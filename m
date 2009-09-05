@@ -1,87 +1,154 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: PATCH: PMC-Sierra MaxRAID driver to support 6Gb/s SAS RAID
- controller (fwd)
-Date: Sat, 05 Sep 2009 10:00:56 -0500
-Message-ID: <1252162856.3882.80.camel@mulgrave.site>
-References: <alpine.LNX.1.10.0909021704370.3751@rslab159.pmc-sierra.bc.ca>
-	 <4A9FDBE4.2090008@linux.vnet.ibm.com>
-	 <alpine.LNX.1.10.0909030959100.11364@rslab159.pmc-sierra.bc.ca>
-	 <4AA03620.70904@linux.vnet.ibm.com>
-	 <alpine.LNX.1.10.0909031637330.11364@rslab159.pmc-sierra.bc.ca>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 3/3][RESUBMIT] scsi_dh_rdac: changes for rdac debug
+ logging
+Date: Sat, 05 Sep 2009 10:19:47 -0500
+Message-ID: <1252163987.3882.103.camel@mulgrave.site>
+References: <E463DF2B2E584B4A82673F53D62C2EF474CCD1BC@cosmail01.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42689 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751945AbZIEPBA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Sep 2009 11:01:00 -0400
-In-Reply-To: <alpine.LNX.1.10.0909031637330.11364@rslab159.pmc-sierra.bc.ca>
+Received: from cantor.suse.de ([195.135.220.2]:54478 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752146AbZIEPT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Sep 2009 11:19:58 -0400
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474CCD1BC@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, gregkh@suse.de
+To: "Moger, Babu" <Babu.Moger@lsi.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'device mapper development' <dm-devel@redhat.com>, "'sekharan@linux.vnet.ibm.com'" <sekharan@linux.vnet.ibm.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
 
-On Thu, 2009-09-03 at 16:43 -0700, Anil Ravindranath wrote:
+On Thu, 2009-09-03 at 21:42 -0600, Moger, Babu wrote:
+> Patch to add debugging stuff for rdac device handler. 
+> - Added a bit mask "module parameter" rdac_logging with 2 bits for each type of logging.
+> - currently defined only two types of logging(failover and sense logging). Can be enhanced later if required.
+> - By default only failover logging is enabled which is equivalent of current logging.
 > 
-> On Thu, 3 Sep 2009, Brian King wrote:
+> Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
+> Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
 > 
-> > Anil Ravindranath wrote:
-> > > Hi Brian,
-> > > 
-> > > 
-> > > On Thu, 3 Sep 2009, Brian King wrote:
-> > > 
-> > >> Anil,
-> > >>
-> > >> Taking a quick scan through the driver, I would suggest you audit your
-> > >> logging. Looks like there is a lot of dev_err, where sdev_printk might be
-> > >> better,
-> > > 
-> > > I hope I am understanding this correct...
-> > > 
-> > > I don't see a difference in using dev_err Vs. sdev_printk. B'coz both call
-> > > dev_printk except the prefix of KERN_ERR. But I guess even if we use
-> > > sdev_printk we will use KERN_ERR anyways. Also both refer "Generic device
-> > > interface".
-> > > 
-> > > #define dev_err(dev, format, arg...)            \   
-> > >         dev_printk(KERN_ERR , dev , format , ## arg)
-> > > 
-> > > #define sdev_printk(prefix, sdev, fmt, a...)    \
-> > >         dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
-> > 
-> > The difference is the dev pointer that gets passed to dev_printk. When calling
-> > sdev_printk, the dev pointer for the scsi device gets passed, so the printk
-> > ends up getting prefixed with the SCSI location: 0:0:0:0, for example where
-> > you have SCSI Host:Bus:Target:LUN. The dev_err calls I see in the driver
-> > generally pass the dev pointer of the PCI device, resulting in the PCI location
-> > of the adapter being logged. Its just a matter of scoping the printk to the
-> > device.
-> >
-> 
-> Sure. We will make this change wherever its applicable like places where 
-> we need scsi device location in the prints.
+> ---
+> --- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-09-03 14:52:46.000000000 -0500
+> +++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-09-03 14:53:06.000000000 -0500
+> @@ -201,6 +201,31 @@ static const char *lun_state[] =
+>  static LIST_HEAD(ctlr_list);
+>  static DEFINE_SPINLOCK(list_lock);
 >  
-> > > 
-> > > struct scsi_device {
-> > > 
-> > > struct device           sdev_gendev;
-> > >  
-> > > }
-> > > 
-> > >  and pmcraid_info where sdev_info might be better, etc.
-> > > Where/what is this sdev_info?
-> > 
-> > There isn't one... I meant to say dev_info, sdev_printk, scmd_printk, etc... 
-> > 
-> 
-> We will change this accordingly wherever applicable. There will be places 
-> where we still want to call pmcraid_info prints which we want to 
-> control using debug flag parameter.
+> +/* 
+> + * module parameter to enable rdac debug logging.
+> + * 2 bits for each type of logging, only two types defined for now 
+> + * Can be enhanced if required at later point
+> + */
+> +static int rdac_logging = 1;
+> +module_param(rdac_logging, int, S_IRUGO|S_IWUSR);
+> +MODULE_PARM_DESC(rdac_logging, "A bit mask of rdac logging levels, "
+> +		"Default is 1 - failover logging enabled, "
+> +		"set it to 0xF to enable all the logs");
+> +
+> +#define RDAC_LOG_FAILOVER	0
+> +#define RDAC_LOG_SENSE		2
+> +
+> +#define RDAC_LOG_BITS		2
+> +
+> +#define RDAC_LOG_LEVEL(SHIFT)  \
+> +        ((rdac_logging >> (SHIFT)) & ((1 << (RDAC_LOG_BITS)) - 1))
+> +
+> +#define RDAC_LOG(SHIFT, sdev, f, arg...) \
+> +do { \
+> +	if (unlikely(RDAC_LOG_LEVEL(SHIFT))) \
+> +		sdev_printk(KERN_INFO, sdev, RDAC_NAME ": " f "\n", ## arg); \
+> +} while (0);
+> +
+>  static inline struct rdac_dh_data *get_rdac_data(struct scsi_device *sdev)
+>  {
+>  	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
+> @@ -469,6 +494,7 @@ static int mode_select_handle_sense(stru
+>  {
+>  	struct scsi_sense_hdr sense_hdr;
+>  	int err = SCSI_DH_IO, ret;
+> +	struct rdac_dh_data *h = get_rdac_data(sdev);
+>  
+>  	ret = scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE, &sense_hdr);
+>  	if (!ret)
+> @@ -497,11 +523,14 @@ static int mode_select_handle_sense(stru
+>  			err = SCSI_DH_RETRY;
+>  		break;
+>  	default:
+> -		sdev_printk(KERN_INFO, sdev,
+> -			    "MODE_SELECT failed with sense %02x/%02x/%02x.\n",
+> -			    sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
+> +		break;
+>  	}
+>  
+> +	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> +		"MODE_SELECT returned with sense %02x/%02x/%02x",
+> +		(char *) h->ctlr->array_name, h->ctlr->index,
+> +		sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
+> +
+>  done:
+>  	return err;
+>  }
+> @@ -518,7 +547,9 @@ retry:
+>  	if (!rq)
+>  		goto done;
+>  
+> -	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
+> +	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> +		"%s MODE_SELECT command",
+> +		(char *) h->ctlr->array_name, h->ctlr->index,
+>  		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+>  
+>  	err = blk_execute_rq(q, NULL, rq, 1);
+> @@ -528,8 +559,12 @@ retry:
+>  		if (err == SCSI_DH_RETRY && retry_cnt--)
+>  			goto retry;
+>  	}
+> -	if (err == SCSI_DH_OK)
+> +	if (err == SCSI_DH_OK) {
+>  		h->state = RDAC_STATE_ACTIVE;
+> +		RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+> +				"MODE_SELECT completed",
+> +				(char *) h->ctlr->array_name, h->ctlr->index);
+> +	}
+>  
+>  done:
+>  	return err;
+> @@ -567,6 +602,12 @@ static int rdac_check_sense(struct scsi_
+>  				struct scsi_sense_hdr *sense_hdr)
+>  {
+>  	struct rdac_dh_data *h = get_rdac_data(sdev);
+> +		
+> +	RDAC_LOG(RDAC_LOG_SENSE, sdev, "array %s, ctlr %d, "
+> +			"I/O returned with sense %02x/%02x/%02x",
+> +			(char *) h->ctlr->array_name, h->ctlr->index,
+> +			sense_hdr->sense_key, sense_hdr->asc, sense_hdr->ascq);
+> +
+>  	switch (sense_hdr->sense_key) {
+>  	case NOT_READY:
+>  		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x01)
 
-These patches are mainly cosmetic.  I'll put the current driver in as-is
-on the understanding that you'll submit this lot as an update patch.
+Could you run these through checkpatch.pl before sending them next time?
+
+ERROR: trailing whitespace
+#30: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:204:
++/* $
+
+ERROR: trailing whitespace
+#32: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:206:
++ * 2 bits for each type of logging, only two types defined for now $
+
+ERROR: code indent should use tabs where possible
+#47: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:221:
++        ((rdac_logging >> (SHIFT)) & ((1 << (RDAC_LOG_BITS)) - 1))$
+
+ERROR: trailing whitespace
+#113: FILE: drivers/scsi/device_handler/scsi_dh_rdac.c:605:
++^I^I$
+
+total: 4 errors, 0 warnings, 90 lines checked
+
+I fixed it all up this time around.
 
 James
 
