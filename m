@@ -1,67 +1,79 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Mon, 7 Sep 2009 12:59:27 +0100
-Message-ID: <20090907115927.GU8710@arachsys.com>
-References: <4A950FA6.4020408@redhat.com> <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com>
+From: Vitaly Bordug <vitb@kernel.crashing.org>
+Subject: Re: [PATCH] mptsas: fix dma alignment
+Date: Mon, 7 Sep 2009 17:45:38 +0400
+Message-ID: <20090907174538.67c7cedd@vitb-lp>
+References: <20090902010331.37889a2c@vitb-lp>
+	<0D1E8821739E724A86F4D16902CE275C1C8EAE0A19@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20090907114442.GG18831@arachsys.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.10]:56006 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752469AbZIGNot convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Sep 2009 09:44:49 -0400
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1C8EAE0A19@inbmail01.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Chris Webb <chris@arachsys.com> writes:
+=D0=92 Mon, 7 Sep 2009 16:42:54 +0530
+"Desai, Kashyap" <Kashyap.Desai@lsi.com> =D0=BF=D0=B8=D1=88=D0=B5=D1=82=
+:
 
-> I have a bitmap on the array, but sometimes when I remove and re-add a
-> failed component, it doesn't seem to use the bitmap and does a lengthy full
-> recovery instead. One example that's ongoing at the moment:-
-> 
->       [=>...................]  recovery =  5.7% (40219648/703205312) finish=7546.3min speed=1463K/sec
->       bitmap: 34/126 pages [136KB], 8192KB chunk
-> 
-> which is rather painful and has to be throttled back with speed_limit_max to
-> avoid the virtual machines running on top of it from having extremely poor IO
-> latency.
+> Can you send an exact link for "465ff.. commit"?
+>=20
+Sure,=20
+http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
+commit;h=3D465ff3185e0cb76d46137335a4d21d0d9d3ac8a2
 
-I've also noticed that during this recovery, I'm seeing lots of timeouts but
-they don't seem to interrupt the resync:
-
-  05:47:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-  05:47:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
-  05:47:39         res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
-  05:47:39 ata5.00: status: { DRDY }
-  05:47:39 ata5: hard resetting link
-  05:47:49 ata5: softreset failed (device not ready)
-  05:47:49 ata5: hard resetting link
-  05:47:49 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  05:47:49 ata5.00: configured for UDMA/133
-  05:47:49 ata5: EH complete
-  
-  08:17:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-  08:17:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
-  08:17:39         res 40/00:00:35:83:f8/00:00:4d:00:00/40 Emask 0x4 (timeout)
-  08:17:39 ata5.00: status: { DRDY }
-  08:17:39 ata5: hard resetting link
-  08:17:49 ata5: softreset failed (device not ready)
-  08:17:49 ata5: hard resetting link
-  08:17:49 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  08:17:49 ata5.00: configured for UDMA/133
-  08:17:49 ata5: EH complete
-  
-  10:22:39 ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-  10:22:39 ata5.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
-  10:22:39         res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
-  10:22:39 ata5.00: status: { DRDY }
-  10:22:39 ata5: hard resetting link
-  10:22:49 ata5: softreset failed (device not ready)
-  10:22:49 ata5: hard resetting link
-  10:22:50 ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-  10:22:51 ata5.00: configured for UDMA/133
-  10:22:51 ata5: EH complete
-
-Cheers,
-
-Chris.
+> Thanks,
+> Kashyap
+>=20
+> -----Original Message-----
+> From: Vitaly Bordug [mailto:vitb@kernel.crashing.org]=20
+> Sent: Wednesday, September 02, 2009 2:34 AM
+> To: Moore, Eric
+> Cc: DL-MPT Fusion Linux; linux-scsi@vger.kernel.org
+> Subject: [PATCH] mptsas: fix dma alignment
+>=20
+>=20
+> From: Yuri Tikhonov <yur@emcraft.com>
+>=20
+> fusion mptsas: fix dma alignment
+>=20
+>      Since the 465ff.. commit from James Bottomley relaxes the defaul=
+t
+>      SCSI DMA alignment from 512 bytes to 4 bytes, then, in the mptsa=
+s
+>      driver, we should explicitly set the alignment to the workable
+>      512 bytes value.
+>=20
+>     Signed-off-by: Ilya Yanok <yanok@emcraft.com>
+>     Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
+>     Signed-off-by: Sergei Poselenov <sposelenov@emcraft.com>
+>     Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
+> ---
+>=20
+>  drivers/message/fusion/mptsas.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>=20
+>=20
+> diff --git a/drivers/message/fusion/mptsas.c
+> b/drivers/message/fusion/mptsas.c index 55ff252..2334f26 100644
+> --- a/drivers/message/fusion/mptsas.c
+> +++ b/drivers/message/fusion/mptsas.c
+> @@ -1843,6 +1843,7 @@ mptsas_slave_alloc(struct scsi_device *sdev)
+>  	return -ENXIO;
+> =20
+>   out:
+> +	blk_queue_update_dma_alignment(sdev->request_queue, 511);
+>  	vdevice->vtarget->num_luns++;
+>  	sdev->hostdata =3D vdevice;
+>  	return 0;
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
