@@ -1,94 +1,64 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] mptsas: fix dma alignment
-Date: Tue, 8 Sep 2009 13:49:03 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C1C8EAE0B11@inbmail01.lsi.com>
-References: <20090902010331.37889a2c@vitb-lp>
-	<0D1E8821739E724A86F4D16902CE275C1C8EAE0A19@inbmail01.lsi.com>
- <20090907174538.67c7cedd@vitb-lp>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: be2iscsi driver
+Date: Tue, 8 Sep 2009 14:05:58 +0530
+Message-ID: <20090908083546.GA19467@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=koi8-r
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og127.obsmtp.com ([64.18.2.210]:53270 "EHLO
-	exprod7og127.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753485AbZIHITS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2009 04:19:18 -0400
-In-Reply-To: <20090907174538.67c7cedd@vitb-lp>
-Content-Language: en-US
+Received: from segment-124-30.sify.net ([124.30.166.146]:39081 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752734AbZIHIf6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2009 04:35:58 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vitaly Bordug <vitb@kernel.crashing.org>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu, sfr@canb.auug.org.au
+
+Hi
+  
+   This patch contains  a fix for powerpc compile issue  and has
+    been tested for compile on powerpc with allyesconfig option.	
+ 
+   I request you to pl consider  this for inclusion
+   in the Linux Kernel.
+
+  This patch requires  Mike's Patch 
+  (commit f54b4b17046a762b80787edda3bb25e84ff0809c and
+   240e4e54b2b324681cda93b10e750ff9d0251b41 on 
+  git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git) 
+  Since Mike's patches have already been applied, I am not including them here.
+
+  This patch supports blk-iopoll and is pulled from Jens Axboe's tree at 
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git 
+ 								 blk-iopoll
+ 
+  The series of  patches are described below:
+
+  [PATCH 1/6]: Modified scsi Layer and be2iscsi Makefile/Kconfig
+	   	    				 to add be2iscsi
+
+  [PATCH 2/6]: This file contains all routines for Initiallization/Teardown,
+  	       registering with upper layer, IO Handling, allocation/free etc.
+
+  [PATCH 3/6]: These are the low level routines to talk to the chip for
+  	   	    				Management commands.
+
+  [PATCH 4/6]: The iscsi hooks to interact with open-iscsi layer.
+
+  [PATCH 5/6]: The Firmware Commands that are used for Management action
+	   	    		  like setup /tear down a connection etc.
+
+  [PATCH 6/6]: The modified MAINTAINERS file with be2iscsi added.
 
 
-After seeing original commit from James, this patch looks OK to me.
-Please consider this patch as ACKed by me.
+Thank You
 
-Thanks,
-Kashyap
+Jayamohan Kallickal
 
------Original Message-----
-=46rom: Vitaly Bordug [mailto:vitb@kernel.crashing.org]=20
-Sent: Monday, September 07, 2009 7:16 PM
-To: Desai, Kashyap
-Cc: Moore, Eric; DL-MPT Fusion Linux; linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] mptsas: fix dma alignment
+Signed-off-by:  Jayamohan Kallickal <jayamohank@serverengines.com>
 
-=F7 Mon, 7 Sep 2009 16:42:54 +0530
-"Desai, Kashyap" <Kashyap.Desai@lsi.com> =D0=C9=DB=C5=D4:
+---
 
-> Can you send an exact link for "465ff.. commit"?
->=20
-Sure,=20
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
-commit;h=3D465ff3185e0cb76d46137335a4d21d0d9d3ac8a2
-
-> Thanks,
-> Kashyap
->=20
-> -----Original Message-----
-> From: Vitaly Bordug [mailto:vitb@kernel.crashing.org]=20
-> Sent: Wednesday, September 02, 2009 2:34 AM
-> To: Moore, Eric
-> Cc: DL-MPT Fusion Linux; linux-scsi@vger.kernel.org
-> Subject: [PATCH] mptsas: fix dma alignment
->=20
->=20
-> From: Yuri Tikhonov <yur@emcraft.com>
->=20
-> fusion mptsas: fix dma alignment
->=20
->      Since the 465ff.. commit from James Bottomley relaxes the defaul=
-t
->      SCSI DMA alignment from 512 bytes to 4 bytes, then, in the mptsa=
-s
->      driver, we should explicitly set the alignment to the workable
->      512 bytes value.
->=20
->     Signed-off-by: Ilya Yanok <yanok@emcraft.com>
->     Signed-off-by: Yuri Tikhonov <yur@emcraft.com>
->     Signed-off-by: Sergei Poselenov <sposelenov@emcraft.com>
->     Signed-off-by: Vitaly Bordug <vitb@kernel.crashing.org>
-> ---
->=20
->  drivers/message/fusion/mptsas.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->=20
->=20
-> diff --git a/drivers/message/fusion/mptsas.c
-> b/drivers/message/fusion/mptsas.c index 55ff252..2334f26 100644
-> --- a/drivers/message/fusion/mptsas.c
-> +++ b/drivers/message/fusion/mptsas.c
-> @@ -1843,6 +1843,7 @@ mptsas_slave_alloc(struct scsi_device *sdev)
->  	return -ENXIO;
-> =20
->   out:
-> +	blk_queue_update_dma_alignment(sdev->request_queue, 511);
->  	vdevice->vtarget->num_luns++;
->  	sdev->hostdata =3D vdevice;
->  	return 0;
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
