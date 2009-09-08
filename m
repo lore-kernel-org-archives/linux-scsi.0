@@ -1,74 +1,55 @@
-From: "Nick Cheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH] SCSI: Support Areca SAS/SATA HBA, ARC-1300/1320 on mvsas of  kernel version 2.6.31-rc9
-Date: Tue, 8 Sep 2009 19:03:07 +0800
-Message-ID: <SERVER-ARECAehBAKbi000035ec@areca.com.tw>
-Reply-To: <nick.cheng@areca.com.tw>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: be2iscsi driver
+Date: Tue, 08 Sep 2009 14:18:47 +0000
+Message-ID: <1252419527.3990.39.camel@mulgrave.site>
+References: <20090908083546.GA19467@serverengines.com>
+	 <20090908200604.beb14288.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from areca.com.tw ([220.130.178.142]:27518 "EHLO areca.com.tw"
+Received: from cantor.suse.de ([195.135.220.2]:40621 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754233AbZIHLDK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Sep 2009 07:03:10 -0400
+	id S1751768AbZIHOSw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Sep 2009 10:18:52 -0400
+In-Reply-To: <20090908200604.beb14288.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: kewei@marvell.com, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-From: Nick Cheng<nick.cheng@areca.com.tw>
+On Tue, 2009-09-08 at 20:06 +1000, Stephen Rothwell wrote:
+> Hi Jayamohan,
+> 
+> On Tue, 8 Sep 2009 14:05:58 +0530 Jayamohan Kallickal <jayamohank@serverengines.com> wrote:
+> >
+> >    This patch contains  a fix for powerpc compile issue  and has
+> >     been tested for compile on powerpc with allyesconfig option.	
+> 
+> Thanks for that.
+> 
+> >   The series of  patches are described below:
+> 
+> This series should be applied in an order that allows the kernel as a
+> whole to keep building at each step.  The easiest way to guarantee that
+> would be to put your patch 1 as the last one.
 
-This is support for Areca SAS/SATA HBA, ARC-1300/1320, which quipped with
-88SE6440/88SE9480 respectively.
-Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
----
-drivers/scsi/mvsas/mv_defs.h |    4 ++++
-drivers/scsi/mvsas/mv_init.c  |    4 ++++
-2 files changed, 8 insertions(+), 0 deletions(-)
-diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
-index f8cb9de..1849da1 100644
---- a/drivers/scsi/mvsas/mv_defs.h
-+++ b/drivers/scsi/mvsas/mv_defs.h
-@@ -25,6 +25,8 @@
- #ifndef _MV_DEFS_H_
- #define _MV_DEFS_H_
- 
-+#define PCI_DEVICE_ID_ARECA_1300	0x1300
-+#define PCI_DEVICE_ID_ARECA_1320	0x1320
- 
- enum chip_flavors {
- 	chip_6320,
-@@ -32,6 +34,8 @@ enum chip_flavors {
- 	chip_6485,
- 	chip_9480,
- 	chip_9180,
-+	chip_1300,
-+	chip_1320
- };
- 
- /* driver compile-time configuration */
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 8646a19..c790d45 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -32,6 +32,8 @@ static const struct mvs_chip_info mvs_chips[] = {
- 	[chip_6485] =	{ 1, 8, 0x800, 33, 32, 10, &mvs_64xx_dispatch, },
- 	[chip_9180] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
- 	[chip_9480] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
-+	[chip_1300] =	{ 1, 4, 0x400, 17, 16,  9, &mvs_64xx_dispatch, },
-+	[chip_1320] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
- };
- 
- #define SOC_SAS_NUM 2
-@@ -653,6 +655,8 @@ static struct pci_device_id __devinitdata
-mvs_pci_table[] = {
- 	{ PCI_VDEVICE(MARVELL, 0x6485), chip_6485 },
- 	{ PCI_VDEVICE(MARVELL, 0x9480), chip_9480 },
- 	{ PCI_VDEVICE(MARVELL, 0x9180), chip_9180 },
-+	{ PCI_VDEVICE(ARECA, PCI_DEVICE_ID_ARECA_1300), chip_1300 },
-+	{ PCI_VDEVICE(ARECA, PCI_DEVICE_ID_ARECA_1320), chip_1320 },
- 
- 	{ }	/* terminate list */
- };
+Actually, I just folded these patches in to one last time.  For new
+drivers, it really makes no sense to apply anything other than all in
+one go.
+
+However, for code inspection purposes, this is pretty useless.  The fix
+is buried somewhere in several thousand lines of code.
+
+Jayamohan, could you please just send a patch for what's currently in
+the tree that fixes the issue, so we can better verify by inspection
+that it's correct?  I'll fold it into the driver submit, so there won't
+be any point in the tree where there's a ppc build breakage, but I would
+like to see what the fix is without having to rebuild this patch and run
+interdiff.
+
+Thanks,
+
+James
+
 
