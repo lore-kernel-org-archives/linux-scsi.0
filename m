@@ -1,86 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/6] be2iscsi: iscsi hook in and handling codei
-Date: Tue, 08 Sep 2009 12:20:13 -0500
-Message-ID: <4AA6924D.9080204@cs.wisc.edu>
-References: <20090908084007.GA19800@serverengines.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: linux-next: Tree for September 7 (scsi/qla2x)
+Date: Tue, 8 Sep 2009 11:25:41 -0700
+Message-ID: <20090908182541.GB44157@plap4-2.local>
+References: <20090907210206.7830ba68.sfr@canb.auug.org.au>
+ <20090907102747.ac6b98ff.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:58515 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750966AbZIHRUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Sep 2009 13:20:31 -0400
-In-Reply-To: <20090908084007.GA19800@serverengines.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:36921 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752070AbZIHSZk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2009 14:25:40 -0400
+Content-Disposition: inline
+In-Reply-To: <20090907102747.ac6b98ff.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, sfr@canb.auug.org.au
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Sorry for the virt_to_bus screw up.
+On Mon, 07 Sep 2009, Randy Dunlap wrote:
 
-On 09/08/2009 03:40 AM, Jayamohan Kallickal wrote:
-> +struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
-> +						 u16 cmds_max,
-> +						 u16 qdepth,
-> +						 u32 initial_cmdsn)
-> +{
-> +	struct Scsi_Host *shost;
+> On Mon, 7 Sep 2009 21:02:06 +1000 Stephen Rothwell wrote:
+> 
+> > Hi all,
+> > 
+> > Changes since 20090904:
+> 
+> 
+> when CONFIG_MODULES=n:
+> 
+> drivers/scsi/qla2xxx/qla_os.c:2685: error: dereferencing pointer to incomplete type
+> 
+> in
+> 	kobject_uevent_env(&(&vha->hw->pdev->driver->driver)->owner->mkobj.kobj,
+> 	    KOBJ_CHANGE, envp);
 
+Argg...  Some history here...  During several unwelcome
+hardware/firmware events (ISP system error, mailbox command timeouts,
+etc), the qla2xxx driver can store a 'firmware-dump' (essentially a
+snapshot of the current state of the ISP firmware).  This snapshot is
+then captured via a user-space tool querying a driver sysfs-node
+hanging off of a scsi_host's device tree:
 
+	/sys/class/scsi_host/host4/device/fw_dump
 
-> +	if (!cls_session)
-> +		return NULL;
-> +	sess = cls_session->dd_data;
-> +	max_size = ALIGN(sizeof(struct be_cmd_bhs), 64) * cmds_max;
+The dump is then used by our firmware engineering group to help triage
+the issue.
 
+This recent change:
 
-Instead of cmds_max you should use session->cmds_max like you do below.
+	commit 10a71b40153a19279428053ad9743e15ef414148
+	Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+	Date:   Tue Aug 25 11:36:15 2009 -0700
 
-> +	task = sess->cmds[0];
-> +	io_task = task->dd_data;
+	    [SCSI] qla2xxx: Add firmware-dump kobject uevent notification.
 
+	    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+	    Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+	    Signed-off-by: James Bottomley <James.Bottomley@suse.de>
 
-The task and io_task assignment as not needed.
+attempted to help 'automate' the task of retrieval by signaling udev
+to automatically run the 'retrieval' script anytime the driver
+captured the firmware-dump.  Here's a snippet of the udev rule:
 
-> +	vaddr = pci_alloc_consistent(phba->pcidev,
-> +						max_size,
-> +						&bus_add);
-> +	pa_addr = (__u64) bus_add;
-> +
-> +	for (num_cmd = 0; num_cmd<  sess->cmds_max; num_cmd++) {
-> +		task = sess->cmds[num_cmd];
-> +		io_task = task->dd_data;
-> +		io_task->cmd_bhs = vaddr;
-> +		io_task->bhs_pa.u.a64.address = pa_addr;
-> +		io_task->alloc_size = max_size;
-> +		vaddr += ALIGN(sizeof(struct be_cmd_bhs), 64);
-> +		pa_addr += ALIGN(sizeof(struct be_cmd_bhs), 64);
-> +	}
-> +	return cls_session;
-> +}
-> +
-> +/**
-> + * beiscsi_session_destroy - destroys iscsi session
-> + * @cls_session:	pointer to iscsi cls session
-> + *
-> + * Destroys iSCSI session instance and releases
-> + * resources allocated for it.
-> + */
-> +void beiscsi_session_destroy(struct iscsi_cls_session *cls_session)
-> +{
-> +	struct iscsi_task *task;
-> +	struct beiscsi_io_task *io_task;
-> +	struct iscsi_session *sess = cls_session->dd_data;
-> +	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-> +	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-> +
-> +	task = sess->cmds[0];
-> +	io_task = task->dd_data;
-> +	pci_free_consistent(phba->pcidev,
-> +			    io_task->alloc_size,
-> +			    io_task->cmd_bhs,
-> +			    io_task->bhs_pa.u.a64.address);
-> +	iscsi_session_teardown(cls_session);
-> +}
-> +
+	# qla2xxx driver
+	KERNEL=="qla2xxx", SUBSYSTEM=="module", ACTION=="change", RUN+="qla2xxx_udev.sh"
+
+Any suggestions here on an alternate driver-specific kobject an LLD
+can/should use for something like this?  I looked previously at other
+callers of kobject_uevent_env(), but didn't really see a simlar
+usage-pattern of a driver wanting to signal events to userspace...
+
+Thanks, AV
