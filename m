@@ -1,37 +1,86 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH] mptsas: fix dma alignment
-Date: Tue, 8 Sep 2009 10:19:25 -0600
-Message-ID: <660360F4F2570145BD872F298951B17AE32BDE1C@cosmail03.lsi.com>
-References: <1252419766.3990.47.camel@mulgrave.site>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/6] be2iscsi: iscsi hook in and handling codei
+Date: Tue, 08 Sep 2009 12:20:13 -0500
+Message-ID: <4AA6924D.9080204@cs.wisc.edu>
+References: <20090908084007.GA19800@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og124.obsmtp.com ([64.18.2.26]:33959 "EHLO
-	exprod7og124.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbZIHQTo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2009 12:19:44 -0400
-In-Reply-To: <1252419766.3990.47.camel@mulgrave.site>
-Content-Language: en-US
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58515 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750966AbZIHRUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Sep 2009 13:20:31 -0400
+In-Reply-To: <20090908084007.GA19800@serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: Vitaly Bordug <vitb@kernel.crashing.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, sfr@canb.auug.org.au
 
-On Tuesday, September 08, 2009 8:23 AM,  James Bottomley wrote:
-> On Tue, 2009-09-08 at 13:49 +0530, Desai, Kashyap wrote:
-> > After seeing original commit from James, this patch looks OK to me.
-> > Please consider this patch as ACKed by me.
-> 
-> If you're sure it's a problem.  The reason for the original 
-> was that all
-> DMA engines (including the old LSI 1010) can transfer on word
-> boundaries.  I didn't realise the 1030 had regressed in terms of DMA
-> alignment requirements.
-> 
+Sorry for the virt_to_bus screw up.
 
-James, correct.  The scatter gather elements themselfs have to be on 4 byte boundary.    Thus I don't believe this patch is required.
+On 09/08/2009 03:40 AM, Jayamohan Kallickal wrote:
+> +struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
+> +						 u16 cmds_max,
+> +						 u16 qdepth,
+> +						 u32 initial_cmdsn)
+> +{
+> +	struct Scsi_Host *shost;
 
-However the alignment restrictions are for Request Message Frames, chains, and sense buffer can't cross 4GB boundary.  The reason is the driver reports the upper 32bit address in the ioc_init request at driver load time.
 
-Eric
+
+> +	if (!cls_session)
+> +		return NULL;
+> +	sess = cls_session->dd_data;
+> +	max_size = ALIGN(sizeof(struct be_cmd_bhs), 64) * cmds_max;
+
+
+Instead of cmds_max you should use session->cmds_max like you do below.
+
+> +	task = sess->cmds[0];
+> +	io_task = task->dd_data;
+
+
+The task and io_task assignment as not needed.
+
+> +	vaddr = pci_alloc_consistent(phba->pcidev,
+> +						max_size,
+> +						&bus_add);
+> +	pa_addr = (__u64) bus_add;
+> +
+> +	for (num_cmd = 0; num_cmd<  sess->cmds_max; num_cmd++) {
+> +		task = sess->cmds[num_cmd];
+> +		io_task = task->dd_data;
+> +		io_task->cmd_bhs = vaddr;
+> +		io_task->bhs_pa.u.a64.address = pa_addr;
+> +		io_task->alloc_size = max_size;
+> +		vaddr += ALIGN(sizeof(struct be_cmd_bhs), 64);
+> +		pa_addr += ALIGN(sizeof(struct be_cmd_bhs), 64);
+> +	}
+> +	return cls_session;
+> +}
+> +
+> +/**
+> + * beiscsi_session_destroy - destroys iscsi session
+> + * @cls_session:	pointer to iscsi cls session
+> + *
+> + * Destroys iSCSI session instance and releases
+> + * resources allocated for it.
+> + */
+> +void beiscsi_session_destroy(struct iscsi_cls_session *cls_session)
+> +{
+> +	struct iscsi_task *task;
+> +	struct beiscsi_io_task *io_task;
+> +	struct iscsi_session *sess = cls_session->dd_data;
+> +	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
+> +	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+> +
+> +	task = sess->cmds[0];
+> +	io_task = task->dd_data;
+> +	pci_free_consistent(phba->pcidev,
+> +			    io_task->alloc_size,
+> +			    io_task->cmd_bhs,
+> +			    io_task->bhs_pa.u.a64.address);
+> +	iscsi_session_teardown(cls_session);
+> +}
+> +
