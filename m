@@ -1,36 +1,54 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/1] be2iscsi: Fixes for powerpc compile
-Date: Wed, 09 Sep 2009 10:38:47 -0500
-Message-ID: <4AA7CC07.20401@cs.wisc.edu>
-References: <20090908223437.cc0c0f82@mailhost.serverengines.com>
+From: Alok Kataria <akataria@vmware.com>
+Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA - V4.
+Date: Wed, 09 Sep 2009 09:56:52 -0700
+Message-ID: <1252515412.16631.6.camel@ank32.eng.vmware.com>
+References: <1252458903.24914.73.camel@ank32.eng.vmware.com>
+	 <1252459596.14793.46.camel@desktop>
+	 <1252472481.2508.20.camel@ank32.eng.vmware.com>
+	 <200909090754.22778.eike-kernel@sf-tec.de>
+Reply-To: akataria@vmware.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:55647 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752569AbZIIPi5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Sep 2009 11:38:57 -0400
-In-Reply-To: <20090908223437.cc0c0f82@mailhost.serverengines.com>
+Received: from smtp-outbound-1.vmware.com ([65.115.85.69]:54703 "EHLO
+	smtp-outbound-1.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752845AbZIIQ4t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2009 12:56:49 -0400
+In-Reply-To: <200909090754.22778.eike-kernel@sf-tec.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, sfr@canb.auug.org.au
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Daniel Walker <dwalker@fifo99.com>, James Bottomley <James.Bottomley@suse.de>, Brian King <brking@linux.vnet.ibm.com>, "Chetan.Loke@Emulex.Com" <Chetan.Loke@emulex.com>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>
 
-On 09/08/2009 05:34 PM, Jayamohan Kalickal wrote:
->    >  + max_size = ALIGN(sizeof(struct be_cmd_bhs), 64) * sess->cmds_max;
->    >  + vaddr = pci_alloc_consistent(phba->pcidev,
->
->
->    Do you just want a dma/pci pool? It will align structs for you too, I think.
->      I didn't want to do it because we do not really alloc/free once a connection is established.
-> Yes, it can be done that way but certainly would not wan to do that in the IO hot path (even
-> if it picking from pool).
->
+Hi Eike,
 
-I was just going by some other drivers like lpfc where they create the 
-pool at pci probe time, then also preallocate from the pool at some 
-setup/init time. In the case of lpfc it allocates scsi bufs for each 
-command in its slave_alloc when new devices are added.
+On Tue, 2009-09-08 at 22:54 -0700, Rolf Eike Beer wrote:
+> Alok Kataria wrote:
+> 
+> > +/* Command line parameters */
+> > +static int pvscsi_ring_pages     = PVSCSI_DEFAULT_NUM_PAGES_PER_RING;
+> > +static int pvscsi_msg_ring_pages = PVSCSI_DEFAULT_NUM_PAGES_MSG_RING;
+> > +static int pvscsi_cmd_per_lun    = PVSCSI_DEFAULT_QUEUE_DEPTH;
+> > +static int pvscsi_disable_msi;
+> > +static int pvscsi_disable_msix;
+> > +static int pvscsi_use_msg        = true;
+> 
+> Should be bool.
 
-It is not a big deal. If people are ok with it as is, I am fine.
+Yeah, could be done, though I think I will do this later as an
+incremental change or piggyback it if something else comes up.
+
+> 
+> Do I get annoying? ;)
+
+:) Do you want the truth ? ;).
+
+Actually its good that the code is being reviewed in so much details.
+Thanks for your time on this.
+
+--Alok 
+
+> 
+> Eike
+
