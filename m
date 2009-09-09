@@ -1,250 +1,291 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
-Date: Wed, 9 Sep 2009 14:07:10 -0600
-Message-ID: <200909091407.10111.tfjellstrom@shaw.ca>
-References: <200909090414.41274.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org> <200909091310.26058.tfjellstrom@shaw.ca>
-Reply-To: tfjellstrom@shaw.ca
+From: Anthony Liguori <anthony@codemonkey.ws>
+Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA - V4.
+Date: Wed, 09 Sep 2009 16:00:42 -0500
+Message-ID: <4AA8177A.2020606@codemonkey.ws>
+References: <1252458903.24914.73.camel@ank32.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753723AbZIIUHM@vger.kernel.org>
-In-Reply-To: <200909091310.26058.tfjellstrom@shaw.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1252458903.24914.73.camel@ank32.eng.vmware.com>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/virtualization>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: akataria@vmware.com
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, pv-drivers@vmware.com, LKML <linux-kernel@vger.kernel.org>, virtualization <virtualization@lists.linux-foundation.org>, "Chetan.Loke@Emulex.Com" <Chetan.Loke@Emulex.Com>, James Bottomley <James.Bottomley@suse.de>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed September 9 2009, Thomas Fjellstrom wrote:
-> On Wed September 9 2009, Jeff Garzik wrote:
-> > On 09/09/2009 12:30 PM, Thomas Fjellstrom wrote:
-> > > No errors on that disk. Other than the one above, and its more of a
-> > > warning. However, I just rebooted to add some extra drives, thinking
-> > > everything was working a little better now that I've updated to
-> > > 2.6.31-rc9, I'm treated to the following two messages right after boot
-> > > (and a system lockup to boot):
-> > >
-> > > kernel: [  971.033138] ------------[ cut here ]------------
-> > > kernel: [  971.033211] WARNING: at drivers/ata/libata-core.c:4913
-> > > __ata_qc_complete+0x5a/0xe1 [libata]()
-> > > kernel: [  971.033217] Hardware name: GA-MA790FXT-UD5P
-> > > kernel: [  971.033221] Modules linked in: powernow_k8
-> > > cpufreq_conservative cpufreq_stats cpufreq_userspace cpufreq_powersave
-> > > kvm_amd kvm nfsd exportfs nfs lockd fscache nfs_acl auth_rpcgss sunrpc
-> > > bridge stp it87 hwmon_vid adt7473 firewire_sbp2 loop md_mod
-> > > snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss
-> > > snd_mixer_oss snd_pcm snd_seq_midi snd_rawmidi snd_seq_midi_event
-> > > snd_seq snd_timer snd_seq_device snd amd64_edac_mod edac_core i2c_piix4
-> > > soundcore snd_page_alloc i2c_core evdev wmi parport_pc button parport
-> > > processor ext3 jbd mbcache dm_mod sg sr_mod cdrom sd_mod crc_t10dif
-> > > usbhid ata_generic ide_pci_generic hid mvsas firewire_ohci libsas
-> > > firewire_core crc_itu_t scsi_transport_sas r8169 atiixp ide_core floppy
-> > > ahci mii ohci_hcd libata ehci_hcd scsi_mod thermal fan thermal_sys
-> > > [last unloaded: scsi_wait_scan]
-> > > kernel: [  971.033337] Pid: 0, comm: swapper Not tainted 2.6.31-rc9 #2
-> > > kernel: [  971.033342] Call Trace:
-> > > kernel: [  971.033346]<IRQ>   [<ffffffffa00562ca>] ?
-> > > __ata_qc_complete+0x5a/0xe1 [libata]
-> > > kernel: [  971.033434]  [<ffffffffa00562ca>] ?
-> > > __ata_qc_complete+0x5a/0xe1 [libata]
-> > > kernel: [  971.033446]  [<ffffffff8104aca0>] ?
-> > > warn_slowpath_common+0x77/0xa3 kernel: [  971.033455]
-> > > [<ffffffff81038d06>] ? enqueue_task+0x5c/0x65 kernel: [  971.033496]
-> > > [<ffffffffa00562ca>] ? __ata_qc_complete+0x5a/0xe1 [libata]
-> > > kernel: [  971.033519]  [<ffffffffa00f7b59>] ?
-> > > sas_ata_task_done+0x178/0x210 [libsas]
-> > > kernel: [  971.033528]  [<ffffffff8115ead1>] ? blk_run_queue+0x21/0x35
-> > > kernel: [  971.033548]  [<ffffffffa010e2ce>] ?
-> > > mvs_slot_complete+0x3df/0x41b [mvsas]
-> > > kernel: [  971.033565]  [<ffffffffa010e39c>] ? mvs_int_rx+0x92/0x101
-> > > [mvsas] kernel: [  971.033583]  [<ffffffffa01112ba>] ?
-> > > mvs_int_full+0x25/0x88 [mvsas] kernel: [  971.033600]
-> > > [<ffffffffa011134e>] ? mvs_64xx_isr+0x31/0x40 [mvsas] kernel: [
-> > > 971.033617]  [<ffffffffa010d0e5>] ? mvs_interrupt+0x61/0x78 [mvsas]
-> > > kernel: [  971.033625]  [<ffffffff8108aaac>] ?
-> > > handle_IRQ_event+0x58/0x135 kernel: [  971.033633] 
-> > > [<ffffffff8108c1a1>] ? handle_fasteoi_irq+0x7d/0xb5 kernel: [ 
-> > > 971.033642]
-> > > [<ffffffff8101388d>] ? handle_irq+0x17/0x1d
-> >
-> > That warning is triggered when an ata_queued_cmd is passed to completion
-> > without the ATA_QCFLAG_ACTIVE flag being set (which indicates the qc was
-> > started with some activity).
-> >
-> > That possibly indicates the low-level driver (or libsas) was passing an
-> > already-completed cmd to libata.
-> >
-> > > The added hard drives are connected to a Supermicro AOC-SASLP-MV8,
-> > > which is based on a marvel MV64460/64461/64462 chipset, which uses the
-> > > sata_mv driver.
-> >
-> > Surely you mean 'mvsas' driver?
+Hi Alok,
+
+Joining this a bit late as this was just brought to my attention.  It 
+would have been nice to CC the virtualization mailing list.  Please do 
+in future submissions.
+
+Alok Kataria wrote:
+> VMware PVSCSI driver - v4.
 > 
-> Yes, sorry I did mean mvsas.
-> 
-> I am more concerned about the actual oops/BUG rather than the warning
->  though. Unless the problem causing the warning is also causing the oops.
-> 
-> > 	Jeff
-> 
+/
+>  
+> diff --git a/drivers/scsi/pvscsi.h b/drivers/scsi/pvscsi.h
+> new file mode 100644
+> index 0000000..96bb655
+> --- /dev/null
+> +++ b/drivers/scsi/pvscsi.h
+> @@ -0,0 +1,395 @@
+> +/*
+> + * VMware PVSCSI header file
+> + *
+> + * Copyright (C) 2008-2009, VMware, Inc. All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms of the GNU General Public License as published by the
+> + * Free Software Foundation; version 2 of the License and no later version.
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, GOOD TITLE or
+> + * NON INFRINGEMENT.  See the GNU General Public License for more
+> + * details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write to the Free Software
+> + * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+> + *
+> + * Maintained by: Alok N Kataria <akataria@vmware.com>
+> + *
+> + */
+> +
+> +#ifndef _PVSCSI_H_
+> +#define _PVSCSI_H_
+> +
+> +#include <linux/types.h>
+> +
+> +#define PVSCSI_DRIVER_VERSION_STRING   "1.0.0.0"
+> +
+> +#define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
+> +
+> +#define MASK(n)        ((1 << (n)) - 1)        /* make an n-bit mask */
+> +
+> +#define PCI_VENDOR_ID_VMWARE		0x15AD
+> +#define PCI_DEVICE_ID_VMWARE_PVSCSI	0x07C0
+> +
+> +/*
+> + * host adapter status/error codes
+> + */
+> +typedef enum {
+> +   BTSTAT_SUCCESS       = 0x00,  /* CCB complete normally with no errors */
+> +   BTSTAT_LINKED_COMMAND_COMPLETED           = 0x0a,
+> +   BTSTAT_LINKED_COMMAND_COMPLETED_WITH_FLAG = 0x0b,
+> +   BTSTAT_DATA_UNDERRUN = 0x0c,
+> +   BTSTAT_SELTIMEO      = 0x11,  /* SCSI selection timeout */
+> +   BTSTAT_DATARUN       = 0x12,  /* data overrun/underrun */
+> +   BTSTAT_BUSFREE       = 0x13,  /* unexpected bus free */
+> +   BTSTAT_INVPHASE      = 0x14,  /* invalid bus phase or sequence requested by target */
+> +   BTSTAT_LUNMISMATCH   = 0x17,  /* linked CCB has different LUN from first CCB */
+> +   BTSTAT_SENSFAILED    = 0x1b,  /* auto request sense failed */
+> +   BTSTAT_TAGREJECT     = 0x1c,  /* SCSI II tagged queueing message rejected by target */
+> +   BTSTAT_BADMSG        = 0x1d,  /* unsupported message received by the host adapter */
+> +   BTSTAT_HAHARDWARE    = 0x20,  /* host adapter hardware failed */
+> +   BTSTAT_NORESPONSE    = 0x21,  /* target did not respond to SCSI ATN, sent a SCSI RST */
+> +   BTSTAT_SENTRST       = 0x22,  /* host adapter asserted a SCSI RST */
+> +   BTSTAT_RECVRST       = 0x23,  /* other SCSI devices asserted a SCSI RST */
+> +   BTSTAT_DISCONNECT    = 0x24,  /* target device reconnected improperly (w/o tag) */
+> +   BTSTAT_BUSRESET      = 0x25,  /* host adapter issued BUS device reset */
+> +   BTSTAT_ABORTQUEUE    = 0x26,  /* abort queue generated */
+> +   BTSTAT_HASOFTWARE    = 0x27,  /* host adapter software error */
+> +   BTSTAT_HATIMEOUT     = 0x30,  /* host adapter hardware timeout error */
+> +   BTSTAT_SCSIPARITY    = 0x34,  /* SCSI parity error detected */
+> +} HostBusAdapterStatus;
+> +
+> +/*
+> + * Register offsets.
+> + *
+> + * These registers are accessible both via i/o space and mm i/o.
+> + */
+> +
+> +enum PVSCSIRegOffset {
+> +	PVSCSI_REG_OFFSET_COMMAND        =    0x0,
+> +	PVSCSI_REG_OFFSET_COMMAND_DATA   =    0x4,
+> +	PVSCSI_REG_OFFSET_COMMAND_STATUS =    0x8,
+> +	PVSCSI_REG_OFFSET_LAST_STS_0     =  0x100,
+> +	PVSCSI_REG_OFFSET_LAST_STS_1     =  0x104,
+> +	PVSCSI_REG_OFFSET_LAST_STS_2     =  0x108,
+> +	PVSCSI_REG_OFFSET_LAST_STS_3     =  0x10c,
+> +	PVSCSI_REG_OFFSET_INTR_STATUS    = 0x100c,
+> +	PVSCSI_REG_OFFSET_INTR_MASK      = 0x2010,
+> +	PVSCSI_REG_OFFSET_KICK_NON_RW_IO = 0x3014,
+> +	PVSCSI_REG_OFFSET_DEBUG          = 0x3018,
+> +	PVSCSI_REG_OFFSET_KICK_RW_IO     = 0x4018,
+> +};
+> +
+> +/*
+> + * Virtual h/w commands.
+> + */
+> +
+> +enum PVSCSICommands {
+> +	PVSCSI_CMD_FIRST             = 0, /* has to be first */
+> +
+> +	PVSCSI_CMD_ADAPTER_RESET     = 1,
+> +	PVSCSI_CMD_ISSUE_SCSI        = 2,
+> +	PVSCSI_CMD_SETUP_RINGS       = 3,
+> +	PVSCSI_CMD_RESET_BUS         = 4,
+> +	PVSCSI_CMD_RESET_DEVICE      = 5,
+> +	PVSCSI_CMD_ABORT_CMD         = 6,
+> +	PVSCSI_CMD_CONFIG            = 7,
+> +	PVSCSI_CMD_SETUP_MSG_RING    = 8,
+> +	PVSCSI_CMD_DEVICE_UNPLUG     = 9,
+> +
+> +	PVSCSI_CMD_LAST              = 10  /* has to be last */
+> +};
+> +
+> +/*
+> + * Command descriptor for PVSCSI_CMD_RESET_DEVICE --
+> + */
+> +
+> +typedef struct PVSCSICmdDescResetDevice {
+> +	u32	target;
+> +	u8	lun[8];
+> +} __packed PVSCSICmdDescResetDevice;
+> +
+> +/*
+> + * Command descriptor for PVSCSI_CMD_ABORT_CMD --
+> + *
+> + * - currently does not support specifying the LUN.
+> + * - _pad should be 0.
+> + */
+> +
+> +typedef struct PVSCSICmdDescAbortCmd {
+> +	u64	context;
+> +	u32	target;
+> +	u32	_pad;
+> +} __packed PVSCSICmdDescAbortCmd;
+> +
+> +/*
+> + * Command descriptor for PVSCSI_CMD_SETUP_RINGS --
+> + *
+> + * Notes:
+> + * - reqRingNumPages and cmpRingNumPages need to be power of two.
+> + * - reqRingNumPages and cmpRingNumPages need to be different from 0,
+> + * - reqRingNumPages and cmpRingNumPages need to be inferior to
+> + *   PVSCSI_SETUP_RINGS_MAX_NUM_PAGES.
+> + */
+> +
+> +#define PVSCSI_SETUP_RINGS_MAX_NUM_PAGES        32
+> +typedef struct PVSCSICmdDescSetupRings {
+> +	u32	reqRingNumPages;
+> +	u32	cmpRingNumPages;
+> +	u64	ringsStatePPN;
+> +	u64	reqRingPPNs[PVSCSI_SETUP_RINGS_MAX_NUM_PAGES];
+> +	u64	cmpRingPPNs[PVSCSI_SETUP_RINGS_MAX_NUM_PAGES];
+> +} __packed PVSCSICmdDescSetupRings;
+> +
+> +/*
+> + * Command descriptor for PVSCSI_CMD_SETUP_MSG_RING --
+> + *
+> + * Notes:
+> + * - this command was not supported in the initial revision of the h/w
+> + *   interface. Before using it, you need to check that it is supported by
+> + *   writing PVSCSI_CMD_SETUP_MSG_RING to the 'command' register, then
+> + *   immediately after read the 'command status' register:
+> + *       * a value of -1 means that the cmd is NOT supported,
+> + *       * a value != -1 means that the cmd IS supported.
+> + *   If it's supported the 'command status' register should return:
+> + *      sizeof(PVSCSICmdDescSetupMsgRing) / sizeof(u32).
+> + * - this command should be issued _after_ the usual SETUP_RINGS so that the
+> + *   RingsState page is already setup. If not, the command is a nop.
+> + * - numPages needs to be a power of two,
+> + * - numPages needs to be different from 0,
+> + * - _pad should be zero.
+> + */
+> +
+> +#define PVSCSI_SETUP_MSG_RING_MAX_NUM_PAGES  16
+> +
+> +typedef struct PVSCSICmdDescSetupMsgRing {
+> +	u32	numPages;
+> +	u32	_pad;
+> +	u64	ringPPNs[PVSCSI_SETUP_MSG_RING_MAX_NUM_PAGES];
+> +} __packed PVSCSICmdDescSetupMsgRing;
+> +
+> +enum PVSCSIMsgType {
+> +	PVSCSI_MSG_DEV_ADDED          = 0,
+> +	PVSCSI_MSG_DEV_REMOVED        = 1,
+> +	PVSCSI_MSG_LAST               = 2,
+> +};
+> +
+> +/*
+> + * Msg descriptor.
+> + *
+> + * sizeof(struct PVSCSIRingMsgDesc) == 128.
+> + *
+> + * - type is of type enum PVSCSIMsgType.
+> + * - the content of args depend on the type of event being delivered.
+> + */
+> +
+> +typedef struct PVSCSIRingMsgDesc {
+> +	u32	type;
+> +	u32	args[31];
+> +} __packed PVSCSIRingMsgDesc;
+> +
+> +typedef struct PVSCSIMsgDescDevStatusChanged {
+> +	u32	type;  /* PVSCSI_MSG_DEV _ADDED / _REMOVED */
+> +	u32	bus;
+> +	u32	target;
+> +	u8	lun[8];
+> +	u32	pad[27];
+> +} __packed PVSCSIMsgDescDevStatusChanged;
+> +
+> +/*
+> + * Rings state.
+> + *
+> + * - the fields:
+> + *    . msgProdIdx,
+> + *    . msgConsIdx,
+> + *    . msgNumEntriesLog2,
+> + *   .. are only used once the SETUP_MSG_RING cmd has been issued.
+> + * - '_pad' helps to ensure that the msg related fields are on their own
+> + *   cache-line.
+> + */
+> +
+> +typedef struct PVSCSIRingsState {
+> +	u32	reqProdIdx;
+> +	u32	reqConsIdx;
+> +	u32	reqNumEntriesLog2;
+> +
+> +	u32	cmpProdIdx;
+> +	u32	cmpConsIdx;
+> +	u32	cmpNumEntriesLog2;
+> +
+> +	u8	_pad[104];
+> +
+> +	u32	msgProdIdx;
+> +	u32	msgConsIdx;
+> +	u32	msgNumEntriesLog2;
+> +} __packed PVSCSIRingsState;
 
-Thanks for taking a look so far. But I'm having more and more trouble with 
-this card as the days go by:
+All of this can be hidden behind a struct virtqueue.  You could then 
+introduce a virtio-vmwring that implemented this ABI.
 
-[  464.792214] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  464.792222] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  494.816170] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  494.816179] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  494.816192] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  494.816197] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  525.817335] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  525.817343] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  525.817358] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  525.817363] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  556.816148] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  556.816157] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  556.816170] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  556.816175] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  587.816171] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  587.816179] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  587.816193] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  587.816199] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  600.616255] INFO: task mount:4395 blocked for more than 120 seconds.
-[  600.616263] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables 
-this message.
-[  600.616270] mount         D 0000000000000000     0  4395   4229 0x00000000
-[  600.616281]  ffff88012fb6f780 0000000000000082 ffff8800b808ddc8 
-ffff8800b80f3d60
-[  600.616290]  ffff880128923c90 0000000000014800 000000000000f800 
-ffff88012dd91840
-[  600.616299]  ffff88012dd91b38 0000000300000008 0000000000000000 
-ffff88010c5bfa88
-[  600.616308] Call Trace:
-[  600.616324]  [<ffffffff81017015>] ? read_tsc+0xa/0x20
-[  600.616335]  [<ffffffff810adc63>] ? __pagevec_free+0x29/0x3b
-[  600.616343]  [<ffffffff810661e9>] ? getnstimeofday+0x55/0xaf
-[  600.616351]  [<ffffffff810a8e69>] ? sync_page+0x0/0x46
-[  600.616361]  [<ffffffff812dc8cb>] ? io_schedule+0x63/0xa5
-[  600.616368]  [<ffffffff810a8eaa>] ? sync_page+0x41/0x46
-[  600.616376]  [<ffffffff812dcade>] ? __wait_on_bit_lock+0x3f/0x84
-[  600.616383]  [<ffffffff810a8e55>] ? __lock_page+0x5d/0x63
-[  600.616391]  [<ffffffff8105ef14>] ? wake_bit_function+0x0/0x23
-[  600.616401]  [<ffffffff810b0ad4>] ? pagevec_lookup+0x17/0x1e
-[  600.616408]  [<ffffffff810b1bbd>] ? truncate_inode_pages_range+0x288/0x318
-[  600.616418]  [<ffffffff810fc8cb>] ? set_blocksize+0xc2/0xd2
-[  600.616426]  [<ffffffff810fc8f2>] ? sb_set_blocksize+0x17/0x43
-[  600.616477]  [<ffffffffa04aa8e0>] ? ext4_fill_super+0x1cc/0x2060 [ext4]
-[  600.616486]  [<ffffffff8117593b>] ? snprintf+0x44/0x4c
-[  600.616493]  [<ffffffff810fb5b7>] ? check_disk_change+0x22/0x52
-[  600.616501]  [<ffffffff812dd680>] ? __down_write_nested+0x15/0xab
-[  600.616524]  [<ffffffff810dbfe6>] ? get_sb_bdev+0x111/0x159
-[  600.616571]  [<ffffffffa04aa714>] ? ext4_fill_super+0x0/0x2060 [ext4]
-[  600.616582]  [<ffffffff810dbc44>] ? vfs_kern_mount+0x95/0x111
-[  600.616593]  [<ffffffff810dbd13>] ? do_kern_mount+0x43/0xe2
-[  600.616607]  [<ffffffff810ef49d>] ? do_mount+0x767/0x7d6
-[  600.616620]  [<ffffffff810ef591>] ? sys_mount+0x85/0xc8
-[  600.616633]  [<ffffffff81010a02>] ? system_call_fastpath+0x16/0x1b
-[  618.816175] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5                                                                                                                                                                        
-[  618.816184] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5                                                                                                                                                                        
-[  618.816196] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5                                                                                                                                                                        
-[  618.816201] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5                                                                                                                                                                        
-[  618.816241] sd 1:0:3:0: [sdf] Unhandled error code                                                                                                                                                                                       
-[  618.816247] sd 1:0:3:0: [sdf] Result: hostbyte=DID_OK 
-driverbyte=DRIVER_TIMEOUT                                                                                                                                                          
-[  618.816255] end_request: I/O error, dev sdf, sector 160                                                                                                                                                                                  
-[  618.816263] Buffer I/O error on device md2, logical block 20                                                                                                                                                                             
-[  618.816274] Buffer I/O error on device md2, logical block 21                                                                                                                                                                             
-[  618.816280] Buffer I/O error on device md2, logical block 22                                                                                                                                                                             
-[  618.816285] Buffer I/O error on device md2, logical block 23                                                                                                                                                                             
-[  618.816291] Buffer I/O error on device md2, logical block 24                                                                                                                                                                             
-[  618.816298] Buffer I/O error on device md2, logical block 25                                                                                                                                                                             
-[  618.816307] Buffer I/O error on device md2, logical block 26                                                                                                                                                                             
-[  618.816316] Buffer I/O error on device md2, logical block 27                                                                                                                                                                             
-[  618.816324] Buffer I/O error on device md2, logical block 28                                                                                                                                                                             
-[  618.816331] Buffer I/O error on device md2, logical block 29                                                                                                                                                                             
-[  649.780185] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5                                                                                                                                                                        
-[  649.780194] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5                                                                                                                                                                        
-[  649.780208] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5                                                                                                                                                                        
-[  649.780214] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5                                                                                                                                                                        
-[  649.780293] ------------[ cut here ]------------                                                                                                                                                                                         
-[  649.780366] WARNING: at drivers/ata/libata-core.c:5129 
-ata_qc_issue+0x10a/0x347 [libata]()                                                                                                                                               
-[  649.780373] Hardware name: GA-MA790FXT-UD5P                                                                                                                                                                                              
-[  649.780377] Modules linked in: ext4 jbd2 crc16 raid0 powernow_k8 
-cpufreq_conservative cpufreq_stats cpufreq_userspace cpufreq_powersave kvm_amd 
-kvm nfsd exportfs nfs lockd fscache nfs_acl auth_rpcgss sunrpc bridge stp it87 
-hwmon_vid adt7473 firewire_sbp2 loop md_mod snd_hda_codec_realtek 
-snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm 
-snd_seq_midi snd_rawmidi snd_seq_midi_event amd64_edac_mod snd_seq edac_core 
-snd_timer snd_seq_device snd soundcore i2c_piix4 snd_page_alloc i2c_core evdev 
-parport_pc wmi parport button processor ext3 jbd mbcache dm_mod usbhid hid sg 
-sr_mod cdrom sd_mod crc_t10dif ata_generic ide_pci_generic firewire_ohci 
-firewire_core ohci_hcd crc_itu_t atiixp ide_core mvsas ehci_hcd ahci libsas 
-libata scsi_transport_sas scsi_mod r8169 mii floppy thermal fan thermal_sys 
-[last unloaded: scsi_wait_scan]
-[  649.780499] Pid: 3185, comm: hddtemp Not tainted 2.6.31-rc9 #2
-[  649.780504] Call Trace:
-[  649.780551]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347 [libata]
-[  649.780593]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347 [libata]
-[  649.780607]  [<ffffffff8104aca0>] ? warn_slowpath_common+0x77/0xa3
-[  649.780649]  [<ffffffffa00790ce>] ? ata_scsi_pass_thru+0x0/0x240 [libata]
-[  649.780690]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347 [libata]
-[  649.780733]  [<ffffffffa00401d6>] ? scsi_get_command+0x75/0x97 [scsi_mod]
-[  649.780776]  [<ffffffffa00790ce>] ? ata_scsi_pass_thru+0x0/0x240 [libata]
-[  649.780815]  [<ffffffffa003f7aa>] ? scsi_done+0x0/0xc [scsi_mod]
-[  649.780858]  [<ffffffffa007a4d5>] ? __ata_scsi_queuecmd+0x185/0x1dc 
-[libata]
-[  649.780896]  [<ffffffffa003f7aa>] ? scsi_done+0x0/0xc [scsi_mod]
-[  649.780918]  [<ffffffffa00a3c8e>] ? sas_queuecommand+0x83/0x25d [libsas]
-[  649.780956]  [<ffffffffa003fa7c>] ? scsi_dispatch_cmd+0x1c0/0x23c 
-[scsi_mod]
-[  649.780996]  [<ffffffffa0044ff0>] ? scsi_request_fn+0x3a5/0x506 [scsi_mod]
-[  649.781006]  [<ffffffff810546e0>] ? del_timer+0x59/0x62
-[  649.781016]  [<ffffffff81163b70>] ? blk_execute_rq_nowait+0x65/0x89
-[  649.781032]  [<ffffffffa014164f>] ? sg_common_write+0x489/0x4ab [sg]
-[  649.781042]  [<ffffffff8115df56>] ? __freed_request+0x26/0x83
-[  649.781056]  [<ffffffffa01421da>] ? sg_new_write+0x23e/0x269 [sg]
-[  649.781070]  [<ffffffffa0142473>] ? sg_ioctl+0x26e/0xb63 [sg]
-[  649.781080]  [<ffffffff81100f38>] ? inotify_d_instantiate+0x12/0x39
-[  649.781088]  [<ffffffff8105eee6>] ? autoremove_wake_function+0x0/0x2e
-[  649.781098]  [<ffffffff810d80bf>] ? fd_install+0x2e/0x5a
-[  649.781105]  [<ffffffff810e5247>] ? vfs_ioctl+0x56/0x6c
-[  649.781111]  [<ffffffff810e570a>] ? do_vfs_ioctl+0x437/0x475
-[  649.781118]  [<ffffffff810e5799>] ? sys_ioctl+0x51/0x70
-[  649.781128]  [<ffffffff81010a02>] ? system_call_fastpath+0x16/0x1b
-[  649.781134] ---[ end trace 9005373b1b9c6eb7 ]---
-[  680.781672] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  680.781681] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  711.781672] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  711.781681] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  741.816069] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  741.816078] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  741.816090] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  741.816096] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  772.820160] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  772.820168] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  772.820181] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  772.820186] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  803.816212] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  803.816220] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  803.816233] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
-[  803.816239] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
-[  803.816264] sd 1:0:3:0: [sdf] Unhandled error code
-[  803.816270] sd 1:0:3:0: [sdf] Result: hostbyte=DID_OK 
-driverbyte=DRIVER_TIMEOUT
-[  803.816278] end_request: I/O error, dev sdf, sector 512
-[  803.816284] __ratelimit: 70 callbacks suppressed
-[  803.816290] Buffer I/O error on device md2, logical block 64
+You could then separate out the actual scsi logic into a separate 
+virtio-scsi.c driver.
 
-That's after bringing up a raid0 array I build a few days ago on 4 perfectly 
-good (Seagate Baracuda 1TB 7200.12) disks, without the bad disk plugged in. I 
-try to mount it, and the driver hangs. Anything trying to access any of the 4 
-disks hangs as well.
+There are numerous advantages to this layering.  You get to remain ABI 
+compatible with yourself.  You can potentially reuse the ring logic in 
+other drivers.  Other VMMs can use different ring transports without 
+introducing new drivers.  For instance, in KVM, we would use virtio-pci 
++ virtio-scsi instead of using virtio-vmwring + virtio-scsi.
 
-I know this array worked a few days ago. The most major change I've made was 
-upgrade from -rc8 (or -rc5, not sure if I mounted the array under -rc8) to
--rc9.
+The virtio infrastructure has been backported to various old kernels too 
+so there really is no reason not to use it.
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+We have the interfaces in virtio to do notification suppression and MSI 
+so I don't think there's any real limitation that it would impose on you.
+
+Regards,
+
+Anthony Liguori
