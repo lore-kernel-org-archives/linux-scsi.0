@@ -1,143 +1,132 @@
-From: pbathija@amcc.com
-Subject: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit resources
-Date: Tue,  8 Sep 2009 17:15:33 -0700
-Message-ID: <1252455333-9925-1-git-send-email-pbathija@amcc.com>
+From: Alok Kataria <akataria@vmware.com>
+Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA - V3.
+Date: Tue, 08 Sep 2009 18:07:45 -0700
+Message-ID: <1252458465.24914.65.camel@ank32.eng.vmware.com>
+References: <1252006675.18725.20.camel@ank32.eng.vmware.com>
+	 <4AA03A9F.2040500@linux.vnet.ibm.com>
+Reply-To: akataria@vmware.com
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sdcmail01.amcc.com ([198.137.200.72]:41681 "EHLO
-	sdcmail01.amcc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651AbZIIAZF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2009 20:25:05 -0400
+Received: from smtp-outbound-2.vmware.com ([65.115.85.73]:36418 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750764AbZIIBHm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Sep 2009 21:07:42 -0400
+In-Reply-To: <4AA03A9F.2040500@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, Pravin Bathija <pbathija@amcc.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, "Chetan.Loke@Emulex.Com" <Chetan.Loke@Emulex.Com>
 
-From: Pravin Bathija <pbathija@amcc.com>
+Hi all,
 
-Powerpc 44x uses 36 bit real address while the real address defined
-in MPT Fusion driver is of type 32 bit. This causes ioremap to fail and driver
-fails to initialize. This fix changes the data types representing the real
-address from unsigned long 32-bit types to "phys_addr_t" which is 64-bit. The
-driver has been tested, the disks get discovered correctly and can do IO.
+Thanks for taking another look. I have addressed all of Eike and Bryan's
+comments except the host_lock one, see below for details. 
+Also I have rolled out a v4 patch with all the changes, which I will
+send out separately. 
 
-Signed-off-by: Pravin Bathija <pbathija@amcc.com>
-Acked-by: Feng Kan <fkan@amcc.com>
-Acked-by: Prodyut Hazarika <phazarika@amcc.com>
-Acked-by: Loc Ho <lho@amcc.com>
-Acked-by: Tirumala Reddy Marri <tmarri@amcc.com>
-Acked-by: Victor Gallardo <vgallardo@amcc.com>
----
- drivers/message/fusion/mptbase.c |   34 +++++++++++++++++++++++++---------
- drivers/message/fusion/mptbase.h |    5 +++--
- 2 files changed, 28 insertions(+), 11 deletions(-)
+On Thu, 2009-09-03 at 14:52 -0700, Brian King wrote:
+> Alok Kataria wrote:
+> > +
+> > +struct pvscsi_adapter {
+> > +	char			*mmioBase;
+> > +	unsigned int		irq;
+> > +	u8			rev;
+> > +	bool			use_msi;
+> > +	bool			use_msix;
+> > +	bool			use_msg;
+> > +
+> > +	spinlock_t		hw_lock;
+> 
+> Why not just use host_lock in the scsi_host structure?
+> 
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 5d496a9..d5b0f15 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1510,11 +1510,12 @@ static int
- mpt_mapresources(MPT_ADAPTER *ioc)
- {
- 	u8		__iomem *mem;
-+	u8		__iomem *port;
- 	int		 ii;
--	unsigned long	 mem_phys;
--	unsigned long	 port;
--	u32		 msize;
--	u32		 psize;
-+	phys_addr_t	 mem_phys;
-+	phys_addr_t	 port_phys;
-+	resource_size_t	 msize;
-+	resource_size_t	 psize;
- 	u8		 revision;
- 	int		 r = -ENODEV;
- 	struct pci_dev *pdev;
-@@ -1552,13 +1553,13 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 	}
- 
- 	mem_phys = msize = 0;
--	port = psize = 0;
-+	port_phys = psize = 0;
- 	for (ii = 0; ii < DEVICE_COUNT_RESOURCE; ii++) {
- 		if (pci_resource_flags(pdev, ii) & PCI_BASE_ADDRESS_SPACE_IO) {
- 			if (psize)
- 				continue;
- 			/* Get I/O space! */
--			port = pci_resource_start(pdev, ii);
-+			port_phys = pci_resource_start(pdev, ii);
- 			psize = pci_resource_len(pdev, ii);
- 		} else {
- 			if (msize)
-@@ -1580,14 +1581,23 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- 		return -EINVAL;
- 	}
- 	ioc->memmap = mem;
--	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %lx\n",
--	    ioc->name, mem, mem_phys));
-+	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %llx\n",
-+	    ioc->name, mem, (u64)mem_phys));
- 
- 	ioc->mem_phys = mem_phys;
- 	ioc->chip = (SYSIF_REGS __iomem *)mem;
- 
- 	/* Save Port IO values in case we need to do downloadboot */
--	ioc->pio_mem_phys = port;
-+	port = ioremap(port_phys, psize);
-+	if (port == NULL) {
-+		printk(MYIOC_s_ERR_FMT " : ERROR - Unable to map adapter"
-+			" port !\n", ioc->name);
-+		return -EINVAL;
-+	}
-+	ioc->portmap = port;
-+	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "port=%p, port_phys=%llx\n",
-+			ioc->name, port, (u64)port_phys));
-+	ioc->pio_mem_phys = port_phys;
- 	ioc->pio_chip = (SYSIF_REGS __iomem *)port;
- 
- 	return 0;
-@@ -1822,6 +1832,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 		if (ioc->alt_ioc)
- 			ioc->alt_ioc->alt_ioc = NULL;
- 		iounmap(ioc->memmap);
-+		iounmap(ioc->portmap);
- 		if (r != -5)
- 			pci_release_selected_regions(pdev, ioc->bars);
- 
-@@ -2583,6 +2594,11 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
- 		ioc->memmap = NULL;
- 	}
- 
-+	if (ioc->portmap != NULL) {
-+		iounmap(ioc->portmap);
-+		ioc->portmap = NULL;
-+	}
-+
- 	pci_disable_device(ioc->pcidev);
- 	pci_release_selected_regions(ioc->pcidev, ioc->bars);
- 
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index b3e981d..8e12bf8 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -584,8 +584,8 @@ typedef struct _MPT_ADAPTER
- 	SYSIF_REGS __iomem	*chip;		/* == c8817000 (mmap) */
- 	SYSIF_REGS __iomem	*pio_chip;	/* Programmed IO (downloadboot) */
- 	u8			 bus_type;
--	u32			 mem_phys;	/* == f4020000 (mmap) */
--	u32			 pio_mem_phys;	/* Programmed IO (downloadboot) */
-+	phys_addr_t		 mem_phys;	/* == f4020000 (mmap) */
-+	phys_addr_t		 pio_mem_phys;	/* Programmed IO (downloadboot) */
- 	int			 mem_size;	/* mmap memory size */
- 	int			 number_of_buses;
- 	int			 devices_per_bus;
-@@ -635,6 +635,7 @@ typedef struct _MPT_ADAPTER
- 	int			bars;		/* bitmask of BAR's that must be configured */
- 	int			msi_enable;
- 	u8			__iomem *memmap;	/* mmap address */
-+	u8			__iomem *portmap;	/* mmap port address */
- 	struct Scsi_Host	*sh;		/* Scsi Host pointer */
- 	SpiCfgData		spi_data;	/* Scsi config. data */
- 	RaidCfgData		raid_data;	/* Raid config. data */
--- 
-1.5.5
+I agree with Chetan here, lets keep these locks separate. 
+
+> > +
+> > +/*
+> > + * Map all data buffers for a command into PCI space and
+> > + * setup the scatter/gather list if needed.
+> > + */
+> > +static void pvscsi_map_buffers(struct pvscsi_adapter *adapter,
+> > +			       struct pvscsi_ctx *ctx,
+> > +			       struct scsi_cmnd *cmd, PVSCSIRingReqDesc *e)
+> > +{
+> > +	unsigned count;
+> > +	unsigned bufflen = scsi_bufflen(cmd);
+> > +	struct scatterlist *sg;
+> > +
+> > +	e->dataLen = bufflen;
+> > +	e->dataAddr = 0;
+> > +	if (bufflen == 0)
+> > +		return;
+> > +
+> > +	sg = scsi_sglist(cmd);
+> > +	count = scsi_sg_count(cmd);
+> > +	if (count != 0) {
+> > +		int segs = pci_map_sg(adapter->dev, sg, count,
+> > +				      cmd->sc_data_direction);
+> 
+> Should use scsi_dma_map here instead.
+
+Done. 
+> > +		if (segs > 1) {
+> > +			pvscsi_create_sg(ctx, sg, segs);
+> > +
+> > +			e->flags |= PVSCSI_FLAG_CMD_WITH_SG_LIST;
+> > +			ctx->sglPA = pci_map_single(adapter->dev, ctx->sgl,
+> > +						    SGL_SIZE, PCI_DMA_TODEVICE);
+> > +			e->dataAddr = ctx->sglPA;
+> > +		} else
+> > +			e->dataAddr = sg_dma_address(sg);
+> > +	} else {
+> > +		/*
+> > +		 * In case there is no S/G list, scsi_sglist points
+> > +		 * directly to the buffer.
+> > +		 */
+> > +		ctx->dataPA = pci_map_single(adapter->dev, sg, bufflen,
+> > +					     cmd->sc_data_direction);
+> > +		e->dataAddr = ctx->dataPA;
+> > +	}
+> > +}
+> > +
+> > +static void pvscsi_unmap_buffers(const struct pvscsi_adapter *adapter,
+> > +				 struct pvscsi_ctx *ctx)
+> > +{
+> > +	struct scsi_cmnd *cmd;
+> > +	unsigned bufflen;
+> > +
+> > +	cmd = ctx->cmd;
+> > +	bufflen = scsi_bufflen(cmd);
+> > +
+> > +	if (bufflen != 0) {
+> > +		unsigned count = scsi_sg_count(cmd);
+> > +
+> > +		if (count != 0) {
+> > +			pci_unmap_sg(adapter->dev, scsi_sglist(cmd), count,
+> > +				     cmd->sc_data_direction);
+> 
+> Use scsi_dma_unmap here instead.
+Done.
+> 
+> > +			if (ctx->sglPA) {
+> > +				pci_unmap_single(adapter->dev, ctx->sglPA,
+> > +						 SGL_SIZE, PCI_DMA_TODEVICE);
+> > +				ctx->sglPA = 0;
+> > +			}
+> > +		} else
+> > +			pci_unmap_single(adapter->dev, ctx->dataPA, bufflen,
+> > +					 cmd->sc_data_direction);
+> > +	}
+> > +	if (cmd->sense_buffer)
+> > +		pci_unmap_single(adapter->dev, ctx->sensePA,
+> > +				 SCSI_SENSE_BUFFERSIZE, PCI_DMA_FROMDEVICE);
+> > +}
+> > +
+> 
+> 
+
+Thanks,
+Alok
 
