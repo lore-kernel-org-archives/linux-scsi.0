@@ -1,92 +1,65 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
-Date: Wed, 9 Sep 2009 13:10:26 -0600
-Message-ID: <200909091310.26058.tfjellstrom@shaw.ca>
-References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org>
-Reply-To: tfjellstrom@shaw.ca
+From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
+Subject: Re: [PATCH 1/1] be2iscsi: Fixes for powerpc compile
+Date: Wed, 09 Sep 2009 12:15:20 -0700
+Message-ID: <20090909191520.fb9e5110@mailhost.serverengines.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4AA7F965.6020408@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail192.messagelabs.com ([216.82.241.243]:42909 "EHLO
+	mail192.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753441AbZIITRl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2009 15:17:41 -0400
+In-Reply-To: 4AA7CC07.20401@cs.wisc.edu
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, sfr@canb.auug.org.au
 
-On Wed September 9 2009, Jeff Garzik wrote:
-> On 09/09/2009 12:30 PM, Thomas Fjellstrom wrote:
-> > No errors on that disk. Other than the one above, and its more of a
-> > warning. However, I just rebooted to add some extra drives, thinking
-> > everything was working a little better now that I've updated to
-> > 2.6.31-rc9, I'm treated to the following two messages right after boot
-> > (and a system lockup to boot):
-> >
-> > kernel: [  971.033138] ------------[ cut here ]------------
-> > kernel: [  971.033211] WARNING: at drivers/ata/libata-core.c:4913
-> > __ata_qc_complete+0x5a/0xe1 [libata]()
-> > kernel: [  971.033217] Hardware name: GA-MA790FXT-UD5P
-> > kernel: [  971.033221] Modules linked in: powernow_k8
-> > cpufreq_conservative cpufreq_stats cpufreq_userspace cpufreq_powersave
-> > kvm_amd kvm nfsd exportfs nfs lockd fscache nfs_acl auth_rpcgss sunrpc
-> > bridge stp it87 hwmon_vid adt7473 firewire_sbp2 loop md_mod
-> > snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss
-> > snd_mixer_oss snd_pcm snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq
-> > snd_timer snd_seq_device snd amd64_edac_mod edac_core i2c_piix4 soundcore
-> > snd_page_alloc i2c_core evdev wmi parport_pc button parport processor
-> > ext3 jbd mbcache dm_mod sg sr_mod cdrom sd_mod crc_t10dif usbhid
-> > ata_generic ide_pci_generic hid mvsas firewire_ohci libsas firewire_core
-> > crc_itu_t scsi_transport_sas r8169 atiixp ide_core floppy ahci mii
-> > ohci_hcd libata ehci_hcd scsi_mod thermal fan thermal_sys [last unloaded:
-> > scsi_wait_scan]
-> > kernel: [  971.033337] Pid: 0, comm: swapper Not tainted 2.6.31-rc9 #2
-> > kernel: [  971.033342] Call Trace:
-> > kernel: [  971.033346]<IRQ>   [<ffffffffa00562ca>] ?
-> > __ata_qc_complete+0x5a/0xe1 [libata]
-> > kernel: [  971.033434]  [<ffffffffa00562ca>] ?
-> > __ata_qc_complete+0x5a/0xe1 [libata]
-> > kernel: [  971.033446]  [<ffffffff8104aca0>] ?
-> > warn_slowpath_common+0x77/0xa3 kernel: [  971.033455] 
-> > [<ffffffff81038d06>] ? enqueue_task+0x5c/0x65 kernel: [  971.033496] 
-> > [<ffffffffa00562ca>] ? __ata_qc_complete+0x5a/0xe1 [libata]
-> > kernel: [  971.033519]  [<ffffffffa00f7b59>] ?
-> > sas_ata_task_done+0x178/0x210 [libsas]
-> > kernel: [  971.033528]  [<ffffffff8115ead1>] ? blk_run_queue+0x21/0x35
-> > kernel: [  971.033548]  [<ffffffffa010e2ce>] ?
-> > mvs_slot_complete+0x3df/0x41b [mvsas]
-> > kernel: [  971.033565]  [<ffffffffa010e39c>] ? mvs_int_rx+0x92/0x101
-> > [mvsas] kernel: [  971.033583]  [<ffffffffa01112ba>] ?
-> > mvs_int_full+0x25/0x88 [mvsas] kernel: [  971.033600] 
-> > [<ffffffffa011134e>] ? mvs_64xx_isr+0x31/0x40 [mvsas] kernel: [ 
-> > 971.033617]  [<ffffffffa010d0e5>] ? mvs_interrupt+0x61/0x78 [mvsas]
-> > kernel: [  971.033625]  [<ffffffff8108aaac>] ?
-> > handle_IRQ_event+0x58/0x135 kernel: [  971.033633]  [<ffffffff8108c1a1>]
-> > ? handle_fasteoi_irq+0x7d/0xb5 kernel: [  971.033642] 
-> > [<ffffffff8101388d>] ? handle_irq+0x17/0x1d
-> 
-> That warning is triggered when an ata_queued_cmd is passed to completion
-> without the ATA_QCFLAG_ACTIVE flag being set (which indicates the qc was
-> started with some activity).
-> 
-> That possibly indicates the low-level driver (or libsas) was passing an
-> already-completed cmd to libata.
-> 
-> > The added hard drives are connected to a Supermicro AOC-SASLP-MV8, which
-> > is based on a marvel MV64460/64461/64462 chipset, which uses the sata_mv
-> > driver.
-> 
-> Surely you mean 'mvsas' driver?
+Implementing pci_pool is not a problem. But, my experience with this chip
+(or for that matter any chip that can do huge IOPS ,say, more then 600 -700 KIOPS),
+ every line of code on the hot path would have an impact and hence I strive to
+move it out of the hot path.
 
-Yes, sorry I did mean mvsas.
+The code is not yet optimized for speed yet but I definitely want to push whatever
+ I can to init time from  the IO path.
 
-I am more concerned about the actual oops/BUG rather than the warning though. 
-Unless the problem causing the warning is also causing the oops.
+Thanks
+Jay
+  _____  
+From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+To: Jayamohan Kalickal [mailto:jayamohank@serverengines.com]
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, sfr@canb.auug.org.au
+Sent: Wed, 09 Sep 2009 08:38:47 -0700
+Subject: Re: [PATCH 1/1] be2iscsi: Fixes for powerpc compile
 
-> 	Jeff
-> 
+On 09/08/2009 05:34 PM, Jayamohan Kalickal wrote:
+>    >  + max_size = ALIGN(sizeof(struct be_cmd_bhs), 64) * sess->cmds_max;
+>    >  + vaddr = pci_alloc_consistent(phba->pcidev,
+>
+>
+>    Do you just want a dma/pci pool? It will align structs for you too, I think.
+>      I didn't want to do it because we do not really alloc/free once a connection is established.
+> Yes, it can be done that way but certainly would not wan to do that in the IO hot path (even
+> if it picking from pool).
+>
 
+I was just going by some other drivers like lpfc where they create the 
+pool at pci probe time, then also preallocate from the pool at some 
+setup/init time. In the case of lpfc it allocates scsi bufs for each 
+command in its slave_alloc when new devices are added.
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+It is not a big deal. If people are ok with it as is, I am fine.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+___________________________________________________________________________________
+This message, together with any attachment(s), contains confidential and proprietary information of
+ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
+review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
+intended recipient of this message, please immediately advise the sender by reply email message and
+delete all copies of this message and any attachment(s). Thank you.
+
