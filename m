@@ -1,52 +1,99 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH] SCSI driver for VMware's virtual HBA - V4.
-Date: Wed, 9 Sep 2009 07:54:15 +0200
-Message-ID: <200909090754.22778.eike-kernel@sf-tec.de>
-References: <1252458903.24914.73.camel@ank32.eng.vmware.com> <1252459596.14793.46.camel@desktop> <1252472481.2508.20.camel@ank32.eng.vmware.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 1/5] SCSI: Add support for 32-byte CDBs
+Date: Wed, 09 Sep 2009 11:27:36 +0300
+Message-ID: <4AA766F8.6050801@panasas.com>
+References: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>	<1252053394-24886-2-git-send-email-martin.petersen@oracle.com>	<4AA395E8.8020300@panasas.com> <yq18wgo4u41.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3765641.eRLI5YlOxm";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751684AbZIIFya@vger.kernel.org>
-In-Reply-To: <1252472481.2508.20.camel@ank32.eng.vmware.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: akataria@vmware.com
-Cc: Daniel Walker <dwalker@fifo99.com>, James Bottomley <James.Bottomley@suse.de>, Brian King <brking@linux.vnet.ibm.com>, "Chetan.Loke@Emulex.Com" <Chetan.Loke@emulex.com>, Matthew Wilcox <matthew@wil.cx>, Roland Dreier <rdreier@cisco.com>, Bart Van Assche <bvanassche@acm.org>, Robert Love <robert.w.love@intel.com>, Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:30483 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752787AbZIII1p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Sep 2009 04:27:45 -0400
+In-Reply-To: <yq18wgo4u41.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
---nextPart3765641.eRLI5YlOxm
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+On 09/09/2009 07:31 AM, Martin K. Petersen wrote:
+>>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+> 
+> Boaz> Again, This might have a potential live-lock problem as we've seen
+> Boaz> a few times in the passed. Two threads are fighting between the
+> Boaz> allocation of a command+sense and here, each one is able to
+> Boaz> allocate one part but not the second. This is why command+sense is
+> Boaz> needed to be allocated atomically, and fail as a whole.
+> 
+> Boaz> I think you need to move this check and allocation to
+> Boaz> scsi_host_alloc_command().
+> 
+> It's not that simple.
+> 
+> Originally I wanted to do the allocation at the block layer to avoid
+> wasting the existing 16 byte command array.  I did this by moving
+> __cmd[] to the end of struct request.  I had a queue flag (set by sd.c)
+> that would toggle between blk_request_16 and blk_request_32 pools.
+> 
+> However, there are several places where we allocate a struct request
+> statically or on the stack, and those assume that it has a fixed size.
+> The patch that attempted to clean up this stuff grew bigger and bigger.
+> Next hurdle was finding corner cases that zeroed out struct request,
+> zapping the 16/32 flag in the process and subsequently leading to
+> de-allocation failures.  Eventually Jens recommended that I abandon that
+> idea and just do it in SCSI for now.  It seemed that the block approach
+> was more effort than it was worth.
+> 
+> Doing the allocation in SCSI opens up another set of problems, however.
+> Namely the host free_list.  Things are going to blow up if we mix 16 and
+> 32-byte CDBs.  So that means switching all DIF Type 2-capable scsi_hosts
+> to 32-byte CDBs wholesale.  Or we can postpone such a switch until a
+> Type 2 target is discovered and then empty free_list and make all
+> subsequent commands bigger.  Or we could have a separate list +
+> scsi_host_cmd_pool that we allocate from if it's a Type 2 dev.  That
+> requires passing the scsi_device info through to the allocation
+> routines.  Right now they are scsi_host centric.
+> 
+> I tried several approaches, none of which ended up being very small, nor
+> pretty.
+> 
+> There's less than a handful of Type 2 devices out there.  No array
+> vendor I know of plan to support Type 2 on the host side, only on the
+> back end.  DIF disk drives will ship formatted with Type 1.  The main
+> intent with my patch was to ensure that a Type 2 drive would work if you
+> pulled it from an array and hooked it up directly.
+> 
+> Short of bumping BLK_MAX_CDB to 32 the patch I posted a few days was by
+> far the least intrusive solution.  It only causes an allocation for FS
+> requests, and only for Type 2 drives, and only if the HBA supports DIF
+> Type 2.
+> 
+> I've had a several requests for Type 2 support in Linux (mainly for
+> target device testing) so I wanted to get some code out there.  But I'm
+> happy to spend more time on the various approaches if people feel that's
+> justified.  I'd just like to know which one before I burn more cycles.
+> So far it's been a huge time sink.
+> 
+> James: What's your take on this?
+> 
+> 
 
-Alok Kataria wrote:
+OK I'm convinced. I only have some concerns at allocation see new reply
+to patch (first mail) near the code in question.
 
-> +/* Command line parameters */
-> +static int pvscsi_ring_pages     = PVSCSI_DEFAULT_NUM_PAGES_PER_RING;
-> +static int pvscsi_msg_ring_pages = PVSCSI_DEFAULT_NUM_PAGES_MSG_RING;
-> +static int pvscsi_cmd_per_lun    = PVSCSI_DEFAULT_QUEUE_DEPTH;
-> +static int pvscsi_disable_msi;
-> +static int pvscsi_disable_msix;
-> +static int pvscsi_use_msg        = true;
+BTW have you thought of doing all this inside sd.c? it might be very simple.
+Since it is sd that probes for type 2 disks, and it is sd that finally decides
+what commands to send, when. It would be easy to just allocate the extra cmnd
+space there, and be done with it. It sounds like all this can be sd private stuff.
 
-Should be bool.
+Boaz
+> Boaz> BTW: I think I found a bug in __scsi_get_command() in regard to:
+> Boaz> 	"scsi_host_get_prot(shost) >= SHOST_DIX_TYPE0_PROTECTION"
+> 
+> Boaz> this here will reset the cmd->prot_sdb pointer, which will leak
+> Boaz> eventually. And will be missing for this operation.
+> 
+> Good spotting!  Will fix.
+> 
 
-Do I get annoying? ;)
-
-Eike
-
---nextPart3765641.eRLI5YlOxm
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEABECAAYFAkqnQw4ACgkQXKSJPmm5/E6gQQCfauBF7DKWE/QD2srAuOJeNcnT
-T58AnjCuaNp8lWsFkCLfa+ae+INooB+g
-=tzC2
------END PGP SIGNATURE-----
-
---nextPart3765641.eRLI5YlOxm--
