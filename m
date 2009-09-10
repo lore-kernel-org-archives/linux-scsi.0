@@ -1,72 +1,34 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [PATCH][RESUBMIT] scsi_dh_rdac: Fix for returning correct mode
-	select cmd return info
-Date: Thu, 10 Sep 2009 15:54:19 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474D3F5AB@cosmail01.lsi.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF474C65F39@cosmail01.lsi.com>
- <1251481851.20333.3.camel@chandra-ubuntu>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: [PATCH 08/10] fcoe,	libfc: fix an libfc issue with queue ramp
+ down in libfc
+Date: Thu, 10 Sep 2009 15:15:30 -0700
+Message-ID: <1252620930.3384.10362.camel@fritz>
+References: <20090903221910.24946.39993.stgit@vi1.jf.intel.com>
+	 <20090903222310.24946.70140.stgit@vi1.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og116.obsmtp.com ([64.18.2.219]:60602 "EHLO
-	exprod7og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753903AbZIJVyd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2009 17:54:33 -0400
-In-Reply-To: <1251481851.20333.3.camel@chandra-ubuntu>
-Content-Language: en-US
+Received: from mga01.intel.com ([192.55.52.88]:46360 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752988AbZIJWP1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Sep 2009 18:15:27 -0400
+In-Reply-To: <20090903222310.24946.70140.stgit@vi1.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@suse.de" <James.Bottomley@suse.de>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'dm-devel@redhat.com'" <dm-devel@redhat.com>, Chandra Seetharaman <sekharan@us.ibm.com>
+To: "Dev, Vasu" <vasu.dev@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <james.smart@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-James,
-   Can you please pick this up for next scsi update.. I have made sure that checkpatch.pl runs fine on this . ):
-Thanks
-Babu Moger 
+On Thu, 2009-09-03 at 15:23 -0700, Dev, Vasu wrote:
+> The cmd_per_lun value is used by scsi-ml as fall back lowest
+> queue_depth value but in case of libfc cmd_per_lun is set to
+> same value as max queue_depth = 32.
+> 
+> So this patch reduces cmd_per_lun value to 3 and configures
+> each lun with default max queue_depth 32 in fc_slave_alloc.
+> 
+> Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 
-> -----Original Message-----
-> From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
-> Sent: Friday, August 28, 2009 12:51 PM
-> To: Moger, Babu
-> Cc: 'linux-scsi@vger.kernel.org'; 'dm-devel@redhat.com'; Chauhan,
-> Vijay; Stankey, Robert; Dachepalli, Sudhir
-> Subject: Re: [PATCH][RESUBMIT] scsi_dh_rdac: Fix for returning correct
-> mode select cmd return info
-> 
-> 
-> On Fri, 2009-08-28 at 08:18 -0600, Moger, Babu wrote:
-> > The function mode_select_handle_sense returns SCSI_DH_OK even when
-> there is a sense code which is incorrect. Removing it so that it
-> returns SCSI_DH_IO when there is sense that is not handled by this
-> function.
-> >
-> > Signed-off-by: Babu Moger <babu.moger@lsi.com>
-> > Reviewed-by: Vijay Chauhan <vijay.chauhan@lsi.com>
-> > Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
-> 
-> Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> 
-> >
-> > ---
-> > --- linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig
-> 	2009-08-22 06:20:45.000000000 -0500
-> > +++ linux-2.6.31-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-
-> 08-22 06:18:36.000000000 -0500
-> > @@ -455,8 +455,6 @@ static int mode_select_handle_sense(stru
-> >  	if (!ret)
-> >  		goto done;
-> >
-> > -	err = SCSI_DH_OK;
-> > -
-> >  	switch (sense_hdr.sense_key) {
-> >  	case NO_SENSE:
-> >  	case ABORTED_COMMAND:
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Acked-by: Robert Love <robert.w.love@intel.com>
+
 
