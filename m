@@ -1,21 +1,43 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
 Subject: Re: [PATCH 1/1] be2iscsi: Fixes for powerpc compile
-Date: Thu, 10 Sep 2009 17:15:40 +0000
-Message-ID: <1252602940.11956.108.camel@mulgrave.site>
-References: <20090909191520.fb9e5110@mailhost.serverengines.com>
+Date: Thu, 10 Sep 2009 10:54:17 -0700
+Message-ID: <20090910175417.3c24eb4b@mailhost.serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51583 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750714AbZIJRPp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Sep 2009 13:15:45 -0400
-In-Reply-To: <20090909191520.fb9e5110@mailhost.serverengines.com>
+Received: from mail96.messagelabs.com ([216.82.254.19]:44880 "EHLO
+	mail96.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751070AbZIJR4k convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Sep 2009 13:56:40 -0400
+In-Reply-To: 1252602940.11956.108.camel@mulgrave.site
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
+To: James Bottomley <James.Bottomley@suse.de>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, sfr@canb.auug.org.au
+
+Ok. Reading Mike's comment once again and looking at the lpfc code ,I think, maybe, this is what Mike had in mind, but I could have misunderstood.
+
+During session create, I will create the pool as well as alloc. This will take 
+care of the allocation at page level and scarce coherent resources problems 
+mentioned by JamesB. Also, this would not have any impact on performance. I see this
+done for "lpfc_mbuf_pool" in lpfc/lpfc_mem.c.
+
+Thanks
+Jay
+
+
+
+
+
+
+  _____  
+From: James Bottomley [mailto:James.Bottomley@suse.de]
+To: Jayamohan Kalickal [mailto:jayamohank@serverengines.com]
+Cc: Mike Christie [mailto:michaelc@cs.wisc.edu], linux-scsi@vger.kernel.org, sfr@canb.auug.org.au
+Sent: Thu, 10 Sep 2009 10:15:40 -0700
+Subject: Re: [PATCH 1/1] be2iscsi: Fixes for powerpc compile
 
 On Wed, 2009-09-09 at 12:15 -0700, Jayamohan Kalickal wrote:
 > Implementing pci_pool is not a problem. But, my experience with this chip
@@ -42,4 +64,16 @@ Thanks,
 
 James
 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+___________________________________________________________________________________
+This message, together with any attachment(s), contains confidential and proprietary information of
+ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
+review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
+intended recipient of this message, please immediately advise the sender by reply email message and
+delete all copies of this message and any attachment(s). Thank you.
 
