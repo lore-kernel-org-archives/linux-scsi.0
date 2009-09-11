@@ -1,51 +1,373 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 28/35] libfc: Remove unused fc_lport pointer from
-	fc_fcp_pkt_abort
-Date: Fri, 11 Sep 2009 16:59:24 -0700
-Message-ID: <20090911235924.27223.8974.stgit@localhost.localdomain>
+Subject: [PATCH 26/35] libfc, fcoe: Add FC passthrough support
+Date: Fri, 11 Sep 2009 16:59:14 -0700
+Message-ID: <20090911235914.27223.71680.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35605 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:21145 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932164AbZIKX7V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:59:21 -0400
+	id S932166AbZIKX7X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:59:23 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
+Cc: Steve Ma <steve.ma@intel.com>, Robert Love <robert.w.love@intel.com>
 
-This argument isn't used, let's not pass it into the routine.
+From: Steve Ma <steve.ma@intel.com>
 
+This is the Open-FCoE implementation of the FC
+passthrough support via bsg interface.
+
+Passthrough support is added to both N_Ports and
+VN_Ports.
+
+Signed-off-by: Steve Ma <steve.ma@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |    4 +
+ drivers/scsi/libfc/fc_lport.c |  267 +++++++++++++++++++++++++++++++++++++++++
+ include/scsi/libfc.h          |    7 +
+ 3 files changed, 278 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index a523e4f..fb4b35d 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1055,7 +1055,7 @@ unlock:
-  * Scsi abort handler- calls to send an abort
-  * and then wait for abort completion
-  */
--static int fc_fcp_pkt_abort(struct fc_lport *lp, struct fc_fcp_pkt *fsp)
-+static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index ba9de9d..ecd1b9d 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -134,6 +134,8 @@ struct fc_function_template fcoe_transport_function = {
+ 	.vport_delete = fcoe_vport_destroy,
+ 	.vport_disable = fcoe_vport_disable,
+ 	.set_vport_symbolic_name = fcoe_set_vport_symbolic_name,
++
++	.bsg_request = fc_lport_bsg_request,
+ };
+ 
+ struct fc_function_template fcoe_vport_transport_function = {
+@@ -167,6 +169,8 @@ struct fc_function_template fcoe_vport_transport_function = {
+ 	.issue_fc_host_lip = fcoe_reset,
+ 
+ 	.terminate_rport_io = fc_rport_terminate_io,
++
++	.bsg_request = fc_lport_bsg_request,
+ };
+ 
+ static struct scsi_host_template fcoe_shost_template = {
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index f6fc9f4..33f4c2f 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -94,6 +94,7 @@
+ 
+ #include <scsi/libfc.h>
+ #include <scsi/fc_encode.h>
++#include <linux/scatterlist.h>
+ 
+ #include "fc_libfc.h"
+ 
+@@ -127,6 +128,24 @@ static const char *fc_lport_state_names[] = {
+ 	[LPORT_ST_RESET] =    "reset",
+ };
+ 
++/**
++ * struct fc_bsg_info - FC Passthrough managemet structure
++ * @job:      The passthrough job
++ * @lport:    The local port to pass through a command
++ * @rsp_code: The expected response code
++ * @sg:       job->reply_payload.sg_list
++ * @nents:    job->reply_payload.sg_cnt
++ * @offset:   The offset into the response data
++ */
++struct fc_bsg_info {
++	struct fc_bsg_job *job;
++	struct fc_lport *lport;
++	u16 rsp_code;
++	struct scatterlist *sg;
++	u32 nents;
++	size_t offset;
++};
++
+ static int fc_frame_drop(struct fc_lport *lport, struct fc_frame *fp)
  {
- 	int rc = FAILED;
+ 	fc_frame_free(fp);
+@@ -1509,3 +1528,251 @@ int fc_lport_init(struct fc_lport *lport)
+ 	return 0;
+ }
+ EXPORT_SYMBOL(fc_lport_init);
++
++/**
++ * fc_lport_bsg_resp() - The common response handler for fc pass-thru requests
++ * @sp: current sequence in the fc pass-thru request exchange
++ * @fp: received response frame
++ * @info_arg: pointer to struct fc_bsg_info
++ */
++static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
++			      void *info_arg)
++{
++	struct fc_bsg_info *info = info_arg;
++	struct fc_bsg_job *job = info->job;
++	struct fc_lport *lport = info->lport;
++	struct fc_frame_header *fh;
++	size_t len;
++	void *buf;
++
++	if (IS_ERR(fp)) {
++		job->reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
++			-ECONNABORTED : -ETIMEDOUT;
++		job->reply_len = sizeof(uint32_t);
++		job->state_flags |= FC_RQST_STATE_DONE;
++		job->job_done(job);
++		kfree(info);
++		return;
++	}
++
++	mutex_lock(&lport->lp_mutex);
++	fh = fc_frame_header_get(fp);
++	len = fr_len(fp) - sizeof(*fh);
++	buf = fc_frame_payload_get(fp, 0);
++
++	if (fr_sof(fp) == FC_SOF_I3 && !ntohs(fh->fh_seq_cnt)) {
++		/* Get the response code from the first frame payload */
++		unsigned short cmd = (info->rsp_code == FC_FS_ACC) ?
++			ntohs(((struct fc_ct_hdr *)buf)->ct_cmd) :
++			(unsigned short)fc_frame_payload_op(fp);
++
++		/* Save the reply status of the job */
++		job->reply->reply_data.ctels_reply.status =
++			(cmd == info->rsp_code) ?
++			FC_CTELS_STATUS_OK : FC_CTELS_STATUS_REJECT;
++	}
++
++	job->reply->reply_payload_rcv_len +=
++		fc_copy_buffer_to_sglist(buf, len, info->sg, &info->nents,
++					 &info->offset, KM_BIO_SRC_IRQ, NULL);
++
++	if (fr_eof(fp) == FC_EOF_T &&
++	    (ntoh24(fh->fh_f_ctl) & (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) ==
++	    (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) {
++		if (job->reply->reply_payload_rcv_len >
++		    job->reply_payload.payload_len)
++			job->reply->reply_payload_rcv_len =
++				job->reply_payload.payload_len;
++		job->reply->result = 0;
++		job->state_flags |= FC_RQST_STATE_DONE;
++		job->job_done(job);
++		kfree(info);
++	}
++	fc_frame_free(fp);
++	mutex_unlock(&lport->lp_mutex);
++}
++
++/**
++ * fc_lport_els_request() - Send ELS pass-thru request
++ * @job: The bsg fc pass-thru job structure
++ * @lport: The local port sending the request
++ * @did: The destination port id.
++ *
++ * Locking Note: The lport lock is expected to be held before calling
++ * this routine.
++ */
++static int fc_lport_els_request(struct fc_bsg_job *job,
++				struct fc_lport *lport,
++				u32 did, u32 tov)
++{
++	struct fc_bsg_info *info;
++	struct fc_frame *fp;
++	struct fc_frame_header *fh;
++	char *pp;
++	int len;
++
++	fp = fc_frame_alloc(lport, sizeof(struct fc_frame_header) +
++			    job->request_payload.payload_len);
++	if (!fp)
++		return -ENOMEM;
++
++	len = job->request_payload.payload_len;
++	pp = fc_frame_payload_get(fp, len);
++
++	sg_copy_to_buffer(job->request_payload.sg_list,
++			  job->request_payload.sg_cnt,
++			  pp, len);
++
++	fh = fc_frame_header_get(fp);
++	fh->fh_r_ctl = FC_RCTL_ELS_REQ;
++	hton24(fh->fh_d_id, did);
++	hton24(fh->fh_s_id, fc_host_port_id(lport->host));
++	fh->fh_type = FC_TYPE_ELS;
++	hton24(fh->fh_f_ctl, FC_FC_FIRST_SEQ |
++	       FC_FC_END_SEQ | FC_FC_SEQ_INIT);
++	fh->fh_cs_ctl = 0;
++	fh->fh_df_ctl = 0;
++	fh->fh_parm_offset = 0;
++
++	info = kzalloc(sizeof(struct fc_bsg_info), GFP_KERNEL);
++	if (!info) {
++		fc_frame_free(fp);
++		return -ENOMEM;
++	}
++
++	info->job = job;
++	info->lport = lport;
++	info->rsp_code = ELS_LS_ACC;
++	info->nents = job->reply_payload.sg_cnt;
++	info->sg = job->reply_payload.sg_list;
++
++	if (!lport->tt.exch_seq_send(lport, fp, fc_lport_bsg_resp,
++				     NULL, info, tov))
++		return -ECOMM;
++	return 0;
++}
++
++/**
++ * fc_lport_ct_request() - Send CT pass-thru request
++ * @job:   The bsg fc pass-thru job structure
++ * @lport: The local port sending the request
++ * @did:   The destination FC-ID
++ * @tov:   The time to wait for a response
++ *
++ * Locking Note: The lport lock is expected to be held before calling
++ * this routine.
++ */
++static int fc_lport_ct_request(struct fc_bsg_job *job,
++			       struct fc_lport *lport, u32 did, u32 tov)
++{
++	struct fc_bsg_info *info;
++	struct fc_frame *fp;
++	struct fc_frame_header *fh;
++	struct fc_ct_req *ct;
++	size_t len;
++
++	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
++			    job->request_payload.payload_len);
++	if (!fp)
++		return -ENOMEM;
++
++	len = job->request_payload.payload_len;
++	ct = fc_frame_payload_get(fp, len);
++
++	sg_copy_to_buffer(job->request_payload.sg_list,
++			  job->request_payload.sg_cnt,
++			  ct, len);
++
++	fh = fc_frame_header_get(fp);
++	fh->fh_r_ctl = FC_RCTL_DD_UNSOL_CTL;
++	hton24(fh->fh_d_id, did);
++	hton24(fh->fh_s_id, fc_host_port_id(lport->host));
++	fh->fh_type = FC_TYPE_CT;
++	hton24(fh->fh_f_ctl, FC_FC_FIRST_SEQ |
++	       FC_FC_END_SEQ | FC_FC_SEQ_INIT);
++	fh->fh_cs_ctl = 0;
++	fh->fh_df_ctl = 0;
++	fh->fh_parm_offset = 0;
++
++	info = kzalloc(sizeof(struct fc_bsg_info), GFP_KERNEL);
++	if (!info) {
++		fc_frame_free(fp);
++		return -ENOMEM;
++	}
++
++	info->job = job;
++	info->lport = lport;
++	info->rsp_code = FC_FS_ACC;
++	info->nents = job->reply_payload.sg_cnt;
++	info->sg = job->reply_payload.sg_list;
++
++	if (!lport->tt.exch_seq_send(lport, fp, fc_lport_bsg_resp,
++				     NULL, info, tov))
++		return -ECOMM;
++	return 0;
++}
++
++/**
++ * fc_lport_bsg_request() - The common entry point for sending
++ *                          fc pass-thru requests
++ * @job: The fc pass-thru job structure
++ */
++int fc_lport_bsg_request(struct fc_bsg_job *job)
++{
++	struct request *rsp = job->req->next_rq;
++	struct Scsi_Host *shost = job->shost;
++	struct fc_lport *lport = shost_priv(shost);
++	struct fc_rport *rport;
++	struct fc_rport_priv *rdata;
++	int rc = -EINVAL;
++	u32 did;
++
++	job->reply->reply_payload_rcv_len = 0;
++	rsp->resid_len = job->reply_payload.payload_len;
++
++	mutex_lock(&lport->lp_mutex);
++
++	switch (job->request->msgcode) {
++	case FC_BSG_RPT_ELS:
++		rport = job->rport;
++		if (!rport)
++			break;
++
++		rdata = rport->dd_data;
++		rc = fc_lport_els_request(job, lport, rport->port_id,
++					  rdata->e_d_tov);
++		break;
++
++	case FC_BSG_RPT_CT:
++		rport = job->rport;
++		if (!rport)
++			break;
++
++		rdata = rport->dd_data;
++		rc = fc_lport_ct_request(job, lport, rport->port_id,
++					 rdata->e_d_tov);
++		break;
++
++	case FC_BSG_HST_CT:
++		did = ntoh24(job->request->rqst_data.h_ct.port_id);
++		if (did == FC_FID_DIR_SERV)
++			rdata = lport->dns_rp;
++		else
++			rdata = lport->tt.rport_lookup(lport, did);
++
++		if (!rdata)
++			break;
++
++		rc = fc_lport_ct_request(job, lport, did, rdata->e_d_tov);
++		break;
++
++	case FC_BSG_HST_ELS_NOLOGIN:
++		did = ntoh24(job->request->rqst_data.h_els.port_id);
++		rc = fc_lport_els_request(job, lport, did, lport->e_d_tov);
++		break;
++	}
++
++	mutex_unlock(&lport->lp_mutex);
++	return rc;
++}
++EXPORT_SYMBOL(fc_lport_bsg_request);
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index a5579c3..3e2df39 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -26,6 +26,7 @@
  
-@@ -1871,7 +1871,7 @@ int fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 		goto release_pkt;
- 	}
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_fc.h>
++#include <scsi/scsi_bsg_fc.h>
  
--	rc = fc_fcp_pkt_abort(lp, fsp);
-+	rc = fc_fcp_pkt_abort(fsp);
- 	fc_fcp_unlock_pkt(fsp);
+ #include <scsi/fc/fc_fcp.h>
+ #include <scsi/fc/fc_ns.h>
+@@ -831,6 +832,12 @@ void fc_vport_setlink(struct fc_lport *vn_port);
+ void fc_vports_linkchange(struct fc_lport *n_port);
  
- release_pkt:
+ /*
++ * Issue fc pass-thru request via bsg interface
++ */
++int fc_lport_bsg_request(struct fc_bsg_job *job);
++
++
++/*
+  * REMOTE PORT LAYER
+  *****************************/
+ int fc_rport_init(struct fc_lport *lp);
 
