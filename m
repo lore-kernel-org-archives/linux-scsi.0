@@ -1,43 +1,102 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 1/1] be2iscsi: Fixes for powerpc compile
-Date: Fri, 11 Sep 2009 08:15:42 -0400
-Message-ID: <4AAA3F6E.5030405@emulex.com>
-References: <20090910175417.3c24eb4b@mailhost.serverengines.com>
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: Re: BUG: bnx2i: scheduling while atomic while modprobing bnx2i
+ module
+Date: Fri, 11 Sep 2009 05:33:36 -0700
+Message-ID: <1252672416.27482.13.camel@anilgv-desktop>
+References: <10381252638771@webmail104.yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:44380 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbZIKMQD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2009 08:16:03 -0400
-In-Reply-To: <20090910175417.3c24eb4b@mailhost.serverengines.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:2638 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752326AbZIKMdj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 08:33:39 -0400
+In-Reply-To: <10381252638771@webmail104.yandex.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>
+To: Sergey Temerkhanov <temerkhanov@yandex.ru>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+This should be resolved by a patch from 3 weeks ago.
+
+reference:
+http://kerneltrap.org/mailarchive/linux-scsi/2009/8/15/6319303
 
 
-
-Jayamohan Kalickal wrote:
-> Ok. Reading Mike's comment once again and looking at the lpfc code ,I think, maybe, this is what Mike had in mind, but I could have misunderstood.
+On Thu, 2009-09-10 at 20:12 -0700, Sergey Temerkhanov wrote:
+> Hi!
 > 
-> During session create, I will create the pool as well as alloc. This will take 
-> care of the allocation at page level and scarce coherent resources problems 
-> mentioned by JamesB. Also, this would not have any impact on performance. I see this
-> done for "lpfc_mbuf_pool" in lpfc/lpfc_mem.c.
+> I'm getting the scheduling while atomic bug while modprobing bnx2i module on 2.6.31. Here's the report from kernel:
 > 
-> Thanks
-> Jay
+> Broadcom NetXtreme II iSCSI Driver bnx2i v2.0.1d (Mar 25, 2009)
+> iscsi: registered transport (bnx2i)
+> BUG: scheduling while atomic: modprobe/9170/0x00000002
+> Modules linked in: bnx2i(+) libiscsi scsi_transport_iscsi nfsd bnep rfcomm l2cap bluetooth snd_pcm_oss snd_mixer_oss snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device ip6table_filter ip6_tables ipt_LOG xt_recent xt_state xt_tcpudp iptable_filter iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables x_tables cpufreq_powersave cnic uio ipv6 snd_hda_codec_atihdmi snd_hda_codec_realtek snd_hda_intel snd_hda_codec bnx2 shpchp snd_hwdep psmouse snd_pcm pci_hotplug snd_timer pcspkr wmi snd firewire_ohci firewire_core soundcore rtc thermal snd_page_alloc asus_atk0110 processor button tg3 libphy fuse nfs auth_rpcgss nfs_acl lockd sunrpc raid10 raid1 raid0 md_mod dm_bbr dm_snapshot dm_mirror dm_region_hash dm_log dm_mod scsi_wait_scan sl811_hcd usbhid ohci_hcd uhci_hcd usb
+ _storage usb_libusual ehci_hcd usbcore scsi_transport_fc sx8 cciss sata_mv ahci sata_nv sata_sil24 sata_sil pata_jmicron pata_atiixp pata_amd
+> Pid: 9170, comm: modprobe Not tainted 2.6.31-gentoo #4
+> Call Trace:
+>  [<ffffffff8146d5b8>] ? thread_return+0x1cc/0x6c4
+>  [<ffffffff8146e035>] ? schedule_timeout+0x1c5/0x200
+>  [<ffffffff8104374b>] ? enqueue_task_fair+0x4b/0xe0
+>  [<ffffffff8146ce6c>] ? wait_for_common+0x17c/0x1b0
+>  [<ffffffff8104c5a0>] ? default_wake_function+0x0/0x40
+>  [<ffffffff8106db88>] ? kthread_create+0xa8/0x160
+>  [<ffffffff8135c590>] ? scsi_error_handler+0x0/0x640
+>  [<ffffffff81073626>] ? up+0x26/0x80
+>  [<ffffffff8134527d>] ? dev_set_name+0x5d/0x80
+>  [<ffffffff8115b6bd>] ? sysfs_find_dirent+0x3d/0x70
+>  [<ffffffff8129828c>] ? kobject_init+0x3c/0xd0
+>  [<ffffffff810e7b0a>] ? __kmalloc+0xca/0x140
+>  [<ffffffff81345b03>] ? device_initialize+0x33/0xb0
+>  [<ffffffff81357efd>] ? scsi_host_alloc+0x29d/0x330
+>  [<ffffffffa057ae50>] ? iscsi_host_alloc+0x30/0x100 [libiscsi]
+>  [<ffffffffa058dc46>] ? bnx2i_alloc_hba+0x36/0x6e0 [bnx2i]
+>  [<ffffffffa0587180>] ? bnx2i_ulp_init+0x30/0x170 [bnx2i]
+>  [<ffffffffa043a141>] ? cnic_register_driver+0x111/0x184 [cnic]
+>  [<ffffffffa0595000>] ? bnx2i_mod_init+0x0/0xe4 [bnx2i]
+>  [<ffffffffa0595077>] ? bnx2i_mod_init+0x77/0xe4 [bnx2i]
+>  [<ffffffffa0595000>] ? bnx2i_mod_init+0x0/0xe4 [bnx2i]
+>  [<ffffffff81009075>] ? do_one_initcall+0x45/0x1c0
+>  [<ffffffff810891c7>] ? sys_init_module+0x107/0x260
+>  [<ffffffff8100c1ab>] ? system_call_fastpath+0x16/0x1b
+> scsi8 : Broadcom Offload iSCSI Initiator
+> BUG: scheduling while atomic: modprobe/9170/0x00000002
+> Modules linked in: bnx2i(+) libiscsi scsi_transport_iscsi nfsd bnep rfcomm l2cap bluetooth snd_pcm_oss snd_mixer_oss snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device ip6table_filter ip6_tables ipt_LOG xt_recent xt_state xt_tcpudp iptable_filter iptable_nat nf_nat nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables x_tables cpufreq_powersave cnic uio ipv6 snd_hda_codec_atihdmi snd_hda_codec_realtek snd_hda_intel snd_hda_codec bnx2 shpchp snd_hwdep psmouse snd_pcm pci_hotplug snd_timer pcspkr wmi snd firewire_ohci firewire_core soundcore rtc thermal snd_page_alloc asus_atk0110 processor button tg3 libphy fuse nfs auth_rpcgss nfs_acl lockd sunrpc raid10 raid1 raid0 md_mod dm_bbr dm_snapshot dm_mirror dm_region_hash dm_log dm_mod scsi_wait_scan sl811_hcd usbhid ohci_hcd uhci_hcd usb
+ _storage usb_libusual ehci_hcd usbcore scsi_transport_fc sx8 cciss sata_mv ahci sata_nv sata_sil24 sata_sil pata_jmicron pata_atiixp pata_amd
+> Pid: 9170, comm: modprobe Not tainted 2.6.31-gentoo #4
+> Call Trace:
+>  [<ffffffff8146d5b8>] ? thread_return+0x1cc/0x6c4
+>  [<ffffffff81074eff>] ? sched_clock_cpu+0x7f/0x290
+>  [<ffffffff81042037>] ? task_rq_lock+0x57/0xb0
+>  [<ffffffff81074eff>] ? sched_clock_cpu+0x7f/0x290
+>  [<ffffffff8146e035>] ? schedule_timeout+0x1c5/0x200
+>  [<ffffffff8104374b>] ? enqueue_task_fair+0x4b/0xe0
+>  [<ffffffff8146ce6c>] ? wait_for_common+0x17c/0x1b0
+>  [<ffffffff8104c5a0>] ? default_wake_function+0x0/0x40
+>  [<ffffffff8106db88>] ? kthread_create+0xa8/0x160
+>  [<ffffffff81067fd0>] ? worker_thread+0x0/0x260
+>  [<ffffffff810e9b9a>] ? pcpu_alloc_area+0x2aa/0x330
+>  [<ffffffff810ea268>] ? pcpu_alloc+0x478/0x4c0
+>  [<ffffffff81067f83>] ? create_workqueue_thread+0x53/0xa0
+>  [<ffffffff81068a46>] ? __create_workqueue_key+0x1b6/0x220
+>  [<ffffffff810e7b0a>] ? __kmalloc+0xca/0x140
+>  [<ffffffff813582f4>] ? scsi_add_host+0x134/0x260
+>  [<ffffffffa058e012>] ? bnx2i_alloc_hba+0x402/0x6e0 [bnx2i]
+>  [<ffffffffa0587180>] ? bnx2i_ulp_init+0x30/0x170 [bnx2i]
+>  [<ffffffffa043a141>] ? cnic_register_driver+0x111/0x184 [cnic]
+>  [<ffffffffa0595000>] ? bnx2i_mod_init+0x0/0xe4 [bnx2i]
+>  [<ffffffffa0595077>] ? bnx2i_mod_init+0x77/0xe4 [bnx2i]
+>  [<ffffffffa0595000>] ? bnx2i_mod_init+0x0/0xe4 [bnx2i]
+>  [<ffffffff81009075>] ? do_one_initcall+0x45/0x1c0
+>  [<ffffffff810891c7>] ? sys_init_module+0x107/0x260
+>  [<ffffffff8100c1ab>] ? system_call_fastpath+0x16/0x1b
+> 
+> Regards, Sergey Temerkhanov
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-As most things - it depends on what's being allocated.  I recommended against 
-a pci pool when I was looking at the allocations for queue memory, SGLs, etc 
-as that is largely static (allocate/assign once, rarely dealloc/deassign) and 
-very much likes to be 4k pages, page aligned, and as contiguous as possible.
-
-However, the DMA buffers for the Command and Response buffers is a different 
-story. They are in the fast path, re-alloc per command, are smaller than a 
-page, etc and fit the pci pool profile very well.
-
--- james s
 
