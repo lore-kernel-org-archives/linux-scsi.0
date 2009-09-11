@@ -1,76 +1,378 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 04/35] libfc: Remove fc_fcp_complete
-Date: Fri, 11 Sep 2009 16:57:16 -0700
-Message-ID: <20090911235716.27223.77749.stgit@localhost.localdomain>
+Subject: [PATCH 05/35] libfc: Add libfc/fc_libfc.[ch] for libfc internal
+	routines
+Date: Fri, 11 Sep 2009 16:57:21 -0700
+Message-ID: <20090911235721.27223.25341.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11612 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:20120 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757191AbZIKX5N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:57:13 -0400
+	id S1753713AbZIKX5T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:57:19 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 Cc: Robert Love <robert.w.love@intel.com>
 
-This function is never used, let's remove it.
+include/scsi/libfc.h is currently loaded with common code
+shared between libfc's sub-modules as well as shared between
+libfc and fcoe. Previous patches attempted to move out
+non-common code. This patch creates two files for common
+libfc routines that will not be shared with fcoe, fnic or
+any other LLDs.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |   17 -----------------
- include/scsi/libfc.h        |    8 --------
- 2 files changed, 0 insertions(+), 25 deletions(-)
+ drivers/scsi/libfc/Makefile   |    1 
+ drivers/scsi/libfc/fc_disc.c  |    2 +
+ drivers/scsi/libfc/fc_exch.c  |    2 +
+ drivers/scsi/libfc/fc_fcp.c   |    8 ---
+ drivers/scsi/libfc/fc_libfc.c |   35 ++++++++++++++
+ drivers/scsi/libfc/fc_libfc.h |  102 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libfc/fc_lport.c |    2 +
+ drivers/scsi/libfc/fc_rport.c |    2 +
+ include/scsi/libfc.h          |   79 --------------------------------
+ 9 files changed, 147 insertions(+), 86 deletions(-)
+ create mode 100644 drivers/scsi/libfc/fc_libfc.c
+ create mode 100644 drivers/scsi/libfc/fc_libfc.h
 
+diff --git a/drivers/scsi/libfc/Makefile b/drivers/scsi/libfc/Makefile
+index 55f982d..2be549c 100644
+--- a/drivers/scsi/libfc/Makefile
++++ b/drivers/scsi/libfc/Makefile
+@@ -3,6 +3,7 @@
+ obj-$(CONFIG_LIBFC) += libfc.o
+ 
+ libfc-objs := \
++	fc_libfc.o \
+ 	fc_disc.o \
+ 	fc_exch.o \
+ 	fc_elsct.o \
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index c48799e..c42bf90 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -40,6 +40,8 @@
+ 
+ #include <scsi/libfc.h>
+ 
++#include "fc_libfc.h"
++
+ #define FC_DISC_RETRY_LIMIT	3	/* max retries */
+ #define FC_DISC_RETRY_DELAY	500UL	/* (msecs) delay */
+ 
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index c10afea..5e43f79 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -32,6 +32,8 @@
+ #include <scsi/libfc.h>
+ #include <scsi/fc_encode.h>
+ 
++#include "fc_libfc.h"
++
+ u16	fc_cpu_mask;		/* cpu mask for possible cpus */
+ EXPORT_SYMBOL(fc_cpu_mask);
+ static u16	fc_cpu_order;	/* 2's power to represent total possible cpus */
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index a78db76..baa097a 100644
+index baa097a..5cd81ff 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1873,23 +1873,6 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
- }
+@@ -39,13 +39,7 @@
+ #include <scsi/libfc.h>
+ #include <scsi/fc_encode.h>
  
- /**
-- * fc_fcp_complete() - complete processing of a fcp packet
-- * @fsp:	fcp packet
-- *
-- * This function may sleep if a fsp timer is pending.
-- * The host lock must not be held by caller.
-- */
--void fc_fcp_complete(struct fc_fcp_pkt *fsp)
--{
--	if (fc_fcp_lock_pkt(fsp))
--		return;
+-MODULE_AUTHOR("Open-FCoE.org");
+-MODULE_DESCRIPTION("libfc");
+-MODULE_LICENSE("GPL v2");
 -
--	fc_fcp_complete_locked(fsp);
--	fc_fcp_unlock_pkt(fsp);
--}
--EXPORT_SYMBOL(fc_fcp_complete);
--
--/**
-  * fc_eh_abort() - Abort a command
-  * @sc_cmd:	scsi command to abort
-  *
+-unsigned int fc_debug_logging;
+-module_param_named(debug_logging, fc_debug_logging, int, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
++#include "fc_libfc.h"
+ 
+ static struct kmem_cache *scsi_pkt_cachep;
+ 
+diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
+new file mode 100644
+index 0000000..e64ea87
+--- /dev/null
++++ b/drivers/scsi/libfc/fc_libfc.c
+@@ -0,0 +1,35 @@
++/*
++ * Copyright(c) 2009 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
++ */
++
++#include <linux/kernel.h>
++#include <linux/types.h>
++#include <linux/scatterlist.h>
++#include <linux/crc32.h>
++
++#include <scsi/libfc.h>
++
++#include "fc_libfc.h"
++
++MODULE_AUTHOR("Open-FCoE.org");
++MODULE_DESCRIPTION("libfc");
++MODULE_LICENSE("GPL v2");
++
++unsigned int fc_debug_logging;
++module_param_named(debug_logging, fc_debug_logging, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
+diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
+new file mode 100644
+index 0000000..388fae4
+--- /dev/null
++++ b/drivers/scsi/libfc/fc_libfc.h
+@@ -0,0 +1,102 @@
++/*
++ * Copyright(c) 2009 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
++ */
++
++#ifndef _FC_LIBFC_H_
++#define _FC_LIBFC_H_
++
++#define FC_LIBFC_LOGGING 0x01 /* General logging, not categorized */
++#define FC_LPORT_LOGGING 0x02 /* lport layer logging */
++#define FC_DISC_LOGGING  0x04 /* discovery layer logging */
++#define FC_RPORT_LOGGING 0x08 /* rport layer logging */
++#define FC_FCP_LOGGING   0x10 /* I/O path logging */
++#define FC_EM_LOGGING    0x20 /* Exchange Manager logging */
++#define FC_EXCH_LOGGING  0x40 /* Exchange/Sequence logging */
++#define FC_SCSI_LOGGING  0x80 /* SCSI logging (mostly error handling) */
++
++extern unsigned int fc_debug_logging;
++
++#define FC_CHECK_LOGGING(LEVEL, CMD)				\
++do {								\
++	if (unlikely(fc_debug_logging & LEVEL))			\
++		do {						\
++			CMD;					\
++		} while (0);					\
++} while (0)
++
++#define FC_LIBFC_DBG(fmt, args...)					\
++	FC_CHECK_LOGGING(FC_LIBFC_LOGGING,				\
++			 printk(KERN_INFO "libfc: " fmt, ##args))
++
++#define FC_LPORT_DBG(lport, fmt, args...)				\
++	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
++			 printk(KERN_INFO "host%u: lport %6x: " fmt,	\
++				(lport)->host->host_no,			\
++				fc_host_port_id((lport)->host), ##args))
++
++#define FC_DISC_DBG(disc, fmt, args...)					\
++	FC_CHECK_LOGGING(FC_DISC_LOGGING,				\
++			 printk(KERN_INFO "host%u: disc: " fmt,		\
++				(disc)->lport->host->host_no,		\
++				##args))
++
++#define FC_RPORT_ID_DBG(lport, port_id, fmt, args...)			\
++	FC_CHECK_LOGGING(FC_RPORT_LOGGING,				\
++			 printk(KERN_INFO "host%u: rport %6x: " fmt,	\
++				(lport)->host->host_no,			\
++				(port_id), ##args))
++
++#define FC_RPORT_DBG(rdata, fmt, args...)				\
++	FC_RPORT_ID_DBG((rdata)->local_port, (rdata)->ids.port_id, fmt, ##args)
++
++#define FC_FCP_DBG(pkt, fmt, args...)					\
++	FC_CHECK_LOGGING(FC_FCP_LOGGING,				\
++			 printk(KERN_INFO "host%u: fcp: %6x: " fmt,	\
++				(pkt)->lp->host->host_no,		\
++				pkt->rport->port_id, ##args))
++
++#define FC_EXCH_DBG(exch, fmt, args...)					\
++	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
++			 printk(KERN_INFO "host%u: xid %4x: " fmt,	\
++				(exch)->lp->host->host_no,		\
++				exch->xid, ##args))
++
++#define FC_SCSI_DBG(lport, fmt, args...)				\
++	FC_CHECK_LOGGING(FC_SCSI_LOGGING,                               \
++			 printk(KERN_INFO "host%u: scsi: " fmt,		\
++				(lport)->host->host_no,	##args))
++
++/*
++ * Set up direct-data placement for this I/O request
++ */
++void fc_fcp_ddp_setup(struct fc_fcp_pkt *fsp, u16 xid);
++
++/*
++ * Module setup functions
++ */
++int fc_setup_exch_mgr(void);
++void fc_destroy_exch_mgr(void);
++int fc_setup_rport(void);
++void fc_destroy_rport(void);
++
++/*
++ * Internal libfc functions
++ */
++const char *fc_els_resp_type(struct fc_frame *);
++
++#endif /* _FC_LIBFC_H_ */
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index bd2f771..646dee1 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -95,6 +95,8 @@
+ #include <scsi/libfc.h>
+ #include <scsi/fc_encode.h>
+ 
++#include "fc_libfc.h"
++
+ /* Fabric IDs to use for point-to-point mode, chosen on whims. */
+ #define FC_LOCAL_PTP_FID_LO   0x010101
+ #define FC_LOCAL_PTP_FID_HI   0x010102
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index bdc9732..bf42a98 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -55,6 +55,8 @@
+ #include <scsi/libfc.h>
+ #include <scsi/fc_encode.h>
+ 
++#include "fc_libfc.h"
++
+ struct workqueue_struct *rport_event_queue;
+ 
+ static void fc_rport_enter_plogi(struct fc_rport_priv *);
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 2944cd2..04b9d49 100644
+index 04b9d49..81901fa 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -888,14 +888,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd,
- 		    void (*done)(struct scsi_cmnd *));
+@@ -34,67 +34,6 @@
+ 
+ #include <scsi/fc_frame.h>
+ 
+-#define FC_LIBFC_LOGGING 0x01 /* General logging, not categorized */
+-#define FC_LPORT_LOGGING 0x02 /* lport layer logging */
+-#define FC_DISC_LOGGING  0x04 /* discovery layer logging */
+-#define FC_RPORT_LOGGING 0x08 /* rport layer logging */
+-#define FC_FCP_LOGGING   0x10 /* I/O path logging */
+-#define FC_EM_LOGGING    0x20 /* Exchange Manager logging */
+-#define FC_EXCH_LOGGING  0x40 /* Exchange/Sequence logging */
+-#define FC_SCSI_LOGGING  0x80 /* SCSI logging (mostly error handling) */
+-
+-extern unsigned int fc_debug_logging;
+-
+-#define FC_CHECK_LOGGING(LEVEL, CMD)				\
+-do {								\
+-	if (unlikely(fc_debug_logging & LEVEL))			\
+-		do {						\
+-			CMD;					\
+-		} while (0);					\
+-} while (0)
+-
+-#define FC_LIBFC_DBG(fmt, args...)					\
+-	FC_CHECK_LOGGING(FC_LIBFC_LOGGING,				\
+-			 printk(KERN_INFO "libfc: " fmt, ##args))
+-
+-#define FC_LPORT_DBG(lport, fmt, args...)				\
+-	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
+-			 printk(KERN_INFO "host%u: lport %6x: " fmt,	\
+-				(lport)->host->host_no,			\
+-				fc_host_port_id((lport)->host), ##args))
+-
+-#define FC_DISC_DBG(disc, fmt, args...)					\
+-	FC_CHECK_LOGGING(FC_DISC_LOGGING,				\
+-			 printk(KERN_INFO "host%u: disc: " fmt,		\
+-				(disc)->lport->host->host_no,		\
+-				##args))
+-
+-#define FC_RPORT_ID_DBG(lport, port_id, fmt, args...)			\
+-	FC_CHECK_LOGGING(FC_RPORT_LOGGING,				\
+-			 printk(KERN_INFO "host%u: rport %6x: " fmt,	\
+-				(lport)->host->host_no,			\
+-				(port_id), ##args))
+-
+-#define FC_RPORT_DBG(rdata, fmt, args...)				\
+-	FC_RPORT_ID_DBG((rdata)->local_port, (rdata)->ids.port_id, fmt, ##args)
+-
+-#define FC_FCP_DBG(pkt, fmt, args...)					\
+-	FC_CHECK_LOGGING(FC_FCP_LOGGING,				\
+-			 printk(KERN_INFO "host%u: fcp: %6x: " fmt,	\
+-				(pkt)->lp->host->host_no,		\
+-				pkt->rport->port_id, ##args))
+-
+-#define FC_EXCH_DBG(exch, fmt, args...)					\
+-	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
+-			 printk(KERN_INFO "host%u: xid %4x: " fmt,	\
+-				(exch)->lp->host->host_no,		\
+-				exch->xid, ##args))
+-
+-#define FC_SCSI_DBG(lport, fmt, args...)				\
+-	FC_CHECK_LOGGING(FC_SCSI_LOGGING,                               \
+-			 printk(KERN_INFO "host%u: scsi: " fmt,		\
+-				(lport)->host->host_no,	##args))
+-
+ /*
+  * libfc error codes
+  */
+@@ -924,11 +863,6 @@ int fc_change_queue_type(struct scsi_device *sdev, int tag_type);
+ void fc_fcp_destroy(struct fc_lport *);
  
  /*
-- * complete processing of a fcp packet
-- *
-- * This function may sleep if a fsp timer is pending.
-- * The host lock must not be held by caller.
+- * Set up direct-data placement for this I/O request
 - */
--void fc_fcp_complete(struct fc_fcp_pkt *fsp);
+-void fc_fcp_ddp_setup(struct fc_fcp_pkt *fsp, u16 xid);
 -
 -/*
-  * Send an ABTS frame to the target device. The sc_cmd argument
-  * is a pointer to the SCSI command to be aborted.
-  */
+  * ELS/CT interface
+  *****************************/
+ /*
+@@ -1020,17 +954,4 @@ void fc_get_host_port_state(struct Scsi_Host *shost);
+ void fc_set_rport_loss_tmo(struct fc_rport *rport, u32 timeout);
+ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *);
+ 
+-/*
+- * module setup functions.
+- */
+-int fc_setup_exch_mgr(void);
+-void fc_destroy_exch_mgr(void);
+-int fc_setup_rport(void);
+-void fc_destroy_rport(void);
+-
+-/*
+- * Internal libfc functions.
+- */
+-const char *fc_els_resp_type(struct fc_frame *);
+-
+ #endif /* _LIBFC_H_ */
 
