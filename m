@@ -1,75 +1,68 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [RESEND] [PATCH]: scsi_dh: create sysfs file,
-	dh_state for SCSI devices even if they are not in the internal lists
-Date: Fri, 11 Sep 2009 10:20:35 -0700
-Message-ID: <1252689635.2541.4.camel@chandra-ubuntu>
-References: <1246069888.14164.53.camel@chandra-ubuntu>
-Reply-To: sekharan@linux.vnet.ibm.com,
-	device-mapper development <dm-devel@redhat.com>
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: [PATCH 1/1] BNX2I - Fix context mapping issue for architectures
+ with PAGE_SIZE != 4096
+Date: Fri, 11 Sep 2009 10:38:26 -0700
+Message-ID: <1252690706.27482.61.camel@anilgv-desktop>
+References: <1245805860.9829.50.camel@anilgv-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1246069888.14164.53.camel@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Mario Mech <mech@meteo.uni-koeln.de>, dm-devel <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:3567 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755727AbZIKRid (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 13:38:33 -0400
+In-Reply-To: <1245805860.9829.50.camel@anilgv-desktop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, michaelc@cs.wisc.edu, mchan@broadcom.com
 
+    [BNX2I] Fix context mapping issue for architectures with PAGE_SIZE != 4096
 
-Hi James,
+    * 5706/5708/5709 devices allow driver/user to set page size. By default
+      it is set to 4096
+    * Current drivers do not program this register based on architecture type
+      (e.g. x86 = 4K, IA64 = 16K) and by choice lets device use the defaults
+    * So while mapping connection context memory (doorebll registers),
+      driver has to match page size used by the device. Included change fixes
+      the issue we uncovered during IA64 testing
 
-This patch was sent to the list long back and was Acked by Hannes on Aug
-11.
-
-Please consider for inclusion. Let me know if you see any issues with
-the patch.
-
-regards,
-
-chandra
--------------------------
-Create the sysfs file, dh_state even if the new SCSI device is not
-in the any of the device handler's internal lists.
-
-Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-Acked-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 ---
- drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ drivers/scsi/bnx2i/bnx2i.h     |    2 ++
+ drivers/scsi/bnx2i/bnx2i_hwi.c |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
-Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh.c
-===================================================================
---- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh.c
-+++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh.c
-@@ -292,18 +292,15 @@ static int scsi_dh_notifier(struct notif
- 	sdev = to_scsi_device(dev);
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index d7576f2..5edde1a 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -100,6 +100,8 @@
+ #define CTX_OFFSET 			0x10000
+ #define MAX_CID_CNT			0x4000
  
- 	if (action == BUS_NOTIFY_ADD_DEVICE) {
-+		err = device_create_file(dev, &scsi_dh_state_attr);
-+		/* don't care about err */
- 		devinfo = device_handler_match(NULL, sdev);
--		if (!devinfo)
--			goto out;
--
--		err = scsi_dh_handler_attach(sdev, devinfo);
--		if (!err)
--			err = device_create_file(dev, &scsi_dh_state_attr);
-+		if (devinfo)
-+			err = scsi_dh_handler_attach(sdev, devinfo);
- 	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
- 		device_remove_file(dev, &scsi_dh_state_attr);
- 		scsi_dh_handler_detach(sdev, NULL);
- 	}
--out:
- 	return err;
- }
- 
++#define BNX2I_570X_PAGE_SIZE_DEFAULT	4096
++
+ /* 5709 context registers */
+ #define BNX2_MQ_CONFIG2			0x00003d00
+ #define BNX2_MQ_CONFIG2_CONT_SZ		(0x7L<<4)
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 906cef5..0afde71 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -2386,7 +2386,7 @@ int bnx2i_map_ep_dbell_regs(struct bnx2i_endpoint *ep)
+ 		ctx_sz = (config2 & BNX2_MQ_CONFIG2_CONT_SZ) >> 3;
+ 		if (ctx_sz)
+ 			reg_off = CTX_OFFSET + MAX_CID_CNT * MB_KERNEL_CTX_SIZE
+-				  + PAGE_SIZE *
++				  + BNX2I_570X_PAGE_SIZE_DEFAULT *
+ 				  (((cid_num - first_l4l5) / ctx_sz) + 256);
+ 		else
+ 			reg_off = CTX_OFFSET + (MB_KERNEL_CTX_SIZE * cid_num);
+-- 
+1.5.4.3
+
+
+
+
