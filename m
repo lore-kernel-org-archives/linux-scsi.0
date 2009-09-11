@@ -1,7 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 11/35] libfc: add some generic NPIV support routines to libfc
-Date: Fri, 11 Sep 2009 16:57:54 -0700
-Message-ID: <20090911235753.27223.55719.stgit@localhost.localdomain>
+Subject: [PATCH 12/35] libfc: vport link handling and fc_vport state managment
+Date: Fri, 11 Sep 2009 16:57:59 -0700
+Message-ID: <20090911235759.27223.68250.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,8 +9,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:55656 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757207AbZIKX54 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:57:56 -0400
+	id S1757227AbZIKX55 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:57:57 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,231 +19,279 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Adds a function to create a new VN_Port instances, which share the EM
-list with the N_Port, VN_Port lookup by fabric ID when responding to a new
-request (otherwise the exchange lookup from the N_Ports EM list is trusted to
-return an exchange with a cached lport value for the correct VN_Port),
-a pointer to a fc_vport structure for VN_Ports, and flags to indicate if an
-N_Port supports NPIV and if the switch/fabric allows it.
+NPIV vports are managed in libfc by changing their virtual link state
+when the parent N_Ports internal state changes.  The vport link is only
+online when the N_Port is in a ready state (logged into the fabric).
+
+vport_state is updated as needed in this patch as well, currently the states
+LINKDOWN, INITIALIZING, ACTIVE, DSIABLED, and NO_FABRIC_SUPP are used.
+
+This also changes the fc_host port_state handling to differentiate between
+LINKDOWN and OFFLINE.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/Makefile  |    3 +
- drivers/scsi/libfc/fc_exch.c |   29 ++++++++++++++
- drivers/scsi/libfc/fc_npiv.c |   86 ++++++++++++++++++++++++++++++++++++++++++
- include/scsi/libfc.h         |   20 ++++++++++
- 4 files changed, 137 insertions(+), 1 deletions(-)
- create mode 100644 drivers/scsi/libfc/fc_npiv.c
+ drivers/scsi/libfc/fc_lport.c |   72 +++++++++++++++++++++++++++++++--------
+ drivers/scsi/libfc/fc_npiv.c  |   75 +++++++++++++++++++++++++++++++++++++++++
+ include/scsi/libfc.h          |    8 ++++
+ 3 files changed, 140 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/libfc/Makefile b/drivers/scsi/libfc/Makefile
-index 2be549c..4bb23ac 100644
---- a/drivers/scsi/libfc/Makefile
-+++ b/drivers/scsi/libfc/Makefile
-@@ -10,4 +10,5 @@ libfc-objs := \
- 	fc_frame.o \
- 	fc_lport.o \
- 	fc_rport.o \
--	fc_fcp.o
-+	fc_fcp.o \
-+	fc_npiv.o
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 5e43f79..c40eab5 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1136,6 +1136,15 @@ static void fc_exch_recv_req(struct fc_lport *lp, struct fc_exch_mgr *mp,
- 	u32 f_ctl;
- 	enum fc_pf_rjt_reason reject;
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index c5f50e2..2729e60 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -224,10 +224,18 @@ void fc_get_host_port_state(struct Scsi_Host *shost)
+ {
+ 	struct fc_lport *lp = shost_priv(shost);
  
-+	/* We can have the wrong fc_lport at this point with NPIV, which is a
-+	 * problem now that we know a new exchange needs to be allocated
-+	 */
-+	lp = fc_vport_id_lookup(lp, ntoh24(fh->fh_d_id));
-+	if (!lp) {
-+		fc_frame_free(fp);
-+		return;
-+	}
-+
- 	fr_seq(fp) = NULL;
- 	reject = fc_seq_lookup_recip(lp, mp, fp);
- 	if (reject == FC_RJT_NONE) {
-@@ -1901,6 +1910,26 @@ void fc_exch_mgr_del(struct fc_exch_mgr_anchor *ema)
- }
- EXPORT_SYMBOL(fc_exch_mgr_del);
- 
-+/**
-+ * fc_exch_mgr_list_clone() - share all exchange manager objects
-+ * @src: source lport to clone exchange managers from
-+ * @dst: new lport that takes references to all the exchange managers
-+ */
-+int fc_exch_mgr_list_clone(struct fc_lport *src, struct fc_lport *dst)
-+{
-+	struct fc_exch_mgr_anchor *ema, *tmp;
-+
-+	list_for_each_entry(ema, &src->ema_list, ema_list) {
-+		if (!fc_exch_mgr_add(dst, ema->mp, ema->match))
-+			goto err;
-+	}
-+	return 0;
-+err:
-+	list_for_each_entry_safe(ema, tmp, &dst->ema_list, ema_list)
-+		fc_exch_mgr_del(ema);
-+	return -ENOMEM;
-+}
-+
- struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lp,
- 				      enum fc_class class,
- 				      u16 min_xid, u16 max_xid,
-diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
-new file mode 100644
-index 0000000..39f02c0
---- /dev/null
-+++ b/drivers/scsi/libfc/fc_npiv.c
-@@ -0,0 +1,86 @@
-+/*
-+ * Copyright(c) 2009 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
-+ */
-+
-+/*
-+ * NPIV VN_Port helper functions for libfc
-+ */
-+
-+#include <scsi/libfc.h>
-+
-+/**
-+ * fc_vport_create() - Create a new NPIV vport instance
-+ * @vport: fc_vport structure from scsi_transport_fc
-+ * @privsize: driver private data size to allocate along with the Scsi_Host
-+ */
-+
-+struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize)
-+{
-+	struct Scsi_Host *shost = vport_to_shost(vport);
-+	struct fc_lport *n_port = shost_priv(shost);
-+	struct fc_lport *vn_port;
-+
-+	vn_port = libfc_host_alloc(shost->hostt, privsize);
-+	if (!vn_port)
-+		goto err_out;
-+	if (fc_exch_mgr_list_clone(n_port, vn_port))
-+		goto err_put;
-+
-+	vn_port->vport = vport;
-+	vport->dd_data = vn_port;
-+
-+	mutex_lock(&n_port->lp_mutex);
-+	list_add_tail(&vn_port->list, &n_port->vports);
-+	mutex_unlock(&n_port->lp_mutex);
-+
-+	return vn_port;
-+
-+err_put:
-+	scsi_host_put(vn_port->host);
-+err_out:
-+	return NULL;
-+}
-+EXPORT_SYMBOL(libfc_vport_create);
-+
-+/**
-+ * fc_vport_id_lookup() - find NPIV lport that matches a given fabric ID
-+ * @n_port: Top level N_Port which may have multiple NPIV VN_Ports
-+ * @port_id: Fabric ID to find a match for
-+ *
-+ * Returns: matching lport pointer or NULL if there is no match
-+ */
-+struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
-+{
-+	struct fc_lport *lport = NULL;
-+	struct fc_lport *vn_port;
-+
-+	if (fc_host_port_id(n_port->host) == port_id)
-+		return n_port;
-+
-+	mutex_lock(&n_port->lp_mutex);
-+	list_for_each_entry(vn_port, &n_port->vports, list) {
-+		if (fc_host_port_id(vn_port->host) == port_id) {
-+			lport = vn_port;
+-	if (lp->link_up)
+-		fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
++	mutex_lock(&lp->lp_mutex);
++	if (!lp->link_up)
++		fc_host_port_state(shost) = FC_PORTSTATE_LINKDOWN;
+ 	else
+-		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
++		switch (lp->state) {
++		case LPORT_ST_READY:
++			fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
 +			break;
++		default:
++			fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
 +		}
-+	}
-+	mutex_unlock(&n_port->lp_mutex);
-+
-+	return lport;
++	mutex_unlock(&lp->lp_mutex);
+ }
+ EXPORT_SYMBOL(fc_get_host_port_state);
+ 
+@@ -493,40 +501,62 @@ int fc_fabric_login(struct fc_lport *lport)
+ EXPORT_SYMBOL(fc_fabric_login);
+ 
+ /**
+- * fc_linkup() - Handler for transport linkup events
++ * __fc_linkup() - Handler for transport linkup events
+  * @lport: The lport whose link is up
++ *
++ * Locking: must be called with the lp_mutex held
+  */
+-void fc_linkup(struct fc_lport *lport)
++void __fc_linkup(struct fc_lport *lport)
+ {
+-	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
+-	       fc_host_port_id(lport->host));
+-
+-	mutex_lock(&lport->lp_mutex);
+ 	if (!lport->link_up) {
+ 		lport->link_up = 1;
+ 
+ 		if (lport->state == LPORT_ST_RESET)
+ 			fc_lport_enter_flogi(lport);
+ 	}
 +}
 +
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index ab12671..e5078a0 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -639,6 +639,8 @@ struct fc_lport {
- 	/* Associations */
- 	struct Scsi_Host	*host;
- 	struct list_head	ema_list;
-+	struct list_head	vports;		/* child vports if N_Port */
-+	struct fc_vport		*vport;		/* parent vport if VN_Port */
- 	struct fc_rport_priv	*dns_rp;
- 	struct fc_rport_priv	*ptp_rp;
- 	void			*scsi_priv;
-@@ -663,6 +665,8 @@ struct fc_lport {
- 	u32			seq_offload:1;	/* seq offload supported */
- 	u32			crc_offload:1;	/* crc offload supported */
- 	u32			lro_enabled:1;	/* large receive offload */
-+	u32			does_npiv:1;	/* supports multiple vports */
-+	u32			npiv_enabled:1;	/* switch/fabric allows NPIV */
- 	u32			mfs;	        /* max FC payload size */
- 	unsigned int		service_params;
- 	unsigned int		e_d_tov;
-@@ -753,6 +757,7 @@ libfc_host_alloc(struct scsi_host_template *sht, int priv_size)
- 	lport = shost_priv(shost);
- 	lport->host = shost;
- 	INIT_LIST_HEAD(&lport->ema_list);
-+	INIT_LIST_HEAD(&lport->vports);
++/**
++ * fc_linkup() - Handler for transport linkup events
++ * @lport: The lport whose link is up
++ */
++void fc_linkup(struct fc_lport *lport)
++{
++	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
++	       fc_host_port_id(lport->host));
++
++	mutex_lock(&lport->lp_mutex);
++	__fc_linkup(lport);
+ 	mutex_unlock(&lport->lp_mutex);
+ }
+ EXPORT_SYMBOL(fc_linkup);
+ 
+ /**
+- * fc_linkdown() - Handler for transport linkdown events
++ * __fc_linkdown() - Handler for transport linkdown events
+  * @lport: The lport whose link is down
++ *
++ * Locking: must be called with the lp_mutex held
+  */
+-void fc_linkdown(struct fc_lport *lport)
++void __fc_linkdown(struct fc_lport *lport)
+ {
+-	mutex_lock(&lport->lp_mutex);
+-	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
+-	       fc_host_port_id(lport->host));
+-
+ 	if (lport->link_up) {
+ 		lport->link_up = 0;
+ 		fc_lport_enter_reset(lport);
+ 		lport->tt.fcp_cleanup(lport);
+ 	}
++}
++
++/**
++ * fc_linkdown() - Handler for transport linkdown events
++ * @lport: The lport whose link is down
++ */
++void fc_linkdown(struct fc_lport *lport)
++{
++	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
++	       fc_host_port_id(lport->host));
++
++	mutex_lock(&lport->lp_mutex);
++	__fc_linkdown(lport);
+ 	mutex_unlock(&lport->lp_mutex);
+ }
+ EXPORT_SYMBOL(fc_linkdown);
+@@ -654,6 +684,9 @@ static void fc_lport_enter_ready(struct fc_lport *lport)
+ 		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_READY);
++	if (lport->vport)
++		fc_vport_set_state(lport->vport, FC_VPORT_ACTIVE);
++	fc_vports_linkchange(lport);
+ 
+ 	if (!lport->ptp_rp)
+ 		lport->tt.disc_start(fc_lport_disc_callback, lport);
+@@ -868,7 +901,14 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
+ 	FC_LPORT_DBG(lport, "Entered RESET state from %s state\n",
+ 		     fc_lport_state(lport));
+ 
++	if (lport->vport) {
++		if (lport->link_up)
++			fc_vport_set_state(lport->vport, FC_VPORT_INITIALIZING);
++		else
++			fc_vport_set_state(lport->vport, FC_VPORT_LINKDOWN);
++	}
+ 	fc_lport_state_enter(lport, LPORT_ST_RESET);
++	fc_vports_linkchange(lport);
+ 	fc_lport_reset_locked(lport);
+ 	if (lport->link_up)
+ 		fc_lport_enter_flogi(lport);
+@@ -887,6 +927,7 @@ static void fc_lport_enter_disabled(struct fc_lport *lport)
+ 		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_DISABLED);
++	fc_vports_linkchange(lport);
+ 	fc_lport_reset_locked(lport);
+ }
+ 
+@@ -1330,6 +1371,7 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
+ 		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_LOGO);
++	fc_vports_linkchange(lport);
+ 
+ 	fp = fc_frame_alloc(lport, sizeof(*logo));
+ 	if (!fp) {
+diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
+index 39f02c0..c68f6c7 100644
+--- a/drivers/scsi/libfc/fc_npiv.c
++++ b/drivers/scsi/libfc/fc_npiv.c
+@@ -84,3 +84,78 @@ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
  	return lport;
  }
  
-@@ -805,6 +810,15 @@ int fc_lport_reset(struct fc_lport *);
++/*
++ * When setting the link state of vports during an lport state change, it's
++ * necessary to hold the lp_mutex of both the N_Port and the VN_Port.
++ * This tells the lockdep engine to treat the nested locking of the VN_Port
++ * as a different lock class.
++ */
++enum libfc_lport_mutex_class {
++	LPORT_MUTEX_NORMAL = 0,
++	LPORT_MUTEX_VN_PORT = 1,
++};
++
++/**
++ * __fc_vport_setlink() - update link and status on a VN_Port
++ * @n_port: parent N_Port
++ * @vn_port: VN_Port to update
++ *
++ * Locking: must be called with both the N_Port and VN_Port lp_mutex held
++ */
++static void __fc_vport_setlink(struct fc_lport *n_port,
++			       struct fc_lport *vn_port)
++{
++	struct fc_vport *vport = vn_port->vport;
++
++	if (vn_port->state == LPORT_ST_DISABLED)
++		return;
++
++	if (n_port->state == LPORT_ST_READY) {
++		if (n_port->npiv_enabled) {
++			fc_vport_set_state(vport, FC_VPORT_INITIALIZING);
++			__fc_linkup(vn_port);
++		} else {
++			fc_vport_set_state(vport, FC_VPORT_NO_FABRIC_SUPP);
++			__fc_linkdown(vn_port);
++		}
++	} else {
++		fc_vport_set_state(vport, FC_VPORT_LINKDOWN);
++		__fc_linkdown(vn_port);
++	}
++}
++
++/**
++ * fc_vport_setlink() - update link and status on a VN_Port
++ * @vn_port: virtual port to update
++ */
++void fc_vport_setlink(struct fc_lport *vn_port)
++{
++	struct fc_vport *vport = vn_port->vport;
++	struct Scsi_Host *shost = vport_to_shost(vport);
++	struct fc_lport *n_port = shost_priv(shost);
++
++	mutex_lock(&n_port->lp_mutex);
++	mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
++	__fc_vport_setlink(n_port, vn_port);
++	mutex_unlock(&vn_port->lp_mutex);
++	mutex_unlock(&n_port->lp_mutex);
++}
++EXPORT_SYMBOL(fc_vport_setlink);
++
++/**
++ * fc_vports_linkchange() - change the link state of all vports
++ * @n_port: Parent N_Port that has changed state
++ *
++ * Locking: called with the n_port lp_mutex held
++ */
++void fc_vports_linkchange(struct fc_lport *n_port)
++{
++	struct fc_lport *vn_port;
++
++	list_for_each_entry(vn_port, &n_port->vports, list) {
++		mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
++		__fc_vport_setlink(n_port, vn_port);
++		mutex_unlock(&vn_port->lp_mutex);
++	}
++}
++
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index e5078a0..015e520 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -788,11 +788,13 @@ int fc_fabric_login(struct fc_lport *lp);
+ /*
+  * The link is up for the given local port.
   */
- int fc_set_mfs(struct fc_lport *lp, u32 mfs);
- 
-+/*
-+ * Allocate a new lport struct for an NPIV VN_Port
-+ */
-+struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize);
-+
-+/*
-+ * Find an NPIV VN_Port by port ID
-+ */
-+struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id);
++void __fc_linkup(struct fc_lport *);
+ void fc_linkup(struct fc_lport *);
  
  /*
+  * Link is down for the given local port.
+  */
++void __fc_linkdown(struct fc_lport *);
+ void fc_linkdown(struct fc_lport *);
+ 
+ /*
+@@ -821,6 +823,12 @@ struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize);
+ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id);
+ 
+ /*
++ * NPIV VN_Port link state management
++ */
++void fc_vport_setlink(struct fc_lport *vn_port);
++void fc_vports_linkchange(struct fc_lport *n_port);
++
++/*
   * REMOTE PORT LAYER
-@@ -912,6 +926,12 @@ struct fc_exch_mgr_anchor *fc_exch_mgr_add(struct fc_lport *lport,
- void fc_exch_mgr_del(struct fc_exch_mgr_anchor *ema);
- 
- /*
-+ * Clone an exchange manager list, getting reference holds for each EM.
-+ * This is for use with NPIV and sharing the X_ID space between VN_Ports.
-+ */
-+int fc_exch_mgr_list_clone(struct fc_lport *src, struct fc_lport *dst);
-+
-+/*
-  * Allocates an Exchange Manager (EM).
-  *
-  * The EM manages exchanges for their allocation and
+  *****************************/
+ int fc_rport_init(struct fc_lport *lp);
 
