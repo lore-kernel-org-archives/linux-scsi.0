@@ -1,76 +1,41 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14159] New: AIC79xx is not working properly with an attached
- scsi tape since 2.6.29
-Date: Fri, 11 Sep 2009 09:18:21 GMT
-Message-ID: <bug-14159-11613@http.bugzilla.kernel.org/>
+Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
+ tape since 2.6.29
+Date: Fri, 11 Sep 2009 09:23:40 GMT
+Message-ID: <200909110923.n8B9Nebn025085@demeter.kernel.org>
+References: <bug-14159-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:57038 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:53138 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860AbZIKJSS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2009 05:18:18 -0400
+	with ESMTP id S1751899AbZIKJXh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2009 05:23:37 -0400
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8B9ILUt024369
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2009 09:18:21 GMT
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8B9NeAs025087
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2009 09:23:40 GMT
+In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 http://bugzilla.kernel.org/show_bug.cgi?id=14159
 
-           Summary: AIC79xx is not working properly with an attached scsi
-                    tape since 2.6.29
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.27 (working), 2.6.30 (not working)
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: g.giorgetti@teamsystem.com
-                CC: g.giorgetti@teamsystem.com
-        Regression: Yes
+
+g.giorgetti@teamsystem.com changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+           Platform|All                         |i386
 
 
-Both kernels 2.6.27 and 2.6.28 are working correctly.
-Since Linux 2.6.29 till 2.6.31rc8 the regression(?) is out there.
 
-Please let me know if I can provide any further details.
 
-Best regards,
- Gabriele
+--- Comment #1 from g.giorgetti@teamsystem.com  2009-09-11 09:23:40 ---
+Previous log for kernel 2.6.30 was missing characters because of a cut/paste
+problem with text wrap, repasting :
 
-=================
-Here is the messages part for Linux 2.6.27:
-
-aic79xx 0000:41:01.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19   
-scsi5 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 3.0
-        <Adaptec 29320ALP PCIx Ultra320 SCSI adapter>
-        aic7901: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 101-133Mhz, 512 SCBs
- target5:0:3: asynchronous
-scsi 5:0:3:0: Sequential-Access IBM      HH LTO Gen 2     0376 PQ: 0 ANSI: 3
- target5:0:3: Beginning Domain Validation
- target5:0:3: wide asynchronous
- target5:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 126)
- target5:0:3: Ending Domain Validation
-scsi 5:0:3:0: Attached scsi generic sg7 type 1
-st: Version 20080504, fixed bufsize 32768, s/g segs 256
-Driver 'st' needs updating - please use bus_type methods
-st 5:0:3:0: Attached scsi tape st0
-st 5:0:3:0: st0: try direct i/o: yes (alignment 4 B)
-osst :I: Tape driver with OnStream support version 0.99.4
-osst :I: $Id: osst.c,v 1.73 2005/01/01 21:13:34 wriede Exp $
-Driver 'osst' needs updating - please use bus_type methods
-st0: Block limits 256 - 524288 bytes.
-=================
-
-=================
-Here is Linux 2.6.30:
+Kernel 2.6.30
 
 Aug  3 06:25:04 svil kernel: aic79xx 0000:41:01.0: PCI INT A -> GSI 19 (level,
 low) -> IRQ 19
@@ -79,60 +44,60 @@ Aug  3 06:25:04 svil kernel: scsi5 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev
 Aug  3 06:25:04 svil kernel:         <Adaptec 29320ALP PCIx Ultra320 SCSI
 adapter>
 Aug  3 06:25:04 svil kernel:         aic7901: Ultra320 Wide Channel A, SCSI
-Id=7, PCI-X 101-1
+Id=7, PCI-X 101-133MHz, 512 SCBs
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:04 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:04 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:04 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:04 svil kernel: Recovery SCB completes
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:0:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:04 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:04 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:04 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:04 svil kernel: Recovery SCB completes
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:1:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:04 svil kernel: scsi 5:0:2:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:2:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:2:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:04 svil kernel: scsi 5:0:2:0: Command already completed
 Aug  3 06:25:04 svil kernel: scsi 5:0:2:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:04 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:04 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:05 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:05 svil kernel: Recovery SCB completes
 Aug  3 06:25:05 svil kernel: scsi 5:0:2:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:05 svil kernel: scsi 5:0:2:0: Command already completed
 Aug  3 06:25:05 svil kernel: scsi 5:0:2:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:05 svil kernel: scsi 5:0:3:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:05 svil kernel: scsi5: At time of recovery, card was paused
 Aug  3 06:25:05 svil kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
 <<<<<<<<<<<<<<<<<
@@ -157,7 +122,7 @@ LQOSTAT0[0x0]
 Aug  3 06:25:05 svil kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
 Aug  3 06:25:05 svil kernel:
 Aug  3 06:25:05 svil kernel: SCB Count = 4 CMDS_PENDING = 1 LASTSCB 0xffff
-CURRSCB 0x3 NEXTSC
+CURRSCB 0x3 NEXTSCB 0x0
 Aug  3 06:25:05 svil kernel: qinstart = 13 qinfifonext = 13
 Aug  3 06:25:05 svil kernel: QINFIFO:
 Aug  3 06:25:05 svil kernel: WAITING_TID_QUEUES:
@@ -188,7 +153,7 @@ Aug  3 06:25:05 svil kernel: SOFFCNT[0x0] MDFFSTAT[0x14] SHADDR = 0x06, SHCNT =
 0x0
 Aug  3 06:25:05 svil kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
 Aug  3 06:25:05 svil kernel: LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-0x0 0x0 0x0 0x
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:05 svil kernel: scsi5: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE
 = 0x52
 Aug  3 06:25:05 svil kernel: scsi5: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
@@ -208,14 +173,14 @@ Aug  3 06:25:05 svil kernel: scsi5: Timer Expired (active 1)
 Aug  3 06:25:05 svil kernel: Recovery code awake
 Aug  3 06:25:05 svil kernel: scsi5: Command abort returning 0x2003
 Aug  3 06:25:06 svil kernel: scsi 5:0:3:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 2)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:3:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi5: At time of recovery, card was not paused
 Aug  3 06:25:06 svil kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins
 <<<<<<<<<<<<<<<<<
@@ -240,7 +205,7 @@ LQOSTAT0[0x0]
 Aug  3 06:25:06 svil kernel: LQOSTAT1[0x0] LQOSTAT2[0x0]
 Aug  3 06:25:06 svil kernel:
 Aug  3 06:25:06 svil kernel: SCB Count = 4 CMDS_PENDING = 0 LASTSCB 0xffff
-CURRSCB 0x3 NEXTSC
+CURRSCB 0x3 NEXTSCB 0x0
 Aug  3 06:25:06 svil kernel: qinstart = 14 qinfifonext = 15
 Aug  3 06:25:06 svil kernel: QINFIFO: 0x3
 Aug  3 06:25:06 svil kernel: WAITING_TID_QUEUES:
@@ -271,7 +236,7 @@ Aug  3 06:25:06 svil kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00, SHCNT =
 0x0
 Aug  3 06:25:06 svil kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10]
 Aug  3 06:25:06 svil kernel: LQIN: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-0x0 0x0 0x0 0x
+0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi5: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE
 = 0x52
 Aug  3 06:25:06 svil kernel: scsi5: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
@@ -289,193 +254,192 @@ Aug  3 06:25:06 svil kernel: scsi5:0:3:0: Cmd aborted from QINFIFO
 Aug  3 06:25:06 svil kernel: scsi 5:0:3:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:4:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:5:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:6:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:8:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Attempting to queue a TARGET RESET
-message:CDB: 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0 
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:9:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Attempting to queue a TARGET RESET
-message:CDB: 0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:10:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Attempting to queue a TARGET RESET
-message:CDB: 0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:11:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Attempting to queue a TARGET RESET
-message:CDB: 0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:12:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Attempting to queue a TARGET RESET
-message:CDB: 0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:06 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:06 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:06 svil kernel: Recovery SCB completes
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:13:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:06 svil kernel: scsi 5:0:14:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:14:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:14:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:06 svil kernel: scsi 5:0:14:0: Command already completed
 Aug  3 06:25:06 svil kernel: scsi 5:0:14:0: Attempting to queue a TARGET RESET
-message:CDB: 0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:06 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:07 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:07 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:07 svil kernel: Recovery SCB completes
 Aug  3 06:25:07 svil kernel: scsi 5:0:14:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:07 svil kernel: scsi 5:0:14:0: Command already completed
 Aug  3 06:25:07 svil kernel: scsi 5:0:14:0: Device offlined - not ready after
 error recovery
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Attempting to queue an ABORT
-message:CDB: 0x12 0x
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Command already completed
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Command already completed
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Attempting to queue a TARGET RESET
-message:CDB: 0
+message:CDB: 0x12 0x0 0x0 0x0 0x24 0x0
 Aug  3 06:25:07 svil kernel: scsi5: Device reset code sleeping
 Aug  3 06:25:07 svil kernel: scsi5: Device reset timer expired (active 1)
 Aug  3 06:25:07 svil kernel: scsi5: Device reset returning 0x2003
 Aug  3 06:25:07 svil kernel: Recovery SCB completes
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Attempting to queue an ABORT
-message:CDB: 0x0 0x0
+message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Command already completed
 Aug  3 06:25:07 svil kernel: scsi 5:0:15:0: Device offlined - not ready after
 error recovery
-=================
 
 -- 
 Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
