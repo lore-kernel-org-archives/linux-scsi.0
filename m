@@ -1,17 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 15/35] fcoe: add a separate scsi transport template for NPIV
-	vports
-Date: Fri, 11 Sep 2009 16:58:15 -0700
-Message-ID: <20090911235814.27223.11707.stgit@localhost.localdomain>
+Subject: [PATCH 09/35] libfc, fcoe: fixes for highmem skb linearize panics
+Date: Fri, 11 Sep 2009 16:57:43 -0700
+Message-ID: <20090911235743.27223.96563.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:25584 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:35055 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757210AbZIKX6M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:58:12 -0400
+	id S1757218AbZIKX6A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:58:00 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,113 +19,134 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Right now it's exactly the same as the physical port template,
-and there is no way to create a port on anything other than the
-netdev.  When the vport_create entry point gets hooked up it will
-create lports on top of vport devices, which will use this.
+There are cases outside of our control that may result in a transmit
+skb being linearized in dev_queue_xmit.  There are a couple of bugs
+in libfc/fcoe that can result in a panic at that point.  This patch
+contains two fixes to prevent those panics.
 
-Rename scsi_transport_fcoe_sw to fcoe_transport_template to be more
-clear with naming now that there are two templates.
+1) use fast cloning instead of shared skbs with dev_queue_xmit
+
+dev_queue_xmit doen't want shared skbuffs being passed in, and
+__skb_linearize will BUG if the skb is shared.  FCoE is holding an extra
+reference around the call to dev_queue_xmit, so that when it returns an
+error code indicating the frame has been dropped it can maintain it's
+own backlog and retransmit.  Switch to using fast skb cloning for this
+instead.
+
+2) don't append compound pages as > PAGE_SIZE skb fragments
+
+fc_fcp_send_data will append pages from a scatterlist to the nr_frags[]
+if the netdev supports it.  But, it's using > PAGE_SIZE compound pages
+as a single skb_frag.  In the highmem linearize case that page will be
+passed to kmap_atomic to get a mapping to copy out of, but
+kmap_atomic will only allow access to the first PAGE_SIZE part.
+The memcpy will keep going and cause a page fault once is crosses the
+first boundary.
+
+If fc_fcp_send_data uses linear buffers from the start, it calls
+kmap_atomic one PAGE_SIZE at a time.  That same logic needs to be
+applied when setting up skb_frags.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   54 ++++++++++++++++++++++++++++++++++++++++------
- 1 files changed, 47 insertions(+), 7 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |    5 +++--
+ drivers/scsi/libfc/fc_fcp.c   |   20 ++++++++++----------
+ drivers/scsi/libfc/fc_frame.c |    5 +++--
+ 3 files changed, 16 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index bfef723..0d7b3b1 100644
+index c8dd228..6926ed7 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -90,7 +90,8 @@ static struct notifier_block fcoe_notifier = {
- 	.notifier_call = fcoe_device_notification,
- };
- 
--static struct scsi_transport_template *scsi_transport_fcoe_sw;
-+static struct scsi_transport_template *fcoe_transport_template;
-+static struct scsi_transport_template *fcoe_vport_transport_template;
- 
- struct fc_function_template fcoe_transport_function = {
- 	.show_host_node_name = 1,
-@@ -125,6 +126,39 @@ struct fc_function_template fcoe_transport_function = {
- 	.terminate_rport_io = fc_rport_terminate_io,
- };
- 
-+struct fc_function_template fcoe_vport_transport_function = {
-+	.show_host_node_name = 1,
-+	.show_host_port_name = 1,
-+	.show_host_supported_classes = 1,
-+	.show_host_supported_fc4s = 1,
-+	.show_host_active_fc4s = 1,
-+	.show_host_maxframe_size = 1,
-+
-+	.show_host_port_id = 1,
-+	.show_host_supported_speeds = 1,
-+	.get_host_speed = fc_get_host_speed,
-+	.show_host_speed = 1,
-+	.show_host_port_type = 1,
-+	.get_host_port_state = fc_get_host_port_state,
-+	.show_host_port_state = 1,
-+	.show_host_symbolic_name = 1,
-+
-+	.dd_fcrport_size = sizeof(struct fc_rport_libfc_priv),
-+	.show_rport_maxframe_size = 1,
-+	.show_rport_supported_classes = 1,
-+
-+	.show_host_fabric_name = 1,
-+	.show_starget_node_name = 1,
-+	.show_starget_port_name = 1,
-+	.show_starget_port_id = 1,
-+	.set_rport_dev_loss_tmo = fc_set_rport_loss_tmo,
-+	.show_rport_dev_loss_tmo = 1,
-+	.get_fc_host_stats = fc_get_host_stats,
-+	.issue_fc_host_lip = fcoe_reset,
-+
-+	.terminate_rport_io = fc_rport_terminate_io,
-+};
-+
- static struct scsi_host_template fcoe_shost_template = {
- 	.module = THIS_MODULE,
- 	.name = "FCoE Driver",
-@@ -508,7 +542,10 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
- 	lp->host->max_lun = FCOE_MAX_LUN;
- 	lp->host->max_id = FCOE_MAX_FCP_TARGET;
- 	lp->host->max_channel = 0;
--	lp->host->transportt = scsi_transport_fcoe_sw;
-+	if (lp->vport)
-+		lp->host->transportt = fcoe_vport_transport_template;
-+	else
-+		lp->host->transportt = fcoe_transport_template;
- 
- 	/* add the new host to the SCSI-ml */
- 	rc = scsi_add_host(lp->host, dev);
-@@ -814,10 +851,11 @@ out:
- static int __init fcoe_if_init(void)
- {
- 	/* attach to scsi transport */
--	scsi_transport_fcoe_sw =
--		fc_attach_transport(&fcoe_transport_function);
-+	fcoe_transport_template = fc_attach_transport(&fcoe_transport_function);
-+	fcoe_vport_transport_template =
-+		fc_attach_transport(&fcoe_vport_transport_function);
- 
--	if (!scsi_transport_fcoe_sw) {
-+	if (!fcoe_transport_template) {
- 		printk(KERN_ERR "fcoe: Failed to attach to the FC transport\n");
- 		return -ENODEV;
- 	}
-@@ -832,8 +870,10 @@ static int __init fcoe_if_init(void)
+@@ -1084,10 +1084,11 @@ err2:
   */
- int __exit fcoe_if_exit(void)
+ static inline int fcoe_start_io(struct sk_buff *skb)
  {
--	fc_release_transport(scsi_transport_fcoe_sw);
--	scsi_transport_fcoe_sw = NULL;
-+	fc_release_transport(fcoe_transport_template);
-+	fc_release_transport(fcoe_vport_transport_template);
-+	fcoe_transport_template = NULL;
-+	fcoe_vport_transport_template = NULL;
- 	return 0;
- }
++	struct sk_buff *nskb;
+ 	int rc;
  
+-	skb_get(skb);
+-	rc = dev_queue_xmit(skb);
++	nskb = skb_clone(skb, GFP_ATOMIC);
++	rc = dev_queue_xmit(nskb);
+ 	if (rc != 0)
+ 		return rc;
+ 	kfree_skb(skb);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index aa3eafd..e4ff27e 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -455,11 +455,13 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
+ 	struct scatterlist *sg;
+ 	struct fc_frame *fp = NULL;
+ 	struct fc_lport *lp = fsp->lp;
++	struct page *page;
+ 	size_t remaining;
+ 	size_t t_blen;
+ 	size_t tlen;
+ 	size_t sg_bytes;
+ 	size_t frame_offset, fh_parm_offset;
++	size_t off;
+ 	int error;
+ 	void *data = NULL;
+ 	void *page_addr;
+@@ -537,28 +539,26 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
+ 			fh_parm_offset = frame_offset;
+ 			fr_max_payload(fp) = fsp->max_payload;
+ 		}
++
++		off = offset + sg->offset;
+ 		sg_bytes = min(tlen, sg->length - offset);
++		sg_bytes = min(sg_bytes,
++			       (size_t) (PAGE_SIZE - (off & ~PAGE_MASK)));
++		page = sg_page(sg) + (off >> PAGE_SHIFT);
+ 		if (using_sg) {
+-			get_page(sg_page(sg));
++			get_page(page);
+ 			skb_fill_page_desc(fp_skb(fp),
+ 					   skb_shinfo(fp_skb(fp))->nr_frags,
+-					   sg_page(sg), sg->offset + offset,
+-					   sg_bytes);
++					   page, off & ~PAGE_MASK, sg_bytes);
+ 			fp_skb(fp)->data_len += sg_bytes;
+ 			fr_len(fp) += sg_bytes;
+ 			fp_skb(fp)->truesize += PAGE_SIZE;
+ 		} else {
+-			size_t off = offset + sg->offset;
+-
+ 			/*
+ 			 * The scatterlist item may be bigger than PAGE_SIZE,
+ 			 * but we must not cross pages inside the kmap.
+ 			 */
+-			sg_bytes = min(sg_bytes, (size_t) (PAGE_SIZE -
+-							   (off & ~PAGE_MASK)));
+-			page_addr = kmap_atomic(sg_page(sg) +
+-						(off >> PAGE_SHIFT),
+-						KM_SOFTIRQ0);
++			page_addr = kmap_atomic(page, KM_SOFTIRQ0);
+ 			memcpy(data, (char *)page_addr + (off & ~PAGE_MASK),
+ 			       sg_bytes);
+ 			kunmap_atomic(page_addr, KM_SOFTIRQ0);
+diff --git a/drivers/scsi/libfc/fc_frame.c b/drivers/scsi/libfc/fc_frame.c
+index 63fe00c..5b9c977 100644
+--- a/drivers/scsi/libfc/fc_frame.c
++++ b/drivers/scsi/libfc/fc_frame.c
+@@ -58,12 +58,13 @@ struct fc_frame *__fc_frame_alloc(size_t len)
+ 
+ 	WARN_ON((len % sizeof(u32)) != 0);
+ 	len += sizeof(struct fc_frame_header);
+-	skb = dev_alloc_skb(len + FC_FRAME_HEADROOM + FC_FRAME_TAILROOM);
++	skb = alloc_skb_fclone(len + FC_FRAME_HEADROOM + FC_FRAME_TAILROOM +
++			       NET_SKB_PAD, GFP_ATOMIC);
+ 	if (!skb)
+ 		return NULL;
++	skb_reserve(skb, NET_SKB_PAD + FC_FRAME_HEADROOM);
+ 	fp = (struct fc_frame *) skb;
+ 	fc_frame_init(fp);
+-	skb_reserve(skb, FC_FRAME_HEADROOM);
+ 	skb_put(skb, len);
+ 	return fp;
+ }
 
