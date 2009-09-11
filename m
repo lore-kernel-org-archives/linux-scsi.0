@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 19/35] libfc: Register Symbolic Node Name (RSNN_NN)
-Date: Fri, 11 Sep 2009 16:58:36 -0700
-Message-ID: <20090911235836.27223.25029.stgit@localhost.localdomain>
+Subject: [PATCH 21/35] libfc: combine name server registration response
+	handlers
+Date: Fri, 11 Sep 2009 16:58:47 -0700
+Message-ID: <20090911235847.27223.88067.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61129 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:48609 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932102AbZIKX6d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:58:33 -0400
+	id S932114AbZIKX6o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:58:44 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,238 +20,289 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Register the fc_host symbolic name as the symbolic node name
-with the fabric name server.
+They all do the same thing, so combine them into a single function.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c      |    6 +--
- drivers/scsi/libfc/fc_lport.c |   91 +++++++++++++++++++++++++++++++++++++++++
- include/scsi/fc/fc_ns.h       |   10 +++++
- include/scsi/fc_encode.h      |   10 +++++
- include/scsi/libfc.h          |    1 
- 5 files changed, 115 insertions(+), 3 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |  205 ++++++-----------------------------------
+ 1 files changed, 30 insertions(+), 175 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index e894c73..6bf396f 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -569,9 +569,9 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
- 	if (!lp->vport)
- 		fc_host_max_npiv_vports(lp->host) = USHORT_MAX;
- 
--	sprintf(fc_host_symbolic_name(lp->host), "%s v%s over %s",
--		FCOE_NAME, FCOE_VERSION,
--		fcoe_netdev(lp)->name);
-+	snprintf(fc_host_symbolic_name(lp->host), FC_SYMBOLIC_NAME_SIZE,
-+		 "%s v%s over %s", FCOE_NAME, FCOE_VERSION,
-+		 fcoe_netdev(lp)->name);
- 
- 	return 0;
- }
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 5b2f75f..ae5e2c3 100644
+index 76197d7..5e7b560 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -109,6 +109,7 @@ static void fc_lport_enter_reset(struct fc_lport *);
- static void fc_lport_enter_flogi(struct fc_lport *);
- static void fc_lport_enter_dns(struct fc_lport *);
- static void fc_lport_enter_rnn_id(struct fc_lport *);
-+static void fc_lport_enter_rsnn_nn(struct fc_lport *);
- static void fc_lport_enter_rft_id(struct fc_lport *);
- static void fc_lport_enter_scr(struct fc_lport *);
- static void fc_lport_enter_ready(struct fc_lport *);
-@@ -119,6 +120,7 @@ static const char *fc_lport_state_names[] = {
- 	[LPORT_ST_FLOGI] =    "FLOGI",
- 	[LPORT_ST_DNS] =      "dNS",
- 	[LPORT_ST_RNN_ID] =   "RNN_ID",
-+	[LPORT_ST_RSNN_NN] =  "RSNN_NN",
- 	[LPORT_ST_RFT_ID] =   "RFT_ID",
- 	[LPORT_ST_SCR] =      "SCR",
- 	[LPORT_ST_READY] =    "Ready",
-@@ -966,6 +968,7 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
- 			case LPORT_ST_READY:
- 			case LPORT_ST_RESET:
- 			case LPORT_ST_RNN_ID:
-+			case LPORT_ST_RSNN_NN:
- 			case LPORT_ST_RFT_ID:
- 			case LPORT_ST_SCR:
- 			case LPORT_ST_DNS:
-@@ -1033,6 +1036,60 @@ err:
+@@ -985,9 +985,9 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
  }
  
  /**
-+ * fc_lport_rsnn_nn_resp() - Handle response to Register Symbolic Node Name
-+ *			     by Node Name (RSNN_NN) request
-+ * @sp: current sequence in RSNN_NN exchange
-+ * @fp: response frame
-+ * @lp_arg: Fibre Channel host port instance
-+ *
-+ * Locking Note: This function will be called without the lport lock
-+ * held, but it will lock, call an _enter_* function or fc_lport_error
-+ * and then unlock the lport.
-+ */
-+static void fc_lport_rsnn_nn_resp(struct fc_seq *sp, struct fc_frame *fp,
-+				  void *lp_arg)
-+{
-+	struct fc_lport *lport = lp_arg;
-+	struct fc_frame_header *fh;
-+	struct fc_ct_hdr *ct;
-+
-+	FC_LPORT_DBG(lport, "Received a RSNN_NN %s\n", fc_els_resp_type(fp));
-+
-+	if (fp == ERR_PTR(-FC_EX_CLOSED))
-+		return;
-+
-+	mutex_lock(&lport->lp_mutex);
-+
-+	if (lport->state != LPORT_ST_RSNN_NN) {
-+		FC_LPORT_DBG(lport, "Received a RSNN_NN response, but in state "
-+			     "%s\n", fc_lport_state(lport));
-+		if (IS_ERR(fp))
-+			goto err;
-+		goto out;
-+	}
-+
-+	if (IS_ERR(fp)) {
-+		fc_lport_error(lport, fp);
-+		goto err;
-+	}
-+
-+	fh = fc_frame_header_get(fp);
-+	ct = fc_frame_payload_get(fp, sizeof(*ct));
-+	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
-+	    ct->ct_fs_type == FC_FST_DIR &&
-+	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
-+	    ntohs(ct->ct_cmd) == FC_FS_ACC)
-+		fc_lport_enter_rsnn_nn(lport);
-+	else
-+		fc_lport_error(lport, fp);
-+
-+out:
-+	fc_frame_free(fp);
-+err:
-+	mutex_unlock(&lport->lp_mutex);
-+}
-+
-+/**
-  * fc_lport_rnn_id_resp() - Handle response to Register Node
-  *			    Name by ID (RNN_ID) request
-  * @sp: current sequence in RNN_ID exchange
-@@ -1204,6 +1261,37 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
- }
- 
- /**
-+ * fc_rport_enter_rsnn_nn() - Register symbolic node name with the name server
-+ * @lport: Fibre Channel local port to register
-+ *
-+ * Locking Note: The lport lock is expected to be held before calling
-+ * this routine.
-+ */
-+static void fc_lport_enter_rsnn_nn(struct fc_lport *lport)
-+{
-+	struct fc_frame *fp;
-+	size_t len;
-+
-+	FC_LPORT_DBG(lport, "Entered RSNN_NN state from %s state\n",
-+		     fc_lport_state(lport));
-+
-+	fc_lport_state_enter(lport, LPORT_ST_RSNN_NN);
-+
-+	len = strnlen(fc_host_symbolic_name(lport->host), 255);
-+	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
-+			    sizeof(struct fc_ns_rsnn) + len);
-+	if (!fp) {
-+		fc_lport_error(lport, fp);
-+		return;
-+	}
-+
-+	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSNN_NN,
-+				  fc_lport_rsnn_nn_resp,
-+				  lport, lport->e_d_tov))
-+		fc_lport_error(lport, fp);
-+}
-+
-+/**
-  * fc_rport_enter_rnn_id() - Register node name with the name server
-  * @lport: Fibre Channel local port to register
+- * fc_lport_rft_id_resp() - Handle response to Register Fibre
+- *			    Channel Types by ID (RFT_ID) request
+- * @sp: current sequence in RFT_ID exchange
++ * fc_lport_ns_resp() - Handle response to a name server
++ * 			registration exchange
++ * @sp: current sequence in exchange
+  * @fp: response frame
+  * @lp_arg: Fibre Channel host port instance
   *
-@@ -1293,6 +1381,9 @@ static void fc_lport_timeout(struct work_struct *work)
- 	case LPORT_ST_RNN_ID:
- 		fc_lport_enter_rnn_id(lport);
- 		break;
-+	case LPORT_ST_RSNN_NN:
-+		fc_lport_enter_rsnn_nn(lport);
-+		break;
- 	case LPORT_ST_RFT_ID:
- 		fc_lport_enter_rft_id(lport);
- 		break;
-diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
-index 790d7b9..fa82830 100644
---- a/include/scsi/fc/fc_ns.h
-+++ b/include/scsi/fc/fc_ns.h
-@@ -47,6 +47,7 @@ enum fc_ns_req {
- 	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
- 	FC_NS_RPN_ID =	0x0212,		/* reg port name for ID */
- 	FC_NS_RNN_ID =	0x0213,		/* reg node name for ID */
-+	FC_NS_RSNN_NN =	0x0239,		/* reg symbolic node name */
- };
+@@ -995,130 +995,23 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
+  * held, but it will lock, call an _enter_* function or fc_lport_error
+  * and then unlock the lport.
+  */
+-static void fc_lport_rft_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+-				 void *lp_arg)
++static void fc_lport_ns_resp(struct fc_seq *sp, struct fc_frame *fp,
++			     void *lp_arg)
+ {
+ 	struct fc_lport *lport = lp_arg;
+ 	struct fc_frame_header *fh;
+ 	struct fc_ct_hdr *ct;
  
- /*
-@@ -156,4 +157,13 @@ struct fc_ns_rn_id {
- 	__be64		fr_wwn;		/* node name or port name */
- } __attribute__((__packed__));
+-	FC_LPORT_DBG(lport, "Received a RFT_ID %s\n", fc_els_resp_type(fp));
++	FC_LPORT_DBG(lport, "Received a ns %s\n", fc_els_resp_type(fp));
  
-+/*
-+ * RSNN_NN request - register symbolic node name
-+ */
-+struct fc_ns_rsnn {
-+	__be64		fr_wwn;		/* node name */
-+	__u8		fr_name_len;
-+	char		fr_name[];
-+} __attribute__((__packed__));
-+
- #endif /* _FC_NS_H_ */
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index ad13cb1..89981af 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -33,6 +33,7 @@ struct fc_ct_req {
- 		struct fc_ns_rn_id  rn;
- 		struct fc_ns_rft rft;
- 		struct fc_ns_fid fid;
-+		struct fc_ns_rsnn snn;
- 	} payload;
- };
+ 	if (fp == ERR_PTR(-FC_EX_CLOSED))
+ 		return;
  
-@@ -136,6 +137,15 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 		put_unaligned_be64(lport->wwnn, &ct->payload.rn.fr_wwn);
- 		break;
+ 	mutex_lock(&lport->lp_mutex);
  
-+	case FC_NS_RSNN_NN:
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn));
-+		put_unaligned_be64(lport->wwnn, &ct->payload.snn.fr_wwn);
-+		strncpy(ct->payload.snn.fr_name,
-+			fc_host_symbolic_name(lport->host), 255);
-+		ct->payload.snn.fr_name_len =
-+			strnlen(ct->payload.snn.fr_name, 255);
-+		break;
-+
- 	default:
- 		return -EINVAL;
+-	if (lport->state != LPORT_ST_RFT_ID) {
+-		FC_LPORT_DBG(lport, "Received a RFT_ID response, but in state "
+-			     "%s\n", fc_lport_state(lport));
+-		if (IS_ERR(fp))
+-			goto err;
+-		goto out;
+-	}
+-
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+-	fh = fc_frame_header_get(fp);
+-	ct = fc_frame_payload_get(fp, sizeof(*ct));
+-
+-	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
+-	    ct->ct_fs_type == FC_FST_DIR &&
+-	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
+-	    ntohs(ct->ct_cmd) == FC_FS_ACC)
+-		fc_lport_enter_scr(lport);
+-	else
+-		fc_lport_error(lport, fp);
+-out:
+-	fc_frame_free(fp);
+-err:
+-	mutex_unlock(&lport->lp_mutex);
+-}
+-
+-/**
+- * fc_lport_rspn_id_resp() - Handle response to Register Symbolic Port Name
+- *			     by ID (RSPN_ID) request
+- * @sp: current sequence in RSPN_ID exchange
+- * @fp: response frame
+- * @lp_arg: Fibre Channel host port instance
+- *
+- * Locking Note: This function will be called without the lport lock
+- * held, but it will lock, call an _enter_* function or fc_lport_error
+- * and then unlock the lport.
+- */
+-static void fc_lport_rspn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+-				  void *lp_arg)
+-{
+-	struct fc_lport *lport = lp_arg;
+-	struct fc_frame_header *fh;
+-	struct fc_ct_hdr *ct;
+-
+-	FC_LPORT_DBG(lport, "Received a RSPN_ID %s\n", fc_els_resp_type(fp));
+-
+-	if (fp == ERR_PTR(-FC_EX_CLOSED))
+-		return;
+-
+-	mutex_lock(&lport->lp_mutex);
+-
+-	if (lport->state != LPORT_ST_RSPN_ID) {
+-		FC_LPORT_DBG(lport, "Received a RSPN_ID response, but in state "
+-			     "%s\n", fc_lport_state(lport));
+-		if (IS_ERR(fp))
+-			goto err;
+-		goto out;
+-	}
+-
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+-	fh = fc_frame_header_get(fp);
+-	ct = fc_frame_payload_get(fp, sizeof(*ct));
+-	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
+-	    ct->ct_fs_type == FC_FST_DIR &&
+-	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
+-	    ntohs(ct->ct_cmd) == FC_FS_ACC)
+-		fc_lport_enter_rspn_id(lport);
+-	else
+-		fc_lport_error(lport, fp);
+-
+-out:
+-	fc_frame_free(fp);
+-err:
+-	mutex_unlock(&lport->lp_mutex);
+-}
+-/**
+- * fc_lport_rsnn_nn_resp() - Handle response to Register Symbolic Node Name
+- *			     by Node Name (RSNN_NN) request
+- * @sp: current sequence in RSNN_NN exchange
+- * @fp: response frame
+- * @lp_arg: Fibre Channel host port instance
+- *
+- * Locking Note: This function will be called without the lport lock
+- * held, but it will lock, call an _enter_* function or fc_lport_error
+- * and then unlock the lport.
+- */
+-static void fc_lport_rsnn_nn_resp(struct fc_seq *sp, struct fc_frame *fp,
+-				  void *lp_arg)
+-{
+-	struct fc_lport *lport = lp_arg;
+-	struct fc_frame_header *fh;
+-	struct fc_ct_hdr *ct;
+-
+-	FC_LPORT_DBG(lport, "Received a RSNN_NN %s\n", fc_els_resp_type(fp));
+-
+-	if (fp == ERR_PTR(-FC_EX_CLOSED))
+-		return;
+-
+-	mutex_lock(&lport->lp_mutex);
+-
+-	if (lport->state != LPORT_ST_RSNN_NN) {
+-		FC_LPORT_DBG(lport, "Received a RSNN_NN response, but in state "
+-			     "%s\n", fc_lport_state(lport));
++	if (lport->state < LPORT_ST_RNN_ID || lport->state > LPORT_ST_RFT_ID) {
++		FC_LPORT_DBG(lport, "Received a name server response, "
++				    "but in state %s\n", fc_lport_state(lport));
+ 		if (IS_ERR(fp))
+ 			goto err;
+ 		goto out;
+@@ -1131,68 +1024,30 @@ static void fc_lport_rsnn_nn_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 
+ 	fh = fc_frame_header_get(fp);
+ 	ct = fc_frame_payload_get(fp, sizeof(*ct));
+-	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
+-	    ct->ct_fs_type == FC_FST_DIR &&
+-	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
+-	    ntohs(ct->ct_cmd) == FC_FS_ACC)
+-		fc_lport_enter_rsnn_nn(lport);
+-	else
+-		fc_lport_error(lport, fp);
+-
+-out:
+-	fc_frame_free(fp);
+-err:
+-	mutex_unlock(&lport->lp_mutex);
+-}
+ 
+-/**
+- * fc_lport_rnn_id_resp() - Handle response to Register Node
+- *			    Name by ID (RNN_ID) request
+- * @sp: current sequence in RNN_ID exchange
+- * @fp: response frame
+- * @lp_arg: Fibre Channel host port instance
+- *
+- * Locking Note: This function will be called without the lport lock
+- * held, but it will lock, call an _enter_* function or fc_lport_error
+- * and then unlock the lport.
+- */
+-static void fc_lport_rnn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+-				 void *lp_arg)
+-{
+-	struct fc_lport *lport = lp_arg;
+-	struct fc_frame_header *fh;
+-	struct fc_ct_hdr *ct;
+-
+-	FC_LPORT_DBG(lport, "Received a RNN_ID %s\n", fc_els_resp_type(fp));
+-
+-	if (fp == ERR_PTR(-FC_EX_CLOSED))
+-		return;
+-
+-	mutex_lock(&lport->lp_mutex);
+-
+-	if (lport->state != LPORT_ST_RNN_ID) {
+-		FC_LPORT_DBG(lport, "Received a RNN_ID response, but in state "
+-			     "%s\n", fc_lport_state(lport));
+-		if (IS_ERR(fp))
+-			goto err;
+-		goto out;
+-	}
+-
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+-	fh = fc_frame_header_get(fp);
+-	ct = fc_frame_payload_get(fp, sizeof(*ct));
+ 	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
+ 	    ct->ct_fs_type == FC_FST_DIR &&
+ 	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
+ 	    ntohs(ct->ct_cmd) == FC_FS_ACC)
+-		fc_lport_enter_rft_id(lport);
++		switch (lport->state) {
++		case LPORT_ST_RNN_ID:
++			fc_lport_enter_rsnn_nn(lport);
++			break;
++		case LPORT_ST_RSNN_NN:
++			fc_lport_enter_rspn_id(lport);
++			break;
++		case LPORT_ST_RSPN_ID:
++			fc_lport_enter_rft_id(lport);
++			break;
++		case LPORT_ST_RFT_ID:
++			fc_lport_enter_scr(lport);
++			break;
++		default:
++			/* should have already been caught by state checks */
++			break;
++		}
+ 	else
+ 		fc_lport_error(lport, fp);
+-
+ out:
+ 	fc_frame_free(fp);
+ err:
+@@ -1311,7 +1166,7 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
  	}
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index ad90857..40ab252 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -62,6 +62,7 @@ enum fc_lport_state {
- 	LPORT_ST_FLOGI,
- 	LPORT_ST_DNS,
- 	LPORT_ST_RNN_ID,
-+	LPORT_ST_RSNN_NN,
- 	LPORT_ST_RFT_ID,
- 	LPORT_ST_SCR,
- 	LPORT_ST_READY,
+ 
+ 	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RFT_ID,
+-				  fc_lport_rft_id_resp,
++				  fc_lport_ns_resp,
+ 				  lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+ }
+@@ -1342,7 +1197,7 @@ static void fc_lport_enter_rspn_id(struct fc_lport *lport)
+ 	}
+ 
+ 	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
+-				  fc_lport_rspn_id_resp,
++				  fc_lport_ns_resp,
+ 				  lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+ }
+@@ -1373,7 +1228,7 @@ static void fc_lport_enter_rsnn_nn(struct fc_lport *lport)
+ 	}
+ 
+ 	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSNN_NN,
+-				  fc_lport_rsnn_nn_resp,
++				  fc_lport_ns_resp,
+ 				  lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+ }
+@@ -1402,7 +1257,7 @@ static void fc_lport_enter_rnn_id(struct fc_lport *lport)
+ 	}
+ 
+ 	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RNN_ID,
+-				  fc_lport_rnn_id_resp,
++				  fc_lport_ns_resp,
+ 				  lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
+ }
 
