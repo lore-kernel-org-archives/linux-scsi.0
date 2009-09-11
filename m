@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 12/35] libfc: vport link handling and fc_vport state managment
-Date: Fri, 11 Sep 2009 16:57:59 -0700
-Message-ID: <20090911235759.27223.68250.stgit@localhost.localdomain>
+Subject: [PATCH 13/35] libfc, libfcoe: FDISC ELS for NPIV
+Date: Fri, 11 Sep 2009 16:58:04 -0700
+Message-ID: <20090911235804.27223.76844.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55656 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:35055 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757227AbZIKX55 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:57:57 -0400
+	id S1757229AbZIKX6B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:58:01 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,279 +19,132 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-NPIV vports are managed in libfc by changing their virtual link state
-when the parent N_Ports internal state changes.  The vport link is only
-online when the N_Port is in a ready state (logged into the fabric).
+Add FDISC ELS handling to libfc and libfcoe, treat it the same as FLOGI where
+appropriate.
 
-vport_state is updated as needed in this patch as well, currently the states
-LINKDOWN, INITIALIZING, ACTIVE, DSIABLED, and NO_FABRIC_SUPP are used.
-
-This also changes the fc_host port_state handling to differentiate between
-LINKDOWN and OFFLINE.
+Add checking for NPIV support in the FLOGI LS_ACC service parameters.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |   72 +++++++++++++++++++++++++++++++--------
- drivers/scsi/libfc/fc_npiv.c  |   75 +++++++++++++++++++++++++++++++++++++++++
- include/scsi/libfc.h          |    8 ++++
- 3 files changed, 140 insertions(+), 15 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c   |    6 +++---
+ drivers/scsi/libfc/fc_lport.c |    6 +++++-
+ include/scsi/fc/fc_els.h      |    4 +++-
+ include/scsi/fc_encode.h      |   29 +++++++++++++++++++++++++++++
+ 4 files changed, 40 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 62a4c20..8d2e5aa 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -450,7 +450,7 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip,
+ 	memset(mac, 0, sizeof(mac));
+ 	mac->fd_desc.fip_dtype = FIP_DT_MAC;
+ 	mac->fd_desc.fip_dlen = sizeof(*mac) / FIP_BPW;
+-	if (dtype != FIP_DT_FLOGI)
++	if (dtype != FIP_DT_FLOGI && dtype != FIP_DT_FDISC)
+ 		memcpy(mac->fd_mac, fip->data_src_addr, ETH_ALEN);
+ 	else if (fip->spma)
+ 		memcpy(mac->fd_mac, fip->ctl_src_addr, ETH_ALEN);
+@@ -866,8 +866,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		goto drop;
+ 	els_op = *(u8 *)(fh + 1);
+ 
+-	if (els_dtype == FIP_DT_FLOGI && sub == FIP_SC_REP &&
+-	    fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
++	if ((els_dtype == FIP_DT_FLOGI || els_dtype == FIP_DT_FDISC) &&
++	    sub == FIP_SC_REP && fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
+ 	    els_op == ELS_LS_ACC && is_valid_ether_addr(granted_mac)) {
+ 		fip->flogi_oxid = FC_XID_UNKNOWN;
+ 		fip->update_mac(fip, fip->data_src_addr, granted_mac);
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index c5f50e2..2729e60 100644
+index 2729e60..dd6a1db 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -224,10 +224,18 @@ void fc_get_host_port_state(struct Scsi_Host *shost)
- {
- 	struct fc_lport *lp = shost_priv(shost);
+@@ -1446,6 +1446,9 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
+ 			if (csp_flags & FC_SP_FT_EDTR)
+ 				e_d_tov /= 1000000;
++
++			lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
++
+ 			if ((csp_flags & FC_SP_FT_FPORT) == 0) {
+ 				if (e_d_tov > lport->e_d_tov)
+ 					lport->e_d_tov = e_d_tov;
+@@ -1495,7 +1498,8 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
+ 	if (!fp)
+ 		return fc_lport_error(lport, fp);
  
--	if (lp->link_up)
--		fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
-+	mutex_lock(&lp->lp_mutex);
-+	if (!lp->link_up)
-+		fc_host_port_state(shost) = FC_PORTSTATE_LINKDOWN;
- 	else
--		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
-+		switch (lp->state) {
-+		case LPORT_ST_READY:
-+			fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
-+			break;
-+		default:
-+			fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
-+		}
-+	mutex_unlock(&lp->lp_mutex);
+-	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_FLOGI,
++	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp,
++				  lport->vport ? ELS_FDISC : ELS_FLOGI,
+ 				  fc_lport_flogi_resp, lport, lport->e_d_tov))
+ 		fc_lport_error(lport, fp);
  }
- EXPORT_SYMBOL(fc_get_host_port_state);
- 
-@@ -493,40 +501,62 @@ int fc_fabric_login(struct fc_lport *lport)
- EXPORT_SYMBOL(fc_fabric_login);
+diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
+index 195ca01..b0872af 100644
+--- a/include/scsi/fc/fc_els.h
++++ b/include/scsi/fc/fc_els.h
+@@ -248,10 +248,12 @@ struct fc_els_csp {
+ /*
+  * sp_features
+  */
+-#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel. off. */
++#define	FC_SP_FT_NPIV	0x8000	/* multiple N_Port_ID support (FLOGI) */
++#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel off (PLOGI) */
+ #define	FC_SP_FT_CLAD	0x8000	/* clean address (in FLOGI LS_ACC) */
+ #define	FC_SP_FT_RAND	0x4000	/* random relative offset */
+ #define	FC_SP_FT_VAL	0x2000	/* valid vendor version level */
++#define	FC_SP_FT_NPIV_ACC	0x2000	/* NPIV assignment (FLOGI LS_ACC) */
+ #define	FC_SP_FT_FPORT	0x1000	/* F port (1) vs. N port (0) */
+ #define	FC_SP_FT_ABB	0x0800	/* alternate BB_credit management */
+ #define	FC_SP_FT_EDTR	0x0400	/* E_D_TOV Resolution is nanoseconds */
+diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
+index 27dad70..c93ca3e 100644
+--- a/include/scsi/fc_encode.h
++++ b/include/scsi/fc_encode.h
+@@ -198,6 +198,31 @@ static inline void fc_flogi_fill(struct fc_lport *lport, struct fc_frame *fp)
+ 	sp->sp_bb_data = htons((u16) lport->mfs);
+ 	cp = &flogi->fl_cssp[3 - 1];	/* class 3 parameters */
+ 	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
++	if (lport->does_npiv)
++		sp->sp_features = htons(FC_SP_FT_NPIV);
++}
++
++/**
++ * fc_fdisc_fill - Fill in a fdisc request frame.
++ */
++static inline void fc_fdisc_fill(struct fc_lport *lport, struct fc_frame *fp)
++{
++	struct fc_els_csp *sp;
++	struct fc_els_cssp *cp;
++	struct fc_els_flogi *fdisc;
++
++	fdisc = fc_frame_payload_get(fp, sizeof(*fdisc));
++	memset(fdisc, 0, sizeof(*fdisc));
++	fdisc->fl_cmd = (u8) ELS_FDISC;
++	put_unaligned_be64(lport->wwpn, &fdisc->fl_wwpn);
++	put_unaligned_be64(lport->wwnn, &fdisc->fl_wwnn);
++	sp = &fdisc->fl_csp;
++	sp->sp_hi_ver = 0x20;
++	sp->sp_lo_ver = 0x20;
++	sp->sp_bb_cred = htons(10);	/* this gets set by gateway */
++	sp->sp_bb_data = htons((u16) lport->mfs);
++	cp = &fdisc->fl_cssp[3 - 1];	/* class 3 parameters */
++	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
+ }
  
  /**
-- * fc_linkup() - Handler for transport linkup events
-+ * __fc_linkup() - Handler for transport linkup events
-  * @lport: The lport whose link is up
-+ *
-+ * Locking: must be called with the lp_mutex held
-  */
--void fc_linkup(struct fc_lport *lport)
-+void __fc_linkup(struct fc_lport *lport)
- {
--	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
--	       fc_host_port_id(lport->host));
--
--	mutex_lock(&lport->lp_mutex);
- 	if (!lport->link_up) {
- 		lport->link_up = 1;
+@@ -296,6 +321,10 @@ static inline int fc_els_fill(struct fc_lport *lport,
+ 		fc_flogi_fill(lport, fp);
+ 		break;
  
- 		if (lport->state == LPORT_ST_RESET)
- 			fc_lport_enter_flogi(lport);
- 	}
-+}
++	case ELS_FDISC:
++		fc_fdisc_fill(lport, fp);
++		break;
 +
-+/**
-+ * fc_linkup() - Handler for transport linkup events
-+ * @lport: The lport whose link is up
-+ */
-+void fc_linkup(struct fc_lport *lport)
-+{
-+	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
-+	       fc_host_port_id(lport->host));
-+
-+	mutex_lock(&lport->lp_mutex);
-+	__fc_linkup(lport);
- 	mutex_unlock(&lport->lp_mutex);
- }
- EXPORT_SYMBOL(fc_linkup);
- 
- /**
-- * fc_linkdown() - Handler for transport linkdown events
-+ * __fc_linkdown() - Handler for transport linkdown events
-  * @lport: The lport whose link is down
-+ *
-+ * Locking: must be called with the lp_mutex held
-  */
--void fc_linkdown(struct fc_lport *lport)
-+void __fc_linkdown(struct fc_lport *lport)
- {
--	mutex_lock(&lport->lp_mutex);
--	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
--	       fc_host_port_id(lport->host));
--
- 	if (lport->link_up) {
- 		lport->link_up = 0;
- 		fc_lport_enter_reset(lport);
- 		lport->tt.fcp_cleanup(lport);
- 	}
-+}
-+
-+/**
-+ * fc_linkdown() - Handler for transport linkdown events
-+ * @lport: The lport whose link is down
-+ */
-+void fc_linkdown(struct fc_lport *lport)
-+{
-+	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
-+	       fc_host_port_id(lport->host));
-+
-+	mutex_lock(&lport->lp_mutex);
-+	__fc_linkdown(lport);
- 	mutex_unlock(&lport->lp_mutex);
- }
- EXPORT_SYMBOL(fc_linkdown);
-@@ -654,6 +684,9 @@ static void fc_lport_enter_ready(struct fc_lport *lport)
- 		     fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_READY);
-+	if (lport->vport)
-+		fc_vport_set_state(lport->vport, FC_VPORT_ACTIVE);
-+	fc_vports_linkchange(lport);
- 
- 	if (!lport->ptp_rp)
- 		lport->tt.disc_start(fc_lport_disc_callback, lport);
-@@ -868,7 +901,14 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
- 	FC_LPORT_DBG(lport, "Entered RESET state from %s state\n",
- 		     fc_lport_state(lport));
- 
-+	if (lport->vport) {
-+		if (lport->link_up)
-+			fc_vport_set_state(lport->vport, FC_VPORT_INITIALIZING);
-+		else
-+			fc_vport_set_state(lport->vport, FC_VPORT_LINKDOWN);
-+	}
- 	fc_lport_state_enter(lport, LPORT_ST_RESET);
-+	fc_vports_linkchange(lport);
- 	fc_lport_reset_locked(lport);
- 	if (lport->link_up)
- 		fc_lport_enter_flogi(lport);
-@@ -887,6 +927,7 @@ static void fc_lport_enter_disabled(struct fc_lport *lport)
- 		     fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_DISABLED);
-+	fc_vports_linkchange(lport);
- 	fc_lport_reset_locked(lport);
- }
- 
-@@ -1330,6 +1371,7 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
- 		     fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_LOGO);
-+	fc_vports_linkchange(lport);
- 
- 	fp = fc_frame_alloc(lport, sizeof(*logo));
- 	if (!fp) {
-diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
-index 39f02c0..c68f6c7 100644
---- a/drivers/scsi/libfc/fc_npiv.c
-+++ b/drivers/scsi/libfc/fc_npiv.c
-@@ -84,3 +84,78 @@ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
- 	return lport;
- }
- 
-+/*
-+ * When setting the link state of vports during an lport state change, it's
-+ * necessary to hold the lp_mutex of both the N_Port and the VN_Port.
-+ * This tells the lockdep engine to treat the nested locking of the VN_Port
-+ * as a different lock class.
-+ */
-+enum libfc_lport_mutex_class {
-+	LPORT_MUTEX_NORMAL = 0,
-+	LPORT_MUTEX_VN_PORT = 1,
-+};
-+
-+/**
-+ * __fc_vport_setlink() - update link and status on a VN_Port
-+ * @n_port: parent N_Port
-+ * @vn_port: VN_Port to update
-+ *
-+ * Locking: must be called with both the N_Port and VN_Port lp_mutex held
-+ */
-+static void __fc_vport_setlink(struct fc_lport *n_port,
-+			       struct fc_lport *vn_port)
-+{
-+	struct fc_vport *vport = vn_port->vport;
-+
-+	if (vn_port->state == LPORT_ST_DISABLED)
-+		return;
-+
-+	if (n_port->state == LPORT_ST_READY) {
-+		if (n_port->npiv_enabled) {
-+			fc_vport_set_state(vport, FC_VPORT_INITIALIZING);
-+			__fc_linkup(vn_port);
-+		} else {
-+			fc_vport_set_state(vport, FC_VPORT_NO_FABRIC_SUPP);
-+			__fc_linkdown(vn_port);
-+		}
-+	} else {
-+		fc_vport_set_state(vport, FC_VPORT_LINKDOWN);
-+		__fc_linkdown(vn_port);
-+	}
-+}
-+
-+/**
-+ * fc_vport_setlink() - update link and status on a VN_Port
-+ * @vn_port: virtual port to update
-+ */
-+void fc_vport_setlink(struct fc_lport *vn_port)
-+{
-+	struct fc_vport *vport = vn_port->vport;
-+	struct Scsi_Host *shost = vport_to_shost(vport);
-+	struct fc_lport *n_port = shost_priv(shost);
-+
-+	mutex_lock(&n_port->lp_mutex);
-+	mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
-+	__fc_vport_setlink(n_port, vn_port);
-+	mutex_unlock(&vn_port->lp_mutex);
-+	mutex_unlock(&n_port->lp_mutex);
-+}
-+EXPORT_SYMBOL(fc_vport_setlink);
-+
-+/**
-+ * fc_vports_linkchange() - change the link state of all vports
-+ * @n_port: Parent N_Port that has changed state
-+ *
-+ * Locking: called with the n_port lp_mutex held
-+ */
-+void fc_vports_linkchange(struct fc_lport *n_port)
-+{
-+	struct fc_lport *vn_port;
-+
-+	list_for_each_entry(vn_port, &n_port->vports, list) {
-+		mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
-+		__fc_vport_setlink(n_port, vn_port);
-+		mutex_unlock(&vn_port->lp_mutex);
-+	}
-+}
-+
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index e5078a0..015e520 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -788,11 +788,13 @@ int fc_fabric_login(struct fc_lport *lp);
- /*
-  * The link is up for the given local port.
-  */
-+void __fc_linkup(struct fc_lport *);
- void fc_linkup(struct fc_lport *);
- 
- /*
-  * Link is down for the given local port.
-  */
-+void __fc_linkdown(struct fc_lport *);
- void fc_linkdown(struct fc_lport *);
- 
- /*
-@@ -821,6 +823,12 @@ struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize);
- struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id);
- 
- /*
-+ * NPIV VN_Port link state management
-+ */
-+void fc_vport_setlink(struct fc_lport *vn_port);
-+void fc_vports_linkchange(struct fc_lport *n_port);
-+
-+/*
-  * REMOTE PORT LAYER
-  *****************************/
- int fc_rport_init(struct fc_lport *lp);
+ 	case ELS_LOGO:
+ 		fc_logo_fill(lport, fp);
+ 		break;
 
