@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 23/35] fcoe: vport symbolic name support
-Date: Fri, 11 Sep 2009 16:58:58 -0700
-Message-ID: <20090911235858.27223.5994.stgit@localhost.localdomain>
+Subject: [PATCH 20/35] libfc: Register Symbolic Port Name (RSPN_ID)
+Date: Fri, 11 Sep 2009 16:58:41 -0700
+Message-ID: <20090911235841.27223.13862.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6007 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:20644 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932126AbZIKX6z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:58:55 -0400
+	id S932121AbZIKX6v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:58:51 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,88 +19,220 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Allow a vport specific string to be appended to the port symbolic
-name.  The new symbolic name is sent to the name server after it
-is set.
-
-This currently messes with libhbalinux, which is looking for
-the fcoe "fcoe <ver> over <ethX>" string and expects whatever
-comes after the "over" to be a network interface name only.
-
-Adds an EXPORT_SYMBOL to libfc for fc_frame_alloc_fill, which is
-needed to allow fcoe to allocate a frame of variable length for
-the RSPN request.
+Register the fc_host symbolic name as the symbolic port name
+with the fabric name server.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c      |   33 +++++++++++++++++++++++++++++++++
- drivers/scsi/libfc/fc_frame.c |    1 +
- 2 files changed, 34 insertions(+), 0 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |   90 +++++++++++++++++++++++++++++++++++++++++
+ include/scsi/fc/fc_ns.h       |   10 +++++
+ include/scsi/fc_encode.h      |   11 +++++
+ include/scsi/libfc.h          |    1 
+ 4 files changed, 112 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 6bf396f..ba9de9d 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -96,6 +96,7 @@ static struct scsi_transport_template *fcoe_vport_transport_template;
- static int fcoe_vport_destroy(struct fc_vport *vport);
- static int fcoe_vport_create(struct fc_vport *vport, bool disabled);
- static int fcoe_vport_disable(struct fc_vport *vport, bool disable);
-+static void fcoe_set_vport_symbolic_name(struct fc_vport *vport);
- 
- struct fc_function_template fcoe_transport_function = {
- 	.show_host_node_name = 1,
-@@ -132,6 +133,7 @@ struct fc_function_template fcoe_transport_function = {
- 	.vport_create = fcoe_vport_create,
- 	.vport_delete = fcoe_vport_destroy,
- 	.vport_disable = fcoe_vport_disable,
-+	.set_vport_symbolic_name = fcoe_set_vport_symbolic_name,
- };
- 
- struct fc_function_template fcoe_vport_transport_function = {
-@@ -2303,3 +2305,34 @@ static int fcoe_vport_disable(struct fc_vport *vport, bool disable)
- 	return 0;
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index ae5e2c3..76197d7 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -110,6 +110,7 @@ static void fc_lport_enter_flogi(struct fc_lport *);
+ static void fc_lport_enter_dns(struct fc_lport *);
+ static void fc_lport_enter_rnn_id(struct fc_lport *);
+ static void fc_lport_enter_rsnn_nn(struct fc_lport *);
++static void fc_lport_enter_rspn_id(struct fc_lport *);
+ static void fc_lport_enter_rft_id(struct fc_lport *);
+ static void fc_lport_enter_scr(struct fc_lport *);
+ static void fc_lport_enter_ready(struct fc_lport *);
+@@ -121,6 +122,7 @@ static const char *fc_lport_state_names[] = {
+ 	[LPORT_ST_DNS] =      "dNS",
+ 	[LPORT_ST_RNN_ID] =   "RNN_ID",
+ 	[LPORT_ST_RSNN_NN] =  "RSNN_NN",
++	[LPORT_ST_RSPN_ID] =  "RSPN_ID",
+ 	[LPORT_ST_RFT_ID] =   "RFT_ID",
+ 	[LPORT_ST_SCR] =      "SCR",
+ 	[LPORT_ST_READY] =    "Ready",
+@@ -969,6 +971,7 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
+ 			case LPORT_ST_RESET:
+ 			case LPORT_ST_RNN_ID:
+ 			case LPORT_ST_RSNN_NN:
++			case LPORT_ST_RSPN_ID:
+ 			case LPORT_ST_RFT_ID:
+ 			case LPORT_ST_SCR:
+ 			case LPORT_ST_DNS:
+@@ -1036,6 +1039,59 @@ err:
  }
  
-+/**
-+ * fcoe_vport_set_symbolic_name() - append vport string to symbolic name
-+ * @vport: fc_vport with a new symbolic name string
+ /**
++ * fc_lport_rspn_id_resp() - Handle response to Register Symbolic Port Name
++ *			     by ID (RSPN_ID) request
++ * @sp: current sequence in RSPN_ID exchange
++ * @fp: response frame
++ * @lp_arg: Fibre Channel host port instance
 + *
-+ * After generating a new symbolic name string, a new RSPN_ID request is
-+ * sent to the name server.  There is no response handler, so if it fails
-+ * for some reason it will not be retried.
++ * Locking Note: This function will be called without the lport lock
++ * held, but it will lock, call an _enter_* function or fc_lport_error
++ * and then unlock the lport.
 + */
-+static void fcoe_set_vport_symbolic_name(struct fc_vport *vport)
++static void fc_lport_rspn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
++				  void *lp_arg)
 +{
-+	struct fc_lport *lport = vport->dd_data;
++	struct fc_lport *lport = lp_arg;
++	struct fc_frame_header *fh;
++	struct fc_ct_hdr *ct;
++
++	FC_LPORT_DBG(lport, "Received a RSPN_ID %s\n", fc_els_resp_type(fp));
++
++	if (fp == ERR_PTR(-FC_EX_CLOSED))
++		return;
++
++	mutex_lock(&lport->lp_mutex);
++
++	if (lport->state != LPORT_ST_RSPN_ID) {
++		FC_LPORT_DBG(lport, "Received a RSPN_ID response, but in state "
++			     "%s\n", fc_lport_state(lport));
++		if (IS_ERR(fp))
++			goto err;
++		goto out;
++	}
++
++	if (IS_ERR(fp)) {
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
++	fh = fc_frame_header_get(fp);
++	ct = fc_frame_payload_get(fp, sizeof(*ct));
++	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
++	    ct->ct_fs_type == FC_FST_DIR &&
++	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
++	    ntohs(ct->ct_cmd) == FC_FS_ACC)
++		fc_lport_enter_rspn_id(lport);
++	else
++		fc_lport_error(lport, fp);
++
++out:
++	fc_frame_free(fp);
++err:
++	mutex_unlock(&lport->lp_mutex);
++}
++/**
+  * fc_lport_rsnn_nn_resp() - Handle response to Register Symbolic Node Name
+  *			     by Node Name (RSNN_NN) request
+  * @sp: current sequence in RSNN_NN exchange
+@@ -1261,6 +1317,37 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
+ }
+ 
+ /**
++ * fc_rport_enter_rspn_id() - Register symbolic port name with the name server
++ * @lport: Fibre Channel local port to register
++ *
++ * Locking Note: The lport lock is expected to be held before calling
++ * this routine.
++ */
++static void fc_lport_enter_rspn_id(struct fc_lport *lport)
++{
 +	struct fc_frame *fp;
 +	size_t len;
 +
-+	snprintf(fc_host_symbolic_name(lport->host), FC_SYMBOLIC_NAME_SIZE,
-+		 "%s v%s over %s : %s", FCOE_NAME, FCOE_VERSION,
-+		 fcoe_netdev(lport)->name, vport->symbolic_name);
++	FC_LPORT_DBG(lport, "Entered RSPN_ID state from %s state\n",
++		     fc_lport_state(lport));
 +
-+	if (lport->state != LPORT_ST_READY)
-+		return;
++	fc_lport_state_enter(lport, LPORT_ST_RSPN_ID);
 +
 +	len = strnlen(fc_host_symbolic_name(lport->host), 255);
-+	fp = fc_frame_alloc(lport,
-+			    sizeof(struct fc_ct_hdr) +
++	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
 +			    sizeof(struct fc_ns_rspn) + len);
-+	if (!fp)
++	if (!fp) {
++		fc_lport_error(lport, fp);
 +		return;
-+	lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
-+			     NULL, NULL, lport->e_d_tov);
++	}
++
++	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
++				  fc_lport_rspn_id_resp,
++				  lport, lport->e_d_tov))
++		fc_lport_error(lport, fp);
 +}
 +
-diff --git a/drivers/scsi/libfc/fc_frame.c b/drivers/scsi/libfc/fc_frame.c
-index 5b9c977..c5f4484 100644
---- a/drivers/scsi/libfc/fc_frame.c
-+++ b/drivers/scsi/libfc/fc_frame.c
-@@ -88,3 +88,4 @@ struct fc_frame *fc_frame_alloc_fill(struct fc_lport *lp, size_t payload_len)
- 	}
- 	return fp;
- }
-+EXPORT_SYMBOL(fc_frame_alloc_fill);
++/**
+  * fc_rport_enter_rsnn_nn() - Register symbolic node name with the name server
+  * @lport: Fibre Channel local port to register
+  *
+@@ -1384,6 +1471,9 @@ static void fc_lport_timeout(struct work_struct *work)
+ 	case LPORT_ST_RSNN_NN:
+ 		fc_lport_enter_rsnn_nn(lport);
+ 		break;
++	case LPORT_ST_RSPN_ID:
++		fc_lport_enter_rspn_id(lport);
++		break;
+ 	case LPORT_ST_RFT_ID:
+ 		fc_lport_enter_rft_id(lport);
+ 		break;
+diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
+index fa82830..3fd59a2 100644
+--- a/include/scsi/fc/fc_ns.h
++++ b/include/scsi/fc/fc_ns.h
+@@ -47,6 +47,7 @@ enum fc_ns_req {
+ 	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
+ 	FC_NS_RPN_ID =	0x0212,		/* reg port name for ID */
+ 	FC_NS_RNN_ID =	0x0213,		/* reg node name for ID */
++	FC_NS_RSPN_ID =	0x0218,		/* reg symbolic port name */
+ 	FC_NS_RSNN_NN =	0x0239,		/* reg symbolic node name */
+ };
+ 
+@@ -166,4 +167,13 @@ struct fc_ns_rsnn {
+ 	char		fr_name[];
+ } __attribute__((__packed__));
+ 
++/*
++ * RSPN_ID request - register symbolic port name
++ */
++struct fc_ns_rspn {
++	struct fc_ns_fid fr_fid;	/* port ID object */
++	__u8		fr_name_len;
++	char		fr_name[];
++} __attribute__((__packed__));
++
+ #endif /* _FC_NS_H_ */
+diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
+index 89981af..9afcbb9 100644
+--- a/include/scsi/fc_encode.h
++++ b/include/scsi/fc_encode.h
+@@ -34,6 +34,7 @@ struct fc_ct_req {
+ 		struct fc_ns_rft rft;
+ 		struct fc_ns_fid fid;
+ 		struct fc_ns_rsnn snn;
++		struct fc_ns_rspn spn;
+ 	} payload;
+ };
+ 
+@@ -137,6 +138,16 @@ static inline int fc_ct_fill(struct fc_lport *lport,
+ 		put_unaligned_be64(lport->wwnn, &ct->payload.rn.fr_wwn);
+ 		break;
+ 
++	case FC_NS_RSPN_ID:
++		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn));
++		hton24(ct->payload.spn.fr_fid.fp_fid,
++		       fc_host_port_id(lport->host));
++		strncpy(ct->payload.spn.fr_name,
++			fc_host_symbolic_name(lport->host), 255);
++		ct->payload.spn.fr_name_len =
++			strnlen(ct->payload.spn.fr_name, 255);
++		break;
++
+ 	case FC_NS_RSNN_NN:
+ 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn));
+ 		put_unaligned_be64(lport->wwnn, &ct->payload.snn.fr_wwn);
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 40ab252..a5579c3 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -63,6 +63,7 @@ enum fc_lport_state {
+ 	LPORT_ST_DNS,
+ 	LPORT_ST_RNN_ID,
+ 	LPORT_ST_RSNN_NN,
++	LPORT_ST_RSPN_ID,
+ 	LPORT_ST_RFT_ID,
+ 	LPORT_ST_SCR,
+ 	LPORT_ST_READY,
 
