@@ -1,199 +1,87 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 25/35] libfc: Add routine to copy data from a buffer to a SG
-	list
-Date: Fri, 11 Sep 2009 16:59:08 -0700
-Message-ID: <20090911235908.27223.52439.stgit@localhost.localdomain>
+Subject: [PATCH 27/35] libfc, fcoe: Don't EXPORT_SYMBOLS unnecessarily
+Date: Fri, 11 Sep 2009 16:59:19 -0700
+Message-ID: <20090911235919.27223.49492.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:37600 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:21145 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932135AbZIKX7F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:59:05 -0400
+	id S932154AbZIKX7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:59:18 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 Cc: Robert Love <robert.w.love@intel.com>
 
-When handling the multi-frame responses of fc pass-thru requests,
-a code segment similar to fc_fcp_recv_data (routine to receive
-inbound SCSI data) is used in the response handler. This patch
-is to add a routine, called fc_copy_buffer_to_sglist(), to handle
-the common function of copying data from a buffer to a scatter-
-gather list in order to avoid code duplication.
+These are a few functions that were not used by other
+modules. They did not need to be exported so this patch
+removes the EXPORT_SYMBOLS call for each.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c   |   56 +++++++-------------------------------
- drivers/scsi/libfc/fc_libfc.c |   60 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libfc/fc_libfc.h |    8 +++++
- 3 files changed, 78 insertions(+), 46 deletions(-)
+ drivers/scsi/libfc/fc_exch.c  |    1 -
+ drivers/scsi/libfc/fc_fcp.c   |    1 -
+ drivers/scsi/libfc/fc_frame.c |    1 -
+ drivers/scsi/libfc/fc_rport.c |    2 --
+ 4 files changed, 0 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index c40eab5..8e815d4 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -519,7 +519,6 @@ static int fc_seq_exch_abort(const struct fc_seq *req_sp,
+ 		error = -ENOBUFS;
+ 	return error;
+ }
+-EXPORT_SYMBOL(fc_seq_exch_abort);
+ 
+ /*
+  * Exchange timeout - handle exchange timer expiration.
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index e4ff27e..a474773 100644
+index a474773..a523e4f 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -324,7 +324,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 	size_t len;
- 	void *buf;
- 	struct scatterlist *sg;
--	size_t remaining;
-+	u32 nents;
- 
- 	fh = fc_frame_header_get(fp);
- 	offset = ntohl(fh->fh_parm_offset);
-@@ -348,55 +348,19 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 	if (offset != fsp->xfer_len)
- 		fsp->state |= FC_SRB_DISCONTIG;
- 
--	crc = 0;
--	if (fr_flags(fp) & FCPHF_CRC_UNCHECKED)
--		crc = crc32(~0, (u8 *) fh, sizeof(*fh));
--
- 	sg = scsi_sglist(sc);
--	remaining = len;
--
--	while (remaining > 0 && sg) {
--		size_t off;
--		void *page_addr;
--		size_t sg_bytes;
--
--		if (offset >= sg->length) {
--			offset -= sg->length;
--			sg = sg_next(sg);
--			continue;
--		}
--		sg_bytes = min(remaining, sg->length - offset);
-+	nents = scsi_sg_count(sc);
- 
--		/*
--		 * The scatterlist item may be bigger than PAGE_SIZE,
--		 * but we are limited to mapping PAGE_SIZE at a time.
--		 */
--		off = offset + sg->offset;
--		sg_bytes = min(sg_bytes, (size_t)
--			       (PAGE_SIZE - (off & ~PAGE_MASK)));
--		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT),
--					KM_SOFTIRQ0);
--		if (!page_addr)
--			break;		/* XXX panic? */
--
--		if (fr_flags(fp) & FCPHF_CRC_UNCHECKED)
--			crc = crc32(crc, buf, sg_bytes);
--		memcpy((char *)page_addr + (off & ~PAGE_MASK), buf,
--		       sg_bytes);
--
--		kunmap_atomic(page_addr, KM_SOFTIRQ0);
--		buf += sg_bytes;
--		offset += sg_bytes;
--		remaining -= sg_bytes;
--		copy_len += sg_bytes;
--	}
--
--	if (fr_flags(fp) & FCPHF_CRC_UNCHECKED) {
-+	if (!(fr_flags(fp) & FCPHF_CRC_UNCHECKED)) {
-+		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
-+						    &offset, KM_SOFTIRQ0, NULL);
-+	} else {
-+		crc = crc32(~0, (u8 *) fh, sizeof(*fh));
-+		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
-+						    &offset, KM_SOFTIRQ0, &crc);
- 		buf = fc_frame_payload_get(fp, 0);
--		if (len % 4) {
-+		if (len % 4)
- 			crc = crc32(crc, buf + len, 4 - (len % 4));
--			len += 4 - (len % 4);
--		}
- 
- 		if (~crc != le32_to_cpu(fr_crc(fp))) {
- crc_err:
-diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
-index 01418ae..295eafb 100644
---- a/drivers/scsi/libfc/fc_libfc.c
-+++ b/drivers/scsi/libfc/fc_libfc.c
-@@ -72,3 +72,63 @@ static void __exit libfc_exit(void)
- 	fc_destroy_rport();
+@@ -279,7 +279,6 @@ void fc_fcp_ddp_setup(struct fc_fcp_pkt *fsp, u16 xid)
+ 			fsp->xfer_ddp = xid;
+ 	}
  }
- module_exit(libfc_exit);
-+
-+/**
-+ * fc_copy_buffer_to_sglist() - This routine copies the data of a buffer
-+ *                              into a scatter-gather list (SG list).
-+ *
-+ * @buf: pointer to the data buffer.
-+ * @len: the byte-length of the data buffer.
-+ * @sg: pointer to the pointer of the SG list.
-+ * @nents: pointer to the remaining number of entries in the SG list.
-+ * @offset: pointer to the current offset in the SG list.
-+ * @km_type: dedicated page table slot type for kmap_atomic.
-+ * @crc: pointer to the 32-bit crc value.
-+ *       If crc is NULL, CRC is not calculated.
-+ */
-+u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
-+			     struct scatterlist *sg,
-+			     u32 *nents, size_t *offset,
-+			     enum km_type km_type, u32 *crc)
-+{
-+	size_t remaining = len;
-+	u32 copy_len = 0;
-+
-+	while (remaining > 0 && sg) {
-+		size_t off, sg_bytes;
-+		void *page_addr;
-+
-+		if (*offset >= sg->length) {
-+			/*
-+			 * Check for end and drop resources
-+			 * from the last iteration.
-+			 */
-+			if (!(*nents))
-+				break;
-+			--(*nents);
-+			*offset -= sg->length;
-+			sg = sg_next(sg);
-+			continue;
-+		}
-+		sg_bytes = min(remaining, sg->length - *offset);
-+
-+		/*
-+		 * The scatterlist item may be bigger than PAGE_SIZE,
-+		 * but we are limited to mapping PAGE_SIZE at a time.
-+		 */
-+		off = *offset + sg->offset;
-+		sg_bytes = min(sg_bytes,
-+			       (size_t)(PAGE_SIZE - (off & ~PAGE_MASK)));
-+		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT),
-+					km_type);
-+		if (crc)
-+			*crc = crc32(*crc, buf, sg_bytes);
-+		memcpy((char *)page_addr + (off & ~PAGE_MASK), buf, sg_bytes);
-+		kunmap_atomic(page_addr, km_type);
-+		buf += sg_bytes;
-+		*offset += sg_bytes;
-+		remaining -= sg_bytes;
-+		copy_len += sg_bytes;
-+	}
-+	return copy_len;
-+}
-diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
-index 0530149..e4b5e92 100644
---- a/drivers/scsi/libfc/fc_libfc.h
-+++ b/drivers/scsi/libfc/fc_libfc.h
-@@ -101,4 +101,12 @@ void fc_destroy_fcp(void);
-  */
- const char *fc_els_resp_type(struct fc_frame *);
+-EXPORT_SYMBOL(fc_fcp_ddp_setup);
  
-+/*
-+ * Copies a buffer into an sg list
-+ */
-+u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
-+			     struct scatterlist *sg,
-+			     u32 *nents, size_t *offset,
-+			     enum km_type km_type, u32 *crc);
-+
- #endif /* _FC_LIBFC_H_ */
+ /*
+  * fc_fcp_ddp_done - calls to LLD's ddp_done to release any
+diff --git a/drivers/scsi/libfc/fc_frame.c b/drivers/scsi/libfc/fc_frame.c
+index c5f4484..8ddb685 100644
+--- a/drivers/scsi/libfc/fc_frame.c
++++ b/drivers/scsi/libfc/fc_frame.c
+@@ -70,7 +70,6 @@ struct fc_frame *__fc_frame_alloc(size_t len)
+ }
+ EXPORT_SYMBOL(__fc_frame_alloc);
+ 
+-
+ struct fc_frame *fc_frame_alloc_fill(struct fc_lport *lp, size_t payload_len)
+ {
+ 	struct fc_frame *fp;
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index bf42a98..239fe54 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1567,13 +1567,11 @@ int fc_setup_rport(void)
+ 		return -ENOMEM;
+ 	return 0;
+ }
+-EXPORT_SYMBOL(fc_setup_rport);
+ 
+ void fc_destroy_rport(void)
+ {
+ 	destroy_workqueue(rport_event_queue);
+ }
+-EXPORT_SYMBOL(fc_destroy_rport);
+ 
+ void fc_rport_terminate_io(struct fc_rport *rport)
+ {
 
