@@ -1,224 +1,54 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 35/35] libfc: adds can_queue ramp up
-Date: Fri, 11 Sep 2009 17:00:06 -0700
-Message-ID: <20090912000006.27223.74492.stgit@localhost.localdomain>
+Subject: [PATCH 32/35] libfc: Fix wrong scsi return status under FC_DATA_UNDRUN
+Date: Fri, 11 Sep 2009 16:59:46 -0700
+Message-ID: <20090911235946.27223.39183.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:10334 "EHLO mga14.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:1759 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757205AbZILAAD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 20:00:03 -0400
+	id S932190AbZILAAJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 20:00:09 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Vasu Dev <vasu.dev@intel.com>
+From: Yi Zou <yi.zou@intel.com>
 
-Adds last_can_queue_ramp_down_time and updates this on every
-ramp down. If last_can_queue_ramp_down_time is not zero then
-do ramp up on any IO completion in added fc_fcp_can_queue_ramp_up.
+This bug is exposed when there is a link flap in LLD. Particularly, when it
+happens right after a SCSI write command is sent out, no FCP_DATA is sent,
+causing fsp->status_code to be set as FC_DATA_UNDRUN in fc_fcp_complete_locked
+even no SCSI status is received. Consequently, fc_io_compl treats this as DID_OK.
+This results in SCSI returning successful to the initial I/O request even
+there is no DATA actually sent. Particularly, if you run an I/O tool w/ data
+verification on, the read back for verification is gonna fail.
 
-Reset last_can_queue_ramp_down_time to zero once can_queue
-is ramped up to added max_can_queue limit, this is to avoid any
-more ramp up attempts on subsequent IO completion.
+This is fixed here by checking when FC_DATA_UNDRUN happens, SCSI status is
+received w/ FC_SRB_RCV_STATUS set in fsp->state.
 
-The ramp down and up are skipped for FC_CAN_QUEUE_PERIOD
-to avoid infrequent changes to can_queue, this required
-keeping track of ramp up time also in last_can_queue_ramp_up_time.
-
-Adds code to ramp down can_queue if lp->qfull is set, with added
-new ramp up code the can_queue will be increased after
-FC_CAN_QUEUE_PERIOD, therefore it is safe to do ramp down
-without fsp in this case and will avoid thrash. This required
-fc_fcp_can_queue_ramp_down locking change so that it can be
-called with Scsi_Host lock held.
-
-Removes si->throttled and fsp state FC_SRB_NOMEM, not needed with
-added ramp up code.
-
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |   78 +++++++++++++++++++++++++++++++++----------
- 1 files changed, 59 insertions(+), 19 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 8b7950f..8447546 100644
+index 7b916cd..858c0b2 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -52,7 +52,6 @@ struct kmem_cache *scsi_pkt_cachep;
- #define FC_SRB_DISCONTIG	(1 << 4)	/* non-sequential data recvd */
- #define FC_SRB_COMPL		(1 << 5)	/* fc_io_compl has been run */
- #define FC_SRB_FCP_PROCESSING_TMO (1 << 6)	/* timer function processing */
--#define FC_SRB_NOMEM		(1 << 7)	/* dropped to out of mem */
- 
- #define FC_SRB_READ		(1 << 1)
- #define FC_SRB_WRITE		(1 << 0)
-@@ -71,12 +70,16 @@ struct kmem_cache *scsi_pkt_cachep;
-  * struct fc_fcp_internal - FCP layer internal data
-  * @scsi_pkt_pool:  Memory pool to draw FCP packets from
-  * @scsi_pkt_queue: Current FCP packets
-- * @throttled:	    The FCP packet queue is throttled
-+ * @last_can_queue_ramp_down_time: ramp down time
-+ * @last_can_queue_ramp_up_time: ramp up time
-+ * @max_can_queue: max can_queue size
-  */
- struct fc_fcp_internal {
- 	mempool_t	 *scsi_pkt_pool;
- 	struct list_head scsi_pkt_queue;
--	u8		 throttled;
-+	unsigned long last_can_queue_ramp_down_time;
-+	unsigned long last_can_queue_ramp_up_time;
-+	int max_can_queue;
- };
- 
- #define fc_get_scsi_internal(x)	((struct fc_fcp_internal *)(x)->scsi_priv)
-@@ -124,6 +127,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *, struct fc_frame *);
- #define FC_SCSI_TM_TOV		(10 * HZ)
- #define FC_SCSI_REC_TOV		(2 * HZ)
- #define FC_HOST_RESET_TIMEOUT	(30 * HZ)
-+#define FC_CAN_QUEUE_PERIOD	(60 * HZ)
- 
- #define FC_MAX_ERROR_CNT	5
- #define FC_MAX_RECOV_RETRY	3
-@@ -327,6 +331,38 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
- }
- 
- /**
-+ * fc_fcp_can_queue_ramp_up() - increases can_queue
-+ * @lport: lport to ramp up can_queue
-+ *
-+ * Locking notes: Called with Scsi_Host lock held
-+ */
-+static void fc_fcp_can_queue_ramp_up(struct fc_lport *lport)
-+{
-+	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
-+	int can_queue;
-+
-+	if (si->last_can_queue_ramp_up_time &&
-+	    (time_before(jiffies, si->last_can_queue_ramp_up_time +
-+			 FC_CAN_QUEUE_PERIOD)))
-+		return;
-+
-+	if (time_before(jiffies, si->last_can_queue_ramp_down_time +
-+			FC_CAN_QUEUE_PERIOD))
-+		return;
-+
-+	si->last_can_queue_ramp_up_time = jiffies;
-+
-+	can_queue = lport->host->can_queue << 1;
-+	if (can_queue >= si->max_can_queue) {
-+		can_queue = si->max_can_queue;
-+		si->last_can_queue_ramp_down_time = 0;
-+	}
-+	lport->host->can_queue = can_queue;
-+	shost_printk(KERN_ERR, lport->host, "libfc: increased "
-+		     "can_queue to %d.\n", can_queue);
-+}
-+
-+/**
-  * fc_fcp_can_queue_ramp_down() - reduces can_queue
-  * @lport: lport to reduce can_queue
-  *
-@@ -335,17 +371,20 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
-  * commands complete or timeout, then try again with a reduced
-  * can_queue. Eventually we will hit the point where we run
-  * on all reserved structs.
-+ *
-+ * Locking notes: Called with Scsi_Host lock held
-  */
- static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
- {
- 	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
--	unsigned long flags;
- 	int can_queue;
- 
--	spin_lock_irqsave(lport->host->host_lock, flags);
--	if (si->throttled)
--		goto done;
--	si->throttled = 1;
-+	if (si->last_can_queue_ramp_down_time &&
-+	    (time_before(jiffies, si->last_can_queue_ramp_down_time +
-+			 FC_CAN_QUEUE_PERIOD)))
-+		return;
-+
-+	si->last_can_queue_ramp_down_time = jiffies;
- 
- 	can_queue = lport->host->can_queue;
- 	can_queue >>= 1;
-@@ -354,8 +393,6 @@ static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
- 	lport->host->can_queue = can_queue;
- 	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
- 		     "Reducing can_queue to %d.\n", can_queue);
--done:
--	spin_unlock_irqrestore(lport->host->host_lock, flags);
- }
- 
- /*
-@@ -370,10 +407,14 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
- 						  size_t len)
- {
- 	struct fc_frame *fp;
-+	unsigned long flags;
- 
- 	fp = fc_frame_alloc(lport, len);
--	if (!fp)
-+	if (!fp) {
-+		spin_lock_irqsave(lport->host->host_lock, flags);
- 		fc_fcp_can_queue_ramp_down(lport);
-+		spin_unlock_irqrestore(lport->host->host_lock, flags);
-+	}
- 	return fp;
- }
- 
-@@ -719,8 +760,6 @@ static void fc_fcp_recv(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 				      (size_t) ntohl(dd->ft_burst_len));
- 		if (!rc)
- 			seq->rec_data = fsp->xfer_len;
--		else if (rc == -ENOMEM)
--			fsp->state |= FC_SRB_NOMEM;
- 	} else if (r_ctl == FC_RCTL_DD_SOL_DATA) {
- 		/*
- 		 * received a DATA frame
-@@ -1736,6 +1775,8 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 	rpriv = rport->dd_data;
- 
- 	if (!fc_fcp_lport_queue_ready(lport)) {
-+		if (lport->qfull)
-+			fc_fcp_can_queue_ramp_down(lport);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
- 	}
-@@ -1832,13 +1873,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
- 	}
- 
- 	/*
--	 * if a command timed out while we had to try and throttle IO
--	 * and it is now getting cleaned up, then we are about to
--	 * try again so clear the throttled flag incase we get more
--	 * time outs.
-+	 * if can_queue ramp down is done then try can_queue ramp up
-+	 * since commands are completing now.
- 	 */
--	if (si->throttled && fsp->state & FC_SRB_NOMEM)
--		si->throttled = 0;
-+	if (si->last_can_queue_ramp_down_time)
-+		fc_fcp_can_queue_ramp_up(lport);
- 
- 	sc_cmd = fsp->cmd;
- 	fsp->cmd = NULL;
-@@ -2180,6 +2219,7 @@ int fc_fcp_init(struct fc_lport *lport)
- 	if (!si)
- 		return -ENOMEM;
- 	lport->scsi_priv = si;
-+	si->max_can_queue = lport->host->can_queue;
- 	INIT_LIST_HEAD(&si->scsi_pkt_queue);
- 
- 	si->scsi_pkt_pool = mempool_create_slab_pool(2, scsi_pkt_cachep);
+@@ -1866,7 +1866,8 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 			 * scsi status is good but transport level
+ 			 * underrun.
+ 			 */
+-			sc_cmd->result = DID_OK << 16;
++			sc_cmd->result = (fsp->state & FC_SRB_RCV_STATUS ?
++					  DID_OK : DID_ERROR) << 16;
+ 		} else {
+ 			/*
+ 			 * scsi got underrun, this is an error
 
