@@ -1,373 +1,654 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 26/35] libfc, fcoe: Add FC passthrough support
-Date: Fri, 11 Sep 2009 16:59:14 -0700
-Message-ID: <20090911235914.27223.71680.stgit@localhost.localdomain>
+Subject: [PATCH 30/35] libfcoe: formatting and comment cleanups
+Date: Fri, 11 Sep 2009 16:59:35 -0700
+Message-ID: <20090911235935.27223.54506.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21145 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:19190 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932166AbZIKX7X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:59:23 -0400
+	id S932178AbZIKX7c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:59:32 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Steve Ma <steve.ma@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
 
-From: Steve Ma <steve.ma@intel.com>
+Ensures that there are kernel-doc style comments for all
+routines and structures.
 
-This is the Open-FCoE implementation of the FC
-passthrough support via bsg interface.
+There were also a few instances of fc_lport's named 'lp'
+which were switched to 'lport' as per the libfc/libfcoe/fcoe
+naming convention.
 
-Passthrough support is added to both N_Ports and
-VN_Ports.
+Also, emacs 'indent-region' and 'tabify' were ran on libfcoe.c.
 
-Signed-off-by: Steve Ma <steve.ma@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c      |    4 +
- drivers/scsi/libfc/fc_lport.c |  267 +++++++++++++++++++++++++++++++++++++++++
- include/scsi/libfc.h          |    7 +
- 3 files changed, 278 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |  216 ++++++++++++++++++++++---------------------
+ include/scsi/libfcoe.h      |   84 ++++++++---------
+ 2 files changed, 153 insertions(+), 147 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index ba9de9d..ecd1b9d 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -134,6 +134,8 @@ struct fc_function_template fcoe_transport_function = {
- 	.vport_delete = fcoe_vport_destroy,
- 	.vport_disable = fcoe_vport_disable,
- 	.set_vport_symbolic_name = fcoe_set_vport_symbolic_name,
-+
-+	.bsg_request = fc_lport_bsg_request,
- };
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index dc3a451..a563c99 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -60,15 +60,15 @@ unsigned int libfcoe_debug_logging;
+ module_param_named(debug_logging, libfcoe_debug_logging, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
  
- struct fc_function_template fcoe_vport_transport_function = {
-@@ -167,6 +169,8 @@ struct fc_function_template fcoe_vport_transport_function = {
- 	.issue_fc_host_lip = fcoe_reset,
+-#define LIBFCOE_LOGGING     0x01 /* General logging, not categorized */
++#define LIBFCOE_LOGGING	    0x01 /* General logging, not categorized */
+ #define LIBFCOE_FIP_LOGGING 0x02 /* FIP logging */
  
- 	.terminate_rport_io = fc_rport_terminate_io,
-+
-+	.bsg_request = fc_lport_bsg_request,
- };
+-#define LIBFCOE_CHECK_LOGGING(LEVEL, CMD)				\
+-do {                                                            	\
+-	if (unlikely(libfcoe_debug_logging & LEVEL))			\
+-		do {							\
+-			CMD;						\
+-		} while (0);						\
++#define LIBFCOE_CHECK_LOGGING(LEVEL, CMD)		\
++do {							\
++	if (unlikely(libfcoe_debug_logging & LEVEL))	\
++		do {					\
++			CMD;				\
++		} while (0);				\
+ } while (0)
  
- static struct scsi_host_template fcoe_shost_template = {
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index f6fc9f4..33f4c2f 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -94,6 +94,7 @@
+ #define LIBFCOE_DBG(fmt, args...)					\
+@@ -79,7 +79,10 @@ do {                                                            	\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_FIP_LOGGING,			\
+ 			      printk(KERN_INFO "fip: " fmt, ##args);)
  
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
-+#include <linux/scatterlist.h>
- 
- #include "fc_libfc.h"
- 
-@@ -127,6 +128,24 @@ static const char *fc_lport_state_names[] = {
- 	[LPORT_ST_RESET] =    "reset",
- };
- 
+-/*
 +/**
-+ * struct fc_bsg_info - FC Passthrough managemet structure
-+ * @job:      The passthrough job
-+ * @lport:    The local port to pass through a command
-+ * @rsp_code: The expected response code
-+ * @sg:       job->reply_payload.sg_list
-+ * @nents:    job->reply_payload.sg_cnt
-+ * @offset:   The offset into the response data
-+ */
-+struct fc_bsg_info {
-+	struct fc_bsg_job *job;
-+	struct fc_lport *lport;
-+	u16 rsp_code;
-+	struct scatterlist *sg;
-+	u32 nents;
-+	size_t offset;
-+};
-+
- static int fc_frame_drop(struct fc_lport *lport, struct fc_frame *fp)
++ * fcoe_ctlr_mtu_valid() - Check if a FCF's MTU is valid
++ * @fcf: The FCF to check
++ *
+  * Return non-zero if FCF fcoe_size has been validated.
+  */
+ static inline int fcoe_ctlr_mtu_valid(const struct fcoe_fcf *fcf)
+@@ -87,7 +90,10 @@ static inline int fcoe_ctlr_mtu_valid(const struct fcoe_fcf *fcf)
+ 	return (fcf->flags & FIP_FL_SOL) != 0;
+ }
+ 
+-/*
++/**
++ * fcoe_ctlr_fcf_usable() - Check if a FCF is usable
++ * @fcf: The FCF to check
++ *
+  * Return non-zero if the FCF is usable.
+  */
+ static inline int fcoe_ctlr_fcf_usable(struct fcoe_fcf *fcf)
+@@ -98,8 +104,8 @@ static inline int fcoe_ctlr_fcf_usable(struct fcoe_fcf *fcf)
+ }
+ 
+ /**
+- * fcoe_ctlr_init() - Initialize the FCoE Controller instance.
+- * @fip:	FCoE controller.
++ * fcoe_ctlr_init() - Initialize the FCoE Controller instance
++ * @fip: The FCoE controller to initialize
+  */
+ void fcoe_ctlr_init(struct fcoe_ctlr *fip)
  {
- 	fc_frame_free(fp);
-@@ -1509,3 +1528,251 @@ int fc_lport_init(struct fc_lport *lport)
+@@ -115,8 +121,8 @@ void fcoe_ctlr_init(struct fcoe_ctlr *fip)
+ EXPORT_SYMBOL(fcoe_ctlr_init);
+ 
+ /**
+- * fcoe_ctlr_reset_fcfs() - Reset and free all FCFs for a controller.
+- * @fip:	FCoE controller.
++ * fcoe_ctlr_reset_fcfs() - Reset and free all FCFs for a controller
++ * @fip: The FCoE controller whose FCFs are to be reset
+  *
+  * Called with &fcoe_ctlr lock held.
+  */
+@@ -135,8 +141,8 @@ static void fcoe_ctlr_reset_fcfs(struct fcoe_ctlr *fip)
+ }
+ 
+ /**
+- * fcoe_ctlr_destroy() - Disable and tear-down the FCoE controller.
+- * @fip:	FCoE controller.
++ * fcoe_ctlr_destroy() - Disable and tear down a FCoE controller
++ * @fip: The FCoE controller to tear down
+  *
+  * This is called by FCoE drivers before freeing the &fcoe_ctlr.
+  *
+@@ -163,8 +169,8 @@ void fcoe_ctlr_destroy(struct fcoe_ctlr *fip)
+ EXPORT_SYMBOL(fcoe_ctlr_destroy);
+ 
+ /**
+- * fcoe_ctlr_fcoe_size() - Return the maximum FCoE size required for VN_Port.
+- * @fip:	FCoE controller.
++ * fcoe_ctlr_fcoe_size() - Return the maximum FCoE size required for VN_Port
++ * @fip: The FCoE controller to get the maximum FCoE size from
+  *
+  * Returns the maximum packet size including the FCoE header and trailer,
+  * but not including any Ethernet or VLAN headers.
+@@ -181,9 +187,9 @@ static inline u32 fcoe_ctlr_fcoe_size(struct fcoe_ctlr *fip)
+ }
+ 
+ /**
+- * fcoe_ctlr_solicit() - Send a solicitation.
+- * @fip:	FCoE controller.
+- * @fcf:	Destination FCF.  If NULL, a multicast solicitation is sent.
++ * fcoe_ctlr_solicit() - Send a FIP solicitation
++ * @fip: The FCoE controller to send the solicitation on
++ * @fcf: The destination FCF (if NULL, a multicast solicitation is sent)
+  */
+ static void fcoe_ctlr_solicit(struct fcoe_ctlr *fip, struct fcoe_fcf *fcf)
+ {
+@@ -242,8 +248,8 @@ static void fcoe_ctlr_solicit(struct fcoe_ctlr *fip, struct fcoe_fcf *fcf)
+ }
+ 
+ /**
+- * fcoe_ctlr_link_up() - Start FCoE controller.
+- * @fip:	FCoE controller.
++ * fcoe_ctlr_link_up() - Start FCoE controller
++ * @fip: The FCoE controller to start
+  *
+  * Called from the LLD when the network link is ready.
+  */
+@@ -269,15 +275,15 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ EXPORT_SYMBOL(fcoe_ctlr_link_up);
+ 
+ /**
+- * fcoe_ctlr_reset() - Reset FIP.
+- * @fip:	FCoE controller.
+- * @new_state:	FIP state to be entered.
++ * fcoe_ctlr_reset() - Reset a FCoE controller
++ * @fip:       The FCoE controller to reset
++ * @new_state: The FIP state to be entered
+  *
+  * Returns non-zero if the link was up and now isn't.
+  */
+ static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
+ {
+-	struct fc_lport *lp = fip->lp;
++	struct fc_lport *lport = fip->lp;
+ 	int link_dropped;
+ 
+ 	spin_lock_bh(&fip->lock);
+@@ -295,19 +301,19 @@ static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
+ 	spin_unlock_bh(&fip->lock);
+ 
+ 	if (link_dropped)
+-		fc_linkdown(lp);
++		fc_linkdown(lport);
+ 
+ 	if (new_state == FIP_ST_ENABLED) {
+ 		fcoe_ctlr_solicit(fip, NULL);
+-		fc_linkup(lp);
++		fc_linkup(lport);
+ 		link_dropped = 0;
+ 	}
+ 	return link_dropped;
+ }
+ 
+ /**
+- * fcoe_ctlr_link_down() - Stop FCoE controller.
+- * @fip:	FCoE controller.
++ * fcoe_ctlr_link_down() - Stop a FCoE controller
++ * @fip: The FCoE controller to be stopped
+  *
+  * Returns non-zero if the link was up and now isn't.
+  *
+@@ -321,11 +327,11 @@ int fcoe_ctlr_link_down(struct fcoe_ctlr *fip)
+ EXPORT_SYMBOL(fcoe_ctlr_link_down);
+ 
+ /**
+- * fcoe_ctlr_send_keep_alive() - Send a keep-alive to the selected FCF.
+- * @fip:	FCoE controller.
+- * @lport:	libfc fc_lport to send from
+- * @ports:	0 for controller keep-alive, 1 for port keep-alive.
+- * @sa:		source MAC address.
++ * fcoe_ctlr_send_keep_alive() - Send a keep-alive to the selected FCF
++ * @fip:   The FCoE controller to send the FKA on
++ * @lport: libfc fc_lport to send from
++ * @ports: 0 for controller keep-alive, 1 for port keep-alive
++ * @sa:	   The source MAC address
+  *
+  * A controller keep-alive is sent every fka_period (typically 8 seconds).
+  * The source MAC is the native MAC address.
+@@ -370,7 +376,7 @@ static void fcoe_ctlr_send_keep_alive(struct fcoe_ctlr *fip,
+ 	kal->fip.fip_op = htons(FIP_OP_CTRL);
+ 	kal->fip.fip_subcode = FIP_SC_KEEP_ALIVE;
+ 	kal->fip.fip_dl_len = htons((sizeof(kal->mac) +
+-				    ports * sizeof(*vn)) / FIP_BPW);
++				     ports * sizeof(*vn)) / FIP_BPW);
+ 	kal->fip.fip_flags = htons(FIP_FL_FPMA);
+ 	if (fip->spma)
+ 		kal->fip.fip_flags |= htons(FIP_FL_SPMA);
+@@ -394,11 +400,10 @@ static void fcoe_ctlr_send_keep_alive(struct fcoe_ctlr *fip,
+ }
+ 
+ /**
+- * fcoe_ctlr_encaps() - Encapsulate an ELS frame for FIP, without sending it.
+- * @fip:	FCoE controller.
+- * @lport:	libfc fc_lport to use for the source address
+- * @dtype:	FIP descriptor type for the frame.
+- * @skb:	FCoE ELS frame including FC header but no FCoE headers.
++ * fcoe_ctlr_encaps() - Encapsulate an ELS frame for FIP, without sending it
++ * @fip:   The FCoE controller for the ELS frame
++ * @dtype: The FIP descriptor type for the frame
++ * @skb:   The FCoE ELS frame including FC header but no FCoE headers
+  *
+  * Returns non-zero error code on failure.
+  *
+@@ -554,9 +559,9 @@ drop:
+ }
+ EXPORT_SYMBOL(fcoe_ctlr_els_send);
+ 
+-/*
+- * fcoe_ctlr_age_fcfs() - Reset and free all old FCFs for a controller.
+- * @fip:	FCoE controller.
++/**
++ * fcoe_ctlr_age_fcfs() - Reset and free all old FCFs for a controller
++ * @fip: The FCoE controller to free FCFs on
+  *
+  * Called with lock held.
+  *
+@@ -597,9 +602,9 @@ static void fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
+ }
+ 
+ /**
+- * fcoe_ctlr_parse_adv() - Decode a FIP advertisement into a new FCF entry.
+- * @skb:	received FIP advertisement frame
+- * @fcf:	resulting FCF entry.
++ * fcoe_ctlr_parse_adv() - Decode a FIP advertisement into a new FCF entry
++ * @skb: The received FIP advertisement frame
++ * @fcf: The resulting FCF entry
+  *
+  * Returns zero on a valid parsed advertisement,
+  * otherwise returns non zero value.
+@@ -700,9 +705,9 @@ len_err:
+ }
+ 
+ /**
+- * fcoe_ctlr_recv_adv() - Handle an incoming advertisement.
+- * @fip:	FCoE controller.
+- * @skb:	Received FIP packet.
++ * fcoe_ctlr_recv_adv() - Handle an incoming advertisement
++ * @fip: The FCoE controller receiving the advertisement
++ * @skb: The received FIP packet
+  */
+ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ {
+@@ -785,7 +790,7 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	 */
+ 	if (mtu_valid && !fip->sel_time && fcoe_ctlr_fcf_usable(fcf)) {
+ 		fip->sel_time = jiffies +
+-				msecs_to_jiffies(FCOE_CTLR_START_DELAY);
++			msecs_to_jiffies(FCOE_CTLR_START_DELAY);
+ 		if (!timer_pending(&fip->timer) ||
+ 		    time_before(fip->sel_time, fip->timer.expires))
+ 			mod_timer(&fip->timer, fip->sel_time);
+@@ -795,13 +800,13 @@ out:
+ }
+ 
+ /**
+- * fcoe_ctlr_recv_els() - Handle an incoming FIP-encapsulated ELS frame.
+- * @fip:	FCoE controller.
+- * @skb:	Received FIP packet.
++ * fcoe_ctlr_recv_els() - Handle an incoming FIP encapsulated ELS frame
++ * @fip: The FCoE controller which received the packet
++ * @skb: The received FIP packet
+  */
+ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ {
+-	struct fc_lport *lp = fip->lp;
++	struct fc_lport *lport = fip->lp;
+ 	struct fip_header *fiph;
+ 	struct fc_frame *fp = (struct fc_frame *)skb;
+ 	struct fc_frame_header *fh = NULL;
+@@ -887,13 +892,13 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	fc_frame_init(fp);
+ 	fr_sof(fp) = FC_SOF_I3;
+ 	fr_eof(fp) = FC_EOF_T;
+-	fr_dev(fp) = lp;
++	fr_dev(fp) = lport;
+ 
+-	stats = fc_lport_get_stats(lp);
++	stats = fc_lport_get_stats(lport);
+ 	stats->RxFrames++;
+ 	stats->RxWords += skb->len / FIP_BPW;
+ 
+-	fc_exch_recv(lp, fp);
++	fc_exch_recv(lport, fp);
+ 	return;
+ 
+ len_err:
+@@ -904,15 +909,15 @@ drop:
+ }
+ 
+ /**
+- * fcoe_ctlr_recv_els() - Handle an incoming link reset frame.
+- * @fip:	FCoE controller.
+- * @fh:		Received FIP header.
++ * fcoe_ctlr_recv_els() - Handle an incoming link reset frame
++ * @fip: The FCoE controller that received the frame
++ * @fh:	 The received FIP header
+  *
+  * There may be multiple VN_Port descriptors.
+  * The overall length has already been checked.
+  */
+ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+-				      struct fip_header *fh)
++				     struct fip_header *fh)
+ {
+ 	struct fip_desc *desc;
+ 	struct fip_mac_desc *mp;
+@@ -921,13 +926,13 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 	size_t rlen;
+ 	size_t dlen;
+ 	struct fcoe_fcf *fcf = fip->sel_fcf;
+-	struct fc_lport *lp = fip->lp;
++	struct fc_lport *lport = fip->lp;
+ 	u32	desc_mask;
+ 
+ 	LIBFCOE_FIP_DBG("Clear Virtual Link received\n");
+ 	if (!fcf)
+ 		return;
+-	if (!fcf || !fc_host_port_id(lp->host))
++	if (!fcf || !fc_host_port_id(lport->host))
+ 		return;
+ 
+ 	/*
+@@ -963,9 +968,10 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 			if (dlen < sizeof(*vp))
+ 				return;
+ 			if (compare_ether_addr(vp->fd_mac,
+-			    fip->get_src_addr(lp)) == 0 &&
+-			    get_unaligned_be64(&vp->fd_wwpn) == lp->wwpn &&
+-			    ntoh24(vp->fd_fc_id) == fc_host_port_id(lp->host))
++					       fip->get_src_addr(lport)) == 0 &&
++			    get_unaligned_be64(&vp->fd_wwpn) == lport->wwpn &&
++			    ntoh24(vp->fd_fc_id) ==
++			    fc_host_port_id(lport->host))
+ 				desc_mask &= ~BIT(FIP_DT_VN_ID);
+ 			break;
+ 		default:
+@@ -990,9 +996,9 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ }
+ 
+ /**
+- * fcoe_ctlr_recv() - Receive a FIP frame.
+- * @fip:	FCoE controller.
+- * @skb:	Received FIP packet.
++ * fcoe_ctlr_recv() - Receive a FIP packet
++ * @fip: The FCoE controller that received the packet
++ * @skb: The received FIP packet
+  *
+  * This is called from NET_RX_SOFTIRQ.
+  */
+@@ -1006,9 +1012,9 @@ void fcoe_ctlr_recv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ EXPORT_SYMBOL(fcoe_ctlr_recv);
+ 
+ /**
+- * fcoe_ctlr_recv_handler() - Receive a FIP frame.
+- * @fip:	FCoE controller.
+- * @skb:	Received FIP packet.
++ * fcoe_ctlr_recv_handler() - Receive a FIP frame
++ * @fip: The FCoE controller that received the frame
++ * @skb: The received FIP frame
+  *
+  * Returns non-zero if the frame is dropped.
+  */
+@@ -1065,8 +1071,8 @@ drop:
+ }
+ 
+ /**
+- * fcoe_ctlr_select() - Select the best FCF, if possible.
+- * @fip:	FCoE controller.
++ * fcoe_ctlr_select() - Select the best FCF (if possible)
++ * @fip: The FCoE controller
+  *
+  * If there are conflicting advertisements, no FCF can be chosen.
+  *
+@@ -1107,8 +1113,8 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
+ }
+ 
+ /**
+- * fcoe_ctlr_timeout() - FIP timer function.
+- * @arg:	&fcoe_ctlr pointer.
++ * fcoe_ctlr_timeout() - FIP timeout handler
++ * @arg: The FCoE controller that timed out
+  *
+  * Ages FCFs.  Triggers FCF selection if possible.  Sends keep-alives.
+  */
+@@ -1143,12 +1149,12 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 			       fip->lp->host->host_no, sel->fcf_mac);
+ 			memcpy(fip->dest_addr, sel->fcf_mac, ETH_ALEN);
+ 			fip->port_ka_time = jiffies +
+-					    msecs_to_jiffies(FIP_VN_KA_PERIOD);
++				msecs_to_jiffies(FIP_VN_KA_PERIOD);
+ 			fip->ctlr_ka_time = jiffies + sel->fka_period;
+ 			fip->link = 1;
+ 		} else {
+ 			printk(KERN_NOTICE "libfcoe: host%d: "
+-			       "FIP Fibre-Channel Forwarder timed out.  "
++			       "FIP Fibre-Channel Forwarder timed out.	"
+ 			       "Starting FCF discovery.\n",
+ 			       fip->lp->host->host_no);
+ 			fip->link = 0;
+@@ -1166,7 +1172,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 
+ 		if (time_after_eq(jiffies, fip->port_ka_time)) {
+ 			fip->port_ka_time += jiffies +
+-					msecs_to_jiffies(FIP_VN_KA_PERIOD);
++				msecs_to_jiffies(FIP_VN_KA_PERIOD);
+ 			fip->send_port_ka = 1;
+ 		}
+ 		if (time_after(next_timer, fip->port_ka_time))
+@@ -1174,7 +1180,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 		mod_timer(&fip->timer, next_timer);
+ 	} else if (fip->sel_time) {
+ 		next_timer = fip->sel_time +
+-				msecs_to_jiffies(FCOE_CTLR_START_DELAY);
++			msecs_to_jiffies(FCOE_CTLR_START_DELAY);
+ 		mod_timer(&fip->timer, next_timer);
+ 	}
+ 	if (fip->send_ctlr_ka || fip->send_port_ka)
+@@ -1183,8 +1189,8 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ }
+ 
+ /**
+- * fcoe_ctlr_link_work() - worker thread function for link changes.
+- * @work:	pointer to link_work member inside &fcoe_ctlr.
++ * fcoe_ctlr_link_work() - Worker thread function for link changes
++ * @work: Handle to a FCoE controller
+  *
+  * See if the link status has changed and if so, report it.
+  *
+@@ -1231,8 +1237,8 @@ static void fcoe_ctlr_link_work(struct work_struct *work)
+ }
+ 
+ /**
+- * fcoe_ctlr_recv_work() - Worker thread function for receiving FIP frames.
+- * @recv_work:	pointer to recv_work member inside &fcoe_ctlr.
++ * fcoe_ctlr_recv_work() - Worker thread function for receiving FIP frames
++ * @recv_work: Handle to a FCoE controller
+  */
+ static void fcoe_ctlr_recv_work(struct work_struct *recv_work)
+ {
+@@ -1250,11 +1256,10 @@ static void fcoe_ctlr_recv_work(struct work_struct *recv_work)
+ }
+ 
+ /**
+- * fcoe_ctlr_recv_flogi() - snoop Pre-FIP receipt of FLOGI response or request.
+- * @fip:	FCoE controller.
+- * @lport:	libfc fc_lport instance received on
+- * @fp:		FC frame.
+- * @sa:		Ethernet source MAC address from received FCoE frame.
++ * fcoe_ctlr_recv_flogi() - Snoop pre-FIP receipt of FLOGI response or request
++ * @fip: The FCoE controller
++ * @fp:	 The FC frame to snoop
++ * @sa:	 Ethernet source MAC address from received FCoE frame
+  *
+  * Snoop potential response to FLOGI or even incoming FLOGI.
+  *
+@@ -1324,10 +1329,10 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ EXPORT_SYMBOL(fcoe_ctlr_recv_flogi);
+ 
+ /**
+- * fcoe_wwn_from_mac() - Converts 48-bit IEEE MAC address to 64-bit FC WWN.
+- * @mac: mac address
+- * @scheme: check port
+- * @port: port indicator for converting
++ * fcoe_wwn_from_mac() - Converts a 48-bit IEEE MAC address to a 64-bit FC WWN
++ * @mac:    The MAC address to convert
++ * @scheme: The scheme to use when converting
++ * @port:   The port indicator for converting
+  *
+  * Returns: u64 fc world wide name
+  */
+@@ -1365,23 +1370,24 @@ u64 fcoe_wwn_from_mac(unsigned char mac[MAX_ADDR_LEN],
+ EXPORT_SYMBOL_GPL(fcoe_wwn_from_mac);
+ 
+ /**
+- * fcoe_libfc_config() - sets up libfc related properties for lport
+- * @lp: ptr to the fc_lport
+- * @tt: libfc function template
++ * fcoe_libfc_config() - Sets up libfc related properties for local port
++ * @lp: The local port to configure libfc for
++ * @tt: The libfc function template
+  *
+  * Returns : 0 for success
+  */
+-int fcoe_libfc_config(struct fc_lport *lp, struct libfc_function_template *tt)
++int fcoe_libfc_config(struct fc_lport *lport,
++		      struct libfc_function_template *tt)
+ {
+ 	/* Set the function pointers set by the LLDD */
+-	memcpy(&lp->tt, tt, sizeof(*tt));
+-	if (fc_fcp_init(lp))
++	memcpy(&lport->tt, tt, sizeof(*tt));
++	if (fc_fcp_init(lport))
+ 		return -ENOMEM;
+-	fc_exch_init(lp);
+-	fc_elsct_init(lp);
+-	fc_lport_init(lp);
+-	fc_rport_init(lp);
+-	fc_disc_init(lp);
++	fc_exch_init(lport);
++	fc_elsct_init(lport);
++	fc_lport_init(lport);
++	fc_rport_init(lport);
++	fc_disc_init(lport);
+ 
  	return 0;
  }
- EXPORT_SYMBOL(fc_lport_init);
-+
-+/**
-+ * fc_lport_bsg_resp() - The common response handler for fc pass-thru requests
-+ * @sp: current sequence in the fc pass-thru request exchange
-+ * @fp: received response frame
-+ * @info_arg: pointer to struct fc_bsg_info
-+ */
-+static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
-+			      void *info_arg)
-+{
-+	struct fc_bsg_info *info = info_arg;
-+	struct fc_bsg_job *job = info->job;
-+	struct fc_lport *lport = info->lport;
-+	struct fc_frame_header *fh;
-+	size_t len;
-+	void *buf;
-+
-+	if (IS_ERR(fp)) {
-+		job->reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
-+			-ECONNABORTED : -ETIMEDOUT;
-+		job->reply_len = sizeof(uint32_t);
-+		job->state_flags |= FC_RQST_STATE_DONE;
-+		job->job_done(job);
-+		kfree(info);
-+		return;
-+	}
-+
-+	mutex_lock(&lport->lp_mutex);
-+	fh = fc_frame_header_get(fp);
-+	len = fr_len(fp) - sizeof(*fh);
-+	buf = fc_frame_payload_get(fp, 0);
-+
-+	if (fr_sof(fp) == FC_SOF_I3 && !ntohs(fh->fh_seq_cnt)) {
-+		/* Get the response code from the first frame payload */
-+		unsigned short cmd = (info->rsp_code == FC_FS_ACC) ?
-+			ntohs(((struct fc_ct_hdr *)buf)->ct_cmd) :
-+			(unsigned short)fc_frame_payload_op(fp);
-+
-+		/* Save the reply status of the job */
-+		job->reply->reply_data.ctels_reply.status =
-+			(cmd == info->rsp_code) ?
-+			FC_CTELS_STATUS_OK : FC_CTELS_STATUS_REJECT;
-+	}
-+
-+	job->reply->reply_payload_rcv_len +=
-+		fc_copy_buffer_to_sglist(buf, len, info->sg, &info->nents,
-+					 &info->offset, KM_BIO_SRC_IRQ, NULL);
-+
-+	if (fr_eof(fp) == FC_EOF_T &&
-+	    (ntoh24(fh->fh_f_ctl) & (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) ==
-+	    (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) {
-+		if (job->reply->reply_payload_rcv_len >
-+		    job->reply_payload.payload_len)
-+			job->reply->reply_payload_rcv_len =
-+				job->reply_payload.payload_len;
-+		job->reply->result = 0;
-+		job->state_flags |= FC_RQST_STATE_DONE;
-+		job->job_done(job);
-+		kfree(info);
-+	}
-+	fc_frame_free(fp);
-+	mutex_unlock(&lport->lp_mutex);
-+}
-+
-+/**
-+ * fc_lport_els_request() - Send ELS pass-thru request
-+ * @job: The bsg fc pass-thru job structure
-+ * @lport: The local port sending the request
-+ * @did: The destination port id.
-+ *
-+ * Locking Note: The lport lock is expected to be held before calling
-+ * this routine.
-+ */
-+static int fc_lport_els_request(struct fc_bsg_job *job,
-+				struct fc_lport *lport,
-+				u32 did, u32 tov)
-+{
-+	struct fc_bsg_info *info;
-+	struct fc_frame *fp;
-+	struct fc_frame_header *fh;
-+	char *pp;
-+	int len;
-+
-+	fp = fc_frame_alloc(lport, sizeof(struct fc_frame_header) +
-+			    job->request_payload.payload_len);
-+	if (!fp)
-+		return -ENOMEM;
-+
-+	len = job->request_payload.payload_len;
-+	pp = fc_frame_payload_get(fp, len);
-+
-+	sg_copy_to_buffer(job->request_payload.sg_list,
-+			  job->request_payload.sg_cnt,
-+			  pp, len);
-+
-+	fh = fc_frame_header_get(fp);
-+	fh->fh_r_ctl = FC_RCTL_ELS_REQ;
-+	hton24(fh->fh_d_id, did);
-+	hton24(fh->fh_s_id, fc_host_port_id(lport->host));
-+	fh->fh_type = FC_TYPE_ELS;
-+	hton24(fh->fh_f_ctl, FC_FC_FIRST_SEQ |
-+	       FC_FC_END_SEQ | FC_FC_SEQ_INIT);
-+	fh->fh_cs_ctl = 0;
-+	fh->fh_df_ctl = 0;
-+	fh->fh_parm_offset = 0;
-+
-+	info = kzalloc(sizeof(struct fc_bsg_info), GFP_KERNEL);
-+	if (!info) {
-+		fc_frame_free(fp);
-+		return -ENOMEM;
-+	}
-+
-+	info->job = job;
-+	info->lport = lport;
-+	info->rsp_code = ELS_LS_ACC;
-+	info->nents = job->reply_payload.sg_cnt;
-+	info->sg = job->reply_payload.sg_list;
-+
-+	if (!lport->tt.exch_seq_send(lport, fp, fc_lport_bsg_resp,
-+				     NULL, info, tov))
-+		return -ECOMM;
-+	return 0;
-+}
-+
-+/**
-+ * fc_lport_ct_request() - Send CT pass-thru request
-+ * @job:   The bsg fc pass-thru job structure
-+ * @lport: The local port sending the request
-+ * @did:   The destination FC-ID
-+ * @tov:   The time to wait for a response
-+ *
-+ * Locking Note: The lport lock is expected to be held before calling
-+ * this routine.
-+ */
-+static int fc_lport_ct_request(struct fc_bsg_job *job,
-+			       struct fc_lport *lport, u32 did, u32 tov)
-+{
-+	struct fc_bsg_info *info;
-+	struct fc_frame *fp;
-+	struct fc_frame_header *fh;
-+	struct fc_ct_req *ct;
-+	size_t len;
-+
-+	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
-+			    job->request_payload.payload_len);
-+	if (!fp)
-+		return -ENOMEM;
-+
-+	len = job->request_payload.payload_len;
-+	ct = fc_frame_payload_get(fp, len);
-+
-+	sg_copy_to_buffer(job->request_payload.sg_list,
-+			  job->request_payload.sg_cnt,
-+			  ct, len);
-+
-+	fh = fc_frame_header_get(fp);
-+	fh->fh_r_ctl = FC_RCTL_DD_UNSOL_CTL;
-+	hton24(fh->fh_d_id, did);
-+	hton24(fh->fh_s_id, fc_host_port_id(lport->host));
-+	fh->fh_type = FC_TYPE_CT;
-+	hton24(fh->fh_f_ctl, FC_FC_FIRST_SEQ |
-+	       FC_FC_END_SEQ | FC_FC_SEQ_INIT);
-+	fh->fh_cs_ctl = 0;
-+	fh->fh_df_ctl = 0;
-+	fh->fh_parm_offset = 0;
-+
-+	info = kzalloc(sizeof(struct fc_bsg_info), GFP_KERNEL);
-+	if (!info) {
-+		fc_frame_free(fp);
-+		return -ENOMEM;
-+	}
-+
-+	info->job = job;
-+	info->lport = lport;
-+	info->rsp_code = FC_FS_ACC;
-+	info->nents = job->reply_payload.sg_cnt;
-+	info->sg = job->reply_payload.sg_list;
-+
-+	if (!lport->tt.exch_seq_send(lport, fp, fc_lport_bsg_resp,
-+				     NULL, info, tov))
-+		return -ECOMM;
-+	return 0;
-+}
-+
-+/**
-+ * fc_lport_bsg_request() - The common entry point for sending
-+ *                          fc pass-thru requests
-+ * @job: The fc pass-thru job structure
-+ */
-+int fc_lport_bsg_request(struct fc_bsg_job *job)
-+{
-+	struct request *rsp = job->req->next_rq;
-+	struct Scsi_Host *shost = job->shost;
-+	struct fc_lport *lport = shost_priv(shost);
-+	struct fc_rport *rport;
-+	struct fc_rport_priv *rdata;
-+	int rc = -EINVAL;
-+	u32 did;
-+
-+	job->reply->reply_payload_rcv_len = 0;
-+	rsp->resid_len = job->reply_payload.payload_len;
-+
-+	mutex_lock(&lport->lp_mutex);
-+
-+	switch (job->request->msgcode) {
-+	case FC_BSG_RPT_ELS:
-+		rport = job->rport;
-+		if (!rport)
-+			break;
-+
-+		rdata = rport->dd_data;
-+		rc = fc_lport_els_request(job, lport, rport->port_id,
-+					  rdata->e_d_tov);
-+		break;
-+
-+	case FC_BSG_RPT_CT:
-+		rport = job->rport;
-+		if (!rport)
-+			break;
-+
-+		rdata = rport->dd_data;
-+		rc = fc_lport_ct_request(job, lport, rport->port_id,
-+					 rdata->e_d_tov);
-+		break;
-+
-+	case FC_BSG_HST_CT:
-+		did = ntoh24(job->request->rqst_data.h_ct.port_id);
-+		if (did == FC_FID_DIR_SERV)
-+			rdata = lport->dns_rp;
-+		else
-+			rdata = lport->tt.rport_lookup(lport, did);
-+
-+		if (!rdata)
-+			break;
-+
-+		rc = fc_lport_ct_request(job, lport, did, rdata->e_d_tov);
-+		break;
-+
-+	case FC_BSG_HST_ELS_NOLOGIN:
-+		did = ntoh24(job->request->rqst_data.h_els.port_id);
-+		rc = fc_lport_els_request(job, lport, did, lport->e_d_tov);
-+		break;
-+	}
-+
-+	mutex_unlock(&lport->lp_mutex);
-+	return rc;
-+}
-+EXPORT_SYMBOL(fc_lport_bsg_request);
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index a5579c3..3e2df39 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -26,6 +26,7 @@
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 8ef5e20..76d08c9 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -53,35 +53,35 @@ enum fip_state {
+ };
  
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_fc.h>
-+#include <scsi/scsi_bsg_fc.h>
+ /**
+- * struct fcoe_ctlr - FCoE Controller and FIP state.
+- * @state:	internal FIP state for network link and FIP or non-FIP mode.
+- * @lp:		&fc_lport: libfc local port.
+- * @sel_fcf:	currently selected FCF, or NULL.
+- * @fcfs:	list of discovered FCFs.
+- * @fcf_count:	number of discovered FCF entries.
+- * @sol_time:	time when a multicast solicitation was last sent.
+- * @sel_time:	time after which to select an FCF.
+- * @port_ka_time: time of next port keep-alive.
+- * @ctlr_ka_time: time of next controller keep-alive.
+- * @timer:	timer struct used for all delayed events.
+- * @link_work:	&work_struct for doing FCF selection.
+- * @recv_work:	&work_struct for receiving FIP frames.
++ * struct fcoe_ctlr - FCoE Controller and FIP state
++ * @state:	   internal FIP state for network link and FIP or non-FIP mode.
++ * @lp:		   &fc_lport: libfc local port.
++ * @sel_fcf:	   currently selected FCF, or NULL.
++ * @fcfs:	   list of discovered FCFs.
++ * @fcf_count:	   number of discovered FCF entries.
++ * @sol_time:	   time when a multicast solicitation was last sent.
++ * @sel_time:	   time after which to select an FCF.
++ * @port_ka_time:  time of next port keep-alive.
++ * @ctlr_ka_time:  time of next controller keep-alive.
++ * @timer:	   timer struct used for all delayed events.
++ * @link_work:	   &work_struct for doing FCF selection.
++ * @recv_work:	   &work_struct for receiving FIP frames.
+  * @fip_recv_list: list of received FIP frames.
+- * @user_mfs:	configured maximum FC frame size, including FC header.
+- * @flogi_oxid: exchange ID of most recent fabric login.
+- * @flogi_count: number of FLOGI attempts in AUTO mode.
+- * @link:	current link status for libfc.
+- * @last_link:	last link state reported to libfc.
+- * @map_dest:	use the FC_MAP mode for destination MAC addresses.
+- * @spma:	supports SPMA server-provided MACs mode
+- * @send_ctlr_ka: need to send controller keep alive
+- * @send_port_ka: need to send port keep alives
+- * @dest_addr:	MAC address of the selected FC forwarder.
+- * @ctl_src_addr: the native MAC address of our local port.
+- * @send:	LLD-supplied function to handle sending of FIP Ethernet frames.
+- * @update_mac: LLD-supplied function to handle changes to MAC addresses.
+- * @get_src_addr: LLD-supplied function to supply a source MAC address.
+- * @lock:	lock protecting this structure.
++ * @user_mfs:	   configured maximum FC frame size, including FC header.
++ * @flogi_oxid:    exchange ID of most recent fabric login.
++ * @flogi_count:   number of FLOGI attempts in AUTO mode.
++ * @link:	   current link status for libfc.
++ * @last_link:	   last link state reported to libfc.
++ * @map_dest:	   use the FC_MAP mode for destination MAC addresses.
++ * @spma:	   supports SPMA server-provided MACs mode
++ * @send_ctlr_ka:  need to send controller keep alive
++ * @send_port_ka:  need to send port keep alives
++ * @dest_addr:	   MAC address of the selected FC forwarder.
++ * @ctl_src_addr:  the native MAC address of our local port.
++ * @send:	   LLD-supplied function to handle sending FIP Ethernet frames
++ * @update_mac:    LLD-supplied function to handle changes to MAC addresses.
++ * @get_src_addr:  LLD-supplied function to supply a source MAC address.
++ * @lock:	   lock protecting this structure.
+  *
+  * This structure is used by all FCoE drivers.  It contains information
+  * needed by all FCoE low-level drivers (LLDs) as well as internal state
+@@ -119,18 +119,18 @@ struct fcoe_ctlr {
+ 	spinlock_t lock;
+ };
  
- #include <scsi/fc/fc_fcp.h>
- #include <scsi/fc/fc_ns.h>
-@@ -831,6 +832,12 @@ void fc_vport_setlink(struct fc_lport *vn_port);
- void fc_vports_linkchange(struct fc_lport *n_port);
+-/*
+- * struct fcoe_fcf - Fibre-Channel Forwarder.
+- * @list:	list linkage.
+- * @time:	system time (jiffies) when an advertisement was last received.
+- * @switch_name: WWN of switch from advertisement.
+- * @fabric_name: WWN of fabric from advertisement.
+- * @fc_map:	FC_MAP value from advertisement.
+- * @fcf_mac:	Ethernet address of the FCF.
+- * @vfid:	virtual fabric ID.
+- * @pri:	seletion priority, smaller values are better.
+- * @flags:	flags received from advertisement.
+- * @fka_period:	keep-alive period, in jiffies.
++/**
++ * struct fcoe_fcf - Fibre-Channel Forwarder
++ * @list:	 list linkage
++ * @time:	 system time (jiffies) when an advertisement was last received
++ * @switch_name: WWN of switch from advertisement
++ * @fabric_name: WWN of fabric from advertisement
++ * @fc_map:	 FC_MAP value from advertisement
++ * @fcf_mac:	 Ethernet address of the FCF
++ * @vfid:	 virtual fabric ID
++ * @pri:	 selection priority, smaller values are better
++ * @flags:	 flags received from advertisement
++ * @fka_period:	 keep-alive period, in jiffies
+  *
+  * A Fibre-Channel Forwarder (FCF) is the entity on the Ethernet that
+  * passes FCoE frames on to an FC fabric.  This structure represents
+@@ -161,8 +161,8 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *);
+ int fcoe_ctlr_link_down(struct fcoe_ctlr *);
+ int fcoe_ctlr_els_send(struct fcoe_ctlr *, struct fc_lport *, struct sk_buff *);
+ void fcoe_ctlr_recv(struct fcoe_ctlr *, struct sk_buff *);
+-int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *, struct fc_lport *lport,
+-			 struct fc_frame *fp, u8 *sa);
++int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *, struct fc_lport *,
++			 struct fc_frame *, u8 *);
  
- /*
-+ * Issue fc pass-thru request via bsg interface
-+ */
-+int fc_lport_bsg_request(struct fc_bsg_job *job);
-+
-+
-+/*
-  * REMOTE PORT LAYER
-  *****************************/
- int fc_rport_init(struct fc_lport *lp);
+ /* libfcoe funcs */
+ u64 fcoe_wwn_from_mac(unsigned char mac[], unsigned int, unsigned int);
 
