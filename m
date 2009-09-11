@@ -1,112 +1,199 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 24/35] libfc: Export FC headers
-Date: Fri, 11 Sep 2009 16:59:03 -0700
-Message-ID: <20090911235903.27223.75025.stgit@localhost.localdomain>
+Subject: [PATCH 25/35] libfc: Add routine to copy data from a buffer to a SG
+	list
+Date: Fri, 11 Sep 2009 16:59:08 -0700
+Message-ID: <20090911235908.27223.52439.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6007 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:37600 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932132AbZIKX7A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:59:00 -0400
+	id S932135AbZIKX7F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:59:05 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 Cc: Robert Love <robert.w.love@intel.com>
 
-Export fc_els.h, fc_fs.h, fc_gs.h and fc_ns.h so that they
-may be used by applications.
-
-This will be needed for FC Passthrough applications like fcping,
-but could be used by other applications.
-
-Fix to include <linux/types.h> to exported files provided by
-Chris Leech <christopher.leech@intel.com>.
+When handling the multi-frame responses of fc pass-thru requests,
+a code segment similar to fc_fcp_recv_data (routine to receive
+inbound SCSI data) is used in the response handler. This patch
+is to add a routine, called fc_copy_buffer_to_sglist(), to handle
+the common function of copying data from a buffer to a scatter-
+gather list in order to avoid code duplication.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- include/scsi/Kbuild      |    1 +
- include/scsi/fc/Kbuild   |    4 ++++
- include/scsi/fc/fc_els.h |    2 ++
- include/scsi/fc/fc_fs.h  |    2 ++
- include/scsi/fc/fc_gs.h  |    2 ++
- include/scsi/fc/fc_ns.h  |    2 ++
- 6 files changed, 13 insertions(+), 0 deletions(-)
- create mode 100644 include/scsi/fc/Kbuild
+ drivers/scsi/libfc/fc_fcp.c   |   56 +++++++-------------------------------
+ drivers/scsi/libfc/fc_libfc.c |   60 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libfc/fc_libfc.h |    8 +++++
+ 3 files changed, 78 insertions(+), 46 deletions(-)
 
-diff --git a/include/scsi/Kbuild b/include/scsi/Kbuild
-index 33b2750..b3a0ee6 100644
---- a/include/scsi/Kbuild
-+++ b/include/scsi/Kbuild
-@@ -2,3 +2,4 @@ header-y += scsi.h
- header-y += scsi_netlink.h
- header-y += scsi_netlink_fc.h
- header-y += scsi_bsg_fc.h
-+header-y += fc/
-diff --git a/include/scsi/fc/Kbuild b/include/scsi/fc/Kbuild
-new file mode 100644
-index 0000000..5660381
---- /dev/null
-+++ b/include/scsi/fc/Kbuild
-@@ -0,0 +1,4 @@
-+header-y += fc_els.h
-+header-y += fc_fs.h
-+header-y += fc_gs.h
-+header-y += fc_ns.h
-diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
-index b0872af..f943281 100644
---- a/include/scsi/fc/fc_els.h
-+++ b/include/scsi/fc/fc_els.h
-@@ -20,6 +20,8 @@
- #ifndef _FC_ELS_H_
- #define	_FC_ELS_H_
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index e4ff27e..a474773 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -324,7 +324,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 	size_t len;
+ 	void *buf;
+ 	struct scatterlist *sg;
+-	size_t remaining;
++	u32 nents;
  
-+#include <linux/types.h>
-+
- /*
-  * Fibre Channel Switch - Enhanced Link Services definitions.
-  * From T11 FC-LS Rev 1.2 June 7, 2005.
-diff --git a/include/scsi/fc/fc_fs.h b/include/scsi/fc/fc_fs.h
-index ac4cd38..50f28b1 100644
---- a/include/scsi/fc/fc_fs.h
-+++ b/include/scsi/fc/fc_fs.h
-@@ -20,6 +20,8 @@
- #ifndef _FC_FS_H_
- #define _FC_FS_H_
+ 	fh = fc_frame_header_get(fp);
+ 	offset = ntohl(fh->fh_parm_offset);
+@@ -348,55 +348,19 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 	if (offset != fsp->xfer_len)
+ 		fsp->state |= FC_SRB_DISCONTIG;
  
-+#include <linux/types.h>
-+
- /*
-  * Fibre Channel Framing and Signalling definitions.
-  * From T11 FC-FS-2 Rev 0.90 - 9 August 2005.
-diff --git a/include/scsi/fc/fc_gs.h b/include/scsi/fc/fc_gs.h
-index 324dd0e..a37346d 100644
---- a/include/scsi/fc/fc_gs.h
-+++ b/include/scsi/fc/fc_gs.h
-@@ -20,6 +20,8 @@
- #ifndef _FC_GS_H_
- #define	_FC_GS_H_
+-	crc = 0;
+-	if (fr_flags(fp) & FCPHF_CRC_UNCHECKED)
+-		crc = crc32(~0, (u8 *) fh, sizeof(*fh));
+-
+ 	sg = scsi_sglist(sc);
+-	remaining = len;
+-
+-	while (remaining > 0 && sg) {
+-		size_t off;
+-		void *page_addr;
+-		size_t sg_bytes;
+-
+-		if (offset >= sg->length) {
+-			offset -= sg->length;
+-			sg = sg_next(sg);
+-			continue;
+-		}
+-		sg_bytes = min(remaining, sg->length - offset);
++	nents = scsi_sg_count(sc);
  
-+#include <linux/types.h>
-+
- /*
-  * Fibre Channel Services - Common Transport.
-  * From T11.org FC-GS-2 Rev 5.3 November 1998.
-diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
-index 3fd59a2..f4d354e 100644
---- a/include/scsi/fc/fc_ns.h
-+++ b/include/scsi/fc/fc_ns.h
-@@ -20,6 +20,8 @@
- #ifndef _FC_NS_H_
- #define	_FC_NS_H_
+-		/*
+-		 * The scatterlist item may be bigger than PAGE_SIZE,
+-		 * but we are limited to mapping PAGE_SIZE at a time.
+-		 */
+-		off = offset + sg->offset;
+-		sg_bytes = min(sg_bytes, (size_t)
+-			       (PAGE_SIZE - (off & ~PAGE_MASK)));
+-		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT),
+-					KM_SOFTIRQ0);
+-		if (!page_addr)
+-			break;		/* XXX panic? */
+-
+-		if (fr_flags(fp) & FCPHF_CRC_UNCHECKED)
+-			crc = crc32(crc, buf, sg_bytes);
+-		memcpy((char *)page_addr + (off & ~PAGE_MASK), buf,
+-		       sg_bytes);
+-
+-		kunmap_atomic(page_addr, KM_SOFTIRQ0);
+-		buf += sg_bytes;
+-		offset += sg_bytes;
+-		remaining -= sg_bytes;
+-		copy_len += sg_bytes;
+-	}
+-
+-	if (fr_flags(fp) & FCPHF_CRC_UNCHECKED) {
++	if (!(fr_flags(fp) & FCPHF_CRC_UNCHECKED)) {
++		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
++						    &offset, KM_SOFTIRQ0, NULL);
++	} else {
++		crc = crc32(~0, (u8 *) fh, sizeof(*fh));
++		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
++						    &offset, KM_SOFTIRQ0, &crc);
+ 		buf = fc_frame_payload_get(fp, 0);
+-		if (len % 4) {
++		if (len % 4)
+ 			crc = crc32(crc, buf + len, 4 - (len % 4));
+-			len += 4 - (len % 4);
+-		}
  
-+#include <linux/types.h>
+ 		if (~crc != le32_to_cpu(fr_crc(fp))) {
+ crc_err:
+diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
+index 01418ae..295eafb 100644
+--- a/drivers/scsi/libfc/fc_libfc.c
++++ b/drivers/scsi/libfc/fc_libfc.c
+@@ -72,3 +72,63 @@ static void __exit libfc_exit(void)
+ 	fc_destroy_rport();
+ }
+ module_exit(libfc_exit);
 +
- /*
-  * Fibre Channel Services - Name Service (dNS)
-  * From T11.org FC-GS-2 Rev 5.3 November 1998.
++/**
++ * fc_copy_buffer_to_sglist() - This routine copies the data of a buffer
++ *                              into a scatter-gather list (SG list).
++ *
++ * @buf: pointer to the data buffer.
++ * @len: the byte-length of the data buffer.
++ * @sg: pointer to the pointer of the SG list.
++ * @nents: pointer to the remaining number of entries in the SG list.
++ * @offset: pointer to the current offset in the SG list.
++ * @km_type: dedicated page table slot type for kmap_atomic.
++ * @crc: pointer to the 32-bit crc value.
++ *       If crc is NULL, CRC is not calculated.
++ */
++u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
++			     struct scatterlist *sg,
++			     u32 *nents, size_t *offset,
++			     enum km_type km_type, u32 *crc)
++{
++	size_t remaining = len;
++	u32 copy_len = 0;
++
++	while (remaining > 0 && sg) {
++		size_t off, sg_bytes;
++		void *page_addr;
++
++		if (*offset >= sg->length) {
++			/*
++			 * Check for end and drop resources
++			 * from the last iteration.
++			 */
++			if (!(*nents))
++				break;
++			--(*nents);
++			*offset -= sg->length;
++			sg = sg_next(sg);
++			continue;
++		}
++		sg_bytes = min(remaining, sg->length - *offset);
++
++		/*
++		 * The scatterlist item may be bigger than PAGE_SIZE,
++		 * but we are limited to mapping PAGE_SIZE at a time.
++		 */
++		off = *offset + sg->offset;
++		sg_bytes = min(sg_bytes,
++			       (size_t)(PAGE_SIZE - (off & ~PAGE_MASK)));
++		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT),
++					km_type);
++		if (crc)
++			*crc = crc32(*crc, buf, sg_bytes);
++		memcpy((char *)page_addr + (off & ~PAGE_MASK), buf, sg_bytes);
++		kunmap_atomic(page_addr, km_type);
++		buf += sg_bytes;
++		*offset += sg_bytes;
++		remaining -= sg_bytes;
++		copy_len += sg_bytes;
++	}
++	return copy_len;
++}
+diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
+index 0530149..e4b5e92 100644
+--- a/drivers/scsi/libfc/fc_libfc.h
++++ b/drivers/scsi/libfc/fc_libfc.h
+@@ -101,4 +101,12 @@ void fc_destroy_fcp(void);
+  */
+ const char *fc_els_resp_type(struct fc_frame *);
+ 
++/*
++ * Copies a buffer into an sg list
++ */
++u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
++			     struct scatterlist *sg,
++			     u32 *nents, size_t *offset,
++			     enum km_type km_type, u32 *crc);
++
+ #endif /* _FC_LIBFC_H_ */
 
