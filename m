@@ -1,169 +1,75 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 04/10] drivers: convert fc drivers calling scsi_track_queue_full
-Date: Fri, 11 Sep 2009 11:54:53 -0500
-Message-ID: <4AAA80DD.5090001@cs.wisc.edu>
-References: <20090903221910.24946.39993.stgit@vi1.jf.intel.com>	 <20090903222247.24946.60577.stgit@vi1.jf.intel.com>	 <412A05BA40734D4887DBC67661F433080FF72616@EXMAIL.ad.emulex.com> <1252100607.4516.35.camel@vi2.jf.intel.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [RESEND] [PATCH]: scsi_dh: create sysfs file,
+	dh_state for SCSI devices even if they are not in the internal lists
+Date: Fri, 11 Sep 2009 10:20:35 -0700
+Message-ID: <1252689635.2541.4.camel@chandra-ubuntu>
+References: <1246069888.14164.53.camel@chandra-ubuntu>
+Reply-To: sekharan@linux.vnet.ibm.com,
+	device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070301000008090603050209"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47275 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752563AbZIKQzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 12:55:08 -0400
-In-Reply-To: <1252100607.4516.35.camel@vi2.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@linux.intel.com>
-Cc: Alex.Iannicelli@Emulex.Com, andrew.vasquez@qlogic.com, James.Bottomley@HansenPartnership.com, vasu.dev@intel.com, linux-scsi@vger.kernel.org, James.Smart@Emulex.Com, robert.w.love@intel.com, christof.schmitt@de.ibm.com
-
-This is a multi-part message in MIME format.
---------------070301000008090603050209
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1246069888.14164.53.camel@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Mario Mech <mech@meteo.uni-koeln.de>, dm-devel <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On 09/04/2009 04:43 PM, Vasu Dev wrote:
-> I agree all FC HBA should handle both ramp down and up as per added new
-> change_queue_depth interface by this series. I did this for libfc/fcoe
-> and Chrirstof did this for zfcp driver but lpfc&  qla2xxx got only ramp
-> down changes from Mike, now that Mike is busy with other stuff I don't
-> know how to complete them in this series since I don't understand lpfc
-> and qla2xxx enough and neither I have way to test changes to these
-> drivers.
 
-The qla2xxxx conversion seems a lot easier than lpfc (at least a lot 
-closer to what is being done in the common code Vasu added). I am 
-attaching a patch made over this patchset that converts it to use the 
-common ramp up code. I have only compile tested it.
+Hi James,
 
-Andrew, could you have your guys give it a spin? Did you guys test out 
-the rampdown/qfull handling?
+This patch was sent to the list long back and was Acked by Hannes on Aug
+11.
 
---------------070301000008090603050209
-Content-Type: text/plain;
- name="0001-qla2xxx-hook-qla2xxx-into-common-ramp-up-code.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="0001-qla2xxx-hook-qla2xxx-into-common-ramp-up-code.patch"
+Please consider for inclusion. Let me know if you see any issues with
+the patch.
 
-RnJvbSBkOGE5NGM4MmNlMjg4MzdjZThhMDUzNDlmYzA3M2I4OTU4MTM2MDFkIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBNaWtlIENocmlzdGllIDxtaWNoYWVsY0Bjcy53aXNj
-LmVkdT4KRGF0ZTogRnJpLCAxMSBTZXAgMjAwOSAxMTo0Mzo0MCAtMDUwMApTdWJqZWN0OiBb
-UEFUQ0ggMS8xXSBxbGEyeHh4OiBob29rIHFsYTJ4eHggaW50byBjb21tb24gcmFtcCB1cCBj
-b2RlCgpUaGlzIGhvb2tzIHFsYTJ4eHggaW50byB0aGUgY29tbW9uIHJhbXAgdXAgY29kZS4K
-ClRoaXMgcSBkZXB0aCBiZWhhdmlvciBzaG91bGQgYmUgdGhlIHNhbWUgYXMgYmVmb3JlLiBU
-aGUgb25seQpjaGFuZ2Ugc2hvdWxkIGJlIHRoYXQgeW91IHVzZSB0aGUgY29tbW9uIHNjc2kg
-ZGV2aWNlIHN5c2ZzCmludGVyZmFjZSB0byBzZXQgdGhlIHJhbXAgdXAgcGVyaW9kIGluc3Rl
-YWQgb2YgdXNpbmcgdGhlCnFsYTJ4eHggbW9kIHBhcmFtLgoKVGhpcyBwYXRjaCB3YXMgbWFk
-ZSBvdmVyIHRoZSByYW1wZG93bi9xZnVsbCBoYW5kbGluZyBwYXRjaC4KSXQgaXMgb25seSBj
-b21waWxlIHRlc3RlZC4KClNpZ25lZC1vZmYtYnk6IE1pa2UgQ2hyaXN0aWUgPG1pY2hhZWxj
-QGNzLndpc2MuZWR1PgotLS0KIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9kZWYuaCB8ICAg
-IDMgLS0KIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9nYmwuaCB8ICAgIDIgLQogZHJpdmVy
-cy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jIHwgICA1OSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3MuYyAgfCAg
-IDM5ICsrKysrKysrKysrKysrKysrKystLS0tLS0tCiA0IGZpbGVzIGNoYW5nZWQsIDI5IGlu
-c2VydGlvbnMoKyksIDc0IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2Nz
-aS9xbGEyeHh4L3FsYV9kZWYuaCBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9kZWYuaApp
-bmRleCBkOGNlMzEwLi44ZWFkNjZlIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfZGVmLmgKKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oCkBAIC0x
-NTcwLDkgKzE1NzAsNiBAQCB0eXBlZGVmIHN0cnVjdCBmY19wb3J0IHsKIAlzdHJ1Y3QgZmNf
-cnBvcnQgKnJwb3J0LCAqZHJwb3J0OwogCXUzMiBzdXBwb3J0ZWRfY2xhc3NlczsKIAotCXVu
-c2lnbmVkIGxvbmcgbGFzdF9xdWV1ZV9mdWxsOwotCXVuc2lnbmVkIGxvbmcgbGFzdF9yYW1w
-X3VwOwotCiAJdWludDE2X3QgdnBfaWR4OwogfSBmY19wb3J0X3Q7CiAKZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9nYmwuaCBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4
-L3FsYV9nYmwuaAppbmRleCAxNGUwNTYyLi4wY2E1YzU0IDEwMDY0NAotLS0gYS9kcml2ZXJz
-L3Njc2kvcWxhMnh4eC9xbGFfZ2JsLmgKKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxh
-X2dibC5oCkBAIC03Miw4ICs3Miw2IEBAIGV4dGVybiBpbnQgcWwyeGxvZ2lucmV0cnljb3Vu
-dDsKIGV4dGVybiBpbnQgcWwyeGZkbWllbmFibGU7CiBleHRlcm4gaW50IHFsMnhhbGxvY2Z3
-ZHVtcDsKIGV4dGVybiBpbnQgcWwyeGV4dGVuZGVkX2Vycm9yX2xvZ2dpbmc7Ci1leHRlcm4g
-aW50IHFsMnhxZnVsbHJhbXB1cDsKLWV4dGVybiBpbnQgcWwyeHFmdWxsdHJhY2tpbmc7CiBl
-eHRlcm4gaW50IHFsMnhpaWRtYWVuYWJsZTsKIGV4dGVybiBpbnQgcWwyeG1heHF1ZXVlczsK
-IGV4dGVybiBpbnQgcWwyeG11bHRpcXVlX3RhZzsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2Nz
-aS9xbGEyeHh4L3FsYV9pc3IuYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYwpp
-bmRleCA4ZWNlYWM4Li5kNjRiYWNlIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfaXNyLmMKKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jCkBAIC04
-MDUsNjQgKzgwNSw2IEBAIHNraXBfcmlvOgogCQlxbGEyeDAwX2FsZXJ0X2FsbF92cHMocnNw
-LCBtYik7CiB9CiAKLXN0YXRpYyB2b2lkCi1xbGEyeDAwX2FkanVzdF9zZGV2X3FkZXB0aF91
-cChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsIHZvaWQgKmRhdGEpCi17Ci0JZmNfcG9ydF90
-ICpmY3BvcnQgPSBkYXRhOwotCXN0cnVjdCBzY3NpX3FsYV9ob3N0ICp2aGEgPSBmY3BvcnQt
-PnZoYTsKLQlzdHJ1Y3QgcWxhX2h3X2RhdGEgKmhhID0gdmhhLT5odzsKLQlzdHJ1Y3QgcmVx
-X3F1ZSAqcmVxID0gTlVMTDsKLQotCWlmICghcWwyeHFmdWxsdHJhY2tpbmcpCi0JCXJldHVy
-bjsKLQotCXJlcSA9IHZoYS0+cmVxOwotCWlmICghcmVxKQotCQlyZXR1cm47Ci0JaWYgKHJl
-cS0+bWF4X3FfZGVwdGggPD0gc2Rldi0+cXVldWVfZGVwdGgpCi0JCXJldHVybjsKLQotCWlm
-IChzZGV2LT5vcmRlcmVkX3RhZ3MpCi0JCXNjc2lfYWRqdXN0X3F1ZXVlX2RlcHRoKHNkZXYs
-IE1TR19PUkRFUkVEX1RBRywKLQkJICAgIHNkZXYtPnF1ZXVlX2RlcHRoICsgMSk7Ci0JZWxz
-ZQotCQlzY3NpX2FkanVzdF9xdWV1ZV9kZXB0aChzZGV2LCBNU0dfU0lNUExFX1RBRywKLQkJ
-ICAgIHNkZXYtPnF1ZXVlX2RlcHRoICsgMSk7Ci0KLQlmY3BvcnQtPmxhc3RfcmFtcF91cCA9
-IGppZmZpZXM7Ci0KLQlERUJVRzIocWxhX3ByaW50ayhLRVJOX0lORk8sIGhhLAotCSAgICAi
-c2NzaSglbGQ6JWQ6JWQ6JWQpOiBRdWV1ZSBkZXB0aCBhZGp1c3RlZC11cCB0byAlZC5cbiIs
-Ci0JICAgIGZjcG9ydC0+dmhhLT5ob3N0X25vLCBzZGV2LT5jaGFubmVsLCBzZGV2LT5pZCwg
-c2Rldi0+bHVuLAotCSAgICBzZGV2LT5xdWV1ZV9kZXB0aCkpOwotfQotCi1zdGF0aWMgaW5s
-aW5lIHZvaWQKLXFsYTJ4MDBfcmFtcF91cF9xdWV1ZV9kZXB0aChzY3NpX3FsYV9ob3N0X3Qg
-KnZoYSwgc3RydWN0IHJlcV9xdWUgKnJlcSwKLQkJCQkJCQkJc3JiX3QgKnNwKQotewotCWZj
-X3BvcnRfdCAqZmNwb3J0OwotCXN0cnVjdCBzY3NpX2RldmljZSAqc2RldjsKLQotCWlmICgh
-cWwyeHFmdWxsdHJhY2tpbmcpCi0JCXJldHVybjsKLQotCXNkZXYgPSBzcC0+Y21kLT5kZXZp
-Y2U7Ci0JaWYgKHNkZXYtPnF1ZXVlX2RlcHRoID49IHJlcS0+bWF4X3FfZGVwdGgpCi0JCXJl
-dHVybjsKLQotCWZjcG9ydCA9IHNwLT5mY3BvcnQ7Ci0JaWYgKHRpbWVfYmVmb3JlKGppZmZp
-ZXMsCi0JICAgIGZjcG9ydC0+bGFzdF9yYW1wX3VwICsgcWwyeHFmdWxscmFtcHVwICogSFop
-KQotCQlyZXR1cm47Ci0JaWYgKHRpbWVfYmVmb3JlKGppZmZpZXMsCi0JICAgIGZjcG9ydC0+
-bGFzdF9xdWV1ZV9mdWxsICsgcWwyeHFmdWxscmFtcHVwICogSFopKQotCQlyZXR1cm47Ci0K
-LQlzdGFyZ2V0X2Zvcl9lYWNoX2RldmljZShzZGV2LT5zZGV2X3RhcmdldCwgZmNwb3J0LAot
-CSAgICBxbGEyeDAwX2FkanVzdF9zZGV2X3FkZXB0aF91cCk7Ci19Ci0KIC8qKgogICogcWxh
-MngwMF9wcm9jZXNzX2NvbXBsZXRlZF9yZXF1ZXN0KCkgLSBQcm9jZXNzIGEgRmFzdCBQb3N0
-IHJlc3BvbnNlLgogICogQGhhOiBTQ1NJIGRyaXZlciBIQSBjb250ZXh0CkBAIC04OTQsNyAr
-ODM2LDYgQEAgcWxhMngwMF9wcm9jZXNzX2NvbXBsZXRlZF9yZXF1ZXN0KHN0cnVjdCBzY3Np
-X3FsYV9ob3N0ICp2aGEsCiAJCS8qIFNhdmUgSVNQIGNvbXBsZXRpb24gc3RhdHVzICovCiAJ
-CXNwLT5jbWQtPnJlc3VsdCA9IERJRF9PSyA8PCAxNjsKIAotCQlxbGEyeDAwX3JhbXBfdXBf
-cXVldWVfZGVwdGgodmhhLCByZXEsIHNwKTsKIAkJcWxhMngwMF9zcF9jb21wbChoYSwgc3Ap
-OwogCX0gZWxzZSB7CiAJCURFQlVHMihwcmludGsoInNjc2koJWxkKSBSZXE6JWQ6IEludmFs
-aWQgSVNQIFNDU0kgY29tcGxldGlvbiIKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEy
-eHh4L3FsYV9vcy5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMKaW5kZXggYjI0
-YzdjYy4uNzJjMjgyMSAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29z
-LmMKKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMKQEAgLTc4LDcgKzc4LDcg
-QEAgbW9kdWxlX3BhcmFtKHFsMnhtYXhxZGVwdGgsIGludCwgU19JUlVHT3xTX0lXVVNSKTsK
-IE1PRFVMRV9QQVJNX0RFU0MocWwyeG1heHFkZXB0aCwKIAkJIk1heGltdW0gcXVldWUgZGVw
-dGggdG8gcmVwb3J0IGZvciB0YXJnZXQgZGV2aWNlcy4iKTsKIAotaW50IHFsMnhxZnVsbHRy
-YWNraW5nID0gMTsKK3N0YXRpYyBpbnQgcWwyeHFmdWxsdHJhY2tpbmcgPSAxOwogbW9kdWxl
-X3BhcmFtKHFsMnhxZnVsbHRyYWNraW5nLCBpbnQsIFNfSVJVR098U19JV1VTUik7CiBNT0RV
-TEVfUEFSTV9ERVNDKHFsMnhxZnVsbHRyYWNraW5nLAogCQkiQ29udHJvbHMgd2hldGhlciB0
-aGUgZHJpdmVyIHRyYWNrcyBxdWV1ZSBmdWxsIHN0YXR1cyAiCkBAIC04NiwxMyArODYsNiBA
-QCBNT0RVTEVfUEFSTV9ERVNDKHFsMnhxZnVsbHRyYWNraW5nLAogCQkiZGVwdGguICBEZWZh
-dWx0IGlzIDEsIHBlcmZvcm0gdHJhY2tpbmcuICBTZXQgdG8gMCB0byAiCiAJCSJkaXNhYmxl
-IGR5bmFtaWMgdHJhY2tpbmcgYW5kIGFkanVzdG1lbnQgb2YgcXVldWUgZGVwdGguIik7CiAK
-LWludCBxbDJ4cWZ1bGxyYW1wdXAgPSAxMjA7Ci1tb2R1bGVfcGFyYW0ocWwyeHFmdWxscmFt
-cHVwLCBpbnQsIFNfSVJVR098U19JV1VTUik7Ci1NT0RVTEVfUEFSTV9ERVNDKHFsMnhxZnVs
-bHJhbXB1cCwKLQkJIk51bWJlciBvZiBzZWNvbmRzIHRvIHdhaXQgdG8gYmVnaW4gdG8gcmFt
-cC11cCB0aGUgcXVldWUgIgotCQkiZGVwdGggZm9yIGEgZGV2aWNlIGFmdGVyIGEgcXVldWUt
-ZnVsbCBjb25kaXRpb24gaGFzIGJlZW4gIgotCQkiZGV0ZWN0ZWQuICBEZWZhdWx0IGlzIDEy
-MCBzZWNvbmRzLiIpOwotCiBpbnQgcWwyeGlpZG1hZW5hYmxlPTE7CiBtb2R1bGVfcGFyYW0o
-cWwyeGlpZG1hZW5hYmxlLCBpbnQsIFNfSVJVR098U19JUlVTUik7CiBNT0RVTEVfUEFSTV9E
-RVNDKHFsMnhpaWRtYWVuYWJsZSwKQEAgLTEyMzgsOCArMTIzMSw2IEBAIHN0YXRpYyB2b2lk
-IHFsYTJ4MDBfaGFuZGxlX3F1ZXVlX2Z1bGwoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LCBp
-bnQgcWRlcHRoKQogewogCWZjX3BvcnRfdCAqZmNwb3J0ID0gKHN0cnVjdCBmY19wb3J0ICop
-IHNkZXYtPmhvc3RkYXRhOwogCi0JZmNwb3J0LT5sYXN0X3F1ZXVlX2Z1bGwgPSBqaWZmaWVz
-OwotCiAJaWYgKCFzY3NpX3RyYWNrX3F1ZXVlX2Z1bGwoc2RldiwgcWRlcHRoKSkKIAkJcmV0
-dXJuOwogCkBAIC0xMjQ5LDYgKzEyNDAsMzAgQEAgc3RhdGljIHZvaWQgcWxhMngwMF9oYW5k
-bGVfcXVldWVfZnVsbChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsIGludCBxZGVwdGgpCiAJ
-CXNkZXYtPnF1ZXVlX2RlcHRoKSk7CiB9CiAKK3N0YXRpYyB2b2lkIHFsYTJ4MDBfYWRqdXN0
-X3NkZXZfcWRlcHRoX3VwKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldiwgaW50IHFkZXB0aCkK
-K3sKKwlmY19wb3J0X3QgKmZjcG9ydCA9IHNkZXYtPmhvc3RkYXRhOworCXN0cnVjdCBzY3Np
-X3FsYV9ob3N0ICp2aGEgPSBmY3BvcnQtPnZoYTsKKwlzdHJ1Y3QgcWxhX2h3X2RhdGEgKmhh
-ID0gdmhhLT5odzsKKwlzdHJ1Y3QgcmVxX3F1ZSAqcmVxID0gTlVMTDsKKworCXJlcSA9IHZo
-YS0+cmVxOworCWlmICghcmVxKQorCQlyZXR1cm47CisJaWYgKHJlcS0+bWF4X3FfZGVwdGgg
-PD0gc2Rldi0+cXVldWVfZGVwdGggfHwgcmVxLT5tYXhfcV9kZXB0aCA8IHFkZXB0aCkKKwkJ
-cmV0dXJuOworCisJaWYgKHNkZXYtPm9yZGVyZWRfdGFncykKKwkJc2NzaV9hZGp1c3RfcXVl
-dWVfZGVwdGgoc2RldiwgTVNHX09SREVSRURfVEFHLCBxZGVwdGgpOworCWVsc2UKKwkJc2Nz
-aV9hZGp1c3RfcXVldWVfZGVwdGgoc2RldiwgTVNHX1NJTVBMRV9UQUcsIHFkZXB0aCk7CisK
-KwlERUJVRzIocWxhX3ByaW50ayhLRVJOX0lORk8sIGhhLAorCSAgICAgICAic2NzaSglbGQ6
-JWQ6JWQ6JWQpOiBRdWV1ZSBkZXB0aCBhZGp1c3RlZC11cCB0byAlZC5cbiIsCisJICAgICAg
-IGZjcG9ydC0+dmhhLT5ob3N0X25vLCBzZGV2LT5jaGFubmVsLCBzZGV2LT5pZCwgc2Rldi0+
-bHVuLAorCSAgICAgICBzZGV2LT5xdWV1ZV9kZXB0aCkpOworfQorCiBzdGF0aWMgaW50CiBx
-bGEyeDAwX2NoYW5nZV9xdWV1ZV9kZXB0aChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsIGlu
-dCBxZGVwdGgsIGludCByZWFzb24pCiB7CkBAIC0xMjYwLDYgKzEyNzUsMTAgQEAgcWxhMngw
-MF9jaGFuZ2VfcXVldWVfZGVwdGgoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LCBpbnQgcWRl
-cHRoLCBpbnQgcmVhc29uKQogCQlpZiAoIXFsMnhxZnVsbHRyYWNraW5nKQogCQkJcWxhMngw
-MF9oYW5kbGVfcXVldWVfZnVsbChzZGV2LCBxZGVwdGgpOwogCQlicmVhazsKKwljYXNlIFND
-U0lfUURFUFRIX1JBTVBfVVA6CisJCWlmICghcWwyeHFmdWxsdHJhY2tpbmcpCisJCQlxbGEy
-eDAwX2FkanVzdF9zZGV2X3FkZXB0aF91cChzZGV2LCBxZGVwdGgpOworCQlicmVhazsKIAlk
-ZWZhdWx0OgogCQlyZXR1cm4gRU9QTk9UU1VQUDsKIAl9Ci0tIAoxLjYuMi4yCgo=
---------------070301000008090603050209--
+regards,
+
+chandra
+-------------------------
+Create the sysfs file, dh_state even if the new SCSI device is not
+in the any of the device handler's internal lists.
+
+Signed-Off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Acked-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/device_handler/scsi_dh.c |   11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh.c
+===================================================================
+--- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh.c
++++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh.c
+@@ -292,18 +292,15 @@ static int scsi_dh_notifier(struct notif
+ 	sdev = to_scsi_device(dev);
+ 
+ 	if (action == BUS_NOTIFY_ADD_DEVICE) {
++		err = device_create_file(dev, &scsi_dh_state_attr);
++		/* don't care about err */
+ 		devinfo = device_handler_match(NULL, sdev);
+-		if (!devinfo)
+-			goto out;
+-
+-		err = scsi_dh_handler_attach(sdev, devinfo);
+-		if (!err)
+-			err = device_create_file(dev, &scsi_dh_state_attr);
++		if (devinfo)
++			err = scsi_dh_handler_attach(sdev, devinfo);
+ 	} else if (action == BUS_NOTIFY_DEL_DEVICE) {
+ 		device_remove_file(dev, &scsi_dh_state_attr);
+ 		scsi_dh_handler_detach(sdev, NULL);
+ 	}
+-out:
+ 	return err;
+ }
+ 
