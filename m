@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 13/35] libfc, libfcoe: FDISC ELS for NPIV
-Date: Fri, 11 Sep 2009 16:58:04 -0700
-Message-ID: <20090911235804.27223.76844.stgit@localhost.localdomain>
+Subject: [PATCH 16/35] fcoe: NPIV vport create/destroy
+Date: Fri, 11 Sep 2009 16:58:20 -0700
+Message-ID: <20090911235820.27223.79447.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:35055 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:9326 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757229AbZIKX6B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:58:01 -0400
+	id S1757230AbZIKX6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:58:17 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,132 +19,270 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Add FDISC ELS handling to libfc and libfcoe, treat it the same as FLOGI where
-appropriate.
-
-Add checking for NPIV support in the FLOGI LS_ACC service parameters.
+Add NPIV vport create and destroy handlers and register them with the
+FC transport.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c   |    6 +++---
- drivers/scsi/libfc/fc_lport.c |    6 +++++-
- include/scsi/fc/fc_els.h      |    4 +++-
- include/scsi/fc_encode.h      |   29 +++++++++++++++++++++++++++++
- 4 files changed, 40 insertions(+), 5 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |  162 +++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 139 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 62a4c20..8d2e5aa 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -450,7 +450,7 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip,
- 	memset(mac, 0, sizeof(mac));
- 	mac->fd_desc.fip_dtype = FIP_DT_MAC;
- 	mac->fd_desc.fip_dlen = sizeof(*mac) / FIP_BPW;
--	if (dtype != FIP_DT_FLOGI)
-+	if (dtype != FIP_DT_FLOGI && dtype != FIP_DT_FDISC)
- 		memcpy(mac->fd_mac, fip->data_src_addr, ETH_ALEN);
- 	else if (fip->spma)
- 		memcpy(mac->fd_mac, fip->ctl_src_addr, ETH_ALEN);
-@@ -866,8 +866,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 		goto drop;
- 	els_op = *(u8 *)(fh + 1);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 0d7b3b1..e894c73 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -93,6 +93,10 @@ static struct notifier_block fcoe_notifier = {
+ static struct scsi_transport_template *fcoe_transport_template;
+ static struct scsi_transport_template *fcoe_vport_transport_template;
  
--	if (els_dtype == FIP_DT_FLOGI && sub == FIP_SC_REP &&
--	    fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
-+	if ((els_dtype == FIP_DT_FLOGI || els_dtype == FIP_DT_FDISC) &&
-+	    sub == FIP_SC_REP && fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
- 	    els_op == ELS_LS_ACC && is_valid_ether_addr(granted_mac)) {
- 		fip->flogi_oxid = FC_XID_UNKNOWN;
- 		fip->update_mac(fip, fip->data_src_addr, granted_mac);
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 2729e60..dd6a1db 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1446,6 +1446,9 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
- 			if (csp_flags & FC_SP_FT_EDTR)
- 				e_d_tov /= 1000000;
++static int fcoe_vport_destroy(struct fc_vport *vport);
++static int fcoe_vport_create(struct fc_vport *vport, bool disabled);
++static int fcoe_vport_disable(struct fc_vport *vport, bool disable);
 +
-+			lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
-+
- 			if ((csp_flags & FC_SP_FT_FPORT) == 0) {
- 				if (e_d_tov > lport->e_d_tov)
- 					lport->e_d_tov = e_d_tov;
-@@ -1495,7 +1498,8 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
- 	if (!fp)
- 		return fc_lport_error(lport, fp);
+ struct fc_function_template fcoe_transport_function = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+@@ -124,6 +128,10 @@ struct fc_function_template fcoe_transport_function = {
+ 	.issue_fc_host_lip = fcoe_reset,
  
--	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_FLOGI,
-+	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp,
-+				  lport->vport ? ELS_FDISC : ELS_FLOGI,
- 				  fc_lport_flogi_resp, lport, lport->e_d_tov))
- 		fc_lport_error(lport, fp);
+ 	.terminate_rport_io = fc_rport_terminate_io,
++
++	.vport_create = fcoe_vport_create,
++	.vport_delete = fcoe_vport_destroy,
++	.vport_disable = fcoe_vport_disable,
+ };
+ 
+ struct fc_function_template fcoe_vport_transport_function = {
+@@ -432,6 +440,7 @@ static int fcoe_lport_config(struct fc_lport *lp)
+ 	lp->r_a_tov = 2 * 2 * 1000;
+ 	lp->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
+ 			      FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
++	lp->does_npiv = 1;
+ 
+ 	fc_lport_init_stats(lp);
+ 
+@@ -514,11 +523,13 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
+ 	port->fcoe_pending_queue_active = 0;
+ 	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lp);
+ 
+-	wwnn = fcoe_wwn_from_mac(netdev->dev_addr, 1, 0);
+-	fc_set_wwnn(lp, wwnn);
+-	/* XXX - 3rd arg needs to be vlan id */
+-	wwpn = fcoe_wwn_from_mac(netdev->dev_addr, 2, 0);
+-	fc_set_wwpn(lp, wwpn);
++	if (!lp->vport) {
++		wwnn = fcoe_wwn_from_mac(netdev->dev_addr, 1, 0);
++		fc_set_wwnn(lp, wwnn);
++		/* XXX - 3rd arg needs to be vlan id */
++		wwpn = fcoe_wwn_from_mac(netdev->dev_addr, 2, 0);
++		fc_set_wwpn(lp, wwpn);
++	}
+ 
+ 	return 0;
  }
-diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
-index 195ca01..b0872af 100644
---- a/include/scsi/fc/fc_els.h
-+++ b/include/scsi/fc/fc_els.h
-@@ -248,10 +248,12 @@ struct fc_els_csp {
- /*
-  * sp_features
+@@ -554,6 +565,10 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
+ 				"error on scsi_add_host\n");
+ 		return rc;
+ 	}
++
++	if (!lp->vport)
++		fc_host_max_npiv_vports(lp->host) = USHORT_MAX;
++
+ 	sprintf(fc_host_symbolic_name(lp->host), "%s v%s over %s",
+ 		FCOE_NAME, FCOE_VERSION,
+ 		fcoe_netdev(lp)->name);
+@@ -754,24 +769,35 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+  * fcoe_if_create() - this function creates the fcoe port
+  * @fcoe: fcoe_interface structure to create an fc_lport instance on
+  * @parent: device pointer to be the parent in sysfs for the SCSI host
++ * @npiv: is this a vport?
+  *
+  * Creates fc_lport struct and scsi_host for lport, configures lport.
+  *
+  * Returns : The allocated fc_lport or an error pointer
   */
--#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel. off. */
-+#define	FC_SP_FT_NPIV	0x8000	/* multiple N_Port_ID support (FLOGI) */
-+#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel off (PLOGI) */
- #define	FC_SP_FT_CLAD	0x8000	/* clean address (in FLOGI LS_ACC) */
- #define	FC_SP_FT_RAND	0x4000	/* random relative offset */
- #define	FC_SP_FT_VAL	0x2000	/* valid vendor version level */
-+#define	FC_SP_FT_NPIV_ACC	0x2000	/* NPIV assignment (FLOGI LS_ACC) */
- #define	FC_SP_FT_FPORT	0x1000	/* F port (1) vs. N port (0) */
- #define	FC_SP_FT_ABB	0x0800	/* alternate BB_credit management */
- #define	FC_SP_FT_EDTR	0x0400	/* E_D_TOV Resolution is nanoseconds */
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index 27dad70..c93ca3e 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -198,6 +198,31 @@ static inline void fc_flogi_fill(struct fc_lport *lport, struct fc_frame *fp)
- 	sp->sp_bb_data = htons((u16) lport->mfs);
- 	cp = &flogi->fl_cssp[3 - 1];	/* class 3 parameters */
- 	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
-+	if (lport->does_npiv)
-+		sp->sp_features = htons(FC_SP_FT_NPIV);
+ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+-				       struct device *parent)
++				       struct device *parent, int npiv)
+ {
+ 	int rc;
+ 	struct fc_lport *lport = NULL;
+ 	struct fcoe_port *port;
+ 	struct Scsi_Host *shost;
+ 	struct net_device *netdev = fcoe->netdev;
++	/*
++	 * parent is only a vport if npiv is 1,
++	 * but we'll only use vport in that case so go ahead and set it
++	 */
++	struct fc_vport *vport = dev_to_vport(parent);
+ 
+ 	FCOE_NETDEV_DBG(netdev, "Create Interface\n");
+ 
+-	lport = libfc_host_alloc(&fcoe_shost_template,
+-				 sizeof(struct fcoe_port));
++	if (!npiv) {
++		lport = libfc_host_alloc(&fcoe_shost_template,
++					 sizeof(struct fcoe_port));
++	} else	{
++		lport = libfc_vport_create(vport,
++					   sizeof(struct fcoe_port));
++	}
+ 	if (!lport) {
+ 		FCOE_NETDEV_DBG(netdev, "Could not allocate host structure\n");
+ 		rc = -ENOMEM;
+@@ -791,6 +817,13 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 		goto out_host_put;
+ 	}
+ 
++	if (npiv) {
++		FCOE_NETDEV_DBG(netdev, "Setting vport names, 0x%llX 0x%llX\n",
++			vport->node_name, vport->port_name);
++		fc_set_wwnn(lport, vport->node_name);
++		fc_set_wwpn(lport, vport->port_name);
++	}
++
+ 	/* configure lport network properties */
+ 	rc = fcoe_netdev_config(lport, netdev);
+ 	if (rc) {
+@@ -815,21 +848,24 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 		goto out_lp_destroy;
+ 	}
+ 
+-	/*
+-	 * fcoe_em_alloc() and fcoe_hostlist_add() both
+-	 * need to be atomic with respect to other changes to the hostlist
+-	 * since fcoe_em_alloc() looks for an existing EM
+-	 * instance on host list updated by fcoe_hostlist_add().
+-	 *
+-	 * This is currently handled through the fcoe_config_mutex begin held.
+-	 */
++	if (!npiv) {
++		/*
++		 * fcoe_em_alloc() and fcoe_hostlist_add() both
++		 * need to be atomic with respect to other changes to the
++		 * hostlist since fcoe_em_alloc() looks for an existing EM
++		 * instance on host list updated by fcoe_hostlist_add().
++		 *
++		 * This is currently handled through the fcoe_config_mutex
++		 * begin held.
++		 */
+ 
+-	/* lport exch manager allocation */
+-	rc = fcoe_em_config(lport);
+-	if (rc) {
+-		FCOE_NETDEV_DBG(netdev, "Could not configure the EM for the "
+-				"interface\n");
+-		goto out_lp_destroy;
++		/* lport exch manager allocation */
++		rc = fcoe_em_config(lport);
++		if (rc) {
++			FCOE_NETDEV_DBG(netdev, "Could not configure the EM "
++						"for the interface\n");
++			goto out_lp_destroy;
++		}
+ 	}
+ 
+ 	fcoe_interface_get(fcoe);
+@@ -1783,7 +1819,7 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 		goto out_putdev;
+ 	}
+ 
+-	lport = fcoe_if_create(fcoe, &netdev->dev);
++	lport = fcoe_if_create(fcoe, &netdev->dev, 0);
+ 	if (IS_ERR(lport)) {
+ 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
+ 		       netdev->name);
+@@ -2090,6 +2126,9 @@ static void __exit fcoe_exit(void)
+ 	/* flush any asyncronous interface destroys,
+ 	 * this should happen after the netdev notifier is unregistered */
+ 	flush_scheduled_work();
++	/* That will flush out all the N_Ports on the hostlist, but now we
++	 * may have NPIV VN_Ports scheduled for destruction */
++	flush_scheduled_work();
+ 
+ 	/* detach from scsi transport
+ 	 * must happen after all destroys are done, therefor after the flush */
+@@ -2187,3 +2226,80 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *lport,
+ 	return fc_elsct_send(lport, did, fp, op, resp, arg, timeout);
+ }
+ 
++/**
++ * fcoe_vport_create() - create an fc_host/scsi_host for a vport
++ * @vport: fc_vport object to create a new fc_host for
++ * @disabled: start the new fc_host in a disabled state by default?
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_vport_create(struct fc_vport *vport, bool disabled)
++{
++	struct Scsi_Host *shost = vport_to_shost(vport);
++	struct fc_lport *n_port = shost_priv(shost);
++	struct fcoe_port *port = lport_priv(n_port);
++	struct fcoe_interface *fcoe = port->fcoe;
++	struct net_device *netdev = fcoe->netdev;
++	struct fc_lport *vn_port;
++
++	mutex_lock(&fcoe_config_mutex);
++	vn_port = fcoe_if_create(fcoe, &vport->dev, 1);
++	mutex_unlock(&fcoe_config_mutex);
++
++	if (IS_ERR(vn_port)) {
++		printk(KERN_ERR "fcoe: fcoe_vport_create(%s) failed\n",
++		       netdev->name);
++		return -EIO;
++	}
++
++	if (disabled) {
++		fc_vport_set_state(vport, FC_VPORT_DISABLED);
++	} else {
++		vn_port->boot_time = jiffies;
++		fc_fabric_login(vn_port);
++		fc_vport_setlink(vn_port);
++	}
++	return 0;
 +}
 +
 +/**
-+ * fc_fdisc_fill - Fill in a fdisc request frame.
++ * fcoe_vport_destroy() - destroy the fc_host/scsi_host for a vport
++ * @vport: fc_vport object that is being destroyed
++ *
++ * Returns: 0 for success
 + */
-+static inline void fc_fdisc_fill(struct fc_lport *lport, struct fc_frame *fp)
++static int fcoe_vport_destroy(struct fc_vport *vport)
 +{
-+	struct fc_els_csp *sp;
-+	struct fc_els_cssp *cp;
-+	struct fc_els_flogi *fdisc;
++	struct Scsi_Host *shost = vport_to_shost(vport);
++	struct fc_lport *n_port = shost_priv(shost);
++	struct fc_lport *vn_port = vport->dd_data;
++	struct fcoe_port *port = lport_priv(vn_port);
 +
-+	fdisc = fc_frame_payload_get(fp, sizeof(*fdisc));
-+	memset(fdisc, 0, sizeof(*fdisc));
-+	fdisc->fl_cmd = (u8) ELS_FDISC;
-+	put_unaligned_be64(lport->wwpn, &fdisc->fl_wwpn);
-+	put_unaligned_be64(lport->wwnn, &fdisc->fl_wwnn);
-+	sp = &fdisc->fl_csp;
-+	sp->sp_hi_ver = 0x20;
-+	sp->sp_lo_ver = 0x20;
-+	sp->sp_bb_cred = htons(10);	/* this gets set by gateway */
-+	sp->sp_bb_data = htons((u16) lport->mfs);
-+	cp = &fdisc->fl_cssp[3 - 1];	/* class 3 parameters */
-+	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
- }
- 
- /**
-@@ -296,6 +321,10 @@ static inline int fc_els_fill(struct fc_lport *lport,
- 		fc_flogi_fill(lport, fp);
- 		break;
- 
-+	case ELS_FDISC:
-+		fc_fdisc_fill(lport, fp);
-+		break;
++	mutex_lock(&n_port->lp_mutex);
++	list_del(&vn_port->list);
++	mutex_unlock(&n_port->lp_mutex);
++	schedule_work(&port->destroy_work);
++	return 0;
++}
 +
- 	case ELS_LOGO:
- 		fc_logo_fill(lport, fp);
- 		break;
++/**
++ * fcoe_vport_disable() - change vport state
++ * @vport: vport to bring online/offline
++ * @disable: should the vport be disabled?
++ */
++static int fcoe_vport_disable(struct fc_vport *vport, bool disable)
++{
++	struct fc_lport *lport = vport->dd_data;
++
++	if (disable) {
++		fc_vport_set_state(vport, FC_VPORT_DISABLED);
++		fc_fabric_logoff(lport);
++	} else {
++		lport->boot_time = jiffies;
++		fc_fabric_login(lport);
++		fc_vport_setlink(lport);
++	}
++
++	return 0;
++}
++
 
