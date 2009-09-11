@@ -1,22 +1,32 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 14159] New: AIC79xx is not working properly with an
- attached scsi tape since 2.6.29
-Date: Fri, 11 Sep 2009 23:27:45 +0000
-Message-ID: <1252711665.13282.202.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
+ tape since 2.6.29
+Date: Fri, 11 Sep 2009 23:27:55 GMT
+Message-ID: <200909112327.n8BNRtDF032672@demeter.kernel.org>
 References: <bug-14159-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33179 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753713AbZIKX1s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:27:48 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:45131 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757184AbZIKX1w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Sep 2009 19:27:52 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8BNRtDD032673
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Sep 2009 23:27:55 GMT
 In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=14159
+
+
+
+
+
+--- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-09-11 23:27:53 ---
+Reply-To: James.Bottomley@suse.de
 
 On Fri, 2009-09-11 at 09:18 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -93,4 +103,7 @@ completed, what does /proc/interrupts say?
 
 James
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
