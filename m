@@ -1,7 +1,8 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 33/35] fcoe, libfc: use single frame allocation API
-Date: Fri, 11 Sep 2009 16:59:56 -0700
-Message-ID: <20090911235956.27223.72586.stgit@localhost.localdomain>
+Subject: [PATCH 34/35] libfc: reduce can_queue for all FCP frame allocation
+	failures
+Date: Fri, 11 Sep 2009 17:00:01 -0700
+Message-ID: <20090912000001.27223.21772.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,8 +10,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga09.intel.com ([134.134.136.24]:61482 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932199AbZIKX7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:59:52 -0400
+	id S932206AbZIKX75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 19:59:57 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,121 +20,190 @@ Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Cleans up frame allocation APIs to have just single fc_frame_alloc API.
+Currently can_queue is reduced only if frame alloc fails
+during fc_fcp_send_data but frame alloc can fail at several
+other places in FCP data path and can_queue needs to be
+reduced for any FCP frame alloc failure.
 
-Removes _fc_frame_alloc, renames __fc_frame_alloc to _fc_frame_alloc.
+This patch adds fc_fcp_frame_alloc for all FCP frame allocations
+and if fc_frame_alloc fails in fc_fcp_frame_alloc then reduce
+can_queue in fc_fcp_frame_alloc, this will reduce can_queue for
+all FCP frame alloc failures.
 
-Modifies fc_fcp_send_data for removed _fc_frame_alloc, fc_fcp_send_data
-was the only user of removed _fc_frame_alloc.
+This required moving fc_fcp_reduce_can_queue up, to build without
+adding its prototype. Also renamed fc_fcp_reduce_can_queue to
+fc_fcp_can_queue_ramp_down.
 
-Also Adds check in fc_frame_alloc to do mod by 4 for only non-zero
-len value.
-
-This patch is prep work to fix can_queue reducing in next patch.
-Single fc_frame_alloc API helps in fixing can_queue reducing in
-next patch.
+Removes fc_fcp_reduce_can_queue calling from fc_fcp_recv since
+not needed with added fc_fcp_frame_alloc reducing can_queue.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c   |   15 ++++-----------
- drivers/scsi/libfc/fc_frame.c |    6 +++---
- include/scsi/fc_frame.h       |   16 +++-------------
- 3 files changed, 10 insertions(+), 27 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |  102 +++++++++++++++++++++++++------------------
+ 1 files changed, 59 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 858c0b2..e85dc9a 100644
+index e85dc9a..8b7950f 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -507,18 +507,11 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
- 			 */
- 			if (tlen % 4)
- 				using_sg = 0;
--			if (using_sg) {
--				fp = _fc_frame_alloc(lport, 0);
--				if (!fp)
--					return -ENOMEM;
--			} else {
--				fp = fc_frame_alloc(lport, tlen);
--				if (!fp)
--					return -ENOMEM;
-+			fp = fc_frame_alloc(lport, using_sg ? 0 : tlen);
-+			if (!fp)
-+				return -ENOMEM;
- 
--				data = (void *)(fr_hdr(fp)) +
--					sizeof(struct fc_frame_header);
--			}
-+			data = fc_frame_header_get(fp) + 1;
- 			fh_parm_offset = frame_offset;
- 			fr_max_payload(fp) = fsp->max_payload;
- 		}
-diff --git a/drivers/scsi/libfc/fc_frame.c b/drivers/scsi/libfc/fc_frame.c
-index 8ddb685..6da01c6 100644
---- a/drivers/scsi/libfc/fc_frame.c
-+++ b/drivers/scsi/libfc/fc_frame.c
-@@ -51,7 +51,7 @@ EXPORT_SYMBOL(fc_frame_crc_check);
-  * Allocate a frame intended to be sent via fcoe_xmit.
-  * Get an sk_buff for the frame and set the length.
-  */
--struct fc_frame *__fc_frame_alloc(size_t len)
-+struct fc_frame *_fc_frame_alloc(size_t len)
- {
- 	struct fc_frame *fp;
- 	struct sk_buff *skb;
-@@ -68,7 +68,7 @@ struct fc_frame *__fc_frame_alloc(size_t len)
- 	skb_put(skb, len);
- 	return fp;
- }
--EXPORT_SYMBOL(__fc_frame_alloc);
-+EXPORT_SYMBOL(_fc_frame_alloc);
- 
- struct fc_frame *fc_frame_alloc_fill(struct fc_lport *lp, size_t payload_len)
- {
-@@ -78,7 +78,7 @@ struct fc_frame *fc_frame_alloc_fill(struct fc_lport *lp, size_t payload_len)
- 	fill = payload_len % 4;
- 	if (fill != 0)
- 		fill = 4 - fill;
--	fp = __fc_frame_alloc(payload_len + fill);
-+	fp = _fc_frame_alloc(payload_len + fill);
- 	if (fp) {
- 		memset((char *) fr_hdr(fp) + payload_len, 0, fill);
- 		/* trim is OK, we just allocated it so there are no fragments */
-diff --git a/include/scsi/fc_frame.h b/include/scsi/fc_frame.h
-index bfdb7aa..b2b2267 100644
---- a/include/scsi/fc_frame.h
-+++ b/include/scsi/fc_frame.h
-@@ -97,17 +97,7 @@ static inline void fc_frame_init(struct fc_frame *fp)
+@@ -327,6 +327,57 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
  }
  
- struct fc_frame *fc_frame_alloc_fill(struct fc_lport *, size_t payload_len);
--
--struct fc_frame *__fc_frame_alloc(size_t payload_len);
--
--/*
-- * Get frame for sending via port.
+ /**
++ * fc_fcp_can_queue_ramp_down() - reduces can_queue
++ * @lport: lport to reduce can_queue
++ *
++ * If we are getting memory allocation failures, then we may
++ * be trying to execute too many commands. We let the running
++ * commands complete or timeout, then try again with a reduced
++ * can_queue. Eventually we will hit the point where we run
++ * on all reserved structs.
++ */
++static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
++{
++	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
++	unsigned long flags;
++	int can_queue;
++
++	spin_lock_irqsave(lport->host->host_lock, flags);
++	if (si->throttled)
++		goto done;
++	si->throttled = 1;
++
++	can_queue = lport->host->can_queue;
++	can_queue >>= 1;
++	if (!can_queue)
++		can_queue = 1;
++	lport->host->can_queue = can_queue;
++	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
++		     "Reducing can_queue to %d.\n", can_queue);
++done:
++	spin_unlock_irqrestore(lport->host->host_lock, flags);
++}
++
++/*
++ * fc_fcp_frame_alloc() -  Allocates fc_frame structure and buffer.
++ * @lport:	fc lport struct
++ * @len:	payload length
++ *
++ * Allocates fc_frame structure and buffer but if fails to allocate
++ * then reduce can_queue.
++ */
++static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
++						  size_t len)
++{
++	struct fc_frame *fp;
++
++	fp = fc_frame_alloc(lport, len);
++	if (!fp)
++		fc_fcp_can_queue_ramp_down(lport);
++	return fp;
++}
++
++/**
+  * fc_fcp_recv_data() - Handler for receiving SCSI-FCP data from a target
+  * @fsp: The FCP packet the data is on
+  * @fp:	 The data frame
+@@ -615,38 +666,6 @@ static void fc_fcp_abts_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ }
+ 
+ /**
+- * fc_fcp_reduce_can_queue() - Reduce the can_queue value for a local port
+- * @lport: The local port to reduce can_queue on
+- *
+- * If we are getting memory allocation failures, then we may
+- * be trying to execute too many commands. We let the running
+- * commands complete or timeout, then try again with a reduced
+- * can_queue. Eventually we will hit the point where we run
+- * on all reserved structs.
 - */
--static inline struct fc_frame *_fc_frame_alloc(struct fc_lport *dev,
--					       size_t payload_len)
+-static void fc_fcp_reduce_can_queue(struct fc_lport *lport)
 -{
--	return __fc_frame_alloc(payload_len);
+-	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
+-	unsigned long flags;
+-	int can_queue;
+-
+-	spin_lock_irqsave(lport->host->host_lock, flags);
+-	if (si->throttled)
+-		goto done;
+-	si->throttled = 1;
+-
+-	can_queue = lport->host->can_queue;
+-	can_queue >>= 1;
+-	if (!can_queue)
+-		can_queue = 1;
+-	lport->host->can_queue = can_queue;
+-	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
+-		     "Reducing can_queue to %d.\n", can_queue);
+-done:
+-	spin_unlock_irqrestore(lport->host->host_lock, flags);
 -}
-+struct fc_frame *_fc_frame_alloc(size_t payload_len);
+-
+-/**
+  * fc_fcp_recv() - Reveive an FCP frame
+  * @seq: The sequence the frame is on
+  * @fp:	 The received frame
+@@ -664,8 +683,10 @@ static void fc_fcp_recv(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 	u8 r_ctl;
+ 	int rc = 0;
  
- /*
-  * Allocate fc_frame structure and buffer.  Set the initial length to
-@@ -121,10 +111,10 @@ static inline struct fc_frame *fc_frame_alloc(struct fc_lport *dev, size_t len)
- 	 * Note: Since len will often be a constant multiple of 4,
- 	 * this check will usually be evaluated and eliminated at compile time.
- 	 */
--	if ((len % 4) != 0)
-+	if (len && len % 4)
- 		fp = fc_frame_alloc_fill(dev, len);
- 	else
--		fp = _fc_frame_alloc(dev, len);
-+		fp = _fc_frame_alloc(len);
- 	return fp;
+-	if (IS_ERR(fp))
+-		goto errout;
++	if (IS_ERR(fp)) {
++		fc_fcp_error(fsp, fp);
++		return;
++	}
+ 
+ 	fh = fc_frame_header_get(fp);
+ 	r_ctl = fh->fh_r_ctl;
+@@ -719,11 +740,6 @@ unlock:
+ 	fc_fcp_unlock_pkt(fsp);
+ out:
+ 	fc_frame_free(fp);
+-errout:
+-	if (IS_ERR(fp))
+-		fc_fcp_error(fsp, fp);
+-	else if (rc == -ENOMEM)
+-		fc_fcp_reduce_can_queue(lport);
  }
+ 
+ /**
+@@ -885,7 +901,7 @@ static void fc_fcp_complete_locked(struct fc_fcp_pkt *fsp)
+ 			struct fc_seq *csp;
+ 
+ 			csp = lport->tt.seq_start_next(seq);
+-			conf_frame = fc_frame_alloc(fsp->lp, 0);
++			conf_frame = fc_fcp_frame_alloc(fsp->lp, 0);
+ 			if (conf_frame) {
+ 				f_ctl = FC_FC_SEQ_INIT;
+ 				f_ctl |= FC_FC_LAST_SEQ | FC_FC_END_SEQ;
+@@ -1025,7 +1041,7 @@ static int fc_fcp_cmd_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp,
+ 	if (fc_fcp_lock_pkt(fsp))
+ 		return 0;
+ 
+-	fp = fc_frame_alloc(lport, sizeof(fsp->cdb_cmd));
++	fp = fc_fcp_frame_alloc(lport, sizeof(fsp->cdb_cmd));
+ 	if (!fp) {
+ 		rc = -1;
+ 		goto unlock;
+@@ -1306,7 +1322,7 @@ static void fc_fcp_rec(struct fc_fcp_pkt *fsp)
+ 		fc_fcp_complete_locked(fsp);
+ 		return;
+ 	}
+-	fp = fc_frame_alloc(lport, sizeof(struct fc_els_rec));
++	fp = fc_fcp_frame_alloc(lport, sizeof(struct fc_els_rec));
+ 	if (!fp)
+ 		goto retry;
+ 
+@@ -1558,7 +1574,7 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 	if (!(rpriv->flags & FC_RP_FLAGS_RETRY) ||
+ 	    rpriv->rp_state != RPORT_ST_READY)
+ 		goto retry;			/* shouldn't happen */
+-	fp = fc_frame_alloc(lport, sizeof(*srr));
++	fp = fc_fcp_frame_alloc(lport, sizeof(*srr));
+ 	if (!fp)
+ 		goto retry;
  
 
