@@ -1,38 +1,35 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 10/19] Target_Core_Mod PSCSI <-> Linux/SCSI subsystem
-	plugin
-Date: Fri, 11 Sep 2009 18:57:08 -0700
-Message-ID: <1252720628.2067.216.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 11/19] Target_Core_Mod RAMDISK_DR and RAMDISK_MCP
+	subsystem plugin
+Date: Fri, 11 Sep 2009 18:57:18 -0700
+Message-ID: <1252720638.2067.218.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp105.sbc.mail.gq1.yahoo.com ([67.195.14.108]:31116 "HELO
-	smtp105.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757302AbZILCET (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 22:04:19 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757280AbZILCEu@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>
+List-Id: linux-scsi@vger.kernel.org
 
-[RFC PATCH 10/19] Target_Core_Mod PSCSI <-> Linux/SCSI subsystem plugin
+[RFC PATCH 11/19] Target_Core_Mod RAMDISK_DR and RAMDISK_MCP subsystem plugin
 
-This patch adds the PSCSI subsystem plugin for accessing struct scsi_device
-using struct request from upstream Linux/SCSI code in k.o v2.6.31
+This patch adds the RAMDISK subsystem plugin for accessing struct page from upstream
+Linux/MM code.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
 new file mode 100644
-index 0000000..85a781b
+index 0000000..6e223f9
 --- /dev/null
-+++ b/drivers/target/target_core_pscsi.c
-@@ -0,0 +1,1677 @@
++++ b/drivers/target/target_core_rd.c
+@@ -0,0 +1,1424 @@
 +/*******************************************************************************
-+ * Filename:  target_core_pscsi.c
++ * Filename:  target_core_rd.c
 + *
-+ * This file contains the generic target mode <-> Linux SCSI subsystem plugin.
++ * This file contains the Storage Engine <-> Ramdisk transport
++ * specific functions.
 + *
 + * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
 + * Copyright (c) 2005, 2006, 2007 SBE, Inc.
@@ -58,7 +55,7 @@ index 0000000..85a781b
 + ******************************************************************************/
 +
 +
-+#define TARGET_CORE_PSCSI_C
++#define TARGET_CORE_RD_C
 +
 +#include <linux/version.h>
 +#include <linux/string.h>
@@ -67,898 +64,1088 @@ index 0000000..85a781b
 +#include <linux/slab.h>
 +#include <linux/spinlock.h>
 +#include <linux/smp_lock.h>
-+#include <linux/genhd.h>
-+#include <linux/cdrom.h>
-+#include <linux/file.h>
 +#include <scsi/scsi.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_cmnd.h>
 +#include <scsi/scsi_host.h>
-+#include <sd.h>
-+#include <sr.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_pscsi.h>
-+#include <target/target_core_plugin.h>
-+#include <target/target_core_seobj.h>
-+#include <target/target_core_transport_plugin.h>
++#include <target/target_core_rd.h>
 +
-+#undef TARGET_CORE_PSCSI_C
++#undef TARGET_CORE_RD_C
 +
-+#define ISPRINT(a)  ((a >= ' ') && (a <= '~'))
++/* #define DEBUG_RAMDISK_MCP */
++/* #define DEBUG_RAMDISK_DR */
 +
-+/*	pscsi_get_sh():
++/*	rd_attach_hba(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+static struct Scsi_Host *pscsi_get_sh(u32 host_no)
++int rd_attach_hba(se_hba_t *hba, u32 host_id)
 +{
-+	struct Scsi_Host *sh = NULL;
++	rd_host_t *rd_host;
 +
-+	sh = scsi_host_lookup(host_no);
-+	if (IS_ERR(sh)) {
-+		printk(KERN_ERR "Unable to locate SCSI HBA with Host ID:"
-+				" %u\n", host_no);
-+		return NULL;
++	rd_host = kzalloc(sizeof(rd_host_t), GFP_KERNEL);
++	if (!(rd_host)) {
++		printk(KERN_ERR "Unable to allocate memory for rd_host_t\n");
++		return -ENOMEM;
 +	}
 +
-+	return sh;
-+}
++	rd_host->rd_host_id = host_id;
 +
-+/*	pscsi_check_sd():
-+ *
-+ *	Should be called with scsi_device_get(sd) held
-+ */
-+int pscsi_check_sd(struct scsi_device *sd)
-+{
-+	struct gendisk *disk;
-+	struct scsi_disk *sdisk;
++	atomic_set(&hba->left_queue_depth, RD_HBA_QUEUE_DEPTH);
++	atomic_set(&hba->max_queue_depth, RD_HBA_QUEUE_DEPTH);
++	hba->hba_ptr = (void *) rd_host;
++	hba->transport = (hba->type == RAMDISK_DR) ?
++			&rd_dr_template : &rd_mcp_template;
 +
-+	if (!sd) {
-+		printk(KERN_ERR "struct scsi_device is NULL!\n");
-+		return -1;
-+	}
-+
-+	if (sd->type != TYPE_DISK)
-+		return 0;
-+
-+	/*
-+	 * Some struct scsi_device of Type: Direct-Access, namely the
-+	 * SGI Univerisal Xport do not have a corrasponding block device.
-+	 * We skip these for now.
-+	 */
-+	sdisk = dev_get_drvdata(&sd->sdev_gendev);
-+	if (!(sdisk))
-+		return -1;
-+
-+	disk = (struct gendisk *) sdisk->disk;
-+	if (!(disk->major)) {
-+		printk(KERN_ERR "dev_get_drvdata() failed\n");
-+		return -1;
-+	}
-+
-+	if (linux_blockdevice_check(disk->major, disk->first_minor) < 0)
-+		return -1;
-+
-+	return 0;
-+}
-+
-+/*	pscsi_claim_sd():
-+ *
-+ *	Should be called with scsi_device_get(sd) held
-+ */
-+int pscsi_claim_sd(struct scsi_device *sd)
-+{
-+	struct block_device *bdev;
-+	struct gendisk *disk;
-+	struct scsi_disk *sdisk;
-+
-+	if (!sd) {
-+		printk(KERN_ERR "struct scsi_device is NULL!\n");
-+		return -1;
-+	}
-+
-+	if (sd->type != TYPE_DISK)
-+		return 0;
-+
-+	/*
-+	 * Some struct scsi_device of Type: Direct-Access, namely the
-+	 * SGI Univerisal Xport do not have a corrasponding block device.
-+	 * We skip these for now.
-+	 */
-+	sdisk = dev_get_drvdata(&sd->sdev_gendev);
-+	if (!(sdisk))
-+		return -1;
-+
-+	disk = (struct gendisk *) sdisk->disk;
-+	if (!(disk->major)) {
-+		printk(KERN_ERR "dev_get_drvdata() failed\n");
-+		return -1;
-+	}
-+
-+	printk(KERN_INFO "PSCSI: Claiming %p Major:Minor - %d:%d\n",
-+		sd, disk->major, disk->first_minor);
-+
-+	bdev = linux_blockdevice_claim(disk->major, disk->first_minor,
-+				(void *)sd);
-+	if (!(bdev))
-+		return -1;
-+
-+	return 0;
-+}
-+
-+/*	pscsi_release_sd()
-+ *
-+ * 	Should be called with scsi_device_get(sd) held
-+ */
-+int pscsi_release_sd(struct scsi_device *sd)
-+{
-+	struct gendisk *disk;
-+	struct scsi_disk *sdisk;
-+
-+	if (!sd) {
-+		printk(KERN_ERR "struct scsi_device is NULL!\n");
-+		return -1;
-+	}
-+
-+	if (sd->type != TYPE_DISK)
-+		return 0;
-+
-+	/*
-+	 * Some struct scsi_device of Type: Direct-Access, namely the
-+	 * SGI Univerisal Xport do not have a corrasponding block device.
-+	 * We skip these for now.
-+	 */
-+	sdisk = dev_get_drvdata(&sd->sdev_gendev);
-+	if (!(sdisk))
-+		return -1;
-+
-+	disk = (struct gendisk *) sdisk->disk;
-+	if (!(disk->major)) {
-+		printk(KERN_ERR "dev_get_drvdata() failed\n");
-+		return -1;
-+	}
-+
-+	printk(KERN_INFO "PSCSI: Releasing Major:Minor - %d:%d\n",
-+		disk->major, disk->first_minor);
-+
-+	return linux_blockdevice_release(disk->major, disk->first_minor, NULL);
-+}
-+
-+/*	pscsi_attach_hba():
-+ *
-+ * 	pscsi_get_sh() used scsi_host_lookup() to locate struct Scsi_Host.
-+ *	from the passed SCSI Host ID.
-+ */
-+int pscsi_attach_hba(se_hba_t *hba, u32 host_id)
-+{
-+	int hba_depth, max_sectors;
-+	struct Scsi_Host *sh;
-+
-+	sh = pscsi_get_sh(host_id);
-+	if (!(sh))
-+		return -EINVAL;
-+
-+	max_sectors = sh->max_sectors;
-+
-+	/*
-+	 * Usually the SCSI LLD will use the hostt->can_queue value to define
-+	 * its HBA TCQ depth.  Some other drivers (like 2.6 megaraid) don't set
-+	 * this at all and set sh->can_queue at runtime.
-+	 */
-+	hba_depth = (sh->hostt->can_queue > sh->can_queue) ?
-+		sh->hostt->can_queue : sh->can_queue;
-+	atomic_set(&hba->left_queue_depth, hba_depth);
-+	atomic_set(&hba->max_queue_depth, hba_depth);
-+
-+	hba->hba_ptr = (void *) sh;
-+	hba->transport = &pscsi_template;
-+
-+	printk(KERN_INFO "CORE_HBA[%d] - %s SCSI HBA Driver %s on"
++	printk(KERN_INFO "CORE_HBA[%d] - %s Ramdisk HBA Driver %s on"
 +		" Generic Target Core Stack %s\n", hba->hba_id,
-+		PYX_ISCSI_VENDOR, PSCSI_VERSION, TARGET_CORE_MOD_VERSION);
-+	printk(KERN_INFO "CORE_HBA[%d] - %s\n", hba->hba_id, (sh->hostt->name) ?
-+			(sh->hostt->name) : "Unknown");
-+	printk(KERN_INFO "CORE_HBA[%d] - Attached SCSI HBA to Generic"
-+		" Target Core with TCQ Depth: %d MaxSectors: %hu\n",
-+		hba->hba_id, atomic_read(&hba->max_queue_depth), max_sectors);
++		PYX_ISCSI_VENDOR, RD_HBA_VERSION, TARGET_CORE_MOD_VERSION);
++	printk(KERN_INFO "CORE_HBA[%d] - Attached Ramdisk HBA: %u to Generic"
++		" Target Core TCQ Depth: %d MaxSectors: %u\n", hba->hba_id,
++		rd_host->rd_host_id, atomic_read(&hba->max_queue_depth),
++		RD_MAX_SECTORS);
 +
 +	return 0;
 +}
 +
-+/*	pscsi_detach_hba(): (Part of se_subsystem_api_t template)
++/*	rd_detach_hba(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+int pscsi_detach_hba(se_hba_t *hba)
++int rd_detach_hba(se_hba_t *hba)
 +{
-+	struct Scsi_Host *scsi_host = (struct Scsi_Host *) hba->hba_ptr;
++	rd_host_t *rd_host;
 +
-+	scsi_host_put(scsi_host);
++	if (!hba->hba_ptr) {
++		printk(KERN_ERR "hba->hba_ptr is NULL!\n");
++		return -1;
++	}
 +
-+	printk(KERN_INFO "CORE_HBA[%d] - Detached SCSI HBA: %s from"
-+		" Generic Target Core\n", hba->hba_id,
-+		(scsi_host->hostt->name) ? (scsi_host->hostt->name) :
-+		"Unknown");
++	rd_host = (rd_host_t *) hba->hba_ptr;
 +
++	printk(KERN_INFO "CORE_HBA[%d] - Detached Ramdisk HBA: %u from"
++		" Generic Target Core\n", hba->hba_id, rd_host->rd_host_id);
++
++	kfree(rd_host);
 +	hba->hba_ptr = NULL;
 +
 +	return 0;
 +}
 +
-+/*	pscsi_add_device_to_list():
++/*	rd_release_device_space():
 + *
 + *
 + */
-+se_device_t *pscsi_add_device_to_list(
++void rd_release_device_space(rd_dev_t *rd_dev)
++{
++	u32 i, j, page_count = 0, sg_per_table;
++	rd_dev_sg_table_t *sg_table;
++	struct page *pg;
++	struct scatterlist *sg;
++
++	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
++		return;
++
++	sg_table = rd_dev->sg_table_array;
++
++	for (i = 0; i < rd_dev->sg_table_count; i++) {
++		sg = sg_table[i].sg_table;
++		sg_per_table = sg_table[i].rd_sg_count;
++
++		for (j = 0; j < sg_per_table; j++) {
++			pg = sg_page(&sg[j]);
++			if ((pg)) {
++				__free_page(pg);
++				page_count++;
++			}
++		}
++
++		kfree(sg);
++	}
++
++	printk(KERN_INFO "CORE_RD[%u] - Released device space for Ramdisk"
++		" Device ID: %u, pages %u in %u tables total bytes %lu\n",
++		rd_dev->rd_host->rd_host_id, rd_dev->rd_dev_id, page_count,
++		rd_dev->sg_table_count, (unsigned long)page_count * PAGE_SIZE);
++
++	kfree(sg_table);
++	rd_dev->sg_table_array = NULL;
++	rd_dev->sg_table_count = 0;
++}
++
++
++/*	rd_build_device_space():
++ *
++ *
++ */
++static int rd_build_device_space(rd_dev_t *rd_dev)
++{
++	u32 i = 0, j, page_offset = 0, sg_per_table, sg_tables, total_sg_needed;
++	u32 max_sg_per_table = (RD_MAX_ALLOCATION_SIZE /
++				sizeof(struct scatterlist));
++	rd_dev_sg_table_t *sg_table;
++	struct page *pg;
++	struct scatterlist *sg;
++
++	if (rd_dev->rd_page_count <= 0) {
++		printk(KERN_ERR "Illegal page count: %u for Ramdisk device\n",
++			rd_dev->rd_page_count);
++		return -1;
++	}
++	total_sg_needed = rd_dev->rd_page_count;
++
++	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
++
++	sg_table = kzalloc(sg_tables * sizeof(rd_dev_sg_table_t), GFP_KERNEL);
++	if (!(sg_table)) {
++		printk(KERN_ERR "Unable to allocate memory for Ramdisk"
++			" scatterlist tables\n");
++		return -1;
++	}
++
++	rd_dev->sg_table_array = sg_table;
++	rd_dev->sg_table_count = sg_tables;
++
++	while (total_sg_needed) {
++		sg_per_table = (total_sg_needed > max_sg_per_table) ?
++			max_sg_per_table : total_sg_needed;
++
++		sg = kzalloc(sg_per_table * sizeof(struct scatterlist),
++				GFP_KERNEL);
++		if (!(sg)) {
++			printk(KERN_ERR "Unable to allocate scatterlist array"
++				" for rd_dev_t\n");
++			return -1;
++		}
++
++		sg_init_table((struct scatterlist *)&sg[0], sg_per_table);
++
++		sg_table[i].sg_table = sg;
++		sg_table[i].rd_sg_count = sg_per_table;
++		sg_table[i].page_start_offset = page_offset;
++		sg_table[i++].page_end_offset = (page_offset + sg_per_table)
++						- 1;
++
++		for (j = 0; j < sg_per_table; j++) {
++			pg = (struct page *) alloc_pages(
++					GFP_KERNEL, 0);
++			if (!(pg)) {
++				printk(KERN_ERR "Unable to allocate scatterlist"
++					" pages for rd_dev_sg_table_t\n");
++				return -1;
++			}
++			sg_assign_page(&sg[j], pg);
++			sg[j].length = PAGE_SIZE;
++		}
++
++		page_offset += sg_per_table;
++		total_sg_needed -= sg_per_table;
++	}
++
++	printk(KERN_INFO "CORE_RD[%u] - Built Ramdisk Device ID: %u space of"
++		" %u pages in %u tables\n", rd_dev->rd_host->rd_host_id,
++		rd_dev->rd_dev_id, rd_dev->rd_page_count,
++		rd_dev->sg_table_count);
++
++	return 0;
++}
++
++static void *rd_allocate_virtdevice(
++	se_hba_t *hba,
++	const char *name,
++	int rd_direct)
++{
++	rd_dev_t *rd_dev;
++	rd_host_t *rd_host = (rd_host_t *) hba->hba_ptr;
++
++	rd_dev = kzalloc(sizeof(rd_dev_t), GFP_KERNEL);
++	if (!(rd_dev)) {
++		printk(KERN_ERR "Unable to allocate memory for rd_dev_t\n");
++		return NULL;
++	}
++
++	rd_dev->rd_host = rd_host;
++	rd_dev->rd_direct = rd_direct;
++
++	return rd_dev;
++}
++
++void *rd_DIRECT_allocate_virtdevice(se_hba_t *hba, const char *name)
++{
++	return rd_allocate_virtdevice(hba, name, 1);
++}
++
++void *rd_MEMCPY_allocate_virtdevice(se_hba_t *hba, const char *name)
++{
++	return rd_allocate_virtdevice(hba, name, 0);
++}
++
++/*	rd_create_virtdevice():
++ *
++ *
++ */
++static se_device_t *rd_create_virtdevice(
 +	se_hba_t *hba,
 +	se_subsystem_dev_t *se_dev,
-+	pscsi_dev_virt_t *pdv,
-+	struct scsi_device *sd,
-+	int dev_flags)
++	void *p,
++	int rd_direct)
 +{
 +	se_device_t *dev;
++	rd_dev_t *rd_dev = (rd_dev_t *) p;
++	rd_host_t *rd_host = (rd_host_t *) hba->hba_ptr;
++	int dev_flags = 0;
 +
-+	/*
-+	 * Some pseudo SCSI HBAs do not fill in sector_size
-+	 * correctly. (See ide-scsi.c)  So go ahead and setup sane
-+	 * values.
-+	 */
-+	if (!sd->sector_size) {
-+		switch (sd->type) {
-+		case TYPE_DISK:
-+			sd->sector_size = 512;
-+			break;
-+		case TYPE_ROM:
-+			sd->sector_size = 2048;
-+			break;
-+		case TYPE_TAPE: /* The Tape may not be in the drive */
-+			break;
-+		case TYPE_MEDIUM_CHANGER: /* Control CDBs only */
-+			break;
-+		default:
-+			printk(KERN_ERR "Unable to set sector_size for %d\n",
-+					sd->type);
-+			return NULL;
-+		}
++	if (rd_dev->rd_direct)
++		dev_flags |= DF_TRANSPORT_DMA_ALLOC;
 +
-+		if (sd->sector_size) {
-+			printk(KERN_ERR "Set broken SCSI Device"
-+				" %d:%d:%d sector_size to %d\n", sd->channel,
-+				sd->id, sd->lun, sd->sector_size);
-+		}
-+	}
++	if (rd_build_device_space(rd_dev) < 0)
++		goto fail;
 +
-+	if (!sd->queue_depth) {
-+		sd->queue_depth = PSCSI_DEFAULT_QUEUEDEPTH;
-+
-+		printk(KERN_ERR "Set broken SCSI Device %d:%d:%d"
-+			" queue_depth to %d\n", sd->channel, sd->id,
-+				sd->lun, sd->queue_depth);
-+	}
-+	/*
-+	 * Set the pointer pdv->pdv_sd to from passed struct scsi_device,
-+	 * which has already been referenced with Linux SCSI code with
-+	 * scsi_device_get() in this file's pscsi_create_virtdevice().
-+	 *
-+	 * The passthrough operations called by the transport_add_device_*
-+	 * function below will require this pointer to be set for passthroug
-+	 *  ops.
-+	 *
-+	 * For the shutdown case in pscsi_free_device(), this struct
-+	 * scsi_device  reference is released with Linux SCSI code
-+	 * scsi_device_put() and the pdv->pdv_sd cleared.
-+	 */
-+	pdv->pdv_sd = sd;
-+
-+	dev = transport_add_device_to_core_hba(hba, &pscsi_template,
-+				se_dev, dev_flags, (void *)pdv);
-+	if (!(dev)) {
-+		pdv->pdv_sd = NULL;
-+		return NULL;
-+	}
-+
-+	/*
-+	 * For TYPE_TAPE, attempt to determine blocksize with MODE_SENSE.
-+	 */
-+	if (sd->type == TYPE_TAPE) {
-+		unsigned char *buf = NULL, cdb[SCSI_CDB_SIZE];
-+		se_cmd_t *cmd;
-+		u32 blocksize;
-+
-+		memset(cdb, 0, SCSI_CDB_SIZE);
-+		cdb[0] = MODE_SENSE;
-+		cdb[4] = 0x0c; /* 12 bytes */
-+
-+		cmd = transport_allocate_passthrough(&cdb[0],
-+				SE_DIRECTION_READ, 0, NULL, 0, 12,
-+				DEV_OBJ_API(dev), dev);
-+		if (!(cmd)) {
-+			printk(KERN_ERR "Unable to determine blocksize for"
-+				" TYPE_TAPE\n");
-+			goto out;
-+		}
-+
-+		if (transport_generic_passthrough(cmd) < 0) {
-+			printk(KERN_ERR "Unable to determine blocksize for"
-+				" TYPE_TAPE\n");
-+			goto out;
-+		}
-+
-+		buf = (unsigned char *)T_TASK(cmd)->t_task_buf;
-+		blocksize = (buf[9] << 16) | (buf[10] << 8) | (buf[11]);
-+
-+		/*
-+		 * If MODE_SENSE still returns zero, set the default value
-+		 * to 1024.
-+		 */
-+		sd->sector_size = blocksize;
-+		if (!(sd->sector_size))
-+			sd->sector_size = 1024;
-+
-+		transport_passthrough_release(cmd);
-+	}
-+out:
-+	return dev;
-+}
-+
-+int pscsi_claim_phydevice(se_hba_t *hba, se_device_t *dev)
-+{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *)pdv->pdv_sd;
-+
-+	return pscsi_claim_sd(sd);
-+}
-+
-+int pscsi_release_phydevice(se_device_t *dev)
-+{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *)pdv->pdv_sd;
-+
-+	return pscsi_release_sd(sd);
-+}
-+
-+void *pscsi_allocate_virtdevice(se_hba_t *hba, const char *name)
-+{
-+	pscsi_dev_virt_t *pdv;
-+
-+	pdv = kzalloc(sizeof(pscsi_dev_virt_t), GFP_KERNEL);
-+	if (!(pdv)) {
-+		printk(KERN_ERR "Unable to allocate memory for pscsi_dev_virt_t\n");
-+		return NULL;
-+	}
-+	pdv->pdv_se_hba = hba;
-+
-+	printk(KERN_INFO "PSCSI: Allocated pdv: %p for %s\n", pdv, name);
-+	return (void *)pdv;
-+}
-+
-+/*
-+ * Called with struct Scsi_Host->host_lock called.
-+ */
-+se_device_t *pscsi_create_type_disk(
-+	struct scsi_device *sd,
-+	pscsi_dev_virt_t *pdv,
-+	se_subsystem_dev_t *se_dev,
-+	se_hba_t *hba)
-+{
-+	se_device_t *dev;
-+	struct Scsi_Host *sh = sd->host;
-+	u32 dev_flags = 0;
-+
-+	if (scsi_device_get(sd)) {
-+		printk(KERN_ERR "scsi_device_get() failed for %d:%d:%d:%d\n",
-+			sh->host_no, sd->channel, sd->id, sd->lun);
-+		spin_unlock_irq(sh->host_lock);
-+		return NULL;
-+	}
-+	spin_unlock_irq(sh->host_lock);
-+
-+	if (pscsi_check_sd(sd) < 0) {
-+		scsi_device_put(sd);
-+		printk(KERN_ERR "pscsi_check_sd() failed for %d:%d:%d:%d\n",
-+			sh->host_no, sd->channel, sd->id, sd->lun);
-+		return NULL;
-+	}
-+	if (!(pscsi_claim_sd(sd))) {
-+		dev_flags |= DF_CLAIMED_BLOCKDEV;
-+		dev_flags |= DF_PERSISTENT_CLAIMED_BLOCKDEV;
-+	}
-+	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-+	if (!(dev)) {
-+		scsi_device_put(sd);
-+		return NULL;
-+	}
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Added TYPE_DISK for %d:%d:%d\n",
-+		sh->host_no, sd->channel, sd->id, sd->lun);
-+
-+	return dev;
-+}
-+
-+/*
-+ * Called with struct Scsi_Host->host_lock called.
-+ */
-+se_device_t *pscsi_create_type_rom(
-+	struct scsi_device *sd,
-+	pscsi_dev_virt_t *pdv,
-+	se_subsystem_dev_t *se_dev,
-+	se_hba_t *hba)
-+{
-+	se_device_t *dev;
-+	struct Scsi_Host *sh = sd->host;
-+	u32 dev_flags = 0;
-+
-+	if (scsi_device_get(sd)) {
-+		printk(KERN_ERR "scsi_device_get() failed for %d:%d:%d:%d\n",
-+			sh->host_no, sd->channel, sd->id, sd->lun);
-+		spin_unlock_irq(sh->host_lock);
-+		return NULL;
-+	}
-+	spin_unlock_irq(sh->host_lock);
-+
-+	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-+	if (!(dev)) {
-+		scsi_device_put(sd);
-+		return NULL;
-+	}
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Added Type: %s for %d:%d:%d\n",
-+		sh->host_no, scsi_device_type(sd->type), sd->channel,
-+		sd->id, sd->lun);
-+
-+	return dev;
-+}
-+
-+/*
-+ *Called with struct Scsi_Host->host_lock called.
-+ */
-+se_device_t *pscsi_create_type_other(
-+	struct scsi_device *sd,
-+	pscsi_dev_virt_t *pdv,
-+	se_subsystem_dev_t *se_dev,
-+	se_hba_t *hba)
-+{
-+	se_device_t *dev;
-+	struct Scsi_Host *sh = sd->host;
-+	u32 dev_flags = 0;
-+
-+	spin_unlock_irq(sh->host_lock);
-+	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
++	dev = transport_add_device_to_core_hba(hba,
++			(rd_dev->rd_direct) ? &rd_dr_template :
++			&rd_mcp_template, se_dev, dev_flags, (void *)rd_dev);
 +	if (!(dev))
-+		return NULL;
++		goto fail;
 +
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Added Type: %s for %d:%d:%d\n",
-+		sh->host_no, scsi_device_type(sd->type), sd->channel,
-+		sd->id, sd->lun);
++	rd_dev->rd_dev_id = rd_host->rd_host_dev_id_count++;
++	rd_dev->rd_queue_depth = dev->queue_depth;
++
++	printk(KERN_INFO "CORE_RD[%u] - Added LIO %s Ramdisk Device ID: %u of"
++		" %u pages in %u tables, %lu total bytes\n",
++		rd_host->rd_host_id, (!rd_dev->rd_direct) ? "MEMCPY" :
++		"DIRECT", rd_dev->rd_dev_id, rd_dev->rd_page_count,
++		rd_dev->sg_table_count,
++		(unsigned long)(rd_dev->rd_page_count * PAGE_SIZE));
 +
 +	return dev;
++
++fail:
++	rd_release_device_space(rd_dev);
++	return NULL;
 +}
 +
-+se_device_t *pscsi_create_virtdevice(
++se_device_t *rd_DIRECT_create_virtdevice(
 +	se_hba_t *hba,
 +	se_subsystem_dev_t *se_dev,
 +	void *p)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *)p;
-+	se_device_t *dev;
-+	struct scsi_device *sd;
-+	struct Scsi_Host *sh = (struct Scsi_Host *) hba->hba_ptr;
-+
-+	if (!(pdv)) {
-+		printk(KERN_ERR "Unable to locate pscsi_dev_virt_t"
-+				" parameter\n");
-+		return NULL;
-+	}
-+
-+	spin_lock_irq(sh->host_lock);
-+	list_for_each_entry(sd, &sh->__devices, siblings) {
-+		if ((pdv->pdv_channel_id != sd->channel) ||
-+		    (pdv->pdv_target_id != sd->id) ||
-+		    (pdv->pdv_lun_id != sd->lun))
-+			continue;
-+		/*
-+		 * Functions will release the held struct scsi_host->host_lock
-+		 * before calling calling pscsi_check_sd() and
-+		 * pscsi_add_device_to_list() to register struct scsi_device
-+		 * with target_core_mod.
-+		 */
-+		switch (sd->type) {
-+		case TYPE_DISK:
-+			dev = pscsi_create_type_disk(sd, pdv, se_dev, hba);
-+			break;
-+		case TYPE_ROM:
-+			dev = pscsi_create_type_rom(sd, pdv, se_dev, hba);
-+			break;
-+		default:
-+			dev = pscsi_create_type_other(sd, pdv, se_dev, hba);
-+			break;
-+		}
-+		if (!(dev)) {
-+			pdv->pdv_sd = NULL;
-+			return NULL;
-+		}
-+		return dev;
-+	}
-+	spin_unlock_irq(sh->host_lock);
-+
-+	printk(KERN_ERR "Unable to locate %d:%d:%d:%d\n", sh->host_no,
-+		pdv->pdv_channel_id,  pdv->pdv_target_id, pdv->pdv_lun_id);
-+
-+	return NULL;
++	return rd_create_virtdevice(hba, se_dev, p, 1);
 +}
 +
-+/*	pscsi_activate_device(): (Part of se_subsystem_api_t template)
++se_device_t *rd_MEMCPY_create_virtdevice(
++	se_hba_t *hba,
++	se_subsystem_dev_t *se_dev,
++	void *p)
++{
++	return rd_create_virtdevice(hba, se_dev, p, 0);
++}
++
++/*	rd_activate_device(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+int pscsi_activate_device(se_device_t *dev)
++int rd_activate_device(se_device_t *dev)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+	struct Scsi_Host *sh = sd->host;
++	rd_dev_t *rd_dev = (rd_dev_t *) dev->dev_ptr;
++	rd_host_t *rd_host = rd_dev->rd_host;
 +
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Activating Device with TCQ: %d at"
-+		" SCSI Location (Channel/Target/LUN) %d/%d/%d\n", sh->host_no,
-+		 sd->queue_depth, sd->channel, sd->id, sd->lun);
++	printk(KERN_INFO "CORE_RD[%u] - Activating Device with TCQ: %d at"
++		" Ramdisk Device ID: %d\n", rd_host->rd_host_id,
++		rd_dev->rd_queue_depth, rd_dev->rd_dev_id);
 +
 +	return 0;
 +}
 +
-+/*	pscsi_deactivate_device(): (Part of se_subsystem_api_t template)
++/*	rd_deactivate_device(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+void pscsi_deactivate_device(se_device_t *dev)
++void rd_deactivate_device(se_device_t *dev)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+	struct Scsi_Host *sh = sd->host;
++	rd_dev_t *rd_dev = (rd_dev_t *) dev->dev_ptr;
++	rd_host_t *rd_host = rd_dev->rd_host;
 +
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Deactivating Device with TCQ: %d at"
-+		" SCSI Location (Channel/Target/LUN) %d/%d/%d\n", sh->host_no,
-+		sd->queue_depth, sd->channel, sd->id, sd->lun);
++	printk(KERN_INFO "CORE_RD[%u] - Deactivating Device with TCQ: %d at"
++		" Ramdisk Device ID: %d\n", rd_host->rd_host_id,
++		rd_dev->rd_queue_depth, rd_dev->rd_dev_id);
 +}
 +
-+/*	pscsi_free_device(): (Part of se_subsystem_api_t template)
++/*	rd_free_device(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+void pscsi_free_device(void *p)
++void rd_free_device(void *p)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) p;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
++	rd_dev_t *rd_dev = (rd_dev_t *) p;
 +
-+	if (sd) {
-+		if ((sd->type == TYPE_DISK) || (sd->type == TYPE_ROM))
-+			scsi_device_put(sd);
-+
-+		pdv->pdv_sd = NULL;
-+	}
-+
-+	kfree(pdv);
++	rd_release_device_space(rd_dev);
++	kfree(rd_dev);
 +}
 +
-+/*	pscsi_transport_complete():
++/*	rd_transport_complete(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+int pscsi_transport_complete(se_task_t *task)
++int rd_transport_complete(se_task_t *task)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+	int result;
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+	unsigned char *cdb = &pt->pscsi_cdb[0];
-+
-+	result = pt->pscsi_result;
-+
-+# ifdef LINUX_VPD_PAGE_CHECK
-+	if ((cdb[0] == INQUIRY) && host_byte(result) == DID_OK) {
-+		u32 len = 0;
-+		unsigned char *dst = (unsigned char *)
-+				T_TASK(task->task_se_cmd)->t_task_buf;
-+		unsigned char buf[VPD_BUF_LEN], *iqn = NULL;
-+		se_subsystem_dev_t *su_dev = TASK_DEV(task)->se_sub_dev;
-+		se_hba_t *hba = task->se_dev->se_hba;
-+
-+		/*
-+		 * The Initiator port did not request VPD information.
-+		 */
-+		if (!(cdb[1] & 0x1)) {
-+			task->task_scsi_status = GOOD;
-+			return 0;
-+		}
-+
-+		/*
-+		 * Assume the SCSI Device did the right thing if an VPD length
-+		 * is provided in the INQUIRY response payload.
-+		 */
-+		if (dst[3] != 0x00) {
-+			su_dev->su_dev_flags |= SDF_FIRMWARE_VPD_UNIT_SERIAL;
-+			su_dev->su_dev_flags &= ~SDF_EMULATED_VPD_UNIT_SERIAL;
-+			task->task_scsi_status = GOOD;
-+			return 0;
-+		}
-+
-+		memset(buf, 0, VPD_BUF_LEN);
-+		memset(dst, 0, task->task_size);
-+		buf[0] = sd->type;
-+
-+		switch (cdb[2]) {
-+		case 0x00:
-+			buf[1] = 0x00;
-+			buf[3] = 3;
-+			buf[4] = 0x0;
-+			buf[5] = 0x80;
-+			buf[6] = 0x83;
-+			len = 3;
-+			break;
-+		case 0x80:
-+			buf[1] = 0x80;
-+			if (su_dev->su_dev_flags &
-+					SDF_EMULATED_VPD_UNIT_SERIAL)
-+				len += sprintf((unsigned char *)&buf[4], "%s",
-+					&su_dev->t10_wwn.unit_serial[0]);
-+			else {
-+				iqn = transport_get_iqn_sn();
-+				len += sprintf((unsigned char *)&buf[4],
-+					"%s:%u_%u_%u_%u", iqn, hba->hba_id,
-+					sd->channel, sd->id, sd->lun);
-+			}
-+			buf[3] = len;
-+			break;
-+		case 0x83:
-+			buf[1] = 0x83;
-+			/* Start Identifier Page */
-+			buf[4] = 0x2; /* ASCII */
-+			buf[5] = 0x1;
-+			buf[6] = 0x0;
-+			len += sprintf((unsigned char *)&buf[8], "LIO-ORG");
-+
-+			if (su_dev->su_dev_flags &
-+					SDF_EMULATED_VPD_UNIT_SERIAL) {
-+				len += sprintf((unsigned char *)&buf[16],
-+					"PSCSI:%s",
-+					&su_dev->t10_wwn.unit_serial[0]);
-+			} else {
-+				iqn = transport_get_iqn_sn();
-+				len += sprintf((unsigned char *)&buf[16],
-+					"PSCSI:%s:%u_%u_%u_%u", iqn,
-+					hba->hba_id, sd->channel,
-+					sd->id, sd->lun);
-+			}
-+			buf[7] = len; /* Identifer Length */
-+			len += 4;
-+			buf[3] = len; /* Page Length */
-+			break;
-+		default:
-+			break;
-+		}
-+
-+		if ((len + 4) > task->task_size) {
-+			printk(KERN_ERR "Inquiry VPD Length: %u larger than"
-+				" req->sr_bufflen: %u\n", (len + 4),
-+				task->task_size);
-+			memcpy(dst, buf, task->task_size);
-+		} else
-+			memcpy(dst, buf, (len + 4));
-+
-+		/*
-+		 * Fake the GOOD SAM status here too.
-+		 */
-+		task->task_scsi_status = GOOD;
-+		return 0;
-+	}
-+
-+# endif /* LINUX_VPD_PAGE_CHECK */
-+
-+	/*
-+	 * Hack to make sure that Write-Protect modepage is set if R/O mode is
-+	 * forced.
-+	 */
-+	if (((cdb[0] == MODE_SENSE) || (cdb[0] == MODE_SENSE_10)) &&
-+	     (status_byte(result) << 1) == SAM_STAT_GOOD) {
-+		if (!TASK_CMD(task)->se_deve)
-+			goto after_mode_sense;
-+
-+		if (TASK_CMD(task)->se_deve->lun_flags &
-+				TRANSPORT_LUNFLAGS_READ_ONLY) {
-+			unsigned char *buf = (unsigned char *)
-+				T_TASK(task->task_se_cmd)->t_task_buf;
-+
-+			if (cdb[0] == MODE_SENSE_10) {
-+				if (!(buf[3] & 0x80))
-+					buf[3] |= 0x80;
-+			} else {
-+				if (!(buf[2] & 0x80))
-+					buf[2] |= 0x80;
-+			}
-+		}
-+	}
-+after_mode_sense:
-+
-+	if (sd->type != TYPE_TAPE)
-+		goto after_mode_select;
-+
-+	/*
-+	 * Hack to correctly obtain the initiator requested blocksize for
-+	 * TYPE_TAPE.  Since this value is dependent upon each tape media,
-+	 * struct scsi_device->sector_size will not contain the correct value
-+	 * by default, so we go ahead and set it so
-+	 * TRANSPORT(dev)->get_blockdev() returns the correct value to the
-+	 * storage engine.
-+	 */
-+	if (((cdb[0] == MODE_SELECT) || (cdb[0] == MODE_SELECT_10)) &&
-+	      (status_byte(result) << 1) == SAM_STAT_GOOD) {
-+		unsigned char *buf;
-+		struct scatterlist *sg = task->task_sg;
-+		u16 bdl;
-+		u32 blocksize;
-+
-+		buf = sg_virt(&sg[0]);
-+		if (!(buf)) {
-+			printk(KERN_ERR "Unable to get buf for scatterlist\n");
-+			goto after_mode_select;
-+		}
-+
-+		if (cdb[0] == MODE_SELECT)
-+			bdl = (buf[3]);
-+		else
-+			bdl = (buf[6] << 8) | (buf[7]);
-+
-+		if (!bdl)
-+			goto after_mode_select;
-+
-+		if (cdb[0] == MODE_SELECT)
-+			blocksize = (buf[9] << 16) | (buf[10] << 8) |
-+					(buf[11]);
-+		else
-+			blocksize = (buf[13] << 16) | (buf[14] << 8) |
-+					(buf[15]);
-+
-+		sd->sector_size = blocksize;
-+	}
-+after_mode_select:
-+
-+	if (status_byte(result) & CHECK_CONDITION)
-+		return 1;
-+
 +	return 0;
 +}
 +
-+/*	pscsi_allocate_request(): (Part of se_subsystem_api_t template)
++/*	rd_allocate_request(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+void *pscsi_allocate_request(
++void *rd_allocate_request(
 +	se_task_t *task,
 +	se_device_t *dev)
 +{
-+	pscsi_plugin_task_t *pt;
++	rd_request_t *rd_req;
 +
-+	pt = kzalloc(sizeof(pscsi_plugin_task_t), GFP_KERNEL);
-+	if (!(pt)) {
-+		printk(KERN_ERR "Unable to allocate pscsi_plugin_task_t\n");
++	rd_req = kzalloc(sizeof(rd_request_t), GFP_KERNEL);
++	if (!(rd_req)) {
++		printk(KERN_ERR "Unable to allocate rd_request_t\n");
 +		return NULL;
 +	}
++	rd_req->rd_dev = (rd_dev_t *) dev->dev_ptr;
 +
-+	return pt;
++	return (void *)rd_req;
 +}
 +
-+static inline void pscsi_blk_init_request(
-+	se_task_t *task,
-+	pscsi_plugin_task_t *pt)
-+{
-+	/*
-+	 * Defined as "scsi command" in include/linux/blkdev.h.
-+	 */
-+	pt->pscsi_req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	/*
-+	 * Setup the done function pointer for struct request,
-+	 * also set the end_io_data pointer.to se_task_t.
-+	 */
-+	pt->pscsi_req->end_io = pscsi_req_done;
-+	pt->pscsi_req->end_io_data = (void *)task;
-+	/*
-+	 * Load the referenced se_task_t's SCSI CDB into
-+	 * include/linux/blkdev.h:struct request->cmd
-+	 */
-+	pt->pscsi_req->cmd_len = COMMAND_SIZE(pt->pscsi_cdb[0]);
-+	memcpy(pt->pscsi_req->cmd, pt->pscsi_cdb, pt->pscsi_req->cmd_len);
-+	/*
-+	 * Setup pointer for outgoing sense data.
-+	 */
-+	pt->pscsi_req->sense = (void *)&pt->pscsi_sense[0];
-+	pt->pscsi_req->sense_len = 0;
-+}
-+
-+/*
-+ * Used for pSCSI data payloads for all *NON* SCF_SCSI_DATA_SG_IO_CDB
-+*/
-+static int pscsi_blk_get_request(se_task_t *task)
-+{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
-+
-+	pt->pscsi_req = blk_get_request(pdv->pdv_sd->request_queue,
-+			(pt->pscsi_direction == DMA_TO_DEVICE), GFP_KERNEL);
-+	if (!(pt->pscsi_req) || IS_ERR(pt->pscsi_req)) {
-+		printk(KERN_ERR "PSCSI: blk_get_request() failed: %ld\n",
-+				IS_ERR(pt->pscsi_req));
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+	}
-+	/*
-+	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
-+	 * and setup rq callback, CDB and sense.
-+	 */
-+	pscsi_blk_init_request(task, pt);
-+	return 0;
-+}
-+
-+/*      pscsi_do_task(): (Part of se_subsystem_api_t template)
++/*	rd_emulate_inquiry():
 + *
 + *
 + */
-+int pscsi_do_task(se_task_t *task)
++static int rd_emulate_inquiry(se_task_t *task)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
-+	struct gendisk *gd = NULL;
-+	/*
-+	 * Grab pointer to struct gendisk for TYPE_DISK and TYPE_ROM
-+	 * cases (eg: cases where struct scsi_device has a backing
-+	 * struct block_device.  Also set the struct request->timeout
-+	 * value based on peripheral device type (from SCSI).
-+	 */
-+	if (pdv->pdv_sd->type == TYPE_DISK) {
-+		struct scsi_disk *sdisk = dev_get_drvdata(
-+					&pdv->pdv_sd->sdev_gendev);
-+		gd = sdisk->disk;
-+		pt->pscsi_req->timeout = PS_TIMEOUT_DISK;
-+	} else
-+		pt->pscsi_req->timeout = PS_TIMEOUT_OTHER;
++	unsigned char prod[64], se_location[128];
++	rd_dev_t *rd_dev = (rd_dev_t *) task->se_dev->dev_ptr;
++	se_cmd_t *cmd = TASK_CMD(task);
++	se_hba_t *hba = task->se_dev->se_hba;
 +
-+	pt->pscsi_req->retries = PS_RETRY;
-+	/*
-+	 * Queue the struct request into the struct scsi_device->request_queue.
-+	 */
-+	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, gd,
-+			      pt->pscsi_req, 1, pscsi_req_done);
++	memset(prod, 0, 64);
++	memset(se_location, 0, 128);
++
++	sprintf(prod, "RAMDISK-%s", (rd_dev->rd_direct) ? "DR" : "MCP");
++	sprintf(se_location, "%u_%u", hba->hba_id, rd_dev->rd_dev_id);
++
++	return transport_generic_emulate_inquiry(cmd, TYPE_DISK, prod,
++			(hba->transport->do_se_mem_map) ? RD_DR_VERSION :
++			RD_MCP_VERSION, se_location);
++}
++
++/*	rd_emulate_read_cap():
++ *
++ *
++ */
++static int rd_emulate_read_cap(se_task_t *task)
++{
++	rd_dev_t *rd_dev = (rd_dev_t *) task->se_dev->dev_ptr;
++	u32 blocks = ((rd_dev->rd_page_count * PAGE_SIZE) /
++		       DEV_ATTRIB(task->se_dev)->block_size) - 1;
++
++	if ((((rd_dev->rd_page_count * PAGE_SIZE) /
++	       DEV_ATTRIB(task->se_dev)->block_size) - 1) >= 0x00000000ffffffff)
++		blocks = 0xffffffff;
++
++	return transport_generic_emulate_readcapacity(TASK_CMD(task), blocks);
++}
++
++static int rd_emulate_read_cap16(se_task_t *task)
++{
++	rd_dev_t *rd_dev = (rd_dev_t *) task->se_dev->dev_ptr;
++	unsigned long long blocks_long = ((rd_dev->rd_page_count * PAGE_SIZE) /
++				   DEV_ATTRIB(task->se_dev)->block_size) - 1;
++
++	return transport_generic_emulate_readcapacity_16(TASK_CMD(task),
++				blocks_long);
++}
++
++/*	rd_emulate_scsi_cdb():
++ *
++ *
++ */
++static int rd_emulate_scsi_cdb(se_task_t *task)
++{
++	int ret;
++	se_cmd_t *cmd = TASK_CMD(task);
++	rd_request_t *rd_req = (rd_request_t *) task->transport_req;
++
++	switch (rd_req->rd_scsi_cdb[0]) {
++	case INQUIRY:
++		if (rd_emulate_inquiry(task) < 0)
++			return PYX_TRANSPORT_INVALID_CDB_FIELD;
++		break;
++	case READ_CAPACITY:
++		ret = rd_emulate_read_cap(task);
++		if (ret < 0)
++			return ret;
++		break;
++	case MODE_SENSE:
++		ret = transport_generic_emulate_modesense(TASK_CMD(task),
++				rd_req->rd_scsi_cdb, rd_req->rd_buf, 0,
++				TYPE_DISK);
++		if (ret < 0)
++			return ret;
++		break;
++	case MODE_SENSE_10:
++		ret = transport_generic_emulate_modesense(TASK_CMD(task),
++				rd_req->rd_scsi_cdb, rd_req->rd_buf, 1,
++				TYPE_DISK);
++		if (ret < 0)
++			return ret;
++		break;
++	case SERVICE_ACTION_IN:
++		if ((T_TASK(cmd)->t_task_cdb[1] & 0x1f) !=
++		     SAI_READ_CAPACITY_16) {
++			printk(KERN_ERR "Unsupported SA: 0x%02x\n",
++					T_TASK(cmd)->t_task_cdb[1] & 0x1f);
++			return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
++		}
++		ret = rd_emulate_read_cap16(task);
++		if (ret < 0)
++			return ret;
++		break;
++	case REQUEST_SENSE:
++		ret = transport_generic_emulate_request_sense(cmd,
++				T_TASK(cmd)->t_task_cdb);
++		if (ret < 0)
++			return ret;
++		break;
++	case ALLOW_MEDIUM_REMOVAL:
++	case ERASE:
++	case REZERO_UNIT:
++	case SEEK_10:
++	case SPACE:
++	case START_STOP:
++	case SYNCHRONIZE_CACHE:
++	case TEST_UNIT_READY:
++	case VERIFY:
++	case WRITE_FILEMARKS:
++	case RESERVE:
++	case RESERVE_10:
++	case RELEASE:
++	case RELEASE_10:
++		break;
++	default:
++		printk(KERN_ERR "Unsupported SCSI Opcode: 0x%02x for"
++			" RAMDISKs\n", rd_req->rd_scsi_cdb[0]);
++		return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
++	}
++
++	task->task_scsi_status = GOOD;
++	transport_complete_task(task, 1);
 +
 +	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
 +}
 +
-+/*	pscsi_free_task(): (Part of se_subsystem_api_t template)
++/*	rd_get_sg_table():
 + *
 + *
 + */
-+void pscsi_free_task(se_task_t *task)
++static rd_dev_sg_table_t *rd_get_sg_table(rd_dev_t *rd_dev, u32 page)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *)task->transport_req;
-+	/*
-+	 * We do not release the bio(s) here associated with this task, as
-+	 * this is handled by bio_put() and pscsi_bi_endio().
-+	 */
-+	kfree(pt);
++	u32 i;
++	rd_dev_sg_table_t *sg_table;
++
++	for (i = 0; i < rd_dev->sg_table_count; i++) {
++		sg_table = &rd_dev->sg_table_array[i];
++		if ((sg_table->page_start_offset <= page) &&
++		    (sg_table->page_end_offset >= page))
++			return sg_table;
++	}
++
++	printk(KERN_ERR "Unable to locate rd_dev_sg_table_t for page: %u\n",
++			page);
++
++	return NULL;
 +}
 +
-+ssize_t pscsi_set_configfs_dev_params(se_hba_t *hba,
++/*	rd_MEMCPY_read():
++ *
++ *
++ */
++static int rd_MEMCPY_read(rd_request_t *req)
++{
++	rd_dev_t *dev = req->rd_dev;
++	rd_dev_sg_table_t *table;
++	struct scatterlist *sg_d, *sg_s;
++	void *dst, *src;
++	u32 i = 0, j = 0, dst_offset = 0, src_offset = 0;
++	u32 length, page_end = 0, table_sg_end;
++	u32 rd_offset = req->rd_offset;
++
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
++		return -1;
++
++	table_sg_end = (table->page_end_offset - req->rd_page);
++	sg_d = (struct scatterlist *) req->rd_buf;
++	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
++#ifdef DEBUG_RAMDISK_MCP
++	printk(KERN_INFO "RD[%u]: Read LBA: %llu, Size: %u Page: %u, Offset:"
++		" %u\n", dev->rd_dev_id, req->rd_lba, req->rd_size,
++		req->rd_page, req->rd_offset);
++#endif
++	src_offset = rd_offset;
++
++	while (req->rd_size) {
++		if ((sg_d[i].length - dst_offset) <
++		    (sg_s[j].length - src_offset)) {
++			length = (sg_d[i].length - dst_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 1 - sg_d[%d]: %p length: %d"
++				" offset: %u sg_s[%d].length: %u\n", i,
++				&sg_d[i], sg_d[i].length, sg_d[i].offset, j,
++				sg_s[j].length);
++			printk(KERN_INFO "Step 1 - length: %u dst_offset: %u"
++				" src_offset: %u\n", length, dst_offset,
++				src_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			dst = sg_virt(&sg_d[i++]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			src = sg_virt(&sg_s[j]) + src_offset;
++			if (!src)
++				BUG();
++
++			dst_offset = 0;
++			src_offset = length;
++			page_end = 0;
++		} else {
++			length = (sg_s[j].length - src_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 2 - sg_d[%d]: %p length: %d"
++				" offset: %u sg_s[%d].length: %u\n", i,
++				&sg_d[i], sg_d[i].length, sg_d[i].offset,
++				j, sg_s[j].length);
++			printk(KERN_INFO "Step 2 - length: %u dst_offset: %u"
++				" src_offset: %u\n", length, dst_offset,
++				src_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			dst = sg_virt(&sg_d[i]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			if (sg_d[i].length == length) {
++				i++;
++				dst_offset = 0;
++			} else
++				dst_offset = length;
++
++			src = sg_virt(&sg_s[j++]) + src_offset;
++			if (!src)
++				BUG();
++
++			src_offset = 0;
++			page_end = 1;
++		}
++
++		memcpy(dst, src, length);
++
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "page: %u, remaining size: %u, length: %u,"
++			" i: %u, j: %u\n", req->rd_page,
++			(req->rd_size - length), length, i, j);
++#endif
++		req->rd_size -= length;
++		if (!(req->rd_size))
++			return 0;
++
++		if (!page_end)
++			continue;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "page: %u in same page table\n",
++				req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_s = &table->sg_table[j = 0];
++	}
++
++	return 0;
++}
++
++/*	rd_MEMCPY_write():
++ *
++ *
++ */
++static int rd_MEMCPY_write(rd_request_t *req)
++{
++	rd_dev_t *dev = req->rd_dev;
++	rd_dev_sg_table_t *table;
++	struct scatterlist *sg_d, *sg_s;
++	void *dst, *src;
++	u32 i = 0, j = 0, dst_offset = 0, src_offset = 0;
++	u32 length, page_end = 0, table_sg_end;
++	u32 rd_offset = req->rd_offset;
++
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
++		return -1;
++
++	table_sg_end = (table->page_end_offset - req->rd_page);
++	sg_d = &table->sg_table[req->rd_page - table->page_start_offset];
++	sg_s = (struct scatterlist *) req->rd_buf;
++#ifdef DEBUG_RAMDISK_MCP
++	printk(KERN_INFO "RD[%d] Write LBA: %llu, Size: %u, Page: %u,"
++		" Offset: %u\n", dev->rd_dev_id, req->rd_lba, req->rd_size,
++		req->rd_page, req->rd_offset);
++#endif
++	dst_offset = rd_offset;
++
++	while (req->rd_size) {
++		if ((sg_s[i].length - src_offset) <
++		    (sg_d[j].length - dst_offset)) {
++			length = (sg_s[i].length - src_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 1 - sg_s[%d]: %p length: %d"
++				" offset: %d sg_d[%d].length: %u\n", i,
++				&sg_s[i], sg_s[i].length, sg_s[i].offset,
++				j, sg_d[j].length);
++			printk(KERN_INFO "Step 1 - length: %u src_offset: %u"
++				" dst_offset: %u\n", length, src_offset,
++				dst_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			src = sg_virt(&sg_s[i++]) + src_offset;
++			if (!src)
++				BUG();
++
++			dst = sg_virt(&sg_d[j]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			src_offset = 0;
++			dst_offset = length;
++			page_end = 0;
++		} else {
++			length = (sg_d[j].length - dst_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 2 - sg_s[%d]: %p length: %d"
++				" offset: %d sg_d[%d].length: %u\n", i,
++				&sg_s[i], sg_s[i].length, sg_s[i].offset,
++				j, sg_d[j].length);
++			printk(KERN_INFO "Step 2 - length: %u src_offset: %u"
++				" dst_offset: %u\n", length, src_offset,
++				dst_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			src = sg_virt(&sg_s[i]) + src_offset;
++			if (!src)
++				BUG();
++
++			if (sg_s[i].length == length) {
++				i++;
++				src_offset = 0;
++			} else
++				src_offset = length;
++
++			dst = sg_virt(&sg_d[j++]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			dst_offset = 0;
++			page_end = 1;
++		}
++
++		memcpy(dst, src, length);
++
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "page: %u, remaining size: %u, length: %u,"
++			" i: %u, j: %u\n", req->rd_page,
++			(req->rd_size - length), length, i, j);
++#endif
++		req->rd_size -= length;
++		if (!(req->rd_size))
++			return 0;
++
++		if (!page_end)
++			continue;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "page: %u in same page table\n",
++				req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_d = &table->sg_table[j = 0];
++	}
++
++	return 0;
++}
++
++/*	rd_MEMCPY_do_task(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++int rd_MEMCPY_do_task(se_task_t *task)
++{
++	se_device_t *dev = task->se_dev;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
++	int ret;
++
++	if (!(TASK_CMD(task)->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB))
++		return rd_emulate_scsi_cdb(task);
++
++	req->rd_lba = task->task_lba;
++	req->rd_page = (req->rd_lba * DEV_ATTRIB(dev)->block_size) / PAGE_SIZE;
++	req->rd_offset = (req->rd_lba %
++			 (PAGE_SIZE / DEV_ATTRIB(dev)->block_size)) *
++			  DEV_ATTRIB(dev)->block_size;
++	req->rd_size = task->task_size;
++
++	if (req->rd_data_direction == RD_DATA_READ)
++		ret = rd_MEMCPY_read(req);
++	else
++		ret = rd_MEMCPY_write(req);
++
++	if (ret != 0)
++		return ret;
++
++	task->task_scsi_status = GOOD;
++	transport_complete_task(task, 1);
++
++	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
++}
++
++/*	rd_DIRECT_with_offset():
++ *
++ *
++ */
++static int rd_DIRECT_with_offset(
++	se_task_t *task,
++	struct list_head *se_mem_list,
++	u32 *se_mem_cnt,
++	u32 *task_offset)
++{
++	rd_request_t *req = (rd_request_t *)task->transport_req;
++	rd_dev_t *dev = req->rd_dev;
++	rd_dev_sg_table_t *table;
++	se_mem_t *se_mem;
++	struct scatterlist *sg_s;
++	u32 j = 0, set_offset = 1;
++	u32 get_next_table = 0, offset_length, table_sg_end;
++
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
++		return -1;
++
++	table_sg_end = (table->page_end_offset - req->rd_page);
++	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "%s DIRECT LBA: %llu, Size: %u Page: %u, Offset: %u\n",
++		(req->rd_data_direction != RD_DATA_READ) ? "Write" : "Read",
++		req->rd_lba, req->rd_size, req->rd_page, req->rd_offset);
++#endif
++	while (req->rd_size) {
++		se_mem = kzalloc(sizeof(se_mem_t), GFP_KERNEL);
++		if (!(se_mem)) {
++			printk(KERN_ERR "Unable to allocate se_mem_t\n");
++			return -1;
++		}
++		INIT_LIST_HEAD(&se_mem->se_list);
++
++		if (set_offset) {
++			offset_length = sg_s[j].length - req->rd_offset;
++			if (offset_length > req->rd_size)
++				offset_length = req->rd_size;
++
++			se_mem->se_page = sg_page(&sg_s[j++]);
++			se_mem->se_off = req->rd_offset;
++			se_mem->se_len = offset_length;
++
++			set_offset = 0;
++			get_next_table = (j > table_sg_end);
++			goto check_eot;
++		}
++
++		offset_length = (req->rd_size < req->rd_offset) ?
++			req->rd_size : req->rd_offset;
++
++		se_mem->se_page = sg_page(&sg_s[j]);
++		se_mem->se_len = offset_length;
++
++		set_offset = 1;
++
++check_eot:
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "page: %u, size: %u, offset_length: %u, j: %u"
++			" se_mem: %p, se_page: %p se_off: %u se_len: %u\n",
++			req->rd_page, req->rd_size, offset_length, j, se_mem,
++			se_mem->se_page, se_mem->se_off, se_mem->se_len);
++#endif
++		list_add_tail(&se_mem->se_list, se_mem_list);
++		(*se_mem_cnt)++;
++
++		req->rd_size -= offset_length;
++		if (!(req->rd_size))
++			goto out;
++
++		if (!set_offset && !get_next_table)
++			continue;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_DR
++			printk(KERN_INFO "page: %u in same page table\n",
++					req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_s = &table->sg_table[j = 0];
++	}
++
++out:
++	T_TASK(task->task_se_cmd)->t_task_se_num += *se_mem_cnt;
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "RD_DR - Allocated %u se_mem_t segments for task\n",
++			*se_mem_cnt);
++#endif
++	return 0;
++}
++
++/*	rd_DIRECT_without_offset():
++ *
++ *
++ */
++static int rd_DIRECT_without_offset(
++	se_task_t *task,
++	struct list_head *se_mem_list,
++	u32 *se_mem_cnt,
++	u32 *task_offset)
++{
++	rd_request_t *req = (rd_request_t *)task->transport_req;
++	rd_dev_t *dev = req->rd_dev;
++	rd_dev_sg_table_t *table;
++	se_mem_t *se_mem;
++	struct scatterlist *sg_s;
++	u32 length, j = 0;
++
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
++		return -1;
++
++	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "%s DIRECT LBA: %llu, Size: %u, Page: %u\n",
++		(req->rd_data_direction != RD_DATA_READ) ? "Write" : "Read",
++		req->rd_lba, req->rd_size, req->rd_page);
++#endif
++	while (req->rd_size) {
++		se_mem = kzalloc(sizeof(se_mem_t), GFP_KERNEL);
++		if (!(se_mem)) {
++			printk(KERN_ERR "Unable to allocate se_mem_t\n");
++			return -1;
++		}
++		INIT_LIST_HEAD(&se_mem->se_list);
++
++		length = (req->rd_size < sg_s[j].length) ?
++			req->rd_size : sg_s[j].length;
++
++		se_mem->se_page = sg_page(&sg_s[j++]);
++		se_mem->se_len = length;
++
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "page: %u, size: %u, j: %u se_mem: %p,"
++			" se_page: %p se_off: %u se_len: %u\n", req->rd_page,
++			req->rd_size, j, se_mem, se_mem->se_page,
++			se_mem->se_off, se_mem->se_len);
++#endif
++		list_add_tail(&se_mem->se_list, se_mem_list);
++		(*se_mem_cnt)++;
++
++		req->rd_size -= length;
++		if (!(req->rd_size))
++			goto out;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_DR
++			printk("page: %u in same page table\n",
++				req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_s = &table->sg_table[j = 0];
++	}
++
++out:
++	T_TASK(task->task_se_cmd)->t_task_se_num += *se_mem_cnt;
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "RD_DR - Allocated %u se_mem_t segments for task\n",
++			*se_mem_cnt);
++#endif
++	return 0;
++}
++
++/*	rd_DIRECT_do_se_mem_map():
++ *
++ *
++ */
++int rd_DIRECT_do_se_mem_map(
++	se_task_t *task,
++	struct list_head *se_mem_list,
++	void *in_mem,
++	se_mem_t *in_se_mem,
++	se_mem_t **out_se_mem,
++	u32 *se_mem_cnt,
++	u32 *task_offset)
++{
++	rd_request_t *req = (rd_request_t *) task->transport_req;
++	int ret;
++
++	req->rd_lba = task->task_lba;
++	req->rd_req_flags = RRF_GOT_LBA;
++	req->rd_page = ((req->rd_lba * DEV_ATTRIB(task->se_dev)->block_size) /
++			PAGE_SIZE);
++	req->rd_offset = (req->rd_lba %
++			(PAGE_SIZE / DEV_ATTRIB(task->se_dev)->block_size)) *
++			DEV_ATTRIB(task->se_dev)->block_size;
++	req->rd_size = task->task_size;
++
++	if (req->rd_offset)
++		ret = rd_DIRECT_with_offset(task, se_mem_list, se_mem_cnt,
++				task_offset);
++	else
++		ret = rd_DIRECT_without_offset(task, se_mem_list, se_mem_cnt,
++				task_offset);
++
++	return ret;
++}
++
++/*	rd_DIRECT_free_DMA():
++ *
++ *
++ */
++void rd_DIRECT_free_DMA(se_cmd_t *cmd)
++{
++	se_mem_t *se_mem, *se_mem_tmp;
++
++	/*
++	 * The scatterlists in the RAMDISK DIRECT case are using the pages
++	 * from the rd_device_t's scatterlist table. They are referencing
++	 * valid memory that is held within the RD transport plugin, so we
++	 * only free the se_mem_t elements.
++	 */
++	list_for_each_entry_safe(se_mem, se_mem_tmp, T_TASK(cmd)->t_mem_list,
++				se_list) {
++		 list_del(&se_mem->se_list);
++		 kfree(se_mem);
++	}
++	kfree(T_TASK(cmd)->t_mem_list);
++	T_TASK(cmd)->t_mem_list = NULL;
++	T_TASK(cmd)->t_task_se_num = 0;
++}
++
++/*	rd_DIRECT_allocate_DMA():
++ *
++ *	Note that rd_DIRECT_do_se_mem_map() actually does the real work.
++ */
++int rd_DIRECT_allocate_DMA(se_cmd_t *cmd, u32 length, u32 dma_size)
++{
++	T_TASK(cmd)->t_mem_list = kzalloc(sizeof(struct list_head), GFP_KERNEL);
++	if (!(T_TASK(cmd)->t_mem_list)) {
++		printk(KERN_ERR "Unable to allocate memory for T_TASK(cmd)"
++				"->t_mem_list\n");
++		return -1;
++	}
++	INIT_LIST_HEAD(T_TASK(cmd)->t_mem_list);
++
++	return 0;
++}
++
++/*	rd_DIRECT_do_task(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++int rd_DIRECT_do_task(se_task_t *task)
++{
++	if (!(TASK_CMD(task)->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB))
++		return rd_emulate_scsi_cdb(task);
++
++	/*
++	 * At this point the locally allocated RD tables have been mapped
++	 * to se_mem_t elements in rd_DIRECT_do_se_mem_map().
++	 */
++	task->task_scsi_status = GOOD;
++	transport_complete_task(task, 1);
++
++	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
++}
++
++/*	rd_free_task(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++void rd_free_task(se_task_t *task)
++{
++	rd_request_t *req;
++	req = (rd_request_t *) task->transport_req;
++
++	kfree(req);
++}
++
++ssize_t rd_set_configfs_dev_params(
++	se_hba_t *hba,
 +	se_subsystem_dev_t *se_dev,
 +	const char *page,
 +	ssize_t count)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) se_dev->se_dev_su_ptr;
-+	struct Scsi_Host *sh = (struct Scsi_Host *) hba->hba_ptr;
++	rd_dev_t *rd_dev = (rd_dev_t *) se_dev->se_dev_su_ptr;
 +	char *buf, *cur, *ptr, *ptr2;
-+	unsigned long scsi_channel_id, scsi_target_id, scsi_lun_id;
++	unsigned long rd_pages;
 +	int params = 0, ret;
 +
 +	buf = kzalloc(count, GFP_KERNEL);
 +	if (!(buf)) {
-+		printk(KERN_ERR "Unable to allocate memory for temporary"
-+				" buffer\n");
-+		return -ENOMEM;
++		printk(KERN_ERR "Unable to allocate memory for temporary buffer\n");
++		return 0;
 +	}
 +	memcpy(buf, page, count);
 +	cur = buf;
@@ -971,51 +1158,19 @@ index 0000000..85a781b
 +		*ptr = '\0';
 +		ptr++;
 +
-+		ptr2 = strstr(cur, "scsi_channel_id");
++		ptr2 = strstr(cur, "rd_pages");
 +		if ((ptr2)) {
 +			transport_check_dev_params_delim(ptr, &cur);
-+			ret = strict_strtoul(ptr, 0, &scsi_channel_id);
++			ret = strict_strtoul(ptr, 0, &rd_pages);
 +			if (ret < 0) {
 +				printk(KERN_ERR "strict_strtoul() failed for"
-+					" scsi_channel_id=\n");
++					" rd_pages=\n");
 +				break;
 +			}
-+			pdv->pdv_channel_id = (int)scsi_channel_id;
-+			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Channel"
-+				" ID: %d\n",  sh->host_no, pdv->pdv_channel_id);
-+			pdv->pdv_flags |= PDF_HAS_CHANNEL_ID;
-+			params++;
-+			continue;
-+		}
-+		ptr2 = strstr(cur, "scsi_target_id");
-+		if ((ptr2)) {
-+			transport_check_dev_params_delim(ptr, &cur);
-+			ret = strict_strtoul(ptr, 0, &scsi_target_id);
-+			if (ret < 0) {
-+				printk("strict_strtoul() failed for"
-+					" strict_strtoul()\n");
-+				break;
-+			}
-+			pdv->pdv_target_id = (int)scsi_target_id;
-+			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Target"
-+				" ID: %d\n", sh->host_no, pdv->pdv_target_id);
-+			pdv->pdv_flags |= PDF_HAS_TARGET_ID;
-+			params++;
-+			continue;
-+		}
-+		ptr2 = strstr(cur, "scsi_lun_id");
-+		if ((ptr2)) {
-+			transport_check_dev_params_delim(ptr, &cur);
-+			ret = strict_strtoul(ptr, 0, &scsi_lun_id);
-+			if (ret < 0) {
-+				printk("strict_strtoul() failed for"
-+					" scsi_lun_id=\n");
-+				break;
-+			}
-+			pdv->pdv_lun_id = (int)scsi_lun_id;
-+			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI LUN ID:"
-+				" %d\n", sh->host_no, pdv->pdv_lun_id);
-+			pdv->pdv_flags |= PDF_HAS_LUN_ID;
++			rd_dev->rd_page_count = (u32)rd_pages;
++			printk(KERN_INFO "RAMDISK: Referencing Page"
++				" Count: %u\n", rd_dev->rd_page_count);
++			rd_dev->rd_flags |= RDF_HAS_PAGE_COUNT;
 +			params++;
 +		} else
 +			cur = NULL;
@@ -1026,697 +1181,285 @@ index 0000000..85a781b
 +	return (params) ? count : -EINVAL;
 +}
 +
-+ssize_t pscsi_check_configfs_dev_params(
-+	se_hba_t *hba,
-+	se_subsystem_dev_t *se_dev)
++ssize_t rd_check_configfs_dev_params(se_hba_t *hba, se_subsystem_dev_t *se_dev)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) se_dev->se_dev_su_ptr;
++	rd_dev_t *rd_dev = (rd_dev_t *) se_dev->se_dev_su_ptr;
 +
-+	if (!(pdv->pdv_flags & PDF_HAS_CHANNEL_ID) ||
-+	    !(pdv->pdv_flags & PDF_HAS_TARGET_ID) ||
-+	    !(pdv->pdv_flags & PDF_HAS_TARGET_ID)) {
-+		printk(KERN_ERR "Missing scsi_channel_id=, scsi_target_id= and"
-+			" scsi_lun_id= parameters\n");
++	if (!(rd_dev->rd_flags & RDF_HAS_PAGE_COUNT)) {
++		printk(KERN_INFO "Missing rd_pages= parameter\n");
 +		return -1;
 +	}
 +
 +	return 0;
 +}
 +
-+ssize_t pscsi_show_configfs_dev_params(
++ssize_t rd_show_configfs_dev_params(
 +	se_hba_t *hba,
 +	se_subsystem_dev_t *se_dev,
 +	char *page)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) se_dev->se_dev_su_ptr;
++	rd_dev_t *rd_dev = (rd_dev_t *) se_dev->se_dev_su_ptr;
 +	int bl = 0;
 +
-+	__pscsi_get_dev_info(pdv, page, &bl);
++	 __rd_get_dev_info(rd_dev, page, &bl);
 +	return (ssize_t)bl;
 +}
 +
-+se_device_t *pscsi_create_virtdevice_from_fd(
-+	se_subsystem_dev_t *se_dev,
-+	const char *page)
++void rd_dr_get_plugin_info(void *p, char *b, int *bl)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) se_dev->se_dev_su_ptr;
-+	se_device_t *dev = NULL;
-+	se_hba_t *hba = se_dev->se_dev_hba;
-+	struct block_device *bd = NULL;
-+	struct file *filp;
-+	struct gendisk *gd = NULL;
-+	struct inode *inode;
-+	struct scsi_device *sd = NULL;
-+	struct Scsi_Host *sh = (struct Scsi_Host *)hba->hba_ptr;
-+	char *p = (char *)page;
-+	unsigned long long fd;
-+	int ret;
-+
-+	ret = strict_strtoull(p, 0, (unsigned long long *)&fd);
-+	if (ret < 0) {
-+		printk(KERN_ERR "strict_strtol() failed for fd\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+	if ((fd < 3 || fd > 7)) {
-+		printk(KERN_ERR "PSCSI: Illegal value of file descriptor:"
-+			" %llu\n", fd);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	filp = fget(fd);
-+	if (!(filp)) {
-+		printk(KERN_ERR "PSCSI: Unable to fget() fd: %llu\n", fd);
-+		return ERR_PTR(-EBADF);
-+	}
-+	inode = igrab(filp->f_mapping->host);
-+	if (!(inode)) {
-+		printk(KERN_ERR "PSCSI: Unable to locate struct inode for"
-+			" struct block_device fd\n");
-+		fput(filp);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	/*
-+	 * Look for struct scsi_device with a backing struct block_device.
-+	 *
-+	 * This means struct scsi_device->type == TYPE_DISK && TYPE_ROM.
-+	 */
-+	if (S_ISBLK(inode->i_mode)) {
-+		bd = I_BDEV(filp->f_mapping->host);
-+		if (!(bd)) {
-+			printk(KERN_ERR "PSCSI: Unable to locate struct"
-+				" block_device from I_BDEV()\n");
-+			iput(inode);
-+			fput(filp);
-+			return ERR_PTR(-EINVAL);
-+		}
-+		gd = bd->bd_disk;
-+		if (!(gd)) {
-+			printk(KERN_ERR "PSCSI: Unable to locate struct gendisk"
-+				" from struct block_device\n");
-+			iput(inode);
-+			fput(filp);
-+			return ERR_PTR(-EINVAL);
-+		}
-+		/*
-+		 * This struct gendisk->driver_fs() is marked as "// remove'
-+		 * in include/linux/genhd.h..
-+		 *
-+		 * Currently in drivers/scsi/s[d,r].c:s[d,r]_probe(), this
-+		 * pointer gets set by struct scsi_device->sdev_gendev.
-+		 *
-+		 * Is there a better way to locate struct scsi_device from
-+		 * struct inode..?
-+		 */
-+		if (!(gd->driverfs_dev)) {
-+			printk(KERN_ERR "PSCSI: struct gendisk->driverfs_dev"
-+					" is NULL!\n");
-+			iput(inode);
-+			fput(filp);
-+			return ERR_PTR(-EINVAL);
-+		}
-+		sd = to_scsi_device(gd->driverfs_dev);
-+		if (!(sd)) {
-+			printk(KERN_ERR "PSCSI: Unable to locate struct"
-+				" scsi_device from struct gendisk->"
-+				"driverfs_dev\n");
-+			iput(inode);
-+			fput(filp);
-+			return ERR_PTR(-EINVAL);
-+		}
-+		if (sd->host != sh) {
-+			printk(KERN_ERR "PSCSI: Trying to attach scsi_device"
-+				" Host ID: %d, but se_hba_t has SCSI Host ID:"
-+				" %d\n", sd->host->host_no, sh->host_no);
-+			iput(inode);
-+			fput(filp);
-+			return ERR_PTR(-EINVAL);
-+		}
-+		/*
-+		 * pscsi_create_type_[disk,rom]() will release host_lock..
-+		 */
-+		spin_lock_irq(sh->host_lock);
-+		switch (sd->type) {
-+		case TYPE_DISK:
-+			dev = pscsi_create_type_disk(sd, pdv, se_dev,
-+					se_dev->se_dev_hba);
-+			break;
-+		case TYPE_ROM:
-+			dev = pscsi_create_type_rom(sd, pdv, se_dev,
-+					se_dev->se_dev_hba);
-+			break;
-+		default:
-+			printk(KERN_ERR "PSCSI: Unable to handle type S_ISBLK()"
-+				" == TRUE Type: %s\n",
-+				scsi_device_type(sd->type));
-+			spin_unlock_irq(sh->host_lock);
-+			iput(inode);
-+			fput(filp);
-+			return ERR_PTR(-ENOSYS);
-+		}
-+	} else if (S_ISCHR(inode->i_mode)) {
-+		/*
-+		 * FIXME: Figure how to get struct scsi_device from character
-+		 * device's struct inode.
-+		 */
-+		printk(KERN_ERR "SCSI Character Device unsupported via"
-+			" configfs/fd  method.  Use configfs/control"
-+				" instead\n");
-+		iput(inode);
-+		fput(filp);
-+		return ERR_PTR(-ENOSYS);
-+	} else {
-+		printk(KERN_ERR "PSCSI: File destriptor is not SCSI block or"
-+			" character device, ignoring\n");
-+		iput(inode);
-+		fput(filp);
-+		return ERR_PTR(-ENODEV);
-+	}
-+
-+	iput(inode);
-+	fput(filp);
-+	return dev;
++	*bl += sprintf(b + *bl, "%s RAMDISK_DR Plugin %s\n",
++			PYX_ISCSI_VENDOR, RD_DR_VERSION);
 +}
 +
-+void pscsi_get_plugin_info(void *p, char *b, int *bl)
++void rd_mcp_get_plugin_info(void *p, char *b, int *bl)
 +{
-+	*bl += sprintf(b + *bl, "%s SCSI Plugin %s\n",
-+		PYX_ISCSI_VENDOR, PSCSI_VERSION);
++	*bl += sprintf(b + *bl, "%s RAMDISK_MCP Plugin %s\n",
++			PYX_ISCSI_VENDOR, RD_MCP_VERSION);
 +}
 +
-+void pscsi_get_hba_info(se_hba_t *hba, char *b, int *bl)
++void rd_get_hba_info(se_hba_t *hba, char *b, int *bl)
 +{
-+	struct Scsi_Host *sh = (struct Scsi_Host *) hba->hba_ptr;
++	rd_host_t *rd_host = (rd_host_t *)hba->hba_ptr;
 +
-+	*bl += sprintf(b + *bl, "Core Host ID: %u  SCSI Host ID: %u\n",
-+			 hba->hba_id, sh->host_no);
-+	*bl += sprintf(b + *bl, "        SCSI HBA: %s  <local>\n",
-+		(sh->hostt->name) ? (sh->hostt->name) : "Unknown");
++	*bl += sprintf(b + *bl, "SE Host ID: %u  RD Host ID: %u\n",
++		hba->hba_id, rd_host->rd_host_id);
++	*bl += sprintf(b + *bl, "        LIO RamDisk HBA\n");
 +}
 +
-+void pscsi_get_dev_info(se_device_t *dev, char *b, int *bl)
++void rd_get_dev_info(se_device_t *dev, char *b, int *bl)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
++	rd_dev_t *rd_dev = (rd_dev_t *) dev->dev_ptr;
 +
-+	__pscsi_get_dev_info(pdv, b, bl);
++	__rd_get_dev_info(rd_dev, b, bl);
 +}
 +
-+void __pscsi_get_dev_info(pscsi_dev_virt_t *pdv, char *b, int *bl)
++void __rd_get_dev_info(rd_dev_t *rd_dev, char *b, int *bl)
 +{
-+	int i;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+
-+	*bl += sprintf(b + *bl, "SCSI Device Bus Location:"
-+		" Channel ID: %d Target ID: %d LUN: %d\n",
-+		pdv->pdv_channel_id, pdv->pdv_target_id, pdv->pdv_lun_id);
-+
-+	if (sd) {
-+		*bl += sprintf(b + *bl, "        ");
-+		*bl += sprintf(b + *bl, "Vendor: ");
-+		for (i = 0; i < 8; i++) {
-+			if (ISPRINT(sd->vendor[i]))   /* printable character? */
-+				*bl += sprintf(b + *bl, "%c", sd->vendor[i]);
-+			else
-+				*bl += sprintf(b + *bl, " ");
-+		}
-+		*bl += sprintf(b + *bl, " Model: ");
-+		for (i = 0; i < 16; i++) {
-+			if (ISPRINT(sd->model[i]))   /* printable character ? */
-+				*bl += sprintf(b + *bl, "%c", sd->model[i]);
-+			else
-+				*bl += sprintf(b + *bl, " ");
-+		}
-+		*bl += sprintf(b + *bl, " Rev: ");
-+		for (i = 0; i < 4; i++) {
-+			if (ISPRINT(sd->rev[i]))   /* printable character ? */
-+				*bl += sprintf(b + *bl, "%c", sd->rev[i]);
-+			else
-+				*bl += sprintf(b + *bl, " ");
-+		}
-+
-+		if (sd->type == TYPE_DISK) {
-+			struct scsi_disk *sdisk =
-+					dev_get_drvdata(&sd->sdev_gendev);
-+			struct gendisk *disk = (struct gendisk *) sdisk->disk;
-+			struct block_device *bdev = bdget(MKDEV(disk->major,
-+						disk->first_minor));
-+
-+			bdev->bd_disk = disk;
-+			*bl += sprintf(b + *bl, "   %s\n", (!bdev->bd_holder) ?
-+					"" : (bdev->bd_holder ==
-+					(struct scsi_device *)sd) ?
-+					"CLAIMED: PSCSI" : "CLAIMED: OS");
-+		} else
-+			*bl += sprintf(b + *bl, "\n");
-+	}
++	*bl += sprintf(b + *bl, "LIO RamDisk ID: %u  RamDisk Makeup: %s\n",
++			rd_dev->rd_dev_id, (rd_dev->rd_direct) ?
++			"rd_direct" : "rd_mcp");
++	*bl += sprintf(b + *bl, "        PAGES/PAGE_SIZE: %u*%lu"
++			"  SG_table_count: %u\n", rd_dev->rd_page_count,
++			PAGE_SIZE, rd_dev->sg_table_count);
 +
 +	return;
 +}
 +
-+static void pscsi_bi_endio(struct bio *bio, int error)
-+{
-+	bio_put(bio);
-+}
-+
-+static inline struct bio *pscsi_get_bio(pscsi_dev_virt_t *pdv, int sg_num)
-+{
-+	struct bio *bio;
-+	/*
-+	 * Use bio_malloc() following the comment in for bio -> struct request
-+	 * in block/blk-core.c:blk_make_request()
-+	 */
-+	bio = bio_kmalloc(GFP_KERNEL, sg_num);
-+	if (!(bio)) {
-+		printk(KERN_ERR "PSCSI: bio_kmalloc() failed\n");
-+		return NULL;
-+	}
-+	bio->bi_end_io = pscsi_bi_endio;
-+
-+	return bio;
-+}
-+
-+#if 0
-+#define DEBUG_PSCSI(x...) printk(x)
-+#else
-+#define DEBUG_PSCSI(x...)
-+#endif
-+
-+/*      pscsi_map_task_SG():
++/*	rd_map_task_non_SG():
 + *
 + *
 + */
-+int pscsi_map_task_SG(se_task_t *task)
-+{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
-+	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
-+	struct page *page;
-+	struct scatterlist *sg;
-+	u32 data_len = task->task_size, i, len, bytes, off;
-+	int nr_pages = (task->task_size + task->task_sg[0].offset +
-+			PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	int nr_vecs = 0, ret = 0;
-+	int rw = (TASK_CMD(task)->data_direction == SE_DIRECTION_WRITE);
-+
-+	if (!task->task_size)
-+		return 0;
-+	/*
-+	 * For SCF_SCSI_DATA_SG_IO_CDB, Use fs/bio.c:bio_add_page() to setup
-+	 * the bio_vec maplist from LIO-SE se_mem_t -> task->task_sg ->
-+	 * struct scatterlist memory.  The se_task_t->task_sg[] currently needs
-+	 * to be attached to struct bios for submission to Linux/SCSI using
-+	 * struct request to struct scsi_device->request_queue.
-+	 *
-+	 * Note that this will be changing post v2.6.28 as Target_Core_Mod/pSCSI
-+	 * is ported to upstream SCSI passthrough functionality that accepts
-+	 * struct scatterlist->page_link or struct page as a paraemeter.
-+	 */
-+	DEBUG_PSCSI("PSCSI: nr_pages: %d\n", nr_pages);
-+
-+	for_each_sg(task->task_sg, sg, task->task_sg_num, i) {
-+		page = sg_page(sg);
-+		off = sg->offset;
-+		len = sg->length;
-+
-+		DEBUG_PSCSI("PSCSI: i: %d page: %p len: %d off: %d\n", i,
-+			page, len, off);
-+
-+		while (len > 0 && data_len > 0) {
-+			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
-+			bytes = min(bytes, data_len);
-+
-+			if (!(bio)) {
-+				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
-+				nr_pages -= nr_vecs;
-+				/*
-+				 * Calls bio_kmalloc() and sets bio->bi_end_io()
-+				 */
-+				bio = pscsi_get_bio(pdv, nr_vecs);
-+				if (!(bio))
-+					goto fail;
-+				/*
-+				 * FIXME: Use bio_set_dir() when avaliable
-+				 */
-+				if (rw)
-+					bio->bi_rw |= (1 << BIO_RW);
-+
-+				DEBUG_PSCSI("PSCSI: Allocated bio: %p,"
-+					" dir: %s nr_vecs: %d\n", bio,
-+					(rw) ? "rw" : "r", nr_vecs);
-+				/*
-+				 * Set *hbio pointer to handle the case:
-+				 * nr_pages > BIO_MAX_PAGES, where additional
-+				 * bios need to be added to complete a given
-+				 * se_task_t
-+				 */
-+				if (!hbio)
-+					hbio = tbio = bio;
-+				else
-+					tbio = tbio->bi_next = bio;
-+			}
-+
-+			DEBUG_PSCSI("PSCSI: Calling bio_add_pc_page() i: %d"
-+				" bio: %p page: %p len: %d off: %d\n", i, bio,
-+				page, len, off);
-+
-+			ret = bio_add_pc_page(pdv->pdv_sd->request_queue,
-+					bio, page, bytes, off);
-+			if (ret != bytes)
-+				goto fail;
-+
-+			DEBUG_PSCSI("PSCSI: bio->bi_vcnt: %d nr_vecs: %d\n",
-+				bio->bi_vcnt, nr_vecs);
-+
-+			if (bio->bi_vcnt > nr_vecs) {
-+				DEBUG_PSCSI("PSCSI: Reached bio->bi_vcnt max:"
-+					" %d i: %d bio: %p, allocating another"
-+					" bio\n", bio->bi_vcnt, i, bio);
-+				/*
-+				 * Clear the pointer so that another bio will
-+				 * be allocated with pscsi_get_bio() above, the
-+				 * current bio has already been set *tbio and
-+				 * bio->bi_next.
-+				 */
-+				bio = NULL;
-+			}
-+
-+			page++;
-+			len -= bytes;
-+			data_len -= bytes;
-+			off = 0;
-+		}
-+	}
-+	/*
-+	 * Starting with v2.6.31, call blk_make_request() passing in *hbio to
-+	 * allocate the pSCSI task a struct request.
-+	 */
-+	pt->pscsi_req = blk_make_request(pdv->pdv_sd->request_queue,
-+				hbio, GFP_KERNEL);
-+	if (!(pt->pscsi_req)) {
-+		printk(KERN_ERR "pSCSI: blk_make_request() failed\n");
-+		goto fail;
-+	}
-+	/*
-+	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
-+	 * and setup rq callback, CDB and sense.
-+	 */
-+	pscsi_blk_init_request(task, pt);
-+
-+	return task->task_sg_num;
-+fail:
-+	while (hbio) {
-+		bio = hbio;
-+		hbio = hbio->bi_next;
-+		bio->bi_next = NULL;
-+		bio_endio(bio, 0);
-+	}
-+	return ret;
-+}
-+
-+/*	pscsi_map_task_non_SG():
-+ *
-+ *
-+ */
-+int pscsi_map_task_non_SG(se_task_t *task)
++void rd_map_task_non_SG(se_task_t *task)
 +{
 +	se_cmd_t *cmd = TASK_CMD(task);
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) task->se_dev->dev_ptr;
-+	int ret = 0;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
 +
-+	if (!task->task_size)
-+		return 0;
++	req->rd_bufflen		= task->task_size;
++	req->rd_buf		= (void *) T_TASK(cmd)->t_task_buf;
++	req->rd_sg_count	= 0;
++}
 +
-+	ret = blk_rq_map_kern(pdv->pdv_sd->request_queue,
-+			pt->pscsi_req, T_TASK(cmd)->t_task_buf,
-+			task->task_size, GFP_KERNEL);
-+	if (ret < 0) {
-+		printk(KERN_ERR "PSCSI: blk_rq_map_kern() failed: %d\n", ret);
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+	}
++/*	rd_map_task_SG():
++ *
++ *
++ */
++void rd_map_task_SG(se_task_t *task)
++{
++	rd_request_t *req = (rd_request_t *) task->transport_req;
++
++	req->rd_bufflen		= task->task_size;
++	req->rd_buf		= task->task_sg;
++	req->rd_sg_count	= task->task_sg_num;
++}
++
++/*      iblock_CDB_inquiry():
++ *
++ *
++ */
++int rd_CDB_inquiry(se_task_t *task, u32 size)
++{
++	rd_request_t *req = (rd_request_t *) task->transport_req;
++
++	req->rd_data_direction  = RD_DATA_READ;
++
++	rd_map_task_non_SG(task);
 +	return 0;
 +}
 +
-+/*	pscsi_CDB_inquiry():
++/*      rd_CDB_none():
 + *
 + *
 + */
-+int pscsi_CDB_inquiry(se_task_t *task, u32 size)
++int rd_CDB_none(se_task_t *task, u32 size)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
 +
-+	pt->pscsi_direction = DMA_FROM_DEVICE;
-+	if (pscsi_blk_get_request(task) < 0)
-+		return -1;
++	req->rd_data_direction	= RD_DATA_NONE;
++	req->rd_bufflen		= 0;
++	req->rd_sg_count	= 0;
++	req->rd_buf		= NULL;
 +
-+	return pscsi_map_task_non_SG(task);
++	return 0;
 +}
 +
-+int pscsi_CDB_none(se_task_t *task, u32 size)
-+{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+
-+	pt->pscsi_direction = DMA_NONE;
-+
-+	return pscsi_blk_get_request(task);
-+}
-+
-+/*	pscsi_CDB_read_non_SG():
++/*	rd_CDB_read_non_SG():
 + *
 + *
 + */
-+int pscsi_CDB_read_non_SG(se_task_t *task, u32 size)
++int rd_CDB_read_non_SG(se_task_t *task, u32 size)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
 +
-+	pt->pscsi_direction = DMA_FROM_DEVICE;
++	req->rd_data_direction = RD_DATA_READ;
++	rd_map_task_non_SG(task);
 +
-+	if (pscsi_blk_get_request(task) < 0)
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+
-+	return pscsi_map_task_non_SG(task);
++	return 0;
 +}
 +
-+/*	pscsi_CDB_read_SG():
++/*	rd_CDB_read_SG):
 + *
 + *
 + */
-+int pscsi_CDB_read_SG(se_task_t *task, u32 size)
++int rd_CDB_read_SG(se_task_t *task, u32 size)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
 +
-+	pt->pscsi_direction = DMA_FROM_DEVICE;
-+	/*
-+	 * pscsi_map_task_SG() calls block/blk-core.c:blk_make_request()
-+	 * for >= v2.6.31 pSCSI
-+	 */
-+	if (pscsi_map_task_SG(task) < 0)
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
++	req->rd_data_direction = RD_DATA_READ;
++	rd_map_task_SG(task);
 +
-+	return task->task_sg_num;
++	return req->rd_sg_count;
 +}
 +
-+/*	pscsi_CDB_write_non_SG():
++/*	rd_CDB_write_non_SG():
 + *
 + *
 + */
-+int pscsi_CDB_write_non_SG(se_task_t *task, u32 size)
++int rd_CDB_write_non_SG(se_task_t *task, u32 size)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
 +
-+	pt->pscsi_direction = DMA_TO_DEVICE;
++	req->rd_data_direction = RD_DATA_WRITE;
++	rd_map_task_non_SG(task);
 +
-+	if (pscsi_blk_get_request(task) < 0)
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+
-+	return pscsi_map_task_non_SG(task);
++	return 0;
 +}
 +
-+/*	pscsi_CDB_write_SG():
++/*	d_CDB_write_SG():
 + *
 + *
 + */
-+int pscsi_CDB_write_SG(se_task_t *task, u32 size)
++int rd_CDB_write_SG(se_task_t *task, u32 size)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
 +
-+	pt->pscsi_direction = DMA_TO_DEVICE;
-+	/*
-+	 * pscsi_map_task_SG() calls block/blk-core.c:blk_make_request()
-+	 * for >= v2.6.31 pSCSI
-+	 */
-+	if (pscsi_map_task_SG(task) < 0)
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
++	req->rd_data_direction = RD_DATA_WRITE;
++	rd_map_task_SG(task);
 +
-+	return task->task_sg_num;
++	return req->rd_sg_count;
 +}
 +
-+/*	pscsi_check_lba():
++/*	rd_DIRECT_check_lba():
 + *
 + *
 + */
-+int pscsi_check_lba(unsigned long long lba, se_device_t *dev)
++int rd_DIRECT_check_lba(unsigned long long lba, se_device_t *dev)
++{
++	return ((lba % (PAGE_SIZE / DEV_ATTRIB(dev)->block_size)) *
++		 DEV_ATTRIB(dev)->block_size) ? 1 : 0;
++}
++
++/*	rd_MEMCPY_check_lba():
++ *
++ *
++ */
++int rd_MEMCPY_check_lba(unsigned long long lba, se_device_t *dev)
 +{
 +	return 0;
 +}
 +
-+/*	pscsi_check_for_SG():
++/*	rd_check_for_SG(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+int pscsi_check_for_SG(se_task_t *task)
++int rd_check_for_SG(se_task_t *task)
 +{
-+	return task->task_sg_num;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
++
++	return req->rd_sg_count;
 +}
 +
-+/*	pscsi_get_cdb():
++/*	rd_get_cdb(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+unsigned char *pscsi_get_cdb(se_task_t *task)
++unsigned char *rd_get_cdb(se_task_t *task)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
++	rd_request_t *req = (rd_request_t *) task->transport_req;
 +
-+	return pt->pscsi_cdb;
++	return req->rd_scsi_cdb;
 +}
 +
-+/*	pscsi_get_sense_buffer():
++/*	rd_get_blocksize(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+unsigned char *pscsi_get_sense_buffer(se_task_t *task)
++u32 rd_get_blocksize(se_device_t *dev)
 +{
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *) task->transport_req;
-+
-+	return (unsigned char *)&pt->pscsi_sense[0];
++	return RD_BLOCKSIZE;
 +}
 +
-+/*	pscsi_get_blocksize():
-+ *
-+ *
-+ */
-+u32 pscsi_get_blocksize(se_device_t *dev)
++u32 rd_get_device_rev(se_device_t *dev)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+
-+	return sd->sector_size;
++	return SCSI_SPC_2; /* Returns SPC-3 in Initiator Data */
 +}
 +
-+/*	pscsi_get_device_rev():
-+ *
-+ *
-+ */
-+u32 pscsi_get_device_rev(se_device_t *dev)
++u32 rd_get_device_type(se_device_t *dev)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+
-+	return (sd->scsi_level - 1) ? sd->scsi_level - 1 : 1;
++	return TYPE_DISK;
 +}
 +
-+/*	pscsi_get_device_type():
++/*	rd_get_dma_length(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+u32 pscsi_get_device_type(se_device_t *dev)
-+{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+
-+	return sd->type;
-+}
-+
-+/*	pscsi_get_dma_length():
-+ *
-+ *
-+ */
-+u32 pscsi_get_dma_length(u32 task_size, se_device_t *dev)
++u32 rd_get_dma_length(u32 task_size, se_device_t *dev)
 +{
 +	return PAGE_SIZE;
 +}
 +
-+/*	pscsi_get_max_sectors():
++/*	rd_get_max_sectors(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+u32 pscsi_get_max_sectors(se_device_t *dev)
++u32 rd_get_max_sectors(se_device_t *dev)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+
-+	return (sd->host->max_sectors > sd->request_queue->limits.max_sectors) ?
-+		sd->request_queue->limits.max_sectors : sd->host->max_sectors;
++	return RD_MAX_SECTORS;
 +}
 +
-+/*	pscsi_get_queue_depth():
++/*	rd_get_queue_depth(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+u32 pscsi_get_queue_depth(se_device_t *dev)
++u32 rd_get_queue_depth(se_device_t *dev)
 +{
-+	pscsi_dev_virt_t *pdv = (pscsi_dev_virt_t *) dev->dev_ptr;
-+	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-+
-+	return sd->queue_depth;
++	return RD_DEVICE_QUEUE_DEPTH;
 +}
 +
-+/*	pscsi_handle_SAM_STATUS_failures():
-+ *
-+ *
-+ */
-+static inline void pscsi_process_SAM_status(
-+	se_task_t *task,
-+	pscsi_plugin_task_t *pt)
++u32 rd_get_max_queue_depth(se_device_t *dev)
 +{
-+	task->task_scsi_status = status_byte(pt->pscsi_result);
-+	if ((task->task_scsi_status)) {
-+		task->task_scsi_status <<= 1;
-+		printk(KERN_INFO "PSCSI Status Byte exception at task: %p CDB:"
-+			" 0x%02x Result: 0x%08x\n", task, pt->pscsi_cdb[0],
-+			pt->pscsi_result);
-+	}
-+
-+	switch (host_byte(pt->pscsi_result)) {
-+	case DID_OK:
-+		transport_complete_task(task, (!task->task_scsi_status));
-+		break;
-+	default:
-+		printk(KERN_INFO "PSCSI Host Byte exception at task: %p CDB:"
-+			" 0x%02x Result: 0x%08x\n", task, pt->pscsi_cdb[0],
-+			pt->pscsi_result);
-+		task->task_scsi_status = SAM_STAT_CHECK_CONDITION;
-+		task->task_error_status = PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-+		TASK_CMD(task)->transport_error_status =
-+					PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-+		transport_complete_task(task, 0);
-+		break;
-+	}
-+
-+	return;
++	return RD_MAX_DEVICE_QUEUE_DEPTH;
 +}
-+
-+void pscsi_req_done(struct request *req, int uptodate)
-+{
-+	se_task_t *task = (se_task_t *)req->end_io_data;
-+	pscsi_plugin_task_t *pt = (pscsi_plugin_task_t *)task->transport_req;
-+
-+	pt->pscsi_result = req->errors;
-+	pt->pscsi_resid = req->resid_len;
-+
-+	pscsi_process_SAM_status(task, pt);
-+	__blk_put_request(req->q, req);
-+	pt->pscsi_req = NULL;
-+}
-diff --git a/include/target/target_core_pscsi.h b/include/target/target_core_pscsi.h
+diff --git a/include/target/target_core_rd.h b/include/target/target_core_rd.h
 new file mode 100644
-index 0000000..da1d618
+index 0000000..67168fd
 --- /dev/null
-+++ b/include/target/target_core_pscsi.h
-@@ -0,0 +1,186 @@
++++ b/include/target/target_core_rd.h
+@@ -0,0 +1,257 @@
 +/*******************************************************************************
-+ * Filename:  target_core_pscsi.h
++ * Filename:  target_core_rd.h
 + *
-+ * This file contains the generic target mode <-> Linux SCSI subsystem plugin.
-+ * specific definitions and prototypes.
++ * This file contains the Storage Engine <-> Ramdisk transport specific
++ * definitions and prototypes.
 + *
 + * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
 + * Copyright (c) 2005, 2006, 2007 SBE, Inc.
@@ -1742,161 +1485,230 @@ index 0000000..da1d618
 + ******************************************************************************/
 +
 +
-+#ifndef TARGET_CORE_PSCSI_H
-+#define TARGET_CORE_PSCSI_H
++#ifndef TARGET_CORE_RD_H
++#define TARGET_CORE_RD_H
 +
-+#define PSCSI_VERSION		"v3.1"
++#define RD_HBA_VERSION		"v3.1"
++#define RD_DR_VERSION		"3.1"
++#define RD_MCP_VERSION		"3.1"
 +
-+/* used in pscsi_find_alloc_len() */
-+#ifndef INQUIRY_DATA_SIZE
-+#define INQUIRY_DATA_SIZE	0x24
-+#endif
++/* Largest piece of memory kmalloc can allocate */
++#define RD_MAX_ALLOCATION_SIZE	65536
++/* Maximum queuedepth for the Ramdisk HBA */
++#define RD_HBA_QUEUE_DEPTH	256
++#define RD_DEVICE_QUEUE_DEPTH	32
++#define RD_MAX_DEVICE_QUEUE_DEPTH 128
++#define RD_BLOCKSIZE		512
++#define RD_MAX_SECTORS		1024
 +
-+/* used in pscsi_add_device_to_list() */
-+#define PSCSI_DEFAULT_QUEUEDEPTH	1
-+
-+#define PS_RETRY		5
-+#define PS_TIMEOUT_DISK		(15*HZ)
-+#define PS_TIMEOUT_OTHER	(500*HZ)
++#define RD_DATA_READ		1
++#define RD_DATA_WRITE		2
++#define RD_DATA_NONE		3
 +
 +extern se_global_t *se_global;
-+extern struct block_device *linux_blockdevice_claim(int, int, void *);
-+extern int linux_blockdevice_release(int, int, struct block_device *);
-+extern int linux_blockdevice_check(int, int);
 +
-+extern int pscsi_CDB_inquiry(se_task_t *, u32);
-+extern int pscsi_CDB_none(se_task_t *, u32);
-+extern int pscsi_CDB_read_non_SG(se_task_t *, u32);
-+extern int pscsi_CDB_read_SG(se_task_t *, u32);
-+extern int pscsi_CDB_write_non_SG(se_task_t *, u32);
-+extern int pscsi_CDB_write_SG(se_task_t *, u32);
++#ifndef RD_INCLUDE_STRUCTS
++extern int rd_CDB_inquiry(se_task_t *, u32);
++extern int rd_CDB_none(se_task_t *, u32);
++extern int rd_CDB_read_non_SG(se_task_t *, u32);
++extern int rd_CDB_read_SG(se_task_t *, u32);
++extern int rd_CDB_write_non_SG(se_task_t *, u32);
++extern int rd_CDB_write_SG(se_task_t *, u32);
 +
-+#ifndef PSCSI_INCLUDE_STRUCTS
-+extern int pscsi_attach_hba(se_hba_t *, u32);
-+extern int pscsi_detach_hba(se_hba_t *);
-+extern int pscsi_claim_phydevice(se_hba_t *, se_device_t *);
-+extern int pscsi_release_phydevice(se_device_t *);
-+extern void *pscsi_allocate_virtdevice(se_hba_t *, const char *);
-+extern se_device_t *pscsi_create_virtdevice(se_hba_t *, se_subsystem_dev_t *,
-+					void *);
-+extern int pscsi_activate_device(se_device_t *);
-+extern void pscsi_deactivate_device(se_device_t *);
-+extern void pscsi_free_device(void *);
-+extern int pscsi_transport_complete(se_task_t *);
-+extern void *pscsi_allocate_request(se_task_t *, se_device_t *);
-+extern int pscsi_do_task(se_task_t *);
-+extern void pscsi_free_task(se_task_t *);
-+extern ssize_t pscsi_set_configfs_dev_params(se_hba_t *, se_subsystem_dev_t *,
++extern int rd_attach_hba(se_hba_t *, u32);
++extern int rd_detach_hba(se_hba_t *);
++extern void *rd_DIRECT_allocate_virtdevice(se_hba_t *, const char *);
++extern void *rd_MEMCPY_allocate_virtdevice(se_hba_t *, const char *);
++extern se_device_t *rd_DIRECT_create_virtdevice(se_hba_t *,
++				se_subsystem_dev_t *, void *);
++extern se_device_t *rd_MEMCPY_create_virtdevice(se_hba_t *,
++				se_subsystem_dev_t *, void *);
++extern int rd_activate_device(se_device_t *);
++extern void rd_deactivate_device(se_device_t *);
++extern void rd_free_device(void *);
++extern int rd_transport_complete(se_task_t *);
++extern void *rd_allocate_request(se_task_t *, se_device_t *);
++extern int rd_DIRECT_do_task(se_task_t *);
++extern int rd_MEMCPY_do_task(se_task_t *);
++extern int rd_DIRECT_allocate_DMA(se_cmd_t *, u32, u32);
++extern int rd_DIRECT_do_se_mem_map(struct se_task_s *, struct list_head *,
++				void *, struct se_mem_s *, struct se_mem_s **,
++				u32 *, u32 *);
++extern void rd_DIRECT_free_DMA(se_cmd_t *);
++extern void rd_free_task(se_task_t *);
++extern ssize_t rd_set_configfs_dev_params(se_hba_t *, se_subsystem_dev_t *,
 +						const char *, ssize_t);
-+extern ssize_t pscsi_check_configfs_dev_params(se_hba_t *,
-+						se_subsystem_dev_t *);
-+extern ssize_t pscsi_show_configfs_dev_params(se_hba_t *, se_subsystem_dev_t *,
++extern ssize_t rd_check_configfs_dev_params(se_hba_t *, se_subsystem_dev_t *);
++extern ssize_t rd_show_configfs_dev_params(se_hba_t *, se_subsystem_dev_t *,
 +						char *);
-+extern se_device_t *pscsi_create_virtdevice_from_fd(se_subsystem_dev_t *,
-+						const char *);
-+extern void pscsi_get_plugin_info(void *, char *, int *);
-+extern void pscsi_get_hba_info(se_hba_t *, char *, int *);
-+extern void pscsi_get_dev_info(se_device_t *, char *, int *);
-+extern int pscsi_check_lba(unsigned long long, se_device_t *);
-+extern int pscsi_check_for_SG(se_task_t *);
-+extern unsigned char *pscsi_get_cdb(se_task_t *);
-+extern unsigned char *pscsi_get_sense_buffer(se_task_t *);
-+extern u32 pscsi_get_blocksize(se_device_t *);
-+extern u32 pscsi_get_device_rev(se_device_t *);
-+extern u32 pscsi_get_device_type(se_device_t *);
-+extern u32 pscsi_get_dma_length(u32, se_device_t *);
-+extern u32 pscsi_get_max_sectors(se_device_t *);
-+extern u32 pscsi_get_queue_depth(se_device_t *);
-+extern void pscsi_req_done(struct request *, int);
-+#endif
++extern void rd_dr_get_plugin_info(void *, char *, int *);
++extern void rd_mcp_get_plugin_info(void *, char *, int *);
++extern void rd_get_hba_info(se_hba_t *, char *, int *);
++extern void rd_get_dev_info(se_device_t *, char *, int *);
++extern int rd_DIRECT_check_lba(unsigned long long, se_device_t *);
++extern int rd_MEMCPY_check_lba(unsigned long long, se_device_t *);
++extern int rd_check_for_SG(se_task_t *);
++extern unsigned char *rd_get_cdb(se_task_t *);
++extern u32 rd_get_blocksize(se_device_t *);
++extern u32 rd_get_device_rev(se_device_t *);
++extern u32 rd_get_device_type(se_device_t *);
++extern u32 rd_get_dma_length(u32, se_device_t *);
++extern u32 rd_get_max_sectors(se_device_t *);
++extern u32 rd_get_queue_depth(se_device_t *);
++extern u32 rd_get_max_queue_depth(se_device_t *);
++#endif /* ! RD_INCLUDE_STRUCTS */
 +
-+#include <linux/device.h>
-+#include <scsi/scsi_driver.h>
-+#include <scsi/scsi_device.h>
-+#include <linux/kref.h>
-+#include <linux/kobject.h>
++#define RRF_EMULATE_CDB		0x01
++#define RRF_GOT_LBA		0x02
 +
-+typedef struct pscsi_plugin_task_s {
-+	unsigned char pscsi_cdb[SCSI_CDB_SIZE];
-+	unsigned char pscsi_sense[SCSI_SENSE_BUFFERSIZE];
-+	int	pscsi_direction;
-+	int	pscsi_result;
-+	u32	pscsi_resid;
-+	struct request *pscsi_req;
-+} pscsi_plugin_task_t;
++typedef struct rd_request_s {
++	/* SCSI CDB from iSCSI Command PDU */
++	unsigned char	rd_scsi_cdb[SCSI_CDB_SIZE];
++	/* Data Direction */
++	u8		rd_data_direction;
++	/* Total length of request */
++	u32		rd_bufflen;
++	/* RD request flags */
++	u32		rd_req_flags;
++	/* Offset from start of page */
++	u32		rd_offset;
++	/* Starting page in Ramdisk for request */
++	u32		rd_page;
++	/* Total number of pages needed for request */
++	u32		rd_page_count;
++	/* Scatterlist count */
++	u32		rd_sg_count;
++	u32		rd_size;
++	/* Logical Block Address */
++	unsigned long long	rd_lba;
++	 /* Data buffer containing scatterlists(s) or
++	  * contiguous memory segments */
++	void		*rd_buf;
++	/* Ramdisk device */
++	struct rd_dev_s	*rd_dev;
++} ____cacheline_aligned rd_request_t;
 +
-+#define PDF_HAS_CHANNEL_ID	0x01
-+#define PDF_HAS_TARGET_ID	0x02
-+#define PDF_HAS_LUN_ID		0x04
-+#define PDF_HAS_VPD_UNIT_SERIAL 0x08
-+#define PDF_HAS_VPD_DEV_IDENT	0x10
++typedef struct rd_dev_sg_table_s {
++	u32		page_start_offset;
++	u32		page_end_offset;
++	u32		rd_sg_count;
++	struct scatterlist *sg_table;
++} ____cacheline_aligned rd_dev_sg_table_t;
 +
-+typedef struct pscsi_dev_virt_s {
-+	int	pdv_flags;
-+	int	pdv_channel_id;
-+	int	pdv_target_id;
-+	int	pdv_lun_id;
-+	struct scsi_device *pdv_sd;
-+	struct se_hba_s *pdv_se_hba;
-+} pscsi_dev_virt_t;
++#define RDF_HAS_PAGE_COUNT	0x01
 +
-+extern void __pscsi_get_dev_info(pscsi_dev_virt_t *, char *, int *);
++typedef struct rd_dev_s {
++	int		rd_direct;
++	u32		rd_flags;
++	/* Unique Ramdisk Device ID in Ramdisk HBA */
++	u32		rd_dev_id;
++	/* Total page count for ramdisk device */
++	u32		rd_page_count;
++	/* Number of SG tables in sg_table_array */
++	u32		sg_table_count;
++	u32		rd_queue_depth;
++	/* Array of rd_dev_sg_table_t containing scatterlists */
++	rd_dev_sg_table_t *sg_table_array;
++	/* Ramdisk HBA device is connected to */
++	struct rd_host_s *rd_host;
++	/* Next RD Device entry in list */
++	struct rd_dev_s *next;
++} ____cacheline_aligned rd_dev_t;
 +
++extern void __rd_get_dev_info(rd_dev_t *, char *, int *);
++
++typedef struct rd_host_s {
++	u32		rd_host_dev_id_count;
++	u32		rd_host_id;		/* Unique Ramdisk Host ID */
++} ____cacheline_aligned rd_host_t;
++
++#ifndef RD_INCLUDE_STRUCTS
 +/*
 + * We use the generic command sequencer, so we must setup
 + * se_subsystem_spc_t.
 + */
-+#ifndef PSCSI_INCLUDE_STRUCTS
-+
-+se_subsystem_spc_t pscsi_template_spc = {
-+	.inquiry		= pscsi_CDB_inquiry,
-+	.none			= pscsi_CDB_none,
-+	.read_non_SG		= pscsi_CDB_read_non_SG,
-+	.read_SG		= pscsi_CDB_read_SG,
-+	.write_non_SG		= pscsi_CDB_write_non_SG,
-+	.write_SG		= pscsi_CDB_write_SG,
++se_subsystem_spc_t rd_template_spc = {
++	.inquiry		= rd_CDB_inquiry,
++	.none			= rd_CDB_none,
++	.read_non_SG		= rd_CDB_read_non_SG,
++	.read_SG		= rd_CDB_read_SG,
++	.write_non_SG		= rd_CDB_write_non_SG,
++	.write_SG		= rd_CDB_write_SG,
 +};
 +
-+se_subsystem_api_t pscsi_template = {
-+	.name			= "pscsi",			\
-+	.type			= PSCSI,			\
-+	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,	\
-+	.attach_hba		= pscsi_attach_hba,		\
-+	.detach_hba		= pscsi_detach_hba,		\
-+	.activate_device	= pscsi_activate_device,	\
-+	.deactivate_device	= pscsi_deactivate_device,	\
-+	.claim_phydevice	= pscsi_claim_phydevice,	\
-+	.allocate_virtdevice	= pscsi_allocate_virtdevice,	\
-+	.create_virtdevice	= pscsi_create_virtdevice,	\
-+	.free_device		= pscsi_free_device,		\
-+	.release_phydevice	= pscsi_release_phydevice,	\
-+	.transport_complete	= pscsi_transport_complete,	\
-+	.allocate_request	= pscsi_allocate_request,	\
-+	.do_task		= pscsi_do_task,		\
-+	.free_task		= pscsi_free_task,		\
-+	.check_configfs_dev_params = pscsi_check_configfs_dev_params, \
-+	.set_configfs_dev_params = pscsi_set_configfs_dev_params, \
-+	.show_configfs_dev_params = pscsi_show_configfs_dev_params, \
-+	.create_virtdevice_from_fd = pscsi_create_virtdevice_from_fd, \
-+	.get_plugin_info	= pscsi_get_plugin_info,	\
-+	.get_hba_info		= pscsi_get_hba_info,		\
-+	.get_dev_info		= pscsi_get_dev_info,		\
-+	.check_lba		= pscsi_check_lba,		\
-+	.check_for_SG		= pscsi_check_for_SG,		\
-+	.get_cdb		= pscsi_get_cdb,		\
-+	.get_sense_buffer	= pscsi_get_sense_buffer,	\
-+	.get_blocksize		= pscsi_get_blocksize,		\
-+	.get_device_rev		= pscsi_get_device_rev,		\
-+	.get_device_type	= pscsi_get_device_type,	\
-+	.get_dma_length		= pscsi_get_dma_length,		\
-+	.get_max_sectors	= pscsi_get_max_sectors,	\
-+	.get_queue_depth	= pscsi_get_queue_depth,	\
-+	.write_pending		= NULL,				\
-+	.spc			= &pscsi_template_spc,		\
++se_subsystem_api_t rd_dr_template = {
++	.name			= "rd_dr",
++	.type			= RAMDISK_DR,
++	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
++	.attach_hba		= rd_attach_hba,
++	.detach_hba		= rd_detach_hba,
++	.allocate_virtdevice	= rd_DIRECT_allocate_virtdevice,
++	.create_virtdevice	= rd_DIRECT_create_virtdevice,
++	.activate_device	= rd_activate_device,
++	.deactivate_device	= rd_deactivate_device,
++	.free_device		= rd_free_device,
++	.transport_complete	= rd_transport_complete,
++	.allocate_DMA		= rd_DIRECT_allocate_DMA,
++	.free_DMA		= rd_DIRECT_free_DMA,
++	.allocate_request	= rd_allocate_request,
++	.do_task		= rd_DIRECT_do_task,
++	.free_task		= rd_free_task,
++	.check_configfs_dev_params = rd_check_configfs_dev_params,
++	.set_configfs_dev_params = rd_set_configfs_dev_params,
++	.show_configfs_dev_params = rd_show_configfs_dev_params,
++	.get_plugin_info	= rd_dr_get_plugin_info,
++	.get_hba_info		= rd_get_hba_info,
++	.get_dev_info		= rd_get_dev_info,
++	.check_lba		= rd_DIRECT_check_lba,
++	.check_for_SG		= rd_check_for_SG,
++	.get_cdb		= rd_get_cdb,
++	.get_blocksize		= rd_get_blocksize,
++	.get_device_rev		= rd_get_device_rev,
++	.get_device_type	= rd_get_device_type,
++	.get_dma_length		= rd_get_dma_length,
++	.get_max_sectors	= rd_get_max_sectors,
++	.get_queue_depth	= rd_get_queue_depth,
++	.get_max_queue_depth	= rd_get_max_queue_depth,
++	.do_se_mem_map		= rd_DIRECT_do_se_mem_map,
++	.write_pending		= NULL,
++	.spc			= &rd_template_spc,
 +};
 +
-+#endif
++se_subsystem_api_t rd_mcp_template = {
++	.name			= "rd_mcp",
++	.type			= RAMDISK_MCP,
++	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
++	.attach_hba		= rd_attach_hba,
++	.detach_hba		= rd_detach_hba,
++	.allocate_virtdevice	= rd_MEMCPY_allocate_virtdevice,
++	.create_virtdevice	= rd_MEMCPY_create_virtdevice,
++	.activate_device	= rd_activate_device,
++	.deactivate_device	= rd_deactivate_device,
++	.free_device		= rd_free_device,
++	.transport_complete	= rd_transport_complete,
++	.allocate_request	= rd_allocate_request,
++	.do_task		= rd_MEMCPY_do_task,
++	.free_task		= rd_free_task,
++	.check_configfs_dev_params = rd_check_configfs_dev_params,
++	.set_configfs_dev_params = rd_set_configfs_dev_params,
++	.show_configfs_dev_params = rd_show_configfs_dev_params,
++	.get_plugin_info	= rd_mcp_get_plugin_info,
++	.get_hba_info		= rd_get_hba_info,
++	.get_dev_info		= rd_get_dev_info,
++	.check_lba		= rd_MEMCPY_check_lba,
++	.check_for_SG		= rd_check_for_SG,
++	.get_cdb		= rd_get_cdb,
++	.get_blocksize		= rd_get_blocksize,
++	.get_device_rev		= rd_get_device_rev,
++	.get_device_type	= rd_get_device_type,
++	.get_dma_length		= rd_get_dma_length,
++	.get_max_sectors	= rd_get_max_sectors,
++	.get_queue_depth	= rd_get_queue_depth,
++	.get_max_queue_depth	= rd_get_max_queue_depth,
++	.write_pending		= NULL,
++	.spc			= &rd_template_spc,
++};
 +
-+#endif   /*** TARGET_CORE_PSCSI_H ***/
-
-
++#endif /* ! RD_INCLUDE_STRUCTS */
++
++#endif /* TARGET_CORE_RD_H */
