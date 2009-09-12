@@ -1,40 +1,41 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 7/19] Target_Core_Mod SCSI MIBs
-Date: Fri, 11 Sep 2009 18:56:30 -0700
-Message-ID: <1252720590.2067.210.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 8/19] Target_Core_Mod Subsystem and SE Object plugin
+	infrastructure
+Date: Fri, 11 Sep 2009 18:56:41 -0700
+Message-ID: <1252720601.2067.212.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from n16a.bullet.mail.mud.yahoo.com ([68.142.207.126]:45959 "HELO
-	n16a.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757261AbZILCDC (ORCPT
+Received: from smtp106.sbc.mail.gq1.yahoo.com ([67.195.14.109]:46411 "HELO
+	smtp106.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757227AbZILCDX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 22:03:02 -0400
+	Fri, 11 Sep 2009 22:03:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>
 
-[RFC PATCH 7/19] Target_Core_Mod SCSI MIBs
+[RFC PATCH 8/19] Target_Core_Mod Subsystem and SE Object plugin infrastructure
 
-This patch adds support for read-only SCSI MIBs through /proc/scsi_target/mib following RFC-4455.
+This patch adds the simple plugin infrastructure used by subsystem and seobj plugins.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-diff --git a/drivers/target/target_core_mib.c b/drivers/target/target_core_mib.c
+diff --git a/drivers/target/target_core_plugin.c b/drivers/target/target_core_plugin.c
 new file mode 100644
-index 0000000..63f7ed1
+index 0000000..9f7ea97
 --- /dev/null
-+++ b/drivers/target/target_core_mib.c
-@@ -0,0 +1,1079 @@
++++ b/drivers/target/target_core_plugin.c
+@@ -0,0 +1,326 @@
 +/*******************************************************************************
-+ * Filename:  target_core_mib.c
++ * Filename:  target_core_plugin.c
 + *
 + * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
 + * Copyright (c) 2007-2009 Rising Tide Software, Inc.
 + * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@linux-iscsi.org>
++ * Nicholas A. Bellinger <nab@kernel.org>
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -52,1074 +53,321 @@ index 0000000..63f7ed1
 + *
 + ******************************************************************************/
 +
++#define TARGET_CORE_PLUGIN_C
 +
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/delay.h>
-+#include <linux/timer.h>
++#include <linux/net.h>
 +#include <linux/string.h>
-+#include <linux/version.h>
-+#include <linux/utsrelease.h>
-+#include <linux/utsname.h>
-+#include <linux/proc_fs.h>
-+#include <linux/seq_file.h>
-+#include <linux/blkdev.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
++#include <linux/timer.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++#include <linux/smp_lock.h>
++#include <linux/in.h>
++#include <net/sock.h>
++#include <net/tcp.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_hba.h>
-+#include <target/target_core_transport.h>
-+#include <target/target_core_mib.h>
-+#include <target/target_core_plugin.h>
 +#include <target/target_core_seobj.h>
-+#include <target/target_core_fabric_ops.h>
-+#include <target/target_core_configfs.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_plugin.h>
 +
-+/* SCSI mib table index */
-+scsi_index_table_t scsi_index_table;
++#undef TARGET_CORE_PLUGIN_C
 +
-+#ifndef INITIAL_JIFFIES
-+#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
-+#endif
-+
-+/* SCSI Instance Table */
-+#define SCSI_INST_SW_INDEX		1
-+#define SCSI_TRANSPORT_INDEX		1
-+
-+#define NONE		"None"
-+#define ISPRINT(a)   ((a >= ' ') && (a <= '~'))
-+
-+static inline int list_is_first(const struct list_head *list,
-+				const struct list_head *head)
++void plugin_load_all_classes(void)
 +{
-+	return list->prev == head;
++	/*
++	 * Setup Transport Plugins
++	 */
++	plugin_register_class(PLUGIN_TYPE_TRANSPORT, "TRANSPORT", MAX_PLUGINS);
++	transport_load_plugins();
++
++	/*
++	 * Setup Storage Engine Object Plugins
++	 */
++	plugin_register_class(PLUGIN_TYPE_OBJ, "OBJ", MAX_PLUGINS);
++	se_obj_load_plugins();
++}
++EXPORT_SYMBOL(plugin_load_all_classes);
++
++se_plugin_class_t *plugin_get_class(
++	u32 plugin_class_type)
++{
++	se_plugin_class_t *pc;
++
++	if (plugin_class_type > MAX_PLUGIN_CLASSES) {
++		printk(KERN_ERR "Passed plugin class type: %u exceeds"
++			" MAX_PLUGIN_CLASSES: %d\n", plugin_class_type,
++			MAX_PLUGIN_CLASSES);
++		return NULL;
++	}
++
++	pc = &se_global->plugin_class_list[plugin_class_type];
++	if (!pc->plugin_array)
++		return NULL;
++
++	return pc;
 +}
 +
-+static void *locate_hba_start(
-+	struct seq_file *seq,
-+	loff_t *pos)
++int plugin_register_class(
++	u32 plugin_class_type,
++	unsigned char *plugin_class_name,
++	int max_plugins)
 +{
-+	spin_lock(&se_global->g_device_lock);
-+	return seq_list_start(&se_global->g_se_dev_list, *pos);
-+}
++	u32 i;
++	se_plugin_class_t *pc;
++	se_plugin_t *p;
 +
-+static void *locate_hba_next(
-+	struct seq_file *seq,
-+	void *v,
-+	loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_se_dev_list, pos);
-+}
++	if (strlen(plugin_class_name) > MAX_PLUGIN_CLASS_NAME) {
++		printk(KERN_ERR "plugin_class_name exceeds MAX_PLUGIN_CLASS"
++				"_NAME: %u\n", MAX_PLUGIN_CLASS_NAME);
++		return -1;
++	}
++	spin_lock(&se_global->plugin_class_lock);
++	if (plugin_class_type > MAX_PLUGIN_CLASSES) {
++		printk(KERN_ERR "Passed plugin class type: %u exceeds"
++			" MAX_PLUGIN_CLASSES: %d\n", plugin_class_type,
++			MAX_PLUGIN_CLASSES);
++		return -1;
++	}
 +
-+static void locate_hba_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock(&se_global->g_device_lock);
-+}
++	pc = &se_global->plugin_class_list[plugin_class_type];
++	if (pc->plugin_array) {
++		printk(KERN_ERR "Plugin Class Type: %u already exists\n",
++			plugin_class_type);
++		return -1;
++	}
++	spin_unlock(&se_global->plugin_class_lock);
 +
-+/****************************************************************************
-+ * SCSI MIB Tables
-+ ****************************************************************************/
++	pc->plugin_array = kzalloc(sizeof(se_plugin_t) * max_plugins,
++				GFP_KERNEL);
++	if (!(pc->plugin_array)) {
++		printk(KERN_ERR "Unable to locate pc->plugin_array\n");
++		return -1;
++	}
 +
-+/*
-+ * SCSI Instance Table
-+ */
-+static void *scsi_inst_seq_start(
-+	struct seq_file *seq,
-+	loff_t *pos)
-+{
-+	spin_lock(&se_global->hba_lock);
-+	return seq_list_start(&se_global->g_hba_list, *pos);
-+}
++	spin_lock_init(&pc->plugin_lock);
++	pc->max_plugins = max_plugins;
++	pc->plugin_class = plugin_class_type;
++	snprintf(pc->plugin_class_name, MAX_PLUGIN_CLASS_NAME,
++		"%s", plugin_class_name);
 +
-+static void *scsi_inst_seq_next(
-+	struct seq_file *seq,
-+	void *v,
-+	loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_hba_list, pos);
-+}
++	for (i = 0; i < max_plugins; i++) {
++		p = &pc->plugin_array[i];
++		p->plugin_class = pc;
++	}
 +
-+static void scsi_inst_seq_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock(&se_global->hba_lock);
-+}
-+
-+static int scsi_inst_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_hba_t *hba = list_entry(v, se_hba_t, hba_list);
-+
-+	if (list_is_first(&hba->hba_list, &se_global->g_hba_list))
-+		seq_puts(seq, "inst sw_indx\n");
-+
-+	if (!(hba->hba_status & HBA_STATUS_ACTIVE))
-+		return 0;
-+
-+	seq_printf(seq, "%u %u\n", hba->hba_index, SCSI_INST_SW_INDEX);
-+	seq_printf(seq, "plugin: %s version: %s\n",
-+			hba->transport->name, TARGET_CORE_VERSION);
++	printk(KERN_INFO "SE_PC[%u] - Registered Plugin Class: %s\n",
++			pc->plugin_class, pc->plugin_class_name);
 +
 +	return 0;
 +}
++EXPORT_SYMBOL(plugin_register_class);
 +
-+static const struct seq_operations scsi_inst_seq_ops = {
-+	.start	= scsi_inst_seq_start,
-+	.next	= scsi_inst_seq_next,
-+	.stop	= scsi_inst_seq_stop,
-+	.show	= scsi_inst_seq_show
-+};
-+
-+static int scsi_inst_seq_open(struct inode *inode, struct file *file)
++int plugin_deregister_class(u32 plugin_class_type)
 +{
-+	return seq_open(file, &scsi_inst_seq_ops);
-+}
++	int i;
++	se_plugin_class_t *pc;
++	se_plugin_t *p;
 +
-+static const struct file_operations scsi_inst_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_inst_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
++	pc = plugin_get_class(plugin_class_type);
++	if (!(pc))
++		return -1;
 +
-+/*
-+ * SCSI Device Table
-+ */
-+static void *scsi_dev_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
++	for (i = 0; i < MAX_PLUGINS; i++) {
++		p = &pc->plugin_array[i];
 +
-+static void *scsi_dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_dev_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+static int scsi_dev_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_hba_t *hba;
-+	se_subsystem_dev_t *se_dev = list_entry(v, se_subsystem_dev_t,
-+						g_se_dev_list);
-+	se_device_t *dev = se_dev->se_dev_ptr;
-+	char str[28];
-+	int k;
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst indx role ports\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	seq_printf(seq, "%u %u %s %u\n", hba->hba_index,
-+		   dev->dev_index, "Target", dev->dev_port_count);
-+
-+	memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
-+
-+	/* vendor */
-+	for (k = 0; k < 8; k++)
-+		str[k] = ISPRINT(DEV_T10_WWN(dev)->vendor[k]) ?
-+				DEV_T10_WWN(dev)->vendor[k] : 0x20;
-+	str[k] = 0x20;
-+
-+	/* model */
-+	for (k = 0; k < 16; k++)
-+		str[k+9] = ISPRINT(DEV_T10_WWN(dev)->model[k]) ?
-+				DEV_T10_WWN(dev)->model[k] : 0x20;
-+	str[k + 9] = 0;
-+
-+	seq_printf(seq, "dev_alias: %s\n", str);
-+
-+	/* Release the semaphore */
-+	core_put_hba(hba);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_dev_seq_ops = {
-+	.start  = scsi_dev_seq_start,
-+	.next   = scsi_dev_seq_next,
-+	.stop   = scsi_dev_seq_stop,
-+	.show   = scsi_dev_seq_show
-+};
-+
-+static int scsi_dev_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_dev_seq_ops);
-+}
-+
-+static const struct file_operations scsi_dev_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_dev_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Port Table
-+ */
-+static void *scsi_port_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_port_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_port_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+static int scsi_port_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_hba_t *hba;
-+	se_subsystem_dev_t *se_dev = list_entry(v, se_subsystem_dev_t,
-+						g_se_dev_list);
-+	se_device_t *dev = se_dev->se_dev_ptr;
-+	se_port_t *sep, *sep_tmp;
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst device indx role busy_count\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	/* FIXME: scsiPortBusyStatuses count */
-+	spin_lock(&dev->se_port_lock);
-+	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
-+		seq_printf(seq, "%u %u %u %s%u %u\n", hba->hba_index,
-+			dev->dev_index, sep->sep_index, "Device",
-+			dev->dev_index, 0);
-+	}
-+	spin_unlock(&dev->se_port_lock);
-+
-+	/* Release the semaphore */
-+	core_put_hba(hba);
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_port_seq_ops = {
-+	.start  = scsi_port_seq_start,
-+	.next   = scsi_port_seq_next,
-+	.stop   = scsi_port_seq_stop,
-+	.show   = scsi_port_seq_show
-+};
-+
-+static int scsi_port_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_port_seq_ops);
-+}
-+
-+static const struct file_operations scsi_port_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_port_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Transport Table
-+ */
-+static void *scsi_transport_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_transport_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_transport_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+static int scsi_transport_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_hba_t *hba;
-+	se_subsystem_dev_t *se_dev = list_entry(v, se_subsystem_dev_t,
-+						g_se_dev_list);
-+	se_device_t *dev = se_dev->se_dev_ptr;
-+	se_port_t *se, *se_tmp;
-+	se_portal_group_t *tpg;
-+	t10_wwn_t *wwn;
-+	char buf[64];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst device indx dev_name\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	wwn = DEV_T10_WWN(dev);
-+
-+	spin_lock(&dev->se_port_lock);
-+	list_for_each_entry_safe(se, se_tmp, &dev->dev_sep_list, sep_list) {
-+		tpg = se->sep_tpg;
-+		sprintf(buf, "scsiTransport%s",
-+				TPG_TFO(tpg)->get_fabric_name());
-+
-+		seq_printf(seq, "%u %s %u %s+%s\n",
-+			hba->hba_index, /* scsiTransportIndex */
-+			buf,  /* scsiTransportType */
-+			(TPG_TFO(tpg)->tpg_get_inst_index != NULL) ?
-+			TPG_TFO(tpg)->tpg_get_inst_index(tpg) :
-+			0,
-+			TPG_TFO(tpg)->tpg_get_wwn(tpg),
-+			(strlen(wwn->unit_serial)) ?
-+			/* scsiTransportDevName */
-+			wwn->unit_serial : wwn->vendor);
-+	}
-+	spin_unlock(&dev->se_port_lock);
-+
-+	/* Release the semaphore */
-+	core_put_hba(hba);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_transport_seq_ops = {
-+	.start  = scsi_transport_seq_start,
-+	.next   = scsi_transport_seq_next,
-+	.stop   = scsi_transport_seq_stop,
-+	.show   = scsi_transport_seq_show
-+};
-+
-+static int scsi_transport_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_transport_seq_ops);
-+}
-+
-+static const struct file_operations scsi_transport_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_transport_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Target Device Table
-+ */
-+static void *scsi_tgt_dev_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_tgt_dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_tgt_dev_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+
-+#define LU_COUNT	1  /* for now */
-+static int scsi_tgt_dev_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_hba_t *hba;
-+	se_subsystem_dev_t *se_dev = list_entry(v, se_subsystem_dev_t,
-+						g_se_dev_list);
-+	se_device_t *dev = se_dev->se_dev_ptr;
-+	int non_accessible_lus = 0;
-+	char status[16];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst indx num_LUs status non_access_LUs"
-+			" resets\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	switch (dev->dev_status) {
-+	case TRANSPORT_DEVICE_ACTIVATED:
-+		strcpy(status, "activated");
-+		break;
-+	case TRANSPORT_DEVICE_DEACTIVATED:
-+		strcpy(status, "deactivated");
-+		non_accessible_lus = 1;
-+		break;
-+	case TRANSPORT_DEVICE_SHUTDOWN:
-+		strcpy(status, "shutdown");
-+		non_accessible_lus = 1;
-+		break;
-+	case TRANSPORT_DEVICE_OFFLINE_ACTIVATED:
-+	case TRANSPORT_DEVICE_OFFLINE_DEACTIVATED:
-+		strcpy(status, "offline");
-+		non_accessible_lus = 1;
-+		break;
-+	default:
-+		sprintf(status, "unknown(%d)", dev->dev_status);
-+		non_accessible_lus = 1;
-+	}
-+
-+	seq_printf(seq, "%u %u %u %s %u %u\n",
-+		   hba->hba_index, dev->dev_index, LU_COUNT,
-+		   status, non_accessible_lus, dev->num_resets);
-+
-+	/* Release the semaphore */
-+	core_put_hba(hba);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_tgt_dev_seq_ops = {
-+	.start  = scsi_tgt_dev_seq_start,
-+	.next   = scsi_tgt_dev_seq_next,
-+	.stop   = scsi_tgt_dev_seq_stop,
-+	.show   = scsi_tgt_dev_seq_show
-+};
-+
-+static int scsi_tgt_dev_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_tgt_dev_seq_ops);
-+}
-+
-+static const struct file_operations scsi_tgt_dev_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_tgt_dev_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Target Port Table
-+ */
-+static void *scsi_tgt_port_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_tgt_port_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_tgt_port_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+static int scsi_tgt_port_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_hba_t *hba;
-+	se_subsystem_dev_t *se_dev = list_entry(v, se_subsystem_dev_t,
-+						g_se_dev_list);
-+	se_device_t *dev = se_dev->se_dev_ptr;
-+	se_port_t *sep, *sep_tmp;
-+	se_portal_group_t *tpg;
-+	u32 rx_mbytes, tx_mbytes;
-+	unsigned long long num_cmds;
-+	char buf[64];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst device indx name port_index in_cmds"
-+			" write_mbytes read_mbytes hs_in_cmds\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	spin_lock(&dev->se_port_lock);
-+	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
-+		tpg = sep->sep_tpg;
-+		sprintf(buf, "%sPort#",
-+			TPG_TFO(tpg)->get_fabric_name());
-+
-+		seq_printf(seq, "%u %u %u %s%d %s%s%d ",
-+		     hba->hba_index,
-+		     dev->dev_index,
-+		     sep->sep_index,
-+		     buf, sep->sep_index,
-+		     TPG_TFO(tpg)->tpg_get_wwn(tpg), "+t+",
-+		     TPG_TFO(tpg)->tpg_get_tag(tpg));
-+
-+		spin_lock(&sep->sep_lun->lun_sep_lock);
-+		num_cmds = sep->sep_stats.cmd_pdus;
-+		rx_mbytes = (sep->sep_stats.rx_data_octets >> 20);
-+		tx_mbytes = (sep->sep_stats.tx_data_octets >> 20);
-+		spin_unlock(&sep->sep_lun->lun_sep_lock);
-+
-+		seq_printf(seq, "%llu %u %u %u\n", num_cmds,
-+			rx_mbytes, tx_mbytes, 0);
-+	}
-+	spin_unlock(&dev->se_port_lock);
-+
-+	/* Release the semaphore */
-+	core_put_hba(hba);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_tgt_port_seq_ops = {
-+	.start  = scsi_tgt_port_seq_start,
-+	.next   = scsi_tgt_port_seq_next,
-+	.stop   = scsi_tgt_port_seq_stop,
-+	.show   = scsi_tgt_port_seq_show
-+};
-+
-+static int scsi_tgt_port_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_tgt_port_seq_ops);
-+}
-+
-+static const struct file_operations scsi_tgt_port_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_tgt_port_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Authorized Initiator Table:
-+ * It contains the SCSI Initiators authorized to be attached to one of the
-+ * local Target ports.
-+ * Iterates through all active TPGs and extracts the info from the ACLs
-+ */
-+static void *scsi_auth_intr_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	spin_lock_bh(&se_global->se_tpg_lock);
-+	return seq_list_start(&se_global->g_se_tpg_list, *pos);
-+}
-+
-+static void *scsi_auth_intr_seq_next(struct seq_file *seq, void *v,
-+					 loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_se_tpg_list, pos);
-+}
-+
-+static void scsi_auth_intr_seq_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock_bh(&se_global->se_tpg_lock);
-+}
-+
-+static int scsi_auth_intr_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_portal_group_t *se_tpg = list_entry(v, se_portal_group_t,
-+						se_tpg_list);
-+	se_dev_entry_t *deve;
-+	se_lun_t *lun;
-+	se_node_acl_t *se_nacl;
-+	int j;
-+
-+	if (list_is_first(&se_tpg->se_tpg_list,
-+			  &se_global->g_se_tpg_list))
-+		seq_puts(seq, "inst dev port indx dev_or_port intr_name "
-+			 "map_indx att_count num_cmds read_mbytes "
-+			 "write_mbytes hs_num_cmds creation_time row_status\n");
-+
-+	if (!(se_tpg))
-+		return 0;
-+
-+	spin_lock(&se_tpg->acl_node_lock);
-+	list_for_each_entry(se_nacl, &se_tpg->acl_node_list, acl_list) {
-+		spin_lock(&se_nacl->device_list_lock);
-+		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
-+			deve = &se_nacl->device_list[j];
-+			if (!(deve->lun_flags &
-+					TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) ||
-+			    (!deve->se_lun))
-+				continue;
-+			lun = deve->se_lun;
-+			if ((lun->lun_type != TRANSPORT_LUN_TYPE_DEVICE) ||
-+			    (!lun->se_dev))
-+				continue;
-+
-+			seq_printf(seq, "%u %u %u %u %u %s %u %u %u %u %u %u"
-+					" %u %s\n",
-+				/* scsiInstIndex */
-+				(TPG_TFO(se_tpg)->tpg_get_inst_index != NULL) ?
-+				TPG_TFO(se_tpg)->tpg_get_inst_index(se_tpg) :
-+				0,
-+				/* scsiDeviceIndex */
-+				lun->se_dev->dev_index,
-+				/* scsiAuthIntrTgtPortIndex */
-+				TPG_TFO(se_tpg)->tpg_get_tag(se_tpg),
-+				/* scsiAuthIntrIndex */
-+				se_nacl->acl_index,
-+				/* scsiAuthIntrDevOrPort */
-+				1,
-+				/* scsiAuthIntrName */
-+				se_nacl->initiatorname[0] ?
-+					se_nacl->initiatorname : NONE,
-+				/* FIXME: scsiAuthIntrLunMapIndex */
-+				0,
-+				/* scsiAuthIntrAttachedTimes */
-+				deve->attach_count,
-+				/* scsiAuthIntrOutCommands */
-+				deve->total_cmds,
-+				/* scsiAuthIntrReadMegaBytes */
-+				(u32)(deve->read_bytes >> 20),
-+				/* scsiAuthIntrWrittenMegaBytes */
-+				(u32)(deve->write_bytes >> 20),
-+				/* FIXME: scsiAuthIntrHSOutCommands */
-+				0,
-+				/* scsiAuthIntrLastCreation */
-+				(u32)(((u32)deve->creation_time -
-+					    INITIAL_JIFFIES) * 100 / HZ),
-+				/* FIXME: scsiAuthIntrRowStatus */
-+				"Ready");
-+		}
-+		spin_unlock(&se_nacl->device_list_lock);
-+	}
-+	spin_unlock(&se_tpg->acl_node_lock);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_auth_intr_seq_ops = {
-+	.start	= scsi_auth_intr_seq_start,
-+	.next	= scsi_auth_intr_seq_next,
-+	.stop	= scsi_auth_intr_seq_stop,
-+	.show	= scsi_auth_intr_seq_show
-+};
-+
-+static int scsi_auth_intr_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_auth_intr_seq_ops);
-+}
-+
-+static const struct file_operations scsi_auth_intr_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_auth_intr_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Attached Initiator Port Table:
-+ * It lists the SCSI Initiators attached to one of the local Target ports.
-+ * Iterates through all active TPGs and use active sessions from each TPG
-+ * to list the info fo this table.
-+ */
-+static void *scsi_att_intr_port_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	spin_lock_bh(&se_global->se_tpg_lock);
-+	return seq_list_start(&se_global->g_se_tpg_list, *pos);
-+}
-+
-+static void *scsi_att_intr_port_seq_next(struct seq_file *seq, void *v,
-+					 loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_se_tpg_list, pos);
-+}
-+
-+static void scsi_att_intr_port_seq_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock_bh(&se_global->se_tpg_lock);
-+}
-+
-+static int scsi_att_intr_port_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_portal_group_t *se_tpg = list_entry(v, se_portal_group_t,
-+						se_tpg_list);
-+	se_dev_entry_t *deve;
-+	se_lun_t *lun;
-+	se_node_acl_t *se_nacl;
-+	se_session_t *se_sess;
-+	unsigned char buf[64];
-+	int j;
-+
-+	if (list_is_first(&se_tpg->se_tpg_list,
-+			  &se_global->g_se_tpg_list))
-+		seq_puts(seq, "inst dev port indx port_auth_indx port_name"
-+			" port_ident\n");
-+
-+	if (!(se_tpg))
-+		return 0;
-+
-+	spin_lock(&se_tpg->session_lock);
-+	list_for_each_entry(se_sess, &se_tpg->tpg_sess_list, sess_list) {
-+		if ((TPG_TFO(se_tpg)->sess_logged_in(se_sess)) ||
-+		    (!se_sess->se_node_acl) ||
-+		    (!se_sess->se_node_acl->device_list))
++		if (!p->plugin_obj)
 +			continue;
 +
-+		se_nacl = se_sess->se_node_acl;
++		plugin_deregister(i, plugin_class_type);
++	}
 +
-+		spin_lock(&se_nacl->device_list_lock);
-+		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
-+			deve = &se_nacl->device_list[j];
-+			if (!(deve->lun_flags &
-+					TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) ||
-+			   (!deve->se_lun))
-+				continue;
++	kfree(pc->plugin_array);
++	pc->plugin_array = NULL;
 +
-+			lun = deve->se_lun;
-+			if ((lun->lun_type != TRANSPORT_LUN_TYPE_DEVICE) ||
-+			    (!lun->se_dev))
-+				continue;
++	return 0;
++}
++EXPORT_SYMBOL(plugin_deregister_class);
 +
-+			memset(buf, 0, 64);
-+			TPG_TFO(se_tpg)->sess_get_initiator_wwn(se_sess,
-+					(unsigned char *)&buf[0], 64);
++void plugin_unload_all_classes(void)
++{
++	u32 i;
++	se_plugin_class_t *pc;
 +
-+			seq_printf(seq, "%u %u %u %u %u %s+i+%s\n",
-+				/* scsiInstIndex */
-+				(TPG_TFO(se_tpg)->tpg_get_inst_index != NULL) ?
-+				TPG_TFO(se_tpg)->tpg_get_inst_index(se_tpg) :
-+				0,
-+				/* scsiDeviceIndex */
-+				lun->se_dev->dev_index,
-+				/* scsiPortIndex */
-+				TPG_TFO(se_tpg)->tpg_get_tag(se_tpg),
-+				/* scsiAttIntrPortIndex */
-+				(TPG_TFO(se_tpg)->sess_get_index != NULL) ?
-+				TPG_TFO(se_tpg)->sess_get_index(se_sess) :
-+				0,
-+				/* scsiAttIntrPortAuthIntrIdx */
-+				se_nacl->acl_index,
-+				/* scsiAttIntrPortName */
-+				se_nacl->initiatorname[0] ?
-+					se_nacl->initiatorname : NONE,
-+				/* scsiAttIntrPortIdentifier */
-+				buf);
++	for (i = 0; i < MAX_PLUGIN_CLASSES; i++) {
++		pc = &se_global->plugin_class_list[i];
++
++		if (!pc->plugin_array)
++			continue;
++
++		plugin_deregister_class(i);
++	}
++
++	return;
++}
++EXPORT_SYMBOL(plugin_unload_all_classes);
++
++void *plugin_get_obj(
++	u32 plugin_class,
++	u32 plugin_loc,
++	int *ret)
++{
++	se_plugin_class_t *pc;
++	se_plugin_t *p;
++
++	pc = plugin_get_class(plugin_class);
++	if (!(pc))
++		return NULL;
++
++	spin_lock(&pc->plugin_lock);
++	if (plugin_loc > pc->max_plugins) {
++		printk(KERN_ERR "Passed plugin_loc: %d exceeds"
++			" pc->max_plugins: %d\n", plugin_loc, pc->max_plugins);
++		goto out;
++	}
++
++	p = &pc->plugin_array[plugin_loc];
++	if (!p->plugin_obj) {
++		printk(KERN_ERR "Passed plugin_loc: %u does not exist!\n",
++				plugin_loc);
++		goto out;
++	}
++	spin_unlock(&pc->plugin_lock);
++
++	*ret = 0;
++	return p->plugin_obj;
++out:
++	*ret = -1;
++	spin_unlock(&pc->plugin_lock);
++	return NULL;
++}
++EXPORT_SYMBOL(plugin_get_obj);
++
++struct se_plugin_s *plugin_register(
++	void *obj,
++	u32 plugin_loc,
++	unsigned char *plugin_name,
++	u32 plugin_class,
++	void (*get_plugin_info)(void *, char *, int *),
++	int (*plugin_init)(void),
++	void (*plugin_free)(void),
++	int *ret)
++{
++	se_plugin_class_t *pc;
++	se_plugin_t *p;
++	int err;
++
++	if (!obj) {
++		printk(KERN_ERR "obj or plugin_class pointers are NULL!\n");
++		return NULL;
++	}
++
++	if (strlen(plugin_name) > MAX_PLUGIN_NAME) {
++		printk(KERN_ERR "plugin_name exceeds MAX_PLUGIN_NAME: %u\n",
++				MAX_PLUGIN_NAME);
++		return NULL;
++	}
++
++	pc = plugin_get_class(plugin_class);
++	if (!(pc))
++		return NULL;
++
++	spin_lock(&pc->plugin_lock);
++	if (plugin_loc > pc->max_plugins) {
++		printk(KERN_ERR "Passed plugin_loc: %u exceeds pc->max_plugins:"
++			" %d\n", plugin_loc, pc->max_plugins);
++		*ret = -1;
++		goto out;
++	}
++
++	p = &pc->plugin_array[plugin_loc];
++	if (p->plugin_obj) {
++		printk(KERN_ERR "Passed plugin_loc: %u already registered\n",
++			plugin_loc);
++		*ret = -1;
++		goto out;
++	}
++
++	p->plugin_obj = obj;
++	p->get_plugin_info = get_plugin_info;
++	p->plugin_free	= plugin_free;
++	p->plugin_state = PLUGIN_REGISTERED;
++	p->plugin_type = plugin_loc;
++	snprintf(p->plugin_name, MAX_PLUGIN_NAME, "%s", plugin_name);
++
++	printk(KERN_INFO "PLUGIN_%s[%u] - %s registered\n",
++			pc->plugin_class_name, plugin_loc, plugin_name);
++	spin_unlock(&pc->plugin_lock);
++
++	if (*plugin_init != NULL) {
++		err = (*plugin_init)();
++		if (err) {
++			plugin_deregister(plugin_loc, plugin_class);
++			return NULL;
 +		}
-+		spin_unlock(&se_nacl->device_list_lock);
-+	}
-+	spin_unlock(&se_tpg->session_lock);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_att_intr_port_seq_ops = {
-+	.start	= scsi_att_intr_port_seq_start,
-+	.next	= scsi_att_intr_port_seq_next,
-+	.stop	= scsi_att_intr_port_seq_stop,
-+	.show	= scsi_att_intr_port_seq_show
-+};
-+
-+static int scsi_att_intr_port_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_att_intr_port_seq_ops);
-+}
-+
-+static const struct file_operations scsi_att_intr_port_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_att_intr_port_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Logical Unit Table
-+ */
-+static void *scsi_lu_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_lu_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_lu_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+#define SCSI_LU_INDEX		1
-+static int scsi_lu_seq_show(struct seq_file *seq, void *v)
-+{
-+	se_hba_t *hba;
-+	se_subsystem_dev_t *se_dev = list_entry(v, se_subsystem_dev_t,
-+						g_se_dev_list);
-+	se_device_t *dev = se_dev->se_dev_ptr;
-+	int j;
-+	char str[28];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst dev indx LUN lu_name vend prod rev"
-+		" dev_type status state-bit num_cmds read_mbytes"
-+		" write_mbytes resets full_stat hs_num_cmds creation_time\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
 +	}
 +
-+	/* Fix LU state, if we can read it from the device */
-+	seq_printf(seq, "%u %u %u %llu %s", hba->hba_index,
-+			dev->dev_index, SCSI_LU_INDEX,
-+			(unsigned long long)0, /* FIXME: scsiLuDefaultLun */
-+			(strlen(DEV_T10_WWN(dev)->unit_serial)) ?
-+			/* scsiLuWwnName */
-+			(char *)&DEV_T10_WWN(dev)->unit_serial[0] :
-+			"None");
++	return p;
 +
-+	memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
-+	/* scsiLuVendorId */
-+	for (j = 0; j < 8; j++)
-+		str[j] = ISPRINT(DEV_T10_WWN(dev)->vendor[j]) ?
-+			DEV_T10_WWN(dev)->vendor[j] : 0x20;
-+	str[8] = 0;
-+	seq_printf(seq, " %s", str);
-+
-+	/* scsiLuProductId */
-+	for (j = 0; j < 16; j++)
-+		str[j] = ISPRINT(DEV_T10_WWN(dev)->model[j]) ?
-+			DEV_T10_WWN(dev)->model[j] : 0x20;
-+	str[16] = 0;
-+	seq_printf(seq, " %s", str);
-+
-+	/* scsiLuRevisionId */
-+	for (j = 0; j < 4; j++)
-+		str[j] = ISPRINT(DEV_T10_WWN(dev)->revision[j]) ?
-+			DEV_T10_WWN(dev)->revision[j] : 0x20;
-+	str[4] = 0;
-+	seq_printf(seq, " %s", str);
-+
-+	seq_printf(seq, " %u %s %s %llu %u %u %u %u %u %u\n",
-+		/* scsiLuPeripheralType */
-+		   dev->dev_obj_api->get_device_type((void *)dev),
-+		   (dev->dev_status == TRANSPORT_DEVICE_ACTIVATED) ?
-+		"available" : "notavailable", /* scsiLuStatus */
-+		"exposed", 	/* scsiLuState */
-+		(unsigned long long)dev->num_cmds,
-+		/* scsiLuReadMegaBytes */
-+		(u32)(dev->read_bytes >> 20),
-+		/* scsiLuWrittenMegaBytes */
-+		(u32)(dev->write_bytes >> 20),
-+		dev->num_resets, /* scsiLuInResets */
-+		0, /* scsiLuOutTaskSetFullStatus */
-+		0, /* scsiLuHSInCommands */
-+		(u32)(((u32)dev->creation_time - INITIAL_JIFFIES) *
-+							100 / HZ));
-+	/* Release the semaphore */
-+	core_put_hba(hba);
-+
-+	return 0;
++out:
++	spin_unlock(&pc->plugin_lock);
++	return NULL;
 +}
++EXPORT_SYMBOL(plugin_register);
 +
-+static const struct seq_operations scsi_lu_seq_ops = {
-+	.start  = scsi_lu_seq_start,
-+	.next   = scsi_lu_seq_next,
-+	.stop   = scsi_lu_seq_stop,
-+	.show   = scsi_lu_seq_show
-+};
-+
-+static int scsi_lu_seq_open(struct inode *inode, struct file *file)
++int plugin_deregister(
++	u32 plugin_loc,
++	u32 plugin_class)
 +{
-+	return seq_open(file, &scsi_lu_seq_ops);
-+}
++	int ret = 0;
++	se_plugin_class_t *pc;
++	se_plugin_t *p;
 +
-+static const struct file_operations scsi_lu_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_lu_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/****************************************************************************/
-+
-+/*
-+ * Remove proc fs entries
-+ */
-+void remove_scsi_target_mib(void)
-+{
-+	remove_proc_entry("scsi_target/mib/scsi_inst", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_dev", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_port", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_transport", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_tgt_dev", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_tgt_port", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_auth_intr", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_att_intr_port", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_lu", NULL);
-+	remove_proc_entry("scsi_target/mib", NULL);
-+}
-+
-+/*
-+ * Create proc fs entries for the mib tables
-+ */
-+int init_scsi_target_mib(void)
-+{
-+	struct proc_dir_entry *dir_entry;
-+	struct proc_dir_entry *scsi_inst_entry;
-+	struct proc_dir_entry *scsi_dev_entry;
-+	struct proc_dir_entry *scsi_port_entry;
-+	struct proc_dir_entry *scsi_transport_entry;
-+	struct proc_dir_entry *scsi_tgt_dev_entry;
-+	struct proc_dir_entry *scsi_tgt_port_entry;
-+	struct proc_dir_entry *scsi_auth_intr_entry;
-+	struct proc_dir_entry *scsi_att_intr_port_entry;
-+	struct proc_dir_entry *scsi_lu_entry;
-+
-+	dir_entry = proc_mkdir("scsi_target/mib", NULL);
-+	if (!(dir_entry)) {
-+		printk(KERN_ERR "proc_mkdir() failed.\n");
++	pc = plugin_get_class(plugin_class);
++	if (!(pc))
 +		return -1;
++
++	spin_lock(&pc->plugin_lock);
++	if (plugin_loc > pc->max_plugins) {
++		printk(KERN_ERR "Passed plugin_loc: %u exceeds pc->max_plugins:"
++			" %d\n", plugin_loc, pc->max_plugins);
++		ret = -1;
++		goto out;
 +	}
 +
-+	scsi_inst_entry =
-+		create_proc_entry("scsi_target/mib/scsi_inst", 0, NULL);
-+	if (scsi_inst_entry)
-+		scsi_inst_entry->proc_fops = &scsi_inst_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_dev_entry =
-+		create_proc_entry("scsi_target/mib/scsi_dev", 0, NULL);
-+	if (scsi_dev_entry)
-+		scsi_dev_entry->proc_fops = &scsi_dev_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_port_entry =
-+		create_proc_entry("scsi_target/mib/scsi_port", 0, NULL);
-+	if (scsi_port_entry)
-+		scsi_port_entry->proc_fops = &scsi_port_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_transport_entry =
-+		create_proc_entry("scsi_target/mib/scsi_transport", 0, NULL);
-+	if (scsi_transport_entry)
-+		scsi_transport_entry->proc_fops = &scsi_transport_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_tgt_dev_entry =
-+		create_proc_entry("scsi_target/mib/scsi_tgt_dev", 0, NULL);
-+	if (scsi_tgt_dev_entry)
-+		scsi_tgt_dev_entry->proc_fops = &scsi_tgt_dev_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_tgt_port_entry =
-+		create_proc_entry("scsi_target/mib/scsi_tgt_port", 0, NULL);
-+	if (scsi_tgt_port_entry)
-+		scsi_tgt_port_entry->proc_fops = &scsi_tgt_port_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_auth_intr_entry =
-+		create_proc_entry("scsi_target/mib/scsi_auth_intr", 0, NULL);
-+	if (scsi_auth_intr_entry)
-+		scsi_auth_intr_entry->proc_fops = &scsi_auth_intr_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_att_intr_port_entry =
-+	      create_proc_entry("scsi_target/mib/scsi_att_intr_port", 0, NULL);
-+	if (scsi_att_intr_port_entry)
-+		scsi_att_intr_port_entry->proc_fops =
-+				&scsi_att_intr_port_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_lu_entry = create_proc_entry("scsi_target/mib/scsi_lu", 0, NULL);
-+	if (scsi_lu_entry)
-+		scsi_lu_entry->proc_fops = &scsi_lu_seq_fops;
-+	else
-+		goto error;
-+
-+	return 0;
-+
-+error:
-+	printk(KERN_ERR "create_proc_entry() failed.\n");
-+	remove_scsi_target_mib();
-+	return -1;
-+}
-+
-+/*
-+ * Initialize the index table for allocating unique row indexes to various mib
-+ * tables
-+ */
-+void init_scsi_index_table(void)
-+{
-+	memset(&scsi_index_table, 0, sizeof(scsi_index_table));
-+	spin_lock_init(&scsi_index_table.lock);
-+}
-+
-+/*
-+ * Allocate a new row index for the entry type specified
-+ */
-+u32 scsi_get_new_index(scsi_index_t type)
-+{
-+	u32 new_index;
-+
-+	if ((type < 0) || (type >= SCSI_INDEX_TYPE_MAX)) {
-+		printk(KERN_ERR "Invalid index type %d\n", type);
-+		return -1;
++	p = &pc->plugin_array[plugin_loc];
++	if (!p->plugin_obj) {
++		printk(KERN_ERR "Passed plugin_loc: %u not active!\n",
++			plugin_loc);
++		ret = -1;
++		goto out;
 +	}
++	spin_unlock(&pc->plugin_lock);
 +
-+	spin_lock(&scsi_index_table.lock);
-+	new_index = ++scsi_index_table.scsi_mib_index[type];
-+	if (new_index == 0)
-+		new_index = ++scsi_index_table.scsi_mib_index[type];
-+	spin_unlock(&scsi_index_table.lock);
++	if (p->plugin_free)
++		p->plugin_free();
 +
-+	return new_index;
++	spin_lock(&pc->plugin_lock);
++	p->plugin_obj = NULL;
++	p->plugin_state = PLUGIN_FREE;
++out:
++	spin_unlock(&pc->plugin_lock);
++	return ret;
 +}
-+EXPORT_SYMBOL(scsi_get_new_index);
-diff --git a/include/target/target_core_mib.h b/include/target/target_core_mib.h
+diff --git a/include/target/target_core_plugin.h b/include/target/target_core_plugin.h
 new file mode 100644
-index 0000000..36cacd5
+index 0000000..bc3333b
 --- /dev/null
-+++ b/include/target/target_core_mib.h
-@@ -0,0 +1,57 @@
++++ b/include/target/target_core_plugin.h
+@@ -0,0 +1,73 @@
 +/*******************************************************************************
-+ * Filename:  target_core_mib.h
++ * Filename:  target_core_plugin.h
 + *
-+ * Copyright (c) 2006 SBE, Inc.  All Rights Reserved.
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
 + * Copyright (c) 2007-2009 Rising Tide Software, Inc.
 + * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@linux-iscsi.org>
++ * Nicholas A. Bellinger <nab@kernel.org>
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -1138,37 +386,52 @@ index 0000000..36cacd5
 + ******************************************************************************/
 +
 +
-+#ifndef TARGET_CORE_MIB_H
-+#define TARGET_CORE_MIB_H
++#ifndef TARGET_CORE_PLUGIN_H
++#define TARGET_CORE_PLUGIN_H
 +
-+extern struct se_global_s *se_global;
++#define PLUGIN_TYPE_TRANSPORT	0
++#define PLUGIN_TYPE_OBJ		1
 +
-+typedef enum {
-+	SCSI_INST_INDEX,
-+	SCSI_DEVICE_INDEX,
-+	SCSI_AUTH_INTR_INDEX,
-+	SCSI_INDEX_TYPE_MAX
-+} scsi_index_t;
++#define MAX_PLUGINS		32
++#define MAX_PLUGIN_CLASSES	16
++#define MAX_PLUGIN_CLASS_NAME	16
++#define MAX_PLUGIN_NAME		16
 +
-+typedef struct scsi_index_table_s {
-+	spinlock_t	lock;
-+	u32 		scsi_mib_index[SCSI_INDEX_TYPE_MAX];
-+} scsi_index_table_t;
++#define PLUGIN_FREE		0
++#define PLUGIN_REGISTERED	1
 +
-+/* SCSI Port stats */
-+typedef struct scsi_port_stats_s {
-+	u64	cmd_pdus;
-+	u64	tx_data_octets;
-+	u64	rx_data_octets;
-+} scsi_port_stats_t;
++extern se_global_t *se_global;
 +
-+extern int init_scsi_target_mib(void);
-+extern void remove_scsi_target_mib(void);
-+extern void init_scsi_index_table(void);
-+extern u32 scsi_get_new_index(scsi_index_t);
++extern void plugin_load_all_classes(void);
++extern struct se_plugin_class_s *plugin_get_class(u32);
++extern int plugin_register_class(u32, unsigned char *, int);
++extern int plugin_deregister_class(u32);
++extern void plugin_unload_all_classes(void);
++extern void *plugin_get_obj(u32, u32, int *);
++extern struct se_plugin_s *plugin_register(void *, u32, unsigned char *, u32,
++				void (*get_plugin_info)(void *, char *, int *),
++				int (*plugin_init)(void),
++				void (*plugin_free)(void), int *);
++extern int plugin_deregister(u32, u32);
 +
-+#endif   /*** TARGET_CORE_MIB_H ***/
++typedef struct se_plugin_class_s {
++	unsigned char		plugin_class_name[MAX_PLUGIN_CLASS_NAME];
++	u32			plugin_class;
++	u32			max_plugins;
++	struct se_plugin_s	*plugin_array;
++	spinlock_t		plugin_lock;
++} se_plugin_class_t;
 +
-
++typedef struct se_plugin_s	{
++	unsigned char		plugin_name[MAX_PLUGIN_NAME];
++	int			plugin_state;
++	u32			plugin_type;
++	se_plugin_class_t	*plugin_class;
++	void			*plugin_obj;
++	void (*get_plugin_info)(void *, char *, int *);
++	void (*plugin_free)(void);
++} se_plugin_t;
++
++#endif /* TARGET_CORE_PLUGIN_H */
 
 
