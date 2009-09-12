@@ -1,36 +1,41 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 14/19] Target_Core_Mod Task Management infrastructure
-Date: Fri, 11 Sep 2009 18:57:48 -0700
-Message-ID: <1252720668.2067.224.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 13/19] Target_Core_Mod Storage Engine Object
+	infrastructure
+Date: Fri, 11 Sep 2009 18:57:40 -0700
+Message-ID: <1252720660.2067.222.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757346AbZILCFn@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:48074 "HELO
+	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757308AbZILCFX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 22:05:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>
-List-Id: linux-scsi@vger.kernel.org
 
-[RFC PATCH 14/19] Target_Core_Mod Task Management infrastructure
+[RFC PATCH 13/19] Target_Core_Mod Storage Engine Object infrastructure
 
-This patch adds SPC-3 task management infrastructure and functionality for LUN_RESET and
-in combination with handling Persistent Reservation PREEMPT_AND_ABORT service action
+This patch adds the storage engine object (SEObject) infrastructure used by
+target_core_mod for accessing allocated se_device_t objects.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+diff --git a/drivers/target/target_core_seobj.c b/drivers/target/target_core_seobj.c
 new file mode 100644
-index 0000000..29e46d7
+index 0000000..e50f64c
 --- /dev/null
-+++ b/drivers/target/target_core_tmr.c
-@@ -0,0 +1,397 @@
++++ b/drivers/target/target_core_seobj.c
+@@ -0,0 +1,679 @@
 +/*******************************************************************************
-+ * Filename:  target_core_tmr.c
++ * Filename:  target_core_seobj.c
 + *
-+ * This file contains SPC-3 task management infrastructure
-+ *
-+ * Copyright (c) 2009 Rising Tide, Inc.
-+ * Copyright (c) 2009 Linux-iSCSI.org
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
++ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
++ * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
 + * Nicholas A. Bellinger <nab@kernel.org>
 + *
@@ -50,423 +55,779 @@ index 0000000..29e46d7
 + *
 + ******************************************************************************/
 +
-+#define TARGET_CORE_TMR_C
 +
-+#include <linux/version.h>
++#define TARGET_CORE_SEOBJ_C
++
++#include <linux/string.h>
++#include <linux/timer.h>
 +#include <linux/slab.h>
++#include <linux/blkdev.h>
 +#include <linux/spinlock.h>
-+#include <linux/list.h>
++#include <linux/smp_lock.h>
++#include <linux/in.h>
 +#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
 +#include <target/target_core_hba.h>
-+#include <target/target_core_pr.h>
-+#include <target/target_core_seobj.h>
-+#include <target/target_core_tmr.h>
++#include <target/target_core_tpg.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_alua.h>
-+#include <target/target_core_transport_plugin.h>
++#include <target/target_core_plugin.h>
++#include <target/target_core_seobj.h>
 +#include <target/target_core_fabric_ops.h>
 +#include <target/target_core_configfs.h>
 +
-+#undef TARGET_CORE_TMR_C
++#undef TARGET_CORE_SEOBJ_C
 +
-+#define DEBUG_LUN_RESET
-+#ifdef DEBUG_LUN_RESET
-+#define DEBUG_LR(x...) printk(KERN_INFO x)
-+#else
-+#define DEBUG_LR(x...)
-+#endif
-+
-+se_tmr_req_t *core_tmr_alloc_req(
-+	se_cmd_t *se_cmd,
-+	void *fabric_tmr_ptr,
-+	u8 function)
-+{
-+	se_tmr_req_t *tmr;
-+
-+	tmr = kmem_cache_zalloc(se_tmr_req_cache, GFP_KERNEL);
-+	if (!(tmr)) {
-+		printk(KERN_ERR "Unable to allocate se_tmr_req_t\n");
-+		return ERR_PTR(-ENOMEM);
-+	}
-+	tmr->task_cmd = se_cmd;
-+	tmr->fabric_tmr_ptr = fabric_tmr_ptr;
-+	tmr->function = function;
-+	INIT_LIST_HEAD(&tmr->tmr_list);
-+
-+	return tmr;
-+}
-+EXPORT_SYMBOL(core_tmr_alloc_req);
-+
-+/*
-+ * Called with se_device_t->se_tmr_lock held.
-+ */
-+void __core_tmr_release_req(
-+	se_tmr_req_t *tmr)
-+{
-+	list_del(&tmr->tmr_list);
-+	kmem_cache_free(se_tmr_req_cache, tmr);
++#define MAKE_OBJ_TYPE(type, op1, op2)			\
++void type##_obj_##op1##_count(struct se_obj_s *obj)	\
++{							\
++	atomic_##op2(&obj->obj_access_count);		\
 +}
 +
-+void core_tmr_release_req(
-+	se_tmr_req_t *tmr)
-+{
-+	se_device_t *dev = tmr->tmr_dev;
-+
-+	spin_lock(&dev->se_tmr_lock);
-+	__core_tmr_release_req(tmr);
-+	spin_unlock(&dev->se_tmr_lock);
++#define MAKE_OBJ_TYPE_RET(type)				\
++int type##_obj_check_count(struct se_obj_s *obj)	\
++{							\
++	return atomic_read(&obj->obj_access_count);	\
 +}
 +
-+int core_tmr_lun_reset(
-+	se_device_t *dev,
-+	se_tmr_req_t *tmr,
-+	struct list_head *preempt_and_abort_list,
-+	se_cmd_t *prout_cmd)
++MAKE_OBJ_TYPE(dev, inc, inc);
++MAKE_OBJ_TYPE(dev, dec, dec);
++MAKE_OBJ_TYPE_RET(dev);
++
++void dev_obj_get_obj_info(
++	void *p,
++	se_lun_t *lun,
++	unsigned long long bytes,
++	int state,
++	char *b,
++	int *bl)
 +{
-+	se_cmd_t *cmd;
-+	se_queue_req_t *qr, *qr_tmp;
-+	se_node_acl_t *tmr_nacl = NULL;
-+	se_portal_group_t *tmr_tpg = NULL;
-+	se_queue_obj_t *qobj = dev->dev_queue_obj;
-+	se_tmr_req_t *tmr_p, *tmr_pp;
-+	se_task_t *task, *task_tmp;
-+	unsigned long flags;
-+	int fe_count, state, tas;
-+	/*
-+	 * TASK_ABORTED status bit, this is configurable via ConfigFS
-+	 * se_device_t attributes.  spc4r17 section 7.4.6 Control mode page
-+	 *
-+	 * A task aborted status (TAS) bit set to zero specifies that aborted
-+	 * tasks shall be terminated by the device server without any response
-+	 * to the application client. A TAS bit set to one specifies that tasks
-+	 * aborted by the actions of an I_T nexus other than the I_T nexus on
-+	 * which the command was received shall be completed with TASK ABORTED
-+	 * status (see SAM-4).
-+	 */
-+	tas = DEV_ATTRIB(dev)->emulate_tas;
-+	/*
-+	 * Determine if this se_tmr is coming from a $FABRIC_MOD
-+	 * or se_device_t passthrough..
-+	 */
-+	if (tmr && tmr->task_cmd && tmr->task_cmd->se_sess) {
-+		tmr_nacl = tmr->task_cmd->se_sess->se_node_acl;
-+		tmr_tpg = tmr->task_cmd->se_sess->se_tpg;
-+		if (tmr_nacl && tmr_tpg) {
-+			DEBUG_LR("LUN_RESET: TMR caller fabric: %s"
-+				" initiator port %s\n",
-+				TPG_TFO(tmr_tpg)->get_fabric_name(),
-+				tmr_nacl->initiatorname);
-+		}
++	se_device_t *dev = (se_device_t *)p;
++
++	if (state)
++		transport_dump_dev_state(dev, b, bl);
++	transport_dump_dev_info((se_device_t *)p, lun, bytes, b, bl);
++}
++
++void dev_obj_get_plugin_info(void *p, char *b, int *bl)
++{
++	*bl += sprintf(b + *bl, "%s Device Object Plugin %s\n",
++			PYX_ISCSI_VENDOR, DEV_OBJ_VERSION);
++}
++
++void *dev_obj_get_obj(void *p)
++{
++	return p;
++}
++
++se_queue_obj_t *dev_obj_get_queue_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->dev_queue_obj;
++}
++
++int dev_obj_claim_obj(void *p)
++{
++	return transport_generic_claim_phydevice((se_device_t *)p);
++}
++
++void dev_obj_release_obj(void *p)
++{
++	transport_generic_release_phydevice((se_device_t *)p, 1);
++}
++
++void dev_access_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	DEV_OBJ_API(dev)->inc_count(&dev->dev_access_obj);
++}
++
++void dev_deaccess_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	DEV_OBJ_API(dev)->dec_count(&dev->dev_access_obj);
++}
++
++void dev_put_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	core_put_hba(dev->se_hba);
++}
++
++int dev_obj_export(void *p, se_portal_group_t *tpg, se_lun_t *lun)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	se_port_t *port;
++
++	port = core_alloc_port(dev);
++	if (!(port))
++		return -1;
++
++	lun->se_dev = dev;
++	if (DEV_OBJ_API(dev)->activate(p) < 0) {
++		lun->se_dev = NULL;
++		kfree(port);
++		return -1;
 +	}
-+	DEBUG_LR("LUN_RESET: %s starting for [%s], tas: %d\n",
-+		(preempt_and_abort_list) ? "Preempt" : "TMR",
-+		TRANSPORT(dev)->name, tas);
-+	/*
-+	 * Release all pending and outgoing TMRs aside from the received
-+	 * LUN_RESET tmr..
-+	 */
-+	spin_lock(&dev->se_tmr_lock);
-+	list_for_each_entry_safe(tmr_p, tmr_pp, &dev->dev_tmr_list, tmr_list) {
-+		/*
-+		 * Allow the received TMR to return with FUNCTION_COMPLETE.
-+		 */
-+		if (tmr && (tmr_p == tmr))
-+			continue;
 +
-+		cmd = tmr_p->task_cmd;
-+		if (!(cmd)) {
-+			printk(KERN_ERR "Unable to locate se_cmd_t for TMR\n");
-+			continue;
-+		}
-+		/*
-+		 * If this function was called with a valid pr_res_key
-+		 * parameter (eg: for PROUT PREEMPT_AND_ABORT service action
-+		 * skip non regisration key matching TMRs.
-+		 */
-+		if ((preempt_and_abort_list != NULL) &&
-+		    (core_scsi3_check_cdb_abort_and_preempt(
-+					preempt_and_abort_list, cmd) != 0))
-+			continue;
-+		spin_unlock(&dev->se_tmr_lock);
++	DEV_OBJ_API(dev)->inc_count(&dev->dev_export_obj);
 +
-+		DEBUG_LR("LUN_RESET: %s releasing TMR %p Function: 0x%02x,"
-+			" Response: 0x%02x, t_state: %d\n",
-+			(preempt_and_abort_list) ? "Preempt" : "", tmr_p,
-+			tmr_p->function, tmr_p->response, cmd->t_state);
-+
-+		transport_cmd_finish_abort_tmr(cmd);
-+		spin_lock(&dev->se_tmr_lock);
-+	}
-+	spin_unlock(&dev->se_tmr_lock);
-+	/*
-+	 * Complete outstanding se_task_t CDBs with TASK_ABORTED SAM status.
-+	 * This is following sam4r17, section 5.6 Aborting commands, Table 38
-+	 * for TMR LUN_RESET:
-+	 *
-+	 * a) "Yes" indicates that each command that is aborted on an I_T nexus
-+	 * other than the one that caused the SCSI device condition is
-+	 * completed with TASK ABORTED status, if the TAS bit is set to one in
-+	 * the Control mode page (see SPC-4). "No" indicates that no status is
-+	 * returned for aborted commands.
-+	 *
-+	 * d) If the logical unit reset is caused by a particular I_T nexus
-+	 * (e.g., by a LOGICAL UNIT RESET task management function), then "yes"
-+	 * (TASK_ABORTED status) applies.
-+	 *
-+	 * Otherwise (e.g., if triggered by a hard reset), "no"
-+	 * (no TASK_ABORTED SAM status) applies.
-+	 *
-+	 * Note that this seems to be independent of TAS (Task Aborted Status)
-+	 * in the Control Mode Page.
-+	 */
-+	spin_lock_irqsave(&dev->execute_task_lock, flags);
-+	list_for_each_entry_safe(task, task_tmp, &dev->state_task_list,
-+				t_state_list) {
-+		if (!(TASK_CMD(task))) {
-+			printk(KERN_ERR "TASK_CMD(task) is NULL!\n");
-+			continue;
-+		}
-+		cmd = TASK_CMD(task);
-+
-+		if (!T_TASK(cmd)) {
-+			printk(KERN_ERR "T_TASK(cmd) is NULL for task: %p cmd:"
-+				" %p ITT: 0x%08x\n", task, cmd,
-+				CMD_TFO(cmd)->get_task_tag(cmd));
-+			continue;
-+		}
-+		/*
-+		 * For PREEMPT_AND_ABORT usage, only process commands
-+		 * with a matching reservation key.
-+		 */
-+		if ((preempt_and_abort_list != NULL) &&
-+		    (core_scsi3_check_cdb_abort_and_preempt(
-+					preempt_and_abort_list, cmd) != 0))
-+			continue;
-+		/*
-+		 * Not aborting PROUT PREEMPT_AND_ABORT CDB..
-+		 */
-+		if (prout_cmd == cmd)
-+			continue;
-+
-+		list_del(&task->t_state_list);
-+		atomic_set(&task->task_state_active, 0);
-+		spin_unlock_irqrestore(&dev->execute_task_lock, flags);
-+
-+		spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
-+		DEBUG_LR("LUN_RESET: %s cmd: %p task: %p ITT/CmdSN: 0x%08x/"
-+			"0x%08x, i_state: %d, t_state/def_t_state: %d/%d cdb:"
-+			" 0x%02x\n", (preempt_and_abort_list) ? "Preempt" : "",
-+			cmd, task, CMD_TFO(cmd)->get_task_tag(cmd),
-+			0, CMD_TFO(cmd)->get_cmd_state(cmd), cmd->t_state,
-+			cmd->deferred_t_state, T_TASK(cmd)->t_task_cdb[0]);
-+		DEBUG_LR("LUN_RESET: ITT[0x%08x] - pr_res_key: 0x%016Lx"
-+			" t_task_cdbs: %d t_task_cdbs_left: %d"
-+			" t_task_cdbs_sent: %d -- t_transport_active: %d"
-+			" t_transport_stop: %d t_transport_sent: %d\n",
-+			CMD_TFO(cmd)->get_task_tag(cmd), cmd->pr_res_key,
-+			T_TASK(cmd)->t_task_cdbs,
-+			atomic_read(&T_TASK(cmd)->t_task_cdbs_left),
-+			atomic_read(&T_TASK(cmd)->t_task_cdbs_sent),
-+			atomic_read(&T_TASK(cmd)->t_transport_active),
-+			atomic_read(&T_TASK(cmd)->t_transport_stop),
-+			atomic_read(&T_TASK(cmd)->t_transport_sent));
-+
-+		if (atomic_read(&task->task_active)) {
-+			atomic_set(&task->task_stop, 1);
-+			spin_unlock_irqrestore(
-+				&T_TASK(cmd)->t_state_lock, flags);
-+
-+			DEBUG_LR("LUN_RESET: Waiting for task: %p to shutdown"
-+				" for dev: %p\n", task, dev);
-+			down(&task->task_stop_sem);
-+			DEBUG_LR("LUN_RESET Completed task: %p shutdown for"
-+				" dev: %p\n", task, dev);
-+			spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
-+			atomic_dec(&T_TASK(cmd)->t_task_cdbs_left);
-+
-+			atomic_set(&task->task_active, 0);
-+			atomic_set(&task->task_stop, 0);
-+		}
-+		__transport_stop_task_timer(task, &flags);
-+
-+		if (!(atomic_dec_and_test(&T_TASK(cmd)->t_task_cdbs_ex_left))) {
-+			spin_unlock_irqrestore(
-+					&T_TASK(cmd)->t_state_lock, flags);
-+			DEBUG_LR("LUN_RESET: Skipping task: %p, dev: %p for"
-+				" t_task_cdbs_ex_left: %d\n", task, dev,
-+				atomic_read(&T_TASK(cmd)->t_task_cdbs_ex_left));
-+
-+			spin_lock_irqsave(&dev->execute_task_lock, flags);
-+			continue;
-+		}
-+		fe_count = atomic_read(&T_TASK(cmd)->t_fe_count);
-+
-+		if (atomic_read(&T_TASK(cmd)->t_transport_active)) {
-+			DEBUG_LR("LUN_RESET: got t_transport_active = 1 for"
-+				" task: %p, t_fe_count: %d dev: %p\n", task,
-+				fe_count, dev);
-+			spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock,
-+						flags);
-+			if (fe_count) {
-+				/*
-+				 * TASK ABORTED status (TAS) bit support
-+				 */
-+				if (((tmr_nacl != NULL) &&
-+				     (tmr_nacl == cmd->se_sess->se_node_acl)) ||
-+				     tas)
-+					transport_send_task_abort(cmd);
-+				transport_cmd_finish_abort(cmd, 0);
-+			} else
-+				transport_cmd_finish_abort(cmd, 1);
-+
-+			spin_lock_irqsave(&dev->execute_task_lock, flags);
-+			continue;
-+		}
-+		DEBUG_LR("LUN_RESET: Got t_transport_active = 0 for task: %p,"
-+			" t_fe_count: %d dev: %p\n", task, fe_count, dev);
-+		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
-+
-+		if (fe_count) {
-+			/*
-+			 * TASK ABORTED status (TAS) bit support
-+			 */
-+			if (((tmr_nacl != NULL) &&
-+			    (tmr_nacl == cmd->se_sess->se_node_acl)) || tas)
-+				transport_send_task_abort(cmd);
-+			transport_cmd_finish_abort(cmd, 0);
-+		} else
-+			transport_cmd_finish_abort(cmd, 1);
-+
-+		spin_lock_irqsave(&dev->execute_task_lock, flags);
-+	}
-+	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
-+	/*
-+	 * Release all commands remaining in the se_device_t cmd queue.
-+	 *
-+	 * This follows the same logic as above for the se_device_t
-+	 * se_task_t state list, where commands are returned with
-+	 * TASK_ABORTED status, if there is an outstanding $FABRIC_MOD
-+	 * reference, otherwise the se_cmd_t is released.
-+	 */
-+	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
-+	list_for_each_entry_safe(qr, qr_tmp, &qobj->qobj_list, qr_list) {
-+		cmd = (se_cmd_t *)qr->cmd;
-+		if (!(cmd)) {
-+			/*
-+			 * Skip these for non PREEMPT_AND_ABORT usage..
-+			 */
-+			if (preempt_and_abort_list != NULL)
-+				continue;
-+
-+			atomic_dec(&qobj->queue_cnt);
-+			list_del(&qr->qr_list);
-+			kfree(qr);
-+			continue;
-+		}
-+		/*
-+		 * For PREEMPT_AND_ABORT usage, only process commands
-+		 * with a matching reservation key.
-+		 */
-+		if ((preempt_and_abort_list != NULL) &&
-+		    (core_scsi3_check_cdb_abort_and_preempt(
-+					preempt_and_abort_list, cmd) != 0))
-+			continue;
-+		/*
-+		 * Not aborting PROUT PREEMPT_AND_ABORT CDB..
-+		 */
-+		if (prout_cmd == cmd)
-+			continue;
-+
-+		atomic_dec(&T_TASK(cmd)->t_transport_queue_active);
-+		atomic_dec(&qobj->queue_cnt);
-+		list_del(&qr->qr_list);
-+		spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
-+
-+		state = qr->state;
-+		kfree(qr);
-+
-+		DEBUG_LR("LUN_RESET: %s from Device Queue: cmd: %p t_state:"
-+			" %d t_fe_count: %d\n", (preempt_and_abort_list) ?
-+			"Preempt" : "", cmd, state,
-+			atomic_read(&T_TASK(cmd)->t_fe_count));
-+
-+		if (atomic_read(&T_TASK(cmd)->t_fe_count)) {
-+			/*
-+			 * TASK ABORTED status (TAS) bit support
-+			 */
-+			if (((tmr_nacl != NULL) &&
-+			     (tmr_nacl == cmd->se_sess->se_node_acl)) ||
-+			      tas)
-+				transport_send_task_abort(cmd);
-+			transport_cmd_finish_abort(cmd, 0);
-+		} else
-+			transport_cmd_finish_abort(cmd, 1);
-+
-+		spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
-+	}
-+	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
-+
-+#ifdef SNMP_SUPPORT
-+	spin_lock(&dev->stats_lock);
-+	dev->num_resets++;
-+	spin_unlock(&dev->stats_lock);
-+#endif /* SNMP_SUPPORT */
-+
-+	DEBUG_LR("LUN_RESET: %s for [%s] Complete\n",
-+			(preempt_and_abort_list) ? "Preempt" : "TMR",
-+			TRANSPORT(dev)->name);
++	core_export_port(dev, tpg, port, lun);
 +	return 0;
 +}
-diff --git a/include/target/target_core_tmr.h b/include/target/target_core_tmr.h
++
++void dev_obj_unexport(void *p, se_portal_group_t *tpg, se_lun_t *lun)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	se_port_t *port = lun->lun_sep;
++
++	spin_lock(&dev->se_port_lock);
++	spin_lock(&lun->lun_sep_lock);
++	if (lun->lun_type_ptr == NULL) {
++		spin_unlock(&dev->se_port_lock);
++		spin_unlock(&lun->lun_sep_lock);
++		return;
++	}
++	spin_unlock(&lun->lun_sep_lock);
++
++	DEV_OBJ_API(dev)->dec_count(&dev->dev_export_obj);
++
++	core_release_port(dev, port);
++	spin_unlock(&dev->se_port_lock);
++
++	DEV_OBJ_API(dev)->deactivate(p);
++	lun->se_dev = NULL;
++}
++
++int dev_obj_transport_setup_cmd(void *p, se_cmd_t *cmd)
++{
++	transport_device_setup_cmd(cmd);
++	return 0;
++}
++
++int dev_obj_active_tasks(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return atomic_read(&dev->execute_tasks);
++}
++
++int dev_obj_add_tasks(void *p, se_cmd_t *cmd)
++{
++	transport_add_tasks_from_cmd(cmd);
++	return 0;
++}
++
++int dev_obj_execute_tasks(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	__transport_execute_tasks(dev);
++	return 0;
++}
++
++int dev_obj_depth_left(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return atomic_read(&dev->depth_left);
++}
++
++int dev_obj_queue_depth(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->queue_depth;
++}
++
++int dev_obj_blocksize(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return DEV_ATTRIB(dev)->block_size;
++}
++
++int dev_obj_max_sectors(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	if (TRANSPORT(dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV) {
++		return (DEV_ATTRIB(dev)->max_sectors >
++			TRANSPORT(dev)->get_max_sectors(dev) ?
++			TRANSPORT(dev)->get_max_sectors(dev) :
++			DEV_ATTRIB(dev)->max_sectors);
++	} else
++		return DEV_ATTRIB(dev)->max_sectors;
++}
++
++unsigned long long dev_obj_end_lba(void *p, int zero_lba)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	 return dev->dev_sectors_total + ((zero_lba) ? 1 : 0);
++}
++
++unsigned long long dev_obj_get_next_lba(void *p, unsigned long long lba)
++{
++	return lba;
++}
++
++unsigned long long dev_obj_total_sectors(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return  dev->dev_sectors_total + 1;
++}
++
++int dev_obj_do_se_mem_map(
++	void *p,
++	se_task_t *task,
++	struct list_head *se_mem_list,
++	void *in_mem,
++	se_mem_t *in_se_mem,
++	se_mem_t **out_se_mem,
++	u32 *se_mem_cnt,
++	u32 *task_offset)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	u32 tmp_task_offset = *task_offset;
++	int ret = 0;
++
++	/*
++	 * se_subsystem_api_t->do_se_mem_map is used when internal allocation
++	 * has been done by the transport plugin.
++	 */
++	if (TRANSPORT(dev)->do_se_mem_map) {
++		ret = TRANSPORT(dev)->do_se_mem_map(task, se_mem_list,
++				in_mem, in_se_mem, out_se_mem, se_mem_cnt,
++				task_offset);
++		if (ret == 0)
++			T_TASK(task->task_se_cmd)->t_task_se_num += *se_mem_cnt;
++
++		return ret;
++	}
++
++	/*
++	 * Assume default that transport plugin speaks preallocated
++	 * scatterlists.
++	 */
++	if (!(transport_calc_sg_num(task, in_se_mem, tmp_task_offset)))
++		return -1;
++
++	/*
++	 * se_task_t->task_sg now contains the struct scatterlist array.
++	 */
++	return transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
++		in_se_mem, out_se_mem, se_mem_cnt, task_offset);
++}
++
++int dev_obj_get_mem_buf(void *p, se_cmd_t *cmd)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	cmd->transport_allocate_resources = (TRANSPORT(dev)->allocate_buf) ?
++		TRANSPORT(dev)->allocate_buf : &transport_generic_allocate_buf;
++	cmd->transport_free_resources = (TRANSPORT(dev)->free_buf) ?
++		TRANSPORT(dev)->free_buf : NULL;
++
++	return 0;
++}
++
++int dev_obj_get_mem_SG(void *p, se_cmd_t *cmd)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	cmd->transport_allocate_resources = (TRANSPORT(dev)->allocate_DMA) ?
++		TRANSPORT(dev)->allocate_DMA : &transport_generic_get_mem;
++	cmd->transport_free_resources = (TRANSPORT(dev)->free_DMA) ?
++		TRANSPORT(dev)->free_DMA : NULL;
++
++	return 0;
++}
++
++map_func_t dev_obj_get_map_SG(void *p, int rw)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return (rw == SE_DIRECTION_WRITE) ? dev->transport->spc->write_SG :
++		dev->transport->spc->read_SG;
++}
++
++map_func_t dev_obj_get_map_non_SG(void *p, int rw)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return (rw == SE_DIRECTION_WRITE) ? dev->transport->spc->write_non_SG :
++		dev->transport->spc->read_non_SG;
++}
++
++map_func_t dev_obj_get_map_none(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->transport->spc->none;
++}
++
++void *dev_obj_get_transport_req(void *p, se_task_t *task)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	task->se_dev = dev;
++
++	return dev->transport->allocate_request(task, dev);
++}
++
++void dev_obj_free_tasks(void *p, se_cmd_t *cmd)
++{
++	transport_free_dev_tasks(cmd);
++}
++
++int dev_obj_activate(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	se_dev_start(dev);
++	return 0;
++}
++
++void dev_obj_deactivate(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	se_dev_stop(dev);
++}
++
++void dev_obj_notify_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	wake_up_interruptible(&dev->dev_queue_obj->thread_wq);
++}
++
++int dev_obj_check_online(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	int ret;
++
++	spin_lock(&dev->dev_status_lock);
++	ret = ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
++	       (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED)) ? 0 : 1;
++	spin_unlock(&dev->dev_status_lock);
++
++	return ret;
++}
++
++int dev_obj_check_shutdown(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	int ret;
++
++	spin_lock(&dev->dev_status_lock);
++	ret = (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN);
++	spin_unlock(&dev->dev_status_lock);
++
++	return ret;
++}
++
++void dev_obj_signal_shutdown(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	spin_lock(&dev->dev_status_lock);
++	if ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
++	    (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED) ||
++	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_ACTIVATED) ||
++	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_DEACTIVATED)) {
++		dev->dev_status |= TRANSPORT_DEVICE_SHUTDOWN;
++		dev->dev_status &= ~TRANSPORT_DEVICE_ACTIVATED;
++		dev->dev_status &= ~TRANSPORT_DEVICE_DEACTIVATED;
++		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_ACTIVATED;
++		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_DEACTIVATED;
++
++		wake_up_interruptible(&dev->dev_queue_obj->thread_wq);
++	}
++	spin_unlock(&dev->dev_status_lock);
++}
++
++void dev_obj_clear_shutdown(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	spin_lock(&dev->dev_status_lock);
++	if (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN) {
++		dev->dev_status &= ~TRANSPORT_DEVICE_SHUTDOWN;
++		dev->dev_status |= TRANSPORT_DEVICE_DEACTIVATED;
++	}
++	spin_unlock(&dev->dev_status_lock);
++}
++
++unsigned char *dev_obj_get_cdb(
++	void *p,
++	se_task_t *task)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->transport->get_cdb(task);
++}
++
++int dev_obj_start(
++	void *p,
++	se_transform_info_t *ti,
++	unsigned long long starting_lba)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return transport_generic_obj_start(ti, DEV_OBJ_API(dev),
++		p, starting_lba);
++}
++
++u32 dev_obj_get_cdb_count(
++	void *p,
++	se_transform_info_t *ti,
++	unsigned long long lba,
++	u32 sectors,
++	se_mem_t *se_mem_in,
++	se_mem_t **se_mem_out,
++	u32 *task_offset_in)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	ti->ti_dev = dev;
++	return transport_generic_get_cdb_count(ti->ti_se_cmd, ti,
++		DEV_OBJ_API(dev), p, lba, sectors, se_mem_in, se_mem_out,
++		task_offset_in);
++}
++
++u32 dev_obj_get_cdb_size(
++	void *p,
++	u32 sectors,
++	unsigned char *cdb)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	if (TRANSPORT(dev)->get_device_type(dev) == TYPE_TAPE) {
++		if (cdb[1] & 1) { /* sectors */
++			return DEV_ATTRIB(dev)->block_size * sectors;
++		} else /* bytes */
++			return sectors;
++	}
++
++	/* sectors */
++#if 0
++	printk(KERN_INFO "Returning block_size: %u, sectors: %u == %u for"
++			" %s object\n", DEV_ATTRIB(dev)->block_size, sectors,
++			DEV_ATTRIB(dev)->block_size * sectors,
++			TRANSPORT(dev)->name);
++#endif
++	return DEV_ATTRIB(dev)->block_size * sectors;
++}
++
++void dev_obj_generate_cdb(
++	void *p,
++	unsigned long long lba,
++	u32 *sectors,
++	unsigned char *cdb,
++	int rw)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	dev->dev_generate_cdb(lba, sectors, cdb, rw);
++}
++
++int dev_obj_get_device_access(void *p)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	return (dev->dev_flags & DF_READ_ONLY) ? 0 : 1;
++}
++
++int dev_obj_get_device_type(void *p)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	return TRANSPORT(dev)->get_device_type(dev);
++}
++
++int dev_obj_check_DMA_handler(void *p)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	if (!dev->transport) {
++		printk(KERN_ERR "se_device_t->transport is NULL!\n");
++		BUG();
++	}
++
++	return (TRANSPORT(dev)->allocate_DMA != NULL);
++}
++
++t10_wwn_t *dev_obj_get_t10_wwn(void *p)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	return DEV_T10_WWN(dev);
++}
++
++int dev_obj_get_task_timeout(void *p)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	return DEV_ATTRIB(dev)->task_timeout;
++}
++
++int dev_add_obj_to_lun(se_portal_group_t *tpg, se_lun_t *lun)
++{
++	return 0;
++}
++
++int dev_del_obj_from_lun(se_portal_group_t *tpg, se_lun_t *lun)
++{
++	return core_dev_del_lun(tpg, lun->unpacked_lun);
++}
++
++se_obj_lun_type_t *dev_get_next_obj_api(void *p, void **next_p)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	*next_p = dev;
++	return DEV_OBJ_API(dev);
++}
++
++int dev_obtain_obj_lock(void *p)
++{
++	return 0;
++}
++
++int dev_release_obj_lock(void *p)
++{
++	return 0;
++}
++
++se_obj_lun_type_t dev_obj_template = {
++	.se_obj_type		= TRANSPORT_LUN_TYPE_DEVICE,
++	.get_obj_info		= dev_obj_get_obj_info,
++	.get_plugin_info	= dev_obj_get_plugin_info,
++	.get_obj		= dev_obj_get_obj,
++	.get_queue_obj		= dev_obj_get_queue_obj,
++	.claim_obj		= dev_obj_claim_obj,
++	.release_obj		= dev_obj_release_obj,
++	.inc_count		= dev_obj_inc_count,
++	.dec_count		= dev_obj_dec_count,
++	.check_count		= dev_obj_check_count,
++	.access_obj		= dev_access_obj,
++	.deaccess_obj		= dev_deaccess_obj,
++	.put_obj		= dev_put_obj,
++	.export_obj		= dev_obj_export,
++	.unexport_obj		= dev_obj_unexport,
++	.transport_setup_cmd	= dev_obj_transport_setup_cmd,
++	.active_tasks		= dev_obj_active_tasks,
++	.add_tasks		= dev_obj_add_tasks,
++	.execute_tasks		= dev_obj_execute_tasks,
++	.depth_left		= dev_obj_depth_left,
++	.queue_depth		= dev_obj_queue_depth,
++	.blocksize		= dev_obj_blocksize,
++	.max_sectors		= dev_obj_max_sectors,
++	.end_lba		= dev_obj_end_lba,
++	.get_next_lba		= dev_obj_get_next_lba,
++	.total_sectors		= dev_obj_total_sectors,
++	.do_se_mem_map		= dev_obj_do_se_mem_map,
++	.get_mem_buf		= dev_obj_get_mem_buf,
++	.get_mem_SG		= dev_obj_get_mem_SG,
++	.get_map_SG		= dev_obj_get_map_SG,
++	.get_map_non_SG		= dev_obj_get_map_non_SG,
++	.get_map_none		= dev_obj_get_map_none,
++	.get_transport_req	= dev_obj_get_transport_req,
++	.free_tasks		= dev_obj_free_tasks,
++	.activate		= dev_obj_activate,
++	.deactivate		= dev_obj_deactivate,
++	.notify_obj		= dev_obj_notify_obj,
++	.check_online		= dev_obj_check_online,
++	.check_shutdown		= dev_obj_check_shutdown,
++	.signal_shutdown	= dev_obj_signal_shutdown,
++	.clear_shutdown		= dev_obj_clear_shutdown,
++	.get_cdb		= dev_obj_get_cdb,
++	.obj_start		= dev_obj_start,
++	.get_cdb_count		= dev_obj_get_cdb_count,
++	.get_cdb_size		= dev_obj_get_cdb_size,
++	.generate_cdb		= dev_obj_generate_cdb,
++	.get_device_access	= dev_obj_get_device_access,
++	.get_device_type	= dev_obj_get_device_type,
++	.check_DMA_handler	= dev_obj_check_DMA_handler,
++	.get_t10_wwn		= dev_obj_get_t10_wwn,
++	.get_task_timeout	= dev_obj_get_task_timeout,
++	.add_obj_to_lun		= dev_add_obj_to_lun,
++	.del_obj_from_lun	= dev_del_obj_from_lun,
++	.get_next_obj_api	= dev_get_next_obj_api,
++	.obtain_obj_lock	= dev_obtain_obj_lock,
++	.release_obj_lock	= dev_release_obj_lock,
++};
++
++se_obj_lun_type_t *se_obj_get_api(u32 plugin_loc)
++{
++	se_plugin_class_t *pc;
++	se_plugin_t *p;
++
++	pc = plugin_get_class(PLUGIN_TYPE_OBJ);
++	if (!(pc))
++		return NULL;
++
++	spin_lock(&pc->plugin_lock);
++	if (plugin_loc > pc->max_plugins) {
++		printk(KERN_ERR "Passed plugin_loc: %u exceeds pc->max_plugins:"
++			" %d\n", plugin_loc, pc->max_plugins);
++		goto out;
++	}
++
++	p = &pc->plugin_array[plugin_loc];
++	if (!p->plugin_obj) {
++		printk(KERN_ERR "Passed plugin_loc: %u does not exist!\n",
++				plugin_loc);
++		goto out;
++	}
++	spin_unlock(&pc->plugin_lock);
++
++	return (se_obj_lun_type_t *)p->plugin_obj;
++out:
++	spin_unlock(&pc->plugin_lock);
++	return NULL;
++}
++
++
++int se_obj_load_plugins(void)
++{
++	int ret = 0;
++
++	dev_obj_template.obj_plugin = plugin_register((void *)&dev_obj_template,
++			TRANSPORT_LUN_TYPE_DEVICE, "dev", PLUGIN_TYPE_OBJ,
++			dev_obj_template.get_plugin_info, NULL, NULL, &ret);
++	if (ret)
++		printk(KERN_ERR "plugin_register() failures\n");
++
++	return ret;
++}
+diff --git a/include/target/target_core_seobj.h b/include/target/target_core_seobj.h
 new file mode 100644
-index 0000000..c649b92
+index 0000000..fad3b4e
 --- /dev/null
-+++ b/include/target/target_core_tmr.h
-@@ -0,0 +1,43 @@
-+#ifndef TARGET_CORE_TMR_H
-+#define TARGET_CORE_TMR_H
++++ b/include/target/target_core_seobj.h
+@@ -0,0 +1,114 @@
++/*******************************************************************************
++ * Filename:  target_core_seobj.h
++ *
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
++ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
++ * Copyright (c) 2008-2009 Linux-iSCSI.org
++ *
++ * Nicholas A. Bellinger <nab@kernel.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ ******************************************************************************/
 +
-+/* task management function values */
-+#ifdef ABORT_TASK
-+#undef ABORT_TASK
-+#endif /* ABORT_TASK */
-+#define ABORT_TASK				1
-+#ifdef ABORT_TASK_SET
-+#undef ABORT_TASK_SET
-+#endif /* ABORT_TASK_SET */
-+#define ABORT_TASK_SET				2
-+#ifdef CLEAR_ACA
-+#undef CLEAR_ACA
-+#endif /* CLEAR_ACA */
-+#define CLEAR_ACA				3
-+#ifdef CLEAR_TASK_SET
-+#undef CLEAR_TASK_SET
-+#endif /* CLEAR_TASK_SET */
-+#define CLEAR_TASK_SET				4
-+#define LUN_RESET				5
-+#define TARGET_WARM_RESET			6
-+#define TARGET_COLD_RESET			7
-+#define TASK_REASSIGN				8
 +
-+/* task management response values */
-+#define TMR_FUNCTION_COMPLETE			0
-+#define TMR_TASK_DOES_NOT_EXIST			1
-+#define TMR_LUN_DOES_NOT_EXIST			2
-+#define TMR_TASK_STILL_ALLEGIANT		3
-+#define TMR_TASK_FAILOVER_NOT_SUPPORTED		4
-+#define TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED	5
-+#define TMR_FUNCTION_AUTHORIZATION_FAILED	6
-+#define TMR_FUNCTION_REJECTED			255
++#ifndef TARGET_CORE_SEOBJ_H
++#define TARGET_CORE_SEOBJ_H
 +
-+extern struct kmem_cache *se_tmr_req_cache;
++extern struct se_obj_lun_type_s *se_obj_get_api(u32);
++extern int se_obj_load_plugins(void);
 +
-+extern struct se_tmr_req_s *core_tmr_alloc_req(struct se_cmd_s *, void *, u8);
-+extern void core_tmr_release_req(struct se_tmr_req_s *);
-+extern int core_tmr_lun_reset(struct se_device_s *, struct se_tmr_req_s *,
-+				struct list_head *, struct se_cmd_s *);
++#define DEV_OBJ_VERSION		"v3.0"
 +
-+#endif /* TARGET_CORE_TMR_H */
++typedef int (*map_func_t)(struct se_task_s *, u32);
++
++typedef struct se_obj_lun_type_s {
++	int	se_obj_type;
++	struct se_plugin_s *obj_plugin;
++	void (*get_obj_info)(void *, struct se_lun_s *, unsigned long long,
++				int, char *, int *);
++	void (*get_plugin_info)(void *, char *, int *);
++	void *(*get_obj)(void *);
++	struct se_queue_obj_s *(*get_queue_obj)(void *);
++	int (*claim_obj)(void *);
++	void (*release_obj)(void *);
++	void (*inc_count)(struct se_obj_s *);
++	void (*dec_count)(struct se_obj_s *);
++	int (*check_count)(struct se_obj_s *);
++	void (*access_obj)(void *);
++	void (*deaccess_obj)(void *);
++	void (*put_obj)(void *);
++	int (*export_obj)(void *, struct se_portal_group_s *,
++				struct se_lun_s *);
++	void (*unexport_obj)(void *, struct se_portal_group_s *,
++				struct se_lun_s *);
++	int (*transport_setup_cmd)(void *, struct se_cmd_s *);
++	int (*active_tasks)(void *);
++	int (*add_tasks)(void *, struct se_cmd_s *);
++	int (*execute_tasks)(void *);
++	int (*depth_left)(void *);
++	int (*queue_depth)(void *);
++	int (*blocksize)(void *);
++	int (*max_sectors)(void *);
++	unsigned long long (*end_lba)(void *, int);
++	unsigned long long (*free_sectors)(void *);
++	unsigned long long (*get_next_lba)(void *, unsigned long long);
++	unsigned long long (*total_sectors)(void *);
++	int (*do_se_mem_map)(void *, struct se_task_s *, struct list_head *,
++			void *, struct se_mem_s *, struct se_mem_s **,
++			u32 *, u32 *);
++	int (*get_mem_buf)(void *, struct se_cmd_s *);
++	int (*get_mem_SG)(void *, struct se_cmd_s *);
++	map_func_t (*get_map_SG)(void *, int);
++	map_func_t (*get_map_non_SG)(void *, int);
++	map_func_t (*get_map_none)(void *);
++	void *(*get_transport_req)(void *, struct se_task_s *);
++	void (*free_tasks)(void *, struct se_cmd_s *);
++	int (*activate)(void *);
++	void (*deactivate)(void *);
++	void (*notify_obj)(void *);
++	int (*check_export)(void *);
++	int (*check_online)(void *);
++	int (*check_shutdown)(void *);
++	void (*signal_shutdown)(void *);
++	void (*clear_shutdown)(void *);
++	int (*obj_start)(void *, struct se_transform_info_s *,
++			unsigned long long);
++	unsigned char *(*get_cdb)(void *, struct se_task_s *);
++	u32 (*get_cdb_count)(void *, struct se_transform_info_s *,
++				unsigned long long, u32, struct se_mem_s *,
++				struct se_mem_s **, u32 *);
++	u32 (*get_cdb_size)(void *, u32, unsigned char *);
++	void (*generate_cdb)(void *, unsigned long long, u32 *,
++				unsigned char *, int);
++	int (*get_device_access)(void *);
++	int (*get_device_type)(void *);
++	int (*check_DMA_handler)(void *);
++	t10_wwn_t *(*get_t10_wwn)(void *);
++	int (*get_task_timeout)(void *);
++	int (*task_failure_complete)(void *, struct se_cmd_s *);
++	int (*add_obj_to_lun)(struct se_portal_group_s *, struct se_lun_s *);
++	int (*del_obj_from_lun)(struct se_portal_group_s *, struct se_lun_s *);
++	struct se_obj_lun_type_s *(*get_next_obj_api)(void *, void **);
++	int (*obtain_obj_lock)(void *);
++	int (*release_obj_lock)(void *);
++} se_obj_lun_type_t;
++
++/*
++ * object template for se_device_t storage objects
++ */
++extern se_obj_lun_type_t dev_obj_template;
++
++#endif /* TARGET_CORE_SEOBJ_H */
+
+
