@@ -1,17 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 34/35] libfc: reduce can_queue for all FCP frame allocation
-	failures
-Date: Fri, 11 Sep 2009 17:00:01 -0700
-Message-ID: <20090912000001.27223.21772.stgit@localhost.localdomain>
+Subject: [PATCH 35/35] libfc: adds can_queue ramp up
+Date: Fri, 11 Sep 2009 17:00:06 -0700
+Message-ID: <20090912000006.27223.74492.stgit@localhost.localdomain>
 References: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61482 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:10334 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932206AbZIKX75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 19:59:57 -0400
+	id S1757205AbZILAAD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Sep 2009 20:00:03 -0400
 In-Reply-To: <20090911235655.27223.69728.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,190 +19,206 @@ Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Currently can_queue is reduced only if frame alloc fails
-during fc_fcp_send_data but frame alloc can fail at several
-other places in FCP data path and can_queue needs to be
-reduced for any FCP frame alloc failure.
+Adds last_can_queue_ramp_down_time and updates this on every
+ramp down. If last_can_queue_ramp_down_time is not zero then
+do ramp up on any IO completion in added fc_fcp_can_queue_ramp_up.
 
-This patch adds fc_fcp_frame_alloc for all FCP frame allocations
-and if fc_frame_alloc fails in fc_fcp_frame_alloc then reduce
-can_queue in fc_fcp_frame_alloc, this will reduce can_queue for
-all FCP frame alloc failures.
+Reset last_can_queue_ramp_down_time to zero once can_queue
+is ramped up to added max_can_queue limit, this is to avoid any
+more ramp up attempts on subsequent IO completion.
 
-This required moving fc_fcp_reduce_can_queue up, to build without
-adding its prototype. Also renamed fc_fcp_reduce_can_queue to
-fc_fcp_can_queue_ramp_down.
+The ramp down and up are skipped for FC_CAN_QUEUE_PERIOD
+to avoid infrequent changes to can_queue, this required
+keeping track of ramp up time also in last_can_queue_ramp_up_time.
 
-Removes fc_fcp_reduce_can_queue calling from fc_fcp_recv since
-not needed with added fc_fcp_frame_alloc reducing can_queue.
+Adds code to ramp down can_queue if lp->qfull is set, with added
+new ramp up code the can_queue will be increased after
+FC_CAN_QUEUE_PERIOD, therefore it is safe to do ramp down
+without fsp in this case and will avoid thrash. This required
+fc_fcp_can_queue_ramp_down locking change so that it can be
+called with Scsi_Host lock held.
+
+Removes si->throttled and fsp state FC_SRB_NOMEM, not needed with
+added ramp up code.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |  102 +++++++++++++++++++++++++------------------
- 1 files changed, 59 insertions(+), 43 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |   78 +++++++++++++++++++++++++++++++++----------
+ 1 files changed, 59 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index e85dc9a..8b7950f 100644
+index 8b7950f..8447546 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -327,6 +327,57 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
+@@ -52,7 +52,6 @@ struct kmem_cache *scsi_pkt_cachep;
+ #define FC_SRB_DISCONTIG	(1 << 4)	/* non-sequential data recvd */
+ #define FC_SRB_COMPL		(1 << 5)	/* fc_io_compl has been run */
+ #define FC_SRB_FCP_PROCESSING_TMO (1 << 6)	/* timer function processing */
+-#define FC_SRB_NOMEM		(1 << 7)	/* dropped to out of mem */
+ 
+ #define FC_SRB_READ		(1 << 1)
+ #define FC_SRB_WRITE		(1 << 0)
+@@ -71,12 +70,16 @@ struct kmem_cache *scsi_pkt_cachep;
+  * struct fc_fcp_internal - FCP layer internal data
+  * @scsi_pkt_pool:  Memory pool to draw FCP packets from
+  * @scsi_pkt_queue: Current FCP packets
+- * @throttled:	    The FCP packet queue is throttled
++ * @last_can_queue_ramp_down_time: ramp down time
++ * @last_can_queue_ramp_up_time: ramp up time
++ * @max_can_queue: max can_queue size
+  */
+ struct fc_fcp_internal {
+ 	mempool_t	 *scsi_pkt_pool;
+ 	struct list_head scsi_pkt_queue;
+-	u8		 throttled;
++	unsigned long last_can_queue_ramp_down_time;
++	unsigned long last_can_queue_ramp_up_time;
++	int max_can_queue;
+ };
+ 
+ #define fc_get_scsi_internal(x)	((struct fc_fcp_internal *)(x)->scsi_priv)
+@@ -124,6 +127,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *, struct fc_frame *);
+ #define FC_SCSI_TM_TOV		(10 * HZ)
+ #define FC_SCSI_REC_TOV		(2 * HZ)
+ #define FC_HOST_RESET_TIMEOUT	(30 * HZ)
++#define FC_CAN_QUEUE_PERIOD	(60 * HZ)
+ 
+ #define FC_MAX_ERROR_CNT	5
+ #define FC_MAX_RECOV_RETRY	3
+@@ -327,6 +331,38 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
  }
  
  /**
-+ * fc_fcp_can_queue_ramp_down() - reduces can_queue
-+ * @lport: lport to reduce can_queue
++ * fc_fcp_can_queue_ramp_up() - increases can_queue
++ * @lport: lport to ramp up can_queue
 + *
-+ * If we are getting memory allocation failures, then we may
-+ * be trying to execute too many commands. We let the running
-+ * commands complete or timeout, then try again with a reduced
-+ * can_queue. Eventually we will hit the point where we run
-+ * on all reserved structs.
++ * Locking notes: Called with Scsi_Host lock held
 + */
-+static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
++static void fc_fcp_can_queue_ramp_up(struct fc_lport *lport)
 +{
 +	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
-+	unsigned long flags;
 +	int can_queue;
 +
-+	spin_lock_irqsave(lport->host->host_lock, flags);
-+	if (si->throttled)
-+		goto done;
-+	si->throttled = 1;
++	if (si->last_can_queue_ramp_up_time &&
++	    (time_before(jiffies, si->last_can_queue_ramp_up_time +
++			 FC_CAN_QUEUE_PERIOD)))
++		return;
 +
-+	can_queue = lport->host->can_queue;
-+	can_queue >>= 1;
-+	if (!can_queue)
-+		can_queue = 1;
++	if (time_before(jiffies, si->last_can_queue_ramp_down_time +
++			FC_CAN_QUEUE_PERIOD))
++		return;
++
++	si->last_can_queue_ramp_up_time = jiffies;
++
++	can_queue = lport->host->can_queue << 1;
++	if (can_queue >= si->max_can_queue) {
++		can_queue = si->max_can_queue;
++		si->last_can_queue_ramp_down_time = 0;
++	}
 +	lport->host->can_queue = can_queue;
-+	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
-+		     "Reducing can_queue to %d.\n", can_queue);
-+done:
-+	spin_unlock_irqrestore(lport->host->host_lock, flags);
-+}
-+
-+/*
-+ * fc_fcp_frame_alloc() -  Allocates fc_frame structure and buffer.
-+ * @lport:	fc lport struct
-+ * @len:	payload length
-+ *
-+ * Allocates fc_frame structure and buffer but if fails to allocate
-+ * then reduce can_queue.
-+ */
-+static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
-+						  size_t len)
-+{
-+	struct fc_frame *fp;
-+
-+	fp = fc_frame_alloc(lport, len);
-+	if (!fp)
-+		fc_fcp_can_queue_ramp_down(lport);
-+	return fp;
++	shost_printk(KERN_ERR, lport->host, "libfc: increased "
++		     "can_queue to %d.\n", can_queue);
 +}
 +
 +/**
-  * fc_fcp_recv_data() - Handler for receiving SCSI-FCP data from a target
-  * @fsp: The FCP packet the data is on
-  * @fp:	 The data frame
-@@ -615,38 +666,6 @@ static void fc_fcp_abts_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- }
- 
- /**
-- * fc_fcp_reduce_can_queue() - Reduce the can_queue value for a local port
-- * @lport: The local port to reduce can_queue on
-- *
-- * If we are getting memory allocation failures, then we may
-- * be trying to execute too many commands. We let the running
-- * commands complete or timeout, then try again with a reduced
-- * can_queue. Eventually we will hit the point where we run
-- * on all reserved structs.
-- */
--static void fc_fcp_reduce_can_queue(struct fc_lport *lport)
--{
--	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
+  * fc_fcp_can_queue_ramp_down() - reduces can_queue
+  * @lport: lport to reduce can_queue
+  *
+@@ -335,17 +371,20 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
+  * commands complete or timeout, then try again with a reduced
+  * can_queue. Eventually we will hit the point where we run
+  * on all reserved structs.
++ *
++ * Locking notes: Called with Scsi_Host lock held
+  */
+ static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
+ {
+ 	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
 -	unsigned long flags;
--	int can_queue;
--
+ 	int can_queue;
+ 
 -	spin_lock_irqsave(lport->host->host_lock, flags);
 -	if (si->throttled)
 -		goto done;
 -	si->throttled = 1;
--
--	can_queue = lport->host->can_queue;
--	can_queue >>= 1;
--	if (!can_queue)
--		can_queue = 1;
--	lport->host->can_queue = can_queue;
--	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
--		     "Reducing can_queue to %d.\n", can_queue);
++	if (si->last_can_queue_ramp_down_time &&
++	    (time_before(jiffies, si->last_can_queue_ramp_down_time +
++			 FC_CAN_QUEUE_PERIOD)))
++		return;
++
++	si->last_can_queue_ramp_down_time = jiffies;
+ 
+ 	can_queue = lport->host->can_queue;
+ 	can_queue >>= 1;
+@@ -354,8 +393,6 @@ static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
+ 	lport->host->can_queue = can_queue;
+ 	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
+ 		     "Reducing can_queue to %d.\n", can_queue);
 -done:
 -	spin_unlock_irqrestore(lport->host->host_lock, flags);
--}
--
--/**
-  * fc_fcp_recv() - Reveive an FCP frame
-  * @seq: The sequence the frame is on
-  * @fp:	 The received frame
-@@ -664,8 +683,10 @@ static void fc_fcp_recv(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 	u8 r_ctl;
- 	int rc = 0;
- 
--	if (IS_ERR(fp))
--		goto errout;
-+	if (IS_ERR(fp)) {
-+		fc_fcp_error(fsp, fp);
-+		return;
-+	}
- 
- 	fh = fc_frame_header_get(fp);
- 	r_ctl = fh->fh_r_ctl;
-@@ -719,11 +740,6 @@ unlock:
- 	fc_fcp_unlock_pkt(fsp);
- out:
- 	fc_frame_free(fp);
--errout:
--	if (IS_ERR(fp))
--		fc_fcp_error(fsp, fp);
--	else if (rc == -ENOMEM)
--		fc_fcp_reduce_can_queue(lport);
  }
  
- /**
-@@ -885,7 +901,7 @@ static void fc_fcp_complete_locked(struct fc_fcp_pkt *fsp)
- 			struct fc_seq *csp;
+ /*
+@@ -370,10 +407,14 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
+ 						  size_t len)
+ {
+ 	struct fc_frame *fp;
++	unsigned long flags;
  
- 			csp = lport->tt.seq_start_next(seq);
--			conf_frame = fc_frame_alloc(fsp->lp, 0);
-+			conf_frame = fc_fcp_frame_alloc(fsp->lp, 0);
- 			if (conf_frame) {
- 				f_ctl = FC_FC_SEQ_INIT;
- 				f_ctl |= FC_FC_LAST_SEQ | FC_FC_END_SEQ;
-@@ -1025,7 +1041,7 @@ static int fc_fcp_cmd_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp,
- 	if (fc_fcp_lock_pkt(fsp))
- 		return 0;
+ 	fp = fc_frame_alloc(lport, len);
+-	if (!fp)
++	if (!fp) {
++		spin_lock_irqsave(lport->host->host_lock, flags);
+ 		fc_fcp_can_queue_ramp_down(lport);
++		spin_unlock_irqrestore(lport->host->host_lock, flags);
++	}
+ 	return fp;
+ }
  
--	fp = fc_frame_alloc(lport, sizeof(fsp->cdb_cmd));
-+	fp = fc_fcp_frame_alloc(lport, sizeof(fsp->cdb_cmd));
- 	if (!fp) {
- 		rc = -1;
- 		goto unlock;
-@@ -1306,7 +1322,7 @@ static void fc_fcp_rec(struct fc_fcp_pkt *fsp)
- 		fc_fcp_complete_locked(fsp);
- 		return;
+@@ -719,8 +760,6 @@ static void fc_fcp_recv(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 				      (size_t) ntohl(dd->ft_burst_len));
+ 		if (!rc)
+ 			seq->rec_data = fsp->xfer_len;
+-		else if (rc == -ENOMEM)
+-			fsp->state |= FC_SRB_NOMEM;
+ 	} else if (r_ctl == FC_RCTL_DD_SOL_DATA) {
+ 		/*
+ 		 * received a DATA frame
+@@ -1736,6 +1775,8 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 	rpriv = rport->dd_data;
+ 
+ 	if (!fc_fcp_lport_queue_ready(lport)) {
++		if (lport->qfull)
++			fc_fcp_can_queue_ramp_down(lport);
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 		goto out;
  	}
--	fp = fc_frame_alloc(lport, sizeof(struct fc_els_rec));
-+	fp = fc_fcp_frame_alloc(lport, sizeof(struct fc_els_rec));
- 	if (!fp)
- 		goto retry;
+@@ -1832,13 +1873,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 	}
  
-@@ -1558,7 +1574,7 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
- 	if (!(rpriv->flags & FC_RP_FLAGS_RETRY) ||
- 	    rpriv->rp_state != RPORT_ST_READY)
- 		goto retry;			/* shouldn't happen */
--	fp = fc_frame_alloc(lport, sizeof(*srr));
-+	fp = fc_fcp_frame_alloc(lport, sizeof(*srr));
- 	if (!fp)
- 		goto retry;
+ 	/*
+-	 * if a command timed out while we had to try and throttle IO
+-	 * and it is now getting cleaned up, then we are about to
+-	 * try again so clear the throttled flag incase we get more
+-	 * time outs.
++	 * if can_queue ramp down is done then try can_queue ramp up
++	 * since commands are completing now.
+ 	 */
+-	if (si->throttled && fsp->state & FC_SRB_NOMEM)
+-		si->throttled = 0;
++	if (si->last_can_queue_ramp_down_time)
++		fc_fcp_can_queue_ramp_up(lport);
  
+ 	sc_cmd = fsp->cmd;
+ 	fsp->cmd = NULL;
+@@ -2180,6 +2219,7 @@ int fc_fcp_init(struct fc_lport *lport)
+ 	if (!si)
+ 		return -ENOMEM;
+ 	lport->scsi_priv = si;
++	si->max_can_queue = lport->host->can_queue;
+ 	INIT_LIST_HEAD(&si->scsi_pkt_queue);
+ 
+ 	si->scsi_pkt_pool = mempool_create_slab_pool(2, scsi_pkt_cachep);
 
