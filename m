@@ -1,237 +1,165 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 12/19] Target_Core_Mod READ/WRITE command descriptor
-	block generation code
-Date: Fri, 11 Sep 2009 18:57:28 -0700
-Message-ID: <1252720648.2067.220.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 19/19] Target_Core_Mod Makefile/Kconfig and div64.c
+Date: Fri, 11 Sep 2009 18:58:46 -0700
+Message-ID: <1252720726.2067.234.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp104.sbc.mail.gq1.yahoo.com ([67.195.15.63]:40037 "HELO
-	smtp104.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757287AbZILCFI (ORCPT
+Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:48308 "HELO
+	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757376AbZILCGv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Sep 2009 22:05:08 -0400
+	Fri, 11 Sep 2009 22:06:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>
 
-[RFC PATCH 12/19] Target_Core_Mod READ/WRITE command descriptor block generation code
+[RFC PATCH 19/19] Target_Core_Mod Makefile/Kconfig and div64.c
 
-This patch adds support for the generation of READ_6, READ_10, READ_12, READ_16,
-WRITE_6, WRITE_10, WRITE_12 and WRITE_16 command descriptor blocks when handling
-incoming fabric module requests that exceed the max_sectors presented for a storage
-object through struct se_subsystem_api_t.
+This patch adds the remaining misc Makefile and Kconfig changes
+
+It also has wrappers for unsigned long division in div64c, that will be converted to
+include/asm-generic/div64.h
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-diff --git a/drivers/target/target_core_scdb.c b/drivers/target/target_core_scdb.c
+diff --git a/drivers/target/div64.c b/drivers/target/div64.c
 new file mode 100644
-index 0000000..ec111d9
+index 0000000..6d59864
 --- /dev/null
-+++ b/drivers/target/target_core_scdb.c
-@@ -0,0 +1,154 @@
-+/*******************************************************************************
-+ * Filename:  target_core_scdb.c
-+ *
-+ * This file contains the generic target engine Split CDB related functions.
-+ *
-+ * Copyright (c) 2004-2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-+ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
-+ * Copyright (c) 2008-2009 Linux-iSCSI.org
-+ *
-+ * Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ ******************************************************************************/
++++ b/drivers/target/div64.c
+@@ -0,0 +1,16 @@
++#include <asm/types.h>
++#include <asm/div64.h>
 +
++#if BITS_PER_LONG == 32
 +
-+#define TARGET_CORE_SCDB_C
-+
-+#include <linux/net.h>
-+#include <linux/string.h>
-+
-+#include <target/target_core_base.h>
-+#include <target/target_core_hba.h>
-+#include <target/target_core_transport.h>
-+#include <target/target_core_scdb.h>
-+
-+#undef TARGET_CORE_SCDB_C
-+
-+/*	split_cdb_XX_6():
-+ *
-+ *      21-bit LBA w/ 8-bit SECTORS
-+ */
-+void split_cdb_XX_6(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++u64 __udivdi3(u64 a, u64 b)
 +{
-+	cdb[1] = (lba >> 16) & 0x1f;
-+	cdb[2] = (lba >> 8) & 0xff;
-+	cdb[3] = lba & 0xff;
-+	cdb[4] = *sectors & 0xff;
++  do_div(a, b);
++  return a;
 +}
 +
-+void split_cdb_RW_6(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++u64 __umoddi3(u64 a, u64 b)
 +{
-+	cdb[0] = (rw) ? 0x0a : 0x08;
-+	split_cdb_XX_6(lba, sectors, &cdb[0]);
++  return do_div(a, b);
 +}
-+
-+/*	split_cdb_XX_10():
-+ *
-+ *	32-bit LBA w/ 16-bit SECTORS
-+ */
-+void split_cdb_XX_10(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
-+{
-+	cdb[2] = (lba >> 24) & 0xff;
-+	cdb[3] = (lba >> 16) & 0xff;
-+	cdb[4] = (lba >> 8) & 0xff;
-+	cdb[5] = lba & 0xff;
-+	cdb[7] = (*sectors >> 8) & 0xff;
-+	cdb[8] = *sectors & 0xff;
-+}
-+
-+void split_cdb_RW_10(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
-+{
-+	cdb[0] = (rw) ? 0x2a : 0x28;
-+	split_cdb_XX_10(lba, sectors, &cdb[0]);
-+}
-+
-+/*	split_cdb_XX_12():
-+ *
-+ *	32-bit LBA w/ 32-bit SECTORS
-+ */
-+void split_cdb_XX_12(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
-+{
-+	cdb[2] = (lba >> 24) & 0xff;
-+	cdb[3] = (lba >> 16) & 0xff;
-+	cdb[4] = (lba >> 8) & 0xff;
-+	cdb[5] = lba & 0xff;
-+	cdb[6] = (*sectors >> 24) & 0xff;
-+	cdb[7] = (*sectors >> 16) & 0xff;
-+	cdb[8] = (*sectors >> 8) & 0xff;
-+	cdb[9] = *sectors & 0xff;
-+}
-+
-+void split_cdb_RW_12(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
-+{
-+	cdb[0] = (rw) ? 0xaa : 0xa8;
-+	split_cdb_XX_12(lba, sectors, &cdb[0]);
-+}
-+
-+/*	split_cdb_XX_16():
-+ *
-+ *	64-bit LBA w/ 32-bit SECTORS
-+ */
-+void split_cdb_XX_16(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
-+{
-+	cdb[2] = (lba >> 56) & 0xff;
-+	cdb[3] = (lba >> 48) & 0xff;
-+	cdb[4] = (lba >> 40) & 0xff;
-+	cdb[5] = (lba >> 32) & 0xff;
-+	cdb[6] = (lba >> 24) & 0xff;
-+	cdb[7] = (lba >> 16) & 0xff;
-+	cdb[8] = (lba >> 8) & 0xff;
-+	cdb[9] = lba & 0xff;
-+	cdb[10] = (*sectors >> 24) & 0xff;
-+	cdb[11] = (*sectors >> 16) & 0xff;
-+	cdb[12] = (*sectors >> 8) & 0xff;
-+	cdb[13] = *sectors & 0xff;
-+}
-+
-+void split_cdb_RW_16(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
-+{
-+	cdb[0] = (rw) ? 0x8a : 0x88;
-+	split_cdb_XX_16(lba, sectors, &cdb[0]);
-+}
-diff --git a/include/target/target_core_scdb.h b/include/target/target_core_scdb.h
++#endif
+diff --git a/drivers/target/Makefile b/drivers/target/Makefile
 new file mode 100644
-index 0000000..1330bc3
+index 0000000..3e413b0
 --- /dev/null
-+++ b/include/target/target_core_scdb.h
-@@ -0,0 +1,42 @@
-+/*******************************************************************************
-+ * Filename:  target_core_scdb.h
-+ *
-+ * This file contains the iSCSI Transport Split CDB related definitions.
-+ *
-+ * Copyright (c) 2004-2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-+ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
-+ * Copyright (c) 2008-2009 Linux-iSCSI.org
-+ *
-+ * Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ ******************************************************************************/
++++ b/drivers/target/Makefile
+@@ -0,0 +1,96 @@
++CWD=$(shell pwd)
++
++PYX_ISCSI_VENDOR ?="Linux-iSCSI.org"
++
++# Transport Plugins and Devices.
++ #
++LINUX_PARALLEL_SCSI ?= 1
++LINUX_STGT ?= 1
++LINUX_SCSI_MEDIA_ROM ?= 1
++LINUX_PARALLEL_ATA ?= 0
++LINUX_IBLOCK ?= 1
++LINUX_RAMDISK ?= 1
++LINUX_FILEIO ?= 1
++
++LINUX_VPD_PAGE_CHECK?=1
++LIO_TARGET_CONFIGFS?=1
++
++MODVER ?= 1
++USEGDB ?= 1
++DEBUG_DEV ?= 0
++SNMP_FEATURE ?= 1
++
++obj-$(CONFIG_TARGET_CORE)		+=	target_core_mod.o
++target_core_mod-objs			:=	target_core_configfs.o \
++						target_core_device.o \
++						target_core_hba.o \
++						target_core_plugin.o \
++						target_core_pr.o \
++						target_core_alua.o \
++						target_core_scdb.o \
++						target_core_seobj.o \
++						target_core_tmr.o \
++						target_core_tpg.o \
++						target_core_transport.o \
++						target_core_ua.o \
++						div64.o
++
++ifeq ($(LINUX_IBLOCK), 1)
++target_core_mod-objs			+=	target_core_iblock.o
++EXTRA_CFLAGS				+=	-DPYX_IBLOCK
++endif
++ifeq ($(LINUX_PARALLEL_SCSI), 1)
++target_core_mod-objs			+=	target_core_pscsi.o
++EXTRA_CFLAGS				+=	-DPARALLEL_SCSI
++endif
++ifeq ($(LINUX_STGT), 1)
++target_core_mod-objs			+=	target_core_stgt.o
++EXTRA_CFLAGS				+=	-DSTGT_PLUGIN
++endif
++ifeq ($(LINUX_RAMDISK), 1)
++target_core_mod-objs			+=	target_core_rd.o
++EXTRA_CFLAGS				+=	-DPYX_RAMDISK
++endif
++ifeq ($(LINUX_FILEIO), 1)
++target_core_mod-objs			+=	target_core_file.o
++EXTRA_CFLAGS				+=	-DPYX_FILEIO
++endif
++ifeq ($(SNMP_FEATURE), 1)
++target_core_mod-objs			+=	target_core_mib.o
++EXTRA_CFLAGS				+=	-DSNMP_SUPPORT
++endif
++ifeq ($(LINUX_VPD_PAGE_CHECK), 1)
++EXTRA_CFLAGS += -DLINUX_VPD_PAGE_CHECK
++endif
++ifeq ($(LINUX_SCSI_MEDIA_ROM), 1)
++EXTRA_CFLAGS += -DLINUX_SCSI_MEDIA_ROM
++endif
++ifeq ($(DEBUG_DEV), 1)
++EXTRA_CFLAGS += -DDEBUG_DEV
++endif
 +
 +
-+#ifndef TARGET_CORE_SCDB_H
-+#define TARGET_CORE_SCDB_H
++EXTRA_CFLAGS+=-I$(CWD)/drivers/target/ -I$(CWD)/drivers/scsi/
++EXTRA_CFLAGS+=-D_TARGET -DLINUX -DLINUX_KERNEL_26 -DLINUX_SCSI_HOST_LOCK -DLINUX_USE_SIGHAND
++EXTRA_CFLAGS+=-DLINUX_SCATTERLIST_HAS_PAGE -DPYX_ISCSI_VENDOR='"Linux-iSCSI.org"'
 +
-+extern void split_cdb_XX_6(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_6(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_10(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_10(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_12(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_12(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_16(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_16(unsigned long long, u32 *, unsigned char *, int);
++all:
++	$(MAKE) -C $(KERNEL_DIR) SUBDIRS=$(CWD) modules CWD=$(CWD) ARCH=$(ARCH) KBUILD_VERBOSE=0
 +
-+#endif /* TARGET_CORE_SCDB_H */
++install ins:
++	rm -f /lib/modules/`uname -r`/kernel/drivers/scsi/iscsi_target_mod.ko
++	rm -f /lib/modules/`uname -r`/kernel/drivers/iscsi/iscsi_target_mod.ko
++	mkdir -p /lib/modules/`uname -r`/kernel/drivers/iscsi
++	cp -f iscsi_target_mod.ko /lib/modules/`uname -r`/kernel/drivers/iscsi
++	cp -f target_core_mod.ko /lib/modules/`uname -r`/kernel/drivers/iscsi
++	depmod -ae
++
++
++
++clean:
++	rm -f $(foreach prog,$(target_core_mod-objs) $(obj-m),$(CWD)/$(prog)) $(CWD)/target_core_mod.mod.o
++	rm -f target_core_mod.ko target_core_mod.mod.c
++	rm -f .*.cmd ../common/.*.cmd .make_autoconfig *~
++	rm -fr .tmp_versions
++
++
+diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+new file mode 100644
+index 0000000..04564f1
+--- /dev/null
++++ b/drivers/target/Kconfig
+@@ -0,0 +1,7 @@
++config TARGET_CORE
++        tristate "Generic Target Core Engine and ConfigFS Infrastructure"
++	select CONFIGFS_FS
++	select SCSI_TGT
++        default m
++        ---help---
++        Say Y here to enable the Storage Engine, Subsystem Plugins, and ConfigFS enabled control path for the Generic Target Engine.
 
 
