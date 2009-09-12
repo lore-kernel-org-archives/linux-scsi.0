@@ -1,59 +1,69 @@
-From: <Shyam_Iyer@Dell.com>
-Subject: RE: [dm-devel] [PATCH 3/3] scsi_dh: rdac handler: Batch up MODE SELECTsand send few of them
-Date: Sat, 12 Sep 2009 09:39:57 +0530
-Message-ID: <46A00B48CC54E4468EF6911F877AC4CA02579491@blrx3m10.blr.amer.dell.com>
-References: <20090428025230.11108.88559.sendpatchset@chandra-ubuntu><20090428025248.11108.38596.sendpatchset@chandra-ubuntu><4A02580A.2060704@cs.wisc.edu> <1241742975.27327.3.camel@chandra-ubuntu>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCHv2] qla2xxx: Correct compilation issues when
+ CONFIG_MOUDLES=n.
+Date: Fri, 11 Sep 2009 21:33:33 -0700
+Message-ID: <20090912043333.GA12349@kroah.com>
+References: <20090907210206.7830ba68.sfr@canb.auug.org.au>
+ <20090907102747.ac6b98ff.randy.dunlap@oracle.com>
+ <20090908182541.GB44157@plap4-2.local>
+ <20090911175341.GH710@plap4-2.local>
+ <1252708951.13282.151.camel@mulgrave.site>
+ <20090912000742.GB12098@plap4-2.local>
+ <20090912001752.GC12098@plap4-2.local>
+ <20090912003808.GD12098@plap4-2.local>
+ <20090912005446.GA11691@kroah.com>
+ <20090912025623.GA14824@plap4-2.local>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:7011 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750713AbZILEKB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Sep 2009 00:10:01 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1241742975.27327.3.camel@chandra-ubuntu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753305AbZILElI@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20090912025623.GA14824@plap4-2.local>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: sekharan@linux.vnet.ibm.com, dm-devel@redhat.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, Yanqing_Liu@Dell.com, Jordan_Hargrave@Dell.com
 
-> -----Original Message-----
-> From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
-> On Behalf Of Chandra Seetharaman
-> Sent: Friday, May 08, 2009 6:06 AM
-> To: Mike Christie
-> Cc: device-mapper development; linux-scsi@vger.kernel.org
-> Subject: Re: [dm-devel] [PATCH 3/3] scsi_dh: rdac handler: Batch up
-> MODE SELECTsand send few of them
+On Fri, Sep 11, 2009 at 07:56:23PM -0700, Andrew Vasquez wrote:
+> On Fri, 11 Sep 2009, Greg KH wrote:
 > 
+> > On Fri, Sep 11, 2009 at 05:38:08PM -0700, Andrew Vasquez wrote:
+> > > Randy Dunlap noted:
+> > > 
+> > >   when CONFIG_MODULES=n:
+> > > 
+> > > 	drivers/scsi/qla2xxx/qla_os.c:2685: error: dereferencing pointer to incomplete type
+> > > 
+> > >   in
+> > > 
+> > > 	kobject_uevent_env(&(&vha->hw->pdev->driver->driver)->owner->mkobj.kobj,
+> > > 		KOBJ_CHANGE, envp);
+> > > 
+> > > Trigger kobject event on the 'struct device' hanging off the pci_dev.
+> > 
+> > Um, why?  What are you trying to do here?  kobject change should not be
+> > for a device, or a "normal" kobject.
+> > 
+> > What do you expect userspace to do with this?  Where have you documented
+> > it?
 > 
-> On Wed, 2009-05-06 at 22:39 -0500, Mike Christie wrote:
-> > Chandra Seetharaman wrote:
-> > >  }
-> > >
-> > > -static int rdac_activate(struct scsi_device *sdev,
-> activate_complete fn, void *data)
-> > > +static int queue_mode_select(struct scsi_device *sdev,
-> > > +				activate_complete fn, void *data)
-> > > +{
-> > > +	struct rdac_queue_data *qdata;
-> > > +	struct rdac_controller *ctlr;
-> > > +
-> > > +	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
-> >
-> >
-> > I think you want to use GFP_NOIO or GFP_ATOMIC here. If GFP_NOIO can
-> > block and screw up other devices using that multipathd workqueue
-> struct
-> > maybe GFP_ATOMIC would be best since we can have dm-mpath retry
-> later.
+> The purpose was described here:
 > 
-> Will do.
+> 	http://article.gmane.org/gmane.linux.scsi/54155
 > 
-> Thanks
-> >
+> Basically we'd like to instruct user-space to retrieve a blob of data
+> automatically.
 
-Chandra - Thanks for doing this. How can we help here to get this
-upstream?
+Hm, like a firmware object perhaps?
+
+> Original implementation used the kboject hanging off
+> the module which does not exist when CONFIG_MODULES=n.  It was
+> suggested that perhaps an alternative would be to use 'struct device'
+> kobj.  Any tips on how to trigger such a driver-specific event,
+> perhaps a dedicated kobject exported by the driver itself???
+
+Why not use the firmware interface for it, that is what it is designed
+for, and you will not have to craft any new udev rules.
+
+thanks,
+
+greg k-h
