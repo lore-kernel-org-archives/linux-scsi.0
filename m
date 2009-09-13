@@ -1,219 +1,195 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 4/5] sd: Support disks formatted with DIF Type 2
-Date: Sun, 13 Sep 2009 12:37:50 +0300
-Message-ID: <4AACBD6E.60703@panasas.com>
-References: <1252696852-17091-1-git-send-email-martin.petersen@oracle.com> <1252696852-17091-5-git-send-email-martin.petersen@oracle.com>
+Subject: Re: [RFC PATCH 19/19] Target_Core_Mod Makefile/Kconfig and div64.c
+Date: Sun, 13 Sep 2009 12:51:01 +0300
+Message-ID: <4AACC085.3000805@panasas.com>
+References: <1252720726.2067.234.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dip-colo-pa.panasas.com ([67.152.220.67]:63007 "EHLO
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:52132 "EHLO
 	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750784AbZIMJiR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Sep 2009 05:38:17 -0400
-In-Reply-To: <1252696852-17091-5-git-send-email-martin.petersen@oracle.com>
+	with ESMTP id S1750784AbZIMJva (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Sep 2009 05:51:30 -0400
+In-Reply-To: <1252720726.2067.234.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>
 
-On 09/11/2009 10:20 PM, Martin K. Petersen wrote:
-> Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
-> when protection is enabled.  Only the 32-byte variants are supported.
+On 09/12/2009 04:58 AM, Nicholas A. Bellinger wrote:
+> [RFC PATCH 19/19] Target_Core_Mod Makefile/Kconfig and div64.c
 > 
-> Implement support for issusing 32-byte READ/WRITE and enable Type 2
-> drives in the protection type detection logic.
+> This patch adds the remaining misc Makefile and Kconfig changes
 > 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
-
-> ---
->  drivers/scsi/sd.c   |   80 ++++++++++++++++++++++++++++++++++++++++++++-------
->  drivers/scsi/sd.h   |    5 +++
->  include/scsi/scsi.h |    3 ++
->  3 files changed, 77 insertions(+), 11 deletions(-)
+> It also has wrappers for unsigned long division in div64c, that will be converted to
+> include/asm-generic/div64.h
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 36e2333..d138e6b 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -116,6 +116,9 @@ static DEFINE_IDA(sd_index_ida);
->   * object after last put) */
->  static DEFINE_MUTEX(sd_ref_mutex);
->  
-> +struct kmem_cache *sd_cdb_cache;
-> +mempool_t *sd_cdb_pool;
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> diff --git a/drivers/target/div64.c b/drivers/target/div64.c
+> new file mode 100644
+> index 0000000..6d59864
+> --- /dev/null
+> +++ b/drivers/target/div64.c
+> @@ -0,0 +1,16 @@
+> +#include <asm/types.h>
+> +#include <asm/div64.h>
 > +
->  static const char *sd_cache_types[] = {
->  	"write through", "none", "write back",
->  	"write back, no read (daft)"
-> @@ -413,6 +416,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
->  	sector_t threshold;
->  	unsigned int this_count = blk_rq_sectors(rq);
->  	int ret, host_dif;
-> +	unsigned char protect;
->  
->  	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
->  		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
-> @@ -545,13 +549,48 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
->  	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
->  	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
->  	if (host_dif)
-> -		SCpnt->cmnd[1] = 1 << 5;
-> +		protect = 1 << 5;
->  	else
-> -		SCpnt->cmnd[1] = 0;
-> +		protect = 0;
+> +#if BITS_PER_LONG == 32
 > +
-> +	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
-> +		SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
+> +u64 __udivdi3(u64 a, u64 b)
+> +{
+> +  do_div(a, b);
+> +  return a;
+> +}
 > +
-> +		if (unlikely(SCpnt->cmnd == NULL)) {
-> +			ret = BLKPREP_DEFER;
-> +			goto out;
-> +		}
->  
-> -	if (block > 0xffffffff) {
-> +		memset(SCpnt->cmnd, 0, SD_EXT_CDB_SIZE);
-> +		SCpnt->cmnd[0] = VARIABLE_LENGTH_CMD;
-> +		SCpnt->cmnd[7] = 0x18;
-> +		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
-> +		SCpnt->cmnd[10] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
-> +
-> +		/* LBA */
-> +		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
-> +		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
-> +		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-> +		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
-> +		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
-> +		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
-> +		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
-> +		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
-> +
-> +		/* Expected Indirect LBA */
-> +		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
-> +		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
-> +		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
-> +		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
-> +
-> +		/* Transfer length */
-> +		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
-> +		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
-> +		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
-> +		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
-> +	} else if (block > 0xffffffff) {
->  		SCpnt->cmnd[0] += READ_16 - READ_6;
-> -		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
-> +		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
->  		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
->  		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
->  		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-> @@ -572,7 +611,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
->  			this_count = 0xffff;
->  
->  		SCpnt->cmnd[0] += READ_10 - READ_6;
-> -		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
-> +		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
->  		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
->  		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
->  		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
-> @@ -1047,6 +1086,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  	int result = SCpnt->result;
->  	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
->  	struct scsi_sense_hdr sshdr;
-> +	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
->  	int sense_valid = 0;
->  	int sense_deferred = 0;
->  
-> @@ -1108,6 +1148,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
->  		sd_dif_complete(SCpnt, good_bytes);
->  
-> +	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
-> +	    == SD_DIF_TYPE2_PROTECTION)
-> +		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-> +
->  	return good_bytes;
->  }
->  
-> @@ -1271,12 +1315,7 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
->  
->  	sdkp->protection_type = type;
->  
-> -	switch (type) {
-> -	case SD_DIF_TYPE1_PROTECTION:
-> -	case SD_DIF_TYPE3_PROTECTION:
-> -		break;
-> -
-> -	default:
-> +	if (type > SD_DIF_TYPE3_PROTECTION) {
->  		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
->  			  "protection type %u. Disabling disk!\n", type);
->  		sdkp->capacity = 0;
-> @@ -2321,8 +2360,24 @@ static int __init init_sd(void)
->  	if (err)
->  		goto err_out_class;
->  
-> +	sd_cdb_cache = kmem_cache_create("sd_ext_cdb", SD_EXT_CDB_SIZE,
-> +					 0, 0, NULL);
-> +	if (!sd_cdb_cache) {
-> +		printk(KERN_ERR "sd: can't init extended cdb cache\n");
-> +		goto err_out_class;
-> +	}
-> +
-> +	sd_cdb_pool = mempool_create_slab_pool(SD_MEMPOOL_SIZE, sd_cdb_cache);
-> +	if (!sd_cdb_pool) {
-> +		printk(KERN_ERR "sd: can't init extended cdb pool\n");
-> +		goto err_out_cache;
-> +	}
-> +
->  	return 0;
->  
-> +err_out_cache:
-> +	kmem_cache_destroy(sd_cdb_cache);
-> +
->  err_out_class:
->  	class_unregister(&sd_disk_class);
->  err_out:
-> @@ -2342,6 +2397,9 @@ static void __exit exit_sd(void)
->  
->  	SCSI_LOG_HLQUEUE(3, printk("exit_sd: exiting sd driver\n"));
->  
-> +	mempool_destroy(sd_cdb_pool);
-> +	kmem_cache_destroy(sd_cdb_cache);
-> +
->  	scsi_unregister_driver(&sd_template.gendrv);
->  	class_unregister(&sd_disk_class);
->  
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index ce1f5f8..e374804 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -37,6 +37,11 @@
->   */
->  #define SD_LAST_BUGGY_SECTORS	8
->  
-> +enum {
-> +	SD_EXT_CDB_SIZE = 32,	/* Extended CDB size */
-> +	SD_MEMPOOL_SIZE = 2,	/* CDB pool size */
-> +};
-> +
->  struct scsi_disk {
->  	struct scsi_driver *driver;	/* always &sd_template */
->  	struct scsi_device *device;
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 084478e..34c46ab 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -129,6 +129,9 @@ struct scsi_cmnd;
->  #define MI_REPORT_TARGET_PGS  0x0a
->  /* values for maintenance out */
->  #define MO_SET_TARGET_PGS     0x0a
-> +/* values for variable length command */
-> +#define READ_32		      0x09
-> +#define WRITE_32	      0x0b
->  
->  /* Values for T10/04-262r7 */
->  #define	ATA_16		      0x85	/* 16-byte pass-thru */
+> +u64 __umoddi3(u64 a, u64 b)
+> +{
+> +  return do_div(a, b);
+> +}
+> +#endif
+> diff --git a/drivers/target/Makefile b/drivers/target/Makefile
 
+I like Kbuild better then Makefile. And so does the Kernel documentation.
+It says new code should use Kbuild
+
+> new file mode 100644
+> index 0000000..3e413b0
+> --- /dev/null
+> +++ b/drivers/target/Makefile
+> @@ -0,0 +1,96 @@
+> +CWD=$(shell pwd)
+> +
+> +PYX_ISCSI_VENDOR ?="Linux-iSCSI.org"
+> +
+> +# Transport Plugins and Devices.
+> + #
+> +LINUX_PARALLEL_SCSI ?= 1
+> +LINUX_STGT ?= 1
+> +LINUX_SCSI_MEDIA_ROM ?= 1
+> +LINUX_PARALLEL_ATA ?= 0
+> +LINUX_IBLOCK ?= 1
+> +LINUX_RAMDISK ?= 1
+> +LINUX_FILEIO ?= 1
+> +
+> +LINUX_VPD_PAGE_CHECK?=1
+> +LIO_TARGET_CONFIGFS?=1
+> +
+> +MODVER ?= 1
+> +USEGDB ?= 1
+> +DEBUG_DEV ?= 0
+> +SNMP_FEATURE ?= 1
+> +
+
+Now when in-Kernel don't you need to use Kconfig for all this "configuration".
+
+What's with the re-invent the wheel, here.
+
+> +obj-$(CONFIG_TARGET_CORE)		+=	target_core_mod.o
+> +target_core_mod-objs			:=	target_core_configfs.o \
+> +						target_core_device.o \
+> +						target_core_hba.o \
+> +						target_core_plugin.o \
+> +						target_core_pr.o \
+> +						target_core_alua.o \
+> +						target_core_scdb.o \
+> +						target_core_seobj.o \
+> +						target_core_tmr.o \
+> +						target_core_tpg.o \
+> +						target_core_transport.o \
+> +						target_core_ua.o \
+> +						div64.o
+> +
+> +ifeq ($(LINUX_IBLOCK), 1)
+> +target_core_mod-objs			+=	target_core_iblock.o
+> +EXTRA_CFLAGS				+=	-DPYX_IBLOCK
+> +endif
+> +ifeq ($(LINUX_PARALLEL_SCSI), 1)
+> +target_core_mod-objs			+=	target_core_pscsi.o
+> +EXTRA_CFLAGS				+=	-DPARALLEL_SCSI
+> +endif
+> +ifeq ($(LINUX_STGT), 1)
+> +target_core_mod-objs			+=	target_core_stgt.o
+> +EXTRA_CFLAGS				+=	-DSTGT_PLUGIN
+> +endif
+> +ifeq ($(LINUX_RAMDISK), 1)
+> +target_core_mod-objs			+=	target_core_rd.o
+> +EXTRA_CFLAGS				+=	-DPYX_RAMDISK
+> +endif
+> +ifeq ($(LINUX_FILEIO), 1)
+> +target_core_mod-objs			+=	target_core_file.o
+> +EXTRA_CFLAGS				+=	-DPYX_FILEIO
+> +endif
+> +ifeq ($(SNMP_FEATURE), 1)
+> +target_core_mod-objs			+=	target_core_mib.o
+> +EXTRA_CFLAGS				+=	-DSNMP_SUPPORT
+> +endif
+> +ifeq ($(LINUX_VPD_PAGE_CHECK), 1)
+> +EXTRA_CFLAGS += -DLINUX_VPD_PAGE_CHECK
+> +endif
+> +ifeq ($(LINUX_SCSI_MEDIA_ROM), 1)
+> +EXTRA_CFLAGS += -DLINUX_SCSI_MEDIA_ROM
+> +endif
+> +ifeq ($(DEBUG_DEV), 1)
+> +EXTRA_CFLAGS += -DDEBUG_DEV
+> +endif
+> +
+
+You see what I mean. Try with Kconfig variables all this disappears.
+
+> +
+> +EXTRA_CFLAGS+=-I$(CWD)/drivers/target/ -I$(CWD)/drivers/scsi/
+> +EXTRA_CFLAGS+=-D_TARGET -DLINUX -DLINUX_KERNEL_26 -DLINUX_SCSI_HOST_LOCK -DLINUX_USE_SIGHAND
+
+?? are you sure
+
+> +EXTRA_CFLAGS+=-DLINUX_SCATTERLIST_HAS_PAGE -DPYX_ISCSI_VENDOR='"Linux-iSCSI.org"'
+
+And these are for ??
+
+<Makefile>
+> +
+> +all:
+> +	$(MAKE) -C $(KERNEL_DIR) SUBDIRS=$(CWD) modules CWD=$(CWD) ARCH=$(ARCH) KBUILD_VERBOSE=0
+> +
+> +install ins:
+> +	rm -f /lib/modules/`uname -r`/kernel/drivers/scsi/iscsi_target_mod.ko
+> +	rm -f /lib/modules/`uname -r`/kernel/drivers/iscsi/iscsi_target_mod.ko
+> +	mkdir -p /lib/modules/`uname -r`/kernel/drivers/iscsi
+> +	cp -f iscsi_target_mod.ko /lib/modules/`uname -r`/kernel/drivers/iscsi
+> +	cp -f target_core_mod.ko /lib/modules/`uname -r`/kernel/drivers/iscsi
+> +	depmod -ae
+> +
+> +
+> +
+> +clean:
+> +	rm -f $(foreach prog,$(target_core_mod-objs) $(obj-m),$(CWD)/$(prog)) $(CWD)/target_core_mod.mod.o
+> +	rm -f target_core_mod.ko target_core_mod.mod.c
+> +	rm -f .*.cmd ../common/.*.cmd .make_autoconfig *~
+> +	rm -fr .tmp_versions
+> +
+</Makefile>
+
+OK this should go in a Makefile and kept out-of-tree
+
+> +
+> diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+> new file mode 100644
+> index 0000000..04564f1
+> --- /dev/null
+> +++ b/drivers/target/Kconfig
+> @@ -0,0 +1,7 @@
+> +config TARGET_CORE
+> +        tristate "Generic Target Core Engine and ConfigFS Infrastructure"
+> +	select CONFIGFS_FS
+> +	select SCSI_TGT
+> +        default m
+> +        ---help---
+> +        Say Y here to enable the Storage Engine, Subsystem Plugins, and ConfigFS enabled control path for the Generic Target Engine.
+> 
+> 
+
+Lots of more configs missing here
+
+Cheers
+Boaz
