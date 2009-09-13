@@ -1,336 +1,275 @@
-From: Constantin Baranov <const@mimas.ru>
-Subject: [PATCH] hwmon: Driver for SCSI/ATA temperature sensors
-Date: Sun, 13 Sep 2009 04:01:04 +0500
-Message-ID: <20090913040104.ab1d0b69.const@mimas.ru>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
+Date: Sat, 12 Sep 2009 20:43:14 -0400
+Message-ID: <4AAC4022.4040805@garzik.org>
+References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091310.26058.tfjellstrom@shaw.ca> <200909091407.10111.tfjellstrom@shaw.ca> <200909101755.51459.tfjellstrom@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f206.google.com ([209.85.219.206]:33755 "EHLO
-	mail-ew0-f206.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbZILXBP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Sep 2009 19:01:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200909101755.51459.tfjellstrom@shaw.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: tfjellstrom@shaw.ca
+Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
-The scsitemp module attaches a device to each SCSI device
-and registers it in hwmon. Currently the only method of
-reading temperature is ATA SMART. Adding support of the
-pure SCSI methods is provided.
+On 09/10/2009 07:55 PM, Thomas Fjellstrom wrote:
+> On Wed September 9 2009, Thomas Fjellstrom wrote:
+>> On Wed September 9 2009, Thomas Fjellstrom wrote:
+>>> On Wed September 9 2009, Jeff Garzik wrote:
+>>>> On 09/09/2009 12:30 PM, Thomas Fjellstrom wrote:
+>>>>> No errors on that disk. Other than the one above, and its more of a
+>>>>> warning. However, I just rebooted to add some extra drives, thinking
+>>>>> everything was working a little better now that I've updated to
+>>>>> 2.6.31-rc9, I'm treated to the following two messages right after
+>>>>> boot (and a system lockup to boot):
+>>>>>
+>>>>> kernel: [  971.033138] ------------[ cut here ]------------
+>>>>> kernel: [  971.033211] WARNING: at drivers/ata/libata-core.c:4913
+>>>>> __ata_qc_complete+0x5a/0xe1 [libata]()
+>>>>> kernel: [  971.033217] Hardware name: GA-MA790FXT-UD5P
+>>>>> kernel: [  971.033221] Modules linked in: powernow_k8
+>>>>> cpufreq_conservative cpufreq_stats cpufreq_userspace
+>>>>> cpufreq_powersave kvm_amd kvm nfsd exportfs nfs lockd fscache nfs_acl
+>>>>> auth_rpcgss sunrpc bridge stp it87 hwmon_vid adt7473 firewire_sbp2
+>>>>> loop md_mod
+>>>>> snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep
+>>>>> snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_midi snd_rawmidi
+>>>>> snd_seq_midi_event snd_seq snd_timer snd_seq_device snd
+>>>>> amd64_edac_mod edac_core i2c_piix4 soundcore snd_page_alloc i2c_core
+>>>>> evdev wmi parport_pc button parport processor ext3 jbd mbcache dm_mod
+>>>>> sg sr_mod cdrom sd_mod crc_t10dif usbhid ata_generic ide_pci_generic
+>>>>> hid mvsas firewire_ohci libsas firewire_core crc_itu_t
+>>>>> scsi_transport_sas r8169 atiixp ide_core floppy ahci mii ohci_hcd
+>>>>> libata ehci_hcd scsi_mod thermal fan thermal_sys [last unloaded:
+>>>>> scsi_wait_scan]
+>>>>> kernel: [  971.033337] Pid: 0, comm: swapper Not tainted 2.6.31-rc9
+>>>>> #2 kernel: [  971.033342] Call Trace:
+>>>>> kernel: [  971.033346]<IRQ>    [<ffffffffa00562ca>] ?
+>>>>> __ata_qc_complete+0x5a/0xe1 [libata]
+>>>>> kernel: [  971.033434]  [<ffffffffa00562ca>] ?
+>>>>> __ata_qc_complete+0x5a/0xe1 [libata]
+>>>>> kernel: [  971.033446]  [<ffffffff8104aca0>] ?
+>>>>> warn_slowpath_common+0x77/0xa3 kernel: [  971.033455]
+>>>>> [<ffffffff81038d06>] ? enqueue_task+0x5c/0x65 kernel: [  971.033496]
+>>>>> [<ffffffffa00562ca>] ? __ata_qc_complete+0x5a/0xe1 [libata]
+>>>>> kernel: [  971.033519]  [<ffffffffa00f7b59>] ?
+>>>>> sas_ata_task_done+0x178/0x210 [libsas]
+>>>>> kernel: [  971.033528]  [<ffffffff8115ead1>] ?
+>>>>> blk_run_queue+0x21/0x35 kernel: [  971.033548]  [<ffffffffa010e2ce>]
+>>>>> ?
+>>>>> mvs_slot_complete+0x3df/0x41b [mvsas]
+>>>>> kernel: [  971.033565]  [<ffffffffa010e39c>] ? mvs_int_rx+0x92/0x101
+>>>>> [mvsas] kernel: [  971.033583]  [<ffffffffa01112ba>] ?
+>>>>> mvs_int_full+0x25/0x88 [mvsas] kernel: [  971.033600]
+>>>>> [<ffffffffa011134e>] ? mvs_64xx_isr+0x31/0x40 [mvsas] kernel: [
+>>>>> 971.033617]  [<ffffffffa010d0e5>] ? mvs_interrupt+0x61/0x78 [mvsas]
+>>>>> kernel: [  971.033625]  [<ffffffff8108aaac>] ?
+>>>>> handle_IRQ_event+0x58/0x135 kernel: [  971.033633]
+>>>>> [<ffffffff8108c1a1>] ? handle_fasteoi_irq+0x7d/0xb5 kernel: [
+>>>>> 971.033642]
+>>>>> [<ffffffff8101388d>] ? handle_irq+0x17/0x1d
+>>>>
+>>>> That warning is triggered when an ata_queued_cmd is passed to
+>>>> completion without the ATA_QCFLAG_ACTIVE flag being set (which
+>>>> indicates the qc was started with some activity).
+>>>>
+>>>> That possibly indicates the low-level driver (or libsas) was passing an
+>>>> already-completed cmd to libata.
+>>>>
+>>>>> The added hard drives are connected to a Supermicro AOC-SASLP-MV8,
+>>>>> which is based on a marvel MV64460/64461/64462 chipset, which uses
+>>>>> the sata_mv driver.
+>>>>
+>>>> Surely you mean 'mvsas' driver?
+>>>
+>>> Yes, sorry I did mean mvsas.
+>>>
+>>> I am more concerned about the actual oops/BUG rather than the warning
+>>>   though. Unless the problem causing the warning is also causing the oops.
+>>>
+>>>> 	Jeff
+>>
+>> Thanks for taking a look so far. But I'm having more and more trouble with
+>> this card as the days go by:
+>>
+>> [  464.792214] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  464.792222] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  494.816170] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  494.816179] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  494.816192] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  494.816197] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  525.817335] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  525.817343] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  525.817358] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  525.817363] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  556.816148] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  556.816157] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  556.816170] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  556.816175] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  587.816171] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  587.816179] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  587.816193] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  587.816199] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  600.616255] INFO: task mount:4395 blocked for more than 120 seconds.
+>> [  600.616263] "echo 0>  /proc/sys/kernel/hung_task_timeout_secs" disables
+>> this message.
+>> [  600.616270] mount         D 0000000000000000     0  4395   4229
+>>   0x00000000 [  600.616281]  ffff88012fb6f780 0000000000000082
+>>   ffff8800b808ddc8 ffff8800b80f3d60
+>> [  600.616290]  ffff880128923c90 0000000000014800 000000000000f800
+>> ffff88012dd91840
+>> [  600.616299]  ffff88012dd91b38 0000000300000008 0000000000000000
+>> ffff88010c5bfa88
+>> [  600.616308] Call Trace:
+>> [  600.616324]  [<ffffffff81017015>] ? read_tsc+0xa/0x20
+>> [  600.616335]  [<ffffffff810adc63>] ? __pagevec_free+0x29/0x3b
+>> [  600.616343]  [<ffffffff810661e9>] ? getnstimeofday+0x55/0xaf
+>> [  600.616351]  [<ffffffff810a8e69>] ? sync_page+0x0/0x46
+>> [  600.616361]  [<ffffffff812dc8cb>] ? io_schedule+0x63/0xa5
+>> [  600.616368]  [<ffffffff810a8eaa>] ? sync_page+0x41/0x46
+>> [  600.616376]  [<ffffffff812dcade>] ? __wait_on_bit_lock+0x3f/0x84
+>> [  600.616383]  [<ffffffff810a8e55>] ? __lock_page+0x5d/0x63
+>> [  600.616391]  [<ffffffff8105ef14>] ? wake_bit_function+0x0/0x23
+>> [  600.616401]  [<ffffffff810b0ad4>] ? pagevec_lookup+0x17/0x1e
+>> [  600.616408]  [<ffffffff810b1bbd>] ?
+>>   truncate_inode_pages_range+0x288/0x318 [  600.616418]
+>>   [<ffffffff810fc8cb>] ? set_blocksize+0xc2/0xd2
+>> [  600.616426]  [<ffffffff810fc8f2>] ? sb_set_blocksize+0x17/0x43
+>> [  600.616477]  [<ffffffffa04aa8e0>] ? ext4_fill_super+0x1cc/0x2060 [ext4]
+>> [  600.616486]  [<ffffffff8117593b>] ? snprintf+0x44/0x4c
+>> [  600.616493]  [<ffffffff810fb5b7>] ? check_disk_change+0x22/0x52
+>> [  600.616501]  [<ffffffff812dd680>] ? __down_write_nested+0x15/0xab
+>> [  600.616524]  [<ffffffff810dbfe6>] ? get_sb_bdev+0x111/0x159
+>> [  600.616571]  [<ffffffffa04aa714>] ? ext4_fill_super+0x0/0x2060 [ext4]
+>> [  600.616582]  [<ffffffff810dbc44>] ? vfs_kern_mount+0x95/0x111
+>> [  600.616593]  [<ffffffff810dbd13>] ? do_kern_mount+0x43/0xe2
+>> [  600.616607]  [<ffffffff810ef49d>] ? do_mount+0x767/0x7d6
+>> [  600.616620]  [<ffffffff810ef591>] ? sys_mount+0x85/0xc8
+>> [  600.616633]  [<ffffffff81010a02>] ? system_call_fastpath+0x16/0x1b
+>> [  618.816175] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  618.816184] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  618.816196] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  618.816201] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  618.816241] sd 1:0:3:0: [sdf] Unhandled error code
+>> [  618.816247] sd 1:0:3:0: [sdf] Result: hostbyte=DID_OK
+>> driverbyte=DRIVER_TIMEOUT
+>> [  618.816255] end_request: I/O error, dev sdf, sector 160
+>> [  618.816263] Buffer I/O error on device md2, logical block 20
+>> [  618.816274] Buffer I/O error on device md2, logical block 21
+>> [  618.816280] Buffer I/O error on device md2, logical block 22
+>> [  618.816285] Buffer I/O error on device md2, logical block 23
+>> [  618.816291] Buffer I/O error on device md2, logical block 24
+>> [  618.816298] Buffer I/O error on device md2, logical block 25
+>> [  618.816307] Buffer I/O error on device md2, logical block 26
+>> [  618.816316] Buffer I/O error on device md2, logical block 27
+>> [  618.816324] Buffer I/O error on device md2, logical block 28
+>> [  618.816331] Buffer I/O error on device md2, logical block 29
+>> [  649.780185] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  649.780194] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  649.780208] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  649.780214] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  649.780293] ------------[ cut here ]------------
+>> [  649.780366] WARNING: at drivers/ata/libata-core.c:5129
+>> ata_qc_issue+0x10a/0x347 [libata]()
+>> [  649.780373] Hardware name: GA-MA790FXT-UD5P
+>> [  649.780377] Modules linked in: ext4 jbd2 crc16 raid0 powernow_k8
+>> cpufreq_conservative cpufreq_stats cpufreq_userspace cpufreq_powersave
+>>   kvm_amd kvm nfsd exportfs nfs lockd fscache nfs_acl auth_rpcgss sunrpc
+>>   bridge stp it87 hwmon_vid adt7473 firewire_sbp2 loop md_mod
+>>   snd_hda_codec_realtek
+>> snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm
+>> snd_seq_midi snd_rawmidi snd_seq_midi_event amd64_edac_mod snd_seq
+>>   edac_core snd_timer snd_seq_device snd soundcore i2c_piix4 snd_page_alloc
+>>   i2c_core evdev parport_pc wmi parport button processor ext3 jbd mbcache
+>>   dm_mod usbhid hid sg sr_mod cdrom sd_mod crc_t10dif ata_generic
+>>   ide_pci_generic firewire_ohci firewire_core ohci_hcd crc_itu_t atiixp
+>>   ide_core mvsas ehci_hcd ahci libsas libata scsi_transport_sas scsi_mod
+>>   r8169 mii floppy thermal fan thermal_sys [last unloaded: scsi_wait_scan]
+>> [  649.780499] Pid: 3185, comm: hddtemp Not tainted 2.6.31-rc9 #2
+>> [  649.780504] Call Trace:
+>> [  649.780551]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347 [libata]
+>> [  649.780593]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347 [libata]
+>> [  649.780607]  [<ffffffff8104aca0>] ? warn_slowpath_common+0x77/0xa3
+>> [  649.780649]  [<ffffffffa00790ce>] ? ata_scsi_pass_thru+0x0/0x240
+>>   [libata] [  649.780690]  [<ffffffffa0074f90>] ? ata_qc_issue+0x10a/0x347
+>>   [libata] [  649.780733]  [<ffffffffa00401d6>] ? scsi_get_command+0x75/0x97
+>>   [scsi_mod] [  649.780776]  [<ffffffffa00790ce>] ?
+>>   ata_scsi_pass_thru+0x0/0x240 [libata] [  649.780815]  [<ffffffffa003f7aa>]
+>>   ? scsi_done+0x0/0xc [scsi_mod] [  649.780858]  [<ffffffffa007a4d5>] ?
+>>   __ata_scsi_queuecmd+0x185/0x1dc [libata]
+>> [  649.780896]  [<ffffffffa003f7aa>] ? scsi_done+0x0/0xc [scsi_mod]
+>> [  649.780918]  [<ffffffffa00a3c8e>] ? sas_queuecommand+0x83/0x25d [libsas]
+>> [  649.780956]  [<ffffffffa003fa7c>] ? scsi_dispatch_cmd+0x1c0/0x23c
+>> [scsi_mod]
+>> [  649.780996]  [<ffffffffa0044ff0>] ? scsi_request_fn+0x3a5/0x506
+>>   [scsi_mod] [  649.781006]  [<ffffffff810546e0>] ? del_timer+0x59/0x62
+>> [  649.781016]  [<ffffffff81163b70>] ? blk_execute_rq_nowait+0x65/0x89
+>> [  649.781032]  [<ffffffffa014164f>] ? sg_common_write+0x489/0x4ab [sg]
+>> [  649.781042]  [<ffffffff8115df56>] ? __freed_request+0x26/0x83
+>> [  649.781056]  [<ffffffffa01421da>] ? sg_new_write+0x23e/0x269 [sg]
+>> [  649.781070]  [<ffffffffa0142473>] ? sg_ioctl+0x26e/0xb63 [sg]
+>> [  649.781080]  [<ffffffff81100f38>] ? inotify_d_instantiate+0x12/0x39
+>> [  649.781088]  [<ffffffff8105eee6>] ? autoremove_wake_function+0x0/0x2e
+>> [  649.781098]  [<ffffffff810d80bf>] ? fd_install+0x2e/0x5a
+>> [  649.781105]  [<ffffffff810e5247>] ? vfs_ioctl+0x56/0x6c
+>> [  649.781111]  [<ffffffff810e570a>] ? do_vfs_ioctl+0x437/0x475
+>> [  649.781118]  [<ffffffff810e5799>] ? sys_ioctl+0x51/0x70
+>> [  649.781128]  [<ffffffff81010a02>] ? system_call_fastpath+0x16/0x1b
+>> [  649.781134] ---[ end trace 9005373b1b9c6eb7 ]---
+>> [  680.781672] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  680.781681] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  711.781672] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  711.781681] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  741.816069] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  741.816078] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  741.816090] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  741.816096] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  772.820160] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  772.820168] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  772.820181] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  772.820186] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  803.816212] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  803.816220] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  803.816233] drivers/scsi/mvsas/mv_sas.c 1669:mvs_abort_task:rc= 5
+>> [  803.816239] drivers/scsi/mvsas/mv_sas.c 1608:mvs_query_task:rc= 5
+>> [  803.816264] sd 1:0:3:0: [sdf] Unhandled error code
+>> [  803.816270] sd 1:0:3:0: [sdf] Result: hostbyte=DID_OK
+>> driverbyte=DRIVER_TIMEOUT
+>> [  803.816278] end_request: I/O error, dev sdf, sector 512
+>> [  803.816284] __ratelimit: 70 callbacks suppressed
+>> [  803.816290] Buffer I/O error on device md2, logical block 64
+>>
+>> That's after bringing up a raid0 array I build a few days ago on 4
+>>   perfectly good (Seagate Baracuda 1TB 7200.12) disks, without the bad disk
+>>   plugged in. I try to mount it, and the driver hangs. Anything trying to
+>>   access any of the 4 disks hangs as well.
+>>
+>> I know this array worked a few days ago. The most major change I've made
+>>   was upgrade from -rc8 (or -rc5, not sure if I mounted the array under
+>>   -rc8) to -rc9.
+>>
+>
+> Hi, just wondering if anyone has had a chance to look at this, or if there's
+> some patches I should try out, or if you need me to do some testing, I'd be
+> glad to, thanks :)
 
-Signed-off-by: Constantin Baranov <const@mimas.ru>
----
- drivers/hwmon/Kconfig    |   10 ++
- drivers/hwmon/Makefile   |    1 +
- drivers/hwmon/scsitemp.c |  264 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 275 insertions(+), 0 deletions(-)
- create mode 100644 drivers/hwmon/scsitemp.c
+I was hoping that some VM would jump in.  The BUG in question is, from 
+mm/slab.c:
 
-diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
-index 2d50166..fb9fd9d 100644
---- a/drivers/hwmon/Kconfig
-+++ b/drivers/hwmon/Kconfig
-@@ -692,6 +692,16 @@ config SENSORS_PCF8591
- 	  These devices are hard to detect and rarely found on mainstream
- 	  hardware.  If unsure, say N.
- 
-+config SENSORS_SCSITEMP
-+	tristate "SCSI/ATA drive temperature sensors"
-+	depends on SCSI
-+	help
-+	  If you say yes you get support for SCSI/ATA accessible temperature
-+	  sensors found on most modern hard drives.
-+
-+	  This driver can also be built as a module.  If so, the module
-+	  will be called scsitemp.
-+
- config SENSORS_SHT15
- 	tristate "Sensiron humidity and temperature sensors. SHT15 and compat."
- 	depends on GENERIC_GPIO
-diff --git a/drivers/hwmon/Makefile b/drivers/hwmon/Makefile
-index b793dce..8c4c870 100644
---- a/drivers/hwmon/Makefile
-+++ b/drivers/hwmon/Makefile
-@@ -76,6 +76,7 @@ obj-$(CONFIG_SENSORS_MAX6650)	+= max6650.o
- obj-$(CONFIG_SENSORS_PC87360)	+= pc87360.o
- obj-$(CONFIG_SENSORS_PC87427)	+= pc87427.o
- obj-$(CONFIG_SENSORS_PCF8591)	+= pcf8591.o
-+obj-$(CONFIG_SENSORS_SCSITEMP)	+= scsitemp.o
- obj-$(CONFIG_SENSORS_SHT15)	+= sht15.o
- obj-$(CONFIG_SENSORS_SIS5595)	+= sis5595.o
- obj-$(CONFIG_SENSORS_SMSC47B397)+= smsc47b397.o
-diff --git a/drivers/hwmon/scsitemp.c b/drivers/hwmon/scsitemp.c
-new file mode 100644
-index 0000000..f50938a
---- /dev/null
-+++ b/drivers/hwmon/scsitemp.c
-@@ -0,0 +1,264 @@
-+/*
-+ * scsitemp.c - SCSI/ATA accessible temperature sensors
-+ *
-+ * TODO:
-+ * - LOG SENSE Temperature log page method
-+ * - LOG SENSE Informational Exceptions log page method
-+ */
-+
-+#include <linux/ata.h>
-+#include <linux/device.h>
-+#include <linux/hwmon.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_driver.h>
-+
-+MODULE_AUTHOR("Constantin Baranov <const@mimas.ru>");
-+MODULE_DESCRIPTION("SCSI/ATA temperature monitor");
-+MODULE_VERSION("0.1");
-+MODULE_LICENSE("GPL");
-+
-+struct scsitemp_method;
-+
-+struct scsitemp {
-+	struct scsi_device *sdev;
-+	struct device *hwmon;
-+	const struct scsitemp_method *method;
-+	int id;
-+	struct device dev;
-+};
-+
-+struct scsitemp_method {
-+	const char *name;
-+	int (*temp_input)(struct scsitemp *st, long *temp);
-+};
-+
-+static int scsitemp_execute(struct scsitemp *st, const u8 *cdb,
-+			void *buffer, unsigned *bufflen)
-+{
-+	int result;
-+	int resid;
-+
-+	result = scsi_execute(st->sdev, cdb, DMA_FROM_DEVICE,
-+			buffer, *bufflen, NULL, 1 * HZ, 0, 0, &resid);
-+
-+	if (result)
-+		return -EIO;
-+
-+	*bufflen -= resid;
-+	return 0;
-+}
-+
-+static int scsitemp_ata_temp_input(struct scsitemp *st, long *temp)
-+{
-+	static const u8 cdb[16] = {
-+		ATA_16,			0x08,	0x0e,			0x00,
-+		ATA_SMART_READ_VALUES,	0x00,	0x01,			0x00,
-+		0x00,			0x00,	ATA_SMART_LBAM_PASS,	0x00,
-+		ATA_SMART_LBAH_PASS,	0x00,	ATA_CMD_SMART,		0x00,
-+	};
-+
-+	u8 values[512];
-+	unsigned len = sizeof(values);
-+	unsigned nattrs, i;
-+	int err;
-+
-+	err = scsitemp_execute(st, cdb, values, &len);
-+	if (err)
-+		goto out;
-+
-+	err = -ENXIO;
-+	nattrs = min_t(unsigned, 30, len / 12);
-+	for (i = 0; i < nattrs; i++) {
-+		u8 *attr = values + i * 12;
-+
-+		if (attr[2] == 194) {
-+			*temp = attr[7] * 1000;
-+			err = 0;
-+			break;
-+		}
-+	}
-+
-+out:
-+	return err;
-+}
-+
-+static const struct scsitemp_method scsitemp_methods[] = {
-+	{"ATA SMART", scsitemp_ata_temp_input},
-+	{}
-+};
-+
-+static void scsitemp_assign_method(struct scsitemp *st)
-+{
-+	const struct scsitemp_method *m;
-+
-+	for (m = scsitemp_methods; m->temp_input; m++) {
-+		long temp;
-+
-+		if (m->temp_input(st, &temp) == 0) {
-+			st->method = m;
-+			return;
-+		}
-+	}
-+}
-+
-+static ssize_t name_show(struct device *dev,
-+			struct device_attribute *attr, char *buf)
-+{
-+	return sprintf(buf, "%s\n", dev->class->name);
-+}
-+
-+static ssize_t temp1_input_show(struct device *dev,
-+				struct device_attribute *attr, char *buf)
-+{
-+	struct scsitemp *st = dev_get_drvdata(dev);
-+	long temp;
-+	int err;
-+
-+	err = st->method->temp_input(st, &temp);
-+	if (err)
-+		return err;
-+
-+	return sprintf(buf, "%ld\n", temp);
-+}
-+
-+static ssize_t temp1_label_show(struct device *dev,
-+				struct device_attribute *attr, char *buf)
-+{
-+	struct scsitemp *st = dev_get_drvdata(dev);
-+	struct scsi_device *sdev = st->sdev;
-+
-+	return sprintf(buf, "%.8s %.16s\n", sdev->vendor, sdev->model);
-+}
-+
-+static struct device_attribute scsitemp_attrs[] = {
-+	__ATTR_RO(name),
-+	__ATTR_RO(temp1_input),
-+	__ATTR_RO(temp1_label),
-+	__ATTR_NULL,
-+};
-+
-+static struct class scsitemp_class;
-+
-+static int scsitemp_add(struct device *dev, struct class_interface *intf)
-+{
-+	struct device *devp = dev->parent;
-+	struct scsi_device *sdev = to_scsi_device(devp);
-+	struct scsitemp *st;
-+	int err;
-+
-+	st = kzalloc(sizeof(*st), GFP_KERNEL);
-+	if (st == NULL) {
-+		err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	st->sdev = sdev;
-+	scsitemp_assign_method(st);
-+	if (!st->method) {
-+		err = -ENODEV;
-+		goto out_st;
-+	}
-+
-+	dev_set_name(&st->dev, "%s-%s", scsitemp_class.name, dev_name(devp));
-+	st->dev.class = &scsitemp_class;
-+	st->dev.parent = devp;
-+	dev_set_drvdata(&st->dev, st);
-+
-+	err = device_register(&st->dev);
-+	if (err)
-+		goto out_st;
-+
-+	st->hwmon = hwmon_device_register(&st->dev);
-+	if (IS_ERR(st->hwmon)) {
-+		err = PTR_ERR(st->hwmon);
-+		device_unregister(&st->dev);
-+		goto out;
-+	}
-+
-+	dev_info(devp, "found temperature sensor using %s method",
-+		st->method->name);
-+
-+	return 0;
-+
-+out_st:
-+	kfree(st);
-+out:
-+	return err;
-+}
-+
-+static void scsitemp_device_release(struct device *dev)
-+{
-+	struct scsitemp *st = dev_get_drvdata(dev);
-+
-+	kfree(st);
-+}
-+
-+static int scsitemp_match(struct device *dev, void *sdev)
-+{
-+	struct scsitemp *st = dev_get_drvdata(dev);
-+
-+	return st->sdev == (struct scsi_device *)sdev;
-+}
-+
-+static void scsitemp_remove(struct device *dev, struct class_interface *intf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev->parent);
-+	struct device *stdev;
-+	struct scsitemp *st;
-+
-+	stdev = class_find_device(&scsitemp_class, NULL,
-+				sdev, scsitemp_match);
-+
-+	if (!stdev)
-+		return;
-+
-+	st = dev_get_drvdata(stdev);
-+	hwmon_device_unregister(st->hwmon);
-+	device_unregister(&st->dev);
-+	put_device(&st->dev);
-+}
-+
-+static struct class scsitemp_class = {
-+	.name = KBUILD_MODNAME,
-+	.owner = THIS_MODULE,
-+	.dev_attrs = scsitemp_attrs,
-+	.dev_release = scsitemp_device_release,
-+};
-+
-+static struct class_interface scsitemp_interface = {
-+	.add_dev = scsitemp_add,
-+	.remove_dev = scsitemp_remove,
-+};
-+
-+static int __init scsitemp_init(void)
-+{
-+	int err;
-+
-+	err = class_register(&scsitemp_class);
-+	if (err)
-+		goto out;
-+
-+	err = scsi_register_interface(&scsitemp_interface);
-+	if (err)
-+		goto out_class;
-+
-+	return 0;
-+
-+out_class:
-+	class_unregister(&scsitemp_class);
-+out:
-+	return err;
-+}
-+
-+static void __exit scsitemp_exit(void)
-+{
-+	scsi_unregister_interface(&scsitemp_interface);
-+	class_unregister(&scsitemp_class);
-+}
-+
-+module_init(scsitemp_init);
-+module_exit(scsitemp_exit);
--- 
-1.6.4.2
+                 /*
+                  * The slab was either on partial or free list so
+                  * there must be at least one object available for
+                  * allocation.
+                  */
+                 BUG_ON(slabp->inuse >= cachep->num);
+
+So I wonder if that is a double-free, indicating a bug in 
+SCSI/libsas/mvsas, or a VM problem of some sort.
+
+Was free memory low on that machine, at that point, perchance?
+
+	Jeff
+
+
 
