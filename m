@@ -1,87 +1,241 @@
-From: Rolf Eike Beer <eike@sf-mail.de>
-Subject: Re: [PATCH] hwmon: Driver for SCSI/ATA temperature sensors
-Date: Sun, 13 Sep 2009 10:04:11 +0200
-Message-ID: <200909131004.19489.eike@sf-mail.de>
-References: <20090913040104.ab1d0b69.const@mimas.ru>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 1/5] SCSI: Add support for 32-byte CDBs
+Date: Sun, 13 Sep 2009 12:31:56 +0300
+Message-ID: <4AACBC0C.9050703@panasas.com>
+References: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>	<1252053394-24886-2-git-send-email-martin.petersen@oracle.com>	<4AA395E8.8020300@panasas.com> <yq18wgo4u41.fsf@sermon.lab.mkp.net>	<4AA766F8.6050801@panasas.com> <yq1iqfq2doc.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5475248.XWu9tlgf66";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:51557 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750810AbZIMILB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Sep 2009 04:11:01 -0400
-In-Reply-To: <20090913040104.ab1d0b69.const@mimas.ru>
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:2106 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751627AbZIMJcX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Sep 2009 05:32:23 -0400
+In-Reply-To: <yq1iqfq2doc.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Constantin Baranov <const@mimas.ru>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
---nextPart5475248.XWu9tlgf66
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+On 09/11/2009 09:33 AM, Martin K. Petersen wrote:
+>>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+> 
+> Boaz> BTW have you thought of doing all this inside sd.c? it might be
+> Boaz> very simple.  Since it is sd that probes for type 2 disks, and it
+> Boaz> is sd that finally decides what commands to send, when. It would
+> Boaz> be easy to just allocate the extra cmnd space there, and be done
+> Boaz> with it. It sounds like all this can be sd private stuff.
+> 
+> How about this?
+> 
 
-Am Sonntag 13 September 2009 01:01:04 schrieb Constantin Baranov:
-> The scsitemp module attaches a device to each SCSI device
-> and registers it in hwmon. Currently the only method of
-> reading temperature is ATA SMART. Adding support of the
-> pure SCSI methods is provided.
+This patch replaces both:
+	[PATCH 1/5] SCSI: Add support for 32-byte CDBs
+	[PATCH 4/5] sd: Support disks formatted with DIF Type 2
 
-That sounds useful. Do you have any nagios rules or something similar aroun=
-d=20
-that make use of this?
+right?
 
-> +static int scsitemp_ata_temp_input(struct scsitemp *st, long *temp)
-> +{
-> +	static const u8 cdb[16] =3D {
-> +		ATA_16,			0x08,	0x0e,			0x00,
-> +		ATA_SMART_READ_VALUES,	0x00,	0x01,			0x00,
-> +		0x00,			0x00,	ATA_SMART_LBAM_PASS,	0x00,
-> +		ATA_SMART_LBAH_PASS,	0x00,	ATA_CMD_SMART,		0x00,
-> +	};
+looks very good. Well I like it better. Don't you?
+(support of the rule, keep it simple.)
+
+One question below
+
+> 
+> sd: Support disks formatted with DIF Type 2
+> 
+> Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
+> when protection is enabled.  Only the 32-byte variants are supported.
+> 
+> Implement support for issusing 32-byte READ/WRITE and enable Type 2
+> drives in the protection type detection logic.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 36e2333..d138e6b 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -116,6 +116,9 @@ static DEFINE_IDA(sd_index_ida);
+>   * object after last put) */
+>  static DEFINE_MUTEX(sd_ref_mutex);
+>  
+> +struct kmem_cache *sd_cdb_cache;
+> +mempool_t *sd_cdb_pool;
 > +
-> +	u8 values[512];
-> +	unsigned len =3D sizeof(values);
-> +	unsigned nattrs, i;
-> +	int err;
+>  static const char *sd_cache_types[] = {
+>  	"write through", "none", "write back",
+>  	"write back, no read (daft)"
+> @@ -413,6 +416,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+>  	sector_t threshold;
+>  	unsigned int this_count = blk_rq_sectors(rq);
+>  	int ret, host_dif;
+> +	unsigned char protect;
+>  
+>  	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+>  		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+> @@ -545,13 +549,48 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+>  	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
+>  	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
+>  	if (host_dif)
+> -		SCpnt->cmnd[1] = 1 << 5;
+> +		protect = 1 << 5;
+>  	else
+> -		SCpnt->cmnd[1] = 0;
+> +		protect = 0;
 > +
-> +	err =3D scsitemp_execute(st, cdb, values, &len);
-> +	if (err)
-> +		goto out;
-
-How about directly doing "return err;" here? This would make the label=20
-superfluous and tthe code a bit more obvious.
-
-> +	err =3D -ENXIO;
-> +	nattrs =3D min_t(unsigned, 30, len / 12);
-> +	for (i =3D 0; i < nattrs; i++) {
-> +		u8 *attr =3D values + i * 12;
+> +	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
+> +		SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
 > +
-> +		if (attr[2] =3D=3D 194) {
-> +			*temp =3D attr[7] * 1000;
-> +			err =3D 0;
-> +			break;
+
+The cmd_len gets updated later on, in scsi_lib.c right?
+
+> +		if (unlikely(SCpnt->cmnd == NULL)) {
+> +			ret = BLKPREP_DEFER;
+> +			goto out;
 > +		}
+>  
+> -	if (block > 0xffffffff) {
+> +		memset(SCpnt->cmnd, 0, SD_EXT_CDB_SIZE);
+> +		SCpnt->cmnd[0] = VARIABLE_LENGTH_CMD;
+> +		SCpnt->cmnd[7] = 0x18;
+> +		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
+> +		SCpnt->cmnd[10] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+> +
+> +		/* LBA */
+> +		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+> +		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+> +		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+> +		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
+> +		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
+> +		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
+> +		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
+> +		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
+> +
+> +		/* Expected Indirect LBA */
+> +		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
+> +		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
+> +		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
+> +		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
+> +
+> +		/* Transfer length */
+> +		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
+> +		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
+> +		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
+> +		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
+> +	} else if (block > 0xffffffff) {
+>  		SCpnt->cmnd[0] += READ_16 - READ_6;
+> -		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
+> +		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+>  		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+>  		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+>  		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+> @@ -572,7 +611,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+>  			this_count = 0xffff;
+>  
+>  		SCpnt->cmnd[0] += READ_10 - READ_6;
+> -		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
+> +		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+>  		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
+>  		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+>  		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+> @@ -1047,6 +1086,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+>  	int result = SCpnt->result;
+>  	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
+>  	struct scsi_sense_hdr sshdr;
+> +	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
+>  	int sense_valid = 0;
+>  	int sense_deferred = 0;
+>  
+> @@ -1108,6 +1148,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+>  	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
+>  		sd_dif_complete(SCpnt, good_bytes);
+>  
+> +	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
+> +	    == SD_DIF_TYPE2_PROTECTION)
+> +		mempool_free(SCpnt->cmnd, sd_cdb_pool);
+> +
+>  	return good_bytes;
+>  }
+>  
+> @@ -1271,12 +1315,7 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
+>  
+>  	sdkp->protection_type = type;
+>  
+> -	switch (type) {
+> -	case SD_DIF_TYPE1_PROTECTION:
+> -	case SD_DIF_TYPE3_PROTECTION:
+> -		break;
+> -
+> -	default:
+> +	if (type > SD_DIF_TYPE3_PROTECTION) {
+>  		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
+>  			  "protection type %u. Disabling disk!\n", type);
+>  		sdkp->capacity = 0;
+> @@ -2321,8 +2360,24 @@ static int __init init_sd(void)
+>  	if (err)
+>  		goto err_out_class;
+>  
+> +	sd_cdb_cache = kmem_cache_create("sd_ext_cdb", SD_EXT_CDB_SIZE,
+> +					 0, 0, NULL);
+> +	if (!sd_cdb_cache) {
+> +		printk(KERN_ERR "sd: can't init extended cdb cache\n");
+> +		goto err_out_class;
 > +	}
 > +
-> +out:
-> +	return err;
-> +}
+> +	sd_cdb_pool = mempool_create_slab_pool(SD_MEMPOOL_SIZE, sd_cdb_cache);
+> +	if (!sd_cdb_pool) {
+> +		printk(KERN_ERR "sd: can't init extended cdb pool\n");
+> +		goto err_out_cache;
+> +	}
+> +
+>  	return 0;
+>  
+> +err_out_cache:
+> +	kmem_cache_destroy(sd_cdb_cache);
+> +
+>  err_out_class:
+>  	class_unregister(&sd_disk_class);
+>  err_out:
+> @@ -2342,6 +2397,9 @@ static void __exit exit_sd(void)
+>  
+>  	SCSI_LOG_HLQUEUE(3, printk("exit_sd: exiting sd driver\n"));
+>  
+> +	mempool_destroy(sd_cdb_pool);
+> +	kmem_cache_destroy(sd_cdb_cache);
+> +
+>  	scsi_unregister_driver(&sd_template.gendrv);
+>  	class_unregister(&sd_disk_class);
+>  
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index ce1f5f8..e374804 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -37,6 +37,11 @@
+>   */
+>  #define SD_LAST_BUGGY_SECTORS	8
+>  
+> +enum {
+> +	SD_EXT_CDB_SIZE = 32,	/* Extended CDB size */
+> +	SD_MEMPOOL_SIZE = 2,	/* CDB pool size */
+> +};
+> +
+>  struct scsi_disk {
+>  	struct scsi_driver *driver;	/* always &sd_template */
+>  	struct scsi_device *device;
+> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+> index 084478e..34c46ab 100644
+> --- a/include/scsi/scsi.h
+> +++ b/include/scsi/scsi.h
+> @@ -129,6 +129,9 @@ struct scsi_cmnd;
+>  #define MI_REPORT_TARGET_PGS  0x0a
+>  /* values for maintenance out */
+>  #define MO_SET_TARGET_PGS     0x0a
+> +/* values for variable length command */
+> +#define READ_32		      0x09
+> +#define WRITE_32	      0x0b
+>  
+>  /* Values for T10/04-262r7 */
+>  #define	ATA_16		      0x85	/* 16-byte pass-thru */
 
---nextPart5475248.XWu9tlgf66
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.9 (GNU/Linux)
-
-iEYEABECAAYFAkqsp4MACgkQXKSJPmm5/E6CLwCfYbSFY6w6DJtUxXtTth6b+w9a
-NcYAoIOHKbvWF3dKuqjgQ6TrGxRFgvne
-=40Wg
------END PGP SIGNATURE-----
-
---nextPart5475248.XWu9tlgf66--
