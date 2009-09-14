@@ -1,20 +1,31 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: Re: [Bug 14159] AIC79xx is not working properly with an attached scsi tape since 2.6.29
-Date: Mon, 14 Sep 2009 11:24:38 -0600
-Message-ID: <200909141124.39379.bjorn.helgaas@hp.com>
-References: <bug-14159-11613@http.bugzilla.kernel.org/> <200909140718.n8E7ImIE010519@demeter.kernel.org> <1252938312.8584.37.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
+ tape since 2.6.29
+Date: Mon, 14 Sep 2009 17:24:43 GMT
+Message-ID: <200909141724.n8EHOhtH026997@demeter.kernel.org>
+References: <bug-14159-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1252938312.8584.37.camel@mulgrave.site>
-Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, Stefan Assmann <sassmann@novell.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:41161 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753744AbZINRYk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2009 13:24:40 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8EHOhId026998
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2009 17:24:43 GMT
+In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+http://bugzilla.kernel.org/show_bug.cgi?id=14159
+
+
+
+
+
+--- Comment #6 from Bjorn Helgaas <bjorn.helgaas@hp.com>  2009-09-14 17:24:42 ---
 On Monday 14 September 2009 08:25:12 am James Bottomley wrote:
 > > --- Comment #3 from g.giorgetti@teamsystem.com  2009-09-14 07:18:46 ---
 > > today after building and installing the latest stable kernel 2.6.31 I can tell
@@ -44,4 +55,10 @@ to have.
 
 Bjorn
 
-[1] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=bbe194433baeadc953f49e3795b41ffffc5486dd
+[1]
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=bbe194433baeadc953f49e3795b41ffffc5486dd
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
