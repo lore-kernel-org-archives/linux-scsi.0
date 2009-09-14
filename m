@@ -1,37 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: MD/RAID time out writing superblock
-Date: Mon, 14 Sep 2009 16:46:42 +0900
-Message-ID: <4AADF4E2.9030407@kernel.org>
-References: <4A950FA6.4020408@redhat.com> <20090907114442.GG18831@arachsys.com> <20090907165504.GJ31003@lifeintegrity.com> <200909071726.56432.tfjellstrom@shaw.ca>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 2/7] block: use blkdev_issue_discard in
+	blk_ioctl_discard
+Date: Mon, 14 Sep 2009 11:40:27 +0200
+Message-ID: <20090914094027.GY14984@kernel.dk>
+References: <20090829230332.017137693@bombadil.infradead.org> <20090829231121.385741993@bombadil.infradead.org> <20090911222644.GA7197@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200909071726.56432.tfjellstrom@shaw.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: tfjellstrom@shaw.ca
-Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([93.163.65.50]:54565 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755248AbZINJkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Sep 2009 05:40:24 -0400
+Content-Disposition: inline
+In-Reply-To: <20090911222644.GA7197@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, liml@rtr.ca, matthew@wil.cx, dwmw2@infradead.org
 
-Hello,
+On Fri, Sep 11 2009, Christoph Hellwig wrote:
+> Jens, can we put this one and possible Dave's treat discard requests
+> as writes patch in early for 2.6.32?  That'll make the discard patch
+> queue quite a bit smaller and will allow easier experimenting.
 
-Thomas Fjellstrom wrote:
-> I have the same issue with a single WD 2TB Green drive. Technically two, but 
-> it always only gets errors from the same drive, so I was assuming it was the 
-> drive. I only have to setup the raid0 array, and put some light load on it for 
-> the kernel to start complaining, and eventually it just kicks the drive 
-> completely with the following messages:
-> 
-> sd 3:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> end_request: I/O error, dev sdb, sector 202026972
-> 
-> The drive does work fine prior to the frozen timeout errors. And I was using 
-> it in windows (same raid0 config) just fine with no errors what so ever.
-
-Can you post full dmesg output?  The above doesn't tell much about ATA
-side of things.
-
-Thanks.
+Looks fine from a review, I'll include it in the for-2.6.32 branch. I
+plan on asking for a pull of that tomorrow.
 
 -- 
-tejun
+Jens Axboe
+
