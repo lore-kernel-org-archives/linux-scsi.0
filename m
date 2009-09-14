@@ -1,82 +1,89 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [RFC PATCH 0/19] A kernel-level configfs enabled generic target
- engine for Linux v2.6.32
-Date: Mon, 14 Sep 2009 22:50:38 +0400
-Message-ID: <4AAE907E.1020205@vlnb.net>
-References: <1252720508.2067.196.camel@haakon2.linux-iscsi.org>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: RE: [dm-devel] [PATCH 3/3] scsi_dh: rdac handler: Batch up MODE
+	SELECTsand send few of them
+Date: Mon, 14 Sep 2009 12:25:03 -0700
+Message-ID: <1252956303.2541.24.camel@chandra-ubuntu>
+References: <20090428025230.11108.88559.sendpatchset@chandra-ubuntu>
+	 <20090428025248.11108.38596.sendpatchset@chandra-ubuntu>
+	 <4A02580A.2060704@cs.wisc.edu> <1241742975.27327.3.camel@chandra-ubuntu>
+	 <46A00B48CC54E4468EF6911F877AC4CA02579491@blrx3m10.blr.amer.dell.com>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:57855 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754909AbZINSuW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2009 14:50:22 -0400
-In-Reply-To: <1252720508.2067.196.camel@haakon2.linux-iscsi.org>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:52470 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754926AbZINTYv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2009 15:24:51 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e38.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n8EJKvsX014051
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2009 13:20:57 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n8EJOqEO223048
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2009 13:24:53 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n8EJOqKL014590
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2009 13:24:52 -0600
+In-Reply-To: <46A00B48CC54E4468EF6911F877AC4CA02579491@blrx3m10.blr.amer.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>
+To: Shyam_Iyer@Dell.com
+Cc: dm-devel@redhat.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, Yanqing_Liu@Dell.com, Jordan_Hargrave@Dell.com
 
-Nicholas A. Bellinger, on 09/12/2009 05:55 AM wrote:
-> Greetings all,
-> 
-> This is my humble request for review and inclusion of
-> Target_Core_Mod/ConfigFS v3.2 from lio-core-2.6.git code into mainline
-> v2.6.32.  With TCM v3.2, the two major SPC-4 SCSI target mode fabric
-> features that have now been completed: Persistent Reservation APTPL and
-> implict/explict ALUA are the first all optional SPC4 defined feature
-> implementation of PR and ALUA in the Linux OSS target theatre using an
-> upstream user-driven virtual filesystem directory hierarchy structure
-> based on configfs that can be configured in realtime in combination with
-> interpreted userspace code.
-> 
-> Both of these new features are now being used to provide Persistent Reservations
-> across target power loss and asymmetric multipath I/O to both Linux and non-Linux
-> clients.  There is also an optional ALUA transition delay logic that has been
-> included to futher debug and improve existing upstream client side Linux kernel code
-> using TCM v3.2. These patches have been diffed against v2.6.31, and tested on x86
-> 32-bit HVM, x86_64 KVM, and powerpc.
-> 
-> There is cleanup work continuing to make the TCM code to use dprintk(),
-> and some include cleanups, and other minor fixes.  The code has also
-> been run through checkpatch again since the posting in April, and all
-> errors have been removed, with the exception of one ConfigFS macro
-> define triggering a checkpatch false positive.
-> 
-> As with the posting of the TCM v3.0 code earlier in April, I have
-> decided to break up the submissions into the generic target_core_mod
-> piece (this patch series) and then a seperate one that will be appearing
-> in the next days for v3.2 of the LIO-Target iSCSI fabric module.
-> 
-> More Information about Target_Core_Mod/ConfigFS, and PR and ALUA:
-> 
-> http://www.linux-iscsi.org/index.php/Target_Core_Mod/ConfigFS
-> http://www.linux-iscsi.org/index.php/Persistent_Reservations
-> http://www.linux-iscsi.org/index.php/ALUA
-> 
-> The complete v3.x TCM CLI operations set can be found here:
-> 
-> http://www.linux-iscsi.org/index.php/Lio-utils#v3.1_TCM_CLI_operations
-> 
-> Instructions and examples for getting setup:
-> 
-> http://linux-iscsi.org/builds/docs/LIO-3.0-Users_Reference_Manual.pdf
-> http://www.linux-iscsi.org/index.php/Howto#Start_target_core_mod
+Hi Shyam,
 
-Some questions among many I have:
+As per Mike (Christie)'s suggestion I am working on getting all the
+hardware handlers to do async pg_init(), EMC handler is getting little
+cumbersome. Working on it. Will try to post the set of patches by end of
+week.
 
-1. Where and how TCM is better over the existing mainline target 
-framework STGT to justify such a move as adding a new piece of code 
-doing the same job?
+Testing and reporting the same (for as many hardware handler as
+possible) would certainly help these get accepted (of course after I
+post them :)....
 
-2. On the linux-iscsi.org main page (BTW, the comparison on that page 
-isn't fully correct about STGT and SCST) you claim that TCM is a generic 
-target engine. But how can you prove (and test) that if there are no 
-hardware target drivers for TCM?
+chandra
+On Sat, 2009-09-12 at 09:39 +0530, Shyam_Iyer@Dell.com wrote:
+> > -----Original Message-----
+> > From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
+> > On Behalf Of Chandra Seetharaman
+> > Sent: Friday, May 08, 2009 6:06 AM
+> > To: Mike Christie
+> > Cc: device-mapper development; linux-scsi@vger.kernel.org
+> > Subject: Re: [dm-devel] [PATCH 3/3] scsi_dh: rdac handler: Batch up
+> > MODE SELECTsand send few of them
+> > 
+> > 
+> > On Wed, 2009-05-06 at 22:39 -0500, Mike Christie wrote:
+> > > Chandra Seetharaman wrote:
+> > > >  }
+> > > >
+> > > > -static int rdac_activate(struct scsi_device *sdev,
+> > activate_complete fn, void *data)
+> > > > +static int queue_mode_select(struct scsi_device *sdev,
+> > > > +				activate_complete fn, void *data)
+> > > > +{
+> > > > +	struct rdac_queue_data *qdata;
+> > > > +	struct rdac_controller *ctlr;
+> > > > +
+> > > > +	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
+> > >
+> > >
+> > > I think you want to use GFP_NOIO or GFP_ATOMIC here. If GFP_NOIO can
+> > > block and screw up other devices using that multipathd workqueue
+> > struct
+> > > maybe GFP_ATOMIC would be best since we can have dm-mpath retry
+> > later.
+> > 
+> > Will do.
+> > 
+> > Thanks
+> > >
+> 
+> Chandra - Thanks for doing this. How can we help here to get this
+> upstream?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Also patch 7 implements MIBs through procfs. Procfs is for long time 
-forbidden for adding anything like that, so you can't push it in the 
-mainline.
-
-Vlad
