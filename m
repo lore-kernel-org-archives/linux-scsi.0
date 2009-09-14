@@ -1,47 +1,47 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 35/35] libfc: adds can_queue ramp up
-Date: Mon, 14 Sep 2009 12:18:36 -0500
-Message-ID: <4AAE7AEC.4090008@cs.wisc.edu>
-References: <20090911235655.27223.69728.stgit@localhost.localdomain> <20090912000006.27223.74492.stgit@localhost.localdomain>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: Re: [Bug 14159] AIC79xx is not working properly with an attached scsi tape since 2.6.29
+Date: Mon, 14 Sep 2009 11:24:38 -0600
+Message-ID: <200909141124.39379.bjorn.helgaas@hp.com>
+References: <bug-14159-11613@http.bugzilla.kernel.org/> <200909140718.n8E7ImIE010519@demeter.kernel.org> <1252938312.8584.37.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38568 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755719AbZINRSl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Sep 2009 13:18:41 -0400
-In-Reply-To: <20090912000006.27223.74492.stgit@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1252938312.8584.37.camel@mulgrave.site>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, Stefan Assmann <sassmann@novell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, Vasu Dev <vasu.dev@intel.com>
 
-Robert Love wrote:
-> From: Vasu Dev <vasu.dev@intel.com>
+On Monday 14 September 2009 08:25:12 am James Bottomley wrote:
+> > --- Comment #3 from g.giorgetti@teamsystem.com  2009-09-14 07:18:46 ---
+> > today after building and installing the latest stable kernel 2.6.31 I can tell
+> > you that the problem is still there.
+> > 
+> > Here is the machine's /proc/interrups
+> > 
+> >            CPU0       CPU1       
+> >   0:         44          0   IO-APIC-edge      timer
+> >   1:          0          2   IO-APIC-edge      i8042
+> >   3:          0          0   IO-APIC-fasteoi   ehci_hcd:usb2, ohci_hcd:usb5,
+> > ohci_hcd:usb6
+> >   4:          0          2   IO-APIC-edge    
+> >   8:          0          1   IO-APIC-edge      rtc0
+> >   9:          0          0   IO-APIC-fasteoi   acpi, sata_svw
+> >  12:          0          4   IO-APIC-edge      i8042
+> >  14:         63      92631   IO-APIC-edge      ide0
+> >  19:          0          0   IO-APIC-fasteoi   aic79xx
 > 
-> Adds last_can_queue_ramp_down_time and updates this on every
-> ramp down. If last_can_queue_ramp_down_time is not zero then
-> do ramp up on any IO completion in added fc_fcp_can_queue_ramp_up.
-> 
-> Reset last_can_queue_ramp_down_time to zero once can_queue
-> is ramped up to added max_can_queue limit, this is to avoid any
-> more ramp up attempts on subsequent IO completion.
-> 
-> The ramp down and up are skipped for FC_CAN_QUEUE_PERIOD
-> to avoid infrequent changes to can_queue, this required
-> keeping track of ramp up time also in last_can_queue_ramp_up_time.
-> 
-> Adds code to ramp down can_queue if lp->qfull is set, with added
-> new ramp up code the can_queue will be increased after
-> FC_CAN_QUEUE_PERIOD, therefore it is safe to do ramp down
-> without fsp in this case and will avoid thrash. This required
-> fc_fcp_can_queue_ramp_down locking change so that it can be
-> called with Scsi_Host lock held.
-> 
+> So this is the problem, as predicted: the card isn't getting interrupts.
+> This would strongly suggest an ACPI problem.  Can you try booting with
+> pci=noacpi?
 
-It looks like this could be a more common helper like the sdev ramp 
-up/down code. Software drivers like iscsi_tcp and drivers that do not 
-have hardware cmd limits like ib_iser, srp and cxgb3i could use it. And 
-I think this what lpfc wants in lpfc_queuecommand when lpfc_get_scsi_buf 
-fails instead of doing lpfc_rampdown_queue_depth.
+You might also try "pci=noioapicquirk".  Commit bbe194433bae [1]
+fiddles with boot interrupts on AMD 813x devices, which you seem
+to have.
+
+Bjorn
+
+[1] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=bbe194433baeadc953f49e3795b41ffffc5486dd
