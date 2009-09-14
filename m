@@ -1,64 +1,82 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
- tape since 2.6.29
-Date: Mon, 14 Sep 2009 17:24:43 GMT
-Message-ID: <200909141724.n8EHOhtH026997@demeter.kernel.org>
-References: <bug-14159-11613@http.bugzilla.kernel.org/>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC PATCH 0/19] A kernel-level configfs enabled generic target
+ engine for Linux v2.6.32
+Date: Mon, 14 Sep 2009 22:50:38 +0400
+Message-ID: <4AAE907E.1020205@vlnb.net>
+References: <1252720508.2067.196.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41161 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753744AbZINRYk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2009 13:24:40 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8EHOhId026998
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2009 17:24:43 GMT
-In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
+Received: from moutng.kundenserver.de ([212.227.126.171]:57855 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754909AbZINSuW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2009 14:50:22 -0400
+In-Reply-To: <1252720508.2067.196.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14159
-
-
-
-
-
---- Comment #6 from Bjorn Helgaas <bjorn.helgaas@hp.com>  2009-09-14 17:24:42 ---
-On Monday 14 September 2009 08:25:12 am James Bottomley wrote:
-> > --- Comment #3 from g.giorgetti@teamsystem.com  2009-09-14 07:18:46 ---
-> > today after building and installing the latest stable kernel 2.6.31 I can tell
-> > you that the problem is still there.
-> > 
-> > Here is the machine's /proc/interrups
-> > 
-> >            CPU0       CPU1       
-> >   0:         44          0   IO-APIC-edge      timer
-> >   1:          0          2   IO-APIC-edge      i8042
-> >   3:          0          0   IO-APIC-fasteoi   ehci_hcd:usb2, ohci_hcd:usb5,
-> > ohci_hcd:usb6
-> >   4:          0          2   IO-APIC-edge    
-> >   8:          0          1   IO-APIC-edge      rtc0
-> >   9:          0          0   IO-APIC-fasteoi   acpi, sata_svw
-> >  12:          0          4   IO-APIC-edge      i8042
-> >  14:         63      92631   IO-APIC-edge      ide0
-> >  19:          0          0   IO-APIC-fasteoi   aic79xx
+Nicholas A. Bellinger, on 09/12/2009 05:55 AM wrote:
+> Greetings all,
 > 
-> So this is the problem, as predicted: the card isn't getting interrupts.
-> This would strongly suggest an ACPI problem.  Can you try booting with
-> pci=noacpi?
+> This is my humble request for review and inclusion of
+> Target_Core_Mod/ConfigFS v3.2 from lio-core-2.6.git code into mainline
+> v2.6.32.  With TCM v3.2, the two major SPC-4 SCSI target mode fabric
+> features that have now been completed: Persistent Reservation APTPL and
+> implict/explict ALUA are the first all optional SPC4 defined feature
+> implementation of PR and ALUA in the Linux OSS target theatre using an
+> upstream user-driven virtual filesystem directory hierarchy structure
+> based on configfs that can be configured in realtime in combination with
+> interpreted userspace code.
+> 
+> Both of these new features are now being used to provide Persistent Reservations
+> across target power loss and asymmetric multipath I/O to both Linux and non-Linux
+> clients.  There is also an optional ALUA transition delay logic that has been
+> included to futher debug and improve existing upstream client side Linux kernel code
+> using TCM v3.2. These patches have been diffed against v2.6.31, and tested on x86
+> 32-bit HVM, x86_64 KVM, and powerpc.
+> 
+> There is cleanup work continuing to make the TCM code to use dprintk(),
+> and some include cleanups, and other minor fixes.  The code has also
+> been run through checkpatch again since the posting in April, and all
+> errors have been removed, with the exception of one ConfigFS macro
+> define triggering a checkpatch false positive.
+> 
+> As with the posting of the TCM v3.0 code earlier in April, I have
+> decided to break up the submissions into the generic target_core_mod
+> piece (this patch series) and then a seperate one that will be appearing
+> in the next days for v3.2 of the LIO-Target iSCSI fabric module.
+> 
+> More Information about Target_Core_Mod/ConfigFS, and PR and ALUA:
+> 
+> http://www.linux-iscsi.org/index.php/Target_Core_Mod/ConfigFS
+> http://www.linux-iscsi.org/index.php/Persistent_Reservations
+> http://www.linux-iscsi.org/index.php/ALUA
+> 
+> The complete v3.x TCM CLI operations set can be found here:
+> 
+> http://www.linux-iscsi.org/index.php/Lio-utils#v3.1_TCM_CLI_operations
+> 
+> Instructions and examples for getting setup:
+> 
+> http://linux-iscsi.org/builds/docs/LIO-3.0-Users_Reference_Manual.pdf
+> http://www.linux-iscsi.org/index.php/Howto#Start_target_core_mod
 
-You might also try "pci=noioapicquirk".  Commit bbe194433bae [1]
-fiddles with boot interrupts on AMD 813x devices, which you seem
-to have.
+Some questions among many I have:
 
-Bjorn
+1. Where and how TCM is better over the existing mainline target 
+framework STGT to justify such a move as adding a new piece of code 
+doing the same job?
 
-[1]
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=bbe194433baeadc953f49e3795b41ffffc5486dd
+2. On the linux-iscsi.org main page (BTW, the comparison on that page 
+isn't fully correct about STGT and SCST) you claim that TCM is a generic 
+target engine. But how can you prove (and test) that if there are no 
+hardware target drivers for TCM?
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Also patch 7 implements MIBs through procfs. Procfs is for long time 
+forbidden for adding anything like that, so you can't push it in the 
+mainline.
+
+Vlad
