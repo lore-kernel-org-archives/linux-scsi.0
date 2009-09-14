@@ -1,115 +1,136 @@
-From: Gabor Gombas <gombasg@sztaki.hu>
-Subject: SMART causes disks to go offline on an LSI SAS 1068 controller
-Date: Mon, 14 Sep 2009 16:29:39 +0200
-Message-ID: <20090914142939.GE14072@boogie.lpds.sztaki.hu>
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: MD/RAID time out writing superblock
+Date: Mon, 14 Sep 2009 23:34:35 +0900
+Message-ID: <4AAE547B.9000405@suse.de>
+References: <4A9B8583.9050601@kernel.org> <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <20090914131114.GA32253@khazad-dum.debian.net> <4AAE4422.4040801@suse.de> <20090914140226.GD32253@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from boogie.lpds.sztaki.hu ([193.224.70.237]:41475 "EHLO
-	boogie.lpds.sztaki.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752259AbZINO3h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2009 10:29:37 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755579AbZINOeq@vger.kernel.org>
+In-Reply-To: <20090914140226.GD32253@khazad-dum.debian.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: smartmontools-support@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Hi,
+Hello,
 
-I'm having problems when using smartmontools with SATA disks behind an
-LSI SAS controller. The machine is a Dell PowerEdge 1950-II, the
-controller in question:
+Henrique de Moraes Holschuh wrote:
+>>> This is the kind of stuff that userspace should NOT have to worry about
+>>> (because it will get it wrong and cause data corruption eventually).
+>> If this indeed is the case (As Mark pointed out, there hasn't been any
+>> precedence involving IDENTIFY but it's also the first time I see
+>> IDENTIFY timeouts which are issued from userland), this is the kind
+>> that userspace shouldn't do to begin with.
+> 
+> There are many reasons why userspace would issue identify (note: I didn't
+> say they are good reasons), and off the hand I recall hddtemp as a likely
+> culprit.  Also, sometimes the local admin does hdparm -I for whatever
+> reason.  So, I am not surprised someone found a way to cause many IDENTIFY
+> commands to be issued.
 
-02:08.0 SCSI storage controller [0100]: LSI Logic / Symbios Logic SAS1068 PCI-X Fusion-MPT SAS [1000:0054] (rev 01)
-        Subsystem: Dell SAS 5/i Integrated Controller [1028:1f06]
-        Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 1270
-        I/O ports at ec00 [disabled] [size=256]
-        Memory at fc8fc000 (64-bit, non-prefetchable) [size=16K]
-        Memory at fc8e0000 (64-bit, non-prefetchable) [size=64K]
-        Expansion ROM at fc900000 [disabled] [size=1M]
-        Capabilities: [50] Power Management version 2
-        Capabilities: [98] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable+
-        Capabilities: [68] PCI-X non-bridge device
-        Capabilities: [b0] MSI-X: Enable- Mask- TabSize=1
-        Kernel driver in use: mptsas
-        Kernel modules: mptsas
+Heh... and there have been plenty of IO errors and timeouts coming
+from hddtemp.  :-)
 
-History:
+> Other SMART-maintenance utilities might issue IDENTIFY as well.  And if this
+> is an issue with SMART in general, smartd issues SMART commands (I don't
+> know if it uses IDENTIFY) once per hour to check attributes, and can be
+> configured to fire off SMART short/long/offline tests automatically.  The
+> local admin sends SMART commands (through smartctl) with the disks hot to
+> check the error log after EH, etc.
+> 
+> IMHO, the kernel really should be protecting userland against data
+> corruption here, even if it means a massive hit on disk performance while
+> the SMART commands are being processed.
 
-- The machine was running with kernel 2.6.22 and smartmontools 5.37 &
-  5.38 (from Debian) for a long time. smartd occassionally complained
-  about "Device: /dev/sdX, not capable of SMART self-check", but other
-  than that the machine was stable. smartd configuration:
+I don't know.  The problem is with test coverage.  As those aren't
+used too often, they don't get tested too much so the coverage of the
+blacklist wouldn't be too good and so on and there's very good reason
+why those aren't used too often.  They're not all that useful for most
+people.
 
-  /dev/sda -d sat -a -s (L/../../4/03|S/../.././02|O/../../6/03) -m root -I 190 -I 194
-  /dev/sdb -d sat -a -s (L/../../4/03|S/../.././02|O/../../6/03) -m root -I 190 -I 194
+>> There was another similar problem.  Some acpi package in ubuntu issues
+>> APM adjustment commands whenever power related stuff changes.  The
+> 
+> Yes.  If you fail to do this on ThinkPads (many models, but probably not
+> all), your disk will break in 1-2yr maximum, and THAT assumes you have
+> Hitachi notebook HDs that are supposed to take 600k head unloads before
+> croaking...  most other vendors say thay can only do 300k head unloads in
+> their datasheets (if you can find a datasheet at all).  If you need a reason
+> to buy Hitachi HDs, this is it: they give you full, proper datasheets.
 
-  sda is a Samsung HD160JJ, sdb is a Seagate ST3160812AS (oh well).
+There are plenty drives and configurations like that and different
+drives need different APM value to function properly.  storage-fixup
+deals exactly with the problem.
 
-- After switching to 2.6.26 (from Debian Lenny), running smartd started
-  to cause the disks to go offline in a couple of hours after boot. Log
-  sample:
+ http://git.kernel.org/?p=linux/kernel/git/tj/storage-fixup.git;a=summary
 
-Sep  7 08:50:36 gw kernel: [4917120.304690] mptscsih: ioc0: attempting task abort! (sc=ffff81007ff26940)
-Sep  7 08:50:36 gw kernel: [4917120.304690] sd 0:0:1:0: [sdb] CDB: ATA command pass through(16): 85 08 0e 00 00 00 01 00 00 00 00 00 00 00 ec 00
-Sep  7 08:50:40 gw kernel: [4917126.213130] mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO Executed}, SubCode(0x0000)
-Sep  7 08:50:40 gw kernel: [4917126.215970] mptsas: ioc0: removing sata device, channel 0, id 1, phy 1
-Sep  7 08:50:40 gw kernel: [4917126.215974]  port-0:1: mptsas: ioc0: delete port (1)
-Sep  7 08:50:40 gw kernel: [4917126.216570] sd 0:0:1:0: [sdb] Synchronizing SCSI cache
-Sep  7 08:50:40 gw kernel: [4917126.563597] mptscsih: ioc0: task abort: SUCCESS (sc=ffff81007ff26940)
-Sep  7 08:50:40 gw kernel: [4917126.563606] mptscsih: ioc0: attempting task abort! (sc=ffff81007ff26bc0)
-Sep  7 08:50:40 gw kernel: [4917126.563609] sd 0:0:1:0: [sdb] CDB: Write(10): 2a 00 01 49 f2 98 00 00 08 00
-Sep  7 08:50:40 gw kernel: [4917126.563617] mptscsih: ioc0: task abort: SUCCESS (sc=ffff81007ff26bc0)
-Sep  7 08:50:40 gw kernel: [4917126.563623] mptscsih: ioc0: attempting target reset! (sc=ffff81007ff26940)
-Sep  7 08:50:40 gw kernel: [4917126.563625] sd 0:0:1:0: [sdb] CDB: ATA command pass through(16): 85 08 0e 00 00 00 01 00 00 00 00 00 00 00 ec 00
-Sep  7 08:50:40 gw kernel: [4917126.897143] mptscsih: ioc0: target reset: SUCCESS (sc=ffff81007ff26940)
-Sep  7 08:50:40 gw kernel: [4917126.897143] mptscsih: ioc0: attempting bus reset! (sc=ffff81007ff26940)
-Sep  7 08:50:40 gw kernel: [4917126.897143] sd 0:0:1:0: [sdb] CDB: ATA command pass through(16): 85 08 0e 00 00 00 01 00 00 00 00 00 00 00 ec 00
-Sep  7 08:50:44 gw kernel: [4917131.074580] mptscsih: ioc0: bus reset: SUCCESS (sc=ffff81007ff26940)
-Sep  7 08:50:54 gw kernel: [4917145.159523] mptscsih: ioc0: attempting host reset! (sc=ffff81007ff26940)
-Sep  7 08:50:54 gw kernel: [4917145.163513] mptbase: ioc0: Initiating recovery
-Sep  7 08:51:10 gw kernel: [4917167.457273] mptscsih: ioc0: host reset: SUCCESS (sc=ffff81007ff26940)
-Sep  7 08:51:10 gw kernel: [4917167.457279] sd 0:0:1:0: Device offlined - not ready after error recovery
-Sep  7 08:51:10 gw kernel: [4917167.457282] sd 0:0:1:0: Device offlined - not ready after error recovery
-Sep  7 08:51:10 gw kernel: [4917167.457350] sd 0:0:1:0: [sdb] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
-Sep  7 08:51:10 gw kernel: [4917167.457357] end_request: I/O error, dev sdb, sector 21623448
-Sep  7 08:51:10 gw kernel: [4917167.457364] raid1: Disk failure on sdb6, disabling device.
-Sep  7 08:51:10 gw kernel: [4917167.457365] raid1: Operation continuing on 1 devices.
-Sep  7 08:51:10 gw kernel: [4917167.457388] end_request: I/O error, dev sdb, sector 1959743
-Sep  7 08:51:10 gw kernel: [4917167.457393] md: super_written gets error=-5, uptodate=0
-Sep  7 08:51:10 gw kernel: [4917167.457398] raid1: Disk failure on sdb1, disabling device.
-Sep  7 08:51:22 gw kernel: [4917167.457399] raid1: Operation continuing on 1 devices.
-Sep  7 08:51:22 gw kernel: [4917167.457411] end_request: I/O error, dev sdb, sector 21478687
-Sep  7 08:51:22 gw kernel: [4917167.457415] md: super_written gets error=-5, uptodate=0
-Sep  7 08:51:22 gw kernel: [4917167.457420] raid1: Disk failure on sdb5, disabling device.
-Sep  7 08:51:22 gw kernel: [4917167.457421] raid1: Operation continuing on 1 devices.
-Sep  7 08:51:22 gw kernel: [4917167.461613] sd 0:0:1:0: [sdb] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
-Sep  7 08:51:22 gw kernel: [4917167.526799] raid1: Disk failure on sdb2, disabling device.
-Sep  7 08:51:22 gw kernel: [4917167.526801] raid1: Operation continuing on 1 devices.
+But please note that it's only done once during boot and resume on
+machines which are known to specifically need it and with values
+reported to work.
 
-  After such an error I have to manually remove and re-insert the drive
-  to make the controller detect it again.
- 
-- Upgrading to 2.6.30 (from Debian Sid) did not help.
+> The *firmware* of these laptops will issue these annoying APM commands by
+> itself when power state changes, and not even setting the BIOS to
+> "performance" mode makes it stop with the destructive behaviour.  So any
+> disk that cannot take receiving APM commands many times per day on such
+> laptops will cause problems.
 
-- Upgrading the controller firmware to the latest version available from
-  Dell (the driver reports: FwRev=000a3300h) did not help.
+Yeap, well, that's what vendors do.  They put together specific subset
+of components and try to figure out configurations which work.  If you
+replace components on your own, they won't guarantee it will work.
+Sucky but that's the way it is.
 
-- I've found this thread:
-  http://marc.info/?l=smartmontools-support&m=122518510306493&w=2
+> Now, why Ubuntu would do this outside of the ThinkPads, or target anything
+> other than magnetic disk media, I don't know.  Maybe other laptop vendors
+> also had the same idea.  Maybe Ubuntu was simplistic on their approach when
+> they added this defensive feature.  Maybe it was considered a PM feature and
+> it is not even related to the ThinkPad APM annoyance.  You'd have to ask
+> them.
 
-  It claimed that a similar bug has been fixed in smartd in CVS HEAD as
-  of 2008-10-30, so I've upgraded to smartmontools 5.38+svn2879-4 from
-  Debian Sid (smartctl -V gives: smartctl 5.39 2009-08-29 r2879), but
-  that also did not help.
+The feature probabaly doesn't have much to do with the frequent head
+unload problem.  Unplugging or pluggin in the AC cord also triggered
+APM commands to be issued so it's more likely they were trying to
+optimize performance / power balance.  The only problem is that APM
+setting values aren't clearly defined and just are not too well
+tested.
 
-Is this a kernel bug (2.6.22 at least did not drop the disks), or a bug
-in smartmontools?
+>> firmware on the drive which shipped on Samsung NC10 for some reason
+>> locks up after being hit with enough of those commands.  It's just not
+>> safe to assume these kind of stuff would reliably work.  If you're
+> 
+> Maybe we can blacklist such commands on drives known to mismimplement them?
 
-Gabor
+Yes, a possibility but we're unlikely to build meaningful coverage and
+likely to prevent valid usages too.  ie. A firmware might lock up when
+APM settings are adjusted continuously while setting it once after
+booting is fine.  I really want to avoid implementing such logics for
+different drives in kernel.
+
+>> ready to do some research and experiments, it's fine.  If you're doing
+>> OEM customization with specific hardware and QA, sure, why not (this
+>> is basically what windows OEMs do too).  But, doing things which
+>> aren't _usually_ used that way repeatedly _by default_ is asking for
+>> trouble.  There's a reason why these operations are root only.  :-)
+> 
+> There are real user cases for APM commands, and for SMART commands...
+
+Yeap, sure, but it just doesn't work very well, not yet at least.
+SMART is usually better tested than APM but given the number of
+reports I've seen from hddtemp users, certain aspects of it are broken
+on many drives.  There isn't a clear answer.  For usual parts of
+SMART, it's probably pretty safe but then again don't go too far with
+it.  Do it every several hours or every day not every ten secs.  APM
+is way more dangerous, if your machine needs it use it minimally.  If
+certain combination of values are known to work for the particular
+configuration, go ahead and use it.  In other cases, just stay away
+from it.
+
+What people use often get tested and verified by vendors and promptly
+fixed.  What people don't use often won't be and will be unreliable.
+If you want to do things people usually don't do, it's your
+responsibility to ensure it actually works.
+
+Thanks.
 
 -- 
-     ---------------------------------------------------------
-     MTA SZTAKI Computer and Automation Research Institute
-                Hungarian Academy of Sciences
-     ---------------------------------------------------------
+tejun
