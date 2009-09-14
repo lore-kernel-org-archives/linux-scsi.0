@@ -1,19 +1,32 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 14159] AIC79xx is not working properly with an attached
- scsi tape since 2.6.29
-Date: Mon, 14 Sep 2009 09:25:12 -0500
-Message-ID: <1252938312.8584.37.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
+ tape since 2.6.29
+Date: Mon, 14 Sep 2009 14:25:26 GMT
+Message-ID: <200909141425.n8EEPQFK031325@demeter.kernel.org>
 References: <bug-14159-11613@http.bugzilla.kernel.org/>
-	 <200909140718.n8E7ImIE010519@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <200909140718.n8E7ImIE010519@demeter.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:40496 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755476AbZINOZW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Sep 2009 10:25:22 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8EEPQA7031326
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Sep 2009 14:25:26 GMT
+In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=14159
+
+
+
+
+
+--- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-09-14 14:25:23 ---
+Reply-To: James.Bottomley@suse.de
 
 > --- Comment #3 from g.giorgetti@teamsystem.com  2009-09-14 07:18:46 ---
 > today after building and installing the latest stable kernel 2.6.31 I can tell
@@ -41,4 +54,7 @@ Thanks,
 
 James
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
