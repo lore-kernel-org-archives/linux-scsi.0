@@ -1,102 +1,67 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: MD/RAID time out writing superblock
-Date: Mon, 14 Sep 2009 11:02:26 -0300
-Message-ID: <20090914140226.GD32253@khazad-dum.debian.net>
-References: <4A9B8583.9050601@kernel.org>
- <4A9BBC4A.6070708@redhat.com>
- <4A9BC023.10903@kernel.org>
- <20090907114442.GG18831@arachsys.com>
- <20090907115927.GU8710@arachsys.com>
- <20090909120218.GB21829@arachsys.com>
- <4AADF3C4.5060004@kernel.org>
- <4AADF471.2020801@suse.de>
- <20090914131114.GA32253@khazad-dum.debian.net>
- <4AAE4422.4040801@suse.de>
+Date: Mon, 14 Sep 2009 10:25:16 -0400
+Message-ID: <4AAE524C.2030401@rtr.ca>
+References: <92cb16daad8278b0aa98125b9e1d057a@localhost> <4A95573A.6090404@redhat.com> <1571f45804875514762f60c0097171e6@localhost> <d086b110526f8bac2f562850dfc70b03@localhost> <4A970154.2020507@redhat.com> <4A9B8583.9050601@kernel.org> <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755284AbZINOC2@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4AAE4422.4040801@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4AAE3F86.8090804@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <teheo@suse.de>
 Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 14 Sep 2009, Tejun Heo wrote:
-> Henrique de Moraes Holschuh wrote:
-> > On Mon, 14 Sep 2009, Tejun Heo wrote:
-> >> Oooh, another possibility is the above continuous IDENTIFY tries.
-> >> Doing things like that generally isn't a good idea because vendors
-> >> don't expect IDENTIFY to be mixed regularly with normal IOs and
-> > 
-> > IMHO that means the kernel should be special-casing such commands, then (i.e
-> > quiesce drive, do command, quiesce driver, start IO again), probably
-> > rate-limiting it for good effect.
-> > 
-> > This is the kind of stuff that userspace should NOT have to worry about
-> > (because it will get it wrong and cause data corruption eventually).
+Tejun Heo wrote:
+> Mark Lord wrote:
+>> Tejun Heo wrote:
+>> ..
+>>> Oooh, another possibility is the above continuous IDENTIFY tries.
+>>> Doing things like that generally isn't a good idea because vendors
+>>> don't expect IDENTIFY to be mixed regularly with normal IOs and
+>>> firmwares aren't tested against that.  Even smart commands sometimes
+>>> cause problems.  So, finding out the thing which is obsessed with the
+>>> identity of the drive and stopping it might help.
+>> ..
+>>
+>> Bullpucky.  That sort of thing, specifically with IDENTIFY,
+>> has never been an issue.
 > 
-> If this indeed is the case (As Mark pointed out, there hasn't been any
-> precedence involving IDENTIFY but it's also the first time I see
-> IDENTIFY timeouts which are issued from userland), this is the kind
-> that userspace shouldn't do to begin with.
+> With SMART it has.  I wouldn't be too surprised if some new firmware
+> chokes on repeated IDENTIFY mixed with stream of NCQ commands.  It's
+> just not something people (including vendors) do regularly.
+..
 
-There are many reasons why userspace would issue identify (note: I didn't
-say they are good reasons), and off the hand I recall hddtemp as a likely
-culprit.  Also, sometimes the local admin does hdparm -I for whatever
-reason.  So, I am not surprised someone found a way to cause many IDENTIFY
-commands to be issued.
+Yeah, some drives really don't like SMART commands (hddtemp & smartctl).
+That's a strange one, too.  Because the whole idea of SMART
+is that it gets used to periodically monitor drive health.
 
-Other SMART-maintenance utilities might issue IDENTIFY as well.  And if this
-is an issue with SMART in general, smartd issues SMART commands (I don't
-know if it uses IDENTIFY) once per hour to check attributes, and can be
-configured to fire off SMART short/long/offline tests automatically.  The
-local admin sends SMART commands (through smartctl) with the disks hot to
-check the error log after EH, etc.
+IDENTIFY is much safer -- usually no media access after initial spin-up,
+and lots of things exercise it quite regularly.
 
-IMHO, the kernel really should be protecting userland against data
-corruption here, even if it means a massive hit on disk performance while
-the SMART commands are being processed.
+Pretty much any hdparm command triggers an IDENTIFY beforehand now,
+hddtemp and smartctl both use it too.
 
-> There was another similar problem.  Some acpi package in ubuntu issues
-> APM adjustment commands whenever power related stuff changes.  The
+I suspect we're missing some info from this specific failure.
+Looking back at Chris's earlier posting, the whole thing started
+with a FLUSH_CACHE_EXT failure.  Once that happens, all bets are
+off on anything that follows.
 
-Yes.  If you fail to do this on ThinkPads (many models, but probably not
-all), your disk will break in 1-2yr maximum, and THAT assumes you have
-Hitachi notebook HDs that are supposed to take 600k head unloads before
-croaking...  most other vendors say thay can only do 300k head unloads in
-their datasheets (if you can find a datasheet at all).  If you need a reason
-to buy Hitachi HDs, this is it: they give you full, proper datasheets.
+> Everything will be running fine when suddenly:
+> 
+>   ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>   ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>           res 40/00:00:80:17:91/00:00:37:00:00/40 Emask 0x4 (timeout)
+>   ata1.00: status: { DRDY }
+>   ata1: hard resetting link
+>   ata1: softreset failed (device not ready)
+>   ata1: hard resetting link
+>   ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>   ata1.00: configured for UDMA/133
+>   ata1: EH complete
+>   end_request: I/O error, dev sda, sector 1465147272
+>   md: super_written gets error=-5, uptodate=0
+>   raid10: Disk failure on sda3, disabling device.
+>   raid10: Operation continuing on 5 devices.
 
-The *firmware* of these laptops will issue these annoying APM commands by
-itself when power state changes, and not even setting the BIOS to
-"performance" mode makes it stop with the destructive behaviour.  So any
-disk that cannot take receiving APM commands many times per day on such
-laptops will cause problems.
-
-Now, why Ubuntu would do this outside of the ThinkPads, or target anything
-other than magnetic disk media, I don't know.  Maybe other laptop vendors
-also had the same idea.  Maybe Ubuntu was simplistic on their approach when
-they added this defensive feature.  Maybe it was considered a PM feature and
-it is not even related to the ThinkPad APM annoyance.  You'd have to ask
-them.
-
-> firmware on the drive which shipped on Samsung NC10 for some reason
-> locks up after being hit with enough of those commands.  It's just not
-> safe to assume these kind of stuff would reliably work.  If you're
-
-Maybe we can blacklist such commands on drives known to mismimplement them?
-
-> ready to do some research and experiments, it's fine.  If you're doing
-> OEM customization with specific hardware and QA, sure, why not (this
-> is basically what windows OEMs do too).  But, doing things which
-> aren't _usually_ used that way repeatedly _by default_ is asking for
-> trouble.  There's a reason why these operations are root only.  :-)
-
-There are real user cases for APM commands, and for SMART commands...
-
--- 
-  "One disk to rule them all, One disk to find them. One disk to bring
-  them all and in the darkness grind them. In the Land of Redmond
-  where the shadows lie." -- The Silicon Valley Tarot
-  Henrique Holschuh
