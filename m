@@ -1,52 +1,50 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/5] SCSI: Add support for 32-byte CDBs
-Date: Tue, 15 Sep 2009 11:15:23 +0300
-Message-ID: <4AAF4D1B.3060205@panasas.com>
-References: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>	<1252053394-24886-2-git-send-email-martin.petersen@oracle.com>	<4AA395E8.8020300@panasas.com> <yq18wgo4u41.fsf@sermon.lab.mkp.net>	<4AA766F8.6050801@panasas.com> <yq1iqfq2doc.fsf@sermon.lab.mkp.net>	<4AACBC0C.9050703@panasas.com> <yq163bk8y35.fsf@sermon.lab.mkp.net>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit
+ resources
+Date: Tue, 15 Sep 2009 20:29:38 +1000
+Message-ID: <1253010578.8375.220.camel@pasglop>
+References: <1252455333-9925-1-git-send-email-pbathija@amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dip-colo-pa.panasas.com ([67.152.220.67]:55627 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755217AbZIOIQB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 04:16:01 -0400
-In-Reply-To: <yq163bk8y35.fsf@sermon.lab.mkp.net>
+Received: from gate.crashing.org ([63.228.1.57]:41618 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077AbZIOK3p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Sep 2009 06:29:45 -0400
+In-Reply-To: <1252455333-9925-1-git-send-email-pbathija@amcc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: pbathija@amcc.com
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On 09/15/2009 10:29 AM, Martin K. Petersen wrote:
->>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
-> 
-> Boaz> This patch replaces both:
-> Boaz> 	[PATCH 1/5] SCSI: Add support for 32-byte CDBs
-> Boaz>   [PATCH 4/5] sd: Support disks formatted with DIF Type 2
-> 
-> Boaz> right?
-> 
-> Yep.
-> 
-> 
-> Boaz> One question below
-> 
->>> + SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
->>> +
-> 
-> Boaz> The cmd_len gets updated later on, in scsi_lib.c right?
-> 
-> Nope.  But you are right that I should set cmd_len correctly.  Otherwise
-> LLDs won't transfer sufficient CDB data (that's obviously not a problem
-> for scsi_debug which is what I've been using for testing).
-> 
 
-It does in scsi_init_cmd_errh() which is called from scsi_request_fn().
-It does:
-	if (cmd->cmd_len == 0)
-		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index 5d496a9..d5b0f15 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -1510,11 +1510,12 @@ static int
+>  mpt_mapresources(MPT_ADAPTER *ioc)
+>  {
+>  	u8		__iomem *mem;
+> +	u8		__iomem *port;
+>  	int		 ii;
+> -	unsigned long	 mem_phys;
+> -	unsigned long	 port;
+> -	u32		 msize;
+> -	u32		 psize;
+> +	phys_addr_t	 mem_phys;
+> +	phys_addr_t	 port_phys;
+> +	resource_size_t	 msize;
+> +	resource_size_t	 psize;
 
-Now scsi_command_size() perfectly understand VARIABLE_LENGTH_CMD, but it might
-be clearer to set it here next to the command setup, in sd.c.
+Is phys_addr_t defined for all archs nowadays ? Why not use
+resource_size_t for everything ? resource_size_t is a bit of a misnomer,
+it's not a type supposed to reference a "size" but really a physical
+address (or a size)... it's been called resource_size_t I believe
+because it's "sized" appropriately for holding a physical address.
 
-Boaz
+Cheers,
+Ben.
+
+
