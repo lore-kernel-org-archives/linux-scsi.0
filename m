@@ -1,124 +1,77 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH 04/10] drivers: convert fc drivers calling
-	scsi_track_queue_full
-Date: Mon, 14 Sep 2009 23:18:25 -0500
-Message-ID: <4AAF1591.60205@cs.wisc.edu>
-References: <20090903221910.24946.39993.stgit@vi1.jf.intel.com>	
-	<20090903222247.24946.60577.stgit@vi1.jf.intel.com>	
-	<412A05BA40734D4887DBC67661F433080FF72616@EXMAIL.ad.emulex.com>	
-	<1252100607.4516.35.camel@vi2.jf.intel.com>
-	<4AAA786A.6020303@cs.wisc.edu>	
-	<1252711553.13165.129.camel@vi2.jf.intel.com>	
-	<4AAE78DD.9070808@cs.wisc.edu>
-	<1252968994.2231.16.camel@vi2.jf.intel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [PATCH] hwmon: Driver for SCSI/ATA temperature sensors
+Date: Tue, 15 Sep 2009 15:57:39 +1000
+Message-ID: <646765f40909142257t560b314dt74d4158a497f0460@mail.gmail.com>
+References: <20090913040104.ab1d0b69.const@mimas.ru> <1252850453.23599.13.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <1252968994.2231.16.camel-B2RhF0yJhE275v1z/vFq2g@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: Vasu Dev <vasu.dev-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Smart-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, christof.schmitt-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, andrew.vasquez-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, Alex.Iannicelli-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f174.google.com ([209.85.211.174]:54975 "EHLO
+	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331AbZIOGEf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 02:04:35 -0400
+In-Reply-To: <1252850453.23599.13.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Constantin Baranov <const@mimas.ru>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Vasu Dev wrote:
-> On Mon, 2009-09-14 at 12:09 -0500, Mike Christie wrote:
->> Vasu Dev wrote:
->>> On Fri, 2009-09-11 at 11:18 -0500, Mike Christie wrote:
->>>> On 09/04/2009 04:43 PM, Vasu Dev wrote:
->>>>> On Fri, 2009-09-04 at 06:47 -0700, Alex.Iannicelli-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org wrote:
->>>>>> It looks like you moved the ramp up functionality into the scsi layer,
->>>>>> but did not move the ramp up code from the lpfc driver in the
->>>>> Correct.
->>>>>
->>>>>>   lpfc_scsi_cmd_iocb_cmpl routine (just above the code that was removed
->>>>>> for the ramp down in this patch) to the new lpfc_change_queue_depth
->>>>>> routine. I think that this new routine should handle both ramp up and
->>>>>> ramp down but you have it only handling the ramp down case.
->>>>>>
->>>>> I agree all FC HBA should handle both ramp down and up as per added new
->>>>> change_queue_depth interface by this series. I did this for libfc/fcoe
->>>>> and Chrirstof did this for zfcp driver but lpfc&  qla2xxx got only ramp
->>>>> down changes from Mike, now that Mike is busy with other stuff I don't
->>>>> know how to complete them in this series since I don't understand lpfc
->>>>> and qla2xxx enough and neither I have way to test changes to these
->>>>> drivers.
->>>>>
->>>>> So I'm going to update this series to have just libfc and zfcp driver
->>>>> changes for now and lpfc and qla2xxx can be updated later by someone
->>>>> familiar lpfc and qla2xxx, their ramp down changes can be collect from
->>>>> this series post.
->>>>>
->>>> I think it is fine not to convert a driver immediately and let the 
->>>> driver maintainer handle it. I normally like to take a stab at it to try 
->>>> and give the driver maintainer some more info on the how I think it 
->>>> should work.
->>>>
->>>> I think at the very least you want to make sure your code will work for 
->>>> other drivers, so sometimes doing a pseudo patch is useful for another 
->>>> reason.
->>>>
->>> I'll try to come up with a compile tested code for lpfc and you already
->>> did that for qla2xx ramp up today. As you said "it is fine not to
->>> convert a driver immediately", so I'll provide this separately and will
->>> try to do it earliest possible.
->>>
->>> Modified change_queue_depth interface changes by this series should be
->>> sufficient to later do lpfc and qla2xx changes.
->>>  
->>>> For the case of lpfc and rampup I think we need a little more code. It 
->>>> looks like lpfc will ramp down queues if it gets a reject on its port 
->>>> (when we get a IOSTAT_LOCAL_REJECT we call lpfc_rampdown_queue_depth). 
->>>> When it then tries to ramp up, it also takes that rampdown event into 
->>>> account. The common code being added by Vasu, only tracks rampdown 
->>>> events from QUEUE_FULLs.
->>>>
->>> The qla2xx ramps down only on QUEUE_FULL beside added zfcp and lpfc
->>> doing same only on QUEUE_FULL condition, but still a HBAs could call
->>> their own change_queue_depth function for other conditions to ramp down
->>> e.g. lpfc for IOSTAT_LOCAL_REJECT.
->> If they do this will they have to duplicate the rampdown/up time 
->> tracking done by the common scsi_error code?
->>
-> 
-> lpfc could still use same added common ramp up and ramp down code for
-> lpfc specific IOSTAT_LOCAL_REJECT condition. This would just require
-> exporting added scsi_handle_queue_full() and then have lpc call this for
-> IOSTAT_LOCAL_REJECT condition. The lpfc change_queue_depth handler could
-> make additional checks for IOSTAT_LOCAL_REJECT condition before final
-> qdepth adjustment which would get called by added common code. So I
-> don't see any duplicate code in that case while also limiting
-> IOSTAT_LOCAL_REJECT code to only lpfc.
+On Mon, Sep 14, 2009 at 00:00, James Bottomley <James.Bottomley@suse.de=
+> wrote:
+> On Sun, 2009-09-13 at 04:01 +0500, Constantin Baranov wrote:
+>> The scsitemp module attaches a device to each SCSI device
+>> and registers it in hwmon. Currently the only method of
+>> reading temperature is ATA SMART. Adding support of the
+>> pure SCSI methods is provided.
+>
+> The code, as you wrote it looks fine.
+>
+> The basic problem are the effects. =A0Right at the moment it tries to=
+ send
+> an ATA_16 encapsulated SMART command to every SCSI device in the syst=
+em.
+> We simply can't allow this. =A0A huge number of SCSI presenting USB
+> devices are known to lock up when they see either ATA_X encapsulation=
+ or
+> SMART commands. =A0It's not really even safe to send ATA_X to SCSI
+> devices. =A0The modern ones should all error out fine, but the older =
+ones
+> are likely to be less tolerant.
+>
+> Finally, this:
+>
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (attr[2] =3D=3D 194) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 *temp =3D attr[7] * 10=
+00;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 err =3D 0;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+>
+> Smart attribute 194 is highly vendor specific ... for instance my new
+> SATA drive doesn't implement it (it does implement 190 instead).
+>
+> So really, given the complexity of just obtaining the data and the
+> problem of matching which data to obtain to which device you have, wh=
+y
+> not just use smartctl from userspace for monitoring? =A0you could eve=
+n
+> just plug into smartd, it seems to have most of the necessary heurist=
+ics
+> built in already.
 
-Works for me.
+There's even a util called hddtemp which handles all this and has a
+database of smart attributes to use for most drives.
 
-> 
->>> The lpfc and qla2xxx both are calling ramp up code only after specified
->>> time interval since last ramp down/up on a successful IO completion, so
->>> does the added code  does the same with tunable time interval. I chose
->>> least 120HZ from qla2xxx as default.
->>>
->>> So added common code for ramp down/up is sufficient for majority of FC
->>> HBAs and lpfc specific additional criteria should be limited to only
->>> lpfc HBA code. 
->> Why should it only be limited to lpfc? Are you saying other drivers or 
->> hw do not have something like a local reject or out of hba port 
->> resources? Do you know this by just looking at the driver? A lot of 
->> times lpfc will add something then other drivers (myself included) will 
->> add it later when they have seen lpfc do it. Or are you saying you think 
->> other drivers are going to want to handle the problem in a different way?
-> 
-> Yes, I think adjusting can_queue will be more helpful in case of
-> resource allocation failures instead queue_depth adjustment on all luns.
-> In case of rport is gone, no use of queue_depth ramp down on luns of
-> rport.
+Thanks,
 
-Works for me.
+--=20
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+=2EPlan: http://sites.google.com/site/juliancalaby/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
