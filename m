@@ -1,45 +1,52 @@
-From: Milan Kocian <milon@wq.cz>
-Subject: Re: [PATCH] sr: consider the last written sector when determining
- media size
-Date: Tue, 15 Sep 2009 09:05:03 +0200
-Message-ID: <20090915070503.GB13228@ntm.vs.lam.cz>
-References: <4AA07D8A.6090004@kernel.org>
- <4AAEBB7A.3060700@kernel.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 1/5] SCSI: Add support for 32-byte CDBs
+Date: Tue, 15 Sep 2009 11:15:23 +0300
+Message-ID: <4AAF4D1B.3060205@panasas.com>
+References: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>	<1252053394-24886-2-git-send-email-martin.petersen@oracle.com>	<4AA395E8.8020300@panasas.com> <yq18wgo4u41.fsf@sermon.lab.mkp.net>	<4AA766F8.6050801@panasas.com> <yq1iqfq2doc.fsf@sermon.lab.mkp.net>	<4AACBC0C.9050703@panasas.com> <yq163bk8y35.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4AAEBB7A.3060700@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Milan Kocian <milan.kocian@wq.cz>, Jan Kara <jack@suse.cz>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:55627 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755217AbZIOIQB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 04:16:01 -0400
+In-Reply-To: <yq163bk8y35.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 15, 2009 at 06:54:02AM +0900, Tejun Heo wrote:
-> Tejun Heo wrote:
-> > On certain cases, UDF disc doesn't report capacity correctly via
-> > READ_CAPACITY but TOC or trackinfo contains valid information which
-> > can be obtained using cdrom_get_last_written().  ide-cd considers both
-> > values and uses the larger one.  Do the same in sr.  This fixes
-> > bko#9668.
-> > 
-> >  http://bugzilla.kernel.org/show_bug.cgi?id=9668
-> > 
-> > Signed-off-by: Tejun Heo <tj@kernel.org>
-> > Reported-by: Milan Kocian <milan.kocian@wq.cz>
-> > Cc: Jan Kara <jack@suse.cz>
+On 09/15/2009 10:29 AM, Martin K. Petersen wrote:
+>>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
 > 
-> PING.
+> Boaz> This patch replaces both:
+> Boaz> 	[PATCH 1/5] SCSI: Add support for 32-byte CDBs
+> Boaz>   [PATCH 4/5] sd: Support disks formatted with DIF Type 2
 > 
-> -- 
-> tejun
+> Boaz> right?
+> 
+> Yep.
+> 
+> 
+> Boaz> One question below
+> 
+>>> + SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
+>>> +
+> 
+> Boaz> The cmd_len gets updated later on, in scsi_lib.c right?
+> 
+> Nope.  But you are right that I should set cmd_len correctly.  Otherwise
+> LLDs won't transfer sufficient CDB data (that's obviously not a problem
+> for scsi_debug which is what I've been using for testing).
 > 
 
-yes, works for me. You can add :
+It does in scsi_init_cmd_errh() which is called from scsi_request_fn().
+It does:
+	if (cmd->cmd_len == 0)
+		cmd->cmd_len = scsi_command_size(cmd->cmnd);
 
-Tested-by: Milan Kocian <milan.kocian@wq.cz>
+Now scsi_command_size() perfectly understand VARIABLE_LENGTH_CMD, but it might
+be clearer to set it here next to the command setup, in sd.c.
 
-:-)
-
--- 
-Milan Kocian
+Boaz
