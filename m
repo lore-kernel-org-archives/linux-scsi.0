@@ -1,47 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
- tape since 2.6.29
-Date: Tue, 15 Sep 2009 07:05:48 GMT
-Message-ID: <200909150705.n8F75mDf004633@demeter.kernel.org>
-References: <bug-14159-11613@http.bugzilla.kernel.org/>
+From: Gabor Gombas <gombasg@sztaki.hu>
+Subject: Re: SMART causes disks to go offline on an LSI SAS 1068 controller
+Date: Tue, 15 Sep 2009 09:25:49 +0200
+Message-ID: <20090915072549.GB27050@boogie.lpds.sztaki.hu>
+References: <4AAEC504.2030203@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36075 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756898AbZIOHFo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 03:05:44 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8F75mOx004634
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2009 07:05:48 GMT
-In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
+Received: from boogie.lpds.sztaki.hu ([193.224.70.237]:40317 "EHLO
+	boogie.lpds.sztaki.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758182AbZIOHZq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 03:25:46 -0400
+Content-Disposition: inline
+In-Reply-To: <4AAEC504.2030203@sauce.co.nz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Richard Scobie <richard@sauce.co.nz>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14159
+Hi!
 
+(Please Cc: me, I'm not subscribed)
 
+> It is possibly a smartmontools build issue - it does not like -pie or
+> -fpie compiler flags.
+> 
+> See: https://bugzilla.redhat.com/show_bug.cgi?id=452389
+>
+> and I reported it on the smartmontools list, but there was no resolution
+> that I am aware of.
 
+I've seen that report but according to the buildd logs at
+https://buildd.debian.org/fetch.cgi?pkg=smartmontools;ver=5.38%2Bsvn2879-4;arch=amd64;stamp=1252352014
+Debian does not use -pie or -fpie.
 
+Also, the 2.6.22 kernel did not drop the disks using the same smart
+binaries (version 5.38 at that time), so something must have changed on
+the kernel side too.
 
---- Comment #7 from g.giorgetti@teamsystem.com  2009-09-15 07:05:46 ---
-Hi Bjorn and James,
-
-pci=noacpi is not working, so even before reading Bjorn's reply, we tried
-"noapic" and the suddenly the tape device was working again. No more timeouts
-on initialization and so on.
-
-I haven't tried pci=noioapicquirk yet, since the server is up for production
-and other people is working. 
-So I'm gonna do that later in the day.
-
-Thank you very much for now.
-
-Regards,
- Gabriele
+Gabor
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+     ---------------------------------------------------------
+     MTA SZTAKI Computer and Automation Research Institute
+                Hungarian Academy of Sciences
+     ---------------------------------------------------------
