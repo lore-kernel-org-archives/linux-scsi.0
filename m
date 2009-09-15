@@ -1,8 +1,8 @@
-From: Greg KH <greg@kroah.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Subject: Re: [PATCHv2] qla2xxx: Correct compilation issues when
  CONFIG_MOUDLES=n.
-Date: Tue, 15 Sep 2009 11:29:03 -0700
-Message-ID: <20090915182903.GA32540@kroah.com>
+Date: Tue, 15 Sep 2009 14:57:53 -0700
+Message-ID: <20090915215753.GA50294@plap4-2.local>
 References: <20090912001752.GC12098@plap4-2.local>
  <20090912003808.GD12098@plap4-2.local>
  <20090912005446.GA11691@kroah.com>
@@ -16,15 +16,19 @@ References: <20090912001752.GC12098@plap4-2.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-next-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:56881 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327AbZIOV5v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 17:57:51 -0400
 Content-Disposition: inline
 In-Reply-To: <ac3eb2510909151022s5a0704c2xd4be73d5c63ab0f1@mail.gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-On Tue, Sep 15, 2009 at 07:22:03PM +0200, Kay Sievers wrote:
+On Tue, 15 Sep 2009, Kay Sievers wrote:
 > On Tue, Sep 15, 2009 at 18:57, Greg KH <greg@kroah.com> wrote:
 > > On Tue, Sep 15, 2009 at 10:47:11AM -0500, James Bottomley wrote:
 > >> On Tue, 2009-09-15 at 08:33 -0700, Greg KH wrote:
@@ -119,8 +123,17 @@ est?
 > Wouldn't kernel/kmod.c :: call_usermodehelper_pipe() somehow fit for
 > that interface?
 
-Ah, yeah, good idea.  Anyone tried that?
+The only current consumer of call_usermodehelper_pipe() is
+fs/exec.c::do_coredump() and it appears to manipulate the blob of data
+via file-level operations.  Would this be a 'notification'
+alternative?  Or, are you suggesting the whole process be redone (both
+notification and blob-transfer)?  Uevent notifications with a udev
+user-space front-end appears to be a much more simplified and flexible
+mechanism.
 
-thanks,
-
-greg k-h
+-- av
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
