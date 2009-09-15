@@ -1,37 +1,89 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
- tape since 2.6.29
-Date: Tue, 15 Sep 2009 15:20:58 GMT
-Message-ID: <200909151520.n8FFKwdn021049@demeter.kernel.org>
-References: <bug-14159-11613@http.bugzilla.kernel.org/>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCHv2] qla2xxx: Correct compilation issues when
+ CONFIG_MOUDLES=n.
+Date: Tue, 15 Sep 2009 08:33:12 -0700
+Message-ID: <20090915153312.GB22774@kroah.com>
+References: <20090908182541.GB44157@plap4-2.local>
+ <20090911175341.GH710@plap4-2.local>
+ <1252708951.13282.151.camel@mulgrave.site>
+ <20090912000742.GB12098@plap4-2.local>
+ <20090912001752.GC12098@plap4-2.local>
+ <20090912003808.GD12098@plap4-2.local>
+ <20090912005446.GA11691@kroah.com>
+ <20090912025623.GA14824@plap4-2.local>
+ <20090912043333.GA12349@kroah.com>
+ <1252765807.4238.74.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:49409 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754688AbZIOPUy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 11:20:54 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8FFKwlX021050
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2009 15:20:58 GMT
-In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1252765807.4238.74.camel@mulgrave.site>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14159
+On Sat, Sep 12, 2009 at 09:30:07AM -0500, James Bottomley wrote:
+> On Fri, 2009-09-11 at 21:33 -0700, Greg KH wrote:
+> > On Fri, Sep 11, 2009 at 07:56:23PM -0700, Andrew Vasquez wrote:
+> > > On Fri, 11 Sep 2009, Greg KH wrote:
+> > > 
+> > > > On Fri, Sep 11, 2009 at 05:38:08PM -0700, Andrew Vasquez wrote:
+> > > > > Randy Dunlap noted:
+> > > > > 
+> > > > >   when CONFIG_MODULES=n:
+> > > > > 
+> > > > > 	drivers/scsi/qla2xxx/qla_os.c:2685: error: dereferencing pointer to incomplete type
+> > > > > 
+> > > > >   in
+> > > > > 
+> > > > > 	kobject_uevent_env(&(&vha->hw->pdev->driver->driver)->owner->mkobj.kobj,
+> > > > > 		KOBJ_CHANGE, envp);
+> > > > > 
+> > > > > Trigger kobject event on the 'struct device' hanging off the pci_dev.
+> > > > 
+> > > > Um, why?  What are you trying to do here?  kobject change should not be
+> > > > for a device, or a "normal" kobject.
+> > > > 
+> > > > What do you expect userspace to do with this?  Where have you documented
+> > > > it?
+> > > 
+> > > The purpose was described here:
+> > > 
+> > > 	http://article.gmane.org/gmane.linux.scsi/54155
+> > > 
+> > > Basically we'd like to instruct user-space to retrieve a blob of data
+> > > automatically.
+> > 
+> > Hm, like a firmware object perhaps?
+> > 
+> > > Original implementation used the kboject hanging off
+> > > the module which does not exist when CONFIG_MODULES=n.  It was
+> > > suggested that perhaps an alternative would be to use 'struct device'
+> > > kobj.  Any tips on how to trigger such a driver-specific event,
+> > > perhaps a dedicated kobject exported by the driver itself???
+> > 
+> > Why not use the firmware interface for it, that is what it is designed
+> > for, and you will not have to craft any new udev rules.
+> 
+> The data is going the wrong way to use the current firmware interface,
+> which is designed to load data from userspace into the kernel.  For this
+> interface, we want the data to go the other way (i.e. the kernel has a
+> blob of dump data it would like userspace to save if it can).
 
+Ick.
 
+> I'd be amenable to updating the firmware interface to do this, but it
+> looks like adding a completely new codepath, which it's not clear even
+> belongs there.
 
+Well, I don't think it deserves a kobject change event, as that means
+something a bit different to userspace today, right?
 
+Either way, I see no documentation being added to the Documentation/ABI/
+directory describing what is happening here, that needs to be added at
+the least.
 
---- Comment #13 from g.giorgetti@teamsystem.com  2009-09-15 15:20:57 ---
-Of course Bjorn.
-There you go. You'll find the lspci -nn output in the attachments.
+thanks,
 
-Thank you again.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+greg k-h
