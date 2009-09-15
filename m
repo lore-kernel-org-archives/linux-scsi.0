@@ -1,23 +1,32 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 14159] AIC79xx is not working properly with an attached
- scsi tape since 2.6.29
-Date: Tue, 15 Sep 2009 08:55:46 -0500
-Message-ID: <1253022946.29947.1.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
+ tape since 2.6.29
+Date: Tue, 15 Sep 2009 13:55:57 GMT
+Message-ID: <200909151355.n8FDtvek008945@demeter.kernel.org>
 References: <bug-14159-11613@http.bugzilla.kernel.org/>
-	 <200909151307.n8FD7jBC002000@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42678 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753349AbZIONzw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Sep 2009 09:55:52 -0400
-In-Reply-To: <200909151307.n8FD7jBC002000@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:57800 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753652AbZIONzy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 09:55:54 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8FDtvs6008946
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Sep 2009 13:55:57 GMT
+In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=14159
+
+
+
+
+
+--- Comment #10 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-09-15 13:55:57 ---
+Reply-To: James.Bottomley@suse.de
 
 On Tue, 2009-09-15 at 13:07 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -131,5 +140,9 @@ James
 >         Command: DPERE- ERO- RBC=512 OST=3
 >         Status: Dev=41:01.0 64bit+ 133MHz+ SCD- USC- DC=simple DMMRBC=512
 > DMOST=8 DMCRS=16 RSCEM- 266MHz- 533MHz-
-> 
+>
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
