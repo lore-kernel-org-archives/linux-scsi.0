@@ -1,139 +1,145 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCHv2] qla2xxx: Correct compilation issues when
- CONFIG_MOUDLES=n.
-Date: Tue, 15 Sep 2009 14:57:53 -0700
-Message-ID: <20090915215753.GA50294@plap4-2.local>
-References: <20090912001752.GC12098@plap4-2.local>
- <20090912003808.GD12098@plap4-2.local>
- <20090912005446.GA11691@kroah.com>
- <20090912025623.GA14824@plap4-2.local>
- <20090912043333.GA12349@kroah.com>
- <1252765807.4238.74.camel@mulgrave.site>
- <20090915153312.GB22774@kroah.com>
- <1253029631.29947.156.camel@mulgrave.site>
- <20090915165708.GA18817@kroah.com>
- <ac3eb2510909151022s5a0704c2xd4be73d5c63ab0f1@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: pbathija@amcc.com
+Subject: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit resources.
+Date: Tue, 15 Sep 2009 15:25:55 -0700
+Message-ID: <1253053555-25097-1-git-send-email-pbathija@amcc.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:56881 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbZIOV5v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 17:57:51 -0400
-Content-Disposition: inline
-In-Reply-To: <ac3eb2510909151022s5a0704c2xd4be73d5c63ab0f1@mail.gmail.com>
+Received: from sdcmail02.amcc.com ([198.137.200.90]:59880 "EHLO
+	sdcmail02.amcc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbZIOWZ4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Sep 2009 18:25:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>
+To: linux-scsi-owner@vger.kernel.org, linux-scsi@vger.kernel.org, benh@kernel.crashing.org
+Cc: linuxppc-dev@ozlabs.org, Pravin Bathija <pbathija@amcc.com>
 
-On Tue, 15 Sep 2009, Kay Sievers wrote:
-> On Tue, Sep 15, 2009 at 18:57, Greg KH <greg@kroah.com> wrote:
-> > On Tue, Sep 15, 2009 at 10:47:11AM -0500, James Bottomley wrote:
-> >> On Tue, 2009-09-15 at 08:33 -0700, Greg KH wrote:
-> >> > On Sat, Sep 12, 2009 at 09:30:07AM -0500, James Bottomley wrote:
-> >> > > On Fri, 2009-09-11 at 21:33 -0700, Greg KH wrote:
-> >> > > > On Fri, Sep 11, 2009 at 07:56:23PM -0700, Andrew Vasquez wro=
-te:
-> >> > > > > On Fri, 11 Sep 2009, Greg KH wrote:
-> >> > > > >
-> >> > > > > > On Fri, Sep 11, 2009 at 05:38:08PM -0700, Andrew Vasquez=
- wrote:
-> >> > > > > > > Randy Dunlap noted:
-> >> > > > > > >
-> >> > > > > > > =A0 when CONFIG_MODULES=3Dn:
-> >> > > > > > >
-> >> > > > > > > =A0 drivers/scsi/qla2xxx/qla_os.c:2685: error: derefer=
-encing pointer to incomplete type
-> >> > > > > > >
-> >> > > > > > > =A0 in
-> >> > > > > > >
-> >> > > > > > > =A0 kobject_uevent_env(&(&vha->hw->pdev->driver->drive=
-r)->owner->mkobj.kobj,
-> >> > > > > > > =A0 =A0 =A0 =A0 =A0 KOBJ_CHANGE, envp);
-> >> > > > > > >
-> >> > > > > > > Trigger kobject event on the 'struct device' hanging o=
-ff the pci_dev.
-> >> > > > > >
-> >> > > > > > Um, why? =A0What are you trying to do here? =A0kobject c=
-hange should not be
-> >> > > > > > for a device, or a "normal" kobject.
-> >> > > > > >
-> >> > > > > > What do you expect userspace to do with this? =A0Where h=
-ave you documented
-> >> > > > > > it?
-> >> > > > >
-> >> > > > > The purpose was described here:
-> >> > > > >
-> >> > > > > =A0 =A0 =A0 http://article.gmane.org/gmane.linux.scsi/5415=
-5
-> >> > > > >
-> >> > > > > Basically we'd like to instruct user-space to retrieve a b=
-lob of data
-> >> > > > > automatically.
-> >> > > >
-> >> > > > Hm, like a firmware object perhaps?
-> >> > > >
-> >> > > > > Original implementation used the kboject hanging off
-> >> > > > > the module which does not exist when CONFIG_MODULES=3Dn. =A0=
-It was
-> >> > > > > suggested that perhaps an alternative would be to use 'str=
-uct device'
-> >> > > > > kobj. =A0Any tips on how to trigger such a driver-specific=
- event,
-> >> > > > > perhaps a dedicated kobject exported by the driver itself?=
-??
-> >> > > >
-> >> > > > Why not use the firmware interface for it, that is what it i=
-s designed
-> >> > > > for, and you will not have to craft any new udev rules.
-> >> > >
-> >> > > The data is going the wrong way to use the current firmware in=
-terface,
-> >> > > which is designed to load data from userspace into the kernel.=
- =A0For this
-> >> > > interface, we want the data to go the other way (i.e. the kern=
-el has a
-> >> > > blob of dump data it would like userspace to save if it can).
-> >> >
-> >> > Ick.
-> >>
-> >> It's a natural debugging event ... the user can simply program the
-> >> system to discard the dump.
-> >>
-> >> > > I'd be amenable to updating the firmware interface to do this,=
- but it
-> >> > > looks like adding a completely new codepath, which it's not cl=
-ear even
-> >> > > belongs there.
-> >> >
-> >> > Well, I don't think it deserves a kobject change event, as that =
-means
-> >> > something a bit different to userspace today, right?
-> >>
-> >> Well, the documentation (in include/linux/kobject.h) does say that
-> >> KOBJ_CHANGED is the dumping ground for events that don't match any=
-thing
-> >> else, which this one seems to qualify as. =A0What else do you sugg=
-est?
-> >
-> > Ok, I can't think of anything else at the moment, sorry.
->=20
-> Wouldn't kernel/kmod.c :: call_usermodehelper_pipe() somehow fit for
-> that interface?
+From: Pravin Bathija <pbathija@amcc.com>
 
-The only current consumer of call_usermodehelper_pipe() is
-fs/exec.c::do_coredump() and it appears to manipulate the blob of data
-via file-level operations.  Would this be a 'notification'
-alternative?  Or, are you suggesting the whole process be redone (both
-notification and blob-transfer)?  Uevent notifications with a udev
-user-space front-end appears to be a much more simplified and flexible
-mechanism.
+Powerpc 44x uses 36 bit real address while the real address defined
+in MPT Fusion driver is of type 32 bit. This causes ioremap to fail and driver
+fails to initialize. This fix changes the data types representing the real
+address from unsigned long 32-bit types to "phys_addr_t" which is 64-bit. The
+driver has been tested, the disks get discovered correctly and can do IO. Also,
+replaced phys_addr_t with resource_size_t as suggested by Ben.
 
--- av
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Pravin Bathija <pbathija@amcc.com>
+Acked-by: Feng Kan <fkan@amcc.com>
+Acked-by: Prodyut Hazarika <phazarika@amcc.com>
+Acked-by: Loc Ho <lho@amcc.com>
+Acked-by: Tirumala Reddy Marri <tmarri@amcc.com>
+Acked-by: Victor Gallardo <vgallardo@amcc.com>
+
+---
+ drivers/message/fusion/mptbase.c |   34 +++++++++++++++++++++++++---------
+ drivers/message/fusion/mptbase.h |    5 +++--
+ 2 files changed, 28 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 5d496a9..e296f2e 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1510,11 +1510,12 @@ static int
+ mpt_mapresources(MPT_ADAPTER *ioc)
+ {
+ 	u8		__iomem *mem;
++	u8		__iomem *port;
+ 	int		 ii;
+-	unsigned long	 mem_phys;
+-	unsigned long	 port;
+-	u32		 msize;
+-	u32		 psize;
++	resource_size_t	 mem_phys;
++	resource_size_t	 port_phys;
++	resource_size_t	 msize;
++	resource_size_t	 psize;
+ 	u8		 revision;
+ 	int		 r = -ENODEV;
+ 	struct pci_dev *pdev;
+@@ -1552,13 +1553,13 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+ 	}
+ 
+ 	mem_phys = msize = 0;
+-	port = psize = 0;
++	port_phys = psize = 0;
+ 	for (ii = 0; ii < DEVICE_COUNT_RESOURCE; ii++) {
+ 		if (pci_resource_flags(pdev, ii) & PCI_BASE_ADDRESS_SPACE_IO) {
+ 			if (psize)
+ 				continue;
+ 			/* Get I/O space! */
+-			port = pci_resource_start(pdev, ii);
++			port_phys = pci_resource_start(pdev, ii);
+ 			psize = pci_resource_len(pdev, ii);
+ 		} else {
+ 			if (msize)
+@@ -1580,14 +1581,23 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+ 		return -EINVAL;
+ 	}
+ 	ioc->memmap = mem;
+-	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %lx\n",
+-	    ioc->name, mem, mem_phys));
++	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %llx\n",
++	    ioc->name, mem, (u64)mem_phys));
+ 
+ 	ioc->mem_phys = mem_phys;
+ 	ioc->chip = (SYSIF_REGS __iomem *)mem;
+ 
+ 	/* Save Port IO values in case we need to do downloadboot */
+-	ioc->pio_mem_phys = port;
++	port = ioremap(port_phys, psize);
++	if (port == NULL) {
++		printk(MYIOC_s_ERR_FMT " : ERROR - Unable to map adapter"
++			" port !\n", ioc->name);
++		return -EINVAL;
++	}
++	ioc->portmap = port;
++	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "port=%p, port_phys=%llx\n",
++			ioc->name, port, (u64)port_phys));
++	ioc->pio_mem_phys = port_phys;
+ 	ioc->pio_chip = (SYSIF_REGS __iomem *)port;
+ 
+ 	return 0;
+@@ -1822,6 +1832,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		if (ioc->alt_ioc)
+ 			ioc->alt_ioc->alt_ioc = NULL;
+ 		iounmap(ioc->memmap);
++		iounmap(ioc->portmap);
+ 		if (r != -5)
+ 			pci_release_selected_regions(pdev, ioc->bars);
+ 
+@@ -2583,6 +2594,11 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
+ 		ioc->memmap = NULL;
+ 	}
+ 
++	if (ioc->portmap != NULL) {
++		iounmap(ioc->portmap);
++		ioc->portmap = NULL;
++	}
++
+ 	pci_disable_device(ioc->pcidev);
+ 	pci_release_selected_regions(ioc->pcidev, ioc->bars);
+ 
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b3e981d..7091f13 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -584,8 +584,8 @@ typedef struct _MPT_ADAPTER
+ 	SYSIF_REGS __iomem	*chip;		/* == c8817000 (mmap) */
+ 	SYSIF_REGS __iomem	*pio_chip;	/* Programmed IO (downloadboot) */
+ 	u8			 bus_type;
+-	u32			 mem_phys;	/* == f4020000 (mmap) */
+-	u32			 pio_mem_phys;	/* Programmed IO (downloadboot) */
++	resource_size_t		 mem_phys;	/* == f4020000 (mmap) */
++	resource_size_t		 pio_mem_phys;	/* Programmed IO (downloadboot) */
+ 	int			 mem_size;	/* mmap memory size */
+ 	int			 number_of_buses;
+ 	int			 devices_per_bus;
+@@ -635,6 +635,7 @@ typedef struct _MPT_ADAPTER
+ 	int			bars;		/* bitmask of BAR's that must be configured */
+ 	int			msi_enable;
+ 	u8			__iomem *memmap;	/* mmap address */
++	u8			__iomem *portmap;	/* mmap port address */
+ 	struct Scsi_Host	*sh;		/* Scsi Host pointer */
+ 	SpiCfgData		spi_data;	/* Scsi config. data */
+ 	RaidCfgData		raid_data;	/* Raid config. data */
+-- 
+1.5.5
+
