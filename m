@@ -1,247 +1,175 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/5] SCSI: Add support for 32-byte CDBs
-Date: Wed, 16 Sep 2009 14:52:24 -0400
-Message-ID: <yq1ws3yd8nr.fsf@sermon.lab.mkp.net>
-References: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>
-	<1252053394-24886-2-git-send-email-martin.petersen@oracle.com>
-	<1253122732.4842.33.camel@mulgrave.site>
+From: Chris Webb <chris@arachsys.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Wed, 16 Sep 2009 23:28:42 +0100
+Message-ID: <20090916222842.GB16053@arachsys.com>
+References: <4AADF471.2020801@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:65311 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845AbZIPSwa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2009 14:52:30 -0400
-In-Reply-To: <1253122732.4842.33.camel@mulgrave.site> (James Bottomley's
-	message of "Wed, 16 Sep 2009 17:38:52 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760207AbZIPWed@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4AADF471.2020801@suse.de>
+ <4AADF3C4.5060004@kernel.org>
+ <4A9BC023.10903@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
 
->>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
+Hi Tejun. Thanks for following up to this. We've done some more experimentation
+over the last couple of days based on your suggestions and thoughts.
 
-James> This does look better than the previous version.
+Tejun Heo <tj@kernel.org> writes:
+> Seriously, it's most likely a hardware malfunction although I can't tell
+> where the problem is with the given data.  Get the hardware fixed.
 
-However, you're a couple of weeks behind :)
+We know this isn't caused by a single faulty piece of hardware, because we have
+a cluster of identical machines and all have shown this behaviour. This doesn't
+mean that there isn't a hardware problem, but if there is one, it's a design
+problem or firmware bug affecting all of our hosts.
 
+There have also been a few reports of problems which look very similar in this
+thread from people with somewhat different hardware and drives to ours.
 
-James> Fundamentally, since you know you're always going to be using a
-James> 32 byte command, it looks like the consistent place to do the
-James> allocation is in the block layer.  If we go that route, I'd
-James> recommend using a variable for the length so ATA can use it also
-James> for transmitting task files. I've cc'd Jens to see what he thinks
-James> of this.
+> The aboves are IDENTIFY.  Who's issuing IDENTIFY regularly?  It isn't
+> from the regular IO paths or md.  It's probably being issued via SG_IO
+> from userland.  These failures don't affect normal operation.
+[...]
+> Oooh, another possibility is the above continuous IDENTIFY tries.
+> Doing things like that generally isn't a good idea because vendors
+> don't expect IDENTIFY to be mixed regularly with normal IOs and
+> firmwares aren't tested against that.  Even smart commands sometimes
+> cause problems.  So, finding out the thing which is obsessed with the
+> identity of the drive and stopping it might help.
 
-If you check the archives you'll see that that was my initial approach.
-I moved the command array to the end of struct request so it could be an
-arbitrary size depending on queue.  However, there are many places where
-it is assumed that struct request is a fixed size, we allocate it on the
-stack, etc.  My patch grew bigger and bigger and got quite hairy.
-Eventually Jens recommended that I abandoned this for now because it was
-more trouble than it was worth.  It's still something I'd like to do
-longer term, but I was interested in doing something that would allow
-Type 2 devices to work in 2.6.32.
+We tracked this down to some (excessively frequent!) monitoring we were doing
+using smartctl. Things were improved considerably by stopping smartd and
+disabling all callers of smartctl, although it doesn't appear to have been a
+cure. The frequency of these timeouts during resync seems to have gone from
+about once every two hours to about once a day, which means we've been able to
+complete some resyncs whereas we were unable to before.
 
+What we still see are (fewer) 'frozen' exceptions leading to a drive reset and
+an 'end_request: I/O error', such as [1]. The drive is then promptly kicked out
+of the raid array.
 
-James> If we just want to hack it up in the SCSI layer, it seems to me
-James> you don't need to muck with req->cmd.  Just populate cmd->cmnd
-James> from the pool and use the signature (req->cmd != cmd->cmnd) to
-James> know you did (thus dispensing with the flag and keeping req->cmd
-James> consistent).
+Some of these timeouts also leave us with a completely dead drive, and we need
+to reboot the machine before it can be accessed again. (Hot plugging it out and
+back in again isn't sufficient to bring it back to life, so maybe a controller
+problem, although other drives on the same controller stay alive?) An example
+is [2].
 
-Here's what I posted a few days ago:
+There are two more symptoms we are seeing on the same which may be
+connected, or may be separate bugs in their own right:
 
-sd: Support disks formatted with DIF Type 2
+  - 'cat /proc/mdstat' sometimes hangs before returning during normal
+    operation, although most of the time it is fine. We have seen hangs of
+    up to 15-20 seconds during resync. Might this be a less severe example
+    of the lock-up which causes a timeout and reset after 30 seconds?
 
-Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
-when protection is enabled.  Only the 32-byte variants are supported.
+  - We've also had a few occasions of O_SYNC writes to raid arrays (from
+    qemu-kvm via LVM2) completely deadlocking against resync writes when the
+    maximum md resync speed is set sufficiently high, even where the minimum
+    md resync speed is set to zero (although this certainly helps). However,
+    I suspect this is an unrelated issue as I've seen this on other hardware
+    running other kernel configs.
 
-Implement support for issusing 32-byte READ/WRITE and enable Type 2
-drives in the protection type detection logic.
+For reference, we're using the ahci driver and deadline IO scheduler with the
+default tuning parameters, our motherboards are SuperMicro X7DBN (Intel ESB2
+SATA 3.0Gbps Controller) and we have six 750GB Seagate ST3750523AS drives
+attached to each motherboard. Also, since first reporting this, I've managed
+to reproduce the problem whilst running Linux 2.6.29.6, 2.6.30.5 and the
+newly released 2.6.31.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+What do you think are our next steps in tracking this one down should be? My
+only ideas are:
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 36e2333..fa44936 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -116,6 +116,9 @@ static DEFINE_IDA(sd_index_ida);
-  * object after last put) */
- static DEFINE_MUTEX(sd_ref_mutex);
- 
-+struct kmem_cache *sd_cdb_cache;
-+mempool_t *sd_cdb_pool;
-+
- static const char *sd_cache_types[] = {
- 	"write through", "none", "write back",
- 	"write back, no read (daft)"
-@@ -413,6 +416,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	sector_t threshold;
- 	unsigned int this_count = blk_rq_sectors(rq);
- 	int ret, host_dif;
-+	unsigned char protect;
- 
- 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
-@@ -545,13 +549,49 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
- 	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
- 	if (host_dif)
--		SCpnt->cmnd[1] = 1 << 5;
-+		protect = 1 << 5;
- 	else
--		SCpnt->cmnd[1] = 0;
-+		protect = 0;
-+
-+	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
-+		SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
-+
-+		if (unlikely(SCpnt->cmnd == NULL)) {
-+			ret = BLKPREP_DEFER;
-+			goto out;
-+		}
- 
--	if (block > 0xffffffff) {
-+		SCpnt->cmd_len = SD_EXT_CDB_SIZE;
-+		memset(SCpnt->cmnd, 0, SCpnt->cmd_len);
-+		SCpnt->cmnd[0] = VARIABLE_LENGTH_CMD;
-+		SCpnt->cmnd[7] = 0x18;
-+		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
-+		SCpnt->cmnd[10] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
-+
-+		/* LBA */
-+		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
-+		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
-+		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-+		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
-+		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
-+		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
-+		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
-+		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
-+
-+		/* Expected Indirect LBA */
-+		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
-+		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
-+		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
-+		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
-+
-+		/* Transfer length */
-+		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
-+		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
-+		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
-+		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
-+	} else if (block > 0xffffffff) {
- 		SCpnt->cmnd[0] += READ_16 - READ_6;
--		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
-+		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
- 		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
- 		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
- 		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
-@@ -572,7 +612,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 			this_count = 0xffff;
- 
- 		SCpnt->cmnd[0] += READ_10 - READ_6;
--		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
-+		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
- 		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
- 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
- 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
-@@ -1047,6 +1087,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	int result = SCpnt->result;
- 	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
- 	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
- 	int sense_valid = 0;
- 	int sense_deferred = 0;
- 
-@@ -1108,6 +1149,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
- 		sd_dif_complete(SCpnt, good_bytes);
- 
-+	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
-+	    == SD_DIF_TYPE2_PROTECTION)
-+		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-+
- 	return good_bytes;
- }
- 
-@@ -1271,12 +1316,7 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 
- 	sdkp->protection_type = type;
- 
--	switch (type) {
--	case SD_DIF_TYPE1_PROTECTION:
--	case SD_DIF_TYPE3_PROTECTION:
--		break;
--
--	default:
-+	if (type > SD_DIF_TYPE3_PROTECTION) {
- 		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
- 			  "protection type %u. Disabling disk!\n", type);
- 		sdkp->capacity = 0;
-@@ -2321,8 +2361,24 @@ static int __init init_sd(void)
- 	if (err)
- 		goto err_out_class;
- 
-+	sd_cdb_cache = kmem_cache_create("sd_ext_cdb", SD_EXT_CDB_SIZE,
-+					 0, 0, NULL);
-+	if (!sd_cdb_cache) {
-+		printk(KERN_ERR "sd: can't init extended cdb cache\n");
-+		goto err_out_class;
-+	}
-+
-+	sd_cdb_pool = mempool_create_slab_pool(SD_MEMPOOL_SIZE, sd_cdb_cache);
-+	if (!sd_cdb_pool) {
-+		printk(KERN_ERR "sd: can't init extended cdb pool\n");
-+		goto err_out_cache;
-+	}
-+
- 	return 0;
- 
-+err_out_cache:
-+	kmem_cache_destroy(sd_cdb_cache);
-+
- err_out_class:
- 	class_unregister(&sd_disk_class);
- err_out:
-@@ -2342,6 +2398,9 @@ static void __exit exit_sd(void)
- 
- 	SCSI_LOG_HLQUEUE(3, printk("exit_sd: exiting sd driver\n"));
- 
-+	mempool_destroy(sd_cdb_pool);
-+	kmem_cache_destroy(sd_cdb_cache);
-+
- 	scsi_unregister_driver(&sd_template.gendrv);
- 	class_unregister(&sd_disk_class);
- 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index ce1f5f8..e374804 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -37,6 +37,11 @@
-  */
- #define SD_LAST_BUGGY_SECTORS	8
- 
-+enum {
-+	SD_EXT_CDB_SIZE = 32,	/* Extended CDB size */
-+	SD_MEMPOOL_SIZE = 2,	/* CDB pool size */
-+};
-+
- struct scsi_disk {
- 	struct scsi_driver *driver;	/* always &sd_template */
- 	struct scsi_device *device;
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 084478e..34c46ab 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -129,6 +129,9 @@ struct scsi_cmnd;
- #define MI_REPORT_TARGET_PGS  0x0a
- /* values for maintenance out */
- #define MO_SET_TARGET_PGS     0x0a
-+/* values for variable length command */
-+#define READ_32		      0x09
-+#define WRITE_32	      0x0b
- 
- /* Values for T10/04-262r7 */
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
+  - We could experiment with NCQ settings. I've already briefly changed
+    /sys/block/sd*/device/queue_depth down from 31 to 1. It didn't seem to stop
+    delays in getting back info from /proc/mdstat, so put it back up again fearing
+    that the performance hit would make the problem worse, but perhaps I should
+    leave it off for a more extended period to verify that we still get timeouts
+    long enough to leave slots without it?
+
+  - We could try replacing the drives that are currently kicked out of one of the
+    arrays with drives from another manufacturer to see if the drive model
+    is implicated. Is the drive or the controller a more likely problem?
+
+Any advice would be very gratefully received.
+
+Cheers,
+
+Chris.
+
+[1] ata5.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+    ata5.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+            res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
+    ata5.00: status: { DRDY }
+    ata5: hard resetting link
+    ata5: softreset failed (device not ready)
+    ata5: hard resetting link
+    ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+    ata5.00: configured for UDMA/133
+    ata5: EH complete
+    end_request: I/O error, dev sde, sector 1465147264
+    md: super_written gets error=-5, uptodate=0
+    raid10: Disk failure on sde3, disabling device.
+    raid10: Operation continuing on 4 devices.
+
+[2] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+    ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+             res 40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
+    ata1.00: status: { DRDY }
+    ata1: hard resetting link
+    ata1: softreset failed (device not ready)
+    ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+    ata1.00: qc timeout (cmd 0xec)
+    ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+    ata1.00: revalidation failed (errno=-5)
+    ata1: hard resetting link
+    ata1: softreset failed (device not ready)
+    ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+    ata1.00: qc timeout (cmd 0xec)
+    ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+    ata1.00: revalidation failed (errno=-5)
+    ata1: limiting SATA link speed to 1.5 Gbps
+    ata1: hard resetting link
+    ata1: softreset failed (device not ready)
+    ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+    ata1.00: qc timeout (cmd 0xec)
+    ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+    ata1.00: revalidation failed (errno=-5)
+    ata1.00: disabled
+    ata1: hard resetting link
+    ata1: softreset failed (device not ready)
+    ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+    ata1: EH complete
+    sd 0:0:0:0: [sda] Unhandled error code
+    sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+    end_request: I/O error, dev sda, sector 1465147272
+    end_request: I/O error, dev sda, sector 1465147272
+    md: super_written gets error=-5, uptodate=0
+    raid10: Disk failure on sda3, disabling device.
+    raid10: Operation continuing on 4 devices.
+    sd 0:0:0:0: [sda] Unhandled error code
+    sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+    end_request: I/O error, dev sda, sector 8396584
+    end_request: I/O error, dev sda, sector 8396584
+    md: super_written gets error=-5, uptodate=0
+    raid1: Disk failure on sda1, disabling device.
+    raid1: Operation continuing on 5 devices.
+    sd 0:0:0:0: [sda] Unhandled error code
+    sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+    end_request: I/O error, dev sda, sector 32
+    raid1: sda1: rescheduling sector 0
+    sd 0:0:0:0: [sda] Unhandled error code
+    sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+    end_request: I/O error, dev sda, sector 8396800
+    raid10: sda2: rescheduling sector 0
+    sd 0:0:0:0: [sda] Unhandled error code
+    sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+    end_request: I/O error, dev sda, sector 8396800
+    sd 0:0:0:0: [sda] Unhandled error code
+    sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
+    end_request: I/O error, dev sda, sector 8396800
+    raid10: Disk failure on sda2, disabling device.
+    raid10: Operation continuing on 5 devices.
