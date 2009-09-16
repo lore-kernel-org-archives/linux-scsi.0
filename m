@@ -1,171 +1,247 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/3] libosd: osd_dev_info: Unique Identification of an
- OSD device
-Date: Wed, 16 Sep 2009 11:47:42 -0600
-Message-ID: <1253123262.4842.39.camel@mulgrave.site>
-References: <4AA4ED94.2050805@panasas.com>
-	 <1252322784-19390-1-git-send-email-bharrosh@panasas.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/5] SCSI: Add support for 32-byte CDBs
+Date: Wed, 16 Sep 2009 14:52:24 -0400
+Message-ID: <yq1ws3yd8nr.fsf@sermon.lab.mkp.net>
+References: <1252053394-24886-1-git-send-email-martin.petersen@oracle.com>
+	<1252053394-24886-2-git-send-email-martin.petersen@oracle.com>
+	<1253122732.4842.33.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50676 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754219AbZIPRrm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Sep 2009 13:47:42 -0400
-In-Reply-To: <1252322784-19390-1-git-send-email-bharrosh@panasas.com>
+Received: from acsinet11.oracle.com ([141.146.126.233]:65311 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845AbZIPSwa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2009 14:52:30 -0400
+In-Reply-To: <1253122732.4842.33.camel@mulgrave.site> (James Bottomley's
+	message of "Wed, 16 Sep 2009 17:38:52 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
 
-On Mon, 2009-09-07 at 14:26 +0300, Boaz Harrosh wrote:
-> Define an osd_dev_info structure that Uniquely identifies an OSD
-> device lun on the network. The identification is built from unique
-> target attributes and is the same for all network/SAN machines.
-> 
-> osduld_info_lookup() - NEW
->     New API that will lookup an osd_dev by its osd_dev_info.
->     This is used by pNFS-objects for cross network global device
->     identification.
-> 
-> osduld_device_info() - NEW
->     Given an osd_dev handle returns its associated osd_dev_info.
->     This is used by exofs to encode the device information for
->     network clients. (Get-device-info). The ULD fetches this
->     information at startup and hangs it on each OSD device. (This is
->     a fast operation that can be called at any condition)
-> 
-> osd_auto_detect_ver() - REVISED
->     Now returns an osd_dev_info structure. Is only called once
->     by ULD as before. See added comments for how to use.
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/osd/osd_initiator.c |   22 +++++++++++----
->  drivers/scsi/osd/osd_uld.c       |   53 +++++++++++++++++++++++++++++++++++++-
->  include/scsi/osd_initiator.h     |   37 +++++++++++++++++++++++---
->  3 files changed, 101 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-> index 7a117c1..26e1b41 100644
-> --- a/drivers/scsi/osd/osd_initiator.c
-> +++ b/drivers/scsi/osd/osd_initiator.c
-> @@ -73,7 +73,8 @@ static const char *_osd_ver_desc(struct osd_request *or)
->  
->  #define ATTR_DEF_RI(id, len) ATTR_DEF(OSD_APAGE_ROOT_INFORMATION, id, len)
->  
-> -static int _osd_print_system_info(struct osd_dev *od, void *caps)
-> +static int _osd_get_print_system_info(struct osd_dev *od,
-> +	void *caps, struct osd_dev_info *odi)
->  {
->  	struct osd_request *or;
->  	struct osd_attr get_attrs[] = {
-> @@ -137,8 +138,13 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
->  	OSD_INFO("PRODUCT_SERIAL_NUMBER  [%s]\n",
->  		(char *)pFirst);
->  
-> -	pFirst = get_attrs[a].val_ptr;
-> -	OSD_INFO("OSD_NAME               [%s]\n", (char *)pFirst);
-> +	odi->osdname_len = get_attrs[a].len;
-> +	if (odi->osdname_len) {
-> +		odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
-> +		memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
-> +	} else
-> +		odi->osdname = NULL;
-> +	OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
->  	a++;
->  
->  	pFirst = get_attrs[a++].val_ptr;
-> @@ -171,6 +177,9 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
->  				   sid_dump, sizeof(sid_dump), true);
->  		OSD_INFO("OSD_SYSTEM_ID(%d)\n"
->  			 "        [%s]\n", len, sid_dump);
-> +
-> +		odi->systemid_len = len;
-> +		memcpy(odi->systemid, get_attrs[a].val_ptr, len);
->  		a++;
->  	}
->  out:
-> @@ -178,16 +187,17 @@ out:
->  	return ret;
->  }
->  
-> -int osd_auto_detect_ver(struct osd_dev *od, void *caps)
-> +int osd_auto_detect_ver(struct osd_dev *od,
-> +	void *caps, struct osd_dev_info *odi)
->  {
->  	int ret;
->  
->  	/* Auto-detect the osd version */
-> -	ret = _osd_print_system_info(od, caps);
-> +	ret = _osd_get_print_system_info(od, caps, odi);
->  	if (ret) {
->  		osd_dev_set_ver(od, OSD_VER1);
->  		OSD_DEBUG("converting to OSD1\n");
-> -		ret = _osd_print_system_info(od, caps);
-> +		ret = _osd_get_print_system_info(od, caps, odi);
->  	}
->  
->  	return ret;
-> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> index 0bdef33..8c069f9 100644
-> --- a/drivers/scsi/osd/osd_uld.c
-> +++ b/drivers/scsi/osd/osd_uld.c
-> @@ -87,6 +87,7 @@ struct osd_uld_device {
->  	struct osd_dev od;
->  	struct gendisk *disk;
->  	struct device *class_member;
-> +	struct osd_dev_info odi;
->  };
->  
->  static void __uld_get(struct osd_uld_device *oud);
-> @@ -216,6 +217,48 @@ free_od:
->  }
->  EXPORT_SYMBOL(osduld_path_lookup);
->  
-> +static inline bool _the_same_or_null(const u8 *a1, unsigned a1_len,
-> +				     const u8 *a2, unsigned a2_len)
-> +{
-> +	if (!a2_len) /* User string is Empty means don't care */
-> +		return true;
-> +
-> +	if (a1_len != a2_len)
-> +		return false;
-> +
-> +	return 0 == memcmp(a1, a2, a1_len);
-> +}
-> +
-> +struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi)
-> +{
-> +	unsigned i;
-> +
-> +	for (i = 0; i < SCSI_OSD_MAX_MINOR; i++) {
-> +		char dev_str[16];
-> +		struct osd_uld_device *oud;
-> +		struct osd_dev *od;
-> +
-> +		sprintf(dev_str, "/dev/osd%d", i);
+>>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
 
-Embedding specific forms user device paths into the kernel really looks
-wrong here ... why are you doing this?  What happens if the user uses
-udev to give them different names?
+James> This does look better than the previous version.
 
-> +		od = osduld_path_lookup(dev_str);
-> +		if (IS_ERR(od))
-> +			continue;
-> +
-> +		oud = od->file->private_data;
-> +		if (_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
-> +				      odi->systemid, odi->systemid_len) &&
-> +		    _the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
-> +				      odi->osdname, odi->osdname_len))
-
-Why not NULL terminate these strings as you pick them out of the device
-info?  Then you can dispense with the length and use standard kernel
-string comparisons instead of rolling your own.
-
-James
+However, you're a couple of weeks behind :)
 
 
+James> Fundamentally, since you know you're always going to be using a
+James> 32 byte command, it looks like the consistent place to do the
+James> allocation is in the block layer.  If we go that route, I'd
+James> recommend using a variable for the length so ATA can use it also
+James> for transmitting task files. I've cc'd Jens to see what he thinks
+James> of this.
+
+If you check the archives you'll see that that was my initial approach.
+I moved the command array to the end of struct request so it could be an
+arbitrary size depending on queue.  However, there are many places where
+it is assumed that struct request is a fixed size, we allocate it on the
+stack, etc.  My patch grew bigger and bigger and got quite hairy.
+Eventually Jens recommended that I abandoned this for now because it was
+more trouble than it was worth.  It's still something I'd like to do
+longer term, but I was interested in doing something that would allow
+Type 2 devices to work in 2.6.32.
+
+
+James> If we just want to hack it up in the SCSI layer, it seems to me
+James> you don't need to muck with req->cmd.  Just populate cmd->cmnd
+James> from the pool and use the signature (req->cmd != cmd->cmnd) to
+James> know you did (thus dispensing with the flag and keeping req->cmd
+James> consistent).
+
+Here's what I posted a few days ago:
+
+sd: Support disks formatted with DIF Type 2
+
+Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
+when protection is enabled.  Only the 32-byte variants are supported.
+
+Implement support for issusing 32-byte READ/WRITE and enable Type 2
+drives in the protection type detection logic.
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 36e2333..fa44936 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -116,6 +116,9 @@ static DEFINE_IDA(sd_index_ida);
+  * object after last put) */
+ static DEFINE_MUTEX(sd_ref_mutex);
+ 
++struct kmem_cache *sd_cdb_cache;
++mempool_t *sd_cdb_pool;
++
+ static const char *sd_cache_types[] = {
+ 	"write through", "none", "write back",
+ 	"write back, no read (daft)"
+@@ -413,6 +416,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	sector_t threshold;
+ 	unsigned int this_count = blk_rq_sectors(rq);
+ 	int ret, host_dif;
++	unsigned char protect;
+ 
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+@@ -545,13 +549,49 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	/* Set RDPROTECT/WRPROTECT if disk is formatted with DIF */
+ 	host_dif = scsi_host_dif_capable(sdp->host, sdkp->protection_type);
+ 	if (host_dif)
+-		SCpnt->cmnd[1] = 1 << 5;
++		protect = 1 << 5;
+ 	else
+-		SCpnt->cmnd[1] = 0;
++		protect = 0;
++
++	if (host_dif == SD_DIF_TYPE2_PROTECTION) {
++		SCpnt->cmnd = mempool_alloc(sd_cdb_pool, GFP_ATOMIC);
++
++		if (unlikely(SCpnt->cmnd == NULL)) {
++			ret = BLKPREP_DEFER;
++			goto out;
++		}
+ 
+-	if (block > 0xffffffff) {
++		SCpnt->cmd_len = SD_EXT_CDB_SIZE;
++		memset(SCpnt->cmnd, 0, SCpnt->cmd_len);
++		SCpnt->cmnd[0] = VARIABLE_LENGTH_CMD;
++		SCpnt->cmnd[7] = 0x18;
++		SCpnt->cmnd[9] = (rq_data_dir(rq) == READ) ? READ_32 : WRITE_32;
++		SCpnt->cmnd[10] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
++
++		/* LBA */
++		SCpnt->cmnd[12] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
++		SCpnt->cmnd[13] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
++		SCpnt->cmnd[14] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
++		SCpnt->cmnd[15] = sizeof(block) > 4 ? (unsigned char) (block >> 32) & 0xff : 0;
++		SCpnt->cmnd[16] = (unsigned char) (block >> 24) & 0xff;
++		SCpnt->cmnd[17] = (unsigned char) (block >> 16) & 0xff;
++		SCpnt->cmnd[18] = (unsigned char) (block >> 8) & 0xff;
++		SCpnt->cmnd[19] = (unsigned char) block & 0xff;
++
++		/* Expected Indirect LBA */
++		SCpnt->cmnd[20] = (unsigned char) (block >> 24) & 0xff;
++		SCpnt->cmnd[21] = (unsigned char) (block >> 16) & 0xff;
++		SCpnt->cmnd[22] = (unsigned char) (block >> 8) & 0xff;
++		SCpnt->cmnd[23] = (unsigned char) block & 0xff;
++
++		/* Transfer length */
++		SCpnt->cmnd[28] = (unsigned char) (this_count >> 24) & 0xff;
++		SCpnt->cmnd[29] = (unsigned char) (this_count >> 16) & 0xff;
++		SCpnt->cmnd[30] = (unsigned char) (this_count >> 8) & 0xff;
++		SCpnt->cmnd[31] = (unsigned char) this_count & 0xff;
++	} else if (block > 0xffffffff) {
+ 		SCpnt->cmnd[0] += READ_16 - READ_6;
+-		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
++		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+ 		SCpnt->cmnd[2] = sizeof(block) > 4 ? (unsigned char) (block >> 56) & 0xff : 0;
+ 		SCpnt->cmnd[3] = sizeof(block) > 4 ? (unsigned char) (block >> 48) & 0xff : 0;
+ 		SCpnt->cmnd[4] = sizeof(block) > 4 ? (unsigned char) (block >> 40) & 0xff : 0;
+@@ -572,7 +612,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 			this_count = 0xffff;
+ 
+ 		SCpnt->cmnd[0] += READ_10 - READ_6;
+-		SCpnt->cmnd[1] |= blk_fua_rq(rq) ? 0x8 : 0;
++		SCpnt->cmnd[1] = protect | (blk_fua_rq(rq) ? 0x8 : 0);
+ 		SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
+ 		SCpnt->cmnd[3] = (unsigned char) (block >> 16) & 0xff;
+ 		SCpnt->cmnd[4] = (unsigned char) (block >> 8) & 0xff;
+@@ -1047,6 +1087,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	int result = SCpnt->result;
+ 	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
+ 	struct scsi_sense_hdr sshdr;
++	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
+ 	int sense_valid = 0;
+ 	int sense_deferred = 0;
+ 
+@@ -1108,6 +1149,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
+ 		sd_dif_complete(SCpnt, good_bytes);
+ 
++	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
++	    == SD_DIF_TYPE2_PROTECTION)
++		mempool_free(SCpnt->cmnd, sd_cdb_pool);
++
+ 	return good_bytes;
+ }
+ 
+@@ -1271,12 +1316,7 @@ void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 
+ 	sdkp->protection_type = type;
+ 
+-	switch (type) {
+-	case SD_DIF_TYPE1_PROTECTION:
+-	case SD_DIF_TYPE3_PROTECTION:
+-		break;
+-
+-	default:
++	if (type > SD_DIF_TYPE3_PROTECTION) {
+ 		sd_printk(KERN_ERR, sdkp, "formatted with unsupported "	\
+ 			  "protection type %u. Disabling disk!\n", type);
+ 		sdkp->capacity = 0;
+@@ -2321,8 +2361,24 @@ static int __init init_sd(void)
+ 	if (err)
+ 		goto err_out_class;
+ 
++	sd_cdb_cache = kmem_cache_create("sd_ext_cdb", SD_EXT_CDB_SIZE,
++					 0, 0, NULL);
++	if (!sd_cdb_cache) {
++		printk(KERN_ERR "sd: can't init extended cdb cache\n");
++		goto err_out_class;
++	}
++
++	sd_cdb_pool = mempool_create_slab_pool(SD_MEMPOOL_SIZE, sd_cdb_cache);
++	if (!sd_cdb_pool) {
++		printk(KERN_ERR "sd: can't init extended cdb pool\n");
++		goto err_out_cache;
++	}
++
+ 	return 0;
+ 
++err_out_cache:
++	kmem_cache_destroy(sd_cdb_cache);
++
+ err_out_class:
+ 	class_unregister(&sd_disk_class);
+ err_out:
+@@ -2342,6 +2398,9 @@ static void __exit exit_sd(void)
+ 
+ 	SCSI_LOG_HLQUEUE(3, printk("exit_sd: exiting sd driver\n"));
+ 
++	mempool_destroy(sd_cdb_pool);
++	kmem_cache_destroy(sd_cdb_cache);
++
+ 	scsi_unregister_driver(&sd_template.gendrv);
+ 	class_unregister(&sd_disk_class);
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index ce1f5f8..e374804 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -37,6 +37,11 @@
+  */
+ #define SD_LAST_BUGGY_SECTORS	8
+ 
++enum {
++	SD_EXT_CDB_SIZE = 32,	/* Extended CDB size */
++	SD_MEMPOOL_SIZE = 2,	/* CDB pool size */
++};
++
+ struct scsi_disk {
+ 	struct scsi_driver *driver;	/* always &sd_template */
+ 	struct scsi_device *device;
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 084478e..34c46ab 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -129,6 +129,9 @@ struct scsi_cmnd;
+ #define MI_REPORT_TARGET_PGS  0x0a
+ /* values for maintenance out */
+ #define MO_SET_TARGET_PGS     0x0a
++/* values for variable length command */
++#define READ_32		      0x09
++#define WRITE_32	      0x0b
+ 
+ /* Values for T10/04-262r7 */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
