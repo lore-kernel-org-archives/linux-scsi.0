@@ -1,78 +1,101 @@
-From: Allan Wind <allan_wind@lifeintegrity.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Thu, 17 Sep 2009 12:36:47 -0400
-Message-ID: <20090917163647.GA6663@lifeintegrity.com>
-References: <20090917115728.GA13854@arachsys.com> <4AB2596D.10809@kernel.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
+Date: Thu, 17 Sep 2009 18:39:45 +0000
+Message-ID: <1253212785.7845.38.camel@mulgrave.site>
+References: <4AB10FC2.1080900@attglobal.net>
+	 <1253118717.4842.13.camel@mulgrave.site> <4AB1185E.1050208@attglobal.net>
+	 <4AB1A60A.5080702@attglobal.net> <1253203147.7845.11.camel@mulgrave.site>
+	 <4AB25F49.4060201@attglobal.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-173-48-39-13.bstnma.fios.verizon.net ([173.48.39.13]:59145
-	"EHLO lifeintegrity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758627AbZIQQgp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 12:36:45 -0400
-Content-Disposition: inline
-In-Reply-To: <4AB2596D.10809@kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:56989 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751487AbZIQSjx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Sep 2009 14:39:53 -0400
+In-Reply-To: <4AB25F49.4060201@attglobal.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: stunnel@attglobal.net
+Cc: linux-scsi@vger.kernel.org, linux-box <bo.yang@lsi.com>
 
-On 2009-09-18T00:44:45, Tejun Heo wrote:
-> Hello,
+On Thu, 2009-09-17 at 09:09 -0700, Eddie wrote:
+> James Bottomley wrote:
+> > On Wed, 2009-09-16 at 19:59 -0700, Eddie wrote:
+> >   
+> >>>> How much memory does your system have?
+> >>>>
+> >>>> Best guess in the 64 bit case is that the physical memory the kernel is
+> >>>> doing DMA to isn't within the range of the card.  You might be able to
+> >>>> test this by booting with the max_addr=4G parameter in the 64 bit case.
+> >>>>
+> >>>> If it is, we'll have to get the DMA mask for this thing set up
+> >>>> correctly.
+> >>>>
+> >>>> James
+> >>>>   
+> >>>>         
+> >>> James,
+> >>>
+> >>> It's got 8Gig.
+> >>>
+> >>> I'll try your suggestion tonight, when I get home.
+> >>>
+> >>> Cheers,
+> >>> Eddie
+> >>>
+> >>>       
+> >> OK, adding addappend = " max_addr=4G" to my lilo.conf made no 
+> >> difference.  It still booted with all 8G.  :(
+> >>
+> >> But, changing it to addappend = " mem=4G" seemed to do the trick.
+> >>
+> >> And, your guess might be correct.  I now see the correct messages for 
+> >> the MegaRAID:
+> >>
+> >> scsi 4:4:0:0: Direct-Access     MegaRAID LD 0 RAID5 1430G N661 PQ: 0 ANSI: 2
+> >> sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
+> >> sd 4:4:0:0: [sda] Write Protect is off
+> >> sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
+> >> sd 4:4:0:0: [sda] Asking for cache data failed
+> >> sd 4:4:0:0: [sda] Assuming drive cache: write through
+> >> sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
+> >> sd 4:4:0:0: [sda] Write Protect is off
+> >> sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
+> >> sd 4:4:0:0: [sda] Asking for cache data failed
+> >> sd 4:4:0:0: [sda] Assuming drive cache: write through
+> >>  sda: sda1
+> >> sd 4:4:0:0: [sda] Attached SCSI disk
+> >> sd 4:4:0:0: Attached scsi generic sg1 type 0
+> >>     
+> >
+> > Hmm, so the driver looks to do this correctly.  By default it sets a 32
+> > bit DMA mask but it raises it to 64 bits for certain boards which can
+> > support that (based on the PCI ids).  Can you do an lspci -n -v and send
+> > the output?  That will tell me whether the board got a 64 bit mask.
+> >
+> > Thanks,
+> >
+> > James
+> >
+> >   
+> James,
 > 
-> Chris Webb wrote:
-> > It's quite hard for us to do this with these machines as we have
-> > them managed by a third party in a datacentre to which we don't have
-> > physical access.  However, I could very easily get an extra 'test'
-> > machine built in there, generate a work load that consistently
-> > reproduces the problems on the six drives, and then retry with an
-> > array build from 5, 4, 3 and 2 drives successively, taking out the
-> > unused drives from chassis, to see if reducing the load on the power
-> > supply with a smaller array helps.
+> This is when booted with the "mem=4G" override still in place.  If you 
+> need it without that, when it fails to "see" the device, let me know, 
+> and I'll re-boot tonight to gather it:
 > 
-> Yeap, that also should shed some light on it.
+> 01:04.0 0104: 101e:1960 (rev 02)
+>         Subsystem: 101e:0511
 
-I have a SuperMicro X8DT3-F motherboard with 2 (2 TB) WDC drives 
-of the 8 bays available in the machine.  They are on a different 
-controller LSI Logic / Symbios Logic SAS1068E PCI-Express Fusion-MPT SAS
-which was flashed into "Integrated Target Mode" to get it running 
-under Linux.
+This is sufficient.  That's an AMI Megaraid3.  They're not 64 bit
+capable and they should only have a 32 bit DMA mask.  The block layer
+should be doing the right thing, so there must be something from a >4GB
+pool leaking into the driver somewhere: probably a stray kmalloc of a
+DMA buffer without the right flags ... I'll run over the driver and see
+if I can spot it.
 
-Disabling smartmontools seems to have helped in terms of failure 
-frequency.  It is almost always the 2nd drive that is kicked out 
-of the mirror although the last time it was the primary after 
-disabling smart.  hddtemp was never running on this host.
+James
 
-[2256003.055451] end_request: I/O error, dev sdb, sector 3907028974
-[2256003.055674] md: super_written gets error=-5, uptodate=0
-[2256003.055677] raid1: Disk failure on sdb2, disabling device.
-[2256003.055678] raid1: Operation continuing on 1 devices.
-[2256003.437315] RAID1 conf printout:
-[2256003.437318]  --- wd:1 rd:2
-[2256003.437321]  disk 0, wo:0, o:1, dev:sda2
-[2256003.437323]  disk 1, wo:1, o:0, dev:sdb2
-[2256003.440542] RAID1 conf printout:
-[2256003.440545]  --- wd:1 rd:2
-[2256003.440548]  disk 0, wo:0, o:1, dev:sda2
-
-[3880879.007618] end_request: I/O error, dev sda, sector 3907028974
-[3880879.007839] md: super_written gets error=-5, uptodate=0
-[3880879.007842] raid1: Disk failure on sda2, disabling device.
-[3880879.007843] raid1: Operation continuing on 1 devices.
-[3880879.028518] RAID1 conf printout:
-[3880879.028521]  --- wd:1 rd:2
-[3880879.028524]  disk 0, wo:1, o:0, dev:sda2
-[3880879.028527]  disk 1, wo:0, o:1, dev:sdb2
-[3880879.031607] RAID1 conf printout:
-[3880879.031610]  --- wd:1 rd:2
-[3880879.031613]  disk 1, wo:0, o:1, dev:sdb2
-
-There is barely any load on this box.  Disabling NCQ did not help 
-for me. 
-
-
-/Allan
--- 
-Allan Wind
-Life Integrity, LLC
-<http://lifeintegrity.com>
 
