@@ -1,34 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14159] AIC79xx is not working properly with an attached scsi
- tape since 2.6.29
-Date: Thu, 17 Sep 2009 14:14:52 GMT
-Message-ID: <200909171414.n8HEEqUt008527@demeter.kernel.org>
-References: <bug-14159-11613@http.bugzilla.kernel.org/>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] Retry ADD_TO_MLQUEUE return value for EH commands
+Date: Thu, 17 Sep 2009 17:00:26 +0200
+Message-ID: <20090917150026.B8692367F6@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35679 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbZIQOOt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 10:14:49 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8HEEqmb008528
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2009 14:14:52 GMT
-In-Reply-To: <bug-14159-11613@http.bugzilla.kernel.org/>
+Received: from cantor.suse.de ([195.135.220.2]:56801 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751717AbZIQPAY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Sep 2009 11:00:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14159
-
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
 
+A target reset when I/O is ongoing might result
+an eventual device offline, as scsi_eh_completed_normally()
+might return ADD_TO_MLQUEUE in addition to the
+advertised SUCCESS, FAILED, and NEEDS_RETRY.
 
+Which is unfortunate as scsi_send_eh_cmnd() will
+therefore map ADD_TO_MLQUEUE to FAILED instead of
+the more appropriate NEEDS_RETRY.
 
---- Comment #17 from Stefan Assmann <sassmann@redhat.com>  2009-09-17 14:14:46 ---
-thanks for testing, I'll post the patch for upstream inclusion.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 39ce3ab..dd6d344 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -793,6 +793,9 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 		case NEEDS_RETRY:
+ 		case FAILED:
+ 			break;
++		case ADD_TO_MLQUEUE:
++			rtn = NEEDS_RETRY;
++			break;
+ 		default:
+ 			rtn = FAILED;
+ 			break;
