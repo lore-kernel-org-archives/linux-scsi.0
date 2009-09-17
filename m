@@ -1,67 +1,66 @@
-From: Neil Brown <neilb@suse.de>
-Subject: Re: MD/RAID time out writing superblock
-Date: Thu, 17 Sep 2009 10:34:39 +1000
-Message-ID: <19121.33823.893569.486518@notabene.brown>
-References: <20090916222842.GB16053@arachsys.com>
-	<4AB17905.90606@kernel.org>
+From: Eddie <stunnel@attglobal.net>
+Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
+Date: Wed, 16 Sep 2009 19:58:52 -0700
+Message-ID: <4AB1A5EC.6040007@attglobal.net>
+References: <4AB10FC2.1080900@attglobal.net> <1253118717.4842.13.camel@mulgrave.site> <4AB1185E.1050208@attglobal.net>
+Reply-To: stunnel@attglobal.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33291 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755403AbZIQAdh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Sep 2009 20:33:37 -0400
-In-Reply-To: message from Tejun Heo on Thursday September 17
+Received: from kcout01.prserv.net ([12.154.55.31]:49846 "EHLO
+	kcout01.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753997AbZIQC7F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2009 22:59:05 -0400
+In-Reply-To: <4AB1185E.1050208@attglobal.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Chris Webb <chris@arachsys.com>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On Thursday September 17, tj@kernel.org wrote:
-> 
-> > There are two more symptoms we are seeing on the same which may be
-> > connected, or may be separate bugs in their own right:
-> > 
-> >   - 'cat /proc/mdstat' sometimes hangs before returning during normal
-> >     operation, although most of the time it is fine. We have seen hangs of
-> >     up to 15-20 seconds during resync. Might this be a less severe example
-> >     of the lock-up which causes a timeout and reset after 30 seconds?
-> > 
-> >   - We've also had a few occasions of O_SYNC writes to raid arrays (from
-> >     qemu-kvm via LVM2) completely deadlocking against resync writes when the
-> >     maximum md resync speed is set sufficiently high, even where the minimum
-> >     md resync speed is set to zero (although this certainly helps). However,
-> >     I suspect this is an unrelated issue as I've seen this on other hardware
-> >     running other kernel configs.
-> 
-> I think these two will be best answered by Neil Brown.  Neil?
-> 
+>
+>> How much memory does your system have?
+>>
+>> Best guess in the 64 bit case is that the physical memory the kernel is
+>> doing DMA to isn't within the range of the card.  You might be able to
+>> test this by booting with the max_addr=4G parameter in the 64 bit case.
+>>
+>> If it is, we'll have to get the DMA mask for this thing set up
+>> correctly.
+>>
+>> James
+>>   
+>
+> James,
+>
+> It's got 8Gig.
+>
+> I'll try your suggestion tonight, when I get home.
+>
+> Cheers,
+> Eddie
+>
+OK, adding addappend = " max_addr=4G" to my lilo.conf made no 
+difference.  It still booted with all 8G.  :(
 
-"cat /proc/mdstat" should only hang if the mddev reconfig_mutex is
-held for an extended period of time.
-The reconfig_mutex is held while superblocks are being written.
+But, changing it to addappend = " mem=4G" seemed to do the trick.
 
-So yes, an extended device timeout while updating the md superblock
-can cause "cat /proc/mdstat" to hang for the duration of the timeout.
+And, your guess might be correct.  I now see the correct messages for 
+the MegaRAID:
 
-For the O_SYNC:
-  I think this is a RAID1 - is that correct?
-  With RAID1, as soon as any IO request arrives, resync is suspended and
-  as soon as all resync requests complete, the IO is permitted to
-  proceed.
-  So normal IO takes absolute precedence over resync IO.
+scsi 4:4:0:0: Direct-Access     MegaRAID LD 0 RAID5 1430G N661 PQ: 0 ANSI: 2
+sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
+sd 4:4:0:0: [sda] Write Protect is off
+sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
+sd 4:4:0:0: [sda] Asking for cache data failed
+sd 4:4:0:0: [sda] Assuming drive cache: write through
+sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
+sd 4:4:0:0: [sda] Write Protect is off
+sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
+sd 4:4:0:0: [sda] Asking for cache data failed
+sd 4:4:0:0: [sda] Assuming drive cache: write through
+ sda: sda1
+sd 4:4:0:0: [sda] Attached SCSI disk
+sd 4:4:0:0: Attached scsi generic sg1 type 0
 
-  So I am very surprised to here that O_SYNC writes deadlock
-  completed.
-  As O_SYNC writes are serialised, there will be a moment between
-  every pair when there is no IO pending.  This will allow resync to
-  get one "window" of resync IO started between each pair of writes.
-  So I can well believe that a sequence of O_SYNC writes are a couple
-  of orders of magnitude slower when resync is happening than without.
-  But it shouldn't deadlock completely.
-  Once you get about 64 sectors of O_SYNC IO through, the resync
-  should notice and back-off and resync IO will be limited to the
-  'minimum' speed.
-
-NeilBrown
+Cheers,
+Eddie
