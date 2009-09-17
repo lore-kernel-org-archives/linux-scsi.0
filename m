@@ -1,280 +1,190 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 05/20] cciss: Dynamically allocate struct device for each
-	logical drive as needed.
-Date: Thu, 17 Sep 2009 13:47:14 -0500
-Message-ID: <20090917184713.15105.84721.stgit@beardog.cce.hp.com>
+Subject: [PATCH 14/20] cciss: Preserve all 8 bytes of LUN ID for logical
+	drives.
+Date: Thu, 17 Sep 2009 13:48:00 -0500
+Message-ID: <20090917184800.15105.11314.stgit@beardog.cce.hp.com>
 References: <20090917184310.15105.43508.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:30025 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759607AbZIQSqp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 14:46:45 -0400
+Received: from g4t0017.houston.hp.com ([15.201.24.20]:31900 "EHLO
+	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753995AbZIQSrb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 14:47:31 -0400
 In-Reply-To: <20090917184310.15105.43508.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@linux-foundation.org, axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, andrew.patterson@hp.com, mikem@beardog.cce.hp.com, scameron@beardog.cce.hp.com
 
-Dynamically allocate struct device for each logical drive as needed
-instead of allocating the maximum we would ever need at driver init time.
+Preserve all 8 bytes of the LunID field returned
+by CCISS_REPORT_LOGICAL instead of only saving 4 bytes.
+This fixes a bug with logical volume addressing encountered on
+an MSA2012.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
 
- drivers/block/cciss.c |   98 ++++++++++++++++++++++++++++++++++++-------------
- drivers/block/cciss.h |    2 +
- 2 files changed, 73 insertions(+), 27 deletions(-)
+ drivers/block/cciss.c |   48 ++++++++++++++++++++++++------------------------
+ drivers/block/cciss.h |    2 +-
+ 2 files changed, 25 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 1d2d614..4f9ef49 100644
+index 239c4f5..56eeb68 100644
 --- a/drivers/block/cciss.c
 +++ b/drivers/block/cciss.c
-@@ -197,6 +197,8 @@ static void fail_all_cmds(unsigned long ctlr);
- static int add_to_scan_list(struct ctlr_info *h);
- static int scan_thread(void *data);
- static int check_for_unit_attention(ctlr_info_t *h, CommandList_struct *c);
-+static void cciss_hba_release(struct device *dev);
-+static void cciss_device_release(struct device *dev);
+@@ -845,7 +845,8 @@ static int cciss_open(struct block_device *bdev, fmode_t mode)
+ 			if (MINOR(bdev->bd_dev) & 0x0f) {
+ 				return -ENXIO;
+ 				/* if it is, make sure we have a LUN ID */
+-			} else if (drv->LunID == 0) {
++			} else if (memcmp(drv->LunID, CTLR_LUNID,
++				sizeof(drv->LunID))) {
+ 				return -ENXIO;
+ 			}
+ 		}
+@@ -1215,7 +1216,8 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case CCISS_GETLUNINFO:{
+ 			LogvolInfo_struct luninfo;
  
- #ifdef CONFIG_PROC_FS
- static void cciss_procinit(int i);
-@@ -458,7 +460,6 @@ static void __devinit cciss_procinit(int i)
- #define MAX_PRODUCT_NAME_LEN 19
- 
- #define to_hba(n) container_of(n, struct ctlr_info, dev)
--#define to_drv(n) container_of(n, drive_info_struct, dev)
- 
- static ssize_t host_store_rescan(struct device *dev,
- 				 struct device_attribute *attr,
-@@ -478,8 +479,8 @@ static ssize_t dev_show_unique_id(struct device *dev,
- 				 struct device_attribute *attr,
- 				 char *buf)
- {
--	drive_info_struct *drv = to_drv(dev);
--	struct ctlr_info *h = to_hba(drv->dev.parent);
-+	drive_info_struct *drv = dev_get_drvdata(dev);
-+	struct ctlr_info *h = to_hba(drv->dev->parent);
- 	__u8 sn[16];
- 	unsigned long flags;
- 	int ret = 0;
-@@ -508,8 +509,8 @@ static ssize_t dev_show_vendor(struct device *dev,
- 			       struct device_attribute *attr,
- 			       char *buf)
- {
--	drive_info_struct *drv = to_drv(dev);
--	struct ctlr_info *h = to_hba(drv->dev.parent);
-+	drive_info_struct *drv = dev_get_drvdata(dev);
-+	struct ctlr_info *h = to_hba(drv->dev->parent);
- 	char vendor[VENDOR_LEN + 1];
- 	unsigned long flags;
- 	int ret = 0;
-@@ -532,8 +533,8 @@ static ssize_t dev_show_model(struct device *dev,
- 			      struct device_attribute *attr,
- 			      char *buf)
- {
--	drive_info_struct *drv = to_drv(dev);
--	struct ctlr_info *h = to_hba(drv->dev.parent);
-+	drive_info_struct *drv = dev_get_drvdata(dev);
-+	struct ctlr_info *h = to_hba(drv->dev->parent);
- 	char model[MODEL_LEN + 1];
- 	unsigned long flags;
- 	int ret = 0;
-@@ -556,8 +557,8 @@ static ssize_t dev_show_rev(struct device *dev,
- 			    struct device_attribute *attr,
- 			    char *buf)
- {
--	drive_info_struct *drv = to_drv(dev);
--	struct ctlr_info *h = to_hba(drv->dev.parent);
-+	drive_info_struct *drv = dev_get_drvdata(dev);
-+	struct ctlr_info *h = to_hba(drv->dev->parent);
- 	char rev[REV_LEN + 1];
- 	unsigned long flags;
- 	int ret = 0;
-@@ -593,6 +594,7 @@ static struct attribute_group *cciss_host_attr_groups[] = {
- static struct device_type cciss_host_type = {
- 	.name		= "cciss_host",
- 	.groups		= cciss_host_attr_groups,
-+	.release	= cciss_hba_release,
- };
- 
- static struct attribute *cciss_dev_attrs[] = {
-@@ -615,12 +617,24 @@ static struct attribute_group *cciss_dev_attr_groups[] = {
- static struct device_type cciss_dev_type = {
- 	.name		= "cciss_device",
- 	.groups		= cciss_dev_attr_groups,
-+	.release	= cciss_device_release,
- };
- 
- static struct bus_type cciss_bus_type = {
- 	.name		= "cciss",
- };
- 
-+/*
-+ * cciss_hba_release is called when the reference count
-+ * of h->dev goes to zero.
-+ */
-+static void cciss_hba_release(struct device *dev)
-+{
-+	/*
-+	 * nothing to do, but need this to avoid a warning
-+	 * about not having a release handler from lib/kref.c.
-+	 */
-+}
- 
- /*
-  * Initialize sysfs entry for each controller.  This sets up and registers
-@@ -644,6 +658,15 @@ static int cciss_create_hba_sysfs_entry(struct ctlr_info *h)
- static void cciss_destroy_hba_sysfs_entry(struct ctlr_info *h)
- {
- 	device_del(&h->dev);
-+	put_device(&h->dev); /* final put. */
-+}
-+
-+/* cciss_device_release is called when the reference count
-+ * of h->drv[x].dev goes to zero.
-+ */
-+static void cciss_device_release(struct device *dev)
-+{
-+	kfree(dev);
+-			luninfo.LunID = drv->LunID;
++			memcpy(&luninfo.LunID, drv->LunID,
++				sizeof(luninfo.LunID));
+ 			luninfo.num_opens = drv->usage_count;
+ 			luninfo.num_parts = 0;
+ 			if (copy_to_user(argp, &luninfo,
+@@ -1610,13 +1612,11 @@ static void cciss_softirq_done(struct request *rq)
+ 	spin_unlock_irqrestore(&h->lock, flags);
  }
  
- /*
-@@ -652,24 +675,33 @@ static void cciss_destroy_hba_sysfs_entry(struct ctlr_info *h)
-  * /sys/bus/pci/devices/<dev/ccis#/. We also create a link from
-  * /sys/block/cciss!c#d# to this entry.
+-static void log_unit_to_scsi3addr(ctlr_info_t *h, unsigned char scsi3addr[],
+-	uint32_t log_unit)
++static inline void log_unit_to_scsi3addr(ctlr_info_t *h,
++	unsigned char scsi3addr[], uint32_t log_unit)
+ {
+-	log_unit = h->drv[log_unit].LunID & 0x03fff;
+-	memset(&scsi3addr[4], 0, 4);
+-	memcpy(&scsi3addr[0], &log_unit, 4);
+-	scsi3addr[3] |= 0x40;
++	memcpy(scsi3addr, h->drv[log_unit].LunID,
++		sizeof(h->drv[log_unit].LunID));
+ }
+ 
+ /* This function gets the SCSI vendor, model, and revision of a logical drive
+@@ -1923,7 +1923,8 @@ static void cciss_free_gendisk(ctlr_info_t *h, int drv_index)
+  * a means to talk to the controller in case no logical
+  * drives have yet been configured.
   */
--static int cciss_create_ld_sysfs_entry(struct ctlr_info *h,
--				       drive_info_struct *drv,
-+static long cciss_create_ld_sysfs_entry(struct ctlr_info *h,
- 				       int drv_index)
+-static int cciss_add_gendisk(ctlr_info_t *h, __u32 lunid, int controller_node)
++static int cciss_add_gendisk(ctlr_info_t *h, unsigned char lunid[],
++	int controller_node)
  {
--	device_initialize(&drv->dev);
--	drv->dev.type = &cciss_dev_type;
--	drv->dev.bus = &cciss_bus_type;
--	dev_set_name(&drv->dev, "c%dd%d", h->ctlr, drv_index);
--	drv->dev.parent = &h->dev;
--	return device_add(&drv->dev);
-+	struct device *dev;
-+
-+	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-+	if (!dev)
-+		return -ENOMEM;
-+	device_initialize(dev);
-+	dev->type = &cciss_dev_type;
-+	dev->bus = &cciss_bus_type;
-+	dev_set_name(dev, "c%dd%d", h->ctlr, drv_index);
-+	dev->parent = &h->dev;
-+	h->drv[drv_index].dev = dev;
-+	dev_set_drvdata(dev, &h->drv[drv_index]);
-+	return device_add(dev);
- }
+ 	int drv_index;
  
- /*
-  * Remove sysfs entries for a logical drive.
-  */
--static void cciss_destroy_ld_sysfs_entry(drive_info_struct *drv)
-+static void cciss_destroy_ld_sysfs_entry(struct ctlr_info *h, int drv_index)
- {
--	device_del(&drv->dev);
-+	struct device *dev = h->drv[drv_index].dev;
-+	device_del(dev);
-+	put_device(dev); /* the "final" put. */
-+	h->drv[drv_index].dev = NULL;
- }
- 
- /*
-@@ -1650,7 +1682,10 @@ static void cciss_get_serial_no(int ctlr, int logvol, int withirq,
- 	return;
- }
- 
--static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
-+/*
-+ * cciss_add_disk sets up the block device queue for a logical drive
-+ */
-+static int cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
- 				int drv_index)
- {
- 	disk->queue = blk_init_queue(do_cciss_request, &h->lock);
-@@ -1658,8 +1693,12 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
- 	disk->major = h->major;
- 	disk->first_minor = drv_index << NWD_SHIFT;
- 	disk->fops = &cciss_fops;
-+	if (h->drv[drv_index].dev == NULL) {
-+		if (cciss_create_ld_sysfs_entry(h, drv_index))
-+			goto cleanup_queue;
-+	}
- 	disk->private_data = &h->drv[drv_index];
--	disk->driverfs_dev = &h->drv[drv_index].dev;
-+	disk->driverfs_dev = h->drv[drv_index].dev;
- 
- 	/* Set up queue information */
- 	blk_queue_bounce_limit(disk->queue, h->pdev->dma_mask);
-@@ -1685,6 +1724,12 @@ static void cciss_add_disk(ctlr_info_t *h, struct gendisk *disk,
- 	wmb();
- 	h->drv[drv_index].queue = disk->queue;
- 	add_disk(disk);
-+	return 0;
-+
-+cleanup_queue:
-+	blk_cleanup_queue(disk->queue);
-+	disk->queue = NULL;
-+	return -1;
- }
- 
- /* This function will check the usage_count of the drive to be updated/added.
-@@ -1870,7 +1915,7 @@ static int cciss_add_gendisk(ctlr_info_t *h, __u32 lunid, int controller_node)
+@@ -1942,7 +1943,8 @@ static int cciss_add_gendisk(ctlr_info_t *h, __u32 lunid, int controller_node)
+ 			return -1;
  		}
  	}
- 	h->drv[drv_index].LunID = lunid;
--	if (cciss_create_ld_sysfs_entry(h, &h->drv[drv_index], drv_index))
-+	if (cciss_create_ld_sysfs_entry(h, drv_index))
- 		goto err_free_disk;
+-	h->drv[drv_index].LunID = lunid;
++	memcpy(h->drv[drv_index].LunID, lunid,
++		sizeof(h->drv[drv_index].LunID));
+ 	if (h->drv[drv_index].dev == NULL) {
+ 		if (cciss_create_ld_sysfs_entry(h, drv_index))
+ 			goto err_free_disk;
+@@ -1972,7 +1974,7 @@ static void cciss_add_controller_node(ctlr_info_t *h)
+ 	if (h->gendisk[0] != NULL) /* already did this? Then bail. */
+ 		return;
  
- 	/* Don't need to mark this busy because nobody */
-@@ -2144,7 +2189,7 @@ static int deregister_disk(ctlr_info_t *h, int drv_index,
- 				 * indicate that this element of the drive
- 				 * array is free.
- 				 */
--	cciss_destroy_ld_sysfs_entry(drv);
-+	cciss_destroy_ld_sysfs_entry(h, drv_index);
+-	drv_index = cciss_add_gendisk(h, 0, 1);
++	drv_index = cciss_add_gendisk(h, CTLR_LUNID, 1);
+ 	if (drv_index == -1)
+ 		goto error;
+ 	h->drv[drv_index].block_size = 512;
+@@ -2011,7 +2013,7 @@ static int rebuild_lun_table(ctlr_info_t *h, int first_time,
+ 	int i;
+ 	int drv_found;
+ 	int drv_index = 0;
+-	__u32 lunid = 0;
++	unsigned char lunid[8] = CTLR_LUNID;
+ 	unsigned long flags;
  
- 	if (clear_all) {
- 		/* check to see if it was the last disk */
-@@ -4267,8 +4312,9 @@ static void __devexit cciss_remove_one(struct pci_dev *pdev)
- 			if (q)
- 				blk_cleanup_queue(q);
+ 	if (!capable(CAP_SYS_RAWIO))
+@@ -2068,9 +2070,9 @@ static int rebuild_lun_table(ctlr_info_t *h, int first_time,
+ 			continue;
+ 
+ 		for (j = 0; j < num_luns; j++) {
+-			memcpy(&lunid, &ld_buff->LUN[j][0], 4);
+-			lunid = le32_to_cpu(lunid);
+-			if (h->drv[i].LunID == lunid) {
++			memcpy(lunid, &ld_buff->LUN[j][0], sizeof(lunid));
++			if (memcmp(h->drv[i].LunID, lunid,
++				sizeof(lunid)) == 0) {
+ 				drv_found = 1;
+ 				break;
+ 			}
+@@ -2095,9 +2097,7 @@ static int rebuild_lun_table(ctlr_info_t *h, int first_time,
+ 
+ 		drv_found = 0;
+ 
+-		memcpy(&lunid, &ld_buff->LUN[i][0], 4);
+-		lunid = le32_to_cpu(lunid);
+-
++		memcpy(lunid, &ld_buff->LUN[i][0], sizeof(lunid));
+ 		/* Find if the LUN is already in the drive array
+ 		 * of the driver.  If so then update its info
+ 		 * if not in use.  If it does not exist then find
+@@ -2105,7 +2105,8 @@ static int rebuild_lun_table(ctlr_info_t *h, int first_time,
+ 		 */
+ 		for (j = 0; j <= h->highest_lun; j++) {
+ 			if (h->drv[j].raid_level != -1 &&
+-				h->drv[j].LunID == lunid) {
++				memcmp(h->drv[j].LunID, lunid,
++					sizeof(h->drv[j].LunID)) == 0) {
+ 				drv_index = j;
+ 				drv_found = 1;
+ 				break;
+@@ -2253,8 +2254,7 @@ static int deregister_disk(ctlr_info_t *h, int drv_index,
+ 			}
+ 			h->highest_lun = newhighest;
  		}
--		if (hba[i]->drv[j].raid_level != -1)
--			cciss_destroy_ld_sysfs_entry(&hba[i]->drv[j]);
-+		if (hba[i]->drv[j].dev != NULL &&
-+			(j == 0 || hba[i]->drv[j].raid_level != -1))
-+				cciss_destroy_ld_sysfs_entry(hba[i], j);
- 
+-
+-		drv->LunID = 0;
++		memset(drv->LunID, 0, sizeof(drv->LunID));
  	}
+ 	return 0;
+ }
+@@ -2685,7 +2685,8 @@ static int cciss_revalidate(struct gendisk *disk)
+ 	InquiryData_struct *inq_buff = NULL;
  
-@@ -4344,7 +4390,7 @@ static int __init cciss_init(void)
- 	if (err)
- 		goto err_thread_stop;
- 
--	return 0;
-+	return err;
- 
- err_thread_stop:
- 	kthread_stop(cciss_scan_thread);
+ 	for (logvol = 0; logvol < CISS_MAX_LUN; logvol++) {
+-		if (h->drv[logvol].LunID == drv->LunID) {
++		if (memcmp(h->drv[logvol].LunID, drv->LunID,
++			sizeof(drv->LunID)) == 0) {
+ 			FOUND = 1;
+ 			break;
+ 		}
+@@ -3170,8 +3171,7 @@ static void do_cciss_request(struct request_queue *q)
+ 	/* The first 2 bits are reserved for controller error reporting. */
+ 	c->Header.Tag.lower = (c->cmdindex << 3);
+ 	c->Header.Tag.lower |= 0x04;	/* flag for direct lookup. */
+-	c->Header.LUN.LogDev.VolId = drv->LunID;
+-	c->Header.LUN.LogDev.Mode = 1;
++	memcpy(&c->Header.LUN, drv->LunID, sizeof(drv->LunID));
+ 	c->Request.CDBLen = 10;	// 12 byte commands not in FW yet;
+ 	c->Request.Type.Type = TYPE_CMD;	// It is a command.
+ 	c->Request.Type.Attribute = ATTR_SIMPLE;
 diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
-index 4fb3639..9679342 100644
+index 9679342..5188f71 100644
 --- a/drivers/block/cciss.h
 +++ b/drivers/block/cciss.h
-@@ -45,7 +45,7 @@ typedef struct _drive_info_struct
- 				   * to prevent it from being opened or it's
- 				   * queue from being started.
- 				   */
--	struct	device dev;
-+	struct	device *dev;
- 	__u8 serial_no[16]; /* from inquiry page 0x83,
- 			     * not necc. null terminated.
- 			     */
+@@ -30,7 +30,7 @@ struct access_method {
+ };
+ typedef struct _drive_info_struct
+ {
+- 	__u32   LunID;	
++	unsigned char LunID[8];
+ 	int 	usage_count;
+ 	struct request_queue *queue;
+ 	sector_t nr_blocks;
 
