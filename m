@@ -1,97 +1,60 @@
-From: Eddie <stunnel@attglobal.net>
-Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
-Date: Thu, 17 Sep 2009 09:09:45 -0700
-Message-ID: <4AB25F49.4060201@attglobal.net>
-References: <4AB10FC2.1080900@attglobal.net>	 <1253118717.4842.13.camel@mulgrave.site> <4AB1185E.1050208@attglobal.net>	 <4AB1A60A.5080702@attglobal.net> <1253203147.7845.11.camel@mulgrave.site>
-Reply-To: stunnel@attglobal.net
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: MD/RAID time out writing superblock
+Date: Thu, 17 Sep 2009 12:16:10 -0400
+Message-ID: <4AB260CA.8040308@rtr.ca>
+References: <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com> <4AB239C8.2020203@rtr.ca> <4AB25736.1060601@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kcout01.prserv.net ([12.154.55.31]:57329 "EHLO
-	kcout01.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbZIQQJ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 12:09:58 -0400
-In-Reply-To: <1253203147.7845.11.camel@mulgrave.site>
+Received: from rtr.ca ([76.10.145.34]:45194 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757957AbZIQQQJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Sep 2009 12:16:09 -0400
+In-Reply-To: <4AB25736.1060601@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-box <bo.yang@lsi.com>
+To: Tejun Heo <teheo@suse.de>
+Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 
-James Bottomley wrote:
-> On Wed, 2009-09-16 at 19:59 -0700, Eddie wrote:
->   
->>>> How much memory does your system have?
->>>>
->>>> Best guess in the 64 bit case is that the physical memory the kernel is
->>>> doing DMA to isn't within the range of the card.  You might be able to
->>>> test this by booting with the max_addr=4G parameter in the 64 bit case.
->>>>
->>>> If it is, we'll have to get the DMA mask for this thing set up
->>>> correctly.
->>>>
->>>> James
->>>>   
->>>>         
->>> James,
->>>
->>> It's got 8Gig.
->>>
->>> I'll try your suggestion tonight, when I get home.
->>>
->>> Cheers,
->>> Eddie
->>>
->>>       
->> OK, adding addappend = " max_addr=4G" to my lilo.conf made no 
->> difference.  It still booted with all 8G.  :(
->>
->> But, changing it to addappend = " mem=4G" seemed to do the trick.
->>
->> And, your guess might be correct.  I now see the correct messages for 
->> the MegaRAID:
->>
->> scsi 4:4:0:0: Direct-Access     MegaRAID LD 0 RAID5 1430G N661 PQ: 0 ANSI: 2
->> sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
->> sd 4:4:0:0: [sda] Write Protect is off
->> sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
->> sd 4:4:0:0: [sda] Asking for cache data failed
->> sd 4:4:0:0: [sda] Assuming drive cache: write through
->> sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
->> sd 4:4:0:0: [sda] Write Protect is off
->> sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
->> sd 4:4:0:0: [sda] Asking for cache data failed
->> sd 4:4:0:0: [sda] Assuming drive cache: write through
->>  sda: sda1
->> sd 4:4:0:0: [sda] Attached SCSI disk
->> sd 4:4:0:0: Attached scsi generic sg1 type 0
->>     
->
-> Hmm, so the driver looks to do this correctly.  By default it sets a 32
-> bit DMA mask but it raises it to 64 bits for certain boards which can
-> support that (based on the PCI ids).  Can you do an lspci -n -v and send
-> the output?  That will tell me whether the board got a 64 bit mask.
->
-> Thanks,
->
-> James
->
->   
-James,
+Tejun Heo wrote:
+> Hello,
+> 
+> Mark Lord wrote:
+>> Tejun.. do we do a FLUSH CACHE before issuing a non-NCQ command ?
+> 
+> Nope.
+> 
+>> If not, then I think we may need to add code to do it.
+> 
+> Hmm... can you explain a bit more?  That seems rather extreme to me.
+..
 
-This is when booted with the "mem=4G" override still in place.  If you 
-need it without that, when it fails to "see" the device, let me know, 
-and I'll re-boot tonight to gather it:
+You may recall that I first raised this issue about a year ago,
+when my own RAID0 array (MythTV box) started showing errors very
+similar to what Chris is reporting.
 
-01:04.0 0104: 101e:1960 (rev 02)
-        Subsystem: 101e:0511
-        Flags: bus master, fast Back2Back, medium devsel, latency 64, IRQ 19
-        Memory at b8000000 (32-bit, prefetchable) [size=64K]
-        [virtual] Expansion ROM at b8010000 [disabled] [size=32K]
-        Capabilities: [80] Power Management version 2
-        Kernel driver in use: megaraid
-        Kernel modules: megaraid_mbox
+These were easily triggered by running hddtemp once every few seconds
+to log drive temperatures during Myth recording sessions.
 
-Cheers,
-Eddie
+hddtemp uses SMART commands.
 
+The actual errors in the logs were command timeouts,
+but at this point I no longer remember which opcode was
+actually timing out.  Disabling the onboard write cache
+immediately "cured" the problem, at the expense of MUCH
+slower I/O times.
+
+My theory at the time, was that some non-NCQ commands might be triggering
+an internal FLUSH CACHE within the (Hitachi) drive firmware, which then
+caused the original command to timeout in libata (due to the large amounts
+of data present in the onboard write-caches).
+
+Now that more people are playing the game, we're seeing more and more
+reports of strange interactions with smartd running in the background.
+
+I suspect more and more now that this is an (avoidable) interaction
+between the write-cache and the SMART opcode, and it could perhaps be
+avoided by doing a FLUSH CACHE before any SMART (or non-data command) opcode.
+
+Cheers
