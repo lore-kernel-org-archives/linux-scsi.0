@@ -1,40 +1,77 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: MD/RAID time out writing superblock
-Date: Fri, 18 Sep 2009 00:47:44 +0900
-Message-ID: <4AB25A20.3040103@kernel.org>
-References: <20090916222842.GB16053@arachsys.com> <4AB17905.90606@kernel.org> <4AB23B17.2040204@rtr.ca>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
+Date: Thu, 17 Sep 2009 09:59:07 -0600
+Message-ID: <1253203147.7845.11.camel@mulgrave.site>
+References: <4AB10FC2.1080900@attglobal.net>
+	 <1253118717.4842.13.camel@mulgrave.site> <4AB1185E.1050208@attglobal.net>
+	 <4AB1A60A.5080702@attglobal.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4AB23B17.2040204@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Chris Webb <chris@arachsys.com>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:53332 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756279AbZIQP7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Sep 2009 11:59:14 -0400
+In-Reply-To: <4AB1A60A.5080702@attglobal.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: stunnel@attglobal.net
+Cc: linux-scsi@vger.kernel.org, linux-box <bo.yang@lsi.com>
 
-Hello,
-
-Mark Lord wrote:
->> That's interesting.  One important side effect of issuing IDENTIFY is
->> that they will serialize command streams as they are not NCQ commands
->> and thus could change command patterns significantly.
-> ..
+On Wed, 2009-09-16 at 19:59 -0700, Eddie wrote:
+> >
+> >> How much memory does your system have?
+> >>
+> >> Best guess in the 64 bit case is that the physical memory the kernel is
+> >> doing DMA to isn't within the range of the card.  You might be able to
+> >> test this by booting with the max_addr=4G parameter in the 64 bit case.
+> >>
+> >> If it is, we'll have to get the DMA mask for this thing set up
+> >> correctly.
+> >>
+> >> James
+> >>   
+> >
+> > James,
+> >
+> > It's got 8Gig.
+> >
+> > I'll try your suggestion tonight, when I get home.
+> >
+> > Cheers,
+> > Eddie
+> >
+> OK, adding addappend = " max_addr=4G" to my lilo.conf made no 
+> difference.  It still booted with all 8G.  :(
 > 
-> SMART is the opcode that is most frequently implicated here, not IDENTIFY.
+> But, changing it to addappend = " mem=4G" seemed to do the trick.
+> 
+> And, your guess might be correct.  I now see the correct messages for 
+> the MegaRAID:
+> 
+> scsi 4:4:0:0: Direct-Access     MegaRAID LD 0 RAID5 1430G N661 PQ: 0 ANSI: 2
+> sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
+> sd 4:4:0:0: [sda] Write Protect is off
+> sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
+> sd 4:4:0:0: [sda] Asking for cache data failed
+> sd 4:4:0:0: [sda] Assuming drive cache: write through
+> sd 4:4:0:0: [sda] 2930307072 512-byte hardware sectors: (1.50 TB/1.36 TiB)
+> sd 4:4:0:0: [sda] Write Protect is off
+> sd 4:4:0:0: [sda] Mode Sense: 00 00 00 00
+> sd 4:4:0:0: [sda] Asking for cache data failed
+> sd 4:4:0:0: [sda] Assuming drive cache: write through
+>  sda: sda1
+> sd 4:4:0:0: [sda] Attached SCSI disk
+> sd 4:4:0:0: Attached scsi generic sg1 type 0
 
-Yeap, any non-NCQ commands would do it.
+Hmm, so the driver looks to do this correctly.  By default it sets a 32
+bit DMA mask but it raises it to 64 bits for certain boards which can
+support that (based on the PCI ids).  Can you do an lspci -n -v and send
+the output?  That will tell me whether the board got a 64 bit mask.
 
-> Note that even a barrier FLUSH CACHE is non NCQ and will serialize
-> the stream.
+Thanks,
 
-Yeah, I was just thinking that issuing non-NCQ commands mixed with NCQ
-commands would make the command stream fluctuate more.  Modern drives
-are pretty good at lowering power consumption while idle so being more
-fluctuative (is it a word?) might have something to do with the
-problem.  Just a wild speculation tho.
+James
 
-Thanks.
 
--- 
-tejun
