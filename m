@@ -1,36 +1,25 @@
-From: Chris Webb <chris@arachsys.com>
-Subject: Re: MD/RAID time out writing superblock
-Date: Thu, 17 Sep 2009 14:37:20 +0100
-Message-ID: <20090917133720.GM5418@arachsys.com>
-References: <20090907114442.GG18831@arachsys.com>
- <20090907115927.GU8710@arachsys.com>
- <20090909120218.GB21829@arachsys.com>
- <4AADF3C4.5060004@kernel.org>
- <4AADF471.2020801@suse.de>
- <4AAE3B9A.2060306@rtr.ca>
- <4AAE3F86.8090804@suse.de>
- <4AAE524C.2030401@rtr.ca>
- <20090916231921.GL1924@arachsys.com>
- <4AB239C8.2020203@rtr.ca>
+From: Richard Sharpe <realrichardsharpe@gmail.com>
+Subject: UNMAP and Thin Provisioning support in SBC3R20 ...
+Date: Thu, 17 Sep 2009 07:10:43 -0700
+Message-ID: <46b8a8850909170710p3f2407c7r742689b1a645577e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4AB239C8.2020203@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Tejun Heo <teheo@suse.de>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from qw-out-2122.google.com ([74.125.92.26]:54698 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753809AbZIQOKj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 10:10:39 -0400
+Received: by qw-out-2122.google.com with SMTP id 5so19220qwd.37
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Sep 2009 07:10:43 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Mark Lord <liml@rtr.ca> writes:
+For those interested in SCSI and thin provisioning,
+http://www.t10.org/cgi-bin/ac.pl?t=f&f=sbc3r20.pdf (sbc2r20) seems to
+contain the resolution to UNMAP vs WRITE SAME (both are included) as
+well as the TP Thresholds proposal. It is dated 10-Sep-2009.
 
-> Yes.  Is this still happening from time to time now?
-
-Hi Mark. We're still seeing the flush timeouts (0xea) with accompanying
-errors, but not the IDENTIFYs anymore. We now don't have smartd nor smartctl
-on the systems, and there's nothing else running in userspace that accesses
-the drives other than via block reads and writes via the md arrays.
-
-Cheers,
-
-Chris.
+-- 
+Regards,
+Richard Sharpe
