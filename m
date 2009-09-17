@@ -1,124 +1,78 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/4] block: allow large discard requests
-Date: Thu, 17 Sep 2009 12:25:38 -0400
-Message-ID: <20090917163105.535796572@bombadil.infradead.org>
-References: <20090917162536.815743395@bombadil.infradead.org>
+From: Allan Wind <allan_wind@lifeintegrity.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Thu, 17 Sep 2009 12:36:47 -0400
+Message-ID: <20090917163647.GA6663@lifeintegrity.com>
+References: <20090917115728.GA13854@arachsys.com> <4AB2596D.10809@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59097 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbZIQQbD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 12:31:03 -0400
-Content-Disposition: inline; filename=discard-allow-large-requests
+Received: from static-173-48-39-13.bstnma.fios.verizon.net ([173.48.39.13]:59145
+	"EHLO lifeintegrity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758627AbZIQQgp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 12:36:45 -0400
+Content-Disposition: inline
+In-Reply-To: <4AB2596D.10809@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk, matthew@wil.cx, dwmw2@infradead.org
-Cc: linux-scsi@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Currently we set the bio size to the byte equivalent of the blocks to
-be trimmed when submitting the initial DISCARD ioctl.  That means it
-is subject to the max_hw_sectors limitation of the HBA which is
-much lower than the size of a DISCARD request we can support.
-Add a separate max_discard_sectors tunable to limit the size for discard
-requests. 
+On 2009-09-18T00:44:45, Tejun Heo wrote:
+> Hello,
+> 
+> Chris Webb wrote:
+> > It's quite hard for us to do this with these machines as we have
+> > them managed by a third party in a datacentre to which we don't have
+> > physical access.  However, I could very easily get an extra 'test'
+> > machine built in there, generate a work load that consistently
+> > reproduces the problems on the six drives, and then retry with an
+> > array build from 5, 4, 3 and 2 drives successively, taking out the
+> > unused drives from chassis, to see if reducing the load on the power
+> > supply with a smaller array helps.
+> 
+> Yeap, that also should shed some light on it.
 
-We limit the max discard request size in bytes to 32bit as that is the
-limit for bio->bi_size.  This could be much larger if we had a way to pass
-that information through the block layer.
+I have a SuperMicro X8DT3-F motherboard with 2 (2 TB) WDC drives 
+of the 8 bays available in the machine.  They are on a different 
+controller LSI Logic / Symbios Logic SAS1068E PCI-Express Fusion-MPT SAS
+which was flashed into "Integrated Target Mode" to get it running 
+under Linux.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Disabling smartmontools seems to have helped in terms of failure 
+frequency.  It is almost always the 2nd drive that is kicked out 
+of the mirror although the last time it was the primary after 
+disabling smart.  hddtemp was never running on this host.
 
-Index: linux-2.6/block/blk-core.c
-===================================================================
---- linux-2.6.orig/block/blk-core.c	2009-09-17 12:15:20.485003934 -0300
-+++ linux-2.6/block/blk-core.c	2009-09-17 12:23:33.018028602 -0300
-@@ -1436,7 +1436,8 @@ static inline void __generic_make_reques
- 			goto end_io;
- 		}
- 
--		if (unlikely(nr_sectors > queue_max_hw_sectors(q))) {
-+		if (unlikely(!bio_rw_flagged(bio, BIO_RW_DISCARD) &&
-+			     nr_sectors > queue_max_hw_sectors(q))) {
- 			printk(KERN_ERR "bio too big device %s (%u > %u)\n",
- 			       bdevname(bio->bi_bdev, b),
- 			       bio_sectors(bio),
-Index: linux-2.6/block/blk-settings.c
-===================================================================
---- linux-2.6.orig/block/blk-settings.c	2009-09-17 12:15:20.494003963 -0300
-+++ linux-2.6/block/blk-settings.c	2009-09-17 13:12:00.770254159 -0300
-@@ -95,6 +95,7 @@ void blk_set_default_limits(struct queue
- 	lim->seg_boundary_mask = BLK_SEG_BOUNDARY_MASK;
- 	lim->max_segment_size = MAX_SEGMENT_SIZE;
- 	lim->max_sectors = lim->max_hw_sectors = SAFE_MAX_SECTORS;
-+	lim->max_discard_sectors = SAFE_MAX_SECTORS;
- 	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
- 	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY >> PAGE_SHIFT);
- 	lim->alignment_offset = 0;
-@@ -237,6 +238,18 @@ void blk_queue_max_hw_sectors(struct req
- EXPORT_SYMBOL(blk_queue_max_hw_sectors);
- 
- /**
-+ * blk_queue_max_discard_sectors - set max sectors for a single discard
-+ * @q:  the request queue for the device
-+ * @max_discard: maximum number of sectors to discard
-+ **/
-+void blk_queue_max_discard_sectors(struct request_queue *q,
-+		unsigned int max_discard_sectors)
-+{
-+	q->limits.max_discard_sectors = max_discard_sectors;
-+}
-+EXPORT_SYMBOL(blk_queue_max_discard_sectors);
-+
-+/**
-  * blk_queue_max_phys_segments - set max phys segments for a request for this queue
-  * @q:  the request queue for the device
-  * @max_segments:  max number of segments
-Index: linux-2.6/include/linux/blkdev.h
-===================================================================
---- linux-2.6.orig/include/linux/blkdev.h	2009-09-17 12:15:20.542254662 -0300
-+++ linux-2.6/include/linux/blkdev.h	2009-09-17 13:12:15.542006586 -0300
-@@ -311,6 +311,7 @@ struct queue_limits {
- 	unsigned int		alignment_offset;
- 	unsigned int		io_min;
- 	unsigned int		io_opt;
-+	unsigned int		max_discard_sectors;
- 
- 	unsigned short		logical_block_size;
- 	unsigned short		max_hw_segments;
-@@ -928,6 +929,8 @@ extern void blk_queue_max_hw_sectors(str
- extern void blk_queue_max_phys_segments(struct request_queue *, unsigned short);
- extern void blk_queue_max_hw_segments(struct request_queue *, unsigned short);
- extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
-+extern void blk_queue_max_discard_sectors(struct request_queue *q,
-+		unsigned int max_discard_sectors);
- extern void blk_queue_logical_block_size(struct request_queue *, unsigned short);
- extern void blk_queue_physical_block_size(struct request_queue *, unsigned short);
- extern void blk_queue_alignment_offset(struct request_queue *q,
-Index: linux-2.6/block/blk-barrier.c
-===================================================================
---- linux-2.6.orig/block/blk-barrier.c	2009-09-17 12:19:18.659011091 -0300
-+++ linux-2.6/block/blk-barrier.c	2009-09-17 12:31:05.660256438 -0300
-@@ -385,6 +385,8 @@ int blkdev_issue_discard(struct block_de
- 
- 	while (nr_sects && !ret) {
- 		unsigned int sector_size = q->limits.logical_block_size;
-+		unsigned int max_discard_sectors =
-+			min(q->limits.max_discard_sectors, UINT_MAX >> 9);
- 
- 		bio = bio_alloc(gfp_mask, 1);
- 		if (!bio)
-@@ -411,10 +413,10 @@ int blkdev_issue_discard(struct block_de
- 		 * touch many more blocks on disk than the actual payload
- 		 * length.
- 		 */
--		if (nr_sects > queue_max_hw_sectors(q)) {
--			bio->bi_size = queue_max_hw_sectors(q) << 9;
--			nr_sects -= queue_max_hw_sectors(q);
--			sector += queue_max_hw_sectors(q);
-+		if (nr_sects > max_discard_sectors) {
-+			bio->bi_size = max_discard_sectors << 9;
-+			nr_sects -= max_discard_sectors;
-+			sector += max_discard_sectors;
- 		} else {
- 			bio->bi_size = nr_sects << 9;
- 			nr_sects = 0;
+[2256003.055451] end_request: I/O error, dev sdb, sector 3907028974
+[2256003.055674] md: super_written gets error=-5, uptodate=0
+[2256003.055677] raid1: Disk failure on sdb2, disabling device.
+[2256003.055678] raid1: Operation continuing on 1 devices.
+[2256003.437315] RAID1 conf printout:
+[2256003.437318]  --- wd:1 rd:2
+[2256003.437321]  disk 0, wo:0, o:1, dev:sda2
+[2256003.437323]  disk 1, wo:1, o:0, dev:sdb2
+[2256003.440542] RAID1 conf printout:
+[2256003.440545]  --- wd:1 rd:2
+[2256003.440548]  disk 0, wo:0, o:1, dev:sda2
+
+[3880879.007618] end_request: I/O error, dev sda, sector 3907028974
+[3880879.007839] md: super_written gets error=-5, uptodate=0
+[3880879.007842] raid1: Disk failure on sda2, disabling device.
+[3880879.007843] raid1: Operation continuing on 1 devices.
+[3880879.028518] RAID1 conf printout:
+[3880879.028521]  --- wd:1 rd:2
+[3880879.028524]  disk 0, wo:1, o:0, dev:sda2
+[3880879.028527]  disk 1, wo:0, o:1, dev:sdb2
+[3880879.031607] RAID1 conf printout:
+[3880879.031610]  --- wd:1 rd:2
+[3880879.031613]  disk 1, wo:0, o:1, dev:sdb2
+
+There is barely any load on this box.  Disabling NCQ did not help 
+for me. 
+
+
+/Allan
+-- 
+Allan Wind
+Life Integrity, LLC
+<http://lifeintegrity.com>
 
