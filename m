@@ -1,69 +1,55 @@
-From: Chris Webb <chris@arachsys.com>
+From: Mark Lord <liml@rtr.ca>
 Subject: Re: MD/RAID time out writing superblock
-Date: Thu, 17 Sep 2009 13:00:30 +0100
-Message-ID: <20090917120030.GB13854@arachsys.com>
-References: <20090916222842.GB16053@arachsys.com>
- <4AB17905.90606@kernel.org>
- <19121.33823.893569.486518@notabene.brown>
+Date: Thu, 17 Sep 2009 09:29:44 -0400
+Message-ID: <4AB239C8.2020203@rtr.ca>
+References: <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alpha.arachsys.com ([91.203.57.7]:40589 "EHLO
-	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757048AbZIQMBJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 08:01:09 -0400
-Content-Disposition: inline
-In-Reply-To: <19121.33823.893569.486518@notabene.brown>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756747AbZIQN3p@vger.kernel.org>
+In-Reply-To: <20090916231921.GL1924@arachsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chris Webb <chris@arachsys.com>
+Cc: Tejun Heo <teheo@suse.de>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 
-Neil Brown <neilb@suse.de> writes:
-
-> For the O_SYNC:
->   I think this is a RAID1 - is that correct?
-
-Hi Neil. It's a RAID10n2 of six disks, but I've also seen the behaviour on a
-RAID1 of two disks around the time of 2.6.27.
-
->   With RAID1, as soon as any IO request arrives, resync is suspended and
->   as soon as all resync requests complete, the IO is permitted to
->   proceed.
->   So normal IO takes absolute precedence over resync IO.
+Chris Webb wrote:
+> Mark Lord <liml@rtr.ca> writes:
 > 
->   So I am very surprised to here that O_SYNC writes deadlock
->   completed.
->   As O_SYNC writes are serialised, there will be a moment between
->   every pair when there is no IO pending.  This will allow resync to
->   get one "window" of resync IO started between each pair of writes.
->   So I can well believe that a sequence of O_SYNC writes are a couple
->   of orders of magnitude slower when resync is happening than without.
->   But it shouldn't deadlock completely.
->   Once you get about 64 sectors of O_SYNC IO through, the resync
->   should notice and back-off and resync IO will be limited to the
->   'minimum' speed.
+>> I suspect we're missing some info from this specific failure.
+>> Looking back at Chris's earlier posting, the whole thing started
+>> with a FLUSH_CACHE_EXT failure.  Once that happens, all bets are
+>> off on anything that follows.
+>>
+>>> Everything will be running fine when suddenly:
+>>>
+>>>  ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>>>  ata1.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+>>>          res 40/00:00:80:17:91/00:00:37:00:00/40 Emask 0x4 (timeout)
+>>>  ata1.00: status: { DRDY }
+>>>  ata1: hard resetting link
+>>>  ata1: softreset failed (device not ready)
+>>>  ata1: hard resetting link
+>>>  ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>>  ata1.00: configured for UDMA/133
+>>>  ata1: EH complete
+>>>  end_request: I/O error, dev sda, sector 1465147272
+>>>  md: super_written gets error=-5, uptodate=0
+>>>  raid10: Disk failure on sda3, disabling device.
+>>>  raid10: Operation continuing on 5 devices.
+> 
+> Hi Mark. Yes, when the first timeout after a clean boot happens, it's with
+> an 0xea flush command every time:
+..
 
-The symptoms seem to be that I can't read or write to /dev/mdX but I can
-read from the underlying /dev/sd* devices fine, at pretty much full speed. I
-didn't try writing to them as there's lots of live customer data on the RAID
-arrays!
+Yes.  Is this still happening from time to time now?
+If so, disable the smartmontools daemon (smartd) and see if the problem goes away.
+And especially disable hddtemp (which issues SMART commands) if that is also around.
 
-The configuration is lvm2 (i.e. device-mapper linear targets) on top of md
-on top of sd, and we've seen the symptoms with the virtual machines
-accessing the logical volumes configured to open in O_SYNC mode, and with
-them configured to open in O_DIRECT mode. During the deadlock, cat
-/proc/mdstat does return promptly (i.e. not blocked), and shows a slow and
-gradually falling sync rate---I think that there's no sync writing going on
-either and the drives are genuinely idle. We have to reset the machine to
-bring it back to life and a graceful reboot fails.
+It would be good to discover if those are the triggers for what's happening here.
 
-Anyway, I see this relatively infrequently, so what I'll try to do is to
-create a reproducible test case and then follow up to you and the RAID list
-with that. At the moment, I understand that my reports is a bit anecdotal,
-and without a proper idea of what conditions are needed to make it happen
-its pretty much impossible to diagnose or work on!
+Tejun.. do we do a FLUSH CACHE before issuing a non-NCQ command ?
+If not, then I think we may need to add code to do it.
 
-Cheers,
 
-Chris.
+Cheers
