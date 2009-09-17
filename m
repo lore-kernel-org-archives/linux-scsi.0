@@ -1,43 +1,34 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH] Retry ADD_TO_MLQUEUE return value for EH commands
-Date: Thu, 17 Sep 2009 17:00:26 +0200
-Message-ID: <20090917150026.B8692367F6@ochil.suse.de>
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: MD/RAID time out writing superblock
+Date: Fri, 18 Sep 2009 00:35:18 +0900
+Message-ID: <4AB25736.1060601@suse.de>
+References: <4A9BBC4A.6070708@redhat.com> <4A9BC023.10903@kernel.org> <20090907114442.GG18831@arachsys.com> <20090907115927.GU8710@arachsys.com> <20090909120218.GB21829@arachsys.com> <4AADF3C4.5060004@kernel.org> <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com> <4AB239C8.2020203@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:56801 "EHLO mx1.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:51190 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751717AbZIQPAY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Sep 2009 11:00:24 -0400
+	id S1753063AbZIQPfV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Sep 2009 11:35:21 -0400
+In-Reply-To: <4AB239C8.2020203@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Chris Webb <chris@arachsys.com>, linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, Andrei Tanas <andrei@tanas.ca>, NeilBrown <neilb@suse.de>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, Mark Lord <mlord@pobox.com>
 
+Hello,
 
-A target reset when I/O is ongoing might result
-an eventual device offline, as scsi_eh_completed_normally()
-might return ADD_TO_MLQUEUE in addition to the
-advertised SUCCESS, FAILED, and NEEDS_RETRY.
+Mark Lord wrote:
+> Tejun.. do we do a FLUSH CACHE before issuing a non-NCQ command ?
 
-Which is unfortunate as scsi_send_eh_cmnd() will
-therefore map ADD_TO_MLQUEUE to FAILED instead of
-the more appropriate NEEDS_RETRY.
+Nope.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+> If not, then I think we may need to add code to do it.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 39ce3ab..dd6d344 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -793,6 +793,9 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 		case NEEDS_RETRY:
- 		case FAILED:
- 			break;
-+		case ADD_TO_MLQUEUE:
-+			rtn = NEEDS_RETRY;
-+			break;
- 		default:
- 			rtn = FAILED;
- 			break;
+Hmm... can you explain a bit more?  That seems rather extreme to me.
+
+Thanks.
+
+-- 
+tejun
