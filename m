@@ -1,134 +1,245 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/4] sd: add support for WRITE SAME (16) with unmap bit
-Date: Thu, 17 Sep 2009 12:25:39 -0400
-Message-ID: <20090917163105.685289349@bombadil.infradead.org>
+Subject: [PATCH 4/4] xfs: add batches discard support
+Date: Thu, 17 Sep 2009 12:25:40 -0400
+Message-ID: <20090917163105.866689916@bombadil.infradead.org>
 References: <20090917162536.815743395@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59098 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:59099 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758205AbZIQQbD (ORCPT
+	with ESMTP id S1758003AbZIQQbD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 12:31:03 -0400
-Content-Disposition: inline; filename=discard-add-scsi-write-same-support
+Content-Disposition: inline; filename=xfs-add-trim-support-2
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, matthew@wil.cx, dwmw2@infradead.org
 Cc: linux-scsi@vger.kernel.org
 
-Send  WRITE SAME request with the unmap bit set to the device if it
-advertises thin provisioning support.  Still pretty hacky and not
-actually looking at the INQUIRY data for the unmap parameters for
-example.
+Add support for discarding all currently unused space by an ioctl.  Only
+intended as demonstration and not for merging.
+
+Use the following small tool to exercise it:
+
+
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <sys/ioctl.h>
+
+#define XFS_IOC_TRIM                 _IOR ('X', 126, uint32_t)
+
+
+int main(int argc, char **argv)
+{
+	int minsize = 4096;
+	int fd;
+
+	if (argc != 2) {
+		fprintf(stderr, "usage: %s mountpoint\n", argv[0]);
+		return 1;
+	}
+
+	fd = open(argv[1], O_RDONLY);
+	if (fd < 0) {
+		perror("open");
+		return 1;
+	}
+
+	if (ioctl(fd, XFS_IOC_TRIM, &minsize)) {
+		if (errno == EOPNOTSUPP)
+			fprintf(stderr, "TRIM not supported\n");
+		else
+			perror("XFS_IOC_TRIM");
+		return 1;
+	}
+
+	return 0;
+}
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/drivers/scsi/sd.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/sd.c	2009-09-17 13:12:00.743253792 -0300
-+++ linux-2.6/drivers/scsi/sd.c	2009-09-17 13:18:31.185005932 -0300
-@@ -370,6 +370,35 @@ static void scsi_disk_put(struct scsi_di
- 	mutex_unlock(&sd_ref_mutex);
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2009-08-29 15:53:27.319844716 -0300
++++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c	2009-08-29 16:51:56.271867967 -0300
+@@ -1274,6 +1274,31 @@ xfs_ioc_getbmapx(
+ 	return 0;
  }
  
-+static void sd_prepare_discard(struct request_queue *q, struct request *rq)
++STATIC int
++xfs_ioc_trim(
++	struct xfs_mount	*mp,
++	__uint32_t		*argp)
 +{
-+	struct bio *bio = rq->bio;
++	xfs_agnumber_t		agno;
++	int			error = 0;
++	__uint32_t		minlen;
 +
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->timeout = SD_TIMEOUT;
-+	rq->cmd[0] = WRITE_SAME_16;
-+	rq->cmd[1] = 0x8; /* UNMAP bit */
-+	rq->cmd[2] = sizeof(bio->bi_sector) > 4 ?
-+			(unsigned char) (bio->bi_sector >> 56) & 0xff : 0;
-+	rq->cmd[3] = sizeof(bio->bi_sector) > 4 ?
-+			(unsigned char) (bio->bi_sector >> 48) & 0xff : 0;
-+	rq->cmd[4] = sizeof(bio->bi_sector) > 4 ?
-+			(unsigned char) (bio->bi_sector >> 40) & 0xff : 0;
-+	rq->cmd[5] = sizeof(bio->bi_sector) > 4 ?
-+			(unsigned char) (bio->bi_sector >> 32) & 0xff : 0;
-+	rq->cmd[6] = (unsigned char) (bio->bi_sector >> 24) & 0xff;
-+	rq->cmd[7] = (unsigned char) (bio->bi_sector >> 16) & 0xff;
-+	rq->cmd[8] = (unsigned char) (bio->bi_sector >> 8) & 0xff;
-+	rq->cmd[9] = (unsigned char) bio->bi_sector & 0xff;
-+	rq->cmd[10] = (unsigned char) (bio_sectors(bio) >> 24) & 0xff;
-+	rq->cmd[11] = (unsigned char) (bio_sectors(bio) >> 16) & 0xff;
-+	rq->cmd[12] = (unsigned char) (bio_sectors(bio) >> 8) & 0xff;
-+	rq->cmd[13] = (unsigned char) bio_sectors(bio) & 0xff;
-+	rq->cmd[14] = 0;
-+	rq->cmd[15] = 0;
-+	rq->cmd_len = 16;
++	if (!capable(CAP_SYS_ADMIN))
++		return -EPERM;
++	if (get_user(minlen, argp))
++		return -EFAULT;
++
++	down_read(&mp->m_peraglock);
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		error = -xfs_trim_extents(mp, agno, minlen);
++		if (error)
++			break;
++	}
++	up_read(&mp->m_peraglock);
++
++	return error;
 +}
 +
- /**
-  *	sd_init_command - build a scsi (read or write) command from
-  *	information in the request structure.
-@@ -389,6 +418,13 @@ static int sd_prep_fn(struct request_que
- 	unsigned int this_count = blk_rq_sectors(rq);
- 	int ret, host_dif;
+ /*
+  * Note: some of the ioctl's return positive numbers as a
+  * byte count indicating success, such as readlink_by_handle.
+@@ -1523,6 +1548,9 @@ xfs_file_ioctl(
+ 		error = xfs_errortag_clearall(mp, 1);
+ 		return -error;
  
-+	/*
-+	 * Discard request come in as REQ_TYPE_FS but we turn them into
-+	 * block PC requests to make life easier.
-+	 */
-+	if (blk_discard_rq(rq))
-+		sd_prepare_discard(q, rq);
++	case XFS_IOC_TRIM:
++		return xfs_ioc_trim(mp, arg);
 +
- 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
- 		goto out;
-@@ -396,6 +432,7 @@ static int sd_prep_fn(struct request_que
- 		ret = BLKPREP_KILL;
- 		goto out;
+ 	default:
+ 		return -ENOTTY;
  	}
-+
- 	ret = scsi_setup_fs_cmnd(sdp, rq);
- 	if (ret != BLKPREP_OK)
- 		goto out;
-@@ -1369,6 +1406,9 @@ static int read_capacity_16(struct scsi_
- 		sd_printk(KERN_NOTICE, sdkp,
- 			  "physical block alignment offset: %u\n", alignment);
- 
-+	if (buffer[14] & 0x80)
-+		sdkp->thin_provisioning = 1;
-+
- 	sdkp->capacity = lba + 1;
- 	return sector_size;
+Index: linux-2.6/fs/xfs/xfs_alloc.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_alloc.c	2009-08-29 15:53:27.355845733 -0300
++++ linux-2.6/fs/xfs/xfs_alloc.c	2009-08-29 16:59:20.451343922 -0300
+@@ -2609,6 +2609,96 @@ error0:
+ 	return error;
  }
-@@ -1916,6 +1956,11 @@ static int sd_revalidate_disk(struct gen
  
- 	blk_queue_ordered(sdkp->disk->queue, ordered, sd_prepare_flush);
- 
-+	if (sdkp->thin_provisioning) {
-+		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, sdkp->disk->queue);
-+		blk_queue_max_discard_sectors(sdp->request_queue, UINT_MAX);
++STATIC int
++xfs_trim_extent(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agblock_t		fbno,
++	xfs_extlen_t		flen)
++{
++	xfs_daddr_t		blkno = XFS_AGB_TO_DADDR(mp, agno, fbno);
++	sector_t		nblks = XFS_FSB_TO_BB(mp, flen);
++	int			error;
++
++	xfs_fs_cmn_err(CE_NOTE, mp, "discarding sectors [0x%llx-0x%llx]",
++			blkno, nblks);
++
++	error = -blkdev_issue_discard(mp->m_ddev_targp->bt_bdev, blkno, nblks,
++				      GFP_NOFS, DISCARD_FL_WAIT);
++	if (error && error != EOPNOTSUPP)
++		xfs_fs_cmn_err(CE_NOTE, mp, "discard failed, error %d", error);
++	return error;
++}
++
++/*
++ * Notify the underlying block device about our free extent map.
++ *
++ * This walks all free extents above a minimum threshold and notifies the
++ * underlying device that these blocks are unused.  That information is
++ * useful for SSDs or thinly provisioned storage in high end arrays or
++ * virtualization scenarios.
++ */
++int
++xfs_trim_extents(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		minlen)	/* minimum extent size to bother */
++{
++	struct xfs_btree_cur	*cur;	/* cursor for the by-block btree */
++	struct xfs_buf		*agbp;	/* AGF buffer pointer */
++	xfs_agblock_t		bno;	/* block the for next search */
++	xfs_agblock_t		fbno;	/* start block of found extent */
++	xfs_extlen_t		flen;	/* length of found extent */
++	int			error;
++	int			i;
++
++	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
++	if (error)
++		return error;
++
++	bno = 0;
++	for (;;) {
++		cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno,
++					      XFS_BTNUM_BNO);
++
++		error = xfs_alloc_lookup_ge(cur, bno, minlen, &i);
++		if (error)
++			goto error0;
++		if (!i) {
++			/*
++			 * No more free extents found: done.
++			 */
++			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++			break;
++		}
++
++		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
++		if (error)
++			goto error0;
++		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
++
++		/*
++		 * Pass if the freespace extent isn't long enough to bother.
++		 */
++		if (flen >= minlen) {
++			error = xfs_trim_extent(mp, agno, fbno, flen);
++			if (error) {
++				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++				break;
++			}
++		}
++
++		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
++		bno = fbno + flen;
 +	}
 +
- 	set_capacity(disk, sdkp->capacity);
- 	kfree(buffer);
++out:
++	xfs_buf_relse(agbp);
++	return error;
++error0:
++	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
++	goto out;
++}
  
-Index: linux-2.6/include/scsi/scsi.h
+ /*
+  * AG Busy list management
+Index: linux-2.6/fs/xfs/xfs_alloc.h
 ===================================================================
---- linux-2.6.orig/include/scsi/scsi.h	2009-09-17 13:12:00.756253702 -0300
-+++ linux-2.6/include/scsi/scsi.h	2009-09-17 13:12:21.031004671 -0300
-@@ -122,6 +122,8 @@ struct scsi_cmnd;
- #define READ_16               0x88
- #define WRITE_16              0x8a
- #define VERIFY_16	      0x8f
-+#define WRITE_SAME_16	      0x93
+--- linux-2.6.orig/fs/xfs/xfs_alloc.h	2009-08-29 15:53:27.371844485 -0300
++++ linux-2.6/fs/xfs/xfs_alloc.h	2009-08-29 16:51:56.271867967 -0300
+@@ -215,4 +215,7 @@ xfs_free_extent(
+ 	xfs_fsblock_t	bno,	/* starting block number of extent */
+ 	xfs_extlen_t	len);	/* length of extent */
+ 
++int xfs_trim_extents(struct xfs_mount *mp, xfs_agnumber_t agno,
++	xfs_extlen_t minlen);
 +
- #define SERVICE_ACTION_IN     0x9e
- /* values for service action in */
- #define	SAI_READ_CAPACITY_16  0x10
-Index: linux-2.6/drivers/scsi/sd.h
+ #endif	/* __XFS_ALLOC_H__ */
+Index: linux-2.6/fs/xfs/xfs_fs.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/sd.h	2009-09-17 13:12:00.750254405 -0300
-+++ linux-2.6/drivers/scsi/sd.h	2009-09-17 13:12:21.034025726 -0300
-@@ -55,6 +55,7 @@ struct scsi_disk {
- 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
- 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
- 	unsigned	first_scan : 1;
-+	unsigned	thin_provisioning : 1;
- };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+--- linux-2.6.orig/fs/xfs/xfs_fs.h	2009-08-29 15:53:27.391844445 -0300
++++ linux-2.6/fs/xfs/xfs_fs.h	2009-08-29 16:51:56.279865211 -0300
+@@ -475,6 +475,7 @@ typedef struct xfs_handle {
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
++#define XFS_IOC_TRIM		     _IOR ('X', 126, __uint32_t)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
  
+ 
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2009-08-29 15:53:27.339845024 -0300
++++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c	2009-08-29 16:51:56.283864672 -0300
+@@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_GOINGDOWN:
+ 	case XFS_IOC_ERROR_INJECTION:
+ 	case XFS_IOC_ERROR_CLEARALL:
++	case XFS_IOC_TRIM:
+ 		return xfs_file_ioctl(filp, cmd, p);
+ #ifndef BROKEN_X86_ALIGNMENT
+ 	/* These are handled fine if no alignment issues */
 
