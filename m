@@ -1,245 +1,124 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 4/4] xfs: add batches discard support
-Date: Thu, 17 Sep 2009 12:25:40 -0400
-Message-ID: <20090917163105.866689916@bombadil.infradead.org>
+Subject: [PATCH 2/4] block: allow large discard requests
+Date: Thu, 17 Sep 2009 12:25:38 -0400
+Message-ID: <20090917163105.535796572@bombadil.infradead.org>
 References: <20090917162536.815743395@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59099 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:59097 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758003AbZIQQbD (ORCPT
+	with ESMTP id S1753284AbZIQQbD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 12:31:03 -0400
-Content-Disposition: inline; filename=xfs-add-trim-support-2
+Content-Disposition: inline; filename=discard-allow-large-requests
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, matthew@wil.cx, dwmw2@infradead.org
 Cc: linux-scsi@vger.kernel.org
 
-Add support for discarding all currently unused space by an ioctl.  Only
-intended as demonstration and not for merging.
+Currently we set the bio size to the byte equivalent of the blocks to
+be trimmed when submitting the initial DISCARD ioctl.  That means it
+is subject to the max_hw_sectors limitation of the HBA which is
+much lower than the size of a DISCARD request we can support.
+Add a separate max_discard_sectors tunable to limit the size for discard
+requests. 
 
-Use the following small tool to exercise it:
-
-
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <sys/ioctl.h>
-
-#define XFS_IOC_TRIM                 _IOR ('X', 126, uint32_t)
-
-
-int main(int argc, char **argv)
-{
-	int minsize = 4096;
-	int fd;
-
-	if (argc != 2) {
-		fprintf(stderr, "usage: %s mountpoint\n", argv[0]);
-		return 1;
-	}
-
-	fd = open(argv[1], O_RDONLY);
-	if (fd < 0) {
-		perror("open");
-		return 1;
-	}
-
-	if (ioctl(fd, XFS_IOC_TRIM, &minsize)) {
-		if (errno == EOPNOTSUPP)
-			fprintf(stderr, "TRIM not supported\n");
-		else
-			perror("XFS_IOC_TRIM");
-		return 1;
-	}
-
-	return 0;
-}
-
+We limit the max discard request size in bytes to 32bit as that is the
+limit for bio->bi_size.  This could be much larger if we had a way to pass
+that information through the block layer.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c
+Index: linux-2.6/block/blk-core.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl.c	2009-08-29 15:53:27.319844716 -0300
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl.c	2009-08-29 16:51:56.271867967 -0300
-@@ -1274,6 +1274,31 @@ xfs_ioc_getbmapx(
- 	return 0;
- }
+--- linux-2.6.orig/block/blk-core.c	2009-09-17 12:15:20.485003934 -0300
++++ linux-2.6/block/blk-core.c	2009-09-17 12:23:33.018028602 -0300
+@@ -1436,7 +1436,8 @@ static inline void __generic_make_reques
+ 			goto end_io;
+ 		}
  
-+STATIC int
-+xfs_ioc_trim(
-+	struct xfs_mount	*mp,
-+	__uint32_t		*argp)
+-		if (unlikely(nr_sectors > queue_max_hw_sectors(q))) {
++		if (unlikely(!bio_rw_flagged(bio, BIO_RW_DISCARD) &&
++			     nr_sectors > queue_max_hw_sectors(q))) {
+ 			printk(KERN_ERR "bio too big device %s (%u > %u)\n",
+ 			       bdevname(bio->bi_bdev, b),
+ 			       bio_sectors(bio),
+Index: linux-2.6/block/blk-settings.c
+===================================================================
+--- linux-2.6.orig/block/blk-settings.c	2009-09-17 12:15:20.494003963 -0300
++++ linux-2.6/block/blk-settings.c	2009-09-17 13:12:00.770254159 -0300
+@@ -95,6 +95,7 @@ void blk_set_default_limits(struct queue
+ 	lim->seg_boundary_mask = BLK_SEG_BOUNDARY_MASK;
+ 	lim->max_segment_size = MAX_SEGMENT_SIZE;
+ 	lim->max_sectors = lim->max_hw_sectors = SAFE_MAX_SECTORS;
++	lim->max_discard_sectors = SAFE_MAX_SECTORS;
+ 	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
+ 	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY >> PAGE_SHIFT);
+ 	lim->alignment_offset = 0;
+@@ -237,6 +238,18 @@ void blk_queue_max_hw_sectors(struct req
+ EXPORT_SYMBOL(blk_queue_max_hw_sectors);
+ 
+ /**
++ * blk_queue_max_discard_sectors - set max sectors for a single discard
++ * @q:  the request queue for the device
++ * @max_discard: maximum number of sectors to discard
++ **/
++void blk_queue_max_discard_sectors(struct request_queue *q,
++		unsigned int max_discard_sectors)
 +{
-+	xfs_agnumber_t		agno;
-+	int			error = 0;
-+	__uint32_t		minlen;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+	if (get_user(minlen, argp))
-+		return -EFAULT;
-+
-+	down_read(&mp->m_peraglock);
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		error = -xfs_trim_extents(mp, agno, minlen);
-+		if (error)
-+			break;
-+	}
-+	up_read(&mp->m_peraglock);
-+
-+	return error;
++	q->limits.max_discard_sectors = max_discard_sectors;
 +}
++EXPORT_SYMBOL(blk_queue_max_discard_sectors);
 +
- /*
-  * Note: some of the ioctl's return positive numbers as a
-  * byte count indicating success, such as readlink_by_handle.
-@@ -1523,6 +1548,9 @@ xfs_file_ioctl(
- 		error = xfs_errortag_clearall(mp, 1);
- 		return -error;
- 
-+	case XFS_IOC_TRIM:
-+		return xfs_ioc_trim(mp, arg);
-+
- 	default:
- 		return -ENOTTY;
- 	}
-Index: linux-2.6/fs/xfs/xfs_alloc.c
++/**
+  * blk_queue_max_phys_segments - set max phys segments for a request for this queue
+  * @q:  the request queue for the device
+  * @max_segments:  max number of segments
+Index: linux-2.6/include/linux/blkdev.h
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_alloc.c	2009-08-29 15:53:27.355845733 -0300
-+++ linux-2.6/fs/xfs/xfs_alloc.c	2009-08-29 16:59:20.451343922 -0300
-@@ -2609,6 +2609,96 @@ error0:
- 	return error;
- }
+--- linux-2.6.orig/include/linux/blkdev.h	2009-09-17 12:15:20.542254662 -0300
++++ linux-2.6/include/linux/blkdev.h	2009-09-17 13:12:15.542006586 -0300
+@@ -311,6 +311,7 @@ struct queue_limits {
+ 	unsigned int		alignment_offset;
+ 	unsigned int		io_min;
+ 	unsigned int		io_opt;
++	unsigned int		max_discard_sectors;
  
-+STATIC int
-+xfs_trim_extent(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		fbno,
-+	xfs_extlen_t		flen)
-+{
-+	xfs_daddr_t		blkno = XFS_AGB_TO_DADDR(mp, agno, fbno);
-+	sector_t		nblks = XFS_FSB_TO_BB(mp, flen);
-+	int			error;
-+
-+	xfs_fs_cmn_err(CE_NOTE, mp, "discarding sectors [0x%llx-0x%llx]",
-+			blkno, nblks);
-+
-+	error = -blkdev_issue_discard(mp->m_ddev_targp->bt_bdev, blkno, nblks,
-+				      GFP_NOFS, DISCARD_FL_WAIT);
-+	if (error && error != EOPNOTSUPP)
-+		xfs_fs_cmn_err(CE_NOTE, mp, "discard failed, error %d", error);
-+	return error;
-+}
-+
-+/*
-+ * Notify the underlying block device about our free extent map.
-+ *
-+ * This walks all free extents above a minimum threshold and notifies the
-+ * underlying device that these blocks are unused.  That information is
-+ * useful for SSDs or thinly provisioned storage in high end arrays or
-+ * virtualization scenarios.
-+ */
-+int
-+xfs_trim_extents(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_extlen_t		minlen)	/* minimum extent size to bother */
-+{
-+	struct xfs_btree_cur	*cur;	/* cursor for the by-block btree */
-+	struct xfs_buf		*agbp;	/* AGF buffer pointer */
-+	xfs_agblock_t		bno;	/* block the for next search */
-+	xfs_agblock_t		fbno;	/* start block of found extent */
-+	xfs_extlen_t		flen;	/* length of found extent */
-+	int			error;
-+	int			i;
-+
-+	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agbp);
-+	if (error)
-+		return error;
-+
-+	bno = 0;
-+	for (;;) {
-+		cur = xfs_allocbt_init_cursor(mp, NULL, agbp, agno,
-+					      XFS_BTNUM_BNO);
-+
-+		error = xfs_alloc_lookup_ge(cur, bno, minlen, &i);
-+		if (error)
-+			goto error0;
-+		if (!i) {
-+			/*
-+			 * No more free extents found: done.
-+			 */
-+			xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+			break;
-+		}
-+
-+		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
-+		if (error)
-+			goto error0;
-+		XFS_WANT_CORRUPTED_GOTO(i == 1, error0);
-+
-+		/*
-+		 * Pass if the freespace extent isn't long enough to bother.
-+		 */
-+		if (flen >= minlen) {
-+			error = xfs_trim_extent(mp, agno, fbno, flen);
-+			if (error) {
-+				xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+				break;
-+			}
-+		}
-+
-+		xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
-+		bno = fbno + flen;
-+	}
-+
-+out:
-+	xfs_buf_relse(agbp);
-+	return error;
-+error0:
-+	xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
-+	goto out;
-+}
- 
- /*
-  * AG Busy list management
-Index: linux-2.6/fs/xfs/xfs_alloc.h
+ 	unsigned short		logical_block_size;
+ 	unsigned short		max_hw_segments;
+@@ -928,6 +929,8 @@ extern void blk_queue_max_hw_sectors(str
+ extern void blk_queue_max_phys_segments(struct request_queue *, unsigned short);
+ extern void blk_queue_max_hw_segments(struct request_queue *, unsigned short);
+ extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
++extern void blk_queue_max_discard_sectors(struct request_queue *q,
++		unsigned int max_discard_sectors);
+ extern void blk_queue_logical_block_size(struct request_queue *, unsigned short);
+ extern void blk_queue_physical_block_size(struct request_queue *, unsigned short);
+ extern void blk_queue_alignment_offset(struct request_queue *q,
+Index: linux-2.6/block/blk-barrier.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/xfs_alloc.h	2009-08-29 15:53:27.371844485 -0300
-+++ linux-2.6/fs/xfs/xfs_alloc.h	2009-08-29 16:51:56.271867967 -0300
-@@ -215,4 +215,7 @@ xfs_free_extent(
- 	xfs_fsblock_t	bno,	/* starting block number of extent */
- 	xfs_extlen_t	len);	/* length of extent */
+--- linux-2.6.orig/block/blk-barrier.c	2009-09-17 12:19:18.659011091 -0300
++++ linux-2.6/block/blk-barrier.c	2009-09-17 12:31:05.660256438 -0300
+@@ -385,6 +385,8 @@ int blkdev_issue_discard(struct block_de
  
-+int xfs_trim_extents(struct xfs_mount *mp, xfs_agnumber_t agno,
-+	xfs_extlen_t minlen);
-+
- #endif	/* __XFS_ALLOC_H__ */
-Index: linux-2.6/fs/xfs/xfs_fs.h
-===================================================================
---- linux-2.6.orig/fs/xfs/xfs_fs.h	2009-08-29 15:53:27.391844445 -0300
-+++ linux-2.6/fs/xfs/xfs_fs.h	2009-08-29 16:51:56.279865211 -0300
-@@ -475,6 +475,7 @@ typedef struct xfs_handle {
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
- #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
-+#define XFS_IOC_TRIM		     _IOR ('X', 126, __uint32_t)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 	while (nr_sects && !ret) {
+ 		unsigned int sector_size = q->limits.logical_block_size;
++		unsigned int max_discard_sectors =
++			min(q->limits.max_discard_sectors, UINT_MAX >> 9);
  
- 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c
-===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_ioctl32.c	2009-08-29 15:53:27.339845024 -0300
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_ioctl32.c	2009-08-29 16:51:56.283864672 -0300
-@@ -563,6 +563,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_GOINGDOWN:
- 	case XFS_IOC_ERROR_INJECTION:
- 	case XFS_IOC_ERROR_CLEARALL:
-+	case XFS_IOC_TRIM:
- 		return xfs_file_ioctl(filp, cmd, p);
- #ifndef BROKEN_X86_ALIGNMENT
- 	/* These are handled fine if no alignment issues */
+ 		bio = bio_alloc(gfp_mask, 1);
+ 		if (!bio)
+@@ -411,10 +413,10 @@ int blkdev_issue_discard(struct block_de
+ 		 * touch many more blocks on disk than the actual payload
+ 		 * length.
+ 		 */
+-		if (nr_sects > queue_max_hw_sectors(q)) {
+-			bio->bi_size = queue_max_hw_sectors(q) << 9;
+-			nr_sects -= queue_max_hw_sectors(q);
+-			sector += queue_max_hw_sectors(q);
++		if (nr_sects > max_discard_sectors) {
++			bio->bi_size = max_discard_sectors << 9;
++			nr_sects -= max_discard_sectors;
++			sector += max_discard_sectors;
+ 		} else {
+ 			bio->bi_size = nr_sects << 9;
+ 			nr_sects = 0;
 
