@@ -1,79 +1,104 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 10/20] cciss: Clear all sysfs-exposed data for deleted logical
-	drives.
-Date: Thu, 17 Sep 2009 13:47:39 -0500
-Message-ID: <20090917184739.15105.60093.stgit@beardog.cce.hp.com>
+Subject: [PATCH 08/20] cciss: Handle cases when cciss_add_disk fails.
+Date: Thu, 17 Sep 2009 13:47:29 -0500
+Message-ID: <20090917184729.15105.88712.stgit@beardog.cce.hp.com>
 References: <20090917184310.15105.43508.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:31584 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758222AbZIQSrL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Sep 2009 14:47:11 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758576AbZIQSrq@vger.kernel.org>
 In-Reply-To: <20090917184310.15105.43508.stgit@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: akpm@linux-foundation.org, axboe@kernel.dk
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, andrew.patterson@hp.com, mikem@beardog.cce.hp.com, scameron@beardog.cce.hp.com
+List-Id: linux-scsi@vger.kernel.org
 
-When removing a logical drive, clear all the information that is
-now exposed by sysfs (e.g. vendor, model, serial number.)
+Handle cases when cciss_add_disk fails.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
 
- drivers/block/cciss.c |   31 +++++++++++++++++++++----------
- 1 files changed, 21 insertions(+), 10 deletions(-)
+ drivers/block/cciss.c |   35 +++++++++++++++++++++++++----------
+ 1 files changed, 25 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 98d8efe..8cd2f8e 100644
+index 60fe3c6..7043b3b 100644
 --- a/drivers/block/cciss.c
 +++ b/drivers/block/cciss.c
-@@ -2133,6 +2133,25 @@ mem_msg:
- 	goto freeret;
+@@ -199,6 +199,7 @@ static int scan_thread(void *data);
+ static int check_for_unit_attention(ctlr_info_t *h, CommandList_struct *c);
+ static void cciss_hba_release(struct device *dev);
+ static void cciss_device_release(struct device *dev);
++static void cciss_free_gendisk(ctlr_info_t *h, int drv_index);
+ 
+ #ifdef CONFIG_PROC_FS
+ static void cciss_procinit(int i);
+@@ -1855,8 +1856,14 @@ static void cciss_update_drive_info(int ctlr, int drv_index, int first_time)
+ 	 * (raid_leve == -1) then we want to update the
+ 	 * logical drive's information.
+ 	 */
+-	if (drv_index || first_time)
+-		cciss_add_disk(h, disk, drv_index);
++	if (drv_index || first_time) {
++		if (cciss_add_disk(h, disk, drv_index) != 0) {
++			cciss_free_gendisk(h, drv_index);
++			printk(KERN_WARNING "cciss:%d could not update "
++				"disk %d\n", h->ctlr, drv_index);
++			--h->num_luns;
++		}
++	}
+ 
+ freeret:
+ 	kfree(inq_buff);
+@@ -1890,6 +1897,12 @@ static int cciss_find_free_drive_index(int ctlr, int controller_node)
+ 	return -1;
  }
  
-+static void cciss_clear_drive_info(drive_info_struct *drive_info)
++static void cciss_free_gendisk(ctlr_info_t *h, int drv_index)
 +{
-+	/* zero out the disk size info */
-+	drive_info->nr_blocks = 0;
-+	drive_info->block_size = 0;
-+	drive_info->heads = 0;
-+	drive_info->sectors = 0;
-+	drive_info->cylinders = 0;
-+	drive_info->raid_level = -1;
-+	memset(drive_info->serial_no, 0, sizeof(drive_info->serial_no));
-+	memset(drive_info->model, 0, sizeof(drive_info->model));
-+	memset(drive_info->rev, 0, sizeof(drive_info->rev));
-+	memset(drive_info->vendor, 0, sizeof(drive_info->vendor));
-+	/*
-+	 * don't clear the LUNID though, we need to remember which
-+	 * one this one is.
-+	 */
++	put_disk(h->gendisk[drv_index]);
++	h->gendisk[drv_index] = NULL;
 +}
 +
- /* This function will deregister the disk and it's queue from the
-  * kernel.  It must be called with the controller lock held and the
-  * drv structures busy_configuring flag set.  It's parameters are:
-@@ -2211,16 +2230,8 @@ static int deregister_disk(ctlr_info_t *h, int drv_index,
- 	}
+ /* cciss_add_gendisk finds a free hba[]->drv structure
+  * and allocates a gendisk if needed, and sets the lunid
+  * in the drvinfo structure.   It returns the index into
+@@ -1930,8 +1943,7 @@ static int cciss_add_gendisk(ctlr_info_t *h, __u32 lunid, int controller_node)
+ 	return drv_index;
  
- 	--h->num_luns;
--	/* zero out the disk size info */
--	drv->nr_blocks = 0;
--	drv->block_size = 0;
--	drv->heads = 0;
--	drv->sectors = 0;
--	drv->cylinders = 0;
--	drv->raid_level = -1;	/* This can be used as a flag variable to
--				 * indicate that this element of the drive
--				 * array is free.
--				 */
-+	cciss_clear_drive_info(drv);
-+
- 	if (clear_all) {
- 		/* check to see if it was the last disk */
- 		if (drv == h->drv + h->highest_lun) {
-
+ err_free_disk:
+-	put_disk(h->gendisk[drv_index]);
+-	h->gendisk[drv_index] = NULL;
++	cciss_free_gendisk(h, drv_index);
+ 	return -1;
+ }
+ 
+@@ -1949,11 +1961,8 @@ static void cciss_add_controller_node(ctlr_info_t *h)
+ 		return;
+ 
+ 	drv_index = cciss_add_gendisk(h, 0, 1);
+-	if (drv_index == -1) {
+-		printk(KERN_WARNING "cciss%d: could not "
+-			"add disk 0.\n", h->ctlr);
+-		return;
+-	}
++	if (drv_index == -1)
++		goto error;
+ 	h->drv[drv_index].block_size = 512;
+ 	h->drv[drv_index].nr_blocks = 0;
+ 	h->drv[drv_index].heads = 0;
+@@ -1962,7 +1971,13 @@ static void cciss_add_controller_node(ctlr_info_t *h)
+ 	h->drv[drv_index].raid_level = -1;
+ 	memset(h->drv[drv_index].serial_no, 0, 16);
+ 	disk = h->gendisk[drv_index];
+-	cciss_add_disk(h, disk, drv_index);
++	if (cciss_add_disk(h, disk, drv_index) == 0)
++		return;
++	cciss_free_gendisk(h, drv_index);
++error:
++	printk(KERN_WARNING "cciss%d: could not "
++		"add disk 0.\n", h->ctlr);
++	return;
+ }
+ 
+ /* This function will add and remove logical drives from the Logical
