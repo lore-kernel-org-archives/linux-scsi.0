@@ -1,17 +1,17 @@
 From: Eddie <stunnel@attglobal.net>
 Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
-Date: Wed, 16 Sep 2009 19:58:52 -0700
-Message-ID: <4AB1A5EC.6040007@attglobal.net>
+Date: Wed, 16 Sep 2009 19:59:22 -0700
+Message-ID: <4AB1A60A.5080702@attglobal.net>
 References: <4AB10FC2.1080900@attglobal.net> <1253118717.4842.13.camel@mulgrave.site> <4AB1185E.1050208@attglobal.net>
 Reply-To: stunnel@attglobal.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kcout01.prserv.net ([12.154.55.31]:49846 "EHLO
-	kcout01.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753997AbZIQC7F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2009 22:59:05 -0400
+Received: from kcout02.prserv.net ([12.154.55.32]:62697 "EHLO
+	kcout02.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753882AbZIQC7e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Sep 2009 22:59:34 -0400
 In-Reply-To: <4AB1185E.1050208@attglobal.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
