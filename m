@@ -1,17 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 05/24] libfcoe: FIP should report link to libfc whether
-	selected or not
-Date: Fri, 18 Sep 2009 15:49:14 -0700
-Message-ID: <20090918224914.5928.38324.stgit@localhost.localdomain>
+Subject: [PATCH 06/24] libfc: don't WARN_ON in lport_timeout for RESET state
+Date: Fri, 18 Sep 2009 15:49:19 -0700
+Message-ID: <20090918224919.5928.34863.stgit@localhost.localdomain>
 References: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35526 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:57922 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758723AbZIRWtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:49:11 -0400
+	id S1758764AbZIRWtQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 18:49:16 -0400
 In-Reply-To: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,167 +19,36 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-The fnic driver with FIP is reporting link up, even though it's down.
+It's possible and harmless to get FLOGI timeouts
+while in RESET state.  Don't do a WARN_ON in that case.
 
-When the interface is shut down by the switch, we receive a clear
-virtual link, and set the state reported to libfc as down, although
-we still report it up.  Clearly wrong.  That causes the subsequent
-link down event not to be reported, and /sys shows the host "Online".
-
-Currently, in FIP mode, if an FCF times out, then link to libfc
-is reported as down, to stop FLOGIs.  That interferes with the LLD
-link down being reported.
-
-Users really need to know the physical link information, to diagnose
-cabling issues, so physical link status should be reported to libfc.
-
-If the selected FCF needs to be reported, that should be done
-separately, in a later patch.
+Also, split out the other WARN_ONs in fc_lport_timeout, so
+we can tell which one is hit by its line number.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c |   60 ++++++++++++++++++++++---------------------
- include/scsi/libfcoe.h      |    1 +
- 2 files changed, 31 insertions(+), 30 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 6480dcf..1ee2350 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -278,38 +278,16 @@ EXPORT_SYMBOL(fcoe_ctlr_link_up);
- /**
-  * fcoe_ctlr_reset() - Reset a FCoE controller
-  * @fip:       The FCoE controller to reset
-- * @new_state: The FIP state to be entered
-- *
-- * Returns non-zero if the link was up and now isn't.
-  */
--static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
-+static void fcoe_ctlr_reset(struct fcoe_ctlr *fip)
- {
--	struct fc_lport *lport = fip->lp;
--	int link_dropped;
--
--	spin_lock_bh(&fip->lock);
- 	fcoe_ctlr_reset_fcfs(fip);
- 	del_timer(&fip->timer);
--	fip->state = new_state;
- 	fip->ctlr_ka_time = 0;
- 	fip->port_ka_time = 0;
- 	fip->sol_time = 0;
- 	fip->flogi_oxid = FC_XID_UNKNOWN;
- 	fip->map_dest = 0;
--	fip->last_link = 0;
--	link_dropped = fip->link;
--	fip->link = 0;
--	spin_unlock_bh(&fip->lock);
--
--	if (link_dropped)
--		fc_linkdown(lport);
--
--	if (new_state == FIP_ST_ENABLED) {
--		fcoe_ctlr_solicit(fip, NULL);
--		fc_linkup(lport);
--		link_dropped = 0;
--	}
--	return link_dropped;
- }
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 278fb04..97e8a35 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1275,10 +1275,13 @@ static void fc_lport_timeout(struct work_struct *work)
  
- /**
-@@ -323,7 +301,20 @@ static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
-  */
- int fcoe_ctlr_link_down(struct fcoe_ctlr *fip)
- {
--	return fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
-+	int link_dropped;
-+
-+	LIBFCOE_FIP_DBG(fip, "link down.\n");
-+	spin_lock_bh(&fip->lock);
-+	fcoe_ctlr_reset(fip);
-+	link_dropped = fip->link;
-+	fip->link = 0;
-+	fip->last_link = 0;
-+	fip->state = FIP_ST_LINK_WAIT;
-+	spin_unlock_bh(&fip->lock);
-+
-+	if (link_dropped)
-+		fc_linkdown(fip->lp);
-+	return link_dropped;
- }
- EXPORT_SYMBOL(fcoe_ctlr_link_down);
- 
-@@ -995,7 +986,13 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
- 				desc_mask);
- 	} else {
- 		LIBFCOE_FIP_DBG(fip, "performing Clear Virtual Link\n");
--		fcoe_ctlr_reset(fip, FIP_ST_ENABLED);
-+
-+		spin_lock_bh(&fip->lock);
-+		fcoe_ctlr_reset(fip);
-+		spin_unlock_bh(&fip->lock);
-+
-+		fc_lport_reset(fip->lp);
-+		fcoe_ctlr_solicit(fip, NULL);
- 	}
- }
- 
-@@ -1153,15 +1150,14 @@ static void fcoe_ctlr_timeout(unsigned long arg)
- 			fip->port_ka_time = jiffies +
- 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
- 			fip->ctlr_ka_time = jiffies + sel->fka_period;
--			fip->link = 1;
- 		} else {
- 			printk(KERN_NOTICE "libfcoe: host%d: "
- 			       "FIP Fibre-Channel Forwarder timed out.	"
- 			       "Starting FCF discovery.\n",
- 			       fip->lp->host->host_no);
--			fip->link = 0;
-+			fip->reset_req = 1;
-+			schedule_work(&fip->link_work);
- 		}
--		schedule_work(&fip->link_work);
- 	}
- 
- 	if (sel) {
-@@ -1206,20 +1202,24 @@ static void fcoe_ctlr_link_work(struct work_struct *work)
- 	u8 *mac;
- 	int link;
- 	int last_link;
-+	int reset;
- 
- 	fip = container_of(work, struct fcoe_ctlr, link_work);
- 	spin_lock_bh(&fip->lock);
- 	last_link = fip->last_link;
- 	link = fip->link;
- 	fip->last_link = link;
-+	reset = fip->reset_req;
-+	fip->reset_req = 0;
- 	spin_unlock_bh(&fip->lock);
- 
- 	if (last_link != link) {
- 		if (link)
- 			fc_linkup(fip->lp);
- 		else
--			fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
--	}
-+			fc_linkdown(fip->lp);
-+	} else if (reset && link)
-+		fc_lport_reset(fip->lp);
- 
- 	if (fip->send_ctlr_ka) {
- 		fip->send_ctlr_ka = 0;
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 2344a00..e38ffa0 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -108,6 +108,7 @@ struct fcoe_ctlr {
- 	u8 flogi_count;
- 	u8 link;
- 	u8 last_link;
-+	u8 reset_req;
- 	u8 map_dest;
- 	u8 spma;
- 	u8 send_ctlr_ka;
+ 	switch (lport->state) {
+ 	case LPORT_ST_DISABLED:
++		WARN_ON(1);
++		break;
+ 	case LPORT_ST_READY:
+-	case LPORT_ST_RESET:
+ 		WARN_ON(1);
+ 		break;
++	case LPORT_ST_RESET:
++		break;
+ 	case LPORT_ST_FLOGI:
+ 		fc_lport_enter_flogi(lport);
+ 		break;
 
