@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 04/24] libfcoe: fip: allow FIP receive to be called from IRQ.
-Date: Fri, 18 Sep 2009 15:49:09 -0700
-Message-ID: <20090918224909.5928.4220.stgit@localhost.localdomain>
+Subject: [PATCH 05/24] libfcoe: FIP should report link to libfc whether
+	selected or not
+Date: Fri, 18 Sep 2009 15:49:14 -0700
+Message-ID: <20090918224914.5928.38324.stgit@localhost.localdomain>
 References: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41182 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:35526 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758721AbZIRWtG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:49:06 -0400
+	id S1758723AbZIRWtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 18:49:11 -0400
 In-Reply-To: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,63 +20,167 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-FIP's fcoe_ctlr_recv() function was previously only called from
-the soft IRQ in FCoE.  It's not performance critical and is more
-convenient for some drivers to call it from the IRQ level.  Just
-Change to use skb_queue()/dequeue() which uses spinlock_irqsave
-instead of separate locking with _bh locks.
+The fnic driver with FIP is reporting link up, even though it's down.
+
+When the interface is shut down by the switch, we receive a clear
+virtual link, and set the state reported to libfc as down, although
+we still report it up.  Clearly wrong.  That causes the subsequent
+link down event not to be reported, and /sys shows the host "Online".
+
+Currently, in FIP mode, if an FCF times out, then link to libfc
+is reported as down, to stop FLOGIs.  That interferes with the LLD
+link down being reported.
+
+Users really need to know the physical link information, to diagnose
+cabling issues, so physical link status should be reported to libfc.
+
+If the selected FCF needs to be reported, that should be done
+separately, in a later patch.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c |   17 ++++-------------
- 1 files changed, 4 insertions(+), 13 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |   60 ++++++++++++++++++++++---------------------
+ include/scsi/libfcoe.h      |    1 +
+ 2 files changed, 31 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 6c5c0d6..6480dcf 100644
+index 6480dcf..1ee2350 100644
 --- a/drivers/scsi/fcoe/libfcoe.c
 +++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -157,9 +157,7 @@ static void fcoe_ctlr_reset_fcfs(struct fcoe_ctlr *fip)
- void fcoe_ctlr_destroy(struct fcoe_ctlr *fip)
- {
- 	cancel_work_sync(&fip->recv_work);
--	spin_lock_bh(&fip->fip_recv_list.lock);
--	__skb_queue_purge(&fip->fip_recv_list);
--	spin_unlock_bh(&fip->fip_recv_list.lock);
-+	skb_queue_purge(&fip->fip_recv_list);
- 
- 	spin_lock_bh(&fip->lock);
- 	fip->state = FIP_ST_DISABLED;
-@@ -1006,13 +1004,11 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
-  * @fip: The FCoE controller that received the packet
-  * @skb: The received FIP packet
-  *
-- * This is called from NET_RX_SOFTIRQ.
-+ * This may be called from either NET_RX_SOFTIRQ or IRQ.
+@@ -278,38 +278,16 @@ EXPORT_SYMBOL(fcoe_ctlr_link_up);
+ /**
+  * fcoe_ctlr_reset() - Reset a FCoE controller
+  * @fip:       The FCoE controller to reset
+- * @new_state: The FIP state to be entered
+- *
+- * Returns non-zero if the link was up and now isn't.
   */
- void fcoe_ctlr_recv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+-static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
++static void fcoe_ctlr_reset(struct fcoe_ctlr *fip)
  {
--	spin_lock_bh(&fip->fip_recv_list.lock);
--	__skb_queue_tail(&fip->fip_recv_list, skb);
--	spin_unlock_bh(&fip->fip_recv_list.lock);
-+	skb_queue_tail(&fip->fip_recv_list, skb);
- 	schedule_work(&fip->recv_work);
- }
- EXPORT_SYMBOL(fcoe_ctlr_recv);
-@@ -1252,13 +1248,8 @@ static void fcoe_ctlr_recv_work(struct work_struct *recv_work)
- 	struct sk_buff *skb;
- 
- 	fip = container_of(recv_work, struct fcoe_ctlr, recv_work);
--	spin_lock_bh(&fip->fip_recv_list.lock);
--	while ((skb = __skb_dequeue(&fip->fip_recv_list))) {
--		spin_unlock_bh(&fip->fip_recv_list.lock);
-+	while ((skb = skb_dequeue(&fip->fip_recv_list)))
- 		fcoe_ctlr_recv_handler(fip, skb);
--		spin_lock_bh(&fip->fip_recv_list.lock);
+-	struct fc_lport *lport = fip->lp;
+-	int link_dropped;
+-
+-	spin_lock_bh(&fip->lock);
+ 	fcoe_ctlr_reset_fcfs(fip);
+ 	del_timer(&fip->timer);
+-	fip->state = new_state;
+ 	fip->ctlr_ka_time = 0;
+ 	fip->port_ka_time = 0;
+ 	fip->sol_time = 0;
+ 	fip->flogi_oxid = FC_XID_UNKNOWN;
+ 	fip->map_dest = 0;
+-	fip->last_link = 0;
+-	link_dropped = fip->link;
+-	fip->link = 0;
+-	spin_unlock_bh(&fip->lock);
+-
+-	if (link_dropped)
+-		fc_linkdown(lport);
+-
+-	if (new_state == FIP_ST_ENABLED) {
+-		fcoe_ctlr_solicit(fip, NULL);
+-		fc_linkup(lport);
+-		link_dropped = 0;
 -	}
--	spin_unlock_bh(&fip->fip_recv_list.lock);
+-	return link_dropped;
  }
  
  /**
+@@ -323,7 +301,20 @@ static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
+  */
+ int fcoe_ctlr_link_down(struct fcoe_ctlr *fip)
+ {
+-	return fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
++	int link_dropped;
++
++	LIBFCOE_FIP_DBG(fip, "link down.\n");
++	spin_lock_bh(&fip->lock);
++	fcoe_ctlr_reset(fip);
++	link_dropped = fip->link;
++	fip->link = 0;
++	fip->last_link = 0;
++	fip->state = FIP_ST_LINK_WAIT;
++	spin_unlock_bh(&fip->lock);
++
++	if (link_dropped)
++		fc_linkdown(fip->lp);
++	return link_dropped;
+ }
+ EXPORT_SYMBOL(fcoe_ctlr_link_down);
+ 
+@@ -995,7 +986,13 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 				desc_mask);
+ 	} else {
+ 		LIBFCOE_FIP_DBG(fip, "performing Clear Virtual Link\n");
+-		fcoe_ctlr_reset(fip, FIP_ST_ENABLED);
++
++		spin_lock_bh(&fip->lock);
++		fcoe_ctlr_reset(fip);
++		spin_unlock_bh(&fip->lock);
++
++		fc_lport_reset(fip->lp);
++		fcoe_ctlr_solicit(fip, NULL);
+ 	}
+ }
+ 
+@@ -1153,15 +1150,14 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 			fip->port_ka_time = jiffies +
+ 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
+ 			fip->ctlr_ka_time = jiffies + sel->fka_period;
+-			fip->link = 1;
+ 		} else {
+ 			printk(KERN_NOTICE "libfcoe: host%d: "
+ 			       "FIP Fibre-Channel Forwarder timed out.	"
+ 			       "Starting FCF discovery.\n",
+ 			       fip->lp->host->host_no);
+-			fip->link = 0;
++			fip->reset_req = 1;
++			schedule_work(&fip->link_work);
+ 		}
+-		schedule_work(&fip->link_work);
+ 	}
+ 
+ 	if (sel) {
+@@ -1206,20 +1202,24 @@ static void fcoe_ctlr_link_work(struct work_struct *work)
+ 	u8 *mac;
+ 	int link;
+ 	int last_link;
++	int reset;
+ 
+ 	fip = container_of(work, struct fcoe_ctlr, link_work);
+ 	spin_lock_bh(&fip->lock);
+ 	last_link = fip->last_link;
+ 	link = fip->link;
+ 	fip->last_link = link;
++	reset = fip->reset_req;
++	fip->reset_req = 0;
+ 	spin_unlock_bh(&fip->lock);
+ 
+ 	if (last_link != link) {
+ 		if (link)
+ 			fc_linkup(fip->lp);
+ 		else
+-			fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
+-	}
++			fc_linkdown(fip->lp);
++	} else if (reset && link)
++		fc_lport_reset(fip->lp);
+ 
+ 	if (fip->send_ctlr_ka) {
+ 		fip->send_ctlr_ka = 0;
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 2344a00..e38ffa0 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -108,6 +108,7 @@ struct fcoe_ctlr {
+ 	u8 flogi_count;
+ 	u8 link;
+ 	u8 last_link;
++	u8 reset_req;
+ 	u8 map_dest;
+ 	u8 spma;
+ 	u8 send_ctlr_ka;
 
