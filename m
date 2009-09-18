@@ -1,82 +1,69 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 13/24] fcoe: Call ndo_fcoe_enable/disable to turn FCoE feature
-	on/off in LLD
-Date: Fri, 18 Sep 2009 15:50:06 -0700
-Message-ID: <20090918225006.5928.18689.stgit@localhost.localdomain>
+Subject: [PATCH 15/24] fcoe: add check to fail gracefully in bonding mode
+Date: Fri, 18 Sep 2009 15:50:17 -0700
+Message-ID: <20090918225016.5928.44156.stgit@localhost.localdomain>
 References: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21287 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:28442 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758801AbZIRWuO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:50:14 -0400
+	id S1758813AbZIRWuZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 18:50:25 -0400
 In-Reply-To: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: John Fastabend <john.r.fastabend@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Yi Zou <yi.zou@intel.com>
+From: john fastabend <john.r.fastabend@intel.com>
 
-Calls ndo_fcoe_enabled() of the associated netdev upon creating the FCoE
-instance to make sure LLD has all necessary resources allocated and setup
-properly before passing FCoE traffic. Similarly, calls ndo_fcoe_disable()
-upon destroying the FCoE instance on the associated netdev to allow the LLD
-to release all allocated resources for FCoE.
+This patch adds a check to fail gracefully when the netdevice
+is bonded.  Previously, the error was detected but the stack
+would continue to load.  This resulted in a partially enabled
+fcoe intance and errors when the fcoe instance was destroy.
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: John Fastabend <john.r.fastabend@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index c104ad6..49d46a8 100644
+index 0a3affd..d8a5169 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -250,9 +250,18 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
- 	struct fcoe_ctlr *fip = &fcoe->ctlr;
- 	struct netdev_hw_addr *ha;
- 	u8 flogi_maddr[ETH_ALEN];
-+	const struct net_device_ops *ops;
- 
- 	fcoe->netdev = netdev;
- 
-+	/* Let LLD initialize for FCoE */
-+	ops = netdev->netdev_ops;
-+	if (ops->ndo_fcoe_enable) {
-+		if (ops->ndo_fcoe_enable(netdev))
-+			FCOE_NETDEV_DBG(netdev, "Failed to enable FCoE"
-+					" specific feature for LLD.\n");
-+	}
-+
- 	/* Do not support for bonding device */
+@@ -266,6 +266,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
  	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
  	    (netdev->priv_flags & IFF_SLAVE_INACTIVE) ||
-@@ -348,6 +357,7 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	struct net_device *netdev = fcoe->netdev;
- 	struct fcoe_ctlr *fip = &fcoe->ctlr;
- 	u8 flogi_maddr[ETH_ALEN];
-+	const struct net_device_ops *ops;
+ 	    (netdev->priv_flags & IFF_MASTER_8023AD)) {
++		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
+ 		return -EOPNOTSUPP;
+ 	}
  
- 	/*
- 	 * Don't listen for Ethernet packets anymore.
-@@ -365,6 +375,14 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	if (fip->spma)
- 		dev_unicast_delete(netdev, fip->ctl_src_addr);
- 	dev_mc_delete(netdev, FIP_ALL_ENODE_MACS, ETH_ALEN, 0);
-+
-+	/* Tell the LLD we are done w/ FCoE */
-+	ops = netdev->netdev_ops;
-+	if (ops->ndo_fcoe_disable) {
-+		if (ops->ndo_fcoe_disable(netdev))
-+			FCOE_NETDEV_DBG(netdev, "Failed to disable FCoE"
-+					" specific feature for LLD.\n");
+@@ -323,6 +324,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev)
+ {
+ 	struct fcoe_interface *fcoe;
++	int err;
+ 
+ 	fcoe = kzalloc(sizeof(*fcoe), GFP_KERNEL);
+ 	if (!fcoe) {
+@@ -341,7 +343,13 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev)
+ 	fcoe->ctlr.update_mac = fcoe_update_src_mac;
+ 	fcoe->ctlr.get_src_addr = fcoe_get_src_mac;
+ 
+-	fcoe_interface_setup(fcoe, netdev);
++	err = fcoe_interface_setup(fcoe, netdev);
++	if (err) {
++		fcoe_ctlr_destroy(&fcoe->ctlr);
++		kfree(fcoe);
++		dev_put(netdev);
++		return NULL;
 +	}
- }
  
- /**
+ 	return fcoe;
+ }
 
