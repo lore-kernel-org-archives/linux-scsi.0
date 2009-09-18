@@ -1,45 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/15] scsi/eata: fix buffer overflow
-Date: Fri, 18 Sep 2009 12:58:18 -0700
-Message-ID: <200909181958.n8IJwI2H004311@imap1.linux-foundation.org>
+Subject: [patch 13/15] gdth: unmap ccb_phys when scsi_add_host() fails in gdth_eisa_probe_one()
+Date: Fri, 18 Sep 2009 12:58:22 -0700
+Message-ID: <200909181958.n8IJwN2I004448@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:39853 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46171 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758127AbZIRUCJ (ORCPT
+	by vger.kernel.org with ESMTP id S1757723AbZIRUCC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 16:02:09 -0400
+	Fri, 18 Sep 2009 16:02:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com, mike@i-Connect.Net
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, achim_leubner@adaptec.com
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-Allows i == MAX_INT_PARAM, which is out of range.
+unmap ccb_phys as well when scsi_add_host() fails
 
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Michael Neuffer <mike@i-Connect.Net>
-Cc: Dario Ballabio <ballabio_dario@emc.com>
+Cc: Achim Leubner <achim_leubner@adaptec.com>
 Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/eata.c |    2 +-
+ drivers/scsi/gdth.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow drivers/scsi/eata.c
---- a/drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow
-+++ a/drivers/scsi/eata.c
-@@ -1509,7 +1509,7 @@ static int option_setup(char *str)
- 	char *cur = str;
- 	int i = 1;
+diff -puN drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one
++++ a/drivers/scsi/gdth.c
+@@ -4900,7 +4900,7 @@ static int __init gdth_eisa_probe_one(us
  
--	while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+	while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
- 		ints[i++] = simple_strtoul(cur, NULL, 0);
+ 	error = scsi_add_host(shp, NULL);
+ 	if (error)
+-		goto out_free_coal_stat;
++		goto out_free_ccb_phys;
+ 	list_add_tail(&ha->list, &gdth_instances);
+ 	gdth_timer_init();
  
- 		if ((cur = strchr(cur, ',')) != NULL)
 _
