@@ -1,57 +1,87 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 4/5] sd: Support disks formatted with DIF Type 2
-Date: Fri, 18 Sep 2009 15:57:44 -0600
-Message-ID: <1253311064.14224.17.camel@mulgrave.site>
-References: <1253309583-22170-1-git-send-email-martin.petersen@oracle.com>
-	 <1253309583-22170-5-git-send-email-martin.petersen@oracle.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [RFC v2 PATCH 0/19] A kernel-level configfs enabled generic target
+	engine for Linux v2.6.32
+Date: Fri, 18 Sep 2009 15:07:36 -0700
+Message-ID: <1253311656.4498.143.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33009 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750964AbZIRV5u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 17:57:50 -0400
-In-Reply-To: <1253309583-22170-5-git-send-email-martin.petersen@oracle.com>
+Received: from smtp108.sbc.mail.gq1.yahoo.com ([67.195.14.111]:23278 "HELO
+	smtp108.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752532AbZIRWKe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 18:10:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Daniel Walker <dwalker@fifo99.com>
 
-On Fri, 2009-09-18 at 17:33 -0400, Martin K. Petersen wrote:
-> Disks formatted with DIF Type 2 reject READ/WRITE 6/10/12/16 commands
-> when protection is enabled.  Only the 32-byte variants are supported.
-> 
-> Implement support for issusing 32-byte READ/WRITE and enable Type 2
-> drives in the protection type detection logic.
+Greetings all,
 
-All looks fine (in all patches [well, except the signed-off-by from doug
-should be acked-by]), except this:
+This is the second round of request for comments for TCM/ConfigFS v3.2 from lio-core-2.6.git.
+Thanks to the folks who made comments, and I again invite people to take a look and make
+recommendations on how the code can be futher improved to use the best available upstream
+interfaces.
 
-> @@ -1108,6 +1149,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  	if (rq_data_dir(SCpnt->request) == READ && scsi_prot_sg_count(SCpnt))
->  		sd_dif_complete(SCpnt, good_bytes);
->  
-> +	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
-> +	    == SD_DIF_TYPE2_PROTECTION)
-> +		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-> +
->  	return good_bytes;
->  }
+Also, the standalone patches for TCM v3.2 are now available from:
 
-If you look at Christoph's discard patch set, you'll see they come back
-through this path in scsi_finish_io(), which would cause a bogus free
-for discard on DIF/DIX systems.
+http://kernel.org/pub/linux/kernel/people/nab/target_core_mod-patches/
 
-I'd really rather this check were tightened to something like
+The first posting from 09112009 can be found here:
 
-if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
-    == SD_DIF_TYPE2_PROTECTION && SCpnt->cmnd != SCpnt->request->cmd)
+http://marc.info/?l=linux-kernel&m=125272088024636
 
-So we're totally positive we fiddled with the command pointer before we
-free it.
+The changelog since the posting on 09112009, which can be found here:
 
-James
+*) Convert to struct mutex for struct sempahore initialized with init_MUTEX() (mentioned by Daniel Walker)
+*) Convert to struct completion for struct semaphore initialized with init_MUTEX_LOCKED() (mentioned by Daniel Walker)
+*) Convert to use Kbuild instead of Makefile for drivers/target/ (mentioned by Boaz Harrosh)
+*) Use include/asm-generic/div64.h for unsigned long long division on 32-bit architectures
+*) Use include/linux/math64.h for unsigned long long modulo on 32-bit architectures
 
+The lio-core-2.6.git tree can be found here:
 
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
+
+More Information about Target_Core_Mod/ConfigFS, and PR and ALUA:
+
+http://www.linux-iscsi.org/index.php/Target_Core_Mod/ConfigFS
+http://www.linux-iscsi.org/index.php/Persistent_Reservations
+http://www.linux-iscsi.org/index.php/ALUA
+
+The complete v3.x TCM CLI operations set can be found here:
+
+http://www.linux-iscsi.org/index.php/Lio-utils#v3.1_TCM_CLI_operations
+
+Instructions and examples for getting setup:
+
+http://www.linux-iscsi.org/builds/docs/LIO-3.0-Users_Reference_Manual.pdf
+http://www.linux-iscsi.org/index.php/Howto#Start_target_core_mod
+
+Constructive comments are welcome,
+
+Thank you!
+
+--nab
+
+[RFC PATCH 1/19] Target_Core_Mod Asymmetric Logical Unit Assignment (ALUA) support
+[RFC PATCH 2/19] Target_Core_Mod ConfigFS infrastructure
+[RFC PATCH 3/19] Target_Core_Mod device core infrastructure
+[RFC PATCH 4/19] Target_Core_Mod FILEIO <-> Linux/VFS subsystem
+[RFC PATCH 5/19] Target_Core_Mod HBA core infrastructure
+[RFC PATCH 6/19] Target_Core_Mod IBLOCK <-> Linux/Block subsystem plugin
+[RFC PATCH 7/19] Target_Core_Mod SCSI MIBs
+[RFC PATCH 8/19] Target_Core_Mod Subsystem and SE Object plugin infrastructure
+[RFC PATCH 9/19] Target_Core_Mod SPC-4 Persistent Reservations
+[RFC PATCH 10/19] Target_Core_Mod PSCSI <-> Linux/SCSI subsystem plugin
+[RFC PATCH 11/19] Target_Core_Mod RAMDISK_DR and RAMDISK_MCP subsystem plugin
+[RFC PATCH 12/19] Target_Core_Mod READ/WRITE command descriptor block generation code
+[RFC PATCH 13/19] Target_Core_Mod Storage Engine Object infrastructure
+[RFC PATCH 14/19] Target_Core_Mod Task Management infrastructure
+[RFC PATCH 15/19] Target_Core_Mod portal group endpoint infrastructure
+[RFC PATCH 16/19] Target_Core_Mod Generic Transport Core
+[RFC PATCH 17/19] Target_Core_Mod Unit Attention emulation support
+[RFC PATCH 18/19] Target_Core_Mod base and fabric_module includes
+[RFC PATCH 19/19] Target_Core_Mod Kbuild/Kconfig
 
