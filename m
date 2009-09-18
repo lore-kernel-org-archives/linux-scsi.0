@@ -1,191 +1,231 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 1/2] libiscsi: iscsi_session_setup to allow for private
-	space
-Date: Fri, 18 Sep 2009 21:46:44 +0530
-Message-ID: <20090918161628.GA8436@serverengines.com>
+Subject: [PATCH 2/2] be2iscsi: Moving to pci_pools
+Date: Fri, 18 Sep 2009 21:48:37 +0530
+Message-ID: <20090918161822.GA8468@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:38011 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:38220 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752250AbZIRQQe (ORCPT
+	by vger.kernel.org with ESMTP id S1752270AbZIRQSb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 12:16:34 -0400
+	Fri, 18 Sep 2009 12:18:31 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-	This patch contains changes that allow iscsi_session_setup
- to allocate private space for LLD's
+ This patch contains changes to use pci_pools for iscsi hdr
+instead of pci_alloc_consistent. Here we alloc and free to pool
+for every IO
 
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |    2 +-
- drivers/scsi/be2iscsi/be_iscsi.c         |    6 ++++--
- drivers/scsi/be2iscsi/be_main.h          |    5 +++++
- drivers/scsi/bnx2i/bnx2i_iscsi.c         |    2 +-
- drivers/scsi/cxgb3i/cxgb3i_iscsi.c       |    2 +-
- drivers/scsi/iscsi_tcp.c                 |    2 +-
- drivers/scsi/libiscsi.c                  |    6 ++++--
- include/scsi/libiscsi.h                  |    3 ++-
- 8 files changed, 19 insertions(+), 9 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c |   52 +++++++++++++++++++------------------
+ drivers/scsi/be2iscsi/be_main.c  |   28 +++++++++++++++++++-
+ drivers/scsi/be2iscsi/be_main.h  |    1 -
+ 3 files changed, 53 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 0ba6ec8..add9188 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -426,7 +426,7 @@ iscsi_iser_session_create(struct iscsi_endpoint *ep,
- 	 * because we preallocate so many resources
- 	 */
- 	cls_session = iscsi_session_setup(&iscsi_iser_transport, shost,
--					  ISCSI_DEF_XMIT_CMDS_MAX,
-+					  ISCSI_DEF_XMIT_CMDS_MAX, 0,
- 					  sizeof(struct iscsi_iser_task),
- 					  initial_cmdsn, 0);
- 	if (!cls_session)
 diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index b23526c..f18e643 100644
+index f18e643..62b94a7 100644
 --- a/drivers/scsi/be2iscsi/be_iscsi.c
 +++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -44,9 +44,10 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
- 	struct Scsi_Host *shost;
+@@ -45,14 +45,9 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
  	struct beiscsi_endpoint *beiscsi_ep;
  	struct iscsi_cls_session *cls_session;
--	struct iscsi_session *sess;
  	struct beiscsi_hba *phba;
+-	struct iscsi_task *task;
+ 	struct iscsi_session *sess;
+ 	struct beiscsi_session *beiscsi_sess;
+ 	struct beiscsi_io_task *io_task;
+-	unsigned int max_size, num_cmd;
+-	dma_addr_t bus_add;
+-	u64 pa_addr;
+-	void *vaddr;
+ 
+ 	SE_DEBUG(DBG_LVL_8, "In beiscsi_session_create\n");
+ 
+@@ -80,20 +75,18 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
+ 	if (!cls_session)
+ 		return NULL;
+ 	sess = cls_session->dd_data;
+-	max_size = ALIGN(sizeof(struct be_cmd_bhs), 64) * sess->cmds_max;
+-	vaddr = pci_alloc_consistent(phba->pcidev, max_size, &bus_add);
+-	pa_addr = (__u64) bus_add;
++	beiscsi_sess = sess->dd_data;
++	beiscsi_sess->bhs_pool =  pci_pool_create("beiscsi_bhs_pool",
++						   phba->pcidev,
++						   sizeof(struct be_cmd_bhs),
++						   64, 0);
++	if (!beiscsi_sess->bhs_pool)
++		goto destroy_sess;
+ 
+-	for (num_cmd = 0; num_cmd < sess->cmds_max; num_cmd++) {
+-		task = sess->cmds[num_cmd];
+-		io_task = task->dd_data;
+-		io_task->cmd_bhs = vaddr;
+-		io_task->bhs_pa.u.a64.address = pa_addr;
+-		io_task->alloc_size = max_size;
+-		vaddr += ALIGN(sizeof(struct be_cmd_bhs), 64);
+-		pa_addr += ALIGN(sizeof(struct be_cmd_bhs), 64);
+-	}
+ 	return cls_session;
++destroy_sess:
++	iscsi_session_teardown(cls_session);
++	return NULL;
+ }
+ 
+ /**
+@@ -107,16 +100,20 @@ void beiscsi_session_destroy(struct iscsi_cls_session *cls_session)
+ {
  	struct iscsi_task *task;
+ 	struct beiscsi_io_task *io_task;
++	unsigned int num_cmd;
+ 	struct iscsi_session *sess = cls_session->dd_data;
+-	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
+-	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	struct beiscsi_session *beiscsi_sess = sess->dd_data;
+ 
+-	task = sess->cmds[0];
+-	io_task = task->dd_data;
+-	pci_free_consistent(phba->pcidev,
+-			    io_task->alloc_size,
+-			    io_task->cmd_bhs,
+-			    io_task->bhs_pa.u.a64.address);
++	for (num_cmd = 0; num_cmd < sess->cmds_max; num_cmd++) {
++		task = sess->cmds[num_cmd];
++		io_task = task->dd_data;
++		if (io_task->cmd_bhs) {
++			pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
++				      io_task->bhs_pa.u.a64.address);
++			io_task->cmd_bhs = NULL;
++		}
++	}
++	pci_pool_destroy(beiscsi_sess->bhs_pool);
+ 	iscsi_session_teardown(cls_session);
+ }
+ 
+@@ -133,6 +130,8 @@ beiscsi_conn_create(struct iscsi_cls_session *cls_session, u32 cid)
+ 	struct iscsi_cls_conn *cls_conn;
+ 	struct beiscsi_conn *beiscsi_conn;
+ 	struct iscsi_conn *conn;
 +	struct iscsi_session *sess;
 +	struct beiscsi_session *beiscsi_sess;
- 	struct beiscsi_io_task *io_task;
- 	unsigned int max_size, num_cmd;
- 	dma_addr_t bus_add;
-@@ -73,7 +74,8 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
  
- 	 cls_session = iscsi_session_setup(&beiscsi_iscsi_transport,
- 					   shost, cmds_max,
--					   sizeof(struct beiscsi_io_task),
-+					   sizeof(*beiscsi_sess),
-+					   sizeof(*io_task),
- 					   initial_cmdsn, ISCSI_MAX_TARGET);
- 	if (!cls_session)
- 		return NULL;
+ 	SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_create ,cid"
+ 		 "from iscsi layer=%d\n", cid);
+@@ -148,6 +147,9 @@ beiscsi_conn_create(struct iscsi_cls_session *cls_session, u32 cid)
+ 	beiscsi_conn->ep = NULL;
+ 	beiscsi_conn->phba = phba;
+ 	beiscsi_conn->conn = conn;
++	sess = cls_session->dd_data;
++	beiscsi_sess = sess->dd_data;
++	beiscsi_conn->beiscsi_sess = beiscsi_sess;
+ 	return cls_conn;
+ }
+ 
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index d520fe8..c3aeba0 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -2880,6 +2880,13 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 	struct hwi_wrb_context *pwrb_context;
+ 	struct hwi_controller *phwi_ctrlr;
+ 	itt_t itt;
++	struct beiscsi_session *beiscsi_sess = beiscsi_conn->beiscsi_sess;
++
++	io_task->cmd_bhs = pci_pool_alloc(beiscsi_sess->bhs_pool,
++					  GFP_KERNEL,
++					  &io_task->bhs_pa.u.a64.address);
++	if (!io_task->cmd_bhs)
++		return -ENOMEM;
+ 
+ 	io_task->pwrb_handle = alloc_wrb_handle(phba,
+ 						beiscsi_conn->beiscsi_conn_cid,
+@@ -2901,6 +2908,9 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 			free_wrb_handle(phba, pwrb_context,
+ 						io_task->pwrb_handle);
+ 			io_task->pwrb_handle = NULL;
++			pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
++				      io_task->bhs_pa.u.a64.address);
++			io_task->cmd_bhs = NULL;
+ 			SE_DEBUG(DBG_LVL_1,
+ 				 "Alloc of SGL_ICD Failed \n");
+ 			return -ENOMEM;
+@@ -2921,6 +2931,11 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 					free_wrb_handle(phba, pwrb_context,
+ 							io_task->pwrb_handle);
+ 					io_task->pwrb_handle = NULL;
++					pci_pool_free(beiscsi_sess->bhs_pool,
++						      io_task->cmd_bhs,
++						      io_task->
++						      bhs_pa.u.a64.address);
++					io_task->cmd_bhs = NULL;
+ 					SE_DEBUG(DBG_LVL_1, "Alloc of "
+ 						"MGMT_SGL_ICD Failed \n");
+ 					return -ENOMEM;
+@@ -2943,6 +2958,10 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 				free_wrb_handle(phba, pwrb_context,
+ 							io_task->pwrb_handle);
+ 				io_task->pwrb_handle = NULL;
++				pci_pool_free(beiscsi_sess->bhs_pool,
++					      io_task->cmd_bhs,
++					      io_task->bhs_pa.u.a64.address);
++				io_task->cmd_bhs = NULL;
+ 				SE_DEBUG(DBG_LVL_1, "Alloc of "
+ 					 "MGMT_SGL_ICD Failed \n");
+ 				return -ENOMEM;
+@@ -2961,6 +2980,7 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
+ 	struct iscsi_conn *conn = task->conn;
+ 	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
+ 	struct beiscsi_hba *phba = beiscsi_conn->phba;
++	struct beiscsi_session *beiscsi_sess = beiscsi_conn->beiscsi_sess;
+ 	struct hwi_wrb_context *pwrb_context;
+ 	struct hwi_controller *phwi_ctrlr;
+ 
+@@ -2971,6 +2991,12 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
+ 		io_task->pwrb_handle = NULL;
+ 	}
+ 
++	if (io_task->cmd_bhs) {
++		pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
++			      io_task->bhs_pa.u.a64.address);
++		io_task->cmd_bhs = NULL;
++	}
++
+ 	if (task->sc) {
+ 		if (io_task->psgl_handle) {
+ 			spin_lock(&phba->io_sgl_lock);
+@@ -3003,7 +3029,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
+ 	unsigned int doorbell = 0;
+ 
+ 	pwrb = io_task->pwrb_handle->pwrb;
+-
+ 	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
+ 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
+ 
+@@ -3020,7 +3045,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
+ 			      &io_task->cmd_bhs->iscsi_data_pdu, 1);
+ 		AMAP_SET_BITS(struct amap_iscsi_wrb, type, pwrb, INI_WR_CMD);
+ 		AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 1);
+-
+ 	} else {
+ 		SE_DEBUG(DBG_LVL_4, "READ Command \t");
+ 		AMAP_SET_BITS(struct amap_iscsi_wrb, type, pwrb, INI_RD_CMD);
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 2520c39..387e363 100644
+index 387e363..53c9b70 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -327,6 +327,10 @@ struct beiscsi_hba {
- 	struct be_ctrl_info ctrl;
- };
+@@ -391,7 +391,6 @@ struct beiscsi_io_task {
+ 	unsigned short cid;
+ 	unsigned short header_len;
  
-+struct beiscsi_session {
-+	struct pci_pool *bhs_pool;
-+};
-+
- /**
-  * struct beiscsi_conn - iscsi connection structure
-  */
-@@ -338,6 +342,7 @@ struct beiscsi_conn {
- 	struct beiscsi_endpoint *ep;
- 	unsigned short login_in_progress;
- 	struct sgl_handle *plogin_sgl_handle;
-+	struct beiscsi_session *beiscsi_sess;
- };
- 
- /* This structure is used by the chip */
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 9a7ba71..cafb888 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1243,7 +1243,7 @@ bnx2i_session_create(struct iscsi_endpoint *ep,
- 		cmds_max = BNX2I_SQ_WQES_MIN;
- 
- 	cls_session = iscsi_session_setup(&bnx2i_iscsi_transport, shost,
--					  cmds_max, sizeof(struct bnx2i_cmd),
-+					  cmds_max, 0, sizeof(struct bnx2i_cmd),
- 					  initial_cmdsn, ISCSI_MAX_TARGET);
- 	if (!cls_session)
- 		return NULL;
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-index c399f48..2631bdd 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-@@ -422,7 +422,7 @@ cxgb3i_session_create(struct iscsi_endpoint *ep, u16 cmds_max, u16 qdepth,
- 	BUG_ON(hba != iscsi_host_priv(shost));
- 
- 	cls_session = iscsi_session_setup(&cxgb3i_iscsi_transport, shost,
--					  cmds_max,
-+					  cmds_max, 0,
- 					  sizeof(struct iscsi_tcp_task) +
- 					  sizeof(struct cxgb3i_task_data),
- 					  initial_cmdsn, ISCSI_MAX_TARGET);
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 2b1b834..edc49ca 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -811,7 +811,7 @@ iscsi_sw_tcp_session_create(struct iscsi_endpoint *ep, uint16_t cmds_max,
- 		goto free_host;
- 
- 	cls_session = iscsi_session_setup(&iscsi_sw_tcp_transport, shost,
--					  cmds_max,
-+					  cmds_max, 0,
- 					  sizeof(struct iscsi_tcp_task) +
- 					  sizeof(struct iscsi_sw_tcp_hdrbuf),
- 					  initial_cmdsn, 0);
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 8dc73c4..f1a4246 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2436,7 +2436,7 @@ static void iscsi_host_dec_session_cnt(struct Scsi_Host *shost)
-  */
- struct iscsi_cls_session *
- iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
--		    uint16_t cmds_max, int cmd_task_size,
-+		    uint16_t cmds_max, int dd_size, int cmd_task_size,
- 		    uint32_t initial_cmdsn, unsigned int id)
- {
- 	struct iscsi_host *ihost = shost_priv(shost);
-@@ -2486,7 +2486,8 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
- 	scsi_cmds = total_cmds - ISCSI_MGMT_CMDS_MAX;
- 
- 	cls_session = iscsi_alloc_session(shost, iscsit,
--					  sizeof(struct iscsi_session));
-+					  sizeof(struct iscsi_session) +
-+					  dd_size);
- 	if (!cls_session)
- 		goto dec_session_count;
- 	session = cls_session->dd_data;
-@@ -2503,6 +2504,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
- 	session->max_cmdsn = initial_cmdsn + 1;
- 	session->max_r2t = 1;
- 	session->tt = iscsit;
-+	session->dd_data = cls_session->dd_data + sizeof(*session);
- 	mutex_init(&session->eh_mutex);
- 	spin_lock_init(&session->lock);
- 
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 887e57e..a72edd4 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -303,6 +303,7 @@ struct iscsi_session {
- 	int			cmds_max;	/* size of cmds array */
- 	struct iscsi_task	**cmds;		/* Original Cmds arr */
- 	struct iscsi_pool	cmdpool;	/* PDU's pool */
-+	void			*dd_data;	/* LLD private data */
- };
- 
- enum {
-@@ -363,7 +364,7 @@ extern int iscsi_target_alloc(struct scsi_target *starget);
-  */
- extern struct iscsi_cls_session *
- iscsi_session_setup(struct iscsi_transport *, struct Scsi_Host *shost,
--		    uint16_t, int, uint32_t, unsigned int);
-+		    uint16_t, int, int, uint32_t, unsigned int);
- extern void iscsi_session_teardown(struct iscsi_cls_session *);
- extern void iscsi_session_recovery_timedout(struct iscsi_cls_session *);
- extern int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+-	unsigned int alloc_size;
+ 	struct be_cmd_bhs *cmd_bhs;
+ 	struct be_bus_address bhs_pa;
+ 	unsigned short bhs_len;
 -- 
 1.6.4
 
