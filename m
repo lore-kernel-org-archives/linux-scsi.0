@@ -1,42 +1,41 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 13/19] Target_Core_Mod Storage Engine Object
-	infrastructure
-Date: Fri, 18 Sep 2009 15:08:56 -0700
-Message-ID: <1253311736.4498.156.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 17/19] Target_Core_Mod Unit Attention emulation support
+Date: Fri, 18 Sep 2009 15:09:27 -0700
+Message-ID: <1253311768.4498.160.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp106.sbc.mail.gq1.yahoo.com ([67.195.14.109]:25606 "HELO
-	smtp106.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758796AbZIRWL6 (ORCPT
+Received: from smtp107.sbc.mail.gq1.yahoo.com ([67.195.14.110]:23084 "HELO
+	smtp107.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756056AbZIRWMO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:11:58 -0400
+	Fri, 18 Sep 2009 18:12:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Daniel Walker <dwalker@fifo99.com>
 
-[RFC PATCH 13/19] Target_Core_Mod Storage Engine Object infrastructure
+[RFC PATCH 17/19] Target_Core_Mod Unit Attention emulation support
 
-This patch adds the storage engine object (SEObject) infrastructure used by
-target_core_mod for accessing allocated se_device_t objects.
+This patch adds support for SPC-3 compliant UNIT Attention emulation that is used
+by the Persistent Reservations and ALUA code.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-
  
-diff --git a/drivers/target/target_core_seobj.c b/drivers/target/target_core_seobj.c
+diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
 new file mode 100644
-index 0000000..31fab2a
+index 0000000..51e7520
 --- /dev/null
-+++ b/drivers/target/target_core_seobj.c
-@@ -0,0 +1,679 @@
++++ b/drivers/target/target_core_ua.c
+@@ -0,0 +1,336 @@
 +/*******************************************************************************
-+ * Filename:  target_core_seobj.c
++ * Filename: target_core_ua.c
 + *
-+ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
-+ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
-+ * Copyright (c) 2008-2009 Linux-iSCSI.org
++ * This file contains logic for SPC-3 Unit Attention emulation
++ *
++ * Copyright (c) 2009 Rising Tide, Inc.
++ * Copyright (c) 2009 Linux-iSCSI.org
 + *
 + * Nicholas A. Bellinger <nab@kernel.org>
 + *
@@ -56,779 +55,357 @@ index 0000000..31fab2a
 + *
 + ******************************************************************************/
 +
++#define TARGET_CORE_UA_C
 +
-+#define TARGET_CORE_SEOBJ_C
-+
-+#include <linux/string.h>
-+#include <linux/timer.h>
++#include <linux/version.h>
 +#include <linux/slab.h>
-+#include <linux/blkdev.h>
 +#include <linux/spinlock.h>
-+#include <linux/smp_lock.h>
-+#include <linux/in.h>
 +#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
 +#include <target/target_core_hba.h>
-+#include <target/target_core_tpg.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_plugin.h>
-+#include <target/target_core_seobj.h>
++#include <target/target_core_alua.h>
++#include <target/target_core_pr.h>
++#include <target/target_core_ua.h>
++#include <target/target_core_transport_plugin.h>
 +#include <target/target_core_fabric_ops.h>
 +#include <target/target_core_configfs.h>
 +
-+#undef TARGET_CORE_SEOBJ_C
++#undef TARGET_CORE_UA_C
 +
-+#define MAKE_OBJ_TYPE(type, op1, op2)			\
-+void type##_obj_##op1##_count(struct se_obj_s *obj)	\
-+{							\
-+	atomic_##op2(&obj->obj_access_count);		\
-+}
-+
-+#define MAKE_OBJ_TYPE_RET(type)				\
-+int type##_obj_check_count(struct se_obj_s *obj)	\
-+{							\
-+	return atomic_read(&obj->obj_access_count);	\
-+}
-+
-+MAKE_OBJ_TYPE(dev, inc, inc);
-+MAKE_OBJ_TYPE(dev, dec, dec);
-+MAKE_OBJ_TYPE_RET(dev);
-+
-+void dev_obj_get_obj_info(
-+	void *p,
-+	se_lun_t *lun,
-+	unsigned long long bytes,
-+	int state,
-+	char *b,
-+	int *bl)
-+{
-+	se_device_t *dev = (se_device_t *)p;
-+
-+	if (state)
-+		transport_dump_dev_state(dev, b, bl);
-+	transport_dump_dev_info((se_device_t *)p, lun, bytes, b, bl);
-+}
-+
-+void dev_obj_get_plugin_info(void *p, char *b, int *bl)
-+{
-+	*bl += sprintf(b + *bl, "TCM Device Object Plugin %s\n",
-+			DEV_OBJ_VERSION);
-+}
-+
-+void *dev_obj_get_obj(void *p)
-+{
-+	return p;
-+}
-+
-+se_queue_obj_t *dev_obj_get_queue_obj(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return dev->dev_queue_obj;
-+}
-+
-+int dev_obj_claim_obj(void *p)
-+{
-+	return transport_generic_claim_phydevice((se_device_t *)p);
-+}
-+
-+void dev_obj_release_obj(void *p)
-+{
-+	transport_generic_release_phydevice((se_device_t *)p, 1);
-+}
-+
-+void dev_access_obj(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	DEV_OBJ_API(dev)->inc_count(&dev->dev_access_obj);
-+}
-+
-+void dev_deaccess_obj(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	DEV_OBJ_API(dev)->dec_count(&dev->dev_access_obj);
-+}
-+
-+void dev_put_obj(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	core_put_hba(dev->se_hba);
-+}
-+
-+int dev_obj_export(void *p, se_portal_group_t *tpg, se_lun_t *lun)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+	se_port_t *port;
-+
-+	port = core_alloc_port(dev);
-+	if (!(port))
-+		return -1;
-+
-+	lun->se_dev = dev;
-+	if (DEV_OBJ_API(dev)->activate(p) < 0) {
-+		lun->se_dev = NULL;
-+		kfree(port);
-+		return -1;
-+	}
-+
-+	DEV_OBJ_API(dev)->inc_count(&dev->dev_export_obj);
-+
-+	core_export_port(dev, tpg, port, lun);
-+	return 0;
-+}
-+
-+void dev_obj_unexport(void *p, se_portal_group_t *tpg, se_lun_t *lun)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+	se_port_t *port = lun->lun_sep;
-+
-+	spin_lock(&dev->se_port_lock);
-+	spin_lock(&lun->lun_sep_lock);
-+	if (lun->lun_type_ptr == NULL) {
-+		spin_unlock(&dev->se_port_lock);
-+		spin_unlock(&lun->lun_sep_lock);
-+		return;
-+	}
-+	spin_unlock(&lun->lun_sep_lock);
-+
-+	DEV_OBJ_API(dev)->dec_count(&dev->dev_export_obj);
-+
-+	core_release_port(dev, port);
-+	spin_unlock(&dev->se_port_lock);
-+
-+	DEV_OBJ_API(dev)->deactivate(p);
-+	lun->se_dev = NULL;
-+}
-+
-+int dev_obj_transport_setup_cmd(void *p, se_cmd_t *cmd)
-+{
-+	transport_device_setup_cmd(cmd);
-+	return 0;
-+}
-+
-+int dev_obj_active_tasks(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return atomic_read(&dev->execute_tasks);
-+}
-+
-+int dev_obj_add_tasks(void *p, se_cmd_t *cmd)
-+{
-+	transport_add_tasks_from_cmd(cmd);
-+	return 0;
-+}
-+
-+int dev_obj_execute_tasks(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	__transport_execute_tasks(dev);
-+	return 0;
-+}
-+
-+int dev_obj_depth_left(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return atomic_read(&dev->depth_left);
-+}
-+
-+int dev_obj_queue_depth(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return dev->queue_depth;
-+}
-+
-+int dev_obj_blocksize(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return DEV_ATTRIB(dev)->block_size;
-+}
-+
-+int dev_obj_max_sectors(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	if (TRANSPORT(dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV) {
-+		return (DEV_ATTRIB(dev)->max_sectors >
-+			TRANSPORT(dev)->get_max_sectors(dev) ?
-+			TRANSPORT(dev)->get_max_sectors(dev) :
-+			DEV_ATTRIB(dev)->max_sectors);
-+	} else
-+		return DEV_ATTRIB(dev)->max_sectors;
-+}
-+
-+unsigned long long dev_obj_end_lba(void *p, int zero_lba)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	 return dev->dev_sectors_total + ((zero_lba) ? 1 : 0);
-+}
-+
-+unsigned long long dev_obj_get_next_lba(void *p, unsigned long long lba)
-+{
-+	return lba;
-+}
-+
-+unsigned long long dev_obj_total_sectors(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return  dev->dev_sectors_total + 1;
-+}
-+
-+int dev_obj_do_se_mem_map(
-+	void *p,
-+	se_task_t *task,
-+	struct list_head *se_mem_list,
-+	void *in_mem,
-+	se_mem_t *in_se_mem,
-+	se_mem_t **out_se_mem,
-+	u32 *se_mem_cnt,
-+	u32 *task_offset)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+	u32 tmp_task_offset = *task_offset;
-+	int ret = 0;
-+
-+	/*
-+	 * se_subsystem_api_t->do_se_mem_map is used when internal allocation
-+	 * has been done by the transport plugin.
-+	 */
-+	if (TRANSPORT(dev)->do_se_mem_map) {
-+		ret = TRANSPORT(dev)->do_se_mem_map(task, se_mem_list,
-+				in_mem, in_se_mem, out_se_mem, se_mem_cnt,
-+				task_offset);
-+		if (ret == 0)
-+			T_TASK(task->task_se_cmd)->t_task_se_num += *se_mem_cnt;
-+
-+		return ret;
-+	}
-+
-+	/*
-+	 * Assume default that transport plugin speaks preallocated
-+	 * scatterlists.
-+	 */
-+	if (!(transport_calc_sg_num(task, in_se_mem, tmp_task_offset)))
-+		return -1;
-+
-+	/*
-+	 * se_task_t->task_sg now contains the struct scatterlist array.
-+	 */
-+	return transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
-+		in_se_mem, out_se_mem, se_mem_cnt, task_offset);
-+}
-+
-+int dev_obj_get_mem_buf(void *p, se_cmd_t *cmd)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	cmd->transport_allocate_resources = (TRANSPORT(dev)->allocate_buf) ?
-+		TRANSPORT(dev)->allocate_buf : &transport_generic_allocate_buf;
-+	cmd->transport_free_resources = (TRANSPORT(dev)->free_buf) ?
-+		TRANSPORT(dev)->free_buf : NULL;
-+
-+	return 0;
-+}
-+
-+int dev_obj_get_mem_SG(void *p, se_cmd_t *cmd)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	cmd->transport_allocate_resources = (TRANSPORT(dev)->allocate_DMA) ?
-+		TRANSPORT(dev)->allocate_DMA : &transport_generic_get_mem;
-+	cmd->transport_free_resources = (TRANSPORT(dev)->free_DMA) ?
-+		TRANSPORT(dev)->free_DMA : NULL;
-+
-+	return 0;
-+}
-+
-+map_func_t dev_obj_get_map_SG(void *p, int rw)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return (rw == SE_DIRECTION_WRITE) ? dev->transport->spc->write_SG :
-+		dev->transport->spc->read_SG;
-+}
-+
-+map_func_t dev_obj_get_map_non_SG(void *p, int rw)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return (rw == SE_DIRECTION_WRITE) ? dev->transport->spc->write_non_SG :
-+		dev->transport->spc->read_non_SG;
-+}
-+
-+map_func_t dev_obj_get_map_none(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return dev->transport->spc->none;
-+}
-+
-+void *dev_obj_get_transport_req(void *p, se_task_t *task)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	task->se_dev = dev;
-+
-+	return dev->transport->allocate_request(task, dev);
-+}
-+
-+void dev_obj_free_tasks(void *p, se_cmd_t *cmd)
-+{
-+	transport_free_dev_tasks(cmd);
-+}
-+
-+int dev_obj_activate(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	se_dev_start(dev);
-+	return 0;
-+}
-+
-+void dev_obj_deactivate(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	se_dev_stop(dev);
-+}
-+
-+void dev_obj_notify_obj(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	wake_up_interruptible(&dev->dev_queue_obj->thread_wq);
-+}
-+
-+int dev_obj_check_online(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+	int ret;
-+
-+	spin_lock(&dev->dev_status_lock);
-+	ret = ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
-+	       (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED)) ? 0 : 1;
-+	spin_unlock(&dev->dev_status_lock);
-+
-+	return ret;
-+}
-+
-+int dev_obj_check_shutdown(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+	int ret;
-+
-+	spin_lock(&dev->dev_status_lock);
-+	ret = (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN);
-+	spin_unlock(&dev->dev_status_lock);
-+
-+	return ret;
-+}
-+
-+void dev_obj_signal_shutdown(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	spin_lock(&dev->dev_status_lock);
-+	if ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
-+	    (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED) ||
-+	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_ACTIVATED) ||
-+	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_DEACTIVATED)) {
-+		dev->dev_status |= TRANSPORT_DEVICE_SHUTDOWN;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_ACTIVATED;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_DEACTIVATED;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_ACTIVATED;
-+		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_DEACTIVATED;
-+
-+		wake_up_interruptible(&dev->dev_queue_obj->thread_wq);
-+	}
-+	spin_unlock(&dev->dev_status_lock);
-+}
-+
-+void dev_obj_clear_shutdown(void *p)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	spin_lock(&dev->dev_status_lock);
-+	if (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN) {
-+		dev->dev_status &= ~TRANSPORT_DEVICE_SHUTDOWN;
-+		dev->dev_status |= TRANSPORT_DEVICE_DEACTIVATED;
-+	}
-+	spin_unlock(&dev->dev_status_lock);
-+}
-+
-+unsigned char *dev_obj_get_cdb(
-+	void *p,
-+	se_task_t *task)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return dev->transport->get_cdb(task);
-+}
-+
-+int dev_obj_start(
-+	void *p,
-+	se_transform_info_t *ti,
-+	unsigned long long starting_lba)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	return transport_generic_obj_start(ti, DEV_OBJ_API(dev),
-+		p, starting_lba);
-+}
-+
-+u32 dev_obj_get_cdb_count(
-+	void *p,
-+	se_transform_info_t *ti,
-+	unsigned long long lba,
-+	u32 sectors,
-+	se_mem_t *se_mem_in,
-+	se_mem_t **se_mem_out,
-+	u32 *task_offset_in)
-+{
-+	se_device_t *dev  = (se_device_t *)p;
-+
-+	ti->ti_dev = dev;
-+	return transport_generic_get_cdb_count(ti->ti_se_cmd, ti,
-+		DEV_OBJ_API(dev), p, lba, sectors, se_mem_in, se_mem_out,
-+		task_offset_in);
-+}
-+
-+u32 dev_obj_get_cdb_size(
-+	void *p,
-+	u32 sectors,
++int core_scsi3_ua_check(
++	se_cmd_t *cmd,
 +	unsigned char *cdb)
 +{
-+	se_device_t *dev  = (se_device_t *)p;
++	se_dev_entry_t *deve;
++	se_session_t *sess = cmd->se_sess;
++	se_node_acl_t *nacl;
 +
-+	if (TRANSPORT(dev)->get_device_type(dev) == TYPE_TAPE) {
-+		if (cdb[1] & 1) { /* sectors */
-+			return DEV_ATTRIB(dev)->block_size * sectors;
-+		} else /* bytes */
-+			return sectors;
++	if (!(sess))
++		return 0;
++
++	nacl = sess->se_node_acl;
++	if (!(nacl))
++		return 0;
++
++	deve = &nacl->device_list[cmd->orig_fe_lun];
++	if (!(atomic_read(&deve->ua_count)))
++		return 0;
++	/*
++	 * From sam4r14, section 5.14 Unit attention condition:
++	 *
++	 * a) if an INQUIRY command enters the enabled command state, the
++	 *    device server shall process the INQUIRY command and shall neither
++	 *    report nor clear any unit attention condition;
++	 * b) if a REPORT LUNS command enters the enabled command state, the
++	 *    device server shall process the REPORT LUNS command and shall not
++	 *    report any unit attention condition;
++	 * e) if a REQUEST SENSE command enters the enabled command state while
++	 *    a unit attention condition exists for the SCSI initiator port
++	 *    associated with the I_T nexus on which the REQUEST SENSE command
++	 *    was received, then the device server shall process the command
++	 *    and either:
++	 */
++	switch (cdb[0]) {
++	case INQUIRY:
++	case REPORT_LUNS:
++	case REQUEST_SENSE:
++		return 0;
++	default:
++		return -1;
 +	}
 +
-+	/* sectors */
-+#if 0
-+	printk(KERN_INFO "Returning block_size: %u, sectors: %u == %u for"
-+			" %s object\n", DEV_ATTRIB(dev)->block_size, sectors,
-+			DEV_ATTRIB(dev)->block_size * sectors,
-+			TRANSPORT(dev)->name);
-+#endif
-+	return DEV_ATTRIB(dev)->block_size * sectors;
++	return -1;
 +}
 +
-+void dev_obj_generate_cdb(
-+	void *p,
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++int core_scsi3_ua_allocate(
++	se_node_acl_t *nacl,
++	u32 unpacked_lun,
++	u8 asc,
++	u8 ascq)
 +{
-+	se_device_t *dev = (se_device_t *)p;
++	se_dev_entry_t *deve;
++	se_ua_t *ua, *ua_p, *ua_tmp;
++	/*
++	 * PASSTHROUGH OPS
++	 */
++	if (!(nacl))
++		return -1;
 +
-+	dev->dev_generate_cdb(lba, sectors, cdb, rw);
-+}
-+
-+int dev_obj_get_device_access(void *p)
-+{
-+	se_device_t *dev = (se_device_t *)p;
-+
-+	return (dev->dev_flags & DF_READ_ONLY) ? 0 : 1;
-+}
-+
-+int dev_obj_get_device_type(void *p)
-+{
-+	se_device_t *dev = (se_device_t *)p;
-+
-+	return TRANSPORT(dev)->get_device_type(dev);
-+}
-+
-+int dev_obj_check_DMA_handler(void *p)
-+{
-+	se_device_t *dev = (se_device_t *)p;
-+
-+	if (!dev->transport) {
-+		printk(KERN_ERR "se_device_t->transport is NULL!\n");
-+		BUG();
++	ua = kmem_cache_zalloc(se_ua_cache, GFP_ATOMIC);
++	if (!(ua)) {
++		printk(KERN_ERR "Unable to allocate se_ua_t\n");
++		return -1;
 +	}
++	INIT_LIST_HEAD(&ua->ua_dev_list);
++	INIT_LIST_HEAD(&ua->ua_nacl_list);
 +
-+	return (TRANSPORT(dev)->allocate_DMA != NULL);
-+}
++	ua->ua_nacl = nacl;
++	ua->ua_asc = asc;
++	ua->ua_ascq = ascq;
 +
-+t10_wwn_t *dev_obj_get_t10_wwn(void *p)
-+{
-+	se_device_t *dev = (se_device_t *)p;
++	spin_lock(&nacl->device_list_lock);
++	deve = &nacl->device_list[unpacked_lun];
 +
-+	return DEV_T10_WWN(dev);
-+}
++	spin_lock(&deve->ua_lock);
++	list_for_each_entry_safe(ua_p, ua_tmp, &deve->ua_list, ua_nacl_list) {
++		/*
++		 * Do not report the same UNIT ATTENTION twice..
++		 */
++		if ((ua_p->ua_asc == asc) && (ua_p->ua_ascq == ascq)) {
++			spin_unlock(&deve->ua_lock);
++			spin_unlock(&nacl->device_list_lock);
++			kmem_cache_free(se_ua_cache, ua);
++			return 0;
++		}
++		/*
++		 * Attach the highest priority Unit Attention to
++		 * the head of the list following sam4r14,
++		 * Section 5.14 Unit Attention Condition:
++		 *
++		 * POWER ON, RESET, OR BUS DEVICE RESET OCCURRED highest
++		 * POWER ON OCCURRED or
++		 * DEVICE INTERNAL RESET
++		 * SCSI BUS RESET OCCURRED or
++		 * MICROCODE HAS BEEN CHANGED or
++		 * protocol specific
++		 * BUS DEVICE RESET FUNCTION OCCURRED
++		 * I_T NEXUS LOSS OCCURRED
++		 * COMMANDS CLEARED BY POWER LOSS NOTIFICATION
++		 * all others                                    Lowest
++		 *
++		 * Each of the ASCQ codes listed above are defined in
++		 * the 29h ASC family, see spc4r17 Table D.1
++		 */
++		if (ua_p->ua_asc == 0x29) {
++			if ((asc == 0x29) && (ascq > ua_p->ua_ascq))
++				list_add(&ua->ua_nacl_list,
++						&deve->ua_list);
++			else
++				list_add_tail(&ua->ua_nacl_list,
++						&deve->ua_list);
++		} else if (ua_p->ua_asc == 0x2a) {
++			/*
++			 * Incoming Family 29h ASCQ codes will override
++			 * Family 2AHh ASCQ codes for Unit Attention condition.
++			 */
++			if ((asc == 0x29) || (ascq > ua_p->ua_asc))
++				list_add(&ua->ua_nacl_list,
++					&deve->ua_list);
++			else
++				list_add_tail(&ua->ua_nacl_list,
++						&deve->ua_list);
++		} else
++			list_add_tail(&ua->ua_nacl_list,
++				&deve->ua_list);
++		spin_unlock(&deve->ua_lock);
++		spin_unlock(&nacl->device_list_lock);
 +
-+int dev_obj_get_task_timeout(void *p)
-+{
-+	se_device_t *dev = (se_device_t *)p;
++		atomic_inc(&deve->ua_count);
++		smp_mb__after_atomic_inc();
++		return 0;
++	}
++	list_add_tail(&ua->ua_nacl_list, &deve->ua_list);
++	spin_unlock(&deve->ua_lock);
++	spin_unlock(&nacl->device_list_lock);
 +
-+	return DEV_ATTRIB(dev)->task_timeout;
-+}
++	printk(KERN_INFO "[%s]: Allocated UNIT ATTENTION, mapped LUN: %u, ASC:"
++		" 0x%02x, ASCQ: 0x%02x\n",
++		TPG_TFO(nacl->se_tpg)->get_fabric_name(), unpacked_lun,
++		asc, ascq);
 +
-+int dev_add_obj_to_lun(se_portal_group_t *tpg, se_lun_t *lun)
-+{
++	atomic_inc(&deve->ua_count);
++	smp_mb__after_atomic_inc();
 +	return 0;
 +}
 +
-+int dev_del_obj_from_lun(se_portal_group_t *tpg, se_lun_t *lun)
++void core_scsi3_ua_release_all(
++	se_dev_entry_t *deve)
 +{
-+	return core_dev_del_lun(tpg, lun->unpacked_lun);
-+}
++	se_ua_t *ua, *ua_p;
 +
-+se_obj_lun_type_t *dev_get_next_obj_api(void *p, void **next_p)
-+{
-+	se_device_t *dev = (se_device_t *)p;
++	spin_lock(&deve->ua_lock);
++	list_for_each_entry_safe(ua, ua_p, &deve->ua_list, ua_nacl_list) {
++		list_del(&ua->ua_nacl_list);
++		kmem_cache_free(se_ua_cache, ua);
 +
-+	*next_p = dev;
-+	return DEV_OBJ_API(dev);
-+}
-+
-+int dev_obtain_obj_lock(void *p)
-+{
-+	return 0;
-+}
-+
-+int dev_release_obj_lock(void *p)
-+{
-+	return 0;
-+}
-+
-+se_obj_lun_type_t dev_obj_template = {
-+	.se_obj_type		= TRANSPORT_LUN_TYPE_DEVICE,
-+	.get_obj_info		= dev_obj_get_obj_info,
-+	.get_plugin_info	= dev_obj_get_plugin_info,
-+	.get_obj		= dev_obj_get_obj,
-+	.get_queue_obj		= dev_obj_get_queue_obj,
-+	.claim_obj		= dev_obj_claim_obj,
-+	.release_obj		= dev_obj_release_obj,
-+	.inc_count		= dev_obj_inc_count,
-+	.dec_count		= dev_obj_dec_count,
-+	.check_count		= dev_obj_check_count,
-+	.access_obj		= dev_access_obj,
-+	.deaccess_obj		= dev_deaccess_obj,
-+	.put_obj		= dev_put_obj,
-+	.export_obj		= dev_obj_export,
-+	.unexport_obj		= dev_obj_unexport,
-+	.transport_setup_cmd	= dev_obj_transport_setup_cmd,
-+	.active_tasks		= dev_obj_active_tasks,
-+	.add_tasks		= dev_obj_add_tasks,
-+	.execute_tasks		= dev_obj_execute_tasks,
-+	.depth_left		= dev_obj_depth_left,
-+	.queue_depth		= dev_obj_queue_depth,
-+	.blocksize		= dev_obj_blocksize,
-+	.max_sectors		= dev_obj_max_sectors,
-+	.end_lba		= dev_obj_end_lba,
-+	.get_next_lba		= dev_obj_get_next_lba,
-+	.total_sectors		= dev_obj_total_sectors,
-+	.do_se_mem_map		= dev_obj_do_se_mem_map,
-+	.get_mem_buf		= dev_obj_get_mem_buf,
-+	.get_mem_SG		= dev_obj_get_mem_SG,
-+	.get_map_SG		= dev_obj_get_map_SG,
-+	.get_map_non_SG		= dev_obj_get_map_non_SG,
-+	.get_map_none		= dev_obj_get_map_none,
-+	.get_transport_req	= dev_obj_get_transport_req,
-+	.free_tasks		= dev_obj_free_tasks,
-+	.activate		= dev_obj_activate,
-+	.deactivate		= dev_obj_deactivate,
-+	.notify_obj		= dev_obj_notify_obj,
-+	.check_online		= dev_obj_check_online,
-+	.check_shutdown		= dev_obj_check_shutdown,
-+	.signal_shutdown	= dev_obj_signal_shutdown,
-+	.clear_shutdown		= dev_obj_clear_shutdown,
-+	.get_cdb		= dev_obj_get_cdb,
-+	.obj_start		= dev_obj_start,
-+	.get_cdb_count		= dev_obj_get_cdb_count,
-+	.get_cdb_size		= dev_obj_get_cdb_size,
-+	.generate_cdb		= dev_obj_generate_cdb,
-+	.get_device_access	= dev_obj_get_device_access,
-+	.get_device_type	= dev_obj_get_device_type,
-+	.check_DMA_handler	= dev_obj_check_DMA_handler,
-+	.get_t10_wwn		= dev_obj_get_t10_wwn,
-+	.get_task_timeout	= dev_obj_get_task_timeout,
-+	.add_obj_to_lun		= dev_add_obj_to_lun,
-+	.del_obj_from_lun	= dev_del_obj_from_lun,
-+	.get_next_obj_api	= dev_get_next_obj_api,
-+	.obtain_obj_lock	= dev_obtain_obj_lock,
-+	.release_obj_lock	= dev_release_obj_lock,
-+};
-+
-+se_obj_lun_type_t *se_obj_get_api(u32 plugin_loc)
-+{
-+	se_plugin_class_t *pc;
-+	se_plugin_t *p;
-+
-+	pc = plugin_get_class(PLUGIN_TYPE_OBJ);
-+	if (!(pc))
-+		return NULL;
-+
-+	spin_lock(&pc->plugin_lock);
-+	if (plugin_loc > pc->max_plugins) {
-+		printk(KERN_ERR "Passed plugin_loc: %u exceeds pc->max_plugins:"
-+			" %d\n", plugin_loc, pc->max_plugins);
-+		goto out;
++		atomic_dec(&deve->ua_count);
++		smp_mb__after_atomic_dec();
 +	}
-+
-+	p = &pc->plugin_array[plugin_loc];
-+	if (!p->plugin_obj) {
-+		printk(KERN_ERR "Passed plugin_loc: %u does not exist!\n",
-+				plugin_loc);
-+		goto out;
-+	}
-+	spin_unlock(&pc->plugin_lock);
-+
-+	return (se_obj_lun_type_t *)p->plugin_obj;
-+out:
-+	spin_unlock(&pc->plugin_lock);
-+	return NULL;
++	spin_unlock(&deve->ua_lock);
 +}
 +
-+
-+int se_obj_load_plugins(void)
++void core_scsi3_ua_for_check_condition(
++	se_cmd_t *cmd,
++	u8 *asc,
++	u8 *ascq)
 +{
-+	int ret = 0;
++	se_device_t *dev = SE_DEV(cmd);
++	se_dev_entry_t *deve;
++	se_session_t *sess = cmd->se_sess;
++	se_node_acl_t *nacl;
++	se_ua_t *ua = NULL, *ua_p;
++	int head = 1;
 +
-+	dev_obj_template.obj_plugin = plugin_register((void *)&dev_obj_template,
-+			TRANSPORT_LUN_TYPE_DEVICE, "dev", PLUGIN_TYPE_OBJ,
-+			dev_obj_template.get_plugin_info, NULL, NULL, &ret);
-+	if (ret)
-+		printk(KERN_ERR "plugin_register() failures\n");
++	if (!(sess))
++		return;
 +
-+	return ret;
++	nacl = sess->se_node_acl;
++	if (!(nacl))
++		return;
++
++	spin_lock(&nacl->device_list_lock);
++	deve = &nacl->device_list[cmd->orig_fe_lun];
++	if (!(atomic_read(&deve->ua_count))) {
++		spin_unlock(&nacl->device_list_lock);
++		return;
++	}
++	/*
++	 * The highest priority Unit Attentions are placed at the head of the
++	 * se_dev_entry_t->ua_list, and will be returned in CHECK_CONDITION +
++	 * sense data for the received CDB.
++	 */
++	spin_lock(&deve->ua_lock);
++	list_for_each_entry_safe(ua, ua_p, &deve->ua_list, ua_nacl_list) {
++		/*
++		 * For ua_intlck_ctrl code not equal to 00b, only report the
++		 * highest priority UNIT_ATTENTION and ASC/ASCQ without
++		 * clearing it.
++		 */
++		if (DEV_ATTRIB(dev)->emulate_ua_intlck_ctrl != 0) {
++			*asc = ua->ua_asc;
++			*ascq = ua->ua_ascq;
++			break;
++		}
++		/*
++		 * Otherwise for the default 00b, release the UNIT ATTENTION
++		 * condition.  Return the ASC/ASCQ of the higest priority UA
++		 * (head of the list) in the outgoing CHECK_CONDITION + sense.
++		 */
++		if (head) {
++			*asc = ua->ua_asc;
++			*ascq = ua->ua_ascq;
++			head = 0;
++		}
++		list_del(&ua->ua_nacl_list);
++		kmem_cache_free(se_ua_cache, ua);
++
++		atomic_dec(&deve->ua_count);
++		smp_mb__after_atomic_dec();
++	}
++	spin_unlock(&deve->ua_lock);
++	spin_unlock(&nacl->device_list_lock);
++
++	printk(KERN_INFO "[%s]: %s UNIT ATTENTION condition with"
++		" INTLCK_CTRL: %d, mapped LUN: %u, got CDB: 0x%02x"
++		" reported ASC: 0x%02x, ASCQ: 0x%02x\n",
++		TPG_TFO(nacl->se_tpg)->get_fabric_name(),
++		(DEV_ATTRIB(dev)->emulate_ua_intlck_ctrl != 0) ? "Reporting" :
++		"Releasing", DEV_ATTRIB(dev)->emulate_ua_intlck_ctrl,
++		cmd->orig_fe_lun, T_TASK(cmd)->t_task_cdb[0], *asc, *ascq);
 +}
-diff --git a/include/target/target_core_seobj.h b/include/target/target_core_seobj.h
++
++int core_scsi3_ua_clear_for_request_sense(
++	se_cmd_t *cmd,
++	u8 *asc,
++	u8 *ascq)
++{
++	se_dev_entry_t *deve;
++	se_session_t *sess = cmd->se_sess;
++	se_node_acl_t *nacl;
++	se_ua_t *ua = NULL, *ua_p;
++	int head = 1;
++
++	if (!(sess))
++		return -1;
++
++	nacl = sess->se_node_acl;
++	if (!(nacl))
++		return -1;
++
++	spin_lock(&nacl->device_list_lock);
++	deve = &nacl->device_list[cmd->orig_fe_lun];
++	if (!(atomic_read(&deve->ua_count))) {
++		spin_unlock(&nacl->device_list_lock);
++		return -1;
++	}
++	/*
++	 * The highest priority Unit Attentions are placed at the head of the
++	 * se_dev_entry_t->ua_list.  The First (and hence highest priority)
++	 * ASC/ASCQ will be returned in REQUEST_SENSE payload data for the
++	 * matching se_lun_t.
++	 *
++	 * Once the returning ASC/ASCQ values are set, we go ahead and
++	 * release all of the Unit Attention conditions for the assoicated
++	 * se_lun_t.
++	 */
++	spin_lock(&deve->ua_lock);
++	list_for_each_entry_safe(ua, ua_p, &deve->ua_list, ua_nacl_list) {
++		if (head) {
++			*asc = ua->ua_asc;
++			*ascq = ua->ua_ascq;
++			head = 0;
++		}
++		list_del(&ua->ua_nacl_list);
++		kmem_cache_free(se_ua_cache, ua);
++
++		atomic_dec(&deve->ua_count);
++		smp_mb__after_atomic_dec();
++	}
++	spin_unlock(&deve->ua_lock);
++	spin_unlock(&nacl->device_list_lock);
++
++	printk(KERN_INFO "[%s]: Released UNIT ATTENTION condition, mapped"
++		" LUN: %u, got REQUEST_SENSE reported ASC: 0x%02x,"
++		" ASCQ: 0x%02x\n", TPG_TFO(nacl->se_tpg)->get_fabric_name(),
++		cmd->orig_fe_lun, *asc, *ascq);
++
++	return (head) ? -1 : 0;
++}
+diff --git a/include/target/target_core_ua.h b/include/target/target_core_ua.h
 new file mode 100644
-index 0000000..fad3b4e
+index 0000000..9e600d0
 --- /dev/null
-+++ b/include/target/target_core_seobj.h
-@@ -0,0 +1,114 @@
-+/*******************************************************************************
-+ * Filename:  target_core_seobj.h
-+ *
-+ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
-+ * Copyright (c) 2007-2009 Rising Tide Software, Inc.
-+ * Copyright (c) 2008-2009 Linux-iSCSI.org
-+ *
-+ * Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ ******************************************************************************/
-+
-+
-+#ifndef TARGET_CORE_SEOBJ_H
-+#define TARGET_CORE_SEOBJ_H
-+
-+extern struct se_obj_lun_type_s *se_obj_get_api(u32);
-+extern int se_obj_load_plugins(void);
-+
-+#define DEV_OBJ_VERSION		"v3.0"
-+
-+typedef int (*map_func_t)(struct se_task_s *, u32);
-+
-+typedef struct se_obj_lun_type_s {
-+	int	se_obj_type;
-+	struct se_plugin_s *obj_plugin;
-+	void (*get_obj_info)(void *, struct se_lun_s *, unsigned long long,
-+				int, char *, int *);
-+	void (*get_plugin_info)(void *, char *, int *);
-+	void *(*get_obj)(void *);
-+	struct se_queue_obj_s *(*get_queue_obj)(void *);
-+	int (*claim_obj)(void *);
-+	void (*release_obj)(void *);
-+	void (*inc_count)(struct se_obj_s *);
-+	void (*dec_count)(struct se_obj_s *);
-+	int (*check_count)(struct se_obj_s *);
-+	void (*access_obj)(void *);
-+	void (*deaccess_obj)(void *);
-+	void (*put_obj)(void *);
-+	int (*export_obj)(void *, struct se_portal_group_s *,
-+				struct se_lun_s *);
-+	void (*unexport_obj)(void *, struct se_portal_group_s *,
-+				struct se_lun_s *);
-+	int (*transport_setup_cmd)(void *, struct se_cmd_s *);
-+	int (*active_tasks)(void *);
-+	int (*add_tasks)(void *, struct se_cmd_s *);
-+	int (*execute_tasks)(void *);
-+	int (*depth_left)(void *);
-+	int (*queue_depth)(void *);
-+	int (*blocksize)(void *);
-+	int (*max_sectors)(void *);
-+	unsigned long long (*end_lba)(void *, int);
-+	unsigned long long (*free_sectors)(void *);
-+	unsigned long long (*get_next_lba)(void *, unsigned long long);
-+	unsigned long long (*total_sectors)(void *);
-+	int (*do_se_mem_map)(void *, struct se_task_s *, struct list_head *,
-+			void *, struct se_mem_s *, struct se_mem_s **,
-+			u32 *, u32 *);
-+	int (*get_mem_buf)(void *, struct se_cmd_s *);
-+	int (*get_mem_SG)(void *, struct se_cmd_s *);
-+	map_func_t (*get_map_SG)(void *, int);
-+	map_func_t (*get_map_non_SG)(void *, int);
-+	map_func_t (*get_map_none)(void *);
-+	void *(*get_transport_req)(void *, struct se_task_s *);
-+	void (*free_tasks)(void *, struct se_cmd_s *);
-+	int (*activate)(void *);
-+	void (*deactivate)(void *);
-+	void (*notify_obj)(void *);
-+	int (*check_export)(void *);
-+	int (*check_online)(void *);
-+	int (*check_shutdown)(void *);
-+	void (*signal_shutdown)(void *);
-+	void (*clear_shutdown)(void *);
-+	int (*obj_start)(void *, struct se_transform_info_s *,
-+			unsigned long long);
-+	unsigned char *(*get_cdb)(void *, struct se_task_s *);
-+	u32 (*get_cdb_count)(void *, struct se_transform_info_s *,
-+				unsigned long long, u32, struct se_mem_s *,
-+				struct se_mem_s **, u32 *);
-+	u32 (*get_cdb_size)(void *, u32, unsigned char *);
-+	void (*generate_cdb)(void *, unsigned long long, u32 *,
-+				unsigned char *, int);
-+	int (*get_device_access)(void *);
-+	int (*get_device_type)(void *);
-+	int (*check_DMA_handler)(void *);
-+	t10_wwn_t *(*get_t10_wwn)(void *);
-+	int (*get_task_timeout)(void *);
-+	int (*task_failure_complete)(void *, struct se_cmd_s *);
-+	int (*add_obj_to_lun)(struct se_portal_group_s *, struct se_lun_s *);
-+	int (*del_obj_from_lun)(struct se_portal_group_s *, struct se_lun_s *);
-+	struct se_obj_lun_type_s *(*get_next_obj_api)(void *, void **);
-+	int (*obtain_obj_lock)(void *);
-+	int (*release_obj_lock)(void *);
-+} se_obj_lun_type_t;
++++ b/include/target/target_core_ua.h
+@@ -0,0 +1,36 @@
++#ifndef TARGET_CORE_UA_H
 +
 +/*
-+ * object template for se_device_t storage objects
++ * From spc4r17, Table D.1: ASC and ASCQ Assignement
 + */
-+extern se_obj_lun_type_t dev_obj_template;
++#define ASCQ_29H_POWER_ON_RESET_OR_BUS_DEVICE_RESET_OCCURED	0x00
++#define ASCQ_29H_POWER_ON_OCCURRED				0x01
++#define ASCQ_29H_SCSI_BUS_RESET_OCCURED				0x02
++#define ASCQ_29H_BUS_DEVICE_RESET_FUNCTION_OCCURRED		0x03
++#define ASCQ_29H_DEVICE_INTERNAL_RESET				0x04
++#define ASCQ_29H_TRANSCEIVER_MODE_CHANGED_TO_SINGLE_ENDED	0x05
++#define ASCQ_29H_TRANSCEIVER_MODE_CHANGED_TO_LVD		0x06
++#define ASCQ_29H_NEXUS_LOSS_OCCURRED				0x07
 +
-+#endif /* TARGET_CORE_SEOBJ_H */
++#define ASCQ_2AH_PARAMETERS_CHANGED				0x00
++#define ASCQ_2AH_MODE_PARAMETERS_CHANGED			0x01
++#define ASCQ_2AH_LOG_PARAMETERS_CHANGED				0x02
++#define ASCQ_2AH_RESERVATIONS_PREEMPTED				0x03
++#define ASCQ_2AH_RESERVATIONS_RELEASED				0x04
++#define ASCQ_2AH_REGISTRATIONS_PREEMPTED			0x05
++#define ASCQ_2AH_ASYMMETRIC_ACCESS_STATE_CHANGED		0x06
++#define ASCQ_2AH_IMPLICT_ASYMMETRIC_ACCESS_STATE_TRANSITION_FAILED 0x07
++#define ASCQ_2AH_PRIORITY_CHANGED				0x08
++
++#define ASCQ_2CH_PREVIOUS_RESERVATION_CONFLICT_STATUS		0x09
++
++extern struct kmem_cache *se_ua_cache;
++
++extern int core_scsi3_ua_check(struct se_cmd_s *, unsigned char *);
++extern int core_scsi3_ua_allocate(struct se_node_acl_s *, u32, u8, u8);
++extern void core_scsi3_ua_release_all(struct se_dev_entry_s *);
++extern void core_scsi3_ua_for_check_condition(struct se_cmd_s *, u8 *, u8 *);
++extern int core_scsi3_ua_clear_for_request_sense(struct se_cmd_s *,
++						u8 *, u8 *);
++
++#endif /* TARGET_CORE_UA_H */
 
 
