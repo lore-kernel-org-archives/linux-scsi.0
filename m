@@ -1,55 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/15] scsi: add __init/__exit macros to ibmvstgt.c
-Date: Fri, 18 Sep 2009 12:58:15 -0700
-Message-ID: <200909181958.n8IJwF2S004146@imap1.linux-foundation.org>
+Subject: [patch 06/15] ibmmca: fix buffer overflow
+Date: Fri, 18 Sep 2009 12:58:17 -0700
+Message-ID: <200909181958.n8IJwH4c004247@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34631 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56362 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756333AbZIRT6i (ORCPT
+	by vger.kernel.org with ESMTP id S1755063AbZIRT66 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 15:58:38 -0400
+	Fri, 18 Sep 2009 15:58:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, langa2@kph.uni-mainz.de
 
-From: Peter Huewe <peterhuewe@gmx.de>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Add the __init and __exit macros to the module_init / module_exit
-functions from drivers/scsi/ibmvscsi/ibmvstgt.c
+Allows i == IM_MAX_HOSTS, which is out of range.
 
-Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: Michael Lang <langa2@kph.uni-mainz.de>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmmca.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
-+++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -955,7 +955,7 @@ static struct srp_function_template ibmv
- 	.it_nexus_response = ibmvstgt_it_nexus_response,
- };
+diff -puN drivers/scsi/ibmmca.c~ibmmca-buffer-overflow drivers/scsi/ibmmca.c
+--- a/drivers/scsi/ibmmca.c~ibmmca-buffer-overflow
++++ a/drivers/scsi/ibmmca.c
+@@ -2335,7 +2335,7 @@ static int option_setup(char *str)
+ 	char *cur = str;
+ 	int i = 1;
  
--static int ibmvstgt_init(void)
-+static int __init ibmvstgt_init(void)
- {
- 	int err = -ENOMEM;
- 
-@@ -986,7 +986,7 @@ release_transport:
- 	return err;
- }
- 
--static void ibmvstgt_exit(void)
-+static void __exit ibmvstgt_exit(void)
- {
- 	printk("Unregister IBM virtual SCSI driver\n");
- 
+-	while (cur && isdigit(*cur) && i <= IM_MAX_HOSTS) {
++	while (cur && isdigit(*cur) && i < IM_MAX_HOSTS) {
+ 		ints[i++] = simple_strtoul(cur, NULL, 0);
+ 		if ((cur = strchr(cur, ',')) != NULL)
+ 			cur++;
 _
