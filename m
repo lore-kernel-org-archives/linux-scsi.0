@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 01/24] libfc: lport: fix minor documentation errors
-Date: Fri, 18 Sep 2009 15:48:53 -0700
-Message-ID: <20090918224853.5928.59059.stgit@localhost.localdomain>
+Subject: [PATCH 02/24] libfcoe: Allow FIP to be disabled by the driver
+Date: Fri, 18 Sep 2009 15:48:58 -0700
+Message-ID: <20090918224858.5928.50377.stgit@localhost.localdomain>
 References: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:62593 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:12201 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754018AbZIRWsu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:48:50 -0400
+	id S1757655AbZIRWsz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 18:48:55 -0400
 In-Reply-To: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,83 +19,66 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-Fix minor errors.
-A debug message said an RLIR was received instead of ECHO.
-"Expected" was misspelled in several places.
-Fix a type cast from u32 to __be32.
+Allow FIP to be disabled by the driver for devices
+that want to use libfcoe in non-FIP mode.
 
-Rob, Some of these may have been also taken care of in your
-other doc cleanup patch.  Feel free to fold them in.
+The driver merely sets the fcoe_ctlr mode to the state which
+should be entered when the link comes up.  The default is auto.
+No change is needed for fcoe.c which uses auto mode.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |    6 ++++--
+ include/scsi/libfcoe.h      |    2 ++
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index a80c61a..278fb04 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -385,7 +385,7 @@ static void fc_lport_add_fc4_type(struct fc_lport *lport, enum fc_fh_type type)
-  * @fp:	   The RLIR request frame
-  * @lport: Fibre Channel local port recieving the RLIR
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
-  */
- static void fc_lport_recv_rlir_req(struct fc_seq *sp, struct fc_frame *fp,
-@@ -404,7 +404,7 @@ static void fc_lport_recv_rlir_req(struct fc_seq *sp, struct fc_frame *fp,
-  * @fp:	   ECHO request frame
-  * @lport: The local port recieving the ECHO
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
-  */
- static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
-@@ -417,7 +417,7 @@ static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
- 	void *dp;
- 	u32 f_ctl;
- 
--	FC_LPORT_DBG(lport, "Received RLIR request while in state %s\n",
-+	FC_LPORT_DBG(lport, "Received ECHO request while in state %s\n",
- 		     fc_lport_state(lport));
- 
- 	len = fr_len(in_fp) - sizeof(struct fc_frame_header);
-@@ -430,7 +430,7 @@ static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
- 	if (fp) {
- 		dp = fc_frame_payload_get(fp, len);
- 		memcpy(dp, pp, len);
--		*((u32 *)dp) = htonl(ELS_LS_ACC << 24);
-+		*((__be32 *)dp) = htonl(ELS_LS_ACC << 24);
- 		sp = lport->tt.seq_start_next(sp);
- 		f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ | FC_FC_END_SEQ;
- 		fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
-@@ -441,12 +441,12 @@ static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
- }
- 
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index a563c99..b1e4d25 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -110,6 +110,7 @@ static inline int fcoe_ctlr_fcf_usable(struct fcoe_fcf *fcf)
+ void fcoe_ctlr_init(struct fcoe_ctlr *fip)
+ {
+ 	fip->state = FIP_ST_LINK_WAIT;
++	fip->mode = FIP_ST_AUTO;
+ 	INIT_LIST_HEAD(&fip->fcfs);
+ 	spin_lock_init(&fip->lock);
+ 	fip->flogi_oxid = FC_XID_UNKNOWN;
+@@ -262,11 +263,12 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ 		spin_unlock_bh(&fip->lock);
+ 		fc_linkup(fip->lp);
+ 	} else if (fip->state == FIP_ST_LINK_WAIT) {
+-		fip->state = FIP_ST_AUTO;
++		fip->state = fip->mode;
+ 		fip->last_link = 1;
+ 		fip->link = 1;
+ 		spin_unlock_bh(&fip->lock);
+-		LIBFCOE_FIP_DBG("%s", "setting AUTO mode.\n");
++		if (fip->state == FIP_ST_AUTO)
++			LIBFCOE_FIP_DBG("%s", "setting AUTO mode.\n");
+ 		fc_linkup(fip->lp);
+ 		fcoe_ctlr_solicit(fip, NULL);
+ 	} else
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 76d08c9..2344a00 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -55,6 +55,7 @@ enum fip_state {
  /**
-- * fc_lport_recv_echo_req() - Handle received Request Node ID data request
-+ * fc_lport_recv_rnid_req() - Handle received Request Node ID data request
-  * @sp:	   The sequence in the RNID exchange
-  * @fp:	   The RNID request frame
-  * @lport: The local port recieving the RNID
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
+  * struct fcoe_ctlr - FCoE Controller and FIP state
+  * @state:	   internal FIP state for network link and FIP or non-FIP mode.
++ * @mode:	   LLD-selected mode.
+  * @lp:		   &fc_lport: libfc local port.
+  * @sel_fcf:	   currently selected FCF, or NULL.
+  * @fcfs:	   list of discovered FCFs.
+@@ -89,6 +90,7 @@ enum fip_state {
   */
- static void fc_lport_recv_rnid_req(struct fc_seq *sp, struct fc_frame *in_fp,
-@@ -742,7 +742,7 @@ static void fc_lport_enter_ready(struct fc_lport *lport)
-  * Accept it with the common service parameters indicating our N port.
-  * Set up to do a PLOGI if we have the higher-number WWPN.
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
-  */
- static void fc_lport_recv_flogi_req(struct fc_seq *sp_in,
+ struct fcoe_ctlr {
+ 	enum fip_state state;
++	enum fip_state mode;
+ 	struct fc_lport *lp;
+ 	struct fcoe_fcf *sel_fcf;
+ 	struct list_head fcfs;
 
