@@ -1,46 +1,35 @@
-From: akpm@linux-foundation.org
-Subject: [patch 09/15] drivers/scsi/u14-34f.c: fix uffer overflow
-Date: Fri, 18 Sep 2009 12:58:19 -0700
-Message-ID: <200909181958.n8IJwKel004357@imap1.linux-foundation.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 00/20] cciss: fix scan_thread, sysfs stuff,
+	dynamically allocate per drive structure
+Date: Fri, 18 Sep 2009 22:14:02 +0200
+Message-ID: <20090918201402.GP23126@kernel.dk>
+References: <20090917184310.15105.43508.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36899 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758001AbZIRUCC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 16:02:02 -0400
+Received: from brick.kernel.dk ([93.163.65.50]:47028 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758001AbZIRUN7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 16:13:59 -0400
+Content-Disposition: inline
+In-Reply-To: <20090917184310.15105.43508.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, andrew.patterson@hp.com, mikem@beardog.cce.hp.com
 
-From: Roel Kluin <roel.kluin@gmail.com>
+On Thu, Sep 17 2009, Stephen M. Cameron wrote:
+> The following series cleans up the broken scan_thread code,
+> allows triggering of the scan_thread via sysfs, dynamically
+> allocates the per device structure for each logical drive as needed
+> instead of all at once at driver init time, fixes a bug in
+> logical drive addressing (seen on MSA2012), and adds lunid,
+> raid_level, and usage_count attributes in sysfs for each
+> logical drive.
 
-This allows i == MAX_INT_PARAM, which is out of range for ints[]
+Thanks Stephen, I've queued it up. I'll look over it and comment if I
+find something problematic.
 
-Found with Parfait, http://research.sun.com/projects/parfait/
+-- 
+Jens Axboe
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Dario Ballabio <ballabio_dario@emc.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/u14-34f.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow drivers/scsi/u14-34f.c
---- a/drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow
-+++ a/drivers/scsi/u14-34f.c
-@@ -1070,7 +1070,7 @@ static int option_setup(char *str) {
-    char *cur = str;
-    int i = 1;
- 
--   while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+   while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
-       ints[i++] = simple_strtoul(cur, NULL, 0);
- 
-       if ((cur = strchr(cur, ',')) != NULL) cur++;
-_
