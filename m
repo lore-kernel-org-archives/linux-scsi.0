@@ -1,55 +1,47 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 11/24] libfc: removes unused disc_work and ex_list
-Date: Fri, 18 Sep 2009 15:49:55 -0700
-Message-ID: <20090918224955.5928.61156.stgit@localhost.localdomain>
+Subject: [PATCH 14/24] fcoe: initialize return value in fcoe_destroy
+Date: Fri, 18 Sep 2009 15:50:11 -0700
+Message-ID: <20090918225011.5928.65375.stgit@localhost.localdomain>
 References: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:12795 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:20713 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758792AbZIRWtw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:49:52 -0400
+	id S1758043AbZIRWuI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 18:50:08 -0400
 In-Reply-To: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Robert Love <robert.w.love@intel.com>
 
-From: Vasu Dev <vasu.dev@intel.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Reported-by: Alex Lyakas <alexl@mellanox.co.il>
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+When doing echo ethX > /sys..../destroy I am getting
+errors when the tear down succeeds. It looks like the
+reason for this is because the rc var is not getting set
+when the destruction works. This just sets it to zero.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_exch.c |    1 -
- include/scsi/libfc.h         |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index d157976..6e4adb8 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -90,7 +90,6 @@ struct fc_exch_mgr {
- 	struct kref	kref;
- 	u16		min_xid;
- 	u16		max_xid;
--	struct list_head	ex_list;
- 	mempool_t	*ep_pool;
- 	u16		pool_max_index;
- 	struct fc_exch_pool *pool;
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index b375dd5..0889c0e 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -821,7 +821,6 @@ struct fc_lport {
- 	struct mutex                   lp_mutex;
- 	struct list_head               list;
- 	struct delayed_work	       retry_work;
--	struct delayed_work	       disc_work;
- };
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 49d46a8..0a3affd 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1804,7 +1804,7 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ {
+ 	struct fcoe_interface *fcoe;
+ 	struct net_device *netdev;
+-	int rc;
++	int rc = 0;
  
- /*
+ 	mutex_lock(&fcoe_config_mutex);
+ #ifdef CONFIG_FCOE_MODULE
 
