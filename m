@@ -1,53 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/15] scsi: fix func names in kernel-doc
-Date: Fri, 18 Sep 2009 12:58:22 -0700
-Message-ID: <200909181958.n8IJwME8004414@imap1.linux-foundation.org>
+Subject: [patch 10/15] drivers/scsi/lpfc/lpfc_vport.c: fix read buffer overflow
+Date: Fri, 18 Sep 2009 12:58:20 -0700
+Message-ID: <200909181958.n8IJwKIq004360@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56112 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49479 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757962AbZIRUCB (ORCPT
+	by vger.kernel.org with ESMTP id S1754161AbZIRUCW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 16:02:01 -0400
+	Fri, 18 Sep 2009 16:02:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, James.Smart@Emulex.Com, jeykholt@cisco.com
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Fix scsi_devinfo.c kernel-doc function names to match actual function
-names.
+Check whether index is within bounds before testing the element.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: James Smart <James.Smart@Emulex.Com>
+Cc: Joe Eykholt <jeykholt@cisco.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_devinfo.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/scsi_devinfo.c~scsi-fix-func-names-in-kernel-doc drivers/scsi/scsi_devinfo.c
---- a/drivers/scsi/scsi_devinfo.c~scsi-fix-func-names-in-kernel-doc
-+++ a/drivers/scsi/scsi_devinfo.c
-@@ -454,7 +454,7 @@ int scsi_get_device_flags(struct scsi_de
- 
- 
- /**
-- * get_device_flags_keyed - get device specific flags from the dynamic device list.
-+ * scsi_get_device_flags_keyed - get device specific flags from the dynamic device list
-  * @sdev:       &scsi_device to get flags for
-  * @vendor:	vendor name
-  * @model:	model name
-@@ -685,7 +685,7 @@ MODULE_PARM_DESC(default_dev_flags,
- 		 "scsi default device flag integer value");
- 
- /**
-- * scsi_dev_info_list_delete - called from scsi.c:exit_scsi to remove the scsi_dev_info_list.
-+ * scsi_exit_devinfo - remove /proc/scsi/device_info & the scsi_dev_info_list
-  **/
- void scsi_exit_devinfo(void)
- {
+diff -puN drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow drivers/scsi/lpfc/lpfc_vport.c
+--- a/drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow
++++ a/drivers/scsi/lpfc/lpfc_vport.c
+@@ -769,7 +769,7 @@ lpfc_destroy_vport_work_array(struct lpf
+ 	int i;
+ 	if (vports == NULL)
+ 		return;
+-	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
++	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+ 		scsi_host_put(lpfc_shost_from_vport(vports[i]));
+ 	kfree(vports);
+ }
 _
