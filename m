@@ -1,200 +1,47 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 23/24] libfc: register FC4 features with the FC switch
-Date: Fri, 18 Sep 2009 15:51:04 -0700
-Message-ID: <20090918225104.5928.24869.stgit@localhost.localdomain>
+Subject: [PATCH 24/24] MAINTAINERS: Update for libfc, libfcoe, fcoe
+Date: Fri, 18 Sep 2009 15:51:10 -0700
+Message-ID: <20090918225110.5928.8928.stgit@localhost.localdomain>
 References: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5440 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:2918 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753500AbZIRWvB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:51:01 -0400
+	id S1758865AbZIRWvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 18:51:06 -0400
 In-Reply-To: <20090918224847.5928.52092.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-From: Joe Eykholt <jeykholt@cisco.com>
-
-Customers and certification tests have pointed out that we don't
-show up on the switch management software as an initiator.
-
-On some MDS switches 'show fcns database' command shows libfc
-initiators as 'fcp' not 'fcp:init' like other initiators.
-
-On others switches, I think the switch gets the features by doing a PRLI,
-but it may be only certain models or under certain configurations.
-
-Fix this by registering our FC4 features with the RFF_ID CT request
-after local port login and after the RFT_ID.
-
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
+Adding FCoE information to the MAINTAINERS file.
 ---
 
- drivers/scsi/libfc/fc_lport.c |   12 +++++++++++-
- include/scsi/fc/fc_fcp.h      |    6 ++++++
- include/scsi/fc/fc_ns.h       |   13 ++++++++++++-
- include/scsi/fc_encode.h      |   12 ++++++++++++
- include/scsi/libfc.h          |    2 ++
- 5 files changed, 43 insertions(+), 2 deletions(-)
+ MAINTAINERS |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 58c145c..3de3e6e 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -122,6 +122,7 @@ static const char *fc_lport_state_names[] = {
- 	[LPORT_ST_RSNN_NN] =  "RSNN_NN",
- 	[LPORT_ST_RSPN_ID] =  "RSPN_ID",
- 	[LPORT_ST_RFT_ID] =   "RFT_ID",
-+	[LPORT_ST_RFF_ID] =   "RFF_ID",
- 	[LPORT_ST_SCR] =      "SCR",
- 	[LPORT_ST_READY] =    "Ready",
- 	[LPORT_ST_LOGO] =     "LOGO",
-@@ -1034,6 +1035,7 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
- 			case LPORT_ST_RSNN_NN:
- 			case LPORT_ST_RSPN_ID:
- 			case LPORT_ST_RFT_ID:
-+			case LPORT_ST_RFF_ID:
- 			case LPORT_ST_SCR:
- 			case LPORT_ST_DNS:
- 			case LPORT_ST_FLOGI:
-@@ -1070,7 +1072,7 @@ static void fc_lport_ns_resp(struct fc_seq *sp, struct fc_frame *fp,
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9117b65..869d6e5 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2004,6 +2004,17 @@ S:	Supported
+ F:	Documentation/fault-injection/
+ F:	lib/fault-inject.c
  
- 	mutex_lock(&lport->lp_mutex);
- 
--	if (lport->state < LPORT_ST_RNN_ID || lport->state > LPORT_ST_RFT_ID) {
-+	if (lport->state < LPORT_ST_RNN_ID || lport->state > LPORT_ST_RFF_ID) {
- 		FC_LPORT_DBG(lport, "Received a name server response, "
- 			     "but in state %s\n", fc_lport_state(lport));
- 		if (IS_ERR(fp))
-@@ -1101,6 +1103,9 @@ static void fc_lport_ns_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			fc_lport_enter_ns(lport, LPORT_ST_RFT_ID);
- 			break;
- 		case LPORT_ST_RFT_ID:
-+			fc_lport_enter_ns(lport, LPORT_ST_RFF_ID);
-+			break;
-+		case LPORT_ST_RFF_ID:
- 			fc_lport_enter_scr(lport);
- 			break;
- 		default:
-@@ -1235,6 +1240,10 @@ static void fc_lport_enter_ns(struct fc_lport *lport, enum fc_lport_state state)
- 		cmd = FC_NS_RFT_ID;
- 		size += sizeof(struct fc_ns_rft);
- 		break;
-+	case LPORT_ST_RFF_ID:
-+		cmd = FC_NS_RFF_ID;
-+		size += sizeof(struct fc_ns_rff_id);
-+		break;
- 	default:
- 		fc_lport_error(lport, NULL);
- 		return;
-@@ -1317,6 +1326,7 @@ static void fc_lport_timeout(struct work_struct *work)
- 	case LPORT_ST_RSNN_NN:
- 	case LPORT_ST_RSPN_ID:
- 	case LPORT_ST_RFT_ID:
-+	case LPORT_ST_RFF_ID:
- 		fc_lport_enter_ns(lport, lport->state);
- 		break;
- 	case LPORT_ST_SCR:
-diff --git a/include/scsi/fc/fc_fcp.h b/include/scsi/fc/fc_fcp.h
-index 5d38f19..29ecb0b 100644
---- a/include/scsi/fc/fc_fcp.h
-+++ b/include/scsi/fc/fc_fcp.h
-@@ -196,4 +196,10 @@ struct fcp_srr {
- 	__u8		srr_resvd2[3];	/* reserved */
- };
- 
-+/*
-+ * Feature bits in name server FC-4 Features object.
-+ */
-+#define	FCP_FEAT_TARG	(1 << 0)	/* target function supported */
-+#define	FCP_FEAT_INIT	(1 << 1)	/* initiator function supported */
++FCOE SUBSYSTEM (libfc, libfcoe, fcoe)
++M:	Robert Love <robert.w.love@intel.com>
++L:	devel@open-fcoe.org
++W:	www.Open-FCoE.org
++S:	Supported
++F:	drivers/scsi/libfc/
++F:	drivers/scsi/fcoe/
++F:	include/scsi/fc/
++F:	include/scsi/libfc.h
++F:	include/scsi/libfcoe.h
 +
- #endif /* _FC_FCP_H_ */
-diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
-index f4d354e..e7d3ac4 100644
---- a/include/scsi/fc/fc_ns.h
-+++ b/include/scsi/fc/fc_ns.h
-@@ -46,10 +46,11 @@ enum fc_ns_req {
- 	FC_NS_GID_FT =	0x0171,		/* get IDs by FC4 type */
- 	FC_NS_GPN_FT =	0x0172,		/* get port names by FC4 type */
- 	FC_NS_GID_PT =	0x01a1,		/* get IDs by port type */
--	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
- 	FC_NS_RPN_ID =	0x0212,		/* reg port name for ID */
- 	FC_NS_RNN_ID =	0x0213,		/* reg node name for ID */
-+	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
- 	FC_NS_RSPN_ID =	0x0218,		/* reg symbolic port name */
-+	FC_NS_RFF_ID =	0x021f,		/* reg FC4 Features for ID */
- 	FC_NS_RSNN_NN =	0x0239,		/* reg symbolic node name */
- };
- 
-@@ -178,4 +179,14 @@ struct fc_ns_rspn {
- 	char		fr_name[];
- } __attribute__((__packed__));
- 
-+/*
-+ * RFF_ID request - register FC-4 Features for ID.
-+ */
-+struct fc_ns_rff_id {
-+	struct fc_ns_fid fr_fid;	/* port ID object */
-+	__u8		fr_resvd[2];
-+	__u8		fr_feat;	/* FC-4 Feature bits */
-+	__u8		fr_type;	/* FC-4 type */
-+} __attribute__((__packed__));
-+
- #endif /* _FC_NS_H_ */
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index ab2260c..8eb0a0f 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -32,6 +32,7 @@ struct fc_ct_req {
- 		struct fc_ns_gid_ft gid;
- 		struct fc_ns_rn_id  rn;
- 		struct fc_ns_rft rft;
-+		struct fc_ns_rff_id rff;
- 		struct fc_ns_fid fid;
- 		struct fc_ns_rsnn snn;
- 		struct fc_ns_rspn spn;
-@@ -131,6 +132,17 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 		ct->payload.rft.fts = lport->fcts;
- 		break;
- 
-+	case FC_NS_RFF_ID:
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rff_id));
-+		hton24(ct->payload.rff.fr_fid.fp_fid,
-+		       fc_host_port_id(lport->host));
-+		ct->payload.rff.fr_type = FC_TYPE_FCP;
-+		if (lport->service_params & FCP_SPPF_INIT_FCN)
-+			ct->payload.rff.fr_feat = FCP_FEAT_INIT;
-+		if (lport->service_params & FCP_SPPF_TARG_FCN)
-+			ct->payload.rff.fr_feat |= FCP_FEAT_TARG;
-+		break;
-+
- 	case FC_NS_RNN_ID:
- 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rn_id));
- 		hton24(ct->payload.rn.fr_fid.fp_fid,
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 62ee644..fd2abfa 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -62,6 +62,7 @@
-  * @LPORT_ST_DNS:      Waiting for name server remote port to become ready
-  * @LPORT_ST_RPN_ID:   Register port name by ID (RPN_ID) sent
-  * @LPORT_ST_RFT_ID:   Register Fibre Channel types by ID (RFT_ID) sent
-+ * @LPORT_ST_RFF_ID:   Register FC-4 Features by ID (RFF_ID) sent
-  * @LPORT_ST_SCR:      State Change Register (SCR) sent
-  * @LPORT_ST_READY:    Ready for use
-  * @LPORT_ST_LOGO:     Local port logout (LOGO) sent
-@@ -75,6 +76,7 @@ enum fc_lport_state {
- 	LPORT_ST_RSNN_NN,
- 	LPORT_ST_RSPN_ID,
- 	LPORT_ST_RFT_ID,
-+	LPORT_ST_RFF_ID,
- 	LPORT_ST_SCR,
- 	LPORT_ST_READY,
- 	LPORT_ST_LOGO,
+ FILE LOCKING (flock() and fcntl()/lockf())
+ M:	Matthew Wilcox <matthew@wil.cx>
+ L:	linux-fsdevel@vger.kernel.org
 
