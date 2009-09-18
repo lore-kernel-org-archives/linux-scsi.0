@@ -1,44 +1,40 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC PATCH 12/19] Target_Core_Mod READ/WRITE command descriptor
-	block generation code
-Date: Fri, 18 Sep 2009 15:08:51 -0700
-Message-ID: <1253311731.4498.155.camel@haakon2.linux-iscsi.org>
+Subject: [RFC PATCH 13/19] Target_Core_Mod Storage Engine Object
+	infrastructure
+Date: Fri, 18 Sep 2009 15:08:56 -0700
+Message-ID: <1253311736.4498.156.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp107.sbc.mail.gq1.yahoo.com ([67.195.14.110]:22987 "HELO
-	smtp107.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758743AbZIRWLx (ORCPT
+Received: from smtp106.sbc.mail.gq1.yahoo.com ([67.195.14.109]:25606 "HELO
+	smtp106.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758796AbZIRWL6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 18:11:53 -0400
+	Fri, 18 Sep 2009 18:11:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Daniel Walker <dwalker@fifo99.com>
 
-[RFC PATCH 12/19] Target_Core_Mod READ/WRITE command descriptor block generation code
+[RFC PATCH 13/19] Target_Core_Mod Storage Engine Object infrastructure
 
-This patch adds support for the generation of READ_6, READ_10, READ_12, READ_16,
-WRITE_6, WRITE_10, WRITE_12 and WRITE_16 command descriptor blocks when handling
-incoming fabric module requests that exceed the max_sectors presented for a storage
-object through struct se_subsystem_api_t.
+This patch adds the storage engine object (SEObject) infrastructure used by
+target_core_mod for accessing allocated se_device_t objects.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
  
-diff --git a/drivers/target/target_core_scdb.c b/drivers/target/target_core_scdb.c
+diff --git a/drivers/target/target_core_seobj.c b/drivers/target/target_core_seobj.c
 new file mode 100644
-index 0000000..ec111d9
+index 0000000..31fab2a
 --- /dev/null
-+++ b/drivers/target/target_core_scdb.c
-@@ -0,0 +1,154 @@
++++ b/drivers/target/target_core_seobj.c
+@@ -0,0 +1,679 @@
 +/*******************************************************************************
-+ * Filename:  target_core_scdb.c
++ * Filename:  target_core_seobj.c
 + *
-+ * This file contains the generic target engine Split CDB related functions.
-+ *
-+ * Copyright (c) 2004-2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
 + * Copyright (c) 2007-2009 Rising Tide Software, Inc.
 + * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
@@ -61,144 +57,669 @@ index 0000000..ec111d9
 + ******************************************************************************/
 +
 +
-+#define TARGET_CORE_SCDB_C
++#define TARGET_CORE_SEOBJ_C
 +
-+#include <linux/net.h>
 +#include <linux/string.h>
++#include <linux/timer.h>
++#include <linux/slab.h>
++#include <linux/blkdev.h>
++#include <linux/spinlock.h>
++#include <linux/smp_lock.h>
++#include <linux/in.h>
++#include <scsi/scsi.h>
 +
 +#include <target/target_core_base.h>
++#include <target/target_core_device.h>
 +#include <target/target_core_hba.h>
++#include <target/target_core_tpg.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_scdb.h>
++#include <target/target_core_plugin.h>
++#include <target/target_core_seobj.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_configfs.h>
 +
-+#undef TARGET_CORE_SCDB_C
++#undef TARGET_CORE_SEOBJ_C
 +
-+/*	split_cdb_XX_6():
-+ *
-+ *      21-bit LBA w/ 8-bit SECTORS
-+ */
-+void split_cdb_XX_6(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
-+{
-+	cdb[1] = (lba >> 16) & 0x1f;
-+	cdb[2] = (lba >> 8) & 0xff;
-+	cdb[3] = lba & 0xff;
-+	cdb[4] = *sectors & 0xff;
++#define MAKE_OBJ_TYPE(type, op1, op2)			\
++void type##_obj_##op1##_count(struct se_obj_s *obj)	\
++{							\
++	atomic_##op2(&obj->obj_access_count);		\
 +}
 +
-+void split_cdb_RW_6(
++#define MAKE_OBJ_TYPE_RET(type)				\
++int type##_obj_check_count(struct se_obj_s *obj)	\
++{							\
++	return atomic_read(&obj->obj_access_count);	\
++}
++
++MAKE_OBJ_TYPE(dev, inc, inc);
++MAKE_OBJ_TYPE(dev, dec, dec);
++MAKE_OBJ_TYPE_RET(dev);
++
++void dev_obj_get_obj_info(
++	void *p,
++	se_lun_t *lun,
++	unsigned long long bytes,
++	int state,
++	char *b,
++	int *bl)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	if (state)
++		transport_dump_dev_state(dev, b, bl);
++	transport_dump_dev_info((se_device_t *)p, lun, bytes, b, bl);
++}
++
++void dev_obj_get_plugin_info(void *p, char *b, int *bl)
++{
++	*bl += sprintf(b + *bl, "TCM Device Object Plugin %s\n",
++			DEV_OBJ_VERSION);
++}
++
++void *dev_obj_get_obj(void *p)
++{
++	return p;
++}
++
++se_queue_obj_t *dev_obj_get_queue_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->dev_queue_obj;
++}
++
++int dev_obj_claim_obj(void *p)
++{
++	return transport_generic_claim_phydevice((se_device_t *)p);
++}
++
++void dev_obj_release_obj(void *p)
++{
++	transport_generic_release_phydevice((se_device_t *)p, 1);
++}
++
++void dev_access_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	DEV_OBJ_API(dev)->inc_count(&dev->dev_access_obj);
++}
++
++void dev_deaccess_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	DEV_OBJ_API(dev)->dec_count(&dev->dev_access_obj);
++}
++
++void dev_put_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	core_put_hba(dev->se_hba);
++}
++
++int dev_obj_export(void *p, se_portal_group_t *tpg, se_lun_t *lun)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	se_port_t *port;
++
++	port = core_alloc_port(dev);
++	if (!(port))
++		return -1;
++
++	lun->se_dev = dev;
++	if (DEV_OBJ_API(dev)->activate(p) < 0) {
++		lun->se_dev = NULL;
++		kfree(port);
++		return -1;
++	}
++
++	DEV_OBJ_API(dev)->inc_count(&dev->dev_export_obj);
++
++	core_export_port(dev, tpg, port, lun);
++	return 0;
++}
++
++void dev_obj_unexport(void *p, se_portal_group_t *tpg, se_lun_t *lun)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	se_port_t *port = lun->lun_sep;
++
++	spin_lock(&dev->se_port_lock);
++	spin_lock(&lun->lun_sep_lock);
++	if (lun->lun_type_ptr == NULL) {
++		spin_unlock(&dev->se_port_lock);
++		spin_unlock(&lun->lun_sep_lock);
++		return;
++	}
++	spin_unlock(&lun->lun_sep_lock);
++
++	DEV_OBJ_API(dev)->dec_count(&dev->dev_export_obj);
++
++	core_release_port(dev, port);
++	spin_unlock(&dev->se_port_lock);
++
++	DEV_OBJ_API(dev)->deactivate(p);
++	lun->se_dev = NULL;
++}
++
++int dev_obj_transport_setup_cmd(void *p, se_cmd_t *cmd)
++{
++	transport_device_setup_cmd(cmd);
++	return 0;
++}
++
++int dev_obj_active_tasks(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return atomic_read(&dev->execute_tasks);
++}
++
++int dev_obj_add_tasks(void *p, se_cmd_t *cmd)
++{
++	transport_add_tasks_from_cmd(cmd);
++	return 0;
++}
++
++int dev_obj_execute_tasks(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	__transport_execute_tasks(dev);
++	return 0;
++}
++
++int dev_obj_depth_left(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return atomic_read(&dev->depth_left);
++}
++
++int dev_obj_queue_depth(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->queue_depth;
++}
++
++int dev_obj_blocksize(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return DEV_ATTRIB(dev)->block_size;
++}
++
++int dev_obj_max_sectors(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	if (TRANSPORT(dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV) {
++		return (DEV_ATTRIB(dev)->max_sectors >
++			TRANSPORT(dev)->get_max_sectors(dev) ?
++			TRANSPORT(dev)->get_max_sectors(dev) :
++			DEV_ATTRIB(dev)->max_sectors);
++	} else
++		return DEV_ATTRIB(dev)->max_sectors;
++}
++
++unsigned long long dev_obj_end_lba(void *p, int zero_lba)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	 return dev->dev_sectors_total + ((zero_lba) ? 1 : 0);
++}
++
++unsigned long long dev_obj_get_next_lba(void *p, unsigned long long lba)
++{
++	return lba;
++}
++
++unsigned long long dev_obj_total_sectors(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return  dev->dev_sectors_total + 1;
++}
++
++int dev_obj_do_se_mem_map(
++	void *p,
++	se_task_t *task,
++	struct list_head *se_mem_list,
++	void *in_mem,
++	se_mem_t *in_se_mem,
++	se_mem_t **out_se_mem,
++	u32 *se_mem_cnt,
++	u32 *task_offset)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	u32 tmp_task_offset = *task_offset;
++	int ret = 0;
++
++	/*
++	 * se_subsystem_api_t->do_se_mem_map is used when internal allocation
++	 * has been done by the transport plugin.
++	 */
++	if (TRANSPORT(dev)->do_se_mem_map) {
++		ret = TRANSPORT(dev)->do_se_mem_map(task, se_mem_list,
++				in_mem, in_se_mem, out_se_mem, se_mem_cnt,
++				task_offset);
++		if (ret == 0)
++			T_TASK(task->task_se_cmd)->t_task_se_num += *se_mem_cnt;
++
++		return ret;
++	}
++
++	/*
++	 * Assume default that transport plugin speaks preallocated
++	 * scatterlists.
++	 */
++	if (!(transport_calc_sg_num(task, in_se_mem, tmp_task_offset)))
++		return -1;
++
++	/*
++	 * se_task_t->task_sg now contains the struct scatterlist array.
++	 */
++	return transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
++		in_se_mem, out_se_mem, se_mem_cnt, task_offset);
++}
++
++int dev_obj_get_mem_buf(void *p, se_cmd_t *cmd)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	cmd->transport_allocate_resources = (TRANSPORT(dev)->allocate_buf) ?
++		TRANSPORT(dev)->allocate_buf : &transport_generic_allocate_buf;
++	cmd->transport_free_resources = (TRANSPORT(dev)->free_buf) ?
++		TRANSPORT(dev)->free_buf : NULL;
++
++	return 0;
++}
++
++int dev_obj_get_mem_SG(void *p, se_cmd_t *cmd)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	cmd->transport_allocate_resources = (TRANSPORT(dev)->allocate_DMA) ?
++		TRANSPORT(dev)->allocate_DMA : &transport_generic_get_mem;
++	cmd->transport_free_resources = (TRANSPORT(dev)->free_DMA) ?
++		TRANSPORT(dev)->free_DMA : NULL;
++
++	return 0;
++}
++
++map_func_t dev_obj_get_map_SG(void *p, int rw)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return (rw == SE_DIRECTION_WRITE) ? dev->transport->spc->write_SG :
++		dev->transport->spc->read_SG;
++}
++
++map_func_t dev_obj_get_map_non_SG(void *p, int rw)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return (rw == SE_DIRECTION_WRITE) ? dev->transport->spc->write_non_SG :
++		dev->transport->spc->read_non_SG;
++}
++
++map_func_t dev_obj_get_map_none(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->transport->spc->none;
++}
++
++void *dev_obj_get_transport_req(void *p, se_task_t *task)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	task->se_dev = dev;
++
++	return dev->transport->allocate_request(task, dev);
++}
++
++void dev_obj_free_tasks(void *p, se_cmd_t *cmd)
++{
++	transport_free_dev_tasks(cmd);
++}
++
++int dev_obj_activate(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	se_dev_start(dev);
++	return 0;
++}
++
++void dev_obj_deactivate(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	se_dev_stop(dev);
++}
++
++void dev_obj_notify_obj(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	wake_up_interruptible(&dev->dev_queue_obj->thread_wq);
++}
++
++int dev_obj_check_online(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	int ret;
++
++	spin_lock(&dev->dev_status_lock);
++	ret = ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
++	       (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED)) ? 0 : 1;
++	spin_unlock(&dev->dev_status_lock);
++
++	return ret;
++}
++
++int dev_obj_check_shutdown(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++	int ret;
++
++	spin_lock(&dev->dev_status_lock);
++	ret = (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN);
++	spin_unlock(&dev->dev_status_lock);
++
++	return ret;
++}
++
++void dev_obj_signal_shutdown(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	spin_lock(&dev->dev_status_lock);
++	if ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
++	    (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED) ||
++	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_ACTIVATED) ||
++	    (dev->dev_status & TRANSPORT_DEVICE_OFFLINE_DEACTIVATED)) {
++		dev->dev_status |= TRANSPORT_DEVICE_SHUTDOWN;
++		dev->dev_status &= ~TRANSPORT_DEVICE_ACTIVATED;
++		dev->dev_status &= ~TRANSPORT_DEVICE_DEACTIVATED;
++		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_ACTIVATED;
++		dev->dev_status &= ~TRANSPORT_DEVICE_OFFLINE_DEACTIVATED;
++
++		wake_up_interruptible(&dev->dev_queue_obj->thread_wq);
++	}
++	spin_unlock(&dev->dev_status_lock);
++}
++
++void dev_obj_clear_shutdown(void *p)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	spin_lock(&dev->dev_status_lock);
++	if (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN) {
++		dev->dev_status &= ~TRANSPORT_DEVICE_SHUTDOWN;
++		dev->dev_status |= TRANSPORT_DEVICE_DEACTIVATED;
++	}
++	spin_unlock(&dev->dev_status_lock);
++}
++
++unsigned char *dev_obj_get_cdb(
++	void *p,
++	se_task_t *task)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return dev->transport->get_cdb(task);
++}
++
++int dev_obj_start(
++	void *p,
++	se_transform_info_t *ti,
++	unsigned long long starting_lba)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	return transport_generic_obj_start(ti, DEV_OBJ_API(dev),
++		p, starting_lba);
++}
++
++u32 dev_obj_get_cdb_count(
++	void *p,
++	se_transform_info_t *ti,
++	unsigned long long lba,
++	u32 sectors,
++	se_mem_t *se_mem_in,
++	se_mem_t **se_mem_out,
++	u32 *task_offset_in)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	ti->ti_dev = dev;
++	return transport_generic_get_cdb_count(ti->ti_se_cmd, ti,
++		DEV_OBJ_API(dev), p, lba, sectors, se_mem_in, se_mem_out,
++		task_offset_in);
++}
++
++u32 dev_obj_get_cdb_size(
++	void *p,
++	u32 sectors,
++	unsigned char *cdb)
++{
++	se_device_t *dev  = (se_device_t *)p;
++
++	if (TRANSPORT(dev)->get_device_type(dev) == TYPE_TAPE) {
++		if (cdb[1] & 1) { /* sectors */
++			return DEV_ATTRIB(dev)->block_size * sectors;
++		} else /* bytes */
++			return sectors;
++	}
++
++	/* sectors */
++#if 0
++	printk(KERN_INFO "Returning block_size: %u, sectors: %u == %u for"
++			" %s object\n", DEV_ATTRIB(dev)->block_size, sectors,
++			DEV_ATTRIB(dev)->block_size * sectors,
++			TRANSPORT(dev)->name);
++#endif
++	return DEV_ATTRIB(dev)->block_size * sectors;
++}
++
++void dev_obj_generate_cdb(
++	void *p,
 +	unsigned long long lba,
 +	u32 *sectors,
 +	unsigned char *cdb,
 +	int rw)
 +{
-+	cdb[0] = (rw) ? 0x0a : 0x08;
-+	split_cdb_XX_6(lba, sectors, &cdb[0]);
++	se_device_t *dev = (se_device_t *)p;
++
++	dev->dev_generate_cdb(lba, sectors, cdb, rw);
 +}
 +
-+/*	split_cdb_XX_10():
-+ *
-+ *	32-bit LBA w/ 16-bit SECTORS
-+ */
-+void split_cdb_XX_10(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++int dev_obj_get_device_access(void *p)
 +{
-+	cdb[2] = (lba >> 24) & 0xff;
-+	cdb[3] = (lba >> 16) & 0xff;
-+	cdb[4] = (lba >> 8) & 0xff;
-+	cdb[5] = lba & 0xff;
-+	cdb[7] = (*sectors >> 8) & 0xff;
-+	cdb[8] = *sectors & 0xff;
++	se_device_t *dev = (se_device_t *)p;
++
++	return (dev->dev_flags & DF_READ_ONLY) ? 0 : 1;
 +}
 +
-+void split_cdb_RW_10(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++int dev_obj_get_device_type(void *p)
 +{
-+	cdb[0] = (rw) ? 0x2a : 0x28;
-+	split_cdb_XX_10(lba, sectors, &cdb[0]);
++	se_device_t *dev = (se_device_t *)p;
++
++	return TRANSPORT(dev)->get_device_type(dev);
 +}
 +
-+/*	split_cdb_XX_12():
-+ *
-+ *	32-bit LBA w/ 32-bit SECTORS
-+ */
-+void split_cdb_XX_12(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++int dev_obj_check_DMA_handler(void *p)
 +{
-+	cdb[2] = (lba >> 24) & 0xff;
-+	cdb[3] = (lba >> 16) & 0xff;
-+	cdb[4] = (lba >> 8) & 0xff;
-+	cdb[5] = lba & 0xff;
-+	cdb[6] = (*sectors >> 24) & 0xff;
-+	cdb[7] = (*sectors >> 16) & 0xff;
-+	cdb[8] = (*sectors >> 8) & 0xff;
-+	cdb[9] = *sectors & 0xff;
++	se_device_t *dev = (se_device_t *)p;
++
++	if (!dev->transport) {
++		printk(KERN_ERR "se_device_t->transport is NULL!\n");
++		BUG();
++	}
++
++	return (TRANSPORT(dev)->allocate_DMA != NULL);
 +}
 +
-+void split_cdb_RW_12(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++t10_wwn_t *dev_obj_get_t10_wwn(void *p)
 +{
-+	cdb[0] = (rw) ? 0xaa : 0xa8;
-+	split_cdb_XX_12(lba, sectors, &cdb[0]);
++	se_device_t *dev = (se_device_t *)p;
++
++	return DEV_T10_WWN(dev);
 +}
 +
-+/*	split_cdb_XX_16():
-+ *
-+ *	64-bit LBA w/ 32-bit SECTORS
-+ */
-+void split_cdb_XX_16(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb)
++int dev_obj_get_task_timeout(void *p)
 +{
-+	cdb[2] = (lba >> 56) & 0xff;
-+	cdb[3] = (lba >> 48) & 0xff;
-+	cdb[4] = (lba >> 40) & 0xff;
-+	cdb[5] = (lba >> 32) & 0xff;
-+	cdb[6] = (lba >> 24) & 0xff;
-+	cdb[7] = (lba >> 16) & 0xff;
-+	cdb[8] = (lba >> 8) & 0xff;
-+	cdb[9] = lba & 0xff;
-+	cdb[10] = (*sectors >> 24) & 0xff;
-+	cdb[11] = (*sectors >> 16) & 0xff;
-+	cdb[12] = (*sectors >> 8) & 0xff;
-+	cdb[13] = *sectors & 0xff;
++	se_device_t *dev = (se_device_t *)p;
++
++	return DEV_ATTRIB(dev)->task_timeout;
 +}
 +
-+void split_cdb_RW_16(
-+	unsigned long long lba,
-+	u32 *sectors,
-+	unsigned char *cdb,
-+	int rw)
++int dev_add_obj_to_lun(se_portal_group_t *tpg, se_lun_t *lun)
 +{
-+	cdb[0] = (rw) ? 0x8a : 0x88;
-+	split_cdb_XX_16(lba, sectors, &cdb[0]);
++	return 0;
 +}
-diff --git a/include/target/target_core_scdb.h b/include/target/target_core_scdb.h
++
++int dev_del_obj_from_lun(se_portal_group_t *tpg, se_lun_t *lun)
++{
++	return core_dev_del_lun(tpg, lun->unpacked_lun);
++}
++
++se_obj_lun_type_t *dev_get_next_obj_api(void *p, void **next_p)
++{
++	se_device_t *dev = (se_device_t *)p;
++
++	*next_p = dev;
++	return DEV_OBJ_API(dev);
++}
++
++int dev_obtain_obj_lock(void *p)
++{
++	return 0;
++}
++
++int dev_release_obj_lock(void *p)
++{
++	return 0;
++}
++
++se_obj_lun_type_t dev_obj_template = {
++	.se_obj_type		= TRANSPORT_LUN_TYPE_DEVICE,
++	.get_obj_info		= dev_obj_get_obj_info,
++	.get_plugin_info	= dev_obj_get_plugin_info,
++	.get_obj		= dev_obj_get_obj,
++	.get_queue_obj		= dev_obj_get_queue_obj,
++	.claim_obj		= dev_obj_claim_obj,
++	.release_obj		= dev_obj_release_obj,
++	.inc_count		= dev_obj_inc_count,
++	.dec_count		= dev_obj_dec_count,
++	.check_count		= dev_obj_check_count,
++	.access_obj		= dev_access_obj,
++	.deaccess_obj		= dev_deaccess_obj,
++	.put_obj		= dev_put_obj,
++	.export_obj		= dev_obj_export,
++	.unexport_obj		= dev_obj_unexport,
++	.transport_setup_cmd	= dev_obj_transport_setup_cmd,
++	.active_tasks		= dev_obj_active_tasks,
++	.add_tasks		= dev_obj_add_tasks,
++	.execute_tasks		= dev_obj_execute_tasks,
++	.depth_left		= dev_obj_depth_left,
++	.queue_depth		= dev_obj_queue_depth,
++	.blocksize		= dev_obj_blocksize,
++	.max_sectors		= dev_obj_max_sectors,
++	.end_lba		= dev_obj_end_lba,
++	.get_next_lba		= dev_obj_get_next_lba,
++	.total_sectors		= dev_obj_total_sectors,
++	.do_se_mem_map		= dev_obj_do_se_mem_map,
++	.get_mem_buf		= dev_obj_get_mem_buf,
++	.get_mem_SG		= dev_obj_get_mem_SG,
++	.get_map_SG		= dev_obj_get_map_SG,
++	.get_map_non_SG		= dev_obj_get_map_non_SG,
++	.get_map_none		= dev_obj_get_map_none,
++	.get_transport_req	= dev_obj_get_transport_req,
++	.free_tasks		= dev_obj_free_tasks,
++	.activate		= dev_obj_activate,
++	.deactivate		= dev_obj_deactivate,
++	.notify_obj		= dev_obj_notify_obj,
++	.check_online		= dev_obj_check_online,
++	.check_shutdown		= dev_obj_check_shutdown,
++	.signal_shutdown	= dev_obj_signal_shutdown,
++	.clear_shutdown		= dev_obj_clear_shutdown,
++	.get_cdb		= dev_obj_get_cdb,
++	.obj_start		= dev_obj_start,
++	.get_cdb_count		= dev_obj_get_cdb_count,
++	.get_cdb_size		= dev_obj_get_cdb_size,
++	.generate_cdb		= dev_obj_generate_cdb,
++	.get_device_access	= dev_obj_get_device_access,
++	.get_device_type	= dev_obj_get_device_type,
++	.check_DMA_handler	= dev_obj_check_DMA_handler,
++	.get_t10_wwn		= dev_obj_get_t10_wwn,
++	.get_task_timeout	= dev_obj_get_task_timeout,
++	.add_obj_to_lun		= dev_add_obj_to_lun,
++	.del_obj_from_lun	= dev_del_obj_from_lun,
++	.get_next_obj_api	= dev_get_next_obj_api,
++	.obtain_obj_lock	= dev_obtain_obj_lock,
++	.release_obj_lock	= dev_release_obj_lock,
++};
++
++se_obj_lun_type_t *se_obj_get_api(u32 plugin_loc)
++{
++	se_plugin_class_t *pc;
++	se_plugin_t *p;
++
++	pc = plugin_get_class(PLUGIN_TYPE_OBJ);
++	if (!(pc))
++		return NULL;
++
++	spin_lock(&pc->plugin_lock);
++	if (plugin_loc > pc->max_plugins) {
++		printk(KERN_ERR "Passed plugin_loc: %u exceeds pc->max_plugins:"
++			" %d\n", plugin_loc, pc->max_plugins);
++		goto out;
++	}
++
++	p = &pc->plugin_array[plugin_loc];
++	if (!p->plugin_obj) {
++		printk(KERN_ERR "Passed plugin_loc: %u does not exist!\n",
++				plugin_loc);
++		goto out;
++	}
++	spin_unlock(&pc->plugin_lock);
++
++	return (se_obj_lun_type_t *)p->plugin_obj;
++out:
++	spin_unlock(&pc->plugin_lock);
++	return NULL;
++}
++
++
++int se_obj_load_plugins(void)
++{
++	int ret = 0;
++
++	dev_obj_template.obj_plugin = plugin_register((void *)&dev_obj_template,
++			TRANSPORT_LUN_TYPE_DEVICE, "dev", PLUGIN_TYPE_OBJ,
++			dev_obj_template.get_plugin_info, NULL, NULL, &ret);
++	if (ret)
++		printk(KERN_ERR "plugin_register() failures\n");
++
++	return ret;
++}
+diff --git a/include/target/target_core_seobj.h b/include/target/target_core_seobj.h
 new file mode 100644
-index 0000000..1330bc3
+index 0000000..fad3b4e
 --- /dev/null
-+++ b/include/target/target_core_scdb.h
-@@ -0,0 +1,42 @@
++++ b/include/target/target_core_seobj.h
+@@ -0,0 +1,114 @@
 +/*******************************************************************************
-+ * Filename:  target_core_scdb.h
++ * Filename:  target_core_seobj.h
 + *
-+ * This file contains the iSCSI Transport Split CDB related definitions.
-+ *
-+ * Copyright (c) 2004-2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
 + * Copyright (c) 2007-2009 Rising Tide Software, Inc.
 + * Copyright (c) 2008-2009 Linux-iSCSI.org
 + *
@@ -221,18 +742,93 @@ index 0000000..1330bc3
 + ******************************************************************************/
 +
 +
-+#ifndef TARGET_CORE_SCDB_H
-+#define TARGET_CORE_SCDB_H
++#ifndef TARGET_CORE_SEOBJ_H
++#define TARGET_CORE_SEOBJ_H
 +
-+extern void split_cdb_XX_6(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_6(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_10(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_10(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_12(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_12(unsigned long long, u32 *, unsigned char *, int);
-+extern void split_cdb_XX_16(unsigned long long, u32 *, unsigned char *);
-+extern void split_cdb_RW_16(unsigned long long, u32 *, unsigned char *, int);
++extern struct se_obj_lun_type_s *se_obj_get_api(u32);
++extern int se_obj_load_plugins(void);
 +
-+#endif /* TARGET_CORE_SCDB_H */
++#define DEV_OBJ_VERSION		"v3.0"
++
++typedef int (*map_func_t)(struct se_task_s *, u32);
++
++typedef struct se_obj_lun_type_s {
++	int	se_obj_type;
++	struct se_plugin_s *obj_plugin;
++	void (*get_obj_info)(void *, struct se_lun_s *, unsigned long long,
++				int, char *, int *);
++	void (*get_plugin_info)(void *, char *, int *);
++	void *(*get_obj)(void *);
++	struct se_queue_obj_s *(*get_queue_obj)(void *);
++	int (*claim_obj)(void *);
++	void (*release_obj)(void *);
++	void (*inc_count)(struct se_obj_s *);
++	void (*dec_count)(struct se_obj_s *);
++	int (*check_count)(struct se_obj_s *);
++	void (*access_obj)(void *);
++	void (*deaccess_obj)(void *);
++	void (*put_obj)(void *);
++	int (*export_obj)(void *, struct se_portal_group_s *,
++				struct se_lun_s *);
++	void (*unexport_obj)(void *, struct se_portal_group_s *,
++				struct se_lun_s *);
++	int (*transport_setup_cmd)(void *, struct se_cmd_s *);
++	int (*active_tasks)(void *);
++	int (*add_tasks)(void *, struct se_cmd_s *);
++	int (*execute_tasks)(void *);
++	int (*depth_left)(void *);
++	int (*queue_depth)(void *);
++	int (*blocksize)(void *);
++	int (*max_sectors)(void *);
++	unsigned long long (*end_lba)(void *, int);
++	unsigned long long (*free_sectors)(void *);
++	unsigned long long (*get_next_lba)(void *, unsigned long long);
++	unsigned long long (*total_sectors)(void *);
++	int (*do_se_mem_map)(void *, struct se_task_s *, struct list_head *,
++			void *, struct se_mem_s *, struct se_mem_s **,
++			u32 *, u32 *);
++	int (*get_mem_buf)(void *, struct se_cmd_s *);
++	int (*get_mem_SG)(void *, struct se_cmd_s *);
++	map_func_t (*get_map_SG)(void *, int);
++	map_func_t (*get_map_non_SG)(void *, int);
++	map_func_t (*get_map_none)(void *);
++	void *(*get_transport_req)(void *, struct se_task_s *);
++	void (*free_tasks)(void *, struct se_cmd_s *);
++	int (*activate)(void *);
++	void (*deactivate)(void *);
++	void (*notify_obj)(void *);
++	int (*check_export)(void *);
++	int (*check_online)(void *);
++	int (*check_shutdown)(void *);
++	void (*signal_shutdown)(void *);
++	void (*clear_shutdown)(void *);
++	int (*obj_start)(void *, struct se_transform_info_s *,
++			unsigned long long);
++	unsigned char *(*get_cdb)(void *, struct se_task_s *);
++	u32 (*get_cdb_count)(void *, struct se_transform_info_s *,
++				unsigned long long, u32, struct se_mem_s *,
++				struct se_mem_s **, u32 *);
++	u32 (*get_cdb_size)(void *, u32, unsigned char *);
++	void (*generate_cdb)(void *, unsigned long long, u32 *,
++				unsigned char *, int);
++	int (*get_device_access)(void *);
++	int (*get_device_type)(void *);
++	int (*check_DMA_handler)(void *);
++	t10_wwn_t *(*get_t10_wwn)(void *);
++	int (*get_task_timeout)(void *);
++	int (*task_failure_complete)(void *, struct se_cmd_s *);
++	int (*add_obj_to_lun)(struct se_portal_group_s *, struct se_lun_s *);
++	int (*del_obj_from_lun)(struct se_portal_group_s *, struct se_lun_s *);
++	struct se_obj_lun_type_s *(*get_next_obj_api)(void *, void **);
++	int (*obtain_obj_lock)(void *);
++	int (*release_obj_lock)(void *);
++} se_obj_lun_type_t;
++
++/*
++ * object template for se_device_t storage objects
++ */
++extern se_obj_lun_type_t dev_obj_template;
++
++#endif /* TARGET_CORE_SEOBJ_H */
 
 
