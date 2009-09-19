@@ -1,161 +1,74 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 1/5] scsi: Deprecate SCSI_PROT_*_CONVERT operations
-Date: Fri, 18 Sep 2009 19:16:54 -0400
-Message-ID: <4AB414E6.1050703@emulex.com>
-References: <1252696852-17091-1-git-send-email-martin.petersen@oracle.com> <1252696852-17091-2-git-send-email-martin.petersen@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Queue depth adjustments to scsi-ml
+Date: Fri, 18 Sep 2009 17:11:33 -0700
+Message-ID: <B221F493-51BD-41D6-9F95-99EA7EFF8D5F@qlogic.com>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:58612 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757621AbZIRXQ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2009 19:16:58 -0400
-In-Reply-To: <1252696852-17091-2-git-send-email-martin.petersen@oracle.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:45129 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754039AbZISALa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Sep 2009 20:11:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: vasu.dev@intel.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Andrew Vasquez <andrew.vasquez@qlogic.com>, LinuxSCSI <linux-scsi@vger.kernel.org>
 
-lpfc mods look fine.
+Hi Vasu Dev,
 
-Acked-by: James Smart <james.smart@emulex.com>
-Acked-by: Ihab Hamadi<Ihab.Hamadi@Emulex.Com>
+I am trying to apply your patches to test the recent scsi queue depth  
+changes on qla2xxx driver. I see two set of patches submitted on   
+2009-08-26 and 2009-09-03 at http://marc.info/?l=linux-scsi&w=2&r=1&s=vasu+dev&q=b
 
--- james s
+I tried to apply the recent patches ( submitted on 2009-09-03 - 10  
+patches) and it fails.
 
-Martin K. Petersen wrote:
-> The checksum format is orthogonal to whether the protection information
-> is being passed on beyond the HBA or not.  It is perfectly valid to use
-> a non-T10 CRC with WRITE_STRIP and READ_INSERT.
->
-> Consequently it no longer makes sense to explicitly refer to the
-> conversion in the protection operation.  Update sd_dif and lpfc
-> accordingly.
->
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  drivers/scsi/lpfc/lpfc_scsi.c |   15 +++------------
->  drivers/scsi/sd_dif.c         |   20 ++++----------------
->  include/scsi/scsi_cmnd.h      |    4 ----
->  3 files changed, 7 insertions(+), 32 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-> index da59c4f..ad75e19 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -56,8 +56,6 @@ static char *dif_op_str[] = {
->  	"SCSI_PROT_WRITE_INSERT",
->  	"SCSI_PROT_READ_PASS",
->  	"SCSI_PROT_WRITE_PASS",
-> -	"SCSI_PROT_READ_CONVERT",
-> -	"SCSI_PROT_WRITE_CONVERT"
->  };
->  static void
->  lpfc_release_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb);
-> @@ -1131,13 +1129,11 @@ lpfc_sc_to_sli_prof(struct scsi_cmnd *sc)
->  			ret_prof = LPFC_PROF_A1;
->  			break;
->  
-> -		case SCSI_PROT_READ_CONVERT:
-> -		case SCSI_PROT_WRITE_CONVERT:
-> +		case SCSI_PROT_READ_PASS:
-> +		case SCSI_PROT_WRITE_PASS:
->  			ret_prof = LPFC_PROF_AST1;
->  			break;
->  
-> -		case SCSI_PROT_READ_PASS:
-> -		case SCSI_PROT_WRITE_PASS:
->  		case SCSI_PROT_NORMAL:
->  		default:
->  			printk(KERN_ERR "Bad op/guard:%d/%d combination\n",
-> @@ -1157,8 +1153,6 @@ lpfc_sc_to_sli_prof(struct scsi_cmnd *sc)
->  			ret_prof = LPFC_PROF_C1;
->  			break;
->  
-> -		case SCSI_PROT_READ_CONVERT:
-> -		case SCSI_PROT_WRITE_CONVERT:
->  		case SCSI_PROT_READ_INSERT:
->  		case SCSI_PROT_WRITE_STRIP:
->  		case SCSI_PROT_NORMAL:
-> @@ -1209,8 +1203,7 @@ lpfc_get_cmd_dif_parms(struct scsi_cmnd *sc, uint16_t *apptagmask,
->  	static int cnt;
->  
->  	if (protcnt && (op == SCSI_PROT_WRITE_STRIP ||
-> -				op == SCSI_PROT_WRITE_PASS ||
-> -				op == SCSI_PROT_WRITE_CONVERT)) {
-> +				op == SCSI_PROT_WRITE_PASS)) {
->  
->  		cnt++;
->  		spt = page_address(sg_page(scsi_prot_sglist(sc))) +
-> @@ -1501,8 +1494,6 @@ lpfc_prot_group_type(struct lpfc_hba *phba, struct scsi_cmnd *sc)
->  	case SCSI_PROT_WRITE_STRIP:
->  	case SCSI_PROT_READ_PASS:
->  	case SCSI_PROT_WRITE_PASS:
-> -	case SCSI_PROT_WRITE_CONVERT:
-> -	case SCSI_PROT_READ_CONVERT:
->  		ret = LPFC_PG_TYPE_DIF_BUF;
->  		break;
->  	default:
-> diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-> index 82f14a9..84224dd 100644
-> --- a/drivers/scsi/sd_dif.c
-> +++ b/drivers/scsi/sd_dif.c
-> @@ -364,15 +364,9 @@ void sd_dif_config_host(struct scsi_disk *sdkp)
->   */
->  void sd_dif_op(struct scsi_cmnd *scmd, unsigned int dif, unsigned int dix, unsigned int type)
->  {
-> -	int csum_convert, prot_op;
-> +	int prot_op;
->  
-> -	prot_op = 0;
-> -
-> -	/* Convert checksum? */
-> -	if (scsi_host_get_guard(scmd->device->host) != SHOST_DIX_GUARD_CRC)
-> -		csum_convert = 1;
-> -	else
-> -		csum_convert = 0;
-> +	prot_op = SCSI_PROT_NORMAL;
->  
->  	BUG_ON(dif && (scmd->cmnd[0] == READ_6 || scmd->cmnd[0] == WRITE_6));
->  
-> @@ -382,10 +376,7 @@ void sd_dif_op(struct scsi_cmnd *scmd, unsigned int dif, unsigned int dix, unsig
->  	case READ_12:
->  	case READ_16:
->  		if (dif && dix)
-> -			if (csum_convert)
-> -				prot_op = SCSI_PROT_READ_CONVERT;
-> -			else
-> -				prot_op = SCSI_PROT_READ_PASS;
-> +			prot_op = SCSI_PROT_READ_PASS;
->  		else if (dif && !dix)
->  			prot_op = SCSI_PROT_READ_STRIP;
->  		else if (!dif && dix)
-> @@ -398,10 +389,7 @@ void sd_dif_op(struct scsi_cmnd *scmd, unsigned int dif, unsigned int dix, unsig
->  	case WRITE_12:
->  	case WRITE_16:
->  		if (dif && dix)
-> -			if (csum_convert)
-> -				prot_op = SCSI_PROT_WRITE_CONVERT;
-> -			else
-> -				prot_op = SCSI_PROT_WRITE_PASS;
-> +			prot_op = SCSI_PROT_WRITE_PASS;
->  		else if (dif && !dix)
->  			prot_op = SCSI_PROT_WRITE_INSERT;
->  		else if (!dif && dix)
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index 3878d1d..a5e885a 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -229,10 +229,6 @@ enum scsi_prot_operations {
->  	/* OS-HBA: Protected, HBA-Target: Protected */
->  	SCSI_PROT_READ_PASS,
->  	SCSI_PROT_WRITE_PASS,
-> -
-> -	/* OS-HBA: Protected, HBA-Target: Protected, checksum conversion */
-> -	SCSI_PROT_READ_CONVERT,
-> -	SCSI_PROT_WRITE_CONVERT,
->  };
->  
->  static inline void scsi_set_prot_op(struct scsi_cmnd *scmd, unsigned char op)
->   
+Do I need to pick both sets of patches. In first set of patches I am  
+seeing some of the patches missing ( 1/9, 2/9, 3/9).
+Can u please let me know which patches need to be picked up for  
+testing the changes.
+
+Thanks,
+Giridhar Malavali
+
+  24. 2009-09-03  [PATCH 08/10]  
+fcoe,                                   linux-scs Vasu Dev
+  25. 2009-09-03  [PATCH 10/10] zfcp: Adapt change_queue_depth for  
+queu linux-scs Vasu Dev
+  26. 2009-09-03  [PATCH 09/10] libfc: adds queue_depth ramp up to  
+libf linux-scs Vasu Dev
+  27. 2009-09-03  [PATCH 07/10] scsi: add common queue_depth ramp up  
+co linux-scs Vasu Dev
+  28. 2009-09-03  [PATCH 05/10] scsi: updates sdev to add queue_depth  
+r linux-scs Vasu Dev
+  29. 2009-09-03  [PATCH 06/10] scsi: adds sdev->queue_ramp_up_period  
+t linux-scs Vasu Dev
+  30. 2009-09-03  [PATCH 04/10] drivers: convert fc drivers  
+calling     linux-scs Vasu Dev
+  31. 2009-09-03  [PATCH 03/10] drivers: convert drivers setting the  
+ch linux-scs Vasu Dev
+  32. 2009-09-03  [PATCH 02/10] scsi error: have scsi-ml call  
+change_qu linux-scs Vasu Dev
+  33. 2009-09-03  [PATCH 01/10] scsi-ml: modify change_queue_depth to  
+t linux-scs Vasu Dev
+  34. 2009-09-03  [PATCH 00/10] handles queue_depth adjustments in  
+scsi linux-scs Vasu Dev
+
+_____
+
+  49. 2009-08-26  [RFC PATCH 6/9] scsi: adds sdev- 
+ >queue_ramp_up_period linux-scs Vasu Dev
+  50. 2009-08-26  [RFC PATCH 9/9] libfc: adds queue_depth ramp up to  
+li linux-scs Vasu Dev
+  51. 2009-08-26  [RFC PATCH 8/9]  
+fcoe,                                 linux-scs Vasu Dev
+  52. 2009-08-26  [RFC PATCH 7/9] scsi: add common queue_depth ramp  
+up  linux-scs Vasu Dev
+  53. 2009-08-26  [RFC PATCH 5/9] scsi: updates sdev to add  
+queue_depth linux-scs Vasu Dev
+  54. 2009-08-26  [RFC PATCH 4/9] drivers: convert fc drivers  
+calling   linux-scs Vasu Dev
+  55. 2009-08-26  [RFC PATCH 0/9] RFC: handle queue_depth adjustments  
+b linux-scs Vasu Dev
+
