@@ -1,75 +1,110 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC v2 PATCH 0/19] A kernel-level configfs enabled generic
-	target engine for Linux v2.6.32
-Date: Fri, 18 Sep 2009 19:07:08 -0700
-Message-ID: <1253326028.4498.194.camel@haakon2.linux-iscsi.org>
-References: <1253311656.4498.143.camel@haakon2.linux-iscsi.org>
-	 <1253322925.6699.8.camel@desktop>
+From: Eddie <stunnel@attglobal.net>
+Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
+Date: Sat, 19 Sep 2009 00:03:48 -0700
+Message-ID: <4AB48254.4000404@attglobal.net>
+References: <1253219291.7845.152.camel@mulgrave.site>	<20090918215950P.fujita.tomonori@lab.ntt.co.jp>	<20090918141106.GA29475@parisc-linux.org> <20090918231745O.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: stunnel@attglobal.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from n21.bullet.mail.mud.yahoo.com ([68.142.206.160]:40147 "HELO
-	n21.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754227AbZISCHH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 22:07:07 -0400
-In-Reply-To: <1253322925.6699.8.camel@desktop>
+Received: from kcout02.prserv.net ([12.154.55.32]:56912 "EHLO
+	kcout02.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754818AbZISHDt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Sep 2009 03:03:49 -0400
+In-Reply-To: <20090918231745O.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Walker <dwalker@fifo99.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Lars Ellenberg <lars.ellenberg@linbit.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: matthew@wil.cx, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, bo.yang@lsi.com
 
-On Fri, 2009-09-18 at 18:15 -0700, Daniel Walker wrote:
-> On Fri, 2009-09-18 at 15:07 -0700, Nicholas A. Bellinger wrote:
-> > Greetings all,
-> > 
-> > This is the second round of request for comments for TCM/ConfigFS v3.2
-> > from lio-core-2.6.git.
-> > Thanks to the folks who made comments, and I again invite people to
-> > take a look and make
-> > recommendations on how the code can be futher improved to use the best
-> > available upstream
-> > interfaces.
-> 
-> There are still a couple of minor checkpatch errors in the series, but
-> it's nothing you would need to resubmit because of ..
-> 
-> In patch 2 the following are fixable,
-> 
-> ERROR: return is not a function, parentheses are not required
-> #3401: FILE: include/target/configfs_macros.h:104:
-> +       return((ci) ? container_of(to_config_group(ci), struct _item,   \
-> 
-> ERROR: trailing whitespace
-> #3438: FILE: include/target/configfs_macros.h:141:
-> +CONFIGFS_EATTR_OPS_STORE(_name, _item);^I$
-> 
-> 
-> and in Patch 18, and 19 there are a couple more whitespace related
-> errors you could fix..
-> 
+FUJITA Tomonori wrote:
+> On Fri, 18 Sep 2009 08:11:07 -0600
+> Matthew Wilcox <matthew@wil.cx> wrote:
+>
+>   
+>> On Fri, Sep 18, 2009 at 10:00:53PM +0900, FUJITA Tomonori wrote:
+>>     
+>>> Let's confirm that dma_map_sg returns an invalid address.
+>>>
+>>> Eddie, can you try a kernel with the following patch and send kernel
+>>> messages?
+>>>
+>>> Note that the patch doesn't fix the problem; just print debug
+>>> information.
+>>>       
+>> This is going to be quite noisy,
+>>     
+>
+> Seems that READ_CAPACITY always fails in his environment so it's not
+> so noisy. :)
+>
+>
+>   
+>> and not give us all that much information.
+>> Why not try this patch instead?
+>>
+>> diff --git a/drivers/scsi/scsi_lib_dma.c b/drivers/scsi/scsi_lib_dma.c
+>> index ac6855c..a179ff8 100644
+>> --- a/drivers/scsi/scsi_lib_dma.c
+>> +++ b/drivers/scsi/scsi_lib_dma.c
+>> @@ -20,7 +20,8 @@
+>>   */
+>>  int scsi_dma_map(struct scsi_cmnd *cmd)
+>>  {
+>> -	int nseg = 0;
+>> +	int i, nseg = 0;
+>> +	struct scatterlist *sgl;
+>>  
+>>  	if (scsi_sg_count(cmd)) {
+>>  		struct device *dev = cmd->device->host->shost_gendev.parent;
+>> @@ -29,6 +30,11 @@ int scsi_dma_map(struct scsi_cmnd *cmd)
+>>  				  cmd->sc_data_direction);
+>>  		if (unlikely(!nseg))
+>>  			return -ENOMEM;
+>> +		scsi_for_each_sg(cmd, sgl, nseg, i) {
+>> +			if (sg_dma_address(sgl) > *dev->dma_mask) {
+>>     
+>
+> I think that it should be
+>
+> if (sg_dma_address(sgl) + sg_dma_len(sgl) > *dev->dma_mask)
+>
+>   
+>> +				printk("IOMMU bug, command %d, dma mask %llx, but returned %lx %u for phys %lx\n", cmd->cmnd[0], *dev->dma_mask, (unsigned long)sg_dma_address(sgl), sg_dma_len(sgl), (unsigned long)sg_phys(sgl));
+>> +			}
+>> +		}
+>>  	}
+>>  	return nseg;
+>>  }
+>>
+>>
+>>     
+>>> diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+>>> index 234f0b7..0d0a02f 100644
+>>> --- a/drivers/scsi/megaraid/megaraid_mbox.c
+>>> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
+>>> @@ -1391,7 +1391,12 @@ megaraid_mbox_mksgl(adapter_t *adapter, scb_t *scb)
+>>>  
+>>>  	scb->dma_type = MRAID_DMA_WSG;
+>>>  
+>>> +	printk("%x %lx\n", scp->cmnd[0],
+>>> +	       (unsigned long)*(scp->device->host->shost_gendev.parent->dma_mask));
+>>> +
+>>>  	scsi_for_each_sg(scp, sgl, sgcnt, i) {
+>>> +		printk("%lx %u\n", (unsigned long)sg_dma_address(sgl),
+>>> +		       sg_dma_len(sgl));
+>>>  		ccb->sgl64[i].address	= sg_dma_address(sgl);
+>>>  		ccb->sgl64[i].length	= sg_dma_len(sgl);
+>>>  	}
+>>>
+>>>       
+OK, there are 2 dmesg outputs stored at ftp://ftp.BogoLinux.net/pub
 
-Ok, commited these checkpatch fixes:
+dmesg.2a contains Fujita's patch and Matthew's
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=65808529e0ed76308842c87faccf4526fa8bb13d
+dmesg.2b contains Fujita's patch and his update to Matthew's.
 
-Also, it looks like configfs_macros.h is triggering the same checkpatch
-false-positive as target_core_configfs.c:
-
-configfs_macros.h:138: ERROR: Macros with multiple statements should be enclosed in a do - while loop
-configfs_macros.h:143: ERROR: Macros with multiple statements should be enclosed in a do - while loop
-
-This is the case where macros with multiple statements exist containing
-function defintions, which obviously cannot be included in a do {} while
-loop.
-
-Thanks Daniel,
-
---nab
-
-
-> Daniel
-> 
-
+Cheers,
+Eddie
 
