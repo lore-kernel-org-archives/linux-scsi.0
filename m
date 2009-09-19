@@ -1,198 +1,75 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/2] be2iscsi: Moving to pci_pools
-Date: Fri, 18 Sep 2009 20:18:05 -0500
-Message-ID: <4AB4314D.5060401@cs.wisc.edu>
-References: <20090918161822.GA8468@serverengines.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC v2 PATCH 0/19] A kernel-level configfs enabled generic
+	target engine for Linux v2.6.32
+Date: Fri, 18 Sep 2009 19:07:08 -0700
+Message-ID: <1253326028.4498.194.camel@haakon2.linux-iscsi.org>
+References: <1253311656.4498.143.camel@haakon2.linux-iscsi.org>
+	 <1253322925.6699.8.camel@desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:59336 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754381AbZISBSM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Sep 2009 21:18:12 -0400
-In-Reply-To: <20090918161822.GA8468@serverengines.com>
+Received: from n21.bullet.mail.mud.yahoo.com ([68.142.206.160]:40147 "HELO
+	n21.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754227AbZISCHH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Sep 2009 22:07:07 -0400
+In-Reply-To: <1253322925.6699.8.camel@desktop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: Daniel Walker <dwalker@fifo99.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Florian Haas <florian.haas@linbit.com>, Philipp Reisner <philipp.reisner@linbit.com>, Lars Ellenberg <lars.ellenberg@linbit.com>
 
-Jayamohan Kallickal wrote:
->  This patch contains changes to use pci_pools for iscsi hdr
-> instead of pci_alloc_consistent. Here we alloc and free to pool
-> for every IO
+On Fri, 2009-09-18 at 18:15 -0700, Daniel Walker wrote:
+> On Fri, 2009-09-18 at 15:07 -0700, Nicholas A. Bellinger wrote:
+> > Greetings all,
+> > 
+> > This is the second round of request for comments for TCM/ConfigFS v3.2
+> > from lio-core-2.6.git.
+> > Thanks to the folks who made comments, and I again invite people to
+> > take a look and make
+> > recommendations on how the code can be futher improved to use the best
+> > available upstream
+> > interfaces.
+> 
+> There are still a couple of minor checkpatch errors in the series, but
+> it's nothing you would need to resubmit because of ..
+> 
+> In patch 2 the following are fixable,
+> 
+> ERROR: return is not a function, parentheses are not required
+> #3401: FILE: include/target/configfs_macros.h:104:
+> +       return((ci) ? container_of(to_config_group(ci), struct _item,   \
+> 
+> ERROR: trailing whitespace
+> #3438: FILE: include/target/configfs_macros.h:141:
+> +CONFIGFS_EATTR_OPS_STORE(_name, _item);^I$
+> 
+> 
+> and in Patch 18, and 19 there are a couple more whitespace related
+> errors you could fix..
 > 
 
-Sorry,  missed some things when you sent this offlist.
+Ok, commited these checkpatch fixes:
+
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=65808529e0ed76308842c87faccf4526fa8bb13d
+
+Also, it looks like configfs_macros.h is triggering the same checkpatch
+false-positive as target_core_configfs.c:
+
+configfs_macros.h:138: ERROR: Macros with multiple statements should be enclosed in a do - while loop
+configfs_macros.h:143: ERROR: Macros with multiple statements should be enclosed in a do - while loop
+
+This is the case where macros with multiple statements exist containing
+function defintions, which obviously cannot be included in a do {} while
+loop.
+
+Thanks Daniel,
+
+--nab
 
 
-> Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
-> ---
->  drivers/scsi/be2iscsi/be_iscsi.c |   52 +++++++++++++++++++------------------
->  drivers/scsi/be2iscsi/be_main.c  |   28 +++++++++++++++++++-
->  drivers/scsi/be2iscsi/be_main.h  |    1 -
->  3 files changed, 53 insertions(+), 28 deletions(-)
+> Daniel
 > 
-> diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-> index f18e643..62b94a7 100644
-> --- a/drivers/scsi/be2iscsi/be_iscsi.c
-> +++ b/drivers/scsi/be2iscsi/be_iscsi.c
-> @@ -45,14 +45,9 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
->  	struct beiscsi_endpoint *beiscsi_ep;
->  	struct iscsi_cls_session *cls_session;
->  	struct beiscsi_hba *phba;
-> -	struct iscsi_task *task;
->  	struct iscsi_session *sess;
->  	struct beiscsi_session *beiscsi_sess;
->  	struct beiscsi_io_task *io_task;
-> -	unsigned int max_size, num_cmd;
-> -	dma_addr_t bus_add;
-> -	u64 pa_addr;
-> -	void *vaddr;
->  
->  	SE_DEBUG(DBG_LVL_8, "In beiscsi_session_create\n");
->  
-> @@ -80,20 +75,18 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
->  	if (!cls_session)
->  		return NULL;
->  	sess = cls_session->dd_data;
-> -	max_size = ALIGN(sizeof(struct be_cmd_bhs), 64) * sess->cmds_max;
-> -	vaddr = pci_alloc_consistent(phba->pcidev, max_size, &bus_add);
-> -	pa_addr = (__u64) bus_add;
-> +	beiscsi_sess = sess->dd_data;
-> +	beiscsi_sess->bhs_pool =  pci_pool_create("beiscsi_bhs_pool",
-> +						   phba->pcidev,
-> +						   sizeof(struct be_cmd_bhs),
-> +						   64, 0);
-> +	if (!beiscsi_sess->bhs_pool)
-> +		goto destroy_sess;
->  
-> -	for (num_cmd = 0; num_cmd < sess->cmds_max; num_cmd++) {
-> -		task = sess->cmds[num_cmd];
-> -		io_task = task->dd_data;
-> -		io_task->cmd_bhs = vaddr;
-> -		io_task->bhs_pa.u.a64.address = pa_addr;
-> -		io_task->alloc_size = max_size;
-> -		vaddr += ALIGN(sizeof(struct be_cmd_bhs), 64);
-> -		pa_addr += ALIGN(sizeof(struct be_cmd_bhs), 64);
-> -	}
->  	return cls_session;
-> +destroy_sess:
-> +	iscsi_session_teardown(cls_session);
-> +	return NULL;
->  }
->  
->  /**
-> @@ -107,16 +100,20 @@ void beiscsi_session_destroy(struct iscsi_cls_session *cls_session)
->  {
->  	struct iscsi_task *task;
->  	struct beiscsi_io_task *io_task;
-> +	unsigned int num_cmd;
->  	struct iscsi_session *sess = cls_session->dd_data;
-> -	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-> -	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-> +	struct beiscsi_session *beiscsi_sess = sess->dd_data;
->  
-> -	task = sess->cmds[0];
-> -	io_task = task->dd_data;
-> -	pci_free_consistent(phba->pcidev,
-> -			    io_task->alloc_size,
-> -			    io_task->cmd_bhs,
-> -			    io_task->bhs_pa.u.a64.address);
-> +	for (num_cmd = 0; num_cmd < sess->cmds_max; num_cmd++) {
-> +		task = sess->cmds[num_cmd];
-> +		io_task = task->dd_data;
-> +		if (io_task->cmd_bhs) {
-> +			pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
-> +				      io_task->bhs_pa.u.a64.address);
-> +			io_task->cmd_bhs = NULL;
-> +		}
 
 
-You should not need this. libiscsi should loop over running task and 
-call cleanup task.
-
-Did you hit a leak?
-
-
-
-> +	}
-> +	pci_pool_destroy(beiscsi_sess->bhs_pool);
->  	iscsi_session_teardown(cls_session);
->  }
->  
-> @@ -133,6 +130,8 @@ beiscsi_conn_create(struct iscsi_cls_session *cls_session, u32 cid)
->  	struct iscsi_cls_conn *cls_conn;
->  	struct beiscsi_conn *beiscsi_conn;
->  	struct iscsi_conn *conn;
-> +	struct iscsi_session *sess;
-> +	struct beiscsi_session *beiscsi_sess;
->  
->  	SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_create ,cid"
->  		 "from iscsi layer=%d\n", cid);
-> @@ -148,6 +147,9 @@ beiscsi_conn_create(struct iscsi_cls_session *cls_session, u32 cid)
->  	beiscsi_conn->ep = NULL;
->  	beiscsi_conn->phba = phba;
->  	beiscsi_conn->conn = conn;
-> +	sess = cls_session->dd_data;
-> +	beiscsi_sess = sess->dd_data;
-> +	beiscsi_conn->beiscsi_sess = beiscsi_sess;
->  	return cls_conn;
->  }
->  
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index d520fe8..c3aeba0 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -2880,6 +2880,13 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
->  	struct hwi_wrb_context *pwrb_context;
->  	struct hwi_controller *phwi_ctrlr;
->  	itt_t itt;
-> +	struct beiscsi_session *beiscsi_sess = beiscsi_conn->beiscsi_sess;
-> +
-> +	io_task->cmd_bhs = pci_pool_alloc(beiscsi_sess->bhs_pool,
-> +					  GFP_KERNEL,
-> +					  &io_task->bhs_pa.u.a64.address);
-> +	if (!io_task->cmd_bhs)
-> +		return -ENOMEM;
->  
->  	io_task->pwrb_handle = alloc_wrb_handle(phba,
->  						beiscsi_conn->beiscsi_conn_cid,
-> @@ -2901,6 +2908,9 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
->  			free_wrb_handle(phba, pwrb_context,
->  						io_task->pwrb_handle);
->  			io_task->pwrb_handle = NULL;
-> +			pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
-> +				      io_task->bhs_pa.u.a64.address);
-> +			io_task->cmd_bhs = NULL;
->  			SE_DEBUG(DBG_LVL_1,
->  				 "Alloc of SGL_ICD Failed \n");
->  			return -ENOMEM;
-> @@ -2921,6 +2931,11 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
->  					free_wrb_handle(phba, pwrb_context,
->  							io_task->pwrb_handle);
->  					io_task->pwrb_handle = NULL;
-> +					pci_pool_free(beiscsi_sess->bhs_pool,
-> +						      io_task->cmd_bhs,
-> +						      io_task->
-> +						      bhs_pa.u.a64.address);
-> +					io_task->cmd_bhs = NULL;
->  					SE_DEBUG(DBG_LVL_1, "Alloc of "
->  						"MGMT_SGL_ICD Failed \n");
->  					return -ENOMEM;
-> @@ -2943,6 +2958,10 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
->  				free_wrb_handle(phba, pwrb_context,
->  							io_task->pwrb_handle);
->  				io_task->pwrb_handle = NULL;
-> +				pci_pool_free(beiscsi_sess->bhs_pool,
-> +					      io_task->cmd_bhs,
-> +					      io_task->bhs_pa.u.a64.address);
-> +				io_task->cmd_bhs = NULL;
->  				SE_DEBUG(DBG_LVL_1, "Alloc of "
->  					 "MGMT_SGL_ICD Failed \n");
->  				return -ENOMEM;
-
-
-
-You probably want to do a goto for the error handler cleanup instead of 
-duplicating it so many times.
