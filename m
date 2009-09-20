@@ -1,45 +1,44 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH] drivers/scsi/qla2xxx: harmonize the use of constants
-Date: Sun, 20 Sep 2009 11:44:18 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0909201143440.14236@ask.diku.dk>
+From: Allan Wind <allan_wind@lifeintegrity.com>
+Subject: Re: MD/RAID time out writing superblock
+Date: Sun, 20 Sep 2009 13:35:43 -0400
+Message-ID: <20090920173543.GA19717@lifeintegrity.com>
+References: <4AADF471.2020801@suse.de> <4AAE3B9A.2060306@rtr.ca> <4AAE3F86.8090804@suse.de> <4AAE524C.2030401@rtr.ca> <20090916231921.GL1924@arachsys.com> <4AB239C8.2020203@rtr.ca> <4AB25736.1060601@suse.de> <4AB260CA.8040308@rtr.ca> <4AB2610F.8010904@rtr.ca> <20090918170517.GI2141@arachsys.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754384AbZITJoS@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.orgkerne
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static-173-48-39-13.bstnma.fios.verizon.net ([173.48.39.13]:54990
+	"EHLO lifeintegrity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754926AbZITRfk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Sep 2009 13:35:40 -0400
+Received: from vent.lifeintegrity.com (Wireless_Broadband_Router [173.48.39.13])
+	by submission.lifeintegrity.com (Postfix) with ESMTPS id 0B60BA3E1
+	for <linux-scsi@vger.kernel.org>; Sun, 20 Sep 2009 13:35:43 -0400 (EDT)
+Content-Disposition: inline
+In-Reply-To: <20090918170517.GI2141@arachsys.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+On 2009-09-18T18:05:17, Chris Webb wrote:
+> Mark Lord <liml@rtr.ca> writes:
+> 
+> > Speaking of which..
+> > 
+> > Chris:  I wonder if the errors will also vanish in your situation
+> > by disabling the onboard write-caches in the drives ?
+> > 
+> > Eg.  hdparm -W0 /dev/sd?
+> 
+> Hi Mark. I've got a test machine on its way at the moment, so I'll make sure
+> I check this one out on it too.
 
-The fields out_mb and in_mb are elsewhere combined with the constant MBX_0
-rather than BIT_0.  These have the same value so there is no change in the
-behavior of the code.
+It has been stable for me the last 3 days with the write cached 
+disabled.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
 
----
- drivers/scsi/qla2xxx/qla_mbx.c      |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+/Allan
+-- 
+Allan Wind
+Life Integrity, LLC
+<http://lifeintegrity.com>
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index b6202fe..6a621e6 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -91,7 +91,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 		if (IS_QLA2200(ha) && cnt == 8)
- 			optr =
- 			    (uint16_t __iomem *)MAILBOX_REG(ha, &reg->isp, 8);
--		if (mboxes & BIT_0)
-+		if (mboxes & MBX_0)
- 			WRT_REG_WORD(optr, *iptr);
- 
- 		mboxes >>= 1;
-@@ -179,7 +179,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
- 		iptr = (uint16_t *)&ha->mailbox_out[0];
- 		mboxes = mcp->in_mb;
- 		for (cnt = 0; cnt < ha->mbx_count; cnt++) {
--			if (mboxes & BIT_0)
-+			if (mboxes & MBX_0)
- 				*iptr2 = *iptr;
- 
- 			mboxes >>= 1;
