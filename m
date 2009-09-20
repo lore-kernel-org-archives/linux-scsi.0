@@ -1,77 +1,83 @@
-From: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
-Subject: [PATCH 1/3] Allow SCSI hosts to be less verbose
-Date: Sun, 20 Sep 2009 16:56:39 -0600
-Message-ID: <20090920225639.GD3690@parisc-linux.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH 2/3] USB Storage: Make driver less chatty when it finds a
+	new device
+Date: Sun, 20 Sep 2009 16:57:58 -0600
+Message-ID: <20090920225758.GE3690@parisc-linux.org>
 References: <20090920225348.GB3690@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:36124 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343AbZITW5y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Sep 2009 18:57:54 -0400
 Content-Disposition: inline
-In-Reply-To: <20090920225348.GB3690-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20090920225348.GB3690@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-From: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+From: Matthew Wilcox <willy@linux.intel.com>
 
-Introduce a 'quiet' flag in the scsi_host_template which drivers can
-set to prevent (in the first instance) printing their name when they
-register with the SCSI core.  Set the quiet flag in the USB Storage
-driver.
+Use dev_dbg() instead of an unconditional printk(KERN_DEBUG).  This has
+two benefits; one is that it identifies the USB device which the messages
+related to, and the other is that the messages won't be produced unless
+debug is turned on.
 
-Signed-off-by: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Enable the debug messages when CONFIG_USB_STORAGE_DEBUG is set.
+
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/hosts.c           |    3 ++-
- drivers/usb/storage/scsiglue.c |    3 +++
- include/scsi/scsi_host.h       |    3 +++
- 3 files changed, 8 insertions(+), 1 deletions(-)
+ drivers/usb/storage/usb.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 5fd2da4..7741f1d 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -192,7 +192,8 @@ int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
- 	struct scsi_host_template *sht = shost->hostt;
- 	int error = -EINVAL;
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index 8060b85..40c21a9 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -45,6 +45,10 @@
+  * 675 Mass Ave, Cambridge, MA 02139, USA.
+  */
  
--	printk(KERN_INFO "scsi%d : %s\n", shost->host_no,
-+	if (!sht->quiet)
-+		printk(KERN_INFO "scsi%d : %s\n", shost->host_no,
- 			sht->info ? sht->info(shost) : sht->name);
- 
- 	if (!shost->can_queue) {
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index cfa26d5..781fb6d 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -555,6 +555,9 @@ struct scsi_host_template usb_stor_host_template = {
- 	/* we do our own delay after a device or bus reset */
- 	.skip_settle_delay =		1,
- 
-+	/* We don't need the scsi midlayer to print our name */
-+	.quiet =			1,
++#ifdef CONFIG_USB_STORAGE_DEBUG
++#define DEBUG
++#endif
 +
- 	/* sysfs device attributes */
- 	.sdev_attrs =			sysfs_device_attr_list,
+ #include <linux/sched.h>
+ #include <linux/errno.h>
+ #include <linux/freezer.h>
+@@ -808,14 +812,13 @@ static int usb_stor_scan_thread(void * __us)
+ {
+ 	struct us_data *us = (struct us_data *)__us;
  
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b62a097..baa527c 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -446,6 +446,9 @@ struct scsi_host_template {
- 	 */
- 	unsigned ordered_tag:1;
+-	printk(KERN_DEBUG
+-		"usb-storage: device found at %d\n", us->pusb_dev->devnum);
++	dev_dbg(&us->pusb_dev->dev, "usb-storage device found\n");
  
-+	/* Be less verbose */
-+	unsigned quiet:1;
-+
- 	/*
- 	 * Countdown for host blocking with no commands outstanding.
- 	 */
+ 	set_freezable();
+ 	/* Wait for the timeout to expire or for a disconnect */
+ 	if (delay_use > 0) {
+-		printk(KERN_DEBUG "usb-storage: waiting for device "
+-				"to settle before scanning\n");
++		dev_dbg(&us->pusb_dev->dev, "usb-storage: waiting for device "
++			"to settle before scanning\n");
+ 		wait_event_freezable_timeout(us->delay_wait,
+ 				test_bit(US_FLIDX_DONT_SCAN, &us->dflags),
+ 				delay_use * HZ);
+@@ -832,7 +835,7 @@ static int usb_stor_scan_thread(void * __us)
+ 			mutex_unlock(&us->dev_mutex);
+ 		}
+ 		scsi_scan_host(us_to_host(us));
+-		printk(KERN_DEBUG "usb-storage: device scan complete\n");
++		dev_dbg(&us->pusb_dev->dev, "usb-storage scan complete\n");
+ 
+ 		/* Should we unbind if no devices were detected? */
+ 	}
 -- 
 1.6.3.3
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
