@@ -1,48 +1,64 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/12] scsi: megaraid_sas - tape drive support fix
-Date: Mon, 21 Sep 2009 09:22:44 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C35C5124EB@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
- <1253504435.9654.221.camel@desktop>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
+Date: Mon, 21 Sep 2009 15:34:04 +0000
+Message-ID: <1253547244.4579.4.camel@mulgrave.site>
+References: <4AB48254.4000404@attglobal.net>
+	 <20090919165404D.fujita.tomonori@lab.ntt.co.jp>
+	 <4AB4F792.8020308@attglobal.net>
+	 <20090921225015B.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:47474 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756554AbZIUPXP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Sep 2009 11:23:15 -0400
-In-Reply-To: <1253504435.9654.221.camel@desktop>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:54546 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751092AbZIUPeI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Sep 2009 11:34:08 -0400
+In-Reply-To: <20090921225015B.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Walker <dwalker@fifo99.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: stunnel@attglobal.net, matthew@wil.cx, linux-scsi@vger.kernel.org, bo.yang@lsi.com
 
-Daniel,
+On Mon, 2009-09-21 at 22:51 +0900, FUJITA Tomonori wrote:
+> On Sat, 19 Sep 2009 08:24:02 -0700
+> Eddie <stunnel@attglobal.net> wrote:
+> 
+> > FUJITA Tomonori wrote:
+> > > Thanks, now the problem is clear; the driver uses 64bit dma_mask but
+> > > the hardware is not capable of 64bit dma according to James. Seems
+> > > that hardware lies about the dma capability.
+> > >
+> > > Can you try the following patch?
+> > >
+> > >
+> > > diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+> > > index 234f0b7..9ead856 100644
+> > > --- a/drivers/scsi/megaraid/megaraid_mbox.c
+> > > +++ b/drivers/scsi/megaraid/megaraid_mbox.c
+> > > @@ -888,6 +888,8 @@ megaraid_init_mbox(adapter_t *adapter)
+> > >  	if (((magic64 == HBA_SIGNATURE_64_BIT) &&
+> > >  		((adapter->pdev->subsystem_device !=
+> > >  		PCI_SUBSYS_ID_MEGARAID_SATA_150_6) &&
+> > > +		(adapter->pdev->device !=
+> > > +		PCI_DEVICE_ID_AMI_MEGARAID3) &&
+> > >  		(adapter->pdev->subsystem_device !=
+> > >  		PCI_SUBSYS_ID_MEGARAID_SATA_150_4))) ||
+> > >  		(adapter->pdev->vendor == PCI_VENDOR_ID_LSI_LOGIC &&
+> > >
+> > >   
+> > OK, that appears to have done the trick.
+> 
+> Thanks for the confirmation.
+> 
+> James, here's a patch in the proper format.
 
-Thanks for viewing the patches.  I did run the checkpatch.pl first before I submit the patches.  Is there possible you can tell me the errors in the specific patch, I need to find out if it is my e-mail setting problems or something else.
+Got it ... I'd like to wait on confirmation from LSI on this ... I
+actually said the Megaraid3 wasn't 64 bit based on the 64 bit exception
+table, but if it really has the firmware marker that says it's 64 bit,
+we should make sure the manufacturers agree that it needs to be added to
+the exception table.
 
-Thanks,
+James
 
-Bo Yang  
-
------Original Message-----
-From: Daniel Walker [mailto:dwalker@fifo99.com] 
-Sent: Sunday, September 20, 2009 11:41 PM
-To: Yang, Bo
-Cc: James.Bottomley@HansenPartnership.com; James.Bottomley@suse.de; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/12] scsi: megaraid_sas - tape drive support fix
-
-
-Your patches all have numerous serious style problems.. There are far
-too many to even give a summary here, and they are all different kinds
-of problems..
-
-You would need to fix all these issues before these patches could move
-forward. Could you run scripts/checkpatch.pl on you patches and fix all
-the issues that it reports?
-
-Daniel
 
