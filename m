@@ -1,294 +1,256 @@
 From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 9/12] scsi: megaraid_sas - Fix the fix for fw hang caused by
- megaraid sas application
-Date: Sun, 20 Sep 2009 20:44:13 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C35C512405@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5119BC@cosmail02.lsi.com>
+Subject: [PATCH 10/12] scsi: megaraid_sas - Add the support for updating the
+ OS after adding/removing the devices form FW.
+Date: Sun, 20 Sep 2009 20:45:27 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C35C512406@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C35C5119CF@cosmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:33730 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754527AbZIUCoW convert rfc822-to-8bit
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50536 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754610AbZIUCpi convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Sep 2009 22:44:22 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C5119BC@cosmail02.lsi.com>
+	Sun, 20 Sep 2009 22:45:38 -0400
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C5119CF@cosmail02.lsi.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Yang, Bo" <Bo.Yang@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Added the fix for FW and OS hang by using MSM.  Also add the fix for pending cmd in fw, after deleting the lds.
+Driver will update the OS devices after adding and deleting the device from FW.  When driver receive add or delete AEN from FW, driver will send the DCMD cmd to get the System PD list from FW.  Then driver will check if this device already in the OS: If add event and OS don't have the device (but it is in the list), driver add the device to OS, otherwise driver will not add.  If remove event, driver will check the list, if is not in the list, but OS have the device, driver will remove the device.
 
 Signed-off-by Bo Yang<bo.yang@lsi.com>
 
 ---
-drivers/scsi/megaraid/megaraid_sas.c |   75 +++++++++++++++++++++++++++++------
- drivers/scsi/megaraid/megaraid_sas.h |   25 ++++++-----
- 2 files changed, 77 insertions(+), 23 deletions(-)
+
+drivers/scsi/megaraid/megaraid_sas.c |  125 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas.h |   17 ++++
+ 2 files changed, 141 insertions(+), 1 deletion(-)
 
 diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-09-14 07:59:41.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-09-14 09:06:54.000000000 -0400
-@@ -226,7 +226,10 @@ megasas_clear_intr_xscale(struct megasas
-  * @regs :                     MFI register set
-  */
- static inline void
--megasas_fire_cmd_xscale(dma_addr_t frame_phys_addr,u32 frame_count, struct megasas_register_set __iomem *regs)
-+megasas_fire_cmd_xscale(struct megasas_instance *instance,
-+               dma_addr_t frame_phys_addr,
-+               u32 frame_count,
-+               struct megasas_register_set __iomem *regs)
- {
-        writel((frame_phys_addr >> 3)|(frame_count),
-               &(regs)->inbound_queue_port);
-@@ -323,7 +326,10 @@ megasas_clear_intr_ppc(struct megasas_re
-  * @regs :                     MFI register set
-  */
- static inline void
--megasas_fire_cmd_ppc(dma_addr_t frame_phys_addr, u32 frame_count, struct megasas_register_set __iomem *regs)
-+megasas_fire_cmd_ppc(struct megasas_instance *instance,
-+               dma_addr_t frame_phys_addr,
-+               u32 frame_count,
-+               struct megasas_register_set __iomem *regs)
- {
-        writel((frame_phys_addr | (frame_count<<1))|1,
-                        &(regs)->inbound_queue_port);
-@@ -413,12 +419,17 @@ megasas_clear_intr_skinny(struct megasas
-  * @regs :                     MFI register set
-  */
- static inline void
--megasas_fire_cmd_skinny(dma_addr_t frame_phys_addr, u32 frame_count,
-+megasas_fire_cmd_skinny(struct megasas_instance *instance,
-+                       dma_addr_t frame_phys_addr,
-+                       u32 frame_count,
-                        struct megasas_register_set __iomem *regs)
- {
-+       unsigned long flags;
-+       spin_lock_irqsave(&instance->fire_lock, flags);
-        writel(0, &(regs)->inbound_high_queue_port);
-        writel((frame_phys_addr | (frame_count<<1))|1,
-                &(regs)->inbound_low_queue_port);
-+       spin_unlock_irqrestore(&instance->fire_lock, flags);
- }
-
- static struct megasas_instance_template megasas_instance_template_skinny = {
-@@ -508,7 +519,9 @@ megasas_clear_intr_gen2(struct megasas_r
-  * @regs :                     MFI register set
-  */
- static inline void
--megasas_fire_cmd_gen2(dma_addr_t frame_phys_addr, u32 frame_count,
-+megasas_fire_cmd_gen2(struct megasas_instance *instance,
-+                       dma_addr_t frame_phys_addr,
-+                       u32 frame_count,
-                        struct megasas_register_set __iomem *regs)
- {
-        writel((frame_phys_addr | (frame_count<<1))|1,
-@@ -550,7 +563,8 @@ megasas_issue_polled(struct megasas_inst
-        /*
-         * Issue the frame using inbound queue port
-         */
--       instance->instancet->fire_cmd(cmd->frame_phys_addr ,0,instance->reg_set);
-+       instance->instancet->fire_cmd(instance,
-+                       cmd->frame_phys_addr, 0, instance->reg_set);
-
-        /*
-         * Wait for cmd_status to change
-@@ -581,7 +595,8 @@ megasas_issue_blocked_cmd(struct megasas
- {
-        cmd->cmd_status = ENODATA;
-
--       instance->instancet->fire_cmd(cmd->frame_phys_addr ,0,instance->reg_set);
-+       instance->instancet->fire_cmd(instance,
-+                       cmd->frame_phys_addr, 0, instance->reg_set);
-
-        wait_event_timeout(instance->int_cmd_wait_q, (cmd->cmd_status != ENODATA),
-                MEGASAS_INTERNAL_CMD_WAIT_TIME*HZ);
-@@ -626,7 +641,8 @@ megasas_issue_blocked_abort_cmd(struct m
-        cmd->sync_cmd = 1;
-        cmd->cmd_status = 0xFF;
-
--       instance->instancet->fire_cmd(cmd->frame_phys_addr ,0,instance->reg_set);
-+       instance->instancet->fire_cmd(instance,
-+                       cmd->frame_phys_addr, 0, instance->reg_set);
-
-        /*
-         * Wait for this cmd to complete
-@@ -1153,7 +1169,8 @@ megasas_queue_command(struct scsi_cmnd *
-         */
-        atomic_inc(&instance->fw_outstanding);
-
--       instance->instancet->fire_cmd(cmd->frame_phys_addr ,cmd->frame_count-1,instance->reg_set);
-+       instance->instancet->fire_cmd(instance, cmd->frame_phys_addr,
-+                               cmd->frame_count-1, instance->reg_set);
-        /*
-         * Check if we have pend cmds to be completed
-         */
-@@ -1346,8 +1363,16 @@ static int megasas_wait_for_outstanding(
-                * Send signal to FW to stop processing any pending cmds.
-                * The controller will be taken offline by the OS now.
-                */
--               writel(MFI_STOP_ADP,
-+               if ((instance->pdev->device ==
-+                       PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
-+                       (instance->pdev->device ==
-+                       PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
-+                       writel(MFI_STOP_ADP,
-+                               &instance->reg_set->reserved_0[0]);
-+               } else {
-+                       writel(MFI_STOP_ADP,
-                                &instance->reg_set->inbound_doorbell);
-+               }
-                megasas_dump_pending_frames(instance);
-                instance->hw_crit_error = 1;
-                return FAILED;
-@@ -1799,7 +1824,7 @@ megasas_transition_to_ready(struct megas
-                        /*
-                         * Set the CLR bit in inbound doorbell
-                         */
--                       if ((instance->pdev->device == \
-+                       if ((instance->pdev->device ==
-                                PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
-                                (instance->pdev->device ==
-                                PCI_DEVICE_ID_LSI_SAS0071SKINNY)) {
-@@ -2799,7 +2824,8 @@ megasas_register_aen(struct megasas_inst
-        /*
-         * Issue the aen registration frame
-         */
--       instance->instancet->fire_cmd(cmd->frame_phys_addr ,0,instance->reg_set);
-+       instance->instancet->fire_cmd(instance,
-+                       cmd->frame_phys_addr, 0, instance->reg_set);
-
+--- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-09-15 03:45:14.000000000 -0400
++++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-09-15 04:18:58.000000000 -0400
+@@ -1520,6 +1520,8 @@ megasas_bios_param(struct scsi_device *s
         return 0;
  }
-@@ -2983,6 +3009,7 @@ megasas_probe_one(struct pci_dev *pdev,
-        init_waitqueue_head(&instance->abort_cmd_wait_q);
 
-        spin_lock_init(&instance->cmd_pool_lock);
-+       spin_lock_init(&instance->fire_lock);
-        spin_lock_init(&instance->completion_lock);
-        spin_lock_init(&poll_aen_lock);
-
-@@ -3005,7 +3032,7 @@ megasas_probe_one(struct pci_dev *pdev,
-
-        megasas_dbg_lvl = 0;
-        instance->flag = 0;
--       instance->unload = 0;
-+       instance->unload = 1;
-        instance->last_time = 0;
-
-        /*
-@@ -3051,6 +3078,7 @@ megasas_probe_one(struct pci_dev *pdev,
-        if (megasas_io_attach(instance))
-                goto fail_io_attach;
-
-+       instance->unload = 0;
-        return 0;
-
-       fail_start_aen:
-@@ -3174,6 +3202,7 @@ megasas_suspend(struct pci_dev *pdev, pm
-
-        instance = pci_get_drvdata(pdev);
-        host = instance->host;
-+       instance->unload = 1;
-
-        if (poll_mode_io)
-                del_timer_sync(&instance->io_completion_timer);
-@@ -3269,6 +3298,8 @@ megasas_resume(struct pci_dev *pdev)
-                megasas_start_timer(instance, &instance->io_completion_timer,
-                                megasas_io_completion_timer,
-                                MEGASAS_COMPLETION_TIMER_INTERVAL);
-+       instance->unload = 0;
++static void megasas_aen_polling(struct work_struct *work);
 +
-        return 0;
+ /**
+  * megasas_service_aen -       Processes an event notification
+  * @instance:                  Adapter soft state
+@@ -1551,6 +1553,20 @@ megasas_service_aen(struct megasas_insta
 
- fail_irq:
-@@ -3366,6 +3397,7 @@ static void __devexit megasas_detach_one
- static void megasas_shutdown(struct pci_dev *pdev)
- {
-        struct megasas_instance *instance = pci_get_drvdata(pdev);
-+       instance->unload = 1;
-        megasas_flush_cache(instance);
-        megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
+        instance->aen_cmd = NULL;
+        megasas_return_cmd(instance, cmd);
++
++       if (instance->unload == 0) {
++               struct megasas_aen_event *ev;
++               ev = kzalloc(sizeof(*ev), GFP_ATOMIC);
++               if (!ev) {
++                       printk(KERN_ERR "megasas_service_aen: out of memory\n");
++               } else {
++                       ev->instance = instance;
++                       instance->ev = ev;
++                       INIT_WORK(&ev->hotplug_work, megasas_aen_polling);
++                       schedule_delayed_work(
++                               (struct delayed_work *)&ev->hotplug_work, 0);
++               }
++       }
  }
-@@ -3615,6 +3647,17 @@ static int megasas_mgmt_ioctl_fw(struct
-                goto out_kfree_ioc;
+
+ /*
+@@ -2075,6 +2091,7 @@ static int megasas_create_frame_pool(str
+                }
+
+                cmd->frame->io.context = cmd->index;
++               cmd->frame->io.pad_0 = 0;
         }
 
-+       if (instance->hw_crit_error == 1) {
-+               printk(KERN_DEBUG "Controller in Crit ERROR\n");
-+               error = -ENODEV;
-+               goto out_kfree_ioc;
-+       }
-+
-+       if (instance->unload == 1) {
-+               error = -ENODEV;
-+               goto out_kfree_ioc;
-+       }
-+
-        /*
-         * We will allow only MEGASAS_INT_CMDS number of parallel ioctl cmds
-         */
-@@ -3650,6 +3693,14 @@ static int megasas_mgmt_ioctl_aen(struct
-        if (!instance)
-                return -ENODEV;
+        return 0;
+@@ -2271,7 +2288,6 @@ megasas_get_pd_list(struct megasas_insta
+        return ret;
+ }
 
-+       if (instance->hw_crit_error == 1) {
-+               error = -ENODEV;
+-
+ /**
+  * megasas_get_controller_info -       Returns FW's controller structure
+  * @instance:                          Adapter soft state
+@@ -2986,6 +3002,7 @@ megasas_probe_one(struct pci_dev *pdev,
+        *instance->consumer = 0;
+        megasas_poll_wait_aen = 0;
+        instance->flag_ieee = 0;
++       instance->ev = NULL;
+
+        instance->evt_detail = pci_alloc_consistent(pdev,
+                                                    sizeof(struct
+@@ -3209,6 +3226,16 @@ megasas_suspend(struct pci_dev *pdev, pm
+
+        megasas_flush_cache(instance);
+        megasas_shutdown_controller(instance, MR_DCMD_HIBERNATE_SHUTDOWN);
++
++       /* cancel the delayed work if this work still in queue */
++       if (instance->ev != NULL) {
++               struct megasas_aen_event *ev = instance->ev;
++               cancel_delayed_work(
++                       (struct delayed_work *)&ev->hotplug_work);
++               flush_scheduled_work();
++               instance->ev = NULL;
 +       }
 +
-+       if (instance->unload == 1) {
-+               return -ENODEV;
+        tasklet_kill(&instance->isr_tasklet);
+
+        pci_set_drvdata(instance->pdev, instance);
+@@ -3349,6 +3376,16 @@ static void __devexit megasas_detach_one
+        scsi_remove_host(instance->host);
+        megasas_flush_cache(instance);
+        megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
++
++       /* cancel the delayed work if this work still in queue*/
++       if (instance->ev != NULL) {
++               struct megasas_aen_event *ev = instance->ev;
++               cancel_delayed_work(
++                       (struct delayed_work *)&ev->hotplug_work);
++               flush_scheduled_work();
++               instance->ev = NULL;
 +       }
 +
-        mutex_lock(&instance->aen_mutex);
-        error = megasas_register_aen(instance, aen.seq_num,
-                                     aen.class_locale_word);
+        tasklet_kill(&instance->isr_tasklet);
+
+        /*
+@@ -3913,6 +3950,92 @@ out:
+        return retval;
+ }
+
++static void
++megasas_aen_polling(struct work_struct *work)
++{
++       struct megasas_aen_event *ev =
++               container_of(work, struct megasas_aen_event, hotplug_work);
++       struct megasas_instance *instance = ev->instance;
++       union megasas_evt_class_locale class_locale;
++       struct  Scsi_Host *host;
++       struct  scsi_device *sdev1;
++       u16     pd_index = 0;
++       int     i, j, doscan = 0;
++       u32 seq_num;
++       int error;
++
++       if (!instance) {
++               printk(KERN_ERR "invalid instance!\n");
++               kfree(ev);
++               return;
++       }
++       instance->ev = NULL;
++       host = instance->host;
++       if (instance->evt_detail) {
++
++               switch (instance->evt_detail->code) {
++               case MR_EVT_PD_INSERTED:
++               case MR_EVT_PD_REMOVED:
++               case MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED:
++                       doscan = 1;
++                       break;
++               default:
++                       doscan = 0;
++                       break;
++               }
++       } else {
++               printk(KERN_ERR "invalid evt_detail!\n");
++               kfree(ev);
++               return;
++       }
++
++       if (doscan) {
++               printk(KERN_INFO "scanning ...\n");
++               megasas_get_pd_list(instance);
++               for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
++                       for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
++                               pd_index = i*MEGASAS_MAX_DEV_PER_CHANNEL + j;
++                               sdev1 = scsi_device_lookup(host, i, j, 0);
++                               if (instance->pd_list[pd_index].driveState ==
++                                                       MR_PD_STATE_SYSTEM) {
++                                       if (!sdev1) {
++                                               scsi_add_device(host, i, j, 0);
++                                       }
++                                       if (sdev1)
++                                               scsi_device_put(sdev1);
++                               } else {
++                                       if (sdev1) {
++                                               scsi_remove_device(sdev1);
++                                               scsi_device_put(sdev1);
++                                       }
++                               }
++                       }
++               }
++       }
++
++       if ( instance->aen_cmd != NULL ) {
++               kfree(ev);
++               return ;
++       }
++
++       seq_num = instance->evt_detail->seq_num + 1;
++
++       /* Register AEN with FW for latest sequence number plus 1 */
++       class_locale.members.reserved = 0;
++       class_locale.members.locale = MR_EVT_LOCALE_ALL;
++       class_locale.members.class = MR_EVT_CLASS_DEBUG;
++       mutex_lock(&instance->aen_mutex);
++       error = megasas_register_aen(instance, seq_num,
++                                       class_locale.word);
++       mutex_unlock(&instance->aen_mutex);
++
++       if (error)
++               printk(KERN_ERR "register aen failed error %x\n", error);
++
++       kfree(ev);
++}
++
++
+ static DRIVER_ATTR(poll_mode_io, S_IRUGO|S_IWUGO,
+                megasas_sysfs_show_poll_mode_io,
+                megasas_sysfs_set_poll_mode_io);
 diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h      2009-09-14 07:59:41.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h       2009-09-14 09:02:28.000000000 -0400
-@@ -1157,17 +1157,6 @@ struct megasas_evt_detail {
+--- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h      2009-09-15 03:45:14.000000000 -0400
++++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h       2009-09-15 04:23:57.000000000 -0400
+@@ -285,6 +285,17 @@ enum MR_PD_QUERY_TYPE {
+        MR_PD_QUERY_TYPE_EXPOSED_TO_HOST    = 5,
+ };
+
++#define MR_EVT_CFG_CLEARED                              0x0004
++#define MR_EVT_LD_STATE_CHANGE                          0x0051
++#define MR_EVT_PD_INSERTED                              0x005b
++#define MR_EVT_PD_REMOVED                               0x0070
++#define MR_EVT_LD_CREATED                               0x008a
++#define MR_EVT_LD_DELETED                               0x008b
++#define MR_EVT_FOREIGN_CFG_IMPORTED                     0x00db
++#define MR_EVT_LD_OFFLINE                               0x00fc
++#define MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED             0x0152
++#define MAX_LOGICAL_DRIVES                             64
++
+ enum MR_PD_STATE {
+        MR_PD_STATE_UNCONFIGURED_GOOD   = 0x00,
+        MR_PD_STATE_UNCONFIGURED_BAD    = 0x01,
+@@ -1157,6 +1168,11 @@ struct megasas_evt_detail {
 
  } __attribute__ ((packed));
 
-- struct megasas_instance_template {
--       void (*fire_cmd)(dma_addr_t ,u32 ,struct megasas_register_set __iomem *);
--
--       void (*enable_intr)(struct megasas_register_set __iomem *) ;
--       void (*disable_intr)(struct megasas_register_set __iomem *);
--
--       int (*clear_intr)(struct megasas_register_set __iomem *);
--
--       u32 (*read_fw_status_reg)(struct megasas_register_set __iomem *);
-- };
--
- struct megasas_instance {
-
-        u32 *producer;
-@@ -1193,6 +1182,8 @@ struct megasas_instance {
-        spinlock_t cmd_pool_lock;
-        /* used to synch producer, consumer ptrs in dpc */
-        spinlock_t completion_lock;
-+       /* used to sync fire the cmd to fw */
-+       spinlock_t fire_lock;
-        struct dma_pool *frame_dma_pool;
-        struct dma_pool *sense_dma_pool;
-@@ -1224,6 +1215,18 @@ struct megasas_instance {
-        struct timer_list io_completion_timer;
- };
-
-+struct megasas_instance_template {
-+       void (*fire_cmd)(struct megasas_instance *, dma_addr_t, \
-+               u32, struct megasas_register_set __iomem *);
-+
-+       void (*enable_intr)(struct megasas_register_set __iomem *) ;
-+       void (*disable_intr)(struct megasas_register_set __iomem *);
-+
-+       int (*clear_intr)(struct megasas_register_set __iomem *);
-+
-+       u32 (*read_fw_status_reg)(struct megasas_register_set __iomem *);
++struct megasas_aen_event {
++       struct work_struct hotplug_work;
++       struct megasas_instance *instance;
 +};
 +
- #define MEGASAS_IS_LOGICAL(scp)                                                \
-        (scp->device->channel < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1
+struct megasas_instance {
+
+        u32 *producer;
+@@ -1176,6 +1192,7 @@ struct megasas_instance {
+        u16 max_num_sge;
+        u16 max_fw_cmds;
+        u32 max_sectors_per_req;
++       struct megasas_aen_event *ev;
+
+        struct megasas_cmd **cmd_list;
+        struct list_head cmd_pool;
