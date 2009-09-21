@@ -1,128 +1,64 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 12/12] scsi: megaraid_sas - version and docs update
-Date: Sun, 20 Sep 2009 20:47:26 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C35C512408@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5119E1@cosmail02.lsi.com>
+From: Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+Subject: Re: Reducing the verbosity of inserting a USB storage device
+Date: Sun, 20 Sep 2009 19:07:34 -0700
+Message-ID: <20090921020734.GB10515@one-eyed-alien.net>
+References: <20090920225348.GB3690@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:41474 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754508AbZIUCrf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Sep 2009 22:47:35 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C5119E1@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4Ckj6UjgE2iN1+kY"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20090920225348.GB3690-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Update the version and documentation
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+--4Ckj6UjgE2iN1+kY
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
----
+On Sun, Sep 20, 2009 at 04:53:49PM -0600, Matthew Wilcox wrote:
+>=20
+> The current kernel is very verbose when you insert a new USB storage
+> device:
+>=20
+> [...]
+>=20
+> I think we can print a bit less information, and format it more densely.
+> With the following three patches, my kernel prints:
 
-Documentation/scsi/ChangeLog.megaraid_sas |   62 ++++++++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.c      |    2
- drivers/scsi/megaraid/megaraid_sas.h      |    6 +-
- 3 files changed, 66 insertions(+), 4 deletions(-)
+Seems pretty reasonable, but perhaps we should put in a module parameter to
+turn off the "quiet" flag?  The old data may be useful for debugging
+purposes.
 
-diff -rupN linux-2.6.28_orig/Documentation/scsi/ChangeLog.megaraid_sas linux-2.6.28_new/Documentation/scsi/ChangeLog.megaraid_sas
---- linux-2.6.28_orig/Documentation/scsi/ChangeLog.megaraid_sas 2009-09-15 05:32:34.000000000 -0400
-+++ linux-2.6.28_new/Documentation/scsi/ChangeLog.megaraid_sas  2009-09-15 06:12:38.000000000 -0400
-@@ -1,3 +1,65 @@
-+1 Release Date    : Tues.  July 28, 2009 10:12:45 PST 2009 -
-+                       (emaild-id:megaraidlinux@lsi.com)
-+                       Bo Yang
-+
-+2 Current Version : 00.00.04.12
-+3 Older Version   : 00.00.04.10
-+
-+1.     Change the AEN sys PD update from scsi_scan to
-+       scsi_add_device and scsi_remove_device.
-+2.     Takeoff the debug print-out in aen_polling routine.
-+
-+1 Release Date    : Thur.  July 02, 2009 10:12:45 PST 2009 -
-+                       (emaild-id:megaraidlinux@lsi.com)
-+                       Bo Yang
-+
-+2 Current Version : 00.00.04.10
-+3 Older Version   : 00.00.04.08
-+
-+1.     Add the 3 mins timeout during the controller initialize.
-+2.     Add the fix for 64bit sense date errors.
-+
-+1 Release Date    : Tues. May 05, 2009 10:12:45 PST 2009 -
-+                       (emaild-id:megaraidlinux@lsi.com)
-+                       Bo Yang
-+
-+2 Current Version : 00.00.04.08
-+3 Older Version   : 00.00.04.06
-+
-+1.     Add the fix of pending in FW after deleted the logic drives.
-+2.     Add the fix of deallocating memory after get pdlist.
-+
-+1 Release Date    : Tues. March 26, 2009 10:12:45 PST 2009 -
-+                       (emaild-id:megaraidlinux@lsi.com)
-+                       Bo Yang
-+
-+2 Current Version : 00.00.04.06
-+3 Older Version   : 00.00.04.04
-+
-+1.     Add the fix of the driver cmd empty fix of the driver cmd empty.
-+2.     Add the fix of the driver MSM AEN CMD cause the system slow.
-+
-+1 Release Date    : Tues. March 03, 2009 10:12:45 PST 2009 -
-+                       (emaild-id:megaraidlinux@lsi.com)
-+                       Bo Yang
-+
-+2 Current Version : 00.00.04.04
-+3 Older Version   : 00.00.04.01
-+
-+1.     Add the Tape drive fix to the driver: If the command is for
-+       the tape device, set the pthru timeout to the os layer timeout value.
-+
-+2.     Add Poll_wait mechanism to Gen-2 Linux driv.
-+               In the aen handler, driver needs to wakeup poll handler similar to
-+               the way it raises SIGIO.
-+
-+3.     Add new controller new SAS2 support to the driver.
-+
-+4.     Report the unconfigured PD (system PD) to OS.
-+
-+5.     Add the IEEE SGL support to the driver
-+
-+6.     Reasign the Application cmds to SAS2 controller
+Matt
 
- 1 Release Date    : Thur.July. 24 11:41:51 PST 2008 -
-                        (emaild-id:megaraidlinux@lsi.com)
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c      2009-09-15 05:32:34.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c       2009-09-15 05:33:49.000000000 -0400
-@@ -10,7 +10,7 @@
-  *        2 of the License, or (at your option) any later version.
-  *
-  * FILE                : megaraid_sas.c
-- * Version     : v00.00.04.01-rc1
-+ * Version     : v00.00.04.12-rc1
-  *
-  * Authors:
-  *     (email-id : megaraidlinux@lsi.com)
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h      2009-09-15 05:32:34.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h       2009-09-15 05:34:40.000000000 -0400
-@@ -18,9 +18,9 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION                                "00.00.04.01"
--#define MEGASAS_RELDATE                                "July 24, 2008"
--#define MEGASAS_EXT_VERSION                    "Thu July 24 11:41:51 PST 2008"
-+#define MEGASAS_VERSION                                "00.00.04.12-rc1"
-+#define MEGASAS_RELDATE                                "Sep. 17, 2009"
-+#define MEGASAS_EXT_VERSION                    "Thu Sep. 17 11:41:51 PST 2009"
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
- /*
-  * Device IDs
+It was a new hope.
+					-- Dust Puppy
+User Friendly, 12/25/1998
+
+--4Ckj6UjgE2iN1+kY
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFKtt/mHL9iwnUZqnkRAsX2AKCfZFwp31PJ0uf88tknj1aOjsBheQCfadIp
+eDRykpf/ToQV/0oIqPKy6Zg=
+=/jaz
+-----END PGP SIGNATURE-----
+
+--4Ckj6UjgE2iN1+kY--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
