@@ -1,67 +1,65 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Reducing the verbosity of inserting a USB storage device
-Date: Sun, 20 Sep 2009 21:09:45 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0909202104300.14465-100000@netrider.rowland.org>
-References: <20090920225348.GB3690@parisc-linux.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 2/3] USB Storage: Make driver less chatty when it finds
+ a new device
+Date: Sun, 20 Sep 2009 22:09:40 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0909202202280.15304-100000@netrider.rowland.org>
+References: <20090920225758.GE3690@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20090920225348.GB3690-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from netrider.rowland.org ([192.131.102.5]:56554 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751002AbZIUCJi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Sep 2009 22:09:38 -0400
+In-Reply-To: <20090920225758.GE3690@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
 On Sun, 20 Sep 2009, Matthew Wilcox wrote:
 
-> The current kernel is very verbose when you insert a new USB storage
-> device:
+> From: Matthew Wilcox <willy@linux.intel.com>
 > 
-> usb 1-2: new high speed USB device using ehci_hcd and address 9
-> usb 1-2: configuration #1 chosen from 1 choice
-> scsi4 : SCSI emulation for USB Mass Storage devices
-> usb-storage: device found at 9
-> usb-storage: waiting for device to settle before scanning
-> usb-storage: device scan complete
-> scsi 4:0:0:0: Direct-Access     GENERIC  USB DISK DEVICE  0100 PQ: 0 ANSI: 0 CCS
-> sd 4:0:0:0: Attached scsi generic sg2 type 0
-> sd 4:0:0:0: [sdc] 15728128 512-byte hardware sectors: (8.05 GB/7.49 GiB)
-> sd 4:0:0:0: [sdc] Write Protect is off
-> sd 4:0:0:0: [sdc] Mode Sense: 00 12 00 00
-> sd 4:0:0:0: [sdc] Assuming drive cache: write through
-> sd 4:0:0:0: [sdc] Assuming drive cache: write through
->  sdc:
-> sd 4:0:0:0: [sdc] Attached SCSI removable disk
+> Use dev_dbg() instead of an unconditional printk(KERN_DEBUG).  This has
+> two benefits; one is that it identifies the USB device which the messages
+> related to, and the other is that the messages won't be produced unless
+> debug is turned on.
 > 
-> I think we can print a bit less information, and format it more densely.
-> With the following three patches, my kernel prints:
-> 
-> usb 1-4: new high speed USB device using ehci_hcd and address 5
-> usb 1-4: configuration #1 chosen from 1 choice
-> scsi 6:0:0:0: Direct-Access              Flash Disk       5.00 PQ: 0 ANSI: 2
-> sd 6:0:0:0: Attached scsi generic sg1 type 0
-> sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> sd 6:0:0:0: [sdb] 2009088 512-byte logical blocks: (1.02 GB/981 MiB)
-> sd 6:0:0:0: [sdb] Removable disk, Write Protect is off
->  sdb: unknown partition table
-> 
-> which doesn't take up nearly as much of my syslog ;-)
+> Enable the debug messages when CONFIG_USB_STORAGE_DEBUG is set.
 
-I approve of these changes in general, but there should be one more
-line of information.  In the "after" example, there's nothing to relate
-the USB device mentioned in the first two lines with the SCSI device
-mentioned in the remaining six.  I'd like to see one line in between
-from usb-storage, to indicate which USB interface is being registered
-as which SCSI host.
+> -	printk(KERN_DEBUG
+> -		"usb-storage: device found at %d\n", us->pusb_dev->devnum);
+> +	dev_dbg(&us->pusb_dev->dev, "usb-storage device found\n");
+>  
+>  	set_freezable();
+>  	/* Wait for the timeout to expire or for a disconnect */
+>  	if (delay_use > 0) {
+> -		printk(KERN_DEBUG "usb-storage: waiting for device "
+> -				"to settle before scanning\n");
+> +		dev_dbg(&us->pusb_dev->dev, "usb-storage: waiting for device "
+> +			"to settle before scanning\n");
+>  		wait_event_freezable_timeout(us->delay_wait,
+>  				test_bit(US_FLIDX_DONT_SCAN, &us->dflags),
+>  				delay_use * HZ);
+> @@ -832,7 +835,7 @@ static int usb_stor_scan_thread(void * __us)
+>  			mutex_unlock(&us->dev_mutex);
+>  		}
+>  		scsi_scan_host(us_to_host(us));
+> -		printk(KERN_DEBUG "usb-storage: device scan complete\n");
+> +		dev_dbg(&us->pusb_dev->dev, "usb-storage scan complete\n");
+>  
+>  		/* Should we unbind if no devices were detected? */
+>  	}
 
-We don't print anything quite like that right now, so this would have 
-to be something new.  The closest we come is the "scsi4 : SCSI 
-emulation for USB Mass Storage devices" line, and it doesn't mention 
-the USB interface.
+Each of these dev_dbg() lines should refer to pusb_intf instead of
+pusb_dev.  See the existing code at the end of adjust_quirks().  Once
+this change is made, the second dev_dbg() line won't need to specify
+"usb-storage:" at the start of the message.
+
+With those changes in place,
+
+	Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
 Alan Stern
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
