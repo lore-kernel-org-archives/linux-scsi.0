@@ -1,65 +1,213 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 2/3] USB Storage: Make driver less chatty when it finds
- a new device
-Date: Sun, 20 Sep 2009 22:09:40 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0909202202280.15304-100000@netrider.rowland.org>
-References: <20090920225758.GE3690@parisc-linux.org>
+From: "jack wang" <jack_wang@usish.com>
+Subject: Re: Adaptec 1405 and mvsas
+Date: Mon, 21 Sep 2009 10:16:01 +0800
+Message-ID: <C9EBA133874648C7B96813342D8B6F99@usish.com.cn>
+References: <20090904141413.GA29006@hydra2.LF.net> <4AB56075.9030304@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:56554 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751002AbZIUCJi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Sep 2009 22:09:38 -0400
-In-Reply-To: <20090920225758.GE3690@parisc-linux.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:37486 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672AbZIUCQJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Sep 2009 22:16:09 -0400
+In-Reply-To: <4AB56075.9030304@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: =?iso-8859-1?Q?'Marco_Gru=DF'?= <kork.test@gmail.com>, linux-scsi@vger.kernel.org
+Cc: sander@humilis.net, 'Ivo Simicevic' <ivo@ultra.hr>, jasonchu@marvell.com, jfeng@marvell.com, ayan@marvell.com
 
-On Sun, 20 Sep 2009, Matthew Wilcox wrote:
+Hello,
 
-> From: Matthew Wilcox <willy@linux.intel.com>
-> 
-> Use dev_dbg() instead of an unconditional printk(KERN_DEBUG).  This has
-> two benefits; one is that it identifies the USB device which the messages
-> related to, and the other is that the messages won't be produced unless
-> debug is turned on.
-> 
-> Enable the debug messages when CONFIG_USB_STORAGE_DEBUG is set.
+following up to my earlier mail from September 4th.
 
-> -	printk(KERN_DEBUG
-> -		"usb-storage: device found at %d\n", us->pusb_dev->devnum);
-> +	dev_dbg(&us->pusb_dev->dev, "usb-storage device found\n");
->  
->  	set_freezable();
->  	/* Wait for the timeout to expire or for a disconnect */
->  	if (delay_use > 0) {
-> -		printk(KERN_DEBUG "usb-storage: waiting for device "
-> -				"to settle before scanning\n");
-> +		dev_dbg(&us->pusb_dev->dev, "usb-storage: waiting for device "
-> +			"to settle before scanning\n");
->  		wait_event_freezable_timeout(us->delay_wait,
->  				test_bit(US_FLIDX_DONT_SCAN, &us->dflags),
->  				delay_use * HZ);
-> @@ -832,7 +835,7 @@ static int usb_stor_scan_thread(void * __us)
->  			mutex_unlock(&us->dev_mutex);
->  		}
->  		scsi_scan_host(us_to_host(us));
-> -		printk(KERN_DEBUG "usb-storage: device scan complete\n");
-> +		dev_dbg(&us->pusb_dev->dev, "usb-storage scan complete\n");
->  
->  		/* Should we unbind if no devices were detected? */
->  	}
+Marco Gru=DF wrote:
+> I recently acquired an Adaptec 1405 SAS/SATA HBA.
+>=20
+> While there is a closed-source driver by Adaptec, called adpinv, I'd =
+of
+> course like to get it to work with open drivers.
+>=20
+> A lspci -v reveals that the controller is actually using a Marvell ch=
+ip:
+>=20
+> 02:00.0 Serial Attached SCSI controller: Adaptec Device 0450 (rev 02)
+>         Subsystem: Marvell Technology Group Ltd. Device 6440
+>=20
+> 02:00.0 0107: 9005:0450 (rev 02)
+>         Subsystem: 11ab:6440
+>=20
+> (The output of lspci -vv is attached below)
+>=20
+> So I simply added an entry for this PCI id to mvsas.c:
+>=20
+> [...]
+>=20
+> ...with limited success:
 
-Each of these dev_dbg() lines should refer to pusb_intf instead of
-pusb_dev.  See the existing code at the end of adjust_quirks().  Once
-this change is made, the second dev_dbg() line won't need to specify
-"usb-storage:" at the start of the message.
+I noticed that the mvsas driver seems to have changed quite a lot
+in 2.6.31, since there's now a subdir for it. I figured I'd try
+my simple PCI ID hack again:
 
-With those changes in place,
+--- /usr/src/linux-2.6.31/drivers/scsi/mvsas/mv_init.c  2009-09-19
+23:09:44.000000000 +0200
++++ /usr/src/linux-2.6.31/drivers/scsi/mvsas/mv_init.c.orig     2009-09=
+-10
+00:13:59.000000000 +0200
+@@ -653,15 +653,6 @@
+         { PCI_VDEVICE(MARVELL, 0x6485), chip_6485 },
+         { PCI_VDEVICE(MARVELL, 0x9480), chip_9480 },
+         { PCI_VDEVICE(MARVELL, 0x9180), chip_9180 },
+-       {
+-               .vendor         =3D PCI_VENDOR_ID_ADAPTEC2,
+-               .device         =3D 0x0450,
+-               .subvendor      =3D PCI_VENDOR_ID_MARVELL,
+-               .subdevice      =3D 0x6440,
+-               .class          =3D 0,
+-               .class_mask     =3D 0,
+-               .driver_data    =3D chip_6440,
+-       },
 
-	Acked-by: Alan Stern <stern@rowland.harvard.edu>
+         { }     /* terminate list */
+  };
 
-Alan Stern
 
+This time I get the following upon loading (on x86_64):
+
+Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: mvsas: driver versio=
+n
+0.8.2
+Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: PCI INT A -> GSI 19
+(level, low) -> IRQ 19
+Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: setting latency time=
+r to
+64
+Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: mvsas: PCI-E x4,
+Bandwidth Usage: 2.5 Gbps
+Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 0
+attach dev info is 0
+Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 0
+attach sas addr is 0
+Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 1
+attach dev info is 0
+Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 1
+attach sas addr is 0
+Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 2
+attach dev info is 20000
+Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 2
+attach sas addr is 2
+Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 3
+attach dev info is 40400
+Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 3
+attach sas addr is 3
+Sep 19 23:24:45 debian kernel: scsi5 : mvsas
+Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 380:phy 2 by=
+te
+dmaded.
+Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 380:phy 3 by=
+te
+dmaded.
+Sep 19 23:24:45 debian kernel: sas: phy-5:2 added to port-5:0, phy_mask=
+:0x4
+( 200000000000000)
+Sep 19 23:24:45 debian kernel: sas: phy-5:3 added to port-5:1, phy_mask=
+:0x8
+( 300000000000000)
+Sep 19 23:24:45 debian kernel: sas: DOING DISCOVERY on port 0, pid:2236
+Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1365:found
+dev[0:5] is gone.
+Sep 19 23:24:45 debian kernel: sas: sas_ata_phy_reset: Found ATA device=
+=2E
+Sep 19 23:24:45 debian kernel: ata7.00: ATA-7: OCZ-VERTEX, 1.3, max UDM=
+A/133
+Sep 19 23:24:45 debian kernel: ata7.00: 62533296 sectors, multi 1: LBA4=
+8 NCQ
+(depth 31/32)
+Sep 19 23:24:45 debian kernel: ata7.00: configured for UDMA/133
+Sep 19 23:24:45 debian kernel: scsi 5:0:0:0: Direct-Access     ATA
+OCZ-VERTEX       1.3  PQ: 0 ANSI: 5
+Sep 19 23:24:45 debian kernel: sd 5:0:0:0: Attached scsi generic sg3 ty=
+pe 0
+Sep 19 23:24:45 debian kernel: sas: DONE DISCOVERY on port 0, pid:2236,
+result:0
+Sep 19 23:24:45 debian kernel: sas: DOING DISCOVERY on port 1, pid:2236
+Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] 62533296 512-byte logi=
+cal
+blocks: (32.0 GB/29.8 GiB)
+Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Write Protect is off
+Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 0=
+0
+Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Write cache: enabled, =
+read
+cache: enabled, doesn't support DPO or FUA
+Sep 19 23:24:45 debian kernel:  sdd: sdd1 sdd2
+Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Attached SCSI disk
+Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1365:found
+dev[1:5] is gone.
+Sep 19 23:24:45 debian kernel: sas: sas_ata_phy_reset: Found ATAPI devi=
+ce.
+Sep 19 23:24:45 debian kernel: ata8.00: ATAPI: HL-DT-ST DVDRAM GH20NS15=
+,
+IL00, max UDMA/100
+Sep 19 23:24:45 debian kernel: ata8.00: configured for UDMA/100
+Sep 19 23:24:45 debian kernel: scsi 5:0:1:0: CD-ROM            HL-DT-ST
+DVDRAM GH20NS15  IL00 PQ: 0 ANSI: 5
+Sep 19 23:24:45 debian kernel: sr0: scsi3-mmc drive: 48x/48x writer dvd=
+-ram
+cd/rw xa/form2 cdda tray
+Sep 19 23:24:45 debian kernel: sr 5:0:1:0: Attached scsi CD-ROM sr0
+Sep 19 23:24:45 debian kernel: sr 5:0:1:0: Attached scsi generic sg4 ty=
+pe 5
+Sep 19 23:24:45 debian kernel: sas: DONE DISCOVERY on port 1, pid:2236,
+result:0
+
+This looks much better; the performance isn't exactly stellar though.
+
+Doing 'sync; time (dd if=3D/dev/zero of=3D1G bs=3D1024 count=3D1024k; s=
+ync)'
+on the SSD shows me about 40MB/s are written to disk. The same SSD
+achieves 150MB/s on an Intel ICH10.
+
+Also, during this experiment, I get some of these in the syslog:
+
+Sep 19 23:25:26 debian kernel: drivers/scsi/mvsas/mv_sas.c 2023:port 2 =
+ctrl
+sts=3D0x199800.
+Sep 19 23:25:26 debian kernel: drivers/scsi/mvsas/mv_sas.c 2025:Port 2 =
+irq
+sts =3D 0x1000000
+Sep 19 23:25:28 debian kernel: drivers/scsi/mvsas/mv_sas.c 2023:port 2 =
+ctrl
+sts=3D0x199800.
+Sep 19 23:25:28 debian kernel: drivers/scsi/mvsas/mv_sas.c 2025:Port 2 =
+irq
+sts =3D 0x1000000
+Sep 19 23:25:30 debian kernel: drivers/scsi/mvsas/mv_sas.c 2023:port 2 =
+ctrl
+sts=3D0x199800.
+Sep 19 23:25:30 debian kernel: drivers/scsi/mvsas/mv_sas.c 2025:Port 2 =
+irq
+sts =3D 0x1000000
+
+As stated in my previous mail: Anything I can to do help get
+this controller working nicely, I'll do ;-)
+
+Thanks!
+
+Marco
+
+CC-ing Marvell persons=20
+Jack
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
