@@ -1,210 +1,59 @@
-From: "jack wang" <jack_wang@usish.com>
-Subject: Re: Adaptec 1405 and mvsas
-Date: Mon, 21 Sep 2009 10:16:01 +0800
-Message-ID: <C9EBA133874648C7B96813342D8B6F99@usish.com.cn>
-References: <20090904141413.GA29006@hydra2.LF.net> <4AB56075.9030304@gmail.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: [PATCH 1/12] scsi: megaraid_sas - tape drive support fix
+Date: Sun, 20 Sep 2009 20:21:19 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:37486 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672AbZIUCQJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Sep 2009 22:16:09 -0400
-In-Reply-To: <4AB56075.9030304@gmail.com>
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:52839 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753257AbZIUCVi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Sep 2009 22:21:38 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?iso-8859-1?Q?'Marco_Gru=DF'?= <kork.test@gmail.com>, linux-scsi@vger.kernel.org
-Cc: sander@humilis.net, 'Ivo Simicevic' <ivo@ultra.hr>, jasonchu@marvell.com, jfeng@marvell.com, ayan@marvell.com
+To: "Yang, Bo" <Bo.Yang@lsi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Hello,
+Add the Tape drive fix to the megaraid_sas driver: If the command is fo=
+r the tape device, set the FW pthru timeout to the os layer timeout val=
+ue.
 
-following up to my earlier mail from September 4th.
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
-Marco Gru=DF wrote:
-> I recently acquired an Adaptec 1405 SAS/SATA HBA.
->=20
-> While there is a closed-source driver by Adaptec, called adpinv, I'd =
-of
-> course like to get it to work with open drivers.
->=20
-> A lspci -v reveals that the controller is actually using a Marvell ch=
-ip:
->=20
-> 02:00.0 Serial Attached SCSI controller: Adaptec Device 0450 (rev 02)
->         Subsystem: Marvell Technology Group Ltd. Device 6440
->=20
-> 02:00.0 0107: 9005:0450 (rev 02)
->         Subsystem: 11ab:6440
->=20
-> (The output of lspci -vv is attached below)
->=20
-> So I simply added an entry for this PCI id to mvsas.c:
->=20
-> [...]
->=20
-> ...with limited success:
+---
+drivers/scsi/megaraid/megaraid_sas.c |=A0=A0 11 +++++++++++
+=A01 file changed, 11 insertions(+)
 
-I noticed that the mvsas driver seems to have changed quite a lot
-in 2.6.31, since there's now a subdir for it. I figured I'd try
-my simple PCI ID hack again:
+diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux=
+-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c=A0=A0=A0=A0=A0=
+ 2009-05-04 20:06:29.000000000 -0400
++++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c=A0=A0=A0=A0=A0=
+=A0 2009-05-04 20:08:26.000000000 -0400
+@@ -687,6 +687,17 @@ megasas_build_dcdb(struct megasas_instan
+=A0=A0=A0=A0=A0=A0=A0 memcpy(pthru->cdb, scp->cmnd, scp->cmd_len);
 
---- /usr/src/linux-2.6.31/drivers/scsi/mvsas/mv_init.c  2009-09-19
-23:09:44.000000000 +0200
-+++ /usr/src/linux-2.6.31/drivers/scsi/mvsas/mv_init.c.orig     2009-09=
--10
-00:13:59.000000000 +0200
-@@ -653,15 +653,6 @@
-         { PCI_VDEVICE(MARVELL, 0x6485), chip_6485 },
-         { PCI_VDEVICE(MARVELL, 0x9480), chip_9480 },
-         { PCI_VDEVICE(MARVELL, 0x9180), chip_9180 },
--       {
--               .vendor         =3D PCI_VENDOR_ID_ADAPTEC2,
--               .device         =3D 0x0450,
--               .subvendor      =3D PCI_VENDOR_ID_MARVELL,
--               .subdevice      =3D 0x6440,
--               .class          =3D 0,
--               .class_mask     =3D 0,
--               .driver_data    =3D chip_6440,
--       },
-
-         { }     /* terminate list */
-  };
-
-
-This time I get the following upon loading (on x86_64):
-
-Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: mvsas: driver versio=
-n
-0.8.2
-Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: PCI INT A -> GSI 19
-(level, low) -> IRQ 19
-Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: setting latency time=
-r to
-64
-Sep 19 23:24:42 debian kernel: mvsas 0000:02:00.0: mvsas: PCI-E x4,
-Bandwidth Usage: 2.5 Gbps
-Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 0
-attach dev info is 0
-Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 0
-attach sas addr is 0
-Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 1
-attach dev info is 0
-Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 1
-attach sas addr is 0
-Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 2
-attach dev info is 20000
-Sep 19 23:24:44 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 2
-attach sas addr is 2
-Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1214:port 3
-attach dev info is 40400
-Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1216:port 3
-attach sas addr is 3
-Sep 19 23:24:45 debian kernel: scsi5 : mvsas
-Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 380:phy 2 by=
-te
-dmaded.
-Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 380:phy 3 by=
-te
-dmaded.
-Sep 19 23:24:45 debian kernel: sas: phy-5:2 added to port-5:0, phy_mask=
-:0x4
-( 200000000000000)
-Sep 19 23:24:45 debian kernel: sas: phy-5:3 added to port-5:1, phy_mask=
-:0x8
-( 300000000000000)
-Sep 19 23:24:45 debian kernel: sas: DOING DISCOVERY on port 0, pid:2236
-Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1365:found
-dev[0:5] is gone.
-Sep 19 23:24:45 debian kernel: sas: sas_ata_phy_reset: Found ATA device=
-=2E
-Sep 19 23:24:45 debian kernel: ata7.00: ATA-7: OCZ-VERTEX, 1.3, max UDM=
-A/133
-Sep 19 23:24:45 debian kernel: ata7.00: 62533296 sectors, multi 1: LBA4=
-8 NCQ
-(depth 31/32)
-Sep 19 23:24:45 debian kernel: ata7.00: configured for UDMA/133
-Sep 19 23:24:45 debian kernel: scsi 5:0:0:0: Direct-Access     ATA
-OCZ-VERTEX       1.3  PQ: 0 ANSI: 5
-Sep 19 23:24:45 debian kernel: sd 5:0:0:0: Attached scsi generic sg3 ty=
-pe 0
-Sep 19 23:24:45 debian kernel: sas: DONE DISCOVERY on port 0, pid:2236,
-result:0
-Sep 19 23:24:45 debian kernel: sas: DOING DISCOVERY on port 1, pid:2236
-Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] 62533296 512-byte logi=
-cal
-blocks: (32.0 GB/29.8 GiB)
-Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Write Protect is off
-Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 0=
-0
-Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Write cache: enabled, =
-read
-cache: enabled, doesn't support DPO or FUA
-Sep 19 23:24:45 debian kernel:  sdd: sdd1 sdd2
-Sep 19 23:24:45 debian kernel: sd 5:0:0:0: [sdd] Attached SCSI disk
-Sep 19 23:24:45 debian kernel: drivers/scsi/mvsas/mv_sas.c 1365:found
-dev[1:5] is gone.
-Sep 19 23:24:45 debian kernel: sas: sas_ata_phy_reset: Found ATAPI devi=
-ce.
-Sep 19 23:24:45 debian kernel: ata8.00: ATAPI: HL-DT-ST DVDRAM GH20NS15=
-,
-IL00, max UDMA/100
-Sep 19 23:24:45 debian kernel: ata8.00: configured for UDMA/100
-Sep 19 23:24:45 debian kernel: scsi 5:0:1:0: CD-ROM            HL-DT-ST
-DVDRAM GH20NS15  IL00 PQ: 0 ANSI: 5
-Sep 19 23:24:45 debian kernel: sr0: scsi3-mmc drive: 48x/48x writer dvd=
--ram
-cd/rw xa/form2 cdda tray
-Sep 19 23:24:45 debian kernel: sr 5:0:1:0: Attached scsi CD-ROM sr0
-Sep 19 23:24:45 debian kernel: sr 5:0:1:0: Attached scsi generic sg4 ty=
-pe 5
-Sep 19 23:24:45 debian kernel: sas: DONE DISCOVERY on port 1, pid:2236,
-result:0
-
-This looks much better; the performance isn't exactly stellar though.
-
-Doing 'sync; time (dd if=3D/dev/zero of=3D1G bs=3D1024 count=3D1024k; s=
-ync)'
-on the SSD shows me about 40MB/s are written to disk. The same SSD
-achieves 150MB/s on an Intel ICH10.
-
-Also, during this experiment, I get some of these in the syslog:
-
-Sep 19 23:25:26 debian kernel: drivers/scsi/mvsas/mv_sas.c 2023:port 2 =
-ctrl
-sts=3D0x199800.
-Sep 19 23:25:26 debian kernel: drivers/scsi/mvsas/mv_sas.c 2025:Port 2 =
-irq
-sts =3D 0x1000000
-Sep 19 23:25:28 debian kernel: drivers/scsi/mvsas/mv_sas.c 2023:port 2 =
-ctrl
-sts=3D0x199800.
-Sep 19 23:25:28 debian kernel: drivers/scsi/mvsas/mv_sas.c 2025:Port 2 =
-irq
-sts =3D 0x1000000
-Sep 19 23:25:30 debian kernel: drivers/scsi/mvsas/mv_sas.c 2023:port 2 =
-ctrl
-sts=3D0x199800.
-Sep 19 23:25:30 debian kernel: drivers/scsi/mvsas/mv_sas.c 2025:Port 2 =
-irq
-sts =3D 0x1000000
-
-As stated in my previous mail: Anything I can to do help get
-this controller working nicely, I'll do ;-)
-
-Thanks!
-
-Marco
-
-CC-ing Marvell persons=20
-Jack
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+=A0=A0=A0=A0=A0=A0=A0 /*
++=A0=A0=A0=A0=A0=A0 * If the command is for the tape device, set the
++=A0=A0=A0=A0=A0 =A0* pthru timeout to the os layer timeout value.
++=A0=A0=A0=A0=A0=A0 */
++=A0=A0=A0=A0=A0=A0 if (scp->device->type =3D=3D TYPE_TAPE) {
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if ((scp->request->timeout =
+/ HZ) > 0xFFFF)
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pth=
+ru->timeout =3D 0xFFFF;
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 else
++=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pth=
+ru->timeout =3D scp->request->timeout / HZ;
++=A0=A0=A0=A0=A0=A0 }
++
++=A0=A0=A0=A0=A0=A0 /*
+=A0=A0=A0=A0=A0=A0=A0=A0 * Construct SGL
+=A0=A0=A0=A0=A0=A0=A0=A0 */
+=A0=A0=A0=A0=A0=A0=A0 if (IS_DMA64) {
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
