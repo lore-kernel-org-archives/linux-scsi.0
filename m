@@ -1,24 +1,36 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
-Date: Mon, 21 Sep 2009 15:34:04 +0000
-Message-ID: <1253547244.4579.4.camel@mulgrave.site>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: LSI MegaRAID not recognised correctly in 64-bit.  2.6.29.6
+Date: Mon, 21 Sep 2009 09:37:32 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C35C5124FF@cosmail02.lsi.com>
 References: <4AB48254.4000404@attglobal.net>
 	 <20090919165404D.fujita.tomonori@lab.ntt.co.jp>
 	 <4AB4F792.8020308@attglobal.net>
 	 <20090921225015B.fujita.tomonori@lab.ntt.co.jp>
+ <1253547244.4579.4.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54546 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092AbZIUPeI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Sep 2009 11:34:08 -0400
-In-Reply-To: <20090921225015B.fujita.tomonori@lab.ntt.co.jp>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:58787 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750813AbZIUPhq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Sep 2009 11:37:46 -0400
+In-Reply-To: <1253547244.4579.4.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: stunnel@attglobal.net, matthew@wil.cx, linux-scsi@vger.kernel.org, bo.yang@lsi.com
+To: James Bottomley <James.Bottomley@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "stunnel@attglobal.net" <stunnel@attglobal.net>, "matthew@wil.cx" <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+I am checking with our FW team...
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@suse.de] 
+Sent: Monday, September 21, 2009 11:34 AM
+To: FUJITA Tomonori
+Cc: stunnel@attglobal.net; matthew@wil.cx; linux-scsi@vger.kernel.org; Yang, Bo
+Subject: Re: LSI MegaRAID not recognised correctly in 64-bit. 2.6.29.6
 
 On Mon, 2009-09-21 at 22:51 +0900, FUJITA Tomonori wrote:
 > On Sat, 19 Sep 2009 08:24:02 -0700
