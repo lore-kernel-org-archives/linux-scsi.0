@@ -1,274 +1,117 @@
-From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 2/2] be2iscsi: Moving to pci_pools v3
-Date: Tue, 22 Sep 2009 08:22:26 +0530
-Message-ID: <20090922025217.GA19987@serverengines.com>
-Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: [2.6.31] Memory leak in SCSI initialization?
+Date: Tue, 22 Sep 2009 13:18:13 +0900
+Message-ID: <200909221318.IFD17141.OQLtSFJVOOFFMH@I-love.SAKURA.ne.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:56946 "EHLO
-	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751641AbZIVCwI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Sep 2009 22:52:08 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753422AbZIVESP@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
+Cc: linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
- This patch contains changes to use pci_pools for iscsi hdr
-instead of pci_alloc_consistent. Here we alloc and free to pool
-for every IO
+Hello.
 
-v3:
-- Remove cleanup loop in beiscsi_session_destroy
-- Fixup for allocation failure handling in beiscsi_alloc_pdu
-- Removed unused variable in beiscsi_session_destroy.
- 
-Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
----
- drivers/scsi/be2iscsi/be_iscsi.c |   44 +++++++++---------------
- drivers/scsi/be2iscsi/be_main.c  |   67 +++++++++++++++++--------------------
- drivers/scsi/be2iscsi/be_main.h  |    1 -
- 3 files changed, 48 insertions(+), 64 deletions(-)
+I can see below message appears for 15 times in
+/sys/kernel/debug/kmemleak after processing /init inside initramfs.
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index f18e643..2fd2544 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -45,14 +45,9 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
- 	struct beiscsi_endpoint *beiscsi_ep;
- 	struct iscsi_cls_session *cls_session;
- 	struct beiscsi_hba *phba;
--	struct iscsi_task *task;
- 	struct iscsi_session *sess;
- 	struct beiscsi_session *beiscsi_sess;
- 	struct beiscsi_io_task *io_task;
--	unsigned int max_size, num_cmd;
--	dma_addr_t bus_add;
--	u64 pa_addr;
--	void *vaddr;
- 
- 	SE_DEBUG(DBG_LVL_8, "In beiscsi_session_create\n");
- 
-@@ -80,20 +75,18 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
- 	if (!cls_session)
- 		return NULL;
- 	sess = cls_session->dd_data;
--	max_size = ALIGN(sizeof(struct be_cmd_bhs), 64) * sess->cmds_max;
--	vaddr = pci_alloc_consistent(phba->pcidev, max_size, &bus_add);
--	pa_addr = (__u64) bus_add;
--
--	for (num_cmd = 0; num_cmd < sess->cmds_max; num_cmd++) {
--		task = sess->cmds[num_cmd];
--		io_task = task->dd_data;
--		io_task->cmd_bhs = vaddr;
--		io_task->bhs_pa.u.a64.address = pa_addr;
--		io_task->alloc_size = max_size;
--		vaddr += ALIGN(sizeof(struct be_cmd_bhs), 64);
--		pa_addr += ALIGN(sizeof(struct be_cmd_bhs), 64);
--	}
-+	beiscsi_sess = sess->dd_data;
-+	beiscsi_sess->bhs_pool =  pci_pool_create("beiscsi_bhs_pool",
-+						   phba->pcidev,
-+						   sizeof(struct be_cmd_bhs),
-+						   64, 0);
-+	if (!beiscsi_sess->bhs_pool)
-+		goto destroy_sess;
-+
- 	return cls_session;
-+destroy_sess:
-+	iscsi_session_teardown(cls_session);
-+	return NULL;
- }
- 
- /**
-@@ -105,18 +98,10 @@ struct iscsi_cls_session *beiscsi_session_create(struct iscsi_endpoint *ep,
-  */
- void beiscsi_session_destroy(struct iscsi_cls_session *cls_session)
- {
--	struct iscsi_task *task;
--	struct beiscsi_io_task *io_task;
- 	struct iscsi_session *sess = cls_session->dd_data;
--	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
--	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-+	struct beiscsi_session *beiscsi_sess = sess->dd_data;
- 
--	task = sess->cmds[0];
--	io_task = task->dd_data;
--	pci_free_consistent(phba->pcidev,
--			    io_task->alloc_size,
--			    io_task->cmd_bhs,
--			    io_task->bhs_pa.u.a64.address);
-+	pci_pool_destroy(beiscsi_sess->bhs_pool);
- 	iscsi_session_teardown(cls_session);
- }
- 
-@@ -133,6 +118,8 @@ beiscsi_conn_create(struct iscsi_cls_session *cls_session, u32 cid)
- 	struct iscsi_cls_conn *cls_conn;
- 	struct beiscsi_conn *beiscsi_conn;
- 	struct iscsi_conn *conn;
-+	struct iscsi_session *sess;
-+	struct beiscsi_session *beiscsi_sess;
- 
- 	SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_create ,cid"
- 		 "from iscsi layer=%d\n", cid);
-@@ -148,6 +135,9 @@ beiscsi_conn_create(struct iscsi_cls_session *cls_session, u32 cid)
- 	beiscsi_conn->ep = NULL;
- 	beiscsi_conn->phba = phba;
- 	beiscsi_conn->conn = conn;
-+	sess = cls_session->dd_data;
-+	beiscsi_sess = sess->dd_data;
-+	beiscsi_conn->beiscsi_sess = beiscsi_sess;
- 	return cls_conn;
- }
- 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index d520fe8..4299a46 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -2880,6 +2880,13 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 	struct hwi_wrb_context *pwrb_context;
- 	struct hwi_controller *phwi_ctrlr;
- 	itt_t itt;
-+	struct beiscsi_session *beiscsi_sess = beiscsi_conn->beiscsi_sess;
-+
-+	io_task->cmd_bhs = pci_pool_alloc(beiscsi_sess->bhs_pool,
-+					  GFP_KERNEL,
-+					  &io_task->bhs_pa.u.a64.address);
-+	if (!io_task->cmd_bhs)
-+		return -ENOMEM;
- 
- 	io_task->pwrb_handle = alloc_wrb_handle(phba,
- 						beiscsi_conn->beiscsi_conn_cid,
-@@ -2894,17 +2901,9 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 		spin_lock(&phba->io_sgl_lock);
- 		io_task->psgl_handle = alloc_io_sgl_handle(phba);
- 		spin_unlock(&phba->io_sgl_lock);
--		if (!io_task->psgl_handle) {
--			phwi_ctrlr = phba->phwi_ctrlr;
--			pwrb_context = &phwi_ctrlr->wrb_context
--					[beiscsi_conn->beiscsi_conn_cid];
--			free_wrb_handle(phba, pwrb_context,
--						io_task->pwrb_handle);
--			io_task->pwrb_handle = NULL;
--			SE_DEBUG(DBG_LVL_1,
--				 "Alloc of SGL_ICD Failed \n");
--			return -ENOMEM;
--		}
-+		if (!io_task->psgl_handle)
-+			goto free_hndls;
-+
- 	} else {
- 		io_task->scsi_cmnd = NULL;
- 		if ((task->hdr->opcode & ISCSI_OPCODE_MASK) == ISCSI_OP_LOGIN) {
-@@ -2913,18 +2912,9 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 				io_task->psgl_handle = (struct sgl_handle *)
- 						alloc_mgmt_sgl_handle(phba);
- 				spin_unlock(&phba->mgmt_sgl_lock);
--				if (!io_task->psgl_handle) {
--					phwi_ctrlr = phba->phwi_ctrlr;
--					pwrb_context =
--					&phwi_ctrlr->wrb_context
--					[beiscsi_conn->beiscsi_conn_cid];
--					free_wrb_handle(phba, pwrb_context,
--							io_task->pwrb_handle);
--					io_task->pwrb_handle = NULL;
--					SE_DEBUG(DBG_LVL_1, "Alloc of "
--						"MGMT_SGL_ICD Failed \n");
--					return -ENOMEM;
--				}
-+				if (!io_task->psgl_handle)
-+					goto free_hndls;
-+
- 				beiscsi_conn->login_in_progress = 1;
- 				beiscsi_conn->plogin_sgl_handle =
- 							io_task->psgl_handle;
-@@ -2936,23 +2926,24 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 			spin_lock(&phba->mgmt_sgl_lock);
- 			io_task->psgl_handle = alloc_mgmt_sgl_handle(phba);
- 			spin_unlock(&phba->mgmt_sgl_lock);
--			if (!io_task->psgl_handle) {
--				phwi_ctrlr = phba->phwi_ctrlr;
--				pwrb_context = &phwi_ctrlr->wrb_context
--					[beiscsi_conn->beiscsi_conn_cid];
--				free_wrb_handle(phba, pwrb_context,
--							io_task->pwrb_handle);
--				io_task->pwrb_handle = NULL;
--				SE_DEBUG(DBG_LVL_1, "Alloc of "
--					 "MGMT_SGL_ICD Failed \n");
--				return -ENOMEM;
--			}
-+			if (!io_task->psgl_handle)
-+				goto free_hndls;
- 		}
- 	}
- 	itt = (itt_t) cpu_to_be32(((unsigned int)task->itt << 16) |
- 			(unsigned int)(io_task->psgl_handle->sgl_index));
- 	io_task->cmd_bhs->iscsi_hdr.itt = itt;
- 	return 0;
-+
-+free_hndls:
-+	phwi_ctrlr = phba->phwi_ctrlr;
-+	pwrb_context = &phwi_ctrlr->wrb_context[beiscsi_conn->beiscsi_conn_cid];
-+	free_wrb_handle(phba, pwrb_context, io_task->pwrb_handle);
-+	io_task->pwrb_handle = NULL;
-+	pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
-+		      io_task->bhs_pa.u.a64.address);
-+	SE_DEBUG(DBG_LVL_1, "Alloc of SGL_ICD Failed \n");
-+	return -ENOMEM;
- }
- 
- static void beiscsi_cleanup_task(struct iscsi_task *task)
-@@ -2961,6 +2952,7 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
- 	struct iscsi_conn *conn = task->conn;
- 	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
- 	struct beiscsi_hba *phba = beiscsi_conn->phba;
-+	struct beiscsi_session *beiscsi_sess = beiscsi_conn->beiscsi_sess;
- 	struct hwi_wrb_context *pwrb_context;
- 	struct hwi_controller *phwi_ctrlr;
- 
-@@ -2971,6 +2963,11 @@ static void beiscsi_cleanup_task(struct iscsi_task *task)
- 		io_task->pwrb_handle = NULL;
- 	}
- 
-+	if (io_task->cmd_bhs) {
-+		pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
-+			      io_task->bhs_pa.u.a64.address);
-+	}
-+
- 	if (task->sc) {
- 		if (io_task->psgl_handle) {
- 			spin_lock(&phba->io_sgl_lock);
-@@ -3003,7 +3000,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 	unsigned int doorbell = 0;
- 
- 	pwrb = io_task->pwrb_handle->pwrb;
--
- 	io_task->cmd_bhs->iscsi_hdr.exp_statsn = 0;
- 	io_task->bhs_len = sizeof(struct be_cmd_bhs);
- 
-@@ -3020,7 +3016,6 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
- 			      &io_task->cmd_bhs->iscsi_data_pdu, 1);
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, type, pwrb, INI_WR_CMD);
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 1);
--
- 	} else {
- 		SE_DEBUG(DBG_LVL_4, "READ Command \t");
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, type, pwrb, INI_RD_CMD);
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 387e363..53c9b70 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -391,7 +391,6 @@ struct beiscsi_io_task {
- 	unsigned short cid;
- 	unsigned short header_len;
- 
--	unsigned int alloc_size;
- 	struct be_cmd_bhs *cmd_bhs;
- 	struct be_bus_address bhs_pa;
- 	unsigned short bhs_len;
--- 
-1.6.4
+unreferenced object 0xdeadb5c8 (size 32):
+  comm "insmod", pid 543, jiffies 4294674766
+  backtrace:
+    [<c048a22c>] create_object+0x135/0x202
+    [<c048a31e>] kmemleak_alloc+0x25/0x49
+    [<c04865d9>] kmemleak_alloc_recursive+0x1c/0x22
+    [<c0486d33>] __kmalloc+0x6c/0xb9
+    [<c04f5675>] kvasprintf+0x2d/0x4a
+    [<c04ef5af>] kobject_set_name_vargs+0x21/0x50
+    [<c054bbd7>] dev_set_name+0x1a/0x1c
+    [<e08dc1b7>] scsi_sysfs_device_initialize+0x8b/0xe4 [scsi_mod]
+    [<e08d9bbf>] scsi_alloc_sdev+0x134/0x18f [scsi_mod]
+    [<e08d9e7a>] scsi_probe_and_add_lun+0x107/0xa98 [scsi_mod]
+    [<e08da946>] __scsi_scan_target+0x70/0x4b1 [scsi_mod]
+    [<e08dadbe>] scsi_scan_channel+0x37/0x60 [scsi_mod]
+    [<e08dae9f>] scsi_scan_host_selected+0xb8/0xf1 [scsi_mod]
+    [<e08daf2c>] do_scsi_scan_host+0x54/0x5d [scsi_mod]
+    [<e08db2ef>] scsi_scan_host+0x14d/0x165 [scsi_mod]
+    [<e0959771>] mptspi_probe+0x2cd/0x2f8 [mptspi]
 
+Environment is CentOS 5.3 on i686 .
+The content of /init is shown below.
+
+--
+#!/bin/nash
+
+mount -t proc /proc /proc
+setquiet
+echo Mounting proc filesystem
+echo Mounting sysfs filesystem
+mount -t sysfs /sys /sys
+echo Creating /dev
+mount -o mode=0755 -t tmpfs /dev /dev
+mkdir /dev/pts
+mount -t devpts -o gid=5,mode=620 /dev/pts /dev/pts
+mkdir /dev/shm
+mkdir /dev/mapper
+echo Creating initial device nodes
+mknod /dev/null c 1 3
+mknod /dev/zero c 1 5
+mknod /dev/systty c 4 0
+mknod /dev/tty c 5 0
+mknod /dev/console c 5 1
+mknod /dev/ptmx c 5 2
+mknod /dev/rtc c 10 135
+mknod /dev/tty0 c 4 0
+mknod /dev/tty1 c 4 1
+mknod /dev/tty2 c 4 2
+mknod /dev/tty3 c 4 3
+mknod /dev/tty4 c 4 4
+mknod /dev/tty5 c 4 5
+mknod /dev/tty6 c 4 6
+mknod /dev/tty7 c 4 7
+mknod /dev/tty8 c 4 8
+mknod /dev/tty9 c 4 9
+mknod /dev/tty10 c 4 10
+mknod /dev/tty11 c 4 11
+mknod /dev/tty12 c 4 12
+mknod /dev/ttyS0 c 4 64
+mknod /dev/ttyS1 c 4 65
+mknod /dev/ttyS2 c 4 66
+mknod /dev/ttyS3 c 4 67
+echo Setting up hotplug.
+hotplug
+echo Creating block device nodes.
+mkblkdevs
+echo "Loading jbd.ko module"
+insmod /lib/jbd.ko 
+echo "Loading ext3.ko module"
+insmod /lib/ext3.ko 
+echo "Loading scsi_mod.ko module"
+insmod /lib/scsi_mod.ko 
+echo "Loading sd_mod.ko module"
+insmod /lib/sd_mod.ko 
+echo "Loading scsi_transport_spi.ko module"
+insmod /lib/scsi_transport_spi.ko 
+echo "Loading mptbase.ko module"
+insmod /lib/mptbase.ko 
+echo "Loading mptscsih.ko module"
+insmod /lib/mptscsih.ko 
+echo "Loading mptspi.ko module"
+insmod /lib/mptspi.ko 
+echo Waiting for driver initialization.
+stabilized --hash --interval 1000 /proc/scsi/scsi
+mkblkdevs
+echo Scanning and configuring dmraid supported devices
+echo Creating root device.
+mkrootdev -t ext3 -o noatime,nodiratime,ro sda1
+echo Mounting root filesystem.
+mount /sysroot
+echo Setting up other filesystems.
+setuproot
+echo Switching to new root and running init.
+switchroot
+--
+
+This is a different one from the one solved by applying
+http://lkml.org/lkml/2009/9/21/384 .
+
+Regards.
