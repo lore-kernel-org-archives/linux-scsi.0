@@ -1,41 +1,30 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: question about drivers/scsi/libsas/sas_ata.c
-Date: Tue, 22 Sep 2009 13:59:50 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0909221355170.20456@pc-004.diku.dk>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] Allow SCSI hosts to be less verbose
+Date: Tue, 22 Sep 2009 09:09:39 -0400
+Message-ID: <20090922130939.GA21265@infradead.org>
+References: <20090920225348.GB3690@parisc-linux.org> <20090920225639.GD3690@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:44853 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754477AbZIVL7s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Sep 2009 07:59:48 -0400
+Received: from bombadil.infradead.org ([18.85.46.34]:58299 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756361AbZIVNJf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Sep 2009 09:09:35 -0400
+Content-Disposition: inline
+In-Reply-To: <20090920225639.GD3690@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-The function sas_ata_task_done in the file drivers/scsi/libsas/sas_ata.c 
-contains the following code:
+On Sun, Sep 20, 2009 at 04:56:39PM -0600, Matthew Wilcox wrote:
+> From: Matthew Wilcox <willy@linux.intel.com>
+> 
+> Introduce a 'quiet' flag in the scsi_host_template which drivers can
+> set to prevent (in the first instance) printing their name when they
+> register with the SCSI core.  Set the quiet flag in the USB Storage
+> driver.
 
-	if (stat->stat == SAS_PROTO_RESPONSE || stat->stat == SAM_GOOD) {
-		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
-		qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
-		dev->sata_dev.sstatus = resp->sstatus;
-		dev->sata_dev.serror = resp->serror;
-		dev->sata_dev.scontrol = resp->scontrol;
-	} else if (stat->stat != SAM_STAT_GOOD) {
-		ac = sas_to_ata_err(stat);
-		if (ac) {
-			SAS_DPRINTK("%s: SAS error %x\n", __func__,
-				    stat->stat);
-			/* We saw a SAS error. Send a vague error. */
-			qc->err_mask = ac;
-			dev->sata_dev.tf.feature = 0x04; /* status err */
-			dev->sata_dev.tf.command = ATA_ERR;
-		}
-	}
+Seems weird to make this conditional.  I'd vote for removing it
+completely.
 
-Should the reference to SAM_STAT_GOOD be instead a reference to SAM_GOOD?  
-They both have the same value (0), but SAM_STAT_GOOD is defined in a 
-different file than the other constants used with stat->stat.
-
-julia
