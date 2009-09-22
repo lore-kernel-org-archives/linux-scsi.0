@@ -1,36 +1,50 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [net-2.6 PATCH 2/6] net: remove kfree_skb on a NULL pointer in
- af_netlink.c
-Date: Mon, 21 Sep 2009 13:54:46 -0700 (PDT)
-Message-ID: <20090921.135446.193691811.davem@davemloft.net>
-References: <20090918005729.25594.14261.stgit@localhost.localdomain>
-	<20090917.182445.240085155.davem@davemloft.net>
-	<4AB76BD3.80802@intel.com>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: libiscsi and be2iscsi driver v2
+Date: Tue, 22 Sep 2009 07:25:21 +0530
+Message-ID: <20090922015508.GA16179@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:55108
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753299AbZIUUy2 (ORCPT
+Received: from segment-124-30.sify.net ([124.30.166.146]:50737 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751190AbZIVBzE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Sep 2009 16:54:28 -0400
-In-Reply-To: <4AB76BD3.80802@intel.com>
+	Mon, 21 Sep 2009 21:55:04 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: john.r.fastabend@intel.com
-Cc: jeffrey.t.kirsher@intel.com, netdev@vger.kernel.org, gospo@redhat.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-From: John Fastabend <john.r.fastabend@intel.com>
-Date: Mon, 21 Sep 2009 12:04:35 +0000
+Hi
 
->>   
-> OK, but this depends on the unlikely() macro in kfree_skb() to catch a
-> case that is the expected non-error case. Would it be better to wrap
-> the kfree_skb() in an if statement to avoid hitting the unlikely()
-> macro?  Or is the performance hit from the unlikely() macro so small
-> this is not an issue?  Thanks for looking at these.
-> 
+  This is a resubmission  and contains changes asked for by Mike Christie.
 
-Expands too much code inline, that's why we don't do it that
-way.
+  These two patches contain the  modifications required to support 
+  moving to pci_pools for the be2iscsi driver.
+
+   I request you to pl consider  this for inclusion
+   in the Linux Kernel.
+
+ 
+  The two  patches are described below:
+
+  [PATCH 1/2]: The changes to libiscsi and all drivers that call
+		iscsi_session_setup to enable support of private
+		space for use by LLD's.
+
+  [PATCH 2/2]: The changes required by be2iscsi to support 
+		pci_pools for iscsi_hdr. This version 
+		i)removes cleanup loop in beiscsi_session_destroy.
+		ii) Fixup for allocation failure handling in beiscsi_alloc_pdu
+
+
+Thank You
+
+Jayamohan Kallickal
+
+Signed-off-by:  Jayamohan Kallickal <jayamohank@serverengines.com>
+
+---
+
