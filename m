@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 8/20] mpt2sas: Added command line option diag_buffer_enable.
-Date: Wed, 23 Sep 2009 17:28:09 +0530
-Message-ID: <20090923115809.GM6772@lsi.com>
+Subject: [PATCH 9/20] mpt2sas: Add Extended Type for Diagnostic Buffer support
+Date: Wed, 23 Sep 2009 17:28:59 +0530
+Message-ID: <20090923115859.GN6772@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:56457 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751534AbZIWMV1 (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:40060 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750782AbZIWMWR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Sep 2009 08:21:27 -0400
+	Wed, 23 Sep 2009 08:22:17 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,253 +17,122 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Added command line option diag_buffer_enable. When the command line option is
-set, the driver will automatically post diag buffers at driver load time.
-The command line option diag_buffer_enable is bitwise, so it's possible to
-enable both and/or snapshot + trace buffers.  For trace, the driver will
-allocate 1MB buffer, whereas for snapshot its 2MB. The purpose for this is
-so the enduser doesn't have to manually use an application to setup diag
-buffers for debugging firmware related issues.
-
-Here is some examples
-trace:
-# insmod mpt2sas.ko diag_buffer_enable=1
-
-snapshot:
-# insmod mpt2sas.ko diag_buffer_enable=2
-
-both trace and snapshot:
-# insmod mpt2sas.ko diag_buffer_enable=3
+Added tests for registry entries of EXBuffSize, EXImmed, and EXType to
+support the new Extended diag buffer type.  Modified code where necessary to
+handle the new ExtendedType field in the F/W diagnostic Post and Release
+messages.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 ---
+
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index ec3f577..1d2374b 100644
+index 1d2374b..465cdd0 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -77,6 +77,17 @@ static int msix_disable = -1;
- module_param(msix_disable, int, 0);
+@@ -78,15 +78,16 @@ module_param(msix_disable, int, 0);
  MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
  
-+/* diag_buffer_enable is bitwise
-+ * bit 0 set = MPI2_DIAG_BUF_TYPE_TRACE(1)
-+ * bit 1 set = MPI2_DIAG_BUF_TYPE_SNAPSHOT(2)
-+ *
-+ * Either bit can be set, or both
-+ */
-+static int diag_buffer_enable;
-+module_param(diag_buffer_enable, int, 0);
-+MODULE_PARM_DESC(diag_buffer_enable, " enable diag buffer at driver load "
-+    "time (TRACE=1/SNAP=2/default=0)");
-+
+ /* diag_buffer_enable is bitwise
+- * bit 0 set = MPI2_DIAG_BUF_TYPE_TRACE(1)
+- * bit 1 set = MPI2_DIAG_BUF_TYPE_SNAPSHOT(2)
++ * bit 0 set = TRACE
++ * bit 1 set = SNAPSHOT
++ * bit 2 set = EXTENDED
+  *
+  * Either bit can be set, or both
+  */
+ static int diag_buffer_enable;
+ module_param(diag_buffer_enable, int, 0);
+-MODULE_PARM_DESC(diag_buffer_enable, " enable diag buffer at driver load "
+-    "time (TRACE=1/SNAP=2/default=0)");
++MODULE_PARM_DESC(diag_buffer_enable, " post diag buffers "
++    "(TRACE=1/SNAPSHOT=2/EXTENDED=4/default=0)");
+ 
  int mpt2sas_fwfault_debug;
  MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
-     "and halt firmware - (default=0)");
-@@ -3588,6 +3599,8 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 		goto out_free_resources;
+@@ -1765,6 +1766,12 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
+ 	}
  
- 	mpt2sas_base_start_watchdog(ioc);
-+	if (diag_buffer_enable != 0)
-+		mpt2sas_enable_diag_buffer(ioc, diag_buffer_enable);
- 	return 0;
- 
-  out_free_resources:
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 0c75c0e..e658cf9 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -886,6 +886,9 @@ u8 mpt2sas_ctl_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
- void mpt2sas_ctl_add_to_event_log(struct MPT2SAS_ADAPTER *ioc,
-     Mpi2EventNotificationReply_t *mpi_reply);
- 
-+void mpt2sas_enable_diag_buffer(struct MPT2SAS_ADAPTER *ioc,
-+	u8 bits_to_regsiter);
+ 	if (ioc->facts.IOCCapabilities &
++	    MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER) {
++		printk(KERN_INFO "%sDiag Extended Buffer", i ? "," : "");
++		i++;
++	}
 +
- /* transport shared API */
- u8 mpt2sas_transport_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
-     u32 reply);
++	if (ioc->facts.IOCCapabilities &
+ 	    MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING) {
+ 		printk("%sTask Set Full", i ? "," : "");
+ 		i++;
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 6901a67..99a332d 100644
+index 99a332d..8dfc5f6 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -1256,18 +1256,15 @@ _ctl_diag_capability(struct MPT2SAS_ADAPTER *ioc, u8 buffer_type)
- }
- 
+@@ -1230,7 +1230,7 @@ _ctl_btdh_mapping(void __user *arg)
  /**
-- * _ctl_diag_register - application register with driver
-- * @arg - user space buffer containing ioctl content
-- * @state - NON_BLOCKING or BLOCKING
-+ * _ctl_diag_register_2 - wrapper for registering diag buffer support
-+ * @ioc: per adapter object
-+ * @diag_register: the diag_register struct passed in from user space
+  * _ctl_diag_capability - return diag buffer capability
+  * @ioc: per adapter object
+- * @buffer_type: specifies either TRACE or SNAPSHOT
++ * @buffer_type: specifies either TRACE, SNAPSHOT, or EXTENDED
   *
-- * This will allow the driver to setup any required buffers that will be
-- * needed by firmware to communicate with the driver.
+  * returns 1 when diag buffer support is enabled in firmware
   */
- static long
--_ctl_diag_register(void __user *arg, enum block_state state)
-+_ctl_diag_register_2(struct MPT2SAS_ADAPTER *ioc,
-+    struct mpt2_diag_register *diag_register)
- {
--	struct mpt2_diag_register karg;
--	struct MPT2SAS_ADAPTER *ioc;
- 	int rc, i;
- 	void *request_data = NULL;
- 	dma_addr_t request_data_dma;
-@@ -1280,18 +1277,17 @@ _ctl_diag_register(void __user *arg, enum block_state state)
- 	u16 ioc_status;
- 	u8 issue_reset = 0;
- 
--	if (copy_from_user(&karg, arg, sizeof(karg))) {
--		printk(KERN_ERR "failure at %s:%d/%s()!\n",
--		    __FILE__, __LINE__, __func__);
--		return -EFAULT;
--	}
--	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
--		return -ENODEV;
--
- 	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
- 	    __func__));
- 
--	buffer_type = karg.buffer_type;
-+	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
-+		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
-+		    ioc->name, __func__);
-+		rc = -EAGAIN;
-+		goto out;
-+	}
-+
-+	buffer_type = diag_register->buffer_type;
- 	if (!_ctl_diag_capability(ioc, buffer_type)) {
- 		printk(MPT2SAS_ERR_FMT "%s: doesn't have capability for "
- 		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
-@@ -1306,24 +1302,12 @@ _ctl_diag_register(void __user *arg, enum block_state state)
- 		return -EINVAL;
+@@ -1250,6 +1250,10 @@ _ctl_diag_capability(struct MPT2SAS_ADAPTER *ioc, u8 buffer_type)
+ 		    MPI2_IOCFACTS_CAPABILITY_SNAPSHOT_BUFFER)
+ 			rc = 1;
+ 		break;
++	case MPI2_DIAG_BUF_TYPE_EXTENDED:
++		if (ioc->facts.IOCCapabilities &
++		    MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER)
++			rc = 1;
  	}
  
--	if (karg.requested_buffer_size % 4)  {
-+	if (diag_register->requested_buffer_size % 4)  {
- 		printk(MPT2SAS_ERR_FMT "%s: the requested_buffer_size "
- 		    "is not 4 byte aligned\n", ioc->name, __func__);
- 		return -EINVAL;
+ 	return rc;
+@@ -1460,6 +1464,16 @@ mpt2sas_enable_diag_buffer(struct MPT2SAS_ADAPTER *ioc, u8 bits_to_register)
+ 		diag_register.unique_id = 0x7075901;
+ 		_ctl_diag_register_2(ioc,  &diag_register);
  	}
- 
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
--	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
--		return -ERESTARTSYS;
--
--	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
--		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
--		    ioc->name, __func__);
--		rc = -EAGAIN;
--		goto out;
--	}
--
- 	smid = mpt2sas_base_get_smid(ioc, ioc->ctl_cb_idx);
- 	if (!smid) {
- 		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
-@@ -1339,12 +1323,12 @@ _ctl_diag_register(void __user *arg, enum block_state state)
- 	ioc->ctl_cmds.smid = smid;
- 
- 	request_data = ioc->diag_buffer[buffer_type];
--	request_data_sz = karg.requested_buffer_size;
--	ioc->unique_id[buffer_type] = karg.unique_id;
-+	request_data_sz = diag_register->requested_buffer_size;
-+	ioc->unique_id[buffer_type] = diag_register->unique_id;
- 	ioc->diag_buffer_status[buffer_type] = 0;
--	memcpy(ioc->product_specific[buffer_type], karg.product_specific,
--	    MPT2_PRODUCT_SPECIFIC_DWORDS);
--	ioc->diagnostic_flags[buffer_type] = karg.diagnostic_flags;
-+	memcpy(ioc->product_specific[buffer_type],
-+	    diag_register->product_specific, MPT2_PRODUCT_SPECIFIC_DWORDS);
-+	ioc->diagnostic_flags[buffer_type] = diag_register->diagnostic_flags;
- 
- 	if (request_data) {
- 		request_data_dma = ioc->diag_buffer_dma[buffer_type];
-@@ -1374,8 +1358,8 @@ _ctl_diag_register(void __user *arg, enum block_state state)
- 	}
- 
- 	mpi_request->Function = MPI2_FUNCTION_DIAG_BUFFER_POST;
--	mpi_request->BufferType = karg.buffer_type;
--	mpi_request->Flags = cpu_to_le32(karg.diagnostic_flags);
-+	mpi_request->BufferType = diag_register->buffer_type;
-+	mpi_request->Flags = cpu_to_le32(diag_register->diagnostic_flags);
- 	mpi_request->BufferAddress = cpu_to_le64(request_data_dma);
- 	mpi_request->BufferLength = cpu_to_le32(request_data_sz);
- 	mpi_request->VF_ID = 0; /* TODO */
-@@ -1439,6 +1423,73 @@ _ctl_diag_register(void __user *arg, enum block_state state)
- 		    request_data, request_data_dma);
- 
- 	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
-+	return rc;
-+}
 +
-+/**
-+ * mpt2sas_enable_diag_buffer - enabling diag_buffers support driver load time
-+ * @ioc: per adapter object
-+ * @bits_to_register: bitwise field where trace is bit 0, and snapshot is bit 1
-+ *
-+ * This is called when command line option diag_buffer_enable is enabled
-+ * at driver load time.
-+ */
-+void
-+mpt2sas_enable_diag_buffer(struct MPT2SAS_ADAPTER *ioc, u8 bits_to_register)
-+{
-+	struct mpt2_diag_register diag_register;
-+
-+	memset(&diag_register, 0, sizeof(struct mpt2_diag_register));
-+
-+	if (bits_to_register & 1) {
-+		printk(MPT2SAS_INFO_FMT "registering trace buffer support\n",
++	if (bits_to_register & 4) {
++		printk(MPT2SAS_INFO_FMT "registering extended buffer support\n",
 +		    ioc->name);
-+		diag_register.buffer_type = MPI2_DIAG_BUF_TYPE_TRACE;
-+		/* register for 1MB buffers  */
-+		diag_register.requested_buffer_size = (1024 * 1024);
-+		diag_register.unique_id = 0x7075900;
-+		_ctl_diag_register_2(ioc,  &diag_register);
-+	}
-+
-+	if (bits_to_register & 2) {
-+		printk(MPT2SAS_INFO_FMT "registering snapshot buffer support\n",
-+		    ioc->name);
-+		diag_register.buffer_type = MPI2_DIAG_BUF_TYPE_SNAPSHOT;
++		diag_register.buffer_type = MPI2_DIAG_BUF_TYPE_EXTENDED;
 +		/* register for 2MB buffers  */
 +		diag_register.requested_buffer_size = 2 * (1024 * 1024);
 +		diag_register.unique_id = 0x7075901;
 +		_ctl_diag_register_2(ioc,  &diag_register);
 +	}
-+}
-+
-+/**
-+ * _ctl_diag_register - application register with driver
-+ * @arg - user space buffer containing ioctl content
-+ * @state - NON_BLOCKING or BLOCKING
-+ *
-+ * This will allow the driver to setup any required buffers that will be
-+ * needed by firmware to communicate with the driver.
-+ */
-+static long
-+_ctl_diag_register(void __user *arg, enum block_state state)
-+{
-+	struct mpt2_diag_register karg;
-+	struct MPT2SAS_ADAPTER *ioc;
-+	long rc;
-+
-+	if (copy_from_user(&karg, arg, sizeof(karg))) {
-+		printk(KERN_ERR "failure at %s:%d/%s()!\n",
-+		    __FILE__, __LINE__, __func__);
-+		return -EFAULT;
-+	}
-+	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
-+		return -ENODEV;
-+
-+	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
-+		return -EAGAIN;
-+	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
-+		return -ERESTARTSYS;
-+	rc = _ctl_diag_register_2(ioc, &karg);
- 	mutex_unlock(&ioc->ctl_cmds.mutex);
- 	return rc;
  }
+ 
+ /**
+@@ -1652,7 +1666,7 @@ _ctl_diag_query(void __user *arg)
+ /**
+  * _ctl_send_release - Diag Release Message
+  * @ioc: per adapter object
+- * @buffer_type - specifies either TRACE or SNAPSHOT
++ * @buffer_type - specifies either TRACE, SNAPSHOT, or EXTENDED
+  * @issue_reset - specifies whether host reset is required.
+  *
+  */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.h b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
+index 211f296..8a5eeb1 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
+@@ -313,7 +313,7 @@ struct mpt2_ioctl_btdh_mapping {
+  * struct mpt2_diag_register - application register with driver
+  * @hdr - generic header
+  * @reserved -
+- * @buffer_type - specifies either TRACE or SNAPSHOT
++ * @buffer_type - specifies either TRACE, SNAPSHOT, or EXTENDED
+  * @application_flags - misc flags
+  * @diagnostic_flags - specifies flags affecting command processing
+  * @product_specific - product specific information
+@@ -352,7 +352,7 @@ struct mpt2_diag_unregister {
+  * struct mpt2_diag_query - query relevant info associated with diag buffers
+  * @hdr - generic header
+  * @reserved -
+- * @buffer_type - specifies either TRACE or SNAPSHOT
++ * @buffer_type - specifies either TRACE, SNAPSHOT, or EXTENDED
+  * @application_flags - misc flags
+  * @diagnostic_flags - specifies flags affecting command processing
+  * @product_specific - product specific information
