@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 9/20] mpt2sas: Add Extended Type for Diagnostic Buffer support
-Date: Wed, 23 Sep 2009 17:28:59 +0530
-Message-ID: <20090923115859.GN6772@lsi.com>
+Subject: [PATCH 10/20] mpt2sas: Added support to set the TimeStamp when sending ioc_init
+Date: Wed, 23 Sep 2009 17:29:29 +0530
+Message-ID: <20090923115929.GO6772@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:40060 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750782AbZIWMWR (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:41473 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752633AbZIWMWr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Sep 2009 08:22:17 -0400
+	Wed, 23 Sep 2009 08:22:47 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,122 +17,41 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Added tests for registry entries of EXBuffSize, EXImmed, and EXType to
-support the new Extended diag buffer type.  Modified code where necessary to
-handle the new ExtendedType field in the F/W diagnostic Post and Release
-messages.
-
+Added support to set the TimeStamp when sending ioc_init.
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 ---
-
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 1d2374b..465cdd0 100644
+index e92934c..112da29 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -78,15 +78,16 @@ module_param(msix_disable, int, 0);
- MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
+@@ -57,6 +57,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/sort.h>
+ #include <linux/io.h>
++#include <linux/time.h>
  
- /* diag_buffer_enable is bitwise
-- * bit 0 set = MPI2_DIAG_BUF_TYPE_TRACE(1)
-- * bit 1 set = MPI2_DIAG_BUF_TYPE_SNAPSHOT(2)
-+ * bit 0 set = TRACE
-+ * bit 1 set = SNAPSHOT
-+ * bit 2 set = EXTENDED
-  *
-  * Either bit can be set, or both
-  */
- static int diag_buffer_enable;
- module_param(diag_buffer_enable, int, 0);
--MODULE_PARM_DESC(diag_buffer_enable, " enable diag buffer at driver load "
--    "time (TRACE=1/SNAP=2/default=0)");
-+MODULE_PARM_DESC(diag_buffer_enable, " post diag buffers "
-+    "(TRACE=1/SNAPSHOT=2/EXTENDED=4/default=0)");
+ #include "mpt2sas_base.h"
  
- int mpt2sas_fwfault_debug;
- MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
-@@ -1765,6 +1766,12 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
- 	}
+@@ -2946,6 +2947,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	Mpi2IOCInitRequest_t mpi_request;
+ 	Mpi2IOCInitReply_t mpi_reply;
+ 	int r;
++	struct timeval current_time;
  
- 	if (ioc->facts.IOCCapabilities &
-+	    MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER) {
-+		printk(KERN_INFO "%sDiag Extended Buffer", i ? "," : "");
-+		i++;
-+	}
+ 	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
+ 	    __func__));
+@@ -2996,6 +2998,13 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	    cpu_to_le32(ioc->reply_post_free_dma);
+ #endif
+ 
++	/* This time stamp specifies number of milliseconds
++	 * since epoch ~ midnight January 1, 1970.
++	 */
++	do_gettimeofday(&current_time);
++	mpi_request.TimeStamp = (current_time.tv_sec * 1000) +
++	    (current_time.tv_usec >> 3);
 +
-+	if (ioc->facts.IOCCapabilities &
- 	    MPI2_IOCFACTS_CAPABILITY_TASK_SET_FULL_HANDLING) {
- 		printk("%sTask Set Full", i ? "," : "");
- 		i++;
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 99a332d..8dfc5f6 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -1230,7 +1230,7 @@ _ctl_btdh_mapping(void __user *arg)
- /**
-  * _ctl_diag_capability - return diag buffer capability
-  * @ioc: per adapter object
-- * @buffer_type: specifies either TRACE or SNAPSHOT
-+ * @buffer_type: specifies either TRACE, SNAPSHOT, or EXTENDED
-  *
-  * returns 1 when diag buffer support is enabled in firmware
-  */
-@@ -1250,6 +1250,10 @@ _ctl_diag_capability(struct MPT2SAS_ADAPTER *ioc, u8 buffer_type)
- 		    MPI2_IOCFACTS_CAPABILITY_SNAPSHOT_BUFFER)
- 			rc = 1;
- 		break;
-+	case MPI2_DIAG_BUF_TYPE_EXTENDED:
-+		if (ioc->facts.IOCCapabilities &
-+		    MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER)
-+			rc = 1;
- 	}
- 
- 	return rc;
-@@ -1460,6 +1464,16 @@ mpt2sas_enable_diag_buffer(struct MPT2SAS_ADAPTER *ioc, u8 bits_to_register)
- 		diag_register.unique_id = 0x7075901;
- 		_ctl_diag_register_2(ioc,  &diag_register);
- 	}
-+
-+	if (bits_to_register & 4) {
-+		printk(MPT2SAS_INFO_FMT "registering extended buffer support\n",
-+		    ioc->name);
-+		diag_register.buffer_type = MPI2_DIAG_BUF_TYPE_EXTENDED;
-+		/* register for 2MB buffers  */
-+		diag_register.requested_buffer_size = 2 * (1024 * 1024);
-+		diag_register.unique_id = 0x7075901;
-+		_ctl_diag_register_2(ioc,  &diag_register);
-+	}
- }
- 
- /**
-@@ -1652,7 +1666,7 @@ _ctl_diag_query(void __user *arg)
- /**
-  * _ctl_send_release - Diag Release Message
-  * @ioc: per adapter object
-- * @buffer_type - specifies either TRACE or SNAPSHOT
-+ * @buffer_type - specifies either TRACE, SNAPSHOT, or EXTENDED
-  * @issue_reset - specifies whether host reset is required.
-  *
-  */
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.h b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
-index 211f296..8a5eeb1 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.h
-@@ -313,7 +313,7 @@ struct mpt2_ioctl_btdh_mapping {
-  * struct mpt2_diag_register - application register with driver
-  * @hdr - generic header
-  * @reserved -
-- * @buffer_type - specifies either TRACE or SNAPSHOT
-+ * @buffer_type - specifies either TRACE, SNAPSHOT, or EXTENDED
-  * @application_flags - misc flags
-  * @diagnostic_flags - specifies flags affecting command processing
-  * @product_specific - product specific information
-@@ -352,7 +352,7 @@ struct mpt2_diag_unregister {
-  * struct mpt2_diag_query - query relevant info associated with diag buffers
-  * @hdr - generic header
-  * @reserved -
-- * @buffer_type - specifies either TRACE or SNAPSHOT
-+ * @buffer_type - specifies either TRACE, SNAPSHOT, or EXTENDED
-  * @application_flags - misc flags
-  * @diagnostic_flags - specifies flags affecting command processing
-  * @product_specific - product specific information
+ 	if (ioc->logging_level & MPT_DEBUG_INIT) {
+ 		u32 *mfp;
+ 		int i;
