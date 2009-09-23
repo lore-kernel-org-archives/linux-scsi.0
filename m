@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 18/20] mpt2sas: Add support for RAID Action System Shutdown Initiated at OS shutdown
-Date: Wed, 23 Sep 2009 17:36:18 +0530
-Message-ID: <20090923120618.GW6772@lsi.com>
+Subject: [PATCH 19/20] mpt2sas: No link rate change, do not call update links nor unblock device
+Date: Wed, 23 Sep 2009 17:36:52 +0530
+Message-ID: <20090923120652.GX6772@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:39439 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751396AbZIWM3g (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:42047 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751862AbZIWMaK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Sep 2009 08:29:36 -0400
+	Wed, 23 Sep 2009 08:30:10 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,254 +17,140 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-(1) Added new function _scsih_ir_shutdown.  This function will issue the
-MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED request via
-MPI2_FUNCTION_RAID_ACTION. The function will wait 10 seconds for reply
-message frame, then print out the ioc status and loginfo.  This function is
-only called when there are raid volumes present.
-
-(2) Add shutdown callback in the struct pci_driver object scsih_driver. This
-will be called only when the system is shutting down. From this function, we
-will call _scsih_ir_shutdown mentioned above.
-
-(3) Add support in _scsih_remove to call _scsih_ir_shutdown. The function
-_scsih_remove will be called when the driver is unloaded (and system is
-still running).
-
-scsih internal command contex is added to send internal message frames
-from mpt2sas_scsih.c.
+(1) target resets are sending link change rate events with no link rate
+change -> thus said the driver was modified so when there is no link rate
+change, we don't need to call mpt2sas_transport_update_links nor
+_scsih_ublock_io_device.
+(2) There were changes made in _scsih_sas_topology_change_event_debug to
+change the debug strings so they are more clear.  Also the link rate change
+information was added to display the new and previous link rate.
+for the MPI2_EVENT_SAS_TOPOLOGY_CHANGE_LIST event when the ExpStatus is
+set to zero, display "responding" instead of "unknown status".
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index f4e7b20..e8ba192 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -492,12 +492,14 @@ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
-  * @msix_table_backup: backup msix table
-  * @scsi_io_cb_idx: shost generated commands
-  * @tm_cb_idx: task management commands
-+ * @scsih_cb_idx: scsih internal commands
-  * @transport_cb_idx: transport internal commands
-  * @ctl_cb_idx: clt internal commands
-  * @base_cb_idx: base internal commands
-  * @config_cb_idx: base internal commands
-  * @base_cmds:
-  * @transport_cmds:
-+ * @scsih_cmds:
-  * @tm_cmds:
-  * @ctl_cmds:
-  * @config_cmds:
-@@ -624,6 +626,7 @@ struct MPT2SAS_ADAPTER {
- 	u8		scsi_io_cb_idx;
- 	u8		tm_cb_idx;
- 	u8		transport_cb_idx;
-+	u8		scsih_cb_idx;
- 	u8		ctl_cb_idx;
- 	u8		base_cb_idx;
- 	u8		config_cb_idx;
-@@ -631,6 +634,7 @@ struct MPT2SAS_ADAPTER {
- 	u8		tm_sas_control_cb_idx;
- 	struct _internal_cmd base_cmds;
- 	struct _internal_cmd transport_cmds;
-+	struct _internal_cmd scsih_cmds;
- 	struct _internal_cmd tm_cmds;
- 	struct _internal_cmd ctl_cmds;
- 	struct _internal_cmd config_cmds;
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index d329857..c6b2a59 100644
+index 4dd7d0c..2d08605 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -76,6 +76,7 @@ static u8 tm_cb_idx = -1;
- static u8 ctl_cb_idx = -1;
- static u8 base_cb_idx = -1;
- static u8 transport_cb_idx = -1;
-+static u8 scsih_cb_idx = -1;
- static u8 config_cb_idx = -1;
- static int mpt_ids;
+@@ -2380,7 +2380,6 @@ _scsih_block_io_to_children_attached_directly(struct MPT2SAS_ADAPTER *ioc,
+ 	u16 handle;
+ 	u16 reason_code;
+ 	u8 phy_number;
+-	u8 link_rate;
  
-@@ -3794,6 +3795,40 @@ _scsih_expander_add(struct MPT2SAS_ADAPTER *ioc, u16 handle)
- }
- 
- /**
-+ * _scsih_done -  scsih callback handler.
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ * @msix_index: MSIX table index supplied by the OS
-+ * @reply: reply message frame(lower 32bit addr)
-+ *
-+ * Callback handler when sending internal generated message frames.
-+ * The callback index passed is `ioc->scsih_cb_idx`
-+ *
-+ * Return 1 meaning mf should be freed from _base_interrupt
-+ *        0 means the mf is freed from this function.
-+ */
-+static u8
-+_scsih_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
-+{
-+	MPI2DefaultReply_t *mpi_reply;
-+
-+	mpi_reply =  mpt2sas_base_get_reply_virt_addr(ioc, reply);
-+	if (ioc->scsih_cmds.status == MPT2_CMD_NOT_USED)
-+		return 1;
-+	if (ioc->scsih_cmds.smid != smid)
-+		return 1;
-+	ioc->scsih_cmds.status |= MPT2_CMD_COMPLETE;
-+	if (mpi_reply) {
-+		memcpy(ioc->scsih_cmds.reply, mpi_reply,
-+		    mpi_reply->MsgLength*4);
-+		ioc->scsih_cmds.status |= MPT2_CMD_REPLY_VALID;
-+	}
-+	ioc->scsih_cmds.status &= ~MPT2_CMD_PENDING;
-+	complete(&ioc->scsih_cmds.done);
-+	return 1;
-+}
-+
-+/**
-  * _scsih_expander_remove - removing expander object
-  * @ioc: per adapter object
-  * @sas_address: expander sas_address
-@@ -5853,9 +5888,99 @@ _scsih_expander_node_remove(struct MPT2SAS_ADAPTER *ioc,
- }
- 
- /**
-+ * _scsih_ir_shutdown - IR shutdown notification
-+ * @ioc: per adapter object
-+ *
-+ * Sending RAID Action to alert the Integrated RAID subsystem of the IOC that
-+ * the host system is shutting down.
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_ir_shutdown(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	Mpi2RaidActionRequest_t *mpi_request;
-+	Mpi2RaidActionReply_t *mpi_reply;
-+	u16 smid;
-+
-+	/* is IR firmware build loaded ? */
-+	if (!ioc->ir_firmware)
-+		return;
-+
-+	/* are there any volumes ? */
-+	if (list_empty(&ioc->raid_device_list))
-+		return;
-+
-+	mutex_lock(&ioc->scsih_cmds.mutex);
-+
-+	if (ioc->scsih_cmds.status != MPT2_CMD_NOT_USED) {
-+		printk(MPT2SAS_ERR_FMT "%s: scsih_cmd in use\n",
-+		    ioc->name, __func__);
-+		goto out;
-+	}
-+	ioc->scsih_cmds.status = MPT2_CMD_PENDING;
-+
-+	smid = mpt2sas_base_get_smid(ioc, ioc->scsih_cb_idx);
-+	if (!smid) {
-+		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
-+		    ioc->name, __func__);
-+		ioc->scsih_cmds.status = MPT2_CMD_NOT_USED;
-+		goto out;
-+	}
-+
-+	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
-+	ioc->scsih_cmds.smid = smid;
-+	memset(mpi_request, 0, sizeof(Mpi2RaidActionRequest_t));
-+
-+	mpi_request->Function = MPI2_FUNCTION_RAID_ACTION;
-+	mpi_request->Action = MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED;
-+
-+	printk(MPT2SAS_INFO_FMT "IR shutdown (sending)\n", ioc->name);
-+	init_completion(&ioc->scsih_cmds.done);
-+	mpt2sas_base_put_smid_default(ioc, smid);
-+	wait_for_completion_timeout(&ioc->scsih_cmds.done, 10*HZ);
-+
-+	if (!(ioc->scsih_cmds.status & MPT2_CMD_COMPLETE)) {
-+		printk(MPT2SAS_ERR_FMT "%s: timeout\n",
-+		    ioc->name, __func__);
-+		goto out;
-+	}
-+
-+	if (ioc->scsih_cmds.status & MPT2_CMD_REPLY_VALID) {
-+		mpi_reply = ioc->scsih_cmds.reply;
-+
-+		printk(MPT2SAS_INFO_FMT "IR shutdown (complete): "
-+		    "ioc_status(0x%04x), loginfo(0x%08x)\n",
-+		    ioc->name, le16_to_cpu(mpi_reply->IOCStatus),
-+		    le32_to_cpu(mpi_reply->IOCLogInfo));
-+	}
-+
-+ out:
-+	ioc->scsih_cmds.status = MPT2_CMD_NOT_USED;
-+	mutex_unlock(&ioc->scsih_cmds.mutex);
-+}
-+
-+/**
-+ * _scsih_shutdown - routine call during system shutdown
-+ * @pdev: PCI device struct
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_scsih_shutdown(struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
-+
-+	_scsih_ir_shutdown(ioc);
-+	mpt2sas_base_detach(ioc);
-+}
-+
-+/**
-  * _scsih_remove - detach and remove add host
-  * @pdev: PCI device struct
-  *
-+ * Routine called when unloading the driver.
-  * Return nothing.
-  */
- static void __devexit
-@@ -5912,7 +6037,7 @@ _scsih_remove(struct pci_dev *pdev)
+ 	for (i = 0; i < event_data->NumEntries; i++) {
+ 		handle = le16_to_cpu(event_data->PHY[i].AttachedDevHandle);
+@@ -2391,11 +2390,6 @@ _scsih_block_io_to_children_attached_directly(struct MPT2SAS_ADAPTER *ioc,
+ 		    MPI2_EVENT_SAS_TOPO_RC_MASK;
+ 		if (reason_code == MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING)
+ 			_scsih_block_io_device(ioc, handle);
+-		if (reason_code == MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED) {
+-			link_rate = event_data->PHY[i].LinkRate >> 4;
+-			if (link_rate >= MPI2_SAS_NEG_LINK_RATE_1_5)
+-				_scsih_ublock_io_device(ioc, handle);
+-		}
  	}
+ }
  
- 	sas_remove_host(shost);
--	mpt2sas_base_detach(ioc);
-+	_scsih_shutdown(pdev);
- 	list_del(&ioc->list);
- 	scsi_remove_host(shost);
- 	scsi_host_put(shost);
-@@ -6096,6 +6221,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ioc->ctl_cb_idx = ctl_cb_idx;
- 	ioc->base_cb_idx = base_cb_idx;
- 	ioc->transport_cb_idx = transport_cb_idx;
-+	ioc->scsih_cb_idx = scsih_cb_idx;
- 	ioc->config_cb_idx = config_cb_idx;
- 	ioc->tm_tr_cb_idx = tm_tr_cb_idx;
- 	ioc->tm_sas_control_cb_idx = tm_sas_control_cb_idx;
-@@ -6233,6 +6359,7 @@ static struct pci_driver scsih_driver = {
- 	.id_table	= scsih_pci_table,
- 	.probe		= _scsih_probe,
- 	.remove		= __devexit_p(_scsih_remove),
-+	.shutdown	= _scsih_shutdown,
- #ifdef CONFIG_PM
- 	.suspend	= _scsih_suspend,
- 	.resume		= _scsih_resume,
-@@ -6274,6 +6401,9 @@ _scsih_init(void)
- 	transport_cb_idx = mpt2sas_base_register_callback_handler(
- 	    mpt2sas_transport_done);
+@@ -4084,7 +4078,7 @@ _scsih_sas_topology_change_event_debug(struct MPT2SAS_ADAPTER *ioc,
+ 	u16 reason_code;
+ 	u8 phy_number;
+ 	char *status_str = NULL;
+-	char link_rate[25];
++	u8 link_rate, prev_link_rate;
  
-+	/* scsih internal commands callback handler */
-+	scsih_cb_idx = mpt2sas_base_register_callback_handler(_scsih_done);
+ 	switch (event_data->ExpStatus) {
+ 	case MPI2_EVENT_SAS_TOPO_ES_ADDED:
+@@ -4094,6 +4088,7 @@ _scsih_sas_topology_change_event_debug(struct MPT2SAS_ADAPTER *ioc,
+ 		status_str = "remove";
+ 		break;
+ 	case MPI2_EVENT_SAS_TOPO_ES_RESPONDING:
++	case 0:
+ 		status_str =  "responding";
+ 		break;
+ 	case MPI2_EVENT_SAS_TOPO_ES_DELAY_NOT_RESPONDING:
+@@ -4119,30 +4114,30 @@ _scsih_sas_topology_change_event_debug(struct MPT2SAS_ADAPTER *ioc,
+ 		    MPI2_EVENT_SAS_TOPO_RC_MASK;
+ 		switch (reason_code) {
+ 		case MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED:
+-			snprintf(link_rate, 25, ": add, link(0x%02x)",
+-			    (event_data->PHY[i].LinkRate >> 4));
+-			status_str = link_rate;
++			status_str = "target add";
+ 			break;
+ 		case MPI2_EVENT_SAS_TOPO_RC_TARG_NOT_RESPONDING:
+-			status_str = ": remove";
++			status_str = "target remove";
+ 			break;
+ 		case MPI2_EVENT_SAS_TOPO_RC_DELAY_NOT_RESPONDING:
+-			status_str = ": remove_delay";
++			status_str = "delay target remove";
+ 			break;
+ 		case MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED:
+-			snprintf(link_rate, 25, ": link(0x%02x)",
+-			    (event_data->PHY[i].LinkRate >> 4));
+-			status_str = link_rate;
++			status_str = "link rate change";
+ 			break;
+ 		case MPI2_EVENT_SAS_TOPO_RC_NO_CHANGE:
+-			status_str = ": responding";
++			status_str = "target responding";
+ 			break;
+ 		default:
+-			status_str = ": unknown";
++			status_str = "unknown";
+ 			break;
+ 		}
+-		printk(KERN_DEBUG "\tphy(%02d), attached_handle(0x%04x)%s\n",
+-		    phy_number, handle, status_str);
++		link_rate = event_data->PHY[i].LinkRate >> 4;
++		prev_link_rate = event_data->PHY[i].LinkRate & 0xF;
++		printk(KERN_DEBUG "\tphy(%02d), attached_handle(0x%04x): %s:"
++		    " link rate: new(0x%02x), old(0x%02x)\n", phy_number,
++		    handle, status_str, link_rate, prev_link_rate);
 +
- 	/* configuration page API internal commands callback handler */
- 	config_cb_idx = mpt2sas_base_register_callback_handler(
- 	    mpt2sas_config_done);
-@@ -6313,6 +6443,7 @@ _scsih_exit(void)
- 	mpt2sas_base_release_callback_handler(tm_cb_idx);
- 	mpt2sas_base_release_callback_handler(base_cb_idx);
- 	mpt2sas_base_release_callback_handler(transport_cb_idx);
-+	mpt2sas_base_release_callback_handler(scsih_cb_idx);
- 	mpt2sas_base_release_callback_handler(config_cb_idx);
- 	mpt2sas_base_release_callback_handler(ctl_cb_idx);
+ 	}
+ }
+ #endif
+@@ -4166,7 +4161,7 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 	struct _sas_device *sas_device;
+ 	u64 sas_address;
+ 	unsigned long flags;
+-	u8 link_rate;
++	u8 link_rate, prev_link_rate;
+ 	Mpi2EventDataSasTopologyChangeList_t *event_data = fw_event->event_data;
+ 
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+@@ -4226,18 +4221,25 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 		if (!handle)
+ 			continue;
+ 		link_rate = event_data->PHY[i].LinkRate >> 4;
++		prev_link_rate = event_data->PHY[i].LinkRate & 0xF;
+ 		switch (reason_code) {
+ 		case MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED:
++
++			if (link_rate == prev_link_rate)
++				break;
++
++			mpt2sas_transport_update_links(ioc, sas_address,
++			    handle, phy_number, link_rate);
++
++			if (link_rate >= MPI2_SAS_NEG_LINK_RATE_1_5)
++				_scsih_ublock_io_device(ioc, handle);
++			break;
+ 		case MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED:
+ 
+ 			mpt2sas_transport_update_links(ioc, sas_address,
+ 			    handle, phy_number, link_rate);
+ 
+-			if (link_rate < MPI2_SAS_NEG_LINK_RATE_1_5)
+-				break;
+-			if (reason_code == MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED) {
+-				_scsih_add_device(ioc, handle, phy_number, 0);
+-			}
++			_scsih_add_device(ioc, handle, phy_number, 0);
+ 			break;
+ 		case MPI2_EVENT_SAS_TOPO_RC_TARG_NOT_RESPONDING:
  
