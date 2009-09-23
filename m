@@ -1,45 +1,33 @@
 From: Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH 4/5] SCSI: qla2xxx, fix NULL-ptr dereference
-Date: Wed, 23 Sep 2009 16:15:34 +0200
-Message-ID: <1253715335-6723-4-git-send-email-jirislaby@gmail.com>
-References: <1253715335-6723-1-git-send-email-jirislaby@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server1.wserver.cz ([82.113.45.157]:58691 "EHLO
-	server1.wserver.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753190AbZIWOPZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2009 10:15:25 -0400
-In-Reply-To: <1253715335-6723-1-git-send-email-jirislaby@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 1/5] SCSI: aacraid, fix memory leak
+Date: Wed, 23 Sep 2009 16:15:31 +0200
+Message-ID: <1253715335-6723-1-git-send-email-jirislaby@gmail.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753329AbZIWOP4@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Stanse found a NULL-ptr dereference on one fail path in
-qla25xx_create_rsp_que. It jumps to que_failed label and
-qla25xx_free_rsp_que there dereferences rsp which is NULL.
-
-Return with ENOMEM directly instead.
+Stanse found a memory leak on one fail path in aac_send_raw_srb. Add kfree
+there.
 
 Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Cc: James E.J. Bottomley <James.Bottomley@suse.de>
 ---
- drivers/scsi/qla2xxx/qla_mid.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/aacraid/commctrl.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 42b799a..8b4e723 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -659,7 +659,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
- 	if (rsp == NULL) {
- 		qla_printk(KERN_WARNING, ha, "could not allocate memory for"
- 				" response que\n");
--		goto que_failed;
-+		return -ENOMEM;
- 	}
- 
- 	rsp->length = RESPONSE_ENTRY_CNT_MQ;
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 0391d75..5c9a8be 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -649,6 +649,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 				     AAC_OPT_NEW_COMM) ?
+ 				      (dev->scsi_host_ptr->max_sectors << 9) :
+ 				      65536) {
++					kfree (usg);
+ 					rcode = -EINVAL;
+ 					goto cleanup;
+ 				}
 -- 
 1.6.4.2
-
