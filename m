@@ -1,41 +1,43 @@
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: Re: [2.6.31] Memory leak in SCSI initialization?
-Date: Tue, 22 Sep 2009 23:26:08 +0900
-Message-ID: <200909222326.GGB13598.JFVOtQFOMOSLHF@I-love.SAKURA.ne.jp>
-References: <200909221318.IFD17141.OQLtSFJVOOFFMH@I-love.SAKURA.ne.jp>
-	<1253625194.5923.10.camel@concordia>
+From: iceberg <strakh@ispras.ru>
+Subject: [BUG] scsi_lib.c: sleeping function called from invalid context
+Date: Wed, 23 Sep 2009 13:12:23 +0000
+Message-ID: <200909231312.23574.strakh@ispras.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wine.ocn.ne.jp ([122.1.235.145]:64286 "EHLO smtp.wine.ocn.ne.jp"
+Received: from smtp.ispras.ru ([83.149.198.201]:57959 "EHLO smtp.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755529AbZIVO0J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Sep 2009 10:26:09 -0400
-In-Reply-To: <1253625194.5923.10.camel@concordia>
+	id S1751203AbZIWJ26 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Sep 2009 05:28:58 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michael@ellerman.id.au
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com, eric@andante.org, linux-scsi@vger.kernel.org
 
-Hello.
+	KERNEL_VERSION: 2.6.31
+	DESCRIBE:
+Driver scsi_lib.c might sleep in atomic context, because it calls 
+scsi_device_put under spin_lock_irqsave.
 
-Michael Ellerman wrote:
-> I think this will fix it:
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 9ce5c34..284bcbe 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -957,7 +957,7 @@ static inline void scsi_destroy_sdev(struct scsi_device *sdev)
->  	if (sdev->host->hostt->slave_destroy)
->  		sdev->host->hostt->slave_destroy(sdev);
->  	transport_destroy_device(&sdev->sdev_gendev);
-> -	put_device(&sdev->sdev_gendev);
-> +	put_device(&sdev->sdev_dev);
->  }
->  
->  #ifdef CONFIG_SCSI_LOGGING
+drivers/scsi/scsi_lib.c:356:
+                spin_lock_irqsave(shost->host_lock, flags);
+                scsi_device_put(sdev);
 
-Yes. This patch solved the memory leak.
+Path to might_sleep macro from scsi_device_put:
+1. scsi_device_put calls put_device at ./drivers/scsi/scsi.c:1111 
+2. put_device calls kobject_put at ./drivers/base/core.c:1038 
+3. kobject_put calls kref_put at ./lib/kobject.c
+4. kref_put may call callback function kobject_release at ./lib/kref.c if 
+refcount becomes zero, which might_sleep because it calls user event. Details:
+	4.1 kobject_cleanup calls kobject_uevent at ./lib/kobject.c:555
+	4.2 kobject_uevent calls kobject_uevent_env at ./lib/kobject_uevent.c:282
+	4.3 kobject_uevent_env calls call_usermodehelper_exec at 
+include/linux/kmod.h:83
+	4.4 call_usermodehelper_exec calls wait_for_completion at ./kernel/kmod.c:481
+	4.5 wait_for_completion calls wait_for_common at ./kernel/sched.c:5710
+	4.5 wait_for_common calls might_sleep at ./kernels/sched.c:5692
 
-Thank you.
+Found by: Linux Driver Verification
+
