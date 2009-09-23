@@ -1,33 +1,26 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH 1/5] SCSI: aacraid, fix memory leak
-Date: Wed, 23 Sep 2009 16:15:31 +0200
-Message-ID: <1253715335-6723-1-git-send-email-jirislaby@gmail.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753329AbZIWOP4@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/2] libiscsi: iscsi_session_setup to allow for private
+ space
+Date: Wed, 23 Sep 2009 12:03:21 -0500
+Message-ID: <4ABA54D9.6080104@cs.wisc.edu>
+References: <20090922025104.GA19957@serverengines.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58582 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753218AbZIWRD3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Sep 2009 13:03:29 -0400
+In-Reply-To: <20090922025104.GA19957@serverengines.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-Stanse found a memory leak on one fail path in aac_send_raw_srb. Add kfree
-there.
+On 09/21/2009 09:51 PM, Jayamohan Kallickal wrote:
+> 	This patch contains changes that allow iscsi_session_setup
+>   to allocate private space for LLD's
+>
 
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
----
- drivers/scsi/aacraid/commctrl.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 0391d75..5c9a8be 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -649,6 +649,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 				     AAC_OPT_NEW_COMM) ?
- 				      (dev->scsi_host_ptr->max_sectors << 9) :
- 				      65536) {
-+					kfree (usg);
- 					rcode = -EINVAL;
- 					goto cleanup;
- 				}
--- 
-1.6.4.2
+Acked-by: Mike Christie <michaelc@cs.wisc.edu>
