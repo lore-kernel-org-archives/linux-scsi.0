@@ -1,26 +1,30 @@
-From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
-Subject: Re: SMART causes disks to go offline on an LSI SAS 1068 controller
-Date: Wed, 23 Sep 2009 23:39:55 +0200
-Message-ID: <4ABA95AB.5070905@macroscoop.nl>
-References: <20090915072549.GB27050@boogie.lpds.sztaki.hu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: qla2xxx: Conditionally disable automatic queue full tracking
+Date: Wed, 23 Sep 2009 16:59:40 -0700
+Message-ID: <5355D915-9CAE-41CD-846B-F816FE914E1B@qlogic.com>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pimzand.xs4all.nl ([80.101.88.103]:48253 "EHLO
-	moog.pim.zandbergen.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752232AbZIWVq5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2009 17:46:57 -0400
-In-Reply-To: <20090915072549.GB27050@boogie.lpds.sztaki.hu>
+Received: from avexch1.qlogic.com ([198.70.193.115]:31853 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363AbZIWX7h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2009 19:59:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: linux-scsi@vger.kernel.org, Richard Scobie <richard@sauce.co.nz>
+To: mdr@sgi.com, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, LinuxSCSI <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, vasu.dev@intel.com
 
-I have had this problem on various machines running Fedora 11 2.6.29 
-kernels.
+Hi Michael/James,
 
-It went away recently with kernel-2.6.30.5-43.fc11.x86_64
+	Patches were submitted to move queue ramp up/down code recently to  
+scsi mid layer. With this change, I don't see a need for a module  
+parameter to disable queuefull tracking  in qla2xxx driver. Andrew,  
+mentioned that this got introduced to avoid wobbling behavior on the  
+wire due to queue depth modifications. Just wanted to check whether  
+the same need to be done in scsi mid layer too.
 
-Pim
+
+Thanks,
+Giridhar.M.B
 
