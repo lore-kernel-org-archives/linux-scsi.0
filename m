@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 7/20] mpt2sas: Fixed some of the comment.\
-Date: Wed, 23 Sep 2009 17:27:41 +0530
-Message-ID: <20090923115741.GL6772@lsi.com>
+Subject: [PATCH 8/20] mpt2sas: Added command line option diag_buffer_enable.
+Date: Wed, 23 Sep 2009 17:28:09 +0530
+Message-ID: <20090923115809.GM6772@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:55853 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752703AbZIWMVA (ORCPT
+Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:56457 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751534AbZIWMV1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Sep 2009 08:21:00 -0400
+	Wed, 23 Sep 2009 08:21:27 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,103 +17,253 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Fixed some of the comments sections for some of the function so "@ioc:
-pointer to scsi command object" was changed to "@ioc: per adapter object"
+Added command line option diag_buffer_enable. When the command line option is
+set, the driver will automatically post diag buffers at driver load time.
+The command line option diag_buffer_enable is bitwise, so it's possible to
+enable both and/or snapshot + trace buffers.  For trace, the driver will
+allocate 1MB buffer, whereas for snapshot its 2MB. The purpose for this is
+so the enduser doesn't have to manually use an application to setup diag
+buffers for debugging firmware related issues.
+
+Here is some examples
+trace:
+# insmod mpt2sas.ko diag_buffer_enable=1
+
+snapshot:
+# insmod mpt2sas.ko diag_buffer_enable=2
+
+both trace and snapshot:
+# insmod mpt2sas.ko diag_buffer_enable=3
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 617664c..ec3f577 100644
+index ec3f577..1d2374b 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -147,7 +147,7 @@ _base_fault_reset_work(struct work_struct *work)
+@@ -77,6 +77,17 @@ static int msix_disable = -1;
+ module_param(msix_disable, int, 0);
+ MODULE_PARM_DESC(msix_disable, " disable msix routed interrupts (default=0)");
+ 
++/* diag_buffer_enable is bitwise
++ * bit 0 set = MPI2_DIAG_BUF_TYPE_TRACE(1)
++ * bit 1 set = MPI2_DIAG_BUF_TYPE_SNAPSHOT(2)
++ *
++ * Either bit can be set, or both
++ */
++static int diag_buffer_enable;
++module_param(diag_buffer_enable, int, 0);
++MODULE_PARM_DESC(diag_buffer_enable, " enable diag buffer at driver load "
++    "time (TRACE=1/SNAP=2/default=0)");
++
+ int mpt2sas_fwfault_debug;
+ MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
+     "and halt firmware - (default=0)");
+@@ -3588,6 +3599,8 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 		goto out_free_resources;
+ 
+ 	mpt2sas_base_start_watchdog(ioc);
++	if (diag_buffer_enable != 0)
++		mpt2sas_enable_diag_buffer(ioc, diag_buffer_enable);
+ 	return 0;
+ 
+  out_free_resources:
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 0c75c0e..e658cf9 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -886,6 +886,9 @@ u8 mpt2sas_ctl_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ void mpt2sas_ctl_add_to_event_log(struct MPT2SAS_ADAPTER *ioc,
+     Mpi2EventNotificationReply_t *mpi_reply);
+ 
++void mpt2sas_enable_diag_buffer(struct MPT2SAS_ADAPTER *ioc,
++	u8 bits_to_regsiter);
++
+ /* transport shared API */
+ u8 mpt2sas_transport_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+     u32 reply);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 6901a67..99a332d 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -1256,18 +1256,15 @@ _ctl_diag_capability(struct MPT2SAS_ADAPTER *ioc, u8 buffer_type)
+ }
  
  /**
-  * mpt2sas_base_start_watchdog - start the fault_reset_work_q
-- * @ioc: pointer to scsi command object
+- * _ctl_diag_register - application register with driver
+- * @arg - user space buffer containing ioctl content
+- * @state - NON_BLOCKING or BLOCKING
++ * _ctl_diag_register_2 - wrapper for registering diag buffer support
 + * @ioc: per adapter object
-  * Context: sleep.
++ * @diag_register: the diag_register struct passed in from user space
   *
-  * Return nothing.
-@@ -181,7 +181,7 @@ mpt2sas_base_start_watchdog(struct MPT2SAS_ADAPTER *ioc)
+- * This will allow the driver to setup any required buffers that will be
+- * needed by firmware to communicate with the driver.
+  */
+ static long
+-_ctl_diag_register(void __user *arg, enum block_state state)
++_ctl_diag_register_2(struct MPT2SAS_ADAPTER *ioc,
++    struct mpt2_diag_register *diag_register)
+ {
+-	struct mpt2_diag_register karg;
+-	struct MPT2SAS_ADAPTER *ioc;
+ 	int rc, i;
+ 	void *request_data = NULL;
+ 	dma_addr_t request_data_dma;
+@@ -1280,18 +1277,17 @@ _ctl_diag_register(void __user *arg, enum block_state state)
+ 	u16 ioc_status;
+ 	u8 issue_reset = 0;
  
- /**
-  * mpt2sas_base_stop_watchdog - stop the fault_reset_work_q
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  * Context: sleep.
-  *
-  * Return nothing.
-@@ -251,7 +251,7 @@ mpt2sas_halt_firmware(struct MPT2SAS_ADAPTER *ioc)
- #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
- /**
-  * _base_sas_ioc_info - verbose translation of the ioc status
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  * @mpi_reply: reply mf payload returned from firmware
-  * @request_hdr: request mf
-  *
-@@ -465,7 +465,7 @@ _base_sas_ioc_info(struct MPT2SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
+-	if (copy_from_user(&karg, arg, sizeof(karg))) {
+-		printk(KERN_ERR "failure at %s:%d/%s()!\n",
+-		    __FILE__, __LINE__, __func__);
+-		return -EFAULT;
+-	}
+-	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
+-		return -ENODEV;
+-
+ 	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
+ 	    __func__));
  
- /**
-  * _base_display_event_data - verbose translation of firmware asyn events
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  * @mpi_reply: reply mf payload returned from firmware
-  *
-  * Return nothing.
-@@ -545,7 +545,7 @@ _base_display_event_data(struct MPT2SAS_ADAPTER *ioc,
+-	buffer_type = karg.buffer_type;
++	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
++		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
++		    ioc->name, __func__);
++		rc = -EAGAIN;
++		goto out;
++	}
++
++	buffer_type = diag_register->buffer_type;
+ 	if (!_ctl_diag_capability(ioc, buffer_type)) {
+ 		printk(MPT2SAS_ERR_FMT "%s: doesn't have capability for "
+ 		    "buffer_type(0x%02x)\n", ioc->name, __func__, buffer_type);
+@@ -1306,24 +1302,12 @@ _ctl_diag_register(void __user *arg, enum block_state state)
+ 		return -EINVAL;
+ 	}
  
- /**
-  * _base_sas_log_info - verbose translation of firmware log info
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  * @log_info: log info
-  *
-  * Return nothing.
-@@ -598,7 +598,7 @@ _base_sas_log_info(struct MPT2SAS_ADAPTER *ioc , u32 log_info)
+-	if (karg.requested_buffer_size % 4)  {
++	if (diag_register->requested_buffer_size % 4)  {
+ 		printk(MPT2SAS_ERR_FMT "%s: the requested_buffer_size "
+ 		    "is not 4 byte aligned\n", ioc->name, __func__);
+ 		return -EINVAL;
+ 	}
  
- /**
-  * _base_display_reply_info -
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  * @smid: system request message index
-  * @msix_index: MSIX table index supplied by the OS
-  * @reply: reply message frame(lower 32bit addr)
-@@ -627,7 +627,7 @@ _base_display_reply_info(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+-	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
+-		return -EAGAIN;
+-	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
+-		return -ERESTARTSYS;
+-
+-	if (ioc->ctl_cmds.status != MPT2_CMD_NOT_USED) {
+-		printk(MPT2SAS_ERR_FMT "%s: ctl_cmd in use\n",
+-		    ioc->name, __func__);
+-		rc = -EAGAIN;
+-		goto out;
+-	}
+-
+ 	smid = mpt2sas_base_get_smid(ioc, ioc->ctl_cb_idx);
+ 	if (!smid) {
+ 		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
+@@ -1339,12 +1323,12 @@ _ctl_diag_register(void __user *arg, enum block_state state)
+ 	ioc->ctl_cmds.smid = smid;
  
- /**
-  * mpt2sas_base_done - base internal command completion routine
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  * @smid: system request message index
-  * @msix_index: MSIX table index supplied by the OS
-  * @reply: reply message frame(lower 32bit addr)
-@@ -660,7 +660,7 @@ mpt2sas_base_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 	request_data = ioc->diag_buffer[buffer_type];
+-	request_data_sz = karg.requested_buffer_size;
+-	ioc->unique_id[buffer_type] = karg.unique_id;
++	request_data_sz = diag_register->requested_buffer_size;
++	ioc->unique_id[buffer_type] = diag_register->unique_id;
+ 	ioc->diag_buffer_status[buffer_type] = 0;
+-	memcpy(ioc->product_specific[buffer_type], karg.product_specific,
+-	    MPT2_PRODUCT_SPECIFIC_DWORDS);
+-	ioc->diagnostic_flags[buffer_type] = karg.diagnostic_flags;
++	memcpy(ioc->product_specific[buffer_type],
++	    diag_register->product_specific, MPT2_PRODUCT_SPECIFIC_DWORDS);
++	ioc->diagnostic_flags[buffer_type] = diag_register->diagnostic_flags;
  
- /**
-  * _base_async_event - main callback handler for firmware asyn events
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  * @msix_index: MSIX table index supplied by the OS
-  * @reply: reply message frame(lower 32bit addr)
-  *
-@@ -741,7 +741,7 @@ _base_get_cb_idx(struct MPT2SAS_ADAPTER *ioc, u16 smid)
+ 	if (request_data) {
+ 		request_data_dma = ioc->diag_buffer_dma[buffer_type];
+@@ -1374,8 +1358,8 @@ _ctl_diag_register(void __user *arg, enum block_state state)
+ 	}
  
- /**
-  * _base_mask_interrupts - disable interrupts
-- * @ioc: pointer to scsi command object
-+ * @ioc: per adapter object
-  *
-  * Disabling ResetIRQ, Reply and Doorbell Interrupts
-  *
-@@ -761,7 +761,7 @@ _base_mask_interrupts(struct MPT2SAS_ADAPTER *ioc)
+ 	mpi_request->Function = MPI2_FUNCTION_DIAG_BUFFER_POST;
+-	mpi_request->BufferType = karg.buffer_type;
+-	mpi_request->Flags = cpu_to_le32(karg.diagnostic_flags);
++	mpi_request->BufferType = diag_register->buffer_type;
++	mpi_request->Flags = cpu_to_le32(diag_register->diagnostic_flags);
+ 	mpi_request->BufferAddress = cpu_to_le64(request_data_dma);
+ 	mpi_request->BufferLength = cpu_to_le32(request_data_sz);
+ 	mpi_request->VF_ID = 0; /* TODO */
+@@ -1439,6 +1423,73 @@ _ctl_diag_register(void __user *arg, enum block_state state)
+ 		    request_data, request_data_dma);
  
- /**
-  * _base_unmask_interrupts - enable interrupts
-- * @ioc: pointer to scsi command object
+ 	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
++	return rc;
++}
++
++/**
++ * mpt2sas_enable_diag_buffer - enabling diag_buffers support driver load time
 + * @ioc: per adapter object
-  *
-  * Enabling only Reply Interrupts
-  *
++ * @bits_to_register: bitwise field where trace is bit 0, and snapshot is bit 1
++ *
++ * This is called when command line option diag_buffer_enable is enabled
++ * at driver load time.
++ */
++void
++mpt2sas_enable_diag_buffer(struct MPT2SAS_ADAPTER *ioc, u8 bits_to_register)
++{
++	struct mpt2_diag_register diag_register;
++
++	memset(&diag_register, 0, sizeof(struct mpt2_diag_register));
++
++	if (bits_to_register & 1) {
++		printk(MPT2SAS_INFO_FMT "registering trace buffer support\n",
++		    ioc->name);
++		diag_register.buffer_type = MPI2_DIAG_BUF_TYPE_TRACE;
++		/* register for 1MB buffers  */
++		diag_register.requested_buffer_size = (1024 * 1024);
++		diag_register.unique_id = 0x7075900;
++		_ctl_diag_register_2(ioc,  &diag_register);
++	}
++
++	if (bits_to_register & 2) {
++		printk(MPT2SAS_INFO_FMT "registering snapshot buffer support\n",
++		    ioc->name);
++		diag_register.buffer_type = MPI2_DIAG_BUF_TYPE_SNAPSHOT;
++		/* register for 2MB buffers  */
++		diag_register.requested_buffer_size = 2 * (1024 * 1024);
++		diag_register.unique_id = 0x7075901;
++		_ctl_diag_register_2(ioc,  &diag_register);
++	}
++}
++
++/**
++ * _ctl_diag_register - application register with driver
++ * @arg - user space buffer containing ioctl content
++ * @state - NON_BLOCKING or BLOCKING
++ *
++ * This will allow the driver to setup any required buffers that will be
++ * needed by firmware to communicate with the driver.
++ */
++static long
++_ctl_diag_register(void __user *arg, enum block_state state)
++{
++	struct mpt2_diag_register karg;
++	struct MPT2SAS_ADAPTER *ioc;
++	long rc;
++
++	if (copy_from_user(&karg, arg, sizeof(karg))) {
++		printk(KERN_ERR "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return -EFAULT;
++	}
++	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
++		return -ENODEV;
++
++	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
++		return -EAGAIN;
++	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
++		return -ERESTARTSYS;
++	rc = _ctl_diag_register_2(ioc, &karg);
+ 	mutex_unlock(&ioc->ctl_cmds.mutex);
+ 	return rc;
+ }
