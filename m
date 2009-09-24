@@ -1,38 +1,68 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [RFC][PATCH v2]Add pm8001 SAS/SATA HBA driver
-Date: Thu, 24 Sep 2009 14:04:02 -0700
-Message-ID: <1253826242.5183.178.camel@mulgrave.site>
-References: <9A9AF0C219C5433DB5A8D61D4914C599@usish.com.cn>
-	 <200909150807.36222.eike-kernel@sf-tec.de>
-	 <4E716EE5A6E14CBEB7C6A982E2347934@usish.com.cn>
+From: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
+Subject: Re: Reducing the verbosity of inserting a USB storage device
+Date: Thu, 24 Sep 2009 16:17:02 -0600
+Message-ID: <20090924221702.GA7943@parisc-linux.org>
+References: <20090920225348.GB3690@parisc-linux.org> <Pine.LNX.4.44L0.0909202104300.14465-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33276 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752430AbZIXVEQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Sep 2009 17:04:16 -0400
-In-Reply-To: <4E716EE5A6E14CBEB7C6A982E2347934@usish.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0909202104300.14465-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>
-Cc: 'Rolf Eike Beer' <eike-kernel@sf-tec.de>, matthew@wil.cx, linux-scsi@vger.kernel.org, lindar_liu@usish.com, tom_peng@usish.com, 'aoqingy' <aoqingyun@usish.com>, roy_wang@usish.com
 
-On Wed, 2009-09-16 at 11:27 +0800, jack wang wrote:
-> Here is an update of our driver patch that incorporates the latest review
-> inputs from Eike.
+On Sun, Sep 20, 2009 at 09:09:45PM -0400, Alan Stern wrote:
+> I approve of these changes in general, but there should be one more
+> line of information.  In the "after" example, there's nothing to relate
+> the USB device mentioned in the first two lines with the SCSI device
+> mentioned in the remaining six.  I'd like to see one line in between
+> from usb-storage, to indicate which USB interface is being registered
+> as which SCSI host.
+> 
+> We don't print anything quite like that right now, so this would have 
+> to be something new.  The closest we come is the "scsi4 : SCSI 
+> emulation for USB Mass Storage devices" line, and it doesn't mention 
+> the USB interface.
 
-I'm afraid this driver has a slightly more serious issue:  it uses
-virt_to_bus() and therefore won't compile on a lot of non-x86 systems:
+I think you're right.  Here's my current dmesg:
 
-pm8001_hwi.c:           phys_addr = cpu_to_le64(virt_to_bus((void *)(ccb->buf_pr
-pm8001_hwi.c:           phys_addr = cpu_to_le64(virt_to_bus((void *)(ccb->buf_pr
+usb 1-4: new high speed USB device using ehci_hcd and address 3
+scsi4 : usb-storage 1-4:1.0
+scsi 4:0:0:0: Direct-Access              Flash Disk       5.00 PQ: 0 ANSI: 2
+sd 4:0:0:0: Attached scsi generic sg1 type 0
+sd 4:0:0:0: [sdb] Assuming drive cache: write through
+sd 4:0:0:0: [sdb] 2009088 512-byte logical blocks: (1.02 GB/981 MiB)
+sd 4:0:0:0: [sdb] Removable disk, Write Protect is off
+ sdb: unknown partition table
 
-It' looks like MEM_CCB already has the physical address of this region,
-so you don't need to use virt_to_bus, you can just compute the offset
-from the MEM_CCB virt address and add the phys address.
+That actually makes the patchset slightly simpler; before:
 
-James
+ drivers/scsi/hosts.c           |    3 +
+ drivers/scsi/sd.c              |   78 +++++++++++++++++++++++------------------
+ drivers/usb/storage/scsiglue.c |    3 +
+ drivers/usb/storage/usb.c      |   13 ++++--
+ include/scsi/scsi_host.h       |    3 +
+ 5 files changed, 60 insertions(+), 40 deletions(-)
 
+after:
 
+ drivers/scsi/sd.c              |   78 +++++++++++++++++++++++------------------
+ drivers/usb/core/generic.c     |    2 -
+ drivers/usb/storage/scsiglue.c |    3 +
+ drivers/usb/storage/usb.c      |   15 +++++--
+ drivers/usb/storage/usb.h      |    1 
+ 5 files changed, 58 insertions(+), 41 deletions(-)
+
+Patches to follow.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
