@@ -1,31 +1,42 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/9] mpt2sas: Update driver to MPI2 REV K headers.
-Date: Thu, 24 Sep 2009 18:39:43 +0000
-Message-ID: <1253817583.5183.88.camel@mulgrave.site>
-References: <20090914052934.GC31450@lsi.com>
+Subject: pmcraid build problem on ppc64
+Date: Thu, 24 Sep 2009 12:10:33 -0700
+Message-ID: <1253819433.5183.121.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53266 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42257 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751319AbZIXSjn (ORCPT
+	by vger.kernel.org with ESMTP id S1753668AbZIXTKe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Sep 2009 14:39:43 -0400
-In-Reply-To: <20090914052934.GC31450@lsi.com>
+	Thu, 24 Sep 2009 15:10:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2009-09-14 at 10:59 +0530, Kashyap, Desai wrote:
-> @@ -3818,6 +3824,7 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc, u8 VF_ID,
->         struct _sas_node *sas_expander;
->         unsigned long flags;
->         u8 link_rate_;
-> +       Mpi2EventDataSasTopologyChangeList_t *event_data = fw_event->event_data;
+I'm getting this in testing:
 
-This causes an unused variable warning when logging is disabled.
+drivers/scsi/pmcraid.c: In function 'pmcraid_request_sense':
+drivers/scsi/pmcraid.c:2254: warning: large integer implicitly truncated
+to unsigned type
+drivers/scsi/pmcraid.c: In function 'pmcraid_build_ioadl':
+drivers/scsi/pmcraid.c:3020: warning: large integer implicitly truncated
+to unsigned type
+drivers/scsi/pmcraid.c: In function 'pmcraid_build_passthrough_ioadls':
+drivers/scsi/pmcraid.c:3390: warning: large integer implicitly truncated
+to unsigned type
+drivers/scsi/pmcraid.c: In function 'pmcraid_querycfg':
+drivers/scsi/pmcraid.c:5317: warning: large integer implicitly truncated
+to unsigned type
+
+It's code like this:
+
+	ioadl->flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
+
+But ->flags is only u8, so that cpu_to_le32() will cause the flag to be
+too big to fit on a BE architecture.
 
 James
 
