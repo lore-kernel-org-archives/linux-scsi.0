@@ -1,45 +1,37 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 1/14] bfa: Brocade BFA FC SCSI driver (bfad)
-Date: Wed, 23 Sep 2009 17:46:15 -0700
-Message-ID: <200909240046.n8O0kFeR011617@swe58.brocade.com>
+Subject: [PATCH 2/14] bfa: Brocade BFA FC SCSI driver (bfa1)
+Date: Wed, 23 Sep 2009 17:49:58 -0700
+Message-ID: <200909240049.n8O0nw3l013437@swe58.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:30981 "EHLO
-	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752438AbZIXAqM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2009 20:46:12 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753080AbZIXAuF@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
+List-Id: linux-scsi@vger.kernel.org
 
 From: Jing Huang <huangj@brocade.com>
 
-This patch contains code that interfaces to upper layer linux kernel, such as
-PCI, SCSI mid-layer and sysfs etc.
+This patch contains code to access Brocade Fibre channel HBA
+firmware/hardware, part-1
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- bfad.c           | 1182 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- bfad_attr.c      |  649 +++++++++++++++++++++++++++++
- bfad_attr.h      |   65 ++
- bfad_drv.h       |  295 +++++++++++++
- bfad_fwimg.c     |   95 ++++
- bfad_im.c        | 1230 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- bfad_im.h        |  150 ++++++
- bfad_im_compat.h |   46 ++
- bfad_intr.c      |  214 +++++++++
- bfad_ipfc.h      |   42 +
- bfad_os.c        |   50 ++
- bfad_tm.h        |   59 ++
- bfad_trcmod.h    |   52 ++
- 13 files changed, 4129 insertions(+)
+ bfa_callback_priv.h  |   57 +
+ bfa_cb_ioim_macros.h |  205 ++++++
+ bfa_cee.c            |  492 +++++++++++++++
+ bfa_core.c           |  402 ++++++++++++
+ bfa_csdebug.c        |   58 +
+ bfa_fcpim.c          |  175 +++++
+ bfa_fcpim_priv.h     |  188 +++++
+ bfa_fcport.c         | 1671 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ bfa_fcxp.c           |  782 +++++++++++++++++++++++
+ 9 files changed, 4030 insertions(+)
 
-diff -urpN orig/drivers/scsi/bfa/bfad.c patch/drivers/scsi/bfa/bfad.c
---- orig/drivers/scsi/bfa/bfad.c	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad.c	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,1182 @@
+diff -urpN orig/drivers/scsi/bfa/bfa_callback_priv.h patch/drivers/scsi/bfa/bfa_callback_priv.h
+--- orig/drivers/scsi/bfa/bfa_callback_priv.h	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_callback_priv.h	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,57 @@
 +/*
 + * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 + * All rights reserved
@@ -57,2196 +49,50 @@ diff -urpN orig/drivers/scsi/bfa/bfad.c patch/drivers/scsi/bfa/bfad.c
 + * General Public License for more details.
 + */
 +
-+/**
-+ *  bfad.c Linux driver PCI interface module.
-+ */
++#ifndef __BFA_CALLBACK_PRIV_H__
++#define __BFA_CALLBACK_PRIV_H__
 +
-+#include <linux/module.h>
-+#include "bfad_drv.h"
-+#include "bfad_im.h"
-+#include "bfad_tm.h"
-+#include "bfad_ipfc.h"
-+#include "bfad_trcmod.h"
-+#include <fcb/bfa_fcb_vf.h>
-+#include <fcb/bfa_fcb_rport.h>
-+#include <fcb/bfa_fcb_port.h>
-+#include <fcb/bfa_fcb.h>
++#include <cs/bfa_q.h>
 +
-+BFA_TRC_FILE(LDRV, BFAD);
-+static DEFINE_MUTEX(bfad_mutex);
-+LIST_HEAD(bfad_list);
-+static int      bfad_inst;
-+int bfad_supported_fc4s;
-+
-+static char     *host_name;
-+static char     *os_name;
-+static char     *os_patch;
-+static int      num_rports;
-+static int      num_ios;
-+static int      num_tms;
-+static int      num_fcxps;
-+static int      num_ufbufs;
-+static int      reqq_size;
-+static int      rspq_size;
-+static int      num_sgpgs;
-+static int      rport_del_timeout = BFA_FCS_RPORT_DEF_DEL_TIMEOUT;
-+static int      bfa_io_max_sge = BFAD_IO_MAX_SGE;
-+static int      log_level = BFA_LOG_WARNING;
-+static int      ioc_auto_recover = BFA_TRUE;
-+static int      ipfc_enable = BFA_FALSE;
-+static int      ipfc_mtu = -1;
-+int 		bfa_lun_queue_depth = BFAD_LUN_QUEUE_DEPTH;
-+int      	bfa_linkup_delay = -1;
-+
-+module_param(os_name, charp, S_IRUGO | S_IWUSR);
-+module_param(os_patch, charp, S_IRUGO | S_IWUSR);
-+module_param(host_name, charp, S_IRUGO | S_IWUSR);
-+module_param(num_rports, int, S_IRUGO | S_IWUSR);
-+module_param(num_ios, int, S_IRUGO | S_IWUSR);
-+module_param(num_tms, int, S_IRUGO | S_IWUSR);
-+module_param(num_fcxps, int, S_IRUGO | S_IWUSR);
-+module_param(num_ufbufs, int, S_IRUGO | S_IWUSR);
-+module_param(reqq_size, int, S_IRUGO | S_IWUSR);
-+module_param(rspq_size, int, S_IRUGO | S_IWUSR);
-+module_param(num_sgpgs, int, S_IRUGO | S_IWUSR);
-+module_param(rport_del_timeout, int, S_IRUGO | S_IWUSR);
-+module_param(bfa_lun_queue_depth, int, S_IRUGO | S_IWUSR);
-+module_param(bfa_io_max_sge, int, S_IRUGO | S_IWUSR);
-+module_param(log_level, int, S_IRUGO | S_IWUSR);
-+module_param(ioc_auto_recover, int, S_IRUGO | S_IWUSR);
-+module_param(ipfc_enable, int, S_IRUGO | S_IWUSR);
-+module_param(ipfc_mtu, int, S_IRUGO | S_IWUSR);
-+module_param(bfa_linkup_delay, int, S_IRUGO | S_IWUSR);
-+
-+/*
-+ * Stores the module parm num_sgpgs value;
-+ * used to reset for bfad next instance.
-+ */
-+static int num_sgpgs_parm;
-+
-+static bfa_status_t
-+bfad_fc4_probe(struct bfad_s *bfad)
-+{
-+	int             rc;
-+
-+	rc = bfad_im_probe(bfad);
-+	if (rc != BFA_STATUS_OK)
-+		goto ext;
-+
-+	bfad_tm_probe(bfad);
-+
-+	if (ipfc_enable)
-+		bfad_ipfc_probe(bfad);
-+ext:
-+	return rc;
-+}
-+
-+static void
-+bfad_fc4_probe_undo(struct bfad_s *bfad)
-+{
-+	bfad_im_probe_undo(bfad);
-+	bfad_tm_probe_undo(bfad);
-+	if (ipfc_enable)
-+		bfad_ipfc_probe_undo(bfad);
-+}
-+
-+static void
-+bfad_fc4_probe_post(struct bfad_s *bfad)
-+{
-+	if (bfad->im)
-+		bfad_im_probe_post(bfad->im);
-+
-+	bfad_tm_probe_post(bfad);
-+	if (ipfc_enable)
-+		bfad_ipfc_probe_post(bfad);
-+}
-+
-+static bfa_status_t
-+bfad_fc4_port_new(struct bfad_s *bfad, struct bfad_port_s *port, int roles)
-+{
-+	int             rc = BFA_STATUS_FAILED;
-+
-+	if (roles & BFA_PORT_ROLE_FCP_IM)
-+		rc = bfad_im_port_new(bfad, port);
-+	if (rc != BFA_STATUS_OK)
-+		goto ext;
-+
-+	if (roles & BFA_PORT_ROLE_FCP_TM)
-+		rc = bfad_tm_port_new(bfad, port);
-+	if (rc != BFA_STATUS_OK)
-+		goto ext;
-+
-+	if ((roles & BFA_PORT_ROLE_FCP_IPFC) && ipfc_enable)
-+		rc = bfad_ipfc_port_new(bfad, port, port->pvb_type);
-+ext:
-+	return rc;
-+}
-+
-+static void
-+bfad_fc4_port_delete(struct bfad_s *bfad, struct bfad_port_s *port, int roles)
-+{
-+	if (roles & BFA_PORT_ROLE_FCP_IM)
-+		bfad_im_port_delete(bfad, port);
-+
-+	if (roles & BFA_PORT_ROLE_FCP_TM)
-+		bfad_tm_port_delete(bfad, port);
-+
-+	if ((roles & BFA_PORT_ROLE_FCP_IPFC) && ipfc_enable)
-+		bfad_ipfc_port_delete(bfad, port);
-+}
++typedef void    (*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
 +
 +/**
-+ *  BFA callbacks
++ * Generic BFA callback element.
 + */
-+void
-+bfad_hcb_comp(void *arg, bfa_status_t status)
-+{
-+	struct bfad_hal_comp *fcomp = (struct bfad_hal_comp *)arg;
-+
-+	fcomp->status = status;
-+	complete(&fcomp->comp);
-+}
-+
-+/**
-+ * bfa_init callback
-+ */
-+void
-+bfa_cb_init(void *drv, bfa_status_t init_status)
-+{
-+	struct bfad_s  *bfad = drv;
-+
-+	if (init_status == BFA_STATUS_OK)
-+		bfad->bfad_flags |= BFAD_HAL_INIT_DONE;
-+
-+	complete(&bfad->comp);
-+}
-+
-+
-+
-+/**
-+ *  BFA_FCS callbacks
-+ */
-+static struct bfad_port_s *
-+bfad_get_drv_port(struct bfad_s *bfad, struct bfad_vf_s *vf_drv,
-+		  struct bfad_vport_s *vp_drv)
-+{
-+	return ((vp_drv) ? (&(vp_drv)->drv_port)
-+		: ((vf_drv) ? (&(vf_drv)->base_port) : (&(bfad)->pport)));
-+}
-+
-+struct bfad_port_s *
-+bfa_fcb_port_new(struct bfad_s *bfad, struct bfa_fcs_port_s *port,
-+		 enum bfa_port_role roles, struct bfad_vf_s *vf_drv,
-+		 struct bfad_vport_s *vp_drv)
-+{
-+	bfa_status_t    rc;
-+	struct bfad_port_s *port_drv;
-+
-+	if (!vp_drv && !vf_drv) {
-+		port_drv = &bfad->pport;
-+		port_drv->pvb_type = BFAD_PORT_PHYS_BASE;
-+	} else if (!vp_drv && vf_drv) {
-+		port_drv = &vf_drv->base_port;
-+		port_drv->pvb_type = BFAD_PORT_VF_BASE;
-+	} else if (vp_drv && !vf_drv) {
-+		port_drv = &vp_drv->drv_port;
-+		port_drv->pvb_type = BFAD_PORT_PHYS_VPORT;
-+	} else {
-+		port_drv = &vp_drv->drv_port;
-+		port_drv->pvb_type = BFAD_PORT_VF_VPORT;
-+	}
-+
-+	port_drv->fcs_port = port;
-+	port_drv->roles = roles;
-+	rc = bfad_fc4_port_new(bfad, port_drv, roles);
-+	if (rc != BFA_STATUS_OK) {
-+		bfad_fc4_port_delete(bfad, port_drv, roles);
-+		port_drv = NULL;
-+	}
-+
-+	return port_drv;
-+}
-+
-+void
-+bfa_fcb_port_delete(struct bfad_s *bfad, enum bfa_port_role roles,
-+		    struct bfad_vf_s *vf_drv, struct bfad_vport_s *vp_drv)
-+{
-+	struct bfad_port_s *port_drv;
-+
-+	/*
-+	 * this will be only called from rmmod context
-+	 */
-+	if (vp_drv && !vp_drv->comp_del) {
-+		port_drv = bfad_get_drv_port(bfad, vf_drv, vp_drv);
-+		bfa_trc(bfad, roles);
-+		bfad_fc4_port_delete(bfad, port_drv, roles);
-+	}
-+}
-+
-+void
-+bfa_fcb_port_online(struct bfad_s *bfad, enum bfa_port_role roles,
-+		    struct bfad_vf_s *vf_drv, struct bfad_vport_s *vp_drv)
-+{
-+	struct bfad_port_s *port_drv = bfad_get_drv_port(bfad, vf_drv, vp_drv);
-+
-+	if (roles & BFA_PORT_ROLE_FCP_IM)
-+		bfad_im_port_online(bfad, port_drv);
-+
-+	if (roles & BFA_PORT_ROLE_FCP_TM)
-+		bfad_tm_port_online(bfad, port_drv);
-+
-+	if ((roles & BFA_PORT_ROLE_FCP_IPFC) && ipfc_enable)
-+		bfad_ipfc_port_online(bfad, port_drv);
-+
-+	bfad->bfad_flags |= BFAD_PORT_ONLINE;
-+}
-+
-+void
-+bfa_fcb_port_offline(struct bfad_s *bfad, enum bfa_port_role roles,
-+		     struct bfad_vf_s *vf_drv, struct bfad_vport_s *vp_drv)
-+{
-+	struct bfad_port_s *port_drv = bfad_get_drv_port(bfad, vf_drv, vp_drv);
-+
-+	if (roles & BFA_PORT_ROLE_FCP_IM)
-+		bfad_im_port_offline(bfad, port_drv);
-+
-+	if (roles & BFA_PORT_ROLE_FCP_TM)
-+		bfad_tm_port_offline(bfad, port_drv);
-+
-+	if ((roles & BFA_PORT_ROLE_FCP_IPFC) && ipfc_enable)
-+		bfad_ipfc_port_offline(bfad, port_drv);
-+}
-+
-+void
-+bfa_fcb_vport_delete(struct bfad_vport_s *vport_drv)
-+{
-+	if (vport_drv->comp_del) {
-+		complete(vport_drv->comp_del);
-+		return;
-+	}
-+
-+	kfree(vport_drv);
-+}
-+
-+/**
-+ * FCS RPORT alloc callback, after successful PLOGI by FCS
-+ */
-+bfa_status_t
-+bfa_fcb_rport_alloc(struct bfad_s *bfad, struct bfa_fcs_rport_s **rport,
-+		    struct bfad_rport_s **rport_drv)
-+{
-+	bfa_status_t    rc = BFA_STATUS_OK;
-+
-+	*rport_drv = kzalloc(sizeof(struct bfad_rport_s), GFP_ATOMIC);
-+	if (*rport_drv == NULL) {
-+		rc = BFA_STATUS_ENOMEM;
-+		goto ext;
-+	}
-+
-+	*rport = &(*rport_drv)->fcs_rport;
-+
-+ext:
-+	return rc;
-+}
-+
-+
-+
-+void
-+bfad_hal_mem_release(struct bfad_s *bfad)
-+{
-+	int             i;
-+	struct bfa_meminfo_s *hal_meminfo = &bfad->meminfo;
-+	struct bfa_mem_elem_s *meminfo_elem;
-+
-+	for (i = 0; i < BFA_MEM_TYPE_MAX; i++) {
-+		meminfo_elem = &hal_meminfo->meminfo[i];
-+		if (meminfo_elem->kva != NULL) {
-+			switch (meminfo_elem->mem_type) {
-+			case BFA_MEM_TYPE_KVA:
-+				vfree(meminfo_elem->kva);
-+				break;
-+			case BFA_MEM_TYPE_DMA:
-+				dma_free_coherent(&bfad->pcidev->dev,
-+						meminfo_elem->mem_len,
-+						meminfo_elem->kva,
-+						(dma_addr_t) meminfo_elem->dma);
-+				break;
-+			default:
-+				bfa_assert(0);
-+				break;
-+			}
-+		}
-+	}
-+
-+	memset(hal_meminfo, 0, sizeof(struct bfa_meminfo_s));
-+}
-+
-+void
-+bfad_update_hal_cfg(struct bfa_iocfc_cfg_s *bfa_cfg)
-+{
-+	if (num_rports > 0)
-+		bfa_cfg->fwcfg.num_rports = num_rports;
-+	if (num_ios > 0)
-+		bfa_cfg->fwcfg.num_ioim_reqs = num_ios;
-+	if (num_tms > 0)
-+		bfa_cfg->fwcfg.num_tskim_reqs = num_tms;
-+	if (num_fcxps > 0)
-+		bfa_cfg->fwcfg.num_fcxp_reqs = num_fcxps;
-+	if (num_ufbufs > 0)
-+		bfa_cfg->fwcfg.num_uf_bufs = num_ufbufs;
-+	if (reqq_size > 0)
-+		bfa_cfg->drvcfg.num_reqq_elems = reqq_size;
-+	if (rspq_size > 0)
-+		bfa_cfg->drvcfg.num_rspq_elems = rspq_size;
-+	if (num_sgpgs > 0)
-+		bfa_cfg->drvcfg.num_sgpgs = num_sgpgs;
-+
-+	/*
-+	 * populate the hal values back to the driver for sysfs use.
-+	 * otherwise, the default values will be shown as 0 in sysfs
-+	 */
-+	num_rports = bfa_cfg->fwcfg.num_rports;
-+	num_ios    = bfa_cfg->fwcfg.num_ioim_reqs;
-+	num_tms	   = bfa_cfg->fwcfg.num_tskim_reqs;
-+	num_fcxps  = bfa_cfg->fwcfg.num_fcxp_reqs;
-+	num_ufbufs = bfa_cfg->fwcfg.num_uf_bufs;
-+	reqq_size  = bfa_cfg->drvcfg.num_reqq_elems;
-+	rspq_size  = bfa_cfg->drvcfg.num_rspq_elems;
-+	num_sgpgs  = bfa_cfg->drvcfg.num_sgpgs;
-+}
-+
-+bfa_status_t
-+bfad_hal_mem_alloc(struct bfad_s *bfad)
-+{
-+	struct bfa_meminfo_s *hal_meminfo = &bfad->meminfo;
-+	struct bfa_mem_elem_s *meminfo_elem;
-+	bfa_status_t    rc = BFA_STATUS_OK;
-+	dma_addr_t      phys_addr;
-+	int             retry_count = 0;
-+	int             reset_value = 1;
-+	int             min_num_sgpgs = 512;
-+	void           *kva;
-+	int             i;
-+
-+	bfa_cfg_get_default(&bfad->ioc_cfg);
-+
-+retry:
-+	bfad_update_hal_cfg(&bfad->ioc_cfg);
-+	bfad->cfg_data.ioc_queue_depth = bfad->ioc_cfg.fwcfg.num_ioim_reqs;
-+	bfa_cfg_get_meminfo(&bfad->ioc_cfg, hal_meminfo);
-+
-+	for (i = 0; i < BFA_MEM_TYPE_MAX; i++) {
-+		meminfo_elem = &hal_meminfo->meminfo[i];
-+		switch (meminfo_elem->mem_type) {
-+		case BFA_MEM_TYPE_KVA:
-+			kva = vmalloc(meminfo_elem->mem_len);
-+			if (kva == NULL) {
-+				bfad_hal_mem_release(bfad);
-+				rc = BFA_STATUS_ENOMEM;
-+				goto ext;
-+			}
-+			memset(kva, 0, meminfo_elem->mem_len);
-+			meminfo_elem->kva = kva;
-+			break;
-+		case BFA_MEM_TYPE_DMA:
-+			kva = dma_alloc_coherent(&bfad->pcidev->dev,
-+					meminfo_elem->mem_len,
-+					&phys_addr, GFP_KERNEL);
-+			if (kva == NULL) {
-+				bfad_hal_mem_release(bfad);
-+				/*
-+				 * If we cannot allocate with default
-+				 * num_sgpages try with half the value.
-+				 */
-+				if (num_sgpgs > min_num_sgpgs) {
-+					printk(KERN_INFO "bfad[%d]: memory"
-+						" allocation failed with"
-+						" num_sgpgs: %d\n",
-+						bfad->inst_no, num_sgpgs);
-+					nextLowerInt(&num_sgpgs);
-+					printk(KERN_INFO "bfad[%d]: trying to"
-+						" allocate memory with"
-+						" num_sgpgs: %d\n",
-+						bfad->inst_no, num_sgpgs);
-+					retry_count++;
-+					goto retry;
-+				} else {
-+					if (num_sgpgs_parm > 0)
-+						num_sgpgs = num_sgpgs_parm;
-+					else {
-+						reset_value =
-+							(1 << retry_count);
-+						num_sgpgs *= reset_value;
-+					}
-+					rc = BFA_STATUS_ENOMEM;
-+					goto ext;
-+				}
-+			}
-+
-+			if (num_sgpgs_parm > 0)
-+				num_sgpgs = num_sgpgs_parm;
-+			else {
-+				reset_value = (1 << retry_count);
-+				num_sgpgs *= reset_value;
-+			}
-+
-+			memset(kva, 0, meminfo_elem->mem_len);
-+			meminfo_elem->kva = kva;
-+			meminfo_elem->dma = phys_addr;
-+			break;
-+		default:
-+			break;
-+
-+		}
-+	}
-+ext:
-+	return rc;
-+}
-+
-+/**
-+ * Create a vport under a vf.
-+ */
-+bfa_status_t
-+bfad_vport_create(struct bfad_s *bfad, u16 vf_id,
-+		  struct bfa_port_cfg_s *port_cfg)
-+{
-+	struct bfad_vport_s *vport;
-+	int             rc = BFA_STATUS_OK;
-+	unsigned long   flags;
-+	struct completion fcomp;
-+
-+	vport = kzalloc(sizeof(struct bfad_vport_s), GFP_KERNEL);
-+	if (!vport) {
-+		rc = BFA_STATUS_ENOMEM;
-+		goto ext;
-+	}
-+
-+	vport->drv_port.bfad = bfad;
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rc = bfa_fcs_vport_create(&vport->fcs_vport, &bfad->bfa_fcs, vf_id,
-+				  port_cfg, vport);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (rc != BFA_STATUS_OK)
-+		goto ext_free_vport;
-+
-+	if (port_cfg->roles & BFA_PORT_ROLE_FCP_IM) {
-+		rc = bfad_im_scsi_host_alloc(bfad, vport->drv_port.im_port);
-+		if (rc != BFA_STATUS_OK)
-+			goto ext_free_fcs_vport;
-+	}
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_fcs_vport_start(&vport->fcs_vport);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return BFA_STATUS_OK;
-+
-+ext_free_fcs_vport:
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	vport->comp_del = &fcomp;
-+	init_completion(vport->comp_del);
-+	bfa_fcs_vport_delete(&vport->fcs_vport);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	wait_for_completion(vport->comp_del);
-+ext_free_vport:
-+	kfree(vport);
-+ext:
-+	return rc;
-+}
-+
-+/**
-+ * Create a vf and its base vport implicitely.
-+ */
-+bfa_status_t
-+bfad_vf_create(struct bfad_s *bfad, u16 vf_id,
-+	       struct bfa_port_cfg_s *port_cfg)
-+{
-+	struct bfad_vf_s *vf;
-+	int             rc = BFA_STATUS_OK;
-+
-+	vf = kzalloc(sizeof(struct bfad_vf_s), GFP_KERNEL);
-+	if (!vf) {
-+		rc = BFA_STATUS_FAILED;
-+		goto ext;
-+	}
-+
-+	rc = bfa_fcs_vf_create(&vf->fcs_vf, &bfad->bfa_fcs, vf_id, port_cfg,
-+			       vf);
-+	if (rc != BFA_STATUS_OK)
-+		kfree(vf);
-+ext:
-+	return rc;
-+}
-+
-+void
-+bfad_bfa_tmo(unsigned long data)
-+{
-+	struct bfad_s  *bfad = (struct bfad_s *)data;
-+	unsigned long   flags;
-+	struct list_head  doneq;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+
-+	bfa_timer_tick(&bfad->bfa);
-+
-+	bfa_comp_deq(&bfad->bfa, &doneq);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (!list_empty(&doneq)) {
-+		bfa_comp_process(&bfad->bfa, &doneq);
-+		spin_lock_irqsave(&bfad->bfad_lock, flags);
-+		bfa_comp_free(&bfad->bfa, &doneq);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	}
-+
-+	mod_timer(&bfad->hal_tmo, jiffies + msecs_to_jiffies(BFA_TIMER_FREQ));
-+}
-+
-+void
-+bfad_init_timer(struct bfad_s *bfad)
-+{
-+	init_timer(&bfad->hal_tmo);
-+	bfad->hal_tmo.function = bfad_bfa_tmo;
-+	bfad->hal_tmo.data = (unsigned long)bfad;
-+
-+	mod_timer(&bfad->hal_tmo, jiffies + msecs_to_jiffies(BFA_TIMER_FREQ));
-+}
-+
-+int
-+bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
-+{
-+	unsigned long   bar0_len;
-+	int             rc = -ENODEV;
-+
-+	if (pci_enable_device(pdev)) {
-+		BFA_PRINTF(BFA_ERR, "pci_enable_device fail %p\n", pdev);
-+		goto out;
-+	}
-+
-+	if (pci_request_regions(pdev, BFAD_DRIVER_NAME))
-+		goto out_disable_device;
-+
-+	pci_set_master(pdev);
-+
-+
-+	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)
-+		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0) {
-+			BFA_PRINTF(BFA_ERR, "pci_set_dma_mask fail %p\n", pdev);
-+			goto out_release_region;
-+		}
-+
-+	bfad->pci_bar0_map = pci_resource_start(pdev, 0);
-+	bar0_len = pci_resource_len(pdev, 0);
-+	bfad->pci_bar0_kva = ioremap(bfad->pci_bar0_map, bar0_len);
-+
-+	if (bfad->pci_bar0_kva == NULL) {
-+		BFA_PRINTF(BFA_ERR, "Fail to map bar0\n");
-+		goto out_release_region;
-+	}
-+
-+	bfad->hal_pcidev.pci_slot = PCI_SLOT(pdev->devfn);
-+	bfad->hal_pcidev.pci_func = PCI_FUNC(pdev->devfn);
-+	bfad->hal_pcidev.pci_bar_kva = bfad->pci_bar0_kva;
-+	bfad->hal_pcidev.device_id = pdev->device;
-+	bfad->pci_name = pci_name(pdev);
-+
-+	bfad->pci_attr.vendor_id = pdev->vendor;
-+	bfad->pci_attr.device_id = pdev->device;
-+	bfad->pci_attr.ssid = pdev->subsystem_device;
-+	bfad->pci_attr.ssvid = pdev->subsystem_vendor;
-+	bfad->pci_attr.pcifn = PCI_FUNC(pdev->devfn);
-+
-+	bfad->pcidev = pdev;
-+	return 0;
-+
-+out_release_region:
-+	pci_release_regions(pdev);
-+out_disable_device:
-+	pci_disable_device(pdev);
-+out:
-+	return rc;
-+}
-+
-+void
-+bfad_pci_uninit(struct pci_dev *pdev, struct bfad_s *bfad)
-+{
-+#if defined(__ia64__)
-+	pci_iounmap(pdev, bfad->pci_bar0_kva);
-+#else
-+	iounmap(bfad->pci_bar0_kva);
-+#endif
-+	pci_release_regions(pdev);
-+	pci_disable_device(pdev);
-+	pci_set_drvdata(pdev, NULL);
-+}
-+
-+void
-+bfad_fcs_port_cfg(struct bfad_s *bfad)
-+{
-+	struct bfa_port_cfg_s port_cfg;
-+	struct bfa_pport_attr_s attr;
-+	char            symname[BFA_SYMNAME_MAXLEN];
-+
-+	sprintf(symname, "%s-%d", BFAD_DRIVER_NAME, bfad->inst_no);
-+	memcpy(port_cfg.sym_name.symname, symname, strlen(symname));
-+	bfa_pport_get_attr(&bfad->bfa, &attr);
-+	port_cfg.nwwn = attr.nwwn;
-+	port_cfg.pwwn = attr.pwwn;
-+
-+	bfa_fcs_cfg_base_port(&bfad->bfa_fcs, &port_cfg);
-+}
-+
-+bfa_status_t
-+bfad_drv_init(struct bfad_s *bfad)
-+{
-+	bfa_status_t    rc;
-+	unsigned long   flags;
-+	struct bfa_fcs_driver_info_s driver_info;
-+	int             i;
-+
-+	bfad->cfg_data.rport_del_timeout = rport_del_timeout;
-+	bfad->cfg_data.lun_queue_depth = bfa_lun_queue_depth;
-+	bfad->cfg_data.io_max_sge = bfa_io_max_sge;
-+	bfad->cfg_data.binding_method = FCP_PWWN_BINDING;
-+
-+	rc = bfad_hal_mem_alloc(bfad);
-+	if (rc != BFA_STATUS_OK) {
-+		printk(KERN_WARNING "bfad%d bfad_hal_mem_alloc failure\n",
-+		       bfad->inst_no);
-+		printk(KERN_WARNING
-+			"Not enough memory to attach all Brocade HBA ports,"
-+			" System may need more memory.\n");
-+		goto out_hal_mem_alloc_failure;
-+	}
-+
-+	bfa_init_log(&bfad->bfa, bfad->logmod);
-+	bfa_init_trc(&bfad->bfa, bfad->trcmod);
-+	bfa_init_aen(&bfad->bfa, bfad->aen);
-+	INIT_LIST_HEAD(&bfad->file_q);
-+	INIT_LIST_HEAD(&bfad->file_free_q);
-+	for (i = 0; i < BFAD_AEN_MAX_APPS; i++) {
-+		bfa_q_qe_init(&bfad->file_buf[i].qe);
-+		list_add_tail(&bfad->file_buf[i].qe, &bfad->file_free_q);
-+	}
-+	bfa_init_plog(&bfad->bfa, &bfad->plog_buf);
-+	bfa_plog_init(&bfad->plog_buf);
-+	bfa_plog_str(&bfad->plog_buf, BFA_PL_MID_DRVR, BFA_PL_EID_DRIVER_START,
-+		     0, "Driver Attach");
-+
-+	bfa_attach(&bfad->bfa, bfad, &bfad->ioc_cfg, &bfad->meminfo,
-+		   &bfad->hal_pcidev);
-+
-+	init_completion(&bfad->comp);
-+
-+	/*
-+	 * Enable Interrupt and wait bfa_init completion
-+	 */
-+	if (bfad_setup_intr(bfad)) {
-+		printk(KERN_WARNING "bfad%d: bfad_setup_intr failed\n",
-+		       bfad->inst_no);
-+		goto out_setup_intr_failure;
-+	}
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_init(&bfad->bfa);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	/*
-+	 * Set up interrupt handler for each vectors
-+	 */
-+	if ((bfad->bfad_flags & BFAD_MSIX_ON)
-+	    && bfad_install_msix_handler(bfad)) {
-+		printk(KERN_WARNING "%s: install_msix failed, bfad%d\n",
-+		       __FUNCTION__, bfad->inst_no);
-+	}
-+
-+	bfad_init_timer(bfad);
-+
-+	wait_for_completion(&bfad->comp);
-+
-+	memset(&driver_info, 0, sizeof(driver_info));
-+	strncpy(driver_info.version, BFAD_DRIVER_VERSION,
-+		sizeof(driver_info.version) - 1);
-+	if (host_name)
-+		strncpy(driver_info.host_machine_name, host_name,
-+			sizeof(driver_info.host_machine_name) - 1);
-+	if (os_name)
-+		strncpy(driver_info.host_os_name, os_name,
-+			sizeof(driver_info.host_os_name) - 1);
-+	if (os_patch)
-+		strncpy(driver_info.host_os_patch, os_patch,
-+			sizeof(driver_info.host_os_patch) - 1);
-+
-+	strncpy(driver_info.os_device_name, bfad->pci_name,
-+		sizeof(driver_info.os_device_name - 1));
-+
-+	/*
-+	 * FCS INIT
-+	 */
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_fcs_log_init(&bfad->bfa_fcs, bfad->logmod);
-+	bfa_fcs_trc_init(&bfad->bfa_fcs, bfad->trcmod);
-+	bfa_fcs_aen_init(&bfad->bfa_fcs, bfad->aen);
-+	bfa_fcs_init(&bfad->bfa_fcs, &bfad->bfa, bfad, BFA_FALSE);
-+	bfa_fcs_driver_info_init(&bfad->bfa_fcs, &driver_info);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	bfad->bfad_flags |= BFAD_DRV_INIT_DONE;
-+	return BFA_STATUS_OK;
-+
-+out_setup_intr_failure:
-+	bfa_detach(&bfad->bfa);
-+	bfad_hal_mem_release(bfad);
-+out_hal_mem_alloc_failure:
-+	return BFA_STATUS_FAILED;
-+}
-+
-+void
-+bfad_drv_uninit(struct bfad_s *bfad)
-+{
-+	del_timer_sync(&bfad->hal_tmo);
-+	bfa_isr_disable(&bfad->bfa);
-+	bfa_detach(&bfad->bfa);
-+	bfad_remove_intr(bfad);
-+	bfa_assert(list_empty(&bfad->file_q));
-+	bfad_hal_mem_release(bfad);
-+}
-+
-+void
-+bfad_drv_start(struct bfad_s *bfad)
-+{
-+	unsigned long   flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_start(&bfad->bfa);
-+	bfa_fcs_start(&bfad->bfa_fcs);
-+	bfad->bfad_flags |= BFAD_HAL_START_DONE;
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	bfad_fc4_probe_post(bfad);
-+}
-+
-+void
-+bfad_drv_stop(struct bfad_s *bfad)
-+{
-+	unsigned long   flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	init_completion(&bfad->comp);
-+	bfad->pport.flags |= BFAD_PORT_DELETE;
-+	bfa_fcs_exit(&bfad->bfa_fcs);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	wait_for_completion(&bfad->comp);
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	init_completion(&bfad->comp);
-+	bfa_stop(&bfad->bfa);
-+	bfad->bfad_flags &= ~BFAD_HAL_START_DONE;
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	wait_for_completion(&bfad->comp);
-+}
-+
-+bfa_status_t
-+bfad_cfg_pport(struct bfad_s *bfad, enum bfa_port_role role)
-+{
-+	int             rc = BFA_STATUS_OK;
-+
-+	/*
-+	 * Allocate scsi_host for the physical port
-+	 */
-+	if ((bfad_supported_fc4s & BFA_PORT_ROLE_FCP_IM)
-+	    && (role & BFA_PORT_ROLE_FCP_IM)) {
-+		if (bfad->pport.im_port == NULL) {
-+			rc = BFA_STATUS_FAILED;
-+			goto out;
-+		}
-+
-+		rc = bfad_im_scsi_host_alloc(bfad, bfad->pport.im_port);
-+		if (rc != BFA_STATUS_OK)
-+			goto out;
-+
-+		bfad->pport.roles |= BFA_PORT_ROLE_FCP_IM;
-+	}
-+
-+	bfad->bfad_flags |= BFAD_CFG_PPORT_DONE;
-+
-+out:
-+	return rc;
-+}
-+
-+void
-+bfad_uncfg_pport(struct bfad_s *bfad)
-+{
-+	if ((bfad->pport.roles & BFA_PORT_ROLE_FCP_IPFC) && ipfc_enable) {
-+		bfad_ipfc_port_delete(bfad, &bfad->pport);
-+		bfad->pport.roles &= ~BFA_PORT_ROLE_FCP_IPFC;
-+	}
-+
-+	if ((bfad_supported_fc4s & BFA_PORT_ROLE_FCP_IM)
-+	    && (bfad->pport.roles & BFA_PORT_ROLE_FCP_IM)) {
-+		bfad_im_scsi_host_free(bfad, bfad->pport.im_port);
-+		bfad_im_port_clean(bfad->pport.im_port);
-+		kfree(bfad->pport.im_port);
-+		bfad->pport.roles &= ~BFA_PORT_ROLE_FCP_IM;
-+	}
-+
-+	bfad->bfad_flags &= ~BFAD_CFG_PPORT_DONE;
-+}
-+
-+void
-+bfad_drv_log_level_set(struct bfad_s *bfad)
-+{
-+	if (log_level > BFA_LOG_INVALID && log_level <= BFA_LOG_LEVEL_MAX)
-+		bfa_log_set_level_all(&bfad->log_data, log_level);
-+}
-+
-+ /*
-+  *  PCI_entry PCI driver entries * {
-+  */
-+
-+/**
-+ * PCI probe entry.
-+ */
-+int
-+bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
-+{
-+	struct bfad_s  *bfad;
-+	int             error = -ENODEV, retval;
-+	char            buf[16];
-+
-+	/*
-+	 * For single port cards - only claim function 0
-+	 */
-+	if ((pdev->device == BFA_PCI_DEVICE_ID_FC_8G1P)
-+	    && (PCI_FUNC(pdev->devfn) != 0))
-+		return -ENODEV;
-+
-+	BFA_TRACE(BFA_INFO, "bfad_pci_probe entry");
-+
-+	bfad = kzalloc(sizeof(struct bfad_s), GFP_KERNEL);
-+	if (!bfad) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
-+
-+	bfad->trcmod = kzalloc(sizeof(struct bfa_trc_mod_s), GFP_KERNEL);
-+	if (!bfad->trcmod) {
-+		printk(KERN_WARNING "Error alloc trace buffer!\n");
-+		error = -ENOMEM;
-+		goto out_alloc_trace_failure;
-+	}
-+
-+	/*
-+	 * LOG/TRACE INIT
-+	 */
-+	bfa_trc_init(bfad->trcmod);
-+	bfa_trc(bfad, bfad_inst);
-+
-+	bfad->logmod = &bfad->log_data;
-+	sprintf(buf, "%d", bfad_inst);
-+	bfa_log_init(bfad->logmod, buf, bfa_os_printf);
-+
-+	bfad_drv_log_level_set(bfad);
-+
-+	bfad->aen = &bfad->aen_buf;
-+
-+	if (!(bfad_load_fwimg(pdev))) {
-+		printk(KERN_WARNING "bfad_load_fwimg failure!\n");
-+		kfree(bfad->trcmod);
-+		goto out_alloc_trace_failure;
-+	}
-+
-+	retval = bfad_pci_init(pdev, bfad);
-+	if (retval) {
-+		printk(KERN_WARNING "bfad_pci_init failure!\n");
-+		error = retval;
-+		goto out_pci_init_failure;
-+	}
-+
-+	mutex_lock(&bfad_mutex);
-+	bfad->inst_no = bfad_inst++;
-+	list_add_tail(&bfad->list_entry, &bfad_list);
-+	mutex_unlock(&bfad_mutex);
-+
-+	spin_lock_init(&bfad->bfad_lock);
-+	pci_set_drvdata(pdev, bfad);
-+
-+	bfad->ref_count = 0;
-+	bfad->pport.bfad = bfad;
-+
-+	retval = bfad_drv_init(bfad);
-+	if (retval != BFA_STATUS_OK)
-+		goto out_drv_init_failure;
-+	if (!(bfad->bfad_flags & BFAD_HAL_INIT_DONE)) {
-+		printk(KERN_WARNING "bfad%d: hal init failed\n", bfad->inst_no);
-+		goto ok;
-+	}
-+
-+	/*
-+	 * PPORT FCS config
-+	 */
-+	bfad_fcs_port_cfg(bfad);
-+
-+	retval = bfad_cfg_pport(bfad, BFA_PORT_ROLE_FCP_IM);
-+	if (retval != BFA_STATUS_OK)
-+		goto out_cfg_pport_failure;
-+
-+	/*
-+	 * BFAD level FC4 (IM/TM/IPFC) specific resource allocation
-+	 */
-+	retval = bfad_fc4_probe(bfad);
-+	if (retval != BFA_STATUS_OK) {
-+		printk(KERN_WARNING "bfad_fc4_probe failed\n");
-+		goto out_fc4_probe_failure;
-+	}
-+
-+	bfad_drv_start(bfad);
-+
-+	/*
-+	 * If bfa_linkup_delay is set to -1 default; try to retrive the
-+	 * value using the bfad_os_get_linkup_delay(); else use the
-+	 * passed in module param value as the bfa_linkup_delay.
-+	 */
-+	if (bfa_linkup_delay < 0) {
-+		bfa_linkup_delay = bfad_os_get_linkup_delay(bfad);
-+		bfad_os_rport_online_wait(bfad);
-+		bfa_linkup_delay = -1;
-+	} else {
-+		bfad_os_rport_online_wait(bfad);
-+	}
-+
-+	bfa_log(bfad->logmod, BFA_LOG_LINUX_DEVICE_CLAIMED, bfad->pci_name);
-+ok:
-+	return 0;
-+
-+out_fc4_probe_failure:
-+	bfad_fc4_probe_undo(bfad);
-+	bfad_uncfg_pport(bfad);
-+out_cfg_pport_failure:
-+	bfad_drv_uninit(bfad);
-+out_drv_init_failure:
-+	mutex_lock(&bfad_mutex);
-+	bfad_inst--;
-+	list_del(&bfad->list_entry);
-+	mutex_unlock(&bfad_mutex);
-+	bfad_pci_uninit(pdev, bfad);
-+out_pci_init_failure:
-+	kfree(bfad->trcmod);
-+out_alloc_trace_failure:
-+	kfree(bfad);
-+out:
-+	return error;
-+}
-+
-+/**
-+ * PCI remove entry.
-+ */
-+void
-+bfad_pci_remove(struct pci_dev *pdev)
-+{
-+	struct bfad_s  *bfad = pci_get_drvdata(pdev);
-+	unsigned long   flags;
-+
-+	bfa_trc(bfad, bfad->inst_no);
-+
-+	if ((bfad->bfad_flags & BFAD_DRV_INIT_DONE)
-+	    && !(bfad->bfad_flags & BFAD_HAL_INIT_DONE)) {
-+
-+		spin_lock_irqsave(&bfad->bfad_lock, flags);
-+		init_completion(&bfad->comp);
-+		bfa_stop(&bfad->bfa);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		wait_for_completion(&bfad->comp);
-+
-+		bfad_remove_intr(bfad);
-+		del_timer_sync(&bfad->hal_tmo);
-+		goto hal_detach;
-+	} else if (!(bfad->bfad_flags & BFAD_DRV_INIT_DONE)) {
-+		goto remove_sysfs;
-+	}
-+
-+	if (bfad->bfad_flags & BFAD_HAL_START_DONE)
-+		bfad_drv_stop(bfad);
-+
-+	bfad_remove_intr(bfad);
-+
-+	del_timer_sync(&bfad->hal_tmo);
-+	bfad_fc4_probe_undo(bfad);
-+
-+	if (bfad->bfad_flags & BFAD_CFG_PPORT_DONE)
-+		bfad_uncfg_pport(bfad);
-+
-+hal_detach:
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_detach(&bfad->bfa);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	bfad_hal_mem_release(bfad);
-+remove_sysfs:
-+
-+	mutex_lock(&bfad_mutex);
-+	bfad_inst--;
-+	list_del(&bfad->list_entry);
-+	mutex_unlock(&bfad_mutex);
-+	bfad_pci_uninit(pdev, bfad);
-+
-+	kfree(bfad->trcmod);
-+	kfree(bfad);
-+}
-+
-+
-+static struct pci_device_id bfad_id_table[] = {
-+	{
-+	 .vendor = BFA_PCI_VENDOR_ID_BROCADE,
-+	 .device = BFA_PCI_DEVICE_ID_FC_8G2P,
-+	 .subvendor = PCI_ANY_ID,
-+	 .subdevice = PCI_ANY_ID,
-+	 },
-+	{
-+	 .vendor = BFA_PCI_VENDOR_ID_BROCADE,
-+	 .device = BFA_PCI_DEVICE_ID_FC_8G1P,
-+	 .subvendor = PCI_ANY_ID,
-+	 .subdevice = PCI_ANY_ID,
-+	 },
-+	{
-+	 .vendor = BFA_PCI_VENDOR_ID_BROCADE,
-+	 .device = BFA_PCI_DEVICE_ID_CT,
-+	 .subvendor = PCI_ANY_ID,
-+	 .subdevice = PCI_ANY_ID,
-+	 .class = (PCI_CLASS_SERIAL_FIBER << 8),
-+	 .class_mask = ~0,
-+	 },
-+
-+	{0, 0},
++struct bfa_cb_qe_s {
++	struct list_head         qe;
++	bfa_cb_cbfn_t  cbfn;
++	bfa_boolean_t   once;
++	u32		rsvd;
++	void           *cbarg;
 +};
 +
-+MODULE_DEVICE_TABLE(pci, bfad_id_table);
-+
-+static struct pci_driver bfad_pci_driver = {
-+	.name = BFAD_DRIVER_NAME,
-+	.id_table = bfad_id_table,
-+	.probe = bfad_pci_probe,
-+	.remove = __devexit_p(bfad_pci_remove),
-+};
-+
-+/**
-+ *  Linux driver module functions
-+ */
-+bfa_status_t
-+bfad_fc4_module_init(void)
-+{
-+	int             rc;
-+
-+	rc = bfad_im_module_init();
-+	if (rc != BFA_STATUS_OK)
-+		goto ext;
-+
-+	bfad_tm_module_init();
-+	if (ipfc_enable)
-+		bfad_ipfc_module_init();
-+ext:
-+	return rc;
-+}
-+
-+void
-+bfad_fc4_module_exit(void)
-+{
-+	if (ipfc_enable)
-+		bfad_ipfc_module_exit();
-+	bfad_tm_module_exit();
-+	bfad_im_module_exit();
-+}
-+
-+/**
-+ * Driver module init.
-+ */
-+static int      __init
-+bfad_init(void)
-+{
-+	int             error = 0;
-+
-+	printk(KERN_INFO "Brocade BFA FC/FCOE SCSI driver - version: %s\n",
-+	       BFAD_DRIVER_VERSION);
-+
-+	if (num_sgpgs > 0)
-+		num_sgpgs_parm = num_sgpgs;
-+
-+	error = bfad_fc4_module_init();
-+	if (error) {
-+		error = -ENOMEM;
-+		printk(KERN_WARNING "bfad_fc4_module_init failure\n");
-+		goto ext;
-+	}
-+
-+	if (!strcmp(FCPI_NAME, " fcpim"))
-+		bfad_supported_fc4s |= BFA_PORT_ROLE_FCP_IM;
-+	if (!strcmp(FCPT_NAME, " fcptm"))
-+		bfad_supported_fc4s |= BFA_PORT_ROLE_FCP_TM;
-+	if (!strcmp(IPFC_NAME, " ipfc"))
-+		bfad_supported_fc4s |= BFA_PORT_ROLE_FCP_IPFC;
-+
-+	bfa_ioc_auto_recover(ioc_auto_recover);
-+	bfa_fcs_rport_set_del_timeout(rport_del_timeout);
-+	error = pci_register_driver(&bfad_pci_driver);
-+
-+	if (error) {
-+		printk(KERN_WARNING "bfad pci_register_driver failure\n");
-+		goto ext;
-+	}
-+
-+	return 0;
-+
-+ext:
-+	bfad_fc4_module_exit();
-+	return error;
-+}
-+
-+/**
-+ * Driver module exit.
-+ */
-+static void     __exit
-+bfad_exit(void)
-+{
-+	pci_unregister_driver(&bfad_pci_driver);
-+	bfad_fc4_module_exit();
-+	bfad_free_fwimg();
-+}
-+
-+#define BFAD_PROTO_NAME FCPI_NAME FCPT_NAME IPFC_NAME
-+
-+module_init(bfad_init);
-+module_exit(bfad_exit);
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Brocade Fibre Channel HBA Driver" BFAD_PROTO_NAME);
-+MODULE_AUTHOR("Brocade Communications Systems, Inc.");
-+MODULE_VERSION(BFAD_DRIVER_VERSION);
-+
-+
-diff -urpN orig/drivers/scsi/bfa/bfad_attr.c patch/drivers/scsi/bfa/bfad_attr.c
---- orig/drivers/scsi/bfa/bfad_attr.c	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_attr.c	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,649 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+/**
-+ *  bfa_attr.c Linux driver configuration interface module.
-+ */
-+
-+#include "bfad_drv.h"
-+#include "bfad_im.h"
-+#include "bfad_trcmod.h"
-+#include "bfad_attr.h"
-+
-+/**
-+ *  FC_transport_template FC transport template
-+ */
-+
-+/**
-+ * FC transport template entry, get SCSI target port ID.
-+ */
-+void
-+bfad_im_get_starget_port_id(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost;
-+	struct bfad_im_port_s *im_port;
-+	struct bfad_s         *bfad;
-+	struct bfad_itnim_s   *itnim = NULL;
-+	u32        fc_id = -1;
-+	unsigned long   flags;
-+
-+	shost = bfad_os_starget_to_shost(starget);
-+	im_port = (struct bfad_im_port_s *) shost->hostdata[0];
-+	bfad = im_port->bfad;
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+
-+	itnim = bfad_os_get_itnim(im_port, starget->id);
-+	if (itnim)
-+		fc_id = bfa_fcs_itnim_get_fcid(&itnim->fcs_itnim);
-+
-+	fc_starget_port_id(starget) = fc_id;
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI target nwwn.
-+ */
-+void
-+bfad_im_get_starget_node_name(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost;
-+	struct bfad_im_port_s *im_port;
-+	struct bfad_s         *bfad;
-+	struct bfad_itnim_s   *itnim = NULL;
-+	u64             node_name = 0;
-+	unsigned long   flags;
-+
-+	shost = bfad_os_starget_to_shost(starget);
-+	im_port = (struct bfad_im_port_s *) shost->hostdata[0];
-+	bfad = im_port->bfad;
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+
-+	itnim = bfad_os_get_itnim(im_port, starget->id);
-+	if (itnim)
-+		node_name = bfa_fcs_itnim_get_nwwn(&itnim->fcs_itnim);
-+
-+	fc_starget_node_name(starget) = bfa_os_htonll(node_name);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI target pwwn.
-+ */
-+void
-+bfad_im_get_starget_port_name(struct scsi_target *starget)
-+{
-+	struct Scsi_Host *shost;
-+	struct bfad_im_port_s *im_port;
-+	struct bfad_s         *bfad;
-+	struct bfad_itnim_s   *itnim = NULL;
-+	u64             port_name = 0;
-+	unsigned long   flags;
-+
-+	shost = bfad_os_starget_to_shost(starget);
-+	im_port = (struct bfad_im_port_s *) shost->hostdata[0];
-+	bfad = im_port->bfad;
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+
-+	itnim = bfad_os_get_itnim(im_port, starget->id);
-+	if (itnim)
-+		port_name = bfa_fcs_itnim_get_pwwn(&itnim->fcs_itnim);
-+
-+	fc_starget_port_name(starget) = bfa_os_htonll(port_name);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI host port ID.
-+ */
-+void
-+bfad_im_get_host_port_id(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_port_s    *port = im_port->port;
-+
-+	fc_host_port_id(shost) =
-+			bfa_os_hton3b(bfa_fcs_port_get_fcid(port->fcs_port));
-+}
-+
-+
-+
-+
-+
-+struct Scsi_Host *
-+bfad_os_starget_to_shost(struct scsi_target *starget)
-+{
-+	return dev_to_shost(starget->dev.parent);
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI host port type.
-+ */
-+static void
-+bfad_im_get_host_port_type(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_pport_attr_s attr;
-+
-+	bfa_pport_get_attr(&bfad->bfa, &attr);
-+
-+	switch (attr.port_type) {
-+	case BFA_PPORT_TYPE_NPORT:
-+		fc_host_port_type(shost) = FC_PORTTYPE_NPORT;
-+		break;
-+	case BFA_PPORT_TYPE_NLPORT:
-+		fc_host_port_type(shost) = FC_PORTTYPE_NLPORT;
-+		break;
-+	case BFA_PPORT_TYPE_P2P:
-+		fc_host_port_type(shost) = FC_PORTTYPE_PTP;
-+		break;
-+	case BFA_PPORT_TYPE_LPORT:
-+		fc_host_port_type(shost) = FC_PORTTYPE_LPORT;
-+		break;
-+	default:
-+		fc_host_port_type(shost) = FC_PORTTYPE_UNKNOWN;
-+		break;
-+	}
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI host port state.
-+ */
-+static void
-+bfad_im_get_host_port_state(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_pport_attr_s attr;
-+
-+	bfa_pport_get_attr(&bfad->bfa, &attr);
-+
-+	switch (attr.port_state) {
-+	case BFA_PPORT_ST_LINKDOWN:
-+		fc_host_port_state(shost) = FC_PORTSTATE_LINKDOWN;
-+		break;
-+	case BFA_PPORT_ST_LINKUP:
-+		fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
-+		break;
-+	case BFA_PPORT_ST_UNINIT:
-+	case BFA_PPORT_ST_ENABLING_QWAIT:
-+	case BFA_PPORT_ST_ENABLING:
-+	case BFA_PPORT_ST_DISABLING_QWAIT:
-+	case BFA_PPORT_ST_DISABLING:
-+	case BFA_PPORT_ST_DISABLED:
-+	case BFA_PPORT_ST_STOPPED:
-+	case BFA_PPORT_ST_IOCDOWN:
-+	default:
-+		fc_host_port_state(shost) = FC_PORTSTATE_UNKNOWN;
-+		break;
-+	}
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI host active fc4s.
-+ */
-+static void
-+bfad_im_get_host_active_fc4s(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_port_s    *port = im_port->port;
-+
-+	memset(fc_host_active_fc4s(shost), 0,
-+	       sizeof(fc_host_active_fc4s(shost)));
-+
-+	if (port->supported_fc4s &
-+		(BFA_PORT_ROLE_FCP_IM | BFA_PORT_ROLE_FCP_TM))
-+		fc_host_active_fc4s(shost)[2] = 1;
-+
-+	if (port->supported_fc4s & BFA_PORT_ROLE_FCP_IPFC)
-+		fc_host_active_fc4s(shost)[3] = 0x20;
-+
-+	fc_host_active_fc4s(shost)[7] = 1;
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI host link speed.
-+ */
-+static void
-+bfad_im_get_host_speed(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_pport_attr_s attr;
-+
-+	bfa_pport_get_attr(&bfad->bfa, &attr);
-+	switch (attr.speed) {
-+	case BFA_PPORT_SPEED_8GBPS:
-+		fc_host_speed(shost) = FC_PORTSPEED_8GBIT;
-+		break;
-+	case BFA_PPORT_SPEED_4GBPS:
-+		fc_host_speed(shost) = FC_PORTSPEED_4GBIT;
-+		break;
-+	case BFA_PPORT_SPEED_2GBPS:
-+		fc_host_speed(shost) = FC_PORTSPEED_2GBIT;
-+		break;
-+	case BFA_PPORT_SPEED_1GBPS:
-+		fc_host_speed(shost) = FC_PORTSPEED_1GBIT;
-+		break;
-+	default:
-+		fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
-+		break;
-+	}
-+}
-+
-+/**
-+ * FC transport template entry, get SCSI host port type.
-+ */
-+static void
-+bfad_im_get_host_fabric_name(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_port_s    *port = im_port->port;
-+	wwn_t           fabric_nwwn = 0;
-+
-+	fabric_nwwn = bfa_fcs_port_get_fabric_name(port->fcs_port);
-+
-+	fc_host_fabric_name(shost) = bfa_os_htonll(fabric_nwwn);
-+
-+}
-+
-+/**
-+ * FC transport template entry, get BFAD statistics.
-+ */
-+static struct fc_host_statistics *
-+bfad_im_get_stats(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfad_hal_comp fcomp;
-+	struct fc_host_statistics *hstats;
-+	bfa_status_t    rc;
-+	unsigned long   flags;
-+
-+	hstats = &bfad->link_stats;
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	memset(hstats, 0, sizeof(struct fc_host_statistics));
-+	rc = bfa_pport_get_stats(&bfad->bfa,
-+				     (union bfa_pport_stats_u *) hstats,
-+				     bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (rc != BFA_STATUS_OK)
-+		return NULL;
-+
-+	wait_for_completion(&fcomp.comp);
-+
-+	return hstats;
-+}
-+
-+/**
-+ * FC transport template entry, reset BFAD statistics.
-+ */
-+static void
-+bfad_im_reset_stats(struct Scsi_Host *shost)
-+{
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfad_hal_comp fcomp;
-+	unsigned long   flags;
-+	bfa_status_t    rc;
-+
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rc = bfa_pport_clear_stats(&bfad->bfa, bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (rc != BFA_STATUS_OK)
-+		return;
-+
-+	wait_for_completion(&fcomp.comp);
-+
-+	return;
-+}
-+
-+/**
-+ * FC transport template entry, get rport loss timeout.
-+ */
-+static void
-+bfad_im_get_rport_loss_tmo(struct fc_rport *rport)
-+{
-+	struct bfad_itnim_data_s *itnim_data = rport->dd_data;
-+	struct bfad_itnim_s   *itnim = itnim_data->itnim;
-+	struct bfad_s         *bfad = itnim->im->bfad;
-+	unsigned long   flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rport->dev_loss_tmo = bfa_fcpim_path_tov_get(&bfad->bfa);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+}
-+
-+/**
-+ * FC transport template entry, set rport loss timeout.
-+ */
-+static void
-+bfad_im_set_rport_loss_tmo(struct fc_rport *rport, u32 timeout)
-+{
-+	struct bfad_itnim_data_s *itnim_data = rport->dd_data;
-+	struct bfad_itnim_s   *itnim = itnim_data->itnim;
-+	struct bfad_s         *bfad = itnim->im->bfad;
-+	unsigned long   flags;
-+
-+	if (timeout > 0) {
-+		spin_lock_irqsave(&bfad->bfad_lock, flags);
-+		bfa_fcpim_path_tov_set(&bfad->bfa, timeout);
-+		rport->dev_loss_tmo = bfa_fcpim_path_tov_get(&bfad->bfa);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	}
-+
-+}
-+
-+struct fc_function_template bfad_im_fc_function_template = {
-+
-+	/* Target dynamic attributes */
-+	.get_starget_port_id = bfad_im_get_starget_port_id,
-+	.show_starget_port_id = 1,
-+	.get_starget_node_name = bfad_im_get_starget_node_name,
-+	.show_starget_node_name = 1,
-+	.get_starget_port_name = bfad_im_get_starget_port_name,
-+	.show_starget_port_name = 1,
-+
-+	/* Host dynamic attribute */
-+	.get_host_port_id = bfad_im_get_host_port_id,
-+	.show_host_port_id = 1,
-+
-+	/* Host fixed attributes */
-+	.show_host_node_name = 1,
-+	.show_host_port_name = 1,
-+	.show_host_supported_classes = 1,
-+	.show_host_supported_fc4s = 1,
-+	.show_host_supported_speeds = 1,
-+	.show_host_maxframe_size = 1,
-+
-+	/* More host dynamic attributes */
-+	.show_host_port_type = 1,
-+	.get_host_port_type = bfad_im_get_host_port_type,
-+	.show_host_port_state = 1,
-+	.get_host_port_state = bfad_im_get_host_port_state,
-+	.show_host_active_fc4s = 1,
-+	.get_host_active_fc4s = bfad_im_get_host_active_fc4s,
-+	.show_host_speed = 1,
-+	.get_host_speed = bfad_im_get_host_speed,
-+	.show_host_fabric_name = 1,
-+	.get_host_fabric_name = bfad_im_get_host_fabric_name,
-+
-+	.show_host_symbolic_name = 1,
-+
-+	/* Statistics */
-+	.get_fc_host_stats = bfad_im_get_stats,
-+	.reset_fc_host_stats = bfad_im_reset_stats,
-+
-+	/* Allocation length for host specific data */
-+	.dd_fcrport_size = sizeof(struct bfad_itnim_data_s *),
-+
-+	/* Remote port fixed attributes */
-+	.show_rport_maxframe_size = 1,
-+	.show_rport_supported_classes = 1,
-+	.show_rport_dev_loss_tmo = 1,
-+	.get_rport_dev_loss_tmo = bfad_im_get_rport_loss_tmo,
-+	.set_rport_dev_loss_tmo = bfad_im_set_rport_loss_tmo,
-+};
-+
-+/**
-+ *  Scsi_Host_attrs SCSI host attributes
-+ */
-+static ssize_t
-+bfad_im_serial_num_show(struct device *dev, struct device_attribute *attr,
-+			 char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	return snprintf(buf, PAGE_SIZE, "%s\n",
-+			ioc_attr.adapter_attr.serial_num);
-+}
-+
-+static ssize_t
-+bfad_im_model_show(struct device *dev, struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ioc_attr.adapter_attr.model);
-+}
-+
-+static ssize_t
-+bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	return snprintf(buf, PAGE_SIZE, "%s\n",
-+			ioc_attr.adapter_attr.model_descr);
-+}
-+
-+static ssize_t
-+bfad_im_node_name_show(struct device *dev, struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_port_s    *port = im_port->port;
-+	u64        nwwn;
-+
-+	nwwn = bfa_fcs_port_get_nwwn(port->fcs_port);
-+	return snprintf(buf, PAGE_SIZE, "0x%llx\n", bfa_os_htonll(nwwn));
-+}
-+
-+static ssize_t
-+bfad_im_symbolic_name_show(struct device *dev, struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+
-+	return snprintf(buf, PAGE_SIZE, "Brocade %s FV%s DV%s\n",
-+			ioc_attr.adapter_attr.model,
-+			ioc_attr.adapter_attr.fw_ver, BFAD_DRIVER_VERSION);
-+}
-+
-+static ssize_t
-+bfad_im_hw_version_show(struct device *dev, struct device_attribute *attr,
-+				char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ioc_attr.adapter_attr.hw_ver);
-+}
-+
-+static ssize_t
-+bfad_im_drv_version_show(struct device *dev, struct device_attribute *attr,
-+				char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_VERSION);
-+}
-+
-+static ssize_t
-+bfad_im_optionrom_version_show(struct device *dev,
-+			 struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	return snprintf(buf, PAGE_SIZE, "%s\n",
-+			ioc_attr.adapter_attr.optrom_ver);
-+}
-+
-+static ssize_t
-+bfad_im_fw_version_show(struct device *dev, struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ioc_attr.adapter_attr.fw_ver);
-+}
-+
-+static ssize_t
-+bfad_im_num_of_ports_show(struct device *dev, struct device_attribute *attr,
-+				char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioc_attr_s  ioc_attr;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	return snprintf(buf, PAGE_SIZE, "%d\n", ioc_attr.adapter_attr.nports);
-+}
-+
-+static ssize_t
-+bfad_im_drv_name_show(struct device *dev, struct device_attribute *attr,
-+				char *buf)
-+{
-+	return snprintf(buf, PAGE_SIZE, "%s\n", BFAD_DRIVER_NAME);
-+}
-+
-+static ssize_t
-+bfad_im_num_of_discovered_ports_show(struct device *dev,
-+			struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_port_s    *port = im_port->port;
-+	struct bfad_s         *bfad = im_port->bfad;
-+	int        nrports = 2048;
-+	wwn_t          *rports = NULL;
-+	unsigned long   flags;
-+
-+	rports = kzalloc(sizeof(wwn_t) * nrports , GFP_ATOMIC);
-+	if (rports == NULL)
-+		return -ENOMEM;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_fcs_port_get_rports(port->fcs_port, rports, &nrports);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	kfree(rports);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", nrports);
-+}
-+
-+static          DEVICE_ATTR(serial_number, S_IRUGO,
-+				bfad_im_serial_num_show, NULL);
-+static          DEVICE_ATTR(model, S_IRUGO, bfad_im_model_show, NULL);
-+static          DEVICE_ATTR(model_description, S_IRUGO,
-+				bfad_im_model_desc_show, NULL);
-+static          DEVICE_ATTR(node_name, S_IRUGO, bfad_im_node_name_show, NULL);
-+static          DEVICE_ATTR(symbolic_name, S_IRUGO,
-+				bfad_im_symbolic_name_show, NULL);
-+static          DEVICE_ATTR(hardware_version, S_IRUGO,
-+				bfad_im_hw_version_show, NULL);
-+static          DEVICE_ATTR(driver_version, S_IRUGO,
-+				bfad_im_drv_version_show, NULL);
-+static          DEVICE_ATTR(option_rom_version, S_IRUGO,
-+				bfad_im_optionrom_version_show, NULL);
-+static          DEVICE_ATTR(firmware_version, S_IRUGO,
-+				bfad_im_fw_version_show, NULL);
-+static          DEVICE_ATTR(number_of_ports, S_IRUGO,
-+				bfad_im_num_of_ports_show, NULL);
-+static          DEVICE_ATTR(driver_name, S_IRUGO, bfad_im_drv_name_show, NULL);
-+static          DEVICE_ATTR(number_of_discovered_ports, S_IRUGO,
-+				bfad_im_num_of_discovered_ports_show, NULL);
-+
-+struct device_attribute *bfad_im_host_attrs[] = {
-+	&dev_attr_serial_number,
-+	&dev_attr_model,
-+	&dev_attr_model_description,
-+	&dev_attr_node_name,
-+	&dev_attr_symbolic_name,
-+	&dev_attr_hardware_version,
-+	&dev_attr_driver_version,
-+	&dev_attr_option_rom_version,
-+	&dev_attr_firmware_version,
-+	&dev_attr_number_of_ports,
-+	&dev_attr_driver_name,
-+	&dev_attr_number_of_discovered_ports,
-+	NULL,
-+};
-+
-+struct device_attribute *bfad_im_vport_attrs[] = {
-+    &dev_attr_serial_number,
-+    &dev_attr_model,
-+    &dev_attr_model_description,
-+    &dev_attr_node_name,
-+    &dev_attr_symbolic_name,
-+    &dev_attr_hardware_version,
-+    &dev_attr_driver_version,
-+    &dev_attr_option_rom_version,
-+    &dev_attr_firmware_version,
-+    &dev_attr_number_of_ports,
-+    &dev_attr_driver_name,
-+    &dev_attr_number_of_discovered_ports,
-+    NULL,
-+};
-+
-+
-diff -urpN orig/drivers/scsi/bfa/bfad_attr.h patch/drivers/scsi/bfa/bfad_attr.h
---- orig/drivers/scsi/bfa/bfad_attr.h	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_attr.h	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,65 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#ifndef __BFAD_ATTR_H__
-+#define __BFAD_ATTR_H__
-+/**
-+ *  bfad_attr.h VMware driver configuration interface module.
-+ */
-+
-+/**
-+ *  FC_transport_template FC transport template
-+ */
-+
-+struct Scsi_Host*
-+bfad_os_dev_to_shost(struct scsi_target *starget);
-+
-+/**
-+ * FC transport template entry, get SCSI target port ID.
-+ */
-+void
-+bfad_im_get_starget_port_id(struct scsi_target *starget);
-+
-+/**
-+ * FC transport template entry, get SCSI target nwwn.
-+ */
-+void
-+bfad_im_get_starget_node_name(struct scsi_target *starget);
-+
-+/**
-+ * FC transport template entry, get SCSI target pwwn.
-+ */
-+void
-+bfad_im_get_starget_port_name(struct scsi_target *starget);
-+
-+/**
-+ * FC transport template entry, get SCSI host port ID.
-+ */
-+void
-+bfad_im_get_host_port_id(struct Scsi_Host *shost);
-+
-+/**
-+ * FC transport template entry, issue a LIP.
-+ */
-+int
-+bfad_im_issue_fc_host_lip(struct Scsi_Host *shost);
-+
-+struct Scsi_Host*
-+bfad_os_starget_to_shost(struct scsi_target *starget);
-+
-+
-+#endif /*  __BFAD_ATTR_H__ */
-diff -urpN orig/drivers/scsi/bfa/bfad_drv.h patch/drivers/scsi/bfa/bfad_drv.h
---- orig/drivers/scsi/bfa/bfad_drv.h	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_drv.h	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,295 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+/**
-+ * Contains base driver definitions.
-+ */
-+
-+/**
-+ *  bfa_drv.h Linux driver data structures.
-+ */
-+
-+#ifndef __BFAD_DRV_H__
-+#define __BFAD_DRV_H__
-+
-+#include "bfa_os_inc.h"
-+
-+#include <bfa.h>
-+#include <bfa_svc.h>
-+#include <fcs/bfa_fcs.h>
-+#include <defs/bfa_defs_pci.h>
-+#include <defs/bfa_defs_port.h>
-+#include <defs/bfa_defs_rport.h>
-+#include <fcs/bfa_fcs_rport.h>
-+#include <defs/bfa_defs_vport.h>
-+#include <fcs/bfa_fcs_vport.h>
-+
-+#include <cs/bfa_plog.h>
-+#include "aen/bfa_aen.h"
-+#include <log/bfa_log_linux.h>
-+
-+#define BFAD_DRIVER_NAME        "bfa"
-+#ifdef BFA_DRIVER_VERSION
-+#define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
-+#else
-+#define BFAD_DRIVER_VERSION    "2.0.0.0"
-+#endif
-+
-+
-+#define BFAD_IRQ_FLAGS IRQF_SHARED
-+
-+/*
-+ * BFAD flags
-+ */
-+#define BFAD_MSIX_ON				0x00000001
-+#define BFAD_HAL_INIT_DONE			0x00000002
-+#define BFAD_DRV_INIT_DONE			0x00000004
-+#define BFAD_CFG_PPORT_DONE			0x00000008
-+#define BFAD_HAL_START_DONE			0x00000010
-+#define BFAD_PORT_ONLINE			0x00000020
-+#define BFAD_RPORT_ONLINE			0x00000040
-+
-+#define BFAD_PORT_DELETE			0x00000001
-+
-+/*
-+ * BFAD related definition
-+ */
-+#define SCSI_SCAN_DELAY		HZ
-+#define BFAD_STOP_TIMEOUT	30
-+#define BFAD_SUSPEND_TIMEOUT	BFAD_STOP_TIMEOUT
-+
-+/*
-+ * BFAD configuration parameter default values
-+ */
-+#define BFAD_LUN_QUEUE_DEPTH 		32
-+#define BFAD_IO_MAX_SGE 		SG_ALL
-+
-+#define bfad_isr_t irq_handler_t
-+
-+#define MAX_MSIX_ENTRY 22
-+
-+struct bfad_msix_s {
-+	struct bfad_s *bfad;
-+	struct msix_entry msix;
-+};
-+
-+enum bfad_port_pvb_type {
-+	BFAD_PORT_PHYS_BASE = 0,
-+	BFAD_PORT_PHYS_VPORT = 1,
-+	BFAD_PORT_VF_BASE = 2,
-+	BFAD_PORT_VF_VPORT = 3,
-+};
-+
-+/*
-+ * PORT data structure
-+ */
-+struct bfad_port_s {
-+	struct list_head list_entry;
-+	struct bfad_s         *bfad;
-+	struct bfa_fcs_port_s *fcs_port;
-+	u32        roles;
-+	s32         flags;
-+	u32        supported_fc4s;
-+	u8		ipfc_flags;
-+	enum bfad_port_pvb_type pvb_type;
-+	struct bfad_im_port_s *im_port;	/* IM specific data */
-+	struct bfad_tm_port_s *tm_port;	/* TM specific data */
-+	struct bfad_ipfc_port_s *ipfc_port;	/* IPFC specific data */
-+};
-+
-+/*
-+ * VPORT data structure
-+ */
-+struct bfad_vport_s {
-+	struct bfad_port_s     drv_port;
-+	struct bfa_fcs_vport_s fcs_vport;
-+	struct completion *comp_del;
-+};
-+
-+/*
-+ * VF data structure
-+ */
-+struct bfad_vf_s {
-+	bfa_fcs_vf_t    fcs_vf;
-+	struct bfad_port_s    base_port;	/* base port for vf */
-+	struct bfad_s   *bfad;
-+};
-+
-+struct bfad_cfg_param_s {
-+	u32        rport_del_timeout;
-+	u32        ioc_queue_depth;
-+	u32        lun_queue_depth;
-+	u32        io_max_sge;
-+	u32        binding_method;
-+};
-+
-+#define BFAD_AEN_MAX_APPS 8
-+struct bfad_aen_file_s {
-+	struct list_head  qe;
-+	struct bfad_s *bfad;
-+	s32 ri;
-+	s32 app_id;
-+};
-+
-+/*
-+ * BFAD (PCI function) data structure
-+ */
-+struct bfad_s {
-+	struct list_head list_entry;
-+	struct bfa_s       bfa;
-+	struct bfa_fcs_s       bfa_fcs;
-+	struct pci_dev *pcidev;
-+	const char *pci_name;
-+	struct bfa_pcidev_s hal_pcidev;
-+	struct bfa_ioc_pci_attr_s pci_attr;
-+	unsigned long   pci_bar0_map;
-+	void __iomem   *pci_bar0_kva;
-+	struct completion comp;
-+	struct completion suspend;
-+	struct completion disable_comp;
-+	bfa_boolean_t   disable_active;
-+	struct bfad_port_s     pport;	/* physical port of the BFAD */
-+	struct bfa_meminfo_s meminfo;
-+	struct bfa_iocfc_cfg_s   ioc_cfg;
-+	u32        inst_no;	/* BFAD instance number */
-+	u32        bfad_flags;
-+	spinlock_t      bfad_lock;
-+	struct bfad_cfg_param_s cfg_data;
-+	struct bfad_msix_s msix_tab[MAX_MSIX_ENTRY];
-+	int             nvec;
-+	char            adapter_name[BFA_ADAPTER_SYM_NAME_LEN];
-+	char            port_name[BFA_ADAPTER_SYM_NAME_LEN];
-+	struct timer_list hal_tmo;
-+	unsigned long   hs_start;
-+	struct bfad_im_s *im;		/* IM specific data */
-+	struct bfad_tm_s *tm;		/* TM specific data */
-+	struct bfad_ipfc_s *ipfc;	/* IPFC specific data */
-+	struct bfa_log_mod_s   log_data;
-+	struct bfa_trc_mod_s  *trcmod;
-+	struct bfa_log_mod_s  *logmod;
-+	struct bfa_aen_s      *aen;
-+	struct bfa_aen_s       aen_buf;
-+	struct bfad_aen_file_s file_buf[BFAD_AEN_MAX_APPS];
-+	struct list_head         file_q;
-+	struct list_head         file_free_q;
-+	struct bfa_plog_s      plog_buf;
-+	int             ref_count;
-+	bfa_boolean_t	ipfc_enabled;
-+	struct fc_host_statistics link_stats;
-+
-+	struct kobject *bfa_kobj;
-+	struct kobject *ioc_kobj;
-+	struct kobject *pport_kobj;
-+	struct kobject *lport_kobj;
-+};
-+
-+/*
-+ * RPORT data structure
-+ */
-+struct bfad_rport_s {
-+	struct bfa_fcs_rport_s fcs_rport;
-+};
-+
-+struct bfad_buf_info {
-+	void           *virt;
-+	dma_addr_t      phys;
-+	u32        size;
-+};
-+
-+struct bfad_fcxp {
-+	struct bfad_port_s    *port;
-+	struct bfa_rport_s *bfa_rport;
-+	bfa_status_t    req_status;
-+	u16        tag;
-+	u16        rsp_len;
-+	u16        rsp_maxlen;
-+	u8         use_ireqbuf;
-+	u8         use_irspbuf;
-+	u32        num_req_sgles;
-+	u32        num_rsp_sgles;
-+	struct fchs_s          fchs;
-+	void           *reqbuf_info;
-+	void           *rspbuf_info;
-+	struct bfa_sge_s  *req_sge;
-+	struct bfa_sge_s  *rsp_sge;
-+	fcxp_send_cb_t  send_cbfn;
-+	void           *send_cbarg;
-+	void           *bfa_fcxp;
-+	struct completion comp;
-+};
-+
-+struct bfad_hal_comp {
-+	bfa_status_t    status;
-+	struct completion comp;
-+};
-+
-+/*
-+ * Macro to obtain the immediate lower power
-+ * of two for the integer.
-+ */
-+#define nextLowerInt(x)                         	\
-+do {                                            	\
-+	int j;                                  	\
-+	(*x)--;    		                	\
-+	for (j = 1; j < (sizeof(int) * 8); j <<= 1)     \
-+		(*x) = (*x) | (*x) >> j;        	\
-+	(*x)++;                  	        	\
-+	(*x) = (*x) >> 1;                       	\
++#define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {		\
++	(__hcb_qe)->cbfn  = (__cbfn);      \
++	(__hcb_qe)->cbarg = (__cbarg);      \
++	list_add_tail(&(__hcb_qe)->qe, &(__bfa)->comp_q);      \
 +} while (0)
 +
++#define bfa_cb_dequeue(__hcb_qe)	list_del(&(__hcb_qe)->qe)
 +
-+bfa_status_t    bfad_vport_create(struct bfad_s *bfad, u16 vf_id,
-+				  struct bfa_port_cfg_s *port_cfg);
-+bfa_status_t    bfad_vf_create(struct bfad_s *bfad, u16 vf_id,
-+			       struct bfa_port_cfg_s *port_cfg);
-+bfa_status_t    bfad_cfg_pport(struct bfad_s *bfad, enum bfa_port_role role);
-+bfa_status_t    bfad_drv_init(struct bfad_s *bfad);
-+void            bfad_drv_start(struct bfad_s *bfad);
-+void            bfad_uncfg_pport(struct bfad_s *bfad);
-+void            bfad_drv_stop(struct bfad_s *bfad);
-+void            bfad_remove_intr(struct bfad_s *bfad);
-+void            bfad_hal_mem_release(struct bfad_s *bfad);
-+void            bfad_hcb_comp(void *arg, bfa_status_t status);
++#define bfa_cb_queue_once(__bfa, __hcb_qe, __cbfn, __cbarg) do {	\
++	(__hcb_qe)->cbfn  = (__cbfn);      \
++	(__hcb_qe)->cbarg = (__cbarg);      \
++	if (!(__hcb_qe)->once) {      \
++		list_add_tail((__hcb_qe), &(__bfa)->comp_q);      \
++		(__hcb_qe)->once = BFA_TRUE;				\
++	}								\
++} while (0)
 +
-+int             bfad_setup_intr(struct bfad_s *bfad);
-+void            bfad_remove_intr(struct bfad_s *bfad);
++#define bfa_cb_queue_done(__hcb_qe) do {				\
++	(__hcb_qe)->once = BFA_FALSE;					\
++} while (0)
 +
-+void		bfad_update_hal_cfg(struct bfa_iocfc_cfg_s *bfa_cfg);
-+bfa_status_t	bfad_hal_mem_alloc(struct bfad_s *bfad);
-+void		bfad_bfa_tmo(unsigned long data);
-+void		bfad_init_timer(struct bfad_s *bfad);
-+int		bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad);
-+void		bfad_pci_uninit(struct pci_dev *pdev, struct bfad_s *bfad);
-+void		bfad_fcs_port_cfg(struct bfad_s *bfad);
-+void		bfad_drv_uninit(struct bfad_s *bfad);
-+void		bfad_drv_log_level_set(struct bfad_s *bfad);
-+bfa_status_t	bfad_fc4_module_init(void);
-+void		bfad_fc4_module_exit(void);
-+
-+void bfad_pci_remove(struct pci_dev *pdev);
-+int bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid);
-+void bfad_os_rport_online_wait(struct bfad_s *bfad);
-+int bfad_os_get_linkup_delay(struct bfad_s *bfad);
-+int bfad_install_msix_handler(struct bfad_s *bfad);
-+
-+extern struct idr bfad_im_port_index;
-+extern struct list_head bfad_list;
-+extern int bfa_lun_queue_depth;
-+extern int bfad_supported_fc4s;
-+extern int bfa_linkup_delay;
-+
-+#endif /* __BFAD_DRV_H__ */
-diff -urpN orig/drivers/scsi/bfa/bfad_fwimg.c patch/drivers/scsi/bfa/bfad_fwimg.c
---- orig/drivers/scsi/bfa/bfad_fwimg.c	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_fwimg.c	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,95 @@
++#endif /* __BFA_CALLBACK_PRIV_H__ */
+diff -urpN orig/drivers/scsi/bfa/bfa_cb_ioim_macros.h patch/drivers/scsi/bfa/bfa_cb_ioim_macros.h
+--- orig/drivers/scsi/bfa/bfa_cb_ioim_macros.h	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_cb_ioim_macros.h	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,205 @@
 +/*
 + * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 + * All rights reserved
@@ -2265,87 +111,197 @@ diff -urpN orig/drivers/scsi/bfa/bfad_fwimg.c patch/drivers/scsi/bfa/bfad_fwimg.
 + */
 +
 +/**
-+ *  bfad_fwimg.c Linux driver PCI interface module.
++ *  bfa_cb_ioim_macros.h BFA IOIM driver interface macros.
 + */
++
++#ifndef __BFA_HCB_IOIM_MACROS_H__
++#define __BFA_HCB_IOIM_MACROS_H__
++
 +#include <bfa_os_inc.h>
-+#include <bfad_drv.h>
-+#include <bfad_im_compat.h>
-+#include <defs/bfa_defs_version.h>
-+#include <linux/errno.h>
-+#include <linux/sched.h>
-+#include <linux/init.h>
-+#include <linux/fs.h>
-+#include <asm/uaccess.h>
-+#include <asm/fcntl.h>
-+#include <linux/pci.h>
-+#include <linux/firmware.h>
-+#include <bfa_fwimg_priv.h>
-+#include <bfa.h>
++/*
++ * #include <linux/dma-mapping.h>
++ *
++ * #include <scsi/scsi.h> #include <scsi/scsi_cmnd.h> #include
++ * <scsi/scsi_device.h> #include <scsi/scsi_host.h>
++ */
++#include "bfad_im_compat.h"
 +
-+u32 bfi_image_ct_size;
-+u32 bfi_image_cb_size;
-+u32 *bfi_image_ct;
-+u32 *bfi_image_cb;
++/*
++ * task attribute values in FCP-2 FCP_CMND IU
++ */
++#define SIMPLE_Q    0
++#define HEAD_OF_Q   1
++#define ORDERED_Q   2
++#define ACA_Q       4
++#define UNTAGGED    5
 +
-+
-+#define	BFAD_FW_FILE_CT	"ctfw.bin"
-+#define	BFAD_FW_FILE_CB	"cbfw.bin"
-+
-+u32 *
-+bfad_read_firmware(struct pci_dev *pdev, u32 **bfi_image,
-+			u32 *bfi_image_size, char *fw_name)
++static inline lun_t
++bfad_int_to_lun(u32 luno)
 +{
-+	const struct firmware *fw;
++	union {
++		u16        scsi_lun[4];
++		lun_t           bfa_lun;
++	} lun;
 +
-+	if (request_firmware(&fw, fw_name, &pdev->dev)) {
-+		printk(KERN_ALERT "Can't locate firmware %s\n", fw_name);
-+		goto error;
-+	}
++	lun.bfa_lun     = 0;
++	lun.scsi_lun[0] = bfa_os_htons(luno);
 +
-+	*bfi_image = vmalloc(fw->size);
-+	if (NULL == *bfi_image) {
-+		printk(KERN_ALERT "Fail to allocate buffer for fw image "
-+			"size=%x!\n", (u32) fw->size);
-+		goto error;
-+	}
-+
-+	memcpy(*bfi_image, fw->data, fw->size);
-+	*bfi_image_size = fw->size/sizeof(u32);
-+
-+	return(*bfi_image);
-+
-+error:
-+	return(NULL);
++	return (lun.bfa_lun);
 +}
 +
-+u32 *
-+bfad_get_firmware_buf(struct pci_dev *pdev)
++/**
++ * Get LUN for the I/O request
++ */
++#define bfa_cb_ioim_get_lun(__dio)	\
++	bfad_int_to_lun(((struct scsi_cmnd *)__dio)->device->lun)
++
++/**
++ * Get CDB for the I/O request
++ */
++static inline u8 *
++bfa_cb_ioim_get_cdb(struct bfad_ioim_s *dio)
 +{
-+	if (pdev->device == BFA_PCI_DEVICE_ID_CT) {
-+		if (bfi_image_ct_size == 0)
-+			bfad_read_firmware(pdev, &bfi_image_ct,
-+				&bfi_image_ct_size, BFAD_FW_FILE_CT);
-+		return(bfi_image_ct);
-+	} else {
-+		if (bfi_image_cb_size == 0)
-+			bfad_read_firmware(pdev, &bfi_image_cb,
-+				&bfi_image_cb_size, BFAD_FW_FILE_CB);
-+		return(bfi_image_cb);
-+	}
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++
++	return ((u8 *) cmnd->cmnd);
 +}
 +
-+u32 *
-+bfi_image_ct_get_chunk(u32 off)
-+{ return (u32 *)(bfi_image_ct + off); }
++/**
++ * Get I/O direction (read/write) for the I/O request
++ */
++static inline enum fcp_iodir
++bfa_cb_ioim_get_iodir(struct bfad_ioim_s *dio)
++{
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++	enum dma_data_direction dmadir;
 +
-+u32 *
-+bfi_image_cb_get_chunk(u32 off)
-+{ return (u32 *)(bfi_image_cb + off); }
++	dmadir = cmnd->sc_data_direction;
++	if (dmadir == DMA_TO_DEVICE)
++		return FCP_IODIR_WRITE;
++	else if (dmadir == DMA_FROM_DEVICE)
++		return FCP_IODIR_READ;
++	else
++		return FCP_IODIR_NONE;
++}
 +
-diff -urpN orig/drivers/scsi/bfa/bfad_im.c patch/drivers/scsi/bfa/bfad_im.c
---- orig/drivers/scsi/bfa/bfad_im.c	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_im.c	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,1230 @@
++/**
++ * Get IO size in bytes for the I/O request
++ */
++static inline u32
++bfa_cb_ioim_get_size(struct bfad_ioim_s *dio)
++{
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++
++	return (scsi_bufflen(cmnd));
++}
++
++/**
++ * Get timeout for the I/O request
++ */
++static inline u8
++bfa_cb_ioim_get_timeout(struct bfad_ioim_s *dio)
++{
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++	/*
++	 * TBD: need a timeout for scsi passthru
++	 */
++	if (cmnd->device->host == NULL)
++		return 4;
++
++	return 0;
++}
++
++/**
++ * Get SG element for the I/O request given the SG element index
++ */
++static inline union bfi_addr_u
++bfa_cb_ioim_get_sgaddr(struct bfad_ioim_s *dio, int sgeid)
++{
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++	struct scatterlist *sge;
++	u64        addr;
++
++	sge = (struct scatterlist *)scsi_sglist(cmnd) + sgeid;
++	addr = (u64) sg_dma_address(sge);
++
++	return (*(union bfi_addr_u *) &addr);
++}
++
++static inline u32
++bfa_cb_ioim_get_sglen(struct bfad_ioim_s *dio, int sgeid)
++{
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++	struct scatterlist *sge;
++	u32        len;
++
++	sge = (struct scatterlist *)scsi_sglist(cmnd) + sgeid;
++	len = sg_dma_len(sge);
++
++	return len;
++}
++
++/**
++ * Get Command Reference Number for the I/O request. 0 if none.
++ */
++static inline u8
++bfa_cb_ioim_get_crn(struct bfad_ioim_s *dio)
++{
++	return 0;
++}
++
++/**
++ * Get SAM-3 priority for the I/O request. 0 is default.
++ */
++static inline u8
++bfa_cb_ioim_get_priority(struct bfad_ioim_s *dio)
++{
++	return 0;
++}
++
++/**
++ * Get task attributes for the I/O request. Default is FCP_TASK_ATTR_SIMPLE(0).
++ */
++static inline u8
++bfa_cb_ioim_get_taskattr(struct bfad_ioim_s *dio)
++{
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++	u8         task_attr = UNTAGGED;
++
++	if (cmnd->device->tagged_supported) {
++		switch (cmnd->tag) {
++		case HEAD_OF_QUEUE_TAG:
++			task_attr = HEAD_OF_Q;
++			break;
++		case ORDERED_QUEUE_TAG:
++			task_attr = ORDERED_Q;
++			break;
++		default:
++			task_attr = SIMPLE_Q;
++			break;
++		}
++	}
++
++	return task_attr;
++}
++
++/**
++ * Get CDB length in bytes for the I/O request. Default is FCP_CMND_CDB_LEN(16).
++ */
++static inline u8
++bfa_cb_ioim_get_cdblen(struct bfad_ioim_s *dio)
++{
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
++
++	return (cmnd->cmd_len);
++}
++
++
++
++#endif /* __BFA_HCB_IOIM_MACROS_H__ */
+diff -urpN orig/drivers/scsi/bfa/bfa_cee.c patch/drivers/scsi/bfa/bfa_cee.c
+--- orig/drivers/scsi/bfa/bfa_cee.c	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_cee.c	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,492 @@
 +/*
 + * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 + * All rights reserved
@@ -2363,1745 +319,2999 @@ diff -urpN orig/drivers/scsi/bfa/bfad_im.c patch/drivers/scsi/bfa/bfad_im.c
 + * General Public License for more details.
 + */
 +
-+/**
-+ *  bfad_im.c Linux driver IM module.
-+ */
++#include <defs/bfa_defs_cee.h>
++#include <cs/bfa_trc.h>
++#include <cs/bfa_log.h>
++#include <cs/bfa_debug.h>
++#include <cee/bfa_cee.h>
++#include <bfi/bfi_cee.h>
++#include <bfi/bfi.h>
++#include <bfa_ioc.h>
++#include <cna/bfa_cna_trcmod.h>
 +
-+#include "bfad_drv.h"
-+#include "bfad_im.h"
-+#include "bfad_trcmod.h"
-+#include "bfa_cb_ioim_macros.h"
-+#include <fcb/bfa_fcb_fcpim.h>
++BFA_TRC_FILE(CNA, CEE);
 +
-+BFA_TRC_FILE(LDRV, IM);
++#define bfa_ioc_portid(__ioc) ((__ioc)->port_id)
++#define bfa_lpuid(__arg) bfa_ioc_portid(&(__arg)->ioc)
 +
-+DEFINE_IDR(bfad_im_port_index);
-+struct scsi_transport_template *bfad_im_scsi_transport_template;
-+static void bfad_im_itnim_work_handler(struct work_struct *work);
-+static int bfad_im_queuecommand(struct scsi_cmnd *cmnd,
-+		void (*done)(struct scsi_cmnd *));
-+static int bfad_im_slave_alloc(struct scsi_device *sdev);
++static void     bfa_cee_format_lldp_cfg(struct bfa_cee_lldp_cfg_s *lldp_cfg);
++static void     bfa_cee_format_dcbcx_stats(struct bfa_cee_dcbx_stats_s
++					   *dcbcx_stats);
++static void     bfa_cee_format_lldp_stats(struct bfa_cee_lldp_stats_s
++					  *lldp_stats);
++static void     bfa_cee_format_cfg_stats(struct bfa_cee_cfg_stats_s *cfg_stats);
++static void     bfa_cee_format_cee_cfg(void *buffer);
++static void     bfa_cee_format_cee_stats(void *buffer);
 +
-+void
-+bfa_cb_ioim_done(void *drv, struct bfad_ioim_s *dio,
-+			enum bfi_ioim_status io_status, u8 scsi_status,
-+			int sns_len, u8 *sns_info, s32 residue)
-+{
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
-+	struct bfad_s         *bfad = drv;
-+	struct bfad_itnim_data_s *itnim_data;
-+	struct bfad_itnim_s *itnim;
-+
-+	switch (io_status) {
-+	case BFI_IOIM_STS_OK:
-+		bfa_trc(bfad, scsi_status);
-+		cmnd->result = ScsiResult(DID_OK, scsi_status);
-+		scsi_set_resid(cmnd, 0);
-+
-+		if (sns_len > 0) {
-+			bfa_trc(bfad, sns_len);
-+			if (sns_len > SCSI_SENSE_BUFFERSIZE)
-+				sns_len = SCSI_SENSE_BUFFERSIZE;
-+			memcpy(cmnd->sense_buffer, sns_info, sns_len);
-+		}
-+		if (residue > 0)
-+			scsi_set_resid(cmnd, residue);
-+		break;
-+
-+	case BFI_IOIM_STS_ABORTED:
-+	case BFI_IOIM_STS_TIMEDOUT:
-+	case BFI_IOIM_STS_PATHTOV:
-+	default:
-+		cmnd->result = ScsiResult(DID_ERROR, 0);
-+	}
-+
-+	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
-+	if (cmnd->device->host != NULL)
-+		scsi_dma_unmap(cmnd);
-+
-+	cmnd->host_scribble = NULL;
-+	bfa_trc(bfad, cmnd->result);
-+
-+	itnim_data = cmnd->device->hostdata;
-+	if (itnim_data) {
-+		itnim = itnim_data->itnim;
-+		if (!cmnd->result && itnim &&
-+			 (bfa_lun_queue_depth > cmnd->device->queue_depth)) {
-+			/* Queue depth adjustment for good status completion */
-+			bfad_os_ramp_up_qdepth(itnim, cmnd->device);
-+		} else if (cmnd->result == SAM_STAT_TASK_SET_FULL && itnim) {
-+			/* qfull handling */
-+			bfad_os_handle_qfull(itnim, cmnd->device);
-+		}
-+	}
-+
-+	cmnd->scsi_done(cmnd);
-+}
-+
-+void
-+bfa_cb_ioim_good_comp(void *drv, struct bfad_ioim_s *dio)
-+{
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
-+	struct bfad_itnim_data_s *itnim_data;
-+	struct bfad_itnim_s *itnim;
-+
-+	cmnd->result = ScsiResult(DID_OK, SCSI_STATUS_GOOD);
-+
-+	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
-+	if (cmnd->device->host != NULL)
-+		scsi_dma_unmap(cmnd);
-+
-+	cmnd->host_scribble = NULL;
-+
-+	/* Queue depth adjustment */
-+	if (bfa_lun_queue_depth > cmnd->device->queue_depth) {
-+		itnim_data = cmnd->device->hostdata;
-+		if (itnim_data) {
-+			itnim = itnim_data->itnim;
-+			if (itnim)
-+				bfad_os_ramp_up_qdepth(itnim, cmnd->device);
-+		}
-+	}
-+
-+	cmnd->scsi_done(cmnd);
-+}
-+
-+void
-+bfa_cb_ioim_abort(void *drv, struct bfad_ioim_s *dio)
-+{
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
-+	struct bfad_s         *bfad = drv;
-+
-+	cmnd->result = ScsiResult(DID_ERROR, 0);
-+
-+	/* Unmap DMA, if host is NULL, it means a scsi passthru cmd */
-+	if (cmnd->device->host != NULL)
-+		scsi_dma_unmap(cmnd);
-+
-+	bfa_trc(bfad, cmnd->result);
-+	cmnd->host_scribble = NULL;
-+}
-+
-+void
-+bfa_cb_tskim_done(void *bfad, struct bfad_tskim_s *dtsk,
-+		   enum bfi_tskim_status tsk_status)
-+{
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dtsk;
-+	wait_queue_head_t *wq;
-+
-+	cmnd->SCp.Status |= tsk_status << 1;
-+	set_bit(IO_DONE_BIT, (unsigned long *)&cmnd->SCp.Status);
-+	wq = (wait_queue_head_t *) cmnd->SCp.ptr;
-+	cmnd->SCp.ptr = NULL;
-+
-+	if (wq)
-+		wake_up(wq);
-+}
-+
-+void
-+bfa_cb_ioim_resfree(void *drv)
-+{
-+}
-+
-+/**
-+ *  Scsi_Host_template SCSI host template
-+ */
-+/**
-+ * Scsi_Host template entry, returns BFAD PCI info.
-+ */
-+static const char *
-+bfad_im_info(struct Scsi_Host *shost)
-+{
-+	static char     bfa_buf[256];
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfa_ioc_attr_s  ioc_attr;
-+	struct bfad_s         *bfad = im_port->bfad;
-+
-+	memset(&ioc_attr, 0, sizeof(ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+
-+	memset(bfa_buf, 0, sizeof(bfa_buf));
-+	snprintf(bfa_buf, sizeof(bfa_buf),
-+		 "Brocade FC/FCOE Adapter, " "model: %s hwpath: %s driver: %s",
-+		 ioc_attr.adapter_attr.model, bfad->pci_name,
-+		 BFAD_DRIVER_VERSION);
-+	return bfa_buf;
-+}
-+
-+/**
-+ * Scsi_Host template entry, aborts the specified SCSI command.
-+ *
-+ * Returns: SUCCESS or FAILED.
-+ */
-+static int
-+bfad_im_abort_handler(struct scsi_cmnd *cmnd)
-+{
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_ioim_s *hal_io;
-+	unsigned long   flags;
-+	u32        timeout;
-+	int             rc = FAILED;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	hal_io = (struct bfa_ioim_s *) cmnd->host_scribble;
-+	if (!hal_io) {
-+		/* IO has been completed, retrun success */
-+		rc = SUCCESS;
-+		goto out;
-+	}
-+	if (hal_io->dio != (struct bfad_ioim_s *) cmnd) {
-+		rc = FAILED;
-+		goto out;
-+	}
-+
-+	bfa_trc(bfad, hal_io->iotag);
-+	bfa_log(bfad->logmod, BFA_LOG_LINUX_SCSI_ABORT,
-+		im_port->shost->host_no, cmnd, hal_io->iotag);
-+	bfa_ioim_abort(hal_io);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	/* Need to wait until the command get aborted */
-+	timeout = 10;
-+	while ((struct bfa_ioim_s *) cmnd->host_scribble == hal_io) {
-+		set_current_state(TASK_UNINTERRUPTIBLE);
-+		schedule_timeout(timeout);
-+		if (timeout < 4 * HZ)
-+			timeout *= 2;
-+	}
-+
-+	cmnd->scsi_done(cmnd);
-+	bfa_trc(bfad, hal_io->iotag);
-+	bfa_log(bfad->logmod, BFA_LOG_LINUX_SCSI_ABORT_COMP,
-+		im_port->shost->host_no, cmnd, hal_io->iotag);
-+	return SUCCESS;
-+out:
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	return rc;
-+}
-+
-+static bfa_status_t
-+bfad_im_target_reset_send(struct bfad_s *bfad, struct scsi_cmnd *cmnd,
-+		     struct bfad_itnim_s *itnim)
-+{
-+	struct bfa_tskim_s *tskim;
-+	struct bfa_itnim_s *bfa_itnim;
-+	bfa_status_t    rc = BFA_STATUS_OK;
-+
-+	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
-+	tskim = bfa_tskim_alloc(&bfad->bfa, (struct bfad_tskim_s *) cmnd);
-+	if (!tskim) {
-+		BFA_DEV_PRINTF(bfad, BFA_ERR,
-+			       "target reset, fail to allocate tskim\n");
-+		rc = BFA_STATUS_FAILED;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Set host_scribble to NULL to avoid aborting a task command if
-+	 * happens.
-+	 */
-+	cmnd->host_scribble = NULL;
-+	cmnd->SCp.Status = 0;
-+	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
-+	bfa_tskim_start(tskim, bfa_itnim, (lun_t)0,
-+			    FCP_TM_TARGET_RESET, BFAD_TARGET_RESET_TMO);
-+out:
-+	return rc;
-+}
-+
-+/**
-+ * Scsi_Host template entry, resets a LUN and abort its all commands.
-+ *
-+ * Returns: SUCCESS or FAILED.
-+ *
-+ */
-+static int
-+bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd)
-+{
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct bfad_im_port_s *im_port =
-+			(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_itnim_data_s *itnim_data = cmnd->device->hostdata;
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfa_tskim_s *tskim;
-+	struct bfad_itnim_s   *itnim;
-+	struct bfa_itnim_s *bfa_itnim;
-+	DECLARE_WAIT_QUEUE_HEAD(wq);
-+	int             rc = SUCCESS;
-+	unsigned long   flags;
-+	enum bfi_tskim_status task_status;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	itnim = itnim_data->itnim;
-+	if (!itnim) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		rc = FAILED;
-+		goto out;
-+	}
-+
-+	tskim = bfa_tskim_alloc(&bfad->bfa, (struct bfad_tskim_s *) cmnd);
-+	if (!tskim) {
-+		BFA_DEV_PRINTF(bfad, BFA_ERR,
-+				"LUN reset, fail to allocate tskim");
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		rc = FAILED;
-+		goto out;
-+	}
-+
-+	/**
-+	 * Set host_scribble to NULL to avoid aborting a task command
-+	 * if happens.
-+	 */
-+	cmnd->host_scribble = NULL;
-+	cmnd->SCp.ptr = (char *)&wq;
-+	cmnd->SCp.Status = 0;
-+	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
-+	bfa_tskim_start(tskim, bfa_itnim,
-+			    bfad_int_to_lun(cmnd->device->lun),
-+			    FCP_TM_LUN_RESET, BFAD_LUN_RESET_TMO);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	wait_event(wq, test_bit(IO_DONE_BIT,
-+			(unsigned long *)&cmnd->SCp.Status));
-+
-+	task_status = cmnd->SCp.Status >> 1;
-+	if (task_status != BFI_TSKIM_STS_OK) {
-+		BFA_DEV_PRINTF(bfad, BFA_ERR, "LUN reset failure, status: %d\n",
-+			       task_status);
-+		rc = FAILED;
-+	}
-+
-+out:
-+	return rc;
-+}
-+
-+/**
-+ * Scsi_Host template entry, resets the bus and abort all commands.
-+ */
-+static int
-+bfad_im_reset_bus_handler(struct scsi_cmnd *cmnd)
-+{
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct bfad_im_port_s *im_port =
-+				(struct bfad_im_port_s *) shost->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfad_itnim_s   *itnim;
-+	unsigned long   flags;
-+	u32        i, rc, err_cnt = 0;
-+	DECLARE_WAIT_QUEUE_HEAD(wq);
-+	enum bfi_tskim_status task_status;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	for (i = 0; i < MAX_FCP_TARGET; i++) {
-+		itnim = bfad_os_get_itnim(im_port, i);
-+		if (itnim) {
-+			cmnd->SCp.ptr = (char *)&wq;
-+			rc = bfad_im_target_reset_send(bfad, cmnd, itnim);
-+			if (rc != BFA_STATUS_OK) {
-+				err_cnt++;
-+				continue;
-+			}
-+
-+			/* wait target reset to complete */
-+			spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+			wait_event(wq, test_bit(IO_DONE_BIT,
-+					(unsigned long *)&cmnd->SCp.Status));
-+			spin_lock_irqsave(&bfad->bfad_lock, flags);
-+
-+			task_status = cmnd->SCp.Status >> 1;
-+			if (task_status != BFI_TSKIM_STS_OK) {
-+				BFA_DEV_PRINTF(bfad, BFA_ERR,
-+					"target reset failure,"
-+					" status: %d\n", task_status);
-+				err_cnt++;
-+			}
-+		}
-+	}
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (err_cnt)
-+		return FAILED;
-+
-+	return SUCCESS;
-+}
-+
-+/**
-+ * Scsi_Host template entry slave_destroy.
-+ */
 +static void
-+bfad_im_slave_destroy(struct scsi_device *sdev)
++bfa_cee_format_cee_stats(void *buffer)
 +{
-+	sdev->hostdata = NULL;
-+	return;
-+}
-+
-+/**
-+ *  BFA FCS itnim callbacks
-+ */
-+
-+/**
-+ * BFA FCS itnim alloc callback, after successful PRLI
-+ * Context: Interrupt
-+ */
-+void
-+bfa_fcb_itnim_alloc(struct bfad_s *bfad, struct bfa_fcs_itnim_s **itnim,
-+		    struct bfad_itnim_s **itnim_drv)
-+{
-+	*itnim_drv = kzalloc(sizeof(struct bfad_itnim_s), GFP_ATOMIC);
-+	if (*itnim_drv == NULL)
-+		return;
-+
-+	(*itnim_drv)->im = bfad->im;
-+	*itnim = &(*itnim_drv)->fcs_itnim;
-+	(*itnim_drv)->state = ITNIM_STATE_NONE;
-+
-+	/*
-+	 * Initiaze the itnim_work
-+	 */
-+	INIT_WORK(&(*itnim_drv)->itnim_work, bfad_im_itnim_work_handler);
-+	bfad->bfad_flags |= BFAD_RPORT_ONLINE;
-+}
-+
-+/**
-+ * BFA FCS itnim free callback.
-+ * Context: Interrupt. bfad_lock is held
-+ */
-+void
-+bfa_fcb_itnim_free(struct bfad_s *bfad, struct bfad_itnim_s *itnim_drv)
-+{
-+	struct bfad_port_s    *port;
-+	wwn_t wwpn;
-+	u32 fcid;
-+	char wwpn_str[32], fcid_str[16];
-+
-+	/* online to free state transtion should not happen */
-+	bfa_assert(itnim_drv->state != ITNIM_STATE_ONLINE);
-+
-+	itnim_drv->queue_work = 1;
-+	/* offline request is not yet done, use the same request to free */
-+	if (itnim_drv->state == ITNIM_STATE_OFFLINE_PENDING)
-+		itnim_drv->queue_work = 0;
-+
-+	itnim_drv->state = ITNIM_STATE_FREE;
-+	port = bfa_fcs_itnim_get_drvport(&itnim_drv->fcs_itnim);
-+	itnim_drv->im_port = port->im_port;
-+	wwpn = bfa_fcs_itnim_get_pwwn(&itnim_drv->fcs_itnim);
-+	fcid = bfa_fcs_itnim_get_fcid(&itnim_drv->fcs_itnim);
-+	wwn2str(wwpn_str, wwpn);
-+	fcid2str(fcid_str, fcid);
-+	bfa_log(bfad->logmod, BFA_LOG_LINUX_ITNIM_FREE,
-+		port->im_port->shost->host_no,
-+		fcid_str, wwpn_str);
-+	bfad_os_itnim_process(itnim_drv);
-+}
-+
-+/**
-+ * BFA FCS itnim online callback.
-+ * Context: Interrupt. bfad_lock is held
-+ */
-+void
-+bfa_fcb_itnim_online(struct bfad_itnim_s *itnim_drv)
-+{
-+	struct bfad_port_s    *port;
-+
-+	itnim_drv->bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim_drv->fcs_itnim);
-+	port = bfa_fcs_itnim_get_drvport(&itnim_drv->fcs_itnim);
-+	itnim_drv->state = ITNIM_STATE_ONLINE;
-+	itnim_drv->queue_work = 1;
-+	itnim_drv->im_port = port->im_port;
-+	bfad_os_itnim_process(itnim_drv);
-+}
-+
-+/**
-+ * BFA FCS itnim offline callback.
-+ * Context: Interrupt. bfad_lock is held
-+ */
-+void
-+bfa_fcb_itnim_offline(struct bfad_itnim_s *itnim_drv)
-+{
-+	struct bfad_port_s    *port;
-+	struct bfad_s *bfad;
-+
-+	port = bfa_fcs_itnim_get_drvport(&itnim_drv->fcs_itnim);
-+	bfad = port->bfad;
-+	if ((bfad->pport.flags & BFAD_PORT_DELETE) ||
-+		 (port->flags & BFAD_PORT_DELETE)) {
-+		itnim_drv->state = ITNIM_STATE_OFFLINE;
-+		return;
-+	}
-+	itnim_drv->im_port = port->im_port;
-+	itnim_drv->state = ITNIM_STATE_OFFLINE_PENDING;
-+	itnim_drv->queue_work = 1;
-+	bfad_os_itnim_process(itnim_drv);
-+}
-+
-+/**
-+ * BFA FCS itnim timeout callback.
-+ * Context: Interrupt. bfad_lock is held
-+ */
-+void bfa_fcb_itnim_tov(struct bfad_itnim_s *itnim)
-+{
-+	itnim->state = ITNIM_STATE_TIMEOUT;
-+}
-+
-+/**
-+ * Path TOV processing begin notification -- dummy for linux
-+ */
-+void
-+bfa_fcb_itnim_tov_begin(struct bfad_itnim_s *itnim)
-+{
-+}
-+
-+
-+
-+/**
-+ * Allocate a Scsi_Host for a port.
-+ */
-+int
-+bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port)
-+{
-+	int error = 1;
-+
-+	if (!idr_pre_get(&bfad_im_port_index, GFP_KERNEL)) {
-+		printk(KERN_WARNING "idr_pre_get failure\n");
-+		goto out;
-+	}
-+
-+	error = idr_get_new(&bfad_im_port_index, im_port,
-+					 &im_port->idr_id);
-+	if (error) {
-+		printk(KERN_WARNING "idr_get_new failure\n");
-+		goto out;
-+	}
-+
-+	im_port->shost = bfad_os_scsi_host_alloc(im_port, bfad);
-+	if (!im_port->shost) {
-+		error = 1;
-+		goto out_free_idr;
-+	}
-+
-+	im_port->shost->hostdata[0] = (unsigned long)im_port;
-+	im_port->shost->unique_id = im_port->idr_id;
-+	im_port->shost->this_id = -1;
-+	im_port->shost->max_id = MAX_FCP_TARGET;
-+	im_port->shost->max_lun = MAX_FCP_LUN;
-+	im_port->shost->max_cmd_len = 16;
-+	im_port->shost->can_queue = bfad->cfg_data.ioc_queue_depth;
-+	im_port->shost->transportt = bfad_im_scsi_transport_template;
-+
-+	error = bfad_os_scsi_add_host(im_port->shost, im_port, bfad);
-+	if (error) {
-+		printk(KERN_WARNING "bfad_os_scsi_add_host failure %d\n",
-+							error);
-+		goto out_fc_rel;
-+	}
-+
-+	/* setup host fixed attribute if the lk supports */
-+	bfad_os_fc_host_init(im_port);
-+
-+	return 0;
-+
-+out_fc_rel:
-+	scsi_host_put(im_port->shost);
-+out_free_idr:
-+	idr_remove(&bfad_im_port_index, im_port->idr_id);
-+out:
-+	return error;
-+}
-+
-+void
-+bfad_im_scsi_host_free(struct bfad_s *bfad, struct bfad_im_port_s *im_port)
-+{
-+	unsigned long flags;
-+
-+	bfa_trc(bfad, bfad->inst_no);
-+	bfa_log(bfad->logmod, BFA_LOG_LINUX_SCSI_HOST_FREE,
-+			im_port->shost->host_no);
-+
-+	fc_remove_host(im_port->shost);
-+
-+	scsi_remove_host(im_port->shost);
-+	scsi_host_put(im_port->shost);
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	idr_remove(&bfad_im_port_index, im_port->idr_id);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	struct bfa_cee_stats_s *cee_stats = buffer;
++	bfa_cee_format_dcbcx_stats(&cee_stats->dcbx_stats);
++	bfa_cee_format_lldp_stats(&cee_stats->lldp_stats);
++	bfa_cee_format_cfg_stats(&cee_stats->cfg_stats);
 +}
 +
 +static void
-+bfad_im_port_delete_handler(struct work_struct *work)
++bfa_cee_format_cee_cfg(void *buffer)
 +{
-+	struct bfad_im_port_s *im_port =
-+		container_of(work, struct bfad_im_port_s, port_delete_work);
-+
-+	bfad_im_scsi_host_free(im_port->bfad, im_port);
-+	bfad_im_port_clean(im_port);
-+	kfree(im_port);
++	struct bfa_cee_attr_s *cee_cfg = buffer;
++	bfa_cee_format_lldp_cfg(&cee_cfg->lldp_remote);
 +}
++
++static void
++bfa_cee_format_dcbcx_stats(struct bfa_cee_dcbx_stats_s *dcbcx_stats)
++{
++	dcbcx_stats->subtlvs_unrecognized =
++		bfa_os_ntohl(dcbcx_stats->subtlvs_unrecognized);
++	dcbcx_stats->negotiation_failed =
++		bfa_os_ntohl(dcbcx_stats->negotiation_failed);
++	dcbcx_stats->remote_cfg_changed =
++		bfa_os_ntohl(dcbcx_stats->remote_cfg_changed);
++	dcbcx_stats->tlvs_received = bfa_os_ntohl(dcbcx_stats->tlvs_received);
++	dcbcx_stats->tlvs_invalid = bfa_os_ntohl(dcbcx_stats->tlvs_invalid);
++	dcbcx_stats->seqno = bfa_os_ntohl(dcbcx_stats->seqno);
++	dcbcx_stats->ackno = bfa_os_ntohl(dcbcx_stats->ackno);
++	dcbcx_stats->recvd_seqno = bfa_os_ntohl(dcbcx_stats->recvd_seqno);
++	dcbcx_stats->recvd_ackno = bfa_os_ntohl(dcbcx_stats->recvd_ackno);
++}
++
++static void
++bfa_cee_format_lldp_stats(struct bfa_cee_lldp_stats_s *lldp_stats)
++{
++	lldp_stats->frames_transmitted =
++		bfa_os_ntohl(lldp_stats->frames_transmitted);
++	lldp_stats->frames_aged_out = bfa_os_ntohl(lldp_stats->frames_aged_out);
++	lldp_stats->frames_discarded =
++		bfa_os_ntohl(lldp_stats->frames_discarded);
++	lldp_stats->frames_in_error = bfa_os_ntohl(lldp_stats->frames_in_error);
++	lldp_stats->frames_rcvd = bfa_os_ntohl(lldp_stats->frames_rcvd);
++	lldp_stats->tlvs_discarded = bfa_os_ntohl(lldp_stats->tlvs_discarded);
++	lldp_stats->tlvs_unrecognized =
++		bfa_os_ntohl(lldp_stats->tlvs_unrecognized);
++}
++
++static void
++bfa_cee_format_cfg_stats(struct bfa_cee_cfg_stats_s *cfg_stats)
++{
++	cfg_stats->cee_status_down = bfa_os_ntohl(cfg_stats->cee_status_down);
++	cfg_stats->cee_status_up = bfa_os_ntohl(cfg_stats->cee_status_up);
++	cfg_stats->cee_hw_cfg_changed =
++		bfa_os_ntohl(cfg_stats->cee_hw_cfg_changed);
++	cfg_stats->recvd_invalid_cfg =
++		bfa_os_ntohl(cfg_stats->recvd_invalid_cfg);
++}
++
++static void
++bfa_cee_format_lldp_cfg(struct bfa_cee_lldp_cfg_s *lldp_cfg)
++{
++	lldp_cfg->time_to_interval = bfa_os_ntohs(lldp_cfg->time_to_interval);
++	lldp_cfg->enabled_system_cap =
++		bfa_os_ntohs(lldp_cfg->enabled_system_cap);
++}
++
++/**
++ * bfa_cee_attr_meminfo()
++ *
++ *
++ * @param[in] void
++ *
++ * @return Size of DMA region
++ */
++static          u32
++bfa_cee_attr_meminfo(void)
++{
++	return BFA_ROUNDUP(sizeof(struct bfa_cee_attr_s), BFA_DMA_ALIGN_SZ);
++}
++
++/**
++ * bfa_cee_stats_meminfo()
++ *
++ *
++ * @param[in] void
++ *
++ * @return Size of DMA region
++ */
++static          u32
++bfa_cee_stats_meminfo(void)
++{
++	return BFA_ROUNDUP(sizeof(struct bfa_cee_stats_s), BFA_DMA_ALIGN_SZ);
++}
++
++/**
++ * bfa_cee_get_attr_isr()
++ *
++ *
++ * @param[in] cee - Pointer to the CEE module
++ *            status - Return status from the f/w
++ *
++ * @return void
++ */
++static void
++bfa_cee_get_attr_isr(struct bfa_cee_s *cee, bfa_status_t status)
++{
++	cee->get_attr_status = status;
++	bfa_trc(cee, 0);
++	if (status == BFA_STATUS_OK) {
++		bfa_trc(cee, 0);
++		/*
++		 * The requested data has been copied to the DMA area, *process
++		 * it.
++		 */
++		memcpy(cee->attr, cee->attr_dma.kva,
++		       sizeof(struct bfa_cee_attr_s));
++		bfa_cee_format_cee_cfg(cee->attr);
++	}
++	cee->get_attr_pending = BFA_FALSE;
++	if (cee->cbfn.get_attr_cbfn) {
++		bfa_trc(cee, 0);
++		cee->cbfn.get_attr_cbfn(cee->cbfn.get_attr_cbarg, status);
++	}
++	bfa_trc(cee, 0);
++}
++
++/**
++ * bfa_cee_get_attr_isr()
++ *
++ *
++ * @param[in] cee - Pointer to the CEE module
++ *            status - Return status from the f/w
++ *
++ * @return void
++ */
++static void
++bfa_cee_get_stats_isr(struct bfa_cee_s *cee, bfa_status_t status)
++{
++	cee->get_stats_status = status;
++	bfa_trc(cee, 0);
++	if (status == BFA_STATUS_OK) {
++		bfa_trc(cee, 0);
++		/*
++		 * The requested data has been copied to the DMA area, process
++		 * it.
++		 */
++		memcpy(cee->stats, cee->stats_dma.kva,
++		       sizeof(struct bfa_cee_stats_s));
++		bfa_cee_format_cee_stats(cee->stats);
++	}
++	cee->get_stats_pending = BFA_FALSE;
++	bfa_trc(cee, 0);
++	if (cee->cbfn.get_stats_cbfn) {
++		bfa_trc(cee, 0);
++		cee->cbfn.get_stats_cbfn(cee->cbfn.get_stats_cbarg, status);
++	}
++	bfa_trc(cee, 0);
++}
++
++/**
++ * bfa_cee_get_attr_isr()
++ *
++ *
++ * @param[in] cee - Pointer to the CEE module
++ *            status - Return status from the f/w
++ *
++ * @return void
++ */
++static void
++bfa_cee_reset_stats_isr(struct bfa_cee_s *cee, bfa_status_t status)
++{
++	cee->reset_stats_status = status;
++	cee->reset_stats_pending = BFA_FALSE;
++	if (cee->cbfn.reset_stats_cbfn)
++		cee->cbfn.reset_stats_cbfn(cee->cbfn.reset_stats_cbarg, status);
++}
++
++/**
++ * bfa_cee_meminfo()
++ *
++ *
++ * @param[in] void
++ *
++ * @return Size of DMA region
++ */
++u32
++bfa_cee_meminfo(void)
++{
++	return (bfa_cee_attr_meminfo() + bfa_cee_stats_meminfo());
++}
++
++/**
++ * bfa_cee_mem_claim()
++ *
++ *
++ * @param[in] cee CEE module pointer
++ * 	      dma_kva Kernel Virtual Address of CEE DMA Memory
++ * 	      dma_pa  Physical Address of CEE DMA Memory
++ *
++ * @return void
++ */
++void
++bfa_cee_mem_claim(struct bfa_cee_s *cee, u8 *dma_kva, u64 dma_pa)
++{
++	cee->attr_dma.kva = dma_kva;
++	cee->attr_dma.pa = dma_pa;
++	cee->stats_dma.kva = dma_kva + bfa_cee_attr_meminfo();
++	cee->stats_dma.pa = dma_pa + bfa_cee_attr_meminfo();
++	cee->attr = (struct bfa_cee_attr_s *)dma_kva;
++	cee->stats =
++		(struct bfa_cee_stats_s *)(dma_kva + bfa_cee_attr_meminfo());
++}
++
++/**
++ * bfa_cee_get_attr()
++ *
++ *   Send the request to the f/w to fetch CEE attributes.
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return Status
++ */
 +
 +bfa_status_t
-+bfad_im_port_new(struct bfad_s *bfad, struct bfad_port_s *port)
++bfa_cee_get_attr(struct bfa_cee_s *cee, struct bfa_cee_attr_s *attr,
++		 bfa_cee_get_attr_cbfn_t cbfn, void *cbarg)
 +{
-+	int             rc = BFA_STATUS_OK;
-+	struct bfad_im_port_s *im_port;
++	struct bfi_cee_get_req_s *cmd;
 +
-+	im_port = kzalloc(sizeof(struct bfad_im_port_s), GFP_ATOMIC);
-+	if (im_port == NULL) {
-+		rc = BFA_STATUS_ENOMEM;
-+		goto ext;
++	bfa_assert((cee != NULL) && (cee->ioc != NULL));
++	bfa_trc(cee, 0);
++	if (!bfa_ioc_is_operational(cee->ioc)) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_IOC_FAILURE;
 +	}
-+	port->im_port = im_port;
-+	im_port->port = port;
-+	im_port->bfad = bfad;
-+
-+	INIT_WORK(&im_port->port_delete_work, bfad_im_port_delete_handler);
-+	INIT_LIST_HEAD(&im_port->itnim_mapped_list);
-+	INIT_LIST_HEAD(&im_port->binding_list);
-+
-+ext:
-+	return rc;
-+}
-+
-+void
-+bfad_im_port_delete(struct bfad_s *bfad, struct bfad_port_s *port)
-+{
-+	struct bfad_im_port_s *im_port = port->im_port;
-+
-+	queue_work(bfad->im->drv_workq,
-+				&im_port->port_delete_work);
-+}
-+
-+void
-+bfad_im_port_clean(struct bfad_im_port_s *im_port)
-+{
-+	struct bfad_fcp_binding *bp, *bp_new;
-+	unsigned long flags;
-+	struct bfad_s *bfad =  im_port->bfad;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	list_for_each_entry_safe(bp, bp_new, &im_port->binding_list,
-+					list_entry) {
-+		list_del(&bp->list_entry);
-+		kfree(bp);
++	if (cee->get_attr_pending == BFA_TRUE) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_DEVBUSY;
 +	}
-+
-+	/* the itnim_mapped_list must be empty at this time */
-+	bfa_assert(list_empty(&im_port->itnim_mapped_list));
-+
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+}
-+
-+void
-+bfad_im_port_online(struct bfad_s *bfad, struct bfad_port_s *port)
-+{
-+}
-+
-+void
-+bfad_im_port_offline(struct bfad_s *bfad, struct bfad_port_s *port)
-+{
-+}
-+
-+bfa_status_t
-+bfad_im_probe(struct bfad_s *bfad)
-+{
-+	struct bfad_im_s      *im;
-+	bfa_status_t    rc = BFA_STATUS_OK;
-+
-+	im = kzalloc(sizeof(struct bfad_im_s), GFP_KERNEL);
-+	if (im == NULL) {
-+		rc = BFA_STATUS_ENOMEM;
-+		goto ext;
-+	}
-+
-+	bfad->im = im;
-+	im->bfad = bfad;
-+
-+	if (bfad_os_thread_workq(bfad) != BFA_STATUS_OK) {
-+		kfree(im);
-+		rc = BFA_STATUS_FAILED;
-+	}
-+
-+ext:
-+	return rc;
-+}
-+
-+void
-+bfad_im_probe_undo(struct bfad_s *bfad)
-+{
-+	if (bfad->im) {
-+		bfad_os_destroy_workq(bfad->im);
-+		kfree(bfad->im);
-+		bfad->im = NULL;
-+	}
-+}
-+
-+
-+
-+
-+int
-+bfad_os_scsi_add_host(struct Scsi_Host *shost, struct bfad_im_port_s *im_port,
-+			struct bfad_s *bfad)
-+{
-+    struct device *dev;
-+
-+    if (im_port->port->pvb_type == BFAD_PORT_PHYS_BASE)
-+		dev = &bfad->pcidev->dev;
-+    else
-+		dev = &bfad->pport.im_port->shost->shost_gendev;
-+
-+    return scsi_add_host(shost, dev);
-+}
-+
-+struct Scsi_Host *
-+bfad_os_scsi_host_alloc(struct bfad_im_port_s *im_port, struct bfad_s *bfad)
-+{
-+	struct scsi_host_template *sht;
-+
-+	if (im_port->port->pvb_type == BFAD_PORT_PHYS_BASE)
-+		sht = &bfad_im_scsi_host_template;
-+	else
-+		sht = &bfad_im_vport_template;
-+
-+	sht->sg_tablesize = bfad->cfg_data.io_max_sge;
-+
-+	return scsi_host_alloc(sht, sizeof(unsigned long));
-+}
-+
-+void
-+bfad_os_scsi_host_free(struct bfad_s *bfad, struct bfad_im_port_s *im_port)
-+{
-+	flush_workqueue(bfad->im->drv_workq);
-+	bfad_im_scsi_host_free(im_port->bfad, im_port);
-+	bfad_im_port_clean(im_port);
-+	kfree(im_port);
-+}
-+
-+void
-+bfad_os_destroy_workq(struct bfad_im_s *im)
-+{
-+	if (im && im->drv_workq) {
-+		destroy_workqueue(im->drv_workq);
-+		im->drv_workq = NULL;
-+	}
-+}
-+
-+bfa_status_t
-+bfad_os_thread_workq(struct bfad_s *bfad)
-+{
-+	struct bfad_im_s      *im = bfad->im;
-+
-+	bfa_trc(bfad, 0);
-+	snprintf(im->drv_workq_name, BFAD_KOBJ_NAME_LEN, "bfad_wq_%d",
-+		 bfad->inst_no);
-+	im->drv_workq = create_singlethread_workqueue(im->drv_workq_name);
-+	if (!im->drv_workq)
-+		return BFA_STATUS_FAILED;
++	cee->get_attr_pending = BFA_TRUE;
++	cmd = (struct bfi_cee_get_req_s *)cee->get_cfg_mb.msg;
++	cee->attr = attr;
++	cee->cbfn.get_attr_cbfn = cbfn;
++	cee->cbfn.get_attr_cbarg = cbarg;
++	bfi_h2i_set(cmd->mh, BFI_MC_CEE, BFI_CEE_H2I_GET_CFG_REQ,
++		    bfa_ioc_portid(cee->ioc));
++	bfa_dma_be_addr_set(cmd->dma_addr, cee->attr_dma.pa);
++	bfa_ioc_mbox_queue(cee->ioc, &cee->get_cfg_mb);
++	bfa_trc(cee, 0);
 +
 +	return BFA_STATUS_OK;
 +}
 +
 +/**
-+ * Scsi_Host template entry.
++ * bfa_cee_get_stats()
 + *
-+ * Description:
-+ * OS entry point to adjust the queue_depths on a per-device basis.
-+ * Called once per device during the bus scan.
-+ * Return non-zero if fails.
++ *   Send the request to the f/w to fetch CEE statistics.
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return Status
 + */
-+static int
-+bfad_im_slave_configure(struct scsi_device *sdev)
-+{
-+	if (sdev->tagged_supported)
-+		scsi_activate_tcq(sdev, bfa_lun_queue_depth);
-+	else
-+		scsi_deactivate_tcq(sdev, bfa_lun_queue_depth);
-+
-+	return 0;
-+}
-+
-+struct scsi_host_template bfad_im_scsi_host_template = {
-+	.module = THIS_MODULE,
-+	.name = BFAD_DRIVER_NAME,
-+	.info = bfad_im_info,
-+	.queuecommand = bfad_im_queuecommand,
-+	.eh_abort_handler = bfad_im_abort_handler,
-+	.eh_device_reset_handler = bfad_im_reset_lun_handler,
-+	.eh_bus_reset_handler = bfad_im_reset_bus_handler,
-+
-+	.slave_alloc = bfad_im_slave_alloc,
-+	.slave_configure = bfad_im_slave_configure,
-+	.slave_destroy = bfad_im_slave_destroy,
-+
-+	.this_id = -1,
-+	.sg_tablesize = BFAD_IO_MAX_SGE,
-+	.cmd_per_lun = 3,
-+	.use_clustering = ENABLE_CLUSTERING,
-+	.shost_attrs = bfad_im_host_attrs,
-+	.max_sectors = 0xFFFF,
-+};
-+
-+struct scsi_host_template bfad_im_vport_template = {
-+	.module = THIS_MODULE,
-+	.name = BFAD_DRIVER_NAME,
-+	.info = bfad_im_info,
-+	.queuecommand = bfad_im_queuecommand,
-+	.eh_abort_handler = bfad_im_abort_handler,
-+	.eh_device_reset_handler = bfad_im_reset_lun_handler,
-+	.eh_bus_reset_handler = bfad_im_reset_bus_handler,
-+
-+	.slave_alloc = bfad_im_slave_alloc,
-+	.slave_configure = bfad_im_slave_configure,
-+	.slave_destroy = bfad_im_slave_destroy,
-+
-+	.this_id = -1,
-+	.sg_tablesize = BFAD_IO_MAX_SGE,
-+	.cmd_per_lun = 3,
-+	.use_clustering = ENABLE_CLUSTERING,
-+	.shost_attrs = bfad_im_vport_attrs,
-+	.max_sectors = 0xFFFF,
-+};
-+
-+void
-+bfad_im_probe_post(struct bfad_im_s *im)
-+{
-+	flush_workqueue(im->drv_workq);
-+}
 +
 +bfa_status_t
-+bfad_im_module_init(void)
++bfa_cee_get_stats(struct bfa_cee_s *cee, struct bfa_cee_stats_s *stats,
++		  bfa_cee_get_stats_cbfn_t cbfn, void *cbarg)
 +{
-+	bfad_im_scsi_transport_template =
-+		fc_attach_transport(&bfad_im_fc_function_template);
-+	if (!bfad_im_scsi_transport_template)
-+		return BFA_STATUS_ENOMEM;
++	struct bfi_cee_get_req_s *cmd;
++
++	bfa_assert((cee != NULL) && (cee->ioc != NULL));
++
++	if (!bfa_ioc_is_operational(cee->ioc)) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_IOC_FAILURE;
++	}
++	if (cee->get_stats_pending == BFA_TRUE) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_DEVBUSY;
++	}
++	cee->get_stats_pending = BFA_TRUE;
++	cmd = (struct bfi_cee_get_req_s *)cee->get_stats_mb.msg;
++	cee->stats = stats;
++	cee->cbfn.get_stats_cbfn = cbfn;
++	cee->cbfn.get_stats_cbarg = cbarg;
++	bfi_h2i_set(cmd->mh, BFI_MC_CEE, BFI_CEE_H2I_GET_STATS_REQ,
++		    bfa_ioc_portid(cee->ioc));
++	bfa_dma_be_addr_set(cmd->dma_addr, cee->stats_dma.pa);
++	bfa_ioc_mbox_queue(cee->ioc, &cee->get_stats_mb);
++	bfa_trc(cee, 0);
 +
 +	return BFA_STATUS_OK;
 +}
 +
-+void
-+bfad_im_module_exit(void)
++/**
++ * bfa_cee_reset_stats()
++ *
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return Status
++ */
++
++bfa_status_t
++bfa_cee_reset_stats(struct bfa_cee_s *cee, bfa_cee_reset_stats_cbfn_t cbfn,
++		    void *cbarg)
 +{
-+	if (bfad_im_scsi_transport_template)
-+		fc_release_transport(bfad_im_scsi_transport_template);
-+}
++	struct bfi_cee_reset_stats_s *cmd;
 +
-+void
-+bfad_os_itnim_process(struct bfad_itnim_s *itnim_drv)
-+{
-+	struct bfad_im_s      *im = itnim_drv->im;
-+
-+	if (itnim_drv->queue_work)
-+		queue_work(im->drv_workq, &itnim_drv->itnim_work);
-+}
-+
-+void
-+bfad_os_ramp_up_qdepth(struct bfad_itnim_s *itnim, struct scsi_device *sdev)
-+{
-+	struct scsi_device *tmp_sdev;
-+
-+	if (((jiffies - itnim->last_ramp_up_time) >
-+		BFA_QUEUE_FULL_RAMP_UP_TIME * HZ) &&
-+		((jiffies - itnim->last_queue_full_time) >
-+		BFA_QUEUE_FULL_RAMP_UP_TIME * HZ)) {
-+		shost_for_each_device(tmp_sdev, sdev->host) {
-+			if (bfa_lun_queue_depth > tmp_sdev->queue_depth) {
-+				if (tmp_sdev->id != sdev->id)
-+					continue;
-+				if (tmp_sdev->ordered_tags)
-+					scsi_adjust_queue_depth(tmp_sdev,
-+						MSG_ORDERED_TAG,
-+						tmp_sdev->queue_depth + 1);
-+				else
-+					scsi_adjust_queue_depth(tmp_sdev,
-+						MSG_SIMPLE_TAG,
-+						tmp_sdev->queue_depth + 1);
-+
-+				itnim->last_ramp_up_time = jiffies;
-+			}
-+		}
++	bfa_assert((cee != NULL) && (cee->ioc != NULL));
++	if (!bfa_ioc_is_operational(cee->ioc)) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_IOC_FAILURE;
 +	}
-+}
-+
-+void
-+bfad_os_handle_qfull(struct bfad_itnim_s *itnim, struct scsi_device *sdev)
-+{
-+	struct scsi_device *tmp_sdev;
-+
-+	itnim->last_queue_full_time = jiffies;
-+
-+	shost_for_each_device(tmp_sdev, sdev->host) {
-+		if (tmp_sdev->id != sdev->id)
-+			continue;
-+		scsi_track_queue_full(tmp_sdev, tmp_sdev->queue_depth - 1);
++	if (cee->reset_stats_pending == BFA_TRUE) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_DEVBUSY;
 +	}
-+}
-+
-+
-+
-+
-+struct bfad_itnim_s *
-+bfad_os_get_itnim(struct bfad_im_port_s *im_port, int id)
-+{
-+	struct bfad_itnim_s   *itnim = NULL;
-+
-+	/* Search the mapped list for this target ID */
-+	list_for_each_entry(itnim, &im_port->itnim_mapped_list, list_entry) {
-+		if (id == itnim->scsi_tgt_id)
-+			return itnim;
-+	}
-+
-+	return NULL;
++	cee->reset_stats_pending = BFA_TRUE;
++	cmd = (struct bfi_cee_reset_stats_s *)cee->reset_stats_mb.msg;
++	cee->cbfn.reset_stats_cbfn = cbfn;
++	cee->cbfn.reset_stats_cbarg = cbarg;
++	bfi_h2i_set(cmd->mh, BFI_MC_CEE, BFI_CEE_H2I_RESET_STATS,
++		    bfa_ioc_portid(cee->ioc));
++	bfa_ioc_mbox_queue(cee->ioc, &cee->reset_stats_mb);
++	bfa_trc(cee, 0);
++	return BFA_STATUS_OK;
 +}
 +
 +/**
-+ * Scsi_Host template entry slave_alloc
++ * bfa_cee_isrs()
++ *
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return void
 + */
-+static int
-+bfad_im_slave_alloc(struct scsi_device *sdev)
-+{
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
-+
-+	if (!rport || fc_remote_port_chkready(rport))
-+		return -ENXIO;
-+
-+	sdev->hostdata = rport->dd_data;
-+
-+	return 0;
-+}
 +
 +void
-+bfad_os_fc_host_init(struct bfad_im_port_s *im_port)
++bfa_cee_isr(void *cbarg, struct bfi_mbmsg_s *m)
 +{
-+	struct Scsi_Host *host = im_port->shost;
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfad_port_s    *port = im_port->port;
-+	union attr {
-+		struct bfa_pport_attr_s pattr;
-+		struct bfa_ioc_attr_s  ioc_attr;
-+	} attr;
-+
-+	fc_host_node_name(host) =
-+		bfa_os_htonll((bfa_fcs_port_get_nwwn(port->fcs_port)));
-+	fc_host_port_name(host) =
-+		bfa_os_htonll((bfa_fcs_port_get_pwwn(port->fcs_port)));
-+
-+	fc_host_supported_classes(host) = FC_COS_CLASS3;
-+
-+	memset(fc_host_supported_fc4s(host), 0,
-+	       sizeof(fc_host_supported_fc4s(host)));
-+	if (bfad_supported_fc4s & (BFA_PORT_ROLE_FCP_IM | BFA_PORT_ROLE_FCP_TM))
-+		/* For FCP type 0x08 */
-+		fc_host_supported_fc4s(host)[2] = 1;
-+	if (bfad_supported_fc4s | BFA_PORT_ROLE_FCP_IPFC)
-+		/* For LLC/SNAP type 0x05 */
-+		fc_host_supported_fc4s(host)[3] = 0x20;
-+	/* For fibre channel services type 0x20 */
-+	fc_host_supported_fc4s(host)[7] = 1;
-+
-+	memset(&attr.ioc_attr, 0, sizeof(attr.ioc_attr));
-+	bfa_get_attr(&bfad->bfa, &attr.ioc_attr);
-+	sprintf(fc_host_symbolic_name(host), "Brocade %s FV%s DV%s",
-+		attr.ioc_attr.adapter_attr.model,
-+		attr.ioc_attr.adapter_attr.fw_ver, BFAD_DRIVER_VERSION);
-+
-+	fc_host_supported_speeds(host) = 0;
-+	fc_host_supported_speeds(host) |=
-+		FC_PORTSPEED_8GBIT | FC_PORTSPEED_4GBIT | FC_PORTSPEED_2GBIT |
-+		FC_PORTSPEED_1GBIT;
-+
-+	memset(&attr.pattr, 0, sizeof(attr.pattr));
-+	bfa_pport_get_attr(&bfad->bfa, &attr.pattr);
-+	fc_host_maxframe_size(host) = attr.pattr.pport_cfg.maxfrsize;
-+}
-+
-+static void
-+bfad_im_fc_rport_add(struct bfad_im_port_s *im_port, struct bfad_itnim_s *itnim)
-+{
-+	struct fc_rport_identifiers rport_ids;
-+	struct fc_rport *fc_rport;
-+	struct bfad_itnim_data_s *itnim_data;
-+
-+	rport_ids.node_name =
-+		bfa_os_htonll(bfa_fcs_itnim_get_nwwn(&itnim->fcs_itnim));
-+	rport_ids.port_name =
-+		bfa_os_htonll(bfa_fcs_itnim_get_pwwn(&itnim->fcs_itnim));
-+	rport_ids.port_id =
-+		bfa_os_hton3b(bfa_fcs_itnim_get_fcid(&itnim->fcs_itnim));
-+	rport_ids.roles = FC_RPORT_ROLE_UNKNOWN;
-+
-+	itnim->fc_rport = fc_rport =
-+		fc_remote_port_add(im_port->shost, 0, &rport_ids);
-+
-+	if (!fc_rport)
-+		return;
-+
-+	fc_rport->maxframe_size =
-+		bfa_fcs_itnim_get_maxfrsize(&itnim->fcs_itnim);
-+	fc_rport->supported_classes = bfa_fcs_itnim_get_cos(&itnim->fcs_itnim);
-+
-+	itnim_data = fc_rport->dd_data;
-+	itnim_data->itnim = itnim;
-+
-+	rport_ids.roles |= FC_RPORT_ROLE_FCP_TARGET;
-+
-+	if (rport_ids.roles != FC_RPORT_ROLE_UNKNOWN)
-+		fc_remote_port_rolechg(fc_rport, rport_ids.roles);
-+
-+	if ((fc_rport->scsi_target_id != -1)
-+	    && (fc_rport->scsi_target_id < MAX_FCP_TARGET))
-+		itnim->scsi_tgt_id = fc_rport->scsi_target_id;
-+
-+	return;
-+}
-+
-+/**
-+ * Work queue handler using FC transport service
-+* Context: kernel
-+ */
-+static void
-+bfad_im_itnim_work_handler(struct work_struct *work)
-+{
-+	struct bfad_itnim_s   *itnim = container_of(work, struct bfad_itnim_s,
-+							itnim_work);
-+	struct bfad_im_s      *im = itnim->im;
-+	struct bfad_s         *bfad = im->bfad;
-+	struct bfad_im_port_s *im_port;
-+	unsigned long   flags;
-+	struct fc_rport *fc_rport;
-+	wwn_t wwpn;
-+	u32 fcid;
-+	char wwpn_str[32], fcid_str[16];
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	im_port = itnim->im_port;
-+	bfa_trc(bfad, itnim->state);
-+	switch (itnim->state) {
-+	case ITNIM_STATE_ONLINE:
-+		if (!itnim->fc_rport) {
-+			spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+			bfad_im_fc_rport_add(im_port, itnim);
-+			spin_lock_irqsave(&bfad->bfad_lock, flags);
-+			wwpn = bfa_fcs_itnim_get_pwwn(&itnim->fcs_itnim);
-+			fcid = bfa_fcs_itnim_get_fcid(&itnim->fcs_itnim);
-+			wwn2str(wwpn_str, wwpn);
-+			fcid2str(fcid_str, fcid);
-+			list_add_tail(&itnim->list_entry,
-+				&im_port->itnim_mapped_list);
-+			bfa_log(bfad->logmod, BFA_LOG_LINUX_ITNIM_ONLINE,
-+				im_port->shost->host_no,
-+				itnim->scsi_tgt_id,
-+				fcid_str, wwpn_str);
-+		} else {
-+			printk(KERN_WARNING
-+				"%s: itnim %llx is already in online state\n",
-+				__FUNCTION__,
-+				bfa_fcs_itnim_get_pwwn(&itnim->fcs_itnim));
-+		}
-+
++	union bfi_cee_i2h_msg_u *msg;
++	struct bfi_cee_get_rsp_s *get_rsp;
++	struct bfa_cee_s *cee = (struct bfa_cee_s *)cbarg;
++	msg = (union bfi_cee_i2h_msg_u *)m;
++	get_rsp = (struct bfi_cee_get_rsp_s *)m;
++	bfa_trc(cee, msg->mh.msg_id);
++	switch (msg->mh.msg_id) {
++	case BFI_CEE_I2H_GET_CFG_RSP:
++		bfa_trc(cee, get_rsp->cmd_status);
++		bfa_cee_get_attr_isr(cee, get_rsp->cmd_status);
 +		break;
-+	case ITNIM_STATE_OFFLINE_PENDING:
-+		itnim->state = ITNIM_STATE_OFFLINE;
-+		if (itnim->fc_rport) {
-+			fc_rport = itnim->fc_rport;
-+			((struct bfad_itnim_data_s *)
-+				fc_rport->dd_data)->itnim = NULL;
-+			itnim->fc_rport = NULL;
-+			if (!(im_port->port->flags & BFAD_PORT_DELETE)) {
-+				spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+				fc_rport->dev_loss_tmo =
-+					bfa_fcpim_path_tov_get(&bfad->bfa) + 1;
-+				fc_remote_port_delete(fc_rport);
-+				spin_lock_irqsave(&bfad->bfad_lock, flags);
-+			}
-+			wwpn = bfa_fcs_itnim_get_pwwn(&itnim->fcs_itnim);
-+			fcid = bfa_fcs_itnim_get_fcid(&itnim->fcs_itnim);
-+			wwn2str(wwpn_str, wwpn);
-+			fcid2str(fcid_str, fcid);
-+			list_del(&itnim->list_entry);
-+			bfa_log(bfad->logmod, BFA_LOG_LINUX_ITNIM_OFFLINE,
-+				im_port->shost->host_no,
-+				itnim->scsi_tgt_id,
-+				fcid_str, wwpn_str);
-+		}
++	case BFI_CEE_I2H_GET_STATS_RSP:
++		bfa_cee_get_stats_isr(cee, get_rsp->cmd_status);
 +		break;
-+	case ITNIM_STATE_FREE:
-+		if (itnim->fc_rport) {
-+			fc_rport = itnim->fc_rport;
-+			((struct bfad_itnim_data_s *)
-+				fc_rport->dd_data)->itnim = NULL;
-+			itnim->fc_rport = NULL;
-+			if (!(im_port->port->flags & BFAD_PORT_DELETE)) {
-+				spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+				fc_rport->dev_loss_tmo =
-+					bfa_fcpim_path_tov_get(&bfad->bfa) + 1;
-+				fc_remote_port_delete(fc_rport);
-+				spin_lock_irqsave(&bfad->bfad_lock, flags);
-+			}
-+			list_del(&itnim->list_entry);
-+		}
-+
-+		kfree(itnim);
++	case BFI_CEE_I2H_RESET_STATS_RSP:
++		bfa_cee_reset_stats_isr(cee, get_rsp->cmd_status);
 +		break;
 +	default:
 +		bfa_assert(0);
++	}
++}
++
++/**
++ * bfa_cee_hbfail()
++ *
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return void
++ */
++
++void
++bfa_cee_hbfail(void *arg)
++{
++	struct bfa_cee_s *cee;
++	cee = (struct bfa_cee_s *)arg;
++
++	if (cee->get_attr_pending == BFA_TRUE) {
++		cee->get_attr_status = BFA_STATUS_FAILED;
++		cee->get_attr_pending = BFA_FALSE;
++		if (cee->cbfn.get_attr_cbfn) {
++			cee->cbfn.get_attr_cbfn(cee->cbfn.get_attr_cbarg,
++						BFA_STATUS_FAILED);
++		}
++	}
++	if (cee->get_stats_pending == BFA_TRUE) {
++		cee->get_stats_status = BFA_STATUS_FAILED;
++		cee->get_stats_pending = BFA_FALSE;
++		if (cee->cbfn.get_stats_cbfn) {
++			cee->cbfn.get_stats_cbfn(cee->cbfn.get_stats_cbarg,
++						 BFA_STATUS_FAILED);
++		}
++	}
++	if (cee->reset_stats_pending == BFA_TRUE) {
++		cee->reset_stats_status = BFA_STATUS_FAILED;
++		cee->reset_stats_pending = BFA_FALSE;
++		if (cee->cbfn.reset_stats_cbfn) {
++			cee->cbfn.reset_stats_cbfn(cee->cbfn.reset_stats_cbarg,
++						   BFA_STATUS_FAILED);
++		}
++	}
++}
++
++/**
++ * bfa_cee_attach()
++ *
++ *
++ * @param[in] cee - Pointer to the CEE module data structure
++ *            ioc - Pointer to the ioc module data structure
++ *            dev - Pointer to the device driver module data structure
++ *                  The device driver specific mbox ISR functions have
++ *                  this pointer as one of the parameters.
++ *            trcmod -
++ *            logmod -
++ *
++ * @return void
++ */
++void
++bfa_cee_attach(struct bfa_cee_s *cee, struct bfa_ioc_s *ioc, void *dev,
++	       struct bfa_trc_mod_s *trcmod, struct bfa_log_mod_s *logmod)
++{
++	bfa_assert(cee != NULL);
++	cee->dev = dev;
++	cee->trcmod = trcmod;
++	cee->logmod = logmod;
++	cee->ioc = ioc;
++
++	bfa_ioc_mbox_regisr(cee->ioc, BFI_MC_CEE, bfa_cee_isr, cee);
++	bfa_ioc_hbfail_init(&cee->hbfail, bfa_cee_hbfail, cee);
++	bfa_ioc_hbfail_register(cee->ioc, &cee->hbfail);
++	bfa_trc(cee, 0);
++}
++
++/**
++ * bfa_cee_detach()
++ *
++ *
++ * @param[in] cee - Pointer to the CEE module data structure
++ *
++ * @return void
++ */
++void
++bfa_cee_detach(struct bfa_cee_s *cee)
++{
++	/*
++	 * For now, just check if there is some ioctl pending and mark that as
++	 * failed?
++	 */
++	/* bfa_cee_hbfail(cee); */
++}
+diff -urpN orig/drivers/scsi/bfa/bfa_core.c patch/drivers/scsi/bfa/bfa_core.c
+--- orig/drivers/scsi/bfa/bfa_core.c	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_core.c	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,402 @@
++/*
++ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
++ * All rights reserved
++ * www.brocade.com
++ *
++ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License (GPL) Version 2 as
++ * published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#include <bfa.h>
++#include <defs/bfa_defs_pci.h>
++#include <cs/bfa_debug.h>
++#include <bfa_iocfc.h>
++
++#define DEF_CFG_NUM_FABRICS         1
++#define DEF_CFG_NUM_LPORTS          256
++#define DEF_CFG_NUM_CQS             4
++#define DEF_CFG_NUM_IOIM_REQS       (BFA_IOIM_MAX)
++#define DEF_CFG_NUM_TSKIM_REQS      128
++#define DEF_CFG_NUM_FCXP_REQS       64
++#define DEF_CFG_NUM_UF_BUFS         64
++#define DEF_CFG_NUM_RPORTS          1024
++#define DEF_CFG_NUM_ITNIMS          (DEF_CFG_NUM_RPORTS)
++#define DEF_CFG_NUM_TINS            256
++
++#define DEF_CFG_NUM_SGPGS           2048
++#define DEF_CFG_NUM_REQQ_ELEMS      256
++#define DEF_CFG_NUM_RSPQ_ELEMS      64
++#define DEF_CFG_NUM_SBOOT_TGTS      16
++#define DEF_CFG_NUM_SBOOT_LUNS      16
++
++/**
++ * Use this function query the memory requirement of the BFA library.
++ * This function needs to be called before bfa_attach() to get the
++ * memory required of the BFA layer for a given driver configuration.
++ *
++ * This call will fail, if the cap is out of range compared to pre-defined
++ * values within the BFA library
++ *
++ * @param[in] cfg - 	pointer to bfa_ioc_cfg_t. Driver layer should indicate
++ * 			its configuration in this structure.
++ *			The default values for struct bfa_iocfc_cfg_s can be
++ *			fetched using bfa_cfg_get_default() API.
++ *
++ * 			If cap's boundary check fails, the library will use
++ *			the default bfa_cap_t values (and log a warning msg).
++ *
++ * @param[out] meminfo - pointer to bfa_meminfo_t. This content
++ * 			indicates the memory type (see bfa_mem_type_t) and
++ *			amount of memory required.
++ *
++ *			Driver should allocate the memory, populate the
++ *			starting address for each block and provide the same
++ *			structure as input parameter to bfa_attach() call.
++ *
++ * @return void
++ *
++ * Special Considerations: @note
++ */
++void
++bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo)
++{
++	int             i;
++	u32        km_len = 0, dm_len = 0;
++
++	bfa_assert((cfg != NULL) && (meminfo != NULL));
++
++	bfa_os_memset((void *)meminfo, 0, sizeof(struct bfa_meminfo_s));
++	meminfo->meminfo[BFA_MEM_TYPE_KVA - 1].mem_type =
++		BFA_MEM_TYPE_KVA;
++	meminfo->meminfo[BFA_MEM_TYPE_DMA - 1].mem_type =
++		BFA_MEM_TYPE_DMA;
++
++	bfa_iocfc_meminfo(cfg, &km_len, &dm_len);
++
++	for (i = 0; hal_mods[i]; i++)
++		hal_mods[i]->meminfo(cfg, &km_len, &dm_len);
++
++
++	meminfo->meminfo[BFA_MEM_TYPE_KVA - 1].mem_len = km_len;
++	meminfo->meminfo[BFA_MEM_TYPE_DMA - 1].mem_len = dm_len;
++}
++
++/**
++ * Use this function to do attach the driver instance with the BFA
++ * library. This function will not trigger any HW initialization
++ * process (which will be done in bfa_init() call)
++ *
++ * This call will fail, if the cap is out of range compared to
++ * pre-defined values within the BFA library
++ *
++ * @param[out]	bfa	Pointer to bfa_t.
++ * @param[in]	bfad 	Opaque handle back to the driver's IOC structure
++ * @param[in]	cfg	Pointer to bfa_ioc_cfg_t. Should be same structure
++ * 			that was used in bfa_cfg_get_meminfo().
++ * @param[in] 	meminfo Pointer to bfa_meminfo_t. The driver should
++ * 			use the bfa_cfg_get_meminfo() call to
++ * 			find the memory blocks required, allocate the
++ * 			required memory and provide the starting addresses.
++ * @param[in] 	pcidev	pointer to struct bfa_pcidev_s
++ *
++ * @return
++ * void
++ *
++ * Special Considerations:
++ *
++ * @note
++ *
++ */
++void
++bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++	       struct bfa_meminfo_s *meminfo, struct bfa_pcidev_s *pcidev)
++{
++	int             i;
++	struct bfa_mem_elem_s *melem;
++
++	bfa->fcs = BFA_FALSE;
++
++	bfa_assert((cfg != NULL) && (meminfo != NULL));
++
++	/**
++	 * initialize all memory pointers for iterative allocation
++	 */
++	for (i = 0; i < BFA_MEM_TYPE_MAX; i++) {
++		melem = meminfo->meminfo + i;
++		melem->kva_curp = melem->kva;
++		melem->dma_curp = melem->dma;
++	}
++
++	bfa_iocfc_attach(bfa, bfad, cfg, meminfo, pcidev);
++
++	for (i = 0; hal_mods[i]; i++)
++		hal_mods[i]->attach(bfa, bfad, cfg, meminfo, pcidev);
++
++}
++
++/**
++ * Use this function to delete a BFA IOC. IOC should be stopped (by
++ * calling bfa_stop()) before this function call.
++ *
++ * @param[in] bfa - pointer to bfa_t.
++ *
++ * @return
++ * void
++ *
++ * Special Considerations:
++ *
++ * @note
++ */
++void
++bfa_detach(struct bfa_s *bfa)
++{
++	int	i;
++
++	for (i = 0; hal_mods[i]; i++)
++		hal_mods[i]->detach(bfa);
++
++	bfa_iocfc_detach(bfa);
++}
++
++
++void
++bfa_init_trc(struct bfa_s *bfa, struct bfa_trc_mod_s *trcmod)
++{
++	bfa->trcmod = trcmod;
++}
++
++
++void
++bfa_init_log(struct bfa_s *bfa, struct bfa_log_mod_s *logmod)
++{
++	bfa->logm = logmod;
++}
++
++
++void
++bfa_init_aen(struct bfa_s *bfa, struct bfa_aen_s *aen)
++{
++	bfa->aen = aen;
++}
++
++void
++bfa_init_plog(struct bfa_s *bfa, struct bfa_plog_s *plog)
++{
++	bfa->plog = plog;
++}
++
++/**
++ * Initialize IOC.
++ *
++ * This function will return immediately, when the IOC initialization is
++ * completed, the bfa_cb_init() will be called.
++ *
++ * @param[in]	bfa	instance
++ *
++ * @return void
++ *
++ * Special Considerations:
++ *
++ * @note
++ * When this function returns, the driver should register the interrupt service
++ * routine(s) and enable the device interrupts. If this is not done,
++ * bfa_cb_init() will never get called
++ */
++void
++bfa_init(struct bfa_s *bfa)
++{
++	bfa_iocfc_init(bfa);
++}
++
++/**
++ * Use this function initiate the IOC configuration setup. This function
++ * will return immediately.
++ *
++ * @param[in]	bfa	instance
++ *
++ * @return None
++ */
++void
++bfa_start(struct bfa_s *bfa)
++{
++	bfa_iocfc_start(bfa);
++}
++
++/**
++ * Use this function quiese the IOC. This function will return immediately,
++ * when the IOC is actually stopped, the bfa_cb_stop() will be called.
++ *
++ * @param[in] 	bfa - pointer to bfa_t.
++ *
++ * @return None
++ *
++ * Special Considerations:
++ * bfa_cb_stop() could be called before or after bfa_stop() returns.
++ *
++ * @note
++ * In case of any failure, we could handle it automatically by doing a
++ * reset and then succeed the bfa_stop() call.
++ */
++void
++bfa_stop(struct bfa_s *bfa)
++{
++	bfa_iocfc_stop(bfa);
++}
++
++void
++bfa_comp_deq(struct bfa_s *bfa, struct list_head *comp_q)
++{
++	INIT_LIST_HEAD(comp_q);
++	list_splice_tail_init(&bfa->comp_q, comp_q);
++}
++
++void
++bfa_comp_process(struct bfa_s *bfa, struct list_head *comp_q)
++{
++	struct list_head        *qe;
++	struct list_head        *qen;
++	struct bfa_cb_qe_s   *hcb_qe;
++
++	list_for_each_safe(qe, qen, comp_q) {
++		hcb_qe = (struct bfa_cb_qe_s *) qe;
++		hcb_qe->cbfn(hcb_qe->cbarg, BFA_TRUE);
++	}
++}
++
++void
++bfa_comp_free(struct bfa_s *bfa, struct list_head *comp_q)
++{
++	struct list_head        *qe;
++	struct bfa_cb_qe_s   *hcb_qe;
++
++	while (!list_empty(comp_q)) {
++		bfa_q_deq(comp_q, &qe);
++		hcb_qe = (struct bfa_cb_qe_s *) qe;
++		hcb_qe->cbfn(hcb_qe->cbarg, BFA_FALSE);
++	}
++}
++
++void
++bfa_attach_fcs(struct bfa_s *bfa)
++{
++	bfa->fcs = BFA_TRUE;
++}
++
++/**
++ * Periodic timer heart beat from driver
++ */
++void
++bfa_timer_tick(struct bfa_s *bfa)
++{
++	bfa_timer_beat(&bfa->timer_mod);
++}
++
++#ifndef BFA_BIOS_BUILD
++/**
++ * Return the list of PCI vendor/device id lists supported by this
++ * BFA instance.
++ */
++void
++bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids)
++{
++	static struct bfa_pciid_s __pciids[] = {
++		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_FC_8G2P},
++		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_FC_8G1P},
++		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT},
++	};
++
++	*npciids = sizeof(__pciids) / sizeof(__pciids[0]);
++	*pciids = __pciids;
++}
++
++/**
++ * Use this function query the default struct bfa_iocfc_cfg_s value (compiled
++ * into BFA layer). The OS driver can then turn back and overwrite entries that
++ * have been configured by the user.
++ *
++ * @param[in] cfg - pointer to bfa_ioc_cfg_t
++ *
++ * @return
++ *	void
++ *
++ * Special Considerations:
++ * 	note
++ */
++void
++bfa_cfg_get_default(struct bfa_iocfc_cfg_s *cfg)
++{
++	cfg->fwcfg.num_fabrics = DEF_CFG_NUM_FABRICS;
++	cfg->fwcfg.num_lports = DEF_CFG_NUM_LPORTS;
++	cfg->fwcfg.num_rports = DEF_CFG_NUM_RPORTS;
++	cfg->fwcfg.num_ioim_reqs = DEF_CFG_NUM_IOIM_REQS;
++	cfg->fwcfg.num_tskim_reqs = DEF_CFG_NUM_TSKIM_REQS;
++	cfg->fwcfg.num_fcxp_reqs = DEF_CFG_NUM_FCXP_REQS;
++	cfg->fwcfg.num_uf_bufs = DEF_CFG_NUM_UF_BUFS;
++	cfg->fwcfg.num_cqs = DEF_CFG_NUM_CQS;
++
++	cfg->drvcfg.num_reqq_elems = DEF_CFG_NUM_REQQ_ELEMS;
++	cfg->drvcfg.num_rspq_elems = DEF_CFG_NUM_RSPQ_ELEMS;
++	cfg->drvcfg.num_sgpgs = DEF_CFG_NUM_SGPGS;
++	cfg->drvcfg.num_sboot_tgts = DEF_CFG_NUM_SBOOT_TGTS;
++	cfg->drvcfg.num_sboot_luns = DEF_CFG_NUM_SBOOT_LUNS;
++	cfg->drvcfg.path_tov = BFA_FCPIM_PATHTOV_DEF;
++	cfg->drvcfg.ioc_recover = BFA_FALSE;
++	cfg->drvcfg.delay_comp = BFA_FALSE;
++
++}
++
++void
++bfa_cfg_get_min(struct bfa_iocfc_cfg_s *cfg)
++{
++	bfa_cfg_get_default(cfg);
++	cfg->fwcfg.num_ioim_reqs   = BFA_IOIM_MIN;
++	cfg->fwcfg.num_tskim_reqs  = BFA_TSKIM_MIN;
++	cfg->fwcfg.num_fcxp_reqs   = BFA_FCXP_MIN;
++	cfg->fwcfg.num_uf_bufs     = BFA_UF_MIN;
++	cfg->fwcfg.num_rports      = BFA_RPORT_MIN;
++
++	cfg->drvcfg.num_sgpgs      = BFA_SGPG_MIN;
++	cfg->drvcfg.num_reqq_elems = BFA_REQQ_NELEMS_MIN;
++	cfg->drvcfg.num_rspq_elems = BFA_RSPQ_NELEMS_MIN;
++	cfg->drvcfg.min_cfg        = BFA_TRUE;
++}
++
++void
++bfa_get_attr(struct bfa_s *bfa, struct bfa_ioc_attr_s *ioc_attr)
++{
++	bfa_ioc_get_attr(&bfa->ioc, ioc_attr);
++}
++
++/**
++ * Retrieve firmware trace information on IOC failure.
++ */
++bfa_status_t
++bfa_debug_fwsave(struct bfa_s *bfa, void *trcdata, int *trclen)
++{
++	return bfa_ioc_debug_fwsave(&bfa->ioc, trcdata, trclen);
++}
++
++/**
++ * 		Fetch firmware trace data.
++ *
++ * @param[in]		bfa			BFA instance
++ * @param[out]		trcdata		Firmware trace buffer
++ * @param[in,out]	trclen		Firmware trace buffer len
++ *
++ * @retval BFA_STATUS_OK			Firmware trace is fetched.
++ * @retval BFA_STATUS_INPROGRESS	Firmware trace fetch is in progress.
++ */
++bfa_status_t
++bfa_debug_fwtrc(struct bfa_s *bfa, void *trcdata, int *trclen)
++{
++	return bfa_ioc_debug_fwtrc(&bfa->ioc, trcdata, trclen);
++}
++#endif
+diff -urpN orig/drivers/scsi/bfa/bfa_csdebug.c patch/drivers/scsi/bfa/bfa_csdebug.c
+--- orig/drivers/scsi/bfa/bfa_csdebug.c	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_csdebug.c	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,58 @@
++/*
++ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
++ * All rights reserved
++ * www.brocade.com
++ *
++ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License (GPL) Version 2 as
++ * published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#include <cs/bfa_debug.h>
++#include <bfa_os_inc.h>
++#include <cs/bfa_q.h>
++#include <log/bfa_log_hal.h>
++
++/**
++ *  cs_debug_api
++ */
++
++
++void
++bfa_panic(int line, char *file, char *panicstr)
++{
++	bfa_log(NULL, BFA_LOG_HAL_ASSERT, file, line, panicstr);
++	bfa_os_panic();
++}
++
++void
++bfa_sm_panic(struct bfa_log_mod_s *logm, int line, char *file, int event)
++{
++	bfa_log(logm, BFA_LOG_HAL_SM_ASSERT, file, line, event);
++	bfa_os_panic();
++}
++
++int
++bfa_q_is_on_q_func(struct list_head *q, struct list_head *qe)
++{
++	struct list_head        *tqe;
++
++	tqe = bfa_q_next(q);
++	while (tqe != q) {
++		if (tqe == qe)
++			return (1);
++		tqe = bfa_q_next(tqe);
++		if (tqe == NULL)
++			break;
++	}
++	return (0);
++}
++
++
+diff -urpN orig/drivers/scsi/bfa/bfa_fcpim.c patch/drivers/scsi/bfa/bfa_fcpim.c
+--- orig/drivers/scsi/bfa/bfa_fcpim.c	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_fcpim.c	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,175 @@
++/*
++ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
++ * All rights reserved
++ * www.brocade.com
++ *
++ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License (GPL) Version 2 as
++ * published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#include <bfa.h>
++#include <log/bfa_log_hal.h>
++
++BFA_TRC_FILE(HAL, FCPIM);
++BFA_MODULE(fcpim);
++
++/**
++ *  hal_fcpim_mod BFA FCP Initiator Mode module
++ */
++
++/**
++ * 		Compute and return memory needed by FCP(im) module.
++ */
++static void
++bfa_fcpim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
++		u32 *dm_len)
++{
++	bfa_itnim_meminfo(cfg, km_len, dm_len);
++
++	/**
++	 * IO memory
++	 */
++	if (cfg->fwcfg.num_ioim_reqs < BFA_IOIM_MIN)
++		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MIN;
++	else if (cfg->fwcfg.num_ioim_reqs > BFA_IOIM_MAX)
++		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MAX;
++
++	*km_len += cfg->fwcfg.num_ioim_reqs *
++	  (sizeof(struct bfa_ioim_s) + sizeof(struct bfa_ioim_sp_s));
++
++	*dm_len += cfg->fwcfg.num_ioim_reqs * BFI_IOIM_SNSLEN;
++
++	/**
++	 * task management command memory
++	 */
++	if (cfg->fwcfg.num_tskim_reqs < BFA_TSKIM_MIN)
++		cfg->fwcfg.num_tskim_reqs = BFA_TSKIM_MIN;
++	*km_len += cfg->fwcfg.num_tskim_reqs * sizeof(struct bfa_tskim_s);
++}
++
++
++static void
++bfa_fcpim_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++		     struct bfa_meminfo_s *meminfo, struct bfa_pcidev_s *pcidev)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	bfa_trc(bfa, cfg->drvcfg.path_tov);
++	bfa_trc(bfa, cfg->fwcfg.num_rports);
++	bfa_trc(bfa, cfg->fwcfg.num_ioim_reqs);
++	bfa_trc(bfa, cfg->fwcfg.num_tskim_reqs);
++
++	fcpim->bfa            = bfa;
++	fcpim->num_itnims     = cfg->fwcfg.num_rports;
++	fcpim->num_ioim_reqs  = cfg->fwcfg.num_ioim_reqs;
++	fcpim->num_tskim_reqs = cfg->fwcfg.num_tskim_reqs;
++	fcpim->path_tov       = cfg->drvcfg.path_tov;
++	fcpim->delay_comp	  = cfg->drvcfg.delay_comp;
++
++	bfa_itnim_attach(fcpim, meminfo);
++	bfa_tskim_attach(fcpim, meminfo);
++	bfa_ioim_attach(fcpim, meminfo);
++}
++
++static void
++bfa_fcpim_initdone(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcpim_detach(struct bfa_s *bfa)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	bfa_ioim_detach(fcpim);
++	bfa_tskim_detach(fcpim);
++}
++
++static void
++bfa_fcpim_start(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcpim_stop(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcpim_iocdisable(struct bfa_s *bfa)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_itnim_s *itnim;
++	struct list_head        *qe, *qen;
++
++	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
++		itnim = (struct bfa_itnim_s *) qe;
++		bfa_itnim_iocdisable(itnim);
++	}
++}
++
++void
++bfa_fcpim_path_tov_set(struct bfa_s *bfa, u16 path_tov)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	fcpim->path_tov = path_tov * 1000;
++	if (fcpim->path_tov > BFA_FCPIM_PATHTOV_MAX)
++		fcpim->path_tov = BFA_FCPIM_PATHTOV_MAX;
++}
++
++u16
++bfa_fcpim_path_tov_get(struct bfa_s *bfa)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	return (fcpim->path_tov / 1000);
++}
++
++bfa_status_t
++bfa_fcpim_get_modstats(struct bfa_s *bfa, struct bfa_fcpim_stats_s *modstats)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	*modstats = fcpim->stats;
++
++	return BFA_STATUS_OK;
++}
++
++bfa_status_t
++bfa_fcpim_clr_modstats(struct bfa_s *bfa)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	memset(&fcpim->stats, 0, sizeof(struct bfa_fcpim_stats_s));
++
++	return BFA_STATUS_OK;
++}
++
++void
++bfa_fcpim_qdepth_set(struct bfa_s *bfa, u16 q_depth)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	bfa_assert(q_depth <= BFA_IOCFC_QDEPTH_MAX);
++
++	fcpim->q_depth = q_depth;
++}
++
++u16
++bfa_fcpim_qdepth_get(struct bfa_s *bfa)
++{
++	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++
++	return (fcpim->q_depth);
++}
++
++
+diff -urpN orig/drivers/scsi/bfa/bfa_fcpim_priv.h patch/drivers/scsi/bfa/bfa_fcpim_priv.h
+--- orig/drivers/scsi/bfa/bfa_fcpim_priv.h	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_fcpim_priv.h	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,188 @@
++/*
++ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
++ * All rights reserved
++ * www.brocade.com
++ *
++ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License (GPL) Version 2 as
++ * published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#ifndef __BFA_FCPIM_PRIV_H__
++#define __BFA_FCPIM_PRIV_H__
++
++#include <bfa_fcpim.h>
++#include <defs/bfa_defs_fcpim.h>
++#include <cs/bfa_wc.h>
++#include "bfa_sgpg_priv.h"
++
++#define BFA_ITNIM_MIN   32
++#define BFA_ITNIM_MAX   1024
++
++#define BFA_IOIM_MIN    8
++#define BFA_IOIM_MAX    2000
++
++#define BFA_TSKIM_MIN   4
++#define BFA_TSKIM_MAX   512
++#define BFA_FCPIM_PATHTOV_DEF	(30 * 1000)	/* in millisecs */
++#define BFA_FCPIM_PATHTOV_MAX	(90 * 1000)	/* in millisecs */
++
++#define bfa_fcpim_stats(__fcpim, __stats)   \
++    (__fcpim)->stats.__stats ++
++
++struct bfa_fcpim_mod_s {
++	struct bfa_s 	*bfa;
++	struct bfa_itnim_s 	*itnim_arr;
++	struct bfa_ioim_s 	*ioim_arr;
++	struct bfa_ioim_sp_s *ioim_sp_arr;
++	struct bfa_tskim_s 	*tskim_arr;
++	struct bfa_dma_s	snsbase;
++	int			num_itnims;
++	int			num_ioim_reqs;
++	int			num_tskim_reqs;
++	u32		path_tov;
++	u16		q_depth;
++	u16		rsvd;
++	struct list_head 	itnim_q;        /*  queue of active itnim    */
++	struct list_head 	ioim_free_q;    /*  free IO resources        */
++	struct list_head 	ioim_resfree_q; /*  IOs waiting for f/w      */
++	struct list_head 	ioim_comp_q;    /*  IO global comp Q         */
++	struct list_head 	tskim_free_q;
++	u32	ios_active;	/*  current active IOs	      */
++	u32	delay_comp;
++	struct bfa_fcpim_stats_s stats;
++};
++
++struct bfa_ioim_s;
++struct bfa_tskim_s;
++
++/**
++ * BFA IO (initiator mode)
++ */
++struct bfa_ioim_s {
++	struct list_head qe;		/*  queue elememt            */
++	bfa_sm_t		sm; 	/*  BFA ioim state machine   */
++	struct bfa_s 	        *bfa;	/*  BFA module               */
++	struct bfa_fcpim_mod_s	*fcpim;	/*  parent fcpim module      */
++	struct bfa_itnim_s 	*itnim;	/*  i-t-n nexus for this IO  */
++	struct bfad_ioim_s 	*dio;	/*  driver IO handle         */
++	u16	iotag;		/*  FWI IO tag               */
++	u16	abort_tag;	/*  unqiue abort request tag */
++	u16	nsges;		/*  number of SG elements    */
++	u16	nsgpgs;		/*  number of SG pages       */
++	struct bfa_sgpg_s *sgpg;	/*  first SG page            */
++	struct list_head sgpg_q;		/*  allocated SG pages       */
++	struct bfa_cb_qe_s hcb_qe;	/*  bfa callback qelem       */
++	bfa_cb_cbfn_t io_cbfn;		/*  IO completion handler    */
++	struct bfa_ioim_sp_s *iosp;	/*  slow-path IO handling    */
++};
++
++struct bfa_ioim_sp_s {
++	struct bfi_msg_s 	comp_rspmsg;	/*  IO comp f/w response     */
++	u8			*snsinfo;	/*  sense info for this IO   */
++	struct bfa_sgpg_wqe_s sgpg_wqe;	/*  waitq elem for sgpg      */
++	struct bfa_reqq_wait_s reqq_wait;	/*  to wait for room in reqq */
++	bfa_boolean_t		abort_explicit;	/*  aborted by OS            */
++	struct bfa_tskim_s	*tskim;		/*  Relevant TM cmd          */
++};
++
++/**
++ * BFA Task management command (initiator mode)
++ */
++struct bfa_tskim_s {
++	struct list_head          qe;
++	bfa_sm_t		sm;
++	struct bfa_s            *bfa;        /*  BFA module  */
++	struct bfa_fcpim_mod_s  *fcpim;      /*  parent fcpim module      */
++	struct bfa_itnim_s      *itnim;      /*  i-t-n nexus for this IO  */
++	struct bfad_tskim_s         *dtsk;   /*  driver task mgmt cmnd    */
++	bfa_boolean_t        notify;         /*  notify itnim on TM comp  */
++	lun_t                lun;            /*  lun if applicable        */
++	enum fcp_tm_cmnd        tm_cmnd;     /*  task management command  */
++	u16             tsk_tag;        /*  FWI IO tag               */
++	u8              tsecs;          /*  timeout in seconds       */
++	struct bfa_reqq_wait_s  reqq_wait;   /*  to wait for room in reqq */
++	struct list_head              io_q;    /*  queue of affected IOs    */
++	struct bfa_wc_s             wc;      /*  waiting counter          */
++	struct bfa_cb_qe_s	hcb_qe;      /*  bfa callback qelem       */
++	enum bfi_tskim_status   tsk_status;  /*  TM status                */
++};
++
++/**
++ * BFA i-t-n (initiator mode)
++ */
++struct bfa_itnim_s {
++	struct list_head    qe;		/*  queue element               */
++	bfa_sm_t	  sm;		/*  i-t-n im BFA state machine  */
++	struct bfa_s      *bfa;		/*  bfa instance                */
++	struct bfa_rport_s *rport;	/*  bfa rport                   */
++	void           *ditn;		/*  driver i-t-n structure      */
++	struct bfi_mhdr_s      mhdr;	/*  pre-built mhdr              */
++	u8         msg_no;		/*  itnim/rport firmware handle */
++	u8         reqq;		/*  CQ for requests             */
++	struct bfa_cb_qe_s    hcb_qe;	/*  bfa callback qelem          */
++	struct list_head pending_q;	/*  queue of pending IO requests*/
++	struct list_head io_q;		/*  queue of active IO requests */
++	struct list_head io_cleanup_q;	/*  IO being cleaned up         */
++	struct list_head tsk_q;		/*  queue of active TM commands */
++	struct list_head  delay_comp_q;/*  queue of failed inflight cmds */
++	bfa_boolean_t   seq_rec;	/*  SQER supported              */
++	bfa_boolean_t   is_online;	/*  itnim is ONLINE for IO      */
++	bfa_boolean_t   iotov_active;	/*  IO TOV timer is active	 */
++	struct bfa_wc_s        wc;	/*  waiting counter             */
++	struct bfa_timer_s timer;	/*  pending IO TOV		 */
++	struct bfa_reqq_wait_s reqq_wait; /*  to wait for room in reqq */
++	struct bfa_fcpim_mod_s *fcpim;	/*  fcpim module                */
++	struct bfa_itnim_hal_stats_s	stats;
++};
++
++#define bfa_itnim_is_online(_itnim) (_itnim)->is_online
++#define BFA_FCPIM_MOD(_hal) (&(_hal)->modules.fcpim_mod)
++#define BFA_IOIM_FROM_TAG(_fcpim, _iotag)	\
++	(&fcpim->ioim_arr[_iotag])
++#define BFA_TSKIM_FROM_TAG(_fcpim, _tmtag)                  \
++    (&fcpim->tskim_arr[_tmtag & (fcpim->num_tskim_reqs - 1)])
++
++/*
++ * function prototypes
++ */
++void            bfa_ioim_attach(struct bfa_fcpim_mod_s *fcpim,
++				    struct bfa_meminfo_s *minfo);
++void            bfa_ioim_detach(struct bfa_fcpim_mod_s *fcpim);
++void            bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++void            bfa_ioim_good_comp_isr(struct bfa_s *bfa,
++					struct bfi_msg_s *msg);
++void            bfa_ioim_cleanup(struct bfa_ioim_s *ioim);
++void            bfa_ioim_cleanup_tm(struct bfa_ioim_s *ioim,
++					struct bfa_tskim_s *tskim);
++void            bfa_ioim_iocdisable(struct bfa_ioim_s *ioim);
++void            bfa_ioim_tov(struct bfa_ioim_s *ioim);
++
++void            bfa_tskim_attach(struct bfa_fcpim_mod_s *fcpim,
++				     struct bfa_meminfo_s *minfo);
++void            bfa_tskim_detach(struct bfa_fcpim_mod_s *fcpim);
++void            bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++void            bfa_tskim_iodone(struct bfa_tskim_s *tskim);
++void            bfa_tskim_iocdisable(struct bfa_tskim_s *tskim);
++void            bfa_tskim_cleanup(struct bfa_tskim_s *tskim);
++
++void            bfa_itnim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
++				      u32 *dm_len);
++void            bfa_itnim_attach(struct bfa_fcpim_mod_s *fcpim,
++				     struct bfa_meminfo_s *minfo);
++void            bfa_itnim_detach(struct bfa_fcpim_mod_s *fcpim);
++void            bfa_itnim_iocdisable(struct bfa_itnim_s *itnim);
++void            bfa_itnim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++void            bfa_itnim_iodone(struct bfa_itnim_s *itnim);
++void            bfa_itnim_tskdone(struct bfa_itnim_s *itnim);
++bfa_boolean_t   bfa_itnim_hold_io(struct bfa_itnim_s *itnim);
++
++#endif /* __BFA_FCPIM_PRIV_H__ */
++
+diff -urpN orig/drivers/scsi/bfa/bfa_fcport.c patch/drivers/scsi/bfa/bfa_fcport.c
+--- orig/drivers/scsi/bfa/bfa_fcport.c	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_fcport.c	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,1671 @@
++/*
++ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
++ * All rights reserved
++ * www.brocade.com
++ *
++ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License (GPL) Version 2 as
++ * published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#include <bfa.h>
++#include <bfa_svc.h>
++#include <bfi/bfi_pport.h>
++#include <cs/bfa_debug.h>
++#include <aen/bfa_aen.h>
++#include <cs/bfa_plog.h>
++#include <aen/bfa_aen_port.h>
++
++BFA_TRC_FILE(HAL, PPORT);
++BFA_MODULE(pport);
++
++#define bfa_pport_callback(__pport, __event) do {			\
++	if ((__pport)->bfa->fcs) {      \
++		(__pport)->event_cbfn((__pport)->event_cbarg, (__event));      \
++	} else {							\
++		(__pport)->hcb_event = (__event);      \
++		bfa_cb_queue((__pport)->bfa, &(__pport)->hcb_qe,	\
++		__bfa_cb_port_event, (__pport));      \
++	}								\
++} while (0)
++
++/*
++ * The port is considered disabled if corresponding physical port or IOC are
++ * disabled explicitly
++ */
++#define BFA_PORT_IS_DISABLED(bfa) \
++	((bfa_pport_is_disabled(bfa) == BFA_TRUE) || \
++	(bfa_ioc_is_disabled(&bfa->ioc) == BFA_TRUE))
++
++/*
++ * forward declarations
++ */
++static bfa_boolean_t bfa_pport_send_enable(struct bfa_pport_s *port);
++static bfa_boolean_t bfa_pport_send_disable(struct bfa_pport_s *port);
++static void     bfa_pport_update_linkinfo(struct bfa_pport_s *pport);
++static void     bfa_pport_reset_linkinfo(struct bfa_pport_s *pport);
++static void     bfa_pport_set_wwns(struct bfa_pport_s *port);
++static void     __bfa_cb_port_event(void *cbarg, bfa_boolean_t complete);
++static void     __bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete);
++static void     __bfa_cb_port_stats_clr(void *cbarg, bfa_boolean_t complete);
++static void     bfa_port_stats_timeout(void *cbarg);
++static void     bfa_port_stats_clr_timeout(void *cbarg);
++
++/**
++ *  bfa_pport_private
++ */
++
++/**
++ * BFA port state machine events
++ */
++enum bfa_pport_sm_event {
++	BFA_PPORT_SM_START = 1,	/*  start port state machine */
++	BFA_PPORT_SM_STOP = 2,	/*  stop port state machine */
++	BFA_PPORT_SM_ENABLE = 3,	/*  enable port */
++	BFA_PPORT_SM_DISABLE = 4,	/*  disable port state machine */
++	BFA_PPORT_SM_FWRSP = 5,	/*  firmware enable/disable rsp */
++	BFA_PPORT_SM_LINKUP = 6,	/*  firmware linkup event */
++	BFA_PPORT_SM_LINKDOWN = 7,	/*  firmware linkup down */
++	BFA_PPORT_SM_QRESUME = 8,	/*  CQ space available */
++	BFA_PPORT_SM_HWFAIL = 9,	/*  IOC h/w failure */
++};
++
++static void     bfa_pport_sm_uninit(struct bfa_pport_s *pport,
++				    enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_enabling_qwait(struct bfa_pport_s *pport,
++					    enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_enabling(struct bfa_pport_s *pport,
++				      enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_linkdown(struct bfa_pport_s *pport,
++				      enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_linkup(struct bfa_pport_s *pport,
++				    enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_disabling(struct bfa_pport_s *pport,
++				       enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_disabling_qwait(struct bfa_pport_s *pport,
++					     enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_disabled(struct bfa_pport_s *pport,
++				      enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_stopped(struct bfa_pport_s *pport,
++				     enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_iocdown(struct bfa_pport_s *pport,
++				     enum bfa_pport_sm_event event);
++static void     bfa_pport_sm_iocfail(struct bfa_pport_s *pport,
++				     enum bfa_pport_sm_event event);
++
++static struct bfa_sm_table_s hal_pport_sm_table[] = {
++	{BFA_SM(bfa_pport_sm_uninit), BFA_PPORT_ST_UNINIT},
++	{BFA_SM(bfa_pport_sm_enabling_qwait), BFA_PPORT_ST_ENABLING_QWAIT},
++	{BFA_SM(bfa_pport_sm_enabling), BFA_PPORT_ST_ENABLING},
++	{BFA_SM(bfa_pport_sm_linkdown), BFA_PPORT_ST_LINKDOWN},
++	{BFA_SM(bfa_pport_sm_linkup), BFA_PPORT_ST_LINKUP},
++	{BFA_SM(bfa_pport_sm_disabling_qwait),
++	 BFA_PPORT_ST_DISABLING_QWAIT},
++	{BFA_SM(bfa_pport_sm_disabling), BFA_PPORT_ST_DISABLING},
++	{BFA_SM(bfa_pport_sm_disabled), BFA_PPORT_ST_DISABLED},
++	{BFA_SM(bfa_pport_sm_stopped), BFA_PPORT_ST_STOPPED},
++	{BFA_SM(bfa_pport_sm_iocdown), BFA_PPORT_ST_IOCDOWN},
++	{BFA_SM(bfa_pport_sm_iocfail), BFA_PPORT_ST_IOCDOWN},
++};
++
++static void
++bfa_pport_aen_post(struct bfa_pport_s *pport, enum bfa_port_aen_event event)
++{
++	union bfa_aen_data_u aen_data;
++	struct bfa_log_mod_s *logmod = pport->bfa->logm;
++	wwn_t           pwwn = pport->pwwn;
++	char            pwwn_ptr[BFA_STRING_32];
++	struct bfa_ioc_attr_s ioc_attr;
++
++	wwn2str(pwwn_ptr, pwwn);
++	switch (event) {
++	case BFA_PORT_AEN_ONLINE:
++		bfa_log(logmod, BFA_AEN_PORT_ONLINE, pwwn_ptr);
++		break;
++	case BFA_PORT_AEN_OFFLINE:
++		bfa_log(logmod, BFA_AEN_PORT_OFFLINE, pwwn_ptr);
++		break;
++	case BFA_PORT_AEN_ENABLE:
++		bfa_log(logmod, BFA_AEN_PORT_ENABLE, pwwn_ptr);
++		break;
++	case BFA_PORT_AEN_DISABLE:
++		bfa_log(logmod, BFA_AEN_PORT_DISABLE, pwwn_ptr);
++		break;
++	case BFA_PORT_AEN_DISCONNECT:
++		bfa_log(logmod, BFA_AEN_PORT_DISCONNECT, pwwn_ptr);
++		break;
++	case BFA_PORT_AEN_QOS_NEG:
++		bfa_log(logmod, BFA_AEN_PORT_QOS_NEG, pwwn_ptr);
++		break;
++	default:
 +		break;
 +	}
 +
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	bfa_ioc_get_attr(&pport->bfa->ioc, &ioc_attr);
++	aen_data.port.ioc_type = ioc_attr.ioc_type;
++	aen_data.port.pwwn = pwwn;
++}
++
++static void
++bfa_pport_sm_uninit(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_START:
++		/**
++		 * Start event after IOC is configured and BFA is started.
++		 */
++		if (bfa_pport_send_enable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling_qwait);
++		break;
++
++	case BFA_PPORT_SM_ENABLE:
++		/**
++		 * Port is persistently configured to be in enabled state. Do
++		 * not change state. Port enabling is done when START event is
++		 * received.
++		 */
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		/**
++		 * If a port is persistently configured to be disabled, the
++		 * first event will a port disable request.
++		 */
++		bfa_sm_set_state(pport, bfa_pport_sm_disabled);
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocdown);
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_enabling_qwait(struct bfa_pport_s *pport,
++			    enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_QRESUME:
++		bfa_sm_set_state(pport, bfa_pport_sm_enabling);
++		bfa_pport_send_enable(pport);
++		break;
++
++	case BFA_PPORT_SM_STOP:
++		bfa_reqq_wcancel(&pport->reqq_wait);
++		bfa_sm_set_state(pport, bfa_pport_sm_stopped);
++		break;
++
++	case BFA_PPORT_SM_ENABLE:
++		/**
++		 * Already enable is in progress.
++		 */
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		/**
++		 * Just send disable request to firmware when room becomes
++		 * available in request queue.
++		 */
++		bfa_sm_set_state(pport, bfa_pport_sm_disabled);
++		bfa_reqq_wcancel(&pport->reqq_wait);
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_DISABLE, 0, "Port Disable");
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_DISABLE);
++		break;
++
++	case BFA_PPORT_SM_LINKUP:
++	case BFA_PPORT_SM_LINKDOWN:
++		/**
++		 * Possible to get link events when doing back-to-back
++		 * enable/disables.
++		 */
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_reqq_wcancel(&pport->reqq_wait);
++		bfa_sm_set_state(pport, bfa_pport_sm_iocdown);
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_enabling(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_FWRSP:
++	case BFA_PPORT_SM_LINKDOWN:
++		bfa_sm_set_state(pport, bfa_pport_sm_linkdown);
++		break;
++
++	case BFA_PPORT_SM_LINKUP:
++		bfa_pport_update_linkinfo(pport);
++		bfa_sm_set_state(pport, bfa_pport_sm_linkup);
++
++		bfa_assert(pport->event_cbfn);
++		bfa_pport_callback(pport, BFA_PPORT_LINKUP);
++		break;
++
++	case BFA_PPORT_SM_ENABLE:
++		/**
++		 * Already being enabled.
++		 */
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		if (bfa_pport_send_disable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_disabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_disabling_qwait);
++
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_DISABLE, 0, "Port Disable");
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_DISABLE);
++		break;
++
++	case BFA_PPORT_SM_STOP:
++		bfa_sm_set_state(pport, bfa_pport_sm_stopped);
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocdown);
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_linkdown(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_LINKUP:
++		bfa_pport_update_linkinfo(pport);
++		bfa_sm_set_state(pport, bfa_pport_sm_linkup);
++		bfa_assert(pport->event_cbfn);
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_ST_CHANGE, 0, "Port Linkup");
++		bfa_pport_callback(pport, BFA_PPORT_LINKUP);
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_ONLINE);
++		/**
++		 * If QoS is enabled and it is not online,
++		 * Send a separate event.
++		 */
++		if ((pport->cfg.qos_enabled)
++		    && (bfa_os_ntohl(pport->qos_attr.state) != BFA_QOS_ONLINE))
++			bfa_pport_aen_post(pport, BFA_PORT_AEN_QOS_NEG);
++
++		break;
++
++	case BFA_PPORT_SM_LINKDOWN:
++		/**
++		 * Possible to get link down event.
++		 */
++		break;
++
++	case BFA_PPORT_SM_ENABLE:
++		/**
++		 * Already enabled.
++		 */
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		if (bfa_pport_send_disable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_disabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_disabling_qwait);
++
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_DISABLE, 0, "Port Disable");
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_DISABLE);
++		break;
++
++	case BFA_PPORT_SM_STOP:
++		bfa_sm_set_state(pport, bfa_pport_sm_stopped);
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocdown);
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_linkup(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_ENABLE:
++		/**
++		 * Already enabled.
++		 */
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		if (bfa_pport_send_disable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_disabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_disabling_qwait);
++
++		bfa_pport_reset_linkinfo(pport);
++		bfa_pport_callback(pport, BFA_PPORT_LINKDOWN);
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_DISABLE, 0, "Port Disable");
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_OFFLINE);
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_DISABLE);
++		break;
++
++	case BFA_PPORT_SM_LINKDOWN:
++		bfa_sm_set_state(pport, bfa_pport_sm_linkdown);
++		bfa_pport_reset_linkinfo(pport);
++		bfa_pport_callback(pport, BFA_PPORT_LINKDOWN);
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_ST_CHANGE, 0, "Port Linkdown");
++		if (BFA_PORT_IS_DISABLED(pport->bfa)) {
++			bfa_pport_aen_post(pport, BFA_PORT_AEN_OFFLINE);
++		} else {
++			bfa_pport_aen_post(pport, BFA_PORT_AEN_DISCONNECT);
++		}
++		break;
++
++	case BFA_PPORT_SM_STOP:
++		bfa_sm_set_state(pport, bfa_pport_sm_stopped);
++		bfa_pport_reset_linkinfo(pport);
++		if (BFA_PORT_IS_DISABLED(pport->bfa)) {
++			bfa_pport_aen_post(pport, BFA_PORT_AEN_OFFLINE);
++		} else {
++			bfa_pport_aen_post(pport, BFA_PORT_AEN_DISCONNECT);
++		}
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocdown);
++		bfa_pport_reset_linkinfo(pport);
++		bfa_pport_callback(pport, BFA_PPORT_LINKDOWN);
++		if (BFA_PORT_IS_DISABLED(pport->bfa)) {
++			bfa_pport_aen_post(pport, BFA_PORT_AEN_OFFLINE);
++		} else {
++			bfa_pport_aen_post(pport, BFA_PORT_AEN_DISCONNECT);
++		}
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_disabling_qwait(struct bfa_pport_s *pport,
++			     enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_QRESUME:
++		bfa_sm_set_state(pport, bfa_pport_sm_disabling);
++		bfa_pport_send_disable(pport);
++		break;
++
++	case BFA_PPORT_SM_STOP:
++		bfa_sm_set_state(pport, bfa_pport_sm_stopped);
++		bfa_reqq_wcancel(&pport->reqq_wait);
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		/**
++		 * Already being disabled.
++		 */
++		break;
++
++	case BFA_PPORT_SM_LINKUP:
++	case BFA_PPORT_SM_LINKDOWN:
++		/**
++		 * Possible to get link events when doing back-to-back
++		 * enable/disables.
++		 */
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocfail);
++		bfa_reqq_wcancel(&pport->reqq_wait);
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_disabling(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_FWRSP:
++		bfa_sm_set_state(pport, bfa_pport_sm_disabled);
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		/**
++		 * Already being disabled.
++		 */
++		break;
++
++	case BFA_PPORT_SM_ENABLE:
++		if (bfa_pport_send_enable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling_qwait);
++
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_ENABLE, 0, "Port Enable");
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_ENABLE);
++		break;
++
++	case BFA_PPORT_SM_STOP:
++		bfa_sm_set_state(pport, bfa_pport_sm_stopped);
++		break;
++
++	case BFA_PPORT_SM_LINKUP:
++	case BFA_PPORT_SM_LINKDOWN:
++		/**
++		 * Possible to get link events when doing back-to-back
++		 * enable/disables.
++		 */
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocfail);
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_disabled(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_START:
++		/**
++		 * Ignore start event for a port that is disabled.
++		 */
++		break;
++
++	case BFA_PPORT_SM_STOP:
++		bfa_sm_set_state(pport, bfa_pport_sm_stopped);
++		break;
++
++	case BFA_PPORT_SM_ENABLE:
++		if (bfa_pport_send_enable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling_qwait);
++
++		bfa_plog_str(pport->bfa->plog, BFA_PL_MID_HAL,
++			     BFA_PL_EID_PORT_ENABLE, 0, "Port Enable");
++		bfa_pport_aen_post(pport, BFA_PORT_AEN_ENABLE);
++		break;
++
++	case BFA_PPORT_SM_DISABLE:
++		/**
++		 * Already disabled.
++		 */
++		break;
++
++	case BFA_PPORT_SM_HWFAIL:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocfail);
++		break;
++
++	default:
++		bfa_sm_fault(pport->bfa, event);
++	}
++}
++
++static void
++bfa_pport_sm_stopped(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
++{
++	bfa_trc(pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_SM_START:
++		if (bfa_pport_send_enable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling_qwait);
++		break;
++
++	default:
++		/**
++		 * Ignore all other events.
++		 */
++		;
++	}
 +}
 +
 +/**
-+ * Scsi_Host template entry, queue a SCSI command to the BFAD.
-+ */
-+static int
-+bfad_im_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
-+{
-+	struct bfad_im_port_s *im_port =
-+		(struct bfad_im_port_s *) cmnd->device->host->hostdata[0];
-+	struct bfad_s         *bfad = im_port->bfad;
-+	struct bfad_itnim_data_s *itnim_data = cmnd->device->hostdata;
-+	struct bfad_itnim_s   *itnim;
-+	struct bfa_ioim_s *hal_io;
-+	unsigned long   flags;
-+	int             rc;
-+	s16        sg_cnt = 0;
-+	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
-+
-+	rc = fc_remote_port_chkready(rport);
-+	if (rc) {
-+		cmnd->result = rc;
-+		done(cmnd);
-+		return 0;
-+	}
-+
-+	sg_cnt = scsi_dma_map(cmnd);
-+
-+	if (sg_cnt < 0)
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+
-+	cmnd->scsi_done = done;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	if (!(bfad->bfad_flags & BFAD_HAL_START_DONE)) {
-+		printk(KERN_WARNING
-+			"bfad%d, queuecommand %p %x failed, BFA stopped\n",
-+		       bfad->inst_no, cmnd, cmnd->cmnd[0]);
-+		cmnd->result = ScsiResult(DID_NO_CONNECT, 0);
-+		goto out_fail_cmd;
-+	}
-+
-+	itnim = itnim_data->itnim;
-+	if (!itnim) {
-+		cmnd->result = ScsiResult(DID_IMM_RETRY, 0);
-+		goto out_fail_cmd;
-+	}
-+
-+	hal_io = bfa_ioim_alloc(&bfad->bfa, (struct bfad_ioim_s *) cmnd,
-+				    itnim->bfa_itnim, sg_cnt);
-+	if (!hal_io) {
-+		printk(KERN_WARNING "hal_io failure\n");
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		scsi_dma_unmap(cmnd);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
-+	cmnd->host_scribble = (char *)hal_io;
-+	bfa_trc_fp(bfad, hal_io->iotag);
-+	bfa_ioim_start(hal_io);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return 0;
-+
-+out_fail_cmd:
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	scsi_dma_unmap(cmnd);
-+	if (done)
-+		done(cmnd);
-+
-+	return 0;
-+}
-+
-+void
-+bfad_os_rport_online_wait(struct bfad_s *bfad)
-+{
-+	int i;
-+	int rport_delay = 10;
-+
-+	for (i = 0; !(bfad->bfad_flags & BFAD_PORT_ONLINE)
-+		 && i < bfa_linkup_delay; i++)
-+		schedule_timeout_uninterruptible(HZ);
-+
-+	if (bfad->bfad_flags & BFAD_PORT_ONLINE) {
-+		rport_delay = rport_delay < bfa_linkup_delay ?
-+				 rport_delay : bfa_linkup_delay;
-+		for (i = 0; !(bfad->bfad_flags & BFAD_RPORT_ONLINE)
-+			 && i < rport_delay; i++)
-+			schedule_timeout_uninterruptible(HZ);
-+
-+		if (rport_delay > 0 && (bfad->bfad_flags & BFAD_RPORT_ONLINE))
-+			schedule_timeout_uninterruptible(rport_delay * HZ);
-+	}
-+}
-+
-+int
-+bfad_os_get_linkup_delay(struct bfad_s *bfad)
-+{
-+
-+	u8         nwwns = 0;
-+	wwn_t           *wwns;
-+	int             ldelay;
-+
-+	/*
-+	 * Querying for the boot target port wwns
-+	 * -- read from boot information in flash.
-+	 * If nwwns > 0 => boot over SAN and set bfa_linkup_delay = 30
-+	 * else => local boot machine set bfa_linkup_delay = 10
-+	 */
-+
-+	bfa_iocfc_get_bootwwns(&bfad->bfa, &nwwns, &wwns);
-+
-+	if (nwwns > 0) {
-+		/* If boot over SAN; linkup_delay = 30sec */
-+		ldelay = 30;
-+	} else {
-+		/* If local boot; linkup_delay = 10sec */
-+		ldelay = 0;
-+	}
-+
-+	return ldelay;
-+}
-+
-+
-diff -urpN orig/drivers/scsi/bfa/bfad_im.h patch/drivers/scsi/bfa/bfad_im.h
---- orig/drivers/scsi/bfa/bfad_im.h	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_im.h	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,150 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#ifndef __BFAD_IM_H__
-+#define __BFAD_IM_H__
-+
-+#include "fcs/bfa_fcs_fcpim.h"
-+#include "bfad_im_compat.h"
-+
-+#define FCPI_NAME " fcpim"
-+
-+void bfad_flags_set(struct bfad_s *bfad, u32 flags);
-+bfa_status_t bfad_im_module_init(void);
-+void bfad_im_module_exit(void);
-+bfa_status_t bfad_im_probe(struct bfad_s *bfad);
-+void bfad_im_probe_undo(struct bfad_s *bfad);
-+void bfad_im_probe_post(struct bfad_im_s *im);
-+bfa_status_t bfad_im_port_new(struct bfad_s *bfad, struct bfad_port_s *port);
-+void bfad_im_port_delete(struct bfad_s *bfad, struct bfad_port_s *port);
-+void bfad_im_port_online(struct bfad_s *bfad, struct bfad_port_s *port);
-+void bfad_im_port_offline(struct bfad_s *bfad, struct bfad_port_s *port);
-+void bfad_im_port_clean(struct bfad_im_port_s *im_port);
-+int  bfad_im_scsi_host_alloc(struct bfad_s *bfad,
-+				struct bfad_im_port_s *im_port);
-+void bfad_im_scsi_host_free(struct bfad_s *bfad,
-+				struct bfad_im_port_s *im_port);
-+
-+#define MAX_FCP_TARGET 1024
-+#define MAX_FCP_LUN 16384
-+#define BFAD_TARGET_RESET_TMO 60
-+#define BFAD_LUN_RESET_TMO 60
-+#define ScsiResult(host_code, scsi_code) (((host_code) << 16) | scsi_code)
-+#define BFA_QUEUE_FULL_RAMP_UP_TIME 120
-+#define BFAD_KOBJ_NAME_LEN 20
-+
-+/*
-+ * itnim flags
-+ */
-+#define ITNIM_MAPPED		0x00000001
-+
-+#define SCSI_TASK_MGMT		0x00000001
-+#define IO_DONE_BIT			0
-+
-+struct bfad_itnim_data_s {
-+	struct bfad_itnim_s *itnim;
-+};
-+
-+struct bfad_im_port_s {
-+	struct bfad_s         *bfad;
-+	struct bfad_port_s    *port;
-+	struct work_struct port_delete_work;
-+	int             idr_id;
-+	u16        cur_scsi_id;
-+	struct list_head binding_list;
-+	struct Scsi_Host *shost;
-+	struct list_head itnim_mapped_list;
-+};
-+
-+enum bfad_itnim_state {
-+	ITNIM_STATE_NONE,
-+	ITNIM_STATE_ONLINE,
-+	ITNIM_STATE_OFFLINE_PENDING,
-+	ITNIM_STATE_OFFLINE,
-+	ITNIM_STATE_TIMEOUT,
-+	ITNIM_STATE_FREE,
-+};
-+
-+/*
-+ * Per itnim data structure
-+ */
-+struct bfad_itnim_s {
-+	struct list_head list_entry;
-+	struct bfa_fcs_itnim_s fcs_itnim;
-+	struct work_struct itnim_work;
-+	u32        flags;
-+	enum bfad_itnim_state state;
-+	struct bfad_im_s *im;
-+	struct bfad_im_port_s *im_port;
-+	struct bfad_rport_s *drv_rport;
-+	struct fc_rport *fc_rport;
-+	struct bfa_itnim_s *bfa_itnim;
-+	u16        scsi_tgt_id;
-+	u16        queue_work;
-+	unsigned long	last_ramp_up_time;
-+	unsigned long	last_queue_full_time;
-+};
-+
-+enum bfad_binding_type {
-+	FCP_PWWN_BINDING = 0x1,
-+	FCP_NWWN_BINDING = 0x2,
-+	FCP_FCID_BINDING = 0x3,
-+};
-+
-+struct bfad_fcp_binding {
-+	struct list_head list_entry;
-+	enum bfad_binding_type binding_type;
-+	u16        scsi_target_id;
-+	u32        fc_id;
-+	wwn_t           nwwn;
-+	wwn_t           pwwn;
-+};
-+
-+struct bfad_im_s {
-+	struct bfad_s         *bfad;
-+	struct workqueue_struct *drv_workq;
-+	char   drv_workq_name[BFAD_KOBJ_NAME_LEN];
-+};
-+
-+struct Scsi_Host *bfad_os_scsi_host_alloc(struct bfad_im_port_s *im_port,
-+				struct bfad_s *);
-+bfa_status_t bfad_os_thread_workq(struct bfad_s *bfad);
-+void bfad_os_destroy_workq(struct bfad_im_s *im);
-+void bfad_os_itnim_process(struct bfad_itnim_s *itnim_drv);
-+void bfad_os_fc_host_init(struct bfad_im_port_s *im_port);
-+void bfad_os_init_work(struct bfad_im_port_s *im_port);
-+void bfad_os_scsi_host_free(struct bfad_s *bfad,
-+				 struct bfad_im_port_s *im_port);
-+void bfad_os_ramp_up_qdepth(struct bfad_itnim_s *itnim,
-+				 struct scsi_device *sdev);
-+void bfad_os_handle_qfull(struct bfad_itnim_s *itnim, struct scsi_device *sdev);
-+struct bfad_itnim_s *bfad_os_get_itnim(struct bfad_im_port_s *im_port, int id);
-+int bfad_os_scsi_add_host(struct Scsi_Host *shost,
-+		struct bfad_im_port_s *im_port, struct bfad_s *bfad);
-+
-+/*
-+ * scsi_host_template entries
-+ */
-+void bfad_im_itnim_unmap(struct bfad_im_port_s  *im_port,
-+			 struct bfad_itnim_s *itnim);
-+
-+extern struct scsi_host_template bfad_im_scsi_host_template;
-+extern struct scsi_host_template bfad_im_vport_template;
-+extern struct fc_function_template bfad_im_fc_function_template;
-+extern struct scsi_transport_template *bfad_im_scsi_transport_template;
-+
-+#endif
-diff -urpN orig/drivers/scsi/bfa/bfad_im_compat.h patch/drivers/scsi/bfa/bfad_im_compat.h
---- orig/drivers/scsi/bfa/bfad_im_compat.h	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_im_compat.h	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,46 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#ifndef __BFAD_IM_COMPAT_H__
-+#define __BFAD_IM_COMPAT_H__
-+
-+extern u32 *bfi_image_buf;
-+extern u32 bfi_image_size;
-+
-+extern struct device_attribute *bfad_im_host_attrs[];
-+extern struct device_attribute *bfad_im_vport_attrs[];
-+
-+u32 *bfad_get_firmware_buf(struct pci_dev *pdev);
-+u32 *bfad_read_firmware(struct pci_dev *pdev, u32 **bfi_image,
-+			u32 *bfi_image_size, char *fw_name);
-+
-+static inline u32 *
-+bfad_load_fwimg(struct pci_dev *pdev)
-+{
-+	return(bfad_get_firmware_buf(pdev));
-+}
-+
-+static inline void
-+bfad_free_fwimg(void)
-+{
-+	if (bfi_image_ct_size && bfi_image_ct)
-+		vfree(bfi_image_ct);
-+	if (bfi_image_cb_size && bfi_image_cb)
-+		vfree(bfi_image_cb);
-+}
-+
-+#endif
-diff -urpN orig/drivers/scsi/bfa/bfad_intr.c patch/drivers/scsi/bfa/bfad_intr.c
---- orig/drivers/scsi/bfa/bfad_intr.c	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_intr.c	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,214 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#include "bfad_drv.h"
-+#include "bfad_trcmod.h"
-+
-+BFA_TRC_FILE(LDRV, INTR);
-+
-+/**
-+ *  bfa_isr BFA driver interrupt functions
-+ */
-+irqreturn_t bfad_intx(int irq, void *dev_id);
-+static int msix_disable;
-+module_param(msix_disable, int, S_IRUGO | S_IWUSR);
-+/**
-+ * Line based interrupt handler.
-+ */
-+irqreturn_t
-+bfad_intx(int irq, void *dev_id)
-+{
-+	struct bfad_s         *bfad = dev_id;
-+	struct list_head         doneq;
-+	unsigned long   flags;
-+	bfa_boolean_t rc;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rc = bfa_intx(&bfad->bfa);
-+	if (!rc) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		return IRQ_NONE;
-+	}
-+
-+	bfa_comp_deq(&bfad->bfa, &doneq);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (!list_empty(&doneq)) {
-+		bfa_comp_process(&bfad->bfa, &doneq);
-+
-+		spin_lock_irqsave(&bfad->bfad_lock, flags);
-+		bfa_comp_free(&bfad->bfa, &doneq);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		bfa_trc_fp(bfad, irq);
-+	}
-+
-+	return IRQ_HANDLED;
-+
-+}
-+
-+static irqreturn_t
-+bfad_msix(int irq, void *dev_id)
-+{
-+	struct bfad_msix_s *vec = dev_id;
-+	struct bfad_s *bfad = vec->bfad;
-+	struct list_head doneq;
-+	unsigned long   flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+
-+	bfa_msix(&bfad->bfa, vec->msix.entry);
-+	bfa_comp_deq(&bfad->bfa, &doneq);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (!list_empty(&doneq)) {
-+		bfa_comp_process(&bfad->bfa, &doneq);
-+
-+		spin_lock_irqsave(&bfad->bfad_lock, flags);
-+		bfa_comp_free(&bfad->bfa, &doneq);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+/**
-+ * Initialize the MSIX entry table.
++ * Port is enabled. IOC is down/failed.
 + */
 +static void
-+bfad_init_msix_entry(struct bfad_s *bfad, struct msix_entry *msix_entries,
-+			 int mask, int max_bit)
++bfa_pport_sm_iocdown(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
 +{
-+	int             i;
-+	int             match = 0x00000001;
++	bfa_trc(pport->bfa, event);
 +
-+	for (i = 0, bfad->nvec = 0; i < MAX_MSIX_ENTRY; i++) {
-+		if (mask & match) {
-+			bfad->msix_tab[bfad->nvec].msix.entry = i;
-+			bfad->msix_tab[bfad->nvec].bfad = bfad;
-+			msix_entries[bfad->nvec].entry = i;
-+			bfad->nvec++;
-+		}
++	switch (event) {
++	case BFA_PPORT_SM_START:
++		if (bfa_pport_send_enable(pport))
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling);
++		else
++			bfa_sm_set_state(pport, bfa_pport_sm_enabling_qwait);
++		break;
 +
-+		match <<= 1;
++	default:
++		/**
++		 * Ignore all events.
++		 */
++		;
 +	}
-+
-+}
-+
-+int
-+bfad_install_msix_handler(struct bfad_s *bfad)
-+{
-+	int             i, error = 0;
-+
-+	for (i = 0; i < bfad->nvec; i++) {
-+		error = request_irq(bfad->msix_tab[i].msix.vector,
-+				    (irq_handler_t) bfad_msix, 0,
-+				    BFAD_DRIVER_NAME, &bfad->msix_tab[i]);
-+		bfa_trc(bfad, i);
-+		bfa_trc(bfad, bfad->msix_tab[i].msix.vector);
-+		if (error) {
-+			int             j;
-+
-+			for (j = 0; j < i; j++)
-+				free_irq(bfad->msix_tab[j].msix.vector,
-+						&bfad->msix_tab[j]);
-+
-+			return 1;
-+		}
-+	}
-+
-+	return 0;
 +}
 +
 +/**
-+ * Setup MSIX based interrupt.
++ * Port is disabled. IOC is down/failed.
 + */
-+int
-+bfad_setup_intr(struct bfad_s *bfad)
++static void
++bfa_pport_sm_iocfail(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
 +{
-+	int error = 0;
-+	u32 mask = 0, i, num_bit = 0, max_bit = 0;
-+	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
++	bfa_trc(pport->bfa, event);
 +
-+	/* Call BFA to get the msix map for this PCI function.  */
-+	bfa_msix_getvecs(&bfad->bfa, &mask, &num_bit, &max_bit);
++	switch (event) {
++	case BFA_PPORT_SM_START:
++		bfa_sm_set_state(pport, bfa_pport_sm_disabled);
++		break;
 +
-+	/* Set up the msix entry table */
-+	bfad_init_msix_entry(bfad, msix_entries, mask, max_bit);
++	case BFA_PPORT_SM_ENABLE:
++		bfa_sm_set_state(pport, bfa_pport_sm_iocdown);
++		break;
 +
-+	if (!msix_disable) {
-+		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
-+		if (error) {
-+			/*
-+			 * Only error number of vector is available.
-+			 * We don't have a mechanism to map multiple
-+			 * interrupts into one vector, so even if we
-+			 * can try to request less vectors, we don't
-+			 * know how to associate interrupt events to
-+			 *  vectors. Linux doesn't dupicate vectors
-+			 * in the MSIX table for this case.
-+			 */
++	default:
++		/**
++		 * Ignore all events.
++		 */
++		;
++	}
++}
 +
-+			printk(KERN_WARNING "bfad%d: "
-+				"pci_enable_msix failed (%d),"
-+				" use line based.\n", bfad->inst_no, error);
 +
-+			goto line_based;
-+		}
 +
-+		/* Save the vectors */
-+		for (i = 0; i < bfad->nvec; i++) {
-+			bfa_trc(bfad, msix_entries[i].vector);
-+			bfad->msix_tab[i].msix.vector = msix_entries[i].vector;
-+		}
++/**
++ *  bfa_pport_private
++ */
 +
-+		bfa_msix_init(&bfad->bfa, bfad->nvec);
++static void
++__bfa_cb_port_event(void *cbarg, bfa_boolean_t complete)
++{
++	struct bfa_pport_s *pport = cbarg;
 +
-+		bfad->bfad_flags |= BFAD_MSIX_ON;
++	if (complete)
++		pport->event_cbfn(pport->event_cbarg, pport->hcb_event);
++}
 +
-+		return error;
++#define PPORT_STATS_DMA_SZ (BFA_ROUNDUP(sizeof(union bfa_pport_stats_u), \
++							BFA_CACHELINE_SZ))
++
++static void
++bfa_pport_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *ndm_len,
++		  u32 *dm_len)
++{
++	*dm_len += PPORT_STATS_DMA_SZ;
++}
++
++static void
++bfa_pport_qresume(void *cbarg)
++{
++	struct bfa_pport_s *port = cbarg;
++
++	bfa_sm_send_event(port, BFA_PPORT_SM_QRESUME);
++}
++
++static void
++bfa_pport_mem_claim(struct bfa_pport_s *pport, struct bfa_meminfo_s *meminfo)
++{
++	u8        *dm_kva;
++	u64        dm_pa;
++
++	dm_kva = bfa_meminfo_dma_virt(meminfo);
++	dm_pa = bfa_meminfo_dma_phys(meminfo);
++
++	pport->stats_kva = dm_kva;
++	pport->stats_pa = dm_pa;
++	pport->stats = (union bfa_pport_stats_u *)dm_kva;
++
++	dm_kva += PPORT_STATS_DMA_SZ;
++	dm_pa += PPORT_STATS_DMA_SZ;
++
++	bfa_meminfo_dma_virt(meminfo) = dm_kva;
++	bfa_meminfo_dma_phys(meminfo) = dm_pa;
++}
++
++/**
++ * Memory initialization.
++ */
++static void
++bfa_pport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++		 struct bfa_meminfo_s *meminfo, struct bfa_pcidev_s *pcidev)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++	struct bfa_pport_cfg_s *port_cfg = &pport->cfg;
++
++	bfa_os_memset(pport, 0, sizeof(struct bfa_pport_s));
++	pport->bfa = bfa;
++
++	bfa_pport_mem_claim(pport, meminfo);
++
++	bfa_sm_set_state(pport, bfa_pport_sm_uninit);
++
++	/**
++	 * initialize and set default configuration
++	 */
++	port_cfg->topology = BFA_PPORT_TOPOLOGY_P2P;
++	port_cfg->speed = BFA_PPORT_SPEED_AUTO;
++	port_cfg->trunked = BFA_FALSE;
++	port_cfg->maxfrsize = 0;
++
++	port_cfg->trl_def_speed = BFA_PPORT_SPEED_1GBPS;
++
++	bfa_reqq_winit(&pport->reqq_wait, bfa_pport_qresume, pport);
++}
++
++static void
++bfa_pport_initdone(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	/**
++	 * Initialize port attributes from IOC hardware data.
++	 */
++	bfa_pport_set_wwns(pport);
++	if (pport->cfg.maxfrsize == 0)
++		pport->cfg.maxfrsize = bfa_ioc_maxfrsize(&bfa->ioc);
++	pport->cfg.rx_bbcredit = bfa_ioc_rx_bbcredit(&bfa->ioc);
++	pport->speed_sup = bfa_ioc_speed_sup(&bfa->ioc);
++
++	bfa_assert(pport->cfg.maxfrsize);
++	bfa_assert(pport->cfg.rx_bbcredit);
++	bfa_assert(pport->speed_sup);
++}
++
++static void
++bfa_pport_detach(struct bfa_s *bfa)
++{
++}
++
++/**
++ * Called when IOC is ready.
++ */
++static void
++bfa_pport_start(struct bfa_s *bfa)
++{
++	bfa_sm_send_event(BFA_PORT_MOD(bfa), BFA_PPORT_SM_START);
++}
++
++/**
++ * Called before IOC is stopped.
++ */
++static void
++bfa_pport_stop(struct bfa_s *bfa)
++{
++	bfa_sm_send_event(BFA_PORT_MOD(bfa), BFA_PPORT_SM_STOP);
++}
++
++/**
++ * Called when IOC failure is detected.
++ */
++static void
++bfa_pport_iocdisable(struct bfa_s *bfa)
++{
++	bfa_sm_send_event(BFA_PORT_MOD(bfa), BFA_PPORT_SM_HWFAIL);
++}
++
++static void
++bfa_pport_update_linkinfo(struct bfa_pport_s *pport)
++{
++	struct bfi_pport_event_s *pevent = pport->event_arg.i2hmsg.event;
++
++	pport->speed = pevent->link_state.speed;
++	pport->topology = pevent->link_state.topology;
++
++	if (pport->topology == BFA_PPORT_TOPOLOGY_LOOP)
++		pport->myalpa = pevent->link_state.tl.loop_info.myalpa;
++
++	/*
++	 * QoS Details
++	 */
++	bfa_os_assign(pport->qos_attr, pevent->link_state.qos_attr);
++	bfa_os_assign(pport->qos_vc_attr, pevent->link_state.qos_vc_attr);
++
++	bfa_trc(pport->bfa, pport->speed);
++	bfa_trc(pport->bfa, pport->topology);
++}
++
++static void
++bfa_pport_reset_linkinfo(struct bfa_pport_s *pport)
++{
++	pport->speed = BFA_PPORT_SPEED_UNKNOWN;
++	pport->topology = BFA_PPORT_TOPOLOGY_NONE;
++}
++
++/**
++ * Send port enable message to firmware.
++ */
++static          bfa_boolean_t
++bfa_pport_send_enable(struct bfa_pport_s *port)
++{
++	struct bfi_pport_enable_req_s *m;
++
++	/**
++	 * Increment message tag before queue check, so that responses to old
++	 * requests are discarded.
++	 */
++	port->msgtag++;
++
++	/**
++	 * check for room in queue to send request now
++	 */
++	m = bfa_reqq_next(port->bfa, BFA_REQQ_PORT);
++	if (!m) {
++		bfa_reqq_wait(port->bfa, BFA_REQQ_PORT, &port->reqq_wait);
++		return BFA_FALSE;
 +	}
 +
-+line_based:
-+	error = 0;
-+	if (request_irq
-+	    (bfad->pcidev->irq, (irq_handler_t) bfad_intx, BFAD_IRQ_FLAGS,
-+	     BFAD_DRIVER_NAME, bfad) != 0) {
-+		/* Enable interrupt handler failed */
-+		return 1;
++	bfi_h2i_set(m->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_ENABLE_REQ,
++		    bfa_lpuid(port->bfa));
++	m->nwwn = port->nwwn;
++	m->pwwn = port->pwwn;
++	m->port_cfg = port->cfg;
++	m->msgtag = port->msgtag;
++	m->port_cfg.maxfrsize = bfa_os_htons(port->cfg.maxfrsize);
++	bfa_dma_be_addr_set(m->stats_dma_addr, port->stats_pa);
++	bfa_trc(port->bfa, m->stats_dma_addr.a32.addr_lo);
++	bfa_trc(port->bfa, m->stats_dma_addr.a32.addr_hi);
++
++	/**
++	 * queue I/O message to firmware
++	 */
++	bfa_reqq_produce(port->bfa, BFA_REQQ_PORT);
++	return BFA_TRUE;
++}
++
++/**
++ * Send port disable message to firmware.
++ */
++static          bfa_boolean_t
++bfa_pport_send_disable(struct bfa_pport_s *port)
++{
++	bfi_pport_disable_req_t *m;
++
++	/**
++	 * Increment message tag before queue check, so that responses to old
++	 * requests are discarded.
++	 */
++	port->msgtag++;
++
++	/**
++	 * check for room in queue to send request now
++	 */
++	m = bfa_reqq_next(port->bfa, BFA_REQQ_PORT);
++	if (!m) {
++		bfa_reqq_wait(port->bfa, BFA_REQQ_PORT, &port->reqq_wait);
++		return BFA_FALSE;
 +	}
 +
-+	return error;
++	bfi_h2i_set(m->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_DISABLE_REQ,
++		    bfa_lpuid(port->bfa));
++	m->msgtag = port->msgtag;
++
++	/**
++	 * queue I/O message to firmware
++	 */
++	bfa_reqq_produce(port->bfa, BFA_REQQ_PORT);
++
++	return BFA_TRUE;
++}
++
++static void
++bfa_pport_set_wwns(struct bfa_pport_s *port)
++{
++	port->pwwn = bfa_ioc_get_pwwn(&port->bfa->ioc);
++	port->nwwn = bfa_ioc_get_nwwn(&port->bfa->ioc);
++
++	bfa_trc(port->bfa, port->pwwn);
++	bfa_trc(port->bfa, port->nwwn);
++}
++
++static void
++bfa_port_send_txcredit(void *port_cbarg)
++{
++
++	struct bfa_pport_s *port = port_cbarg;
++	struct bfi_pport_set_svc_params_req_s *m;
++
++	/**
++	 * check for room in queue to send request now
++	 */
++	m = bfa_reqq_next(port->bfa, BFA_REQQ_PORT);
++	if (!m) {
++		bfa_trc(port->bfa, port->cfg.tx_bbcredit);
++		return;
++	}
++
++	bfi_h2i_set(m->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_SET_SVC_PARAMS_REQ,
++		    bfa_lpuid(port->bfa));
++	m->tx_bbcredit = bfa_os_htons((u16) port->cfg.tx_bbcredit);
++
++	/**
++	 * queue I/O message to firmware
++	 */
++	bfa_reqq_produce(port->bfa, BFA_REQQ_PORT);
++}
++
++
++
++/**
++ *  bfa_pport_public
++ */
++
++/**
++ * Firmware message handler.
++ */
++void
++bfa_pport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++	union bfi_pport_i2h_msg_u i2hmsg;
++
++	i2hmsg.msg = msg;
++	pport->event_arg.i2hmsg = i2hmsg;
++
++	switch (msg->mhdr.msg_id) {
++	case BFI_PPORT_I2H_ENABLE_RSP:
++		if (pport->msgtag == i2hmsg.enable_rsp->msgtag)
++			bfa_sm_send_event(pport, BFA_PPORT_SM_FWRSP);
++		break;
++
++	case BFI_PPORT_I2H_DISABLE_RSP:
++		if (pport->msgtag == i2hmsg.enable_rsp->msgtag)
++			bfa_sm_send_event(pport, BFA_PPORT_SM_FWRSP);
++		break;
++
++	case BFI_PPORT_I2H_EVENT:
++		switch (i2hmsg.event->link_state.linkstate) {
++		case BFA_PPORT_LINKUP:
++			bfa_sm_send_event(pport, BFA_PPORT_SM_LINKUP);
++			break;
++		case BFA_PPORT_LINKDOWN:
++			bfa_sm_send_event(pport, BFA_PPORT_SM_LINKDOWN);
++			break;
++		case BFA_PPORT_TRUNK_LINKDOWN:
++			/** todo: event notification */
++			break;
++		}
++		break;
++
++	case BFI_PPORT_I2H_GET_STATS_RSP:
++	case BFI_PPORT_I2H_GET_QOS_STATS_RSP:
++		/*
++		 * check for timer pop before processing the rsp
++		 */
++		if (pport->stats_busy == BFA_FALSE
++		    || pport->stats_status == BFA_STATUS_ETIMER)
++			break;
++
++		bfa_timer_stop(&pport->timer);
++		pport->stats_status = i2hmsg.getstats_rsp->status;
++		bfa_cb_queue(pport->bfa, &pport->hcb_qe, __bfa_cb_port_stats,
++			     pport);
++		break;
++	case BFI_PPORT_I2H_CLEAR_STATS_RSP:
++	case BFI_PPORT_I2H_CLEAR_QOS_STATS_RSP:
++		/*
++		 * check for timer pop before processing the rsp
++		 */
++		if (pport->stats_busy == BFA_FALSE
++		    || pport->stats_status == BFA_STATUS_ETIMER)
++			break;
++
++		bfa_timer_stop(&pport->timer);
++		pport->stats_status = BFA_STATUS_OK;
++		bfa_cb_queue(pport->bfa, &pport->hcb_qe,
++			     __bfa_cb_port_stats_clr, pport);
++		break;
++
++	default:
++		bfa_assert(0);
++	}
++}
++
++
++
++/**
++ *  bfa_pport_api
++ */
++
++/**
++ * Registered callback for port events.
++ */
++void
++bfa_pport_event_register(struct bfa_s *bfa,
++			 void (*cbfn) (void *cbarg, bfa_pport_event_t event),
++			 void *cbarg)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	pport->event_cbfn = cbfn;
++	pport->event_cbarg = cbarg;
++}
++
++bfa_status_t
++bfa_pport_enable(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	if (pport->diag_busy)
++		return (BFA_STATUS_DIAG_BUSY);
++	else if (bfa_sm_cmp_state
++		 (BFA_PORT_MOD(bfa), bfa_pport_sm_disabling_qwait))
++		return (BFA_STATUS_DEVBUSY);
++
++	bfa_sm_send_event(BFA_PORT_MOD(bfa), BFA_PPORT_SM_ENABLE);
++	return BFA_STATUS_OK;
++}
++
++bfa_status_t
++bfa_pport_disable(struct bfa_s *bfa)
++{
++	bfa_sm_send_event(BFA_PORT_MOD(bfa), BFA_PPORT_SM_DISABLE);
++	return BFA_STATUS_OK;
++}
++
++/**
++ * Configure port speed.
++ */
++bfa_status_t
++bfa_pport_cfg_speed(struct bfa_s *bfa, enum bfa_pport_speed speed)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, speed);
++
++	if ((speed != BFA_PPORT_SPEED_AUTO) && (speed > pport->speed_sup)) {
++		bfa_trc(bfa, pport->speed_sup);
++		return BFA_STATUS_UNSUPP_SPEED;
++	}
++
++	pport->cfg.speed = speed;
++
++	return (BFA_STATUS_OK);
++}
++
++/**
++ * Get current speed.
++ */
++enum bfa_pport_speed
++bfa_pport_get_speed(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	return port->speed;
++}
++
++/**
++ * Configure port topology.
++ */
++bfa_status_t
++bfa_pport_cfg_topology(struct bfa_s *bfa, enum bfa_pport_topology topology)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, topology);
++	bfa_trc(bfa, pport->cfg.topology);
++
++	switch (topology) {
++	case BFA_PPORT_TOPOLOGY_P2P:
++	case BFA_PPORT_TOPOLOGY_LOOP:
++	case BFA_PPORT_TOPOLOGY_AUTO:
++		break;
++
++	default:
++		return BFA_STATUS_EINVAL;
++	}
++
++	pport->cfg.topology = topology;
++	return (BFA_STATUS_OK);
++}
++
++/**
++ * Get current topology.
++ */
++enum bfa_pport_topology
++bfa_pport_get_topology(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	return port->topology;
++}
++
++bfa_status_t
++bfa_pport_cfg_hardalpa(struct bfa_s *bfa, u8 alpa)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, alpa);
++	bfa_trc(bfa, pport->cfg.cfg_hardalpa);
++	bfa_trc(bfa, pport->cfg.hardalpa);
++
++	pport->cfg.cfg_hardalpa = BFA_TRUE;
++	pport->cfg.hardalpa = alpa;
++
++	return (BFA_STATUS_OK);
++}
++
++bfa_status_t
++bfa_pport_clr_hardalpa(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, pport->cfg.cfg_hardalpa);
++	bfa_trc(bfa, pport->cfg.hardalpa);
++
++	pport->cfg.cfg_hardalpa = BFA_FALSE;
++	return (BFA_STATUS_OK);
++}
++
++bfa_boolean_t
++bfa_pport_get_hardalpa(struct bfa_s *bfa, u8 *alpa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	*alpa = port->cfg.hardalpa;
++	return port->cfg.cfg_hardalpa;
++}
++
++u8
++bfa_pport_get_myalpa(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	return port->myalpa;
++}
++
++bfa_status_t
++bfa_pport_cfg_maxfrsize(struct bfa_s *bfa, u16 maxfrsize)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, maxfrsize);
++	bfa_trc(bfa, pport->cfg.maxfrsize);
++
++	/*
++	 * with in range
++	 */
++	if ((maxfrsize > FC_MAX_PDUSZ) || (maxfrsize < FC_MIN_PDUSZ))
++		return (BFA_STATUS_INVLD_DFSZ);
++
++	/*
++	 * power of 2, if not the max frame size of 2112
++	 */
++	if ((maxfrsize != FC_MAX_PDUSZ) && (maxfrsize & (maxfrsize - 1)))
++		return (BFA_STATUS_INVLD_DFSZ);
++
++	pport->cfg.maxfrsize = maxfrsize;
++	return (BFA_STATUS_OK);
++}
++
++u16
++bfa_pport_get_maxfrsize(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	return port->cfg.maxfrsize;
++}
++
++u32
++bfa_pport_mypid(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	return port->mypid;
++}
++
++u8
++bfa_pport_get_rx_bbcredit(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	return port->cfg.rx_bbcredit;
 +}
 +
 +void
-+bfad_remove_intr(struct bfad_s *bfad)
++bfa_pport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit)
 +{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	port->cfg.tx_bbcredit = (u8) tx_bbcredit;
++	bfa_port_send_txcredit(port);
++}
++
++/**
++ * Get port attributes.
++ */
++
++wwn_t
++bfa_pport_get_wwn(struct bfa_s *bfa, bfa_boolean_t node)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++	if (node)
++		return pport->nwwn;
++	else
++		return pport->pwwn;
++}
++
++void
++bfa_pport_get_attr(struct bfa_s *bfa, struct bfa_pport_attr_s *attr)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_os_memset(attr, 0, sizeof(struct bfa_pport_attr_s));
++
++	attr->nwwn = pport->nwwn;
++	attr->pwwn = pport->pwwn;
++
++	bfa_os_memcpy(&attr->pport_cfg, &pport->cfg,
++		      sizeof(struct bfa_pport_cfg_s));
++	/*
++	 * speed attributes
++	 */
++	attr->pport_cfg.speed = pport->cfg.speed;
++	attr->speed_supported = pport->speed_sup;
++	attr->speed = pport->speed;
++	attr->cos_supported = FC_CLASS_3;
++
++	/*
++	 * topology attributes
++	 */
++	attr->pport_cfg.topology = pport->cfg.topology;
++	attr->topology = pport->topology;
++
++	/*
++	 * beacon attributes
++	 */
++	attr->beacon = pport->beacon;
++	attr->link_e2e_beacon = pport->link_e2e_beacon;
++	attr->plog_enabled = bfa_plog_get_setting(pport->bfa->plog);
++
++	attr->pport_cfg.path_tov = bfa_fcpim_path_tov_get(bfa);
++	attr->pport_cfg.q_depth = bfa_fcpim_qdepth_get(bfa);
++	attr->port_state = bfa_sm_to_state(hal_pport_sm_table, pport->sm);
++	if (bfa_ioc_is_disabled(&pport->bfa->ioc))
++		attr->port_state = BFA_PPORT_ST_IOCDIS;
++	else if (bfa_ioc_fw_mismatch(&pport->bfa->ioc))
++		attr->port_state = BFA_PPORT_ST_FWMISMATCH;
++}
++
++static void
++bfa_port_stats_query(void *cbarg)
++{
++	struct bfa_pport_s *port = (struct bfa_pport_s *)cbarg;
++	bfi_pport_get_stats_req_t *msg;
++
++	msg = bfa_reqq_next(port->bfa, BFA_REQQ_PORT);
++
++	if (!msg) {
++		port->stats_qfull = BFA_TRUE;
++		bfa_reqq_winit(&port->stats_reqq_wait, bfa_port_stats_query,
++			       port);
++		bfa_reqq_wait(port->bfa, BFA_REQQ_PORT, &port->stats_reqq_wait);
++		return;
++	}
++	port->stats_qfull = BFA_FALSE;
++
++	bfa_os_memset(msg, 0, sizeof(bfi_pport_get_stats_req_t));
++	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_GET_STATS_REQ,
++		    bfa_lpuid(port->bfa));
++	bfa_reqq_produce(port->bfa, BFA_REQQ_PORT);
++
++	return;
++}
++
++static void
++bfa_port_stats_clear(void *cbarg)
++{
++	struct bfa_pport_s *port = (struct bfa_pport_s *)cbarg;
++	bfi_pport_clear_stats_req_t *msg;
++
++	msg = bfa_reqq_next(port->bfa, BFA_REQQ_PORT);
++
++	if (!msg) {
++		port->stats_qfull = BFA_TRUE;
++		bfa_reqq_winit(&port->stats_reqq_wait, bfa_port_stats_clear,
++			       port);
++		bfa_reqq_wait(port->bfa, BFA_REQQ_PORT, &port->stats_reqq_wait);
++		return;
++	}
++	port->stats_qfull = BFA_FALSE;
++
++	bfa_os_memset(msg, 0, sizeof(bfi_pport_clear_stats_req_t));
++	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_CLEAR_STATS_REQ,
++		    bfa_lpuid(port->bfa));
++	bfa_reqq_produce(port->bfa, BFA_REQQ_PORT);
++	return;
++}
++
++static void
++bfa_port_qos_stats_clear(void *cbarg)
++{
++	struct bfa_pport_s *port = (struct bfa_pport_s *)cbarg;
++	bfi_pport_clear_qos_stats_req_t *msg;
++
++	msg = bfa_reqq_next(port->bfa, BFA_REQQ_PORT);
++
++	if (!msg) {
++		port->stats_qfull = BFA_TRUE;
++		bfa_reqq_winit(&port->stats_reqq_wait, bfa_port_qos_stats_clear,
++			       port);
++		bfa_reqq_wait(port->bfa, BFA_REQQ_PORT, &port->stats_reqq_wait);
++		return;
++	}
++	port->stats_qfull = BFA_FALSE;
++
++	bfa_os_memset(msg, 0, sizeof(bfi_pport_clear_qos_stats_req_t));
++	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_CLEAR_QOS_STATS_REQ,
++		    bfa_lpuid(port->bfa));
++	bfa_reqq_produce(port->bfa, BFA_REQQ_PORT);
++	return;
++}
++
++static void
++bfa_pport_stats_swap(union bfa_pport_stats_u *d, union bfa_pport_stats_u *s)
++{
++	u32       *dip = (u32 *) d;
++	u32       *sip = (u32 *) s;
 +	int             i;
 +
-+	if (bfad->bfad_flags & BFAD_MSIX_ON) {
-+		for (i = 0; i < bfad->nvec; i++)
-+			free_irq(bfad->msix_tab[i].msix.vector,
-+					&bfad->msix_tab[i]);
++	/*
++	 * Do 64 bit fields swap first
++	 */
++	for (i = 0;
++	     i <
++	     ((sizeof(union bfa_pport_stats_u) -
++	       sizeof(struct bfa_qos_stats_s)) / sizeof(u32)); i = i + 2) {
++#ifdef __BIGENDIAN
++		dip[i] = bfa_os_ntohl(sip[i]);
++		dip[i + 1] = bfa_os_ntohl(sip[i + 1]);
++#else
++		dip[i] = bfa_os_ntohl(sip[i + 1]);
++		dip[i + 1] = bfa_os_ntohl(sip[i]);
++#endif
++	}
 +
-+		pci_disable_msix(bfad->pcidev);
-+		bfad->bfad_flags &= ~BFAD_MSIX_ON;
++	/*
++	 * Now swap the 32 bit fields
++	 */
++	for (; i < (sizeof(union bfa_pport_stats_u) / sizeof(u32)); ++i)
++		dip[i] = bfa_os_ntohl(sip[i]);
++}
++
++static void
++__bfa_cb_port_stats_clr(void *cbarg, bfa_boolean_t complete)
++{
++	struct bfa_pport_s *port = cbarg;
++
++	if (complete) {
++		port->stats_cbfn(port->stats_cbarg, port->stats_status);
 +	} else {
-+		free_irq(bfad->pcidev->irq, bfad);
++		port->stats_busy = BFA_FALSE;
++		port->stats_status = BFA_STATUS_OK;
 +	}
 +}
 +
++static void
++bfa_port_stats_clr_timeout(void *cbarg)
++{
++	struct bfa_pport_s *port = (struct bfa_pport_s *)cbarg;
 +
-diff -urpN orig/drivers/scsi/bfa/bfad_ipfc.h patch/drivers/scsi/bfa/bfad_ipfc.h
---- orig/drivers/scsi/bfa/bfad_ipfc.h	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_ipfc.h	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,42 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+#ifndef __BFA_DRV_IPFC_H__
-+#define __BFA_DRV_IPFC_H__
++	bfa_trc(port->bfa, port->stats_qfull);
 +
++	if (port->stats_qfull) {
++		bfa_reqq_wcancel(&port->stats_reqq_wait);
++		port->stats_qfull = BFA_FALSE;
++	}
 +
-+#define IPFC_NAME ""
++	port->stats_status = BFA_STATUS_ETIMER;
++	bfa_cb_queue(port->bfa, &port->hcb_qe, __bfa_cb_port_stats_clr, port);
++}
 +
-+#define bfad_ipfc_module_init(x) do {} while (0)
-+#define bfad_ipfc_module_exit(x) do {} while (0)
-+#define bfad_ipfc_probe(x) do {} while (0)
-+#define bfad_ipfc_probe_undo(x) do {} while (0)
-+#define bfad_ipfc_port_config(x, y) BFA_STATUS_OK
-+#define bfad_ipfc_port_unconfig(x, y) do {} while (0)
++static void
++__bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete)
++{
++	struct bfa_pport_s *port = cbarg;
 +
-+#define bfad_ipfc_probe_post(x) do {} while (0)
-+#define bfad_ipfc_port_new(x, y, z) BFA_STATUS_OK
-+#define bfad_ipfc_port_delete(x, y) do {} while (0)
-+#define bfad_ipfc_port_online(x, y) do {} while (0)
-+#define bfad_ipfc_port_offline(x, y) do {} while (0)
++	if (complete) {
++		if (port->stats_status == BFA_STATUS_OK)
++			bfa_pport_stats_swap(port->stats_ret, port->stats);
++		port->stats_cbfn(port->stats_cbarg, port->stats_status);
++	} else {
++		port->stats_busy = BFA_FALSE;
++		port->stats_status = BFA_STATUS_OK;
++	}
++}
 +
-+#define bfad_ip_get_attr(x) BFA_STATUS_FAILED
-+#define bfad_ip_reset_drv_stats(x) BFA_STATUS_FAILED
-+#define bfad_ip_get_drv_stats(x, y) BFA_STATUS_FAILED
-+#define bfad_ip_enable_ipfc(x, y, z) BFA_STATUS_FAILED
++static void
++bfa_port_stats_timeout(void *cbarg)
++{
++	struct bfa_pport_s *port = (struct bfa_pport_s *)cbarg;
 +
++	bfa_trc(port->bfa, port->stats_qfull);
 +
-+#endif
-diff -urpN orig/drivers/scsi/bfa/bfad_os.c patch/drivers/scsi/bfa/bfad_os.c
---- orig/drivers/scsi/bfa/bfad_os.c	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_os.c	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,50 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
++	if (port->stats_qfull) {
++		bfa_reqq_wcancel(&port->stats_reqq_wait);
++		port->stats_qfull = BFA_FALSE;
++	}
++
++	port->stats_status = BFA_STATUS_ETIMER;
++	bfa_cb_queue(port->bfa, &port->hcb_qe, __bfa_cb_port_stats, port);
++}
++
++#define BFA_PORT_STATS_TOV	1000
 +
 +/**
-+ *  bfad_os.c Linux driver OS specific calls.
++ * Fetch port attributes.
 + */
-+
-+#include "bfa_os_inc.h"
-+#include "bfad_drv.h"
-+
-+void
-+bfa_os_gettimeofday(struct bfa_timeval_s *tv)
++bfa_status_t
++bfa_pport_get_stats(struct bfa_s *bfa, union bfa_pport_stats_u *stats,
++		    bfa_cb_pport_t cbfn, void *cbarg)
 +{
-+	struct timeval  tmp_tv;
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
 +
-+	do_gettimeofday(&tmp_tv);
-+	tv->tv_sec = (u32) tmp_tv.tv_sec;
-+	tv->tv_usec = (u32) tmp_tv.tv_usec;
++	if (port->stats_busy) {
++		bfa_trc(bfa, port->stats_busy);
++		return (BFA_STATUS_DEVBUSY);
++	}
++
++	port->stats_busy = BFA_TRUE;
++	port->stats_ret = stats;
++	port->stats_cbfn = cbfn;
++	port->stats_cbarg = cbarg;
++
++	bfa_port_stats_query(port);
++
++	bfa_timer_start(bfa, &port->timer, bfa_port_stats_timeout, port,
++			BFA_PORT_STATS_TOV);
++	return (BFA_STATUS_OK);
++}
++
++bfa_status_t
++bfa_pport_clear_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	if (port->stats_busy) {
++		bfa_trc(bfa, port->stats_busy);
++		return (BFA_STATUS_DEVBUSY);
++	}
++
++	port->stats_busy = BFA_TRUE;
++	port->stats_cbfn = cbfn;
++	port->stats_cbarg = cbarg;
++
++	bfa_port_stats_clear(port);
++
++	bfa_timer_start(bfa, &port->timer, bfa_port_stats_clr_timeout, port,
++			BFA_PORT_STATS_TOV);
++	return (BFA_STATUS_OK);
++}
++
++bfa_status_t
++bfa_pport_trunk_enable(struct bfa_s *bfa, u8 bitmap)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, bitmap);
++	bfa_trc(bfa, pport->cfg.trunked);
++	bfa_trc(bfa, pport->cfg.trunk_ports);
++
++	if (!bitmap || (bitmap & (bitmap - 1)))
++		return BFA_STATUS_EINVAL;
++
++	pport->cfg.trunked = BFA_TRUE;
++	pport->cfg.trunk_ports = bitmap;
++
++	return BFA_STATUS_OK;
 +}
 +
 +void
-+bfa_os_printf(struct bfa_log_mod_s *log_mod, u32 msg_id,
-+			const char *fmt, ...)
++bfa_pport_qos_get_attr(struct bfa_s *bfa, struct bfa_qos_attr_s *qos_attr)
 +{
-+	va_list ap;
-+	#define BFA_STRING_256	256
-+	char tmp[BFA_STRING_256];
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
 +
-+	va_start(ap, fmt);
-+	vsprintf(tmp, fmt, ap);
-+	va_end(ap);
++	qos_attr->state = bfa_os_ntohl(pport->qos_attr.state);
++	qos_attr->total_bb_cr = bfa_os_ntohl(pport->qos_attr.total_bb_cr);
++}
 +
-+	printk(tmp);
++void
++bfa_pport_qos_get_vc_attr(struct bfa_s *bfa,
++			  struct bfa_qos_vc_attr_s *qos_vc_attr)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++	struct bfa_qos_vc_attr_s *bfa_vc_attr = &pport->qos_vc_attr;
++	u32        i = 0;
++
++	qos_vc_attr->total_vc_count = bfa_os_ntohs(bfa_vc_attr->total_vc_count);
++	qos_vc_attr->shared_credit = bfa_os_ntohs(bfa_vc_attr->shared_credit);
++	qos_vc_attr->elp_opmode_flags =
++		bfa_os_ntohl(bfa_vc_attr->elp_opmode_flags);
++
++	/*
++	 * Individual VC info
++	 */
++	while (i < qos_vc_attr->total_vc_count) {
++		qos_vc_attr->vc_info[i].vc_credit =
++			bfa_vc_attr->vc_info[i].vc_credit;
++		qos_vc_attr->vc_info[i].borrow_credit =
++			bfa_vc_attr->vc_info[i].borrow_credit;
++		qos_vc_attr->vc_info[i].priority =
++			bfa_vc_attr->vc_info[i].priority;
++		++i;
++	}
++}
++
++/**
++ * Fetch QoS Stats.
++ */
++bfa_status_t
++bfa_pport_get_qos_stats(struct bfa_s *bfa, union bfa_pport_stats_u *stats,
++			bfa_cb_pport_t cbfn, void *cbarg)
++{
++	/*
++	 * QoS stats is embedded in port stats
++	 */
++	return (bfa_pport_get_stats(bfa, stats, cbfn, cbarg));
++}
++
++bfa_status_t
++bfa_pport_clear_qos_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	if (port->stats_busy) {
++		bfa_trc(bfa, port->stats_busy);
++		return (BFA_STATUS_DEVBUSY);
++	}
++
++	port->stats_busy = BFA_TRUE;
++	port->stats_cbfn = cbfn;
++	port->stats_cbarg = cbarg;
++
++	bfa_port_qos_stats_clear(port);
++
++	bfa_timer_start(bfa, &port->timer, bfa_port_stats_clr_timeout, port,
++			BFA_PORT_STATS_TOV);
++	return (BFA_STATUS_OK);
++}
++
++/**
++ * Fetch port attributes.
++ */
++bfa_status_t
++bfa_pport_trunk_disable(struct bfa_s *bfa)
++{
++	return (BFA_STATUS_OK);
++}
++
++bfa_boolean_t
++bfa_pport_trunk_query(struct bfa_s *bfa, u32 *bitmap)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	*bitmap = port->cfg.trunk_ports;
++	return port->cfg.trunked;
++}
++
++bfa_boolean_t
++bfa_pport_is_disabled(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *port = BFA_PORT_MOD(bfa);
++
++	return (bfa_sm_to_state(hal_pport_sm_table, port->sm) ==
++		BFA_PPORT_ST_DISABLED);
++
++}
++
++bfa_boolean_t
++bfa_pport_is_ratelim(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++return (pport->cfg.ratelimit ? BFA_TRUE : BFA_FALSE);
++
++}
++
++void
++bfa_pport_cfg_qos(struct bfa_s *bfa, bfa_boolean_t on_off)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, on_off);
++	bfa_trc(bfa, pport->cfg.qos_enabled);
++
++	pport->cfg.qos_enabled = on_off;
++}
++
++void
++bfa_pport_cfg_ratelim(struct bfa_s *bfa, bfa_boolean_t on_off)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, on_off);
++	bfa_trc(bfa, pport->cfg.ratelimit);
++
++	pport->cfg.ratelimit = on_off;
++	if (pport->cfg.trl_def_speed == BFA_PPORT_SPEED_UNKNOWN)
++		pport->cfg.trl_def_speed = BFA_PPORT_SPEED_1GBPS;
++}
++
++/**
++ * Configure default minimum ratelim speed
++ */
++bfa_status_t
++bfa_pport_cfg_ratelim_speed(struct bfa_s *bfa, enum bfa_pport_speed speed)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, speed);
++
++	/*
++	 * Auto and speeds greater than the supported speed, are invalid
++	 */
++	if ((speed == BFA_PPORT_SPEED_AUTO) || (speed > pport->speed_sup)) {
++		bfa_trc(bfa, pport->speed_sup);
++		return BFA_STATUS_UNSUPP_SPEED;
++	}
++
++	pport->cfg.trl_def_speed = speed;
++
++	return (BFA_STATUS_OK);
++}
++
++/**
++ * Get default minimum ratelim speed
++ */
++enum bfa_pport_speed
++bfa_pport_get_ratelim_speed(struct bfa_s *bfa)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, pport->cfg.trl_def_speed);
++	return (pport->cfg.trl_def_speed);
++
++}
++
++void
++bfa_pport_busy(struct bfa_s *bfa, bfa_boolean_t status)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, status);
++	bfa_trc(bfa, pport->diag_busy);
++
++	pport->diag_busy = status;
++}
++
++void
++bfa_pport_beacon(struct bfa_s *bfa, bfa_boolean_t beacon,
++		 bfa_boolean_t link_e2e_beacon)
++{
++	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
++
++	bfa_trc(bfa, beacon);
++	bfa_trc(bfa, link_e2e_beacon);
++	bfa_trc(bfa, pport->beacon);
++	bfa_trc(bfa, pport->link_e2e_beacon);
++
++	pport->beacon = beacon;
++	pport->link_e2e_beacon = link_e2e_beacon;
++}
++
++bfa_boolean_t
++bfa_pport_is_linkup(struct bfa_s *bfa)
++{
++	return bfa_sm_cmp_state(BFA_PORT_MOD(bfa), bfa_pport_sm_linkup);
 +}
 +
 +
-diff -urpN orig/drivers/scsi/bfa/bfad_tm.h patch/drivers/scsi/bfa/bfad_tm.h
---- orig/drivers/scsi/bfa/bfad_tm.h	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_tm.h	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,59 @@
+diff -urpN orig/drivers/scsi/bfa/bfa_fcxp.c patch/drivers/scsi/bfa/bfa_fcxp.c
+--- orig/drivers/scsi/bfa/bfa_fcxp.c	1969-12-31 16:00:00.000000000 -0800
++++ patch/drivers/scsi/bfa/bfa_fcxp.c	2009-09-23 15:59:19.000000000 -0700
+@@ -0,0 +1,782 @@
 +/*
 + * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 + * All rights reserved
@@ -4119,101 +3329,768 @@ diff -urpN orig/drivers/scsi/bfa/bfad_tm.h patch/drivers/scsi/bfa/bfad_tm.h
 + * General Public License for more details.
 + */
 +
-+/*
-+ * Brocade Fibre Channel HBA Linux Target Mode Driver
++#include <bfa.h>
++#include <bfi/bfi_uf.h>
++#include <cs/bfa_debug.h>
++
++BFA_TRC_FILE(HAL, FCXP);
++BFA_MODULE(fcxp);
++
++/**
++ * forward declarations
++ */
++static void     __bfa_fcxp_send_cbfn(void *cbarg, bfa_boolean_t complete);
++static void     hal_fcxp_rx_plog(struct bfa_s *bfa, struct bfa_fcxp_s *fcxp,
++				 struct bfi_fcxp_send_rsp_s *fcxp_rsp);
++static void     hal_fcxp_tx_plog(struct bfa_s *bfa, u32 reqlen,
++				 struct bfa_fcxp_s *fcxp, struct fchs_s *fchs);
++static void	bfa_fcxp_qresume(void *cbarg);
++static void	bfa_fcxp_queue(struct bfa_fcxp_s *fcxp,
++			       struct bfi_fcxp_send_req_s *send_req);
++
++/**
++ *  fcxp_pvt BFA FCXP private functions
++ */
++
++static void
++claim_fcxp_req_rsp_mem(struct bfa_fcxp_mod_s *mod, struct bfa_meminfo_s *mi)
++{
++	u8        *dm_kva = NULL;
++	u64        dm_pa;
++	u32        buf_pool_sz;
++
++	dm_kva = bfa_meminfo_dma_virt(mi);
++	dm_pa = bfa_meminfo_dma_phys(mi);
++
++	buf_pool_sz = mod->req_pld_sz * mod->num_fcxps;
++
++	/*
++	 * Initialize the fcxp req payload list
++	 */
++	mod->req_pld_list_kva = dm_kva;
++	mod->req_pld_list_pa = dm_pa;
++	dm_kva += buf_pool_sz;
++	dm_pa += buf_pool_sz;
++	bfa_os_memset(mod->req_pld_list_kva, 0, buf_pool_sz);
++
++	/*
++	 * Initialize the fcxp rsp payload list
++	 */
++	buf_pool_sz = mod->rsp_pld_sz * mod->num_fcxps;
++	mod->rsp_pld_list_kva = dm_kva;
++	mod->rsp_pld_list_pa = dm_pa;
++	dm_kva += buf_pool_sz;
++	dm_pa += buf_pool_sz;
++	bfa_os_memset(mod->rsp_pld_list_kva, 0, buf_pool_sz);
++
++	bfa_meminfo_dma_virt(mi) = dm_kva;
++	bfa_meminfo_dma_phys(mi) = dm_pa;
++}
++
++static void
++claim_fcxps_mem(struct bfa_fcxp_mod_s *mod, struct bfa_meminfo_s *mi)
++{
++	u16        i;
++	struct bfa_fcxp_s *fcxp;
++
++	fcxp = (struct bfa_fcxp_s *) bfa_meminfo_kva(mi);
++	bfa_os_memset(fcxp, 0, sizeof(struct bfa_fcxp_s) * mod->num_fcxps);
++
++	INIT_LIST_HEAD(&mod->fcxp_free_q);
++	INIT_LIST_HEAD(&mod->fcxp_active_q);
++
++	mod->fcxp_list = fcxp;
++
++	for (i = 0; i < mod->num_fcxps; i++) {
++		fcxp->fcxp_mod = mod;
++		fcxp->fcxp_tag = i;
++
++		list_add_tail(&fcxp->qe, &mod->fcxp_free_q);
++		bfa_reqq_winit(&fcxp->reqq_wqe, bfa_fcxp_qresume, fcxp);
++		fcxp->reqq_waiting = BFA_FALSE;
++
++		fcxp = fcxp + 1;
++	}
++
++	bfa_meminfo_kva(mi) = (void *)fcxp;
++}
++
++static void
++bfa_fcxp_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *ndm_len,
++		u32 *dm_len)
++{
++	u16        num_fcxp_reqs = cfg->fwcfg.num_fcxp_reqs;
++
++	if (num_fcxp_reqs == 0)
++		return;
++
++	/*
++	 * Account for req/rsp payload
++	 */
++	*dm_len += BFA_FCXP_MAX_IBUF_SZ * num_fcxp_reqs;
++	if (cfg->drvcfg.min_cfg)
++		*dm_len += BFA_FCXP_MAX_IBUF_SZ * num_fcxp_reqs;
++	else
++		*dm_len += BFA_FCXP_MAX_LBUF_SZ * num_fcxp_reqs;
++
++	/*
++	 * Account for fcxp structs
++	 */
++	*ndm_len += sizeof(struct bfa_fcxp_s) * num_fcxp_reqs;
++}
++
++static void
++bfa_fcxp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++		    struct bfa_meminfo_s *meminfo, struct bfa_pcidev_s *pcidev)
++{
++	struct bfa_fcxp_mod_s *mod = BFA_FCXP_MOD(bfa);
++
++	bfa_os_memset(mod, 0, sizeof(struct bfa_fcxp_mod_s));
++	mod->bfa = bfa;
++	mod->num_fcxps = cfg->fwcfg.num_fcxp_reqs;
++
++	/**
++	 * Initialize FCXP request and response payload sizes.
++	 */
++	mod->req_pld_sz = mod->rsp_pld_sz = BFA_FCXP_MAX_IBUF_SZ;
++	if (!cfg->drvcfg.min_cfg)
++		mod->rsp_pld_sz = BFA_FCXP_MAX_LBUF_SZ;
++
++	INIT_LIST_HEAD(&mod->wait_q);
++
++	claim_fcxp_req_rsp_mem(mod, meminfo);
++	claim_fcxps_mem(mod, meminfo);
++}
++
++static void
++bfa_fcxp_initdone(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcxp_detach(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcxp_start(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcxp_stop(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcxp_iocdisable(struct bfa_s *bfa)
++{
++	struct bfa_fcxp_mod_s *mod = BFA_FCXP_MOD(bfa);
++	struct bfa_fcxp_s *fcxp;
++	struct list_head        *qe, *qen;
++
++	list_for_each_safe(qe, qen, &mod->fcxp_active_q) {
++		fcxp = (struct bfa_fcxp_s *) qe;
++		if (fcxp->caller == NULL) {
++			fcxp->send_cbfn(fcxp->caller, fcxp, fcxp->send_cbarg,
++					BFA_STATUS_IOC_FAILURE, 0, 0, NULL);
++			bfa_fcxp_free(fcxp);
++		} else {
++			fcxp->rsp_status = BFA_STATUS_IOC_FAILURE;
++			bfa_cb_queue(bfa, &fcxp->hcb_qe,
++				      __bfa_fcxp_send_cbfn, fcxp);
++		}
++	}
++}
++
++static struct bfa_fcxp_s *
++bfa_fcxp_get(struct bfa_fcxp_mod_s *fm)
++{
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_q_deq(&fm->fcxp_free_q, &fcxp);
++
++	if (fcxp)
++		list_add_tail(&fcxp->qe, &fm->fcxp_active_q);
++
++	return (fcxp);
++}
++
++static void
++bfa_fcxp_put(struct bfa_fcxp_s *fcxp)
++{
++	struct bfa_fcxp_mod_s *mod = fcxp->fcxp_mod;
++	struct bfa_fcxp_wqe_s *wqe;
++
++	bfa_q_deq(&mod->wait_q, &wqe);
++	if (wqe) {
++		bfa_trc(mod->bfa, fcxp->fcxp_tag);
++		wqe->alloc_cbfn(wqe->alloc_cbarg, fcxp);
++		return;
++	}
++
++	bfa_assert(bfa_q_is_on_q(&mod->fcxp_active_q, fcxp));
++	list_del(&fcxp->qe);
++	list_add_tail(&fcxp->qe, &mod->fcxp_free_q);
++}
++
++static void
++bfa_fcxp_null_comp(void *bfad_fcxp, struct bfa_fcxp_s *fcxp, void *cbarg,
++		       bfa_status_t req_status, u32 rsp_len,
++		       u32 resid_len, struct fchs_s *rsp_fchs)
++{
++	/**discarded fcxp completion */
++}
++
++static void
++__bfa_fcxp_send_cbfn(void *cbarg, bfa_boolean_t complete)
++{
++	struct bfa_fcxp_s *fcxp = cbarg;
++
++	if (complete) {
++		fcxp->send_cbfn(fcxp->caller, fcxp, fcxp->send_cbarg,
++				fcxp->rsp_status, fcxp->rsp_len,
++				fcxp->residue_len, &fcxp->rsp_fchs);
++	} else {
++		bfa_fcxp_free(fcxp);
++	}
++}
++
++static void
++hal_fcxp_send_comp(struct bfa_s *bfa, struct bfi_fcxp_send_rsp_s *fcxp_rsp)
++{
++	struct bfa_fcxp_mod_s	*mod = BFA_FCXP_MOD(bfa);
++	struct bfa_fcxp_s 	*fcxp;
++	u16		fcxp_tag = bfa_os_ntohs(fcxp_rsp->fcxp_tag);
++
++	bfa_trc(bfa, fcxp_tag);
++
++	fcxp_rsp->rsp_len = bfa_os_ntohl(fcxp_rsp->rsp_len);
++
++	/**
++	 * @todo f/w should not set residue to non-0 when everything
++	 *       is received.
++	 */
++	if (fcxp_rsp->req_status == BFA_STATUS_OK)
++		fcxp_rsp->residue_len = 0;
++	else
++		fcxp_rsp->residue_len = bfa_os_ntohl(fcxp_rsp->residue_len);
++
++	fcxp = BFA_FCXP_FROM_TAG(mod, fcxp_tag);
++
++	bfa_assert(fcxp->send_cbfn != NULL);
++
++	hal_fcxp_rx_plog(mod->bfa, fcxp, fcxp_rsp);
++
++	if (fcxp->send_cbfn != NULL) {
++		if (fcxp->caller == NULL) {
++			bfa_trc(mod->bfa, fcxp->fcxp_tag);
++
++			fcxp->send_cbfn(fcxp->caller, fcxp, fcxp->send_cbarg,
++					fcxp_rsp->req_status, fcxp_rsp->rsp_len,
++					fcxp_rsp->residue_len, &fcxp_rsp->fchs);
++			/*
++			 * fcxp automatically freed on return from the callback
++			 */
++			bfa_fcxp_free(fcxp);
++		} else {
++			bfa_trc(mod->bfa, fcxp->fcxp_tag);
++			fcxp->rsp_status = fcxp_rsp->req_status;
++			fcxp->rsp_len = fcxp_rsp->rsp_len;
++			fcxp->residue_len = fcxp_rsp->residue_len;
++			fcxp->rsp_fchs = fcxp_rsp->fchs;
++
++			bfa_cb_queue(bfa, &fcxp->hcb_qe,
++				      __bfa_fcxp_send_cbfn, fcxp);
++		}
++	} else {
++		bfa_trc(bfa, fcxp_tag);
++	}
++}
++
++static void
++hal_fcxp_set_local_sges(struct bfi_sge_s *sge, u32 reqlen, u64 req_pa)
++{
++	union bfi_addr_u      sga_zero = { {0} };
++
++	sge->sg_len = reqlen;
++	sge->flags = BFI_SGE_DATA_LAST;
++	bfa_dma_addr_set(sge[0].sga, req_pa);
++	bfa_sge_to_be(sge);
++	sge++;
++
++	sge->sga = sga_zero;
++	sge->sg_len = reqlen;
++	sge->flags = BFI_SGE_PGDLEN;
++	bfa_sge_to_be(sge);
++}
++
++static void
++hal_fcxp_tx_plog(struct bfa_s *bfa, u32 reqlen, struct bfa_fcxp_s *fcxp,
++		 struct fchs_s *fchs)
++{
++	/*
++	 * TODO: TX ox_id
++	 */
++	if (reqlen > 0) {
++		if (fcxp->use_ireqbuf) {
++			u32        pld_w0 =
++				*((u32 *) BFA_FCXP_REQ_PLD(fcxp));
++
++			bfa_plog_fchdr_and_pl(bfa->plog, BFA_PL_MID_HAL_FCXP,
++				BFA_PL_EID_TX,
++				reqlen + sizeof(struct fchs_s), fchs, pld_w0);
++		} else {
++			bfa_plog_fchdr(bfa->plog, BFA_PL_MID_HAL_FCXP,
++				BFA_PL_EID_TX, reqlen + sizeof(struct fchs_s),
++				fchs);
++		}
++	} else {
++		bfa_plog_fchdr(bfa->plog, BFA_PL_MID_HAL_FCXP, BFA_PL_EID_TX,
++			       reqlen + sizeof(struct fchs_s), fchs);
++	}
++}
++
++static void
++hal_fcxp_rx_plog(struct bfa_s *bfa, struct bfa_fcxp_s *fcxp,
++		 struct bfi_fcxp_send_rsp_s *fcxp_rsp)
++{
++	if (fcxp_rsp->rsp_len > 0) {
++		if (fcxp->use_irspbuf) {
++			u32        pld_w0 =
++				*((u32 *) BFA_FCXP_RSP_PLD(fcxp));
++
++			bfa_plog_fchdr_and_pl(bfa->plog, BFA_PL_MID_HAL_FCXP,
++					      BFA_PL_EID_RX,
++					      (u16) fcxp_rsp->rsp_len,
++					      &fcxp_rsp->fchs, pld_w0);
++		} else {
++			bfa_plog_fchdr(bfa->plog, BFA_PL_MID_HAL_FCXP,
++				       BFA_PL_EID_RX,
++				       (u16) fcxp_rsp->rsp_len,
++				       &fcxp_rsp->fchs);
++		}
++	} else {
++		bfa_plog_fchdr(bfa->plog, BFA_PL_MID_HAL_FCXP, BFA_PL_EID_RX,
++			       (u16) fcxp_rsp->rsp_len, &fcxp_rsp->fchs);
++	}
++}
++
++/**
++ * Handler to resume sending fcxp when space in available in cpe queue.
++ */
++static void
++bfa_fcxp_qresume(void *cbarg)
++{
++	struct bfa_fcxp_s		*fcxp = cbarg;
++	struct bfa_s			*bfa = fcxp->fcxp_mod->bfa;
++	struct bfi_fcxp_send_req_s	*send_req;
++
++	fcxp->reqq_waiting = BFA_FALSE;
++	send_req = bfa_reqq_next(bfa, BFA_REQQ_FCXP);
++	bfa_fcxp_queue(fcxp, send_req);
++}
++
++/**
++ * Queue fcxp send request to foimrware.
++ */
++static void
++bfa_fcxp_queue(struct bfa_fcxp_s *fcxp, struct bfi_fcxp_send_req_s *send_req)
++{
++	struct bfa_s      		*bfa = fcxp->fcxp_mod->bfa;
++	struct bfa_fcxp_req_info_s	*reqi = &fcxp->req_info;
++	struct bfa_fcxp_rsp_info_s	*rspi = &fcxp->rsp_info;
++	struct bfa_rport_s		*rport = reqi->bfa_rport;
++
++	bfi_h2i_set(send_req->mh, BFI_MC_FCXP, BFI_FCXP_H2I_SEND_REQ,
++			bfa_lpuid(bfa));
++
++	send_req->fcxp_tag = bfa_os_htons(fcxp->fcxp_tag);
++	if (rport) {
++		send_req->rport_fw_hndl = rport->fw_handle;
++		send_req->max_frmsz = bfa_os_htons(rport->rport_info.max_frmsz);
++		if (send_req->max_frmsz == 0)
++			send_req->max_frmsz = bfa_os_htons(FC_MAX_PDUSZ);
++	} else {
++		send_req->rport_fw_hndl = 0;
++		send_req->max_frmsz = bfa_os_htons(FC_MAX_PDUSZ);
++	}
++
++	send_req->vf_id = bfa_os_htons(reqi->vf_id);
++	send_req->lp_tag = reqi->lp_tag;
++	send_req->class = reqi->class;
++	send_req->rsp_timeout = rspi->rsp_timeout;
++	send_req->cts = reqi->cts;
++	send_req->fchs = reqi->fchs;
++
++	send_req->req_len = bfa_os_htonl(reqi->req_tot_len);
++	send_req->rsp_maxlen = bfa_os_htonl(rspi->rsp_maxlen);
++
++	/*
++	 * setup req sgles
++	 */
++	if (fcxp->use_ireqbuf == 1) {
++		hal_fcxp_set_local_sges(send_req->req_sge, reqi->req_tot_len,
++					BFA_FCXP_REQ_PLD_PA(fcxp));
++	} else {
++		if (fcxp->nreq_sgles > 0) {
++			bfa_assert(fcxp->nreq_sgles == 1);
++			hal_fcxp_set_local_sges(send_req->req_sge,
++						reqi->req_tot_len,
++						fcxp->req_sga_cbfn(fcxp->caller,
++								   0));
++		} else {
++			bfa_assert(reqi->req_tot_len == 0);
++			hal_fcxp_set_local_sges(send_req->rsp_sge, 0, 0);
++		}
++	}
++
++	/*
++	 * setup rsp sgles
++	 */
++	if (fcxp->use_irspbuf == 1) {
++		bfa_assert(rspi->rsp_maxlen <= BFA_FCXP_MAX_LBUF_SZ);
++
++		hal_fcxp_set_local_sges(send_req->rsp_sge, rspi->rsp_maxlen,
++					BFA_FCXP_RSP_PLD_PA(fcxp));
++
++	} else {
++		if (fcxp->nrsp_sgles > 0) {
++			bfa_assert(fcxp->nrsp_sgles == 1);
++			hal_fcxp_set_local_sges(send_req->rsp_sge,
++						rspi->rsp_maxlen,
++						fcxp->rsp_sga_cbfn(fcxp->caller,
++								   0));
++		} else {
++			bfa_assert(rspi->rsp_maxlen == 0);
++			hal_fcxp_set_local_sges(send_req->rsp_sge, 0, 0);
++		}
++	}
++
++	hal_fcxp_tx_plog(bfa, reqi->req_tot_len, fcxp, &reqi->fchs);
++
++	bfa_reqq_produce(bfa, BFA_REQQ_FCXP);
++
++	bfa_trc(bfa, bfa_reqq_pi(bfa, BFA_REQQ_FCXP));
++	bfa_trc(bfa, bfa_reqq_ci(bfa, BFA_REQQ_FCXP));
++}
++
++
++/**
++ *  hal_fcxp_api BFA FCXP API
 + */
 +
 +/**
-+ *  tm/dummy/bfad_tm.h BFA callback dummy header file for BFA Linux target mode PCI interface module.
-+ */
-+
-+#ifndef __BFAD_TM_H__
-+#define __BFAD_TM_H__
-+
-+#include <defs/bfa_defs_status.h>
-+
-+#define FCPT_NAME 		""
-+
-+/*
-+ * Called from base Linux driver on (De)Init events
-+ */
-+
-+/* attach tgt template with scst */
-+#define bfad_tm_module_init()	do {} while (0)
-+
-+/* detach/release tgt template */
-+#define bfad_tm_module_exit()	do {} while (0)
-+
-+#define bfad_tm_probe(x)	do {} while (0)
-+#define bfad_tm_probe_undo(x)	do {} while (0)
-+#define bfad_tm_probe_post(x)	do {} while (0)
-+
-+/*
-+ * Called by base Linux driver but triggered by BFA FCS on config events
-+ */
-+#define bfad_tm_port_new(x, y)		BFA_STATUS_OK
-+#define bfad_tm_port_delete(x, y)	do {} while (0)
-+
-+/*
-+ * Called by base Linux driver but triggered by BFA FCS on PLOGI/O events
-+ */
-+#define bfad_tm_port_online(x, y)	do {} while (0)
-+#define bfad_tm_port_offline(x, y)	do {} while (0)
-+
-+#endif
-diff -urpN orig/drivers/scsi/bfa/bfad_trcmod.h patch/drivers/scsi/bfa/bfad_trcmod.h
---- orig/drivers/scsi/bfa/bfad_trcmod.h	1969-12-31 16:00:00.000000000 -0800
-+++ patch/drivers/scsi/bfa/bfad_trcmod.h	2009-09-23 15:59:17.000000000 -0700
-@@ -0,0 +1,52 @@
-+/*
-+ * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
++ * Allocate an FCXP instance to send a response or to send a request
++ * that has a response. Request/response buffers are allocated by caller.
 + *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
++ * @param[in]	bfa		BFA bfa instance
++ * @param[in]	nreq_sgles	Number of SG elements required for request
++ * 				buffer. 0, if fcxp internal buffers are	used.
++ * 				Use bfa_fcxp_get_reqbuf() to get the
++ * 				internal req buffer.
++ * @param[in]	req_sgles	SG elements describing request buffer. Will be
++ * 				copied in by BFA and hence can be freed on
++ * 				return from this function.
++ * @param[in]	get_req_sga	function ptr to be called to get a request SG
++ * 				Address (given the sge index).
++ * @param[in]	get_req_sglen	function ptr to be called to get a request SG
++ * 				len (given the sge index).
++ * @param[in]	get_rsp_sga	function ptr to be called to get a response SG
++ * 				Address (given the sge index).
++ * @param[in]	get_rsp_sglen	function ptr to be called to get a response SG
++ * 				len (given the sge index).
 + *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
++ * @return FCXP instance. NULL on failure.
 + */
++struct bfa_fcxp_s *
++bfa_fcxp_alloc(void *caller, struct bfa_s *bfa, int nreq_sgles,
++			int nrsp_sgles, bfa_fcxp_get_sgaddr_t req_sga_cbfn,
++			bfa_fcxp_get_sglen_t req_sglen_cbfn,
++			bfa_fcxp_get_sgaddr_t rsp_sga_cbfn,
++			bfa_fcxp_get_sglen_t rsp_sglen_cbfn)
++{
++	struct bfa_fcxp_s *fcxp = NULL;
++	u32        nreq_sgpg, nrsp_sgpg;
++
++	bfa_assert(bfa != NULL);
++
++	fcxp = bfa_fcxp_get(BFA_FCXP_MOD(bfa));
++	if (fcxp == NULL)
++		return (NULL);
++
++	bfa_trc(bfa, fcxp->fcxp_tag);
++
++	fcxp->caller = caller;
++
++	if (nreq_sgles == 0) {
++		fcxp->use_ireqbuf = 1;
++	} else {
++		bfa_assert(req_sga_cbfn != NULL);
++		bfa_assert(req_sglen_cbfn != NULL);
++
++		fcxp->use_ireqbuf = 0;
++		fcxp->req_sga_cbfn = req_sga_cbfn;
++		fcxp->req_sglen_cbfn = req_sglen_cbfn;
++
++		fcxp->nreq_sgles = nreq_sgles;
++
++		/*
++		 * alloc required sgpgs
++		 */
++		if (nreq_sgles > BFI_SGE_INLINE) {
++			nreq_sgpg = BFA_SGPG_NPAGE(nreq_sgles);
++
++			if (bfa_sgpg_malloc
++			    (bfa, &fcxp->req_sgpg_q, nreq_sgpg)
++			    != BFA_STATUS_OK) {
++				/* bfa_sgpg_wait(bfa, &fcxp->req_sgpg_wqe,
++				nreq_sgpg); */
++				/*
++				 * TODO
++				 */
++			}
++		}
++	}
++
++	if (nrsp_sgles == 0) {
++		fcxp->use_irspbuf = 1;
++	} else {
++		bfa_assert(rsp_sga_cbfn != NULL);
++		bfa_assert(rsp_sglen_cbfn != NULL);
++
++		fcxp->use_irspbuf = 0;
++		fcxp->rsp_sga_cbfn = rsp_sga_cbfn;
++		fcxp->rsp_sglen_cbfn = rsp_sglen_cbfn;
++
++		fcxp->nrsp_sgles = nrsp_sgles;
++		/*
++		 * alloc required sgpgs
++		 */
++		if (nrsp_sgles > BFI_SGE_INLINE) {
++			nrsp_sgpg = BFA_SGPG_NPAGE(nreq_sgles);
++
++			if (bfa_sgpg_malloc
++			    (bfa, &fcxp->rsp_sgpg_q, nrsp_sgpg)
++			    != BFA_STATUS_OK) {
++				/* bfa_sgpg_wait(bfa, &fcxp->rsp_sgpg_wqe,
++				nrsp_sgpg); */
++				/*
++				 * TODO
++				 */
++			}
++		}
++	}
++
++	return (fcxp);
++}
 +
 +/**
-+ *  bfad_trcmod.h Linux driver trace modules
++ * Get the internal request buffer pointer
++ *
++ * @param[in]	fcxp	BFA fcxp pointer
++ *
++ * @return 		pointer to the internal request buffer
++ */
++void *
++bfa_fcxp_get_reqbuf(struct bfa_fcxp_s *fcxp)
++{
++	struct bfa_fcxp_mod_s *mod = fcxp->fcxp_mod;
++	void	*reqbuf;
++
++	bfa_assert(fcxp->use_ireqbuf == 1);
++	reqbuf = ((u8 *)mod->req_pld_list_kva) +
++			fcxp->fcxp_tag * mod->req_pld_sz;
++	return reqbuf;
++}
++
++u32
++bfa_fcxp_get_reqbufsz(struct bfa_fcxp_s *fcxp)
++{
++	struct bfa_fcxp_mod_s *mod = fcxp->fcxp_mod;
++
++	return mod->req_pld_sz;
++}
++
++/**
++ * Get the internal response buffer pointer
++ *
++ * @param[in]	fcxp	BFA fcxp pointer
++ *
++ * @return		pointer to the internal request buffer
++ */
++void *
++bfa_fcxp_get_rspbuf(struct bfa_fcxp_s *fcxp)
++{
++	struct bfa_fcxp_mod_s *mod = fcxp->fcxp_mod;
++	void	*rspbuf;
++
++	bfa_assert(fcxp->use_irspbuf == 1);
++
++	rspbuf = ((u8 *)mod->rsp_pld_list_kva) +
++			fcxp->fcxp_tag * mod->rsp_pld_sz;
++	return rspbuf;
++}
++
++/**
++ * 		Free the BFA FCXP
++ *
++ * @param[in]	fcxp			BFA fcxp pointer
++ *
++ * @return 		void
++ */
++void
++bfa_fcxp_free(struct bfa_fcxp_s *fcxp)
++{
++	struct bfa_fcxp_mod_s *mod = fcxp->fcxp_mod;
++
++	bfa_assert(fcxp != NULL);
++	bfa_trc(mod->bfa, fcxp->fcxp_tag);
++	bfa_fcxp_put(fcxp);
++}
++
++/**
++ * Send a FCXP request
++ *
++ * @param[in]	fcxp	BFA fcxp pointer
++ * @param[in]	rport	BFA rport pointer. Could be left NULL for WKA rports
++ * @param[in]	vf_id	virtual Fabric ID
++ * @param[in]	lp_tag  lport tag
++ * @param[in]	cts	use Continous sequence
++ * @param[in]	cos	fc Class of Service
++ * @param[in]	reqlen	request length, does not include FCHS length
++ * @param[in]	fchs	fc Header Pointer. The header content will be copied
++ *			in by BFA.
++ *
++ * @param[in]	cbfn	call back function to be called on receiving
++ * 								the response
++ * @param[in]	cbarg	arg for cbfn
++ * @param[in]	rsp_timeout
++ *			response timeout
++ *
++ * @return		bfa_status_t
++ */
++void
++bfa_fcxp_send(struct bfa_fcxp_s *fcxp, struct bfa_rport_s *rport,
++		u16 vf_id, u8 lp_tag, bfa_boolean_t cts, enum fc_cos cos,
++		u32 reqlen, struct fchs_s *fchs, bfa_cb_fcxp_send_t cbfn,
++		void *cbarg, u32 rsp_maxlen, u8 rsp_timeout)
++{
++	struct bfa_s			*bfa  = fcxp->fcxp_mod->bfa;
++	struct bfa_fcxp_req_info_s	*reqi = &fcxp->req_info;
++	struct bfa_fcxp_rsp_info_s	*rspi = &fcxp->rsp_info;
++	struct bfi_fcxp_send_req_s	*send_req;
++
++	bfa_trc(bfa, fcxp->fcxp_tag);
++
++	/**
++	 * setup request/response info
++	 */
++	reqi->bfa_rport = rport;
++	reqi->vf_id = vf_id;
++	reqi->lp_tag = lp_tag;
++	reqi->class = cos;
++	rspi->rsp_timeout = rsp_timeout;
++	reqi->cts = cts;
++	reqi->fchs = *fchs;
++	reqi->req_tot_len = reqlen;
++	rspi->rsp_maxlen = rsp_maxlen;
++	fcxp->send_cbfn = cbfn ? cbfn : bfa_fcxp_null_comp;
++	fcxp->send_cbarg = cbarg;
++
++	/**
++	 * If no room in CPE queue, wait for
++	 */
++	send_req = bfa_reqq_next(bfa, BFA_REQQ_FCXP);
++	if (!send_req) {
++		bfa_trc(bfa, fcxp->fcxp_tag);
++		fcxp->reqq_waiting = BFA_TRUE;
++		bfa_reqq_wait(bfa, BFA_REQQ_FCXP, &fcxp->reqq_wqe);
++		return;
++	}
++
++	bfa_fcxp_queue(fcxp, send_req);
++}
++
++/**
++ * Abort a BFA FCXP
++ *
++ * @param[in]	fcxp	BFA fcxp pointer
++ *
++ * @return 		void
++ */
++bfa_status_t
++bfa_fcxp_abort(struct bfa_fcxp_s *fcxp)
++{
++	bfa_assert(0);
++	return (BFA_STATUS_OK);
++}
++
++void
++bfa_fcxp_alloc_wait(struct bfa_s *bfa, struct bfa_fcxp_wqe_s *wqe,
++			bfa_fcxp_alloc_cbfn_t alloc_cbfn, void *alloc_cbarg)
++{
++	struct bfa_fcxp_mod_s *mod = BFA_FCXP_MOD(bfa);
++
++	bfa_assert(list_empty(&mod->fcxp_free_q));
++
++	wqe->alloc_cbfn = alloc_cbfn;
++	wqe->alloc_cbarg = alloc_cbarg;
++	list_add_tail(&wqe->qe, &mod->wait_q);
++}
++
++void
++bfa_fcxp_walloc_cancel(struct bfa_s *bfa, struct bfa_fcxp_wqe_s *wqe)
++{
++	struct bfa_fcxp_mod_s *mod = BFA_FCXP_MOD(bfa);
++
++	bfa_assert(bfa_q_is_on_q(&mod->wait_q, wqe));
++	list_del(&wqe->qe);
++}
++
++void
++bfa_fcxp_discard(struct bfa_fcxp_s *fcxp)
++{
++	/**
++	 * If waiting for room in request queue, cancel reqq wait
++	 * and free fcxp.
++	 */
++	if (fcxp->reqq_waiting) {
++		fcxp->reqq_waiting = BFA_FALSE;
++		bfa_reqq_wcancel(&fcxp->reqq_wqe);
++		bfa_fcxp_free(fcxp);
++		return;
++	}
++
++	fcxp->send_cbfn = bfa_fcxp_null_comp;
++}
++
++
++
++/**
++ *  hal_fcxp_public BFA FCXP public functions
 + */
 +
++void
++bfa_fcxp_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
++{
++	switch (msg->mhdr.msg_id) {
++	case BFI_FCXP_I2H_SEND_RSP:
++		hal_fcxp_send_comp(bfa, (struct bfi_fcxp_send_rsp_s *) msg);
++		break;
 +
-+#ifndef __BFAD_TRCMOD_H__
-+#define __BFAD_TRCMOD_H__
++	default:
++		bfa_trc(bfa, msg->mhdr.msg_id);
++		bfa_assert(0);
++	}
++}
 +
-+#include <cs/bfa_trc.h>
++u32
++bfa_fcxp_get_maxrsp(struct bfa_s *bfa)
++{
++	struct bfa_fcxp_mod_s *mod = BFA_FCXP_MOD(bfa);
 +
-+/*
-+ * !!! Only append to the enums defined here to avoid any versioning
-+ * !!! needed between trace utility and driver version
-+ */
-+enum {
-+	/* 2.6 Driver */
-+	BFA_TRC_LDRV_BFAD		= 1,
-+	BFA_TRC_LDRV_BFAD_2_6		= 2,
-+	BFA_TRC_LDRV_BFAD_2_6_9		= 3,
-+	BFA_TRC_LDRV_BFAD_2_6_10	= 4,
-+	BFA_TRC_LDRV_INTR		= 5,
-+	BFA_TRC_LDRV_IOCTL		= 6,
-+	BFA_TRC_LDRV_OS			= 7,
-+	BFA_TRC_LDRV_IM			= 8,
-+	BFA_TRC_LDRV_IM_2_6		= 9,
-+	BFA_TRC_LDRV_IM_2_6_9		= 10,
-+	BFA_TRC_LDRV_IM_2_6_10		= 11,
-+	BFA_TRC_LDRV_TM			= 12,
-+	BFA_TRC_LDRV_IPFC		= 13,
-+	BFA_TRC_LDRV_IM_2_4		= 14,
-+	BFA_TRC_LDRV_IM_VMW		= 15,
-+	BFA_TRC_LDRV_IM_LT_2_6_10	= 16,
-+};
++	return mod->rsp_pld_sz;
++}
 +
-+#endif /* __BFAD_TRCMOD_H__ */
++
