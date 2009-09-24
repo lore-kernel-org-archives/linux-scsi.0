@@ -1,55 +1,97 @@
-From: David Jeffery <djeffery@redhat.com>
-Subject: [PATCH] st.c: possible memory use after free after MTSETBLK ioctl
-Date: Thu, 24 Sep 2009 16:32:40 -0400 (EDT)
-Message-ID: <2123868472.308991253824360715.JavaMail.root@zmail02.collab.prod.int.phx2.redhat.com>
-References: <912553534.308131253824005002.JavaMail.root@zmail02.collab.prod.int.phx2.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: qla2xxx: Conditionally disable automatic queue full tracking
+Date: Thu, 24 Sep 2009 13:55:36 -0700
+Message-ID: <3E1B3796-029F-4DBE-A414-0358AB257E93@qlogic.com>
+References: <5355D915-9CAE-41CD-846B-F816FE914E1B@qlogic.com> <4ABB8572.5050902@sgi.com> <67E59C8B-0E12-44EA-983C-38634993DF5A@qlogic.com> <4ABBC53F.9090203@sgi.com>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57203 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751676AbZIXUcg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Sep 2009 16:32:36 -0400
-Received: from int-mx05.intmail.prod.int.phx2.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.18])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id n8OKWeaL011276
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2009 16:32:41 -0400
-Received: from mail02.corp.redhat.com (zmail02.collab.prod.int.phx2.redhat.com [10.5.5.42])
-	by int-mx05.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id n8OKWebh008624
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Sep 2009 16:32:40 -0400
-In-Reply-To: <912553534.308131253824005002.JavaMail.root@zmail02.collab.prod.int.phx2.redhat.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:37857 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753418AbZIXUzi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2009 16:55:38 -0400
+In-Reply-To: <4ABBC53F.9090203@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, LinuxSCSI <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "vasu.dev@intel.com" <vasu.dev@intel.com>
 
-A memory use after free bug can manifest if the MTSETBLK or SET_DENS_AND_BLK
-ioctl features are used to set the tape's blocksize from 0 to non-zero.
-After the driver sets the new block size, in this one case it calls
-normalize_buffer() to free the device's internal data buffers.  However, the
-ioctl code assumes there is always a buffer and does not check or allocate
-a buffer if there isn't one.  So any following ioctl calls can corrupt
-a part of memory by writing data to memory that the st driver had freed.
+I will be more than willing to do these changes. Just curious, was  
+this seen on non qla2xxx drivers too.
 
-This small patch forces the st driver to allocate a minimal one page buffer
-using enlarge_buffer() after the previous buffers were freed.
+-- Giri
 
 
-Signed-of-by: David Jeffery <djeffery@redhat.com>
+On Sep 24, 2009, at 12:15 PM, Michael Reed wrote:
 
+> To answer your query, yes.  Ultimately, I believe the ml should be
+> modified to view a user space modification to a lun's queue depth
+> as an upper bound.  I don't care, much, whether the system dynamically
+> adjusts the queue depth or leaves it alone as long as it honors the
+> value programmed via user space.
+>
+> Are you volunteering to do the work?  :)  How can I help?
+>
+> Thanks,
+> Mike
+>
+>
+> Giridhar Malavali wrote:
+>> Hi Michael,
+>>
+>> Here are the patches..
+>>
+>> http://marc.info/?a=119828370000006&r=1&w=2 .
+>> http://marc.info/?l=linux-scsi&m=125201657106722&w=2
+>>
+>> Thanks,
+>> Giridhar.M.B
+>>
+>>
+>>
+>> On Sep 24, 2009, at 7:42 AM, Michael Reed wrote:
+>>
+>>> Hello,
+>>>
+>>> The purpose of the queue full tracking patch in qla2xxx is to
+>>> keep the driver from changing a user space override of the queue
+>>> depth back to what the driver believes is the "correct" value.
+>>>
+>>> The raid devices that we use have per raid controller queue depth
+>>> limits and have at times demonstrated, uh, bad behavior when
+>>> their queues are full for sustained periods of time.  SGI needs
+>>> to be able to set queue depth for a lun based upon access patterns
+>>> and performance requirements of the entire cluster and know that
+>>> it will be honored as an upper bound.
+>>>
+>>> Might you provide a pointer to the recently submitted patches?
+>>> I haven't followed linux-scsi in a while....  I'll be quite
+>>> happy to take a look.
+>>>
+>>> Thanks,
+>>> Mike
+>>>
+>>>
+>>> Giridhar Malavali wrote:
+>>>> Hi Michael/James,
+>>>>
+>>>> 	Patches were submitted to move queue ramp up/down code recently to
+>>>> scsi mid layer. With this change, I don't see a need for a module
+>>>> parameter to disable queuefull tracking  in qla2xxx driver. Andrew,
+>>>> mentioned that this got introduced to avoid wobbling behavior on  
+>>>> the
+>>>> wire due to queue depth modifications. Just wanted to check whether
+>>>> the same need to be done in scsi mid layer too.
+>>>>
+>>>>
+>>>> Thanks,
+>>>> Giridhar.M.B
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-
+>>>> scsi" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
 
---- a/drivers/scsi/st.c	2009-09-24 12:34:14.000000000 -0400
-+++ b/drivers/scsi/st.c	2009-09-23 22:10:17.000000000 -0400
-@@ -2776,8 +2776,12 @@
- 			int old_block_size = STp->block_size;
- 			STp->block_size = arg & MT_ST_BLKSIZE_MASK;
- 			if (STp->block_size != 0) {
--				if (old_block_size == 0)
-+				if (old_block_size == 0){
- 					normalize_buffer(STp->buffer);
-+					if (!enlarge_buffer(STp->buffer, PAGE_SIZE, STp->restr_dma)) {
-+						printk(KERN_ERR "No st buffer!\n");
-+					}
-+				}
- 				(STp->buffer)->buffer_blocks =
- 				    (STp->buffer)->buffer_size / STp->block_size;
- 			}
