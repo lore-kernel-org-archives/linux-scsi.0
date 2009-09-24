@@ -1,58 +1,48 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: qla2xxx: Conditionally disable automatic queue full tracking
-Date: Thu, 24 Sep 2009 09:42:58 -0500
-Message-ID: <4ABB8572.5050902@sgi.com>
-References: <5355D915-9CAE-41CD-846B-F816FE914E1B@qlogic.com>
+From: Daniel Walker <dwalker@fifo99.com>
+Subject: Re: [PATCH 2/14] bfa: Brocade BFA FC SCSI driver (bfa1)
+Date: Thu, 24 Sep 2009 08:44:02 -0700
+Message-ID: <1253807042.20648.188.camel@desktop>
+References: <200909240049.n8O0nw3l013437@swe58.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.179.30]:57691 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753546AbZIXOmz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Sep 2009 10:42:55 -0400
-In-Reply-To: <5355D915-9CAE-41CD-846B-F816FE914E1B@qlogic.com>
+Received: from fifo99.com ([67.223.236.141]:53701 "EHLO fifo99.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752686AbZIXPoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Sep 2009 11:44:13 -0400
+In-Reply-To: <200909240049.n8O0nw3l013437@swe58.brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, LinuxSCSI <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, vasu.dev@intel.com
+To: Jing Huang <huangj@brocade.com>
+Cc: James.Bottomley@HansenPartnership.com, kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 
-Hello,
+On Wed, 2009-09-23 at 17:49 -0700, Jing Huang wrote:
+> +
+> +       return (*(union bfi_addr_u *) &addr);
+> +}
 
-The purpose of the queue full tracking patch in qla2xxx is to
-keep the driver from changing a user space override of the queue
-depth back to what the driver believes is the "correct" value.
+Have you run checkpatch on this code? It produces many errors due to
+your "return" usage for one.. The usual style of return is not to use
+parentheses since it's really not a function ..
 
-The raid devices that we use have per raid controller queue depth
-limits and have at times demonstrated, uh, bad behavior when
-their queues are full for sustained periods of time.  SGI needs
-to be able to set queue depth for a lun based upon access patterns
-and performance requirements of the entire cluster and know that
-it will be honored as an upper bound.
+The line I quoted above gives the following error,
 
-Might you provide a pointer to the recently submitted patches?
-I haven't followed linux-scsi in a while....  I'll be quite
-happy to take a look.
+ERROR: return is not a function, parentheses are not required
+#266: FILE: drivers/scsi/bfa/bfa_cb_ioim_macros.h:132:
++       return (*(union bfi_addr_u *) &addr);
 
-Thanks,
- Mike
+First of all I'd consider making your code consistent with respect to
+the return statements .. I noticed that you sometimes use the
+parentheses sometimes not .. Since it's more with Linux style I'd just
+remove all the extra parentheses..
+
+Checkpatch produces many other errors in your code .. If you haven't
+already evaluated those errors, I'd do go through each patch and review
+the errors (and the warnings) that it produces since checkpatch can give
+you a fairly mechanical view into how well your code matches the Linux
+coding style. The less the output from checkpatch the better ..
+
+Daniel
 
 
-Giridhar Malavali wrote:
-> Hi Michael/James,
-> 
-> 	Patches were submitted to move queue ramp up/down code recently to  
-> scsi mid layer. With this change, I don't see a need for a module  
-> parameter to disable queuefull tracking  in qla2xxx driver. Andrew,  
-> mentioned that this got introduced to avoid wobbling behavior on the  
-> wire due to queue depth modifications. Just wanted to check whether  
-> the same need to be done in scsi mid layer too.
-> 
-> 
-> Thanks,
-> Giridhar.M.B
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
