@@ -1,30 +1,54 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: qla2xxx: Conditionally disable automatic queue full tracking
-Date: Wed, 23 Sep 2009 16:59:40 -0700
-Message-ID: <5355D915-9CAE-41CD-846B-F816FE914E1B@qlogic.com>
-Mime-Version: 1.0 (Apple Message framework v912)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:31853 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363AbZIWX7h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Sep 2009 19:59:37 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 0/14] bfa: Brocade BFA FC SCSI driver (overview)
+Date: Wed, 23 Sep 2009 17:41:52 -0700
+Message-ID: <200909240041.n8O0fq0j019952@blc-10-6.brocade.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754490AbZIXAl5@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: kgudipat@brocade.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
 List-Id: linux-scsi@vger.kernel.org
-To: mdr@sgi.com, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, LinuxSCSI <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, vasu.dev@intel.com
 
-Hi Michael/James,
+From: Jing Huang <huangj@brocade.com>
 
-	Patches were submitted to move queue ramp up/down code recently to  
-scsi mid layer. With this change, I don't see a need for a module  
-parameter to disable queuefull tracking  in qla2xxx driver. Andrew,  
-mentioned that this got introduced to avoid wobbling behavior on the  
-wire due to queue depth modifications. Just wanted to check whether  
-the same need to be done in scsi mid layer too.
+Incorporated code review comments from Andrew Morton and Brian King. Please
+consider this patch set for next kernel update.
 
+Patches are generated and tested in 2.6.31 kernel.
 
-Thanks,
-Giridhar.M.B
+[PATCH 1/14]: SCSI LLD driver code, module init/exit, PCI and SCSI host entry
+points, interrupt handler, and sysfs interface etc. 
 
+[PATCH 2/14]: Hardware/FW access code. part-1
+
+[PATCH 3/14]: Hardware/FW access code. part-2
+
+[PATCH 4/14]: Hardware/FW access code. part-3
+
+[PATCH 5/14]: Hardware/FW access code. part-4
+
+[PATCH 6/14]: FC state machines. part-1
+
+[PATCH 7/14]: FC state machines. part-2
+
+[PATCH 8/14]: FC state machines. part-3
+
+[PATCH 9/14]: FC state machines. part-3
+
+[PATCH 10/14]: Common header files shared by linux driver,
+hardware/FW access code, FC state machines. part-1
+
+[PATCH 11/14]: Common header files shared by linux driver,
+hardware/FW access code, FC state machines. part-2
+
+[PATCH 12/14]: Common header files shared by linux driver,
+hardware/FW access code, FC state machines. part-3
+
+[PATCH 13/14]: Updated Kconfig and Makefile for driver/scsi, and Makefile
+for bfa driver 
+
+[PATCH 14/14]: Updated MAINTAINER file.
+
+Signed-off-by: Jing Huang <huangj@brocade.com>
+---
