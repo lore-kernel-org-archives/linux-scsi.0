@@ -1,74 +1,51 @@
-From: Daniel Walker <dwalker@fifo99.com>
+From: Jing Huang <huangj@Brocade.COM>
 Subject: RE: [PATCH 2/14] bfa: Brocade BFA FC SCSI driver (bfa1)
-Date: Thu, 24 Sep 2009 10:55:34 -0700
-Message-ID: <1253814934.20648.262.camel@desktop>
+Date: Thu, 24 Sep 2009 11:08:31 -0700
+Message-ID: <B0A7AF226B49A14897036E9B3A68CFFECB1AB0F79B@HQ-EXCH-7.corp.brocade.com>
 References: <200909240049.n8O0nw3l013437@swe58.brocade.com>
 	 <1253807042.20648.188.camel@desktop>
 	 <B0A7AF226B49A14897036E9B3A68CFFECB1AB0F77D@HQ-EXCH-7.corp.brocade.com>
+ <1253814934.20648.262.camel@desktop>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fifo99.com ([67.223.236.141]:49891 "EHLO fifo99.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752306AbZIXRzs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Sep 2009 13:55:48 -0400
-In-Reply-To: <B0A7AF226B49A14897036E9B3A68CFFECB1AB0F77D@HQ-EXCH-7.corp.brocade.com>
+Received: from hq-exedge.brocade.com ([66.243.153.82]:38796 "EHLO
+	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752886AbZIXSI3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Sep 2009 14:08:29 -0400
+In-Reply-To: <1253814934.20648.262.camel@desktop>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@Brocade.COM>
+To: Daniel Walker <dwalker@fifo99.com>
 Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, Krishna Gudipati <kgudipat@Brocade.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Vinodh Ravindran <vravindr@Brocade.COM>
 
-On Thu, 2009-09-24 at 10:38 -0700, Jing Huang wrote:
-> > On Wed, 2009-09-23 at 17:49 -0700, Jing Huang wrote:
-> > > +
-> > > +       return (*(union bfi_addr_u *) &addr);
-> > > +}
-> > 
-> > Have you run checkpatch on this code? It produces many errors due to
-> > your "return" usage for one.. The usual style of return is not to use
-> > parentheses since it's really not a function ..
-> > 
-> > The line I quoted above gives the following error,
-> > 
-> > ERROR: return is not a function, parentheses are not required
-> > #266: FILE: drivers/scsi/bfa/bfa_cb_ioim_macros.h:132:
-> > +       return (*(union bfi_addr_u *) &addr);
-> > 
-> > First of all I'd consider making your code consistent with respect to
-> > the return statements .. I noticed that you sometimes use the
-> > parentheses sometimes not .. Since it's more with Linux style I'd just
-> > remove all the extra parentheses..
-> > 
-> > Checkpatch produces many other errors in your code .. If you haven't
-> > already evaluated those errors, I'd do go through each patch and review
-> > the errors (and the warnings) that it produces since checkpatch can give
-> > you a fairly mechanical view into how well your code matches the Linux
-> > coding style. The less the output from checkpatch the better ..
-> > 
-> > Daniel
-> > 
+> > Hi Daniel,
+> >
+> > I did run checkpatch.pl and it didn't report any ERROR or WARNING. Do
+> you use any specific flags?
 > 
-> Hi Daniel, 
+> No nothing special .. I run it in the following way,
 > 
-> I did run checkpatch.pl and it didn't report any ERROR or WARNING. Do you use any specific flags?
+> ./scripts/checkpatch.pl this-is-the-test.patch
+> 
+> or
+> 
+> cat this-is-the-test.patch | ./scripts/checkpatch.pl -
+> 
+> how did you run it? Usually it will report something like the following
+> if it finds nothing,
+> 
+> total: 0 errors, 0 warnings, XXX lines checked
+> 
+> Your patch has no obvious style problems and is ready for submission.
+> 
+> 
+> 
+> Daniel
 
-No nothing special .. I run it in the following way,
+Thanks. I found the problem. I tried the latest checkpatch in 2.6.31 and it generates a lot of ERRORs about putting parentheses for return. I have been using an older version of checkpatch for patch submission all the time, and therefore I didn't see any problem. I will fix them and resubmit the patch.
 
-./scripts/checkpatch.pl this-is-the-test.patch
-
-or
-
-cat this-is-the-test.patch | ./scripts/checkpatch.pl -
-
-how did you run it? Usually it will report something like the following
-if it finds nothing,
-
-total: 0 errors, 0 warnings, XXX lines checked
-
-Your patch has no obvious style problems and is ready for submission.
-
-
-
-Daniel
+Jing 
 
