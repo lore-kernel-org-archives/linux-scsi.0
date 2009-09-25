@@ -1,80 +1,87 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Subject: PATCH 1/1] pmcraid: Fix ppc64 driver build for using cpu_to_le32 on
- U8 data type
-Date: Thu, 24 Sep 2009 16:27:42 -0700 (PDT)
-Message-ID: <alpine.LNX.1.10.0909241613320.16579@rslab159.pmc-sierra.bc.ca>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi_lib.c: sleeping function called from invalid
+ context
+Date: Thu, 24 Sep 2009 18:23:36 -0700
+Message-ID: <1253841816.5183.361.camel@mulgrave.site>
+References: <200909231758.47612.strakh@ispras.ru>
+	 <20090924155604.4299aa0a.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:59719 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752011AbZIYAZd (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33825 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751613AbZIYBXf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Sep 2009 20:25:33 -0400
+	Thu, 24 Sep 2009 21:23:35 -0400
+In-Reply-To: <20090924155604.4299aa0a.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: gregkh@suse.de, anil_ravindranath@pmc-sierra.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: iceberg <strakh@ispras.ru>, eric@andante.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+
+On Thu, 2009-09-24 at 15:56 -0700, Andrew Morton wrote:
+> On Wed, 23 Sep 2009 17:58:47 +0000
+> iceberg <strakh@ispras.ru> wrote:
+> 
+> > Driver scsi_lib.c might sleep in atomic context, because it calls 
+> > scsi_device_put under spin_lock_irqsave.
+> > drivers/scsi/scsi_lib.c:356:
+> > 	spin_lock_irqsave(shost->host_lock, flags);
+> > 	scsi_device_put(sdev);
+> > Path to might_sleep macro from scsi_device_put:
+> > 1. scsi_device_put calls put_device at ./drivers/scsi/scsi.c:1111 
+> > 2. put_device calls kobject_put at ./drivers/base/core.c:1038 
+> > 3. kobject_put calls kref_put at ./lib/kobject.c
+> > 4. kref_put may call callback function kobject_release at ./lib/kref.c if 
+> > refcount becomes zero, which might_sleep because it calls user event. Details:
+> > 	4.1 kobject_cleanup calls kobject_uevent at ./lib/kobject.c:555
+> > 	4.2 kobject_uevent calls kobject_uevent_env at  ./lib/kobject_uevent.c:282
+> > 	4.3 kobject_uevent_env calls call_usermodehelper_exec at 
+> > ./include/linux/kmod.h:83
+> > 	4.4 call_usermodehelper_exec calls wait_for_completion at 
+> > ./kernel/kmod.c:481
+> > 	4.5 wait_for_completion calls wait_for_common at ./kernel/sched.c:5710
+> > 	4.5 wait_for_common calls might_sleep at ./kernels/sched.c:5692
+> > 
+> > Found by Linux Driver Verification project.
+> > 
+> > Delete wrong sleeping function calls.
+> > 
+> > Signed-off-by: Alexander Strakh <strakh@ispras.ru>
+> > 
+> > ---
+> > diff --git a/./a/drivers/scsi/scsi_lib.c b/./b/drivers/scsi/scsi_lib.c
+> > index f3c4089..a8f8e2f 100644
+> > --- a/./a/drivers/scsi/scsi_lib.c
+> > +++ b/./b/drivers/scsi/scsi_lib.c
+> > @@ -353,9 +353,9 @@ static void scsi_single_lun_run(struct scsi_device 
+> > *current_sdev)
+> >  
+> >  		spin_unlock_irqrestore(shost->host_lock, flags);
+> >  		blk_run_queue(sdev->request_queue);
+> > -		spin_lock_irqsave(shost->host_lock, flags);
+> >  	
+> > -		scsi_device_put(sdev);
+> > +		scsi_device_put(sdev);	
+> > +		spin_lock_irqsave(shost->host_lock, flags);
+> >  	}
+> >   out:
+> >  	spin_unlock_irqrestore(shost->host_lock, flags);
+> > 
+> 
+> Well this is strange.  afacit all the code to which you refer is
+> ancient, so why did this bug just pop up now?
+
+No idea.  I think the root cause of this is in the kobject code:  we
+explicitly require the ability to call last put from interrupt context
+(and that includes holding locks).  I'll talks to Greg and Kai about
+this (they're both here at plumbers).  I think the fix is to indirect
+the kobject uevent stuff via a usermode helper so we don't get this
+problem.
+
+James
+
+---
 
 
-Fix a reported ppc64 driver build issue. Removed cpu_to_le32 conversion 
-usage for flags in struct pmcraid_ioadl_desc. This was breaking the driver build in ppc64.
-
-drivers/scsi/pmcraid.c: In function 'pmcraid_request_sense':
-drivers/scsi/pmcraid.c:2254: warning: large integer implicitly truncated
-to unsigned type
-
-(I have not done compile/build test on ppc64 with these changes)
-
-Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
-
-pmcraid.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
---- scsi-misc-2.6.orig/drivers/scsi/pmcraid.c	2009-09-24 15:06:06.000000000 -0700
-+++ scsi-misc-2.6/drivers/scsi/pmcraid.c	2009-09-24 15:46:22.000000000 -0700
-@@ -1071,7 +1071,7 @@ static struct pmcraid_cmd *pmcraid_init_
- 
- 	ioarcb->data_transfer_length = cpu_to_le32(rcb_size);
- 
--	ioadl[0].flags |= cpu_to_le32(IOADL_FLAGS_READ_LAST);
-+	ioadl[0].flags |= IOADL_FLAGS_READ_LAST;
- 	ioadl[0].data_len = cpu_to_le32(rcb_size);
- 	ioadl[0].address = cpu_to_le32(dma);
- 
-@@ -2251,7 +2251,7 @@ static void pmcraid_request_sense(struct
- 
- 	ioadl->address = cpu_to_le64(cmd->sense_buffer_dma);
- 	ioadl->data_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
--	ioadl->flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
-+	ioadl->flags = IOADL_FLAGS_LAST_DESC;
- 
- 	/* request sense might be called as part of error response processing
- 	 * which runs in tasklets context. It is possible that mid-layer might
-@@ -3017,7 +3017,7 @@ static int pmcraid_build_ioadl(
- 		ioadl[i].flags = 0;
- 	}
- 	/* setup last descriptor */
--	ioadl[i - 1].flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
-+	ioadl[i - 1].flags = IOADL_FLAGS_LAST_DESC;
- 
- 	return 0;
- }
-@@ -3387,7 +3387,7 @@ static int pmcraid_build_passthrough_ioa
- 	}
- 
- 	/* setup the last descriptor */
--	ioadl[i - 1].flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
-+	ioadl[i - 1].flags = IOADL_FLAGS_LAST_DESC;
- 
- 	return 0;
- }
-@@ -5314,7 +5314,7 @@ static void pmcraid_querycfg(struct pmcr
- 		cpu_to_le32(sizeof(struct pmcraid_config_table));
- 
- 	ioadl = &(ioarcb->add_data.u.ioadl[0]);
--	ioadl->flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
-+	ioadl->flags = IOADL_FLAGS_LAST_DESC;
- 	ioadl->address = cpu_to_le64(pinstance->cfg_table_bus_addr);
- 	ioadl->data_len = cpu_to_le32(sizeof(struct pmcraid_config_table));
- 
