@@ -1,53 +1,38 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 2/2 scsi-post-merge] cxgb3i: support of private MAC
- address in iSCSI
-Date: Fri, 25 Sep 2009 19:36:10 -0500
-Message-ID: <4ABD61FA.2040609@cs.wisc.edu>
-References: <200909252225.n8PMPaa4031752@localhost.localdomain>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH v2 0/2] cxgb3/cxgb3i: added support of private MAC
+ address and provisioning packet handler for iSCSI
+Date: Sat, 26 Sep 2009 00:16:46 -0700 (PDT)
+Message-ID: <20090926.001646.06991481.davem@davemloft.net>
+References: <200909252225.n8PMPaqI031748@localhost.localdomain>
+	<20090925.152430.119503066.davem@davemloft.net>
+	<8A71B368A89016469F72CD08050AD334066E7019@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51027 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752760AbZIZAgT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Sep 2009 20:36:19 -0400
-In-Reply-To: <200909252225.n8PMPaa4031752@localhost.localdomain>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42620
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750818AbZIZHQ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Sep 2009 03:16:27 -0400
+In-Reply-To: <8A71B368A89016469F72CD08050AD334066E7019@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: kxie@chelsio.com
-Cc: James.Bottomley@HansenPartnership.com, davem@davemloft.net, swise@opengridcomputing.com, divy@chelsio.com, rakesh@chelsio.com, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, swise@opengridcomputing.com, divy@chelsio.com, rakesh@chelsio.com, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, linux-kernel@vger.kernel.org, netdev@vger.kernel.org
 
-kxie@chelsio.com wrote:
-> [PATCH v2 2/2 scsi-post-merge] cxgb3i: private MAC address for iSCSI
-> 
-> From: Karen Xie <kxie@chelsio.com>
->         
-> This patch updated the use of private MAC address per port in iscsi.
-> 
-> This patch is generated against scsi-post-merge.
->              
-> Signed-off-by: Karen Xie <kxie@chelsio.com>
-> --- 
->  drivers/scsi/cxgb3i/cxgb3i_offload.h |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.h b/drivers/scsi/cxgb3i/cxgb3i_offload.h
-> index 6a1d86b..f585ece 100644
-> --- a/drivers/scsi/cxgb3i/cxgb3i_offload.h
-> +++ b/drivers/scsi/cxgb3i/cxgb3i_offload.h
-> @@ -234,9 +234,9 @@ struct sge_opaque_hdr {
->   * get and set private ip for iscsi traffic
->   */
->  #define cxgb3i_get_private_ipv4addr(ndev) \
-> -	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr)
-> +	(((struct port_info *)(netdev_priv(ndev)))->iscsic.ipv4_addr)
->  #define cxgb3i_set_private_ipv4addr(ndev, addr) \
-> -	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr) = addr
-> +	(((struct port_info *)(netdev_priv(ndev)))->iscsic.ipv4_addr) = addr
->  
+From: "Karen Xie" <kxie@chelsio.com>
+Date: Fri, 25 Sep 2009 15:34:22 -0700
 
-This looks ok.
+> Hmm, I am wondering how could this merge activity to be coordinated? If
+> only the driver/scsi change is merged, then it won't compile either,
+> since it requires the driver/net change.
 
-Reviewed-by Mike Christie <michaelc@cs.wisc.edu>
+That's rediculious, frankly.
+
+Since they are two seperate changes you are knowingly creating
+a bisection point that will not work.  That's wrong.
+
+You need to split up the changes so that each and every one of them
+are independant and the tree can be checked out at either of them and
+everything can be expected to work.
