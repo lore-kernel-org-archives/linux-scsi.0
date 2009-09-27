@@ -1,75 +1,73 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] st.c: possible memory use after free after MTSETBLK
- ioctl
-Date: Sun, 27 Sep 2009 09:08:36 +0300 (EEST)
-Message-ID: <alpine.LNX.2.00.0909270904350.12701@kai.makisara.local>
-References: <2123868472.308991253824360715.JavaMail.root@zmail02.collab.prod.int.phx2.redhat.com> <alpine.LNX.2.00.0909252203330.6291@kai.makisara.local>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 1/3] libosd: osd_dev_info: Unique Identification of an
+ OSD device
+Date: Sun, 27 Sep 2009 10:13:28 +0200
+Message-ID: <4ABF1EA8.3020000@panasas.com>
+References: <4AA4ED94.2050805@panasas.com>	 <1252322784-19390-1-git-send-email-bharrosh@panasas.com> <1253123262.4842.39.camel@mulgrave.site> <4AB21D55.9040000@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:56734 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbZI0GIh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Sep 2009 02:08:37 -0400
-In-Reply-To: <alpine.LNX.2.00.0909252203330.6291@kai.makisara.local>
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:18222 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753390AbZI0IN1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Sep 2009 04:13:27 -0400
+In-Reply-To: <4AB21D55.9040000@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Jeffery <djeffery@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-On Fri, 25 Sep 2009, Kai Makisara wrote:
-
-> On Thu, 24 Sep 2009, David Jeffery wrote:
+On 09/17/2009 02:28 PM, Boaz Harrosh wrote:
+> On 09/16/2009 08:47 PM, James Bottomley wrote:
+>>> +		sprintf(dev_str, "/dev/osd%d", i);
+>>
+>> Embedding specific forms user device paths into the kernel really looks
+>> wrong here ... why are you doing this?  What happens if the user uses
+>> udev to give them different names?
+>>
+> Two things
 > 
-> > A memory use after free bug can manifest if the MTSETBLK or SET_DENS_AND_BLK
-> > ioctl features are used to set the tape's blocksize from 0 to non-zero.
-> > After the driver sets the new block size, in this one case it calls
-> > normalize_buffer() to free the device's internal data buffers.  However, the
-> > ioctl code assumes there is always a buffer and does not check or allocate
-> > a buffer if there isn't one.  So any following ioctl calls can corrupt
-> > a part of memory by writing data to memory that the st driver had freed.
-> > 
-> > This small patch forces the st driver to allocate a minimal one page buffer
-> > using enlarge_buffer() after the previous buffers were freed.
-> > 
-> > 
-> > Signed-of-by: David Jeffery <djeffery@redhat.com>
-> > 
-> > 
-> > --- a/drivers/scsi/st.c	2009-09-24 12:34:14.000000000 -0400
-> > +++ b/drivers/scsi/st.c	2009-09-23 22:10:17.000000000 -0400
-> > @@ -2776,8 +2776,12 @@
-> >  			int old_block_size = STp->block_size;
-> >  			STp->block_size = arg & MT_ST_BLKSIZE_MASK;
-> >  			if (STp->block_size != 0) {
-> > -				if (old_block_size == 0)
-> > +				if (old_block_size == 0){
-> >  					normalize_buffer(STp->buffer);
-> > +					if (!enlarge_buffer(STp->buffer, PAGE_SIZE, STp->restr_dma)) {
-> > +						printk(KERN_ERR "No st buffer!\n");
-> > +					}
-> > +				}
-> >  				(STp->buffer)->buffer_blocks =
-> >  				    (STp->buffer)->buffer_size / STp->block_size;
-> >  			}
+> [1]
+> These names are created here below, exactly as shown. Now udev usually
+> creates more links and soft-links, I've never seen a delete?
+> (I agree that maybe a comment or a define could help readability as this
+>  format string is repeated twice, though slightly different).
+> Lets say that "udev can do anything but not delete the primary file created
+> by Kernel", as a prerequisite.
 > 
-> Good catch. This bug probably has not manifested itself because the next 
-> commands have either been ioctls not needing a buffer or a read/write that 
-> has enlarged the buffer.
+> [2]
+> I could easily just add a global device list, like all the other parts of
+> the Kernel are trigger happy to shoot this problem.
+> But I hate it.
+> All these devices are already held on a Kernel structure called the name_space.
+> The life_time rules, locking, reference counting, and visibility, is bug-free and
+> tried out to the bone. Why should I have to reinvent the wheel? Why introduce all
+> these subtle corner cases, and sleepless debugging nights?
 > 
-> The patch has one problem: it prints an error if the page can't be 
-> allocated but it does not do prevent using a non-allocated buffer in this 
-> case. Although this is a nearly theoretical possibility, it should be 
-> handled in some way. At least a comment should be added.
+> The way I see it Kernel keeps my devices for me and gives me a "Key" to fetch for
+> them. The key is the name.
 > 
-Having thought this a little more, it would probably be best to remove the 
-call to normalize_buffer() instead of trying to cope with it failing. This 
-just means that some memory may stay allocated longer. In the usage 
-scenarios coming into my mind, the buffer is either small or it will be 
-reallocated.
+> That said. I'll do what people want, it is 5 minutes to put all these on a global
+> list_head. It's not lack of effort on my part.
+> 
 
-Would you like to make the patch?
+I'm resending the same patch with minor changes:
+1. Same defined format-string is now used both at creation of device
+   and at look-up, so it is clear that these must and are the same.
+2. I've added a comment to osduld_info_lookup that documents it's behavior
+   So it should be clear from the get go and there are no surprises.
 
-Thanks,
-Kai
+I'm using this code for a long time now, under a pNFS setups, and what can
+I say, it does the job. 
+Also I like the fact that I can use the same code as osduld_path_lookup()
+and open a file handle on the device, which solved some bugs in the past.
 
+Please consider for inclusion.
+
+The other two trivial patches are independent please include those as well.
+
+(I'll post as ver2 in reply to original patch)
+
+Thanks
+Boaz
