@@ -1,49 +1,72 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] scsi-ml: fix propogation of integrity errors
-Date: Mon, 28 Sep 2009 15:50:52 -0500
-Message-ID: <1254171052-2649-1-git-send-email-michaelc@cs.wisc.edu>
+From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Subject: [PATCH] qla2xxx: Fix NULL ptr deref bug in fail path during queue
+ create
+Date: Mon, 28 Sep 2009 13:52:58 -0700 (PDT)
+Message-ID: <alpine.OSX.1.00.0909281340560.3295@n4012av9w19yf1.qlogic.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28461 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752975AbZI1Uuz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Sep 2009 16:50:55 -0400
+Received: from avexch2.qlogic.com ([198.70.193.116]:51224 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753175AbZI1Uwz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Sep 2009 16:52:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>, James.Bottomley@suse.de
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Current code attempts to clean up resources when queue create fails and there it 
+invokes queue free call with a (NULL) pointer to the queue which could not be 
+allocated in the first place. Fix it by returning directly without invoking the 
+queue free call as no resources has been allocated at that point of time.
 
-When the Integrity check is done in scsi_io_completion it will
-set error to -EILSEQ. However, at this point error is no longer
-used, and blk_end_request_err has -EIO hardcoded.
+Please apply.
+Thanks,
+Anirban
 
-It looks like there was just porting mistake with this patch
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=3e695f89c5debb735e4ff051e9e58d8fb4e95110
-and we meant to send error upwards, so this patch changes the hard
-coded EIO to the error variable.
-
-I have only boot tested this patch.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reported-by: Jiri Slaby <jirislaby@gmail.com>
+Signed-off-by: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
 ---
- drivers/scsi/scsi_lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_mid.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d8fcb80..e98a845 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -898,7 +898,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 				scsi_print_sense("", cmd);
- 			scsi_print_command(cmd);
- 		}
--		if (blk_end_request_err(req, -EIO))
-+		if (blk_end_request_err(req, error))
- 			scsi_requeue_command(q, cmd);
- 		else
- 			scsi_next_command(cmd);
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 42b799a..e07b361 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -568,7 +568,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 	if (req == NULL) {
+ 		qla_printk(KERN_WARNING, ha, "could not allocate memory"
+ 			"for request que\n");
+-		goto que_failed;
++		goto failed;
+ 	}
+ 
+ 	req->length = REQUEST_ENTRY_CNT_24XX;
+@@ -632,6 +632,7 @@ qla25xx_create_req_que(struct qla_hw_data *ha, uint16_t options,
+ 
+ que_failed:
+ 	qla25xx_free_req_que(base_vha, req);
++failed:
+ 	return 0;
+ }
+ 
+@@ -659,7 +660,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
+ 	if (rsp == NULL) {
+ 		qla_printk(KERN_WARNING, ha, "could not allocate memory for"
+ 				" response que\n");
+-		goto que_failed;
++		goto failed;
+ 	}
+ 
+ 	rsp->length = RESPONSE_ENTRY_CNT_MQ;
+@@ -728,6 +729,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
+ 
+ que_failed:
+ 	qla25xx_free_rsp_que(base_vha, rsp);
++failed:
+ 	return 0;
+ }
+ 
 -- 
-1.6.2.2
+1.6.2
 
