@@ -1,39 +1,58 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH] drivers/scsi/libsas: Use SAM_GOOD
-Date: Tue, 29 Sep 2009 08:00:16 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0909290759420.29620@ask.diku.dk>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH 3/3] stex: update version to 4.6.0000.4
+Date: Mon, 28 Sep 2009 22:58:36 -0800
+Message-ID: <200909282258362762245@promise.com>
+Reply-To: ed.lin@promise.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:57287 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751407AbZI2GAQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2009 02:00:16 -0400
+Received: from gateway.promise.com ([67.111.72.2]:57248 "EHLO
+	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751636AbZI2GNj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2009 02:13:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: djwong@us.ibm.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "James.Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, promise_linux <promise_linux@promise.com>
 
-From: Julia Lawall <julia@diku.dk>
+Update version to 4.6.0000.4.
 
-The field stat->stat should be compared to SAM_GOOD, not SAM_STAT_GOOD, as
-done elsewhere in the same function.  Both constants have the same value.
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Ed Lin <ed.lin@promise.com>
 ---
- drivers/scsi/libsas/sas_ata.c       |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index e155011..c77b3f9 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -112,7 +112,7 @@ static void sas_ata_task_done(struct sas_task *task)
- 		dev->sata_dev.sstatus = resp->sstatus;
- 		dev->sata_dev.serror = resp->serror;
- 		dev->sata_dev.scontrol = resp->scontrol;
--	} else if (stat->stat != SAM_STAT_GOOD) {
-+	} else if (stat->stat != SAM_GOOD) {
- 		ac = sas_to_ata_err(stat);
- 		if (ac) {
- 			SAS_DPRINTK("%s: SAS error %x\n", __func__,
+ drivers/scsi/stex.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 79216ee..3058bb1 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -36,11 +36,11 @@
+ #include <scsi/scsi_eh.h>
+ 
+ #define DRV_NAME "stex"
+-#define ST_DRIVER_VERSION "4.6.0000.3"
++#define ST_DRIVER_VERSION "4.6.0000.4"
+ #define ST_VER_MAJOR		4
+ #define ST_VER_MINOR		6
+ #define ST_OEM			0
+-#define ST_BUILD_VER		3
++#define ST_BUILD_VER		4
+ 
+ enum {
+ 	/* MU register offset */
+@@ -1488,8 +1488,8 @@ static int stex_set_dma_mask(struct pci_dev * pdev)
+ {
+ 	int ret;
+ 
+-	if (!pci_set_dma_mask(pdev,  DMA_BIT_MASK(64))
+-		&& !pci_set_consistent_dma_mask(pdev,  DMA_BIT_MASK(64)))
++	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
++		&& !pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
+ 		return 0;
+ 	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+ 	if (!ret)
+
+
