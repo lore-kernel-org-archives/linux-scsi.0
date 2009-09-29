@@ -1,457 +1,423 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: [PATCH 2/3] stex: add support for reset request from firmware
-Date: Mon, 28 Sep 2009 22:58:33 -0800
-Message-ID: <200909282258216055237@promise.com>
-Reply-To: ed.lin@promise.com
+From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
+	<narasimhareddyc@hcl.in>
+Subject: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Tue, 29 Sep 2009 14:17:42 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345523@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed;
+	boundary="_003_4F2B1A2459C7AD4D96A23CE911C352CB1E91345523CHNHCLTEVS07H_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.promise.com ([67.111.72.2]:57248 "EHLO
-	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751657AbZI2GNj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2009 02:13:39 -0400
+Received: from gws08.hcl.in ([203.105.186.28]:60079 "EHLO gws08.hcl.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753502AbZI2Iso (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2009 04:48:44 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, promise_linux <promise_linux@promise.com>
-
-Add support for reset request from firmware for controllers
-of st_shasta and st_yel type. Code adjustments necessary
-for this change are also included.
-
-Signed-off-by: Ed Lin <ed.lin@promise.com>
----
- drivers/scsi/stex.c |  249 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 166 insertions(+), 83 deletions(-)
-
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index af5bafc..79216ee 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -64,24 +64,24 @@ enum {
- 	YH2I_REQ_HI				= 0xc4,
- 
- 	/* MU register value */
--	MU_INBOUND_DOORBELL_HANDSHAKE		= 1,
--	MU_INBOUND_DOORBELL_REQHEADCHANGED	= 2,
--	MU_INBOUND_DOORBELL_STATUSTAILCHANGED	= 4,
--	MU_INBOUND_DOORBELL_HMUSTOPPED		= 8,
--	MU_INBOUND_DOORBELL_RESET		= 16,
--
--	MU_OUTBOUND_DOORBELL_HANDSHAKE		= 1,
--	MU_OUTBOUND_DOORBELL_REQUESTTAILCHANGED	= 2,
--	MU_OUTBOUND_DOORBELL_STATUSHEADCHANGED	= 4,
--	MU_OUTBOUND_DOORBELL_BUSCHANGE		= 8,
--	MU_OUTBOUND_DOORBELL_HASEVENT		= 16,
-+	MU_INBOUND_DOORBELL_HANDSHAKE		= (1 << 0),
-+	MU_INBOUND_DOORBELL_REQHEADCHANGED	= (1 << 1),
-+	MU_INBOUND_DOORBELL_STATUSTAILCHANGED	= (1 << 2),
-+	MU_INBOUND_DOORBELL_HMUSTOPPED		= (1 << 3),
-+	MU_INBOUND_DOORBELL_RESET		= (1 << 4),
-+
-+	MU_OUTBOUND_DOORBELL_HANDSHAKE		= (1 << 0),
-+	MU_OUTBOUND_DOORBELL_REQUESTTAILCHANGED	= (1 << 1),
-+	MU_OUTBOUND_DOORBELL_STATUSHEADCHANGED	= (1 << 2),
-+	MU_OUTBOUND_DOORBELL_BUSCHANGE		= (1 << 3),
-+	MU_OUTBOUND_DOORBELL_HASEVENT		= (1 << 4),
-+	MU_OUTBOUND_DOORBELL_REQUEST_RESET	= (1 << 27),
- 
- 	/* MU status code */
- 	MU_STATE_STARTING			= 1,
--	MU_STATE_FMU_READY_FOR_HANDSHAKE	= 2,
--	MU_STATE_SEND_HANDSHAKE_FRAME		= 3,
--	MU_STATE_STARTED			= 4,
--	MU_STATE_RESETTING			= 5,
-+	MU_STATE_STARTED			= 2,
-+	MU_STATE_RESETTING			= 3,
-+	MU_STATE_FAILED				= 4,
- 
- 	MU_MAX_DELAY				= 120,
- 	MU_HANDSHAKE_SIGNATURE			= 0x55aaaa55,
-@@ -111,6 +111,8 @@ enum {
- 
- 	SS_H2I_INT_RESET			= 0x100,
- 
-+	SS_I2H_REQUEST_RESET			= 0x2000,
-+
- 	SS_MU_OPERATIONAL			= 0x80000000,
- 
- 	STEX_CDB_LENGTH				= 16,
-@@ -312,6 +314,10 @@ struct st_hba {
- 	struct st_ccb *wait_ccb;
- 	__le32 *scratch;
- 
-+	char work_q_name[20];
-+	struct workqueue_struct *work_q;
-+	struct work_struct reset_work;
-+	wait_queue_head_t reset_waitq;
- 	unsigned int mu_status;
- 	unsigned int cardtype;
- 	int msi_enabled;
-@@ -578,6 +584,9 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
- 	lun = cmd->device->lun;
- 	hba = (struct st_hba *) &host->hostdata[0];
- 
-+	if (unlikely(hba->mu_status == MU_STATE_RESETTING))
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+
- 	switch (cmd->cmnd[0]) {
- 	case MODE_SENSE_10:
- 	{
-@@ -842,7 +851,6 @@ static irqreturn_t stex_intr(int irq, void *__hba)
- 	void __iomem *base = hba->mmio_base;
- 	u32 data;
- 	unsigned long flags;
--	int handled = 0;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 
-@@ -853,12 +861,16 @@ static irqreturn_t stex_intr(int irq, void *__hba)
- 		writel(data, base + ODBL);
- 		readl(base + ODBL); /* flush */
- 		stex_mu_intr(hba, data);
--		handled = 1;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		if (unlikely(data & MU_OUTBOUND_DOORBELL_REQUEST_RESET &&
-+			hba->cardtype == st_shasta))
-+			queue_work(hba->work_q, &hba->reset_work);
-+		return IRQ_HANDLED;
- 	}
- 
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
--	return IRQ_RETVAL(handled);
-+	return IRQ_NONE;
- }
- 
- static void stex_ss_mu_intr(struct st_hba *hba)
-@@ -940,7 +952,6 @@ static irqreturn_t stex_ss_intr(int irq, void *__hba)
- 	void __iomem *base = hba->mmio_base;
- 	u32 data;
- 	unsigned long flags;
--	int handled = 0;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 
-@@ -949,12 +960,15 @@ static irqreturn_t stex_ss_intr(int irq, void *__hba)
- 		/* clear the interrupt */
- 		writel(data, base + YI2H_INT_C);
- 		stex_ss_mu_intr(hba);
--		handled = 1;
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		if (unlikely(data & SS_I2H_REQUEST_RESET))
-+			queue_work(hba->work_q, &hba->reset_work);
-+		return IRQ_HANDLED;
- 	}
- 
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
--	return IRQ_RETVAL(handled);
-+	return IRQ_NONE;
- }
- 
- static int stex_common_handshake(struct st_hba *hba)
-@@ -1047,7 +1061,7 @@ static int stex_ss_handshake(struct st_hba *hba)
- 	struct st_msg_header *msg_h;
- 	struct handshake_frame *h;
- 	__le32 *scratch;
--	u32 data;
-+	u32 data, scratch_size;
- 	unsigned long before;
- 	int ret = 0;
- 
-@@ -1075,13 +1089,16 @@ static int stex_ss_handshake(struct st_hba *hba)
- 	stex_gettime(&h->hosttime);
- 	h->partner_type = HMU_PARTNER_TYPE;
- 	h->extra_offset = h->extra_size = 0;
--	h->scratch_size = cpu_to_le32((hba->sts_count+1)*sizeof(u32));
-+	scratch_size = (hba->sts_count+1)*sizeof(u32);
-+	h->scratch_size = cpu_to_le32(scratch_size);
- 
- 	data = readl(base + YINT_EN);
- 	data &= ~4;
- 	writel(data, base + YINT_EN);
- 	writel((hba->dma_handle >> 16) >> 16, base + YH2I_REQ_HI);
-+	readl(base + YH2I_REQ_HI);
- 	writel(hba->dma_handle, base + YH2I_REQ);
-+	readl(base + YH2I_REQ); /* flush */
- 
- 	scratch = hba->scratch;
- 	before = jiffies;
-@@ -1097,7 +1114,7 @@ static int stex_ss_handshake(struct st_hba *hba)
- 		msleep(1);
- 	}
- 
--	*scratch = 0;
-+	memset(scratch, 0, scratch_size);
- 	msg_h->flag = 0;
- 	return ret;
- }
-@@ -1106,19 +1123,24 @@ static int stex_handshake(struct st_hba *hba)
- {
- 	int err;
- 	unsigned long flags;
-+	unsigned int mu_status;
- 
- 	err = (hba->cardtype == st_yel) ?
- 		stex_ss_handshake(hba) : stex_common_handshake(hba);
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	mu_status = hba->mu_status;
- 	if (err == 0) {
--		spin_lock_irqsave(hba->host->host_lock, flags);
- 		hba->req_head = 0;
- 		hba->req_tail = 0;
- 		hba->status_head = 0;
- 		hba->status_tail = 0;
- 		hba->out_req_cnt = 0;
- 		hba->mu_status = MU_STATE_STARTED;
--		spin_unlock_irqrestore(hba->host->host_lock, flags);
--	}
-+	} else
-+		hba->mu_status = MU_STATE_FAILED;
-+	if (mu_status == MU_STATE_RESETTING)
-+		wake_up_all(&hba->reset_waitq);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	return err;
- }
- 
-@@ -1138,17 +1160,11 @@ static int stex_abort(struct scsi_cmnd *cmd)
- 
- 	base = hba->mmio_base;
- 	spin_lock_irqsave(host->host_lock, flags);
--	if (tag < host->can_queue && hba->ccb[tag].cmd == cmd)
-+	if (tag < host->can_queue &&
-+		hba->ccb[tag].req && hba->ccb[tag].cmd == cmd)
- 		hba->wait_ccb = &hba->ccb[tag];
--	else {
--		for (tag = 0; tag < host->can_queue; tag++)
--			if (hba->ccb[tag].cmd == cmd) {
--				hba->wait_ccb = &hba->ccb[tag];
--				break;
--			}
--		if (tag >= host->can_queue)
--			goto out;
--	}
-+	else
-+		goto out;
- 
- 	if (hba->cardtype == st_yel) {
- 		data = readl(base + YI2H_INT);
-@@ -1222,6 +1238,37 @@ static void stex_hard_reset(struct st_hba *hba)
- 			hba->pdev->saved_config_space[i]);
- }
- 
-+static int stex_yos_reset(struct st_hba *hba)
-+{
-+	void __iomem *base;
-+	unsigned long flags, before;
-+	int ret = 0;
-+
-+	base = hba->mmio_base;
-+	writel(MU_INBOUND_DOORBELL_RESET, base + IDBL);
-+	readl(base + IDBL); /* flush */
-+	before = jiffies;
-+	while (hba->out_req_cnt > 0) {
-+		if (time_after(jiffies, before + ST_INTERNAL_TIMEOUT * HZ)) {
-+			printk(KERN_WARNING DRV_NAME
-+				"(%s): reset timeout\n", pci_name(hba->pdev));
-+			ret = -1;
-+			break;
-+		}
-+		msleep(1);
-+	}
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (ret == -1)
-+		hba->mu_status = MU_STATE_FAILED;
-+	else
-+		hba->mu_status = MU_STATE_STARTED;
-+	wake_up_all(&hba->reset_waitq);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	return ret;
-+}
-+
- static void stex_ss_reset(struct st_hba *hba)
- {
- 	writel(SS_H2I_INT_RESET, hba->mmio_base + YH2I_INT);
-@@ -1229,66 +1276,86 @@ static void stex_ss_reset(struct st_hba *hba)
- 	ssleep(5);
- }
- 
--static int stex_reset(struct scsi_cmnd *cmd)
-+static int stex_do_reset(struct st_hba *hba)
- {
--	struct st_hba *hba;
--	void __iomem *base;
--	unsigned long flags, before;
-+	struct st_ccb *ccb;
-+	unsigned long flags;
-+	unsigned int mu_status = MU_STATE_RESETTING;
-+	u16 tag;
- 
--	hba = (struct st_hba *) &cmd->device->host->hostdata[0];
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (hba->mu_status == MU_STATE_STARTING) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		printk(KERN_INFO DRV_NAME "(%s): request reset during init\n",
-+			pci_name(hba->pdev));
-+		return 0;
-+	}
-+	while (hba->mu_status == MU_STATE_RESETTING) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		wait_event_timeout(hba->reset_waitq,
-+				   hba->mu_status != MU_STATE_RESETTING,
-+				   MU_MAX_DELAY * HZ);
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		mu_status = hba->mu_status;
-+	}
- 
--	printk(KERN_INFO DRV_NAME
--		"(%s): resetting host\n", pci_name(hba->pdev));
--	scsi_print_command(cmd);
-+	if (mu_status != MU_STATE_RESETTING) {
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+		return (mu_status == MU_STATE_STARTED) ? 0 : -1;
-+	}
- 
- 	hba->mu_status = MU_STATE_RESETTING;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
-+	if (hba->cardtype == st_yosemite)
-+		return stex_yos_reset(hba);
- 
- 	if (hba->cardtype == st_shasta)
- 		stex_hard_reset(hba);
- 	else if (hba->cardtype == st_yel)
- 		stex_ss_reset(hba);
- 
--	if (hba->cardtype != st_yosemite) {
--		if (stex_handshake(hba)) {
--			printk(KERN_WARNING DRV_NAME
--				"(%s): resetting: handshake failed\n",
--				pci_name(hba->pdev));
--			return FAILED;
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	for (tag = 0; tag < hba->host->can_queue; tag++) {
-+		ccb = &hba->ccb[tag];
-+		if (ccb->req == NULL)
-+			continue;
-+		ccb->req = NULL;
-+		if (ccb->cmd) {
-+			scsi_dma_unmap(ccb->cmd);
-+			ccb->cmd->result = DID_RESET << 16;
-+			ccb->cmd->scsi_done(ccb->cmd);
-+			ccb->cmd = NULL;
- 		}
--		return SUCCESS;
- 	}
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
--	/* st_yosemite */
--	writel(MU_INBOUND_DOORBELL_RESET, hba->mmio_base + IDBL);
--	readl(hba->mmio_base + IDBL); /* flush */
--	before = jiffies;
--	while (hba->out_req_cnt > 0) {
--		if (time_after(jiffies, before + ST_INTERNAL_TIMEOUT * HZ)) {
--			printk(KERN_WARNING DRV_NAME
--				"(%s): reset timeout\n", pci_name(hba->pdev));
--			return FAILED;
--		}
--		msleep(1);
--	}
-+	if (stex_handshake(hba) == 0)
-+		return 0;
- 
--	base = hba->mmio_base;
--	writel(0, base + IMR0);
--	readl(base + IMR0);
--	writel(0, base + OMR0);
--	readl(base + OMR0);
--	writel(0, base + IMR1);
--	readl(base + IMR1);
--	writel(0, base + OMR1);
--	readl(base + OMR1); /* flush */
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	hba->req_head = 0;
--	hba->req_tail = 0;
--	hba->status_head = 0;
--	hba->status_tail = 0;
--	hba->out_req_cnt = 0;
--	hba->mu_status = MU_STATE_STARTED;
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--	return SUCCESS;
-+	printk(KERN_WARNING DRV_NAME "(%s): resetting: handshake failed\n",
-+		pci_name(hba->pdev));
-+	return -1;
-+}
-+
-+static int stex_reset(struct scsi_cmnd *cmd)
-+{
-+	struct st_hba *hba;
-+
-+	hba = (struct st_hba *) &cmd->device->host->hostdata[0];
-+
-+	printk(KERN_INFO DRV_NAME
-+		"(%s): resetting host\n", pci_name(hba->pdev));
-+	scsi_print_command(cmd);
-+
-+	return stex_do_reset(hba) ? FAILED : SUCCESS;
-+}
-+
-+static void stex_reset_work(struct work_struct *work)
-+{
-+	struct st_hba *hba = container_of(work, struct st_hba, reset_work);
-+
-+	stex_do_reset(hba);
- }
- 
- static int stex_biosparam(struct scsi_device *sdev,
-@@ -1583,12 +1650,24 @@ stex_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	hba->host = host;
- 	hba->pdev = pdev;
-+	init_waitqueue_head(&hba->reset_waitq);
-+
-+	snprintf(hba->work_q_name, sizeof(hba->work_q_name),
-+		 "stex_wq_%d", host->host_no);
-+	hba->work_q = create_singlethread_workqueue(hba->work_q_name);
-+	if (!hba->work_q) {
-+		printk(KERN_ERR DRV_NAME "(%s): create workqueue failed\n",
-+			pci_name(pdev));
-+		err = -ENOMEM;
-+		goto out_ccb_free;
-+	}
-+	INIT_WORK(&hba->reset_work, stex_reset_work);
- 
- 	err = stex_request_irq(hba);
- 	if (err) {
- 		printk(KERN_ERR DRV_NAME "(%s): request irq failed\n",
- 			pci_name(pdev));
--		goto out_ccb_free;
-+		goto out_free_wq;
- 	}
- 
- 	err = stex_handshake(hba);
-@@ -1617,6 +1696,8 @@ stex_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- out_free_irq:
- 	stex_free_irq(hba);
-+out_free_wq:
-+	destroy_workqueue(hba->work_q);
- out_ccb_free:
- 	kfree(hba->ccb);
- out_pci_free:
-@@ -1684,6 +1765,8 @@ static void stex_hba_free(struct st_hba *hba)
- {
- 	stex_free_irq(hba);
- 
-+	destroy_workqueue(hba->work_q);
-+
- 	iounmap(hba->mmio_base);
- 
- 	pci_release_regions(hba->pdev);
+To: "'linux-scsi@vger.kernel.org'" <'linux-scsi@vger.kernel.org'>, James Bottomley <jejb@kernel.org>
+Cc: ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
 
+--_003_4F2B1A2459C7AD4D96A23CE911C352CB1E91345523CHNHCLTEVS07H_
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Hi=20James=20and=20linux-scsi=20community,
+
+=20=20=20=20=20=20=20I=20would=20request=20you=20that=20please=20review=
+=20the=20attached=20patch=20and=20do=20the=20needful=20to=20incorporate=
+=20the=20patch=20in=20up-coming=20release.=20I=20am=20happy=20to=20provid=
+e=20if=20any=20additional=20info=20is=20required=20to=20accept=20the=20pa=
+tch.
+
+From:=20Narasimha=20Reddy=20<ServeRAIDDriver@hcl.in>
+
+=20=20=20=20=20=20=20=20The=20attached=20patch=20was=20generated=20for=20=
+fixing=20the=20following=20issues.=20These=20issues=20were=20reported=20b=
+y=20Cisco,=20SAP=20and=20some=20other=20customers=20as=20well.
+
+Regarding=20the=20testing=20of=20fixes:
+--------------------------------
+
+=20=20=20=20=20=20=20=20These=20particular=20problems=20were=20reported=
+=20by=20Cisco=20and=20SAP=20and=20customers=20as=20well.=20Cisco=20report=
+ed=20on=20RHEL4=20U6=20and=20SAP=20reported=20on=20SLES9=20SP4=20and=20SL=
+ES10=20SP2.=20We=20added=20these=20fixes=20on=20RHEL4=20U6=20and=20gave=
+=20a=20private=20build=20to=20IBM=20and=20Cisco.=20Cisco=20and=20IBM=20te=
+sted=20it=20for=20more=20than=2015=20days=20and=20they=20reported=20that=
+=20they=20did=20not=20see=20the=20issue=20so=20far.=20Before=20the=20fix,=
+=20Cisco=20used=20to=20see=20the=20issue=20within=205=20days.=20We=20gene=
+rated=20a=20patch=20for=20SLES9=20SP4=20and=20SLES10=20SP2=20and=20submit=
+ted=20to=20Novell.=20Novell=20applied=20the=20patch=20and=20gave=20a=20te=
+st=20build=20to=20SAP.=20SAP=20tested=20and=20reported=20that=20the=20bui=
+ld=20is=20working=20properly.
+
+We=20also=20tested=20in=20our=20lab=20using=20the=20tools=20"dishogsync",=
+=20which=20is=20IO=20stress=20tool=20and=20the=20tool=20was=20provided=20=
+by=20Cisco.
+
+Issue1:=20File=20System=20going=20into=20read-only=20mode
+---------
+
+Root=20cause:
+-----------
+=20=20=20=20=20=20=20The=20driver=20tends=20to=20not=20free=20the=20memor=
+y=20(FIB)=20when=20the=20management=20request=20exits=20prematurely.=20Th=
+e=20accumulation=20of=20such=20un-freed=20memory=20causes=20the=20driver=
+=20to=20fail=20to=20allocate=20anymore=20memory=20(FIB)=20and=20hence=20r=
+eturn=200x70000=20value=20to=20the=20upper=20layer,=20which=20puts=20the=
+=20file=20system=20into=20read=20only=20mode.
+
+Fix=20details:
+------------
+=20=20=20=20=20The=20fix=20makes=20sure=20to=20free=20the=20memory=20(FIB=
+)=20even=20if=20the=20request=20exits=20prematurely=20hence=20ensuring=20=
+the=20driver=20wouldn't=20run=20out=20of=20memory=20(FIBs).
+
+
+Issue2:
+-------
+=20=20=20=20=20=20=20=20False=20Raid=20Alert=20occurs-=20when=20the=20Phy=
+sical=20Drives=20and=20Logical=20drives=20are=20reported=20as=20deleted=
+=20or=20added,=20even=20though=20there=20is=20no=20change=20done=20on=20t=
+he=20system
+
+Root=20cause:
+-----------
+=20=20=20=20=20=20=20=20Driver=20IOCTLs=20is=20signaled=20with=20EINTR=20=
+while=20waiting=20on=20response=20from=20the=20lower=20layers.=20Returnin=
+g=20"EINTR"=20will=20never=20initiate=20internal=20retry.
+
+Fix=20details:
+------------
+=20=20=20=20=20=20=20=20The=20issue=20was=20fixed=20by=20replacing=20"EIN=
+TR"=20with=20"ERESTARTSYS"=20for=20mid-layer=20retries.
+
+
+Signed-off-by:=20Narasimha=20Reddy=20<ServeRAIDDriver@hcl.in>
+
+=20=20=20=20=20=20=20Please=20find=20the=20attached=20patch=20file=20"com=
+munity_aac24701.patch",=20which=20has=20been=20generated=20for=20the=20is=
+sues=20we=20fixed=20and=20"email"=20file=20"community_aac24701.email",=20=
+which=20has=20been=20generated=20for=20the=20statistics=20like=20number=
+=20of=20lines=20inserted=20and=20deleted,=20errors=20etc.
+
+Regards=20-=20Narasimha=20Reddy
+
+
+DISCLAIMER:
+-------------------------------------------------------------------------=
+----------------------------------------------
+
+The=20contents=20of=20this=20e-mail=20and=20any=20attachment(s)=20are=20c=
+onfidential=20and=20intended=20for=20the=20named=20recipient(s)=20only.=
+=20
+It=20shall=20not=20attach=20any=20liability=20on=20the=20originator=20or=
+=20HCL=20or=20its=20affiliates.=20Any=20views=20or=20opinions=20presented=
+=20in=20
+this=20email=20are=20solely=20those=20of=20the=20author=20and=20may=20not=
+=20necessarily=20reflect=20the=20opinions=20of=20HCL=20or=20its=20affilia=
+tes.=20
+Any=20form=20of=20reproduction,=20dissemination,=20copying,=20disclosure,=
+=20modification,=20distribution=20and=20/=20or=20publication=20of=20
+this=20message=20without=20the=20prior=20written=20consent=20of=20the=20a=
+uthor=20of=20this=20e-mail=20is=20strictly=20prohibited.=20If=20you=20hav=
+e=20
+received=20this=20email=20in=20error=20please=20delete=20it=20and=20notif=
+y=20the=20sender=20immediately.=20Before=20opening=20any=20mail=20and=20
+attachments=20please=20check=20them=20for=20viruses=20and=20defect.
+
+-------------------------------------------------------------------------=
+----------------------------------------------
+
+--_003_4F2B1A2459C7AD4D96A23CE911C352CB1E91345523CHNHCLTEVS07H_
+Content-Type: application/octet-stream; name="community_aac24701.email"
+Content-Description: community_aac24701.email
+Content-Disposition: attachment; filename="community_aac24701.email";
+	size=690; creation-date="Fri, 25 Sep 2009 14:22:04 GMT";
+	modification-date="Fri, 25 Sep 2009 12:25:01 GMT"
+Content-Transfer-Encoding: base64
+
+ClRoaXMgYXR0YWNoZWQgcGF0Y2ggaXMgYWdhaW5zdCBjdXJyZW50IHNjc2ktbWlzYy0yLjYuCgpP
+YmxpZ2F0b3J5RGlzY2xhaW1lcjogUGxlYXNlIGFjY2VwdCBteSBjb25kb2xlbmNlcyByZWdhcmRp
+bmcgT3V0bG9vaydzIGhhbmRsaW5nIG9mIHBhdGNoIGF0dGFjaG1lbnRzLgoKU2lnbmVkLW9mZi1i
+eTogUGVuY2hhbGEgTmFyYXNpbWhhIFJlZGR5IDxTZXJ2ZVJBSUREcml2ZXJAaGNsLmluPgoKIGRy
+aXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jICAgfCAgIDUyICsrKysrKysrKysrKysrKysrKysr
+KysrKysrLS0tLS0tLS0KIGRyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaCAgfCAgICA1ICsr
+LQogZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWN0cmwuYyB8ICAgMzcgKysrKysrKysrKysrKysr
+LS0tLS0tLS0tCiBkcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5pdC5jIHwgICAgNiArKysKIGRy
+aXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYyAgfCAgIDYxICsrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrLS0tLS0tLS0KIGRyaXZlcnMvc2NzaS9hYWNyYWlkL2RwY3N1cC5jICAgfCAg
+IDM2ICsrKysrKysrKysrKysrKysrKystLS0tCiA2IGZpbGVzIGNoYW5nZWQsIDE1MSBpbnNlcnRp
+b25zKCspLCA0NiBkZWxldGlvbnMoLSkKClNpbmNlcmVseSAtIFBlbmNoYWxhIE5hcmFzaW1oYSBS
+ZWRkeSAK
+
+--_003_4F2B1A2459C7AD4D96A23CE911C352CB1E91345523CHNHCLTEVS07H_
+Content-Type: application/octet-stream; name="community_aac24701.patch"
+Content-Description: community_aac24701.patch
+Content-Disposition: attachment; filename="community_aac24701.patch";
+	size=14698; creation-date="Fri, 25 Sep 2009 14:22:04 GMT";
+	modification-date="Fri, 25 Sep 2009 12:13:58 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtcHVyTiBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jIGIvZHJpdmVycy9zY3Np
+L2FhY3JhaWQvYWFjaGJhLmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjaGJhLmMJMjAw
+OS0wOS0xMCAwMzo0Mzo1OS4wMDAwMDAwMDAgKzA1MzAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3Jh
+aWQvYWFjaGJhLmMJMjAwOS0wOS0yNSAxMTo0MzoxMi4wMDAwMDAwMDAgKzA1MzAKQEAgLTI5Myw3
+ICsyOTMsMTAgQEAgaW50IGFhY19nZXRfY29uZmlnX3N0YXR1cyhzdHJ1Y3QgYWFjX2RldgogCQkJ
+c3RhdHVzID0gLUVJTlZBTDsKIAkJfQogCX0KLQlhYWNfZmliX2NvbXBsZXRlKGZpYnB0cik7CisJ
+LyogRG8gbm90IHNldCBYZmVyU3RhdGUgdG8gemVybyB1bmxlc3MgcmVjZWl2ZXMgYSByZXNwb25z
+ZSBmcm9tIEYvVyAqLworCWlmIChzdGF0dXMgPj0gMCkKKwkJYWFjX2ZpYl9jb21wbGV0ZShmaWJw
+dHIpOworCiAJLyogU2VuZCBhIENUX0NPTU1JVF9DT05GSUcgdG8gZW5hYmxlIGRpc2NvdmVyeSBv
+ZiBkZXZpY2VzICovCiAJaWYgKHN0YXR1cyA+PSAwKSB7CiAJCWlmICgoYWFjX2NvbW1pdCA9PSAx
+KSB8fCBjb21taXRfZmxhZykgewpAQCAtMzEwLDEzICszMTMsMTggQEAgaW50IGFhY19nZXRfY29u
+ZmlnX3N0YXR1cyhzdHJ1Y3QgYWFjX2RldgogCQkJCSAgICBGc2FOb3JtYWwsCiAJCQkJICAgIDEs
+IDEsCiAJCQkJICAgIE5VTEwsIE5VTEwpOwotCQkJYWFjX2ZpYl9jb21wbGV0ZShmaWJwdHIpOwor
+CQkJLyogRG8gbm90IHNldCBYZmVyU3RhdGUgdG8gemVybyB1bmxlc3MKKwkJCSAqIHJlY2VpdmVz
+IGEgcmVzcG9uc2UgZnJvbSBGL1cgKi8KKwkJCWlmIChzdGF0dXMgPj0gMCkKKwkJCQlhYWNfZmli
+X2NvbXBsZXRlKGZpYnB0cik7CiAJCX0gZWxzZSBpZiAoYWFjX2NvbW1pdCA9PSAwKSB7CiAJCQlw
+cmludGsoS0VSTl9XQVJOSU5HCiAJCQkgICJhYWNfZ2V0X2NvbmZpZ19zdGF0dXM6IEZvcmVpZ24g
+ZGV2aWNlIGNvbmZpZ3VyYXRpb25zIGFyZSBiZWluZyBpZ25vcmVkXG4iKTsKIAkJfQogCX0KLQlh
+YWNfZmliX2ZyZWUoZmlicHRyKTsKKwkvKiBGSUIgc2hvdWxkIGJlIGZyZWVkIG9ubHkgYWZ0ZXIg
+Z2V0dGluZyB0aGUgcmVzcG9uc2UgZnJvbSB0aGUgRi9XICovCisJaWYgKHN0YXR1cyAhPSAtRVJF
+U1RBUlRTWVMpCisJCWFhY19maWJfZnJlZShmaWJwdHIpOwogCXJldHVybiBzdGF0dXM7CiB9CiAK
+QEAgLTM1NSw3ICszNjMsOSBAQCBpbnQgYWFjX2dldF9jb250YWluZXJzKHN0cnVjdCBhYWNfZGV2
+ICpkCiAJCW1heGltdW1fbnVtX2NvbnRhaW5lcnMgPSBsZTMyX3RvX2NwdShkcmVzcC0+Q29udGFp
+bmVyU3dpdGNoRW50cmllcyk7CiAJCWFhY19maWJfY29tcGxldGUoZmlicHRyKTsKIAl9Ci0JYWFj
+X2ZpYl9mcmVlKGZpYnB0cik7CisJLyogRklCIHNob3VsZCBiZSBmcmVlZCBvbmx5IGFmdGVyIGdl
+dHRpbmcgdGhlIHJlc3BvbnNlIGZyb20gdGhlIEYvVyAqLworCWlmIChzdGF0dXMgIT0gLUVSRVNU
+QVJUU1lTKQorCQlhYWNfZmliX2ZyZWUoZmlicHRyKTsKIAogCWlmIChtYXhpbXVtX251bV9jb250
+YWluZXJzIDwgTUFYSU1VTV9OVU1fQ09OVEFJTkVSUykKIAkJbWF4aW11bV9udW1fY29udGFpbmVy
+cyA9IE1BWElNVU1fTlVNX0NPTlRBSU5FUlM7CkBAIC0xMjQ1LDggKzEyNTUsMTIgQEAgaW50IGFh
+Y19nZXRfYWRhcHRlcl9pbmZvKHN0cnVjdCBhYWNfZGV2KgogCQkJIE5VTEwpOwogCiAJaWYgKHJj
+b2RlIDwgMCkgewotCQlhYWNfZmliX2NvbXBsZXRlKGZpYnB0cik7Ci0JCWFhY19maWJfZnJlZShm
+aWJwdHIpOworCQkvKiBGSUIgc2hvdWxkIGJlIGZyZWVkIG9ubHkgYWZ0ZXIKKwkJICogZ2V0dGlu
+ZyB0aGUgcmVzcG9uc2UgZnJvbSB0aGUgRi9XICovCisJCWlmIChyY29kZSAhPSAtRVJFU1RBUlRT
+WVMpIHsKKwkJCWFhY19maWJfY29tcGxldGUoZmlicHRyKTsKKwkJCWFhY19maWJfZnJlZShmaWJw
+dHIpOworCQl9CiAJCXJldHVybiByY29kZTsKIAl9CiAJbWVtY3B5KCZkZXYtPmFkYXB0ZXJfaW5m
+bywgaW5mbywgc2l6ZW9mKCppbmZvKSk7CkBAIC0xMjcwLDYgKzEyODQsMTIgQEAgaW50IGFhY19n
+ZXRfYWRhcHRlcl9pbmZvKHN0cnVjdCBhYWNfZGV2KgogCiAJCWlmIChyY29kZSA+PSAwKQogCQkJ
+bWVtY3B5KCZkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLCBzaW5mbywgc2l6ZW9mKCpzaW5m
+bykpOworCQlpZiAocmNvZGUgPT0gLUVSRVNUQVJUU1lTKSB7CisJCQlmaWJwdHIgPSBhYWNfZmli
+X2FsbG9jKGRldik7CisJCQlpZiAoIWZpYnB0cikKKwkJCQlyZXR1cm4gLUVOT01FTTsKKwkJfQor
+CiAJfQogCiAKQEAgLTE0NzAsOSArMTQ5MCwxMSBAQCBpbnQgYWFjX2dldF9hZGFwdGVyX2luZm8o
+c3RydWN0IGFhY19kZXYqCiAJCQkgIChkZXYtPnNjc2lfaG9zdF9wdHItPnNnX3RhYmxlc2l6ZSAq
+IDgpICsgMTEyOwogCQl9CiAJfQotCi0JYWFjX2ZpYl9jb21wbGV0ZShmaWJwdHIpOwotCWFhY19m
+aWJfZnJlZShmaWJwdHIpOworCS8qIEZJQiBzaG91bGQgYmUgZnJlZWQgb25seSBhZnRlciBnZXR0
+aW5nIHRoZSByZXNwb25zZSBmcm9tIHRoZSBGL1cgKi8KKwlpZiAocmNvZGUgIT0gLUVSRVNUQVJU
+U1lTKSB7CisJCWFhY19maWJfY29tcGxldGUoZmlicHRyKTsKKwkJYWFjX2ZpYl9mcmVlKGZpYnB0
+cik7CisJfQogCiAJcmV0dXJuIHJjb2RlOwogfQpAQCAtMTYzMyw2ICsxNjU1LDcgQEAgc3RhdGlj
+IGludCBhYWNfcmVhZChzdHJ1Y3Qgc2NzaV9jbW5kICogcwogCSAqCUFsb2NhdGUgYW5kIGluaXRp
+YWxpemUgYSBGaWIKIAkgKi8KIAlpZiAoIShjbWRfZmliY29udGV4dCA9IGFhY19maWJfYWxsb2Mo
+ZGV2KSkpIHsKKwkJcHJpbnRrKEtFUk5fV0FSTklORyAiYWFjX3JlYWQ6IGZpYiBhbGxvY2F0aW9u
+IGZhaWxlZFxuIik7CiAJCXJldHVybiAtMTsKIAl9CiAKQEAgLTE3MTIsOSArMTczNSwxNCBAQCBz
+dGF0aWMgaW50IGFhY193cml0ZShzdHJ1Y3Qgc2NzaV9jbW5kICogCiAJICoJQWxsb2NhdGUgYW5k
+IGluaXRpYWxpemUgYSBGaWIgdGhlbiBzZXR1cCBhIEJsb2NrV3JpdGUgY29tbWFuZAogCSAqLwog
+CWlmICghKGNtZF9maWJjb250ZXh0ID0gYWFjX2ZpYl9hbGxvYyhkZXYpKSkgewotCQlzY3NpY21k
+LT5yZXN1bHQgPSBESURfRVJST1IgPDwgMTY7Ci0JCXNjc2ljbWQtPnNjc2lfZG9uZShzY3NpY21k
+KTsKLQkJcmV0dXJuIDA7CisJCS8qIEZJQiB0ZW1wb3JhcmlseSB1bmF2YWlsYWJsZSxub3QgY2F0
+YXN0cm9waGljIGZhaWx1cmUgKi8KKworCQkvKiBzY3NpY21kLT5yZXN1bHQgPSBESURfRVJST1Ig
+PDwgMTY7CisJCSAqIHNjc2ljbWQtPnNjc2lfZG9uZShzY3NpY21kKTsKKwkJICogcmV0dXJuIDA7
+CisJCSAqLworCQlwcmludGsoS0VSTl9XQVJOSU5HICJhYWNfd3JpdGU6IGZpYiBhbGxvY2F0aW9u
+IGZhaWxlZFxuIik7CisJCXJldHVybiAtMTsKIAl9CiAKIAlzdGF0dXMgPSBhYWNfYWRhcHRlcl93
+cml0ZShjbWRfZmliY29udGV4dCwgc2NzaWNtZCwgbGJhLCBjb3VudCwgZnVhKTsKZGlmZiAtcHVy
+TiBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaCBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY3JhaWQuaAotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgJMjAwOS0wOS0x
+MCAwMzo0Mzo1OS4wMDAwMDAwMDAgKzA1MzAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFj
+cmFpZC5oCTIwMDktMDktMjUgMTI6MTM6NTUuMDAwMDAwMDAwICswNTMwCkBAIC0xMiw3ICsxMiw3
+IEBACiAgKi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0qLwogCiAjaWZuZGVmIEFBQ19EUklWRVJfQlVJTEQK
+LSMgZGVmaW5lIEFBQ19EUklWRVJfQlVJTEQgMjQ2MQorIyBkZWZpbmUgQUFDX0RSSVZFUl9CVUlM
+RCAyNDcwMQogIyBkZWZpbmUgQUFDX0RSSVZFUl9CUkFOQ0ggIi1tcyIKICNlbmRpZgogI2RlZmlu
+ZSBNQVhJTVVNX05VTV9DT05UQUlORVJTCTMyCkBAIC0xMDM2LDYgKzEwMzYsOSBAQCBzdHJ1Y3Qg
+YWFjX2RldgogCXU4CQkJcHJpbnRmX2VuYWJsZWQ7CiAJdTgJCQlpbl9yZXNldDsKIAl1OAkJCW1z
+aTsKKwlpbnQJCQltYW5hZ2VtZW50X2ZpYl9jb3VudDsKKwlzcGlubG9ja190CQltYW5hZ2VfbG9j
+azsKKwogfTsKIAogI2RlZmluZSBhYWNfYWRhcHRlcl9pbnRlcnJ1cHQoZGV2KSBcCmRpZmYgLXB1
+ck4gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tY3RybC5jIGIvZHJpdmVycy9zY3NpL2FhY3Jh
+aWQvY29tbWN0cmwuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tY3RybC5jCTIwMDkt
+MDktMTAgMDM6NDM6NTkuMDAwMDAwMDAwICswNTMwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2NvbW1jdHJsLmMJMjAwOS0wOS0yNSAxMjowNzo0NC4wMDAwMDAwMDAgKzA1MzAKQEAgLTE1Myw3
+ICsxNTMsNyBAQCBjbGVhbnVwOgogCQlmaWJwdHItPmh3X2ZpYl9wYSA9IGh3X2ZpYl9wYTsKIAkJ
+ZmlicHRyLT5od19maWJfdmEgPSBod19maWI7CiAJfQotCWlmIChyZXR2YWwgIT0gLUVJTlRSKQor
+CWlmIChyZXR2YWwgIT0gLUVSRVNUQVJUU1lTKQogCQlhYWNfZmliX2ZyZWUoZmlicHRyKTsKIAly
+ZXR1cm4gcmV0dmFsOwogfQpAQCAtMzIyLDcgKzMyMiw3IEBAIHJldHVybl9maWI6CiAJCX0KIAkJ
+aWYgKGYud2FpdCkgewogCQkJaWYoZG93bl9pbnRlcnJ1cHRpYmxlKCZmaWJjdHgtPndhaXRfc2Vt
+KSA8IDApIHsKLQkJCQlzdGF0dXMgPSAtRUlOVFI7CisJCQkJc3RhdHVzID0gLUVSRVNUQVJUU1lT
+OwogCQkJfSBlbHNlIHsKIAkJCQkvKiBMb2NrIGFnYWluIGFuZCByZXRyeSAqLwogCQkJCXNwaW5f
+bG9ja19pcnFzYXZlKCZkZXYtPmZpYl9sb2NrLCBmbGFncyk7CkBAIC01OTMsMTAgKzU5MywxMCBA
+QCBzdGF0aWMgaW50IGFhY19zZW5kX3Jhd19zcmIoc3RydWN0IGFhY19kCiAJCQkJdTY0IGFkZHI7
+CiAJCQkJdm9pZCogcDsKIAkJCQlpZiAodXBzZy0+c2dbaV0uY291bnQgPgotCQkJCSAgICAoZGV2
+LT5hZGFwdGVyX2luZm8ub3B0aW9ucyAmCisJCQkJICAgICgoZGV2LT5hZGFwdGVyX2luZm8ub3B0
+aW9ucyAmCiAJCQkJICAgICBBQUNfT1BUX05FV19DT01NKSA/CiAJCQkJICAgICAgKGRldi0+c2Nz
+aV9ob3N0X3B0ci0+bWF4X3NlY3RvcnMgPDwgOSkgOgotCQkJCSAgICAgIDY1NTM2KSB7CisJCQkJ
+ICAgICAgNjU1MzYpKSB7CiAJCQkJCXJjb2RlID0gLUVJTlZBTDsKIAkJCQkJZ290byBjbGVhbnVw
+OwogCQkJCX0KQEAgLTY0NSwxMCArNjQ1LDEwIEBAIHN0YXRpYyBpbnQgYWFjX3NlbmRfcmF3X3Ny
+YihzdHJ1Y3QgYWFjX2QKIAkJCQl1NjQgYWRkcjsKIAkJCQl2b2lkKiBwOwogCQkJCWlmICh1c2ct
+PnNnW2ldLmNvdW50ID4KLQkJCQkgICAgKGRldi0+YWRhcHRlcl9pbmZvLm9wdGlvbnMgJgorCQkJ
+CSAgICAoKGRldi0+YWRhcHRlcl9pbmZvLm9wdGlvbnMgJgogCQkJCSAgICAgQUFDX09QVF9ORVdf
+Q09NTSkgPwogCQkJCSAgICAgIChkZXYtPnNjc2lfaG9zdF9wdHItPm1heF9zZWN0b3JzIDw8IDkp
+IDoKLQkJCQkgICAgICA2NTUzNikgeworCQkJCSAgICAgIDY1NTM2KSkgewogCQkJCQlyY29kZSA9
+IC1FSU5WQUw7CiAJCQkJCWdvdG8gY2xlYW51cDsKIAkJCQl9CkBAIC02OTUsMTAgKzY5NSwxMCBA
+QCBzdGF0aWMgaW50IGFhY19zZW5kX3Jhd19zcmIoc3RydWN0IGFhY19kCiAJCQkJdWludHB0cl90
+IGFkZHI7CiAJCQkJdm9pZCogcDsKIAkJCQlpZiAodXNnLT5zZ1tpXS5jb3VudCA+Ci0JCQkJICAg
+IChkZXYtPmFkYXB0ZXJfaW5mby5vcHRpb25zICYKKwkJCQkgICAgKChkZXYtPmFkYXB0ZXJfaW5m
+by5vcHRpb25zICYKIAkJCQkgICAgIEFBQ19PUFRfTkVXX0NPTU0pID8KIAkJCQkgICAgICAoZGV2
+LT5zY3NpX2hvc3RfcHRyLT5tYXhfc2VjdG9ycyA8PCA5KSA6Ci0JCQkJICAgICAgNjU1MzYpIHsK
+KwkJCQkgICAgICA2NTUzNikpIHsKIAkJCQkJcmNvZGUgPSAtRUlOVkFMOwogCQkJCQlnb3RvIGNs
+ZWFudXA7CiAJCQkJfQpAQCAtNzM0LDEwICs3MzQsMTAgQEAgc3RhdGljIGludCBhYWNfc2VuZF9y
+YXdfc3JiKHN0cnVjdCBhYWNfZAogCQkJCWRtYV9hZGRyX3QgYWRkcjsKIAkJCQl2b2lkKiBwOwog
+CQkJCWlmICh1cHNnLT5zZ1tpXS5jb3VudCA+Ci0JCQkJICAgIChkZXYtPmFkYXB0ZXJfaW5mby5v
+cHRpb25zICYKKwkJCQkgICAgKChkZXYtPmFkYXB0ZXJfaW5mby5vcHRpb25zICYKIAkJCQkgICAg
+IEFBQ19PUFRfTkVXX0NPTU0pID8KIAkJCQkgICAgICAoZGV2LT5zY3NpX2hvc3RfcHRyLT5tYXhf
+c2VjdG9ycyA8PCA5KSA6Ci0JCQkJICAgICAgNjU1MzYpIHsKKwkJCQkgICAgICA2NTUzNikpIHsK
+IAkJCQkJcmNvZGUgPSAtRUlOVkFMOwogCQkJCQlnb3RvIGNsZWFudXA7CiAJCQkJfQpAQCAtNzcy
+LDggKzc3Miw4IEBAIHN0YXRpYyBpbnQgYWFjX3NlbmRfcmF3X3NyYihzdHJ1Y3QgYWFjX2QKIAkJ
+cHNnLT5jb3VudCA9IGNwdV90b19sZTMyKHNnX2luZHgrMSk7CiAJCXN0YXR1cyA9IGFhY19maWJf
+c2VuZChTY3NpUG9ydENvbW1hbmQsIHNyYmZpYiwgYWN0dWFsX2ZpYnNpemUsIEZzYU5vcm1hbCwg
+MSwgMSwgTlVMTCwgTlVMTCk7CiAJfQotCWlmIChzdGF0dXMgPT0gLUVJTlRSKSB7Ci0JCXJjb2Rl
+ID0gLUVJTlRSOworCWlmIChzdGF0dXMgPT0gLUVSRVNUQVJUU1lTKSB7CisJCXJjb2RlID0gLUVS
+RVNUQVJUU1lTOwogCQlnb3RvIGNsZWFudXA7CiAJfQogCkBAIC04MTAsNyArODEwLDcgQEAgY2xl
+YW51cDoKIAlmb3IoaT0wOyBpIDw9IHNnX2luZHg7IGkrKyl7CiAJCWtmcmVlKHNnX2xpc3RbaV0p
+OwogCX0KLQlpZiAocmNvZGUgIT0gLUVJTlRSKSB7CisJaWYgKHJjb2RlICE9IC1FUkVTVEFSVFNZ
+UykgewogCQlhYWNfZmliX2NvbXBsZXRlKHNyYmZpYik7CiAJCWFhY19maWJfZnJlZShzcmJmaWIp
+OwogCX0KQEAgLTg0MiwxMyArODQyLDIyIEBAIHN0YXRpYyBpbnQgYWFjX2dldF9wY2lfaW5mbyhz
+dHJ1Y3QgYWFjX2QKIGludCBhYWNfZG9faW9jdGwoc3RydWN0IGFhY19kZXYgKiBkZXYsIGludCBj
+bWQsIHZvaWQgX191c2VyICphcmcpCiB7CiAJaW50IHN0YXR1czsKKwl1bnNpZ25lZCBsb25nIG1m
+bGFnczsKIAogCS8qCiAJICoJSEJBIGdldHMgZmlyc3QgY3JhY2sKIAkgKi8KIAorCXNwaW5fbG9j
+a19pcnFzYXZlKCZkZXYtPm1hbmFnZV9sb2NrLCBtZmxhZ3MpOworCWlmIChkZXYtPm1hbmFnZW1l
+bnRfZmliX2NvdW50ID4gQUFDX05VTV9NR1RfRklCKSB7CisJCXByaW50ayhLRVJOX0lORk8gIk5v
+IG1hbmFnZW1lbnQgRmlicyBBdmFpbGFibGU6JWRcbiIsCisJCQkJCQlkZXYtPm1hbmFnZW1lbnRf
+ZmliX2NvdW50KTsKKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmZGV2LT5tYW5hZ2VfbG9jaywg
+bWZsYWdzKTsKKwkJcmV0dXJuIC1FQlVTWTsKKwl9CisJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgm
+ZGV2LT5tYW5hZ2VfbG9jaywgbWZsYWdzKTsKIAlzdGF0dXMgPSBhYWNfZGV2X2lvY3RsKGRldiwg
+Y21kLCBhcmcpOwotCWlmKHN0YXR1cyAhPSAtRU5PVFRZKQorCWlmIChzdGF0dXMgIT0gLUVOT1RU
+WSkKIAkJcmV0dXJuIHN0YXR1czsKIAogCXN3aXRjaCAoY21kKSB7CmRpZmYgLXB1ck4gYS9kcml2
+ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5pdC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWlu
+aXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5pdC5jCTIwMDktMDktMTAgMDM6
+NDM6NTkuMDAwMDAwMDAwICswNTMwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1pbml0
+LmMJMjAwOS0wOS0yNSAxMTo1NDoyMy4wMDAwMDAwMDAgKzA1MzAKQEAgLTE5NCw3ICsxOTQsOSBA
+QCBpbnQgYWFjX3NlbmRfc2h1dGRvd24oc3RydWN0IGFhY19kZXYgKiBkCiAKIAlpZiAoc3RhdHVz
+ID49IDApCiAJCWFhY19maWJfY29tcGxldGUoZmliY3R4KTsKLQlhYWNfZmliX2ZyZWUoZmliY3R4
+KTsKKwkvKiBGSUIgc2hvdWxkIGJlIGZyZWVkIG9ubHkgYWZ0ZXIgZ2V0dGluZyB0aGUgcmVzcG9u
+c2UgZnJvbSB0aGUgRi9XICovCisJaWYgKHN0YXR1cyAhPSAtRVJFU1RBUlRTWVMpCisJCWFhY19m
+aWJfZnJlZShmaWJjdHgpOwogCXJldHVybiBzdGF0dXM7CiB9CiAKQEAgLTMwNCw2ICszMDYsOCBA
+QCBzdHJ1Y3QgYWFjX2RldiAqYWFjX2luaXRfYWRhcHRlcihzdHJ1Y3QgCiAJLyoKIAkgKglDaGVj
+ayB0aGUgcHJlZmVycmVkIGNvbW0gc2V0dGluZ3MsIGRlZmF1bHRzIGZyb20gdGVtcGxhdGUuCiAJ
+ICovCisJZGV2LT5tYW5hZ2VtZW50X2ZpYl9jb3VudCA9IDA7CisJc3Bpbl9sb2NrX2luaXQoJmRl
+di0+bWFuYWdlX2xvY2spOwogCWRldi0+bWF4X2ZpYl9zaXplID0gc2l6ZW9mKHN0cnVjdCBod19m
+aWIpOwogCWRldi0+c2dfdGFibGVzaXplID0gaG9zdC0+c2dfdGFibGVzaXplID0gKGRldi0+bWF4
+X2ZpYl9zaXplCiAJCS0gc2l6ZW9mKHN0cnVjdCBhYWNfZmliaGRyKQpkaWZmIC1wdXJOIGEvZHJp
+dmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1
+cC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYwkyMDA5LTA5LTEwIDAzOjQz
+OjU5LjAwMDAwMDAwMCArMDUzMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMJ
+MjAwOS0wOS0yNSAxMTo1NzowMC4wMDAwMDAwMDAgKzA1MzAKQEAgLTE4OSw3ICsxODksMTQgQEAg
+c3RydWN0IGZpYiAqYWFjX2ZpYl9hbGxvYyhzdHJ1Y3QgYWFjX2RldgogCiB2b2lkIGFhY19maWJf
+ZnJlZShzdHJ1Y3QgZmliICpmaWJwdHIpCiB7Ci0JdW5zaWduZWQgbG9uZyBmbGFnczsKKwl1bnNp
+Z25lZCBsb25nIGZsYWdzLCBmbGFnc3Y7CisKKwlzcGluX2xvY2tfaXJxc2F2ZSgmZmlicHRyLT5l
+dmVudF9sb2NrLCBmbGFnc3YpOworCWlmIChmaWJwdHItPmRvbmUgPT0gMikgeworCQlzcGluX3Vu
+bG9ja19pcnFyZXN0b3JlKCZmaWJwdHItPmV2ZW50X2xvY2ssIGZsYWdzdik7CisJCXJldHVybjsK
+Kwl9CisJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmZmlicHRyLT5ldmVudF9sb2NrLCBmbGFnc3Yp
+OwogCiAJc3Bpbl9sb2NrX2lycXNhdmUoJmZpYnB0ci0+ZGV2LT5maWJfbG9jaywgZmxhZ3MpOwog
+CWlmICh1bmxpa2VseShmaWJwdHItPmZsYWdzICYgRklCX0NPTlRFWFRfRkxBR19USU1FRF9PVVQp
+KQpAQCAtNDczLDE0ICs0ODAsMjcgQEAgaW50IGFhY19maWJfc2VuZCh1MTYgY29tbWFuZCwgc3Ry
+dWN0IGZpYgogCiAJaWYod2FpdCkKIAkJc3Bpbl9sb2NrX2lycXNhdmUoJmZpYnB0ci0+ZXZlbnRf
+bG9jaywgZmxhZ3MpOwotCWFhY19hZGFwdGVyX2RlbGl2ZXIoZmlicHRyKTsKKworCWlmIChhYWNf
+YWRhcHRlcl9kZWxpdmVyKGZpYnB0cikgIT0gMCkgeworCQlwcmludGsoS0VSTl9FUlIgImFhY19m
+aWJfc2VuZDogcmV0dXJuZWQgLUVCVVNZXG4iKTsKKwkJaWYgKHdhaXQpCisJCQlzcGluX3VubG9j
+a19pcnFyZXN0b3JlKCZmaWJwdHItPmV2ZW50X2xvY2ssIGZsYWdzKTsKKwkJcmV0dXJuIC1FQlVT
+WTsKKwl9CisKIAogCS8qCiAJICoJSWYgdGhlIGNhbGxlciB3YW50ZWQgdXMgdG8gd2FpdCBmb3Ig
+cmVzcG9uc2Ugd2FpdCBub3cuCiAJICovCiAKIAlpZiAod2FpdCkgeworCQl1bnNpZ25lZCBsb25n
+IG1mbGFnczsKIAkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmZmlicHRyLT5ldmVudF9sb2NrLCBm
+bGFncyk7CisKKwkJc3Bpbl9sb2NrX2lycXNhdmUoJmRldi0+bWFuYWdlX2xvY2ssIG1mbGFncyk7
+CisJCWRldi0+bWFuYWdlbWVudF9maWJfY291bnQrKzsKKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9y
+ZSgmZGV2LT5tYW5hZ2VfbG9jaywgbWZsYWdzKTsKKwogCQkvKiBPbmx5IHNldCBmb3IgZmlyc3Qg
+a25vd24gaW50ZXJydXB0YWJsZSBjb21tYW5kICovCiAJCWlmICh3YWl0IDwgMCkgewogCQkJLyoK
+QEAgLTUxNSwxNSArNTM1LDE0IEBAIGludCBhYWNfZmliX3NlbmQodTE2IGNvbW1hbmQsIHN0cnVj
+dCBmaWIKIAkJCQl9CiAJCQkJdWRlbGF5KDUpOwogCQkJfQotCQl9IGVsc2UgaWYgKGRvd25faW50
+ZXJydXB0aWJsZSgmZmlicHRyLT5ldmVudF93YWl0KSkgewotCQkJZmlicHRyLT5kb25lID0gMjsK
+LQkJCXVwKCZmaWJwdHItPmV2ZW50X3dhaXQpOwotCQl9CisJCX0gZWxzZQorCQkJZG93bl9pbnRl
+cnJ1cHRpYmxlKCZmaWJwdHItPmV2ZW50X3dhaXQpOworCiAJCXNwaW5fbG9ja19pcnFzYXZlKCZm
+aWJwdHItPmV2ZW50X2xvY2ssIGZsYWdzKTsKLQkJaWYgKChmaWJwdHItPmRvbmUgPT0gMCkgfHwg
+KGZpYnB0ci0+ZG9uZSA9PSAyKSkgeworCQlpZiAoZmlicHRyLT5kb25lID09IDApIHsKIAkJCWZp
+YnB0ci0+ZG9uZSA9IDI7IC8qIFRlbGwgaW50ZXJydXB0IHdlIGFib3J0ZWQgKi8KIAkJCXNwaW5f
+dW5sb2NrX2lycXJlc3RvcmUoJmZpYnB0ci0+ZXZlbnRfbG9jaywgZmxhZ3MpOwotCQkJcmV0dXJu
+IC1FSU5UUjsKKwkJCXJldHVybiAtRVJFU1RBUlRTWVM7CiAJCX0KIAkJc3Bpbl91bmxvY2tfaXJx
+cmVzdG9yZSgmZmlicHRyLT5ldmVudF9sb2NrLCBmbGFncyk7CiAJCUJVR19PTihmaWJwdHItPmRv
+bmUgPT0gMCk7CkBAIC02ODksNiArNzA4LDcgQEAgaW50IGFhY19maWJfYWRhcHRlcl9jb21wbGV0
+ZShzdHJ1Y3QgZmliIAogCiBpbnQgYWFjX2ZpYl9jb21wbGV0ZShzdHJ1Y3QgZmliICpmaWJwdHIp
+CiB7CisJdW5zaWduZWQgbG9uZyBmbGFnczsKIAlzdHJ1Y3QgaHdfZmliICogaHdfZmliID0gZmli
+cHRyLT5od19maWJfdmE7CiAKIAkvKgpAQCAtNzA5LDYgKzcyOSwxMyBAQCBpbnQgYWFjX2ZpYl9j
+b21wbGV0ZShzdHJ1Y3QgZmliICpmaWJwdHIpCiAJICoJY29tbWFuZCBpcyBjb21wbGV0ZSB0aGF0
+IHdlIGhhZCBzZW50IHRvIHRoZSBhZGFwdGVyIGFuZCB0aGlzCiAJICoJY2RiIGNvdWxkIGJlIHJl
+dXNlZC4KIAkgKi8KKwlzcGluX2xvY2tfaXJxc2F2ZSgmZmlicHRyLT5ldmVudF9sb2NrLCBmbGFn
+cyk7CisJaWYgKGZpYnB0ci0+ZG9uZSA9PSAyKSB7CisJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUo
+JmZpYnB0ci0+ZXZlbnRfbG9jaywgZmxhZ3MpOworCQlyZXR1cm4gMDsKKwl9CisJc3Bpbl91bmxv
+Y2tfaXJxcmVzdG9yZSgmZmlicHRyLT5ldmVudF9sb2NrLCBmbGFncyk7CisKIAlpZigoaHdfZmli
+LT5oZWFkZXIuWGZlclN0YXRlICYgY3B1X3RvX2xlMzIoU2VudEZyb21Ib3N0KSkgJiYKIAkJKGh3
+X2ZpYi0+aGVhZGVyLlhmZXJTdGF0ZSAmIGNwdV90b19sZTMyKEFkYXB0ZXJQcm9jZXNzZWQpKSkK
+IAl7CkBAIC0xMzU1LDcgKzEzODIsMTAgQEAgaW50IGFhY19yZXNldF9hZGFwdGVyKHN0cnVjdCBh
+YWNfZGV2ICogYQogCiAJCQlpZiAoc3RhdHVzID49IDApCiAJCQkJYWFjX2ZpYl9jb21wbGV0ZShm
+aWJjdHgpOwotCQkJYWFjX2ZpYl9mcmVlKGZpYmN0eCk7CisJCQkvKiBGSUIgc2hvdWxkIGJlIGZy
+ZWVkIG9ubHkgYWZ0ZXIgZ2V0dGluZworCQkJICogdGhlIHJlc3BvbnNlIGZyb20gdGhlIEYvVyAq
+LworCQkJaWYgKHN0YXR1cyAhPSAtRVJFU1RBUlRTWVMpCisJCQkJYWFjX2ZpYl9mcmVlKGZpYmN0
+eCk7CiAJCX0KIAl9CiAKQEAgLTE3NTksNiArMTc4OSw3IEBAIGludCBhYWNfY29tbWFuZF90aHJl
+YWQodm9pZCAqZGF0YSkKIAkJCQlzdHJ1Y3QgZmliICpmaWJwdHI7CiAKIAkJCQlpZiAoKGZpYnB0
+ciA9IGFhY19maWJfYWxsb2MoZGV2KSkpIHsKKwkJCQkJaW50IHN0YXR1czsKIAkJCQkJX19sZTMy
+ICppbmZvOwogCiAJCQkJCWFhY19maWJfaW5pdChmaWJwdHIpOwpAQCAtMTc2OSwxNSArMTgwMCwy
+MSBAQCBpbnQgYWFjX2NvbW1hbmRfdGhyZWFkKHZvaWQgKmRhdGEpCiAKIAkJCQkJKmluZm8gPSBj
+cHVfdG9fbGUzMihub3cudHZfc2VjKTsKIAotCQkJCQkodm9pZClhYWNfZmliX3NlbmQoU2VuZEhv
+c3RUaW1lLAorCQkJCQlzdGF0dXMgPSBhYWNfZmliX3NlbmQoU2VuZEhvc3RUaW1lLAogCQkJCQkJ
+ZmlicHRyLAogCQkJCQkJc2l6ZW9mKCppbmZvKSwKIAkJCQkJCUZzYU5vcm1hbCwKIAkJCQkJCTEs
+IDEsCiAJCQkJCQlOVUxMLAogCQkJCQkJTlVMTCk7Ci0JCQkJCWFhY19maWJfY29tcGxldGUoZmli
+cHRyKTsKLQkJCQkJYWFjX2ZpYl9mcmVlKGZpYnB0cik7CisJCQkJCS8qIERvIG5vdCBzZXQgWGZl
+clN0YXRlIHRvIHplcm8gdW5sZXNzCisJCQkJCSAqIHJlY2VpdmVzIGEgcmVzcG9uc2UgZnJvbSBG
+L1cgKi8KKwkJCQkJaWYgKHN0YXR1cyA+PSAwKQorCQkJCQkJYWFjX2ZpYl9jb21wbGV0ZShmaWJw
+dHIpOworCQkJCQkvKiBGSUIgc2hvdWxkIGJlIGZyZWVkIG9ubHkgYWZ0ZXIKKwkJCQkJICogZ2V0
+dGluZyB0aGUgcmVzcG9uc2UgZnJvbSB0aGUgRi9XICovCisJCQkJCWlmIChzdGF0dXMgIT0gLUVS
+RVNUQVJUU1lTKQorCQkJCQkJYWFjX2ZpYl9mcmVlKGZpYnB0cik7CiAJCQkJfQogCQkJCWRpZmZl
+cmVuY2UgPSAobG9uZykodW5zaWduZWQpdXBkYXRlX2ludGVydmFsKkhaOwogCQkJfSBlbHNlIHsK
+ZGlmZiAtcHVyTiBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2RwY3N1cC5jIGIvZHJpdmVycy9zY3Np
+L2FhY3JhaWQvZHBjc3VwLmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvZHBjc3VwLmMJMjAw
+OS0wOS0xMCAwMzo0Mzo1OS4wMDAwMDAwMDAgKzA1MzAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3Jh
+aWQvZHBjc3VwLmMJMjAwOS0wOS0yNSAxMjowODo0NC4wMDAwMDAwMDAgKzA1MzAKQEAgLTU3LDkg
+KzU3LDkgQEAgdW5zaWduZWQgaW50IGFhY19yZXNwb25zZV9ub3JtYWwoc3RydWN0IAogCXN0cnVj
+dCBod19maWIgKiBod2ZpYjsKIAlzdHJ1Y3QgZmliICogZmliOwogCWludCBjb25zdW1lZCA9IDA7
+Ci0JdW5zaWduZWQgbG9uZyBmbGFnczsKKwl1bnNpZ25lZCBsb25nIGZsYWdzLCBtZmxhZ3M7CiAK
+LQlzcGluX2xvY2tfaXJxc2F2ZShxLT5sb2NrLCBmbGFncyk7CQorCXNwaW5fbG9ja19pcnFzYXZl
+KHEtPmxvY2ssIGZsYWdzKTsKIAkvKgogCSAqCUtlZXAgcHVsbGluZyByZXNwb25zZSBRRXMgb2Zm
+IHRoZSByZXNwb25zZSBxdWV1ZSBhbmQgd2FraW5nCiAJICoJdXAgdGhlIHdhaXRlcnMgdW50aWwg
+dGhlcmUgYXJlIG5vIG1vcmUgUUVzLiBXZSB0aGVuIHJldHVybgpAQCAtMTI1LDEyICsxMjUsMjEg
+QEAgdW5zaWduZWQgaW50IGFhY19yZXNwb25zZV9ub3JtYWwoc3RydWN0IAogCQl9IGVsc2Ugewog
+CQkJdW5zaWduZWQgbG9uZyBmbGFndjsKIAkJCXNwaW5fbG9ja19pcnFzYXZlKCZmaWItPmV2ZW50
+X2xvY2ssIGZsYWd2KTsKLQkJCWlmICghZmliLT5kb25lKQorCQkJaWYgKCFmaWItPmRvbmUpIHsK
+IAkJCQlmaWItPmRvbmUgPSAxOwotCQkJdXAoJmZpYi0+ZXZlbnRfd2FpdCk7CisJCQkJdXAoJmZp
+Yi0+ZXZlbnRfd2FpdCk7CisJCQl9CiAJCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZmaWItPmV2
+ZW50X2xvY2ssIGZsYWd2KTsKKworCQkJc3Bpbl9sb2NrX2lycXNhdmUoJmRldi0+bWFuYWdlX2xv
+Y2ssIG1mbGFncyk7CisJCQlkZXYtPm1hbmFnZW1lbnRfZmliX2NvdW50LS07CisJCQlzcGluX3Vu
+bG9ja19pcnFyZXN0b3JlKCZkZXYtPm1hbmFnZV9sb2NrLCBtZmxhZ3MpOworCiAJCQlGSUJfQ09V
+TlRFUl9JTkNSRU1FTlQoYWFjX2NvbmZpZy5Ob3JtYWxSZWN2ZWQpOwogCQkJaWYgKGZpYi0+ZG9u
+ZSA9PSAyKSB7CisJCQkJc3Bpbl9sb2NrX2lycXNhdmUoJmZpYi0+ZXZlbnRfbG9jaywgZmxhZ3Yp
+OworCQkJCWZpYi0+ZG9uZSA9IDA7CisJCQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmZmliLT5l
+dmVudF9sb2NrLCBmbGFndik7CiAJCQkJYWFjX2ZpYl9jb21wbGV0ZShmaWIpOwogCQkJCWFhY19m
+aWJfZnJlZShmaWIpOwogCQkJfQpAQCAtMjMyLDYgKzI0MSw3IEBAIHVuc2lnbmVkIGludCBhYWNf
+Y29tbWFuZF9ub3JtYWwoc3RydWN0IGEKIAogdW5zaWduZWQgaW50IGFhY19pbnRyX25vcm1hbChz
+dHJ1Y3QgYWFjX2RldiAqIGRldiwgdTMyIGluZGV4KQogeworCXVuc2lnbmVkIGxvbmcgbWZsYWdz
+OwogCWRwcmludGsoKEtFUk5fSU5GTyAiYWFjX2ludHJfbm9ybWFsKCVwLCV4KVxuIiwgZGV2LCBp
+bmRleCkpOwogCWlmICgoaW5kZXggJiAweDAwMDAwMDAyTCkpIHsKIAkJc3RydWN0IGh3X2ZpYiAq
+IGh3X2ZpYjsKQEAgLTMyMCwxMSArMzMwLDI1IEBAIHVuc2lnbmVkIGludCBhYWNfaW50cl9ub3Jt
+YWwoc3RydWN0IGFhY18KIAkJCXVuc2lnbmVkIGxvbmcgZmxhZ3Y7CiAJICAJCWRwcmludGsoKEtF
+Uk5fSU5GTyAiZXZlbnRfd2FpdCB1cFxuIikpOwogCQkJc3Bpbl9sb2NrX2lycXNhdmUoJmZpYi0+
+ZXZlbnRfbG9jaywgZmxhZ3YpOwotCQkJaWYgKCFmaWItPmRvbmUpCisJCQlpZiAoIWZpYi0+ZG9u
+ZSkgewogCQkJCWZpYi0+ZG9uZSA9IDE7Ci0JCQl1cCgmZmliLT5ldmVudF93YWl0KTsKKwkJCQl1
+cCgmZmliLT5ldmVudF93YWl0KTsKKwkJCX0KIAkJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmZp
+Yi0+ZXZlbnRfbG9jaywgZmxhZ3YpOworCisJCQlzcGluX2xvY2tfaXJxc2F2ZSgmZGV2LT5tYW5h
+Z2VfbG9jaywgbWZsYWdzKTsKKwkJCWRldi0+bWFuYWdlbWVudF9maWJfY291bnQtLTsKKwkJCXNw
+aW5fdW5sb2NrX2lycXJlc3RvcmUoJmRldi0+bWFuYWdlX2xvY2ssIG1mbGFncyk7CisKIAkJCUZJ
+Ql9DT1VOVEVSX0lOQ1JFTUVOVChhYWNfY29uZmlnLk5vcm1hbFJlY3ZlZCk7CisJCQlpZiAoZmli
+LT5kb25lID09IDIpIHsKKwkJCQlzcGluX2xvY2tfaXJxc2F2ZSgmZmliLT5ldmVudF9sb2NrLCBm
+bGFndik7CisJCQkJZmliLT5kb25lID0gMDsKKwkJCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZm
+aWItPmV2ZW50X2xvY2ssIGZsYWd2KTsKKwkJCQlhYWNfZmliX2NvbXBsZXRlKGZpYik7CisJCQkJ
+YWFjX2ZpYl9mcmVlKGZpYik7CisJCQl9CisKIAkJfQogCQlyZXR1cm4gMDsKIAl9Cg==
+
+--_003_4F2B1A2459C7AD4D96A23CE911C352CB1E91345523CHNHCLTEVS07H_--
