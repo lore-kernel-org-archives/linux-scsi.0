@@ -1,88 +1,93 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: mvsas (2.6.31) driver for Adaptec ASC-1045/1405 SAS/SATA
- controller
-Date: Tue, 29 Sep 2009 14:31:13 +0000
-Message-ID: <1254234673.3942.52.camel@mulgrave.site>
-References: <4CA9DA403FFEC64AA62B3C295F8D47B7212674D127@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+From: Takahiro Yasui <tyasui@redhat.com>
+Subject: [PATCH] scsi_devinfo: update Hitachi entries (v2)
+Date: Tue, 29 Sep 2009 11:53:49 -0400
+Message-ID: <4AC22D8D.8070801@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34703 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:12698 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752780AbZI2ObQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Sep 2009 10:31:16 -0400
-In-Reply-To: <4CA9DA403FFEC64AA62B3C295F8D47B7212674D127@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+	id S1752618AbZI2QA5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Sep 2009 12:00:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yugendranath R Singh <yugendranath.s@hcl.in>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2009-09-29 at 19:38 +0530, Yugendranath R Singh wrote:
-> We are currently working on open source drivers for Adaptec ASC
-> 1045/1405 HBAs and these HBAs internally use Marvell 6440 SAS
-> controller. The efforts started couple of weeks back with 2.6.30 mvsas
-> driver as base. The 2.6.30 driver worked fine but had some issues with
-> discovery and I/O of ATAPI devices and we were trying to fix these
-> issues.  However, the newly released 2.6.31 mvsas seems to address all
-> these issues and the test results of this driver are very encouraging.
-> The testing basically included discovery - Hot plug, Cold plug and
-> Overnight I/O with the various devices listed below except for the
-> performance. There were few issues with discovery (Hot Plug) of
-> daisy-chained expanders, but we have identified the fix for the same
-> in 'libsas'.  
-> 
-> List of devices testing with ASC 1045/1405 using mvsas (2.6.31)
-> ----------------------------------------------------------------
-> 1. SAS disk drives
-> 2. SAS Tape drives (HP LTO Ultrium-4)
-> 3. Expanders (Adaptec, LSI and Promise)
-> 4. SATA disk drives
-> 5. SATA tape drives (DLT and AIT)
-> 6. SATA DVD drives
-> 7. Quantum GoVault drives
-> 8. RBODs
-> 9. 335 SAS JBOD
-> 
-> Below are our queries,
-> ----------------------
-> 1. How to get the PCI table of mv_init.c populated with vendor and
-> device id of ASC 1045/1405? Should we submit a patch to mv_init.c or
-> just sending the PCI details of ASC 1045/1405 to owners will suffice?
+Hi James,
 
-Just submit the patch and cc the mvsas Maintainers (There's no
-maintainers file entry, so this is from git log):
+On 06/26/09 20:18, Takahiro Yasui wrote:
+> I will evaluate BLIST_ATTACH_PQ3 flags on our storages, and post
+> the result here. Please give me some time.
 
-    Signed-off-by: Ying Chu <jasonchu@marvell.com>
-    Signed-off-by: Andy Yan <ayan@marvell.com>
-    Signed-off-by: Ke Wei <kewei@marvell.com
+On the test with the BLIST_ATTACH_PQ3 flag on Hitachi storages,
+existing disks were detected as expected, However, LU#0 is also
+recognized like a existing disk and it is displayed as follows in
+/proc/scsi/scsi.
 
-> 2. Going forward, we are very much interested in contributing to the
-> support of issues related to mvsas driver.  Is it possible to have
-> access to known-bugs list on this driver? We will do our best to fix
-> the bugs utilizing whatever hardware resources we have.
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+  Vendor: HITACHI  Model: DISK-SUBSYSTEM   Rev: 6006
+  Type:   Unknown                          ANSI SCSI revision: 02
 
-The bugzilla entries (for everything) all come over the linux-scsi list,
-so it's the best source of information.
+In addition, LU#0 is detected as sg0 and the real devices are assigned
+to sg1, sg2...
 
-So far there's a slew of bug reports on the list (archived by somewhere
-like http://marc.info/?l=linux-scsi from Thomas Fjellstrom
-<tfjellstrom@shaw.ca>
+<with the BLIST_ATTACH_PQ3 flag>
+kernel: scsi 1:0:0:0: Attached scsi generic sg0 type 31
+kernel: sd 1:0:0:1: Attached scsi generic sg1 type 0
+...
 
-> 3. Any plans of getting the 2.6.31 mvsas driver changes to older
-> kernels (from 2.6.24 through 2.6.30) ? If not can we re-use this
-> driver and submit to the earlier kernels under a different name?
+<without the BLIST_ATTACH_PQ3 flag>
+kernel: sd 1:0:0:1: Attached scsi generic sg0 type 0
+kernel: sd 1:0:0:2: Attached scsi generic sg1 type 0
+...
 
-Well, stable kernels don't go back that far ... they only go back a
-revision or so; but no, no plans since it was a rewrite of the driver it
-doesn't qualify under the bug fix only policy (the distributions will
-still be free to backport it, though).
+This behavior is not consistent with other disks, and it is better that
+noexistent disk, LU#0, is not detected. Once again, I appreciate your
+comments on the necessity of the BLIST_ATTACH_PQ3 flag.
 
-> We are currently preparing the patch for libsas (for the expander
-> issue, mentioned above) and will submit the patch in couple of days.
+In addition, I added one more flag change about the DISK-SUBSYSTEM model
+in my patch. The DISK-SUBSYSTEM is a special model name returned when LUs
+are not installed. For example, when LU#0 is not installed in "OPEN-"
+models, LU#0 is detected as the DISK-SUBSYSTEM model. The DISK-SUBSYSTEM
+model also requires the BLIST_REPORTLUN2 flag.
 
 Thanks,
+-- 
+Takahiro Yasui
+Hitachi Computer Products (America), Inc.
 
-James
+
+This is scsi_devinfo flag updates for the Hitachi storages.
+
+Four models, OPEN-/DF400/DF500/DISK-SUBSYSTEM, can handle REPORT_LUN,
+and the BLIST_REPORTLUN2 flag needs to be set. And DF600 doesn't require
+any flags because it returns ANSI 03h (SPC).
 
 
+Signed-off-by: Takahiro Yasui <tyasui@redhat.com>
+---
+ drivers/scsi/scsi_devinfo.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+Index: linux-2.6.31.1/drivers/scsi/scsi_devinfo.c
+===================================================================
+--- linux-2.6.31.1.orig/drivers/scsi/scsi_devinfo.c
++++ linux-2.6.31.1/drivers/scsi/scsi_devinfo.c
+@@ -168,11 +168,10 @@ static struct {
+ 	{"Generic", "USB SD Reader", "1.00", BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"Generic", "USB Storage-SMC", "0180", BLIST_FORCELUN | BLIST_INQUIRY_36},
+ 	{"Generic", "USB Storage-SMC", "0207", BLIST_FORCELUN | BLIST_INQUIRY_36},
+-	{"HITACHI", "DF400", "*", BLIST_SPARSELUN},
+-	{"HITACHI", "DF500", "*", BLIST_SPARSELUN},
+-	{"HITACHI", "DF600", "*", BLIST_SPARSELUN},
+-	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
+-	{"HITACHI", "OPEN-E", "*", BLIST_ATTACH_PQ3 | BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"HITACHI", "DF400", "*", BLIST_REPORTLUN2},
++	{"HITACHI", "DF500", "*", BLIST_REPORTLUN2},
++	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
++	{"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
+ 	{"HITACHI", "OP-C-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HITACHI", "3380-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HITACHI", "3390-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
