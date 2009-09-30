@@ -1,23 +1,49 @@
 From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
 	<narasimhareddyc@hcl.in>
 Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
-Date: Wed, 30 Sep 2009 16:39:52 +0530
-Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345528@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
-References: <1254233992.3942.39.camel@mulgrave.site>
+Date: Wed, 30 Sep 2009 17:03:44 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345529@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+References: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345528@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.hcl.in ([203.105.186.28]:44361 "EHLO gws08.hcl.in"
+Received: from gws08.mail.hcl.in ([203.105.186.28]:57314 "EHLO gws08.hcl.in"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751405AbZI3LLI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2009 07:11:08 -0400
-In-Reply-To: <1254233992.3942.39.camel@mulgrave.site>
+	id S1751992AbZI3LfM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2009 07:35:12 -0400
+In-Reply-To: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345528@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
+To: "Penchala Narasimha Reddy Chilakala, TLS-Chennai" <narasimhareddyc@hcl.in>, James Bottomley <James.Bottomley@suse.de>
 Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+
+Hi James and linux-scsi community,
+
+Sorry for missing a word "not" in the previous mail for the following inline response.
+
+flags is the usual linux convention for this ... and that's what's used
+throughout the rest of the file ... consistency on flags would be better
+(for all the uses).
+
+<Previous response> I do have any issue to replace "mflags" with "flags", but we have used this mflags in dpcsup.c, and commsup.c as well. We initially thought of using flags only, but flags variable is used by some other spinlock function in the same function in dpcsup.c so we do not have any other alternative and went with different name. So we used mflags for the management fib count across all the files.
+
+<Correct response>
+I do not have any issue to replace "mflags" with "flags", but we have used this mflags in dpcsup.c, and commsup.c as well. We initially thought of using flags only, but flags variable is used by some other spinlock function in the same function in dpcsup.c so we do not have any other alternative and went with different name. So we used mflags for the management fib count across all the files.
+
+
+
+Thanks,
+Narasimha Reddy
+ 
+
+-----Original Message-----
+From: Penchala Narasimha Reddy Chilakala, TLS-Chennai 
+Sent: Wednesday, September 30, 2009 4:40 PM
+To: James Bottomley
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
 
 Hi James and linux-scsi community,
 
@@ -29,7 +55,7 @@ Thanks,
 Narasimha Reddy
 
 -----Original Message-----
-From: James Bottomley [mailto:James.Bottomley@suse.de]
+From: James Bottomley [mailto:James.Bottomley@suse.de] 
 Sent: Tuesday, September 29, 2009 7:50 PM
 To: Penchala Narasimha Reddy Chilakala, TLS-Chennai
 Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
@@ -126,7 +152,7 @@ just sent to a public list ...
 
 This can just move under the if (status >= 0) below, can't it?
 
-<Narasimha Reddy>: I accept your suggestion as we can avoid two times execution of the same condition and redundancy. Earlier there was no check and comment before calling the aac_fib_complete function. We added a check to fix the issues and comment to understand that why we have done the change and it is easy for reviewing when we have comments like this.
+<Narasimha Reddy>: I accept your suggestion as we can avoid two times execution of the same condition and redundancy. Earlier there was no check and comment before calling the aac_fib_complete function. We added a check to fix the issues and comment to understand that why we have done the change and it is easy for reviewing when we have comments like this. 
 
 > +
 >         /* Send a CT_COMMIT_CONFIG to enable discovery of devices */
@@ -145,7 +171,7 @@ flags is the usual linux convention for this ... and that's what's used
 throughout the rest of the file ... consistency on flags would be better
 (for all the uses).
 
-<Narasimha Reddy> I do have any issue to replace "mflags" with "flags", but we have used this mflags in dpcsup.c, and commsup.c as well. We initially thought of using flags only, but flags variable is used by some other spinlock function in the same function in dpcsup.c so we do not have any other alternative and went with different name. So we used mflags for the management fib count across all the files.
+<Narasimha Reddy> I do have any issue to replace "mflags" with "flags", but we have used this mflags in dpcsup.c, and commsup.c as well. We initially thought of using flags only, but flags variable is used by some other spinlock function in the same function in dpcsup.c so we do not have any other alternative and went with different name. So we used mflags for the management fib count across all the files. 
 
 >
 >         /*
@@ -176,9 +202,9 @@ You'll need to do an atomic test and increment somewhere.
 
 For example:
 
-1. Assume driver received a management comment from a application layer,
-2. On receiving, driver checks whether management fib count reached to its limit or not.
-3. If it reached to its limit, then it will return as -EBUSY to the application layer saying that no management fibs are available at this point of time. That means currently, all management fibs are in use.
+1. Assume driver received a management comment from a application layer, 
+2. On receiving, driver checks whether management fib count reached to its limit or not. 
+3. If it reached to its limit, then it will return as -EBUSY to the application layer saying that no management fibs are available at this point of time. That means currently, all management fibs are in use. 
 
 Other than the above, the code in here looks fine.
 
