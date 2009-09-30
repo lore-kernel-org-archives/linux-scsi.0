@@ -1,256 +1,283 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 1/4] scsi_dh: Change the scsidh_activate interface to be asynchronous
-Date: Tue, 29 Sep 2009 19:08:17 -0700
-Message-ID: <20090930020817.11455.52042.sendpatchset@chandra-ubuntu>
+Subject: [PATCH 2/4] scsi_dh: rdac handler: Make rdac hardware handler async
+Date: Tue, 29 Sep 2009 19:08:23 -0700
+Message-ID: <20090930020823.11455.23935.sendpatchset@chandra-ubuntu>
 References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:33369 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752504AbZI3CH4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2009 22:07:56 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e33.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n8U25fSd020461
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2009 20:05:41 -0600
+Received: from e38.co.us.ibm.com ([32.97.110.159]:44258 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753376AbZI3CIC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Sep 2009 22:08:02 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e38.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n8U23x4J020060
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2009 20:03:59 -0600
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n8U27wnt229988
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2009 20:07:58 -0600
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n8U2837w212914
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2009 20:08:03 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n8U27vlx020872
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2009 20:07:57 -0600
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n8U283Ad021175
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Sep 2009 20:08:03 -0600
 In-Reply-To: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: dm-devel@redhat.com, babu.moger@lsi.com, michaelc@cs.wisc.edu, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com, berthiaume_wayne@emc.com, Chandra Seetharaman <sekharan@us.ibm.com>
 
-Make scsi_dh_activate() function asynchronous, by taking in two additional 
-parameters, one is the callback function and the other is the data to call
-the callback function with.
+Batch up MODE_SELECT in rdac device handler.
 
+LSI RDAC storage has the capability of handling mode selects for
+multiple luns in a same command. Make use of that ability to send
+as few MODE SELECTs as possible to the storage controller as possible.
+
+This patch creates a work queue and queues up activate requests
+when a MODE SELECT is sent down the wire. When that MODE SELECT 
+completes, it compiles queued up activate requests for multiple
+luns into a single MODE SELECT.
+
+This reduces the time to do failover/failback of large number of LUNS.
+
+Signed-off-by: Babu Moger <babu.moger@lsi.com>
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
---------------
- drivers/md/dm-mpath.c                       |    8 ++++----
- drivers/scsi/device_handler/scsi_dh.c       |   17 ++++++++++++-----
- drivers/scsi/device_handler/scsi_dh_alua.c  |    6 ++++--
- drivers/scsi/device_handler/scsi_dh_emc.c   |    6 ++++--
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |    6 ++++--
- drivers/scsi/device_handler/scsi_dh_rdac.c  |    6 ++++--
- include/scsi/scsi_device.h                  |    3 ++-
- include/scsi/scsi_dh.h                      |    7 +++++--
- 8 files changed, 39 insertions(+), 20 deletions(-)
+---
+ drivers/scsi/device_handler/scsi_dh_rdac.c |  117 ++++++++++++++++++++++++++---
+ 1 file changed, 104 insertions(+), 13 deletions(-)
 
-Index: linux-2.6.31/include/scsi/scsi_dh.h
-===================================================================
---- linux-2.6.31.orig/include/scsi/scsi_dh.h
-+++ linux-2.6.31/include/scsi/scsi_dh.h
-@@ -55,14 +55,17 @@ enum {
- 	SCSI_DH_NOSYS,
- 	SCSI_DH_DRIVER_MAX,
- };
-+
- #if defined(CONFIG_SCSI_DH) || defined(CONFIG_SCSI_DH_MODULE)
--extern int scsi_dh_activate(struct request_queue *);
-+extern int scsi_dh_activate(struct request_queue *, activate_complete, void *);
- extern int scsi_dh_handler_exist(const char *);
- extern int scsi_dh_attach(struct request_queue *, const char *);
- extern void scsi_dh_detach(struct request_queue *);
- #else
--static inline int scsi_dh_activate(struct request_queue *req)
-+static inline int scsi_dh_activate(struct request_queue *req,
-+					activate_complete fn, void *data)
- {
-+	fn(data, 0);
- 	return 0;
- }
- static inline int scsi_dh_handler_exist(const char *name)
-Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh.c
-===================================================================
---- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh.c
-+++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh.c
-@@ -214,7 +214,7 @@ store_dh_state(struct device *dev, struc
- 			 * Activate a device handler
- 			 */
- 			if (scsi_dh->activate)
--				err = scsi_dh->activate(sdev);
-+				err = scsi_dh->activate(sdev, NULL, NULL);
- 			else
- 				err = 0;
- 		}
-@@ -411,10 +411,17 @@ EXPORT_SYMBOL_GPL(scsi_unregister_device
- /*
-  * scsi_dh_activate - activate the path associated with the scsi_device
-  *      corresponding to the given request queue.
-- * @q - Request queue that is associated with the scsi_device to be
-- *      activated.
-+ *     Returns immediately without waiting for activation to be completed.
-+ * @q    - Request queue that is associated with the scsi_device to be
-+ *         activated.
-+ * @fn   - Function to be called upon completion of the activation.
-+ *         Function fn is called with data (below) and the error code.
-+ *         Function fn may be called from the same calling context. So,
-+ *         do not hold the lock in the caller which may be needed in fn.
-+ * @data - data passed to the function fn upon completion.
-+ *
-  */
--int scsi_dh_activate(struct request_queue *q)
-+int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- {
- 	int err = 0;
- 	unsigned long flags;
-@@ -433,7 +440,7 @@ int scsi_dh_activate(struct request_queu
- 		return err;
- 
- 	if (scsi_dh->activate)
--		err = scsi_dh->activate(sdev);
-+		err = scsi_dh->activate(sdev, fn, data);
- 	put_device(&sdev->sdev_gendev);
- 	return err;
- }
 Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh_rdac.c
 ===================================================================
 --- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
 +++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -516,7 +516,7 @@ done:
+@@ -22,6 +22,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_dh.h>
++#include <linux/workqueue.h>
+ 
+ #define RDAC_NAME "rdac"
+ #define RDAC_RETRY_COUNT 5
+@@ -135,6 +136,11 @@ struct rdac_controller {
+ 		struct rdac_pg_legacy legacy;
+ 		struct rdac_pg_expanded expanded;
+ 	} mode_select;
++	spinlock_t		ms_lock;
++	int			ms_queued;
++	struct work_struct	ms_work;
++	struct scsi_device	*ms_sdev;
++	struct list_head	ms_head;
+ };
+ struct c8_inquiry {
+ 	u8	peripheral_info;
+@@ -195,8 +201,17 @@ static const char *lun_state[] =
+ 	"owned (AVT mode)",
+ };
+ 
++struct rdac_queue_data {
++	struct list_head	entry;
++	struct rdac_dh_data	*h;
++	activate_complete	callback_fn;
++	void			*callback_data;
++};
++
+ static LIST_HEAD(ctlr_list);
+ static DEFINE_SPINLOCK(list_lock);
++static struct workqueue_struct *kmpath_rdacd;
++static void send_mode_select(struct work_struct *work);
+ 
+ static inline struct rdac_dh_data *get_rdac_data(struct scsi_device *sdev)
+ {
+@@ -253,7 +268,6 @@ static struct request *rdac_failover_get
+ 		rdac_pg->subpage_code = 0x1;
+ 		rdac_pg->page_len[0] = 0x01;
+ 		rdac_pg->page_len[1] = 0x28;
+-		rdac_pg->lun_table[h->lun] = 0x81;
+ 	} else {
+ 		struct rdac_pg_legacy *rdac_pg;
+ 
+@@ -263,7 +277,6 @@ static struct request *rdac_failover_get
+ 		common = &rdac_pg->common;
+ 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
+ 		rdac_pg->page_len = 0x68;
+-		rdac_pg->lun_table[h->lun] = 0x81;
+ 	}
+ 	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
+ 	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
+@@ -297,6 +310,7 @@ static void release_controller(struct kr
+ 	struct rdac_controller *ctlr;
+ 	ctlr = container_of(kref, struct rdac_controller, kref);
+ 
++	flush_workqueue(kmpath_rdacd);
+ 	spin_lock(&list_lock);
+ 	list_del(&ctlr->node);
+ 	spin_unlock(&list_lock);
+@@ -326,6 +340,11 @@ static struct rdac_controller *get_contr
+ 	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
+ 	kref_init(&ctlr->kref);
+ 	ctlr->use_ms10 = -1;
++	ctlr->ms_queued = 0;
++	ctlr->ms_sdev = NULL;
++	spin_lock_init(&ctlr->ms_lock);
++	INIT_WORK(&ctlr->ms_work, send_mode_select);
++	INIT_LIST_HEAD(&ctlr->ms_head);
+ 	list_add(&ctlr->node, &ctlr_list);
+ done:
+ 	spin_unlock(&list_lock);
+@@ -445,8 +464,7 @@ static int set_mode_select(struct scsi_d
  	return err;
  }
  
--static int rdac_activate(struct scsi_device *sdev)
-+static int rdac_activate(struct scsi_device *sdev, activate_complete fn, void *data)
+-static int mode_select_handle_sense(struct scsi_device *sdev,
+-				    unsigned char *sensebuf)
++static int mode_select_handle_sense(unsigned char *sensebuf)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int err = SCSI_DH_IO, ret;
+@@ -478,7 +496,7 @@ static int mode_select_handle_sense(stru
+ 			err = SCSI_DH_RETRY;
+ 		break;
+ 	default:
+-		sdev_printk(KERN_INFO, sdev,
++		printk(KERN_INFO
+ 			    "MODE_SELECT failed with sense %02x/%02x/%02x.\n",
+ 			    sense_hdr.sense_key, sense_hdr.asc, sense_hdr.ascq);
+ 	}
+@@ -487,11 +505,29 @@ done:
+ 	return err;
+ }
+ 
+-static int send_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
++static void send_mode_select(struct work_struct *work)
+ {
++	struct rdac_controller *ctlr =
++		container_of(work, struct rdac_controller, ms_work);
+ 	struct request *rq;
++	struct scsi_device *sdev = ctlr->ms_sdev;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 	struct request_queue *q = sdev->request_queue;
+ 	int err, retry_cnt = RDAC_RETRY_COUNT;
++	struct rdac_queue_data *tmp, *qdata;
++	LIST_HEAD(list);
++	u8 *lun_table;
++
++	spin_lock(&ctlr->ms_lock);
++	list_splice_init(&ctlr->ms_head, &list);
++	ctlr->ms_queued = 0;
++	ctlr->ms_sdev = NULL;
++	spin_unlock(&ctlr->ms_lock);
++
++	if (ctlr->use_ms10)
++		lun_table = ctlr->mode_select.expanded.lun_table;
++	else
++		lun_table = ctlr->mode_select.legacy.lun_table;
+ 
+ retry:
+ 	err = SCSI_DH_RES_TEMP_UNAVAIL;
+@@ -499,13 +535,17 @@ retry:
+ 	if (!rq)
+ 		goto done;
+ 
+-	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
++ 	list_for_each_entry(qdata, &list, entry) {
++		lun_table[qdata->h->lun] = 0x81;
++	}
++
++	printk(KERN_INFO "%s MODE_SELECT command.\n",
+ 		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+ 
+ 	err = blk_execute_rq(q, NULL, rq, 1);
+ 	blk_put_request(rq);
+ 	if (err != SCSI_DH_OK) {
+-		err = mode_select_handle_sense(sdev, h->sense);
++		err = mode_select_handle_sense(h->sense);
+ 		if (err == SCSI_DH_RETRY && retry_cnt--)
+ 			goto retry;
+ 	}
+@@ -513,10 +553,45 @@ retry:
+ 		h->state = RDAC_STATE_ACTIVE;
+ 
+ done:
+-	return err;
++	list_for_each_entry_safe(qdata, tmp, &list, entry) {
++		list_del(&qdata->entry);
++		if (err == SCSI_DH_OK)
++			qdata->h->state = RDAC_STATE_ACTIVE;
++		if (qdata->callback_fn)
++			qdata->callback_fn(qdata->callback_data, err);
++		kfree(qdata);
++	}
++	return;
+ }
+ 
+-static int rdac_activate(struct scsi_device *sdev, activate_complete fn, void *data)
++static int queue_mode_select(struct scsi_device *sdev,
++				activate_complete fn, void *data)
++{
++	struct rdac_queue_data *qdata;
++	struct rdac_controller *ctlr;
++
++	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
++	if (!qdata)
++		return SCSI_DH_RETRY;
++
++ 	qdata->h = get_rdac_data(sdev);
++	qdata->callback_fn = fn;
++	qdata->callback_data = data;
++
++	ctlr = qdata->h->ctlr;
++	spin_lock(&ctlr->ms_lock);
++	list_add_tail(&qdata->entry, &ctlr->ms_head);
++	if (!ctlr->ms_queued) {
++		ctlr->ms_queued = 1;
++		ctlr->ms_sdev = sdev;
++		queue_work(kmpath_rdacd, &ctlr->ms_work);
++	}
++	spin_unlock(&ctlr->ms_lock);
++	return SCSI_DH_OK;
++}
++
++static int rdac_activate(struct scsi_device *sdev,
++				activate_complete fn, void *data)
  {
  	struct rdac_dh_data *h = get_rdac_data(sdev);
  	int err = SCSI_DH_OK;
-@@ -539,7 +539,9 @@ static int rdac_activate(struct scsi_dev
- 	if (h->lun_state == RDAC_LUN_UNOWNED)
- 		err = send_mode_select(sdev, h);
- done:
--	return err;
-+	if (fn)
-+		fn(data, err);
-+	return 0;
- }
- 
- static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
-Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh_alua.c
-===================================================================
---- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -652,7 +652,7 @@ out:
-  * based on a certain policy. But until we actually encounter them it
-  * should be okay.
-  */
--static int alua_activate(struct scsi_device *sdev)
-+static int alua_activate(struct scsi_device *sdev, activate_complete fn, void *data)
- {
- 	struct alua_dh_data *h = get_alua_data(sdev);
- 	int err = SCSI_DH_OK;
-@@ -667,7 +667,9 @@ static int alua_activate(struct scsi_dev
- 		err = alua_stpg(sdev, TPGS_STATE_OPTIMIZED, h);
- 
- out:
--	return err;
-+	if (fn)
-+		fn(data, err);
-+	return 0;
- }
- 
- /*
-Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh_emc.c
-===================================================================
---- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -528,7 +528,7 @@ retry:
- 	return err;
- }
- 
--static int clariion_activate(struct scsi_device *sdev)
-+static int clariion_activate(struct scsi_device *sdev, activate_complete fn, void *data)
- {
- 	struct clariion_dh_data *csdev = get_clariion_data(sdev);
- 	int result;
-@@ -559,7 +559,9 @@ done:
- 		    csdev->port, lun_state[csdev->lun_state],
- 		    csdev->default_sp + 'A');
- 
--	return result;
-+	if (fn)
-+		fn(data, result);
-+	return 0;
- }
- 
- static const struct scsi_dh_devlist clariion_dev_list[] = {
-Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-===================================================================
---- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-+++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-@@ -268,7 +268,7 @@ static int hp_sw_prep_fn(struct scsi_dev
-  * activate the passive path (and deactivate the
-  * previously active one).
-  */
--static int hp_sw_activate(struct scsi_device *sdev)
-+static int hp_sw_activate(struct scsi_device *sdev, activate_complete fn, void *data)
- {
- 	int ret = SCSI_DH_OK;
- 	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-@@ -283,7 +283,9 @@ static int hp_sw_activate(struct scsi_de
- 				    HP_SW_NAME);
+@@ -536,8 +611,11 @@ static int rdac_activate(struct scsi_dev
+ 		if (err != SCSI_DH_OK)
+ 			goto done;
  	}
+-	if (h->lun_state == RDAC_LUN_UNOWNED)
+-		err = send_mode_select(sdev, h);
++	if (h->lun_state == RDAC_LUN_UNOWNED) {
++		err = queue_mode_select(sdev, fn, data);
++		if (err == SCSI_DH_OK)
++			return 0;
++	}
+ done:
+ 	if (fn)
+ 		fn(data, err);
+@@ -726,13 +804,26 @@ static int __init rdac_init(void)
+ 	int r;
  
--	return ret;
-+	if (fn)
-+		fn(data, ret);
-+	return 0;
+ 	r = scsi_register_device_handler(&rdac_dh);
+-	if (r != 0)
++	if (r != 0) {
+ 		printk(KERN_ERR "Failed to register scsi device handler.");
++		goto done;
++	}
++
++	/*
++	 * Create workqueue to handle mode selects for rdac
++	 */
++	kmpath_rdacd = create_singlethread_workqueue("kmpath_rdacd");
++	if (!kmpath_rdacd) {
++		scsi_unregister_device_handler(&rdac_dh);
++		printk(KERN_ERR "kmpath_rdacd creation failed.\n");
++	}
++done:
+ 	return r;
  }
  
- static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
-Index: linux-2.6.31/include/scsi/scsi_device.h
-===================================================================
---- linux-2.6.31.orig/include/scsi/scsi_device.h
-+++ linux-2.6.31/include/scsi/scsi_device.h
-@@ -174,6 +174,7 @@ struct scsi_dh_devlist {
- 	char *model;
- };
- 
-+typedef void (*activate_complete)(void *, int);
- struct scsi_device_handler {
- 	/* Used by the infrastructure */
- 	struct list_head list; /* list of scsi_device_handlers */
-@@ -185,7 +186,7 @@ struct scsi_device_handler {
- 	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
- 	int (*attach)(struct scsi_device *);
- 	void (*detach)(struct scsi_device *);
--	int (*activate)(struct scsi_device *);
-+	int (*activate)(struct scsi_device *, activate_complete, void *);
- 	int (*prep_fn)(struct scsi_device *, struct request *);
- };
- 
-Index: linux-2.6.31/drivers/md/dm-mpath.c
-===================================================================
---- linux-2.6.31.orig/drivers/md/dm-mpath.c
-+++ linux-2.6.31/drivers/md/dm-mpath.c
-@@ -1086,8 +1086,9 @@ static int pg_init_limit_reached(struct 
- 	return limit_reached;
- }
- 
--static void pg_init_done(struct dm_path *path, int errors)
-+static void pg_init_done(void *data, int errors)
+ static void __exit rdac_exit(void)
  {
-+	struct dm_path *path = data;
- 	struct pgpath *pgpath = path_to_pgpath(path);
- 	struct priority_group *pg = pgpath->pg;
- 	struct multipath *m = pg->m;
-@@ -1153,12 +1154,11 @@ static void pg_init_done(struct dm_path 
- 
- static void activate_path(struct work_struct *work)
- {
--	int ret;
- 	struct pgpath *pgpath =
- 		container_of(work, struct pgpath, activate_path);
- 
--	ret = scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev));
--	pg_init_done(&pgpath->path, ret);
-+	scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev),
-+				pg_init_done, &pgpath->path);
++	destroy_workqueue(kmpath_rdacd);
+ 	scsi_unregister_device_handler(&rdac_dh);
  }
  
- /*
