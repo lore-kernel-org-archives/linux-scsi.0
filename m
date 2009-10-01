@@ -1,50 +1,37 @@
-From: Anatolij Gustschin <agust@denx.de>
-Subject: [PATCH] mptsas: Fix issue with chain pools allocation on katmai
-Date: Thu,  1 Oct 2009 11:57:35 +0200
-Message-ID: <1254391055-7321-1-git-send-email-agust@denx.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14214] BUG at drivers/scsi/scsi_lib.c:1108!
+Date: Thu, 1 Oct 2009 10:32:17 GMT
+Message-ID: <200910011032.n91AWHOl017134@demeter.kernel.org>
+References: <bug-14214-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:38033 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756063AbZJAJ5d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 05:57:33 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:40339 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756173AbZJAKcN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 06:32:13 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n91AWHUv017135
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 10:32:17 GMT
+In-Reply-To: <bug-14214-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Anatolij Gustschin <agust@denx.de>
 
-After commit 9d2e9d66 mptsas driver fails to allocate
-memory for the MPT chain buffers for second adapter on
-PPC440SPe Katmai platform:
-...
-ioc1: LSISAS1068E B3: Capabilities={Initiator}
-mptbase: ioc1: ERROR - Unable to allocate Reply, Request, Chain Buffers!
-mptbase: ioc1: ERROR - didn't initialize properly! (-3)
-mptsas: probe of 0002:31:00.0 failed with error -3
+http://bugzilla.kernel.org/show_bug.cgi?id=14214
 
-This commit increased MPT_FC_CAN_QUEUE value but initChainBuffers()
-doesn't differentiate between SAS and FC causing increased allocation
-for SAS case, too. Later pci_alloc_consistent() fails to allocate
-increased chain buffer pool size for SAS case.
-This patch is an attempt to fix it.
 
-Signed-off-by: Anatolij Gustschin <agust@denx.de>
----
- drivers/message/fusion/mptbase.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 610e914..b6992b7 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -4330,6 +4330,8 @@ initChainBuffers(MPT_ADAPTER *ioc)
- 
- 	if (ioc->bus_type == SPI)
- 		num_chain *= MPT_SCSI_CAN_QUEUE;
-+	else if (ioc->bus_type == SAS)
-+		num_chain *= MPT_SAS_CAN_QUEUE;
- 	else
- 		num_chain *= MPT_FC_CAN_QUEUE;
- 
+
+
+--- Comment #9 from Jens Axboe <axboe@kernel.dk>  2009-10-01 10:32:15 ---
+Plamen, not sure what you are trying to accomplish. As I mentioned earlier,
+this looks like a bug that was fixed in md after your initial test point. The
+commit in question is 1ef04fefe2241087d9db7e9615c3f11b516e36cf and I think it
+was merged on the 23rd/24th. Your testing of 2.6.32-rc1 appears to confirm this
+fact.
+
 -- 
-1.5.6.3
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
