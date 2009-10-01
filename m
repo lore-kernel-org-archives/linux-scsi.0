@@ -1,42 +1,54 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 02/34] move atp870u_remove to .devexit.text
-Date: Thu, 01 Oct 2009 14:20:02 +0000
-Message-ID: <1254406802.3885.1.camel@mulgrave.site>
-References: <20091001082607.GA2181@pengutronix.de>
-	 <1254385718-14254-2-git-send-email-u.kleine-koenig@pengutronix.de>
+From: Yugendranath R Singh <yugendranath.s@hcl.in>
+Subject: [PATCH] drivers/scsi/mvsas: mvsas driver supported device list to
+ inlcude Adaptec ASC-1045/1405 SAS/SATA Controllers
+Date: Thu, 1 Oct 2009 20:35:28 +0530
+Message-ID: <4CA9DA403FFEC64AA62B3C295F8D47B7212674D868@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:53186 "EHLO mx1.suse.de"
+Received: from gws08.mail.hcl.in ([203.105.186.28]:44953 "EHLO gws08.hcl.in"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932423AbZJAOUF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Oct 2009 10:20:05 -0400
-In-Reply-To: <1254385718-14254-2-git-send-email-u.kleine-koenig@pengutronix.de>
+	id S1752320AbZJAPGA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 11:06:00 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
-Cc: linux-kernel@vger.kernel.org, Sam Ravnborg <sam@ravnborg.org>, Andrew Morton <akpm@linux-foundation.org>, Yang Hongyang <yanghy@cn.fujitsu.com>, Alan Cox <alan@redhat.com>, linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Ying Chu <jasonchu@marvell.com>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
 
-On Thu, 2009-10-01 at 10:28 +0200, Uwe Kleine-K=C3=B6nig wrote:
-> The function atp870u_remove is used only wrapped by __devexit_p so de=
-fine
-> it using __devexit.
+Hi,
+Please find the patch below which adds the Adaptec ASC 1045/1405 controllers to mvsas driver supported device list, for kernel version 2.6.31.1.
 
-What's the justification for this?
+-----
+diff -uprN a/linux-2.6.31.1/drivers/scsi/mvsas/mv_init.c b/linux-2.6.31.1/drivers/scsi/mvsas/mv_init.c
+--- a/linux-2.6.31.1/drivers/scsi/mvsas/mv_init.c       2009-09-24 21:15:25.000000000 +0530
++++ b/linux-2.6.31.1/drivers/scsi/mvsas/mv_init.c       2009-10-02 00:03:53.000000000 +0530
+@@ -653,6 +653,7 @@ static struct pci_device_id __devinitdat
+        { PCI_VDEVICE(MARVELL, 0x6485), chip_6485 },
+        { PCI_VDEVICE(MARVELL, 0x9480), chip_9480 },
+        { PCI_VDEVICE(MARVELL, 0x9180), chip_9180 },
++       { PCI_VDEVICE(ADAPTEC2, 0x0450), chip_6440 },
 
-Given that practically every kernel on the planet is hotplug enabled
-these days and that the savings on the very few that aren't from
-discarding the devexit section is at most a page or two (and even arm
-says they don't care about that), there doesn't seem to be any point
-making these changes.  In fact, I think we can just kill devinit and
-devexit as section markers.
+        { }     /* terminate list */
+ };
+------
 
-James
+Thanks,
+Yugen
+HCL Tech.
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DISCLAIMER:
+-----------------------------------------------------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
+It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
+this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
+Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
+this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
+received this email in error please delete it and notify the sender immediately. Before opening any mail and 
+attachments please check them for viruses and defect.
+
+-----------------------------------------------------------------------------------------------------------------------
