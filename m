@@ -1,151 +1,90 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: Why does SCSI mid layer mark the LUN offline in this situation?
-Date: Thu, 1 Oct 2009 14:53:03 -0400
-Message-ID: <4AC4FA8F.8090008@emulex.com>
-References: <da0ca6030909302246s4527cc98v6e3b37d7ca3bba2d@mail.gmail.com>	 <4AC44CB6.1050304@cisco.com> <4AC4B642.5050000@emulex.com> <da0ca6030910011108p38312559tf06c7dc80d4d031f@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [BUG] sg.c: sleeping function called from invalid context
+Date: Thu, 01 Oct 2009 15:59:54 -0400
+Message-ID: <4AC50A3A.4010200@interlog.com>
+References: <200910011628.06870.strakh@ispras.ru>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:33591 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756210AbZJASxD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 14:53:03 -0400
-In-Reply-To: <da0ca6030910011108p38312559tf06c7dc80d4d031f@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756497AbZJAT74@vger.kernel.org>
+In-Reply-To: <200910011628.06870.strakh@ispras.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: iceberg <strakh@ispras.ru>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: G S <gogman69-linuxscsi@yahoo.com>
-Cc: Joe Eykholt <jeykholt@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+iceberg wrote:
+> 	KERNEL_VERSION: 2.6.31
+> 	DESCRIBE:
+> Driver sg.c might sleep in atomic context, because it calls 
+> scsi_device_put under lock_kernel.
+> 
+> /drivers/scsi/sg.c:306:
+> 	static int
+> 	sg_open(struct inode *inode, struct file *filp)
+> 	{
+> 	...
+> 	lock_kernel();
+> 	...
+> 	error_out:
+> 	        if (retval)
+> 	                scsi_device_put(sdp->device);
+> 	...
+> 
+> Path to might_sleep macro from scsi_device_put:
+> 1. scsi_device_put calls put_device at ./drivers/scsi/scsi.c:1111 
+> 2. put_device calls kobject_put at ./drivers/base/core.c:1038 
+> 3. kobject_put calls kref_put at ./lib/kobject.c
+> 4. kref_put may call callback function kobject_release at ./lib/kref.c if 
+> refcount becomes zero, which might_sleep because it calls user event. Details:
+> 	5.1 kobject_cleanup calls kobject_uevent at ./lib/kobject.c:555
+> 	5.2 kobject_uevent calls kobject_uevent_env at ./lib/kobject_uevent.c:282
+> 	5.3 kobject_uevent_env calls call_usermodehelper_exec at 
+> include/linux/kmod.h:83
+> 	5.4 call_usermodehelper_exec calls wait_for_completion at ./kernel/kmod.c:481
+> 	5.5 wait_for_completion calls wait_for_common at ./kernel/sched.c:5710
+> 	5.6 wait_for_common calls might_sleep at ./kernels/sched.c:5692
+> 
+> Found by: Linux Driver Verification
+
+This patch to sg_open() does one (and only one) unlock_kernel()
+prior to scsi_device_put(). I presume sg_put_dev() may also
+sleep so the unlock_kernel() is moved before it as well.
+
+Hopefully Tomo will comment.
+
+Doug Gilbert
 
 
+--- linux/drivers/scsi/sg.c2631	2009-09-10 06:22:34.000000000 -0400
++++ linux/drivers/scsi/sg.c	2009-10-01 15:54:30.000000000 -0400
+@@ -227,8 +227,10 @@
+  	Sg_fd *sfp;
+  	int res;
+  	int retval;
++	int locked = 0;
 
-G S wrote:
-> Joe, James, thanks for the replies.
->
-> Bit more follow up.
->
-> I understand about the target-level change is detected by the
-> transport.  And the transport kicks off the scans.  And the LUN level
-> change is not detected by the transport.
->
-> So, my follow up comments and questions are,
->
-> a) When the disk array comes back up from restart with LUN 1 deleted,
-> that rebooting will cause RSCN at the transport layer.
->
-> b) HBA driver kicks off the scans, and this is scans of FC ports and
-> not a scan for LUN-level changes, right?
->   
-The hba, after detecting/logging in to the remote port, adds the remote 
-port to the transport. The transport then scans the port (aka fcp 
-target), and the scan looks for all luns subject to the responses from 
-Lun 0 (e.g. what scsi level, report luns support, etc).
-
-> c) Is this behavior i noted in (b) at the HBA driver different between
-> the "standard" versus "inbox" (aka. upstream) HBA drivers?
->   
-In general, No, as most upstream drivers are also the inbox drivers. 
-But, with older kernels/distros, you may not have the same feature 
-level, so it may differ.
-
-> d) Does the HBA driver notify the SCSI mid layer to kick off LUN-level
-> scan, to look for LUN-level changes?
->   
-In general, no, although, it could.
-
-> e) If the HBA driver does not notify the SCSI mid layer of transport
-> level change (from RSCN), then will SCSI mid layer continue to think
-> that LUN 1, and kernel structures for LUN 1 will still be intact in
-> the SCSI mid layer?
->   
-Until the midlayer sees something from the hba/transport, or from errors 
-reported on i/o's - yes.
-> f) If SCSI mid layer still has LUN 1 marked online, then should the
-> application (using "sg" dsf) be able to access LUN 1 once the LUN 1 is
-> recreated on the disk array, without having to cause manual scan
-> through /proc ?
->   
-As long as there's no RSCN's, etc - just a change in lun state - yes.
-
--- james
-
-
-> Thanks much,
->
-> G
->
-> On Thu, Oct 1, 2009 at 8:01 AM, James Smart <James.Smart@emulex.com> wrote:
->   
->> Joe's description is correct.   Target-level change is detected by the transport, and the transport kicks off the scans.  Lun-level change is not detected by the transport, thus its up to the midlayer or admin to rescan. Currently, the midlayer doesn't understand the "luns changed" sense codes and does not rescan.  Thus you must use the steps indicated to scan  (please avoid anything in /proc as, as much as it continues to exist, it is being deprecated).
->>
->> -- james s
->>
->>
->> Joe Eykholt wrote:
->>
->> G S wrote:
->>
->>
->> Howdy,
->>
->> I have a Linux (2.6) using Emulex and QLogic FC HBA's to a disk array
->> product, with a single LUN presented, say LUN 1.
->>
->> The dsf is created for LUN 1 and i can send SCSI commands to LUN 1.
->> And i'm using "sg".
->>
->> If i delete LUN 1 from disk array.  Reboot the disk array.  Array
->> boots up only with LUN 0.
->>
->> I have recreated LUN 1 on the target storage array.
->>
->> But any attempt to send SCSI command to LUN 1 fails because LUN 1 has
->> been marked offline by SCSI mid layer.
->>
->> Why?  Is it because RSCN seen by HBA driver is passed up to SCSI mid
->> layer to trigger re-scan?  And re-scan no longer finds LUN 1, so LUN 1
->> kernel structures are torned down, and LUN 1 marked offline by SCSI
->> mid layer?
->>
->>
->> If I understand your sequence correctly, rebooting the disk array
->> would cause a RSCN to the HBA, and that would cause it to delete LUN 0 and 1.
->> When the disk array comes up and logs into the fabric again, another
->> RSCN goes to the HBA and it sees the target (array) and presents
->> it to the transport layer and SCSI.  It scans LUN0 (does REPORT LUNS)
->> and it reports no other LUNs.  No LUN 1 at this point.
->>
->> Then you add LUN 1 on the array.  There's no event caused by that
->> as far as I know.   I'm not a complete expert on this and it
->> depends on your array, I think.  It may cause an check condition
->> on the next I/O that goes to LUN0, but that may never happen.
->> So nothing happens on the server.   It doesn't cause an RSCN because
->> the array didn't re-login to the fabric (that would be disruptive
->> for other initiators).
->>
->>
->>
->> Doing following to add back LUN 1 will bring it back for access,
->>
->> # echo "scsi add-single-device <H> <B> <T> <L>" > /proc/scsi/scsi
->>
->> Above "echo" seems to cause a blind re-scan by sending SCSI INQUIRY to
->> LUN 1 on the h/b/t/l hardware path.  That SCSI INQUIRY succeeds.  And
->> that success seems to cause LUN 1 to be marked online again.
->>
->>
->> OK.  I think you can also echo 1 to /sys/class/scsi_host/hostX/
->> scan
->>
->> I hope that helps and someone will correct me if any of this is wrong.
->>
->> 	Joe
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>     
->
->   
+  	lock_kernel();
++	locked = 1;
+  	nonseekable_open(inode, filp);
+  	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+  	sdp = sg_get_dev(dev);
+@@ -302,12 +304,16 @@
+  	}
+  	retval = 0;
+  error_out:
+-	if (retval)
++	if (retval) {
++		unlock_kernel();
++		locked = 0;
+  		scsi_device_put(sdp->device);
++	}
+  sg_put:
++	if (locked)
++		unlock_kernel();
+  	if (sdp)
+  		sg_put_dev(sdp);
+-	unlock_kernel();
+  	return retval;
+  }
