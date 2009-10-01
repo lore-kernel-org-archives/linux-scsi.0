@@ -1,73 +1,104 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [BUG] sg.c: sleeping function called from invalid context
-Date: Thu, 01 Oct 2009 20:25:27 +0000
-Message-ID: <1254428727.3885.64.camel@mulgrave.site>
-References: <200910011628.06870.strakh@ispras.ru>
-	 <4AC50A3A.4010200@interlog.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: RE: [PATCH 0/4] scsi_dh: Make scsi_dh_activate asynchronous
+Date: Thu, 01 Oct 2009 13:54:03 -0700
+Message-ID: <1254430443.24692.4.camel@chandra-ubuntu>
+References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+	 <E463DF2B2E584B4A82673F53D62C2EF474E78371@cosmail01.lsi.com>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53191 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754687AbZJAUZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Oct 2009 16:25:32 -0400
-In-Reply-To: <4AC50A3A.4010200@interlog.com>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:41587 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751842AbZJAUxy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 16:53:54 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n91Kptpb009312
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 14:51:55 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n91KrmwV124760
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 14:53:50 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n91KrjjY001020
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 14:53:48 -0600
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474E78371@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: iceberg <strakh@ispras.ru>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: "Moger, Babu" <Babu.Moger@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>, "berthiaume_wayne@emc.com" <berthiaume_wayne@emc.com>
 
-On Thu, 2009-10-01 at 15:59 -0400, Douglas Gilbert wrote:
-> iceberg wrote:
-> > 	KERNEL_VERSION: 2.6.31
-> > 	DESCRIBE:
-> > Driver sg.c might sleep in atomic context, because it calls 
-> > scsi_device_put under lock_kernel.
-> > 
-> > /drivers/scsi/sg.c:306:
-> > 	static int
-> > 	sg_open(struct inode *inode, struct file *filp)
-> > 	{
-> > 	...
-> > 	lock_kernel();
-> > 	...
-> > 	error_out:
-> > 	        if (retval)
-> > 	                scsi_device_put(sdp->device);
-> > 	...
-> > 
-> > Path to might_sleep macro from scsi_device_put:
-> > 1. scsi_device_put calls put_device at ./drivers/scsi/scsi.c:1111 
-> > 2. put_device calls kobject_put at ./drivers/base/core.c:1038 
-> > 3. kobject_put calls kref_put at ./lib/kobject.c
-> > 4. kref_put may call callback function kobject_release at ./lib/kref.c if 
-> > refcount becomes zero, which might_sleep because it calls user event. Details:
-> > 	5.1 kobject_cleanup calls kobject_uevent at ./lib/kobject.c:555
-> > 	5.2 kobject_uevent calls kobject_uevent_env at ./lib/kobject_uevent.c:282
-> > 	5.3 kobject_uevent_env calls call_usermodehelper_exec at 
-> > include/linux/kmod.h:83
-> > 	5.4 call_usermodehelper_exec calls wait_for_completion at ./kernel/kmod.c:481
-> > 	5.5 wait_for_completion calls wait_for_common at ./kernel/sched.c:5710
-> > 	5.6 wait_for_common calls might_sleep at ./kernels/sched.c:5692
-> > 
-> > Found by: Linux Driver Verification
+Thanks Babu,
+
+I will fix the issues you pointed.
+
+Let me know how the testing goes.
+
+It will be nice if you could also review the code :)
+
+chandra
+On Wed, 2009-09-30 at 22:19 -0600, Moger, Babu wrote:
+> Hi Chandra,
+>    Thanks for the patches. Patches applied cleanly on 2.6.31. I am testing the patches right now. Will post the with test results tomorrow.
+> These are my initial comments. 
+> 1. Patches do not apply on 2.6.32. You may have to regenerate it on 2.6.32.
+> 2. Also, I noticed few errors and warnings while running checkpatch.pl script.  
+> 3. Subject line for patch 3 and 4 may need to be modified. It still says "rdac handler". It should be hp and alua handler. 
 > 
-> This patch to sg_open() does one (and only one) unlock_kernel()
-> prior to scsi_device_put(). I presume sg_put_dev() may also
-> sleep so the unlock_kernel() is moved before it as well.
+> Thanks..
 > 
-> Hopefully Tomo will comment.
-
-Really, this isn't a bug, so no fix is required.
-
-The analysis is wrong on two levels.  Firstly scsi_device_put() is
-designed to be called from interrupt/locked context and secondly
-lock_kernel isn't actually a lock taking interrupt context anyway.  The
-BLK is a strange beast; it's recursive and it's actually transparently
-dropped and reacquired over schedule, so you can sleep by design with
-the BKL held.
-
-James
-
+> > -----Original Message-----
+> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> > owner@vger.kernel.org] On Behalf Of Chandra Seetharaman
+> > Sent: Tuesday, September 29, 2009 9:08 PM
+> > To: linux-scsi@vger.kernel.org
+> > Cc: dm-devel@redhat.com; Moger, Babu; michaelc@cs.wisc.edu;
+> > Benoit_Arthur@emc.com; Eddie.Williams@steeleye.com;
+> > berthiaume_wayne@emc.com; Chandra Seetharaman
+> > Subject: [PATCH 0/4] scsi_dh: Make scsi_dh_activate asynchronous
+> > 
+> > Hello All,
+> > 
+> > Currently, device handlers process path activation in series. This leads
+> > to a lot of time delay when more than 100 luns are involved. For example,
+> > with lsi rdac 100+ luns take about 12-15 minutes. This was found by Moger
+> > Babu of LSI.
+> > 
+> > This time delay can be avoided if we can do the activations
+> > asynchronously.
+> > By making scsi_dh_activate() async, we can give the device handlers an
+> > oppurtunity to decide on how to send the device activation down the wire
+> > to make the turn around time faster. They can send the commands
+> > asynchronously or send them in batches.
+> > 
+> > I brought up this issue on the mailing list
+> > (http://marc.info/?l=linux-scsi&m=123888063818755&w=2) and provided a
+> > set of patch a loooong while back http://marc.info/?l=linux-
+> > scsi&m=124088712709821&w=2
+> > 
+> > This set of patches applies cleanly on 2.6.31 and I tested the rdac
+> > handler
+> > on the same.
+> > 
+> > Please review and provide comments.
+> > 
+> > This set of patched adds asynchronous support for rdac, hp, and alua
+> > handlers.
+> > 
+> > Didn't add async support for EMC for the following reasons:
+> >  - EMC handler is getting more hairy (when I try to move to _nowait())
+> >  - I do not know if EMC has a special command to group them (like rdac).
+> >  - I wasn't sure if EMC has this problem in the first place ( I did not
+> > get
+> >    any response from EMC).
+> > Can somebody from EMC comment, please.
+> > 
+> > Thanks & Regards,
+> > 
+> > chandra
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
