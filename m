@@ -1,95 +1,100 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14242] MPT SAS Fails on heavy operations
-Date: Wed, 30 Sep 2009 23:29:25 GMT
-Message-ID: <200909302329.n8UNTP0X016141@demeter.kernel.org>
-References: <bug-14242-11613@http.bugzilla.kernel.org/>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH 0/4] scsi_dh: Make scsi_dh_activate
+	asynchronous
+Date: Wed, 30 Sep 2009 22:19:09 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474E78371@cosmail01.lsi.com>
+References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:43006 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754995AbZI3X3V convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Sep 2009 19:29:21 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n8UNTPBS016142
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Sep 2009 23:29:25 GMT
-In-Reply-To: <bug-14242-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D14242
+Hi Chandra,
+   Thanks for the patches. Patches applied cleanly on 2.6.31. I am testin=
+g the patches right now. Will post the with test results tomorrow.
+These are my initial comments.=20
+1. Patches do not apply on 2.6.32. You may have to regenerate it on 2.6.3=
+2.
+2. Also, I noticed few errors and warnings while running checkpatch.pl sc=
+ript. =20
+3. Subject line for patch 3 and 4 may need to be modified. It still says =
+"rdac handler". It should be hp and alua handler.=20
 
+Thanks..
 
-
-
-
---- Comment #2 from Denys Fedoryshchenko <nuclearcat@nuclearcat.com>  2=
-009-09-30 23:29:24 ---
-If i just copy fusion directory from previous kernel it works.
-Most probably changes what trigger that is (just diff between kernels):
-
-
-+static void
-+mpt_add_sge_64bit(void *pAddr, u32 flagslength, dma_addr_t dma_addr)
-+{
-+       SGESimple64_t *pSge =3D (SGESimple64_t *) pAddr;
-+       pSge->Address.Low =3D cpu_to_le32
-+                       (lower_32_bits((unsigned long)(dma_addr)));
-+       pSge->Address.High =3D cpu_to_le32
-+                       (upper_32_bits((unsigned long)dma_addr));
-+       pSge->FlagsLength =3D cpu_to_le32
-+                       ((flagslength | MPT_SGE_FLAGS_64_BIT_ADDRESSING=
-));
-+}
-
--       } else {
--               SGESimple32_t *pSge =3D (SGESimple32_t *) pAddr;
--               pSge->FlagsLength =3D cpu_to_le32(flagslength);
--               pSge->Address =3D cpu_to_le32(dma_addr);
-+/**
-+ *     mpt_add_sge_64bit_1078 - Place a simple 64 bit SGE at address p=
-Addr
-(1078 workaround).
-+ *     @pAddr: virtual address for SGE
-+ *     @flagslength: SGE flags and data transfer length
-+ *     @dma_addr: Physical address
-+ *
-+ *     This routine places a MPT request frame back on the MPT adapter=
-'s
-+ *     FreeQ.
-+ **/
-+static void
-+mpt_add_sge_64bit_1078(void *pAddr, u32 flagslength, dma_addr_t dma_ad=
-dr)
-+{
-+       SGESimple64_t *pSge =3D (SGESimple64_t *) pAddr;
-+       u32 tmp;
-+
-+       pSge->Address.Low =3D cpu_to_le32
-+                       (lower_32_bits((unsigned long)(dma_addr)));
-+       tmp =3D (u32)(upper_32_bits((unsigned long)dma_addr));
-+
-
-=46ollowing patch in upstream (but not in latest stable kernel) seems f=
-ixing my
-issue. Probably it must be pushed to stable kernels?
-
-commit=C2=A0=C2=A0c55b89fba9872ebcd5ac15cdfdad29ffb89329f0
-
-[SCSI] mptsas : PAE Kernel more than 4 GB kernel panic
-
-This patch is solving problem for PAE kernel DMA operation.
-On PAE system dma_addr and unsigned long will have different
-values.
-Now dma_addr is not type casted using unsigned long.
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Chandra Seetharaman
+> Sent: Tuesday, September 29, 2009 9:08 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: dm-devel@redhat.com; Moger, Babu; michaelc@cs.wisc.edu;
+> Benoit_Arthur@emc.com; Eddie.Williams@steeleye.com;
+> berthiaume_wayne@emc.com; Chandra Seetharaman
+> Subject: [PATCH 0/4] scsi_dh: Make scsi_dh_activate asynchronous
+>=20
+> Hello All,
+>=20
+> Currently, device handlers process path activation in series. This lead=
+s
+> to a lot of time delay when more than 100 luns are involved. For exampl=
+e,
+> with lsi rdac 100+ luns take about 12-15 minutes. This was found by Mog=
+er
+> Babu of LSI.
+>=20
+> This time delay can be avoided if we can do the activations
+> asynchronously.
+> By making scsi_dh_activate() async, we can give the device handlers an
+> oppurtunity to decide on how to send the device activation down the wir=
+e
+> to make the turn around time faster. They can send the commands
+> asynchronously or send them in batches.
+>=20
+> I brought up this issue on the mailing list
+> (http://marc.info/?l=3Dlinux-scsi&m=3D123888063818755&w=3D2) and provid=
+ed a
+> set of patch a loooong while back http://marc.info/?l=3Dlinux-
+> scsi&m=3D124088712709821&w=3D2
+>=20
+> This set of patches applies cleanly on 2.6.31 and I tested the rdac
+> handler
+> on the same.
+>=20
+> Please review and provide comments.
+>=20
+> This set of patched adds asynchronous support for rdac, hp, and alua
+> handlers.
+>=20
+> Didn't add async support for EMC for the following reasons:
+>  - EMC handler is getting more hairy (when I try to move to _nowait())
+>  - I do not know if EMC has a special command to group them (like rdac)=
+.
+>  - I wasn't sure if EMC has this problem in the first place ( I did not
+> get
+>    any response from EMC).
+> Can somebody from EMC comment, please.
+>=20
+> Thanks & Regards,
+>=20
+> chandra
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
