@@ -1,39 +1,55 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14214] BUG at drivers/scsi/scsi_lib.c:1108!
-Date: Thu, 1 Oct 2009 07:07:12 GMT
-Message-ID: <200910010707.n9177CD5027346@demeter.kernel.org>
-References: <bug-14214-11613@http.bugzilla.kernel.org/>
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
+	<u.kleine-koenig@pengutronix.de>
+Subject: [PATCH 23/34] don't use __devexit_p to wrap sgiwd93_remove
+Date: Thu,  1 Oct 2009 10:28:27 +0200
+Message-ID: <1254385718-14254-23-git-send-email-u.kleine-koenig@pengutronix.de>
+References: <20091001082607.GA2181@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:38812 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754937AbZJAHHI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 03:07:08 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9177CbN027347
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 07:07:12 GMT
-In-Reply-To: <bug-14214-11613@http.bugzilla.kernel.org/>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:56661 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932289AbZJAI3k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 04:29:40 -0400
+In-Reply-To: <20091001082607.GA2181@pengutronix.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Sam Ravnborg <sam@ravnborg.org>, Andrew Morton <akpm@linux-foundation.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Dmitri Vorobiev <dmitri.vorobiev@movial.fi>, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14214
+The function sgiwd93_remove is defined using __exit, so don't use
+__devexit_p but __exit_p to wrap it.
 
+Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dmitri Vorobiev <dmitri.vorobiev@movial.fi>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/sgiwd93.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Jens Axboe <axboe@kernel.dk> changed:
+diff --git a/drivers/scsi/sgiwd93.c b/drivers/scsi/sgiwd93.c
+index 0807b26..2f28ec4 100644
+--- a/drivers/scsi/sgiwd93.c
++++ b/drivers/scsi/sgiwd93.c
+@@ -312,7 +312,7 @@ static int __exit sgiwd93_remove(struct platform_de=
+vice *pdev)
+=20
+ static struct platform_driver sgiwd93_driver =3D {
+ 	.probe  =3D sgiwd93_probe,
+-	.remove =3D __devexit_p(sgiwd93_remove),
++	.remove =3D __exit_p(sgiwd93_remove),
+ 	.driver =3D {
+ 		.name   =3D "sgiwd93",
+ 		.owner	=3D THIS_MODULE,
+--=20
+1.6.4.3
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |axboe@kernel.dk
-
-
-
-
---- Comment #3 from Jens Axboe <axboe@kernel.dk>  2009-10-01 07:07:09 ---
-Please try and update your kernel, this one should be fixed already.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
