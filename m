@@ -1,181 +1,320 @@
-From: "H Hartley Sweeten" <hartleys@visionengravers.com>
-Subject: [PATCH] dc395x.h: use bitops.h BIT macro
-Date: Thu, 1 Oct 2009 19:28:18 -0400
-Message-ID: <BD79186B4FD85F4B8E60E381CAEE190901DB7421@mi8nycmail19.Mi8.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH 2/4] scsi_dh: rdac handler: Make rdac hardware handler
+ async
+Date: Thu, 1 Oct 2009 18:03:46 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474E786BE@cosmail01.lsi.com>
+References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+ <20090930020823.11455.23935.sendpatchset@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod6og101.obsmtp.com ([64.18.1.181]:38553 "HELO
-	exprod6og101.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751657AbZJAXfV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 19:35:21 -0400
-Content-class: urn:content-classes:message
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:34794 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754046AbZJBAE3 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Oct 2009 20:04:29 -0400
+In-Reply-To: <20090930020823.11455.23935.sendpatchset@chandra-ubuntu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: oliver@neukum.name, aliakc@web.de, lenehan@twibble.org, James.Bottomley@suse.de
+To: Chandra Seetharaman <sekharan@us.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>, "berthiaume_wayne@emc.com" <berthiaume_wayne@emc.com>
 
-Use BIT macro from linux/bitops.h instead of custom defines.
+Hi Chandra,
+I have tested these patches on 2.6.31 kernel with LSI storage.
+My configuration had 234 Luns with two paths to each lun(one active, one  passive) and luns were evenly distributed. 
+Here are the results.
 
-Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-Cc: Oliver Neukum <oliver@neukum.name>
-Cc: Ali Akcaagac <aliakc@web.de>
-Cc: Jamie Lenehan <lenehan@twibble.org>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-
----
-
-This patch was originally posted to the linux-kernel list on
-Aug 14, 2009.  Oliver Neukum said it looked good to him but it
-needed to be posted to the scsi list.
+Results with the patches
+Failover takes about 1 minute to complete 117 mode selects. Failovers are completed in two sets(1 mode select first and then 116 mode selects together).
+Failback takes about 2 and Half minutes.. 
 
 
-diff --git a/drivers/scsi/dc395x.h b/drivers/scsi/dc395x.h
-index b38360e..a448f5d 100644
---- a/drivers/scsi/dc395x.h
-+++ b/drivers/scsi/dc395x.h
-@@ -41,49 +41,17 @@
- /*	Various definitions						*/
- /*									*/
- /************************************************************************/
--#define BIT31				0x80000000
--#define BIT30				0x40000000
--#define BIT29				0x20000000
--#define BIT28				0x10000000
--#define BIT27				0x08000000
--#define BIT26				0x04000000
--#define BIT25				0x02000000
--#define BIT24				0x01000000
--#define BIT23				0x00800000
--#define BIT22				0x00400000
--#define BIT21				0x00200000
--#define BIT20				0x00100000
--#define BIT19				0x00080000
--#define BIT18				0x00040000
--#define BIT17				0x00020000
--#define BIT16				0x00010000
--#define BIT15				0x00008000
--#define BIT14				0x00004000
--#define BIT13				0x00002000
--#define BIT12				0x00001000
--#define BIT11				0x00000800
--#define BIT10				0x00000400
--#define BIT9				0x00000200
--#define BIT8				0x00000100
--#define BIT7				0x00000080
--#define BIT6				0x00000040
--#define BIT5				0x00000020
--#define BIT4				0x00000010
--#define BIT3				0x00000008
--#define BIT2				0x00000004
--#define BIT1				0x00000002
--#define BIT0				0x00000001
- 
- /* UnitCtrlFlag */
--#define UNIT_ALLOCATED			BIT0
--#define UNIT_INFO_CHANGED		BIT1
--#define FORMATING_MEDIA			BIT2
--#define UNIT_RETRY			BIT3
-+#define UNIT_ALLOCATED			BIT(0)
-+#define UNIT_INFO_CHANGED		BIT(1)
-+#define FORMATING_MEDIA			BIT(2)
-+#define UNIT_RETRY			BIT(3)
- 
- /* UnitFlags */
--#define DASD_SUPPORT			BIT0
--#define SCSI_SUPPORT			BIT1
--#define ASPI_SUPPORT			BIT2
-+#define DASD_SUPPORT			BIT(0)
-+#define SCSI_SUPPORT			BIT(1)
-+#define ASPI_SUPPORT			BIT(2)
- 
- /* SRBState machine definition */
- #define SRB_FREE			0x0000
-@@ -117,29 +85,29 @@
- #define HCC_UP8TERM			0x01
- 
- /* ACBFlag */
--#define RESET_DEV			BIT0
--#define RESET_DETECT			BIT1
--#define RESET_DONE			BIT2
-+#define RESET_DEV			BIT(0)
-+#define RESET_DETECT			BIT(1)
-+#define RESET_DONE			BIT(2)
- 
- /* DCBFlag */
--#define ABORT_DEV_			BIT0
-+#define ABORT_DEV_			BIT(0)
- 
- /* SRBstatus */
--#define SRB_OK				BIT0
--#define ABORTION			BIT1
--#define OVER_RUN			BIT2
--#define UNDER_RUN			BIT3
--#define PARITY_ERROR			BIT4
--#define SRB_ERROR			BIT5
-+#define SRB_OK				BIT(0)
-+#define ABORTION			BIT(1)
-+#define OVER_RUN			BIT(2)
-+#define UNDER_RUN			BIT(3)
-+#define PARITY_ERROR			BIT(4)
-+#define SRB_ERROR			BIT(5)
- 
- /* SRBFlag */
--#define DATAOUT				BIT7
--#define DATAIN				BIT6
--#define RESIDUAL_VALID			BIT5
--#define ENABLE_TIMER			BIT4
--#define RESET_DEV0			BIT2
--#define ABORT_DEV			BIT1
--#define AUTO_REQSENSE			BIT0
-+#define DATAOUT				BIT(7)
-+#define DATAIN				BIT(6)
-+#define RESIDUAL_VALID			BIT(5)
-+#define ENABLE_TIMER			BIT(4)
-+#define RESET_DEV0			BIT(2)
-+#define ABORT_DEV			BIT(1)
-+#define AUTO_REQSENSE			BIT(0)
- 
- /* Adapter status */
- #define H_STATUS_GOOD			0
-@@ -170,13 +138,13 @@
- 
- /* Sync_Mode */
- #define SYNC_WIDE_TAG_ATNT_DISABLE	0
--#define SYNC_NEGO_ENABLE		BIT0
--#define SYNC_NEGO_DONE			BIT1
--#define WIDE_NEGO_ENABLE		BIT2
--#define WIDE_NEGO_DONE			BIT3
--#define WIDE_NEGO_STATE			BIT4
--#define EN_TAG_QUEUEING			BIT5
--#define EN_ATN_STOP			BIT6
-+#define SYNC_NEGO_ENABLE		BIT(0)
-+#define SYNC_NEGO_DONE			BIT(1)
-+#define WIDE_NEGO_ENABLE		BIT(2)
-+#define WIDE_NEGO_DONE			BIT(3)
-+#define WIDE_NEGO_STATE			BIT(4)
-+#define EN_TAG_QUEUEING			BIT(5)
-+#define EN_ATN_STOP			BIT(6)
- 
- #define SYNC_NEGO_OFFSET		15
- 
-@@ -626,12 +594,12 @@ struct ScsiInqData
- /*									*/
- /************************************************************************/
- #if 0
--#define MORE2_DRV			BIT0
--#define GREATER_1G			BIT1
--#define RST_SCSI_BUS			BIT2
--#define ACTIVE_NEGATION			BIT3
--#define NO_SEEK				BIT4
--#define LUN_CHECK			BIT5
-+#define MORE2_DRV			BIT(0)
-+#define GREATER_1G			BIT(1)
-+#define RST_SCSI_BUS			BIT(2)
-+#define ACTIVE_NEGATION			BIT(3)
-+#define NO_SEEK				BIT(4)
-+#define LUN_CHECK			BIT(5)
- #endif
- 
- /************************************************************************/ 
+Results without the patches on same configuration
+failover takes about 12 minutes to complete 117 mode selects. 
+Failback takes about 15 minutes.
+
+Thanks
+Babu Moger 
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Chandra Seetharaman
+> Sent: Tuesday, September 29, 2009 9:08 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: dm-devel@redhat.com; Moger, Babu; michaelc@cs.wisc.edu;
+> Benoit_Arthur@emc.com; Eddie.Williams@steeleye.com;
+> berthiaume_wayne@emc.com; Chandra Seetharaman
+> Subject: [PATCH 2/4] scsi_dh: rdac handler: Make rdac hardware handler
+> async
+> 
+> Batch up MODE_SELECT in rdac device handler.
+> 
+> LSI RDAC storage has the capability of handling mode selects for
+> multiple luns in a same command. Make use of that ability to send
+> as few MODE SELECTs as possible to the storage controller as possible.
+> 
+> This patch creates a work queue and queues up activate requests
+> when a MODE SELECT is sent down the wire. When that MODE SELECT
+> completes, it compiles queued up activate requests for multiple
+> luns into a single MODE SELECT.
+> 
+> This reduces the time to do failover/failback of large number of LUNS.
+> 
+> Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> 
+> ---
+>  drivers/scsi/device_handler/scsi_dh_rdac.c |  117
+> ++++++++++++++++++++++++++---
+>  1 file changed, 104 insertions(+), 13 deletions(-)
+> 
+> Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh_rdac.c
+> ===================================================================
+> --- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
+> +++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh_rdac.c
+> @@ -22,6 +22,7 @@
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_eh.h>
+>  #include <scsi/scsi_dh.h>
+> +#include <linux/workqueue.h>
+> 
+>  #define RDAC_NAME "rdac"
+>  #define RDAC_RETRY_COUNT 5
+> @@ -135,6 +136,11 @@ struct rdac_controller {
+>  		struct rdac_pg_legacy legacy;
+>  		struct rdac_pg_expanded expanded;
+>  	} mode_select;
+> +	spinlock_t		ms_lock;
+> +	int			ms_queued;
+> +	struct work_struct	ms_work;
+> +	struct scsi_device	*ms_sdev;
+> +	struct list_head	ms_head;
+>  };
+>  struct c8_inquiry {
+>  	u8	peripheral_info;
+> @@ -195,8 +201,17 @@ static const char *lun_state[] =
+>  	"owned (AVT mode)",
+>  };
+> 
+> +struct rdac_queue_data {
+> +	struct list_head	entry;
+> +	struct rdac_dh_data	*h;
+> +	activate_complete	callback_fn;
+> +	void			*callback_data;
+> +};
+> +
+>  static LIST_HEAD(ctlr_list);
+>  static DEFINE_SPINLOCK(list_lock);
+> +static struct workqueue_struct *kmpath_rdacd;
+> +static void send_mode_select(struct work_struct *work);
+> 
+>  static inline struct rdac_dh_data *get_rdac_data(struct scsi_device
+> *sdev)
+>  {
+> @@ -253,7 +268,6 @@ static struct request *rdac_failover_get
+>  		rdac_pg->subpage_code = 0x1;
+>  		rdac_pg->page_len[0] = 0x01;
+>  		rdac_pg->page_len[1] = 0x28;
+> -		rdac_pg->lun_table[h->lun] = 0x81;
+>  	} else {
+>  		struct rdac_pg_legacy *rdac_pg;
+> 
+> @@ -263,7 +277,6 @@ static struct request *rdac_failover_get
+>  		common = &rdac_pg->common;
+>  		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
+>  		rdac_pg->page_len = 0x68;
+> -		rdac_pg->lun_table[h->lun] = 0x81;
+>  	}
+>  	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
+>  	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
+> @@ -297,6 +310,7 @@ static void release_controller(struct kr
+>  	struct rdac_controller *ctlr;
+>  	ctlr = container_of(kref, struct rdac_controller, kref);
+> 
+> +	flush_workqueue(kmpath_rdacd);
+>  	spin_lock(&list_lock);
+>  	list_del(&ctlr->node);
+>  	spin_unlock(&list_lock);
+> @@ -326,6 +340,11 @@ static struct rdac_controller *get_contr
+>  	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
+>  	kref_init(&ctlr->kref);
+>  	ctlr->use_ms10 = -1;
+> +	ctlr->ms_queued = 0;
+> +	ctlr->ms_sdev = NULL;
+> +	spin_lock_init(&ctlr->ms_lock);
+> +	INIT_WORK(&ctlr->ms_work, send_mode_select);
+> +	INIT_LIST_HEAD(&ctlr->ms_head);
+>  	list_add(&ctlr->node, &ctlr_list);
+>  done:
+>  	spin_unlock(&list_lock);
+> @@ -445,8 +464,7 @@ static int set_mode_select(struct scsi_d
+>  	return err;
+>  }
+> 
+> -static int mode_select_handle_sense(struct scsi_device *sdev,
+> -				    unsigned char *sensebuf)
+> +static int mode_select_handle_sense(unsigned char *sensebuf)
+>  {
+>  	struct scsi_sense_hdr sense_hdr;
+>  	int err = SCSI_DH_IO, ret;
+> @@ -478,7 +496,7 @@ static int mode_select_handle_sense(stru
+>  			err = SCSI_DH_RETRY;
+>  		break;
+>  	default:
+> -		sdev_printk(KERN_INFO, sdev,
+> +		printk(KERN_INFO
+>  			    "MODE_SELECT failed with sense
+> %02x/%02x/%02x.\n",
+>  			    sense_hdr.sense_key, sense_hdr.asc,
+> sense_hdr.ascq);
+>  	}
+> @@ -487,11 +505,29 @@ done:
+>  	return err;
+>  }
+> 
+> -static int send_mode_select(struct scsi_device *sdev, struct
+> rdac_dh_data *h)
+> +static void send_mode_select(struct work_struct *work)
+>  {
+> +	struct rdac_controller *ctlr =
+> +		container_of(work, struct rdac_controller, ms_work);
+>  	struct request *rq;
+> +	struct scsi_device *sdev = ctlr->ms_sdev;
+> +	struct rdac_dh_data *h = get_rdac_data(sdev);
+>  	struct request_queue *q = sdev->request_queue;
+>  	int err, retry_cnt = RDAC_RETRY_COUNT;
+> +	struct rdac_queue_data *tmp, *qdata;
+> +	LIST_HEAD(list);
+> +	u8 *lun_table;
+> +
+> +	spin_lock(&ctlr->ms_lock);
+> +	list_splice_init(&ctlr->ms_head, &list);
+> +	ctlr->ms_queued = 0;
+> +	ctlr->ms_sdev = NULL;
+> +	spin_unlock(&ctlr->ms_lock);
+> +
+> +	if (ctlr->use_ms10)
+> +		lun_table = ctlr->mode_select.expanded.lun_table;
+> +	else
+> +		lun_table = ctlr->mode_select.legacy.lun_table;
+> 
+>  retry:
+>  	err = SCSI_DH_RES_TEMP_UNAVAIL;
+> @@ -499,13 +535,17 @@ retry:
+>  	if (!rq)
+>  		goto done;
+> 
+> -	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
+> + 	list_for_each_entry(qdata, &list, entry) {
+> +		lun_table[qdata->h->lun] = 0x81;
+> +	}
+> +
+> +	printk(KERN_INFO "%s MODE_SELECT command.\n",
+>  		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+> 
+>  	err = blk_execute_rq(q, NULL, rq, 1);
+>  	blk_put_request(rq);
+>  	if (err != SCSI_DH_OK) {
+> -		err = mode_select_handle_sense(sdev, h->sense);
+> +		err = mode_select_handle_sense(h->sense);
+>  		if (err == SCSI_DH_RETRY && retry_cnt--)
+>  			goto retry;
+>  	}
+> @@ -513,10 +553,45 @@ retry:
+>  		h->state = RDAC_STATE_ACTIVE;
+> 
+>  done:
+> -	return err;
+> +	list_for_each_entry_safe(qdata, tmp, &list, entry) {
+> +		list_del(&qdata->entry);
+> +		if (err == SCSI_DH_OK)
+> +			qdata->h->state = RDAC_STATE_ACTIVE;
+> +		if (qdata->callback_fn)
+> +			qdata->callback_fn(qdata->callback_data, err);
+> +		kfree(qdata);
+> +	}
+> +	return;
+>  }
+> 
+> -static int rdac_activate(struct scsi_device *sdev, activate_complete
+> fn, void *data)
+> +static int queue_mode_select(struct scsi_device *sdev,
+> +				activate_complete fn, void *data)
+> +{
+> +	struct rdac_queue_data *qdata;
+> +	struct rdac_controller *ctlr;
+> +
+> +	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
+> +	if (!qdata)
+> +		return SCSI_DH_RETRY;
+> +
+> + 	qdata->h = get_rdac_data(sdev);
+> +	qdata->callback_fn = fn;
+> +	qdata->callback_data = data;
+> +
+> +	ctlr = qdata->h->ctlr;
+> +	spin_lock(&ctlr->ms_lock);
+> +	list_add_tail(&qdata->entry, &ctlr->ms_head);
+> +	if (!ctlr->ms_queued) {
+> +		ctlr->ms_queued = 1;
+> +		ctlr->ms_sdev = sdev;
+> +		queue_work(kmpath_rdacd, &ctlr->ms_work);
+> +	}
+> +	spin_unlock(&ctlr->ms_lock);
+> +	return SCSI_DH_OK;
+> +}
+> +
+> +static int rdac_activate(struct scsi_device *sdev,
+> +				activate_complete fn, void *data)
+>  {
+>  	struct rdac_dh_data *h = get_rdac_data(sdev);
+>  	int err = SCSI_DH_OK;
+> @@ -536,8 +611,11 @@ static int rdac_activate(struct scsi_dev
+>  		if (err != SCSI_DH_OK)
+>  			goto done;
+>  	}
+> -	if (h->lun_state == RDAC_LUN_UNOWNED)
+> -		err = send_mode_select(sdev, h);
+> +	if (h->lun_state == RDAC_LUN_UNOWNED) {
+> +		err = queue_mode_select(sdev, fn, data);
+> +		if (err == SCSI_DH_OK)
+> +			return 0;
+> +	}
+>  done:
+>  	if (fn)
+>  		fn(data, err);
+> @@ -726,13 +804,26 @@ static int __init rdac_init(void)
+>  	int r;
+> 
+>  	r = scsi_register_device_handler(&rdac_dh);
+> -	if (r != 0)
+> +	if (r != 0) {
+>  		printk(KERN_ERR "Failed to register scsi device handler.");
+> +		goto done;
+> +	}
+> +
+> +	/*
+> +	 * Create workqueue to handle mode selects for rdac
+> +	 */
+> +	kmpath_rdacd = create_singlethread_workqueue("kmpath_rdacd");
+> +	if (!kmpath_rdacd) {
+> +		scsi_unregister_device_handler(&rdac_dh);
+> +		printk(KERN_ERR "kmpath_rdacd creation failed.\n");
+> +	}
+> +done:
+>  	return r;
+>  }
+> 
+>  static void __exit rdac_exit(void)
+>  {
+> +	destroy_workqueue(kmpath_rdacd);
+>  	scsi_unregister_device_handler(&rdac_dh);
+>  }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
