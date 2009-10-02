@@ -1,84 +1,335 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: qla2xxx: Conditionally disable automatic queue full tracking
-Date: Thu, 01 Oct 2009 19:19:04 -0500
-Message-ID: <4AC546F8.7060507@sgi.com>
-References: <5355D915-9CAE-41CD-846B-F816FE914E1B@qlogic.com> <4ABB8572.5050902@sgi.com> <67E59C8B-0E12-44EA-983C-38634993DF5A@qlogic.com> <4ABBC53F.9090203@sgi.com> <3E1B3796-029F-4DBE-A414-0358AB257E93@qlogic.com> <4ABBDE68.2020903@sgi.com> <ABA38BF9-3910-45E9-8C2B-C860FD862D59@qlogic.com> <4AC3A21F.8070705@cs.wisc.edu>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: RE: [PATCH 2/4] scsi_dh: rdac handler: Make rdac hardware handler
+	async
+Date: Thu, 01 Oct 2009 17:29:20 -0700
+Message-ID: <1254443360.24692.21.camel@chandra-ubuntu>
+References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+	 <20090930020823.11455.23935.sendpatchset@chandra-ubuntu>
+	 <E463DF2B2E584B4A82673F53D62C2EF474E786BE@cosmail01.lsi.com>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.179.30]:37374 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754141AbZJBATC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Oct 2009 20:19:02 -0400
-In-Reply-To: <4AC3A21F.8070705@cs.wisc.edu>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:40414 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbZJBA3D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Oct 2009 20:29:03 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n920OXJT005654
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 18:24:33 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n920T27S146684
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 18:29:03 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n920T1nT021582
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Oct 2009 18:29:02 -0600
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF474E786BE@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, LinuxSCSI <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "vasu.dev@intel.com" <vasu.dev@intel.com>, Jeremy Higdon <jeremy@sgi.com>
+To: "Moger, Babu" <Babu.Moger@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>, "berthiaume_wayne@emc.com" <berthiaume_wayne@emc.com>
 
+Thanks Babu,
 
+It matches with what I was seeing too.
 
-Mike Christie wrote:
-> On 09/29/2009 08:34 PM, Giridhar Malavali wrote:
->> 3) From your previous mail, I understand that you don't require a
->> combined limit per target. Say the total queue depth for all LUN's on a
->> particular target should not exceed some threshold.
->>
+On Thu, 2009-10-01 at 18:03 -0600, Moger, Babu wrote:
+> Hi Chandra,
+> I have tested these patches on 2.6.31 kernel with LSI storage.
+> My configuration had 234 Luns with two paths to each lun(one active, one  passive) and luns were evenly distributed. 
+> Here are the results.
 > 
-> James Smart had done this patch
-> http://marc.info/?l=linux-scsi&m=121070114018354&w=2
-> where it sets the starget->can_queue based on info we get from vendors. 
-> The patch did not get merged. JamesB does not want the 
-> starget->can_queue to be static, and wants code like the queue full 
-> tracking code which dynamically ramps the device queue depth up and down.
-
-Agree.  Some amount of dynamic management of queue full seems desirable.
-I believe any such dynamic management needs to acknowledge that it
-exists in a multi-initiator environment, i.e., might get a QUEUE_FULL
-with no other commands outstanding.
-
+> Results with the patches
+> Failover takes about 1 minute to complete 117 mode selects. Failovers are completed in two sets(1 mode select first and then 116 mode selects together).
+> Failback takes about 2 and Half minutes.. 
 > 
-> I am not sure if JamesB meant that he wants to ramp down the 
-> starget->can_queue based on getting a QEUEU_FULL though. I thought he 
-> just meant he wants it to be dynamic. 
-
-What does "be dynamic" mean if not adjusted based upon a target's
-response to scsi commands?
-
-> If I am right, then I think we 
-> could use JamesS's patch to set an initial starget->can_queue and add 
-> another field for a max value. Then we could add some code that ramps 
-> down/up based on something like command completion time or throughput or 
-> some other value.
-
-We don't necessarily need or want can_queue set by a value encoded into
-a kernel table.  Some of our raid devices' can_queue values vary based
-upon the firmware they are running.  A static table would, at best, be a
-decent starting point.  At worst, it could dramatically over-commit the
-target.  Our raid devices' max can_queue is either per raid controller
-or per host port.
-
-Whatever path we go down, I view having a user programmable upper bound
-as a requirement.
-
 > 
-> If JamesS did mean that he wanted to ramp down the starget->can_queue 
-> based on QUEUE_FULLs then JamesS and JamesB do not agree on that and we 
-> are stuck.
-
-I don't consider ramp up/down of starget->can_queue a requirement.
-But I also don't consider its presence a problem.
-
-Our requirements are pretty simple: the ability to limit the number
-of commands queued to a target or lun in a multi-initiator environment
-such that no individual initiator can fully consume the resources
-of the target/lun.  I.e., we want a user programmable upper bound
-on all queue_depth and can_queue adjustments.  (Yes, I've stated this
-a few times.  :)
-
-
-Mike
-
-
+> Results without the patches on same configuration
+> failover takes about 12 minutes to complete 117 mode selects. 
+> Failback takes about 15 minutes.
+> 
+> Thanks
+> Babu Moger 
+> 
+> > -----Original Message-----
+> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> > owner@vger.kernel.org] On Behalf Of Chandra Seetharaman
+> > Sent: Tuesday, September 29, 2009 9:08 PM
+> > To: linux-scsi@vger.kernel.org
+> > Cc: dm-devel@redhat.com; Moger, Babu; michaelc@cs.wisc.edu;
+> > Benoit_Arthur@emc.com; Eddie.Williams@steeleye.com;
+> > berthiaume_wayne@emc.com; Chandra Seetharaman
+> > Subject: [PATCH 2/4] scsi_dh: rdac handler: Make rdac hardware handler
+> > async
+> > 
+> > Batch up MODE_SELECT in rdac device handler.
+> > 
+> > LSI RDAC storage has the capability of handling mode selects for
+> > multiple luns in a same command. Make use of that ability to send
+> > as few MODE SELECTs as possible to the storage controller as possible.
+> > 
+> > This patch creates a work queue and queues up activate requests
+> > when a MODE SELECT is sent down the wire. When that MODE SELECT
+> > completes, it compiles queued up activate requests for multiple
+> > luns into a single MODE SELECT.
+> > 
+> > This reduces the time to do failover/failback of large number of LUNS.
+> > 
+> > Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > 
+> > ---
+> >  drivers/scsi/device_handler/scsi_dh_rdac.c |  117
+> > ++++++++++++++++++++++++++---
+> >  1 file changed, 104 insertions(+), 13 deletions(-)
+> > 
+> > Index: linux-2.6.31/drivers/scsi/device_handler/scsi_dh_rdac.c
+> > ===================================================================
+> > --- linux-2.6.31.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
+> > +++ linux-2.6.31/drivers/scsi/device_handler/scsi_dh_rdac.c
+> > @@ -22,6 +22,7 @@
+> >  #include <scsi/scsi.h>
+> >  #include <scsi/scsi_eh.h>
+> >  #include <scsi/scsi_dh.h>
+> > +#include <linux/workqueue.h>
+> > 
+> >  #define RDAC_NAME "rdac"
+> >  #define RDAC_RETRY_COUNT 5
+> > @@ -135,6 +136,11 @@ struct rdac_controller {
+> >  		struct rdac_pg_legacy legacy;
+> >  		struct rdac_pg_expanded expanded;
+> >  	} mode_select;
+> > +	spinlock_t		ms_lock;
+> > +	int			ms_queued;
+> > +	struct work_struct	ms_work;
+> > +	struct scsi_device	*ms_sdev;
+> > +	struct list_head	ms_head;
+> >  };
+> >  struct c8_inquiry {
+> >  	u8	peripheral_info;
+> > @@ -195,8 +201,17 @@ static const char *lun_state[] =
+> >  	"owned (AVT mode)",
+> >  };
+> > 
+> > +struct rdac_queue_data {
+> > +	struct list_head	entry;
+> > +	struct rdac_dh_data	*h;
+> > +	activate_complete	callback_fn;
+> > +	void			*callback_data;
+> > +};
+> > +
+> >  static LIST_HEAD(ctlr_list);
+> >  static DEFINE_SPINLOCK(list_lock);
+> > +static struct workqueue_struct *kmpath_rdacd;
+> > +static void send_mode_select(struct work_struct *work);
+> > 
+> >  static inline struct rdac_dh_data *get_rdac_data(struct scsi_device
+> > *sdev)
+> >  {
+> > @@ -253,7 +268,6 @@ static struct request *rdac_failover_get
+> >  		rdac_pg->subpage_code = 0x1;
+> >  		rdac_pg->page_len[0] = 0x01;
+> >  		rdac_pg->page_len[1] = 0x28;
+> > -		rdac_pg->lun_table[h->lun] = 0x81;
+> >  	} else {
+> >  		struct rdac_pg_legacy *rdac_pg;
+> > 
+> > @@ -263,7 +277,6 @@ static struct request *rdac_failover_get
+> >  		common = &rdac_pg->common;
+> >  		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
+> >  		rdac_pg->page_len = 0x68;
+> > -		rdac_pg->lun_table[h->lun] = 0x81;
+> >  	}
+> >  	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
+> >  	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
+> > @@ -297,6 +310,7 @@ static void release_controller(struct kr
+> >  	struct rdac_controller *ctlr;
+> >  	ctlr = container_of(kref, struct rdac_controller, kref);
+> > 
+> > +	flush_workqueue(kmpath_rdacd);
+> >  	spin_lock(&list_lock);
+> >  	list_del(&ctlr->node);
+> >  	spin_unlock(&list_lock);
+> > @@ -326,6 +340,11 @@ static struct rdac_controller *get_contr
+> >  	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
+> >  	kref_init(&ctlr->kref);
+> >  	ctlr->use_ms10 = -1;
+> > +	ctlr->ms_queued = 0;
+> > +	ctlr->ms_sdev = NULL;
+> > +	spin_lock_init(&ctlr->ms_lock);
+> > +	INIT_WORK(&ctlr->ms_work, send_mode_select);
+> > +	INIT_LIST_HEAD(&ctlr->ms_head);
+> >  	list_add(&ctlr->node, &ctlr_list);
+> >  done:
+> >  	spin_unlock(&list_lock);
+> > @@ -445,8 +464,7 @@ static int set_mode_select(struct scsi_d
+> >  	return err;
+> >  }
+> > 
+> > -static int mode_select_handle_sense(struct scsi_device *sdev,
+> > -				    unsigned char *sensebuf)
+> > +static int mode_select_handle_sense(unsigned char *sensebuf)
+> >  {
+> >  	struct scsi_sense_hdr sense_hdr;
+> >  	int err = SCSI_DH_IO, ret;
+> > @@ -478,7 +496,7 @@ static int mode_select_handle_sense(stru
+> >  			err = SCSI_DH_RETRY;
+> >  		break;
+> >  	default:
+> > -		sdev_printk(KERN_INFO, sdev,
+> > +		printk(KERN_INFO
+> >  			    "MODE_SELECT failed with sense
+> > %02x/%02x/%02x.\n",
+> >  			    sense_hdr.sense_key, sense_hdr.asc,
+> > sense_hdr.ascq);
+> >  	}
+> > @@ -487,11 +505,29 @@ done:
+> >  	return err;
+> >  }
+> > 
+> > -static int send_mode_select(struct scsi_device *sdev, struct
+> > rdac_dh_data *h)
+> > +static void send_mode_select(struct work_struct *work)
+> >  {
+> > +	struct rdac_controller *ctlr =
+> > +		container_of(work, struct rdac_controller, ms_work);
+> >  	struct request *rq;
+> > +	struct scsi_device *sdev = ctlr->ms_sdev;
+> > +	struct rdac_dh_data *h = get_rdac_data(sdev);
+> >  	struct request_queue *q = sdev->request_queue;
+> >  	int err, retry_cnt = RDAC_RETRY_COUNT;
+> > +	struct rdac_queue_data *tmp, *qdata;
+> > +	LIST_HEAD(list);
+> > +	u8 *lun_table;
+> > +
+> > +	spin_lock(&ctlr->ms_lock);
+> > +	list_splice_init(&ctlr->ms_head, &list);
+> > +	ctlr->ms_queued = 0;
+> > +	ctlr->ms_sdev = NULL;
+> > +	spin_unlock(&ctlr->ms_lock);
+> > +
+> > +	if (ctlr->use_ms10)
+> > +		lun_table = ctlr->mode_select.expanded.lun_table;
+> > +	else
+> > +		lun_table = ctlr->mode_select.legacy.lun_table;
+> > 
+> >  retry:
+> >  	err = SCSI_DH_RES_TEMP_UNAVAIL;
+> > @@ -499,13 +535,17 @@ retry:
+> >  	if (!rq)
+> >  		goto done;
+> > 
+> > -	sdev_printk(KERN_INFO, sdev, "%s MODE_SELECT command.\n",
+> > + 	list_for_each_entry(qdata, &list, entry) {
+> > +		lun_table[qdata->h->lun] = 0x81;
+> > +	}
+> > +
+> > +	printk(KERN_INFO "%s MODE_SELECT command.\n",
+> >  		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+> > 
+> >  	err = blk_execute_rq(q, NULL, rq, 1);
+> >  	blk_put_request(rq);
+> >  	if (err != SCSI_DH_OK) {
+> > -		err = mode_select_handle_sense(sdev, h->sense);
+> > +		err = mode_select_handle_sense(h->sense);
+> >  		if (err == SCSI_DH_RETRY && retry_cnt--)
+> >  			goto retry;
+> >  	}
+> > @@ -513,10 +553,45 @@ retry:
+> >  		h->state = RDAC_STATE_ACTIVE;
+> > 
+> >  done:
+> > -	return err;
+> > +	list_for_each_entry_safe(qdata, tmp, &list, entry) {
+> > +		list_del(&qdata->entry);
+> > +		if (err == SCSI_DH_OK)
+> > +			qdata->h->state = RDAC_STATE_ACTIVE;
+> > +		if (qdata->callback_fn)
+> > +			qdata->callback_fn(qdata->callback_data, err);
+> > +		kfree(qdata);
+> > +	}
+> > +	return;
+> >  }
+> > 
+> > -static int rdac_activate(struct scsi_device *sdev, activate_complete
+> > fn, void *data)
+> > +static int queue_mode_select(struct scsi_device *sdev,
+> > +				activate_complete fn, void *data)
+> > +{
+> > +	struct rdac_queue_data *qdata;
+> > +	struct rdac_controller *ctlr;
+> > +
+> > +	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
+> > +	if (!qdata)
+> > +		return SCSI_DH_RETRY;
+> > +
+> > + 	qdata->h = get_rdac_data(sdev);
+> > +	qdata->callback_fn = fn;
+> > +	qdata->callback_data = data;
+> > +
+> > +	ctlr = qdata->h->ctlr;
+> > +	spin_lock(&ctlr->ms_lock);
+> > +	list_add_tail(&qdata->entry, &ctlr->ms_head);
+> > +	if (!ctlr->ms_queued) {
+> > +		ctlr->ms_queued = 1;
+> > +		ctlr->ms_sdev = sdev;
+> > +		queue_work(kmpath_rdacd, &ctlr->ms_work);
+> > +	}
+> > +	spin_unlock(&ctlr->ms_lock);
+> > +	return SCSI_DH_OK;
+> > +}
+> > +
+> > +static int rdac_activate(struct scsi_device *sdev,
+> > +				activate_complete fn, void *data)
+> >  {
+> >  	struct rdac_dh_data *h = get_rdac_data(sdev);
+> >  	int err = SCSI_DH_OK;
+> > @@ -536,8 +611,11 @@ static int rdac_activate(struct scsi_dev
+> >  		if (err != SCSI_DH_OK)
+> >  			goto done;
+> >  	}
+> > -	if (h->lun_state == RDAC_LUN_UNOWNED)
+> > -		err = send_mode_select(sdev, h);
+> > +	if (h->lun_state == RDAC_LUN_UNOWNED) {
+> > +		err = queue_mode_select(sdev, fn, data);
+> > +		if (err == SCSI_DH_OK)
+> > +			return 0;
+> > +	}
+> >  done:
+> >  	if (fn)
+> >  		fn(data, err);
+> > @@ -726,13 +804,26 @@ static int __init rdac_init(void)
+> >  	int r;
+> > 
+> >  	r = scsi_register_device_handler(&rdac_dh);
+> > -	if (r != 0)
+> > +	if (r != 0) {
+> >  		printk(KERN_ERR "Failed to register scsi device handler.");
+> > +		goto done;
+> > +	}
+> > +
+> > +	/*
+> > +	 * Create workqueue to handle mode selects for rdac
+> > +	 */
+> > +	kmpath_rdacd = create_singlethread_workqueue("kmpath_rdacd");
+> > +	if (!kmpath_rdacd) {
+> > +		scsi_unregister_device_handler(&rdac_dh);
+> > +		printk(KERN_ERR "kmpath_rdacd creation failed.\n");
+> > +	}
+> > +done:
+> >  	return r;
+> >  }
+> > 
+> >  static void __exit rdac_exit(void)
+> >  {
+> > +	destroy_workqueue(kmpath_rdacd);
+> >  	scsi_unregister_device_handler(&rdac_dh);
+> >  }
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> > in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
