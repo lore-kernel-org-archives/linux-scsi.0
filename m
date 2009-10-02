@@ -1,38 +1,36 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] dc395x.h: use bitops.h BIT macro
-Date: Fri, 02 Oct 2009 19:09:57 +0000
-Message-ID: <1254510597.3874.135.camel@mulgrave.site>
-References: <BD79186B4FD85F4B8E60E381CAEE190901DB7421@mi8nycmail19.Mi8.com>
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
+	<u.kleine-koenig@pengutronix.de>
+Subject: Re: [PATCH 02/34] move atp870u_remove to .devexit.text
+Date: Fri, 2 Oct 2009 21:13:17 +0200
+Message-ID: <20091002191317.GA17428@pengutronix.de>
+References: <20091001082607.GA2181@pengutronix.de> <1254385718-14254-2-git-send-email-u.kleine-koenig@pengutronix.de> <1254406802.3885.1.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52983 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753767AbZJBTKB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Oct 2009 15:10:01 -0400
-In-Reply-To: <BD79186B4FD85F4B8E60E381CAEE190901DB7421@mi8nycmail19.Mi8.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755124AbZJBTNY@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1254406802.3885.1.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-kernel@vger.kernel.org, Sam Ravnborg <sam@ravnborg.org>, Andrew Morton <akpm@linux-foundation.org>, Yang Hongyang <yanghy@cn.fujitsu.com>, Alan Cox <alan@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: H Hartley Sweeten <hartleys@visionengravers.com>
-Cc: linux-scsi@vger.kernel.org, oliver@neukum.name, aliakc@web.de, lenehan@twibble.org
 
-On Thu, 2009-10-01 at 19:28 -0400, H Hartley Sweeten wrote: 
-> Use BIT macro from linux/bitops.h instead of custom defines.
-> 
-> Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-> Cc: Oliver Neukum <oliver@neukum.name>
-> Cc: Ali Akcaagac <aliakc@web.de>
-> Cc: Jamie Lenehan <lenehan@twibble.org>
-> Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Hello,
 
-This is a really old driver; we try not to touch the ancient drivers at
-all unless absolutely necessary because they tend to come apart under
-the slightest pressure.
+On Thu, Oct 01, 2009 at 02:20:02PM +0000, James Bottomley wrote:
+> Given that practically every kernel on the planet is hotplug enabled
+> these days and that the savings on the very few that aren't from
+> discarding the devexit section is at most a page or two (and even arm
+> says they don't care about that), there doesn't seem to be any point
+> making these changes.  In fact, I think we can just kill devinit and
+> devexit as section markers.
+IMHO you should better kill CONFIG_HOTPLUG completely then.
 
-Unless you actually have the hardware and are willing to maintain it,
-I'm not really interested in conversions like this.
+Best regards
+Uwe
 
-James
-
-
+--=20
+Pengutronix e.K.                              | Uwe Kleine-K=F6nig     =
+       |
+Industrial Linux Solutions                    | http://www.pengutronix.=
+de/  |
