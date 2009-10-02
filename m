@@ -1,47 +1,38 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: Re: [PATCH] Add hpsa driver for HP Smart Array controllers.
-Date: Fri, 2 Oct 2009 14:16:26 -0500
-Message-ID: <20091002191626.GA17862@beardog.cce.hp.com>
-References: <20091001211705.15591.76403.stgit@beardog.cce.hp.com> <20091001143035.a83a7564.akpm@linux-foundation.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [Patch 0/6] lpfc 8.3.5: Update lpfc driver to revision 8.3.5
+Date: Fri, 2 Oct 2009 15:16:30 -0400
+Message-ID: <1254510990.32739.15.camel@ogier>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:1982 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753891AbZJBTPn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2009 15:15:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20091001143035.a83a7564.akpm@linux-foundation.org>
+Received: from emulex.emulex.com ([138.239.112.1]:63967 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091AbZJBT6q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2009 15:58:46 -0400
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id n92Jwpf6026923
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Oct 2009 12:58:51 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cce.hp.com, jowens@hp.com, mike.miller@hp.com
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Oct 01, 2009 at 02:30:35PM -0700, Andrew Morton wrote:
-> On Thu, 01 Oct 2009 16:25:30 -0500
-> "Stephen M. Cameron" <scameron@beardog.cce.hp.com> wrote:
-> 
-> > Add hpsa driver for HP Smart Array controllers.
-> > 
-> > This driver supports a subset of HP Smart Array Controllers.
-> > It is a SCSI alternative to the cciss driver.
-> 
-> Does it support all the devices which cciss supports?
-> 
-> IOW, do we have a plan here to remove the cciss driver or must we
-> maintain both drivers indefinitely?
+This patch set updates the lpfc driver to revision 8.3.5
 
-Andrew, et al.,
->From the lack of response I'm guessing my reply about phasing cciss out
-completely did not go over well. Or is that what the question meant?
+The patches for 8.3.5 include:
+- Bunches of small fixes to discovery, bugs, etc.  Split into 4 patches.
+- AER support
+- Update driver version to 8.3.4
 
-We purposely limited controller support in hpsa to try and prevent problems
-in the field. What's needed to get hpsa accepted? Add support for all
-hardware?
+The patches are prepared against scsi-misc-2.6
 
-While we do not want to maintain 2 drivers indefinitely we (HP) must
-continue to support cciss for some years to come.
 
-Any guidance is appreciated.
+-- james s[Patch 0/5] lpfc 8.3.3: Update lpfc driver to revision 8.3.3
 
--- mikem
+
+ Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
