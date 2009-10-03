@@ -1,84 +1,543 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.28 available
-Date: Fri, 02 Oct 2009 23:43:14 -0400
-Message-ID: <4AC6C852.60400@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi_debug: Thin provisioning
+Date: Sat, 03 Oct 2009 00:02:21 -0400
+Message-ID: <yq1eipldt0y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:58310 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754475AbZJCDnS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Oct 2009 23:43:18 -0400
+Received: from acsinet11.oracle.com ([141.146.126.233]:62406 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711AbZJCEC0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Oct 2009 00:02:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Eric Schwartz <emschwar@debian.org>, "Robin H. Johnson" <robbat2@gentoo.org>, xiao li - Sun Microsystems - Beijing China <Xiao.L@Sun.COM>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Douglas Gilbert <dgilbert@interlog.com>
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the linux kernel (lk) 2.6 and lk 2.4 series. Also included are
-ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
 
-This version adds these utilities: sg_get_lba_status,
-sg_read_block_limits and sg_unmap . Various changes made by
-www.t10.org since April 2009 are reflected in this version.
-A lot more thin provisioning support has been added. There
-is a copy of ChangeLog below.
+scsi_debug: Thin provisioning support
 
-For an overview of sg3_utils and downloads see this page:
-     http://sg.danny.cz/sg/sg3_utils.html
-The sg_dd utility has its own page at:
-     http://sg.danny.cz/sg/sg_dd.html
-The SG_IO ioctl is discussed at:
-     http://sg.danny.cz/sg/sg_io.html
-A full changelog can be found at:
-     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
+Implement support for thin provisioning in scsi_debug.  No actual memory
+de-allocation is taking place.  The intent is to emulate a thinly
+provisioned storage device, not to be one.
 
-A release announcement will be sent to freshmeat.net .
+There are four new module options:
 
-Changelog for sg3_utils-1.28 [20091002] [svn: r313]
-   - sg_unmap: new utility for thin provisioning
-     - add examples/sg_unmap_example.txt
-   - sg_get_lba_status: new utility for thin provisioning
-   - sg_read_block_limits: new utility for tape drives
-   - sg_logs: add cache memory statistics log (sub)page
-   - sg_vpd, sg_inq: extend Block limits VPD page (sbc3r19)
-   - sg_vpd: add Thin provisioning VPD page (sbc3r20) and
-             TapeAlert supported flags VPD page
-   - sg_inq: note VPD page support better in sg_vpd
-   - sg_persist: add transport specific transportID format
-     - allow transportIDs to be read from named file
-   - sg_opcodes: allow --opcode= option to take OP and SA
-     values (comma seperated)
-     - tweak print format, remove test code
-   - sg_requests: remove test code in progress calculation
-   - sg_reset: add target reset option
-   - sg_luns: reduce default maxlen to 8192 (for FreeBSD)
-   - sg_raw: extend max cdb length from 16 to 256 bytes
-     - align heap allocs to page boundaries
-   - sg_lib: sg_set_binary_mode() needs config.h included
-     - add progress indication sense data descriptor (0xa)
-     - change SG3_UTILS_* constants to SG_LIB_*
-     - decode service actions within persistent reserve in/out
-     - sync with spc4r21
-   - sg_cmds_extra: add sg_ll_unmap() and sg_ll_get_lba_status()
-   - sg_pt_linux: fix check condition but empty sense buffer; occurred
-     when sg v3 node used and /usr/include/linux/bsg.h visible
-     - major() macro grief, if present include <linux/kdev_t.h> and
-       use MAJOR() instead
-   - scripts/sas_disk_blink: moved from this package to sdparm
-   - utils/hxascdmp: in Windows set binary mode on read files
-   - examples/sg_persist_tst.sh: add PRIN read full status command
-   - sg_raw,sg_write_buffer,sg_write_long,sg_write_same: in Windows
-     set binary mode on read files
-   - sg_pt_win32: default to non-direct variant of SPT interface
-     - use './configure --enable-win32-spt-direct' to override
-     - non-direct data length set to 16 KB, extended if required
-   - debian: incorporate patch from debian sid
+ - unmap_granularity specifies the granularity at which to track mapped
+   blocks (specified in number of logical blocks).  2048 (1 MB) is a
+   realistic value for disk arrays although some may have a finer
+   granularity.
 
-Changelog for sg3_utils-1.27 [20090411] [svn: r250]
-....
+ - unmap_alignment specifies the first LBA which is naturally aligned on
+   an unmap_granularity boundary.
 
-Doug Gilbert
+ - unmap_max_desc specifies the maximum number of ranges that can be
+   unmapped using one UNMAP command.  If this is 0, only WRITE SAME is
+   supported and UNMAP will cause a check condition.
+
+ - unmap_max_blocks specifies the maximum number of blocks that can be
+   unmapped using a single UNMAP command.  Default is 0xffffffff.
+
+These parameters are reported in the new and extended block limits VPD.
+
+If unmap_granularity is specified the device is tagged as thin
+provisioning capable in READ CAPACITY(16).  A bitmap is allocated to
+track whether blocks are mapped or not.  A WRITE request will cause a
+block to be mapped.  So will WRITE SAME unless the UNMAP bit is set.
+
+Blocks can be unmapped using either WRITE SAME or UNMAP.  No accounting
+is done to track partial blocks.  This means that only whole blocks will
+be marked free.  This is how the array people tell me their firmwares
+work.
+
+GET LBA STATUS is also supported.  This command reports whether a block
+is mapped or not, and how long the adjoining mapped/unmapped extent is.
+
+The block allocation bitmap can also be viewed from user space via:
+
+	/sys/bus/pseudo/drivers/scsi_debug/map
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+---
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index fb9af20..6faa77e 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -44,6 +44,8 @@
+ 
+ #include <net/checksum.h>
+ 
++#include <asm/unaligned.h>
++
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+@@ -103,6 +105,10 @@ static const char * scsi_debug_version_date = "20070104";
+ #define DEF_ATO 1
+ #define DEF_PHYSBLK_EXP 0
+ #define DEF_LOWEST_ALIGNED 0
++#define DEF_UNMAP_MAX_BLOCKS 0
++#define DEF_UNMAP_MAX_DESC 0
++#define DEF_UNMAP_GRANULARITY 0
++#define DEF_UNMAP_ALIGNMENT 0
+ 
+ /* bit mask values for scsi_debug_opts */
+ #define SCSI_DEBUG_OPT_NOISE   1
+@@ -160,6 +166,10 @@ static int scsi_debug_guard = DEF_GUARD;
+ static int scsi_debug_ato = DEF_ATO;
+ static int scsi_debug_physblk_exp = DEF_PHYSBLK_EXP;
+ static int scsi_debug_lowest_aligned = DEF_LOWEST_ALIGNED;
++static int scsi_debug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
++static int scsi_debug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
++static int scsi_debug_unmap_granularity = DEF_UNMAP_GRANULARITY;
++static int scsi_debug_unmap_alignment = DEF_UNMAP_ALIGNMENT;
+ 
+ static int scsi_debug_cmnd_count = 0;
+ 
+@@ -221,7 +231,9 @@ static struct sdebug_queued_cmd queued_arr[SCSI_DEBUG_CANQUEUE];
+ 
+ static unsigned char * fake_storep;	/* ramdisk storage */
+ static unsigned char *dif_storep;	/* protection info */
++static void *map_storep;		/* provisioning map */
+ 
++static unsigned long map_size;
+ static int num_aborts = 0;
+ static int num_dev_resets = 0;
+ static int num_bus_resets = 0;
+@@ -299,6 +311,7 @@ static void get_data_transfer_info(unsigned char *cmd,
+ 				   unsigned long long *lba, unsigned int *num)
+ {
+ 	switch (*cmd) {
++	case WRITE_SAME_16:
+ 	case WRITE_16:
+ 	case READ_16:
+ 		*lba = (u64)cmd[9] | (u64)cmd[8] << 8 |
+@@ -317,6 +330,7 @@ static void get_data_transfer_info(unsigned char *cmd,
+ 		*num = (u32)cmd[9] | (u32)cmd[8] << 8 | (u32)cmd[7] << 16 |
+ 			(u32)cmd[6] << 24;
+ 		break;
++	case WRITE_SAME:
+ 	case WRITE_10:
+ 	case READ_10:
+ 	case XDWRITEREAD_10:
+@@ -673,6 +687,29 @@ static int inquiry_evpd_b0(unsigned char * arr)
+ 		arr[6] = (sdebug_store_sectors >> 8) & 0xff;
+ 		arr[7] = sdebug_store_sectors & 0xff;
+ 	}
++
++	if (scsi_debug_unmap_max_desc) {
++		unsigned int blocks;
++
++		if (scsi_debug_unmap_max_blocks)
++			blocks = scsi_debug_unmap_max_blocks;
++		else
++			blocks = 0xffffffff;
++
++		put_unaligned_be32(blocks, &arr[16]);
++		put_unaligned_be32(scsi_debug_unmap_max_desc, &arr[20]);
++	}
++
++	if (scsi_debug_unmap_alignment) {
++		put_unaligned_be32(scsi_debug_unmap_alignment, &arr[28]);
++		arr[28] |= 0x80; /* UGAVALID */
++	}
++
++	if (scsi_debug_unmap_granularity) {
++		put_unaligned_be32(scsi_debug_unmap_granularity, &arr[24]);
++		return 0x3c; /* Mandatory page length for thin provisioning */
++	}
++
+ 	return sizeof(vpdb0_data);
+ }
+ 
+@@ -956,6 +993,10 @@ static int resp_readcap16(struct scsi_cmnd * scp,
+ 	arr[11] = scsi_debug_sector_size & 0xff;
+ 	arr[13] = scsi_debug_physblk_exp & 0xf;
+ 	arr[14] = (scsi_debug_lowest_aligned >> 8) & 0x3f;
++
++	if (scsi_debug_unmap_granularity)
++		arr[14] |= 0x80; /* TPE */
++
+ 	arr[15] = scsi_debug_lowest_aligned & 0xff;
+ 
+ 	if (scsi_debug_dif) {
+@@ -1852,6 +1893,68 @@ out:
+ 	return ret;
+ }
+ 
++static unsigned int map_state(sector_t lba, unsigned int *num)
++{
++	unsigned int granularity, alignment, mapped;
++	sector_t block, next, end;
++
++	granularity = scsi_debug_unmap_granularity;
++	alignment = (granularity - scsi_debug_unmap_alignment) % granularity;
++	block = lba + alignment;
++	do_div(block, granularity);
++
++	mapped = test_bit(block, map_storep);
++
++	if (mapped)
++		next = find_next_zero_bit(map_storep, map_size, block);
++	else
++		next = find_next_bit(map_storep, map_size, block);
++
++	end = next * granularity - scsi_debug_unmap_alignment;
++	*num = end - lba;
++
++	return mapped;
++}
++
++static void map_region(sector_t lba, unsigned int len)
++{
++	unsigned int granularity, alignment;
++	sector_t end = lba + len;
++
++	granularity = scsi_debug_unmap_granularity;
++	alignment = (granularity - scsi_debug_unmap_alignment) % granularity;
++
++	while (lba < end) {
++		sector_t block = lba + alignment;
++
++		do_div(block, granularity);
++		set_bit(block, map_storep);
++
++		lba += granularity - ((lba + alignment) % granularity);
++	}
++}
++
++static void unmap_region(sector_t lba, unsigned int len)
++{
++	unsigned int granularity, alignment;
++	sector_t end = lba + len;
++
++	granularity = scsi_debug_unmap_granularity;
++	alignment = (granularity - scsi_debug_unmap_alignment) % granularity;
++
++	while (lba < end) {
++		sector_t block = lba + alignment;
++
++		do_div(block, granularity);
++
++		if ((lba + alignment) % granularity == 0 &&
++		    lba + granularity <= end)
++			clear_bit(block, map_storep);
++
++		lba += granularity - ((lba + alignment) % granularity);
++	}
++}
++
+ static int resp_write(struct scsi_cmnd *SCpnt, unsigned long long lba,
+ 		      unsigned int num, struct sdebug_dev_info *devip)
+ {
+@@ -1874,6 +1977,7 @@ static int resp_write(struct scsi_cmnd *SCpnt, unsigned long long lba,
+ 
+ 	write_lock_irqsave(&atomic_rw, iflags);
+ 	ret = do_device_access(SCpnt, devip, lba, num, 1);
++	map_region(lba, num);
+ 	write_unlock_irqrestore(&atomic_rw, iflags);
+ 	if (-1 == ret)
+ 		return (DID_ERROR << 16);
+@@ -1881,9 +1985,142 @@ static int resp_write(struct scsi_cmnd *SCpnt, unsigned long long lba,
+ 		 (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts))
+ 		printk(KERN_INFO "scsi_debug: write: cdb indicated=%u, "
+ 		       " IO sent=%d bytes\n", num * scsi_debug_sector_size, ret);
++
+ 	return 0;
+ }
+ 
++static int resp_write_same(struct scsi_cmnd *scmd, unsigned long long lba,
++		      unsigned int num, struct sdebug_dev_info *devip,
++			   u32 ei_lba, unsigned int unmap)
++{
++	unsigned long iflags;
++	unsigned long long i;
++	int ret;
++
++	ret = check_device_access_params(devip, lba, num);
++	if (ret)
++		return ret;
++
++	write_lock_irqsave(&atomic_rw, iflags);
++
++	if (unmap) {
++		unmap_region(lba, num);
++		goto out;
++	}
++
++	/* Else fetch one logical block */
++	ret = fetch_to_dev_buffer(scmd,
++				  fake_storep + (lba * scsi_debug_sector_size),
++				  scsi_debug_sector_size);
++
++	if (-1 == ret) {
++		write_unlock_irqrestore(&atomic_rw, iflags);
++		return (DID_ERROR << 16);
++	} else if ((ret < (num * scsi_debug_sector_size)) &&
++		 (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts))
++		printk(KERN_INFO "scsi_debug: write same: cdb indicated=%u, "
++		       " IO sent=%d bytes\n", num * scsi_debug_sector_size, ret);
++
++	/* Copy first sector to remaining blocks */
++	for (i = 1 ; i < num ; i++)
++		memcpy(fake_storep + ((lba + i) * scsi_debug_sector_size),
++		       fake_storep + (lba * scsi_debug_sector_size),
++		       scsi_debug_sector_size);
++
++	map_region(lba, num);
++out:
++	write_unlock_irqrestore(&atomic_rw, iflags);
++
++	return 0;
++}
++
++struct unmap_block_desc {
++	__be64	lba;
++	__be32	blocks;
++	__be32	__reserved;
++};
++
++static int resp_unmap(struct scsi_cmnd * scmd, struct sdebug_dev_info * devip)
++{
++	unsigned char *buf;
++	struct unmap_block_desc *desc;
++	unsigned int i, payload_len, descriptors;
++	int ret;
++
++	ret = check_readiness(scmd, 1, devip);
++	if (ret)
++		return ret;
++
++	payload_len = get_unaligned_be16(&scmd->cmnd[7]);
++	BUG_ON(scsi_bufflen(scmd) != payload_len);
++
++	descriptors = (payload_len - 8) / 16;
++
++	buf = kmalloc(scsi_bufflen(scmd), GFP_ATOMIC);
++	if (!buf)
++		return check_condition_result;
++
++	scsi_sg_copy_to_buffer(scmd, buf, scsi_bufflen(scmd));
++
++	BUG_ON(get_unaligned_be16(&buf[0]) != payload_len - 2);
++	BUG_ON(get_unaligned_be16(&buf[2]) != descriptors * 16);
++
++	desc = (void *)&buf[8];
++
++	for (i = 0 ; i < descriptors ; i++) {
++		unsigned long long lba = get_unaligned_be64(&desc[i].lba);
++		unsigned int num = get_unaligned_be32(&desc[i].blocks);
++
++		ret = check_device_access_params(devip, lba, num);
++		if (ret)
++			goto out;
++
++		unmap_region(lba, num);
++	}
++
++	ret = 0;
++
++out:
++	kfree(buf);
++
++	return ret;
++}
++
++#define SDEBUG_GET_LBA_STATUS_LEN 32
++
++static int resp_get_lba_status(struct scsi_cmnd * scmd,
++			       struct sdebug_dev_info * devip)
++{
++	unsigned long long lba;
++	unsigned int alloc_len, mapped, num;
++	unsigned char arr[SDEBUG_GET_LBA_STATUS_LEN];
++	int ret;
++
++	ret = check_readiness(scmd, 1, devip);
++	if (ret)
++		return ret;
++
++	lba = get_unaligned_be64(&scmd->cmnd[2]);
++	alloc_len = get_unaligned_be32(&scmd->cmnd[10]);
++
++	if (alloc_len < 24)
++		return 0;
++
++	ret = check_device_access_params(devip, lba, 1);
++	if (ret)
++		return ret;
++
++	mapped = map_state(lba, &num);
++
++	memset(arr, 0, SDEBUG_GET_LBA_STATUS_LEN);
++	put_unaligned_be32(16, &arr[0]);	/* Parameter Data Length */
++	put_unaligned_be64(lba, &arr[8]);	/* LBA */
++	put_unaligned_be32(num, &arr[16]);	/* Number of blocks */
++	arr[20] = !mapped;			/* mapped = 0, unmapped = 1 */
++
++	return fill_from_dev_buffer(scmd, arr, SDEBUG_GET_LBA_STATUS_LEN);
++}
++
+ #define SDEBUG_RLUN_ARR_SZ 256
+ 
+ static int resp_report_luns(struct scsi_cmnd * scp,
+@@ -2394,6 +2631,10 @@ module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
+ module_param_named(ato, scsi_debug_ato, int, S_IRUGO);
+ module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
+ module_param_named(lowest_aligned, scsi_debug_lowest_aligned, int, S_IRUGO);
++module_param_named(unmap_max_blocks, scsi_debug_unmap_max_blocks, int, S_IRUGO);
++module_param_named(unmap_max_desc, scsi_debug_unmap_max_desc, int, S_IRUGO);
++module_param_named(unmap_granularity, scsi_debug_unmap_granularity, int, S_IRUGO);
++module_param_named(unmap_alignment, scsi_debug_unmap_alignment, int, S_IRUGO);
+ 
+ MODULE_AUTHOR("Eric Youngdale + Douglas Gilbert");
+ MODULE_DESCRIPTION("SCSI debug adapter driver");
+@@ -2422,6 +2663,10 @@ MODULE_PARM_DESC(dix, "data integrity extensions mask (def=0)");
+ MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
+ MODULE_PARM_DESC(guard, "protection checksum: 0=crc, 1=ip (def=0)");
+ MODULE_PARM_DESC(ato, "application tag ownership: 0=disk 1=host (def=1)");
++MODULE_PARM_DESC(unmap_max_blocks, "max # of blocks can be unmapped in one cmd (def=0)");
++MODULE_PARM_DESC(unmap_max_desc, "max # of ranges that can be unmapped in one cmd (def=0)");
++MODULE_PARM_DESC(unmap_granularity, "thin provisioning granularity in blocks (def=0)");
++MODULE_PARM_DESC(unmap_alignment, "lowest aligned thin provisioning lba (def=0)");
+ 
+ static char sdebug_info[256];
+ 
+@@ -2780,6 +3025,23 @@ static ssize_t sdebug_ato_show(struct device_driver *ddp, char *buf)
+ }
+ DRIVER_ATTR(ato, S_IRUGO, sdebug_ato_show, NULL);
+ 
++static ssize_t sdebug_map_show(struct device_driver *ddp, char *buf)
++{
++	ssize_t count;
++
++	if (scsi_debug_unmap_granularity == 0)
++		return scnprintf(buf, PAGE_SIZE, "0-%u\n",
++				 sdebug_store_sectors);
++
++	count = bitmap_scnlistprintf(buf, PAGE_SIZE, map_storep, map_size);
++
++	buf[count++] = '\n';
++	buf[count++] = 0;
++
++	return count;
++}
++DRIVER_ATTR(map, S_IRUGO, sdebug_map_show, NULL);
++
+ 
+ /* Note: The following function creates attribute files in the
+    /sys/bus/pseudo/drivers/scsi_debug directory. The advantage of these
+@@ -2811,11 +3073,13 @@ static int do_create_driverfs_files(void)
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_dif);
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_guard);
+ 	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_ato);
++	ret |= driver_create_file(&sdebug_driverfs_driver, &driver_attr_map);
+ 	return ret;
+ }
+ 
+ static void do_remove_driverfs_files(void)
+ {
++	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_map);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_ato);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_guard);
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_dif);
+@@ -2952,6 +3216,29 @@ static int __init scsi_debug_init(void)
+ 		memset(dif_storep, 0xff, dif_size);
+ 	}
+ 
++	if (scsi_debug_unmap_granularity) {
++		unsigned int map_bytes;
++
++		map_size = (sdebug_store_sectors / scsi_debug_unmap_granularity);
++		map_bytes = map_size >> 3;
++		map_storep = vmalloc(map_bytes);
++
++		printk(KERN_INFO "scsi_debug_init: %lu provisioning blocks\n",
++		       map_size);
++
++		if (map_storep == NULL) {
++			printk(KERN_ERR "scsi_debug_init: out of mem. (MAP)\n");
++			ret = -ENOMEM;
++			goto free_vm;
++		}
++
++		memset(map_storep, 0x0, map_bytes);
++
++		/* Map first 1KB for partition table */
++		if (scsi_debug_num_parts)
++			map_region(0, 2);
++	}
++
+ 	ret = device_register(&pseudo_primary);
+ 	if (ret < 0) {
+ 		printk(KERN_WARNING "scsi_debug: device_register error: %d\n",
+@@ -3004,6 +3291,8 @@ bus_unreg:
+ dev_unreg:
+ 	device_unregister(&pseudo_primary);
+ free_vm:
++	if (map_storep)
++		vfree(map_storep);
+ 	if (dif_storep)
+ 		vfree(dif_storep);
+ 	vfree(fake_storep);
+@@ -3129,6 +3418,7 @@ int scsi_debug_queuecommand(struct scsi_cmnd *SCpnt, done_funct_t done)
+ 	int inj_dif = 0;
+ 	int inj_dix = 0;
+ 	int delay_override = 0;
++	int unmap = 0;
+ 
+ 	scsi_set_resid(SCpnt, 0);
+ 	if ((SCSI_DEBUG_OPT_NOISE & scsi_debug_opts) && cmd) {
+@@ -3234,13 +3524,15 @@ int scsi_debug_queuecommand(struct scsi_cmnd *SCpnt, done_funct_t done)
+ 		errsts = resp_readcap(SCpnt, devip);
+ 		break;
+ 	case SERVICE_ACTION_IN:
+-		if (SAI_READ_CAPACITY_16 != cmd[1]) {
++		if (cmd[1] == SAI_READ_CAPACITY_16)
++			errsts = resp_readcap16(SCpnt, devip);
++		else if (cmd[1] == SAI_GET_LBA_STATUS)
++			errsts = resp_get_lba_status(SCpnt, devip);
++		else {
+ 			mk_sense_buffer(devip, ILLEGAL_REQUEST,
+ 					INVALID_OPCODE, 0);
+ 			errsts = check_condition_result;
+-			break;
+ 		}
+-		errsts = resp_readcap16(SCpnt, devip);
+ 		break;
+ 	case MAINTENANCE_IN:
+ 		if (MI_REPORT_TARGET_PGS != cmd[1]) {
+@@ -3308,6 +3600,31 @@ int scsi_debug_queuecommand(struct scsi_cmnd *SCpnt, done_funct_t done)
+ 			errsts = illegal_condition_result;
+ 		}
+ 		break;
++	case WRITE_SAME_16:
++		if (cmd[1] & 0x8)
++			unmap = 1;
++		/* fall through */
++	case WRITE_SAME:
++		errsts = check_readiness(SCpnt, 0, devip);
++		if (errsts)
++			break;
++		get_data_transfer_info(cmd, &lba, &num, &ei_lba);
++		errsts = resp_write_same(SCpnt, lba, num, devip, ei_lba, unmap);
++		break;
++	case UNMAP:
++		errsts = check_readiness(SCpnt, 0, devip);
++		if (errsts)
++			break;
++
++		if (scsi_debug_unmap_max_desc == 0) {
++			mk_sense_buffer(devip, ILLEGAL_REQUEST,
++					INVALID_COMMAND_OPCODE, 0);
++			errsts = check_condition_result;
++			break;
++		}
++
++		errsts = resp_unmap(SCpnt, devip);
++		break;
+ 	case MODE_SENSE:
+ 	case MODE_SENSE_10:
+ 		errsts = resp_mode_sense(SCpnt, target, devip);
