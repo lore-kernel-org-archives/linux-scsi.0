@@ -1,66 +1,42 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: Thin provisioning
-Date: Sat, 03 Oct 2009 09:49:49 -0400
-Message-ID: <4AC7567D.2080507@interlog.com>
-References: <yq1eipldt0y.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
+From: stevec <stephenmcameron@gmail.com>
+Subject: Re: Add hpsa driver for HP Smart Array controllers.
+Date: Sat, 3 Oct 2009 06:22:21 -0700 (PDT)
+Message-ID: <b4c460e2-0e83-415a-b3ef-4b95188e5de4@o21g2000vbl.googlegroups.com>
+References: <dqBnV-3pF-5@gated-at.bofh.it> <dqWVs-3hD-15@gated-at.bofh.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:48496 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932139AbZJCNtu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 3 Oct 2009 09:49:50 -0400
-In-Reply-To: <yq1eipldt0y.fsf@sermon.lab.mkp.net>
+Received: from mail-yw0-f142.google.com ([209.85.211.142]:39454 "EHLO
+	mail-yw0-f142.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932211AbZJCOHK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Oct 2009 10:07:10 -0400
+In-Reply-To: <dqWVs-3hD-15@gated-at.bofh.it>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cce.hp.com, scameron@beardog.cce.hp.com
 
-Martin K. Petersen wrote:
-> scsi_debug: Thin provisioning support
-> 
-> Implement support for thin provisioning in scsi_debug.  No actual memory
-> de-allocation is taking place.  The intent is to emulate a thinly
-> provisioned storage device, not to be one.
-> 
-> There are four new module options:
-> 
->  - unmap_granularity specifies the granularity at which to track mapped
->    blocks (specified in number of logical blocks).  2048 (1 MB) is a
->    realistic value for disk arrays although some may have a finer
->    granularity.
-> 
->  - unmap_alignment specifies the first LBA which is naturally aligned on
->    an unmap_granularity boundary.
-> 
->  - unmap_max_desc specifies the maximum number of ranges that can be
->    unmapped using one UNMAP command.  If this is 0, only WRITE SAME is
->    supported and UNMAP will cause a check condition.
-> 
->  - unmap_max_blocks specifies the maximum number of blocks that can be
->    unmapped using a single UNMAP command.  Default is 0xffffffff.
-> 
-> These parameters are reported in the new and extended block limits VPD.
-> 
-> If unmap_granularity is specified the device is tagged as thin
-> provisioning capable in READ CAPACITY(16).  A bitmap is allocated to
-> track whether blocks are mapped or not.  A WRITE request will cause a
-> block to be mapped.  So will WRITE SAME unless the UNMAP bit is set.
-> 
-> Blocks can be unmapped using either WRITE SAME or UNMAP.  No accounting
-> is done to track partial blocks.  This means that only whole blocks will
-> be marked free.  This is how the array people tell me their firmwares
-> work.
-> 
-> GET LBA STATUS is also supported.  This command reports whether a block
-> is mapped or not, and how long the adjoining mapped/unmapped extent is.
-> 
-> The block allocation bitmap can also be viewed from user space via:
-> 
-> 	/sys/bus/pseudo/drivers/scsi_debug/map
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+On Oct 2, 4:30=A0pm, Rolf Eike Beer <eike-ker...@sf-tec.de> wrote:
+> Stephen M. Cameron wrote:
+> > +static const char *raid_label[] =3D { "0", "4", "1(1+0)", "5", "5+=
+1", "ADG",
+> > + =A0"UNKNOWN"
+> > +};
+> > +#define RAID_UNKNOWN (sizeof(raid_label) / sizeof(raid_label[0]) -=
+ 1)
+>
+> (ARRAY_SIZE(raid_label) - 1)
+>
+>
+[...]
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Thanks for the feedback.
+
+-- steve
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
