@@ -1,63 +1,78 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] sdparm 1.04 available
-Date: Sat, 03 Oct 2009 00:07:32 -0400
-Message-ID: <4AC6CE04.20901@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: Re: [2.6.31] Memory leak in SCSI initialization?
+Date: Sat, 3 Oct 2009 16:19:47 +0900
+Message-ID: <200910031619.GHF86400.QSVFFFLOMOtHOJ@I-love.SAKURA.ne.jp>
+References: <200909221318.IFD17141.OQLtSFJVOOFFMH@I-love.SAKURA.ne.jp>
+	<1253625194.5923.10.camel@concordia>
+	<1254508208.3874.131.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751514AbZJCEHg@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753413AbZJCHTw@vger.kernel.org>
+In-Reply-To: <1254508208.3874.131.camel@mulgrave.site>
 Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Tomas Fasth <tomfa@debian.org>, Martin Pitt <mpitt@debian.org>, kumba@gentoo.org
+To: James.Bottomley@suse.de, michael@ellerman.id.au
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org
 List-Id: linux-scsi@vger.kernel.org
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). The
-parameters are held in mode pages. Apart from SCSI devices
-(e.g. disks, tapes and enclosures) sdparm can be used on
-any device that uses a SCSI command set. Almost all CD/DVD/BD
-drives use the SCSI MMC set irrespective of the transport.
-sdparm also can decode VPD pages including the device
-identification page. Commands to start and stop the media;
-load and unload removable media and some other housekeeping
-functions are supported. sdparm supports both the linux
-kernel 2.4 and 2.6 series with ports to FreeBSD, Solaris,
-Tru64 and Windows.
+Hello.
 
-The version tracks changes in draft standards from
-www.t10.org since June 2008.
+James Bottomley wrote:
+> Can we verify this fixes the memory leak?
+I tested this patch on 2.6.31.1 and verified that
+the memory leak was solved by this patch.
 
-
-ChangeLog for sdparm-1.04 [20090920] [svn: r129]
-   - add SAT ATA Power condition mode page (sat2r06)
-   - add SBC Thin provisioning mode page (sbc3r20)
-   - add SBC Thin provisioning VPD page (sbc3r20)
-   - sync with spc4r21
-   - add Power condition, update extended inquiry VPD pages
-   - smc3: add Device capabilities + Extended device
-     capabilities + Transport geometry parameters mode pages
-   - prepare for Thin provisioning VPD and mode pages
-   - expand block limits VPD page
-   - update Power condition mode page
-   - rename SAS-2 phy mode page to Enhanced phy control (SAS)
-   - add ADC mode (sub)page place holders
-   - print mode page descriptors in full in more contexts
-   - add linux bsg support
-   - scripts/sas_disk_blink: moved here from sg3_utils package
-   - rework the '-w' option (win32) per sg_scan in sg3_utils
-   - change SDPARM_* constants to SG_LIB_*
-   - remove sdparm.html, refer to its url in sdparm.8
-   - sdparm.spec: correction to configure call
-
-ChangeLog for sdparm-1.03 [20080623] [svn: r96]
-....
-
-
-For more information and downloads see:
-     http://sg.danny.cz/sg/sdparm.html
-Note that the web site has changed since the previous release.
-
-A release announcement will be sent to freshmeat.net .
-
-Doug Gilbert
+Thank you.
+> 
+> ---
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index c447838..0547a7f 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -317,6 +317,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+>  out_device_destroy:
+>  	scsi_device_set_state(sdev, SDEV_DEL);
+>  	transport_destroy_device(&sdev->sdev_gendev);
+> +	put_device(&sdev->sdev_dev);
+>  	put_device(&sdev->sdev_gendev);
+>  out:
+>  	if (display_failure_msg)
+> @@ -957,6 +958,7 @@ static inline void scsi_destroy_sdev(struct scsi_device *sdev)
+>  	if (sdev->host->hostt->slave_destroy)
+>  		sdev->host->hostt->slave_destroy(sdev);
+>  	transport_destroy_device(&sdev->sdev_gendev);
+> +	put_device(&sdev->sdev_dev);
+>  	put_device(&sdev->sdev_gendev);
+>  }
+>  
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index fde5453..5c7eb63 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -864,10 +864,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>  		goto clean_device;
+>  	}
+>  
+> -	/* take a reference for the sdev_dev; this is
+> -	 * released by the sdev_class .release */
+> -	get_device(&sdev->sdev_gendev);
+> -
+>  	/* create queue files, which may be writable, depending on the host */
+>  	if (sdev->host->hostt->change_queue_depth)
+>  		error = device_create_file(&sdev->sdev_gendev, &sdev_attr_queue_depth_rw);
+> @@ -917,6 +913,7 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>  
+>  	device_del(&sdev->sdev_gendev);
+>  	transport_destroy_device(&sdev->sdev_gendev);
+> +	put_device(&sdev->sdev_dev);
+>  	put_device(&sdev->sdev_gendev);
+>  
+>  	return error;
+> @@ -1065,7 +1062,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+>  		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+>  
+>  	device_initialize(&sdev->sdev_dev);
+> -	sdev->sdev_dev.parent = &sdev->sdev_gendev;
+> +	sdev->sdev_dev.parent = get_device(&sdev->sdev_gendev);
+>  	sdev->sdev_dev.class = &sdev_class;
+>  	dev_set_name(&sdev->sdev_dev, "%d:%d:%d:%d",
+>  		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
