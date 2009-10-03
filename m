@@ -1,46 +1,84 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [PATCH 1/4] scsi_dh: Change the scsidh_activate interface to	be
- asynchronous
-Date: Fri, 2 Oct 2009 17:02:51 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474ED8912@cosmail01.lsi.com>
-References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
-	 <20090930020817.11455.52042.sendpatchset@chandra-ubuntu>
-	 <E463DF2B2E584B4A82673F53D62C2EF474ED88E7@cosmail01.lsi.com>
- <1254522985.747.3.camel@chandra-ubuntu>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.28 available
+Date: Fri, 02 Oct 2009 23:43:14 -0400
+Message-ID: <4AC6C852.60400@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:45526 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752327AbZJBXDL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Oct 2009 19:03:11 -0400
-In-Reply-To: <1254522985.747.3.camel@chandra-ubuntu>
-Content-Language: en-US
+Received: from smtp.infotech.no ([82.134.31.41]:58310 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754475AbZJCDnS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Oct 2009 23:43:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "sekharan@linux.vnet.ibm.com" <sekharan@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>, "berthiaume_wayne@emc.com" <berthiaume_wayne@emc.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Eric Schwartz <emschwar@debian.org>, "Robin H. Johnson" <robbat2@gentoo.org>, xiao li - Sun Microsystems - Beijing China <Xiao.L@Sun.COM>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-DQo+IE9uIEZyaSwgMjAwOS0xMC0wMiBhdCAxNjowNCAtMDYwMCwgTW9nZXIsIEJhYnUgd3JvdGU6
-DQo+ID4gQ2hhbmRyYSwgSSBoYXZlIG9uZSBjb21tZW50IG9uIHRoaXMgcGF0Y2guLg0KPiA+DQo+
-ID4gPiAgc3RhdGljIGlubGluZSBpbnQgc2NzaV9kaF9oYW5kbGVyX2V4aXN0KGNvbnN0IGNoYXIg
-Km5hbWUpDQo+ID4gPiBJbmRleDogbGludXgtMi42LjMxL2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFu
-ZGxlci9zY3NpX2RoLmMNCj4gPiA+ID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCj4gPiA+IC0tLSBsaW51eC0yLjYuMzEu
-b3JpZy9kcml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaC5jDQo+ID4gPiArKysgbGlu
-dXgtMi42LjMxL2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoLmMNCj4gPiA+IEBA
-IC0yMTQsNyArMjE0LDcgQEAgc3RvcmVfZGhfc3RhdGUoc3RydWN0IGRldmljZSAqZGV2LCBzdHJ1
-Yw0KPiA+ID4gIAkJCSAqIEFjdGl2YXRlIGEgZGV2aWNlIGhhbmRsZXINCj4gPiA+ICAJCQkgKi8N
-Cj4gPiA+ICAJCQlpZiAoc2NzaV9kaC0+YWN0aXZhdGUpDQo+ID4gPiAtCQkJCWVyciA9IHNjc2lf
-ZGgtPmFjdGl2YXRlKHNkZXYpOw0KPiA+ID4gKwkJCQllcnIgPSBzY3NpX2RoLT5hY3RpdmF0ZShz
-ZGV2LCBOVUxMLCBOVUxMKTsNCj4gPg0KPiA+DQo+ID4gVGhpcyBtaWdodCBjYXVzZSBwcm9ibGVt
-cyBpbiBoYW5kbGVycy4gIFdlIGRvbuKAmXQgZG8gTlVMTCBjaGVjayBpbg0KPiBhdHRhY2ggcm91
-dGluZS4NCj4gDQo+IEkgYXNzdW1lIHlvdSBtZWFudCBhY3RpdmF0ZSgpLCB3aGVuIHlvdSBtZW50
-aW9uICJhdHRhY2giIGFib3ZlLg0KPiANCj4gQXQgZXZlcnkgcGxhY2Ugd2hlcmUgdGhlIGNhbGxi
-YWNrIGZ1bmN0aW9uIGlzIGNhbGxlZCwgd2UgZmlyc3QgY2hlY2sNCj4gdGhhdCB0aGUgY2FsbGJh
-Y2sgZnVuY3Rpb24gaXMgbm90IE5VTEwuDQo+IA0KPiBDYW4geW91IHBvaW50IG1lIGlmIEkgbWlz
-c2VkIHNvbWUgcGxhY2UuDQo+IA0KDQpTb3JyeSBmb3IgdGhlIGNvbmZ1c2lvbi4uIFllcywgSSBt
-ZWFudCBhY3RpdmF0ZS4gDQpZb3UgYXJlIHJpZ2h0LiBBbGwgdGhlIGhhbmRsZXJzIGNoZWNrIGZv
-ciBOVUxMIGJlZm9yZSBjYWxsaW5nLiBXZSBhcmUgZ29vZCBoZXJlLi4NCkkgbWlzcmVhZCB0aGUg
-Y29kZS4uDQo=
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the linux kernel (lk) 2.6 and lk 2.4 series. Also included are
+ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
+
+This version adds these utilities: sg_get_lba_status,
+sg_read_block_limits and sg_unmap . Various changes made by
+www.t10.org since April 2009 are reflected in this version.
+A lot more thin provisioning support has been added. There
+is a copy of ChangeLog below.
+
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+The sg_dd utility has its own page at:
+     http://sg.danny.cz/sg/sg_dd.html
+The SG_IO ioctl is discussed at:
+     http://sg.danny.cz/sg/sg_io.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
+
+A release announcement will be sent to freshmeat.net .
+
+Changelog for sg3_utils-1.28 [20091002] [svn: r313]
+   - sg_unmap: new utility for thin provisioning
+     - add examples/sg_unmap_example.txt
+   - sg_get_lba_status: new utility for thin provisioning
+   - sg_read_block_limits: new utility for tape drives
+   - sg_logs: add cache memory statistics log (sub)page
+   - sg_vpd, sg_inq: extend Block limits VPD page (sbc3r19)
+   - sg_vpd: add Thin provisioning VPD page (sbc3r20) and
+             TapeAlert supported flags VPD page
+   - sg_inq: note VPD page support better in sg_vpd
+   - sg_persist: add transport specific transportID format
+     - allow transportIDs to be read from named file
+   - sg_opcodes: allow --opcode= option to take OP and SA
+     values (comma seperated)
+     - tweak print format, remove test code
+   - sg_requests: remove test code in progress calculation
+   - sg_reset: add target reset option
+   - sg_luns: reduce default maxlen to 8192 (for FreeBSD)
+   - sg_raw: extend max cdb length from 16 to 256 bytes
+     - align heap allocs to page boundaries
+   - sg_lib: sg_set_binary_mode() needs config.h included
+     - add progress indication sense data descriptor (0xa)
+     - change SG3_UTILS_* constants to SG_LIB_*
+     - decode service actions within persistent reserve in/out
+     - sync with spc4r21
+   - sg_cmds_extra: add sg_ll_unmap() and sg_ll_get_lba_status()
+   - sg_pt_linux: fix check condition but empty sense buffer; occurred
+     when sg v3 node used and /usr/include/linux/bsg.h visible
+     - major() macro grief, if present include <linux/kdev_t.h> and
+       use MAJOR() instead
+   - scripts/sas_disk_blink: moved from this package to sdparm
+   - utils/hxascdmp: in Windows set binary mode on read files
+   - examples/sg_persist_tst.sh: add PRIN read full status command
+   - sg_raw,sg_write_buffer,sg_write_long,sg_write_same: in Windows
+     set binary mode on read files
+   - sg_pt_win32: default to non-direct variant of SPT interface
+     - use './configure --enable-win32-spt-direct' to override
+     - non-direct data length set to 16 KB, extended if required
+   - debian: incorporate patch from debian sid
+
+Changelog for sg3_utils-1.27 [20090411] [svn: r250]
+....
+
+Doug Gilbert
