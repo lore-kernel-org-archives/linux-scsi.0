@@ -1,55 +1,86 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Add hpsa driver for HP Smart Array controllers.
-Date: Mon, 05 Oct 2009 14:43:01 +0200
-Message-ID: <4AC9E9D5.6080809@suse.de>
-References: <20091001211705.15591.76403.stgit@beardog.cce.hp.com> <20091001143035.a83a7564.akpm@linux-foundation.org> <20091001214239.GA15691@beardog.cce.hp.com>
+Subject: Re: [PATCH 0/4] scsi_dh: Make scsi_dh_activate
+	asynchronous
+Date: Mon, 05 Oct 2009 15:01:15 +0200
+Message-ID: <4AC9EE1B.7030702@suse.de>
+References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36626 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753193AbZJEMnj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Oct 2009 08:43:39 -0400
-In-Reply-To: <20091001214239.GA15691@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, dm-devel@redhat.com, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, James.Bottomley@HansenPartnership.com, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Mike Miller wrote:
-> On Thu, Oct 01, 2009 at 02:30:35PM -0700, Andrew Morton wrote:
->> On Thu, 01 Oct 2009 16:25:30 -0500
->> "Stephen M. Cameron" <scameron@beardog.cce.hp.com> wrote:
->>
->>> Add hpsa driver for HP Smart Array controllers.
->>>
->>> This driver supports a subset of HP Smart Array Controllers.
->>> It is a SCSI alternative to the cciss driver.
->> Does it support all the devices which cciss supports?
->>
->> IOW, do we have a plan here to remove the cciss driver or must we
->> maintain both drivers indefinitely?
+Chandra Seetharaman wrote:
+> Hello All,
 >=20
-> Andrew,
-> The hpsa driver supports only the latest generation of Smart Array
-> controllers plus the P400 and P800. The goal was to have minimal over=
-lap but
-> if we included only the very latest I suspect little testing would be=
- done
-> because of the availability of new hardware.
+> Currently, device handlers process path activation in series. This lead=
+s
+> to a lot of time delay when more than 100 luns are involved. For exampl=
+e,
+> with lsi rdac 100+ luns take about 12-15 minutes. This was found by Mog=
+er
+> Babu of LSI.
 >=20
-> No new controllers will be added to cciss once hpsa is accepted. We'r=
+> This time delay can be avoided if we can do the activations asynchronou=
+sly.
+> By making scsi_dh_activate() async, we can give the device handlers an
+> oppurtunity to decide on how to send the device activation down the wir=
 e
-> looking at supporting both drivers for 3 or 4 years until cciss can b=
-e
-> phased out completely.
+> to make the turn around time faster. They can send the commands
+> asynchronously or send them in batches.
 >=20
-Yeah!
+> I brought up this issue on the mailing list
+> (http://marc.info/?l=3Dlinux-scsi&m=3D123888063818755&w=3D2) and provid=
+ed a
+> set of patch a loooong while back http://marc.info/?l=3Dlinux-scsi&m=3D=
+124088712709821&w=3D2
+>=20
+> This set of patches applies cleanly on 2.6.31 and I tested the rdac han=
+dler
+> on the same.
+>=20
+> Please review and provide comments.
+>=20
+> This set of patched adds asynchronous support for rdac, hp, and alua ha=
+ndlers.
+>=20
+Hmm. IIRC we added the synchronous mode by request of LSI/IBM, as the RDA=
+C
+handler could only support on MODE SELECT command at a time.
+If LSI checked this, okay, no objections.
 
-Thanks, Mike and Stephen, for the effort you put into this.
-Very much appreciated.
+However: The main reason why we're getting flooded with MODE SELECT comma=
+nds
+is that the RDAC handler switches _each LUN_, not the entire controller.
+Seeing that the controller simply cannot cope with the resulting MODE SEL=
+ECT
+flood wouldn't it be more sensible to switch the entire controller here?
+
+After all, we're trying to address a communication failure between the
+HBA and the controller, not a failure between the controller and the LUN.
+And by that reasoning switching individual LUNs is quite pointless as we
+have to switch _all_ LUNs handled by this controller eventually.
+
+So I would suggest to first issue a MODE SENSE command to check which LUN=
+s
+are currently handled by this controller and then switch those LUNs in
+one go. This way we would be sending quite a few MODE SENSE commands,
+but I was under the impression that those do not have any restriction.
+
+I will see to draw up a patch.
 
 Cheers,
 
@@ -59,8 +90,3 @@ Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
 GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
