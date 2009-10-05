@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH Resend] mpt2sas : PPC (power pc) endian bug fix's
-Date: Mon, 5 Oct 2009 15:53:06 +0530
-Message-ID: <20091005102253.GB16801@lsi.com>
+Subject: [PATCH Resend] mpt2sas : Add support for RAID Action System Shutdown Initiated at OS shutdown
+Date: Mon, 5 Oct 2009 15:56:56 +0530
+Message-ID: <20091005102650.GC16801@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:42728 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932588AbZJEKrt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Oct 2009 06:47:49 -0400
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:42762 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932550AbZJEKvd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Oct 2009 06:51:33 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,201 +16,261 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Resending this patch. Removing "Hunk successful" warning.
-Original patch had subject :
-" [PATCH 16/20] mpt2sas : PPC (powerpc) endian bug fix's" 
-sent on 9/23/2009. 
+Resending patch.
+Original patch subject line :
+" [PATCH 18/20] mpt2sas : Add support for RAID Action System Shutdown Initiated at 
+OS shutdwon" sent on 09/23/2009.
 
 Consider this patch as update of original patch.
 
-(1) EEDP(End to End data protection) was not working. This was due to not
-setting EEDP BlockSize and Flags to little endian format in the message
-frame.
-(2) Some expander sysfs attributes were not getting set properly.  The sas
-format was not getting set due to endian issues with sas_format field in the
-struct rep_manu_reply. Since sas_format was not set properly, the
-component_vendor_id, component_revision_id, and component_id were not set.
-(3) In _transport_smp_handler: we don't need to convert the smid from little
-endian to cpu prior to calling mpt2sas_base_free_smid, because its allready
-in cpu format. (4) Some loginfos and ioc status were not xonverted from
-little endian to cpu.
+(1) Added new function _scsih_ir_shutdown.  This function will issue the
+MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED request via
+MPI2_FUNCTION_RAID_ACTION. The function will wait 10 seconds for reply
+message frame, then print out the ioc status and loginfo.  This function is
+only called when there are raid volumes present.
+
+(2) Add shutdown callback in the struct pci_driver object scsih_driver. This
+will be called only when the system is shutting down. From this function, we
+will call _scsih_ir_shutdown mentioned above.
+
+(3) Add support in _scsih_remove to call _scsih_ir_shutdown. The function
+_scsih_remove will be called when the driver is unloaded (and system is
+still running).
+
+scsih internal command contex is added to send internal message frames
+from mpt2sas_scsih.c.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Eric Moore <Eric.moore@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index db5e367..6422e25 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -2949,6 +2949,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 	Mpi2IOCInitReply_t mpi_reply;
- 	int r;
- 	struct timeval current_time;
-+	u16 ioc_status;
- 
- 	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n", ioc->name,
- 	    __func__));
-@@ -3028,7 +3029,8 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 		return r;
- 	}
- 
--	if (mpi_reply.IOCStatus != MPI2_IOCSTATUS_SUCCESS ||
-+	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
-+	if (ioc_status != MPI2_IOCSTATUS_SUCCESS ||
- 	    mpi_reply.IOCLogInfo) {
- 		printk(MPT2SAS_ERR_FMT "%s: failed\n", ioc->name, __func__);
- 		r = -EIO;
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index afdb4f3..84a124f 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -848,8 +848,9 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 		printk(MPT2SAS_DEBUG_FMT "TASK_MGMT: "
- 		    "IOCStatus(0x%04x), IOCLogInfo(0x%08x), "
- 		    "TerminationCount(0x%08x)\n", ioc->name,
--		    tm_reply->IOCStatus, tm_reply->IOCLogInfo,
--		    tm_reply->TerminationCount);
-+		    le16_to_cpu(tm_reply->IOCStatus),
-+		    le32_to_cpu(tm_reply->IOCLogInfo),
-+		    le32_to_cpu(tm_reply->TerminationCount));
- 	}
- #endif
- 	/* copy out xdata to user */
-@@ -1411,7 +1412,7 @@ _ctl_diag_register_2(struct MPT2SAS_ADAPTER *ioc,
- 	} else {
- 		printk(MPT2SAS_DEBUG_FMT "%s: ioc_status(0x%04x) "
- 		    "log_info(0x%08x)\n", ioc->name, __func__,
--		    ioc_status, mpi_reply->IOCLogInfo);
-+		    ioc_status, le32_to_cpu(mpi_reply->IOCLogInfo));
- 		rc = -EFAULT;
- 	}
- 
-@@ -1756,7 +1757,7 @@ _ctl_send_release(struct MPT2SAS_ADAPTER *ioc, u8 buffer_type, u8 *issue_reset)
- 	} else {
- 		printk(MPT2SAS_DEBUG_FMT "%s: ioc_status(0x%04x) "
- 		    "log_info(0x%08x)\n", ioc->name, __func__,
--		    ioc_status, mpi_reply->IOCLogInfo);
-+		    ioc_status, le32_to_cpu(mpi_reply->IOCLogInfo));
- 		rc = -EFAULT;
- 	}
- 
-@@ -2017,7 +2018,7 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
- 	} else {
- 		printk(MPT2SAS_DEBUG_FMT "%s: ioc_status(0x%04x) "
- 		    "log_info(0x%08x)\n", ioc->name, __func__,
--		    ioc_status, mpi_reply->IOCLogInfo);
-+		    ioc_status, le32_to_cpu(mpi_reply->IOCLogInfo));
- 		rc = -EFAULT;
- 	}
- 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 7efb6ab..eb51fe9 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -492,12 +492,14 @@ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
+  * @msix_table_backup: backup msix table
+  * @scsi_io_cb_idx: shost generated commands
+  * @tm_cb_idx: task management commands
++ * @scsih_cb_idx: scsih internal commands
+  * @transport_cb_idx: transport internal commands
+  * @ctl_cb_idx: clt internal commands
+  * @base_cb_idx: base internal commands
+  * @config_cb_idx: base internal commands
+  * @base_cmds:
+  * @transport_cmds:
++ * @scsih_cmds:
+  * @tm_cmds:
+  * @ctl_cmds:
+  * @config_cmds:
+@@ -624,6 +626,7 @@ struct MPT2SAS_ADAPTER {
+ 	u8		scsi_io_cb_idx;
+ 	u8		tm_cb_idx;
+ 	u8		transport_cb_idx;
++	u8		scsih_cb_idx;
+ 	u8		ctl_cb_idx;
+ 	u8		base_cb_idx;
+ 	u8		config_cb_idx;
+@@ -631,6 +634,7 @@ struct MPT2SAS_ADAPTER {
+ 	u8		tm_sas_control_cb_idx;
+ 	struct _internal_cmd base_cmds;
+ 	struct _internal_cmd transport_cmds;
++	struct _internal_cmd scsih_cmds;
+ 	struct _internal_cmd tm_cmds;
+ 	struct _internal_cmd ctl_cmds;
+ 	struct _internal_cmd config_cmds;
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 6f5e2e4..d0d6672 100644
+index c81e842..5916bdd 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2775,8 +2775,6 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 	else
- 		return;
+@@ -76,6 +76,7 @@ static u8 tm_cb_idx = -1;
+ static u8 ctl_cb_idx = -1;
+ static u8 base_cb_idx = -1;
+ static u8 transport_cb_idx = -1;
++static u8 scsih_cb_idx = -1;
+ static u8 config_cb_idx = -1;
+ static int mpt_ids;
  
--	mpi_request->EEDPBlockSize = scmd->device->sector_size;
--
- 	switch (prot_type) {
- 	case SCSI_PROT_DIF_TYPE1:
- 
-@@ -2784,8 +2782,7 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 		* enable ref/guard checking
- 		* auto increment ref tag
- 		*/
--		mpi_request->EEDPFlags = eedp_flags |
--		    MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
-+		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
- 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
- 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
- 		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
-@@ -2798,11 +2795,11 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 		/*
- 		* enable guard checking
- 		*/
--		mpi_request->EEDPFlags = eedp_flags |
--		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
--
-+		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
- 		break;
- 	}
-+	mpi_request->EEDPBlockSize = cpu_to_le32(scmd->device->sector_size);
-+	mpi_request->EEDPFlags = cpu_to_le16(eedp_flags);
+@@ -3794,6 +3795,40 @@ _scsih_expander_add(struct MPT2SAS_ADAPTER *ioc, u16 handle)
  }
  
  /**
-@@ -4395,6 +4392,7 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
- #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
- 	Mpi2EventDataSasBroadcastPrimitive_t *event_data = fw_event->event_data;
- #endif
-+	u16 ioc_status;
- 	dewtprintk(ioc, printk(MPT2SAS_DEBUG_FMT "broadcast primative: "
- 	    "phy number(%d), width(%d)\n", ioc->name, event_data->PhyNum,
- 	    event_data->PortWidth));
-@@ -4428,8 +4426,9 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
- 		mpt2sas_scsih_issue_tm(ioc, handle, lun,
- 		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid, 30);
- 		ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
--
--		if ((mpi_reply->IOCStatus == MPI2_IOCSTATUS_SUCCESS) &&
-+		ioc_status = le16_to_cpu(mpi_reply->IOCStatus)
-+		    & MPI2_IOCSTATUS_MASK;
-+		if ((ioc_status == MPI2_IOCSTATUS_SUCCESS) &&
- 		    (mpi_reply->ResponseCode ==
- 		     MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED ||
- 		     mpi_reply->ResponseCode ==
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index 8030bc2..3a82872 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -258,8 +258,7 @@ struct rep_manu_reply{
- 	u8 response_length;
- 	u16 expander_change_count;
- 	u8 reserved0[2];
--	u8 sas_format:1;
--	u8 reserved1:7;
-+	u8 sas_format;
- 	u8 reserved2[3];
- 	u8 vendor_id[SAS_EXPANDER_VENDOR_ID_LEN];
- 	u8 product_id[SAS_EXPANDER_PRODUCT_ID_LEN];
-@@ -374,7 +373,8 @@ _transport_expander_report_manufacture(struct MPT2SAS_ADAPTER *ioc,
- 	mpi_request->VP_ID = 0;
- 	sas_address_le = (u64 *)&mpi_request->SASAddress;
- 	*sas_address_le = cpu_to_le64(sas_address);
--	mpi_request->RequestDataLength = sizeof(struct rep_manu_request);
-+	mpi_request->RequestDataLength =
-+	    cpu_to_le16(sizeof(struct rep_manu_request));
- 	psge = &mpi_request->SGL;
++ * _scsih_done -  scsih callback handler.
++ * @ioc: per adapter object
++ * @smid: system request message index
++ * @msix_index: MSIX table index supplied by the OS
++ * @reply: reply message frame(lower 32bit addr)
++ *
++ * Callback handler when sending internal generated message frames.
++ * The callback index passed is `ioc->scsih_cb_idx`
++ *
++ * Return 1 meaning mf should be freed from _base_interrupt
++ *        0 means the mf is freed from this function.
++ */
++static u8
++_scsih_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
++{
++	MPI2DefaultReply_t *mpi_reply;
++
++	mpi_reply =  mpt2sas_base_get_reply_virt_addr(ioc, reply);
++	if (ioc->scsih_cmds.status == MPT2_CMD_NOT_USED)
++		return 1;
++	if (ioc->scsih_cmds.smid != smid)
++		return 1;
++	ioc->scsih_cmds.status |= MPT2_CMD_COMPLETE;
++	if (mpi_reply) {
++		memcpy(ioc->scsih_cmds.reply, mpi_reply,
++		    mpi_reply->MsgLength*4);
++		ioc->scsih_cmds.status |= MPT2_CMD_REPLY_VALID;
++	}
++	ioc->scsih_cmds.status &= ~MPT2_CMD_PENDING;
++	complete(&ioc->scsih_cmds.done);
++	return 1;
++}
++
++/**
+  * _scsih_expander_remove - removing expander object
+  * @ioc: per adapter object
+  * @sas_address: expander sas_address
+@@ -5854,9 +5889,99 @@ _scsih_expander_node_remove(struct MPT2SAS_ADAPTER *ioc,
+ }
  
- 	/* WRITE sgel first */
-@@ -437,8 +437,8 @@ _transport_expander_report_manufacture(struct MPT2SAS_ADAPTER *ioc,
- 		     SAS_EXPANDER_PRODUCT_ID_LEN);
- 		strncpy(edev->product_rev, manufacture_reply->product_rev,
- 		     SAS_EXPANDER_PRODUCT_REV_LEN);
--		edev->level = manufacture_reply->sas_format;
--		if (manufacture_reply->sas_format) {
-+		edev->level = manufacture_reply->sas_format & 1;
-+		if (edev->level) {
- 			strncpy(edev->component_vendor_id,
- 			    manufacture_reply->component_vendor_id,
- 			     SAS_EXPANDER_COMPONENT_VENDOR_ID_LEN);
-@@ -1116,7 +1116,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	dma_addr_out = pci_map_single(ioc->pdev, bio_data(req->bio),
- 		blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
- 	if (!dma_addr_out) {
--		mpt2sas_base_free_smid(ioc, le16_to_cpu(smid));
-+		mpt2sas_base_free_smid(ioc, smid);
- 		goto unmap;
+ /**
++ * _scsih_ir_shutdown - IR shutdown notification
++ * @ioc: per adapter object
++ *
++ * Sending RAID Action to alert the Integrated RAID subsystem of the IOC that
++ * the host system is shutting down.
++ *
++ * Return nothing.
++ */
++static void
++_scsih_ir_shutdown(struct MPT2SAS_ADAPTER *ioc)
++{
++	Mpi2RaidActionRequest_t *mpi_request;
++	Mpi2RaidActionReply_t *mpi_reply;
++	u16 smid;
++
++	/* is IR firmware build loaded ? */
++	if (!ioc->ir_firmware)
++		return;
++
++	/* are there any volumes ? */
++	if (list_empty(&ioc->raid_device_list))
++		return;
++
++	mutex_lock(&ioc->scsih_cmds.mutex);
++
++	if (ioc->scsih_cmds.status != MPT2_CMD_NOT_USED) {
++		printk(MPT2SAS_ERR_FMT "%s: scsih_cmd in use\n",
++		    ioc->name, __func__);
++		goto out;
++	}
++	ioc->scsih_cmds.status = MPT2_CMD_PENDING;
++
++	smid = mpt2sas_base_get_smid(ioc, ioc->scsih_cb_idx);
++	if (!smid) {
++		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
++		    ioc->name, __func__);
++		ioc->scsih_cmds.status = MPT2_CMD_NOT_USED;
++		goto out;
++	}
++
++	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
++	ioc->scsih_cmds.smid = smid;
++	memset(mpi_request, 0, sizeof(Mpi2RaidActionRequest_t));
++
++	mpi_request->Function = MPI2_FUNCTION_RAID_ACTION;
++	mpi_request->Action = MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED;
++
++	printk(MPT2SAS_INFO_FMT "IR shutdown (sending)\n", ioc->name);
++	init_completion(&ioc->scsih_cmds.done);
++	mpt2sas_base_put_smid_default(ioc, smid);
++	wait_for_completion_timeout(&ioc->scsih_cmds.done, 10*HZ);
++
++	if (!(ioc->scsih_cmds.status & MPT2_CMD_COMPLETE)) {
++		printk(MPT2SAS_ERR_FMT "%s: timeout\n",
++		    ioc->name, __func__);
++		goto out;
++	}
++
++	if (ioc->scsih_cmds.status & MPT2_CMD_REPLY_VALID) {
++		mpi_reply = ioc->scsih_cmds.reply;
++
++		printk(MPT2SAS_INFO_FMT "IR shutdown (complete): "
++		    "ioc_status(0x%04x), loginfo(0x%08x)\n",
++		    ioc->name, le16_to_cpu(mpi_reply->IOCStatus),
++		    le32_to_cpu(mpi_reply->IOCLogInfo));
++	}
++
++ out:
++	ioc->scsih_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_unlock(&ioc->scsih_cmds.mutex);
++}
++
++/**
++ * _scsih_shutdown - routine call during system shutdown
++ * @pdev: PCI device struct
++ *
++ * Return nothing.
++ */
++static void
++_scsih_shutdown(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	_scsih_ir_shutdown(ioc);
++	mpt2sas_base_detach(ioc);
++}
++
++/**
+  * _scsih_remove - detach and remove add host
+  * @pdev: PCI device struct
+  *
++ * Routine called when unloading the driver.
+  * Return nothing.
+  */
+ static void __devexit
+@@ -5913,7 +6038,7 @@ _scsih_remove(struct pci_dev *pdev)
  	}
  
-@@ -1134,7 +1134,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 	dma_addr_in = pci_map_single(ioc->pdev, bio_data(rsp->bio),
- 				     blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
- 	if (!dma_addr_in) {
--		mpt2sas_base_free_smid(ioc, le16_to_cpu(smid));
-+		mpt2sas_base_free_smid(ioc, smid);
- 		goto unmap;
- 	}
+ 	sas_remove_host(shost);
+-	mpt2sas_base_detach(ioc);
++	_scsih_shutdown(pdev);
+ 	list_del(&ioc->list);
+ 	scsi_remove_host(shost);
+ 	scsi_host_put(shost);
+@@ -6097,6 +6222,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ioc->ctl_cb_idx = ctl_cb_idx;
+ 	ioc->base_cb_idx = base_cb_idx;
+ 	ioc->transport_cb_idx = transport_cb_idx;
++	ioc->scsih_cb_idx = scsih_cb_idx;
+ 	ioc->config_cb_idx = config_cb_idx;
+ 	ioc->tm_tr_cb_idx = tm_tr_cb_idx;
+ 	ioc->tm_sas_control_cb_idx = tm_sas_control_cb_idx;
+@@ -6234,6 +6360,7 @@ static struct pci_driver scsih_driver = {
+ 	.id_table	= scsih_pci_table,
+ 	.probe		= _scsih_probe,
+ 	.remove		= __devexit_p(_scsih_remove),
++	.shutdown	= _scsih_shutdown,
+ #ifdef CONFIG_PM
+ 	.suspend	= _scsih_suspend,
+ 	.resume		= _scsih_resume,
+@@ -6275,6 +6402,9 @@ _scsih_init(void)
+ 	transport_cb_idx = mpt2sas_base_register_callback_handler(
+ 	    mpt2sas_transport_done);
+ 
++	/* scsih internal commands callback handler */
++	scsih_cb_idx = mpt2sas_base_register_callback_handler(_scsih_done);
++
+ 	/* configuration page API internal commands callback handler */
+ 	config_cb_idx = mpt2sas_base_register_callback_handler(
+ 	    mpt2sas_config_done);
+@@ -6314,6 +6444,7 @@ _scsih_exit(void)
+ 	mpt2sas_base_release_callback_handler(tm_cb_idx);
+ 	mpt2sas_base_release_callback_handler(base_cb_idx);
+ 	mpt2sas_base_release_callback_handler(transport_cb_idx);
++	mpt2sas_base_release_callback_handler(scsih_cb_idx);
+ 	mpt2sas_base_release_callback_handler(config_cb_idx);
+ 	mpt2sas_base_release_callback_handler(ctl_cb_idx);
  
