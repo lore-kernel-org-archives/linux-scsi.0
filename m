@@ -1,119 +1,62 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [PATCH 0/4] scsi_dh: Make scsi_dh_activate
-	asynchronous
-Date: Tue, 6 Oct 2009 13:46:19 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474ED90C7@cosmail01.lsi.com>
-References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
-	<4AC9EE1B.7030702@suse.de> <1254785154.15826.18.camel@chandra-ubuntu>
-	<4ACAFAF5.5000805@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: [PATCH 1/12] scsi: megaraid_sas - tape drive support fix
+Date: Tue, 6 Oct 2009 14:12:21 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4ACAFAF5.5000805@suse.de>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:60978 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933122AbZJFUN2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Oct 2009 16:13:28 -0400
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
 Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>, "sekharan@linux.vnet.ibm.com" <sekharan@linux.vnet.ibm.com>
-Cc: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Stankey,
-	Robert" <Robert.Stankey@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "Chauhan,
-	Vijay" <Vijay.Chauhan@lsi.com>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>, "Qi,
-	Yanling" <Yanling.Qi@lsi.com>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "Mukker, Atul" <Atul.Mukker@lsi.com>
 
-Thanks Hannes and Chandra for your patches and feedback.  Right now we ar=
-e internally discussing the pros and cons of both these approaches. We wi=
-ll respond to all your question once we arrive at the conclusion.
+RESUBMIT:
 
-Also adding our Team (Bob Stankey, Sudhir, Yanling, Vijay ) in the respon=
-se.
+Add the Tape drive fix to the megaraid_sas driver: If the command is fo=
+r the tape device, set the FW pthru timeout to the os layer timeout val=
+ue.
 
-Thanks
-Babu Moger=20
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Tuesday, October 06, 2009 3:08 AM
-> To: sekharan@linux.vnet.ibm.com
-> Cc: linux-scsi@vger.kernel.org; dm-devel@redhat.com; Moger, Babu;
-> michaelc@cs.wisc.edu; Benoit_Arthur@emc.com;
-> Eddie.Williams@steeleye.com; berthiaume_wayne@emc.com
-> Subject: Re: [PATCH 0/4] scsi_dh: Make scsi_dh_activate asynchronous
->=20
-> Chandra Seetharaman wrote:
-> > On Mon, 2009-10-05 at 15:01 +0200, Hannes Reinecke wrote:
-> >
-> > Thanks for the comment and the patch. I will try the patch.
-> >
-> >> Hmm. IIRC we added the synchronous mode by request of LSI/IBM, as
-> the RDAC
-> >> handler could only support on MODE SELECT command at a time.
-> >> If LSI checked this, okay, no objections.
-> >
-> > The original patch (for rdac) came from LSI (Moger Babu), I made
-> changes
-> > to the infrastructure and to the code to fit them together.
-> >
-> >> However: The main reason why we're getting flooded with MODE SELECT
-> commands
-> >> is that the RDAC handler switches _each LUN_, not the entire
-> controller.
-> >> Seeing that the controller simply cannot cope with the resulting
-> MODE SELECT
-> >> flood wouldn't it be more sensible to switch the entire controller
-> here?
-> >
-> > I see your point of view.... but here is the rationale...
-> >
-> > When we originally added the rdac support (as dm_rdac), we decided
-> this
-> > way consciously for the following reasons:
-> >  1. we do not know which link is broken (hba-ctlr or ctlr-lun).
-> >     The way it is currently implemented, both these cases are
-> handled.
-> Quite. But if the ctlr-lun link is broken, we really should receive
-> and appropriate error code, which then could be handled in dm-rdac
-> appropriately. After all, the controller is still accessible and
-> so we don't have to guess what happened (which is all what multipath
-> is about). So I doubt we need to worry about this.
->=20
-> >  2. multipath layer to decide what to do and this module to just do
-> >     what it was told.
-> Yep.
->=20
-> >  3. since multipath sends pg_init only if there is any IO sent to the
-> >     lun, (with the current implementation) we don't have to change
-> >     ownership (back and forth) of all the luns if the user is using
-> only
-> >     a handful.
-> Well, yes. But if the implementation is such that changing ownership
-> for all LUNs is about as efficient as changing an individual LUN (or,
-> as the case might be, as _inefficient_ :-), surely it's better to
-> save us some coding here.
->=20
-> >  4. to be consistent with LSI's original driver (which does one lun
-> at a
-> >     time).
-> :-/ That's unfair.
-> But it still has the drawback that it doesn't scale; given enough LUNs
-> and
-> access patterns you _inevitably_ have to send MODE SELECT commands for
-> each LUN, ie you only delay this issue.
-> Only by switching all LUNs you can avoid this.
->=20
-> Cheers,
->=20
-> Hannes
-> --
-> Dr. Hannes Reinecke		      zSeries & Storage
-> hare@suse.de			      +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+---
+drivers/scsi/megaraid/megaraid_sas.c |=A0=A0 11 +++++++++++
+=A01 file changed, 11 insertions(+)
+
+diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux=
+-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c	2009-05-04 2=
+0:06:29.000000000 -0400
++++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c	2009-05-04 20=
+:08:26.000000000 -0400
+@@ -687,6 +687,17 @@ megasas_build_dcdb(struct megasas_instan
+ 	memcpy(pthru->cdb, scp->cmnd, scp->cmd_len);
+=20
+ 	/*
++	* If the command is for the tape device, set the
++	* pthru timeout to the os layer timeout value.
++	*/
++	if (scp->device->type =3D=3D TYPE_TAPE) {
++		if ((scp->request->timeout / HZ) > 0xFFFF)
++			pthru->timeout =3D 0xFFFF;
++		else
++			pthru->timeout =3D scp->request->timeout / HZ;
++	}
++
++	/*
+ 	 * Construct SGL
+ 	 */
+ 	if (IS_DMA64) {
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
