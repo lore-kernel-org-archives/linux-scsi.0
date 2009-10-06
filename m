@@ -1,94 +1,116 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/4] scsi_dh: Make scsi_dh_activate
-	asynchronous
-Date: Tue, 06 Oct 2009 10:08:21 +0200
-Message-ID: <4ACAFAF5.5000805@suse.de>
-References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>	
-	<4AC9EE1B.7030702@suse.de>
-	<1254785154.15826.18.camel@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: iceberg <strakh@ispras.ru>
+Subject: Re: [PATCH] scsi_lib.c: sleeping function called from invalid context
+Date: Tue, 6 Oct 2009 12:30:02 +0000
+Message-ID: <200910061230.03488.strakh@ispras.ru>
+References: <200909231758.47612.strakh@ispras.ru> <200910051835.51891.strakh@ispras.ru> <1254755602.3838.5.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1254785154.15826.18.camel@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: sekharan@linux.vnet.ibm.com
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, dm-devel@redhat.com, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756462AbZJFI2M@vger.kernel.org>
+In-Reply-To: <1254755602.3838.5.camel@mulgrave.site>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, eric@andante.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kay Sievers <kay.siev>
 List-Id: linux-scsi@vger.kernel.org
 
-Chandra Seetharaman wrote:
-> On Mon, 2009-10-05 at 15:01 +0200, Hannes Reinecke wrote:
->=20
-> Thanks for the comment and the patch. I will try the patch.
->=20
->> Hmm. IIRC we added the synchronous mode by request of LSI/IBM, as the =
-RDAC
->> handler could only support on MODE SELECT command at a time.
->> If LSI checked this, okay, no objections.
->=20
-> The original patch (for rdac) came from LSI (Moger Babu), I made change=
-s
-> to the infrastructure and to the code to fit them together.
->=20
->> However: The main reason why we're getting flooded with MODE SELECT co=
-mmands
->> is that the RDAC handler switches _each LUN_, not the entire controlle=
-r.
->> Seeing that the controller simply cannot cope with the resulting MODE =
-SELECT
->> flood wouldn't it be more sensible to switch the entire controller her=
-e?
->=20
-> I see your point of view.... but here is the rationale...
->=20
-> When we originally added the rdac support (as dm_rdac), we decided this
-> way consciously for the following reasons:
->  1. we do not know which link is broken (hba-ctlr or ctlr-lun).
->     The way it is currently implemented, both these cases are handled.
-Quite. But if the ctlr-lun link is broken, we really should receive
-and appropriate error code, which then could be handled in dm-rdac
-appropriately. After all, the controller is still accessible and
-so we don't have to guess what happened (which is all what multipath
-is about). So I doubt we need to worry about this.
+On Monday 05 October 2009 15:13:22 you wrote:
+> > > Hang on ... I looked at the bug report again: there's no actual kernel
+> > > trace, just a theoretical function graph.
+> > >
+> > > Has this actually been seen or is it just the result of an analysis?
+> > >
+> > > If the latter (which I suspect), there's no actual problem.  The
+> > > explicit design of the calls is that device_initialize() and
+> > > put_device() can be called from interrupt context.  device_add() and
+> > > device_del() must be called from user context.
+> > >
+> > > The path you seem to be showing is the put_device() path where there's
+> > > been an error in the state model and the caller is doing last put on a
+> > > visible device without having first called device_del().
+> > >
+> > > If you see the real kernel message about this, it means there's a bug
+> > > in the device model handling somewhere in SCSI.  If you haven't seen
+> > > the message, it's just a bug in the static analysis tool.
+> >
+> > This bug report is the result of code inspection. I'm considering
+> > functions which can call might_sleep macro and consequently which can not
+> > be called from atomic context.
+> > I choose function scsi_device_put. There are two paths to might_sleep
+> > macro. First path was shown in the report, second is:
+> > 1. scsi_device_put calls put_device at ./drivers/scsi/scsi.c:1111
+> > 2. put_device calls kobject_put at ./drivers/base/core.c:1038
+> > 3. kobject_put calls kref_put at ./lib/kobject.c
+> > 4. kref_put may call callback function kobject_release at ./lib/kref.c if
+> > refcount becomes zero
+> > 5. kobject_cleanup calls kobject_del at ./lib/kobject.c:562
+>
+> only if state_in_sysfs is set.
+>
+> This is only set if the caller previously failed to call kobject_del
+> (i.e. device_del).
+>
+> As long as devices follow the proper create->add->del->put paths, the
+> final put may be called from interrupt context.
+>
+> Your analysis is wrong because you're basing it on the exception cleanup
+> paths not the correct calling paths.
+>
+> James
+>
+> > 6. kobject_del calls sysfs_remove_dir at ./lib/kobject.c:516
+> > 7. sysfs_remove_dir calls __sysfs_remove_dir at ./fs/sysfs/dir.c:821
+> > 8. __sysfs_remove_dir calls sysfs_addrm_start at ./fs/sysfs/dir.c:789
+> > 9. sysfs_addrm_start calls mutex_lock at ./fs/sysfs/dir.c:377, which
+> > might_sleep because it calls might_sleep macro.
+> >
+> > As you wrote earlier, scsi_device_put was designed with the ability to
+> > call last put from interrupt context, but as we can see from the paths
+> > there might be situations where it is not true. Moreover, while analysing
+> > different usage patterns of scsi_device_put, I found that people are
+> > using scsi_device_put as if it can not be called from atomic context.
+> > Because before calling scsi_device_put, spin_locks are always released
+> > (i.e. spin_unlock is called before scsi_device_put and spin_lock is
+> > called after it). Examples are: 1. drivers/scsi/dpt_i2o.c line 701
+> > 2. drivers/ata/libata-scsi.c line 3626
+> > 3. drivers/scsi/ipr.c line 2415
+> >
+> > >The path you seem to be showing is the put_device() path where there's
+> > >been an error in the state model and the caller is doing last put on a
+> > >visible device without having first called device_del().
+> >
+> > In scsi_lib.c  prior to scsi_device_put we always do scsi_device_get.  As
+> > far as I understand, if we are sure that scsi_device_put is always not
+> > last, then we can remove both calls to scsi_device_get and to
+> > scsi_device_put from the code without introducing races.
+> >
+> >  347         list_for_each_entry_safe(sdev, tmp, &starget->devices,
+> >  348                         same_target_siblings) {
+> >  349                 if (sdev == current_sdev)
+> >  350                         continue;
+> >  351                 if (scsi_device_get(sdev))
+> >  352                         continue;
+> >  353
+> >  354                 spin_unlock_irqrestore(shost->host_lock, flags);
+> >  355                 blk_run_queue(sdev->request_queue);
+> >  356                 spin_lock_irqsave(shost->host_lock, flags);
+> >  357
+> >  358                 scsi_device_put(sdev);
+> >  359         }
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
->  2. multipath layer to decide what to do and this module to just do
->     what it was told.
-Yep.
+James, what about code where spin_unlock is called before scsi_device_put, 
+especially for avoiding atomic context?
+In code like 
+	spin_unlock
+	scsi_device_put
+	spin_lock
+Is spin_unlock/spin_lock redundant?
 
->  3. since multipath sends pg_init only if there is any IO sent to the
->     lun, (with the current implementation) we don't have to change
->     ownership (back and forth) of all the luns if the user is using onl=
-y
->     a handful.
-Well, yes. But if the implementation is such that changing ownership
-for all LUNs is about as efficient as changing an individual LUN (or,
-as the case might be, as _inefficient_ :-), surely it's better to
-save us some coding here.
-
->  4. to be consistent with LSI's original driver (which does one lun at =
-a
->     time).
-:-/ That's unfair.
-But it still has the drawback that it doesn't scale; given enough LUNs an=
-d
-access patterns you _inevitably_ have to send MODE SELECT commands for
-each LUN, ie you only delay this issue.
-Only by switching all LUNs you can avoid this.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+Why do we need scsi_device_get/scsi_device_put pair in scsi_lib.c at all? If 
+we are sure that scsi_device_put is always not last, for what purpose do we 
+call it together with scsi_device_get in the loop?
