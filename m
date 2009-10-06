@@ -1,148 +1,52 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 6/12] scsi: megaraid_sas - report system pds to OS (part II)
-Date: Tue, 6 Oct 2009 14:33:06 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C35C6861C9@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C51198F@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C35C512401@cosmail02.lsi.com>
+From: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: scsi-misc.git status
+Date: Tue, 06 Oct 2009 13:42:34 -0700
+Message-ID: <1254861754.5318.116.camel@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933229AbZJFUfa@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C512401@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "Austria, Winston" <Winston.Austria@lsi.com>, "Mukker, Atul" <Atul.Mukker@lsi.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: James.Bottomley-l3A5Bk7waGM@public.gmane.org
+Cc: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-RESUBMIT:
+Hi James,
 
-Add the system pds support part-II.  When OS issue inquiry, it will check driver's internal pd_list.
+   On 09/11 I submitted 35 patches for the 2.6.32 merge window. On 09/18
+I submitted another 24 patches. Some of the patches from the first set
+were committed to scsi-misc and I haven't seen any activity with the
+second set. Now the scsi-misc.git tree seems to have been reset to
+linux-2.6.git (4 days ago). What is the status of scsi-misc.git?
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+   I know there were some reservations about the SCSI queue depth
+patches that Vasu wrote and so maybe those shouldn't have been applied.
+However, one of the initial 35 patches wasn't committed to linux-scsi at
+the time the others were. It was a libfc formatting cleanup patch. Was
+there something wrong with this patch or did it not merge cleanly with
+the queue depth patches removed? I didn't see any comments.
 
----
-drivers/scsi/megaraid/megaraid_sas.c |   91 +++++++++++++++++++++++++----------
- 1 file changed, 65 insertions(+), 26 deletions(-)
+   What about the second set?
 
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c	2009-09-14 05:49:20.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c	2009-09-14 05:56:01.000000000 -0400
-@@ -1115,24 +1115,76 @@ megasas_queue_command(struct scsi_cmnd *
- 	return 0;
- }
- 
-+static struct megasas_instance *megasas_lookup_instance(u16 host_no)
-+{
-+	int i;
-+
-+	for (i = 0; i < megasas_mgmt_info.max_index; i++) {
-+
-+		if ((megasas_mgmt_info.instance[i]) &&
-+		    (megasas_mgmt_info.instance[i]->host->host_no == host_no))
-+			return megasas_mgmt_info.instance[i];
-+	}
-+
-+	return NULL;
-+}
-+
- static int megasas_slave_configure(struct scsi_device *sdev)
- {
-+	u16             pd_index = 0;
-+	struct  megasas_instance *instance ;
-+
-+	instance = megasas_lookup_instance(sdev->host->host_no);
-+
- 	/*
--	 * Don't export physical disk devices to the disk driver.
--	 *
--	 * FIXME: Currently we don't export them to the midlayer at all.
--	 * 	  That will be fixed once LSI engineers have audited the
--	 * 	  firmware for possible issues.
--	 */
--	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type == TYPE_DISK)
-+	* Don't export physical disk devices to the disk driver.
-+	*
-+	* FIXME: Currently we don't export them to the midlayer at all.
-+	*        That will be fixed once LSI engineers have audited the
-+	*        firmware for possible issues.
-+	*/
-+	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
-+				sdev->type == TYPE_DISK) {
-+		pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
-+								sdev->id;
-+		if (instance->pd_list[pd_index].driveState ==
-+						MR_PD_STATE_SYSTEM) {
-+			blk_queue_rq_timeout(sdev->request_queue,
-+				MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
-+			return 0;
-+		}
- 		return -ENXIO;
-+	}
- 
- 	/*
--	 * The RAID firmware may require extended timeouts.
--	 */
--	if (sdev->channel >= MEGASAS_MAX_PD_CHANNELS)
--		blk_queue_rq_timeout(sdev->request_queue,
--				     MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
-+	* The RAID firmware may require extended timeouts.
-+	*/
-+	blk_queue_rq_timeout(sdev->request_queue,
-+		MEGASAS_DEFAULT_CMD_TIMEOUT * HZ);
-+	return 0;
-+}
-+
-+static int megasas_slave_alloc(struct scsi_device *sdev)
-+{
-+	u16             pd_index = 0;
-+	struct megasas_instance *instance ;
-+	instance = megasas_lookup_instance(sdev->host->host_no);
-+	if ((sdev->channel < MEGASAS_MAX_PD_CHANNELS) &&
-+				(sdev->type == TYPE_DISK)) {
-+		/*
-+		 * Open the OS scan to the SYSTEM PD
-+		 */
-+		pd_index =
-+			(sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
-+			sdev->id;
-+		if ((instance->pd_list[pd_index].driveState ==
-+					MR_PD_STATE_SYSTEM) &&
-+			(instance->pd_list[pd_index].driveType ==
-+						TYPE_DISK)) {
-+			return 0;
-+		}
-+		return -ENXIO;
-+	}
- 	return 0;
- }
- 
-@@ -1423,6 +1475,7 @@ static struct scsi_host_template megasas
- 	.name = "LSI SAS based MegaRAID driver",
- 	.proc_name = "megaraid_sas",
- 	.slave_configure = megasas_slave_configure,
-+	.slave_alloc = megasas_slave_alloc,
- 	.queuecommand = megasas_queue_command,
- 	.eh_device_reset_handler = megasas_reset_device,
- 	.eh_bus_reset_handler = megasas_reset_bus_host,
-@@ -3455,20 +3508,6 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
- 	return error;
- }
- 
--static struct megasas_instance *megasas_lookup_instance(u16 host_no)
--{
--	int i;
--
--	for (i = 0; i < megasas_mgmt_info.max_index; i++) {
--
--		if ((megasas_mgmt_info.instance[i]) &&
--		    (megasas_mgmt_info.instance[i]->host->host_no == host_no))
--			return megasas_mgmt_info.instance[i];
--	}
--
--	return NULL;
--}
--
- static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
- {
- 	struct megasas_iocpacket __user *user_ioc =
+   Missing some of the patches in the second set is particularly a
+problem because some changes to netdev were made to change fcoe offload
+initialization in netdev based Ethernet drivers that support it. The
+corresponding fcoe stack change was in the second set submitted to
+linux-scsi. Since these patches weren't pushed to linux-2.6 fcoe offload
+support in 2.6.32 is broken. Should these patches be resubmitted to
+scsi-rc-fixes? 
+
+   I ensure that all patches have been reviewed, tested and should merge
+with scsi-misc.git when I submit them. If you need patches re-worked
+because dependent patches are rejected please let me know and I can
+resubmit.
+
+Thanks, //Rob
