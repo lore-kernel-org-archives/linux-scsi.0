@@ -1,62 +1,40 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 1/12] scsi: megaraid_sas - tape drive support fix
-Date: Tue, 6 Oct 2009 14:12:21 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] NCR5380: bit MR_DMA_MODE set twice in NCR5380_transfer_dma()
+Date: Tue, 06 Oct 2009 22:17:43 +0200
+Message-ID: <4ACBA5E7.3090000@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:60978 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933122AbZJFUN2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Oct 2009 16:13:28 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
-Content-Language: en-US
+Received: from mail-ew0-f217.google.com ([209.85.219.217]:54023 "EHLO
+	mail-ew0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933023AbZJFUJg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Oct 2009 16:09:36 -0400
+Received: by ewy17 with SMTP id 17so4320863ewy.39
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Oct 2009 13:08:57 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "Mukker, Atul" <Atul.Mukker@lsi.com>
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-RESUBMIT:
+Besides keeping the line short, the second setting of the
+MR_DMA_MODE bit was removed.
 
-Add the Tape drive fix to the megaraid_sas driver: If the command is fo=
-r the tape device, set the FW pthru timeout to the os layer timeout val=
-ue.
-
-Signed-off-by Bo Yang<bo.yang@lsi.com>
-
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 ---
-drivers/scsi/megaraid/megaraid_sas.c |=A0=A0 11 +++++++++++
-=A01 file changed, 11 insertions(+)
+Please review, maybe some other bit should be set?
 
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux=
--2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c	2009-05-04 2=
-0:06:29.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c	2009-05-04 20=
-:08:26.000000000 -0400
-@@ -687,6 +687,17 @@ megasas_build_dcdb(struct megasas_instan
- 	memcpy(pthru->cdb, scp->cmnd, scp->cmd_len);
-=20
- 	/*
-+	* If the command is for the tape device, set the
-+	* pthru timeout to the os layer timeout value.
-+	*/
-+	if (scp->device->type =3D=3D TYPE_TAPE) {
-+		if ((scp->request->timeout / HZ) > 0xFFFF)
-+			pthru->timeout =3D 0xFFFF;
-+		else
-+			pthru->timeout =3D scp->request->timeout / HZ;
-+	}
-+
-+	/*
- 	 * Construct SGL
- 	 */
- 	if (IS_DMA64) {
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index f92da9f..5d2f148 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -1857,7 +1857,9 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase
+ #endif
+ 	/* KLL May need eop and parity in 53c400 */
+ 	if (hostdata->flags & FLAG_NCR53C400)
+-		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR | MR_ENABLE_EOP_INTR | MR_DMA_MODE | MR_MONITOR_BSY);
++		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
++				MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR |
++				MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
+ 	else
+ 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
+ #endif				/* def REAL_DMA */
