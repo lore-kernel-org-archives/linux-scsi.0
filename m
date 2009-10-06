@@ -1,127 +1,76 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 12/12] scsi: megaraid_sas - version and docs update
-Date: Tue, 6 Oct 2009 14:55:09 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C35C70B212@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5119E1@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C35C512408@cosmail02.lsi.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
+Date: Tue, 06 Oct 2009 20:54:02 +0000
+Message-ID: <1254862442.4383.183.camel@mulgrave.site>
+References: <1254844007.4383.85.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910060851590.3432@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933384AbZJFU4C@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C512408@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: "Austria, Winston" <Winston.Austria@lsi.com>, "Mukker, Atul" <Atul.Mukker@lsi.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:52999 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933324AbZJFUyr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Oct 2009 16:54:47 -0400
+In-Reply-To: <alpine.LFD.2.01.0910060851590.3432@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-RESUBMIT:
+On Tue, 2009-10-06 at 08:58 -0700, Linus Torvalds wrote:
+> 
+> On Tue, 6 Oct 2009, James Bottomley wrote:
+> >
+> > This is mostly fixes.  However, it contains two new drivers: Brocade SAS
+> > (bfa), the Bladengine2 iSCSI (be2iscsi) under the merge window exemption
+> 
+> Btw, I'm getting less excited about the merge window exemption.
+> 
+> It makes sense for consumer devices that people actually hit and that are 
+> needed for bringup (ie they make a difference between a system that can be 
+> installed and used, and one that cannot), but I'm not at all sure it makes 
+> sense for things like this.
+> 
+> The _reason_ for the driver exemption was the fact that even a broken 
+> driver is better than no driver at all for somebody who just can't get a 
+> working system without it, but that argument really goes away when the 
+> driver is so specialized that it's not about regular hardware any more.
 
-Update the version and documentation
+OK, so I don't see a huge distinction here.  This is a driver for a
+piece of enterprise HW that Linux previously didn't support.  To someone
+cursing not being able to use there hardware, it's every bit as
+important as the latest wireless driver.
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+> And the whole "driver exemption" seems to have become a by-word for "I can 
+> ignore the merge window for 50% of my code". Which makes me very tired of 
+> it if there aren't real advantages to real users.
 
----
+While the exemption exists, I can certainly ignore the merge window for
+new drivers, yes ... however, that's not 50% of the code submitted in
+the merge window, and it's one time ... the same driver follows the
+merge window for the next release.  I try to police this pretty rigidly
+in SCSI ... as you do at the top.
 
-Documentation/scsi/ChangeLog.megaraid_sas |   62 ++++++++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.c      |    2
- drivers/scsi/megaraid/megaraid_sas.h      |    6 +-
- 3 files changed, 66 insertions(+), 4 deletions(-)
+In fact, for SCSI, these two drivers are the third and fourth merge
+window exemptions in our year long history of allowing this.
 
-diff -rupN linux-2.6.28_orig/Documentation/scsi/ChangeLog.megaraid_sas linux-2.6.28_new/Documentation/scsi/ChangeLog.megaraid_sas
---- linux-2.6.28_orig/Documentation/scsi/ChangeLog.megaraid_sas	2009-09-15 05:32:34.000000000 -0400
-+++ linux-2.6.28_new/Documentation/scsi/ChangeLog.megaraid_sas	2009-09-15 06:12:38.000000000 -0400
-@@ -1,3 +1,65 @@
-+1 Release Date    : Tues.  July 28, 2009 10:12:45 PST 2009 -
-+			(emaild-id:megaraidlinux@lsi.com)
-+			Bo Yang
-+
-+2 Current Version : 00.00.04.12
-+3 Older Version   : 00.00.04.10
-+
-+1.	Change the AEN sys PD update from scsi_scan to
-+	scsi_add_device and scsi_remove_device.
-+2.	Takeoff the debug print-out in aen_polling routine.
-+
-+1 Release Date    : Thur.  July 02, 2009 10:12:45 PST 2009 -
-+			(emaild-id:megaraidlinux@lsi.com)
-+			Bo Yang
-+
-+2 Current Version : 00.00.04.10
-+3 Older Version   : 00.00.04.08
-+
-+1.	Add the 3 mins timeout during the controller initialize.
-+2.	Add the fix for 64bit sense date errors.
-+ 
-+1 Release Date    : Tues. May 05, 2009 10:12:45 PST 2009 -
-+			(emaild-id:megaraidlinux@lsi.com)
-+			Bo Yang
-+
-+2 Current Version : 00.00.04.08
-+3 Older Version   : 00.00.04.06
-+
-+1.	Add the fix of pending in FW after deleted the logic drives. 
-+2.	Add the fix of deallocating memory after get pdlist.
-+
-+1 Release Date    : Tues. March 26, 2009 10:12:45 PST 2009 -
-+			(emaild-id:megaraidlinux@lsi.com)
-+			Bo Yang
-+
-+2 Current Version : 00.00.04.06
-+3 Older Version   : 00.00.04.04
-+
-+1.	Add the fix of the driver cmd empty fix of the driver cmd empty. 
-+2.	Add the fix of the driver MSM AEN CMD cause the system slow. 
-+
-+1 Release Date    : Tues. March 03, 2009 10:12:45 PST 2009 -
-+			(emaild-id:megaraidlinux@lsi.com)
-+			Bo Yang
-+
-+2 Current Version : 00.00.04.04
-+3 Older Version   : 00.00.04.01
-+
-+1.	Add the Tape drive fix to the driver: If the command is for
-+	the tape device, set the pthru timeout to the os layer timeout value.
-+
-+2.	Add Poll_wait mechanism to Gen-2 Linux driv.
-+		In the aen handler, driver needs to wakeup poll handler similar to 
-+		the way it raises SIGIO. 
-+
-+3.	Add new controller new SAS2 support to the driver.
-+
-+4.	Report the unconfigured PD (system PD) to OS.
-+
-+5.	Add the IEEE SGL support to the driver   
-+
-+6.	Reasign the Application cmds to SAS2 controller
- 
- 1 Release Date    : Thur.July. 24 11:41:51 PST 2008 -
-                        (emaild-id:megaraidlinux@lsi.com)
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.c	2009-09-15 05:32:34.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.c	2009-09-15 05:33:49.000000000 -0400
-@@ -10,7 +10,7 @@
-  *	   2 of the License, or (at your option) any later version.
-  *
-  * FILE		: megaraid_sas.c
-- * Version     : v00.00.04.01-rc1
-+ * Version     : v00.00.04.12-rc1
-  *
-  * Authors:
-  *	(email-id : megaraidlinux@lsi.com)
-diff -rupN linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.28_orig/drivers/scsi/megaraid/megaraid_sas.h	2009-09-15 05:32:34.000000000 -0400
-+++ linux-2.6.28_new/drivers/scsi/megaraid/megaraid_sas.h	2009-09-15 05:34:40.000000000 -0400
-@@ -18,9 +18,9 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"00.00.04.01"
--#define MEGASAS_RELDATE				"July 24, 2008"
--#define MEGASAS_EXT_VERSION			"Thu July 24 11:41:51 PST 2008"
-+#define MEGASAS_VERSION				"00.00.04.12-rc1"
-+#define MEGASAS_RELDATE				"Sep. 17, 2009"
-+#define MEGASAS_EXT_VERSION			"Thu Sep. 17 11:41:51 PST 2009"
- 
- /*
-  * Device IDs
+> So I'm seriously considering a "the driver has to be mass market and also 
+> actually matter to an install" rule for the exemption to be valid.
+
+OK, so on the policy, let me argue against the above.  One of the things
+we've been saying about linux is that we facilitate rapid adoption of
+new hardware (and that we support more hardware than any other OS).  The
+Merge window exemption was adopted at the kernel summit last year
+specifically to speed our adoption of new hardware.  I think it's
+valuable for this speed of adoption to be *all* hardware, not
+specifically mass market laptop type stuff.
+
+However, even if you want to change the definition, can we please not do
+it retroactively?
+
+Thanks,
+
+James
+
+
