@@ -1,37 +1,35 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [Patch 4/6] lpfc 8.3.5: Add AER support
-Date: Wed, 7 Oct 2009 21:25:54 +0200
-Message-ID: <20091007192554.GA1656@one.firstfloor.org>
-References: <1254511016.32739.23.camel@ogier> <87r5tfzqpq.fsf@basil.nowhere.org> <412A05BA40734D4887DBC67661F43308101CA3F0@EXMAIL.ad.emulex.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14258] Memory leak in SCSI initialization
+Date: Wed, 7 Oct 2009 20:21:41 GMT
+Message-ID: <200910072021.n97KLfcC031935@demeter.kernel.org>
+References: <bug-14258-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:55442 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759900AbZJGT0q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2009 15:26:46 -0400
-Content-Disposition: inline
-In-Reply-To: <412A05BA40734D4887DBC67661F43308101CA3F0@EXMAIL.ad.emulex.com>
+Received: from demeter.kernel.org ([140.211.167.39]:41194 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753795AbZJGUWS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2009 16:22:18 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n97KLfr9031936
+	for <linux-scsi@vger.kernel.org>; Wed, 7 Oct 2009 20:21:41 GMT
+In-Reply-To: <bug-14258-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alex.Iannicelli@Emulex.Com
-Cc: andi@firstfloor.org, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Oct 07, 2009 at 08:27:28AM -0700, Alex.Iannicelli@Emulex.Com wrote:
-> > James Smart <James.Smart@Emulex.Com> writes:
-> > 
-> > > This patch adds AER support.
-> > 
-> > I'm curious -- how did you test that? Did you use the new AER injector
-> > in 2.6.31?
-> 
-> Yes, we tested it using all the AER error profiles in the AER injector tool.
+http://bugzilla.kernel.org/show_bug.cgi?id=14258
 
-If you wrote any special scripts it would be good if you could publish
-those (ideally become part of aer-inject), so that others can later
-test too.
 
--Andi
+
+
+
+--- Comment #1 from Rafael J. Wysocki <rjw@sisk.pl>  2009-10-07 20:21:40 ---
+Ignore-Patch : http://patchwork.kernel.org/patch/49258/
+Handled-By : James Bottomley <James.Bottomley@suse.de>
+Patch : http://patchwork.kernel.org/patch/51412/
 
 -- 
-ak@linux.intel.com -- Speaking for myself only.
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
