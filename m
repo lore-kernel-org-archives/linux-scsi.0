@@ -1,36 +1,37 @@
-From: James Smart <James.Smart@Emulex.Com>
+From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: [Patch 4/6] lpfc 8.3.5: Add AER support
-Date: Wed, 7 Oct 2009 11:46:15 -0400
-Message-ID: <4ACCB7C7.8030807@emulex.com>
-References: <1254511016.32739.23.camel@ogier> <87r5tfzqpq.fsf@basil.nowhere.org>
+Date: Wed, 7 Oct 2009 21:25:54 +0200
+Message-ID: <20091007192554.GA1656@one.firstfloor.org>
+References: <1254511016.32739.23.camel@ogier> <87r5tfzqpq.fsf@basil.nowhere.org> <412A05BA40734D4887DBC67661F43308101CA3F0@EXMAIL.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:51442 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758635AbZJGPqy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2009 11:46:54 -0400
-In-Reply-To: <87r5tfzqpq.fsf@basil.nowhere.org>
+Received: from one.firstfloor.org ([213.235.205.2]:55442 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759900AbZJGT0q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Oct 2009 15:26:46 -0400
+Content-Disposition: inline
+In-Reply-To: <412A05BA40734D4887DBC67661F43308101CA3F0@EXMAIL.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Alex.Iannicelli@Emulex.Com
+Cc: andi@firstfloor.org, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-We used the aer-inject user space tool on 2.6.31 to test it
-http://www.kernel.org/pub/linux/utils/pci/aer-inject/
+On Wed, Oct 07, 2009 at 08:27:28AM -0700, Alex.Iannicelli@Emulex.Com wrote:
+> > James Smart <James.Smart@Emulex.Com> writes:
+> > 
+> > > This patch adds AER support.
+> > 
+> > I'm curious -- how did you test that? Did you use the new AER injector
+> > in 2.6.31?
+> 
+> Yes, we tested it using all the AER error profiles in the AER injector tool.
 
--- james s
+If you wrote any special scripts it would be good if you could publish
+those (ideally become part of aer-inject), so that others can later
+test too.
 
-Andi Kleen wrote:
-> James Smart <James.Smart@Emulex.Com> writes:
->
->   
->> This patch adds AER support.
->>     
->
-> I'm curious -- how did you test that? Did you use the new AER injector in 2.6.31?
->
-> -Andi
->
->   
+-Andi
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
