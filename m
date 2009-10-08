@@ -1,71 +1,72 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH 5/14] bfa: Brocade BFA FC SCSI driver (bfa4)
-Date: Thu, 08 Oct 2009 12:39:21 -0400
-Message-ID: <4ACE15B9.1060501@redhat.com>
-References: <200909240055.n8O0tNHN016016@swe58.brocade.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
+Date: Thu, 08 Oct 2009 19:48:18 +0000
+Message-ID: <1255031298.4187.260.camel@mulgrave.site>
+References: <1254844007.4383.85.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910060851590.3432@localhost.localdomain>
+	 <1254862442.4383.183.camel@mulgrave.site>
+	 <1255012399.4187.24.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
+	 <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758892AbZJHQqE@vger.kernel.org>
-In-Reply-To: <200909240055.n8O0tNHN016016@swe58.brocade.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rvadivel@brocade.com, vravindr@brocade.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:56262 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757915AbZJHTtE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Oct 2009 15:49:04 -0400
+In-Reply-To: <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+
+On Thu, 2009-10-08 at 07:54 -0700, Linus Torvalds wrote:
+> 
+> On Thu, 8 Oct 2009, Linus Torvalds wrote:
+> > 
+> > I'm taking it (and the parisc one I was also unhappy with)
+> 
+> Actually, looking at it again, I'm wavering.
+> 
+> That BFA driver isn't a "driver". It's a huge subsystem of it's own. It's 
+> almost 50 _thousand_ lines of code for just a single "driver", and for 
+> rare hardware at that.
+
+It's a huge glue layer driver, like the aic7xxx, yes.
+
+So the tradeoff here is that I estimate it would take years to get it to
+where a linux driver should be.
+
+Could I remind you that at the last kernel summit I was the one
+advocating for holding drivers out of tree until they met our standards
+and you were the one who told me not to do this ... Jon even captured
+it:
+
+https://lwn.net/Articles/298570/
+
+I'll certainly offer this driver to Greg's drivers project to see if
+they can unglue it ... I just think it's going to take a while.
+
+> Quite frankly, the "bang per line" is almost zero. 
+> 
+> What the ^&@* is wrong with "enterprise SCSI" people? The amount of crazy 
+> is overwhelming.
+> 
+> So I've pulled it, but I'm still considering just unpulling it. That 
+> driver is _not_ "just a driver".  It's something more. Something dank and 
+> smelly, that has grown in dark and forbidding places.
+> 
+> The whole crazy "high end SCSI" industry needs a f*cking exorcism.
+> 
+> Even if I don't unpull, I don't _ever_ want to see a driver like this 
+> outside the merge window. And dammit, James, you should have realized 
+> that.
+
+Well certainly in an ideal world ... and in fact the world before KS2008
+I wouldn't have accepted it until it was well cleaned up.
+
+James
 
 
-> +
-> +#define bfa_swap_3b(_x)				\
-> +	((((_x) & 0xff) << 16) |		\
-> +	((_x) & 0x00ff00) |			\
-> +	(((_x) & 0xff0000) >> 16))
-> +
-> +#define bfa_swap_8b(_x) 				\
-> +     ((((_x) & 0xff00000000000000ull) >> 56)		\
-> +      | (((_x) & 0x00ff000000000000ull) >> 40)		\
-> +      | (((_x) & 0x0000ff0000000000ull) >> 24)		\
-> +      | (((_x) & 0x000000ff00000000ull) >> 8)		\
-> +      | (((_x) & 0x00000000ff000000ull) << 8)		\
-> +      | (((_x) & 0x0000000000ff0000ull) << 24)		\
-> +      | (((_x) & 0x000000000000ff00ull) << 40)		\
-> +      | (((_x) & 0x00000000000000ffull) << 56))
-> +
-> +#define bfa_os_swap32(_x) 			\
-> +	((((_x) & 0xff) << 24) 		|	\
-> +	(((_x) & 0x0000ff00) << 8)	|	\
-> +	(((_x) & 0x00ff0000) >> 8)	|	\
-> +	(((_x) & 0xff000000) >> 24))
-> +
-> +
-> +#ifndef __BIGENDIAN
-> +#define bfa_os_htons(_x) ((u16)((((_x) & 0xff00) >> 8) | \
-> +				 (((_x) & 0x00ff) << 8)))
-> +
-> +#define bfa_os_htonl(_x)	bfa_os_swap32(_x)
-> +#define bfa_os_htonll(_x)	bfa_swap_8b(_x)
-> +#define bfa_os_hton3b(_x)	bfa_swap_3b(_x)
-> +
-> +#define bfa_os_wtole(_x)   (_x)
-> +
-> +#else
-> +
-> +#define bfa_os_htons(_x)   (_x)
-> +#define bfa_os_htonl(_x)   (_x)
-> +#define bfa_os_hton3b(_x)  (_x)
-> +#define bfa_os_htonll(_x)  (_x)
-> +#define bfa_os_wtole(_x)   bfa_os_swap32(_x)
-> +
-> +#endif
-> +
-> +#define bfa_os_ntohs(_x)   bfa_os_htons(_x)
-> +#define bfa_os_ntohl(_x)   bfa_os_htonl(_x)
-> +#define bfa_os_ntohll(_x)  bfa_os_htonll(_x)
-> +#define bfa_os_ntoh3b(_x)  bfa_os_hton3b(_x)
->   
-
-Can bfa_os_ntoh* and bfa_os_hton* be defined to use
-linux defined ntoh* and hton*?
-
-include/linux/byteorder/generic.h has some of these definitions.
-Perhaps this could be expanded a bit, or, is an expanded set
-of such definitions available elsewhere?
