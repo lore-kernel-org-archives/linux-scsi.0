@@ -1,48 +1,43 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH -repost 3/4] SCSI: lpfc, fix memory leak
-Date: Fri, 9 Oct 2009 13:43:24 -0400
-Message-ID: <4ACF763C.5070308@emulex.com>
-References: <1255096688-23399-1-git-send-email-jirislaby@gmail.com> <1255096688-23399-3-git-send-email-jirislaby@gmail.com>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 4/4] sd.c: Make initialisation less verbose
+Date: Fri, 9 Oct 2009 10:54:30 -0700
+Message-ID: <20091009175430.GB5718@kroah.com>
+References: <20090920225348.GB3690@parisc-linux.org>
+ <Pine.LNX.4.44L0.0909202104300.14465-100000@netrider.rowland.org>
+ <20090924221702.GA7943@parisc-linux.org>
+ <20090924222056.GE7943@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:38061 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932095AbZJIRoH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2009 13:44:07 -0400
-In-Reply-To: <1255096688-23399-3-git-send-email-jirislaby@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20090924222056.GE7943-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Acked-by: James Smart <james.smart@emulex.com>
+On Thu, Sep 24, 2009 at 04:20:56PM -0600, Matthew Wilcox wrote:
+> From: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> 
+> Introduce a new function, sd_print_info() to print the information we
+> normally want to display to the user on revalidation.
+> 
+> Move the capacity display from sd_read_capacity() to sd_print_info().
+> Move the write protect display from sd_read_write_protect_flag() to
+> sd_print_info().
+> Delete the printk reporting Mode Sense as it is not generally useful.
+> 
+> Move the display of 'Removable' to the same line as reporting the Write
+> Protect status.
+> 
+> Only print the line about write cache once.
 
--- james s
+No signed off by line?
 
-Jiri Slaby wrote:
-> Stanse found a memory leak on one fail path in lpfc_sli4_read_rev.
->
-> Add there kfree.
->
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: James Smart <james.smart@emulex.com>
-> Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-> ---
->  drivers/scsi/lpfc/lpfc_sli.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 43cbe33..7750868 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -4211,6 +4211,7 @@ lpfc_sli4_read_rev(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
->  	if (rc) {
->  		dma_free_coherent(&phba->pcidev->dev, dma_size,
->  				  dmabuf->virt, dmabuf->phys);
-> +		kfree(dmabuf);
->  		return -EIO;
->  	}
->  
->   
+thanks,
+
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
