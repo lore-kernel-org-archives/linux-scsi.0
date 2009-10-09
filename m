@@ -1,75 +1,88 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
-Date: Fri, 9 Oct 2009 12:25:33 -0700
-Message-ID: <20091009192533.GA32084@suse.de>
-References: <1255012399.4187.24.camel@mulgrave.site>
- <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
- <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
- <1255031298.4187.260.camel@mulgrave.site>
- <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
- <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
- <20091008210737.GD29181@mit.edu>
- <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
- <20091009091538.GA4154@elte.hu>
- <1255097287.2934.21.camel@localhost.localdomain>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH] scsi: fix inconsistent usage of max_lun
+Date: Fri, 9 Oct 2009 15:23:27 -0700
+Message-ID: <200910091523266186177@promise.com>
+Reply-To: ed.lin@promise.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934077AbZJITaK@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1255097287.2934.21.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gateway.promise.com ([67.111.72.2]:35350 "EHLO
+	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934014AbZJIWYV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2009 18:24:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James.Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Oct 09, 2009 at 09:08:07AM -0500, James Bottomley wrote:
-> On Fri, 2009-10-09 at 11:15 +0200, Ingo Molnar wrote:
-> > * Linus Torvalds <torvalds@linux-foundation.org> wrote:
-> > 
-> > > On Thu, 8 Oct 2009, Theodore Tso wrote:
-> > > > 
-> > > > So would it be acceptable to merge the 50 kloc of crap _during_ the
-> > > > merge window?
-> > > 
-> > > Yes. I actually looked at the driver (since I had pulled it - I've 
-> > > unpulled it but am still mulling it over), and while I think it looked 
-> > > huge and overly complex, it by no means gave me the kinds of vibes I 
-> > > get from some "obviously-ported-from-windows-with-no-clue" drivers.
-> > > 
-> > > So at least from my quick look I didn't get the feeling that the 
-> > > driver was "evil". For me, it's a timing issue.  I hate getting big 
-> > > pull requests after -rc1 is out, and I really don't like the feeling 
-> > > that people are just ignoring the merge window.
-> > > 
-> > > That said, if somebody wants to look more closely at the driver, and 
-> > > then wants to convince people that it should have gone through 
-> > > "staging", feel free. But that's not what I've personally been arguing 
-> > > about.
-> > 
-> > Greg, what's your take on the quality of this new driver? Do you have 
-> > some time to do a review of this with drivers/staging/ versus drivers/ 
-> > glasses on? The Git URI is at:
-> 
-> To me, the matter of staging versus actual tree isn't a quality issue
-> (otherwise we'd be shifting ~75% of SCSI drivers to staging, depending
-> on whose view of "quality" was being used).
 
-Great, I'll be glad to take them :)
+max_lun in struct Scsi_Host is used as actual max lun
+plus 1 in scsi_sequential_lun_scan()(scsi_scan.c).
+However it is also used as actual max lun in some
+other cases.
 
-> It's an ABI issue.  If we would have to change the user visible ABI
-> while the driver was being cleaned up, I'd want it in staging to warn
-> users to expect these problems.  Although we couldn't clean up
-> everything, I did make sure this driver plugs correctly into the
-> standard linux FC ABI before putting it in the SCSI tree, so there are
-> no ABI changes anticipated even though there will likely be a lot of
-> code changes.  Therefore, the correct clean up path for this one is
-> through the SCSI tree.
+According to the comment in the definition of struct
+Scsi_Host, max_lun should be set to 1 more than the
+actual max lun, just like max_id. Fix the problem
+according to this definition.
 
-Ok, that's your call as the scsi maintainer.
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
 
-If you need anything to go into staging as an incentive to get the code
-cleaned up, or if not, dropped, just send it to me.
+ drivers/scsi/3w-xxxx.c           |    2 +-
+ drivers/scsi/scsi_scan.c         |    4 ++--
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-thanks,
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index faa0fcf..4e91650 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -2321,7 +2321,7 @@ static int __devinit tw_probe(struct pci_dev *pdev, const struct pci_device_id *
+ 	host->max_cmd_len = TW_MAX_CDB_LEN;
+ 
+ 	/* Luns and channels aren't supported by adapter */
+-	host->max_lun = 0;
++	host->max_lun = 1;
+ 	host->max_channel = 0;
+ 
+ 	/* Register the card with the kernel SCSI layer */
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index c447838..cb6338f 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1468,7 +1468,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 			for (i = 0; i < sizeof(struct scsi_lun); i++)
+ 				printk("%02x", data[i]);
+ 			printk(" has a LUN larger than currently supported.\n");
+-		} else if (lun > sdev->host->max_lun) {
++		} else if (lun >= sdev->host->max_lun) {
+ 			printk(KERN_WARNING "scsi: %s lun%d has a LUN larger"
+ 			       " than allowed by the host adapter\n",
+ 			       devname, lun);
+@@ -1681,7 +1681,7 @@ int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
+ 
+ 	if (((channel != SCAN_WILD_CARD) && (channel > shost->max_channel)) ||
+ 	    ((id != SCAN_WILD_CARD) && (id >= shost->max_id)) ||
+-	    ((lun != SCAN_WILD_CARD) && (lun > shost->max_lun)))
++	    ((lun != SCAN_WILD_CARD) && (lun >= shost->max_lun)))
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&shost->scan_mutex);
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index b98885d..e7518a2 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1992,7 +1992,7 @@ fc_user_scan(struct Scsi_Host *shost, uint channel, uint id, uint lun)
+ 
+ 	if (((channel != SCAN_WILD_CARD) && (channel > shost->max_channel)) ||
+ 	    ((id != SCAN_WILD_CARD) && (id >= shost->max_id)) ||
+-	    ((lun != SCAN_WILD_CARD) && (lun > shost->max_lun)))
++	    ((lun != SCAN_WILD_CARD) && (lun >= shost->max_lun)))
+ 		return -EINVAL;
+ 
+ 	if (channel == SCAN_WILD_CARD) {
 
-greg k-h
+
