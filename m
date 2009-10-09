@@ -1,51 +1,101 @@
-From: Jason White <jason@jasonjgw.net>
-Subject: SCSI queue warnings under 2.6.31 with LSI SAS1064E controller
-Date: Fri, 9 Oct 2009 03:07:16 +0000 (UTC)
-Message-ID: <ham9d4$ihu$1@ger.gmane.org>
+From: Sachin Sant <sachinp@in.ibm.com>
+Subject: [PATCH] drivers/ata/ahci build break.
+Date: Fri, 09 Oct 2009 11:57:46 +0530
+Message-ID: <4ACED7E2.2010108@in.ibm.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------070905000207010709010504"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:58464 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760208AbZJIDUl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Oct 2009 23:20:41 -0400
-Received: from list by lo.gmane.org with local (Exim 4.50)
-	id 1Mw61U-0007xb-OI
-	for linux-scsi@vger.kernel.org; Fri, 09 Oct 2009 05:20:04 +0200
-Received: from ppp118-208-189-60.lns10.mel4.internode.on.net ([118.208.189.60])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2009 05:20:04 +0200
-Received: from jason by ppp118-208-189-60.lns10.mel4.internode.on.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2009 05:20:04 +0200
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:38898 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800AbZJIG2l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2009 02:28:41 -0400
+Received: from d23relay04.au.ibm.com (d23relay04.au.ibm.com [202.81.31.246])
+	by e23smtp08.au.ibm.com (8.14.3/8.13.1) with ESMTP id n996IDtg002319
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Oct 2009 17:18:13 +1100
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay04.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n996PPQ21769510
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Oct 2009 17:25:27 +1100
+Received: from d23av01.au.ibm.com (loopback [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id n996RpN6012950
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Oct 2009 17:27:51 +1100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
 
-With apologies in advance if this is the wrong mailing list for this, after
-upgrading from 2.6.30 to 2.6.31 I get the following warnings in syslog
-frequently
+This is a multi-part message in MIME format.
+--------------070905000207010709010504
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Oct  9 12:19:21 jdc kernel: [ 1785.096275] sd 6:1:0:0: strange observation,
-the queue depth is (64) meanwhile fw queue depth (65)
-Oct  9 12:19:51 jdc kernel: [ 1815.312019] sd 6:1:0:0: Queue depth not changed yet
+On a Powerpc box latest git (2.6.32-rc3-git2: 36a07902...) failed to build with
+following error :
 
-The Debian bug report is here
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=550190
+drivers/ata/ahci.c: In function 'ahci_gtf_filter_workaround':
+drivers/ata/ahci.c:2927: error: 'struct ata_device' has no member named
+'gtf_filter'
+make[2]: *** [drivers/ata/ahci.o] Error 1
 
-Following a suggestion by Debian developers, I tried patching 2.6.31.3 with
-this commit, but with no effect.
+The code was introduced by f80ae7e45a0e03da188494c6e947a5c8b0cdfb4a.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=9d2e9d66a3f032667934144cd61c396ba49f090d
+CONFIG_ATA_ACPI is not set in this case.
 
-However, this also shows the problem can be reproduced under 2.6.31.3.
+The following patch fixes the build break for me.
 
-I would prefer to avoid running git bisect on this machine if I can, but I'll
-gladly test a patch if it is unlikely to corrupt the file system.
-
-HP XW6400 workstation, two SAS drives configured for striping, x86-64
-architecture.
-
-I haven't noticed any file corruption so far - I'm not sure how serious this
-problem is.
+Signed-off-by : Sachin Sant <sachinp@in.ibm.com>
+---
 
 
+
+
+--------------070905000207010709010504
+Content-Type: text/x-patch;
+ name="fix-ata-ahci-build-break.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="fix-ata-ahci-build-break.patch"
+
+With !CONFIG_ATA_ACPI drivers/ata build breaks with following error
+
+drivers/ata/ahci.c: In function 'ahci_gtf_filter_workaround':
+drivers/ata/ahci.c:2927: error: 'struct ata_device' has no member named
+'gtf_filter'
+make[2]: *** [drivers/ata/ahci.o] Error 1
+
+Box the function within CONFIG_ATA_ACPI.
+
+Signed-off-by : Sachin Sant <sachinp@in.ibm.com>
+---
+diff -Naurp old/drivers/ata/ahci.c new/drivers/ata/ahci.c
+--- old/drivers/ata/ahci.c	2009-10-09 11:34:28.000000000 +0530
++++ new/drivers/ata/ahci.c	2009-10-09 11:36:39.000000000 +0530
+@@ -2884,6 +2884,7 @@ static bool ahci_broken_online(struct pc
+ 	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
+ }
+ 
++#ifdef CONFIG_ATA_ACPI
+ static void ahci_gtf_filter_workaround(struct ata_host *host)
+ {
+ 	static const struct dmi_system_id sysids[] = {
+@@ -2927,6 +2928,7 @@ static void ahci_gtf_filter_workaround(s
+ 				dev->gtf_filter |= filter;
+ 	}
+ }
++#endif
+ 
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+@@ -3093,8 +3095,10 @@ static int ahci_init_one(struct pci_dev
+ 	/* apply workaround for ASUS P5W DH Deluxe mainboard */
+ 	ahci_p5wdh_workaround(host);
+ 
++#ifdef CONFIG_ATA_ACPI
+ 	/* apply gtf filter quirk */
+ 	ahci_gtf_filter_workaround(host);
++#endif
+ 
+ 	/* initialize adapter */
+ 	rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
+
+--------------070905000207010709010504--
