@@ -1,154 +1,75 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH 1/1] remove invalid BUG_ON in scsi_transport_fc.c
-Date: Fri, 09 Oct 2009 14:15:59 -0500
-Message-ID: <4ACF8BEF.6040105@sgi.com>
-References: <4AB3D773.50108@sgi.com> <4AB3DB7C.2050004@emulex.com> <4AB3DE99.3080602@sgi.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
+Date: Fri, 9 Oct 2009 12:25:33 -0700
+Message-ID: <20091009192533.GA32084@suse.de>
+References: <1255012399.4187.24.camel@mulgrave.site>
+ <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
+ <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
+ <1255031298.4187.260.camel@mulgrave.site>
+ <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
+ <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
+ <20091008210737.GD29181@mit.edu>
+ <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+ <20091009091538.GA4154@elte.hu>
+ <1255097287.2934.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.179.30]:57679 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752880AbZJITQl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Oct 2009 15:16:41 -0400
-In-Reply-To: <4AB3DE99.3080602@sgi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934077AbZJITaK@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1255097287.2934.21.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Smart <James.Smart@Emulex.Com>
 
-I was doing some large lun count testing with 2.6.31 and hit
-a BUG_ON() in fc_timeout_deleted_rport(), and it seems like it
-should have been just a matter of time before someone did.
+On Fri, Oct 09, 2009 at 09:08:07AM -0500, James Bottomley wrote:
+> On Fri, 2009-10-09 at 11:15 +0200, Ingo Molnar wrote:
+> > * Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> > 
+> > > On Thu, 8 Oct 2009, Theodore Tso wrote:
+> > > > 
+> > > > So would it be acceptable to merge the 50 kloc of crap _during_ the
+> > > > merge window?
+> > > 
+> > > Yes. I actually looked at the driver (since I had pulled it - I've 
+> > > unpulled it but am still mulling it over), and while I think it looked 
+> > > huge and overly complex, it by no means gave me the kinds of vibes I 
+> > > get from some "obviously-ported-from-windows-with-no-clue" drivers.
+> > > 
+> > > So at least from my quick look I didn't get the feeling that the 
+> > > driver was "evil". For me, it's a timing issue.  I hate getting big 
+> > > pull requests after -rc1 is out, and I really don't like the feeling 
+> > > that people are just ignoring the merge window.
+> > > 
+> > > That said, if somebody wants to look more closely at the driver, and 
+> > > then wants to convince people that it should have gone through 
+> > > "staging", feel free. But that's not what I've personally been arguing 
+> > > about.
+> > 
+> > Greg, what's your take on the quality of this new driver? Do you have 
+> > some time to do a review of this with drivers/staging/ versus drivers/ 
+> > glasses on? The Git URI is at:
+> 
+> To me, the matter of staging versus actual tree isn't a quality issue
+> (otherwise we'd be shifting ~75% of SCSI drivers to staging, depending
+> on whose view of "quality" was being used).
 
-It seems invalid to set port_state under lock, then expect it to
-remain set after releasing the lock.  Another thread called
-fc_remote_port_add() when the lock was released, changing the
-port_state.
+Great, I'll be glad to take them :)
 
-This patch removes the BUG_ON and moves the test of the
-port_state to inside the host_lock.  It's been running for
-several weeks now with no ill effect.
+> It's an ABI issue.  If we would have to change the user visible ABI
+> while the driver was being cleaned up, I'd want it in staging to warn
+> users to expect these problems.  Although we couldn't clean up
+> everything, I did make sure this driver plugs correctly into the
+> standard linux FC ABI before putting it in the SCSI tree, so there are
+> no ABI changes anticipated even though there will likely be a lot of
+> code changes.  Therefore, the correct clean up path for this one is
+> through the SCSI tree.
 
-Applies to 2.6.31 and 2.6.32-rc3.
+Ok, that's your call as the scsi maintainer.
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
+If you need anything to go into staging as an incentive to get the code
+cleaned up, or if not, dropped, just send it to me.
 
+thanks,
 
---- a/drivers/scsi/scsi_transport_fc.c	2009-09-09 17:13:59.000000000 -0500
-+++ b/drivers/scsi/scsi_transport_fc.c	2009-10-02 15:09:00.298487474 -0500
-@@ -2384,6 +2384,7 @@ fc_rport_final_delete(struct work_struct
- 	struct Scsi_Host *shost = rport_to_shost(rport);
- 	struct fc_internal *i = to_fc_internal(shost->transportt);
- 	unsigned long flags;
-+	int do_callback = 0;
- 
- 	/*
- 	 * if a scan is pending, flush the SCSI Host work_q so that
-@@ -2422,8 +2423,15 @@ fc_rport_final_delete(struct work_struct
- 	 * Avoid this call if we already called it when we preserved the
- 	 * rport for the binding.
- 	 */
-+	spin_lock_irqsave(shost->host_lock, flags);
- 	if (!(rport->flags & FC_RPORT_DEVLOSS_CALLBK_DONE) &&
--	    (i->f->dev_loss_tmo_callbk))
-+	    (i->f->dev_loss_tmo_callbk)) {
-+		rport->flags |= FC_RPORT_DEVLOSS_CALLBK_DONE;
-+		do_callback = 1;
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	if (do_callback)
- 		i->f->dev_loss_tmo_callbk(rport);
- 
- 	fc_bsg_remove(rport->rqst_q);
-@@ -2970,6 +2978,7 @@ fc_timeout_deleted_rport(struct work_str
- 	struct fc_internal *i = to_fc_internal(shost->transportt);
- 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
- 	unsigned long flags;
-+	int do_callback = 0;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 
-@@ -3035,7 +3044,6 @@ fc_timeout_deleted_rport(struct work_str
- 	rport->roles = FC_PORT_ROLE_UNKNOWN;
- 	rport->port_state = FC_PORTSTATE_NOTPRESENT;
- 	rport->flags &= ~FC_RPORT_FAST_FAIL_TIMEDOUT;
--	rport->flags |= FC_RPORT_DEVLOSS_CALLBK_DONE;
- 
- 	/*
- 	 * Pre-emptively kill I/O rather than waiting for the work queue
-@@ -3045,32 +3053,40 @@ fc_timeout_deleted_rport(struct work_str
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	fc_terminate_rport_io(rport);
- 
--	BUG_ON(rport->port_state != FC_PORTSTATE_NOTPRESENT);
-+	spin_lock_irqsave(shost->host_lock, flags);
-+
-+	if (rport->port_state == FC_PORTSTATE_NOTPRESENT) {	/* still missing */
-+
-+		/* remove the identifiers that aren't used in the consisting binding */
-+		switch (fc_host->tgtid_bind_type) {
-+		case FC_TGTID_BIND_BY_WWPN:
-+			rport->node_name = -1;
-+			rport->port_id = -1;
-+			break;
-+		case FC_TGTID_BIND_BY_WWNN:
-+			rport->port_name = -1;
-+			rport->port_id = -1;
-+			break;
-+		case FC_TGTID_BIND_BY_ID:
-+			rport->node_name = -1;
-+			rport->port_name = -1;
-+			break;
-+		case FC_TGTID_BIND_NONE:	/* to keep compiler happy */
-+			break;
-+		}
- 
--	/* remove the identifiers that aren't used in the consisting binding */
--	switch (fc_host->tgtid_bind_type) {
--	case FC_TGTID_BIND_BY_WWPN:
--		rport->node_name = -1;
--		rport->port_id = -1;
--		break;
--	case FC_TGTID_BIND_BY_WWNN:
--		rport->port_name = -1;
--		rport->port_id = -1;
--		break;
--	case FC_TGTID_BIND_BY_ID:
--		rport->node_name = -1;
--		rport->port_name = -1;
--		break;
--	case FC_TGTID_BIND_NONE:	/* to keep compiler happy */
--		break;
-+		/*
-+		 * As this only occurs if the remote port (scsi target)
-+		 * went away and didn't come back - we'll remove
-+		 * all attached scsi devices.
-+		 */
-+		rport->flags |= FC_RPORT_DEVLOSS_CALLBK_DONE;
-+		fc_queue_work(shost, &rport->stgt_delete_work);
-+
-+		do_callback = 1;
- 	}
- 
--	/*
--	 * As this only occurs if the remote port (scsi target)
--	 * went away and didn't come back - we'll remove
--	 * all attached scsi devices.
--	 */
--	fc_queue_work(shost, &rport->stgt_delete_work);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	/*
- 	 * Notify the driver that the rport is now dead. The LLDD will
-@@ -3078,7 +3094,7 @@ fc_timeout_deleted_rport(struct work_str
- 	 *
- 	 * Note: we set the CALLBK_DONE flag above to correspond
- 	 */
--	if (i->f->dev_loss_tmo_callbk)
-+	if (do_callback && i->f->dev_loss_tmo_callbk)
- 		i->f->dev_loss_tmo_callbk(rport);
- }
- 
-
+greg k-h
