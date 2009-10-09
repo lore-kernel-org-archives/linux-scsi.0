@@ -1,59 +1,71 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: [PATCH -repost 4/4] SCSI: scsi_lib, fix potential NULL dereference
-Date: Fri,  9 Oct 2009 15:58:08 +0200
-Message-ID: <1255096688-23399-4-git-send-email-jirislaby@gmail.com>
-References: <1255096688-23399-1-git-send-email-jirislaby@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server1.wserver.cz ([82.113.45.157]:37649 "EHLO
-	server1.wserver.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760864AbZJIN6q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2009 09:58:46 -0400
-In-Reply-To: <1255096688-23399-1-git-send-email-jirislaby@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: RE: [PATCH 0/4] scsi_dh: Make scsi_dh_activate
+	asynchronous
+Date: Fri, 9 Oct 2009 08:06:01 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF474F4317C@cosmail01.lsi.com>
+References: <20090930020811.11455.59565.sendpatchset@chandra-ubuntu>
+	<4AC9EE1B.7030702@suse.de> <1254785154.15826.18.camel@chandra-ubuntu>
+	<4ACAFAF5.5000805@suse.de>
+	<E463DF2B2E584B4A82673F53D62C2EF474ED90C7@cosmail01.lsi.com>
+	<E463DF2B2E584B4A82673F53D62C2EF474ED95C8@cosmail01.lsi.com>
+	<4ACF05FF.2030401@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <4ACF05FF.2030401@suse.de>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Stankey,
+	Robert" <Robert.Stankey@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sekharan@linux.vnet.ibm.com" <sekharan@linux.vnet.ibm.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, device-mapper development <dm-devel@redhat.com>, "Chauhan,
+	Vijay" <Vijay.Chauhan@lsi.com>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>, "Qi,
+	Yanling" <Yanling.Qi@lsi.com>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
 
-Stanse found a potential NULL dereference in scsi_kill_request.
+Hannes, Thanks again for the response..  Please see the comments below..
+=20
+> Moger, Babu wrote:
+> > 1. Run I/O on both these Luns
+> > 2. Pull the cable connected to controller A.
+> > 3. Failover will happen and Lun 0 will move to controller B. Now both
+> the Luns are on controller B.
+> > 4. Connect the cable back on controller A.
+> > 5. multipath tool will detect the physical Luns on controller A and
+> run the priority test.
+> > 6. It will find that Lun 0 is not on preferred path and will initiate
+> a failback.
+> >    Because it is a controller level failover it will move the Lun 1
+> also to controller A.
+> >    Now both the Luns are on controller A.
+> > 7. Multipath tool will come again and find Lun 1 not on preferred
+> path and initiate failback.
+> >    This will both the Luns to controller B.
+> >    This will continue forever.
+> >
+> Hmm. Yes, correct.
+> After all, the patch I sent was meant to be a proof of concept, not a
+> fully fledged
+> solution. (In fact, I'm quite surprised it worked so well :-)
+>=20
+> What about modifying the LUN select code to switch all _visible_ LUNs
+> (ie all LUNs which
+> are _not_ on the preferred path) in one go?
+> That way we wouldn't run into this issue.
 
-Instead of triggering BUG() in 'if (unlikely(cmd == NULL))' branch,
-the kernel will Oops earlier on cmd dereference.
+In this case handler should be able to do two tasks.
+1. move all the Luns when one of the path failed(failover)
+2. move only the luns which are not there on preferred path(failback).
 
-Move the dereferences after the if.
-
-Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
----
- drivers/scsi/scsi_lib.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 39b5858..53bdd25 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1359,9 +1359,9 @@ static int scsi_lld_busy(struct request_queue *q)
- static void scsi_kill_request(struct request *req, struct request_queue *q)
- {
- 	struct scsi_cmnd *cmd = req->special;
--	struct scsi_device *sdev = cmd->device;
--	struct scsi_target *starget = scsi_target(sdev);
--	struct Scsi_Host *shost = sdev->host;
-+	struct scsi_device *sdev;
-+	struct scsi_target *starget;
-+	struct Scsi_Host *shost;
- 
- 	blk_start_request(req);
- 
-@@ -1371,6 +1371,9 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 		BUG();
- 	}
- 
-+	sdev = cmd->device;
-+	starget = scsi_target(sdev);
-+	shost = sdev->host;
- 	scsi_init_cmd_errh(cmd);
- 	cmd->result = DID_NO_CONNECT << 16;
- 	atomic_inc(&cmd->device->iorequest_cnt);
--- 
-1.6.4.2
-
+With the current code rdac_activate(struct scsi_device *sdev) we cannot m=
+ake that decision.  There is no information passed from dm layer to know =
+if this command is for task 1(failover) or task 2(failback).=20
