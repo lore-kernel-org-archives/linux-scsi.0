@@ -1,515 +1,244 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
-Date: Fri, 9 Oct 2009 11:15:38 +0200
-Message-ID: <20091009091538.GA4154@elte.hu>
-References: <alpine.LFD.2.01.0910060851590.3432@localhost.localdomain> <1254862442.4383.183.camel@mulgrave.site> <1255012399.4187.24.camel@mulgrave.site> <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain> <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain> <1255031298.4187.260.camel@mulgrave.site> <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain> <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain> <20091008210737.GD29181@mit.edu> <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
+	<narasimhareddyc@hcl.in>
+Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Fri, 9 Oct 2009 14:53:19 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134554A@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:42885 "EHLO mx2.mail.elte.hu"
+Received: from gws08.mail.hcl.in ([203.105.186.28]:39116 "EHLO gws08.hcl.in"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754997AbZJIJQ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Oct 2009 05:16:27 -0400
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+	id S1760492AbZJIJZE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2009 05:25:04 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
-
-
-* Linus Torvalds <torvalds@linux-foundation.org> wrote:
-
-> On Thu, 8 Oct 2009, Theodore Tso wrote:
-> > 
-> > So would it be acceptable to merge the 50 kloc of crap _during_ the
-> > merge window?
-> 
-> Yes. I actually looked at the driver (since I had pulled it - I've 
-> unpulled it but am still mulling it over), and while I think it looked 
-> huge and overly complex, it by no means gave me the kinds of vibes I 
-> get from some "obviously-ported-from-windows-with-no-clue" drivers.
-> 
-> So at least from my quick look I didn't get the feeling that the 
-> driver was "evil". For me, it's a timing issue.  I hate getting big 
-> pull requests after -rc1 is out, and I really don't like the feeling 
-> that people are just ignoring the merge window.
-> 
-> That said, if somebody wants to look more closely at the driver, and 
-> then wants to convince people that it should have gone through 
-> "staging", feel free. But that's not what I've personally been arguing 
-> about.
-
-Greg, what's your take on the quality of this new driver? Do you have 
-some time to do a review of this with drivers/staging/ versus drivers/ 
-glasses on? The Git URI is at:
-
-  master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6 master
-
-To me, after a very quick skimming of it it's borderline. The driver 
-looks like proper Linux code at first sight in places, but i can see 
-_lots_ of (as in thousands of) odd bits - at least odd for a newly 
-submitted driver:
-
- - 200+ instances of bfa_boolean_t, which is defined via:
-
-  enum bfa_boolean {
-          BFA_FALSE = 0,
-          BFA_TRUE  = 1
-  };
-  #define bfa_boolean_t enum bfa_boolean
-
-  that should be bool simply.
-
- - the driver is full with misaligned vertical spacing like:
-
-struct bfa_pcidev_s {
-	int             pci_slot;
-	u8         pci_func;
-	u16	device_id;
-	bfa_os_addr_t   pci_bar_kva;
-};
-
-void
-bfa_timer_beat(struct bfa_timer_mod_s *mod)
-{
-	struct list_head        *qh = &mod->timer_q;
-	struct list_head        *qe, *qe_next;
-	struct bfa_timer_s *elem;
-	struct list_head         timedout_q;
-
-   which suggests that this driver was treated with a
-   de-ugly-ifying sed job without a human looking at the result. There's
-   over a thousand (!) of such instances in the driver.
-
- - various forms of avoidable whitespace damage: for example 873 
-   instances of 'space' character followed by 'tab'.
-
- - bfa_timer.c looks weird - implements a naive timeout mechanism on top
-   of real timers? Why not use real timers in to begin with?
-
- - Also, the .h files are layed out oddly. Bits of them are in 
-   include/*, bits of them in *.h.
-
- - the 90+ easily avoidable stylistic details attached below in
-   drivers/scsi/bfa/fcbuild.c.
-
- - accesses to cmnd->host_scribble both seem an ancient method, and 
-   are also somewhat SMP-barrier-unclean. (i'm sure it works and is 
-   correct in practice as there are heavy, serializing functions around 
-   those places, but the casts still look ugly and there are no 
-   barriers.)
-
- - The 290+ instances of bfa_assert() uses should probably be BUG_ON()s 
-   or WARN_ON()s instead of a wrapped panic. Nothing ever defines 
-   BFA_PERF_BUILD so the wrapping seems removable.
-
-havent looked further and these are all easily addressed by just looking 
-at the code and doing fixes that dont impact the resulting .o - so very 
-easy to do en masse.
-
-I dont know what's the current mainline inclusion quality threshold for 
-non-staging Linux drivers - it might be ok. Also, the driver commit has 
-been rebased a few days ago which makes it hard to see its stability 
-track record.
-
-	Ingo
-
---------------->
-ERROR: return is not a function, parentheses are not required
-#191: FILE: fcbuild.c:191:
-+			return (FC_PARSE_BUSY);
-
-ERROR: return is not a function, parentheses are not required
-#193: FILE: fcbuild.c:193:
-+			return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#196: FILE: fcbuild.c:196:
-+		return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#198: FILE: fcbuild.c:198:
-+	return (FC_PARSE_OK);
-
-CHECK: multiple assignments should be avoided
-#226: FILE: fcbuild.c:226:
-+	plogi->csp.rxsz = plogi->class3.rxsz = bfa_os_htons(pdu_size);
-
-ERROR: return is not a function, parentheses are not required
-#231: FILE: fcbuild.c:231:
-+	return (sizeof(struct fc_logi_s));
-
-CHECK: multiple assignments should be avoided
-#248: FILE: fcbuild.c:248:
-+	flogi->csp.rxsz = flogi->class3.rxsz = bfa_os_htons(pdu_size);
-
-ERROR: return is not a function, parentheses are not required
-#270: FILE: fcbuild.c:270:
-+	return (sizeof(struct fc_logi_s));
-
-CHECK: multiple assignments should be avoided
-#284: FILE: fcbuild.c:284:
-+	flogi->csp.rxsz = flogi->class3.rxsz = bfa_os_htons(pdu_size);
-
-ERROR: return is not a function, parentheses are not required
-#290: FILE: fcbuild.c:290:
-+	return (sizeof(struct fc_logi_s));
-
-CHECK: multiple assignments should be avoided
-#305: FILE: fcbuild.c:305:
-+	flogi->csp.rxsz = flogi->class3.rxsz = bfa_os_htons(pdu_size);
-
-ERROR: return is not a function, parentheses are not required
-#309: FILE: fcbuild.c:309:
-+	return (sizeof(struct fc_logi_s));
-
-ERROR: return is not a function, parentheses are not required
-#341: FILE: fcbuild.c:341:
-+			return (FC_PARSE_BUSY);
-
-ERROR: return is not a function, parentheses are not required
-#343: FILE: fcbuild.c:343:
-+			return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#347: FILE: fcbuild.c:347:
-+			return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#350: FILE: fcbuild.c:350:
-+			return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#353: FILE: fcbuild.c:353:
-+			return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#356: FILE: fcbuild.c:356:
-+			return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#358: FILE: fcbuild.c:358:
-+		return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#360: FILE: fcbuild.c:360:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#375: FILE: fcbuild.c:375:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#396: FILE: fcbuild.c:396:
-+	return (sizeof(struct fc_prli_s));
-
-ERROR: return is not a function, parentheses are not required
-#417: FILE: fcbuild.c:417:
-+	return (sizeof(struct fc_prli_s));
-
-ERROR: return is not a function, parentheses are not required
-#424: FILE: fcbuild.c:424:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#427: FILE: fcbuild.c:427:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#431: FILE: fcbuild.c:431:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#434: FILE: fcbuild.c:434:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#436: FILE: fcbuild.c:436:
-+	return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#443: FILE: fcbuild.c:443:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#446: FILE: fcbuild.c:446:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#449: FILE: fcbuild.c:449:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#451: FILE: fcbuild.c:451:
-+	return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#465: FILE: fcbuild.c:465:
-+	return (sizeof(struct fc_logo_s));
-
-ERROR: return is not a function, parentheses are not required
-#487: FILE: fcbuild.c:487:
-+	return (sizeof(struct fc_adisc_s));
-
-ERROR: return is not a function, parentheses are not required
-#514: FILE: fcbuild.c:514:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#517: FILE: fcbuild.c:517:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#520: FILE: fcbuild.c:520:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#522: FILE: fcbuild.c:522:
-+	return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#532: FILE: fcbuild.c:532:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#537: FILE: fcbuild.c:537:
-+		return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#539: FILE: fcbuild.c:539:
-+	return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#553: FILE: fcbuild.c:553:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#556: FILE: fcbuild.c:556:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#559: FILE: fcbuild.c:559:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#573: FILE: fcbuild.c:573:
-+	return (sizeof(struct fchs_s));
-
-ERROR: return is not a function, parentheses are not required
-#581: FILE: fcbuild.c:581:
-+		return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#583: FILE: fcbuild.c:583:
-+	return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#600: FILE: fcbuild.c:600:
-+	return (sizeof(struct fc_rrq_s));
-
-ERROR: return is not a function, parentheses are not required
-#614: FILE: fcbuild.c:614:
-+	return (sizeof(struct fc_els_cmd_s));
-
-ERROR: return is not a function, parentheses are not required
-#630: FILE: fcbuild.c:630:
-+	return (sizeof(struct fc_ls_rjt_s));
-
-ERROR: return is not a function, parentheses are not required
-#646: FILE: fcbuild.c:646:
-+	return (sizeof(struct fc_ba_acc_s));
-
-ERROR: return is not a function, parentheses are not required
-#657: FILE: fcbuild.c:657:
-+	return (sizeof(struct fc_els_cmd_s));
-
-ERROR: return is not a function, parentheses are not required
-#699: FILE: fcbuild.c:699:
-+	return (bfa_os_ntohs(tprlo_acc->payload_len));
-
-ERROR: return is not a function, parentheses are not required
-#724: FILE: fcbuild.c:724:
-+	return (bfa_os_ntohs(prlo_acc->payload_len));
-
-ERROR: return is not a function, parentheses are not required
-#738: FILE: fcbuild.c:738:
-+	return (sizeof(struct fc_rnid_cmd_s));
-
-ERROR: return is not a function, parentheses are not required
-#762: FILE: fcbuild.c:762:
-+		return (sizeof(struct fc_rnid_acc_s));
-
-ERROR: return is not a function, parentheses are not required
-#764: FILE: fcbuild.c:764:
-+		return (sizeof(struct fc_rnid_acc_s) -
-
-ERROR: return is not a function, parentheses are not required
-#779: FILE: fcbuild.c:779:
-+	return (sizeof(struct fc_rpsc_cmd_s));
-
-ERROR: return is not a function, parentheses are not required
-#800: FILE: fcbuild.c:800:
-+	return (sizeof(struct fc_rpsc2_cmd_s) + ((npids - 1) *
-
-ERROR: return is not a function, parentheses are not required
-#822: FILE: fcbuild.c:822:
-+	return (sizeof(struct fc_rpsc_acc_s));
-
-CHECK: multiple assignments should be avoided
-#855: FILE: fcbuild.c:855:
-+	pdisc->csp.rxsz = pdisc->class3.rxsz = bfa_os_htons(pdu_size);
-
-ERROR: return is not a function, parentheses are not required
-#859: FILE: fcbuild.c:859:
-+	return (sizeof(struct fc_logi_s));
-
-ERROR: return is not a function, parentheses are not required
-#868: FILE: fcbuild.c:868:
-+		return (FC_PARSE_LEN_INVAL);
-
-ERROR: return is not a function, parentheses are not required
-#871: FILE: fcbuild.c:871:
-+		return (FC_PARSE_ACC_INVAL);
-
-ERROR: return is not a function, parentheses are not required
-#874: FILE: fcbuild.c:874:
-+		return (FC_PARSE_PWWN_NOT_EQUAL);
-
-ERROR: return is not a function, parentheses are not required
-#877: FILE: fcbuild.c:877:
-+		return (FC_PARSE_NWWN_NOT_EQUAL);
-
-ERROR: return is not a function, parentheses are not required
-#880: FILE: fcbuild.c:880:
-+		return (FC_PARSE_RXSZ_INVAL);
-
-ERROR: return is not a function, parentheses are not required
-#882: FILE: fcbuild.c:882:
-+	return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#906: FILE: fcbuild.c:906:
-+	return (bfa_os_ntohs(prlo->payload_len));
-
-ERROR: return is not a function, parentheses are not required
-#919: FILE: fcbuild.c:919:
-+		return (FC_PARSE_FAILURE);
-
-ERROR: return is not a function, parentheses are not required
-#939: FILE: fcbuild.c:939:
-+	return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#971: FILE: fcbuild.c:971:
-+	return (bfa_os_ntohs(tprlo->payload_len));
-
-ERROR: return is not a function, parentheses are not required
-#984: FILE: fcbuild.c:984:
-+		return (FC_PARSE_ACC_INVAL);
-
-ERROR: return is not a function, parentheses are not required
-#990: FILE: fcbuild.c:990:
-+			return (FC_PARSE_NOT_FCP);
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+
+Hi James and linux-scsi community,
+
+Can you please let us know your feedback on my response to the queries raised by James so that I will proceed further based on your feedback?
+
+Thanks,
+Narasimha Reddy 
+
+-----Original Message-----
+From: Penchala Narasimha Reddy Chilakala, TLS-Chennai 
+Sent: Wednesday, October 07, 2009 11:33 AM
+To: James Bottomley
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+
+
+Hi James and linux-scsi community,
+
+Have you had a chance to look at my inline responses to the queries raised by James?
+
+Thanks,
+Narasimha Reddy
+
+-----Original Message-----
+From: Penchala Narasimha Reddy Chilakala, TLS-Chennai 
+Sent: Wednesday, September 30, 2009 5:04 PM
+To: Penchala Narasimha Reddy Chilakala, TLS-Chennai; James Bottomley
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+
+Hi James and linux-scsi community,
+
+Sorry for missing a word "not" in the previous mail for the following inline response.
+
+flags is the usual linux convention for this ... and that's what's used
+throughout the rest of the file ... consistency on flags would be better
+(for all the uses).
+
+<Previous response> I do have any issue to replace "mflags" with "flags", but we have used this mflags in dpcsup.c, and commsup.c as well. We initially thought of using flags only, but flags variable is used by some other spinlock function in the same function in dpcsup.c so we do not have any other alternative and went with different name. So we used mflags for the management fib count across all the files.
+
+<Correct response>
+I do not have any issue to replace "mflags" with "flags", but we have used this mflags in dpcsup.c, and commsup.c as well. We initially thought of using flags only, but flags variable is used by some other spinlock function in the same function in dpcsup.c so we do not have any other alternative and went with different name. So we used mflags for the management fib count across all the files.
+
+
+
+Thanks,
+Narasimha Reddy
+ 
+
+-----Original Message-----
+From: Penchala Narasimha Reddy Chilakala, TLS-Chennai 
+Sent: Wednesday, September 30, 2009 4:40 PM
+To: James Bottomley
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+
+Hi James and linux-scsi community,
+
+Thank you very much for your valuable feedback.
+
+Please have a look at my inline responses and let me your opinion so that I will go ahead and do the necessary changes if required.
+
+Thanks,
+Narasimha Reddy
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@suse.de] 
+Sent: Tuesday, September 29, 2009 7:50 PM
+To: Penchala Narasimha Reddy Chilakala, TLS-Chennai
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: Re: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+
+On Tue, 2009-09-29 at 14:17 +0530, Penchala Narasimha Reddy Chilakala,
+TLS-Chennai wrote:
+> Hi James and linux-scsi community,
+>
+>        I would request you that please review the attached patch and do the needful to incorporate the patch in up-coming release. I am happy to provide if any additional info is required to accept the patch.
+>
+> From: Narasimha Reddy <ServeRAIDDriver@hcl.in>
+>
+>         The attached patch was generated for fixing the following issues. These issues were reported by Cisco, SAP and some other customers as well.
+>
+> Regarding the testing of fixes:
+> --------------------------------
+>
+>         These particular problems were reported by Cisco and SAP and customers as well. Cisco reported on RHEL4 U6 and SAP reported on SLES9 SP4 and SLES10 SP2. We added these fixes on RHEL4 U6 and gave a private build to IBM and Cisco. Cisco and IBM tested it for more than 15 days and they reported that they did not see the issue so far. Before the fix, Cisco used to see the issue within 5 days. We generated a patch for SLES9 SP4 and SLES10 SP2 and submitted to Novell. Novell applied the patch and gave a test build to SAP. SAP tested and reported that the build is working properly.
+>
+> We also tested in our lab using the tools "dishogsync", which is IO stress tool and the tool was provided by Cisco.
+>
+> Issue1: File System going into read-only mode
+> ---------
+>
+> Root cause:
+> -----------
+>        The driver tends to not free the memory (FIB) when the management request exits prematurely. The accumulation of such un-freed memory causes the driver to fail to allocate anymore memory (FIB) and hence return 0x70000 value to the upper layer, which puts the file system into read only mode.
+>
+> Fix details:
+> ------------
+>      The fix makes sure to free the memory (FIB) even if the request exits prematurely hence ensuring the driver wouldn't run out of memory (FIBs).
+>
+>
+> Issue2:
+> -------
+>         False Raid Alert occurs- when the Physical Drives and Logical drives are reported as deleted or added, even though there is no change done on the system
+>
+> Root cause:
+> -----------
+>         Driver IOCTLs is signaled with EINTR while waiting on response from the lower layers. Returning "EINTR" will never initiate internal retry.
+>
+> Fix details:
+> ------------
+>         The issue was fixed by replacing "EINTR" with "ERESTARTSYS" for mid-layer retries.
+>
+>
+> Signed-off-by: Narasimha Reddy <ServeRAIDDriver@hcl.in>
+
+Would it be possible to split this into two patches, one that fixes each
+issue?  That makes it easier for distro backporting and bisection
+checking if something goes wrong with the fix
+
+<Narasimha Reddy> Actually, the issues are inter-linked each other even though customers reported the issues separately. So I feel that it would be better go with as single patch instead of separate patches.
+
+>        Please find the attached patch file "community_aac24701.patch", which has been generated for the issues we fixed and "email" file "community_aac24701.email", which has been generated for the statistics like number of lines inserted and deleted, errors etc.
+
+That's fine ... I note you're using outlook, which is known to mangle
+inline patches.
+
+> Regards - Narasimha Reddy
+>
+>
+> DISCLAIMER:
+> -----------------------------------------------------------------------------------------------------------------------
+>
+> The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only.
+> It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in
+> this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates.
+> Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of
+> this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have
+> received this email in error please delete it and notify the sender immediately. Before opening any mail and
+> attachments please check them for viruses and defect.
+>
+> -----------------------------------------------------------------------------------------------------------------------
+
+It does look a bit odd to have a disclaimer like this on an email you've
+just sent to a public list ...
+
+<Narasimha Reddy>:   Yes, I agree with your comment, but the disclaimer will be added by HCL email-server for all outgoing mails outside HCL. I will talk to HCL IT service about this if it is serious issue. Please let me know.
+
+
+> diff -purN a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+> --- a/drivers/scsi/aacraid/aachba.c     2009-09-10 03:43:59.000000000 +0530
+> +++ b/drivers/scsi/aacraid/aachba.c     2009-09-25 11:43:12.000000000 +0530
+> @@ -293,7 +293,10 @@ int aac_get_config_status(struct aac_dev
+>                         status = -EINVAL;
+>                 }
+>         }
+> -       aac_fib_complete(fibptr);
+> +       /* Do not set XferState to zero unless receives a response from F/W */
+> +       if (status >= 0)
+> +               aac_fib_complete(fibptr);
+
+This can just move under the if (status >= 0) below, can't it?
+
+<Narasimha Reddy>: I accept your suggestion as we can avoid two times execution of the same condition and redundancy. Earlier there was no check and comment before calling the aac_fib_complete function. We added a check to fix the issues and comment to understand that why we have done the change and it is easy for reviewing when we have comments like this. 
+
+> +
+>         /* Send a CT_COMMIT_CONFIG to enable discovery of devices */
+>         if (status >= 0) {
+
+[...]
+
+
+> @@ -842,13 +842,22 @@ static int aac_get_pci_info(struct aac_d
+>  int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+>  {
+>         int status;
+> +       unsigned long mflags;
+
+flags is the usual linux convention for this ... and that's what's used
+throughout the rest of the file ... consistency on flags would be better
+(for all the uses).
+
+<Narasimha Reddy> I do have any issue to replace "mflags" with "flags", but we have used this mflags in dpcsup.c, and commsup.c as well. We initially thought of using flags only, but flags variable is used by some other spinlock function in the same function in dpcsup.c so we do not have any other alternative and went with different name. So we used mflags for the management fib count across all the files. 
+
+>
+>         /*
+>          *      HBA gets first crack
+>          */
+>
+> +       spin_lock_irqsave(&dev->manage_lock, mflags);
+> +       if (dev->management_fib_count > AAC_NUM_MGT_FIB) {
+> +               printk(KERN_INFO "No management Fibs Available:%d\n",
+> +                                               dev->management_fib_count);
+> +               spin_unlock_irqrestore(&dev->manage_lock, mflags);
+> +               return -EBUSY;
+> +       }
+> +       spin_unlock_irqrestore(&dev->manage_lock, mflags);
+>         status = aac_dev_ioctl(dev, cmd, arg);
+> -       if(status != -ENOTTY)
+> +       if (status != -ENOTTY)
+>                 return status;
+
+It seems to me from the above that the intention of manage_lock is to
+protect management_fib_count?  If so, there's a race here, isn't there,
+because you check the count under the lock, but then drop the lock which
+makes the count vulnerable to change again before you get to
+aac_fib_send()?  If you really don't want to go over AAC_NUM_MGT_FIB,
+You'll need to do an atomic test and increment somewhere.
+
+<Narasimha Reddy>  We have tested it extensively this in our lab and client as well, we have not seen any race condition here as it is a starting point for any management commands, it is meant only for management commands, and not meant for IO commands. I strongly feel that there would not be any race condition.
+
+For example:
+
+1. Assume driver received a management comment from a application layer, 
+2. On receiving, driver checks whether management fib count reached to its limit or not. 
+3. If it reached to its limit, then it will return as -EBUSY to the application layer saying that no management fibs are available at this point of time. That means currently, all management fibs are in use. 
+
+Other than the above, the code in here looks fine.
+
+Thanks,
+
+James
 
-ERROR: return is not a function, parentheses are not required
-#992: FILE: fcbuild.c:992:
-+			return (FC_PARSE_OPAFLAG_INVAL);
 
-ERROR: return is not a function, parentheses are not required
-#994: FILE: fcbuild.c:994:
-+			return (FC_PARSE_RPAFLAG_INVAL);
 
-ERROR: return is not a function, parentheses are not required
-#996: FILE: fcbuild.c:996:
-+			return (FC_PARSE_OPA_INVAL);
 
-ERROR: return is not a function, parentheses are not required
-#998: FILE: fcbuild.c:998:
-+			return (FC_PARSE_RPA_INVAL);
-
-ERROR: return is not a function, parentheses are not required
-#1000: FILE: fcbuild.c:1000:
-+	return (FC_PARSE_OK);
-
-ERROR: return is not a function, parentheses are not required
-#1027: FILE: fcbuild.c:1027:
-+	return (sizeof(struct fc_ba_rjt_s));
-
-ERROR: return is not a function, parentheses are not required
-#1076: FILE: fcbuild.c:1076:
-+	return (sizeof(struct fcgs_gidpn_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1093: FILE: fcbuild.c:1093:
-+	return (sizeof(fcgs_gpnid_req_t) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1110: FILE: fcbuild.c:1110:
-+	return (sizeof(fcgs_gnnid_req_t) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1140: FILE: fcbuild.c:1140:
-+	return (sizeof(struct fc_scr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1160: FILE: fcbuild.c:1160:
-+	return (sizeof(struct fc_rscn_pl_s));
-
-ERROR: return is not a function, parentheses are not required
-#1191: FILE: fcbuild.c:1191:
-+	return (sizeof(struct fcgs_rftid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1213: FILE: fcbuild.c:1213:
-+	return (sizeof(struct fcgs_rftid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1234: FILE: fcbuild.c:1234:
-+	return (sizeof(struct fcgs_rffid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1256: FILE: fcbuild.c:1256:
-+	return (sizeof(struct fcgs_rspnid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1278: FILE: fcbuild.c:1278:
-+	return (sizeof(struct fcgs_gidft_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1297: FILE: fcbuild.c:1297:
-+	return (sizeof(struct fcgs_rpnid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1316: FILE: fcbuild.c:1316:
-+	return (sizeof(struct fcgs_rnnid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1335: FILE: fcbuild.c:1335:
-+	return (sizeof(struct fcgs_rcsid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1354: FILE: fcbuild.c:1354:
-+	return (sizeof(struct fcgs_rptid_req_s) + sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1371: FILE: fcbuild.c:1371:
-+	return (sizeof(struct ct_hdr_s) + sizeof(struct fcgs_ganxt_req_s));
-
-ERROR: return is not a function, parentheses are not required
-#1388: FILE: fcbuild.c:1388:
-+	return (sizeof(struct ct_hdr_s));
-
-ERROR: return is not a function, parentheses are not required
-#1428: FILE: fcbuild.c:1428:
-+	return (sizeof(struct ct_hdr_s) + sizeof(fcgs_gmal_req_t));
-
-ERROR: return is not a function, parentheses are not required
-#1448: FILE: fcbuild.c:1448:
-+	return (sizeof(struct ct_hdr_s) + sizeof(fcgs_gfn_req_t));
-
-total: 93 errors, 0 warnings, 5 checks, 1449 lines checked
-
-fcbuild.c has style problems, please review.  If any of these errors
-are false positives report them to the maintainer, see
-CHECKPATCH in MAINTAINERS.
