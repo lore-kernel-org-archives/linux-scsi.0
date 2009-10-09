@@ -1,53 +1,33 @@
-From: Daniel Walker <dwalker@fifo99.com>
-Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
-Date: Fri, 09 Oct 2009 06:10:10 -0700
-Message-ID: <1255093810.18167.398.camel@desktop>
-References: <alpine.LFD.2.01.0910060851590.3432@localhost.localdomain>
-	 <1254862442.4383.183.camel@mulgrave.site>
-	 <1255012399.4187.24.camel@mulgrave.site>
-	 <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
-	 <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
-	 <1255031298.4187.260.camel@mulgrave.site>
-	 <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
-	 <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
-	 <20091008210737.GD29181@mit.edu>
-	 <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
-	 <20091009091538.GA4154@elte.hu>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fifo99.com ([67.223.236.141]:44052 "EHLO fifo99.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752524AbZJINLj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Oct 2009 09:11:39 -0400
-In-Reply-To: <20091009091538.GA4154@elte.hu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: [PATCH -repost 1/4] SCSI: aacraid, fix memory leak
+Date: Fri,  9 Oct 2009 15:58:05 +0200
+Message-ID: <1255096688-23399-1-git-send-email-jirislaby@gmail.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932510AbZJIN6s@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
 
-On Fri, 2009-10-09 at 11:15 +0200, Ingo Molnar wrote:
-> 
-> I dont know what's the current mainline inclusion quality threshold for 
-> non-staging Linux drivers - it might be ok. Also, the driver commit has 
-> been rebased a few days ago which makes it hard to see its stability 
-> track record.
-> 
-> 	Ingo
-> 
-> --------------->
-> ERROR: return is not a function, parentheses are not required
-> #191: FILE: fcbuild.c:191:
-> +			return (FC_PARSE_BUSY);
+Stanse found a memory leak on one fail path in aac_send_raw_srb. Add kfree
+there.
 
-The author submitted a basic style clean up here,
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+---
+ drivers/scsi/aacraid/commctrl.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-http://patchwork.kernel.org/patch/50161/
-
-It was a series that did the whole driver.. I'm not sure why those
-patches aren't included, but at least there was an attempt at cleaning
-the driver up..
-
-Daniel
-
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 0391d75..5c9a8be 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -649,6 +649,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
+ 				     AAC_OPT_NEW_COMM) ?
+ 				      (dev->scsi_host_ptr->max_sectors << 9) :
+ 				      65536) {
++					kfree (usg);
+ 					rcode = -EINVAL;
+ 					goto cleanup;
+ 				}
+-- 
+1.6.4.2
