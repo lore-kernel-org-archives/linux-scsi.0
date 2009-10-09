@@ -1,41 +1,51 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
-Date: Thu, 8 Oct 2009 14:13:52 -0700 (PDT)
-Message-ID: <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
-References: <1254844007.4383.85.camel@mulgrave.site> <alpine.LFD.2.01.0910060851590.3432@localhost.localdomain> <1254862442.4383.183.camel@mulgrave.site> <1255012399.4187.24.camel@mulgrave.site> <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
- <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain> <1255031298.4187.260.camel@mulgrave.site> <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain> <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain> <20091008210737.GD29181@mit.edu>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Jason White <jason@jasonjgw.net>
+Subject: SCSI queue warnings under 2.6.31 with LSI SAS1064E controller
+Date: Fri, 9 Oct 2009 03:07:16 +0000 (UTC)
+Message-ID: <ham9d4$ihu$1@ger.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49425 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754688AbZJHVOi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Oct 2009 17:14:38 -0400
-In-Reply-To: <20091008210737.GD29181@mit.edu>
+Received: from lo.gmane.org ([80.91.229.12]:58464 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760208AbZJIDUl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Oct 2009 23:20:41 -0400
+Received: from list by lo.gmane.org with local (Exim 4.50)
+	id 1Mw61U-0007xb-OI
+	for linux-scsi@vger.kernel.org; Fri, 09 Oct 2009 05:20:04 +0200
+Received: from ppp118-208-189-60.lns10.mel4.internode.on.net ([118.208.189.60])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2009 05:20:04 +0200
+Received: from jason by ppp118-208-189-60.lns10.mel4.internode.on.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2009 05:20:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>
-Cc: James Bottomley <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+With apologies in advance if this is the wrong mailing list for this, after
+upgrading from 2.6.30 to 2.6.31 I get the following warnings in syslog
+frequently
+
+Oct  9 12:19:21 jdc kernel: [ 1785.096275] sd 6:1:0:0: strange observation,
+the queue depth is (64) meanwhile fw queue depth (65)
+Oct  9 12:19:51 jdc kernel: [ 1815.312019] sd 6:1:0:0: Queue depth not changed yet
+
+The Debian bug report is here
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=550190
+
+Following a suggestion by Debian developers, I tried patching 2.6.31.3 with
+this commit, but with no effect.
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=9d2e9d66a3f032667934144cd61c396ba49f090d
+
+However, this also shows the problem can be reproduced under 2.6.31.3.
+
+I would prefer to avoid running git bisect on this machine if I can, but I'll
+gladly test a patch if it is unlikely to corrupt the file system.
+
+HP XW6400 workstation, two SAS drives configured for striping, x86-64
+architecture.
+
+I haven't noticed any file corruption so far - I'm not sure how serious this
+problem is.
 
 
-
-On Thu, 8 Oct 2009, Theodore Tso wrote:
-> 
-> So would it be acceptable to merge the 50 kloc of crap _during_ the
-> merge window?
-
-Yes. I actually looked at the driver (since I had pulled it - I've 
-unpulled it but am still mulling it over), and while I think it looked 
-huge and overly complex, it by no means gave me the kinds of vibes I get 
-from some "obviously-ported-from-windows-with-no-clue" drivers.
-
-So at least from my quick look I didn't get the feeling that the driver 
-was "evil". For me, it's a timing issue.  I hate getting big pull requests 
-after -rc1 is out, and I really don't like the feeling that people are 
-just ignoring the merge window.
-
-That said, if somebody wants to look more closely at the driver, and then 
-wants to convince people that it should have gone through "staging", feel 
-free. But that's not what I've personally been arguing about.
-
-			Linus
