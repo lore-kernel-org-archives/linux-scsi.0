@@ -1,82 +1,68 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
-Date: Sat, 10 Oct 2009 13:18:17 -0600
-Message-ID: <200910101318.17785.tfjellstrom@shaw.ca>
-References: <200910091141.52303.tfjellstrom@shaw.ca> <200910100956.19241.tfjellstrom@shaw.ca> <20091010164422.GA8896@linux-dev>
-Reply-To: tfjellstrom@shaw.ca
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [RFC][PATCH v2]Add pm8001 SAS/SATA HBA driver
+Date: Sat, 10 Oct 2009 21:27:10 +0200
+Message-ID: <200910102127.17843.eike-kernel@sf-tec.de>
+References: <9A9AF0C219C5433DB5A8D61D4914C599@usish.com.cn> <9510C503D9D946EDB9AD0B61044881EF@usish.com.cn> <da824cf30910091937l761e1b8bo311dc2a0bbf1c115@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: multipart/signed;
+  boundary="nextPart16521694.kAZkucbelN";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:7877 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762051AbZJJTTD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Oct 2009 15:19:03 -0400
-In-Reply-To: <20091010164422.GA8896@linux-dev>
+Received: from mail.sf-mail.de ([62.27.20.61]:34931 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934621AbZJJT15 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Oct 2009 15:27:57 -0400
+In-Reply-To: <da824cf30910091937l761e1b8bo311dc2a0bbf1c115@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ying Chu <gm.ychu@gmail.com>
-Cc: ayan@marvell.com, linux-kernel <linux-kernel@vger.kernel.org>, linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Grant Grundler <grundler@google.com>
+Cc: jack wang <jack_wang@usish.com>, James Bottomley <James.Bottomley@suse.de>, lindar_liu <lindar_liu@usish.com>, matthew@wil.cx, linux-scsi@vger.kernel.org, tom_peng@usish.com, aoqingy <aoqingyun@usish.com>, roy_wang@usish.com
 
-On Sat October 10 2009, Ying Chu wrote:
-> Hi, Thomas
-> 
->  Did you build the dm/md storage with SATA disk drives?
+--nextPart16521694.kAZkucbelN
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Yes I did. I've got 5 Seagate 7200.12 1TB disks, and two 2TB WD Green drives. 
-The last two tests used solely the 5 Seagates though.
+Grant Grundler wrote:
 
-> On Sat, Oct 10, 2009 at 09:56:19AM -0600, Thomas Fjellstrom wrote:
-> > From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-> > To: linux-kernel <linux-kernel@vger.kernel.org>
-> > Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
-> > Date: Sat, 10 Oct 2009 09:56:19 -0600
-> > Cc: linux-raid <linux-raid@vger.kernel.org>,
-> > 	linux-scsi <linux-scsi@vger.kernel.org>
-> > X-Mailing-List: linux-scsi@vger.kernel.org
-> >
-> > On Fri October 9 2009, Thomas Fjellstrom wrote:
-> > > Hi,
-> > >
-> > > I've been trying to get an AOC-SASLP-MV8 card (pcie x4 2 port SAS card)
-> > > to work with linux for the past month or so. I've recently just RMAed
-> > > my first card, and tested the new one under linux, and I see the same
-> > > problems.
-> > >
-> > > The very first time I made a new array off the controller, formated
-> > > (with xfs) and mounted the volume, it seemed to work. ioozone even
-> > > seemed to run for a while. Sadly after a few minutes I got a stream of
-> > > mvs_abort_task messages in dmesg, and any accesses to the volume, or
-> > > any disks connected to the controller lock up.
-> > >
-> > > After that I updated my 2.6.31 kernel to 2.6.32-rc3-git2 off of
-> > > kernel.org, and the volume fails to mount with the same mvs_abort_task
-> > > messages.
-> > >
-> > > I've attached my dmesg log from both attempts. dmesg1 is the first
-> > > attempt, dmesg2 is the second attempt on the newer kernel.
-> > >
-> > > I would really appreciate some help with this.
-> >
-> > I should also mention that if I attempt to remove any of the drives while
-> > the card is in a hung state, the entire machine locks up with the
-> > keyboard LEDs blinking.
-> >
-> > This does seem to be a rather serious error.
-> >
-> > If there is more I can do to help track down the problems, please let me
-> > know. I really need to get this to work (my current array is FULL, and
-> > may be showing signs of failure) as soon as possible.
-> >
-> > I can pretty much wipe and reinstall everything at any point on this
-> > machine, update/install new kernels, etc. I just don't have a null modem
-> > cable atm to hook up a serial console to capture the errors on OOPSes.
-> >
-> > Thanks.
-> 
+> Later in the patch I see:
+> +       pm8001_ha->tags =3D kmalloc(sizeof(unsigned long)*PM8001_MAX_DEVI=
+CES,
+> +               GFP_KERNEL);
+>=20
+> What are we limiting to 1024 devices? LUNS?
+> I noticed the constant was also used in an initialization loop too.
 
+There are some other things that I find suspicious at this point:
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+=2Dfor allocations of array kcalloc() is usually the way to go as it does=20
+overflow checks for the multiplication result (not needed here with the=20
+current values, but doesn't really hurt in init path either)
+=2Dusing sizeof(*pm8001_ha->tags) would make sure it's the correct size no=
+=20
+matter what type this will ever be, because ...
+=2Dunsigned long has different size on 32 and 64 bit, I don't know if that =
+makes=20
+sense here. AFAICT this is sort of bitmap here so this probably doesn't nee=
+d=20
+to double it's size on 64 bit.
+
+Greetings,
+
+Eike
+
+--nextPart16521694.kAZkucbelN
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEABECAAYFAkrQ4BUACgkQXKSJPmm5/E4kvwCgmNaN5cOlkNow3tGQrq+ABVd8
+BV0An2ZSpHII0KzP7T1fIuPZfGht/GTu
+=iOmz
+-----END PGP SIGNATURE-----
+
+--nextPart16521694.kAZkucbelN--
