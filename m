@@ -1,318 +1,110 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [RFC][PATCH v2]Add pm8001 SAS/SATA HBA driver
-Date: Fri, 9 Oct 2009 19:37:29 -0700
-Message-ID: <da824cf30910091937l761e1b8bo311dc2a0bbf1c115@mail.gmail.com>
-References: <9A9AF0C219C5433DB5A8D61D4914C599@usish.com.cn>
-	 <200909150807.36222.eike-kernel@sf-tec.de>
-	 <4E716EE5A6E14CBEB7C6A982E2347934@usish.com.cn>
-	 <1253826242.5183.178.camel@mulgrave.site>
-	 <08BF47025E834582AAA7FE0AE45FE2D3@usish.com.cn>
-	 <1254518156.3874.139.camel@mulgrave.site>
-	 <A00AC85A58F649ACB9E1738AD668638F@usish.com.cn>
-	 <9510C503D9D946EDB9AD0B61044881EF@usish.com.cn>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
+Date: Sat, 10 Oct 2009 09:37:56 -0500
+Message-ID: <1255185476.2894.24.camel@localhost.localdomain>
+References: <1254844007.4383.85.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910060851590.3432@localhost.localdomain>
+	 <1254862442.4383.183.camel@mulgrave.site>
+	 <1255012399.4187.24.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
+	 <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
+	 <1255031298.4187.260.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
+	 <1255032244.4187.267.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910081309310.3432@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:54346 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934744AbZJJCim (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Oct 2009 22:38:42 -0400
-Received: from wpaz33.hot.corp.google.com (wpaz33.hot.corp.google.com [172.24.198.97])
-	by smtp-out.google.com with ESMTP id n9A2bWXW009706
-	for <linux-scsi@vger.kernel.org>; Sat, 10 Oct 2009 03:37:33 +0100
-Received: from pxi29 (pxi29.prod.google.com [10.243.27.29])
-	by wpaz33.hot.corp.google.com with ESMTP id n9A2bTjs010910
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Oct 2009 19:37:29 -0700
-Received: by pxi29 with SMTP id 29so7145418pxi.14
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Oct 2009 19:37:29 -0700 (PDT)
-In-Reply-To: <9510C503D9D946EDB9AD0B61044881EF@usish.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932558AbZJJOim@vger.kernel.org>
+In-Reply-To: <alpine.LFD.2.01.0910081309310.3432@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, lindar_liu <lindar_liu@usish.com>, Rolf Eike Beer <eike-kernel@sf-tec.de>, matthew@wil.cx, linux-scsi@vger.kernel.org, tom_peng@usish.com, aoqingy <aoqingyun@usish.com>, roy_wang@usish.com
 
-Jack,
-Sorry to nit pick after you've posted several updates. But so many
-still remain that I didn't have time to get past what is posted below.
+On Thu, 2009-10-08 at 13:25 -0700, Linus Torvalds wrote:
+> 
+> On Thu, 8 Oct 2009, James Bottomley wrote:
+> > 
+> > OK, you're saying the merge window exemption should only apply to
+> > drivers which meet our coding standards.
+> 
+> Well, to me, it's not even "coding standards". It's more about "letting 
+> things slide so that users get their hands on things earlier, since it 
+> can't really regress". Coding standards are obviously a part of that, but 
+> I think the coding standard question should come into this mainly in the 
+> sense of "should it go through staging or not" kind of sense, not in the 
+> timing sense.
+> 
+> The reason I object to this driver at this point is that I really think 
+> there's a _huge_ difference between some random average driver, and a 50 
+> kloc monster driver that basically seems to implement its own protocol.
 
+The protocol it's implementing is a Fibre Channel state engine (it is a
+FC driver, after all).  We have an embryonic project in SCSI to do this:
+libfc.  libfc was separated from the fcoe project when we thought it
+might prove useful.  However, it isn't quite production ready yet, but I
+do have agreement that the bca driver will move to it in the near
+future.
 
-On Fri, Oct 9, 2009 at 3:01 AM, jack wang <jack_wang@usish.com> wrote:
-...
-> Add sign-off-by && fix bug when do io on some 6g sas disk will cause
-> open-retry-timeout error.
+Just for comparison with other enterprise FC drivers:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-...
-+F:     drivers/scsi/pm8001/*.*
+qla2xxx: 30k LOC
+lpfc: 58k LOC
 
-This can just be "*". Few people use DOS to store linux source trees. :)
+so it's not even our biggest FC driver.
 
+The other reason for the big state engine is that this isn't a fat
+firmware (everything done inside the firmware of the card) type driver.
+We like thin firmware hardware because it's easier to fix when things go
+wrong.
 
-diff --git a/drivers/scsi/pm8001/pm8001_chips.h
-b/drivers/scsi/pm8001/pm8001_chips.h
-...
-+#define PM8001_READ_32(ADDR32, DMA_ADDR, OFFSET)       \
-+       (*((u32 *)ADDR32)) = (*((u32 *)(((u8 *)DMA_ADDR) + (OFFSET))))
-+
-+#define PM8001_WRITE_32(DMA_ADDR, OFFSET, VALUE32)     \
-+       (*((u32 *)(((u8 *)DMA_ADDR)+(OFFSET)))) = (u32)(VALUE32)
+If you give the perception of penalising drivers for being "huge" you're
+sending the message to hardware manufacturers that they'll have an
+easier time of it if they simply shove all the nasty bits into firmware
+and present the kernel community with a tiny driver for a bloated fat
+firmware card.
 
-I really don't like the name of this macro nor the fact that its a macro.
+> Most random new drivers tend to be a few hundred lines of code, in some 
+> cases a few thousand. They don't generally bring in their own subsystem 
+> code, they often just hook into existing things like the libata layer or 
+> the network driver infrastructure etc.
 
-1) "READ_32" implies MMIO access and DMA_ADDR implies it's touching
-host memory. Something is fundamentally wrong if everything is needed
-to be cast to u32 to compile correctly.
+Right, and in this case, it will eventually plug into libfc ... we just
+haven't quite got the infrastructure ready yet.
 
-2) If there were an inline function, we'd have type checking and
-probably would't need the casts.
+The functional infrastructure we need it to plug into for the userspace
+ABI: scsi_transport_fc is all there and working.
 
-The upside is if the macro is only used to touch data that is
-read/written by the device, then it would be a good place to put
-cpu_to_le32()  (write case) and le32_to_cpu() (read case) calls.
+> So most drivers are in a totally different class than the one I'm 
+> objecting to in the SCSI tree.
+> 
+> And I also really do think there is a huge difference between some 
+> specialized high-end SCSI driver that is only relevant to enterprise 
+> people and some more average driver that is expected to perhaps exist in 
+> lots of consumer devices. How many people does it affect, and what's their 
+> ability to handle it?
 
-...
-+static inline u32 pm8001_mr32(dma_addr_t addr, u32 offset)
-+{
-+       return readl((void *)addr + offset);
-+}
-+static inline void pm8001_mw32(dma_addr_t addr, u32 offset, u32 val)
-+{
-+       writel(val, (void *)addr + offset);
-+}
+Actually, larger than you would think.  Our primary customer at
+distributions is the enterprise.  Now, you may say that enterprise
+distro users aren't at the bleeding edge of kernel development.
+However, we use the club of not being backported to a distro until
+you're upstream to try and force driver writers/hardware vendors to
+engage with the community.  The carrot to them is that as soon as they
+make it upstream, the distros will incorporate the driver.  This makes
+the merge window exemption an important part of that carrot, since
+otherwise they might find themselves on the wrong side of a three month
+cycle.
 
-This is definitely wrong. dma_addr_t is not an MMIO address. Someone
-didn't understand
-that dma_addr_t is ONLY to be used by devices for accessing host
-memory (ie DMA).
+> Another way of putting that "consumer" vs "enterprise" thing: how big is 
+> the _upside_ of merging the driver outside fo the merge window? Again, I 
+> simply think pure number of potential users matters for the "should we let 
+> it slide" question.
 
-This line in init_pci_device_addresses() seems to be the root of the problem:
-+       pm8001_ha->cfg_addr = cfg_addr =
-+               (dma_addr_t)pm8001_ha->io_mem[pcibar].memvirtaddr + offset;
+The upside is that I can use this as an inducement to other driver
+writers for good behaviour, plus the bfa driver can get picked up by the
+enterprise distributions early.  To people engaged in convincing
+hardware vendors to work upstream and release early and often, that's a
+very big upside.
 
-cfg_addr is also a poorly named variable since PCI has a config space
-and I'm sure that's not meant here.
-
-I suggest taking some inspiration (ie copy the coding style and/or
-code) from drivers/net/bnx2.h:
-...
-#define REG_ADDR(bp, offset)            (bp->regview + offset)
-
-#define REG_RD(bp, offset)              readl(REG_ADDR(bp, offset))
-#define REG_RD8(bp, offset)             readb(REG_ADDR(bp, offset))
-...
-struct bnx2x {
-        /* Fields used in the tx and intr/napi performance paths
-         * are grouped together in the beginning of the structure
-         */
-        struct bnx2x_fastpath   fp[MAX_CONTEXT];
-        void __iomem            *regview;
-        void __iomem            *doorbells;
-...
-
-(even though I wished they had used inline functions instead of macros as well).
-
-
-+static inline u32 get_pci_bar_index(u32 pcibar)
-+{
-+               switch (pcibar) {
-+               case 0x10:
-+               case 0x14:
-+                       return 0;
-...
-
-Don't need these two cases. The default case will return 0.
-
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-...
-+/**
-+ * pm8001_ctl_fw_version_show - firmware version
-+ * @cdev - pointer to embedded class device
-+ * @buf - the buffer returned
-
-Almost but not quite docbook correct. See
-Documentation/kernel-doc-nano-HOWTO.txt
-Lots of functions are missing the ":" for the args. "make docbook"
-shouldn't add any warnings for this driver.
-
-+static ssize_t pm8001_ctl_fw_version_show(struct device *cdev,
-+       struct device_attribute *attr, char *buf)
-+{
-+       struct Scsi_Host *shost = class_to_shost(cdev);
-+       struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+       struct pm8001_hba_info *pm8001_ha = sha->lldd_ha;
-+
-+       return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
-+       (pm8001_ha->cfg_data.firmware_rev & 0xFF000000) >> 24,
-+       (pm8001_ha->cfg_data.firmware_rev & 0x00FF0000) >> 16,
-+       (pm8001_ha->cfg_data.firmware_rev & 0x0000FF00) >> 8,
-+       pm8001_ha->cfg_data.firmware_rev & 0x000000FF);
-+}
-
-The "& 0xFF" byte masks aren't needed if the resulting value were cast to u8.
-e.g. (u8) (foo >> 24)
-
-
-
-+       return snprintf(buf, PAGE_SIZE, "%d\n",
-+       pm8001_ha->cfg_data.max_out_io);
-
-Continued lines should be indented at least one (or more) tabs from
-the first line.  This shows up in a bunch of places.
-
-Here's another example:
-+static ssize_t pm8001_ctl_aap_log_show(struct device *cdev,
-...
-+       for (i = 0; i < max; i++) {
-+               str += sprintf(str, "0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x"
-+                              "0x%08x 0x%08x\n",
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr +
-+               i * 32),
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr
-+               + 4 + i * 32),
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr
-+               + 8 + i * 32),
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr
-+               + 12 + i * 32),
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr
-+               + 16 + i * 32),
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr
-+               + 20 + i * 32),
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr
-+               + 24 + i * 32),
-+               *(u32 *)((u8 *)pm8001_ha->memoryMap.region[AAP1].virt_ptr
-+               + 28 + i * 32));
-+       }
-
-Define a macro before the first line with something like this:
-#define AAP1_MEMMAP(r,c)  (*(u32 *)((u8
-*)pm8001_ha->memoryMap.region[AAP1].virt_ptr + (r) * 32 + (c)))
-
-Then the code would be:
-   AAP1_MEMMAP(i,0), AAP1_MEMMAP(i,4), ...
-
-...
-+static ssize_t pm8001_store_update_fw(struct device *cdev,
-+                                     struct device_attribute *attr,
-+                                     const char *buf, size_t count)
-...
-+       default:
-+               pm8001_ha->fw_status = FAIL_PARAMETERS;
-+               break;
-+       }
-+       release_firmware(pm8001_ha->fw_image);
-+out1:
-+       kfree(cmd_ptr);
-+out:
-+       pm8001_ha->fw_status = err;
-
-
-err will clobber the fw_status set in the default case.
-Ie the default case should be setting "err" instead.
-
-
-diff --git a/drivers/scsi/pm8001/pm8001_defs.h
-b/drivers/scsi/pm8001/pm8001_defs.h
-...
-+/* unchangeable hardware details */
-+enum hardware_details {
-+       PM8001_MAX_PHYS         = 8,    /* max. possible phys */
-+       PM8001_MAX_PORTS        = 8,    /* max. possible ports */
-+       PM8001_MAX_DEVICES      = 1024, /* max supported device */
-+};
-
-Does it make any sense to declare these as enum?
-
-Later in the patch I see:
-+       pm8001_ha->tags = kmalloc(sizeof(unsigned long)*PM8001_MAX_DEVICES,
-+               GFP_KERNEL);
-
-What are we limiting to 1024 devices? LUNS?
-I noticed the constant was also used in an initialization loop too.
-
-This use needs a more descriptive error:
-+       if (dev == PM8001_MAX_DEVICES) {
-+               PM8001_FAIL_DBG(pm8001_ha,
-+                       pm8001_printk("max support %d devices, ignore ..\n",
-+                       PM8001_MAX_DEVICES));
-+       }
-
-The error message should indicate exactly what is getting ignored.
-
-
-...
-+ /*error code*/
-+#define MPI_IO_STATUS_SUCCESS  0
-+#define MPI_IO_STATUS_BUSY     1
-+#define MPI_IO_STATUS_FAIL     -1
-
-These look like they should be enum. Just guessing.
-
-
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-...
-+       pm8001_ha->cfg_data.event_log_size                      = 128*1024;
-
-Do these need to be hard coded? Isn't there a #define'd constant for them?
-
-...
-+update_outbound_queue_table(struct pm8001_hba_info *pm8001_ha, int number)
-+{
-+       dma_addr_t address = pm8001_ha->outb_addr;
-...
-
-While "outb" here certainly means "outbound",  can the field please be
-named "outbnd_addr" or "outbound_addr" to avoid any confusion with IO
-Port space accessors (inb() and outb())?
-
-Ditto for pm8001_ha->inb_addr.
-
-...
-+/**
-+ * bar4_shift - function is called to shift BAR base address
-+ * @pm8001_ha : our hba card infomation
-+ * @shiftValue : shifting value in memory bar.
-+ */
-+static u32 bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
-+{
-+       u32 regVal;
-+       u32 max_wait_time;
-+       u32 max_wait_count;
-+
-+       /* program the inbound AXI translation Lower Address */
-+       pm8001_cw32(pm8001_ha, 1, SPC_IBW_AXI_TRANSLATION_LOW, shiftValue);
-+
-+       /* confirm the setting is written */
-+       max_wait_time = 1 * 1000 * 1000;  /* 1 sec */
-+       max_wait_count = max_wait_time;
-+       do {
-+               mdelay(1);
-+               regVal = pm8001_cr32(pm8001_ha, 1, SPC_IBW_AXI_TRANSLATION_LOW);
-+       } while ((regVal != shiftValue) && (--max_wait_count));
-
-
-Comment about "1 sec" is definitely wrong.
-mdelay() is millisecond delay.
-Was udelay() meant to be used here? Probably not.
-Any hangs for 1000 seconds (< 17 minutes) could be explained....
-
-Can we drop max_wait_time variable? It's not helping in this case.
-
-Is there any guarantee bar4_shift() will never get called from
-the interrupt context?
-I just ran out of time to double check.
-Just want to point out it's not OK to spin on the
-cpu for milliseconds at a time in that context.
-
-
-....
-+static void init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
-
-Doesn't this need __devinit since it's being called from pm8001_chip_init() ?
-
-+static int __devinit pm8001_chip_init(struct pm8001_hba_info *pm8001_ha)
-
-sorry...only 1500 lines or so into a 2000 line patch. Gotta run.
-
-
-hope this helps,
-grant
+James
