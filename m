@@ -1,89 +1,61 @@
-From: Eddie <stunnel@attglobal.net>
-Subject: Should I be Worried: sda: p1 size .... limited to end of disk
-Date: Sat, 10 Oct 2009 12:45:42 -0700
-Message-ID: <4AD0E466.2070904@attglobal.net>
-Reply-To: stunnel@attglobal.net
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH RFC] [PATCH] drivers/scsi/ch.c: Remove BKL in ch_open
+Date: Sun, 11 Oct 2009 15:37:09 +0100
+Message-ID: <20091011153709.4438cf9c@lxorguk.ukuu.org.uk>
+References: <alpine.LFD.2.00.0910111443400.3587@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kcout01.prserv.net ([12.154.55.31]:60822 "EHLO
-	kcout01.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757158AbZJJTq3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Oct 2009 15:46:29 -0400
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48815 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753977AbZJKOhG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Oct 2009 10:37:06 -0400
+In-Reply-To: <alpine.LFD.2.00.0910111443400.3587@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: John Kacur <jkacur@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Frederic Weisbecker <fweisbec@gmail.com>, Ingo Molnar <mingo@elte.hu>, Christoph Hellwig <hch@infradead.org>, Jonathan Corbet <corbet@lwn.net>, Andrew Morton <akpm@linux-foundation.org>, Vincent Sanders <vince@simtec.co.uk>, linux-scsi@vger.kernel.org
 
-After the fun and games with my other LSI MegaRAID card, I'm a glutton 
-for punishment.
+On Sun, 11 Oct 2009 15:45:16 +0200 (CEST)
+John Kacur <jkacur@redhat.com> wrote:
 
-I'm building another system, which this time, has an LSI MegaRAID SATA 
-300-8X controller in it.  This appears to be working perfectly, and a 
-lot faster than my other card, with the exception of this warning 
-message during boot:
+[linux-scsi cc'd]
 
-sda: p1 size 2930304132 limited to end of disk
+> Locking in ch_open is covered by the spin_lock, it serializes the calls
+> to idr_find and scsi_device_get. The BKL appears redundant to me here.
 
-Is this something I should be worried about, and how does it come 
-about.  I built a new RAID 5, Logical device, on the card, which the LSI 
-utility says is 1430511MB in size.
+I'm not so sure. In fact there are some quite umm interesting questions
+about this code, and some of them are shared with other modules too.
 
-Here's the relevant output from DMESG:
+Consider the following sequence
 
-scsi 4:1:0:0: Direct-Access     MegaRAID LD 0 RAID5 1430G 815C PQ: 0 ANSI: 2
-sd 4:1:0:0: [sda] 2929686528 512-byte hardware sectors: (1.49 TB/1.36 TiB)
-sd 4:1:0:0: [sda] Write Protect is off
-sd 4:1:0:0: [sda] Mode Sense: 00 00 00 00
-sd 4:1:0:0: [sda] Asking for cache data failed
-sd 4:1:0:0: [sda] Assuming drive cache: write through
-sd 4:1:0:0: [sda] 2929686528 512-byte hardware sectors: (1.49 TB/1.36 TiB)
-sd 4:1:0:0: [sda] Write Protect is off
-sd 4:1:0:0: [sda] Mode Sense: 00 00 00 00
-sd 4:1:0:0: [sda] Asking for cache data failed
-sd 4:1:0:0: [sda] Assuming drive cache: write through
- sda: sda1
-sda: p1 size 2930304132 limited to end of disk
-sd 4:1:0:0: [sda] Attached SCSI disk
-sd 4:1:0:0: Attached scsi generic sg1 type 0
+		CPU1				CPU2
+	register_chrdev
+		ok
+						open device
+						takes lock
+	scsi_register_driver
+		error
 
-And /proc/partions:
+	unregister_chrdev
+	error
+	unload
+						??????
 
-major minor  #blocks  name
+We don't allocate any idr entries in open so the paths don't seem to leak
+and the module itself looks correct. Looking at the bigger picture
+however I am not sure what the module loader is trying to do in
+kernel/module.c with the code at
 
-   3        0   20044080 hda
-   3        1    9727326 hda1
-   3        2    9727357 hda2
-   3        4     586372 hda4
-   8        0 1464843264 sda
-   8        1 1464843232 sda1
- 253        0  314572800 dm-0
- 253        1  157286400 dm-1
- 253        2  209715200 dm-2
- 253        3  104857600 dm-3
- 253        4  104857600 dm-4
- 253        5  262144000 dm-5
+     if (ret < 0) {
+                /* Init routine failed: abort.  Try to protect us from
+                   buggy refcounters. */
+                mod->state = MODULE_STATE_GOING;
+                synchronize_sched();
+                module_put(mod);
+                blocking_notifier_call_chain(&module_notify_list,
 
+but it doesn't seem to be sufficient for what may go on ?
 
-And fdisk:
-
-Disk /dev/sda: 1499.9 GB, 1499999502336 bytes
-255 heads, 63 sectors/track, 182364 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
-Disk identifier: 0x0003d809
-
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1               1      182403  1465152066   8e  Linux LVM
-
-So, where is the discrepancy creeping in.
-
-Also, I see this in DMESG:
-
-sd 4:1:0:0: [sda] Assuming drive cache: write through
-
-But, as this card has a battery backup, I have it set to "Write Back" in 
-the configuration.  So, what mode is it really operating in.
-
-Cheers,
-Eddie
-
+Rusty ?
