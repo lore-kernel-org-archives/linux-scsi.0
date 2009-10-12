@@ -1,37 +1,76 @@
-From: Frederik Deweerdt <frederik.deweerdt-kjvbsxwSFqI@public.gmane.org>
-Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
-Date: Mon, 12 Oct 2009 12:22:01 +0000
-Message-ID: <20091012122201.GA31282@gambetta>
-References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
+Date: Mon, 12 Oct 2009 15:06:52 +0200
+Message-ID: <20091012130652.GB25464@elte.hu>
+References: <1255012399.4187.24.camel@mulgrave.site> <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain> <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain> <1255031298.4187.260.camel@mulgrave.site> <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain> <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain> <20091008210737.GD29181@mit.edu> <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain> <20091009091538.GA4154@elte.hu> <1255097287.2934.21.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756558AbZJLNHk@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <56acieJJ2fF.A.nEB.Hzl0KB@chimera>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+In-Reply-To: <1255097287.2934.21.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Rafael,
 
-On Mon, Oct 12, 2009 at 12:41:30AM +0200, Rafael J. Wysocki wrote:
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14185
-> Subject		: Oops in driversbasefirmware_class
-> Submitter	:  <lars_ericsson-zq6IREYz3ykAvxtiuMwx3w@public.gmane.org>
-> Date		: 2009-09-17 05:09 (25 days old)
-> First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=6e03a201bbe8137487f340d26aa662110e324b20
-> 
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14253
-> Subject		: Oops in driversbasefirmware_class
-> Submitter	: Lars Ericsson <Lars_Ericsson-zq6IREYz3ykAvxtiuMwx3w@public.gmane.org>
-> Date		: 2009-09-16 20:44 (26 days old)
-> References	: http://lkml.org/lkml/2009/9/16/461
-> Handled-By	: Frederik Deweerdt <frederik.deweerdt-kjvbsxwSFqI@public.gmane.org>
-> Patch		: http://patchwork.kernel.org/patch/49914/
-> 
-Those two are refering to the same bug.
+* James Bottomley <James.Bottomley@suse.de> wrote:
 
-Regards,
-Frederik
+> On Fri, 2009-10-09 at 11:15 +0200, Ingo Molnar wrote:
+> > * Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> > 
+> > > On Thu, 8 Oct 2009, Theodore Tso wrote:
+> > > > 
+> > > > So would it be acceptable to merge the 50 kloc of crap _during_ the
+> > > > merge window?
+> > > 
+> > > Yes. I actually looked at the driver (since I had pulled it - I've 
+> > > unpulled it but am still mulling it over), and while I think it looked 
+> > > huge and overly complex, it by no means gave me the kinds of vibes I 
+> > > get from some "obviously-ported-from-windows-with-no-clue" drivers.
+> > > 
+> > > So at least from my quick look I didn't get the feeling that the 
+> > > driver was "evil". For me, it's a timing issue.  I hate getting big 
+> > > pull requests after -rc1 is out, and I really don't like the feeling 
+> > > that people are just ignoring the merge window.
+> > > 
+> > > That said, if somebody wants to look more closely at the driver, and 
+> > > then wants to convince people that it should have gone through 
+> > > "staging", feel free. But that's not what I've personally been arguing 
+> > > about.
+> > 
+> > Greg, what's your take on the quality of this new driver? Do you have 
+> > some time to do a review of this with drivers/staging/ versus drivers/ 
+> > glasses on? The Git URI is at:
+> 
+> To me, the matter of staging versus actual tree isn't a quality issue 
+> (otherwise we'd be shifting ~75% of SCSI drivers to staging, depending 
+> on whose view of "quality" was being used). [...]
+
+I think you need to update your notion of what goes into 
+drivers/staging/ - these days it's primarily about code/implementation 
+quality (Greg please correct me if i'm wrong about that).
+
+Driver ABIs are distinctly down the priority list.
+
+> [...] It's an ABI issue.  If we would have to change the user visible 
+> ABI while the driver was being cleaned up, I'd want it in staging to 
+> warn users to expect these problems.  Although we couldn't clean up 
+> everything, I did make sure this driver plugs correctly into the 
+> standard linux FC ABI before putting it in the SCSI tree, so there are 
+> no ABI changes anticipated even though there will likely be a lot of 
+> code changes.  Therefore, the correct clean up path for this one is 
+> through the SCSI tree.
+
+What kind of significant ABI does this driver expose? If this question 
+even comes up then it's using the wrong kind of ABI i think. Drivers 
+should almost never expose significant new ABIs.
+
+If it's a storage management ABI then that should have been done at a 
+higher level - possibly as a system call, but at minimum as a general 
+facility.
+
+(Anyway ... this cannot be argued without knowing what specific ABI you 
+mean here.)
+
+	Ingo
