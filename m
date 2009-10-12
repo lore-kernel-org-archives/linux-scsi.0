@@ -1,51 +1,68 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.32-rc4: Reported regressions 2.6.30 -> 2.6.31
-Date: Mon, 12 Oct 2009 23:48:33 +0200
-Message-ID: <200910122348.33588.rjw@sisk.pl>
-References: <56acieJJ2fF.A.nEB.Hzl0KB@chimera>
-	<1255377529.9544.63.camel@bluto.andrew>
+From: Greg KH <gregkh-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+Date: Mon, 12 Oct 2009 16:24:29 -0700
+Message-ID: <20091012232429.GA24254@suse.de>
+References: <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
+ <20091008210737.GD29181@mit.edu>
+ <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+ <20091009091538.GA4154@elte.hu>
+ <1255097287.2934.21.camel@localhost.localdomain>
+ <20091012130652.GB25464@elte.hu>
+ <1255357148.2850.91.camel@localhost.localdomain>
+ <20091012145453.GD4565@elte.hu>
+ <20091012150911.GB1656@suse.de>
+ <20091012154244.GA13323@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dri-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1255377529.9544.63.camel@bluto.andrew>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=dri-devel>
-List-Post: <mailto:dri-devel@lists.sourceforge.net>
-List-Help: <mailto:dri-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.sourceforge.net
-To: Andrew Patterson <andrew.patterson@hp.com>
-Cc: DRI <dri-devel@lists.sourceforge.net>, Linux SCSI List <linux-scsi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Natalie Protasevich <protasnb@gmail.com>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20091012154244.GA13323-X9Un+BFzKDI@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Theodore Tso <tytso-3s7WtUTddSA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jing Huang <huangj-43mecJUBy8ZBDgjK7y7TUQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Monday 12 October 2009, Andrew Patterson wrote:
-> On Mon, 2009-10-12 at 00:41 +0200, Rafael J. Wysocki wrote:
-> > 
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14309
-> > Subject		: MCA on hp rx8640
-> > Submitter	: Andrew Patterson <andrew.patterson@hp.com>
-> > Date		: 2009-09-29 17:20 (13 days old)
-> > First-Bad-Commit: http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=db8be50c4307dac2b37305fc59c8dc0f978d09ea
-> > References	: http://www.spinics.net/lists/linux-usb/msg22799.html
-> > 
+On Mon, Oct 12, 2009 at 05:42:44PM +0200, Ingo Molnar wrote:
+> Hm, i think i even gave drivers/staging/ its name?
+
+Yes you did, and I appreciate it :)
+
+> > [...] It seems that I'm the only one that has the ability to drop 
+> > drivers out of the kernel tree, which is a funny situation :)
 > 
-> Linus fixed this one with d93a8f829fe1d2f3002f2c6ddb553d12db420412.  It
-> also looks like a duplicate of
-> http://bugzilla.kernel.org/show_bug.cgi?id=14374
+> You are the only one who has the ability to send a warning shot towards 
+> drivers _without hurting users_, and by moving it into the focus of a 
+> team of cleanup oriented developers.
+> 
+> I think that's an important distinction ;-)
 
-Thanks, I closed #14309 as a duplicate of #14374 that's already closed.
+Good point.
 
-Best,
-Rafael
+> > In thinking about this a lot more, I don't really mind it.  If people 
+> > want to push stuff out of "real" places in the kernel, into 
+> > drivers/staging/ and give the original authors and maintainers notice 
+> > about what is going on, _and_ provide a TODO file for what needs to 
+> > happen to get the code back into the main portion of the kernel tree, 
+> > then I'll be happy to help out with this and manage it.
+> > 
+> > I think a 6-9 month window (basically 3 kernel releases) should be 
+> > sufficient time to have a driver that has been in drivers/staging/ be 
+> > cleaned up enough to move back into the main kernel tree.  If not, it 
+> > could be easily dropped.
+> > 
+> > Any objections to this?
+> 
+> Sounds excellent to me!
 
-------------------------------------------------------------------------------
-Come build with us! The BlackBerry(R) Developer Conference in SF, CA
-is the only developer event you need to attend this year. Jumpstart your
-developing skills, take BlackBerry mobile applications to market and stay 
-ahead of the curve. Join us from November 9 - 12, 2009. Register now!
-http://p.sf.net/sfu/devconference
+Great, I'll await the patches to move stuff to drivers/staging/ now.
+
+Wireless developers, warm up your editors :)
+
+thanks,
+
+greg k-h
 --
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
