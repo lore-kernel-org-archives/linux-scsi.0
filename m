@@ -1,33 +1,33 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Greg KH <gregkh@suse.de>
 Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
-Date: Mon, 12 Oct 2009 09:19:07 -0500
-Message-ID: <1255357148.2850.91.camel@localhost.localdomain>
-References: <1255012399.4187.24.camel@mulgrave.site>
-	 <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
-	 <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
-	 <1255031298.4187.260.camel@mulgrave.site>
-	 <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
-	 <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
-	 <20091008210737.GD29181@mit.edu>
-	 <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
-	 <20091009091538.GA4154@elte.hu>
-	 <1255097287.2934.21.camel@localhost.localdomain>
-	 <20091012130652.GB25464@elte.hu>
+Date: Mon, 12 Oct 2009 07:25:27 -0700
+Message-ID: <20091012142527.GB1037@suse.de>
+References: <alpine.LFD.2.01.0910080736490.3432@localhost.localdomain>
+ <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
+ <1255031298.4187.260.camel@mulgrave.site>
+ <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
+ <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
+ <20091008210737.GD29181@mit.edu>
+ <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+ <20091009091538.GA4154@elte.hu>
+ <1255097287.2934.21.camel@localhost.localdomain>
+ <20091012130652.GB25464@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50824 "EHLO mx2.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:46709 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932185AbZJLOT6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Oct 2009 10:19:58 -0400
+	id S1756848AbZJLO3Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Oct 2009 10:29:16 -0400
+Content-Disposition: inline
 In-Reply-To: <20091012130652.GB25464@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ingo Molnar <mingo@elte.hu>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
 
-On Mon, 2009-10-12 at 15:06 +0200, Ingo Molnar wrote:
+On Mon, Oct 12, 2009 at 03:06:52PM +0200, Ingo Molnar wrote:
+> 
 > * James Bottomley <James.Bottomley@suse.de> wrote:
 > 
 > > On Fri, 2009-10-09 at 11:15 +0200, Ingo Molnar wrote:
@@ -64,49 +64,14 @@ On Mon, 2009-10-12 at 15:06 +0200, Ingo Molnar wrote:
 > I think you need to update your notion of what goes into 
 > drivers/staging/ - these days it's primarily about code/implementation 
 > quality (Greg please correct me if i'm wrong about that).
-> 
-> Driver ABIs are distinctly down the priority list.
 
-Not for me they're not.  We worked hard to unify exposed ABIs for
-drivers, so this is the most important user visible feature.  We can
-clean up code in the drivers tree, that's easy.  We can't break the user
-visible ABI of a supported driver without causing a lot of pain to its
-user community.
+No, so far that is the majority of why stuff is in staging, although
+userspace apis also do play a part here.
 
-> > [...] It's an ABI issue.  If we would have to change the user visible 
-> > ABI while the driver was being cleaned up, I'd want it in staging to 
-> > warn users to expect these problems.  Although we couldn't clean up 
-> > everything, I did make sure this driver plugs correctly into the 
-> > standard linux FC ABI before putting it in the SCSI tree, so there are 
-> > no ABI changes anticipated even though there will likely be a lot of 
-> > code changes.  Therefore, the correct clean up path for this one is 
-> > through the SCSI tree.
-> 
-> What kind of significant ABI does this driver expose? If this question 
-> even comes up then it's using the wrong kind of ABI i think. Drivers 
-> should almost never expose significant new ABIs.
+But I leave it up to the subsystem maintainer to do what they want to
+do, if they want to take coding style mistakes, well, it's their
+responsibility to maintain the crud :)
 
-The answer was in the email fragment you quoted: none on its own.  It
-plugs into the standard FC transport ABI now.
+thanks,
 
-However, there are various storage bodies who see creating user ABIs as
-part of their job.  The way these tend to get implemented is in the
-driver because that's the way it was done in UNIX (each driver rolls its
-own).  Part of my job is going through drivers and taking them out
-again ... while ensuring we at least have a way to perform whatever task
-it was in a uniform manner for all drivers.
-
-> If it's a storage management ABI then that should have been done at a 
-> higher level - possibly as a system call, but at minimum as a general 
-> facility.
-
-It is: it's implemented in the FC transport class, where it's uniform
-for all FC drivers.
-
-James
-
-> (Anyway ... this cannot be argued without knowing what specific ABI you 
-> mean here.)
-> 
-> 	Ingo
-
+greg k-h
