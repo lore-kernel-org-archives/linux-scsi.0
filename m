@@ -1,42 +1,52 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: Re: SCSI driver for VMware's virtual HBA - V6.
-Date: Tue, 13 Oct 2009 16:41:27 -0700
-Message-ID: <20091013234127.GA9024@sequoia.sous-sol.org>
-References: <1254336812.19921.23.camel@ank32.eng.vmware.com>
-	<20091002004725.GP3958@sequoia.sous-sol.org>
-	<1254789028.15233.54.camel@ank32.eng.vmware.com>
-	<20091013053726.GE17547@sequoia.sous-sol.org>
-	<1255470665.12792.105.camel@ank32.eng.vmware.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] NCR5380: bit MR_DMA_MODE set twice in
+ NCR5380_transfer_dma()
+Date: Tue, 13 Oct 2009 16:40:17 -0700
+Message-ID: <20091013164017.f666d9a2.akpm@linux-foundation.org>
+References: <4ACBA5E7.3090000@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <1255470665.12792.105.camel@ank32.eng.vmware.com>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/virtualization>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Alok Kataria <akataria@vmware.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "virtualization@lists.linux-foundataion.org" <virtualization@lists.linux-foundataion.org>, Bart Van Assche <bvanassche@acm.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>, "pv-drivers@vmware.com" <pv-drivers@vmware.com>, Roland Dreier <rdreier@cisco.com>, LKML <linux-kernel@vger.kernel.org>, Chris Wright <chrisw@sous-sol.org>, "Chetan.Loke@Emulex.Com" <Chetan.Loke@Emulex.Com>, James Bottomley <James.Bottomley@suse.de>, virtualization@lists.osdl.org, Daniel Walker <dwalker@fifo99.com>, Rolf Eike Beer <eike-kernel@sf-tec.de>, Robert Love <robert.w.love@intel.com>, Andrew Morton <akpm@linux-foundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60146 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751714AbZJMXlF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Oct 2009 19:41:05 -0400
+In-Reply-To: <4ACBA5E7.3090000@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roel Kluin <roel.kluin@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-* Alok Kataria (akataria@vmware.com) wrote:
-> SCSI driver for VMware's virtual HBA.
-> 
-> From: Alok N Kataria <akataria@vmware.com>
-> 
-> This is a driver for VMware's paravirtualized SCSI device,
-> which should improve disk performance for guests running
-> under control of VMware hypervisors that support such devices.
-> 
-> Signed-off-by: Alok N Kataria <akataria@vmware.com>
+On Tue, 06 Oct 2009 22:17:43 +0200
+Roel Kluin <roel.kluin@gmail.com> wrote:
 
-Looks in good shape to me.
+> Besides keeping the line short, the second setting of the
+> MR_DMA_MODE bit was removed.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+> Please review, maybe some other bit should be set?
 
-Reviewed-by: Chris Wright <chrisw@sous-sol.org>
+The only ones left are MR_BLOCK_DMA_MODE and MR_ARBITRATE.
+
+No, I don't know if they hould have been set either.  Let that sleeping
+dog lie, I suspect.
+
+
+> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> index f92da9f..5d2f148 100644
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> @@ -1857,7 +1857,9 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase
+>  #endif
+>  	/* KLL May need eop and parity in 53c400 */
+>  	if (hostdata->flags & FLAG_NCR53C400)
+> -		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR | MR_ENABLE_EOP_INTR | MR_DMA_MODE | MR_MONITOR_BSY);
+> +		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
+> +				MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR |
+> +				MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
+>  	else
+>  		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
+>  #endif				/* def REAL_DMA */
