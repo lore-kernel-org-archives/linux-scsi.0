@@ -1,132 +1,66 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 2/5] zfcp: Handle WWPN mismatch in PLOGI payload
-Date: Tue, 13 Oct 2009 10:44:08 +0200
-Message-ID: <20091013084944.777367000@de.ibm.com>
+Subject: [patch 1/5] zfcp: fix kfree handling in zfcp_init_device_setup
+Date: Tue, 13 Oct 2009 10:44:07 +0200
+Message-ID: <20091013084943.478223000@de.ibm.com>
 References: <20091013084406.630890000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.17.167]:33492 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933706AbZJMIuX (ORCPT
+Received: from mtagate3.de.ibm.com ([195.212.17.163]:46824 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933804AbZJMIuX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2009 04:50:23 -0400
-Content-Disposition: inline; filename=706-zfcp-wwpn-mismatch.diff
+Content-Disposition: inline; filename=705-zfcp-init-device-kfree.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-For ports, zfcp gets the DID from the FC nameserver and tries to open
-the port. If the open succeeds, zfcp compares the WWPN from the
-nameserver with the WWPN in the PLOGI payload. In case of a mismatch,
-zfcp assumes that the DID of the port just changed and we opened the
-wrong port. This means that zfcp has to forget the DID, lookup the DID
-again and retry.
+The pointer that is allocated with kmalloc() is passed to strsep()
+which modifies it. Later on the modified pointer value will be passed
+to kfree. Save the original pointer and pass that one to kfree
+instead.
 
-This error case had a problem that zfcp forgets the DID, but never
-looks up a new one, stalling the ERP in this case. Fix this by
-triggering the DID lookup and properly exit from the ERP. The DID
-lookup will trigger a new ERP action.
-
-Also ensure when trying to open the port again with the new DID, first
-close the open port, even in the NOESC case.
-
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_erp.c |   22 ++++++++++------------
- drivers/s390/scsi/zfcp_ext.h |    1 +
- drivers/s390/scsi/zfcp_fc.c  |   11 +++++++++++
- 3 files changed, 22 insertions(+), 12 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
---- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2009-10-07 10:16:33.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2009-10-07 10:17:01.000000000 +0200
-@@ -858,10 +858,7 @@ static int zfcp_erp_port_strategy_open_c
- 		if (fc_host_port_type(adapter->scsi_host) == FC_PORTTYPE_PTP)
- 			return zfcp_erp_open_ptp_port(act);
- 		if (!port->d_id) {
--			zfcp_port_get(port);
--			if (!queue_work(adapter->work_queue,
--					&port->gid_pn_work))
--				zfcp_port_put(port);
-+			zfcp_fc_trigger_did_lookup(port);
- 			return ZFCP_ERP_EXIT;
- 		}
- 		return zfcp_erp_port_strategy_open_port(act);
-@@ -869,12 +866,11 @@ static int zfcp_erp_port_strategy_open_c
- 	case ZFCP_ERP_STEP_PORT_OPENING:
- 		/* D_ID might have changed during open */
- 		if (p_status & ZFCP_STATUS_COMMON_OPEN) {
--			if (port->d_id)
--				return ZFCP_ERP_SUCCEEDED;
--			else {
--				act->step = ZFCP_ERP_STEP_PORT_CLOSING;
--				return ZFCP_ERP_CONTINUES;
-+			if (!port->d_id) {
-+				zfcp_fc_trigger_did_lookup(port);
-+				return ZFCP_ERP_EXIT;
- 			}
-+			return ZFCP_ERP_SUCCEEDED;
- 		}
- 		if (port->d_id && !(p_status & ZFCP_STATUS_COMMON_NOESC)) {
- 			port->d_id = 0;
-@@ -889,19 +885,21 @@ static int zfcp_erp_port_strategy_open_c
- static int zfcp_erp_port_strategy(struct zfcp_erp_action *erp_action)
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_aux.c linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c
+--- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2009-10-07 10:17:01.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2009-10-07 10:17:01.000000000 +0200
+@@ -128,12 +128,13 @@ out_ccwdev:
+ static void __init zfcp_init_device_setup(char *devstr)
  {
- 	struct zfcp_port *port = erp_action->port;
-+	int p_status = atomic_read(&port->status);
+ 	char *token;
+-	char *str;
++	char *str, *str_saved;
+ 	char busid[ZFCP_BUS_ID_SIZE];
+ 	u64 wwpn, lun;
  
--	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_NOESC)
-+	if ((p_status & ZFCP_STATUS_COMMON_NOESC) &&
-+	    !(p_status & ZFCP_STATUS_COMMON_OPEN))
- 		goto close_init_done;
+ 	/* duplicate devstr and keep the original for sysfs presentation*/
+-	str = kmalloc(strlen(devstr) + 1, GFP_KERNEL);
++	str_saved = kmalloc(strlen(devstr) + 1, GFP_KERNEL);
++	str = str_saved;
+ 	if (!str)
+ 		return;
  
- 	switch (erp_action->step) {
- 	case ZFCP_ERP_STEP_UNINITIALIZED:
- 		zfcp_erp_port_strategy_clearstati(port);
--		if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_OPEN)
-+		if (p_status & ZFCP_STATUS_COMMON_OPEN)
- 			return zfcp_erp_port_strategy_close(erp_action);
- 		break;
+@@ -152,12 +153,12 @@ static void __init zfcp_init_device_setu
+ 	if (!token || strict_strtoull(token, 0, (unsigned long long *) &lun))
+ 		goto err_out;
  
- 	case ZFCP_ERP_STEP_PORT_CLOSING:
--		if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_OPEN)
-+		if (p_status & ZFCP_STATUS_COMMON_OPEN)
- 			return ZFCP_ERP_FAILED;
- 		break;
- 	}
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h
---- linux-2.6/drivers/s390/scsi/zfcp_ext.h	2009-10-07 10:16:59.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h	2009-10-07 10:17:01.000000000 +0200
-@@ -96,6 +96,7 @@ extern int zfcp_fc_scan_ports(struct zfc
- extern void _zfcp_fc_scan_ports_later(struct work_struct *);
- extern void zfcp_fc_incoming_els(struct zfcp_fsf_req *);
- extern void zfcp_fc_port_did_lookup(struct work_struct *);
-+extern void zfcp_fc_trigger_did_lookup(struct zfcp_port *);
- extern void zfcp_fc_plogi_evaluate(struct zfcp_port *, struct fsf_plogi *);
- extern void zfcp_fc_test_link(struct zfcp_port *);
- extern void zfcp_fc_link_test_work(struct work_struct *);
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
---- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2009-10-07 10:16:33.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2009-10-07 10:17:01.000000000 +0200
-@@ -361,6 +361,17 @@ out:
+-	kfree(str);
++	kfree(str_saved);
+ 	zfcp_init_device_configure(busid, wwpn, lun);
+ 	return;
+ 
+- err_out:
+-	kfree(str);
++err_out:
++	kfree(str_saved);
+ 	pr_err("%s is not a valid SCSI device\n", devstr);
  }
  
- /**
-+ * zfcp_fc_trigger_did_ookup - trigger the d_id lookup using a GPN_FT request
-+ * @port: The zfcp_port to lookup the d_id for.
-+ */
-+void zfcp_fc_trigger_did_lookup(struct zfcp_port *port)
-+{
-+	zfcp_port_get(port);
-+	if (!queue_work(port->adapter->work_queue, &port->gid_pn_work))
-+		zfcp_port_put(port);
-+}
-+
-+/**
-  * zfcp_fc_plogi_evaluate - evaluate PLOGI playload
-  * @port: zfcp_port structure
-  * @plogi: plogi payload
 
