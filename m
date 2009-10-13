@@ -1,73 +1,58 @@
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
-	2.6.32-rc3)
-Date: Tue, 13 Oct 2009 11:08:15 -0700
-Message-ID: <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com>
-References: <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
-	<alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
-	<20091009091538.GA4154@elte.hu> <1255097287.2934.21.camel@localhost.localdomain>
-	<20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain>
-	<20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de>
-	<20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [patch 2/5] zfcp: Handle WWPN mismatch in PLOGI payload
+Date: Tue, 13 Oct 2009 14:09:12 -0400
+Message-ID: <4AD4C248.3040406@emulex.com>
+References: <20091013084406.630890000@de.ibm.com> <20091013084944.777367000@de.ibm.com> <4AD4B01B.2010100@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20091012232429.GA24254@suse.de>
-Sender: netdev-owner@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Ingo Molnar <mingo@elte.hu>, James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:43380 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760849AbZJMSJ4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2009 14:09:56 -0400
+In-Reply-To: <4AD4B01B.2010100@cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Eykholt <jeykholt@cisco.com>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "schwidefsky@de.ibm.com" <schwidefsky@de.ibm.com>, "heiko.carstens@de.ibm.com" <heiko.carstens@de.ibm.com>
 
-On Mon, Oct 12, 2009 at 4:24 PM, Greg KH <gregkh@suse.de> wrote:
-> On Mon, Oct 12, 2009 at 05:42:44PM +0200, Ingo Molnar wrote:
->> Hm, i think i even gave drivers/staging/ its name?
->
-> Yes you did, and I appreciate it :)
->
->> > [...] It seems that I'm the only one that has the ability to drop
->> > drivers out of the kernel tree, which is a funny situation :)
->>
->> You are the only one who has the ability to send a warning shot towa=
-rds
->> drivers _without hurting users_, and by moving it into the focus of =
-a
->> team of cleanup oriented developers.
->>
->> I think that's an important distinction ;-)
->
-> Good point.
->
->> > In thinking about this a lot more, I don't really mind it. =C2=A0I=
-f people
->> > want to push stuff out of "real" places in the kernel, into
->> > drivers/staging/ and give the original authors and maintainers not=
-ice
->> > about what is going on, _and_ provide a TODO file for what needs t=
-o
->> > happen to get the code back into the main portion of the kernel tr=
-ee,
->> > then I'll be happy to help out with this and manage it.
->> >
->> > I think a 6-9 month window (basically 3 kernel releases) should be
->> > sufficient time to have a driver that has been in drivers/staging/=
- be
->> > cleaned up enough to move back into the main kernel tree. =C2=A0If=
- not, it
->> > could be easily dropped.
->> >
->> > Any objections to this?
->>
->> Sounds excellent to me!
->
-> Great, I'll await the patches to move stuff to drivers/staging/ now.
->
-> Wireless developers, warm up your editors :)
 
-OK -- prism54 seems like a good candidate, instead of removing it
-completely as I originally outlined on the feature removal schedule.
-Do we have a file to give notices to move drivers to staging because
-they are old as with the feature removal schedule? The more visible
-these things become the better it is for users.
 
-  Luis
+Joe Eykholt wrote:
+> Christof Schmitt wrote:
+>   
+>> From: Christof Schmitt <christof.schmitt@de.ibm.com>
+>>
+>> For ports, zfcp gets the DID from the FC nameserver and tries to open
+>> the port. If the open succeeds, zfcp compares the WWPN from the
+>> nameserver with the WWPN in the PLOGI payload. In case of a mismatch,
+>> zfcp assumes that the DID of the port just changed and we opened the
+>> wrong port. This means that zfcp has to forget the DID, lookup the DID
+>> again and retry.
+>>     
+>
+> Does this happen very often?  Would you get an RSCN if a target's WWPN changed?
+>   
+You should - as it is supposed to re-login with the fabric, thus the 
+fabric login will update the nameserver, and nameserver will generate 
+the RSCN. But, there's no guarantee as to how quickly you will see the 
+RSCN.   If you were on FC-AL, this happens all the time and never w/ an 
+RSCN.
+
+> Just wondering how this happens and whether libfc needs similar defenses.
+> Is it due to a broken target?
+>   
+
+Libfc needs a similar defense.  You may not need to compare against the 
+"nameserver" values, but you had better compare against same N_Port_ID, 
+different WWPN. or vice-versa.   Its common to have RSCN events delayed, 
+allowing discovery to occur in between events that may be outstanding 
+(e.g. tgt plugs in - RSCN-1 event, tgt moves to another port (user error 
+-kicks out and replugs) or an array failover such that WWPN moves to new 
+switch port/N_Port_ID - RSCN-2 event;  and your ADISC/PLOGI based on 
+RSCN-1 arrives and is responded to sooner than the nameserver propagates 
+its updates and you receive RSCN-2)
+
+-- james s
+
