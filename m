@@ -1,72 +1,73 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [RFC][PATCH v3]Add pm8001 SAS/SATA HBA driver
-Date: Tue, 13 Oct 2009 13:05:36 +0200
-Message-ID: <200910131305.41047.eike-kernel@sf-tec.de>
-References: <9A9AF0C219C5433DB5A8D61D4914C599@usish.com.cn> <da824cf30910091937l761e1b8bo311dc2a0bbf1c115@mail.gmail.com> <D7F4135C8933429C8019D47D3DB5A7D0@usish.com.cn>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [GIT PULL] SCSI fixes for 2.6.32-rc3
+Date: Tue, 13 Oct 2009 14:29:37 +0000
+Message-ID: <1255444177.2855.91.camel@localhost.localdomain>
+References: <alpine.LFD.2.01.0910080742230.3432@localhost.localdomain>
+	 <1255031298.4187.260.camel@mulgrave.site>
+	 <alpine.LFD.2.01.0910081252090.3432@localhost.localdomain>
+	 <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
+	 <20091008210737.GD29181@mit.edu>
+	 <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
+	 <20091009091538.GA4154@elte.hu>
+	 <1255097287.2934.21.camel@localhost.localdomain>
+	 <20091012130652.GB25464@elte.hu>
+	 <1255357148.2850.91.camel@localhost.localdomain>
+	 <20091012145453.GD4565@elte.hu>
+	 <1255361148.2850.298.camel@localhost.localdomain>
+	 <alpine.LFD.2.01.0910121022110.3438@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2429481.ZxZ63OebOl";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:41858 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098AbZJMLG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Oct 2009 07:06:27 -0400
-In-Reply-To: <D7F4135C8933429C8019D47D3DB5A7D0@usish.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759994AbZJMOaX@vger.kernel.org>
+In-Reply-To: <alpine.LFD.2.01.0910121022110.3438@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ingo Molnar <mingo@elte.hu>, Greg Kroah-Hartman <gregkh@suse.de>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>
-Cc: 'James Bottomley' <James.Bottomley@suse.de>, 'Grant Grundler' <grundler@google.com>, 'lindar_liu' <lindar_liu@usish.com>, matthew@wil.cx, linux-scsi@vger.kernel.org, tom_peng@usish.com, 'aoqingy' <aoqingyun@usish.com>, roy_wang@usish.com
 
---nextPart2429481.ZxZ63OebOl
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Mon, 2009-10-12 at 10:24 -0700, Linus Torvalds wrote: 
+> 
+> On Mon, 12 Oct 2009, James Bottomley wrote:
+> > > 
+> > > I think you are interpreting what should go into drivers/staging/ _very_ 
+> > > narrowly.
+> > 
+> > As it is my right to do.
+> 
+> Umm, James, it cuts both ways.
+> 
+> Others can assert their interpretation, and quite frankly, yours is the 
+> odd one out. Everybody else agrees oevrwhelmingly that "staging" is about 
+> ugly and not-up-to-snuff drivers.
 
-jack wang wrote:
-> Hi James
-> Here is an updated driver patch that incorporates all the latest review
-> inputs from Grant and Eike.
-> Best wishes,
-> Jack
+I haven't actually ever said otherwise.  I have asserted that the bfa
+driver, while large, isn't out of the ball park for a FC driver, that it
+does provide all the correct user visible FC ABI pieces but that it does
+have minor anomalies, primarily in bfa/include, that need cleaning up,
+plus it needs to interface to libfc at some future point.  I have also
+asserted that drivers/scsi is the best place to address the remaining
+issues.
 
-+static inline u32 pm8001_read_le_32(void *virt_addr)
-+{
-+	return *((u32 *)((u8 *)virt_addr));
-+}
+> So you can talk about your 'right' to interpret things all you want, but 
+> what's the point? If others haev the same right (which presumably even you 
+> agree they do), then if people think a driver is ugly and needs to be in 
+> staging, what makes _your_ right so special?
 
-The cast to u8* isn't needed.
+It's a judgement call whether a driver goes through staging or not.  I'm
+happy to hear other opinions about this driver, but I'd like them to be
+from reading the code, not generalities.  I've stated my specific
+reasons why this driver isn't a good candidate for staging.
 
-+static inline void pm8001_write_le_32(void *addr, u32 offset, u32 val)
-+{
-+	*((u32 *)(((u8 *)addr)+(offset))) =3D val;
-+}
+> As mentioned earlier, I don't personally care about this driver, but I do 
+> care about your behavior. You can't just ignore other people if they say 
+> that a driver is too damn ugly.
 
-void* can be added, it's a gcc extension the Linux kernel uses just=20
-everywhere. So at the end this could boil down to:
+But no-one's actually said that.  The whole discussion was theoretical
+rather than based on this driver.  My position on the generalities is
+that ABI issues head a driver automatically for staging.  For non user
+visible code based issues, it's a maintainer judgement call where the
+cleanup is best done, which in turn depends on what the actual issues
+are.  For this specific driver, I've given reasons several times why the
+changes are best made in drivers/scsi.
 
-*((u32 *)(addr + offset)) =3D val;
-
-And if you have _le_32 the value passed in and returned from=20
-pm8001_read_le_32() should probably be le32 instead of u32 so you can get=20
-sparse checks for that.
-
-Greetings,
-
-Eike
-
---nextPart2429481.ZxZ63OebOl
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEABECAAYFAkrUXwQACgkQXKSJPmm5/E5HbgCeI3Nz8lCDOYSjJJtoRS9IHgcx
-HC8AoIIxHZcSroqV04fpSIbz3JUGbZp9
-=Fa3T
------END PGP SIGNATURE-----
-
---nextPart2429481.ZxZ63OebOl--
+James
