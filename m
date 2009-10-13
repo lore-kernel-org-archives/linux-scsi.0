@@ -1,60 +1,34 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
- 2.6.32-rc3)
-Date: Mon, 12 Oct 2009 16:26:07 -0700
-Message-ID: <20091012232607.GB24254@suse.de>
-References: <alpine.LFD.2.01.0910081255510.3432@localhost.localdomain>
- <20091008210737.GD29181@mit.edu>
- <alpine.LFD.2.01.0910081410400.3432@localhost.localdomain>
- <20091009091538.GA4154@elte.hu>
- <1255097287.2934.21.camel@localhost.localdomain>
- <20091012130652.GB25464@elte.hu>
- <1255357148.2850.91.camel@localhost.localdomain>
- <20091012145453.GD4565@elte.hu>
- <20091012150911.GB1656@suse.de>
- <1255362186.2850.348.camel@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14118] USB storage: "No sense [current]" when connecting
+Date: Tue, 13 Oct 2009 02:40:35 GMT
+Message-ID: <200910130240.n9D2eZ5o001293@demeter.kernel.org>
+References: <bug-14118-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40709 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757315AbZJLXjU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Oct 2009 19:39:20 -0400
-Content-Disposition: inline
-In-Reply-To: <1255362186.2850.348.camel@localhost.localdomain>
+Received: from demeter.kernel.org ([140.211.167.39]:45074 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758753AbZJMClM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Oct 2009 22:41:12 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9D2eZcx001294
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Oct 2009 02:40:35 GMT
+In-Reply-To: <bug-14118-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Oct 12, 2009 at 10:43:06AM -0500, James Bottomley wrote:
-> If you want to make this a mandatory path for old drivers, then, I think
-> it's far too rigid, yes.   There's a huge amount of danger to changing
-> working drivers simply on grounds of code cleanup and that danger
-> increases exponentially as they get older and the hardware gets rarer.
-> Look at what happened to the initio driver in 2008 for instance.  That
-> was cleaned up by Alan Cox, no mean expert in the field, with the
-> assistance of a tester with the actual card, so basically a textbook
-> operation.  However, a bug crept in during this process that wasn't
-> spotted by the tester.  When it was spotted (bug report ~6 months later)
-> the original tester wasn't available and code inspection across the
-> cleanup was very hard.  Fortunately, the reporter was motivated to track
-> down and patch the driver, so it worked out all right in the end, but a
-> lot of bug reporters aren't so capable (or so motivated).  Plus most
-> clean up patches for old hardware tend only to be compile tested, so the
-> potential for bugs is far greater.
+http://bugzilla.kernel.org/show_bug.cgi?id=14118
 
-I understand the potential for bugs, and am not saying to do this for
-all drivers, so it is not mandatory at all.
 
-I have just received a bunch of people asking me if we can use
-drivers/staging/ to get stuff that is known broken, or has other
-problems (style issues[1]), out into an area where people know it needs
-to be fixed up otherwise it will be dropped.
 
-thanks,
 
-greg k-h
 
-[1] No, floppy.c doesn't count, no matter how much people might want it
-    to :)
+--- Comment #12 from Alan Stern <stern@rowland.harvard.edu>  2009-10-13 02:40:33 ---
+The patch has been merged as commit f1a0743bc0e7a30c032b1eb78f6a2b0f805b4597. 
+You can close out this bug report.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
