@@ -1,128 +1,72 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/1] RFC: scsi/dm-mpath: return -EACCES on
- reservation conflict
-Date: Tue, 13 Oct 2009 12:07:51 +0200
-Message-ID: <4AD45177.9050303@panasas.com>
-References: <1255406553-7054-1-git-send-email-michaelc@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [RFC][PATCH v3]Add pm8001 SAS/SATA HBA driver
+Date: Tue, 13 Oct 2009 13:05:36 +0200
+Message-ID: <200910131305.41047.eike-kernel@sf-tec.de>
+References: <9A9AF0C219C5433DB5A8D61D4914C599@usish.com.cn> <da824cf30910091937l761e1b8bo311dc2a0bbf1c115@mail.gmail.com> <D7F4135C8933429C8019D47D3DB5A7D0@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed;
+  boundary="nextPart2429481.ZxZ63OebOl";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1255406553-7054-1-git-send-email-michaelc@cs.wisc.edu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: michaelc@cs.wisc.edu
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:41858 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751098AbZJMLG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Oct 2009 07:06:27 -0400
+In-Reply-To: <D7F4135C8933429C8019D47D3DB5A7D0@usish.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jack wang <jack_wang@usish.com>
+Cc: 'James Bottomley' <James.Bottomley@suse.de>, 'Grant Grundler' <grundler@google.com>, 'lindar_liu' <lindar_liu@usish.com>, matthew@wil.cx, linux-scsi@vger.kernel.org, tom_peng@usish.com, 'aoqingy' <aoqingyun@usish.com>, roy_wang@usish.com
 
-On 10/13/2009 06:02 AM, michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> This patch was made over this patch
-> http://marc.info/?l=linux-scsi&m=125417106125449&w=2
-> 
-> The basic problem is that we do not want dm-multipath to retry
-> this error, but the scsi layer returns -EIO or -EILSEQ, so
-> dm-multipath cannot distinguish between a reservation conflict
-> and other errors.
-> 
-> This problem was originally discussed here
-> http://www.linux-archive.org/device-mapper-development/180290-dm-mpath-scsi-persistent-reservation.html
-> 
-> I have considered adding new blk error values (I have sent pactches
-> for this before and can send updated ones if we want to go this route),
-> and even just using more -EXYZ values for scsi errors, but in the end I am
-> just not sure it ended up being worth it, so this patch just
-> handles the one error.
-> 
-> The problem with adding new blk errors is that it seems only dm-multipath
-> knows what it wants (have not seen anything from the FS or RAID people),
-> and I also do not know what every device is sending so I cannot completely
-> clean up cases like where a device returns a error (check condition
-> and sense) indicating a controller port is temporarily unavialable.
-> For example, I do not know if I am getting a ILLEGAL request for some
-> non retryable device error vs the controller is getting its FW updated
-> (for a non retryable device error case we do not want to fail the path
-> and just want to fail the IO, but for FW update we just want to fail
-> the path), so I have to treat those device errors like a transport error
-> and just fail the path.
-> 
-> So, I did another take just using lots of different -EXYZ values. See
-> this patch
-> 
-> for an example. The problem is still that the transport error
-> and generic error cases are the same so all I bought was the handling
-> of the reservation conflict.
-> 
-> And, that is how I ended up here where I am only handling the one
-> error I know for sure will cause problems with the infrastructure we have.
-> I am  not in love with this patch, so please give me any other
-> suggestions.
-> 
+--nextPart2429481.ZxZ63OebOl
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Mike.
+jack wang wrote:
+> Hi James
+> Here is an updated driver patch that incorporates all the latest review
+> inputs from Grant and Eike.
+> Best wishes,
+> Jack
 
-I guess error handling is always a mess. It's fine to take it one at a time.
-At the end we'll handle them all ;-)
++static inline u32 pm8001_read_le_32(void *virt_addr)
++{
++	return *((u32 *)((u8 *)virt_addr));
++}
 
-Please do not use -EACCES it means something else. It means more like permissions
-thing, as if, this user does not have access but someone else might. (Actually I've
-used it in OSD when permissions are not sufficient for requested access)
+The cast to u8* isn't needed.
 
-I have some better suggestions perhaps, some taken from Posix/NFS world
++static inline void pm8001_write_le_32(void *addr, u32 offset, u32 val)
++{
++	*((u32 *)(((u8 *)addr)+(offset))) =3D val;
++}
 
-#define	EISCONN		106	/* Transport endpoint is already connected */
-#define	ECONNREFUSED	111	/* Connection refused */
-#define	EREMOTEIO	121	/* Remote I/O error */
+void* can be added, it's a gcc extension the Linux kernel uses just=20
+everywhere. So at the end this could boil down to:
 
+*((u32 *)(addr + offset)) =3D val;
 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  drivers/md/dm-mpath.c   |    2 +-
->  drivers/scsi/scsi_lib.c |    4 ++++
->  2 files changed, 5 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index 32d0b87..93e6ce5 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -1214,7 +1214,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
->  	if (!error && !clone->errors)
->  		return 0;	/* I/O complete */
->  
-> -	if (error == -EOPNOTSUPP)
-> +	if (error == -EOPNOTSUPP || error == -EACCES)
->  		return error;
->  
->  	if (mpio->pgpath)
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 1086552..5635035 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -797,6 +797,10 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  		 * happens.
->  		 */
->  		action = ACTION_RETRY;
-> +	else if (status_byte(cmd->result) == RESERVATION_CONFLICT) {
-> +		error = -EACCES;
-> +		description = "Could not access device";
+And if you have _le_32 the value passed in and returned from=20
+pm8001_read_le_32() should probably be le32 instead of u32 so you can get=20
+sparse checks for that.
 
-Please put: description = "scsi reservation conflict"
+Greetings,
 
-It is a well defined scsi error that means exactly what it is.
+Eike
 
-> +		action = ACTION_FAIL;
->  	} else if (sense_valid && !sense_deferred) {
->  		switch (sshdr.sense_key) {
->  		case UNIT_ATTENTION:
+--nextPart2429481.ZxZ63OebOl
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Thanks
-Boaz
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.11 (GNU/Linux)
+
+iEYEABECAAYFAkrUXwQACgkQXKSJPmm5/E5HbgCeI3Nz8lCDOYSjJJtoRS9IHgcx
+HC8AoIIxHZcSroqV04fpSIbz3JUGbZp9
+=Fa3T
+-----END PGP SIGNATURE-----
+
+--nextPart2429481.ZxZ63OebOl--
