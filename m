@@ -1,48 +1,43 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 1/1] remove invalid BUG_ON in scsi_transport_fc.c
-Date: Tue, 13 Oct 2009 13:15:45 -0400
-Message-ID: <4AD4B5C1.7020909@emulex.com>
-References: <4AB3D773.50108@sgi.com> <4AB3DB7C.2050004@emulex.com> <4AB3DE99.3080602@sgi.com> <4ACF8BEF.6040105@sgi.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 9/12] scsi: megaraid_sas - Fix the fix for fw hang
+ caused by megaraid sas application
+Date: Tue, 13 Oct 2009 17:26:57 +0000
+Message-ID: <1255454817.2855.211.camel@localhost.localdomain>
+References: <4B6A08C587958942AA3002690DD4F8C35C5119BC@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C35C512405@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C35C6861E8@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:37359 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753666AbZJMRQ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2009 13:16:27 -0400
-In-Reply-To: <4ACF8BEF.6040105@sgi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760636AbZJMR1h@vger.kernel.org>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C35C6861E8@cosmail02.lsi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "Mukker, Atul" <Atul.Mukker@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch looks good.  Thanks Mike.
+On Tue, 2009-10-06 at 14:47 -0600, Yang, Bo wrote:
+> RESUBMIT:
+> 
+> Added the fix for FW and OS hang by using MSM.  Also add the fix for pending cmd in fw, after deleting the lds.
 
-Acked-by:  James Smart  <james.smart@emulex.com>
+This is practically unintelligible as a changelog.  These logs get used
+by distibutions and other people trying to determine if they need the
+patch based on bug reports they're seeing
 
--- james s
+>From the patch I think what you've done is:
 
+1. Added a lock to the skinny firmware initialisation sequence to
+prevent the two stage write being non atomic if multiple instances use
+it.
+2. Added a flag to the driver shutdown sequence to prevent aen ioctls
+being called after shutdown begins.
 
+For the future, could we also have separate bug fixes in separate
+patches, please.
 
-Michael Reed wrote:
-> I was doing some large lun count testing with 2.6.31 and hit
-> a BUG_ON() in fc_timeout_deleted_rport(), and it seems like it
-> should have been just a matter of time before someone did.
-> 
-> It seems invalid to set port_state under lock, then expect it to
-> remain set after releasing the lock.  Another thread called
-> fc_remote_port_add() when the lock was released, changing the
-> port_state.
-> 
-> This patch removes the BUG_ON and moves the test of the
-> port_state to inside the host_lock.  It's been running for
-> several weeks now with no ill effect.
-> 
-> Applies to 2.6.31 and 2.6.32-rc3.
-> 
-> Signed-off-by: Michael Reed <mdr@sgi.com>
-> 
-> 
-> --- a/drivers/scsi/scsi_transport_fc.c	2009-09-09 17:13:59.000000000 -0500
-> +++ b/drivers/scsi/scsi_transport_fc.c	2009-10-02 15:09:00.298487474 -0500
+Also, does this need to go to stable?
+
+Thanks,
+
+James
