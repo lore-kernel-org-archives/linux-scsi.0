@@ -1,134 +1,53 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [updated patch (fix comment)][patch 2/5] zfcp: Handle WWPN
-	mismatch in PLOGI payload
-Date: Wed, 14 Oct 2009 11:00:43 +0200
-Message-ID: <20091014090043.GB3874@schmichrtp.de.ibm.com>
-References: <20091013084406.630890000@de.ibm.com> <20091013084944.777367000@de.ibm.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+ 2.6.32-rc3)
+Date: Wed, 14 Oct 2009 10:13:59 -0400
+Message-ID: <4AD5DCA7.5060704@emulex.com>
+References: <1255097287.2934.21.camel@localhost.localdomain> <20091012130652.GB25464@elte.hu> <1255357148.2850.91.camel@localhost.localdomain> <20091012145453.GD4565@elte.hu> <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home> <20091014063308.GE784@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.uk.ibm.com ([195.212.29.138]:48589 "EHLO
-	mtagate5.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755955AbZJNJCf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2009 05:02:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20091013084944.777367000@de.ibm.com>
+Received: from emulex.emulex.com ([138.239.112.1]:39791 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756426AbZJNOP3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2009 10:15:29 -0400
+In-Reply-To: <20091014063308.GE784@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>, "Luis R. Rodriguez" <mcgrof@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-For ports, zfcp gets the DID from the FC nameserver and tries to open
-the port. If the open succeeds, zfcp compares the WWPN from the
-nameserver with the WWPN in the PLOGI payload. In case of a mismatch,
-zfcp assumes that the DID of the port just changed and we opened the
-wrong port. This means that zfcp has to forget the DID, lookup the DID
-again and retry.
 
-This error case had a problem that zfcp forgets the DID, but never
-looks up a new one, stalling the ERP in this case. Fix this by
-triggering the DID lookup and properly exit from the ERP. The DID
-lookup will trigger a new ERP action.
+Ingo Molnar wrote:
+> Yes, that's a real worry. Some time ago i suggested:
+> 
+>   drivers/staging/good/
+>   drivers/staging/bad/
+>   drivers/staging/ugly/
+> 
+>  good:  drivers that are to go upstream in the next cycle 
+>  bad:   outgoing drivers being obsoleted or abandoned
+>  ugly:  incoming messy drivers with active developers
+> 
+> The messaging of this looks nice and the names are short and obvious.
+> 
+> An added benefit is that this kind of separation makes it easy for 
+> people interested in drivers/staging to follow the 'status' of drivers. 
+> Once stuff goes into 'good' a different kind of review is needed than if 
+> a driver goes into 'ugly'.
+> 
+> The main disadvantage would be the PR angle: putting new drivers into a 
+> path named 'ugly'. Not something you want to put into a quarterly status 
+> report, right? If we put drivers/staging/ugly/ drivers into 
+> drivers/staging/ itself, we'd solve that problem. I.e. we'd keep the 
+> current scheme, but we'd also add drivers/staging/good/ and 
+> drivers/staging/bad/ as two extra stages for incoming and outgoing 
+> drivers.
 
-Also ensure when trying to open the port again with the new DID, first
-close the open port, even in the NOESC case.
+Change "ugly" to "wip"  (work in progress).  Should remove the negative 
+connotation and keeps things short. Does miss the spaghetti western theme
+though :)
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
-
- drivers/s390/scsi/zfcp_erp.c |   22 ++++++++++------------
- drivers/s390/scsi/zfcp_ext.h |    1 +
- drivers/s390/scsi/zfcp_fc.c  |   11 +++++++++++
- 3 files changed, 22 insertions(+), 12 deletions(-)
-
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
---- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2009-10-14 10:41:56.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2009-10-14 10:42:20.000000000 +0200
-@@ -858,10 +858,7 @@ static int zfcp_erp_port_strategy_open_c
- 		if (fc_host_port_type(adapter->scsi_host) == FC_PORTTYPE_PTP)
- 			return zfcp_erp_open_ptp_port(act);
- 		if (!port->d_id) {
--			zfcp_port_get(port);
--			if (!queue_work(adapter->work_queue,
--					&port->gid_pn_work))
--				zfcp_port_put(port);
-+			zfcp_fc_trigger_did_lookup(port);
- 			return ZFCP_ERP_EXIT;
- 		}
- 		return zfcp_erp_port_strategy_open_port(act);
-@@ -869,12 +866,11 @@ static int zfcp_erp_port_strategy_open_c
- 	case ZFCP_ERP_STEP_PORT_OPENING:
- 		/* D_ID might have changed during open */
- 		if (p_status & ZFCP_STATUS_COMMON_OPEN) {
--			if (port->d_id)
--				return ZFCP_ERP_SUCCEEDED;
--			else {
--				act->step = ZFCP_ERP_STEP_PORT_CLOSING;
--				return ZFCP_ERP_CONTINUES;
-+			if (!port->d_id) {
-+				zfcp_fc_trigger_did_lookup(port);
-+				return ZFCP_ERP_EXIT;
- 			}
-+			return ZFCP_ERP_SUCCEEDED;
- 		}
- 		if (port->d_id && !(p_status & ZFCP_STATUS_COMMON_NOESC)) {
- 			port->d_id = 0;
-@@ -889,19 +885,21 @@ static int zfcp_erp_port_strategy_open_c
- static int zfcp_erp_port_strategy(struct zfcp_erp_action *erp_action)
- {
- 	struct zfcp_port *port = erp_action->port;
-+	int p_status = atomic_read(&port->status);
- 
--	if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_NOESC)
-+	if ((p_status & ZFCP_STATUS_COMMON_NOESC) &&
-+	    !(p_status & ZFCP_STATUS_COMMON_OPEN))
- 		goto close_init_done;
- 
- 	switch (erp_action->step) {
- 	case ZFCP_ERP_STEP_UNINITIALIZED:
- 		zfcp_erp_port_strategy_clearstati(port);
--		if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_OPEN)
-+		if (p_status & ZFCP_STATUS_COMMON_OPEN)
- 			return zfcp_erp_port_strategy_close(erp_action);
- 		break;
- 
- 	case ZFCP_ERP_STEP_PORT_CLOSING:
--		if (atomic_read(&port->status) & ZFCP_STATUS_COMMON_OPEN)
-+		if (p_status & ZFCP_STATUS_COMMON_OPEN)
- 			return ZFCP_ERP_FAILED;
- 		break;
- 	}
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h
---- linux-2.6/drivers/s390/scsi/zfcp_ext.h	2009-10-14 10:41:56.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h	2009-10-14 10:42:20.000000000 +0200
-@@ -96,6 +96,7 @@ extern int zfcp_fc_scan_ports(struct zfc
- extern void _zfcp_fc_scan_ports_later(struct work_struct *);
- extern void zfcp_fc_incoming_els(struct zfcp_fsf_req *);
- extern void zfcp_fc_port_did_lookup(struct work_struct *);
-+extern void zfcp_fc_trigger_did_lookup(struct zfcp_port *);
- extern void zfcp_fc_plogi_evaluate(struct zfcp_port *, struct fsf_plogi *);
- extern void zfcp_fc_test_link(struct zfcp_port *);
- extern void zfcp_fc_link_test_work(struct work_struct *);
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
---- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2009-10-14 10:41:56.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2009-10-14 10:42:20.000000000 +0200
-@@ -361,6 +361,17 @@ out:
- }
- 
- /**
-+ * zfcp_fc_trigger_did_lookup - trigger the d_id lookup using a GID_PN request
-+ * @port: The zfcp_port to lookup the d_id for.
-+ */
-+void zfcp_fc_trigger_did_lookup(struct zfcp_port *port)
-+{
-+	zfcp_port_get(port);
-+	if (!queue_work(port->adapter->work_queue, &port->gid_pn_work))
-+		zfcp_port_put(port);
-+}
-+
-+/**
-  * zfcp_fc_plogi_evaluate - evaluate PLOGI playload
-  * @port: zfcp_port structure
-  * @plogi: plogi payload
+-- james s
