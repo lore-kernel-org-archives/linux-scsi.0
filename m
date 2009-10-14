@@ -1,84 +1,89 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: Should I be Worried: sda: p1 size .... limited to end of disk
-Date: Wed, 14 Oct 2009 12:38:48 -0700
-Message-ID: <da824cf30910141238v4780fbaasbcdeff33bc819f41@mail.gmail.com>
-References: <4AD0E466.2070904@attglobal.net>
-	 <da824cf30910121204l4edd75e7pa05386732ccb7556@mail.gmail.com>
-	 <4AD38BEA.4090202@attglobal.net> <4AD51FF2.50900@attglobal.net>
+From: Clemens Fruhwirth <clemens@endorphin.org>
+Subject: [PATCH] Forcing SCSI capacity for broken SD Card readers
+Date: Wed, 14 Oct 2009 23:13:42 +0200
+Message-ID: <2f83750a0910141413s58df3658k5ed170541e637f1e@mail.gmail.com>
+References: <2f83750a0910141408m44082639m13cb0bfdb5cbd5cb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary=001485e36bef35e2050475eba3d8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:33499 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758804AbZJNTkA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2009 15:40:00 -0400
-Received: from wpaz13.hot.corp.google.com (wpaz13.hot.corp.google.com [172.24.198.77])
-	by smtp-out.google.com with ESMTP id n9EJcp6n026367
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 12:38:51 -0700
-Received: from pzk30 (pzk30.prod.google.com [10.243.19.158])
-	by wpaz13.hot.corp.google.com with ESMTP id n9EJcSIp023645
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 12:38:48 -0700
-Received: by pzk30 with SMTP id 30so105483pzk.24
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 12:38:48 -0700 (PDT)
-In-Reply-To: <4AD51FF2.50900@attglobal.net>
+Received: from fg-out-1718.google.com ([72.14.220.157]:62899 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760156AbZJNVPe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2009 17:15:34 -0400
+Received: by fg-out-1718.google.com with SMTP id 16so141427fgg.1
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 14:13:44 -0700 (PDT)
+In-Reply-To: <2f83750a0910141408m44082639m13cb0bfdb5cbd5cb@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stunnel@attglobal.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Oct 13, 2009 at 5:48 PM, Eddie <stunnel@attglobal.net> wrote:
-=2E...
-> =C2=A0Device Boot =C2=A0 =C2=A0 =C2=A0Start =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- End =C2=A0 =C2=A0 =C2=A0Blocks =C2=A0 Id =C2=A0System
-> /dev/sda1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A063 =C2=A029=
-29677659 =C2=A01464838798+ =C2=A08e =C2=A0Linux LVM
->
->
-> OK, the total sectors seems to match the hardware scan -> sd 4:1:0:0:=
- [sda]
-> 2929686528 512-byte hardware sectors: (1.49 TB/1.36 TiB)
->
-> But 255 * 63 * 182364 =3D 2929677660. =C2=A0What's this discrepancy d=
-ue to. =C2=A0Does
-> the drive report ALL sectors, even the ones used to replace "bad" one=
-s.
+--001485e36bef35e2050475eba3d8
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Definitely does not. SCSI disks report whatever number of sectors the
-firmware is told to report. That's *always* less than the actual
-number of physical sectors since drives need a reasonable supply of
-"spare" sectors/tracks.
+Hi everyone,
 
+Short: Attached is an incomplete patch that allows user space to force
+the capacity of an scsi device to a specific value. Any not over
+my-dead-body objections with that?
 
-> However, 2929677660 does seem to tie up quite nicely with the "end se=
-ctor",
-> from the fdisk, so I'm assuming that everything is now correct.
->
-> Well, apart from the fact that LVM reports a Total PE allocation of 3=
-57627
-> extents, which maps to 1464840192 Blocks, according to my maths anywa=
-y,
-> which happens to be bigger than the "available" sectors on the disk. =
-=C2=A0I
-> guess it's time to hit the LVM list, to see if there's any way I can =
-safely
-> correct this, before anything tries to use the "phantom" sectors.
+Long: I was unfortunate and grabbed one of the cheaper USB SD card
+readers that do not correctly detect >1GB capacity sd cards. This is a
+known and common bug. See [1] or [2]. What's interesting is that this
+card reader was sold to work with these cards explicitly, and I
+figured it must have been tested only under Windows, which we all know
+believes in the partition table more strongly than in what the device
+reports. And indeed, my 2GB sd cards start to work if I simply ignore
+the capacity reported by the device. I have been using this
+successfully in the last half year with all my sd cards and now I'm
+tired of patching the kernel for just that thing. Could you imagine to
+merge that upstream? I doubt that any device will kill itself if this
+interface is used incorrectly.
 
-I expect the LVM needs to be resized anytime the size of the
-underlying partitions has changed. I'll bet there wiki/HOWTO someplace
-that describes how to do that.
+A simple user space program using the new interface is available at [3].
 
-grant
-
->
-> Cheers,
-> Eddie
->
->
->
->
+Please CC, me not on list.
+[1]=C2=A0http://en.wikipedia.org/wiki/Secure_Digital#Standard-SD_cards_.28n=
+on-SDHC.29_with_greater_than_1_GB_capacity
+[2]=C2=A0http://www.hjreggel.net/cardspeed/special-sd.html
+[3]=C2=A0http://blog.clemens.endorphin.org/2009/03/patching-for-broken-sd-c=
+ard-readers.html
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fruhwirth Clemens http://clemens.endorphin.org
+
+--001485e36bef35e2050475eba3d8
+Content-Type: text/x-patch; charset=US-ASCII; name="scsi-capacity-setter.patch"
+Content-Disposition: attachment; filename="scsi-capacity-setter.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g0skmd8j0
+
+ZGlmZiAtcnUgbGludXgtMi42LjI4L2RyaXZlcnMvc2NzaS9zZC5jIGxpbnV4LTIuNi4yOC9kcml2
+ZXJzL3Njc2kvc2QuYwotLS0gbGludXgtMi42LjI4L2RyaXZlcnMvc2NzaS9zZC5jCTIwMDktMDMt
+MjEgMTM6MzY6NDguMDAwMDAwMDAwICswMTAwCisrKyBsaW51eC0yLjYuMjgvZHJpdmVycy9zY3Np
+L3NkLmMJMjAwOS0wMy0yMSAxMzowNzo0My4wMDAwMDAwMDAgKzAxMDAKQEAgLTcyNSw2ICs3MjUs
+MTkgQEAKIAlyZXR1cm4gMDsKIH0KIAorc3RhdGljIGludCBzY3NpX2lvY3RsX3NldF9jYXBhY2l0
+eShzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwLCB2b2lkIF9fdXNlciAqYXJnKQoreworICAgIGludCB2
+YWwsIHJlc3VsdDsKKworICAgIHJlc3VsdCA9IGdldF91c2VyKHZhbCwgKGludCBfX3VzZXIgKilh
+cmcpOworICAgIGlmIChyZXN1bHQpCisJcmV0dXJuIHJlc3VsdDsKKyAgICBzZGtwLT5jYXBhY2l0
+eSA9IHZhbDsKKyAgICBzZXRfY2FwYWNpdHkoc2RrcC0+ZGlzaywgc2RrcC0+Y2FwYWNpdHkpOwor
+CisgICAgcmV0dXJuIDA7Cit9CisKIC8qKgogICoJc2RfaW9jdGwgLSBwcm9jZXNzIGFuIGlvY3Rs
+CiAgKglAaW5vZGU6IG9ubHkgaV9yZGV2L2lfYmRldiBtZW1iZXJzIG1heSBiZSB1c2VkCkBAIC03
+NzAsNiArNzg2LDExIEBACiAJCWNhc2UgU0NTSV9JT0NUTF9HRVRfSURMVU46CiAJCWNhc2UgU0NT
+SV9JT0NUTF9HRVRfQlVTX05VTUJFUjoKIAkJCXJldHVybiBzY3NpX2lvY3RsKHNkcCwgY21kLCBw
+KTsKKwkJY2FzZSBTQ1NJX0lPQ1RMX1NFVF9DQVBBQ0lUWToKKwkJCXJldHVybiBzY3NpX2lvY3Rs
+X3NldF9jYXBhY2l0eShzY3NpX2Rpc2soZGlzayksIChpbnQgX191c2VyICopYXJnKTsKKwkJY2Fz
+ZSBTQ1NJX0lPQ1RMX0dFVF9DQVBBQ0lUWToKKwkJCXJldHVybiBwdXRfdXNlcihzY3NpX2Rpc2so
+ZGlzayktPmNhcGFjaXR5LCAoaW50IF9fdXNlciAqKWFyZyk7CisKIAkJZGVmYXVsdDoKIAkJCWVy
+cm9yID0gc2NzaV9jbWRfaW9jdGwoZGlzay0+cXVldWUsIGRpc2ssIG1vZGUsIGNtZCwgcCk7CiAJ
+CQlpZiAoZXJyb3IgIT0gLUVOT1RUWSkKZGlmZiAtcnUgbGludXgtMi42LjI4L2luY2x1ZGUvc2Nz
+aS9zY3NpX2lvY3RsLmggbGludXgtMi42LjI4L2luY2x1ZGUvc2NzaS9zY3NpX2lvY3RsLmgKLS0t
+IGxpbnV4LTIuNi4yOC9pbmNsdWRlL3Njc2kvc2NzaV9pb2N0bC5oCTIwMDgtMTItMjUgMDA6MjY6
+MzcuMDAwMDAwMDAwICswMTAwCisrKyBsaW51eC0yLjYuMjgvaW5jbHVkZS9zY3NpL3Njc2lfaW9j
+dGwuaAkyMDA5LTAzLTIxIDEyOjQ4OjQ1LjAwMDAwMDAwMCArMDEwMApAQCAtMTEsNiArMTEsOCBA
+QAogICAgdGhlIGNkcm9tICovCiAjZGVmaW5lIFNDU0lfSU9DVExfRE9PUkxPQ0sgMHg1MzgwCQkv
+KiBsb2NrIHRoZSBlamVjdCBtZWNoYW5pc20gKi8KICNkZWZpbmUgU0NTSV9JT0NUTF9ET09SVU5M
+T0NLIDB4NTM4MQkJLyogdW5sb2NrIHRoZSBtZWNoYW5pc20JICAqLworI2RlZmluZSBTQ1NJX0lP
+Q1RMX1NFVF9DQVBBQ0lUWSAweDUzODgJCS8qIHNldCBjYXBhY2l0eSAqLworI2RlZmluZSBTQ1NJ
+X0lPQ1RMX0dFVF9DQVBBQ0lUWSAweDUzODkJCS8qIGdldCBjYXBhY2l0eSAqLwogCiAjZGVmaW5l
+CVNDU0lfUkVNT1ZBTF9QUkVWRU5UCTEKICNkZWZpbmUJU0NTSV9SRU1PVkFMX0FMTE9XCTAK
+--001485e36bef35e2050475eba3d8--
