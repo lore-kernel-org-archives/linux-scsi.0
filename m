@@ -1,75 +1,103 @@
-From: Eddie <stunnel@attglobal.net>
-Subject: Re: Should I be Worried: sda: p1 size .... limited to end of disk
-Date: Tue, 13 Oct 2009 17:48:50 -0700
-Message-ID: <4AD51FF2.50900@attglobal.net>
-References: <4AD0E466.2070904@attglobal.net> <da824cf30910121204l4edd75e7pa05386732ccb7556@mail.gmail.com> <4AD38BEA.4090202@attglobal.net>
-Reply-To: stunnel@attglobal.net
+From: Noriyuki Fujii <n-fujii@np.css.fujitsu.com>
+Subject: [PATCH 2nd try] PCI legacy I/O port free driver - Making MegaRAID
+ SAS driver
+Date: Wed, 14 Oct 2009 10:03:35 +0900
+Message-ID: <4AD52367.7050500@np.css.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020300030307040004010300"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kcout01.prserv.net ([12.154.55.31]:58234 "EHLO
-	kcout01.prserv.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129AbZJNAtd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2009 20:49:33 -0400
-In-Reply-To: <4AD38BEA.4090202@attglobal.net>
+Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:41120 "EHLO
+	fgwmail7.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758811AbZJNBFF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2009 21:05:05 -0400
+Received: from m3.gw.fujitsu.co.jp ([10.0.50.73])
+	by fgwmail7.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id n9E14RVM032703
+	for <linux-scsi@vger.kernel.org> (envelope-from n-fujii@np.css.fujitsu.com);
+	Wed, 14 Oct 2009 10:04:27 +0900
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 2E1AB45DE59
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:25 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id A832F45DE56
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:18 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 73E611DB803F
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:18 +0900 (JST)
+Received: from m000.s.css.fujitsu.com (m000.s.css.fujitsu.com [10.23.4.38])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 0A39D1DB804B
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:18 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Grant Grundler <grundler@google.com>, linux-scsi@vger.kernel.org
+To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
 
-Eddie wrote:
-> The raw partition table entry is:
->
-> 00 01 01 00 8E FE FF FF 3F 00 00 00 84 E4 A8 AE
->
-> Active Flag = 00
-> Starting Head = 01
-> Starting Cylinder = 0001
-> Partition Type = x'8E' - Linux LVM
-> Ending Head = x'FE' - 254
-> Ending Cylinder/Sector = x'FFFF' - LBA
-> Offset to Start = x'0000003F' - 63
-> # of Sectors = x'AEA8E484' - 2930304132 - Hmmmmmmm
->
-> So, that looks like the culprit.  Now, how did it happen.  I know I 
-> can, sort of safely, rebuild that, by running (c)fdisk and making sure 
-> I start the partition at exactly the same point.  But all I did the 
-> first time, was use cfdisk, and allocate the complete disk to the 1st 
-> primary partition.
-OK, I recreated the partition table, trying both fdisk and cfdisk.  I'm 
-still not sure how the original had the wrong values in there.  I guess 
-that will remain a mystery.
+This is a multi-part message in MIME format.
+--------------020300030307040004010300
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 
+Hi,
 
-fdisk -l -u /dev/sda
+Here's my 2nd try of the following post.
 
-Disk /dev/sda: 1499.9 GB, 1499999502336 bytes
-255 heads, 63 sectors/track, 182364 cylinders, total 2929686528 sectors
-Units = sectors of 1 * 512 = 512 bytes
-Disk identifier: 0x0003d809
+http://marc.info/?l=linux-scsi&m=124962265606425&w=2
 
-   Device Boot      Start         End      Blocks   Id  System
-/dev/sda1              63  2929677659  1464838798+  8e  Linux LVM
+I made a patch for MegaRAID sas driver to make PCI legacy I/O port free.
+
+The way to make PCI legacy I/O port free is the same as Fusion-MPT
+driver's and it has been merged into 2.6.30.4.
+
+This has already been fixed in e1000 and lpfc.
+
+As a result of the above, the driver can handle its device even when
+there are a huge number of PCI devices being used on the system and no
+I/O port region assigned to the device.
+
+I'm not in the linux-scsi mailing list.
+Please reply to the following address.
+
+ E-Mail: n-fujii@np.css.fujitsu.com
+
+Thanks,
+Noriyuki Fujii
 
 
-OK, the total sectors seems to match the hardware scan -> sd 4:1:0:0: 
-[sda] 2929686528 512-byte hardware sectors: (1.49 TB/1.36 TiB)
+--------------020300030307040004010300
+Content-Type: text/plain;
+ name="linux-2.6-scsi-megaraid-sas-make-legacy-i-o-port-free.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename*0="linux-2.6-scsi-megaraid-sas-make-legacy-i-o-port-free.patch"
 
-But 255 * 63 * 182364 = 2929677660.  What's this discrepancy due to.  
-Does the drive report ALL sectors, even the ones used to replace "bad" ones.
-
-However, 2929677660 does seem to tie up quite nicely with the "end 
-sector", from the fdisk, so I'm assuming that everything is now correct.
-
-Well, apart from the fact that LVM reports a Total PE allocation of 
-357627 extents, which maps to 1464840192 Blocks, according to my maths 
-anyway, which happens to be bigger than the "available" sectors on the 
-disk.  I guess it's time to hit the LVM list, to see if there's any way 
-I can safely correct this, before anything tries to use the "phantom" 
-sectors.
-
-Cheers,
-Eddie
-
-
+LS0tIG1lZ2FyYWlkX3Nhc09yZy5jCTIwMDktMDctMDIgMTY6MzE6MTcuMDAwMDAwMDAwICsw
+OTAwCisrKyBtZWdhcmFpZF9zYXNNb2QuYwkyMDA5LTA4LTA2IDExOjI0OjQyLjAwMDAwMDAw
+MCArMDkwMApAQCAtMjU3Myw3ICsyNTczLDkgQEAgc3RhdGljIGludCBtZWdhc2FzX2luaXRf
+bWZpKHN0cnVjdCBtZWdhcwogCQlpbnN0YW5jZS0+YmFzZV9hZGRyID0gcGNpX3Jlc291cmNl
+X3N0YXJ0KGluc3RhbmNlLT5wZGV2LCAwKTsKIAl9CiAKLQlpZiAocGNpX3JlcXVlc3RfcmVn
+aW9ucyhpbnN0YW5jZS0+cGRldiwgIm1lZ2FzYXM6IExTSSIpKSB7CisgICAgICAgIGlmIChw
+Y2lfcmVxdWVzdF9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNlLT5wZGV2LAorCQkJCQkgcGNp
+X3NlbGVjdF9iYXJzKGluc3RhbmNlLT5wZGV2LCBJT1JFU09VUkNFX01FTSksCisJCQkJCSAi
+bWVnYXNhczogTFNJIikpIHsKIAkJcHJpbnRrKEtFUk5fREVCVUcgIm1lZ2FzYXM6IElPIG1l
+bW9yeSByZWdpb24gYnVzeSFcbiIpOwogCQlyZXR1cm4gLUVCVVNZOwogCX0KQEAgLTI3MTks
+NyArMjcyMSw4IEBAIHN0YXRpYyBpbnQgbWVnYXNhc19pbml0X21maShzdHJ1Y3QgbWVnYXMK
+IAlpb3VubWFwKGluc3RhbmNlLT5yZWdfc2V0KTsKIAogICAgICAgZmFpbF9pb3JlbWFwOgot
+CXBjaV9yZWxlYXNlX3JlZ2lvbnMoaW5zdGFuY2UtPnBkZXYpOworICAgICAgICBwY2lfcmVs
+ZWFzZV9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNlLT5wZGV2LAorCQkJCSAgICAgcGNpX3Nl
+bGVjdF9iYXJzKGluc3RhbmNlLT5wZGV2LCBJT1JFU09VUkNFX01FTSkpOwogCiAJcmV0dXJu
+IC1FSU5WQUw7CiB9CkBAIC0yNzM5LDcgKzI3NDIsOCBAQCBzdGF0aWMgdm9pZCBtZWdhc2Fz
+X3JlbGVhc2VfbWZpKHN0cnVjdCBtCiAKIAlpb3VubWFwKGluc3RhbmNlLT5yZWdfc2V0KTsK
+IAotCXBjaV9yZWxlYXNlX3JlZ2lvbnMoaW5zdGFuY2UtPnBkZXYpOworICAgICAgICBwY2lf
+cmVsZWFzZV9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNlLT5wZGV2LAorCQkJCSAgICAgcGNp
+X3NlbGVjdF9iYXJzKGluc3RhbmNlLT5wZGV2LCBJT1JFU09VUkNFX01FTSkpOwogfQogCiAv
+KioKQEAgLTMwNDksNyArMzA1Myw3IEBAIG1lZ2FzYXNfcHJvYmVfb25lKHN0cnVjdCBwY2lf
+ZGV2ICpwZGV2LCAKIAkvKgogCSAqIFBDSSBwcmVwcGluZzogZW5hYmxlIGRldmljZSBzZXQg
+YnVzIG1hc3RlcmluZyBhbmQgZG1hIG1hc2sKIAkgKi8KLQlydmFsID0gcGNpX2VuYWJsZV9k
+ZXZpY2UocGRldik7CisgICAgICAgIHJ2YWwgPSBwY2lfZW5hYmxlX2RldmljZV9tZW0ocGRl
+dik7CiAKIAlpZiAocnZhbCkgewogCQlyZXR1cm4gcnZhbDsKQEAgLTMzNDMsNyArMzM0Nyw3
+IEBAIG1lZ2FzYXNfcmVzdW1lKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQogCS8qCiAJICogUENJ
+IHByZXBwaW5nOiBlbmFibGUgZGV2aWNlIHNldCBidXMgbWFzdGVyaW5nIGFuZCBkbWEgbWFz
+awogCSAqLwotCXJ2YWwgPSBwY2lfZW5hYmxlX2RldmljZShwZGV2KTsKKyAgICAgICAgcnZh
+bCA9IHBjaV9lbmFibGVfZGV2aWNlX21lbShwZGV2KTsKIAogCWlmIChydmFsKSB7CiAJCXBy
+aW50ayhLRVJOX0lORk8gIm1lZ2FzYXM6IEVuYWJsZSBkZXZpY2UgZmFpbGVkXG4iKTsK
+--------------020300030307040004010300--
 
