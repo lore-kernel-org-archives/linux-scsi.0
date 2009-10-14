@@ -1,103 +1,81 @@
-From: Noriyuki Fujii <n-fujii@np.css.fujitsu.com>
-Subject: [PATCH 2nd try] PCI legacy I/O port free driver - Making MegaRAID
- SAS driver
-Date: Wed, 14 Oct 2009 10:03:35 +0900
-Message-ID: <4AD52367.7050500@np.css.fujitsu.com>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
+Date: Tue, 13 Oct 2009 19:39:08 -0600
+Message-ID: <200910131939.09039.tfjellstrom@shaw.ca>
+References: <200910091141.52303.tfjellstrom@shaw.ca> <4AD22532.9060001@univ-lille2.fr> <200910111658.13639.tfjellstrom@shaw.ca>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020300030307040004010300"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:41120 "EHLO
-	fgwmail7.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758811AbZJNBFF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Oct 2009 21:05:05 -0400
-Received: from m3.gw.fujitsu.co.jp ([10.0.50.73])
-	by fgwmail7.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id n9E14RVM032703
-	for <linux-scsi@vger.kernel.org> (envelope-from n-fujii@np.css.fujitsu.com);
-	Wed, 14 Oct 2009 10:04:27 +0900
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 2E1AB45DE59
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:25 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id A832F45DE56
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:18 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 73E611DB803F
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:18 +0900 (JST)
-Received: from m000.s.css.fujitsu.com (m000.s.css.fujitsu.com [10.23.4.38])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 0A39D1DB804B
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 10:04:18 +0900 (JST)
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------020300030307040004010300
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <200910111658.13639.tfjellstrom@shaw.ca>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, kewei@marvell.com
+List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+On Sun October 11 2009, Thomas Fjellstrom wrote:
+> On Sun October 11 2009, Christian Vilhelm wrote:
+> > Thomas Fjellstrom wrote:
+> > > Hi,
+> > >
+> > > I've been trying to get an AOC-SASLP-MV8 card (pcie x4 2 port SAS card)
+> > > to work with linux for the past month or so. I've recently just RMAed
+> > > my first card, and tested the new one under linux, and I see the same
+> > > problems.
+> > >
+> > > The very first time I made a new array off the controller, formated
+> > > (with xfs) and mounted the volume, it seemed to work. ioozone even
+> > > seemed to run for a while. Sadly after a few minutes I got a stream of
+> > > mvs_abort_task messages in dmesg, and any accesses to the volume, or
+> > > any disks connected to the controller lock up.
+> > >
+> > > After that I updated my 2.6.31 kernel to 2.6.32-rc3-git2 off of
+> > > kernel.org, and the volume fails to mount with the same mvs_abort_task
+> > > messages.
+> >
+> > I have the exact same problem with another Marvell 88SE64xx based card,
+> > namely an Areca ARC-1300ix-16 and the mvsas driver.
+> > If the disks are just used alone, with a filesystem on them, all seems
+> > to work fine. dd and badblocks run fine on them. Mounting them,
+> > reading/writing work fine. The error seem to popup but rarely when
+> > several disks are used simultaneously.
+> > But, an absolute sure way to trigger the error is to assemble (or
+> > create) a md raid array with the disks. I join a syslog extract from the
+> > error. You can see it happens seconds after the array creation.
+> > I tried :
+> > 1) disabling the write cache on the disks => same error
+> > 2) disabling NCQ : in mv_sas.h :
+> > #define MV_DISABLE_NCQ  1
+> > same error.
+> > Afer a while, the devices handled by the card are just dropped from the
+> > system and the card stops working at all, a reboot is necessary.
+> 
+> I have found that a proper reboot is impossible once the card/driver starts
+> misbehaving. Anything that tries to do anything with the md device, or any
+>  of the component drives will hang. Even kernel threads it seems. A reboot
+>  or a shutdown hangs when it tries to sync the md device, and ALT+SYSRQ+S/U
+>  both hang. After the first Alt+sysrq+s it will register more of them, but
+>  it won't print the "Emergency Sync Complete" message.
+> 
+> > Does anyone have a working config based on a Marvell 64xx card ?
+> >
+> > I'm willing to explore solutions, patches or anything, just tell me what
+> > to do to help.
+> >
+> > Christian Vilhelm.
+> 
 
-Here's my 2nd try of the following post.
+I'd really appreciate some assistance with this. The card is essentially 
+useless under linux, if not harmful (causes oopses and hangs) with the current 
+driver.
 
-http://marc.info/?l=linux-scsi&m=124962265606425&w=2
+My last weekly backup failed while creating the disk image due to my array 
+being low on space, I really need to get the new array up asap.
 
-I made a patch for MegaRAID sas driver to make PCI legacy I/O port free.
+Thanks.
 
-The way to make PCI legacy I/O port free is the same as Fusion-MPT
-driver's and it has been merged into 2.6.30.4.
-
-This has already been fixed in e1000 and lpfc.
-
-As a result of the above, the driver can handle its device even when
-there are a huge number of PCI devices being used on the system and no
-I/O port region assigned to the device.
-
-I'm not in the linux-scsi mailing list.
-Please reply to the following address.
-
- E-Mail: n-fujii@np.css.fujitsu.com
-
-Thanks,
-Noriyuki Fujii
-
-
---------------020300030307040004010300
-Content-Type: text/plain;
- name="linux-2.6-scsi-megaraid-sas-make-legacy-i-o-port-free.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename*0="linux-2.6-scsi-megaraid-sas-make-legacy-i-o-port-free.patch"
-
-LS0tIG1lZ2FyYWlkX3Nhc09yZy5jCTIwMDktMDctMDIgMTY6MzE6MTcuMDAwMDAwMDAwICsw
-OTAwCisrKyBtZWdhcmFpZF9zYXNNb2QuYwkyMDA5LTA4LTA2IDExOjI0OjQyLjAwMDAwMDAw
-MCArMDkwMApAQCAtMjU3Myw3ICsyNTczLDkgQEAgc3RhdGljIGludCBtZWdhc2FzX2luaXRf
-bWZpKHN0cnVjdCBtZWdhcwogCQlpbnN0YW5jZS0+YmFzZV9hZGRyID0gcGNpX3Jlc291cmNl
-X3N0YXJ0KGluc3RhbmNlLT5wZGV2LCAwKTsKIAl9CiAKLQlpZiAocGNpX3JlcXVlc3RfcmVn
-aW9ucyhpbnN0YW5jZS0+cGRldiwgIm1lZ2FzYXM6IExTSSIpKSB7CisgICAgICAgIGlmIChw
-Y2lfcmVxdWVzdF9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNlLT5wZGV2LAorCQkJCQkgcGNp
-X3NlbGVjdF9iYXJzKGluc3RhbmNlLT5wZGV2LCBJT1JFU09VUkNFX01FTSksCisJCQkJCSAi
-bWVnYXNhczogTFNJIikpIHsKIAkJcHJpbnRrKEtFUk5fREVCVUcgIm1lZ2FzYXM6IElPIG1l
-bW9yeSByZWdpb24gYnVzeSFcbiIpOwogCQlyZXR1cm4gLUVCVVNZOwogCX0KQEAgLTI3MTks
-NyArMjcyMSw4IEBAIHN0YXRpYyBpbnQgbWVnYXNhc19pbml0X21maShzdHJ1Y3QgbWVnYXMK
-IAlpb3VubWFwKGluc3RhbmNlLT5yZWdfc2V0KTsKIAogICAgICAgZmFpbF9pb3JlbWFwOgot
-CXBjaV9yZWxlYXNlX3JlZ2lvbnMoaW5zdGFuY2UtPnBkZXYpOworICAgICAgICBwY2lfcmVs
-ZWFzZV9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNlLT5wZGV2LAorCQkJCSAgICAgcGNpX3Nl
-bGVjdF9iYXJzKGluc3RhbmNlLT5wZGV2LCBJT1JFU09VUkNFX01FTSkpOwogCiAJcmV0dXJu
-IC1FSU5WQUw7CiB9CkBAIC0yNzM5LDcgKzI3NDIsOCBAQCBzdGF0aWMgdm9pZCBtZWdhc2Fz
-X3JlbGVhc2VfbWZpKHN0cnVjdCBtCiAKIAlpb3VubWFwKGluc3RhbmNlLT5yZWdfc2V0KTsK
-IAotCXBjaV9yZWxlYXNlX3JlZ2lvbnMoaW5zdGFuY2UtPnBkZXYpOworICAgICAgICBwY2lf
-cmVsZWFzZV9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNlLT5wZGV2LAorCQkJCSAgICAgcGNp
-X3NlbGVjdF9iYXJzKGluc3RhbmNlLT5wZGV2LCBJT1JFU09VUkNFX01FTSkpOwogfQogCiAv
-KioKQEAgLTMwNDksNyArMzA1Myw3IEBAIG1lZ2FzYXNfcHJvYmVfb25lKHN0cnVjdCBwY2lf
-ZGV2ICpwZGV2LCAKIAkvKgogCSAqIFBDSSBwcmVwcGluZzogZW5hYmxlIGRldmljZSBzZXQg
-YnVzIG1hc3RlcmluZyBhbmQgZG1hIG1hc2sKIAkgKi8KLQlydmFsID0gcGNpX2VuYWJsZV9k
-ZXZpY2UocGRldik7CisgICAgICAgIHJ2YWwgPSBwY2lfZW5hYmxlX2RldmljZV9tZW0ocGRl
-dik7CiAKIAlpZiAocnZhbCkgewogCQlyZXR1cm4gcnZhbDsKQEAgLTMzNDMsNyArMzM0Nyw3
-IEBAIG1lZ2FzYXNfcmVzdW1lKHN0cnVjdCBwY2lfZGV2ICpwZGV2KQogCS8qCiAJICogUENJ
-IHByZXBwaW5nOiBlbmFibGUgZGV2aWNlIHNldCBidXMgbWFzdGVyaW5nIGFuZCBkbWEgbWFz
-awogCSAqLwotCXJ2YWwgPSBwY2lfZW5hYmxlX2RldmljZShwZGV2KTsKKyAgICAgICAgcnZh
-bCA9IHBjaV9lbmFibGVfZGV2aWNlX21lbShwZGV2KTsKIAogCWlmIChydmFsKSB7CiAJCXBy
-aW50ayhLRVJOX0lORk8gIm1lZ2FzYXM6IEVuYWJsZSBkZXZpY2UgZmFpbGVkXG4iKTsK
---------------020300030307040004010300--
-
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
