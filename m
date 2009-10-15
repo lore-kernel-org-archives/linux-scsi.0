@@ -1,107 +1,45 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH] Forcing SCSI capacity for broken SD Card readers
-Date: Wed, 14 Oct 2009 16:29:51 -0700
-Message-ID: <da824cf30910141629m1c30521ftd6ee2ed9970a0edb@mail.gmail.com>
-References: <2f83750a0910141408m44082639m13cb0bfdb5cbd5cb@mail.gmail.com>
-	 <2f83750a0910141413s58df3658k5ed170541e637f1e@mail.gmail.com>
+From: Christian Vilhelm <christian.vilhelm@univ-lille2.fr>
+Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
+Date: Thu, 15 Oct 2009 08:01:03 +0200
+Message-ID: <4AD6BA9F.1060704@univ-lille2.fr>
+References: <3CD4E24D4F537D439B71EB28963F98F46815EA2115@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:39436 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755469AbZJNXbE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Oct 2009 19:31:04 -0400
-Received: from wpaz21.hot.corp.google.com (wpaz21.hot.corp.google.com [172.24.198.85])
-	by smtp-out.google.com with ESMTP id n9ENTtu9027499
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 16:29:56 -0700
-Received: from pxi39 (pxi39.prod.google.com [10.243.27.39])
-	by wpaz21.hot.corp.google.com with ESMTP id n9ENTqUS021429
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 16:29:52 -0700
-Received: by pxi39 with SMTP id 39so255847pxi.10
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Oct 2009 16:29:52 -0700 (PDT)
-In-Reply-To: <2f83750a0910141413s58df3658k5ed170541e637f1e@mail.gmail.com>
+Received: from mx2.univ-lille2.fr ([194.254.117.6]:56735 "EHLO
+	smtp.univ-lille2.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933013AbZJOGBu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2009 02:01:50 -0400
+In-Reply-To: <3CD4E24D4F537D439B71EB28963F98F46815EA2115@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Clemens Fruhwirth <clemens@endorphin.org>
-Cc: linux-scsi@vger.kernel.org
+To: "Meena Shanmugam, TLS-Chennai" <smeena@hcl.in>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tfjellstrom@shaw.ca" <tfjellstrom@shaw.ca>
 
-On Wed, Oct 14, 2009 at 2:13 PM, Clemens Fruhwirth
-<clemens@endorphin.org> wrote:
-> Hi everyone,
->
-> Short: Attached is an incomplete patch that allows user space to forc=
-e
-> the capacity of an scsi device to a specific value. Any not over
-> my-dead-body objections with that?
+Meena Shanmugam, TLS-Chennai wrote:
+> Hi,
+> 
+> I am also facing the same problem with this driver. I'm using Adaptec ASC-1045 which uses the Marvell 88SE6440 chip. In my case, this could be reproduced with RAID-5 configured with 3 SATA drives. While analysing the problem, it looks like the prd table is getting corrupted in the SATA path triggers the issue.
+> 
+> ----mvs_sas.c---
+>  726 #ifndef DISABLE_HOTPLUG_DMA_FIX
+>  727         if (task->data_dir == DMA_FROM_DEVICE)
+>  728                 MVS_CHIP_DISP->dma_fix(asi->bulk_buffer_dma,
+>  729                         TRASH_BUCKET_SIZE, tei->n_elem, buf_prd);
+>  730 #endif
+> -----------
+> 
+> The hang issue doesn't occur after enabling DISABLE_HOTPLUG_DMA_FIX in mvs_sas.h file. Please let me know if this fix solves the issue. Btw, I'm not sure about the reason why this macro is disabled by default. Someone who is aware about this change can throw light on this. Meanwhile, I'm running some overnight test to see if this workaround/fix is harmless.
 
-No major objection - just the usual nits:
-Why not make /sys/block/sdX/size writeable?
-    (instead of adding an ioctl())
+I just tried that, enabling DISABLE_HOTPLUG_DMA_FIX. I still get the 
+error when creating an array, it just worked a little further (building 
+for two minutes before hanging instead of immediately).
 
-grundler@parisc:~$ cat /sys/block/sda/size
-976773168
-grundler@parisc:~$ ls -l /sys/block/sda/size
--r--r--r-- 1 root root 4096 Oct 14 16:14 /sys/block/sda/size
+Christian Vilhelm.
 
-
-After reading the wiki page[1], my impression is that the block size
-gets reported wrong and thus the total capacity is miscalculated for
-1GB-4GB SD cards with 1024 or 2048 byte blocks. Two questions around th=
-is:
-a) Does the host need to know the correct block size for correct operat=
-ion?
-b) Do the devices report which SD Card Association spec they are compli=
-ant
-   with in the USB headers?
-
-I'm asking (b) to start the conversation about if it's feasible to
-auto-detect this in the kernel and spare all the distro's from having
-to frob the device size.
-
-If we can autodetect this case, *and* the device has a valid FAT
-partition, it should be trivial
-to use the FAT partition info instead of what the USB card reader is
-reporting. Partitioning
-a new card will probably still need "size" to be writable.
-
-hth,
-grant
-
-> Long: I was unfortunate and grabbed one of the cheaper USB SD card
-> readers that do not correctly detect >1GB capacity sd cards. This is =
-a
-> known and common bug. See [1] or [2]. What's interesting is that this
-> card reader was sold to work with these cards explicitly, and I
-> figured it must have been tested only under Windows, which we all kno=
-w
-> believes in the partition table more strongly than in what the device
-> reports. And indeed, my 2GB sd cards start to work if I simply ignore
-> the capacity reported by the device. I have been using this
-> successfully in the last half year with all my sd cards and now I'm
-> tired of patching the kernel for just that thing. Could you imagine t=
-o
-> merge that upstream? I doubt that any device will kill itself if this
-> interface is used incorrectly.
->
-> A simple user space program using the new interface is available at [=
-3].
->
-> Please CC, me not on list.
-> [1]=C2=A0http://en.wikipedia.org/wiki/Secure_Digital#Standard-SD_card=
-s_.28non-SDHC.29_with_greater_than_1_GB_capacity
-> [2]=C2=A0http://www.hjreggel.net/cardspeed/special-sd.html
-> [3]=C2=A0http://blog.clemens.endorphin.org/2009/03/patching-for-broke=
-n-sd-card-readers.html
-
-thanks,
-grant
-
-> --
-> Fruhwirth Clemens http://clemens.endorphin.org
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+/~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
+|       Christian Vilhelm : christian.vilhelm@univ-lille2.fr         |
+|            Reality is for people who lack imagination              |
+\____________________________________________________________________/
