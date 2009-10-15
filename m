@@ -1,43 +1,49 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH] bfa: fix test in bfad_os_fc_host_init()
-Date: Thu, 15 Oct 2009 11:28:21 -0700
-Message-ID: <B0A7AF226B49A14897036E9B3A68CFFECF042BADEA@HQ-EXCH-7.corp.brocade.com>
-References: <4AD766B5.5040509@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: Fix incorrect reporting of host protection capabilities
+Date: Thu, 15 Oct 2009 14:46:13 -0400
+Message-ID: <yq18wfc8phm.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:22490 "EHLO
-	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933110AbZJOS3K convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2009 14:29:10 -0400
-In-Reply-To: <4AD766B5.5040509@gmail.com>
-Content-Language: en-US
+Received: from acsinet11.oracle.com ([141.146.126.233]:36162 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935290AbZJOSsv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2009 14:48:51 -0400
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by acsinet11.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n9FImYJI029603
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2009 18:48:35 GMT
+Received: from acsmt355.oracle.com (acsmt355.oracle.com [141.146.40.155])
+	by acsinet15.oracle.com (Switch-3.3.1/Switch-3.3.1) with ESMTP id n9FCxN0f015190
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Oct 2009 18:49:14 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
 
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
-> see vi drivers/scsi/bfa/include/defs/bfa_defs_port.h +45
-> was this intended?
-> 
-> diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-> index 158c992..55d012a 100644
-> --- a/drivers/scsi/bfa/bfad_im.c
-> +++ b/drivers/scsi/bfa/bfad_im.c
-> @@ -948,7 +948,7 @@ bfad_os_fc_host_init(struct bfad_im_port_s *im_port)
->  	if (bfad_supported_fc4s & (BFA_PORT_ROLE_FCP_IM |
-> BFA_PORT_ROLE_FCP_TM))
->  		/* For FCP type 0x08 */
->  		fc_host_supported_fc4s(host)[2] = 1;
-> -	if (bfad_supported_fc4s | BFA_PORT_ROLE_FCP_IPFC)
-> +	if (bfad_supported_fc4s & BFA_PORT_ROLE_FCP_IPFC)
->  		/* For LLC/SNAP type 0x05 */
->  		fc_host_supported_fc4s(host)[3] = 0x20;
->  	/* For fibre channel services type 0x20 */
 
-This is a bug. Thanks!
+The advent of DIF Type 2 devices exposed these missing break statements.
 
-Jing
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+---
+
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 6e728b1..7220125 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -801,12 +801,15 @@ static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsign
+ 	case 1:
+ 		if (shost->prot_capabilities & SHOST_DIF_TYPE1_PROTECTION)
+ 			return target_type;
++		break;
+ 	case 2:
+ 		if (shost->prot_capabilities & SHOST_DIF_TYPE2_PROTECTION)
+ 			return target_type;
++		break;
+ 	case 3:
+ 		if (shost->prot_capabilities & SHOST_DIF_TYPE3_PROTECTION)
+ 			return target_type;
++		break;
+ 	}
+ 
+ 	return 0;
