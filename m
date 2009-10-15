@@ -1,45 +1,53 @@
-From: Christian Vilhelm <christian.vilhelm@univ-lille2.fr>
-Subject: Re: MVSAS 1669:mvs_abort_task:rc= 5
-Date: Thu, 15 Oct 2009 08:01:03 +0200
-Message-ID: <4AD6BA9F.1060704@univ-lille2.fr>
-References: <3CD4E24D4F537D439B71EB28963F98F46815EA2115@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: Moving drivers into staging (was Re: [GIT PULL] SCSI fixes for
+	2.6.32-rc3)
+Date: Thu, 15 Oct 2009 08:03:03 +0200
+Message-ID: <20091015060303.GA32415@elte.hu>
+References: <20091012150911.GB1656@suse.de> <20091012154244.GA13323@elte.hu> <20091012232429.GA24254@suse.de> <43e72e890910131108m789110b4hc35e25601ad67bb7@mail.gmail.com> <20091014044519.GA19199@suse.de> <1255497575.1851.16.camel@Joe-Laptop.home> <20091014063308.GE784@elte.hu> <4AD60FF9.40200@s5r6.in-berlin.de> <20091014183657.GB5133@elte.hu> <tkrat.88ac5cebebbd9689@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.univ-lille2.fr ([194.254.117.6]:56735 "EHLO
-	smtp.univ-lille2.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933013AbZJOGBu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Oct 2009 02:01:50 -0400
-In-Reply-To: <3CD4E24D4F537D439B71EB28963F98F46815EA2115@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <tkrat.88ac5cebebbd9689@s5r6.in-berlin.de>
+Sender: netdev-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Joe Perches <joe@perches.com>, Greg KH <gregkh@suse.de>, "Luis R. Rodriguez" <mcgrof@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Meena Shanmugam, TLS-Chennai" <smeena@hcl.in>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tfjellstrom@shaw.ca" <tfjellstrom@shaw.ca>
 
-Meena Shanmugam, TLS-Chennai wrote:
-> Hi,
+
+* Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+
+> > Well, the answer is obvious i think. Tell me, at a glance, if you 
+> > see a patch on lkml, which one is for a staging driver to be 
+> > obsoleted, and which one is the one going upstream real soon? The 
+> > patches say:
+> > 
+> >  +++ a/drivers/staging/foo/x.c
+> > 
+> >  +++ a/drivers/staging/bar/y.c
+> > 
+> > Then tell me the same at a glance if you see patches for:
+> > 
+> >  +++ a/drivers/staging/wip/x.c
+> > 
+> >  +++ a/drivers/staging/bad/y.c
 > 
-> I am also facing the same problem with this driver. I'm using Adaptec ASC-1045 which uses the Marvell 88SE6440 chip. In my case, this could be reproduced with RAID-5 configured with 3 SATA drives. While analysing the problem, it looks like the prd table is getting corrupted in the SATA path triggers the issue.
-> 
-> ----mvs_sas.c---
->  726 #ifndef DISABLE_HOTPLUG_DMA_FIX
->  727         if (task->data_dir == DMA_FROM_DEVICE)
->  728                 MVS_CHIP_DISP->dma_fix(asi->bulk_buffer_dma,
->  729                         TRASH_BUCKET_SIZE, tei->n_elem, buf_prd);
->  730 #endif
-> -----------
-> 
-> The hang issue doesn't occur after enabling DISABLE_HOTPLUG_DMA_FIX in mvs_sas.h file. Please let me know if this fix solves the issue. Btw, I'm not sure about the reason why this macro is disabled by default. Someone who is aware about this change can throw light on this. Meanwhile, I'm running some overnight test to see if this workaround/fix is harmless.
+> Does this information matter much?
 
-I just tried that, enabling DISABLE_HOTPLUG_DMA_FIX. I still get the 
-error when creating an array, it just worked a little further (building 
-for two minutes before hanging instead of immediately).
+Yes. You might not appreciate it as you are active in a relatively 
+narrow field (so all patches in your world have an 'obvious' place) - 
+but i for example take most of the context of a change from the email 
+itself and the more self-descriptive it is, the better. I would be more 
+likely to review work-in-progress patches while not bother about 
+obsolete drivers on the way out. YMMV.
 
-Christian Vilhelm.
+> What's more interesting is whether development activity will _lead_ to 
+> a driver being moved from bad or ugly to good.
 
--- 
-/~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
-|       Christian Vilhelm : christian.vilhelm@univ-lille2.fr         |
-|            Reality is for people who lack imagination              |
-\____________________________________________________________________/
+... a prerequisite of which is for more developers to be accutely aware 
+of in what state a driver is.
+
+Anyway ... it's all up to Greg and he indicated that he wants the 
+simplest structure, which is fair enough.
+
+	Ingo
