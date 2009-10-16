@@ -1,71 +1,34 @@
-From: Srinivas Naga Venkatasatya Pasagadugula <satyasrinivasp@hcl.in>
-Subject: LIBSAS:Issue with cascading of edge expanders
-Date: Fri, 16 Oct 2009 17:14:12 +0530
-Message-ID: <6B62480106F2B34D8404CF2FDAA4D9EF38546AA22B@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 7/8] trivial: fix many typos s/untill/until/
+Date: Fri, 16 Oct 2009 15:24:21 +0200 (CEST)
+Message-ID: <alpine.LSU.2.00.0910161523400.8582@wotan.suse.de>
+References: <1255638072-6236-1-git-send-email-cascardo@holoscopio.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.hcl.in ([203.105.186.28]:55720 "EHLO gws08.hcl.in"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752664AbZJPLqg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Oct 2009 07:46:36 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1255638072-6236-1-git-send-email-cascardo-DmMZpsCg3uxeGPcbtGPokg@public.gmane.org>
+Sender: linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Thadeu Lima de Souza Cascardo <cascardo-DmMZpsCg3uxeGPcbtGPokg@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bonding-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, users-IdT//7ivld+3fTS+yoWyeR8Sddau0WhX@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sctp-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "jasonchu@marvell.com" <jasonchu@marvell.com>, "ayan@marvell.com" <ayan@marvell.com>, "kewei@marvell.com" <kewei@marvell.com>
 
-Hi,
+On Thu, 15 Oct 2009, Thadeu Lima de Souza Cascardo wrote:
 
-I have some issues with cascading of edge expanders in linux kernel-2.6.31.
+> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo-DmMZpsCg3uxeGPcbtGPokg@public.gmane.org>
+> ---
+>  drivers/infiniband/ulp/iser/iser_verbs.c |    2 +-
+>  drivers/net/bonding/bond_alb.c           |    2 +-
+>  drivers/net/wireless/rt2x00/rt2800usb.c  |    2 +-
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c         |    2 +-
+>  drivers/staging/rtl8187se/r8180.h        |    2 +-
+>  fs/ext4/balloc.c                         |    2 +-
+>  net/bluetooth/bnep/core.c                |    2 +-
+>  net/sctp/sm_statefuns.c                  |    2 +-
+>  8 files changed, 8 insertions(+), 8 deletions(-)
 
-Test Environment:
--------------------
-Linux Kernel-2.6.31.
-I'm using Adaptec ASC-1045/1405 which uses the Marvell 88SE6440 chip and I am using 2.6.31-mvsas driver.
+Merged together with patches 2-8 from your series and applied to trivial 
+queue.
 
-Problem Description.
---------------------
-Cold boot of cascading expanders are working fine but hot plug in and plug out of the same is not working properly.
-
-Root Cause:
--------------
-After analyzing the same I have figured out the problem is in sas_expander.c (libsas). It is not working when the phy change is occurred to remove the devices or to rediscover the devices.
-
-...... sas_expander.c....
-1805 static int sas_discover_new(struct domain_device *dev, int phy_id)
-
-1832         res = sas_ex_discover_devices(dev, phy_id);
-1833         if (!res)
-1834                 goto out;
-..........
-
-Solution:
-------------
-The same issue doesn't occur after modifying the code like this.
-...sas_expander.c...
-1832            res = sas_ex_discover_devices(dev, phy_id);
-1833        if (res)
-1834               goto out;
-............
-
-Is this is the fix for the same? Any inputs are highly appreciated.
-
-Thanks
-Srinivas.
-
-
-DISCLAIMER:
------------------------------------------------------------------------------------------------------------------------
-
-The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
-It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
-this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
-Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
-this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
-received this email in error please delete it and notify the sender immediately. Before opening any mail and 
-attachments please check them for viruses and defect.
-
------------------------------------------------------------------------------------------------------------------------
+-- 
+Jiri Kosina
+SUSE Labs, Novell Inc.
