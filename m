@@ -1,12 +1,14 @@
 From: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2 1/7] scsi-ml: modify change_queue_depth to
-	take in reason	why it is being called
-Date: Thu, 15 Oct 2009 17:46:39 -0700
-Message-ID: <20091016004639.22451.76363.stgit@vifc.jf.intel.com>
+Subject: [PATCH v2 2/7] scsi error: have scsi-ml call
+	change_queue_depth to	handle QUEUE_FULL
+Date: Thu, 15 Oct 2009 17:46:44 -0700
+Message-ID: <20091016004644.22451.37634.stgit@vifc.jf.intel.com>
+References: <20091016004639.22451.76363.stgit@vifc.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <20091016004639.22451.76363.stgit-M4Lc0Xp98oKtqXYlAKuG4QC/G2K4zDHf@public.gmane.org>
 List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
 	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://www.open-fcoe.org/pipermail/devel>
@@ -21,613 +23,75 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 
-This patch modifies scsi_host_tematepl->change_queue_depth so that
-it takes an argument indicating why it is being called. This will be
-used so that if a LLD needs to do some extra processing when
-handling queue fulls or later ramp ups, it can do so.
-
-This is a simple port of the drivers setting a change_queue_depth
-callback. In the patch I just have these LLDs adjust the queue depth
-if the user was requesting it.
+This has scsi-ml call the change_queue_depth functions when
+we get a QUEUE_FULL. It will only change the queue depth if
+change_queue_depth is set because the LLD may have to
+modify some internal resources, so I thought this would
+be the safest route.
 
 Signed-off-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 
 -v2
-	Also converted pmcraid_change_queue_depth and then verified
-all modules compile  using "make allmodconfig" for any new build
-warnings on X86_64.
-
-	Updated original description after combing two original
-patches from Mike to make this patch git bisectable.
+Limits change_queue_depth to only all luns of target by adding
+channel check while iterating for all luns of Scsi_Host. This is
+same as currently qla2xxx FC HBA does on QUEUE_FULL event.
 
 Signed-off-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 ---
 
- drivers/ata/libata-scsi.c             |    7 ++++++-
- drivers/ata/sata_nv.c                 |    2 +-
- drivers/message/fusion/mptscsih.c     |    9 +++++++--
- drivers/message/fusion/mptscsih.h     |    3 ++-
- drivers/s390/scsi/zfcp_scsi.c         |    6 +++++-
- drivers/scsi/3w-9xxx.c                |    6 +++++-
- drivers/scsi/3w-xxxx.c                |    6 +++++-
- drivers/scsi/53c700.c                 |    5 ++++-
- drivers/scsi/aacraid/linit.c          |    6 +++++-
- drivers/scsi/arcmsr/arcmsr_hba.c      |    5 ++++-
- drivers/scsi/hptiop.c                 |    5 ++++-
- drivers/scsi/ibmvscsi/ibmvfc.c        |    7 ++++++-
- drivers/scsi/ibmvscsi/ibmvscsi.c      |    7 ++++++-
- drivers/scsi/ipr.c                    |    7 ++++++-
- drivers/scsi/libfc/fc_fcp.c           |    5 ++++-
- drivers/scsi/libiscsi.c               |    5 ++++-
- drivers/scsi/libsas/sas_scsi_host.c   |    6 +++++-
- drivers/scsi/megaraid/megaraid_mbox.c |    7 ++++++-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c  |   10 +++++++---
- drivers/scsi/pmcraid.c                |    7 ++++++-
- drivers/scsi/qla2xxx/qla_os.c         |    7 +++++--
- drivers/scsi/scsi_sysfs.c             |    3 ++-
- include/linux/libata.h                |    2 +-
- include/scsi/libfc.h                  |    2 +-
- include/scsi/libiscsi.h               |    3 ++-
- include/scsi/libsas.h                 |    3 ++-
- include/scsi/scsi_host.h              |    8 +++++++-
- 27 files changed, 118 insertions(+), 31 deletions(-)
+ drivers/scsi/scsi_error.c |   27 ++++++++++++++++++++++++++-
+ 1 files changed, 26 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b4ee28d..5d52c2f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1208,6 +1208,7 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
-  *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
-  *	@sdev: SCSI device to configure queue depth for
-  *	@queue_depth: new queue depth
-+ *	@reason: calling context
-  *
-  *	This is libata standard hostt->change_queue_depth callback.
-  *	SCSI will call into this callback when user tries to set queue
-@@ -1219,12 +1220,16 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
-  *	RETURNS:
-  *	Newly configured queue depth.
-  */
--int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
-+int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth,
-+				int reason)
- {
- 	struct ata_port *ap = ata_shost_to_port(sdev->host);
- 	struct ata_device *dev;
- 	unsigned long flags;
- 
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
- 		return sdev->queue_depth;
- 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 86a4058..9bb4afb 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -1963,7 +1963,7 @@ static int nv_swncq_slave_config(struct scsi_device *sdev)
- 	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
- 
- 	if (strncmp(model_num, "Maxtor", 6) == 0) {
--		ata_scsi_change_queue_depth(sdev, 1);
-+		ata_scsi_change_queue_depth(sdev, 1, SCSI_QDEPTH_DEFAULT);
- 		ata_dev_printk(dev, KERN_NOTICE,
- 			"Disabling SWNCQ mode (depth %x)\n", sdev->queue_depth);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1b0060b..7b1e20f 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -331,6 +331,28 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
  	}
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index f68ec48..5775275 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -2351,11 +2351,12 @@ mptscsih_slave_destroy(struct scsi_device *sdev)
-  *	mptscsih_change_queue_depth - This function will set a devices queue depth
-  *	@sdev: per scsi_device pointer
-  *	@qdepth: requested queue depth
-+ *	@reason: calling context
-  *
-  *	Adding support for new 'change_queue_depth' api.
- */
- int
--mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
- {
- 	MPT_SCSI_HOST		*hd = shost_priv(sdev->host);
- 	VirtTarget 		*vtarget;
-@@ -2367,6 +2368,9 @@ mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
- 	starget = scsi_target(sdev);
- 	vtarget = starget->hostdata;
- 
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (ioc->bus_type == SPI) {
- 		if (!(vtarget->tflags & MPT_TARGET_FLAGS_Q_YES))
- 			max_depth = 1;
-@@ -2433,7 +2437,8 @@ mptscsih_slave_configure(struct scsi_device *sdev)
- 		    ioc->name, vtarget->negoFlags, vtarget->maxOffset,
- 		    vtarget->minSyncFactor));
- 
--	mptscsih_change_queue_depth(sdev, MPT_SCSI_CMD_PER_DEV_HIGH);
-+	mptscsih_change_queue_depth(sdev, MPT_SCSI_CMD_PER_DEV_HIGH,
-+				    SCSI_QDEPTH_DEFAULT);
- 	dsprintk(ioc, printk(MYIOC_s_DEBUG_FMT
- 		"tagged %d, simple %d, ordered %d\n",
- 		ioc->name,sdev->tagged_supported, sdev->simple_tags,
-diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
-index e0b33e0..45a5ff3 100644
---- a/drivers/message/fusion/mptscsih.h
-+++ b/drivers/message/fusion/mptscsih.h
-@@ -128,7 +128,8 @@ extern int mptscsih_taskmgmt_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_F
- extern int mptscsih_scandv_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *r);
- extern int mptscsih_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *pEvReply);
- extern int mptscsih_ioc_reset(MPT_ADAPTER *ioc, int post_reset);
--extern int mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth);
-+extern int mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth,
-+				       int reason);
- extern u8 mptscsih_raid_id_to_num(MPT_ADAPTER *ioc, u8 channel, u8 id);
- extern int mptscsih_is_phys_disk(MPT_ADAPTER *ioc, u8 channel, u8 id);
- extern struct device_attribute *mptscsih_host_attrs[];
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 0e1a346..ad11547 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -29,8 +29,12 @@ char *zfcp_get_fcp_sns_info_ptr(struct fcp_rsp_iu *fcp_rsp_iu)
- 	return fcp_sns_info_ptr;
  }
  
--static int zfcp_scsi_change_queue_depth(struct scsi_device *sdev, int depth)
-+static int zfcp_scsi_change_queue_depth(struct scsi_device *sdev, int depth,
-+					int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
++static void scsi_handle_queue_full(struct scsi_device *sdev)
++{
++	struct scsi_host_template *sht = sdev->host->hostt;
++	struct scsi_device *tmp_sdev;
 +
- 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
- 	return sdev->queue_depth;
- }
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index 36c21b1..2d16d49 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -186,8 +186,12 @@ static ssize_t twa_show_stats(struct device *dev,
- } /* End twa_show_stats() */
- 
- /* This function will set a devices queue depth */
--static int twa_change_queue_depth(struct scsi_device *sdev, int queue_depth)
-+static int twa_change_queue_depth(struct scsi_device *sdev, int queue_depth,
-+				  int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
++	if (!sht->change_queue_depth)
++		return;
 +
- 	if (queue_depth > TW_Q_LENGTH-2)
- 		queue_depth = TW_Q_LENGTH-2;
- 	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index 4e91650..245aeb7 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -521,8 +521,12 @@ static ssize_t tw_show_stats(struct device *dev, struct device_attribute *attr,
- } /* End tw_show_stats() */
- 
- /* This function will set a devices queue depth */
--static int tw_change_queue_depth(struct scsi_device *sdev, int queue_depth)
-+static int tw_change_queue_depth(struct scsi_device *sdev, int queue_depth,
-+				 int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
++	shost_for_each_device(tmp_sdev, sdev->host) {
++		if (tmp_sdev->channel != sdev->channel ||
++		    tmp_sdev->id != sdev->id)
++			continue;
++		/*
++		 * We do not know the number of commands that were at
++		 * the device when we got the queue full so we start
++		 * from the highest possible value and work our way down.
++		 */
++		sht->change_queue_depth(tmp_sdev, tmp_sdev->queue_depth - 1,
++					SCSI_QDEPTH_QFULL);
++	}
++}
 +
- 	if (queue_depth > TW_Q_LENGTH-2)
- 		queue_depth = TW_Q_LENGTH-2;
- 	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
-diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index f5a9add..a5a493d 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -2082,8 +2082,11 @@ NCR_700_slave_destroy(struct scsi_device *SDp)
- }
- 
- static int
--NCR_700_change_queue_depth(struct scsi_device *SDp, int depth)
-+NCR_700_change_queue_depth(struct scsi_device *SDp, int depth, int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (depth > NCR_700_MAX_TAGS)
- 		depth = NCR_700_MAX_TAGS;
- 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 9b97c3e..e9373a2 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -472,8 +472,12 @@ static int aac_slave_configure(struct scsi_device *sdev)
-  *	total capacity and the queue depth supported by the target device.
-  */
- 
--static int aac_change_queue_depth(struct scsi_device *sdev, int depth)
-+static int aac_change_queue_depth(struct scsi_device *sdev, int depth,
-+				  int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
- 	    (sdev_channel(sdev) == CONTAINER_CHANNEL)) {
- 		struct scsi_device * dev;
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 80aac01..47d5d19 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -98,8 +98,11 @@ static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
- static const char *arcmsr_info(struct Scsi_Host *);
- static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb);
- static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev,
--								int queue_depth)
-+					  int queue_depth, int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (queue_depth > ARCMSR_MAX_CMD_PERLUN)
- 		queue_depth = ARCMSR_MAX_CMD_PERLUN;
- 	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index a0e7e71..901a3da 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -861,10 +861,13 @@ static int hptiop_reset(struct scsi_cmnd *scp)
- }
- 
- static int hptiop_adjust_disk_queue_depth(struct scsi_device *sdev,
--						int queue_depth)
-+					  int queue_depth, int reason)
- {
- 	struct hptiop_hba *hba = (struct hptiop_hba *)sdev->host->hostdata;
- 
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (queue_depth > hba->max_requests)
- 		queue_depth = hba->max_requests;
- 	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index bb2c696..07e2e35 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -2478,12 +2478,17 @@ static int ibmvfc_slave_configure(struct scsi_device *sdev)
-  * ibmvfc_change_queue_depth - Change the device's queue depth
-  * @sdev:	scsi device struct
-  * @qdepth:	depth to set
-+ * @reason:	calling context
-  *
-  * Return value:
-  * 	actual depth set
-  **/
--static int ibmvfc_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+static int ibmvfc_change_queue_depth(struct scsi_device *sdev, int qdepth,
-+				     int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (qdepth > IBMVFC_MAX_CMDS_PER_LUN)
- 		qdepth = IBMVFC_MAX_CMDS_PER_LUN;
- 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index d9b0e9d..e475b79 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -1637,12 +1637,17 @@ static int ibmvscsi_slave_configure(struct scsi_device *sdev)
-  * ibmvscsi_change_queue_depth - Change the device's queue depth
-  * @sdev:	scsi device struct
-  * @qdepth:	depth to set
-+ * @reason:	calling context
-  *
-  * Return value:
-  * 	actual depth set
-  **/
--static int ibmvscsi_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+static int ibmvscsi_change_queue_depth(struct scsi_device *sdev, int qdepth,
-+				       int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (qdepth > IBMVSCSI_MAX_CMDS_PER_LUN)
- 		qdepth = IBMVSCSI_MAX_CMDS_PER_LUN;
- 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 5f04550..d40d5c7 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -3367,16 +3367,21 @@ static int ipr_free_dump(struct ipr_ioa_cfg *ioa_cfg) { return 0; };
-  * ipr_change_queue_depth - Change the device's queue depth
-  * @sdev:	scsi device struct
-  * @qdepth:	depth to set
-+ * @reason:	calling context
-  *
-  * Return value:
-  * 	actual depth set
-  **/
--static int ipr_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+static int ipr_change_queue_depth(struct scsi_device *sdev, int qdepth,
-+				  int reason)
- {
- 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)sdev->host->hostdata;
- 	struct ipr_resource_entry *res;
- 	unsigned long lock_flags = 0;
- 
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	res = (struct ipr_resource_entry *)sdev->hostdata;
- 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 59a4408..958788f 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -2062,8 +2062,11 @@ int fc_slave_alloc(struct scsi_device *sdev)
- }
- EXPORT_SYMBOL(fc_slave_alloc);
- 
--int fc_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
- 	return sdev->queue_depth;
- }
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f1a4246..67d0f3f 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1643,8 +1643,11 @@ fault:
- }
- EXPORT_SYMBOL_GPL(iscsi_queuecommand);
- 
--int iscsi_change_queue_depth(struct scsi_device *sdev, int depth)
-+int iscsi_change_queue_depth(struct scsi_device *sdev, int depth, int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
- 	return sdev->queue_depth;
- }
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 1c558d3..14b1319 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -820,10 +820,14 @@ void sas_slave_destroy(struct scsi_device *scsi_dev)
- 		ata_port_disable(dev->sata_dev.ap);
- }
- 
--int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth)
-+int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth,
-+			   int reason)
- {
- 	int res = min(new_depth, SAS_MAX_QD);
- 
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (scsi_dev->tagged_supported)
- 		scsi_adjust_queue_depth(scsi_dev, scsi_get_tag_type(scsi_dev),
- 					res);
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index 234f0b7..fd181c2 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -335,12 +335,17 @@ static struct device_attribute *megaraid_sdev_attrs[] = {
-  * megaraid_change_queue_depth - Change the device's queue depth
-  * @sdev:	scsi device struct
-  * @qdepth:	depth to set
-+ * @reason:	calling context
-  *
-  * Return value:
-  * 	actual depth set
-  */
--static int megaraid_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+static int megaraid_change_queue_depth(struct scsi_device *sdev, int qdepth,
-+				       int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (qdepth > MBOX_MAX_SCSI_CMDS)
- 		qdepth = MBOX_MAX_SCSI_CMDS;
- 	scsi_adjust_queue_depth(sdev, 0, qdepth);
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 8dc682f..55ee014 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -1099,11 +1099,12 @@ _scsih_build_scatter_gather(struct MPT2SAS_ADAPTER *ioc,
-  * _scsih_change_queue_depth - setting device queue depth
-  * @sdev: scsi device struct
-  * @qdepth: requested queue depth
-+ * @reason: calling context
-  *
-  * Returns queue depth.
-  */
- static int
--_scsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+_scsih_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
- {
- 	struct Scsi_Host *shost = sdev->host;
- 	int max_depth;
-@@ -1114,6 +1115,9 @@ _scsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
- 	struct _sas_device *sas_device;
- 	unsigned long flags;
- 
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	max_depth = shost->can_queue;
- 
- 	/* limit max device queue for SATA to 32 */
-@@ -1569,7 +1573,7 @@ _scsih_slave_configure(struct scsi_device *sdev)
- 		    r_level, raid_device->handle,
- 		    (unsigned long long)raid_device->wwid,
- 		    raid_device->num_pds, ds);
--		_scsih_change_queue_depth(sdev, qdepth);
-+		_scsih_change_queue_depth(sdev, qdepth, SCSI_QDEPTH_DEFAULT);
- 		return 0;
+ /**
+  * scsi_eh_completed_normally - Disposition a eh cmd on return from LLD.
+  * @scmd:	SCSI cmd to examine.
+@@ -387,8 +409,10 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
+ 		 * let issuer deal with this, it could be just fine
+ 		 */
+ 		return SUCCESS;
+-	case BUSY:
+ 	case QUEUE_FULL:
++		scsi_handle_queue_full(scmd->device);
++		/* fall through */
++	case BUSY:
+ 	default:
+ 		return FAILED;
  	}
- 
-@@ -1615,7 +1619,7 @@ _scsih_slave_configure(struct scsi_device *sdev)
- 			_scsih_display_sata_capabilities(ioc, sas_device, sdev);
- 	}
- 
--	_scsih_change_queue_depth(sdev, qdepth);
-+	_scsih_change_queue_depth(sdev, qdepth, SCSI_QDEPTH_DEFAULT);
- 
- 	if (ssp_target)
- 		sas_read_port_mode_page(sdev);
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index f7c70e2..86d158e 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -278,12 +278,17 @@ static void pmcraid_slave_destroy(struct scsi_device *scsi_dev)
-  * pmcraid_change_queue_depth - Change the device's queue depth
-  * @scsi_dev: scsi device struct
-  * @depth: depth to set
-+ * @reason: calling context
-  *
-  * Return value
-  * 	actual depth set
-  */
--static int pmcraid_change_queue_depth(struct scsi_device *scsi_dev, int depth)
-+static int pmcraid_change_queue_depth(struct scsi_device *scsi_dev, int depth,
-+				      int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	if (depth > PMCRAID_MAX_CMD_PER_LUN)
- 		depth = PMCRAID_MAX_CMD_PER_LUN;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index b79fca7..921054d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -137,7 +137,7 @@ static int qla2xxx_eh_target_reset(struct scsi_cmnd *);
- static int qla2xxx_eh_bus_reset(struct scsi_cmnd *);
- static int qla2xxx_eh_host_reset(struct scsi_cmnd *);
- 
--static int qla2x00_change_queue_depth(struct scsi_device *, int);
-+static int qla2x00_change_queue_depth(struct scsi_device *, int, int);
- static int qla2x00_change_queue_type(struct scsi_device *, int);
- 
- struct scsi_host_template qla2xxx_driver_template = {
-@@ -1234,8 +1234,11 @@ qla2xxx_slave_destroy(struct scsi_device *sdev)
- }
- 
- static int
--qla2x00_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+qla2x00_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason)
- {
-+	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return -EOPNOTSUPP;
-+
- 	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
- 	return sdev->queue_depth;
- }
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index fde5453..4c59336 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -766,7 +766,8 @@ sdev_store_queue_depth_rw(struct device *dev, struct device_attribute *attr,
- 	if (depth < 1)
- 		return -EINVAL;
- 
--	retval = sht->change_queue_depth(sdev, depth);
-+	retval = sht->change_queue_depth(sdev, depth,
-+					 SCSI_QDEPTH_DEFAULT);
- 	if (retval < 0)
- 		return retval;
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8769864..85df383 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1023,7 +1023,7 @@ extern int ata_std_bios_param(struct scsi_device *sdev,
- extern int ata_scsi_slave_config(struct scsi_device *sdev);
- extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
--				       int queue_depth);
-+				       int queue_depth, int reason);
- extern struct ata_device *ata_dev_pair(struct ata_device *adev);
- extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
- 
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 65dc9aa..9874ea7 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -919,7 +919,7 @@ int fc_slave_alloc(struct scsi_device *sdev);
- /*
-  * Adjust the queue depth.
-  */
--int fc_change_queue_depth(struct scsi_device *sdev, int qdepth);
-+int fc_change_queue_depth(struct scsi_device *sdev, int qdepth, int reason);
- 
- /*
-  * Change the tag type.
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index a72edd4..2db2bc2 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -333,7 +333,8 @@ struct iscsi_host {
- /*
-  * scsi host template
-  */
--extern int iscsi_change_queue_depth(struct scsi_device *sdev, int depth);
-+extern int iscsi_change_queue_depth(struct scsi_device *sdev, int depth,
-+				    int reason);
- extern int iscsi_eh_abort(struct scsi_cmnd *sc);
- extern int iscsi_eh_target_reset(struct scsi_cmnd *sc);
- extern int iscsi_eh_device_reset(struct scsi_cmnd *sc);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index e78d3b6..9eaa3f0 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -634,7 +634,8 @@ extern int sas_target_alloc(struct scsi_target *);
- extern int sas_slave_alloc(struct scsi_device *);
- extern int sas_slave_configure(struct scsi_device *);
- extern void sas_slave_destroy(struct scsi_device *);
--extern int sas_change_queue_depth(struct scsi_device *, int new_depth);
-+extern int sas_change_queue_depth(struct scsi_device *, int new_depth,
-+				  int reason);
- extern int sas_change_queue_type(struct scsi_device *, int qt);
- extern int sas_bios_param(struct scsi_device *,
- 			  struct block_device *,
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 6e728b1..603054d 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -43,6 +43,12 @@ struct blk_queue_tags;
- #define DISABLE_CLUSTERING 0
- #define ENABLE_CLUSTERING 1
- 
-+enum {
-+	SCSI_QDEPTH_DEFAULT,	/* default requested change, e.g. from sysfs */
-+	SCSI_QDEPTH_QFULL,	/* scsi-ml requested due to queue full */
-+	SCSI_QDEPTH_RAMP_UP,	/* scsi-ml requested due to threshhold event */
-+};
-+
- struct scsi_host_template {
- 	struct module *module;
- 	const char *name;
-@@ -294,7 +300,7 @@ struct scsi_host_template {
- 	 *
- 	 * Status: OPTIONAL
+@@ -1387,6 +1411,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
  	 */
--	int (* change_queue_depth)(struct scsi_device *, int);
-+	int (* change_queue_depth)(struct scsi_device *, int, int);
- 
- 	/*
- 	 * Fill in this function to allow the changing of tag types
+ 	switch (status_byte(scmd->result)) {
+ 	case QUEUE_FULL:
++		scsi_handle_queue_full(scmd->device);
+ 		/*
+ 		 * the case of trying to send too many commands to a
+ 		 * tagged queueing device.
