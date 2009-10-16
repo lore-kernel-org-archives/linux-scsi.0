@@ -1,141 +1,71 @@
-From: Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [PATCH 7/8] trivial: fix many typos s/untill/until/
-Date: Fri, 16 Oct 2009 12:04:56 +0200
-Message-ID: <200910161204.56879.IvDoorn@gmail.com>
-References: <1255638072-6236-1-git-send-email-cascardo@holoscopio.com>
+From: Srinivas Naga Venkatasatya Pasagadugula <satyasrinivasp@hcl.in>
+Subject: LIBSAS:Issue with cascading of edge expanders
+Date: Fri, 16 Oct 2009 17:14:12 +0530
+Message-ID: <6B62480106F2B34D8404CF2FDAA4D9EF38546AA22B@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1255638072-6236-1-git-send-email-cascardo@holoscopio.com>
-Content-Disposition: inline
-Sender: netdev-owner@vger.kernel.org
-To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Cc: trivial@kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, bonding-devel@lists.sourceforge.net, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-ext4@vger.kernel.org, linux-bluetooth@vger.kernel.org, linux-sctp@vger.kernel.org
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gws08.hcl.in ([203.105.186.28]:55720 "EHLO gws08.hcl.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752664AbZJPLqg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Oct 2009 07:46:36 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "jasonchu@marvell.com" <jasonchu@marvell.com>, "ayan@marvell.com" <ayan@marvell.com>, "kewei@marvell.com" <kewei@marvell.com>
 
-On Thursday 15 October 2009, Thadeu Lima de Souza Cascardo wrote:
-> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Hi,
 
-For rt2800usb
+I have some issues with cascading of edge expanders in linux kernel-2.6.31.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Test Environment:
+-------------------
+Linux Kernel-2.6.31.
+I'm using Adaptec ASC-1045/1405 which uses the Marvell 88SE6440 chip and I am using 2.6.31-mvsas driver.
 
-> ---
->  drivers/infiniband/ulp/iser/iser_verbs.c |    2 +-
->  drivers/net/bonding/bond_alb.c           |    2 +-
->  drivers/net/wireless/rt2x00/rt2800usb.c  |    2 +-
->  drivers/scsi/bnx2i/bnx2i_iscsi.c         |    2 +-
->  drivers/staging/rtl8187se/r8180.h        |    2 +-
->  fs/ext4/balloc.c                         |    2 +-
->  net/bluetooth/bnep/core.c                |    2 +-
->  net/sctp/sm_statefuns.c                  |    2 +-
->  8 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/infiniband/ulp/iser/iser_verbs.c b/drivers/infiniband/ulp/iser/iser_verbs.c
-> index ea9e155..8579f32 100644
-> --- a/drivers/infiniband/ulp/iser/iser_verbs.c
-> +++ b/drivers/infiniband/ulp/iser/iser_verbs.c
-> @@ -499,7 +499,7 @@ void iser_conn_init(struct iser_conn *ib_conn)
->  
->   /**
->   * starts the process of connecting to the target
-> - * sleeps untill the connection is established or rejected
-> + * sleeps until the connection is established or rejected
->   */
->  int iser_connect(struct iser_conn   *ib_conn,
->  		 struct sockaddr_in *src_addr,
-> diff --git a/drivers/net/bonding/bond_alb.c b/drivers/net/bonding/bond_alb.c
-> index 9b5936f..a1e7eb9 100644
-> --- a/drivers/net/bonding/bond_alb.c
-> +++ b/drivers/net/bonding/bond_alb.c
-> @@ -559,7 +559,7 @@ static void rlb_update_rx_clients(struct bonding *bond)
->  		}
->  	}
->  
-> -	/* do not update the entries again untill this counter is zero so that
-> +	/* do not update the entries again until this counter is zero so that
->  	 * not to confuse the clients.
->  	 */
->  	bond_info->rlb_update_delay_counter = RLB_UPDATE_DELAY;
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index a084077..449886c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -1257,7 +1257,7 @@ static int rt2800usb_init_registers(struct rt2x00_dev *rt2x00dev)
->  	unsigned int i;
->  
->  	/*
-> -	 * Wait untill BBP and RF are ready.
-> +	 * Wait until BBP and RF are ready.
->  	 */
->  	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
->  		rt2x00usb_register_read(rt2x00dev, MAC_CSR0, &reg);
-> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> index cafb888..10110be 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> @@ -1883,7 +1883,7 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
->  
->  	bnx2i_ep = ep->dd_data;
->  
-> -	/* driver should not attempt connection cleanup untill TCP_CONNECT
-> +	/* driver should not attempt connection cleanup until TCP_CONNECT
->  	 * completes either successfully or fails. Timeout is 9-secs, so
->  	 * wait for it to complete
->  	 */
-> diff --git a/drivers/staging/rtl8187se/r8180.h b/drivers/staging/rtl8187se/r8180.h
-> index 8216d7e..35ed60b 100644
-> --- a/drivers/staging/rtl8187se/r8180.h
-> +++ b/drivers/staging/rtl8187se/r8180.h
-> @@ -521,7 +521,7 @@ typedef struct r8180_priv
->  	//u32 NumTxOkInPeriod;   //YJ,del,080828
->  	u8   TxPollingTimes;
->  
-> -	bool	bApBufOurFrame;// TRUE if AP buffer our unicast data , we will keep eAwake untill receive data or timeout.
-> +	bool	bApBufOurFrame;// TRUE if AP buffer our unicast data , we will keep eAwake until receive data or timeout.
->  	u8	WaitBufDataBcnCount;
->  	u8	WaitBufDataTimeOut;
->  
-> diff --git a/fs/ext4/balloc.c b/fs/ext4/balloc.c
-> index 1d04189..2565b8c 100644
-> --- a/fs/ext4/balloc.c
-> +++ b/fs/ext4/balloc.c
-> @@ -519,7 +519,7 @@ void ext4_free_blocks(handle_t *handle, struct inode *inode,
->  		metadata = 1;
->  
->  	/* We need to make sure we don't reuse
-> -	 * block released untill the transaction commit.
-> +	 * block released until the transaction commit.
->  	 * writeback mode have weak data consistency so
->  	 * don't force data as metadata when freeing block
->  	 * for writeback mode.
-> diff --git a/net/bluetooth/bnep/core.c b/net/bluetooth/bnep/core.c
-> index 1bd9398..9ac0497 100644
-> --- a/net/bluetooth/bnep/core.c
-> +++ b/net/bluetooth/bnep/core.c
-> @@ -629,7 +629,7 @@ int bnep_del_connection(struct bnep_conndel_req *req)
->  	s = __bnep_get_session(req->dst);
->  	if (s) {
->  		/* Wakeup user-space which is polling for socket errors.
-> -		 * This is temporary hack untill we have shutdown in L2CAP */
-> +		 * This is temporary hack until we have shutdown in L2CAP */
->  		s->sock->sk->sk_err = EUNATCH;
->  
->  		/* Kill session thread */
-> diff --git a/net/sctp/sm_statefuns.c b/net/sctp/sm_statefuns.c
-> index c8fae19..ba2f66d 100644
-> --- a/net/sctp/sm_statefuns.c
-> +++ b/net/sctp/sm_statefuns.c
-> @@ -3569,7 +3569,7 @@ sctp_disposition_t sctp_sf_do_asconf(const struct sctp_endpoint *ep,
->  	 * To do this properly, we'll set the destination address of the chunk
->  	 * and at the transmit time, will try look up the transport to use.
->  	 * Since ASCONFs may be bundled, the correct transport may not be
-> -	 * created untill we process the entire packet, thus this workaround.
-> +	 * created until we process the entire packet, thus this workaround.
->  	 */
->  	asconf_ack->dest = chunk->source;
->  	sctp_add_cmd_sf(commands, SCTP_CMD_REPLY, SCTP_CHUNK(asconf_ack));
+Problem Description.
+--------------------
+Cold boot of cascading expanders are working fine but hot plug in and plug out of the same is not working properly.
+
+Root Cause:
+-------------
+After analyzing the same I have figured out the problem is in sas_expander.c (libsas). It is not working when the phy change is occurred to remove the devices or to rediscover the devices.
+
+...... sas_expander.c....
+1805 static int sas_discover_new(struct domain_device *dev, int phy_id)
+
+1832         res = sas_ex_discover_devices(dev, phy_id);
+1833         if (!res)
+1834                 goto out;
+..........
+
+Solution:
+------------
+The same issue doesn't occur after modifying the code like this.
+...sas_expander.c...
+1832            res = sas_ex_discover_devices(dev, phy_id);
+1833        if (res)
+1834               goto out;
+............
+
+Is this is the fix for the same? Any inputs are highly appreciated.
+
+Thanks
+Srinivas.
 
 
+DISCLAIMER:
+-----------------------------------------------------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
+It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
+this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
+Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
+this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
+received this email in error please delete it and notify the sender immediately. Before opening any mail and 
+attachments please check them for viruses and defect.
+
+-----------------------------------------------------------------------------------------------------------------------
