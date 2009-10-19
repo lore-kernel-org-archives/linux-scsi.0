@@ -1,44 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Mon, 19 Oct 2009 03:46:26 GMT
-Message-ID: <200910190346.n9J3kQsj026955@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: disk restart failure after suspend
+Date: Mon, 19 Oct 2009 09:42:04 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0910181642390.18952-100000@netrider.rowland.org>
+References: <4ADB2967.7000103@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:46859 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754030AbZJSDqV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Oct 2009 23:46:21 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9J3kQ8M026956
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 03:46:26 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from netrider.rowland.org ([192.131.102.5]:40061 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756113AbZJSNmA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2009 09:42:00 -0400
+In-Reply-To: <4ADB2967.7000103@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Tino Keitel <tino.keitel@tikei.de>, linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+On Sun, 18 Oct 2009, Stefan Richter wrote:
 
+> > It seems to me that the restart always fails if the "rediscovered
+> > device fw1" resp.  "firewire_sbp2: fw1.0: reconnected to LUN 0000"
+> > message comes after the "[sdb] Starting disk" message.  That would
+> > sound like an actual bug to me.
+> 
+> It is not a bug.  IEEE 1394 rediscovery and SBP-2 reconnect can become
+> necessary anytime (and they do become necessary at /least/ once during
+> PM resume), in no particular order with respect to SCSI request
+> submission.  Our drivers (firewire-sbp2 mainly) need to be able to
+> handle any order of such events.
 
+Is it possible to delay returning from the device resume routine until
+the rediscovery/reconnect has completed?  This is more or less how the
+USB stack works.
 
+> Interesting findings.
+> 
+> There are two independent places of the code that could possibly be
+> improved to fix this issue:
+> 
+> a.)  sd's PM resume method:
+> 
+> 1.a)  sd_resume could gain this retry loop which you implemented.
 
+This wouldn't be necessary if the transport was working before 
+sd_resume got called.
 
---- Comment #19 from Wendall Cada <wendallc@83864.com>  2009-10-19 03:46:23 ---
-What's interesting is that the cpu usage is spread across several processes:
-devkit-disks-daemon 3%-8% (user)
-gvfs-gdu-volume-monitor 3%-8% (system)
-dbus-daemon 3%-8% (system)
-gdu-notification-daemon 3%-8% (user)
-udevd 1%-2% (system)
+> 1.b)  sd_resume (but probably not sd_suspend) could optimistically
+> ignore any error return from sd_start_stop_device.  If the motor cannot
+> be started immediately at resume, the SCSI core would try to start it
+> later on when the disk is normally accessed.
 
-The cpu spikes to about 35%-40% usage for 30 seconds, then drops down to about
-15%-20% for around a second and repeats the cycle.
+This is probably a worthwhile idea in any case.
 
-I'm not sure which process I should provide an strace for. Or even if this is a
-udev bug at this point. Suggestions?
+> My assumption here is that an error return from sd_resume causes the
+> disk to become inaccessible (taken offline?).
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+No.  All it does is cause an error message to be printed in the system 
+log.  But it's possible that a failure lower down in the SCSI stack has 
+this effect.
+
+Alan Stern
+
