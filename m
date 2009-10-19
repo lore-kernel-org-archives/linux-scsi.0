@@ -1,388 +1,91 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 5/6] ibmvfc: Add FC Passthru support
-Date: Mon, 19 Oct 2009 14:19:47 -0500
-Message-ID: <200910191919.n9JJJm5H024833@d03av03.boulder.ibm.com>
+Subject: Re: [PATCH 1/6] ibmvfc: Fixup TMF response handling - drop
+Date: Mon, 19 Oct 2009 14:56:25 -0500
+Message-ID: <4ADCC469.20205@linux.vnet.ibm.com>
+References: <200910191919.n9JJJhxV018480@d01av04.pok.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:55638 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757326AbZJSTUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Oct 2009 15:20:04 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by e5.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9JJAKsG014171
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:10:20 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9JJJre8901222
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:19:55 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9JJJnAU024892
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 13:19:49 -0600
+Received: from e38.co.us.ibm.com ([32.97.110.159]:41218 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752089AbZJST4j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2009 15:56:39 -0400
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
+	by e38.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9JJqNIw008174
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 13:52:23 -0600
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9JJuQk3082330
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 13:56:26 -0600
+Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id n9JJuQTh011984
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 13:56:26 -0600
+In-Reply-To: <200910191919.n9JJJhxV018480@d01av04.pok.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org
+
+James,
+
+Please drop this patch series, as it has a bug in the passthru
+patch. I'll resend the fixed patch series soon.
+
+Thanks,
+
+Brian
 
 
-Adds support for FC passthru via BSG.
+Brian King wrote:
+> When processing the response to either a LUN reset,
+> target reset, or an abort task set, the ibmvfc driver needs to
+> treat as success receiving a response with a non-zero
+> status in the response IU along with a general transport
+> error with the FCP response code being zero. The VIOS
+> currently guarantees this cannot happen, but a future version
+> of VIOS may allow this to be returned, so ensure we handle
+> this response combination correctly for TMFs, as we already
+> do for SCSI commands.
+> 
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
+> 
+>  drivers/scsi/ibmvscsi/ibmvfc.c |   10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tmf_rsp_fixup drivers/scsi/ibmvscsi/ibmvfc.c
+> --- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tmf_rsp_fixup	2009-10-02 10:39:48.000000000 -0500
+> +++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-10-05 10:03:00.000000000 -0500
+> @@ -1731,7 +1731,10 @@ static int ibmvfc_reset_device(struct sc
+>  	sdev_printk(KERN_INFO, sdev, "Resetting %s\n", desc);
+>  	wait_for_completion(&evt->comp);
+> 
+> -	if (rsp_iu.cmd.status) {
+> +	if (rsp_iu.cmd.status)
+> +		rsp_code = ibmvfc_get_err_result(&rsp_iu.cmd);
+> +
+> +	if (rsp_code) {
+>  		if (fc_rsp->flags & FCP_RSP_LEN_VALID)
+>  			rsp_code = fc_rsp->data.info.rsp_code;
+> 
+> @@ -1820,7 +1823,10 @@ static int ibmvfc_abort_task_set(struct
+>  	sdev_printk(KERN_INFO, sdev, "Aborting outstanding commands\n");
+>  	wait_for_completion(&evt->comp);
+> 
+> -	if (rsp_iu.cmd.status) {
+> +	if (rsp_iu.cmd.status)
+> +		rsp_code = ibmvfc_get_err_result(&rsp_iu.cmd);
+> +
+> +	if (rsp_code) {
+>  		if (fc_rsp->flags & FCP_RSP_LEN_VALID)
+>  			rsp_code = fc_rsp->data.info.rsp_code;
+> 
+> _
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
 
- drivers/scsi/ibmvscsi/ibmvfc.c |  279 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ibmvscsi/ibmvfc.h |    5 
- 2 files changed, 284 insertions(+)
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_fc_pass_thru drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_fc_pass_thru	2009-10-19 10:14:58.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-10-19 10:22:23.000000000 -0500
-@@ -39,6 +39,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport_fc.h>
-+#include <scsi/scsi_bsg_fc.h>
- #include "ibmvfc.h"
- 
- static unsigned int init_timeout = IBMVFC_INIT_TIMEOUT;
-@@ -1675,6 +1676,276 @@ static void ibmvfc_sync_completion(struc
- }
- 
- /**
-+ * ibmvfc_bsg_timeout_done - Completion handler for cancelling BSG commands
-+ * @evt:	struct ibmvfc_event
-+ *
-+ **/
-+static void ibmvfc_bsg_timeout_done(struct ibmvfc_event *evt)
-+{
-+	struct ibmvfc_host *vhost = evt->vhost;
-+
-+	ibmvfc_free_event(evt);
-+	vhost->aborting_passthru = 0;
-+	dev_info(vhost->dev, "Passthru command cancelled\n");
-+}
-+
-+/**
-+ * ibmvfc_bsg_timeout - Handle a BSG timeout
-+ * @job:	struct fc_bsg_job that timed out
-+ *
-+ * Returns:
-+ *	0 on success / other on failure
-+ **/
-+static int ibmvfc_bsg_timeout(struct fc_bsg_job *job)
-+{
-+	struct ibmvfc_host *vhost = shost_priv(job->shost);
-+	unsigned long port_id = (unsigned long)job->dd_data;
-+	struct ibmvfc_event *evt;
-+	struct ibmvfc_tmf *tmf;
-+	unsigned long flags;
-+	int rc;
-+
-+	ENTER;
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
-+	if (vhost->aborting_passthru || vhost->state != IBMVFC_ACTIVE) {
-+		__ibmvfc_reset_host(vhost);
-+		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+		return 0;
-+	}
-+
-+	vhost->aborting_passthru = 1;
-+	evt = ibmvfc_get_event(vhost);
-+	ibmvfc_init_event(evt, ibmvfc_bsg_timeout_done, IBMVFC_MAD_FORMAT);
-+
-+	tmf = &evt->iu.tmf;
-+	memset(tmf, 0, sizeof(*tmf));
-+	tmf->common.version = 1;
-+	tmf->common.opcode = IBMVFC_TMF_MAD;
-+	tmf->common.length = sizeof(*tmf);
-+	tmf->scsi_id = port_id;
-+	tmf->cancel_key = IBMVFC_PASSTHRU_CANCEL_KEY;
-+	tmf->my_cancel_key = IBMVFC_INTERNAL_CANCEL_KEY;
-+	rc = ibmvfc_send_event(evt, vhost, default_timeout);
-+
-+	if (rc != 0) {
-+		vhost->aborting_passthru = 0;
-+		dev_err(vhost->dev, "Failed to send cancel event. rc=%d\n", rc);
-+		rc = -EIO;
-+	} else
-+		dev_info(vhost->dev, "Cancelling passthru command to port id 0x%lx\n",
-+			 port_id);
-+
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+
-+	LEAVE;
-+	return rc;
-+}
-+
-+/**
-+ * ibmvfc_bsg_plogi - PLOGI into a target to handle a BSG command
-+ * @vhost:		struct ibmvfc_host to send command
-+ * @port_id:	port ID to send command
-+ *
-+ * Returns:
-+ *	0 on success / other on failure
-+ **/
-+static int ibmvfc_bsg_plogi(struct ibmvfc_host *vhost, unsigned int port_id)
-+{
-+	struct ibmvfc_port_login *plogi;
-+	struct ibmvfc_target *tgt;
-+	struct ibmvfc_event *evt;
-+	union ibmvfc_iu rsp_iu;
-+	unsigned long flags;
-+	int rc = 0, issue_login = 1;
-+
-+	ENTER;
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
-+	list_for_each_entry(tgt, &vhost->targets, queue) {
-+		if (tgt->scsi_id == port_id) {
-+			issue_login = 0;
-+			break;
-+		}
-+	}
-+
-+	if (!issue_login)
-+		goto unlock_out;
-+	if (unlikely((rc = ibmvfc_host_chkready(vhost))))
-+		goto unlock_out;
-+
-+	evt = ibmvfc_get_event(vhost);
-+	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
-+	plogi = &evt->iu.plogi;
-+	memset(plogi, 0, sizeof(*plogi));
-+	plogi->common.version = 1;
-+	plogi->common.opcode = IBMVFC_PORT_LOGIN;
-+	plogi->common.length = sizeof(*plogi);
-+	plogi->scsi_id = port_id;
-+	evt->sync_iu = &rsp_iu;
-+	init_completion(&evt->comp);
-+
-+	rc = ibmvfc_send_event(evt, vhost, default_timeout);
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+
-+	if (rc)
-+		return -EIO;
-+
-+	wait_for_completion(&evt->comp);
-+
-+	if (rsp_iu.plogi.common.status)
-+		rc = -EIO;
-+
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
-+	ibmvfc_free_event(evt);
-+unlock_out:
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+	LEAVE;
-+	return rc;
-+}
-+
-+/**
-+ * ibmvfc_bsg_request - Handle a BSG request
-+ * @job:	struct fc_bsg_job to be executed
-+ *
-+ * Returns:
-+ *	0 on success / other on failure
-+ **/
-+static int ibmvfc_bsg_request(struct fc_bsg_job *job)
-+{
-+	struct ibmvfc_host *vhost = shost_priv(job->shost);
-+	struct fc_rport *rport = job->rport;
-+	struct ibmvfc_passthru_mad *mad;
-+	struct ibmvfc_event *evt;
-+	union ibmvfc_iu rsp_iu;
-+	unsigned long flags, port_id = -1;
-+	unsigned int code = job->request->msgcode;
-+	int rc = 0, req_seg, rsp_seg, issue_login = 0;
-+	u32 fc_flags, rsp_len;
-+
-+	ENTER;
-+	job->reply->reply_payload_rcv_len = 0;
-+	if (rport)
-+		port_id = rport->port_id;
-+
-+	switch (code) {
-+	case FC_BSG_HST_ELS_NOLOGIN:
-+		port_id = (job->request->rqst_data.h_els.port_id[0] << 16) |
-+			(job->request->rqst_data.h_els.port_id[1] << 8) |
-+			job->request->rqst_data.h_els.port_id[2];
-+	case FC_BSG_RPT_ELS:
-+		fc_flags = IBMVFC_FC_ELS;
-+		break;
-+	case FC_BSG_HST_CT:
-+		issue_login = 1;
-+		port_id = (job->request->rqst_data.h_ct.port_id[0] << 16) |
-+			(job->request->rqst_data.h_ct.port_id[1] << 8) |
-+			job->request->rqst_data.h_ct.port_id[2];
-+	case FC_BSG_RPT_CT:
-+		fc_flags = IBMVFC_FC_CT_IU;
-+		break;
-+	default:
-+		return -ENOTSUPP;
-+	};
-+
-+	if (port_id == -1)
-+		return -EINVAL;
-+	if (!mutex_trylock(&vhost->passthru_mutex))
-+		return -EBUSY;
-+
-+	job->dd_data = (void *)port_id;
-+	req_seg = dma_map_sg(vhost->dev, job->request_payload.sg_list,
-+			     job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+
-+	if (!req_seg) {
-+		mutex_unlock(&vhost->passthru_mutex);
-+		return -ENOMEM;
-+	}
-+
-+	rsp_seg = dma_map_sg(vhost->dev, job->reply_payload.sg_list,
-+			     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+
-+	if (!rsp_seg) {
-+		dma_unmap_sg(vhost->dev, job->request_payload.sg_list,
-+			     job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+		mutex_unlock(&vhost->passthru_mutex);
-+		return -ENOMEM;
-+	}
-+
-+	if (req_seg > 1 || rsp_seg > 1) {
-+		rc = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (issue_login)
-+		rc = ibmvfc_bsg_plogi(vhost, port_id);
-+
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
-+
-+	if (unlikely(rc || (rport && (rc = fc_remote_port_chkready(rport)))) ||
-+	    unlikely((rc = ibmvfc_host_chkready(vhost)))) {
-+		spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+		goto out;
-+	}
-+
-+	evt = ibmvfc_get_event(vhost);
-+	ibmvfc_init_event(evt, ibmvfc_sync_completion, IBMVFC_MAD_FORMAT);
-+	mad = &evt->iu.passthru;
-+
-+	memset(mad, 0, sizeof(*mad));
-+	mad->common.version = 1;
-+	mad->common.opcode = IBMVFC_PASSTHRU;
-+	mad->common.length = sizeof(*mad) - sizeof(mad->fc_iu) - sizeof(mad->iu);
-+
-+	mad->cmd_ioba.va = (u64)evt->crq.ioba +
-+		offsetof(struct ibmvfc_passthru_mad, iu);
-+	mad->cmd_ioba.len = sizeof(mad->iu);
-+
-+	mad->iu.cmd_len = job->request_payload.payload_len;
-+	mad->iu.rsp_len = job->reply_payload.payload_len;
-+	mad->iu.flags = fc_flags;
-+	mad->iu.cancel_key = IBMVFC_PASSTHRU_CANCEL_KEY;
-+
-+	mad->iu.cmd.va = sg_dma_address(job->request_payload.sg_list);
-+	mad->iu.cmd.len = sg_dma_len(job->request_payload.sg_list);
-+	mad->iu.rsp.va = sg_dma_address(job->reply_payload.sg_list);
-+	mad->iu.rsp.len = sg_dma_len(job->reply_payload.sg_list);
-+	mad->iu.scsi_id = port_id;
-+	mad->iu.tag = (u64)evt;
-+	rsp_len = mad->iu.rsp.len;
-+
-+	evt->sync_iu = &rsp_iu;
-+	init_completion(&evt->comp);
-+	rc = ibmvfc_send_event(evt, vhost, 0);
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+
-+	if (rc) {
-+		rc = -EIO;
-+		goto out;
-+	}
-+
-+	wait_for_completion(&evt->comp);
-+
-+	if (rsp_iu.passthru.common.status)
-+		rc = -EIO;
-+	else
-+		job->reply->reply_payload_rcv_len = rsp_len;
-+
-+	spin_lock_irqsave(vhost->host->host_lock, flags);
-+	ibmvfc_free_event(evt);
-+	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-+	job->reply->result = rc;
-+	job->job_done(job);
-+	rc = 0;
-+out:
-+	dma_unmap_sg(vhost->dev, job->request_payload.sg_list,
-+		     job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+	dma_unmap_sg(vhost->dev, job->reply_payload.sg_list,
-+		     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+	mutex_unlock(&vhost->passthru_mutex);
-+	LEAVE;
-+	return rc;
-+}
-+
-+/**
-  * ibmvfc_reset_device - Reset the device with the specified reset type
-  * @sdev:	scsi device to reset
-  * @type:	reset type
-@@ -3918,6 +4189,8 @@ static void ibmvfc_tgt_add_rport(struct
- 			rport->supported_classes |= FC_COS_CLASS2;
- 		if (tgt->service_parms.class3_parms[0] & 0x80000000)
- 			rport->supported_classes |= FC_COS_CLASS3;
-+		if (rport->rqst_q)
-+			blk_queue_max_hw_segments(rport->rqst_q, 1);
- 	} else
- 		tgt_dbg(tgt, "rport add failed\n");
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
-@@ -4357,6 +4630,7 @@ static int ibmvfc_probe(struct vio_dev *
- 	init_waitqueue_head(&vhost->work_wait_q);
- 	init_waitqueue_head(&vhost->init_wait_q);
- 	INIT_WORK(&vhost->rport_add_work_q, ibmvfc_rport_add_thread);
-+	mutex_init(&vhost->passthru_mutex);
- 
- 	if ((rc = ibmvfc_alloc_mem(vhost)))
- 		goto free_scsi_host;
-@@ -4389,6 +4663,8 @@ static int ibmvfc_probe(struct vio_dev *
- 		goto remove_shost;
- 	}
- 
-+	if (shost_to_fc_host(shost)->rqst_q)
-+		blk_queue_max_hw_segments(shost_to_fc_host(shost)->rqst_q, 1);
- 	dev_set_drvdata(dev, vhost);
- 	spin_lock(&ibmvfc_driver_lock);
- 	list_add_tail(&vhost->queue, &ibmvfc_head);
-@@ -4517,6 +4793,9 @@ static struct fc_function_template ibmvf
- 
- 	.get_starget_port_id = ibmvfc_get_starget_port_id,
- 	.show_starget_port_id = 1,
-+
-+	.bsg_request = ibmvfc_bsg_request,
-+	.bsg_timeout = ibmvfc_bsg_timeout,
- };
- 
- /**
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_fc_pass_thru drivers/scsi/ibmvscsi/ibmvfc.h
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_fc_pass_thru	2009-10-19 10:14:58.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2009-10-19 10:15:01.000000000 -0500
-@@ -466,7 +466,10 @@ struct ibmvfc_passthru_iu {
- 	u16 error;
- 	u32 flags;
- #define IBMVFC_FC_ELS		0x01
-+#define IBMVFC_FC_CT_IU		0x02
- 	u32 cancel_key;
-+#define IBMVFC_PASSTHRU_CANCEL_KEY	0x80000000
-+#define IBMVFC_INTERNAL_CANCEL_KEY	0x80000001
- 	u32 reserved;
- 	struct srp_direct_buf cmd;
- 	struct srp_direct_buf rsp;
-@@ -693,6 +696,7 @@ struct ibmvfc_host {
- 	int disc_buf_sz;
- 	int log_level;
- 	struct ibmvfc_discover_targets_buf *disc_buf;
-+	struct mutex passthru_mutex;
- 	int task_set;
- 	int init_retries;
- 	int discovery_threads;
-@@ -702,6 +706,7 @@ struct ibmvfc_host {
- 	int delay_init;
- 	int scan_complete;
- 	int logged_in;
-+	int aborting_passthru;
- 	int events_to_log;
- #define IBMVFC_AE_LINKUP	0x0001
- #define IBMVFC_AE_LINKDOWN	0x0002
-_
+
