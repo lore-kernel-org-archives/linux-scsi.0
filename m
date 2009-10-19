@@ -1,168 +1,104 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 1/1] be2iscsi: Enabling MSIX and mcc_rings V2
-Date: Mon, 19 Oct 2009 12:26:52 -0400
-Message-ID: <4ADC934C.1020401@emulex.com>
-References: <20091017011435.GA25197@serverengines.com>
+Subject: Re: [PATCH 1/1] scsi: Fix WARN message for FC passthru failure paths
+Date: Mon, 19 Oct 2009 12:51:33 -0400
+Message-ID: <4ADC9915.4040004@emulex.com>
+References: <200910191152.n9JBqvxJ009698@d01av02.pok.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:51086 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:53690 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754588AbZJSQ06 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2009 12:26:58 -0400
-In-Reply-To: <20091017011435.GA25197@serverengines.com>
+	with ESMTP id S1755137AbZJSQve (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2009 12:51:34 -0400
+In-Reply-To: <200910191152.n9JBqvxJ009698@d01av02.pok.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-A few code review comments:
+Thanks Brian.
 
-Jayamohan Kallickal wrote:
-> +static struct bin_attribute sysfs_drvr_fw_prgrm_attr = {
-> +       .attr = {
-> +               .name = "be2iscsi_fw_prgrm",
-> +               .mode = S_IRUSR | S_IWUSR,
-> +               .owner = THIS_MODULE,
-> +       },
-> +       .size = 0,
-> +       .read = beiscsi_sysfs_fw_rd,
-> +       .write = beiscsi_sysfs_fw_wr,
-> +};
-> +
+Acked-By: James Smart <james.smart@emulex.com>
 
-Use the DEVICE_ATTR macro...
+-- james
+
+fyi: If I remember right, the passthru interface still has a problem returning 
+the receive residual properly via bsg.
 
 
-> @@ -355,13 +526,32 @@ static irqreturn_t be_isr(int irq, void *dev_id)
->  static int beiscsi_init_irqs(struct beiscsi_hba *phba)
->  {
->         struct pci_dev *pcidev = phba->pcidev;
-> -       int ret;
-> +       struct hwi_controller *phwi_ctrlr;
-> +       struct hwi_context_memory *phwi_context;
-> +       int ret, msix_vec, i = 0;
-> +       char desc[32];
+Brian King wrote:
+> There are three error paths in the FC passthru code where
+> job->reply->reply_payload_rcv_len does not get initialized,
+> resulting in the WARN_ON in fc_bsg_jobdone going off. This patch
+> fixes this. An example of one of the WARN_ON messages seen:
 > 
-> -       ret = request_irq(pcidev->irq, be_isr, IRQF_SHARED, "beiscsi", phba);
-> -       if (ret) {
-> -               shost_printk(KERN_ERR, phba->shost, "beiscsi_init_irqs-"
-> -                            "Failed to register irq\\n");
-> -               return ret;
-> +       phwi_ctrlr = phba->phwi_ctrlr;
-> +       phwi_context = phwi_ctrlr->phwi_ctxt;
-> +
-> +       if (enable_msix) {
-
-This should be checking phba->msix_enabled instead.  This code is checking the 
-module-global variable for whether to attempt MSIX mode.  The phba-specific 
-value must be checked to see if pci_enable_msix was successful on this adapter.
-
-There are lots of other occurrences of the same issue in the cq/eq create 
-routines and handlers, as well as error paths, etc.
-
-
-> -static int beiscsi_create_eq(struct beiscsi_hba *phba,
-> +static int beiscsi_create_eqs(struct beiscsi_hba *phba,
->                              struct hwi_context_memory *phwi_context)
->  {
-> -       unsigned int idx;
-> -       int ret;
-> +       unsigned int i, num_eq_pages;
-> +       int ret, eq_for_mcc;
->         struct be_queue_info *eq;
->         struct be_dma_mem *mem;
-> -       struct be_mem_descriptor *mem_descr;
->         void *eq_vaddress;
-> +       dma_addr_t paddr;
+> Badness at drivers/scsi/scsi_transport_fc.c:3424
+> NIP: d000000000bf21ac LR: d000000000bf2684 CTR: c0000000003f753c
+> REGS: c00000004eb03430 TRAP: 0700   Not tainted  (2.6.32-rc4-git)
+> MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 24008444  XER: 00000012
+> TASK = c00000004c3fc9c0[3243] 'fcping' THREAD: c00000004eb00000 CPU: 0
+> GPR00: 0000000000000001 c00000004eb036b0 d000000000c01da0 000000004bf17fc0
+> GPR04: c00000004cd256a0 c00000007e011ce0 c00000007e011d00 c00000004e718000
+> GPR08: c00000004cd256a0 c00000004eb03ad0 c00000004cd25a90 0000000000000020
+> GPR12: d000000000bf7848 c000000000b62600 0000000000000060 fffffffffffffff4
+> GPR16: ffffffffffffffd6 c00000004c7a3060 ffffffff80000003 c00000004b0f0310
+> GPR20: c00000004e71b180 c00000004c7a3060 0000000000000004 0000000000000000
+> GPR24: c00000004e71b000 c00000004c7a3000 c00000004b0f0000 c00000004e718000
+> GPR28: c00000004cd256a0 c00000004cd25a90 d000000000c01db0 c00000004e01d680
+> NIP [d000000000bf21ac] .fc_bsg_jobdone+0x64/0x9c [scsi_transport_fc]
+> LR [d000000000bf2684] .fc_bsg_request_handler+0x4a0/0x564 [scsi_transport_fc]
+> Call Trace:
+> [c00000004eb036b0] [c0000000003f755c] .get_device+0x20/0x38 (unreliable)
+> [c00000004eb03720] [d000000000bf2684] .fc_bsg_request_handler+0x4a0/0x564 [scsi_transport_fc]
+> [c00000004eb03820] [c0000000002c9b5c] .__generic_unplug_device+0x58/0x70
+> [c00000004eb038a0] [c0000000002ce9fc] .blk_execute_rq_nowait+0x70/0xf4
+> [c00000004eb03930] [c0000000002ceb2c] .blk_execute_rq+0xac/0x100
+> [c00000004eb03a60] [c0000000002d51b4] .bsg_ioctl+0x1fc/0x264
+> [c00000004eb03c10] [c00000000018a89c] .vfs_ioctl+0x54/0xec
+> [c00000004eb03ca0] [c00000000018b01c] .do_vfs_ioctl+0x640/0x6a8
+> [c00000004eb03d80] [c00000000018b0fc] .SyS_ioctl+0x78/0xbc
+> [c00000004eb03e30] [c0000000000085b4] syscall_exit+0x0/0x40
+> Instruction dump:
+> 8003004c 2fa80000 90090104 38000000 900a0108 419e0038 e9230040 81680108
+> 80690004 7f835840 7c101026 5400f7fe <0b000000> 7d605b78 7f8b1840 409d0008
 > 
-> -       idx = 0;
-> -       eq = &phwi_context->be_eq.q;
-> -       mem = &eq->dma_mem;
-> -       mem_descr = phba->init_mem;
-> -       mem_descr += HWI_MEM_EQ;
-> -       eq_vaddress = mem_descr->mem_array[idx].virtual_address;
-> -
-> -       ret = be_fill_queue(eq, phba->params.num_eq_entries,
-> -                           sizeof(struct be_eq_entry), eq_vaddress);
-> -       if (ret) {
-> -               shost_printk(KERN_ERR, phba->shost,
-> -                            "be_fill_queue Failed for EQ \n");
-> -               return ret;
-> -       }
-> +       num_eq_pages = PAGES_REQUIRED(phba->params.num_eq_entries * \
-> +                                     sizeof(struct be_eq_entry));
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> ---
 > 
-> -       mem->dma = mem_descr->mem_array[idx].bus_address.u.a64.address;
-> +       if (enable_msix)
-> +               eq_for_mcc = 1;
-> +       else
-> +               eq_for_mcc = 0;
-> +       for (i = 0; i < (phba->num_cpus + eq_for_mcc); i++) {
-> +               eq = &phwi_context->be_eq[i].q;
-> +               mem = &eq->dma_mem;
-> +               phwi_context->be_eq[i].phba = phba;
-> +               eq_vaddress = pci_alloc_consistent(phba->pcidev,
-> +                                                    num_eq_pages * PAGE_SIZE,
-> +                                                    &paddr);
-
-Missing check for NULL return from pci_alloc_consistent().   There are several 
-other occurrences of the same issue in the patch.
-
-I see you are no longer applying the "round down" logic for the eq's/cq's.
-
-
-
-
-> +static int
-> +beiscsi_alloc_sysfs_attr(struct Scsi_Host *shost)
-> +{
-> +       int ret;
-> +
-> +       ret = sysfs_create_bin_file(&shost->shost_dev.kobj,
-> +                                   &sysfs_drvr_fw_prgrm_attr);
-> +       if (ret)
-> +               shost_printk(KERN_WARNING, shost,
-> +                            "Failed in be2iscsi_alloc_sysfs_attr\n");
-> +       return ret;
-> +}
-> +
-> +static void beiscsi_free_sysfs_attr(struct Scsi_Host *shost)
-> +{
-> +       sysfs_remove_bin_file(&shost->shost_dev.kobj,
-> +                             &sysfs_drvr_fw_prgrm_attr);
-> +}
-
-This style of creating sysfs attributes is odd for SCSI hosts.  Attributes 
-usually use the DEVICE_ATTR macro, with an attribute array that is set in the 
-scsi_host_template via the .shost_attrs field.
-
-
-
-> +static void beiscsi_msix_enable(struct beiscsi_hba *phba)
-> +{
-> +       int i, status;
-> +
-> +       for (i = 0; i <= phba->num_cpus; i++)
-> +               phba->msix_entries[i].entry = i;
-> +
-> +       status = pci_enable_msix(phba->pcidev, phba->msix_entries,
-> +                                (phba->num_cpus + 1));
-> +       if (!status)
-> +               phba->msix_enabled = true;
-> +
-> +       return;
-> +}
-> +
-
-Here's where you set the per-phba setting for msix enabled or not....
-
-
-> +       if (beiscsi_alloc_sysfs_attr(phba->shost))
-> +               goto free_attr_mem;
-
-See comment above on sysfs attributes on scsi hosts....
-
-
--- james s
+>  drivers/scsi/scsi_transport_fc.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff -puN drivers/scsi/scsi_transport_fc.c~scsi_fc_bsg_fix_warn drivers/scsi/scsi_transport_fc.c
+> --- linux-2.6/drivers/scsi/scsi_transport_fc.c~scsi_fc_bsg_fix_warn	2009-10-16 17:06:47.000000000 -0500
+> +++ linux-2.6-bjking1/drivers/scsi/scsi_transport_fc.c	2009-10-16 17:06:47.000000000 -0500
+> @@ -3656,6 +3656,7 @@ fc_bsg_host_dispatch(struct request_queu
+>  fail_host_msg:
+>  	/* return the errno failure code as the only status */
+>  	BUG_ON(job->reply_len < sizeof(uint32_t));
+> +	job->reply->reply_payload_rcv_len = 0;
+>  	job->reply->result = ret;
+>  	job->reply_len = sizeof(uint32_t);
+>  	fc_bsg_jobdone(job);
+> @@ -3741,6 +3742,7 @@ check_bidi:
+>  fail_rport_msg:
+>  	/* return the errno failure code as the only status */
+>  	BUG_ON(job->reply_len < sizeof(uint32_t));
+> +	job->reply->reply_payload_rcv_len = 0;
+>  	job->reply->result = ret;
+>  	job->reply_len = sizeof(uint32_t);
+>  	fc_bsg_jobdone(job);
+> @@ -3797,6 +3799,7 @@ fc_bsg_request_handler(struct request_qu
+>  		/* check if we have the msgcode value at least */
+>  		if (job->request_len < sizeof(uint32_t)) {
+>  			BUG_ON(job->reply_len < sizeof(uint32_t));
+> +			job->reply->reply_payload_rcv_len = 0;
+>  			job->reply->result = -ENOMSG;
+>  			job->reply_len = sizeof(uint32_t);
+>  			fc_bsg_jobdone(job);
+> _
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
