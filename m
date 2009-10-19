@@ -1,68 +1,89 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/6] ibmvfc: Fixup TMF response handling
-Date: Mon, 19 Oct 2009 14:19:43 -0500
-Message-ID: <200910191919.n9JJJhxV018480@d01av04.pok.ibm.com>
+Subject: [PATCH 3/6] ibmvfc: Remove unnecessary parameter to ibmvfc_init_host
+Date: Mon, 19 Oct 2009 14:19:44 -0500
+Message-ID: <200910191919.n9JJJjIL013304@d01av03.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:38408 "EHLO e7.ny.us.ibm.com"
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:56207 "EHLO e1.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755706AbZJSTTj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Oct 2009 15:19:39 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e7.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9JJGcpR023860
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:16:38 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9JJJifD253508
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:19:44 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9JJJhT8018494
-	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:19:44 -0400
+	id S1757254AbZJSTTl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Oct 2009 15:19:41 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e1.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9JJIKSX008300
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:18:20 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9JJJkkZ258278
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:19:46 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9JJJj36013340
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:19:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-When processing the response to either a LUN reset,
-target reset, or an abort task set, the ibmvfc driver needs to
-treat as success receiving a response with a non-zero
-status in the response IU along with a general transport
-error with the FCP response code being zero. The VIOS
-currently guarantees this cannot happen, but a future version
-of VIOS may allow this to be returned, so ensure we handle
-this response combination correctly for TMFs, as we already
-do for SCSI commands.
+Remove a parameter to ibmvfc_init_host which is always set to
+zero by all callers.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ibmvscsi/ibmvfc.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c |   15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tmf_rsp_fixup drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tmf_rsp_fixup	2009-10-02 10:39:48.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-10-05 10:03:00.000000000 -0500
-@@ -1731,7 +1731,10 @@ static int ibmvfc_reset_device(struct sc
- 	sdev_printk(KERN_INFO, sdev, "Resetting %s\n", desc);
- 	wait_for_completion(&evt->comp);
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_init_host_cleanup drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_init_host_cleanup	2009-08-26 17:10:22.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-08-26 17:12:06.000000000 -0500
+@@ -558,12 +558,11 @@ static void ibmvfc_link_down(struct ibmv
+ /**
+  * ibmvfc_init_host - Start host initialization
+  * @vhost:		ibmvfc host struct
+- * @relogin:	is this a re-login?
+  *
+  * Return value:
+  *	nothing
+  **/
+-static void ibmvfc_init_host(struct ibmvfc_host *vhost, int relogin)
++static void ibmvfc_init_host(struct ibmvfc_host *vhost)
+ {
+ 	struct ibmvfc_target *tgt;
  
--	if (rsp_iu.cmd.status) {
-+	if (rsp_iu.cmd.status)
-+		rsp_code = ibmvfc_get_err_result(&rsp_iu.cmd);
-+
-+	if (rsp_code) {
- 		if (fc_rsp->flags & FCP_RSP_LEN_VALID)
- 			rsp_code = fc_rsp->data.info.rsp_code;
+@@ -577,10 +576,8 @@ static void ibmvfc_init_host(struct ibmv
+ 	}
  
-@@ -1820,7 +1823,10 @@ static int ibmvfc_abort_task_set(struct
- 	sdev_printk(KERN_INFO, sdev, "Aborting outstanding commands\n");
- 	wait_for_completion(&evt->comp);
+ 	if (!ibmvfc_set_host_state(vhost, IBMVFC_INITIALIZING)) {
+-		if (!relogin) {
+-			memset(vhost->async_crq.msgs, 0, PAGE_SIZE);
+-			vhost->async_crq.cur = 0;
+-		}
++		memset(vhost->async_crq.msgs, 0, PAGE_SIZE);
++		vhost->async_crq.cur = 0;
  
--	if (rsp_iu.cmd.status) {
-+	if (rsp_iu.cmd.status)
-+		rsp_code = ibmvfc_get_err_result(&rsp_iu.cmd);
-+
-+	if (rsp_code) {
- 		if (fc_rsp->flags & FCP_RSP_LEN_VALID)
- 			rsp_code = fc_rsp->data.info.rsp_code;
- 
+ 		list_for_each_entry(tgt, &vhost->targets, queue)
+ 			ibmvfc_set_tgt_action(tgt, IBMVFC_TGT_ACTION_DEL_RPORT);
+@@ -2303,13 +2300,13 @@ static void ibmvfc_handle_crq(struct ibm
+ 			/* Send back a response */
+ 			rc = ibmvfc_send_crq_init_complete(vhost);
+ 			if (rc == 0)
+-				ibmvfc_init_host(vhost, 0);
++				ibmvfc_init_host(vhost);
+ 			else
+ 				dev_err(vhost->dev, "Unable to send init rsp. rc=%ld\n", rc);
+ 			break;
+ 		case IBMVFC_CRQ_INIT_COMPLETE:
+ 			dev_info(vhost->dev, "Partner initialization complete\n");
+-			ibmvfc_init_host(vhost, 0);
++			ibmvfc_init_host(vhost);
+ 			break;
+ 		default:
+ 			dev_err(vhost->dev, "Unknown crq message type: %d\n", crq->format);
+@@ -3731,7 +3728,7 @@ static void ibmvfc_npiv_logout_done(stru
+ 	case IBMVFC_MAD_SUCCESS:
+ 		if (list_empty(&vhost->sent) &&
+ 		    vhost->action == IBMVFC_HOST_ACTION_LOGO_WAIT) {
+-			ibmvfc_init_host(vhost, 0);
++			ibmvfc_init_host(vhost);
+ 			return;
+ 		}
+ 		break;
 _
