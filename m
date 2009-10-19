@@ -1,86 +1,68 @@
-From: Tino Keitel <tino.keitel@tikei.de>
-Subject: Re: disk restart failure after suspend
-Date: Mon, 19 Oct 2009 20:05:09 +0200
-Message-ID: <20091019180509.GA24410@mac.home>
-References: <4ADB2967.7000103@s5r6.in-berlin.de>
-	<Pine.LNX.4.44L0.0910181642390.18952-100000@netrider.rowland.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="qMm9M+Fa2AknHoGS"
-Return-path: <linux1394-user-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0910181642390.18952-100000@netrider.rowland.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
-	<mailto:linux1394-user-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-user>
-List-Post: <mailto:linux1394-user@lists.sourceforge.net>
-List-Help: <mailto:linux1394-user-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
-	<mailto:linux1394-user-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux1394-user-bounces@lists.sourceforge.net
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Tejun Heo <tj@kernel.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/6] ibmvfc: Fixup TMF response handling
+Date: Mon, 19 Oct 2009 14:19:43 -0500
+Message-ID: <200910191919.n9JJJhxV018480@d01av04.pok.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:38408 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755706AbZJSTTj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Oct 2009 15:19:39 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e7.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9JJGcpR023860
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:16:38 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9JJJifD253508
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:19:44 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9JJJhT8018494
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Oct 2009 15:19:44 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
---qMm9M+Fa2AknHoGS
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+When processing the response to either a LUN reset,
+target reset, or an abort task set, the ibmvfc driver needs to
+treat as success receiving a response with a non-zero
+status in the response IU along with a general transport
+error with the FCP response code being zero. The VIOS
+currently guarantees this cannot happen, but a future version
+of VIOS may allow this to be returned, so ensure we handle
+this response combination correctly for TMFs, as we already
+do for SCSI commands.
 
-Hi,
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-for reference, I attach the patch I used to workaround this.
+ drivers/scsi/ibmvscsi/ibmvfc.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Regards,
-Tino
-
---qMm9M+Fa2AknHoGS
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="retry_restart_disk.diff"
-
---- sd.c	2009-10-19 14:19:20.199156476 +0200
-+++ linux-2.6.31/drivers/scsi/sd.c	2009-10-14 22:38:27.922974268 +0200
-@@ -2183,6 +2185,7 @@
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_device *sdp = sdkp->device;
- 	int res;
-+	int i = 0;
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tmf_rsp_fixup drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_tmf_rsp_fixup	2009-10-02 10:39:48.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2009-10-05 10:03:00.000000000 -0500
+@@ -1731,7 +1731,10 @@ static int ibmvfc_reset_device(struct sc
+ 	sdev_printk(KERN_INFO, sdev, "Resetting %s\n", desc);
+ 	wait_for_completion(&evt->comp);
  
- 	if (start)
- 		cmd[4] |= 1;	/* START */
-@@ -2193,8 +2196,13 @@
- 	if (!scsi_device_online(sdp))
- 		return -ENODEV;
- 
--	res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--			       SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+	while (res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+			       SD_TIMEOUT, SD_MAX_RETRIES, NULL) && i < 10) {
-+		i++;
-+		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED, retrying.\n");
-+		msleep(2000);
-+	}
+-	if (rsp_iu.cmd.status) {
++	if (rsp_iu.cmd.status)
++		rsp_code = ibmvfc_get_err_result(&rsp_iu.cmd);
 +
- 	if (res) {
- 		sd_printk(KERN_WARNING, sdkp, "START_STOP FAILED\n");
- 		sd_print_result(sdkp, res);
-
---qMm9M+Fa2AknHoGS
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-------------------------------------------------------------------------------
-Come build with us! The BlackBerry(R) Developer Conference in SF, CA
-is the only developer event you need to attend this year. Jumpstart your
-developing skills, take BlackBerry mobile applications to market and stay 
-ahead of the curve. Join us from November 9 - 12, 2009. Register now!
-http://p.sf.net/sfu/devconference
---qMm9M+Fa2AknHoGS
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-
---qMm9M+Fa2AknHoGS--
++	if (rsp_code) {
+ 		if (fc_rsp->flags & FCP_RSP_LEN_VALID)
+ 			rsp_code = fc_rsp->data.info.rsp_code;
+ 
+@@ -1820,7 +1823,10 @@ static int ibmvfc_abort_task_set(struct
+ 	sdev_printk(KERN_INFO, sdev, "Aborting outstanding commands\n");
+ 	wait_for_completion(&evt->comp);
+ 
+-	if (rsp_iu.cmd.status) {
++	if (rsp_iu.cmd.status)
++		rsp_code = ibmvfc_get_err_result(&rsp_iu.cmd);
++
++	if (rsp_code) {
+ 		if (fc_rsp->flags & FCP_RSP_LEN_VALID)
+ 			rsp_code = fc_rsp->data.info.rsp_code;
+ 
+_
