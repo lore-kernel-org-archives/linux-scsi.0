@@ -1,53 +1,90 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: disk restart failure after suspend
-Date: Mon, 19 Oct 2009 23:50:29 +0200
-Message-ID: <4ADCDF25.8090908@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0910181642390.18952-100000@netrider.rowland.org> <4ADCCB0B.6060005@s5r6.in-berlin.de> <20091019202828.GA26338@mac.home>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: fc_remote_port_delete and returning SCSI commands from LLD
+Date: Tue, 20 Oct 2009 16:40:27 +0200
+Message-ID: <20091020144027.GA17717@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:42377 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932316AbZJSVv6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Oct 2009 17:51:58 -0400
-In-Reply-To: <20091019202828.GA26338@mac.home>
+Received: from mtagate6.uk.ibm.com ([195.212.29.139]:63751 "EHLO
+	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193AbZJTOkt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Oct 2009 10:40:49 -0400
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate6.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n9KEecge778350
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2009 14:40:43 GMT
+Received: from d06av04.portsmouth.uk.ibm.com (d06av04.portsmouth.uk.ibm.com [9.149.37.216])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9KEeSJL1708286
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2009 15:40:28 +0100
+Received: from d06av04.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av04.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9KEeR3f008431
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2009 15:40:28 +0100
+Received: from schmichrtp.de.ibm.com (schmichrtp.mainz.de.ibm.com [9.155.42.186])
+	by d06av04.portsmouth.uk.ibm.com (8.12.11.20060308/8.12.11) with SMTP id n9KEeRcZ008416
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2009 15:40:27 +0100
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tino Keitel <tino.keitel@tikei.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Tino Keitel wrote:
-> On Mon, Oct 19, 2009 at 22:24:43 +0200, Stefan Richter wrote:
-> 
-> [...]
-> 
->>> No.  All it does is cause an error message to be printed in the system 
->>> log.  But it's possible that a failure lower down in the SCSI stack has 
->>> this effect.
->> I wonder what this might be.
-> 
-> I my case, XFS threw a lot of errors because of an incaccessible device
-> and set the filesystem offline.
+I am looking again at how and when a FC LLD should call
+fc_remote_port_delete. Some help would be welcome to cover all
+requirements and to plug the holes...
 
-Perhaps this happens:
+One scenario i am looking at: The connection to the HBA has been
+temporarily lost and the LLD has to return all pending I/O requests to
+the upper layers, so they can be retried later. Now with the SCSI
+device being part of a multipath device, the first failed I/O request
+triggers path failover:
 
-  - START STOP UNIT does not get through to the disk since
-    firewire-sbp2 could not reconnect early enough.
-  - The kernel _does not_ actually care, unlike I thought.
-    It logs a device resume failure like Alan mentioned, then
-    goes about its business.
-  - Linux attempts to use the filesystem and issues read/ write/
-    whatever requests.
-  - Spindle motor is still off, disk returns errors.
+multipath_end_io
+do_end_io
+fail_path
+queue_work(kmultipathd, &pgpath->deactivate_path);
 
-At this moment, the target should fail these requests with a specific
-sense code which tells the SCSI core that another START STOP UNIT is
-required now.  However, it is just as likely that the target firmware
-sends something nonsensical or nothing at all.  Or maybe the SCSI core
-does even proceed to request START STOP UNIT but the firmware already
-went belly-up.  Finally, SCSI core gives up and takes the disk offline.
--- 
-Stefan Richter
--=====-==--= =-=- =--==
-http://arcgraph.de/sr/
+which then marks the following returned requests as timed out:
+
+deactivate_path
+blk_abort_queue
+blk_abort_request
+blk_rq_timed_out
+scsi_times_out
+fc_timed_out
+
+If the remote_port status is not BLOCKED, this will trigger the SCSI
+midlayer error handling which cannot do much during the interruption
+to the hardware and will mark the SCSI devices 'offline'. In order to
+prevent this, the rule would be: First call fc_remote_port_delete to
+set the remote port (or in the case of an HBA interruption all remote
+ports) to BLOCKED, and only after this step call scsi_done to pass the
+SCSI commands back to the upper layers.
+
+This means, if the HBA problem is detected in interrupt context,
+fc_remote_port_delete has to be called before calling scsi_done.
+
+But the description for fc_remote_port_delete states:
+
+ * Called from normal process context only - cannot be called from
+ * interrupt.
+ *
+ * Notes:
+ *	This routine assumes no locks are held on entry.
+ */
+
+Looking at the functions called from fc_remote_port_delete, i don't
+see a problem in calling fc_remote_port_delete from interrupt context
+or with locks held. Does this mean the description should be fixed or
+am i missing something?
+
+fc_remote_port_add on the other hand can wait during flushes and has
+to be called from process context. To summarize:
+- A LLD has to call fc_remote_port_delete before returning SCSI
+  commands from a failed port or failed HBA.
+- fc_remote_port_delete can be called from interrupt context before
+  calling scsi_done if necessary
+- fc_remote_port_add has to be called from process context
+- The LLD has to serialize the fc_remote_port_add and
+  fc_remote_port_delete calls to guarantee the add->delete->...
+  sequence.
+
+--
+Christof
