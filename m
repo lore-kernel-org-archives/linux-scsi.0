@@ -1,135 +1,80 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: add workaround for MSI interrupts on P7
-Date: Tue, 20 Oct 2009 13:29:14 -0500
-Message-ID: <4ADE017A.4030508@linux.vnet.ibm.com>
-References: <20090930212120.556737609@linux.vnet.ibm.com> <4ADDFCBC.9050608@linux.vnet.ibm.com>
+From: Christof Schmitt <christof.schmitt-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3] scsi-ml: adds queue_depth ramp up code
+Date: Tue, 20 Oct 2009 20:54:26 +0200
+Message-ID: <20091020185426.GA5905@schmichrtp.de.ibm.com>
+References: <20091016004700.22451.42962.stgit@vifc.jf.intel.com>
+	<20091016230824.18916.84116.stgit@vifc.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:57706 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718AbZJTS3N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Oct 2009 14:29:13 -0400
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by e1.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9KIRnRg004062
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2009 14:27:49 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9KITF9S211666
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2009 14:29:15 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id n9KIT3Lp002714
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Oct 2009 14:29:03 -0400
-In-Reply-To: <4ADDFCBC.9050608@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20091016230824.18916.84116.stgit-M4Lc0Xp98oKtqXYlAKuG4QC/G2K4zDHf@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+On Fri, Oct 16, 2009 at 04:08:24PM -0700, Vasu Dev wrote:
+> -v3
+>  Moves max_queue_depth initialization after slave_configure is
+> called from after slave_alloc calling done. Also adjusted
+> max_queue_depth check to skip ramp up if current queue_depth
+> is >= max_queue_depth.
+> 
+> Signed-off-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Wayne Boyer wrote:
-> This patch adds some additional logic to the interrupt service routine to fix
-> a potential problem where an MSI interrupt does not get cleared the first time.
+Looks good to me. I ran some tests on s390 and the queue depth counter
+increased until hitting the defined maximum.
+
+> @@ -779,6 +781,36 @@ static struct device_attribute sdev_attr_queue_depth_rw =
+>  	       sdev_store_queue_depth_rw);
 > 
-> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-> ---
->  ipr.c |   42 +++++++++++++++++++++++++++++++++---------
->  ipr.h |    1 +
->  2 files changed, 34 insertions(+), 9 deletions(-)
-> 
-> Index: b/ipr.c
-> ===================================================================
-> --- a/ipr.c	2009-09-29 09:34:08.000000000 -0700
-> +++ b/ipr.c	2009-09-30 14:16:51.000000000 -0700
-> @@ -4189,6 +4189,25 @@ static irqreturn_t ipr_handle_other_inte
->  }
-> 
->  /**
-> + * ipr_isr_eh - Interrupt service routine error handler
-> + * @ioa_cfg:	ioa config struct
-> + * @msg:	message to log
-> + *
-> + * Return value:
-> + * 	none
-> + **/
-> +static void ipr_isr_eh(struct ipr_ioa_cfg *ioa_cfg, char *msg)
+>  static ssize_t
+> +sdev_show_queue_ramp_up_period(struct device *dev,
+> +			       struct device_attribute *attr,
+> +			       char *buf)
 > +{
-> +	ioa_cfg->errors_logged++;
-> +	dev_err(&ioa_cfg->pdev->dev, "%s\n", msg);
-> +
-> +	if (WAIT_FOR_DUMP == ioa_cfg->sdt_state)
-> +		ioa_cfg->sdt_state = GET_DUMP;
-> +
-> +	ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
+> +	struct scsi_device *sdev;
+> +	sdev = to_scsi_device(dev);
+> +	return snprintf(buf, 20, "%lu\n", sdev->queue_ramp_up_period);
 > +}
 > +
-> +/**
->   * ipr_isr - Interrupt service routine
->   * @irq:	irq number
->   * @devp:	pointer to ioa config struct
-> @@ -4203,6 +4222,7 @@ static irqreturn_t ipr_isr(int irq, void
->  	volatile u32 int_reg, int_mask_reg;
->  	u32 ioasc;
->  	u16 cmd_index;
-> +	int num_hrrq = 0;
->  	struct ipr_cmnd *ipr_cmd;
->  	irqreturn_t rc = IRQ_NONE;
-> 
-> @@ -4233,13 +4253,7 @@ static irqreturn_t ipr_isr(int irq, void
->  				     IPR_HRRQ_REQ_RESP_HANDLE_MASK) >> IPR_HRRQ_REQ_RESP_HANDLE_SHIFT;
-> 
->  			if (unlikely(cmd_index >= IPR_NUM_CMD_BLKS)) {
-> -				ioa_cfg->errors_logged++;
-> -				dev_err(&ioa_cfg->pdev->dev, "Invalid response handle from IOA\n");
-> -
-> -				if (WAIT_FOR_DUMP == ioa_cfg->sdt_state)
-> -					ioa_cfg->sdt_state = GET_DUMP;
-> -
-> -				ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
-> +				ipr_isr_eh(ioa_cfg, "Invalid response handle from IOA");
->  				spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
->  				return IRQ_HANDLED;
->  			}
-> @@ -4266,8 +4280,18 @@ static irqreturn_t ipr_isr(int irq, void
-> 
->  		if (ipr_cmd != NULL) {
->  			/* Clear the PCI interrupt */
-> -			writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg);
-> -			int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
-> +			do {
-> +				writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg);
-> +				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
-> +			} while (int_reg & IPR_PCII_HRRQ_UPDATED &&
-> +					num_hrrq++ < IPR_MAX_HRRQ_RETRIES);
+> +static ssize_t
+> +sdev_store_queue_ramp_up_period(struct device *dev,
+> +				struct device_attribute *attr,
+> +				const char *buf, size_t count)
+> +{
+> +	struct scsi_device *sdev = to_scsi_device(dev);
+> +	unsigned long period;
 > +
-> +			if (int_reg & IPR_PCII_HRRQ_UPDATED) {
-> +				ipr_isr_eh(ioa_cfg, "Error clearing HRRQ");
-> +				spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-> +				return IRQ_HANDLED;
-> +			}
+> +	if (strict_strtoul(buf, 10, &period))
+> +		return -EINVAL;
 > +
->  		} else
->  			break;
->  	}
-> Index: b/ipr.h
-> ===================================================================
-> --- a/ipr.h	2009-09-29 14:59:33.000000000 -0700
-> +++ b/ipr.h	2009-09-29 15:00:35.000000000 -0700
-> @@ -144,6 +144,7 @@
->  #define IPR_IOA_MAX_SECTORS				32767
->  #define IPR_VSET_MAX_SECTORS				512
->  #define IPR_MAX_CDB_LEN					16
-> +#define IPR_MAX_HRRQ_RETRIES				3
-> 
->  #define IPR_DEFAULT_BUS_WIDTH				16
->  #define IPR_80MBs_SCSI_RATE		((80 * 10) / (IPR_DEFAULT_BUS_WIDTH / 8))
-> 
+> +	sdev->queue_ramp_up_period = period;
+> +	return period;
+> +}
 
+[...]
+> +	unsigned long queue_ramp_up_period;	/* ramp up period in jiffies */
+> +#define SCSI_DEFAULT_RAMP_UP_PERIOD	(120 * HZ)
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+Only a small inconvenience i guess: The sysfs attribute shows the
+ramp-up-period in jiffies. On my system with HZ==100 the default is
+12000 and i was wondering if this would be milliseconds or something
+related. If HZ changes, the unit of the ramp-up-period also changes.
 
+I would prefer having seconds or milliseconds in sysfs and only using
+jiffies internally.
 
+Thanks for doing this,
+
+Christof
