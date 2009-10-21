@@ -1,239 +1,66 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 20/20] libfc: fix free of fc_rport_priv with timer pending
-Date: Wed, 21 Oct 2009 16:28:30 -0700
-Message-ID: <20091021232830.12986.88095.stgit@localhost.localdomain>
+Subject: [PATCH 19/20] fnic: Pad the unused bytes of CDB to 0s
+Date: Wed, 21 Oct 2009 16:28:25 -0700
+Message-ID: <20091021232825.12986.91773.stgit@localhost.localdomain>
 References: <20091021232640.12986.79205.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12648 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:38195 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750894AbZJUX31 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 19:29:27 -0400
+	id S1750753AbZJUX3Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Oct 2009 19:29:24 -0400
 In-Reply-To: <20091021232640.12986.79205.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Abhijeet Joglekar <abjoglek@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-From: Joe Eykholt <jeykholt@cisco.com>
+From: Abhijeet Joglekar <abjoglek@cisco.com>
 
-Timer crashes were caused by freeing a struct fc_rport_priv
-with a timer pending, causing the timer facility list to be
-corrupted.  This was during FC uplink flap tests with a lot
-of targets.
-
-After discovery, we were doing an PLOGI on an rdata that was
-in DELETE state but not yet removed from the lookup list.
-This moved the rdata from DELETE state to PLOGI state.
-If the PLOGI exchange allocation failed and needed to be
-retried, the timer scheduling could race with the free
-being done by fc_rport_work().
-
-When fc_rport_login() is called on a rport in DELETE state,
-move it to a new state RESTART.  In fc_rport_work, when
-handling a LOGO, STOPPED or FAILED event, look for restart
-state.  In the RESTART case, don't take the rdata off the
-list and after the transport remote port is deleted and
-exchanges are reset, re-login to the remote port.
-
-Note that the new RESTART state also corrects a problem we
-had when re-discovering a port that had moved to DELETE state.
-In that case, a new rdata was created, but the old rdata
-would do an exchange manager reset affecting the FC_ID
-for both the new rdata and old rdata.  With the new state,
-the new port isn't logged into until after any old exchanges
-are reset.
-
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
+Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_rport.c |   69 ++++++++++++++++++++++++++++++-----------
- include/scsi/libfc.h          |    1 +
- 2 files changed, 51 insertions(+), 19 deletions(-)
+ drivers/scsi/fnic/fnic_res.h  |    4 +++-
+ drivers/scsi/fnic/fnic_scsi.c |    3 ++-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 49abb83..324e156 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -86,6 +86,7 @@ static const char *fc_rport_state_names[] = {
- 	[RPORT_ST_LOGO] = "LOGO",
- 	[RPORT_ST_ADISC] = "ADISC",
- 	[RPORT_ST_DELETE] = "Delete",
-+	[RPORT_ST_RESTART] = "Restart",
- };
- 
- /**
-@@ -99,8 +100,7 @@ static struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
- 	struct fc_rport_priv *rdata;
- 
- 	list_for_each_entry(rdata, &lport->disc.rports, peers)
--		if (rdata->ids.port_id == port_id &&
--		    rdata->rp_state != RPORT_ST_DELETE)
-+		if (rdata->ids.port_id == port_id)
- 			return rdata;
- 	return NULL;
- }
-@@ -235,6 +235,7 @@ static void fc_rport_work(struct work_struct *work)
- 	struct fc_rport_operations *rport_ops;
- 	struct fc_rport_identifiers ids;
- 	struct fc_rport *rport;
-+	int restart = 0;
- 
- 	mutex_lock(&rdata->rp_mutex);
- 	event = rdata->event;
-@@ -287,8 +288,19 @@ static void fc_rport_work(struct work_struct *work)
- 		mutex_unlock(&rdata->rp_mutex);
- 
- 		if (port_id != FC_FID_DIR_SERV) {
-+			/*
-+			 * We must drop rp_mutex before taking disc_mutex.
-+			 * Re-evaluate state to allow for restart.
-+			 * A transition to RESTART state must only happen
-+			 * while disc_mutex is held and rdata is on the list.
-+			 */
- 			mutex_lock(&lport->disc.disc_mutex);
--			list_del(&rdata->peers);
-+			mutex_lock(&rdata->rp_mutex);
-+			if (rdata->rp_state == RPORT_ST_RESTART)
-+				restart = 1;
-+			else
-+				list_del(&rdata->peers);
-+			mutex_unlock(&rdata->rp_mutex);
- 			mutex_unlock(&lport->disc.disc_mutex);
- 		}
- 
-@@ -312,7 +324,13 @@ static void fc_rport_work(struct work_struct *work)
- 			mutex_unlock(&rdata->rp_mutex);
- 			fc_remote_port_delete(rport);
- 		}
--		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+		if (restart) {
-+			mutex_lock(&rdata->rp_mutex);
-+			FC_RPORT_DBG(rdata, "work restart\n");
-+			fc_rport_enter_plogi(rdata);
-+			mutex_unlock(&rdata->rp_mutex);
-+		} else
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
- 		break;
- 
- 	default:
-@@ -342,6 +360,12 @@ int fc_rport_login(struct fc_rport_priv *rdata)
- 		FC_RPORT_DBG(rdata, "ADISC port\n");
- 		fc_rport_enter_adisc(rdata);
- 		break;
-+	case RPORT_ST_RESTART:
-+		break;
-+	case RPORT_ST_DELETE:
-+		FC_RPORT_DBG(rdata, "Restart deleted port\n");
-+		fc_rport_state_enter(rdata, RPORT_ST_RESTART);
-+		break;
- 	default:
- 		FC_RPORT_DBG(rdata, "Login to port\n");
- 		fc_rport_enter_plogi(rdata);
-@@ -397,20 +421,21 @@ int fc_rport_logoff(struct fc_rport_priv *rdata)
- 
- 	if (rdata->rp_state == RPORT_ST_DELETE) {
- 		FC_RPORT_DBG(rdata, "Port in Delete state, not removing\n");
--		mutex_unlock(&rdata->rp_mutex);
- 		goto out;
- 	}
- 
--	fc_rport_enter_logo(rdata);
-+	if (rdata->rp_state == RPORT_ST_RESTART)
-+		FC_RPORT_DBG(rdata, "Port in Restart state, deleting\n");
-+	else
-+		fc_rport_enter_logo(rdata);
- 
- 	/*
- 	 * Change the state to Delete so that we discard
- 	 * the response.
- 	 */
- 	fc_rport_enter_delete(rdata, RPORT_EV_STOP);
--	mutex_unlock(&rdata->rp_mutex);
--
- out:
-+	mutex_unlock(&rdata->rp_mutex);
- 	return 0;
- }
- 
-@@ -466,6 +491,7 @@ static void fc_rport_timeout(struct work_struct *work)
- 	case RPORT_ST_READY:
- 	case RPORT_ST_INIT:
- 	case RPORT_ST_DELETE:
-+	case RPORT_ST_RESTART:
- 		break;
- 	}
- 
-@@ -499,6 +525,7 @@ static void fc_rport_error(struct fc_rport_priv *rdata, struct fc_frame *fp)
- 		fc_rport_enter_logo(rdata);
- 		break;
- 	case RPORT_ST_DELETE:
-+	case RPORT_ST_RESTART:
- 	case RPORT_ST_READY:
- 	case RPORT_ST_INIT:
- 		break;
-@@ -1248,6 +1275,7 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
- 		}
- 		break;
- 	case RPORT_ST_PRLI:
-+	case RPORT_ST_RTV:
- 	case RPORT_ST_READY:
- 	case RPORT_ST_ADISC:
- 		FC_RPORT_DBG(rdata, "Received PLOGI in logged-in state %d "
-@@ -1255,11 +1283,14 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
- 		/* XXX TBD - should reset */
- 		break;
- 	case RPORT_ST_DELETE:
--	default:
--		FC_RPORT_DBG(rdata, "Received PLOGI in unexpected state %d\n",
--			     rdata->rp_state);
--		fc_frame_free(rx_fp);
--		goto out;
-+	case RPORT_ST_LOGO:
-+	case RPORT_ST_RESTART:
-+		FC_RPORT_DBG(rdata, "Received PLOGI in state %s - send busy\n",
-+			     fc_rport_state(rdata));
-+		mutex_unlock(&rdata->rp_mutex);
-+		rjt_data.reason = ELS_RJT_BUSY;
-+		rjt_data.explan = ELS_EXPL_NONE;
-+		goto reject;
- 	}
- 
- 	/*
-@@ -1510,14 +1541,14 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport,
- 		FC_RPORT_DBG(rdata, "Received LOGO request while in state %s\n",
- 			     fc_rport_state(rdata));
- 
-+		fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
-+
- 		/*
--		 * If the remote port was created due to discovery,
--		 * log back in.  It may have seen a stale RSCN about us.
-+		 * If the remote port was created due to discovery, set state
-+		 * to log back in.  It may have seen a stale RSCN about us.
- 		 */
--		if (rdata->rp_state != RPORT_ST_DELETE && rdata->disc_id)
--			fc_rport_enter_plogi(rdata);
--		else
--			fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
-+		if (rdata->disc_id)
-+			fc_rport_state_enter(rdata, RPORT_ST_RESTART);
- 		mutex_unlock(&rdata->rp_mutex);
- 	} else
- 		FC_RPORT_ID_DBG(lport, sid,
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 4ff1485..1662d73 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -145,6 +145,7 @@ enum fc_rport_state {
- 	RPORT_ST_LOGO,		/* port logout sent */
- 	RPORT_ST_ADISC,		/* Discover Address sent */
- 	RPORT_ST_DELETE,	/* port being deleted */
-+	RPORT_ST_RESTART,       /* remote port being deleted and will restart */
- };
- 
- /**
+diff --git a/drivers/scsi/fnic/fnic_res.h b/drivers/scsi/fnic/fnic_res.h
+index b6f3102..88c4471 100644
+--- a/drivers/scsi/fnic/fnic_res.h
++++ b/drivers/scsi/fnic/fnic_res.h
+@@ -58,6 +58,7 @@ static inline void fnic_queue_wq_copy_desc_icmnd_16(struct vnic_wq_copy *wq,
+ 						    u64 sgl_addr, u64 sns_addr,
+ 						    u8 crn, u8 pri_ta,
+ 						    u8 flags, u8 *scsi_cdb,
++						    u8 cdb_len,
+ 						    u32 data_len, u8 *lun,
+ 						    u32 d_id, u16 mss,
+ 						    u32 ratov, u32 edtov)
+@@ -82,7 +83,8 @@ static inline void fnic_queue_wq_copy_desc_icmnd_16(struct vnic_wq_copy *wq,
+ 	desc->u.icmnd_16.pri_ta = pri_ta; 	/* SCSI Pri & Task attribute */
+ 	desc->u.icmnd_16._resvd1 = 0;           /* reserved: should be 0 */
+ 	desc->u.icmnd_16.flags = flags;         /* command flags */
+-	memcpy(desc->u.icmnd_16.scsi_cdb, scsi_cdb, CDB_16);    /* SCSI CDB */
++	memset(desc->u.icmnd_16.scsi_cdb, 0, CDB_16);
++	memcpy(desc->u.icmnd_16.scsi_cdb, scsi_cdb, cdb_len);    /* SCSI CDB */
+ 	desc->u.icmnd_16.data_len = data_len;   /* length of data expected */
+ 	memcpy(desc->u.icmnd_16.lun, lun, LUN_ADDRESS);  /* LUN address */
+ 	desc->u.icmnd_16._resvd2 = 0;          	/* reserved */
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index bfc9969..b5d1738 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -319,7 +319,8 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
+ 					 0, /* scsi cmd ref, always 0 */
+ 					 pri_tag, /* scsi pri and tag */
+ 					 flags,	/* command flags */
+-					 sc->cmnd, scsi_bufflen(sc),
++					 sc->cmnd, sc->cmd_len,
++					 scsi_bufflen(sc),
+ 					 fc_lun.scsi_lun, io_req->port_id,
+ 					 rport->maxframe_size, rp->r_a_tov,
+ 					 rp->e_d_tov);
 
