@@ -1,51 +1,212 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 05/20] libfc: Remove unused fc_lport pointer from
-	fc_fcp_pkt_abort
-Date: Wed, 21 Oct 2009 16:27:06 -0700
-Message-ID: <20091021232706.12986.83741.stgit@localhost.localdomain>
+Subject: [PATCH 16/20] libfc: fix memory corruption caused by double frees and
+	bad error handling
+Date: Wed, 21 Oct 2009 16:28:09 -0700
+Message-ID: <20091021232808.12986.58747.stgit@localhost.localdomain>
 References: <20091021232640.12986.79205.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:2918 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:43971 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751897AbZJUX17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 19:27:59 -0400
+	id S1751980AbZJUX2E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Oct 2009 19:28:04 -0400
 In-Reply-To: <20091021232640.12986.79205.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
+Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
 
-This argument isn't used, let's not pass it into the routine.
+From: Chris Leech <christopher.leech@intel.com>
 
+I was running into several different panics under stress, which I traced down
+to a few different possible slab corruption issues in error handling paths.
+I have not yet looked into why these exchange sends fail, but with these
+fixes my test system is much more stable under stress than before.
+
+fc_elsct_send() could fail and either leave the passed in frame intact
+(failure in fc_ct/els_fill) or the frame could have been freed if the
+failure was is fc_exch_seq_send().  The caller had no way of knowing, and
+there was a potential double free in the error handling in fc_fcp_rec().
+
+Make fc_elsct_send() always free the frame before returning, and remove the
+fc_frame_free() call in fc_fcp_rec().
+
+While fc_exch_seq_send() did always consume the frame, there were double free
+bugs in the error handling of fc_fcp_cmd_send() and fc_fcp_srr() as well.
+
+Numerous calls to error handling routines (fc_disc_error(),
+fc_lport_error(), fc_rport_error_retry() ) were passing in a frame pointer that
+had already been freed in the case of an error.  I have changed the call
+sites to pass in a NULL pointer, but there may be more appropriate error
+codes to use.
+
+Question:  Why do these error routines take a frame pointer anyway?  I
+understand passing in a pointer encoded error to the response handlers, but
+the error routines take no action on a valid pointer and should never be
+called that way.
+
+Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_disc.c  |    2 +-
+ drivers/scsi/libfc/fc_elsct.c |    4 +++-
+ drivers/scsi/libfc/fc_fcp.c   |    7 ++-----
+ drivers/scsi/libfc/fc_lport.c |    8 ++++----
+ drivers/scsi/libfc/fc_rport.c |   10 +++++-----
+ 5 files changed, 15 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index e613eb8..ade962d 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1097,7 +1097,7 @@ unlock:
-  * Scsi abort handler- calls to send an abort
-  * and then wait for abort completion
-  */
--static int fc_fcp_pkt_abort(struct fc_lport *lp, struct fc_fcp_pkt *fsp)
-+static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
- {
- 	int rc = FAILED;
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index c48799e..d4cb3f9 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -371,7 +371,7 @@ static void fc_disc_gpn_ft_req(struct fc_disc *disc)
+ 				 disc, lport->e_d_tov))
+ 		return;
+ err:
+-	fc_disc_error(disc, fp);
++	fc_disc_error(disc, NULL);
+ }
  
-@@ -1945,7 +1945,7 @@ int fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 		goto release_pkt;
+ /**
+diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
+index 5cfa687..9298458 100644
+--- a/drivers/scsi/libfc/fc_elsct.c
++++ b/drivers/scsi/libfc/fc_elsct.c
+@@ -53,8 +53,10 @@ static struct fc_seq *fc_elsct_send(struct fc_lport *lport,
+ 		did = FC_FID_DIR_SERV;
  	}
  
--	rc = fc_fcp_pkt_abort(lp, fsp);
-+	rc = fc_fcp_pkt_abort(fsp);
- 	fc_fcp_unlock_pkt(fsp);
+-	if (rc)
++	if (rc) {
++		fc_frame_free(fp);
+ 		return NULL;
++	}
  
- release_pkt:
+ 	fc_fill_fc_hdr(fp, r_ctl, did, fc_host_port_id(lport->host), fh_type,
+ 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 28bfe1c..a67f53a 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1051,7 +1051,6 @@ static int fc_fcp_cmd_send(struct fc_lport *lp, struct fc_fcp_pkt *fsp,
+ 
+ 	seq = lp->tt.exch_seq_send(lp, fp, resp, fc_fcp_pkt_destroy, fsp, 0);
+ 	if (!seq) {
+-		fc_frame_free(fp);
+ 		rc = -1;
+ 		goto unlock;
+ 	}
+@@ -1316,7 +1315,6 @@ static void fc_fcp_rec(struct fc_fcp_pkt *fsp)
+ 		fc_fcp_pkt_hold(fsp);		/* hold while REC outstanding */
+ 		return;
+ 	}
+-	fc_frame_free(fp);
+ retry:
+ 	if (fsp->recov_retry++ < FC_MAX_RECOV_RETRY)
+ 		fc_fcp_timer_set(fsp, FC_SCSI_REC_TOV);
+@@ -1564,10 +1562,9 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 
+ 	seq = lp->tt.exch_seq_send(lp, fp, fc_fcp_srr_resp, NULL,
+ 				   fsp, jiffies_to_msecs(FC_SCSI_REC_TOV));
+-	if (!seq) {
+-		fc_frame_free(fp);
++	if (!seq)
+ 		goto retry;
+-	}
++
+ 	fsp->recov_seq = seq;
+ 	fsp->xfer_len = offset;
+ 	fsp->xfer_contig_end = offset;
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 0d19ffa..536492a 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1115,7 +1115,7 @@ static void fc_lport_enter_scr(struct fc_lport *lport)
+ 
+ 	if (!lport->tt.elsct_send(lport, FC_FID_FCTRL, fp, ELS_SCR,
+ 				  fc_lport_scr_resp, lport, lport->e_d_tov))
+-		fc_lport_error(lport, fp);
++		fc_lport_error(lport, NULL);
+ }
+ 
+ /**
+@@ -1186,7 +1186,7 @@ static void fc_lport_enter_rpn_id(struct fc_lport *lport)
+ 	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RPN_ID,
+ 				  fc_lport_rpn_id_resp,
+ 				  lport, lport->e_d_tov))
+-		fc_lport_error(lport, fp);
++		fc_lport_error(lport, NULL);
+ }
+ 
+ static struct fc_rport_operations fc_lport_rport_ops = {
+@@ -1340,7 +1340,7 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
+ 
+ 	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_LOGO,
+ 				  fc_lport_logo_resp, lport, lport->e_d_tov))
+-		fc_lport_error(lport, fp);
++		fc_lport_error(lport, NULL);
+ }
+ 
+ /**
+@@ -1456,7 +1456,7 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
+ 
+ 	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_FLOGI,
+ 				  fc_lport_flogi_resp, lport, lport->e_d_tov))
+-		fc_lport_error(lport, fp);
++		fc_lport_error(lport, NULL);
+ }
+ 
+ /* Configure a fc_lport */
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 1f795e4..49abb83 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -632,7 +632,7 @@ static void fc_rport_enter_plogi(struct fc_rport_priv *rdata)
+ 
+ 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_PLOGI,
+ 				  fc_rport_plogi_resp, rdata, lport->e_d_tov))
+-		fc_rport_error_retry(rdata, fp);
++		fc_rport_error_retry(rdata, NULL);
+ 	else
+ 		kref_get(&rdata->kref);
+ }
+@@ -793,7 +793,7 @@ static void fc_rport_enter_prli(struct fc_rport_priv *rdata)
+ 
+ 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_PRLI,
+ 				  fc_rport_prli_resp, rdata, lport->e_d_tov))
+-		fc_rport_error_retry(rdata, fp);
++		fc_rport_error_retry(rdata, NULL);
+ 	else
+ 		kref_get(&rdata->kref);
+ }
+@@ -889,7 +889,7 @@ static void fc_rport_enter_rtv(struct fc_rport_priv *rdata)
+ 
+ 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_RTV,
+ 				     fc_rport_rtv_resp, rdata, lport->e_d_tov))
+-		fc_rport_error_retry(rdata, fp);
++		fc_rport_error_retry(rdata, NULL);
+ 	else
+ 		kref_get(&rdata->kref);
+ }
+@@ -919,7 +919,7 @@ static void fc_rport_enter_logo(struct fc_rport_priv *rdata)
+ 
+ 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_LOGO,
+ 				  fc_rport_logo_resp, rdata, lport->e_d_tov))
+-		fc_rport_error_retry(rdata, fp);
++		fc_rport_error_retry(rdata, NULL);
+ 	else
+ 		kref_get(&rdata->kref);
+ }
+@@ -1006,7 +1006,7 @@ static void fc_rport_enter_adisc(struct fc_rport_priv *rdata)
+ 	}
+ 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_ADISC,
+ 				  fc_rport_adisc_resp, rdata, lport->e_d_tov))
+-		fc_rport_error_retry(rdata, fp);
++		fc_rport_error_retry(rdata, NULL);
+ 	else
+ 		kref_get(&rdata->kref);
+ }
 
