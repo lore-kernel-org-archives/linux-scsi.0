@@ -1,261 +1,62 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 2/4] scsi_dh: Make rdac hardware handler's activate() async
-Date: Wed, 21 Oct 2009 09:22:51 -0700
-Message-ID: <20091021162251.8473.16503.sendpatchset@chandra-ubuntu>
-References: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
+Subject: [PATCH 0/4] scsi_dh: Make scsi_dh_activate asynchronous
+Date: Wed, 21 Oct 2009 09:22:40 -0700
+Message-ID: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:47538 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753643AbZJUQWt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 12:22:49 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by e4.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9LGF9hd015901
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:15:09 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9LGMr6W179374
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:22:53 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id n9LGMSNe026274
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:22:29 -0400
-In-Reply-To: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:51554 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247AbZJUQWy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2009 12:22:54 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9LGHwlV008185
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 10:17:58 -0600
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9LGMg2D117836
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 10:22:42 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9LGMfM4004667
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 10:22:42 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: dm-devel@redhat.com, babu.moger@lsi.com, michaelc@cs.wisc.edu, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com, berthiaume_wayne@emc.com, Chandra Seetharaman <sekharan@us.ibm.com>
 
-Batch up MODE_SELECT in rdac device handler.
+Hello All,
 
-LSI RDAC storage has the capability of handling mode selects for
-multiple luns in a same command. Make use of that ability to send
-as few MODE SELECTs as possible to the storage controller as possible.
+Currently, device handlers process path activation in series. This leads
+to a lot of time delay when more than 100 luns are involved. For example,
+with lsi rdac 100+ luns take about 12-15 minutes. This was found by Moger
+Babu of LSI.
 
-This patch creates a work queue and queues up activate requests
-when a MODE SELECT is sent down the wire. When that MODE SELECT 
-completes, it compiles queued up activate requests for multiple
-luns into a single MODE SELECT.
+This time delay can be avoided if we can do the activations asynchronously.
+By making scsi_dh_activate() async, we can give the device handlers an
+oppurtunity to decide on how to send the device activation down the wire
+to make the turn around time faster. They can send the commands
+asynchronously or send them in batches.
 
-This reduces the time to do failover/failback of large number of LUNS.
+I brought up this issue on the mailing list
+(http://marc.info/?l=linux-scsi&m=123888063818755&w=2) and provided a
+set of patch a loooong while back http://marc.info/?l=linux-scsi&m=124088712709821&w=2
 
-Signed-off-by: Babu Moger <babu.moger@lsi.com>
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+I posted another set of patches against 2.6.31 on 2009/09/29:
+http://marc.info/?l=linux-scsi&m=125427648406736&w=2
 
----
- drivers/scsi/device_handler/scsi_dh_rdac.c |  108 +++++++++++++++++++++++++++--
- 1 file changed, 100 insertions(+), 8 deletions(-)
+This set of patches applies cleanly on 2.6.32-rc5 and I tested the rdac handler
+and alua handler on the same.
 
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c
-===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:14.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:29.000000000 -0700
-@@ -22,6 +22,7 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_dh.h>
-+#include <linux/workqueue.h>
- 
- #define RDAC_NAME "rdac"
- #define RDAC_RETRY_COUNT 5
-@@ -138,7 +139,13 @@
- 	} mode_select;
- 	u8	index;
- 	u8	array_name[ARRAY_LABEL_LEN];
-+	spinlock_t		ms_lock;
-+	int			ms_queued;
-+	struct work_struct	ms_work;
-+	struct scsi_device	*ms_sdev;
-+	struct list_head	ms_head;
- };
-+
- struct c8_inquiry {
- 	u8	peripheral_info;
- 	u8	page_code; /* 0xC8 */
-@@ -198,8 +205,17 @@
- 	"owned (AVT mode)",
- };
- 
-+struct rdac_queue_data {
-+	struct list_head	entry;
-+	struct rdac_dh_data	*h;
-+	activate_complete	callback_fn;
-+	void			*callback_data;
-+};
-+
- static LIST_HEAD(ctlr_list);
- static DEFINE_SPINLOCK(list_lock);
-+static struct workqueue_struct *kmpath_rdacd;
-+static void send_mode_select(struct work_struct *work);
- 
- /*
-  * module parameter to enable rdac debug logging.
-@@ -281,7 +297,6 @@
- 		rdac_pg->subpage_code = 0x1;
- 		rdac_pg->page_len[0] = 0x01;
- 		rdac_pg->page_len[1] = 0x28;
--		rdac_pg->lun_table[h->lun] = 0x81;
- 	} else {
- 		struct rdac_pg_legacy *rdac_pg;
- 
-@@ -291,7 +306,6 @@
- 		common = &rdac_pg->common;
- 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
- 		rdac_pg->page_len = 0x68;
--		rdac_pg->lun_table[h->lun] = 0x81;
- 	}
- 	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
- 	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
-@@ -325,6 +339,7 @@
- 	struct rdac_controller *ctlr;
- 	ctlr = container_of(kref, struct rdac_controller, kref);
- 
-+	flush_workqueue(kmpath_rdacd);
- 	spin_lock(&list_lock);
- 	list_del(&ctlr->node);
- 	spin_unlock(&list_lock);
-@@ -363,6 +378,11 @@
- 
- 	kref_init(&ctlr->kref);
- 	ctlr->use_ms10 = -1;
-+	ctlr->ms_queued = 0;
-+	ctlr->ms_sdev = NULL;
-+	spin_lock_init(&ctlr->ms_lock);
-+	INIT_WORK(&ctlr->ms_work, send_mode_select);
-+	INIT_LIST_HEAD(&ctlr->ms_head);
- 	list_add(&ctlr->node, &ctlr_list);
- done:
- 	spin_unlock(&list_lock);
-@@ -490,7 +510,7 @@
- }
- 
- static int mode_select_handle_sense(struct scsi_device *sdev,
--				    unsigned char *sensebuf)
-+					unsigned char *sensebuf)
- {
- 	struct scsi_sense_hdr sense_hdr;
- 	int err = SCSI_DH_IO, ret;
-@@ -533,11 +553,29 @@
- 	return err;
- }
- 
--static int send_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
-+static void send_mode_select(struct work_struct *work)
- {
-+	struct rdac_controller *ctlr =
-+		container_of(work, struct rdac_controller, ms_work);
- 	struct request *rq;
-+	struct scsi_device *sdev = ctlr->ms_sdev;
-+	struct rdac_dh_data *h = get_rdac_data(sdev);
- 	struct request_queue *q = sdev->request_queue;
- 	int err, retry_cnt = RDAC_RETRY_COUNT;
-+	struct rdac_queue_data *tmp, *qdata;
-+	LIST_HEAD(list);
-+	u8 *lun_table;
-+
-+	spin_lock(&ctlr->ms_lock);
-+	list_splice_init(&ctlr->ms_head, &list);
-+	ctlr->ms_queued = 0;
-+	ctlr->ms_sdev = NULL;
-+	spin_unlock(&ctlr->ms_lock);
-+
-+	if (ctlr->use_ms10)
-+		lun_table = ctlr->mode_select.expanded.lun_table;
-+	else
-+		lun_table = ctlr->mode_select.legacy.lun_table;
- 
- retry:
- 	err = SCSI_DH_RES_TEMP_UNAVAIL;
-@@ -545,6 +583,10 @@
- 	if (!rq)
- 		goto done;
- 
-+	list_for_each_entry(qdata, &list, entry) {
-+		lun_table[qdata->h->lun] = 0x81;
-+	}
-+
- 	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
- 		"%s MODE_SELECT command",
- 		(char *) h->ctlr->array_name, h->ctlr->index,
-@@ -565,7 +607,41 @@
- 	}
- 
- done:
--	return err;
-+	list_for_each_entry_safe(qdata, tmp, &list, entry) {
-+		list_del(&qdata->entry);
-+		if (err == SCSI_DH_OK)
-+			qdata->h->state = RDAC_STATE_ACTIVE;
-+		if (qdata->callback_fn)
-+			qdata->callback_fn(qdata->callback_data, err);
-+		kfree(qdata);
-+	}
-+	return;
-+}
-+
-+static int queue_mode_select(struct scsi_device *sdev,
-+				activate_complete fn, void *data)
-+{
-+	struct rdac_queue_data *qdata;
-+	struct rdac_controller *ctlr;
-+
-+	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
-+	if (!qdata)
-+		return SCSI_DH_RETRY;
-+
-+	qdata->h = get_rdac_data(sdev);
-+	qdata->callback_fn = fn;
-+	qdata->callback_data = data;
-+
-+	ctlr = qdata->h->ctlr;
-+	spin_lock(&ctlr->ms_lock);
-+	list_add_tail(&qdata->entry, &ctlr->ms_head);
-+	if (!ctlr->ms_queued) {
-+		ctlr->ms_queued = 1;
-+		ctlr->ms_sdev = sdev;
-+		queue_work(kmpath_rdacd, &ctlr->ms_work);
-+	}
-+	spin_unlock(&ctlr->ms_lock);
-+	return SCSI_DH_OK;
- }
- 
- static int rdac_activate(struct scsi_device *sdev,
-@@ -578,8 +654,11 @@
- 	if (err != SCSI_DH_OK)
- 		goto done;
- 
--	if (h->lun_state == RDAC_LUN_UNOWNED)
--		err = send_mode_select(sdev, h);
-+	if (h->lun_state == RDAC_LUN_UNOWNED) {
-+		err = queue_mode_select(sdev, fn, data);
-+		if (err == SCSI_DH_OK)
-+			return 0;
-+	}
- done:
- 	if (fn)
- 		fn(data, err);
-@@ -793,13 +872,26 @@
- 	int r;
- 
- 	r = scsi_register_device_handler(&rdac_dh);
--	if (r != 0)
-+	if (r != 0) {
- 		printk(KERN_ERR "Failed to register scsi device handler.");
-+		goto done;
-+	}
-+
-+	/*
-+	 * Create workqueue to handle mode selects for rdac
-+	 */
-+	kmpath_rdacd = create_singlethread_workqueue("kmpath_rdacd");
-+	if (!kmpath_rdacd) {
-+		scsi_unregister_device_handler(&rdac_dh);
-+		printk(KERN_ERR "kmpath_rdacd creation failed.\n");
-+	}
-+done:
- 	return r;
- }
- 
- static void __exit rdac_exit(void)
- {
-+	destroy_workqueue(kmpath_rdacd);
- 	scsi_unregister_device_handler(&rdac_dh);
- }
- 
+Please review and provide comments.
+
+This set of patched adds asynchronous support for rdac, hp, and alua handlers.
+
+Didn't add async support for EMC for the following reasons:
+ - EMC handler is getting more hairy (when I try to move to _nowait())
+ - I do not know if EMC has a special command to group them (like rdac).
+ - I wasn't sure if EMC has this problem in the first place ( I did not get
+   any response from EMC).
+
+Can somebody from EMC comment, please.
+
+Thanks & Regards,
+
+chandra
+
