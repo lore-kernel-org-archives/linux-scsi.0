@@ -1,22 +1,22 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 3/4] scsi_dh: Make hp hardware handler's activate() async
-Date: Wed, 21 Oct 2009 09:22:58 -0700
-Message-ID: <20091021162258.8473.32042.sendpatchset@chandra-ubuntu>
+Subject: [PATCH 4/4] scsi_dh: Make alua hardware handler's activate() async
+Date: Wed, 21 Oct 2009 09:23:04 -0700
+Message-ID: <20091021162304.8473.66039.sendpatchset@chandra-ubuntu>
 References: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:47555 "EHLO e4.ny.us.ibm.com"
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:54193 "EHLO e1.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754278AbZJUQW4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 12:22:56 -0400
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by e4.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9LGFFh4016158
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:15:15 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9LGN0OT201596
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:23:00 -0400
-Received: from d01av01.pok.ibm.com (d03av01 [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id n9LGMxOA032761
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:23:00 -0400
+	id S1754343AbZJUQXC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Oct 2009 12:23:02 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e1.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9LGLcJp025867
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:21:38 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9LGN52P154998
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:23:05 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9LGN5Vj031491
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:23:05 -0400
 In-Reply-To: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -27,57 +27,77 @@ Make the activate function asynchronous by using blk_execute_rq_nowait()
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |   87 +++++++++++++++++-----------
- 1 file changed, 54 insertions(+), 33 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c |  132 ++++++++++++++++-------------
+ 1 file changed, 73 insertions(+), 59 deletions(-)
 
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c
 ===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2009-10-20 18:26:14.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2009-10-20 18:26:44.000000000 -0700
-@@ -39,8 +39,14 @@
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
- 	int path_state;
- 	int retries;
-+	int retry_cnt;
-+	struct scsi_device *sdev;
+--- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:26:14.000000000 -0700
++++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:27:12.000000000 -0700
+@@ -60,11 +60,17 @@
+ 	int			bufflen;
+ 	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
+ 	int			senselen;
++	struct scsi_device	*sdev;
 +	activate_complete	callback_fn;
 +	void			*callback_data;
  };
  
-+static int hp_sw_start_stop(struct hp_sw_dh_data *);
+ #define ALUA_POLICY_SWITCH_CURRENT	0
+ #define ALUA_POLICY_SWITCH_ALL		1
+ 
++static char print_alua_state(int);
++static int alua_check_sense(struct scsi_device *, struct scsi_sense_hdr *);
 +
- static inline struct hp_sw_dh_data *get_hp_sw_data(struct scsi_device *sdev)
+ static inline struct alua_dh_data *get_alua_data(struct scsi_device *sdev)
  {
  	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
-@@ -191,19 +197,53 @@
- 	return rc;
+@@ -231,18 +237,71 @@
  }
  
-+static void start_stop_endio(struct request *req, int error)
+ /*
++ * alua_stpg - Evaluate SET TARGET GROUP STATES
++ * @sdev: the device to be evaluated
++ * @state: the new target group state
++ *
++ * Send a SET TARGET GROUP STATES command to the device.
++ * We only have to test here if we should resubmit the command;
++ * any other error is assumed as a failure.
++ */
++static void stpg_endio(struct request *req, int error)
 +{
-+	struct hp_sw_dh_data *h = req->end_io_data;
-+	unsigned err = SCSI_DH_OK;
++	struct alua_dh_data *h = req->end_io_data;
++	struct scsi_sense_hdr sense_hdr;
++	unsigned err = SCSI_DH_IO;
 +
 +	if (error || host_byte(req->errors) != DID_OK ||
-+			msg_byte(req->errors) != COMMAND_COMPLETE) {
-+		sdev_printk(KERN_WARNING, h->sdev,
-+			    "%s: sending start_stop_unit failed with %x\n",
-+			    HP_SW_NAME, req->errors);
-+		err = SCSI_DH_IO;
++			msg_byte(req->errors) != COMMAND_COMPLETE)
 +		goto done;
-+	}
 +
-+	if (req->sense_len > 0) {
-+		err = start_done(h->sdev, h->sense);
-+		if (err == SCSI_DH_RETRY) {
++	if (err == SCSI_DH_IO && h->senselen > 0) {
++		err = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
++					   &sense_hdr);
++		if (!err) {
 +			err = SCSI_DH_IO;
-+			if (--h->retry_cnt) {
-+				blk_put_request(req);
-+				err = hp_sw_start_stop(h);
-+				if (err == SCSI_DH_OK)
-+					return;
-+			}
++			goto done;
 +		}
++		err = alua_check_sense(h->sdev, &sense_hdr);
++		if (err == ADD_TO_MLQUEUE) {
++			err = SCSI_DH_RETRY;
++			goto done;
++		}
++		sdev_printk(KERN_INFO, h->sdev,
++			    "%s: stpg sense code: %02x/%02x/%02x\n",
++			    ALUA_DH_NAME, sense_hdr.sense_key,
++			    sense_hdr.asc, sense_hdr.ascq);
++		err = SCSI_DH_IO;
++	}
++	if (err == SCSI_DH_OK) {
++		h->state = TPGS_STATE_OPTIMIZED;
++		sdev_printk(KERN_INFO, h->sdev,
++			    "%s: port group %02x switched to state %c\n",
++			    ALUA_DH_NAME, h->group_id,
++			    print_alua_state(h->state));
 +	}
 +done:
 +	blk_put_request(req);
@@ -86,86 +106,128 @@ Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c
 +		h->callback_fn = h->callback_data = NULL;
 +	}
 +	return;
-+
 +}
 +
- /*
-  * hp_sw_start_stop - Send START STOP UNIT command
-  * @sdev: sdev command should be sent to
++/*
+  * submit_stpg - Issue a SET TARGET GROUP STATES command
+- * @sdev: sdev the command should be sent to
   *
-  * Sending START STOP UNIT activates the SP.
+  * Currently we're only setting the current target port group state
+  * to 'active/optimized' and let the array firmware figure out
+  * the states of the remaining groups.
   */
--static int hp_sw_start_stop(struct scsi_device *sdev, struct hp_sw_dh_data *h)
-+static int hp_sw_start_stop(struct hp_sw_dh_data *h)
+-static unsigned submit_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
++static unsigned submit_stpg(struct alua_dh_data *h)
  {
- 	struct request *req;
--	int ret, retry;
+ 	struct request *rq;
+ 	int err = SCSI_DH_RES_TEMP_UNAVAIL;
+ 	int stpg_len = 8;
++	struct scsi_device *sdev = h->sdev;
  
--retry:
--	req = blk_get_request(sdev->request_queue, WRITE, GFP_NOIO);
-+	req = blk_get_request(h->sdev->request_queue, WRITE, GFP_ATOMIC);
- 	if (!req)
- 		return SCSI_DH_RES_TEMP_UNAVAIL;
+ 	/* Prepare the data buffer */
+ 	memset(h->buff, 0, stpg_len);
+@@ -252,7 +311,7 @@
  
-@@ -217,32 +257,10 @@
- 	req->sense = h->sense;
- 	memset(req->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	req->sense_len = 0;
--	retry = h->retries;
-+	req->end_io_data = h;
+ 	rq = get_alua_req(sdev, h->buff, stpg_len, WRITE);
+ 	if (!rq)
+-		goto done;
++		return SCSI_DH_RES_TEMP_UNAVAIL;
  
--	ret = blk_execute_rq(req->q, NULL, req, 1);
--	if (ret == -EIO) {
--		if (req->sense_len > 0) {
--			ret = start_done(sdev, h->sense);
--		} else {
--			sdev_printk(KERN_WARNING, sdev,
--				    "%s: sending start_stop_unit failed with %x\n",
--				    HP_SW_NAME, req->errors);
--			ret = SCSI_DH_IO;
--		}
--	} else
--		ret = SCSI_DH_OK;
--
--	if (ret == SCSI_DH_RETRY) {
--		if (--retry) {
--			blk_put_request(req);
--			goto retry;
--		}
--		ret = SCSI_DH_IO;
+ 	/* Prepare the command. */
+ 	rq->cmd[0] = MAINTENANCE_OUT;
+@@ -266,17 +325,9 @@
+ 	rq->sense = h->sense;
+ 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	rq->sense_len = h->senselen = 0;
++	rq->end_io_data = h;
+ 
+-	err = blk_execute_rq(rq->q, NULL, rq, 1);
+-	if (err == -EIO) {
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: stpg failed with %x\n",
+-			    ALUA_DH_NAME, rq->errors);
+-		h->senselen = rq->sense_len;
+-		err = SCSI_DH_IO;
 -	}
--
--	blk_put_request(req);
--
--	return ret;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, start_stop_endio);
-+	return SCSI_DH_OK;
+-	blk_put_request(rq);
+-done:
++	blk_execute_rq_nowait(rq->q, NULL, rq, 1, stpg_endio);
+ 	return err;
  }
  
- static int hp_sw_prep_fn(struct scsi_device *sdev, struct request *req)
-@@ -277,11 +295,13 @@
- 	ret = hp_sw_tur(sdev, h);
+@@ -477,50 +528,6 @@
+ }
  
- 	if (ret == SCSI_DH_OK && h->path_state == HP_SW_PATH_PASSIVE) {
--		ret = hp_sw_start_stop(sdev, h);
-+		h->retry_cnt = h->retries;
-+		h->callback_fn = fn;
-+		h->callback_data = data;
-+		ret = hp_sw_start_stop(h);
- 		if (ret == SCSI_DH_OK)
--			sdev_printk(KERN_INFO, sdev,
--				    "%s: activated path\n",
--				    HP_SW_NAME);
-+			return 0;
-+		h->callback_fn = h->callback_data = NULL;
+ /*
+- * alua_stpg - Evaluate SET TARGET GROUP STATES
+- * @sdev: the device to be evaluated
+- * @state: the new target group state
+- *
+- * Send a SET TARGET GROUP STATES command to the device.
+- * We only have to test here if we should resubmit the command;
+- * any other error is assumed as a failure.
+- */
+-static int alua_stpg(struct scsi_device *sdev, int state,
+-		     struct alua_dh_data *h)
+-{
+-	struct scsi_sense_hdr sense_hdr;
+-	unsigned err;
+-	int retry = ALUA_FAILOVER_RETRIES;
+-
+- retry:
+-	err = submit_stpg(sdev, h);
+-	if (err == SCSI_DH_IO && h->senselen > 0) {
+-		err = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+-					   &sense_hdr);
+-		if (!err)
+-			return SCSI_DH_IO;
+-		err = alua_check_sense(sdev, &sense_hdr);
+-		if (retry > 0 && err == ADD_TO_MLQUEUE) {
+-			retry--;
+-			goto retry;
+-		}
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: stpg sense code: %02x/%02x/%02x\n",
+-			    ALUA_DH_NAME, sense_hdr.sense_key,
+-			    sense_hdr.asc, sense_hdr.ascq);
+-		err = SCSI_DH_IO;
+-	}
+-	if (err == SCSI_DH_OK) {
+-		h->state = state;
+-		sdev_printk(KERN_INFO, sdev,
+-			    "%s: port group %02x switched to state %c\n",
+-			    ALUA_DH_NAME, h->group_id,
+-			    print_alua_state(h->state) );
+-	}
+-	return err;
+-}
+-
+-/*
+  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
+  * @sdev: the device to be evaluated.
+  *
+@@ -664,8 +671,14 @@
+ 			goto out;
  	}
  
+-	if (h->tpgs & TPGS_MODE_EXPLICIT && h->state != TPGS_STATE_OPTIMIZED)
+-		err = alua_stpg(sdev, TPGS_STATE_OPTIMIZED, h);
++	if (h->tpgs & TPGS_MODE_EXPLICIT && h->state != TPGS_STATE_OPTIMIZED) {
++		h->callback_fn = fn;
++		h->callback_data = data;
++		err = submit_stpg(h);
++		if (err == SCSI_DH_OK)
++			return 0;
++		h->callback_fn = h->callback_data = NULL;
++	}
+ 
+ out:
  	if (fn)
-@@ -329,6 +349,7 @@
- 	h = (struct hp_sw_dh_data *) scsi_dh_data->buf;
- 	h->path_state = HP_SW_PATH_UNINITIALIZED;
- 	h->retries = HP_SW_RETRIES;
+@@ -748,6 +761,7 @@
+ 	h->rel_port = -1;
+ 	h->buff = h->inq;
+ 	h->bufflen = ALUA_INQUIRY_SIZE;
 +	h->sdev = sdev;
  
- 	ret = hp_sw_tur(sdev, h);
- 	if (ret != SCSI_DH_OK || h->path_state == HP_SW_PATH_UNINITIALIZED)
+ 	err = alua_initialize(sdev, h);
+ 	if (err != SCSI_DH_OK)
