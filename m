@@ -1,104 +1,79 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 07/20] libfc: lport: fix minor documentation errors
-Date: Wed, 21 Oct 2009 16:27:17 -0700
-Message-ID: <20091021232717.12986.18606.stgit@localhost.localdomain>
-References: <20091021232640.12986.79205.stgit@localhost.localdomain>
+Subject: [PATCH 00/20] libfc, fcoe and fnci fixes for 2.6.32 RC
+Date: Wed, 21 Oct 2009 16:26:40 -0700
+Message-ID: <20091021232640.12986.79205.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60597 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:32805 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718AbZJUX1d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 19:27:33 -0400
-In-Reply-To: <20091021232640.12986.79205.stgit@localhost.localdomain>
+	id S1751582AbZJUX1b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Oct 2009 19:27:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-From: Joe Eykholt <jeykholt@cisco.com>
+The following series fixes some bugs in the 2.6.32 kernel. A few of the patches fix regressions in fcoe offloads as previously mentioned on linux-scsi.
 
-Fix minor errors.
-A debug message said an RLIR was received instead of ECHO.
-"Expected" was misspelled in several places.
-Fix a type cast from u32 to __be32.
+This series reorders patches previously mailed to the list. Please disregard previously mailed patches from me. I will resend the other patches for the 2.6.33 merge window.
 
-Rob, Some of these may have been also taken care of in your
-other doc cleanup patch.  Feel free to fold them in.
+This series is tested against today's scsi-rc-fixes tree.
 
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+Abhijeet Joglekar (3):
+      fnic: Pad the unused bytes of CDB to 0s
+      fnic: Set max_cmd_len to driver supported CDB length
+      fnic: Process all cq entries per ISR
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index bd2f771..eefe87d 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -329,7 +329,7 @@ static void fc_lport_add_fc4_type(struct fc_lport *lport, enum fc_fh_type type)
-  * @sp: current sequence in the RLIR exchange
-  * @fp: RLIR request frame
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
-  */
- static void fc_lport_recv_rlir_req(struct fc_seq *sp, struct fc_frame *fp,
-@@ -348,7 +348,7 @@ static void fc_lport_recv_rlir_req(struct fc_seq *sp, struct fc_frame *fp,
-  * @sp: current sequence in the ECHO exchange
-  * @fp: ECHO request frame
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
-  */
- static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
-@@ -361,7 +361,7 @@ static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
- 	void *dp;
- 	u32 f_ctl;
- 
--	FC_LPORT_DBG(lport, "Received RLIR request while in state %s\n",
-+	FC_LPORT_DBG(lport, "Received ECHO request while in state %s\n",
- 		     fc_lport_state(lport));
- 
- 	len = fr_len(in_fp) - sizeof(struct fc_frame_header);
-@@ -374,7 +374,7 @@ static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
- 	if (fp) {
- 		dp = fc_frame_payload_get(fp, len);
- 		memcpy(dp, pp, len);
--		*((u32 *)dp) = htonl(ELS_LS_ACC << 24);
-+		*((__be32 *)dp) = htonl(ELS_LS_ACC << 24);
- 		sp = lport->tt.seq_start_next(sp);
- 		f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ | FC_FC_END_SEQ;
- 		fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
-@@ -385,12 +385,12 @@ static void fc_lport_recv_echo_req(struct fc_seq *sp, struct fc_frame *in_fp,
- }
- 
- /**
-- * fc_lport_recv_echo_req() - Handle received Request Node ID data request
-- * @lport: Fibre Channel local port recieving the RNID
-- * @sp: current sequence in the RNID exchange
-- * @fp: RNID request frame
-+ * fc_lport_recv_rnid_req() - Handle received Request Node ID data request
-+ * @sp:	   The sequence in the RNID exchange
-+ * @fp:	   The RNID request frame
-+ * @lport: The local port recieving the RNID
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
-  */
- static void fc_lport_recv_rnid_req(struct fc_seq *sp, struct fc_frame *in_fp,
-@@ -667,7 +667,7 @@ static void fc_lport_enter_ready(struct fc_lport *lport)
-  * Accept it with the common service parameters indicating our N port.
-  * Set up to do a PLOGI if we have the higher-number WWPN.
-  *
-- * Locking Note: The lport lock is exected to be held before calling
-+ * Locking Note: The lport lock is expected to be held before calling
-  * this function.
-  */
- static void fc_lport_recv_flogi_req(struct fc_seq *sp_in,
+Chris Leech (1):
+      libfc: fix memory corruption caused by double frees and bad error handling
 
+Joe Eykholt (4):
+      libfc: fix free of fc_rport_priv with timer pending
+      libfc: don't WARN_ON in lport_timeout for RESET state
+      libfc: lport: fix minor documentation errors
+      libfc: fix typo in retry check on received PRLI
+
+Mike Christie (1):
+      fcoe: initialize return value in fcoe_destroy
+
+Robert Love (2):
+      libfc: Remove unused fc_lport pointer from fc_fcp_pkt_abort
+      libfc, fcoe: Don't EXPORT_SYMBOLS unnecessarily
+
+Vasu Dev (3):
+      libfc: removes unused disc_work and ex_list
+      libfc: adds missing exch release for accepted RRQ
+      libfc: removes initializing fc_cpu_order and fc_cpu_mask per lport
+
+Yi Zou (6):
+      fcoe: Call ndo_fcoe_enable/disable to turn FCoE feature on/off in LLD
+      libfc: Fix frags in frame exceeding SKB_MAX_FRAGS in fc_fcp_send_data
+      fcoe: Use NETIF_F_FCOE_MTU flag to set up max frame size (lport->mfs)
+      libfc: Fix wrong scsi return status under FC_DATA_UNDRUN
+      fcoe: remove redundant checking of netdev->netdev_ops
+      libfc: fix ddp in fc_fcp for 0 xid
+
+
+ drivers/scsi/fcoe/fcoe.c      |   34 ++++++++++++++---
+ drivers/scsi/fcoe/fcoe.h      |    6 +++
+ drivers/scsi/fnic/fnic.h      |    2 -
+ drivers/scsi/fnic/fnic_isr.c  |   18 ++++-----
+ drivers/scsi/fnic/fnic_main.c |    1 
+ drivers/scsi/fnic/fnic_res.h  |    4 +-
+ drivers/scsi/fnic/fnic_scsi.c |    3 +
+ drivers/scsi/libfc/fc_disc.c  |    2 -
+ drivers/scsi/libfc/fc_elsct.c |    4 +-
+ drivers/scsi/libfc/fc_exch.c  |   35 +++++++++--------
+ drivers/scsi/libfc/fc_fcp.c   |   26 +++++++------
+ drivers/scsi/libfc/fc_frame.c |    1 
+ drivers/scsi/libfc/fc_lport.c |   33 +++++++++-------
+ drivers/scsi/libfc/fc_rport.c |   83 ++++++++++++++++++++++++++++-------------
+ include/scsi/fc_frame.h       |    3 +
+ include/scsi/libfc.h          |    2 -
+ 16 files changed, 166 insertions(+), 91 deletions(-)
+
+-- 
+//Rob
