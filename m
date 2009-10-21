@@ -1,101 +1,66 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 17/20] fnic: Process all cq entries per ISR
-Date: Wed, 21 Oct 2009 16:28:14 -0700
-Message-ID: <20091021232814.12986.39089.stgit@localhost.localdomain>
+Subject: [PATCH 14/20] libfc: Fix frags in frame exceeding SKB_MAX_FRAGS in
+	fc_fcp_send_data
+Date: Wed, 21 Oct 2009 16:27:58 -0700
+Message-ID: <20091021232758.12986.69286.stgit@localhost.localdomain>
 References: <20091021232640.12986.79205.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50833 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:41449 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040AbZJUX2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 19:28:09 -0400
+	id S1752132AbZJUX2K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Oct 2009 19:28:10 -0400
 In-Reply-To: <20091021232640.12986.79205.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Herman Lee <hermlee@cisco.com>, Abhijeet Joglekar <abjoglek@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Abhijeet Joglekar <abjoglek@cisco.com>
+From: Yi Zou <yi.zou@intel.com>
 
-Driver was processing a fixed max number of cq descriptors per ISR. For
-instance, for the SCSI IO queue, number of IOs processed per ISR were 8.
-If hardware writes 9 cq descriptors to the cq and generates an interrupt,
-driver would process only 8 descriptors and decrement the outstanding
-credit count by 8. Unless another interrupt event happens, the hw does
-not generate any additional interrupt. This results in the cq descriptor
-sitting in the queue without being procesed and can cause IO timeouts
-and aborts.
+In case of sequence offload, in fc_fcp_send_data(), the skb_fill_page_info()
+called may end up adding more frags to the skb_shinfo(fp_skb(fp))->frags[],
+exceeding SKB_MAX_FRAGS, this eventually corrupts the memory. I am adding the
+FR_FRAME_SG_LEN back, but as SKB_MAX_FRAGS -1, leaving 1 for our fcoe_eof_crc
+page. And send will be broken into multiple large sends if the frame already
+contains more frags than skb handle.
 
-Modify all ISR functions to process all queued cq descriptors in one shot.
-Since bulk of ELS frame processing is done in thread context and bulk
-of SCSI IO processing is done in soft ISR deferred context, the cycles
-spent in the ISR per cq descriptor is small.
-
-Signed-off-by: Herman Lee <hermlee@cisco.com>
-Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fnic/fnic_isr.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    3 ++-
+ include/scsi/fc_frame.h     |    3 +++
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
-index 2b30648..5c1f223 100644
---- a/drivers/scsi/fnic/fnic_isr.c
-+++ b/drivers/scsi/fnic/fnic_isr.c
-@@ -48,9 +48,9 @@ static irqreturn_t fnic_isr_legacy(int irq, void *data)
- 	}
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 40ed744..28bfe1c 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -574,7 +574,8 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
+ 		tlen -= sg_bytes;
+ 		remaining -= sg_bytes;
  
- 	if (pba & (1 << FNIC_INTX_WQ_RQ_COPYWQ)) {
--		work_done += fnic_wq_copy_cmpl_handler(fnic, 8);
--		work_done += fnic_wq_cmpl_handler(fnic, 4);
--		work_done += fnic_rq_cmpl_handler(fnic, 4);
-+		work_done += fnic_wq_copy_cmpl_handler(fnic, -1);
-+		work_done += fnic_wq_cmpl_handler(fnic, -1);
-+		work_done += fnic_rq_cmpl_handler(fnic, -1);
+-		if (tlen)
++		if ((skb_shinfo(fp_skb(fp))->nr_frags < FC_FRAME_SG_LEN) &&
++		    (tlen))
+ 			continue;
  
- 		vnic_intr_return_credits(&fnic->intr[FNIC_INTX_WQ_RQ_COPYWQ],
- 					 work_done,
-@@ -66,9 +66,9 @@ static irqreturn_t fnic_isr_msi(int irq, void *data)
- 	struct fnic *fnic = data;
- 	unsigned long work_done = 0;
+ 		/*
+diff --git a/include/scsi/fc_frame.h b/include/scsi/fc_frame.h
+index c35d238..148126d 100644
+--- a/include/scsi/fc_frame.h
++++ b/include/scsi/fc_frame.h
+@@ -37,6 +37,9 @@
+ #define	FC_FRAME_HEADROOM	32	/* headroom for VLAN + FCoE headers */
+ #define	FC_FRAME_TAILROOM	8	/* trailer space for FCoE */
  
--	work_done += fnic_wq_copy_cmpl_handler(fnic, 8);
--	work_done += fnic_wq_cmpl_handler(fnic, 4);
--	work_done += fnic_rq_cmpl_handler(fnic, 4);
-+	work_done += fnic_wq_copy_cmpl_handler(fnic, -1);
-+	work_done += fnic_wq_cmpl_handler(fnic, -1);
-+	work_done += fnic_rq_cmpl_handler(fnic, -1);
- 
- 	vnic_intr_return_credits(&fnic->intr[0],
- 				 work_done,
-@@ -83,7 +83,7 @@ static irqreturn_t fnic_isr_msix_rq(int irq, void *data)
- 	struct fnic *fnic = data;
- 	unsigned long rq_work_done = 0;
- 
--	rq_work_done = fnic_rq_cmpl_handler(fnic, 4);
-+	rq_work_done = fnic_rq_cmpl_handler(fnic, -1);
- 	vnic_intr_return_credits(&fnic->intr[FNIC_MSIX_RQ],
- 				 rq_work_done,
- 				 1 /* unmask intr */,
-@@ -97,7 +97,7 @@ static irqreturn_t fnic_isr_msix_wq(int irq, void *data)
- 	struct fnic *fnic = data;
- 	unsigned long wq_work_done = 0;
- 
--	wq_work_done = fnic_wq_cmpl_handler(fnic, 4);
-+	wq_work_done = fnic_wq_cmpl_handler(fnic, -1);
- 	vnic_intr_return_credits(&fnic->intr[FNIC_MSIX_WQ],
- 				 wq_work_done,
- 				 1 /* unmask intr */,
-@@ -110,7 +110,7 @@ static irqreturn_t fnic_isr_msix_wq_copy(int irq, void *data)
- 	struct fnic *fnic = data;
- 	unsigned long wq_copy_work_done = 0;
- 
--	wq_copy_work_done = fnic_wq_copy_cmpl_handler(fnic, 8);
-+	wq_copy_work_done = fnic_wq_copy_cmpl_handler(fnic, -1);
- 	vnic_intr_return_credits(&fnic->intr[FNIC_MSIX_WQ_COPY],
- 				 wq_copy_work_done,
- 				 1 /* unmask intr */,
++/* Max number of skb frags allowed, reserving one for fcoe_crc_eof page */
++#define FC_FRAME_SG_LEN		(MAX_SKB_FRAGS - 1)
++
+ #define fp_skb(fp)	(&((fp)->skb))
+ #define fr_hdr(fp)	((fp)->skb.data)
+ #define fr_len(fp)	((fp)->skb.len)
 
