@@ -1,233 +1,256 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 4/4] scsi_dh: Make alua hardware handler's activate() async
-Date: Wed, 21 Oct 2009 09:23:04 -0700
-Message-ID: <20091021162304.8473.66039.sendpatchset@chandra-ubuntu>
+Subject: [PATCH 1/4] scsi_dh: Change the scsidh_activate
+	interface to be asynchronous
+Date: Wed, 21 Oct 2009 09:22:46 -0700
+Message-ID: <20091021162246.8473.68316.sendpatchset@chandra-ubuntu>
 References: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:54193 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754343AbZJUQXC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 12:23:02 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9LGLcJp025867
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:21:38 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9LGN52P154998
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:23:05 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9LGN5Vj031491
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:23:05 -0400
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: linux-scsi@vger.kernel.org
-Cc: dm-devel@redhat.com, babu.moger@lsi.com, michaelc@cs.wisc.edu, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com, berthiaume_wayne@emc.com, Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com
+List-Id: linux-scsi@vger.kernel.org
 
-Make the activate function asynchronous by using blk_execute_rq_nowait()
+Make scsi_dh_activate() function asynchronous, by taking in two additional 
+parameters, one is the callback function and the other is the data to call
+the callback function with.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c |  132 ++++++++++++++++-------------
- 1 file changed, 73 insertions(+), 59 deletions(-)
 
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c
+--------------
+ drivers/md/dm-mpath.c                       |    8 ++++----
+ drivers/scsi/device_handler/scsi_dh.c       |   17 ++++++++++++-----
+ drivers/scsi/device_handler/scsi_dh_alua.c  |    7 +++++--
+ drivers/scsi/device_handler/scsi_dh_emc.c   |    7 +++++--
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |    7 +++++--
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |    7 +++++--
+ include/scsi/scsi_device.h                  |    3 ++-
+ include/scsi/scsi_dh.h                      |    6 ++++--
+ 8 files changed, 42 insertions(+), 20 deletions(-)
+
+Index: linux-2.6.32-rc5/include/scsi/scsi_dh.h
 ===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:26:14.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:27:12.000000000 -0700
-@@ -60,11 +60,17 @@
- 	int			bufflen;
- 	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
- 	int			senselen;
-+	struct scsi_device	*sdev;
-+	activate_complete	callback_fn;
-+	void			*callback_data;
+--- linux-2.6.32-rc5.orig/include/scsi/scsi_dh.h	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/include/scsi/scsi_dh.h	2009-10-20 18:26:14.000000000 -0700
+@@ -56,14 +56,16 @@
+ 	SCSI_DH_DRIVER_MAX,
  };
- 
- #define ALUA_POLICY_SWITCH_CURRENT	0
- #define ALUA_POLICY_SWITCH_ALL		1
- 
-+static char print_alua_state(int);
-+static int alua_check_sense(struct scsi_device *, struct scsi_sense_hdr *);
-+
- static inline struct alua_dh_data *get_alua_data(struct scsi_device *sdev)
+ #if defined(CONFIG_SCSI_DH) || defined(CONFIG_SCSI_DH_MODULE)
+-extern int scsi_dh_activate(struct request_queue *);
++extern int scsi_dh_activate(struct request_queue *, activate_complete, void *);
+ extern int scsi_dh_handler_exist(const char *);
+ extern int scsi_dh_attach(struct request_queue *, const char *);
+ extern void scsi_dh_detach(struct request_queue *);
+ extern int scsi_dh_set_params(struct request_queue *, const char *);
+ #else
+-static inline int scsi_dh_activate(struct request_queue *req)
++static inline int scsi_dh_activate(struct request_queue *req,
++					activate_complete fn, void *data)
  {
- 	struct scsi_dh_data *scsi_dh_data = sdev->scsi_dh_data;
-@@ -231,18 +237,71 @@
++	fn(data, 0);
+ 	return 0;
  }
- 
+ static inline int scsi_dh_handler_exist(const char *name)
+Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh.c
+===================================================================
+--- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh.c	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh.c	2009-10-20 18:26:14.000000000 -0700
+@@ -226,7 +226,7 @@
+ 			 * Activate a device handler
+ 			 */
+ 			if (scsi_dh->activate)
+-				err = scsi_dh->activate(sdev);
++				err = scsi_dh->activate(sdev, NULL, NULL);
+ 			else
+ 				err = 0;
+ 		}
+@@ -423,10 +423,17 @@
  /*
-+ * alua_stpg - Evaluate SET TARGET GROUP STATES
-+ * @sdev: the device to be evaluated
-+ * @state: the new target group state
+  * scsi_dh_activate - activate the path associated with the scsi_device
+  *      corresponding to the given request queue.
+- * @q - Request queue that is associated with the scsi_device to be
+- *      activated.
++ *     Returns immediately without waiting for activation to be completed.
++ * @q    - Request queue that is associated with the scsi_device to be
++ *         activated.
++ * @fn   - Function to be called upon completion of the activation.
++ *         Function fn is called with data (below) and the error code.
++ *         Function fn may be called from the same calling context. So,
++ *         do not hold the lock in the caller which may be needed in fn.
++ * @data - data passed to the function fn upon completion.
 + *
-+ * Send a SET TARGET GROUP STATES command to the device.
-+ * We only have to test here if we should resubmit the command;
-+ * any other error is assumed as a failure.
-+ */
-+static void stpg_endio(struct request *req, int error)
-+{
-+	struct alua_dh_data *h = req->end_io_data;
-+	struct scsi_sense_hdr sense_hdr;
-+	unsigned err = SCSI_DH_IO;
-+
-+	if (error || host_byte(req->errors) != DID_OK ||
-+			msg_byte(req->errors) != COMMAND_COMPLETE)
-+		goto done;
-+
-+	if (err == SCSI_DH_IO && h->senselen > 0) {
-+		err = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
-+					   &sense_hdr);
-+		if (!err) {
-+			err = SCSI_DH_IO;
-+			goto done;
-+		}
-+		err = alua_check_sense(h->sdev, &sense_hdr);
-+		if (err == ADD_TO_MLQUEUE) {
-+			err = SCSI_DH_RETRY;
-+			goto done;
-+		}
-+		sdev_printk(KERN_INFO, h->sdev,
-+			    "%s: stpg sense code: %02x/%02x/%02x\n",
-+			    ALUA_DH_NAME, sense_hdr.sense_key,
-+			    sense_hdr.asc, sense_hdr.ascq);
-+		err = SCSI_DH_IO;
-+	}
-+	if (err == SCSI_DH_OK) {
-+		h->state = TPGS_STATE_OPTIMIZED;
-+		sdev_printk(KERN_INFO, h->sdev,
-+			    "%s: port group %02x switched to state %c\n",
-+			    ALUA_DH_NAME, h->group_id,
-+			    print_alua_state(h->state));
-+	}
-+done:
-+	blk_put_request(req);
-+	if (h->callback_fn) {
-+		h->callback_fn(h->callback_data, err);
-+		h->callback_fn = h->callback_data = NULL;
-+	}
-+	return;
-+}
-+
-+/*
-  * submit_stpg - Issue a SET TARGET GROUP STATES command
-- * @sdev: sdev the command should be sent to
-  *
-  * Currently we're only setting the current target port group state
-  * to 'active/optimized' and let the array firmware figure out
-  * the states of the remaining groups.
   */
--static unsigned submit_stpg(struct scsi_device *sdev, struct alua_dh_data *h)
-+static unsigned submit_stpg(struct alua_dh_data *h)
+-int scsi_dh_activate(struct request_queue *q)
++int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
  {
- 	struct request *rq;
- 	int err = SCSI_DH_RES_TEMP_UNAVAIL;
- 	int stpg_len = 8;
-+	struct scsi_device *sdev = h->sdev;
+ 	int err = 0;
+ 	unsigned long flags;
+@@ -445,7 +452,7 @@
+ 		return err;
  
- 	/* Prepare the data buffer */
- 	memset(h->buff, 0, stpg_len);
-@@ -252,7 +311,7 @@
- 
- 	rq = get_alua_req(sdev, h->buff, stpg_len, WRITE);
- 	if (!rq)
--		goto done;
-+		return SCSI_DH_RES_TEMP_UNAVAIL;
- 
- 	/* Prepare the command. */
- 	rq->cmd[0] = MAINTENANCE_OUT;
-@@ -266,17 +325,9 @@
- 	rq->sense = h->sense;
- 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
- 	rq->sense_len = h->senselen = 0;
-+	rq->end_io_data = h;
- 
--	err = blk_execute_rq(rq->q, NULL, rq, 1);
--	if (err == -EIO) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: stpg failed with %x\n",
--			    ALUA_DH_NAME, rq->errors);
--		h->senselen = rq->sense_len;
--		err = SCSI_DH_IO;
--	}
--	blk_put_request(rq);
--done:
-+	blk_execute_rq_nowait(rq->q, NULL, rq, 1, stpg_endio);
+ 	if (scsi_dh->activate)
+-		err = scsi_dh->activate(sdev);
++		err = scsi_dh->activate(sdev, fn, data);
+ 	put_device(&sdev->sdev_gendev);
+ 	return err;
+ }
+Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c
+===================================================================
+--- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:14.000000000 -0700
+@@ -568,7 +568,8 @@
  	return err;
  }
  
-@@ -477,50 +528,6 @@
+-static int rdac_activate(struct scsi_device *sdev)
++static int rdac_activate(struct scsi_device *sdev,
++			activate_complete fn, void *data)
+ {
+ 	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 	int err = SCSI_DH_OK;
+@@ -580,7 +581,9 @@
+ 	if (h->lun_state == RDAC_LUN_UNOWNED)
+ 		err = send_mode_select(sdev, h);
+ done:
+-	return err;
++	if (fn)
++		fn(data, err);
++	return 0;
+ }
+ 
+ static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
+Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c
+===================================================================
+--- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:26:14.000000000 -0700
+@@ -652,7 +652,8 @@
+  * based on a certain policy. But until we actually encounter them it
+  * should be okay.
+  */
+-static int alua_activate(struct scsi_device *sdev)
++static int alua_activate(struct scsi_device *sdev,
++			activate_complete fn, void *data)
+ {
+ 	struct alua_dh_data *h = get_alua_data(sdev);
+ 	int err = SCSI_DH_OK;
+@@ -667,7 +668,9 @@
+ 		err = alua_stpg(sdev, TPGS_STATE_OPTIMIZED, h);
+ 
+ out:
+-	return err;
++	if (fn)
++		fn(data, err);
++	return 0;
  }
  
  /*
-- * alua_stpg - Evaluate SET TARGET GROUP STATES
-- * @sdev: the device to be evaluated
-- * @state: the new target group state
-- *
-- * Send a SET TARGET GROUP STATES command to the device.
-- * We only have to test here if we should resubmit the command;
-- * any other error is assumed as a failure.
-- */
--static int alua_stpg(struct scsi_device *sdev, int state,
--		     struct alua_dh_data *h)
--{
--	struct scsi_sense_hdr sense_hdr;
--	unsigned err;
--	int retry = ALUA_FAILOVER_RETRIES;
--
-- retry:
--	err = submit_stpg(sdev, h);
--	if (err == SCSI_DH_IO && h->senselen > 0) {
--		err = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
--					   &sense_hdr);
--		if (!err)
--			return SCSI_DH_IO;
--		err = alua_check_sense(sdev, &sense_hdr);
--		if (retry > 0 && err == ADD_TO_MLQUEUE) {
--			retry--;
--			goto retry;
--		}
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: stpg sense code: %02x/%02x/%02x\n",
--			    ALUA_DH_NAME, sense_hdr.sense_key,
--			    sense_hdr.asc, sense_hdr.ascq);
--		err = SCSI_DH_IO;
--	}
--	if (err == SCSI_DH_OK) {
--		h->state = state;
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: port group %02x switched to state %c\n",
--			    ALUA_DH_NAME, h->group_id,
--			    print_alua_state(h->state) );
--	}
--	return err;
--}
--
--/*
-  * alua_rtpg - Evaluate REPORT TARGET GROUP STATES
-  * @sdev: the device to be evaluated.
-  *
-@@ -664,8 +671,14 @@
- 			goto out;
+Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_emc.c
+===================================================================
+--- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_emc.c	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_emc.c	2009-10-20 18:26:14.000000000 -0700
+@@ -528,7 +528,8 @@
+ 	return err;
+ }
+ 
+-static int clariion_activate(struct scsi_device *sdev)
++static int clariion_activate(struct scsi_device *sdev,
++				activate_complete fn, void *data)
+ {
+ 	struct clariion_dh_data *csdev = get_clariion_data(sdev);
+ 	int result;
+@@ -559,7 +560,9 @@
+ 		    csdev->port, lun_state[csdev->lun_state],
+ 		    csdev->default_sp + 'A');
+ 
+-	return result;
++	if (fn)
++		fn(data, result);
++	return 0;
+ }
+ /*
+  * params - parameters in the following format
+Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+===================================================================
+--- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2009-10-20 18:26:14.000000000 -0700
+@@ -268,7 +268,8 @@
+  * activate the passive path (and deactivate the
+  * previously active one).
+  */
+-static int hp_sw_activate(struct scsi_device *sdev)
++static int hp_sw_activate(struct scsi_device *sdev,
++				activate_complete fn, void *data)
+ {
+ 	int ret = SCSI_DH_OK;
+ 	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
+@@ -283,7 +284,9 @@
+ 				    HP_SW_NAME);
  	}
  
--	if (h->tpgs & TPGS_MODE_EXPLICIT && h->state != TPGS_STATE_OPTIMIZED)
--		err = alua_stpg(sdev, TPGS_STATE_OPTIMIZED, h);
-+	if (h->tpgs & TPGS_MODE_EXPLICIT && h->state != TPGS_STATE_OPTIMIZED) {
-+		h->callback_fn = fn;
-+		h->callback_data = data;
-+		err = submit_stpg(h);
-+		if (err == SCSI_DH_OK)
-+			return 0;
-+		h->callback_fn = h->callback_data = NULL;
-+	}
+-	return ret;
++	if (fn)
++		fn(data, ret);
++	return 0;
+ }
  
- out:
- 	if (fn)
-@@ -748,6 +761,7 @@
- 	h->rel_port = -1;
- 	h->buff = h->inq;
- 	h->bufflen = ALUA_INQUIRY_SIZE;
-+	h->sdev = sdev;
+ static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
+Index: linux-2.6.32-rc5/include/scsi/scsi_device.h
+===================================================================
+--- linux-2.6.32-rc5.orig/include/scsi/scsi_device.h	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/include/scsi/scsi_device.h	2009-10-20 18:26:14.000000000 -0700
+@@ -174,6 +174,7 @@
+ 	char *model;
+ };
  
- 	err = alua_initialize(sdev, h);
- 	if (err != SCSI_DH_OK)
++typedef void (*activate_complete)(void *, int);
+ struct scsi_device_handler {
+ 	/* Used by the infrastructure */
+ 	struct list_head list; /* list of scsi_device_handlers */
+@@ -185,7 +186,7 @@
+ 	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
+ 	int (*attach)(struct scsi_device *);
+ 	void (*detach)(struct scsi_device *);
+-	int (*activate)(struct scsi_device *);
++	int (*activate)(struct scsi_device *, activate_complete, void *);
+ 	int (*prep_fn)(struct scsi_device *, struct request *);
+ 	int (*set_params)(struct scsi_device *, const char *);
+ };
+Index: linux-2.6.32-rc5/drivers/md/dm-mpath.c
+===================================================================
+--- linux-2.6.32-rc5.orig/drivers/md/dm-mpath.c	2009-10-20 18:26:03.000000000 -0700
++++ linux-2.6.32-rc5/drivers/md/dm-mpath.c	2009-10-20 18:26:14.000000000 -0700
+@@ -1116,8 +1116,9 @@
+ 	return limit_reached;
+ }
+ 
+-static void pg_init_done(struct dm_path *path, int errors)
++static void pg_init_done(void *data, int errors)
+ {
++	struct dm_path *path = data;
+ 	struct pgpath *pgpath = path_to_pgpath(path);
+ 	struct priority_group *pg = pgpath->pg;
+ 	struct multipath *m = pg->m;
+@@ -1183,12 +1184,11 @@
+ 
+ static void activate_path(struct work_struct *work)
+ {
+-	int ret;
+ 	struct pgpath *pgpath =
+ 		container_of(work, struct pgpath, activate_path);
+ 
+-	ret = scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev));
+-	pg_init_done(&pgpath->path, ret);
++	scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev),
++				pg_init_done, &pgpath->path);
+ }
+ 
+ /*
