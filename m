@@ -1,403 +1,261 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH] Add new driver for LSI 3ware 9750
-Date: Wed, 21 Oct 2009 17:27:27 +0200
-Message-ID: <200910211727.34165.eike-kernel@sf-tec.de>
-References: <b1bc6a000910201722v28d895cbv25e4959473ff215d@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1704932.Fe2k6izlcY";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH 2/4] scsi_dh: Make rdac hardware handler's activate() async
+Date: Wed, 21 Oct 2009 09:22:51 -0700
+Message-ID: <20091021162251.8473.16503.sendpatchset@chandra-ubuntu>
+References: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:41589 "EHLO mail.sf-mail.de"
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:47538 "EHLO e4.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753959AbZJUP1j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 11:27:39 -0400
-In-Reply-To: <b1bc6a000910201722v28d895cbv25e4959473ff215d@mail.gmail.com>
+	id S1753643AbZJUQWt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Oct 2009 12:22:49 -0400
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by e4.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9LGF9hd015901
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:15:09 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9LGMr6W179374
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:22:53 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id n9LGMSNe026274
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Oct 2009 12:22:29 -0400
+In-Reply-To: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: linux-scsi@vger.kernel.org
+Cc: dm-devel@redhat.com, babu.moger@lsi.com, michaelc@cs.wisc.edu, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com, berthiaume_wayne@emc.com, Chandra Seetharaman <sekharan@us.ibm.com>
 
---nextPart1704932.Fe2k6izlcY
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Batch up MODE_SELECT in rdac device handler.
 
-adam radford wrote:
+LSI RDAC storage has the capability of handling mode selects for
+multiple luns in a same command. Make use of that ability to send
+as few MODE SELECTs as possible to the storage controller as possible.
 
-> +static int use_msi =3D 0;
+This patch creates a work queue and queues up activate requests
+when a MODE SELECT is sent down the wire. When that MODE SELECT 
+completes, it compiles queued up activate requests for multiple
+luns into a single MODE SELECT.
 
-Static variables are automatically 0.
+This reduces the time to do failover/failback of large number of LUNS.
 
-> +/* This function will look up an AEN severity string */
-> +static char *twl_aen_severity_lookup(unsigned char severity_code)
-> +{
-> +	char *retval =3D NULL;
-> +
-> +	if ((severity_code < (unsigned char) TW_AEN_SEVERITY_ERROR) ||
-> +	    (severity_code > (unsigned char) TW_AEN_SEVERITY_DEBUG))
-> +		goto out;
-> +
-> +	retval =3D twl_aen_severity_table[severity_code];
-> +out:
-> +	return retval;
-> +} /* End twl_aen_severity_lookup() */
+Signed-off-by: Babu Moger <babu.moger@lsi.com>
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-I would find it more readable with direct "return NULL" and without the got=
-o.
+---
+ drivers/scsi/device_handler/scsi_dh_rdac.c |  108 +++++++++++++++++++++++++++--
+ 1 file changed, 100 insertions(+), 8 deletions(-)
 
-> +/* This function will read the aen queue from the isr */
-> +static int twl_aen_read_queue(TW_Device_Extension *tw_dev, int request_i=
-d)
-> +{
-> +	char cdb[TW_MAX_CDB_LEN];
-> +	TW_SG_Entry_ISO sglist[1];
-> +	TW_Command_Full *full_command_packet;
-> +	int retval =3D 1;
-> +
-> +	full_command_packet =3D tw_dev->command_packet_virt[request_id];
-> +	memset(full_command_packet, 0, sizeof(TW_Command_Full));
-
-sizeof(*full_command_packet)
-
-> +	/* Initialize cdb */
-> +	memset(&cdb, 0, TW_MAX_CDB_LEN);
-
-memset(...,sizeof(cdb))
-
-> +	cdb[0] =3D REQUEST_SENSE; /* opcode */
-> +	cdb[4] =3D TW_ALLOCATION_LENGTH; /* allocation length */
-> +
-> +	/* Initialize sglist */
-> +	memset(&sglist, 0, sizeof(TW_SG_Entry_ISO));
-
-sizeof(sglist)
-
-In all cases you will always get the correct size even if you change the=20
-variable to another type or the array to another length. This happens also =
-in=20
-a bunch of other places.
-
-> +/* This function will assign an available request id */
-> +static void twl_get_request_id(TW_Device_Extension *tw_dev, int
->  *request_id) +{
-> +	*request_id =3D tw_dev->free_queue[tw_dev->free_head];
-> +	tw_dev->free_head =3D (tw_dev->free_head + 1) % TW_Q_LENGTH;
-> +	tw_dev->state[*request_id] =3D TW_S_STARTED;
-> +} /* End twl_get_request_id() */
-
-Why not simply return the request id instead of being a void function and=20
-taking that as pointer?
-
-> +/* This function will poll for a response */
-> +static int twl_poll_response(TW_Device_Extension *tw_dev, int
-> request_id, int seconds)
-> +{
-> +	unsigned long before;
-> +	dma_addr_t mfa;
-> +	u32 regh, regl;
-> +	u32 response;
-> +	int retval =3D 1;
-> +	int found =3D 0;
-> +
-> +	before =3D jiffies;
-> +
-> +	while (!found) {
-> +		if (sizeof(dma_addr_t) > 4) {
-> +			regh =3D readl(TWL_HOBQPH_REG_ADDR(tw_dev));
-> +			regl =3D readl(TWL_HOBQPL_REG_ADDR(tw_dev));
-> +			mfa =3D ((u64)regh << 32) | regl;
-> +		} else
-> +			mfa =3D readl(TWL_HOBQPL_REG_ADDR(tw_dev));
-> +
-> +		response =3D (u32)mfa;
-
-Reading regh is useless here. And if you need to read it for protocol reaso=
-ns=20
-at the end it's at least useless to put it into mfa, simply reading=20
-TWL_HOBQPL_REG_ADDR(tw_dev) into response should be enough.
-
-> +static int twl_initialize_device_extension(TW_Device_Extension *tw_dev)
-
-Device extension? Don't call anything IRP ;) Bah, I was so lucky that I had=
-=20
-forgotten that pain for a while ;)
-
-> +{
-> +	int i, retval =3D 1;
-> +
-> +	/* Initialize command packet buffers */
-> +	if (twl_allocate_memory(tw_dev, sizeof(TW_Command_Full), 0)) {
-> +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x9, "Command packet memory
-> allocation failed");
-> +		goto out;
-> +	}
-
-Your gotos here don't do anything useful as there is no error handling at t=
-he=20
-destination so you could simply do "return something" here as that would al=
-low=20
-anyone to spot what's going on without scrolling. Also you should return so=
-me=20
-useful return code (like ENOMEM here) instead of just "1" as that could eas=
-e=20
-debugging.
-
-> +/* This funciton returns unit geometry in cylinders/heads/sectors */
-> +static int twl_scsi_biosparam(struct scsi_device *sdev, struct
-> block_device *bdev, sector_t capacity, int geom[])
-> +{
-> +	int heads, sectors, cylinders;
-> +	TW_Device_Extension *tw_dev;
-> +
-> +	tw_dev =3D (TW_Device_Extension *)sdev->host->hostdata;
-> +
-> +	if (capacity >=3D 0x200000) {
-> +		heads =3D 255;
-> +		sectors =3D 63;
-> +		cylinders =3D sector_div(capacity, heads * sectors);
-> +	} else {
-> +		heads =3D 64;
-> +		sectors =3D 32;
-> +		cylinders =3D sector_div(capacity, heads * sectors);
-> +	}
-
-The calculation of cylinders is both the same, you could move it out of the=
- if=20
-or just directly assign the result to geom[2].
-
-> +/* This function will probe and initialize a card */
-> +static int __devinit twl_probe(struct pci_dev *pdev, const struct
-> pci_device_id *dev_id)
-> +{
-> +	struct Scsi_Host *host =3D NULL;
-> +	TW_Device_Extension *tw_dev;
-> +	resource_size_t mem_addr, mem_len;
-> +	int retval =3D -ENODEV;
-> +	int *ptr_phycount, phycount=3D0;
-> +
-> +	retval =3D pci_enable_device(pdev);
-> +	if (retval) {
-> +		TW_PRINTK(host, TW_DRIVER, 0x17, "Failed to enable pci device");
-> +		goto out_disable_device;
-> +	}
-
-You may want to look at devres (see Documentation/driver-model/devres.txt) =
-as=20
-that could make you the live a bit easier. It would care both for error=20
-handling here as well for device release.
-
-> +	pci_set_master(pdev);
-> +	pci_try_set_mwi(pdev);
-> +
-> +	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
-> +	    || pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)))
-> +		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32))
-> +		    || pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
-> +			TW_PRINTK(host, TW_DRIVER, 0x18, "Failed to set dma mask");
-> +			retval =3D -ENODEV;
-> +			goto out_disable_device;
-> +		}
-> +
-> +	host =3D scsi_host_alloc(&driver_template, sizeof(TW_Device_Extension));
-> +	if (!host) {
-> +		TW_PRINTK(host, TW_DRIVER, 0x19, "Failed to allocate memory for
-> device extension");
-> +		retval =3D -ENOMEM;
-> +		goto out_disable_device;
-> +	}
-> +	tw_dev =3D (TW_Device_Extension *)host->hostdata;
-
-tw_dev =3D shost_priv(host);
-
-> +	/* Save values to device extension */
-> +	tw_dev->host =3D host;
-> +	tw_dev->tw_pci_dev =3D pdev;
-> +
-> +	if (twl_initialize_device_extension(tw_dev)) {
-> +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1a, "Failed to initialize
-> device extension");
-> +		goto out_free_device_extension;
-> +	}
-> +
-> +	/* Request IO regions */
-> +	retval =3D pci_request_regions(pdev, "3w-sas");
-> +	if (retval) {
-> +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1b, "Failed to get mem region");
-> +		goto out_free_device_extension;
-> +	}
-> +
-> +	/* Use region 1 */
-> +	mem_addr =3D pci_resource_start(pdev, 1);
-> +	mem_len =3D pci_resource_len(pdev, 1);
-> +
-> +	/* Save base address */
-> +	tw_dev->base_addr =3D ioremap(mem_addr, mem_len);
-
-tw_dev->base_addr =3D pci_iomap(pdev, 1, 0);
-
-> +	if (!tw_dev->base_addr) {
-> +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1c, "Failed to ioremap");
-> +		goto out_release_mem_region;
-> +	}
-> +
-> +	/* Disable interrupts on the card */
-> +	TWL_MASK_INTERRUPTS(tw_dev);
-> +
-> +	/* Initialize the card */
-> +	if (twl_reset_sequence(tw_dev, 0)) {
-> +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1d, "Controller reset failed
-> during probe");
-> +		goto out_iounmap;
-> +	}
-> +
-> +	/* Set host specific parameters */
-> +	host->max_id =3D TW_MAX_UNITS;
-> +	host->max_cmd_len =3D TW_MAX_CDB_LEN;
-> +	host->max_lun =3D TW_MAX_LUNS;
-> +	host->max_channel =3D 0;
-> +
-> +	/* Register the card with the kernel SCSI layer */
-> +	retval =3D scsi_add_host(host, &pdev->dev);
-> +	if (retval) {
-> +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1e, "scsi add host failed");
-> +		goto out_iounmap;
-> +	}
-> +
-> +	pci_set_drvdata(pdev, host);
-> +
-> +	printk(KERN_WARNING "3w-sas: scsi%d: Found an LSI 3ware %s
-> Controller at 0x%llx, IRQ: %d.\n",
-> +	       host->host_no,
-> +	       (char *)twl_get_param(tw_dev, 1, TW_VERSION_TABLE,
-> +				     TW_PARAM_MODEL, TW_PARAM_MODEL_LENGTH),
-> +	       (u64)mem_addr, pdev->irq);
-> +
-> +	ptr_phycount =3D twl_get_param(tw_dev, 2, TW_PARAM_PHY_SUMMARY_TABLE,
-> +				     TW_PARAM_PHYCOUNT, TW_PARAM_PHYCOUNT_LENGTH);
-> +	if (ptr_phycount)
-> +		phycount =3D le32_to_cpu(*(int *)ptr_phycount);
-> +
-> +	printk(KERN_WARNING "3w-sas: scsi%d: Firmware %s, BIOS %s, Phys: %d.\n",
-> +	       host->host_no,
-> +	       (char *)twl_get_param(tw_dev, 1, TW_VERSION_TABLE,
-> +				     TW_PARAM_FWVER, TW_PARAM_FWVER_LENGTH),
-> +	       (char *)twl_get_param(tw_dev, 2, TW_VERSION_TABLE,
-> +				     TW_PARAM_BIOSVER, TW_PARAM_BIOSVER_LENGTH),
-> +	       phycount);
-> +
-> +	/* Try to enable MSI */
-> +	if (use_msi && !pci_enable_msi(pdev))
-> +		set_bit(TW_USING_MSI, &tw_dev->flags);
-> +
-> +	/* Now setup the interrupt handler */
-> +	retval =3D request_irq(pdev->irq, twl_interrupt, IRQF_SHARED, "3w-sas",
->  tw_dev); +	if (retval) {
-> +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1f, "Error requesting IRQ");
-> +		goto out_remove_host;
-> +	}
-
-If you're using MSI you should not pass IRQF_SHARED here.
-
-> +/* PCI Devices supported by this driver */
-> +static struct pci_device_id twl_pci_tbl[] __devinitdata =3D {
-> +	{ PCI_VENDOR_ID_3WARE, PCI_DEVICE_ID_3WARE_9750,
-> +	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-> +	{ }
-> +};
-
-PCI_VDEVICE(3WARE, PCI_DEVICE_ID_3WARE_9750)
-
-> +MODULE_DEVICE_TABLE(pci, twl_pci_tbl);
-> +
-> +/* pci_driver initializer */
-> +static struct pci_driver twl_driver =3D {
-> +	.name		=3D "3w-sas",
-
-You probably should put that string in some constant and use it all over th=
-e=20
-place.
-
-> +/* This function is called on driver initialization */
-> +static int __init twl_init(void)
-> +{
-> +	printk(KERN_WARNING "LSI 3ware SAS/SATA-RAID Controller device
-> driver for Linux v%s.\n", TW_DRIVER_VERSION);
-
-Ehm, no, that is no warning.
-
-> +	return pci_register_driver(&twl_driver);
-> +} /* End twl_init() */
-
-> +/* AEN severity table */
-> +static char *twl_aen_severity_table[] =3D
-> +{
-> +	"None", "ERROR", "WARNING", "INFO", "DEBUG", (char*) 0
-> +};
-
-NULL instead of (char*) 0
-
-> +/* Register access macros */
-> +#define TWL_STATUS_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_STATUS)
-> +#define TWL_HOBQPL_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HOBQPL)
-> +#define TWL_HOBQPH_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HOBQPH)
-> +#define TWL_HOBDB_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HOBDB)
-> +#define TWL_HOBDBC_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HOBDBC)
-> +#define TWL_HIMASK_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HIMASK)
-> +#define TWL_HISTAT_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HISTAT)
-> +#define TWL_HIBQPH_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HIBQPH)
-> +#define TWL_HIBQPL_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HIBQPL)
-> +#define TWL_HIBDB_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_HIBDB)
-> +#define TWL_SCRPD3_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr
-> + TWL_SCRPD3)
-
-You can add to a void pointer, this is equivalent. So you might not need to=
-=20
-cast here at all.
-
-> +/* Macros */
-> +#define TW_PRINTK(h,a,b,c) { \
-> +if (h) \
-> +printk(KERN_WARNING "3w-sas: scsi%d: ERROR: (0x%02X:0x%04X):
-> %s.\n",h->host_no,a,b,c); \
-
-shost_printk
-
-> +else \
-> +printk(KERN_WARNING "3w-sas: ERROR: (0x%02X:0x%04X): %s.\n",a,b,c); \
-
-pr_warning
-
-> +}
-
-Also I don't see a point where you don't pass a host to that makro at all.
-
-HTH
-
-Eike
-
---nextPart1704932.Fe2k6izlcY
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.11 (GNU/Linux)
-
-iEYEABECAAYFAkrfKGYACgkQXKSJPmm5/E5MpACfeQp1OEzvR11qvov8SI5zUhbY
-8GgAn1HNAaTeuOY/ew9gy2fvAKzcsGOg
-=znfY
------END PGP SIGNATURE-----
-
---nextPart1704932.Fe2k6izlcY--
+Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c
+===================================================================
+--- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:14.000000000 -0700
++++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:29.000000000 -0700
+@@ -22,6 +22,7 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_dh.h>
++#include <linux/workqueue.h>
+ 
+ #define RDAC_NAME "rdac"
+ #define RDAC_RETRY_COUNT 5
+@@ -138,7 +139,13 @@
+ 	} mode_select;
+ 	u8	index;
+ 	u8	array_name[ARRAY_LABEL_LEN];
++	spinlock_t		ms_lock;
++	int			ms_queued;
++	struct work_struct	ms_work;
++	struct scsi_device	*ms_sdev;
++	struct list_head	ms_head;
+ };
++
+ struct c8_inquiry {
+ 	u8	peripheral_info;
+ 	u8	page_code; /* 0xC8 */
+@@ -198,8 +205,17 @@
+ 	"owned (AVT mode)",
+ };
+ 
++struct rdac_queue_data {
++	struct list_head	entry;
++	struct rdac_dh_data	*h;
++	activate_complete	callback_fn;
++	void			*callback_data;
++};
++
+ static LIST_HEAD(ctlr_list);
+ static DEFINE_SPINLOCK(list_lock);
++static struct workqueue_struct *kmpath_rdacd;
++static void send_mode_select(struct work_struct *work);
+ 
+ /*
+  * module parameter to enable rdac debug logging.
+@@ -281,7 +297,6 @@
+ 		rdac_pg->subpage_code = 0x1;
+ 		rdac_pg->page_len[0] = 0x01;
+ 		rdac_pg->page_len[1] = 0x28;
+-		rdac_pg->lun_table[h->lun] = 0x81;
+ 	} else {
+ 		struct rdac_pg_legacy *rdac_pg;
+ 
+@@ -291,7 +306,6 @@
+ 		common = &rdac_pg->common;
+ 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
+ 		rdac_pg->page_len = 0x68;
+-		rdac_pg->lun_table[h->lun] = 0x81;
+ 	}
+ 	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
+ 	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
+@@ -325,6 +339,7 @@
+ 	struct rdac_controller *ctlr;
+ 	ctlr = container_of(kref, struct rdac_controller, kref);
+ 
++	flush_workqueue(kmpath_rdacd);
+ 	spin_lock(&list_lock);
+ 	list_del(&ctlr->node);
+ 	spin_unlock(&list_lock);
+@@ -363,6 +378,11 @@
+ 
+ 	kref_init(&ctlr->kref);
+ 	ctlr->use_ms10 = -1;
++	ctlr->ms_queued = 0;
++	ctlr->ms_sdev = NULL;
++	spin_lock_init(&ctlr->ms_lock);
++	INIT_WORK(&ctlr->ms_work, send_mode_select);
++	INIT_LIST_HEAD(&ctlr->ms_head);
+ 	list_add(&ctlr->node, &ctlr_list);
+ done:
+ 	spin_unlock(&list_lock);
+@@ -490,7 +510,7 @@
+ }
+ 
+ static int mode_select_handle_sense(struct scsi_device *sdev,
+-				    unsigned char *sensebuf)
++					unsigned char *sensebuf)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int err = SCSI_DH_IO, ret;
+@@ -533,11 +553,29 @@
+ 	return err;
+ }
+ 
+-static int send_mode_select(struct scsi_device *sdev, struct rdac_dh_data *h)
++static void send_mode_select(struct work_struct *work)
+ {
++	struct rdac_controller *ctlr =
++		container_of(work, struct rdac_controller, ms_work);
+ 	struct request *rq;
++	struct scsi_device *sdev = ctlr->ms_sdev;
++	struct rdac_dh_data *h = get_rdac_data(sdev);
+ 	struct request_queue *q = sdev->request_queue;
+ 	int err, retry_cnt = RDAC_RETRY_COUNT;
++	struct rdac_queue_data *tmp, *qdata;
++	LIST_HEAD(list);
++	u8 *lun_table;
++
++	spin_lock(&ctlr->ms_lock);
++	list_splice_init(&ctlr->ms_head, &list);
++	ctlr->ms_queued = 0;
++	ctlr->ms_sdev = NULL;
++	spin_unlock(&ctlr->ms_lock);
++
++	if (ctlr->use_ms10)
++		lun_table = ctlr->mode_select.expanded.lun_table;
++	else
++		lun_table = ctlr->mode_select.legacy.lun_table;
+ 
+ retry:
+ 	err = SCSI_DH_RES_TEMP_UNAVAIL;
+@@ -545,6 +583,10 @@
+ 	if (!rq)
+ 		goto done;
+ 
++	list_for_each_entry(qdata, &list, entry) {
++		lun_table[qdata->h->lun] = 0x81;
++	}
++
+ 	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+ 		"%s MODE_SELECT command",
+ 		(char *) h->ctlr->array_name, h->ctlr->index,
+@@ -565,7 +607,41 @@
+ 	}
+ 
+ done:
+-	return err;
++	list_for_each_entry_safe(qdata, tmp, &list, entry) {
++		list_del(&qdata->entry);
++		if (err == SCSI_DH_OK)
++			qdata->h->state = RDAC_STATE_ACTIVE;
++		if (qdata->callback_fn)
++			qdata->callback_fn(qdata->callback_data, err);
++		kfree(qdata);
++	}
++	return;
++}
++
++static int queue_mode_select(struct scsi_device *sdev,
++				activate_complete fn, void *data)
++{
++	struct rdac_queue_data *qdata;
++	struct rdac_controller *ctlr;
++
++	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
++	if (!qdata)
++		return SCSI_DH_RETRY;
++
++	qdata->h = get_rdac_data(sdev);
++	qdata->callback_fn = fn;
++	qdata->callback_data = data;
++
++	ctlr = qdata->h->ctlr;
++	spin_lock(&ctlr->ms_lock);
++	list_add_tail(&qdata->entry, &ctlr->ms_head);
++	if (!ctlr->ms_queued) {
++		ctlr->ms_queued = 1;
++		ctlr->ms_sdev = sdev;
++		queue_work(kmpath_rdacd, &ctlr->ms_work);
++	}
++	spin_unlock(&ctlr->ms_lock);
++	return SCSI_DH_OK;
+ }
+ 
+ static int rdac_activate(struct scsi_device *sdev,
+@@ -578,8 +654,11 @@
+ 	if (err != SCSI_DH_OK)
+ 		goto done;
+ 
+-	if (h->lun_state == RDAC_LUN_UNOWNED)
+-		err = send_mode_select(sdev, h);
++	if (h->lun_state == RDAC_LUN_UNOWNED) {
++		err = queue_mode_select(sdev, fn, data);
++		if (err == SCSI_DH_OK)
++			return 0;
++	}
+ done:
+ 	if (fn)
+ 		fn(data, err);
+@@ -793,13 +872,26 @@
+ 	int r;
+ 
+ 	r = scsi_register_device_handler(&rdac_dh);
+-	if (r != 0)
++	if (r != 0) {
+ 		printk(KERN_ERR "Failed to register scsi device handler.");
++		goto done;
++	}
++
++	/*
++	 * Create workqueue to handle mode selects for rdac
++	 */
++	kmpath_rdacd = create_singlethread_workqueue("kmpath_rdacd");
++	if (!kmpath_rdacd) {
++		scsi_unregister_device_handler(&rdac_dh);
++		printk(KERN_ERR "kmpath_rdacd creation failed.\n");
++	}
++done:
+ 	return r;
+ }
+ 
+ static void __exit rdac_exit(void)
+ {
++	destroy_workqueue(kmpath_rdacd);
+ 	scsi_unregister_device_handler(&rdac_dh);
+ }
+ 
