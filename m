@@ -1,256 +1,180 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 1/4] scsi_dh: Change the scsidh_activate
-	interface to be asynchronous
-Date: Wed, 21 Oct 2009 09:22:46 -0700
-Message-ID: <20091021162246.8473.68316.sendpatchset@chandra-ubuntu>
-References: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: fc_remote_port_delete and returning SCSI commands from LLD
+Date: Wed, 21 Oct 2009 12:24:31 -0400
+Message-ID: <4ADF35BF.8050100@emulex.com>
+References: <20091020144027.GA17717@schmichrtp.de.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:39169 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754417AbZJUQYa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2009 12:24:30 -0400
+In-Reply-To: <20091020144027.GA17717@schmichrtp.de.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Make scsi_dh_activate() function asynchronous, by taking in two additional 
-parameters, one is the callback function and the other is the data to call
-the callback function with.
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
---------------
- drivers/md/dm-mpath.c                       |    8 ++++----
- drivers/scsi/device_handler/scsi_dh.c       |   17 ++++++++++++-----
- drivers/scsi/device_handler/scsi_dh_alua.c  |    7 +++++--
- drivers/scsi/device_handler/scsi_dh_emc.c   |    7 +++++--
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |    7 +++++--
- drivers/scsi/device_handler/scsi_dh_rdac.c  |    7 +++++--
- include/scsi/scsi_device.h                  |    3 ++-
- include/scsi/scsi_dh.h                      |    6 ++++--
- 8 files changed, 42 insertions(+), 20 deletions(-)
+Christof Schmitt wrote:
+> I am looking again at how and when a FC LLD should call
+> fc_remote_port_delete. Some help would be welcome to cover all
+> requirements and to plug the holes...
 
-Index: linux-2.6.32-rc5/include/scsi/scsi_dh.h
-===================================================================
---- linux-2.6.32-rc5.orig/include/scsi/scsi_dh.h	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/include/scsi/scsi_dh.h	2009-10-20 18:26:14.000000000 -0700
-@@ -56,14 +56,16 @@
- 	SCSI_DH_DRIVER_MAX,
- };
- #if defined(CONFIG_SCSI_DH) || defined(CONFIG_SCSI_DH_MODULE)
--extern int scsi_dh_activate(struct request_queue *);
-+extern int scsi_dh_activate(struct request_queue *, activate_complete, void *);
- extern int scsi_dh_handler_exist(const char *);
- extern int scsi_dh_attach(struct request_queue *, const char *);
- extern void scsi_dh_detach(struct request_queue *);
- extern int scsi_dh_set_params(struct request_queue *, const char *);
- #else
--static inline int scsi_dh_activate(struct request_queue *req)
-+static inline int scsi_dh_activate(struct request_queue *req,
-+					activate_complete fn, void *data)
- {
-+	fn(data, 0);
- 	return 0;
- }
- static inline int scsi_dh_handler_exist(const char *name)
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh.c
-===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh.c	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh.c	2009-10-20 18:26:14.000000000 -0700
-@@ -226,7 +226,7 @@
- 			 * Activate a device handler
- 			 */
- 			if (scsi_dh->activate)
--				err = scsi_dh->activate(sdev);
-+				err = scsi_dh->activate(sdev, NULL, NULL);
- 			else
- 				err = 0;
- 		}
-@@ -423,10 +423,17 @@
- /*
-  * scsi_dh_activate - activate the path associated with the scsi_device
-  *      corresponding to the given request queue.
-- * @q - Request queue that is associated with the scsi_device to be
-- *      activated.
-+ *     Returns immediately without waiting for activation to be completed.
-+ * @q    - Request queue that is associated with the scsi_device to be
-+ *         activated.
-+ * @fn   - Function to be called upon completion of the activation.
-+ *         Function fn is called with data (below) and the error code.
-+ *         Function fn may be called from the same calling context. So,
-+ *         do not hold the lock in the caller which may be needed in fn.
-+ * @data - data passed to the function fn upon completion.
-+ *
-  */
--int scsi_dh_activate(struct request_queue *q)
-+int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- {
- 	int err = 0;
- 	unsigned long flags;
-@@ -445,7 +452,7 @@
- 		return err;
- 
- 	if (scsi_dh->activate)
--		err = scsi_dh->activate(sdev);
-+		err = scsi_dh->activate(sdev, fn, data);
- 	put_device(&sdev->sdev_gendev);
- 	return err;
- }
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c
-===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-10-20 18:26:14.000000000 -0700
-@@ -568,7 +568,8 @@
- 	return err;
- }
- 
--static int rdac_activate(struct scsi_device *sdev)
-+static int rdac_activate(struct scsi_device *sdev,
-+			activate_complete fn, void *data)
- {
- 	struct rdac_dh_data *h = get_rdac_data(sdev);
- 	int err = SCSI_DH_OK;
-@@ -580,7 +581,9 @@
- 	if (h->lun_state == RDAC_LUN_UNOWNED)
- 		err = send_mode_select(sdev, h);
- done:
--	return err;
-+	if (fn)
-+		fn(data, err);
-+	return 0;
- }
- 
- static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c
-===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c	2009-10-20 18:26:14.000000000 -0700
-@@ -652,7 +652,8 @@
-  * based on a certain policy. But until we actually encounter them it
-  * should be okay.
-  */
--static int alua_activate(struct scsi_device *sdev)
-+static int alua_activate(struct scsi_device *sdev,
-+			activate_complete fn, void *data)
- {
- 	struct alua_dh_data *h = get_alua_data(sdev);
- 	int err = SCSI_DH_OK;
-@@ -667,7 +668,9 @@
- 		err = alua_stpg(sdev, TPGS_STATE_OPTIMIZED, h);
- 
- out:
--	return err;
-+	if (fn)
-+		fn(data, err);
-+	return 0;
- }
- 
- /*
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_emc.c
-===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_emc.c	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_emc.c	2009-10-20 18:26:14.000000000 -0700
-@@ -528,7 +528,8 @@
- 	return err;
- }
- 
--static int clariion_activate(struct scsi_device *sdev)
-+static int clariion_activate(struct scsi_device *sdev,
-+				activate_complete fn, void *data)
- {
- 	struct clariion_dh_data *csdev = get_clariion_data(sdev);
- 	int result;
-@@ -559,7 +560,9 @@
- 		    csdev->port, lun_state[csdev->lun_state],
- 		    csdev->default_sp + 'A');
- 
--	return result;
-+	if (fn)
-+		fn(data, result);
-+	return 0;
- }
- /*
-  * params - parameters in the following format
-Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c
-===================================================================
---- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2009-10-20 18:26:14.000000000 -0700
-@@ -268,7 +268,8 @@
-  * activate the passive path (and deactivate the
-  * previously active one).
-  */
--static int hp_sw_activate(struct scsi_device *sdev)
-+static int hp_sw_activate(struct scsi_device *sdev,
-+				activate_complete fn, void *data)
- {
- 	int ret = SCSI_DH_OK;
- 	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
-@@ -283,7 +284,9 @@
- 				    HP_SW_NAME);
- 	}
- 
--	return ret;
-+	if (fn)
-+		fn(data, ret);
-+	return 0;
- }
- 
- static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
-Index: linux-2.6.32-rc5/include/scsi/scsi_device.h
-===================================================================
---- linux-2.6.32-rc5.orig/include/scsi/scsi_device.h	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/include/scsi/scsi_device.h	2009-10-20 18:26:14.000000000 -0700
-@@ -174,6 +174,7 @@
- 	char *model;
- };
- 
-+typedef void (*activate_complete)(void *, int);
- struct scsi_device_handler {
- 	/* Used by the infrastructure */
- 	struct list_head list; /* list of scsi_device_handlers */
-@@ -185,7 +186,7 @@
- 	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr *);
- 	int (*attach)(struct scsi_device *);
- 	void (*detach)(struct scsi_device *);
--	int (*activate)(struct scsi_device *);
-+	int (*activate)(struct scsi_device *, activate_complete, void *);
- 	int (*prep_fn)(struct scsi_device *, struct request *);
- 	int (*set_params)(struct scsi_device *, const char *);
- };
-Index: linux-2.6.32-rc5/drivers/md/dm-mpath.c
-===================================================================
---- linux-2.6.32-rc5.orig/drivers/md/dm-mpath.c	2009-10-20 18:26:03.000000000 -0700
-+++ linux-2.6.32-rc5/drivers/md/dm-mpath.c	2009-10-20 18:26:14.000000000 -0700
-@@ -1116,8 +1116,9 @@
- 	return limit_reached;
- }
- 
--static void pg_init_done(struct dm_path *path, int errors)
-+static void pg_init_done(void *data, int errors)
- {
-+	struct dm_path *path = data;
- 	struct pgpath *pgpath = path_to_pgpath(path);
- 	struct priority_group *pg = pgpath->pg;
- 	struct multipath *m = pg->m;
-@@ -1183,12 +1184,11 @@
- 
- static void activate_path(struct work_struct *work)
- {
--	int ret;
- 	struct pgpath *pgpath =
- 		container_of(work, struct pgpath, activate_path);
- 
--	ret = scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev));
--	pg_init_done(&pgpath->path, ret);
-+	scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev),
-+				pg_init_done, &pgpath->path);
- }
- 
- /*
+It's pretty simple, as far as the FC transport is concerned.
+Call fc_remote_port_add() once connectivity is established.
+Call fc_remote_port_delete() once connectivity is lost.
+It is expected that there is a clear add->delete->add->delete->... sequence.
+
+Timing is considered "immediate", but there's always a window of delay.
+
+In general, the Transport ignores what happens to outstanding i/o, letting the 
+LLDD do something based on its policy, or let natural i/o timers or the fast 
+fail timer to fire.  The transport, at the delete call, will start the fast 
+fail timer if it is set.
+
+
+> One scenario i am looking at: The connection to the HBA has been
+> temporarily lost and the LLD has to return all pending I/O requests to
+> the upper layers, so they can be retried later. Now with the SCSI
+> device being part of a multipath device, the first failed I/O request
+> triggers path failover:
+
+You are now asking a different question - how to make the upper layers play
+nice with the different responses from queuecommand, the LLDD's interaction 
+with the transport and midlayer, etc.
+
+> 
+> multipath_end_io
+> do_end_io
+> fail_path
+> queue_work(kmultipathd, &pgpath->deactivate_path);
+> 
+> which then marks the following returned requests as timed out:
+> 
+> deactivate_path
+> blk_abort_queue
+> blk_abort_request
+> blk_rq_timed_out
+> scsi_times_out
+> fc_timed_out
+> 
+> If the remote_port status is not BLOCKED, this will trigger the SCSI
+> midlayer error handling which cannot do much during the interruption
+> to the hardware and will mark the SCSI devices 'offline'.
+
+Well - this isn't absolute, but is pretty much true. We expect, when 
+connectivity is lost, for the block state to be temporarily entered. The 
+blocked state holds off further i/o and the eh handler as well, to postpone 
+the normal i/o failure cases which do lead to offline conditions in most 
+scenarios.
+
+But - this process is a coordinated effort between the driver and the upper 
+layers, and where the driver doesn't get helped by the transport (the blocked 
+state) it had better mimic the return codes at the different points, and 
+perhaps more, so that bad things don't happen.
+
+
+> In order to
+> prevent this, the rule would be: First call fc_remote_port_delete to
+> set the remote port (or in the case of an HBA interruption all remote
+> ports) to BLOCKED, and only after this step call scsi_done to pass the
+> SCSI commands back to the upper layers.
+
+True, although as mentioned, i/o termination is considered independent from 
+the rport/transport. But, you're best off if the target is blocked due to the 
+rport delete as we've prepped the upper layers to behave best with this behavior.
+
+There will always be a few i/o's that sneak in or complete (timeout ?) in 
+between when the LLDD detects connectivity loss and when the 
+fc_remote_port_delete has been called. It's up to the LLDD to handle this window.
+
+Completions, including i/o timeouts, are typically not a big deal and should 
+just return via scsi_done as they normally would. The caveat is when those 
+i/o's are from the eh thread.  Granted - if you are actively aborting/failing 
+i/o at the connectivity loss, and doing so before the block is in place, 
+you're causing more headaches for yourself in getting the upper layers to play 
+right with the LLDD - with the recommendation being "don't do that".
+
+New i/o needs to be caught in queuecommand with the LLDD emulating the 
+transport status that would normally get returned.  E.g. the call to 
+fc_remote_port_chkready() won't catch it as the fc_remote_port_delete() call 
+hasn't completed yet - so the LLDD needs a 2nd check against it's own 
+structures, and if it detects the state, it should fail the i/o with the same 
+codes that chkready would. In reality, if you wanted to accept the command, 
+but never issue it and just leave it outstanding - waiting for i/o timeout, or 
+fast fail i/o timout, or devloss_tmo, I guess you could.
+
+
+> This means, if the HBA problem is detected in interrupt context,
+> fc_remote_port_delete has to be called before calling scsi_done.
+
+Well - execution context is somewhat unrelated, as it depends on how the LLDD 
+is implemented, and what else its doing when connectivity is lost.
+
+> 
+> But the description for fc_remote_port_delete states:
+> 
+>  * Called from normal process context only - cannot be called from
+>  * interrupt.
+>  *
+>  * Notes:
+>  *	This routine assumes no locks are held on entry.
+>  */
+> 
+> Looking at the functions called from fc_remote_port_delete, i don't
+> see a problem in calling fc_remote_port_delete from interrupt context
+> or with locks held. Does this mean the description should be fixed or
+> am i missing something?
+
+That's probably true. underlying routines have changed a bit over time and it 
+may be better now. I'd still hesitate with fc_tgt_it_nexus_destroy() (although 
+it shouldn't be applicable to you), and scsi_target_block().  Creating 
+additional lock hierachies between LLDD locks and the locks in these paths 
+(which the LLDD rarely sees/knows about) isn't good.   Thus, we've mostly 
+pushed LLDDs to use a pristine context when calling the transport (such as a 
+workq context) so that we can disassociate low-level LLDD design from midlayer 
+design.
+
+
+> fc_remote_port_add on the other hand can wait during flushes and has
+> to be called from process context. To summarize:
+> - A LLD has to call fc_remote_port_delete before returning SCSI
+>   commands from a failed port or failed HBA.
+
+not true, but best behavior.
+
+> - fc_remote_port_delete can be called from interrupt context before
+>   calling scsi_done if necessary
+
+part a (called from interrupt context) - do so at your own risk.  These other 
+paths can change at any time and its not fair for those developers to know 
+your driver dependencies.
+
+part b (before calling scsi_done) - recommended approach.
+
+> - fc_remote_port_add has to be called from process context
+
+True.
+
+> - The LLD has to serialize the fc_remote_port_add and
+>   fc_remote_port_delete calls to guarantee the add->delete->...
+>   sequence.
+
+True.
+
+-- james s
+
+
+> 
+> --
+> Christof
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
