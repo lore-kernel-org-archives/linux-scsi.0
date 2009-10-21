@@ -1,95 +1,65 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/1] be2iscsi: Enabling MSIX and mcc_rings V2
-Date: Wed, 21 Oct 2009 12:39:58 -0500
-Message-ID: <4ADF476E.6000901@cs.wisc.edu>
-References: <20091017011435.GA25197@serverengines.com>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [Open-FCoE] [PATCH v3] scsi-ml: adds queue_depth ramp up code
+Date: Wed, 21 Oct 2009 10:45:28 -0700
+Message-ID: <1256147128.16472.89.camel@vi2.jf.intel.com>
+References: <20091016004700.22451.42962.stgit@vifc.jf.intel.com>
+	 <20091016230824.18916.84116.stgit@vifc.jf.intel.com>
+	 <20091020185426.GA5905@schmichrtp.de.ibm.com>
+	 <1256077937.16472.60.camel@vi2.jf.intel.com> <4ADE444D.5090307@cisco.com>
+	 <20091021074944.GA3563@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49832 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754463AbZJURkF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Oct 2009 13:40:05 -0400
-In-Reply-To: <20091017011435.GA25197@serverengines.com>
+Received: from mga10.intel.com ([192.55.52.92]:29094 "EHLO
+	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753945AbZJURqG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Oct 2009 13:46:06 -0400
+In-Reply-To: <20091021074944.GA3563@schmichrtp.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: Joe Eykholt <jeykholt@cisco.com>, James.Bottomley@HansenPartnership.com, devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-Adding Qlogic guys on this one, because I think they want something similar.
-
-Jayamohan Kallickal wrote:
->  4) Adds sysfs for FW commands
+On Wed, 2009-10-21 at 09:49 +0200, Christof Schmitt wrote:
+> >> Added timestamp comparison checks are straightforward without any
+> >> additional conversion on each check since added timestamps and
+> >> queue_ramp_up_period both are jiffies, so works better this way
+> with
+> >> stored queue_ramp_up_period in jiffies. 
+> >>
+> >> I do see your point as well but jiffies unit is also common in
+> Linux.
+> >> However if you or some other feels strongly to change this to ms or
+> >> seconds unit then I could change store or show sysfs functions to
+> handle
+> >> this value in ms or second unit while storing it in jiffies in
+> >> queue_ramp_up_period.
+> >>
+> >>      Vasu
+> >
+> > I agree with Christof on this, HZ may be 100 on some machines and
+> 1000
+> > on others.  Management tools (if they ever adjust this) would like
+> > standard units, so it should be in ms or seconds, and I prefer ms.
+> > I would just change the sysfs functions as you say, and use jiffies
+> internally.
 > 
+> I would also vote for ms in sysfs and using jiffies internally. This
+> should be fairly easy using the functions jiffies_to_msecs and
+> msecs_to_jiffies.
 
-Jay, what operations are you wanting to do with the binary sysfs file? 
-Are there any operations that should be common with Qlogic?
+Yeap it will be easy change and I'll do this change to have ms unit for
+only sysfs i/f as mostly preferred ms as unit, though Mike Reed said in
+other response that ms unit is too fine grained but that should be okay
+as oppose to not giving choice of fine granularity and I also don't see
+any risk to large value limitation by use of fine ms unit here.
 
-Also if you guys both need binary operations for card specific 
-operations then binary sysfs is fine. However, James S had suggested 
-using bsg for this too. Since that is upstream now, and you could just 
-copy the FC implementation that might be a easier route (I think qlogic 
-might have mentioned sysfs was a pain sometimes, and it is something you 
-both could work on and help each other out on).
+I wasn't against the Christof's suggestion to use ms or sec in first
+place since as I said "I do see your point as well". And now all these
+responses gives solid confirmation to use ms unit here. 
 
+Thanks all for your inputs.
+ 
+	Vasu
 
-
-Comment on the implementation.
-
->  MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
->  
-> +static ssize_t
-> +beiscsi_sysfs_fw_wr(struct kobject *kobj, struct bin_attribute *bin_attr,
-> +		    char *buf, loff_t off, size_t count) {
-> +
-> +	unsigned int ret_len = 0;
-> +	struct Scsi_Host *shost = class_to_shost(container_of(kobj,
-> +						 struct device, kobj));
-> +	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-> +
-> +	ret_len = mgmt_fw_cmd(&phba->ctrl, phba, buf, count);
-
-
-For normal sysfs files I think we normally want it to do only one thing. 
-This one seems to be a cmd to exec and the data buffer. I am not sure if 
-that is right. Maybe you just want one file per operation. Or maybe you 
-want another file for the length of the opertaion so you do not have to 
-waste mem on that phba buffer.
-
-Or JamesS's comment offlist about using the bsg pass through stuff is 
-also ok. Adding the infrastucture is a little more work, but it is 
-probably easier in the long run for the reasons he explained.
-
-
-
-> +	if (!ret_len) {
-> +		memcpy(buf, phba->attr_mem, count);
-> +		return count;
-> +	} else
-> +		return ret_len;
-> +}
-> +
-> +static ssize_t
-> +beiscsi_sysfs_fw_rd(struct kobject *kobj, struct bin_attribute *bin_attr,
-> +		    char *buf, loff_t off, size_t count) {
-> +
-> +	struct Scsi_Host *shost = class_to_shost(container_of(kobj,
-> +						 struct device, kobj));
-> +	struct beiscsi_hba *phba = iscsi_host_priv(shost);
-> +
-> +	memcpy(buf, phba->attr_mem, count);
-> +	return count;
-> +}
-> +
-> +static struct bin_attribute sysfs_drvr_fw_prgrm_attr = {
-> +	.attr = {
-> +		.name = "be2iscsi_fw_prgrm",
-> +		.mode = S_IRUSR | S_IWUSR,
-> +		.owner = THIS_MODULE,
-> +	},
-> +	.size = 0,
-> +	.read = beiscsi_sysfs_fw_rd,
-> +	.write = beiscsi_sysfs_fw_wr,
-> +};
-> +
