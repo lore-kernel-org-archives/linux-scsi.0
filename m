@@ -1,270 +1,302 @@
-From: Vasu Dev <vasu.dev@intel.com>
-Subject: [PATCH v4 5/7] scsi-ml: adds queue_depth ramp up code
-Date: Thu, 22 Oct 2009 15:46:33 -0700
-Message-ID: <20091022224627.20122.78013.stgit@vifc.jf.intel.com>
-References: <20091016004700.22451.42962.stgit@vifc.jf.intel.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH 1/4] scsi_dh: Change the scsidh_activate interface to be
+ asynchronous
+Date: Thu, 22 Oct 2009 17:26:56 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF487374248@cosmail01.lsi.com>
+References: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
+ <20091021162246.8473.68316.sendpatchset@chandra-ubuntu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2938 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750991AbZJVWqk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Oct 2009 18:46:40 -0400
-In-Reply-To: <20091016004700.22451.42962.stgit@vifc.jf.intel.com>
+Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:56947 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751028AbZJVX1m convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Oct 2009 19:27:42 -0400
+In-Reply-To: <20091021162246.8473.68316.sendpatchset@chandra-ubuntu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, devel@open-fcoe.org, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, christof.schmitt@de.ibm.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "Benoit_Arthur@emc.com" <Benoit_Arthur@emc.com>, "Eddie.Williams@steeleye.com" <Eddie.Williams@steeleye.com>, "berthiaume_wayne@emc.com" <berthiaume_wayne@emc.com>
 
-Current FC HBA queue_depth ramp up code depends on last queue
-full time. The sdev already  has last_queue_full_time field to
-track last queue full time but stored value is truncated by
-last four bits.
+I have tested this patch on LSI rdac storage. It works pretty well..
 
-So this patch updates last_queue_full_time without truncating
-last 4 bits to store full value and then updates its only
-current usages in scsi_track_queue_full to ignore last four bits
-to keep current usages same while also use this field
-in added ramp up code.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Chandra Seetharaman
+> Sent: Wednesday, October 21, 2009 11:23 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: dm-devel@redhat.com; Moger, Babu; michaelc@cs.wisc.edu;
+> Benoit_Arthur@emc.com; Eddie.Williams@steeleye.com;
+> berthiaume_wayne@emc.com; Chandra Seetharaman
+> Subject: [PATCH 1/4] scsi_dh: Change the scsidh_activate interface to
+> be asynchronous
+> 
+> Make scsi_dh_activate() function asynchronous, by taking in two
+> additional
+> parameters, one is the callback function and the other is the data to
+> call
+> the callback function with.
+> 
+> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+  Tested-by: Babu Moger@lsi.com
 
-Adds scsi_handle_queue_ramp_up to ramp up queue_depth on
-successful completion of IO. The scsi_handle_queue_ramp_up will
-do ramp up on all luns of a target, just same as ramp down done
-on all luns on a target.
-
-The ramp up is skipped in case the change_queue_depth is not
-supported by LLD or already reached to added max_queue_depth.
-
-Updates added max_queue_depth on every new update to default
-queue_depth value.
-
-The ramp up is also skipped if lapsed time since either last
-queue ramp up or down is less than LLD specified
-queue_ramp_up_period.
-
-Adds queue_ramp_up_period to sysfs but only if change_queue_depth
-is supported since ramp up and queue_ramp_up_period is needed only
-in case change_queue_depth is supported first.
-
-Initializes queue_ramp_up_period to 120HZ jiffies as initial
-default value, it is same as used in existing lpfc and qla2xxx.
-
--v2
- Combined all ramp code into this single patch.
-
--v3
- Moves max_queue_depth initialization after slave_configure is
-called from after slave_alloc calling done. Also adjusted
-max_queue_depth check to skip ramp up if current queue_depth
-is >= max_queue_depth.
-
--v4
- Changes sdev->queue_ramp_up_period unit to ms when using sysfs i/f
-to store or show its value.
-
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
----
-
- drivers/scsi/scsi.c        |   10 ++++++++--
- drivers/scsi/scsi_error.c  |   38 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_scan.c   |    3 +++
- drivers/scsi/scsi_sysfs.c  |   41 +++++++++++++++++++++++++++++++++++++++--
- include/scsi/scsi_device.h |    9 ++++++---
- 5 files changed, 94 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index dd098ca..a60da55 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -940,10 +940,16 @@ EXPORT_SYMBOL(scsi_adjust_queue_depth);
-  */
- int scsi_track_queue_full(struct scsi_device *sdev, int depth)
- {
--	if ((jiffies >> 4) == sdev->last_queue_full_time)
-+
-+	/*
-+	 * Don't let QUEUE_FULLs on the same
-+	 * jiffies count, they could all be from
-+	 * same event.
-+	 */
-+	if ((jiffies >> 4) == (sdev->last_queue_full_time >> 4))
- 		return 0;
- 
--	sdev->last_queue_full_time = (jiffies >> 4);
-+	sdev->last_queue_full_time = jiffies;
- 	if (sdev->last_queue_full_depth != depth) {
- 		sdev->last_queue_full_count = 1;
- 		sdev->last_queue_full_depth = depth;
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 7b1e20f..08ed506 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -331,6 +331,42 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 	}
- }
- 
-+static void scsi_handle_queue_ramp_up(struct scsi_device *sdev)
-+{
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	struct scsi_device *tmp_sdev;
-+
-+	if (!sht->change_queue_depth ||
-+	    sdev->queue_depth >= sdev->max_queue_depth)
-+		return;
-+
-+	if (time_before(jiffies,
-+	    sdev->last_queue_ramp_up + sdev->queue_ramp_up_period))
-+		return;
-+
-+	if (time_before(jiffies,
-+	    sdev->last_queue_full_time + sdev->queue_ramp_up_period))
-+		return;
-+
-+	/*
-+	 * Walk all devices of a target and do
-+	 * ramp up on them.
-+	 */
-+	shost_for_each_device(tmp_sdev, sdev->host) {
-+		if (tmp_sdev->channel != sdev->channel ||
-+		    tmp_sdev->id != sdev->id ||
-+		    tmp_sdev->queue_depth == sdev->max_queue_depth)
-+			continue;
-+		/*
-+		 * call back into LLD to increase queue_depth by one
-+		 * with ramp up reason code.
-+		 */
-+		sht->change_queue_depth(tmp_sdev, tmp_sdev->queue_depth + 1,
-+					SCSI_QDEPTH_RAMP_UP);
-+		sdev->last_queue_ramp_up = jiffies;
-+	}
-+}
-+
- static void scsi_handle_queue_full(struct scsi_device *sdev)
- {
- 	struct scsi_host_template *sht = sdev->host->hostt;
-@@ -393,6 +429,7 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
- 	 */
- 	switch (status_byte(scmd->result)) {
- 	case GOOD:
-+		scsi_handle_queue_ramp_up(scmd->device);
- 	case COMMAND_TERMINATED:
- 		return SUCCESS;
- 	case CHECK_CONDITION:
-@@ -1425,6 +1462,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		 */
- 		return ADD_TO_MLQUEUE;
- 	case GOOD:
-+		scsi_handle_queue_ramp_up(scmd->device);
- 	case COMMAND_TERMINATED:
- 		return SUCCESS;
- 	case TASK_ABORTED:
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index cb6338f..2847a86 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -251,6 +251,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	sdev->model = scsi_null_device_strs;
- 	sdev->rev = scsi_null_device_strs;
- 	sdev->host = shost;
-+	sdev->queue_ramp_up_period = SCSI_DEFAULT_RAMP_UP_PERIOD;
- 	sdev->id = starget->id;
- 	sdev->lun = lun;
- 	sdev->channel = starget->channel;
-@@ -940,6 +941,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		}
- 	}
- 
-+	sdev->max_queue_depth = sdev->queue_depth;
-+
- 	/*
- 	 * Ok, the device is now all set up, we can
- 	 * register it and tell the rest of the kernel
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 4c59336..3a9e805 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -771,6 +771,8 @@ sdev_store_queue_depth_rw(struct device *dev, struct device_attribute *attr,
- 	if (retval < 0)
- 		return retval;
- 
-+	sdev->max_queue_depth = sdev->queue_depth;
-+
- 	return count;
- }
- 
-@@ -779,6 +781,37 @@ static struct device_attribute sdev_attr_queue_depth_rw =
- 	       sdev_store_queue_depth_rw);
- 
- static ssize_t
-+sdev_show_queue_ramp_up_period(struct device *dev,
-+			       struct device_attribute *attr,
-+			       char *buf)
-+{
-+	struct scsi_device *sdev;
-+	sdev = to_scsi_device(dev);
-+	return snprintf(buf, 20, "%u\n",
-+			jiffies_to_msecs(sdev->queue_ramp_up_period));
-+}
-+
-+static ssize_t
-+sdev_store_queue_ramp_up_period(struct device *dev,
-+				struct device_attribute *attr,
-+				const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	unsigned long period;
-+
-+	if (strict_strtoul(buf, 10, &period))
-+		return -EINVAL;
-+
-+	sdev->queue_ramp_up_period = msecs_to_jiffies(period);
-+	return period;
-+}
-+
-+static struct device_attribute sdev_attr_queue_ramp_up_period =
-+	__ATTR(queue_ramp_up_period, S_IRUGO | S_IWUSR,
-+	       sdev_show_queue_ramp_up_period,
-+	       sdev_store_queue_ramp_up_period);
-+
-+static ssize_t
- sdev_store_queue_type_rw(struct device *dev, struct device_attribute *attr,
- 			 const char *buf, size_t count)
- {
-@@ -870,8 +903,12 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	get_device(&sdev->sdev_gendev);
- 
- 	/* create queue files, which may be writable, depending on the host */
--	if (sdev->host->hostt->change_queue_depth)
--		error = device_create_file(&sdev->sdev_gendev, &sdev_attr_queue_depth_rw);
-+	if (sdev->host->hostt->change_queue_depth) {
-+		error = device_create_file(&sdev->sdev_gendev,
-+					   &sdev_attr_queue_depth_rw);
-+		error = device_create_file(&sdev->sdev_gendev,
-+					   &sdev_attr_queue_ramp_up_period);
-+	}
- 	else
- 		error = device_create_file(&sdev->sdev_gendev, &dev_attr_queue_depth);
- 	if (error) {
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 9af48cb..92c4c3b 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -81,11 +81,14 @@ struct scsi_device {
- 	struct list_head starved_entry;
- 	struct scsi_cmnd *current_cmnd;	/* currently active command */
- 	unsigned short queue_depth;	/* How deep of a queue we want */
-+	unsigned short max_queue_depth;	/* max queue depth */
- 	unsigned short last_queue_full_depth; /* These two are used by */
- 	unsigned short last_queue_full_count; /* scsi_track_queue_full() */
--	unsigned long last_queue_full_time;/* don't let QUEUE_FULLs on the same
--					   jiffie count on our counter, they
--					   could all be from the same event. */
-+	unsigned long last_queue_full_time;	/* last queue full time */
-+	unsigned long queue_ramp_up_period;	/* ramp up period in jiffies */
-+#define SCSI_DEFAULT_RAMP_UP_PERIOD	(120 * HZ)
-+
-+	unsigned long last_queue_ramp_up;	/* last queue ramp up time */
- 
- 	unsigned int id, lun, channel;
- 
-
+> 
+> --------------
+>  drivers/md/dm-mpath.c                       |    8 ++++----
+>  drivers/scsi/device_handler/scsi_dh.c       |   17 ++++++++++++-----
+>  drivers/scsi/device_handler/scsi_dh_alua.c  |    7 +++++--
+>  drivers/scsi/device_handler/scsi_dh_emc.c   |    7 +++++--
+>  drivers/scsi/device_handler/scsi_dh_hp_sw.c |    7 +++++--
+>  drivers/scsi/device_handler/scsi_dh_rdac.c  |    7 +++++--
+>  include/scsi/scsi_device.h                  |    3 ++-
+>  include/scsi/scsi_dh.h                      |    6 ++++--
+>  8 files changed, 42 insertions(+), 20 deletions(-)
+> 
+> Index: linux-2.6.32-rc5/include/scsi/scsi_dh.h
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/include/scsi/scsi_dh.h	2009-10-20
+> 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/include/scsi/scsi_dh.h	2009-10-20
+> 18:26:14.000000000 -0700
+> @@ -56,14 +56,16 @@
+>  	SCSI_DH_DRIVER_MAX,
+>  };
+>  #if defined(CONFIG_SCSI_DH) || defined(CONFIG_SCSI_DH_MODULE)
+> -extern int scsi_dh_activate(struct request_queue *);
+> +extern int scsi_dh_activate(struct request_queue *, activate_complete,
+> void *);
+>  extern int scsi_dh_handler_exist(const char *);
+>  extern int scsi_dh_attach(struct request_queue *, const char *);
+>  extern void scsi_dh_detach(struct request_queue *);
+>  extern int scsi_dh_set_params(struct request_queue *, const char *);
+>  #else
+> -static inline int scsi_dh_activate(struct request_queue *req)
+> +static inline int scsi_dh_activate(struct request_queue *req,
+> +					activate_complete fn, void *data)
+>  {
+> +	fn(data, 0);
+>  	return 0;
+>  }
+>  static inline int scsi_dh_handler_exist(const char *name)
+> Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh.c
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh.c	2009-
+> 10-20 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh.c	2009-10-20
+> 18:26:14.000000000 -0700
+> @@ -226,7 +226,7 @@
+>  			 * Activate a device handler
+>  			 */
+>  			if (scsi_dh->activate)
+> -				err = scsi_dh->activate(sdev);
+> +				err = scsi_dh->activate(sdev, NULL, NULL);
+>  			else
+>  				err = 0;
+>  		}
+> @@ -423,10 +423,17 @@
+>  /*
+>   * scsi_dh_activate - activate the path associated with the
+> scsi_device
+>   *      corresponding to the given request queue.
+> - * @q - Request queue that is associated with the scsi_device to be
+> - *      activated.
+> + *     Returns immediately without waiting for activation to be
+> completed.
+> + * @q    - Request queue that is associated with the scsi_device to be
+> + *         activated.
+> + * @fn   - Function to be called upon completion of the activation.
+> + *         Function fn is called with data (below) and the error code.
+> + *         Function fn may be called from the same calling context.
+> So,
+> + *         do not hold the lock in the caller which may be needed in
+> fn.
+> + * @data - data passed to the function fn upon completion.
+> + *
+>   */
+> -int scsi_dh_activate(struct request_queue *q)
+> +int scsi_dh_activate(struct request_queue *q, activate_complete fn,
+> void *data)
+>  {
+>  	int err = 0;
+>  	unsigned long flags;
+> @@ -445,7 +452,7 @@
+>  		return err;
+> 
+>  	if (scsi_dh->activate)
+> -		err = scsi_dh->activate(sdev);
+> +		err = scsi_dh->activate(sdev, fn, data);
+>  	put_device(&sdev->sdev_gendev);
+>  	return err;
+>  }
+> Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_rdac.c
+> 	2009-10-20 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-
+> 10-20 18:26:14.000000000 -0700
+> @@ -568,7 +568,8 @@
+>  	return err;
+>  }
+> 
+> -static int rdac_activate(struct scsi_device *sdev)
+> +static int rdac_activate(struct scsi_device *sdev,
+> +			activate_complete fn, void *data)
+>  {
+>  	struct rdac_dh_data *h = get_rdac_data(sdev);
+>  	int err = SCSI_DH_OK;
+> @@ -580,7 +581,9 @@
+>  	if (h->lun_state == RDAC_LUN_UNOWNED)
+>  		err = send_mode_select(sdev, h);
+>  done:
+> -	return err;
+> +	if (fn)
+> +		fn(data, err);
+> +	return 0;
+>  }
+> 
+>  static int rdac_prep_fn(struct scsi_device *sdev, struct request *req)
+> Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_alua.c
+> 	2009-10-20 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_alua.c	2009-
+> 10-20 18:26:14.000000000 -0700
+> @@ -652,7 +652,8 @@
+>   * based on a certain policy. But until we actually encounter them it
+>   * should be okay.
+>   */
+> -static int alua_activate(struct scsi_device *sdev)
+> +static int alua_activate(struct scsi_device *sdev,
+> +			activate_complete fn, void *data)
+>  {
+>  	struct alua_dh_data *h = get_alua_data(sdev);
+>  	int err = SCSI_DH_OK;
+> @@ -667,7 +668,9 @@
+>  		err = alua_stpg(sdev, TPGS_STATE_OPTIMIZED, h);
+> 
+>  out:
+> -	return err;
+> +	if (fn)
+> +		fn(data, err);
+> +	return 0;
+>  }
+> 
+>  /*
+> Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_emc.c
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_emc.c
+> 	2009-10-20 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_emc.c	2009-
+> 10-20 18:26:14.000000000 -0700
+> @@ -528,7 +528,8 @@
+>  	return err;
+>  }
+> 
+> -static int clariion_activate(struct scsi_device *sdev)
+> +static int clariion_activate(struct scsi_device *sdev,
+> +				activate_complete fn, void *data)
+>  {
+>  	struct clariion_dh_data *csdev = get_clariion_data(sdev);
+>  	int result;
+> @@ -559,7 +560,9 @@
+>  		    csdev->port, lun_state[csdev->lun_state],
+>  		    csdev->default_sp + 'A');
+> 
+> -	return result;
+> +	if (fn)
+> +		fn(data, result);
+> +	return 0;
+>  }
+>  /*
+>   * params - parameters in the following format
+> Index: linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+> 	2009-10-20 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2009-
+> 10-20 18:26:14.000000000 -0700
+> @@ -268,7 +268,8 @@
+>   * activate the passive path (and deactivate the
+>   * previously active one).
+>   */
+> -static int hp_sw_activate(struct scsi_device *sdev)
+> +static int hp_sw_activate(struct scsi_device *sdev,
+> +				activate_complete fn, void *data)
+>  {
+>  	int ret = SCSI_DH_OK;
+>  	struct hp_sw_dh_data *h = get_hp_sw_data(sdev);
+> @@ -283,7 +284,9 @@
+>  				    HP_SW_NAME);
+>  	}
+> 
+> -	return ret;
+> +	if (fn)
+> +		fn(data, ret);
+> +	return 0;
+>  }
+> 
+>  static const struct scsi_dh_devlist hp_sw_dh_data_list[] = {
+> Index: linux-2.6.32-rc5/include/scsi/scsi_device.h
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/include/scsi/scsi_device.h	2009-10-20
+> 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/include/scsi/scsi_device.h	2009-10-20
+> 18:26:14.000000000 -0700
+> @@ -174,6 +174,7 @@
+>  	char *model;
+>  };
+> 
+> +typedef void (*activate_complete)(void *, int);
+>  struct scsi_device_handler {
+>  	/* Used by the infrastructure */
+>  	struct list_head list; /* list of scsi_device_handlers */
+> @@ -185,7 +186,7 @@
+>  	int (*check_sense)(struct scsi_device *, struct scsi_sense_hdr
+> *);
+>  	int (*attach)(struct scsi_device *);
+>  	void (*detach)(struct scsi_device *);
+> -	int (*activate)(struct scsi_device *);
+> +	int (*activate)(struct scsi_device *, activate_complete, void *);
+>  	int (*prep_fn)(struct scsi_device *, struct request *);
+>  	int (*set_params)(struct scsi_device *, const char *);
+>  };
+> Index: linux-2.6.32-rc5/drivers/md/dm-mpath.c
+> ===================================================================
+> --- linux-2.6.32-rc5.orig/drivers/md/dm-mpath.c	2009-10-20
+> 18:26:03.000000000 -0700
+> +++ linux-2.6.32-rc5/drivers/md/dm-mpath.c	2009-10-20
+> 18:26:14.000000000 -0700
+> @@ -1116,8 +1116,9 @@
+>  	return limit_reached;
+>  }
+> 
+> -static void pg_init_done(struct dm_path *path, int errors)
+> +static void pg_init_done(void *data, int errors)
+>  {
+> +	struct dm_path *path = data;
+>  	struct pgpath *pgpath = path_to_pgpath(path);
+>  	struct priority_group *pg = pgpath->pg;
+>  	struct multipath *m = pg->m;
+> @@ -1183,12 +1184,11 @@
+> 
+>  static void activate_path(struct work_struct *work)
+>  {
+> -	int ret;
+>  	struct pgpath *pgpath =
+>  		container_of(work, struct pgpath, activate_path);
+> 
+> -	ret = scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev));
+> -	pg_init_done(&pgpath->path, ret);
+> +	scsi_dh_activate(bdev_get_queue(pgpath->path.dev->bdev),
+> +				pg_init_done, &pgpath->path);
+>  }
+> 
+>  /*
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
