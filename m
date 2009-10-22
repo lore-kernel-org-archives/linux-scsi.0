@@ -1,99 +1,63 @@
-From: Yugendranath R Singh <yugendranath.s@hcl.in>
-Subject: [PATCH] drivers/scsi/mvsas: Support for Adaptec ASC-1045/1405
- SAS/SATA HBA on mvsas
-Date: Thu, 22 Oct 2009 15:12:59 +0530
-Message-ID: <4CA9DA403FFEC64AA62B3C295F8D47B721268A6601@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+From: Chandra Seetharaman <sekharan@linux.vnet.ibm.com>
+Subject: Re: [dm-devel] [PATCH 0/4] scsi_dh: Make scsi_dh_activate
+	asynchronous
+Date: Thu, 22 Oct 2009 09:06:28 -0700
+Message-ID: <1256227588.6475.6.camel@chandra-ubuntu>
+References: <20091021162240.8473.99556.sendpatchset@chandra-ubuntu>
+	 <20091022010608.GA10445@infradead.org>
+Reply-To: sekharan@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_4CA9DA403FFEC64AA62B3C295F8D47B721268A6601CHNHCLTEVS07H_"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.hcl.in ([203.105.186.28]:48838 "EHLO gws08.hcl.in"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753287AbZJVJnG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Oct 2009 05:43:06 -0400
-Content-Language: en-US
+Received: from e33.co.us.ibm.com ([32.97.110.151]:39004 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754090AbZJVQGr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Oct 2009 12:06:47 -0400
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by e33.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id n9MG4I71023649
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2009 10:04:18 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9MG6aPv071222
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2009 10:06:41 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id n9MG6MJv020970
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Oct 2009 10:06:23 -0600
+In-Reply-To: <20091022010608.GA10445@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Benoit_Arthur@emc.com, Eddie.Williams@steeleye.com
 
+Hi Christoph,
 
---_002_4CA9DA403FFEC64AA62B3C295F8D47B721268A6601CHNHCLTEVS07H_
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Thanks for looking into this.
 
-Hi=20James,
-The=20attached=20patch=20submitted=20on=20Oct=2015=20didn't=20get=20into=
-=202.6.32-rc5.=20Please=20let=20me=20know=20if=20there=20are=20any=20issu=
-es=20so=20that=20I=20can=20correct=20and=20re-send=20the=20same=20and=20g=
-et=20this=20included=20in=20subsequent=20rc=20release.
+Babu (LSI) and I did some testing and found couple of problems. Major
+one was that moving all luns blindly causes luns to be moved to their
+non-preferred path against the user's setting, which is a no-no.
 
-Thanks,
-Yugen.
+Here is the email Babu sent on this:
+http://marc.info/?l=linux-scsi&m=125495712310371&w=2
 
------Original=20Message-----
-From:=20linux-scsi-owner@vger.kernel.org=20[mailto:linux-scsi-owner@vger.=
-kernel.org]=20On=20Behalf=20Of=20Yugendranath=20R=20Singh
-Sent:=20Tuesday,=20October=2013,=202009=209:45=20PM
-To:=20linux-scsi@vger.kernel.org
-Cc:=20James=20Bottomley;=20Andy=20Yan;=20Ke=20Wei
-Subject:=20[PATCH]=20drivers/scsi/mvsas:=20Support=20for=20Adaptec=20ASC-=
-1045/1405=20SAS/SATA=20HBA=20on=20mvsas
+chandra
 
-From:=20Yugendranath=20R=20Singh<yugendranath.s@hcl.in>
+On Wed, 2009-10-21 at 21:06 -0400, Christoph Hellwig wrote:
+> On Wed, Oct 21, 2009 at 09:22:40AM -0700, Chandra Seetharaman wrote:
+> > Hello All,
+> > 
+> > Currently, device handlers process path activation in series. This leads
+> > to a lot of time delay when more than 100 luns are involved. For example,
+> > with lsi rdac 100+ luns take about 12-15 minutes. This was found by Moger
+> > Babu of LSI.
+> 
+> So what happened to the suggestion to just switch over per target
+> instead of per lun?   It's the obviously much better way to do, and
+> unless there are bugs in the hardware preventing it from working it
+> should be the way to go.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-This=20is=20support=20for=20Adaptec=20ASC-1045/1405=20SAS/SATA=20HBA=20on=
-=20mvsas,=20which=20is=20based=20on=20Marvell=2088SE6440=20chipset.
-Signed-off-by:=20Yugendranath=20R=20Singh<yugendranath.s@hcl.in>
----
-Patch=20being=20sent=20as=20attachment,=20as=20my=20mailer=20would=20mang=
-le=20the=20contents=20if=20sent=20inline.=20
-
-
-
-DISCLAIMER:
--------------------------------------------------------------------------=
-----------------------------------------------
-
-The=20contents=20of=20this=20e-mail=20and=20any=20attachment(s)=20are=20c=
-onfidential=20and=20intended=20for=20the=20named=20recipient(s)=20only.=
-=20
-It=20shall=20not=20attach=20any=20liability=20on=20the=20originator=20or=
-=20HCL=20or=20its=20affiliates.=20Any=20views=20or=20opinions=20presented=
-=20in=20
-this=20email=20are=20solely=20those=20of=20the=20author=20and=20may=20not=
-=20necessarily=20reflect=20the=20opinions=20of=20HCL=20or=20its=20affilia=
-tes.=20
-Any=20form=20of=20reproduction,=20dissemination,=20copying,=20disclosure,=
-=20modification,=20distribution=20and=20/=20or=20publication=20of=20
-this=20message=20without=20the=20prior=20written=20consent=20of=20the=20a=
-uthor=20of=20this=20e-mail=20is=20strictly=20prohibited.=20If=20you=20hav=
-e=20
-received=20this=20email=20in=20error=20please=20delete=20it=20and=20notif=
-y=20the=20sender=20immediately.=20Before=20opening=20any=20mail=20and=20
-attachments=20please=20check=20them=20for=20viruses=20and=20defect.
-
--------------------------------------------------------------------------=
-----------------------------------------------
-
---_002_4CA9DA403FFEC64AA62B3C295F8D47B721268A6601CHNHCLTEVS07H_
-Content-Type: application/octet-stream; name="mv_init.patch"
-Content-Description: mv_init.patch
-Content-Disposition: attachment; filename="mv_init.patch"; size=530;
-	creation-date="Wed, 14 Oct 2009 02:24:54 GMT";
-	modification-date="Wed, 14 Oct 2009 07:23:48 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtdXByTiBhL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9pbml0LmMgYi9kcml2ZXJzL3Njc2kv
-bXZzYXMvbXZfaW5pdC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9tdnNhcy9tdl9pbml0LmMJMjAwOS0x
-MC0xNCAwMTo0MDo1Mi4wMDAwMDAwMDAgKzA1MzAKKysrIGIvZHJpdmVycy9zY3NpL212c2FzL212
-X2luaXQuYwkyMDA5LTEwLTE0IDAxOjUyOjE0LjAwMDAwMDAwMCArMDUzMApAQCAtNjU3LDYgKzY1
-Nyw3IEBAIHN0YXRpYyBzdHJ1Y3QgcGNpX2RldmljZV9pZCBfX2RldmluaXRkYXQKIAl7IFBDSV9W
-REVWSUNFKE1BUlZFTEwsIDB4OTE4MCksIGNoaXBfOTE4MCB9LAogCXsgUENJX1ZERVZJQ0UoQVJF
-Q0EsIFBDSV9ERVZJQ0VfSURfQVJFQ0FfMTMwMCksIGNoaXBfMTMwMCB9LAogCXsgUENJX1ZERVZJ
-Q0UoQVJFQ0EsIFBDSV9ERVZJQ0VfSURfQVJFQ0FfMTMyMCksIGNoaXBfMTMyMCB9LAorCXsgUENJ
-X1ZERVZJQ0UoQURBUFRFQzIsIDB4MDQ1MCksIGNoaXBfNjQ0MCB9LAogCiAJeyB9CS8qIHRlcm1p
-bmF0ZSBsaXN0ICovCiB9Owo=
-
---_002_4CA9DA403FFEC64AA62B3C295F8D47B721268A6601CHNHCLTEVS07H_--
