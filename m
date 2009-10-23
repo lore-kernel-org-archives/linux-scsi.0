@@ -1,45 +1,140 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Add new driver for LSI 3ware 9750
-Date: Fri, 23 Oct 2009 05:21:38 -0600
-Message-ID: <20091023112137.GB19566@parisc-linux.org>
-References: <b1bc6a000910201722v28d895cbv25e4959473ff215d@mail.gmail.com> <200910211727.34165.eike-kernel@sf-tec.de>
+From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
+	<narasimhareddyc@hcl.in>
+Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Fri, 23 Oct 2009 18:40:52 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345563@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+References: <1256173776.7297.28.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:57405 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbZJWLVe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Oct 2009 07:21:34 -0400
-Content-Disposition: inline
-In-Reply-To: <200910211727.34165.eike-kernel@sf-tec.de>
+Received: from gws08.hcl.in ([203.105.186.28]:49563 "EHLO gws08.hcl.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751706AbZJWNLs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Oct 2009 09:11:48 -0400
+In-Reply-To: <1256173776.7297.28.camel@localhost.localdomain>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-On Wed, Oct 21, 2009 at 05:27:27PM +0200, Rolf Eike Beer wrote:
-> > +	/* Try to enable MSI */
-> > +	if (use_msi && !pci_enable_msi(pdev))
-> > +		set_bit(TW_USING_MSI, &tw_dev->flags);
-> > +
-> > +	/* Now setup the interrupt handler */
-> > +	retval = request_irq(pdev->irq, twl_interrupt, IRQF_SHARED, "3w-sas",
-> >  tw_dev); +	if (retval) {
-> > +		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x1f, "Error requesting IRQ");
-> > +		goto out_remove_host;
-> > +	}
-> 
-> If you're using MSI you should not pass IRQF_SHARED here.
+Hi James,
 
-That's not true.  While it is currently the case that each MSI gets its
-own vector, if you have a machine with sufficiently many interrupt sources
-and insufficiently many interrupt vectors, it is possible we'll have to
-share interrupt vectors.  The PCI MSI code does not support this yet,
-but it may have to in the future, and it would be unpleasant to have to
-go through and change all the device drivers.
+Thanks a lot for your feedback.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Here is my explanation for the change. We have done good amount of review and testing before finalizing the change. We found the following code also caused to exit the management request prematurely without getting response from the firmware during our review, which in turn caused to generated False Raid Alert events in the application layer. 
+
+So after doing good amount of review and testing, we replace the below code
+
+	    else if (down_interruptible(&fibptr->event_wait)) {
+                      fibptr->done = 2;
+                      up(&fibptr->event_wait);
+          }
+
+With the following code
+	    } else
+          	down_interruptible (&fibptr->event_wait);
+
+To overcome the warning, we can replace the above code with either
+
+    	    } else if (down_interruptible (&fibptr->event_wait));
+               
+			Or
+
+	    } else {
+          	 if (down_interruptible (&fibptr->event_wait))
+			;
+	    }
+
+I am ok to do the above mentioned change in the code and resubmit the patch with the above change as there is no issue with respect to functionality and other aspects as such.
+
+Please let me know your opinion on this so that I will proceed further based on your feedback. 
+
+ 
+Important note: 
+-----------------
+
+fibptr->event_wait is initialized with the following OS kernel function call during the driver initialization.
+
+	init_MUTEX_LOCKED(&fibptr->event_wait);
+
+The above OS kernel function call initializes the semaphore to locked (unavailable) state. On using the fibptr->event_wait by down_interruptible, the semaphore is not available so process/task will enter into sleep mode until the semaphore is available. The semaphore will be available only when the response gets from the firmware for the request delivered to the firmware. When response comes from the firmware then driver's response path code calls the up() if the fibpter->done is equal to zero. So the corresponding task/process gets semaphore and wakes the task/process up and proceeds with further processing. 
+
+Suppose the process/task, who is waiting for semaphore, gets exited before getting response from the firmware due to some signal, then driver should not call up() function as there is no point calling up() function after exiting as the fibptr->event_wait was initialized to locked (unavailable) state during the driver initialization. 
+
+So my point, here, is that we should not call up() if process/task is exited prematurely before getting the response from the firmware for the request delivered to firmware as the fibptr->event_wait was initialized to locked (unavailable) state. 
+---------------------------------------------------------------------------
+
+Thanks,
+Narasimha Reddy 
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@suse.de] 
+Sent: Thursday, October 22, 2009 6:40 AM
+To: Penchala Narasimha Reddy Chilakala, TLS-Chennai
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+
+On Fri, 2009-10-09 at 14:53 +0530, Penchala Narasimha Reddy Chilakala,
+TLS-Chennai wrote:
+> Hi James and linux-scsi community,
+>
+> Can you please let us know your feedback on my response to the queries
+> raised by James so that I will proceed further based on your feedback?
+
+Sorry, press of conferences has delayed me getting around to looking at
+this.
+
+The patch is spitting this compile warning:
+
+drivers/scsi/aacraid/commsup.c: In function 'aac_fib_send':
+drivers/scsi/aacraid/commsup.c:539: warning: ignoring return value of 'down_interruptible', declared with attribute warn_unused_result
+
+Because of this hunk:
+
+@@ -515,15 +535,14 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned
+                                }
+                                udelay(5);
+                        }
+-               } else if (down_interruptible(&fibptr->event_wait)) {
+-                       fibptr->done = 2;
+-                       up(&fibptr->event_wait);
+-               }
++               } else
++                       down_interruptible(&fibptr->event_wait);
+
+
+The reason for the warning is that down_interruptible() will return an
+error if it gets interrupted without acquiring the semaphore, and the
+kernel checkers believe you can't write correct code without knowing
+whether you acquired the semaphore or not.
+
+Now, the original use case didn't care it was just waiting for the
+semaphore to become available but didn't actually want to acquire it, so
+I suspect what you want is:
+
+} else if (down_interruptible(&fibptr->event_wait))
+                     up(&fibptr->event_wait);
+
+If you suddenly do care about acquiring the semaphore, you need to do
+something about the interrupted failure case.
+
+James
+
+
+
+
+DISCLAIMER:
+-----------------------------------------------------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
+It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
+this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
+Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
+this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
+received this email in error please delete it and notify the sender immediately. Before opening any mail and 
+attachments please check them for viruses and defect.
+
+-----------------------------------------------------------------------------------------------------------------------
