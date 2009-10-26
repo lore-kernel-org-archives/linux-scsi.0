@@ -1,138 +1,33 @@
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [PATCH 11/16] pcmcia: use dynamic debug infrastructure, deprecate CS_CHECK (scsi)
-Date: Sat, 24 Oct 2009 22:39:58 +0200
-Message-ID: <20091024203958.GA1714@isilmar.linta.de>
-References: <20091024194219.GA19546@comet.dominikbrodowski.net> <1256413386-20501-11-git-send-email-linux@dominikbrodowski.net> <200910242216.55136.eike-kernel@sf-tec.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13783] udev causes high cpu usage
+Date: Mon, 26 Oct 2009 15:08:27 GMT
+Message-ID: <200910261508.n9QF8RUC001430@demeter.kernel.org>
+References: <bug-13783-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:52447 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751629AbZJXUjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Oct 2009 16:39:55 -0400
-Content-Disposition: inline
-In-Reply-To: <200910242216.55136.eike-kernel@sf-tec.de>
+Received: from demeter.kernel.org ([140.211.167.39]:59960 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbZJZPIX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2009 11:08:23 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9QF8R0h001431
+	for <linux-scsi@vger.kernel.org>; Mon, 26 Oct 2009 15:08:27 GMT
+In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-pcmcia@lists.infradead.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Oct 24, 2009 at 10:16:49PM +0200, Rolf Eike Beer wrote:
-> Dominik Brodowski wrote:
-> 
-> > @@ -164,19 +152,21 @@ static int aha152x_config_cs(struct pcmcia_device
-> >  *link) {
-> >      scsi_info_t *info = link->priv;
-> >      struct aha152x_setup s;
-> > -    int last_ret, last_fn;
-> > +    int ret
-> >      struct Scsi_Host *host;
-> 
-> This looks not even compile tested, there is a semicolon missing.
-
-Indeed, for this driver is !64BIT.... Updated patch (aha152x_stub.c only)
-attached.
-
-Thanks for noticing this issue.
-
-	Dominik
+http://bugzilla.kernel.org/show_bug.cgi?id=13783
 
 
-diff --git a/drivers/scsi/pcmcia/aha152x_stub.c b/drivers/scsi/pcmcia/aha152x_stub.c
-index 67cde01..4329e4e 100644
---- a/drivers/scsi/pcmcia/aha152x_stub.c
-+++ b/drivers/scsi/pcmcia/aha152x_stub.c
-@@ -54,15 +54,6 @@
- #include <pcmcia/cistpl.h>
- #include <pcmcia/ds.h>
- 
--#ifdef PCMCIA_DEBUG
--static int pc_debug = PCMCIA_DEBUG;
--module_param(pc_debug, int, 0644);
--#define DEBUG(n, args...) if (pc_debug>(n)) printk(KERN_DEBUG args)
--static char *version =
--"aha152x_cs.c 1.54 2000/06/12 21:27:25 (David Hinds)";
--#else
--#define DEBUG(n, args...)
--#endif
- 
- /*====================================================================*/
- 
-@@ -103,7 +94,7 @@ static int aha152x_probe(struct pcmcia_device *link)
- {
-     scsi_info_t *info;
- 
--    DEBUG(0, "aha152x_attach()\n");
-+    dev_dbg(&link->dev, "aha152x_attach()\n");
- 
-     /* Create new SCSI device */
-     info = kzalloc(sizeof(*info), GFP_KERNEL);
-@@ -127,7 +118,7 @@ static int aha152x_probe(struct pcmcia_device *link)
- 
- static void aha152x_detach(struct pcmcia_device *link)
- {
--    DEBUG(0, "aha152x_detach(0x%p)\n", link);
-+    dev_dbg(&link->dev, "aha152x_detach\n");
- 
-     aha152x_release_cs(link);
- 
-@@ -137,9 +128,6 @@ static void aha152x_detach(struct pcmcia_device *link)
- 
- /*====================================================================*/
- 
--#define CS_CHECK(fn, ret) \
--do { last_fn = (fn); if ((last_ret = (ret)) != 0) goto cs_failed; } while (0)
--
- static int aha152x_config_check(struct pcmcia_device *p_dev,
- 				cistpl_cftable_entry_t *cfg,
- 				cistpl_cftable_entry_t *dflt,
-@@ -164,19 +152,22 @@ static int aha152x_config_cs(struct pcmcia_device *link)
- {
-     scsi_info_t *info = link->priv;
-     struct aha152x_setup s;
--    int last_ret, last_fn;
-+    int ret;
-     struct Scsi_Host *host;
- 
--    DEBUG(0, "aha152x_config(0x%p)\n", link);
-+    dev_dbg(&link->dev, "aha152x_config\n");
- 
--    last_ret = pcmcia_loop_config(link, aha152x_config_check, NULL);
--    if (last_ret) {
--	cs_error(link, RequestIO, last_ret);
--	goto failed;
--    }
-+    ret = pcmcia_loop_config(link, aha152x_config_check, NULL);
-+    if (ret)
-+	    goto failed;
- 
--    CS_CHECK(RequestIRQ, pcmcia_request_irq(link, &link->irq));
--    CS_CHECK(RequestConfiguration, pcmcia_request_configuration(link, &link->conf));
-+    ret = pcmcia_request_irq(link, &link->irq);
-+    if (ret)
-+	    goto failed;
-+
-+    ret = pcmcia_request_configuration(link, &link->conf);
-+    if (ret)
-+	    goto failed;
-     
-     /* Set configuration options for the aha152x driver */
-     memset(&s, 0, sizeof(s));
-@@ -194,7 +185,7 @@ static int aha152x_config_cs(struct pcmcia_device *link)
-     host = aha152x_probe_one(&s);
-     if (host == NULL) {
- 	printk(KERN_INFO "aha152x_cs: no SCSI devices found\n");
--	goto cs_failed;
-+	goto failed;
-     }
- 
-     sprintf(info->node.dev_name, "scsi%d", host->host_no);
-@@ -203,8 +194,6 @@ static int aha152x_config_cs(struct pcmcia_device *link)
- 
-     return 0;
- 
--cs_failed:
--    cs_error(link, last_fn, last_ret);
- failed:
-     aha152x_release_cs(link);
-     return -ENODEV;
+
+
+
+--- Comment #21 from Tejun Heo <tj@kernel.org>  2009-10-26 15:08:24 ---
+Wendall, can you also please test udev version 147?  Thanks.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
