@@ -1,57 +1,62 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCHSET 0/5] osd: Revised patches for the 2.6.33 merge window
-Date: Mon, 26 Oct 2009 18:51:00 +0200
-Message-ID: <4AE5D374.80400@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 1/5] libosd: osd_dev_is_ver1 - Minor API cleanup
+Date: Mon, 26 Oct 2009 18:56:45 +0200
+Message-ID: <1256576205-10351-1-git-send-email-bharrosh@panasas.com>
+References: <4AE5D374.80400@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dip-colo-pa.panasas.com ([67.152.220.67]:62641 "EHLO
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:26286 "EHLO
 	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752225AbZJZQu7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2009 12:50:59 -0400
+	with ESMTP id S1753373AbZJZQ4n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2009 12:56:43 -0400
+In-Reply-To: <4AE5D374.80400@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd mailing-list <osd-dev@open-osd.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-Hi James
+define a new osd_dev_is_ver1 that operates on devices
+and the old osd_req_is_ver1 uses that new API.
 
-I've revisited my last patches, and am submitting a new set. They address
-the concern you had that I was searching for devices by /dev/* names where
-actually user-mode can change those.
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ include/scsi/osd_initiator.h |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-Additionally there is a related bugfix.
+diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
+index 02bd9f7..f787d24 100644
+--- a/include/scsi/osd_initiator.h
++++ b/include/scsi/osd_initiator.h
+@@ -84,6 +84,15 @@ static inline void osd_dev_set_ver(struct osd_dev *od, enum osd_std_version v)
+ #endif
+ }
+ 
++static inline bool osd_dev_is_ver1(struct osd_dev *od)
++{
++#ifdef OSD_VER1_SUPPORT
++	return od->version == OSD_VER1;
++#else
++	return false;
++#endif
++}
++
+ struct osd_request;
+ typedef void (osd_req_done_fn)(struct osd_request *or, void *private);
+ 
+@@ -120,14 +129,9 @@ struct osd_request {
+ 	int async_error;
+ };
+ 
+-/* OSD Version control */
+ static inline bool osd_req_is_ver1(struct osd_request *or)
+ {
+-#ifdef OSD_VER1_SUPPORT
+-	return or->osd_dev->version == OSD_VER1;
+-#else
+-	return false;
+-#endif
++	return osd_dev_is_ver1(or->osd_dev);
+ }
+ 
+ /*
+-- 
+1.6.5.1
 
-These are the patches
-
-[PATCH 1/5] libosd: osd_dev_is_ver1 - Minor API cleanup
-[PATCH 2/5] libosd: osd_sense: OSD_CFO_PERMISSIONS
-	Same as before, please submit regardless.
-
-[PATCH 3/5] osduld: Ref-counting bug fix
-	This is a bug fix. In the long past it used to work, by chance.
-	With this fix it does what it's suppose to do.
-	(Please submit)
-
-[PATCH 4/5] osduld: Use device->release instead of internal kref
-[PATCH 5/5] libosd: osd_dev_info: Unique Identification of an OSD device
-	These two patches are new implementation to the API introduced in previous
-	patchset. (Plus a related addition needed by multy-device exofs support).
-
-	It will now use the class_find_device() API to iterate through devices looking
-	for the requested one. Using class_find_device forced a ref-counting shift.
-	(Please review and submit)
-
-I've tested these patches with multy-device exofs installation also exported to
-pnfs-objects clients (also in multi-device) and I'm satisfied with the results.
-There are no apparent new instabilities.
-
-I would want to submit a substantial patchset to exofs, supporting multiple devices,
-mirror operations. The exofs patches are dependent on these patches to osd
-
-[I'm putting these patches and a rebased set of exofs in linux-next. There should be
- no problems merging once they get accepted into scsi-misc. As these patches are
- based on by exofs and pnfs-objects]
-
-Thanks
-Boaz
