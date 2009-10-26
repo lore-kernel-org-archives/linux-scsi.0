@@ -1,317 +1,430 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 5/5] libosd: osd_dev_info: Unique Identification of an OSD device
-Date: Mon, 26 Oct 2009 18:58:56 +0200
-Message-ID: <1256576336-10456-1-git-send-email-bharrosh@panasas.com>
-References: <4AE5D374.80400@panasas.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dip-colo-pa.panasas.com ([67.152.220.67]:49116 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753358AbZJZQ6x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Oct 2009 12:58:53 -0400
-In-Reply-To: <4AE5D374.80400@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: 2.6.32-rc5-git3: Reported regressions from 2.6.31
+Date: Mon, 26 Oct 2009 19:45:48 +0100 (CET)
+Message-ID: <Sj-rRjx6TwF.A.djE.vqe5KB@chimera>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-Define an osd_dev_info structure that Uniquely identifies an OSD
-device lun on the network. The identification is built from unique
-target attributes and is the same for all network/SAN machines.
+This message contains a list of some regressions from 2.6.31, for which=
+ there
+are no fixes in the mainline I know of.  If any of them have been fixed=
+ already,
+please let me know.
 
-osduld_info_lookup() - NEW
-    New API that will lookup an osd_dev by its osd_dev_info.
-    This is used by pNFS-objects for cross network global device
-    identification. And by exofs multy-device support, the device
-    info is specified in the on-disk exofs device table.
+If you know of any other unresolved regressions from 2.6.31, please let=
+ me know
+either and I'll add them to the list.  Also, please let me know if any =
+of the
+entries below are invalid.
 
-osduld_device_info() - NEW
-    Given an osd_dev handle returns its associated osd_dev_info.
-    The ULD fetches this information at startup and hangs it on
-    each OSD device. (This is a fast operation that can be called
-    at any condition)
+Each entry from the list will be sent additionally in an automatic repl=
+y to
+this message with CCs to the people involved in reporting and handling =
+the
+issue.
 
-osduld_device_same() - NEW
-    With a given osd_dev at one hand and an osd_dev_info
-    at another, we would like to know if they are the same
-    device.
-    Two osd_dev handles can be checked by:
-        osduld_device_same(od1, osduld_device_info(od2));
 
-osd_auto_detect_ver() - REVISED
-    Now returns an osd_dev_info structure. Is only called once
-    by ULD as before. See added comments for how to use.
+Listed regressions statistics:
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/osd/osd_initiator.c |   26 ++++++++--
- drivers/scsi/osd/osd_uld.c       |   97 +++++++++++++++++++++++++++++++++++++-
- include/scsi/osd_initiator.h     |   38 +++++++++++++--
- 3 files changed, 149 insertions(+), 12 deletions(-)
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2009-10-26       66       42          37
+  2009-10-12       48       31          27
+  2009-10-02       22       15           9
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 7a117c1..60b7ca1 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -73,7 +73,8 @@ static const char *_osd_ver_desc(struct osd_request *or)
- 
- #define ATTR_DEF_RI(id, len) ATTR_DEF(OSD_APAGE_ROOT_INFORMATION, id, len)
- 
--static int _osd_print_system_info(struct osd_dev *od, void *caps)
-+static int _osd_get_print_system_info(struct osd_dev *od,
-+	void *caps, struct osd_dev_info *odi)
- {
- 	struct osd_request *or;
- 	struct osd_attr get_attrs[] = {
-@@ -137,8 +138,12 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 	OSD_INFO("PRODUCT_SERIAL_NUMBER  [%s]\n",
- 		(char *)pFirst);
- 
--	pFirst = get_attrs[a].val_ptr;
--	OSD_INFO("OSD_NAME               [%s]\n", (char *)pFirst);
-+	odi->osdname_len = get_attrs[a].len;
-+	/* Avoid NULL for memcmp optimization 0-length is good enough */
-+	odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
-+	if (odi->osdname_len)
-+		memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
-+	OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
- 	a++;
- 
- 	pFirst = get_attrs[a++].val_ptr;
-@@ -171,6 +176,14 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 				   sid_dump, sizeof(sid_dump), true);
- 		OSD_INFO("OSD_SYSTEM_ID(%d)\n"
- 			 "        [%s]\n", len, sid_dump);
-+
-+		if (unlikely(len > sizeof(odi->systemid))) {
-+			OSD_ERR("OSD Target error: OSD_SYSTEM_ID too long(%d). "
-+				"device idetification might not work\n", len);
-+			len = sizeof(odi->systemid);
-+		}
-+		odi->systemid_len = len;
-+		memcpy(odi->systemid, get_attrs[a].val_ptr, len);
- 		a++;
- 	}
- out:
-@@ -178,16 +191,17 @@ out:
- 	return ret;
- }
- 
--int osd_auto_detect_ver(struct osd_dev *od, void *caps)
-+int osd_auto_detect_ver(struct osd_dev *od,
-+	void *caps, struct osd_dev_info *odi)
- {
- 	int ret;
- 
- 	/* Auto-detect the osd version */
--	ret = _osd_print_system_info(od, caps);
-+	ret = _osd_get_print_system_info(od, caps, odi);
- 	if (ret) {
- 		osd_dev_set_ver(od, OSD_VER1);
- 		OSD_DEBUG("converting to OSD1\n");
--		ret = _osd_print_system_info(od, caps);
-+		ret = _osd_get_print_system_info(od, caps, odi);
- 	}
- 
- 	return ret;
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index 7ec12ef..25ef993 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -85,6 +85,7 @@ struct osd_uld_device {
- 	int minor;
- 	struct cdev cdev;
- 	struct osd_dev od;
-+	struct osd_dev_info odi;
- 	struct gendisk *disk;
- 	struct device *class_member;
- 	typeof(((struct device *)NULL)->release) save_release;
-@@ -231,6 +232,71 @@ free_od:
- }
- EXPORT_SYMBOL(osduld_path_lookup);
- 
-+static inline bool _the_same_or_null(const u8 *a1, unsigned a1_len,
-+				     const u8 *a2, unsigned a2_len)
-+{
-+	if (!a2_len) /* User string is Empty means don't care */
-+		return true;
-+
-+	if (a1_len != a2_len)
-+		return false;
-+
-+	return 0 == memcmp(a1, a2, a1_len);
-+}
-+
-+struct find_oud_t {
-+	const struct osd_dev_info *odi;
-+	struct device *dev;
-+	struct osd_uld_device *oud;
-+} ;
-+
-+int _mach_odi(struct device *dev, void *find_data)
-+{
-+	struct osd_uld_device *oud = dev_get_drvdata(dev);
-+	struct find_oud_t *fot = find_data;
-+	const struct osd_dev_info *odi = fot->odi;
-+
-+	if (_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
-+			      odi->systemid, odi->systemid_len) &&
-+	    _the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
-+			      odi->osdname, odi->osdname_len)) {
-+		OSD_DEBUG("found device sysid_len=%d osdname=%d\n",
-+			  odi->systemid_len, odi->osdname_len);
-+		fot->oud = oud;
-+		return 1;
-+	} else {
-+		return 0;
-+	}
-+}
-+
-+/* osduld_info_lookup - Loop through all devices, return the requested osd_dev.
-+ *
-+ * if @odi->systemid_len and/or @odi->osdname_len are zero, they act as a don't
-+ * care. .e.g if they're both zero /dev/osd0 is returned.
-+ */
-+struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi)
-+{
-+	struct find_oud_t find = {.odi = odi};
-+
-+	find.dev = class_find_device(&osd_uld_class, NULL, &find, _mach_odi);
-+	if (likely(find.dev)) {
-+		struct osd_dev_handle *odh = kzalloc(sizeof(*odh), GFP_KERNEL);
-+
-+		if (unlikely(!odh)) {
-+			put_device(find.dev);
-+			return ERR_PTR(-ENOMEM);
-+		}
-+
-+		odh->od = find.oud->od;
-+		odh->oud = find.oud;
-+
-+		return &odh->od;
-+	}
-+
-+	return ERR_PTR(-ENODEV);
-+}
-+EXPORT_SYMBOL(osduld_info_lookup);
-+
- void osduld_put_device(struct osd_dev *od)
- {
- 	if (od && !IS_ERR(od)) {
-@@ -247,13 +313,39 @@ void osduld_put_device(struct osd_dev *od)
- 		 * sure we have a cdev for the duration of fput
- 		 */
- 		__uld_get(oud);
--		fput(odh->file);
-+		if (odh->file)
-+			fput(odh->file);
-+		else
-+			put_device(oud->class_member);
- 		__uld_put(oud);
- 		kfree(odh);
- 	}
- }
- EXPORT_SYMBOL(osduld_put_device);
- 
-+const struct osd_dev_info *osduld_device_info(struct osd_dev *od)
-+{
-+	struct osd_dev_handle *odh =
-+				container_of(od, struct osd_dev_handle, od);
-+	return &odh->oud->odi;
-+}
-+EXPORT_SYMBOL(osduld_device_info);
-+
-+bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi)
-+{
-+	struct osd_dev_handle *odh =
-+				container_of(od, struct osd_dev_handle, od);
-+	struct osd_uld_device *oud = odh->oud;
-+
-+	return (oud->odi.systemid_len == odi->systemid_len) &&
-+		_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
-+				 odi->systemid, odi->systemid_len) &&
-+		(oud->odi.osdname_len == odi->osdname_len) &&
-+		_the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
-+				  odi->osdname, odi->osdname_len);
-+}
-+EXPORT_SYMBOL(osduld_device_same);
-+
- /*
-  * Scsi Device operations
-  */
-@@ -274,7 +366,7 @@ static int __detect_osd(struct osd_uld_device *oud)
- 		OSD_ERR("warning: scsi_test_unit_ready failed\n");
- 
- 	osd_sec_init_nosec_doall_caps(caps, &osd_root_object, false, true);
--	if (osd_auto_detect_ver(&oud->od, caps))
-+	if (osd_auto_detect_ver(&oud->od, caps, &oud->odi))
- 		return -ENODEV;
- 
- 	return 0;
-@@ -285,6 +377,7 @@ static void __remove(struct device *dev)
- 	struct osd_uld_device *oud = dev_get_drvdata(dev);
- 	struct scsi_device *scsi_device = oud->od.scsi_device;
- 
-+	kfree(oud->odi.osdname);
- 	oud->save_release(oud->class_member);
- 
- 	if (oud->cdev.owner)
-diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
-index 589e5f0..3ec346e 100644
---- a/include/scsi/osd_initiator.h
-+++ b/include/scsi/osd_initiator.h
-@@ -55,10 +55,24 @@ struct osd_dev {
- #endif
- };
- 
--/* Retrieve/return osd_dev(s) for use by Kernel clients */
--struct osd_dev *osduld_path_lookup(const char *dev_name); /*Use IS_ERR/ERR_PTR*/
-+/* Unique Identification of an OSD device */
-+struct osd_dev_info {
-+	unsigned systemid_len;
-+	u8 systemid[OSD_SYSTEMID_LEN];
-+	unsigned osdname_len;
-+	u8 *osdname;
-+};
-+
-+/* Retrieve/return osd_dev(s) for use by Kernel clients
-+ * Use IS_ERR/ERR_PTR on returned "osd_dev *".
-+ */
-+struct osd_dev *osduld_path_lookup(const char *dev_name);
-+struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi);
- void osduld_put_device(struct osd_dev *od);
- 
-+const struct osd_dev_info *osduld_device_info(struct osd_dev *od);
-+bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi);
-+
- /* Add/remove test ioctls from external modules */
- typedef int (do_test_fn)(struct osd_dev *od, unsigned cmd, unsigned long arg);
- int osduld_register_test(unsigned ioctl, do_test_fn *do_test);
-@@ -68,8 +82,24 @@ void osduld_unregister_test(unsigned ioctl);
- void osd_dev_init(struct osd_dev *od, struct scsi_device *scsi_device);
- void osd_dev_fini(struct osd_dev *od);
- 
--/* some hi level device operations */
--int osd_auto_detect_ver(struct osd_dev *od, void *caps);    /* GFP_KERNEL */
-+/**
-+ * osd_auto_detect_ver - Detect the OSD version, return Unique Identification
-+ *
-+ * @od:     OSD target lun handle
-+ * @caps:   Capabilities authorizing OSD root read attributes access
-+ * @odi:    Retrieved information uniquely identifying the osd target lun
-+ *          Note: odi->osdname must be kfreed by caller.
-+ *
-+ * Auto detects the OSD version of the OSD target and sets the @od
-+ * accordingly. Meanwhile also returns the "system id" and "osd name" root
-+ * attributes which uniquely identify the OSD target. This member is usually
-+ * called by the ULD. ULD users should call osduld_device_info().
-+ * This rutine allocates osd requests and memory at GFP_KERNEL level and might
-+ * sleep.
-+ */
-+int osd_auto_detect_ver(struct osd_dev *od,
-+	void *caps, struct osd_dev_info *odi);
-+
- static inline struct request_queue *osd_request_queue(struct osd_dev *od)
- {
- 	return od->scsi_device->request_queue;
--- 
-1.6.5.1
 
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14485
+Subject		: System lockup running "cat /sys/kernel/debug/dri/0/i915_regs=
+"
+Submitter	: Miles Lane <miles.lane-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-26 4:00 (1 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125652968117713&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14484
+Subject		: no video output after suspend
+Submitter	: Riccardo Magliocchetti <riccardo.magliocchetti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-25 20:57 (2 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125650430123713&w=3D=
+4
+Handled-By	: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14483
+Subject		: WARNING: at drivers/base/sys.c:353 __sysdev_resume+0x54/0xca=
+()
+Submitter	: Justin Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-25 19:58 (2 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125650070420168&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14482
+Subject		: kernel BUG at fs/dcache.c:670 +lvm +md +ext3
+Submitter	: Alexander Clouter <alex-L4GPcECwBoDe9xe1eoZjHA@public.gmane.org>
+Date		: 2009-10-23 10:30 (4 days old)
+References	: http://lkml.org/lkml/2009/10/23/50
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14481
+Subject		: umount blocked for more than 120 seconds after USB drive rem=
+oval
+Submitter	: Robert Hancock <hancockrwd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-21 5:26 (6 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125610280532245&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14479
+Subject		: nfs oops
+Submitter	: Egon Alter <egon.alter-hi6Y0CQ0nG0@public.gmane.org>
+Date		: 2009-10-19 16:03 (8 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125596822630410&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14477
+Subject		: possible circular locking dependency in ISDN PPP
+Submitter	: Tilman Schmidt <tilman-ZTO5kqT2PaM@public.gmane.org>
+Date		: 2009-10-18 22:16 (9 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125590423416087&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14473
+Subject		: ATA related kernel warning after resume
+Submitter	: Tino Keitel <tino.keitel-rAwCM5oiXHA@public.gmane.org>
+Date		: 2009-10-14 6:55 (13 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125550466624678&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14472
+Subject		: EXT4 corruption
+Submitter	: Shawn Starr <shawn.starr-bJEeYj9oJeDQT0dZR+AlfA@public.gmane.org>
+Date		: 2009-10-13 2:07 (14 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125539997508256&w=3D=
+4
+Handled-By	: Theodore Tso <tytso-3s7WtUTddSA@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14467
+Subject		: Linker errors on ia64 with NR_CPUS=3D4096
+Submitter	: Jeff Mahoney <jeffm-IBi9RG/b67k@public.gmane.org>
+Date		: 2009-10-18 22:28 (9 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3D34d76c41554a05425613d16efebb3069c4c545f0
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125590493116720&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14466
+Subject		: EFI boot on x86 fails in .32
+Submitter	: Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>
+Date		: 2009-10-20 0:34 (7 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3D7bd867dfb4e0357e06a3211ab2bd0e714110def3
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125599887314290&w=3D=
+4
+Handled-By	: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14442
+Subject		: resume after hibernate: /dev/sdb drops and returns as /dev/s=
+de
+Submitter	: Duncan <1i5t5.duncan-j9pdmedNgrk@public.gmane.org>
+Date		: 2009-10-20 01:52 (7 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14430
+Subject		: sync() hangs in bdi_sched_wait
+Submitter	: Petr Vandrovec <petr-vPk2MGR0e28uaRcfnNAh7A@public.gmane.org>
+Date		: 2009-10-17 19:14 (10 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14415
+Subject		: Reboot on kernel load
+Submitter	: Brian Beardall <brian-sVkzCUl/XCrR7s880joybQ@public.gmane.org>
+Date		: 2009-10-15 23:57 (12 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14408
+Subject		: sysctl check failed
+Submitter	: Peter Teoh <htmldeveloper-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-14 22:59 (13 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14406
+Subject		: uvcvideo stopped work on Toshiba
+Submitter	: okias <d.okias-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-14 19:08 (13 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14390
+Subject		: "bind" a device to a driver doesn't not work anymore
+Submitter	: =C3=89ric Piel <Eric.Piel-VkQ1JFuSMpfAbQlEx87xDw@public.gmane.org>
+Date		: 2009-10-11 0:04 (16 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125521979921241&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14389
+Subject		: Build system issue
+Submitter	: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Date		: 2009-10-09 8:58 (18 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3Dhttp://git.kernel.org/?p=3Dlinux/kernel/=
+git/torvalds/linux-2.6.git;a=3Dcommit;h=3D575543347b5baed0ca927cb90ba88=
+07396fe9cc9
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125507914909152&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14387
+Subject		: deadlock with fallocate
+Submitter	: Thomas Neumann <tneumann-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Date		: 2009-10-07 3:00 (20 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125488495526471&w=3D=
+4
+Handled-By	: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14384
+Subject		: tbench regression with 2.6.32-rc1
+Submitter	: Zhang, Yanmin <yanmin_zhang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Date		: 2009-10-09 9:51 (18 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3D59abf02644c45f1591e1374ee7bb45dc757fcb88
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125508216713138&w=3D=
+4
+Handled-By	: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14383
+Subject		: hackbench regression with kernel 2.6.32-rc1
+Submitter	: Zhang, Yanmin <yanmin_zhang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Date		: 2009-10-09 9:19 (18 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3D29cd8bae396583a2ee9a3340db8c5102acf9f6fd
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125508007510274&w=3D=
+4
+Handled-By	: Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14381
+Subject		: iwlagn lost connection after s2ram (with warnings)
+Submitter	: Carlos R. Mafra <crmafra2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-07 14:20 (20 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125492569119947&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14378
+Subject		: Problems with net/core/skbuff.c
+Submitter	: Massimo Cetra <mcetra-BBpJ+9iBSNKonA0d6jMUrA@public.gmane.org>
+Date		: 2009-10-08 14:51 (19 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125501488220358&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14376
+Subject		: Kernel NULL pointer dereference/ kvm subsystem
+Submitter	: Don Dupuis <dondster-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-06 14:38 (21 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125484025021737&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14373
+Subject		: Task blocked for more than 120 seconds
+Submitter	: Zeno Davatz <zdavatz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-02 10:16 (25 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125447858618412&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14372
+Subject		: ath5k wireless not working after suspend-resume - eeepc
+Submitter	: Fabio Comolli <fabio.comolli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-03 15:36 (24 days old)
+References	: http://lkml.org/lkml/2009/10/3/91
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14355
+Subject		: USB serial regression after 2.6.31.1 with Huawei E169 GSM mo=
+dem
+Submitter	: Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>
+Date		: 2009-10-10 03:07 (17 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125513456327542&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14354
+Subject		: Bad corruption with 2.6.32-rc1 and upwards
+Submitter	: Holger Freyther <zecke-MQnelBtSfJRAfugRpC6u6w@public.gmane.org>
+Date		: 2009-10-09 15:42 (18 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14353
+Subject		: BUG: sleeping function called from invalid context at kernel=
+/mutex.c:280
+Submitter	: Miles Lane <miles.lane-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-05 3:39 (22 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125471432208671&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14352
+Subject		: WARNING: at net/mac80211/scan.c:267
+Submitter	: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-08 00:30 (19 days old)
+References	: http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=3D2=
+089#c7
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14334
+Subject		: pcmcia suspend regression from 2.6.31.1 to 2.6.31.2 - Dell I=
+nspiron 600m
+Submitter	: Jose Marino <braket-PkbjNfxxIARBDgjK7y7TUQ@public.gmane.org>
+Date		: 2009-10-06 15:44 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14331
+Subject		: Radeon XPRESS 200M: System hang with radeon DRI and Fedora 1=
+0 userspace unless DRI=3Doff
+Submitter	: Alex Villacis Lasso <avillaci-x0m+Mc+nT7uljOmnV8AmnkElSqmLX1BE@public.gmane.org>
+Date		: 2009-10-06 00:29 (21 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14299
+Subject		: oops in wireless, iwl3945 related?
+Submitter	: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Date		: 2009-09-29 17:12 (28 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125424439725743&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14298
+Subject		: warning at manage.c:361 (set_irq_wake), matrix-keypad relate=
+d?
+Submitter	: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Date		: 2009-09-30 20:07 (27 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125434130703538&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14297
+Subject		: console resume broken since ba15ab0e8d
+Submitter	: Sascha Hauer <s.hauer-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
+Date		: 2009-09-30 15:11 (27 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125432349404060&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14296
+Subject		: spitz boots but suspend/resume is broken
+Submitter	: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Date		: 2009-09-30 12:06 (27 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125431244516449&w=3D=
+4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14277
+Subject		: Caught 8-bit read from freed memory in b43 driver at associa=
+tion
+Submitter	: Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>
+Date		: 2009-09-30 18:06 (27 days old)
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14480
+Subject		: 2 locks held by cat -- running "find /sys | head -c 4" --> s=
+ystem hang
+Submitter	: Miles Lane <miles.lane-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-20 16:11 (7 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125605511728088&w=3D=
+4
+Handled-By	: Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>
+Patch		: http://patchwork.kernel.org/patch/54974/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14380
+Subject		: Video tearing/glitching with T400 laptops
+Submitter	: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
+Date		: 2009-10-02 22:40 (25 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125452324520623&w=3D=
+4
+Handled-By	: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
+Patch		: http://marc.info/?l=3Dlinux-kernel&m=3D125591495325000&w=3D4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14379
+Subject		: ACPI Warning for _SB_.BAT0._BIF: Converted Buffer to expecte=
+d String
+Submitter	: Justin Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-08 21:46 (19 days old)
+=46irst-Bad-Commit: http://git.kernel.org/?p=3Dlinux/kernel/git/torvald=
+s/linux-2.6.git;a=3Dcommit;h=3Dd9adc2e031bd22d5d9607a53a8d3b30e0b675f39
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125504031328941&w=3D=
+4
+Handled-By	: Alexey Starikovskiy <astarikovskiy-l3A5Bk7waGM@public.gmane.org>
+Patch		: http://bugzilla.kernel.org/attachment.cgi?id=3D23347
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14375
+Subject		: Intel(R) I/OAT DMA Engine init failed
+Submitter	: Alexander Beregalov <a.beregalov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-02 9:46 (25 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125447680016160&w=3D=
+4
+Handled-By	: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Patch		: http://patchwork.kernel.org/patch/51808/
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14302
+Subject		: Kernel panic on i386 machine when booting with profile=3D2
+Submitter	: Shi, Alex <alex.shi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Date		: 2009-10-01 3:23 (26 days old)
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D125436749607199&w=3D=
+4
+Handled-By	: Alex Shi <alex.shi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Patch		: http://patchwork.kernel.org/patch/50813/
+
+
+=46or details, please visit the bug entries and follow the links given =
+in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regres=
+sions.
+There also is a Bugzilla entry used for tracking the regressions from 2=
+=2E6.31,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=3D14230
+
+Please let me know if there are any Bugzilla entries that should be add=
+ed to
+the list in there.
+
+Thanks,
+Rafael
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
