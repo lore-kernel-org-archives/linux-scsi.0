@@ -1,43 +1,57 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14118] USB storage: "No sense [current]" when connecting
-Date: Tue, 27 Oct 2009 11:56:13 GMT
-Message-ID: <200910271156.n9RBuDhs009088@demeter.kernel.org>
-References: <bug-14118-11613@http.bugzilla.kernel.org/>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: SCST target driver for QLogic adapters qla_isp 1.0.2
+ released
+Date: Tue, 27 Oct 2009 16:48:16 +0300
+Message-ID: <4AE6FA20.1090609@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:38512 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbZJ0L4I convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2009 07:56:08 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9RBuDVE009089
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2009 11:56:13 GMT
-In-Reply-To: <bug-14118-11613@http.bugzilla.kernel.org/>
+Received: from moutng.kundenserver.de ([212.227.126.171]:59871 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754353AbZJ0NsX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2009 09:48:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+Cc: Stanislaw Gruszka <stf_xl@wp.pl>, Matthew Jacob <lydianconcepts@gmail.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=3D14118
+Hi All,
+
+I'm glad to announce that SCST target driver for QLogic FC adapters
+qla_isp version 1.0.2 released and can be downloaded from the SCST
+download page, thanks to Stanislaw Gruszka and Matthew Jacob!
+
+This is, most likely, the final release of this driver. Users of it are 
+encouraged to migrate on qla2x00t driver.
+
+Summary of changes between versions 1.0.0 and 1.0.2
+---------------------------------------------------
+
+- Support for 2532 chipset (8Gb/s).
+
+- Fixed random firmware crash during startup.
+
+- Fixed problem with N_port login.
+
+- Synchronize with mainline Feral repository (various low level fixes).
+
+- Firmware update, (again) add firmware with multichannel support.
+
+- Fixed oops when stopping kernel thread.
+
+- Fixed residual setting for 21xx/22xx/23xx chipsets.
+
+- Fixed WWN setting for cards with scrambled NVRAM.
+
+- Print information about loop state, link speed and topology in human
+   readable form.
+
+- Compilation fixes for kernel up to 2.6.32
 
 
-Mantas Mikul=C4=97nas <grawity@gmail.com> changed:
+SCST page of the qla_isp target driver located at
+http://scst.sourceforge.net/target_qla_isp.html.
 
-           What    |Removed                     |Added
------------------------------------------------------------------------=
------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |CODE_FIX
+Vlad
 
-
-
-
---=20
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
-------- You are receiving this mail because: -------
-You are the assignee for the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
