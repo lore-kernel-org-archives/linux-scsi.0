@@ -1,35 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 4/14] drivers/message: Move dereference after NULL test
-Date: Tue, 27 Oct 2009 11:40:48 +0000
-Message-ID: <20091027114048.2f79ca46@lxorguk.ukuu.org.uk>
-References: <Pine.LNX.4.64.0910170833480.9213@ask.diku.dk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14118] USB storage: "No sense [current]" when connecting
+Date: Tue, 27 Oct 2009 11:56:13 GMT
+Message-ID: <200910271156.n9RBuDhs009088@demeter.kernel.org>
+References: <bug-14118-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33502 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753382AbZJ0LjF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2009 07:39:05 -0400
-In-Reply-To: <Pine.LNX.4.64.0910170833480.9213@ask.diku.dk>
+Received: from demeter.kernel.org ([140.211.167.39]:38512 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683AbZJ0L4I convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2009 07:56:08 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id n9RBuDVE009089
+	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2009 11:56:13 GMT
+In-Reply-To: <bug-14118-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <julia@diku.dk>
-Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, 17 Oct 2009 08:34:18 +0200 (CEST)
-Julia Lawall <julia@diku.dk> wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=3D14118
 
-> From: Julia Lawall <julia@diku.dk>
-> 
-> If the NULL test on dev->i2o_dev or i2o_dev is needed, then the dereference
-> should be after the NULL test.
-> 
-> A simplified version of the semantic match that detects this problem is as
-> follows (http://coccinelle.lip6.fr/):
 
-Real bug - actually this needs proper locking but I doubt anyone uses I2O
-hardware any. Should go in anyway
+Mantas Mikul=C4=97nas <grawity@gmail.com> changed:
 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-Signed-off-by: Alan Cox <alan@linux.intel.com>
+           What    |Removed                     |Added
+-----------------------------------------------------------------------=
+-----
+             Status|NEW                         |RESOLVED
+         Resolution|                            |CODE_FIX
+
+
+
+
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are the assignee for the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
