@@ -1,79 +1,44 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: fc_remote_port_delete and returning SCSI commands from LLD
-Date: Tue, 27 Oct 2009 16:53:50 -0500
-Message-ID: <4AE76BEE.20907@cs.wisc.edu>
-References: <20091020144027.GA17717@schmichrtp.de.ibm.com> <4ADF4EC3.6010506@cs.wisc.edu> <20091023071324.GA5930@schmichrtp.de.ibm.com>
+Date: Tue, 27 Oct 2009 16:57:49 -0500
+Message-ID: <4AE76CDD.7030408@cs.wisc.edu>
+References: <20091020144027.GA17717@schmichrtp.de.ibm.com> <4ADF35BF.8050100@emulex.com> <20091023074746.GB5930@schmichrtp.de.ibm.com> <4AE1C213.9090607@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40286 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34156 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756726AbZJ0Vxz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Oct 2009 17:53:55 -0400
-In-Reply-To: <20091023071324.GA5930@schmichrtp.de.ibm.com>
+	id S1755835AbZJ0V5z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Oct 2009 17:57:55 -0400
+In-Reply-To: <4AE1C213.9090607@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Christof Schmitt wrote:
-> On Wed, Oct 21, 2009 at 01:11:15PM -0500, Mike Christie wrote:
->> Christof Schmitt wrote:
->>> If the remote_port status is not BLOCKED, this will trigger the SCSI
->>> midlayer error handling which cannot do much during the interruption
->>> to the hardware and will mark the SCSI devices 'offline'. In order to
->>> prevent this, the rule would be: First call fc_remote_port_delete to
->>> set the remote port (or in the case of an HBA interruption all remote
->>> ports) to BLOCKED, and only after this step call scsi_done to pass the
->>> SCSI commands back to the upper layers.
->>>
->> One other note when doing this.
+James Smart wrote:
+> 
+> 
+> Christof Schmitt wrote:
+>> On Wed, Oct 21, 2009 at 12:24:31PM -0400, James Smart wrote:
+>>> But - this process is a coordinated effort between the driver and the 
+>>> upper layers, and where the driver doesn't get helped by the 
+>>> transport (the blocked state) it had better mimic the return codes at 
+>>> the different points, and perhaps more, so that bad things don't happen.
 >>
->> For problems where you are deleting the rport, it is best to use  
->> something like DID_TRANSPORT_DISRUPTED to fail the cmd if you are  
->> failing it right away.
+>> "mimic the return codes" refers to fc_remote_port_chkready? Like
+>> returning DID_IMM_RETRY when the rport is going to be BLOCKED, but
+>> fc_remote_port_delete did not run yet?
 > 
-> "something like DID_TRANSPORT_DISRUPTED" would be any error code that
-> goes through "maybe_retry" in scsi_decide_disposition? I guess moving
-> to DID_TRANSPORT_DISRUPTED is nice for consistency, but DID_ERROR
-> triggers the same code paths as far as i can see.
+> Yes
+> 
+> Although, now that I look at chkready again, I'm surprised it didn't 
+> have one of Mike's TRANSPORT_DISRUPTED status's being returned.
+> 
 
-It could be a little different. See scsi_noretry_cmd. If you used 
-DID_ERROR and something set the driver failfast bit then it would be 
-fast failed.
-
-
-> 
->> If drivers block the rport, then fail commands  
->> immediately with DID_TRANSPORT_DISRUPTED, then they will not actually be  
->> failed to the block/mpath layer until the fast io fail timeout has  
->> fired. This will prevent very short problems from firing the mutlipath  
->> path offlining code.
-> 
-> Just to get the complete picture: Blocking the rport and then
-> returning DID_TRANSPORT_DISRUPTED will retry the command to the LLD
-> which then first calls fc_remote_port_chkready.
-> fc_remote_port_chkready will then keep the command between LLD and
-> SCSI midlayer until the rport state changes or the fast_fail fires.
-> Is this the complete picture or did i miss something?
-
-I think that is it.
-
-> 
->> If your driver deletes the rport and does not fail the cmd immediately  
->> so it can recover within the command or some other reason like the fw  
->> just works that way, then when the fast io fail timer fires and the  
->> terminate_rport_io callback is run you could actually use any error code  
->> since at this time when a IO is sent to the queuecommand the driver will  
->> call fc_remote_port_chkready and IO will be failed immediately with  
->> DID_TRANSPORT_FAILFAST).
-> 
-> And the rport state is still BLOCKED, so at this point commands failed
-> in the upper layers with blk_abort_request will not end up in the SCSI
-> error recovery which cannot do much...
-> 
-> Thanks for the help, i am starting to get the complete picture...
-> 
-> Christof
-
+We use DID_IMM_RETRY and do not use TRANSPORT_DISRUPTED in 
+fc_remote_port_chkready because it would count against the retries which 
+we do not want when we hit those state change races. I think 
+Andrew/qlogic hit something where during those race windows we could 
+exhaust all the retries.
