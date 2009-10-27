@@ -1,281 +1,144 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: fc_remote_port_delete and returning SCSI commands from LLD
-Date: Tue, 27 Oct 2009 17:59:44 +0100
-Message-ID: <20091027165943.GA21795@schmichrtp.de.ibm.com>
-References: <20091020144027.GA17717@schmichrtp.de.ibm.com> <20091021152437.GA19717@schmichrtp.de.ibm.com> <4ADF37D5.5090507@emulex.com> <20091023075839.GC5930@schmichrtp.de.ibm.com> <4AE1C2A7.3040508@emulex.com>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: [smartmontools-support] SMART causes disks to go offline on an
+	LSI	SAS1068 controller - Dell SAS 5/iR
+Date: Tue, 27 Oct 2009 17:30:40 +0000
+Message-ID: <4AE72E40.2000903@seoss.co.uk>
+References: <20090914142939.GE14072@boogie.lpds.sztaki.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.uk.ibm.com ([195.212.29.137]:55801 "EHLO
-	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756045AbZJ0RAH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Oct 2009 13:00:07 -0400
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate4.uk.ibm.com (8.14.3/8.13.8) with ESMTP id n9RGxtAo264154
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2009 17:00:00 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9RGxjUk1351792
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2009 16:59:45 GMT
-Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9RGxiGK003165
-	for <linux-scsi@vger.kernel.org>; Tue, 27 Oct 2009 16:59:45 GMT
-Content-Disposition: inline
-In-Reply-To: <4AE1C2A7.3040508@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-poweredge-bounces@dell.com>
+In-Reply-To: <20090914142939.GE14072@boogie.lpds.sztaki.hu>
+List-Unsubscribe: <https://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
+List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
+List-Post: <mailto:linux-poweredge@dell.com>
+List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
+List-Subscribe: <https://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
+Sender: linux-poweredge-bounces@dell.com
+Errors-To: linux-poweredge-bounces@dell.com
+To: Gabor Gombas <gombasg@sztaki.hu>
+Cc: smartmontools-support@lists.sourceforge.net, linux-scsi@vger.kernel.org, Linux-PowerEdge@dell.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Oct 23, 2009 at 10:50:15AM -0400, James Smart wrote:
-> Christof Schmitt wrote:
->> It looks to me like this is required to prevent offline SCSI devices
->> in this case. Should this code be in a FC transport helper function
->> rather than being duplicated in each FC LLD?
->
-> That would make sense....
->
-> -- james s
+Hello,
 
-Here is a patch for this. It is only compile tested on x86, but the
-code move is fairly trivial.
+Just to say that I'm seeing this bug as well, with smartmontools 5.38 
+and smartctl 5.39 2009-10-10 r2955 on Debian lenny.  The machine is a 
+Dell PowerEdge 860.  I'm guessing that this is either a firmware or 
+driver issue.
 
-Christof
----
-scsi_transport_fc: Introduce helper function for blocking scsi_eh
+02:08.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068 PCI-X 
+Fusion-MPT SAS (rev 01)
+        Subsystem: Dell SAS 5/iR Adapter RAID Controller
+        Flags: bus master, 66MHz, medium devsel, latency 72, IRQ 1275
+        I/O ports at ec00 [disabled] [size=256]
+        Memory at fe9fc000 (64-bit, non-prefetchable) [size=16K]
+        Memory at fe9e0000 (64-bit, non-prefetchable) [size=64K]
+        Expansion ROM at fea00000 [disabled] [size=1M]
+        Capabilities: [50] Power Management version 2
+        Capabilities: [98] Message Signalled Interrupts: Mask- 64bit+ 
+Queue=0/0 Enable+
+        Capabilities: [68] PCI-X non-bridge device
+        Capabilities: [b0] MSI-X: Enable- Mask- TabSize=1
+        Kernel driver in use: mptsas
+        Kernel modules: mptsas
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+# modinfo mptsas
+filename:       
+/lib/modules/2.6.26-2-openvz-amd64/kernel/drivers/message/fusion/mptsas.ko
+version:        3.04.06
+license:        GPL
+description:    Fusion MPT SAS Host driver
+author:         LSI Corporation
 
-Move the duplicated code from FC LLDs to SCSI FC transport class.
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
- drivers/scsi/fnic/fnic_scsi.c    |   20 ++------------------
- drivers/scsi/lpfc/lpfc_scsi.c    |   30 ++++--------------------------
- drivers/scsi/qla2xxx/qla_os.c    |   25 ++++---------------------
- drivers/scsi/scsi_transport_fc.c |   26 ++++++++++++++++++++++++++
- include/scsi/scsi_transport_fc.h |    1 +
- 5 files changed, 37 insertions(+), 65 deletions(-)
 
---- a/drivers/scsi/scsi_transport_fc.c	2009-10-27 17:50:56.000000000 +0100
-+++ b/drivers/scsi/scsi_transport_fc.c	2009-10-27 17:51:18.000000000 +0100
-@@ -27,6 +27,7 @@
-  */
- #include <linux/module.h>
- #include <linux/init.h>
-+#include <linux/delay.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-@@ -3128,6 +3129,31 @@ fc_scsi_scan_rport(struct work_struct *w
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
-+/**
-+ * fc_block_scsi_eh - Block SCSI eh thread for blocked fc_rport
-+ * @cmnd: SCSI command that scsi_eh is trying to recover
-+ *
-+ * This routine can be called from a FC LLD scsi_eh callback. It
-+ * blocks the scsi_eh thread until the fc_rport leaves the
-+ * FC_PORTSTATE_BLOCKED. This is necessary to avoid the scsi_eh
-+ * failing recovery actions for blocked rports which would lead to
-+ * offlined SCSI devices.
-+ */
-+void fc_block_scsi_eh(struct scsi_cmnd *cmnd)
-+{
-+	struct Scsi_Host *shost = cmnd->device->host;
-+	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	while (rport->port_state == FC_PORTSTATE_BLOCKED) {
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		msleep(1000);
-+		spin_lock_irqsave(shost->host_lock, flags);
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+}
-+EXPORT_SYMBOL(fc_block_scsi_eh);
- 
- /**
-  * fc_vport_setup - allocates and creates a FC virtual port.
---- a/include/scsi/scsi_transport_fc.h	2009-10-27 17:50:57.000000000 +0100
-+++ b/include/scsi/scsi_transport_fc.h	2009-10-27 17:51:18.000000000 +0100
-@@ -807,5 +807,6 @@ void fc_host_post_vendor_event(struct Sc
- struct fc_vport *fc_vport_create(struct Scsi_Host *shost, int channel,
- 		struct fc_vport_identifiers *);
- int fc_vport_terminate(struct fc_vport *vport);
-+void fc_block_scsi_eh(struct scsi_cmnd *cmnd);
- 
- #endif /* SCSI_TRANSPORT_FC_H */
---- a/drivers/scsi/fnic/fnic_scsi.c	2009-10-27 17:50:56.000000000 +0100
-+++ b/drivers/scsi/fnic/fnic_scsi.c	2009-10-27 17:51:18.000000000 +0100
-@@ -1224,22 +1224,6 @@ void fnic_terminate_rport_io(struct fc_r
- 
- }
- 
--static void fnic_block_error_handler(struct scsi_cmnd *sc)
--{
--	struct Scsi_Host *shost = sc->device->host;
--	struct fc_rport *rport = starget_to_rport(scsi_target(sc->device));
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	while (rport->port_state == FC_PORTSTATE_BLOCKED) {
--		spin_unlock_irqrestore(shost->host_lock, flags);
--		msleep(1000);
--		spin_lock_irqsave(shost->host_lock, flags);
--	}
--	spin_unlock_irqrestore(shost->host_lock, flags);
--
--}
--
- /*
-  * This function is exported to SCSI for sending abort cmnds.
-  * A SCSI IO is represented by a io_req in the driver.
-@@ -1259,7 +1243,7 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
- 
- 	/* Wait for rport to unblock */
--	fnic_block_error_handler(sc);
-+	fc_block_scsi_eh(sc);
- 
- 	/* Get local-port, check ready and link up */
- 	lp = shost_priv(sc->device->host);
-@@ -1541,7 +1525,7 @@ int fnic_device_reset(struct scsi_cmnd *
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
- 
- 	/* Wait for rport to unblock */
--	fnic_block_error_handler(sc);
-+	fc_block_scsi_eh(sc);
- 
- 	/* Get local-port, check ready and link up */
- 	lp = shost_priv(sc->device->host);
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2009-10-27 17:50:56.000000000 +0100
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2009-10-27 17:51:18.000000000 +0100
-@@ -2917,28 +2917,6 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd
- }
- 
- /**
-- * lpfc_block_error_handler - Routine to block error  handler
-- * @cmnd: Pointer to scsi_cmnd data structure.
-- *
-- *  This routine blocks execution till fc_rport state is not FC_PORSTAT_BLCOEKD.
-- **/
--static void
--lpfc_block_error_handler(struct scsi_cmnd *cmnd)
--{
--	struct Scsi_Host *shost = cmnd->device->host;
--	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
--
--	spin_lock_irq(shost->host_lock);
--	while (rport->port_state == FC_PORTSTATE_BLOCKED) {
--		spin_unlock_irq(shost->host_lock);
--		msleep(1000);
--		spin_lock_irq(shost->host_lock);
--	}
--	spin_unlock_irq(shost->host_lock);
--	return;
--}
--
--/**
-  * lpfc_abort_handler - scsi_host_template eh_abort_handler entry point
-  * @cmnd: Pointer to scsi_cmnd data structure.
-  *
-@@ -2961,7 +2939,7 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 	int ret = SUCCESS;
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
- 
--	lpfc_block_error_handler(cmnd);
-+	fc_block_scsi_eh(cmnd);
- 	lpfc_cmd = (struct lpfc_scsi_buf *)cmnd->host_scribble;
- 	BUG_ON(!lpfc_cmd);
- 
-@@ -3259,7 +3237,7 @@ lpfc_device_reset_handler(struct scsi_cm
- 	struct lpfc_scsi_event_header scsi_event;
- 	int status;
- 
--	lpfc_block_error_handler(cmnd);
-+	fc_block_scsi_eh(cmnd);
- 
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
- 	if (status == FAILED) {
-@@ -3318,7 +3296,7 @@ lpfc_target_reset_handler(struct scsi_cm
- 	struct lpfc_scsi_event_header scsi_event;
- 	int status;
- 
--	lpfc_block_error_handler(cmnd);
-+	fc_block_scsi_eh(cmnd);
- 
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
- 	if (status == FAILED) {
-@@ -3384,7 +3362,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd 
- 	fc_host_post_vendor_event(shost, fc_get_event_number(),
- 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
- 
--	lpfc_block_error_handler(cmnd);
-+	fc_block_scsi_eh(cmnd);
- 
- 	/*
- 	 * Since the driver manages a single bus device, reset all
---- a/drivers/scsi/qla2xxx/qla_os.c	2009-10-27 17:50:56.000000000 +0100
-+++ b/drivers/scsi/qla2xxx/qla_os.c	2009-10-27 17:51:18.000000000 +0100
-@@ -727,23 +727,6 @@ qla2x00_abort_fcport_cmds(fc_port_t *fcp
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- }
- 
--static void
--qla2x00_block_error_handler(struct scsi_cmnd *cmnd)
--{
--	struct Scsi_Host *shost = cmnd->device->host;
--	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	while (rport->port_state == FC_PORTSTATE_BLOCKED) {
--		spin_unlock_irqrestore(shost->host_lock, flags);
--		msleep(1000);
--		spin_lock_irqsave(shost->host_lock, flags);
--	}
--	spin_unlock_irqrestore(shost->host_lock, flags);
--	return;
--}
--
- /**************************************************************************
- * qla2xxx_eh_abort
- *
-@@ -773,7 +756,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	struct req_que *req = vha->req;
- 	srb_t *spt;
- 
--	qla2x00_block_error_handler(cmd);
-+	fc_block_scsi_eh(cmd);
- 
- 	if (!CMD_SP(cmd))
- 		return SUCCESS;
-@@ -904,7 +887,7 @@ __qla2xxx_eh_generic_reset(char *name, e
- 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
- 	int err;
- 
--	qla2x00_block_error_handler(cmd);
-+	fc_block_scsi_eh(cmd);
- 
- 	if (!fcport)
- 		return FAILED;
-@@ -984,7 +967,7 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *c
- 	unsigned long serial;
- 	srb_t *sp = (srb_t *) CMD_SP(cmd);
- 
--	qla2x00_block_error_handler(cmd);
-+	fc_block_scsi_eh(cmd);
- 
- 	id = cmd->device->id;
- 	lun = cmd->device->lun;
-@@ -1047,7 +1030,7 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *
- 	srb_t *sp = (srb_t *) CMD_SP(cmd);
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 
--	qla2x00_block_error_handler(cmd);
-+	fc_block_scsi_eh(cmd);
- 
- 	id = cmd->device->id;
- 	lun = cmd->device->lun;
+The errors look like this:
+
+428.524463] mptscsih: ioc0: attempting task abort! (sc=ffff81021b950940)
+428.524471] sd 0:0:0:0: [sda] CDB: ATA command pass through(16): 85 08 
+0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
+433.199851] mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, 
+Code={IO Executed}, SubCode(0x0000)
+433.199851] mptsas: ioc0: removing sata device, channel 0, id 0, phy 0
+433.199851]  port-0:0: mptsas: ioc0: delete port (0)
+433.199851] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+433.348856] mptscsih: ioc0: task abort: SUCCESS (sc=ffff81021b950940)
+433.348868] mptscsih: ioc0: attempting task abort! (sc=ffff81021b950440)
+433.348873] sd 0:0:0:0: [sda] CDB: Synchronize Cache(10): 35 00 00 00 00 
+00 00 00 00 00
+433.348885] mptscsih: ioc0: task abort: SUCCESS (sc=ffff81021b950440)
+433.348893] mptscsih: ioc0: attempting target reset! (sc=ffff81021b950940)
+433.348896] sd 0:0:0:0: [sda] CDB: ATA command pass through(16): 85 08 
+0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
+433.605026] mptscsih: ioc0: target reset: SUCCESS (sc=ffff81021b950940)
+433.605034] mptscsih: ioc0: attempting bus reset! (sc=ffff81021b950940)
+433.605037] sd 0:0:0:0: [sda] CDB: ATA command pass through(16): 85 08 
+0e 00 d5 00 01 00 09 00 4f 00 c2 00 b0 00
+434.157594] mptscsih: ioc0: bus reset: SUCCESS (sc=ffff81021b950940)
+444.546154] mptscsih: ioc0: attempting host reset! (sc=ffff81021b950940)
+444.546162] mptbase: ioc0: Initiating recovery
+461.540429] mptscsih: ioc0: host reset: SUCCESS (sc=ffff81021b950940)
+461.540437] sd 0:0:0:0: Device offlined - not ready after error recovery
+461.540440] sd 0:0:0:0: Device offlined - not ready after error recovery
+461.540475] end_request: I/O error, dev sda, sector 15631039
+461.540480] md: super_written gets error=-5, uptodate=0
+461.540485] raid1: Disk failure on sda1, disabling device.
+
+
+
+and the drives are:
+
+Model Family:     Seagate Barracuda ES
+Device Model:     ST3250620NS
+Serial Number:    9QE3L9E0
+Firmware Version: 3BKS
+
+and are in JBOD mode (+ sw RAID with md).
+
+lsiutil says:
+
+Current active firmware version is 0.10.51
+Firmware image's version is MPTFW-00.10.51.00-IE
+  LSI Logic
+x86 BIOS image's version is MPTBIOS-6.12.05.00 (2007.09.29)
+
+... which is the latest on Dell's download pages for this server.
+
+The kernel is 2.6.26-2-openvz-amd64 from Debian Lenny (same behaviour 
+with non-openvz kernel).  Running smartd makes the drives disappear 
+after a few hours, but doing this:
+
+while true ; do smartctl -T permissive -d sat -a /dev/sda > /dev/null && 
+echo -n . ; done
+
+seems to knock them out in about a minute.
+
+Subjectively, 5.38 seemed to upset the controller a lot quicker than 
+5.39 r2955 does.  For good measure I'm currently stress-testing a PE1950 
+with a SAS 6/iR (SAS1068E) in the same way (however this is using RAID 
+setup through the BIOS).
+
+smartctl 5.39-pre needs '-T permissive' on the PE860, but 5.38 doesn't 
+seem to require it.
+
+
+It is worth trying a newer mptsas driver?
+
+Regards,
+
+Tim.
+
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.  
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+
+_______________________________________________
+Linux-PowerEdge mailing list
+Linux-PowerEdge@dell.com
+https://lists.us.dell.com/mailman/listinfo/linux-poweredge
+Please read the FAQ at http://lists.us.dell.com/faq
