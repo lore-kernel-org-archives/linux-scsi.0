@@ -1,22 +1,43 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Apparent MPT ata pass-through bug SAS1068 and SAS1068E - WAS SMART
- causes disks to go offline on an LSI SAS1068 controller - Dell SAS 5/iR
-Date: Wed, 28 Oct 2009 13:18:04 +0000
-Message-ID: <4AE8448C.6070709@seoss.co.uk>
-References: <20090914142939.GE14072@boogie.lpds.sztaki.hu> <4AE72E40.2000903@seoss.co.uk>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: Apparent MPT ata pass-through bug SAS1068 and SAS1068E - WAS
+ SMART causes disks to go offline on an LSI SAS1068 controller - Dell SAS 5/iR
+Date: Wed, 28 Oct 2009 18:58:26 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1C93A02A34@inbmail01.lsi.com>
+References: <20090914142939.GE14072@boogie.lpds.sztaki.hu>
+ <4AE72E40.2000903@seoss.co.uk> <4AE8448C.6070709@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([63.246.152.102]:47930 "EHLO
-	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbZJ1NSO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2009 09:18:14 -0400
-In-Reply-To: <4AE72E40.2000903@seoss.co.uk>
+Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:45570 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752995AbZJ1N3Z convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Oct 2009 09:29:25 -0400
+In-Reply-To: <4AE8448C.6070709@seoss.co.uk>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: smartmontools-support@lists.sourceforge.net, linux-scsi@vger.kernel.org, Linux-PowerEdge@dell.com
+To: Tim Small <tim@seoss.co.uk>, "smartmontools-support@lists.sourceforge.net" <smartmontools-support@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Cc: Gabor Gombas <gombasg@sztaki.hu>
+
+Tim,
+
+Can you try doing the same test upgrading our driver to 3.04.13?
+You can find relevant patches at 
+
+http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-misc-2.6.git&a=search&h=993340e8ab4e856bf0fc7818cdca1a92f6e8ed38&st=commit&s=kashyap
+
+Thanks,
+Kashyap
+
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Tim Small
+Sent: Wednesday, October 28, 2009 6:48 PM
+To: smartmontools-support@lists.sourceforge.net; linux-scsi@vger.kernel.org; Linux-PowerEdge@dell.com
+Cc: Gabor Gombas
+Subject: Apparent MPT ata pass-through bug SAS1068 and SAS1068E - WAS SMART causes disks to go offline on an LSI SAS1068 controller - Dell SAS 5/iR
 
 Hello,
 
@@ -71,3 +92,7 @@ Registered in England and Wales with company number 06134732.
 Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
 VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
