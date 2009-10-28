@@ -1,60 +1,54 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: fc_remote_port_delete and returning SCSI commands from LLD
-Date: Wed, 28 Oct 2009 15:27:36 +0100
-Message-ID: <20091028142736.GA7642@schmichrtp.de.ibm.com>
-References: <20091020144027.GA17717@schmichrtp.de.ibm.com> <4ADF4EC3.6010506@cs.wisc.edu> <20091023071324.GA5930@schmichrtp.de.ibm.com> <4AE76BEE.20907@cs.wisc.edu>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: Apparent MPT ata pass-through bug SAS1068 and SAS1068E - WAS
+ SMART causes disks to go offline on an LSI SAS1068 controller - Dell SAS
+ 5/iR
+Date: Wed, 28 Oct 2009 16:56:51 +0000
+Message-ID: <4AE877D3.4040300@seoss.co.uk>
+References: <20090914142939.GE14072@boogie.lpds.sztaki.hu> <4AE72E40.2000903@seoss.co.uk> <4AE8448C.6070709@seoss.co.uk> <0D1E8821739E724A86F4D16902CE275C1C93A02A34@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.17.164]:50662 "EHLO
-	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104AbZJ1O1d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2009 10:27:33 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate4.de.ibm.com (8.13.1/8.13.1) with ESMTP id n9SERbG4031088
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2009 14:27:37 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id n9SERbU91171560
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2009 15:27:37 +0100
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id n9SERaec029921
-	for <linux-scsi@vger.kernel.org>; Wed, 28 Oct 2009 15:27:37 +0100
-Content-Disposition: inline
-In-Reply-To: <4AE76BEE.20907@cs.wisc.edu>
+Received: from relay1.allsecurenet.com ([63.246.152.102]:38342 "EHLO
+	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754658AbZJ1Q5I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Oct 2009 12:57:08 -0400
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1C93A02A34@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "smartmontools-support@lists.sourceforge.net" <smartmontools-support@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Linux-PowerEdge@dell.com" <Linux-PowerEdge@dell.com>, Gabor Gombas <gombasg@sztaki.hu>
 
-On Tue, Oct 27, 2009 at 04:53:50PM -0500, Mike Christie wrote:
-> Christof Schmitt wrote:
->> On Wed, Oct 21, 2009 at 01:11:15PM -0500, Mike Christie wrote:
->>> Christof Schmitt wrote:
->>>> If the remote_port status is not BLOCKED, this will trigger the SCSI
->>>> midlayer error handling which cannot do much during the interruption
->>>> to the hardware and will mark the SCSI devices 'offline'. In order to
->>>> prevent this, the rule would be: First call fc_remote_port_delete to
->>>> set the remote port (or in the case of an HBA interruption all remote
->>>> ports) to BLOCKED, and only after this step call scsi_done to pass the
->>>> SCSI commands back to the upper layers.
->>>>
->>> One other note when doing this.
->>>
->>> For problems where you are deleting the rport, it is best to use   
->>> something like DID_TRANSPORT_DISRUPTED to fail the cmd if you are   
->>> failing it right away.
->>
->> "something like DID_TRANSPORT_DISRUPTED" would be any error code that
->> goes through "maybe_retry" in scsi_decide_disposition? I guess moving
->> to DID_TRANSPORT_DISRUPTED is nice for consistency, but DID_ERROR
->> triggers the same code paths as far as i can see.
+Desai, Kashyap wrote:
+> Can you try doing the same test upgrading our driver to 3.04.13?
+> You can find relevant patches at 
 >
-> It could be a little different. See scsi_noretry_cmd. If you used  
-> DID_ERROR and something set the driver failfast bit then it would be  
-> fast failed.
+> http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-misc-2.6.git&a=search&h=993340e8ab4e856bf0fc7818cdca1a92f6e8ed38&st=commit&s=kashyap
+>   
 
-Ok. Somehow i missed scsi_noretry_cmd while looking at the SCSI code.
-Then it makes sense to report DID_TRANSPORT_DISRUPTED from the zfcp. I
-will target the zfcp patch for the next merge window.
+Have just compiled a kernel package from James' tree directly, rather 
+than attempting to back-port and manually patch, so I'm now running 
+2.6.32-rc4 with mptsas 3.04.13.  I'm running the smartctl -a in a loop 
+at the moment and will leave it running over-night, but with this kernel 
+I get a pair of messages like this:
 
-Christof
+[ 1045.130560] scsi 2:0:0:0: [sg1] Sense Key : Recovered Error [current] 
+[descriptor]
+[ 1045.145751] Descriptor sense data with sense descriptors (in hex):
+[ 1045.158107]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
+[ 1045.171010]         00 4f 00 c2 00 50
+[ 1045.178585] scsi 2:0:0:0: [sg1] Add. Sense: ATA pass through 
+information available
+[ 1045.280318] scsi 2:0:0:0: [sg1] Sense Key : Recovered Error [current] 
+[descriptor]
+[ 1045.284311] Descriptor sense data with sense descriptors (in hex):
+[ 1045.284311]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
+[ 1045.284311]         00 4f 00 c2 00 50
+[ 1045.284311] scsi 2:0:0:0: [sg1] Add. Sense: ATA pass through 
+information available
+
+for every 'smartctl -a /dev/sg1' command which is run.
+
+Cheers,
+
+Tim.
