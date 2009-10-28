@@ -1,78 +1,75 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Apparent MPT ata pass-through bug SAS1068 and SAS1068E - WAS
- SMART causes disks to go offline on an LSI SAS1068 controller - Dell SAS
- 5/iR
-Date: Wed, 28 Oct 2009 17:10:53 -0400
-Message-ID: <4AE8B35D.2070609@interlog.com>
-References: <20090914142939.GE14072@boogie.lpds.sztaki.hu> <4AE72E40.2000903@seoss.co.uk> <4AE8448C.6070709@seoss.co.uk> <0D1E8821739E724A86F4D16902CE275C1C93A02A34@inbmail01.lsi.com> <4AE877D3.4040300@seoss.co.uk>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: [PATCH v2 1/7] scsi-ml: modify change_queue_depth
+ to take in reason why it is being called
+Date: Wed, 28 Oct 2009 22:48:38 +0000
+Message-ID: <1256770118.2989.24.camel@localhost.localdomain>
+References: <20091016004639.22451.76363.stgit@vifc.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53597 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755843AbZJ1VKy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Oct 2009 17:10:54 -0400
-In-Reply-To: <4AE877D3.4040300@seoss.co.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <20091016004639.22451.76363.stgit-M4Lc0Xp98oKtqXYlAKuG4QC/G2K4zDHf@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: christof.schmitt-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tim Small <tim@seoss.co.uk>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "smartmontools-support@lists.sourceforge.net" <smartmontools-support@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Linux-PowerEdge@dell.com" <Linux-PowerEdge@dell.com>, Gabor Gombas <gombasg@sztaki.hu>
 
-Tim Small wrote:
-> Desai, Kashyap wrote:
->> Can you try doing the same test upgrading our driver to 3.04.13?
->> You can find relevant patches at
->> http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Fjejb%2Fscsi-misc-2.6.git&a=search&h=993340e8ab4e856bf0fc7818cdca1a92f6e8ed38&st=commit&s=kashyap 
->>
->>   
+On Thu, 2009-10-15 at 17:46 -0700, Vasu Dev wrote:
+> From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
 > 
-> Have just compiled a kernel package from James' tree directly, rather 
-> than attempting to back-port and manually patch, so I'm now running 
-> 2.6.32-rc4 with mptsas 3.04.13.  I'm running the smartctl -a in a loop 
-> at the moment and will leave it running over-night, but with this kernel 
-> I get a pair of messages like this:
+> This patch modifies scsi_host_tematepl->change_queue_depth so that
+> it takes an argument indicating why it is being called. This will be
+> used so that if a LLD needs to do some extra processing when
+> handling queue fulls or later ramp ups, it can do so.
 > 
-> [ 1045.130560] scsi 2:0:0:0: [sg1] Sense Key : Recovered Error [current] 
-> [descriptor]
-> [ 1045.145751] Descriptor sense data with sense descriptors (in hex):
-> [ 1045.158107]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
-> [ 1045.171010]         00 4f 00 c2 00 50
-> [ 1045.178585] scsi 2:0:0:0: [sg1] Add. Sense: ATA pass through 
-> information available
-> [ 1045.280318] scsi 2:0:0:0: [sg1] Sense Key : Recovered Error [current] 
-> [descriptor]
-> [ 1045.284311] Descriptor sense data with sense descriptors (in hex):
-> [ 1045.284311]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
-> [ 1045.284311]         00 4f 00 c2 00 50
-> [ 1045.284311] scsi 2:0:0:0: [sg1] Add. Sense: ATA pass through 
-> information available
+> This is a simple port of the drivers setting a change_queue_depth
+> callback. In the patch I just have these LLDs adjust the queue depth
+> if the user was requesting it.
 > 
-> for every 'smartctl -a /dev/sg1' command which is run.
+> Signed-off-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+> 
+> -v2
+> 	Also converted pmcraid_change_queue_depth and then verified
+> all modules compile  using "make allmodconfig" for any new build
+> warnings on X86_64.
+> 
+> 	Updated original description after combing two original
+> patches from Mike to make this patch git bisectable.
+> 
+> Signed-off-by: Vasu Dev <vasu.dev-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Tim,
-This is _not_ an error. If the CK_COND bit is set in the SCSI
-ATA PASS-THROUGH (12 or 16 byte) cdb and the ATA command
-succeeds then what is shown above is correct.
+This still doesn't build:
 
-The whole point is to get the ATA registers after the command
-is complete. The register values are placed in a ATA (status)
-return descriptor encapsulated in sense data with that sense key
-and those additional sense codes. The ATA return descriptor
-starts with the "09" value in the sense buffer shown above.
+drivers/scsi/53c700.c: In function 'NCR_700_detect':
+drivers/scsi/53c700.c:331: warning: assignment from incompatible pointer type
+drivers/scsi/53c700.c: At top level:
+drivers/scsi/53c700.c:2085: error: conflicting types for 'NCR_700_change_queue_depth'
+drivers/scsi/53c700.c:178: error: previous declaration of 'NCR_700_change_queue_depth' was here
 
-smartmontools needs to set CK_COND on some ATA commands (e.g.
-to get the SMART status) because the result can only be found
-in the ATA registers after completion.
+It looks like just an unconverted function prototype, so the patch below fixes it.
 
-Now it is annoying, distracting and wasteful to log the sense
-data in this particular situation. Perhaps the SCSI mid level
-error reporting should filter out that particular combination:
-   Sense key: RECOVERED ERROR
-   Additional sense: ATA PASS THROUGH INFORMATION AVAILABLE (0x0,0x1d)
+James
 
-References: sat-r09.pdf sat2r09.pdf
+---
 
-
-Doug Gilbert
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index a5a493d..6c60a80 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -175,7 +175,7 @@ STATIC void NCR_700_chip_reset(struct Scsi_Host *host);
+ STATIC int NCR_700_slave_alloc(struct scsi_device *SDpnt);
+ STATIC int NCR_700_slave_configure(struct scsi_device *SDpnt);
+ STATIC void NCR_700_slave_destroy(struct scsi_device *SDpnt);
+-static int NCR_700_change_queue_depth(struct scsi_device *SDpnt, int depth);
++static int NCR_700_change_queue_depth(struct scsi_device *SDpnt, int depth, int reason);
+ static int NCR_700_change_queue_type(struct scsi_device *SDpnt, int depth);
+ 
+ STATIC struct device_attribute *NCR_700_dev_attrs[];
