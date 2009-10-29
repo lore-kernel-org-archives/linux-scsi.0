@@ -1,76 +1,121 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 4/5] osduld: Use device->release instead of internal
- kref
-Date: Thu, 29 Oct 2009 17:41:13 +0000
-Message-ID: <1256838073.7191.24.camel@mulgrave.site>
-References: <4AE5D374.80400@panasas.com>
-	 <1256576294-10430-1-git-send-email-bharrosh@panasas.com>
-	 <1256836303.7191.21.camel@mulgrave.site>  <4AE9CFC6.2080404@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 4/5] osduld: Use device->release instead of internal kref
+Date: Thu, 29 Oct 2009 19:50:35 +0200
+Message-ID: <4AE9D5EB.7080202@panasas.com>
+References: <4AE5D374.80400@panasas.com>	 <1256576294-10430-1-git-send-email-bharrosh@panasas.com>	 <1256836303.7191.21.camel@mulgrave.site>  <4AE9CFC6.2080404@panasas.com> <1256838073.7191.24.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54078 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756511AbZJ2RlO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Oct 2009 13:41:14 -0400
-In-Reply-To: <4AE9CFC6.2080404@panasas.com>
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:40073 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755656AbZJ2Ruc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2009 13:50:32 -0400
+In-Reply-To: <1256838073.7191.24.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-On Thu, 2009-10-29 at 19:24 +0200, Boaz Harrosh wrote:
-> On 10/29/2009 07:11 PM, James Bottomley wrote:
-> > On Mon, 2009-10-26 at 18:58 +0200, Boaz Harrosh wrote:
-> >> @@ -335,18 +370,19 @@ static int osd_probe(struct device *dev)
-> >>  		OSD_ERR("cdev_add failed\n");
-> >>  		goto err_put_disk;
-> >>  	}
-> >> -	kobject_get(&oud->cdev.kobj); /* 2nd ref see osd_remove() */
-> >>  
-> >>  	/* class_member */
-> >> -	oud->class_member = device_create(osd_sysfs_class, dev,
-> >> -		MKDEV(SCSI_OSD_MAJOR, oud->minor), "%s", disk->disk_name);
-> >> +	oud->class_member = device_create(&osd_uld_class, dev,
-> >> +		MKDEV(SCSI_OSD_MAJOR, oud->minor), oud, disk->disk_name);
-> >>  	if (IS_ERR(oud->class_member)) {
-> >>  		OSD_ERR("class_device_create failed\n");
-> >>  		error = PTR_ERR(oud->class_member);
-> >>  		goto err_put_cdev;
-> >>  	}
-> >> +	oud->save_release = oud->class_member->release;
-> >> +	oud->class_member->release = __remove;
-> > 
-> > What exactly is the reason for this iffy manipulation?  Can't this be
-> > done properly by adding a dev_release member to osd_uld_class without
-> > this unnecessary and improper function chaining?
-> > 
-> 
-> I tried, it does not work if I use device_create.
-> 
-> because in device_release(struct kobject *kobj) it has ruffly this:
-> 	if (dev->release)
-> 		dev->release(dev);
-> 	else if (class->dev_release)
-> 		class->dev_release(dev);
-> 
-> (See core.c:110)
-> 
-> so since device_create sets a dev->release = it masks out my class->dev_release
-> 
-> Now I have two choice. Above release chaining, or duplicate the 9 lines of code
-> done in device_create() before the call to device_register. I prefer the first
-> since it is more resilient to future core changes. (And it is less code lines)
+Some thing like below. 
 
-Chaining methods like this because of inner knowledge of the
-implementation isn't resilient, it's very fragile.
+There is to much knolage of device in my opinion. To much fidling
+of private device members. What when some new members are added?
 
-Isn't the correct answer to embed your device in struct osd_uld_device?
-They both look to have identical lifetimes and the release rules can
-then handle the dual destruction?
+I hate it.
 
-James
+(compile tested only)
+---
+git diff --stat -p drivers/scsi/osd/osd_uld.c
+ drivers/scsi/osd/osd_uld.c |   35 ++++++++++++++++++-----------------
+ 1 files changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index 25ef993..5f308be 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -87,7 +87,7 @@ struct osd_uld_device {
+ 	struct osd_dev od;
+ 	struct osd_dev_info odi;
+ 	struct gendisk *disk;
+-	struct device *class_member;
++	struct device class_dev;
+ 	typeof(((struct device *)NULL)->release) save_release;
+ };
+ 
+@@ -316,7 +316,7 @@ void osduld_put_device(struct osd_dev *od)
+ 		if (odh->file)
+ 			fput(odh->file);
+ 		else
+-			put_device(oud->class_member);
++			put_device(&oud->class_dev);
+ 		__uld_put(oud);
+ 		kfree(odh);
+ 	}
+@@ -378,7 +378,6 @@ static void __remove(struct device *dev)
+ 	struct scsi_device *scsi_device = oud->od.scsi_device;
+ 
+ 	kfree(oud->odi.osdname);
+-	oud->save_release(oud->class_member);
+ 
+ 	if (oud->cdev.owner)
+ 		cdev_del(&oud->cdev);
+@@ -464,16 +463,20 @@ static int osd_probe(struct device *dev)
+ 		goto err_put_disk;
+ 	}
+ 
+-	/* class_member */
+-	oud->class_member = device_create(&osd_uld_class, dev,
+-		MKDEV(SCSI_OSD_MAJOR, oud->minor), oud, disk->disk_name);
+-	if (IS_ERR(oud->class_member)) {
+-		OSD_ERR("class_device_create failed\n");
+-		error = PTR_ERR(oud->class_member);
++	/* class device member */
++	oud->class_dev.devt = MKDEV(SCSI_OSD_MAJOR, oud->minor);
++	oud->class_dev.class = &osd_uld_class;
++	oud->class_dev.parent = dev;
++	oud->class_dev.release = __remove;
++	dev_set_drvdata(&oud->class_dev, oud);
++
++	error = kobject_set_name(&oud->class_dev.kobj, disk->disk_name);
++	if (error)
++		goto err_put_cdev;
++
++	error = device_register(&oud->class_dev);
++	if (error)
+ 		goto err_put_cdev;
+-	}
+-	oud->save_release = oud->class_member->release;
+-	oud->class_member->release = __remove;
+ 
+ 	__uld_get(oud);
+ 
+@@ -504,9 +507,7 @@ static int osd_remove(struct device *dev)
+ 			scsi_device);
+ 	}
+ 
+-	if (oud->class_member)
+-		device_destroy(&osd_uld_class,
+-			       MKDEV(SCSI_OSD_MAJOR, oud->minor));
++	device_unregister(&oud->class_dev);
+ 
+ 	__uld_put(oud);
+ 	return 0;
+@@ -514,12 +515,12 @@ static int osd_remove(struct device *dev)
+ 
+ static void __uld_get(struct osd_uld_device *oud)
+ {
+-	get_device(oud->class_member);
++	get_device(&oud->class_dev);
+ }
+ 
+ static void __uld_put(struct osd_uld_device *oud)
+ {
+-	put_device(oud->class_member);
++	put_device(&oud->class_dev);
+ }
+ 
+ /*
+
 
 
