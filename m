@@ -1,49 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 4/5] osduld: Use device->release instead of internal
- kref
-Date: Thu, 29 Oct 2009 18:03:06 +0000
-Message-ID: <1256839386.7191.31.camel@mulgrave.site>
-References: <4AE5D374.80400@panasas.com>
-	 <1256576294-10430-1-git-send-email-bharrosh@panasas.com>
-	 <1256836303.7191.21.camel@mulgrave.site>  <4AE9CFC6.2080404@panasas.com>
-	 <1256838073.7191.24.camel@mulgrave.site>  <4AE9D5EB.7080202@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 4/5] osduld: Use device->release instead of internal kref
+Date: Thu, 29 Oct 2009 20:05:45 +0200
+Message-ID: <4AE9D979.90809@panasas.com>
+References: <4AE5D374.80400@panasas.com>	 <1256576294-10430-1-git-send-email-bharrosh@panasas.com>	 <1256836303.7191.21.camel@mulgrave.site>  <4AE9CFC6.2080404@panasas.com> <1256838073.7191.24.camel@mulgrave.site> <4AE9D5EB.7080202@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42434 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754956AbZJ2SDH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Oct 2009 14:03:07 -0400
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:47102 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753815AbZJ2SFn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2009 14:05:43 -0400
 In-Reply-To: <4AE9D5EB.7080202@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
-On Thu, 2009-10-29 at 19:50 +0200, Boaz Harrosh wrote:
+On 10/29/2009 07:50 PM, Boaz Harrosh wrote:
 > Some thing like below. 
 > 
 > There is to much knolage of device in my opinion. To much fidling
 > of private device members. What when some new members are added?
-
-What private device members ... the pieces you fill in are the public
-ones.  If you want a macro to do that, I'm sure Greg would be
-amenable ...
-
+> 
 > I hate it.
-
-Because you have to type six more lines of code?  To me it looks cleaner
-because there's only a single allocation instead of two and now no need
-of chaining destructors because everything goes together thus making the
-lifetime rules more obvious and robust.
-
-It also saves memory because it has two fewer pointers.
-
-James
-
-
+> 
 > (compile tested only)
 > ---
 > git diff --stat -p drivers/scsi/osd/osd_uld.c
@@ -101,6 +82,16 @@ James
 > +	if (error)
 > +		goto err_put_cdev;
 > +
+
+With cdev (above) I have "cdev_init(&oud->cdev, &osd_fops);"
+If I would only have a:
+    device_init(&osd_uld_class, dev,MKDEV(SCSI_OSD_MAJOR, oud->minor),
+		oud, disk->disk_name);
+
+That does these code lines above I would feel much more comfortable
+
+Boaz
+
 > +	error = device_register(&oud->class_dev);
 > +	if (error)
 >  		goto err_put_cdev;
@@ -139,8 +130,3 @@ James
 > 
 > 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
