@@ -1,29 +1,36 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH 2/2] sd: WRITE SAME(16) / UNMAP support
-Date: Fri, 30 Oct 2009 00:28:38 -0400
-Message-ID: <4AEA6B76.2010303@interlog.com>
-References: <1256873409-12668-1-git-send-email-martin.petersen@oracle.com> <1256873409-12668-3-git-send-email-martin.petersen@oracle.com>
-Reply-To: dgilbert@interlog.com
+Date: Fri, 30 Oct 2009 00:53:31 -0400
+Message-ID: <yq1pr85scs4.fsf@sermon.lab.mkp.net>
+References: <1256873409-12668-1-git-send-email-martin.petersen@oracle.com>
+	<1256873409-12668-3-git-send-email-martin.petersen@oracle.com>
+	<4AEA6B76.2010303@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:45121 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750963AbZJ3E2i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Oct 2009 00:28:38 -0400
-In-Reply-To: <1256873409-12668-3-git-send-email-martin.petersen@oracle.com>
+Received: from acsinet11.oracle.com ([141.146.126.233]:29297 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794AbZJ3EzP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2009 00:55:15 -0400
+In-Reply-To: <4AEA6B76.2010303@interlog.com> (Douglas Gilbert's message of
+	"Fri, 30 Oct 2009 00:28:38 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: hch@infradead.org, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, hch@infradead.org, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
 
-Martin K. Petersen wrote:
-> Implement a prepare discard function that sends either WRITE SAME(16) or
-> UNMAP(10) depending on parameters indicated by the device in the block
-> limits VPD.
+>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
 
-And if both are supported by the logical unit, the patch
-prefers UNMAP?
+Doug> And if both are supported by the logical unit, the patch prefers
+Doug> UNMAP?
 
-Doug Gilbert
+Yes.
+
+SBC states that if the device reports MAXIMUM UNMAP LBA COUNT > 1 and
+MAXIMUM UNMAP DESCRIPTOR COUNT > 1 then the device supports UNMAP.  And
+in that case that's what I'll issue.  In all other cases I'll send out
+WRITE SAME(16).  I believe that approach is what's currently considered
+best practice.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
