@@ -1,41 +1,59 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_debug: Thin provisioning support
-Date: Thu, 29 Oct 2009 22:40:59 -0400
-Message-ID: <yq1pr85txhg.fsf@sermon.lab.mkp.net>
-References: <yq1d44o8piw.fsf@sermon.lab.mkp.net>
-	<20091029072322.GA25926@infradead.org>
+Subject: Re: [PATCH 1/2] block: add support for discard limits
+Date: Thu, 29 Oct 2009 23:19:43 -0400
+Message-ID: <yq1ws2dsh4g.fsf@sermon.lab.mkp.net>
+References: <20091029150830.497006534@bombadil.infradead.org>
+	<20091029151127.257902381@bombadil.infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:49774 "EHLO
+Received: from rcsinet11.oracle.com ([148.87.113.123]:19661 "EHLO
 	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751097AbZJ3Cl7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2009 22:41:59 -0400
-In-Reply-To: <20091029072322.GA25926@infradead.org> (Christoph Hellwig's
-	message of "Thu, 29 Oct 2009 03:23:22 -0400")
+	with ESMTP id S1751073AbZJ3DVt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2009 23:21:49 -0400
+In-Reply-To: <20091029151127.257902381@bombadil.infradead.org> (Christoph
+	Hellwig's message of "Thu, 29 Oct 2009 11:08:31 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk, matthew@wil.cx
 
 >>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-Christoph> And a crash when using unmap_granularity=1 when using the
-Christoph> discard-enable mkfs.xfs binary from xfsprogs-dev.git:
+Christoph> To properly support discard on SCSI Arrays we need to take
+Christoph> the discard granularity and the first aligned discard LBA
+Christoph> into account.  This patch adds block limits for both of them,
+Christoph> and trims down dicard requests to fit into these limits in
+Christoph> blkdev_issue_discard.  We also make sure the alignment offset
+Christoph> is properly adjust for partitions and add sysfs files to
+Christoph> expose the limits to userspaced.
 
-I was unable to reproduce.  I also tried with xfs_trim.  Both work fine.
-I guess I'll try with your two latest patches in the mix next.
+Do we know for sure that this is really needed?
 
-i386, x86_64, ppc?
+The reason I'm asking is that in my first attempt I also exposed all
+this up the stack.  However, it sucks to keep this in sync and would
+require the same level of topology stacking magic as the rest of the
+queue limits.  My brain melted at the thought of LVM/MD volumes striped
+or mirrored between devices with different unmap granularity and
+alignment.
 
+So I talked to a variety of array folks.  And regardless of whether they
+implement WRITE SAME or UNMAP they all appear to handle misaligned
+requests just fine.  I.e. there may be some mapped residue at the
+beginning and end of an unmap request but any full allocation units in
+between will be correctly unmapped.  They all told me the alignment and
+granularity parameters were purely informational and intended as hints
+for laying out data.  Not as hard limits for issuing I/O.
 
-Christoph> qemu1:~/xfsprogs-dev# ./mkfs/mkfs.xfs -f /dev/sdb [
-Christoph> 53.562041] BUG: unable to handle kernel paging request at
-Christoph> fcc80000 [ 53.563812] IP: [<c070fbb7>]
-Christoph> unmap_region+0xc7/0x120
-           ^^^^^^^^^^^^^^^^^
+Consequently I gutted all the alignment stuff from my thin provisioning
+tree.  I also changed mt scsi_debug code to unmap allocations similar to
+the way the arrays work (my first attempt completely ignored misaligned
+requests).
 
-That's pretty odd.  It's way beyond the end of unmap_region here.
+ACS-2 doesn't currently have a notion of unmap granularity and all array
+vendors I have talked to appear to happily process any unmap request we
+throw at them.  So I'm leaning towards keeping things simple and just
+sending things down verbatim...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
