@@ -1,149 +1,192 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/2] block: Expose discard granularity
-Date: Thu, 29 Oct 2009 23:30:08 -0400
-Message-ID: <1256873409-12668-2-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 2/2] sd: WRITE SAME(16) / UNMAP support
+Date: Thu, 29 Oct 2009 23:30:09 -0400
+Message-ID: <1256873409-12668-3-git-send-email-martin.petersen@oracle.com>
 References: <1256873409-12668-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:41761 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755033AbZJ3Da2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2009 23:30:28 -0400
+Received: from rcsinet12.oracle.com ([148.87.113.124]:29138 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754724AbZJ3Da1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Oct 2009 23:30:27 -0400
 In-Reply-To: <1256873409-12668-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: hch@infradead.org, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-While SSDs track block usage on a per-sector basis, RAID arrays often
-have allocation blocks that are bigger.  Allow the discard granularity
-to be set and expose it in sysfs.
+Implement a prepare discard function that sends either WRITE SAME(16) or
+UNMAP(10) depending on parameters indicated by the device in the block
+limits VPD.
+
+Extract unmap constraints and report them to the block layer.
+
+Based in part by a patch by Christoph Hellwig <hch@lst.de>.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/blk-settings.c   |   16 +++++++++++++++-
- block/blk-sysfs.c      |   22 ++++++++++++++++++++++
- include/linux/blkdev.h |   13 +++++++++++++
- 3 files changed, 50 insertions(+), 1 deletions(-)
+ drivers/scsi/sd.c |   93 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.h |    2 +
+ 2 files changed, 95 insertions(+), 0 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 66d4aa8..60a0bec 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -96,7 +96,8 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->max_segment_size = MAX_SEGMENT_SIZE;
- 	lim->max_sectors = BLK_DEF_MAX_SECTORS;
- 	lim->max_hw_sectors = INT_MAX;
--	lim->max_discard_sectors = SAFE_MAX_SECTORS;
-+	lim->max_discard_sectors = 0;
-+	lim->discard_granularity = 0;
- 	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
- 	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY >> PAGE_SHIFT);
- 	lim->alignment_offset = 0;
-@@ -252,6 +253,19 @@ void blk_queue_max_discard_sectors(struct request_queue *q,
- EXPORT_SYMBOL(blk_queue_max_discard_sectors);
- 
- /**
-+ * blk_queue_discard_granularity - set minimum size for discard requests
-+ * @q:	the request queue for the device
-+ * @gran:  the smallest unit the device can discard (in bytes)
-+ *
-+ * Description:
-+ */
-+void blk_queue_discard_granularity(struct request_queue *q, unsigned int gran)
-+{
-+	q->limits.discard_granularity = gran;
-+}
-+EXPORT_SYMBOL(blk_queue_discard_granularity);
-+
-+/**
-  * blk_queue_max_phys_segments - set max phys segments for a request for this queue
-  * @q:  the request queue for the device
-  * @max_segments:  max number of segments
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 8a6d81a..3e9c947 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -126,6 +126,16 @@ static ssize_t queue_io_opt_show(struct request_queue *q, char *page)
- 	return queue_var_show(queue_io_opt(q), page);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9093c72..72e0d78 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -264,6 +264,15 @@ sd_show_app_tag_own(struct device *dev, struct device_attribute *attr,
+ 	return snprintf(buf, 20, "%u\n", sdkp->ATO);
  }
  
-+static ssize_t queue_discard_granularity_show(struct request_queue *q, char *page)
++static ssize_t
++sd_show_thin_provisioning(struct device *dev, struct device_attribute *attr,
++			  char *buf)
 +{
-+	return queue_var_show(queue_discard_granularity(q), page);
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->thin_provisioning);
 +}
 +
-+static ssize_t queue_discard_max_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(queue_max_discard_sectors(q) << 9, page);
-+}
-+
- static ssize_t
- queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
- {
-@@ -293,6 +303,16 @@ static struct queue_sysfs_entry queue_io_opt_entry = {
- 	.show = queue_io_opt_show,
+ static struct device_attribute sd_disk_attrs[] = {
+ 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
+ 	       sd_store_cache_type),
+@@ -274,6 +283,7 @@ static struct device_attribute sd_disk_attrs[] = {
+ 	       sd_store_manage_start_stop),
+ 	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
+ 	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
++	__ATTR(thin_provisioning, S_IRUGO, sd_show_thin_provisioning, NULL),
+ 	__ATTR_NULL,
  };
  
-+static struct queue_sysfs_entry queue_discard_granularity_entry = {
-+	.attr = {.name = "discard_granularity", .mode = S_IRUGO },
-+	.show = queue_discard_granularity_show,
-+};
-+
-+static struct queue_sysfs_entry queue_discard_max_entry = {
-+	.attr = {.name = "discard_max_bytes", .mode = S_IRUGO },
-+	.show = queue_discard_max_show,
-+};
-+
- static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_nonrot_show,
-@@ -328,6 +348,8 @@ static struct attribute *default_attrs[] = {
- 	&queue_physical_block_size_entry.attr,
- 	&queue_io_min_entry.attr,
- 	&queue_io_opt_entry.attr,
-+	&queue_discard_granularity_entry.attr,
-+	&queue_discard_max_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 221cecd..d5bb834 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -312,6 +312,7 @@ struct queue_limits {
- 	unsigned int		io_min;
- 	unsigned int		io_opt;
- 	unsigned int		max_discard_sectors;
-+	unsigned int		discard_granularity;
- 
- 	unsigned short		logical_block_size;
- 	unsigned short		max_hw_segments;
-@@ -939,6 +940,8 @@ extern void blk_limits_io_min(struct queue_limits *limits, unsigned int min);
- extern void blk_queue_io_min(struct request_queue *q, unsigned int min);
- extern void blk_limits_io_opt(struct queue_limits *limits, unsigned int opt);
- extern void blk_queue_io_opt(struct request_queue *q, unsigned int opt);
-+extern void blk_queue_discard_granularity(struct request_queue *q,
-+					  unsigned int gran);
- extern void blk_set_default_limits(struct queue_limits *lim);
- extern int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
- 			    sector_t offset);
-@@ -1134,6 +1137,16 @@ static inline int bdev_alignment_offset(struct block_device *bdev)
- 	return q->limits.alignment_offset;
+@@ -399,6 +409,57 @@ static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
  }
  
-+static inline unsigned int queue_discard_granularity(struct request_queue *q)
+ /**
++ * sd_prepare_discard - unmap blocks on thinly provisioned device
++ * @rq: Request to prepare
++ *
++ * Will issue either UNMAP or WRITE SAME(16) depending on preference
++ * indicated by target device.
++ **/
++static int sd_prepare_discard(struct request *rq)
 +{
-+	return q->limits.discard_granularity;
++	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
++	struct bio *bio = rq->bio;
++	sector_t sector = bio->bi_sector;
++	unsigned int num = bio_sectors(bio);
++
++	if (sdkp->device->sector_size == 4096) {
++		sector >>= 3;
++		num >>= 3;
++	}
++
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++	rq->timeout = SD_TIMEOUT;
++
++	memset(rq->cmd, 0, rq->cmd_len);
++
++	if (sdkp->unmap) {
++		char *buf = kmap_atomic(bio_page(bio), KM_USER0);
++
++		rq->cmd[0] = UNMAP;
++		rq->cmd[8] = 24;
++		rq->cmd_len = 10;
++
++		/* Ensure that data length matches payload */
++		rq->__data_len = bio->bi_size = bio->bi_io_vec->bv_len = 24;
++
++		put_unaligned_be16(6 + 16, &buf[0]);
++		put_unaligned_be16(16, &buf[2]);
++		put_unaligned_be64(sector, &buf[8]);
++		put_unaligned_be32(num, &buf[16]);
++
++		kunmap_atomic(buf, KM_USER0);
++	} else {
++		rq->cmd[0] = WRITE_SAME_16;
++		rq->cmd[1] = 0x8; /* UNMAP */
++		put_unaligned_be64(sector, &rq->cmd[2]);
++		put_unaligned_be32(num, &rq->cmd[10]);
++		rq->cmd_len = 16;
++	}
++
++	return BLKPREP_OK;
 +}
 +
-+static inline unsigned int queue_max_discard_sectors(struct request_queue *q)
-+{
-+	return q->limits.max_discard_sectors;
-+}
++/**
+  *	sd_init_command - build a scsi (read or write) command from
+  *	information in the request structure.
+  *	@SCpnt: pointer to mid-level's per scsi command structure that
+@@ -418,6 +479,13 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	int ret, host_dif;
+ 	unsigned char protect;
+ 
++	/*
++	 * Discard request come in as REQ_TYPE_FS but we turn them into
++	 * block PC requests to make life easier.
++	 */
++	if (blk_discard_rq(rq))
++		ret = sd_prepare_discard(rq);
 +
- static inline int queue_dma_alignment(struct request_queue *q)
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
+@@ -1432,6 +1500,9 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		sd_printk(KERN_NOTICE, sdkp,
+ 			  "physical block alignment offset: %u\n", alignment);
+ 
++	if (buffer[14] & 0x80)
++		sdkp->thin_provisioning = 1;
++
+ 	sdkp->capacity = lba + 1;
+ 	return sector_size;
+ }
+@@ -1863,6 +1934,7 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+  */
+ static void sd_read_block_limits(struct scsi_disk *sdkp)
  {
- 	return q ? q->dma_alignment : 511;
++	struct scsi_device *sdp = sdkp->device;
+ 	unsigned int sector_sz = sdkp->device->sector_size;
+ 	char *buffer;
+ 
+@@ -1877,6 +1949,27 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	blk_queue_io_opt(sdkp->disk->queue,
+ 			 get_unaligned_be32(&buffer[12]) * sector_sz);
+ 
++	if (sdkp->thin_provisioning && buffer[3] == 0x3c) {
++		unsigned int lba_count, desc_count, granularity;
++		unsigned int max_sectors = UINT_MAX;
++
++		lba_count = get_unaligned_be32(&buffer[20]);
++		desc_count = get_unaligned_be32(&buffer[24]);
++		granularity = get_unaligned_be32(&buffer[28]) * sector_sz;
++
++		if (lba_count && desc_count) {
++			sdkp->unmap = 1;
++			max_sectors = lba_count * sector_sz >> 9;
++		}
++
++		if (granularity == 0)
++			granularity = sector_sz;
++
++		blk_queue_max_discard_sectors(sdp->request_queue, max_sectors);
++		blk_queue_discard_granularity(sdp->request_queue, granularity);
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, sdkp->disk->queue);
++	}
++
+ 	kfree(buffer);
+ }
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index e374804..43d3caf 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -60,6 +60,8 @@ struct scsi_disk {
+ 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
+ 	unsigned	first_scan : 1;
++	unsigned	thin_provisioning : 1;
++	unsigned	unmap : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
 -- 
 1.6.0.6
 
