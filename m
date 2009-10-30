@@ -1,36 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] sd: WRITE SAME(16) / UNMAP support
-Date: Fri, 30 Oct 2009 00:53:31 -0400
-Message-ID: <yq1pr85scs4.fsf@sermon.lab.mkp.net>
-References: <1256873409-12668-1-git-send-email-martin.petersen@oracle.com>
-	<1256873409-12668-3-git-send-email-martin.petersen@oracle.com>
-	<4AEA6B76.2010303@interlog.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] block: add support for discard limits
+Date: Fri, 30 Oct 2009 01:03:33 -0400
+Message-ID: <20091030050333.GB17714@infradead.org>
+References: <20091029150830.497006534@bombadil.infradead.org> <20091029151127.257902381@bombadil.infradead.org> <20091029190659.GW10727@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:29297 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794AbZJ3EzP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2009 00:55:15 -0400
-In-Reply-To: <4AEA6B76.2010303@interlog.com> (Douglas Gilbert's message of
-	"Fri, 30 Oct 2009 00:28:38 -0400")
+Received: from bombadil.infradead.org ([18.85.46.34]:56990 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754157AbZJ3FD3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Oct 2009 01:03:29 -0400
+Content-Disposition: inline
+In-Reply-To: <20091029190659.GW10727@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, hch@infradead.org, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, mkp@mkp.net, matthew@wil.cx
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+On Thu, Oct 29, 2009 at 08:06:59PM +0100, Jens Axboe wrote:
+> On Thu, Oct 29 2009, Christoph Hellwig wrote:
+> > To properly support discard on SCSI Arrays we need to take the discard
+> > granularity and the first aligned discard LBA into account.  This patch
+> > adds block limits for both of them, and trims down dicard requests to fit
+> > into these limits in blkdev_issue_discard.  We also make sure the alignment
+> > offset is properly adjust for partitions and add sysfs files to expose
+> > the limits to userspaced.
+> 
+> Except for a few typos, this looks good to me. I'll add it for 2.6.33.
 
-Doug> And if both are supported by the logical unit, the patch prefers
-Doug> UNMAP?
+It would be good if we could queue up this (or mkp's version) with the
+sd bits through the scsi tree - otherwise getting testing for the whole
+stack will be a pain.
 
-Yes.
-
-SBC states that if the device reports MAXIMUM UNMAP LBA COUNT > 1 and
-MAXIMUM UNMAP DESCRIPTOR COUNT > 1 then the device supports UNMAP.  And
-in that case that's what I'll issue.  In all other cases I'll send out
-WRITE SAME(16).  I believe that approach is what's currently considered
-best practice.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
