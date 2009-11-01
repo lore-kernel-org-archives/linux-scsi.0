@@ -1,325 +1,108 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 5/5 version2] libosd: osd_dev_info: Unique Identification
- of an OSD device
-Date: Sun, 01 Nov 2009 18:45:04 +0200
-Message-ID: <4AEDBB10.4060605@panasas.com>
-References: <4AE5D374.80400@panasas.com> <1256576336-10456-1-git-send-email-bharrosh@panasas.com>
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+Subject: raid disk failure, options?
+Date: Sun, 1 Nov 2009 13:16:31 -0600
+Message-ID: <200911011216.32196.tfjellstrom@shaw.ca>
+Reply-To: tfjellstrom@shaw.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dip-colo-pa.panasas.com ([67.152.220.67]:14898 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752525AbZKAQpB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Nov 2009 11:45:01 -0500
-In-Reply-To: <1256576336-10456-1-git-send-email-bharrosh@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-raid@vger.kernel.org
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
+
+My main raid array just had a disk failure. I tried to hot remove the 
+device, and use the scsi bus rescan sysfs entries, but it seems to fail on 
+IDENTIFY.
+
+Can I assume my disk is dead?
 
 
-Define an osd_dev_info structure that Uniquely identifies an OSD
-device lun on the network. The identification is built from unique
-target attributes and is the same for all network/SAN machines.
+[5015721.851044] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0                                                                                                                                                                  
+[5015721.851089] ata3.00: irq_stat 0x40000001                                                                                                                                                                                               
+[5015721.851124] ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0                                                                                                                                                                     
+[5015721.851125]          res 71/04:03:80:01:32/00:00:00:00:00/e0 Emask 0x1 
+(device error)                                                                                                                                                  
+[5015721.851193] ata3.00: status: { DRDY DF ERR }                                                                                                                                                                                           
+[5015721.851225] ata3.00: error: { ABRT }                                                                                                                                                                                                   
+[5015726.848684] ata3.00: qc timeout (cmd 0xec)                                                                                                                                                                                             
+[5015726.848729] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)                                                                                                                                                                      
+[5015726.848763] ata3.00: revalidation failed (errno=-5)                                                                                                                                                                                    
+[5015726.848798] ata3: hard resetting link                                                                                                                                                                                                  
+[5015734.501527] ata3: softreset failed (device not ready)                                                                                                                                                                                  
+[5015734.501565] ata3: failed due to HW bug, retry pmp=0                                                                                                                                                                                    
+[5015734.665530] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)                                                                                                                                                                     
+[5015734.707085] ata3.00: both IDENTIFYs aborted, assuming NODEV                                                                                                                                                                            
+[5015734.707089] ata3.00: revalidation failed (errno=-2)                                                                                                                                                                                    
+[5015739.664923] ata3: hard resetting link                                                                                                                                                                                                  
+[5015740.148277] ata3: softreset failed (device not ready)                                                                                                                                                                                  
+[5015740.148314] ata3: failed due to HW bug, retry pmp=0                                                                                                                                                                                    
+[5015740.313532] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[5015740.337129] ata3.00: both IDENTIFYs aborted, assuming NODEV
+[5015740.337132] ata3.00: revalidation failed (errno=-2)
+[5015740.337167] ata3.00: disabled
+[5015740.337231] ata3: EH complete
+[5015740.337275] sd 2:0:0:0: [sdc] Unhandled error code
+[5015740.337308] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET 
+driverbyte=DRIVER_OK,SUGGEST_OK
+[5015740.337372] end_request: I/O error, dev sdc, sector 1250258495
+[5015740.337410] end_request: I/O error, dev sdc, sector 1250258495
+[5015740.337445] md: super_written gets error=-5, uptodate=0
+[5015740.337479] raid5: Disk failure on sdc1, disabling device.
+[5015740.337480] raid5: Operation continuing on 3 devices.
+[5015740.337569] sd 2:0:0:0: [sdc] Unhandled error code
+[5015740.337601] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET 
+driverbyte=DRIVER_OK,SUGGEST_OK
+[5015740.337665] end_request: I/O error, dev sdc, sector 480014231
+[5015740.337710] sd 2:0:0:0: [sdc] Unhandled error code
+[5015740.337742] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET 
+driverbyte=DRIVER_OK,SUGGEST_OK
+[5015740.337806] end_request: I/O error, dev sdc, sector 1186573399
+[5015740.337840] sd 2:0:0:0: [sdc] Unhandled error code
+[5015740.337872] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET 
+driverbyte=DRIVER_OK,SUGGEST_OK
+[5015740.337936] end_request: I/O error, dev sdc, sector 404014999
+[5015740.371191] RAID5 conf printout:
+[5015740.371226]  --- rd:4 wd:3
+[5015740.371258]  disk 0, o:0, dev:sdc1
+[5015740.371290]  disk 1, o:1, dev:sda1
+[5015740.371322]  disk 2, o:1, dev:sdb1
+[5015740.371353]  disk 3, o:1, dev:sdd1
+[5015740.393516] RAID5 conf printout:
+[5015740.393551]  --- rd:4 wd:3
+[5015740.393583]  disk 1, o:1, dev:sda1
+[5015740.393615]  disk 2, o:1, dev:sdb1
+[5015740.393647]  disk 3, o:1, dev:sdd1
 
-osduld_info_lookup() - NEW
-    New API that will lookup an osd_dev by its osd_dev_info.
-    This is used by pNFS-objects for cross network global device
-    identification. And by exofs multy-device support, the device
-    info is specified in the on-disk exofs device table.
+ran: echo x > /sys/bus/scsi/devices/2\:0\:0\:0/delete
 
-osduld_device_info() - NEW
-    Given an osd_dev handle returns its associated osd_dev_info.
-    The ULD fetches this information at startup and hangs it on
-    each OSD device. (This is a fast operation that can be called
-    at any condition)
+[5016224.932073] sd 2:0:0:0: [sdc] Synchronizing SCSI cache
+[5016224.932150] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET 
+driverbyte=DRIVER_OK,SUGGEST_OK
+[5016224.932216] sd 2:0:0:0: [sdc] Stopping disk
+[5016224.933192] sd 2:0:0:0: [sdc] START_STOP FAILED
+[5016224.933227] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET 
+driverbyte=DRIVER_OK,SUGGEST_OK
 
-osduld_device_same() - NEW
-    With a given osd_dev at one hand and an osd_dev_info
-    at another, we would like to know if they are the same
-    device.
-    Two osd_dev handles can be checked by:
-        osduld_device_same(od1, osduld_device_info(od2));
+ran: echo "0 0 0" > /sys/class/scsi_host/host2/scan
 
-osd_auto_detect_ver() - REVISED
-    Now returns an osd_dev_info structure. Is only called once
-    by ULD as before. See added comments for how to use.
+[5016463.173706] ata3: hard resetting link
+[5016463.657520] ata3: softreset failed (device not ready)
+[5016463.657557] ata3: failed due to HW bug, retry pmp=0
+[5016463.821535] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[5016463.842475] ata3.00: both IDENTIFYs aborted, assuming NODEV
+[5016463.842492] ata3: EH complete
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/osd/osd_initiator.c |   26 ++++++++--
- drivers/scsi/osd/osd_uld.c       |   99 ++++++++++++++++++++++++++++++++++++-
- include/scsi/osd_initiator.h     |   38 +++++++++++++--
- 3 files changed, 150 insertions(+), 13 deletions(-)
+To be honest, I've been expecting this, I just had no idea which drive was 
+going to fail. For the past 6-12 months I've been hearing this rather loud 
+clicking noise coming from that machine, but I could never pin it down, it 
+only happened a couple times a day (and it wasn't heads parking).
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 7a117c1..60b7ca1 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -73,7 +73,8 @@ static const char *_osd_ver_desc(struct osd_request *or)
- 
- #define ATTR_DEF_RI(id, len) ATTR_DEF(OSD_APAGE_ROOT_INFORMATION, id, len)
- 
--static int _osd_print_system_info(struct osd_dev *od, void *caps)
-+static int _osd_get_print_system_info(struct osd_dev *od,
-+	void *caps, struct osd_dev_info *odi)
- {
- 	struct osd_request *or;
- 	struct osd_attr get_attrs[] = {
-@@ -137,8 +138,12 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 	OSD_INFO("PRODUCT_SERIAL_NUMBER  [%s]\n",
- 		(char *)pFirst);
- 
--	pFirst = get_attrs[a].val_ptr;
--	OSD_INFO("OSD_NAME               [%s]\n", (char *)pFirst);
-+	odi->osdname_len = get_attrs[a].len;
-+	/* Avoid NULL for memcmp optimization 0-length is good enough */
-+	odi->osdname = kzalloc(odi->osdname_len + 1, GFP_KERNEL);
-+	if (odi->osdname_len)
-+		memcpy(odi->osdname, get_attrs[a].val_ptr, odi->osdname_len);
-+	OSD_INFO("OSD_NAME               [%s]\n", odi->osdname);
- 	a++;
- 
- 	pFirst = get_attrs[a++].val_ptr;
-@@ -171,6 +176,14 @@ static int _osd_print_system_info(struct osd_dev *od, void *caps)
- 				   sid_dump, sizeof(sid_dump), true);
- 		OSD_INFO("OSD_SYSTEM_ID(%d)\n"
- 			 "        [%s]\n", len, sid_dump);
-+
-+		if (unlikely(len > sizeof(odi->systemid))) {
-+			OSD_ERR("OSD Target error: OSD_SYSTEM_ID too long(%d). "
-+				"device idetification might not work\n", len);
-+			len = sizeof(odi->systemid);
-+		}
-+		odi->systemid_len = len;
-+		memcpy(odi->systemid, get_attrs[a].val_ptr, len);
- 		a++;
- 	}
- out:
-@@ -178,16 +191,17 @@ out:
- 	return ret;
- }
- 
--int osd_auto_detect_ver(struct osd_dev *od, void *caps)
-+int osd_auto_detect_ver(struct osd_dev *od,
-+	void *caps, struct osd_dev_info *odi)
- {
- 	int ret;
- 
- 	/* Auto-detect the osd version */
--	ret = _osd_print_system_info(od, caps);
-+	ret = _osd_get_print_system_info(od, caps, odi);
- 	if (ret) {
- 		osd_dev_set_ver(od, OSD_VER1);
- 		OSD_DEBUG("converting to OSD1\n");
--		ret = _osd_print_system_info(od, caps);
-+		ret = _osd_get_print_system_info(od, caps, odi);
- 	}
- 
- 	return ret;
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index 9dd5948..0484bae 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -84,6 +84,7 @@ struct osd_uld_device {
- 	struct device class_dev;
- 	struct cdev cdev;
- 	struct osd_dev od;
-+	struct osd_dev_info odi;
- 	struct gendisk *disk;
- };
- 
-@@ -225,6 +226,71 @@ free_od:
- }
- EXPORT_SYMBOL(osduld_path_lookup);
- 
-+static inline bool _the_same_or_null(const u8 *a1, unsigned a1_len,
-+				     const u8 *a2, unsigned a2_len)
-+{
-+	if (!a2_len) /* User string is Empty means don't care */
-+		return true;
-+
-+	if (a1_len != a2_len)
-+		return false;
-+
-+	return 0 == memcmp(a1, a2, a1_len);
-+}
-+
-+struct find_oud_t {
-+	const struct osd_dev_info *odi;
-+	struct device *dev;
-+	struct osd_uld_device *oud;
-+} ;
-+
-+int _mach_odi(struct device *dev, void *find_data)
-+{
-+	struct osd_uld_device *oud = dev_get_drvdata(dev);
-+	struct find_oud_t *fot = find_data;
-+	const struct osd_dev_info *odi = fot->odi;
-+
-+	if (_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
-+			      odi->systemid, odi->systemid_len) &&
-+	    _the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
-+			      odi->osdname, odi->osdname_len)) {
-+		OSD_DEBUG("found device sysid_len=%d osdname=%d\n",
-+			  odi->systemid_len, odi->osdname_len);
-+		fot->oud = oud;
-+		return 1;
-+	} else {
-+		return 0;
-+	}
-+}
-+
-+/* osduld_info_lookup - Loop through all devices, return the requested osd_dev.
-+ *
-+ * if @odi->systemid_len and/or @odi->osdname_len are zero, they act as a don't
-+ * care. .e.g if they're both zero /dev/osd0 is returned.
-+ */
-+struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi)
-+{
-+	struct find_oud_t find = {.odi = odi};
-+
-+	find.dev = class_find_device(&osd_uld_class, NULL, &find, _mach_odi);
-+	if (likely(find.dev)) {
-+		struct osd_dev_handle *odh = kzalloc(sizeof(*odh), GFP_KERNEL);
-+
-+		if (unlikely(!odh)) {
-+			put_device(find.dev);
-+			return ERR_PTR(-ENOMEM);
-+		}
-+
-+		odh->od = find.oud->od;
-+		odh->oud = find.oud;
-+
-+		return &odh->od;
-+	}
-+
-+	return ERR_PTR(-ENODEV);
-+}
-+EXPORT_SYMBOL(osduld_info_lookup);
-+
- void osduld_put_device(struct osd_dev *od)
- {
- 	if (od && !IS_ERR(od)) {
-@@ -240,14 +306,39 @@ void osduld_put_device(struct osd_dev *od)
- 		 * is called after the fops->release. A get_/put_ pair makes
- 		 * sure we have a cdev for the duration of fput
- 		 */
--		get_device(&oud->class_dev);
--		fput(odh->file);
-+		if (odh->file) {
-+			get_device(&oud->class_dev);
-+			fput(odh->file);
-+		}
- 		put_device(&oud->class_dev);
- 		kfree(odh);
- 	}
- }
- EXPORT_SYMBOL(osduld_put_device);
- 
-+const struct osd_dev_info *osduld_device_info(struct osd_dev *od)
-+{
-+	struct osd_dev_handle *odh =
-+				container_of(od, struct osd_dev_handle, od);
-+	return &odh->oud->odi;
-+}
-+EXPORT_SYMBOL(osduld_device_info);
-+
-+bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi)
-+{
-+	struct osd_dev_handle *odh =
-+				container_of(od, struct osd_dev_handle, od);
-+	struct osd_uld_device *oud = odh->oud;
-+
-+	return (oud->odi.systemid_len == odi->systemid_len) &&
-+		_the_same_or_null(oud->odi.systemid, oud->odi.systemid_len,
-+				 odi->systemid, odi->systemid_len) &&
-+		(oud->odi.osdname_len == odi->osdname_len) &&
-+		_the_same_or_null(oud->odi.osdname, oud->odi.osdname_len,
-+				  odi->osdname, odi->osdname_len);
-+}
-+EXPORT_SYMBOL(osduld_device_same);
-+
- /*
-  * Scsi Device operations
-  */
-@@ -268,7 +359,7 @@ static int __detect_osd(struct osd_uld_device *oud)
- 		OSD_ERR("warning: scsi_test_unit_ready failed\n");
- 
- 	osd_sec_init_nosec_doall_caps(caps, &osd_root_object, false, true);
--	if (osd_auto_detect_ver(&oud->od, caps))
-+	if (osd_auto_detect_ver(&oud->od, caps, &oud->odi))
- 		return -ENODEV;
- 
- 	return 0;
-@@ -279,6 +370,8 @@ static void __remove(struct device *dev)
- 	struct osd_uld_device *oud = dev_get_drvdata(dev);
- 	struct scsi_device *scsi_device = oud->od.scsi_device;
- 
-+	kfree(oud->odi.osdname);
-+
- 	if (oud->cdev.owner)
- 		cdev_del(&oud->cdev);
- 
-diff --git a/include/scsi/osd_initiator.h b/include/scsi/osd_initiator.h
-index 589e5f0..3ec346e 100644
---- a/include/scsi/osd_initiator.h
-+++ b/include/scsi/osd_initiator.h
-@@ -55,10 +55,24 @@ struct osd_dev {
- #endif
- };
- 
--/* Retrieve/return osd_dev(s) for use by Kernel clients */
--struct osd_dev *osduld_path_lookup(const char *dev_name); /*Use IS_ERR/ERR_PTR*/
-+/* Unique Identification of an OSD device */
-+struct osd_dev_info {
-+	unsigned systemid_len;
-+	u8 systemid[OSD_SYSTEMID_LEN];
-+	unsigned osdname_len;
-+	u8 *osdname;
-+};
-+
-+/* Retrieve/return osd_dev(s) for use by Kernel clients
-+ * Use IS_ERR/ERR_PTR on returned "osd_dev *".
-+ */
-+struct osd_dev *osduld_path_lookup(const char *dev_name);
-+struct osd_dev *osduld_info_lookup(const struct osd_dev_info *odi);
- void osduld_put_device(struct osd_dev *od);
- 
-+const struct osd_dev_info *osduld_device_info(struct osd_dev *od);
-+bool osduld_device_same(struct osd_dev *od, const struct osd_dev_info *odi);
-+
- /* Add/remove test ioctls from external modules */
- typedef int (do_test_fn)(struct osd_dev *od, unsigned cmd, unsigned long arg);
- int osduld_register_test(unsigned ioctl, do_test_fn *do_test);
-@@ -68,8 +82,24 @@ void osduld_unregister_test(unsigned ioctl);
- void osd_dev_init(struct osd_dev *od, struct scsi_device *scsi_device);
- void osd_dev_fini(struct osd_dev *od);
- 
--/* some hi level device operations */
--int osd_auto_detect_ver(struct osd_dev *od, void *caps);    /* GFP_KERNEL */
-+/**
-+ * osd_auto_detect_ver - Detect the OSD version, return Unique Identification
-+ *
-+ * @od:     OSD target lun handle
-+ * @caps:   Capabilities authorizing OSD root read attributes access
-+ * @odi:    Retrieved information uniquely identifying the osd target lun
-+ *          Note: odi->osdname must be kfreed by caller.
-+ *
-+ * Auto detects the OSD version of the OSD target and sets the @od
-+ * accordingly. Meanwhile also returns the "system id" and "osd name" root
-+ * attributes which uniquely identify the OSD target. This member is usually
-+ * called by the ULD. ULD users should call osduld_device_info().
-+ * This rutine allocates osd requests and memory at GFP_KERNEL level and might
-+ * sleep.
-+ */
-+int osd_auto_detect_ver(struct osd_dev *od,
-+	void *caps, struct osd_dev_info *odi);
-+
- static inline struct request_queue *osd_request_queue(struct osd_dev *od)
- {
- 	return od->scsi_device->request_queue;
+I'm tempted to try and reboot the machine, to see if the disk comes back. 
+But I'm worried the array might not come back (for whatever reason).
+
 -- 
-1.6.5.1
-
-
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
