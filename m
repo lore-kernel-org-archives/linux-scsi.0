@@ -1,60 +1,113 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
-Date: Mon, 02 Nov 2009 11:45:57 -0600
-Message-ID: <1257183957.2472.156.camel@mulgrave.site>
-References: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134556F@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+Subject: Re: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Mon, 02 Nov 2009 11:46:44 -0600
+Message-ID: <1257184004.2472.157.camel@mulgrave.site>
+References: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345523@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:39979 "EHLO mx1.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:39995 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756059AbZKBRqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2009 12:46:03 -0500
-In-Reply-To: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134556F@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+	id S1755965AbZKBRqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Nov 2009 12:46:47 -0500
+In-Reply-To: <4F2B1A2459C7AD4D96A23CE911C352CB1E91345523@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Penchala Narasimha Reddy Chilakala, TLS-Chennai" <narasimhareddyc@hcl.in>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, James Bottomley <jejb@kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-On Mon, 2009-11-02 at 13:05 +0530, Penchala Narasimha Reddy Chilakala,
+On Tue, 2009-09-29 at 14:17 +0530, Penchala Narasimha Reddy Chilakala,
 TLS-Chennai wrote:
-> Please let me know your opinion on the explanation given by me in the
-> previous e-mail to the issue raised by you so that I will proceed
-> further based on your feedback as lot of IBM customers and RedHat have
-> been waiting for this patch to come in linux-scsi upstream even though
-> we have given private build to some of the IBM customers like Cisco
-> and SAP?
 
-I need the warning fixed.
+> @@ -593,10 +593,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 u64 addr;
+>                                 void* p;
+>                                 if (upsg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
+> @@ -645,10 +645,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 u64 addr;
+>                                 void* p;
+>                                 if (usg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
+> @@ -695,10 +695,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 uintptr_t addr;
+>                                 void* p;
+>                                 if (usg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
+> @@ -734,10 +734,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 dma_addr_t addr;
+>                                 void* p;
+>                                 if (upsg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
 
-How about this as the fix suggestion on top of your original patch:
+This is all spurious bracket addition; it doesn't really have any place
+in a code fix.
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index d29af45..1712ebe 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -535,11 +535,11 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
- 				}
- 				udelay(5);
- 			}
--		} else
--			down_interruptible(&fibptr->event_wait);
--
-+		} else if (down_interruptible(&fibptr->event_wait)) {
-+			fibptr->done = 2;
-+		}
- 		spin_lock_irqsave(&fibptr->event_lock, flags);
--		if (fibptr->done == 0) {
-+		if ((fibptr->done == 0) || (fibptr->done == 2)) {
- 			fibptr->done = 2; /* Tell interrupt we aborted */
- 			spin_unlock_irqrestore(&fibptr->event_lock, flags);
- 			return -ERESTARTSYS;
 
-It preserves the original code, even though setting fibptr->done to 2 is
-a bit superfluous, it makes it much more obvious to someone looking at
-the diff what the actual fix is.
+> @@ -842,13 +842,22 @@ static int aac_get_pci_info(struct aac_d
+>  int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+>  {
+>         int status;
+> +       unsigned long mflags;
+>  
+>         /*
+>          *      HBA gets first crack
+>          */
+>  
+> +       spin_lock_irqsave(&dev->manage_lock, mflags);
+> +       if (dev->management_fib_count > AAC_NUM_MGT_FIB) {
+> +               printk(KERN_INFO "No management Fibs Available:%d\n",
+> +                                               dev->management_fib_count);
+> +               spin_unlock_irqrestore(&dev->manage_lock, mflags);
+> +               return -EBUSY;
+> +       }
+> +       spin_unlock_irqrestore(&dev->manage_lock, mflags);
+>         status = aac_dev_ioctl(dev, cmd, arg);
+
+I can see what you're trying to do: limit the number of ioctl created
+fibs to prevent starvation, but this mechanism is completely racy.  The
+check is too far away from the increment.  It looks fixable just by
+doing the increment within the lock here and decrementing if something
+fails.
 
 James
+
 
 
