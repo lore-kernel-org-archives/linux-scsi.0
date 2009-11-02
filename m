@@ -1,39 +1,33 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC-PATCH] dhcp provisioning support in cxgb3i
-Date: Mon, 02 Nov 2009 17:48:20 -0600
-Message-ID: <4AEF6FC4.6060208@cs.wisc.edu>
-References: <4AE995C4.4080909@chelsio.com> <4AEA04A4.1060800@cs.wisc.edu> <4AEA7870.4010804@chelsio.com>
+Subject: Re: [RFC] iscsi transport : add sgio pass-thru support
+Date: Mon, 02 Nov 2009 17:55:08 -0600
+Message-ID: <4AEF715C.4030700@cs.wisc.edu>
+References: <1256853056.7154.6.camel@wookie>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50975 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58369 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754990AbZKBXsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2009 18:48:31 -0500
-In-Reply-To: <4AEA7870.4010804@chelsio.com>
+	id S1757160AbZKBXzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Nov 2009 18:55:10 -0500
+In-Reply-To: <1256853056.7154.6.camel@wookie>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rakesh Ranjan <rakesh@chelsio.com>
-Cc: davem@davemloft.net, James Bottomley <James.Bottomley@suse.de>, Karen Xie <kxie@chelsio.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, netdev@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-Rakesh Ranjan wrote:
-> Mike Christie wrote:
->> Rakesh Ranjan wrote:
->>> Hi Mike,
->>>
->>> Herein attached patches for having dhcp provisioning support in 
->>> cxgb3i. I have added one new iscsi netlink message 
->>> ISCSI_UEVENT_REQ_IPCONF. 
->>
->> Is the idea to have iscsid/uip send down this msg?
->>
->> Was it not possible to hook in more like how bnx2i does dhcp?
+James Smart wrote:
+> This patch implements the same infrastructure as found in the FC transport
+> for sgio request/response handling.
 > 
-> yep, idea is to have iscsid send down ISCSI_UEVENT_REQ_IPCONF msg. bnx2i 
-> approach in our case for at least T3 is not feasible.
+> The patch creates (and exports to userland) a new header - scsi_bsg_iscsi.h
+> 
 > 
 
-I think adding DHCP in the kernel is getting a little crazy :) If we go 
-down this path, I agree with the other person that stated it should at 
-least be generic.
+Sorry for the late reply. I am trying to sell my house and move.
+
+
+Based on your experience with fc bsg support, do you think there is some 
+common code? It looks like a lot of this is generic. I just started 
+looking at the fc bsg stuff again, so I am not sure ATM.
