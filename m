@@ -1,138 +1,153 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: raid disk failure, options?
-Date: Sun, 1 Nov 2009 17:45:47 -0600
-Message-ID: <200911011645.47649.tfjellstrom@shaw.ca>
-References: <200911011216.32196.tfjellstrom@shaw.ca> <alpine.DEB.2.00.0911011818190.15187@p34.internal.lan>
-Reply-To: tfjellstrom@shaw.ca
+From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
+	<narasimhareddyc@hcl.in>
+Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Mon, 2 Nov 2009 13:05:56 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134556F@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.0911011818190.15187@p34.internal.lan>
-Sender: linux-raid-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gws08.mail.hcl.in ([203.105.186.28]:33631 "EHLO gws08.hcl.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751971AbZKBHgE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2009 02:36:04 -0500
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-On Sun November 1 2009, Justin Piszcz wrote:
-> On Sun, 1 Nov 2009, Thomas Fjellstrom wrote:
-> > My main raid array just had a disk failure. I tried to hot remove the
-> > device, and use the scsi bus rescan sysfs entries, but it seems to fail
-> > on IDENTIFY.
-> >
-> > Can I assume my disk is dead?
-> >
-> >
-> > [5015721.851044] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action
-> > 0x0 [5015721.851089] ata3.00: irq_stat 0x40000001
-> > [5015721.851124] ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-> > [5015721.851125]          res 71/04:03:80:01:32/00:00:00:00:00/e0 Emask
-> > 0x1 (device error)
-> > [5015721.851193] ata3.00: status: { DRDY DF ERR }
-> > [5015721.851225] ata3.00: error: { ABRT }
-> > [5015726.848684] ata3.00: qc timeout (cmd 0xec)
-> > [5015726.848729] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> > [5015726.848763] ata3.00: revalidation failed (errno=-5)
-> > [5015726.848798] ata3: hard resetting link
-> > [5015734.501527] ata3: softreset failed (device not ready)
-> > [5015734.501565] ata3: failed due to HW bug, retry pmp=0
-> > [5015734.665530] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [5015734.707085] ata3.00: both IDENTIFYs aborted, assuming NODEV
-> > [5015734.707089] ata3.00: revalidation failed (errno=-2)
-> > [5015739.664923] ata3: hard resetting link
-> > [5015740.148277] ata3: softreset failed (device not ready)
-> > [5015740.148314] ata3: failed due to HW bug, retry pmp=0
-> > [5015740.313532] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [5015740.337129] ata3.00: both IDENTIFYs aborted, assuming NODEV
-> > [5015740.337132] ata3.00: revalidation failed (errno=-2)
-> > [5015740.337167] ata3.00: disabled
-> > [5015740.337231] ata3: EH complete
-> > [5015740.337275] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337308] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337372] end_request: I/O error, dev sdc, sector 1250258495
-> > [5015740.337410] end_request: I/O error, dev sdc, sector 1250258495
-> > [5015740.337445] md: super_written gets error=-5, uptodate=0
-> > [5015740.337479] raid5: Disk failure on sdc1, disabling device.
-> > [5015740.337480] raid5: Operation continuing on 3 devices.
-> > [5015740.337569] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337601] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337665] end_request: I/O error, dev sdc, sector 480014231
-> > [5015740.337710] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337742] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337806] end_request: I/O error, dev sdc, sector 1186573399
-> > [5015740.337840] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337872] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337936] end_request: I/O error, dev sdc, sector 404014999
-> > [5015740.371191] RAID5 conf printout:
-> > [5015740.371226]  --- rd:4 wd:3
-> > [5015740.371258]  disk 0, o:0, dev:sdc1
-> > [5015740.371290]  disk 1, o:1, dev:sda1
-> > [5015740.371322]  disk 2, o:1, dev:sdb1
-> > [5015740.371353]  disk 3, o:1, dev:sdd1
-> > [5015740.393516] RAID5 conf printout:
-> > [5015740.393551]  --- rd:4 wd:3
-> > [5015740.393583]  disk 1, o:1, dev:sda1
-> > [5015740.393615]  disk 2, o:1, dev:sdb1
-> > [5015740.393647]  disk 3, o:1, dev:sdd1
-> >
-> > ran: echo x > /sys/bus/scsi/devices/2\:0\:0\:0/delete
-> >
-> > [5016224.932073] sd 2:0:0:0: [sdc] Synchronizing SCSI cache
-> > [5016224.932150] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5016224.932216] sd 2:0:0:0: [sdc] Stopping disk
-> > [5016224.933192] sd 2:0:0:0: [sdc] START_STOP FAILED
-> > [5016224.933227] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> >
-> > ran: echo "0 0 0" > /sys/class/scsi_host/host2/scan
-> >
-> > [5016463.173706] ata3: hard resetting link
-> > [5016463.657520] ata3: softreset failed (device not ready)
-> > [5016463.657557] ata3: failed due to HW bug, retry pmp=0
-> > [5016463.821535] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [5016463.842475] ata3.00: both IDENTIFYs aborted, assuming NODEV
-> > [5016463.842492] ata3: EH complete
-> >
-> > To be honest, I've been expecting this, I just had no idea which drive
-> > was going to fail. For the past 6-12 months I've been hearing this
-> > rather loud clicking noise coming from that machine, but I could never
-> > pin it down, it only happened a couple times a day (and it wasn't heads
-> > parking).
-> >
-> > I'm tempted to try and reboot the machine, to see if the disk comes
-> > back. But I'm worried the array might not come back (for whatever
-> > reason).
-> 
-> Looks like it but show smart stats as well-- they may show what/why is
-> failing, if not try to run a smart test (short) and see what the error
->  is, or if it passes successfully.
-> 
-> smartctl -a /dev/disk
-> 
-> or smartctl -d (cciss,3ware),drive -a /dev/device
+Hi James,
+
+
+Please let me know your opinion on the explanation given by me in the previous e-mail to the issue raised by you so that I will proceed further based on your feedback as lot of IBM customers and RedHat have been waiting for this patch to come in linux-scsi upstream even though we have given private build to some of the IBM customers like Cisco and SAP?
+
+Thanks,
+Narasimha Reddy
+
+-----Original Message-----
+From: Penchala Narasimha Reddy Chilakala, TLS-Chennai
+Sent: Friday, October 23, 2009 6:41 PM
+To: 'James Bottomley'
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+
+Hi James,
+
+Thanks a lot for your feedback.
+
+Here is my explanation for the change. We have done good amount of review and testing before finalizing the change. We found the following code also caused to exit the management request prematurely without getting response from the firmware during our review, which in turn caused to generated False Raid Alert events in the application layer.
+
+So after doing good amount of review and testing, we replace the below code
+
+            else if (down_interruptible(&fibptr->event_wait)) {
+                      fibptr->done = 2;
+                      up(&fibptr->event_wait);
+          }
+
+With the following code
+            } else
+                down_interruptible (&fibptr->event_wait);
+
+To overcome the warning, we can replace the above code with either
+
+            } else if (down_interruptible (&fibptr->event_wait));
+
+                        Or
+
+            } else {
+                 if (down_interruptible (&fibptr->event_wait))
+                        ;
+            }
+
+I am ok to do the above mentioned change in the code and resubmit the patch with the above change as there is no issue with respect to functionality and other aspects as such.
+
+Please let me know your opinion on this so that I will proceed further based on your feedback.
+
+
+Important note:
+-----------------
+
+fibptr->event_wait is initialized with the following OS kernel function call during the driver initialization.
+
+        init_MUTEX_LOCKED(&fibptr->event_wait);
+
+The above OS kernel function call initializes the semaphore to locked (unavailable) state. On using the fibptr->event_wait by down_interruptible, the semaphore is not available so process/task will enter into sleep mode until the semaphore is available. The semaphore will be available only when the response gets from the firmware for the request delivered to the firmware. When response comes from the firmware then driver's response path code calls the up() if the fibpter->done is equal to zero. So the corresponding task/process gets semaphore and wakes the task/process up and proceeds with further processing.
+
+Suppose the process/task, who is waiting for semaphore, gets exited before getting response from the firmware due to some signal, then driver should not call up() function as there is no point calling up() function after exiting as the fibptr->event_wait was initialized to locked (unavailable) state during the driver initialization.
+
+So my point, here, is that we should not call up() if process/task is exited prematurely before getting the response from the firmware for the request delivered to firmware as the fibptr->event_wait was initialized to locked (unavailable) state.
+---------------------------------------------------------------------------
+
+Thanks,
+Narasimha Reddy
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@suse.de]
+Sent: Thursday, October 22, 2009 6:40 AM
+To: Penchala Narasimha Reddy Chilakala, TLS-Chennai
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+
+On Fri, 2009-10-09 at 14:53 +0530, Penchala Narasimha Reddy Chilakala,
+TLS-Chennai wrote:
+> Hi James and linux-scsi community,
 >
+> Can you please let us know your feedback on my response to the queries
+> raised by James so that I will proceed further based on your feedback?
 
-smartctl fails. even adding -T permissive doesn't help. At this point, the 
-disk is completely inaccessible to the OS. Also, after removing the disk 
-(using the sysfs interface) it won't come back, so there is no /dev device 
-for it anymore, so I can't run smartctl on it again (I've lost the output 
-from before, which was just smartctl saying it couldn't read from the 
-device).
+Sorry, press of conferences has delayed me getting around to looking at
+this.
 
-> Justin.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The patch is spitting this compile warning:
+
+drivers/scsi/aacraid/commsup.c: In function 'aac_fib_send':
+drivers/scsi/aacraid/commsup.c:539: warning: ignoring return value of 'down_interruptible', declared with attribute warn_unused_result
+
+Because of this hunk:
+
+@@ -515,15 +535,14 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned
+                                }
+                                udelay(5);
+                        }
+-               } else if (down_interruptible(&fibptr->event_wait)) {
+-                       fibptr->done = 2;
+-                       up(&fibptr->event_wait);
+-               }
++               } else
++                       down_interruptible(&fibptr->event_wait);
 
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+The reason for the warning is that down_interruptible() will return an
+error if it gets interrupted without acquiring the semaphore, and the
+kernel checkers believe you can't write correct code without knowing
+whether you acquired the semaphore or not.
+
+Now, the original use case didn't care it was just waiting for the
+semaphore to become available but didn't actually want to acquire it, so
+I suspect what you want is:
+
+} else if (down_interruptible(&fibptr->event_wait))
+                     up(&fibptr->event_wait);
+
+If you suddenly do care about acquiring the semaphore, you need to do
+something about the interrupted failure case.
+
+James
+
+
+
+
+DISCLAIMER:
+-----------------------------------------------------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
+It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
+this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
+Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
+this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
+received this email in error please delete it and notify the sender immediately. Before opening any mail and 
+attachments please check them for viruses and defect.
+
+-----------------------------------------------------------------------------------------------------------------------
