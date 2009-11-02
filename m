@@ -1,64 +1,32 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [PATCH 1/2] block: add support for discard limits
-Date: Mon, 02 Nov 2009 09:39:36 -0600
-Message-ID: <1257176376.2472.24.camel@mulgrave.site>
-References: <20091029150830.497006534@bombadil.infradead.org>
-	 <20091029151127.257902381@bombadil.infradead.org>
-	 <yq1ws2dsh4g.fsf@sermon.lab.mkp.net> <20091030050558.GC17714@infradead.org>
-	 <yq1eioh9hsr.fsf@sermon.lab.mkp.net>
+Date: Mon, 02 Nov 2009 18:02:56 +0200
+Message-ID: <4AEF02B0.2060506@panasas.com>
+References: <20091029150830.497006534@bombadil.infradead.org>	<20091029151127.257902381@bombadil.infradead.org>	<yq1ws2dsh4g.fsf@sermon.lab.mkp.net>	<20091030050558.GC17714@infradead.org> <yq1eioh9hsr.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33698 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754990AbZKBPjj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Nov 2009 10:39:39 -0500
+Received: from qw-out-2122.google.com ([74.125.92.25]:1251 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755364AbZKBQC6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2009 11:02:58 -0500
+Received: by qw-out-2122.google.com with SMTP id 9so1147385qwb.37
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2009 08:03:03 -0800 (PST)
 In-Reply-To: <yq1eioh9hsr.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, axboe@kernel.dk, matthew@wil.cx
 
-On Mon, 2009-11-02 at 08:29 -0500, Martin K. Petersen wrote:
-> >>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+On 11/02/2009 03:29 PM, Martin K. Petersen wrote:
 > 
-> >> ACS-2 doesn't currently have a notion of unmap granularity and all
-> >> array vendors I have talked to appear to happily process any unmap
-> >> request we throw at them.  So I'm leaning towards keeping things
-> >> simple and just sending things down verbatim...
+> With heterogeneous md and dm devices there may not be a meaningful value
+> to put in the discard granularity field.  Then what?
 > 
-> Christoph> We have all the granularity and alignment information
-> Christoph> avilable and keeping track of it is simple enough.
-> 
-> That's not the issue.
-> 
-> Nothing prevents you from submitting a misaligned read/write request to
-> the array.  If you do, the array may be slower in servicing the request.
-> But the entire request will still be serviced.
-> 
-> Similarly, nothing prevents you from submitting a misaligned unmap
-> request.  If you do, the array will just ignore the portions that do not
-> constitute entire allocation units.  Your code is taking what is a hint
-> and turning it into a hard limit.  Note that it's called OPTIMAL UNMAP
-> GRANULARITY, not REQUIRED UNMAP GRANULARITY.
-> 
-> Every vendor I have talked to have asked us to always unmap the *entire*
-> LBA range we're interested in freeing.  No exceptions.
-> 
-> We don't throw away the beginning/end of a read/write request because
-> it's not properly aligned either, do we?
 
-Agree entirely for this with UNMAP, since the array will just silently
-discard what it doesn't want.
+These alignment masks may only be base-2, no?
+If so then the max alignment of all devices will work for any device.
 
-Don't necessarily agree with this for WRITE_SAME.  From the
-implementations I've read, it sounds like the array will discard all
-sectors within the correct boundary and alignment but it will have to
-write zeros to all sectors outside of the aligned region ... this sounds
-like a performance hit unless we do some judicious aligning of the
-discards.
-
-James
-
-
+I think
+Boaz
