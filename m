@@ -1,32 +1,81 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/2] block: add support for discard limits
-Date: Mon, 02 Nov 2009 18:02:56 +0200
-Message-ID: <4AEF02B0.2060506@panasas.com>
-References: <20091029150830.497006534@bombadil.infradead.org>	<20091029151127.257902381@bombadil.infradead.org>	<yq1ws2dsh4g.fsf@sermon.lab.mkp.net>	<20091030050558.GC17714@infradead.org> <yq1eioh9hsr.fsf@sermon.lab.mkp.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Mon, 02 Nov 2009 17:30:01 +0100
+Message-ID: <4AEF0909.5050809@s5r6.in-berlin.de>
+References: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134556F@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:1251 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755364AbZKBQC6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2009 11:02:58 -0500
-Received: by qw-out-2122.google.com with SMTP id 9so1147385qwb.37
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Nov 2009 08:03:03 -0800 (PST)
-In-Reply-To: <yq1eioh9hsr.fsf@sermon.lab.mkp.net>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:39929 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755413AbZKBQaE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2009 11:30:04 -0500
+In-Reply-To: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134556F@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, axboe@kernel.dk, matthew@wil.cx
+To: "Penchala Narasimha Reddy Chilakala, TLS-Chennai" <narasimhareddyc@hcl.in>
+Cc: James Bottomley <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-On 11/02/2009 03:29 PM, Martin K. Petersen wrote:
+Penchala Narasimha Reddy Chilakala, TLS-Chennai wrote:
+> Hi James,
 > 
-> With heterogeneous md and dm devices there may not be a meaningful value
-> to put in the discard granularity field.  Then what?
+> Please let me know your opinion on the explanation given by me in the
+> previous e-mail to the issue raised by you so that I will proceed
+> further based on your feedback
+[...]
+> -----Original Message-----
+> From: Penchala Narasimha Reddy Chilakala, TLS-Chennai
+> Sent: Friday, October 23, 2009 6:41 PM
+[...]
+> Here is my explanation for the change. We have done good amount of
+> review and testing before finalizing the change. We found the following
+> code also caused to exit the management request prematurely without
+> getting response from the firmware during our review, which in turn
+> caused to generated False Raid Alert events in the application layer.
 > 
+> So after doing good amount of review and testing, we replace the below
+> code
+> 
+>             else if (down_interruptible(&fibptr->event_wait)) {
+>                       fibptr->done = 2;
+>                       up(&fibptr->event_wait);
+>           }
+> 
+> With the following code
+>             } else
+>                 down_interruptible (&fibptr->event_wait);
+> 
+> To overcome the warning,
 
-These alignment masks may only be base-2, no?
-If so then the max alignment of all devices will work for any device.
+[i.e. "warning: ignoring return value of 'down_interruptible', declared
+with attribute warn_unused_result"]
 
-I think
-Boaz
+> we can replace the above code with either
+> 
+>             } else if (down_interruptible (&fibptr->event_wait));
+> 
+>                         Or
+> 
+>             } else {
+>                  if (down_interruptible (&fibptr->event_wait))
+>                         ;
+>             }
+> 
+> I am ok to do the above mentioned change in the code and resubmit the
+> patch with the above change as there is no issue with respect to
+> functionality and other aspects as such.
+
+I'm not James, but I do have a suggestion:
+
+Leave the compiler warning there for the short term.  And then, instead
+of suppressing the warning with hard to read code, convert from
+semaphore to completion (or waitqueue perhaps).
+
+I'm not familiar with aacraid but your problem description sounds to me
+as if the legacy counting semaphore API is not the correct kernel API to
+use here.
+-- 
+Stefan Richter
+-=====-==--= =-=- ===--
+http://arcgraph.de/sr/
