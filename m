@@ -1,143 +1,60 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: raid disk failure, options?
-Date: Mon, 2 Nov 2009 11:36:19 -0600
-Message-ID: <200911021036.20015.tfjellstrom@shaw.ca>
-References: <200911011216.32196.tfjellstrom@shaw.ca> <4AEEF40B.4060103@tmr.com>
-Reply-To: tfjellstrom@shaw.ca
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Mon, 02 Nov 2009 11:45:57 -0600
+Message-ID: <1257183957.2472.156.camel@mulgrave.site>
+References: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134556F@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4AEEF40B.4060103@tmr.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Bill Davidsen <davidsen@tmr.com>
-Cc: linux-raid@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:39979 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756059AbZKBRqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Nov 2009 12:46:03 -0500
+In-Reply-To: <4F2B1A2459C7AD4D96A23CE911C352CB1E9134556F@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Penchala Narasimha Reddy Chilakala, TLS-Chennai" <narasimhareddyc@hcl.in>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-On Mon November 2 2009, you wrote:
-> Thomas Fjellstrom wrote:
-> > My main raid array just had a disk failure. I tried to hot remove the
-> > device, and use the scsi bus rescan sysfs entries, but it seems to fail
-> > on IDENTIFY.
-> >
-> > Can I assume my disk is dead?
-> >
-> >
-> > [5015721.851044] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action
-> > 0x0 [5015721.851089] ata3.00: irq_stat 0x40000001
-> > [5015721.851124] ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-> > [5015721.851125]          res 71/04:03:80:01:32/00:00:00:00:00/e0 Emask
-> > 0x1 (device error)
-> > [5015721.851193] ata3.00: status: { DRDY DF ERR }
-> > [5015721.851225] ata3.00: error: { ABRT }
-> > [5015726.848684] ata3.00: qc timeout (cmd 0xec)
-> > [5015726.848729] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> > [5015726.848763] ata3.00: revalidation failed (errno=-5)
-> > [5015726.848798] ata3: hard resetting link
-> > [5015734.501527] ata3: softreset failed (device not ready)
-> > [5015734.501565] ata3: failed due to HW bug, retry pmp=0
-> > [5015734.665530] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [5015734.707085] ata3.00: both IDENTIFYs aborted, assuming NODEV
-> > [5015734.707089] ata3.00: revalidation failed (errno=-2)
-> > [5015739.664923] ata3: hard resetting link
-> > [5015740.148277] ata3: softreset failed (device not ready)
-> > [5015740.148314] ata3: failed due to HW bug, retry pmp=0
-> > [5015740.313532] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [5015740.337129] ata3.00: both IDENTIFYs aborted, assuming NODEV
-> > [5015740.337132] ata3.00: revalidation failed (errno=-2)
-> > [5015740.337167] ata3.00: disabled
-> > [5015740.337231] ata3: EH complete
-> > [5015740.337275] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337308] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337372] end_request: I/O error, dev sdc, sector 1250258495
-> > [5015740.337410] end_request: I/O error, dev sdc, sector 1250258495
-> > [5015740.337445] md: super_written gets error=-5, uptodate=0
-> > [5015740.337479] raid5: Disk failure on sdc1, disabling device.
-> > [5015740.337480] raid5: Operation continuing on 3 devices.
-> > [5015740.337569] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337601] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337665] end_request: I/O error, dev sdc, sector 480014231
-> > [5015740.337710] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337742] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337806] end_request: I/O error, dev sdc, sector 1186573399
-> > [5015740.337840] sd 2:0:0:0: [sdc] Unhandled error code
-> > [5015740.337872] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5015740.337936] end_request: I/O error, dev sdc, sector 404014999
-> > [5015740.371191] RAID5 conf printout:
-> > [5015740.371226]  --- rd:4 wd:3
-> > [5015740.371258]  disk 0, o:0, dev:sdc1
-> > [5015740.371290]  disk 1, o:1, dev:sda1
-> > [5015740.371322]  disk 2, o:1, dev:sdb1
-> > [5015740.371353]  disk 3, o:1, dev:sdd1
-> > [5015740.393516] RAID5 conf printout:
-> > [5015740.393551]  --- rd:4 wd:3
-> > [5015740.393583]  disk 1, o:1, dev:sda1
-> > [5015740.393615]  disk 2, o:1, dev:sdb1
-> > [5015740.393647]  disk 3, o:1, dev:sdd1
-> >
-> > ran: echo x > /sys/bus/scsi/devices/2\:0\:0\:0/delete
-> >
-> > [5016224.932073] sd 2:0:0:0: [sdc] Synchronizing SCSI cache
-> > [5016224.932150] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> > [5016224.932216] sd 2:0:0:0: [sdc] Stopping disk
-> > [5016224.933192] sd 2:0:0:0: [sdc] START_STOP FAILED
-> > [5016224.933227] sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-> > driverbyte=DRIVER_OK,SUGGEST_OK
-> >
-> > ran: echo "0 0 0" > /sys/class/scsi_host/host2/scan
-> >
-> > [5016463.173706] ata3: hard resetting link
-> > [5016463.657520] ata3: softreset failed (device not ready)
-> > [5016463.657557] ata3: failed due to HW bug, retry pmp=0
-> > [5016463.821535] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > [5016463.842475] ata3.00: both IDENTIFYs aborted, assuming NODEV
-> > [5016463.842492] ata3: EH complete
-> >
-> > To be honest, I've been expecting this, I just had no idea which drive
-> > was going to fail. For the past 6-12 months I've been hearing this
-> > rather loud clicking noise coming from that machine, but I could never
-> > pin it down, it only happened a couple times a day (and it wasn't heads
-> > parking).
-> 
-> For future use, that's when you 'fail' the drive out of the array and
-> listen to see if the noise goes away. Crude but effective. 
+On Mon, 2009-11-02 at 13:05 +0530, Penchala Narasimha Reddy Chilakala,
+TLS-Chennai wrote:
+> Please let me know your opinion on the explanation given by me in the
+> previous e-mail to the issue raised by you so that I will proceed
+> further based on your feedback as lot of IBM customers and RedHat have
+> been waiting for this patch to come in linux-scsi upstream even though
+> we have given private build to some of the IBM customers like Cisco
+> and SAP?
 
-The noise only happened a couple times a day at maximum. Trying to pin it 
-down was a little hard.
+I need the warning fixed.
 
-> At this point
-> I would expect the array to remain working, and rebuild properly after
-> you replace your drive. But if you lose another your data is gone, so
-> thinking about the possible solutions for long is not advisable.
+How about this as the fix suggestion on top of your original patch:
 
-I have a new server with a new larger (5x1TB) array to replace the current  
-(4x640GB) one ;) I've been ready for this for a while. I copied the last 
-thing off the array last night.
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index d29af45..1712ebe 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -535,11 +535,11 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
+ 				}
+ 				udelay(5);
+ 			}
+-		} else
+-			down_interruptible(&fibptr->event_wait);
+-
++		} else if (down_interruptible(&fibptr->event_wait)) {
++			fibptr->done = 2;
++		}
+ 		spin_lock_irqsave(&fibptr->event_lock, flags);
+-		if (fibptr->done == 0) {
++		if ((fibptr->done == 0) || (fibptr->done == 2)) {
+ 			fibptr->done = 2; /* Tell interrupt we aborted */
+ 			spin_unlock_irqrestore(&fibptr->event_lock, flags);
+ 			return -ERESTARTSYS;
 
-> > I'm tempted to try and reboot the machine, to see if the disk comes
-> > back. But I'm worried the array might not come back (for whatever
-> > reason).
-> 
-> See above, if another drive fails it definitely won't come back.
-> 
+It preserves the original code, even though setting fibptr->done to 2 is
+a bit superfluous, it makes it much more obvious to someone looking at
+the diff what the actual fix is.
 
-Yeah, luckily I've gotten all the data off it, and I can RMA the drive at my 
-leisure :)
+James
 
-I've already been testing the new system for _quite_ some time, so according 
-to google's drive statistics, I should be good. Already had to RMA one of 
-the disks in the new array. I have _all_ the luck.
 
-Seems every time I buy a batch (4+) of drives at least one of them is DOA or 
-nearly DOA. One time not only did one fail within a couple weeks, but the 
-replacement failed as well. That was a heck of a lot of fun.
-
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
