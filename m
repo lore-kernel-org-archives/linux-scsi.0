@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 13/54] fcoe: NPIV vport create/destroy
-Date: Tue, 03 Nov 2009 11:46:40 -0800
-Message-ID: <20091103194640.4085.25550.stgit@localhost.localdomain>
+Subject: [PATCH 09/54] libfc: vport link handling and fc_vport state managment
+Date: Tue, 03 Nov 2009 11:46:19 -0800
+Message-ID: <20091103194619.4085.47300.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37204 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:48209 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753324AbZKCTqf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:46:35 -0500
+	id S1754954AbZKCTqO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:46:14 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,270 +19,279 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Add NPIV vport create and destroy handlers and register them with the
-FC transport.
+NPIV vports are managed in libfc by changing their virtual link state
+when the parent N_Ports internal state changes.  The vport link is only
+online when the N_Port is in a ready state (logged into the fabric).
+
+vport_state is updated as needed in this patch as well, currently the states
+LINKDOWN, INITIALIZING, ACTIVE, DSIABLED, and NO_FABRIC_SUPP are used.
+
+This also changes the fc_host port_state handling to differentiate between
+LINKDOWN and OFFLINE.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |  162 +++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 139 insertions(+), 23 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |   72 +++++++++++++++++++++++++++++++--------
+ drivers/scsi/libfc/fc_npiv.c  |   75 +++++++++++++++++++++++++++++++++++++++++
+ include/scsi/libfc.h          |    8 ++++
+ 3 files changed, 140 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index d37d573..f23cdb3 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -93,6 +93,10 @@ static struct notifier_block fcoe_notifier = {
- static struct scsi_transport_template *fcoe_transport_template;
- static struct scsi_transport_template *fcoe_vport_transport_template;
- 
-+static int fcoe_vport_destroy(struct fc_vport *vport);
-+static int fcoe_vport_create(struct fc_vport *vport, bool disabled);
-+static int fcoe_vport_disable(struct fc_vport *vport, bool disable);
-+
- struct fc_function_template fcoe_transport_function = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
-@@ -124,6 +128,10 @@ struct fc_function_template fcoe_transport_function = {
- 	.issue_fc_host_lip = fcoe_reset,
- 
- 	.terminate_rport_io = fc_rport_terminate_io,
-+
-+	.vport_create = fcoe_vport_create,
-+	.vport_delete = fcoe_vport_destroy,
-+	.vport_disable = fcoe_vport_disable,
- };
- 
- struct fc_function_template fcoe_vport_transport_function = {
-@@ -450,6 +458,7 @@ static int fcoe_lport_config(struct fc_lport *lp)
- 	lp->r_a_tov = 2 * 2 * 1000;
- 	lp->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
- 			      FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
-+	lp->does_npiv = 1;
- 
- 	fc_lport_init_stats(lp);
- 
-@@ -536,11 +545,13 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
- 	port->fcoe_pending_queue_active = 0;
- 	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lp);
- 
--	wwnn = fcoe_wwn_from_mac(netdev->dev_addr, 1, 0);
--	fc_set_wwnn(lp, wwnn);
--	/* XXX - 3rd arg needs to be vlan id */
--	wwpn = fcoe_wwn_from_mac(netdev->dev_addr, 2, 0);
--	fc_set_wwpn(lp, wwpn);
-+	if (!lp->vport) {
-+		wwnn = fcoe_wwn_from_mac(netdev->dev_addr, 1, 0);
-+		fc_set_wwnn(lp, wwnn);
-+		/* XXX - 3rd arg needs to be vlan id */
-+		wwpn = fcoe_wwn_from_mac(netdev->dev_addr, 2, 0);
-+		fc_set_wwpn(lp, wwpn);
-+	}
- 
- 	return 0;
- }
-@@ -576,6 +587,10 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
- 				"error on scsi_add_host\n");
- 		return rc;
- 	}
-+
-+	if (!lp->vport)
-+		fc_host_max_npiv_vports(lp->host) = USHORT_MAX;
-+
- 	sprintf(fc_host_symbolic_name(lp->host), "%s v%s over %s",
- 		FCOE_NAME, FCOE_VERSION,
- 		fcoe_netdev(lp)->name);
-@@ -776,24 +791,35 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
-  * fcoe_if_create() - this function creates the fcoe port
-  * @fcoe: fcoe_interface structure to create an fc_lport instance on
-  * @parent: device pointer to be the parent in sysfs for the SCSI host
-+ * @npiv: is this a vport?
-  *
-  * Creates fc_lport struct and scsi_host for lport, configures lport.
-  *
-  * Returns : The allocated fc_lport or an error pointer
-  */
- static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
--				       struct device *parent)
-+				       struct device *parent, int npiv)
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 41650d3..46897cf 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -224,10 +224,18 @@ void fc_get_host_port_state(struct Scsi_Host *shost)
  {
- 	int rc;
- 	struct fc_lport *lport = NULL;
- 	struct fcoe_port *port;
- 	struct Scsi_Host *shost;
- 	struct net_device *netdev = fcoe->netdev;
-+	/*
-+	 * parent is only a vport if npiv is 1,
-+	 * but we'll only use vport in that case so go ahead and set it
-+	 */
-+	struct fc_vport *vport = dev_to_vport(parent);
+ 	struct fc_lport *lp = shost_priv(shost);
  
- 	FCOE_NETDEV_DBG(netdev, "Create Interface\n");
- 
--	lport = libfc_host_alloc(&fcoe_shost_template,
--				 sizeof(struct fcoe_port));
-+	if (!npiv) {
-+		lport = libfc_host_alloc(&fcoe_shost_template,
-+					 sizeof(struct fcoe_port));
-+	} else	{
-+		lport = libfc_vport_create(vport,
-+					   sizeof(struct fcoe_port));
-+	}
- 	if (!lport) {
- 		FCOE_NETDEV_DBG(netdev, "Could not allocate host structure\n");
- 		rc = -ENOMEM;
-@@ -813,6 +839,13 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
- 		goto out_host_put;
- 	}
- 
-+	if (npiv) {
-+		FCOE_NETDEV_DBG(netdev, "Setting vport names, 0x%llX 0x%llX\n",
-+			vport->node_name, vport->port_name);
-+		fc_set_wwnn(lport, vport->node_name);
-+		fc_set_wwpn(lport, vport->port_name);
-+	}
-+
- 	/* configure lport network properties */
- 	rc = fcoe_netdev_config(lport, netdev);
- 	if (rc) {
-@@ -837,21 +870,24 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
- 		goto out_lp_destroy;
- 	}
- 
--	/*
--	 * fcoe_em_alloc() and fcoe_hostlist_add() both
--	 * need to be atomic with respect to other changes to the hostlist
--	 * since fcoe_em_alloc() looks for an existing EM
--	 * instance on host list updated by fcoe_hostlist_add().
--	 *
--	 * This is currently handled through the fcoe_config_mutex begin held.
--	 */
-+	if (!npiv) {
-+		/*
-+		 * fcoe_em_alloc() and fcoe_hostlist_add() both
-+		 * need to be atomic with respect to other changes to the
-+		 * hostlist since fcoe_em_alloc() looks for an existing EM
-+		 * instance on host list updated by fcoe_hostlist_add().
-+		 *
-+		 * This is currently handled through the fcoe_config_mutex
-+		 * begin held.
-+		 */
- 
--	/* lport exch manager allocation */
--	rc = fcoe_em_config(lport);
--	if (rc) {
--		FCOE_NETDEV_DBG(netdev, "Could not configure the EM for the "
--				"interface\n");
--		goto out_lp_destroy;
-+		/* lport exch manager allocation */
-+		rc = fcoe_em_config(lport);
-+		if (rc) {
-+			FCOE_NETDEV_DBG(netdev, "Could not configure the EM "
-+						"for the interface\n");
-+			goto out_lp_destroy;
+-	if (lp->link_up)
+-		fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
++	mutex_lock(&lp->lp_mutex);
++	if (!lp->link_up)
++		fc_host_port_state(shost) = FC_PORTSTATE_LINKDOWN;
+ 	else
+-		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
++		switch (lp->state) {
++		case LPORT_ST_READY:
++			fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
++			break;
++		default:
++			fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
 +		}
- 	}
- 
- 	fcoe_interface_get(fcoe);
-@@ -1806,7 +1842,7 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 		goto out_putdev;
- 	}
- 
--	lport = fcoe_if_create(fcoe, &netdev->dev);
-+	lport = fcoe_if_create(fcoe, &netdev->dev, 0);
- 	if (IS_ERR(lport)) {
- 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
- 		       netdev->name);
-@@ -2113,6 +2149,9 @@ static void __exit fcoe_exit(void)
- 	/* flush any asyncronous interface destroys,
- 	 * this should happen after the netdev notifier is unregistered */
- 	flush_scheduled_work();
-+	/* That will flush out all the N_Ports on the hostlist, but now we
-+	 * may have NPIV VN_Ports scheduled for destruction */
-+	flush_scheduled_work();
- 
- 	/* detach from scsi transport
- 	 * must happen after all destroys are done, therefor after the flush */
-@@ -2210,3 +2249,80 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *lport,
- 	return fc_elsct_send(lport, did, fp, op, resp, arg, timeout);
++	mutex_unlock(&lp->lp_mutex);
  }
+ EXPORT_SYMBOL(fc_get_host_port_state);
  
-+/**
-+ * fcoe_vport_create() - create an fc_host/scsi_host for a vport
-+ * @vport: fc_vport object to create a new fc_host for
-+ * @disabled: start the new fc_host in a disabled state by default?
+@@ -493,40 +501,62 @@ int fc_fabric_login(struct fc_lport *lport)
+ EXPORT_SYMBOL(fc_fabric_login);
+ 
+ /**
+- * fc_linkup() - Handler for transport linkup events
++ * __fc_linkup() - Handler for transport linkup events
+  * @lport: The lport whose link is up
 + *
-+ * Returns: 0 for success
-+ */
-+static int fcoe_vport_create(struct fc_vport *vport, bool disabled)
-+{
-+	struct Scsi_Host *shost = vport_to_shost(vport);
-+	struct fc_lport *n_port = shost_priv(shost);
-+	struct fcoe_port *port = lport_priv(n_port);
-+	struct fcoe_interface *fcoe = port->fcoe;
-+	struct net_device *netdev = fcoe->netdev;
-+	struct fc_lport *vn_port;
-+
-+	mutex_lock(&fcoe_config_mutex);
-+	vn_port = fcoe_if_create(fcoe, &vport->dev, 1);
-+	mutex_unlock(&fcoe_config_mutex);
-+
-+	if (IS_ERR(vn_port)) {
-+		printk(KERN_ERR "fcoe: fcoe_vport_create(%s) failed\n",
-+		       netdev->name);
-+		return -EIO;
-+	}
-+
-+	if (disabled) {
-+		fc_vport_set_state(vport, FC_VPORT_DISABLED);
-+	} else {
-+		vn_port->boot_time = jiffies;
-+		fc_fabric_login(vn_port);
-+		fc_vport_setlink(vn_port);
-+	}
-+	return 0;
++ * Locking: must be called with the lp_mutex held
+  */
+-void fc_linkup(struct fc_lport *lport)
++void __fc_linkup(struct fc_lport *lport)
+ {
+-	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
+-	       fc_host_port_id(lport->host));
+-
+-	mutex_lock(&lport->lp_mutex);
+ 	if (!lport->link_up) {
+ 		lport->link_up = 1;
+ 
+ 		if (lport->state == LPORT_ST_RESET)
+ 			fc_lport_enter_flogi(lport);
+ 	}
 +}
 +
 +/**
-+ * fcoe_vport_destroy() - destroy the fc_host/scsi_host for a vport
-+ * @vport: fc_vport object that is being destroyed
-+ *
-+ * Returns: 0 for success
++ * fc_linkup() - Handler for transport linkup events
++ * @lport: The lport whose link is up
 + */
-+static int fcoe_vport_destroy(struct fc_vport *vport)
++void fc_linkup(struct fc_lport *lport)
 +{
++	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
++	       fc_host_port_id(lport->host));
++
++	mutex_lock(&lport->lp_mutex);
++	__fc_linkup(lport);
+ 	mutex_unlock(&lport->lp_mutex);
+ }
+ EXPORT_SYMBOL(fc_linkup);
+ 
+ /**
+- * fc_linkdown() - Handler for transport linkdown events
++ * __fc_linkdown() - Handler for transport linkdown events
+  * @lport: The lport whose link is down
++ *
++ * Locking: must be called with the lp_mutex held
+  */
+-void fc_linkdown(struct fc_lport *lport)
++void __fc_linkdown(struct fc_lport *lport)
+ {
+-	mutex_lock(&lport->lp_mutex);
+-	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
+-	       fc_host_port_id(lport->host));
+-
+ 	if (lport->link_up) {
+ 		lport->link_up = 0;
+ 		fc_lport_enter_reset(lport);
+ 		lport->tt.fcp_cleanup(lport);
+ 	}
++}
++
++/**
++ * fc_linkdown() - Handler for transport linkdown events
++ * @lport: The lport whose link is down
++ */
++void fc_linkdown(struct fc_lport *lport)
++{
++	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
++	       fc_host_port_id(lport->host));
++
++	mutex_lock(&lport->lp_mutex);
++	__fc_linkdown(lport);
+ 	mutex_unlock(&lport->lp_mutex);
+ }
+ EXPORT_SYMBOL(fc_linkdown);
+@@ -654,6 +684,9 @@ static void fc_lport_enter_ready(struct fc_lport *lport)
+ 		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_READY);
++	if (lport->vport)
++		fc_vport_set_state(lport->vport, FC_VPORT_ACTIVE);
++	fc_vports_linkchange(lport);
+ 
+ 	if (!lport->ptp_rp)
+ 		lport->tt.disc_start(fc_lport_disc_callback, lport);
+@@ -868,7 +901,14 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
+ 	FC_LPORT_DBG(lport, "Entered RESET state from %s state\n",
+ 		     fc_lport_state(lport));
+ 
++	if (lport->vport) {
++		if (lport->link_up)
++			fc_vport_set_state(lport->vport, FC_VPORT_INITIALIZING);
++		else
++			fc_vport_set_state(lport->vport, FC_VPORT_LINKDOWN);
++	}
+ 	fc_lport_state_enter(lport, LPORT_ST_RESET);
++	fc_vports_linkchange(lport);
+ 	fc_lport_reset_locked(lport);
+ 	if (lport->link_up)
+ 		fc_lport_enter_flogi(lport);
+@@ -887,6 +927,7 @@ static void fc_lport_enter_disabled(struct fc_lport *lport)
+ 		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_DISABLED);
++	fc_vports_linkchange(lport);
+ 	fc_lport_reset_locked(lport);
+ }
+ 
+@@ -1333,6 +1374,7 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
+ 		     fc_lport_state(lport));
+ 
+ 	fc_lport_state_enter(lport, LPORT_ST_LOGO);
++	fc_vports_linkchange(lport);
+ 
+ 	fp = fc_frame_alloc(lport, sizeof(*logo));
+ 	if (!fp) {
+diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
+index 39f02c0..c68f6c7 100644
+--- a/drivers/scsi/libfc/fc_npiv.c
++++ b/drivers/scsi/libfc/fc_npiv.c
+@@ -84,3 +84,78 @@ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
+ 	return lport;
+ }
+ 
++/*
++ * When setting the link state of vports during an lport state change, it's
++ * necessary to hold the lp_mutex of both the N_Port and the VN_Port.
++ * This tells the lockdep engine to treat the nested locking of the VN_Port
++ * as a different lock class.
++ */
++enum libfc_lport_mutex_class {
++	LPORT_MUTEX_NORMAL = 0,
++	LPORT_MUTEX_VN_PORT = 1,
++};
++
++/**
++ * __fc_vport_setlink() - update link and status on a VN_Port
++ * @n_port: parent N_Port
++ * @vn_port: VN_Port to update
++ *
++ * Locking: must be called with both the N_Port and VN_Port lp_mutex held
++ */
++static void __fc_vport_setlink(struct fc_lport *n_port,
++			       struct fc_lport *vn_port)
++{
++	struct fc_vport *vport = vn_port->vport;
++
++	if (vn_port->state == LPORT_ST_DISABLED)
++		return;
++
++	if (n_port->state == LPORT_ST_READY) {
++		if (n_port->npiv_enabled) {
++			fc_vport_set_state(vport, FC_VPORT_INITIALIZING);
++			__fc_linkup(vn_port);
++		} else {
++			fc_vport_set_state(vport, FC_VPORT_NO_FABRIC_SUPP);
++			__fc_linkdown(vn_port);
++		}
++	} else {
++		fc_vport_set_state(vport, FC_VPORT_LINKDOWN);
++		__fc_linkdown(vn_port);
++	}
++}
++
++/**
++ * fc_vport_setlink() - update link and status on a VN_Port
++ * @vn_port: virtual port to update
++ */
++void fc_vport_setlink(struct fc_lport *vn_port)
++{
++	struct fc_vport *vport = vn_port->vport;
 +	struct Scsi_Host *shost = vport_to_shost(vport);
 +	struct fc_lport *n_port = shost_priv(shost);
-+	struct fc_lport *vn_port = vport->dd_data;
-+	struct fcoe_port *port = lport_priv(vn_port);
 +
 +	mutex_lock(&n_port->lp_mutex);
-+	list_del(&vn_port->list);
++	mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
++	__fc_vport_setlink(n_port, vn_port);
++	mutex_unlock(&vn_port->lp_mutex);
 +	mutex_unlock(&n_port->lp_mutex);
-+	schedule_work(&port->destroy_work);
-+	return 0;
 +}
++EXPORT_SYMBOL(fc_vport_setlink);
 +
 +/**
-+ * fcoe_vport_disable() - change vport state
-+ * @vport: vport to bring online/offline
-+ * @disable: should the vport be disabled?
++ * fc_vports_linkchange() - change the link state of all vports
++ * @n_port: Parent N_Port that has changed state
++ *
++ * Locking: called with the n_port lp_mutex held
 + */
-+static int fcoe_vport_disable(struct fc_vport *vport, bool disable)
++void fc_vports_linkchange(struct fc_lport *n_port)
 +{
-+	struct fc_lport *lport = vport->dd_data;
++	struct fc_lport *vn_port;
 +
-+	if (disable) {
-+		fc_vport_set_state(vport, FC_VPORT_DISABLED);
-+		fc_fabric_logoff(lport);
-+	} else {
-+		lport->boot_time = jiffies;
-+		fc_fabric_login(lport);
-+		fc_vport_setlink(lport);
++	list_for_each_entry(vn_port, &n_port->vports, list) {
++		mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
++		__fc_vport_setlink(n_port, vn_port);
++		mutex_unlock(&vn_port->lp_mutex);
 +	}
-+
-+	return 0;
 +}
 +
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 2c6d55d..dfeb1ee 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -788,11 +788,13 @@ int fc_fabric_login(struct fc_lport *lp);
+ /*
+  * The link is up for the given local port.
+  */
++void __fc_linkup(struct fc_lport *);
+ void fc_linkup(struct fc_lport *);
+ 
+ /*
+  * Link is down for the given local port.
+  */
++void __fc_linkdown(struct fc_lport *);
+ void fc_linkdown(struct fc_lport *);
+ 
+ /*
+@@ -821,6 +823,12 @@ struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize);
+ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id);
+ 
+ /*
++ * NPIV VN_Port link state management
++ */
++void fc_vport_setlink(struct fc_lport *vn_port);
++void fc_vports_linkchange(struct fc_lport *n_port);
++
++/*
+  * REMOTE PORT LAYER
+  *****************************/
+ int fc_rport_init(struct fc_lport *lp);
 
