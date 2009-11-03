@@ -1,260 +1,199 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 19/54] libfc: combine name server registration request
-	functions
-Date: Tue, 03 Nov 2009 11:47:12 -0800
-Message-ID: <20091103194712.4085.75730.stgit@localhost.localdomain>
+Subject: [PATCH 22/54] libfc: Add routine to copy data from a buffer to a SG
+	list
+Date: Tue, 03 Nov 2009 11:47:28 -0800
+Message-ID: <20091103194728.4085.79895.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:2075 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:64631 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755043AbZKCTrY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:47:24 -0500
+	id S1755035AbZKCTrX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:47:23 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
 
-From: Chris Leech <christopher.leech@intel.com>
+When handling the multi-frame responses of fc pass-thru requests,
+a code segment similar to fc_fcp_recv_data (routine to receive
+inbound SCSI data) is used in the response handler. This patch
+is to add a routine, called fc_copy_buffer_to_sglist(), to handle
+the common function of copying data from a buffer to a scatter-
+gather list in order to avoid code duplication.
 
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |  164 +++++++++++------------------------------
- 1 files changed, 42 insertions(+), 122 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c   |   56 +++++++-------------------------------
+ drivers/scsi/libfc/fc_libfc.c |   60 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/libfc/fc_libfc.h |    8 +++++
+ 3 files changed, 78 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index f67ca68..dfea6c5 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -108,10 +108,7 @@ static void fc_lport_error(struct fc_lport *, struct fc_frame *);
- static void fc_lport_enter_reset(struct fc_lport *);
- static void fc_lport_enter_flogi(struct fc_lport *);
- static void fc_lport_enter_dns(struct fc_lport *);
--static void fc_lport_enter_rnn_id(struct fc_lport *);
--static void fc_lport_enter_rsnn_nn(struct fc_lport *);
--static void fc_lport_enter_rspn_id(struct fc_lport *);
--static void fc_lport_enter_rft_id(struct fc_lport *);
-+static void fc_lport_enter_ns(struct fc_lport *, enum fc_lport_state);
- static void fc_lport_enter_scr(struct fc_lport *);
- static void fc_lport_enter_ready(struct fc_lport *);
- static void fc_lport_enter_logo(struct fc_lport *);
-@@ -157,7 +154,7 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
- 	case RPORT_EV_READY:
- 		if (lport->state == LPORT_ST_DNS) {
- 			lport->dns_rp = rdata;
--			fc_lport_enter_rnn_id(lport);
-+			fc_lport_enter_ns(lport, LPORT_ST_RNN_ID);
- 		} else {
- 			FC_LPORT_DBG(lport, "Received an READY event "
- 				     "on port (%6x) for the directory "
-@@ -1031,13 +1028,13 @@ static void fc_lport_ns_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	    ntohs(ct->ct_cmd) == FC_FS_ACC)
- 		switch (lport->state) {
- 		case LPORT_ST_RNN_ID:
--			fc_lport_enter_rsnn_nn(lport);
-+			fc_lport_enter_ns(lport, LPORT_ST_RSNN_NN);
- 			break;
- 		case LPORT_ST_RSNN_NN:
--			fc_lport_enter_rspn_id(lport);
-+			fc_lport_enter_ns(lport, LPORT_ST_RSPN_ID);
- 			break;
- 		case LPORT_ST_RSPN_ID:
--			fc_lport_enter_rft_id(lport);
-+			fc_lport_enter_ns(lport, LPORT_ST_RFT_ID);
- 			break;
- 		case LPORT_ST_RFT_ID:
- 			fc_lport_enter_scr(lport);
-@@ -1130,133 +1127,62 @@ static void fc_lport_enter_scr(struct fc_lport *lport)
- }
- 
- /**
-- * fc_lport_enter_rft_id() - Register FC4-types with the name server
-+ * fc_lport_enter_ns() - register some object with the name server
-  * @lport: Fibre Channel local port to register
-  *
-  * Locking Note: The lport lock is expected to be held before calling
-  * this routine.
-  */
--static void fc_lport_enter_rft_id(struct fc_lport *lport)
--{
--	struct fc_frame *fp;
--	struct fc_ns_fts *lps;
--	int i;
--
--	FC_LPORT_DBG(lport, "Entered RFT_ID state from %s state\n",
--		     fc_lport_state(lport));
--
--	fc_lport_state_enter(lport, LPORT_ST_RFT_ID);
--
--	lps = &lport->fcts;
--	i = sizeof(lps->ff_type_map) / sizeof(lps->ff_type_map[0]);
--	while (--i >= 0)
--		if (ntohl(lps->ff_type_map[i]) != 0)
--			break;
--	if (i < 0) {
--		/* nothing to register, move on to SCR */
--		fc_lport_enter_scr(lport);
--		return;
--	}
--
--	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
--			    sizeof(struct fc_ns_rft));
--	if (!fp) {
--		fc_lport_error(lport, fp);
--		return;
--	}
--
--	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RFT_ID,
--				  fc_lport_ns_resp,
--				  lport, lport->e_d_tov))
--		fc_lport_error(lport, fp);
--}
--
--/**
-- * fc_rport_enter_rspn_id() - Register symbolic port name with the name server
-- * @lport: Fibre Channel local port to register
-- *
-- * Locking Note: The lport lock is expected to be held before calling
-- * this routine.
-- */
--static void fc_lport_enter_rspn_id(struct fc_lport *lport)
-+static void fc_lport_enter_ns(struct fc_lport *lport, enum fc_lport_state state)
- {
- 	struct fc_frame *fp;
-+	enum fc_ns_req cmd;
-+	int size = sizeof(struct fc_ct_hdr);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 866f78a..98279fe 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -323,7 +323,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
  	size_t len;
+ 	void *buf;
+ 	struct scatterlist *sg;
+-	size_t remaining;
++	u32 nents;
  
--	FC_LPORT_DBG(lport, "Entered RSPN_ID state from %s state\n",
-+	FC_LPORT_DBG(lport, "Entered %s state from %s state\n",
-+		     fc_lport_state_names[state],
- 		     fc_lport_state(lport));
+ 	fh = fc_frame_header_get(fp);
+ 	offset = ntohl(fh->fh_parm_offset);
+@@ -347,55 +347,19 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 	if (offset != fsp->xfer_len)
+ 		fsp->state |= FC_SRB_DISCONTIG;
  
--	fc_lport_state_enter(lport, LPORT_ST_RSPN_ID);
+-	crc = 0;
+-	if (fr_flags(fp) & FCPHF_CRC_UNCHECKED)
+-		crc = crc32(~0, (u8 *) fh, sizeof(*fh));
 -
--	len = strnlen(fc_host_symbolic_name(lport->host), 255);
--	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
--			    sizeof(struct fc_ns_rspn) + len);
--	if (!fp) {
--		fc_lport_error(lport, fp);
--		return;
+ 	sg = scsi_sglist(sc);
+-	remaining = len;
+-
+-	while (remaining > 0 && sg) {
+-		size_t off;
+-		void *page_addr;
+-		size_t sg_bytes;
+-
+-		if (offset >= sg->length) {
+-			offset -= sg->length;
+-			sg = sg_next(sg);
+-			continue;
+-		}
+-		sg_bytes = min(remaining, sg->length - offset);
+-
+-		/*
+-		 * The scatterlist item may be bigger than PAGE_SIZE,
+-		 * but we are limited to mapping PAGE_SIZE at a time.
+-		 */
+-		off = offset + sg->offset;
+-		sg_bytes = min(sg_bytes, (size_t)
+-			       (PAGE_SIZE - (off & ~PAGE_MASK)));
+-		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT),
+-					KM_SOFTIRQ0);
+-		if (!page_addr)
+-			break;		/* XXX panic? */
+-
+-		if (fr_flags(fp) & FCPHF_CRC_UNCHECKED)
+-			crc = crc32(crc, buf, sg_bytes);
+-		memcpy((char *)page_addr + (off & ~PAGE_MASK), buf,
+-		       sg_bytes);
+-
+-		kunmap_atomic(page_addr, KM_SOFTIRQ0);
+-		buf += sg_bytes;
+-		offset += sg_bytes;
+-		remaining -= sg_bytes;
+-		copy_len += sg_bytes;
 -	}
--
--	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
--				  fc_lport_ns_resp,
--				  lport, lport->e_d_tov))
--		fc_lport_error(lport, fp);
--}
-+	fc_lport_state_enter(lport, state);
++	nents = scsi_sg_count(sc);
  
--/**
-- * fc_rport_enter_rsnn_nn() - Register symbolic node name with the name server
-- * @lport: Fibre Channel local port to register
-- *
-- * Locking Note: The lport lock is expected to be held before calling
-- * this routine.
-- */
--static void fc_lport_enter_rsnn_nn(struct fc_lport *lport)
--{
--	struct fc_frame *fp;
--	size_t len;
--
--	FC_LPORT_DBG(lport, "Entered RSNN_NN state from %s state\n",
--		     fc_lport_state(lport));
--
--	fc_lport_state_enter(lport, LPORT_ST_RSNN_NN);
--
--	len = strnlen(fc_host_symbolic_name(lport->host), 255);
--	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
--			    sizeof(struct fc_ns_rsnn) + len);
--	if (!fp) {
--		fc_lport_error(lport, fp);
-+	switch (state) {
-+	case LPORT_ST_RNN_ID:
-+		cmd = FC_NS_RNN_ID;
-+		size += sizeof(struct fc_ns_rn_id);
-+		break;
-+	case LPORT_ST_RSNN_NN:
-+		len = strnlen(fc_host_symbolic_name(lport->host), 255);
-+		/* if there is no symbolic name, skip to RFT_ID */
-+		if (!len)
-+			return fc_lport_enter_ns(lport, LPORT_ST_RFT_ID);
-+		cmd = FC_NS_RSNN_NN;
-+		size += sizeof(struct fc_ns_rsnn) + len;
-+		break;
-+	case LPORT_ST_RSPN_ID:
-+		len = strnlen(fc_host_symbolic_name(lport->host), 255);
-+		/* if there is no symbolic name, skip to RFT_ID */
-+		if (!len)
-+			return fc_lport_enter_ns(lport, LPORT_ST_RFT_ID);
-+		cmd = FC_NS_RSPN_ID;
-+		size += sizeof(struct fc_ns_rspn) + len;
-+		break;
-+	case LPORT_ST_RFT_ID:
-+		cmd = FC_NS_RFT_ID;
-+		size += sizeof(struct fc_ns_rft);
-+		break;
-+	default:
-+		fc_lport_error(lport, NULL);
- 		return;
- 	}
+-	if (fr_flags(fp) & FCPHF_CRC_UNCHECKED) {
++	if (!(fr_flags(fp) & FCPHF_CRC_UNCHECKED)) {
++		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
++						    &offset, KM_SOFTIRQ0, NULL);
++	} else {
++		crc = crc32(~0, (u8 *) fh, sizeof(*fh));
++		copy_len = fc_copy_buffer_to_sglist(buf, len, sg, &nents,
++						    &offset, KM_SOFTIRQ0, &crc);
+ 		buf = fc_frame_payload_get(fp, 0);
+-		if (len % 4) {
++		if (len % 4)
+ 			crc = crc32(crc, buf + len, 4 - (len % 4));
+-			len += 4 - (len % 4);
+-		}
  
--	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSNN_NN,
--				  fc_lport_ns_resp,
--				  lport, lport->e_d_tov))
--		fc_lport_error(lport, fp);
--}
--
--/**
-- * fc_rport_enter_rnn_id() - Register node name with the name server
-- * @lport: Fibre Channel local port to register
-- *
-- * Locking Note: The lport lock is expected to be held before calling
-- * this routine.
-- */
--static void fc_lport_enter_rnn_id(struct fc_lport *lport)
--{
--	struct fc_frame *fp;
--
--	FC_LPORT_DBG(lport, "Entered RNN_ID state from %s state\n",
--		     fc_lport_state(lport));
--
--	fc_lport_state_enter(lport, LPORT_ST_RNN_ID);
--
--	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
--			    sizeof(struct fc_ns_rn_id));
-+	fp = fc_frame_alloc(lport, size);
- 	if (!fp) {
- 		fc_lport_error(lport, fp);
- 		return;
- 	}
+ 		if (~crc != le32_to_cpu(fr_crc(fp))) {
+ crc_err:
+diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
+index 01418ae..295eafb 100644
+--- a/drivers/scsi/libfc/fc_libfc.c
++++ b/drivers/scsi/libfc/fc_libfc.c
+@@ -72,3 +72,63 @@ static void __exit libfc_exit(void)
+ 	fc_destroy_rport();
+ }
+ module_exit(libfc_exit);
++
++/**
++ * fc_copy_buffer_to_sglist() - This routine copies the data of a buffer
++ *                              into a scatter-gather list (SG list).
++ *
++ * @buf: pointer to the data buffer.
++ * @len: the byte-length of the data buffer.
++ * @sg: pointer to the pointer of the SG list.
++ * @nents: pointer to the remaining number of entries in the SG list.
++ * @offset: pointer to the current offset in the SG list.
++ * @km_type: dedicated page table slot type for kmap_atomic.
++ * @crc: pointer to the 32-bit crc value.
++ *       If crc is NULL, CRC is not calculated.
++ */
++u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
++			     struct scatterlist *sg,
++			     u32 *nents, size_t *offset,
++			     enum km_type km_type, u32 *crc)
++{
++	size_t remaining = len;
++	u32 copy_len = 0;
++
++	while (remaining > 0 && sg) {
++		size_t off, sg_bytes;
++		void *page_addr;
++
++		if (*offset >= sg->length) {
++			/*
++			 * Check for end and drop resources
++			 * from the last iteration.
++			 */
++			if (!(*nents))
++				break;
++			--(*nents);
++			*offset -= sg->length;
++			sg = sg_next(sg);
++			continue;
++		}
++		sg_bytes = min(remaining, sg->length - *offset);
++
++		/*
++		 * The scatterlist item may be bigger than PAGE_SIZE,
++		 * but we are limited to mapping PAGE_SIZE at a time.
++		 */
++		off = *offset + sg->offset;
++		sg_bytes = min(sg_bytes,
++			       (size_t)(PAGE_SIZE - (off & ~PAGE_MASK)));
++		page_addr = kmap_atomic(sg_page(sg) + (off >> PAGE_SHIFT),
++					km_type);
++		if (crc)
++			*crc = crc32(*crc, buf, sg_bytes);
++		memcpy((char *)page_addr + (off & ~PAGE_MASK), buf, sg_bytes);
++		kunmap_atomic(page_addr, km_type);
++		buf += sg_bytes;
++		*offset += sg_bytes;
++		remaining -= sg_bytes;
++		copy_len += sg_bytes;
++	}
++	return copy_len;
++}
+diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
+index 0530149..e4b5e92 100644
+--- a/drivers/scsi/libfc/fc_libfc.h
++++ b/drivers/scsi/libfc/fc_libfc.h
+@@ -101,4 +101,12 @@ void fc_destroy_fcp(void);
+  */
+ const char *fc_els_resp_type(struct fc_frame *);
  
--	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RNN_ID,
-+	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, cmd,
- 				  fc_lport_ns_resp,
- 				  lport, lport->e_d_tov))
- 		fc_lport_error(lport, fp);
-@@ -1324,16 +1250,10 @@ static void fc_lport_timeout(struct work_struct *work)
- 		fc_lport_enter_dns(lport);
- 		break;
- 	case LPORT_ST_RNN_ID:
--		fc_lport_enter_rnn_id(lport);
--		break;
- 	case LPORT_ST_RSNN_NN:
--		fc_lport_enter_rsnn_nn(lport);
--		break;
- 	case LPORT_ST_RSPN_ID:
--		fc_lport_enter_rspn_id(lport);
--		break;
- 	case LPORT_ST_RFT_ID:
--		fc_lport_enter_rft_id(lport);
-+		fc_lport_enter_ns(lport, lport->state);
- 		break;
- 	case LPORT_ST_SCR:
- 		fc_lport_enter_scr(lport);
++/*
++ * Copies a buffer into an sg list
++ */
++u32 fc_copy_buffer_to_sglist(void *buf, size_t len,
++			     struct scatterlist *sg,
++			     u32 *nents, size_t *offset,
++			     enum km_type km_type, u32 *crc);
++
+ #endif /* _FC_LIBFC_H_ */
 
