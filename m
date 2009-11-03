@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 47/54] fcoe: Fix getting san mac for VLAN interface
-Date: Tue, 03 Nov 2009 11:49:43 -0800
-Message-ID: <20091103194943.4085.88732.stgit@localhost.localdomain>
+Subject: [PATCH 48/54] fcoe: Fix setting lport's WWNN/WWPN to use san mac
+	address
+Date: Tue, 03 Nov 2009 11:49:49 -0800
+Message-ID: <20091103194949.4085.34820.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60187 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:32331 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753877AbZKCTti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:49:38 -0500
+	id S1755224AbZKCTto (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:49:44 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,38 +20,33 @@ Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
 From: Yi Zou <yi.zou@intel.com>
 
-Make sure we are get the SAN MAC address from the real netdev if the input
-netdev is a VLAN device.
+We are still using netdev->dev_addr to generate lport's WWNN/WWPN even if the
+LLD has support for NETDEV_HW_ADDR_T_SAN. Instead, we should just use the
+fip->ctl_src_addr, which is the NETDEV_HW_ADDR_T_SAN if LLD supports it or it
+is just the netdev->dev_addr if it does not.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 2274fcd..c1fd756 100644
+index c1fd756..fba7ba0 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -249,6 +249,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
- {
- 	struct fcoe_ctlr *fip = &fcoe->ctlr;
- 	struct netdev_hw_addr *ha;
-+	struct net_device *real_dev;
- 	u8 flogi_maddr[ETH_ALEN];
- 	const struct net_device_ops *ops;
+@@ -599,10 +599,10 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
+ 	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lport);
  
-@@ -272,8 +273,10 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	if (!lport->vport) {
+-		wwnn = fcoe_wwn_from_mac(netdev->dev_addr, 1, 0);
++		wwnn = fcoe_wwn_from_mac(fcoe->ctlr.ctl_src_addr, 1, 0);
+ 		fc_set_wwnn(lport, wwnn);
+ 		/* XXX - 3rd arg needs to be vlan id */
+-		wwpn = fcoe_wwn_from_mac(netdev->dev_addr, 2, 0);
++		wwpn = fcoe_wwn_from_mac(fcoe->ctlr.ctl_src_addr, 2, 0);
+ 		fc_set_wwpn(lport, wwpn);
+ 	}
  
- 	/* look for SAN MAC address, if multiple SAN MACs exist, only
- 	 * use the first one for SPMA */
-+	real_dev = (netdev->priv_flags & IFF_802_1Q_VLAN) ?
-+		vlan_dev_real_dev(netdev) : netdev;
- 	rcu_read_lock();
--	for_each_dev_addr(netdev, ha) {
-+	for_each_dev_addr(real_dev, ha) {
- 		if ((ha->type == NETDEV_HW_ADDR_T_SAN) &&
- 		    (is_valid_ether_addr(ha->addr))) {
- 			memcpy(fip->ctl_src_addr, ha->addr, ETH_ALEN);
 
