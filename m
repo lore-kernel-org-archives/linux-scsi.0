@@ -1,76 +1,142 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 04/54] libfc: Remove fc_fcp_complete
-Date: Tue, 03 Nov 2009 11:45:52 -0800
-Message-ID: <20091103194552.4085.94465.stgit@localhost.localdomain>
+Subject: [PATCH 07/54] libfc: changes to libfc_host_alloc to consolidate
+	initialization with allocation
+Date: Tue, 03 Nov 2009 11:46:08 -0800
+Message-ID: <20091103194608.4085.55603.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:23103 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:30749 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753328AbZKCTpr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:45:47 -0500
+	id S1754206AbZKCTqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:46:03 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
+Cc: Chris Leech <christopher.leech@intel.com>, Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-This function is never used, let's remove it.
+From: Chris Leech <christopher.leech@intel.com>
 
+I'd like to keep basic initialization together with allocation, which means
+this can't just be a tail-call to scsi_host_alloc.
+
+This is needed to create a generic libfc host allocation routine for NPIV
+VN_Ports, which will share the exchange ID space (through sharing exchange
+manager structures) with the parent lport.  In order to clone the exchange
+manager list when the lport is allocated, the list head must be initialized
+earlier.
+
+Also, update fnic to use the libfc_host_alloc so that later changes do not break
+it. (contribution by Joe Eykholt)
+
+Signed-off-by: Chris Leech <christopher.leech@intel.com>
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |   17 -----------------
- include/scsi/libfc.h        |    8 --------
- 2 files changed, 0 insertions(+), 25 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |    8 +++-----
+ drivers/scsi/fnic/fnic_main.c |   10 ++++------
+ drivers/scsi/libfc/fc_lport.c |    1 -
+ include/scsi/libfc.h          |   15 ++++++++++++---
+ 4 files changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 479af93..3ab08f8 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1875,23 +1875,6 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
- }
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 4efbc17..8ca488d 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -515,8 +515,6 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
+ 	int rc = 0;
  
- /**
-- * fc_fcp_complete() - complete processing of a fcp packet
-- * @fsp:	fcp packet
-- *
-- * This function may sleep if a fsp timer is pending.
-- * The host lock must not be held by caller.
-- */
--void fc_fcp_complete(struct fc_fcp_pkt *fsp)
--{
--	if (fc_fcp_lock_pkt(fsp))
--		return;
+ 	/* lport scsi host config */
+-	lp->host = shost;
 -
--	fc_fcp_complete_locked(fsp);
--	fc_fcp_unlock_pkt(fsp);
--}
--EXPORT_SYMBOL(fc_fcp_complete);
--
--/**
-  * fc_eh_abort() - Abort a command
-  * @sc_cmd:	scsi command to abort
-  *
+ 	lp->host->max_lun = FCOE_MAX_LUN;
+ 	lp->host->max_id = FCOE_MAX_FCP_TARGET;
+ 	lp->host->max_channel = 0;
+@@ -734,14 +732,14 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 
+ 	FCOE_NETDEV_DBG(netdev, "Create Interface\n");
+ 
+-	shost = libfc_host_alloc(&fcoe_shost_template,
++	lport = libfc_host_alloc(&fcoe_shost_template,
+ 				 sizeof(struct fcoe_port));
+-	if (!shost) {
++	if (!lport) {
+ 		FCOE_NETDEV_DBG(netdev, "Could not allocate host structure\n");
+ 		rc = -ENOMEM;
+ 		goto out;
+ 	}
+-	lport = shost_priv(shost);
++	shost = lport->host;
+ 	port = lport_priv(lport);
+ 	port->lport = lport;
+ 	port->fcoe = fcoe;
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index fc61f17..018cc42 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -424,15 +424,13 @@ static int __devinit fnic_probe(struct pci_dev *pdev,
+ 	 * Allocate SCSI Host and set up association between host,
+ 	 * local port, and fnic
+ 	 */
+-	host = scsi_host_alloc(&fnic_host_template,
+-			       sizeof(struct fc_lport) + sizeof(struct fnic));
+-	if (!host) {
+-		printk(KERN_ERR PFX "Unable to alloc SCSI host\n");
++	lp = libfc_host_alloc(&fnic_host_template, sizeof(struct fnic));
++	if (!lp) {
++		printk(KERN_ERR PFX "Unable to alloc libfc local port\n");
+ 		err = -ENOMEM;
+ 		goto err_out;
+ 	}
+-	lp = shost_priv(host);
+-	lp->host = host;
++	host = lp->host;
+ 	fnic = lport_priv(lp);
+ 	fnic->lport = lp;
+ 
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index f7f20a4..41650d3 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1505,7 +1505,6 @@ int fc_lport_init(struct fc_lport *lport)
+ 	if (lport->link_supported_speeds & FC_PORTSPEED_10GBIT)
+ 		fc_host_supported_speeds(lport->host) |= FC_PORTSPEED_10GBIT;
+ 
+-	INIT_LIST_HEAD(&lport->ema_list);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(fc_lport_init);
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index f207b6c..db2175d 100644
+index 690f829..ed3057b 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -888,14 +888,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd,
- 		    void (*done)(struct scsi_cmnd *));
+@@ -739,12 +739,21 @@ static inline void *lport_priv(const struct fc_lport *lp)
+  * @sht: ptr to the scsi host templ
+  * @priv_size: size of private data after fc_lport
+  *
+- * Returns: ptr to Scsi_Host
++ * Returns: libfc lport
+  */
+-static inline struct Scsi_Host *
++static inline struct fc_lport *
+ libfc_host_alloc(struct scsi_host_template *sht, int priv_size)
+ {
+-	return scsi_host_alloc(sht, sizeof(struct fc_lport) + priv_size);
++	struct fc_lport *lport;
++	struct Scsi_Host *shost;
++
++	shost = scsi_host_alloc(sht, sizeof(*lport) + priv_size);
++	if (!shost)
++		return NULL;
++	lport = shost_priv(shost);
++	lport->host = shost;
++	INIT_LIST_HEAD(&lport->ema_list);
++	return lport;
+ }
  
  /*
-- * complete processing of a fcp packet
-- *
-- * This function may sleep if a fsp timer is pending.
-- * The host lock must not be held by caller.
-- */
--void fc_fcp_complete(struct fc_fcp_pkt *fsp);
--
--/*
-  * Send an ABTS frame to the target device. The sc_cmd argument
-  * is a pointer to the SCSI command to be aborted.
-  */
 
