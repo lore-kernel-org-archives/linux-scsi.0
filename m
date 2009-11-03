@@ -1,17 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 33/54] libfcoe: FIP should report link to libfc whether
-	selected or not
-Date: Tue, 03 Nov 2009 11:48:27 -0800
-Message-ID: <20091103194827.4085.3666.stgit@localhost.localdomain>
+Subject: [PATCH 31/54] libfcoe: fip: use SCSI host number to identify debug
+	messages.
+Date: Tue, 03 Nov 2009 11:48:16 -0800
+Message-ID: <20091103194816.4085.41658.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50606 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:6894 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755044AbZKCTsW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:48:22 -0500
+	id S1755039AbZKCTs1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:48:27 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,167 +20,202 @@ Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-The fnic driver with FIP is reporting link up, even though it's down.
-
-When the interface is shut down by the switch, we receive a clear
-virtual link, and set the state reported to libfc as down, although
-we still report it up.  Clearly wrong.  That causes the subsequent
-link down event not to be reported, and /sys shows the host "Online".
-
-Currently, in FIP mode, if an FCF times out, then link to libfc
-is reported as down, to stop FLOGIs.  That interferes with the LLD
-link down being reported.
-
-Users really need to know the physical link information, to diagnose
-cabling issues, so physical link status should be reported to libfc.
-
-If the selected FCF needs to be reported, that should be done
-separately, in a later patch.
-
+Use scsi host number to identify debug messages.
+Previously, no instance information was given, so if multiple
+ports were active, it became confusing.
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c |   60 ++++++++++++++++++++++---------------------
- include/scsi/libfcoe.h      |    1 +
- 2 files changed, 31 insertions(+), 30 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |   47 ++++++++++++++++++++++++-------------------
+ 1 files changed, 26 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 787e722..4d857c2 100644
+index 1ea17a3..99f583f 100644
 --- a/drivers/scsi/fcoe/libfcoe.c
 +++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -277,38 +277,16 @@ EXPORT_SYMBOL(fcoe_ctlr_link_up);
- /**
-  * fcoe_ctlr_reset() - Reset a FCoE controller
-  * @fip:       The FCoE controller to reset
-- * @new_state: The FIP state to be entered
-- *
-- * Returns non-zero if the link was up and now isn't.
-  */
--static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
-+static void fcoe_ctlr_reset(struct fcoe_ctlr *fip)
- {
--	struct fc_lport *lport = fip->lp;
--	int link_dropped;
--
--	spin_lock_bh(&fip->lock);
- 	fcoe_ctlr_reset_fcfs(fip);
- 	del_timer(&fip->timer);
--	fip->state = new_state;
- 	fip->ctlr_ka_time = 0;
- 	fip->port_ka_time = 0;
- 	fip->sol_time = 0;
- 	fip->flogi_oxid = FC_XID_UNKNOWN;
- 	fip->map_dest = 0;
--	fip->last_link = 0;
--	link_dropped = fip->link;
--	fip->link = 0;
--	spin_unlock_bh(&fip->lock);
--
--	if (link_dropped)
--		fc_linkdown(lport);
--
--	if (new_state == FIP_ST_ENABLED) {
--		fcoe_ctlr_solicit(fip, NULL);
--		fc_linkup(lport);
--		link_dropped = 0;
--	}
--	return link_dropped;
- }
+@@ -74,9 +74,10 @@ do {							\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_LOGGING,				\
+ 			      printk(KERN_INFO "libfcoe: " fmt, ##args);)
+ 
+-#define LIBFCOE_FIP_DBG(fmt, args...)					\
++#define LIBFCOE_FIP_DBG(fip, fmt, args...)				\
+ 	LIBFCOE_CHECK_LOGGING(LIBFCOE_FIP_LOGGING,			\
+-			      printk(KERN_INFO "fip: " fmt, ##args);)
++			      printk(KERN_INFO "host%d: fip: " fmt, 	\
++				     (fip)->lp->host->host_no, ##args);)
  
  /**
-@@ -322,7 +300,20 @@ static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
+  * fcoe_ctlr_mtu_valid() - Check if a FCF's MTU is valid
+@@ -267,7 +268,7 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ 		fip->link = 1;
+ 		spin_unlock_bh(&fip->lock);
+ 		if (fip->state == FIP_ST_AUTO)
+-			LIBFCOE_FIP_DBG("%s", "setting AUTO mode.\n");
++			LIBFCOE_FIP_DBG(fip, "%s", "setting AUTO mode.\n");
+ 		fc_linkup(fip->lp);
+ 		fcoe_ctlr_solicit(fip, NULL);
+ 	} else
+@@ -604,13 +605,15 @@ static void fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
+ 
+ /**
+  * fcoe_ctlr_parse_adv() - Decode a FIP advertisement into a new FCF entry
++ * @fip: The FCoE controller receiving the advertisement
+  * @skb: The received FIP advertisement frame
+  * @fcf: The resulting FCF entry
+  *
+  * Returns zero on a valid parsed advertisement,
+  * otherwise returns non zero value.
   */
- int fcoe_ctlr_link_down(struct fcoe_ctlr *fip)
+-static int fcoe_ctlr_parse_adv(struct sk_buff *skb, struct fcoe_fcf *fcf)
++static int fcoe_ctlr_parse_adv(struct fcoe_ctlr *fip,
++			       struct sk_buff *skb, struct fcoe_fcf *fcf)
  {
--	return fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
-+	int link_dropped;
-+
-+	LIBFCOE_FIP_DBG(fip, "link down.\n");
-+	spin_lock_bh(&fip->lock);
-+	fcoe_ctlr_reset(fip);
-+	link_dropped = fip->link;
-+	fip->link = 0;
-+	fip->last_link = 0;
-+	fip->state = FIP_ST_LINK_WAIT;
-+	spin_unlock_bh(&fip->lock);
-+
-+	if (link_dropped)
-+		fc_linkdown(fip->lp);
-+	return link_dropped;
+ 	struct fip_header *fiph;
+ 	struct fip_desc *desc = NULL;
+@@ -649,7 +652,7 @@ static int fcoe_ctlr_parse_adv(struct sk_buff *skb, struct fcoe_fcf *fcf)
+ 			       ((struct fip_mac_desc *)desc)->fd_mac,
+ 			       ETH_ALEN);
+ 			if (!is_valid_ether_addr(fcf->fcf_mac)) {
+-				LIBFCOE_FIP_DBG("Invalid MAC address "
++				LIBFCOE_FIP_DBG(fip, "Invalid MAC address "
+ 						"in FIP adv\n");
+ 				return -EINVAL;
+ 			}
+@@ -683,7 +686,7 @@ static int fcoe_ctlr_parse_adv(struct sk_buff *skb, struct fcoe_fcf *fcf)
+ 		case FIP_DT_LOGO:
+ 		case FIP_DT_ELP:
+ 		default:
+-			LIBFCOE_FIP_DBG("unexpected descriptor type %x "
++			LIBFCOE_FIP_DBG(fip, "unexpected descriptor type %x "
+ 					"in FIP adv\n", desc->fip_dtype);
+ 			/* standard says ignore unknown descriptors >= 128 */
+ 			if (desc->fip_dtype < FIP_DT_VENDOR_BASE)
+@@ -700,7 +703,7 @@ static int fcoe_ctlr_parse_adv(struct sk_buff *skb, struct fcoe_fcf *fcf)
+ 	return 0;
+ 
+ len_err:
+-	LIBFCOE_FIP_DBG("FIP length error in descriptor type %x len %zu\n",
++	LIBFCOE_FIP_DBG(fip, "FIP length error in descriptor type %x len %zu\n",
+ 			desc->fip_dtype, dlen);
+ 	return -EINVAL;
  }
- EXPORT_SYMBOL(fcoe_ctlr_link_down);
+@@ -719,7 +722,7 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	int first = 0;
+ 	int mtu_valid;
  
-@@ -994,7 +985,13 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
- 				desc_mask);
- 	} else {
- 		LIBFCOE_FIP_DBG(fip, "performing Clear Virtual Link\n");
--		fcoe_ctlr_reset(fip, FIP_ST_ENABLED);
-+
-+		spin_lock_bh(&fip->lock);
-+		fcoe_ctlr_reset(fip);
-+		spin_unlock_bh(&fip->lock);
-+
-+		fc_lport_reset(fip->lp);
-+		fcoe_ctlr_solicit(fip, NULL);
- 	}
- }
+-	if (fcoe_ctlr_parse_adv(skb, &new))
++	if (fcoe_ctlr_parse_adv(fip, skb, &new))
+ 		return;
  
-@@ -1152,15 +1149,14 @@ static void fcoe_ctlr_timeout(unsigned long arg)
- 			fip->port_ka_time = jiffies +
- 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
- 			fip->ctlr_ka_time = jiffies + sel->fka_period;
--			fip->link = 1;
- 		} else {
- 			printk(KERN_NOTICE "libfcoe: host%d: "
- 			       "FIP Fibre-Channel Forwarder timed out.	"
- 			       "Starting FCF discovery.\n",
- 			       fip->lp->host->host_no);
--			fip->link = 0;
-+			fip->reset_req = 1;
-+			schedule_work(&fip->link_work);
- 		}
--		schedule_work(&fip->link_work);
- 	}
- 
- 	if (sel) {
-@@ -1205,20 +1201,24 @@ static void fcoe_ctlr_link_work(struct work_struct *work)
- 	u8 *mac;
- 	int link;
- 	int last_link;
-+	int reset;
- 
- 	fip = container_of(work, struct fcoe_ctlr, link_work);
  	spin_lock_bh(&fip->lock);
- 	last_link = fip->last_link;
- 	link = fip->link;
- 	fip->last_link = link;
-+	reset = fip->reset_req;
-+	fip->reset_req = 0;
+@@ -765,7 +768,7 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	mtu_valid = fcoe_ctlr_mtu_valid(fcf);
+ 	fcf->time = jiffies;
+ 	if (!found) {
+-		LIBFCOE_FIP_DBG("New FCF for fab %llx map %x val %d\n",
++		LIBFCOE_FIP_DBG(fip, "New FCF for fab %llx map %x val %d\n",
+ 				fcf->fabric_name, fcf->fc_map, mtu_valid);
+ 	}
+ 
+@@ -844,7 +847,7 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 			       ((struct fip_mac_desc *)desc)->fd_mac,
+ 			       ETH_ALEN);
+ 			if (!is_valid_ether_addr(granted_mac)) {
+-				LIBFCOE_FIP_DBG("Invalid MAC address "
++				LIBFCOE_FIP_DBG(fip, "Invalid MAC address "
+ 						"in FIP ELS\n");
+ 				goto drop;
+ 			}
+@@ -864,7 +867,7 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 			els_dtype = desc->fip_dtype;
+ 			break;
+ 		default:
+-			LIBFCOE_FIP_DBG("unexpected descriptor type %x "
++			LIBFCOE_FIP_DBG(fip, "unexpected descriptor type %x "
+ 					"in FIP adv\n", desc->fip_dtype);
+ 			/* standard says ignore unknown descriptors >= 128 */
+ 			if (desc->fip_dtype < FIP_DT_VENDOR_BASE)
+@@ -903,7 +906,7 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	return;
+ 
+ len_err:
+-	LIBFCOE_FIP_DBG("FIP length error in descriptor type %x len %zu\n",
++	LIBFCOE_FIP_DBG(fip, "FIP length error in descriptor type %x len %zu\n",
+ 			desc->fip_dtype, dlen);
+ drop:
+ 	kfree_skb(skb);
+@@ -930,7 +933,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 	struct fc_lport *lport = fip->lp;
+ 	u32	desc_mask;
+ 
+-	LIBFCOE_FIP_DBG("Clear Virtual Link received\n");
++	LIBFCOE_FIP_DBG(fip, "Clear Virtual Link received\n");
+ 	if (!fcf)
+ 		return;
+ 	if (!fcf || !fc_host_port_id(lport->host))
+@@ -989,9 +992,10 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 	 * reset only if all required descriptors were present and valid.
+ 	 */
+ 	if (desc_mask) {
+-		LIBFCOE_FIP_DBG("missing descriptors mask %x\n", desc_mask);
++		LIBFCOE_FIP_DBG(fip, "missing descriptors mask %x\n",
++				desc_mask);
+ 	} else {
+-		LIBFCOE_FIP_DBG("performing Clear Virtual Link\n");
++		LIBFCOE_FIP_DBG(fip, "performing Clear Virtual Link\n");
+ 		fcoe_ctlr_reset(fip, FIP_ST_ENABLED);
+ 	}
+ }
+@@ -1050,7 +1054,7 @@ static int fcoe_ctlr_recv_handler(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		fip->map_dest = 0;
+ 		fip->state = FIP_ST_ENABLED;
+ 		state = FIP_ST_ENABLED;
+-		LIBFCOE_FIP_DBG("Using FIP mode\n");
++		LIBFCOE_FIP_DBG(fip, "Using FIP mode\n");
+ 	}
  	spin_unlock_bh(&fip->lock);
+ 	if (state != FIP_ST_ENABLED)
+@@ -1085,11 +1089,11 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
+ 	struct fcoe_fcf *best = NULL;
  
- 	if (last_link != link) {
- 		if (link)
- 			fc_linkup(fip->lp);
- 		else
--			fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
--	}
-+			fc_linkdown(fip->lp);
-+	} else if (reset && link)
-+		fc_lport_reset(fip->lp);
+ 	list_for_each_entry(fcf, &fip->fcfs, list) {
+-		LIBFCOE_FIP_DBG("consider FCF for fab %llx VFID %d map %x "
++		LIBFCOE_FIP_DBG(fip, "consider FCF for fab %llx VFID %d map %x "
+ 				"val %d\n", fcf->fabric_name, fcf->vfid,
+ 				fcf->fc_map, fcoe_ctlr_mtu_valid(fcf));
+ 		if (!fcoe_ctlr_fcf_usable(fcf)) {
+-			LIBFCOE_FIP_DBG("FCF for fab %llx map %x %svalid "
++			LIBFCOE_FIP_DBG(fip, "FCF for fab %llx map %x %svalid "
+ 					"%savailable\n", fcf->fabric_name,
+ 					fcf->fc_map, (fcf->flags & FIP_FL_SOL)
+ 					? "" : "in", (fcf->flags & FIP_FL_AVAIL)
+@@ -1103,7 +1107,7 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
+ 		if (fcf->fabric_name != best->fabric_name ||
+ 		    fcf->vfid != best->vfid ||
+ 		    fcf->fc_map != best->fc_map) {
+-			LIBFCOE_FIP_DBG("Conflicting fabric, VFID, "
++			LIBFCOE_FIP_DBG(fip, "Conflicting fabric, VFID, "
+ 					"or FC-MAP\n");
+ 			return;
+ 		}
+@@ -1292,7 +1296,8 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 			return -EINVAL;
+ 		}
+ 		fip->state = FIP_ST_NON_FIP;
+-		LIBFCOE_FIP_DBG("received FLOGI LS_ACC using non-FIP mode\n");
++		LIBFCOE_FIP_DBG(fip,
++				"received FLOGI LS_ACC using non-FIP mode\n");
  
- 	if (fip->send_ctlr_ka) {
- 		fip->send_ctlr_ka = 0;
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index 2344a00..e38ffa0 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -108,6 +108,7 @@ struct fcoe_ctlr {
- 	u8 flogi_count;
- 	u8 link;
- 	u8 last_link;
-+	u8 reset_req;
- 	u8 map_dest;
- 	u8 spma;
- 	u8 send_ctlr_ka;
+ 		/*
+ 		 * FLOGI accepted.
+@@ -1319,7 +1324,7 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 			memcpy(fip->dest_addr, sa, ETH_ALEN);
+ 			fip->map_dest = 0;
+ 			if (fip->state == FIP_ST_NON_FIP)
+-				LIBFCOE_FIP_DBG("received FLOGI REQ, "
++				LIBFCOE_FIP_DBG(fip, "received FLOGI REQ, "
+ 						"using non-FIP mode\n");
+ 			fip->state = FIP_ST_NON_FIP;
+ 		}
 
