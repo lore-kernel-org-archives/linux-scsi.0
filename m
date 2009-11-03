@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 08/54] libfc: add some generic NPIV support routines to libfc
-Date: Tue, 03 Nov 2009 11:46:14 -0800
-Message-ID: <20091103194613.4085.92206.stgit@localhost.localdomain>
+Subject: [PATCH 13/54] fcoe: NPIV vport create/destroy
+Date: Tue, 03 Nov 2009 11:46:40 -0800
+Message-ID: <20091103194640.4085.25550.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:35406 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:37204 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754338AbZKCTqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:46:08 -0500
+	id S1753324AbZKCTqf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:46:35 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,231 +19,270 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Adds a function to create a new VN_Port instances, which share the EM
-list with the N_Port, VN_Port lookup by fabric ID when responding to a new
-request (otherwise the exchange lookup from the N_Ports EM list is trusted to
-return an exchange with a cached lport value for the correct VN_Port),
-a pointer to a fc_vport structure for VN_Ports, and flags to indicate if an
-N_Port supports NPIV and if the switch/fabric allows it.
+Add NPIV vport create and destroy handlers and register them with the
+FC transport.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/Makefile  |    3 +
- drivers/scsi/libfc/fc_exch.c |   29 ++++++++++++++
- drivers/scsi/libfc/fc_npiv.c |   86 ++++++++++++++++++++++++++++++++++++++++++
- include/scsi/libfc.h         |   20 ++++++++++
- 4 files changed, 137 insertions(+), 1 deletions(-)
- create mode 100644 drivers/scsi/libfc/fc_npiv.c
+ drivers/scsi/fcoe/fcoe.c |  162 +++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 139 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/libfc/Makefile b/drivers/scsi/libfc/Makefile
-index 2be549c..4bb23ac 100644
---- a/drivers/scsi/libfc/Makefile
-+++ b/drivers/scsi/libfc/Makefile
-@@ -10,4 +10,5 @@ libfc-objs := \
- 	fc_frame.o \
- 	fc_lport.o \
- 	fc_rport.o \
--	fc_fcp.o
-+	fc_fcp.o \
-+	fc_npiv.o
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index ee6031e..751a485 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1134,6 +1134,15 @@ static void fc_exch_recv_req(struct fc_lport *lp, struct fc_exch_mgr *mp,
- 	u32 f_ctl;
- 	enum fc_pf_rjt_reason reject;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index d37d573..f23cdb3 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -93,6 +93,10 @@ static struct notifier_block fcoe_notifier = {
+ static struct scsi_transport_template *fcoe_transport_template;
+ static struct scsi_transport_template *fcoe_vport_transport_template;
  
-+	/* We can have the wrong fc_lport at this point with NPIV, which is a
-+	 * problem now that we know a new exchange needs to be allocated
-+	 */
-+	lp = fc_vport_id_lookup(lp, ntoh24(fh->fh_d_id));
-+	if (!lp) {
-+		fc_frame_free(fp);
-+		return;
-+	}
++static int fcoe_vport_destroy(struct fc_vport *vport);
++static int fcoe_vport_create(struct fc_vport *vport, bool disabled);
++static int fcoe_vport_disable(struct fc_vport *vport, bool disable);
 +
- 	fr_seq(fp) = NULL;
- 	reject = fc_seq_lookup_recip(lp, mp, fp);
- 	if (reject == FC_RJT_NONE) {
-@@ -1900,6 +1909,26 @@ void fc_exch_mgr_del(struct fc_exch_mgr_anchor *ema)
+ struct fc_function_template fcoe_transport_function = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+@@ -124,6 +128,10 @@ struct fc_function_template fcoe_transport_function = {
+ 	.issue_fc_host_lip = fcoe_reset,
+ 
+ 	.terminate_rport_io = fc_rport_terminate_io,
++
++	.vport_create = fcoe_vport_create,
++	.vport_delete = fcoe_vport_destroy,
++	.vport_disable = fcoe_vport_disable,
+ };
+ 
+ struct fc_function_template fcoe_vport_transport_function = {
+@@ -450,6 +458,7 @@ static int fcoe_lport_config(struct fc_lport *lp)
+ 	lp->r_a_tov = 2 * 2 * 1000;
+ 	lp->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
+ 			      FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
++	lp->does_npiv = 1;
+ 
+ 	fc_lport_init_stats(lp);
+ 
+@@ -536,11 +545,13 @@ static int fcoe_netdev_config(struct fc_lport *lp, struct net_device *netdev)
+ 	port->fcoe_pending_queue_active = 0;
+ 	setup_timer(&port->timer, fcoe_queue_timer, (unsigned long)lp);
+ 
+-	wwnn = fcoe_wwn_from_mac(netdev->dev_addr, 1, 0);
+-	fc_set_wwnn(lp, wwnn);
+-	/* XXX - 3rd arg needs to be vlan id */
+-	wwpn = fcoe_wwn_from_mac(netdev->dev_addr, 2, 0);
+-	fc_set_wwpn(lp, wwpn);
++	if (!lp->vport) {
++		wwnn = fcoe_wwn_from_mac(netdev->dev_addr, 1, 0);
++		fc_set_wwnn(lp, wwnn);
++		/* XXX - 3rd arg needs to be vlan id */
++		wwpn = fcoe_wwn_from_mac(netdev->dev_addr, 2, 0);
++		fc_set_wwpn(lp, wwpn);
++	}
+ 
+ 	return 0;
  }
- EXPORT_SYMBOL(fc_exch_mgr_del);
+@@ -576,6 +587,10 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
+ 				"error on scsi_add_host\n");
+ 		return rc;
+ 	}
++
++	if (!lp->vport)
++		fc_host_max_npiv_vports(lp->host) = USHORT_MAX;
++
+ 	sprintf(fc_host_symbolic_name(lp->host), "%s v%s over %s",
+ 		FCOE_NAME, FCOE_VERSION,
+ 		fcoe_netdev(lp)->name);
+@@ -776,24 +791,35 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+  * fcoe_if_create() - this function creates the fcoe port
+  * @fcoe: fcoe_interface structure to create an fc_lport instance on
+  * @parent: device pointer to be the parent in sysfs for the SCSI host
++ * @npiv: is this a vport?
+  *
+  * Creates fc_lport struct and scsi_host for lport, configures lport.
+  *
+  * Returns : The allocated fc_lport or an error pointer
+  */
+ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+-				       struct device *parent)
++				       struct device *parent, int npiv)
+ {
+ 	int rc;
+ 	struct fc_lport *lport = NULL;
+ 	struct fcoe_port *port;
+ 	struct Scsi_Host *shost;
+ 	struct net_device *netdev = fcoe->netdev;
++	/*
++	 * parent is only a vport if npiv is 1,
++	 * but we'll only use vport in that case so go ahead and set it
++	 */
++	struct fc_vport *vport = dev_to_vport(parent);
+ 
+ 	FCOE_NETDEV_DBG(netdev, "Create Interface\n");
+ 
+-	lport = libfc_host_alloc(&fcoe_shost_template,
+-				 sizeof(struct fcoe_port));
++	if (!npiv) {
++		lport = libfc_host_alloc(&fcoe_shost_template,
++					 sizeof(struct fcoe_port));
++	} else	{
++		lport = libfc_vport_create(vport,
++					   sizeof(struct fcoe_port));
++	}
+ 	if (!lport) {
+ 		FCOE_NETDEV_DBG(netdev, "Could not allocate host structure\n");
+ 		rc = -ENOMEM;
+@@ -813,6 +839,13 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 		goto out_host_put;
+ 	}
+ 
++	if (npiv) {
++		FCOE_NETDEV_DBG(netdev, "Setting vport names, 0x%llX 0x%llX\n",
++			vport->node_name, vport->port_name);
++		fc_set_wwnn(lport, vport->node_name);
++		fc_set_wwpn(lport, vport->port_name);
++	}
++
+ 	/* configure lport network properties */
+ 	rc = fcoe_netdev_config(lport, netdev);
+ 	if (rc) {
+@@ -837,21 +870,24 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
+ 		goto out_lp_destroy;
+ 	}
+ 
+-	/*
+-	 * fcoe_em_alloc() and fcoe_hostlist_add() both
+-	 * need to be atomic with respect to other changes to the hostlist
+-	 * since fcoe_em_alloc() looks for an existing EM
+-	 * instance on host list updated by fcoe_hostlist_add().
+-	 *
+-	 * This is currently handled through the fcoe_config_mutex begin held.
+-	 */
++	if (!npiv) {
++		/*
++		 * fcoe_em_alloc() and fcoe_hostlist_add() both
++		 * need to be atomic with respect to other changes to the
++		 * hostlist since fcoe_em_alloc() looks for an existing EM
++		 * instance on host list updated by fcoe_hostlist_add().
++		 *
++		 * This is currently handled through the fcoe_config_mutex
++		 * begin held.
++		 */
+ 
+-	/* lport exch manager allocation */
+-	rc = fcoe_em_config(lport);
+-	if (rc) {
+-		FCOE_NETDEV_DBG(netdev, "Could not configure the EM for the "
+-				"interface\n");
+-		goto out_lp_destroy;
++		/* lport exch manager allocation */
++		rc = fcoe_em_config(lport);
++		if (rc) {
++			FCOE_NETDEV_DBG(netdev, "Could not configure the EM "
++						"for the interface\n");
++			goto out_lp_destroy;
++		}
+ 	}
+ 
+ 	fcoe_interface_get(fcoe);
+@@ -1806,7 +1842,7 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 		goto out_putdev;
+ 	}
+ 
+-	lport = fcoe_if_create(fcoe, &netdev->dev);
++	lport = fcoe_if_create(fcoe, &netdev->dev, 0);
+ 	if (IS_ERR(lport)) {
+ 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
+ 		       netdev->name);
+@@ -2113,6 +2149,9 @@ static void __exit fcoe_exit(void)
+ 	/* flush any asyncronous interface destroys,
+ 	 * this should happen after the netdev notifier is unregistered */
+ 	flush_scheduled_work();
++	/* That will flush out all the N_Ports on the hostlist, but now we
++	 * may have NPIV VN_Ports scheduled for destruction */
++	flush_scheduled_work();
+ 
+ 	/* detach from scsi transport
+ 	 * must happen after all destroys are done, therefor after the flush */
+@@ -2210,3 +2249,80 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *lport,
+ 	return fc_elsct_send(lport, did, fp, op, resp, arg, timeout);
+ }
  
 +/**
-+ * fc_exch_mgr_list_clone() - share all exchange manager objects
-+ * @src: source lport to clone exchange managers from
-+ * @dst: new lport that takes references to all the exchange managers
-+ */
-+int fc_exch_mgr_list_clone(struct fc_lport *src, struct fc_lport *dst)
-+{
-+	struct fc_exch_mgr_anchor *ema, *tmp;
-+
-+	list_for_each_entry(ema, &src->ema_list, ema_list) {
-+		if (!fc_exch_mgr_add(dst, ema->mp, ema->match))
-+			goto err;
-+	}
-+	return 0;
-+err:
-+	list_for_each_entry_safe(ema, tmp, &dst->ema_list, ema_list)
-+		fc_exch_mgr_del(ema);
-+	return -ENOMEM;
-+}
-+
- struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lp,
- 				      enum fc_class class,
- 				      u16 min_xid, u16 max_xid,
-diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
-new file mode 100644
-index 0000000..39f02c0
---- /dev/null
-+++ b/drivers/scsi/libfc/fc_npiv.c
-@@ -0,0 +1,86 @@
-+/*
-+ * Copyright(c) 2009 Intel Corporation. All rights reserved.
++ * fcoe_vport_create() - create an fc_host/scsi_host for a vport
++ * @vport: fc_vport object to create a new fc_host for
++ * @disabled: start the new fc_host in a disabled state by default?
 + *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
++ * Returns: 0 for success
 + */
-+
-+/*
-+ * NPIV VN_Port helper functions for libfc
-+ */
-+
-+#include <scsi/libfc.h>
-+
-+/**
-+ * fc_vport_create() - Create a new NPIV vport instance
-+ * @vport: fc_vport structure from scsi_transport_fc
-+ * @privsize: driver private data size to allocate along with the Scsi_Host
-+ */
-+
-+struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize)
++static int fcoe_vport_create(struct fc_vport *vport, bool disabled)
 +{
 +	struct Scsi_Host *shost = vport_to_shost(vport);
 +	struct fc_lport *n_port = shost_priv(shost);
++	struct fcoe_port *port = lport_priv(n_port);
++	struct fcoe_interface *fcoe = port->fcoe;
++	struct net_device *netdev = fcoe->netdev;
 +	struct fc_lport *vn_port;
 +
-+	vn_port = libfc_host_alloc(shost->hostt, privsize);
-+	if (!vn_port)
-+		goto err_out;
-+	if (fc_exch_mgr_list_clone(n_port, vn_port))
-+		goto err_put;
++	mutex_lock(&fcoe_config_mutex);
++	vn_port = fcoe_if_create(fcoe, &vport->dev, 1);
++	mutex_unlock(&fcoe_config_mutex);
 +
-+	vn_port->vport = vport;
-+	vport->dd_data = vn_port;
++	if (IS_ERR(vn_port)) {
++		printk(KERN_ERR "fcoe: fcoe_vport_create(%s) failed\n",
++		       netdev->name);
++		return -EIO;
++	}
 +
-+	mutex_lock(&n_port->lp_mutex);
-+	list_add_tail(&vn_port->list, &n_port->vports);
-+	mutex_unlock(&n_port->lp_mutex);
-+
-+	return vn_port;
-+
-+err_put:
-+	scsi_host_put(vn_port->host);
-+err_out:
-+	return NULL;
++	if (disabled) {
++		fc_vport_set_state(vport, FC_VPORT_DISABLED);
++	} else {
++		vn_port->boot_time = jiffies;
++		fc_fabric_login(vn_port);
++		fc_vport_setlink(vn_port);
++	}
++	return 0;
 +}
-+EXPORT_SYMBOL(libfc_vport_create);
 +
 +/**
-+ * fc_vport_id_lookup() - find NPIV lport that matches a given fabric ID
-+ * @n_port: Top level N_Port which may have multiple NPIV VN_Ports
-+ * @port_id: Fabric ID to find a match for
++ * fcoe_vport_destroy() - destroy the fc_host/scsi_host for a vport
++ * @vport: fc_vport object that is being destroyed
 + *
-+ * Returns: matching lport pointer or NULL if there is no match
++ * Returns: 0 for success
 + */
-+struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
++static int fcoe_vport_destroy(struct fc_vport *vport)
 +{
-+	struct fc_lport *lport = NULL;
-+	struct fc_lport *vn_port;
-+
-+	if (fc_host_port_id(n_port->host) == port_id)
-+		return n_port;
++	struct Scsi_Host *shost = vport_to_shost(vport);
++	struct fc_lport *n_port = shost_priv(shost);
++	struct fc_lport *vn_port = vport->dd_data;
++	struct fcoe_port *port = lport_priv(vn_port);
 +
 +	mutex_lock(&n_port->lp_mutex);
-+	list_for_each_entry(vn_port, &n_port->vports, list) {
-+		if (fc_host_port_id(vn_port->host) == port_id) {
-+			lport = vn_port;
-+			break;
-+		}
-+	}
++	list_del(&vn_port->list);
 +	mutex_unlock(&n_port->lp_mutex);
-+
-+	return lport;
++	schedule_work(&port->destroy_work);
++	return 0;
 +}
 +
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index ed3057b..2c6d55d 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -640,6 +640,8 @@ struct fc_lport {
- 	/* Associations */
- 	struct Scsi_Host	*host;
- 	struct list_head	ema_list;
-+	struct list_head	vports;		/* child vports if N_Port */
-+	struct fc_vport		*vport;		/* parent vport if VN_Port */
- 	struct fc_rport_priv	*dns_rp;
- 	struct fc_rport_priv	*ptp_rp;
- 	void			*scsi_priv;
-@@ -664,6 +666,8 @@ struct fc_lport {
- 	u32			seq_offload:1;	/* seq offload supported */
- 	u32			crc_offload:1;	/* crc offload supported */
- 	u32			lro_enabled:1;	/* large receive offload */
-+	u32			does_npiv:1;	/* supports multiple vports */
-+	u32			npiv_enabled:1;	/* switch/fabric allows NPIV */
- 	u32			mfs;	        /* max FC payload size */
- 	unsigned int		service_params;
- 	unsigned int		e_d_tov;
-@@ -753,6 +757,7 @@ libfc_host_alloc(struct scsi_host_template *sht, int priv_size)
- 	lport = shost_priv(shost);
- 	lport->host = shost;
- 	INIT_LIST_HEAD(&lport->ema_list);
-+	INIT_LIST_HEAD(&lport->vports);
- 	return lport;
- }
- 
-@@ -805,6 +810,15 @@ int fc_lport_reset(struct fc_lport *);
-  */
- int fc_set_mfs(struct fc_lport *lp, u32 mfs);
- 
-+/*
-+ * Allocate a new lport struct for an NPIV VN_Port
++/**
++ * fcoe_vport_disable() - change vport state
++ * @vport: vport to bring online/offline
++ * @disable: should the vport be disabled?
 + */
-+struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize);
++static int fcoe_vport_disable(struct fc_vport *vport, bool disable)
++{
++	struct fc_lport *lport = vport->dd_data;
 +
-+/*
-+ * Find an NPIV VN_Port by port ID
-+ */
-+struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id);
- 
- /*
-  * REMOTE PORT LAYER
-@@ -912,6 +926,12 @@ struct fc_exch_mgr_anchor *fc_exch_mgr_add(struct fc_lport *lport,
- void fc_exch_mgr_del(struct fc_exch_mgr_anchor *ema);
- 
- /*
-+ * Clone an exchange manager list, getting reference holds for each EM.
-+ * This is for use with NPIV and sharing the X_ID space between VN_Ports.
-+ */
-+int fc_exch_mgr_list_clone(struct fc_lport *src, struct fc_lport *dst);
++	if (disable) {
++		fc_vport_set_state(vport, FC_VPORT_DISABLED);
++		fc_fabric_logoff(lport);
++	} else {
++		lport->boot_time = jiffies;
++		fc_fabric_login(lport);
++		fc_vport_setlink(lport);
++	}
 +
-+/*
-  * Allocates an Exchange Manager (EM).
-  *
-  * The EM manages exchanges for their allocation and
++	return 0;
++}
++
 
