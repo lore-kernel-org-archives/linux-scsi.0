@@ -1,19 +1,19 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
  resync
-Date: Tue, 3 Nov 2009 02:10:24 GMT
-Message-ID: <200911030210.nA32AOhQ015318@demeter.kernel.org>
+Date: Tue, 3 Nov 2009 02:22:05 GMT
+Message-ID: <200911030222.nA32M570018681@demeter.kernel.org>
 References: <bug-14534-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:45859 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:39534 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754990AbZKCCKT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2009 21:10:19 -0500
+	with ESMTP id S1754990AbZKCCWA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Nov 2009 21:22:00 -0500
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nA32AOwp015319
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Nov 2009 02:10:24 GMT
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nA32M5jp018682
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Nov 2009 02:22:05 GMT
 In-Reply-To: <bug-14534-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,13 +22,20 @@ To: linux-scsi@vger.kernel.org
 http://bugzilla.kernel.org/show_bug.cgi?id=14534
 
 
+quig48pak6ui <arno@wagner.name> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |arno@wagner.name
 
 
 
---- Comment #1 from Arno Wagner <wagner@tik.ee.ethz.ch>  2009-11-03 02:10:23 ---
-Created an attachment (id=23625)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=23625)
-kernel .config
+
+--- Comment #2 from quig48pak6ui <arno@wagner.name>  2009-11-03 02:22:02 ---
+Please send email to arno@wagner.name. I accidentially posted from the wrong
+account and the forwarding for my old email seems not to work anymore.
+
+Arno
 
 -- 
 Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
