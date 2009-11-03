@@ -1,110 +1,106 @@
-From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Subject: Re: [PATCH] strstrip incorrectly marked __must_check
-Date: Wed, 4 Nov 2009 04:58:50 +0900
-Message-ID: <2f11576a0911031158r7fabb96fx8073bb4e86f4981e@mail.gmail.com>
-References: <1257273488.9427.27.camel@mulgrave.site>
-	 <20091103105921.160d5599.akpm@linux-foundation.org>
-	 <20091103191233.0c3ba736@lxorguk.ukuu.org.uk>
+From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Subject: Re: [PATCH] pcmraid: fix endianness problems
+Date: Tue, 3 Nov 2009 11:29:44 -0800 (PST)
+Message-ID: <alpine.LNX.1.10.0911031116170.13870@rslab159.pmc-sierra.bc.ca>
+References: <1257268514.9427.4.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0015177404c6482da004777cec1b
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f180.google.com ([209.85.223.180]:43481 "EHLO
-	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751766AbZKCT6r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 14:58:47 -0500
-In-Reply-To: <20091103191233.0c3ba736@lxorguk.ukuu.org.uk>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:54463 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751588AbZKCUfH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 15:35:07 -0500
+In-Reply-To: <1257268514.9427.4.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, anil_ravindranath@pmc-sierra.com
 
---0015177404c6482da004777cec1b
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+James,
 
-2009/11/4 Alan Cox <alan@lxorguk.ukuu.org.uk>:
->> static inline void strsrip_tail(char *str)
->> {
->> =A0 =A0 =A0 char *x __used;
->> =A0 =A0 =A0 x =3D strstrip(str);
->> }
->
-> Bikeshed time but its cleaner to do
->
-> static inline __must_check void strstrip(char *str)
-> {
-> =A0 =A0 =A0 =A0return strim(str);
-> }
->
-> and make strim() the old strstrip function without the check requirement
+Yes. We can remove these spurious cpu_to_le32 wrappers for 8 bits.
+I had already submitted a patch dated: Sep 24 to address this. The subject 
+of the mail/patch was:
+PATCH 1/1] pmcraid: Fix ppc64 driver build for using cpu_to_le32 on U8 
+data type
 
-Okey...
+In addition to below, I have made one more similar change as well -
 
-[quick hack and compile check]
+pmcraid.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-done :)
-sorry for attached file. I'm under poor mail environment now.
+--- scsi-misc-2.6.orig/drivers/scsi/pmcraid.c	2009-11-03 11:22:49.000000000 -0800
++++ scsi-misc-2.6/drivers/scsi/pmcraid.c	2009-11-03 11:25:06.000000000 -0800
+@@ -1076,7 +1076,7 @@
+ 
+ 	ioarcb->data_transfer_length = cpu_to_le32(rcb_size);
+ 
+-	ioadl[0].flags |= cpu_to_le32(IOADL_FLAGS_READ_LAST);
++	ioadl[0].flags |= IOADL_FLAGS_READ_LAST;
+ 	ioadl[0].data_len = cpu_to_le32(rcb_size);
+ 	ioadl[0].address = cpu_to_le32(dma);
+ 
 
---0015177404c6482da004777cec1b
-Content-Type: application/octet-stream;
-	name="0001-lib-Introduce-strim.patch"
-Content-Disposition: attachment; filename="0001-lib-Introduce-strim.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g1l2xg480
+On Tue, 3 Nov 2009, James Bottomley wrote:
 
-RnJvbSA5NGE4NjQyNGE4ODJkNTJmY2QxMTAzOWQxMWZiZDAzNjNhMzE0NzJmIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBLT1NBS0kgTW90b2hpcm8gPGtvc2FraS5tb3RvaGlyb0BqcC5m
-dWppdHN1LmNvbT4KRGF0ZTogV2VkLCA0IE5vdiAyMDA5IDA0OjQ3OjIzICswOTAwClN1YmplY3Q6
-IFtQQVRDSF0gbGliOiBJbnRyb2R1Y2Ugc3RyaW0KClJlY2VudGx5LCBXZSBtYXJrZWQgc3Ryc3Ry
-aXAoKSBhcyBtdXN0X2NoZWNrLiBiZWNhdXNlIGl0IHdhcyBmcmVxdWVudGx5IG1pc3VzZWQgYW5k
-Cml0IHNob3VsZCBiZSBjaGVja2VkLiBob3dldmVyLCB3ZSBmb3VuZCBvbmUgZXhjZXB0aW9uLiBz
-Y3NpL2lwci5jIGludGVudGlvbmFsbHkgaWdub3JlCnJldHVybiB2YWx1ZSBvZiBzdHJzdHJpcC4g
-YmVjYXVzZSwgaXQgd2lzaCB0byBrZWVwIHRoZSB3aGl0ZXNwYWNlIGF0IHRoZSBiZWdpbm5pbmcu
-CgpUaHVzLCB3ZSBuZWVkIHRvIGtlZXAgd2l0aCBhbmQgd2l0aG91dCBjaGVja2VkIHdoaXRlc3Bh
-Y2UgdHJpbSBmdW5jdGlvbi4gVGhpcyBwYXRjaAptYWtlcyBzdHJpbSBuZXcgZnVuY3Rpb24gYW5k
-IGlwci5jIHVzZSBpdC4KClN1Z2dlc3RlZC1ieTogQWxhbiBDb3ggPGFsYW5AbHhvcmd1ay51a3V1
-Lm9yZy51az4KU2lnbmVkLW9mZi1ieTogS09TQUtJIE1vdG9oaXJvIDxrb3Nha2kubW90b2hpcm9A
-anAuZnVqaXRzdS5jb20+Ci0tLQogZHJpdmVycy9zY3NpL2lwci5jICAgICB8ICAgIDQgKystLQog
-aW5jbHVkZS9saW51eC9zdHJpbmcuaCB8ICAgIDkgKysrKysrKystCiBsaWIvc3RyaW5nLmMgICAg
-ICAgICAgIHwgICAgNiArKystLS0KIDMgZmlsZXMgY2hhbmdlZCwgMTMgaW5zZXJ0aW9ucygrKSwg
-NiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvaXByLmMgYi9kcml2ZXJz
-L3Njc2kvaXByLmMKaW5kZXggZDQwZDVjNy4uNjYwMmZjNCAxMDA2NDQKLS0tIGEvZHJpdmVycy9z
-Y3NpL2lwci5jCisrKyBiL2RyaXZlcnMvc2NzaS9pcHIuYwpAQCAtMTMzMyw3ICsxMzMzLDcgQEAg
-c3RhdGljIHZvaWQgaXByX2xvZ19lbmhhbmNlZF9kdWFsX2lvYV9lcnJvcihzdHJ1Y3QgaXByX2lv
-YV9jZmcgKmlvYV9jZmcsCiAKIAllcnJvciA9ICZob3N0cmNiLT5oY2FtLnUuZXJyb3IudS50eXBl
-XzE3X2Vycm9yOwogCWVycm9yLT5mYWlsdXJlX3JlYXNvbltzaXplb2YoZXJyb3ItPmZhaWx1cmVf
-cmVhc29uKSAtIDFdID0gJ1wwJzsKLQlzdHJzdHJpcChlcnJvci0+ZmFpbHVyZV9yZWFzb24pOwor
-CXN0cmltKGVycm9yLT5mYWlsdXJlX3JlYXNvbik7CiAKIAlpcHJfaGNhbV9lcnIoaG9zdHJjYiwg
-IiVzIFtQUkM6ICUwOFhdXG4iLCBlcnJvci0+ZmFpbHVyZV9yZWFzb24sCiAJCSAgICAgYmUzMl90
-b19jcHUoaG9zdHJjYi0+aGNhbS51LmVycm9yLnByYykpOwpAQCAtMTM1OSw3ICsxMzU5LDcgQEAg
-c3RhdGljIHZvaWQgaXByX2xvZ19kdWFsX2lvYV9lcnJvcihzdHJ1Y3QgaXByX2lvYV9jZmcgKmlv
-YV9jZmcsCiAKIAllcnJvciA9ICZob3N0cmNiLT5oY2FtLnUuZXJyb3IudS50eXBlXzA3X2Vycm9y
-OwogCWVycm9yLT5mYWlsdXJlX3JlYXNvbltzaXplb2YoZXJyb3ItPmZhaWx1cmVfcmVhc29uKSAt
-IDFdID0gJ1wwJzsKLQlzdHJzdHJpcChlcnJvci0+ZmFpbHVyZV9yZWFzb24pOworCXN0cmltKGVy
-cm9yLT5mYWlsdXJlX3JlYXNvbik7CiAKIAlpcHJfaGNhbV9lcnIoaG9zdHJjYiwgIiVzIFtQUkM6
-ICUwOFhdXG4iLCBlcnJvci0+ZmFpbHVyZV9yZWFzb24sCiAJCSAgICAgYmUzMl90b19jcHUoaG9z
-dHJjYi0+aGNhbS51LmVycm9yLnByYykpOwpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9zdHJp
-bmcuaCBiL2luY2x1ZGUvbGludXgvc3RyaW5nLmgKaW5kZXggYjg1MDg4Ni4uMTdhMzc1ZSAxMDA2
-NDQKLS0tIGEvaW5jbHVkZS9saW51eC9zdHJpbmcuaAorKysgYi9pbmNsdWRlL2xpbnV4L3N0cmlu
-Zy5oCkBAIC02Miw3ICs2MiwxNCBAQCBleHRlcm4gY2hhciAqIHN0cm5jaHIoY29uc3QgY2hhciAq
-LCBzaXplX3QsIGludCk7CiAjaWZuZGVmIF9fSEFWRV9BUkNIX1NUUlJDSFIKIGV4dGVybiBjaGFy
-ICogc3RycmNocihjb25zdCBjaGFyICosaW50KTsKICNlbmRpZgotZXh0ZXJuIGNoYXIgKiBfX211
-c3RfY2hlY2sgc3Ryc3RyaXAoY2hhciAqKTsKKworZXh0ZXJuIGNoYXIgKiBzdHJpbShjaGFyICop
-OworCitzdGF0aWMgaW5saW5lIF9fbXVzdF9jaGVjayBjaGFyKiBzdHJzdHJpcChjaGFyICpzdHIp
-Cit7CisJcmV0dXJuIHN0cmltKHN0cik7Cit9CisKICNpZm5kZWYgX19IQVZFX0FSQ0hfU1RSU1RS
-CiBleHRlcm4gY2hhciAqIHN0cnN0cihjb25zdCBjaGFyICosY29uc3QgY2hhciAqKTsKICNlbmRp
-ZgpkaWZmIC0tZ2l0IGEvbGliL3N0cmluZy5jIGIvbGliL3N0cmluZy5jCmluZGV4IGIxOWI4N2Eu
-LjI4MjExYzYgMTAwNjQ0Ci0tLSBhL2xpYi9zdHJpbmcuYworKysgYi9saWIvc3RyaW5nLmMKQEAg
-LTMzMCwxNCArMzMwLDE0IEBAIEVYUE9SVF9TWU1CT0woc3RybmNocik7CiAjZW5kaWYKIAogLyoq
-Ci0gKiBzdHJzdHJpcCAtIFJlbW92ZXMgbGVhZGluZyBhbmQgdHJhaWxpbmcgd2hpdGVzcGFjZSBm
-cm9tIEBzLgorICogc3RyaW0gLSBSZW1vdmVzIGxlYWRpbmcgYW5kIHRyYWlsaW5nIHdoaXRlc3Bh
-Y2UgZnJvbSBAcy4KICAqIEBzOiBUaGUgc3RyaW5nIHRvIGJlIHN0cmlwcGVkLgogICoKICAqIE5v
-dGUgdGhhdCB0aGUgZmlyc3QgdHJhaWxpbmcgd2hpdGVzcGFjZSBpcyByZXBsYWNlZCB3aXRoIGEg
-JU5VTC10ZXJtaW5hdG9yCiAgKiBpbiB0aGUgZ2l2ZW4gc3RyaW5nIEBzLiBSZXR1cm5zIGEgcG9p
-bnRlciB0byB0aGUgZmlyc3Qgbm9uLXdoaXRlc3BhY2UKICAqIGNoYXJhY3RlciBpbiBAcy4KICAq
-LwotY2hhciAqc3Ryc3RyaXAoY2hhciAqcykKK2NoYXIgKnN0cmltKGNoYXIgKnMpCiB7CiAJc2l6
-ZV90IHNpemU7CiAJY2hhciAqZW5kOwpAQCAtMzU3LDcgKzM1Nyw3IEBAIGNoYXIgKnN0cnN0cmlw
-KGNoYXIgKnMpCiAKIAlyZXR1cm4gczsKIH0KLUVYUE9SVF9TWU1CT0woc3Ryc3RyaXApOworRVhQ
-T1JUX1NZTUJPTChzdHJpbSk7CiAKICNpZm5kZWYgX19IQVZFX0FSQ0hfU1RSTEVOCiAvKioKLS0g
-CjEuNi4yLjUKCg==
---0015177404c6482da004777cec1b--
+> There's a compile problem with pcmraid on BE platforms because the flags
+> machine mailbox register is only 8 bits wide:
+> 
+> drivers/scsi/pmcraid.c: In function 'pmcraid_request_sense':
+> drivers/scsi/pmcraid.c:2259: warning: large integer implicitly truncated to unsigned type
+> drivers/scsi/pmcraid.c: In function 'pmcraid_build_ioadl':
+> drivers/scsi/pmcraid.c:3025: warning: large integer implicitly truncated to unsigned type
+> drivers/scsi/pmcraid.c: In function 'pmcraid_build_passthrough_ioadls':
+> drivers/scsi/pmcraid.c:3395: warning: large integer implicitly truncated to unsigned type
+> drivers/scsi/pmcraid.c: In function 'pmcraid_querycfg':
+> drivers/scsi/pmcraid.c:5322: warning: large integer implicitly truncated to unsigned type
+> 
+> The fix, I think, is just to remove the spurious cpu_to_le32 wrappers
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+> index 86d158e..ef4102e 100644
+> --- a/drivers/scsi/pmcraid.c
+> +++ b/drivers/scsi/pmcraid.c
+> @@ -2256,7 +2256,7 @@ static void pmcraid_request_sense(struct pmcraid_cmd *cmd)
+>  
+>  	ioadl->address = cpu_to_le64(cmd->sense_buffer_dma);
+>  	ioadl->data_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
+> -	ioadl->flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
+> +	ioadl->flags = IOADL_FLAGS_LAST_DESC;
+>  
+>  	/* request sense might be called as part of error response processing
+>  	 * which runs in tasklets context. It is possible that mid-layer might
+> @@ -3022,7 +3022,7 @@ static int pmcraid_build_ioadl(
+>  		ioadl[i].flags = 0;
+>  	}
+>  	/* setup last descriptor */
+> -	ioadl[i - 1].flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
+> +	ioadl[i - 1].flags = IOADL_FLAGS_LAST_DESC;
+>  
+>  	return 0;
+>  }
+> @@ -3392,7 +3392,7 @@ static int pmcraid_build_passthrough_ioadls(
+>  	}
+>  
+>  	/* setup the last descriptor */
+> -	ioadl[i - 1].flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
+> +	ioadl[i - 1].flags = IOADL_FLAGS_LAST_DESC;
+>  
+>  	return 0;
+>  }
+> @@ -5319,7 +5319,7 @@ static void pmcraid_querycfg(struct pmcraid_cmd *cmd)
+>  		cpu_to_le32(sizeof(struct pmcraid_config_table));
+>  
+>  	ioadl = &(ioarcb->add_data.u.ioadl[0]);
+> -	ioadl->flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
+> +	ioadl->flags = IOADL_FLAGS_LAST_DESC;
+>  	ioadl->address = cpu_to_le64(pinstance->cfg_table_bus_addr);
+>  	ioadl->data_len = cpu_to_le32(sizeof(struct pmcraid_config_table));
+>  
+> 
+> 
+> 
