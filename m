@@ -1,36 +1,37 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] pcmraid: fix endianness problems
-Date: Tue, 03 Nov 2009 15:31:43 -0600
-Message-ID: <1257283903.2454.3.camel@mulgrave.site>
-References: <1257268514.9427.4.camel@mulgrave.site>
-	 <alpine.LNX.1.10.0911031116170.13870@rslab159.pmc-sierra.bc.ca>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: aic7xxx: Missing parentheses in ahc_init()?
+Date: Tue, 03 Nov 2009 23:38:55 +0100
+Message-ID: <4AF0B0FF.6000706@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:40352 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755273AbZKCVbo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 16:31:44 -0500
-In-Reply-To: <alpine.LNX.1.10.0911031116170.13870@rslab159.pmc-sierra.bc.ca>
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:42840 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754535AbZKCW1e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 17:27:34 -0500
+Received: by ewy3 with SMTP id 3so2505435ewy.37
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Nov 2009 14:27:38 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On Tue, 2009-11-03 at 11:29 -0800, Anil Ravindranath wrote:
-> James,
-> 
-> Yes. We can remove these spurious cpu_to_le32 wrappers for 8 bits.
-> I had already submitted a patch dated: Sep 24 to address this. The subject 
-> of the mail/patch was:
-> PATCH 1/1] pmcraid: Fix ppc64 driver build for using cpu_to_le32 on U8 
-> data type
+This looks odd, are there maybe parentheses missing here?
 
-Sorry ... found it now.  I'll add it to the list for scsi-misc.
+Thanks, Roel
 
-Thanks,
-
-James
-
-
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
+index 8dfb59d..e6aad3e 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -5534,8 +5534,8 @@ ahc_init(struct ahc_softc *ahc)
+ 					 * so the format is different.
+ 					 */
+ 					scsirate = (scsirate & SXFR) >> 4
+-						 | (ultraenb & mask)
+-						  ? 0x08 : 0x0
++						 | ((ultraenb & mask)
++						  ? 0x08 : 0x0)
+ 						 | (scsirate & WIDEXFER);
+ 					offset = MAX_OFFSET_ULTRA2;
+ 				} else
