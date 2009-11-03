@@ -1,53 +1,72 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] strstrip incorrectly marked __must_check
-Date: Tue, 3 Nov 2009 10:59:21 -0800
-Message-ID: <20091103105921.160d5599.akpm@linux-foundation.org>
-References: <1257273488.9427.27.camel@mulgrave.site>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Tue, 03 Nov 2009 20:02:49 +0100
+Message-ID: <4AF07E59.1070000@s5r6.in-berlin.de>
+References: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C8553@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60207 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753248AbZKCS71 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 13:59:27 -0500
-In-Reply-To: <1257273488.9427.27.camel@mulgrave.site>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:46584 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbZKCTDQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 14:03:16 -0500
+In-Reply-To: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C8553@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Penchala Narasimha Reddy Chilakala, TLS-Chennai" <narasimhareddyc@hcl.in>
+Cc: James Bottomley <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-On Tue, 03 Nov 2009 12:38:08 -0600
-James Bottomley <James.Bottomley@suse.de> wrote:
-
-> strstrip strips whitespace from the beginning and end of a string.  I
-> agree you have to take the returned pointer if you want to strip from
-> the beginning.  However, if you wish to keep the whitespace at the
-> beginning and only wish strstrip to remove it from the end, then it's
-> entirely legitimate to discard the returned pointer.
+Penchala Narasimha Reddy Chilakala, TLS-Chennai wrote:
+> Hi Stefan,
 > 
-> This is what we have in drivers/scsi/ipr.c and the patch to make
-> strstrip __must_check is now causing SCSI spurious warnings in that
-> code.
+> Thanks a lot for your suggestion and feedback.
 > 
+> Aacraid driver has been using down_interruptible () and up () for
+> quite some time. We will take your suggestion into consideration
+> and keep in our mind. But it is quite difficult to implement your
+> suggestion at this point of time as we need to modify the code in
+> lot places and we need to test a lot.
 
-Would prefer to keep the warning and to patch ipr.c, please.  We found
-I think three call sites which were incorrectly ignoring the strstrip()
-return value and it's reasonable to fear that others will make the same
-mistake in the future.
+dpcsup.c:	2x up(&fib->event_wait)
+commsup.c:	allocation and initialization of the semaphore
+		1x down_trylock(&fibptr->event_wait) +
+		1x down_interruptible(&fibptr->event_wait) + up()
+		1x up(&fib->event_wait)
 
-And maybe ipr.c _should_ be patched.  Right now it's assuming that the
-string coming back from the device has no leading whitespace.  Why trim
-any possible trailing whitespace but not trim any possible leading
-whitespace?
+So there are just two places which conditionally wait for completion (or
+just one place but with a differentiation between sync and async mode),
+and three places which signal "done".
 
-Or..
+You are right that this would be a non-trivial change and will require
+respective testing.  However, (1.) only the place which waits for
+completion is the non-trivial part (because it's currently coded in a
+rather obfuscated way), (2.) I expect that the result would be cleaner
+code which is (3.) more obvious to be correct and (4.) can also be
+checked for correctness by the lockdep facility --- this is not possible
+with legacy semaphores.
 
-/*
- * Comment goes here
- */
-static inline void strsrip_tail(char *str)
-{
-	char *x __used;
-	x = strstrip(str);
-}
+Anyway; it's up to those who use or maintain this driver.  I for one
+converted another subsystem away from two or three different misused
+semaphores to more appropriate APIs and it wasn't too hard; but I can't
+do this for aacraid since I don't have hardware to test.
+
+(In my rather irrelevant opinion, whatever you decide for now, just do
+_not_ do this here:
+
+>>> we can replace the above code with either
+>>>
+>>>             } else if (down_interruptible (&fibptr->event_wait));
+>>>
+>>>                         Or
+>>>
+>>>             } else {
+>>>                  if (down_interruptible (&fibptr->event_wait))
+>>>                         ;
+>>>             }
+
+because it can really hurt in the long run if sensible warnings are hidden.)
+-- 
+Stefan Richter
+-=====-==--= =-== ---==
+http://arcgraph.de/sr/
