@@ -1,224 +1,186 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 29/54] libfc: adds can_queue ramp up
-Date: Tue, 03 Nov 2009 11:48:06 -0800
-Message-ID: <20091103194806.4085.45070.stgit@localhost.localdomain>
+Subject: [PATCH 33/54] libfcoe: FIP should report link to libfc whether
+	selected or not
+Date: Tue, 03 Nov 2009 11:48:27 -0800
+Message-ID: <20091103194827.4085.3666.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2649 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:50606 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755174AbZKCTsM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:48:12 -0500
+	id S1755044AbZKCTsW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:48:22 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-From: Vasu Dev <vasu.dev@intel.com>
+From: Joe Eykholt <jeykholt@cisco.com>
 
-Adds last_can_queue_ramp_down_time and updates this on every
-ramp down. If last_can_queue_ramp_down_time is not zero then
-do ramp up on any IO completion in added fc_fcp_can_queue_ramp_up.
+The fnic driver with FIP is reporting link up, even though it's down.
 
-Reset last_can_queue_ramp_down_time to zero once can_queue
-is ramped up to added max_can_queue limit, this is to avoid any
-more ramp up attempts on subsequent IO completion.
+When the interface is shut down by the switch, we receive a clear
+virtual link, and set the state reported to libfc as down, although
+we still report it up.  Clearly wrong.  That causes the subsequent
+link down event not to be reported, and /sys shows the host "Online".
 
-The ramp down and up are skipped for FC_CAN_QUEUE_PERIOD
-to avoid infrequent changes to can_queue, this required
-keeping track of ramp up time also in last_can_queue_ramp_up_time.
+Currently, in FIP mode, if an FCF times out, then link to libfc
+is reported as down, to stop FLOGIs.  That interferes with the LLD
+link down being reported.
 
-Adds code to ramp down can_queue if lp->qfull is set, with added
-new ramp up code the can_queue will be increased after
-FC_CAN_QUEUE_PERIOD, therefore it is safe to do ramp down
-without fsp in this case and will avoid thrash. This required
-fc_fcp_can_queue_ramp_down locking change so that it can be
-called with Scsi_Host lock held.
+Users really need to know the physical link information, to diagnose
+cabling issues, so physical link status should be reported to libfc.
 
-Removes si->throttled and fsp state FC_SRB_NOMEM, not needed with
-added ramp up code.
+If the selected FCF needs to be reported, that should be done
+separately, in a later patch.
 
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |   78 +++++++++++++++++++++++++++++++++----------
- 1 files changed, 59 insertions(+), 19 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |   60 ++++++++++++++++++++++---------------------
+ include/scsi/libfcoe.h      |    1 +
+ 2 files changed, 31 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index ac5c148..4bfab4f 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -52,7 +52,6 @@ struct kmem_cache *scsi_pkt_cachep;
- #define FC_SRB_DISCONTIG	(1 << 4)	/* non-sequential data recvd */
- #define FC_SRB_COMPL		(1 << 5)	/* fc_io_compl has been run */
- #define FC_SRB_FCP_PROCESSING_TMO (1 << 6)	/* timer function processing */
--#define FC_SRB_NOMEM		(1 << 7)	/* dropped to out of mem */
- 
- #define FC_SRB_READ		(1 << 1)
- #define FC_SRB_WRITE		(1 << 0)
-@@ -71,12 +70,16 @@ struct kmem_cache *scsi_pkt_cachep;
-  * struct fc_fcp_internal - FCP layer internal data
-  * @scsi_pkt_pool:  Memory pool to draw FCP packets from
-  * @scsi_pkt_queue: Current FCP packets
-- * @throttled:	    The FCP packet queue is throttled
-+ * @last_can_queue_ramp_down_time: ramp down time
-+ * @last_can_queue_ramp_up_time: ramp up time
-+ * @max_can_queue: max can_queue size
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 787e722..4d857c2 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -277,38 +277,16 @@ EXPORT_SYMBOL(fcoe_ctlr_link_up);
+ /**
+  * fcoe_ctlr_reset() - Reset a FCoE controller
+  * @fip:       The FCoE controller to reset
+- * @new_state: The FIP state to be entered
+- *
+- * Returns non-zero if the link was up and now isn't.
   */
- struct fc_fcp_internal {
- 	mempool_t	 *scsi_pkt_pool;
- 	struct list_head scsi_pkt_queue;
--	u8		 throttled;
-+	unsigned long last_can_queue_ramp_down_time;
-+	unsigned long last_can_queue_ramp_up_time;
-+	int max_can_queue;
- };
- 
- #define fc_get_scsi_internal(x)	((struct fc_fcp_internal *)(x)->scsi_priv)
-@@ -124,6 +127,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *, struct fc_frame *);
- #define FC_SCSI_TM_TOV		(10 * HZ)
- #define FC_SCSI_REC_TOV		(2 * HZ)
- #define FC_HOST_RESET_TIMEOUT	(30 * HZ)
-+#define FC_CAN_QUEUE_PERIOD	(60 * HZ)
- 
- #define FC_MAX_ERROR_CNT	5
- #define FC_MAX_RECOV_RETRY	3
-@@ -327,6 +331,38 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
+-static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
++static void fcoe_ctlr_reset(struct fcoe_ctlr *fip)
+ {
+-	struct fc_lport *lport = fip->lp;
+-	int link_dropped;
+-
+-	spin_lock_bh(&fip->lock);
+ 	fcoe_ctlr_reset_fcfs(fip);
+ 	del_timer(&fip->timer);
+-	fip->state = new_state;
+ 	fip->ctlr_ka_time = 0;
+ 	fip->port_ka_time = 0;
+ 	fip->sol_time = 0;
+ 	fip->flogi_oxid = FC_XID_UNKNOWN;
+ 	fip->map_dest = 0;
+-	fip->last_link = 0;
+-	link_dropped = fip->link;
+-	fip->link = 0;
+-	spin_unlock_bh(&fip->lock);
+-
+-	if (link_dropped)
+-		fc_linkdown(lport);
+-
+-	if (new_state == FIP_ST_ENABLED) {
+-		fcoe_ctlr_solicit(fip, NULL);
+-		fc_linkup(lport);
+-		link_dropped = 0;
+-	}
+-	return link_dropped;
  }
  
  /**
-+ * fc_fcp_can_queue_ramp_up() - increases can_queue
-+ * @lport: lport to ramp up can_queue
-+ *
-+ * Locking notes: Called with Scsi_Host lock held
-+ */
-+static void fc_fcp_can_queue_ramp_up(struct fc_lport *lport)
-+{
-+	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
-+	int can_queue;
-+
-+	if (si->last_can_queue_ramp_up_time &&
-+	    (time_before(jiffies, si->last_can_queue_ramp_up_time +
-+			 FC_CAN_QUEUE_PERIOD)))
-+		return;
-+
-+	if (time_before(jiffies, si->last_can_queue_ramp_down_time +
-+			FC_CAN_QUEUE_PERIOD))
-+		return;
-+
-+	si->last_can_queue_ramp_up_time = jiffies;
-+
-+	can_queue = lport->host->can_queue << 1;
-+	if (can_queue >= si->max_can_queue) {
-+		can_queue = si->max_can_queue;
-+		si->last_can_queue_ramp_down_time = 0;
-+	}
-+	lport->host->can_queue = can_queue;
-+	shost_printk(KERN_ERR, lport->host, "libfc: increased "
-+		     "can_queue to %d.\n", can_queue);
-+}
-+
-+/**
-  * fc_fcp_can_queue_ramp_down() - reduces can_queue
-  * @lport: lport to reduce can_queue
-  *
-@@ -335,17 +371,20 @@ static void fc_fcp_ddp_done(struct fc_fcp_pkt *fsp)
-  * commands complete or timeout, then try again with a reduced
-  * can_queue. Eventually we will hit the point where we run
-  * on all reserved structs.
-+ *
-+ * Locking notes: Called with Scsi_Host lock held
+@@ -322,7 +300,20 @@ static int fcoe_ctlr_reset(struct fcoe_ctlr *fip, enum fip_state new_state)
   */
- static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
+ int fcoe_ctlr_link_down(struct fcoe_ctlr *fip)
  {
- 	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
--	unsigned long flags;
- 	int can_queue;
- 
--	spin_lock_irqsave(lport->host->host_lock, flags);
--	if (si->throttled)
--		goto done;
--	si->throttled = 1;
-+	if (si->last_can_queue_ramp_down_time &&
-+	    (time_before(jiffies, si->last_can_queue_ramp_down_time +
-+			 FC_CAN_QUEUE_PERIOD)))
-+		return;
+-	return fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
++	int link_dropped;
 +
-+	si->last_can_queue_ramp_down_time = jiffies;
++	LIBFCOE_FIP_DBG(fip, "link down.\n");
++	spin_lock_bh(&fip->lock);
++	fcoe_ctlr_reset(fip);
++	link_dropped = fip->link;
++	fip->link = 0;
++	fip->last_link = 0;
++	fip->state = FIP_ST_LINK_WAIT;
++	spin_unlock_bh(&fip->lock);
++
++	if (link_dropped)
++		fc_linkdown(fip->lp);
++	return link_dropped;
+ }
+ EXPORT_SYMBOL(fcoe_ctlr_link_down);
  
- 	can_queue = lport->host->can_queue;
- 	can_queue >>= 1;
-@@ -354,8 +393,6 @@ static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
- 	lport->host->can_queue = can_queue;
- 	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
- 		     "Reducing can_queue to %d.\n", can_queue);
--done:
--	spin_unlock_irqrestore(lport->host->host_lock, flags);
+@@ -994,7 +985,13 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
+ 				desc_mask);
+ 	} else {
+ 		LIBFCOE_FIP_DBG(fip, "performing Clear Virtual Link\n");
+-		fcoe_ctlr_reset(fip, FIP_ST_ENABLED);
++
++		spin_lock_bh(&fip->lock);
++		fcoe_ctlr_reset(fip);
++		spin_unlock_bh(&fip->lock);
++
++		fc_lport_reset(fip->lp);
++		fcoe_ctlr_solicit(fip, NULL);
+ 	}
  }
  
- /*
-@@ -370,10 +407,14 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
- 						  size_t len)
- {
- 	struct fc_frame *fp;
-+	unsigned long flags;
- 
- 	fp = fc_frame_alloc(lport, len);
--	if (!fp)
-+	if (!fp) {
-+		spin_lock_irqsave(lport->host->host_lock, flags);
- 		fc_fcp_can_queue_ramp_down(lport);
-+		spin_unlock_irqrestore(lport->host->host_lock, flags);
-+	}
- 	return fp;
- }
- 
-@@ -720,8 +761,6 @@ static void fc_fcp_recv(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 				      (size_t) ntohl(dd->ft_burst_len));
- 		if (!rc)
- 			seq->rec_data = fsp->xfer_len;
--		else if (rc == -ENOMEM)
--			fsp->state |= FC_SRB_NOMEM;
- 	} else if (r_ctl == FC_RCTL_DD_SOL_DATA) {
- 		/*
- 		 * received a DATA frame
-@@ -1734,6 +1773,8 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 	rpriv = rport->dd_data;
- 
- 	if (!fc_fcp_lport_queue_ready(lport)) {
-+		if (lport->qfull)
-+			fc_fcp_can_queue_ramp_down(lport);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
- 	}
-@@ -1830,13 +1871,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+@@ -1152,15 +1149,14 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 			fip->port_ka_time = jiffies +
+ 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
+ 			fip->ctlr_ka_time = jiffies + sel->fka_period;
+-			fip->link = 1;
+ 		} else {
+ 			printk(KERN_NOTICE "libfcoe: host%d: "
+ 			       "FIP Fibre-Channel Forwarder timed out.	"
+ 			       "Starting FCF discovery.\n",
+ 			       fip->lp->host->host_no);
+-			fip->link = 0;
++			fip->reset_req = 1;
++			schedule_work(&fip->link_work);
+ 		}
+-		schedule_work(&fip->link_work);
  	}
  
- 	/*
--	 * if a command timed out while we had to try and throttle IO
--	 * and it is now getting cleaned up, then we are about to
--	 * try again so clear the throttled flag incase we get more
--	 * time outs.
-+	 * if can_queue ramp down is done then try can_queue ramp up
-+	 * since commands are completing now.
- 	 */
--	if (si->throttled && fsp->state & FC_SRB_NOMEM)
--		si->throttled = 0;
-+	if (si->last_can_queue_ramp_down_time)
-+		fc_fcp_can_queue_ramp_up(lport);
+ 	if (sel) {
+@@ -1205,20 +1201,24 @@ static void fcoe_ctlr_link_work(struct work_struct *work)
+ 	u8 *mac;
+ 	int link;
+ 	int last_link;
++	int reset;
  
- 	sc_cmd = fsp->cmd;
- 	fsp->cmd = NULL;
-@@ -2176,6 +2215,7 @@ int fc_fcp_init(struct fc_lport *lport)
- 	if (!si)
- 		return -ENOMEM;
- 	lport->scsi_priv = si;
-+	si->max_can_queue = lport->host->can_queue;
- 	INIT_LIST_HEAD(&si->scsi_pkt_queue);
+ 	fip = container_of(work, struct fcoe_ctlr, link_work);
+ 	spin_lock_bh(&fip->lock);
+ 	last_link = fip->last_link;
+ 	link = fip->link;
+ 	fip->last_link = link;
++	reset = fip->reset_req;
++	fip->reset_req = 0;
+ 	spin_unlock_bh(&fip->lock);
  
- 	si->scsi_pkt_pool = mempool_create_slab_pool(2, scsi_pkt_cachep);
+ 	if (last_link != link) {
+ 		if (link)
+ 			fc_linkup(fip->lp);
+ 		else
+-			fcoe_ctlr_reset(fip, FIP_ST_LINK_WAIT);
+-	}
++			fc_linkdown(fip->lp);
++	} else if (reset && link)
++		fc_lport_reset(fip->lp);
+ 
+ 	if (fip->send_ctlr_ka) {
+ 		fip->send_ctlr_ka = 0;
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 2344a00..e38ffa0 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -108,6 +108,7 @@ struct fcoe_ctlr {
+ 	u8 flogi_count;
+ 	u8 link;
+ 	u8 last_link;
++	u8 reset_req;
+ 	u8 map_dest;
+ 	u8 spma;
+ 	u8 send_ctlr_ka;
 
