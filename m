@@ -1,378 +1,520 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 05/54] libfc: Add libfc/fc_libfc.[ch] for libfc internal
-	routines
-Date: Tue, 03 Nov 2009 11:45:58 -0800
-Message-ID: <20091103194558.4085.28642.stgit@localhost.localdomain>
+Subject: [PATCH 03/54] libfc: Move non-common routines and prototypes out of
+	libfc.h
+Date: Tue, 03 Nov 2009 11:45:47 -0800
+Message-ID: <20091103194547.4085.63084.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11167 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:42412 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752029AbZKCTpx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:45:53 -0500
+	id S1754613AbZKCTpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:45:42 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 Cc: Robert Love <robert.w.love@intel.com>
 
-include/scsi/libfc.h is currently loaded with common code
-shared between libfc's sub-modules as well as shared between
-libfc and fcoe. Previous patches attempted to move out
-non-common code. This patch creates two files for common
-libfc routines that will not be shared with fcoe, fnic or
-any other LLDs.
+This patch moves all non-common routines and function prototypes
+out of libfc.h and into the appropriate .c files. It makes these
+routines 'static' when necessary and removes any unnecessary EXPORT_SYMBOL
+statements.
+
+A result of moving the fc_exch_seq_send, fc_seq_els_rsp_send, fc_exch_alloc
+and fc_seq_start_next prototypes out of libfc.h is that they were no longer
+being imported into fc_exch.c when libfc.h was included. This caused errors
+where routines in fc_exch.c were looking for undefined symbols. To fix this
+this patch reorganizes fc_seq_alloc, fc_seq_start_next and
+fc_seq_start_next_locked. This move also made it so that
+fc_seq_start_next_locked did not need to be prototyped at the top of
+fc_exch.c.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/Makefile   |    1 
- drivers/scsi/libfc/fc_disc.c  |    2 +
- drivers/scsi/libfc/fc_exch.c  |    2 +
- drivers/scsi/libfc/fc_fcp.c   |    8 ---
- drivers/scsi/libfc/fc_libfc.c |   35 ++++++++++++++
- drivers/scsi/libfc/fc_libfc.h |  102 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/libfc/fc_lport.c |    2 +
- drivers/scsi/libfc/fc_rport.c |    2 +
- include/scsi/libfc.h          |   79 --------------------------------
- 9 files changed, 147 insertions(+), 86 deletions(-)
- create mode 100644 drivers/scsi/libfc/fc_libfc.c
- create mode 100644 drivers/scsi/libfc/fc_libfc.h
+ drivers/scsi/libfc/fc_exch.c |  329 +++++++++++++++++++++++-------------------
+ include/scsi/libfc.h         |   49 ------
+ 2 files changed, 177 insertions(+), 201 deletions(-)
 
-diff --git a/drivers/scsi/libfc/Makefile b/drivers/scsi/libfc/Makefile
-index 55f982d..2be549c 100644
---- a/drivers/scsi/libfc/Makefile
-+++ b/drivers/scsi/libfc/Makefile
-@@ -3,6 +3,7 @@
- obj-$(CONFIG_LIBFC) += libfc.o
- 
- libfc-objs := \
-+	fc_libfc.o \
- 	fc_disc.o \
- 	fc_exch.o \
- 	fc_elsct.o \
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index d4cb3f9..a4bdec2 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -40,6 +40,8 @@
- 
- #include <scsi/libfc.h>
- 
-+#include "fc_libfc.h"
-+
- #define FC_DISC_RETRY_LIMIT	3	/* max retries */
- #define FC_DISC_RETRY_DELAY	500UL	/* (msecs) delay */
- 
 diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 659bb05..ee6031e 100644
+index 170cdf4..659bb05 100644
 --- a/drivers/scsi/libfc/fc_exch.c
 +++ b/drivers/scsi/libfc/fc_exch.c
-@@ -32,6 +32,8 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
+@@ -107,7 +107,6 @@ static void fc_seq_ls_rjt(struct fc_seq *, enum fc_els_rjt_reason,
+ 			  enum fc_els_rjt_explan);
+ static void fc_exch_els_rec(struct fc_seq *, struct fc_frame *);
+ static void fc_exch_els_rrq(struct fc_seq *, struct fc_frame *);
+-static struct fc_seq *fc_seq_start_next_locked(struct fc_seq *sp);
  
-+#include "fc_libfc.h"
-+
- u16	fc_cpu_mask;		/* cpu mask for possible cpus */
- EXPORT_SYMBOL(fc_cpu_mask);
- static u16	fc_cpu_order;	/* 2's power to represent total possible cpus */
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 3ab08f8..8a31ced 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -39,13 +39,7 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
+ /*
+  * Internal implementation notes.
+@@ -272,7 +271,6 @@ static void fc_exch_setup_hdr(struct fc_exch *ep, struct fc_frame *fp,
+ 	fh->fh_seq_cnt = htons(ep->seq.cnt);
+ }
  
--MODULE_AUTHOR("Open-FCoE.org");
--MODULE_DESCRIPTION("libfc");
--MODULE_LICENSE("GPL v2");
 -
--unsigned int fc_debug_logging;
--module_param_named(debug_logging, fc_debug_logging, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
-+#include "fc_libfc.h"
+ /*
+  * Release a reference to an exchange.
+  * If the refcnt goes to zero and the exchange is complete, it is freed.
+@@ -372,7 +370,104 @@ static void fc_exch_timer_set(struct fc_exch *ep, unsigned int timer_msec)
+ 	spin_unlock_bh(&ep->ex_lock);
+ }
  
- static struct kmem_cache *scsi_pkt_cachep;
+-int fc_seq_exch_abort(const struct fc_seq *req_sp, unsigned int timer_msec)
++/**
++ * send a frame using existing sequence and exchange.
++ */
++static int fc_seq_send(struct fc_lport *lp, struct fc_seq *sp,
++		       struct fc_frame *fp)
++{
++	struct fc_exch *ep;
++	struct fc_frame_header *fh = fc_frame_header_get(fp);
++	int error;
++	u32	f_ctl;
++
++	ep = fc_seq_exch(sp);
++	WARN_ON((ep->esb_stat & ESB_ST_SEQ_INIT) != ESB_ST_SEQ_INIT);
++
++	f_ctl = ntoh24(fh->fh_f_ctl);
++	fc_exch_setup_hdr(ep, fp, f_ctl);
++
++	/*
++	 * update sequence count if this frame is carrying
++	 * multiple FC frames when sequence offload is enabled
++	 * by LLD.
++	 */
++	if (fr_max_payload(fp))
++		sp->cnt += DIV_ROUND_UP((fr_len(fp) - sizeof(*fh)),
++					fr_max_payload(fp));
++	else
++		sp->cnt++;
++
++	/*
++	 * Send the frame.
++	 */
++	error = lp->tt.frame_send(lp, fp);
++
++	/*
++	 * Update the exchange and sequence flags,
++	 * assuming all frames for the sequence have been sent.
++	 * We can only be called to send once for each sequence.
++	 */
++	spin_lock_bh(&ep->ex_lock);
++	ep->f_ctl = f_ctl & ~FC_FC_FIRST_SEQ;	/* not first seq */
++	if (f_ctl & (FC_FC_END_SEQ | FC_FC_SEQ_INIT))
++		ep->esb_stat &= ~ESB_ST_SEQ_INIT;
++	spin_unlock_bh(&ep->ex_lock);
++	return error;
++}
++
++/**
++ * fc_seq_alloc() - Allocate a sequence.
++ * @ep: Exchange pointer
++ * @seq_id: Sequence ID to allocate a sequence for
++ *
++ * We don't support multiple originated sequences on the same exchange.
++ * By implication, any previously originated sequence on this exchange
++ * is complete, and we reallocate the same sequence.
++ */
++static struct fc_seq *fc_seq_alloc(struct fc_exch *ep, u8 seq_id)
++{
++	struct fc_seq *sp;
++
++	sp = &ep->seq;
++	sp->ssb_stat = 0;
++	sp->cnt = 0;
++	sp->id = seq_id;
++	return sp;
++}
++
++static struct fc_seq *fc_seq_start_next_locked(struct fc_seq *sp)
++{
++	struct fc_exch *ep = fc_seq_exch(sp);
++
++	sp = fc_seq_alloc(ep, ep->seq_id++);
++	FC_EXCH_DBG(ep, "f_ctl %6x seq %2x\n",
++		    ep->f_ctl, sp->id);
++	return sp;
++}
++
++/**
++ * Allocate a new sequence on the same exchange as the supplied sequence.
++ * This will never return NULL.
++ */
++static struct fc_seq *fc_seq_start_next(struct fc_seq *sp)
++{
++	struct fc_exch *ep = fc_seq_exch(sp);
++
++	spin_lock_bh(&ep->ex_lock);
++	sp = fc_seq_start_next_locked(sp);
++	spin_unlock_bh(&ep->ex_lock);
++
++	return sp;
++}
++
++/**
++ * This function is for seq_exch_abort function pointer in
++ * struct libfc_function_template, see comment block on
++ * seq_exch_abort for description of this function.
++ */
++static int fc_seq_exch_abort(const struct fc_seq *req_sp,
++			     unsigned int timer_msec)
+ {
+ 	struct fc_seq *sp;
+ 	struct fc_exch *ep;
+@@ -472,24 +567,6 @@ done:
+ 	fc_exch_release(ep);
+ }
  
-diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
-new file mode 100644
-index 0000000..e64ea87
---- /dev/null
-+++ b/drivers/scsi/libfc/fc_libfc.c
-@@ -0,0 +1,35 @@
-+/*
-+ * Copyright(c) 2009 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/types.h>
-+#include <linux/scatterlist.h>
-+#include <linux/crc32.h>
-+
-+#include <scsi/libfc.h>
-+
-+#include "fc_libfc.h"
-+
-+MODULE_AUTHOR("Open-FCoE.org");
-+MODULE_DESCRIPTION("libfc");
-+MODULE_LICENSE("GPL v2");
-+
-+unsigned int fc_debug_logging;
-+module_param_named(debug_logging, fc_debug_logging, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
-diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
-new file mode 100644
-index 0000000..388fae4
---- /dev/null
-+++ b/drivers/scsi/libfc/fc_libfc.h
-@@ -0,0 +1,102 @@
-+/*
-+ * Copyright(c) 2009 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ *
-+ * Maintained at www.Open-FCoE.org
-+ */
-+
-+#ifndef _FC_LIBFC_H_
-+#define _FC_LIBFC_H_
-+
-+#define FC_LIBFC_LOGGING 0x01 /* General logging, not categorized */
-+#define FC_LPORT_LOGGING 0x02 /* lport layer logging */
-+#define FC_DISC_LOGGING  0x04 /* discovery layer logging */
-+#define FC_RPORT_LOGGING 0x08 /* rport layer logging */
-+#define FC_FCP_LOGGING   0x10 /* I/O path logging */
-+#define FC_EM_LOGGING    0x20 /* Exchange Manager logging */
-+#define FC_EXCH_LOGGING  0x40 /* Exchange/Sequence logging */
-+#define FC_SCSI_LOGGING  0x80 /* SCSI logging (mostly error handling) */
-+
-+extern unsigned int fc_debug_logging;
-+
-+#define FC_CHECK_LOGGING(LEVEL, CMD)				\
-+do {								\
-+	if (unlikely(fc_debug_logging & LEVEL))			\
-+		do {						\
-+			CMD;					\
-+		} while (0);					\
-+} while (0)
-+
-+#define FC_LIBFC_DBG(fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_LIBFC_LOGGING,				\
-+			 printk(KERN_INFO "libfc: " fmt, ##args))
-+
-+#define FC_LPORT_DBG(lport, fmt, args...)				\
-+	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
-+			 printk(KERN_INFO "host%u: lport %6x: " fmt,	\
-+				(lport)->host->host_no,			\
-+				fc_host_port_id((lport)->host), ##args))
-+
-+#define FC_DISC_DBG(disc, fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_DISC_LOGGING,				\
-+			 printk(KERN_INFO "host%u: disc: " fmt,		\
-+				(disc)->lport->host->host_no,		\
-+				##args))
-+
-+#define FC_RPORT_ID_DBG(lport, port_id, fmt, args...)			\
-+	FC_CHECK_LOGGING(FC_RPORT_LOGGING,				\
-+			 printk(KERN_INFO "host%u: rport %6x: " fmt,	\
-+				(lport)->host->host_no,			\
-+				(port_id), ##args))
-+
-+#define FC_RPORT_DBG(rdata, fmt, args...)				\
-+	FC_RPORT_ID_DBG((rdata)->local_port, (rdata)->ids.port_id, fmt, ##args)
-+
-+#define FC_FCP_DBG(pkt, fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_FCP_LOGGING,				\
-+			 printk(KERN_INFO "host%u: fcp: %6x: " fmt,	\
-+				(pkt)->lp->host->host_no,		\
-+				pkt->rport->port_id, ##args))
-+
-+#define FC_EXCH_DBG(exch, fmt, args...)					\
-+	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
-+			 printk(KERN_INFO "host%u: xid %4x: " fmt,	\
-+				(exch)->lp->host->host_no,		\
-+				exch->xid, ##args))
-+
-+#define FC_SCSI_DBG(lport, fmt, args...)				\
-+	FC_CHECK_LOGGING(FC_SCSI_LOGGING,                               \
-+			 printk(KERN_INFO "host%u: scsi: " fmt,		\
-+				(lport)->host->host_no,	##args))
-+
-+/*
-+ * Set up direct-data placement for this I/O request
-+ */
-+void fc_fcp_ddp_setup(struct fc_fcp_pkt *fsp, u16 xid);
-+
-+/*
-+ * Module setup functions
-+ */
-+int fc_setup_exch_mgr(void);
-+void fc_destroy_exch_mgr(void);
-+int fc_setup_rport(void);
-+void fc_destroy_rport(void);
-+
-+/*
-+ * Internal libfc functions
-+ */
-+const char *fc_els_resp_type(struct fc_frame *);
-+
-+#endif /* _FC_LIBFC_H_ */
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 536492a..f7f20a4 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -95,6 +95,8 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
+-/*
+- * Allocate a sequence.
+- *
+- * We don't support multiple originated sequences on the same exchange.
+- * By implication, any previously originated sequence on this exchange
+- * is complete, and we reallocate the same sequence.
+- */
+-static struct fc_seq *fc_seq_alloc(struct fc_exch *ep, u8 seq_id)
+-{
+-	struct fc_seq *sp;
+-
+-	sp = &ep->seq;
+-	sp->ssb_stat = 0;
+-	sp->cnt = 0;
+-	sp->id = seq_id;
+-	return sp;
+-}
+-
+ /**
+  * fc_exch_em_alloc() - allocate an exchange from a specified EM.
+  * @lport:	ptr to the local port
+@@ -570,7 +647,8 @@ err:
+  * EM is selected having either a NULL match function pointer
+  * or call to match function returning true.
+  */
+-struct fc_exch *fc_exch_alloc(struct fc_lport *lport, struct fc_frame *fp)
++static struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
++				     struct fc_frame *fp)
+ {
+ 	struct fc_exch_mgr_anchor *ema;
+ 	struct fc_exch *ep;
+@@ -584,7 +662,6 @@ struct fc_exch *fc_exch_alloc(struct fc_lport *lport, struct fc_frame *fp)
+ 	}
+ 	return NULL;
+ }
+-EXPORT_SYMBOL(fc_exch_alloc);
  
-+#include "fc_libfc.h"
-+
- /* Fabric IDs to use for point-to-point mode, chosen on whims. */
- #define FC_LOCAL_PTP_FID_LO   0x010101
- #define FC_LOCAL_PTP_FID_HI   0x010102
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 324e156..622285c 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -55,6 +55,8 @@
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
+ /*
+  * Lookup and hold an exchange.
+@@ -607,7 +684,13 @@ static struct fc_exch *fc_exch_find(struct fc_exch_mgr *mp, u16 xid)
+ 	return ep;
+ }
  
-+#include "fc_libfc.h"
+-void fc_exch_done(struct fc_seq *sp)
 +
- struct workqueue_struct *rport_event_queue;
++/**
++ * fc_exch_done() - Indicate that an exchange/sequence tuple is complete and
++ *                  the memory allocated for the related objects may be freed.
++ * @sp: Sequence pointer
++ */
++static void fc_exch_done(struct fc_seq *sp)
+ {
+ 	struct fc_exch *ep = fc_seq_exch(sp);
+ 	int rc;
+@@ -618,7 +701,6 @@ void fc_exch_done(struct fc_seq *sp)
+ 	if (!rc)
+ 		fc_exch_delete(ep);
+ }
+-EXPORT_SYMBOL(fc_exch_done);
  
- static void fc_rport_enter_plogi(struct fc_rport_priv *);
+ /*
+  * Allocate a new exchange as responder.
+@@ -821,76 +903,15 @@ static void fc_exch_set_addr(struct fc_exch *ep,
+ 	}
+ }
+ 
+-static struct fc_seq *fc_seq_start_next_locked(struct fc_seq *sp)
+-{
+-	struct fc_exch *ep = fc_seq_exch(sp);
+-
+-	sp = fc_seq_alloc(ep, ep->seq_id++);
+-	FC_EXCH_DBG(ep, "f_ctl %6x seq %2x\n",
+-		    ep->f_ctl, sp->id);
+-	return sp;
+-}
+-/*
+- * Allocate a new sequence on the same exchange as the supplied sequence.
+- * This will never return NULL.
++/**
++ * fc_seq_els_rsp_send() - Send ELS response using mainly infomation
++ *                         in exchange and sequence in EM layer.
++ * @sp: Sequence pointer
++ * @els_cmd: ELS command
++ * @els_data: ELS data
+  */
+-struct fc_seq *fc_seq_start_next(struct fc_seq *sp)
+-{
+-	struct fc_exch *ep = fc_seq_exch(sp);
+-
+-	spin_lock_bh(&ep->ex_lock);
+-	sp = fc_seq_start_next_locked(sp);
+-	spin_unlock_bh(&ep->ex_lock);
+-
+-	return sp;
+-}
+-EXPORT_SYMBOL(fc_seq_start_next);
+-
+-int fc_seq_send(struct fc_lport *lp, struct fc_seq *sp, struct fc_frame *fp)
+-{
+-	struct fc_exch *ep;
+-	struct fc_frame_header *fh = fc_frame_header_get(fp);
+-	int error;
+-	u32	f_ctl;
+-
+-	ep = fc_seq_exch(sp);
+-	WARN_ON((ep->esb_stat & ESB_ST_SEQ_INIT) != ESB_ST_SEQ_INIT);
+-
+-	f_ctl = ntoh24(fh->fh_f_ctl);
+-	fc_exch_setup_hdr(ep, fp, f_ctl);
+-
+-	/*
+-	 * update sequence count if this frame is carrying
+-	 * multiple FC frames when sequence offload is enabled
+-	 * by LLD.
+-	 */
+-	if (fr_max_payload(fp))
+-		sp->cnt += DIV_ROUND_UP((fr_len(fp) - sizeof(*fh)),
+-					fr_max_payload(fp));
+-	else
+-		sp->cnt++;
+-
+-	/*
+-	 * Send the frame.
+-	 */
+-	error = lp->tt.frame_send(lp, fp);
+-
+-	/*
+-	 * Update the exchange and sequence flags,
+-	 * assuming all frames for the sequence have been sent.
+-	 * We can only be called to send once for each sequence.
+-	 */
+-	spin_lock_bh(&ep->ex_lock);
+-	ep->f_ctl = f_ctl & ~FC_FC_FIRST_SEQ;	/* not first seq */
+-	if (f_ctl & (FC_FC_END_SEQ | FC_FC_SEQ_INIT))
+-		ep->esb_stat &= ~ESB_ST_SEQ_INIT;
+-	spin_unlock_bh(&ep->ex_lock);
+-	return error;
+-}
+-EXPORT_SYMBOL(fc_seq_send);
+-
+-void fc_seq_els_rsp_send(struct fc_seq *sp, enum fc_els_cmd els_cmd,
+-			 struct fc_seq_els_data *els_data)
++static void fc_seq_els_rsp_send(struct fc_seq *sp, enum fc_els_cmd els_cmd,
++				struct fc_seq_els_data *els_data)
+ {
+ 	switch (els_cmd) {
+ 	case ELS_LS_RJT:
+@@ -909,7 +930,6 @@ void fc_seq_els_rsp_send(struct fc_seq *sp, enum fc_els_cmd els_cmd,
+ 		FC_EXCH_DBG(fc_seq_exch(sp), "Invalid ELS CMD:%x\n", els_cmd);
+ 	}
+ }
+-EXPORT_SYMBOL(fc_seq_els_rsp_send);
+ 
+ /*
+  * Send a sequence, which is also the last sequence in the exchange.
+@@ -1662,6 +1682,68 @@ cleanup:
+ 	fc_exch_release(aborted_ep);
+ }
+ 
++
++/**
++ * This function is for exch_seq_send function pointer in
++ * struct libfc_function_template, see comment block on
++ * exch_seq_send for description of this function.
++ */
++static struct fc_seq *fc_exch_seq_send(struct fc_lport *lp,
++				       struct fc_frame *fp,
++				       void (*resp)(struct fc_seq *,
++						    struct fc_frame *fp,
++						    void *arg),
++				       void (*destructor)(struct fc_seq *,
++							  void *),
++				       void *arg, u32 timer_msec)
++{
++	struct fc_exch *ep;
++	struct fc_seq *sp = NULL;
++	struct fc_frame_header *fh;
++	int rc = 1;
++
++	ep = fc_exch_alloc(lp, fp);
++	if (!ep) {
++		fc_frame_free(fp);
++		return NULL;
++	}
++	ep->esb_stat |= ESB_ST_SEQ_INIT;
++	fh = fc_frame_header_get(fp);
++	fc_exch_set_addr(ep, ntoh24(fh->fh_s_id), ntoh24(fh->fh_d_id));
++	ep->resp = resp;
++	ep->destructor = destructor;
++	ep->arg = arg;
++	ep->r_a_tov = FC_DEF_R_A_TOV;
++	ep->lp = lp;
++	sp = &ep->seq;
++
++	ep->fh_type = fh->fh_type; /* save for possbile timeout handling */
++	ep->f_ctl = ntoh24(fh->fh_f_ctl);
++	fc_exch_setup_hdr(ep, fp, ep->f_ctl);
++	sp->cnt++;
++
++	if (ep->xid <= lp->lro_xid)
++		fc_fcp_ddp_setup(fr_fsp(fp), ep->xid);
++
++	if (unlikely(lp->tt.frame_send(lp, fp)))
++		goto err;
++
++	if (timer_msec)
++		fc_exch_timer_set_locked(ep, timer_msec);
++	ep->f_ctl &= ~FC_FC_FIRST_SEQ;	/* not first seq */
++
++	if (ep->f_ctl & FC_FC_SEQ_INIT)
++		ep->esb_stat &= ~ESB_ST_SEQ_INIT;
++	spin_unlock_bh(&ep->ex_lock);
++	return sp;
++err:
++	rc = fc_exch_done_locked(ep);
++	spin_unlock_bh(&ep->ex_lock);
++	if (!rc)
++		fc_exch_delete(ep);
++	return NULL;
++}
++
+ /*
+  * Send ELS RRQ - Reinstate Recovery Qualifier.
+  * This tells the remote port to stop blocking the use of
+@@ -1902,63 +1984,6 @@ void fc_exch_mgr_free(struct fc_lport *lport)
+ }
+ EXPORT_SYMBOL(fc_exch_mgr_free);
+ 
+-
+-struct fc_seq *fc_exch_seq_send(struct fc_lport *lp,
+-				struct fc_frame *fp,
+-				void (*resp)(struct fc_seq *,
+-					     struct fc_frame *fp,
+-					     void *arg),
+-				void (*destructor)(struct fc_seq *, void *),
+-				void *arg, u32 timer_msec)
+-{
+-	struct fc_exch *ep;
+-	struct fc_seq *sp = NULL;
+-	struct fc_frame_header *fh;
+-	int rc = 1;
+-
+-	ep = fc_exch_alloc(lp, fp);
+-	if (!ep) {
+-		fc_frame_free(fp);
+-		return NULL;
+-	}
+-	ep->esb_stat |= ESB_ST_SEQ_INIT;
+-	fh = fc_frame_header_get(fp);
+-	fc_exch_set_addr(ep, ntoh24(fh->fh_s_id), ntoh24(fh->fh_d_id));
+-	ep->resp = resp;
+-	ep->destructor = destructor;
+-	ep->arg = arg;
+-	ep->r_a_tov = FC_DEF_R_A_TOV;
+-	ep->lp = lp;
+-	sp = &ep->seq;
+-
+-	ep->fh_type = fh->fh_type; /* save for possbile timeout handling */
+-	ep->f_ctl = ntoh24(fh->fh_f_ctl);
+-	fc_exch_setup_hdr(ep, fp, ep->f_ctl);
+-	sp->cnt++;
+-
+-	if (ep->xid <= lp->lro_xid)
+-		fc_fcp_ddp_setup(fr_fsp(fp), ep->xid);
+-
+-	if (unlikely(lp->tt.frame_send(lp, fp)))
+-		goto err;
+-
+-	if (timer_msec)
+-		fc_exch_timer_set_locked(ep, timer_msec);
+-	ep->f_ctl &= ~FC_FC_FIRST_SEQ;	/* not first seq */
+-
+-	if (ep->f_ctl & FC_FC_SEQ_INIT)
+-		ep->esb_stat &= ~ESB_ST_SEQ_INIT;
+-	spin_unlock_bh(&ep->ex_lock);
+-	return sp;
+-err:
+-	rc = fc_exch_done_locked(ep);
+-	spin_unlock_bh(&ep->ex_lock);
+-	if (!rc)
+-		fc_exch_delete(ep);
+-	return NULL;
+-}
+-EXPORT_SYMBOL(fc_exch_seq_send);
+-
+ /*
+  * Receive a frame
+  */
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index db2175d..690f829 100644
+index 9617f93..f207b6c 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -34,67 +34,6 @@
- 
- #include <scsi/fc_frame.h>
- 
--#define FC_LIBFC_LOGGING 0x01 /* General logging, not categorized */
--#define FC_LPORT_LOGGING 0x02 /* lport layer logging */
--#define FC_DISC_LOGGING  0x04 /* discovery layer logging */
--#define FC_RPORT_LOGGING 0x08 /* rport layer logging */
--#define FC_FCP_LOGGING   0x10 /* I/O path logging */
--#define FC_EM_LOGGING    0x20 /* Exchange Manager logging */
--#define FC_EXCH_LOGGING  0x40 /* Exchange/Sequence logging */
--#define FC_SCSI_LOGGING  0x80 /* SCSI logging (mostly error handling) */
--
--extern unsigned int fc_debug_logging;
--
--#define FC_CHECK_LOGGING(LEVEL, CMD)				\
--do {								\
--	if (unlikely(fc_debug_logging & LEVEL))			\
--		do {						\
--			CMD;					\
--		} while (0);					\
--} while (0)
--
--#define FC_LIBFC_DBG(fmt, args...)					\
--	FC_CHECK_LOGGING(FC_LIBFC_LOGGING,				\
--			 printk(KERN_INFO "libfc: " fmt, ##args))
--
--#define FC_LPORT_DBG(lport, fmt, args...)				\
--	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
--			 printk(KERN_INFO "host%u: lport %6x: " fmt,	\
--				(lport)->host->host_no,			\
--				fc_host_port_id((lport)->host), ##args))
--
--#define FC_DISC_DBG(disc, fmt, args...)					\
--	FC_CHECK_LOGGING(FC_DISC_LOGGING,				\
--			 printk(KERN_INFO "host%u: disc: " fmt,		\
--				(disc)->lport->host->host_no,		\
--				##args))
--
--#define FC_RPORT_ID_DBG(lport, port_id, fmt, args...)			\
--	FC_CHECK_LOGGING(FC_RPORT_LOGGING,				\
--			 printk(KERN_INFO "host%u: rport %6x: " fmt,	\
--				(lport)->host->host_no,			\
--				(port_id), ##args))
--
--#define FC_RPORT_DBG(rdata, fmt, args...)				\
--	FC_RPORT_ID_DBG((rdata)->local_port, (rdata)->ids.port_id, fmt, ##args)
--
--#define FC_FCP_DBG(pkt, fmt, args...)					\
--	FC_CHECK_LOGGING(FC_FCP_LOGGING,				\
--			 printk(KERN_INFO "host%u: fcp: %6x: " fmt,	\
--				(pkt)->lp->host->host_no,		\
--				pkt->rport->port_id, ##args))
--
--#define FC_EXCH_DBG(exch, fmt, args...)					\
--	FC_CHECK_LOGGING(FC_EXCH_LOGGING,				\
--			 printk(KERN_INFO "host%u: xid %4x: " fmt,	\
--				(exch)->lp->host->host_no,		\
--				exch->xid, ##args))
--
--#define FC_SCSI_DBG(lport, fmt, args...)				\
--	FC_CHECK_LOGGING(FC_SCSI_LOGGING,                               \
--			 printk(KERN_INFO "host%u: scsi: " fmt,		\
--				(lport)->host->host_no,	##args))
--
- /*
-  * libfc error codes
-  */
-@@ -924,11 +863,6 @@ int fc_change_queue_type(struct scsi_device *sdev, int tag_type);
- void fc_fcp_destroy(struct fc_lport *);
+@@ -1012,55 +1012,6 @@ void fc_exch_mgr_free(struct fc_lport *lport);
+ void fc_exch_recv(struct fc_lport *lp, struct fc_frame *fp);
  
  /*
-- * Set up direct-data placement for this I/O request
+- * This function is for exch_seq_send function pointer in
+- * struct libfc_function_template, see comment block on
+- * exch_seq_send for description of this function.
 - */
--void fc_fcp_ddp_setup(struct fc_fcp_pkt *fsp, u16 xid);
+-struct fc_seq *fc_exch_seq_send(struct fc_lport *lp,
+-				struct fc_frame *fp,
+-				void (*resp)(struct fc_seq *sp,
+-					     struct fc_frame *fp,
+-					     void *arg),
+-				void (*destructor)(struct fc_seq *sp,
+-						   void *arg),
+-				void *arg, u32 timer_msec);
 -
 -/*
-  * ELS/CT interface
-  *****************************/
- /*
-@@ -1020,17 +954,4 @@ void fc_get_host_port_state(struct Scsi_Host *shost);
- void fc_set_rport_loss_tmo(struct fc_rport *rport, u32 timeout);
- struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *);
- 
--/*
-- * module setup functions.
+- * send a frame using existing sequence and exchange.
 - */
--int fc_setup_exch_mgr(void);
--void fc_destroy_exch_mgr(void);
--int fc_setup_rport(void);
--void fc_destroy_rport(void);
+-int fc_seq_send(struct fc_lport *lp, struct fc_seq *sp, struct fc_frame *fp);
 -
 -/*
-- * Internal libfc functions.
+- * Send ELS response using mainly infomation
+- * in exchange and sequence in EM layer.
 - */
--const char *fc_els_resp_type(struct fc_frame *);
+-void fc_seq_els_rsp_send(struct fc_seq *sp, enum fc_els_cmd els_cmd,
+-			 struct fc_seq_els_data *els_data);
 -
- #endif /* _LIBFC_H_ */
+-/*
+- * This function is for seq_exch_abort function pointer in
+- * struct libfc_function_template, see comment block on
+- * seq_exch_abort for description of this function.
+- */
+-int fc_seq_exch_abort(const struct fc_seq *req_sp, unsigned int timer_msec);
+-
+-/*
+- * Indicate that an exchange/sequence tuple is complete and the memory
+- * allocated for the related objects may be freed.
+- */
+-void fc_exch_done(struct fc_seq *sp);
+-
+-/*
+- * Allocate a new exchange and sequence pair.
+- */
+-struct fc_exch *fc_exch_alloc(struct fc_lport *lport, struct fc_frame *fp);
+-/*
+- * Start a new sequence on the same exchange as the supplied sequence.
+- */
+-struct fc_seq *fc_seq_start_next(struct fc_seq *sp);
+-
+-
+-/*
+  * Reset all EMs of a lport, releasing its all sequences and
+  * exchanges. If sid is non-zero, then reset only exchanges
+  * we sourced from that FID. If did is non-zero, reset only
 
