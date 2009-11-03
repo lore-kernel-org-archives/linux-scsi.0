@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 09/54] libfc: vport link handling and fc_vport state managment
-Date: Tue, 03 Nov 2009 11:46:19 -0800
-Message-ID: <20091103194619.4085.47300.stgit@localhost.localdomain>
+Subject: [PATCH 14/54] libfc: RPN_ID is obsolete and unnecessary
+Date: Tue, 03 Nov 2009 11:46:46 -0800
+Message-ID: <20091103194645.4085.24147.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48209 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:37204 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754954AbZKCTqO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:46:14 -0500
+	id S1753324AbZKCTqk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:46:40 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,279 +19,183 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-NPIV vports are managed in libfc by changing their virtual link state
-when the parent N_Ports internal state changes.  The vport link is only
-online when the N_Port is in a ready state (logged into the fabric).
-
-vport_state is updated as needed in this patch as well, currently the states
-LINKDOWN, INITIALIZING, ACTIVE, DSIABLED, and NO_FABRIC_SUPP are used.
-
-This also changes the fc_host port_state handling to differentiate between
-LINKDOWN and OFFLINE.
+RPN_ID has been obsolete per FC-GS-5 for several years.  The port name is
+registered implicitly as part of FLOGI, and it is undesirable for ports to
+change a registered port name using RPN_ID while logged into the fabric.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |   72 +++++++++++++++++++++++++++++++--------
- drivers/scsi/libfc/fc_npiv.c  |   75 +++++++++++++++++++++++++++++++++++++++++
- include/scsi/libfc.h          |    8 ++++
- 3 files changed, 140 insertions(+), 15 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |   95 +----------------------------------------
+ include/scsi/libfc.h          |    1 
+ 2 files changed, 3 insertions(+), 93 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 41650d3..46897cf 100644
+index 807f5b3..47577e4 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -224,10 +224,18 @@ void fc_get_host_port_state(struct Scsi_Host *shost)
- {
- 	struct fc_lport *lp = shost_priv(shost);
- 
--	if (lp->link_up)
--		fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
-+	mutex_lock(&lp->lp_mutex);
-+	if (!lp->link_up)
-+		fc_host_port_state(shost) = FC_PORTSTATE_LINKDOWN;
- 	else
--		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
-+		switch (lp->state) {
-+		case LPORT_ST_READY:
-+			fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
-+			break;
-+		default:
-+			fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
-+		}
-+	mutex_unlock(&lp->lp_mutex);
- }
- EXPORT_SYMBOL(fc_get_host_port_state);
- 
-@@ -493,40 +501,62 @@ int fc_fabric_login(struct fc_lport *lport)
- EXPORT_SYMBOL(fc_fabric_login);
- 
- /**
-- * fc_linkup() - Handler for transport linkup events
-+ * __fc_linkup() - Handler for transport linkup events
-  * @lport: The lport whose link is up
-+ *
-+ * Locking: must be called with the lp_mutex held
-  */
--void fc_linkup(struct fc_lport *lport)
-+void __fc_linkup(struct fc_lport *lport)
- {
--	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
--	       fc_host_port_id(lport->host));
--
--	mutex_lock(&lport->lp_mutex);
- 	if (!lport->link_up) {
- 		lport->link_up = 1;
- 
- 		if (lport->state == LPORT_ST_RESET)
- 			fc_lport_enter_flogi(lport);
- 	}
-+}
-+
-+/**
-+ * fc_linkup() - Handler for transport linkup events
-+ * @lport: The lport whose link is up
-+ */
-+void fc_linkup(struct fc_lport *lport)
-+{
-+	printk(KERN_INFO "libfc: Link up on port (%6x)\n",
-+	       fc_host_port_id(lport->host));
-+
-+	mutex_lock(&lport->lp_mutex);
-+	__fc_linkup(lport);
- 	mutex_unlock(&lport->lp_mutex);
- }
- EXPORT_SYMBOL(fc_linkup);
+@@ -108,7 +108,6 @@ static void fc_lport_error(struct fc_lport *, struct fc_frame *);
+ static void fc_lport_enter_reset(struct fc_lport *);
+ static void fc_lport_enter_flogi(struct fc_lport *);
+ static void fc_lport_enter_dns(struct fc_lport *);
+-static void fc_lport_enter_rpn_id(struct fc_lport *);
+ static void fc_lport_enter_rft_id(struct fc_lport *);
+ static void fc_lport_enter_scr(struct fc_lport *);
+ static void fc_lport_enter_ready(struct fc_lport *);
+@@ -118,7 +117,6 @@ static const char *fc_lport_state_names[] = {
+ 	[LPORT_ST_DISABLED] = "disabled",
+ 	[LPORT_ST_FLOGI] =    "FLOGI",
+ 	[LPORT_ST_DNS] =      "dNS",
+-	[LPORT_ST_RPN_ID] =   "RPN_ID",
+ 	[LPORT_ST_RFT_ID] =   "RFT_ID",
+ 	[LPORT_ST_SCR] =      "SCR",
+ 	[LPORT_ST_READY] =    "Ready",
+@@ -153,7 +151,7 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
+ 	case RPORT_EV_READY:
+ 		if (lport->state == LPORT_ST_DNS) {
+ 			lport->dns_rp = rdata;
+-			fc_lport_enter_rpn_id(lport);
++			fc_lport_enter_rft_id(lport);
+ 		} else {
+ 			FC_LPORT_DBG(lport, "Received an READY event "
+ 				     "on port (%6x) for the directory "
+@@ -965,7 +963,6 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
+ 			case LPORT_ST_DISABLED:
+ 			case LPORT_ST_READY:
+ 			case LPORT_ST_RESET:
+-			case LPORT_ST_RPN_ID:
+ 			case LPORT_ST_RFT_ID:
+ 			case LPORT_ST_SCR:
+ 			case LPORT_ST_DNS:
+@@ -980,8 +977,8 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
  
  /**
-- * fc_linkdown() - Handler for transport linkdown events
-+ * __fc_linkdown() - Handler for transport linkdown events
-  * @lport: The lport whose link is down
-+ *
-+ * Locking: must be called with the lp_mutex held
-  */
--void fc_linkdown(struct fc_lport *lport)
-+void __fc_linkdown(struct fc_lport *lport)
- {
--	mutex_lock(&lport->lp_mutex);
--	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
--	       fc_host_port_id(lport->host));
+  * fc_lport_rft_id_resp() - Handle response to Register Fibre
+- *			    Channel Types by ID (RPN_ID) request
+- * @sp: current sequence in RPN_ID exchange
++ *			    Channel Types by ID (RFT_ID) request
++ * @sp: current sequence in RFT_ID exchange
+  * @fp: response frame
+  * @lp_arg: Fibre Channel host port instance
+  *
+@@ -1033,60 +1030,6 @@ err:
+ }
+ 
+ /**
+- * fc_lport_rpn_id_resp() - Handle response to Register Port
+- *			    Name by ID (RPN_ID) request
+- * @sp: current sequence in RPN_ID exchange
+- * @fp: response frame
+- * @lp_arg: Fibre Channel host port instance
+- *
+- * Locking Note: This function will be called without the lport lock
+- * held, but it will lock, call an _enter_* function or fc_lport_error
+- * and then unlock the lport.
+- */
+-static void fc_lport_rpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+-				 void *lp_arg)
+-{
+-	struct fc_lport *lport = lp_arg;
+-	struct fc_frame_header *fh;
+-	struct fc_ct_hdr *ct;
 -
- 	if (lport->link_up) {
- 		lport->link_up = 0;
- 		fc_lport_enter_reset(lport);
- 		lport->tt.fcp_cleanup(lport);
- 	}
-+}
-+
-+/**
-+ * fc_linkdown() - Handler for transport linkdown events
-+ * @lport: The lport whose link is down
-+ */
-+void fc_linkdown(struct fc_lport *lport)
-+{
-+	printk(KERN_INFO "libfc: Link down on port (%6x)\n",
-+	       fc_host_port_id(lport->host));
-+
-+	mutex_lock(&lport->lp_mutex);
-+	__fc_linkdown(lport);
- 	mutex_unlock(&lport->lp_mutex);
- }
- EXPORT_SYMBOL(fc_linkdown);
-@@ -654,6 +684,9 @@ static void fc_lport_enter_ready(struct fc_lport *lport)
- 		     fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_READY);
-+	if (lport->vport)
-+		fc_vport_set_state(lport->vport, FC_VPORT_ACTIVE);
-+	fc_vports_linkchange(lport);
- 
- 	if (!lport->ptp_rp)
- 		lport->tt.disc_start(fc_lport_disc_callback, lport);
-@@ -868,7 +901,14 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
- 	FC_LPORT_DBG(lport, "Entered RESET state from %s state\n",
- 		     fc_lport_state(lport));
- 
-+	if (lport->vport) {
-+		if (lport->link_up)
-+			fc_vport_set_state(lport->vport, FC_VPORT_INITIALIZING);
-+		else
-+			fc_vport_set_state(lport->vport, FC_VPORT_LINKDOWN);
-+	}
- 	fc_lport_state_enter(lport, LPORT_ST_RESET);
-+	fc_vports_linkchange(lport);
- 	fc_lport_reset_locked(lport);
- 	if (lport->link_up)
- 		fc_lport_enter_flogi(lport);
-@@ -887,6 +927,7 @@ static void fc_lport_enter_disabled(struct fc_lport *lport)
- 		     fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_DISABLED);
-+	fc_vports_linkchange(lport);
- 	fc_lport_reset_locked(lport);
+-	FC_LPORT_DBG(lport, "Received a RPN_ID %s\n", fc_els_resp_type(fp));
+-
+-	if (fp == ERR_PTR(-FC_EX_CLOSED))
+-		return;
+-
+-	mutex_lock(&lport->lp_mutex);
+-
+-	if (lport->state != LPORT_ST_RPN_ID) {
+-		FC_LPORT_DBG(lport, "Received a RPN_ID response, but in state "
+-			     "%s\n", fc_lport_state(lport));
+-		if (IS_ERR(fp))
+-			goto err;
+-		goto out;
+-	}
+-
+-	if (IS_ERR(fp)) {
+-		fc_lport_error(lport, fp);
+-		goto err;
+-	}
+-
+-	fh = fc_frame_header_get(fp);
+-	ct = fc_frame_payload_get(fp, sizeof(*ct));
+-	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
+-	    ct->ct_fs_type == FC_FST_DIR &&
+-	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
+-	    ntohs(ct->ct_cmd) == FC_FS_ACC)
+-		fc_lport_enter_rft_id(lport);
+-	else
+-		fc_lport_error(lport, fp);
+-
+-out:
+-	fc_frame_free(fp);
+-err:
+-	mutex_unlock(&lport->lp_mutex);
+-}
+-
+-/**
+  * fc_lport_scr_resp() - Handle response to State Change Register (SCR) request
+  * @sp: current sequence in SCR exchange
+  * @fp: response frame
+@@ -1203,35 +1146,6 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
+ 		fc_lport_error(lport, fp);
  }
  
-@@ -1333,6 +1374,7 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
- 		     fc_lport_state(lport));
- 
- 	fc_lport_state_enter(lport, LPORT_ST_LOGO);
-+	fc_vports_linkchange(lport);
- 
- 	fp = fc_frame_alloc(lport, sizeof(*logo));
- 	if (!fp) {
-diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
-index 39f02c0..c68f6c7 100644
---- a/drivers/scsi/libfc/fc_npiv.c
-+++ b/drivers/scsi/libfc/fc_npiv.c
-@@ -84,3 +84,78 @@ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
- 	return lport;
- }
- 
-+/*
-+ * When setting the link state of vports during an lport state change, it's
-+ * necessary to hold the lp_mutex of both the N_Port and the VN_Port.
-+ * This tells the lockdep engine to treat the nested locking of the VN_Port
-+ * as a different lock class.
-+ */
-+enum libfc_lport_mutex_class {
-+	LPORT_MUTEX_NORMAL = 0,
-+	LPORT_MUTEX_VN_PORT = 1,
-+};
-+
-+/**
-+ * __fc_vport_setlink() - update link and status on a VN_Port
-+ * @n_port: parent N_Port
-+ * @vn_port: VN_Port to update
-+ *
-+ * Locking: must be called with both the N_Port and VN_Port lp_mutex held
-+ */
-+static void __fc_vport_setlink(struct fc_lport *n_port,
-+			       struct fc_lport *vn_port)
-+{
-+	struct fc_vport *vport = vn_port->vport;
-+
-+	if (vn_port->state == LPORT_ST_DISABLED)
-+		return;
-+
-+	if (n_port->state == LPORT_ST_READY) {
-+		if (n_port->npiv_enabled) {
-+			fc_vport_set_state(vport, FC_VPORT_INITIALIZING);
-+			__fc_linkup(vn_port);
-+		} else {
-+			fc_vport_set_state(vport, FC_VPORT_NO_FABRIC_SUPP);
-+			__fc_linkdown(vn_port);
-+		}
-+	} else {
-+		fc_vport_set_state(vport, FC_VPORT_LINKDOWN);
-+		__fc_linkdown(vn_port);
-+	}
-+}
-+
-+/**
-+ * fc_vport_setlink() - update link and status on a VN_Port
-+ * @vn_port: virtual port to update
-+ */
-+void fc_vport_setlink(struct fc_lport *vn_port)
-+{
-+	struct fc_vport *vport = vn_port->vport;
-+	struct Scsi_Host *shost = vport_to_shost(vport);
-+	struct fc_lport *n_port = shost_priv(shost);
-+
-+	mutex_lock(&n_port->lp_mutex);
-+	mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
-+	__fc_vport_setlink(n_port, vn_port);
-+	mutex_unlock(&vn_port->lp_mutex);
-+	mutex_unlock(&n_port->lp_mutex);
-+}
-+EXPORT_SYMBOL(fc_vport_setlink);
-+
-+/**
-+ * fc_vports_linkchange() - change the link state of all vports
-+ * @n_port: Parent N_Port that has changed state
-+ *
-+ * Locking: called with the n_port lp_mutex held
-+ */
-+void fc_vports_linkchange(struct fc_lport *n_port)
-+{
-+	struct fc_lport *vn_port;
-+
-+	list_for_each_entry(vn_port, &n_port->vports, list) {
-+		mutex_lock_nested(&vn_port->lp_mutex, LPORT_MUTEX_VN_PORT);
-+		__fc_vport_setlink(n_port, vn_port);
-+		mutex_unlock(&vn_port->lp_mutex);
-+	}
-+}
-+
+-/**
+- * fc_rport_enter_rft_id() - Register port name with the name server
+- * @lport: Fibre Channel local port to register
+- *
+- * Locking Note: The lport lock is expected to be held before calling
+- * this routine.
+- */
+-static void fc_lport_enter_rpn_id(struct fc_lport *lport)
+-{
+-	struct fc_frame *fp;
+-
+-	FC_LPORT_DBG(lport, "Entered RPN_ID state from %s state\n",
+-		     fc_lport_state(lport));
+-
+-	fc_lport_state_enter(lport, LPORT_ST_RPN_ID);
+-
+-	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
+-			    sizeof(struct fc_ns_rn_id));
+-	if (!fp) {
+-		fc_lport_error(lport, fp);
+-		return;
+-	}
+-
+-	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RPN_ID,
+-				  fc_lport_rpn_id_resp,
+-				  lport, lport->e_d_tov))
+-		fc_lport_error(lport, NULL);
+-}
+-
+ static struct fc_rport_operations fc_lport_rport_ops = {
+ 	.event_callback = fc_lport_rport_callback,
+ };
+@@ -1293,9 +1207,6 @@ static void fc_lport_timeout(struct work_struct *work)
+ 	case LPORT_ST_DNS:
+ 		fc_lport_enter_dns(lport);
+ 		break;
+-	case LPORT_ST_RPN_ID:
+-		fc_lport_enter_rpn_id(lport);
+-		break;
+ 	case LPORT_ST_RFT_ID:
+ 		fc_lport_enter_rft_id(lport);
+ 		break;
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 2c6d55d..dfeb1ee 100644
+index dad66ce..75be713 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -788,11 +788,13 @@ int fc_fabric_login(struct fc_lport *lp);
- /*
-  * The link is up for the given local port.
-  */
-+void __fc_linkup(struct fc_lport *);
- void fc_linkup(struct fc_lport *);
- 
- /*
-  * Link is down for the given local port.
-  */
-+void __fc_linkdown(struct fc_lport *);
- void fc_linkdown(struct fc_lport *);
- 
- /*
-@@ -821,6 +823,12 @@ struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize);
- struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id);
- 
- /*
-+ * NPIV VN_Port link state management
-+ */
-+void fc_vport_setlink(struct fc_lport *vn_port);
-+void fc_vports_linkchange(struct fc_lport *n_port);
-+
-+/*
-  * REMOTE PORT LAYER
-  *****************************/
- int fc_rport_init(struct fc_lport *lp);
+@@ -61,7 +61,6 @@ enum fc_lport_state {
+ 	LPORT_ST_DISABLED = 0,
+ 	LPORT_ST_FLOGI,
+ 	LPORT_ST_DNS,
+-	LPORT_ST_RPN_ID,
+ 	LPORT_ST_RFT_ID,
+ 	LPORT_ST_SCR,
+ 	LPORT_ST_READY,
 
