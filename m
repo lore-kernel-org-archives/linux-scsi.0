@@ -1,104 +1,140 @@
 From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
 	<narasimhareddyc@hcl.in>
 Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
-Date: Tue, 3 Nov 2009 15:24:54 +0530
-Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C8553@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
-References: <4AEF0909.5050809@s5r6.in-berlin.de>
+Date: Tue, 3 Nov 2009 15:47:14 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C8572@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+References: <1257184004.2472.157.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.hcl.in ([203.105.186.28]:60493 "EHLO gws08.hcl.in"
+Received: from gws08.mail.hcl.in ([203.105.186.28]:34944 "EHLO gws08.hcl.in"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750933AbZKCJzM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 04:55:12 -0500
-In-Reply-To: <4AEF0909.5050809@s5r6.in-berlin.de>
+	id S1752593AbZKCKR0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 05:17:26 -0500
+In-Reply-To: <1257184004.2472.157.camel@mulgrave.site>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, James Bottomley <jejb@kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-Hi Stefan,
+Hi James,
 
-Thanks a lot for your suggestion and feedback.
-
-Aacraid driver has been using down_interruptible () and up () for quite some time. We will take your suggestion into consideration and keep in our mind. But it is quite difficult to implement your suggestion at this point of time as we need to modify the code in lot places and we need to test a lot.
+My answers are inline to your queries.
 
 Thanks,
 Narasimha Reddy
 
-
 -----Original Message-----
-From: Stefan Richter [mailto:stefanr@s5r6.in-berlin.de]
-Sent: Monday, November 02, 2009 10:00 PM
+From: James Bottomley [mailto:James.Bottomley@suse.de]
+Sent: Monday, November 02, 2009 11:17 PM
 To: Penchala Narasimha Reddy Chilakala, TLS-Chennai
-Cc: James Bottomley; 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Cc: 'linux-scsi@vger.kernel.org'; James Bottomley; ServeRAID Driver
 Subject: Re: [PATCH ] scsi-misc-2.6: File System going into read-only mode
 
-Penchala Narasimha Reddy Chilakala, TLS-Chennai wrote:
-> Hi James,
->
-> Please let me know your opinion on the explanation given by me in the
-> previous e-mail to the issue raised by you so that I will proceed
-> further based on your feedback
-[...]
-> -----Original Message-----
-> From: Penchala Narasimha Reddy Chilakala, TLS-Chennai
-> Sent: Friday, October 23, 2009 6:41 PM
-[...]
-> Here is my explanation for the change. We have done good amount of
-> review and testing before finalizing the change. We found the following
-> code also caused to exit the management request prematurely without
-> getting response from the firmware during our review, which in turn
-> caused to generated False Raid Alert events in the application layer.
->
-> So after doing good amount of review and testing, we replace the below
-> code
->
->             else if (down_interruptible(&fibptr->event_wait)) {
->                       fibptr->done = 2;
->                       up(&fibptr->event_wait);
->           }
->
-> With the following code
->             } else
->                 down_interruptible (&fibptr->event_wait);
->
-> To overcome the warning,
+On Tue, 2009-09-29 at 14:17 +0530, Penchala Narasimha Reddy Chilakala,
+TLS-Chennai wrote:
 
-[i.e. "warning: ignoring return value of 'down_interruptible', declared
-with attribute warn_unused_result"]
+> @@ -593,10 +593,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 u64 addr;
+>                                 void* p;
+>                                 if (upsg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
+> @@ -645,10 +645,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 u64 addr;
+>                                 void* p;
+>                                 if (usg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
+> @@ -695,10 +695,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 uintptr_t addr;
+>                                 void* p;
+>                                 if (usg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
+> @@ -734,10 +734,10 @@ static int aac_send_raw_srb(struct aac_d
+>                                 dma_addr_t addr;
+>                                 void* p;
+>                                 if (upsg->sg[i].count >
+> -                                   (dev->adapter_info.options &
+> +                                   ((dev->adapter_info.options &
+>                                      AAC_OPT_NEW_COMM) ?
+>                                       (dev->scsi_host_ptr->max_sectors
+> << 9) :
+> -                                     65536) {
+> +                                     65536)) {
+>                                         rcode = -EINVAL;
+>                                         goto cleanup;
+>                                 }
 
-> we can replace the above code with either
->
->             } else if (down_interruptible (&fibptr->event_wait));
->
->                         Or
->
->             } else {
->                  if (down_interruptible (&fibptr->event_wait))
->                         ;
->             }
->
-> I am ok to do the above mentioned change in the code and resubmit the
-> patch with the above change as there is no issue with respect to
-> functionality and other aspects as such.
+This is all spurious bracket addition; it doesn't really have any place
+in a code fix.
 
-I'm not James, but I do have a suggestion:
+<Narasimha Reddy>: As we know that if we do not keep bracket appropriately, some times compilers will behave differently and it may use different instructions and evaluate differently. So to avoid those kinds of issues, we added those brackets. It is not a code fix, but it is compiler fix (compilers should not interpret differently). If compiler interprets differently then the logic may behave differently as against to your intentional behavior.  I hope you agree with me.
 
-Leave the compiler warning there for the short term.  And then, instead
-of suppressing the warning with hard to read code, convert from
-semaphore to completion (or waitqueue perhaps).
 
-I'm not familiar with aacraid but your problem description sounds to me
-as if the legacy counting semaphore API is not the correct kernel API to
-use here.
---
-Stefan Richter
--=====-==--= =-=- ===--
-http://arcgraph.de/sr/
+
+> @@ -842,13 +842,22 @@ static int aac_get_pci_info(struct aac_d
+>  int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+>  {
+>         int status;
+> +       unsigned long mflags;
+>
+>         /*
+>          *      HBA gets first crack
+>          */
+>
+> +       spin_lock_irqsave(&dev->manage_lock, mflags);
+> +       if (dev->management_fib_count > AAC_NUM_MGT_FIB) {
+> +               printk(KERN_INFO "No management Fibs Available:%d\n",
+> +                                               dev->management_fib_count);
+> +               spin_unlock_irqrestore(&dev->manage_lock, mflags);
+> +               return -EBUSY;
+> +       }
+> +       spin_unlock_irqrestore(&dev->manage_lock, mflags);
+>         status = aac_dev_ioctl(dev, cmd, arg);
+
+I can see what you're trying to do: limit the number of ioctl created
+fibs to prevent starvation, but this mechanism is completely racy.  The
+check is too far away from the increment.  It looks fixable just by
+doing the increment within the lock here and decrementing if something
+fails.
+
+
+<Narasimha Reddy>: My intention is not to prevent starvation, but my intention is that management fibs should not cross more than "AAC_NUM_MGT_FIB". During our testing, we have seen any racy condition.
+Even no end user has reported such kind of problem. We have given a private build to end customers two months back. So far nobody reported the issue.
+
+James
+
+
+
 
 DISCLAIMER:
 -----------------------------------------------------------------------------------------------------------------------
