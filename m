@@ -1,152 +1,107 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 51/54] libfc, fcoe: fixes for highmem skb linearize panics
-Date: Tue, 03 Nov 2009 11:50:05 -0800
-Message-ID: <20091103195005.4085.32630.stgit@localhost.localdomain>
+Subject: [PATCH 52/54] libfc: fix an issue of pending exch/es after i/f
+	destroyed or rmmod fcoe
+Date: Tue, 03 Nov 2009 11:50:10 -0800
+Message-ID: <20091103195010.4085.48488.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15619 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:36436 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755232AbZKCTuA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:50:00 -0500
+	id S1755234AbZKCTuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:50:05 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Chris Leech <christopher.leech@intel.com>
+From: Vasu Dev <vasu.dev@intel.com>
 
-There are cases outside of our control that may result in a transmit
-skb being linearized in dev_queue_xmit.  There are a couple of bugs
-in libfc/fcoe that can result in a panic at that point.  This patch
-contains two fixes to prevent those panics.
+All exches must be freed before its EM mempool destroyed in this
+case but currently some exches could be still pending in their
+scheduled delayed work after EM mempool is destroyed causing
+this issue discussed and reported in this latest email thread:-
 
-1) use fast cloning instead of shared skbs with dev_queue_xmit
+ http://www.open-fcoe.org/pipermail/devel/2009-October/004788.html
 
-dev_queue_xmit doen't want shared skbuffs being passed in, and
-__skb_linearize will BUG if the skb is shared.  FCoE is holding an extra
-reference around the call to dev_queue_xmit, so that when it returns an
-error code indicating the frame has been dropped it can maintain it's
-own backlog and retransmit.  Switch to using fast skb cloning for this
-instead.
+This patch fixes this issue by adding dedicated work queue thread
+fc_exch_workqueue for exch delayed work and then flush this work
+queue before destroying EM mempool.
 
-2) don't append compound pages as > PAGE_SIZE skb fragments
+The cancel_delayed_work_sync cannot be called during final
+fc_exch_reset due to lport and exch locking ordering, so removes
+related comment block not relevant any more with this patch.
 
-fc_fcp_send_data will append pages from a scatterlist to the nr_frags[]
-if the netdev supports it.  But, it's using > PAGE_SIZE compound pages
-as a single skb_frag.  In the highmem linearize case that page will be
-passed to kmap_atomic to get a mapping to copy out of, but
-kmap_atomic will only allow access to the first PAGE_SIZE part.
-The memcpy will keep going and cause a page fault once is crosses the
-first boundary.
-
-If fc_fcp_send_data uses linear buffers from the start, it calls
-kmap_atomic one PAGE_SIZE at a time.  That same logic needs to be
-applied when setting up skb_frags.
-
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
+Reported-by: Joe Eykholt <jeykholt@cisco.com>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c      |    5 +++--
- drivers/scsi/libfc/fc_fcp.c   |   20 ++++++++++----------
- drivers/scsi/libfc/fc_frame.c |    5 +++--
- 3 files changed, 16 insertions(+), 14 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 28029a3..b570f39 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1267,10 +1267,11 @@ err2:
-  */
- static inline int fcoe_start_io(struct sk_buff *skb)
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 0f45bb8..19d711c 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -38,6 +38,7 @@ u16	fc_cpu_mask;		/* cpu mask for possible cpus */
+ EXPORT_SYMBOL(fc_cpu_mask);
+ static u16	fc_cpu_order;	/* 2's power to represent total possible cpus */
+ static struct kmem_cache *fc_em_cachep;	       /* cache for exchanges */
++struct workqueue_struct *fc_exch_workqueue;
+ 
+ /*
+  * Structure and function definitions for managing Fibre Channel Exchanges
+@@ -427,8 +428,8 @@ static inline void fc_exch_timer_set_locked(struct fc_exch *ep,
+ 
+ 	FC_EXCH_DBG(ep, "Exchange timer armed\n");
+ 
+-	if (schedule_delayed_work(&ep->timeout_work,
+-				  msecs_to_jiffies(timer_msec)))
++	if (queue_delayed_work(fc_exch_workqueue, &ep->timeout_work,
++			       msecs_to_jiffies(timer_msec)))
+ 		fc_exch_hold(ep);		/* hold for timer */
+ }
+ 
+@@ -1619,12 +1620,6 @@ static void fc_exch_reset(struct fc_exch *ep)
+ 
+ 	spin_lock_bh(&ep->ex_lock);
+ 	ep->state |= FC_EX_RST_CLEANUP;
+-	/*
+-	 * we really want to call del_timer_sync, but cannot due
+-	 * to the lport calling with the lport lock held (some resp
+-	 * functions can also grab the lport lock which could cause
+-	 * a deadlock).
+-	 */
+ 	if (cancel_delayed_work(&ep->timeout_work))
+ 		atomic_dec(&ep->ex_refcnt);	/* drop hold for timer */
+ 	resp = ep->resp;
+@@ -2203,6 +2198,7 @@ void fc_exch_mgr_free(struct fc_lport *lport)
  {
-+	struct sk_buff *nskb;
- 	int rc;
+ 	struct fc_exch_mgr_anchor *ema, *next;
  
--	skb_get(skb);
--	rc = dev_queue_xmit(skb);
-+	nskb = skb_clone(skb, GFP_ATOMIC);
-+	rc = dev_queue_xmit(nskb);
- 	if (rc != 0)
- 		return rc;
- 	kfree_skb(skb);
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index db252e2..c4b58d0 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -530,11 +530,13 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
- 	struct scatterlist *sg;
- 	struct fc_frame *fp = NULL;
- 	struct fc_lport *lport = fsp->lp;
-+	struct page *page;
- 	size_t remaining;
- 	size_t t_blen;
- 	size_t tlen;
- 	size_t sg_bytes;
- 	size_t frame_offset, fh_parm_offset;
-+	size_t off;
- 	int error;
- 	void *data = NULL;
- 	void *page_addr;
-@@ -605,28 +607,26 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
- 			fh_parm_offset = frame_offset;
- 			fr_max_payload(fp) = fsp->max_payload;
- 		}
-+
-+		off = offset + sg->offset;
- 		sg_bytes = min(tlen, sg->length - offset);
-+		sg_bytes = min(sg_bytes,
-+			       (size_t) (PAGE_SIZE - (off & ~PAGE_MASK)));
-+		page = sg_page(sg) + (off >> PAGE_SHIFT);
- 		if (using_sg) {
--			get_page(sg_page(sg));
-+			get_page(page);
- 			skb_fill_page_desc(fp_skb(fp),
- 					   skb_shinfo(fp_skb(fp))->nr_frags,
--					   sg_page(sg), sg->offset + offset,
--					   sg_bytes);
-+					   page, off & ~PAGE_MASK, sg_bytes);
- 			fp_skb(fp)->data_len += sg_bytes;
- 			fr_len(fp) += sg_bytes;
- 			fp_skb(fp)->truesize += PAGE_SIZE;
- 		} else {
--			size_t off = offset + sg->offset;
--
- 			/*
- 			 * The scatterlist item may be bigger than PAGE_SIZE,
- 			 * but we must not cross pages inside the kmap.
- 			 */
--			sg_bytes = min(sg_bytes, (size_t) (PAGE_SIZE -
--							   (off & ~PAGE_MASK)));
--			page_addr = kmap_atomic(sg_page(sg) +
--						(off >> PAGE_SHIFT),
--						KM_SOFTIRQ0);
-+			page_addr = kmap_atomic(page, KM_SOFTIRQ0);
- 			memcpy(data, (char *)page_addr + (off & ~PAGE_MASK),
- 			       sg_bytes);
- 			kunmap_atomic(page_addr, KM_SOFTIRQ0);
-diff --git a/drivers/scsi/libfc/fc_frame.c b/drivers/scsi/libfc/fc_frame.c
-index 79c9565..6da01c6 100644
---- a/drivers/scsi/libfc/fc_frame.c
-+++ b/drivers/scsi/libfc/fc_frame.c
-@@ -58,12 +58,13 @@ struct fc_frame *_fc_frame_alloc(size_t len)
++	flush_workqueue(fc_exch_workqueue);
+ 	list_for_each_entry_safe(ema, next, &lport->ema_list, ema_list)
+ 		fc_exch_mgr_del(ema);
+ }
+@@ -2338,6 +2334,9 @@ int fc_setup_exch_mgr()
+ 	}
+ 	fc_cpu_mask--;
  
- 	WARN_ON((len % sizeof(u32)) != 0);
- 	len += sizeof(struct fc_frame_header);
--	skb = dev_alloc_skb(len + FC_FRAME_HEADROOM + FC_FRAME_TAILROOM);
-+	skb = alloc_skb_fclone(len + FC_FRAME_HEADROOM + FC_FRAME_TAILROOM +
-+			       NET_SKB_PAD, GFP_ATOMIC);
- 	if (!skb)
- 		return NULL;
-+	skb_reserve(skb, NET_SKB_PAD + FC_FRAME_HEADROOM);
- 	fp = (struct fc_frame *) skb;
- 	fc_frame_init(fp);
--	skb_reserve(skb, FC_FRAME_HEADROOM);
- 	skb_put(skb, len);
- 	return fp;
++	fc_exch_workqueue = create_singlethread_workqueue("fc_exch_workqueue");
++	if (!fc_exch_workqueue)
++		return -ENOMEM;
+ 	return 0;
+ }
+ 
+@@ -2346,5 +2345,6 @@ int fc_setup_exch_mgr()
+  */
+ void fc_destroy_exch_mgr()
+ {
++	destroy_workqueue(fc_exch_workqueue);
+ 	kmem_cache_destroy(fc_em_cachep);
  }
 
