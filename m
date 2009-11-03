@@ -1,41 +1,53 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
- resync
-Date: Tue, 3 Nov 2009 09:41:05 GMT
-Message-ID: <200911030941.nA39f5kh031506@demeter.kernel.org>
-References: <bug-14534-11613@http.bugzilla.kernel.org/>
+From: "Denis V. Lunev" <den@openvz.org>
+Subject: [PATCH 1/2] Crash in linux kernel when disconnecting usb storage
+Date: Tue, 3 Nov 2009 12:36:35 +0300
+Message-ID: <1257240996-23118-1-git-send-email-den@openvz.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:38768 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754547AbZKCJk7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 04:40:59 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nA39f5w8031507
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Nov 2009 09:41:05 GMT
-In-Reply-To: <bug-14534-11613@http.bugzilla.kernel.org/>
+Received: from relay.parallels.com ([195.214.232.42]:34147 "EHLO
+	relay.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754153AbZKCJwe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 04:52:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "James E.J. Bottomley" <James.Bottomley@suse.de>, "Denis V. Lunev" <den@openvz.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14534
+From: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
 
+__scsi_remove_device() in scsi_forget_host() is executed out of scan_mutex
+and races with scsi_destroy_sdev() <- scsi_sysfs_add_devices()
+<- scsi_finish_async_scan(). The result is use after free and/or
+double free, oops.
 
-andy yan <ayan@marvell.com> changed:
+The fix is simple, move scsi_forget_host() under scan_mutex.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |ayan@marvell.com
+scsi_forget_host() is just sequence of __scsi_remove_device().
+All another calls of __scsi_remove_device() are made under scan_mutex.
+So that it is safe.
 
+Signed-off-by: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
+CC: James E.J. Bottomley <James.Bottomley@suse.de>
+Signed-off-by: Denis V. Lunev <den@openvz.org>
+---
+ drivers/scsi/hosts.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-
---- Comment #3 from andy yan <ayan@marvell.com>  2009-11-03 09:41:02 ---
-I will commit a patch to update the mvsas code to latest version, this version
-fixed some issue with disk IO.
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 5fd2da4..c968cc3 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -164,8 +164,8 @@ void scsi_remove_host(struct Scsi_Host *shost)
+ 			return;
+ 		}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-	mutex_unlock(&shost->scan_mutex);
+ 	scsi_forget_host(shost);
++	mutex_unlock(&shost->scan_mutex);
+ 	scsi_proc_host_rm(shost);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.6.4.4
+
