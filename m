@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 14/54] libfc: RPN_ID is obsolete and unnecessary
-Date: Tue, 03 Nov 2009 11:46:46 -0800
-Message-ID: <20091103194645.4085.24147.stgit@localhost.localdomain>
+Subject: [PATCH 10/54] libfc, libfcoe: FDISC ELS for NPIV
+Date: Tue, 03 Nov 2009 11:46:24 -0800
+Message-ID: <20091103194624.4085.50023.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37204 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:28647 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753324AbZKCTqk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:46:40 -0500
+	id S1753896AbZKCTqT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:46:19 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,183 +19,132 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-RPN_ID has been obsolete per FC-GS-5 for several years.  The port name is
-registered implicitly as part of FLOGI, and it is undesirable for ports to
-change a registered port name using RPN_ID while logged into the fabric.
+Add FDISC ELS handling to libfc and libfcoe, treat it the same as FLOGI where
+appropriate.
+
+Add checking for NPIV support in the FLOGI LS_ACC service parameters.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |   95 +----------------------------------------
- include/scsi/libfc.h          |    1 
- 2 files changed, 3 insertions(+), 93 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c   |    6 +++---
+ drivers/scsi/libfc/fc_lport.c |    6 +++++-
+ include/scsi/fc/fc_els.h      |    4 +++-
+ include/scsi/fc_encode.h      |   29 +++++++++++++++++++++++++++++
+ 4 files changed, 40 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 11ae5c9..d8ea04a 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -449,7 +449,7 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip,
+ 	memset(mac, 0, sizeof(mac));
+ 	mac->fd_desc.fip_dtype = FIP_DT_MAC;
+ 	mac->fd_desc.fip_dlen = sizeof(*mac) / FIP_BPW;
+-	if (dtype != FIP_DT_FLOGI)
++	if (dtype != FIP_DT_FLOGI && dtype != FIP_DT_FDISC)
+ 		memcpy(mac->fd_mac, fip->data_src_addr, ETH_ALEN);
+ 	else if (fip->spma)
+ 		memcpy(mac->fd_mac, fip->ctl_src_addr, ETH_ALEN);
+@@ -865,8 +865,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		goto drop;
+ 	els_op = *(u8 *)(fh + 1);
+ 
+-	if (els_dtype == FIP_DT_FLOGI && sub == FIP_SC_REP &&
+-	    fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
++	if ((els_dtype == FIP_DT_FLOGI || els_dtype == FIP_DT_FDISC) &&
++	    sub == FIP_SC_REP && fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
+ 	    els_op == ELS_LS_ACC && is_valid_ether_addr(granted_mac)) {
+ 		fip->flogi_oxid = FC_XID_UNKNOWN;
+ 		fip->update_mac(fip, fip->data_src_addr, granted_mac);
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 807f5b3..47577e4 100644
+index 46897cf..ccba67c 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -108,7 +108,6 @@ static void fc_lport_error(struct fc_lport *, struct fc_frame *);
- static void fc_lport_enter_reset(struct fc_lport *);
- static void fc_lport_enter_flogi(struct fc_lport *);
- static void fc_lport_enter_dns(struct fc_lport *);
--static void fc_lport_enter_rpn_id(struct fc_lport *);
- static void fc_lport_enter_rft_id(struct fc_lport *);
- static void fc_lport_enter_scr(struct fc_lport *);
- static void fc_lport_enter_ready(struct fc_lport *);
-@@ -118,7 +117,6 @@ static const char *fc_lport_state_names[] = {
- 	[LPORT_ST_DISABLED] = "disabled",
- 	[LPORT_ST_FLOGI] =    "FLOGI",
- 	[LPORT_ST_DNS] =      "dNS",
--	[LPORT_ST_RPN_ID] =   "RPN_ID",
- 	[LPORT_ST_RFT_ID] =   "RFT_ID",
- 	[LPORT_ST_SCR] =      "SCR",
- 	[LPORT_ST_READY] =    "Ready",
-@@ -153,7 +151,7 @@ static void fc_lport_rport_callback(struct fc_lport *lport,
- 	case RPORT_EV_READY:
- 		if (lport->state == LPORT_ST_DNS) {
- 			lport->dns_rp = rdata;
--			fc_lport_enter_rpn_id(lport);
-+			fc_lport_enter_rft_id(lport);
- 		} else {
- 			FC_LPORT_DBG(lport, "Received an READY event "
- 				     "on port (%6x) for the directory "
-@@ -965,7 +963,6 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
- 			case LPORT_ST_DISABLED:
- 			case LPORT_ST_READY:
- 			case LPORT_ST_RESET:
--			case LPORT_ST_RPN_ID:
- 			case LPORT_ST_RFT_ID:
- 			case LPORT_ST_SCR:
- 			case LPORT_ST_DNS:
-@@ -980,8 +977,8 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
+@@ -1449,6 +1449,9 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
+ 			if (csp_flags & FC_SP_FT_EDTR)
+ 				e_d_tov /= 1000000;
++
++			lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
++
+ 			if ((csp_flags & FC_SP_FT_FPORT) == 0) {
+ 				if (e_d_tov > lport->e_d_tov)
+ 					lport->e_d_tov = e_d_tov;
+@@ -1498,7 +1501,8 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
+ 	if (!fp)
+ 		return fc_lport_error(lport, fp);
  
- /**
-  * fc_lport_rft_id_resp() - Handle response to Register Fibre
-- *			    Channel Types by ID (RPN_ID) request
-- * @sp: current sequence in RPN_ID exchange
-+ *			    Channel Types by ID (RFT_ID) request
-+ * @sp: current sequence in RFT_ID exchange
-  * @fp: response frame
-  * @lp_arg: Fibre Channel host port instance
-  *
-@@ -1033,60 +1030,6 @@ err:
+-	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_FLOGI,
++	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp,
++				  lport->vport ? ELS_FDISC : ELS_FLOGI,
+ 				  fc_lport_flogi_resp, lport, lport->e_d_tov))
+ 		fc_lport_error(lport, NULL);
+ }
+diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
+index 195ca01..b0872af 100644
+--- a/include/scsi/fc/fc_els.h
++++ b/include/scsi/fc/fc_els.h
+@@ -248,10 +248,12 @@ struct fc_els_csp {
+ /*
+  * sp_features
+  */
+-#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel. off. */
++#define	FC_SP_FT_NPIV	0x8000	/* multiple N_Port_ID support (FLOGI) */
++#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel off (PLOGI) */
+ #define	FC_SP_FT_CLAD	0x8000	/* clean address (in FLOGI LS_ACC) */
+ #define	FC_SP_FT_RAND	0x4000	/* random relative offset */
+ #define	FC_SP_FT_VAL	0x2000	/* valid vendor version level */
++#define	FC_SP_FT_NPIV_ACC	0x2000	/* NPIV assignment (FLOGI LS_ACC) */
+ #define	FC_SP_FT_FPORT	0x1000	/* F port (1) vs. N port (0) */
+ #define	FC_SP_FT_ABB	0x0800	/* alternate BB_credit management */
+ #define	FC_SP_FT_EDTR	0x0400	/* E_D_TOV Resolution is nanoseconds */
+diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
+index 27dad70..c93ca3e 100644
+--- a/include/scsi/fc_encode.h
++++ b/include/scsi/fc_encode.h
+@@ -198,6 +198,31 @@ static inline void fc_flogi_fill(struct fc_lport *lport, struct fc_frame *fp)
+ 	sp->sp_bb_data = htons((u16) lport->mfs);
+ 	cp = &flogi->fl_cssp[3 - 1];	/* class 3 parameters */
+ 	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
++	if (lport->does_npiv)
++		sp->sp_features = htons(FC_SP_FT_NPIV);
++}
++
++/**
++ * fc_fdisc_fill - Fill in a fdisc request frame.
++ */
++static inline void fc_fdisc_fill(struct fc_lport *lport, struct fc_frame *fp)
++{
++	struct fc_els_csp *sp;
++	struct fc_els_cssp *cp;
++	struct fc_els_flogi *fdisc;
++
++	fdisc = fc_frame_payload_get(fp, sizeof(*fdisc));
++	memset(fdisc, 0, sizeof(*fdisc));
++	fdisc->fl_cmd = (u8) ELS_FDISC;
++	put_unaligned_be64(lport->wwpn, &fdisc->fl_wwpn);
++	put_unaligned_be64(lport->wwnn, &fdisc->fl_wwnn);
++	sp = &fdisc->fl_csp;
++	sp->sp_hi_ver = 0x20;
++	sp->sp_lo_ver = 0x20;
++	sp->sp_bb_cred = htons(10);	/* this gets set by gateway */
++	sp->sp_bb_data = htons((u16) lport->mfs);
++	cp = &fdisc->fl_cssp[3 - 1];	/* class 3 parameters */
++	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
  }
  
  /**
-- * fc_lport_rpn_id_resp() - Handle response to Register Port
-- *			    Name by ID (RPN_ID) request
-- * @sp: current sequence in RPN_ID exchange
-- * @fp: response frame
-- * @lp_arg: Fibre Channel host port instance
-- *
-- * Locking Note: This function will be called without the lport lock
-- * held, but it will lock, call an _enter_* function or fc_lport_error
-- * and then unlock the lport.
-- */
--static void fc_lport_rpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
--				 void *lp_arg)
--{
--	struct fc_lport *lport = lp_arg;
--	struct fc_frame_header *fh;
--	struct fc_ct_hdr *ct;
--
--	FC_LPORT_DBG(lport, "Received a RPN_ID %s\n", fc_els_resp_type(fp));
--
--	if (fp == ERR_PTR(-FC_EX_CLOSED))
--		return;
--
--	mutex_lock(&lport->lp_mutex);
--
--	if (lport->state != LPORT_ST_RPN_ID) {
--		FC_LPORT_DBG(lport, "Received a RPN_ID response, but in state "
--			     "%s\n", fc_lport_state(lport));
--		if (IS_ERR(fp))
--			goto err;
--		goto out;
--	}
--
--	if (IS_ERR(fp)) {
--		fc_lport_error(lport, fp);
--		goto err;
--	}
--
--	fh = fc_frame_header_get(fp);
--	ct = fc_frame_payload_get(fp, sizeof(*ct));
--	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
--	    ct->ct_fs_type == FC_FST_DIR &&
--	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
--	    ntohs(ct->ct_cmd) == FC_FS_ACC)
--		fc_lport_enter_rft_id(lport);
--	else
--		fc_lport_error(lport, fp);
--
--out:
--	fc_frame_free(fp);
--err:
--	mutex_unlock(&lport->lp_mutex);
--}
--
--/**
-  * fc_lport_scr_resp() - Handle response to State Change Register (SCR) request
-  * @sp: current sequence in SCR exchange
-  * @fp: response frame
-@@ -1203,35 +1146,6 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
- 		fc_lport_error(lport, fp);
- }
+@@ -296,6 +321,10 @@ static inline int fc_els_fill(struct fc_lport *lport,
+ 		fc_flogi_fill(lport, fp);
+ 		break;
  
--/**
-- * fc_rport_enter_rft_id() - Register port name with the name server
-- * @lport: Fibre Channel local port to register
-- *
-- * Locking Note: The lport lock is expected to be held before calling
-- * this routine.
-- */
--static void fc_lport_enter_rpn_id(struct fc_lport *lport)
--{
--	struct fc_frame *fp;
--
--	FC_LPORT_DBG(lport, "Entered RPN_ID state from %s state\n",
--		     fc_lport_state(lport));
--
--	fc_lport_state_enter(lport, LPORT_ST_RPN_ID);
--
--	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
--			    sizeof(struct fc_ns_rn_id));
--	if (!fp) {
--		fc_lport_error(lport, fp);
--		return;
--	}
--
--	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RPN_ID,
--				  fc_lport_rpn_id_resp,
--				  lport, lport->e_d_tov))
--		fc_lport_error(lport, NULL);
--}
--
- static struct fc_rport_operations fc_lport_rport_ops = {
- 	.event_callback = fc_lport_rport_callback,
- };
-@@ -1293,9 +1207,6 @@ static void fc_lport_timeout(struct work_struct *work)
- 	case LPORT_ST_DNS:
- 		fc_lport_enter_dns(lport);
++	case ELS_FDISC:
++		fc_fdisc_fill(lport, fp);
++		break;
++
+ 	case ELS_LOGO:
+ 		fc_logo_fill(lport, fp);
  		break;
--	case LPORT_ST_RPN_ID:
--		fc_lport_enter_rpn_id(lport);
--		break;
- 	case LPORT_ST_RFT_ID:
- 		fc_lport_enter_rft_id(lport);
- 		break;
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index dad66ce..75be713 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -61,7 +61,6 @@ enum fc_lport_state {
- 	LPORT_ST_DISABLED = 0,
- 	LPORT_ST_FLOGI,
- 	LPORT_ST_DNS,
--	LPORT_ST_RPN_ID,
- 	LPORT_ST_RFT_ID,
- 	LPORT_ST_SCR,
- 	LPORT_ST_READY,
 
