@@ -1,44 +1,44 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 45/54] fnic: enable bsg pass-thru for fcping
-Date: Tue, 03 Nov 2009 11:49:32 -0800
-Message-ID: <20091103194932.4085.25846.stgit@localhost.localdomain>
+Subject: [PATCH 46/54] fcoe: Fix checking san mac address
+Date: Tue, 03 Nov 2009 11:49:38 -0800
+Message-ID: <20091103194938.4085.42925.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:42469 "EHLO mga14.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:60187 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755218AbZKCTt1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:49:27 -0500
+	id S1754104AbZKCTtd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:49:33 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Joe Eykholt <jeykholt@cisco.com>
+From: Yi Zou <yi.zou@intel.com>
 
-Add initialization of .bsg_request in the scsi_transport_fc
-template so that fcping works.
+This was fixed before in 7a7f0c7 but it's introduced again recently.
 
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fnic/fnic_main.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 0333c7f..fe1b103 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -143,6 +143,7 @@ static struct fc_function_template fnic_fc_functions = {
- 	.get_fc_host_stats = fnic_get_stats,
- 	.dd_fcrport_size = sizeof(struct fc_rport_libfc_priv),
- 	.terminate_rport_io = fnic_terminate_rport_io,
-+	.bsg_request = fc_lport_bsg_request,
- };
- 
- static void fnic_get_host_speed(struct Scsi_Host *shost)
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 343900a..2274fcd 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -275,7 +275,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	rcu_read_lock();
+ 	for_each_dev_addr(netdev, ha) {
+ 		if ((ha->type == NETDEV_HW_ADDR_T_SAN) &&
+-		    (is_valid_ether_addr(fip->ctl_src_addr))) {
++		    (is_valid_ether_addr(ha->addr))) {
+ 			memcpy(fip->ctl_src_addr, ha->addr, ETH_ALEN);
+ 			fip->spma = 1;
+ 			break;
 
