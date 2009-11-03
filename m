@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 10/54] libfc, libfcoe: FDISC ELS for NPIV
-Date: Tue, 03 Nov 2009 11:46:24 -0800
-Message-ID: <20091103194624.4085.50023.stgit@localhost.localdomain>
+Subject: [PATCH 12/54] fcoe: add a separate scsi transport template for NPIV
+	vports
+Date: Tue, 03 Nov 2009 11:46:34 -0800
+Message-ID: <20091103194634.4085.42030.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28647 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:27084 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753896AbZKCTqT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:46:19 -0500
+	id S1753324AbZKCTqa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:46:30 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,132 +20,113 @@ Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.
 
 From: Chris Leech <christopher.leech@intel.com>
 
-Add FDISC ELS handling to libfc and libfcoe, treat it the same as FLOGI where
-appropriate.
+Right now it's exactly the same as the physical port template,
+and there is no way to create a port on anything other than the
+netdev.  When the vport_create entry point gets hooked up it will
+create lports on top of vport devices, which will use this.
 
-Add checking for NPIV support in the FLOGI LS_ACC service parameters.
+Rename scsi_transport_fcoe_sw to fcoe_transport_template to be more
+clear with naming now that there are two templates.
 
 Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c   |    6 +++---
- drivers/scsi/libfc/fc_lport.c |    6 +++++-
- include/scsi/fc/fc_els.h      |    4 +++-
- include/scsi/fc_encode.h      |   29 +++++++++++++++++++++++++++++
- 4 files changed, 40 insertions(+), 5 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   54 ++++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 47 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 11ae5c9..d8ea04a 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -449,7 +449,7 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip,
- 	memset(mac, 0, sizeof(mac));
- 	mac->fd_desc.fip_dtype = FIP_DT_MAC;
- 	mac->fd_desc.fip_dlen = sizeof(*mac) / FIP_BPW;
--	if (dtype != FIP_DT_FLOGI)
-+	if (dtype != FIP_DT_FLOGI && dtype != FIP_DT_FDISC)
- 		memcpy(mac->fd_mac, fip->data_src_addr, ETH_ALEN);
- 	else if (fip->spma)
- 		memcpy(mac->fd_mac, fip->ctl_src_addr, ETH_ALEN);
-@@ -865,8 +865,8 @@ static void fcoe_ctlr_recv_els(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 		goto drop;
- 	els_op = *(u8 *)(fh + 1);
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index a64c398..d37d573 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -90,7 +90,8 @@ static struct notifier_block fcoe_notifier = {
+ 	.notifier_call = fcoe_device_notification,
+ };
  
--	if (els_dtype == FIP_DT_FLOGI && sub == FIP_SC_REP &&
--	    fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
-+	if ((els_dtype == FIP_DT_FLOGI || els_dtype == FIP_DT_FDISC) &&
-+	    sub == FIP_SC_REP && fip->flogi_oxid == ntohs(fh->fh_ox_id) &&
- 	    els_op == ELS_LS_ACC && is_valid_ether_addr(granted_mac)) {
- 		fip->flogi_oxid = FC_XID_UNKNOWN;
- 		fip->update_mac(fip, fip->data_src_addr, granted_mac);
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 46897cf..ccba67c 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1449,6 +1449,9 @@ static void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
- 			if (csp_flags & FC_SP_FT_EDTR)
- 				e_d_tov /= 1000000;
-+
-+			lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
-+
- 			if ((csp_flags & FC_SP_FT_FPORT) == 0) {
- 				if (e_d_tov > lport->e_d_tov)
- 					lport->e_d_tov = e_d_tov;
-@@ -1498,7 +1501,8 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
- 	if (!fp)
- 		return fc_lport_error(lport, fp);
+-static struct scsi_transport_template *scsi_transport_fcoe_sw;
++static struct scsi_transport_template *fcoe_transport_template;
++static struct scsi_transport_template *fcoe_vport_transport_template;
  
--	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_FLOGI,
-+	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp,
-+				  lport->vport ? ELS_FDISC : ELS_FLOGI,
- 				  fc_lport_flogi_resp, lport, lport->e_d_tov))
- 		fc_lport_error(lport, NULL);
- }
-diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
-index 195ca01..b0872af 100644
---- a/include/scsi/fc/fc_els.h
-+++ b/include/scsi/fc/fc_els.h
-@@ -248,10 +248,12 @@ struct fc_els_csp {
- /*
-  * sp_features
+ struct fc_function_template fcoe_transport_function = {
+ 	.show_host_node_name = 1,
+@@ -125,6 +126,39 @@ struct fc_function_template fcoe_transport_function = {
+ 	.terminate_rport_io = fc_rport_terminate_io,
+ };
+ 
++struct fc_function_template fcoe_vport_transport_function = {
++	.show_host_node_name = 1,
++	.show_host_port_name = 1,
++	.show_host_supported_classes = 1,
++	.show_host_supported_fc4s = 1,
++	.show_host_active_fc4s = 1,
++	.show_host_maxframe_size = 1,
++
++	.show_host_port_id = 1,
++	.show_host_supported_speeds = 1,
++	.get_host_speed = fc_get_host_speed,
++	.show_host_speed = 1,
++	.show_host_port_type = 1,
++	.get_host_port_state = fc_get_host_port_state,
++	.show_host_port_state = 1,
++	.show_host_symbolic_name = 1,
++
++	.dd_fcrport_size = sizeof(struct fc_rport_libfc_priv),
++	.show_rport_maxframe_size = 1,
++	.show_rport_supported_classes = 1,
++
++	.show_host_fabric_name = 1,
++	.show_starget_node_name = 1,
++	.show_starget_port_name = 1,
++	.show_starget_port_id = 1,
++	.set_rport_dev_loss_tmo = fc_set_rport_loss_tmo,
++	.show_rport_dev_loss_tmo = 1,
++	.get_fc_host_stats = fc_get_host_stats,
++	.issue_fc_host_lip = fcoe_reset,
++
++	.terminate_rport_io = fc_rport_terminate_io,
++};
++
+ static struct scsi_host_template fcoe_shost_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "FCoE Driver",
+@@ -530,7 +564,10 @@ static int fcoe_shost_config(struct fc_lport *lp, struct Scsi_Host *shost,
+ 	lp->host->max_lun = FCOE_MAX_LUN;
+ 	lp->host->max_id = FCOE_MAX_FCP_TARGET;
+ 	lp->host->max_channel = 0;
+-	lp->host->transportt = scsi_transport_fcoe_sw;
++	if (lp->vport)
++		lp->host->transportt = fcoe_vport_transport_template;
++	else
++		lp->host->transportt = fcoe_transport_template;
+ 
+ 	/* add the new host to the SCSI-ml */
+ 	rc = scsi_add_host(lp->host, dev);
+@@ -836,10 +873,11 @@ out:
+ static int __init fcoe_if_init(void)
+ {
+ 	/* attach to scsi transport */
+-	scsi_transport_fcoe_sw =
+-		fc_attach_transport(&fcoe_transport_function);
++	fcoe_transport_template = fc_attach_transport(&fcoe_transport_function);
++	fcoe_vport_transport_template =
++		fc_attach_transport(&fcoe_vport_transport_function);
+ 
+-	if (!scsi_transport_fcoe_sw) {
++	if (!fcoe_transport_template) {
+ 		printk(KERN_ERR "fcoe: Failed to attach to the FC transport\n");
+ 		return -ENODEV;
+ 	}
+@@ -854,8 +892,10 @@ static int __init fcoe_if_init(void)
   */
--#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel. off. */
-+#define	FC_SP_FT_NPIV	0x8000	/* multiple N_Port_ID support (FLOGI) */
-+#define	FC_SP_FT_CIRO	0x8000	/* continuously increasing rel off (PLOGI) */
- #define	FC_SP_FT_CLAD	0x8000	/* clean address (in FLOGI LS_ACC) */
- #define	FC_SP_FT_RAND	0x4000	/* random relative offset */
- #define	FC_SP_FT_VAL	0x2000	/* valid vendor version level */
-+#define	FC_SP_FT_NPIV_ACC	0x2000	/* NPIV assignment (FLOGI LS_ACC) */
- #define	FC_SP_FT_FPORT	0x1000	/* F port (1) vs. N port (0) */
- #define	FC_SP_FT_ABB	0x0800	/* alternate BB_credit management */
- #define	FC_SP_FT_EDTR	0x0400	/* E_D_TOV Resolution is nanoseconds */
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index 27dad70..c93ca3e 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -198,6 +198,31 @@ static inline void fc_flogi_fill(struct fc_lport *lport, struct fc_frame *fp)
- 	sp->sp_bb_data = htons((u16) lport->mfs);
- 	cp = &flogi->fl_cssp[3 - 1];	/* class 3 parameters */
- 	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
-+	if (lport->does_npiv)
-+		sp->sp_features = htons(FC_SP_FT_NPIV);
-+}
-+
-+/**
-+ * fc_fdisc_fill - Fill in a fdisc request frame.
-+ */
-+static inline void fc_fdisc_fill(struct fc_lport *lport, struct fc_frame *fp)
-+{
-+	struct fc_els_csp *sp;
-+	struct fc_els_cssp *cp;
-+	struct fc_els_flogi *fdisc;
-+
-+	fdisc = fc_frame_payload_get(fp, sizeof(*fdisc));
-+	memset(fdisc, 0, sizeof(*fdisc));
-+	fdisc->fl_cmd = (u8) ELS_FDISC;
-+	put_unaligned_be64(lport->wwpn, &fdisc->fl_wwpn);
-+	put_unaligned_be64(lport->wwnn, &fdisc->fl_wwnn);
-+	sp = &fdisc->fl_csp;
-+	sp->sp_hi_ver = 0x20;
-+	sp->sp_lo_ver = 0x20;
-+	sp->sp_bb_cred = htons(10);	/* this gets set by gateway */
-+	sp->sp_bb_data = htons((u16) lport->mfs);
-+	cp = &fdisc->fl_cssp[3 - 1];	/* class 3 parameters */
-+	cp->cp_class = htons(FC_CPC_VALID | FC_CPC_SEQ);
+ int __exit fcoe_if_exit(void)
+ {
+-	fc_release_transport(scsi_transport_fcoe_sw);
+-	scsi_transport_fcoe_sw = NULL;
++	fc_release_transport(fcoe_transport_template);
++	fc_release_transport(fcoe_vport_transport_template);
++	fcoe_transport_template = NULL;
++	fcoe_vport_transport_template = NULL;
+ 	return 0;
  }
  
- /**
-@@ -296,6 +321,10 @@ static inline int fc_els_fill(struct fc_lport *lport,
- 		fc_flogi_fill(lport, fp);
- 		break;
- 
-+	case ELS_FDISC:
-+		fc_fdisc_fill(lport, fp);
-+		break;
-+
- 	case ELS_LOGO:
- 		fc_logo_fill(lport, fp);
- 		break;
 
