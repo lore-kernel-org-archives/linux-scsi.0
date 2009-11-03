@@ -1,245 +1,40 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
-Date: Tue, 03 Nov 2009 12:33:07 -0600
-Message-ID: <1257273187.9427.22.camel@mulgrave.site>
-References: <4A92BE18.50208@gmail.com>
-	 <1251416731.27356.8.camel@mulgrave.site>  <4A9A6676.8050304@panasas.com>
-	 <1251642902.10135.4.camel@mulgrave.site>
+Subject: [PATCH] strstrip incorrectly marked __must_check
+Date: Tue, 03 Nov 2009 12:38:08 -0600
+Message-ID: <1257273488.9427.27.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41085 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751488AbZKCSdL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 13:33:11 -0500
-In-Reply-To: <1251642902.10135.4.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753915AbZKCSiM@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Sun, 2009-08-30 at 09:35 -0500, James Bottomley wrote:
-> On Sun, 2009-08-30 at 14:45 +0300, Boaz Harrosh wrote:
-> > On 08/28/2009 02:45 AM, James Bottomley wrote:
-> > > On Mon, 2009-08-24 at 18:21 +0200, Roel Kluin wrote:
-> > >> kmalloc() may fail, so test whether it succeeded.
-> > >>
-> > >> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> > >> ---
-> > >> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > >> index 2de5f3a..34fdde0 100644
-> > >> --- a/drivers/scsi/scsi.c
-> > >> +++ b/drivers/scsi/scsi.c
-> > >> @@ -1056,6 +1056,9 @@ unsigned char *scsi_get_vpd_page(struct scsi_device *sdev, u8 page)
-> > >>  
-> > >>  	kfree(buf);
-> > >>  	buf = kmalloc(len + 4, GFP_KERNEL);
-> > >> +	if (!buf)
-> > >> +		return NULL;
-> > >> +
-> > > 
-> > > Firstly, this won't actually apply ... you should be developing against
-> > > either the SCSI trees or linux-next to get the latest versions in git.
-> > > 
-> > > Secondly it's not really right for the most common use cases, which
-> > > don't usually want the whole vpd buffer anyway.  I don't really see a
-> > > simple way of fixing it without altering the interface, though.
-> > > 
-> > 
-> > "most common use cases" do not have pages bigger then 255. Can you think
-> > of any? For these few places that anticipate pages bigger then 255 I don't
-> > see much choice, we just freed 255 bytes and tried a new size, say 317, which
-> > failed with GFP_KERNEL, In such a busy system, better fail with NULL then BUG,
-> > No? In any way caller must check for NULL because of the first allocation.
-> 
-> Other way around: common use cases means the callers.  What I'm saying
-> is that regardless of the size of the VPD page, the caller usually only
-> wants a few bytes into it.  Once we have all the information the caller
-> ever needs, there's no point in trying again with a larger buffer just
-> because the VPD page is larger ... to code this into the interface,
-> though, the caller would need to specify the max length it is looking
-> for.
+strstrip strips whitespace from the beginning and end of a string.  I
+agree you have to take the returned pointer if you want to strip from
+the beginning.  However, if you wish to keep the whitespace at the
+beginning and only wish strstrip to remove it from the end, then it's
+entirely legitimate to discard the returned pointer.
 
-OK, it's been a couple of months and  no patch has been forthcoming on
-this, so how about the attached?  It does the query and only adjusts the
-size where the caller actually wants to bother.
+This is what we have in drivers/scsi/ipr.c and the patch to make
+strstrip __must_check is now causing SCSI spurious warnings in that
+code.
 
-James
+Signed-off-by: James Bottomley <James.Bottomley@suse.de>
 
 ---
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a60da55..513661f 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1026,55 +1026,39 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
-  * responsible for calling kfree() on this pointer when it is no longer
-  * needed.  If we cannot retrieve the VPD page this routine returns %NULL.
-  */
--unsigned char *scsi_get_vpd_page(struct scsi_device *sdev, u8 page)
-+int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
-+		      int buf_len)
- {
- 	int i, result;
--	unsigned int len;
--	const unsigned int init_vpd_len = 255;
--	unsigned char *buf = kmalloc(init_vpd_len, GFP_KERNEL);
--
--	if (!buf)
--		return NULL;
- 
- 	/* Ask for all the pages supported by this device */
--	result = scsi_vpd_inquiry(sdev, buf, 0, init_vpd_len);
-+	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
- 	if (result)
- 		goto fail;
- 
- 	/* If the user actually wanted this page, we can skip the rest */
- 	if (page == 0)
--		return buf;
-+		return -EINVAL;
- 
--	for (i = 0; i < buf[3]; i++)
-+	for (i = 0; i < min((int)buf[3], buf_len - 4); i++)
- 		if (buf[i + 4] == page)
- 			goto found;
-+
-+	if (i < buf[3] && i > buf_len)
-+		/* ran off the end of the buffer, give us benefit of doubt */
-+		goto found;
- 	/* The device claims it doesn't support the requested page */
- 	goto fail;
- 
-  found:
--	result = scsi_vpd_inquiry(sdev, buf, page, 255);
-+	result = scsi_vpd_inquiry(sdev, buf, page, buf_len);
- 	if (result)
- 		goto fail;
- 
--	/*
--	 * Some pages are longer than 255 bytes.  The actual length of
--	 * the page is returned in the header.
--	 */
--	len = ((buf[2] << 8) | buf[3]) + 4;
--	if (len <= init_vpd_len)
--		return buf;
--
--	kfree(buf);
--	buf = kmalloc(len, GFP_KERNEL);
--	result = scsi_vpd_inquiry(sdev, buf, page, len);
--	if (result)
--		goto fail;
--
--	return buf;
-+	return 0;
- 
-  fail:
--	kfree(buf);
--	return NULL;
-+	return -EINVAL;
- }
- EXPORT_SYMBOL_GPL(scsi_get_vpd_page);
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 9093c72..fd1bd8f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1864,19 +1864,20 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- static void sd_read_block_limits(struct scsi_disk *sdkp)
- {
- 	unsigned int sector_sz = sdkp->device->sector_size;
--	char *buffer;
-+	const int vpd_len = 32;
-+	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
- 
--	/* Block Limits VPD */
--	buffer = scsi_get_vpd_page(sdkp->device, 0xb0);
--
--	if (buffer == NULL)
--		return;
-+	if (!buffer ||
-+	    /* Block Limits VPD */
-+	    scsi_get_vpd_page(sdkp->device, 0xb0, buffer, vpd_len))
-+		goto out;
- 
- 	blk_queue_io_min(sdkp->disk->queue,
- 			 get_unaligned_be16(&buffer[6]) * sector_sz);
- 	blk_queue_io_opt(sdkp->disk->queue,
- 			 get_unaligned_be32(&buffer[12]) * sector_sz);
- 
-+ out:
- 	kfree(buffer);
- }
- 
-@@ -1886,20 +1887,23 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
-  */
- static void sd_read_block_characteristics(struct scsi_disk *sdkp)
- {
--	char *buffer;
-+	unsigned char *buffer;
- 	u16 rot;
-+	const int vpd_len = 32;
- 
--	/* Block Device Characteristics VPD */
--	buffer = scsi_get_vpd_page(sdkp->device, 0xb1);
-+	buffer = kmalloc(vpd_len, GFP_KERNEL);
- 
--	if (buffer == NULL)
--		return;
-+	if (!buffer ||
-+	    /* Block Device Characteristics VPD */
-+	    scsi_get_vpd_page(sdkp->device, 0xb1, buffer, vpd_len))
-+		goto out;
- 
- 	rot = get_unaligned_be16(&buffer[4]);
- 
- 	if (rot == 1)
- 		queue_flag_set_unlocked(QUEUE_FLAG_NONROT, sdkp->disk->queue);
- 
-+ out:
- 	kfree(buffer);
- }
- 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 55b034b..1d7a878 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -448,13 +448,17 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
- 		.addr = 0,
- 	};
- 
--	buf = scsi_get_vpd_page(sdev, 0x83);
--	if (!buf)
--		return;
-+	buf = kmalloc(INIT_ALLOC_SIZE, GFP_KERNEL);
-+	if (!buf || scsi_get_vpd_page(sdev, 0x83, buf, INIT_ALLOC_SIZE))
-+		goto free;
- 
- 	ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent), 0);
- 
- 	vpd_len = ((buf[2] << 8) | buf[3]) + 4;
-+	kfree(buf);
-+	buf = kmalloc(vpd_len, GFP_KERNEL);
-+	if (!buf ||scsi_get_vpd_page(sdev, 0x83, buf, vpd_len))
-+		goto free;
- 
- 	desc = buf + 4;
- 	while (desc < buf + vpd_len) {
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 68d185c..fe66d34 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -347,7 +347,8 @@ extern int scsi_mode_select(struct scsi_device *sdev, int pf, int sp,
- 			    struct scsi_sense_hdr *);
- extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
- 				int retries, struct scsi_sense_hdr *sshdr);
--extern unsigned char *scsi_get_vpd_page(struct scsi_device *, u8 page);
-+extern int scsi_get_vpd_page(struct scsi_device *, u8 page, unsigned char *buf,
-+			     int buf_len);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
- extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-
-
-
+diff --git a/include/linux/string.h b/include/linux/string.h
+index b850886..489019e 100644
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -62,7 +62,7 @@ extern char * strnchr(const char *, size_t, int);
+ #ifndef __HAVE_ARCH_STRRCHR
+ extern char * strrchr(const char *,int);
+ #endif
+-extern char * __must_check strstrip(char *);
++extern char * strstrip(char *);
+ #ifndef __HAVE_ARCH_STRSTR
+ extern char * strstr(const char *,const char *);
+ #endif
