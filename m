@@ -1,238 +1,112 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 17/54] libfc: Register Symbolic Port Name (RSPN_ID)
-Date: Tue, 03 Nov 2009 11:47:01 -0800
-Message-ID: <20091103194701.4085.25958.stgit@localhost.localdomain>
+Subject: [PATCH 21/54] libfc: Export FC headers
+Date: Tue, 03 Nov 2009 11:47:23 -0800
+Message-ID: <20091103194723.4085.75231.stgit@localhost.localdomain>
 References: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:5157 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:28829 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754991AbZKCTq4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:46:56 -0500
+	id S1754940AbZKCTrS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Nov 2009 14:47:18 -0500
 In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
 
-From: Chris Leech <christopher.leech@intel.com>
+Export fc_els.h, fc_fs.h, fc_gs.h and fc_ns.h so that they
+may be used by applications.
 
-Register the fc_host symbolic name as the symbolic port name
-with the fabric name server.
+This will be needed for FC Passthrough applications like fcping,
+but could be used by other applications.
 
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
+Fix to include <linux/types.h> to exported files provided by
+Chris Leech <christopher.leech@intel.com>.
+
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |   90 +++++++++++++++++++++++++++++++++++++++++
- include/scsi/fc/fc_ns.h       |   10 +++++
- include/scsi/fc_encode.h      |   11 +++++
- include/scsi/libfc.h          |    1 
- 4 files changed, 112 insertions(+), 0 deletions(-)
+ include/scsi/Kbuild      |    1 +
+ include/scsi/fc/Kbuild   |    4 ++++
+ include/scsi/fc/fc_els.h |    2 ++
+ include/scsi/fc/fc_fs.h  |    2 ++
+ include/scsi/fc/fc_gs.h  |    2 ++
+ include/scsi/fc/fc_ns.h  |    2 ++
+ 6 files changed, 13 insertions(+), 0 deletions(-)
+ create mode 100644 include/scsi/fc/Kbuild
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index cc389c0..28a35da 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -110,6 +110,7 @@ static void fc_lport_enter_flogi(struct fc_lport *);
- static void fc_lport_enter_dns(struct fc_lport *);
- static void fc_lport_enter_rnn_id(struct fc_lport *);
- static void fc_lport_enter_rsnn_nn(struct fc_lport *);
-+static void fc_lport_enter_rspn_id(struct fc_lport *);
- static void fc_lport_enter_rft_id(struct fc_lport *);
- static void fc_lport_enter_scr(struct fc_lport *);
- static void fc_lport_enter_ready(struct fc_lport *);
-@@ -121,6 +122,7 @@ static const char *fc_lport_state_names[] = {
- 	[LPORT_ST_DNS] =      "dNS",
- 	[LPORT_ST_RNN_ID] =   "RNN_ID",
- 	[LPORT_ST_RSNN_NN] =  "RSNN_NN",
-+	[LPORT_ST_RSPN_ID] =  "RSPN_ID",
- 	[LPORT_ST_RFT_ID] =   "RFT_ID",
- 	[LPORT_ST_SCR] =      "SCR",
- 	[LPORT_ST_READY] =    "Ready",
-@@ -969,6 +971,7 @@ static void fc_lport_error(struct fc_lport *lport, struct fc_frame *fp)
- 			case LPORT_ST_RESET:
- 			case LPORT_ST_RNN_ID:
- 			case LPORT_ST_RSNN_NN:
-+			case LPORT_ST_RSPN_ID:
- 			case LPORT_ST_RFT_ID:
- 			case LPORT_ST_SCR:
- 			case LPORT_ST_DNS:
-@@ -1036,6 +1039,59 @@ err:
- }
+diff --git a/include/scsi/Kbuild b/include/scsi/Kbuild
+index 33b2750..b3a0ee6 100644
+--- a/include/scsi/Kbuild
++++ b/include/scsi/Kbuild
+@@ -2,3 +2,4 @@ header-y += scsi.h
+ header-y += scsi_netlink.h
+ header-y += scsi_netlink_fc.h
+ header-y += scsi_bsg_fc.h
++header-y += fc/
+diff --git a/include/scsi/fc/Kbuild b/include/scsi/fc/Kbuild
+new file mode 100644
+index 0000000..5660381
+--- /dev/null
++++ b/include/scsi/fc/Kbuild
+@@ -0,0 +1,4 @@
++header-y += fc_els.h
++header-y += fc_fs.h
++header-y += fc_gs.h
++header-y += fc_ns.h
+diff --git a/include/scsi/fc/fc_els.h b/include/scsi/fc/fc_els.h
+index b0872af..f943281 100644
+--- a/include/scsi/fc/fc_els.h
++++ b/include/scsi/fc/fc_els.h
+@@ -20,6 +20,8 @@
+ #ifndef _FC_ELS_H_
+ #define	_FC_ELS_H_
  
- /**
-+ * fc_lport_rspn_id_resp() - Handle response to Register Symbolic Port Name
-+ *			     by ID (RSPN_ID) request
-+ * @sp: current sequence in RSPN_ID exchange
-+ * @fp: response frame
-+ * @lp_arg: Fibre Channel host port instance
-+ *
-+ * Locking Note: This function will be called without the lport lock
-+ * held, but it will lock, call an _enter_* function or fc_lport_error
-+ * and then unlock the lport.
-+ */
-+static void fc_lport_rspn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
-+				  void *lp_arg)
-+{
-+	struct fc_lport *lport = lp_arg;
-+	struct fc_frame_header *fh;
-+	struct fc_ct_hdr *ct;
++#include <linux/types.h>
 +
-+	FC_LPORT_DBG(lport, "Received a RSPN_ID %s\n", fc_els_resp_type(fp));
-+
-+	if (fp == ERR_PTR(-FC_EX_CLOSED))
-+		return;
-+
-+	mutex_lock(&lport->lp_mutex);
-+
-+	if (lport->state != LPORT_ST_RSPN_ID) {
-+		FC_LPORT_DBG(lport, "Received a RSPN_ID response, but in state "
-+			     "%s\n", fc_lport_state(lport));
-+		if (IS_ERR(fp))
-+			goto err;
-+		goto out;
-+	}
-+
-+	if (IS_ERR(fp)) {
-+		fc_lport_error(lport, fp);
-+		goto err;
-+	}
-+
-+	fh = fc_frame_header_get(fp);
-+	ct = fc_frame_payload_get(fp, sizeof(*ct));
-+	if (fh && ct && fh->fh_type == FC_TYPE_CT &&
-+	    ct->ct_fs_type == FC_FST_DIR &&
-+	    ct->ct_fs_subtype == FC_NS_SUBTYPE &&
-+	    ntohs(ct->ct_cmd) == FC_FS_ACC)
-+		fc_lport_enter_rspn_id(lport);
-+	else
-+		fc_lport_error(lport, fp);
-+
-+out:
-+	fc_frame_free(fp);
-+err:
-+	mutex_unlock(&lport->lp_mutex);
-+}
-+/**
-  * fc_lport_rsnn_nn_resp() - Handle response to Register Symbolic Node Name
-  *			     by Node Name (RSNN_NN) request
-  * @sp: current sequence in RSNN_NN exchange
-@@ -1261,6 +1317,37 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
- }
+ /*
+  * Fibre Channel Switch - Enhanced Link Services definitions.
+  * From T11 FC-LS Rev 1.2 June 7, 2005.
+diff --git a/include/scsi/fc/fc_fs.h b/include/scsi/fc/fc_fs.h
+index ac4cd38..50f28b1 100644
+--- a/include/scsi/fc/fc_fs.h
++++ b/include/scsi/fc/fc_fs.h
+@@ -20,6 +20,8 @@
+ #ifndef _FC_FS_H_
+ #define _FC_FS_H_
  
- /**
-+ * fc_rport_enter_rspn_id() - Register symbolic port name with the name server
-+ * @lport: Fibre Channel local port to register
-+ *
-+ * Locking Note: The lport lock is expected to be held before calling
-+ * this routine.
-+ */
-+static void fc_lport_enter_rspn_id(struct fc_lport *lport)
-+{
-+	struct fc_frame *fp;
-+	size_t len;
++#include <linux/types.h>
 +
-+	FC_LPORT_DBG(lport, "Entered RSPN_ID state from %s state\n",
-+		     fc_lport_state(lport));
+ /*
+  * Fibre Channel Framing and Signalling definitions.
+  * From T11 FC-FS-2 Rev 0.90 - 9 August 2005.
+diff --git a/include/scsi/fc/fc_gs.h b/include/scsi/fc/fc_gs.h
+index 324dd0e..a37346d 100644
+--- a/include/scsi/fc/fc_gs.h
++++ b/include/scsi/fc/fc_gs.h
+@@ -20,6 +20,8 @@
+ #ifndef _FC_GS_H_
+ #define	_FC_GS_H_
+ 
++#include <linux/types.h>
 +
-+	fc_lport_state_enter(lport, LPORT_ST_RSPN_ID);
-+
-+	len = strnlen(fc_host_symbolic_name(lport->host), 255);
-+	fp = fc_frame_alloc(lport, sizeof(struct fc_ct_hdr) +
-+			    sizeof(struct fc_ns_rspn) + len);
-+	if (!fp) {
-+		fc_lport_error(lport, fp);
-+		return;
-+	}
-+
-+	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
-+				  fc_lport_rspn_id_resp,
-+				  lport, lport->e_d_tov))
-+		fc_lport_error(lport, fp);
-+}
-+
-+/**
-  * fc_rport_enter_rsnn_nn() - Register symbolic node name with the name server
-  * @lport: Fibre Channel local port to register
-  *
-@@ -1387,6 +1474,9 @@ static void fc_lport_timeout(struct work_struct *work)
- 	case LPORT_ST_RSNN_NN:
- 		fc_lport_enter_rsnn_nn(lport);
- 		break;
-+	case LPORT_ST_RSPN_ID:
-+		fc_lport_enter_rspn_id(lport);
-+		break;
- 	case LPORT_ST_RFT_ID:
- 		fc_lport_enter_rft_id(lport);
- 		break;
+ /*
+  * Fibre Channel Services - Common Transport.
+  * From T11.org FC-GS-2 Rev 5.3 November 1998.
 diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
-index fa82830..3fd59a2 100644
+index 3fd59a2..f4d354e 100644
 --- a/include/scsi/fc/fc_ns.h
 +++ b/include/scsi/fc/fc_ns.h
-@@ -47,6 +47,7 @@ enum fc_ns_req {
- 	FC_NS_RFT_ID =	0x0217,		/* reg FC4 type for ID */
- 	FC_NS_RPN_ID =	0x0212,		/* reg port name for ID */
- 	FC_NS_RNN_ID =	0x0213,		/* reg node name for ID */
-+	FC_NS_RSPN_ID =	0x0218,		/* reg symbolic port name */
- 	FC_NS_RSNN_NN =	0x0239,		/* reg symbolic node name */
- };
+@@ -20,6 +20,8 @@
+ #ifndef _FC_NS_H_
+ #define	_FC_NS_H_
  
-@@ -166,4 +167,13 @@ struct fc_ns_rsnn {
- 	char		fr_name[];
- } __attribute__((__packed__));
- 
-+/*
-+ * RSPN_ID request - register symbolic port name
-+ */
-+struct fc_ns_rspn {
-+	struct fc_ns_fid fr_fid;	/* port ID object */
-+	__u8		fr_name_len;
-+	char		fr_name[];
-+} __attribute__((__packed__));
++#include <linux/types.h>
 +
- #endif /* _FC_NS_H_ */
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index 89981af..9afcbb9 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -34,6 +34,7 @@ struct fc_ct_req {
- 		struct fc_ns_rft rft;
- 		struct fc_ns_fid fid;
- 		struct fc_ns_rsnn snn;
-+		struct fc_ns_rspn spn;
- 	} payload;
- };
- 
-@@ -137,6 +138,16 @@ static inline int fc_ct_fill(struct fc_lport *lport,
- 		put_unaligned_be64(lport->wwnn, &ct->payload.rn.fr_wwn);
- 		break;
- 
-+	case FC_NS_RSPN_ID:
-+		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn));
-+		hton24(ct->payload.spn.fr_fid.fp_fid,
-+		       fc_host_port_id(lport->host));
-+		strncpy(ct->payload.spn.fr_name,
-+			fc_host_symbolic_name(lport->host), 255);
-+		ct->payload.spn.fr_name_len =
-+			strnlen(ct->payload.spn.fr_name, 255);
-+		break;
-+
- 	case FC_NS_RSNN_NN:
- 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rsnn));
- 		put_unaligned_be64(lport->wwnn, &ct->payload.snn.fr_wwn);
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 1a63206..8258edf 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -63,6 +63,7 @@ enum fc_lport_state {
- 	LPORT_ST_DNS,
- 	LPORT_ST_RNN_ID,
- 	LPORT_ST_RSNN_NN,
-+	LPORT_ST_RSPN_ID,
- 	LPORT_ST_RFT_ID,
- 	LPORT_ST_SCR,
- 	LPORT_ST_READY,
+ /*
+  * Fibre Channel Services - Name Service (dNS)
+  * From T11.org FC-GS-2 Rev 5.3 November 1998.
 
