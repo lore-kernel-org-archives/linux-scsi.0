@@ -1,176 +1,110 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 54/54] libfc fcoe: increase ELS and CT timeouts
-Date: Tue, 03 Nov 2009 11:50:21 -0800
-Message-ID: <20091103195021.4085.53617.stgit@localhost.localdomain>
-References: <20091103194530.4085.37963.stgit@localhost.localdomain>
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Subject: Re: [PATCH] strstrip incorrectly marked __must_check
+Date: Wed, 4 Nov 2009 04:58:50 +0900
+Message-ID: <2f11576a0911031158r7fabb96fx8073bb4e86f4981e@mail.gmail.com>
+References: <1257273488.9427.27.camel@mulgrave.site>
+	 <20091103105921.160d5599.akpm@linux-foundation.org>
+	 <20091103191233.0c3ba736@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=0015177404c6482da004777cec1b
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23896 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755243AbZKCTuQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Nov 2009 14:50:16 -0500
-In-Reply-To: <20091103194530.4085.37963.stgit@localhost.localdomain>
+Received: from mail-iw0-f180.google.com ([209.85.223.180]:43481 "EHLO
+	mail-iw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766AbZKCT6r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 14:58:47 -0500
+In-Reply-To: <20091103191233.0c3ba736@lxorguk.ukuu.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-From: Joe Eykholt <jeykholt@cisco.com>
+--0015177404c6482da004777cec1b
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-The FC-LS spec. says ELS timeouts should be 2 x R_A_TOV.
-The FC-GS spec. says CT timeouts should be 3 x R_A_TOV.
+2009/11/4 Alan Cox <alan@lxorguk.ukuu.org.uk>:
+>> static inline void strsrip_tail(char *str)
+>> {
+>> =A0 =A0 =A0 char *x __used;
+>> =A0 =A0 =A0 x =3D strstrip(str);
+>> }
+>
+> Bikeshed time but its cleaner to do
+>
+> static inline __must_check void strstrip(char *str)
+> {
+> =A0 =A0 =A0 =A0return strim(str);
+> }
+>
+> and make strim() the old strstrip function without the check requirement
 
-We've been using E_D_TOV for both of those.
+Okey...
 
-Change for all ELS and CT requests except FLOGI, which we
-leave at 2 seconds (using E_D_TOV).  One could argue that
-R_A_TOV is locally determined until after FLOGI succeeds.
+[quick hack and compile check]
 
-This does change FLOGI for vports which becomes FDISC.
-This does not change the REC/SRR timeout which is 2 seconds.
+done :)
+sorry for attached file. I'm under poor mail environment now.
 
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
+--0015177404c6482da004777cec1b
+Content-Type: application/octet-stream;
+	name="0001-lib-Introduce-strim.patch"
+Content-Disposition: attachment; filename="0001-lib-Introduce-strim.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g1l2xg480
 
- drivers/scsi/fcoe/fcoe.c      |    2 +-
- drivers/scsi/libfc/fc_disc.c  |    5 +++--
- drivers/scsi/libfc/fc_lport.c |   12 ++++++++----
- drivers/scsi/libfc/fc_rport.c |   15 ++++++++++-----
- 4 files changed, 22 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index b570f39..4a43b74 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2428,5 +2428,5 @@ static void fcoe_set_vport_symbolic_name(struct fc_vport *vport)
- 	if (!fp)
- 		return;
- 	lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
--			     NULL, NULL, lport->e_d_tov);
-+			     NULL, NULL, 3 * lport->r_a_tov);
- }
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 7b790ad..9b0a519 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -370,7 +370,7 @@ static void fc_disc_gpn_ft_req(struct fc_disc *disc)
- 	if (lport->tt.elsct_send(lport, 0, fp,
- 				 FC_NS_GPN_FT,
- 				 fc_disc_gpn_ft_resp,
--				 disc, lport->e_d_tov))
-+				 disc, 3 * lport->r_a_tov))
- 		return;
- err:
- 	fc_disc_error(disc, NULL);
-@@ -654,7 +654,8 @@ static int fc_disc_gpn_id_req(struct fc_lport *lport,
- 	if (!fp)
- 		return -ENOMEM;
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, FC_NS_GPN_ID,
--				  fc_disc_gpn_id_resp, rdata, lport->e_d_tov))
-+				  fc_disc_gpn_id_resp, rdata,
-+				  3 * lport->r_a_tov))
- 		return -ENOMEM;
- 	kref_get(&rdata->kref);
- 	return 0;
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 1bcc5e1..c841d54 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1191,7 +1191,8 @@ static void fc_lport_enter_scr(struct fc_lport *lport)
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, FC_FID_FCTRL, fp, ELS_SCR,
--				  fc_lport_scr_resp, lport, lport->e_d_tov))
-+				  fc_lport_scr_resp, lport,
-+				  2 * lport->r_a_tov))
- 		fc_lport_error(lport, NULL);
- }
- 
-@@ -1257,7 +1258,7 @@ static void fc_lport_enter_ns(struct fc_lport *lport, enum fc_lport_state state)
- 
- 	if (!lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, cmd,
- 				  fc_lport_ns_resp,
--				  lport, lport->e_d_tov))
-+				  lport, 3 * lport->r_a_tov))
- 		fc_lport_error(lport, fp);
- }
- 
-@@ -1414,7 +1415,8 @@ static void fc_lport_enter_logo(struct fc_lport *lport)
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp, ELS_LOGO,
--				  fc_lport_logo_resp, lport, lport->e_d_tov))
-+				  fc_lport_logo_resp, lport,
-+				  2 * lport->r_a_tov))
- 		fc_lport_error(lport, NULL);
- }
- 
-@@ -1534,7 +1536,9 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
- 
- 	if (!lport->tt.elsct_send(lport, FC_FID_FLOGI, fp,
- 				  lport->vport ? ELS_FDISC : ELS_FLOGI,
--				  fc_lport_flogi_resp, lport, lport->e_d_tov))
-+				  fc_lport_flogi_resp, lport,
-+				  lport->vport ? 2 * lport->r_a_tov :
-+				  lport->e_d_tov))
- 		fc_lport_error(lport, NULL);
- }
- 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 6578968..91e2ba2 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -668,7 +668,8 @@ static void fc_rport_enter_plogi(struct fc_rport_priv *rdata)
- 	rdata->e_d_tov = lport->e_d_tov;
- 
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_PLOGI,
--				  fc_rport_plogi_resp, rdata, lport->e_d_tov))
-+				  fc_rport_plogi_resp, rdata,
-+				  2 * lport->r_a_tov))
- 		fc_rport_error_retry(rdata, NULL);
- 	else
- 		kref_get(&rdata->kref);
-@@ -829,7 +830,8 @@ static void fc_rport_enter_prli(struct fc_rport_priv *rdata)
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_PRLI,
--				  fc_rport_prli_resp, rdata, lport->e_d_tov))
-+				  fc_rport_prli_resp, rdata,
-+				  2 * lport->r_a_tov))
- 		fc_rport_error_retry(rdata, NULL);
- 	else
- 		kref_get(&rdata->kref);
-@@ -925,7 +927,8 @@ static void fc_rport_enter_rtv(struct fc_rport_priv *rdata)
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_RTV,
--				  fc_rport_rtv_resp, rdata, lport->e_d_tov))
-+				  fc_rport_rtv_resp, rdata,
-+				  2 * lport->r_a_tov))
- 		fc_rport_error_retry(rdata, NULL);
- 	else
- 		kref_get(&rdata->kref);
-@@ -955,7 +958,8 @@ static void fc_rport_enter_logo(struct fc_rport_priv *rdata)
- 	}
- 
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_LOGO,
--				  fc_rport_logo_resp, rdata, lport->e_d_tov))
-+				  fc_rport_logo_resp, rdata,
-+				  2 * lport->r_a_tov))
- 		fc_rport_error_retry(rdata, NULL);
- 	else
- 		kref_get(&rdata->kref);
-@@ -1042,7 +1046,8 @@ static void fc_rport_enter_adisc(struct fc_rport_priv *rdata)
- 		return;
- 	}
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_ADISC,
--				  fc_rport_adisc_resp, rdata, lport->e_d_tov))
-+				  fc_rport_adisc_resp, rdata,
-+				  2 * lport->r_a_tov))
- 		fc_rport_error_retry(rdata, NULL);
- 	else
- 		kref_get(&rdata->kref);
-
+RnJvbSA5NGE4NjQyNGE4ODJkNTJmY2QxMTAzOWQxMWZiZDAzNjNhMzE0NzJmIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBLT1NBS0kgTW90b2hpcm8gPGtvc2FraS5tb3RvaGlyb0BqcC5m
+dWppdHN1LmNvbT4KRGF0ZTogV2VkLCA0IE5vdiAyMDA5IDA0OjQ3OjIzICswOTAwClN1YmplY3Q6
+IFtQQVRDSF0gbGliOiBJbnRyb2R1Y2Ugc3RyaW0KClJlY2VudGx5LCBXZSBtYXJrZWQgc3Ryc3Ry
+aXAoKSBhcyBtdXN0X2NoZWNrLiBiZWNhdXNlIGl0IHdhcyBmcmVxdWVudGx5IG1pc3VzZWQgYW5k
+Cml0IHNob3VsZCBiZSBjaGVja2VkLiBob3dldmVyLCB3ZSBmb3VuZCBvbmUgZXhjZXB0aW9uLiBz
+Y3NpL2lwci5jIGludGVudGlvbmFsbHkgaWdub3JlCnJldHVybiB2YWx1ZSBvZiBzdHJzdHJpcC4g
+YmVjYXVzZSwgaXQgd2lzaCB0byBrZWVwIHRoZSB3aGl0ZXNwYWNlIGF0IHRoZSBiZWdpbm5pbmcu
+CgpUaHVzLCB3ZSBuZWVkIHRvIGtlZXAgd2l0aCBhbmQgd2l0aG91dCBjaGVja2VkIHdoaXRlc3Bh
+Y2UgdHJpbSBmdW5jdGlvbi4gVGhpcyBwYXRjaAptYWtlcyBzdHJpbSBuZXcgZnVuY3Rpb24gYW5k
+IGlwci5jIHVzZSBpdC4KClN1Z2dlc3RlZC1ieTogQWxhbiBDb3ggPGFsYW5AbHhvcmd1ay51a3V1
+Lm9yZy51az4KU2lnbmVkLW9mZi1ieTogS09TQUtJIE1vdG9oaXJvIDxrb3Nha2kubW90b2hpcm9A
+anAuZnVqaXRzdS5jb20+Ci0tLQogZHJpdmVycy9zY3NpL2lwci5jICAgICB8ICAgIDQgKystLQog
+aW5jbHVkZS9saW51eC9zdHJpbmcuaCB8ICAgIDkgKysrKysrKystCiBsaWIvc3RyaW5nLmMgICAg
+ICAgICAgIHwgICAgNiArKystLS0KIDMgZmlsZXMgY2hhbmdlZCwgMTMgaW5zZXJ0aW9ucygrKSwg
+NiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvaXByLmMgYi9kcml2ZXJz
+L3Njc2kvaXByLmMKaW5kZXggZDQwZDVjNy4uNjYwMmZjNCAxMDA2NDQKLS0tIGEvZHJpdmVycy9z
+Y3NpL2lwci5jCisrKyBiL2RyaXZlcnMvc2NzaS9pcHIuYwpAQCAtMTMzMyw3ICsxMzMzLDcgQEAg
+c3RhdGljIHZvaWQgaXByX2xvZ19lbmhhbmNlZF9kdWFsX2lvYV9lcnJvcihzdHJ1Y3QgaXByX2lv
+YV9jZmcgKmlvYV9jZmcsCiAKIAllcnJvciA9ICZob3N0cmNiLT5oY2FtLnUuZXJyb3IudS50eXBl
+XzE3X2Vycm9yOwogCWVycm9yLT5mYWlsdXJlX3JlYXNvbltzaXplb2YoZXJyb3ItPmZhaWx1cmVf
+cmVhc29uKSAtIDFdID0gJ1wwJzsKLQlzdHJzdHJpcChlcnJvci0+ZmFpbHVyZV9yZWFzb24pOwor
+CXN0cmltKGVycm9yLT5mYWlsdXJlX3JlYXNvbik7CiAKIAlpcHJfaGNhbV9lcnIoaG9zdHJjYiwg
+IiVzIFtQUkM6ICUwOFhdXG4iLCBlcnJvci0+ZmFpbHVyZV9yZWFzb24sCiAJCSAgICAgYmUzMl90
+b19jcHUoaG9zdHJjYi0+aGNhbS51LmVycm9yLnByYykpOwpAQCAtMTM1OSw3ICsxMzU5LDcgQEAg
+c3RhdGljIHZvaWQgaXByX2xvZ19kdWFsX2lvYV9lcnJvcihzdHJ1Y3QgaXByX2lvYV9jZmcgKmlv
+YV9jZmcsCiAKIAllcnJvciA9ICZob3N0cmNiLT5oY2FtLnUuZXJyb3IudS50eXBlXzA3X2Vycm9y
+OwogCWVycm9yLT5mYWlsdXJlX3JlYXNvbltzaXplb2YoZXJyb3ItPmZhaWx1cmVfcmVhc29uKSAt
+IDFdID0gJ1wwJzsKLQlzdHJzdHJpcChlcnJvci0+ZmFpbHVyZV9yZWFzb24pOworCXN0cmltKGVy
+cm9yLT5mYWlsdXJlX3JlYXNvbik7CiAKIAlpcHJfaGNhbV9lcnIoaG9zdHJjYiwgIiVzIFtQUkM6
+ICUwOFhdXG4iLCBlcnJvci0+ZmFpbHVyZV9yZWFzb24sCiAJCSAgICAgYmUzMl90b19jcHUoaG9z
+dHJjYi0+aGNhbS51LmVycm9yLnByYykpOwpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9zdHJp
+bmcuaCBiL2luY2x1ZGUvbGludXgvc3RyaW5nLmgKaW5kZXggYjg1MDg4Ni4uMTdhMzc1ZSAxMDA2
+NDQKLS0tIGEvaW5jbHVkZS9saW51eC9zdHJpbmcuaAorKysgYi9pbmNsdWRlL2xpbnV4L3N0cmlu
+Zy5oCkBAIC02Miw3ICs2MiwxNCBAQCBleHRlcm4gY2hhciAqIHN0cm5jaHIoY29uc3QgY2hhciAq
+LCBzaXplX3QsIGludCk7CiAjaWZuZGVmIF9fSEFWRV9BUkNIX1NUUlJDSFIKIGV4dGVybiBjaGFy
+ICogc3RycmNocihjb25zdCBjaGFyICosaW50KTsKICNlbmRpZgotZXh0ZXJuIGNoYXIgKiBfX211
+c3RfY2hlY2sgc3Ryc3RyaXAoY2hhciAqKTsKKworZXh0ZXJuIGNoYXIgKiBzdHJpbShjaGFyICop
+OworCitzdGF0aWMgaW5saW5lIF9fbXVzdF9jaGVjayBjaGFyKiBzdHJzdHJpcChjaGFyICpzdHIp
+Cit7CisJcmV0dXJuIHN0cmltKHN0cik7Cit9CisKICNpZm5kZWYgX19IQVZFX0FSQ0hfU1RSU1RS
+CiBleHRlcm4gY2hhciAqIHN0cnN0cihjb25zdCBjaGFyICosY29uc3QgY2hhciAqKTsKICNlbmRp
+ZgpkaWZmIC0tZ2l0IGEvbGliL3N0cmluZy5jIGIvbGliL3N0cmluZy5jCmluZGV4IGIxOWI4N2Eu
+LjI4MjExYzYgMTAwNjQ0Ci0tLSBhL2xpYi9zdHJpbmcuYworKysgYi9saWIvc3RyaW5nLmMKQEAg
+LTMzMCwxNCArMzMwLDE0IEBAIEVYUE9SVF9TWU1CT0woc3RybmNocik7CiAjZW5kaWYKIAogLyoq
+Ci0gKiBzdHJzdHJpcCAtIFJlbW92ZXMgbGVhZGluZyBhbmQgdHJhaWxpbmcgd2hpdGVzcGFjZSBm
+cm9tIEBzLgorICogc3RyaW0gLSBSZW1vdmVzIGxlYWRpbmcgYW5kIHRyYWlsaW5nIHdoaXRlc3Bh
+Y2UgZnJvbSBAcy4KICAqIEBzOiBUaGUgc3RyaW5nIHRvIGJlIHN0cmlwcGVkLgogICoKICAqIE5v
+dGUgdGhhdCB0aGUgZmlyc3QgdHJhaWxpbmcgd2hpdGVzcGFjZSBpcyByZXBsYWNlZCB3aXRoIGEg
+JU5VTC10ZXJtaW5hdG9yCiAgKiBpbiB0aGUgZ2l2ZW4gc3RyaW5nIEBzLiBSZXR1cm5zIGEgcG9p
+bnRlciB0byB0aGUgZmlyc3Qgbm9uLXdoaXRlc3BhY2UKICAqIGNoYXJhY3RlciBpbiBAcy4KICAq
+LwotY2hhciAqc3Ryc3RyaXAoY2hhciAqcykKK2NoYXIgKnN0cmltKGNoYXIgKnMpCiB7CiAJc2l6
+ZV90IHNpemU7CiAJY2hhciAqZW5kOwpAQCAtMzU3LDcgKzM1Nyw3IEBAIGNoYXIgKnN0cnN0cmlw
+KGNoYXIgKnMpCiAKIAlyZXR1cm4gczsKIH0KLUVYUE9SVF9TWU1CT0woc3Ryc3RyaXApOworRVhQ
+T1JUX1NZTUJPTChzdHJpbSk7CiAKICNpZm5kZWYgX19IQVZFX0FSQ0hfU1RSTEVOCiAvKioKLS0g
+CjEuNi4yLjUKCg==
+--0015177404c6482da004777cec1b--
