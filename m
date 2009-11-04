@@ -1,51 +1,33 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH -2nd repost 2/4] SCSI: remove unnecessary NULL test
-Date: Wed, 04 Nov 2009 10:22:15 -0600
-Message-ID: <4AF1AA37.5060500@cs.wisc.edu>
-References: <1257351321-8281-1-git-send-email-jirislaby@gmail.com> <1257351321-8281-2-git-send-email-jirislaby@gmail.com>
+From: John Hughes <john@Calva.COM>
+Subject: Re: ses enclosure stuff not working with Promise Vtrak J610S JBOD
+Date: Wed, 04 Nov 2009 17:54:23 +0100
+Message-ID: <4AF1B1BF.1060702@Calva.COM>
+References: <4AF17AD3.6060909@Calva.COM> <4AF1A2F0.7060201@Calva.COM>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757068AbZKDQW1@vger.kernel.org>
-In-Reply-To: <1257351321-8281-2-git-send-email-jirislaby@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: James.Bottomley@suse.de, Karen Xie <kxie@chelsio.com>, james.smart@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from oceanic.CalvaEDI.COM ([81.252.197.184]:36708 "EHLO
+	oceanic.CalvaEDI.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756771AbZKDQyU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 11:54:20 -0500
+In-Reply-To: <4AF1A2F0.7060201@Calva.COM>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Hughes <john@Calva.COM>
+Cc: linux-scsi@vger.kernel.org
 
-Adding Karen and removing adaptec since this is chelsio's driver.
+John Hughes wrote:
+> Well the "locate" light does work, you just have to first write zero, 
+> then one.
+>
+> I.E.
+>
+> echo 0 > locate
+> echo 1 > locate
+>
+> starts the light flashing.
+This appears to be a problem with the Promise firmware; once a zero has 
+been written to "locate" then it works as expected until the next time 
+the promise is power-cycled.
 
-Jiri Slaby wrote:
-> Stanse found that c3cn is poked many times around in
-> cxgb3i_conn_pdu_ready, there is no need to check if it is NULL.
-> 
-> Remove the test.
-> 
-> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
-> Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-> ---
->  drivers/scsi/cxgb3i/cxgb3i_pdu.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/cxgb3i/cxgb3i_pdu.c b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-> index 7091050..64bbc28 100644
-> --- a/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-> +++ b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
-> @@ -461,10 +461,8 @@ void cxgb3i_conn_pdu_ready(struct s3_conn *c3cn)
->  		skb = skb_peek(&c3cn->receive_queue);
->  	}
->  	read_unlock(&c3cn->callback_lock);
-> -	if (c3cn) {
-> -		c3cn->copied_seq += read;
-> -		cxgb3i_c3cn_rx_credits(c3cn, read);
-> -	}
-> +	c3cn->copied_seq += read;
-> +	cxgb3i_c3cn_rx_credits(c3cn, read);
->  	conn->rxdata_octets += read;
->  
->  	if (err) {
-
-Looks ok to me. The null check was useless since we access c3cn all over 
-the function and would have oopsed before we got there.
-
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
