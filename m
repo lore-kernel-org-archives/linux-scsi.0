@@ -1,56 +1,51 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: ses enclosure stuff not working with Promise Vtrak J610S JBOD
-Date: Wed, 04 Nov 2009 10:20:54 -0600
-Message-ID: <1257351654.2697.55.camel@mulgrave.site>
-References: <4AF17AD3.6060909@Calva.COM>
-	 <1257348128.2697.29.camel@mulgrave.site>  <4AF1A38E.3000009@Calva.COM>
-	 <1257350834.2697.52.camel@mulgrave.site>  <4AF1A7E7.7070307@Calva.COM>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH -2nd repost 2/4] SCSI: remove unnecessary NULL test
+Date: Wed, 04 Nov 2009 10:22:15 -0600
+Message-ID: <4AF1AA37.5060500@cs.wisc.edu>
+References: <1257351321-8281-1-git-send-email-jirislaby@gmail.com> <1257351321-8281-2-git-send-email-jirislaby@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51071 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756838AbZKDQUy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Nov 2009 11:20:54 -0500
-In-Reply-To: <4AF1A7E7.7070307@Calva.COM>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757068AbZKDQW1@vger.kernel.org>
+In-Reply-To: <1257351321-8281-2-git-send-email-jirislaby@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: James.Bottomley@suse.de, Karen Xie <kxie@chelsio.com>, james.smart@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Hughes <john@Calva.COM>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2009-11-04 at 17:12 +0100, John Hughes wrote:
-> James Bottomley wrote:
-> > Could you tell me what the enclosure page 0 (supported diagnostic pages)
-> > and page 10 (additional information page that allows us to do the
-> > matching) say?  I suspect the enclosure either doesn't support the page
-> > needed for the matching or there's some problem with the way the
-> > information is encoded.
-> >   
-> Ok, here we go.   (I wonder whether the "<<<additional: response too 
-> short>>>" at the end of page 10 has something to do with the problem).
+Adding Karen and removing adaptec since this is chelsio's driver.
 
-Possibly ... that tends to indicate the enclosure data returned stopped
-in the middle of the actual specification ... although looking at the
-output this doesn't seem to be the case.  The zeros at the end
-definitely indicate we have enough data, just that the expected
-termination doesn't seem to be present.
+Jiri Slaby wrote:
+> Stanse found that c3cn is poked many times around in
+> cxgb3i_conn_pdu_ready, there is no need to check if it is NULL.
+> 
+> Remove the test.
+> 
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+> Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+> ---
+>  drivers/scsi/cxgb3i/cxgb3i_pdu.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/cxgb3i/cxgb3i_pdu.c b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+> index 7091050..64bbc28 100644
+> --- a/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+> +++ b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+> @@ -461,10 +461,8 @@ void cxgb3i_conn_pdu_ready(struct s3_conn *c3cn)
+>  		skb = skb_peek(&c3cn->receive_queue);
+>  	}
+>  	read_unlock(&c3cn->callback_lock);
+> -	if (c3cn) {
+> -		c3cn->copied_seq += read;
+> -		cxgb3i_c3cn_rx_credits(c3cn, read);
+> -	}
+> +	c3cn->copied_seq += read;
+> +	cxgb3i_c3cn_rx_credits(c3cn, read);
+>  	conn->rxdata_octets += read;
+>  
+>  	if (err) {
 
-> # sg_ses -p 0 /dev/sg17
->   PROMISE   3U-SAS-16-D BP    0107
->     enclosure services device
-> Supported diagnostic pages:
->   Supported diagnostic pages [0x0]
->   Configuration (SES) [0x1]
->   Enclosure status/control (SES) [0x2]
->   Threshold In/Out (SES) [0x5]
->   Enclosure busy (SES-2) [0x9]
->   Additional (device) element status (SES-2) [0xa]
+Looks ok to me. The null check was useless since we access c3cn all over 
+the function and would have oopsed before we got there.
 
-This may also be a problem.  My enclosure returns page 7 as well.  The
-traversal routine has special code to try to parse page 10 without a
-page 7 ... I don't think I actually ever tested that ...
-
-James
-
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
