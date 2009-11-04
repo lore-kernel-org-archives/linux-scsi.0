@@ -1,45 +1,32 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
-Date: Wed, 04 Nov 2009 02:40:04 +0100
-Message-ID: <4AF0DB74.8010906@s5r6.in-berlin.de>
-References: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C8572@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN> <1257259243.2728.4.camel@mulgrave.site> <4AF0D7AE.200@s5r6.in-berlin.de> <4AF0D9CE.2050407@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Thin provisioning update
+Date: Tue,  3 Nov 2009 23:25:38 -0500
+Message-ID: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:48207 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753591AbZKDBkK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 20:40:10 -0500
-In-Reply-To: <4AF0D9CE.2050407@s5r6.in-berlin.de>
+Received: from acsinet11.oracle.com ([141.146.126.233]:25265 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754289AbZKDE0i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 23:26:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Penchala Narasimha Reddy Chilakala, TLS-Chennai" <narasimhareddyc@hcl.in>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+To: hch@infradead.org, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
 
-Stefan Richter wrote:
-> Stefan Richter wrote:
->> Before:
->>
->> if (upsg->sg[i].count > (dev->adapter_info.options & AAC_OPT_NEW_COMM)
->>         ? (dev->scsi_host_ptr->max_sectors << 9) : 65536) {
-> 
-> Doesn't make sense.  dev->adapter_info.options is a __le32 bitfield.
-> 
->> After:
->>
->> if (upsg->sg[i].count > (
->>           (dev->adapter_info.options & AAC_OPT_NEW_COMM)
->>                  ? (dev->scsi_host_ptr->max_sectors << 9) : 65536
->>     )) {
-> 
-> Makes sense.  Don't know if it's correct.
+Christoph,
 
-PS:  These things wouldn't happen if
-  a) the coding wouldn't be as deeply nested,
-  b) sparse with endianess check would be used for QA.
-(OK, it's apparently a decade old code.)
--- 
-Stefan Richter
--=====-==--= =-== --=--
-http://arcgraph.de/sr/
+Here are some more recent bits for you to tinker with.
+
+The first patch exports unmap granularity and alignment up the stack.  I have
+also implemented support for topology stacking of these parameters.  A reported
+discard granularity of 0 means fully provisioned.
+
+In the second patch I made a few changes to the TP detection and extraction of
+VPD values.
+
+I have been hunting for heuristics for the WRITE SAME case but haven't found any
+good ones.  I'm thinking we probably want to distinguish between a real array
+with NV-backed unmap queueing and a thinly provisioned disk on a virtualization
+server where there might be a real impact from having to zero out partial blocks.
+I guess that's easy to handle with virtio but I'm not so sure how to do it when
+emulating a SCSI disk.
+
+
