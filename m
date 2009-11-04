@@ -1,95 +1,56 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
-Date: Wed, 04 Nov 2009 18:18:09 +0200
-Message-ID: <4AF1A941.3080808@panasas.com>
-References: <4A92BE18.50208@gmail.com>	 <1251416731.27356.8.camel@mulgrave.site>  <4A9A6676.8050304@panasas.com>	 <1251642902.10135.4.camel@mulgrave.site>	 <1257273187.9427.22.camel@mulgrave.site>  <4AF14147.4050102@panasas.com> <1257347360.2697.20.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: ses enclosure stuff not working with Promise Vtrak J610S JBOD
+Date: Wed, 04 Nov 2009 10:20:54 -0600
+Message-ID: <1257351654.2697.55.camel@mulgrave.site>
+References: <4AF17AD3.6060909@Calva.COM>
+	 <1257348128.2697.29.camel@mulgrave.site>  <4AF1A38E.3000009@Calva.COM>
+	 <1257350834.2697.52.camel@mulgrave.site>  <4AF1A7E7.7070307@Calva.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dip-colo-pa.panasas.com ([67.152.220.67]:23631 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756743AbZKDQSH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 11:18:07 -0500
-In-Reply-To: <1257347360.2697.20.camel@mulgrave.site>
+Received: from cantor.suse.de ([195.135.220.2]:51071 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756838AbZKDQUy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Nov 2009 11:20:54 -0500
+In-Reply-To: <4AF1A7E7.7070307@Calva.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: John Hughes <john@Calva.COM>
+Cc: linux-scsi@vger.kernel.org
 
-On 11/04/2009 05:09 PM, James Bottomley wrote:
-> On Wed, 2009-11-04 at 10:54 +0200, Boaz Harrosh wrote:
->>> +
->>> +	if (i < buf[3] && i > buf_len)
->>> +		/* ran off the end of the buffer, give us benefit of doubt */
->>> +		goto found;
->>
->> Some cheep devices are known to break when asked for pages they do not support
->> better return an -ETOOSMALL the user can check for. (And the comment above should
->> also take care of it)
-> 
-> OK, so I struggled with this.  The reason for the behaviour is  that
-> only USB devices with incredibly small page lists are likely to exhibit
-> the problem.  Whereas the page lists in array type devices are likely to
-> grow.  I don't want to run into the situation that your new $10m array
-> suddenly gives an error with DIF/DIX because the page list is too big
-> and the problem this is checking for only afflicts cheap and badly
-> implemented HW.
-> 
+On Wed, 2009-11-04 at 17:12 +0100, John Hughes wrote:
+> James Bottomley wrote:
+> > Could you tell me what the enclosure page 0 (supported diagnostic pages)
+> > and page 10 (additional information page that allows us to do the
+> > matching) say?  I suspect the enclosure either doesn't support the page
+> > needed for the matching or there's some problem with the way the
+> > information is encoded.
+> >   
+> Ok, here we go.   (I wonder whether the "<<<additional: response too 
+> short>>>" at the end of page 10 has something to do with the problem).
 
-If I remember the standard correctly and from inspecting the code 260 is the
-maximum size for page 0. (And the maximum we supported until today for page
-0 was 256) so there is no speculations here. 256 it should be. If you want
-you can do an:
+Possibly ... that tends to indicate the enclosure data returned stopped
+in the middle of the actual specification ... although looking at the
+output this doesn't seem to be the case.  The zeros at the end
+definitely indicate we have enough data, just that the expected
+termination doesn't seem to be present.
 
-	if (i < buf[3] && i > buf_len) {
-		if (likely(buf_len >= 255))
-			/* ran off the end of the buffer, give us benefit of doubt */
-			goto found;
-		else
-			return -ETOOSMALL;
-	}
+> # sg_ses -p 0 /dev/sg17
+>   PROMISE   3U-SAS-16-D BP    0107
+>     enclosure services device
+> Supported diagnostic pages:
+>   Supported diagnostic pages [0x0]
+>   Configuration (SES) [0x1]
+>   Enclosure status/control (SES) [0x2]
+>   Threshold In/Out (SES) [0x5]
+>   Enclosure busy (SES-2) [0x9]
+>   Additional (device) element status (SES-2) [0xa]
 
-which is only theoretical because we only check against buf[3] that cannot
-be more then 255 so all is left is return -ETOOSMALL;
+This may also be a problem.  My enclosure returns page 7 as well.  The
+traversal routine has special code to try to parse page 10 without a
+page 7 ... I don't think I actually ever tested that ...
 
-Callers that allocate smaller then 256 for this (hence the comment)
-must check for -ETOOSMALL;. Or should call with >= 256.
+James
 
-<snip>
->>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->>> index 9093c72..fd1bd8f 100644
->>> --- a/drivers/scsi/sd.c
->>> +++ b/drivers/scsi/sd.c
->>> @@ -1864,19 +1864,20 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
->>>  static void sd_read_block_limits(struct scsi_disk *sdkp)
->>>  {
->>>  	unsigned int sector_sz = sdkp->device->sector_size;
->>> -	char *buffer;
->>> +	const int vpd_len = 32;
->>> +	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
->>>  
->>
->> 32 sounds two small for me. Not because of the page but because of the
->> first pass. Why not just 255 as a rule. We kmalloc it anyway.
-> 
-> It only needs 16 if you look at the code.  32 is actually the smallest
-> kmalloc slab on 32 bit systems.
-> 
 
->> We used to allocate 255 here, for some devices out there this is surly
->> a regression.
-> 
-> We did 255 because we were concerned about space for the page list ...
-> hopefully I answered that one above.
-> 
-
-No, I still disagree. Whats the point of checking at all? Surly there is a device
-out there that has more then 12 pages but will breaks with wrong page. So what's
-the limit? the standards say 260 why not stick with that. It's not at any hot path.
-
-> James
-> 
-> 
-
-Boaz
