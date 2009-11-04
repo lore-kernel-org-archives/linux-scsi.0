@@ -1,56 +1,61 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
-Date: Wed, 04 Nov 2009 01:50:41 +0100
-Message-ID: <4AF0CFE1.8050407@tomt.net>
-References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Wed, 04 Nov 2009 02:23:58 +0100
+Message-ID: <4AF0D7AE.200@s5r6.in-berlin.de>
+References: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C8572@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN> <1257259243.2728.4.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4AA7F965.6020408@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: tfjellstrom@shaw.ca, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:48140 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409AbZKDBYD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 20:24:03 -0500
+In-Reply-To: <1257259243.2728.4.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "Penchala Narasimha Reddy Chilakala, TLS-Chennai" <narasimhareddyc@hcl.in>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-Jeff Garzik wrote:
-> On 09/09/2009 12:30 PM, Thomas Fjellstrom wrote:
->> No errors on that disk. Other than the one above, and its more of a 
->> warning.
->> However, I just rebooted to add some extra drives, thinking everything 
->> was
->> working a little better now that I've updated to 2.6.31-rc9, I'm 
->> treated to
->> the following two messages right after boot (and a system lockup to 
->> boot):
+James Bottomley wrote:
+> On Tue, 2009-11-03 at 15:47 +0530, Penchala Narasimha Reddy Chilakala,
+> TLS-Chennai wrote:
+>> This is all spurious bracket addition; it doesn't really have any place
+>> in a code fix.
+>>
+>> <Narasimha Reddy>: As we know that if we do not keep bracket
+>> appropriately, some times compilers will behave differently and it may
+>> use different instructions and evaluate differently. So to avoid those
+>> kinds of issues, we added those brackets. It is not a code fix, but it
+>> is compiler fix (compilers should not interpret differently). If
+>> compiler interprets differently then the logic may behave differently
+>> as against to your intentional behavior.  I hope you agree with me.
+> 
+> Not really ... in principle we try to fix the compilers rather than work
+> around their bugs.  Which compilers are exhibiting the problem? ...
+> because they'll affect more than just aacraid.
 
-Jeff & Co,
+Huh?
 
-Just chiming in with a "me too" comment.
+Expression before the patch:	a > (b & c) ? d : e
+Expression after the patch:	a > ((b & c) ? d : e)
 
-Identical issues with the AOC-SASLP-MV8 card with 8 Seagate Barracuda 
-7200.11 1.5TB drives using the mvsas driver. Creating a md raid array 
-seems to trigger it nearly instantly, however other loads do not trigger 
-it as fast (if at all, only tested briefly with paralell dd).
+That's clearly different; a C compiler would have to be extremely buggy
+to get such expressions wrong.  So which is really the right one; before
+or after?
 
-Not sure if its related in any way, but I also noticed that with 
-parallell dd read on all ports, the card/driver tops out at 600MB/s even 
-though the card is in a northbridge connected slot running in x4 mode. 
-Only the first 4-5 ports run at nearly full speed, while the rest barely 
-gets to read any data at all. To illustrate, it looks sort of like this 
-in iostat -m:
-sda 122
-sdb 122
-sbc 120
-sdd 121
-sde 100
-sdf 10
-sdg 5
-sdh 5
+Before:
 
-Starting to think this driver has some issues with concurrency.. The 
-other controllers have no issues saturating all their ports, even if 
-they are on a south bridge connected slot.
+if (upsg->sg[i].count > (dev->adapter_info.options & AAC_OPT_NEW_COMM)
+        ? (dev->scsi_host_ptr->max_sectors << 9) : 65536) {
 
-Same disks/setup works just fine on AHCI and sata_mv controllers on the 
-same computer, easily pushes 8-900MB/s with md software raid5/6 (Yipes!)
+After:
+
+if (upsg->sg[i].count > (
+          (dev->adapter_info.options & AAC_OPT_NEW_COMM)
+                 ? (dev->scsi_host_ptr->max_sectors << 9) : 65536
+    )) {
+-- 
+Stefan Richter
+-=====-==--= =-== --=--
+http://arcgraph.de/sr/
