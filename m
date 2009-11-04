@@ -1,92 +1,107 @@
 From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
 	<narasimhareddyc@hcl.in>
 Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
-Date: Wed, 4 Nov 2009 12:30:56 +0530
-Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C87F5@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
-References: <4AF07E59.1070000@s5r6.in-berlin.de>
+Date: Wed, 4 Nov 2009 12:37:53 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C8804@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+References: <1257260938.2728.6.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.mail.hcl.in ([203.105.186.28]:37351 "EHLO gws08.hcl.in"
+Received: from gws08.mail.hcl.in ([203.105.186.28]:39828 "EHLO gws08.hcl.in"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518AbZKDHBw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 02:01:52 -0500
-In-Reply-To: <4AF07E59.1070000@s5r6.in-berlin.de>
+	id S1750898AbZKDHIy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 02:08:54 -0500
+In-Reply-To: <1257260938.2728.6.camel@mulgrave.site>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
-Hi Stefan,
+Hi James,
 
-All your feedback will be considered, and need to be discussed with other people before trying it out in aacraid code, but it would be taken as experiment bases because we need to work on other customer defects as well and it needs lot of testing as I said earlier. So it will take quite a sometime.
+Please let me know that shall I generate new patch with this modification and resubmit it?
 
 Thanks,
 Narasimha Reddy
 
 -----Original Message-----
-From: Stefan Richter [mailto:stefanr@s5r6.in-berlin.de]
-Sent: Wednesday, November 04, 2009 12:33 AM
+From: James Bottomley [mailto:James.Bottomley@suse.de] 
+Sent: Tuesday, November 03, 2009 8:39 PM
 To: Penchala Narasimha Reddy Chilakala, TLS-Chennai
-Cc: James Bottomley; 'linux-scsi@vger.kernel.org'; ServeRAID Driver
-Subject: Re: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+Cc: 'linux-scsi@vger.kernel.org'; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
 
-Penchala Narasimha Reddy Chilakala, TLS-Chennai wrote:
-> Hi Stefan,
+On Tue, 2009-11-03 at 15:08 +0530, Penchala Narasimha Reddy Chilakala,
+TLS-Chennai wrote:
+> Hi James,
 >
-> Thanks a lot for your suggestion and feedback.
+> I can do the following thing, I hope which works well and it would not change any existing functionality behavior and I hope you agree with me. I could not able accept your suggestion because of the following reason.
 >
-> Aacraid driver has been using down_interruptible () and up () for
-> quite some time. We will take your suggestion into consideration
-> and keep in our mind. But it is quite difficult to implement your
-> suggestion at this point of time as we need to modify the code in
-> lot places and we need to test a lot.
+> As the warning fix, here is my suggestion on top of my original patch (I will resubmit a patch with this modification, please let me know if it is ok for you)
+>
+> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+> index d29af45..1712ebe 100644
+> --- a/drivers/scsi/aacraid/commsup.c
+> +++ b/drivers/scsi/aacraid/commsup.c
+> @@ -535,11 +535,11 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
+>                               }
+>                               udelay(5);
+>                       }
+> -             } else
+> -                     down_interruptible(&fibptr->event_wait);
+> -
+> +             } else if (down_interruptible(&fibptr->event_wait)) {
+> +                     fibptr->done |= 2;
+> +             }
+>               spin_lock_irqsave(&fibptr->event_lock, flags);
+> -             if (fibptr->done == 0) {
+> +             if (!(fibptr->done & 1)) {
+>                       fibptr->done = 2; /* Tell interrupt we aborted */
+>                       spin_unlock_irqrestore(&fibptr->event_lock, flags);
+>                       return -ERESTARTSYS;
+>
+>
+> Reason:
+> ---------
+>       Whatever explanation I have given here is based on our test results
+> and problems we encountered during our testing. Nobody might have done
+> this much testing on this code after replacing the "down ()" with
+> "down_interruptible () kernel function.
+>
+> "down_interruptible" is not a single statement or single instruction
+> function. It has set of statements, which have to be executed based on
+> its conditions. When it receives a soft interrupt signal, a set of
+> statements will be executed and when it gets semaphore, some other set
+> of statements will be executed.
+>
+>       Now, assume that down_interruptible received a soft interrupt signal
+> from X source and started executing those statements and while
+> executing those statements, host driver received a interrupt from
+> aacraid controller and suspends the currently executing task and
+> starts executing the aacraid driver interrupt service route (ISR).
+> The ISR checks the responses for the requests sent to firmware, if it
+> gets response for the management request then it sets fibptr->done = 1
+> and it comes out of the ISR and starts executing the suspended task.
+> Now the suspended task will modify the fibptr->done with 2. This is
+> not correct behavior. So, to over come that we have done those
+> changes, after doing those changes, we have executed all the test
+> cases we executed before the changes and we have not seen the issue we
+> encountered before the change.
 
-dpcsup.c:       2x up(&fib->event_wait)
-commsup.c:      allocation and initialization of the semaphore
-                1x down_trylock(&fibptr->event_wait) +
-                1x down_interruptible(&fibptr->event_wait) + up()
-                1x up(&fib->event_wait)
+Yes, I agree with the analysis.  In that case just make it
 
-So there are just two places which conditionally wait for completion (or
-just one place but with a differentiation between sync and async mode),
-and three places which signal "done".
+else if (down_interruptible(&fibptr->event_wait)) {
+        /* do nothing ... satisfy down_interruptible must_check */
+}
 
-You are right that this would be a non-trivial change and will require
-respective testing.  However, (1.) only the place which waits for
-completion is the non-trivial part (because it's currently coded in a
-rather obfuscated way), (2.) I expect that the result would be cleaner
-code which is (3.) more obvious to be correct and (4.) can also be
-checked for correctness by the lockdep facility --- this is not possible
-with legacy semaphores.
+And keep the original.
 
-Anyway; it's up to those who use or maintain this driver.  I for one
-converted another subsystem away from two or three different misused
-semaphores to more appropriate APIs and it wasn't too hard; but I can't
-do this for aacraid since I don't have hardware to test.
+James
 
-(In my rather irrelevant opinion, whatever you decide for now, just do
-_not_ do this here:
 
->>> we can replace the above code with either
->>>
->>>             } else if (down_interruptible (&fibptr->event_wait));
->>>
->>>                         Or
->>>
->>>             } else {
->>>                  if (down_interruptible (&fibptr->event_wait))
->>>                         ;
->>>             }
-
-because it can really hurt in the long run if sensible warnings are hidden.)
---
-Stefan Richter
--=====-==--= =-== ---==
-http://arcgraph.de/sr/
 
 DISCLAIMER:
 -----------------------------------------------------------------------------------------------------------------------
