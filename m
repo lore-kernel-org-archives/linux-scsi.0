@@ -1,37 +1,98 @@
-From: John Hughes <john@Calva.COM>
-Subject: Re: ses enclosure stuff not working with Promise Vtrak J610S JBOD
-Date: Wed, 04 Nov 2009 17:55:09 +0100
-Message-ID: <4AF1B1ED.1090104@Calva.COM>
-References: <4AF17AD3.6060909@Calva.COM> <4AF1A2F0.7060201@Calva.COM>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH Resend 2/3] pm8001:enhance IOMB process modules
+Date: Wed, 04 Nov 2009 11:32:40 -0600
+Message-ID: <1257355960.10416.5.camel@mulgrave.site>
+References: <200910281755.n9SHtGrV004494@hera.kernel.org>
+	 , <200910302144471408205@usish.com>  <200910302152552653057@usish.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from oceanic.CalvaEDI.COM ([81.252.197.184]:36738 "EHLO
-	oceanic.CalvaEDI.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757179AbZKDQzH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 11:55:07 -0500
-In-Reply-To: <4AF1A2F0.7060201@Calva.COM>
+Received: from cantor2.suse.de ([195.135.220.15]:33417 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932098AbZKDRcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Nov 2009 12:32:42 -0500
+In-Reply-To: <200910302152552653057@usish.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Hughes <john@Calva.COM>
-Cc: linux-scsi@vger.kernel.org
+To: jack_wang <jack_wang@usish.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-John Hughes wrote:
-> Attempts to change the "status" fail:
->
-> # echo "unconfigured" > status
-> [  626.389093] general protection fault: 0000 [#1] SMP [  626.389243] 
-> last sysfs file: /sys/class/enclosure/0:0:32:0/0/status
-This bug still exists in 2.6.32-rc6.
+Just for future reference, git doesn't like patches in this format.
+What it's expecting is the change log in the actual email and the patch
+as an attachment.
 
-It's pretty crazy - if we use a legal value then the routine correctly 
-returns -EINVAL as there is no setter.
+On Fri, 2009-10-30 at 21:53 +0800, jack_wang wrote:
+> @@ -1342,34 +1360,43 @@ static u32 mpi_msg_consume(struct pm8001_hba_info *pm8001_ha,
+>                                         *pBC = (u8)((msgHeader_tmp >> 24) &
+>                                                 0x1f);
+>                                         PM8001_IO_DBG(pm8001_ha,
+> -                                               pm8001_printk("mpi_msg_consume"
+> -                                               ": CI=%d PI=%d msgHeader=%x\n",
+> +                                               pm8001_printk(": CI=%d PI=%d "
+> +                                               "msgHeader=%x\n",
+>                                                 circularQ->consumer_idx,
+>                                                 circularQ->producer_index,
+>                                                 msgHeader_tmp));
+>                                         return MPI_IO_STATUS_SUCCESS;
+>                                 } else {
+> -                                       u32 producer_index;
+> -                                       void *pi_virt = circularQ->pi_virt;
+> -                                       /* free the circular queue buffer
+> -                                       elements associated with the message*/
+>                                         circularQ->consumer_idx =
+>                                                 (circularQ->consumer_idx +
+> -                                               ((msgHeader_tmp >> 24) & 0x1f))
+> -                                               % 256;
+> +                                               ((msgHeader_tmp >> 24) & 0x1f))
+> +                                               % 256;
+> +                                       msgHeader_tmp = 0;
+> +                                       pm8001_write_32(msgHeader, 0, 0);
+>                                         /* update the CI of outbound queue */
+>                                         pm8001_cw32(pm8001_ha,
+>                                                 circularQ->ci_pci_bar,
+>                                                 circularQ->ci_offset,
+>                                                 circularQ->consumer_idx);
+> -                                       /* Update the producer index from SPC */
+> -                                       producer_index =
+> -                                               pm8001_read_32(pi_virt);
+> -                                       circularQ->producer_index =
+> -                                               cpu_to_le32(producer_index);
+> +
+>                                 }
+> -                       } else
+> +                       } else {
+> +                               circularQ->consumer_idx =
+> +                                       (circularQ->consumer_idx +
+> +                                       ((msgHeader_tmp >> 24) & 0x1f)) % 256;
+> +                               msgHeader_tmp = 0;
+> +                               pm8001_write_32(msgHeader, 0, 0);
+> +                               /* update the CI of outbound queue */
+> +                               pm8001_cw32(pm8001_ha, circularQ->ci_pci_bar,
+> +                                       circularQ->ci_offset,
+> +                                       circularQ->consumer_idx);
+>                                 return MPI_IO_STATUS_FAIL;
+> +                       }
+> +               } else {
+> +                       u32 producer_index;
+> +                       void *pi_virt = circularQ->pi_virt;
+> +                       /* Update the producer index from SPC */
+> +                       producer_index = pm8001_read_32(pi_virt);
+> +                       circularQ->producer_index = cpu_to_le32(producer_index);
+>                 }
+>         } while (circularQ->producer_index != circularQ->consumer_idx);
+>         /* while we don't have any more not-yet-delivered message */
 
-If we write an illegal value to status we get an oops!
+This hunk is refusing to apply:
 
-Aha!  It's because the enclosure_status array is not NULL terminated, so 
-if we try to write an illegal value we run off the end of the array!
+patching file drivers/scsi/pm8001/pm8001_hwi.c
+patch: **** malformed patch at line 164:        /* while we don't have
+any more not-yet-delivered message */
 
+The problem seems to be that the header promises there will be 43 lines
+after patching and there are actually 44 ... did you edit this patch
+after generating the diff?
+
+James
 
 
