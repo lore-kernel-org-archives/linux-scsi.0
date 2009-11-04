@@ -1,104 +1,83 @@
-From: "Penchala Narasimha Reddy Chilakala, TLS-Chennai"
-	<narasimhareddyc@hcl.in>
-Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
-Date: Wed, 4 Nov 2009 14:48:56 +0530
-Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E914C889D@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
-References: <4AF07E59.1070000@s5r6.in-berlin.de>
+From: John Hughes <john@Calva.COM>
+Subject: ses enclosure stuff not working with Promise Vtrak J610S JBOD
+Date: Wed, 04 Nov 2009 14:00:03 +0100
+Message-ID: <4AF17AD3.6060909@Calva.COM>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.hcl.in ([203.105.186.28]:39872 "EHLO gws08.hcl.in"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754905AbZKDJTC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 04:19:02 -0500
-In-Reply-To: <4AF07E59.1070000@s5r6.in-berlin.de>
-Content-Language: en-US
+Received: from oceanic.CalvaEDI.COM ([81.252.197.184]:64560 "EHLO
+	oceanic.CalvaEDI.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755935AbZKDNFH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 08:05:07 -0500
+Received: from f.olympic (olympic.CalvaEDI.COM [192.168.6.67])
+	(authenticated (0 bits))
+	by oceanic.CalvaEDI.COM (8.11.1-20030923/8.11.1/6.32) with ESMTP id nA4D03b28421
+	(using TLSv1/SSLv3 with cipher RC4-MD5 (128 bits) verified NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2009 14:00:04 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+To: linux-scsi@vger.kernel.org
 
-Hi Stefan,
+Like Lars T=E4uber last year I have a Promise Vtrak J610S "just a bunch=
+ of=20
+disks" cabinet, and like him I find that the ses enclosure services=20
+don't seem to be working right.
 
-Yes, you are right that the up() is used in 3 places and down_trylock, down_interruptible in one place each, but we need to do other changes like when we return a value ERESTATSYS from that particular function, the value will be checked in many places to take appropriate action and fibptr->done also checked in some other places. Considering all these, I mentioned that we need to modify the code in lot places.
+If I look in the /sys/class/enclosure hierarchy I don't see the links I=
+=20
+should for the devices:
 
-I hope you understand.
+# lsscsi | grep PROMISE
+[3:0:14:0]   enclosu PROMISE  3U-SAS-16-D BP   0107  -         /dev/sg1=
+7
+[4:0:14:0]   enclosu PROMISE  3U-SAS-16-D BP   0107  -         /dev/sg3=
+2
 
-Thanks,
-Narasimha Reddy
 
------Original Message-----
-From: Stefan Richter [mailto:stefanr@s5r6.in-berlin.de]
-Sent: Wednesday, November 04, 2009 12:33 AM
-To: Penchala Narasimha Reddy Chilakala, TLS-Chennai
-Cc: James Bottomley; 'linux-scsi@vger.kernel.org'; ServeRAID Driver
-Subject: Re: [PATCH ] scsi-misc-2.6: File System going into read-only mode
+(Note that's one device with two connections)
 
-Penchala Narasimha Reddy Chilakala, TLS-Chennai wrote:
-> Hi Stefan,
->
-> Thanks a lot for your suggestion and feedback.
->
-> Aacraid driver has been using down_interruptible () and up () for
-> quite some time. We will take your suggestion into consideration
-> and keep in our mind. But it is quite difficult to implement your
-> suggestion at this point of time as we need to modify the code in
-> lot places and we need to test a lot.
+# ls -R /sys/class/enclosure/4\:0\:14\:0/
+/sys/class/enclosure/4:0:14:0/:
+0  10  12  14  2  4  6	8  components  power	  uevent
+1  11  13  15  3  5  7	9  device      subsystem
 
-dpcsup.c:       2x up(&fib->event_wait)
-commsup.c:      allocation and initialization of the semaphore
-                1x down_trylock(&fibptr->event_wait) +
-                1x down_interruptible(&fibptr->event_wait) + up()
-                1x up(&fib->event_wait)
+/sys/class/enclosure/4:0:14:0/0:
+active	fault  locate  power  status  type  uevent
 
-So there are just two places which conditionally wait for completion (or
-just one place but with a differentiation between sync and async mode),
-and three places which signal "done".
+/sys/class/enclosure/4:0:14:0/0/power:
+wakeup
 
-You are right that this would be a non-trivial change and will require
-respective testing.  However, (1.) only the place which waits for
-completion is the non-trivial part (because it's currently coded in a
-rather obfuscated way), (2.) I expect that the result would be cleaner
-code which is (3.) more obvious to be correct and (4.) can also be
-checked for correctness by the lockdep facility --- this is not possible
-with legacy semaphores.
+/sys/class/enclosure/4:0:14:0/1:
+active	fault  locate  power  status  type  uevent
+[...]
 
-Anyway; it's up to those who use or maintain this driver.  I for one
-converted another subsystem away from two or three different misused
-semaphores to more appropriate APIs and it wasn't too hard; but I can't
-do this for aacraid since I don't have hardware to test.
+No sign of any "device" links in the "bay" directories.
 
-(In my rather irrelevant opinion, whatever you decide for now, just do
-_not_ do this here:
+Also the "fault" and "locate" files seem to do nothing, writing to them=
+=20
+doesn't make any lights flash.
 
->>> we can replace the above code with either
->>>
->>>             } else if (down_interruptible (&fibptr->event_wait));
->>>
->>>                         Or
->>>
->>>             } else {
->>>                  if (down_interruptible (&fibptr->event_wait))
->>>                         ;
->>>             }
+If I try looking from the device side:
 
-because it can really hurt in the long run if sensible warnings are hidden.)
+# ls /sys/block/sdaa/device
+block:sdaa	evt_media_change  modalias     rev		     subsystem
+bsg:4:0:11:0	generic		  model        scsi_device:4:0:11:0  timeout
+bus		iocounterbits	  power        scsi_disk:4:0:11:0    type
+delete		iodone_cnt	  queue_depth  scsi_generic:sg29     uevent
+device_blocked	ioerr_cnt	  queue_type   scsi_level	     vendor
+driver		iorequest_cnt	  rescan       state
+
+No sign of an enclosure.
+
+I've tried with a Debian  2.6.26-2-xen-amd64 kernel, and a 2.6.31 I=20
+build myself.
+
+Any clues about what I should to to diagnose this problem?
+
 --
-Stefan Richter
--=====-==--= =-== ---==
-http://arcgraph.de/sr/
-
-DISCLAIMER:
------------------------------------------------------------------------------------------------------------------------
-
-The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
-It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
-this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
-Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
-this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
-received this email in error please delete it and notify the sender immediately. Before opening any mail and 
-attachments please check them for viruses and defect.
-
------------------------------------------------------------------------------------------------------------------------
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
