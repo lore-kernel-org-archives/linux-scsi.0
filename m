@@ -1,97 +1,111 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH Resend 2/3] pm8001:enhance IOMB process modules
-Date: Wed, 04 Nov 2009 11:32:40 -0600
-Message-ID: <1257355960.10416.5.camel@mulgrave.site>
-References: <200910281755.n9SHtGrV004494@hera.kernel.org>
-	 , <200910302144471408205@usish.com>  <200910302152552653057@usish.com>
+Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
+Date: Wed, 04 Nov 2009 11:50:13 -0600
+Message-ID: <1257357013.10416.8.camel@mulgrave.site>
+References: <4A92BE18.50208@gmail.com>
+	 <1251416731.27356.8.camel@mulgrave.site>  <4A9A6676.8050304@panasas.com>
+	 <1251642902.10135.4.camel@mulgrave.site>
+	 <1257273187.9427.22.camel@mulgrave.site>  <4AF14147.4050102@panasas.com>
+	 <1257347360.2697.20.camel@mulgrave.site>  <4AF1A941.3080808@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33417 "EHLO mx2.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:54126 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932098AbZKDRcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:32:42 -0500
-In-Reply-To: <200910302152552653057@usish.com>
+	id S1755902AbZKDRuP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Nov 2009 12:50:15 -0500
+In-Reply-To: <4AF1A941.3080808@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jack_wang <jack_wang@usish.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Just for future reference, git doesn't like patches in this format.
-What it's expecting is the change log in the actual email and the patch
-as an attachment.
+On Wed, 2009-11-04 at 18:18 +0200, Boaz Harrosh wrote:
+> On 11/04/2009 05:09 PM, James Bottomley wrote:
+> > On Wed, 2009-11-04 at 10:54 +0200, Boaz Harrosh wrote:
+> >>> +
+> >>> +	if (i < buf[3] && i > buf_len)
+> >>> +		/* ran off the end of the buffer, give us benefit of doubt */
+> >>> +		goto found;
+> >>
+> >> Some cheep devices are known to break when asked for pages they do not support
+> >> better return an -ETOOSMALL the user can check for. (And the comment above should
+> >> also take care of it)
+> > 
+> > OK, so I struggled with this.  The reason for the behaviour is  that
+> > only USB devices with incredibly small page lists are likely to exhibit
+> > the problem.  Whereas the page lists in array type devices are likely to
+> > grow.  I don't want to run into the situation that your new $10m array
+> > suddenly gives an error with DIF/DIX because the page list is too big
+> > and the problem this is checking for only afflicts cheap and badly
+> > implemented HW.
+> > 
+> 
+> If I remember the standard correctly and from inspecting the code 260 is the
+> maximum size for page 0. (And the maximum we supported until today for page
+> 0 was 256) so there is no speculations here. 256 it should be. If you want
+> you can do an:
 
-On Fri, 2009-10-30 at 21:53 +0800, jack_wang wrote:
-> @@ -1342,34 +1360,43 @@ static u32 mpi_msg_consume(struct pm8001_hba_info *pm8001_ha,
->                                         *pBC = (u8)((msgHeader_tmp >> 24) &
->                                                 0x1f);
->                                         PM8001_IO_DBG(pm8001_ha,
-> -                                               pm8001_printk("mpi_msg_consume"
-> -                                               ": CI=%d PI=%d msgHeader=%x\n",
-> +                                               pm8001_printk(": CI=%d PI=%d "
-> +                                               "msgHeader=%x\n",
->                                                 circularQ->consumer_idx,
->                                                 circularQ->producer_index,
->                                                 msgHeader_tmp));
->                                         return MPI_IO_STATUS_SUCCESS;
->                                 } else {
-> -                                       u32 producer_index;
-> -                                       void *pi_virt = circularQ->pi_virt;
-> -                                       /* free the circular queue buffer
-> -                                       elements associated with the message*/
->                                         circularQ->consumer_idx =
->                                                 (circularQ->consumer_idx +
-> -                                               ((msgHeader_tmp >> 24) & 0x1f))
-> -                                               % 256;
-> +                                               ((msgHeader_tmp >> 24) & 0x1f))
-> +                                               % 256;
-> +                                       msgHeader_tmp = 0;
-> +                                       pm8001_write_32(msgHeader, 0, 0);
->                                         /* update the CI of outbound queue */
->                                         pm8001_cw32(pm8001_ha,
->                                                 circularQ->ci_pci_bar,
->                                                 circularQ->ci_offset,
->                                                 circularQ->consumer_idx);
-> -                                       /* Update the producer index from SPC */
-> -                                       producer_index =
-> -                                               pm8001_read_32(pi_virt);
-> -                                       circularQ->producer_index =
-> -                                               cpu_to_le32(producer_index);
-> +
->                                 }
-> -                       } else
-> +                       } else {
-> +                               circularQ->consumer_idx =
-> +                                       (circularQ->consumer_idx +
-> +                                       ((msgHeader_tmp >> 24) & 0x1f)) % 256;
-> +                               msgHeader_tmp = 0;
-> +                               pm8001_write_32(msgHeader, 0, 0);
-> +                               /* update the CI of outbound queue */
-> +                               pm8001_cw32(pm8001_ha, circularQ->ci_pci_bar,
-> +                                       circularQ->ci_offset,
-> +                                       circularQ->consumer_idx);
->                                 return MPI_IO_STATUS_FAIL;
-> +                       }
-> +               } else {
-> +                       u32 producer_index;
-> +                       void *pi_virt = circularQ->pi_virt;
-> +                       /* Update the producer index from SPC */
-> +                       producer_index = pm8001_read_32(pi_virt);
-> +                       circularQ->producer_index = cpu_to_le32(producer_index);
->                 }
->         } while (circularQ->producer_index != circularQ->consumer_idx);
->         /* while we don't have any more not-yet-delivered message */
+The standard actually lists only two mandatory pages and about eight
+optional ones (plus the 127 vendor specific ones that no-one seems to
+use).
 
-This hunk is refusing to apply:
+The point isn't to exercise the standard to the maximum, it's to
+generate working code.  The point is that problem devices likely only
+list a couple of VPD pages, so we'll correctly not probe them.
+Conforming devices don't matter because they'll do the right thing when
+asked for a VPD page they don't have.
 
-patching file drivers/scsi/pm8001/pm8001_hwi.c
-patch: **** malformed patch at line 164:        /* while we don't have
-any more not-yet-delivered message */
+> 	if (i < buf[3] && i > buf_len) {
+> 		if (likely(buf_len >= 255))
+> 			/* ran off the end of the buffer, give us benefit of doubt */
+> 			goto found;
+> 		else
+> 			return -ETOOSMALL;
+> 	}
+> 
+> which is only theoretical because we only check against buf[3] that cannot
+> be more then 255 so all is left is return -ETOOSMALL;
+> 
+> Callers that allocate smaller then 256 for this (hence the comment)
+> must check for -ETOOSMALL;. Or should call with >= 256.
+> 
+> <snip>
+> >>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> >>> index 9093c72..fd1bd8f 100644
+> >>> --- a/drivers/scsi/sd.c
+> >>> +++ b/drivers/scsi/sd.c
+> >>> @@ -1864,19 +1864,20 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+> >>>  static void sd_read_block_limits(struct scsi_disk *sdkp)
+> >>>  {
+> >>>  	unsigned int sector_sz = sdkp->device->sector_size;
+> >>> -	char *buffer;
+> >>> +	const int vpd_len = 32;
+> >>> +	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
+> >>>  
+> >>
+> >> 32 sounds two small for me. Not because of the page but because of the
+> >> first pass. Why not just 255 as a rule. We kmalloc it anyway.
+> > 
+> > It only needs 16 if you look at the code.  32 is actually the smallest
+> > kmalloc slab on 32 bit systems.
+> > 
+> 
+> >> We used to allocate 255 here, for some devices out there this is surly
+> >> a regression.
+> > 
+> > We did 255 because we were concerned about space for the page list ...
+> > hopefully I answered that one above.
+> > 
+> 
+> No, I still disagree. Whats the point of checking at all? Surly there is a device
+> out there that has more then 12 pages but will breaks with wrong page. So what's
+> the limit? the standards say 260 why not stick with that. It's not at any hot path.
 
-The problem seems to be that the header promises there will be 43 lines
-after patching and there are actually 44 ... did you edit this patch
-after generating the diff?
+The point of checking is not to send a VPD inquiry to USB devices that
+don't support it.  These have a very limited range of supported VPD
+pages.
 
 James
 
