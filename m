@@ -1,32 +1,204 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Thin provisioning update
-Date: Tue,  3 Nov 2009 23:25:38 -0500
-Message-ID: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 2/2] sd: WRITE SAME(16) / UNMAP support
+Date: Tue,  3 Nov 2009 23:25:40 -0500
+Message-ID: <1257308740-4729-3-git-send-email-martin.petersen@oracle.com>
+References: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:25265 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754289AbZKDE0i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 23:26:38 -0500
+Received: from acsinet12.oracle.com ([141.146.126.234]:45378 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754394AbZKDE0l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Nov 2009 23:26:41 -0500
+In-Reply-To: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: hch@infradead.org, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Christoph,
+Implement a prepare discard function that sends either WRITE SAME(16) or
+UNMAP(10) depending on parameters indicated by the device in the block
+limits VPD.
 
-Here are some more recent bits for you to tinker with.
+Extract unmap constraints and report them to the block layer.
 
-The first patch exports unmap granularity and alignment up the stack.  I have
-also implemented support for topology stacking of these parameters.  A reported
-discard granularity of 0 means fully provisioned.
+Based in part by a patch by Christoph Hellwig <hch@lst.de>.
 
-In the second patch I made a few changes to the TP detection and extraction of
-VPD values.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c |  105 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.h |    2 +
+ 2 files changed, 107 insertions(+), 0 deletions(-)
 
-I have been hunting for heuristics for the WRITE SAME case but haven't found any
-good ones.  I'm thinking we probably want to distinguish between a real array
-with NV-backed unmap queueing and a thinly provisioned disk on a virtualization
-server where there might be a real impact from having to zero out partial blocks.
-I guess that's easy to handle with virtio but I'm not so sure how to do it when
-emulating a SCSI disk.
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9093c72..80a5cb5 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -264,6 +264,15 @@ sd_show_app_tag_own(struct device *dev, struct device_attribute *attr,
+ 	return snprintf(buf, 20, "%u\n", sdkp->ATO);
+ }
+ 
++static ssize_t
++sd_show_thin_provisioning(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->thin_provisioning);
++}
++
+ static struct device_attribute sd_disk_attrs[] = {
+ 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
+ 	       sd_store_cache_type),
+@@ -274,6 +283,7 @@ static struct device_attribute sd_disk_attrs[] = {
+ 	       sd_store_manage_start_stop),
+ 	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
+ 	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
++	__ATTR(thin_provisioning, S_IRUGO, sd_show_thin_provisioning, NULL),
+ 	__ATTR_NULL,
+ };
+ 
+@@ -399,6 +409,57 @@ static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
+ }
+ 
+ /**
++ * sd_prepare_discard - unmap blocks on thinly provisioned device
++ * @rq: Request to prepare
++ *
++ * Will issue either UNMAP or WRITE SAME(16) depending on preference
++ * indicated by target device.
++ **/
++static int sd_prepare_discard(struct request *rq)
++{
++	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
++	struct bio *bio = rq->bio;
++	sector_t sector = bio->bi_sector;
++	unsigned int num = bio_sectors(bio);
++
++	if (sdkp->device->sector_size == 4096) {
++		sector >>= 3;
++		num >>= 3;
++	}
++
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++	rq->timeout = SD_TIMEOUT;
++
++	memset(rq->cmd, 0, rq->cmd_len);
++
++	if (sdkp->unmap) {
++		char *buf = kmap_atomic(bio_page(bio), KM_USER0);
++
++		rq->cmd[0] = UNMAP;
++		rq->cmd[8] = 24;
++		rq->cmd_len = 10;
++
++		/* Ensure that data length matches payload */
++		rq->__data_len = bio->bi_size = bio->bi_io_vec->bv_len = 24;
++
++		put_unaligned_be16(6 + 16, &buf[0]);
++		put_unaligned_be16(16, &buf[2]);
++		put_unaligned_be64(sector, &buf[8]);
++		put_unaligned_be32(num, &buf[16]);
++
++		kunmap_atomic(buf, KM_USER0);
++	} else {
++		rq->cmd[0] = WRITE_SAME_16;
++		rq->cmd[1] = 0x8; /* UNMAP */
++		put_unaligned_be64(sector, &rq->cmd[2]);
++		put_unaligned_be32(num, &rq->cmd[10]);
++		rq->cmd_len = 16;
++	}
++
++	return BLKPREP_OK;
++}
++
++/**
+  *	sd_init_command - build a scsi (read or write) command from
+  *	information in the request structure.
+  *	@SCpnt: pointer to mid-level's per scsi command structure that
+@@ -418,6 +479,13 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	int ret, host_dif;
+ 	unsigned char protect;
+ 
++	/*
++	 * Discard request come in as REQ_TYPE_FS but we turn them into
++	 * block PC requests to make life easier.
++	 */
++	if (blk_discard_rq(rq))
++		ret = sd_prepare_discard(rq);
++
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
+@@ -1432,6 +1500,9 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		sd_printk(KERN_NOTICE, sdkp,
+ 			  "physical block alignment offset: %u\n", alignment);
+ 
++	if (buffer[14] & 0x80)
++		sdkp->thin_provisioning = 1;
++
+ 	sdkp->capacity = lba + 1;
+ 	return sector_size;
+ }
+@@ -1863,6 +1934,7 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+  */
+ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ {
++	struct request_queue *q = sdkp->disk->queue;
+ 	unsigned int sector_sz = sdkp->device->sector_size;
+ 	char *buffer;
+ 
+@@ -1877,6 +1949,39 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	blk_queue_io_opt(sdkp->disk->queue,
+ 			 get_unaligned_be32(&buffer[12]) * sector_sz);
+ 
++	if (sdkp->thin_provisioning) {
++		unsigned int max_sectors = 0xffffffff;
++		unsigned int granularity = 1;
++		unsigned int alignment = 0;
++
++		if (buffer[3] == 0x3c) { /* TP-enhanced BL page length */
++			unsigned int lba_count, desc_count;
++
++			lba_count = get_unaligned_be32(&buffer[20]);
++			desc_count = get_unaligned_be32(&buffer[24]);
++
++			if (lba_count && desc_count) {
++				sdkp->unmap = 1;
++				max_sectors = lba_count * sector_sz >> 9;
++			}
++
++			granularity = get_unaligned_be32(&buffer[28]);
++
++			if (granularity == 0)
++				granularity = 1;
++
++			if (buffer[32] & 0x80)
++				alignment = get_unaligned_be32(&buffer[32])
++					& ~(1 << 31);
++		}
++
++		blk_queue_max_discard_sectors(q, max_sectors);
++		q->limits.discard_granularity = granularity * sector_sz;
++		q->limits.discard_alignment = alignment * sector_sz;
++
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
++	}
++
+ 	kfree(buffer);
+ }
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index e374804..43d3caf 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -60,6 +60,8 @@ struct scsi_disk {
+ 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
+ 	unsigned	first_scan : 1;
++	unsigned	thin_provisioning : 1;
++	unsigned	unmap : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
+-- 
+1.6.0.6
 
