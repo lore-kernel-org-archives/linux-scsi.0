@@ -1,112 +1,71 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
-Date: Wed, 04 Nov 2009 11:50:13 -0600
-Message-ID: <1257357013.10416.8.camel@mulgrave.site>
-References: <4A92BE18.50208@gmail.com>
-	 <1251416731.27356.8.camel@mulgrave.site>  <4A9A6676.8050304@panasas.com>
-	 <1251642902.10135.4.camel@mulgrave.site>
-	 <1257273187.9427.22.camel@mulgrave.site>  <4AF14147.4050102@panasas.com>
-	 <1257347360.2697.20.camel@mulgrave.site>  <4AF1A941.3080808@panasas.com>
+From: John Hughes <john@Calva.COM>
+Subject: Re: ses enclosure stuff not working with Promise Vtrak J610S JBOD
+Date: Wed, 04 Nov 2009 19:01:22 +0100
+Message-ID: <4AF1C172.6080509@Calva.COM>
+References: <4AF17AD3.6060909@Calva.COM>	 <1257348128.2697.29.camel@mulgrave.site>  <4AF1A38E.3000009@Calva.COM>	 <1257350834.2697.52.camel@mulgrave.site>  <4AF1A7E7.7070307@Calva.COM> <1257351654.2697.55.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:54126 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755902AbZKDRuP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Nov 2009 12:50:15 -0500
-In-Reply-To: <4AF1A941.3080808@panasas.com>
+Received: from oceanic.CalvaEDI.COM ([81.252.197.184]:37717 "EHLO
+	oceanic.CalvaEDI.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757423AbZKDSBT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 13:01:19 -0500
+In-Reply-To: <1257351654.2697.55.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2009-11-04 at 18:18 +0200, Boaz Harrosh wrote:
-> On 11/04/2009 05:09 PM, James Bottomley wrote:
-> > On Wed, 2009-11-04 at 10:54 +0200, Boaz Harrosh wrote:
-> >>> +
-> >>> +	if (i < buf[3] && i > buf_len)
-> >>> +		/* ran off the end of the buffer, give us benefit of doubt */
-> >>> +		goto found;
-> >>
-> >> Some cheep devices are known to break when asked for pages they do not support
-> >> better return an -ETOOSMALL the user can check for. (And the comment above should
-> >> also take care of it)
-> > 
-> > OK, so I struggled with this.  The reason for the behaviour is  that
-> > only USB devices with incredibly small page lists are likely to exhibit
-> > the problem.  Whereas the page lists in array type devices are likely to
-> > grow.  I don't want to run into the situation that your new $10m array
-> > suddenly gives an error with DIF/DIX because the page list is too big
-> > and the problem this is checking for only afflicts cheap and badly
-> > implemented HW.
-> > 
-> 
-> If I remember the standard correctly and from inspecting the code 260 is the
-> maximum size for page 0. (And the maximum we supported until today for page
-> 0 was 256) so there is no speculations here. 256 it should be. If you want
-> you can do an:
+James Bottomley wrote:
+> On Wed, 2009-11-04 at 17:12 +0100, John Hughes wrote:
+>   
+>> # sg_ses -p 0 /dev/sg17
+>>   PROMISE   3U-SAS-16-D BP    0107
+>>     enclosure services device
+>> Supported diagnostic pages:
+>>   Supported diagnostic pages [0x0]
+>>   Configuration (SES) [0x1]
+>>   Enclosure status/control (SES) [0x2]
+>>   Threshold In/Out (SES) [0x5]
+>>   Enclosure busy (SES-2) [0x9]
+>>   Additional (device) element status (SES-2) [0xa]
+>>     
+>
+> This may also be a problem.  My enclosure returns page 7 as well.  The
+> traversal routine has special code to try to parse page 10 without a
+> page 7 ... I don't think I actually ever tested that ...
+>   
+As far as I can tell you only use page 7 to get the slot names, but you 
+ignore the "addl_desc_ptr" information in page10 if you didn't get page7.
 
-The standard actually lists only two mandatory pages and about eight
-optional ones (plus the 127 vendor specific ones that no-one seems to
-use).
+With the following patch I get the "device" directories in the enclosure 
+bay directories, even for the SATA drive.  (Maybe this is because the 
+SATA drive is behind a so-called "aamux" device).
 
-The point isn't to exercise the standard to the maximum, it's to
-generate working code.  The point is that problem devices likely only
-list a couple of VPD pages, so we'll correctly not probe them.
-Conforming devices don't matter because they'll do the right thing when
-asked for a VPD page they don't have.
+I also find the "enclosure_device:xxx" link in the 
+/sys/block/sdxx/device directory
 
-> 	if (i < buf[3] && i > buf_len) {
-> 		if (likely(buf_len >= 255))
-> 			/* ran off the end of the buffer, give us benefit of doubt */
-> 			goto found;
-> 		else
-> 			return -ETOOSMALL;
-> 	}
-> 
-> which is only theoretical because we only check against buf[3] that cannot
-> be more then 255 so all is left is return -ETOOSMALL;
-> 
-> Callers that allocate smaller then 256 for this (hence the comment)
-> must check for -ETOOSMALL;. Or should call with >= 256.
-> 
-> <snip>
-> >>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> >>> index 9093c72..fd1bd8f 100644
-> >>> --- a/drivers/scsi/sd.c
-> >>> +++ b/drivers/scsi/sd.c
-> >>> @@ -1864,19 +1864,20 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
-> >>>  static void sd_read_block_limits(struct scsi_disk *sdkp)
-> >>>  {
-> >>>  	unsigned int sector_sz = sdkp->device->sector_size;
-> >>> -	char *buffer;
-> >>> +	const int vpd_len = 32;
-> >>> +	unsigned char *buffer = kmalloc(vpd_len, GFP_KERNEL);
-> >>>  
-> >>
-> >> 32 sounds two small for me. Not because of the page but because of the
-> >> first pass. Why not just 255 as a rule. We kmalloc it anyway.
-> > 
-> > It only needs 16 if you look at the code.  32 is actually the smallest
-> > kmalloc slab on 32 bit systems.
-> > 
-> 
-> >> We used to allocate 255 here, for some devices out there this is surly
-> >> a regression.
-> > 
-> > We did 255 because we were concerned about space for the page list ...
-> > hopefully I answered that one above.
-> > 
-> 
-> No, I still disagree. Whats the point of checking at all? Surly there is a device
-> out there that has more then 12 pages but will breaks with wrong page. So what's
-> the limit? the standards say 260 why not stick with that. It's not at any hot path.
+# ls -l /sys/block/sdaa/device/enclosure_device:13
+lrwxrwxrwx 1 root root 0 2009-11-04 18:57 /sys/block/sdaa/device/enclosure_device:13 -> ../../../../../../../../../../../../class/enclosure/4:0:14:0/13
 
-The point of checking is not to send a VPD inquiry to USB devices that
-don't support it.  These have a very limited range of supported VPD
-pages.
+Yay!
 
-James
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 55b034b..725a095 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -389,9 +389,9 @@ static void ses_enclosure_data_process(struct enclosure_devi
+                len = (desc_ptr[2] << 8) + desc_ptr[3];
+                /* skip past overall descriptor */
+                desc_ptr += len + 4;
+-               if (ses_dev->page10)
+-                       addl_desc_ptr = ses_dev->page10 + 8;
+        }
++       if (ses_dev->page10)
++               addl_desc_ptr = ses_dev->page10 + 8;
+        type_ptr = ses_dev->page1 + 12 + ses_dev->page1[11];
+        components = 0;
+        for (i = 0; i < types; i++, type_ptr += 4) {
 
 
