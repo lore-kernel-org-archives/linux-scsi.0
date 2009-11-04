@@ -1,46 +1,70 @@
-From: John Hughes <john@Calva.COM>
-Subject: Re: ses enclosure stuff not working with Promise Vtrak J610S JBOD
-Date: Wed, 04 Nov 2009 19:10:01 +0100
-Message-ID: <4AF1C379.7060306@Calva.COM>
-References: <4AF17AD3.6060909@Calva.COM>	 <1257348128.2697.29.camel@mulgrave.site>  <4AF1A38E.3000009@Calva.COM>	 <1257350834.2697.52.camel@mulgrave.site>  <4AF1A7E7.7070307@Calva.COM>	 <1257351654.2697.55.camel@mulgrave.site>  <4AF1C172.6080509@Calva.COM> <1257357948.10416.9.camel@mulgrave.site>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH -2nd repost 2/4] SCSI: remove unnecessary NULL test
+Date: Wed, 4 Nov 2009 10:18:42 -0800
+Message-ID: <8A71B368A89016469F72CD08050AD33406BFD213@maui.asicdesigners.com>
+References: <1257351321-8281-1-git-send-email-jirislaby@gmail.com> <1257351321-8281-2-git-send-email-jirislaby@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from oceanic.CalvaEDI.COM ([81.252.197.184]:37866 "EHLO
-	oceanic.CalvaEDI.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750816AbZKDSKA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 13:10:00 -0500
-In-Reply-To: <1257357948.10416.9.camel@mulgrave.site>
+Received: from stargate.chelsio.com ([67.207.112.58]:27954 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755810AbZKDSM4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 13:12:56 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>, James.Bottomley@suse.de
+Cc: aacraid@adaptec.com, james.smart@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2009-11-04 at 19:01 +0100, John Hughes wrote:
->   
->>
->> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
->> index 55b034b..725a095 100644
->> --- a/drivers/scsi/ses.c
->> +++ b/drivers/scsi/ses.c
->> @@ -389,9 +389,9 @@ static void ses_enclosure_data_process(struct enclosure_devi
->>                 len = (desc_ptr[2] << 8) + desc_ptr[3];
->>                 /* skip past overall descriptor */
->>                 desc_ptr += len + 4;
->> -               if (ses_dev->page10)
->> -                       addl_desc_ptr = ses_dev->page10 + 8;
->>         }
->> +       if (ses_dev->page10)
->> +               addl_desc_ptr = ses_dev->page10 + 8;
->>     
->
-> Ah, yes ... knew I'd done something stupid.
->
-> Could you format this properly (as in with description) and add a signed
-> off by line and I'll put it in the bug fixes tree.
->   
-I'll do that tomorrow, off home to play some fallout3 now.
+Yes, the check is not necessary.
 
-(Well, and feed the kids).
+Thanks,
+Karen
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jiri Slaby
+Sent: Wednesday, November 04, 2009 8:15 AM
+To: James.Bottomley@suse.de
+Cc: aacraid@adaptec.com; james.smart@emulex.com;
+linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Jiri Slaby
+Subject: [PATCH -2nd repost 2/4] SCSI: remove unnecessary NULL test
+
+Stanse found that c3cn is poked many times around in
+cxgb3i_conn_pdu_ready, there is no need to check if it is NULL.
+
+Remove the test.
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+---
+ drivers/scsi/cxgb3i/cxgb3i_pdu.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+index 7091050..64bbc28 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_pdu.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_pdu.c
+@@ -461,10 +461,8 @@ void cxgb3i_conn_pdu_ready(struct s3_conn *c3cn)
+ 		skb = skb_peek(&c3cn->receive_queue);
+ 	}
+ 	read_unlock(&c3cn->callback_lock);
+-	if (c3cn) {
+-		c3cn->copied_seq += read;
+-		cxgb3i_c3cn_rx_credits(c3cn, read);
+-	}
++	c3cn->copied_seq += read;
++	cxgb3i_c3cn_rx_credits(c3cn, read);
+ 	conn->rxdata_octets += read;
+ 
+ 	if (err) {
+-- 
+1.6.4.2
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
