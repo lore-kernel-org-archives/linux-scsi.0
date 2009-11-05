@@ -1,49 +1,61 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
-Date: Thu, 05 Nov 2009 13:41:33 -0600
-Message-ID: <1257450093.10355.28.camel@mulgrave.site>
-References: <4A92BE18.50208@gmail.com>
-	 <1251416731.27356.8.camel@mulgrave.site>  <4A9A6676.8050304@panasas.com>
-	 <1251642902.10135.4.camel@mulgrave.site>
-	 <1257273187.9427.22.camel@mulgrave.site>  <4AF14147.4050102@panasas.com>
-	 <1257347360.2697.20.camel@mulgrave.site>  <4AF1A941.3080808@panasas.com>
-	 <1257357013.10416.8.camel@mulgrave.site>  <4AF28CCF.8020605@panasas.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit
+	resources.
+Date: Fri, 06 Nov 2009 07:00:18 +1100
+Message-ID: <1257451218.13611.114.camel@pasglop>
+References: <1253053555-25097-1-git-send-email-pbathija@amcc.com>
+	<20091105134330.GA30489@zod.rchland.ibm.com>
+	<1257437226.2753.64.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:47327 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758273AbZKETlf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Nov 2009 14:41:35 -0500
-In-Reply-To: <4AF28CCF.8020605@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1257437226.2753.64.camel@mulgrave.site>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Eric.Moore@lsi.com, pbathija@amcc.com, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Thu, 2009-11-05 at 10:29 +0200, Boaz Harrosh wrote:
-> On 11/04/2009 07:50 PM, James Bottomley wrote:
-> > On Wed, 2009-11-04 at 18:18 +0200, Boaz Harrosh wrote:
-> > 
-> > The point of checking is not to send a VPD inquiry to USB devices that
-> > don't support it.  These have a very limited range of supported VPD
-> > pages.
-> > 
+On Thu, 2009-11-05 at 10:07 -0600, James Bottomley wrote:
+
+> > > 	ioc->memmap = mem;
+> > >-	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %lx\n",
+> > >-	    ioc->name, mem, mem_phys));
+> > >+	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %llx\n",
+> > >+	    ioc->name, mem, (u64)mem_phys));
+> > >
+> > > 	ioc->mem_phys = mem_phys;
+> > > 	ioc->chip = (SYSIF_REGS __iomem *)mem;
+> > >
+> > > 	/* Save Port IO values in case we need to do downloadboot */
+> > >-	ioc->pio_mem_phys = port;
+> > >+	port = ioremap(port_phys, psize);
+> > >+	if (port == NULL) {
+> > >+		printk(MYIOC_s_ERR_FMT " : ERROR - Unable to map adapter"
+> > >+			" port !\n", ioc->name);
+> > >+		return -EINVAL;
 > 
-> OK thanks. But maybe just define a MIN_INQUIRY_SIZE instead of hard
-> coded 32 everywhere, and use that. So in future if such a device is
-> found we can easily change it.
+> So this looks problematic on a few platforms ... what happens to
+> platforms that have no IO space?  They automatically fail here and it
+> looks like the adapter never attaches.
 
-So the minimum inquiry size would actually be 36 ... from
-scsi_scan.c ... and that's hard coded to a value too.
+Yup, that part of the patch looks wrong.
 
-> (Never say never ;-))
+However, a mechanical replacement of unsigned long's with
+resource_size_t to hold physical addresses should be fine despite the
+lack of feedback from LSI.
 
-I'm hoping that by the time USB devices get complex enough to need more
-than 28 VPD pages, they've actually discovered what conforming to the
-standards means.
+Pravin, that ioremap definitely seems like it has nothing to do there,
+port IO is already remapped for you by the core PCI code and should work
+"as is". Please respin without that change.
 
-James
-
-
+Cheers,
+Ben.
