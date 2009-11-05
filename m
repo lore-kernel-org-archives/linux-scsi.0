@@ -1,118 +1,39 @@
-From: "jack wang" <jack_wang@usish.com>
-Subject: Re: [PATCH Resend 2/3] pm8001:enhance IOMB process modules
-Date: Thu, 5 Nov 2009 09:03:50 +0800
-Message-ID: <909B326367A94F2AA36433626E3FCFE9@usish.com.cn>
-References: <200910281755.n9SHtGrV004494@hera.kernel.org> , <200910302144471408205@usish.com>  <200910302152552653057@usish.com> <1257355960.10416.5.camel@mulgrave.site>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] zfcp: Test kmalloc failure in scsi_get_vpd_page()
+Date: Thu, 05 Nov 2009 10:29:03 +0200
+Message-ID: <4AF28CCF.8020605@panasas.com>
+References: <4A92BE18.50208@gmail.com>	 <1251416731.27356.8.camel@mulgrave.site>  <4A9A6676.8050304@panasas.com>	 <1251642902.10135.4.camel@mulgrave.site>	 <1257273187.9427.22.camel@mulgrave.site>  <4AF14147.4050102@panasas.com>	 <1257347360.2697.20.camel@mulgrave.site>  <4AF1A941.3080808@panasas.com> <1257357013.10416.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:40595 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365AbZKEBDu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 20:03:50 -0500
-In-Reply-To: <1257355960.10416.5.camel@mulgrave.site>
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:13570 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755343AbZKEI3D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2009 03:29:03 -0500
+In-Reply-To: <1257357013.10416.8.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@suse.de>
-Cc: 'linux-scsi' <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Just for future reference, git doesn't like patches in this format.
-What it's expecting is the change log in the actual email and the patch
-as an attachment.
-[Jack] Sorry James
-I will re-diff the patches and send them later today.
- 
-On Fri, 2009-10-30 at 21:53 +0800, jack_wang wrote:
-> @@ -1342,34 +1360,43 @@ static u32 mpi_msg_consume(struct pm8001_hba_info
-*pm8001_ha,
->                                         *pBC = (u8)((msgHeader_tmp >> 24)
-&
->                                                 0x1f);
->                                         PM8001_IO_DBG(pm8001_ha,
-> -
-pm8001_printk("mpi_msg_consume"
-> -                                               ": CI=%d PI=%d
-msgHeader=%x\n",
-> +                                               pm8001_printk(": CI=%d
-PI=%d "
-> +                                               "msgHeader=%x\n",
->                                                 circularQ->consumer_idx,
->                                                 circularQ->producer_index,
->                                                 msgHeader_tmp));
->                                         return MPI_IO_STATUS_SUCCESS;
->                                 } else {
-> -                                       u32 producer_index;
-> -                                       void *pi_virt =
-circularQ->pi_virt;
-> -                                       /* free the circular queue buffer
-> -                                       elements associated with the
-message*/
->                                         circularQ->consumer_idx =
->                                                 (circularQ->consumer_idx +
-> -                                               ((msgHeader_tmp >> 24) &
-0x1f))
-> -                                               % 256;
-> +                                               ((msgHeader_tmp >> 24) &
-0x1f))
-> +                                               % 256;
-> +                                       msgHeader_tmp = 0;
-> +                                       pm8001_write_32(msgHeader, 0, 0);
->                                         /* update the CI of outbound queue
-*/
->                                         pm8001_cw32(pm8001_ha,
->                                                 circularQ->ci_pci_bar,
->                                                 circularQ->ci_offset,
->                                                 circularQ->consumer_idx);
-> -                                       /* Update the producer index from
-SPC */
-> -                                       producer_index =
-> -                                               pm8001_read_32(pi_virt);
-> -                                       circularQ->producer_index =
-> -
-cpu_to_le32(producer_index);
-> +
->                                 }
-> -                       } else
-> +                       } else {
-> +                               circularQ->consumer_idx =
-> +                                       (circularQ->consumer_idx +
-> +                                       ((msgHeader_tmp >> 24) & 0x1f)) %
-256;
-> +                               msgHeader_tmp = 0;
-> +                               pm8001_write_32(msgHeader, 0, 0);
-> +                               /* update the CI of outbound queue */
-> +                               pm8001_cw32(pm8001_ha,
-circularQ->ci_pci_bar,
-> +                                       circularQ->ci_offset,
-> +                                       circularQ->consumer_idx);
->                                 return MPI_IO_STATUS_FAIL;
-> +                       }
-> +               } else {
-> +                       u32 producer_index;
-> +                       void *pi_virt = circularQ->pi_virt;
-> +                       /* Update the producer index from SPC */
-> +                       producer_index = pm8001_read_32(pi_virt);
-> +                       circularQ->producer_index =
-cpu_to_le32(producer_index);
->                 }
->         } while (circularQ->producer_index != circularQ->consumer_idx);
->         /* while we don't have any more not-yet-delivered message */
+On 11/04/2009 07:50 PM, James Bottomley wrote:
+> On Wed, 2009-11-04 at 18:18 +0200, Boaz Harrosh wrote:
+> 
+> The point of checking is not to send a VPD inquiry to USB devices that
+> don't support it.  These have a very limited range of supported VPD
+> pages.
+> 
 
-This hunk is refusing to apply:
+OK thanks. But maybe just define a MIN_INQUIRY_SIZE instead of hard
+coded 32 everywhere, and use that. So in future if such a device is
+found we can easily change it.
 
-patching file drivers/scsi/pm8001/pm8001_hwi.c
-patch: **** malformed patch at line 164:        /* while we don't have
-any more not-yet-delivered message */
+(Never say never ;-))
 
-The problem seems to be that the header promises there will be 43 lines
-after patching and there are actually 44 ... did you edit this patch
-after generating the diff?
 
-James
+> James
+> 
+> 
 
-[Jack] Yes ,sorry , I modify the patch directly because the checkpatch
-error.
-I will re-diff it .
-
+Boaz
