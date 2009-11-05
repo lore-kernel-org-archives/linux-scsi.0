@@ -1,172 +1,183 @@
-From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
-Subject: Re: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit
-	resources.
-Date: Thu, 5 Nov 2009 08:43:30 -0500
-Message-ID: <20091105134330.GA30489@zod.rchland.ibm.com>
-References: <1253053555-25097-1-git-send-email-pbathija@amcc.com>
+From: "=?utf-8?B?amFja193YW5n?=" <jack_wang@usish.com>
+Subject: =?utf-8?B?W1BBVENIIHYyIDEvM10gcG04MDAxOmFkZCByZWluaXRpYWxpemUgU1BDIHBhcmFtZXRlcnMgYmVmb3JlIHBoeSBzdGFydA==?=
+Date: Thu, 5 Nov 2009 22:32:31 +0800
+Message-ID: <200911052232267508572@usish.com>
+References: <200910281755.n9SHtGrV004494@hera.kernel.org>,
+ <200910302144471408205@usish.com>,
+ <200910302152552653057@usish.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="=====001_Dragon701370763123_====="
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:37783 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755568AbZKENnm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Nov 2009 08:43:42 -0500
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e4.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id nA5DZgMK025270
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Nov 2009 08:35:42 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id nA5DhYqF536698
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Nov 2009 08:43:35 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id nA5DhXYs024643
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Nov 2009 08:43:34 -0500
-Content-Disposition: inline
-In-Reply-To: <1253053555-25097-1-git-send-email-pbathija@amcc.com>
+Received: from sr-smtp.usish.com ([210.5.144.203]:53814 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757323AbZKEObu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2009 09:31:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com
-Cc: pbathija@amcc.com, linux-scsi@vger.kernel.org, benh@kernel.crashing.org, linuxppc-dev@ozlabs.org
+To: =?utf-8?B?SmFtZXMgQm90dG9tbGV5?= <James.Bottomley@suse.de>
+Cc: =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?amFjayB3YW5n?= <jack_wang@usish.com>, =?utf-8?B?bGluZGFyX2xpdQ==?= <lindar_liu@usish.com>, =?utf-8?B?YW9xaW5neXVu?= <aoqingyun@usish.com>
 
-On Tue, Sep 15, 2009 at 03:25:55PM -0700, pbathija@amcc.com wrote:
->From: Pravin Bathija <pbathija@amcc.com>
->
->Powerpc 44x uses 36 bit real address while the real address defined
->in MPT Fusion driver is of type 32 bit. This causes ioremap to fail and driver
->fails to initialize. This fix changes the data types representing the real
->address from unsigned long 32-bit types to "phys_addr_t" which is 64-bit. The
->driver has been tested, the disks get discovered correctly and can do IO. Also,
->replaced phys_addr_t with resource_size_t as suggested by Ben.
->
->Signed-off-by: Pravin Bathija <pbathija@amcc.com>
->Acked-by: Feng Kan <fkan@amcc.com>
->Acked-by: Prodyut Hazarika <phazarika@amcc.com>
->Acked-by: Loc Ho <lho@amcc.com>
->Acked-by: Tirumala Reddy Marri <tmarri@amcc.com>
->Acked-by: Victor Gallardo <vgallardo@amcc.com>
+This is a multi-part message in MIME format.
 
-Is this patch included in the scsi tree at all?  I can't seem to find it in
-linux-next and I know it's not in the powerpc tree.  Are there further changes
-needed, or has it simply been missed?
+--=====001_Dragon701370763123_=====
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-josh
 
->
->---
-> drivers/message/fusion/mptbase.c |   34 +++++++++++++++++++++++++---------
-> drivers/message/fusion/mptbase.h |    5 +++--
-> 2 files changed, 28 insertions(+), 11 deletions(-)
->
->diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
->index 5d496a9..e296f2e 100644
->--- a/drivers/message/fusion/mptbase.c
->+++ b/drivers/message/fusion/mptbase.c
->@@ -1510,11 +1510,12 @@ static int
-> mpt_mapresources(MPT_ADAPTER *ioc)
-> {
-> 	u8		__iomem *mem;
->+	u8		__iomem *port;
-> 	int		 ii;
->-	unsigned long	 mem_phys;
->-	unsigned long	 port;
->-	u32		 msize;
->-	u32		 psize;
->+	resource_size_t	 mem_phys;
->+	resource_size_t	 port_phys;
->+	resource_size_t	 msize;
->+	resource_size_t	 psize;
-> 	u8		 revision;
-> 	int		 r = -ENODEV;
-> 	struct pci_dev *pdev;
->@@ -1552,13 +1553,13 @@ mpt_mapresources(MPT_ADAPTER *ioc)
-> 	}
->
-> 	mem_phys = msize = 0;
->-	port = psize = 0;
->+	port_phys = psize = 0;
-> 	for (ii = 0; ii < DEVICE_COUNT_RESOURCE; ii++) {
-> 		if (pci_resource_flags(pdev, ii) & PCI_BASE_ADDRESS_SPACE_IO) {
-> 			if (psize)
-> 				continue;
-> 			/* Get I/O space! */
->-			port = pci_resource_start(pdev, ii);
->+			port_phys = pci_resource_start(pdev, ii);
-> 			psize = pci_resource_len(pdev, ii);
-> 		} else {
-> 			if (msize)
->@@ -1580,14 +1581,23 @@ mpt_mapresources(MPT_ADAPTER *ioc)
-> 		return -EINVAL;
-> 	}
-> 	ioc->memmap = mem;
->-	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %lx\n",
->-	    ioc->name, mem, mem_phys));
->+	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "mem = %p, mem_phys = %llx\n",
->+	    ioc->name, mem, (u64)mem_phys));
->
-> 	ioc->mem_phys = mem_phys;
-> 	ioc->chip = (SYSIF_REGS __iomem *)mem;
->
-> 	/* Save Port IO values in case we need to do downloadboot */
->-	ioc->pio_mem_phys = port;
->+	port = ioremap(port_phys, psize);
->+	if (port == NULL) {
->+		printk(MYIOC_s_ERR_FMT " : ERROR - Unable to map adapter"
->+			" port !\n", ioc->name);
->+		return -EINVAL;
->+	}
->+	ioc->portmap = port;
->+	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "port=%p, port_phys=%llx\n",
->+			ioc->name, port, (u64)port_phys));
->+	ioc->pio_mem_phys = port_phys;
-> 	ioc->pio_chip = (SYSIF_REGS __iomem *)port;
->
-> 	return 0;
->@@ -1822,6 +1832,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
-> 		if (ioc->alt_ioc)
-> 			ioc->alt_ioc->alt_ioc = NULL;
-> 		iounmap(ioc->memmap);
->+		iounmap(ioc->portmap);
-> 		if (r != -5)
-> 			pci_release_selected_regions(pdev, ioc->bars);
->
->@@ -2583,6 +2594,11 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
-> 		ioc->memmap = NULL;
-> 	}
->
->+	if (ioc->portmap != NULL) {
->+		iounmap(ioc->portmap);
->+		ioc->portmap = NULL;
->+	}
->+
-> 	pci_disable_device(ioc->pcidev);
-> 	pci_release_selected_regions(ioc->pcidev, ioc->bars);
->
->diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
->index b3e981d..7091f13 100644
->--- a/drivers/message/fusion/mptbase.h
->+++ b/drivers/message/fusion/mptbase.h
->@@ -584,8 +584,8 @@ typedef struct _MPT_ADAPTER
-> 	SYSIF_REGS __iomem	*chip;		/* == c8817000 (mmap) */
-> 	SYSIF_REGS __iomem	*pio_chip;	/* Programmed IO (downloadboot) */
-> 	u8			 bus_type;
->-	u32			 mem_phys;	/* == f4020000 (mmap) */
->-	u32			 pio_mem_phys;	/* Programmed IO (downloadboot) */
->+	resource_size_t		 mem_phys;	/* == f4020000 (mmap) */
->+	resource_size_t		 pio_mem_phys;	/* Programmed IO (downloadboot) */
-> 	int			 mem_size;	/* mmap memory size */
-> 	int			 number_of_buses;
-> 	int			 devices_per_bus;
->@@ -635,6 +635,7 @@ typedef struct _MPT_ADAPTER
-> 	int			bars;		/* bitmask of BAR's that must be configured */
-> 	int			msi_enable;
-> 	u8			__iomem *memmap;	/* mmap address */
->+	u8			__iomem *portmap;	/* mmap port address */
-> 	struct Scsi_Host	*sh;		/* Scsi Host pointer */
-> 	SpiCfgData		spi_data;	/* Scsi config. data */
-> 	RaidCfgData		raid_data;	/* Raid config. data */
->-- 
->1.5.5
->
->_______________________________________________
->Linuxppc-dev mailing list
->Linuxppc-dev@lists.ozlabs.org
->https://lists.ozlabs.org/listinfo/linuxppc-dev
+We should reinitialize SPC patameters to enhance some disks will cause open
+retry timeout and sata head of line blocking timeout issues. We also need set
+g3_with_ssc bit properly.   patch attached.
+changelog:
+	v1->v2 re-diff the patch ues git format patch  base latest scsi-misc tree
+
+------------------				 
+jack_wang
+2009-11-05
+--=====001_Dragon701370763123_=====
+Content-Type: application/octet-stream;
+	name="0001-Add-reinitialize-SPC-parameters-before-phy-start.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="0001-Add-reinitialize-SPC-parameters-before-phy-start.patch"
+
+RnJvbSA3MTE3ZDYyMDkzNTg5MTlhMDE3MmJlNWNiMTk2NzZkYmFmOWVlMTI1IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBKYWNrIFdhbmcgPGphY2tfd2FuZ0B1c2lzaC5jb20+CkRhdGU6
+IFRodSwgNSBOb3YgMjAwOSAyMTozNTowNSArMDgwMApTdWJqZWN0OiBbUEFUQ0ggMS8zXSBBZGQg
+cmVpbml0aWFsaXplIFNQQyBwYXJhbWV0ZXJzIGJlZm9yZSBwaHkgc3RhcnQKClNpZ25lZC1vZmYt
+Ynk6IEphY2sgV2FuZyA8amFja193YW5nQHVzaXNoLmNvbT4KU2lnbmVkLW9mZi1ieTogTGluZGFy
+IExpdSA8bGluZGFyX2xpdUB1c2lzaC5jb20+Ci0tLQogZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
+MDFfaHdpLmMgfCAgIDc2ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tCiBk
+cml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuaCB8ICAgMTkgKysrKysrKysrCiBkcml2ZXJz
+L3Njc2kvcG04MDAxL3BtODAwMV9zYXMuYyB8ICAgIDEgKwogZHJpdmVycy9zY3NpL3BtODAwMS9w
+bTgwMDFfc2FzLmggfCAgICAxICsKIDQgZmlsZXMgY2hhbmdlZCwgODUgaW5zZXJ0aW9ucygrKSwg
+MTIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFf
+aHdpLmMgYi9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuYwppbmRleCBhYTU3NTZmLi5k
+MThjMjYzIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuYworKysg
+Yi9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9od2kuYwpAQCAtNTcsOSArNTcsOSBAQCBzdGF0
+aWMgdm9pZCBfX2RldmluaXQgcmVhZF9tYWluX2NvbmZpZ190YWJsZShzdHJ1Y3QgcG04MDAxX2hi
+YV9pbmZvICpwbTgwMDFfaGEpCiAJcG04MDAxX2hhLT5tYWluX2NmZ190YmwuY3RybF9jYXBfZmxh
+Zwk9IHBtODAwMV9tcjMyKGFkZHJlc3MsIDB4MTQpOwogCXBtODAwMV9oYS0+bWFpbl9jZmdfdGJs
+LmdzdF9vZmZzZXQJPSBwbTgwMDFfbXIzMihhZGRyZXNzLCAweDE4KTsKIAlwbTgwMDFfaGEtPm1h
+aW5fY2ZnX3RibC5pbmJvdW5kX3F1ZXVlX29mZnNldCA9Ci0JCXBtODAwMV9tcjMyKGFkZHJlc3Ms
+IDB4MUMpOworCQlwbTgwMDFfbXIzMihhZGRyZXNzLCBNQUlOX0lCUV9PRkZTRVQpOwogCXBtODAw
+MV9oYS0+bWFpbl9jZmdfdGJsLm91dGJvdW5kX3F1ZXVlX29mZnNldCA9Ci0JCXBtODAwMV9tcjMy
+KGFkZHJlc3MsIDB4MjApOworCQlwbTgwMDFfbXIzMihhZGRyZXNzLCBNQUlOX09CUV9PRkZTRVQp
+OwogCXBtODAwMV9oYS0+bWFpbl9jZmdfdGJsLmhkYV9tb2RlX2ZsYWcJPQogCQlwbTgwMDFfbXIz
+MihhZGRyZXNzLCBNQUlOX0hEQV9GTEFHU19PRkZTRVQpOwogCkBAIC0xMjQsNyArMTI0LDcgQEAg
+cmVhZF9pbmJuZF9xdWV1ZV90YWJsZShzdHJ1Y3QgcG04MDAxX2hiYV9pbmZvICpwbTgwMDFfaGEp
+CiAJaW50IGk7CiAJdm9pZCBfX2lvbWVtICphZGRyZXNzID0gcG04MDAxX2hhLT5pbmJuZF9xX3Ri
+bF9hZGRyOwogCWZvciAoaSA9IDA7IGkgPCBpbmJRX251bTsgaSsrKSB7Ci0JCXUzMiBvZmZzZXQg
+PSBpICogMHgyNDsKKwkJdTMyIG9mZnNldCA9IGkgKiAweDIwOwogCQlwbTgwMDFfaGEtPmluYm5k
+X3FfdGJsW2ldLnBpX3BjaV9iYXIgPQogCQkgICAgICBnZXRfcGNpX2Jhcl9pbmRleChwbTgwMDFf
+bXIzMihhZGRyZXNzLCAob2Zmc2V0ICsgMHgxNCkpKTsKIAkJcG04MDAxX2hhLT5pbmJuZF9xX3Ri
+bFtpXS5waV9vZmZzZXQgPQpAQCAtMjMxLDcgKzIzMSw3IEBAIGluaXRfZGVmYXVsdF90YWJsZV92
+YWx1ZXMoc3RydWN0IHBtODAwMV9oYmFfaW5mbyAqcG04MDAxX2hhKQogCQlwbTgwMDFfaGEtPm91
+dGJuZF9xX3RibFtpXS5waV9sb3dlcl9iYXNlX2FkZHIJPQogCQkJcG04MDAxX2hhLT5tZW1vcnlN
+YXAucmVnaW9uW1BJXS5waHlzX2FkZHJfbG87CiAJCXBtODAwMV9oYS0+b3V0Ym5kX3FfdGJsW2ld
+LmludGVycnVwX3ZlY19jbnRfZGVsYXkJPQotCQkJMCB8ICgwIDw8IDE2KSB8ICgwIDw8IDI0KTsK
+KwkJCTAgfCAoMTAgPDwgMTYpIHwgKDAgPDwgMjQpOwogCQlwbTgwMDFfaGEtPm91dGJuZF9xX3Ri
+bFtpXS5waV92aXJ0CQk9CiAJCQlwbTgwMDFfaGEtPm1lbW9yeU1hcC5yZWdpb25bUEldLnZpcnRf
+cHRyOwogCQlvZmZzZXRvYiA9IGkgKiAweDI0OwpAQCAtMzc1LDEzICszNzUsMTYgQEAgbXBpX3Nl
+dF9waHlzX2czX3dpdGhfc3NjKHN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYSwgdTMy
+IFNTQ2JpdCkKIHsKIAl1MzIgb2Zmc2V0OwogCXUzMiB2YWx1ZTsKLQl1MzIgaTsKKwl1MzIgaSwg
+ajsKKwl1MzIgYml0X2NudDsKIAogI2RlZmluZSBTQVMyX1NFVFRJTkdTX0xPQ0FMX1BIWV8wXzNf
+U0hJRlRfQUREUiAweDAwMDMwMDAwCiAjZGVmaW5lIFNBUzJfU0VUVElOR1NfTE9DQUxfUEhZXzRf
+N19TSElGVF9BRERSIDB4MDAwNDAwMDAKICNkZWZpbmUgU0FTMl9TRVRUSU5HU19MT0NBTF9QSFlf
+MF8zX09GRlNFVCAweDEwNzQKICNkZWZpbmUgU0FTMl9TRVRUSU5HU19MT0NBTF9QSFlfNF83X09G
+RlNFVCAweDEwNzQKLSNkZWZpbmUgUEhZX1NTQ19CSVRfU0hJRlQgMTMKKyNkZWZpbmUgUEhZX0cz
+X1dJVEhPVVRfU1NDX0JJVF9TSElGVCAxMgorI2RlZmluZSBQSFlfRzNfV0lUSF9TU0NfQklUX1NI
+SUZUIDEzCisjZGVmaW5lIFNOVzNfUEhZX0NBUEFCSUxJVElFU19QQVJJVFkgMzEKIAogICAgLyoK
+ICAgICAqIFVzaW5nIHNoaWZ0ZWQgZGVzdGluYXRpb24gYWRkcmVzcyAweDNfMDAwMDoweDEwNzQg
+KyAweDQwMDAqTiAoTj0wOjMpCkBAIC0zOTMsMTAgKzM5NiwyMiBAQCBtcGlfc2V0X3BoeXNfZzNf
+d2l0aF9zc2Moc3RydWN0IHBtODAwMV9oYmFfaW5mbyAqcG04MDAxX2hhLCB1MzIgU1NDYml0KQog
+CWZvciAoaSA9IDA7IGkgPCA0OyBpKyspIHsKIAkJb2Zmc2V0ID0gU0FTMl9TRVRUSU5HU19MT0NB
+TF9QSFlfMF8zX09GRlNFVCArIDB4NDAwMCAqIGk7CiAJCXZhbHVlID0gcG04MDAxX2NyMzIocG04
+MDAxX2hhLCAyLCBvZmZzZXQpOwotCQlpZiAoU1NDYml0KQotCQkJdmFsdWUgPSB2YWx1ZSB8ICgw
+eDAwMDAwMDAxIDw8IFBIWV9TU0NfQklUX1NISUZUKTsKKwkJaWYgKFNTQ2JpdCkgeworCQkJdmFs
+dWUgfD0gMHgwMDAwMDAwMSA8PCBQSFlfRzNfV0lUSF9TU0NfQklUX1NISUZUOworCQkJdmFsdWUg
+Jj0gfigweDAwMDAwMDAxIDw8IFBIWV9HM19XSVRIT1VUX1NTQ19CSVRfU0hJRlQpOworCQl9IGVs
+c2UgeworCQkJdmFsdWUgfD0gMHgwMDAwMDAwMSA8PCBQSFlfRzNfV0lUSE9VVF9TU0NfQklUX1NI
+SUZUOworCQkJdmFsdWUgJj0gfigweDAwMDAwMDAxIDw8IFBIWV9HM19XSVRIX1NTQ19CSVRfU0hJ
+RlQpOworCQl9CisJCWJpdF9jbnQgPSAwOworCQlmb3IgKGogPSAwOyBqIDwgMzE7IGorKykKKwkJ
+CWlmICgodmFsdWUgPj4gaikgJiAweDAwMDAwMDAxKQorCQkJCWJpdF9jbnQrKzsKKwkJaWYgKGJp
+dF9jbnQgJSAyKQorCQkJdmFsdWUgJj0gfigweDAwMDAwMDAxIDw8IFNOVzNfUEhZX0NBUEFCSUxJ
+VElFU19QQVJJVFkpOwogCQllbHNlCi0JCQl2YWx1ZSA9IHZhbHVlICYgKH4oMHgwMDAwMDAwMTw8
+UEhZX1NTQ19CSVRfU0hJRlQpKTsKKwkJCXZhbHVlIHw9IDB4MDAwMDAwMDEgPDwgU05XM19QSFlf
+Q0FQQUJJTElUSUVTX1BBUklUWTsKKwogCQlwbTgwMDFfY3czMihwbTgwMDFfaGEsIDIsIG9mZnNl
+dCwgdmFsdWUpOwogCX0KIApAQCAtNDA4LDEwICs0MjMsMjIgQEAgbXBpX3NldF9waHlzX2czX3dp
+dGhfc3NjKHN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYSwgdTMyIFNTQ2JpdCkKIAlm
+b3IgKGkgPSA0OyBpIDwgODsgaSsrKSB7CiAJCW9mZnNldCA9IFNBUzJfU0VUVElOR1NfTE9DQUxf
+UEhZXzRfN19PRkZTRVQgKyAweDQwMDAgKiAoaS00KTsKIAkJdmFsdWUgPSBwbTgwMDFfY3IzMihw
+bTgwMDFfaGEsIDIsIG9mZnNldCk7Ci0JCWlmIChTU0NiaXQpCi0JCQl2YWx1ZSA9IHZhbHVlIHwg
+KDB4MDAwMDAwMDEgPDwgUEhZX1NTQ19CSVRfU0hJRlQpOworCQlpZiAoU1NDYml0KSB7CisJCQl2
+YWx1ZSB8PSAweDAwMDAwMDAxIDw8IFBIWV9HM19XSVRIX1NTQ19CSVRfU0hJRlQ7CisJCQl2YWx1
+ZSAmPSB+KDB4MDAwMDAwMDEgPDwgUEhZX0czX1dJVEhPVVRfU1NDX0JJVF9TSElGVCk7CisJCX0g
+ZWxzZSB7CisJCQl2YWx1ZSB8PSAweDAwMDAwMDAxIDw8IFBIWV9HM19XSVRIT1VUX1NTQ19CSVRf
+U0hJRlQ7CisJCQl2YWx1ZSAmPSB+KDB4MDAwMDAwMDEgPDwgUEhZX0czX1dJVEhfU1NDX0JJVF9T
+SElGVCk7CisJCX0KKwkJYml0X2NudCA9IDA7CisJCWZvciAoaiA9IDA7IGogPCAzMTsgaisrKQor
+CQkJaWYgKCh2YWx1ZSA+PiBqKSAmIDB4MDAwMDAwMDEpCisJCQkJYml0X2NudCsrOworCQlpZiAo
+Yml0X2NudCAlIDIpCisJCQl2YWx1ZSAmPSB+KDB4MDAwMDAwMDEgPDwgU05XM19QSFlfQ0FQQUJJ
+TElUSUVTX1BBUklUWSk7CiAJCWVsc2UKLQkJCXZhbHVlID0gdmFsdWUgJiAofigweDAwMDAwMDAx
+PDxQSFlfU1NDX0JJVF9TSElGVCkpOworCQkJdmFsdWUgfD0gMHgwMDAwMDAwMSA8PCBTTlczX1BI
+WV9DQVBBQklMSVRJRVNfUEFSSVRZOworCiAJCXBtODAwMV9jdzMyKHBtODAwMV9oYSwgMiwgb2Zm
+c2V0LCB2YWx1ZSk7CiAJfQogCkBAIC00MzM4LDYgKzQzNjUsMzAgQEAgcG04MDAxX2NoaXBfc2V0
+X2Rldl9zdGF0ZV9yZXEoc3RydWN0IHBtODAwMV9oYmFfaW5mbyAqcG04MDAxX2hhLAogCXBheWxv
+YWQubmRzID0gY3B1X3RvX2xlMzIoc3RhdGUpOwogCW1waV9idWlsZF9jbWQocG04MDAxX2hhLCBj
+aXJjdWxhclEsIG9wYywgJnBheWxvYWQpOwogCXJldHVybiAwOworfQorCitzdGF0aWMgaW50Citw
+bTgwMDFfY2hpcF9zYXNfcmVfaW5pdGlhbGl6YXRpb24oc3RydWN0IHBtODAwMV9oYmFfaW5mbyAq
+cG04MDAxX2hhKQoreworCXN0cnVjdCBzYXNfcmVfaW5pdGlhbGl6YXRpb25fcmVxIHBheWxvYWQ7
+CisJc3RydWN0IGluYm91bmRfcXVldWVfdGFibGUgKmNpcmN1bGFyUTsKKwlzdHJ1Y3QgcG04MDAx
+X2NjYl9pbmZvICpjY2I7CisJaW50IHJjOworCXUzMiB0YWc7CisJdTMyIG9wYyA9IE9QQ19JTkJf
+U0FTX1JFX0lOSVRJQUxJWkU7CisJbWVtc2V0KCZwYXlsb2FkLCAwLCBzaXplb2YocGF5bG9hZCkp
+OworCXJjID0gcG04MDAxX3RhZ19hbGxvYyhwbTgwMDFfaGEsICZ0YWcpOworCWlmIChyYykKKwkJ
+cmV0dXJuIC0xOworCWNjYiA9ICZwbTgwMDFfaGEtPmNjYl9pbmZvW3RhZ107CisJY2NiLT5jY2Jf
+dGFnID0gdGFnOworCWNpcmN1bGFyUSA9ICZwbTgwMDFfaGEtPmluYm5kX3FfdGJsWzBdOworCXBh
+eWxvYWQudGFnID0gY3B1X3RvX2xlMzIodGFnKTsKKwlwYXlsb2FkLlNTQUhPTFQgPSBjcHVfdG9f
+bGUzMigweGQgPDwgMjUpOworCXBheWxvYWQuc2F0YV9ob2xfdG1vID0gY3B1X3RvX2xlMzIoODAp
+OworCXBheWxvYWQub3Blbl9yZWplY3RfY21kcmV0cmllc19kYXRhX3JldHJpZXMgPSBjcHVfdG9f
+bGUzMigweGZmMDBmZik7CisJcmMgPSBtcGlfYnVpbGRfY21kKHBtODAwMV9oYSwgY2lyY3VsYXJR
+LCBvcGMsICZwYXlsb2FkKTsKKwlyZXR1cm4gcmM7CiAKIH0KIApAQCAtNDM2Nyw1ICs0NDE4LDYg
+QEAgY29uc3Qgc3RydWN0IHBtODAwMV9kaXNwYXRjaCBwbTgwMDFfODAwMV9kaXNwYXRjaCA9IHsK
+IAkuc2V0X252bWRfcmVxCQk9IHBtODAwMV9jaGlwX3NldF9udm1kX3JlcSwKIAkuZndfZmxhc2hf
+dXBkYXRlX3JlcQk9IHBtODAwMV9jaGlwX2Z3X2ZsYXNoX3VwZGF0ZV9yZXEsCiAJLnNldF9kZXZf
+c3RhdGVfcmVxCT0gcG04MDAxX2NoaXBfc2V0X2Rldl9zdGF0ZV9yZXEsCisJLnNhc19yZV9pbml0
+X3JlcQk9IHBtODAwMV9jaGlwX3Nhc19yZV9pbml0aWFsaXphdGlvbiwKIH07CiAKZGlmZiAtLWdp
+dCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2h3aS5oIGIvZHJpdmVycy9zY3NpL3BtODAw
+MS9wbTgwMDFfaHdpLmgKaW5kZXggMzY5MGEyYi4uOTZlNGRhYSAxMDA2NDQKLS0tIGEvZHJpdmVy
+cy9zY3NpL3BtODAwMS9wbTgwMDFfaHdpLmgKKysrIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
+MDFfaHdpLmgKQEAgLTQ5MCw2ICs0OTAsMjUgQEAgc3RydWN0IHNldF9kZXZfc3RhdGVfcmVxIHsK
+IAl1MzIJcmVzZXJ2ZWRbMTJdOwogfSBfX2F0dHJpYnV0ZV9fKChwYWNrZWQsIGFsaWduZWQoNCkp
+KTsKIAorLyoKKyAqIGJyaWVmIHRoZSBkYXRhIHN0cnVjdHVyZSBvZiBzYXNfcmVfaW5pdGlhbGl6
+YXRpb24KKyAqLworc3RydWN0IHNhc19yZV9pbml0aWFsaXphdGlvbl9yZXEgeworCisJX19sZTMy
+CXRhZzsKKwlfX2xlMzIJU1NBSE9MVDsvKiBiaXQyOS1zZXQgbWF4IHBvcnQ7CisJCQkqKiBiaXQy
+OC1zZXQgb3BlbiByZWplY3QgY21kIHJldHJpZXMuCisJCQkqKiBiaXQyNy1zZXQgb3BlbiByZWpl
+Y3QgZGF0YSByZXRyaWVzLgorCQkJKiogYml0MjYtc2V0IG9wZW4gcmVqZWN0IG9wdGlvbiwgcmVt
+YXA6MSBvciBub3Q6MC4KKwkJCSoqIGJpdDI1LXNldCBzYXRhIGhlYWQgb2YgbGluZSB0aW1lIG91
+dC4KKwkJCSovCisJX19sZTMyIHJlc2VydmVkX21heFBvcnRzOworCV9fbGUzMiBvcGVuX3JlamVj
+dF9jbWRyZXRyaWVzX2RhdGFfcmV0cmllczsvKiBjbWQgcmV0cmllczogMzEtYml0MTY7CisJCQkJ
+CQkgICAgKiBkYXRhIHJldHJpZXM6IGJpdDE1LWJpdDAuCisJCQkJCQkgICAgKi8KKwlfX2xlMzIJ
+c2F0YV9ob2xfdG1vOworCXUzMglyZXNlcnZlZDFbMTBdOworfSBfX2F0dHJpYnV0ZV9fKChwYWNr
+ZWQsIGFsaWduZWQoNCkpKTsKIAogLyoKICAqIGJyaWVmIHRoZSBkYXRhIHN0cnVjdHVyZSBvZiBT
+QVRBIFN0YXJ0IENvbW1hbmQKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAx
+X3Nhcy5jIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMKaW5kZXggN2JmMzBmYS4u
+MWU4NDBmZCAxMDA2NDQKLS0tIGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMKKysr
+IGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2FzLmMKQEAgLTI0MCw2ICsyNDAsNyBAQCB2
+b2lkIHBtODAwMV9zY2FuX3N0YXJ0KHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0KQogCXN0cnVjdCBw
+bTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYTsKIAlzdHJ1Y3Qgc2FzX2hhX3N0cnVjdCAqc2hhID0g
+U0hPU1RfVE9fU0FTX0hBKHNob3N0KTsKIAlwbTgwMDFfaGEgPSBzaGEtPmxsZGRfaGE7CisJUE04
+MDAxX0NISVBfRElTUC0+c2FzX3JlX2luaXRfcmVxKHBtODAwMV9oYSk7CiAJZm9yIChpID0gMDsg
+aSA8IHBtODAwMV9oYS0+Y2hpcC0+bl9waHk7ICsraSkKIAkJUE04MDAxX0NISVBfRElTUC0+cGh5
+X3N0YXJ0X3JlcShwbTgwMDFfaGEsIGkpOwogfQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Bt
+ODAwMS9wbTgwMDFfc2FzLmggYi9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaAppbmRl
+eCAxNGM2NzZiLi5lZDZkYmQxIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAw
+MV9zYXMuaAorKysgYi9kcml2ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9zYXMuaApAQCAtMTUzLDYg
+KzE1Myw3IEBAIHN0cnVjdCBwbTgwMDFfZGlzcGF0Y2ggewogCQl1MzIgc3RhdGUpOwogCWludCAo
+KnNhc19kaWFnX2V4ZWN1dGVfcmVxKShzdHJ1Y3QgcG04MDAxX2hiYV9pbmZvICpwbTgwMDFfaGEs
+CiAJCXUzMiBzdGF0ZSk7CisJaW50ICgqc2FzX3JlX2luaXRfcmVxKShzdHJ1Y3QgcG04MDAxX2hi
+YV9pbmZvICpwbTgwMDFfaGEpOwogfTsKIAogc3RydWN0IHBtODAwMV9jaGlwX2luZm8gewotLSAK
+MS42LjQubXN5c2dpdC4wCgo=
+
+--=====001_Dragon701370763123_=====--
+
