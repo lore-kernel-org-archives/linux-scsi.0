@@ -1,49 +1,118 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH] scsi_dh_rdac: Add two new IBM devices to rdac_dev_list
-Date: Wed, 04 Nov 2009 13:35:45 -0800
-Message-ID: <1257370545.21609.10.camel@chandra-ubuntu>
-References: <E463DF2B2E584B4A82673F53D62C2EF48744CE36@cosmail01.lsi.com>
-Reply-To: sekharan@us.ibm.com
+From: "jack wang" <jack_wang@usish.com>
+Subject: Re: [PATCH Resend 2/3] pm8001:enhance IOMB process modules
+Date: Thu, 5 Nov 2009 09:03:50 +0800
+Message-ID: <909B326367A94F2AA36433626E3FCFE9@usish.com.cn>
+References: <200910281755.n9SHtGrV004494@hera.kernel.org> , <200910302144471408205@usish.com>  <200910302152552653057@usish.com> <1257355960.10416.5.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:33383 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758235AbZKDVgF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 16:36:05 -0500
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by e39.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id nA4LU5dv027680
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2009 14:30:05 -0700
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id nA4LZvNj134026
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2009 14:35:59 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id nA4LZu9P022925
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Nov 2009 14:35:57 -0700
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF48744CE36@cosmail01.lsi.com>
+Received: from sr-smtp.usish.com ([210.5.144.203]:40595 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbZKEBDu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Nov 2009 20:03:50 -0500
+In-Reply-To: <1257355960.10416.5.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+To: 'James Bottomley' <James.Bottomley@suse.de>
+Cc: 'linux-scsi' <linux-scsi@vger.kernel.org>
 
-Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
+Just for future reference, git doesn't like patches in this format.
+What it's expecting is the change log in the actual email and the patch
+as an attachment.
+[Jack] Sorry James
+I will re-diff the patches and send them later today.
+ 
+On Fri, 2009-10-30 at 21:53 +0800, jack_wang wrote:
+> @@ -1342,34 +1360,43 @@ static u32 mpi_msg_consume(struct pm8001_hba_info
+*pm8001_ha,
+>                                         *pBC = (u8)((msgHeader_tmp >> 24)
+&
+>                                                 0x1f);
+>                                         PM8001_IO_DBG(pm8001_ha,
+> -
+pm8001_printk("mpi_msg_consume"
+> -                                               ": CI=%d PI=%d
+msgHeader=%x\n",
+> +                                               pm8001_printk(": CI=%d
+PI=%d "
+> +                                               "msgHeader=%x\n",
+>                                                 circularQ->consumer_idx,
+>                                                 circularQ->producer_index,
+>                                                 msgHeader_tmp));
+>                                         return MPI_IO_STATUS_SUCCESS;
+>                                 } else {
+> -                                       u32 producer_index;
+> -                                       void *pi_virt =
+circularQ->pi_virt;
+> -                                       /* free the circular queue buffer
+> -                                       elements associated with the
+message*/
+>                                         circularQ->consumer_idx =
+>                                                 (circularQ->consumer_idx +
+> -                                               ((msgHeader_tmp >> 24) &
+0x1f))
+> -                                               % 256;
+> +                                               ((msgHeader_tmp >> 24) &
+0x1f))
+> +                                               % 256;
+> +                                       msgHeader_tmp = 0;
+> +                                       pm8001_write_32(msgHeader, 0, 0);
+>                                         /* update the CI of outbound queue
+*/
+>                                         pm8001_cw32(pm8001_ha,
+>                                                 circularQ->ci_pci_bar,
+>                                                 circularQ->ci_offset,
+>                                                 circularQ->consumer_idx);
+> -                                       /* Update the producer index from
+SPC */
+> -                                       producer_index =
+> -                                               pm8001_read_32(pi_virt);
+> -                                       circularQ->producer_index =
+> -
+cpu_to_le32(producer_index);
+> +
+>                                 }
+> -                       } else
+> +                       } else {
+> +                               circularQ->consumer_idx =
+> +                                       (circularQ->consumer_idx +
+> +                                       ((msgHeader_tmp >> 24) & 0x1f)) %
+256;
+> +                               msgHeader_tmp = 0;
+> +                               pm8001_write_32(msgHeader, 0, 0);
+> +                               /* update the CI of outbound queue */
+> +                               pm8001_cw32(pm8001_ha,
+circularQ->ci_pci_bar,
+> +                                       circularQ->ci_offset,
+> +                                       circularQ->consumer_idx);
+>                                 return MPI_IO_STATUS_FAIL;
+> +                       }
+> +               } else {
+> +                       u32 producer_index;
+> +                       void *pi_virt = circularQ->pi_virt;
+> +                       /* Update the producer index from SPC */
+> +                       producer_index = pm8001_read_32(pi_virt);
+> +                       circularQ->producer_index =
+cpu_to_le32(producer_index);
+>                 }
+>         } while (circularQ->producer_index != circularQ->consumer_idx);
+>         /* while we don't have any more not-yet-delivered message */
 
-On Wed, 2009-11-04 at 12:36 -0700, Moger, Babu wrote:
-> This patch adds two new IBM storage devices which can use rdac device handlers.
-> Signed-off-by: Babu Moger <babu.moger@lsi.com>
-> ---
-> --- linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2009-11-03 16:06:58.677451876 -0600
-> +++ linux-2.6.32-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2009-11-03 16:08:29.725570987 -0600
-> @@ -666,6 +666,8 @@ static const struct scsi_dh_devlist rdac
->  	{"IBM", "1724"},
->  	{"IBM", "1726"},
->  	{"IBM", "1742"},
-> +	{"IBM", "1745"},
-> +	{"IBM", "1746"},
->  	{"IBM", "1814"},
->  	{"IBM", "1815"},
->  	{"IBM", "1818"},
-> 
-> 
+This hunk is refusing to apply:
+
+patching file drivers/scsi/pm8001/pm8001_hwi.c
+patch: **** malformed patch at line 164:        /* while we don't have
+any more not-yet-delivered message */
+
+The problem seems to be that the header promises there will be 43 lines
+after patching and there are actually 44 ... did you edit this patch
+after generating the diff?
+
+James
+
+[Jack] Yes ,sorry , I modify the patch directly because the checkpatch
+error.
+I will re-diff it .
 
