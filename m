@@ -1,47 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] Add new driver for LSI 3ware 9750
-Date: Thu, 5 Nov 2009 15:45:38 +0100
-Message-ID: <200911051545.38102.bzolnier@gmail.com>
-References: <b1bc6a000910201722v28d895cbv25e4959473ff215d@mail.gmail.com> <200910231553.09572.bzolnier@gmail.com>
+From: John Hughes <john@Calva.COM>
+Subject: Re: ses enclosure stuff not working with Promise Vtrak J610S JBOD
+Date: Thu, 05 Nov 2009 16:30:44 +0100
+Message-ID: <4AF2EFA4.4080004@Calva.COM>
+References: <4AF17AD3.6060909@Calva.COM>	 <1257348128.2697.29.camel@mulgrave.site>  <4AF1A38E.3000009@Calva.COM>	 <1257350834.2697.52.camel@mulgrave.site>  <4AF1A7E7.7070307@Calva.COM> <1257351654.2697.55.camel@mulgrave.site> <4AF1C172.6080509@Calva.COM> <4AF29DC2.2070803@Calva.COM>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:60673 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757910AbZKEOq3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2009 09:46:29 -0500
-Received: by bwz27 with SMTP id 27so50689bwz.21
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Nov 2009 06:46:33 -0800 (PST)
-In-Reply-To: <200910231553.09572.bzolnier@gmail.com>
+Received: from oceanic.CalvaEDI.COM ([81.252.197.184]:54087 "EHLO
+	oceanic.CalvaEDI.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260AbZKEPan (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Nov 2009 10:30:43 -0500
+In-Reply-To: <4AF29DC2.2070803@Calva.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: John Hughes <john@Calva.COM>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On Friday 23 October 2009 15:53:09 Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi,
-> 
-> On Wednesday 21 October 2009 02:22:15 adam radford wrote:
-> > James, linux-scsi,
-> > 
-> > This patch adds a new driver '3w-sas' for the LSI 3ware 9750 6Gb/s
-> > SAS/SATA-RAID controllers.
-> > 
-> > - I have tested this code to work on 32-bit, 64-bit, PAE, PPC-64.
-> > - This code contains a legacy interface that works with open-source
-> > smartmontools software at
-> >   http://sourceforge.net/projects/smartmontools.
-> > 
-> > Signed-off-by: Adam Radford <aradford@gmail.com>
-> 
-> This driver seems to contain some code which could be shared with
-> 3w-9xxx driver.  Would it be possible to move the common code to
-> mini library shared by both drivers to avoid needless duplication?
+John Hughes wrote:
+> One problem with the patch is that, since I don't have a page 7 (bay 
+> names) it's using the "enclosure component index" as the name, and 
+> that (at least for me) seems to be an index starting from zero, where 
+> my bays are numbered from one.
+>
+> sg_ses shows a "bay number", I think I'll try to make the patch look 
+> for the bay number and make the name something like "bay-nn" if there 
+> is a bay number.
+Doesn't work because bays without a device don't show a bay number and 
+hot-plugging a device doesn't make things change dynamically.
 
-Did you have a chance to look into it?
+Buggeration.
 
--- 
-Bartlomiej Zolnierkiewicz
+
