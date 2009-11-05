@@ -1,51 +1,41 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] fc class: fail fast bsg requests
-Date: Thu,  5 Nov 2009 11:18:09 -0600
-Message-ID: <1257441489-9055-1-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/1] scsi: add scsi target reset support to scsi ioctl
+Date: Thu,  5 Nov 2009 11:37:28 -0600
+Message-ID: <1257442648-7215-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13111 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37320 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752513AbZKERSI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Nov 2009 12:18:08 -0500
+	id S1752970AbZKERh0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Nov 2009 12:37:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "james.smart@emulex.com" <james.smart@emulex.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-If the port state is blocked and the fast io fail tmo has
-fired then this patch will fail bsg requests immediately.
-This is needed if userspace is sending IOs to test the transport
-like with fcping, so it will not have to wait for the dev loss tmo.
-With this patch he bsg req fast io fail code behaves like the normal
-and sg io/passthrough fast io fail.
-
-Patch was made over scsi-rc-fixes. It is only compiled tested.
-I found this while looking over the iscsi bsg patch.
+The scsi ioctl code path was missing scsi target reset
+support. This patch just adds it.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: james.smart@emulex.com <james.smart@emulex.com>
 ---
- drivers/scsi/scsi_transport_fc.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_ioctl.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index c6f70da..1004684 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3769,8 +3769,9 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
- 		return;
- 
- 	while (!blk_queue_plugged(q)) {
--		if (rport && (rport->port_state == FC_PORTSTATE_BLOCKED))
--				break;
-+		if (rport && (rport->port_state == FC_PORTSTATE_BLOCKED) &&
-+		    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index b98f763..d9564fb 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -308,6 +308,9 @@ int scsi_nonblockable_ioctl(struct scsi_device *sdev, int cmd,
+ 		case SG_SCSI_RESET_DEVICE:
+ 			val = SCSI_TRY_RESET_DEVICE;
+ 			break;
++		case SG_SCSI_RESET_TARGET:
++			val = SCSI_TRY_RESET_TARGET;
 +			break;
- 
- 		req = blk_fetch_request(q);
- 		if (!req)
+ 		case SG_SCSI_RESET_BUS:
+ 			val = SCSI_TRY_RESET_BUS;
+ 			break;
 -- 
 1.6.0.6
 
