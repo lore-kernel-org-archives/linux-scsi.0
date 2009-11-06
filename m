@@ -1,33 +1,26 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] libsas: do not set res = 0 in sas_ex_discover_dev()
-Date: Fri, 06 Nov 2009 13:12:27 -0600
-Message-ID: <1257534748.2715.265.camel@mulgrave.site>
-References: <6B62480106F2B34D8404CF2FDAA4D9EF38546AA22B@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-	 <e938503f0910181843q1569ca1eo34b3af884cefb45e@mail.gmail.com>
-	 <63412251C6BA4D16B1721701D56292B8@usish.com.cn>
-	 <6B62480106F2B34D8404CF2FDAA4D9EF38546AA598@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-	 <9363F2E7DE9C4DBAB057D40324240F96@usish.com.cn>
+From: "=?utf-8?B?amFja193YW5n?=" <jack_wang@usish.com>
+Subject: =?utf-8?B?UmU6IFJlOiBbUEFUQ0hdIGxpYnNhczogZG8gbm90IHNldCByZXMgPSAwIGluIHNhc19leF9kaXNjb3Zlcl9kZXYoKQ==?=
+Date: Sat, 7 Nov 2009 06:36:53 +0800
+Message-ID: <200911070636527812488@usish.com>
+References: <6B62480106F2B34D8404CF2FDAA4D9EF38546AA22B@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>,
+ <e938503f0910181843q1569ca1eo34b3af884cefb45e@mail.gmail.com>,
+ <63412251C6BA4D16B1721701D56292B8@usish.com.cn>,
+ <6B62480106F2B34D8404CF2FDAA4D9EF38546AA598@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>,
+ <9363F2E7DE9C4DBAB057D40324240F96@usish.com.cn>,
+ <1257534748.2715.265.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41563 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756654AbZKFTMe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Nov 2009 14:12:34 -0500
-In-Reply-To: <9363F2E7DE9C4DBAB057D40324240F96@usish.com.cn>
+Received: from sr-smtp.usish.com ([210.5.144.203]:54147 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932461AbZKFWgF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Nov 2009 17:36:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org, 'Srinivas Naga Venkatasatya Pasagadugula' <satyasrinivasp@hcl.in>, 'Tom Peng' <tom_peng@usish.com>, 'andy yan' <andyysj@gmail.com>, aoqingyun@usish.com
-
-On Thu, 2009-11-05 at 15:56 +0800, jack wang wrote:
-> Hi, James
-> 
-> What is the status of this this patch .  we have test it  Srinivas
-> have confirmed it does work.
-> 
-> Please consider to include it in your rc-fixes tree.
+To: =?utf-8?B?SmFtZXMgQm90dG9tbGV5?= <James.Bottomley@suse.de>
+Cc: =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?J1NyaW5pdmFzIE5hZ2EgVmVua2F0YXNhdHlhIFBhc2FnYWR1Z3VsYSc=?= <satyasrinivasp@hcl.in>, =?utf-8?B?J1RvbSBQZW5nJw==?= <tom_peng@usish.com>, =?utf-8?B?J2FuZHkgeWFuJw==?= <andyysj@gmail.com>, =?utf-8?B?YW9xaW5neXVu?= <aoqingyun@usish.com>
 
 OK, this one never actually made it to the list.  I think this was
 because all the patches contained text/html attachments which the list
@@ -38,7 +31,8 @@ through.
 For simplicity, the patch is below for list review.
 
 James
-
+ [Jack] Sorry for that, We will make sure text/html things will never happen in the future. 
+And thanks for you help.
 ---
 
 From: jack wang <jack_wang@usish.com>
