@@ -1,52 +1,52 @@
 From: Davidlohr Bueso <dave@gnu.org>
-Subject: [PATCH 00/20] SCSI: No longer use Scsi_Cmd typedef
-Date: Sun, 08 Nov 2009 17:16:51 -0300
-Message-ID: <1257711411.4759.105.camel@dbueso-pc>
+Subject: [PATCH 02/20] scsi/NCR53c406a No longer use Scsi_Cmd typedef
+Date: Sun, 08 Nov 2009 17:17:00 -0300
+Message-ID: <1257711420.4759.108.camel@dbueso-pc>
 Reply-To: dave@gnu.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755251AbZKHUZo@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755434AbZKHU0V@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, normunds@fi.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-Plenty of older drivers are still using Scsi_Cmd. The following patches
-remove its use and changes them for "struct scsi_cmnd". There is also no
-need for the drivers/scsi/scsi_typedefs.h file anymore since this only
-contains the typedef for Scsi_Cmd. 
+Change Scsi_Cmnd for struct scsi_cmnd.
 
-Thanks,
-Davidlohr
+Signed-off-by: Davidlohr Bueso <dave@gnu.org>
 
+--- 
+drivers/scsi/NCR53c406a.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
- drivers/scsi/NCR5380.c       |   72 ++++++++++++++++---------------
- drivers/scsi/NCR5380.h       |   16 ++++----
- drivers/scsi/NCR53c406a.c    |    6 +-
- drivers/scsi/aha152x.c       |   68 +++++++++++++++---------------
- drivers/scsi/aha1542.c       |   30 +++++++-------
- drivers/scsi/aha1542.h       |   12 +++---
- drivers/scsi/aha1740.c       |    8 ++--
- drivers/scsi/aha1740.h       |    4 +-
- drivers/scsi/atari_NCR5380.c |   94 +++++++++++++++++++++---------------------
- drivers/scsi/atari_scsi.c    |   12 +++---
- drivers/scsi/atari_scsi.h    |    2 +-
- drivers/scsi/dtc.h           |    6 +-
- drivers/scsi/fd_mcs.c        |   10 ++--
- drivers/scsi/g_NCR5380.c     |   10 ++--
- drivers/scsi/g_NCR5380.h     |    6 +-
- drivers/scsi/gdth.c          |   66 +++++++++++++++---------------
- drivers/scsi/gdth.h          |   10 ++--
- drivers/scsi/gdth_proc.c     |    2 +-
- drivers/scsi/ibmmca.c        |   28 ++++++------
- drivers/scsi/in2000.c        |   68 +++++++++++++++---------------
- drivers/scsi/in2000.h        |   14 +++---
- drivers/scsi/megaraid.c      |   28 ++++++------
- drivers/scsi/megaraid.h      |   18 ++++----
- drivers/scsi/nsp32_debug.c   |    2 +-
- drivers/scsi/pas16.h         |    6 +-
- drivers/scsi/scsi.h          |    3 -
- drivers/scsi/sym53c416.c     |    6 +-
- drivers/scsi/sym53c416.h     |    4 +-
- drivers/scsi/wd7000.c        |    2 +-
- 29 files changed, 306 insertions(+), 307 deletions(-)
+diff --git a/drivers/scsi/NCR53c406a.c b/drivers/scsi/NCR53c406a.c
+index 6961f78..8ef7dc9 100644
+--- a/drivers/scsi/NCR53c406a.c
++++ b/drivers/scsi/NCR53c406a.c
+@@ -201,7 +201,7 @@ static int dma_chan;
+ static int fast_pio = USE_FAST_PIO;
+ #endif
+ 
+-static Scsi_Cmnd *current_SC;
++static struct scsi_cmnd *current_SC;
+ static char info_msg[256];
+ 
+ /* ================================================================= */
+@@ -693,7 +693,7 @@ static void wait_intr(void)
+ }
+ #endif
+ 
+-static int NCR53c406a_queue(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
++static int NCR53c406a_queue(struct scsi_cmnd * SCpnt, void (*done) (struct scsi_cmnd *))
+ {
+ 	int i;
+ 
+@@ -726,7 +726,7 @@ static int NCR53c406a_queue(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 	return 0;
+ }
+ 
+-static int NCR53c406a_host_reset(Scsi_Cmnd * SCpnt)
++static int NCR53c406a_host_reset(struct scsi_cmnd * SCpnt)
+ {
+ 	DEB(printk("NCR53c406a_reset called\n"));
+ 
