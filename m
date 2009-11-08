@@ -1,67 +1,43 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 1/2] libosd: bug in osd_req_decode_sense_full()
-Date: Sun, 08 Nov 2009 14:29:37 +0200
-Message-ID: <4AF6B9B1.5040002@panasas.com>
+Subject: [PATCH 2/2] libosd: Bugfix of error handling in attributes-list decoding
+Date: Sun, 08 Nov 2009 14:30:40 +0200
+Message-ID: <4AF6B9F0.9020803@panasas.com>
 References: <4AF6B946.8000106@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dip-colo-pa.panasas.com ([67.152.220.67]:41343 "EHLO
+Received: from dip-colo-pa.panasas.com ([67.152.220.67]:1790 "EHLO
 	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753150AbZKHM3d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Nov 2009 07:29:33 -0500
+	with ESMTP id S1753946AbZKHMag (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Nov 2009 07:30:36 -0500
 In-Reply-To: <4AF6B946.8000106@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
 
-The (never tested) osd_sense_attribute_identification case
-has never worked. The loop was never advanced on.
-Fix it to work as intended.
+When an error was detected in an attribute list, do to
+a target bug. We would print an error but spin endlessly
+regardless. Fix it.
 
-On 10/30/2009 04:39 PM, Roel Kluin wrote:
-  I found this by code analysis, searching for while
-  loops that test a local variable, but do not modify
-  the variable.
-
-Reported-by: Roel Kluin <roel.kluin@gmail.com>
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/osd/osd_initiator.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/osd/osd_initiator.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 60b7ca1..d504e82 100644
+index d504e82..26d8dc0 100644
 --- a/drivers/scsi/osd/osd_initiator.c
 +++ b/drivers/scsi/osd/osd_initiator.c
-@@ -1584,14 +1584,13 @@ int osd_req_decode_sense_full(struct osd_request *or,
- 			struct osd_sense_attributes_data_descriptor
- 				*osadd = cur_descriptor;
- 			int len = min(cur_len, sense_len);
--			int i = 0;
- 			struct osd_sense_attr *pattr = osadd->sense_attrs;
+@@ -1167,6 +1167,7 @@ int osd_req_decode_get_attr_list(struct osd_request *or,
+ 				"c=%d r=%d n=%d\n",
+ 				cur_bytes, returned_bytes, n);
+ 			oa->val_ptr = NULL;
++			cur_bytes = returned_bytes; /* break the caller loop */
+ 			break;
+ 		}
  
--			while (len < 0) {
-+			while (len >= sizeof(*pattr)) {
- 				u32 attr_page = be32_to_cpu(pattr->attr_page);
- 				u32 attr_id = be32_to_cpu(pattr->attr_id);
- 
--				if (i++ == 0) {
-+				if (!osi->attr.attr_page) {
- 					osi->attr.attr_page = attr_page;
- 					osi->attr.attr_id = attr_id;
- 				}
-@@ -1602,6 +1601,8 @@ int osd_req_decode_sense_full(struct osd_request *or,
- 					bad_attr_list++;
- 					max_attr--;
- 				}
-+
-+				len -= sizeof(*pattr);
- 				OSD_SENSE_PRINT2(
- 					"osd_sense_attribute_identification"
- 					"attr_page=0x%x attr_id=0x%x\n",
 -- 
 1.6.5.1
 
