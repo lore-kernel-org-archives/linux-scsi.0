@@ -1,73 +1,64 @@
-From: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
-Subject: [PATCH 1/1] lpfc cleanups
-Date: Mon, 09 Nov 2009 14:52:45 +0900
-Message-ID: <4AF7AE2D.3060703@jp.fujitsu.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 00/20] SCSI: No longer use Scsi_Cmd typedef
+Date: Mon, 09 Nov 2009 10:08:07 +0200
+Message-ID: <4AF7CDE7.8030008@panasas.com>
+References: <1257711411.4759.105.camel@dbueso-pc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:33310 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbZKIFu4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2009 00:50:56 -0500
-Received: from m4.gw.fujitsu.co.jp ([10.0.50.74])
-	by fgwmail5.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id nA95p0U2028578
-	for <linux-scsi@vger.kernel.org> (envelope-from kusumi.tomohiro@jp.fujitsu.com);
-	Mon, 9 Nov 2009 14:51:00 +0900
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id EE64045DE6E
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2009 14:50:59 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 953C445DE60
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2009 14:50:59 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 378B0E18005
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2009 14:50:59 +0900 (JST)
-Received: from m023.s.css.fujitsu.com (m023.s.css.fujitsu.com [10.0.81.63])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 430C31DB803B
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Nov 2009 14:50:57 +0900 (JST)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754316AbZKIIIM@vger.kernel.org>
+In-Reply-To: <1257711411.4759.105.camel@dbueso-pc>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dave@gnu.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+On 11/08/2009 10:16 PM, Davidlohr Bueso wrote:
+> Plenty of older drivers are still using Scsi_Cmd. The following patches
+> remove its use and changes them for "struct scsi_cmnd". There is also no
+> need for the drivers/scsi/scsi_typedefs.h file anymore since this only
+> contains the typedef for Scsi_Cmd. 
+> 
+> Thanks,
+> Davidlohr
+> 
+> 
+>  drivers/scsi/NCR5380.c       |   72 ++++++++++++++++---------------
+>  drivers/scsi/NCR5380.h       |   16 ++++----
+>  drivers/scsi/NCR53c406a.c    |    6 +-
+>  drivers/scsi/aha152x.c       |   68 +++++++++++++++---------------
+>  drivers/scsi/aha1542.c       |   30 +++++++-------
+>  drivers/scsi/aha1542.h       |   12 +++---
+>  drivers/scsi/aha1740.c       |    8 ++--
+>  drivers/scsi/aha1740.h       |    4 +-
+>  drivers/scsi/atari_NCR5380.c |   94 +++++++++++++++++++++---------------------
+>  drivers/scsi/atari_scsi.c    |   12 +++---
+>  drivers/scsi/atari_scsi.h    |    2 +-
+>  drivers/scsi/dtc.h           |    6 +-
+>  drivers/scsi/fd_mcs.c        |   10 ++--
+>  drivers/scsi/g_NCR5380.c     |   10 ++--
+>  drivers/scsi/g_NCR5380.h     |    6 +-
+>  drivers/scsi/gdth.c          |   66 +++++++++++++++---------------
+>  drivers/scsi/gdth.h          |   10 ++--
+>  drivers/scsi/gdth_proc.c     |    2 +-
+>  drivers/scsi/ibmmca.c        |   28 ++++++------
+>  drivers/scsi/in2000.c        |   68 +++++++++++++++---------------
+>  drivers/scsi/in2000.h        |   14 +++---
+>  drivers/scsi/megaraid.c      |   28 ++++++------
+>  drivers/scsi/megaraid.h      |   18 ++++----
+>  drivers/scsi/nsp32_debug.c   |    2 +-
+>  drivers/scsi/pas16.h         |    6 +-
+>  drivers/scsi/scsi.h          |    3 -
+>  drivers/scsi/sym53c416.c     |    6 +-
+>  drivers/scsi/sym53c416.h     |    4 +-
+>  drivers/scsi/wd7000.c        |    2 +-
+>  29 files changed, 306 insertions(+), 307 deletions(-)
+> 
 
-This patch is just cleanups.
-It corrects a typo in lpfc_sli.c, and also removes linux/kthread.h from lpfc_debugfs.c.
+Thanks for doing this. What a grate relief.
 
-  Tomohiro Kusumi
+One thing that I'm missing is the actual patch to remove the
+scsi_typedefs.h file. Is it still used?
 
-
-Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
----
-
-
- drivers/scsi/lpfc/lpfc_debugfs.c |    1 -
- drivers/scsi/lpfc/lpfc_sli.c     |    2 +-
- 2 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index 8d0f0de..3c72664 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -23,7 +23,6 @@
- #include <linux/dma-mapping.h>
- #include <linux/idr.h>
- #include <linux/interrupt.h>
--#include <linux/kthread.h>
- #include <linux/pci.h>
- #include <linux/spinlock.h>
- #include <linux/ctype.h>
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 43cbe33..429bd88 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -2716,7 +2716,7 @@ lpfc_sli_sp_handle_rspiocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	list_add_tail(&rspiocbp->list, &(pring->iocb_continueq));
- 	pring->iocb_continueq_cnt++;
- 
--	/* Now, determine whetehr the list is completed for processing */
-+	/* Now, determine whether the list is completed for processing */
- 	irsp = &rspiocbp->iocb;
- 	if (irsp->ulpLe) {
- 		/*
+Thanks
+Boaz
