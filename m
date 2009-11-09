@@ -1,362 +1,177 @@
 From: Andy Yan <ayan@marvell.com>
-Subject: [PATCH 2/7]MVSAS:add supporting MSI feature
-Date: Mon, 9 Nov 2009 20:08:18 +0800
-Message-ID: <20091109120818.GA32336@Andy.marvell.com>
+Subject: [PATCH 3/7]MVSAS: bug fix with big endian
+Date: Mon, 9 Nov 2009 20:11:41 +0800
+Message-ID: <20091109121141.GB32336@Andy.marvell.com>
 Reply-To: ayan@marvell.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:55549 "EHLO
+Received: from dakia2.marvell.com ([65.219.4.35]:55684 "EHLO
 	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753303AbZKIDMF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Nov 2009 22:12:05 -0500
+	with ESMTP id S1751501AbZKIDPF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Nov 2009 22:15:05 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com, jeff@garzik.org, linux-scsi@vger.kernel.org
-Cc: jfeng@marvell.com, qswang@marvell.com
+Cc: qswang@marvell.com, jfeng@marvell.com
 
 
->From 8b51aa63e8b123046a334d630ae045f479acbf6c Mon Sep 17 00:00:00 2001
+>From 8cbb984df30eced387272905dfe13b552724024b Mon Sep 17 00:00:00 2001
 From: andy <ayan@marvell.com>
-Date: Fri, 6 Nov 2009 17:03:21 +0800
-Subject: [PATCH 2/7] Add supporting MSI feature
+Date: Fri, 6 Nov 2009 17:13:12 +0800
+Subject: [PATCH 3/7] bug fix with big endian
 
-MSI feature is implemented with mvsas driver.
+Fixed some issue with working on big endian platform
+correct SAS address and SG table for big endian
 
 Signed-off-by: Andy <ayan@marvell.com>
 Signed-off-by: Jacky <jfeng@marvell.com>
 Signed-off-by: Ke <kewei@marvell.com>
 
 ---
- drivers/scsi/mvsas/mv_init.c |  113 ++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/mvsas/mv_sas.c  |   28 ++++++-----
- drivers/scsi/mvsas/mv_sas.h  |    2 +
- 3 files changed, 126 insertions(+), 17 deletions(-)
+ drivers/scsi/mvsas/mv_94xx.c |   31 ++++++++++++++++++++++---------
+ drivers/scsi/mvsas/mv_94xx.h |    9 ++++++++-
+ drivers/scsi/mvsas/mv_defs.h |    4 ++++
+ drivers/scsi/mvsas/mv_init.c |    2 ++
+ 4 files changed, 36 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index f0017fc..bb1026d 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -183,7 +183,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 		mvs_94xx_phy_disable(mvi, i);
+ 		/* set phy local SAS address */
+ 		mvs_set_sas_addr(mvi, i, CONFIG_ID_FRAME3, CONFIG_ID_FRAME4,
+-						(mvi->phy[i].dev_sas_addr));
++					cpu_to_le64(mvi->phy[i].dev_sas_addr));
+ 
+ 		mvs_94xx_enable_xmt(mvi, i);
+ 		mvs_94xx_phy_enable(mvi, i);
+@@ -228,7 +228,6 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 	 */
+ 	cctl = mr32(MVS_CTL);
+ 	cctl |= CCTL_ENDIAN_CMD;
+-	cctl |= CCTL_ENDIAN_DATA;
+ 	cctl &= ~CCTL_ENDIAN_OPEN;
+ 	cctl |= CCTL_ENDIAN_RSP;
+ 	mw32_f(MVS_CTL, cctl);
+@@ -436,9 +435,13 @@ static void mvs_94xx_make_prd(struct scatterlist *scatter, int nr, void *prd)
+ 	int i;
+ 	struct scatterlist *sg;
+ 	struct mvs_prd *buf_prd = prd;
++	struct mvs_prd_imt im_len;
++	*(u32 *)&im_len = 0;
+ 	for_each_sg(scatter, sg, nr, i) {
+ 		buf_prd->addr = cpu_to_le64(sg_dma_address(sg));
+-		buf_prd->im_len.len = cpu_to_le32(sg_dma_len(sg));
++		im_len.len = sg_dma_len(sg);
++		buf_prd->im_len =
++			cpu_to_le32(*(u32 *)&im_len);
+ 		buf_prd++;
+ 	}
+ }
+@@ -461,7 +464,7 @@ static void mvs_94xx_get_dev_identify_frame(struct mvs_info *mvi, int port_id,
+ 	for (i = 0; i < 7; i++) {
+ 		mvs_write_port_cfg_addr(mvi, port_id,
+ 					CONFIG_ID_FRAME0 + i * 4);
+-		id_frame[i] = mvs_read_port_cfg_data(mvi, port_id);
++		id_frame[i] = cpu_to_le32(mvs_read_port_cfg_data(mvi, port_id));
+ 	}
+ 	memcpy(id, id_frame, 28);
+ }
+@@ -476,7 +479,7 @@ static void mvs_94xx_get_att_identify_frame(struct mvs_info *mvi, int port_id,
+ 	for (i = 0; i < 7; i++) {
+ 		mvs_write_port_cfg_addr(mvi, port_id,
+ 					CONFIG_ATT_ID_FRAME0 + i * 4);
+-		id_frame[i] = mvs_read_port_cfg_data(mvi, port_id);
++		id_frame[i] = cpu_to_le32(mvs_read_port_cfg_data(mvi, port_id));
+ 		mv_dprintk("94xx phy %d atta frame %d %x.\n",
+ 			port_id + mvi->id * mvi->chip->n_phy, i, id_frame[i]);
+ 	}
+@@ -622,11 +625,21 @@ void mvs_94xx_fix_dma(dma_addr_t buf_dma, int buf_len, int from, void *prd)
+ {
+ 	int i;
+ 	struct mvs_prd *buf_prd = prd;
++	struct mvs_prd_imt im_len;
++	*(u32 *)&im_len = 0;
+ 	buf_prd += from;
+-	for (i = 0; i < MAX_SG_ENTRY - from; i++) {
+-		buf_prd->addr = cpu_to_le64(buf_dma);
+-		buf_prd->im_len.len = cpu_to_le32(buf_len);
+-		++buf_prd;
++
++#define PRD_CHAINED_ENTRY 0x01
++	for (i = from; i < MAX_SG_ENTRY; i++, ++buf_prd) {
++		if (i == MAX_SG_ENTRY - 1) {
++			buf_prd->addr = cpu_to_le64(virt_to_phys(buf_prd - 1));
++			im_len.len = 2;
++			im_len.misc_ctl = PRD_CHAINED_ENTRY;
++		} else {
++			buf_prd->addr = cpu_to_le64(buf_dma);
++			im_len.len = buf_len;
++		}
++		buf_prd->im_len = cpu_to_le32(*(u32 *)&im_len);
+ 	}
+ }
+ #endif
+diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
+index a510ad8..1df38a9 100644
+--- a/drivers/scsi/mvsas/mv_94xx.h
++++ b/drivers/scsi/mvsas/mv_94xx.h
+@@ -172,17 +172,24 @@ enum pci_interrupt_cause {
+ #define MAX_SG_ENTRY		255
+ 
+ struct mvs_prd_imt {
++#ifndef __BIG_ENDIAN
+ 	__le32			len:22;
+ 	u8			_r_a:2;
+ 	u8			misc_ctl:4;
+ 	u8			inter_sel:4;
++#else
++	u32			inter_sel:4;
++	u32			misc_ctl:4;
++	u32			_r_a:2;
++	u32			len:22;
++#endif
+ };
+ 
+ struct mvs_prd {
+ 	/* 64-bit buffer address */
+ 	__le64			addr;
+ 	/* 22-bit length */
+-	struct mvs_prd_imt	im_len;
++	__le32		im_len;
+ } __attribute__ ((packed));
+ 
+ #define SPI_CTRL_REG_94XX           	0xc800
+diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
+index 1849da1..5096de8 100644
+--- a/drivers/scsi/mvsas/mv_defs.h
++++ b/drivers/scsi/mvsas/mv_defs.h
+@@ -503,4 +503,8 @@ struct mvs_tmf_task{
+ 	u8 tmf;
+ 	u16 tag_of_task_to_be_managed;
+ };
++enum pci_cfg_comm_registers {
++	PCR_CMD		= 0x04,
++	PCR_MSI_CTRL 	= 0x50,
++};
+ #endif
 diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index c790d45..d030959 100644
+index d030959..bbbc20e 100644
 --- a/drivers/scsi/mvsas/mv_init.c
 +++ b/drivers/scsi/mvsas/mv_init.c
-@@ -25,6 +25,10 @@
- 
- #include "mv_sas.h"
- 
-+static int msi;
-+module_param(msi, int, 0);
-+MODULE_PARM_DESC(msi, "Enable Message Signaled Interrupts(0=off, 1=on)");
-+int io_delay;
- static struct scsi_transport_template *mvs_stt;
- static const struct mvs_chip_info mvs_chips[] = {
- 	[chip_6320] =	{ 1, 2, 0x400, 17, 16,  9, &mvs_64xx_dispatch, },
-@@ -36,11 +40,13 @@ static const struct mvs_chip_info mvs_chips[] = {
- 	[chip_1320] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
- };
- 
-+struct device_attribute *mvst_host_attrs[];
- #define SOC_SAS_NUM 2
- 
- static struct scsi_host_template mvs_sht = {
- 	.module			= THIS_MODULE,
--	.name			= DRV_NAME,
-+	.name			= "Marvell Storage Controller",
-+	.proc_name		= DRV_NAME,
- 	.queuecommand		= sas_queuecommand,
- 	.target_alloc		= sas_target_alloc,
- 	.slave_configure	= mvs_slave_configure,
-@@ -61,6 +67,7 @@ static struct scsi_host_template mvs_sht = {
- 	.slave_alloc		= mvs_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+	.shost_attrs		= mvst_host_attrs,
- };
- 
- static struct sas_domain_function_template mvs_transport_ops = {
-@@ -89,6 +96,7 @@ static void __devinit mvs_phy_init(struct mvs_info *mvi, int phy_id)
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 
- 	phy->mvi = mvi;
-+	phy->port = NULL;
- 	init_timer(&phy->timer);
- 	sas_phy->enabled = (phy_id < mvi->chip->n_phy) ? 1 : 0;
- 	sas_phy->class = SAS;
-@@ -118,7 +126,7 @@ static void mvs_free(struct mvs_info *mvi)
- 	if (mvi->flags & MVF_FLAG_SOC)
- 		slot_nr = MVS_SOC_SLOTS;
- 	else
--		slot_nr = MVS_SLOTS;
-+		slot_nr = MVS_CHIP_SLOT_SZ;
- 
- 	for (i = 0; i < mvi->tags_num; i++) {
- 		struct mvs_slot_info *slot = &mvi->slot_info[i];
-@@ -183,6 +191,30 @@ static void mvs_tasklet(unsigned long opaque)
- }
- #endif
- 
-+void mvs_enable_msi(struct mvs_info *mvi)
-+{
-+	u32 tmp;
-+	pci_read_config_dword(mvi->pdev, PCR_CMD, &tmp);
-+	tmp |= 1 << 10;    	/* disable interrupt */
-+	pci_write_config_dword(mvi->pdev, PCR_CMD, tmp);
-+
-+	pci_read_config_dword(mvi->pdev, PCR_MSI_CTRL, &tmp);
-+	tmp |= 1 << 16; 		/* enable MSI */
-+	pci_write_config_dword(mvi->pdev, PCR_MSI_CTRL, tmp);
-+}
-+void mvs_disable_msi(struct mvs_info *mvi)
-+{
-+	u32 tmp;
-+	pci_read_config_dword(mvi->pdev, PCR_CMD, &tmp);
-+	tmp &= ~(1 << 10);    	/* enable interrupt */
-+	pci_write_config_dword(mvi->pdev, PCR_CMD, tmp);
-+
-+	pci_read_config_dword(mvi->pdev, PCR_MSI_CTRL, &tmp);
-+	tmp &= ~(1 << 16); 	/* disable MSI */
-+	pci_write_config_dword(mvi->pdev, PCR_MSI_CTRL, tmp);
-+}
-+
-+
- static irqreturn_t mvs_interrupt(int irq, void *opaque)
- {
- 	u32 core_nr, i = 0;
-@@ -519,6 +551,7 @@ static int __devinit mvs_pci_init(struct pci_dev *pdev,
- 
- 	dev_printk(KERN_INFO, &pdev->dev,
- 		"mvsas: driver version %s\n", DRV_VERSION);
-+	io_delay = 0;
- 	rc = pci_enable_device(pdev);
- 	if (rc)
- 		goto err_out_enable;
-@@ -563,6 +596,8 @@ static int __devinit mvs_pci_init(struct pci_dev *pdev,
- 			rc = -ENOMEM;
- 			goto err_out_regions;
- 		}
-+		if (msi)
-+			mvi->flags |= MVF_MSI;
- 
- 		mvs_init_sas_add(mvi);
- 
-@@ -581,13 +616,22 @@ static int __devinit mvs_pci_init(struct pci_dev *pdev,
- 	if (rc)
- 		goto err_out_shost;
- 
-+	if (mvi->flags & MVF_MSI) {
-+		pci_enable_msi(pdev);
-+		mvs_enable_msi(mvi);
-+	}
- 	rc = sas_register_ha(SHOST_TO_SAS_HA(shost));
- 	if (rc)
- 		goto err_out_shost;
- 	rc = request_irq(pdev->irq, irq_handler, IRQF_SHARED,
- 		DRV_NAME, SHOST_TO_SAS_HA(shost));
--	if (rc)
-+	if (rc) {
-+		if (mvi->flags & MVF_MSI) {
-+			mvs_disable_msi(mvi);
-+			pci_disable_msi(pdev);
-+		}
- 		goto err_not_sas;
-+	}
- 
- 	MVS_CHIP_DISP->interrupt_enable(mvi);
- 
-@@ -620,13 +664,16 @@ static void __devexit mvs_pci_remove(struct pci_dev *pdev)
- 	tasklet_kill(&mv_tasklet);
- #endif
- 
--	pci_set_drvdata(pdev, NULL);
- 	sas_unregister_ha(sha);
- 	sas_remove_host(mvi->shost);
- 	scsi_remove_host(mvi->shost);
- 
- 	MVS_CHIP_DISP->interrupt_disable(mvi);
- 	free_irq(mvi->irq, sha);
-+	if (mvi->flags & MVF_MSI) {
-+		mvs_disable_msi(mvi);
-+		pci_disable_msi(pdev);
-+	}
- 	for (i = 0; i < core_nr; i++) {
- 		mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[i];
- 		mvs_free(mvi);
-@@ -634,6 +681,7 @@ static void __devexit mvs_pci_remove(struct pci_dev *pdev)
- 	kfree(sha->sas_phy);
- 	kfree(sha->sas_port);
- 	kfree(sha);
-+	pci_set_drvdata(pdev, NULL);
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- 	return;
-@@ -668,6 +716,57 @@ static struct pci_driver mvs_pci_driver = {
- 	.remove		= __devexit_p(mvs_pci_remove),
- };
- 
-+static ssize_t
-+mvs_show_driver_version(struct device *cdev,
-+			struct device_attribute *attr,
-+			char *buffer)
-+{
-+	return snprintf(buffer, PAGE_SIZE, "%s\n", DRV_VERSION);
-+}
-+
-+static DEVICE_ATTR(driver_version,
-+			 S_IRUGO,
-+			 mvs_show_driver_version,
-+			 NULL);
-+
-+static ssize_t
-+mvs_store_io_delay(struct device *cdev,
-+			struct device_attribute *attr,
-+			const char *buffer, size_t size)
-+{
-+
-+	int val = 0;
-+
-+	if (buffer == NULL)
-+		return size;
-+
-+	if (sscanf(buffer, "%d", &val) != 1)
-+		return -EINVAL;
-+
-+	io_delay = val;
-+	if (io_delay > 10) {
-+		printk(KERN_NOTICE "io delay time %d seconds is too long, \
-+			max is 10s\n",  io_delay);
-+		io_delay = 10;
-+		return strlen(buffer);
-+	}
-+	printk(KERN_NOTICE "set io delay time to %d seconds\n",  io_delay);
-+	return strlen(buffer);
-+}
-+
-+static ssize_t mvs_show_io_delay(struct device *cdev,
-+				struct device_attribute *attr,
-+				char *buffer)
-+{
-+	return snprintf(buffer, PAGE_SIZE, "%d\n", io_delay);
-+}
-+
-+
-+static DEVICE_ATTR(io_delay,
-+			 S_IRUGO|S_IWUSR,
-+			 mvs_show_io_delay,
-+			 mvs_store_io_delay);
-+
- /* task handler */
- struct task_struct *mvs_th;
- static int __init mvs_init(void)
-@@ -695,6 +794,12 @@ static void __exit mvs_exit(void)
- 	sas_release_transport(mvs_stt);
- }
- 
-+struct device_attribute *mvst_host_attrs[] = {
-+	&dev_attr_driver_version,
-+	&dev_attr_io_delay,
-+	NULL,
-+};
-+
- module_init(mvs_init);
- module_exit(mvs_exit);
- 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 0d21386..4fe365a 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1935,15 +1935,15 @@ static void mvs_work_queue(struct work_struct *work)
- 	struct delayed_work *dw = container_of(work, struct delayed_work, work);
- 	struct mvs_wq *mwq = container_of(dw, struct mvs_wq, work_q);
- 	struct mvs_info *mvi = mwq->mvi;
--	unsigned long flags;
- 
--	spin_lock_irqsave(&mvi->lock, flags);
--	if (mwq->handler & PHY_PLUG_EVENT) {
- 		u32 phy_no = (unsigned long) mwq->data;
- 		struct sas_ha_struct *sas_ha = mvi->sas;
- 		struct mvs_phy *phy = &mvi->phy[phy_no];
- 		struct asd_sas_phy *sas_phy = &phy->sas_phy;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(&mvi->lock, flags);
-+	if (mwq->handler & PHY_PLUG_EVENT) {
- 		if (phy->phy_event & PHY_PLUG_OUT) {
- 			u32 tmp;
- 			struct sas_identify_frame *id;
-@@ -1964,6 +1964,10 @@ static void mvs_work_queue(struct work_struct *work)
- 				mv_dprintk("phy%d Attached Device\n", phy_no);
- 			}
- 		}
-+	} else if (mwq->handler & EXP_BRCT_CHG) {
-+			phy->phy_event &= ~EXP_BRCT_CHG;
-+			sas_ha->notify_port_event(sas_phy,
-+					PORTE_BROADCAST_RCVD);
+@@ -533,6 +533,8 @@ static void mvs_init_sas_add(struct mvs_info *mvi)
+ 	u8 i;
+ 	for (i = 0; i < mvi->chip->n_phy; i++) {
+ 		mvi->phy[i].dev_sas_addr = 0x5005043011ab0000ULL;
++		if (mvi->id == 1)
++			mvi->phy[i].dev_sas_addr =  0x5005043011ab0001ULL;
+ 		mvi->phy[i].dev_sas_addr =
+ 			cpu_to_be64((u64)(*(u64 *)&mvi->phy[i].dev_sas_addr));
  	}
- 	list_del(&mwq->entry);
- 	spin_unlock_irqrestore(&mvi->lock, flags);
-@@ -1982,7 +1986,7 @@ static int mvs_handle_event(struct mvs_info *mvi, void *data, int handler)
- 		mwq->handler = handler;
- 		MV_INIT_DELAYED_WORK(&mwq->work_q, mvs_work_queue, mwq);
- 		list_add_tail(&mwq->entry, &mvi->wq_list);
--		schedule_delayed_work(&mwq->work_q, HZ * 2);
-+		schedule_delayed_work(&mwq->work_q, HZ * io_delay);
- 	} else
- 		ret = -ENOMEM;
- 
-@@ -2014,14 +2018,14 @@ static void mvs_sig_remove_timer(struct mvs_phy *phy)
- void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
- {
- 	u32 tmp;
--	struct sas_ha_struct *sas_ha = mvi->sas;
- 	struct mvs_phy *phy = &mvi->phy[phy_no];
- 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 
- 	phy->irq_status = MVS_CHIP_DISP->read_port_irq_stat(mvi, phy_no);
--	mv_dprintk("port %d ctrl sts=0x%X.\n", phy_no+mvi->id*mvi->chip->n_phy,
-+	MVS_CHIP_DISP->write_port_irq_stat(mvi, phy_no, phy->irq_status);
-+	mv_dprintk("phy %d ctrl sts=%08X.\n", phy_no+mvi->id*mvi->chip->n_phy,
- 		MVS_CHIP_DISP->read_phy_ctl(mvi, phy_no));
--	mv_dprintk("Port %d irq sts = 0x%X\n", phy_no+mvi->id*mvi->chip->n_phy,
-+	mv_dprintk("phy %d irq sts = %08X\n", phy_no+mvi->id*mvi->chip->n_phy,
- 		phy->irq_status);
- 
- 	/*
-@@ -2096,13 +2100,11 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
- 				phy_no + mvi->id*mvi->chip->n_phy);
- 		}
- 	} else if (phy->irq_status & PHYEV_BROAD_CH) {
--		mv_dprintk("port %d broadcast change.\n",
--			phy_no + mvi->id*mvi->chip->n_phy);
--		/* exception for Samsung disk drive*/
--		mdelay(1000);
--		sas_ha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
-+			mv_dprintk("phy %d broadcast change.\n",
-+				phy_no + mvi->id*mvi->chip->n_phy);
-+			mvs_handle_event(mvi, (void *)(unsigned long)phy_no,
-+					EXP_BRCT_CHG);
- 	}
--	MVS_CHIP_DISP->write_port_irq_stat(mvi, phy_no, phy->irq_status);
- }
- 
- int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index aa2270a..7d3e5f6 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -61,6 +61,7 @@
- #endif
- #define MV_MAX_U32			0xffffffff
- 
-+extern int io_delay;
- extern struct mvs_tgt_initiator mvs_tgt;
- extern struct mvs_info *tgt_mvi;
- extern const struct mvs_dispatch mvs_64xx_dispatch;
-@@ -93,6 +94,7 @@ extern const struct mvs_dispatch mvs_94xx_dispatch;
- enum dev_status {
- 	MVS_DEV_NORMAL = 0x0,
- 	MVS_DEV_EH	= 0x1,
-+	MVS_DEV_OFF 	= 0x2,
- };
- 
- 
 -- 
 1.6.2.2
 
