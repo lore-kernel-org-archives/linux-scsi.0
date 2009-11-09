@@ -1,49 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Thin provisioning update
-Date: Mon, 9 Nov 2009 09:20:51 -0500
-Message-ID: <20091109142051.GC4855@infradead.org>
-References: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH 60/75] bfa: declare MODULE_FIRMWARE
+Date: Mon, 9 Nov 2009 11:32:43 -0800
+Message-ID: <B0A7AF226B49A14897036E9B3A68CFFECF0442C32C@HQ-EXCH-7.corp.brocade.com>
+References: <1257631534.15927.482.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:56702 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755966AbZKIOU4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2009 09:20:56 -0500
-Content-Disposition: inline
-In-Reply-To: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
+Received: from hq-exedge.brocade.com ([66.243.153.82]:50517 "EHLO
+	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbZKITcj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2009 14:32:39 -0500
+In-Reply-To: <1257631534.15927.482.camel@localhost>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: hch@infradead.org, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Nov 03, 2009 at 11:25:38PM -0500, Martin K. Petersen wrote:
-> Christoph,
+Reviewed-by: Jing Huang <huangj@brocade.com>
+
+Thanks.
+
+> -----Original Message-----
+> From: Ben Hutchings [mailto:ben@decadent.org.uk]
+> Sent: Saturday, November 07, 2009 2:06 PM
+> To: James E.J. Bottomley
+> Cc: Jing Huang; linux-scsi@vger.kernel.org
+> Subject: [PATCH 60/75] bfa: declare MODULE_FIRMWARE
 > 
-> Here are some more recent bits for you to tinker with.
+> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+> ---
+>  drivers/scsi/bfa/bfad_fwimg.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 > 
-> The first patch exports unmap granularity and alignment up the stack.  I have
-> also implemented support for topology stacking of these parameters.  A reported
-> discard granularity of 0 means fully provisioned.
+> diff --git a/drivers/scsi/bfa/bfad_fwimg.c b/drivers/scsi/bfa/bfad_fwimg.c
+> index 2c2082d..2ad65f2 100644
+> --- a/drivers/scsi/bfa/bfad_fwimg.c
+> +++ b/drivers/scsi/bfa/bfad_fwimg.c
+> @@ -41,6 +41,8 @@ u32 *bfi_image_cb;
 > 
-> In the second patch I made a few changes to the TP detection and extraction of
-> VPD values.
-
-I was offline for a while, but I have another half-finished alternative
-to it.  Which only exposes the discard granularity/alignment at the
-whole disk level and does the adjustment in sd.  I think I actually
-prefer it - I'll post it for review as soon as I have cought up with my
-backlog.
-
-> I have been hunting for heuristics for the WRITE SAME case but haven't found any
-> good ones.  I'm thinking we probably want to distinguish between a real array
-> with NV-backed unmap queueing and a thinly provisioned disk on a virtualization
-> server where there might be a real impact from having to zero out partial blocks.
-> I guess that's easy to handle with virtio but I'm not so sure how to do it when
-> emulating a SCSI disk.
-
-We might just offer UNMAP for virtualized disks for now to sort this
-out.  But the primary use case at least for now will be ide TRIM for
-virtualized environments with virtio as a second and scsi a distant
-third for now.
+>  #define	BFAD_FW_FILE_CT	"ctfw.bin"
+>  #define	BFAD_FW_FILE_CB	"cbfw.bin"
+> +MODULE_FIRMWARE(BFAD_FW_FILE_CT);
+> +MODULE_FIRMWARE(BFAD_FW_FILE_CB);
+> 
+>  u32 *
+>  bfad_read_firmware(struct pci_dev *pdev, u32 **bfi_image,
+> --
+> 1.6.5.2
+> 
+> 
 
