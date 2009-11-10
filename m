@@ -1,34 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
- resync
-Date: Tue, 10 Nov 2009 01:29:35 GMT
-Message-ID: <200911100129.nAA1TZKB029891@demeter.kernel.org>
-References: <bug-14534-11613@http.bugzilla.kernel.org/>
+From: "jack wang" <jack_wang@usish.com>
+Subject: Re: [PATCH 6/7]MVSAS: Enhanced hot plug handling
+Date: Tue, 10 Nov 2009 09:38:35 +0800
+Message-ID: <27D4B599214A4AE693D4D01B2AD74FF7@usish.com.cn>
+References: <20091109122713.GE32336@Andy.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:54925 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbZKJB3a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2009 20:29:30 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAA1TZvW029892
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2009 01:29:35 GMT
-In-Reply-To: <bug-14534-11613@http.bugzilla.kernel.org/>
+Received: from sr-smtp.usish.com ([210.5.144.203]:34727 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753056AbZKJBig (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Nov 2009 20:38:36 -0500
+In-Reply-To: <20091109122713.GE32336@Andy.marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: ayan@marvell.com, james.bottomley@hansenpartnership.com, jeff@garzik.org, linux-scsi@vger.kernel.org
+Cc: qswang@marvell.com, jfeng@marvell.com
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14534
+@@ -914,13 +911,22 @@ static int mvs_task_exec(struct sas_task *task, const
+int num, gfp_t gfp_flags,
+ 			tei.port = &mvi->port[dev->port->id -
+mvi->chip->n_phy];
+ 		else
+ 			tei.port = &mvi->port[dev->port->id];
+-
+-		if (!tei.port->port_attached) {
++		if (tei.port && !tei.port->port_attached) {
+ 			if (sas_protocol_ata(t->task_proto)) {
+-				mv_dprintk("port %d does not"
+-					"attached device.\n",
+dev->port->id);
+-				rc = SAS_PHY_DOWN;
+-				goto out_done;
++				struct task_status_struct *ts =
+&t->task_status;
++				ts->stat = SAS_PROTO_RESPONSE;
++				ts->stat = SAS_PHY_DOWN;
 
 
+[Jack] Here ts->stat was double set. Maybe the first one is unnessary.
 
-
-
---- Comment #5 from andy yan <ayan@marvell.com>  2009-11-10 01:29:32 ---
-I committed patch, please check it.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
