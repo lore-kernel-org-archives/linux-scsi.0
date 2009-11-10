@@ -1,32 +1,21 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
- (17380)
-Date: Tue, 10 Nov 2009 14:03:57 GMT
-Message-ID: <200911101403.nAAE3v9d020665@demeter.kernel.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Bug 14577] New: Data Corruption with Adaptec 52445
+Date: Tue, 10 Nov 2009 09:03:33 -0500
+Message-ID: <1257861813.4184.191.camel@mulgrave.site>
 References: <bug-14577-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37211 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753187AbZKJODv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 09:03:51 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAAE3vX7020666
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2009 14:03:57 GMT
+Received: from cantor2.suse.de ([195.135.220.15]:42362 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751031AbZKJODs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Nov 2009 09:03:48 -0500
 In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14577
-
-
-
-
-
---- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-11-10 14:03:56 ---
-Reply-To: James.Bottomley@suse.de
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, aacraid@adaptec.com
 
 On Tue, 2009-11-10 at 13:31 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -69,7 +58,4 @@ it's a hardware error.
 
 James
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
