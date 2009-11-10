@@ -1,38 +1,82 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd_dif: Return correct error code
-Date: Tue, 10 Nov 2009 00:39:12 -0500
-Message-ID: <yq1y6mfndkv.fsf@sermon.lab.mkp.net>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] fix use after kfree() bugs in dpt_i2o.c
+Date: Tue, 10 Nov 2009 10:50:12 +0200 (SAST)
+Message-ID: <alpine.DEB.2.00.0911091502110.28271@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:22439 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029AbZKJFkp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 00:40:45 -0500
+Received: from mail-ew0-f207.google.com ([209.85.219.207]:56794 "EHLO
+	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698AbZKJIwc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 03:52:32 -0500
+Received: by ewy3 with SMTP id 3so3995426ewy.37
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2009 00:52:37 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@hansenpartnership.com
+To: aacraid@adaptec.com
+Cc: linux-scsi@vger.kernel.org
 
+I re-orderred things a bit.
 
-sd_dif.c was not updated to return -EILSEQ, leading to error handling
-failures in applications which provide their own integrity metadata (as
-opposed to being protected by the block layer functions).
+All four bugs were found by smatch (http://repo.or.cz/w/smatch.git), but I 
+had to wade through a gazillion false positives as well so smatch still 
+sucks.  Compile tested.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+regards,
+dan carpenter
 
----
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index 88da977..84be621 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -418,7 +418,7 @@ error:
- 		  __func__, virt, phys, be32_to_cpu(sdt->ref_tag),
- 		  be16_to_cpu(sdt->app_tag));
+--- orig/drivers/scsi/dpt_i2o.c	2009-11-07 22:19:42.000000000 +0200
++++ devel/drivers/scsi/dpt_i2o.c	2009-11-07 22:31:21.000000000 +0200
+@@ -189,6 +189,7 @@
+ {
+ 	struct pci_dev *pDev = NULL;
+ 	adpt_hba* pHba;
++	adpt_hba* next;
  
--	return -EIO;
-+	return -EILSEQ;
- }
+ 	PINFO("Detecting Adaptec I2O RAID controllers...\n");
  
- /*
+@@ -206,7 +207,8 @@
+ 	}
+ 
+ 	/* In INIT state, Activate IOPs */
+-	for (pHba = hba_chain; pHba; pHba = pHba->next) {
++	for (pHba = hba_chain; pHba; pHba = next) {
++		next = pHba->next;
+ 		// Activate does get status , init outbound, and get hrt
+ 		if (adpt_i2o_activate_hba(pHba) < 0) {
+ 			adpt_i2o_delete_hba(pHba);
+@@ -243,7 +245,8 @@
+ 	PDEBUG("HBA's in OPERATIONAL state\n");
+ 
+ 	printk("dpti: If you have a lot of devices this could take a few minutes.\n");
+-	for (pHba = hba_chain; pHba; pHba = pHba->next) {
++	for (pHba = hba_chain; pHba; pHba = next) {
++		next = pHba->next;
+ 		printk(KERN_INFO"%s: Reading the hardware resource table.\n", pHba->name);
+ 		if (adpt_i2o_lct_get(pHba) < 0){
+ 			adpt_i2o_delete_hba(pHba);
+@@ -263,7 +266,8 @@
+ 		adpt_sysfs_class = NULL;
+ 	}
+ 
+-	for (pHba = hba_chain; pHba; pHba = pHba->next) {
++	for (pHba = hba_chain; pHba; pHba = next) {
++		next = pHba->next;
+ 		if (adpt_scsi_host_alloc(pHba, sht) < 0){
+ 			adpt_i2o_delete_hba(pHba);
+ 			continue;
+@@ -1229,11 +1233,10 @@
+ 		}
+ 	}
+ 	pci_dev_put(pHba->pDev);
+-	kfree(pHba);
+-
+ 	if (adpt_sysfs_class)
+ 		device_destroy(adpt_sysfs_class,
+ 				MKDEV(DPTI_I2O_MAJOR, pHba->unit));
++	kfree(pHba);
+ 
+ 	if(hba_count <= 0){
+ 		unregister_chrdev(DPTI_I2O_MAJOR, DPT_DRIVER);   
