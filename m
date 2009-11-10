@@ -1,38 +1,36 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Progress of patch submissions?
-Date: Tue, 10 Nov 2009 10:29:11 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0911101025140.2888-100000@iolanthe.rowland.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14579] Devices disappear; on bus reset machine hangs; on I/O
+ machine hangs
+Date: Tue, 10 Nov 2009 15:29:21 GMT
+Message-ID: <200911101529.nAAFTLlw004934@demeter.kernel.org>
+References: <bug-14579-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:34585 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756690AbZKJP3G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 10:29:06 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:46143 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756687AbZKJP3P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 10:29:15 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAAFTLDH004935
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2009 15:29:21 GMT
+In-Reply-To: <bug-14579-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James:
+http://bugzilla.kernel.org/show_bug.cgi?id=14579
 
-What is the story on the patch series I submitted about two weeks ago?
 
-[PATCH 1/4 ver 3] SCSI: add construction flags to scsi_device
-http://marc.info/?l=linux-scsi&m=125675695827770&w=2
 
-[PATCH 2/4 ver 2] SCSI: fix various bugs in the the scsi_device code
-http://marc.info/?l=linux-scsi&m=125675696627788&w=2
 
-[PATCH 3/4 ver 3] SCSI: improvements to the device and target code
-http://marc.info/?l=linux-scsi&m=125675698027801&w=2
 
-[PATCH 4/4 ver 3] SCSI: make starget->reap_ref count the number of 
-	underlying devices
-http://marc.info/?l=linux-scsi&m=125675699627826&w=2
+--- Comment #1 from Sascha Frey <sfrey@techfak.uni-bielefeld.de>  2009-11-10 15:29:20 ---
+Created an attachment (id=23730)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=23730)
+cat /proc/modules output
 
-You indicated earlier that these should be non-controversial and 
-acceptable as-is.
-
-Alan Stern
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
