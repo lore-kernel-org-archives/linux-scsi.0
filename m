@@ -1,65 +1,42 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: [PATCH][Resend] Do not set DMA mask to 32 bit first if adapter only supports 31
-Date: Tue, 10 Nov 2009 20:55:36 +0200
-Message-ID: <200911101955.41504.eike-kernel@sf-tec.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Thin provisioning update
+Date: Tue, 10 Nov 2009 13:58:37 -0500
+Message-ID: <yq18weenr4y.fsf@sermon.lab.mkp.net>
+References: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
+	<20091109142051.GC4855@infradead.org>
+	<20091109193409.GA26596@infradead.org>
+	<yq13a4nos7y.fsf@sermon.lab.mkp.net>
+	<20091110131649.GA4516@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:59680 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757656AbZKJSz4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Nov 2009 13:55:56 -0500
+Received: from acsinet11.oracle.com ([141.146.126.233]:19390 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757579AbZKJS7x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 13:59:53 -0500
+In-Reply-To: <20091110131649.GA4516@infradead.org> (Christoph Hellwig's
+	message of "Tue, 10 Nov 2009 08:16:49 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@adaptec.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@kernel.dk, matthew@wil.cx, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
----
-First send on 2009-07-26
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
- drivers/scsi/aacraid/linit.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+>> Ok.  Jens, please queue the patch below.  And then we'll have to see
+>> about getting James to rebase and/or postpone the SCSI portion to
+>> round #2.
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 9b97c3e..7e0d05a 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1082,6 +1082,7 @@ static int __devinit aac_probe_one(struct pci_dev *pdev,
- 	struct list_head *insert = &aac_devices;
- 	int error = -ENODEV;
- 	int unique_id = 0;
-+	u64 dmamask;
- 
- 	list_for_each_entry(aac, &aac_devices, entry) {
- 		if (aac->id > unique_id)
-@@ -1095,17 +1096,18 @@ static int __devinit aac_probe_one(struct pci_dev *pdev,
- 		goto out;
- 	error = -ENODEV;
- 
--	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
--			pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
--		goto out_disable_pdev;
- 	/*
- 	 * If the quirk31 bit is set, the adapter needs adapter
- 	 * to driver communication memory to be allocated below 2gig
- 	 */
- 	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
--		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(31)) ||
--				pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(31)))
--			goto out_disable_pdev;
-+		dmamask = DMA_BIT_MASK(31);
-+	else
-+		dmamask = DMA_BIT_MASK(32);
-+
-+	if (pci_set_dma_mask(pdev, dmamask) ||
-+			pci_set_consistent_dma_mask(pdev, dmamask))
-+		goto out_disable_pdev;
- 
- 	pci_set_master(pdev);
- 
+Christoph> Can't we please get both patches in through one tree?
+Christoph> Everything else is a bit of a pain to manage.
+
+I'm intimately familiar with said pain.  Pretty much everything I do
+touches both block and scsi :/
+
+But James has been pretty good about rebasing scsi-misc on top of Jens'
+tree.  That's how we've done all the other tricky merges.
+
+James, what do you think?
+
 -- 
-1.6.0.2
-
+Martin K. Petersen	Oracle Linux Engineering
