@@ -1,45 +1,39 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] scsi_lib_dma.c :  fix bug with dma maps on nested scsi
- objects - (2nd try)
-Date: Tue, 10 Nov 2009 09:38:45 -0500
-Message-ID: <4AF97AF5.2090700@emulex.com>
-References: <1257295546.5965.7.camel@wookie> <1257449592.10355.26.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
+ (17380)
+Date: Tue, 10 Nov 2009 14:51:43 GMT
+Message-ID: <200911101451.nAAEphks029478@demeter.kernel.org>
+References: <bug-14577-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1257449592.10355.26.camel@mulgrave.site>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:58741 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830AbZKJOvi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 09:51:38 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAAEphM7029479
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2009 14:51:43 GMT
+In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-James,
-
-This updated patch works fine for lpfc and our vports...
-
-Acked-By: James Smart  <james.smart@emulex.com>
-
--- james s
+http://bugzilla.kernel.org/show_bug.cgi?id=14577
 
 
-James Bottomley wrote:
-> 
-> 141 lines plus a static list to solve a simple problem is getting a bit
-> icky to say the least.
-> 
-> What about being more simplistic and simply making the host cache a
-> pointer to the physical bus device?  I probably objected to this a long
-> time ago because using the parent pointers is more elegant, but I think
-> this patch demonstrates conclusively it's not worth this amount of code
-> for the sake of alleged elegance.
-> 
-> James
-> 
-> ---
->  drivers/scsi/hosts.c            |   13 ++++++++++---
->  drivers/scsi/lpfc/lpfc_init.c   |    2 +-
->  drivers/scsi/qla2xxx/qla_attr.c |    3 ++-
->  drivers/scsi/scsi_lib_dma.c     |    4 ++--
->  include/scsi/scsi_host.h        |   16 +++++++++++++++-
->  5 files changed, 30 insertions(+), 8 deletions(-)
+
+
+
+--- Comment #6 from lkolbe@techfak.uni-bielefeld.de  2009-11-10 14:51:42 ---
+I understand that indicates a hardware failure, but this doesn't occur when
+using 2.6.30. That's why I opened it as a regression in the first place. I
+welcome input from the aacraid people, of course :)
+
+-- 
+Lukas
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
