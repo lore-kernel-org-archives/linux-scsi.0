@@ -1,82 +1,35 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] fix use after kfree() bugs in dpt_i2o.c
-Date: Tue, 10 Nov 2009 10:50:12 +0200 (SAST)
-Message-ID: <alpine.DEB.2.00.0911091502110.28271@bicker>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Thin provisioning update
+Date: Tue, 10 Nov 2009 11:51:57 +0100
+Message-ID: <20091110105157.GG8742@kernel.dk>
+References: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com> <20091109142051.GC4855@infradead.org> <20091109193409.GA26596@infradead.org> <yq13a4nos7y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f207.google.com ([209.85.219.207]:56794 "EHLO
-	mail-ew0-f207.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698AbZKJIwc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 03:52:32 -0500
-Received: by ewy3 with SMTP id 3so3995426ewy.37
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Nov 2009 00:52:37 -0800 (PST)
+Received: from [95.166.99.235] ([95.166.99.235]:38572 "EHLO kernel.dk"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752891AbZKJKvw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Nov 2009 05:51:52 -0500
+Content-Disposition: inline
+In-Reply-To: <yq13a4nos7y.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@adaptec.com
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, matthew@wil.cx, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-I re-orderred things a bit.
+On Tue, Nov 10 2009, Martin K. Petersen wrote:
+> >>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+> 
+> Christoph> So actually I'll take my previous comment back.  I think
+> Christoph> these patches are good enough to put them in now to have
+> Christoph> something we can build on.
+> 
+> Ok.  Jens, please queue the patch below.  And then we'll have to see
+> about getting James to rebase and/or postpone the SCSI portion to round
+> #2.
 
-All four bugs were found by smatch (http://repo.or.cz/w/smatch.git), but I 
-had to wade through a gazillion false positives as well so smatch still 
-sucks.  Compile tested.
+Queued up for 2.6.33.
 
-regards,
-dan carpenter
+-- 
+Jens Axboe
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
---- orig/drivers/scsi/dpt_i2o.c	2009-11-07 22:19:42.000000000 +0200
-+++ devel/drivers/scsi/dpt_i2o.c	2009-11-07 22:31:21.000000000 +0200
-@@ -189,6 +189,7 @@
- {
- 	struct pci_dev *pDev = NULL;
- 	adpt_hba* pHba;
-+	adpt_hba* next;
- 
- 	PINFO("Detecting Adaptec I2O RAID controllers...\n");
- 
-@@ -206,7 +207,8 @@
- 	}
- 
- 	/* In INIT state, Activate IOPs */
--	for (pHba = hba_chain; pHba; pHba = pHba->next) {
-+	for (pHba = hba_chain; pHba; pHba = next) {
-+		next = pHba->next;
- 		// Activate does get status , init outbound, and get hrt
- 		if (adpt_i2o_activate_hba(pHba) < 0) {
- 			adpt_i2o_delete_hba(pHba);
-@@ -243,7 +245,8 @@
- 	PDEBUG("HBA's in OPERATIONAL state\n");
- 
- 	printk("dpti: If you have a lot of devices this could take a few minutes.\n");
--	for (pHba = hba_chain; pHba; pHba = pHba->next) {
-+	for (pHba = hba_chain; pHba; pHba = next) {
-+		next = pHba->next;
- 		printk(KERN_INFO"%s: Reading the hardware resource table.\n", pHba->name);
- 		if (adpt_i2o_lct_get(pHba) < 0){
- 			adpt_i2o_delete_hba(pHba);
-@@ -263,7 +266,8 @@
- 		adpt_sysfs_class = NULL;
- 	}
- 
--	for (pHba = hba_chain; pHba; pHba = pHba->next) {
-+	for (pHba = hba_chain; pHba; pHba = next) {
-+		next = pHba->next;
- 		if (adpt_scsi_host_alloc(pHba, sht) < 0){
- 			adpt_i2o_delete_hba(pHba);
- 			continue;
-@@ -1229,11 +1233,10 @@
- 		}
- 	}
- 	pci_dev_put(pHba->pDev);
--	kfree(pHba);
--
- 	if (adpt_sysfs_class)
- 		device_destroy(adpt_sysfs_class,
- 				MKDEV(DPTI_I2O_MAJOR, pHba->unit));
-+	kfree(pHba);
- 
- 	if(hba_count <= 0){
- 		unregister_chrdev(DPTI_I2O_MAJOR, DPT_DRIVER);   
