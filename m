@@ -1,30 +1,27 @@
 From: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: [PATCH 06/13] pcmcia: Pass struct pcmcia_device to pcmcia_map_mem_page()
-Date: Wed, 11 Nov 2009 21:38:12 +0100
-Message-ID: <1257971899-9274-6-git-send-email-linux@dominikbrodowski.net>
+Subject: [PATCH 11/13] pcmcia: pcmcia_request_window() doesn't need a pointer to a pointer
+Date: Wed, 11 Nov 2009 21:38:17 +0100
+Message-ID: <1257971899-9274-11-git-send-email-linux@dominikbrodowski.net>
 References: <20091111203303.GA7939@comet.dominikbrodowski.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from isilmar.linta.de ([213.133.102.198]:47656 "EHLO linta.de"
+Received: from isilmar.linta.de ([213.133.102.198]:47668 "EHLO linta.de"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758844AbZKKUjA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Nov 2009 15:39:00 -0500
+	id S1758868AbZKKUjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Nov 2009 15:39:02 -0500
 In-Reply-To: <20091111203303.GA7939@comet.dominikbrodowski.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-pcmcia@lists.infradead.org
-Cc: Magnus Damm <damm@opensource.se>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>, Karsten Keil <isdn@linux-pingi.de>, Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>, Karsten Keil <isdn@linux-pingi.de>
 
-From: Magnus Damm <damm@opensource.se>
+pcmcia_request_window() only needs a pointer to struct pcmcia_device, not
+a pointer to a pointer.
 
-No logic changes, just pass struct pcmcia_device to pcmcia_map_mem_page()
-
-[linux@dominikbrodowski.net: update to 2.6.31]
 CC: netdev@vger.kernel.org
 CC: linux-wireless@vger.kernel.org
 CC: linux-scsi@vger.kernel.org
 CC: Jiri Kosina <jkosina@suse.cz>
 CC: Karsten Keil <isdn@linux-pingi.de>
-Signed-off-by: Magnus Damm <damm@opensource.se>
 Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
  drivers/char/pcmcia/ipwireless/main.c         |    4 ++--
@@ -40,321 +37,327 @@ Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
  drivers/net/wireless/netwave_cs.c             |    2 +-
  drivers/net/wireless/ray_cs.c                 |    6 +++---
  drivers/net/wireless/wavelan_cs.c             |    2 +-
- drivers/pcmcia/pcmcia_resource.c              |    5 ++++-
+ drivers/pcmcia/pcmcia_resource.c              |    6 +++---
  drivers/scsi/pcmcia/nsp_cs.c                  |    2 +-
  drivers/staging/comedi/drivers/ni_daq_700.c   |    2 +-
  drivers/staging/comedi/drivers/ni_daq_dio24.c |    2 +-
  drivers/staging/comedi/drivers/ni_labpc_cs.c  |    2 +-
- include/pcmcia/ds.h                           |    3 ++-
- 19 files changed, 29 insertions(+), 25 deletions(-)
+ include/pcmcia/ds.h                           |    2 +-
+ 19 files changed, 27 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/char/pcmcia/ipwireless/main.c b/drivers/char/pcmcia/ipwireless/main.c
-index 91ca23d..10af1c0 100644
+index 10af1c0..082146a 100644
 --- a/drivers/char/pcmcia/ipwireless/main.c
 +++ b/drivers/char/pcmcia/ipwireless/main.c
-@@ -125,7 +125,7 @@ static int ipwireless_probe(struct pcmcia_device *p_dev,
- 	memreq_common_memory.CardOffset = cfg->mem.win[0].card_addr;
- 	memreq_common_memory.Page = 0;
+@@ -116,7 +116,7 @@ static int ipwireless_probe(struct pcmcia_device *p_dev,
+ 		ipw->request_common_memory.Size = 0x1000;
+ 	ipw->request_common_memory.AccessSpeed = 0;
  
--	ret = pcmcia_map_mem_page(ipw->handle_common_memory,
-+	ret = pcmcia_map_mem_page(p_dev, ipw->handle_common_memory,
- 				&memreq_common_memory);
+-	ret = pcmcia_request_window(&p_dev, &ipw->request_common_memory,
++	ret = pcmcia_request_window(p_dev, &ipw->request_common_memory,
+ 				&ipw->handle_common_memory);
  
  	if (ret != 0)
-@@ -154,7 +154,7 @@ static int ipwireless_probe(struct pcmcia_device *p_dev,
- 	memreq_attr_memory.CardOffset = 0;
- 	memreq_attr_memory.Page = 0;
+@@ -145,7 +145,7 @@ static int ipwireless_probe(struct pcmcia_device *p_dev,
+ 	ipw->request_attr_memory.Size = 0;	/* this used to be 0x1000 */
+ 	ipw->request_attr_memory.AccessSpeed = 0;
  
--	ret = pcmcia_map_mem_page(ipw->handle_attr_memory,
-+	ret = pcmcia_map_mem_page(p_dev, ipw->handle_attr_memory,
- 				&memreq_attr_memory);
+-	ret = pcmcia_request_window(&p_dev, &ipw->request_attr_memory,
++	ret = pcmcia_request_window(p_dev, &ipw->request_attr_memory,
+ 				&ipw->handle_attr_memory);
  
  	if (ret != 0)
 diff --git a/drivers/isdn/hisax/sedlbauer_cs.c b/drivers/isdn/hisax/sedlbauer_cs.c
-index 33d7530..598e17a 100644
+index 598e17a..331716f 100644
 --- a/drivers/isdn/hisax/sedlbauer_cs.c
 +++ b/drivers/isdn/hisax/sedlbauer_cs.c
-@@ -276,7 +276,7 @@ static int sedlbauer_config_check(struct pcmcia_device *p_dev,
+@@ -272,7 +272,7 @@ static int sedlbauer_config_check(struct pcmcia_device *p_dev,
+ 		req->Base = mem->win[0].host_addr;
+ 		req->Size = mem->win[0].len;
+ 		req->AccessSpeed = 0;
+-		if (pcmcia_request_window(&p_dev, req, &p_dev->win) != 0)
++		if (pcmcia_request_window(p_dev, req, &p_dev->win) != 0)
  			return -ENODEV;
  		map.Page = 0;
  		map.CardOffset = mem->win[0].card_addr;
--		if (pcmcia_map_mem_page(p_dev->win, &map) != 0)
-+		if (pcmcia_map_mem_page(p_dev, p_dev->win, &map) != 0)
- 			return -ENODEV;
- 	}
- 	return 0;
 diff --git a/drivers/mtd/maps/pcmciamtd.c b/drivers/mtd/maps/pcmciamtd.c
-index 16d9985..80b9005 100644
+index 80b9005..689d6a7 100644
 --- a/drivers/mtd/maps/pcmciamtd.c
 +++ b/drivers/mtd/maps/pcmciamtd.c
-@@ -118,7 +118,7 @@ static caddr_t remap_window(struct map_info *map, unsigned long to)
- 		DEBUG(2, "Remapping window from 0x%8.8x to 0x%8.8x",
- 		      dev->offset, mrq.CardOffset);
- 		mrq.Page = 0;
--		ret = pcmcia_map_mem_page(win, &mrq);
-+		ret = pcmcia_map_mem_page(dev->p_dev, win, &mrq);
- 		if (ret != 0)
- 			return NULL;
- 		dev->offset = mrq.CardOffset;
+@@ -530,7 +530,7 @@ static int pcmciamtd_config(struct pcmcia_device *link)
+ 		int ret;
+ 		DEBUG(2, "requesting window with size = %dKiB memspeed = %d",
+ 		      req.Size >> 10, req.AccessSpeed);
+-		ret = pcmcia_request_window(&link, &req, &link->win);
++		ret = pcmcia_request_window(link, &req, &link->win);
+ 		DEBUG(2, "ret = %d dev->win_size = %d", ret, dev->win_size);
+ 		if(ret) {
+ 			req.Size >>= 1;
 diff --git a/drivers/net/pcmcia/fmvj18x_cs.c b/drivers/net/pcmcia/fmvj18x_cs.c
-index 61726c8..6b9c79e 100644
+index 6b9c79e..85f7c45 100644
 --- a/drivers/net/pcmcia/fmvj18x_cs.c
 +++ b/drivers/net/pcmcia/fmvj18x_cs.c
-@@ -574,7 +574,7 @@ static int fmvj18x_get_hwinfo(struct pcmcia_device *link, u_char *node_id)
-     base = ioremap(req.Base, req.Size);
-     mem.Page = 0;
-     mem.CardOffset = 0;
--    pcmcia_map_mem_page(link->win, &mem);
-+    pcmcia_map_mem_page(link, link->win, &mem);
+@@ -567,7 +567,7 @@ static int fmvj18x_get_hwinfo(struct pcmcia_device *link, u_char *node_id)
+     req.Attributes = WIN_DATA_WIDTH_8|WIN_MEMORY_TYPE_AM|WIN_ENABLE;
+     req.Base = 0; req.Size = 0;
+     req.AccessSpeed = 0;
+-    i = pcmcia_request_window(&link, &req, &link->win);
++    i = pcmcia_request_window(link, &req, &link->win);
+     if (i != 0)
+ 	return -1;
  
-     /*
-      *  MBH10304 CISTPL_FUNCE_LAN_NODE_ID format
-@@ -630,7 +630,7 @@ static int fmvj18x_setup_mfc(struct pcmcia_device *link)
+@@ -618,7 +618,7 @@ static int fmvj18x_setup_mfc(struct pcmcia_device *link)
+     req.Attributes = WIN_DATA_WIDTH_8|WIN_MEMORY_TYPE_AM|WIN_ENABLE;
+     req.Base = 0; req.Size = 0;
+     req.AccessSpeed = 0;
+-    i = pcmcia_request_window(&link, &req, &link->win);
++    i = pcmcia_request_window(link, &req, &link->win);
+     if (i != 0)
+ 	return -1;
  
-     mem.Page = 0;
-     mem.CardOffset = 0;
--    i = pcmcia_map_mem_page(link->win, &mem);
-+    i = pcmcia_map_mem_page(link, link->win, &mem);
-     if (i != 0) {
- 	iounmap(lp->base);
- 	lp->base = NULL;
 diff --git a/drivers/net/pcmcia/ibmtr_cs.c b/drivers/net/pcmcia/ibmtr_cs.c
-index 7a985ca..6fc89eb 100644
+index 6fc89eb..14fe5fa 100644
 --- a/drivers/net/pcmcia/ibmtr_cs.c
 +++ b/drivers/net/pcmcia/ibmtr_cs.c
-@@ -252,7 +252,7 @@ static int __devinit ibmtr_config(struct pcmcia_device *link)
- 
-     mem.CardOffset = mmiobase;
-     mem.Page = 0;
--    ret = pcmcia_map_mem_page(link->win, &mem);
-+    ret = pcmcia_map_mem_page(link, link->win, &mem);
+@@ -246,7 +246,7 @@ static int __devinit ibmtr_config(struct pcmcia_device *link)
+     req.Base = 0; 
+     req.Size = 0x2000;
+     req.AccessSpeed = 250;
+-    ret = pcmcia_request_window(&link, &req, &link->win);
++    ret = pcmcia_request_window(link, &req, &link->win);
      if (ret)
  	    goto failed;
-     ti->mmio = ioremap(req.Base, req.Size);
-@@ -269,7 +269,7 @@ static int __devinit ibmtr_config(struct pcmcia_device *link)
  
-     mem.CardOffset = srambase;
-     mem.Page = 0;
--    ret = pcmcia_map_mem_page(info->sram_win_handle, &mem);
-+    ret = pcmcia_map_mem_page(link, info->sram_win_handle, &mem);
+@@ -263,7 +263,7 @@ static int __devinit ibmtr_config(struct pcmcia_device *link)
+     req.Base = 0;
+     req.Size = sramsize * 1024;
+     req.AccessSpeed = 250;
+-    ret = pcmcia_request_window(&link, &req, &info->sram_win_handle);
++    ret = pcmcia_request_window(link, &req, &info->sram_win_handle);
      if (ret)
  	    goto failed;
  
 diff --git a/drivers/net/pcmcia/pcnet_cs.c b/drivers/net/pcmcia/pcnet_cs.c
-index 4156a6c..75e6894 100644
+index 518b094..d06a0ce 100644
 --- a/drivers/net/pcmcia/pcnet_cs.c
 +++ b/drivers/net/pcmcia/pcnet_cs.c
-@@ -325,7 +325,7 @@ static hw_info_t *get_hwinfo(struct pcmcia_device *link)
-     mem.Page = 0;
-     for (i = 0; i < NR_INFO; i++) {
- 	mem.CardOffset = hw_info[i].offset & ~(req.Size-1);
--	pcmcia_map_mem_page(link->win, &mem);
-+	pcmcia_map_mem_page(link, link->win, &mem);
- 	base = &virt[hw_info[i].offset & (req.Size-1)];
- 	if ((readb(base+0) == hw_info[i].a0) &&
- 	    (readb(base+2) == hw_info[i].a1) &&
-@@ -1499,7 +1499,7 @@ static int setup_shmem_window(struct pcmcia_device *link, int start_pg,
-     offset = mem.CardOffset % window_size;
-     mem.CardOffset -= offset;
-     mem.Page = 0;
--    ret = pcmcia_map_mem_page(link->win, &mem);
-+    ret = pcmcia_map_mem_page(link, link->win, &mem);
+@@ -317,7 +317,7 @@ static hw_info_t *get_hwinfo(struct pcmcia_device *link)
+     req.Attributes = WIN_DATA_WIDTH_8|WIN_MEMORY_TYPE_AM|WIN_ENABLE;
+     req.Base = 0; req.Size = 0;
+     req.AccessSpeed = 0;
+-    i = pcmcia_request_window(&link, &req, &link->win);
++    i = pcmcia_request_window(link, &req, &link->win);
+     if (i != 0)
+ 	return NULL;
+ 
+@@ -1491,7 +1491,7 @@ static int setup_shmem_window(struct pcmcia_device *link, int start_pg,
+     req.Attributes |= WIN_USE_WAIT;
+     req.Base = 0; req.Size = window_size;
+     req.AccessSpeed = mem_speed;
+-    ret = pcmcia_request_window(&link, &req, &link->win);
++    ret = pcmcia_request_window(link, &req, &link->win);
      if (ret)
  	    goto failed;
  
 diff --git a/drivers/net/pcmcia/smc91c92_cs.c b/drivers/net/pcmcia/smc91c92_cs.c
-index 580ec44..4ceaa45 100644
+index 4ceaa45..c6ca376 100644
 --- a/drivers/net/pcmcia/smc91c92_cs.c
 +++ b/drivers/net/pcmcia/smc91c92_cs.c
-@@ -480,7 +480,7 @@ static int mhz_mfc_config(struct pcmcia_device *link)
-     mem.CardOffset = mem.Page = 0;
-     if (smc->manfid == MANFID_MOTOROLA)
- 	mem.CardOffset = link->conf.ConfigBase;
--    i = pcmcia_map_mem_page(link->win, &mem);
-+    i = pcmcia_map_mem_page(link, link->win, &mem);
+@@ -472,7 +472,7 @@ static int mhz_mfc_config(struct pcmcia_device *link)
+     req.Attributes = WIN_DATA_WIDTH_8|WIN_MEMORY_TYPE_AM|WIN_ENABLE;
+     req.Base = req.Size = 0;
+     req.AccessSpeed = 0;
+-    i = pcmcia_request_window(&link, &req, &link->win);
++    i = pcmcia_request_window(link, &req, &link->win);
+     if (i != 0)
+ 	    return -ENODEV;
  
-     if ((i == 0)
- 	&& (smc->manfid == MANFID_MEGAHERTZ)
 diff --git a/drivers/net/pcmcia/xirc2ps_cs.c b/drivers/net/pcmcia/xirc2ps_cs.c
-index fbf9265..9bc4d60 100644
+index 9bc4d60..265852a 100644
 --- a/drivers/net/pcmcia/xirc2ps_cs.c
 +++ b/drivers/net/pcmcia/xirc2ps_cs.c
-@@ -932,7 +932,7 @@ xirc2ps_config(struct pcmcia_device * link)
- 	local->dingo_ccr = ioremap(req.Base,0x1000) + 0x0800;
- 	mem.CardOffset = 0x0;
- 	mem.Page = 0;
--	if ((err = pcmcia_map_mem_page(link->win, &mem)))
-+	if ((err = pcmcia_map_mem_page(link, link->win, &mem)))
+@@ -926,7 +926,7 @@ xirc2ps_config(struct pcmcia_device * link)
+ 	req.Attributes = WIN_DATA_WIDTH_8|WIN_MEMORY_TYPE_AM|WIN_ENABLE;
+ 	req.Base = req.Size = 0;
+ 	req.AccessSpeed = 0;
+-	if ((err = pcmcia_request_window(&link, &req, &link->win)))
++	if ((err = pcmcia_request_window(link, &req, &link->win)))
  	    goto config_error;
  
- 	/* Setup the CCRs; there are no infos in the CIS about the Ethernet
+ 	local->dingo_ccr = ioremap(req.Base,0x1000) + 0x0800;
 diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
-index a1b84fc..2aa6978 100644
+index 2aa6978..34d775c 100644
 --- a/drivers/net/wireless/airo_cs.c
 +++ b/drivers/net/wireless/airo_cs.c
-@@ -261,7 +261,7 @@ static int airo_cs_config_check(struct pcmcia_device *p_dev,
+@@ -257,7 +257,7 @@ static int airo_cs_config_check(struct pcmcia_device *p_dev,
+ 		req->Base = mem->win[0].host_addr;
+ 		req->Size = mem->win[0].len;
+ 		req->AccessSpeed = 0;
+-		if (pcmcia_request_window(&p_dev, req, &p_dev->win) != 0)
++		if (pcmcia_request_window(p_dev, req, &p_dev->win) != 0)
  			return -ENODEV;
  		map.Page = 0;
  		map.CardOffset = mem->win[0].card_addr;
--		if (pcmcia_map_mem_page(p_dev->win, &map) != 0)
-+		if (pcmcia_map_mem_page(p_dev, p_dev->win, &map) != 0)
- 			return -ENODEV;
- 	}
- 	/* If we got this far, we're cool! */
 diff --git a/drivers/net/wireless/b43/pcmcia.c b/drivers/net/wireless/b43/pcmcia.c
-index cd14b7e..c0a34bb 100644
+index c0a34bb..2588358 100644
 --- a/drivers/net/wireless/b43/pcmcia.c
 +++ b/drivers/net/wireless/b43/pcmcia.c
-@@ -93,7 +93,7 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
- 
- 	mem.CardOffset = 0;
- 	mem.Page = 0;
--	res = pcmcia_map_mem_page(dev->win, &mem);
-+	res = pcmcia_map_mem_page(dev, dev->win, &mem);
+@@ -87,7 +87,7 @@ static int __devinit b43_pcmcia_probe(struct pcmcia_device *dev)
+ 	win.Base = 0;
+ 	win.Size = SSB_CORE_SIZE;
+ 	win.AccessSpeed = 250;
+-	res = pcmcia_request_window(&dev, &win, &dev->win);
++	res = pcmcia_request_window(dev, &win, &dev->win);
  	if (res != 0)
- 		goto err_disable;
+ 		goto err_kfree_ssb;
  
 diff --git a/drivers/net/wireless/netwave_cs.c b/drivers/net/wireless/netwave_cs.c
-index cbd85de..4a8c621 100644
+index 4a8c621..bd4eff7 100644
 --- a/drivers/net/wireless/netwave_cs.c
 +++ b/drivers/net/wireless/netwave_cs.c
-@@ -763,7 +763,7 @@ static int netwave_pcmcia_config(struct pcmcia_device *link) {
+@@ -759,7 +759,7 @@ static int netwave_pcmcia_config(struct pcmcia_device *link) {
+     req.Attributes = WIN_DATA_WIDTH_8|WIN_MEMORY_TYPE_CM|WIN_ENABLE;
+     req.Base = 0; req.Size = 0x8000;
+     req.AccessSpeed = mem_speed;
+-    ret = pcmcia_request_window(&link, &req, &link->win);
++    ret = pcmcia_request_window(link, &req, &link->win);
      if (ret)
  	    goto failed;
      mem.CardOffset = 0x20000; mem.Page = 0; 
--    ret = pcmcia_map_mem_page(link->win, &mem);
-+    ret = pcmcia_map_mem_page(link, link->win, &mem);
-     if (ret)
- 	    goto failed;
- 
 diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index ed32875..f719ffc 100644
+index f719ffc..66e2d10 100644
 --- a/drivers/net/wireless/ray_cs.c
 +++ b/drivers/net/wireless/ray_cs.c
-@@ -443,7 +443,7 @@ static int ray_config(struct pcmcia_device *link)
- 		goto failed;
- 	mem.CardOffset = 0x0000;
- 	mem.Page = 0;
--	ret = pcmcia_map_mem_page(link->win, &mem);
-+	ret = pcmcia_map_mem_page(link, link->win, &mem);
+@@ -438,7 +438,7 @@ static int ray_config(struct pcmcia_device *link)
+ 	req.Base = 0;
+ 	req.Size = 0x8000;
+ 	req.AccessSpeed = ray_mem_speed;
+-	ret = pcmcia_request_window(&link, &req, &link->win);
++	ret = pcmcia_request_window(link, &req, &link->win);
  	if (ret)
  		goto failed;
- 	local->sram = ioremap(req.Base, req.Size);
-@@ -459,7 +459,7 @@ static int ray_config(struct pcmcia_device *link)
+ 	mem.CardOffset = 0x0000;
+@@ -454,7 +454,7 @@ static int ray_config(struct pcmcia_device *link)
+ 	req.Base = 0;
+ 	req.Size = 0x4000;
+ 	req.AccessSpeed = ray_mem_speed;
+-	ret = pcmcia_request_window(&link, &req, &local->rmem_handle);
++	ret = pcmcia_request_window(link, &req, &local->rmem_handle);
+ 	if (ret)
  		goto failed;
  	mem.CardOffset = 0x8000;
- 	mem.Page = 0;
--	ret = pcmcia_map_mem_page(local->rmem_handle, &mem);
-+	ret = pcmcia_map_mem_page(link, local->rmem_handle, &mem);
+@@ -470,7 +470,7 @@ static int ray_config(struct pcmcia_device *link)
+ 	req.Base = 0;
+ 	req.Size = 0x1000;
+ 	req.AccessSpeed = ray_mem_speed;
+-	ret = pcmcia_request_window(&link, &req, &local->amem_handle);
++	ret = pcmcia_request_window(link, &req, &local->amem_handle);
  	if (ret)
- 		goto failed;
- 	local->rmem = ioremap(req.Base, req.Size);
-@@ -475,7 +475,7 @@ static int ray_config(struct pcmcia_device *link)
  		goto failed;
  	mem.CardOffset = 0x0000;
- 	mem.Page = 0;
--	ret = pcmcia_map_mem_page(local->amem_handle, &mem);
-+	ret = pcmcia_map_mem_page(link, local->amem_handle, &mem);
- 	if (ret)
- 		goto failed;
- 	local->amem = ioremap(req.Base, req.Size);
 diff --git a/drivers/net/wireless/wavelan_cs.c b/drivers/net/wireless/wavelan_cs.c
-index 2fad4ac..d4df25d 100644
+index d4df25d..f8c5166 100644
 --- a/drivers/net/wireless/wavelan_cs.c
 +++ b/drivers/net/wireless/wavelan_cs.c
-@@ -3885,7 +3885,7 @@ wv_pcmcia_config(struct pcmcia_device *	link)
-       dev->mem_end = dev->mem_start + req.Size;
- 
-       mem.CardOffset = 0; mem.Page = 0;
--      i = pcmcia_map_mem_page(link->win, &mem);
-+      i = pcmcia_map_mem_page(link, link->win, &mem);
+@@ -3876,7 +3876,7 @@ wv_pcmcia_config(struct pcmcia_device *	link)
+       req.Attributes = WIN_DATA_WIDTH_8|WIN_MEMORY_TYPE_AM|WIN_ENABLE;
+       req.Base = req.Size = 0;
+       req.AccessSpeed = mem_speed;
+-      i = pcmcia_request_window(&link, &req, &link->win);
++      i = pcmcia_request_window(link, &req, &link->win);
        if (i != 0)
  	  break;
  
 diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
-index 820a6e5..b60952a 100644
+index fd20b1a..1f33ed6 100644
 --- a/drivers/pcmcia/pcmcia_resource.c
 +++ b/drivers/pcmcia/pcmcia_resource.c
-@@ -234,9 +234,12 @@ int pcmcia_get_mem_page(window_handle_t win, memreq_t *req)
- EXPORT_SYMBOL(pcmcia_get_mem_page);
- 
- 
--int pcmcia_map_mem_page(window_handle_t win, memreq_t *req)
-+int pcmcia_map_mem_page(struct pcmcia_device *p_dev, window_handle_t wh,
-+			memreq_t *req)
+@@ -752,9 +752,9 @@ EXPORT_SYMBOL(pcmcia_request_irq);
+  * Request_window() establishes a mapping between card memory space
+  * and system memory space.
+  */
+-int pcmcia_request_window(struct pcmcia_device **p_dev, win_req_t *req, window_handle_t *wh)
++int pcmcia_request_window(struct pcmcia_device *p_dev, win_req_t *req, window_handle_t *wh)
  {
- 	struct pcmcia_socket *s;
-+	window_handle_t win = wh;
-+
- 	if ((win == NULL) || (win->magic != WINDOW_MAGIC))
- 		return -EINVAL;
- 	s = win->sock;
+-	struct pcmcia_socket *s = (*p_dev)->socket;
++	struct pcmcia_socket *s = p_dev->socket;
+ 	pccard_mem_map *win;
+ 	u_long align;
+ 	int w;
+@@ -804,7 +804,7 @@ int pcmcia_request_window(struct pcmcia_device **p_dev, win_req_t *req, window_h
+ 			return -EINVAL;
+ 		}
+ 	}
+-	(*p_dev)->_win |= CLIENT_WIN_REQ(w);
++	p_dev->_win |= CLIENT_WIN_REQ(w);
+ 
+ 	/* Configure the socket controller */
+ 	win->map = w+1;
 diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index e32c344..c54108f 100644
+index c54108f..9dfd6f5 100644
 --- a/drivers/scsi/pcmcia/nsp_cs.c
 +++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1687,7 +1687,7 @@ static int nsp_cs_config_check(struct pcmcia_device *p_dev,
- 			if (pcmcia_request_window(&p_dev, &cfg_mem->req, &p_dev->win) != 0)
+@@ -1684,7 +1684,7 @@ static int nsp_cs_config_check(struct pcmcia_device *p_dev,
+ 			if (cfg_mem->req.Size < 0x1000)
+ 				cfg_mem->req.Size = 0x1000;
+ 			cfg_mem->req.AccessSpeed = 0;
+-			if (pcmcia_request_window(&p_dev, &cfg_mem->req, &p_dev->win) != 0)
++			if (pcmcia_request_window(p_dev, &cfg_mem->req, &p_dev->win) != 0)
  				goto next_entry;
  			map.Page = 0; map.CardOffset = mem->win[0].card_addr;
--			if (pcmcia_map_mem_page(p_dev->win, &map) != 0)
-+			if (pcmcia_map_mem_page(p_dev, p_dev->win, &map) != 0)
- 				goto next_entry;
- 
- 			cfg_mem->data->MmioAddress = (unsigned long) ioremap_nocache(cfg_mem->req.Base, cfg_mem->req.Size);
+ 			if (pcmcia_map_mem_page(p_dev, p_dev->win, &map) != 0)
 diff --git a/drivers/staging/comedi/drivers/ni_daq_700.c b/drivers/staging/comedi/drivers/ni_daq_700.c
-index e06d5b2..aeb85b3 100644
+index aeb85b3..7328a84 100644
 --- a/drivers/staging/comedi/drivers/ni_daq_700.c
 +++ b/drivers/staging/comedi/drivers/ni_daq_700.c
-@@ -616,7 +616,7 @@ static int dio700_pcmcia_config_loop(struct pcmcia_device *p_dev,
+@@ -612,7 +612,7 @@ static int dio700_pcmcia_config_loop(struct pcmcia_device *p_dev,
+ 		if (req->Size < 0x1000)
+ 			req->Size = 0x1000;
+ 		req->AccessSpeed = 0;
+-		if (pcmcia_request_window(&p_dev, req, &p_dev->win))
++		if (pcmcia_request_window(p_dev, req, &p_dev->win))
  			return -ENODEV;
  		map.Page = 0;
  		map.CardOffset = mem->win[0].card_addr;
--		if (pcmcia_map_mem_page(p_dev->win, &map))
-+		if (pcmcia_map_mem_page(p_dev, p_dev->win, &map))
- 			return -ENODEV;
- 	}
- 	/* If we got this far, we're cool! */
 diff --git a/drivers/staging/comedi/drivers/ni_daq_dio24.c b/drivers/staging/comedi/drivers/ni_daq_dio24.c
-index 9257a42..0968a67 100644
+index 0968a67..5056315 100644
 --- a/drivers/staging/comedi/drivers/ni_daq_dio24.c
 +++ b/drivers/staging/comedi/drivers/ni_daq_dio24.c
-@@ -367,7 +367,7 @@ static int dio24_pcmcia_config_loop(struct pcmcia_device *p_dev,
+@@ -363,7 +363,7 @@ static int dio24_pcmcia_config_loop(struct pcmcia_device *p_dev,
+ 		if (req->Size < 0x1000)
+ 			req->Size = 0x1000;
+ 		req->AccessSpeed = 0;
+-		if (pcmcia_request_window(&p_dev, req, &p_dev->win))
++		if (pcmcia_request_window(p_dev, req, &p_dev->win))
  			return -ENODEV;
  		map.Page = 0;
  		map.CardOffset = mem->win[0].card_addr;
--		if (pcmcia_map_mem_page(p_dev->win, &map))
-+		if (pcmcia_map_mem_page(p_dev, p_dev->win, &map))
- 			return -ENODEV;
- 	}
- 	/* If we got this far, we're cool! */
 diff --git a/drivers/staging/comedi/drivers/ni_labpc_cs.c b/drivers/staging/comedi/drivers/ni_labpc_cs.c
-index 28ff4a6..b4c7dfa 100644
+index b4c7dfa..7fb5058 100644
 --- a/drivers/staging/comedi/drivers/ni_labpc_cs.c
 +++ b/drivers/staging/comedi/drivers/ni_labpc_cs.c
-@@ -346,7 +346,7 @@ static int labpc_pcmcia_config_loop(struct pcmcia_device *p_dev,
+@@ -342,7 +342,7 @@ static int labpc_pcmcia_config_loop(struct pcmcia_device *p_dev,
+ 		if (req->Size < 0x1000)
+ 			req->Size = 0x1000;
+ 		req->AccessSpeed = 0;
+-		if (pcmcia_request_window(&p_dev, req, &p_dev->win))
++		if (pcmcia_request_window(p_dev, req, &p_dev->win))
  			return -ENODEV;
  		map.Page = 0;
  		map.CardOffset = mem->win[0].card_addr;
--		if (pcmcia_map_mem_page(p_dev->win, &map))
-+		if (pcmcia_map_mem_page(p_dev, p_dev->win, &map))
- 			return -ENODEV;
- 	}
- 	/* If we got this far, we're cool! */
 diff --git a/include/pcmcia/ds.h b/include/pcmcia/ds.h
-index 40b098d..f240bfa 100644
+index cbf5f05..d6c55fd 100644
 --- a/include/pcmcia/ds.h
 +++ b/include/pcmcia/ds.h
-@@ -204,7 +204,8 @@ int pcmcia_request_window(struct pcmcia_device **p_dev, win_req_t *req,
+@@ -199,7 +199,7 @@ int pcmcia_request_irq(struct pcmcia_device *p_dev, irq_req_t *req);
+ int pcmcia_request_configuration(struct pcmcia_device *p_dev,
+ 				 config_req_t *req);
+ 
+-int pcmcia_request_window(struct pcmcia_device **p_dev, win_req_t *req,
++int pcmcia_request_window(struct pcmcia_device *p_dev, win_req_t *req,
+ 			  window_handle_t *wh);
  int pcmcia_release_window(struct pcmcia_device *p_dev, window_handle_t win);
- 
- int pcmcia_get_mem_page(window_handle_t win, memreq_t *req);
--int pcmcia_map_mem_page(window_handle_t win, memreq_t *req);
-+int pcmcia_map_mem_page(struct pcmcia_device *p_dev, window_handle_t win,
-+			memreq_t *req);
- 
- int pcmcia_modify_configuration(struct pcmcia_device *p_dev, modconf_t *mod);
- void pcmcia_disable_device(struct pcmcia_device *p_dev);
+ int pcmcia_map_mem_page(struct pcmcia_device *p_dev, window_handle_t win,
 -- 
 1.6.0.4
 
