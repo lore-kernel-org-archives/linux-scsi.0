@@ -1,29 +1,84 @@
 From: michaelc@cs.wisc.edu
-Subject: iscsi fixes and features for 2.6.33
-Date: Wed, 11 Nov 2009 16:34:29 -0600
-Message-ID: <1257978876-2742-1-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/7] bnx2i: use common iscsi suspend queue
+Date: Wed, 11 Nov 2009 16:34:30 -0600
+Message-ID: <1257978876-2742-2-git-send-email-michaelc@cs.wisc.edu>
+References: <1257978876-2742-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48685 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20467 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759311AbZKKWec (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Nov 2009 17:34:32 -0500
-Received: from int-mx03.intmail.prod.int.phx2.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id nABMYb8G002647
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2009 17:34:38 -0500
-Received: from localhost.localdomain (vpn-10-182.rdu.redhat.com [10.11.10.182])
-	by int-mx03.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id nABMYagK016321
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2009 17:34:37 -0500
+	id S1759326AbZKKWee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Nov 2009 17:34:34 -0500
+In-Reply-To: <1257978876-2742-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-The following patches are for 2.6.33. They were made over scsi-misc.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-[PATCH 1/7] bnx2i: use common iscsi suspend queue
-[PATCH 2/7] libiscsi: fix login/text checks in pdu injection code
-[PATCH 3/7] libiscsi: Check TMF state before sending PDU
-[PATCH 4/7] libiscsi: add warm target reset tmf support
-[PATCH 5/7] iscsi class: modify handling of replacement timeout
-[PATCH 6/7] iser: set tgt and lu reset timeout
-[PATCH 7/7] libiscsi: hook into ramp up/down handling
+This just has bnx2i use the iscsi_suspend_queue helper.
+
+The suspend works as follows:
+
+When ep_poll has succeeed iscsid will call conn_bind, the LLD will
+then call iscsi_conn_bind which will clear the suspend bit.
+When ep_disconnect is called (or if there is a conn error) we set
+the suspend bit. For the ep_disconnect case I  added a helper
+in the previous kernel that will take the session lock to make sure
+iscsi_queuecommand/xmit_task is not running and it will set
+the suspend bit.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/bnx2i/bnx2i.h       |    1 -
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |    8 +-------
+ 2 files changed, 1 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index 5edde1a..2b973f3 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -232,7 +232,6 @@ struct bnx2i_conn {
+ 	struct iscsi_cls_conn *cls_conn;
+ 	struct bnx2i_hba *hba;
+ 	struct completion cmd_cleanup_cmpl;
+-	int is_bound;
+ 
+ 	u32 iscsi_conn_cid;
+ #define BNX2I_CID_RESERVED	0x5AFF
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index cafb888..89e84c3 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1161,9 +1161,6 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
+ 	struct bnx2i_cmd *cmd = task->dd_data;
+ 	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
+ 
+-	if (!bnx2i_conn->is_bound)
+-		return -ENOTCONN;
+-
+ 	/*
+ 	 * If there is no scsi_cmnd this must be a mgmt task
+ 	 */
+@@ -1371,7 +1368,6 @@ static int bnx2i_conn_bind(struct iscsi_cls_session *cls_session,
+ 	bnx2i_conn->ep = bnx2i_ep;
+ 	bnx2i_conn->iscsi_conn_cid = bnx2i_ep->ep_iscsi_cid;
+ 	bnx2i_conn->fw_cid = bnx2i_ep->ep_cid;
+-	bnx2i_conn->is_bound = 1;
+ 
+ 	ret_code = bnx2i_bind_conn_to_iscsi_cid(hba, bnx2i_conn,
+ 						bnx2i_ep->ep_iscsi_cid);
+@@ -1896,9 +1892,7 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
+ 		conn = bnx2i_conn->cls_conn->dd_data;
+ 		session = conn->session;
+ 
+-		spin_lock_bh(&session->lock);
+-		bnx2i_conn->is_bound = 0;
+-		spin_unlock_bh(&session->lock);
++		iscsi_suspend_queue(conn);
+ 	}
+ 
+ 	hba = bnx2i_ep->hba;
+-- 
+1.6.2.2
+
