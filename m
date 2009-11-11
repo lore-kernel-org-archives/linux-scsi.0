@@ -1,62 +1,47 @@
-From: Marcel Holtmann <marcel-kz+m5ild9QBg9hUCZPvPmw@public.gmane.org>
-Subject: Re: [PATCH 13/13] pcmcia: rework the irq_req_t typedef
-Date: Wed, 11 Nov 2009 21:46:03 +0100
-Message-ID: <1257972363.21467.7.camel@violet>
-References: <20091111203303.GA7939@comet.dominikbrodowski.net>
-	 <1257971899-9274-13-git-send-email-linux@dominikbrodowski.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
+ resync
+Date: Wed, 11 Nov 2009 20:50:45 GMT
+Message-ID: <200911112050.nABKojna021576@demeter.kernel.org>
+References: <bug-14534-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1257971899-9274-13-git-send-email-linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Sender: linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Cc: linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:44875 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758871AbZKKUuj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2009 15:50:39 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nABKojvN021577
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2009 20:50:45 GMT
+In-Reply-To: <bug-14534-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Dominik,
+http://bugzilla.kernel.org/show_bug.cgi?id=14534
 
-> Most of the irq_req_t typedef'd struct can be re-worked quite
-> easily:
-> 
-> (1) IRQInfo2 was unused in any case, so drop it.
-> 
-> (2) IRQInfo1 was used write-only, so drop it.
-> 
-> (3) Instance (private data to be passed to the IRQ handler):
-> 	Most PCMCIA drivers using pcmcia_request_irq() to actually
-> 	register an IRQ handler set the "dev_id" to the same pointer
-> 	as the "priv" pointer in struct pcmcia_device. Modify the two
-> 	exceptions (ipwireless, ibmtr_cs) to also work this waym and
-> 	set the IRQ handler's "dev_id" to p_dev->priv unconditionally.
-> 
-> (4) Handler is to be of type irq_handler_t.
-> 
-> (5) Handler != NULL already tells whether an IRQ handler is present.
-> 	Therefore, we do not need the IRQ_HANDLER_PRESENT flag in
-> 	irq_req_t.Attributes.
-> 
-> CC: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
-> CC: Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>
-> CC: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-> CC: Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>
-> Signed-off-by: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-> ---
->  drivers/ata/pata_pcmcia.c                        |    1 -
->  drivers/bluetooth/bluecard_cs.c                  |    4 +---
->  drivers/bluetooth/bt3c_cs.c                      |    4 +---
->  drivers/bluetooth/btuart_cs.c                    |    4 +---
->  drivers/bluetooth/dtl1_cs.c                      |    4 +---
 
-for the Bluetooth parts:
+Christian Vilhelm <christian.vilhelm@univ-lille2.fr> changed:
 
-Acked-by: Marcel Holtmann <marcel-kz+m5ild9QBg9hUCZPvPmw@public.gmane.org>
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |christian.vilhelm@univ-lill
+                   |                            |e2.fr
 
-Regards
 
-Marcel
+
+
+--- Comment #8 from Christian Vilhelm <christian.vilhelm@univ-lille2.fr>  2009-11-11 20:50:40 ---
+I just tried the patches on 2.6.32-rc6, I did not apply the 7th patch as the
+new libsas version is not in -rc6.
+I could create a raid 5 array just fine on 6 SATA disks, using a 64xx based
+card (Areca 1300). The raid-5 build was not possible without the patches (tried
+many times with different configurations).
+I will do some more tests in the coming days to confirm this.
+Many thanks Andy for fixing this.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
