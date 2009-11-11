@@ -1,14 +1,15 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/7] bnx2i: use common iscsi suspend queue
-Date: Wed, 11 Nov 2009 16:34:30 -0600
-Message-ID: <1257978876-2742-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 2/7] libiscsi: fix login/text checks in pdu injection code
+Date: Wed, 11 Nov 2009 16:34:31 -0600
+Message-ID: <1257978876-2742-3-git-send-email-michaelc@cs.wisc.edu>
 References: <1257978876-2742-1-git-send-email-michaelc@cs.wisc.edu>
+ <1257978876-2742-2-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20467 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33775 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759326AbZKKWee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Nov 2009 17:34:34 -0500
-In-Reply-To: <1257978876-2742-1-git-send-email-michaelc@cs.wisc.edu>
+	id S1759464AbZKKWek (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Nov 2009 17:34:40 -0500
+In-Reply-To: <1257978876-2742-2-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -16,69 +17,85 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This just has bnx2i use the iscsi_suspend_queue helper.
-
-The suspend works as follows:
-
-When ep_poll has succeeed iscsid will call conn_bind, the LLD will
-then call iscsi_conn_bind which will clear the suspend bit.
-When ep_disconnect is called (or if there is a conn error) we set
-the suspend bit. For the ep_disconnect case I  added a helper
-in the previous kernel that will take the session lock to make sure
-iscsi_queuecommand/xmit_task is not running and it will set
-the suspend bit.
+For some reason we used to check for the the immediate bit
+set and the opcocde in many places instead of just masking
+the opcode. In the passthrough code this is a problem
+because userspace may or may not have set the immediate bit
+and it does not have to. This fixes up the opcode checks
+in the passthrough code, so we mask off the opcode then
+check against the iscsi proto definition like is done in
+other places.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/bnx2i/bnx2i.h       |    1 -
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    8 +-------
- 2 files changed, 1 insertions(+), 8 deletions(-)
+ drivers/scsi/libiscsi.c |   21 +++++++++++++++------
+ 1 files changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index 5edde1a..2b973f3 100644
---- a/drivers/scsi/bnx2i/bnx2i.h
-+++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -232,7 +232,6 @@ struct bnx2i_conn {
- 	struct iscsi_cls_conn *cls_conn;
- 	struct bnx2i_hba *hba;
- 	struct completion cmd_cleanup_cmpl;
--	int is_bound;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 67d0f3f..8c29480 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -577,12 +577,12 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
+ 	struct iscsi_session *session = conn->session;
+ 	struct iscsi_hdr *hdr = task->hdr;
+ 	struct iscsi_nopout *nop = (struct iscsi_nopout *)hdr;
++	uint8_t opcode = hdr->opcode & ISCSI_OPCODE_MASK;
  
- 	u32 iscsi_conn_cid;
- #define BNX2I_CID_RESERVED	0x5AFF
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index cafb888..89e84c3 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1161,9 +1161,6 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
- 	struct bnx2i_cmd *cmd = task->dd_data;
- 	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
+ 	if (conn->session->state == ISCSI_STATE_LOGGING_OUT)
+ 		return -ENOTCONN;
  
--	if (!bnx2i_conn->is_bound)
--		return -ENOTCONN;
--
+-	if (hdr->opcode != (ISCSI_OP_LOGIN | ISCSI_OP_IMMEDIATE) &&
+-	    hdr->opcode != (ISCSI_OP_TEXT | ISCSI_OP_IMMEDIATE))
++	if (opcode != ISCSI_OP_LOGIN && opcode != ISCSI_OP_TEXT)
+ 		nop->exp_statsn = cpu_to_be32(conn->exp_statsn);
  	/*
- 	 * If there is no scsi_cmnd this must be a mgmt task
- 	 */
-@@ -1371,7 +1368,6 @@ static int bnx2i_conn_bind(struct iscsi_cls_session *cls_session,
- 	bnx2i_conn->ep = bnx2i_ep;
- 	bnx2i_conn->iscsi_conn_cid = bnx2i_ep->ep_iscsi_cid;
- 	bnx2i_conn->fw_cid = bnx2i_ep->ep_cid;
--	bnx2i_conn->is_bound = 1;
+ 	 * pre-format CmdSN for outgoing PDU.
+@@ -590,9 +590,12 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
+ 	nop->cmdsn = cpu_to_be32(session->cmdsn);
+ 	if (hdr->itt != RESERVED_ITT) {
+ 		/*
+-		 * TODO: We always use immediate, so we never hit this.
++		 * TODO: We always use immediate for normal session pdus.
+ 		 * If we start to send tmfs or nops as non-immediate then
+ 		 * we should start checking the cmdsn numbers for mgmt tasks.
++		 *
++		 * During discovery sessions iscsid sends TEXT as non immediate,
++		 * but we always only send one PDU at a time.
+ 		 */
+ 		if (conn->c_stage == ISCSI_CONN_STARTED &&
+ 		    !(hdr->opcode & ISCSI_OP_IMMEDIATE)) {
+@@ -620,22 +623,28 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ {
+ 	struct iscsi_session *session = conn->session;
+ 	struct iscsi_host *ihost = shost_priv(session->host);
++	uint8_t opcode = hdr->opcode & ISCSI_OPCODE_MASK;
+ 	struct iscsi_task *task;
+ 	itt_t itt;
  
- 	ret_code = bnx2i_bind_conn_to_iscsi_cid(hba, bnx2i_conn,
- 						bnx2i_ep->ep_iscsi_cid);
-@@ -1896,9 +1892,7 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
- 		conn = bnx2i_conn->cls_conn->dd_data;
- 		session = conn->session;
+ 	if (session->state == ISCSI_STATE_TERMINATE)
+ 		return NULL;
  
--		spin_lock_bh(&session->lock);
--		bnx2i_conn->is_bound = 0;
--		spin_unlock_bh(&session->lock);
-+		iscsi_suspend_queue(conn);
- 	}
+-	if (hdr->opcode == (ISCSI_OP_LOGIN | ISCSI_OP_IMMEDIATE) ||
+-	    hdr->opcode == (ISCSI_OP_TEXT | ISCSI_OP_IMMEDIATE))
++	if (opcode == ISCSI_OP_LOGIN || opcode == ISCSI_OP_TEXT) {
+ 		/*
+ 		 * Login and Text are sent serially, in
+ 		 * request-followed-by-response sequence.
+ 		 * Same task can be used. Same ITT must be used.
+ 		 * Note that login_task is preallocated at conn_create().
+ 		 */
++		if (conn->login_task->state != ISCSI_TASK_FREE) {
++			iscsi_conn_printk(KERN_ERR, conn, "Login/Text in "
++					  "progress. Cannot start new task.\n");
++			return NULL;
++		}
++
+ 		task = conn->login_task;
+-	else {
++	} else {
+ 		if (session->state != ISCSI_STATE_LOGGED_IN)
+ 			return NULL;
  
- 	hba = bnx2i_ep->hba;
 -- 
 1.6.2.2
 
