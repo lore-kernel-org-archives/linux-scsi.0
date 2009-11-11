@@ -1,38 +1,38 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: [PATCH] osd_protocol.h: Add missing #include
-Date: Wed, 11 Nov 2009 15:14:30 +0000
-Message-ID: <20091111151430.GA3515@deprecation.cyrius.com>
+From: Lukas Kolbe <lkolbe@TechFak.Uni-Bielefeld.DE>
+Subject: Bug 14579 -  Devices disappear... and Bug 14577 - Data corruption
+	with Adaptec
+Date: Wed, 11 Nov 2009 17:02:20 +0100
+Message-ID: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:44675 "EHLO
-	sorrow.cyrius.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756940AbZKKPOe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2009 10:14:34 -0500
+Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:41366 "EHLO
+	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750918AbZKKQKP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Nov 2009 11:10:15 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: sfrey@techfak.uni-bielefeld.de
 
-include/scsi/osd_protocol.h uses ALIGN() without an #include
-<linux/kernel.h>, leading to:
-| include/scsi/osd_protocol.h:362: error: implicit declaration of function 'ALIGN'
+Hi all,
 
-Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
-Acked-by: Boaz Harrosh <bharrosh@panasas.com>
+we'd really appreciate any hints and help we can get for the following
+bugs:
+http://bugzilla.kernel.org/show_bug.cgi?id=14579
 
---- a/include/scsi/osd_protocol.h	2009-10-31 09:19:28.000000000 +0000
-+++ b/include/scsi/osd_protocol.h	2009-10-31 09:27:42.000000000 +0000
-@@ -17,6 +17,7 @@
- #define __OSD_PROTOCOL_H__
- 
- #include <linux/types.h>
-+#include <linux/kernel.h>
- #include <asm/unaligned.h>
- #include <scsi/scsi.h>
- 
+In anticipation that we would be asked to run a current kernel snapshot,
+we tested 2.6.32-rc2 and hit another bug:
+http://bugzilla.kernel.org/show_bug.cgi?id=14577
+
+I do not believe it's a hardware fault at the moment as the machine
+ran OK under Solaris for a few weeks (including successful btape runs).
+
+We'll happily provide more info if it's needed.
 
 -- 
-Martin Michlmayr
-http://www.cyrius.com/
+Regards,
+Lukas Kolbe
+
