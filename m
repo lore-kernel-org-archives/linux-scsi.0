@@ -1,132 +1,110 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 08/17] hpsa: Factor out some pci_unmap code
-Date: Wed, 11 Nov 2009 10:51:04 -0600
-Message-ID: <20091111165104.17754.42113.stgit@beardog.cce.hp.com>
+Subject: [PATCH 04/17] Fix use of unallocated memory for MSA2xxx enclosure
+	device data.
+Date: Wed, 11 Nov 2009 10:50:43 -0600
+Message-ID: <20091111165043.17754.6076.stgit@beardog.cce.hp.com>
 References: <20091111164803.17754.11900.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:47132 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758024AbZKKQth (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2009 11:49:37 -0500
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:27250 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757843AbZKKQtQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2009 11:49:16 -0500
 In-Reply-To: <20091111164803.17754.11900.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, scameron@beardog.cce.hp.com, mikem@beardog.cce.hp.com
 
-hpsa: Factor out some pci_unmap code.  There are a few places
-where the same, or nearly the same code is used to pci_unmap
-data buffers of driver initiated commands.  Factor these out
-into a separate function.
+Fix use of unallocated memory for MSA2xxx enclosure device data.
+If you happened to have fewer physical devices reported by
+CCISS_REPORT_LUNS than the total number of MSA2012 enclosures
+(unlikely), the data for some enclosure(s) would get stored into,
+or cause other device data to be stored into unallocated territory.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
 
- drivers/scsi/hpsa.c |   45 ++++++++++++++-------------------------------
- 1 files changed, 14 insertions(+), 31 deletions(-)
+ drivers/scsi/hpsa.c |   26 ++++++++++++++++++++++----
+ 1 files changed, 22 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 81fbbff..74c054a 100644
+index 6c4d9fd..e402155 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -928,17 +928,18 @@ static int hpsa_scsi_detect(struct ctlr_info *h)
- 	return -1;
- }
- 
--static void hpsa_unmap_one(struct pci_dev *pdev,
--		struct CommandList *cp,
--		size_t buflen,
--		int data_direction)
-+static void hpsa_pci_unmap(struct pci_dev *pdev,
-+	struct CommandList *c, int sg_used, int data_direction)
+@@ -1314,7 +1314,8 @@ static void figure_bus_target_lun(struct ctlr_info *h,
+ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	struct hpsa_scsi_dev_t *tmpdevice,
+ 	struct hpsa_scsi_dev_t *this_device, __u8 *lunaddrbytes,
+-	int bus, int target, int lun, unsigned long lunzerobits[])
++	int bus, int target, int lun, unsigned long lunzerobits[],
++	int *nmsa2xxx_enclosures)
  {
-+	int i;
- 	union u64bit addr64;
+ 	unsigned char scsi3addr[8];
  
--	addr64.val32.lower = cp->SG[0].Addr.lower;
--	addr64.val32.upper = cp->SG[0].Addr.upper;
--	pci_unmap_single(pdev, (dma_addr_t) addr64.val,
--		buflen, data_direction);
-+	for (i = 0; i < sg_used; i++) {
-+		addr64.val32.lower = c->SG[i].Addr.lower;
-+		addr64.val32.upper = c->SG[i].Addr.upper;
-+		pci_unmap_single(pdev, (dma_addr_t) addr64.val, c->SG[i].Len,
-+			data_direction);
+@@ -1333,10 +1334,19 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	if (is_hba_lunid(scsi3addr))
+ 		return 0; /* Don't add the RAID controller here. */
+ 
++#define MAX_MSA2XXX_ENCLOSURES 32
++	if (*nmsa2xxx_enclosures >= MAX_MSA2XXX_ENCLOSURES) {
++		dev_warn(&h->pdev->dev, "Maximum number of MSA2XXX "
++			"enclosures exceeded.  Check your hardware "
++			"configuration.");
++		return 0;
 +	}
- }
++
+ 	memset(scsi3addr, 0, 8);
+ 	scsi3addr[3] = target;
+ 	if (hpsa_update_device_info(h, scsi3addr, this_device))
+ 		return 0;
++	(*nmsa2xxx_enclosures)++;
+ 	hpsa_set_bus_target_lun(this_device, bus, target, 0);
+ 	set_bit(target, lunzerobits);
+ 	return 1;
+@@ -1416,7 +1426,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 	struct hpsa_scsi_dev_t **currentsd, *this_device, *tmpdevice;
+ 	int ncurrent = 0;
+ 	int reportlunsize = sizeof(*physdev_list) + HPSA_MAX_PHYS_LUN * 8;
+-	int i;
++	int i, nmsa2xxx_enclosures, ndevs_to_allocate;
+ 	int bus, target, lun;
+ 	DECLARE_BITMAP(lunzerobits, HPSA_MAX_TARGETS_PER_CTLR);
  
- static void hpsa_map_one(struct pci_dev *pdev,
-@@ -1055,7 +1056,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
- 		TYPE_CMD);
- 	if (rc == 0) {
- 		hpsa_scsi_do_simple_cmd_core(h, c);
--		hpsa_unmap_one(h->pdev, c, bufsize, PCI_DMA_FROMDEVICE);
-+		hpsa_pci_unmap(h->pdev, c, 1, PCI_DMA_FROMDEVICE);
+@@ -1438,8 +1448,14 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 			logdev_list, &nlogicals))
+ 		goto out;
  
- 		ei = c->err_info;
- 		if (ei->CommandStatus != 0 &&
-@@ -1162,7 +1163,7 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- 	if (extended_response)
- 		c->Request.CDB[1] = extended_response;
- 	hpsa_scsi_do_simple_cmd_core(h, c);
--	hpsa_unmap_one(h->pdev, c, bufsize, PCI_DMA_FROMDEVICE);
-+	hpsa_pci_unmap(h->pdev, c, 1, PCI_DMA_FROMDEVICE);
- 	ei = c->err_info;
- 	if (ei->CommandStatus != 0 &&
- 	    ei->CommandStatus != CMD_DATA_UNDERRUN) {
-@@ -2144,12 +2145,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
- 		c->SG[0].Ext = 0; /* we are not chaining*/
++	/* We might see up to 32 MSA2xxx enclosures, actually 8 of them
++	 * but each of them 4 times through different paths.  The plus 1
++	 * is for the RAID controller.
++	 */
++	ndevs_to_allocate = nphysicals + nlogicals + MAX_MSA2XXX_ENCLOSURES + 1;
++
+ 	/* Allocate the per device structures */
+-	for (i = 0; i < nphysicals + nlogicals + 1; i++) {
++	for (i = 0; i < ndevs_to_allocate; i++) {
+ 		currentsd[i] = kzalloc(sizeof(*currentsd[i]), GFP_KERNEL);
+ 		if (!currentsd[i]) {
+ 			dev_warn(&h->pdev->dev, "out of memory at %s:%d\n",
+@@ -1450,6 +1466,7 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
  	}
- 	hpsa_scsi_do_simple_cmd_core(h, c);
--
--	/* unlock the buffers from DMA */
--	temp64.val32.lower = c->SG[0].Addr.lower;
--	temp64.val32.upper = c->SG[0].Addr.upper;
--	pci_unmap_single(h->pdev, (dma_addr_t) temp64.val, iocommand.buf_size,
--			 PCI_DMA_BIDIRECTIONAL);
-+	hpsa_pci_unmap(h->pdev, c, 1, PCI_DMA_BIDIRECTIONAL);
  
- 	/* Copy the error information out */
- 	memcpy(&iocommand.error_info, c->err_info,
-@@ -2277,14 +2273,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	/* adjust our table of devices */
++	nmsa2xxx_enclosures = 0;
+ 	for (i = 0; i < nphysicals + nlogicals + 1; i++) {
+ 		__u8 *lunaddrbytes;
+ 
+@@ -1482,7 +1499,8 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno)
+ 		 * there is no lun 0.
+ 		 */
+ 		if (add_msa2xxx_enclosure_device(h, tmpdevice, this_device,
+-			lunaddrbytes, bus, target, lun, lunzerobits)) {
++				lunaddrbytes, bus, target, lun, lunzerobits,
++				&nmsa2xxx_enclosures)) {
+ 			ncurrent++;
+ 			this_device = currentsd[ncurrent];
  		}
- 	}
- 	hpsa_scsi_do_simple_cmd_core(h, c);
--	/* unlock the buffers from DMA */
--	for (i = 0; i < sg_used; i++) {
--		temp64.val32.lower = c->SG[i].Addr.lower;
--		temp64.val32.upper = c->SG[i].Addr.upper;
--		pci_unmap_single(h->pdev,
--			(dma_addr_t) temp64.val, buff_size[i],
--			PCI_DMA_BIDIRECTIONAL);
--	}
-+	hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
- 	/* Copy the error information out */
- 	memcpy(&ioc->error_info, c->err_info, sizeof(ioc->error_info));
- 	if (copy_to_user(argp, ioc, sizeof(*ioc))) {
-@@ -2501,7 +2490,6 @@ static int sendcmd_core(struct ctlr_info *h, struct CommandList *c)
- 	int i;
- 	unsigned long complete;
- 	int status = IO_ERROR;
--	union u64bit buff_dma_handle;
- 
- resend_cmd1:
- 	/*
-@@ -2596,12 +2584,7 @@ resend_cmd1:
- 	} while (1);
- 
- cleanup1:
--
--	/* unlock the data buffer from DMA */
--	buff_dma_handle.val32.lower = c->SG[0].Addr.lower;
--	buff_dma_handle.val32.upper = c->SG[0].Addr.upper;
--	pci_unmap_single(h->pdev, (dma_addr_t) buff_dma_handle.val,
--			 c->SG[0].Len, PCI_DMA_BIDIRECTIONAL);
-+	hpsa_pci_unmap(h->pdev, c, 1, PCI_DMA_BIDIRECTIONAL);
- 	return status;
- }
- 
 
