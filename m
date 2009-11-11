@@ -1,47 +1,61 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
- resync
-Date: Wed, 11 Nov 2009 20:50:45 GMT
-Message-ID: <200911112050.nABKojna021576@demeter.kernel.org>
-References: <bug-14534-11613@http.bugzilla.kernel.org/>
+From: Jeff Smith <lkml.sepix@code.wastedcycles.net>
+Subject: Re: [PATCH] SCSI: userspace cannot use scsi_device_type
+Date: Wed, 11 Nov 2009 21:22:41 +0000
+Message-ID: <4AFB2B21.4030103@code.wastedcycles.net>
+References: <4AFAFF94.4050500@code.wastedcycles.net> <1257970134.11985.20.camel@mulgrave.site>
+Reply-To: lkml.sepix@code.wastedcycles.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44875 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758871AbZKKUuj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2009 15:50:39 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nABKojvN021577
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2009 20:50:45 GMT
-In-Reply-To: <bug-14534-11613@http.bugzilla.kernel.org/>
+Received: from thinkula.hx3.notconnected.net ([192.207.141.44]:38884 "EHLO
+	sardonic.codimension.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758823AbZKKVWl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2009 16:22:41 -0500
+In-Reply-To: <1257970134.11985.20.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14534
+James Bottomley wrote:
+> On Wed, 2009-11-11 at 18:16 +0000, Jeff Smith wrote:
+>> The following patch fixes the 'make headers_check' warning:
+>>     include/scsi/scsi.h:288: userspace cannot call function or variable defined in the kernel
+>> It is similar to a patch from Jaswinder Singh Rajput back in July, which did not initially compile.
+[..snip..]
+>> A similar patch for the scsi_command_size code should be feasible, but a code search reveals some 
+[..snip..]
+ 
+> Actually, there are several other problems like this that need
+> fixing ... and for which we have patches submitted.  
 
+Thanks for the hint -- I've found some of them now! Sorry! (I am not
+on linux-scsi, so I have a bit of catching-up to do.)
 
-Christian Vilhelm <christian.vilhelm@univ-lille2.fr> changed:
+> The debating point
+> is whether we actually want to clean scsi.h and the allied headers up
+> enough so we can ask Ulrich actually to use them for glibc ... and where
+> the resulting headers should be placed.  So far we have no consensus on
+> this.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |christian.vilhelm@univ-lill
-                   |                            |e2.fr
+If there is no agreement on asking Ulrich or on ultimate filestore location, the
+question is whether meanwhile it's worth deploying the minimal cleaning necessary
+to avoid warnings and other known small difficulties (as mentioned 
+in eg. Michael S. Tsirkin's patchset). I assume you think that the debate 
+will resolve itself in due course, so a minor stall now is preferable?
+ 
+> Personally, I think a line by line comparison of the scsi.h in Ulrich's
+> glibc tree and ours making it identical and shoving all the non kernel
+> stuff into other headers might be the way to go .. but others have
+> disagreed in the past.
 
+Personally I agree with your approach, but I wouldn't want to do actual
+work on it if it's unlikely to get deployed.
 
+Jeff
 
+> James
+> 
+> 
 
---- Comment #8 from Christian Vilhelm <christian.vilhelm@univ-lille2.fr>  2009-11-11 20:50:40 ---
-I just tried the patches on 2.6.32-rc6, I did not apply the 7th patch as the
-new libsas version is not in -rc6.
-I could create a raid 5 array just fine on 6 SATA disks, using a 64xx based
-card (Areca 1300). The raid-5 build was not possible without the patches (tried
-many times with different configurations).
-I will do some more tests in the coming days to confirm this.
-Many thanks Andy for fixing this.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
