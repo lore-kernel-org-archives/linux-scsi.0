@@ -1,255 +1,66 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 3/7] libiscsi: Check TMF state before sending PDU
-Date: Wed, 11 Nov 2009 16:34:32 -0600
-Message-ID: <1257978876-2742-4-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 5/7] iscsi class: modify handling of replacement timeout
+Date: Wed, 11 Nov 2009 16:34:34 -0600
+Message-ID: <1257978876-2742-6-git-send-email-michaelc@cs.wisc.edu>
 References: <1257978876-2742-1-git-send-email-michaelc@cs.wisc.edu>
  <1257978876-2742-2-git-send-email-michaelc@cs.wisc.edu>
  <1257978876-2742-3-git-send-email-michaelc@cs.wisc.edu>
+ <1257978876-2742-4-git-send-email-michaelc@cs.wisc.edu>
+ <1257978876-2742-5-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54073 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60212 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759480AbZKKWem (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Nov 2009 17:34:42 -0500
-In-Reply-To: <1257978876-2742-3-git-send-email-michaelc@cs.wisc.edu>
+	id S1759506AbZKKWex (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Nov 2009 17:34:53 -0500
+In-Reply-To: <1257978876-2742-5-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-Patch and mail from both MikeC and HannesR:
+This patch modifies the replacement/recovery_timeout so it works
+more like the fc fast io fail tmo.
 
-Before we're trying to send a PDU we have to check whether a TMF
-is active. If so and if the PDU will be affected by the TMF
-we should allow only Data-out PDUs to be sent.
+If userspace tries to set the replacement/recovery_timeout to less than
+zero, we will turn off the forced recovery cleanup.
 
-If fast_abort is set, no Data-out PDUs will be sent while
-a LUN reset is being processed for a affected LUN.
-
-fast_abort is now ingored during a ABORT TASK tmf. We will not
-send any Data-outs for a task if the task is being aborted.
+If userspace sets the value to 0 then we will force the recovery
+cleanup immediately.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/libiscsi.c    |  113 +++++++++++++++++++++++++++++++++++++++-----
- include/scsi/iscsi_proto.h |    2 +
- 2 files changed, 103 insertions(+), 12 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 8c29480..b6ffdc5 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -266,6 +266,88 @@ static int iscsi_prep_bidi_ahs(struct iscsi_task *task)
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index dc04ca1..ea3892e 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -627,8 +627,10 @@ static void __iscsi_block_session(struct work_struct *work)
+ 	spin_unlock_irqrestore(&session->lock, flags);
+ 	scsi_target_block(&session->dev);
+ 	ISCSI_DBG_TRANS_SESSION(session, "Completed SCSI target blocking\n");
+-	queue_delayed_work(iscsi_eh_timer_workq, &session->recovery_work,
+-			   session->recovery_tmo * HZ);
++	if (session->recovery_tmo >= 0)
++		queue_delayed_work(iscsi_eh_timer_workq,
++				   &session->recovery_work,
++				   session->recovery_tmo * HZ);
  }
  
- /**
-+ * iscsi_check_tmf_restrictions - check if a task is affected by TMF
-+ * @task: iscsi task
-+ * @opcode: opcode to check for
-+ *
-+ * During TMF a task has to be checked if it's affected.
-+ * All unrelated I/O can be passed through, but I/O to the
-+ * affected LUN should be restricted.
-+ * If 'fast_abort' is set we won't be sending any I/O to the
-+ * affected LUN.
-+ * Otherwise the target is waiting for all TTTs to be completed,
-+ * so we have to send all outstanding Data-Out PDUs to the target.
-+ */
-+static int iscsi_check_tmf_restrictions(struct iscsi_task *task, int opcode)
-+{
-+	struct iscsi_conn *conn = task->conn;
-+	struct iscsi_tm *tmf = &conn->tmhdr;
-+	unsigned int hdr_lun;
-+
-+	if (conn->tmf_state == TMF_INITIAL)
-+		return 0;
-+
-+	if ((tmf->opcode & ISCSI_OPCODE_MASK) != ISCSI_OP_SCSI_TMFUNC)
-+		return 0;
-+
-+	switch (ISCSI_TM_FUNC_VALUE(tmf)) {
-+	case ISCSI_TM_FUNC_LOGICAL_UNIT_RESET:
-+		/*
-+		 * Allow PDUs for unrelated LUNs
-+		 */
-+		hdr_lun = scsilun_to_int((struct scsi_lun *)tmf->lun);
-+		if (hdr_lun != task->sc->device->lun)
-+			return 0;
-+
-+		/*
-+		 * Fail all SCSI cmd PDUs
-+		 */
-+		if (opcode != ISCSI_OP_SCSI_DATA_OUT) {
-+			iscsi_conn_printk(KERN_INFO, conn,
-+					  "task [op %x/%x itt "
-+					  "0x%x/0x%x lun %u] "
-+					  "rejected.\n",
-+					  task->hdr->opcode, opcode,
-+					  task->itt, task->hdr_itt, hdr_lun);
-+			return -EACCES;
-+		}
-+		/*
-+		 * And also all data-out PDUs in response to R2T
-+		 * if fast_abort is set.
-+		 */
-+		if (conn->session->fast_abort) {
-+			iscsi_conn_printk(KERN_INFO, conn,
-+					  "task [op %x/%x itt "
-+					  "0x%x/0x%x lun %u] "
-+					  "fast abort.\n",
-+					  task->hdr->opcode, opcode,
-+					  task->itt, task->hdr_itt, hdr_lun);
-+			return -EACCES;
-+		}
-+		break;
-+	case ISCSI_TM_FUNC_ABORT_TASK:
-+		/*
-+		 * the caller has already checked if the task
-+		 * they want to abort was in the pending queue so if
-+		 * we are here the cmd pdu has gone out already, and
-+		 * we will only hit this for data-outs
-+		 */
-+		if (opcode == ISCSI_OP_SCSI_DATA_OUT &&
-+		    task->hdr_itt == tmf->rtt) {
-+			ISCSI_DBG_SESSION(conn->session,
-+					  "Preventing task %x/%x from sending "
-+					  "data-out due to abort task in "
-+					  "progress\n", task->itt,
-+					  task->hdr_itt);
-+			return -EACCES;
-+		}
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-  * iscsi_prep_scsi_cmd_pdu - prep iscsi scsi cmd pdu
-  * @task: iscsi task
-  *
-@@ -282,6 +364,10 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 	itt_t itt;
- 	int rc;
- 
-+	rc = iscsi_check_tmf_restrictions(task, ISCSI_OP_SCSI_CMD);
-+	if (rc)
-+		return rc;
-+
- 	if (conn->session->tt->alloc_pdu) {
- 		rc = conn->session->tt->alloc_pdu(task, ISCSI_OP_SCSI_CMD);
- 		if (rc)
-@@ -1366,6 +1452,7 @@ EXPORT_SYMBOL_GPL(iscsi_requeue_task);
-  **/
- static int iscsi_data_xmit(struct iscsi_conn *conn)
- {
-+	struct iscsi_task *task;
- 	int rc = 0;
- 
- 	spin_lock_bh(&conn->session->lock);
-@@ -1403,11 +1490,8 @@ check_mgmt:
- 
- 	/* process pending command queue */
- 	while (!list_empty(&conn->cmdqueue)) {
--		if (conn->tmf_state == TMF_QUEUED)
--			break;
--
--		conn->task = list_entry(conn->cmdqueue.next,
--					 struct iscsi_task, running);
-+		conn->task = list_entry(conn->cmdqueue.next, struct iscsi_task,
-+					running);
- 		list_del_init(&conn->task->running);
- 		if (conn->session->state == ISCSI_STATE_LOGGING_OUT) {
- 			fail_scsi_task(conn->task, DID_IMM_RETRY);
-@@ -1415,7 +1499,7 @@ check_mgmt:
- 		}
- 		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
- 		if (rc) {
--			if (rc == -ENOMEM) {
-+			if (rc == -ENOMEM || rc == -EACCES) {
- 				list_add_tail(&conn->task->running,
- 					      &conn->cmdqueue);
- 				conn->task = NULL;
-@@ -1437,17 +1521,18 @@ check_mgmt:
- 	}
- 
- 	while (!list_empty(&conn->requeue)) {
--		if (conn->session->fast_abort && conn->tmf_state != TMF_INITIAL)
--			break;
--
- 		/*
- 		 * we always do fastlogout - conn stop code will clean up.
- 		 */
- 		if (conn->session->state == ISCSI_STATE_LOGGING_OUT)
- 			break;
- 
--		conn->task = list_entry(conn->requeue.next,
--					 struct iscsi_task, running);
-+		task = list_entry(conn->requeue.next, struct iscsi_task,
-+				  running);
-+		if (iscsi_check_tmf_restrictions(task, ISCSI_OP_SCSI_DATA_OUT))
-+			break;
-+
-+		conn->task = task;
- 		list_del_init(&conn->task->running);
- 		conn->task->state = ISCSI_TASK_RUNNING;
- 		rc = iscsi_xmit_task(conn);
-@@ -1600,7 +1685,7 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 	if (!ihost->workq) {
- 		reason = iscsi_prep_scsi_cmd_pdu(task);
- 		if (reason) {
--			if (reason == -ENOMEM) {
-+			if (reason == -ENOMEM ||  reason == -EACCES) {
- 				reason = FAILURE_OOM;
- 				goto prepd_reject;
- 			} else {
-@@ -2120,6 +2205,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 		spin_lock_bh(&session->lock);
- 		fail_scsi_task(task, DID_ABORT);
- 		conn->tmf_state = TMF_INITIAL;
-+		memset(hdr, 0, sizeof(*hdr));
- 		spin_unlock_bh(&session->lock);
- 		iscsi_start_tx(conn);
- 		goto success_unlocked;
-@@ -2130,6 +2216,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	case TMF_NOT_FOUND:
- 		if (!sc->SCp.ptr) {
- 			conn->tmf_state = TMF_INITIAL;
-+			memset(hdr, 0, sizeof(*hdr));
- 			/* task completed before tmf abort response */
- 			ISCSI_DBG_EH(session, "sc completed while abort	in "
- 					      "progress\n");
-@@ -2224,6 +2311,7 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	iscsi_suspend_tx(conn);
- 
- 	spin_lock_bh(&session->lock);
-+	memset(hdr, 0, sizeof(*hdr));
- 	fail_scsi_tasks(conn, sc->device->lun, DID_ERROR);
- 	conn->tmf_state = TMF_INITIAL;
- 	spin_unlock_bh(&session->lock);
-@@ -2868,6 +2956,7 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
- 	spin_lock_bh(&session->lock);
- 	fail_scsi_tasks(conn, -1, DID_TRANSPORT_DISRUPTED);
- 	fail_mgmt_tasks(session, conn);
-+	memset(&conn->tmhdr, 0, sizeof(conn->tmhdr));
- 	spin_unlock_bh(&session->lock);
- 	mutex_unlock(&session->eh_mutex);
- }
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index f2a2c11..dd0a52c 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -279,6 +279,8 @@ struct iscsi_tm {
- #define ISCSI_TM_FUNC_TARGET_COLD_RESET		7
- #define ISCSI_TM_FUNC_TASK_REASSIGN		8
- 
-+#define ISCSI_TM_FUNC_VALUE(hdr) ((hdr)->flags & ISCSI_FLAG_TM_FUNC_MASK)
-+
- /* SCSI Task Management Response Header */
- struct iscsi_tm_rsp {
- 	uint8_t opcode;
+ void iscsi_block_session(struct iscsi_cls_session *session)
+@@ -1348,8 +1350,7 @@ iscsi_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+ 	switch (ev->u.set_param.param) {
+ 	case ISCSI_PARAM_SESS_RECOVERY_TMO:
+ 		sscanf(data, "%d", &value);
+-		if (value != 0)
+-			session->recovery_tmo = value;
++		session->recovery_tmo = value;
+ 		break;
+ 	default:
+ 		err = transport->set_param(conn, ev->u.set_param.param,
 -- 
 1.6.2.2
 
