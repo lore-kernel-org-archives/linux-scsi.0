@@ -1,15 +1,17 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/7] libiscsi: fix login/text checks in pdu injection code
-Date: Wed, 11 Nov 2009 16:34:31 -0600
-Message-ID: <1257978876-2742-3-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 4/7] libiscsi: add warm target reset tmf support
+Date: Wed, 11 Nov 2009 16:34:33 -0600
+Message-ID: <1257978876-2742-5-git-send-email-michaelc@cs.wisc.edu>
 References: <1257978876-2742-1-git-send-email-michaelc@cs.wisc.edu>
  <1257978876-2742-2-git-send-email-michaelc@cs.wisc.edu>
+ <1257978876-2742-3-git-send-email-michaelc@cs.wisc.edu>
+ <1257978876-2742-4-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33775 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:4377 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759464AbZKKWek (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1759460AbZKKWek (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 11 Nov 2009 17:34:40 -0500
-In-Reply-To: <1257978876-2742-2-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <1257978876-2742-4-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -17,85 +19,450 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-For some reason we used to check for the the immediate bit
-set and the opcocde in many places instead of just masking
-the opcode. In the passthrough code this is a problem
-because userspace may or may not have set the immediate bit
-and it does not have to. This fixes up the opcode checks
-in the passthrough code, so we mask off the opcode then
-check against the iscsi proto definition like is done in
-other places.
+This implements warm target reset tmf support for
+the scsi-ml target reset callback. Previously we would
+just drop the session in that callback. This patch will
+now try a target reset and if that fails drop the session.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c |   21 +++++++++++++++------
- 1 files changed, 15 insertions(+), 6 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c     |    2 +-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c    |    2 +-
+ drivers/scsi/cxgb3i/cxgb3i_iscsi.c  |    2 +-
+ drivers/scsi/iscsi_tcp.c            |    2 +-
+ drivers/scsi/libiscsi.c             |  251 +++++++++++++++++++++++++----------
+ drivers/scsi/scsi_transport_iscsi.c |    4 +-
+ include/scsi/iscsi_if.h             |    3 +
+ include/scsi/libiscsi.h             |    1 +
+ 8 files changed, 190 insertions(+), 77 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index d15df07..1a557fa 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3859,7 +3859,7 @@ struct iscsi_transport beiscsi_iscsi_transport = {
+ 		ISCSI_USERNAME | ISCSI_PASSWORD |
+ 		ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+ 		ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-		ISCSI_LU_RESET_TMO |
++		ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+ 		ISCSI_PING_TMO | ISCSI_RECV_TMO |
+ 		ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask = ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 89e84c3..070118a 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -2028,7 +2028,7 @@ struct iscsi_transport bnx2i_iscsi_transport = {
+ 				  ISCSI_USERNAME | ISCSI_PASSWORD |
+ 				  ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+ 				  ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				  ISCSI_LU_RESET_TMO |
++				  ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+ 				  ISCSI_PING_TMO | ISCSI_RECV_TMO |
+ 				  ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_NETDEV_NAME,
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+index 2631bdd..969c831 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+@@ -937,7 +937,7 @@ static struct iscsi_transport cxgb3i_iscsi_transport = {
+ 				ISCSI_USERNAME | ISCSI_PASSWORD |
+ 				ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+ 				ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				ISCSI_LU_RESET_TMO |
++				ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+ 				ISCSI_PING_TMO | ISCSI_RECV_TMO |
+ 				ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index edc49ca..517da3f 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -903,7 +903,7 @@ static struct iscsi_transport iscsi_sw_tcp_transport = {
+ 				  ISCSI_USERNAME | ISCSI_PASSWORD |
+ 				  ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+ 				  ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				  ISCSI_LU_RESET_TMO |
++				  ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+ 				  ISCSI_PING_TMO | ISCSI_RECV_TMO |
+ 				  ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 67d0f3f..8c29480 100644
+index b6ffdc5..07ec997 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -577,12 +577,12 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
- 	struct iscsi_session *session = conn->session;
- 	struct iscsi_hdr *hdr = task->hdr;
- 	struct iscsi_nopout *nop = (struct iscsi_nopout *)hdr;
-+	uint8_t opcode = hdr->opcode & ISCSI_OPCODE_MASK;
- 
- 	if (conn->session->state == ISCSI_STATE_LOGGING_OUT)
- 		return -ENOTCONN;
- 
--	if (hdr->opcode != (ISCSI_OP_LOGIN | ISCSI_OP_IMMEDIATE) &&
--	    hdr->opcode != (ISCSI_OP_TEXT | ISCSI_OP_IMMEDIATE))
-+	if (opcode != ISCSI_OP_LOGIN && opcode != ISCSI_OP_TEXT)
- 		nop->exp_statsn = cpu_to_be32(conn->exp_statsn);
- 	/*
- 	 * pre-format CmdSN for outgoing PDU.
-@@ -590,9 +590,12 @@ static int iscsi_prep_mgmt_task(struct iscsi_conn *conn,
- 	nop->cmdsn = cpu_to_be32(session->cmdsn);
- 	if (hdr->itt != RESERVED_ITT) {
+@@ -298,17 +298,18 @@ static int iscsi_check_tmf_restrictions(struct iscsi_task *task, int opcode)
+ 		hdr_lun = scsilun_to_int((struct scsi_lun *)tmf->lun);
+ 		if (hdr_lun != task->sc->device->lun)
+ 			return 0;
+-
++		/* fall through */
++	case ISCSI_TM_FUNC_TARGET_WARM_RESET:
  		/*
--		 * TODO: We always use immediate, so we never hit this.
-+		 * TODO: We always use immediate for normal session pdus.
- 		 * If we start to send tmfs or nops as non-immediate then
- 		 * we should start checking the cmdsn numbers for mgmt tasks.
-+		 *
-+		 * During discovery sessions iscsid sends TEXT as non immediate,
-+		 * but we always only send one PDU at a time.
+ 		 * Fail all SCSI cmd PDUs
  		 */
- 		if (conn->c_stage == ISCSI_CONN_STARTED &&
- 		    !(hdr->opcode & ISCSI_OP_IMMEDIATE)) {
-@@ -620,22 +623,28 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		if (opcode != ISCSI_OP_SCSI_DATA_OUT) {
+ 			iscsi_conn_printk(KERN_INFO, conn,
+ 					  "task [op %x/%x itt "
+-					  "0x%x/0x%x lun %u] "
++					  "0x%x/0x%x] "
+ 					  "rejected.\n",
+ 					  task->hdr->opcode, opcode,
+-					  task->itt, task->hdr_itt, hdr_lun);
++					  task->itt, task->hdr_itt);
+ 			return -EACCES;
+ 		}
+ 		/*
+@@ -318,10 +319,9 @@ static int iscsi_check_tmf_restrictions(struct iscsi_task *task, int opcode)
+ 		if (conn->session->fast_abort) {
+ 			iscsi_conn_printk(KERN_INFO, conn,
+ 					  "task [op %x/%x itt "
+-					  "0x%x/0x%x lun %u] "
+-					  "fast abort.\n",
++					  "0x%x/0x%x] fast abort.\n",
+ 					  task->hdr->opcode, opcode,
+-					  task->itt, task->hdr_itt, hdr_lun);
++					  task->itt, task->hdr_itt);
+ 			return -EACCES;
+ 		}
+ 		break;
+@@ -1757,72 +1757,6 @@ int iscsi_target_alloc(struct scsi_target *starget)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_target_alloc);
+ 
+-void iscsi_session_recovery_timedout(struct iscsi_cls_session *cls_session)
+-{
+-	struct iscsi_session *session = cls_session->dd_data;
+-
+-	spin_lock_bh(&session->lock);
+-	if (session->state != ISCSI_STATE_LOGGED_IN) {
+-		session->state = ISCSI_STATE_RECOVERY_FAILED;
+-		if (session->leadconn)
+-			wake_up(&session->leadconn->ehwait);
+-	}
+-	spin_unlock_bh(&session->lock);
+-}
+-EXPORT_SYMBOL_GPL(iscsi_session_recovery_timedout);
+-
+-int iscsi_eh_target_reset(struct scsi_cmnd *sc)
+-{
+-	struct iscsi_cls_session *cls_session;
+-	struct iscsi_session *session;
+-	struct iscsi_conn *conn;
+-
+-	cls_session = starget_to_session(scsi_target(sc->device));
+-	session = cls_session->dd_data;
+-	conn = session->leadconn;
+-
+-	mutex_lock(&session->eh_mutex);
+-	spin_lock_bh(&session->lock);
+-	if (session->state == ISCSI_STATE_TERMINATE) {
+-failed:
+-		ISCSI_DBG_EH(session,
+-			     "failing target reset: Could not log back into "
+-			     "target [age %d]\n",
+-			     session->age);
+-		spin_unlock_bh(&session->lock);
+-		mutex_unlock(&session->eh_mutex);
+-		return FAILED;
+-	}
+-
+-	spin_unlock_bh(&session->lock);
+-	mutex_unlock(&session->eh_mutex);
+-	/*
+-	 * we drop the lock here but the leadconn cannot be destoyed while
+-	 * we are in the scsi eh
+-	 */
+-	iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
+-
+-	ISCSI_DBG_EH(session, "wait for relogin\n");
+-	wait_event_interruptible(conn->ehwait,
+-				 session->state == ISCSI_STATE_TERMINATE ||
+-				 session->state == ISCSI_STATE_LOGGED_IN ||
+-				 session->state == ISCSI_STATE_RECOVERY_FAILED);
+-	if (signal_pending(current))
+-		flush_signals(current);
+-
+-	mutex_lock(&session->eh_mutex);
+-	spin_lock_bh(&session->lock);
+-	if (session->state == ISCSI_STATE_LOGGED_IN) {
+-		ISCSI_DBG_EH(session,
+-			     "target reset succeeded\n");
+-	} else
+-		goto failed;
+-	spin_unlock_bh(&session->lock);
+-	mutex_unlock(&session->eh_mutex);
+-	return SUCCESS;
+-}
+-EXPORT_SYMBOL_GPL(iscsi_eh_target_reset);
+-
+ static void iscsi_tmf_timedout(unsigned long data)
  {
- 	struct iscsi_session *session = conn->session;
- 	struct iscsi_host *ihost = shost_priv(session->host);
-+	uint8_t opcode = hdr->opcode & ISCSI_OPCODE_MASK;
- 	struct iscsi_task *task;
- 	itt_t itt;
+ 	struct iscsi_conn *conn = (struct iscsi_conn *)data;
+@@ -2329,6 +2263,172 @@ done:
+ }
+ EXPORT_SYMBOL_GPL(iscsi_eh_device_reset);
  
- 	if (session->state == ISCSI_STATE_TERMINATE)
- 		return NULL;
- 
--	if (hdr->opcode == (ISCSI_OP_LOGIN | ISCSI_OP_IMMEDIATE) ||
--	    hdr->opcode == (ISCSI_OP_TEXT | ISCSI_OP_IMMEDIATE))
-+	if (opcode == ISCSI_OP_LOGIN || opcode == ISCSI_OP_TEXT) {
- 		/*
- 		 * Login and Text are sent serially, in
- 		 * request-followed-by-response sequence.
- 		 * Same task can be used. Same ITT must be used.
- 		 * Note that login_task is preallocated at conn_create().
- 		 */
-+		if (conn->login_task->state != ISCSI_TASK_FREE) {
-+			iscsi_conn_printk(KERN_ERR, conn, "Login/Text in "
-+					  "progress. Cannot start new task.\n");
-+			return NULL;
-+		}
++void iscsi_session_recovery_timedout(struct iscsi_cls_session *cls_session)
++{
++	struct iscsi_session *session = cls_session->dd_data;
 +
- 		task = conn->login_task;
--	else {
-+	} else {
- 		if (session->state != ISCSI_STATE_LOGGED_IN)
- 			return NULL;
++	spin_lock_bh(&session->lock);
++	if (session->state != ISCSI_STATE_LOGGED_IN) {
++		session->state = ISCSI_STATE_RECOVERY_FAILED;
++		if (session->leadconn)
++			wake_up(&session->leadconn->ehwait);
++	}
++	spin_unlock_bh(&session->lock);
++}
++EXPORT_SYMBOL_GPL(iscsi_session_recovery_timedout);
++
++/**
++ * iscsi_eh_session_reset - drop session and attempt relogin
++ * @sc: scsi command
++ *
++ * This function will wait for a relogin, session termination from
++ * userspace, or a recovery/replacement timeout.
++ */
++static int iscsi_eh_session_reset(struct scsi_cmnd *sc)
++{
++	struct iscsi_cls_session *cls_session;
++	struct iscsi_session *session;
++	struct iscsi_conn *conn;
++
++	cls_session = starget_to_session(scsi_target(sc->device));
++	session = cls_session->dd_data;
++	conn = session->leadconn;
++
++	mutex_lock(&session->eh_mutex);
++	spin_lock_bh(&session->lock);
++	if (session->state == ISCSI_STATE_TERMINATE) {
++failed:
++		ISCSI_DBG_EH(session,
++			     "failing session reset: Could not log back into "
++			     "%s, %s [age %d]\n", session->targetname,
++			     conn->persistent_address, session->age);
++		spin_unlock_bh(&session->lock);
++		mutex_unlock(&session->eh_mutex);
++		return FAILED;
++	}
++
++	spin_unlock_bh(&session->lock);
++	mutex_unlock(&session->eh_mutex);
++	/*
++	 * we drop the lock here but the leadconn cannot be destoyed while
++	 * we are in the scsi eh
++	 */
++	iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
++
++	ISCSI_DBG_EH(session, "wait for relogin\n");
++	wait_event_interruptible(conn->ehwait,
++				 session->state == ISCSI_STATE_TERMINATE ||
++				 session->state == ISCSI_STATE_LOGGED_IN ||
++				 session->state == ISCSI_STATE_RECOVERY_FAILED);
++	if (signal_pending(current))
++		flush_signals(current);
++
++	mutex_lock(&session->eh_mutex);
++	spin_lock_bh(&session->lock);
++	if (session->state == ISCSI_STATE_LOGGED_IN) {
++		ISCSI_DBG_EH(session,
++			     "session reset succeeded for %s,%s\n",
++			     session->targetname, conn->persistent_address);
++	} else
++		goto failed;
++	spin_unlock_bh(&session->lock);
++	mutex_unlock(&session->eh_mutex);
++	return SUCCESS;
++}
++
++static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
++{
++	memset(hdr, 0, sizeof(*hdr));
++	hdr->opcode = ISCSI_OP_SCSI_TMFUNC | ISCSI_OP_IMMEDIATE;
++	hdr->flags = ISCSI_TM_FUNC_TARGET_WARM_RESET & ISCSI_FLAG_TM_FUNC_MASK;
++	hdr->flags |= ISCSI_FLAG_CMD_FINAL;
++	hdr->rtt = RESERVED_ITT;
++}
++
++/**
++ * iscsi_eh_target_reset - reset target
++ * @sc: scsi command
++ *
++ * This will attempt to send a warm target reset. If that fails
++ * then we will drop the session and attempt ERL0 recovery.
++ */
++int iscsi_eh_target_reset(struct scsi_cmnd *sc)
++{
++	struct iscsi_cls_session *cls_session;
++	struct iscsi_session *session;
++	struct iscsi_conn *conn;
++	struct iscsi_tm *hdr;
++	int rc = FAILED;
++
++	cls_session = starget_to_session(scsi_target(sc->device));
++	session = cls_session->dd_data;
++
++	ISCSI_DBG_EH(session, "tgt Reset [sc %p tgt %s]\n", sc,
++		     session->targetname);
++
++	mutex_lock(&session->eh_mutex);
++	spin_lock_bh(&session->lock);
++	/*
++	 * Just check if we are not logged in. We cannot check for
++	 * the phase because the reset could come from a ioctl.
++	 */
++	if (!session->leadconn || session->state != ISCSI_STATE_LOGGED_IN)
++		goto unlock;
++	conn = session->leadconn;
++
++	/* only have one tmf outstanding at a time */
++	if (conn->tmf_state != TMF_INITIAL)
++		goto unlock;
++	conn->tmf_state = TMF_QUEUED;
++
++	hdr = &conn->tmhdr;
++	iscsi_prep_tgt_reset_pdu(sc, hdr);
++
++	if (iscsi_exec_task_mgmt_fn(conn, hdr, session->age,
++				    session->tgt_reset_timeout)) {
++		rc = FAILED;
++		goto unlock;
++	}
++
++	switch (conn->tmf_state) {
++	case TMF_SUCCESS:
++		break;
++	case TMF_TIMEDOUT:
++		spin_unlock_bh(&session->lock);
++		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
++		goto done;
++	default:
++		conn->tmf_state = TMF_INITIAL;
++		goto unlock;
++	}
++
++	rc = SUCCESS;
++	spin_unlock_bh(&session->lock);
++
++	iscsi_suspend_tx(conn);
++
++	spin_lock_bh(&session->lock);
++	memset(hdr, 0, sizeof(*hdr));
++	fail_scsi_tasks(conn, -1, DID_ERROR);
++	conn->tmf_state = TMF_INITIAL;
++	spin_unlock_bh(&session->lock);
++
++	iscsi_start_tx(conn);
++	goto done;
++
++unlock:
++	spin_unlock_bh(&session->lock);
++done:
++	ISCSI_DBG_EH(session, "tgt %s reset result = %s\n", session->targetname,
++		     rc == SUCCESS ? "SUCCESS" : "FAILED");
++	mutex_unlock(&session->eh_mutex);
++
++	if (rc == FAILED)
++		rc = iscsi_eh_session_reset(sc);
++	return rc;
++}
++EXPORT_SYMBOL_GPL(iscsi_eh_target_reset);
++
+ /*
+  * Pre-allocate a pool of @max items of @item_size. By default, the pool
+  * should be accessed via kfifo_{get,put} on q->queue.
+@@ -2595,6 +2695,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+ 	session->host = shost;
+ 	session->state = ISCSI_STATE_FREE;
+ 	session->fast_abort = 1;
++	session->tgt_reset_timeout = 30;
+ 	session->lu_reset_timeout = 15;
+ 	session->abort_timeout = 10;
+ 	session->scsi_cmds_max = scsi_cmds;
+@@ -3033,6 +3134,9 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ 	case ISCSI_PARAM_LU_RESET_TMO:
+ 		sscanf(buf, "%d", &session->lu_reset_timeout);
+ 		break;
++	case ISCSI_PARAM_TGT_RESET_TMO:
++		sscanf(buf, "%d", &session->tgt_reset_timeout);
++		break;
+ 	case ISCSI_PARAM_PING_TMO:
+ 		sscanf(buf, "%d", &conn->ping_timeout);
+ 		break;
+@@ -3132,6 +3236,9 @@ int iscsi_session_get_param(struct iscsi_cls_session *cls_session,
+ 	case ISCSI_PARAM_LU_RESET_TMO:
+ 		len = sprintf(buf, "%d\n", session->lu_reset_timeout);
+ 		break;
++	case ISCSI_PARAM_TGT_RESET_TMO:
++		len = sprintf(buf, "%d\n", session->tgt_reset_timeout);
++		break;
+ 	case ISCSI_PARAM_INITIAL_R2T_EN:
+ 		len = sprintf(buf, "%d\n", session->initial_r2t_en);
+ 		break;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index ad897df..dc04ca1 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -30,7 +30,7 @@
+ #include <scsi/scsi_transport_iscsi.h>
+ #include <scsi/iscsi_if.h>
  
+-#define ISCSI_SESSION_ATTRS 21
++#define ISCSI_SESSION_ATTRS 22
+ #define ISCSI_CONN_ATTRS 13
+ #define ISCSI_HOST_ATTRS 4
+ 
+@@ -1759,6 +1759,7 @@ iscsi_session_attr(password_in, ISCSI_PARAM_PASSWORD_IN, 1);
+ iscsi_session_attr(fast_abort, ISCSI_PARAM_FAST_ABORT, 0);
+ iscsi_session_attr(abort_tmo, ISCSI_PARAM_ABORT_TMO, 0);
+ iscsi_session_attr(lu_reset_tmo, ISCSI_PARAM_LU_RESET_TMO, 0);
++iscsi_session_attr(tgt_reset_tmo, ISCSI_PARAM_TGT_RESET_TMO, 0);
+ iscsi_session_attr(ifacename, ISCSI_PARAM_IFACE_NAME, 0);
+ iscsi_session_attr(initiatorname, ISCSI_PARAM_INITIATOR_NAME, 0)
+ 
+@@ -2000,6 +2001,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
+ 	SETUP_SESSION_RD_ATTR(fast_abort, ISCSI_FAST_ABORT);
+ 	SETUP_SESSION_RD_ATTR(abort_tmo, ISCSI_ABORT_TMO);
+ 	SETUP_SESSION_RD_ATTR(lu_reset_tmo,ISCSI_LU_RESET_TMO);
++	SETUP_SESSION_RD_ATTR(tgt_reset_tmo,ISCSI_TGT_RESET_TMO);
+ 	SETUP_SESSION_RD_ATTR(ifacename, ISCSI_IFACE_NAME);
+ 	SETUP_SESSION_RD_ATTR(initiatorname, ISCSI_INITIATOR_NAME);
+ 	SETUP_PRIV_SESSION_RD_ATTR(recovery_tmo);
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index d67dda2..66d377b 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -311,6 +311,8 @@ enum iscsi_param {
+ 	ISCSI_PARAM_IFACE_NAME,
+ 	ISCSI_PARAM_ISID,
+ 	ISCSI_PARAM_INITIATOR_NAME,
++
++	ISCSI_PARAM_TGT_RESET_TMO,
+ 	/* must always be last */
+ 	ISCSI_PARAM_MAX,
+ };
+@@ -350,6 +352,7 @@ enum iscsi_param {
+ #define ISCSI_IFACE_NAME		(1ULL << ISCSI_PARAM_IFACE_NAME)
+ #define ISCSI_ISID			(1ULL << ISCSI_PARAM_ISID)
+ #define ISCSI_INITIATOR_NAME		(1ULL << ISCSI_PARAM_INITIATOR_NAME)
++#define ISCSI_TGT_RESET_TMO		(1ULL << ISCSI_PARAM_TGT_RESET_TMO)
+ 
+ /* iSCSI HBA params */
+ enum iscsi_host_param {
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index 2db2bc2..7394e3b 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -267,6 +267,7 @@ struct iscsi_session {
+ 	/* configuration */
+ 	int			abort_timeout;
+ 	int			lu_reset_timeout;
++	int			tgt_reset_timeout;
+ 	int			initial_r2t_en;
+ 	unsigned		max_r2t;
+ 	int			imm_data_en;
 -- 
 1.6.2.2
 
