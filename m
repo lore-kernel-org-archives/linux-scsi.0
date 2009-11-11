@@ -1,38 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Thin provisioning update
-Date: Tue, 10 Nov 2009 18:06:46 -0500
-Message-ID: <yq1fx8mm12x.fsf@sermon.lab.mkp.net>
-References: <1257308740-4729-1-git-send-email-martin.petersen@oracle.com>
-	<20091109142051.GC4855@infradead.org>
-	<20091109193409.GA26596@infradead.org>
-	<yq13a4nos7y.fsf@sermon.lab.mkp.net>
-	<20091110131649.GA4516@infradead.org>
-	<yq18weenr4y.fsf@sermon.lab.mkp.net>
-	<1257880209.4184.438.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
+ resync
+Date: Wed, 11 Nov 2009 01:14:55 GMT
+Message-ID: <200911110114.nAB1Etk3028504@demeter.kernel.org>
+References: <bug-14534-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:17144 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758320AbZKJXIk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 18:08:40 -0500
-In-Reply-To: <1257880209.4184.438.camel@mulgrave.site> (James Bottomley's
-	message of "Tue, 10 Nov 2009 14:10:09 -0500")
+Received: from demeter.kernel.org ([140.211.167.39]:47978 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754291AbZKKBOu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 20:14:50 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAB1EtYG028505
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2009 01:14:55 GMT
+In-Reply-To: <bug-14534-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, axboe@kernel.dk, matthew@wil.cx, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+http://bugzilla.kernel.org/show_bug.cgi?id=14534
 
-James> SCSI pretty much pioneered the use of postmerge trees, which is
-James> how I do this ... if everyone's happy, that's what I'll do this
-James> time.
 
-In the meantime I'll try to keep my TP branch up to date for people who
-want to tinker with this.
 
-  http://www.kernel.org/pub/scm/linux/kernel/git/mkp/linux-2.6-mkp.git
+
+
+--- Comment #7 from andy yan <ayan@marvell.com>  2009-11-11 01:14:53 ---
+Are you in the SCSI mail list, if yes, you should have received it. OK, I will
+forward it to you.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
