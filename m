@@ -1,35 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
- resync
-Date: Wed, 11 Nov 2009 01:14:55 GMT
-Message-ID: <200911110114.nAB1Etk3028504@demeter.kernel.org>
-References: <bug-14534-11613@http.bugzilla.kernel.org/>
+From: Martin Michlmayr <tbm@cyrius.com>
+Subject: [PATCH] osd_protocol.h: Add missing #include
+Date: Wed, 11 Nov 2009 15:14:30 +0000
+Message-ID: <20091111151430.GA3515@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47978 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754291AbZKKBOu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Nov 2009 20:14:50 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAB1EtYG028505
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Nov 2009 01:14:55 GMT
-In-Reply-To: <bug-14534-11613@http.bugzilla.kernel.org/>
+Received: from sorrow.cyrius.com ([65.19.161.204]:44675 "EHLO
+	sorrow.cyrius.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756940AbZKKPOe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Nov 2009 10:14:34 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14534
+include/scsi/osd_protocol.h uses ALIGN() without an #include
+<linux/kernel.h>, leading to:
+| include/scsi/osd_protocol.h:362: error: implicit declaration of function 'ALIGN'
 
+Signed-off-by: Martin Michlmayr <tbm@cyrius.com>
+Acked-by: Boaz Harrosh <bharrosh@panasas.com>
 
-
-
-
---- Comment #7 from andy yan <ayan@marvell.com>  2009-11-11 01:14:53 ---
-Are you in the SCSI mail list, if yes, you should have received it. OK, I will
-forward it to you.
+--- a/include/scsi/osd_protocol.h	2009-10-31 09:19:28.000000000 +0000
++++ b/include/scsi/osd_protocol.h	2009-10-31 09:27:42.000000000 +0000
+@@ -17,6 +17,7 @@
+ #define __OSD_PROTOCOL_H__
+ 
+ #include <linux/types.h>
++#include <linux/kernel.h>
+ #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ 
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Martin Michlmayr
+http://www.cyrius.com/
