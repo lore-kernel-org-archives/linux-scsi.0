@@ -1,58 +1,35 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: [patch] Fix: 'return -ENOMEM' instead of 'return
-	ENOMEM'
-Date: Thu, 12 Nov 2009 12:27:29 -0800
-Message-ID: <20091112202728.GC22985@mail.oracle.com>
-References: <4AFB2C0B.50605@gmail.com>
-	<20091111134730.a0da9e38.akpm@linux-foundation.org>
-	<20091112081043.GA25345@elte.hu>
-	<20091112191758.GA22985@mail.oracle.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 04/17] Fix use of unallocated memory for MSA2xxx
+ enclosure device data.
+Date: Thu, 12 Nov 2009 14:45:24 -0800
+Message-ID: <20091112144524.dc254708.akpm@linux-foundation.org>
+References: <20091111164803.17754.11900.stgit@beardog.cce.hp.com>
+	<20091111165043.17754.6076.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
-Content-Disposition: inline
-In-Reply-To: <20091112191758.GA22985@mail.oracle.com>
-List-Unsubscribe: <http://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <http://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, "Stephen M. Cameron" <scameron@beardog.cca.cpqcorp.net>, Mike Christie <michaelc@cs.wisc.edu>, David Airlie <airlied@linux.ie>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Evgeniy Polyakov <zbr@ioremap.net>, iss_storagedev@hp.com, Eric Dumazet <eric.dumazet@gmail.com>, Andy Whitcroft <apw@shadowen.org>, Dave Airlie <airlied@redhat.com>, Hannes Eder <hannes@hanneseder.net>, dri-devel@lists.sourceforge.net, Alexey Dobriyan <adobriyan@gmail.com>, Mike Miller <mike.miller@hp.com>, Mark Fasheh <mfasheh@suse.com>, Karsten Keil <isdn@linux-pingi.de>, rostedt@goodmis.org, Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Andreas
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:44827 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754731AbZKLWp3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Nov 2009 17:45:29 -0500
+In-Reply-To: <20091111165043.17754.6076.stgit@beardog.cce.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cce.hp.com
 
-On Thu, Nov 12, 2009 at 11:17:58AM -0800, Joel Becker wrote:
-> On Thu, Nov 12, 2009 at 09:10:43AM +0100, Ingo Molnar wrote:
-> > 5 out of 8 places look buggy - i.e. more than 60% - a checkpatch warning 
-> > would avoid real bugs here. (even ignoring the cleanliness effects of 
-> > using proper error propagation)
-> > 
-> > Cc:-ed affected maintainers. The rightmost column are my observations. 
-> > Below is the patch fixing these.
-> 
-> Acked-by: Joel Becker <joel.becker@oracle.com>
+On Wed, 11 Nov 2009 10:50:43 -0600
+"Stephen M. Cameron" <scameron@beardog.cce.hp.com> wrote:
 
-I take that back.  NAK.
+> +#define MAX_MSA2XXX_ENCLOSURES 32
+> +	if (*nmsa2xxx_enclosures >= MAX_MSA2XXX_ENCLOSURES) {
+> +		dev_warn(&h->pdev->dev, "Maximum number of MSA2XXX "
+> +			"enclosures exceeded.  Check your hardware "
+> +			"configuration.");
+> +		return 0;
+> +	}
 
-Sorry, I read the code wrong.  This function is just a handler.
-The caller, dlm_send_begin_reco_message(), expects the positive EAGAIN
-as a non-error case.
-
-Joel
-
--- 
-
-Life's Little Instruction Book #337
-
-	"Reread your favorite book."
-
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+The message would be a bit more helpful if it told the operator what the
+limit actually is.
