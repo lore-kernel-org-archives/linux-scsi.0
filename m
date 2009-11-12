@@ -1,95 +1,125 @@
-From: Dave Airlie <airlied@gmail.com>
-Subject: Re: [patch] Fix: 'return -ENOMEM' instead of 'return ENOMEM'
-Date: Thu, 12 Nov 2009 18:43:26 +1000
-Message-ID: <21d7e9970911120043v42c57acyecf07b4bc002ae12@mail.gmail.com>
-References: <4AFB2C0B.50605@gmail.com>
-	<20091111134730.a0da9e38.akpm@linux-foundation.org>
-	<20091112081043.GA25345@elte.hu>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Crash during SATA reads
+Date: Thu, 12 Nov 2009 10:16:02 +0100
+Message-ID: <20091112091602.GC8742@kernel.dk>
+References: <bd36f99e0911110118v6dc7f87ao98968ba234fad7fc@mail.gmail.com> <4AFA835B.9000904@garzik.org> <bd36f99e0911110412hf2c7920gf06bd29ed43e240c@mail.gmail.com> <bd36f99e0911111309ie8166a9h8f926948bf15d350@mail.gmail.com> <4AFB2F2A.7080900@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <dri-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20091112081043.GA25345@elte.hu>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=dri-devel>
-List-Post: <mailto:dri-devel@lists.sourceforge.net>
-List-Help: <mailto:dri-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.sourceforge.net
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, "Stephen M. Cameron" <scameron@beardog.cca.cpqcorp.net>, Mike Christie <michaelc@cs.wisc.edu>, David Airlie <airlied@linux.ie>, Jens Axboe <jens.axboe@oracle.com>, Evgeniy Polyakov <zbr@ioremap.net>, Mike Miller <mike.miller@hp.com>, Eric Dumazet <eric.dumazet@gmail.com>, Joel Becker <joel.becker@oracle.com>, Jeff Liu <jeff.liu@oracle.com>, Andy Whitcroft <apw@shadowen.org>, Dave Airlie <airlied@redhat.com>, Hannes Eder <hannes@hanneseder.net>, dri-devel@lists.sourceforge.net, Alexey Dobriyan <adobriyan@gmail.com>, iss_storagedev@hp.com, Mark Fasheh <mfasheh@suse.com>, Keith Packard <keithp@keithp.com>, rostedt@goodmis.org, Karen Xie <kxie@chelsio.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Andreas Eversberg <andreas@eversberg.eu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [95.166.99.235] ([95.166.99.235]:41551 "EHLO kernel.dk"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751305AbZKLJP5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Nov 2009 04:15:57 -0500
+Content-Disposition: inline
+In-Reply-To: <4AFB2F2A.7080900@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Glenn Maynard <glenn@zewt.org>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Nov 12, 2009 at 6:10 PM, Ingo Molnar <mingo@elte.hu> wrote:
->
-> * Andrew Morton <akpm@linux-foundation.org> wrote:
->
->> > @@ -3730,7 +3730,7 @@ tracing_stats_read(struct file *filp, char __use=
-r *ubuf,
->> >
->> > =A0 =A0 s =3D kmalloc(sizeof(*s), GFP_KERNEL);
->> > =A0 =A0 if (!s)
->> > - =A0 =A0 =A0 =A0 =A0 return ENOMEM;
->> > + =A0 =A0 =A0 =A0 =A0 return -ENOMEM;
->> >
->> > =A0 =A0 trace_seq_init(s);
->> >
+On Wed, Nov 11 2009, Jeff Garzik wrote:
+> On 11/11/2009 04:09 PM, Glenn Maynard wrote:
+>> Another trace, this time a bit deeper:
 >>
->> lol, there we go again.
+>> BUG: unable to handle kernel NULL pointer dereference at (null)
+>> IP: [<c1079e7b>] end_buffer_async_read+0x59/0xc5
+>> *pde = 00000000
+>> Oops: 0000 [#1] PREEMPT
+>> last sysfs file:
+>> Modules linked in: netconsole atl1c rtc
 >>
->> Andy, can we have a checkpatch rule please?
+>> Pid: 1300, comm: gzip Not tainted (2.6.31.6 #5) G31M-ES2L
+>> EIP: 0060:[<c1079e7b>] EFLAGS: 00010013 CPU: 0
+>> EIP is at end_buffer_async_read+0x59/0xc5
+>> EAX: 00000000 EBX: c1ae7b38 ECX: 00000000 EDX: c1079e22
+>> ESI: 00000202 EDI: c17b5040 EBP: 00000000 ESP: df1dde80
+>>   DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+>> Process gzip (pid: 1300, ti=df1dc000 task=df866420 task.ti=df1dc000)
+>> Stack:
+>>   ce632840 ce632840 df91de78 df1dded0 c107ccb9 c107cc89 c107e551 00000200
+>> <0>  c11587c4 00000000 00000001 df430298 00000000 00000000 0000be00 00004200
+>> <0>  00000000 df91de78 00000000 df91de78 df8ef168 c115893e df8a6c80 00000000
+>> Call Trace:
+>>   [<c107ccb9>] ? end_bio_bh_io_sync+0x30/0x38
+>>   [<c107cc89>] ? end_bio_bh_io_sync+0x0/0x38
+>>   [<c107e551>] ? bio_endio+0x24/0x26
+>>   [<c11587c4>] ? blk_update_request+0xdf/0x24e
+>>   [<c115893e>] ? blk_update_bidi_request+0xb/0x41
+>>   [<c11589f5>] ? blk_end_bidi_request+0x10/0x4f
+>>   [<c1158a64>] ? blk_end_request+0x7/0xc
+>>   [<c11abcb2>] ? scsi_end_request+0x17/0x69
+>>   [<c11abfc3>] ? scsi_io_completion+0x173/0x335
+>>   [<c11a8330>] ? scsi_finish_command+0x70/0x86
+>>   [<c11ac6a6>] ? scsi_softirq_done+0xd7/0xdc
+>>   [<c115b3f9>] ? blk_done_softirq+0x51/0x5d
+>>   [<c101bde0>] ? __do_softirq+0x5f/0xc8
+>>   [<c101be6b>] ? do_softirq+0x22/0x26
+>>   [<c101becd>] ? irq_exit+0x29/0x34
+>>   [<c1004097>] ? do_IRQ+0x53/0x63
+>>   [<c1002ea9>] ? common_interrupt+0x29/0x30
+>> Code: e8 d2 fd ff ff 80 0f 02 f6 47 01 08 75 04 0f 0b eb fe 9c 5e fa
+>> 89 e0 25 00 e0 ff ff ff 40 14 80 23 7f 89 d8 e8 58 fd ff ff 89 d9<8b>
+>> 11 b8 00 00 00 00 f6 c2 01 0f 44 e8 f6 c2 80 74 09 80 e2 04
+>> EIP: [<c1079e7b>] end_buffer_async_read+0x59/0xc5 SS:ESP 0068:df1dde80
+>> CR2: 0000000000000000
+>> ---[ end trace 2e93648aef49fa0e ]---
+>>
+>> It looks like buffer_tmp was NULL during end_buffer_async_read's
+>> buffer_uptodate(tmp).
+>>
+>>
+>> This one just happened when I interrupted the dd:
+>>
+>> BUG: unable to handle kernel NULL pointer dereference at 00000004
+>> IP: [<c107ae05>] block_invalidatepage+0x22/0x54
+>> *pde = 00000000
+>> Oops: 0000 [#1] PREEMPT
+>> last sysfs file:
+>> Modules linked in: netconsole atl1c rtc
+>>
+>> Pid: 1296, comm: dd Not tainted (2.6.31.6 #6) G31M-ES2L
+>> EIP: 0060:[<c107ae05>] EFLAGS: 00010217 CPU: 0
+>> EIP is at block_invalidatepage+0x22/0x54
+>> EAX: 00000000 EBX: c14f1540 ECX: 00000002 EDX: 00001000
+>> ESI: 00000000 EDI: 00001000 EBP: c8d4fc88 ESP: df1d7ed0
+>>   DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+>> Process dd (pid: 1296, ti=df1d6000 task=df87bc00 task.ti=df1d6000)
+>> Stack:
+>>   00000000 c14f1540 00000000 c14f1540 00064156 c1048c29 c14f1540 c1048cab
+>> <0>  00000001 c1048def ffffffff 00000000 df4cff54 0000000e 00000000 c13f0440
+>> <0>  c14f1540 c14f2ae0 c13f7a40 c13f7e80 c13fd220 c13efd40 c13efd60 c13f01c0
+>> Call Trace:
+>>   [<c1048c29>] ? do_invalidatepage+0x1d/0x1f
+>>   [<c1048cab>] ? truncate_complete_page+0x19/0x4b
+>>   [<c1048def>] ? truncate_inode_pages_range+0xd1/0x2af
+>>   [<c1048fd6>] ? truncate_inode_pages+0x9/0xc
+>>   [<c107fb83>] ? __blkdev_put+0x47/0xec
+>>   [<c1060fe7>] ? __fput+0xc4/0x177
+>>   [<c105fa8a>] ? filp_close+0x4c/0x52
+>>   [<c105faee>] ? sys_close+0x5e/0x99
+>>   [<c10027f0>] ? sysenter_do_call+0x12/0x22
+>> Code: bf 89 d8 5b e9 ee ed ff ff 55 57 56 53 89 c3 56 89 14 24 31 d2
+>> 8b 00 a8 01 75 04 0f 0b eb fe f6 c4 08 74 33 8b 6b 0c 89 e8 89 d7<8b>
+>> 70 04 03 78 14 39 14 24 77 05 e8 97 ff ff ff 39 ee 89 fa 89
+>> EIP: [<c107ae05>] block_invalidatepage+0x22/0x54 SS:ESP 0068:df1d7ed0
+>> CR2: 0000000000000004
+>> ---[ end trace 64b0df80bcbb02ce ]---
+>>
+>> Here, it looks like bh is NULL in block_invalidatepage's loop, dying
+>> at bh->b_size.
+>>
+>> I'm not sure where to go from here.
 >
-> Note, that will upset creative uses of error codes i guess, such as
-> fs/xfs/.
->
-> But yeah, +1 from me too.
->
-> Ob'post'mortem - looked for similar patterns in the kernel and there's
-> quite a few bugs there:
->
-> =A0include/net/inet_hashtables.h: =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0retu=
-rn ENOMEM; =A0 =A0 =A0 =A0 # bug
-> =A0drivers/scsi/aic7xxx/aic7xxx_osm.c: =A0 =A0 =A0 =A0 =A0 =A0 return ENO=
-MEM; =A0 =A0 =A0 =A0 # works but weird
-> =A0drivers/scsi/cxgb3i/cxgb3i_offload.c: =A0 =A0 =A0 =A0 =A0 return ENOME=
-M; =A0 =A0 =A0 =A0 # works but weird
-> =A0fs/ocfs2/dlm/dlmrecovery.c: =A0 =A0 =A0 =A0 =A0 =A0return EAGAIN; =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0# bug
-> =A0drivers/block/cciss_scsi.c: =A0 =A0 =A0 =A0 =A0 =A0 return ENXIO; =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0# works but weird
-> =A0drivers/gpu/drm/radeon/radeon_irq.c: =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0return EINVAL; # bug
-> =A0drivers/gpu/drm/radeon/radeon_irq.c: =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0return EINVAL; # bug
-> =A0drivers/isdn/hardware/mISDN/hfcmulti.c: =A0 =A0 =A0 =A0 return EINVAL;=
- =A0 =A0 =A0 =A0 # bug
->
-> 5 out of 8 places look buggy - i.e. more than 60% - a checkpatch warning
-> would avoid real bugs here. (even ignoring the cleanliness effects of
-> using proper error propagation)
->
-> Cc:-ed affected maintainers. The rightmost column are my observations.
-> Below is the patch fixing these.
->
-> =A0 =A0 =A0 =A0Ingo
->
-> Signed-off-by: Ingo Molnar <mingo@elte.hu>
+> I would poke Jens Axboe (block maintainer) and linux-scsi, the issuer of  
+> these commands.
 
-Looks good to me for radeon bits.
+So the device isn't mounted, which means that we'll default to 1k
+blocks. I think that's a big clue here, as you'll have 4 buffer_heads
+pointing to the same page. And one of your oopses is indeed in the
+->b_this_page unroll.
 
-Acked-by: Dave Airlie <airlied@redhat.com>
+Can you trigger this if you mount/umount the device first?
 
-Dave.
+-- 
+Jens Axboe
 
----------------------------------------------------------------------------=
----
-Let Crystal Reports handle the reporting - Free Crystal Reports 2008 30-Day =
-
-trial. Simplify your report design, integration and deployment - and focus =
-on =
-
-what you do best, core application coding. Discover what's new with
-Crystal Reports now.  http://p.sf.net/sfu/bobj-july
---
