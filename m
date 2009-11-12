@@ -1,143 +1,192 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: [patch] Fix: 'return -ENOMEM' instead of 'return ENOMEM'
-Date: Thu, 12 Nov 2009 09:10:43 +0100
-Message-ID: <20091112081043.GA25345@elte.hu>
-References: <4AFB2C0B.50605@gmail.com>
-	<20091111134730.a0da9e38.akpm@linux-foundation.org>
+From: "Penchala Narasimha Reddy Chilakala, ERS-HCLTech"
+	<narasimhareddyc@hcl.in>
+Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Thu, 12 Nov 2009 13:58:32 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E9150B4EE@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+References: <1257967601.11985.10.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dri-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <20091111134730.a0da9e38.akpm@linux-foundation.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=dri-devel>
-List-Post: <mailto:dri-devel@lists.sourceforge.net>
-List-Help: <mailto:dri-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.sourceforge.net
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, "Stephen M. Cameron" <scameron@beardog.cca.cpqcorp.net>, Mike Christie <michaelc@cs.wisc.edu>, David Airlie <airlied@linux.ie>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Evgeniy Polyakov <zbr@ioremap.net>, iss_storagedev@hp.com, Eric Dumazet <eric.dumazet@gmail.com>, Joel Becker <joel.becker@oracle.com>, Jeff Liu <jeff.liu@oracle.com>, Andy Whitcroft <apw@shadowen.org>, Dave Airlie <airlied@redhat.com>, Hannes Eder <hannes@hanneseder.net>, dri-devel@lists.sourceforge.net, Alexey Dobriyan <adobriyan@gmail.com>, Mike Miller <mike.miller@hp.com>, Mark Fasheh <mfasheh@suse.com>, Karsten Keil <isdn@linux-pingi.de>, rostedt@goodmis.org, Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Andreas Eversberg <andreas@eversberg.eu>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gws07.mail.hcl.in ([203.105.186.27]:58179 "EHLO gws07.hcl.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752572AbZKLI3Q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Nov 2009 03:29:16 -0500
+In-Reply-To: <1257967601.11985.10.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, James Bottomley <jejb@kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
+
+Hi James,
+
+Thank you very much for your suggestion.
+
+I feel that we need to work out for a better solution which would not create any issues. We have to go ahead with the patch as it is tested and working as expected (with out any issues) even though we are thinking there might be some racy issue until we come out with a better solution than the current one
+
+I am not quite ok with the fix because of the following reasons:
+
+        1. I feel that calling the dev->management_fib_count-- statement in one place, that is in dpcsup.c (Whenever interrupt comes from arcraid controller, the corresponding ISR route will be called and the value will be decremented, if the response is for the requested management fib) is good  instead of calling the statement in two places, which are dpcsup.c and commctrl.c.
+
+     2. Moving the dev->management_fib_count++ from aac_fib_send () function to aac_do_ioctl () function did not work well during our testing (This was suggested by you in one of the earlier mails).
 
 
-* Andrew Morton <akpm@linux-foundation.org> wrote:
+Thanks,
+Narasimha Reddy
 
-> > @@ -3730,7 +3730,7 @@ tracing_stats_read(struct file *filp, char __user *ubuf,
-> >  
-> >  	s = kmalloc(sizeof(*s), GFP_KERNEL);
-> >  	if (!s)
-> > -		return ENOMEM;
-> > +		return -ENOMEM;
-> >  
-> >  	trace_seq_init(s);
-> >  
-> 
-> lol, there we go again.
-> 
-> Andy, can we have a checkpatch rule please?
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@suse.de]
+Sent: Thursday, November 12, 2009 12:57 AM
+To: Penchala Narasimha Reddy Chilakala, ERS-HCLTech
+Cc: 'linux-scsi@vger.kernel.org'; James Bottomley; ServeRAID Driver
+Subject: Re: [PATCH ] scsi-misc-2.6: File System going into read-only mode
 
-Note, that will upset creative uses of error codes i guess, such as 
-fs/xfs/.
+On Thu, 2009-11-05 at 18:57 +0530, Penchala Narasimha Reddy Chilakala,
+TLS-Chennai wrote:
+> Hi James and linux-scsi community,
+>
+>        I would request you that please review the attached updated patch with the following modification, which is suggested by James in the previous mails and do the needful to incorporate the patch in up-coming release.
+>
+>
+> else if (down_interruptible(&fibptr->event_wait)) {
+>         /* Do nothing ... satisfy
+>          * down_interruptible must_check */
+>  }
+>
 
-But yeah, +1 from me too.
+Yes, that's fine.
 
-Ob'post'mortem - looked for similar patterns in the kernel and there's 
-quite a few bugs there:
+The management fib stuff is still racy as I pointed out previously. The
+attached should fix it up, is this OK with you?
 
- include/net/inet_hashtables.h:                  return ENOMEM;         # bug
- drivers/scsi/aic7xxx/aic7xxx_osm.c:             return ENOMEM;         # works but weird
- drivers/scsi/cxgb3i/cxgb3i_offload.c:           return ENOMEM;         # works but weird
- fs/ocfs2/dlm/dlmrecovery.c:		return EAGAIN;                  # bug
- drivers/block/cciss_scsi.c:             return ENXIO;                  # works but weird
- drivers/gpu/drm/radeon/radeon_irq.c:                    return EINVAL; # bug
- drivers/gpu/drm/radeon/radeon_irq.c:                    return EINVAL; # bug
- drivers/isdn/hardware/mISDN/hfcmulti.c:         return EINVAL;         # bug
 
-5 out of 8 places look buggy - i.e. more than 60% - a checkpatch warning 
-would avoid real bugs here. (even ignoring the cleanliness effects of 
-using proper error propagation)
+James
 
-Cc:-ed affected maintainers. The rightmost column are my observations. 
-Below is the patch fixing these.
-
-	Ingo
-
-Signed-off-by: Ingo Molnar <mingo@elte.hu>
 ---
- drivers/gpu/drm/radeon/radeon_irq.c    |    4 ++--
- drivers/isdn/hardware/mISDN/hfcmulti.c |    2 +-
- fs/ocfs2/dlm/dlmrecovery.c             |    2 +-
- include/net/inet_hashtables.h          |    2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/gpu/drm/radeon/radeon_irq.c b/drivers/gpu/drm/radeon/radeon_irq.c
-index b79ecc4..fbbc0a1 100644
---- a/drivers/gpu/drm/radeon/radeon_irq.c
-+++ b/drivers/gpu/drm/radeon/radeon_irq.c
-@@ -76,7 +76,7 @@ int radeon_enable_vblank(struct drm_device *dev, int crtc)
- 		default:
- 			DRM_ERROR("tried to enable vblank on non-existent crtc %d\n",
- 				  crtc);
--			return EINVAL;
-+			return -EINVAL;
- 		}
- 	} else {
- 		switch (crtc) {
-@@ -89,7 +89,7 @@ int radeon_enable_vblank(struct drm_device *dev, int crtc)
- 		default:
- 			DRM_ERROR("tried to enable vblank on non-existent crtc %d\n",
- 				  crtc);
--			return EINVAL;
-+			return -EINVAL;
- 		}
- 	}
- 
-diff --git a/drivers/isdn/hardware/mISDN/hfcmulti.c b/drivers/isdn/hardware/mISDN/hfcmulti.c
-index faed794..cfb45c9 100644
---- a/drivers/isdn/hardware/mISDN/hfcmulti.c
-+++ b/drivers/isdn/hardware/mISDN/hfcmulti.c
-@@ -2846,7 +2846,7 @@ mode_hfcmulti(struct hfc_multi *hc, int ch, int protocol, int slot_tx,
- 	int conf;
- 
- 	if (ch < 0 || ch > 31)
--		return EINVAL;
-+		return -EINVAL;
- 	oslot_tx = hc->chan[ch].slot_tx;
- 	oslot_rx = hc->chan[ch].slot_rx;
- 	conf = hc->chan[ch].conf;
-diff --git a/fs/ocfs2/dlm/dlmrecovery.c b/fs/ocfs2/dlm/dlmrecovery.c
-index d9fa3d2..0a8a6a4 100644
---- a/fs/ocfs2/dlm/dlmrecovery.c
-+++ b/fs/ocfs2/dlm/dlmrecovery.c
-@@ -2639,7 +2639,7 @@ int dlm_begin_reco_handler(struct o2net_msg *msg, u32 len, void *data,
- 		     dlm->name, br->node_idx, br->dead_node,
- 		     dlm->reco.dead_node, dlm->reco.new_master);
- 		spin_unlock(&dlm->spinlock);
--		return EAGAIN;
-+		return -EAGAIN;
- 	}
- 	spin_unlock(&dlm->spinlock);
- 
-diff --git a/include/net/inet_hashtables.h b/include/net/inet_hashtables.h
-index d522dcf..5e31447 100644
---- a/include/net/inet_hashtables.h
-+++ b/include/net/inet_hashtables.h
-@@ -193,7 +193,7 @@ static inline int inet_ehash_locks_alloc(struct inet_hashinfo *hashinfo)
- 		hashinfo->ehash_locks =	kmalloc(size * sizeof(spinlock_t),
- 						GFP_KERNEL);
- 		if (!hashinfo->ehash_locks)
--			return ENOMEM;
-+			return -ENOMEM;
- 		for (i = 0; i < size; i++)
- 			spin_lock_init(&hashinfo->ehash_locks[i]);
- 	}
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index b1fc0a0..795fb05 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -855,10 +855,11 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+                spin_unlock_irqrestore(&dev->manage_lock, mflags);
+                return -EBUSY;
+        }
++       dev->management_fib_count++;
+        spin_unlock_irqrestore(&dev->manage_lock, mflags);
+        status = aac_dev_ioctl(dev, cmd, arg);
+        if (status != -ENOTTY)
+-               return status;
++               goto out;
 
-------------------------------------------------------------------------------
-Let Crystal Reports handle the reporting - Free Crystal Reports 2008 30-Day 
-trial. Simplify your report design, integration and deployment - and focus on 
-what you do best, core application coding. Discover what's new with
-Crystal Reports now.  http://p.sf.net/sfu/bobj-july
---
+        switch (cmd) {
+        case FSACTL_MINIPORT_REV_CHECK:
+@@ -887,6 +888,13 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+                status = -ENOTTY;
+                break;
+        }
++ out:
++       if (status != -ERESTARTSYS) {
++               spin_lock_irqsave(&dev->manage_lock, mflags);
++               --dev->management_fib_count;
++               spin_unlock_irqrestore(&dev->manage_lock, mflags);
++       }
++
+        return status;
+ }
+
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 99729a6..e00c6a9 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -494,13 +494,8 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
+         */
+
+        if (wait) {
+-               unsigned long mflags;
+                spin_unlock_irqrestore(&fibptr->event_lock, flags);
+
+-               spin_lock_irqsave(&dev->manage_lock, mflags);
+-               dev->management_fib_count++;
+-               spin_unlock_irqrestore(&dev->manage_lock, mflags);
+-
+                /* Only set for first known interruptable command */
+                if (wait < 0) {
+                        /*
+diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
+index 9c7408f..d06bfd2 100644
+--- a/drivers/scsi/aacraid/dpcsup.c
++++ b/drivers/scsi/aacraid/dpcsup.c
+@@ -57,7 +57,7 @@ unsigned int aac_response_normal(struct aac_queue * q)
+        struct hw_fib * hwfib;
+        struct fib * fib;
+        int consumed = 0;
+-       unsigned long flags, mflags;
++       unsigned long flags;
+
+        spin_lock_irqsave(q->lock, flags);
+        /*
+@@ -131,13 +131,13 @@ unsigned int aac_response_normal(struct aac_queue * q)
+                        }
+                        spin_unlock_irqrestore(&fib->event_lock, flagv);
+
+-                       spin_lock_irqsave(&dev->manage_lock, mflags);
+-                       dev->management_fib_count--;
+-                       spin_unlock_irqrestore(&dev->manage_lock, mflags);
+-
+                        FIB_COUNTER_INCREMENT(aac_config.NormalRecved);
+                        if (fib->done == 2) {
+-                               spin_lock_irqsave(&fib->event_lock, flagv);
++                               spin_lock_irqsave(&dev->manage_lock, flagv);
++                               dev->management_fib_count--;
++                               spin_unlock(&dev->manage_lock);
++
++                               spin_lock(&fib->event_lock);
+                                fib->done = 0;
+                                spin_unlock_irqrestore(&fib->event_lock, flagv);
+                                aac_fib_complete(fib);
+@@ -241,7 +241,6 @@ unsigned int aac_command_normal(struct aac_queue *q)
+
+ unsigned int aac_intr_normal(struct aac_dev * dev, u32 index)
+ {
+-       unsigned long mflags;
+        dprintk((KERN_INFO "aac_intr_normal(%p,%x)\n", dev, index));
+        if ((index & 0x00000002L)) {
+                struct hw_fib * hw_fib;
+@@ -336,13 +335,13 @@ unsigned int aac_intr_normal(struct aac_dev * dev, u32 index)
+                        }
+                        spin_unlock_irqrestore(&fib->event_lock, flagv);
+
+-                       spin_lock_irqsave(&dev->manage_lock, mflags);
+-                       dev->management_fib_count--;
+-                       spin_unlock_irqrestore(&dev->manage_lock, mflags);
+-
+                        FIB_COUNTER_INCREMENT(aac_config.NormalRecved);
+                        if (fib->done == 2) {
+-                               spin_lock_irqsave(&fib->event_lock, flagv);
++                               spin_lock_irqsave(&dev->manage_lock, flagv);
++                               dev->management_fib_count--;
++                               spin_unlock(&dev->manage_lock);
++
++                               spin_lock(&fib->event_lock);
+                                fib->done = 0;
+                                spin_unlock_irqrestore(&fib->event_lock, flagv);
+                                aac_fib_complete(fib);
+
+
+
+
+DISCLAIMER:
+-----------------------------------------------------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
+It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
+this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
+Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
+this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
+received this email in error please delete it and notify the sender immediately. Before opening any mail and 
+attachments please check them for viruses and defect.
+
+-----------------------------------------------------------------------------------------------------------------------
