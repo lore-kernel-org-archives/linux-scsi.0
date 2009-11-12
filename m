@@ -1,37 +1,83 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 13/17] hpsa: Retry driver initiated commands on unit
- attention
-Date: Thu, 12 Nov 2009 14:52:48 -0800
-Message-ID: <20091112145248.35c76f52.akpm@linux-foundation.org>
-References: <20091111164803.17754.11900.stgit@beardog.cce.hp.com>
-	<20091111165129.17754.71091.stgit@beardog.cce.hp.com>
+From: Sascha Frey <sfrey@techfak.uni-bielefeld.de>
+Subject: Re: Bug 14579 -  Devices disappear... and Bug 14577 - Data
+	corruption with Adaptec
+Date: Thu, 12 Nov 2009 23:58:25 +0100
+Message-ID: <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE>
+References: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
+Reply-To: Support@TechFak.Uni-Bielefeld.DE
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754859AbZKLWwy@vger.kernel.org>
-In-Reply-To: <20091111165129.17754.71091.stgit@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cce.hp.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:51851 "EHLO
+	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755032AbZKLXFy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Nov 2009 18:05:54 -0500
+Content-Disposition: inline
+In-Reply-To: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Lukas Kolbe <lkolbe@TechFak.Uni-Bielefeld.DE>
 
-On Wed, 11 Nov 2009 10:51:29 -0600
-"Stephen M. Cameron" <scameron@beardog.cce.hp.com> wrote:
+Hi,
 
-> +static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
-> +	struct CommandList *c, int data_direction)
-> +{
-> +	int retry_count = 0;
-> +
-> +	do {
-> +		memset(c->err_info, 0, sizeof(c->err_info));
-> +		hpsa_scsi_do_simple_cmd_core(h, c);
-> +		retry_count++;
-> +	} while (check_for_unit_attention(h, c) && retry_count <= 3);
-> +	hpsa_pci_unmap(h->pdev, c, 1, data_direction);
-> +}
+Lukas Kolbe wrote:
+>we'd really appreciate any hints and help we can get for the following
+>bugs:
+>http://bugzilla.kernel.org/show_bug.cgi?id=14579
 
-If this times out, no indication of the error is returned to the caller
-and no message is displayed to the operator.
+We've done some further testing:
+it's very hard to trigger this bug. Sometimes the machine freezes after
+a few minutes into tape access and sometimes it works days - or even
+weeks - without any problem.
 
-Doesn't seem very robust?
+The bug only appears during tape I/O (regardless of which tape program is
+used: btape, dd or tar).
+In most cases the tape write ends with an input/output error. After this
+error occurred, any access to the tape library robot (connected through
+the SAS interface of the first drive) fails:
+
+# mtx unload 1 1
+Unloading drive 1 into Storage Element 1...mtx: Request Sense: Long Report=yes
+mtx: Request Sense: Valid Residual=no
+mtx: Request Sense: Error Code=70 (Current)
+mtx: Request Sense: Sense Key=Illegal Request
+mtx: Request Sense: FileMark=no
+mtx: Request Sense: EOM=no
+mtx: Request Sense: ILI=no
+mtx: Request Sense: Additional Sense Code = 53
+mtx: Request Sense: Additional Sense Qualifier = 01
+mtx: Request Sense: BPV=no
+mtx: Request Sense: Error in CDB=no
+mtx: Request Sense: SKSV=no
+MOVE MEDIUM from Element Address 257 to 4096 Failed
+
+After resetting the scsi bus (echo "- - -" >
+/sys/class/scsi_host/host5/scan) the tape drives are revitalized, but
+the changer device disappears. Even after a cold restart of the whole
+library the device keeps missing.
+
+Yet another problem: restting the SCSI bus of the LSI SAS HBA sometimes
+results in a hardy freeze (console stuck; no log messages).
+
+> [...]
+>
+>I do not believe it's a hardware fault at the moment as the machine
+>ran OK under Solaris for a few weeks (including successful btape runs).
+>
+
+The very same piece of hardware worked fine using Solaris 10 with heavy
+disk and tape I/O at the same time for two months.
+
+We really prefer using Linux instead, but we're in pressure of time.
+
+
+We appreciate any help resolving this bug!
+
+
+
+
+Regards,
+Sascha Frey
+
