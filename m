@@ -1,63 +1,102 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: [patch] Fix: 'return -ENOMEM' instead of 'return
-	ENOMEM'
-Date: Fri, 13 Nov 2009 03:56:10 -0800
-Message-ID: <20091113115610.GB28530@mail.oracle.com>
-References: <4AFB2C0B.50605@gmail.com>
-	<20091111134730.a0da9e38.akpm@linux-foundation.org>
-	<20091112081043.GA25345@elte.hu>
-	<20091112191758.GA22985@mail.oracle.com>
-	<20091112202728.GC22985@mail.oracle.com>
-	<20091113075306.GB2775@elte.hu>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: Bug 14579 -  Devices disappear... and Bug 14577 - Data
+	corruption with Adaptec
+Date: Fri, 13 Nov 2009 17:29:43 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1C93C04462@inbmail01.lsi.com>
+References: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
+ <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <ocfs2-devel-bounces@oss.oracle.com>
-Content-Disposition: inline
-In-Reply-To: <20091113075306.GB2775@elte.hu>
-List-Unsubscribe: <http://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=unsubscribe>
-List-Archive: <http://oss.oracle.com/pipermail/ocfs2-devel>
-List-Post: <mailto:ocfs2-devel@oss.oracle.com>
-List-Help: <mailto:ocfs2-devel-request@oss.oracle.com?subject=help>
-List-Subscribe: <http://oss.oracle.com/mailman/listinfo/ocfs2-devel>,
-	<mailto:ocfs2-devel-request@oss.oracle.com?subject=subscribe>
-Sender: ocfs2-devel-bounces@oss.oracle.com
-Errors-To: ocfs2-devel-bounces@oss.oracle.com
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, "Stephen M. Cameron" <scameron@beardog.cca.cpqcorp.net>, Mike Christie <michaelc@cs.wisc.edu>, David Airlie <airlied@linux.ie>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Evgeniy Polyakov <zbr@ioremap.net>, iss_storagedev@hp.com, Eric Dumazet <eric.dumazet@gmail.com>, Andy Whitcroft <apw@shadowen.org>, Dave Airlie <airlied@redhat.com>, Hannes Eder <hannes@hanneseder.net>, dri-devel@lists.sourceforge.net, Alexey Dobriyan <adobriyan@gmail.com>, Mike Miller <mike.miller@hp.com>, Mark Fasheh <mfasheh@suse.com>, Karsten Keil <isdn@linux-pingi.de>, rostedt@goodmis.org, Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Andreas
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:34893 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755456AbZKML7u convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Nov 2009 06:59:50 -0500
+In-Reply-To: <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Support@techfak.uni-bielefeld.de" <Support@techfak.uni-bielefeld.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
 
-On Fri, Nov 13, 2009 at 08:53:06AM +0100, Ingo Molnar wrote:
-> > Sorry, I read the code wrong.  This function is just a handler. The 
-> > caller, dlm_send_begin_reco_message(), expects the positive EAGAIN as 
-> > a non-error case.
-> 
-> Well, at minimum the error code usage is very confused. The 
-> dlm_begin_reco_handler gets registered via o2net_register_handler(). 
-> Here's where dlm_begin_reco_handler gets registered, followed by 
-> dlm_finalize_reco_handler right afterwards:
-<snip> 
-> A negative error code right there. The other event handlers are seem to 
-> be similar - dlm_begin_reco_handler() is the odd one out.
+Subject line is related to *Adaptec* and there are some places LSI related issue is pointed out. Little confusing to me. Is it possible to rewrite what is an issue related to LSI card?
 
-	The usage of the handlers - 'status' is the return code of the
-handler - is pretty straightforward.  Once you're in the mindset of the
-o2net code, of course.  This is old stuff, from the earliest days of
-ocfs2 development, so we haven't had to spelunk in here for a while ;-)
-	Sunil and I both thought while looking at this code that we
-could probably return -EAGAIN just as easily, though.  We'll probably
-clean it that way at some point.
+>From dmesg log I can figure out 3.04.07 is mpt fusion driver version.
+Please update LSI driver using latest upstream driver version 3.04.13. And see what a result is.
 
-Joel
+- Kashyap
 
--- 
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Sascha Frey
+Sent: Friday, November 13, 2009 4:28 AM
+To: linux-scsi@vger.kernel.org
+Cc: Lukas Kolbe
+Subject: Re: Bug 14579 - Devices disappear... and Bug 14577 - Data corruption with Adaptec
 
- There are morethings in heaven and earth, Horatio,
- Than are dreamt of in your philosophy.
+Hi,
 
-Joel Becker
-Principal Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+Lukas Kolbe wrote:
+>we'd really appreciate any hints and help we can get for the following
+>bugs:
+>http://bugzilla.kernel.org/show_bug.cgi?id=14579
+
+We've done some further testing:
+it's very hard to trigger this bug. Sometimes the machine freezes after
+a few minutes into tape access and sometimes it works days - or even
+weeks - without any problem.
+
+The bug only appears during tape I/O (regardless of which tape program is
+used: btape, dd or tar).
+In most cases the tape write ends with an input/output error. After this
+error occurred, any access to the tape library robot (connected through
+the SAS interface of the first drive) fails:
+
+# mtx unload 1 1
+Unloading drive 1 into Storage Element 1...mtx: Request Sense: Long Report=yes
+mtx: Request Sense: Valid Residual=no
+mtx: Request Sense: Error Code=70 (Current)
+mtx: Request Sense: Sense Key=Illegal Request
+mtx: Request Sense: FileMark=no
+mtx: Request Sense: EOM=no
+mtx: Request Sense: ILI=no
+mtx: Request Sense: Additional Sense Code = 53
+mtx: Request Sense: Additional Sense Qualifier = 01
+mtx: Request Sense: BPV=no
+mtx: Request Sense: Error in CDB=no
+mtx: Request Sense: SKSV=no
+MOVE MEDIUM from Element Address 257 to 4096 Failed
+
+After resetting the scsi bus (echo "- - -" >
+/sys/class/scsi_host/host5/scan) the tape drives are revitalized, but
+the changer device disappears. Even after a cold restart of the whole
+library the device keeps missing.
+
+Yet another problem: restting the SCSI bus of the LSI SAS HBA sometimes
+results in a hardy freeze (console stuck; no log messages).
+
+> [...]
+>
+>I do not believe it's a hardware fault at the moment as the machine
+>ran OK under Solaris for a few weeks (including successful btape runs).
+>
+
+The very same piece of hardware worked fine using Solaris 10 with heavy
+disk and tape I/O at the same time for two months.
+
+We really prefer using Linux instead, but we're in pressure of time.
+
+
+We appreciate any help resolving this bug!
+
+
+
+
+Regards,
+Sascha Frey
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
