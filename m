@@ -1,63 +1,50 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH 2/7]MVSAS:add supporting MSI feature
-Date: Sat, 14 Nov 2009 12:19:17 -0600
-Message-ID: <1258222757.4070.34.camel@mulgrave.site>
+Date: Sat, 14 Nov 2009 15:56:27 -0700
+Message-ID: <20091114225627.GK16033@parisc-linux.org>
 References: <20091109120818.GA32336@Andy.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39437 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751211AbZKNSTT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Nov 2009 13:19:19 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:59180 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218AbZKNW4X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Nov 2009 17:56:23 -0500
+Content-Disposition: inline
 In-Reply-To: <20091109120818.GA32336@Andy.marvell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ayan@marvell.com
-Cc: jeff@garzik.org, linux-scsi@vger.kernel.org, jfeng@marvell.com, qswang@marvell.com
+To: Andy Yan <ayan@marvell.com>
+Cc: james.bottomley@hansenpartnership.com, jeff@garzik.org, linux-scsi@vger.kernel.org, jfeng@marvell.com, qswang@marvell.com
 
-On Mon, 2009-11-09 at 20:08 +0800, Andy Yan wrote:
-> From 8b51aa63e8b123046a334d630ae045f479acbf6c Mon Sep 17 00:00:00 200=
-1
-> From: andy <ayan@marvell.com>
-> Date: Fri, 6 Nov 2009 17:03:21 +0800
-> Subject: [PATCH 2/7] Add supporting MSI feature
->=20
-> MSI feature is implemented with mvsas driver.
->=20
-> Signed-off-by: Andy <ayan@marvell.com>
-> Signed-off-by: Jacky <jfeng@marvell.com>
-> Signed-off-by: Ke <kewei@marvell.com>
+On Mon, Nov 09, 2009 at 08:08:18PM +0800, Andy Yan wrote:
+> +void mvs_enable_msi(struct mvs_info *mvi)
+> +{
+> +	u32 tmp;
+> +	pci_read_config_dword(mvi->pdev, PCR_CMD, &tmp);
+> +	tmp |= 1 << 10;    	/* disable interrupt */
+> +	pci_write_config_dword(mvi->pdev, PCR_CMD, tmp);
 
-This doesn't compile:
+What makes you think the pci_enable_msi() code doesn't set this bit?
 
-  CC [M]  drivers/scsi/mvsas/mv_init.o
-drivers/scsi/mvsas/mv_init.c: In function =E2=80=98mvs_enable_msi=E2=80=
-=99:
-drivers/scsi/mvsas/mv_init.c:197: error: =E2=80=98PCR_CMD=E2=80=99 unde=
-clared (first use in this function)
-drivers/scsi/mvsas/mv_init.c:197: error: (Each undeclared identifier is=
- reported only once
-drivers/scsi/mvsas/mv_init.c:197: error: for each function it appears i=
-n.)
-drivers/scsi/mvsas/mv_init.c:201: error: =E2=80=98PCR_MSI_CTRL=E2=80=99=
- undeclared (first use in this function)
-drivers/scsi/mvsas/mv_init.c: In function =E2=80=98mvs_disable_msi=E2=80=
-=99:
-drivers/scsi/mvsas/mv_init.c:208: error: =E2=80=98PCR_CMD=E2=80=99 unde=
-clared (first use in this function)
-drivers/scsi/mvsas/mv_init.c:212: error: =E2=80=98PCR_MSI_CTRL=E2=80=99=
- undeclared (first use in this function)
+> +	pci_read_config_dword(mvi->pdev, PCR_MSI_CTRL, &tmp);
+> +	tmp |= 1 << 16; 		/* enable MSI */
+> +	pci_write_config_dword(mvi->pdev, PCR_MSI_CTRL, tmp);
 
-It looks like these definitions are added in patch 3 (after this
-one) ... you can't do that: a patch series has to be bisectable
+... and what makes you think it doesn't set this bit either?
 
-James
+> +static ssize_t
+> +mvs_show_driver_version(struct device *cdev,
+> +			struct device_attribute *attr,
+> +			char *buffer)
+> +{
+> +	return snprintf(buffer, PAGE_SIZE, "%s\n", DRV_VERSION);
+> +}
 
+There's a lot of code in this patch not related to enabling MSI.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
