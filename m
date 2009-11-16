@@ -1,44 +1,110 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [uml-user] [PATCH 00/12] move compat_ioctl handling into drivers
-Date: Mon, 16 Nov 2009 02:02:36 +0100
-Message-ID: <200911160202.36577.arnd@arndb.de>
-References: <1258331227-1694-1-git-send-email-arnd@arndb.de>
-	<20091116115715.600e346f@notabene.brown>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
+ (17380)
+Date: Mon, 16 Nov 2009 01:58:10 GMT
+Message-ID: <200911160158.nAG1wATk028993@demeter.kernel.org>
+References: <bug-14577-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <user-mode-linux-user-bounces@lists.sourceforge.net>
-In-Reply-To: <20091116115715.600e346f@notabene.brown>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-user>,
-	<mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=user-mode-linux-user>
-List-Post: <mailto:user-mode-linux-user@lists.sourceforge.net>
-List-Help: <mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/user-mode-linux-user>,
-	<mailto:user-mode-linux-user-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: user-mode-linux-user-bounces@lists.sourceforge.net
-To: Neil Brown <neilb@suse.de>
-Cc: linux-usb@vger.kernel.org, user-mode-linux-user@lists.sourceforge.net, "H. Peter Anvin" <hpa@zytor.com>, Paul Clements <Paul.Clements@steeleye.com>, Wolfram Sang <w.sang@pengutronix.de>, Andre Noll <maan@systemlinux.org>, Pavel Machek <pavel@suse.cz>, linux-i2c@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Jan Blunck <jblunck@suse.de>, Ian Kent <raven@themaw.net>, Nick Piggin <npiggin@suse.de>, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Alon Bar-Lev <alon.barlev@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>, Doug Gilbert <dgilbert@interlog.com>, David Vrabel <david.vrabel@csr.com>, Alexey Dobriyan <adobriyan@gmail.com>, user-mode-linux-devel@lists.sourceforge.net, Jeff Dike <jdike@addtoit.com>, Oliver Neukum <oliver@neukum.org>, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>Ja
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:52164 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444AbZKPB6F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2009 20:58:05 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAG1wAMK028994
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2009 01:58:10 GMT
+In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Monday 16 November 2009, Neil Brown wrote:
-> I would take the md ones into my tree, but I suspect that if
-> everyone did that we would end up with lots of conflicts in
-> fs/compat_ioctl.c.
-> 
-> So how about I just take the changes to md.c, and give you an:
-> 
->    Acked-by: NeilBrown <neilb@suse.de>
-> 
-> for the changes to fs/compat_ioctl.c
-> ??
+http://bugzilla.kernel.org/show_bug.cgi?id=14577
 
-Yes, that is exactly what I was trying to suggest. Thanks,
 
-	Arnd <><
 
-------------------------------------------------------------------------------
-Let Crystal Reports handle the reporting - Free Crystal Reports 2008 30-Day 
-trial. Simplify your report design, integration and deployment - and focus on 
-what you do best, core application coding. Discover what's new with
-Crystal Reports now.  http://p.sf.net/sfu/bobj-july
+
+
+--- Comment #7 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-11-16 01:58:08 ---
+Reply-To: Ganapathy_Sridaran@adaptec.com
+
+*** Copying the bugzilla email in the email address ***
+
+
+Hi James,
+
+We'll look into this issue and get back to you. I wonder if they are genuine
+write errors due to the medium errors. Is this problem seen with other RAID
+volumes or just with this one particular volume? 
+
+Are you running Adaptec Storage Manager Software on this system? If so, can you
+please collect the support.zip file? Support.zip can be collected by clicking
+"support.zip" under the "actions" menu. The Support.zip file provides us
+additional information on any disk errors that might have happened in the
+system.
+
+Thanks,
+Gana 
+
+
+Gana S. Sridaran
+Engg., Manager - RAID FW/Drivers
+Adaptec Inc.,
+691, S. Milpitas Blvd.,
+Milpitas, CA 95035
+408.957.4985
+
+
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@suse.de] 
+Sent: Tuesday, November 10, 2009 6:04 AM
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org; AACRAID
+Subject: Re: [Bug 14577] New: Data Corruption with Adaptec 52445
+
+On Tue, 2009-11-10 at 13:31 +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=14577
+
+
+> [   21.903794] sd 0:0:0:0: [sda] Unhandled sense code
+> [   21.903865] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK
+> driverbyte=DRIVER_SENSE
+> [   21.903998] sd 0:0:0:0: [sda] Sense Key : Hardware Error [current] 
+> [   21.904219] sd 0:0:0:0: [sda] Add. Sense: Internal target failure
+> [   21.904382] sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 00 01 bf 00 00 08 00
+> [   21.905051] end_request: I/O error, dev sda, sector 447
+> [   21.905122] Buffer I/O error on device dm-0, logical block 0
+> [   21.905191] lost page write due to I/O error on dm-0
+> [   21.905271] EXT3 FS on dm-0, internal journal
+> [   23.263958] sd 0:0:0:0: [sda] Unhandled sense code
+> [   23.264029] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK
+> driverbyte=DRIVER_SENSE
+> [   23.264162] sd 0:0:0:0: [sda] Sense Key : Hardware Error [current] 
+> [   23.264368] sd 0:0:0:0: [sda] Add. Sense: Internal target failure
+> [   23.264531] sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 bc 11 cf 00 00 08 00
+> [   23.265186] end_request: I/O error, dev sda, sector 12325327
+> [   23.265257] Buffer I/O error on device dm-1, logical block 492034
+> [   23.265327] lost page write due to I/O error on dm-1
+> [   23.364800] kjournald starting.  Commit interval 5 seconds
+> [   23.423871] sd 0:0:0:0: [sda] Unhandled sense code
+> [   23.423874] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK
+> driverbyte=DRIVER_SENSE
+> [   23.423877] sd 0:0:0:0: [sda] Sense Key : Hardware Error [current] 
+> [   23.423880] sd 0:0:0:0: [sda] Add. Sense: Internal target failure
+> [   23.423886] sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 80 01 bf 00 00 08 00
+
+These are sense codes (Hardware error and Target Failure) generated by
+the driver when it encounters some type of firmware related failure in
+the RAID ... the only people who can really debug and fix this are the
+aacraid people (cc'd).  It may be a simple matter of a support call if
+it's a hardware error.
+
+James
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
