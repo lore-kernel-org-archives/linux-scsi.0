@@ -1,110 +1,87 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
- (17380)
-Date: Mon, 16 Nov 2009 01:58:10 GMT
-Message-ID: <200911160158.nAG1wATk028993@demeter.kernel.org>
-References: <bug-14577-11613@http.bugzilla.kernel.org/>
+From: "Penchala Narasimha Reddy Chilakala, ERS-HCLTech"
+	<narasimhareddyc@hcl.in>
+Subject: RE: [PATCH ]  scsi-misc-2.6:  File System going into read-only mode
+Date: Mon, 16 Nov 2009 08:55:12 +0530
+Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E9150B996@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+References: <1258145722.5965.55.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:52164 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444AbZKPB6F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2009 20:58:05 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAG1wAMK028994
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Nov 2009 01:58:10 GMT
-In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
+Received: from gws08.hcl.in ([203.105.186.28]:59978 "EHLO gws08.hcl.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751161AbZKPDZS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Nov 2009 22:25:18 -0500
+In-Reply-To: <1258145722.5965.55.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14577
-
-
-
-
-
---- Comment #7 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-11-16 01:58:08 ---
-Reply-To: Ganapathy_Sridaran@adaptec.com
-
-*** Copying the bugzilla email in the email address ***
-
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, James Bottomley <jejb@kernel.org>, ServeRAID Driver <ServeRAIDDriver@hcl.in>
 
 Hi James,
 
-We'll look into this issue and get back to you. I wonder if they are genuine
-write errors due to the medium errors. Is this problem seen with other RAID
-volumes or just with this one particular volume? 
-
-Are you running Adaptec Storage Manager Software on this system? If so, can you
-please collect the support.zip file? Support.zip can be collected by clicking
-"support.zip" under the "actions" menu. The Support.zip file provides us
-additional information on any disk errors that might have happened in the
-system.
+Thanks a lot for your nice review, feedback and support so far. I hope that we have sorted out all the issues raised by you except the racy issue.
 
 Thanks,
-Gana 
-
-
-Gana S. Sridaran
-Engg., Manager - RAID FW/Drivers
-Adaptec Inc.,
-691, S. Milpitas Blvd.,
-Milpitas, CA 95035
-408.957.4985
-
-
+Narasimha Reddy
 
 -----Original Message-----
 From: James Bottomley [mailto:James.Bottomley@suse.de] 
-Sent: Tuesday, November 10, 2009 6:04 AM
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org; AACRAID
-Subject: Re: [Bug 14577] New: Data Corruption with Adaptec 52445
+Sent: Saturday, November 14, 2009 2:25 AM
+To: Penchala Narasimha Reddy Chilakala, ERS-HCLTech
+Cc: 'linux-scsi@vger.kernel.org'; James Bottomley; ServeRAID Driver
+Subject: RE: [PATCH ] scsi-misc-2.6: File System going into read-only mode
 
-On Tue, 2009-11-10 at 13:31 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
+On Thu, 2009-11-12 at 13:58 +0530, Penchala Narasimha Reddy Chilakala,
+ERS-HCLTech wrote:
+> Hi James,
+>
+> Thank you very much for your suggestion.
+>
+> I feel that we need to work out for a better solution which would not
+> create any issues. We have to go ahead with the patch as it is tested
+> and working as expected (with out any issues) even though we are
+> thinking there might be some racy issue until we come out with a
+> better solution than the current one
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=14577
+Sure, I can wait for a better solution.
 
+> I am not quite ok with the fix because of the following reasons:
+>
+>         1. I feel that calling the dev->management_fib_count--
+> statement in one place, that is in dpcsup.c (Whenever interrupt comes
+> from arcraid controller, the corresponding ISR route will be called
+> and the value will be decremented, if the response is for the
+> requested management fib) is good  instead of calling the statement in
+> two places, which are dpcsup.c and commctrl.c.
 
-> [   21.903794] sd 0:0:0:0: [sda] Unhandled sense code
-> [   21.903865] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> [   21.903998] sd 0:0:0:0: [sda] Sense Key : Hardware Error [current] 
-> [   21.904219] sd 0:0:0:0: [sda] Add. Sense: Internal target failure
-> [   21.904382] sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 00 01 bf 00 00 08 00
-> [   21.905051] end_request: I/O error, dev sda, sector 447
-> [   21.905122] Buffer I/O error on device dm-0, logical block 0
-> [   21.905191] lost page write due to I/O error on dm-0
-> [   21.905271] EXT3 FS on dm-0, internal journal
-> [   23.263958] sd 0:0:0:0: [sda] Unhandled sense code
-> [   23.264029] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> [   23.264162] sd 0:0:0:0: [sda] Sense Key : Hardware Error [current] 
-> [   23.264368] sd 0:0:0:0: [sda] Add. Sense: Internal target failure
-> [   23.264531] sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 bc 11 cf 00 00 08 00
-> [   23.265186] end_request: I/O error, dev sda, sector 12325327
-> [   23.265257] Buffer I/O error on device dm-1, logical block 492034
-> [   23.265327] lost page write due to I/O error on dm-1
-> [   23.364800] kjournald starting.  Commit interval 5 seconds
-> [   23.423871] sd 0:0:0:0: [sda] Unhandled sense code
-> [   23.423874] sd 0:0:0:0: [sda] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> [   23.423877] sd 0:0:0:0: [sda] Sense Key : Hardware Error [current] 
-> [   23.423880] sd 0:0:0:0: [sda] Add. Sense: Internal target failure
-> [   23.423886] sd 0:0:0:0: [sda] CDB: Write(10): 2a 00 00 80 01 bf 00 00 08 00
+Um, so that's the same mechanism you implemented for this undone fib
+problem: setting the ->done flag as mediator.
 
-These are sense codes (Hardware error and Target Failure) generated by
-the driver when it encounters some type of firmware related failure in
-the RAID ... the only people who can really debug and fix this are the
-aacraid people (cc'd).  It may be a simple matter of a support call if
-it's a hardware error.
+>      2. Moving the dev->management_fib_count++ from aac_fib_send ()
+> function to aac_do_ioctl () function did not work well during our
+> testing (This was suggested by you in one of the earlier mails).
+
+That doesn't give me a lot to go on.
+
+However, I'm not particularly bothered whose solution it is, just that
+we have a solution that isn't demonstrably racy.
 
 James
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
+
+DISCLAIMER:
+-----------------------------------------------------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
+It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
+this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
+Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
+this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
+received this email in error please delete it and notify the sender immediately. Before opening any mail and 
+attachments please check them for viruses and defect.
+
+-----------------------------------------------------------------------------------------------------------------------
