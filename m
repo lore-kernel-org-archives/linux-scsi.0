@@ -1,43 +1,35 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 2/9] libosd: osd_sense: OSD_CFO_PERMISSIONS
-Date: Mon, 16 Nov 2009 20:41:03 +0200
-Message-ID: <1258396863-32623-1-git-send-email-bharrosh@panasas.com>
-References: <4B019BEC.3080909@panasas.com>
+Subject: [PATCHES 0/9] osd patches for 2.6.33 merge window - resend
+Date: Mon, 16 Nov 2009 20:37:32 +0200
+Message-ID: <4B019BEC.3080909@panasas.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from daytona.panasas.com ([67.152.220.89]:35512 "EHLO
 	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751869AbZKPSwr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2009 13:52:47 -0500
-In-Reply-To: <4B019BEC.3080909@panasas.com>
+	with ESMTP id S1753569AbZKPSwx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2009 13:52:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, open-osd <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Add one more important cdb_field_offset that can be returned with
-scsi_invalid_field_in_cdb. It is the offset of the permissions_bit_mask
-field in the capabilities structure.
+James hi.
 
-Interestingly, the offset is the same for V1/V2
+It's getting near the next merge window and none of the osd patches made it
+into scsi-misc yet. I would not like to miss it like last time.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- include/scsi/osd_sense.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+All these are exactly as posted in the mailing list, latest version:
 
-diff --git a/include/scsi/osd_sense.h b/include/scsi/osd_sense.h
-index ff9b33c..91db543 100644
---- a/include/scsi/osd_sense.h
-+++ b/include/scsi/osd_sense.h
-@@ -255,6 +255,9 @@ enum osdv2_cdb_field_offset {
- 	OSD_CFO_STARTING_BYTE	= OSD_CDB_OFFSET(v2.start_address),
- 	OSD_CFO_PARTITION_ID	= OSD_CDB_OFFSET(partition),
- 	OSD_CFO_OBJECT_ID	= OSD_CDB_OFFSET(object),
-+	OSD_CFO_PERMISSIONS	= sizeof(struct osd_cdb_head) +
-+					offsetof(struct osd_capability_head,
-+						 permissions_bit_mask),
- };
- 
- #endif /* ndef __OSD_SENSE_H__ */
--- 
-1.6.5.2
+[PATCH 1/9] libosd: osd_dev_is_ver1 - Minor API cleanup
+[PATCH 2/9] libosd: osd_sense: OSD_CFO_PERMISSIONS
+[PATCH 3/9] osduld: Ref-counting bug fix
+[PATCH 4/9] osduld: Use device->release instead of internal kref
+[PATCH 5/9] libosd: osd_dev_info: Unique Identification of an OSD device
+[PATCH 6/9] libosd: bug in osd_req_decode_sense_full()
+[PATCH 7/9] libosd: Bugfix of error handling in attributes-list decoding
+[PATCH 8/9] libosd: Error handling revamped
+[PATCH 9/9] osd_protocol.h: Add missing #include
 
+Thanks
+Boaz
