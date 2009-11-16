@@ -1,36 +1,52 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Mon, 16 Nov 2009 19:19:39 +0300
-Message-ID: <4B017B9B.6090702@ru.mvista.com>
-References: <20091116154343.GA6672@infradead.org> <20091116160748.3c58218e@lxorguk.ukuu.org.uk>
+From: Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: FC bus questions
+Date: Mon, 16 Nov 2009 10:44:13 -0800
+Message-ID: <1258397053.3331.10149.camel@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20091116160748.3c58218e@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: James.Smart-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org
+Cc: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello.
+Hi James (and everyone else),
 
-Alan Cox wrote:
+   I wanted to continue the discussion on FCoE statistics and a possible
+device tree reorganization. The original thread has been expired from my
+mail system, so I have to start this new thread. The main theme was that
+we might want to convert FC to be a bus.
 
->> +	min_io_sectors = 1;
->> +	if ((args->id[106] & 0xc000) == 0x4000 && (args->id[106] & (1 << 13)))
->> +		min_io_sectors *= args->id[106] & 0xf;
->>     
->
-> That magic probably wants to be an ata_id_foo helper of some sort but
-> otherwise all looks sensible enough for ATA. I'm assuming gcc is smart
-> enough to collapse that into
->
-> 	id[106] & 0xE000 != 0x6000
->   
+   For reference here is your proposed sysfs layout-
 
-   You probably meant ==, not !=. Not sure if gcc is that smart...
+/sys/.../fcportX/fcfportY/fcfabricZ/fcvportA/fcrportB
+                                            /fcpinitC/hostD/target<H:C:T>/<H:C:T>
 
-WBR, Sergei
+   I can see a benefit to extending the FC device tree. Assuming that
+each of these devices is created as they're discovered by the FC HBA
+then it's giving a more accurate description of the system's state. For
+example, in FCoE if you were to succeed with FIP and discover a FCF, but
+the FLOGI failed then user space could clearly see that devices were
+only created up to the fcfabric. I also think that it simply makes more
+room for new attributes. With FCFs and FCoE attributes it would be nice
+to have them better organized instead of just grouping them all under
+the fc_host.
 
+   Aside from a sysfs reorganization, which could be done without making
+FC a bus, the main benefit seems to be that other FC4 protocols could
+use a FC HBA. Is there other goodness that I'm overlooking?
 
+   Also, buses usually have devices and drivers. I'm not sure what the
+FC drivers would be since SCSI would ultimately provide the drivers for
+SCSI-FCP. Would a FC bus only have devices and no drivers?
+
+Thanks, //Rob
