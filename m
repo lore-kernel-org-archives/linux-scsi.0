@@ -1,48 +1,39 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 9/9] osd_protocol.h: Add missing #include
-Date: Tue, 17 Nov 2009 09:54:17 +0200
-Message-ID: <4B0256A9.5090406@panasas.com>
-References: <4B019BEC.3080909@panasas.com>	 <1258397365-356-1-git-send-email-bharrosh@panasas.com>	 <20091116185741.GH8113@deprecation.cyrius.com>	 <4B01A174.8000005@panasas.com> <1258401694.2517.245.camel@mulgrave.site>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH] mpt2sas : missing initialization of scsih_cmds is included
+Date: Tue, 17 Nov 2009 13:16:37 +0530
+Message-ID: <20091117074622.GA20953@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:59004 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751588AbZKQHyO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 02:54:14 -0500
-In-Reply-To: <1258401694.2517.245.camel@mulgrave.site>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:57891 "HELO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752488AbZKQIMg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2009 03:12:36 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Martin Michlmayr <tbm@cyrius.com>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On 11/16/2009 10:01 PM, James Bottomley wrote:
-> On Mon, 2009-11-16 at 21:01 +0200, Boaz Harrosh wrote:
->> On 11/16/2009 08:57 PM, Martin Michlmayr wrote:
->>> * Boaz Harrosh <bharrosh@panasas.com> [2009-11-16 20:49]:
->>>> From: Martin Michlmayr <tbm@cyrius.com>
->>>>
->>>> include/scsi/osd_protocol.h uses ALIGN() without an #include
->>>> <linux/kernel.h>, leading to:
->>>> | include/scsi/osd_protocol.h:362: error: implicit declaration of function 'ALIGN'
->>>
->>> Note that this patch also has to go into 2.6.32, where OSD currently
->>> builds to build (at least on ARM).
->>
->> OK in that case we need to CC: stable@kernel.org, inside the patch
->>
->> James could you add it to the patch? Should I re-post?
 
-Sorry, yes you are right.
+Internal command scsih_cmds init is included in mpt2sas_base_attach.
 
-> 
-> I can add it.
-> 
-
-Thanks
-> James
-> 
-> 
-
-Boaz
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+---
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 6422e25..89d0240 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3583,6 +3583,11 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 	ioc->transport_cmds.status = MPT2_CMD_NOT_USED;
+ 	mutex_init(&ioc->transport_cmds.mutex);
+ 
++	/* scsih internal command bits */
++	ioc->scsih_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
++	ioc->scsih_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_init(&ioc->scsih_cmds.mutex);
++
+ 	/* task management internal command bits */
+ 	ioc->tm_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
+ 	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
