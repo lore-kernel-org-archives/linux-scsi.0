@@ -1,54 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
- (17380)
-Date: Tue, 17 Nov 2009 22:44:02 GMT
-Message-ID: <200911172244.nAHMi2vu006716@demeter.kernel.org>
-References: <bug-14577-11613@http.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [patch for 2.6.32? 3/3] scsi: fix another crash at disconnect
+ of usb strorage
+Date: Tue, 17 Nov 2009 17:44:39 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0911171742380.3501-100000@iolanthe.rowland.org>
+References: <200911172210.nAHMADAW014298@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:60095 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756301AbZKQWnz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 17:43:55 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAHMi20m006717
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2009 22:44:02 GMT
-In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
+Received: from iolanthe.rowland.org ([192.131.102.54]:60373 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754535AbZKQWoe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 17:44:34 -0500
+In-Reply-To: <200911172210.nAHMADAW014298@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, kuznet@ms2.inr.ac.ru, alan@lxorguk.ukuu.org.uk, den@openvz.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14577
+On Tue, 17 Nov 2009 akpm@linux-foundation.org wrote:
 
-
-
-
-
---- Comment #9 from Rafael J. Wysocki <rjw@sisk.pl>  2009-11-17 22:44:00 ---
-On Tuesday 17 November 2009, Lukas Kolbe wrote:
-> Rafael J. Wysocki wrote:
+> From: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
 > 
-> >This message has been generated automatically as a part of a report
-> >of recent regressions.
-> >
-> >The following bug entry is on the current list of known regressions
-> >from 2.6.31.  Please verify if it still should be listed and let me know
-> >(either way).
+> Asynchronous scan (scsi_add_lun()) sets state to SDEV_RUNNING, but the
+> device is not registered in sysfs.  Before async scan it was OK, because
+> before releasing scan_mutex old code called either scsi_sysfs_add_sdev()
+> or scsi_destroy_sdev() and, therefore, completed the work or discarded it.
 > 
-> It is still valid. We haven't yet been able to verify if it is either a
-> hardware problem (working with the adaptec folks to sort that out) or a
-> kernel problem (working with you to find that out ;). Kernel 2.6.30, as
-> already said, seems to think everything is fine, so it really might be a
-> regression.
-> 
-> >Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14577
-> >Subject		: Data Corruption with Adaptec 52445, Firmware 5.2-0 (17380)
-> >Submitter	:  <lkolbe@techfak.uni-bielefeld.de>
-> >Date		: 2009-11-10 13:31 (7 days old)
+> With async scan the invariant is broken and scsi crashes in
+> __scsi_remove_device() when trying to unregister not registered devices.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Alexey, have you seen the patches I posted?  In particular this one, 
+but also the following three messages:
+
+	http://marc.info/?l=linux-scsi&m=125675695827770&w=2
+
+It does what you want to accomplish and more.
+
+Alan Stern
+
