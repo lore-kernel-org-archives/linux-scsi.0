@@ -1,43 +1,28 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] libata: add TRIM support
-Date: Tue, 17 Nov 2009 14:52:39 +0000
-Message-ID: <20091117145239.768072c9@lxorguk.ukuu.org.uk>
-References: <20091116154343.GA6672@infradead.org>
-	<4B02AD86.8010304@rtr.ca>
-	<20091117143507.GC588@infradead.org>
+Date: Tue, 17 Nov 2009 10:00:13 -0500
+Message-ID: <20091117150012.GA10748@infradead.org>
+References: <20091116154343.GA6672@infradead.org> <4B02AD86.8010304@rtr.ca> <20091117143507.GC588@infradead.org> <20091117145239.768072c9@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60393 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752712AbZKQOvF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 09:51:05 -0500
-In-Reply-To: <20091117143507.GC588@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20091117145239.768072c9@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, Mark Lord <liml@rtr.ca>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
-Cc: Mark Lord <liml@rtr.ca>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
-> > Eg. sata_mv, sata_sil, .. won't work as-is with this command.
+On Tue, Nov 17, 2009 at 02:52:39PM +0000, Alan Cox wrote:
+> I'm not convinced that is the right way to handle it. If we start doing
+> that we'll have this massive unmanagable set of magic flags and twiddles
+> for every possible host specific corner case.
 > 
-> I can certainly add a blacklist, do you have a complete list of
-> controllers that should be blacklisted.  Also is there a good reason
-> why they are blacklisted or ist just controller bugs?
+> Far better to keep the issue of the command as Christoph has done and
+> block the command issue in the afflicted devices qc_issue so that you get
+> an error back. That keeps the mess in the right places.
 
-I'm not convinced that is the right way to handle it. If we start doing
-that we'll have this massive unmanagable set of magic flags and twiddles
-for every possible host specific corner case.
+Ok, new version of the patch without this will go out this minute.  I'm
+happy to add whatever patch is nessecary to block it for controllers
+that can't accept it once we agree on a method.
 
-Far better to keep the issue of the command as Christoph has done and
-block the command issue in the afflicted devices qc_issue so that you get
-an error back. That keeps the mess in the right places.
-
-Christoph - the problem with some overly bright and IMHO misdesigned
-controllers is that they've got magic tables for command lengths in them
-to drive their ATA state machines. Those controllers tend to need special
-handlers when new commands come along to explain to them in simple terms
-what sort of command it is and wipe their backside afterwards.
-
-That belongs in the crappy hardware drivers not in the core code.
-
-Alan
