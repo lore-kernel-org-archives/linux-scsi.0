@@ -1,71 +1,38 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Tue, 17 Nov 2009 16:59:38 -0500
-Message-ID: <4B031CCA.1080409@pobox.com>
-References: <20091116154343.GA6672@infradead.org> <4B0219CC.2060401@pobox.com> <20091117143249.GB588@infradead.org>
+Subject: Re: [PATCH V2] libata: add TRIM support
+Date: Tue, 17 Nov 2009 17:01:19 -0500
+Message-ID: <4B031D2F.7030004@pobox.com>
+References: <20091117150047.GB10748@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:55624 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:48782 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751882AbZKQV7n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2009 16:59:43 -0500
-In-Reply-To: <20091117143249.GB588@infradead.org>
+	id S1751999AbZKQWBe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2009 17:01:34 -0500
+In-Reply-To: <20091117150047.GB10748@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
 
-On 11/17/2009 09:32 AM, Christoph Hellwig wrote:
-> On Mon, Nov 16, 2009 at 10:34:36PM -0500, Jeff Garzik wrote:
->> args->id[] access should be via ata_id_* functions from include/linux/ata.h.
->>
->> Create new ata_id_* as needed.
+On 11/17/2009 10:00 AM, Christoph Hellwig wrote:
+> Add support for the ATA TRIM command in libata.  We translate a WRITE SAME 16
+> command with the unmap bit set into an ATA TRIM command and export enough
+> information in READ CAPACITY 16 and the block limits EVPD page so that the new
+> SCSI layer discard support will driver this for us.
 >
-> Fixed.
+> Note that I hardcode the WRITE_SAME_16 opcode for now as the patch to introduce
+> the symbolic is not in 2.6.32 yet but only in the SCSI tree - as soon as it is
+> merged we can fix it up to properly use the symbolic name.
 >
->>> +	tf->lbam = 0;
->>> +	tf->hob_lbah = 0;
->>> +	tf->lbah = 0;
->>
->> taskfile is pre-zeroed for you (ata_scsi_qc_new ->  ata_qc_new_init ->
->> ata_qc_reinit ->  ata_tf_init), so zap all those zeroing lines.
->
-> Thanks, tried to figure out if it was but after going a few levels deep
-> I gave up.
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
 
-Understandable ;-)
-
-
->>> +	tf->device = ATA_LBA;
->>
->> __do not__ overwrite tf->device value.  It is already assigned a useful
->> value, which you just stomped.
->>
->>
->>> +	tf->device = dev->devno ?
->>> +		tf->device | ATA_DEV1 : tf->device&   ~ATA_DEV1;
->>
->> delete this; already done in ata_tf_init()
->>
->>
->>> +	qc->sect_size = ATA_SECT_SIZE;
->>
->> delete this; already done in ata_qc_reinit()
->
-> All this is copy and paste from ata_scsi_pass_thru, but I'll happily fix
-> it up.
-
-Thanks.
-
-ata_scsi_pass_thru() isn't the best model, since it assumes some 
-registers -- notably Device -- are accurately filled in by userland. 
-That is the purpose of the pass-through "command," after all.
-
-Pretty much all other sources use the tf->device provided by 
-ata_tf_init(), OR'd as appropriate with additional bits.
+Looks good to me....  will apply to libata-dev.git#upstream soonish
 
 	Jeff
+
+
 
 
