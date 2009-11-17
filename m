@@ -1,46 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/18] drivers/scsi/u14-34f.c: fix uffer overflow
-Date: Tue, 17 Nov 2009 14:53:18 -0800
-Message-ID: <200911172253.nAHMrIwA019787@imap1.linux-foundation.org>
+Subject: [patch 14/18] NCR5380: bit MR_DMA_MODE set twice in NCR5380_transfer_dma()
+Date: Tue, 17 Nov 2009 14:53:24 -0800
+Message-ID: <200911172253.nAHMrOJG020042@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57458 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:37862 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756658AbZKQWzt (ORCPT
+	by vger.kernel.org with ESMTP id S1756802AbZKQW4s (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2009 17:55:49 -0500
+	Tue, 17 Nov 2009 17:56:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, alan@lxorguk.ukuu.org.uk
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-This allows i == MAX_INT_PARAM, which is out of range for ints[]
-
-Found with Parfait, http://research.sun.com/projects/parfait/
+Besides keeping the line short, the second setting of the MR_DMA_MODE bit
+was removed.
 
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Dario Ballabio <ballabio_dario@emc.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/u14-34f.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/NCR5380.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow drivers/scsi/u14-34f.c
---- a/drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow
-+++ a/drivers/scsi/u14-34f.c
-@@ -1070,7 +1070,7 @@ static int option_setup(char *str) {
-    char *cur = str;
-    int i = 1;
- 
--   while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+   while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
-       ints[i++] = simple_strtoul(cur, NULL, 0);
- 
-       if ((cur = strchr(cur, ',')) != NULL) cur++;
+diff -puN drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma
++++ a/drivers/scsi/NCR5380.c
+@@ -1857,7 +1857,9 @@ static int NCR5380_transfer_dma(struct S
+ #endif
+ 	/* KLL May need eop and parity in 53c400 */
+ 	if (hostdata->flags & FLAG_NCR53C400)
+-		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR | MR_ENABLE_EOP_INTR | MR_DMA_MODE | MR_MONITOR_BSY);
++		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
++				MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR |
++				MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
+ 	else
+ 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
+ #endif				/* def REAL_DMA */
 _
