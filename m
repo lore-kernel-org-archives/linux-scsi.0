@@ -1,51 +1,46 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/18] st: fix test of value range in st_set_options()
-Date: Tue, 17 Nov 2009 14:53:22 -0800
-Message-ID: <200911172253.nAHMrMHU019953@imap1.linux-foundation.org>
+Subject: [patch 06/18] drivers/scsi/u14-34f.c: fix uffer overflow
+Date: Tue, 17 Nov 2009 14:53:18 -0800
+Message-ID: <200911172253.nAHMrIwA019787@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40051 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57458 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756768AbZKQW4W (ORCPT
+	by vger.kernel.org with ESMTP id S1756658AbZKQWzt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2009 17:56:22 -0500
+	Tue, 17 Nov 2009 17:55:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, osst@riede.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-value cannot logically be less than START and greater than BUFFERSIZE.
+This allows i == MAX_INT_PARAM, which is out of range for ints[]
 
-#define EXTENDED_SENSE_START  18
+Found with Parfait, http://research.sun.com/projects/parfait/
 
-// vi include/scsi/scsi_cmnd.h +105
-#define SCSI_SENSE_BUFFERSIZE 	96
-
-[akpm@linux-foundation.org: fix warning]
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Willem Riede <osst@riede.org>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dario Ballabio <ballabio_dario@emc.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/st.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/u14-34f.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/st.c~st-fix-test-of-value-range-in-st_set_options drivers/scsi/st.c
---- a/drivers/scsi/st.c~st-fix-test-of-value-range-in-st_set_options
-+++ a/drivers/scsi/st.c
-@@ -2280,7 +2280,8 @@ static int st_set_options(struct scsi_ta
- 	} else if (code == MT_ST_SET_CLN) {
- 		value = (options & ~MT_ST_OPTIONS) & 0xff;
- 		if (value != 0 &&
--		    value < EXTENDED_SENSE_START && value >= SCSI_SENSE_BUFFERSIZE)
-+			(value < EXTENDED_SENSE_START ||
-+				value >= SCSI_SENSE_BUFFERSIZE))
- 			return (-EINVAL);
- 		STp->cln_mode = value;
- 		STp->cln_sense_mask = (options >> 8) & 0xff;
+diff -puN drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow drivers/scsi/u14-34f.c
+--- a/drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow
++++ a/drivers/scsi/u14-34f.c
+@@ -1070,7 +1070,7 @@ static int option_setup(char *str) {
+    char *cur = str;
+    int i = 1;
+ 
+-   while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
++   while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
+       ints[i++] = simple_strtoul(cur, NULL, 0);
+ 
+       if ((cur = strchr(cur, ',')) != NULL) cur++;
 _
