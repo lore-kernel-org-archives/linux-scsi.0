@@ -1,73 +1,54 @@
-From: akpm@linux-foundation.org
-Subject: [patch for 2.6.32? 3/3] scsi: fix another crash at disconnect of usb strorage
-Date: Tue, 17 Nov 2009 14:10:13 -0800
-Message-ID: <200911172210.nAHMADAW014298@imap1.linux-foundation.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
+ (17380)
+Date: Tue, 17 Nov 2009 22:44:02 GMT
+Message-ID: <200911172244.nAHMi2vu006716@demeter.kernel.org>
+References: <bug-14577-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41165 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752373AbZKQWLF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2009 17:11:05 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:60095 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756301AbZKQWnz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 17:43:55 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAHMi20m006717
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2009 22:44:02 GMT
+In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, kuznet@ms2.inr.ac.ru, alan@lxorguk.ukuu.org.uk, den@openvz.org, stern@rowland.harvard.edu
+To: linux-scsi@vger.kernel.org
 
-From: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
+http://bugzilla.kernel.org/show_bug.cgi?id=14577
 
-Asynchronous scan (scsi_add_lun()) sets state to SDEV_RUNNING, but the
-device is not registered in sysfs.  Before async scan it was OK, because
-before releasing scan_mutex old code called either scsi_sysfs_add_sdev()
-or scsi_destroy_sdev() and, therefore, completed the work or discarded it.
 
-With async scan the invariant is broken and scsi crashes in
-__scsi_remove_device() when trying to unregister not registered devices.
 
-The fix could be introducing new state(s), which is equivalent to
-SDEV_RUNNING, except for one thing, we know that scsi_sysfs_add_sdev() has
-not been called yet.  Or a separate flag, because the state can be
-SDEV_BLOCK or even something else.
 
-Simpler way is just to check that the device is regstered in sysfs before
-unregistering.  Another operations in __scsi_remove_device() seem to be
-idempotent or even required, because scsi_add_lun() makes some part of
-work duplicated in scsi_sysfs_add_sdev().
 
-Signed-off-by: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Denis V. Lunev <den@openvz.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+--- Comment #9 from Rafael J. Wysocki <rjw@sisk.pl>  2009-11-17 22:44:00 ---
+On Tuesday 17 November 2009, Lukas Kolbe wrote:
+> Rafael J. Wysocki wrote:
+> 
+> >This message has been generated automatically as a part of a report
+> >of recent regressions.
+> >
+> >The following bug entry is on the current list of known regressions
+> >from 2.6.31.  Please verify if it still should be listed and let me know
+> >(either way).
+> 
+> It is still valid. We haven't yet been able to verify if it is either a
+> hardware problem (working with the adaptec folks to sort that out) or a
+> kernel problem (working with you to find that out ;). Kernel 2.6.30, as
+> already said, seems to think everything is fine, so it really might be a
+> regression.
+> 
+> >Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=14577
+> >Subject		: Data Corruption with Adaptec 52445, Firmware 5.2-0 (17380)
+> >Submitter	:  <lkolbe@techfak.uni-bielefeld.de>
+> >Date		: 2009-11-10 13:31 (7 days old)
 
- drivers/scsi/scsi_sysfs.c |   12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
-
-diff -puN drivers/scsi/scsi_sysfs.c~scsi-fix-another-crash-at-disconnect-of-usb-strorage drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c~scsi-fix-another-crash-at-disconnect-of-usb-strorage
-+++ a/drivers/scsi/scsi_sysfs.c
-@@ -965,9 +965,17 @@ void __scsi_remove_device(struct scsi_de
- 		return;
- 
- 	bsg_unregister_queue(sdev->request_queue);
--	device_unregister(&sdev->sdev_dev);
-+	/* Asynchronous scan violates invariant that SDEV_RUNNING
-+	 * implies that device is registered in sysfs.
-+	 * We could introduce new state flag or extend set of state,
-+	 * but just plain checking that device is registered already
-+	 * before trying to unregister it is enough.
-+	 */
-+	if (sdev->sdev_dev.kobj.parent)
-+		device_unregister(&sdev->sdev_dev);
- 	transport_remove_device(dev);
--	device_del(dev);
-+	if (dev->kobj.parent)
-+		device_del(dev);
- 	scsi_device_set_state(sdev, SDEV_DEL);
- 	if (sdev->host->hostt->slave_destroy)
- 		sdev->host->hostt->slave_destroy(sdev);
-_
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
