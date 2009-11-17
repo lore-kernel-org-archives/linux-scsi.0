@@ -1,223 +1,326 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH V2] libata: add TRIM support
-Date: Tue, 17 Nov 2009 10:00:47 -0500
-Message-ID: <20091117150047.GB10748@infradead.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: [GIT PATCH] SCSI fixes for 2.6.32-rc7
+Date: Tue, 17 Nov 2009 10:30:12 -0600
+Message-ID: <1258475412.4113.10.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37331 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753347AbZKQPAm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 10:00:42 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753067AbZKQQaT@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
 
-Add support for the ATA TRIM command in libata.  We translate a WRITE SAME 16
-command with the unmap bit set into an ATA TRIM command and export enough
-information in READ CAPACITY 16 and the block limits EVPD page so that the new
-SCSI layer discard support will driver this for us.
+This is a set of miscellaneous (but small) fixes for SCSI.  The only
+urgent one is the CVE, but the number of people having the hardware
+(gdth population approaching zero) makes it less exploit worthy.
 
-Note that I hardcode the WRITE_SAME_16 opcode for now as the patch to introduce
-the symbolic is not in 2.6.32 yet but only in the SCSI tree - as soon as it is
-merged we can fix it up to properly use the symbolic name.
+The patch is available here:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
--- 
+The short changelog is:
 
-Changelog since V1:
+Anil Ravindranath (1):
+      pmcraid: Fix ppc64 driver build for using cpu_to_le32 on U8 data type
 
- - add ata_id_has_large_logical_sectors and ata_id_logical_per_physical_sectors
-   helpers in ata.h
- - remove field initialization in ata_scsi_write_same_xlat that were already
-   done for us in common code
- - remove the ATA_QCFLAG_RESULT_TF flags - we don't need the result TF and
-   this actually speeds up the command dramatically
- - remove the ATA_QCFLAG_QUIET - we do not want failures of the TRIM command
-   to be silent
+Ben Hutchings (1):
+      bfa: declare MODULE_FIRMWARE
 
-Index: linux-2.6/drivers/ata/libata-scsi.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-scsi.c	2009-11-17 15:25:36.199003969 +0100
-+++ linux-2.6/drivers/ata/libata-scsi.c	2009-11-17 15:40:19.901256012 +0100
-@@ -47,6 +47,7 @@
- #include <linux/hdreg.h>
- #include <linux/uaccess.h>
- #include <linux/suspend.h>
-+#include <asm/unaligned.h>
+Brian King (1):
+      scsi_transport_fc: Fix WARN message for FC passthru failure paths
+
+Dave Jones (1):
+      gdth: Prevent negative offsets in ioctl CVE-2009-3080
+
+Martin K. Petersen (1):
+      Fix incorrect reporting of host protection capabilities
+
+Roel Kluin (1):
+      bfa: fix test in bfad_os_fc_host_init()
+
+Wayne Boyer (1):
+      ipr: add workaround for MSI interrupts on P7
+
+jack wang (1):
+      libsas: do not set res = 0 in sas_ex_discover_dev()
+
+And the diffstat:
+
+ drivers/scsi/bfa/bfad_fwimg.c      |    2 +
+ drivers/scsi/bfa/bfad_im.c         |    2 -
+ drivers/scsi/gdth.c                |    2 -
+ drivers/scsi/ipr.c                 |   42 +++++++++++++++++++++++++++++--------
+ drivers/scsi/ipr.h                 |    1 
+ drivers/scsi/libsas/sas_expander.c |    1 
+ drivers/scsi/pmcraid.c             |   10 ++++----
+ drivers/scsi/scsi_transport_fc.c   |    3 ++
+ include/scsi/scsi_host.h           |   29 +++++++++----------------
+ 9 files changed, 57 insertions(+), 35 deletions(-)
+
+Full diffs below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/bfa/bfad_fwimg.c b/drivers/scsi/bfa/bfad_fwimg.c
+index b2f6949..bd34b0d 100644
+--- a/drivers/scsi/bfa/bfad_fwimg.c
++++ b/drivers/scsi/bfa/bfad_fwimg.c
+@@ -41,6 +41,8 @@ u32 *bfi_image_cb;
  
- #include "libata.h"
+ #define	BFAD_FW_FILE_CT	"ctfw.bin"
+ #define	BFAD_FW_FILE_CB	"cbfw.bin"
++MODULE_FIRMWARE(BFAD_FW_FILE_CT);
++MODULE_FIRMWARE(BFAD_FW_FILE_CB);
  
-@@ -1964,6 +1965,7 @@ static unsigned int ata_scsiop_inq_00(st
- 		0x80,	/* page 0x80, unit serial no page */
- 		0x83,	/* page 0x83, device ident page */
- 		0x89,	/* page 0x89, ata info page */
-+		0xb0,	/* page 0xb0, block limits page */
- 		0xb1,	/* page 0xb1, block device characteristics page */
- 	};
+ u32 *
+ bfad_read_firmware(struct pci_dev *pdev, u32 **bfi_image,
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 158c992..55d012a 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -948,7 +948,7 @@ bfad_os_fc_host_init(struct bfad_im_port_s *im_port)
+ 	if (bfad_supported_fc4s & (BFA_PORT_ROLE_FCP_IM | BFA_PORT_ROLE_FCP_TM))
+ 		/* For FCP type 0x08 */
+ 		fc_host_supported_fc4s(host)[2] = 1;
+-	if (bfad_supported_fc4s | BFA_PORT_ROLE_FCP_IPFC)
++	if (bfad_supported_fc4s & BFA_PORT_ROLE_FCP_IPFC)
+ 		/* For LLC/SNAP type 0x05 */
+ 		fc_host_supported_fc4s(host)[3] = 0x20;
+ 	/* For fibre channel services type 0x20 */
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 185e6bc..9e8fce0 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -2900,7 +2900,7 @@ static int gdth_read_event(gdth_ha_str *ha, int handle, gdth_evt_str *estr)
+         eindex = handle;
+     estr->event_source = 0;
  
-@@ -2085,6 +2087,41 @@ static unsigned int ata_scsiop_inq_89(st
- 	return 0;
+-    if (eindex >= MAX_EVENTS) {
++    if (eindex < 0 || eindex >= MAX_EVENTS) {
+         spin_unlock_irqrestore(&ha->smp_lock, flags);
+         return eindex;
+     }
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 5f04550..76d294f 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4189,6 +4189,25 @@ static irqreturn_t ipr_handle_other_interrupt(struct ipr_ioa_cfg *ioa_cfg,
  }
  
-+static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ /**
++ * ipr_isr_eh - Interrupt service routine error handler
++ * @ioa_cfg:	ioa config struct
++ * @msg:	message to log
++ *
++ * Return value:
++ * 	none
++ **/
++static void ipr_isr_eh(struct ipr_ioa_cfg *ioa_cfg, char *msg)
 +{
-+	u32 min_io_sectors;
++	ioa_cfg->errors_logged++;
++	dev_err(&ioa_cfg->pdev->dev, "%s\n", msg);
 +
-+	rbuf[1] = 0xb0;
-+	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
++	if (WAIT_FOR_DUMP == ioa_cfg->sdt_state)
++		ioa_cfg->sdt_state = GET_DUMP;
 +
-+	/*
-+	 * Optimal transfer length granularity.
-+	 *
-+	 * This is always one physical block, but for disks with a smaller
-+	 * logical than physical sector size we need to figure out what the
-+	 * latter is.
-+	 */
-+	if (ata_id_has_large_logical_sectors(args->id))
-+		min_io_sectors = ata_id_logical_per_physical_sectors(args->id);
-+	else
-+		min_io_sectors = 1;
-+	put_unaligned_be16(min_io_sectors, &rbuf[6]);
-+
-+	/*
-+	 * Optimal unmap granularity.
-+	 *
-+	 * The ATA spec doesn't even know about a granularity or alignment
-+	 * for the TRIM command.  We can leave away most of the unmap related
-+	 * VPD page entries, but we have specifify a granularity to signal
-+	 * that we support some form of unmap - in thise case via WRITE SAME
-+	 * with the unmap bit set.
-+	 */
-+	if (ata_id_has_trim(args->id))
-+		put_unaligned_be32(1, &rbuf[28]);
-+
-+	return 0;
++	ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
 +}
 +
- static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
- {
- 	int form_factor = ata_id_form_factor(args->id);
-@@ -2374,6 +2411,9 @@ static unsigned int ata_scsiop_read_cap(
- 		rbuf[13] = log_per_phys;
- 		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
- 		rbuf[15] = lowest_aligned;
++/**
+  * ipr_isr - Interrupt service routine
+  * @irq:	irq number
+  * @devp:	pointer to ioa config struct
+@@ -4203,6 +4222,7 @@ static irqreturn_t ipr_isr(int irq, void *devp)
+ 	volatile u32 int_reg, int_mask_reg;
+ 	u32 ioasc;
+ 	u16 cmd_index;
++	int num_hrrq = 0;
+ 	struct ipr_cmnd *ipr_cmd;
+ 	irqreturn_t rc = IRQ_NONE;
+ 
+@@ -4233,13 +4253,7 @@ static irqreturn_t ipr_isr(int irq, void *devp)
+ 				     IPR_HRRQ_REQ_RESP_HANDLE_MASK) >> IPR_HRRQ_REQ_RESP_HANDLE_SHIFT;
+ 
+ 			if (unlikely(cmd_index >= IPR_NUM_CMD_BLKS)) {
+-				ioa_cfg->errors_logged++;
+-				dev_err(&ioa_cfg->pdev->dev, "Invalid response handle from IOA\n");
+-
+-				if (WAIT_FOR_DUMP == ioa_cfg->sdt_state)
+-					ioa_cfg->sdt_state = GET_DUMP;
+-
+-				ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
++				ipr_isr_eh(ioa_cfg, "Invalid response handle from IOA");
+ 				spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 				return IRQ_HANDLED;
+ 			}
+@@ -4266,8 +4280,18 @@ static irqreturn_t ipr_isr(int irq, void *devp)
+ 
+ 		if (ipr_cmd != NULL) {
+ 			/* Clear the PCI interrupt */
+-			writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg);
+-			int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
++			do {
++				writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg);
++				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
++			} while (int_reg & IPR_PCII_HRRQ_UPDATED &&
++					num_hrrq++ < IPR_MAX_HRRQ_RETRIES);
 +
-+		if (ata_id_has_trim(args->id))
-+			rbuf[14] |= 0x80;
++			if (int_reg & IPR_PCII_HRRQ_UPDATED) {
++				ipr_isr_eh(ioa_cfg, "Error clearing HRRQ");
++				spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++				return IRQ_HANDLED;
++			}
++
+ 		} else
+ 			break;
+ 	}
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index 163245a..19bbcf3 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -144,6 +144,7 @@
+ #define IPR_IOA_MAX_SECTORS				32767
+ #define IPR_VSET_MAX_SECTORS				512
+ #define IPR_MAX_CDB_LEN					16
++#define IPR_MAX_HRRQ_RETRIES				3
+ 
+ #define IPR_DEFAULT_BUS_WIDTH				16
+ #define IPR_80MBs_SCSI_RATE		((80 * 10) / (IPR_DEFAULT_BUS_WIDTH / 8))
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index b338195..33cf988 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -960,7 +960,6 @@ static int sas_ex_discover_dev(struct domain_device *dev, int phy_id)
+ 
+ 			}
+ 		}
+-		res = 0;
  	}
  
+ 	return res;
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index f7c70e2..0a97bc9 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -1071,7 +1071,7 @@ static struct pmcraid_cmd *pmcraid_init_hcam
+ 
+ 	ioarcb->data_transfer_length = cpu_to_le32(rcb_size);
+ 
+-	ioadl[0].flags |= cpu_to_le32(IOADL_FLAGS_READ_LAST);
++	ioadl[0].flags |= IOADL_FLAGS_READ_LAST;
+ 	ioadl[0].data_len = cpu_to_le32(rcb_size);
+ 	ioadl[0].address = cpu_to_le32(dma);
+ 
+@@ -2251,7 +2251,7 @@ static void pmcraid_request_sense(struct pmcraid_cmd *cmd)
+ 
+ 	ioadl->address = cpu_to_le64(cmd->sense_buffer_dma);
+ 	ioadl->data_len = cpu_to_le32(SCSI_SENSE_BUFFERSIZE);
+-	ioadl->flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
++	ioadl->flags = IOADL_FLAGS_LAST_DESC;
+ 
+ 	/* request sense might be called as part of error response processing
+ 	 * which runs in tasklets context. It is possible that mid-layer might
+@@ -3017,7 +3017,7 @@ static int pmcraid_build_ioadl(
+ 		ioadl[i].flags = 0;
+ 	}
+ 	/* setup last descriptor */
+-	ioadl[i - 1].flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
++	ioadl[i - 1].flags = IOADL_FLAGS_LAST_DESC;
+ 
  	return 0;
-@@ -2896,6 +2936,58 @@ static unsigned int ata_scsi_pass_thru(s
- 	return 1;
  }
+@@ -3387,7 +3387,7 @@ static int pmcraid_build_passthrough_ioadls(
+ 	}
  
-+static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
-+{
-+	struct ata_taskfile *tf = &qc->tf;
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct ata_device *dev = qc->dev;
-+	const u8 *cdb = scmd->cmnd;
-+	u64 block;
-+	u32 n_block;
-+	u32 size;
-+	void *buf;
-+
-+	/* we may not issue DMA commands if no DMA mode is set */
-+	if (unlikely(!dev->dma_mode))
-+		goto invalid_fld;
-+
-+	if (unlikely(scmd->cmd_len < 16))
-+		goto invalid_fld;
-+	scsi_16_lba_len(cdb, &block, &n_block);
-+
-+	/* for now we only support WRITE SAME with the unmap bit set */
-+	if (unlikely(!(cdb[1] & 0x8)))
-+		goto invalid_fld;
-+
-+	/*
-+	 * WRITE SAME always has a sector sized buffer as payload, this
-+	 * should never be a multiple entry S/G list.
-+	 */
-+	if (!scsi_sg_count(scmd))
-+		goto invalid_fld;
-+
-+	buf = page_address(sg_page(scsi_sglist(scmd)));
-+	size = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
-+
-+	tf->protocol = ATA_PROT_DMA;
-+	tf->hob_feature = 0;
-+	tf->feature = ATA_DSM_TRIM;
-+	tf->hob_nsect = (size / 512) >> 8;
-+	tf->nsect = size / 512;
-+	tf->command = ATA_CMD_DSM;
-+	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
-+		     ATA_TFLAG_WRITE;
-+
-+	ata_qc_set_pc_nbytes(qc);
-+
-+	return 0;
-+
-+ invalid_fld:
-+	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x00);
-+	/* "Invalid field in cdb" */
-+	return 1;
-+}
-+
- /**
-  *	ata_get_xlat_func - check if SCSI to ATA translation is possible
-  *	@dev: ATA device
-@@ -2920,6 +3012,9 @@ static inline ata_xlat_func_t ata_get_xl
- 	case WRITE_16:
- 		return ata_scsi_rw_xlat;
+ 	/* setup the last descriptor */
+-	ioadl[i - 1].flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
++	ioadl[i - 1].flags = IOADL_FLAGS_LAST_DESC;
  
-+	case 0x93 /*WRITE_SAME_16*/:
-+		return ata_scsi_write_same_xlat;
-+
- 	case SYNCHRONIZE_CACHE:
- 		if (ata_try_flush_cache(dev))
- 			return ata_scsi_flush_xlat;
-@@ -3109,6 +3204,9 @@ void ata_scsi_simulate(struct ata_device
- 		case 0x89:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
- 			break;
-+		case 0xb0:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b0);
-+			break;
- 		case 0xb1:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
- 			break;
-Index: linux-2.6/include/linux/ata.h
-===================================================================
---- linux-2.6.orig/include/linux/ata.h	2009-11-17 15:25:53.989003924 +0100
-+++ linux-2.6/include/linux/ata.h	2009-11-17 15:29:14.874033900 +0100
-@@ -87,6 +87,7 @@ enum {
- 	ATA_ID_HW_CONFIG	= 93,
- 	ATA_ID_SPG		= 98,
- 	ATA_ID_LBA_CAPACITY_2	= 100,
-+	ATA_ID_SECTOR_SIZE	= 106,
- 	ATA_ID_LAST_LUN		= 126,
- 	ATA_ID_DLF		= 128,
- 	ATA_ID_CSFO		= 129,
-@@ -638,6 +639,18 @@ static inline int ata_id_flush_ext_enabl
- 	return (id[ATA_ID_CFS_ENABLE_2] & 0x2400) == 0x2400;
+ 	return 0;
  }
+@@ -5314,7 +5314,7 @@ static void pmcraid_querycfg(struct pmcraid_cmd *cmd)
+ 		cpu_to_le32(sizeof(struct pmcraid_config_table));
  
-+static inline int ata_id_has_large_logical_sectors(const u16 *id)
-+{
-+	if ((id[ATA_ID_SECTOR_SIZE] & 0xc000) != 0x4000)
-+		return 0;
-+	return id[ATA_ID_SECTOR_SIZE] & (1 << 13);
-+}
-+
-+static inline u8 ata_id_logical_per_physical_sectors(const u16 *id)
-+{
-+	return id[ATA_ID_SECTOR_SIZE] & 0xf;
-+}
-+
- static inline int ata_id_has_lba48(const u16 *id)
+ 	ioadl = &(ioarcb->add_data.u.ioadl[0]);
+-	ioadl->flags = cpu_to_le32(IOADL_FLAGS_LAST_DESC);
++	ioadl->flags = IOADL_FLAGS_LAST_DESC;
+ 	ioadl->address = cpu_to_le64(pinstance->cfg_table_bus_addr);
+ 	ioadl->data_len = cpu_to_le32(sizeof(struct pmcraid_config_table));
+ 
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index a67fed1..c6f70da 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -3656,6 +3656,7 @@ fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+ fail_host_msg:
+ 	/* return the errno failure code as the only status */
+ 	BUG_ON(job->reply_len < sizeof(uint32_t));
++	job->reply->reply_payload_rcv_len = 0;
+ 	job->reply->result = ret;
+ 	job->reply_len = sizeof(uint32_t);
+ 	fc_bsg_jobdone(job);
+@@ -3741,6 +3742,7 @@ check_bidi:
+ fail_rport_msg:
+ 	/* return the errno failure code as the only status */
+ 	BUG_ON(job->reply_len < sizeof(uint32_t));
++	job->reply->reply_payload_rcv_len = 0;
+ 	job->reply->result = ret;
+ 	job->reply_len = sizeof(uint32_t);
+ 	fc_bsg_jobdone(job);
+@@ -3797,6 +3799,7 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+ 		/* check if we have the msgcode value at least */
+ 		if (job->request_len < sizeof(uint32_t)) {
+ 			BUG_ON(job->reply_len < sizeof(uint32_t));
++			job->reply->reply_payload_rcv_len = 0;
+ 			job->reply->result = -ENOMSG;
+ 			job->reply_len = sizeof(uint32_t);
+ 			fc_bsg_jobdone(job);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 6e728b1..47941fc 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -797,30 +797,23 @@ static inline unsigned int scsi_host_get_prot(struct Scsi_Host *shost)
+ 
+ static inline unsigned int scsi_host_dif_capable(struct Scsi_Host *shost, unsigned int target_type)
  {
- 	if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) != 0x4000)
+-	switch (target_type) {
+-	case 1:
+-		if (shost->prot_capabilities & SHOST_DIF_TYPE1_PROTECTION)
+-			return target_type;
+-	case 2:
+-		if (shost->prot_capabilities & SHOST_DIF_TYPE2_PROTECTION)
+-			return target_type;
+-	case 3:
+-		if (shost->prot_capabilities & SHOST_DIF_TYPE3_PROTECTION)
+-			return target_type;
+-	}
++	static unsigned char cap[] = { 0,
++				       SHOST_DIF_TYPE1_PROTECTION,
++				       SHOST_DIF_TYPE2_PROTECTION,
++				       SHOST_DIF_TYPE3_PROTECTION };
+ 
+-	return 0;
++	return shost->prot_capabilities & cap[target_type] ? target_type : 0;
+ }
+ 
+ static inline unsigned int scsi_host_dix_capable(struct Scsi_Host *shost, unsigned int target_type)
+ {
+ #if defined(CONFIG_BLK_DEV_INTEGRITY)
+-	switch (target_type) {
+-	case 0: return shost->prot_capabilities & SHOST_DIX_TYPE0_PROTECTION;
+-	case 1: return shost->prot_capabilities & SHOST_DIX_TYPE1_PROTECTION;
+-	case 2: return shost->prot_capabilities & SHOST_DIX_TYPE2_PROTECTION;
+-	case 3: return shost->prot_capabilities & SHOST_DIX_TYPE3_PROTECTION;
+-	}
++	static unsigned char cap[] = { SHOST_DIX_TYPE0_PROTECTION,
++				       SHOST_DIX_TYPE1_PROTECTION,
++				       SHOST_DIX_TYPE2_PROTECTION,
++				       SHOST_DIX_TYPE3_PROTECTION };
++
++	return shost->prot_capabilities & cap[target_type];
+ #endif
+ 	return 0;
+ }
