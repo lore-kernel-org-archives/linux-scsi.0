@@ -1,46 +1,59 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Known-good PCI-E SAS HBAs?
-Date: Tue, 17 Nov 2009 11:10:36 +0000
-Message-ID: <73e903670911170310r3b4106eaxfd23c3195d8cb266@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
+ (17380)
+Date: Tue, 17 Nov 2009 12:25:25 GMT
+Message-ID: <200911171225.nAHCPPBe028647@demeter.kernel.org>
+References: <bug-14577-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.26]:27910 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753226AbZKQLKv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 06:10:51 -0500
-Received: by qw-out-2122.google.com with SMTP id 3so1277903qwe.37
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2009 03:10:57 -0800 (PST)
+Received: from demeter.kernel.org ([140.211.167.39]:32788 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751629AbZKQMZT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 07:25:19 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAHCPPgH028648
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2009 12:25:25 GMT
+In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi,
+http://bugzilla.kernel.org/show_bug.cgi?id=14577
 
-I'm looking for a 4-8 port PCI-Express SAS adapter that has solid
-out-of-the-box Linux support. Can you give any recommendations?
 
-I already have a PCI-e Supermicro AOC-SASLP-MV8 card that uses the
-mvsas driver. It hasn't worked too well - when I start a mdadm raid
-over it, the driver freaks out and drops the drives. This has been
-documented in the mailing lists, and I believe there is a fix on the
-way, but I haven't been able to obtain it despite trying.
 
-I have seen recommendations for LSI PCI-e SAS adapters that also use
-mvsas. However, I have also been told that sending SMART commands to
-drives on these similarly cause the driver to freak out and drop
-drives.
 
-So, any recommendations for known fully-working PCI-Express SAS HBAs
-with in-kernel support? 4-8 ports. Much appreciated.
 
-FWIW, the Supermicro AOC-SAT2-MV8 PCI-X SATA card behaves perfectly. I
-can highly recommend it, and would very much like to find something
-similar but for PCI-e and SAS.
+--- Comment #8 from lkolbe@techfak.uni-bielefeld.de  2009-11-17 12:25:21 ---
+bugzilla-daemon@bugzilla.kernel.org wrote:
 
-I'll be running relatively new kernels, 2.6.31, if it matters w.r.t.
-driver support etc.
+>Hi James,
+>
+>We'll look into this issue and get back to you. I wonder if they are genuine
+>write errors due to the medium errors. Is this problem seen with other RAID
+>volumes or just with this one particular volume? 
+>
+>Are you running Adaptec Storage Manager Software on this system? If so, can you
+>please collect the support.zip file? Support.zip can be collected by clicking
+>"support.zip" under the "actions" menu. The Support.zip file provides us
+>additional information on any disk errors that might have happened in the
+>system.
 
-Thanks!
+Hello Gana,
 
--- Kristleifur
+we have the arcconf utility available on that system, but since it is
+Debian Lenny based and we only found RPMs for the storage manager, we
+cannot run it on that system (I suppose). Would the arcconf utility be
+of any help here? 
+
+>Thanks,
+>Gana 
+
+Thanks for your help,
+Lukas Kolbe
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
