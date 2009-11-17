@@ -1,87 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Mon, 16 Nov 2009 22:34:36 -0500
-Message-ID: <4B0219CC.2060401@pobox.com>
-References: <20091116154343.GA6672@infradead.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 10413] (mptbase) Possible incompatibility between SATA and SAS
+Date: Tue, 17 Nov 2009 04:58:50 GMT
+Message-ID: <200911170458.nAH4wosC021946@demeter.kernel.org>
+References: <bug-10413-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20091116154343.GA6672@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:54224 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239AbZKQE6p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Nov 2009 23:58:45 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAH4wp3Y021947
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2009 04:58:51 GMT
+In-Reply-To: <bug-10413-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=10413
+
+
+Jeff Garzik <jgarzik@pobox.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|Serial ATA                  |SCSI
+         AssignedTo|jgarzik@pobox.com           |linux-scsi@vger.kernel.org
+         Regression|---                         |No
 
 
 
-Overall, OK.
 
-Needs minor revisions, including one bug fix (tf->device stomping).
-
-
-> +static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
-> +{
-> +	u32 min_io_sectors;
-> +
-> +	rbuf[1] = 0xb0;
-> +	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
-> +
-> +	/*
-> +	 * Optimal transfer length granularity.
-> +	 *
-> +	 * This is always one physical block, but for disks with a smaller
-> +	 * logical than physical sector size we need to figure out what the
-> +	 * latter is.
-> +	 */
-> +	min_io_sectors = 1;
-> +	if ((args->id[106]&  0xc000) == 0x4000&&  (args->id[106]&  (1<<  13)))
-> +		min_io_sectors *= args->id[106]&  0xf;
-
-args->id[] access should be via ata_id_* functions from include/linux/ata.h.
-
-Create new ata_id_* as needed.
-
-Plus...  add some whitespace before all C operators, to be consistent 
-with the rest of libata.
-
-
-> +	buf = page_address(sg_page(scsi_sglist(scmd)));
-> +	size = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
-> +
-> +	tf->protocol = ATA_PROT_DMA;
-> +	tf->hob_feature = 0;
-> +	tf->feature = ATA_DSM_TRIM;
-> +	tf->hob_nsect = (size / 512)>>  8;
-
-needs whitespace before op
-
-
-> +	tf->nsect = size / 512;
-> +	tf->hob_lbal = 0;
-> +	tf->lbal = 0;
-> +	tf->hob_lbam = 0;
-> +	tf->lbam = 0;
-> +	tf->hob_lbah = 0;
-> +	tf->lbah = 0;
-
-taskfile is pre-zeroed for you (ata_scsi_qc_new -> ata_qc_new_init -> 
-ata_qc_reinit -> ata_tf_init), so zap all those zeroing lines.
-
-
-> +	tf->device = ATA_LBA;
-
-__do not__ overwrite tf->device value.  It is already assigned a useful 
-value, which you just stomped.
-
-
-> +	tf->device = dev->devno ?
-> +		tf->device | ATA_DEV1 : tf->device&  ~ATA_DEV1;
-
-delete this; already done in ata_tf_init()
-
-
-> +	qc->sect_size = ATA_SECT_SIZE;
-
-delete this; already done in ata_qc_reinit()
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
