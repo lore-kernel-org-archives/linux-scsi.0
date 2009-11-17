@@ -1,59 +1,65 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
- (17380)
-Date: Tue, 17 Nov 2009 12:25:25 GMT
-Message-ID: <200911171225.nAHCPPBe028647@demeter.kernel.org>
-References: <bug-14577-11613@http.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 10/10] osduld: No need to use dev_set_drvdata on embedded
+ devices
+Date: Tue, 17 Nov 2009 15:50:59 +0200
+Message-ID: <4B02AA43.4010407@panasas.com>
+References: <4B019BEC.3080909@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:32788 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751629AbZKQMZT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 07:25:19 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAHCPPgH028648
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2009 12:25:25 GMT
-In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
+Received: from daytona.panasas.com ([67.152.220.89]:22404 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752018AbZKQNuz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 08:50:55 -0500
+In-Reply-To: <4B019BEC.3080909@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14577
+To: James Bottomley <James.Bottomley@SteelEye.com>, open-osd <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
 
+This is a micro optimization patch on cold path code.
+Use container_of() on embedded device instead of using
+dev_set_drvdata. Also makes code structure more clear.
 
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/osd/osd_uld.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-
---- Comment #8 from lkolbe@techfak.uni-bielefeld.de  2009-11-17 12:25:21 ---
-bugzilla-daemon@bugzilla.kernel.org wrote:
-
->Hi James,
->
->We'll look into this issue and get back to you. I wonder if they are genuine
->write errors due to the medium errors. Is this problem seen with other RAID
->volumes or just with this one particular volume? 
->
->Are you running Adaptec Storage Manager Software on this system? If so, can you
->please collect the support.zip file? Support.zip can be collected by clicking
->"support.zip" under the "actions" menu. The Support.zip file provides us
->additional information on any disk errors that might have happened in the
->system.
-
-Hello Gana,
-
-we have the arcconf utility available on that system, but since it is
-Debian Lenny based and we only found RPMs for the storage manager, we
-cannot run it on that system (I suppose). Would the arcconf utility be
-of any help here? 
-
->Thanks,
->Gana 
-
-Thanks for your help,
-Lukas Kolbe
-
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index 0484bae..0a90702 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -246,7 +246,8 @@ struct find_oud_t {
+ 
+ int _mach_odi(struct device *dev, void *find_data)
+ {
+-	struct osd_uld_device *oud = dev_get_drvdata(dev);
++	struct osd_uld_device *oud = container_of(dev, struct osd_uld_device,
++						  class_dev);
+ 	struct find_oud_t *fot = find_data;
+ 	const struct osd_dev_info *odi = fot->odi;
+ 
+@@ -367,7 +368,8 @@ static int __detect_osd(struct osd_uld_device *oud)
+ 
+ static void __remove(struct device *dev)
+ {
+-	struct osd_uld_device *oud = dev_get_drvdata(dev);
++	struct osd_uld_device *oud = container_of(dev, struct osd_uld_device,
++						  class_dev);
+ 	struct scsi_device *scsi_device = oud->od.scsi_device;
+ 
+ 	kfree(oud->odi.osdname);
+@@ -461,7 +463,6 @@ static int osd_probe(struct device *dev)
+ 	oud->class_dev.class = &osd_uld_class;
+ 	oud->class_dev.parent = dev;
+ 	oud->class_dev.release = __remove;
+-	dev_set_drvdata(&oud->class_dev, oud);
+ 	error = dev_set_name(&oud->class_dev, disk->disk_name);
+ 	if (error) {
+ 		OSD_ERR("dev_set_name failed => %d\n", error);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.6.5.2
+
+
