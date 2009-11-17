@@ -1,207 +1,123 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Tue, 17 Nov 2009 09:04:54 -0500
-Message-ID: <4B02AD86.8010304@rtr.ca>
-References: <20091116154343.GA6672@infradead.org>
+From: Lukas Kolbe <lkolbe@TechFak.Uni-Bielefeld.DE>
+Subject: Re: Bug 14579 -  Devices disappear... and Bug 14577 - Data
+	corruption with Adaptec
+Date: Tue, 17 Nov 2009 15:22:42 +0100
+Message-ID: <20091117142242.GA15638@TechFak.Uni-Bielefeld.DE>
+References: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE> <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE> <0D1E8821739E724A86F4D16902CE275C1C93C04462@inbmail01.lsi.com>
+Reply-To: support@TechFak.Uni-Bielefeld.DE
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20091116154343.GA6672@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:57000 "EHLO
+	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751065AbZKQOWi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2009 09:22:38 -0500
+Content-Disposition: inline
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1C93C04462@inbmail01.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> Add support for the ATA TRIM command in libata.  We translate a WRITE SAME 16
-> command with the unmap bit set into an ATA TRIM command and export enough
-> information in READ CAPACITY 16 and the block limits EVPD page so that the new
-> SCSI layer discard support will driver this for us.
-> 
-> Note that I hardcode the WRITE_SAME_16 opcode for now as the patch to introduce
-> the symbolic is not in 2.6.32 yet but only in the SCSI tree - as soon as it is
-> merged we can fix it up to properly use the symbolic name.
-> 
-> Tested with a OCZ Vertex SSD and my still quite hackish TRIM emulation
-> for qemu.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6/drivers/ata/libata-scsi.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ata/libata-scsi.c	2009-11-16 16:37:37.776003870 +0100
-> +++ linux-2.6/drivers/ata/libata-scsi.c	2009-11-16 16:37:41.864004223 +0100
-> @@ -47,6 +47,7 @@
->  #include <linux/hdreg.h>
->  #include <linux/uaccess.h>
->  #include <linux/suspend.h>
-> +#include <asm/unaligned.h>
->  
->  #include "libata.h"
->  
-> @@ -1964,6 +1965,7 @@ static unsigned int ata_scsiop_inq_00(st
->  		0x80,	/* page 0x80, unit serial no page */
->  		0x83,	/* page 0x83, device ident page */
->  		0x89,	/* page 0x89, ata info page */
-> +		0xb0,	/* page 0xb0, block limits page */
->  		0xb1,	/* page 0xb1, block device characteristics page */
->  	};
->  
-> @@ -2085,6 +2087,40 @@ static unsigned int ata_scsiop_inq_89(st
->  	return 0;
->  }
->  
-> +static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
-> +{
-> +	u32 min_io_sectors;
-> +
-> +	rbuf[1] = 0xb0;
-> +	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
-> +
-> +	/*
-> +	 * Optimal transfer length granularity.
-> +	 *
-> +	 * This is always one physical block, but for disks with a smaller
-> +	 * logical than physical sector size we need to figure out what the
-> +	 * latter is.
-> +	 */
-> +	min_io_sectors = 1;
-> +	if ((args->id[106] & 0xc000) == 0x4000 && (args->id[106] & (1 << 13)))
-> +		min_io_sectors *= args->id[106] & 0xf;
-> +	put_unaligned_be16(min_io_sectors, &rbuf[6]);
-> +
-> +	/*
-> +	 * Optimal unmap granularity.
-> +	 *
-> +	 * The ATA spec doesn't even know about a granularity or alignment
-> +	 * for the TRIM command.  We can leave away most of the unmap related
-> +	 * VPD page entries, but we have specifify a granularity to signal
-> +	 * that we support some form of unmap - in thise case via WRITE SAME
-> +	 * with the unmap bit set.
-> +	 */
-> +	if (ata_id_has_trim(args->id))
-> +		put_unaligned_be32(1, &rbuf[28]);
-> +
-> +	return 0;
-> +}
-> +
->  static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
->  {
->  	int form_factor = ata_id_form_factor(args->id);
-> @@ -2374,6 +2410,9 @@ static unsigned int ata_scsiop_read_cap(
->  		rbuf[13] = log_per_phys;
->  		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
->  		rbuf[15] = lowest_aligned;
-> +
-> +		if (ata_id_has_trim(args->id))
-> +			rbuf[14] |= 0x80;
->  	}
->  
->  	return 0;
-> @@ -2896,6 +2935,70 @@ static unsigned int ata_scsi_pass_thru(s
->  	return 1;
->  }
->  
-> +static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
-> +{
-> +	struct ata_taskfile *tf = &qc->tf;
-> +	struct scsi_cmnd *scmd = qc->scsicmd;
-> +	struct ata_device *dev = qc->dev;
-> +	const u8 *cdb = scmd->cmnd;
-> +	u64 block;
-> +	u32 n_block;
-> +	u32 size;
-> +	void *buf;
-> +
-> +	/* we may not issue DMA commands if no DMA mode is set */
-> +	if (unlikely(!dev->dma_mode))
-> +		goto invalid_fld;
-> +
-> +	if (unlikely(scmd->cmd_len < 16))
-> +		goto invalid_fld;
-> +	scsi_16_lba_len(cdb, &block, &n_block);
-> +
-> +	/* for now we only support WRITE SAME with the unmap bit set */
-> +	if (unlikely(!(cdb[1] & 0x8)))
-> +		goto invalid_fld;
-> +
-> +	/*
-> +	 * WRITE SAME always has a sector sized buffer as payload, this
-> +	 * should never be a multiple entry S/G list.
-> +	 */
-> +	if (!scsi_sg_count(scmd))
-> +		goto invalid_fld;
-> +
-> +	buf = page_address(sg_page(scsi_sglist(scmd)));
-> +	size = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
-> +
-> +	tf->protocol = ATA_PROT_DMA;
-> +	tf->hob_feature = 0;
-> +	tf->feature = ATA_DSM_TRIM;
-> +	tf->hob_nsect = (size / 512) >> 8;
-> +	tf->nsect = size / 512;
-> +	tf->hob_lbal = 0;
-> +	tf->lbal = 0;
-> +	tf->hob_lbam = 0;
-> +	tf->lbam = 0;
-> +	tf->hob_lbah = 0;
-> +	tf->lbah = 0;
-> +	tf->device = ATA_LBA;
-> +	tf->command = ATA_CMD_DSM;
-> +	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
-> +		     ATA_TFLAG_WRITE;
-> +	tf->device = dev->devno ?
-> +		tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
-> +
-> +	qc->sect_size = ATA_SECT_SIZE;
-> +	qc->flags |= ATA_QCFLAG_RESULT_TF | ATA_QCFLAG_QUIET;
-> +
-> +	ata_qc_set_pc_nbytes(qc);
-> +
-> +	return 0;
-> +
-> + invalid_fld:
-> +	ata_scsi_set_sense(scmd, ILLEGAL_REQUEST, 0x24, 0x00);
-> +	/* "Invalid field in cdb" */
-> +	return 1;
-> +}
-> +
->  /**
->   *	ata_get_xlat_func - check if SCSI to ATA translation is possible
->   *	@dev: ATA device
-> @@ -2920,6 +3023,9 @@ static inline ata_xlat_func_t ata_get_xl
->  	case WRITE_16:
->  		return ata_scsi_rw_xlat;
->  
-> +	case 0x93 /*WRITE_SAME_16*/:
-> +		return ata_scsi_write_same_xlat;
-> +
->  	case SYNCHRONIZE_CACHE:
->  		if (ata_try_flush_cache(dev))
->  			return ata_scsi_flush_xlat;
-> @@ -3109,6 +3215,9 @@ void ata_scsi_simulate(struct ata_device
->  		case 0x89:
->  			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
->  			break;
-> +		case 0xb0:
-> +			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b0);
-> +			break;
->  		case 0xb1:
->  			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
->  			break;
-..
+Desai, Kashyap wrote:
 
-Where is the code that sets up the multi-entry trim list
-that this command requires as data?  It's probably there,
-but I don't see it (blind or something).
+>Subject line is related to *Adaptec* and there are some places LSI
+>related issue is pointed out. Little confusing to me. Is it possible to
+>rewrite what is an issue related to LSI card?
 
-And, where is the per-ATA-host flag to enable use of this feature,
-with the default being DISABLED.  Or vice versa, if you want to test
-all the supported controllers first for compatibility.
+Sorry for that one. This system has an Adaptec Controller for its
+Storage array and an LSI controller for the tape library. Bug 14577 is
+about a possible data corruption on 2.6.32-rc6 that seems to be either a
+hardware error (currently trying to find that out) or a regression in
+2.6.32-rc6, as 2.6.30 is very happy with its storage. 
 
-Eg. sata_mv, sata_sil, .. won't work as-is with this command.
+Finally, the real problem here is Bug 14579 that is about the systems
+problems when using the tape library.
 
-Thanks
+>From dmesg log I can figure out 3.04.07 is mpt fusion driver version.
+>Please update LSI driver using latest upstream driver version 3.04.13. And see what a result is.
 
-Mark
+Thanks for the pointer. Linus' current tree contains 3.04.12 - where can
+I find 3.04.13?
+
+>- Kashyap
+
+Kind regards,
+Lukas Kolbe
+
+
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Sascha Frey
+>Sent: Friday, November 13, 2009 4:28 AM
+>To: linux-scsi@vger.kernel.org
+>Cc: Lukas Kolbe
+>Subject: Re: Bug 14579 - Devices disappear... and Bug 14577 - Data corruption with Adaptec
+>
+>Hi,
+>
+>Lukas Kolbe wrote:
+>>we'd really appreciate any hints and help we can get for the following
+>>bugs:
+>>http://bugzilla.kernel.org/show_bug.cgi?id=14579
+>
+>We've done some further testing:
+>it's very hard to trigger this bug. Sometimes the machine freezes after
+>a few minutes into tape access and sometimes it works days - or even
+>weeks - without any problem.
+>
+>The bug only appears during tape I/O (regardless of which tape program is
+>used: btape, dd or tar).
+>In most cases the tape write ends with an input/output error. After this
+>error occurred, any access to the tape library robot (connected through
+>the SAS interface of the first drive) fails:
+>
+># mtx unload 1 1
+>Unloading drive 1 into Storage Element 1...mtx: Request Sense: Long Report=yes
+>mtx: Request Sense: Valid Residual=no
+>mtx: Request Sense: Error Code=70 (Current)
+>mtx: Request Sense: Sense Key=Illegal Request
+>mtx: Request Sense: FileMark=no
+>mtx: Request Sense: EOM=no
+>mtx: Request Sense: ILI=no
+>mtx: Request Sense: Additional Sense Code = 53
+>mtx: Request Sense: Additional Sense Qualifier = 01
+>mtx: Request Sense: BPV=no
+>mtx: Request Sense: Error in CDB=no
+>mtx: Request Sense: SKSV=no
+>MOVE MEDIUM from Element Address 257 to 4096 Failed
+>
+>After resetting the scsi bus (echo "- - -" >
+>/sys/class/scsi_host/host5/scan) the tape drives are revitalized, but
+>the changer device disappears. Even after a cold restart of the whole
+>library the device keeps missing.
+>
+>Yet another problem: restting the SCSI bus of the LSI SAS HBA sometimes
+>results in a hardy freeze (console stuck; no log messages).
+>
+>> [...]
+>>
+>>I do not believe it's a hardware fault at the moment as the machine
+>>ran OK under Solaris for a few weeks (including successful btape runs).
+>>
+>
+>The very same piece of hardware worked fine using Solaris 10 with heavy
+>disk and tape I/O at the same time for two months.
+>
+>We really prefer using Linux instead, but we're in pressure of time.
+>
+>
+>We appreciate any help resolving this bug!
+>
+>
+>
+>
+>Regards,
+>Sascha Frey
+>
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
