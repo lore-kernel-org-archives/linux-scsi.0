@@ -1,31 +1,22 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
-Date: Tue, 17 Nov 2009 05:15:04 GMT
-Message-ID: <200911170515.nAH5F4LF024816@demeter.kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
+Date: Tue, 17 Nov 2009 14:14:54 +0900
+Message-ID: <20091117141437G.fujita.tomonori@lab.ntt.co.jp>
 References: <bug-14563-11613@http.bugzilla.kernel.org/>
+	<200911161919.nAGJJZ94028105@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36688 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752481AbZKQFO7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Nov 2009 00:14:59 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAH5F4Yw024817
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Nov 2009 05:15:04 GMT
-In-Reply-To: <bug-14563-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:42388 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753000AbZKQFPI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2009 00:15:08 -0500
+In-Reply-To: <200911161919.nAGJJZ94028105@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14563
-
-
-
-
-
---- Comment #7 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-11-17 05:15:02 ---
-Reply-To: fujita.tomonori@lab.ntt.co.jp
+To: linux-kernel@jmbreuer.net
+Cc: linux-scsi@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, Kai.Makisara@kolumbus.fi
 
 > > Performing tape backups using amanda 2.6.0-p2 [using 512kB block size] leads to
 > > spurious 'EIO' errors when writing to the tape; most of the time a kernel BUG
@@ -42,8 +33,3 @@ Looks like that st drivers messes up memory management but the log
 doesn't give enough information.
 
 As Kai suggested, please enable the debug option and send the new log.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
