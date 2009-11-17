@@ -1,14 +1,14 @@
 From: akpm@linux-foundation.org
-Subject: [patch for 2.6.32? 2/3] scsi: fix crash when disconnecting usb storage
-Date: Tue, 17 Nov 2009 14:10:11 -0800
-Message-ID: <200911172210.nAHMABna014259@imap1.linux-foundation.org>
+Subject: [patch for 2.6.32? 3/3] scsi: fix another crash at disconnect of usb strorage
+Date: Tue, 17 Nov 2009 14:10:13 -0800
+Message-ID: <200911172210.nAHMADAW014298@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55284 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41165 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754353AbZKQWLF (ORCPT
+	by vger.kernel.org with ESMTP id S1752373AbZKQWLF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 17 Nov 2009 17:11:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,16 +18,23 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, kuznet@ms2.inr.ac.ru,
 
 From: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
 
-__scsi_remove_device() in scsi_forget_host() is executed out of scan_mutex
-and races with scsi_destroy_sdev() <- scsi_sysfs_add_devices() <-
-scsi_finish_async_scan().  The result is use after free and/or double
-free, oops.
+Asynchronous scan (scsi_add_lun()) sets state to SDEV_RUNNING, but the
+device is not registered in sysfs.  Before async scan it was OK, because
+before releasing scan_mutex old code called either scsi_sysfs_add_sdev()
+or scsi_destroy_sdev() and, therefore, completed the work or discarded it.
 
-The fix is simple, move scsi_forget_host() under scan_mutex.
+With async scan the invariant is broken and scsi crashes in
+__scsi_remove_device() when trying to unregister not registered devices.
 
-scsi_forget_host() is just sequence of __scsi_remove_device().  All
-another calls of __scsi_remove_device() are made under scan_mutex.  So
-that it is safe.
+The fix could be introducing new state(s), which is equivalent to
+SDEV_RUNNING, except for one thing, we know that scsi_sysfs_add_sdev() has
+not been called yet.  Or a separate flag, because the state can be
+SDEV_BLOCK or even something else.
+
+Simpler way is just to check that the device is regstered in sysfs before
+unregistering.  Another operations in __scsi_remove_device() seem to be
+idempotent or even required, because scsi_add_lun() makes some part of
+work duplicated in scsi_sysfs_add_sdev().
 
 Signed-off-by: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -37,20 +44,30 @@ Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/hosts.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_sysfs.c |   12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/hosts.c~scsi-fix-crash-when-disconnecting-usb-storage drivers/scsi/hosts.c
---- a/drivers/scsi/hosts.c~scsi-fix-crash-when-disconnecting-usb-storage
-+++ a/drivers/scsi/hosts.c
-@@ -164,8 +164,8 @@ void scsi_remove_host(struct Scsi_Host *
- 			return;
- 		}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--	mutex_unlock(&shost->scan_mutex);
- 	scsi_forget_host(shost);
-+	mutex_unlock(&shost->scan_mutex);
- 	scsi_proc_host_rm(shost);
+diff -puN drivers/scsi/scsi_sysfs.c~scsi-fix-another-crash-at-disconnect-of-usb-strorage drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~scsi-fix-another-crash-at-disconnect-of-usb-strorage
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -965,9 +965,17 @@ void __scsi_remove_device(struct scsi_de
+ 		return;
  
- 	spin_lock_irqsave(shost->host_lock, flags);
+ 	bsg_unregister_queue(sdev->request_queue);
+-	device_unregister(&sdev->sdev_dev);
++	/* Asynchronous scan violates invariant that SDEV_RUNNING
++	 * implies that device is registered in sysfs.
++	 * We could introduce new state flag or extend set of state,
++	 * but just plain checking that device is registered already
++	 * before trying to unregister it is enough.
++	 */
++	if (sdev->sdev_dev.kobj.parent)
++		device_unregister(&sdev->sdev_dev);
+ 	transport_remove_device(dev);
+-	device_del(dev);
++	if (dev->kobj.parent)
++		device_del(dev);
+ 	scsi_device_set_state(sdev, SDEV_DEL);
+ 	if (sdev->host->hostt->slave_destroy)
+ 		sdev->host->hostt->slave_destroy(sdev);
 _
