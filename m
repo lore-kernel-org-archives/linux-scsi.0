@@ -1,44 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 03/18] ibmmca: fix buffer overflow
-Date: Tue, 17 Nov 2009 14:53:15 -0800
-Message-ID: <200911172253.nAHMrFwD019719@imap1.linux-foundation.org>
+Subject: [patch 04/18] scsi/eata: fix buffer overflow
+Date: Tue, 17 Nov 2009 14:53:16 -0800
+Message-ID: <200911172253.nAHMrGcP019765@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34966 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35551 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756631AbZKQWxz (ORCPT
+	by vger.kernel.org with ESMTP id S1756731AbZKQWxh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2009 17:53:55 -0500
+	Tue, 17 Nov 2009 17:53:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, langa2@kph.uni-mainz.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com, mike@i-Connect.Net
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-Allows i == IM_MAX_HOSTS, which is out of range.
+Allows i == MAX_INT_PARAM, which is out of range.
 
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Michael Lang <langa2@kph.uni-mainz.de>
+Cc: Michael Neuffer <mike@i-Connect.Net>
+Cc: Dario Ballabio <ballabio_dario@emc.com>
 Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ibmmca.c |    2 +-
+ drivers/scsi/eata.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ibmmca.c~ibmmca-buffer-overflow drivers/scsi/ibmmca.c
---- a/drivers/scsi/ibmmca.c~ibmmca-buffer-overflow
-+++ a/drivers/scsi/ibmmca.c
-@@ -2336,7 +2336,7 @@ static int option_setup(char *str)
+diff -puN drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow drivers/scsi/eata.c
+--- a/drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow
++++ a/drivers/scsi/eata.c
+@@ -1509,7 +1509,7 @@ static int option_setup(char *str)
  	char *cur = str;
  	int i = 1;
  
--	while (cur && isdigit(*cur) && i <= IM_MAX_HOSTS) {
-+	while (cur && isdigit(*cur) && i < IM_MAX_HOSTS) {
+-	while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
++	while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
  		ints[i++] = simple_strtoul(cur, NULL, 0);
+ 
  		if ((cur = strchr(cur, ',')) != NULL)
- 			cur++;
 _
