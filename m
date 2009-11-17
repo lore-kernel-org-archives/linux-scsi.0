@@ -1,25 +1,51 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] libata: add TRIM support
-Date: Tue, 17 Nov 2009 09:30:35 -0500
-Message-ID: <20091117143035.GA588@infradead.org>
-References: <20091116154343.GA6672@infradead.org> <20091116160748.3c58218e@lxorguk.ukuu.org.uk>
+Date: Tue, 17 Nov 2009 09:32:50 -0500
+Message-ID: <20091117143249.GB588@infradead.org>
+References: <20091116154343.GA6672@infradead.org> <4B0219CC.2060401@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20091116160748.3c58218e@lxorguk.ukuu.org.uk>
+In-Reply-To: <4B0219CC.2060401@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 16, 2009 at 04:07:48PM +0000, Alan Cox wrote:
-> > +	min_io_sectors = 1;
-> > +	if ((args->id[106] & 0xc000) == 0x4000 && (args->id[106] & (1 << 13)))
-> > +		min_io_sectors *= args->id[106] & 0xf;
-> 
-> That magic probably wants to be an ata_id_foo helper of some sort but
-> otherwise all looks sensible enough for ATA.
+On Mon, Nov 16, 2009 at 10:34:36PM -0500, Jeff Garzik wrote:
+> args->id[] access should be via ata_id_* functions from include/linux/ata.h.
+>
+> Create new ata_id_* as needed.
 
-I've added two helpers for this.
+Fixed.
+
+>> +	tf->lbam = 0;
+>> +	tf->hob_lbah = 0;
+>> +	tf->lbah = 0;
+>
+> taskfile is pre-zeroed for you (ata_scsi_qc_new -> ata_qc_new_init ->  
+> ata_qc_reinit -> ata_tf_init), so zap all those zeroing lines.
+
+Thanks, tried to figure out if it was but after going a few levels deep
+I gave up.
+
+>> +	tf->device = ATA_LBA;
+>
+> __do not__ overwrite tf->device value.  It is already assigned a useful  
+> value, which you just stomped.
+>
+>
+>> +	tf->device = dev->devno ?
+>> +		tf->device | ATA_DEV1 : tf->device&  ~ATA_DEV1;
+>
+> delete this; already done in ata_tf_init()
+>
+>
+>> +	qc->sect_size = ATA_SECT_SIZE;
+>
+> delete this; already done in ata_qc_reinit()
+
+All this is copy and paste from ata_scsi_pass_thru, but I'll happily fix
+it up.
 
