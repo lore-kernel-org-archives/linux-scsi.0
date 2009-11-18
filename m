@@ -1,51 +1,198 @@
 From: "jack wang" <jack_wang@usish.com>
-Subject: [PATCH 0/5] pm8001: 5 Patches for the driver
-Date: Wed, 18 Nov 2009 17:16:45 +0800
-Message-ID: <85E0D649126540A29CF7528716BB2CBE@usish.com.cn>
-References: <20091118004049.GA10257@serverengines.com>
+Subject: [PATCH 1/5] pm8001: Fix for sata io circular lock dependency.
+Date: Wed, 18 Nov 2009 17:17:30 +0800
+Message-ID: <5044F07B440F42B99BD2EA7562E2DC7D@usish.com.cn>
+References: <20091118004141.GA10291@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_001E_01CA6873.02C568A0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:45355 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:49363 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754967AbZKRJQo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2009 04:16:44 -0500
-In-Reply-To: <20091118004049.GA10257@serverengines.com>
+	with ESMTP id S1754289AbZKRJR0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2009 04:17:26 -0500
+In-Reply-To: <20091118004141.GA10291@serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: linux-scsi@vger.kernel.org, 'Lindar Liu' <lindar_liu@usish.com>, 'Kevin Ao' <aoqingyun@usish.com>, 'jack wang' <jack_wang@usish.com>
 
-Hi James and all
+This is a multi-part message in MIME format.
 
- I am sending five patches. Some are inspired from mvsas patchset, thanks
-for that.
+------=_NextPart_000_001E_01CA6873.02C568A0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-1/5 : Fix for sata io circular lock dependency.
+   This patch fix for sata io circular lock dependency. when we call
+task_done for SATA io, we have get pm8001_ha->lock ,and in
+sas_ata_task_done, it will get 
+(dev->sata_dev.ap->lock. then cause circular lock dependency .So we should
+drop
+pm8001_ha->lock when we call task_done for SATA task.
 
-2/5 : enhance error handle for io patch, when the port is down ,fast return 
-phy down for it.
 
-3/5 :fix endian issues 
+------=_NextPart_000_001E_01CA6873.02C568A0
+Content-Type: application/octet-stream;
+	name="0001-Fix-sata-circular-lock-dependency.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0001-Fix-sata-circular-lock-dependency.patch"
 
-4/5 : This patch does a couple of very small, mostly
-    single line changes which I feel will be an overkill to put in
-    individual patches.
+>From 5ed129af3c06470953f2f8126b61af38545db314 Mon Sep 17 00:00:00 2001=0A=
+From: Jack Wang <jack_wang@usish.com>=0A=
+Date: Wed, 18 Nov 2009 15:19:08 +0800=0A=
+Subject: [PATCH 1/4] Fix sata circular lock dependency=0A=
+=0A=
+Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
+Signed-off-by: Lindar Liu <lindar_liu@usish.com>=0A=
+---=0A=
+ drivers/scsi/pm8001/pm8001_hwi.c |   40 =
++++++++++++++++++++++++++++++++++----=0A=
+ 1 files changed, 35 insertions(+), 5 deletions(-)=0A=
+=0A=
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c =
+b/drivers/scsi/pm8001/pm8001_hwi.c=0A=
+index a3de306..68695b7 100644=0A=
+--- a/drivers/scsi/pm8001/pm8001_hwi.c=0A=
++++ b/drivers/scsi/pm8001/pm8001_hwi.c=0A=
+@@ -1901,7 +1901,7 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ {=0A=
+ 	struct sas_task *t;=0A=
+ 	struct pm8001_ccb_info *ccb;=0A=
+-	unsigned long flags;=0A=
++	unsigned long flags =3D 0;=0A=
+ 	u32 param;=0A=
+ 	u32 status;=0A=
+ 	u32 tag;=0A=
+@@ -2040,7 +2040,9 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ 			ts->stat =3D SAS_QUEUE_FULL;=0A=
+ 			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+ 			mb();/*in order to force CPU ordering*/=0A=
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 			t->task_done(t);=0A=
++			spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 			return;=0A=
+ 		}=0A=
+ 		break;=0A=
+@@ -2058,7 +2060,9 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ 			ts->stat =3D SAS_QUEUE_FULL;=0A=
+ 			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+ 			mb();/*ditto*/=0A=
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 			t->task_done(t);=0A=
++			spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 			return;=0A=
+ 		}=0A=
+ 		break;=0A=
+@@ -2084,7 +2088,9 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ 			ts->stat =3D SAS_QUEUE_FULL;=0A=
+ 			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+ 			mb();/* ditto*/=0A=
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 			t->task_done(t);=0A=
++			spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 			return;=0A=
+ 		}=0A=
+ 		break;=0A=
+@@ -2149,7 +2155,9 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ 			ts->stat =3D SAS_QUEUE_FULL;=0A=
+ 			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+ 			mb();/*ditto*/=0A=
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 			t->task_done(t);=0A=
++			spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 			return;=0A=
+ 		}=0A=
+ 		break;=0A=
+@@ -2171,7 +2179,9 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ 			ts->stat =3D SAS_QUEUE_FULL;=0A=
+ 			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+ 			mb();/*ditto*/=0A=
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 			t->task_done(t);=0A=
++			spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 			return;=0A=
+ 		}=0A=
+ 		break;=0A=
+@@ -2200,11 +2210,20 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ 			" resp 0x%x stat 0x%x but aborted by upper layer!\n",=0A=
+ 			t, status, ts->resp, ts->stat));=0A=
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+-	} else {=0A=
++	} else if (t->uldd_task) {=0A=
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);=0A=
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+ 		mb();/* ditto */=0A=
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
++		t->task_done(t);=0A=
++		spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
++	} else if (!t->uldd_task) {=0A=
++		spin_unlock_irqrestore(&t->task_state_lock, flags);=0A=
++		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
++		mb();/*ditto*/=0A=
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 		t->task_done(t);=0A=
++		spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 	}=0A=
+ }=0A=
+ =0A=
+@@ -2212,7 +2231,7 @@ mpi_sata_completion(struct pm8001_hba_info =
+*pm8001_ha, void *piomb)=0A=
+ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha , void =
+*piomb)=0A=
+ {=0A=
+ 	struct sas_task *t;=0A=
+-	unsigned long flags;=0A=
++	unsigned long flags =3D 0;=0A=
+ 	struct task_status_struct *ts;=0A=
+ 	struct pm8001_ccb_info *ccb;=0A=
+ 	struct pm8001_device *pm8001_dev;=0A=
+@@ -2292,7 +2311,9 @@ static void mpi_sata_event(struct pm8001_hba_info =
+*pm8001_ha , void *piomb)=0A=
+ 			ts->stat =3D SAS_QUEUE_FULL;=0A=
+ 			pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+ 			mb();/*ditto*/=0A=
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 			t->task_done(t);=0A=
++			spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 			return;=0A=
+ 		}=0A=
+ 		break;=0A=
+@@ -2401,11 +2422,20 @@ static void mpi_sata_event(struct =
+pm8001_hba_info *pm8001_ha , void *piomb)=0A=
+ 			" resp 0x%x stat 0x%x but aborted by upper layer!\n",=0A=
+ 			t, event, ts->resp, ts->stat));=0A=
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+-	} else {=0A=
++	} else if (t->uldd_task) {=0A=
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);=0A=
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
+-		mb();/* in order to force CPU ordering */=0A=
++		mb();/* ditto */=0A=
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
++		t->task_done(t);=0A=
++		spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
++	} else if (!t->uldd_task) {=0A=
++		spin_unlock_irqrestore(&t->task_state_lock, flags);=0A=
++		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);=0A=
++		mb();/*ditto*/=0A=
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+ 		t->task_done(t);=0A=
++		spin_lock_irqsave(&pm8001_ha->lock, flags);=0A=
+ 	}=0A=
+ }=0A=
+ =0A=
+-- =0A=
+1.6.5.1.1367.gcd48=0A=
+=0A=
 
-	1) delete unnecessary cast.
-	2) fix potential NULL pointer dereference.
-	3) bit set pm8001_ha->flags
-	4) cleanup
-	5) local sata do not reset as it will not be found if reset.
-	
-5/5 :set SSC down-spreading only to get less error on some 6G device.
-
-The patch was built on the latest scsi-misc-2.6.git tree
-
-I request that these patches  be applied to the next release
-
-Thanks
-Jack
+------=_NextPart_000_001E_01CA6873.02C568A0--
 
