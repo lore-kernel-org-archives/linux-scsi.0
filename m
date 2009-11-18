@@ -1,56 +1,42 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: unconditional discard calls in the swap code
-Date: Wed, 18 Nov 2009 18:12:32 +0100
-Message-ID: <20091118171232.GB25541@lst.de>
-References: <20091030065102.GA2896@lst.de> <Pine.LNX.4.64.0910301629030.4106@sister.anvils>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/6] lpfc 8.3.6 : Update lpfc driver to version 8.3.6
+Date: Wed, 18 Nov 2009 15:39:07 -0500
+Message-ID: <1258576767.29086.12.camel@wookie>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0910301629030.4106@sister.anvils>
-Sender: owner-linux-mm@kvack.org
-To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <jens.axboe@oracle.com>, Matthew Wilcox <matthew@wil.cx>, linux-mm@kvack.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:50796 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758235AbZKRUkE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2009 15:40:04 -0500
+Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id nAIKe9Qh012604
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2009 12:40:09 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Oct 30, 2009 at 05:26:18PM +0000, Hugh Dickins wrote:
-> Yes, in practice TRIM seems a huge disappointment: is there a device on
-> which it is really implemented, and not more trouble than it's worth?
-> 
-> I'd been waiting for OCZ to get a Vertex 1.4* firmware out of Beta
-> before looking at swap discard again; but even then, the Linux ATA
-> support is still up in the air, so far as I know.
+This patch set updates the lpfc driver to revision 8.3.6
 
-I've tied it up now for libata, and testing with the releases OCZ 1.4
-firmware.  Haven't tested anything else yet except for my own
-implementations of TRIM and WRITE SAME in qemu which are a lot faster
-than real hardware.
+The patches for 8.3.6 contain:
+- FCoE Protocol fixes.
+- FC protocol fixes.
+- Fix AER issues.
+- Fix critical errors
+- Hardware related Fixes and Changes.
+- Update lpfc driver version to 8.3.6
 
-> 
-> You don't mention swap's discard of the whole partition (or all
-> extents of the swapfile) at swapon time: do you believe that usage
-> is okay to retain?  Is it likely on some devices to take so long,
-> that I ought to make it asynchronous?
+The patches are preparted against scsi-misc-2.6, for inclusion
+into the 2.6.33 merge window, and are dependent upon the 8.3.5
+patch set that posted on 10/2/2009 (and have yet to be merged):
+http://marc.info/?l=linux-scsi&m=125451353307197&w=2
 
-The use on swapon seems fine - we've also added support to discard
-on mkfs which is generally fast enough - the existing implementations
-seem to have mostly constant overhead, the more blocks your discard,
-the better.
+-- james s
 
-> Assuming that initial swap discard is good, I wonder whether just
-> to revert the discard of swap clusters for now: until such time as
-> we find devices (other than mtd) that can implement it efficiently.
-> 
-> If we do retain the discard of swap clusters, under something more
-> than an #if 0, any ideas for what I should make it conditional upon?
+  Signed-off-by: James Smart <james.smart@emulex.com>
 
-add a sysctl / sysfs tunable for it?  For all filesystems we now have
-patches pending to require and -o discard option to use it, which will
-be quite nessecary for 2.6.33 where all the block layer / scsi layer /
-libata support will fall into place.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
+
