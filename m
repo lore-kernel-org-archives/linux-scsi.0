@@ -1,223 +1,525 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 4/6] lpfc 8.3.6 : Fix critical errors
-Date: Wed, 18 Nov 2009 15:40:49 -0500
-Message-ID: <1258576869.29086.17.camel@wookie>
+Subject: [PATCH 5/6] lpfc 8.3.6 : Hardware related fixes and changes
+Date: Wed, 18 Nov 2009 15:41:10 -0500
+Message-ID: <1258576891.29086.18.camel@wookie>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:50889 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:50979 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932452AbZKRUlF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2009 15:41:05 -0500
+	with ESMTP id S932604AbZKRUlk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2009 15:41:40 -0500
 Received: from xcm.ad.emulex.com (xcm.emulex.com [138.239.112.69])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id nAIKfCFU012676
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2009 12:41:12 -0800 (PST)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id nAIKfkLR012763
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2009 12:41:46 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix errors relating to crashes and hangs.
- - Fix crash due to list corruption while unloading driver.
- - Fix panic during pci-hot-plug testing.
- - Fix panic when unmapping luns.
- - Fixed total_scsi_bufs counting could cause exhausted memory.
- - Fixed locking issue causing hang.
- - Fixed the call from lpfc_new_scsi_buf_s3 to use lpfc_release_scsi_buf_s3.
+
+Hardware related Fixes and Changes.
+ - Added new Adapter IDs and update default Adapter names.
+ - Added PCI read after EQarm doorbell PCI write to flush the write
+   and avoid spurrious interrupts when in INTx mode.
+ - Phase out use of ONLINE registers.
+ - Fix for lost MSI interrupt
 
 
  Signed-off-by: James Smart <james.smart@emulex.com>
 
 ---
 
- drivers/scsi/lpfc/lpfc_hbadisc.c |   14 ++++++++------
- drivers/scsi/lpfc/lpfc_init.c    |    4 ++--
- drivers/scsi/lpfc/lpfc_scsi.c    |   33 ++++++++++++++++++++++++++++-----
- 3 files changed, 38 insertions(+), 13 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw.h   |    3 +-
+ drivers/scsi/lpfc/lpfc_hw4.h  |    4 +-
+ drivers/scsi/lpfc/lpfc_init.c |  170 ++++++++++++++++++++++------------------
+ drivers/scsi/lpfc/lpfc_sli.c  |   55 ++++++++-----
+ drivers/scsi/lpfc/lpfc_sli4.h |    7 +-
+ 5 files changed, 134 insertions(+), 105 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 4d7d884..3b94244 100755
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1018,13 +1018,12 @@ lpfc_mbx_cmpl_reg_fcfi(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 		mempool_free(mboxq, phba->mbox_mem_pool);
- 		return;
- 	}
-+	spin_lock_irqsave(&phba->hbalock, flags);
- 	phba->fcf.fcf_flag |= (FCF_DISCOVERED | FCF_IN_USE);
- 	phba->hba_flag &= ~FCF_DISC_INPROGRESS;
--	if (vport->port_state != LPFC_FLOGI) {
--		spin_lock_irqsave(&phba->hbalock, flags);
--		spin_unlock_irqrestore(&phba->hbalock, flags);
-+	spin_unlock_irqrestore(&phba->hbalock, flags);
-+	if (vport->port_state != LPFC_FLOGI)
- 		lpfc_initial_flogi(vport);
--	}
+diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+index f279d19..c9faa1d 100644
+--- a/drivers/scsi/lpfc/lpfc_hw.h
++++ b/drivers/scsi/lpfc/lpfc_hw.h
+@@ -1168,7 +1168,8 @@ typedef struct {
+ #define PCI_DEVICE_ID_ZEPHYR_DCSP   0xfe12
+ #define PCI_VENDOR_ID_SERVERENGINE  0x19a2
+ #define PCI_DEVICE_ID_TIGERSHARK    0x0704
+-#define PCI_DEVICE_ID_TS_BE3        0x0714
++#define PCI_DEVICE_ID_TOMCAT        0x0714
++#define PCI_DEVICE_ID_FALCON        0xf180
  
- 	mempool_free(mboxq, phba->mbox_mem_pool);
- 	return;
-@@ -1460,12 +1459,15 @@ lpfc_check_pending_fcoe_event(struct lpfc_hba *phba, uint8_t unreg_fcf)
+ #define JEDEC_ID_ADDRESS            0x0080001c
+ #define FIREFLY_JEDEC_ID            0x1ACC
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index fa33063..1585148 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -514,8 +514,8 @@ struct lpfc_register {
  
- 	if (phba->link_state >= LPFC_LINK_UP)
- 		lpfc_sli4_read_fcf_record(phba, LPFC_FCOE_FCF_GET_FIRST);
--	else
-+	else {
- 		/*
- 		 * Do not continue FCF discovery and clear FCF_DISC_INPROGRESS
- 		 * flag
- 		 */
-+		spin_lock_irq(&phba->hbalock);
- 		phba->hba_flag &= ~FCF_DISC_INPROGRESS;
-+		spin_unlock_irq(&phba->hbalock);
-+	}
+ #define LPFC_UERR_STATUS_HI		0x00A4
+ #define LPFC_UERR_STATUS_LO		0x00A0
+-#define LPFC_ONLINE0			0x00B0
+-#define LPFC_ONLINE1			0x00B4
++#define LPFC_UE_MASK_HI			0x00AC
++#define LPFC_UE_MASK_LO			0x00A8
+ #define LPFC_SCRATCHPAD			0x0058
  
- 	if (unreg_fcf) {
- 		spin_lock_irq(&phba->hbalock);
-@@ -2264,7 +2266,7 @@ lpfc_mbx_cmpl_unreg_vpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	 * This shost reference might have been taken at the beginning of
- 	 * lpfc_vport_delete()
- 	 */
--	if (vport->load_flag & FC_UNLOADING)
-+	if ((vport->load_flag & FC_UNLOADING) && (vport != phba->pport))
- 		scsi_host_put(shost);
- }
- 
+ /* BAR0 Registers */
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 33ed4b3..954594b 100644
+index 954594b..bb9cea9 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2320,6 +2320,7 @@ lpfc_scsi_free(struct lpfc_hba *phba)
+@@ -1529,10 +1529,10 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
+ 	int GE = 0;
+ 	int oneConnect = 0; /* default is not a oneConnect */
+ 	struct {
+-		char * name;
+-		int    max_speed;
+-		char * bus;
+-	} m = {"<Unknown>", 0, ""};
++		char *name;
++		char *bus;
++		char *function;
++	} m = {"<Unknown>", "", ""};
  
- 	spin_lock_irq(&phba->hbalock);
- 	/* Release all the lpfc_scsi_bufs maintained by this host. */
-+	spin_lock(&phba->scsi_buf_list_lock);
- 	list_for_each_entry_safe(sb, sb_next, &phba->lpfc_scsi_buf_list, list) {
- 		list_del(&sb->list);
- 		pci_pool_free(phba->lpfc_scsi_dma_buf_pool, sb->data,
-@@ -2327,6 +2328,7 @@ lpfc_scsi_free(struct lpfc_hba *phba)
- 		kfree(sb);
- 		phba->total_scsi_bufs--;
- 	}
-+	spin_unlock(&phba->scsi_buf_list_lock);
+ 	if (mdp && mdp[0] != '\0'
+ 		&& descp && descp[0] != '\0')
+@@ -1553,136 +1553,155 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
  
- 	/* Release all the lpfc_iocbq entries maintained by this host. */
- 	list_for_each_entry_safe(io, io_next, &phba->lpfc_iocb_list, list) {
-@@ -2334,9 +2336,7 @@ lpfc_scsi_free(struct lpfc_hba *phba)
- 		kfree(io);
- 		phba->total_iocbq_bufs--;
+ 	switch (dev_id) {
+ 	case PCI_DEVICE_ID_FIREFLY:
+-		m = (typeof(m)){"LP6000", max_speed, "PCI"};
++		m = (typeof(m)){"LP6000", "PCI", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_SUPERFLY:
+ 		if (vp->rev.biuRev >= 1 && vp->rev.biuRev <= 3)
+-			m = (typeof(m)){"LP7000", max_speed,  "PCI"};
++			m = (typeof(m)){"LP7000", "PCI",
++					"Fibre Channel Adapter"};
+ 		else
+-			m = (typeof(m)){"LP7000E", max_speed, "PCI"};
++			m = (typeof(m)){"LP7000E", "PCI",
++					"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_DRAGONFLY:
+-		m = (typeof(m)){"LP8000", max_speed, "PCI"};
++		m = (typeof(m)){"LP8000", "PCI",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_CENTAUR:
+ 		if (FC_JEDEC_ID(vp->rev.biuRev) == CENTAUR_2G_JEDEC_ID)
+-			m = (typeof(m)){"LP9002", max_speed, "PCI"};
++			m = (typeof(m)){"LP9002", "PCI",
++					"Fibre Channel Adapter"};
+ 		else
+-			m = (typeof(m)){"LP9000", max_speed, "PCI"};
++			m = (typeof(m)){"LP9000", "PCI",
++					"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_RFLY:
+-		m = (typeof(m)){"LP952", max_speed, "PCI"};
++		m = (typeof(m)){"LP952", "PCI",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_PEGASUS:
+-		m = (typeof(m)){"LP9802", max_speed, "PCI-X"};
++		m = (typeof(m)){"LP9802", "PCI-X",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_THOR:
+-		m = (typeof(m)){"LP10000", max_speed, "PCI-X"};
++		m = (typeof(m)){"LP10000", "PCI-X",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_VIPER:
+-		m = (typeof(m)){"LPX1000", max_speed,  "PCI-X"};
++		m = (typeof(m)){"LPX1000",  "PCI-X",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_PFLY:
+-		m = (typeof(m)){"LP982", max_speed, "PCI-X"};
++		m = (typeof(m)){"LP982", "PCI-X",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_TFLY:
+-		m = (typeof(m)){"LP1050", max_speed, "PCI-X"};
++		m = (typeof(m)){"LP1050", "PCI-X",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_HELIOS:
+-		m = (typeof(m)){"LP11000", max_speed, "PCI-X2"};
++		m = (typeof(m)){"LP11000", "PCI-X2",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_HELIOS_SCSP:
+-		m = (typeof(m)){"LP11000-SP", max_speed, "PCI-X2"};
++		m = (typeof(m)){"LP11000-SP", "PCI-X2",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_HELIOS_DCSP:
+-		m = (typeof(m)){"LP11002-SP", max_speed, "PCI-X2"};
++		m = (typeof(m)){"LP11002-SP",  "PCI-X2",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_NEPTUNE:
+-		m = (typeof(m)){"LPe1000", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe1000", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_NEPTUNE_SCSP:
+-		m = (typeof(m)){"LPe1000-SP", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe1000-SP", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_NEPTUNE_DCSP:
+-		m = (typeof(m)){"LPe1002-SP", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe1002-SP", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_BMID:
+-		m = (typeof(m)){"LP1150", max_speed, "PCI-X2"};
++		m = (typeof(m)){"LP1150", "PCI-X2", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_BSMB:
+-		m = (typeof(m)){"LP111", max_speed, "PCI-X2"};
++		m = (typeof(m)){"LP111", "PCI-X2", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZEPHYR:
+-		m = (typeof(m)){"LPe11000", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe11000", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZEPHYR_SCSP:
+-		m = (typeof(m)){"LPe11000", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe11000", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZEPHYR_DCSP:
+-		m = (typeof(m)){"LP2105", max_speed, "PCIe"};
++		m = (typeof(m)){"LP2105", "PCIe", "FCoE Adapter"};
+ 		GE = 1;
+ 		break;
+ 	case PCI_DEVICE_ID_ZMID:
+-		m = (typeof(m)){"LPe1150", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe1150", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_ZSMB:
+-		m = (typeof(m)){"LPe111", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe111", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_LP101:
+-		m = (typeof(m)){"LP101", max_speed, "PCI-X"};
++		m = (typeof(m)){"LP101", "PCI-X", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_LP10000S:
+-		m = (typeof(m)){"LP10000-S", max_speed, "PCI"};
++		m = (typeof(m)){"LP10000-S", "PCI", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_LP11000S:
+-		m = (typeof(m)){"LP11000-S", max_speed,
+-			"PCI-X2"};
++		m = (typeof(m)){"LP11000-S", "PCI-X2", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_LPE11000S:
+-		m = (typeof(m)){"LPe11000-S", max_speed,
+-			"PCIe"};
++		m = (typeof(m)){"LPe11000-S", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_SAT:
+-		m = (typeof(m)){"LPe12000", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe12000", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_SAT_MID:
+-		m = (typeof(m)){"LPe1250", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe1250", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_SAT_SMB:
+-		m = (typeof(m)){"LPe121", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe121", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_SAT_DCSP:
+-		m = (typeof(m)){"LPe12002-SP", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe12002-SP", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_SAT_SCSP:
+-		m = (typeof(m)){"LPe12000-SP", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe12000-SP", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_SAT_S:
+-		m = (typeof(m)){"LPe12000-S", max_speed, "PCIe"};
++		m = (typeof(m)){"LPe12000-S", "PCIe", "Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_HORNET:
+-		m = (typeof(m)){"LP21000", max_speed, "PCIe"};
++		m = (typeof(m)){"LP21000", "PCIe", "FCoE Adapter"};
+ 		GE = 1;
+ 		break;
+ 	case PCI_DEVICE_ID_PROTEUS_VF:
+-		m = (typeof(m)) {"LPev12000", max_speed, "PCIe IOV"};
++		m = (typeof(m)){"LPev12000", "PCIe IOV",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_PROTEUS_PF:
+-		m = (typeof(m)) {"LPev12000", max_speed, "PCIe IOV"};
++		m = (typeof(m)){"LPev12000", "PCIe IOV",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_PROTEUS_S:
+-		m = (typeof(m)) {"LPemv12002-S", max_speed, "PCIe IOV"};
++		m = (typeof(m)){"LPemv12002-S", "PCIe IOV",
++				"Fibre Channel Adapter"};
+ 		break;
+ 	case PCI_DEVICE_ID_TIGERSHARK:
+ 		oneConnect = 1;
+-		m = (typeof(m)) {"OCe10100-F", max_speed, "PCIe"};
++		m = (typeof(m)){"OCe10100", "PCIe", "FCoE"};
+ 		break;
+-	case PCI_DEVICE_ID_TS_BE3:
++	case PCI_DEVICE_ID_TOMCAT:
+ 		oneConnect = 1;
+-		m = (typeof(m)) {"OCeXXXXX-F", max_speed, "PCIe"};
++		m = (typeof(m)){"OCe11100", "PCIe", "FCoE"};
++		break;
++	case PCI_DEVICE_ID_FALCON:
++		m = (typeof(m)){"LPSe12002-ML1-E", "PCIe",
++				"EmulexSecure Fibre"};
+ 		break;
+ 	default:
+-		m = (typeof(m)){ NULL };
++		m = (typeof(m)){"Unknown", "", ""};
+ 		break;
  	}
--
- 	spin_unlock_irq(&phba->hbalock);
--
- 	return 0;
+ 
+@@ -1694,17 +1713,14 @@ lpfc_get_hba_model_desc(struct lpfc_hba *phba, uint8_t *mdp, uint8_t *descp)
+ 	if (descp && descp[0] == '\0') {
+ 		if (oneConnect)
+ 			snprintf(descp, 255,
+-				"Emulex OneConnect %s, FCoE Initiator, Port %s",
+-				m.name,
++				"Emulex OneConnect %s, %s Initiator, Port %s",
++				m.name, m.function,
+ 				phba->Port);
+ 		else
+ 			snprintf(descp, 255,
+ 				"Emulex %s %d%s %s %s",
+-				m.name, m.max_speed,
+-				(GE) ? "GE" : "Gb",
+-				m.bus,
+-				(GE) ? "FCoE Adapter" :
+-					"Fibre Channel Adapter");
++				m.name, max_speed, (GE) ? "GE" : "Gb",
++				m.bus, m.function);
+ 	}
  }
  
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index bf80cde..a246410 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -59,6 +59,8 @@ static char *dif_op_str[] = {
- };
- static void
- lpfc_release_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb);
-+static void
-+lpfc_release_scsi_buf_s3(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb);
- 
- static void
- lpfc_debug_save_data(struct lpfc_hba *phba, struct scsi_cmnd *cmnd)
-@@ -596,7 +598,7 @@ lpfc_new_scsi_buf_s3(struct lpfc_vport *vport, int num_to_alloc)
- 		iocb->ulpClass = CLASS3;
- 		psb->status = IOSTAT_SUCCESS;
- 		/* Put it back into the SCSI buffer list */
--		lpfc_release_scsi_buf_s4(phba, psb);
-+		lpfc_release_scsi_buf_s3(phba, psb);
- 
- 	}
- 
-@@ -2766,7 +2768,7 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_rport_data *rdata = cmnd->device->hostdata;
--	struct lpfc_nodelist *ndlp = rdata->pnode;
-+	struct lpfc_nodelist *ndlp;
- 	struct lpfc_scsi_buf *lpfc_cmd;
- 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
- 	int err;
-@@ -2776,6 +2778,7 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 		cmnd->result = err;
- 		goto out_fail_command;
- 	}
-+	ndlp = rdata->pnode;
- 
- 	if (!(phba->sli3_options & LPFC_SLI3_BG_ENABLED) &&
- 		scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) {
-@@ -3154,9 +3157,15 @@ static int
- lpfc_chk_tgt_mapped(struct lpfc_vport *vport, struct scsi_cmnd *cmnd)
+@@ -4618,7 +4634,6 @@ int
+ lpfc_sli4_post_status_check(struct lpfc_hba *phba)
  {
- 	struct lpfc_rport_data *rdata = cmnd->device->hostdata;
--	struct lpfc_nodelist *pnode = rdata->pnode;
-+	struct lpfc_nodelist *pnode;
- 	unsigned long later;
+ 	struct lpfc_register sta_reg, uerrlo_reg, uerrhi_reg, scratchpad;
+-	uint32_t onlnreg0, onlnreg1;
+ 	int i, port_error = -ENODEV;
  
-+	if (!rdata) {
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_FCP,
-+			"0797 Tgt Map rport failure: rdata x%p\n", rdata);
-+		return FAILED;
-+	}
-+	pnode = rdata->pnode;
- 	/*
- 	 * If target is not in a MAPPED state, delay until
- 	 * target is rediscovered or devloss timeout expires.
-@@ -3241,12 +3250,18 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
- 	struct Scsi_Host  *shost = cmnd->device->host;
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_rport_data *rdata = cmnd->device->hostdata;
--	struct lpfc_nodelist *pnode = rdata->pnode;
-+	struct lpfc_nodelist *pnode;
- 	unsigned tgt_id = cmnd->device->id;
- 	unsigned int lun_id = cmnd->device->lun;
- 	struct lpfc_scsi_event_header scsi_event;
- 	int status;
- 
-+	if (!rdata) {
-+		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-+			"0798 Device Reset rport failure: rdata x%p\n", rdata);
-+		return FAILED;
-+	}
-+	pnode = rdata->pnode;
- 	fc_block_scsi_eh(cmnd);
- 
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
-@@ -3300,12 +3315,18 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	struct Scsi_Host  *shost = cmnd->device->host;
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
- 	struct lpfc_rport_data *rdata = cmnd->device->hostdata;
--	struct lpfc_nodelist *pnode = rdata->pnode;
-+	struct lpfc_nodelist *pnode;
- 	unsigned tgt_id = cmnd->device->id;
- 	unsigned int lun_id = cmnd->device->lun;
- 	struct lpfc_scsi_event_header scsi_event;
- 	int status;
- 
-+	if (!rdata) {
-+		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-+			"0799 Target Reset rport failure: rdata x%p\n", rdata);
-+		return FAILED;
-+	}
-+	pnode = rdata->pnode;
- 	fc_block_scsi_eh(cmnd);
- 
- 	status = lpfc_chk_tgt_mapped(vport, cmnd);
-@@ -3486,6 +3507,8 @@ lpfc_slave_alloc(struct scsi_device *sdev)
- 				 "Allocated %d buffers.\n",
- 				 num_to_alloc, num_allocated);
+ 	if (!phba->sli4_hba.STAregaddr)
+@@ -4662,21 +4677,20 @@ lpfc_sli4_post_status_check(struct lpfc_hba *phba)
+ 			bf_get(lpfc_scratchpad_slirev, &scratchpad),
+ 			bf_get(lpfc_scratchpad_featurelevel1, &scratchpad),
+ 			bf_get(lpfc_scratchpad_featurelevel2, &scratchpad));
+-
++	phba->sli4_hba.ue_mask_lo = readl(phba->sli4_hba.UEMASKLOregaddr);
++	phba->sli4_hba.ue_mask_hi = readl(phba->sli4_hba.UEMASKHIregaddr);
+ 	/* With uncoverable error, log the error message and return error */
+-	onlnreg0 = readl(phba->sli4_hba.ONLINE0regaddr);
+-	onlnreg1 = readl(phba->sli4_hba.ONLINE1regaddr);
+-	if ((onlnreg0 != LPFC_ONLINE_NERR) || (onlnreg1 != LPFC_ONLINE_NERR)) {
+-		uerrlo_reg.word0 = readl(phba->sli4_hba.UERRLOregaddr);
+-		uerrhi_reg.word0 = readl(phba->sli4_hba.UERRHIregaddr);
+-		if (uerrlo_reg.word0 || uerrhi_reg.word0) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"1422 HBA Unrecoverable error: "
+-					"uerr_lo_reg=0x%x, uerr_hi_reg=0x%x, "
+-					"online0_reg=0x%x, online1_reg=0x%x\n",
+-					uerrlo_reg.word0, uerrhi_reg.word0,
+-					onlnreg0, onlnreg1);
+-		}
++	uerrlo_reg.word0 = readl(phba->sli4_hba.UERRLOregaddr);
++	uerrhi_reg.word0 = readl(phba->sli4_hba.UERRHIregaddr);
++	if ((~phba->sli4_hba.ue_mask_lo & uerrlo_reg.word0) ||
++	    (~phba->sli4_hba.ue_mask_hi & uerrhi_reg.word0)) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"1422 HBA Unrecoverable error: "
++				"uerr_lo_reg=0x%x, uerr_hi_reg=0x%x, "
++				"ue_mask_lo_reg=0x%x, ue_mask_hi_reg=0x%x\n",
++				uerrlo_reg.word0, uerrhi_reg.word0,
++				phba->sli4_hba.ue_mask_lo,
++				phba->sli4_hba.ue_mask_hi);
+ 		return -ENODEV;
  	}
-+	if (num_allocated > 0)
-+		phba->total_scsi_bufs += num_allocated;
- 	return 0;
+ 
+@@ -4697,10 +4711,10 @@ lpfc_sli4_bar0_register_memmap(struct lpfc_hba *phba)
+ 					LPFC_UERR_STATUS_LO;
+ 	phba->sli4_hba.UERRHIregaddr = phba->sli4_hba.conf_regs_memmap_p +
+ 					LPFC_UERR_STATUS_HI;
+-	phba->sli4_hba.ONLINE0regaddr = phba->sli4_hba.conf_regs_memmap_p +
+-					LPFC_ONLINE0;
+-	phba->sli4_hba.ONLINE1regaddr = phba->sli4_hba.conf_regs_memmap_p +
+-					LPFC_ONLINE1;
++	phba->sli4_hba.UEMASKLOregaddr = phba->sli4_hba.conf_regs_memmap_p +
++					LPFC_UE_MASK_LO;
++	phba->sli4_hba.UEMASKHIregaddr = phba->sli4_hba.conf_regs_memmap_p +
++					LPFC_UE_MASK_HI;
+ 	phba->sli4_hba.SCRATCHPADregaddr = phba->sli4_hba.conf_regs_memmap_p +
+ 					LPFC_SCRATCHPAD;
+ }
+@@ -7249,7 +7263,7 @@ lpfc_io_error_detected_s3(struct pci_dev *pdev, pci_channel_state_t state)
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	default:
+ 		/* Unknown state, prepare and request slot reset */
+-  		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0472 Unknown PCI error state: x%x\n", state);
+ 		lpfc_sli_prep_dev_for_reset(phba);
+ 		return PCI_ERS_RESULT_NEED_RESET;
+@@ -8116,7 +8130,9 @@ static struct pci_device_id lpfc_id_table[] = {
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+ 	{PCI_VENDOR_ID_SERVERENGINE, PCI_DEVICE_ID_TIGERSHARK,
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+-	{PCI_VENDOR_ID_SERVERENGINE, PCI_DEVICE_ID_TS_BE3,
++	{PCI_VENDOR_ID_SERVERENGINE, PCI_DEVICE_ID_TOMCAT,
++		PCI_ANY_ID, PCI_ANY_ID, },
++	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_FALCON,
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+ 	{ 0 }
+ };
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1d2f65c..b3a69f9 100755
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -263,6 +263,9 @@ lpfc_sli4_eq_release(struct lpfc_queue *q, bool arm)
+ 	bf_set(lpfc_eqcq_doorbell_qt, &doorbell, LPFC_QUEUE_TYPE_EVENT);
+ 	bf_set(lpfc_eqcq_doorbell_eqid, &doorbell, q->queue_id);
+ 	writel(doorbell.word0, q->phba->sli4_hba.EQCQDBregaddr);
++	/* PCI read to flush PCI pipeline on re-arming for INTx mode */
++	if ((q->phba->intr_type == INTx) && (arm == LPFC_QUEUE_REARM))
++		readl(q->phba->sli4_hba.EQCQDBregaddr);
+ 	return released;
  }
  
+@@ -7686,31 +7689,28 @@ static int
+ lpfc_sli4_eratt_read(struct lpfc_hba *phba)
+ {
+ 	uint32_t uerr_sta_hi, uerr_sta_lo;
+-	uint32_t onlnreg0, onlnreg1;
+ 
+ 	/* For now, use the SLI4 device internal unrecoverable error
+ 	 * registers for error attention. This can be changed later.
+ 	 */
+-	onlnreg0 = readl(phba->sli4_hba.ONLINE0regaddr);
+-	onlnreg1 = readl(phba->sli4_hba.ONLINE1regaddr);
+-	if ((onlnreg0 != LPFC_ONLINE_NERR) || (onlnreg1 != LPFC_ONLINE_NERR)) {
+-		uerr_sta_lo = readl(phba->sli4_hba.UERRLOregaddr);
+-		uerr_sta_hi = readl(phba->sli4_hba.UERRHIregaddr);
+-		if (uerr_sta_lo || uerr_sta_hi) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-					"1423 HBA Unrecoverable error: "
+-					"uerr_lo_reg=0x%x, uerr_hi_reg=0x%x, "
+-					"online0_reg=0x%x, online1_reg=0x%x\n",
+-					uerr_sta_lo, uerr_sta_hi,
+-					onlnreg0, onlnreg1);
+-			phba->work_status[0] = uerr_sta_lo;
+-			phba->work_status[1] = uerr_sta_hi;
+-			/* Set the driver HA work bitmap */
+-			phba->work_ha |= HA_ERATT;
+-			/* Indicate polling handles this ERATT */
+-			phba->hba_flag |= HBA_ERATT_HANDLED;
+-			return 1;
+-		}
++	uerr_sta_lo = readl(phba->sli4_hba.UERRLOregaddr);
++	uerr_sta_hi = readl(phba->sli4_hba.UERRHIregaddr);
++	if ((~phba->sli4_hba.ue_mask_lo & uerr_sta_lo) ||
++	    (~phba->sli4_hba.ue_mask_hi & uerr_sta_hi)) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"1423 HBA Unrecoverable error: "
++				"uerr_lo_reg=0x%x, uerr_hi_reg=0x%x, "
++				"ue_mask_lo_reg=0x%x, ue_mask_hi_reg=0x%x\n",
++				uerr_sta_lo, uerr_sta_hi,
++				phba->sli4_hba.ue_mask_lo,
++				phba->sli4_hba.ue_mask_hi);
++		phba->work_status[0] = uerr_sta_lo;
++		phba->work_status[1] = uerr_sta_hi;
++		/* Set the driver HA work bitmap */
++		phba->work_ha |= HA_ERATT;
++		/* Indicate polling handles this ERATT */
++		phba->hba_flag |= HBA_ERATT_HANDLED;
++		return 1;
+ 	}
+ 	return 0;
+ }
+@@ -7833,7 +7833,7 @@ irqreturn_t
+ lpfc_sli_sp_intr_handler(int irq, void *dev_id)
+ {
+ 	struct lpfc_hba  *phba;
+-	uint32_t ha_copy;
++	uint32_t ha_copy, hc_copy;
+ 	uint32_t work_ha_copy;
+ 	unsigned long status;
+ 	unsigned long iflag;
+@@ -7891,8 +7891,13 @@ lpfc_sli_sp_intr_handler(int irq, void *dev_id)
+ 		}
+ 
+ 		/* Clear up only attention source related to slow-path */
++		hc_copy = readl(phba->HCregaddr);
++		writel(hc_copy & ~(HC_MBINT_ENA | HC_R2INT_ENA |
++			HC_LAINT_ENA | HC_ERINT_ENA),
++			phba->HCregaddr);
+ 		writel((ha_copy & (HA_MBATT | HA_R2_CLR_MSK)),
+ 			phba->HAregaddr);
++		writel(hc_copy, phba->HCregaddr);
+ 		readl(phba->HAregaddr); /* flush */
+ 		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 	} else
+@@ -8202,6 +8207,7 @@ lpfc_sli_intr_handler(int irq, void *dev_id)
+ 	struct lpfc_hba  *phba;
+ 	irqreturn_t sp_irq_rc, fp_irq_rc;
+ 	unsigned long status1, status2;
++	uint32_t hc_copy;
+ 
+ 	/*
+ 	 * Get the driver's phba structure from the dev_id and
+@@ -8239,7 +8245,12 @@ lpfc_sli_intr_handler(int irq, void *dev_id)
+ 	}
+ 
+ 	/* Clear attention sources except link and error attentions */
++	hc_copy = readl(phba->HCregaddr);
++	writel(hc_copy & ~(HC_MBINT_ENA | HC_R0INT_ENA | HC_R1INT_ENA
++		| HC_R2INT_ENA | HC_LAINT_ENA | HC_ERINT_ENA),
++		phba->HCregaddr);
+ 	writel((phba->ha_copy & ~(HA_LATT | HA_ERATT)), phba->HAregaddr);
++	writel(hc_copy, phba->HCregaddr);
+ 	readl(phba->HAregaddr); /* flush */
+ 	spin_unlock(&phba->hbalock);
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+index 6a4558b..25d66d0 100644
+--- a/drivers/scsi/lpfc/lpfc_sli4.h
++++ b/drivers/scsi/lpfc/lpfc_sli4.h
+@@ -293,9 +293,8 @@ struct lpfc_sli4_hba {
+ 	/* BAR0 PCI config space register memory map */
+ 	void __iomem *UERRLOregaddr; /* Address to UERR_STATUS_LO register */
+ 	void __iomem *UERRHIregaddr; /* Address to UERR_STATUS_HI register */
+-	void __iomem *ONLINE0regaddr; /* Address to components of internal UE */
+-	void __iomem *ONLINE1regaddr; /* Address to components of internal UE */
+-#define LPFC_ONLINE_NERR	0xFFFFFFFF
++	void __iomem *UEMASKLOregaddr; /* Address to UE_MASK_LO register */
++	void __iomem *UEMASKHIregaddr; /* Address to UE_MASK_HI register */
+ 	void __iomem *SCRATCHPADregaddr; /* Address to scratchpad register */
+ 	/* BAR1 FCoE function CSR register memory map */
+ 	void __iomem *STAregaddr;    /* Address to HST_STATE register */
+@@ -309,6 +308,8 @@ struct lpfc_sli4_hba {
+ 	void __iomem *MQDBregaddr;   /* Address to MQ_DOORBELL register */
+ 	void __iomem *BMBXregaddr;   /* Address to BootStrap MBX register */
+ 
++	uint32_t ue_mask_lo;
++	uint32_t ue_mask_hi;
+ 	struct msix_entry *msix_entries;
+ 	uint32_t cfg_eqn;
+ 	struct lpfc_fcp_eq_hdl *fcp_eq_hdl; /* FCP per-WQ handle */
 -- 
 1.6.0.6
 
