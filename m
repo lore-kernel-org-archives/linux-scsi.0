@@ -1,36 +1,56 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
-Date: Wed, 18 Nov 2009 16:54:44 GMT
-Message-ID: <200911181654.nAIGsi3t024547@demeter.kernel.org>
-References: <bug-14563-11613@http.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: unconditional discard calls in the swap code
+Date: Wed, 18 Nov 2009 18:12:32 +0100
+Message-ID: <20091118171232.GB25541@lst.de>
+References: <20091030065102.GA2896@lst.de> <Pine.LNX.4.64.0910301629030.4106@sister.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44168 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757843AbZKRQyi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2009 11:54:38 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAIGsiXZ024548
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Nov 2009 16:54:44 GMT
-In-Reply-To: <bug-14563-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0910301629030.4106@sister.anvils>
+Sender: owner-linux-mm@kvack.org
+To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <jens.axboe@oracle.com>, Matthew Wilcox <matthew@wil.cx>, linux-mm@kvack.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14563
+On Fri, Oct 30, 2009 at 05:26:18PM +0000, Hugh Dickins wrote:
+> Yes, in practice TRIM seems a huge disappointment: is there a device on
+> which it is really implemented, and not more trouble than it's worth?
+> 
+> I'd been waiting for OCZ to get a Vertex 1.4* firmware out of Beta
+> before looking at swap discard again; but even then, the Linux ATA
+> support is still up in the air, so far as I know.
 
+I've tied it up now for libata, and testing with the releases OCZ 1.4
+firmware.  Haven't tested anything else yet except for my own
+implementations of TRIM and WRITE SAME in qemu which are a lot faster
+than real hardware.
 
+> 
+> You don't mention swap's discard of the whole partition (or all
+> extents of the swapfile) at swapon time: do you believe that usage
+> is okay to retain?  Is it likely on some devices to take so long,
+> that I ought to make it asynchronous?
 
+The use on swapon seems fine - we've also added support to discard
+on mkfs which is generally fast enough - the existing implementations
+seem to have mostly constant overhead, the more blocks your discard,
+the better.
 
+> Assuming that initial swap discard is good, I wonder whether just
+> to revert the discard of swap clusters for now: until such time as
+> we find devices (other than mtd) that can implement it efficiently.
+> 
+> If we do retain the discard of swap clusters, under something more
+> than an #if 0, any ideas for what I should make it conditional upon?
 
---- Comment #16 from Joachim Breuer <linux-kernel@jmbreuer.net>  2009-11-18 16:54:44 ---
-Created an attachment (id=23826)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=23826)
- Console output with st DEBUG enabled, 2.6.30.3, fixed tape block size 512k,
-DIO turned off (see comment)
+add a sysctl / sysfs tunable for it?  For all filesystems we now have
+patches pending to require and -o discard option to use it, which will
+be quite nessecary for 2.6.33 where all the block layer / scsi layer /
+libata support will fall into place.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
