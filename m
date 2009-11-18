@@ -1,63 +1,144 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] fc class: fix fc_transport_init error handling
-Date: Tue, 17 Nov 2009 21:25:16 -0600
-Message-ID: <1258514716-2564-1-git-send-email-michaelc@cs.wisc.edu>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: Bug 14579 -  Devices disappear... and Bug 14577 - Data
+	corruption with Adaptec
+Date: Wed, 18 Nov 2009 10:24:38 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1C93C74A49@inbmail01.lsi.com>
+References: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
+ <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE>
+ <0D1E8821739E724A86F4D16902CE275C1C93C04462@inbmail01.lsi.com>
+ <20091117142242.GA15638@TechFak.Uni-Bielefeld.DE>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4292 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756209AbZKREFF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Nov 2009 23:05:05 -0500
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:46476 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755055AbZKREyo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Nov 2009 23:54:44 -0500
+In-Reply-To: <20091117142242.GA15638@TechFak.Uni-Bielefeld.DE>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: "support@TechFak.Uni-Bielefeld.DE" <support@TechFak.Uni-Bielefeld.DE>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Hello Lukas,
 
-If transport_class_register fails we should unregister any
-registered classes, or we will leak memory or other
-resources.
 
-I did a quick modprobe of scsi_transport_fc to test the
-patch.
+> -----Original Message-----
+> From: Lukas Kolbe [mailto:lkolbe@TechFak.Uni-Bielefeld.DE]
+> Sent: Tuesday, November 17, 2009 7:53 PM
+> To: Desai, Kashyap
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: Bug 14579 - Devices disappear... and Bug 14577 - Data
+> corruption with Adaptec
+> 
+> Desai, Kashyap wrote:
+> 
+> >Subject line is related to *Adaptec* and there are some places LSI
+> >related issue is pointed out. Little confusing to me. Is it possible to
+> >rewrite what is an issue related to LSI card?
+> 
+> Sorry for that one. This system has an Adaptec Controller for its
+> Storage array and an LSI controller for the tape library. Bug 14577 is
+> about a possible data corruption on 2.6.32-rc6 that seems to be either a
+> hardware error (currently trying to find that out) or a regression in
+> 2.6.32-rc6, as 2.6.30 is very happy with its storage.
+OK. In data corruption condition only LSI driver and controller are involved? I mean can I nullify Adaptec controller's roll in your test?
+> 
+> Finally, the real problem here is Bug 14579 that is about the systems
+> problems when using the tape library.
+> 
+> >From dmesg log I can figure out 3.04.07 is mpt fusion driver version.
+> >Please update LSI driver using latest upstream driver version 3.04.13.
+> And see what a result is.
+> 
+> Thanks for the pointer. Linus' current tree contains 3.04.12 - where can
+> I find 3.04.13?
 
-Patch was made over scsi-rc-fixes.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/scsi_transport_fc.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index c6f70da..45be82f 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -648,11 +648,22 @@ static __init int fc_transport_init(void)
- 		return error;
- 	error = transport_class_register(&fc_vport_class);
- 	if (error)
--		return error;
-+		goto unreg_host_class;
- 	error = transport_class_register(&fc_rport_class);
- 	if (error)
--		return error;
--	return transport_class_register(&fc_transport_class);
-+		goto unreg_vport_class;
-+	error = transport_class_register(&fc_transport_class);
-+	if (error)
-+		goto unreg_rport_class;
-+	return 0;
-+
-+unreg_rport_class:
-+	transport_class_unregister(&fc_rport_class);
-+unreg_vport_class:
-+	transport_class_unregister(&fc_vport_class);
-+unreg_host_class:
-+	transport_class_unregister(&fc_host_class);
-+	return error;
- }
- 
- static void __exit fc_transport_exit(void)
--- 
-1.6.2.2
+It is there in 2.6.32-rc5. Not sure in which exact rc version it is included, but I have 2.6.32-rc5 tree in my setup and for that kernel mptfusion version is 3.104.13
+> 
+> >- Kashyap
+> 
+> Kind regards,
+> Lukas Kolbe
+> 
+> 
+> >-----Original Message-----
+> >From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Sascha Frey
+> >Sent: Friday, November 13, 2009 4:28 AM
+> >To: linux-scsi@vger.kernel.org
+> >Cc: Lukas Kolbe
+> >Subject: Re: Bug 14579 - Devices disappear... and Bug 14577 - Data
+> corruption with Adaptec
+> >
+> >Hi,
+> >
+> >Lukas Kolbe wrote:
+> >>we'd really appreciate any hints and help we can get for the following
+> >>bugs:
+> >>http://bugzilla.kernel.org/show_bug.cgi?id=14579
+> >
+> >We've done some further testing:
+> >it's very hard to trigger this bug. Sometimes the machine freezes after
+> >a few minutes into tape access and sometimes it works days - or even
+> >weeks - without any problem.
+> >
+> >The bug only appears during tape I/O (regardless of which tape program is
+> >used: btape, dd or tar).
+> >In most cases the tape write ends with an input/output error. After this
+> >error occurred, any access to the tape library robot (connected through
+> >the SAS interface of the first drive) fails:
+> >
+> ># mtx unload 1 1
+> >Unloading drive 1 into Storage Element 1...mtx: Request Sense: Long
+> Report=yes
+> >mtx: Request Sense: Valid Residual=no
+> >mtx: Request Sense: Error Code=70 (Current)
+> >mtx: Request Sense: Sense Key=Illegal Request
+> >mtx: Request Sense: FileMark=no
+> >mtx: Request Sense: EOM=no
+> >mtx: Request Sense: ILI=no
+> >mtx: Request Sense: Additional Sense Code = 53
+> >mtx: Request Sense: Additional Sense Qualifier = 01
+> >mtx: Request Sense: BPV=no
+> >mtx: Request Sense: Error in CDB=no
+> >mtx: Request Sense: SKSV=no
+> >MOVE MEDIUM from Element Address 257 to 4096 Failed
+> >
+> >After resetting the scsi bus (echo "- - -" >
+> >/sys/class/scsi_host/host5/scan) the tape drives are revitalized, but
+> >the changer device disappears. Even after a cold restart of the whole
+> >library the device keeps missing.
+> >
+> >Yet another problem: restting the SCSI bus of the LSI SAS HBA sometimes
+> >results in a hardy freeze (console stuck; no log messages).
+> >
+> >> [...]
+> >>
+> >>I do not believe it's a hardware fault at the moment as the machine
+> >>ran OK under Solaris for a few weeks (including successful btape runs).
+> >>
+> >
+> >The very same piece of hardware worked fine using Solaris 10 with heavy
+> >disk and tape I/O at the same time for two months.
+> >
+> >We really prefer using Linux instead, but we're in pressure of time.
+> >
+> >
+> >We appreciate any help resolving this bug!
+> >
+> >
+> >
+> >
+> >Regards,
+> >Sascha Frey
+> >
+> >--
+> >To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> >the body of a message to majordomo@vger.kernel.org
+> >More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
 
