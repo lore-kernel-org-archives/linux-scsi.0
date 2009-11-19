@@ -1,69 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [patch for 2.6.32? 3/3] scsi: fix another crash at disconnect
- of usb strorage
-Date: Thu, 19 Nov 2009 12:57:05 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0911191249440.2720-100000@iolanthe.rowland.org>
-References: <20091119125947.GB23095@ms2.inr.ac.ru>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] multipath: Evaluate request result and sense
+	code
+Date: Thu, 19 Nov 2009 13:58:36 -0600
+Message-ID: <4B05A36C.2030409@cs.wisc.edu>
+References: <20091119122503.413AD3A174@ochil.suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44465 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752005AbZKSR5A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2009 12:57:00 -0500
-In-Reply-To: <20091119125947.GB23095@ms2.inr.ac.ru>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20091119122503.413AD3A174@ochil.suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, SCSI development list <linux-scsi@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, den@openvz.org
 
-On Thu, 19 Nov 2009, Alexey Kuznetsov wrote:
+Hannes Reinecke wrote:
+> As we now see the result for every command we
+> can use it to make some more elaborate choices
+> if we should retry the request on another path.
+> 
+> This solves a potential data corruption when
+> a request is being terminated with RESERVATION
+> CONFLICT and queue_if_no_path is active; the
+> request will be queued until the reservation
+> status changes and then transmitted.
 
-> Hello!
-> 
-> > Alexey, have you seen the patches I posted?
-> 
-> Sorry, I have not.
-> 
-> 
-> > It does what you want to accomplish and more.
-> 
-> Yes, it looks like this.
-> 
-> I am no expert in this area and cannot tell exactly.
-> 
-> I can only suggest a practical way to test the patch: you take some USB flash
-> (the older and the slower is the better, usb1.1 flash is the best),
-> then do the following:
-> 
->         for (;;) {
-> 	        usb_detach_kernel_driver_np(handle, 0);
->         	usleep(1000*(random() % 10000));
-> 	        usb_attach_kernel_driver_np(handle, 0);
->         	usleep(1000*(random() % 10000));
->     	}
-> 
-> (handle is libusb handle for the device)
-> 
-> Unpatched kernels crash almost instantly.
 
-Using an old kernel without any patches, the test crashed twice: once 
-after 10 iterations and once after 49 iterations.  Using a new kernel 
-with my patches, the test ran okay for 100 iterations.  Not an 
-exhaustive check, to be sure, but a good sign.  The test is rather 
-slow, since each iteration requires an average of 10 seconds.
+I had the same bz. To handle it I just converted the error to some other 
+-EXYZ value. But like I said in my patch that I sent to the list I did 
+not like it much.
 
-The patches were submitted during October and I still haven't received 
-any feedback at all from James Bottomley regarding them.  In fact, 
-James hasn't responded to any of my emails for several months.
-
-Andrew, can you do anything to help get these four patches reviewed and 
-(hopefully) merged?  They are:
-
-	http://marc.info/?l=linux-scsi&m=125675695827770&w=2
-	http://marc.info/?l=linux-scsi&m=125675696627788&w=2
-	http://marc.info/?l=linux-scsi&m=125675698027801&w=2
-	http://marc.info/?l=linux-scsi&m=125675699627826&w=2
-
-Alan Stern
-
+I thought of going the route you did in this patch, but thought it was 
+too scsi specific. Does dasd want advanced error handling? If not, then 
+I am fine since for hw handlers we assume they are always scsi_dh modules.
