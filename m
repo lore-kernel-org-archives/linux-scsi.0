@@ -1,31 +1,56 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Thu, 19 Nov 2009 10:23:46 +0000
-Message-ID: <20091119102346.3c656b99@lxorguk.ukuu.org.uk>
-References: <20091116154343.GA6672@infradead.org>
-	<4B02AD86.8010304@rtr.ca>
-	<20091117143507.GC588@infradead.org>
-	<20091117145239.768072c9@lxorguk.ukuu.org.uk>
-	<20091117150012.GA10748@infradead.org>
-	<4B04BD01.5090706@rtr.ca>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: Bug 14579 (was: RE: Bug 14579 -  Devices disappear... and Bug
+ 14577 - Data corruption with Adaptec)
+Date: Thu, 19 Nov 2009 16:00:31 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1C93C74C80@inbmail01.lsi.com>
+References: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
+	 <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C04462@inbmail01.lsi.com>
+	 <20091117142242.GA15638@TechFak.Uni-Bielefeld.DE>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C74A49@inbmail01.lsi.com>
+	 <20091118133909.GD16440@TechFak.Uni-Bielefeld.DE>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C74BD4@inbmail01.lsi.com>
+ <1258625851.8918.20.camel@muchoki.zuhause>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4B04BD01.5090706@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:58547 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758129AbZKSKad convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2009 05:30:33 -0500
+In-Reply-To: <1258625851.8918.20.camel@muchoki.zuhause>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "sfrey@techfak.uni-bielefeld.de" <sfrey@techfak.uni-bielefeld.de>
 
-> I imagine some sort of port or host flag, that the LLD could set
-> to indicate that it can correctly handle TRIM.  Or not handle TRIM.
+
+
+> -----Original Message-----
+> From: Lukas Kolbe [mailto:lkolbe@techfak.uni-bielefeld.de]
+> Sent: Thursday, November 19, 2009 3:48 PM
+> To: Desai, Kashyap
+> Cc: linux-scsi@vger.kernel.org; sfrey@techfak.uni-bielefeld.de
+> Subject: Bug 14579 (was: RE: Bug 14579 - Devices disappear... and Bug
+> 14577 - Data corruption with Adaptec)
 > 
-> Tejun is pretty good at these flag things.. I wonder what he might suggest?
+> Am Donnerstag, den 19.11.2009, 10:43 +0530 schrieb Desai, Kashyap:
+> > OK. So I get it now. You are working to solve major issue which is
+> > related to your RAID 60 + Adaptec controller. If you want to upgrade
+> > LSI driver, we can always go for latest driver. I can provide you
+> > latest driver source tar ball.  Back porting to 2.6.30 is fine.
+> 
+> That would be great, thank you. It seems the Adaptec-problem will still
+> take a while to debug, so if we can get further with the LSI issue it
+> would be much appreciated. It might take a few days of testing after we
+> build 2.6.30 with the new mtpfusion.
+> 
+I think, without solving one issue (Adaptec related), I am not in position to understand what is an issue w.r.t LSI ? Pls clarify. If you can provide me Logs for LSI driver and provide me pointer to look inside, I can do something on this.
+> --
+> Lukas Kolbe
+> 
+> 
 
-As I said - just error it in your driver qc_issue function. If you are
-feeling really arty you can hook do_identify and mask the bit in the
-ident data as well. See it821x 'smart' RAID mode for both of those in
-pata_it821x.c
-
-Alan
