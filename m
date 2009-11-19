@@ -1,43 +1,43 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
-Date: Thu, 19 Nov 2009 16:50:58 +0900
-Message-ID: <20091119165048D.fujita.tomonori@lab.ntt.co.jp>
-References: <bug-14563-11613@http.bugzilla.kernel.org/>
-	<200911181653.nAIGrr9M024422@demeter.kernel.org>
+From: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
+Subject: Bug 14579 (was: RE: Bug 14579 -  Devices disappear... and Bug
+ 14577 - Data corruption with Adaptec)
+Date: Thu, 19 Nov 2009 11:17:31 +0100
+Message-ID: <1258625851.8918.20.camel@muchoki.zuhause>
+References: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
+	 <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C04462@inbmail01.lsi.com>
+	 <20091117142242.GA15638@TechFak.Uni-Bielefeld.DE>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C74A49@inbmail01.lsi.com>
+	 <20091118133909.GD16440@TechFak.Uni-Bielefeld.DE>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C74BD4@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:41002 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753418AbZKSHvD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Nov 2009 02:51:03 -0500
-In-Reply-To: <200911181653.nAIGrr9M024422@demeter.kernel.org>
+Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:35808 "EHLO
+	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755337AbZKSKQK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2009 05:16:10 -0500
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1C93C74BD4@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@jmbreuer.net
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, sfrey@techfak.uni-bielefeld.de
 
-On Wed, 18 Nov 2009 16:53:53 GMT
-bugzilla-daemon@bugzilla.kernel.org wrote:
+Am Donnerstag, den 19.11.2009, 10:43 +0530 schrieb Desai, Kashyap:
+> OK. So I get it now. You are working to solve major issue which is
+> related to your RAID 60 + Adaptec controller. If you want to upgrade
+> LSI driver, we can always go for latest driver. I can provide you
+> latest driver source tar ball.  Back porting to 2.6.30 is fine.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=14563
-> 
-> 
-> 
-> 
-> 
-> --- Comment #15 from Joachim Breuer <linux-kernel@jmbreuer.net>  2009-11-18 16:53:53 ---
-> Allright! You hit something on the head!
-> 
-> With 'try_rdio=0 try_wdio=0' as parameters to the st module, writing to tape
-> from amanda works correctly in 2.6.30.3.
+That would be great, thank you. It seems the Adaptec-problem will still
+take a while to debug, so if we can get further with the LSI issue it
+would be much appreciated. It might take a few days of testing after we
+build 2.6.30 with the new mtpfusion. 
 
-Thanks a lot for the logs. They are very helpful.
+-- 
+Lukas Kolbe
 
-I think that I found one bug about dio. There might be other bugs that
-cause this issue though.
 
-Can you try the patch that I've just sent.
 
-Thanks,
