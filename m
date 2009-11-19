@@ -1,44 +1,48 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] multipath: Evaluate request result and sense
-	code
-Date: Thu, 19 Nov 2009 13:58:36 -0600
-Message-ID: <4B05A36C.2030409@cs.wisc.edu>
-References: <20091119122503.413AD3A174@ochil.suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
+Date: Thu, 19 Nov 2009 22:03:44 +0200 (EET)
+Message-ID: <alpine.LNX.2.00.0911192156460.14560@kai.makisara.local>
+References: <4B028253.1040407@jmbreuer.net> <alpine.LNX.2.00.0911172231040.20752@kai.makisara.local> <alpine.LNX.2.00.0911182338070.13484@kai.makisara.local> <20091119164558H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20091119122503.413AD3A174@ochil.suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:56653 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026AbZKSUD5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2009 15:03:57 -0500
+In-Reply-To: <20091119164558H.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-kernel@jmbreuer.net, linux-scsi@vger.kernel.org
 
-Hannes Reinecke wrote:
-> As we now see the result for every command we
-> can use it to make some more elaborate choices
-> if we should retry the request on another path.
+On Thu, 19 Nov 2009, FUJITA Tomonori wrote:
+
+...
+> As you suggested earlier, looks like normalize_buffer() doesn't free
+> all the buffers. I think that I found one bug that causes to this.
 > 
-> This solves a potential data corruption when
-> a request is being terminated with RESERVATION
-> CONFLICT and queue_if_no_path is active; the
-> request will be queued until the reservation
-> status changes and then transmitted.
+> When enlarge_buffer() allocates 524288 from 0, st uses six-order page
+> allocation. So mdata->page_order is 6 and frp_seg is 2.
+> 
+> After that, if st uses dio, sgl_map_user_pages() sets
+> mdata->page_order to 0 for st_do_scsi(). After that, when we call
+> normalize_buffer(), it frees only free frp_seg * PAGE_SIZE (2 * 4096)
+> though we should free frp_seg * PAGE_SIZE << 6 (2 * 4096 << 6). So we
+> see buffer_size is set to 516096 (524288 - 8192).
+> 
+This surely can cause problems later.
 
+> Here's a fix for this.
+> 
 
-I had the same bz. To handle it I just converted the error to some other 
--EXYZ value. But like I said in my patch that I sent to the list I did 
-not like it much.
+I have tested the patch. Amanda did make the backup without problems. 
+However, looking at dmesg revealed that this time it did not use dio with 
+any write. Then I made a small program that writes both with and without 
+dio (when the write buffer is not aligned at page boundary, it needs 129 
+s/g segments and dio is not used). Dmesg showed that dio was used in half 
+of the writes and the buffer was shrunk properly.
 
-I thought of going the route you did in this patch, but thought it was 
-too scsi specific. Does dasd want advanced error handling? If not, then 
-I am fine since for hw handlers we assume they are always scsi_dh modules.
+Thanks,
+Kai
+
