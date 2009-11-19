@@ -1,31 +1,22 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
-Date: Thu, 19 Nov 2009 07:51:08 GMT
-Message-ID: <200911190751.nAJ7p8iu004256@demeter.kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
+Date: Thu, 19 Nov 2009 16:50:58 +0900
+Message-ID: <20091119165048D.fujita.tomonori@lab.ntt.co.jp>
 References: <bug-14563-11613@http.bugzilla.kernel.org/>
+	<200911181653.nAIGrr9M024422@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:43759 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394AbZKSHvC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2009 02:51:02 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAJ7p8lT004257
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Nov 2009 07:51:08 GMT
-In-Reply-To: <bug-14563-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:41002 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753418AbZKSHvD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Nov 2009 02:51:03 -0500
+In-Reply-To: <200911181653.nAIGrr9M024422@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14563
-
-
-
-
-
---- Comment #17 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-11-19 07:51:05 ---
-Reply-To: fujita.tomonori@lab.ntt.co.jp
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@jmbreuer.net
 
 On Wed, 18 Nov 2009 16:53:53 GMT
 bugzilla-daemon@bugzilla.kernel.org wrote:
@@ -50,8 +41,3 @@ cause this issue though.
 Can you try the patch that I've just sent.
 
 Thanks,
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
