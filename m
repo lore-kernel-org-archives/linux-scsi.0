@@ -1,43 +1,31 @@
-From: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
-Subject: Bug 14579 (was: RE: Bug 14579 -  Devices disappear... and Bug
- 14577 - Data corruption with Adaptec)
-Date: Thu, 19 Nov 2009 11:17:31 +0100
-Message-ID: <1258625851.8918.20.camel@muchoki.zuhause>
-References: <20091111160220.GC5705@TechFak.Uni-Bielefeld.DE>
-	 <20091112225825.GA20808@TechFak.Uni-Bielefeld.DE>
-	 <0D1E8821739E724A86F4D16902CE275C1C93C04462@inbmail01.lsi.com>
-	 <20091117142242.GA15638@TechFak.Uni-Bielefeld.DE>
-	 <0D1E8821739E724A86F4D16902CE275C1C93C74A49@inbmail01.lsi.com>
-	 <20091118133909.GD16440@TechFak.Uni-Bielefeld.DE>
-	 <0D1E8821739E724A86F4D16902CE275C1C93C74BD4@inbmail01.lsi.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Thu, 19 Nov 2009 10:23:46 +0000
+Message-ID: <20091119102346.3c656b99@lxorguk.ukuu.org.uk>
+References: <20091116154343.GA6672@infradead.org>
+	<4B02AD86.8010304@rtr.ca>
+	<20091117143507.GC588@infradead.org>
+	<20091117145239.768072c9@lxorguk.ukuu.org.uk>
+	<20091117150012.GA10748@infradead.org>
+	<4B04BD01.5090706@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:35808 "EHLO
-	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755337AbZKSKQK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Nov 2009 05:16:10 -0500
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1C93C74BD4@inbmail01.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4B04BD01.5090706@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, sfrey@techfak.uni-bielefeld.de
 
-Am Donnerstag, den 19.11.2009, 10:43 +0530 schrieb Desai, Kashyap:
-> OK. So I get it now. You are working to solve major issue which is
-> related to your RAID 60 + Adaptec controller. If you want to upgrade
-> LSI driver, we can always go for latest driver. I can provide you
-> latest driver source tar ball.  Back porting to 2.6.30 is fine.
+> I imagine some sort of port or host flag, that the LLD could set
+> to indicate that it can correctly handle TRIM.  Or not handle TRIM.
+> 
+> Tejun is pretty good at these flag things.. I wonder what he might suggest?
 
-That would be great, thank you. It seems the Adaptec-problem will still
-take a while to debug, so if we can get further with the LSI issue it
-would be much appreciated. It might take a few days of testing after we
-build 2.6.30 with the new mtpfusion. 
+As I said - just error it in your driver qc_issue function. If you are
+feeling really arty you can hook do_identify and mask the bit in the
+ident data as well. See it821x 'smart' RAID mode for both of those in
+pata_it821x.c
 
--- 
-Lukas Kolbe
-
-
-
+Alan
