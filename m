@@ -1,38 +1,36 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [patch 12/18] st: fix test of value range in st_set_options()
-Date: Wed, 18 Nov 2009 23:57:32 +0200 (EET)
-Message-ID: <alpine.LNX.2.00.0911182356470.13484@kai.makisara.local>
-References: <200911172253.nAHMrMHU019953@imap1.linux-foundation.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Wed, 18 Nov 2009 22:35:29 -0500
+Message-ID: <4B04BD01.5090706@rtr.ca>
+References: <20091116154343.GA6672@infradead.org> <4B02AD86.8010304@rtr.ca> <20091117143507.GC588@infradead.org> <20091117145239.768072c9@lxorguk.ukuu.org.uk> <20091117150012.GA10748@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:57366 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756151AbZKRV5o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Nov 2009 16:57:44 -0500
-In-Reply-To: <200911172253.nAHMrMHU019953@imap1.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20091117150012.GA10748@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, roel.kluin@gmail.com, osst@riede.org
 
-On Tue, 17 Nov 2009, akpm@linux-foundation.org wrote:
+Christoph Hellwig wrote:
+> On Tue, Nov 17, 2009 at 02:52:39PM +0000, Alan Cox wrote:
+>> I'm not convinced that is the right way to handle it. If we start doing
+>> that we'll have this massive unmanagable set of magic flags and twiddles
+>> for every possible host specific corner case.
+>>
+>> Far better to keep the issue of the command as Christoph has done and
+>> block the command issue in the afflicted devices qc_issue so that you get
+>> an error back. That keeps the mess in the right places.
+> 
+> Ok, new version of the patch without this will go out this minute.  I'm
+> happy to add whatever patch is nessecary to block it for controllers
+> that can't accept it once we agree on a method.
+..
 
-> From: Roel Kluin <roel.kluin@gmail.com>
-> 
-> value cannot logically be less than START and greater than BUFFERSIZE.
-> 
-> #define EXTENDED_SENSE_START  18
-> 
-> // vi include/scsi/scsi_cmnd.h +105
-> #define SCSI_SENSE_BUFFERSIZE 	96
-> 
-> [akpm@linux-foundation.org: fix warning]
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> Cc: Willem Riede <osst@riede.org>
-> Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
-Acked-by: Kai Makisara <kai.makisara@kolumbus.fi>
+I imagine some sort of port or host flag, that the LLD could set
+to indicate that it can correctly handle TRIM.  Or not handle TRIM.
 
+Tejun is pretty good at these flag things.. I wonder what he might suggest?
+
+Cheers
