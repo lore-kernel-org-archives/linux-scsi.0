@@ -1,124 +1,84 @@
-From: Noriyuki Fujii <n-fujii@np.css.fujitsu.com>
-Subject: [PATCH] PCI legacy I/O port free driver - Making MegaRAID SAS driver
-Date: Fri, 20 Nov 2009 16:27:20 +0900
-Message-ID: <4B0644D8.8010000@np.css.fujitsu.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [PATCH] multipath: Evaluate request result and sense
+ code
+Date: Fri, 20 Nov 2009 08:48:49 +0100
+Message-ID: <4B0649E1.10106@suse.de>
+References: <20091119122503.413AD3A174@ochil.suse.de> <4B05A36C.2030409@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:54180 "EHLO
-	fgwmail7.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286AbZKTH2g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 02:28:36 -0500
-Received: from m6.gw.fujitsu.co.jp ([10.0.50.76])
-	by fgwmail7.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id nAK7SenP004857
-	for <linux-scsi@vger.kernel.org> (envelope-from n-fujii@np.css.fujitsu.com);
-	Fri, 20 Nov 2009 16:28:40 +0900
-Received: from smail (m6 [127.0.0.1])
-	by outgoing.m6.gw.fujitsu.co.jp (Postfix) with ESMTP id 6A6E045DE4C
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2009 16:28:40 +0900 (JST)
-Received: from s6.gw.fujitsu.co.jp (s6.gw.fujitsu.co.jp [10.0.50.96])
-	by m6.gw.fujitsu.co.jp (Postfix) with ESMTP id 09F3045DE51
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2009 16:28:40 +0900 (JST)
-Received: from s6.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id D7E74E18004
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2009 16:28:39 +0900 (JST)
-Received: from ml2.s.css.fujitsu.com (ml2.s.css.fujitsu.com [10.23.4.192])
-	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id 896391DB803F
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2009 16:28:39 +0900 (JST)
+Received: from cantor.suse.de ([195.135.220.2]:40974 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755868AbZKTHsn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 02:48:43 -0500
+In-Reply-To: <4B05A36C.2030409@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: device-mapper development <dm-devel@redhat.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-Hi,
+Mike Christie wrote:
+> Hannes Reinecke wrote:
+>> As we now see the result for every command we
+>> can use it to make some more elaborate choices
+>> if we should retry the request on another path.
+>>
+>> This solves a potential data corruption when
+>> a request is being terminated with RESERVATION
+>> CONFLICT and queue_if_no_path is active; the
+>> request will be queued until the reservation
+>> status changes and then transmitted.
+>=20
+>=20
+> I had the same bz. To handle it I just converted the error to some ot=
+her
+> -EXYZ value. But like I said in my patch that I sent to the list I di=
+d
+> not like it much.
+>=20
+Yeah, that was my thought, too.
+The scsi result codes simply don't fit on the -EXXX values.
 
-On the large servers, I/O port resource may not be assigned to all
-the PCI devices since it is limited (to 64KB on Intel Architecture[1])
-and it may also be fragmented (I/O base register of PCI-to-PCI bridge
-will usually be aligned to a 4KB boundary[2]).
-If no I/O port resource is assigned to devices, those devices do not
-work.
-[1] Some machines support 64KB I/O port space per PCI segment.
-[2] Some P2P bridges support optional 1KB aligned I/O base.
+> I thought of going the route you did in this patch, but thought it wa=
+s
+> too scsi specific. Does dasd want advanced error handling? If not, th=
+en
+> I am fine since for hw handlers we assume they are always scsi_dh mod=
+ules.
+Well, DASD has it's own sort of problems; basically DASD will _always_
+try to do it's own internal recovery by waiting for the storage array
+to respond. So with DASD we basically only ever have three states:
+- GOOD
+- Failure as being evaluated by the _storage array_
+- Don't know (if failfast is set)
+And any advanced checking won't give us much here, as either the link
+is on-line and we have details about the error or the link is severed
+and we don't know anything.
 
-Therefore, I made a patch for MegaRAID SAS driver to make PCI legacy I/O
-port free.
-I have also tested the patch and it had no problem.
+But there's a good point, we should be doing some sort of
+cross-check to determine if it really is a SCSI error.
+Just to prevent any accidental spill-overs in the future.
 
-The way to make PCI legacy I/O port free is the same as Fusion-MPT
-driver's and it has been merged into 2.6.30.4.
+I'll be sending a patch.
 
-This has already been fixed in e1000 and lpfc.
+Cheers,
 
-As a result of the above, the driver can handle its device even when
-there are a huge number of PCI devices being used on the system and no
-I/O port region assigned to the device.
-
-Thanks,
-Noriyuki Fujii
-
-Signed-off-by: Noriyuki Fujii n-fujii@np.css.fujitsu.com
-
- drivers/scsi/megaraid/megaraid_sas.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas.c
-b/drivers/scsi/megaraid/megaraid_sas.c
-index a39addc..8a58927 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -2087,7 +2087,9 @@ static int megasas_init_mfi(struct
-megasas_instance *instance)
- 		instance->base_addr = pci_resource_start(instance->pdev, 0);
- 	}
-
--	if (pci_request_regions(instance->pdev, "megasas: LSI")) {
-+	if (pci_request_selected_regions(instance->pdev,
-+		pci_select_bars(instance->pdev, IORESOURCE_MEM),
-+		"megasas: LSI")) {
- 		printk(KERN_DEBUG "megasas: IO memory region busy!\n");
- 		return -EBUSY;
- 	}
-@@ -2220,7 +2222,8 @@ static int megasas_init_mfi(struct
-megasas_instance *instance)
- 	iounmap(instance->reg_set);
-
-       fail_ioremap:
--	pci_release_regions(instance->pdev);
-+	pci_release_selected_regions(instance->pdev,
-+		pci_select_bars(instance->pdev, IORESOURCE_MEM));
-
- 	return -EINVAL;
- }
-@@ -2240,7 +2243,8 @@ static void megasas_release_mfi(struct
-megasas_instance *instance)
-
- 	iounmap(instance->reg_set);
-
--	pci_release_regions(instance->pdev);
-+	pci_release_selected_regions(instance->pdev,
-+		pci_select_bars(instance->pdev, IORESOURCE_MEM));
- }
-
- /**
-@@ -2537,7 +2541,7 @@ megasas_probe_one(struct pci_dev *pdev, const
-struct pci_device_id *id)
- 	/*
- 	 * PCI prepping: enable device set bus mastering and dma mask
- 	 */
--	rval = pci_enable_device(pdev);
-+	rval = pci_enable_device_mem(pdev);
-
- 	if (rval) {
- 		return rval;
-@@ -2818,7 +2822,7 @@ megasas_resume(struct pci_dev *pdev)
- 	/*
- 	 * PCI prepping: enable device set bus mastering and dma mask
- 	 */
--	rval = pci_enable_device(pdev);
-+	rval = pci_enable_device_mem(pdev);
-
- 	if (rval) {
- 		printk(KERN_ERR "megasas: Enable device failed\n");
+Hannes
+> --=20
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
