@@ -1,30 +1,25 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH V2] libata: add TRIM support
-Date: Thu, 19 Nov 2009 18:46:12 -0500
-Message-ID: <4B05D8C4.4000804@pobox.com>
-References: <20091117150047.GB10748@infradead.org>
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 0/7] bfa: update bfa driver to version 2.1.2.1
+Date: Thu, 19 Nov 2009 16:08:33 -0800
+Message-ID: <1258675713-17487-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20091117150047.GB10748@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Mark Lord <liml@rtr.ca>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hq-exedge.brocade.com ([66.243.153.82]:26550 "EHLO
+	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757782AbZKTAIa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Nov 2009 19:08:30 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: adapter_linux_open_src_team@brocade.com, Jing Huang <huangj@brocade.com>
 
-On 11/17/2009 10:00 AM, Christoph Hellwig wrote:
-> Add support for the ATA TRIM command in libata.  We translate a WRITE SAME 16
-> command with the unmap bit set into an ATA TRIM command and export enough
-> information in READ CAPACITY 16 and the block limits EVPD page so that the new
-> SCSI layer discard support will driver this for us.
->
-> Note that I hardcode the WRITE_SAME_16 opcode for now as the patch to introduce
-> the symbolic is not in 2.6.32 yet but only in the SCSI tree - as soon as it is
-> merged we can fix it up to properly use the symbolic name.
->
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
+This patch set updates bfa driver to version 2.1.2.1. It contains:
 
-applied
+- Bugs fixes from latest internal release (bfa driver version 2.1.0.0) 
+- Bug fixes received from upstream.
+- Misc code cleanups & reorganization.
 
+The patches are prepared againist scsi-misc-2.6
 
+Signed-off-by: Jing Huang <huangj@brocade.com>
