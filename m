@@ -1,162 +1,116 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Subject: [PATCH 1/1] pmcraid driver fixes to support SMI-S object model of
- storage pool
-Date: Fri, 20 Nov 2009 09:39:30 -0800 (PST)
-Message-ID: <alpine.LNX.1.10.0911200846100.27645@rslab159.pmc-sierra.bc.ca>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/4 ver 3] SCSI: add construction flags to scsi_device
+ structure
+Date: Fri, 20 Nov 2009 15:55:43 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0911201422150.2903-100000@iolanthe.rowland.org>
+References: <1258670909.6363.647.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:48002 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754783AbZKTSpf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 13:45:35 -0500
+Received: from iolanthe.rowland.org ([192.131.102.54]:47323 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753928AbZKTUzn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 15:55:43 -0500
+In-Reply-To: <1258670909.6363.647.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
-Cc: anil_ravindranath@pmc-sierra.com
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
+On Thu, 19 Nov 2009, James Bottomley wrote:
 
-PMC-Sierra mgmt application uses SMI-S model. According to SMI-S, the 
-object model exposed by the SMI-S provider should show an StoragePool 
-which contains member disks of a RAID Virtual disk and StorageVolume 
-based on the StoragePool. But according to SMI-S, there is a possibility 
-where StoragePool is created but StorageVolume is not yet created. To 
-satisfy this scenario, we are trying a hidden RAID Virtual disk. The 
-hidden RAID virtual disk will not be exposed to OS. Once a StorageVolume 
-is created for this RAID virtual disk it is exposed.
+> Your 5 constructor flags are what makes this so complex ... plus it now
+> doesn't actually work with the memory leak fix commit:
+> 
+> commit 37e6ba00720c2786330dec2a9a5081e9e049422f
+> Author: James Bottomley <James.Bottomley@suse.de>
+> Date:   Fri Oct 2 13:30:08 2009 -0500
+> 
+>     [SCSI] fix memory leak in initialization
 
-Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
+Yes, okay.  I'll rebase on top of that patch.
 
-pmcraid.c |   34 +++++++++++++++++++++++++---------
-pmcraid.h |    5 ++++-
-2 files changed, 29 insertions(+), 10 deletions(-)
+> I think you can make this much simpler just by having one visible flag
+> (i.e. was scsi_sysfs_sdev_add() called or not) and making everything
+> unwind back to either the alloc or the add state on failure.  Like the
+> attached.  It also cleanly fixes the USB scan crash in an easily
+> backportable manner.
 
-diff -urN scsi-misc-2.6.orig/drivers/scsi/pmcraid.c scsi-misc-2.6/drivers/scsi/pmcraid.c
---- scsi-misc-2.6.orig/drivers/scsi/pmcraid.c	2009-11-19 18:04:46.000000000 -0800
-+++ scsi-misc-2.6/drivers/scsi/pmcraid.c	2009-11-19 18:04:37.000000000 -0800
-@@ -1,7 +1,8 @@
- /*
-  * pmcraid.c -- driver for PMC Sierra MaxRAID controller adapters
-  *
-- * Written By: PMC Sierra Corporation
-+ * Written By: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
-+ *             PMC-Sierra Inc
-  *
-  * Copyright (C) 2008, 2009 PMC Sierra Inc
-  *
-@@ -79,7 +80,7 @@
- /*
-  * Module parameters
-  */
--MODULE_AUTHOR("PMC Sierra Corporation, anil_ravindranath@pmc-sierra.com");
-+MODULE_AUTHOR("Anil Ravindranath<anil_ravindranath@pmc-sierra.com>");
- MODULE_DESCRIPTION("PMC Sierra MaxRAID Controller Driver");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(PMCRAID_DRIVER_VERSION);
-@@ -162,10 +163,10 @@
- 	spin_lock_irqsave(&pinstance->resource_lock, lock_flags);
- 	list_for_each_entry(temp, &pinstance->used_res_q, queue) {
- 
--		/* do not expose VSETs with order-ids >= 240 */
-+		/* do not expose VSETs with order-ids > MAX_VSET_TARGETS */
- 		if (RES_IS_VSET(temp->cfg_entry)) {
- 			target = temp->cfg_entry.unique_flags1;
--			if (target >= PMCRAID_MAX_VSET_TARGETS)
-+			if (target > PMCRAID_MAX_VSET_TARGETS)
- 				continue;
- 			bus = PMCRAID_VSET_BUS_ID;
- 			lun = 0;
-@@ -1210,7 +1211,7 @@
- 	int retval = 0;
- 
- 	if (cfgte->resource_type == RES_TYPE_VSET)
--		retval = ((cfgte->unique_flags1 & 0xFF) < 0xFE);
-+		retval = ((cfgte->unique_flags1 & 0x80) == 0);
- 	else if (cfgte->resource_type == RES_TYPE_GSCSI)
- 		retval = (RES_BUS(cfgte->resource_address) !=
- 				PMCRAID_VIRTUAL_ENCL_BUS_ID);
-@@ -1361,6 +1362,7 @@
-  * Return value:
-  *  none
-  */
-+
- static void pmcraid_handle_config_change(struct pmcraid_instance *pinstance)
- {
- 	struct pmcraid_config_table_entry *cfg_entry;
-@@ -1368,9 +1370,10 @@
- 	struct pmcraid_cmd *cmd;
- 	struct pmcraid_cmd *cfgcmd;
- 	struct pmcraid_resource_entry *res = NULL;
--	u32 new_entry = 1;
- 	unsigned long lock_flags;
- 	unsigned long host_lock_flags;
-+	u32 new_entry = 1;
-+	u32 hidden_entry = 0;
- 	int rc;
- 
- 	ccn_hcam = (struct pmcraid_hcam_ccn *)pinstance->ccn.hcam;
-@@ -1406,9 +1409,15 @@
- 	}
- 
- 	/* If this resource is not going to be added to mid-layer, just notify
--	 * applications and return
-+	 * applications and return. If this notification is about hiding a VSET
-+	 * resource, check if it was exposed already.
- 	 */
--	if (!pmcraid_expose_resource(cfg_entry))
-+	if (pinstance->ccn.hcam->notification_type ==
-+	    NOTIFICATION_TYPE_ENTRY_CHANGED &&
-+	    cfg_entry->resource_type == RES_TYPE_VSET &&
-+	    cfg_entry->unique_flags1 & 0x80) {
-+		hidden_entry = 1;
-+	} else if (!pmcraid_expose_resource(cfg_entry))
- 		goto out_notify_apps;
- 
- 	spin_lock_irqsave(&pinstance->resource_lock, lock_flags);
-@@ -1424,6 +1433,12 @@
- 
- 	if (new_entry) {
- 
-+		if (hidden_entry) {
-+			spin_unlock_irqrestore(&pinstance->resource_lock,
-+						lock_flags);
-+			goto out_notify_apps;
-+		}
-+
- 		/* If there are more number of resources than what driver can
- 		 * manage, do not notify the applications about the CCN. Just
- 		 * ignore this notifications and re-register the same HCAM
-@@ -1454,8 +1469,9 @@
- 		sizeof(struct pmcraid_config_table_entry));
- 
- 	if (pinstance->ccn.hcam->notification_type ==
--	    NOTIFICATION_TYPE_ENTRY_DELETED) {
-+	    NOTIFICATION_TYPE_ENTRY_DELETED || hidden_entry) {
- 		if (res->scsi_dev) {
-+			res->cfg_entry.unique_flags1 &= 0x7F;
- 			res->change_detected = RES_CHANGE_DEL;
- 			res->cfg_entry.resource_handle =
- 				PMCRAID_INVALID_RES_HANDLE;
-diff -urN scsi-misc-2.6.orig/drivers/scsi/pmcraid.h scsi-misc-2.6/drivers/scsi/pmcraid.h
---- scsi-misc-2.6.orig/drivers/scsi/pmcraid.h	2009-11-19 18:04:46.000000000 -0800
-+++ scsi-misc-2.6/drivers/scsi/pmcraid.h	2009-11-19 18:04:37.000000000 -0800
-@@ -1,6 +1,9 @@
- /*
-  * pmcraid.h -- PMC Sierra MaxRAID controller driver header file
-  *
-+ * Written By: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
-+ *             PMC-Sierra Inc
-+ *
-  * Copyright (C) 2008, 2009 PMC Sierra Inc.
-  *
-  * This program is free software; you can redistribute it and/or modify
-@@ -106,7 +109,7 @@
- #define PMCRAID_VSET_LUN_ID                      0x0
- #define PMCRAID_PHYS_BUS_ID                      0x0
- #define PMCRAID_VIRTUAL_ENCL_BUS_ID              0x8
--#define PMCRAID_MAX_VSET_TARGETS                 240
-+#define PMCRAID_MAX_VSET_TARGETS                 0x7F
- #define PMCRAID_MAX_VSET_LUNS_PER_TARGET         8
- 
- #define PMCRAID_IOA_MAX_SECTORS                  32767
+That makes sense.  But there's still a little awkwardness caused by the
+fact that the creation and destruction paths aren't clean mirror
+images.  In broad outline and ignoring the state transitions, we have:
+
+scsi_alloc_sdev():
+	kzalloc and init sdev
+	get_device(&starget->dev)
+	scsi_alloc_queue()
+	scsi_sysfs_device_initialize():
+		device_initialize(&sdev->sdev_gendev)
+		device_initialize(&sdev->sdev_dev)
+		get_device(&sdev->sdev_gendev) for sdev_dev
+		transport_setup_device()
+		add sdev to host's and target's lists
+	shost->hostt->slave_alloc()
+
+scsi_add_lun():
+	transport_configure_device()
+	sdev->host->hostt->slave_configure()
+	scsi_sysfs_add_sdev():
+		device_add(&sdev->sdev_gendev)
+		device_add(&sdev->sdev_dev)
+		transport_add_device()
+		bsg_register_queue()
+		add extra host attributes
+
+The removal routines look like this:
+
+__scsi_remove_device():
+	bsg_unregister_queue()
+	device_unregister(&sdev->sdev_dev)
+	transport_remove_device()
+	device_del(&sdev->sdev_gendev)
+	sdev->host->hostt->slave_destroy()
+	transport_destroy_device()
+	put_device(&sdev->sdev_gendev)
+
+scsi_device_cls_release():
+	put_device(&sdev->sdev_gendev)
+
+scsi_device_dev_release_usercontext():
+	remove sdev from host's and target's lists
+	scsi_free_queue()
+	kfree(sdev)
+	put_device(&starget->dev)
+
+Sorry for the large amount of detail.  But this does reveal some
+oddities.
+
+     1. __scsi_remove_device() is awkward because it encompasses both
+	removal from visibility (its first four lines above) and
+	deinitialization (the last three lines).  Adding the
+	is_visible flag helps clarify this, of course.
+
+     2. bsg_unregister_queue() is called even when
+	bsg_register_queue() fails.  Is this legitimate?
+
+     3. transport_setup_device() and adding sdev to the host's and 
+	target's lists don't have anything to do with sysfs.  Hence
+	they don't really belong in scsi_sysfs_device_initialize().
+	Is there any reason not to move them up into scsi_alloc_lun()?
+
+     4. bsg_register_queue() comes before transport_add_device() but
+	bug_unregister_queue() doesn't come after
+	transport_remove_device().  Maybe the order doesn't matter and
+	maybe it does; but it isn't commented and it looks unclean.
+	Should the second pair be reversed?
+
+     5. scsi_sysfs_device_initialize() can't fail.  Hence it should
+	come after the slave_alloc() call, which can, in order to
+	simplify unwinding.  Unless there is an ordering restriction
+	which prevents this?
+
+Would it be okay to take your patch and modify it in accordance with
+points 3 - 5?
+
+Alan Stern
+
