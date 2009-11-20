@@ -1,67 +1,93 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14644] PROBLEM: system locking when burning dvd with an
- externel usb dvd writer
-Date: Fri, 20 Nov 2009 11:38:56 GMT
-Message-ID: <200911201138.nAKBcuUs017049@demeter.kernel.org>
-References: <bug-14644-11613@http.bugzilla.kernel.org/>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Fri, 20 Nov 2009 12:46:24 +0000
+Message-ID: <20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>
+References: <20091116154343.GA6672@infradead.org>
+	<4B02AD86.8010304@rtr.ca>
+	<20091117143507.GC588@infradead.org>
+	<20091117145239.768072c9@lxorguk.ukuu.org.uk>
+	<20091117150012.GA10748@infradead.org>
+	<4B04BD01.5090706@rtr.ca>
+	<20091119102346.3c656b99@lxorguk.ukuu.org.uk>
+	<4B0554A2.9060404@rtr.ca>
+	<4B05DE00.3020707@gmail.com>
+	<20091120001829.354abfc0@lxorguk.ukuu.org.uk>
+	<4B05E3D1.1000904@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:51708 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbZKTLiu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 06:38:50 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAKBcu56017050
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Nov 2009 11:38:56 GMT
-In-Reply-To: <bug-14644-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4B05E3D1.1000904@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Mark Lord <liml@rtr.ca>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14644
+> > For those that pee themselves you don't need a host flag, you need a
+> > qc_issue hook - you need that hook for the purpose of actually making the
+> > command work, so in the short term making it just return AC_ERR_DEV isn't
+> > exactly hard. Not having the flag and fixing those odd few drivers would
+> > be far more productive.
+> 
+> We are talking about chips whose command set is essentially fixed at 
+> manufacture time.
 
+There are only two of those I know of
+- IT821x which already uses qc_issue to filter.
+- pata_st412, which uses qc_issue and isn't in tree anyway and probably
+  never will be.
 
+The SIL ones jut need babysitting. The older Promise at least only snoop
+SET_FEATURES and the transfer lengths for some DMA ops. We disable the
+features snooping (its there to make driverless windows stuff work well I
+assume), and we babysit the transfer lengths for the chip as per the
+documentation for issuing LBA48 etc.
 
+> So the alternative is to create a table of known-working commands in 
+> each driver, and fail all commands outside that table.  In the case of
 
+For most drivers all commands just work. There are very few with command
+tables. LBA48 confused some not because of command tables but because the
+double load of the taskfile was a sequence they couldn't hack or because
+they snooped the transfer length. The latter is kept correctly by the new
+commands.
 
---- Comment #3 from Laurent Carlier <lordheavym@gmail.com>  2009-11-20 11:38:55 ---
-Here is the revelant part of the log:
+> SiI and Promise at least, I think that command table will be the same 
+> (ATA-7 commands).
 
-INFO: task wodim:2562 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-wodim         D ffff88011eef5da0     0  2562   2420 0x00000000
- ffff88011eef5da0 0000000000000082 0000000000000000 ffff88011e41b580
- ffff8800282d3b00 ffff8800282d3b00 ffff88011e85a820 ffff880091b18000
- ffff88011eef6040 000000000000e1c8 ffff88011eef6040 ffff880091b18000
-Call Trace:
- [<ffffffff8131839d>] ? schedule_timeout+0x23d/0x380
- [<ffffffff81199d1e>] ? blk_peek_request+0x13e/0x220
- [<ffffffff81317235>] ? wait_for_common+0xd5/0x190
- [<ffffffff81045200>] ? default_wake_function+0x0/0x20
- [<ffffffff8119eb79>] ? blk_execute_rq+0x79/0xe0
- [<ffffffff8119e933>] ? blk_rq_map_user+0x1b3/0x2a0
- [<ffffffff811a2a05>] ? sg_io+0x2b5/0x3f0
- [<ffffffff811a33b0>] ? scsi_cmd_ioctl+0x4e0/0x540
- [<ffffffff81053cae>] ? current_fs_time+0x1e/0x30
- [<ffffffff81318c7d>] ? __mutex_lock_slowpath+0x23d/0x330
- [<ffffffff81039880>] ? __wake_up_common+0x50/0x80
- [<ffffffff811180b1>] ? file_update_time+0x111/0x1b0
- [<ffffffffa039dcc1>] ? cdrom_ioctl+0x51/0xff0 [cdrom]
- [<ffffffff8110ae5e>] ? pipe_write+0x41e/0x570
- [<ffffffffa0164408>] ? sr_block_ioctl+0x58/0xd0 [sr_mod]
- [<ffffffff811a0145>] ? __blkdev_driver_ioctl+0x75/0x90
- [<ffffffff811a05eb>] ? blkdev_ioctl+0x1fb/0x700
- [<ffffffff81130267>] ? block_ioctl+0x37/0x40
- [<ffffffff81111ecd>] ? vfs_ioctl+0x1d/0xb0
- [<ffffffff81112004>] ? do_vfs_ioctl+0x4/0x570
- [<ffffffff81112088>] ? do_vfs_ioctl+0x88/0x570
- [<ffffffff811125f0>] ? sys_ioctl+0x80/0xa0
- [<ffffffff81102a9e>] ? sys_write+0x4e/0x90
- [<ffffffff8100c042>] ? system_call_fastpath+0x16/0x1b
-usb 3-6: reset high speed USB device using ehci_hcd and address 2
+It's certainly not quite that simple. A table wouldn't be too bad for
+just kernel issued commands as we don't issue very many but for the
+general case it would not be pretty at all. The command list for SII is
+btw not ATA-7 its a bit more complicated, which is another reason not to
+do a command filter but to worry about feature sets we care about.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+> At that point, whether it's a common function (is_ata7_command) or a 
+> command flag (ATA_HFLAG_NO_NEW_COMMANDS) is largely a point of taste.
+
+SII controllers support a subset of commands based on legacy (WD1010),
+ATA and bits of CF. However they also support things like a subset of
+smart commands and some extensions. That means a command table isn't
+sufficient for the general case, you actually have to parse the features
+field if you want to do every case right (ick ick ick)
+
+You don't actually want to do that filtering on SII controllers
+anyway because their default behaviour is to abort an unsupported command.
+So it all "just works" because the stack sees an abort and assumes the
+drive replied with command not supported status (see 10.3.4.2). The chip
+designers got that one right.
+
+The SII anyhow supports telling the controller the command behaviour
+required, which means that a filter isn't what you need anyway. You need
+to set up the command table to allow TRIM through. That means we don't
+need a filter, the driver just needs enhancing to fix that quirk.
+
+So who will actually use this flag ? Which other drivers have problems
+in this area ? Rather than blindly implement a flag we need to work
+through those that *actually* have a problem.
+
+As far as I can see the TRIM stuff will just work as it is right now. The
+problem controllers like the IT821x will return AC_ERR_DEV on qc_issue and
+the SII controllers will fake a drive abort for command unknown. The
+older Promise at least will handle the command.
+
+Alan
