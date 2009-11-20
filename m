@@ -1,142 +1,50 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 1/4 ver 3] SCSI: add construction flags to scsi_device
- structure
-Date: Fri, 20 Nov 2009 16:20:58 -0500
-Message-ID: <1258752058.2889.303.camel@mulgrave.site>
-References: <Pine.LNX.4.44L0.0911201422150.2903-100000@iolanthe.rowland.org>
+Subject: Re: [PATCH] enclosure: fix oops while iterating enclosure_status
+ array
+Date: Fri, 20 Nov 2009 16:43:14 -0500
+Message-ID: <1258753394.2889.315.camel@mulgrave.site>
+References: <4B05E183.4010301@jeffreymahoney.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53543 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755537AbZKTVVJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 16:21:09 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0911201422150.2903-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754593AbZKTVnR@vger.kernel.org>
+In-Reply-To: <4B05E183.4010301@jeffreymahoney.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Mahoney <jeffm@jeffreymahoney.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 2009-11-20 at 15:55 -0500, Alan Stern wrote:
-> On Thu, 19 Nov 2009, James Bottomley wrote:
-> 
-> > Your 5 constructor flags are what makes this so complex ... plus it now
-> > doesn't actually work with the memory leak fix commit:
-> > 
-> > commit 37e6ba00720c2786330dec2a9a5081e9e049422f
-> > Author: James Bottomley <James.Bottomley@suse.de>
-> > Date:   Fri Oct 2 13:30:08 2009 -0500
-> > 
-> >     [SCSI] fix memory leak in initialization
-> 
-> Yes, okay.  I'll rebase on top of that patch.
-> 
-> > I think you can make this much simpler just by having one visible flag
-> > (i.e. was scsi_sysfs_sdev_add() called or not) and making everything
-> > unwind back to either the alloc or the add state on failure.  Like the
-> > attached.  It also cleanly fixes the USB scan crash in an easily
-> > backportable manner.
-> 
-> That makes sense.  But there's still a little awkwardness caused by the
-> fact that the creation and destruction paths aren't clean mirror
-> images.  In broad outline and ignoring the state transitions, we have:
-> 
-> scsi_alloc_sdev():
-> 	kzalloc and init sdev
-> 	get_device(&starget->dev)
-> 	scsi_alloc_queue()
-> 	scsi_sysfs_device_initialize():
-> 		device_initialize(&sdev->sdev_gendev)
-> 		device_initialize(&sdev->sdev_dev)
-> 		get_device(&sdev->sdev_gendev) for sdev_dev
-> 		transport_setup_device()
-> 		add sdev to host's and target's lists
-> 	shost->hostt->slave_alloc()
-> 
-> scsi_add_lun():
-> 	transport_configure_device()
-> 	sdev->host->hostt->slave_configure()
-> 	scsi_sysfs_add_sdev():
-> 		device_add(&sdev->sdev_gendev)
-> 		device_add(&sdev->sdev_dev)
-> 		transport_add_device()
-> 		bsg_register_queue()
-> 		add extra host attributes
-> 
-> The removal routines look like this:
-> 
-> __scsi_remove_device():
-> 	bsg_unregister_queue()
-> 	device_unregister(&sdev->sdev_dev)
-> 	transport_remove_device()
-> 	device_del(&sdev->sdev_gendev)
-> 	sdev->host->hostt->slave_destroy()
-> 	transport_destroy_device()
-> 	put_device(&sdev->sdev_gendev)
-> 
-> scsi_device_cls_release():
-> 	put_device(&sdev->sdev_gendev)
-> 
-> scsi_device_dev_release_usercontext():
-> 	remove sdev from host's and target's lists
-> 	scsi_free_queue()
-> 	kfree(sdev)
-> 	put_device(&starget->dev)
-> 
-> Sorry for the large amount of detail.  But this does reveal some
-> oddities.
-> 
->      1. __scsi_remove_device() is awkward because it encompasses both
-> 	removal from visibility (its first four lines above) and
-> 	deinitialization (the last three lines).  Adding the
-> 	is_visible flag helps clarify this, of course.
+*really* (promise) adding linux-scsi to the cc list this time.
 
-Right, the point I was looking at is what are the persistent states.
-Pretty much that's running not visible and running visible ... most
-other transactions can simply be wound backwards or forwards to those
-points.
-
->      2. bsg_unregister_queue() is called even when
-> 	bsg_register_queue() fails.  Is this legitimate?
-
-Yes, there's a check in bsg_unregister for the initial registration.
-
->      3. transport_setup_device() and adding sdev to the host's and 
-> 	target's lists don't have anything to do with sysfs.  Hence
-> 	they don't really belong in scsi_sysfs_device_initialize().
-> 	Is there any reason not to move them up into scsi_alloc_lun()?
-
-For a patch that needs to fix a bug, yes ... it needs to be the minimum
-change.  But on the broader principle, no, it doesn't matter.  The
-scsi_alloc_sdev() must contain the list adds because at some point if
-the scan mutex is removed, the act of checking the lists and allocating
-and adding them will have to become atomic so they have to be somwhere
-in scsi_alloc_sdev() ... but it might not matter where.
-
->      4. bsg_register_queue() comes before transport_add_device() but
-> 	bug_unregister_queue() doesn't come after
-> 	transport_remove_device().  Maybe the order doesn't matter and
-> 	maybe it does; but it isn't commented and it looks unclean.
-> 	Should the second pair be reversed?
-
-The ordering shouldn't matter.  The bsg registration is an independent
-operation.
-
->      5. scsi_sysfs_device_initialize() can't fail.  Hence it should
-> 	come after the slave_alloc() call, which can, in order to
-> 	simplify unwinding.  Unless there is an ordering restriction
-> 	which prevents this?
-
-Well, we'd have to unwind what was done on slave alloc failure if you do
-that ... so it just adds more to the unwind path.
-
-> Would it be okay to take your patch and modify it in accordance with
-> points 3 - 5?
-
-I really just need the minimum patch that can be backported, so if you
-can shorten it, go for it.
+Patch looks fine to me, though, thanks.
 
 James
 
-
+On Thu, 2009-11-19 at 19:23 -0500, Jeff Mahoney wrote:
+> enclosure_status is expected to be a NULL terminated array of strings
+>  but isn't actually NULL terminated. When writing an invalid value to
+>  /sys/class/enclosure/.../.../status, it goes off the end of the array
+>  and Oopses.
+> 
+>  This patch uses the array size instead.
+> 
+> Reported-by: Artur Wojcik <artur.wojcik@intel.com>
+> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+> ---
+>  drivers/misc/enclosure.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> --- a/drivers/misc/enclosure.c
+> +++ b/drivers/misc/enclosure.c
+> @@ -412,8 +412,9 @@ static ssize_t set_component_status(stru
+>  	struct enclosure_component *ecomp = to_enclosure_component(cdev);
+>  	int i;
+>  
+> -	for (i = 0; enclosure_status[i]; i++) {
+> -		if (strncmp(buf, enclosure_status[i],
+> +	for (i = 0; i < ARRAY_SIZE(enclosure_status); i++) {
+> +		if (enclosure_status[i] &&
+> +		    strncmp(buf, enclosure_status[i],
+>  			    strlen(enclosure_status[i])) == 0 &&
+>  		    (buf[strlen(enclosure_status[i])] == '\n' ||
+>  		     buf[strlen(enclosure_status[i])] == '\0'))
