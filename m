@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 3/9] libfc: add FC-BB-5 LESB counters to fcoe_dev_stats
-Date: Fri, 20 Nov 2009 14:54:52 -0800
-Message-ID: <20091120225452.495.98956.stgit@localhost.localdomain>
+Subject: [PATCH 4/9] libfcoe: add checking disable flag in FIP_FKA_ADV
+Date: Fri, 20 Nov 2009 14:54:57 -0800
+Message-ID: <20091120225457.495.93487.stgit@localhost.localdomain>
 References: <20091120225436.495.88600.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7180 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:14477 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755059AbZKTWyq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 17:54:46 -0500
+	id S1755130AbZKTWyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 17:54:51 -0500
 In-Reply-To: <20091120225436.495.88600.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,41 +19,82 @@ Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
 From: Yi Zou <yi.zou@intel.com>
 
-FC-BB-5 Rev2.0, Clause 7.10 extends the FC-LS-3 LESB for FC-BB_E. We are
-already tracking Link Failure Count so add the rest in this patch.
+When the D bit is set if the FKA_ADV_Period of the FIP Discovery
+Advertisement, the ENode should not transmit period ENode FIP Keep Alive and
+VN_Port FIP Keep Alive (FC-BB-5 Rev2, 7.8.3.13).
 
-For VLinkFailureCount and MissDiscAdvCount, they are part of the per-cpu
-fcoe_dev_stats. For SymbolErrorCount, ErroredBlockCount, and FCSErrorCount,
-they are defined in IEEE 802.3-2008 and are per LLD. They are expected to
-come from LLD.
+Note that fcf->flags is taken directly from the fip_header, I am claiming one
+bit for the purpose of the FIP_FKA_Period D bit as FIP_FL_FK_ADV_B, and use
+FIP_HEADER_FLAGS as bitmask for bits used in fip_header.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- include/scsi/libfc.h |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |    4 +++-
+ include/scsi/fc/fc_fip.h    |   12 +++++++++++-
+ include/scsi/libfcoe.h      |    1 +
+ 3 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 2936fba..b97be29 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -231,6 +231,8 @@ struct fc_rport_priv {
-  * @ControlRequests:       Number of control requests
-  * @InputMegabytes:        Number of received megabytes
-  * @OutputMegabytes:       Number of transmitted megabytes
-+ * @VLinkFailureCount:     Number of virtual link failures
-+ * @MissDiscAdvCount:      Number of missing FIP discovery advertisement
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 3c501d4..9961fd7 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -665,6 +665,8 @@ static int fcoe_ctlr_parse_adv(struct fcoe_ctlr *fip,
+ 			if (dlen != sizeof(struct fip_fka_desc))
+ 				goto len_err;
+ 			fka = (struct fip_fka_desc *)desc;
++			if (fka->fd_flags & FIP_FKA_ADV_D)
++				fcf->fd_flags = 1;
+ 			t = ntohl(fka->fd_fka_period);
+ 			if (t >= FCOE_CTLR_MIN_FKA)
+ 				fcf->fka_period = msecs_to_jiffies(t);
+@@ -1160,7 +1162,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 		}
+ 	}
+ 
+-	if (sel) {
++	if (sel && !sel->fd_flags) {
+ 		if (time_after_eq(jiffies, fip->ctlr_ka_time)) {
+ 			fip->ctlr_ka_time = jiffies + sel->fka_period;
+ 			fip->send_ctlr_ka = 1;
+diff --git a/include/scsi/fc/fc_fip.h b/include/scsi/fc/fc_fip.h
+index 3d138c1..17baa19 100644
+--- a/include/scsi/fc/fc_fip.h
++++ b/include/scsi/fc/fc_fip.h
+@@ -214,11 +214,21 @@ struct fip_vn_desc {
   */
- struct fcoe_dev_stats {
- 	u64		SecondsSinceLastReset;
-@@ -249,6 +251,8 @@ struct fcoe_dev_stats {
- 	u64		ControlRequests;
- 	u64		InputMegabytes;
- 	u64		OutputMegabytes;
-+	u64		VLinkFailureCount;
-+	u64		MissDiscAdvCount;
+ struct fip_fka_desc {
+ 	struct fip_desc fd_desc;
+-	__u8		fd_resvd[2];
++	__u8		fd_resvd;
++	__u8		fd_flags;	/* bit0 is fka disable flag */
+ 	__be32		fd_fka_period;	/* adv./keep-alive period in mS */
+ } __attribute__((packed));
+ 
+ /*
++ * flags for fip_fka_desc.fd_flags
++ */
++enum fip_fka_flags {
++	FIP_FKA_ADV_D =	0x01,		/* no need for FKA from ENode */
++};
++
++/* FIP_DT_FKA flags */
++
++/*
+  * FIP_DT_VENDOR descriptor.
+  */
+ struct fip_vendor_desc {
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index 3837872..c603f4a 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -155,6 +155,7 @@ struct fcoe_fcf {
+ 	u8 pri;
+ 	u16 flags;
+ 	u32 fka_period;
++	u8 fd_flags:1;
  };
  
- /**
+ /* FIP API functions */
 
