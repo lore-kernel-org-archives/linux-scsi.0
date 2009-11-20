@@ -1,52 +1,59 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 0/9] libfc, libfcoe and fcoe updates for scsi-misc.git (2.6.33)
-Date: Fri, 20 Nov 2009 14:54:36 -0800
-Message-ID: <20091120225436.495.88600.stgit@localhost.localdomain>
+Subject: [PATCH 3/9] libfc: add FC-BB-5 LESB counters to fcoe_dev_stats
+Date: Fri, 20 Nov 2009 14:54:52 -0800
+Message-ID: <20091120225452.495.98956.stgit@localhost.localdomain>
+References: <20091120225436.495.88600.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:32762 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:7180 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754886AbZKTWyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 17:54:43 -0500
+	id S1755059AbZKTWyq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 17:54:46 -0500
+In-Reply-To: <20091120225436.495.88600.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
-The following series adds the following-
+From: Yi Zou <yi.zou@intel.com>
 
-1) Support for a link status error block (LESB) command.
+FC-BB-5 Rev2.0, Clause 7.10 extends the FC-LS-3 LESB for FC-BB_E. We are
+already tracking Link Failure Count so add the rest in this patch.
 
-2) A performance optimization. If an incoming FCP frame is already on the correct CPU then bypass the Rx threads and process in irq context.
+For VLinkFailureCount and MissDiscAdvCount, they are part of the per-cpu
+fcoe_dev_stats. For SymbolErrorCount, ErroredBlockCount, and FCSErrorCount,
+they are defined in IEEE 802.3-2008 and are per LLD. They are expected to
+come from LLD.
 
-3) At least one fix.
-
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
-Chris Leech (1):
-      fcoe: allow SCSI-FCP to be processed directly in softirq context
+ include/scsi/libfc.h |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Yi Zou (8):
-      libfc: add support of receiving ELS_RLS
-      fcoe, libfc: add get_lesb() to allow LLD to fill the link error status block (LESB)
-      libfc: add fcoe_fc_els_lesb to fc_fcoe.h for FC-BB-5 LESB definitions
-      libfcoe: add tracking FIP Missing Discovery Advertisement count
-      libfcoe: add tracking FIP Virtual Link Failure count
-      libfcoe: add checking disable flag in FIP_FKA_ADV
-      libfc: add FC-BB-5 LESB counters to fcoe_dev_stats
-      libfc: fix payload size passed to fc_frame_alloc() in fc_lport_els_request
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 2936fba..b97be29 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -231,6 +231,8 @@ struct fc_rport_priv {
+  * @ControlRequests:       Number of control requests
+  * @InputMegabytes:        Number of received megabytes
+  * @OutputMegabytes:       Number of transmitted megabytes
++ * @VLinkFailureCount:     Number of virtual link failures
++ * @MissDiscAdvCount:      Number of missing FIP discovery advertisement
+  */
+ struct fcoe_dev_stats {
+ 	u64		SecondsSinceLastReset;
+@@ -249,6 +251,8 @@ struct fcoe_dev_stats {
+ 	u64		ControlRequests;
+ 	u64		InputMegabytes;
+ 	u64		OutputMegabytes;
++	u64		VLinkFailureCount;
++	u64		MissDiscAdvCount;
+ };
+ 
+ /**
 
-
- drivers/scsi/fcoe/fcoe.c      |  279 +++++++++++++++++++++++++----------------
- drivers/scsi/fcoe/libfcoe.c   |   20 +++
- drivers/scsi/libfc/fc_lport.c |    3 
- drivers/scsi/libfc/fc_rport.c |   76 +++++++++++
- include/scsi/fc/fc_fcoe.h     |   12 ++
- include/scsi/fc/fc_fip.h      |   12 ++
- include/scsi/libfc.h          |   10 +
- include/scsi/libfcoe.h        |    1 
- 8 files changed, 299 insertions(+), 114 deletions(-)
-
--- 
-//Rob
