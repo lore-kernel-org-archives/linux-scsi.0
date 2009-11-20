@@ -1,17 +1,18 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 7/9] libfc: add fcoe_fc_els_lesb to fc_fcoe.h for FC-BB-5 LESB
-	definitions
-Date: Fri, 20 Nov 2009 14:55:14 -0800
-Message-ID: <20091120225514.495.46190.stgit@localhost.localdomain>
+Subject: [PATCH 8/9] fcoe,
+	libfc: add get_lesb() to allow LLD to fill the link error status
+	block (LESB)
+Date: Fri, 20 Nov 2009 14:55:19 -0800
+Message-ID: <20091120225519.495.32652.stgit@localhost.localdomain>
 References: <20091120225436.495.88600.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24241 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:45038 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755431AbZKTWzH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 17:55:07 -0500
+	id S1755468AbZKTWzN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 17:55:13 -0500
 In-Reply-To: <20091120225436.495.88600.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,38 +21,89 @@ Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
 From: Yi Zou <yi.zou@intel.com>
 
-Add struct fcoe_fc_els_lesb as described in FC-BB-5 LESB for FCoE. It has
-the same size as LESB defined in FC-FS-3 (struct fc_els_lesb) but members
-have different meanings according to FC-BB-5.
+Add a member function pointer as get_lesb to libfc_function_template so LLD
+can fill the LESB based on its own statistics. For fcoe, it fills the LESB
+as a fcoe_fc_els_lesb struct according to FC-BB-5.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- include/scsi/fc/fc_fcoe.h |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   34 ++++++++++++++++++++++++++++++++++
+ include/scsi/libfc.h     |    6 ++++++
+ 2 files changed, 40 insertions(+), 0 deletions(-)
 
-diff --git a/include/scsi/fc/fc_fcoe.h b/include/scsi/fc/fc_fcoe.h
-index ccb3dbe..e6ad3d2 100644
---- a/include/scsi/fc/fc_fcoe.h
-+++ b/include/scsi/fc/fc_fcoe.h
-@@ -86,6 +86,18 @@ struct fcoe_crc_eof {
- #define FCOE_MIN_FRAME 46
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 32298ed..a30ffaa 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -111,6 +111,8 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *,
+ 				      void *, u32 timeout);
+ static void fcoe_recv_frame(struct sk_buff *skb);
  
- /*
-+ * FCoE Link Error Status Block: T11 FC-BB-5 Rev2.0, Clause 7.10.
-+ */
-+struct fcoe_fc_els_lesb {
-+	__be32		lesb_link_fail;	/* link failure count */
-+	__be32		lesb_vlink_fail; /* virtual link failure count */
-+	__be32		lesb_miss_fka;	/* missing FIP keep-alive count */
-+	__be32		lesb_symb_err;	/* symbol error during carrier count */
-+	__be32		lesb_err_block;	/* errored block count */
-+	__be32		lesb_fcs_error; /* frame check sequence error count */
-+};
++static void fcoe_get_lesb(struct fc_lport *, struct fc_els_lesb *);
 +
-+/*
-  * fc_fcoe_set_mac - Store OUI + DID into MAC address field.
-  * @mac: mac address to be set
-  * @did: fc dest id to use
+ module_param_call(create, fcoe_create, NULL, NULL, S_IWUSR);
+ __MODULE_PARM_TYPE(create, "string");
+ MODULE_PARM_DESC(create, "Create fcoe fcoe using net device passed in.");
+@@ -141,6 +143,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+ 	.ddp_setup = fcoe_ddp_setup,
+ 	.ddp_done = fcoe_ddp_done,
+ 	.elsct_send = fcoe_elsct_send,
++	.get_lesb = fcoe_get_lesb,
+ };
+ 
+ struct fc_function_template fcoe_transport_function = {
+@@ -2455,3 +2458,34 @@ static void fcoe_set_vport_symbolic_name(struct fc_vport *vport)
+ 	lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
+ 			     NULL, NULL, 3 * lport->r_a_tov);
+ }
++
++/**
++ * fcoe_get_lesb() - Fill the FCoE Link Error Status Block
++ * @lport: the local port
++ * @fc_lesb: the link error status block
++ */
++static void fcoe_get_lesb(struct fc_lport *lport,
++			 struct fc_els_lesb *fc_lesb)
++{
++	unsigned int cpu;
++	u32 lfc, vlfc, mdac;
++	struct fcoe_dev_stats *devst;
++	struct fcoe_fc_els_lesb *lesb;
++	struct net_device *netdev = fcoe_netdev(lport);
++
++	lfc = 0;
++	vlfc = 0;
++	mdac = 0;
++	lesb = (struct fcoe_fc_els_lesb *)fc_lesb;
++	memset(lesb, 0, sizeof(*lesb));
++	for_each_possible_cpu(cpu) {
++		devst = per_cpu_ptr(lport->dev_stats, cpu);
++		lfc += devst->LinkFailureCount;
++		vlfc += devst->VLinkFailureCount;
++		mdac += devst->MissDiscAdvCount;
++	}
++	lesb->lesb_link_fail = htonl(lfc);
++	lesb->lesb_vlink_fail = htonl(vlfc);
++	lesb->lesb_miss_fka = htonl(mdac);
++	lesb->lesb_fcs_error = htonl(dev_get_stats(netdev)->rx_crc_errors);
++}
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index b97be29..4b912ee 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -511,6 +511,12 @@ struct libfc_function_template {
+ 	 */
+ 	int (*ddp_done)(struct fc_lport *, u16);
+ 	/*
++	 * Allow LLD to fill its own Link Error Status Block
++	 *
++	 * STATUS: OPTIONAL
++	 */
++	void (*get_lesb)(struct fc_lport *, struct fc_els_lesb *lesb);
++	/*
+ 	 * Send a frame using an existing sequence and exchange.
+ 	 *
+ 	 * STATUS: OPTIONAL
 
