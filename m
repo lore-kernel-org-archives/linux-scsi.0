@@ -1,63 +1,162 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH 0/7] bfa: update bfa driver to version 2.1.2.1
-Date: Fri, 20 Nov 2009 09:40:25 -0800
-Message-ID: <04391A4E90BB2149B010D22452FA168702063371@HQ-EXCH-6.corp.brocade.com>
-References: <1258675713-17487-1-git-send-email-huangj@brocade.com>
-	 <1258688102.6363.722.camel@mulgrave.site>
-	 <04391A4E90BB2149B010D22452FA168702063351@HQ-EXCH-6.corp.brocade.com>
- <1258729830.2889.134.camel@mulgrave.site>
+From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Subject: [PATCH 1/1] pmcraid driver fixes to support SMI-S object model of
+ storage pool
+Date: Fri, 20 Nov 2009 09:39:30 -0800 (PST)
+Message-ID: <alpine.LNX.1.10.0911200846100.27645@rslab159.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:32121 "EHLO
-	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512AbZKTRk0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 12:40:26 -0500
-In-Reply-To: <1258729830.2889.134.camel@mulgrave.site>
-Content-Language: en-US
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:48002 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754783AbZKTSpf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 13:45:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Cc: anil_ravindranath@pmc-sierra.com
 
-> > Sorry about the terse description. This patch set basically updates
-> > the current driver in scsi-misc-2.6 to our recently released 2.1
-> > driver. We couldn't make it in upstream in our initial submission
-> > since it was not ready at that time. Except for the second item (2
-> > fixes received from upstream, which you already added into rc fix tree
-> > but not in scsi-misc-2.6), the remaining changes come from our
-> > internal 2.1 GA driver which is intended to be included in 2.6.33
-> > merge window. I divide them into 7 patches for the consideration of
-> > patch size. Moving forward, we will make incremental changes instead
-> > of big patches like this.
-> 
-> OK, so the fixes already in rc-fixes (and now upstream) can't go
-> separately into scsi-misc as part of other patches otherwise we'll get a
-> nasty merge conflict in linux-next (and later linus' tree at the merge
-> window) since rc-fixes is already upstream.
-> 
 
-This makes sense. I will not include them in my resubmission.
+PMC-Sierra mgmt application uses SMI-S model. According to SMI-S, the 
+object model exposed by the SMI-S provider should show an StoragePool 
+which contains member disks of a RAID Virtual disk and StorageVolume 
+based on the StoragePool. But according to SMI-S, there is a possibility 
+where StoragePool is created but StorageVolume is not yet created. To 
+satisfy this scenario, we are trying a hidden RAID Virtual disk. The 
+hidden RAID virtual disk will not be exposed to OS. Once a StorageVolume 
+is created for this RAID virtual disk it is exposed.
 
-> So base the patch off a combination of linus' upstream tree and
-> scsi-misc (just pull one tree into another) and I'll sort out the
-> prerequisites on this end (just mention it needs patches in linus and
-> not in scsi-misc).
-> 
+Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
 
-Will do this to create the patch for resubmission.
+pmcraid.c |   34 +++++++++++++++++++++++++---------
+pmcraid.h |    5 ++++-
+2 files changed, 29 insertions(+), 10 deletions(-)
 
-> If you could do it, the enterprise distributions would very  much
-> appreciate code clean up separated from bug fixes ... with a nice
-> description of the bugs actually fixed so they know what to do if bugs
-> come in to them.
-> 
-> James
-> 
-
-I will come up a detailed description of the issues we fixed in 2.1 driver and resubmit.
-
-Thanks
-
-Jing
+diff -urN scsi-misc-2.6.orig/drivers/scsi/pmcraid.c scsi-misc-2.6/drivers/scsi/pmcraid.c
+--- scsi-misc-2.6.orig/drivers/scsi/pmcraid.c	2009-11-19 18:04:46.000000000 -0800
++++ scsi-misc-2.6/drivers/scsi/pmcraid.c	2009-11-19 18:04:37.000000000 -0800
+@@ -1,7 +1,8 @@
+ /*
+  * pmcraid.c -- driver for PMC Sierra MaxRAID controller adapters
+  *
+- * Written By: PMC Sierra Corporation
++ * Written By: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
++ *             PMC-Sierra Inc
+  *
+  * Copyright (C) 2008, 2009 PMC Sierra Inc
+  *
+@@ -79,7 +80,7 @@
+ /*
+  * Module parameters
+  */
+-MODULE_AUTHOR("PMC Sierra Corporation, anil_ravindranath@pmc-sierra.com");
++MODULE_AUTHOR("Anil Ravindranath<anil_ravindranath@pmc-sierra.com>");
+ MODULE_DESCRIPTION("PMC Sierra MaxRAID Controller Driver");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(PMCRAID_DRIVER_VERSION);
+@@ -162,10 +163,10 @@
+ 	spin_lock_irqsave(&pinstance->resource_lock, lock_flags);
+ 	list_for_each_entry(temp, &pinstance->used_res_q, queue) {
+ 
+-		/* do not expose VSETs with order-ids >= 240 */
++		/* do not expose VSETs with order-ids > MAX_VSET_TARGETS */
+ 		if (RES_IS_VSET(temp->cfg_entry)) {
+ 			target = temp->cfg_entry.unique_flags1;
+-			if (target >= PMCRAID_MAX_VSET_TARGETS)
++			if (target > PMCRAID_MAX_VSET_TARGETS)
+ 				continue;
+ 			bus = PMCRAID_VSET_BUS_ID;
+ 			lun = 0;
+@@ -1210,7 +1211,7 @@
+ 	int retval = 0;
+ 
+ 	if (cfgte->resource_type == RES_TYPE_VSET)
+-		retval = ((cfgte->unique_flags1 & 0xFF) < 0xFE);
++		retval = ((cfgte->unique_flags1 & 0x80) == 0);
+ 	else if (cfgte->resource_type == RES_TYPE_GSCSI)
+ 		retval = (RES_BUS(cfgte->resource_address) !=
+ 				PMCRAID_VIRTUAL_ENCL_BUS_ID);
+@@ -1361,6 +1362,7 @@
+  * Return value:
+  *  none
+  */
++
+ static void pmcraid_handle_config_change(struct pmcraid_instance *pinstance)
+ {
+ 	struct pmcraid_config_table_entry *cfg_entry;
+@@ -1368,9 +1370,10 @@
+ 	struct pmcraid_cmd *cmd;
+ 	struct pmcraid_cmd *cfgcmd;
+ 	struct pmcraid_resource_entry *res = NULL;
+-	u32 new_entry = 1;
+ 	unsigned long lock_flags;
+ 	unsigned long host_lock_flags;
++	u32 new_entry = 1;
++	u32 hidden_entry = 0;
+ 	int rc;
+ 
+ 	ccn_hcam = (struct pmcraid_hcam_ccn *)pinstance->ccn.hcam;
+@@ -1406,9 +1409,15 @@
+ 	}
+ 
+ 	/* If this resource is not going to be added to mid-layer, just notify
+-	 * applications and return
++	 * applications and return. If this notification is about hiding a VSET
++	 * resource, check if it was exposed already.
+ 	 */
+-	if (!pmcraid_expose_resource(cfg_entry))
++	if (pinstance->ccn.hcam->notification_type ==
++	    NOTIFICATION_TYPE_ENTRY_CHANGED &&
++	    cfg_entry->resource_type == RES_TYPE_VSET &&
++	    cfg_entry->unique_flags1 & 0x80) {
++		hidden_entry = 1;
++	} else if (!pmcraid_expose_resource(cfg_entry))
+ 		goto out_notify_apps;
+ 
+ 	spin_lock_irqsave(&pinstance->resource_lock, lock_flags);
+@@ -1424,6 +1433,12 @@
+ 
+ 	if (new_entry) {
+ 
++		if (hidden_entry) {
++			spin_unlock_irqrestore(&pinstance->resource_lock,
++						lock_flags);
++			goto out_notify_apps;
++		}
++
+ 		/* If there are more number of resources than what driver can
+ 		 * manage, do not notify the applications about the CCN. Just
+ 		 * ignore this notifications and re-register the same HCAM
+@@ -1454,8 +1469,9 @@
+ 		sizeof(struct pmcraid_config_table_entry));
+ 
+ 	if (pinstance->ccn.hcam->notification_type ==
+-	    NOTIFICATION_TYPE_ENTRY_DELETED) {
++	    NOTIFICATION_TYPE_ENTRY_DELETED || hidden_entry) {
+ 		if (res->scsi_dev) {
++			res->cfg_entry.unique_flags1 &= 0x7F;
+ 			res->change_detected = RES_CHANGE_DEL;
+ 			res->cfg_entry.resource_handle =
+ 				PMCRAID_INVALID_RES_HANDLE;
+diff -urN scsi-misc-2.6.orig/drivers/scsi/pmcraid.h scsi-misc-2.6/drivers/scsi/pmcraid.h
+--- scsi-misc-2.6.orig/drivers/scsi/pmcraid.h	2009-11-19 18:04:46.000000000 -0800
++++ scsi-misc-2.6/drivers/scsi/pmcraid.h	2009-11-19 18:04:37.000000000 -0800
+@@ -1,6 +1,9 @@
+ /*
+  * pmcraid.h -- PMC Sierra MaxRAID controller driver header file
+  *
++ * Written By: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
++ *             PMC-Sierra Inc
++ *
+  * Copyright (C) 2008, 2009 PMC Sierra Inc.
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -106,7 +109,7 @@
+ #define PMCRAID_VSET_LUN_ID                      0x0
+ #define PMCRAID_PHYS_BUS_ID                      0x0
+ #define PMCRAID_VIRTUAL_ENCL_BUS_ID              0x8
+-#define PMCRAID_MAX_VSET_TARGETS                 240
++#define PMCRAID_MAX_VSET_TARGETS                 0x7F
+ #define PMCRAID_MAX_VSET_LUNS_PER_TARGET         8
+ 
+ #define PMCRAID_IOA_MAX_SECTORS                  32767
