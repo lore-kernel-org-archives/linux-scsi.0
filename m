@@ -1,335 +1,52 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 2/9] fcoe: allow SCSI-FCP to be processed directly in softirq
-	context
-Date: Fri, 20 Nov 2009 14:54:47 -0800
-Message-ID: <20091120225447.495.89016.stgit@localhost.localdomain>
-References: <20091120225436.495.88600.stgit@localhost.localdomain>
+Subject: [PATCH 0/9] libfc, libfcoe and fcoe updates for scsi-misc.git (2.6.33)
+Date: Fri, 20 Nov 2009 14:54:36 -0800
+Message-ID: <20091120225436.495.88600.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4156 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:32762 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754242AbZKTWyl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 17:54:41 -0500
-In-Reply-To: <20091120225436.495.88600.stgit@localhost.localdomain>
+	id S1754886AbZKTWyn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 17:54:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Chris Leech <christopher.leech@intel.com>
+The following series adds the following-
 
-Allow FCP frames to bypass the FCoE receive processing threads and handle
-them directly in softirq context, if they are received on the correct CPU.
-This preserves the queuing to threads for scaling out receive processing
-to multiple CPUs, but allows FCoE-aware multi-queue network drivers that
-direct frames to the originating CPUs to handle FCP processing with less
-scheduling latency.
+1) Support for a link status error block (LESB) command.
 
-Only FCP is handled directly, because libfc makes use of mutexes in ELS
-handling routines.
+2) A performance optimization. If an incoming FCP frame is already on the correct CPU then bypass the Rx threads and process in irq context.
 
-The bulk of this change is just moving the FCoE receive processing out of
-the receive thread function, leaving behind just the thread and queue
-management.  The interesting bits are in fcoe_rcv()
+3) At least one fix.
 
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |  245 +++++++++++++++++++++++++---------------------
- 1 files changed, 135 insertions(+), 110 deletions(-)
+Chris Leech (1):
+      fcoe: allow SCSI-FCP to be processed directly in softirq context
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 4a43b74..32298ed 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -109,6 +109,7 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *,
- 						   struct fc_frame *,
- 						   void *),
- 				      void *, u32 timeout);
-+static void fcoe_recv_frame(struct sk_buff *skb);
- 
- module_param_call(create, fcoe_create, NULL, NULL, S_IWUSR);
- __MODULE_PARM_TYPE(create, "string");
-@@ -1241,11 +1242,25 @@ int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 	 * this skb. We also have this receive thread locked,
- 	 * so we're free to queue skbs into it's queue.
- 	 */
--	__skb_queue_tail(&fps->fcoe_rx_list, skb);
--	if (fps->fcoe_rx_list.qlen == 1)
--		wake_up_process(fps->thread);
- 
--	spin_unlock_bh(&fps->fcoe_rx_list.lock);
-+	/* If this is a SCSI-FCP frame, and this is already executing on the
-+	 * correct CPU, and the queue for this CPU is empty, then go ahead
-+	 * and process the frame directly in the softirq context.
-+	 * This lets us process completions without context switching from the
-+	 * NET_RX softirq, to our receive processing thread, and then back to
-+	 * BLOCK softirq context.
-+	 */
-+	if (fh->fh_type == FC_TYPE_FCP &&
-+	    cpu == smp_processor_id() &&
-+	    skb_queue_empty(&fps->fcoe_rx_list)) {
-+		spin_unlock_bh(&fps->fcoe_rx_list.lock);
-+		fcoe_recv_frame(skb);
-+	} else {
-+		__skb_queue_tail(&fps->fcoe_rx_list, skb);
-+		if (fps->fcoe_rx_list.qlen == 1)
-+			wake_up_process(fps->thread);
-+		spin_unlock_bh(&fps->fcoe_rx_list.lock);
-+	}
- 
- 	return 0;
- err:
-@@ -1503,26 +1518,134 @@ static void fcoe_percpu_flush_done(struct sk_buff *skb)
- }
- 
- /**
-- * fcoe_percpu_receive_thread() - The per-CPU packet receive thread
-- * @arg: The per-CPU context
-- *
-- * Return: 0 for success
-+ * fcoe_recv_frame() - process a single received frame
-+ * @skb: frame to process
-  */
--int fcoe_percpu_receive_thread(void *arg)
-+static void fcoe_recv_frame(struct sk_buff *skb)
- {
--	struct fcoe_percpu_s *p = arg;
- 	u32 fr_len;
- 	struct fc_lport *lport;
- 	struct fcoe_rcv_info *fr;
- 	struct fcoe_dev_stats *stats;
- 	struct fc_frame_header *fh;
--	struct sk_buff *skb;
- 	struct fcoe_crc_eof crc_eof;
- 	struct fc_frame *fp;
- 	u8 *mac = NULL;
- 	struct fcoe_port *port;
- 	struct fcoe_hdr *hp;
- 
-+	fr = fcoe_dev_from_skb(skb);
-+	lport = fr->fr_dev;
-+	if (unlikely(!lport)) {
-+		if (skb->destructor != fcoe_percpu_flush_done)
-+			FCOE_NETDEV_DBG(skb->dev, "NULL lport in skb");
-+		kfree_skb(skb);
-+		return;
-+	}
-+
-+	FCOE_NETDEV_DBG(skb->dev, "skb_info: len:%d data_len:%d "
-+			"head:%p data:%p tail:%p end:%p sum:%d dev:%s",
-+			skb->len, skb->data_len,
-+			skb->head, skb->data, skb_tail_pointer(skb),
-+			skb_end_pointer(skb), skb->csum,
-+			skb->dev ? skb->dev->name : "<NULL>");
-+
-+	/*
-+	 * Save source MAC address before discarding header.
-+	 */
-+	port = lport_priv(lport);
-+	if (skb_is_nonlinear(skb))
-+		skb_linearize(skb);	/* not ideal */
-+	mac = eth_hdr(skb)->h_source;
-+
-+	/*
-+	 * Frame length checks and setting up the header pointers
-+	 * was done in fcoe_rcv already.
-+	 */
-+	hp = (struct fcoe_hdr *) skb_network_header(skb);
-+	fh = (struct fc_frame_header *) skb_transport_header(skb);
-+
-+	stats = fc_lport_get_stats(lport);
-+	if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
-+		if (stats->ErrorFrames < 5)
-+			printk(KERN_WARNING "fcoe: FCoE version "
-+			       "mismatch: The frame has "
-+			       "version %x, but the "
-+			       "initiator supports version "
-+			       "%x\n", FC_FCOE_DECAPS_VER(hp),
-+			       FC_FCOE_VER);
-+		stats->ErrorFrames++;
-+		kfree_skb(skb);
-+		return;
-+	}
-+
-+	skb_pull(skb, sizeof(struct fcoe_hdr));
-+	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
-+
-+	stats->RxFrames++;
-+	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
-+
-+	fp = (struct fc_frame *)skb;
-+	fc_frame_init(fp);
-+	fr_dev(fp) = lport;
-+	fr_sof(fp) = hp->fcoe_sof;
-+
-+	/* Copy out the CRC and EOF trailer for access */
-+	if (skb_copy_bits(skb, fr_len, &crc_eof, sizeof(crc_eof))) {
-+		kfree_skb(skb);
-+		return;
-+	}
-+	fr_eof(fp) = crc_eof.fcoe_eof;
-+	fr_crc(fp) = crc_eof.fcoe_crc32;
-+	if (pskb_trim(skb, fr_len)) {
-+		kfree_skb(skb);
-+		return;
-+	}
-+
-+	/*
-+	 * We only check CRC if no offload is available and if it is
-+	 * it's solicited data, in which case, the FCP layer would
-+	 * check it during the copy.
-+	 */
-+	if (lport->crc_offload &&
-+	    skb->ip_summed == CHECKSUM_UNNECESSARY)
-+		fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
-+	else
-+		fr_flags(fp) |= FCPHF_CRC_UNCHECKED;
-+
-+	fh = fc_frame_header_get(fp);
-+	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
-+	    fh->fh_type == FC_TYPE_FCP) {
-+		fc_exch_recv(lport, fp);
-+		return;
-+	}
-+	if (fr_flags(fp) & FCPHF_CRC_UNCHECKED) {
-+		if (le32_to_cpu(fr_crc(fp)) !=
-+		    ~crc32(~0, skb->data, fr_len)) {
-+			if (stats->InvalidCRCCount < 5)
-+				printk(KERN_WARNING "fcoe: dropping "
-+				       "frame with CRC error\n");
-+			stats->InvalidCRCCount++;
-+			stats->ErrorFrames++;
-+			fc_frame_free(fp);
-+			return;
-+		}
-+		fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
-+	}
-+	fc_exch_recv(lport, fp);
-+}
-+
-+/**
-+ * fcoe_percpu_receive_thread() - The per-CPU packet receive thread
-+ * @arg: The per-CPU context
-+ *
-+ * Return: 0 for success
-+ */
-+int fcoe_percpu_receive_thread(void *arg)
-+{
-+	struct fcoe_percpu_s *p = arg;
-+	struct sk_buff *skb;
-+
- 	set_user_nice(current, -20);
- 
- 	while (!kthread_should_stop()) {
-@@ -1538,105 +1661,7 @@ int fcoe_percpu_receive_thread(void *arg)
- 			spin_lock_bh(&p->fcoe_rx_list.lock);
- 		}
- 		spin_unlock_bh(&p->fcoe_rx_list.lock);
--		fr = fcoe_dev_from_skb(skb);
--		lport = fr->fr_dev;
--		if (unlikely(!lport)) {
--			if (skb->destructor != fcoe_percpu_flush_done)
--				FCOE_NETDEV_DBG(skb->dev, "NULL lport in skb");
--			kfree_skb(skb);
--			continue;
--		}
--
--		FCOE_NETDEV_DBG(skb->dev, "skb_info: len:%d data_len:%d "
--				"head:%p data:%p tail:%p end:%p sum:%d dev:%s",
--				skb->len, skb->data_len,
--				skb->head, skb->data, skb_tail_pointer(skb),
--				skb_end_pointer(skb), skb->csum,
--				skb->dev ? skb->dev->name : "<NULL>");
--
--		/*
--		 * Save source MAC address before discarding header.
--		 */
--		port = lport_priv(lport);
--		if (skb_is_nonlinear(skb))
--			skb_linearize(skb);	/* not ideal */
--		mac = eth_hdr(skb)->h_source;
--
--		/*
--		 * Frame length checks and setting up the header pointers
--		 * was done in fcoe_rcv already.
--		 */
--		hp = (struct fcoe_hdr *) skb_network_header(skb);
--		fh = (struct fc_frame_header *) skb_transport_header(skb);
--
--		stats = fc_lport_get_stats(lport);
--		if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
--			if (stats->ErrorFrames < 5)
--				printk(KERN_WARNING "fcoe: FCoE version "
--				       "mismatch: The frame has "
--				       "version %x, but the "
--				       "initiator supports version "
--				       "%x\n", FC_FCOE_DECAPS_VER(hp),
--				       FC_FCOE_VER);
--			stats->ErrorFrames++;
--			kfree_skb(skb);
--			continue;
--		}
--
--		skb_pull(skb, sizeof(struct fcoe_hdr));
--		fr_len = skb->len - sizeof(struct fcoe_crc_eof);
--
--		stats->RxFrames++;
--		stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
--
--		fp = (struct fc_frame *)skb;
--		fc_frame_init(fp);
--		fr_dev(fp) = lport;
--		fr_sof(fp) = hp->fcoe_sof;
--
--		/* Copy out the CRC and EOF trailer for access */
--		if (skb_copy_bits(skb, fr_len, &crc_eof, sizeof(crc_eof))) {
--			kfree_skb(skb);
--			continue;
--		}
--		fr_eof(fp) = crc_eof.fcoe_eof;
--		fr_crc(fp) = crc_eof.fcoe_crc32;
--		if (pskb_trim(skb, fr_len)) {
--			kfree_skb(skb);
--			continue;
--		}
--
--		/*
--		 * We only check CRC if no offload is available and if it is
--		 * it's solicited data, in which case, the FCP layer would
--		 * check it during the copy.
--		 */
--		if (lport->crc_offload &&
--		    skb->ip_summed == CHECKSUM_UNNECESSARY)
--			fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
--		else
--			fr_flags(fp) |= FCPHF_CRC_UNCHECKED;
--
--		fh = fc_frame_header_get(fp);
--		if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
--		    fh->fh_type == FC_TYPE_FCP) {
--			fc_exch_recv(lport, fp);
--			continue;
--		}
--		if (fr_flags(fp) & FCPHF_CRC_UNCHECKED) {
--			if (le32_to_cpu(fr_crc(fp)) !=
--			    ~crc32(~0, skb->data, fr_len)) {
--				if (stats->InvalidCRCCount < 5)
--					printk(KERN_WARNING "fcoe: dropping "
--					       "frame with CRC error\n");
--				stats->InvalidCRCCount++;
--				stats->ErrorFrames++;
--				fc_frame_free(fp);
--				continue;
--			}
--			fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
--		}
--		fc_exch_recv(lport, fp);
-+		fcoe_recv_frame(skb);
- 	}
- 	return 0;
- }
+Yi Zou (8):
+      libfc: add support of receiving ELS_RLS
+      fcoe, libfc: add get_lesb() to allow LLD to fill the link error status block (LESB)
+      libfc: add fcoe_fc_els_lesb to fc_fcoe.h for FC-BB-5 LESB definitions
+      libfcoe: add tracking FIP Missing Discovery Advertisement count
+      libfcoe: add tracking FIP Virtual Link Failure count
+      libfcoe: add checking disable flag in FIP_FKA_ADV
+      libfc: add FC-BB-5 LESB counters to fcoe_dev_stats
+      libfc: fix payload size passed to fc_frame_alloc() in fc_lport_els_request
 
+
+ drivers/scsi/fcoe/fcoe.c      |  279 +++++++++++++++++++++++++----------------
+ drivers/scsi/fcoe/libfcoe.c   |   20 +++
+ drivers/scsi/libfc/fc_lport.c |    3 
+ drivers/scsi/libfc/fc_rport.c |   76 +++++++++++
+ include/scsi/fc/fc_fcoe.h     |   12 ++
+ include/scsi/fc/fc_fip.h      |   12 ++
+ include/scsi/libfc.h          |   10 +
+ include/scsi/libfcoe.h        |    1 
+ 8 files changed, 299 insertions(+), 114 deletions(-)
+
+-- 
+//Rob
