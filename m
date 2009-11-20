@@ -1,9 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 8/9] fcoe,
-	libfc: add get_lesb() to allow LLD to fill the link error status
-	block (LESB)
-Date: Fri, 20 Nov 2009 14:55:19 -0800
-Message-ID: <20091120225519.495.32652.stgit@localhost.localdomain>
+Subject: [PATCH 9/9] libfc: add support of receiving ELS_RLS
+Date: Fri, 20 Nov 2009 14:55:24 -0800
+Message-ID: <20091120225524.495.89014.stgit@localhost.localdomain>
 References: <20091120225436.495.88600.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,8 +9,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:45038 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755468AbZKTWzN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 17:55:13 -0500
+	id S1755493AbZKTWzS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 17:55:18 -0500
 In-Reply-To: <20091120225436.495.88600.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,89 +19,114 @@ Cc: Yi Zou <yi.zou@intel.com>, Robert Love <robert.w.love@intel.com>
 
 From: Yi Zou <yi.zou@intel.com>
 
-Add a member function pointer as get_lesb to libfc_function_template so LLD
-can fill the LESB based on its own statistics. For fcoe, it fills the LESB
-as a fcoe_fc_els_lesb struct according to FC-BB-5.
+Upon receiving ELS_RLS, send the Link Error Status Block (LESB) back.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe.c |   34 ++++++++++++++++++++++++++++++++++
- include/scsi/libfc.h     |    6 ++++++
- 2 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/scsi/libfc/fc_rport.c |   76 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 76 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 32298ed..a30ffaa 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -111,6 +111,8 @@ static struct fc_seq *fcoe_elsct_send(struct fc_lport *,
- 				      void *, u32 timeout);
- static void fcoe_recv_frame(struct sk_buff *skb);
- 
-+static void fcoe_get_lesb(struct fc_lport *, struct fc_els_lesb *);
-+
- module_param_call(create, fcoe_create, NULL, NULL, S_IWUSR);
- __MODULE_PARM_TYPE(create, "string");
- MODULE_PARM_DESC(create, "Create fcoe fcoe using net device passed in.");
-@@ -141,6 +143,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
- 	.ddp_setup = fcoe_ddp_setup,
- 	.ddp_done = fcoe_ddp_done,
- 	.elsct_send = fcoe_elsct_send,
-+	.get_lesb = fcoe_get_lesb,
- };
- 
- struct fc_function_template fcoe_transport_function = {
-@@ -2455,3 +2458,34 @@ static void fcoe_set_vport_symbolic_name(struct fc_vport *vport)
- 	lport->tt.elsct_send(lport, FC_FID_DIR_SERV, fp, FC_NS_RSPN_ID,
- 			     NULL, NULL, 3 * lport->r_a_tov);
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 91e2ba2..35ca0e7 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1098,6 +1098,78 @@ drop:
  }
+ 
+ /**
++ * fc_rport_recv_rls_req() - Handle received Read Link Status request
++ * @rdata: The remote port that sent the RLS request
++ * @sp:	The sequence that the RLS was on
++ * @rx_fp: The PRLI request frame
++ *
++ * Locking Note: The rport lock is expected to be held before calling
++ * this function.
++ */
++static void fc_rport_recv_rls_req(struct fc_rport_priv *rdata,
++				  struct fc_seq *sp, struct fc_frame *rx_fp)
++
++{
++	struct fc_lport *lport = rdata->local_port;
++	struct fc_frame *fp;
++	struct fc_exch *ep = fc_seq_exch(sp);
++	struct fc_els_rls *rls;
++	struct fc_els_rls_resp *rsp;
++	struct fc_els_lesb *lesb;
++	struct fc_seq_els_data rjt_data;
++	struct fc_host_statistics *hst;
++	u32 f_ctl;
++
++	FC_RPORT_DBG(rdata, "Received RLS request while in state %s\n",
++		     fc_rport_state(rdata));
++
++	rls = fc_frame_payload_get(rx_fp, sizeof(*rls));
++	if (!rls) {
++		rjt_data.reason = ELS_RJT_PROT;
++		rjt_data.explan = ELS_EXPL_INV_LEN;
++		goto out_rjt;
++	}
++
++	fp = fc_frame_alloc(lport, sizeof(*rsp));
++	if (!fp) {
++		rjt_data.reason = ELS_RJT_UNAB;
++		rjt_data.explan = ELS_EXPL_INSUF_RES;
++		goto out_rjt;
++	}
++
++	rsp = fc_frame_payload_get(fp, sizeof(*rsp));
++	memset(rsp, 0, sizeof(*rsp));
++	rsp->rls_cmd = ELS_LS_ACC;
++	lesb = &rsp->rls_lesb;
++	if (lport->tt.get_lesb) {
++		/* get LESB from LLD if it supports it */
++		lport->tt.get_lesb(lport, lesb);
++	} else {
++		fc_get_host_stats(lport->host);
++		hst = &lport->host_stats;
++		lesb->lesb_link_fail = htonl(hst->link_failure_count);
++		lesb->lesb_sync_loss = htonl(hst->loss_of_sync_count);
++		lesb->lesb_sig_loss = htonl(hst->loss_of_signal_count);
++		lesb->lesb_prim_err = htonl(hst->prim_seq_protocol_err_count);
++		lesb->lesb_inv_word = htonl(hst->invalid_tx_word_count);
++		lesb->lesb_inv_crc = htonl(hst->invalid_crc_count);
++	}
++
++	sp = lport->tt.seq_start_next(sp);
++	f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ | FC_FC_END_SEQ;
++	fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
++		       FC_TYPE_ELS, f_ctl, 0);
++	lport->tt.seq_send(lport, sp, fp);
++	goto out;
++
++out_rjt:
++	rjt_data.fp = NULL;
++	lport->tt.seq_els_rsp_send(sp, ELS_LS_RJT, &rjt_data);
++out:
++	fc_frame_free(rx_fp);
++}
 +
 +/**
-+ * fcoe_get_lesb() - Fill the FCoE Link Error Status Block
-+ * @lport: the local port
-+ * @fc_lesb: the link error status block
-+ */
-+static void fcoe_get_lesb(struct fc_lport *lport,
-+			 struct fc_els_lesb *fc_lesb)
-+{
-+	unsigned int cpu;
-+	u32 lfc, vlfc, mdac;
-+	struct fcoe_dev_stats *devst;
-+	struct fcoe_fc_els_lesb *lesb;
-+	struct net_device *netdev = fcoe_netdev(lport);
-+
-+	lfc = 0;
-+	vlfc = 0;
-+	mdac = 0;
-+	lesb = (struct fcoe_fc_els_lesb *)fc_lesb;
-+	memset(lesb, 0, sizeof(*lesb));
-+	for_each_possible_cpu(cpu) {
-+		devst = per_cpu_ptr(lport->dev_stats, cpu);
-+		lfc += devst->LinkFailureCount;
-+		vlfc += devst->VLinkFailureCount;
-+		mdac += devst->MissDiscAdvCount;
-+	}
-+	lesb->lesb_link_fail = htonl(lfc);
-+	lesb->lesb_vlink_fail = htonl(vlfc);
-+	lesb->lesb_miss_fka = htonl(mdac);
-+	lesb->lesb_fcs_error = htonl(dev_get_stats(netdev)->rx_crc_errors);
-+}
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index b97be29..4b912ee 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -511,6 +511,12 @@ struct libfc_function_template {
- 	 */
- 	int (*ddp_done)(struct fc_lport *, u16);
- 	/*
-+	 * Allow LLD to fill its own Link Error Status Block
-+	 *
-+	 * STATUS: OPTIONAL
-+	 */
-+	void (*get_lesb)(struct fc_lport *, struct fc_els_lesb *lesb);
-+	/*
- 	 * Send a frame using an existing sequence and exchange.
- 	 *
- 	 * STATUS: OPTIONAL
+  * fc_rport_recv_els_req() - Handler for validated ELS requests
+  * @lport: The local port that received the ELS request
+  * @sp:	   The sequence that the ELS request was on
+@@ -1159,6 +1231,9 @@ static void fc_rport_recv_els_req(struct fc_lport *lport,
+ 		els_data.fp = fp;
+ 		lport->tt.seq_els_rsp_send(sp, ELS_REC, &els_data);
+ 		break;
++	case ELS_RLS:
++		fc_rport_recv_rls_req(rdata, sp, fp);
++		break;
+ 	default:
+ 		fc_frame_free(fp);	/* can't happen */
+ 		break;
+@@ -1203,6 +1278,7 @@ void fc_rport_recv_req(struct fc_seq *sp, struct fc_frame *fp,
+ 	case ELS_ADISC:
+ 	case ELS_RRQ:
+ 	case ELS_REC:
++	case ELS_RLS:
+ 		fc_rport_recv_els_req(lport, sp, fp);
+ 		break;
+ 	default:
 
