@@ -1,91 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/4] libata: Report zeroed read after Trim and max discard size
-Date: Fri, 20 Nov 2009 21:45:23 -0500
-Message-ID: <1258771524-26673-4-git-send-email-martin.petersen__37045.4443073415$1258773667$gmane$org@oracle.com>
-References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [PATCH] libata: add TRIM support
+Date: Fri, 20 Nov 2009 23:33:59 -0500
+Message-ID: <4B076DB7.3040303@rtr.ca>
+References: <20091116154343.GA6672@infradead.org>	<4B02AD86.8010304@rtr.ca>	<20091117143507.GC588@infradead.org>	<20091117145239.768072c9@lxorguk.ukuu.org.uk>	<20091117150012.GA10748@infradead.org>	<4B04BD01.5090706@rtr.ca>	<20091119102346.3c656b99@lxorguk.ukuu.org.uk>	<4B0554A2.9060404@rtr.ca>	<4B05DE00.3020707@gmail.com>	<20091120001829.354abfc0@lxorguk.ukuu.org.uk>	<4B05E3D1.1000904@pobox.com> <20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:51758 "EHLO
-	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766AbZKUDUp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 22:20:45 -0500
-In-Reply-To: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
+Received: from rtr.ca ([76.10.145.34]:45880 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752635AbZKUEd5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Nov 2009 23:33:57 -0500
+In-Reply-To: <20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Robert Hancock <hancockrwd@gmail.com>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
-Our current Trim payload is a single sector that can accommodate 64 *
-65535 blocks being unmapped.  Report this value in the Block Limits
-Maximum Unmap LBA count field.
+Alan Cox wrote:
+>>> For those that pee themselves you don't need a host flag, you need a
+>>> qc_issue hook - you need that hook for the purpose of actually making the
+>>> command work, so in the short term making it just return AC_ERR_DEV isn't
+>>> exactly hard. Not having the flag and fixing those odd few drivers would
+>>> be far more productive.
+>> We are talking about chips whose command set is essentially fixed at 
+>> manufacture time.
+> 
+> There are only two of those I know of
+> - IT821x which already uses qc_issue to filter.
+> - pata_st412, which uses qc_issue and isn't in tree anyway and probably
+>   never will be.
+..
 
-If a storage device supports Trim and the DRAT and RZAT bits are set,
-report TPRZ=1 in Read Capacity(16).
+The sata_mv driver will choke the chipset if the TRIM command
+involves more than one sector of TRIM data.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/ata/libata-scsi.c |   12 +++++++++---
- include/linux/ata.h       |   10 ++++++++++
- 2 files changed, 19 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e0995c4..08d4ab7 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2116,8 +2116,10 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- 	 * that we support some form of unmap - in thise case via WRITE SAME
- 	 * with the unmap bit set.
- 	 */
--	if (ata_id_has_trim(args->id))
-+	if (ata_id_has_trim(args->id)) {
-+		put_unaligned_be32(65535 * 512 / 8, &rbuf[20]);
- 		put_unaligned_be32(1, &rbuf[28]);
-+	}
- 
- 	return 0;
- }
-@@ -2412,8 +2414,12 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
- 		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
- 		rbuf[15] = lowest_aligned;
- 
--		if (ata_id_has_trim(args->id))
--			rbuf[14] |= 0x80;
-+		if (ata_id_has_trim(args->id)) {
-+			rbuf[14] |= 0x80; /* TPE */
-+
-+			if (ata_id_has_zero_after_trim(args->id))
-+				rbuf[14] |= 0x40; /* TPRZ */
-+		}
- 	}
- 
- 	return 0;
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index e2595e8..b18b2bb 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -75,6 +75,7 @@ enum {
- 	ATA_ID_EIDE_DMA_TIME	= 66,
- 	ATA_ID_EIDE_PIO		= 67,
- 	ATA_ID_EIDE_PIO_IORDY	= 68,
-+	ATA_ID_ADDITIONAL_SUPP	= 69,
- 	ATA_ID_QUEUE_DEPTH	= 75,
- 	ATA_ID_MAJOR_VER	= 80,
- 	ATA_ID_COMMAND_SET_1	= 82,
-@@ -816,6 +817,15 @@ static inline int ata_id_has_trim(const u16 *id)
- 	return 0;
- }
- 
-+static inline int ata_id_has_zero_after_trim(const u16 *id)
-+{
-+	/* DSM supported, deterministic read, and read zero after trim set */
-+	if (ata_id_has_trim(id) && id[ATA_ID_ADDITIONAL_SUPP] & 0x4020)
-+		return 1;
-+
-+	return 0;
-+}
-+
- static inline int ata_id_current_chs_valid(const u16 *id)
- {
- 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
--- 
-1.6.0.6
-
+Cheers
