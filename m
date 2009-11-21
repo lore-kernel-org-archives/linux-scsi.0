@@ -1,12 +1,12 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/4] sd: WRITE SAME(16) / UNMAP support
-Date: Fri, 20 Nov 2009 21:45:22 -0500
-Message-ID: <1258771524-26673-3-git-send-email-martin.petersen__5178.12591647289$1258771616$gmane$org@oracle.com>
+Subject: [PATCH 4/4] libata: Fix garbled Trim payload
+Date: Fri, 20 Nov 2009 21:45:24 -0500
+Message-ID: <1258771524-26673-5-git-send-email-martin.petersen__8902.78525553203$1258771621$gmane$org@oracle.com>
 References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet11.oracle.com ([141.146.126.233]:55384 "EHLO
-	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753866AbZKUCqc (ORCPT
+Received: from rcsinet11.oracle.com ([148.87.113.123]:42609 "EHLO
+	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753933AbZKUCqc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 21:46:32 -0500
 In-Reply-To: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,191 +14,74 @@ List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Implement a prepare discard function that sends either WRITE SAME(16) or
-UNMAP(10) depending on parameters indicated by the device in the block
-limits VPD.
+ata_set_lba_range_entries confused indexes into a u64 buffer with byte
+offsets.  Fix this up and document the return value.
 
-Extract unmap constraints and report them to the block layer.
-
-Based in part by a patch by Christoph Hellwig <hch@lst.de>.
+Update the libata write same translation to reflect this.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/sd.c |  105 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.h |    2 +
- 2 files changed, 107 insertions(+), 0 deletions(-)
+ drivers/ata/libata-scsi.c |    8 ++++----
+ include/linux/ata.h       |    9 +++++----
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 9093c72..65538e1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -264,6 +264,15 @@ sd_show_app_tag_own(struct device *dev, struct device_attribute *attr,
- 	return snprintf(buf, 20, "%u\n", sdkp->ATO);
- }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 08d4ab7..0c496f8 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2950,7 +2950,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 	const u8 *cdb = scmd->cmnd;
+ 	u64 block;
+ 	u32 n_block;
+-	u32 size;
++	u32 trim_sectors;
+ 	void *buf;
  
-+static ssize_t
-+sd_show_thin_provisioning(struct device *dev, struct device_attribute *attr,
-+			  char *buf)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(dev);
-+
-+	return snprintf(buf, 20, "%u\n", sdkp->thin_provisioning);
-+}
-+
- static struct device_attribute sd_disk_attrs[] = {
- 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
- 	       sd_store_cache_type),
-@@ -274,6 +283,7 @@ static struct device_attribute sd_disk_attrs[] = {
- 	       sd_store_manage_start_stop),
- 	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
- 	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
-+	__ATTR(thin_provisioning, S_IRUGO, sd_show_thin_provisioning, NULL),
- 	__ATTR_NULL,
- };
+ 	/* we may not issue DMA commands if no DMA mode is set */
+@@ -2973,13 +2973,13 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 		goto invalid_fld;
  
-@@ -399,6 +409,57 @@ static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
- }
+ 	buf = page_address(sg_page(scsi_sglist(scmd)));
+-	size = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
++	trim_sectors = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
  
- /**
-+ * sd_prepare_discard - unmap blocks on thinly provisioned device
-+ * @rq: Request to prepare
-+ *
-+ * Will issue either UNMAP or WRITE SAME(16) depending on preference
-+ * indicated by target device.
-+ **/
-+static int sd_prepare_discard(struct request *rq)
-+{
-+	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-+	struct bio *bio = rq->bio;
-+	sector_t sector = bio->bi_sector;
-+	unsigned int num = bio_sectors(bio);
-+
-+	if (sdkp->device->sector_size == 4096) {
-+		sector >>= 3;
-+		num >>= 3;
-+	}
-+
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->timeout = SD_TIMEOUT;
-+
-+	memset(rq->cmd, 0, rq->cmd_len);
-+
-+	if (sdkp->unmap) {
-+		char *buf = kmap_atomic(bio_page(bio), KM_USER0);
-+
-+		rq->cmd[0] = UNMAP;
-+		rq->cmd[8] = 24;
-+		rq->cmd_len = 10;
-+
-+		/* Ensure that data length matches payload */
-+		rq->__data_len = bio->bi_size = bio->bi_io_vec->bv_len = 24;
-+
-+		put_unaligned_be16(6 + 16, &buf[0]);
-+		put_unaligned_be16(16, &buf[2]);
-+		put_unaligned_be64(sector, &buf[8]);
-+		put_unaligned_be32(num, &buf[16]);
-+
-+		kunmap_atomic(buf, KM_USER0);
-+	} else {
-+		rq->cmd[0] = WRITE_SAME_16;
-+		rq->cmd[1] = 0x8; /* UNMAP */
-+		put_unaligned_be64(sector, &rq->cmd[2]);
-+		put_unaligned_be32(num, &rq->cmd[10]);
-+		rq->cmd_len = 16;
-+	}
-+
-+	return BLKPREP_OK;
-+}
-+
-+/**
-  *	sd_init_command - build a scsi (read or write) command from
-  *	information in the request structure.
-  *	@SCpnt: pointer to mid-level's per scsi command structure that
-@@ -418,6 +479,13 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	int ret, host_dif;
- 	unsigned char protect;
- 
-+	/*
-+	 * Discard request come in as REQ_TYPE_FS but we turn them into
-+	 * block PC requests to make life easier.
-+	 */
-+	if (blk_discard_rq(rq))
-+		ret = sd_prepare_discard(rq);
-+
- 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
- 		goto out;
-@@ -1432,6 +1500,19 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		sd_printk(KERN_NOTICE, sdkp,
- 			  "physical block alignment offset: %u\n", alignment);
- 
-+	if (buffer[14] & 0x80) { /* TPE */
-+		struct request_queue *q = sdp->request_queue;
-+
-+		sdkp->thin_provisioning = 1;
-+		q->limits.discard_granularity = sdkp->hw_sector_size;
-+		q->limits.max_discard_sectors = 0xffffffff;
-+
-+		if (buffer[14] & 0x40) /* TPRZ */
-+			q->limits.discard_zeroes_data = 1;
-+
-+		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
-+	}
-+
- 	sdkp->capacity = lba + 1;
- 	return sector_size;
- }
-@@ -1863,6 +1944,7 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	tf->protocol = ATA_PROT_DMA;
+ 	tf->hob_feature = 0;
+ 	tf->feature = ATA_DSM_TRIM;
+-	tf->hob_nsect = (size / 512) >> 8;
+-	tf->nsect = size / 512;
++	tf->hob_nsect = trim_sectors >> 8;
++	tf->nsect = trim_sectors;
+ 	tf->command = ATA_CMD_DSM;
+ 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
+ 		     ATA_TFLAG_WRITE;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index b18b2bb..150c9dc 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -983,7 +983,8 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+ /*
+  * Write up to 'max' LBA Range Entries to the buffer that will cover the
+  * extent from sector to sector + count.  This is used for TRIM and for
+- * ADD LBA(S) TO NV CACHE PINNED SET.
++ * ADD LBA(S) TO NV CACHE PINNED SET.  Returns number of 512-byte
++ * sectors required to encode the range.
   */
- static void sd_read_block_limits(struct scsi_disk *sdkp)
- {
-+	struct request_queue *q = sdkp->disk->queue;
- 	unsigned int sector_sz = sdkp->device->sector_size;
- 	char *buffer;
+ static inline unsigned ata_set_lba_range_entries(void *_buffer, unsigned max,
+ 						u64 sector, unsigned long count)
+@@ -1001,9 +1002,9 @@ static inline unsigned ata_set_lba_range_entries(void *_buffer, unsigned max,
+ 		sector += 0xffff;
+ 	}
  
-@@ -1877,6 +1959,29 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
- 	blk_queue_io_opt(sdkp->disk->queue,
- 			 get_unaligned_be32(&buffer[12]) * sector_sz);
- 
-+	/* Thin provisioning enabled and page length indicates TP support */
-+	if (sdkp->thin_provisioning && buffer[3] == 0x3c) {
-+		unsigned int lba_count, desc_count, granularity;
+-	max = ALIGN(i * 8, 512);
+-	memset(buffer + i, 0, max - i * 8);
+-	return max;
++	memset(&buffer[i], 0, (max - i) * 8);
 +
-+		lba_count = get_unaligned_be32(&buffer[20]);
-+		desc_count = get_unaligned_be32(&buffer[24]);
-+
-+		if (lba_count && desc_count) {
-+			sdkp->unmap = 1;
-+			q->limits.max_discard_sectors =
-+				lba_count * sector_sz >> 9;
-+		}
-+
-+		granularity = get_unaligned_be32(&buffer[28]);
-+
-+		if (granularity)
-+			q->limits.discard_granularity = granularity * sector_sz;
-+
-+		if (buffer[32] & 0x80)
-+			q->limits.discard_alignment =
-+				get_unaligned_be32(&buffer[32]) & ~(1 << 31);
-+	}
-+
- 	kfree(buffer);
++	return ALIGN(i * 8, 512);
  }
  
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index e374804..43d3caf 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -60,6 +60,8 @@ struct scsi_disk {
- 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
- 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
- 	unsigned	first_scan : 1;
-+	unsigned	thin_provisioning : 1;
-+	unsigned	unmap : 1;
- };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
- 
+ static inline int is_multi_taskfile(struct ata_taskfile *tf)
 -- 
 1.6.0.6
 
