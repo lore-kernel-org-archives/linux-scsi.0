@@ -1,97 +1,204 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Sat, 21 Nov 2009 00:20:32 GMT
-Message-ID: <200911210020.nAL0KWWJ030566@demeter.kernel.org>
-References: <bug-13594-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 2/4] sd: WRITE SAME(16) / UNMAP support
+Date: Fri, 20 Nov 2009 21:45:22 -0500
+Message-ID: <1258771524-26673-3-git-send-email-martin.petersen__5178.12591647289$1258771616$gmane$org@oracle.com>
+References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:56991 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbZKUAU0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 19:20:26 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAL0KWqC030567
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2009 00:20:32 GMT
-In-Reply-To: <bug-13594-11613@http.bugzilla.kernel.org/>
+Received: from acsinet11.oracle.com ([141.146.126.233]:55384 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866AbZKUCqc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Nov 2009 21:46:32 -0500
+In-Reply-To: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13594
+Implement a prepare discard function that sends either WRITE SAME(16) or
+UNMAP(10) depending on parameters indicated by the device in the block
+limits VPD.
 
+Extract unmap constraints and report them to the block layer.
 
-Al Tobey <tobert@gmail.com> changed:
+Based in part by a patch by Christoph Hellwig <hch@lst.de>.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |tobert@gmail.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/scsi/sd.c |  105 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.h |    2 +
+ 2 files changed, 107 insertions(+), 0 deletions(-)
 
-
-
-
---- Comment #8 from Al Tobey <tobert@gmail.com>  2009-11-21 00:20:30 ---
-I get the same issue on LSI SAS2008 using the mpt2sas driver in 2.6.32-rc5.  
-It wouldn't be a big deal, but it actually increments
-/sys/block/$dev/device/ioerr_cnt, which I'd like to use for quick & dirty
-checks for drives going south (I realize it's not perfect).
-
-This occurs with both smartmontools 5.38-2+lenny1 as shipped with Debian 5 and
-with a local backport of 5.38+svn2956 from experimental.
-
-Trying smartctl -d scsi returns an outright failure. 
-
-I can also reproduce with sg_sat_identify -c.
-
-~$ sudo sg_sat_identify -c /dev/sg13
-~$ dmesg |tail -n 5
-sd 4:0:11:0: [sg13] Sense Key : Recovered Error [current] [descriptor]
-Descriptor sense data with sense descriptors (in hex):
-        72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00 
-        00 00 00 00 00 00 
-sd 4:0:11:0: [sg13] Add. Sense: ATA pass through information available
-
-~$ cat /sys/block/sdm/device/ioerr_cnt
-0x5
-
-~$ sudo smartctl -d sat -q errorsonly -H /dev/sdm
-smartctl 5.39 2009-10-10 r2955 [x86_64-unknown-linux-gnu] (local build)
-Copyright (C) 2002-9 by Bruce Allen, http://smartmontools.sourceforge.net
-
-Warning! SMART Attribute Thresholds Structure error: invalid SMART checksum.
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
-
-~$ cat /sys/block/sdm/device/ioerr_cnt
-0x6
-
-~$ cat /sys/class/scsi_host/host4/device_delay
-00
-~$ cat /sys/class/scsi_host/host4/version_fw
-02.00.50.00
-~$ cat /sys/class/scsi_host/host4/version_mpi
-200.0b
-~$ cat /sys/class/scsi_host/host4/version_product 
-LSISAS2008
-~$ cat /sys/class/scsi_host/host4/version_bios
-07.01.01.00
-
-~$ sudo sg_inq /dev/sg12
-standard INQUIRY:
-  PQual=0  Device_type=0  RMB=0  version=0x05  [SPC-3]
-  [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=1  Resp_data_format=2
-  SCCS=0  ACC=0  TGPS=0  3PC=0  Protect=0  BQue=0
-  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-  [RelAdr=0]  WBus16=0  Sync=0  Linked=0  [TranDis=0]  CmdQue=1
-  [SPI: Clocking=0x0  QAS=0  IUS=0]
-    length=74 (0x4a)   Peripheral device type: disk
- Vendor identification: ATA     
- Product identification: WDC WD2002FYPS-0
- Product revision level: 5G04
- Unit serial number:      WD-WCAVY0517841
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9093c72..65538e1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -264,6 +264,15 @@ sd_show_app_tag_own(struct device *dev, struct device_attribute *attr,
+ 	return snprintf(buf, 20, "%u\n", sdkp->ATO);
+ }
+ 
++static ssize_t
++sd_show_thin_provisioning(struct device *dev, struct device_attribute *attr,
++			  char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++
++	return snprintf(buf, 20, "%u\n", sdkp->thin_provisioning);
++}
++
+ static struct device_attribute sd_disk_attrs[] = {
+ 	__ATTR(cache_type, S_IRUGO|S_IWUSR, sd_show_cache_type,
+ 	       sd_store_cache_type),
+@@ -274,6 +283,7 @@ static struct device_attribute sd_disk_attrs[] = {
+ 	       sd_store_manage_start_stop),
+ 	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
+ 	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
++	__ATTR(thin_provisioning, S_IRUGO, sd_show_thin_provisioning, NULL),
+ 	__ATTR_NULL,
+ };
+ 
+@@ -399,6 +409,57 @@ static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
+ }
+ 
+ /**
++ * sd_prepare_discard - unmap blocks on thinly provisioned device
++ * @rq: Request to prepare
++ *
++ * Will issue either UNMAP or WRITE SAME(16) depending on preference
++ * indicated by target device.
++ **/
++static int sd_prepare_discard(struct request *rq)
++{
++	struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
++	struct bio *bio = rq->bio;
++	sector_t sector = bio->bi_sector;
++	unsigned int num = bio_sectors(bio);
++
++	if (sdkp->device->sector_size == 4096) {
++		sector >>= 3;
++		num >>= 3;
++	}
++
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++	rq->timeout = SD_TIMEOUT;
++
++	memset(rq->cmd, 0, rq->cmd_len);
++
++	if (sdkp->unmap) {
++		char *buf = kmap_atomic(bio_page(bio), KM_USER0);
++
++		rq->cmd[0] = UNMAP;
++		rq->cmd[8] = 24;
++		rq->cmd_len = 10;
++
++		/* Ensure that data length matches payload */
++		rq->__data_len = bio->bi_size = bio->bi_io_vec->bv_len = 24;
++
++		put_unaligned_be16(6 + 16, &buf[0]);
++		put_unaligned_be16(16, &buf[2]);
++		put_unaligned_be64(sector, &buf[8]);
++		put_unaligned_be32(num, &buf[16]);
++
++		kunmap_atomic(buf, KM_USER0);
++	} else {
++		rq->cmd[0] = WRITE_SAME_16;
++		rq->cmd[1] = 0x8; /* UNMAP */
++		put_unaligned_be64(sector, &rq->cmd[2]);
++		put_unaligned_be32(num, &rq->cmd[10]);
++		rq->cmd_len = 16;
++	}
++
++	return BLKPREP_OK;
++}
++
++/**
+  *	sd_init_command - build a scsi (read or write) command from
+  *	information in the request structure.
+  *	@SCpnt: pointer to mid-level's per scsi command structure that
+@@ -418,6 +479,13 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	int ret, host_dif;
+ 	unsigned char protect;
+ 
++	/*
++	 * Discard request come in as REQ_TYPE_FS but we turn them into
++	 * block PC requests to make life easier.
++	 */
++	if (blk_discard_rq(rq))
++		ret = sd_prepare_discard(rq);
++
+ 	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+ 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+ 		goto out;
+@@ -1432,6 +1500,19 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		sd_printk(KERN_NOTICE, sdkp,
+ 			  "physical block alignment offset: %u\n", alignment);
+ 
++	if (buffer[14] & 0x80) { /* TPE */
++		struct request_queue *q = sdp->request_queue;
++
++		sdkp->thin_provisioning = 1;
++		q->limits.discard_granularity = sdkp->hw_sector_size;
++		q->limits.max_discard_sectors = 0xffffffff;
++
++		if (buffer[14] & 0x40) /* TPRZ */
++			q->limits.discard_zeroes_data = 1;
++
++		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
++	}
++
+ 	sdkp->capacity = lba + 1;
+ 	return sector_size;
+ }
+@@ -1863,6 +1944,7 @@ void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+  */
+ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ {
++	struct request_queue *q = sdkp->disk->queue;
+ 	unsigned int sector_sz = sdkp->device->sector_size;
+ 	char *buffer;
+ 
+@@ -1877,6 +1959,29 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 	blk_queue_io_opt(sdkp->disk->queue,
+ 			 get_unaligned_be32(&buffer[12]) * sector_sz);
+ 
++	/* Thin provisioning enabled and page length indicates TP support */
++	if (sdkp->thin_provisioning && buffer[3] == 0x3c) {
++		unsigned int lba_count, desc_count, granularity;
++
++		lba_count = get_unaligned_be32(&buffer[20]);
++		desc_count = get_unaligned_be32(&buffer[24]);
++
++		if (lba_count && desc_count) {
++			sdkp->unmap = 1;
++			q->limits.max_discard_sectors =
++				lba_count * sector_sz >> 9;
++		}
++
++		granularity = get_unaligned_be32(&buffer[28]);
++
++		if (granularity)
++			q->limits.discard_granularity = granularity * sector_sz;
++
++		if (buffer[32] & 0x80)
++			q->limits.discard_alignment =
++				get_unaligned_be32(&buffer[32]) & ~(1 << 31);
++	}
++
+ 	kfree(buffer);
+ }
+ 
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index e374804..43d3caf 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -60,6 +60,8 @@ struct scsi_disk {
+ 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
+ 	unsigned	first_scan : 1;
++	unsigned	thin_provisioning : 1;
++	unsigned	unmap : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.6.0.6
+
