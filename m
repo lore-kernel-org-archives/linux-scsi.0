@@ -1,116 +1,86 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [PATCH 1/4] block: Allow devices to indicate whether discarded
- blocks are zeroed
-Date: Sat, 21 Nov 2009 07:50:28 -0500
-Message-ID: <4B07E214.3020800@redhat.com>
-References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-2-git-send-email-martin.petersen@oracle.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14653] New: sysfs: cannot create duplicate filename
+ '/bus/scsi/drivers/sd/2:0:1:0'
+Date: Sat, 21 Nov 2009 13:13:37 GMT
+Message-ID: <bug-14653-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65044 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752860AbZKUMxv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Nov 2009 07:53:51 -0500
-In-Reply-To: <1258771524-26673-2-git-send-email-martin.petersen@oracle.com>
+Received: from demeter.kernel.org ([140.211.167.39]:44744 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528AbZKUNNb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 Nov 2009 08:13:31 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nALDDbHa028745
+	for <linux-scsi@vger.kernel.org>; Sat, 21 Nov 2009 13:13:37 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 11/20/2009 09:45 PM, Martin K. Petersen wrote:
-> The discard ioctl is used by mkfs utilities to clear a block device
-> prior to putting metadata down.  However, not all devices return zeroed
-> blocks after a discard.  Some drives return stale data, potentially
-> containing old superblocks.  It is therefore important to know whether
-> discarded blocks are properly zeroed.
->
-> Both ATA and SCSI drives have configuration bits that indicate whether
-> zeroes are returned after a discard operation.  Implement a block level
-> interface that allows this information to be bubbled up the stack.
->
-> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
-> ---
->   block/blk-settings.c   |    2 ++
->   block/blk-sysfs.c      |   11 +++++++++++
->   include/linux/blkdev.h |    1 +
->   3 files changed, 14 insertions(+), 0 deletions(-)
->
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index 7f986ca..1027e30 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -100,6 +100,7 @@ void blk_set_default_limits(struct queue_limits *lim)
->   	lim->discard_granularity = 0;
->   	lim->discard_alignment = 0;
->   	lim->discard_misaligned = 0;
-> +	lim->discard_zeroes_data = -1;
->    
+http://bugzilla.kernel.org/show_bug.cgi?id=14653
+
+           Summary: sysfs: cannot create duplicate filename
+                    '/bus/scsi/drivers/sd/2:0:1:0'
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.31.6
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: QLOGIC QLA2XXX
+        AssignedTo: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+        ReportedBy: olel@ans.pl
+        Regression: No
 
 
-Did you mean to set this to -1 ?
+sd 2:0:1:0: emc: connected to SP B Port 5 (bound, default SP A)
+------------[ cut here ]------------
+WARNING: at fs/sysfs/dir.c:487 sysfs_add_one+0x85/0x99()
+Hardware name: PowerEdge 1950
+sysfs: cannot create duplicate filename '/bus/scsi/drivers/sd/2:0:1:0'
+Pid: 795, comm: scsi_wq_2 Not tainted 2.6.31.6-o0 #1
+Call Trace:
+ [<ffffffff810e32fe>] ? sysfs_add_one+0x85/0x99
+ [<ffffffff8103b82f>] ? warn_slowpath_common+0x72/0x9e
+ [<ffffffff8103b8b7>] ? warn_slowpath_fmt+0x51/0x59
+ [<ffffffff812fa3e4>] ? ida_get_new_above+0xf5/0x1b3
+ [<ffffffff810e3271>] ? sysfs_pathname+0x35/0x3d
+ [<ffffffff810e3271>] ? sysfs_pathname+0x35/0x3d
+ [<ffffffff810e3271>] ? sysfs_pathname+0x35/0x3d
+ [<ffffffff810e3271>] ? sysfs_pathname+0x35/0x3d
+ [<ffffffff810e32fe>] ? sysfs_add_one+0x85/0x99
+ [<ffffffff810e4051>] ? sysfs_do_create_link+0xba/0x11c
+ [<ffffffff813996bb>] ? driver_sysfs_add+0x22/0x63
+ [<ffffffff81399947>] ? device_bind_driver+0xe/0x23
+ [<ffffffff81399986>] ? device_attach+0x2a/0x63
+ [<ffffffff81398ce1>] ? bus_probe_device+0x1f/0x38
+ [<ffffffff81397a34>] ? device_add+0x464/0x5b1
+ [<ffffffff8139be76>] ? transport_configure+0x0/0x17
+ [<ffffffff8139bb90>] ? attribute_container_device_trigger+0x99/0xa4
+ [<ffffffff813a9572>] ? scsi_sysfs_add_sdev+0xaf/0x241
+ [<ffffffff813a762e>] ? scsi_probe_and_add_lun+0x8d3/0xa17
+ [<ffffffff81396f61>] ? get_device+0x14/0x1b
+ [<ffffffff813a6994>] ? scsi_alloc_target+0x252/0x28f
+ [<ffffffff813a796e>] ? __scsi_scan_target+0xb3/0x541
+ [<ffffffff815b1182>] ? _spin_unlock_irq+0x11/0x2b
+ [<ffffffff81035545>] ? finish_task_switch+0x5d/0xbd
+ [<ffffffff815afd1c>] ? __mutex_lock_slowpath+0x261/0x287
+ [<ffffffff813a8356>] ? scsi_scan_target+0x92/0xb1
+ [<ffffffff813b09c8>] ? fc_scsi_scan_rport+0x0/0x99
+ [<ffffffff813b0a42>] ? fc_scsi_scan_rport+0x7a/0x99
+ [<ffffffff8104990d>] ? worker_thread+0xec/0x194
+ [<ffffffff8104ce98>] ? autoremove_wake_function+0x0/0x2e
+ [<ffffffff81049821>] ? worker_thread+0x0/0x194
+ [<ffffffff8104cba1>] ? kthread+0x8b/0x93
+ [<ffffffff8100c94a>] ? child_rip+0xa/0x20
+ [<ffffffff8104cb16>] ? kthread+0x0/0x93
+ [<ffffffff8100c940>] ? child_rip+0x0/0x20
+---[ end trace 8aac874df8e186c3 ]---
 
-ric
-
-
->   	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
->   	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY>>  PAGE_SHIFT);
->   	lim->alignment_offset = 0;
-> @@ -543,6 +544,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
->
->   	t->io_min = max(t->io_min, b->io_min);
->   	t->no_cluster |= b->no_cluster;
-> +	t->discard_zeroes_data&= b->discard_zeroes_data;
->
->   	/* Bottom device offset aligned? */
->   	if (offset&&
-> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-> index 3147145..1f1d2b6 100644
-> --- a/block/blk-sysfs.c
-> +++ b/block/blk-sysfs.c
-> @@ -136,6 +136,11 @@ static ssize_t queue_discard_max_show(struct request_queue *q, char *page)
->   	return queue_var_show(q->limits.max_discard_sectors<<  9, page);
->   }
->
-> +static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *page)
-> +{
-> +	return queue_var_show(q->limits.discard_zeroes_data == 1 ? 1 : 0, page);
-> +}
-> +
->   static ssize_t
->   queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
->   {
-> @@ -313,6 +318,11 @@ static struct queue_sysfs_entry queue_discard_max_entry = {
->   	.show = queue_discard_max_show,
->   };
->
-> +static struct queue_sysfs_entry queue_discard_zeroes_data_entry = {
-> +	.attr = {.name = "discard_zeroes_data", .mode = S_IRUGO },
-> +	.show = queue_discard_zeroes_data_show,
-> +};
-> +
->   static struct queue_sysfs_entry queue_nonrot_entry = {
->   	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
->   	.show = queue_nonrot_show,
-> @@ -350,6 +360,7 @@ static struct attribute *default_attrs[] = {
->   	&queue_io_opt_entry.attr,
->   	&queue_discard_granularity_entry.attr,
->   	&queue_discard_max_entry.attr,
-> +	&queue_discard_zeroes_data_entry.attr,
->   	&queue_nonrot_entry.attr,
->   	&queue_nomerges_entry.attr,
->   	&queue_rq_affinity_entry.attr,
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 3b67221..e605945 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -322,6 +322,7 @@ struct queue_limits {
->   	unsigned char		misaligned;
->   	unsigned char		discard_misaligned;
->   	unsigned char		no_cluster;
-> +	signed char		discard_zeroes_data;
->   };
->
->   struct request_queue
->    
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
