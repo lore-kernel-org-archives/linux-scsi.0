@@ -1,38 +1,72 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Fri, 20 Nov 2009 23:33:59 -0500
-Message-ID: <4B076DB7.3040303@rtr.ca>
-References: <20091116154343.GA6672@infradead.org>	<4B02AD86.8010304@rtr.ca>	<20091117143507.GC588@infradead.org>	<20091117145239.768072c9@lxorguk.ukuu.org.uk>	<20091117150012.GA10748@infradead.org>	<4B04BD01.5090706@rtr.ca>	<20091119102346.3c656b99@lxorguk.ukuu.org.uk>	<4B0554A2.9060404@rtr.ca>	<4B05DE00.3020707@gmail.com>	<20091120001829.354abfc0@lxorguk.ukuu.org.uk>	<4B05E3D1.1000904@pobox.com> <20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: Re: Thin provisioning fixes
+Date: Fri, 20 Nov 2009 22:56:50 -0600
+Message-ID: <4B077312.3050501@redhat.com>
+References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:45880 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752635AbZKUEd5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Nov 2009 23:33:57 -0500
-In-Reply-To: <20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Robert Hancock <hancockrwd@gmail.com>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>, Matthew Wilcox <willy@wil.cx>
 
-Alan Cox wrote:
->>> For those that pee themselves you don't need a host flag, you need a
->>> qc_issue hook - you need that hook for the purpose of actually making the
->>> command work, so in the short term making it just return AC_ERR_DEV isn't
->>> exactly hard. Not having the flag and fixing those odd few drivers would
->>> be far more productive.
->> We are talking about chips whose command set is essentially fixed at 
->> manufacture time.
+Martin K. Petersen wrote:
+> A few updates to the thin provisioning bits aimed at 2.6.33:
 > 
-> There are only two of those I know of
-> - IT821x which already uses qc_issue to filter.
-> - pata_st412, which uses qc_issue and isn't in tree anyway and probably
->   never will be.
-..
+>  - Block layer support for reporting whether reading previously
+>    discarded blocks returns zeroes or not.  Jens, this applies on
+>    top of the patch that you have already queued.
+> 
+>  - Updated SCSI disk thin provisioning support:
+> 
+>    - Reports TPRZ via the new block layer flag
+> 
+>    - Moved some of the discard detection to read_capacity_16 to
+>      accommodate TP devices that don't support Unmap and the
+>      block limits VPD
+> 
+>    James, this replaces my existing post-merge sd patch.
+> 
+>  - libata:
+> 
+>    - Translate DRAT and ZRAT to TPRZ (zeroed blocks after trim)
+> 
+>    - Report the maximum discard sectors in the block limits VPD
+> 
+>    - Fix a couple of problems in ata_set_lba_range_entries() that
+>      caused us to issue garbled trims
+> 
+> 
+> Interested parties can grab the tp branch from:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux-2.6-mkp.git
 
-The sata_mv driver will choke the chipset if the TRIM command
-involves more than one sector of TRIM data.
+I pulled that tonight ...
 
-Cheers
+Doing a test on an OCZ ssd, by patterning 16GB and then discarding
+it via a single ioctl call, ends in an unhappy drive:
+
+ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata3.00: cmd 06/01:00:00:00:00/00:02:00:00:00/a0 tag 0 dma 4294966784 out
+         res 40/00:18:18:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+ata3.00: status: { DRDY }
+ata3: hard resetting link
+ata3: SATA link down (SStatus 0 SControl 300)
+ata3: hard resetting link
+ata3: SATA link down (SStatus 0 SControl 300)
+ata3: limiting SATA link speed to 1.5 Gbps
+ata3: hard resetting link
+ata3: SATA link down (SStatus 0 SControl 310)
+ata3.00: disabled
+ata3: EH complete
+ata3.00: detaching (SCSI 2:0:0:0)
+sd 2:0:0:0: [sdb] Stopping disk
+sd 2:0:0:0: [sdb] START_STOP FAILED
+sd 2:0:0:0: [sdb] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+
+... and then it goes away ...
+
+-Eric
