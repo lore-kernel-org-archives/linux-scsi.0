@@ -1,26 +1,36 @@
 From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH] libata: add TRIM support
-Date: Sat, 21 Nov 2009 21:39:54 -0500
-Message-ID: <4B08A47A.3030001@rtr.ca>
-References: <20091116154343.GA6672@infradead.org> <4B02AD86.8010304@rtr.ca>	<20091117143507.GC588@infradead.org>	<20091117145239.768072c9@lxorguk.ukuu.org.uk>	<20091117150012.GA10748@infradead.org> <4B04BD01.5090706@rtr.ca>	<20091119102346.3c656b99@lxorguk.ukuu.org.uk>	<4B0554A2.9060404@rtr.ca> <4B05DE00.3020707@gmail.com>	<20091120001829.354abfc0@lxorguk.ukuu.org.uk>	<4B05E3D1.1000904@pobox.com>	<20091120124624.63ac0b9a@lxorguk.ukuu.org.uk>	<4B076DB7.3040303@rtr.ca> <yq1einss91u.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 1/4] block: Allow devices to indicate whether discarded
+ blocks are zeroed
+Date: Sat, 21 Nov 2009 21:43:15 -0500
+Message-ID: <4B08A543.909@rtr.ca>
+References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-2-git-send-email-martin.petersen@oracle.com> <20091121101356.GA21716@infradead.org> <20091121195802.GC8502@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq1einss91u.fsf@sermon.lab.mkp.net>
+In-Reply-To: <20091121195802.GC8502@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, Robert Hancock <hancockrwd@gmail.com>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Wilcox <willy@wil.cx>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Martin K. Petersen wrote:
-> Mark> The sata_mv driver will choke the chipset if the TRIM command
-> Mark> involves more than one sector of TRIM data.
+Matthew Wilcox wrote:
+> On Sat, Nov 21, 2009 at 05:13:56AM -0500, Christoph Hellwig wrote:
+>> On Fri, Nov 20, 2009 at 09:45:21PM -0500, Martin K. Petersen wrote:
+>>> The discard ioctl is used by mkfs utilities to clear a block device
+>>> prior to putting metadata down.  However, not all devices return zeroed
+>>> blocks after a discard.  Some drives return stale data, potentially
+>>> containing old superblocks.  It is therefore important to know whether
+>>> discarded blocks are properly zeroed.
+>> At least for mkfs.xfs we make sure to still zero the important areas
+>> after the TRIM ioctl anyway.
 > 
-> We never issue more than a single sector.
+> Could you change that to zero _before_ the TRIM?
 ..
 
-Today.
 
-:)
+Hopefully not for the drives that *don't* guarantee zeros after TRIM.
+Eg. most existing ones, including all of the Indilinx chipset drives.
+
+Cheers
 
