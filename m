@@ -1,46 +1,42 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem
- readonly
-Date: Mon, 23 Nov 2009 11:54:40 +0100
-Message-ID: <20091123105440.GB15679@duck.suse.cz>
-References: <20091113050907.GA4965@roll>
- <20091119160700.GC2943@atrey.karlin.mff.cuni.cz>
- <20091120082359.GA29538@roll>
- <20091120094641.GB15422@duck.suse.cz>
- <20091123080919.GA3115@roll>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14577] Data Corruption with Adaptec 52445, Firmware 5.2-0
+ (17380)
+Date: Mon, 23 Nov 2009 11:39:14 GMT
+Message-ID: <200911231139.nANBdEUn011935@demeter.kernel.org>
+References: <bug-14577-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20091123080919.GA3115@roll>
-Sender: linux-ext4-owner@vger.kernel.org
-To: tmhikaru@gmail.com
-Cc: Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:32899 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756753AbZKWLjI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Nov 2009 06:39:08 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nANBdEgN011936
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Nov 2009 11:39:14 GMT
+In-Reply-To: <bug-14577-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-  Hi,
+http://bugzilla.kernel.org/show_bug.cgi?id=14577
 
-On Mon 23-11-09 03:09:19, tmhikaru@gmail.com wrote:
-> 	Okay, finally had some time to dismantle the machine in question and
-> inserted the backup drive without the enclosure. Now that I was able to get
-> smartctl to give me information on what was going on, it seems there's
-> nothing wrong with the drive itself (no remapped sectors, nothing prefail or
-> fail going wrong, drive's smart status is good) but it's had a history of
-> 406 (!!!) errors reported, the last five happening within the same second,
-> all of which seem (to my untrained eye) to imply a bad IDE cable. Which
-> means likely my USB enclosure is screwing up.
-> 
-> 	To be sure, I did some extended testing with it hooked up: Tried
-> doing a full and incremental backup of my machine with no errors reported,
-> as well as an offline and then immediately afterwards, long test via
-> smartctl. Nothing changed in the output.
-  Yeah, from what you write, it looks like USB enclosure is at fault (or it
-could still be your USB controller but I doubt it).  It's still a bit
-bothering that the error reported by the drive was not properly propagated
-up to VFS. Either it's some block layer retry/ignore magic that I missed or
-we ignore errors from block layer in some place.
 
-									Honza
+lkolbe@techfak.uni-bielefeld.de changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |CODE_FIX
+
+
+
+
+--- Comment #11 from lkolbe@techfak.uni-bielefeld.de  2009-11-23 11:39:11 ---
+With rc7 _and_ new firmware 5.2-0 (17544) on the adaptec controller, this
+problem doesn't occur anymore. Thanks for your patience.
+
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
