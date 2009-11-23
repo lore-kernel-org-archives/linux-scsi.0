@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 13/27] scsi proc_fops: convert cciss
-Date: Mon, 23 Nov 2009 04:37:40 +0300
-Message-ID: <20091123013740.GM31711@x200.localdomain>
+Subject: [PATCH 14/27] scsi proc_fops: convert mpt fusion
+Date: Mon, 23 Nov 2009 04:38:15 +0300
+Message-ID: <20091123013815.GN31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:27063 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299AbZKWBi4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:38:56 -0500
-Received: by ey-out-2122.google.com with SMTP id 25so101740eya.5
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:39:02 -0800 (PST)
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:49932 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750867AbZKWBjd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:39:33 -0500
+Received: by ewy19 with SMTP id 19so1401399ewy.21
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:39:38 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,175 +20,197 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/block/cciss_scsi.c |  129 +++++++++++++++++++++------------------------
- 1 file changed, 61 insertions(+), 68 deletions(-)
+ drivers/message/fusion/mptfc.c    |    2 
+ drivers/message/fusion/mptsas.c   |    2 
+ drivers/message/fusion/mptscsih.c |  110 ++++++--------------------------------
+ drivers/message/fusion/mptscsih.h |    2 
+ drivers/message/fusion/mptspi.c   |    3 -
+ 5 files changed, 24 insertions(+), 95 deletions(-)
 
---- a/drivers/block/cciss_scsi.c
-+++ b/drivers/block/cciss_scsi.c
-@@ -52,13 +52,7 @@ static int fill_cmd(CommandList_struct *c, __u8 cmd, int ctlr, void *buff,
- static CommandList_struct *cmd_alloc(ctlr_info_t *h, int get_from_pool);
- static void cmd_free(ctlr_info_t *h, CommandList_struct *c, int got_from_pool);
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -109,7 +109,7 @@ static int mptfc_host_reset(struct scsi_cmnd *SCpnt);
+ static struct scsi_host_template mptfc_driver_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_name			= "mptfc",
+-	.proc_info			= mptscsih_proc_info,
++	.proc_fops			= &mptscsih_proc_fops,
+ 	.name				= "MPT FC Host",
+ 	.info				= mptscsih_info,
+ 	.queuecommand			= mptfc_qcmd,
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1877,7 +1877,7 @@ mptsas_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ static struct scsi_host_template mptsas_driver_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_name			= "mptsas",
+-	.proc_info			= mptscsih_proc_info,
++	.proc_fops			= &mptscsih_proc_fops,
+ 	.name				= "MPT SPI Host",
+ 	.info				= mptscsih_info,
+ 	.queuecommand			= mptsas_qcmd,
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -53,6 +53,7 @@
+ #include <linux/delay.h>	/* for mdelay */
+ #include <linux/interrupt.h>	/* needed for in_interrupt() proto */
+ #include <linux/reboot.h>	/* notifier code */
++#include <linux/seq_file.h>
+ #include <linux/workqueue.h>
  
--static int cciss_scsi_proc_info(
--		struct Scsi_Host *sh,
--		char *buffer, /* data buffer */
--		char **start, 	   /* where data in buffer starts */
--		off_t offset,	   /* offset from start of imaginary file */
--		int length, 	   /* length of data in buffer */
--		int func);	   /* 0 == read, 1 == write */
-+static const struct file_operations cciss_scsi_proc_fops;
+ #include <scsi/scsi.h>
+@@ -1185,102 +1186,32 @@ mptscsih_info(struct Scsi_Host *SChost)
+ 	return h->info_kbuf;
+ }
  
- static int cciss_scsi_queue_command (struct scsi_cmnd *cmd,
- 		void (* done)(struct scsi_cmnd *));
-@@ -80,7 +74,7 @@ static struct scsi_host_template cciss_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "cciss",
- 	.proc_name		= "cciss",
--	.proc_info		= cciss_scsi_proc_info,
-+	.proc_fops		= &cciss_scsi_proc_fops,
- 	.queuecommand		= cciss_scsi_queue_command,
- 	.can_queue		= SCSI_CCISS_CAN_QUEUE,
- 	.this_id		= 7,
-@@ -1281,39 +1275,9 @@ out:
- 	return;
+-struct info_str {
+-	char *buffer;
+-	int   length;
+-	int   offset;
+-	int   pos;
+-};
+-
+-static void
+-mptscsih_copy_mem_info(struct info_str *info, char *data, int len)
++static int mptscsih_proc_show(struct seq_file *m, void *v)
+ {
+-	if (info->pos + len > info->length)
+-		len = info->length - info->pos;
+-
+-	if (info->pos + len < info->offset) {
+-		info->pos += len;
+-		return;
+-	}
+-
+-	if (info->pos < info->offset) {
+-	        data += (info->offset - info->pos);
+-	        len  -= (info->offset - info->pos);
+-	}
++	struct Scsi_Host *host = m->private;
++	MPT_SCSI_HOST	*hd = shost_priv(host);
++	MPT_ADAPTER	*ioc = hd->ioc;
+ 
+-	if (len > 0) {
+-                memcpy(info->buffer + info->pos, data, len);
+-                info->pos += len;
+-	}
++	seq_printf(m, "%s: %s, ", ioc->name, ioc->prod_name);
++	seq_printf(m, "%s%08xh, ", MPT_FW_REV_MAGIC_ID_STRING, ioc->facts.FWVersion.Word);
++	seq_printf(m, "Ports=%d, ", ioc->facts.NumberOfPorts);
++	seq_printf(m, "MaxQ=%d\n", ioc->req_depth);
++	return 0;
  }
  
 -static int
--is_keyword(char *ptr, int len, char *verb)  // Thanks to ncr53c8xx.c
-+static int cciss_scsi_proc_show(struct seq_file *m, void *v)
+-mptscsih_copy_info(struct info_str *info, char *fmt, ...)
++static int mptscsih_proc_open(struct inode *inode, struct file *file)
  {
--	int verb_len = strlen(verb);
--	if (len >= verb_len && !memcmp(verb,ptr,verb_len))
--		return verb_len;
--	else
--		return 0;
+-	va_list args;
+-	char buf[81];
+-	int len;
+-
+-	va_start(args, fmt);
+-	len = vsprintf(buf, fmt, args);
+-	va_end(args);
+-
+-	mptscsih_copy_mem_info(info, buf, len);
+-	return len;
++	return single_open(file, mptscsih_proc_show, PDE(inode)->data);
+ }
+ 
+-static int
+-mptscsih_host_info(MPT_ADAPTER *ioc, char *pbuf, off_t offset, int len)
+-{
+-	struct info_str info;
+-
+-	info.buffer	= pbuf;
+-	info.length	= len;
+-	info.offset	= offset;
+-	info.pos	= 0;
+-
+-	mptscsih_copy_info(&info, "%s: %s, ", ioc->name, ioc->prod_name);
+-	mptscsih_copy_info(&info, "%s%08xh, ", MPT_FW_REV_MAGIC_ID_STRING, ioc->facts.FWVersion.Word);
+-	mptscsih_copy_info(&info, "Ports=%d, ", ioc->facts.NumberOfPorts);
+-	mptscsih_copy_info(&info, "MaxQ=%d\n", ioc->req_depth);
+-
+-	return ((info.pos > info.offset) ? info.pos - info.offset : 0);
 -}
 -
--static int
--cciss_scsi_user_command(int ctlr, int hostno, char *buffer, int length)
+-/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-/**
+- *	mptscsih_proc_info - Return information about MPT adapter
+- * 	@host:   scsi host struct
+- * 	@buffer: if write, user data; if read, buffer for user
+- *	@start: returns the buffer address
+- * 	@offset: if write, 0; if read, the current offset into the buffer from
+- * 		 the previous read.
+- * 	@length: if write, return length;
+- *	@func:   write = 1; read = 0
+- *
+- *	(linux scsi_host_template.info routine)
+- */
+-int
+-mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
+-			int length, int func)
 -{
--	int arg_len;
+-	MPT_SCSI_HOST	*hd = shost_priv(host);
+-	MPT_ADAPTER	*ioc = hd->ioc;
+-	int size = 0;
 -
--	if ((arg_len = is_keyword(buffer, length, "rescan")) != 0)
--		cciss_update_non_disk_devices(ctlr, hostno);
--	else
--		return -EINVAL;
--	return length;
+-	if (func) {
+-		/*
+-		 * write is not supported
+-		 */
+-	} else {
+-		if (start)
+-			*start = buffer;
+-
+-		size = mptscsih_host_info(ioc, buffer, offset, length);
+-	}
+-
+-	return size;
 -}
--
--
--static int
--cciss_scsi_proc_info(struct Scsi_Host *sh,
--		char *buffer, /* data buffer */
--		char **start, 	   /* where data in buffer starts */
--		off_t offset,	   /* offset from start of imaginary file */
--		int length, 	   /* length of data in buffer */
--		int func)	   /* 0 == read, 1 == write */
--{
--
--	int buflen, datalen;
-+	struct Scsi_Host *sh = m->private;
- 	ctlr_info_t *ci;
- 	int i;
- 	int cntl_num;
-@@ -1325,21 +1289,20 @@ cciss_scsi_proc_info(struct Scsi_Host *sh,
- 
- 	cntl_num = ci->ctlr;	/* Get our index into the hba[] array */
- 
--	if (func == 0) {	/* User is reading from /proc/scsi/ciss*?/?*  */
--		buflen = sprintf(buffer, "cciss%d: SCSI host: %d\n",
--				cntl_num, sh->host_no);
--
--		/* this information is needed by apps to know which cciss
--		   device corresponds to which scsi host number without
--		   having to open a scsi target device node.  The device
--		   information is not a duplicate of /proc/scsi/scsi because
--		   the two may be out of sync due to scsi hotplug, rather
--		   this info is for an app to be able to use to know how to
--		   get them back in sync. */
--
--		for (i=0;i<ccissscsi[cntl_num].ndevices;i++) {
--			struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
--			buflen += sprintf(&buffer[buflen], "c%db%dt%dl%d %02d "
-+	seq_printf(m, "cciss%d: SCSI host: %d\n", cntl_num, sh->host_no);
-+
-+	/* this information is needed by apps to know which cciss
-+	   device corresponds to which scsi host number without
-+	   having to open a scsi target device node.  The device
-+	   information is not a duplicate of /proc/scsi/scsi because
-+	   the two may be out of sync due to scsi hotplug, rather
-+	   this info is for an app to be able to use to know how to
-+	   get them back in sync. */
-+
-+	for (i = 0; i < ccissscsi[cntl_num].ndevices; i++) {
-+		struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
-+
-+		seq_printf(m, "c%db%dt%dl%d %02d "
- 				"0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
- 				sh->host_no, sd->bus, sd->target, sd->lun,
- 				sd->devtype,
-@@ -1347,18 +1310,49 @@ cciss_scsi_proc_info(struct Scsi_Host *sh,
- 				sd->scsi3addr[2], sd->scsi3addr[3],
- 				sd->scsi3addr[4], sd->scsi3addr[5],
- 				sd->scsi3addr[6], sd->scsi3addr[7]);
--		}
--		datalen = buflen - offset;
--		if (datalen < 0) { 	/* they're reading past EOF. */
--			datalen = 0;
--			*start = buffer+buflen;	
--		} else
--			*start = buffer + offset;
--		return(datalen);
--	} else 	/* User is writing to /proc/scsi/cciss*?/?*  ... */
--		return cciss_scsi_user_command(cntl_num, sh->host_no,
--			buffer, length);	
--} 
-+	}
-+
-+	return 0;
-+}
-+
-+static int cciss_scsi_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, cciss_scsi_proc_show, PDE(inode)->data);
-+}
-+
-+static ssize_t cciss_scsi_proc_write(struct file *file, const char __user *buf,
-+				     size_t count, loff_t *pos)
-+{
-+	struct Scsi_Host *sh = PDE(file->f_path.dentry->d_inode)->data;
-+	ctlr_info_t *ci;
-+	char cmd[sizeof("rescan")];
-+	size_t len;
-+
-+	ci = (ctlr_info_t *) sh->hostdata[0];
-+	if (ci == NULL)  /* This really shouldn't ever happen. */
-+		return -EINVAL;
-+
-+	len = min(count, sizeof(cmd) - 1);
-+	if (copy_from_user(cmd, buf, len))
-+		return -EFAULT;
-+	cmd[len] = '\0';
-+
-+	if (strcmp(cmd, "rescan") != 0)
-+		return -EINVAL;
-+
-+	cciss_update_non_disk_devices(ci->ctlr, sh->host_no);
-+
-+	return count;
-+}
-+
-+static const struct file_operations cciss_scsi_proc_fops = {
++const struct file_operations mptscsih_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= cciss_scsi_proc_open,
++	.open		= mptscsih_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
-+	.write		= cciss_scsi_proc_write,
 +};
++EXPORT_SYMBOL(mptscsih_proc_fops);
  
- /* cciss_scatter_gather takes a struct scsi_cmnd, (cmd), and does the pci 
-    dma mapping  and fills in the scatter gather entries of the 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ #define ADD_INDEX_LOG(req_ent)	do { } while(0)
+@@ -3215,7 +3146,6 @@ EXPORT_SYMBOL(mptscsih_shutdown);
+ EXPORT_SYMBOL(mptscsih_suspend);
+ EXPORT_SYMBOL(mptscsih_resume);
+ #endif
+-EXPORT_SYMBOL(mptscsih_proc_info);
+ EXPORT_SYMBOL(mptscsih_info);
+ EXPORT_SYMBOL(mptscsih_qcmd);
+ EXPORT_SYMBOL(mptscsih_slave_destroy);
+--- a/drivers/message/fusion/mptscsih.h
++++ b/drivers/message/fusion/mptscsih.h
+@@ -111,7 +111,7 @@ extern void mptscsih_shutdown(struct pci_dev *);
+ extern int mptscsih_suspend(struct pci_dev *pdev, pm_message_t state);
+ extern int mptscsih_resume(struct pci_dev *pdev);
+ #endif
+-extern int mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset, int length, int func);
++extern const struct file_operations mptscsih_proc_fops;
+ extern const char * mptscsih_info(struct Scsi_Host *SChost);
+ extern int mptscsih_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *));
+ extern int mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel,
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -823,7 +823,7 @@ static void mptspi_slave_destroy(struct scsi_device *sdev)
+ static struct scsi_host_template mptspi_driver_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_name			= "mptspi",
+-	.proc_info			= mptscsih_proc_info,
++	.proc_fops			= &mptscsih_proc_fops,
+ 	.name				= "MPT SPI Host",
+ 	.info				= mptscsih_info,
+ 	.queuecommand			= mptspi_qcmd,
 -- 
 1.6.5.2
 
