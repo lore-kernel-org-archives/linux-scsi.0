@@ -1,94 +1,118 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 01/27] scsi proc_fops: add struct
- scsi_host_template::proc_fops
-Date: Mon, 23 Nov 2009 04:30:05 +0300
-Message-ID: <20091123013004.GA31711@x200.localdomain>
+Subject: [PATCH 02/27] scsi proc_fops: convert usb_storage
+Date: Mon, 23 Nov 2009 04:31:00 +0300
+Message-ID: <20091123013100.GB31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:55344 "EHLO
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:50271 "EHLO
 	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176AbZKWBbW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:31:22 -0500
-Received: by ewy19 with SMTP id 19so1397872ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:31:27 -0800 (PST)
+	with ESMTP id S1755936AbZKWBcS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:32:18 -0500
+Received: by ewy19 with SMTP id 19so1398270ewy.21
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:32:23 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: linux-scsi@vger.kernel.org
 
-Add struct scsi_host_template::proc_fops .
-
-->read_proc and ->write_proc interfaces are going to be removed,
-the only big user of them is scsi_proc.c
-
-->proc_fops takes precedence over ->proc_info while conversion is done.
-
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/scsi_proc.c |   20 +++++++++++++++-----
- include/scsi/scsi_host.h |    1 +
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/usb/storage/scsiglue.c |   47 +++++++++++++++++++----------------------
+ 1 file changed, 22 insertions(+), 25 deletions(-)
 
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -106,7 +106,7 @@ out:
- 
- void scsi_proc_hostdir_add(struct scsi_host_template *sht)
- {
--	if (!sht->proc_info)
-+	if (!sht->proc_info && !sht->proc_fops)
- 		return;
- 
- 	mutex_lock(&global_host_template_mutex);
-@@ -125,7 +125,7 @@ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -43,6 +43,8 @@
+  * 675 Mass Ave, Cambridge, MA 02139, USA.
   */
- void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
+ 
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+@@ -408,19 +410,14 @@ void usb_stor_report_bus_reset(struct us_data *us)
+ /* we use this macro to help us write into the buffer */
+ #undef SPRINTF
+ #define SPRINTF(args...) \
+-	do { if (pos < buffer+length) pos += sprintf(pos, ## args); } while (0)
++	seq_printf(m, ## args)
+ 
+-static int proc_info (struct Scsi_Host *host, char *buffer,
+-		char **start, off_t offset, int length, int inout)
++static int usb_stor_proc_show(struct seq_file *m, void *v)
  {
--	if (!sht->proc_info)
-+	if (!sht->proc_info && !sht->proc_fops)
- 		return;
++	struct Scsi_Host *host = m->private;
+ 	struct us_data *us = host_to_us(host);
+-	char *pos = buffer;
+ 	const char *string;
  
- 	mutex_lock(&global_host_template_mutex);
-@@ -151,16 +151,26 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
- 		return;
- 
- 	sprintf(name,"%d", shost->host_no);
--	p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
-+	if (sht->proc_fops) {
-+		mode_t mode;
-+
-+		mode = S_IRUGO;
-+		if (sht->proc_fops->write)
-+			mode |= S_IWUSR;
-+		p = proc_create_data(name, mode, sht->proc_dir,
-+				     sht->proc_fops, shost);
-+	} else {
-+		p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
- 			sht->proc_dir, proc_scsi_read, shost);
-+		if (p)
-+			p->write_proc = proc_scsi_write_proc;
-+	}
- 	if (!p) {
- 		printk(KERN_ERR "%s: Failed to register host %d in"
- 		       "%s\n", __func__, shost->host_no,
- 		       sht->proc_name);
- 		return;
- 	} 
+-	/* if someone is sending us data, just throw it away */
+-	if (inout)
+-		return length;
 -
--	p->write_proc = proc_scsi_write_proc;
+ 	/* print the controller name */
+ 	SPRINTF("   Host scsi%d: usb-storage\n", host->host_no);
+ 
+@@ -450,30 +447,31 @@ static int proc_info (struct Scsi_Host *host, char *buffer,
+ 	SPRINTF("    Transport: %s\n", us->transport_name);
+ 
+ 	/* show the device flags */
+-	if (pos < buffer + length) {
+-		pos += sprintf(pos, "       Quirks:");
++	seq_printf(m, "       Quirks:");
+ 
+ #define US_FLAG(name, value) \
+-	if (us->fflags & value) pos += sprintf(pos, " " #name);
++	if (us->fflags & value) seq_printf(m, " " #name);
+ US_DO_ALL_FLAGS
+ #undef US_FLAG
+ 
+-		*(pos++) = '\n';
+-	}
++	seq_putc(m, '\n');
+ 
+-	/*
+-	 * Calculate start of next buffer, and return value.
+-	 */
+-	*start = buffer + offset;
++	return 0;
++}
+ 
+-	if ((pos - buffer) < offset)
+-		return (0);
+-	else if ((pos - buffer - offset) < length)
+-		return (pos - buffer - offset);
+-	else
+-		return (length);
++static int usb_stor_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, usb_stor_proc_show, PDE(inode)->data);
  }
  
- /**
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -328,6 +328,7 @@ struct scsi_host_template {
- 	 * Status: OBSOLETE
- 	 */
- 	int (*proc_info)(struct Scsi_Host *, char *, char **, off_t, int, int);
-+	const struct file_operations *proc_fops;
++static const struct file_operations usb_stor_proc_fops = {
++	.owner		= THIS_MODULE,
++	.open		= usb_stor_proc_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
+ /***********************************************************************
+  * Sysfs interface
+  ***********************************************************************/
+@@ -516,7 +514,7 @@ struct scsi_host_template usb_stor_host_template = {
+ 	/* basic userland interface stuff */
+ 	.name =				"usb-storage",
+ 	.proc_name =			"usb-storage",
+-	.proc_info =			proc_info,
++	.proc_fops =			&usb_stor_proc_fops,
+ 	.info =				host_info,
  
- 	/*
- 	 * This is an optional routine that allows the transport to become
+ 	/* command interface -- queued only */
+-- 
+1.6.5.2
+
