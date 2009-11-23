@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 04/27] scsi proc_fops: convert nsp32
-Date: Mon, 23 Nov 2009 04:32:32 +0300
-Message-ID: <20091123013232.GD31711@x200.localdomain>
+Subject: [PATCH 05/27] scsi proc_fops: convert imm
+Date: Mon, 23 Nov 2009 04:33:04 +0300
+Message-ID: <20091123013304.GE31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:44479 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755986AbZKWBds (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:33:48 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so885718eyf.19
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:33:54 -0800 (PST)
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:48245 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755885AbZKWBeV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:34:21 -0500
+Received: by ewy19 with SMTP id 19so1399180ewy.21
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:34:26 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,109 +20,116 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/nsp32.c |   52 +++++++++++++++++++--------------------------------
- 1 file changed, 20 insertions(+), 32 deletions(-)
+ drivers/scsi/imm.c |   75 ++++++++++++++++++++++++-----------------------------
+ 1 file changed, 35 insertions(+), 40 deletions(-)
 
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -34,6 +34,8 @@
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -13,6 +13,7 @@
+ #include <linux/module.h>
  #include <linux/blkdev.h>
- #include <linux/interrupt.h>
- #include <linux/pci.h>
-+#include <linux/proc_fs.h>
+ #include <linux/parport.h>
 +#include <linux/seq_file.h>
+ #include <linux/workqueue.h>
  #include <linux/delay.h>
- #include <linux/ctype.h>
- #include <linux/dma-mapping.h>
-@@ -194,7 +196,7 @@ static int  __init    init_nsp32  (void);
- static void __exit    exit_nsp32  (void);
+ #include <asm/io.h>
+@@ -113,54 +114,49 @@ static inline void imm_pb_release(imm_struct *dev)
+ 	parport_release(dev->dev);
+ }
  
- /* struct struct scsi_host_template */
--static int         nsp32_proc_info   (struct Scsi_Host *, char *, char **, off_t, int, int);
-+static const struct file_operations nsp32_proc_fops;
- 
- static int         nsp32_detect      (struct pci_dev *pdev);
- static int         nsp32_queuecommand(struct scsi_cmnd *,
-@@ -271,7 +273,7 @@ static void nsp32_dmessage(const char *, int, int,    char *, ...);
- static struct scsi_host_template nsp32_template = {
- 	.proc_name			= "nsp32",
- 	.name				= "Workbit NinjaSCSI-32Bi/UDE",
--	.proc_info			= nsp32_proc_info,
-+	.proc_fops			= &nsp32_proc_fops,
- 	.info				= nsp32_info,
- 	.queuecommand			= nsp32_queuecommand,
- 	.can_queue			= 1,
-@@ -1444,18 +1446,11 @@ static irqreturn_t do_nsp32_isr(int irq, void *dev_id)
- 
- #undef SPRINTF
- #define SPRINTF(args...) \
--	do { \
--		if(length > (pos - buffer)) { \
--			pos += snprintf(pos, length - (pos - buffer) + 1, ## args); \
--			nsp32_dbg(NSP32_DEBUG_PROC, "buffer=0x%p pos=0x%p length=%d %d\n", buffer, pos, length,  length - (pos - buffer));\
--		} \
--	} while(0)
--
--static int nsp32_proc_info(struct Scsi_Host *host, char *buffer, char **start,
--			   off_t offset, int length, int inout)
-+	seq_printf(m, ## args)
-+
-+static int nsp32_proc_show(struct seq_file *m, void *v)
+-/* This is to give the imm driver a way to modify the timings (and other
+- * parameters) by writing to the /proc/scsi/imm/0 file.
+- * Very simple method really... (Too simple, no error checking :( )
+- * Reason: Kernel hackers HATE having to unload and reload modules for
+- * testing...
+- * Also gives a method to use a script to obtain optimum timings (TODO)
+- */
+-static inline int imm_proc_write(imm_struct *dev, char *buffer, int length)
++static int imm_proc_show(struct seq_file *m, void *v)
  {
--	char             *pos = buffer;
--	int               thislength;
+-	unsigned long x;
 +	struct Scsi_Host *host = m->private;
- 	unsigned long     flags;
- 	nsp32_hw_data    *data;
- 	int               hostno;
-@@ -1464,11 +1459,6 @@ static int nsp32_proc_info(struct Scsi_Host *host, char *buffer, char **start,
- 	int               id, speed;
- 	long              model;
++	imm_struct *dev = imm_dev(host);
  
--	/* Write is not supported, just return. */
--	if (inout == TRUE) {
--		return -EINVAL;
+-	if ((length > 5) && (strncmp(buffer, "mode=", 5) == 0)) {
+-		x = simple_strtoul(buffer + 5, NULL, 0);
+-		dev->mode = x;
+-		return length;
 -	}
--
- 	hostno = host->host_no;
- 	data = (nsp32_hw_data *)host->hostdata;
- 	base = host->io_port;
-@@ -1529,23 +1519,22 @@ static int nsp32_proc_info(struct Scsi_Host *host, char *buffer, char **start,
- 		SPRINTF("\n");
- 	}
- 
--
--	thislength = pos - (buffer + offset);
--
--	if(thislength < 0) {
--		*start = NULL;
--                return 0;
--        }
--
--
--	thislength = min(thislength, length);
--	*start = buffer + offset;
--
--	return thislength;
+-	printk("imm /proc: invalid variable\n");
+-	return (-EINVAL);
++	seq_printf(m, "Version : %s\n", IMM_VERSION);
++	seq_printf(m, "Parport : %s\n", dev->dev->port->name);
++	seq_printf(m, "Mode    : %s\n", IMM_MODE_STRING[dev->mode]);
++
 +	return 0;
  }
- #undef SPRINTF
  
-+static int nsp32_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, nsp32_proc_show, PDE(inode)->data);
+-static int imm_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+-			off_t offset, int length, int inout)
++static int imm_proc_open(struct inode *inode, struct file *file)
+ {
+-	imm_struct *dev = imm_dev(host);
+-	int len = 0;
+-
+-	if (inout)
+-		return imm_proc_write(dev, buffer, length);
++	return single_open(file, imm_proc_show, PDE(inode)->data);
 +}
  
-+static const struct file_operations nsp32_proc_fops = {
+-	len += sprintf(buffer + len, "Version : %s\n", IMM_VERSION);
+-	len +=
+-	    sprintf(buffer + len, "Parport : %s\n",
+-		    dev->dev->port->name);
+-	len +=
+-	    sprintf(buffer + len, "Mode    : %s\n",
+-		    IMM_MODE_STRING[dev->mode]);
++static ssize_t imm_proc_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
++{
++	struct Scsi_Host *host = PDE(file->f_path.dentry->d_inode)->data;
++	imm_struct *dev = imm_dev(host);
++	char kbuf[42];
++	size_t len;
+ 
+-	/* Request for beyond end of buffer */
+-	if (offset > len)
+-		return 0;
++	len = min(count, sizeof(kbuf) - 1);
++	if (copy_from_user(kbuf, buf, len))
++		return -EFAULT;
++	kbuf[len] = '\0';
+ 
+-	*start = buffer + offset;
+-	len -= offset;
+-	if (len > length)
+-		len = length;
+-	return len;
++	if (sscanf(kbuf, "mode=%i", &dev->mode) != 1)
++		return -EINVAL;
++	return count;
+ }
+ 
++static const struct file_operations imm_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= nsp32_proc_open,
++	.open		= imm_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
++	.write		= imm_proc_write,
 +};
- 
- /*
-  * Reset parameters and call scsi_done for data->cur_lunt.
++
+ #if IMM_DEBUG > 0
+ #define imm_fail(x,y) printk("imm: imm_fail(%i) from %s at line %d\n",\
+ 	   y, __func__, __LINE__); imm_fail_func(x,y);
+@@ -1115,7 +1111,7 @@ static int imm_adjust_queue(struct scsi_device *device)
+ static struct scsi_host_template imm_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_name		= "imm",
+-	.proc_info		= imm_proc_info,
++	.proc_fops		= &imm_proc_fops,
+ 	.name			= "Iomega VPI2 (imm) interface",
+ 	.queuecommand		= imm_queuecommand,
+ 	.eh_abort_handler	= imm_abort,
 -- 
 1.6.5.2
 
