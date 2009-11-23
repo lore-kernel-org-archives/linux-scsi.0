@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 12/27] scsi proc_fops: convert fd_mcs
-Date: Mon, 23 Nov 2009 04:37:02 +0300
-Message-ID: <20091123013702.GL31711@x200.localdomain>
+Subject: [PATCH 13/27] scsi proc_fops: convert cciss
+Date: Mon, 23 Nov 2009 04:37:40 +0300
+Message-ID: <20091123013740.GM31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.24]:56601 "EHLO
+Received: from ey-out-2122.google.com ([74.125.78.25]:27063 "EHLO
 	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbZKWBiT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:38:19 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so886098eyf.19
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:38:24 -0800 (PST)
+	with ESMTP id S1751299AbZKWBi4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:38:56 -0500
+Received: by ey-out-2122.google.com with SMTP id 25so101740eya.5
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:39:02 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,85 +20,175 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/fd_mcs.c |   48 +++++++++++++++++++++---------------------------
- 1 file changed, 21 insertions(+), 27 deletions(-)
+ drivers/block/cciss_scsi.c |  129 +++++++++++++++++++++------------------------
+ 1 file changed, 61 insertions(+), 68 deletions(-)
 
---- a/drivers/scsi/fd_mcs.c
-+++ b/drivers/scsi/fd_mcs.c
-@@ -85,6 +85,7 @@
- #include <linux/string.h>
- #include <linux/ioport.h>
- #include <linux/proc_fs.h>
-+#include <linux/seq_file.h>
- #include <linux/delay.h>
- #include <linux/mca.h>
- #include <linux/spinlock.h>
-@@ -528,37 +529,31 @@ static const char *fd_mcs_info(struct Scsi_Host *shpnt)
+--- a/drivers/block/cciss_scsi.c
++++ b/drivers/block/cciss_scsi.c
+@@ -52,13 +52,7 @@ static int fill_cmd(CommandList_struct *c, __u8 cmd, int ctlr, void *buff,
+ static CommandList_struct *cmd_alloc(ctlr_info_t *h, int get_from_pool);
+ static void cmd_free(ctlr_info_t *h, CommandList_struct *c, int got_from_pool);
  
- static int TOTAL_INTR = 0;
+-static int cciss_scsi_proc_info(
+-		struct Scsi_Host *sh,
+-		char *buffer, /* data buffer */
+-		char **start, 	   /* where data in buffer starts */
+-		off_t offset,	   /* offset from start of imaginary file */
+-		int length, 	   /* length of data in buffer */
+-		int func);	   /* 0 == read, 1 == write */
++static const struct file_operations cciss_scsi_proc_fops;
  
--/*
-- * inout : decides on the direction of the dataflow and the meaning of the 
-- *         variables
-- * buffer: If inout==FALSE data is being written to it else read from it
-- * *start: If inout==FALSE start of the valid data in the buffer
-- * offset: If inout==FALSE offset from the beginning of the imaginary file 
-- *         from which we start writing into the buffer
-- * length: If inout==FALSE max number of bytes to be written into the buffer 
-- *         else number of bytes in the buffer
-- */
--static int fd_mcs_proc_info(struct Scsi_Host *shpnt, char *buffer, char **start, off_t offset, int length, int inout)
-+static int fd_mcs_proc_show(struct seq_file *m, void *v)
- {
--	int len = 0;
-+	struct Scsi_Host *shpnt = m->private;
- 
--	if (inout)
--		return (-ENOSYS);
-+	seq_printf(m, "Future Domain MCS-600/700 Driver %s\n", DRIVER_VERSION);
-+	seq_printf(m, "HOST #%d: %s\n", shpnt->host_no, adapter_name);
-+	seq_printf(m, "FIFO Size=0x%x, FIFO Count=%d\n", FIFO_Size, FIFO_COUNT);
-+	seq_printf(m, "DriverCalls=%d, Interrupts=%d, BytesRead=%d, BytesWrite=%d\n\n", TOTAL_INTR, INTR_Processed, Bytes_Read, Bytes_Written);
- 
--	*start = buffer + offset;
--
--	len += sprintf(buffer + len, "Future Domain MCS-600/700 Driver %s\n", DRIVER_VERSION);
--	len += sprintf(buffer + len, "HOST #%d: %s\n", shpnt->host_no, adapter_name);
--	len += sprintf(buffer + len, "FIFO Size=0x%x, FIFO Count=%d\n", FIFO_Size, FIFO_COUNT);
--	len += sprintf(buffer + len, "DriverCalls=%d, Interrupts=%d, BytesRead=%d, BytesWrite=%d\n\n", TOTAL_INTR, INTR_Processed, Bytes_Read, Bytes_Written);
-+	return 0;
-+}
- 
--	if ((len -= offset) <= 0)
--		return 0;
--	if (len > length)
--		len = length;
--	return len;
-+static int fd_mcs_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, fd_mcs_proc_show, PDE(inode)->data);
+ static int cciss_scsi_queue_command (struct scsi_cmnd *cmd,
+ 		void (* done)(struct scsi_cmnd *));
+@@ -80,7 +74,7 @@ static struct scsi_host_template cciss_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "cciss",
+ 	.proc_name		= "cciss",
+-	.proc_info		= cciss_scsi_proc_info,
++	.proc_fops		= &cciss_scsi_proc_fops,
+ 	.queuecommand		= cciss_scsi_queue_command,
+ 	.can_queue		= SCSI_CCISS_CAN_QUEUE,
+ 	.this_id		= 7,
+@@ -1281,39 +1275,9 @@ out:
+ 	return;
  }
  
-+static const struct file_operations fd_mcs_proc_fops = {
+-static int
+-is_keyword(char *ptr, int len, char *verb)  // Thanks to ncr53c8xx.c
++static int cciss_scsi_proc_show(struct seq_file *m, void *v)
+ {
+-	int verb_len = strlen(verb);
+-	if (len >= verb_len && !memcmp(verb,ptr,verb_len))
+-		return verb_len;
+-	else
+-		return 0;
+-}
+-
+-static int
+-cciss_scsi_user_command(int ctlr, int hostno, char *buffer, int length)
+-{
+-	int arg_len;
+-
+-	if ((arg_len = is_keyword(buffer, length, "rescan")) != 0)
+-		cciss_update_non_disk_devices(ctlr, hostno);
+-	else
+-		return -EINVAL;
+-	return length;
+-}
+-
+-
+-static int
+-cciss_scsi_proc_info(struct Scsi_Host *sh,
+-		char *buffer, /* data buffer */
+-		char **start, 	   /* where data in buffer starts */
+-		off_t offset,	   /* offset from start of imaginary file */
+-		int length, 	   /* length of data in buffer */
+-		int func)	   /* 0 == read, 1 == write */
+-{
+-
+-	int buflen, datalen;
++	struct Scsi_Host *sh = m->private;
+ 	ctlr_info_t *ci;
+ 	int i;
+ 	int cntl_num;
+@@ -1325,21 +1289,20 @@ cciss_scsi_proc_info(struct Scsi_Host *sh,
+ 
+ 	cntl_num = ci->ctlr;	/* Get our index into the hba[] array */
+ 
+-	if (func == 0) {	/* User is reading from /proc/scsi/ciss*?/?*  */
+-		buflen = sprintf(buffer, "cciss%d: SCSI host: %d\n",
+-				cntl_num, sh->host_no);
+-
+-		/* this information is needed by apps to know which cciss
+-		   device corresponds to which scsi host number without
+-		   having to open a scsi target device node.  The device
+-		   information is not a duplicate of /proc/scsi/scsi because
+-		   the two may be out of sync due to scsi hotplug, rather
+-		   this info is for an app to be able to use to know how to
+-		   get them back in sync. */
+-
+-		for (i=0;i<ccissscsi[cntl_num].ndevices;i++) {
+-			struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
+-			buflen += sprintf(&buffer[buflen], "c%db%dt%dl%d %02d "
++	seq_printf(m, "cciss%d: SCSI host: %d\n", cntl_num, sh->host_no);
++
++	/* this information is needed by apps to know which cciss
++	   device corresponds to which scsi host number without
++	   having to open a scsi target device node.  The device
++	   information is not a duplicate of /proc/scsi/scsi because
++	   the two may be out of sync due to scsi hotplug, rather
++	   this info is for an app to be able to use to know how to
++	   get them back in sync. */
++
++	for (i = 0; i < ccissscsi[cntl_num].ndevices; i++) {
++		struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
++
++		seq_printf(m, "c%db%dt%dl%d %02d "
+ 				"0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+ 				sh->host_no, sd->bus, sd->target, sd->lun,
+ 				sd->devtype,
+@@ -1347,18 +1310,49 @@ cciss_scsi_proc_info(struct Scsi_Host *sh,
+ 				sd->scsi3addr[2], sd->scsi3addr[3],
+ 				sd->scsi3addr[4], sd->scsi3addr[5],
+ 				sd->scsi3addr[6], sd->scsi3addr[7]);
+-		}
+-		datalen = buflen - offset;
+-		if (datalen < 0) { 	/* they're reading past EOF. */
+-			datalen = 0;
+-			*start = buffer+buflen;	
+-		} else
+-			*start = buffer + offset;
+-		return(datalen);
+-	} else 	/* User is writing to /proc/scsi/cciss*?/?*  ... */
+-		return cciss_scsi_user_command(cntl_num, sh->host_no,
+-			buffer, length);	
+-} 
++	}
++
++	return 0;
++}
++
++static int cciss_scsi_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, cciss_scsi_proc_show, PDE(inode)->data);
++}
++
++static ssize_t cciss_scsi_proc_write(struct file *file, const char __user *buf,
++				     size_t count, loff_t *pos)
++{
++	struct Scsi_Host *sh = PDE(file->f_path.dentry->d_inode)->data;
++	ctlr_info_t *ci;
++	char cmd[sizeof("rescan")];
++	size_t len;
++
++	ci = (ctlr_info_t *) sh->hostdata[0];
++	if (ci == NULL)  /* This really shouldn't ever happen. */
++		return -EINVAL;
++
++	len = min(count, sizeof(cmd) - 1);
++	if (copy_from_user(cmd, buf, len))
++		return -EFAULT;
++	cmd[len] = '\0';
++
++	if (strcmp(cmd, "rescan") != 0)
++		return -EINVAL;
++
++	cciss_update_non_disk_devices(ci->ctlr, sh->host_no);
++
++	return count;
++}
++
++static const struct file_operations cciss_scsi_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= fd_mcs_proc_open,
++	.open		= cciss_scsi_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
++	.write		= cciss_scsi_proc_write,
 +};
-+
- static int fd_mcs_select(struct Scsi_Host *shpnt, int target)
- {
- 	int status;
-@@ -1333,7 +1328,7 @@ static int fd_mcs_biosparam(struct scsi_device * disk, struct block_device *bdev
  
- static struct scsi_host_template driver_template = {
- 	.proc_name			= "fd_mcs",
--	.proc_info			= fd_mcs_proc_info,
-+	.proc_fops			= &fd_mcs_proc_fops,
- 	.detect				= fd_mcs_detect,
- 	.release			= fd_mcs_release,
- 	.info				= fd_mcs_info,
+ /* cciss_scatter_gather takes a struct scsi_cmnd, (cmd), and does the pci 
+    dma mapping  and fills in the scatter gather entries of the 
 -- 
 1.6.5.2
 
