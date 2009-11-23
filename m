@@ -1,419 +1,357 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 23/27] scsi proc_fops: convert aic7xxx_old
-Date: Mon, 23 Nov 2009 04:47:19 +0300
-Message-ID: <20091123014719.GW31711@x200.localdomain>
+Subject: [PATCH 24/27] scsi proc_fops: convert ips
+Date: Mon, 23 Nov 2009 04:47:46 +0300
+Message-ID: <20091123014746.GX31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:49333 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753861AbZKWBsh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:48:37 -0500
-Received: by ewy19 with SMTP id 19so1405260ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:48:42 -0800 (PST)
+Received: from ey-out-2122.google.com ([74.125.78.26]:3253 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753434AbZKWBtD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:49:03 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so887142eyf.19
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:49:09 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: linux-scsi@vger.kernel.org
 
-Removed code is so bad, I don't even know where to start.
-
-As side effect, fix user-triggerable kmalloc/kfree clusterfsck
-and output corruption with two threads reading same file.
-
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/aic7xxx_old.c              |    2 
- drivers/scsi/aic7xxx_old/aic7xxx_proc.c |  242 +++++++++-----------------------
- 2 files changed, 73 insertions(+), 171 deletions(-)
+ drivers/scsi/ips.c |  177 ++++++++++++++---------------------------------------
+ drivers/scsi/ips.h |   10 --
+ 2 files changed, 47 insertions(+), 140 deletions(-)
 
---- a/drivers/scsi/aic7xxx_old.c
-+++ b/drivers/scsi/aic7xxx_old.c
-@@ -11124,7 +11124,7 @@ MODULE_VERSION(AIC7XXX_H_VERSION);
- 
- 
- static struct scsi_host_template driver_template = {
--	.proc_info		= aic7xxx_proc_info,
-+	.proc_fops		= &aic7xxx_proc_fops,
- 	.detect			= aic7xxx_detect,
- 	.release		= aic7xxx_release,
- 	.info			= aic7xxx_info,	
---- a/drivers/scsi/aic7xxx_old/aic7xxx_proc.c
-+++ b/drivers/scsi/aic7xxx_old/aic7xxx_proc.c
-@@ -28,64 +28,17 @@
-  *
-  *  $Id: aic7xxx_proc.c,v 4.1 1997/06/97 08:23:42 deang Exp $
-  *-M*************************************************************************/
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -174,6 +174,7 @@
+ #include <linux/pci.h>
+ #include <linux/proc_fs.h>
+ #include <linux/reboot.h>
 +#include <linux/seq_file.h>
+ #include <linux/interrupt.h>
  
--
--#define	BLS	(&aic7xxx_buffer[size])
- #define HDRB \
- "               0 - 4K   4 - 16K   16 - 64K  64 - 256K  256K - 1M        1M+"
+ #include <linux/blkdev.h>
+@@ -326,10 +327,8 @@ static void ips_scmd_buf_write(struct scsi_cmnd * scmd, void *data,
+ static void ips_scmd_buf_read(struct scsi_cmnd * scmd, void *data,
+ 			      unsigned int count);
  
--#ifdef PROC_DEBUG
--extern int vsprintf(char *, const char *, va_list);
--
--static void
--proc_debug(const char *fmt, ...)
--{
--  va_list ap;
--  char buf[256];
--
--  va_start(ap, fmt);
--  vsprintf(buf, fmt, ap);
--  printk(buf);
--  va_end(ap);
--}
--#else /* PROC_DEBUG */
--#  define proc_debug(fmt, args...)
--#endif /* PROC_DEBUG */
--
--static int aic7xxx_buffer_size = 0;
--static char *aic7xxx_buffer = NULL;
--
--
--/*+F*************************************************************************
-- * Function:
-- *   aic7xxx_set_info
-- *
-- * Description:
-- *   Set parameters for the driver from the /proc filesystem.
-- *-F*************************************************************************/
--static int
--aic7xxx_set_info(char *buffer, int length, struct Scsi_Host *HBAptr)
--{
--  proc_debug("aic7xxx_set_info(): %s\n", buffer);
--  return (-ENOSYS);  /* Currently this is a no-op */
--}
--
--
--/*+F*************************************************************************
-- * Function:
-- *   aic7xxx_proc_info
-- *
-- * Description:
-- *   Return information to handle /proc support for the driver.
-- *-F*************************************************************************/
--int
--aic7xxx_proc_info ( struct Scsi_Host *HBAptr, char *buffer, char **start, off_t offset, int length, 
--                    int inout)
-+static int aic7xxx_proc_show(struct seq_file *m, void *v)
- {
-+  struct Scsi_Host *HBAptr = m->private;
-   struct aic7xxx_host *p;
-   struct aic_dev_data *aic_dev;
-   struct scsi_device *sdptr;
--  int    size = 0;
-   unsigned char i;
-   unsigned char tindex;
+-static int ips_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
+-static int ips_host_info(ips_ha_t *, char *, off_t, int);
+-static void copy_mem_info(IPS_INFOSTR *, char *, int);
+-static int copy_info(IPS_INFOSTR *, char *, ...);
++static const struct file_operations ips_proc_fops;
++static void ips_host_info(ips_ha_t *, struct seq_file *);
+ static int ips_abort_init(ips_ha_t * ha, int index);
+ static int ips_init_phase2(int index);
  
-@@ -94,66 +47,21 @@ aic7xxx_proc_info ( struct Scsi_Host *HBAptr, char *buffer, char **start, off_t
- 
-   if (!p)
-   {
--    size += sprintf(buffer, "Can't find adapter for host number %d\n", HBAptr->host_no);
--    if (size > length)
--    {
--      return (size);
--    }
--    else
--    {
--      return (length);
--    }
--  }
--
--  if (inout == TRUE) /* Has data been written to the file? */ 
--  {
--    return (aic7xxx_set_info(buffer, length, HBAptr));
-+    seq_printf(m, "Can't find adapter for host number %d\n", HBAptr->host_no);
-+    return 0;
-   }
- 
-   p = (struct aic7xxx_host *) HBAptr->hostdata;
- 
--  /*
--   * It takes roughly 1K of space to hold all relevant card info, not
--   * counting any proc stats, so we start out with a 1.5k buffer size and
--   * if proc_stats is defined, then we sweep the stats structure to see
--   * how many drives we will be printing out for and add 384 bytes per
--   * device with active stats.
--   *
--   * Hmmmm...that 1.5k seems to keep growing as items get added so they
--   * can be easily viewed for debugging purposes.  So, we bumped that
--   * 1.5k to 4k so we can quit having to bump it all the time.
--   */
--
--  size = 4096;
--  list_for_each_entry(aic_dev, &p->aic_devs, list)
--    size += 512;
--  if (aic7xxx_buffer_size != size)
--  {
--    if (aic7xxx_buffer != NULL) 
--    {
--      kfree(aic7xxx_buffer);
--      aic7xxx_buffer_size = 0;
--    }
--    aic7xxx_buffer = kmalloc(size, GFP_KERNEL);
--  }
--  if (aic7xxx_buffer == NULL)
--  {
--    size = sprintf(buffer, "AIC7xxx - kmalloc error at line %d\n",
--        __LINE__);
--    return size;
--  }
--  aic7xxx_buffer_size = size;
--
--  size = 0;
--  size += sprintf(BLS, "Adaptec AIC7xxx driver version: ");
--  size += sprintf(BLS, "%s/", AIC7XXX_C_VERSION);
--  size += sprintf(BLS, "%s", AIC7XXX_H_VERSION);
--  size += sprintf(BLS, "\n");
--  size += sprintf(BLS, "Adapter Configuration:\n");
--  size += sprintf(BLS, "           SCSI Adapter: %s\n",
-+  seq_printf(m, "Adaptec AIC7xxx driver version: ");
-+  seq_printf(m, "%s/", AIC7XXX_C_VERSION);
-+  seq_printf(m, "%s", AIC7XXX_H_VERSION);
-+  seq_printf(m, "\n");
-+  seq_printf(m, "Adapter Configuration:\n");
-+  seq_printf(m, "           SCSI Adapter: %s\n",
-       board_names[p->board_name_index]);
-   if (p->flags & AHC_TWIN)
--    size += sprintf(BLS, "                         Twin Channel Controller ");
-+    seq_printf(m, "                         Twin Channel Controller ");
-   else
-   {
-     char *channel = "";
-@@ -184,86 +92,86 @@ aic7xxx_proc_info ( struct Scsi_Host *HBAptr, char *buffer, char **start, off_t
-       ultra = "Ultra-2 LVD/SE ";
-     else if (p->features & AHC_ULTRA)
-       ultra = "Ultra ";
--    size += sprintf(BLS, "                           %s%sController%s ",
-+    seq_printf(m, "                           %s%sController%s ",
-       ultra, wide, channel);
-   }
-   switch(p->chip & ~AHC_CHIPID_MASK)
-   {
-     case AHC_VL:
--      size += sprintf(BLS, "at VLB slot %d\n", p->pci_device_fn);
-+      seq_printf(m, "at VLB slot %d\n", p->pci_device_fn);
-       break;
-     case AHC_EISA:
--      size += sprintf(BLS, "at EISA slot %d\n", p->pci_device_fn);
-+      seq_printf(m, "at EISA slot %d\n", p->pci_device_fn);
-       break;
-     default:
--      size += sprintf(BLS, "at PCI %d/%d/%d\n", p->pci_bus,
-+      seq_printf(m, "at PCI %d/%d/%d\n", p->pci_bus,
-         PCI_SLOT(p->pci_device_fn), PCI_FUNC(p->pci_device_fn));
-       break;
-   }
-   if( !(p->maddr) )
-   {
--    size += sprintf(BLS, "    Programmed I/O Base: %lx\n", p->base);
-+    seq_printf(m, "    Programmed I/O Base: %lx\n", p->base);
-   }
-   else
-   {
--    size += sprintf(BLS, "    PCI MMAPed I/O Base: 0x%lx\n", p->mbase);
-+    seq_printf(m, "    PCI MMAPed I/O Base: 0x%lx\n", p->mbase);
-   }
-   if( (p->chip & (AHC_VL | AHC_EISA)) )
-   {
--    size += sprintf(BLS, "    BIOS Memory Address: 0x%08x\n", p->bios_address);
-+    seq_printf(m, "    BIOS Memory Address: 0x%08x\n", p->bios_address);
-   }
--  size += sprintf(BLS, " Adapter SEEPROM Config: %s\n",
-+  seq_printf(m, " Adapter SEEPROM Config: %s\n",
-           (p->flags & AHC_SEEPROM_FOUND) ? "SEEPROM found and used." :
-          ((p->flags & AHC_USEDEFAULTS) ? "SEEPROM not found, using defaults." :
-            "SEEPROM not found, using leftover BIOS values.") );
--  size += sprintf(BLS, "      Adaptec SCSI BIOS: %s\n",
-+  seq_printf(m, "      Adaptec SCSI BIOS: %s\n",
-           (p->flags & AHC_BIOS_ENABLED) ? "Enabled" : "Disabled");
--  size += sprintf(BLS, "                    IRQ: %d\n", HBAptr->irq);
--  size += sprintf(BLS, "                   SCBs: Active %d, Max Active %d,\n",
-+  seq_printf(m, "                    IRQ: %d\n", HBAptr->irq);
-+  seq_printf(m, "                   SCBs: Active %d, Max Active %d,\n",
-             p->activescbs, p->max_activescbs);
--  size += sprintf(BLS, "                         Allocated %d, HW %d, "
-+  seq_printf(m, "                         Allocated %d, HW %d, "
-             "Page %d\n", p->scb_data->numscbs, p->scb_data->maxhscbs,
-             p->scb_data->maxscbs);
-   if (p->flags & AHC_EXTERNAL_SRAM)
--    size += sprintf(BLS, "                         Using External SCB SRAM\n");
--  size += sprintf(BLS, "             Interrupts: %ld", p->isr_count);
-+    seq_printf(m, "                         Using External SCB SRAM\n");
-+  seq_printf(m, "             Interrupts: %ld", p->isr_count);
-   if (p->chip & AHC_EISA)
-   {
--    size += sprintf(BLS, " %s\n",
-+    seq_printf(m, " %s\n",
-         (p->pause & IRQMS) ? "(Level Sensitive)" : "(Edge Triggered)");
-   }
-   else
-   {
--    size += sprintf(BLS, "\n");
-+    seq_printf(m, "\n");
-   }
--  size += sprintf(BLS, "      BIOS Control Word: 0x%04x\n",
-+  seq_printf(m, "      BIOS Control Word: 0x%04x\n",
-             p->bios_control);
--  size += sprintf(BLS, "   Adapter Control Word: 0x%04x\n",
-+  seq_printf(m, "   Adapter Control Word: 0x%04x\n",
-             p->adapter_control);
--  size += sprintf(BLS, "   Extended Translation: %sabled\n",
-+  seq_printf(m, "   Extended Translation: %sabled\n",
-       (p->flags & AHC_EXTEND_TRANS_A) ? "En" : "Dis");
--  size += sprintf(BLS, "Disconnect Enable Flags: 0x%04x\n", p->discenable);
-+  seq_printf(m, "Disconnect Enable Flags: 0x%04x\n", p->discenable);
-   if (p->features & (AHC_ULTRA | AHC_ULTRA2))
-   {
--    size += sprintf(BLS, "     Ultra Enable Flags: 0x%04x\n", p->ultraenb);
-+    seq_printf(m, "     Ultra Enable Flags: 0x%04x\n", p->ultraenb);
-   }
--  size += sprintf(BLS, "Default Tag Queue Depth: %d\n", aic7xxx_default_queue_depth);
--  size += sprintf(BLS, "    Tagged Queue By Device array for aic7xxx host "
-+  seq_printf(m, "Default Tag Queue Depth: %d\n", aic7xxx_default_queue_depth);
-+  seq_printf(m, "    Tagged Queue By Device array for aic7xxx host "
-                        "instance %d:\n", p->instance);
--  size += sprintf(BLS, "      {");
-+  seq_printf(m, "      {");
-   for(i=0; i < (MAX_TARGETS - 1); i++)
--    size += sprintf(BLS, "%d,",aic7xxx_tag_info[p->instance].tag_commands[i]);
--  size += sprintf(BLS, "%d}\n",aic7xxx_tag_info[p->instance].tag_commands[i]);
-+    seq_printf(m, "%d,",aic7xxx_tag_info[p->instance].tag_commands[i]);
-+  seq_printf(m, "%d}\n",aic7xxx_tag_info[p->instance].tag_commands[i]);
- 
--  size += sprintf(BLS, "\n");
--  size += sprintf(BLS, "Statistics:\n\n");
-+  seq_printf(m, "\n");
-+  seq_printf(m, "Statistics:\n\n");
-   list_for_each_entry(aic_dev, &p->aic_devs, list)
-   {
-     sdptr = aic_dev->SDptr;
-     tindex = sdptr->channel << 3 | sdptr->id;
--    size += sprintf(BLS, "(scsi%d:%d:%d:%d)\n",
-+    seq_printf(m, "(scsi%d:%d:%d:%d)\n",
-         p->host_no, sdptr->channel, sdptr->id, sdptr->lun);
--    size += sprintf(BLS, "  Device using %s/%s",
-+    seq_printf(m, "  Device using %s/%s",
-           (aic_dev->cur.width == MSG_EXT_WDTR_BUS_16_BIT) ?
-           "Wide" : "Narrow",
-           (aic_dev->cur.offset != 0) ?
-@@ -279,80 +187,75 @@ aic7xxx_proc_info ( struct Scsi_Host *HBAptr, char *buffer, char **start, off_t
-       sync_rate = aic7xxx_find_syncrate(p, &period, 0, &options);
-       if (sync_rate != NULL)
-       {
--        size += sprintf(BLS, "%s MByte/sec, offset %d\n",
-+        seq_printf(m, "%s MByte/sec, offset %d\n",
-                         sync_rate->rate[rate],
-                         aic_dev->cur.offset );
-       }
-       else
-       {
--        size += sprintf(BLS, "3.3 MByte/sec, offset %d\n",
-+        seq_printf(m, "3.3 MByte/sec, offset %d\n",
-                         aic_dev->cur.offset );
-       }
-     }
--    size += sprintf(BLS, "  Transinfo settings: ");
--    size += sprintf(BLS, "current(%d/%d/%d/%d), ",
-+    seq_printf(m, "  Transinfo settings: ");
-+    seq_printf(m, "current(%d/%d/%d/%d), ",
-                     aic_dev->cur.period,
-                     aic_dev->cur.offset,
-                     aic_dev->cur.width,
-                     aic_dev->cur.options);
--    size += sprintf(BLS, "goal(%d/%d/%d/%d), ",
-+    seq_printf(m, "goal(%d/%d/%d/%d), ",
-                     aic_dev->goal.period,
-                     aic_dev->goal.offset,
-                     aic_dev->goal.width,
-                     aic_dev->goal.options);
--    size += sprintf(BLS, "user(%d/%d/%d/%d)\n",
-+    seq_printf(m, "user(%d/%d/%d/%d)\n",
-                     p->user[tindex].period,
-                     p->user[tindex].offset,
-                     p->user[tindex].width,
-                     p->user[tindex].options);
-     if(sdptr->simple_tags)
-     {
--      size += sprintf(BLS, "  Tagged Command Queueing Enabled, Ordered Tags %s, Depth %d/%d\n", sdptr->ordered_tags ? "Enabled" : "Disabled", sdptr->queue_depth, aic_dev->max_q_depth);
-+      seq_printf(m, "  Tagged Command Queueing Enabled, Ordered Tags %s, Depth %d/%d\n", sdptr->ordered_tags ? "Enabled" : "Disabled", sdptr->queue_depth, aic_dev->max_q_depth);
-     }
-     if(aic_dev->barrier_total)
--      size += sprintf(BLS, "  Total transfers %ld:\n    (%ld/%ld/%ld/%ld reads/writes/REQ_BARRIER/Ordered Tags)\n",
-+      seq_printf(m, "  Total transfers %ld:\n    (%ld/%ld/%ld/%ld reads/writes/REQ_BARRIER/Ordered Tags)\n",
-         aic_dev->r_total+aic_dev->w_total, aic_dev->r_total, aic_dev->w_total,
-         aic_dev->barrier_total, aic_dev->ordered_total);
-     else
--      size += sprintf(BLS, "  Total transfers %ld:\n    (%ld/%ld reads/writes)\n",
-+      seq_printf(m, "  Total transfers %ld:\n    (%ld/%ld reads/writes)\n",
-         aic_dev->r_total+aic_dev->w_total, aic_dev->r_total, aic_dev->w_total);
--    size += sprintf(BLS, "%s\n", HDRB);
--    size += sprintf(BLS, "   Reads:");
-+    seq_printf(m, "%s\n", HDRB);
-+    seq_printf(m, "   Reads:");
-     for (i = 0; i < ARRAY_SIZE(aic_dev->r_bins); i++)
-     {
--      size += sprintf(BLS, " %10ld", aic_dev->r_bins[i]);
-+      seq_printf(m, " %10ld", aic_dev->r_bins[i]);
-     }
--    size += sprintf(BLS, "\n");
--    size += sprintf(BLS, "  Writes:");
-+    seq_printf(m, "\n");
-+    seq_printf(m, "  Writes:");
-     for (i = 0; i < ARRAY_SIZE(aic_dev->w_bins); i++)
-     {
--      size += sprintf(BLS, " %10ld", aic_dev->w_bins[i]);
-+      seq_printf(m, " %10ld", aic_dev->w_bins[i]);
-     }
--    size += sprintf(BLS, "\n");
--    size += sprintf(BLS, "\n\n");
--  }
--  if (size >= aic7xxx_buffer_size)
--  {
--    printk(KERN_WARNING "aic7xxx: Overflow in aic7xxx_proc.c\n");
-+    seq_printf(m, "\n");
-+    seq_printf(m, "\n\n");
-   }
- 
--  if (offset > size - 1)
--  {
--    kfree(aic7xxx_buffer);
--    aic7xxx_buffer = NULL;
--    aic7xxx_buffer_size = length = 0;
--    *start = NULL;
--  }
--  else
--  {
--    *start = buffer;
--    length = min_t(int, length, size - offset);
--    memcpy(buffer, &aic7xxx_buffer[offset], length);
--  }
-+  return 0;
-+}
- 
--  return (length);
-+static int aic7xxx_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, aic7xxx_proc_show, PDE(inode)->data);
+@@ -367,7 +366,7 @@ static struct scsi_host_template ips_driver_template = {
+ 	.eh_abort_handler	= ips_eh_abort,
+ 	.eh_host_reset_handler	= ips_eh_reset,
+ 	.proc_name		= "ips",
+-	.proc_info		= ips_proc_info,
++	.proc_fops		= &ips_proc_fops,
+ 	.slave_configure	= ips_slave_configure,
+ 	.bios_param		= ips_biosparam,
+ 	.this_id		= -1,
+@@ -1431,25 +1430,12 @@ ips_info(struct Scsi_Host *SH)
+ 	return (bp);
  }
  
-+static const struct file_operations aic7xxx_proc_fops = {
+-/****************************************************************************/
+-/*                                                                          */
+-/* Routine Name: ips_proc_info                                              */
+-/*                                                                          */
+-/* Routine Description:                                                     */
+-/*                                                                          */
+-/*   The passthru interface for the driver                                  */
+-/*                                                                          */
+-/****************************************************************************/
+-static int
+-ips_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
+-	      int length, int func)
++static int ips_proc_show(struct seq_file *m, void *v)
+ {
++	struct Scsi_Host *host = m->private;
+ 	int i;
+-	int ret;
+ 	ips_ha_t *ha = NULL;
+ 
+-	METHOD_TRACE("ips_proc_info", 1);
+-
+ 	/* Find our host structure */
+ 	for (i = 0; i < ips_next_controller; i++) {
+ 		if (ips_sh[i]) {
+@@ -1463,20 +1449,23 @@ ips_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
+ 	if (!ha)
+ 		return (-EINVAL);
+ 
+-	if (func) {
+-		/* write */
+-		return (0);
+-	} else {
+-		/* read */
+-		if (start)
+-			*start = buffer;
+-
+-		ret = ips_host_info(ha, buffer, offset, length);
++	ips_host_info(ha, m);
++	return 0;
++}
+ 
+-		return (ret);
+-	}
++static int ips_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, ips_proc_show, PDE(inode)->data);
+ }
+ 
++static const struct file_operations ips_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= aic7xxx_proc_open,
++	.open		= ips_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
 +};
 +
- /*
-  * Overrides for Emacs so that we follow Linus's tabbing style.
-  * Emacs will notice this stuff at the end of the file and automatically
+ /*--------------------------------------------------------------------------*/
+ /* Helper Functions                                                         */
+ /*--------------------------------------------------------------------------*/
+@@ -2032,51 +2021,43 @@ ips_cleanup_passthru(ips_ha_t * ha, ips_scb_t * scb)
+ /*   The passthru interface for the driver                                  */
+ /*                                                                          */
+ /****************************************************************************/
+-static int
+-ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
++static void
++ips_host_info(ips_ha_t * ha, struct seq_file *m)
+ {
+-	IPS_INFOSTR info;
+-
+ 	METHOD_TRACE("ips_host_info", 1);
+ 
+-	info.buffer = ptr;
+-	info.length = len;
+-	info.offset = offset;
+-	info.pos = 0;
+-	info.localpos = 0;
+-
+-	copy_info(&info, "\nIBM ServeRAID General Information:\n\n");
++	seq_printf(m, "\nIBM ServeRAID General Information:\n\n");
+ 
+ 	if ((le32_to_cpu(ha->nvram->signature) == IPS_NVRAM_P5_SIG) &&
+ 	    (le16_to_cpu(ha->nvram->adapter_type) != 0))
+-		copy_info(&info, "\tController Type                   : %s\n",
++		seq_printf(m, "\tController Type                   : %s\n",
+ 			  ips_adapter_name[ha->ad_type - 1]);
+ 	else
+-		copy_info(&info,
++		seq_printf(m,
+ 			  "\tController Type                   : Unknown\n");
+ 
+ 	if (ha->io_addr)
+-		copy_info(&info,
+-			  "\tIO region                         : 0x%lx (%d bytes)\n",
++		seq_printf(m,
++			  "\tIO region                         : 0x%x (%d bytes)\n",
+ 			  ha->io_addr, ha->io_len);
+ 
+ 	if (ha->mem_addr) {
+-		copy_info(&info,
+-			  "\tMemory region                     : 0x%lx (%d bytes)\n",
++		seq_printf(m,
++			  "\tMemory region                     : 0x%x (%d bytes)\n",
+ 			  ha->mem_addr, ha->mem_len);
+-		copy_info(&info,
+-			  "\tShared memory address             : 0x%lx\n",
++		seq_printf(m,
++			  "\tShared memory address             : %p\n",
+ 			  ha->mem_ptr);
+ 	}
+ 
+-	copy_info(&info, "\tIRQ number                        : %d\n", ha->pcidev->irq);
++	seq_printf(m, "\tIRQ number                        : %d\n", ha->pcidev->irq);
+ 
+     /* For the Next 3 lines Check for Binary 0 at the end and don't include it if it's there. */
+     /* That keeps everything happy for "text" operations on the proc file.                    */
+ 
+ 	if (le32_to_cpu(ha->nvram->signature) == IPS_NVRAM_P5_SIG) {
+ 	if (ha->nvram->bios_low[3] == 0) {
+-            copy_info(&info,
++            seq_printf(m,
+ 			          "\tBIOS Version                      : %c%c%c%c%c%c%c\n",
+ 			          ha->nvram->bios_high[0], ha->nvram->bios_high[1],
+ 			          ha->nvram->bios_high[2], ha->nvram->bios_high[3],
+@@ -2084,7 +2065,7 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
+ 			          ha->nvram->bios_low[2]);
+ 
+         } else {
+-		    copy_info(&info,
++		    seq_printf(m,
+ 			          "\tBIOS Version                      : %c%c%c%c%c%c%c%c\n",
+ 			          ha->nvram->bios_high[0], ha->nvram->bios_high[1],
+ 			          ha->nvram->bios_high[2], ha->nvram->bios_high[3],
+@@ -2095,14 +2076,14 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
+     }
+ 
+     if (ha->enq->CodeBlkVersion[7] == 0) {
+-        copy_info(&info,
++        seq_printf(m,
+ 		          "\tFirmware Version                  : %c%c%c%c%c%c%c\n",
+ 		          ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
+ 		          ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
+ 		          ha->enq->CodeBlkVersion[4], ha->enq->CodeBlkVersion[5],
+ 		          ha->enq->CodeBlkVersion[6]);
+     } else {
+-        copy_info(&info,
++        seq_printf(m,
+ 		          "\tFirmware Version                  : %c%c%c%c%c%c%c%c\n",
+ 		          ha->enq->CodeBlkVersion[0], ha->enq->CodeBlkVersion[1],
+ 		          ha->enq->CodeBlkVersion[2], ha->enq->CodeBlkVersion[3],
+@@ -2111,14 +2092,14 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
+     }
+ 
+     if (ha->enq->BootBlkVersion[7] == 0) {
+-        copy_info(&info,
++        seq_printf(m,
+ 		          "\tBoot Block Version                : %c%c%c%c%c%c%c\n",
+ 		          ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
+ 		          ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
+ 		          ha->enq->BootBlkVersion[4], ha->enq->BootBlkVersion[5],
+ 		          ha->enq->BootBlkVersion[6]);
+     } else {
+-        copy_info(&info,
++        seq_printf(m,
+ 		          "\tBoot Block Version                : %c%c%c%c%c%c%c%c\n",
+ 		          ha->enq->BootBlkVersion[0], ha->enq->BootBlkVersion[1],
+ 		          ha->enq->BootBlkVersion[2], ha->enq->BootBlkVersion[3],
+@@ -2126,90 +2107,26 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
+ 		          ha->enq->BootBlkVersion[6], ha->enq->BootBlkVersion[7]);
+     }
+ 
+-	copy_info(&info, "\tDriver Version                    : %s%s\n",
++	seq_printf(m, "\tDriver Version                    : %s%s\n",
+ 		  IPS_VERSION_HIGH, IPS_VERSION_LOW);
+ 
+-	copy_info(&info, "\tDriver Build                      : %d\n",
++	seq_printf(m, "\tDriver Build                      : %d\n",
+ 		  IPS_BUILD_IDENT);
+ 
+-	copy_info(&info, "\tMax Physical Devices              : %d\n",
++	seq_printf(m, "\tMax Physical Devices              : %d\n",
+ 		  ha->enq->ucMaxPhysicalDevices);
+-	copy_info(&info, "\tMax Active Commands               : %d\n",
++	seq_printf(m, "\tMax Active Commands               : %d\n",
+ 		  ha->max_cmds);
+-	copy_info(&info, "\tCurrent Queued Commands           : %d\n",
++	seq_printf(m, "\tCurrent Queued Commands           : %d\n",
+ 		  ha->scb_waitlist.count);
+-	copy_info(&info, "\tCurrent Active Commands           : %d\n",
++	seq_printf(m, "\tCurrent Active Commands           : %d\n",
+ 		  ha->scb_activelist.count - ha->num_ioctl);
+-	copy_info(&info, "\tCurrent Queued PT Commands        : %d\n",
++	seq_printf(m, "\tCurrent Queued PT Commands        : %d\n",
+ 		  ha->copp_waitlist.count);
+-	copy_info(&info, "\tCurrent Active PT Commands        : %d\n",
++	seq_printf(m, "\tCurrent Active PT Commands        : %d\n",
+ 		  ha->num_ioctl);
+ 
+-	copy_info(&info, "\n");
+-
+-	return (info.localpos);
+-}
+-
+-/****************************************************************************/
+-/*                                                                          */
+-/* Routine Name: copy_mem_info                                              */
+-/*                                                                          */
+-/* Routine Description:                                                     */
+-/*                                                                          */
+-/*   Copy data into an IPS_INFOSTR structure                                */
+-/*                                                                          */
+-/****************************************************************************/
+-static void
+-copy_mem_info(IPS_INFOSTR * info, char *data, int len)
+-{
+-	METHOD_TRACE("copy_mem_info", 1);
+-
+-	if (info->pos + len < info->offset) {
+-		info->pos += len;
+-		return;
+-	}
+-
+-	if (info->pos < info->offset) {
+-		data += (info->offset - info->pos);
+-		len -= (info->offset - info->pos);
+-		info->pos += (info->offset - info->pos);
+-	}
+-
+-	if (info->localpos + len > info->length)
+-		len = info->length - info->localpos;
+-
+-	if (len > 0) {
+-		memcpy(info->buffer + info->localpos, data, len);
+-		info->pos += len;
+-		info->localpos += len;
+-	}
+-}
+-
+-/****************************************************************************/
+-/*                                                                          */
+-/* Routine Name: copy_info                                                  */
+-/*                                                                          */
+-/* Routine Description:                                                     */
+-/*                                                                          */
+-/*   printf style wrapper for an info structure                             */
+-/*                                                                          */
+-/****************************************************************************/
+-static int
+-copy_info(IPS_INFOSTR * info, char *fmt, ...)
+-{
+-	va_list args;
+-	char buf[128];
+-	int len;
+-
+-	METHOD_TRACE("copy_info", 1);
+-
+-	va_start(args, fmt);
+-	len = vsprintf(buf, fmt, args);
+-	va_end(args);
+-
+-	copy_mem_info(info, buf, len);
+-
+-	return (len);
++	seq_printf(m, "\n");
+ }
+ 
+ /****************************************************************************/
+--- a/drivers/scsi/ips.h
++++ b/drivers/scsi/ips.h
+@@ -416,7 +416,6 @@
+    /*
+     * Scsi_Host Template
+     */
+-   static int ips_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
+    static int ips_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 		sector_t capacity, int geom[]);
+    static int ips_slave_configure(struct scsi_device *SDptr);
+@@ -959,14 +958,6 @@ typedef union {
+    IPS_ENH_SG_LIST  *enh_list;
+ } IPS_SG_LIST;
+ 
+-typedef struct _IPS_INFOSTR {
+-   char *buffer;
+-   int   length;
+-   int   offset;
+-   int   pos;
+-   int   localpos;
+-} IPS_INFOSTR;
+-
+ typedef struct {
+    char *option_name;
+    int  *option_flag;
 -- 
 1.6.5.2
 
