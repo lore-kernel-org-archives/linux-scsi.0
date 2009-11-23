@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 03/27] scsi proc_fops: convert scsi_debug.c
-Date: Mon, 23 Nov 2009 04:31:59 +0300
-Message-ID: <20091123013159.GC31711@x200.localdomain>
+Subject: [PATCH 04/27] scsi proc_fops: convert nsp32
+Date: Mon, 23 Nov 2009 04:32:32 +0300
+Message-ID: <20091123013232.GD31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:60691 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755956AbZKWBdS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:33:18 -0500
-Received: by ewy19 with SMTP id 19so1398726ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:33:21 -0800 (PST)
+Received: from ey-out-2122.google.com ([74.125.78.26]:44479 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755986AbZKWBds (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:33:48 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so885718eyf.19
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:33:54 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,123 +20,109 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/scsi_debug.c |   81 ++++++++++++++++++++++++----------------------
- 1 file changed, 44 insertions(+), 37 deletions(-)
+ drivers/scsi/nsp32.c |   52 +++++++++++++++++++--------------------------------
+ 1 file changed, 20 insertions(+), 32 deletions(-)
 
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -39,6 +39,7 @@
- #include <linux/vmalloc.h>
- #include <linux/moduleparam.h>
- #include <linux/scatterlist.h>
-+#include <linux/seq_file.h>
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -34,6 +34,8 @@
  #include <linux/blkdev.h>
- #include <linux/crc-t10dif.h>
+ #include <linux/interrupt.h>
+ #include <linux/pci.h>
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
+ #include <linux/delay.h>
+ #include <linux/ctype.h>
+ #include <linux/dma-mapping.h>
+@@ -194,7 +196,7 @@ static int  __init    init_nsp32  (void);
+ static void __exit    exit_nsp32  (void);
  
-@@ -2470,34 +2471,12 @@ static const char * scsi_debug_info(struct Scsi_Host * shp)
- 	return sdebug_info;
- }
+ /* struct struct scsi_host_template */
+-static int         nsp32_proc_info   (struct Scsi_Host *, char *, char **, off_t, int, int);
++static const struct file_operations nsp32_proc_fops;
  
--/* scsi_debug_proc_info
-+/*
-  * Used if the driver currently has no own support for /proc/scsi
-  */
--static int scsi_debug_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
--				int length, int inout)
--{
--	int len, pos, begin;
--	int orig_length;
+ static int         nsp32_detect      (struct pci_dev *pdev);
+ static int         nsp32_queuecommand(struct scsi_cmnd *,
+@@ -271,7 +273,7 @@ static void nsp32_dmessage(const char *, int, int,    char *, ...);
+ static struct scsi_host_template nsp32_template = {
+ 	.proc_name			= "nsp32",
+ 	.name				= "Workbit NinjaSCSI-32Bi/UDE",
+-	.proc_info			= nsp32_proc_info,
++	.proc_fops			= &nsp32_proc_fops,
+ 	.info				= nsp32_info,
+ 	.queuecommand			= nsp32_queuecommand,
+ 	.can_queue			= 1,
+@@ -1444,18 +1446,11 @@ static irqreturn_t do_nsp32_isr(int irq, void *dev_id)
+ 
+ #undef SPRINTF
+ #define SPRINTF(args...) \
+-	do { \
+-		if(length > (pos - buffer)) { \
+-			pos += snprintf(pos, length - (pos - buffer) + 1, ## args); \
+-			nsp32_dbg(NSP32_DEBUG_PROC, "buffer=0x%p pos=0x%p length=%d %d\n", buffer, pos, length,  length - (pos - buffer));\
+-		} \
+-	} while(0)
 -
--	orig_length = length;
--
--	if (inout == 1) {
--		char arr[16];
--		int minLen = length > 15 ? 15 : length;
--
--		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
--			return -EACCES;
--		memcpy(arr, buffer, minLen);
--		arr[minLen] = '\0';
--		if (1 != sscanf(arr, "%d", &pos))
--			return -EINVAL;
--		scsi_debug_opts = pos;
--		if (scsi_debug_every_nth != 0)
--                        scsi_debug_cmnd_count = 0;
--		return length;
+-static int nsp32_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+-			   off_t offset, int length, int inout)
++	seq_printf(m, ## args)
++
++static int nsp32_proc_show(struct seq_file *m, void *v)
+ {
+-	char             *pos = buffer;
+-	int               thislength;
++	struct Scsi_Host *host = m->private;
+ 	unsigned long     flags;
+ 	nsp32_hw_data    *data;
+ 	int               hostno;
+@@ -1464,11 +1459,6 @@ static int nsp32_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+ 	int               id, speed;
+ 	long              model;
+ 
+-	/* Write is not supported, just return. */
+-	if (inout == TRUE) {
+-		return -EINVAL;
 -	}
--	begin = 0;
--	pos = len = sprintf(buffer, "scsi_debug adapter driver, version "
-+static int scsi_debug_proc_show(struct seq_file *m, void *v)
-+{
-+	seq_printf(m, "scsi_debug adapter driver, version "
- 	    "%s [%s]\n"
- 	    "num_tgts=%d, shared (ram) size=%d MB, opts=0x%x, "
- 	    "every_nth=%d(curr:%d)\n"
-@@ -2512,17 +2491,46 @@ static int scsi_debug_proc_info(struct Scsi_Host *host, char *buffer, char **sta
- 	    scsi_debug_sector_size, sdebug_cylinders_per, sdebug_heads,
- 	    sdebug_sectors_per, num_aborts, num_dev_resets, num_bus_resets,
- 	    num_host_resets, dix_reads, dix_writes, dif_errors);
--	if (pos < offset) {
--		len = 0;
--		begin = pos;
--	}
--	*start = buffer + (offset - begin);	/* Start of wanted data */
--	len -= (offset - begin);
--	if (len > length)
--		len = length;
--	return len;
+-
+ 	hostno = host->host_no;
+ 	data = (nsp32_hw_data *)host->hostdata;
+ 	base = host->io_port;
+@@ -1529,23 +1519,22 @@ static int nsp32_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+ 		SPRINTF("\n");
+ 	}
+ 
+-
+-	thislength = pos - (buffer + offset);
+-
+-	if(thislength < 0) {
+-		*start = NULL;
+-                return 0;
+-        }
+-
+-
+-	thislength = min(thislength, length);
+-	*start = buffer + offset;
+-
+-	return thislength;
 +	return 0;
  }
+ #undef SPRINTF
  
-+static int scsi_debug_proc_open(struct inode *inode, struct file *file)
++static int nsp32_proc_open(struct inode *inode, struct file *file)
 +{
-+	return single_open(file, scsi_debug_proc_show, NULL);
++	return single_open(file, nsp32_proc_show, PDE(inode)->data);
 +}
-+
-+static ssize_t scsi_debug_proc_write(struct file *file, const char __user *buf,
-+				     size_t count, loff_t *pos)
-+{
-+	char kbuf[16];
-+	size_t len;
-+
-+	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+		return -EACCES;
-+
-+	len = min(count, sizeof(kbuf) - 1);
-+	if (copy_from_user(kbuf, buf, len))
-+		return -EFAULT;
-+	kbuf[len] = '\0';
-+
-+	if (sscanf(kbuf, "%d", &scsi_debug_opts) != 1)
-+		return -EINVAL;
-+
-+	if (scsi_debug_every_nth != 0)
-+		scsi_debug_cmnd_count = 0;
-+
-+	return count;
-+}
-+
-+static const struct file_operations scsi_debug_proc_fops = {
+ 
++static const struct file_operations nsp32_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= scsi_debug_proc_open,
++	.open		= nsp32_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
-+	.write		= scsi_debug_proc_write,
 +};
-+
- static ssize_t sdebug_delay_show(struct device_driver * ddp, char * buf)
- {
-         return scnprintf(buf, PAGE_SIZE, "%d\n", scsi_debug_delay);
-@@ -3459,7 +3467,7 @@ write:
- }
  
- static struct scsi_host_template sdebug_driver_template = {
--	.proc_info =		scsi_debug_proc_info,
-+	.proc_fops =		&scsi_debug_proc_fops,
- 	.proc_name =		sdebug_proc_name,
- 	.name =			"SCSI DEBUG",
- 	.info =			scsi_debug_info,
+ /*
+  * Reset parameters and call scsi_done for data->cur_lunt.
 -- 
 1.6.5.2
 
