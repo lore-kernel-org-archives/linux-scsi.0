@@ -1,41 +1,94 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] multipath: Evaluate request result and sense
-	code
-Date: Sun, 22 Nov 2009 15:00:17 -0600
-Message-ID: <4B09A661.10102@cs.wisc.edu>
-References: <20091119122503.413AD3A174@ochil.suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH 01/27] scsi proc_fops: add struct
+ scsi_host_template::proc_fops
+Date: Mon, 23 Nov 2009 04:30:05 +0300
+Message-ID: <20091123013004.GA31711@x200.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20091119122503.413AD3A174@ochil.suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:55344 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754176AbZKWBbW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:31:22 -0500
+Received: by ewy19 with SMTP id 19so1397872ewy.21
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:31:27 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-Hannes Reinecke wrote:
->  /*
-> + * Evaluate scsi return code
-> + */
-> +static int eval_scsi_error(int result, char *sense, int sense_len)
-> +{
-> +	struct scsi_sense_hdr sshdr;
-> +	int r = DM_ENDIO_REQUEUE;
-> +
-> +	if (host_byte(result) != DID_OK)
+Add struct scsi_host_template::proc_fops .
 
+->read_proc and ->write_proc interfaces are going to be removed,
+the only big user of them is scsi_proc.c
 
-For values like DID_NO_CONNECT or DID_TRANSPORT FAILFAST, I think it 
-makes sense to fail the path. Not in this patch, but a new one, would we 
-want to modify dm-mpath so that we do not fail the path for errors like 
-DID_ABORT or DID_SOFT_ERROR, DID_RESET or DID_ERROR?
+->proc_fops takes precedence over ->proc_info while conversion is done.
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
+
+ drivers/scsi/scsi_proc.c |   20 +++++++++++++++-----
+ include/scsi/scsi_host.h |    1 +
+ 2 files changed, 16 insertions(+), 5 deletions(-)
+
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -106,7 +106,7 @@ out:
+ 
+ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+ {
+-	if (!sht->proc_info)
++	if (!sht->proc_info && !sht->proc_fops)
+ 		return;
+ 
+ 	mutex_lock(&global_host_template_mutex);
+@@ -125,7 +125,7 @@ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+  */
+ void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
+ {
+-	if (!sht->proc_info)
++	if (!sht->proc_info && !sht->proc_fops)
+ 		return;
+ 
+ 	mutex_lock(&global_host_template_mutex);
+@@ -151,16 +151,26 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
+ 		return;
+ 
+ 	sprintf(name,"%d", shost->host_no);
+-	p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
++	if (sht->proc_fops) {
++		mode_t mode;
++
++		mode = S_IRUGO;
++		if (sht->proc_fops->write)
++			mode |= S_IWUSR;
++		p = proc_create_data(name, mode, sht->proc_dir,
++				     sht->proc_fops, shost);
++	} else {
++		p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
+ 			sht->proc_dir, proc_scsi_read, shost);
++		if (p)
++			p->write_proc = proc_scsi_write_proc;
++	}
+ 	if (!p) {
+ 		printk(KERN_ERR "%s: Failed to register host %d in"
+ 		       "%s\n", __func__, shost->host_no,
+ 		       sht->proc_name);
+ 		return;
+ 	} 
+-
+-	p->write_proc = proc_scsi_write_proc;
+ }
+ 
+ /**
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -328,6 +328,7 @@ struct scsi_host_template {
+ 	 * Status: OBSOLETE
+ 	 */
+ 	int (*proc_info)(struct Scsi_Host *, char *, char **, off_t, int, int);
++	const struct file_operations *proc_fops;
+ 
+ 	/*
+ 	 * This is an optional routine that allows the transport to become
