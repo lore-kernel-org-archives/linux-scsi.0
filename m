@@ -1,235 +1,607 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH] mac_esp: fix PIO mode
-Date: Mon, 23 Nov 2009 14:57:42 +1100 (EST)
-Message-ID: <alpine.OSX.2.00.0911231452300.468@localhost>
+From: tmhikaru@gmail.com
+Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem readonly
+Date: Mon, 23 Nov 2009 03:09:19 -0500
+Message-ID: <20091123080919.GA3115@roll>
+References: <20091113050907.GA4965@roll> <20091119160700.GC2943@atrey.karlin.mff.cuni.cz> <20091120082359.GA29538@roll> <20091120094641.GB15422@duck.suse.cz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Content-Type: multipart/mixed; boundary="liOOAslEiF7prFVr"
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20091120094641.GB15422@duck.suse.cz>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-The mac_esp PIO algorithm no longer works in 2.6.31 and crashes my Centris 
-660av. So here's a better one.
+--liOOAslEiF7prFVr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-One of the SCSI drives I tested still doesn't like the PIO mode and fails 
-with "esp: esp0: Reconnect IRQ2 timeout" (the same drive works fine in 
-PDMA mode).
+	Okay, finally had some time to dismantle the machine in question and
+inserted the backup drive without the enclosure. Now that I was able to get
+smartctl to give me information on what was going on, it seems there's
+nothing wrong with the drive itself (no remapped sectors, nothing prefail or
+fail going wrong, drive's smart status is good) but it's had a history of
+406 (!!!) errors reported, the last five happening within the same second,
+all of which seem (to my untrained eye) to imply a bad IDE cable. Which
+means likely my USB enclosure is screwing up.
 
-This failure happens when esp_reconnect_with_tag() tries to read in two 
-tag bytes but the chip only provides one (0x20). I don't know what causes 
-this. I decided not to waste any more time trying to fix it because the 
-best solution is to rip out the PIO mode altogether and use the DMA 
-engine.
+	To be sure, I did some extended testing with it hooked up: Tried
+doing a full and incremental backup of my machine with no errors reported,
+as well as an offline and then immediately afterwards, long test via
+smartctl. Nothing changed in the output.
 
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+	I've attached the output of smartctl at various points in the tests:
+the first being the initial immediate display of information at startup, the
+second just after the long test, and the third just after the two backups
+(Full and incremental) were tried. Nothing seems to shout at me in the
+output, I'm frankly pretty sure something's wrong with the enclosure. If
+it's the drive, it's not showing up here at least.
 
----
- drivers/scsi/esp_scsi.c |   11 ++---
- drivers/scsi/mac_esp.c  |   97 ++++++++++++++++++++++++------------------------
- 2 files changed, 55 insertions(+), 53 deletions(-)
+	I'd like your thoughts and suggestions on this. While I'm pretty
+sure I know what the smartctl output means, I'm always capable of being
+entirely wrong. Please let me know if I've misinterpreted the information.
 
-Index: linux-2.6.31/drivers/scsi/mac_esp.c
-===================================================================
---- linux-2.6.31.orig/drivers/scsi/mac_esp.c	2009-11-23 12:52:45.000000000 +1100
-+++ linux-2.6.31/drivers/scsi/mac_esp.c	2009-11-23 12:56:15.000000000 +1100
-@@ -22,7 +22,6 @@
- 
- #include <asm/irq.h>
- #include <asm/dma.h>
--
- #include <asm/macints.h>
- #include <asm/macintosh.h>
- 
-@@ -278,24 +277,27 @@ static void mac_esp_send_pdma_cmd(struct
-  * Programmed IO routines follow.
-  */
- 
--static inline int mac_esp_wait_for_fifo(struct esp *esp)
-+static inline unsigned int mac_esp_wait_for_fifo(struct esp *esp)
- {
- 	int i = 500000;
- 
- 	do {
--		if (esp_read8(ESP_FFLAGS) & ESP_FF_FBYTES)
--			return 0;
-+		unsigned int fbytes = esp_read8(ESP_FFLAGS) & ESP_FF_FBYTES;
-+
-+		if (fbytes)
-+			return fbytes;
- 
- 		udelay(2);
- 	} while (--i);
- 
- 	printk(KERN_ERR PFX "FIFO is empty (sreg %02x)\n",
- 	       esp_read8(ESP_STATUS));
--	return 1;
-+	return 0;
- }
- 
- static inline int mac_esp_wait_for_intr(struct esp *esp)
- {
-+	struct mac_esp_priv *mep = MAC_ESP_GET_PRIV(esp);
- 	int i = 500000;
- 
- 	do {
-@@ -307,6 +309,7 @@ static inline int mac_esp_wait_for_intr(
- 	} while (--i);
- 
- 	printk(KERN_ERR PFX "IRQ timeout (sreg %02x)\n", esp->sreg);
-+	mep->error = 1;
- 	return 1;
- }
- 
-@@ -346,11 +349,10 @@ static inline int mac_esp_wait_for_intr(
- static void mac_esp_send_pio_cmd(struct esp *esp, u32 addr, u32 esp_count,
- 				 u32 dma_count, int write, u8 cmd)
- {
--	unsigned long flags;
- 	struct mac_esp_priv *mep = MAC_ESP_GET_PRIV(esp);
- 	u8 *fifo = esp->regs + ESP_FDATA * 16;
- 
--	local_irq_save(flags);
-+	disable_irq(esp->host->irq);
- 
- 	cmd &= ~ESP_CMD_DMA;
- 	mep->error = 0;
-@@ -358,11 +360,35 @@ static void mac_esp_send_pio_cmd(struct 
- 	if (write) {
- 		scsi_esp_cmd(esp, cmd);
- 
--		if (!mac_esp_wait_for_intr(esp)) {
--			if (mac_esp_wait_for_fifo(esp))
--				esp_count = 0;
--		} else {
--			esp_count = 0;
-+		while (1) {
-+			unsigned int n;
-+
-+			n = mac_esp_wait_for_fifo(esp);
-+			if (!n)
-+				break;
-+
-+			if (n > esp_count)
-+				n = esp_count;
-+			esp_count -= n;
-+
-+			MAC_ESP_PIO_LOOP("%2@,%0@+", n);
-+
-+			if (!esp_count)
-+				break;
-+
-+			if (mac_esp_wait_for_intr(esp))
-+				break;
-+
-+			if (((esp->sreg & ESP_STAT_PMASK) != ESP_DIP) &&
-+			    ((esp->sreg & ESP_STAT_PMASK) != ESP_MIP))
-+				break;
-+
-+			esp->ireg = esp_read8(ESP_INTRPT);
-+			if ((esp->ireg & (ESP_INTR_DC | ESP_INTR_BSERV)) !=
-+			    ESP_INTR_BSERV)
-+				break;
-+
-+			scsi_esp_cmd(esp, ESP_CMD_TI);
- 		}
- 	} else {
- 		scsi_esp_cmd(esp, ESP_CMD_FLUSH);
-@@ -373,47 +399,24 @@ static void mac_esp_send_pio_cmd(struct 
- 			MAC_ESP_PIO_LOOP("%0@+,%2@", esp_count);
- 
- 		scsi_esp_cmd(esp, cmd);
--	}
--
--	while (esp_count) {
--		unsigned int n;
--
--		if (mac_esp_wait_for_intr(esp)) {
--			mep->error = 1;
--			break;
--		}
--
--		if (esp->sreg & ESP_STAT_SPAM) {
--			printk(KERN_ERR PFX "gross error\n");
--			mep->error = 1;
--			break;
--		}
- 
--		n = esp_read8(ESP_FFLAGS) & ESP_FF_FBYTES;
--
--		if (write) {
--			if (n > esp_count)
--				n = esp_count;
--			esp_count -= n;
--
--			MAC_ESP_PIO_LOOP("%2@,%0@+", n);
-+		while (esp_count) {
-+			unsigned int n;
- 
--			if ((esp->sreg & ESP_STAT_PMASK) == ESP_STATP)
-+			if (mac_esp_wait_for_intr(esp))
- 				break;
- 
--			if (esp_count) {
--				esp->ireg = esp_read8(ESP_INTRPT);
--				if (esp->ireg & ESP_INTR_DC)
--					break;
-+			if (((esp->sreg & ESP_STAT_PMASK) != ESP_DOP) &&
-+			    ((esp->sreg & ESP_STAT_PMASK) != ESP_MOP))
-+				break;
- 
--				scsi_esp_cmd(esp, ESP_CMD_TI);
--			}
--		} else {
- 			esp->ireg = esp_read8(ESP_INTRPT);
--			if (esp->ireg & ESP_INTR_DC)
-+			if ((esp->ireg & (ESP_INTR_DC | ESP_INTR_BSERV)) !=
-+			    ESP_INTR_BSERV)
- 				break;
- 
--			n = MAC_ESP_FIFO_SIZE - n;
-+			n = MAC_ESP_FIFO_SIZE -
-+			    (esp_read8(ESP_FFLAGS) & ESP_FF_FBYTES);
- 			if (n > esp_count)
- 				n = esp_count;
- 
-@@ -428,7 +431,7 @@ static void mac_esp_send_pio_cmd(struct 
- 		}
- 	}
- 
--	local_irq_restore(flags);
-+	enable_irq(esp->host->irq);
- }
- 
- static int mac_esp_irq_pending(struct esp *esp)
-Index: linux-2.6.31/drivers/scsi/esp_scsi.c
-===================================================================
---- linux-2.6.31.orig/drivers/scsi/esp_scsi.c	2009-11-23 12:52:45.000000000 +1100
-+++ linux-2.6.31/drivers/scsi/esp_scsi.c	2009-11-23 12:53:30.000000000 +1100
-@@ -2405,12 +2405,6 @@ static int esp_slave_configure(struct sc
- 	struct esp_target_data *tp = &esp->target[dev->id];
- 	int goal_tags, queue_depth;
- 
--	if (esp->flags & ESP_FLAG_DISABLE_SYNC) {
--		/* Bypass async domain validation */
--		dev->ppr  = 0;
--		dev->sdtr = 0;
--	}
--
- 	goal_tags = 0;
- 
- 	if (dev->tagged_supported) {
-@@ -2433,6 +2427,11 @@ static int esp_slave_configure(struct sc
- 	}
- 	tp->flags |= ESP_TGT_DISCONNECT;
- 
-+	if (esp->flags & ESP_FLAG_DISABLE_SYNC) {
-+		dev->wdtr = spi_support_wide(dev->sdev_target) = 0;
-+		dev->sdtr = spi_support_sync(dev->sdev_target) = 0;
-+	}
-+
- 	if (!spi_initial_dv(dev->sdev_target))
- 		spi_dv_device(dev);
- 
+Timothy McGrath
+--liOOAslEiF7prFVr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=diskstats
+
+smartctl version 5.38 [i486-slackware-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Barracuda 7200.8 family
+Device Model:     ST3250823A
+Serial Number:    5ND3CC5A
+Firmware Version: 3.06
+User Capacity:    250,059,350,016 bytes
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   7
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Nov 23 00:23:54 2009 EST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x82)	Offline data collection activity
+					was completed without error.
+					Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0)	The previous self-test routine completed
+					without error or no self-test has ever 
+					been run.
+Total time to complete Offline 
+data collection: 		 ( 430) seconds.
+Offline data collection
+capabilities: 			 (0x5b) SMART execute Offline immediate.
+					Auto Offline data collection on/off support.
+					Suspend Offline collection upon new
+					command.
+					Offline surface scan supported.
+					Self-test supported.
+					No Conveyance Self-test supported.
+					Selective Self-test supported.
+SMART capabilities:            (0x0003)	Saves SMART data before entering
+					power-saving mode.
+					Supports SMART auto save timer.
+Error logging capability:        (0x01)	Error logging supported.
+					General Purpose Logging supported.
+Short self-test routine 
+recommended polling time: 	 (   1) minutes.
+Extended self-test routine
+recommended polling time: 	 (  84) minutes.
+
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   074   036   006    Pre-fail  Always       -       50613791
+  3 Spin_Up_Time            0x0003   099   098   000    Pre-fail  Always       -       0
+  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       112
+  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always       -       0
+  7 Seek_Error_Rate         0x000f   050   047   030    Pre-fail  Always       -       1443141758905
+  9 Power_On_Hours          0x0032   100   100   000    Old_age   Always       -       354
+ 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always       -       157
+194 Temperature_Celsius     0x0022   027   052   000    Old_age   Always       -       27 (0 19 0 0)
+195 Hardware_ECC_Recovered  0x001a   051   046   000    Old_age   Always       -       760201
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
+200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age   Offline      -       0
+202 TA_Increase_Count       0x0032   100   253   000    Old_age   Always       -       0
+
+SMART Error Log Version: 1
+ATA Error Count: 406 (device log contains only the most recent five errors)
+	CR = Command Register [HEX]
+	FR = Features Register [HEX]
+	SC = Sector Count Register [HEX]
+	SN = Sector Number Register [HEX]
+	CL = Cylinder Low Register [HEX]
+	CH = Cylinder High Register [HEX]
+	DH = Device/Head Register [HEX]
+	DC = Device Command Register [HEX]
+	ER = Error register [HEX]
+	ST = Status register [HEX]
+Powered_Up_Time is measured from power on, and printed as
+DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
+SS=sec, and sss=millisec. It "wraps" after 49.710 days.
+
+Error 406 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 405 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 404 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 403 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 402 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:30.579  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+SMART Self-test log structure revision number 1
+No self-tests have been logged.  [To run self-tests, use: smartctl -t]
+
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+
+
+--liOOAslEiF7prFVr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=diskstats2
+
+smartctl version 5.38 [i486-slackware-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Barracuda 7200.8 family
+Device Model:     ST3250823A
+Serial Number:    5ND3CC5A
+Firmware Version: 3.06
+User Capacity:    250,059,350,016 bytes
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   7
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Nov 23 02:37:01 2009 EST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x82)	Offline data collection activity
+					was completed without error.
+					Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0)	The previous self-test routine completed
+					without error or no self-test has ever 
+					been run.
+Total time to complete Offline 
+data collection: 		 ( 430) seconds.
+Offline data collection
+capabilities: 			 (0x5b) SMART execute Offline immediate.
+					Auto Offline data collection on/off support.
+					Suspend Offline collection upon new
+					command.
+					Offline surface scan supported.
+					Self-test supported.
+					No Conveyance Self-test supported.
+					Selective Self-test supported.
+SMART capabilities:            (0x0003)	Saves SMART data before entering
+					power-saving mode.
+					Supports SMART auto save timer.
+Error logging capability:        (0x01)	Error logging supported.
+					General Purpose Logging supported.
+Short self-test routine 
+recommended polling time: 	 (   1) minutes.
+Extended self-test routine
+recommended polling time: 	 (  84) minutes.
+
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   053   036   006    Pre-fail  Always       -       73989115
+  3 Spin_Up_Time            0x0003   099   098   000    Pre-fail  Always       -       0
+  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       112
+  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always       -       0
+  7 Seek_Error_Rate         0x000f   050   047   030    Pre-fail  Always       -       1443142340790
+  9 Power_On_Hours          0x0032   100   100   000    Old_age   Always       -       357
+ 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always       -       157
+194 Temperature_Celsius     0x0022   040   052   000    Old_age   Always       -       40 (0 19 0 0)
+195 Hardware_ECC_Recovered  0x001a   050   046   000    Old_age   Always       -       33250523
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
+200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age   Offline      -       0
+202 TA_Increase_Count       0x0032   100   253   000    Old_age   Always       -       0
+
+SMART Error Log Version: 1
+ATA Error Count: 406 (device log contains only the most recent five errors)
+	CR = Command Register [HEX]
+	FR = Features Register [HEX]
+	SC = Sector Count Register [HEX]
+	SN = Sector Number Register [HEX]
+	CL = Cylinder Low Register [HEX]
+	CH = Cylinder High Register [HEX]
+	DH = Device/Head Register [HEX]
+	DC = Device Command Register [HEX]
+	ER = Error register [HEX]
+	ST = Status register [HEX]
+Powered_Up_Time is measured from power on, and printed as
+DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
+SS=sec, and sss=millisec. It "wraps" after 49.710 days.
+
+Error 406 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 405 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 404 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 403 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 402 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:30.579  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Extended captive    Completed without error       00%       356         -
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+
+
+--liOOAslEiF7prFVr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=diskstats3
+
+smartctl version 5.38 [i486-slackware-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
+
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Barracuda 7200.8 family
+Device Model:     ST3250823A
+Serial Number:    5ND3CC5A
+Firmware Version: 3.06
+User Capacity:    250,059,350,016 bytes
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   7
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Nov 23 02:42:34 2009 EST
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+
+General SMART Values:
+Offline data collection status:  (0x82)	Offline data collection activity
+					was completed without error.
+					Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0)	The previous self-test routine completed
+					without error or no self-test has ever 
+					been run.
+Total time to complete Offline 
+data collection: 		 ( 430) seconds.
+Offline data collection
+capabilities: 			 (0x5b) SMART execute Offline immediate.
+					Auto Offline data collection on/off support.
+					Suspend Offline collection upon new
+					command.
+					Offline surface scan supported.
+					Self-test supported.
+					No Conveyance Self-test supported.
+					Selective Self-test supported.
+SMART capabilities:            (0x0003)	Saves SMART data before entering
+					power-saving mode.
+					Supports SMART auto save timer.
+Error logging capability:        (0x01)	Error logging supported.
+					General Purpose Logging supported.
+Short self-test routine 
+recommended polling time: 	 (   1) minutes.
+Extended self-test routine
+recommended polling time: 	 (  84) minutes.
+
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   051   036   006    Pre-fail  Always       -       72983290
+  3 Spin_Up_Time            0x0003   099   098   000    Pre-fail  Always       -       0
+  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       112
+  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always       -       0
+  7 Seek_Error_Rate         0x000f   050   047   030    Pre-fail  Always       -       1443142359378
+  9 Power_On_Hours          0x0032   100   100   000    Old_age   Always       -       357
+ 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always       -       157
+194 Temperature_Celsius     0x0022   040   052   000    Old_age   Always       -       40 (0 19 0 0)
+195 Hardware_ECC_Recovered  0x001a   049   046   000    Old_age   Always       -       48607152
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
+200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age   Offline      -       0
+202 TA_Increase_Count       0x0032   100   253   000    Old_age   Always       -       0
+
+SMART Error Log Version: 1
+ATA Error Count: 406 (device log contains only the most recent five errors)
+	CR = Command Register [HEX]
+	FR = Features Register [HEX]
+	SC = Sector Count Register [HEX]
+	SN = Sector Number Register [HEX]
+	CL = Cylinder Low Register [HEX]
+	CH = Cylinder High Register [HEX]
+	DH = Device/Head Register [HEX]
+	DC = Device Command Register [HEX]
+	ER = Error register [HEX]
+	ST = Status register [HEX]
+Powered_Up_Time is measured from power on, and printed as
+DDd+hh:mm:SS.sss where DD=days, hh=hours, mm=minutes,
+SS=sec, and sss=millisec. It "wraps" after 49.710 days.
+
+Error 406 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 405 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 404 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 403 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:36.934  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+Error 402 occurred at disk power-on lifetime: 160 hours (6 days + 16 hours)
+  When the command that caused the error occurred, the device was active or idle.
+
+  After command completion occurred, registers were:
+  ER ST SC SN CL CH DH
+  -- -- -- -- -- -- --
+  84 51 01 07 00 00 e0  Error: ICRC, ABRT 1 sectors at LBA = 0x00000007 = 7
+
+  Commands leading to the command that caused the error were:
+  CR FR SC SN CL CH DH DC   Powered_Up_Time  Command/Feature_Name
+  -- -- -- -- -- -- -- --  ----------------  --------------------
+  c8 03 08 00 00 00 e0 00      00:00:30.579  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.511  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:36.087  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.663  READ DMA
+  c8 03 08 00 00 00 e0 00      00:00:35.240  READ DMA
+
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Extended captive    Completed without error       00%       356         -
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+
+
+--liOOAslEiF7prFVr--
