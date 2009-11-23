@@ -1,37 +1,48 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem
- readonly
-Date: Mon, 23 Nov 2009 17:09:14 +0100
-Message-ID: <20091123160914.GG15679@duck.suse.cz>
-References: <20091123105440.GB15679@duck.suse.cz>
- <Pine.LNX.4.44L0.0911231004030.2958-100000@iolanthe.rowland.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCH 1/4] block: Allow devices to indicate whether discarded
+ blocks are zeroed
+Date: Mon, 23 Nov 2009 11:37:03 -0500
+Message-ID: <4B0ABA2F.2090407@redhat.com>
+References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-2-git-send-email-martin.petersen@oracle.com> <20091121101356.GA21716@infradead.org> <20091121195802.GC8502@parisc-linux.org> <4B08A543.909@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755549AbZKWQJN@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0911231004030.2958-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jan Kara <jack@suse.cz>, tmhikaru@gmail.com, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4B08A543.909@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon 23-11-09 10:06:03, Alan Stern wrote:
-> On Mon, 23 Nov 2009, Jan Kara wrote:
-> 
-> >   Yeah, from what you write, it looks like USB enclosure is at fault (or it
-> > could still be your USB controller but I doubt it).  It's still a bit
-> > bothering that the error reported by the drive was not properly propagated
-> > up to VFS. Either it's some block layer retry/ignore magic that I missed or
-> > we ignore errors from block layer in some place.
-> 
-> Is there any interest in tracking this down?  It's not hard to find out
-> what low-level errors are being reported and to generate them on demand
-> with an emulated USB disk drive.
-  Well, if you could provide me with the patch, I could try to track down
-why the errors aren't propagated... It would be interesting because if it's
-not some retry logic in block layer, it's a bug in VFS ;).
+On 11/21/2009 09:43 PM, Mark Lord wrote:
+> Matthew Wilcox wrote:
+>> On Sat, Nov 21, 2009 at 05:13:56AM -0500, Christoph Hellwig wrote:
+>>> On Fri, Nov 20, 2009 at 09:45:21PM -0500, Martin K. Petersen wrote:
+>>>> The discard ioctl is used by mkfs utilities to clear a block device
+>>>> prior to putting metadata down.  However, not all devices return 
+>>>> zeroed
+>>>> blocks after a discard.  Some drives return stale data, potentially
+>>>> containing old superblocks.  It is therefore important to know whether
+>>>> discarded blocks are properly zeroed.
+>>> At least for mkfs.xfs we make sure to still zero the important areas
+>>> after the TRIM ioctl anyway.
+>>
+>> Could you change that to zero _before_ the TRIM?
+> ..
+>
+>
+> Hopefully not for the drives that *don't* guarantee zeros after TRIM.
+> Eg. most existing ones, including all of the Indilinx chipset drives.
+>
+> Cheers
+>
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Note that writing to a block after a discard (write or trim) changes the 
+state of that block back to allocated (mapped) in the target. Basically, 
+that would seem to make the trim redundant and irrelevant.
+
+You can zero before the discard but that can still fail is the device 
+returns garbage for a trim'ed block I think,
+
+Ric
+
