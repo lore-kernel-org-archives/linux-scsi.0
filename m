@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 25/27] scsi proc_fops: convert in2000
-Date: Mon, 23 Nov 2009 04:48:10 +0300
-Message-ID: <20091123014810.GY31711@x200.localdomain>
+Subject: [PATCH 26/27] scsi proc_fops: convert generic NCR5380
+Date: Mon, 23 Nov 2009 04:48:53 +0300
+Message-ID: <20091123014853.GZ31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:45780 "EHLO
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:63172 "EHLO
 	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458AbZKWBt2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:49:28 -0500
-Received: by ewy19 with SMTP id 19so1405652ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:49:33 -0800 (PST)
+	with ESMTP id S1753618AbZKWBuK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:50:10 -0500
+Received: by ewy19 with SMTP id 19so1405995ewy.21
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:50:15 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,273 +20,163 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/in2000.c |  191 ++++++++++++++++++++++++--------------------------
- 1 file changed, 93 insertions(+), 98 deletions(-)
+ drivers/scsi/g_NCR5380.c |   81 +++++++++++++++++++----------------------------
+ 1 file changed, 34 insertions(+), 47 deletions(-)
 
---- a/drivers/scsi/in2000.c
-+++ b/drivers/scsi/in2000.c
-@@ -119,6 +119,7 @@
- #include <linux/string.h>
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -114,6 +114,8 @@
+ #include <linux/isapnp.h>
  #include <linux/delay.h>
- #include <linux/proc_fs.h>
+ #include <linux/interrupt.h>
++#include <linux/proc_fs.h>
 +#include <linux/seq_file.h>
- #include <linux/ioport.h>
- #include <linux/stat.h>
  
-@@ -2165,161 +2166,156 @@ static int in2000_biosparam(struct scsi_device *sdev, struct block_device *bdev,
- 	return 0;
+ #define NCR_NOT_SET 0
+ static int ncr_irq = NCR_NOT_SET;
+@@ -745,24 +747,21 @@ static inline int NCR5380_pwrite(struct Scsi_Host *instance, unsigned char *src,
+  
+ #include "NCR5380.c"
+ 
+-#define PRINTP(x) len += sprintf(buffer+len, x)
++#define PRINTP(x) seq_printf(m, x)
+ #define ANDP ,
+ 
+-static int sprint_opcode(char *buffer, int len, int opcode)
++static void sprint_opcode(struct seq_file *m, int opcode)
+ {
+-	int start = len;
+ 	PRINTP("0x%02x " ANDP opcode);
+-	return len - start;
  }
  
--
--static int in2000_proc_info(struct Scsi_Host *instance, char *buf, char **start, off_t off, int len, int in)
--{
--
- #ifdef PROC_INTERFACE
--
--	char *bp;
--	char tbuf[128];
-+static int in2000_proc_show(struct seq_file *m, void *v)
-+{
-+	struct Scsi_Host *instance = m->private;
- 	unsigned long flags;
- 	struct IN2000_hostdata *hd;
- 	Scsi_Cmnd *cmd;
--	int x, i;
--	static int stop = 0;
-+	int x;
+-static int sprint_command(char *buffer, int len, unsigned char *command)
++static void sprint_command(struct seq_file *m, unsigned char *command)
+ {
+-	int i, s, start = len;
+-	len += sprint_opcode(buffer, len, command[0]);
++	int i, s;
++	sprint_opcode(m, command[0]);
+ 	for (i = 1, s = COMMAND_SIZE(command[0]); i < s; ++i)
+ 		PRINTP("%02x " ANDP command[i]);
+ 	PRINTP("\n");
+-	return len - start;
+ }
  
- 	hd = (struct IN2000_hostdata *) instance->hostdata;
+ /**
+@@ -774,35 +773,16 @@ static int sprint_command(char *buffer, int len, unsigned char *command)
+  *	Print out the target and command data in hex
+  */
  
--/* If 'in' is TRUE we need to _read_ the proc file. We accept the following
-- * keywords (same format as command-line, but only ONE per read):
-- *    debug
-- *    disconnect
-- *    period
-- *    resync
-- *    proc
+-static int sprint_Scsi_Cmnd(char *buffer, int len, Scsi_Cmnd * cmd)
++static void sprint_Scsi_Cmnd(struct seq_file *m, Scsi_Cmnd * cmd)
+ {
+-	int start = len;
+ 	PRINTP("host number %d destination target %d, lun %d\n" ANDP cmd->device->host->host_no ANDP cmd->device->id ANDP cmd->device->lun);
+ 	PRINTP("        command = ");
+-	len += sprint_command(buffer, len, cmd->cmnd);
+-	return len - start;
++	sprint_command(m, cmd->cmnd);
+ }
+ 
+-/**
+- *	generic_NCR5380_proc_info	-	/proc for NCR5380 driver
+- *	@buffer: buffer to print into
+- *	@start: start position
+- *	@offset: offset into buffer
+- *	@len: length
+- *	@hostno: instance to affect
+- *	@inout: read/write
+- *
+- *	Provide the procfs information for the 5380 controller. We fill
+- *	this with useful debugging information including the commands
+- *	being executed, disconnected command queue and the statistical
+- *	data
+- *
+- *	Locks: global cli/lock for queue walk
 - */
--
--	if (in) {
--		buf[len] = '\0';
--		bp = buf;
--		if (!strncmp(bp, "debug:", 6)) {
--			bp += 6;
--			hd->args = simple_strtoul(bp, NULL, 0) & DB_MASK;
--		} else if (!strncmp(bp, "disconnect:", 11)) {
--			bp += 11;
--			x = simple_strtoul(bp, NULL, 0);
--			if (x < DIS_NEVER || x > DIS_ALWAYS)
--				x = DIS_ADAPTIVE;
--			hd->disconnect = x;
--		} else if (!strncmp(bp, "period:", 7)) {
--			bp += 7;
--			x = simple_strtoul(bp, NULL, 0);
--			hd->default_sx_per = sx_table[round_period((unsigned int) x)].period_ns;
--		} else if (!strncmp(bp, "resync:", 7)) {
--			bp += 7;
--			x = simple_strtoul(bp, NULL, 0);
--			for (i = 0; i < 7; i++)
--				if (x & (1 << i))
--					hd->sync_stat[i] = SS_UNSET;
--		} else if (!strncmp(bp, "proc:", 5)) {
--			bp += 5;
--			hd->proc = simple_strtoul(bp, NULL, 0);
--		} else if (!strncmp(bp, "level2:", 7)) {
--			bp += 7;
--			hd->level2 = simple_strtoul(bp, NULL, 0);
--		}
--		return len;
--	}
--
- 	spin_lock_irqsave(instance->host_lock, flags);
--	bp = buf;
--	*bp = '\0';
- 	if (hd->proc & PR_VERSION) {
--		sprintf(tbuf, "\nVersion %s - %s. Compiled %s %s", IN2000_VERSION, IN2000_DATE, __DATE__, __TIME__);
--		strcat(bp, tbuf);
-+		seq_printf(m, "\nVersion %s - %s. Compiled %s %s", IN2000_VERSION, IN2000_DATE, __DATE__, __TIME__);
+- 
+-static int generic_NCR5380_proc_info(struct Scsi_Host *scsi_ptr, char *buffer, char **start, off_t offset, int length, int inout)
++static int generic_NCR5380_proc_show(struct seq_file *m, void *v)
+ {
+-	int len = 0;
++	struct Scsi_Host *scsi_ptr = m->private;
+ 	NCR5380_local_declare();
+ 	unsigned long flags;
+ 	unsigned char status;
+@@ -853,16 +833,16 @@ static int generic_NCR5380_proc_info(struct Scsi_Host *scsi_ptr, char *buffer, c
+ 		PRINTP("  T:%d %s " ANDP dev->id ANDP scsi_device_type(dev->type));
+ 		for (i = 0; i < 8; i++)
+ 			if (dev->vendor[i] >= 0x20)
+-				*(buffer + (len++)) = dev->vendor[i];
+-		*(buffer + (len++)) = ' ';
++				seq_putc(m, dev->vendor[i]);
++		seq_putc(m, ' ');
+ 		for (i = 0; i < 16; i++)
+ 			if (dev->model[i] >= 0x20)
+-				*(buffer + (len++)) = dev->model[i];
+-		*(buffer + (len++)) = ' ';
++				seq_putc(m, dev->model[i]);
++		seq_putc(m, ' ');
+ 		for (i = 0; i < 4; i++)
+ 			if (dev->rev[i] >= 0x20)
+-				*(buffer + (len++)) = dev->rev[i];
+-		*(buffer + (len++)) = ' ';
++				seq_putc(m, dev->rev[i]);
++		seq_putc(m, ' ');
+ 
+ 		PRINTP("\n%10ld kb read    in %5ld secs" ANDP br / 1024 ANDP tr);
+ 		if (tr)
+@@ -886,32 +866,40 @@ static int generic_NCR5380_proc_info(struct Scsi_Host *scsi_ptr, char *buffer, c
+ 	if (!hostdata->connected) {
+ 		PRINTP("No currently connected command\n");
+ 	} else {
+-		len += sprint_Scsi_Cmnd(buffer, len, (Scsi_Cmnd *) hostdata->connected);
++		sprint_Scsi_Cmnd(m, (Scsi_Cmnd *) hostdata->connected);
  	}
- 	if (hd->proc & PR_INFO) {
--		sprintf(tbuf, "\ndip_switch=%02x: irq=%d io=%02x floppy=%s sync/DOS5=%s", (hd->dip_switch & 0x7f), instance->irq, hd->io_base, (hd->dip_switch & 0x40) ? "Yes" : "No", (hd->dip_switch & 0x20) ? "Yes" : "No");
--		strcat(bp, tbuf);
--		strcat(bp, "\nsync_xfer[] =       ");
-+		seq_printf(m, "\ndip_switch=%02x: irq=%d io=%02x floppy=%s sync/DOS5=%s", (hd->dip_switch & 0x7f), instance->irq, hd->io_base, (hd->dip_switch & 0x40) ? "Yes" : "No", (hd->dip_switch & 0x20) ? "Yes" : "No");
-+		seq_printf(m, "\nsync_xfer[] =       ");
- 		for (x = 0; x < 7; x++) {
--			sprintf(tbuf, "\t%02x", hd->sync_xfer[x]);
--			strcat(bp, tbuf);
-+			seq_printf(m, "\t%02x", hd->sync_xfer[x]);
- 		}
--		strcat(bp, "\nsync_stat[] =       ");
-+		seq_printf(m, "\nsync_stat[] =       ");
- 		for (x = 0; x < 7; x++) {
--			sprintf(tbuf, "\t%02x", hd->sync_stat[x]);
--			strcat(bp, tbuf);
-+			seq_printf(m, "\t%02x", hd->sync_stat[x]);
- 		}
- 	}
- #ifdef PROC_STATISTICS
- 	if (hd->proc & PR_STATISTICS) {
--		strcat(bp, "\ncommands issued:    ");
-+		seq_printf(m, "\ncommands issued:    ");
- 		for (x = 0; x < 7; x++) {
--			sprintf(tbuf, "\t%ld", hd->cmd_cnt[x]);
--			strcat(bp, tbuf);
-+			seq_printf(m, "\t%ld", hd->cmd_cnt[x]);
- 		}
--		strcat(bp, "\ndisconnects allowed:");
-+		seq_printf(m, "\ndisconnects allowed:");
- 		for (x = 0; x < 7; x++) {
--			sprintf(tbuf, "\t%ld", hd->disc_allowed_cnt[x]);
--			strcat(bp, tbuf);
-+			seq_printf(m, "\t%ld", hd->disc_allowed_cnt[x]);
- 		}
--		strcat(bp, "\ndisconnects done:   ");
-+		seq_printf(m, "\ndisconnects done:   ");
- 		for (x = 0; x < 7; x++) {
--			sprintf(tbuf, "\t%ld", hd->disc_done_cnt[x]);
--			strcat(bp, tbuf);
-+			seq_printf(m, "\t%ld", hd->disc_done_cnt[x]);
- 		}
--		sprintf(tbuf, "\ninterrupts:      \t%ld", hd->int_cnt);
--		strcat(bp, tbuf);
-+		seq_printf(m, "\ninterrupts:      \t%ld", hd->int_cnt);
- 	}
- #endif
- 	if (hd->proc & PR_CONNECTED) {
--		strcat(bp, "\nconnected:     ");
-+		seq_printf(m, "\nconnected:     ");
- 		if (hd->connected) {
- 			cmd = (Scsi_Cmnd *) hd->connected;
--			sprintf(tbuf, " %ld-%d:%d(%02x)", cmd->serial_number, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
--			strcat(bp, tbuf);
-+			seq_printf(m, " %ld-%d:%d(%02x)", cmd->serial_number, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
- 		}
- 	}
- 	if (hd->proc & PR_INPUTQ) {
--		strcat(bp, "\ninput_Q:       ");
-+		seq_printf(m, "\ninput_Q:       ");
- 		cmd = (Scsi_Cmnd *) hd->input_Q;
- 		while (cmd) {
--			sprintf(tbuf, " %ld-%d:%d(%02x)", cmd->serial_number, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
--			strcat(bp, tbuf);
-+			seq_printf(m, " %ld-%d:%d(%02x)", cmd->serial_number, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
- 			cmd = (Scsi_Cmnd *) cmd->host_scribble;
- 		}
- 	}
- 	if (hd->proc & PR_DISCQ) {
--		strcat(bp, "\ndisconnected_Q:");
-+		seq_printf(m, "\ndisconnected_Q:");
- 		cmd = (Scsi_Cmnd *) hd->disconnected_Q;
- 		while (cmd) {
--			sprintf(tbuf, " %ld-%d:%d(%02x)", cmd->serial_number, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
--			strcat(bp, tbuf);
-+			seq_printf(m, " %ld-%d:%d(%02x)", cmd->serial_number, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
- 			cmd = (Scsi_Cmnd *) cmd->host_scribble;
- 		}
- 	}
- 	if (hd->proc & PR_TEST) {
- 		;		/* insert your own custom function here */
- 	}
--	strcat(bp, "\n");
-+	seq_putc(m, '\n');
- 	spin_unlock_irqrestore(instance->host_lock, flags);
--	*start = buf;
--	if (stop) {
--		stop = 0;
--		return 0;	/* return 0 to signal end-of-file */
--	}
--	if (off > 0x40000)	/* ALWAYS stop after 256k bytes have been read */
--		stop = 1;
--	if (hd->proc & PR_STOP)	/* stop every other time */
--		stop = 1;
--	return strlen(bp);
+ 
+ 	PRINTP("issue_queue\n");
+ 
+ 	for (ptr = (Scsi_Cmnd *) hostdata->issue_queue; ptr; ptr = (Scsi_Cmnd *) ptr->host_scribble)
+-		len += sprint_Scsi_Cmnd(buffer, len, ptr);
++		sprint_Scsi_Cmnd(m, ptr);
+ 
+ 	PRINTP("disconnected_queue\n");
+ 
+ 	for (ptr = (Scsi_Cmnd *) hostdata->disconnected_queue; ptr; ptr = (Scsi_Cmnd *) ptr->host_scribble)
+-		len += sprint_Scsi_Cmnd(buffer, len, ptr);
++		sprint_Scsi_Cmnd(m, ptr);
+ 
+-	*start = buffer + offset;
+-	len -= offset;
+-	if (len > length)
+-		len = length;
+ 	spin_unlock_irqrestore(scsi_ptr->host_lock, flags);
+-	return len;
 +	return 0;
-+}
- 
--#else				/* PROC_INTERFACE */
-+static int in2000_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, in2000_proc_show, PDE(inode)->data);
-+}
- 
--	return 0;
-+static ssize_t in2000_proc_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
-+{
-+	struct Scsi_Host *instance = PDE(file->f_path.dentry->d_inode)->data;
-+	struct IN2000_hostdata *hd = (struct IN2000_hostdata *)instance->hostdata;
-+	char cmd[42], *bp;
-+	size_t len;
-+	int x, i;
-+
-+	len = min(count, sizeof(cmd) - 1);
-+	if (copy_from_user(cmd, buf, len))
-+		return -EFAULT;
-+	cmd[len] = '\0';
- 
--#endif				/* PROC_INTERFACE */
-+	/*
-+	 * We accept the following keywords (same format as command-line,
-+	 * but only ONE per read):
-+	 *    debug
-+	 *    disconnect
-+	 *    period
-+	 *    resync
-+	 *    proc
-+	 */
-+	bp = cmd;
-+	if (!strncmp(bp, "debug:", 6)) {
-+		bp += 6;
-+		hd->args = simple_strtoul(bp, NULL, 0) & DB_MASK;
-+	} else if (!strncmp(bp, "disconnect:", 11)) {
-+		bp += 11;
-+		x = simple_strtoul(bp, NULL, 0);
-+		if (x < DIS_NEVER || x > DIS_ALWAYS)
-+			x = DIS_ADAPTIVE;
-+		hd->disconnect = x;
-+	} else if (!strncmp(bp, "period:", 7)) {
-+		bp += 7;
-+		x = simple_strtoul(bp, NULL, 0);
-+		hd->default_sx_per = sx_table[round_period((unsigned int) x)].period_ns;
-+	} else if (!strncmp(bp, "resync:", 7)) {
-+		bp += 7;
-+		x = simple_strtoul(bp, NULL, 0);
-+		for (i = 0; i < 7; i++)
-+			if (x & (1 << i))
-+				hd->sync_stat[i] = SS_UNSET;
-+	} else if (!strncmp(bp, "proc:", 5)) {
-+		bp += 5;
-+		hd->proc = simple_strtoul(bp, NULL, 0);
-+	} else if (!strncmp(bp, "level2:", 7)) {
-+		bp += 7;
-+		hd->level2 = simple_strtoul(bp, NULL, 0);
-+	}
- 
-+	return count;
  }
  
-+static const struct file_operations in2000_proc_fops = {
+ #undef PRINTP
+ #undef ANDP
+ 
++static int generic_NCR5380_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, generic_NCR5380_proc_show, PDE(inode)->data);
++}
++
++static const struct file_operations generic_NCR5380_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= in2000_proc_open,
++	.open		= generic_NCR5380_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
-+	.write		= in2000_proc_write,
 +};
-+#endif
-+
- MODULE_LICENSE("GPL");
- 
- 
  static struct scsi_host_template driver_template = {
- 	.proc_name       		= "in2000",
--	.proc_info       		= in2000_proc_info,
-+#ifdef PROC_INTERFACE
-+	.proc_fops			= &in2000_proc_fops,
-+#endif
- 	.name            		= "Always IN2000",
- 	.detect          		= in2000_detect, 
- 	.release			= in2000_release,
+-	.proc_info      	= generic_NCR5380_proc_info,
++	.proc_fops		= &generic_NCR5380_proc_fops,
+ 	.name           	= "Generic NCR5380/NCR53C400 Scsi Driver",
+ 	.detect         	= generic_NCR5380_detect,
+ 	.release        	= generic_NCR5380_release_resources,
 -- 
 1.6.5.2
 
