@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 20/27] scsi proc_fops: convert buslogic
-Date: Mon, 23 Nov 2009 04:43:38 +0300
-Message-ID: <20091123014338.GT31711@x200.localdomain>
+Subject: [PATCH 21/27] scsi proc_fops: convert dpt_i2o
+Date: Mon, 23 Nov 2009 04:44:06 +0300
+Message-ID: <20091123014406.GU31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:65042 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752866AbZKWBoy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:44:54 -0500
-Received: by mail-ew0-f219.google.com with SMTP id 19so1403526ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:45:00 -0800 (PST)
+Received: from ey-out-2122.google.com ([74.125.78.25]:5161 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752981AbZKWBpW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:45:22 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so886781eyf.19
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:45:28 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,213 +20,178 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/BusLogic.c |  104 +++++++++++++++++++++++++-----------------------
- drivers/scsi/BusLogic.h |    2 
- 2 files changed, 55 insertions(+), 51 deletions(-)
+ drivers/scsi/dpt_i2o.c |  114 +++++++++++--------------------------------------
+ 1 file changed, 26 insertions(+), 88 deletions(-)
 
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -39,6 +39,8 @@
- #include <linux/mm.h>
- #include <linux/stat.h>
- #include <linux/pci.h>
-+#include <linux/proc_fs.h>
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -49,6 +49,7 @@ MODULE_DESCRIPTION("Adaptec I2O RAID Driver");
+ #include <linux/kernel.h>	/* for printk */
+ #include <linux/sched.h>
+ #include <linux/reboot.h>
 +#include <linux/seq_file.h>
+ #include <linux/smp_lock.h>
  #include <linux/spinlock.h>
- #include <linux/jiffies.h>
  #include <linux/dma-mapping.h>
-@@ -3196,30 +3198,19 @@ static int BusLogic_BIOSDiskParameters(struct scsi_device *sdev, struct block_de
+@@ -545,36 +546,15 @@ static const char *adpt_info(struct Scsi_Host *host)
+ 	return (char *) (pHba->detail);
  }
  
- 
--/*
--  BugLogic_ProcDirectoryInfo implements /proc/scsi/BusLogic/<N>.
--*/
--
--static int BusLogic_ProcDirectoryInfo(struct Scsi_Host *shost, char *ProcBuffer, char **StartPointer, off_t Offset, int BytesAvailable, int WriteFlag)
-+/* /proc/scsi/BusLogic/<N> */
-+static int buslogic_proc_show(struct seq_file *m, void *v)
+-static int adpt_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
+-		  int length, int inout)
++static int adpt_proc_show(struct seq_file *m, void *v)
  {
-+	struct Scsi_Host *shost = m->private;
- 	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) shost->hostdata;
- 	struct BusLogic_TargetStatistics *TargetStatistics;
--	int TargetID, Length;
--	char *Buffer;
-+	int TargetID;
++	struct Scsi_Host *host = m->private;
+ 	struct adpt_device* d;
+ 	int id;
+ 	int chan;
+-	int len = 0;
+-	int begin = 0;
+-	int pos = 0;
+ 	adpt_hba* pHba;
+ 	int unit;
  
- 	TargetStatistics = HostAdapter->TargetStatistics;
--	if (WriteFlag) {
--		HostAdapter->ExternalHostAdapterResets = 0;
--		HostAdapter->HostAdapterInternalErrors = 0;
--		memset(TargetStatistics, 0, BusLogic_MaxTargetDevices * sizeof(struct BusLogic_TargetStatistics));
--		return 0;
+-	*start = buffer;
+-	if (inout == TRUE) {
+-		/*
+-		 * The user has done a write and wants us to take the
+-		 * data in the buffer and do something with it.
+-		 * proc_scsiwrite calls us with inout = 1
+-		 *
+-		 * Read data from buffer (writing to us) - NOT SUPPORTED
+-		 */
+-		return -EINVAL;
 -	}
--	Buffer = HostAdapter->MessageBuffer;
--	Length = HostAdapter->MessageBufferLength;
--	Length += sprintf(&Buffer[Length], "\n\
-+	seq_printf(m, "\n\
- Current Driver Queue Depth:	%d\n\
- Currently Allocated CCBs:	%d\n", HostAdapter->DriverQueueDepth, HostAdapter->AllocatedCCBs);
--	Length += sprintf(&Buffer[Length], "\n\n\
-+	seq_printf(m, "\n\n\
- 			   DATA TRANSFER STATISTICS\n\
- \n\
- Target	Tagged Queuing	Queue Depth  Active  Attempted	Completed\n\
-@@ -3228,66 +3219,62 @@ Target	Tagged Queuing	Queue Depth  Active  Attempted	Completed\n\
- 		struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[TargetID];
- 		if (!TargetFlags->TargetExists)
- 			continue;
--		Length += sprintf(&Buffer[Length], "  %2d	%s", TargetID, (TargetFlags->TaggedQueuingSupported ? (TargetFlags->TaggedQueuingActive ? "    Active" : (HostAdapter->TaggedQueuingPermitted & (1 << TargetID)
-+		seq_printf(m, "  %2d	%s", TargetID, (TargetFlags->TaggedQueuingSupported ? (TargetFlags->TaggedQueuingActive ? "    Active" : (HostAdapter->TaggedQueuingPermitted & (1 << TargetID)
- 																				    ? "  Permitted" : "   Disabled"))
- 									  : "Not Supported"));
--		Length += sprintf(&Buffer[Length],
-+		seq_printf(m,
- 				  "	    %3d       %3u    %9u	%9u\n", HostAdapter->QueueDepth[TargetID], HostAdapter->ActiveCommands[TargetID], TargetStatistics[TargetID].CommandsAttempted, TargetStatistics[TargetID].CommandsCompleted);
+-
+-	/*
+-	 * inout = 0 means the user has done a read and wants information
+-	 * returned, so we write information about the cards into the buffer
+-	 * proc_scsiread() calls us with inout = 0
+-	 */
+-
+ 	// Find HBA (host bus adapter) we are looking for
+ 	mutex_lock(&adpt_configuration_lock);
+ 	for (pHba = hba_chain; pHba; pHba = pHba->next) {
+@@ -588,88 +568,47 @@ static int adpt_proc_info(struct Scsi_Host *host, char *buffer, char **start, of
  	}
--	Length += sprintf(&Buffer[Length], "\n\
-+	seq_printf(m, "\n\
- Target  Read Commands  Write Commands   Total Bytes Read    Total Bytes Written\n\
- ======  =============  ==============  ===================  ===================\n");
- 	for (TargetID = 0; TargetID < HostAdapter->MaxTargetDevices; TargetID++) {
- 		struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[TargetID];
- 		if (!TargetFlags->TargetExists)
- 			continue;
--		Length += sprintf(&Buffer[Length], "  %2d	  %9u	 %9u", TargetID, TargetStatistics[TargetID].ReadCommands, TargetStatistics[TargetID].WriteCommands);
-+		seq_printf(m, "  %2d	  %9u	 %9u", TargetID, TargetStatistics[TargetID].ReadCommands, TargetStatistics[TargetID].WriteCommands);
- 		if (TargetStatistics[TargetID].TotalBytesRead.Billions > 0)
--			Length += sprintf(&Buffer[Length], "     %9u%09u", TargetStatistics[TargetID].TotalBytesRead.Billions, TargetStatistics[TargetID].TotalBytesRead.Units);
-+			seq_printf(m, "     %9u%09u", TargetStatistics[TargetID].TotalBytesRead.Billions, TargetStatistics[TargetID].TotalBytesRead.Units);
- 		else
--			Length += sprintf(&Buffer[Length], "		%9u", TargetStatistics[TargetID].TotalBytesRead.Units);
-+			seq_printf(m, "		%9u", TargetStatistics[TargetID].TotalBytesRead.Units);
- 		if (TargetStatistics[TargetID].TotalBytesWritten.Billions > 0)
--			Length += sprintf(&Buffer[Length], "   %9u%09u\n", TargetStatistics[TargetID].TotalBytesWritten.Billions, TargetStatistics[TargetID].TotalBytesWritten.Units);
-+			seq_printf(m, "   %9u%09u\n", TargetStatistics[TargetID].TotalBytesWritten.Billions, TargetStatistics[TargetID].TotalBytesWritten.Units);
- 		else
--			Length += sprintf(&Buffer[Length], "	     %9u\n", TargetStatistics[TargetID].TotalBytesWritten.Units);
-+			seq_printf(m, "	     %9u\n", TargetStatistics[TargetID].TotalBytesWritten.Units);
+ 	host = pHba->host;
+ 
+-	len  = sprintf(buffer    , "Adaptec I2O RAID Driver Version: %s\n\n", DPT_I2O_VERSION);
+-	len += sprintf(buffer+len, "%s\n", pHba->detail);
+-	len += sprintf(buffer+len, "SCSI Host=scsi%d  Control Node=/dev/%s  irq=%d\n", 
++	seq_printf(m, "Adaptec I2O RAID Driver Version: %s\n\n", DPT_I2O_VERSION);
++	seq_printf(m, "%s\n", pHba->detail);
++	seq_printf(m, "SCSI Host=scsi%d  Control Node=/dev/%s  irq=%d\n", 
+ 			pHba->host->host_no, pHba->name, host->irq);
+-	len += sprintf(buffer+len, "\tpost fifo size  = %d\n\treply fifo size = %d\n\tsg table size   = %d\n\n",
++	seq_printf(m, "\tpost fifo size  = %d\n\treply fifo size = %d\n\tsg table size   = %d\n\n",
+ 			host->can_queue, (int) pHba->reply_fifo_size , host->sg_tablesize);
+ 
+-	pos = begin + len;
+-
+-	/* CHECKPOINT */
+-	if(pos > offset + length) {
+-		goto stop_output;
+-	}
+-	if(pos <= offset) {
+-		/*
+-		 * If we haven't even written to where we last left
+-		 * off (the last time we were called), reset the 
+-		 * beginning pointer.
+-		 */
+-		len = 0;
+-		begin = pos;
+-	}
+-	len +=  sprintf(buffer+len, "Devices:\n");
++	seq_printf(m, "Devices:\n");
+ 	for(chan = 0; chan < MAX_CHANNEL; chan++) {
+ 		for(id = 0; id < MAX_ID; id++) {
+ 			d = pHba->channel[chan].device[id];
+ 			while(d){
+-				len += sprintf(buffer+len,"\t%-24.24s", d->pScsi_dev->vendor);
+-				len += sprintf(buffer+len," Rev: %-8.8s\n", d->pScsi_dev->rev);
+-				pos = begin + len;
+-
+-
+-				/* CHECKPOINT */
+-				if(pos > offset + length) {
+-					goto stop_output;
+-				}
+-				if(pos <= offset) {
+-					len = 0;
+-					begin = pos;
+-				}
++				seq_printf(m, "\t%-24.24s", d->pScsi_dev->vendor);
++				seq_printf(m, " Rev: %-8.8s\n", d->pScsi_dev->rev);
+ 
+ 				unit = d->pI2o_dev->lct_data.tid;
+-				len += sprintf(buffer+len, "\tTID=%d, (Channel=%d, Target=%d, Lun=%d)  (%s)\n\n",
++				seq_printf(m, "\tTID=%d, (Channel=%d, Target=%d, Lun=%d)  (%s)\n\n",
+ 					       unit, (int)d->scsi_channel, (int)d->scsi_id, (int)d->scsi_lun,
+ 					       scsi_device_online(d->pScsi_dev)? "online":"offline"); 
+-				pos = begin + len;
+-
+-				/* CHECKPOINT */
+-				if(pos > offset + length) {
+-					goto stop_output;
+-				}
+-				if(pos <= offset) {
+-					len = 0;
+-					begin = pos;
+-				}
+ 
+ 				d = d->next_lun;
+ 			}
+ 		}
  	}
--	Length += sprintf(&Buffer[Length], "\n\
-+	seq_printf(m, "\n\
- Target  Command    0-1KB      1-2KB      2-4KB      4-8KB     8-16KB\n\
- ======  =======  =========  =========  =========  =========  =========\n");
- 	for (TargetID = 0; TargetID < HostAdapter->MaxTargetDevices; TargetID++) {
- 		struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[TargetID];
- 		if (!TargetFlags->TargetExists)
- 			continue;
--		Length +=
--		    sprintf(&Buffer[Length],
-+		seq_printf(m,
- 			    "  %2d	 Read	 %9u  %9u  %9u  %9u  %9u\n", TargetID,
- 			    TargetStatistics[TargetID].ReadCommandSizeBuckets[0],
- 			    TargetStatistics[TargetID].ReadCommandSizeBuckets[1], TargetStatistics[TargetID].ReadCommandSizeBuckets[2], TargetStatistics[TargetID].ReadCommandSizeBuckets[3], TargetStatistics[TargetID].ReadCommandSizeBuckets[4]);
--		Length +=
--		    sprintf(&Buffer[Length],
-+		seq_printf(m,
- 			    "  %2d	 Write	 %9u  %9u  %9u  %9u  %9u\n", TargetID,
- 			    TargetStatistics[TargetID].WriteCommandSizeBuckets[0],
- 			    TargetStatistics[TargetID].WriteCommandSizeBuckets[1], TargetStatistics[TargetID].WriteCommandSizeBuckets[2], TargetStatistics[TargetID].WriteCommandSizeBuckets[3], TargetStatistics[TargetID].WriteCommandSizeBuckets[4]);
- 	}
--	Length += sprintf(&Buffer[Length], "\n\
-+	seq_printf(m, "\n\
- Target  Command   16-32KB    32-64KB   64-128KB   128-256KB   256KB+\n\
- ======  =======  =========  =========  =========  =========  =========\n");
- 	for (TargetID = 0; TargetID < HostAdapter->MaxTargetDevices; TargetID++) {
- 		struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[TargetID];
- 		if (!TargetFlags->TargetExists)
- 			continue;
--		Length +=
--		    sprintf(&Buffer[Length],
-+		seq_printf(m,
- 			    "  %2d	 Read	 %9u  %9u  %9u  %9u  %9u\n", TargetID,
- 			    TargetStatistics[TargetID].ReadCommandSizeBuckets[5],
- 			    TargetStatistics[TargetID].ReadCommandSizeBuckets[6], TargetStatistics[TargetID].ReadCommandSizeBuckets[7], TargetStatistics[TargetID].ReadCommandSizeBuckets[8], TargetStatistics[TargetID].ReadCommandSizeBuckets[9]);
--		Length +=
--		    sprintf(&Buffer[Length],
-+		seq_printf(m,
- 			    "  %2d	 Write	 %9u  %9u  %9u  %9u  %9u\n", TargetID,
- 			    TargetStatistics[TargetID].WriteCommandSizeBuckets[5],
- 			    TargetStatistics[TargetID].WriteCommandSizeBuckets[6], TargetStatistics[TargetID].WriteCommandSizeBuckets[7], TargetStatistics[TargetID].WriteCommandSizeBuckets[8], TargetStatistics[TargetID].WriteCommandSizeBuckets[9]);
- 	}
--	Length += sprintf(&Buffer[Length], "\n\n\
-+	seq_printf(m, "\n\n\
- 			   ERROR RECOVERY STATISTICS\n\
- \n\
- 	  Command Aborts      Bus Device Resets	  Host Adapter Resets\n\
-@@ -3298,22 +3285,41 @@ Target	Requested Completed  Requested Completed  Requested Completed\n\
- 		struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[TargetID];
- 		if (!TargetFlags->TargetExists)
- 			continue;
--		Length += sprintf(&Buffer[Length], "\
-+		seq_printf(m, "\
-   %2d	 %5d %5d %5d    %5d %5d %5d	   %5d %5d %5d\n", TargetID, TargetStatistics[TargetID].CommandAbortsRequested, TargetStatistics[TargetID].CommandAbortsAttempted, TargetStatistics[TargetID].CommandAbortsCompleted, TargetStatistics[TargetID].BusDeviceResetsRequested, TargetStatistics[TargetID].BusDeviceResetsAttempted, TargetStatistics[TargetID].BusDeviceResetsCompleted, TargetStatistics[TargetID].HostAdapterResetsRequested, TargetStatistics[TargetID].HostAdapterResetsAttempted, TargetStatistics[TargetID].HostAdapterResetsCompleted);
- 	}
--	Length += sprintf(&Buffer[Length], "\nExternal Host Adapter Resets: %d\n", HostAdapter->ExternalHostAdapterResets);
--	Length += sprintf(&Buffer[Length], "Host Adapter Internal Errors: %d\n", HostAdapter->HostAdapterInternalErrors);
--	if (Length >= BusLogic_MessageBufferSize)
--		BusLogic_Error("Message Buffer length %d exceeds size %d\n", HostAdapter, Length, BusLogic_MessageBufferSize);
--	if ((Length -= Offset) <= 0)
--		return 0;
--	if (Length >= BytesAvailable)
--		Length = BytesAvailable;
--	memcpy(ProcBuffer, HostAdapter->MessageBuffer + Offset, Length);
--	*StartPointer = ProcBuffer;
--	return Length;
-+	seq_printf(m, "\nExternal Host Adapter Resets: %d\n", HostAdapter->ExternalHostAdapterResets);
-+	seq_printf(m, "Host Adapter Internal Errors: %d\n", HostAdapter->HostAdapterInternalErrors);
-+
+ 
+-	/*
+-	 * begin is where we last checked our position with regards to offset
+-	 * begin is always less than offset.  len is relative to begin.  It
+-	 * is the number of bytes written past begin
+-	 *
+-	 */
+-stop_output:
+-	/* stop the output and calculate the correct length */
+-	*(buffer + len) = '\0';
+-
+-	*start = buffer + (offset - begin);	/* Start of wanted data */
+-	len -= (offset - begin);
+-	if(len > length) {
+-		len = length;
+-	} else if(len < 0){
+-		len = 0;
+-		**start = '\0';
+-	}
+-	return len;
 +	return 0;
 +}
 +
-+static int buslogic_proc_open(struct inode *inode, struct file *file)
++static int adpt_proc_open(struct inode *inode, struct file *file)
 +{
-+	return single_open(file, buslogic_proc_show, PDE(inode)->data);
-+}
-+
-+static ssize_t buslogic_proc_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
-+{
-+	struct Scsi_Host *shost = PDE(file->f_path.dentry->d_inode)->data;
-+	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) shost->hostdata;
-+	struct BusLogic_TargetStatistics *TargetStatistics = HostAdapter->TargetStatistics;
-+
-+	HostAdapter->ExternalHostAdapterResets = 0;
-+	HostAdapter->HostAdapterInternalErrors = 0;
-+	memset(TargetStatistics, 0, BusLogic_MaxTargetDevices * sizeof(struct BusLogic_TargetStatistics));
-+
-+	return count;
++	return single_open(file, adpt_proc_show, PDE(inode)->data);
  }
  
-+static const struct file_operations buslogic_proc_fops = {
++static const struct file_operations adpt_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= buslogic_proc_open,
++	.open		= adpt_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
-+	.write		= buslogic_proc_write,
 +};
- 
++
  /*
-   BusLogic_Message prints Driver Messages.
-@@ -3565,7 +3571,7 @@ static int __init BusLogic_ParseDriverOptions(char *OptionsString)
- static struct scsi_host_template Bus_Logic_template = {
- 	.module = THIS_MODULE,
- 	.proc_name = "BusLogic",
--	.proc_info = BusLogic_ProcDirectoryInfo,
-+	.proc_fops = &buslogic_proc_fops,
- 	.name = "BusLogic",
- 	.info = BusLogic_DriverInfo,
- 	.queuecommand = BusLogic_QueueCommand,
---- a/drivers/scsi/BusLogic.h
-+++ b/drivers/scsi/BusLogic.h
-@@ -1321,7 +1321,6 @@ static inline void BusLogic_IncrementSizeBucket(BusLogic_CommandSizeBuckets_T Co
- static const char *BusLogic_DriverInfo(struct Scsi_Host *);
- static int BusLogic_QueueCommand(struct scsi_cmnd *, void (*CompletionRoutine) (struct scsi_cmnd *));
- static int BusLogic_BIOSDiskParameters(struct scsi_device *, struct block_device *, sector_t, int *);
--static int BusLogic_ProcDirectoryInfo(struct Scsi_Host *, char *, char **, off_t, int, int);
- static int BusLogic_SlaveConfigure(struct scsi_device *);
- static void BusLogic_QueueCompletedCCB(struct BusLogic_CCB *);
- static irqreturn_t BusLogic_InterruptHandler(int, void *);
+  *	Turn a struct scsi_cmnd * into a unique 32 bit 'context'.
+  */
+@@ -3611,7 +3550,7 @@ static struct scsi_host_template driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "dpt_i2o",
+ 	.proc_name		= "dpt_i2o",
+-	.proc_info		= adpt_proc_info,
++	.proc_fops		= &adpt_proc_fops,
+ 	.info			= adpt_info,
+ 	.queuecommand		= adpt_queue,
+ 	.eh_abort_handler	= adpt_abort,
 -- 
 1.6.5.2
 
