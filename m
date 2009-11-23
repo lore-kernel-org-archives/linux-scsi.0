@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 10/27] scsi proc_fops: convert wd7000
-Date: Mon, 23 Nov 2009 04:35:49 +0300
-Message-ID: <20091123013549.GJ31711@x200.localdomain>
+Subject: [PATCH 11/27] scsi proc_fops: convert nsp_cs
+Date: Mon, 23 Nov 2009 04:36:24 +0300
+Message-ID: <20091123013624.GK31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:40919 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756018AbZKWBhF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:37:05 -0500
-Received: by mail-ew0-f219.google.com with SMTP id 19so1399892ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:37:11 -0800 (PST)
+Received: from ey-out-2122.google.com ([74.125.78.26]:27816 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756007AbZKWBhk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:37:40 -0500
+Received: by ey-out-2122.google.com with SMTP id 4so886035eyf.19
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:37:46 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,109 +20,116 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/wd7000.c |   52 +++++++++++++++++---------------------------------
- 1 file changed, 18 insertions(+), 34 deletions(-)
+ drivers/scsi/pcmcia/nsp_cs.c |   49 ++++++++++++++++++-------------------------
+ drivers/scsi/pcmcia/nsp_cs.h |    9 -------
+ 2 files changed, 22 insertions(+), 36 deletions(-)
 
---- a/drivers/scsi/wd7000.c
-+++ b/drivers/scsi/wd7000.c
-@@ -175,6 +175,7 @@
- #include <linux/spinlock.h>
- #include <linux/ioport.h>
- #include <linux/proc_fs.h>
-+#include <linux/seq_file.h>
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -36,6 +36,8 @@
+ #include <linux/interrupt.h>
+ #include <linux/major.h>
  #include <linux/blkdev.h>
- #include <linux/init.h>
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
  #include <linux/stat.h>
-@@ -1296,36 +1297,18 @@ static void wd7000_revision(Adapter * host)
  
+ #include <asm/io.h>
+@@ -78,7 +80,7 @@ MODULE_PARM_DESC(free_ports, "Release IO ports after configuration? (default: 0
+ 
+ static struct scsi_host_template nsp_driver_template = {
+ 	.proc_name	         = "nsp_cs",
+-	.proc_info		 = nsp_proc_info,
++	.proc_fops		 = &nsp_proc_fops,
+ 	.name			 = "WorkBit NinjaSCSI-3/32Bi(16bit)",
+ 	.info			 = nsp_info,
+ 	.queuecommand		 = nsp_queuecommand,
+@@ -1366,28 +1368,17 @@ static const char *nsp_info(struct Scsi_Host *shpnt)
  
  #undef SPRINTF
--#define SPRINTF(args...) { if (pos < (buffer + length)) pos += sprintf (pos, ## args); }
-+#define SPRINTF(args...)	seq_printf(m, ## args)
- 
--static int wd7000_set_info(char *buffer, int length, struct Scsi_Host *host)
--{
--	dprintk("Buffer = <%.*s>, length = %d\n", length, buffer, length);
+ #define SPRINTF(args...) \
+-        do { \
+-		if(length > (pos - buffer)) { \
+-			pos += snprintf(pos, length - (pos - buffer) + 1, ## args); \
+-			nsp_dbg(NSP_DEBUG_PROC, "buffer=0x%p pos=0x%p length=%d %d\n", buffer, pos, length,  length - (pos - buffer));\
+-		} \
+-	} while(0)
 -
--	/*
--	 * Currently this is a no-op
--	 */
--	dprintk("Sorry, this function is currently out of order...\n");
--	return (length);
--}
--
--
--static int wd7000_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset, int length,  int inout)
-+static int wd7000_proc_show(struct seq_file *m, void *v)
+-static int nsp_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+-			 off_t offset, int length, int inout)
++	seq_printf(m, ## args)
++
++static int nsp_proc_show(struct seq_file *m, void *v)
  {
 +	struct Scsi_Host *host = m->private;
- 	Adapter *adapter = (Adapter *)host->hostdata;
- 	unsigned long flags;
+ 	int id;
 -	char *pos = buffer;
- #ifdef WD7000_DEBUG
- 	Mailbox *ogmbs, *icmbs;
- 	short count;
- #endif
+-	int thislength;
+ 	int speed;
+ 	unsigned long flags;
+ 	nsp_hw_data *data;
+ 	int hostno;
  
--	/*
--	 * Has data been written to the file ?
--	 */
--	if (inout)
--		return (wd7000_set_info(buffer, length, host));
+-	if (inout) {
+-		return -EINVAL;
+-	}
 -
- 	spin_lock_irqsave(host->host_lock, flags);
- 	SPRINTF("Host scsi%d: Western Digital WD-7000 (rev %d.%d)\n", host->host_no, adapter->rev1, adapter->rev2);
- 	SPRINTF("  IO base:      0x%x\n", adapter->iobase);
-@@ -1368,19 +1351,21 @@ static int wd7000_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+ 	hostno = host->host_no;
+ 	data = (nsp_hw_data *)host->hostdata;
  
- 	spin_unlock_irqrestore(host->host_lock, flags);
+@@ -1459,21 +1450,23 @@ static int nsp_proc_info(struct Scsi_Host *host, char *buffer, char **start,
+ 		SPRINTF("\n");
+ 	}
  
--	/*
--	 * Calculate start of next buffer, and return value.
--	 */
+-	thislength = pos - (buffer + offset);
+-
+-	if(thislength < 0) {
+-		*start = NULL;
+-                return 0;
+-        }
+-
+-
+-	thislength = min(thislength, length);
 -	*start = buffer + offset;
+-
+-	return thislength;
 +	return 0;
-+}
- 
--	if ((pos - buffer) < offset)
--		return (0);
--	else if ((pos - buffer - offset) < length)
--		return (pos - buffer - offset);
--	else
--		return (length);
-+static int wd7000_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, wd7000_proc_show, PDE(inode)->data);
  }
+ #undef SPRINTF
  
-+static const struct file_operations wd7000_proc_fops = {
++static int nsp_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, nsp_proc_show, PDE(inode)->data);
++}
++
++static const struct file_operations nsp_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= wd7000_proc_open,
++	.open		= nsp_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
 +};
++
+ /*---------------------------------------------------------------*/
+ /* error handler                                                 */
+ /*---------------------------------------------------------------*/
+--- a/drivers/scsi/pcmcia/nsp_cs.h
++++ b/drivers/scsi/pcmcia/nsp_cs.h
+@@ -293,13 +293,7 @@ static int        nsp_cs_config (struct pcmcia_device *link);
+ /* Linux SCSI subsystem specific functions */
+ static struct Scsi_Host *nsp_detect     (struct scsi_host_template *sht);
+ static const  char      *nsp_info       (struct Scsi_Host *shpnt);
+-static        int        nsp_proc_info  (
+-	                                 struct Scsi_Host *host,
+-					 char   *buffer,
+-					 char  **start,
+-					 off_t   offset,
+-					 int     length,
+-					 int     inout);
++static const struct file_operations nsp_proc_fops;
+ static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
+ 			    void (* done)(struct scsi_cmnd *SCpnt));
  
- /*
-  *  Returns the number of adapters this driver is supporting.
-@@ -1413,7 +1398,7 @@ static __init int wd7000_detect(struct scsi_host_template *tpnt)
- 	for (i = 0; i < NUM_CONFIGS; biosptr[i++] = -1);
- 
- 	tpnt->proc_name = "wd7000";
--	tpnt->proc_info = &wd7000_proc_info;
-+	tpnt->proc_fops = &wd7000_proc_fops;
- 
- 	/*
- 	 * Set up SCB free list, which is shared by all adapters
-@@ -1658,7 +1643,7 @@ MODULE_LICENSE("GPL");
- 
- static struct scsi_host_template driver_template = {
- 	.proc_name		= "wd7000",
--	.proc_info		= wd7000_proc_info,
-+	.proc_fops		= &wd7000_proc_fops,
- 	.name			= "Western Digital WD-7000",
- 	.detect			= wd7000_detect,
- 	.release		= wd7000_release,
 -- 
 1.6.5.2
 
