@@ -1,16 +1,16 @@
 From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 17/27] scsi proc_fops: convert aha152x
-Date: Mon, 23 Nov 2009 04:40:31 +0300
-Message-ID: <20091123014031.GQ31711@x200.localdomain>
+Subject: [PATCH 18/27] scsi proc_fops: convert sym53c8xx_2
+Date: Mon, 23 Nov 2009 04:41:04 +0300
+Message-ID: <20091123014104.GR31711@x200.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:38215 "EHLO
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:35465 "EHLO
 	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771AbZKWBls (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:41:48 -0500
-Received: by ewy19 with SMTP id 19so1402353ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:41:53 -0800 (PST)
+	with ESMTP id S1752729AbZKWBmU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Nov 2009 20:42:20 -0500
+Received: by ewy19 with SMTP id 19so1402587ewy.21
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Nov 2009 17:42:26 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,207 +20,194 @@ Cc: linux-scsi@vger.kernel.org
 Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
 ---
 
- drivers/scsi/aha152x.c |   96 ++++++++++++++++++++++---------------------------
- 1 file changed, 45 insertions(+), 51 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |  136 +++++++++++++-----------------------
+ 1 file changed, 51 insertions(+), 85 deletions(-)
 
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -251,6 +251,7 @@
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -41,6 +41,8 @@
  #include <linux/init.h>
- #include <linux/kernel.h>
- #include <linux/isapnp.h>
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
++#include <linux/proc_fs.h>
 +#include <linux/seq_file.h>
  #include <linux/spinlock.h>
- #include <linux/workqueue.h>
- #include <linux/list.h>
-@@ -2966,11 +2967,10 @@ static void show_queues(struct Scsi_Host *shpnt)
- }
- 
- #undef SPRINTF
--#define SPRINTF(args...) pos += sprintf(pos, ## args)
-+#define SPRINTF(args...) seq_printf(m, ## args)
- 
--static int get_command(char *pos, Scsi_Cmnd * ptr)
-+static void get_command(struct seq_file *m, Scsi_Cmnd *ptr)
- {
--	char *start = pos;
- 	int i;
- 
- 	SPRINTF("0x%08x: target=%d; lun=%d; cmnd=( ",
-@@ -3000,13 +3000,10 @@ static int get_command(char *pos, Scsi_Cmnd * ptr)
- 	if (ptr->SCp.phase & syncneg)
- 		SPRINTF("syncneg|");
- 	SPRINTF("; next=0x%p\n", SCNEXT(ptr));
--
--	return (pos - start);
- }
- 
--static int get_ports(struct Scsi_Host *shpnt, char *pos)
-+static void get_ports(struct Scsi_Host *shpnt, struct seq_file *m)
- {
--	char *start = pos;
- 	int s;
- 
- 	SPRINTF("\n%s: %s(%s) ", CURRENT_SC ? "on bus" : "waiting", states[STATE].name, states[PREVSTATE].name);
-@@ -3262,26 +3259,37 @@ static int get_ports(struct Scsi_Host *shpnt, char *pos)
- 	if (s & ENREQINIT)
- 		SPRINTF("ENREQINIT ");
- 	SPRINTF(")\n");
--
--	return (pos - start);
- }
- 
--static int aha152x_set_info(char *buffer, int length, struct Scsi_Host *shpnt)
-+static ssize_t aha152x_proc_write(struct file *file, const char __user *buf,
-+				  size_t count, loff_t *pos)
- {
--	if(!shpnt || !buffer || length<8 || strncmp("aha152x ", buffer, 8)!=0)
-+	struct Scsi_Host *shpnt = PDE(file->f_path.dentry->d_inode)->data;
-+	char cmd[42];
-+	size_t len;
-+
-+	if (!shpnt)
-+		return -EINVAL;
-+
-+	len = min(count, sizeof(cmd) - 1);
-+	if (copy_from_user(cmd, buf, len))
-+		return -EFAULT;
-+	cmd[len] = '\0';
-+
-+	if (len < 8 || strncmp("aha152x ", cmd, 8) != 0)
- 		return -EINVAL;
- 
- #if defined(AHA152X_DEBUG)
--	if(length>14 && strncmp("debug ", buffer+8, 6)==0) {
-+	if (len > 14 && strncmp("debug ", cmd + 8, 6) == 0) {
- 		int debug = HOSTDATA(shpnt)->debug;
- 
--		HOSTDATA(shpnt)->debug = simple_strtoul(buffer+14, NULL, 0);
-+		HOSTDATA(shpnt)->debug = simple_strtoul(cmd + 14, NULL, 0);
- 
- 		printk(KERN_INFO "aha152x%d: debugging options set to 0x%04x (were 0x%04x)\n", HOSTNO, HOSTDATA(shpnt)->debug, debug);
- 	} else
- #endif
- #if defined(AHA152X_STAT)
--	if(length>13 && strncmp("reset", buffer+8, 5)==0) {
-+	if (len > 13 && strncmp("reset", cmd + 8, 5) == 0) {
- 		int i;
- 
- 		HOSTDATA(shpnt)->total_commands=0;
-@@ -3305,30 +3313,19 @@ static int aha152x_set_info(char *buffer, int length, struct Scsi_Host *shpnt)
- 		return -EINVAL;
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_tcq.h>
+@@ -1161,116 +1163,81 @@ printk("sym_user_command: data=%ld\n", uc->data);
  	}
- 
--
--	return length;
-+	return count;
+ 	return length;
  }
++#endif
  
- #undef SPRINTF
- #define SPRINTF(args...) \
--	do { if(pos < buffer + length) pos += sprintf(pos, ## args); } while(0)
-+	seq_printf(m, ## args)
- 
--static int aha152x_proc_info(struct Scsi_Host *shpnt, char *buffer, char **start,
--		      off_t offset, int length, int inout)
-+static int aha152x_proc_show(struct seq_file *m, void *v)
+-#endif	/* SYM_LINUX_USER_COMMAND_SUPPORT */
+-
+-
+-#ifdef SYM_LINUX_USER_INFO_SUPPORT
+-/*
+- *  Informations through the proc file system.
+- */
+-struct info_str {
+-	char *buffer;
+-	int length;
+-	int offset;
+-	int pos;
+-};
+-
+-static void copy_mem_info(struct info_str *info, char *data, int len)
++static ssize_t sym53c8xx_proc_write(struct file *file, const char __user *buf,
++				    size_t count, loff_t *pos)
  {
-+	struct Scsi_Host *shpnt = m->private;
- 	int i;
--	char *pos = buffer;
- 	Scsi_Cmnd *ptr;
- 	unsigned long flags;
--	int thislength;
+-	if (info->pos + len > info->length)
+-		len = info->length - info->pos;
 -
--	DPRINTK(debug_procinfo, 
--	       KERN_DEBUG "aha152x_proc_info: buffer=%p offset=%ld length=%d hostno=%d inout=%d\n",
--	       buffer, offset, length, shpnt->host_no, inout);
--
--
--	if (inout)
--		return aha152x_set_info(buffer, length, shpnt);
- 
- 	SPRINTF(AHA152X_REVID "\n");
- 
-@@ -3381,25 +3378,25 @@ static int aha152x_proc_info(struct Scsi_Host *shpnt, char *buffer, char **start
- 	if (ISSUE_SC) {
- 		SPRINTF("not yet issued commands:\n");
- 		for (ptr = ISSUE_SC; ptr; ptr = SCNEXT(ptr))
--			pos += get_command(pos, ptr);
-+			get_command(m, ptr);
- 	} else
- 		SPRINTF("no not yet issued commands\n");
- 	DO_UNLOCK(flags);
- 
- 	if (CURRENT_SC) {
- 		SPRINTF("current command:\n");
--		pos += get_command(pos, CURRENT_SC);
-+		get_command(m, CURRENT_SC);
- 	} else
- 		SPRINTF("no current command\n");
- 
- 	if (DISCONNECTED_SC) {
- 		SPRINTF("disconnected commands:\n");
- 		for (ptr = DISCONNECTED_SC; ptr; ptr = SCNEXT(ptr))
--			pos += get_command(pos, ptr);
-+			get_command(m, ptr);
- 	} else
- 		SPRINTF("no disconnected commands\n");
- 
--	pos += get_ports(shpnt, pos);
-+	get_ports(shpnt, m);
- 
- #if defined(AHA152X_STAT)
- 	SPRINTF("statistics:\n"
-@@ -3430,25 +3427,23 @@ static int aha152x_proc_info(struct Scsi_Host *shpnt, char *buffer, char **start
- 	}
- #endif
- 
--	DPRINTK(debug_procinfo, KERN_DEBUG "aha152x_proc_info: pos=%p\n", pos);
--
--	thislength = pos - (buffer + offset);
--	DPRINTK(debug_procinfo, KERN_DEBUG "aha152x_proc_info: length=%d thislength=%d\n", length, thislength);
--
--	if(thislength<0) {
--		DPRINTK(debug_procinfo, KERN_DEBUG "aha152x_proc_info: output too short\n");
--		*start = NULL;
--		return 0;
+-	if (info->pos + len < info->offset) {
+-		info->pos += len;
+-		return;
+-	}
+-	if (info->pos < info->offset) {
+-		data += (info->offset - info->pos);
+-		len  -= (info->offset - info->pos);
 -	}
 -
--	thislength = thislength<length ? thislength : length;
+-	if (len > 0) {
+-		memcpy(info->buffer + info->pos, data, len);
+-		info->pos += len;
++#ifdef SYM_LINUX_USER_COMMAND_SUPPORT
++	struct Scsi_Host *shost = PDE(file->f_path.dentry->d_inode)->data;
++	char *cmd;
++	size_t len;
++	int rv;
++
++	cmd = kmalloc(PAGE_SIZE, GFP_KERNEL);
++	if (!cmd)
++		return -ENOMEM;
++	len = min_t(size_t, count, PAGE_SIZE - 1);
++	if (copy_from_user(cmd, buf, len)) {
++		kfree(cmd);
++		return -EFAULT;
+ 	}
+-}
 -
--	DPRINTK(debug_procinfo, KERN_DEBUG "aha152x_proc_info: return %d\n", thislength);
-+	return 0;
-+}
+-static int copy_info(struct info_str *info, char *fmt, ...)
+-{
+-	va_list args;
+-	char buf[81];
+-	int len;
++	cmd[len] = '\0';
  
--	*start = buffer + offset;
--	return thislength < length ? thislength : length;
-+static int aha152x_proc_open(struct inode *inode, struct file *file)
-+{
-+	return single_open(file, aha152x_proc_show, PDE(inode)->data);
+-	va_start(args, fmt);
+-	len = vsprintf(buf, fmt, args);
+-	va_end(args);
+-
+-	copy_mem_info(info, buf, len);
+-	return len;
++	rv = sym_user_command(shost, cmd, len);
++	kfree(cmd);
++	if (rv < 0)
++		return rv;
++	return count;
++#else
++	return -EINVAL;
++#endif
  }
  
-+static const struct file_operations aha152x_proc_fops = {
+ /*
+- *  Copy formatted information into the input buffer.
++ *  Informations through the proc file system.
+  */
+-static int sym_host_info(struct Scsi_Host *shost, char *ptr, off_t offset, int len)
++static int sym53c8xx_proc_show(struct seq_file *m, void *v)
+ {
++#ifdef SYM_LINUX_USER_INFO_SUPPORT
++	struct Scsi_Host *shost = m->private;
+ 	struct sym_data *sym_data = shost_priv(shost);
+ 	struct pci_dev *pdev = sym_data->pdev;
+ 	struct sym_hcb *np = sym_data->ncb;
+-	struct info_str info;
+ 
+-	info.buffer	= ptr;
+-	info.length	= len;
+-	info.offset	= offset;
+-	info.pos	= 0;
+-
+-	copy_info(&info, "Chip " NAME53C "%s, device id 0x%x, "
++	seq_printf(m, "Chip " NAME53C "%s, device id 0x%x, "
+ 			 "revision id 0x%x\n", np->s.chip_name,
+ 			 pdev->device, pdev->revision);
+-	copy_info(&info, "At PCI address %s, IRQ %u\n",
++	seq_printf(m, "At PCI address %s, IRQ %u\n",
+ 			 pci_name(pdev), pdev->irq);
+-	copy_info(&info, "Min. period factor %d, %s SCSI BUS%s\n",
++	seq_printf(m, "Min. period factor %d, %s SCSI BUS%s\n",
+ 			 (int) (np->minsync_dt ? np->minsync_dt : np->minsync),
+ 			 np->maxwide ? "Wide" : "Narrow",
+ 			 np->minsync_dt ? ", DT capable" : "");
+ 
+-	copy_info(&info, "Max. started commands %d, "
++	seq_printf(m, "Max. started commands %d, "
+ 			 "max. commands per LUN %d\n",
+ 			 SYM_CONF_MAX_START, SYM_CONF_MAX_TAG);
+ 
+-	return info.pos > info.offset? info.pos - info.offset : 0;
+-}
+-#endif /* SYM_LINUX_USER_INFO_SUPPORT */
+-
+-/*
+- *  Entry point of the scsi proc fs of the driver.
+- *  - func = 0 means read  (returns adapter infos)
+- *  - func = 1 means write (not yet merget from sym53c8xx)
+- */
+-static int sym53c8xx_proc_info(struct Scsi_Host *shost, char *buffer,
+-			char **start, off_t offset, int length, int func)
+-{
+-	int retv;
+-
+-	if (func) {
+-#ifdef	SYM_LINUX_USER_COMMAND_SUPPORT
+-		retv = sym_user_command(shost, buffer, length);
+-#else
+-		retv = -EINVAL;
+-#endif
+-	} else {
+-		if (start)
+-			*start = buffer;
+-#ifdef SYM_LINUX_USER_INFO_SUPPORT
+-		retv = sym_host_info(shost, buffer, offset, length);
++	return 0;
+ #else
+-		retv = -EINVAL;
++	return -EINVAL;
+ #endif
+-	}
++}
+ 
+-	return retv;
++static int sym53c8xx_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, sym53c8xx_proc_show, PDE(inode)->data);
+ }
++
++static const struct file_operations sym53c8xx_proc_fops = {
 +	.owner		= THIS_MODULE,
-+	.open		= aha152x_proc_open,
++	.open		= sym53c8xx_proc_open,
 +	.read		= seq_read,
 +	.llseek		= seq_lseek,
 +	.release	= single_release,
-+	.write		= aha152x_proc_write,
++	.write		= sym53c8xx_proc_write,
 +};
-+
- static int aha152x_adjust_queue(struct scsi_device *device)
- {
- 	blk_queue_bounce_limit(device->request_queue, BLK_BOUNCE_HIGH);
-@@ -3459,7 +3454,7 @@ static struct scsi_host_template aha152x_driver_template = {
- 	.module				= THIS_MODULE,
- 	.name				= AHA152X_REVID,
- 	.proc_name			= "aha152x",
--	.proc_info			= aha152x_proc_info,
-+	.proc_fops			= &aha152x_proc_fops,
- 	.queuecommand			= aha152x_queue,
- 	.eh_abort_handler		= aha152x_abort,
- 	.eh_device_reset_handler	= aha152x_device_reset,
+ #endif /* SYM_LINUX_PROC_INFO_SUPPORT */
+ 
+ /*
+@@ -1738,7 +1705,7 @@ static struct scsi_host_template sym2_template = {
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.max_sectors		= 0xFFFF,
+ #ifdef SYM_LINUX_PROC_INFO_SUPPORT
+-	.proc_info		= sym53c8xx_proc_info,
++	.proc_fops		= &sym53c8xx_proc_fops,
+ 	.proc_name		= NAME53C8XX,
+ #endif
+ };
 -- 
 1.6.5.2
 
