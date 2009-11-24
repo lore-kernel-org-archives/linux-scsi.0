@@ -1,47 +1,64 @@
 From: "SRINIVAS NAGA VENKATASATYA PASAGADUGULA - ERS, HCL Tech"
 	<satyasrinivasp@hcl.in>
-Subject: [PATCH] SCSI: Support for Adaptec ASC-1045/1405 SAS/SATA HBA on
- mvsas
-Date: Tue, 24 Nov 2009 20:07:39 +0530
-Message-ID: <6B62480106F2B34D8404CF2FDAA4D9EF467E786AA8@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+Subject: RE: LIBSAS/MVSAS: Issues with hot-plug Out/In of disks from
+ cascading expanders while IO is going on
+Date: Tue, 24 Nov 2009 20:48:54 +0530
+Message-ID: <6B62480106F2B34D8404CF2FDAA4D9EF467E786AB4@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.hcl.in ([203.105.186.28]:39806 "EHLO gws08.hcl.in"
+Received: from gws07.hcl.in ([203.105.186.27]:47899 "EHLO gws07.hcl.in"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933018AbZKXOiV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 09:38:21 -0500
+	id S1756848AbZKXPTU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 10:19:20 -0500
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
-Cc: "ayan@marvell.com" <ayan@marvell.com>, "kewei@marvell.com" <kewei@marvell.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, "ayan@marvell.com" <ayan@marvell.com>, "kewei@marvell.com" <kewei@marvell.com>, "tom_peng@usish.com" <tom_peng@usish.com>, "aoqingyun@usish.com" <aoqingyun@usish.com>, "jack_wang@usish.com" <jack_wang@usish.com>"tom_peng@usish.com" <tom_peng@usish.com>
 
+Hi all,
 
-From: Srinivas <satyasrinivasp@hcl.in>
+Could you please provide me some inputs on below issues?
 
-This is support for Adaptec ASC-1045/1405 SAS/SATA HBA on mvsas, which is based on Marvell 88SE6440 chipset.
-Signed-off-by: Srinivas <satyasrinivasp@hcl.in>
----
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index c790d45..cae6b2c 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -657,6 +657,7 @@ static struct pci_device_id __devinitdata mvs_pci_table[] = {
-        { PCI_VDEVICE(MARVELL, 0x9180), chip_9180 },
-        { PCI_VDEVICE(ARECA, PCI_DEVICE_ID_ARECA_1300), chip_1300 },
-        { PCI_VDEVICE(ARECA, PCI_DEVICE_ID_ARECA_1320), chip_1320 },
-+       { PCI_VDEVICE(ADAPTEC2, 0x0450), chip_6440 },
+--Srini.
+________________________________________
+From: Srinivas Naga Venkatasatya Pasagadugula
+Sent: Friday, November 20, 2009 6:44 PM
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley; jasonchu@marvell.com; ayan@marvell.com; kewei@marvell.com; tom_peng@usish.com; aoqingyun@usish.com; jack_wang@usish.com; 'tom_peng@usish.com'
+Subject: LIBSAS/MVSAS: Issues with hot-plug Out/In of disks from cascading expanders while IO is going on
 
-        { }     /* terminate list */
- };
+Hi,
 
---
+I have some issues with hot-plug Out/In of disks from cascading expanders while IO is going on.
+I'm using Adaptec ASC-1045/1405 which uses the Marvell 88SE6440 chip.
 
-Thanks,
-Srinivas.
+Test Set Up;
+--------------
+ Cascading of edge expanders.
+ Diskstress IO test tool.
+
+Description:
+-----------------
+1. For SATA: After freeing the slot info in mvs_abort_task ( ) function (same as in mvsas driver latest patch), its working as expected.
+2. For SAS drives, still problem exists with hot-plugging of disks in expander while IO is going on.
+
+Need Clarification:
+----------------------
+1. After hot plug out of disks from expanders, why we need to wait for timeout to happen then calling abort_task TMF to freeing the device info?
+2. Once the broad cast signal is received why don't we freeing the entire device resources instead of waiting for timeout to happen?
+      - Because it is taking long time to come out from IO Application and
+        from fdisk -l.
+3. In case of SAS why we are sending abort TMF to target which is already disconnected?
+    (Note: Assumed there is no IT-Nexus support for both SAS and SATA)
+
+Any inputs are highly appreciated.
+
+Thanks
+Srini
+
 
 DISCLAIMER:
 -----------------------------------------------------------------------------------------------------------------------
