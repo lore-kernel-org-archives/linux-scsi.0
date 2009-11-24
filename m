@@ -1,60 +1,70 @@
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
 	<u.kleine-koenig@pengutronix.de>
-Subject: [PATCH 05/38] move initio_remove_one to .devexit.text
-Date: Tue, 24 Nov 2009 22:07:00 +0100
-Message-ID: <1259096853-18909-5-git-send-email-u.kleine-koenig@pengutronix.de>
+Subject: [PATCH 27/38] move bfad_pci_remove to .devexit.text
+Date: Tue, 24 Nov 2009 22:07:22 +0100
+Message-ID: <1259096853-18909-27-git-send-email-u.kleine-koenig@pengutronix.de>
 References: <1259096853-18909-1-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-3-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-4-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-5-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-6-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-7-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-8-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-9-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-10-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-11-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-12-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-13-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-14-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-15-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-16-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-17-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-18-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-19-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-20-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-21-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-22-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-23-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-24-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-25-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-26-git-send-email-u.kleine-koenig@pengutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:44628 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933969AbZKXVI3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 16:08:29 -0500
-In-Reply-To: <1259096853-18909-4-git-send-email-u.kleine-koenig@pengutronix.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934224AbZKXVQB@vger.kernel.org>
+In-Reply-To: <1259096853-18909-26-git-send-email-u.kleine-koenig@pengutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Yang Hongyang <yanghy@cn.fujitsu.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Cox <alan@linux.intel.com>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
+Cc: akpm@linux-foundation.org, Jing Huang <huangj@brocade.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-The function initio_remove_one is used only wrapped by __devexit_p so
-define it using __devexit.
+The function bfad_pci_remove is used only wrapped by __devexit_p so def=
+ine
+it using __devexit.
 
 Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-Cc: Yang Hongyang <yanghy@cn.fujitsu.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Alan Cox <alan@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: Jing Huang <huangj@brocade.com>
+Cc: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-kernel@vger.kernel.org
-Cc: Alan Cox <alan@redhat.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/initio.c |    2 +-
+ drivers/scsi/bfa/bfad.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 89a5948..8bbfd99 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -2964,7 +2964,7 @@ out_disable_device:
-  *	finished being used.
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 6f2be5a..c4d3c91 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1000,7 +1000,7 @@ out:
+ /**
+  * PCI remove entry.
   */
-=20
--static void initio_remove_one(struct pci_dev *pdev)
-+static void __devexit initio_remove_one(struct pci_dev *pdev)
+-void
++void __devexit
+ bfad_pci_remove(struct pci_dev *pdev)
  {
- 	struct Scsi_Host *host =3D pci_get_drvdata(pdev);
- 	struct initio_host *s =3D (struct initio_host *)host->hostdata;
+ 	struct bfad_s  *bfad =3D pci_get_drvdata(pdev);
 --=20
 1.6.5.2
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
