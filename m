@@ -1,38 +1,64 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem
- readonly
-Date: Tue, 24 Nov 2009 21:39:44 +0100
-Message-ID: <20091124203944.GD16662@quack.suse.cz>
-References: <20091124195607.GC16662@quack.suse.cz>
- <Pine.LNX.4.44L0.0911241510590.2881-100000@iolanthe.rowland.org>
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
+	<u.kleine-koenig@pengutronix.de>
+Subject: [PATCH 09/38] move megaraid_detach_one to .devexit.text
+Date: Tue, 24 Nov 2009 22:07:04 +0100
+Message-ID: <1259096853-18909-9-git-send-email-u.kleine-koenig@pengutronix.de>
+References: <1259096853-18909-1-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-3-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-4-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-5-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-6-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-7-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-8-git-send-email-u.kleine-koenig@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:34947 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932611AbZKXUjp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Nov 2009 15:39:45 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0911241510590.2881-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934129AbZKXVJk@vger.kernel.org>
+In-Reply-To: <1259096853-18909-8-git-send-email-u.kleine-koenig@pengutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: akpm@linux-foundation.org, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Yang Hongyang <yanghy@cn.fujitsu.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, tmhikaru@gmail.com, Kernel development list <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ext4@vger.kernel.org
 
-On Tue 24-11-09 15:13:01, Alan Stern wrote:
-> On Tue, 24 Nov 2009, Jan Kara wrote:
-> 
-> >   After digging in block layer code, it's as we suspected:
-> > In case of host error DID_ERROR (which is our case), scsi request is
-> > retried iff it is not a FAILFAST request which is set if bio is doing
-> > readahead... So this is explained and everything behaves as it should.
-> > Thanks everybody involved :).
-> 
-> Okay, very good.  There remains the question of the disturbing error
-> messages in the system log.  Should they be supressed for FAILFAST
-> requests?
-  I think it's useful they are there because ultimately, something really
-went wrong and you should better investigate. BTW, "end_request: I/O error"
-messages are in the log even for requests where we retried and succeeded...
+The function megaraid_detach_one is used only wrapped by __devexit_p so
+define it using __devexit.
 
-								Honza
+Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
+Acked-by: Sam Ravnborg <sam@ravnborg.org>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: Yang Hongyang <yanghy@cn.fujitsu.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/megaraid/megaraid_mbox.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megar=
+aid/megaraid_mbox.c
+index 234f0b7..9fc9cf7 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -76,7 +76,7 @@ static int megaraid_init(void);
+ static void megaraid_exit(void);
+=20
+ static int megaraid_probe_one(struct pci_dev*, const struct pci_device=
+_id *);
+-static void megaraid_detach_one(struct pci_dev *);
++static void __devexit megaraid_detach_one(struct pci_dev *);
+ static void megaraid_mbox_shutdown(struct pci_dev *);
+=20
+ static int megaraid_io_attach(adapter_t *);
+@@ -551,7 +551,7 @@ out_probe_one:
+  *
+  * This routine is also called from the PCI hotplug system.
+  */
+-static void
++static void __devexit
+ megaraid_detach_one(struct pci_dev *pdev)
+ {
+ 	adapter_t		*adapter;
+--=20
+1.6.5.2
