@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 16/22] zfcp: Remove ZFCP_DID_MASK
-Date: Tue, 24 Nov 2009 16:54:12 +0100
-Message-ID: <20091124160138.339012000@de.ibm.com>
+Subject: [patch 19/22] zfcp: Update FSF error reporting
+Date: Tue, 24 Nov 2009 16:54:15 +0100
+Message-ID: <20091124160138.788299000@de.ibm.com>
 References: <20091124155356.135092000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.17.164]:39607 "EHLO
+Received: from mtagate4.de.ibm.com ([195.212.17.164]:39612 "EHLO
 	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933407AbZKXQCS (ORCPT
+	with ESMTP id S933409AbZKXQCS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 11:02:18 -0500
-Content-Disposition: inline; filename=715-zfcp-rm-mask.diff
+Content-Disposition: inline; filename=718-zfcp-fsf-errors.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,158 +16,157 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Instead of assigning 4 bytes with the highest byte masked out, use a 3
-byte array with the ntoh24 and h24ton helper functions, thus
-eliminating the need for the ZFCP_DID_MASK.
+The SCSI midlayer retries commands based on the remote port state and
+the command status reported by the driver. Returning
+DID_TRANSPORT_DISRUPTED is a better approach, use this for reporting
+FSF errors back to the SCSI midlayer.  See
+http://marc.info/?l=linux-scsi&m=125668044215051&w=2 as reference.
+
+There is also no need in special treatment of ABORTED commands, so
+remove the ZFCP_STATUS_FSFREQ_ABORTED, the commands are then returned
+with DID_TRANSPORT_DISRUPTED.
+
+Also remove the ZFCP_STATUS_FSFREQ_RETRY: It is useless, no retry is
+happening in the FSF layer and nobody checks the state of this flag.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_dbf.c |    4 ++--
- drivers/s390/scsi/zfcp_def.h |    4 ----
- drivers/s390/scsi/zfcp_fsf.c |   12 ++++++------
- drivers/s390/scsi/zfcp_fsf.h |   15 +++++++++------
- 4 files changed, 17 insertions(+), 18 deletions(-)
+ drivers/s390/scsi/zfcp_def.h |    2 --
+ drivers/s390/scsi/zfcp_fsf.c |   38 +++++++++++---------------------------
+ 2 files changed, 11 insertions(+), 29 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.c linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c
---- linux-2.6/drivers/s390/scsi/zfcp_dbf.c	2009-11-23 09:59:44.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c	2009-11-23 09:59:44.000000000 +0100
-@@ -178,7 +178,7 @@ void _zfcp_dbf_hba_fsf_response(const ch
- 
- 	case FSF_QTCB_SEND_ELS:
- 		send_els = (struct zfcp_send_els *)fsf_req->data;
--		response->u.els.d_id = qtcb->bottom.support.d_id;
-+		response->u.els.d_id = ntoh24(qtcb->bottom.support.d_id);
- 		response->u.els.ls_code = send_els->ls_code >> 24;
- 		break;
- 
-@@ -812,7 +812,7 @@ void zfcp_dbf_san_incoming_els(struct zf
- 	int length = (int)buf->length -
- 		     (int)((void *)&buf->payload - (void *)buf);
- 
--	zfcp_dbf_san_els("iels", 1, fsf_req, buf->d_id,
-+	zfcp_dbf_san_els("iels", 1, fsf_req, ntoh24(buf->d_id),
- 			       fc_host_port_id(adapter->scsi_host),
- 			       buf->payload.data[0], (void *)buf->payload.data,
- 			       length);
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
---- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-11-23 09:59:44.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-11-23 09:59:44.000000000 +0100
-@@ -71,10 +71,6 @@
- /* timeout value for "default timer" for fsf requests */
- #define ZFCP_FSF_REQUEST_TIMEOUT (60*HZ)
+--- linux-2.6/drivers/s390/scsi/zfcp_def.h	2009-11-23 09:59:45.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2009-11-23 09:59:45.000000000 +0100
+@@ -110,10 +110,8 @@
+ #define ZFCP_STATUS_FSFREQ_CLEANUP		0x00000010
+ #define ZFCP_STATUS_FSFREQ_ABORTSUCCEEDED	0x00000040
+ #define ZFCP_STATUS_FSFREQ_ABORTNOTNEEDED       0x00000080
+-#define ZFCP_STATUS_FSFREQ_ABORTED              0x00000100
+ #define ZFCP_STATUS_FSFREQ_TMFUNCFAILED         0x00000200
+ #define ZFCP_STATUS_FSFREQ_TMFUNCNOTSUPP        0x00000400
+-#define ZFCP_STATUS_FSFREQ_RETRY                0x00000800
+ #define ZFCP_STATUS_FSFREQ_DISMISSED            0x00001000
  
--/*************** FIBRE CHANNEL PROTOCOL SPECIFIC DEFINES ********************/
--
--#define ZFCP_DID_MASK           0x00FFFFFF
--
- /*************** ADAPTER/PORT/UNIT AND FSF_REQ STATUS FLAGS ******************/
- 
- /*
+ /************************* STRUCTURE DEFINITIONS *****************************/
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-11-23 09:59:44.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-11-23 09:59:44.000000000 +0100
-@@ -128,7 +128,7 @@ static void zfcp_fsf_status_read_port_cl
- 	struct fsf_status_read_buffer *sr_buf = req->data;
- 	struct zfcp_adapter *adapter = req->adapter;
- 	struct zfcp_port *port;
--	int d_id = sr_buf->d_id & ZFCP_DID_MASK;
-+	int d_id = ntoh24(sr_buf->d_id);
+--- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2009-11-23 09:59:45.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2009-11-23 09:59:45.000000000 +0100
+@@ -315,7 +315,6 @@ static void zfcp_fsf_fsfstatus_qual_eval
+ 	case FSF_SQ_ULP_DEPENDENT_ERP_REQUIRED:
+ 		return;
+ 	case FSF_SQ_COMMAND_ABORTED:
+-		req->status |= ZFCP_STATUS_FSFREQ_ABORTED;
+ 		break;
+ 	case FSF_SQ_NO_RECOM:
+ 		dev_err(&req->adapter->ccw_device->dev,
+@@ -356,8 +355,7 @@ static void zfcp_fsf_protstatus_eval(str
+ 	zfcp_dbf_hba_fsf_response(req);
  
- 	read_lock_irqsave(&adapter->port_list_lock, flags);
- 	list_for_each_entry(port, &adapter->port_list, list)
-@@ -494,7 +494,7 @@ static int zfcp_fsf_exchange_config_eval
+ 	if (req->status & ZFCP_STATUS_FSFREQ_DISMISSED) {
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			ZFCP_STATUS_FSFREQ_RETRY; /* only for SCSI cmnds. */
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		return;
+ 	}
  
- 	fc_host_port_name(shost) = nsp->fl_wwpn;
- 	fc_host_node_name(shost) = nsp->fl_wwnn;
--	fc_host_port_id(shost) = bottom->s_id & ZFCP_DID_MASK;
-+	fc_host_port_id(shost) = ntoh24(bottom->s_id);
- 	fc_host_speed(shost) = bottom->fc_link_speed;
- 	fc_host_supported_classes(shost) = FC_COS_CLASS2 | FC_COS_CLASS3;
+@@ -375,7 +373,7 @@ static void zfcp_fsf_protstatus_eval(str
+ 	case FSF_PROT_ERROR_STATE:
+ 	case FSF_PROT_SEQ_NUMB_ERROR:
+ 		zfcp_erp_adapter_reopen(adapter, 0, "fspse_2", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_PROT_UNSUPP_QTCB_TYPE:
+ 		dev_err(&adapter->ccw_device->dev,
+@@ -884,13 +882,11 @@ static void zfcp_fsf_abort_fcp_command_h
+ 		break;
+ 	case FSF_PORT_BOXED:
+ 		zfcp_erp_port_boxed(unit->port, "fsafch3", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_LUN_BOXED:
+ 		zfcp_erp_unit_boxed(unit, "fsafch4", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+                 break;
+ 	case FSF_ADAPTER_STATUS_AVAILABLE:
+ 		switch (fsq->word[0]) {
+@@ -988,8 +984,7 @@ static void zfcp_fsf_send_ct_handler(str
+ 	case FSF_ACCESS_DENIED:
+ 		break;
+         case FSF_PORT_BOXED:
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_PORT_HANDLE_NOT_VALID:
+ 		zfcp_erp_adapter_reopen(adapter, 0, "fsscth1", req);
+@@ -1761,9 +1756,7 @@ static void zfcp_fsf_close_physical_port
+ 					  &unit->status);
+ 		read_unlock(&port->unit_list_lock);
+ 		zfcp_erp_port_boxed(port, "fscpph2", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
+-
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_ADAPTER_STATUS_AVAILABLE:
+ 		switch (header->fsf_status_qual.word[0]) {
+@@ -1867,8 +1860,7 @@ static void zfcp_fsf_open_unit_handler(s
+ 		break;
+ 	case FSF_PORT_BOXED:
+ 		zfcp_erp_port_boxed(unit->port, "fsouh_2", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_LUN_SHARING_VIOLATION:
+ 		if (header->fsf_status_qual.word[0])
+@@ -2030,8 +2022,7 @@ static void zfcp_fsf_close_unit_handler(
+ 		break;
+ 	case FSF_PORT_BOXED:
+ 		zfcp_erp_port_boxed(unit->port, "fscuh_3", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_ADAPTER_STATUS_AVAILABLE:
+ 		switch (req->qtcb->header.fsf_status_qual.word[0]) {
+@@ -2164,13 +2155,8 @@ static void zfcp_fsf_send_fcp_command_ta
+ 		return;
+ 	}
  
-@@ -506,7 +506,7 @@ static int zfcp_fsf_exchange_config_eval
+-	if (unlikely(req->status & ZFCP_STATUS_FSFREQ_ABORTED)) {
+-		set_host_byte(scpnt, DID_SOFT_ERROR);
+-		goto skip_fsfstatus;
+-	}
+-
+ 	if (unlikely(req->status & ZFCP_STATUS_FSFREQ_ERROR)) {
+-		set_host_byte(scpnt, DID_ERROR);
++		set_host_byte(scpnt, DID_TRANSPORT_DISRUPTED);
+ 		goto skip_fsfstatus;
+ 	}
  
- 	switch (bottom->fc_topology) {
- 	case FSF_TOPO_P2P:
--		adapter->peer_d_id = bottom->peer_d_id & ZFCP_DID_MASK;
-+		adapter->peer_d_id = ntoh24(bottom->peer_d_id);
- 		adapter->peer_wwpn = plogi->fl_wwpn;
- 		adapter->peer_wwnn = plogi->fl_wwnn;
- 		fc_host_port_type(shost) = FC_PORTTYPE_PTP;
-@@ -1216,7 +1216,7 @@ int zfcp_fsf_send_els(struct zfcp_send_e
- 	if (ret)
- 		goto failed_send;
- 
--	req->qtcb->bottom.support.d_id = els->d_id;
-+	hton24(req->qtcb->bottom.support.d_id, els->d_id);
- 	req->handler = zfcp_fsf_send_els_handler;
- 	req->data = els;
- 
-@@ -1522,7 +1522,7 @@ int zfcp_fsf_open_port(struct zfcp_erp_a
-         sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
- 
- 	req->handler = zfcp_fsf_open_port_handler;
--	req->qtcb->bottom.support.d_id = port->d_id;
-+	hton24(req->qtcb->bottom.support.d_id, port->d_id);
- 	req->data = port;
- 	req->erp_action = erp_action;
- 	erp_action->fsf_req = req;
-@@ -1669,7 +1669,7 @@ int zfcp_fsf_open_wka_port(struct zfcp_f
- 	sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
- 
- 	req->handler = zfcp_fsf_open_wka_port_handler;
--	req->qtcb->bottom.support.d_id = wka_port->d_id;
-+	hton24(req->qtcb->bottom.support.d_id, wka_port->d_id);
- 	req->data = wka_port;
- 
- 	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.h linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.h
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.h	2009-11-23 09:59:43.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.h	2009-11-23 09:59:44.000000000 +0100
-@@ -11,6 +11,7 @@
- 
- #include <linux/pfn.h>
- #include <linux/scatterlist.h>
-+#include <scsi/libfc.h>
- 
- #define FSF_QTCB_CURRENT_VERSION		0x00000001
- 
-@@ -228,7 +229,8 @@ struct fsf_status_read_buffer {
- 	u32 length;
- 	u32 res1;
- 	struct fsf_queue_designator queue_designator;
--	u32 d_id;
-+	u8 res2;
-+	u8 d_id[3];
- 	u32 class;
- 	u64 fcp_lun;
- 	u8  res3[24];
-@@ -327,8 +329,8 @@ struct fsf_qtcb_bottom_io {
- 
- struct fsf_qtcb_bottom_support {
- 	u32 operation_subtype;
--	u8  res1[12];
--	u32 d_id;
-+	u8  res1[13];
-+	u8 d_id[3];
- 	u32 option;
- 	u64 fcp_lun;
- 	u64 res2;
-@@ -357,11 +359,12 @@ struct fsf_qtcb_bottom_config {
- 	u32 fc_topology;
- 	u32 fc_link_speed;
- 	u32 adapter_type;
--	u32 peer_d_id;
-+	u8 res0;
-+	u8 peer_d_id[3];
- 	u8 res1[2];
- 	u16 timer_interval;
--	u8 res2[8];
--	u32 s_id;
-+	u8 res2[9];
-+	u8 s_id[3];
- 	u8 nport_serv_param[128];
- 	u8 res3[8];
- 	u32 adapter_ports;
+@@ -2266,13 +2252,11 @@ static void zfcp_fsf_send_fcp_command_ha
+ 		break;
+ 	case FSF_PORT_BOXED:
+ 		zfcp_erp_port_boxed(unit->port, "fssfch5", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_LUN_BOXED:
+ 		zfcp_erp_unit_boxed(unit, "fssfch6", req);
+-		req->status |= ZFCP_STATUS_FSFREQ_ERROR |
+-			       ZFCP_STATUS_FSFREQ_RETRY;
++		req->status |= ZFCP_STATUS_FSFREQ_ERROR;
+ 		break;
+ 	case FSF_ADAPTER_STATUS_AVAILABLE:
+ 		if (header->fsf_status_qual.word[0] ==
 
