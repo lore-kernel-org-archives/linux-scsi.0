@@ -1,64 +1,53 @@
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
 	<u.kleine-koenig@pengutronix.de>
-Subject: [PATCH 09/38] move megaraid_detach_one to .devexit.text
-Date: Tue, 24 Nov 2009 22:07:04 +0100
-Message-ID: <1259096853-18909-9-git-send-email-u.kleine-koenig@pengutronix.de>
+Subject: [PATCH 07/38] move lasi700_driver_remove to .devexit.text
+Date: Tue, 24 Nov 2009 22:07:02 +0100
+Message-ID: <1259096853-18909-7-git-send-email-u.kleine-koenig@pengutronix.de>
 References: <1259096853-18909-1-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-3-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-4-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-5-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-6-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-7-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-8-git-send-email-u.kleine-koenig@pengutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934129AbZKXVJk@vger.kernel.org>
-In-Reply-To: <1259096853-18909-8-git-send-email-u.kleine-koenig@pengutronix.de>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934143AbZKXVJ4@vger.kernel.org>
+In-Reply-To: <1259096853-18909-6-git-send-email-u.kleine-koenig@pengutronix.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, Neela Syam Kolli <megaraidlinux@lsi.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Yang Hongyang <yanghy@cn.fujitsu.com>, linux-scsi@vger.kernel.org
+Cc: akpm@linux-foundation.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Yang Hongyang <yanghy@cn.fujitsu.com>, Kyle McMartin <kyle@mcmartin.ca>, Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Helge Deller <deller@gmx.de>
 List-Id: linux-scsi@vger.kernel.org
 
-The function megaraid_detach_one is used only wrapped by __devexit_p so
-define it using __devexit.
+The function lasi700_driver_remove is used only wrapped by __devexit_p
+so define it using __devexit.
 
 Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
-Acked-by: Sam Ravnborg <sam@ravnborg.org>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
 Cc: James E.J. Bottomley <James.Bottomley@suse.de>
 Cc: Yang Hongyang <yanghy@cn.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kyle McMartin <kyle@mcmartin.ca>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Helge Deller <deller@gmx.de>
 ---
- drivers/scsi/megaraid/megaraid_mbox.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lasi700.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megar=
-aid/megaraid_mbox.c
-index 234f0b7..9fc9cf7 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -76,7 +76,7 @@ static int megaraid_init(void);
- static void megaraid_exit(void);
+diff --git a/drivers/scsi/lasi700.c b/drivers/scsi/lasi700.c
+index b3d3131..a192914 100644
+--- a/drivers/scsi/lasi700.c
++++ b/drivers/scsi/lasi700.c
+@@ -147,7 +147,7 @@ lasi700_probe(struct parisc_device *dev)
+ 	return -ENODEV;
+ }
 =20
- static int megaraid_probe_one(struct pci_dev*, const struct pci_device=
-_id *);
--static void megaraid_detach_one(struct pci_dev *);
-+static void __devexit megaraid_detach_one(struct pci_dev *);
- static void megaraid_mbox_shutdown(struct pci_dev *);
-=20
- static int megaraid_io_attach(adapter_t *);
-@@ -551,7 +551,7 @@ out_probe_one:
-  *
-  * This routine is also called from the PCI hotplug system.
-  */
--static void
-+static void __devexit
- megaraid_detach_one(struct pci_dev *pdev)
+-static int __exit
++static int __devexit
+ lasi700_driver_remove(struct parisc_device *dev)
  {
- 	adapter_t		*adapter;
+ 	struct Scsi_Host *host =3D dev_get_drvdata(&dev->dev);
 --=20
 1.6.5.2
