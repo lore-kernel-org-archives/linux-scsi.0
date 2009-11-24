@@ -1,8 +1,8 @@
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
 	<u.kleine-koenig@pengutronix.de>
-Subject: [PATCH 19/38] move snirm710_driver_remove to .devexit.text
-Date: Tue, 24 Nov 2009 22:07:14 +0100
-Message-ID: <1259096853-18909-19-git-send-email-u.kleine-koenig@pengutronix.de>
+Subject: [PATCH 21/38] move stex_remove to .devexit.text
+Date: Tue, 24 Nov 2009 22:07:16 +0100
+Message-ID: <1259096853-18909-21-git-send-email-u.kleine-koenig@pengutronix.de>
 References: <1259096853-18909-1-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-3-git-send-email-u.kleine-koenig@pengutronix.de>
@@ -21,46 +21,59 @@ References: <1259096853-18909-1-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-16-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-17-git-send-email-u.kleine-koenig@pengutronix.de>
  <1259096853-18909-18-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-19-git-send-email-u.kleine-koenig@pengutronix.de>
+ <1259096853-18909-20-git-send-email-u.kleine-koenig@pengutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934112AbZKXVIz@vger.kernel.org>
-In-Reply-To: <1259096853-18909-18-git-send-email-u.kleine-koenig@pengutronix.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Yang Hongyang <yanghy@cn.fujitsu.com>, Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:44749 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934048AbZKXVIm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 16:08:42 -0500
+In-Reply-To: <1259096853-18909-20-git-send-email-u.kleine-koenig@pengutronix.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: akpm@linux-foundation.org, Willem Riede <osst@riede.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@HansenPartnership.com>, Ed Lin <ed.lin@promise.com>, Yang Hongyang <yanghy@cn.fujitsu.com>, linux-scsi@vger.kernel.org, osst-users@lists.sourceforge.net
 
-The function snirm710_driver_remove is used only wrapped by __devexit_p
-so define it using __devexit.
+The function stex_remove is used only wrapped by __devexit_p so define
+it using __devexit.
 
 Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
+Acked-by: Sam Ravnborg <sam@ravnborg.org>
+Cc: Willem Riede <osst@riede.org>
 Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-Cc: Yang Hongyang <yanghy@cn.fujitsu.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: "Kai M=C3=A4kisara" <Kai.Makisara@kolumbus.fi>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Cc: Ed Lin <ed.lin@promise.com>
+Cc: Yang Hongyang <yanghy@cn.fujitsu.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org
+Cc: osst-users@lists.sourceforge.net
+Cc: linux-kernel@vger.kernel.org
 ---
- drivers/scsi/sni_53c710.c |    2 +-
+ drivers/scsi/stex.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
-index 37b3359..c941a00 100644
---- a/drivers/scsi/sni_53c710.c
-+++ b/drivers/scsi/sni_53c710.c
-@@ -116,7 +116,7 @@ static int __init snirm710_probe(struct platform_de=
-vice *dev)
- 	return -ENODEV;
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 09fa886..09ee386 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1679,7 +1679,7 @@ static void stex_hba_free(struct st_hba *hba)
+ 			  hba->dma_mem, hba->dma_handle);
  }
 =20
--static int __exit snirm710_driver_remove(struct platform_device *dev)
-+static int __devexit snirm710_driver_remove(struct platform_device *de=
-v)
+-static void stex_remove(struct pci_dev *pdev)
++static void __devexit stex_remove(struct pci_dev *pdev)
  {
- 	struct Scsi_Host *host =3D dev_get_drvdata(&dev->dev);
- 	struct NCR_700_Host_Parameters *hostdata =3D
+ 	struct st_hba *hba =3D pci_get_drvdata(pdev);
+=20
 --=20
 1.6.5.2
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
