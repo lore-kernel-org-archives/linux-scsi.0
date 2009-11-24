@@ -1,61 +1,72 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 20/22] zfcp: Block scsi_eh thread for rport state BLOCKED
-Date: Tue, 24 Nov 2009 16:54:16 +0100
-Message-ID: <20091124160138.938355000@de.ibm.com>
-References: <20091124155356.135092000@de.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem
+ readonly
+Date: Tue, 24 Nov 2009 12:16:17 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0911241111410.2881-100000@iolanthe.rowland.org>
+References: <20091123234234.GA22126@roll>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.17.162]:57704 "EHLO
-	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933241AbZKXQBe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 11:01:34 -0500
-Content-Disposition: inline; filename=720-zfcp-block-thread.diff
+Received: from iolanthe.rowland.org ([192.131.102.54]:40672 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933597AbZKXRQO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 12:16:14 -0500
+In-Reply-To: <20091123234234.GA22126@roll>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: tmhikaru@gmail.com
+Cc: Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+On Mon, 23 Nov 2009 tmhikaru@gmail.com wrote:
 
-In case the SCSI error recovery starts because of a SCSI command
-timeout, but then something else triggers the rport to be deleted, the
-SCSI error recovery will run to the end and set the SCSI device
-offline. To prevent this, call the FC transport function
-fc_block_scsi_eh which waits until the rport leaves the BLOCKED state.
-This guarantees that communication is possible if the rport is ONLINE,
-or the SCSI devices will be removed if the rport state switches to
-NOT_PRESENT.
+> Thank you. I've gotten output of it screwing up, but it's a 62MB file. I
+> don't think I'm allowed to send attachments here, nor do I know what I'm
+> supposed to be looking for in this output. So, instead I'm putting the
+> (compressed) file up on my home computer. If you've got suggestions for what
+> I should use instead, let me know.
+> 
+> http://hikaru.no-ip.info:3000/1.mon.out.xz
+> 
+> Although I don't think you'll need it, I've included the dmesg output of
+> what happened when I ran my backup script, just in case it helps at all.
 
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
+Here's an annotated example of one of those hiccups:
 
- drivers/s390/scsi/zfcp_scsi.c |    3 +++
- 1 file changed, 3 insertions(+)
+f1aa1f00 2416018820 S Bo:1:003:1 -115 31 = 55534243 07050100 00100000 80000a28 000000ae ef000008 00000000 000000
+f1aa1f00 2416018929 C Bo:1:003:1 0 31 >
 
---- a/drivers/s390/scsi/zfcp_scsi.c	2009-11-24 12:36:53.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_scsi.c	2009-11-24 12:36:58.000000000 +0100
-@@ -209,6 +209,7 @@ static int zfcp_scsi_eh_abort_handler(st
- 			break;
- 
- 		zfcp_erp_wait(adapter);
-+		fc_block_scsi_eh(scpnt);
- 		if (!(atomic_read(&adapter->status) &
- 		      ZFCP_STATUS_COMMON_RUNNING)) {
- 			zfcp_dbf_scsi_abort("nres", adapter->dbf, scpnt, NULL,
-@@ -248,6 +249,7 @@ static int zfcp_task_mgmt_function(struc
- 			break;
- 
- 		zfcp_erp_wait(adapter);
-+		fc_block_scsi_eh(scpnt);
- 		if (!(atomic_read(&adapter->status) &
- 		      ZFCP_STATUS_COMMON_RUNNING)) {
- 			zfcp_dbf_scsi_devreset("nres", tm_flags, unit, scpnt);
-@@ -289,6 +291,7 @@ static int zfcp_scsi_eh_host_reset_handl
- 
- 	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1", scpnt);
- 	zfcp_erp_wait(adapter);
-+	fc_block_scsi_eh(scpnt);
- 
- 	return SUCCESS;
- }
+The computer issued a READ command for 8 blocks (4096 bytes) starting
+at block number 0x0000aeef = 44783.
+
+d2588b00 2416019342 S Bi:1:003:2 -115 4096 <
+d2588b00 2416019428 C Bi:1:003:2 -32 0
+f1aa1f00 2416019435 S Co:1:003:0 s 02 01 0000 0082 0000 0
+f1aa1f00 2416019554 C Co:1:003:0 0 0
+
+The drive returned 0 bytes of data.
+
+f1aa1f00 2416019560 S Bi:1:003:2 -115 13 <
+f1aa1f00 2416019678 C Bi:1:003:2 0 13 = 55534253 07050100 00100000 00
+
+And then it returned a status indicating no error but 4096 bytes
+residue (i.e., incorrect or undelivered data).  This caused the
+usb-storage driver to send the SCSI layer a result code of DID_ERROR
+with no sense data.
+
+> sd 0:0:0:0: [sda] Unhandled error code
+> sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> end_request: I/O error, dev sda, sector 44783
+
+The DID_ERROR code caused the SCSI layer to display this error message.  
+
+> sd 0:0:0:0: [sda] Unhandled error code
+> sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> end_request: I/O error, dev sda, sector 51823
+
+I would have expected the READ to be retried, but in these two cases 
+it wasn't.  The usbmon log contained five instances of this error 
+sequence; the other three were retried successfully.  I don't know what 
+the difference was.
+
+Alan Stern
 
