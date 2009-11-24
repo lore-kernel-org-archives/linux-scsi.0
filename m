@@ -1,70 +1,33 @@
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
-	<u.kleine-koenig@pengutronix.de>
-Subject: [PATCH 27/38] move bfad_pci_remove to .devexit.text
-Date: Tue, 24 Nov 2009 22:07:22 +0100
-Message-ID: <1259096853-18909-27-git-send-email-u.kleine-koenig@pengutronix.de>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 02/38] move atp870u_remove to .devexit.text
+Date: Tue, 24 Nov 2009 15:38:16 -0600
+Message-ID: <1259098696.4549.643.camel@mulgrave.site>
 References: <1259096853-18909-1-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-3-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-4-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-5-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-6-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-7-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-8-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-9-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-10-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-11-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-12-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-13-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-14-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-15-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-16-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-17-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-18-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-19-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-20-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-21-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-22-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-23-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-24-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-25-git-send-email-u.kleine-koenig@pengutronix.de>
- <1259096853-18909-26-git-send-email-u.kleine-koenig@pengutronix.de>
+	 <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934224AbZKXVQB@vger.kernel.org>
-In-Reply-To: <1259096853-18909-26-git-send-email-u.kleine-koenig@pengutronix.de>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934158AbZKXViW@vger.kernel.org>
+In-Reply-To: <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, Jing Huang <huangj@brocade.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+To: Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Yang Hongyang <yanghy@cn.fujitsu.com>, Alan Cox <alan@linux.intel.com>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The function bfad_pci_remove is used only wrapped by __devexit_p so def=
-ine
-it using __devexit.
+On Tue, 2009-11-24 at 22:06 +0100, Uwe Kleine-K=C3=B6nig wrote:
+> The function atp870u_remove is used only wrapped by __devexit_p so de=
+fine
+> it using __devexit.
 
-Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
-Cc: Jing Huang <huangj@brocade.com>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-kernel@vger.kernel.org
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/bfa/bfad.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+But there's really no point to this.  HOTPLUG is always defined on SCSI
+systems that have these drivers, which means that _devinit/exit are
+nops.  That makes the change purely cosmetic and not worth churning two
+dozen drivers for.
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 6f2be5a..c4d3c91 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1000,7 +1000,7 @@ out:
- /**
-  * PCI remove entry.
-  */
--void
-+void __devexit
- bfad_pci_remove(struct pci_dev *pdev)
- {
- 	struct bfad_s  *bfad =3D pci_get_drvdata(pdev);
---=20
-1.6.5.2
+Even for the EMBEDDED cases that should care about this, the maintainer=
+s
+have indicated that the memory savings simply aren't worth the hassle o=
+f
+tracking the sectional updates.
+
+James
