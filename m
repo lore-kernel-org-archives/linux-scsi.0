@@ -1,40 +1,37 @@
-From: Michael Holzheu <holzheu@linux.vnet.ibm.com>
-Subject: Re: [PATCH] strstrip incorrectly marked __must_check
-Date: Tue, 24 Nov 2009 10:09:55 +0100
-Message-ID: <1259053795.4014.2.camel@holzheu-laptop>
-References: <2f11576a0911031158r7fabb96fx8073bb4e86f4981e@mail.gmail.com>
-	 <1258981499.11269.6.camel@holzheu-laptop>
-	 <20091124175338.AFB6.A69D9226@jp.fujitsu.com>
-Reply-To: holzheu@linux.vnet.ibm.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/4] libata: Report zeroed read after Trim and max
+	discard size
+Date: Tue, 24 Nov 2009 09:35:08 -0500
+Message-ID: <20091124143508.GB21629@infradead.org>
+References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <1258771524-26673-4-git-send-email-martin.petersen@oracle.com> <20091121104923.GB30153@infradead.org> <yq11vjrskfu.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.17.165]:47690 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932292AbZKXJJv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 04:09:51 -0500
-In-Reply-To: <20091124175338.AFB6.A69D9226@jp.fujitsu.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:47293 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932987AbZKXOfW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 09:35:22 -0500
+Content-Disposition: inline
+In-Reply-To: <yq11vjrskfu.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2009-11-24 at 17:55 +0900, KOSAKI Motohiro wrote:
-> > Hi,
-> > 
-> > I have several places in my code where the new __must_check of strstrip
-> > will introduce unnecessary dummy variables to avoid the warnings.
-> > 
-> > Therefore I would like to have the suggested new strim() or
-> > strstip_tail() function. Any chance to have this upstream soon?
+On Sat, Nov 21, 2009 at 03:16:05PM -0500, Martin K. Petersen wrote:
+> I was trying to help Eric figure out why his drive pooped on big Trim
+> requests.  For WRITE SAME the limit is inherent in the arguments,
+> whereas our SATL implementation is limited by the 512-byte WRITE SAME
+> payload.  So I needed a way to convey this up the stack.
 > 
-> strim() is in mmotm now. I expect it will merge mainline soon.
+> Since you already return a B0 VPD page I thought it would be a
+> convenient place to communicate the max without having to tweak the
+> queue limits directly from within libata.
+> 
+> You are right that I'm relying on fuzziness in SBC which requires both
+> the max LBA count and the descriptor count to be specified for UNMAP.
 
-That's really good news!
-
-Thanks!
-
-Michael
-
+I think the better way is to make sure we can support any TRIM that
+can be sent down.  Given that TRIM is not NCQ-capable we can just
+allocate one buffer for the TRIM ranges per TRIM capable device.
 
