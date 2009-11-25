@@ -1,63 +1,52 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem
- readonly
-Date: Wed, 25 Nov 2009 09:42:41 +0100
-Message-ID: <20091125084240.GA549@quack.suse.cz>
-References: <20091124195607.GC16662@quack.suse.cz>
- <Pine.LNX.4.44L0.0911241510590.2881-100000@iolanthe.rowland.org>
- <20091124203944.GD16662@quack.suse.cz>
- <20091124215044.GA20245@roll>
- <20091124222334.GB20245@roll>
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
+	<u.kleine-koenig@pengutronix.de>
+Subject: Re: [PATCH 02/38] move atp870u_remove to .devexit.text
+Date: Wed, 25 Nov 2009 10:26:56 +0100
+Message-ID: <20091125092656.GA14459@pengutronix.de>
+References: <1259096853-18909-1-git-send-email-u.kleine-koenig@pengutronix.de> <1259096853-18909-2-git-send-email-u.kleine-koenig@pengutronix.de> <1259098696.4549.643.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:55891 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934251AbZKYImm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Nov 2009 03:42:42 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758400AbZKYJ1C@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20091124222334.GB20245@roll>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1259098696.4549.643.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Yang Hongyang <yanghy@cn.fujitsu.com>, Alan Cox <alan@linux.intel.com>, linux-scsi@vger.kernel.org, Alan Cox <alan@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: tmhikaru@gmail.com
-Cc: Jan Kara <jack@suse.cz>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Kernel development list <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ext4@vger.kernel.org
 
-On Tue 24-11-09 17:23:34, tmhikaru@gmail.com wrote:
-> On Tue, Nov 24, 2009 at 04:50:44PM -0500, tmhikaru@gmail.com wrote:
-> > On Tue, Nov 24, 2009 at 09:39:44PM +0100, Jan Kara wrote:
-> > > On Tue 24-11-09 15:13:01, Alan Stern wrote:
-> > > > On Tue, 24 Nov 2009, Jan Kara wrote:
-> > > > 
-> > > > >   After digging in block layer code, it's as we suspected:
-> > > > > In case of host error DID_ERROR (which is our case), scsi request is
-> > > > > retried iff it is not a FAILFAST request which is set if bio is doing
-> > > > > readahead... So this is explained and everything behaves as it should.
-> > > > > Thanks everybody involved :).
-> > > > 
-> > > > Okay, very good.  There remains the question of the disturbing error
-> > > > messages in the system log.  Should they be supressed for FAILFAST
-> > > > requests?
-> > >   I think it's useful they are there because ultimately, something really
-> > > went wrong and you should better investigate. BTW, "end_request: I/O error"
-> > > messages are in the log even for requests where we retried and succeeded...
-> > > 
-> > > 								Honza
-> > 
-> > While I agree it is useful information, I think that if the error messages
-> > are going to be printed, you should *also* print that this is a NON FATAL
-> > error and that it's going to be retried. It'd help diagnosing the path it's
-> > following through the failure code IMHO as well as not making users
-> > completely freak out like I did in my case. It is *not* particularly obvious
-> > given the message printed to syslog what is going wrong or why.
-  Yeah, we might make it more obvious that read failed and whether or not
-we are going to retry. Just technically it's not so simple because a
-different layer prints messages about errors (generic block layer) and
-different (scsi disk driver) decides what to do (retry, don't retry, ...).
+On Tue, Nov 24, 2009 at 03:38:16PM -0600, James Bottomley wrote:
+> On Tue, 2009-11-24 at 22:06 +0100, Uwe Kleine-K=F6nig wrote:
+> > The function atp870u_remove is used only wrapped by __devexit_p so =
+define
+> > it using __devexit.
+>=20
+> But there's really no point to this.  HOTPLUG is always defined on SC=
+SI
+> systems that have these drivers, which means that _devinit/exit are
+> nops.  That makes the change purely cosmetic and not worth churning t=
+wo
+> dozen drivers for.
+>=20
+> Even for the EMBEDDED cases that should care about this, the maintain=
+ers
+> have indicated that the memory savings simply aren't worth the hassle=
+ of
+> tracking the sectional updates.
+I think there are people that care.  Anyhow, then the best thing you ca=
+n
+do is something like
 
-> 	I should have asked since I'm here at the moment - do you need any
-> more information out of the buggy USB enclosure at the moment, or can I work
-> on trying to fix/replace it now?
-  No, feel free to do anything with it :). Thanks for your help with
-debugging this.
+	find drivers/scsi -type f -print0 | xargs perl -p -i -e 's/\b__(dev)?e=
+xit(_p)?\b//'
 
-									Honza
+Then my scripts will drop the scsi related patches.
+
+Best regards
+Uwe
+
+--=20
+Pengutronix e.K.                              | Uwe Kleine-K=F6nig     =
+       |
+Industrial Linux Solutions                    | http://www.pengutronix.=
+de/  |
