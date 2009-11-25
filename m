@@ -1,54 +1,66 @@
-From: tmhikaru@gmail.com
-Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem readonly
-Date: Tue, 24 Nov 2009 17:23:34 -0500
-Message-ID: <20091124222334.GB20245@roll>
-References: <20091124195607.GC16662@quack.suse.cz> <Pine.LNX.4.44L0.0911241510590.2881-100000@iolanthe.rowland.org> <20091124203944.GD16662@quack.suse.cz> <20091124215044.GA20245@roll>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
+Date: Wed, 25 Nov 2009 00:21:51 GMT
+Message-ID: <200911250021.nAP0Lp33017612@demeter.kernel.org>
+References: <bug-14563-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f226.google.com ([209.85.217.226]:64562 "EHLO
-	mail-gx0-f226.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933798AbZKXWXb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 17:23:31 -0500
-Content-Disposition: inline
-In-Reply-To: <20091124215044.GA20245@roll>
+Received: from demeter.kernel.org ([140.211.167.39]:45946 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933239AbZKYAVp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Nov 2009 19:21:45 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAP0LpT6017613
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Nov 2009 00:21:51 GMT
+In-Reply-To: <bug-14563-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tmhikaru@gmail.com
-Cc: Jan Kara <jack@suse.cz>, Alan Stern <stern@rowland.harvard.edu>, Boaz Harrosh <bharrosh@panasas.com>, Kernel development list <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ext4@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Nov 24, 2009 at 04:50:44PM -0500, tmhikaru@gmail.com wrote:
-> On Tue, Nov 24, 2009 at 09:39:44PM +0100, Jan Kara wrote:
-> > On Tue 24-11-09 15:13:01, Alan Stern wrote:
-> > > On Tue, 24 Nov 2009, Jan Kara wrote:
-> > > 
-> > > >   After digging in block layer code, it's as we suspected:
-> > > > In case of host error DID_ERROR (which is our case), scsi request is
-> > > > retried iff it is not a FAILFAST request which is set if bio is doing
-> > > > readahead... So this is explained and everything behaves as it should.
-> > > > Thanks everybody involved :).
-> > > 
-> > > Okay, very good.  There remains the question of the disturbing error
-> > > messages in the system log.  Should they be supressed for FAILFAST
-> > > requests?
-> >   I think it's useful they are there because ultimately, something really
-> > went wrong and you should better investigate. BTW, "end_request: I/O error"
-> > messages are in the log even for requests where we retried and succeeded...
-> > 
-> > 								Honza
+http://bugzilla.kernel.org/show_bug.cgi?id=14563
+
+
+
+
+
+--- Comment #20 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-11-25 00:21:50 ---
+Reply-To: fujita.tomonori@lab.ntt.co.jp
+
+On Mon, 23 Nov 2009 12:10:06 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
+
+> http://bugzilla.kernel.org/show_bug.cgi?id=14563
 > 
-> While I agree it is useful information, I think that if the error messages
-> are going to be printed, you should *also* print that this is a NON FATAL
-> error and that it's going to be retried. It'd help diagnosing the path it's
-> following through the failure code IMHO as well as not making users
-> completely freak out like I did in my case. It is *not* particularly obvious
-> given the message printed to syslog what is going wrong or why.
 > 
-> 	Just my opinion,
-> 	Tim McGrath
+> 
+> 
+> 
+> --- Comment #18 from Joachim Breuer <linux-kernel@jmbreuer.net>  2009-11-23 12:10:04 ---
+> Created an attachment (id=23877)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=23877)
+>  --> (http://bugzilla.kernel.org/attachment.cgi?id=23877)
+> Console output, 2.6.30.3, fixed tape block size 512k, patch by FUJITA Tomonori
+> 2009-11-19
+> 
+> The patch you sent changes the behavior: I still get the EIO after (in this
+> case) 239 I/O requests while writing to the tape; but the machine no longer
+> hard-crashes with a BUG.
+> 
+> [I've removed the try_rdio=0/try_wdio=0 module parameters for this test.]
+> 
+> Attached is the console log as usual with my comments interspersed; if I read
+> this correctly "st0: Number of r/w requests 239, dio used in 1, pages 128."
+> direct I/O is used at least once before the problem occurs.
 
-	I should have asked since I'm here at the moment - do you need any
-more information out of the buggy USB enclosure at the moment, or can I work
-on trying to fix/replace it now?
+As Kai said, it doesn't look like a kernel log with the patch
+applied. With the patch, the kernel becomes more verbose.
 
-Tim McGrath
+Can you check again?
+
+Thanks,
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
