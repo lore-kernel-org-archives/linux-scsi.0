@@ -1,31 +1,22 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
-Date: Thu, 26 Nov 2009 00:27:04 GMT
-Message-ID: <200911260027.nAQ0R4DC017271@demeter.kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Bug 14563] SCSI tape driver: Spurious EIO and kernel BUG
+Date: Thu, 26 Nov 2009 09:26:59 +0900
+Message-ID: <20091126092646I.fujita.tomonori@lab.ntt.co.jp>
 References: <bug-14563-11613@http.bugzilla.kernel.org/>
+	<200911251651.nAPGpPdg001386@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:49563 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758931AbZKZA06 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Nov 2009 19:26:58 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.2/8.14.2) with ESMTP id nAQ0R4fl017272
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Nov 2009 00:27:04 GMT
-In-Reply-To: <bug-14563-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:57126 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759995AbZKZA1B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Nov 2009 19:27:01 -0500
+In-Reply-To: <200911251651.nAPGpPdg001386@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14563
-
-
-
-
-
---- Comment #23 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2009-11-26 00:27:03 ---
-Reply-To: fujita.tomonori@lab.ntt.co.jp
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@jmbreuer.net
 
 On Wed, 25 Nov 2009 16:51:25 GMT
 bugzilla-daemon@bugzilla.kernel.org wrote:
@@ -43,8 +34,3 @@ bugzilla-daemon@bugzilla.kernel.org wrote:
 Thanks a lot!
 
 And really sorry about the bug.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
