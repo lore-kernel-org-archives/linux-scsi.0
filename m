@@ -1,36 +1,99 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: Thin provisioning fixes
-Date: Thu, 26 Nov 2009 10:14:30 -0500
-Message-ID: <4B0E9B56.3040904@teksavvy.com>
-References: <1258771524-26673-1-git-send-email-martin.petersen@oracle.com> <20091126105947.GA28120@infradead.org> <20091126110157.GV8742@kernel.dk> <20091126110545.GA364@infradead.org> <4B0E9B08.3020204@teksavvy.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] enclosure: fix oops while iterating enclosure_status
+ array
+Date: Thu, 26 Nov 2009 09:50:20 -0600
+Message-ID: <1259250620.7584.28.camel@mulgrave.site>
+References: <4B05E183.4010301@jeffreymahoney.com>
+	 <1258753394.2889.315.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4B0E9B08.3020204@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, james.bottomley@hansenpartnership.com, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:41814 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750919AbZKZPuW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Nov 2009 10:50:22 -0500
+In-Reply-To: <1258753394.2889.315.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Mahoney <jeffm@jeffreymahoney.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org
 
-Mark Lord wrote:
-> Christoph Hellwig wrote:
->>
->> Note that we might have to add blacklists for this in libata pretty soon
->> as the OCZ Vertex seems to get it wrong, but that's material for another
->> patch not touching the block layer..
-> ..
+On Fri, 2009-11-20 at 16:43 -0500, James Bottomley wrote:
+> *really* (promise) adding linux-scsi to the cc list this time.
 > 
-> With the current (latest) firmware on the Vertex,
-> it does not claim "read zeros after trim".
-> Which is correct.
+> Patch looks fine to me, though, thanks.
 > 
-> How does this get something wrong?
-..
+> James
+> 
+> On Thu, 2009-11-19 at 19:23 -0500, Jeff Mahoney wrote:
+> > enclosure_status is expected to be a NULL terminated array of strings
+> >  but isn't actually NULL terminated. When writing an invalid value to
+> >  /sys/class/enclosure/.../.../status, it goes off the end of the array
+> >  and Oopses.
+> > 
+> >  This patch uses the array size instead.
+> > 
+> > Reported-by: Artur Wojcik <artur.wojcik@intel.com>
+> > Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+> > ---
+> >  drivers/misc/enclosure.c |    5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > --- a/drivers/misc/enclosure.c
+> > +++ b/drivers/misc/enclosure.c
+> > @@ -412,8 +412,9 @@ static ssize_t set_component_status(stru
+> >  	struct enclosure_component *ecomp = to_enclosure_component(cdev);
+> >  	int i;
+> >  
+> > -	for (i = 0; enclosure_status[i]; i++) {
+> > -		if (strncmp(buf, enclosure_status[i],
+> > +	for (i = 0; i < ARRAY_SIZE(enclosure_status); i++) {
+> > +		if (enclosure_status[i] &&
+> > +		    strncmp(buf, enclosure_status[i],
+> >  			    strlen(enclosure_status[i])) == 0 &&
+> >  		    (buf[strlen(enclosure_status[i])] == '\n' ||
+> >  		     buf[strlen(enclosure_status[i])] == '\0'))
 
-Oh.. answering my own question here..
+Actually, it's not fine ... it's giving this error:
 
-All of the earlier firmwares *did* get it wrong,
-so I suppose those could/should be X-listed.
+drivers/misc/enclosure.c: In function 'set_component_status':
+drivers/misc/enclosure.c:453: warning: array subscript is above array bounds
 
-Cheers!
+It's another place where there's an assumption that the array is zero
+terminated.
+
+I think the actual best fix is simply to make the assumption true, like
+the patch below.
+
+James
+
+---
+
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index e9eae4a..1eac626 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -391,6 +391,7 @@ static const char *const enclosure_status [] = {
+ 	[ENCLOSURE_STATUS_NOT_INSTALLED] = "not installed",
+ 	[ENCLOSURE_STATUS_UNKNOWN] = "unknown",
+ 	[ENCLOSURE_STATUS_UNAVAILABLE] = "unavailable",
++	[ENCLOSURE_STATUS_MAX] = NULL,
+ };
+ 
+ static const char *const enclosure_type [] = {
+diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
+index 90d1c21..9a33c5f 100644
+--- a/include/linux/enclosure.h
++++ b/include/linux/enclosure.h
+@@ -42,6 +42,8 @@ enum enclosure_status {
+ 	ENCLOSURE_STATUS_NOT_INSTALLED,
+ 	ENCLOSURE_STATUS_UNKNOWN,
+ 	ENCLOSURE_STATUS_UNAVAILABLE,
++	/* last element for counting purposes */
++	ENCLOSURE_STATUS_MAX
+ };
+ 
+ /* SFF-8485 activity light settings */
+
+
