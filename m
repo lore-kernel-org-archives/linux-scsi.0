@@ -1,99 +1,84 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] enclosure: fix oops while iterating enclosure_status
- array
-Date: Thu, 26 Nov 2009 09:50:20 -0600
-Message-ID: <1259250620.7584.28.camel@mulgrave.site>
-References: <4B05E183.4010301@jeffreymahoney.com>
-	 <1258753394.2889.315.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 5/5] libata: Clarify ata_set_lba_range_entries function
+Date: Thu, 26 Nov 2009 12:00:43 -0500
+Message-ID: <1259254843-8326-6-git-send-email-martin.petersen__1316.04994317076$1259255024$gmane$org@oracle.com>
+References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:41814 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750919AbZKZPuW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Nov 2009 10:50:22 -0500
-In-Reply-To: <1258753394.2889.315.camel@mulgrave.site>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:20123 "EHLO
+	rgminet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760852AbZKZRCm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2009 12:02:42 -0500
+In-Reply-To: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Mahoney <jeffm@jeffreymahoney.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, 2009-11-20 at 16:43 -0500, James Bottomley wrote:
-> *really* (promise) adding linux-scsi to the cc list this time.
-> 
-> Patch looks fine to me, though, thanks.
-> 
-> James
-> 
-> On Thu, 2009-11-19 at 19:23 -0500, Jeff Mahoney wrote:
-> > enclosure_status is expected to be a NULL terminated array of strings
-> >  but isn't actually NULL terminated. When writing an invalid value to
-> >  /sys/class/enclosure/.../.../status, it goes off the end of the array
-> >  and Oopses.
-> > 
-> >  This patch uses the array size instead.
-> > 
-> > Reported-by: Artur Wojcik <artur.wojcik@intel.com>
-> > Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-> > ---
-> >  drivers/misc/enclosure.c |    5 +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > --- a/drivers/misc/enclosure.c
-> > +++ b/drivers/misc/enclosure.c
-> > @@ -412,8 +412,9 @@ static ssize_t set_component_status(stru
-> >  	struct enclosure_component *ecomp = to_enclosure_component(cdev);
-> >  	int i;
-> >  
-> > -	for (i = 0; enclosure_status[i]; i++) {
-> > -		if (strncmp(buf, enclosure_status[i],
-> > +	for (i = 0; i < ARRAY_SIZE(enclosure_status); i++) {
-> > +		if (enclosure_status[i] &&
-> > +		    strncmp(buf, enclosure_status[i],
-> >  			    strlen(enclosure_status[i])) == 0 &&
-> >  		    (buf[strlen(enclosure_status[i])] == '\n' ||
-> >  		     buf[strlen(enclosure_status[i])] == '\0'))
+ata_set_lba_range_entries used the variable max for two different things
+which was confusing.  Make the function take a buffer size in bytes as
+argument and return the used buffer size upon completion.
 
-Actually, it's not fine ... it's giving this error:
-
-drivers/misc/enclosure.c: In function 'set_component_status':
-drivers/misc/enclosure.c:453: warning: array subscript is above array bounds
-
-It's another place where there's an assumption that the array is zero
-terminated.
-
-I think the actual best fix is simply to make the assumption true, like
-the patch below.
-
-James
-
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
+ drivers/ata/libata-scsi.c |    2 +-
+ include/linux/ata.h       |   20 ++++++++++----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-index e9eae4a..1eac626 100644
---- a/drivers/misc/enclosure.c
-+++ b/drivers/misc/enclosure.c
-@@ -391,6 +391,7 @@ static const char *const enclosure_status [] = {
- 	[ENCLOSURE_STATUS_NOT_INSTALLED] = "not installed",
- 	[ENCLOSURE_STATUS_UNKNOWN] = "unknown",
- 	[ENCLOSURE_STATUS_UNAVAILABLE] = "unavailable",
-+	[ENCLOSURE_STATUS_MAX] = NULL,
- };
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 08d4ab7..e06ee7b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2973,7 +2973,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 		goto invalid_fld;
  
- static const char *const enclosure_type [] = {
-diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
-index 90d1c21..9a33c5f 100644
---- a/include/linux/enclosure.h
-+++ b/include/linux/enclosure.h
-@@ -42,6 +42,8 @@ enum enclosure_status {
- 	ENCLOSURE_STATUS_NOT_INSTALLED,
- 	ENCLOSURE_STATUS_UNKNOWN,
- 	ENCLOSURE_STATUS_UNAVAILABLE,
-+	/* last element for counting purposes */
-+	ENCLOSURE_STATUS_MAX
- };
+ 	buf = page_address(sg_page(scsi_sglist(scmd)));
+-	size = ata_set_lba_range_entries(buf, 512 / 8, block, n_block);
++	size = ata_set_lba_range_entries(buf, 512, block, n_block);
  
- /* SFF-8485 activity light settings */
-
+ 	tf->protocol = ATA_PROT_DMA;
+ 	tf->hob_feature = 0;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index b18b2bb..54a8ffb 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -981,17 +981,17 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+ }
+ 
+ /*
+- * Write up to 'max' LBA Range Entries to the buffer that will cover the
+- * extent from sector to sector + count.  This is used for TRIM and for
+- * ADD LBA(S) TO NV CACHE PINNED SET.
++ * Write LBA Range Entries to the buffer that will cover the extent from
++ * sector to sector + count.  This is used for TRIM and for ADD LBA(S)
++ * TO NV CACHE PINNED SET.
+  */
+-static inline unsigned ata_set_lba_range_entries(void *_buffer, unsigned max,
+-						u64 sector, unsigned long count)
++static inline unsigned ata_set_lba_range_entries(void *_buffer,
++		unsigned buf_size, u64 sector, unsigned long count)
+ {
+ 	__le64 *buffer = _buffer;
+-	unsigned i = 0;
++	unsigned i = 0, used_bytes;
+ 
+-	while (i < max) {
++	while (i < buf_size / 8 ) { /* 6-byte LBA + 2-byte range per entry */
+ 		u64 entry = sector |
+ 			((u64)(count > 0xffff ? 0xffff : count) << 48);
+ 		buffer[i++] = __cpu_to_le64(entry);
+@@ -1001,9 +1001,9 @@ static inline unsigned ata_set_lba_range_entries(void *_buffer, unsigned max,
+ 		sector += 0xffff;
+ 	}
+ 
+-	max = ALIGN(i * 8, 512);
+-	memset(buffer + i, 0, max - i * 8);
+-	return max;
++	used_bytes = ALIGN(i * 8, 512);
++	memset(buffer + i, 0, used_bytes - i * 8);
++	return used_bytes;
+ }
+ 
+ static inline int is_multi_taskfile(struct ata_taskfile *tf)
+-- 
+1.6.0.6
 
