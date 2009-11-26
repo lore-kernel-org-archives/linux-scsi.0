@@ -1,166 +1,91 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/5] block: Allow devices to indicate whether discarded blocks are zeroed
-Date: Thu, 26 Nov 2009 12:00:39 -0500
-Message-ID: <1259254843-8326-2-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 4/5] libata: Report zeroed read after Trim and max discard size
+Date: Thu, 26 Nov 2009 12:00:42 -0500
+Message-ID: <1259254843-8326-5-git-send-email-martin.petersen__28549.570326186$1259255033$gmane$org@oracle.com>
 References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:47810 "EHLO
+Received: from rcsinet11.oracle.com ([148.87.113.123]:47621 "EHLO
 	rgminet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760859AbZKZRC4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2009 12:02:56 -0500
+	with ESMTP id S1760878AbZKZRCr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Nov 2009 12:02:47 -0500
 In-Reply-To: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-The discard ioctl is used by mkfs utilities to clear a block device
-prior to putting metadata down.  However, not all devices return zeroed
-blocks after a discard.  Some drives return stale data, potentially
-containing old superblocks.  It is therefore important to know whether
-discarded blocks are properly zeroed.
+Our current Trim payload is a single sector that can accommodate 64 *
+65535 blocks being unmapped.  Report this value in the Block Limits
+Maximum Unmap LBA count field.
 
-Both ATA and SCSI drives have configuration bits that indicate whether
-zeroes are returned after a discard operation.  Implement a block level
-interface that allows this information to be bubbled up the stack and
-queried via a new block device ioctl.
+If a storage device supports Trim and the DRAT and RZAT bits are set,
+report TPRZ=1 in Read Capacity(16).
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/blk-settings.c   |    2 ++
- block/blk-sysfs.c      |   11 +++++++++++
- block/compat_ioctl.c   |    2 ++
- block/ioctl.c          |    2 ++
- include/linux/blkdev.h |   14 ++++++++++++++
- include/linux/fs.h     |    1 +
- 6 files changed, 32 insertions(+), 0 deletions(-)
+ drivers/ata/libata-scsi.c |   12 +++++++++---
+ include/linux/ata.h       |   10 ++++++++++
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 7f986ca..1027e30 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -100,6 +100,7 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->discard_granularity = 0;
- 	lim->discard_alignment = 0;
- 	lim->discard_misaligned = 0;
-+	lim->discard_zeroes_data = -1;
- 	lim->logical_block_size = lim->physical_block_size = lim->io_min = 512;
- 	lim->bounce_pfn = (unsigned long)(BLK_BOUNCE_ANY >> PAGE_SHIFT);
- 	lim->alignment_offset = 0;
-@@ -543,6 +544,7 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e0995c4..08d4ab7 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2116,8 +2116,10 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ 	 * that we support some form of unmap - in thise case via WRITE SAME
+ 	 * with the unmap bit set.
+ 	 */
+-	if (ata_id_has_trim(args->id))
++	if (ata_id_has_trim(args->id)) {
++		put_unaligned_be32(65535 * 512 / 8, &rbuf[20]);
+ 		put_unaligned_be32(1, &rbuf[28]);
++	}
  
- 	t->io_min = max(t->io_min, b->io_min);
- 	t->no_cluster |= b->no_cluster;
-+	t->discard_zeroes_data &= b->discard_zeroes_data;
+ 	return 0;
+ }
+@@ -2412,8 +2414,12 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
+ 		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
+ 		rbuf[15] = lowest_aligned;
  
- 	/* Bottom device offset aligned? */
- 	if (offset &&
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 3147145..8606c95 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -136,6 +136,11 @@ static ssize_t queue_discard_max_show(struct request_queue *q, char *page)
- 	return queue_var_show(q->limits.max_discard_sectors << 9, page);
+-		if (ata_id_has_trim(args->id))
+-			rbuf[14] |= 0x80;
++		if (ata_id_has_trim(args->id)) {
++			rbuf[14] |= 0x80; /* TPE */
++
++			if (ata_id_has_zero_after_trim(args->id))
++				rbuf[14] |= 0x40; /* TPRZ */
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index e2595e8..b18b2bb 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -75,6 +75,7 @@ enum {
+ 	ATA_ID_EIDE_DMA_TIME	= 66,
+ 	ATA_ID_EIDE_PIO		= 67,
+ 	ATA_ID_EIDE_PIO_IORDY	= 68,
++	ATA_ID_ADDITIONAL_SUPP	= 69,
+ 	ATA_ID_QUEUE_DEPTH	= 75,
+ 	ATA_ID_MAJOR_VER	= 80,
+ 	ATA_ID_COMMAND_SET_1	= 82,
+@@ -816,6 +817,15 @@ static inline int ata_id_has_trim(const u16 *id)
+ 	return 0;
  }
  
-+static ssize_t queue_discard_zeroes_data_show(struct request_queue *q, char *page)
++static inline int ata_id_has_zero_after_trim(const u16 *id)
 +{
-+	return queue_var_show(queue_discard_zeroes_data(q), page);
-+}
-+
- static ssize_t
- queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
- {
-@@ -313,6 +318,11 @@ static struct queue_sysfs_entry queue_discard_max_entry = {
- 	.show = queue_discard_max_show,
- };
- 
-+static struct queue_sysfs_entry queue_discard_zeroes_data_entry = {
-+	.attr = {.name = "discard_zeroes_data", .mode = S_IRUGO },
-+	.show = queue_discard_zeroes_data_show,
-+};
-+
- static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.attr = {.name = "rotational", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_nonrot_show,
-@@ -350,6 +360,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_io_opt_entry.attr,
- 	&queue_discard_granularity_entry.attr,
- 	&queue_discard_max_entry.attr,
-+	&queue_discard_zeroes_data_entry.attr,
- 	&queue_nonrot_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
-diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
-index 9bd086c..4eb8e9e 100644
---- a/block/compat_ioctl.c
-+++ b/block/compat_ioctl.c
-@@ -747,6 +747,8 @@ long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
- 		return compat_put_uint(arg, bdev_io_opt(bdev));
- 	case BLKALIGNOFF:
- 		return compat_put_int(arg, bdev_alignment_offset(bdev));
-+	case BLKDISCARDZEROES:
-+		return compat_put_uint(arg, bdev_discard_zeroes_data(bdev));
- 	case BLKFLSBUF:
- 	case BLKROSET:
- 	case BLKDISCARD:
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 1f4d1de..be48ea5 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -280,6 +280,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 		return put_uint(arg, bdev_io_opt(bdev));
- 	case BLKALIGNOFF:
- 		return put_int(arg, bdev_alignment_offset(bdev));
-+	case BLKDISCARDZEROES:
-+		return put_uint(arg, bdev_discard_zeroes_data(bdev));
- 	case BLKSECTGET:
- 		return put_ushort(arg, queue_max_sectors(bdev_get_queue(bdev)));
- 	case BLKRASET:
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3b67221..bb92f15 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -322,6 +322,7 @@ struct queue_limits {
- 	unsigned char		misaligned;
- 	unsigned char		discard_misaligned;
- 	unsigned char		no_cluster;
-+	signed char		discard_zeroes_data;
- };
- 
- struct request_queue
-@@ -1152,6 +1153,19 @@ static inline int queue_sector_discard_alignment(struct request_queue *q,
- 		& (q->limits.discard_granularity - 1);
- }
- 
-+static inline unsigned int queue_discard_zeroes_data(struct request_queue *q)
-+{
-+	if (q->limits.discard_zeroes_data == 1)
++	/* DSM supported, deterministic read, and read zero after trim set */
++	if (ata_id_has_trim(id) && id[ATA_ID_ADDITIONAL_SUPP] & 0x4020)
 +		return 1;
 +
 +	return 0;
 +}
 +
-+static inline unsigned int bdev_discard_zeroes_data(struct block_device *bdev)
-+{
-+	return queue_discard_zeroes_data(bdev_get_queue(bdev));
-+}
-+
- static inline int queue_dma_alignment(struct request_queue *q)
+ static inline int ata_id_current_chs_valid(const u16 *id)
  {
- 	return q ? q->dma_alignment : 511;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 2620a8c..6962d0d 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -304,6 +304,7 @@ struct inodes_stat_t {
- #define BLKIOOPT _IO(0x12,121)
- #define BLKALIGNOFF _IO(0x12,122)
- #define BLKPBSZGET _IO(0x12,123)
-+#define BLKDISCARDZEROES _IO(0x12,124)
- 
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
+ 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
 -- 
 1.6.0.6
 
