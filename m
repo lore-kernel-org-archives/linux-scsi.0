@@ -1,111 +1,63 @@
-From: Peter Korsgaard <jacmet@sunsite.dk>
-Subject: [PATCH] scsi: use __uX types for headers exported to user space
-Date: Fri, 27 Nov 2009 11:29:08 +0100
-Message-ID: <1259317748-27167-1-git-send-email-jacmet@sunsite.dk>
+From: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ipr: fix EEH recovery
+Date: Fri, 27 Nov 2009 10:58:23 -0200
+Message-ID: <1259326703.26087.13.camel@zeppelin>
+References: <1259187223.4938.45.camel@zeppelin>
+	 <4B0F2F87.9070804@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:49490 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbZK0K3I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2009 05:29:08 -0500
-Received: by ewy19 with SMTP id 19so1260673ewy.21
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2009 02:29:12 -0800 (PST)
+Received: from e24smtp01.br.ibm.com ([32.104.18.85]:40336 "EHLO
+	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260AbZK0M6W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Nov 2009 07:58:22 -0500
+Received: from mailhub1.br.ibm.com (mailhub1.br.ibm.com [9.18.232.109])
+	by e24smtp01.br.ibm.com (8.14.3/8.13.1) with ESMTP id nARDAohS000573
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2009 11:10:50 -0200
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+	by mailhub1.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id nARCxnnd864724
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2009 10:59:49 -0200
+Received: from d24av01.br.ibm.com (d24av01 [127.0.0.1])
+	by d24av01.br.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id nARC68FU022077
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Nov 2009 10:06:09 -0200
+In-Reply-To: <4B0F2F87.9070804@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, james.smart@emulex.com, linux-scsi@vger.kernel.org
-Cc: Peter Korsgaard <jacmet@sunsite.dk>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Brian King <brking@linux.vnet.ibm.com>, Wayne Boyer <wayneb@linux.vnet.ibm.com>
 
-Commit 9e4f5e29 (FC Pass Thru support) exported a number of header file=
-s
-in include/scsi to user space, but didn't change the uX types to the
-userspace-compatible __uX types. Without that you'll get compile errors
-when including them - E.G.:
+On Thu, 2009-11-26 at 19:46 -0600, Brian King wrote:
+> Acked-by: Brian King <brking@linux.vnet.ibm.com>
+> 
+> > 
+> > Signed-off-by: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+> > ---
+> >  drivers/scsi/ipr.c |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> > index 76d294f..c3ff9a6 100644
+> > --- a/drivers/scsi/ipr.c
+> > +++ b/drivers/scsi/ipr.c
+> > @@ -6516,6 +6516,7 @@ static int ipr_reset_restore_cfg_space(struct ipr_cmnd *ipr_cmd)
+> >  	int rc;
+> > 
+> >  	ENTER;
+> > +	ioa_cfg->pdev->state_saved = true;
+> >  	rc = pci_restore_state(ioa_cfg->pdev);
+> > 
+> >  	if (rc != PCIBIOS_SUCCESSFUL) {
+> 
+> 
 
-/tmp/include/scsi/scsi.h:145: error: expected specifier-qualifier-list
-before =E2=80=98u8=E2=80=99
+Since this is a regression, is there any chance to have this patch
+applied and merged for 2.6.32?
 
-Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
----
- include/scsi/scsi.h         |    8 ++++----
- include/scsi/scsi_netlink.h |   20 ++++++++++----------
- 2 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 34c46ab..b3cffec 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -145,10 +145,10 @@ struct scsi_cmnd;
-=20
- /* defined in T10 SCSI Primary Commands-2 (SPC2) */
- struct scsi_varlen_cdb_hdr {
--	u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
--	u8 control;
--	u8 misc[5];
--	u8 additional_cdb_length;         /* total cdb length - 8 */
-+	__u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
-+	__u8 control;
-+	__u8 misc[5];
-+	__u8 additional_cdb_length;         /* total cdb length - 8 */
- 	__be16 service_action;
- 	/* service specific data follows */
- };
-diff --git a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
-index 536752c..7445c46 100644
---- a/include/scsi/scsi_netlink.h
-+++ b/include/scsi/scsi_netlink.h
-@@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
-  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
-  */
- #define SCSI_NL_VID_TYPE_SHIFT		56
--#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
--#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
- #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
-=20
-=20
-@@ -125,21 +125,21 @@ struct scsi_nl_host_vendor_msg {
- #include <scsi/scsi_host.h>
-=20
- /* Exported Kernel Interfaces */
--int scsi_nl_add_transport(u8 tport,
-+int scsi_nl_add_transport(__u8 tport,
- 	 int (*msg_handler)(struct sk_buff *),
- 	void (*event_handler)(struct notifier_block *, unsigned long, void *)=
-);
--void scsi_nl_remove_transport(u8 tport);
-+void scsi_nl_remove_transport(__u8 tport);
-=20
--int scsi_nl_add_driver(u64 vendor_id, struct scsi_host_template *hostt=
-,
-+int scsi_nl_add_driver(__u64 vendor_id, struct scsi_host_template *hos=
-tt,
- 	int (*nlmsg_handler)(struct Scsi_Host *shost, void *payload,
--				 u32 len, u32 pid),
-+				 __u32 len, __u32 pid),
- 	void (*nlevt_handler)(struct notifier_block *nb,
- 				 unsigned long event, void *notify_ptr));
--void scsi_nl_remove_driver(u64 vendor_id);
-+void scsi_nl_remove_driver(__u64 vendor_id);
-=20
--void scsi_nl_send_transport_msg(u32 pid, struct scsi_nl_hdr *hdr);
--int scsi_nl_send_vendor_msg(u32 pid, unsigned short host_no, u64 vendo=
-r_id,
--			 char *data_buf, u32 data_len);
-+void scsi_nl_send_transport_msg(__u32 pid, struct scsi_nl_hdr *hdr);
-+int scsi_nl_send_vendor_msg(__u32 pid, unsigned short host_no, __u64 v=
-endor_id,
-+			 char *data_buf, __u32 data_len);
-=20
- #endif /* __KERNEL__ */
-=20
---=20
-1.6.5
+Thanks,
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Kleber S. Souza
+IBM Linux Technology Center
+
