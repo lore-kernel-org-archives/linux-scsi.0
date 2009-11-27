@@ -1,44 +1,24 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem
- readonly
-Date: Fri, 27 Nov 2009 12:58:23 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0911271248210.30903-100000@netrider.rowland.org>
-References: <20091127094339.GA9047@roll>
+From: aaa bbb <ilana90@013net.net>
+Subject: Hello
+Date: Fri, 27 Nov 2009 23:36:17 +0000 (GMT)
+Message-ID: <f709a0203712.4b106271__16057.0999411449$1259384592$gmane$org@netvision.net.il>
+Reply-To: missojita@rediffmail.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20091127094339.GA9047@roll>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: tmhikaru-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Kernel development list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mxout5.netvision.net.il ([194.90.9.29]:27763 "EHLO
+	mxout5.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756AbZK1FCQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2009 00:02:16 -0500
+Content-language: en
+Content-disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 27 Nov 2009 tmhikaru-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
 
-> It is important to me to know exactly how the failure path operates. Please
-> explain to me what I will see happen. - Not knowing is driving me nuts.
 
-It goes like this.  The computer sends a lot of READ commands to the
-drive.  (For all we know the same thing might happen with WRITEs, but
-you didn't do any writing in the test data you sent.)  Every now and
-then the drive fails to carry out a READ, for no apparent reason.
-
-Normally the computer then retries, and the READ succeeds the second
-time.  But of course, success isn't guaranteed.  When the retry does
-succeed, no error messages are printed in the log and everything
-continues normally.
-
-Occasionally the computer does not retry the READ -- in circumstances
-where it doesn't really need the data (optimistic readahead).  When 
-this happens, the failed READ does cause an error message to appear.  
-The same thing would happen if the attempted retries were to fail.
-
-Whether or not this would result in lost or corrupted data, or
-remounted readonly filesystems, depends on the kind of data being read.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hello
+How are you today? I hope you are fine.If so thank be to God almighty.My name is Miss Ojita,26 years, single girl looking for honest and nice person. whom i can partner with. i have the sum of $7,000,000.00(Seven Million US Dollars) which i intend to use for business purpose.I would like to know you more,most especially what you like and what you dislike, I don't care about your colour or ethnicity, I'm sending you this beautiful mail, with a wish for much happiness.I am looking forward to hear from you,
+Love from,
+Ojita
