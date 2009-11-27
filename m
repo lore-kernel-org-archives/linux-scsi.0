@@ -1,98 +1,56 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 4/5] libata: Report zeroed read after Trim and max discard size
-Date: Thu, 26 Nov 2009 22:46:03 -0500
-Message-ID: <yq18wds3a10.fsf@sermon.lab.mkp.net>
-References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>
-	<1259254843-8326-5-git-send-email-martin.petersen@oracle.com>
-	<4B0F3186.6000903@teksavvy.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: BUG at scsi_lib.c:1108 [Was: mmotm 2009-11-24-16-47 uploaded]
+Date: Fri, 27 Nov 2009 15:17:21 +1100
+Message-ID: <20091127151721.57c02c29@notabene.brown>
+References: <200911250111.nAP1BFg5030254@imap1.linux-foundation.org>
+	<4B0D4949.4090109@gmail.com>
+	<1259162399.2535.8.camel@mulgrave.site>
+	<4B0D9221.2050103@gmail.com>
+	<20091126081359.414c8216@notabene.brown>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4B0F3186.6000903@teksavvy.com> (Mark Lord's message of "Thu, 26
-	Nov 2009 20:55:18 -0500")
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, jgarzik@pobox.com, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48883 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753024AbZK0EPt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Nov 2009 23:15:49 -0500
+In-Reply-To: <20091126081359.414c8216@notabene.brown>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, mm-commits@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
 
->>>>> "Mark" == Mark Lord <kernel@teksavvy.com> writes:
+On Thu, 26 Nov 2009 08:13:59 +1100
+Neil Brown <neilb@suse.de> wrote:
 
-Mark> Is that correct, or should it be this:
+> On Wed, 25 Nov 2009 21:22:57 +0100
+> Jiri Slaby <jirislaby@gmail.com> wrote:
+> 
+> > It doesn't make sense at all. How can empty merge cause a regression?
+> > And md/for-next doesn't produce the BUG.
+> 
+> I've hit that situation before.  Two separate changes in separate
+> branches conspire to cause a problem.
+> 
+> md/for-next contains code to handle barriers properly for all levels,
+> not just RAID1.
+> It is possible I got this wrong in some way, and some new sanity check
+> in a separate branch is firing, or it is possible some other bug in
+> barrier handling has been added and now that MD sends barriers, it is
+> being triggered.
 
-Mark>        if (ata_id_has_trim(id) && (id[ATA_ID_ADDITIONAL_SUPP] &
-Mark>        0x4020) == 0x4020)
+And it looks like I did get it wrong in some way.
+I handled a barrier by:
+   - send an empty barrier to each component
+   - schedule to write with the barrier flag cleared
+   - send another empty barrier
 
-Good spotting!  You are right, I need both bits to be set...
+If an empty barrier is received, step 2 sends an empty non-barrier,
+which caused the BUG.
+I have revised the code to special case empty barriers and only perform
+the first step.
+This should appear in the next -next.
 
-
-libata: Report zeroed read after Trim and max discard size
-
-Our current Trim payload is a single sector that can accommodate 64 *
-65535 blocks being unmapped.  Report this value in the Block Limits
-Maximum Unmap LBA count field.
-
-If a storage device supports Trim and the DRAT and RZAT bits are set,
-report TPRZ=1 in Read Capacity(16).
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e0995c4..08d4ab7 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2116,8 +2116,10 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- 	 * that we support some form of unmap - in thise case via WRITE SAME
- 	 * with the unmap bit set.
- 	 */
--	if (ata_id_has_trim(args->id))
-+	if (ata_id_has_trim(args->id)) {
-+		put_unaligned_be32(65535 * 512 / 8, &rbuf[20]);
- 		put_unaligned_be32(1, &rbuf[28]);
-+	}
- 
- 	return 0;
- }
-@@ -2412,8 +2414,12 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
- 		rbuf[14] = (lowest_aligned >> 8) & 0x3f;
- 		rbuf[15] = lowest_aligned;
- 
--		if (ata_id_has_trim(args->id))
--			rbuf[14] |= 0x80;
-+		if (ata_id_has_trim(args->id)) {
-+			rbuf[14] |= 0x80; /* TPE */
-+
-+			if (ata_id_has_zero_after_trim(args->id))
-+				rbuf[14] |= 0x40; /* TPRZ */
-+		}
- 	}
- 
- 	return 0;
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index e2595e8..dfa2298 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -75,6 +75,7 @@ enum {
- 	ATA_ID_EIDE_DMA_TIME	= 66,
- 	ATA_ID_EIDE_PIO		= 67,
- 	ATA_ID_EIDE_PIO_IORDY	= 68,
-+	ATA_ID_ADDITIONAL_SUPP	= 69,
- 	ATA_ID_QUEUE_DEPTH	= 75,
- 	ATA_ID_MAJOR_VER	= 80,
- 	ATA_ID_COMMAND_SET_1	= 82,
-@@ -816,6 +817,16 @@ static inline int ata_id_has_trim(const u16 *id)
- 	return 0;
- }
- 
-+static inline int ata_id_has_zero_after_trim(const u16 *id)
-+{
-+	/* DSM supported, deterministic read, and read zero after trim set */
-+	if (ata_id_has_trim(id) &&
-+	    (id[ATA_ID_ADDITIONAL_SUPP] & 0x4020) == 0x4020)
-+		return 1;
-+
-+	return 0;
-+}
-+
- static inline int ata_id_current_chs_valid(const u16 *id)
- {
- 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
+Thanks,
+NeilBrown
