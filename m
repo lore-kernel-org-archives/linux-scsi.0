@@ -1,23 +1,27 @@
-From: tmhikaru@gmail.com
-Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem readonly
-Date: Sat, 28 Nov 2009 23:30:57 -0500
-Message-ID: <20091129043057.GA6131@roll>
-References: <20091127094339.GA9047@roll> <Pine.LNX.4.44L0.0911271248210.30903-100000@netrider.rowland.org>
+From: "RubyRoyale Club" <cahmjnljnadwtb@edb.ericsson.se>
+Subject: Det har stallet ager, registrera dig idag och spinn far miljonen
+Date: Sun, 29 Nov 2009 13:05:56 +0100
+Message-ID: <000b01ca70ec$4e7eb540$00426138@xbhqebcetv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0911271248210.30903-100000@netrider.rowland.org>
-Sender: linux-ext4-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: tmhikaru@gmail.com, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Kernel development list <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ext4@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 251.222-136-217.adsl-static.isp.belgacom.be ([217.136.222.251]:53844
+	"EHLO 251.222-136-217.adsl-static.isp.belgacom.be"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751060AbZK2MFy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2009 07:05:54 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-	Thank you for the time and effort you had to spend on this, all of
-you, I really appreciate all the hard work spent diagnosing my hardware
-issues as well as explaining what the various error messages were coming
-from.
+Jag f=F6rst=E5r anledningen till att de har vunnit priser =96 allt p=E5=
+ sidan =E4r s=E5 smart och urvalet av spel =E4r superbt.
 
+http://www.gamezroyalruby.net/sv/
 
-	Hope to see you next time,
-	Tim McGrath
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
