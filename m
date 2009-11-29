@@ -1,27 +1,78 @@
-From: "RubyRoyale Club" <cahmjnljnadwtb@edb.ericsson.se>
-Subject: Det har stallet ager, registrera dig idag och spinn far miljonen
-Date: Sun, 29 Nov 2009 13:05:56 +0100
-Message-ID: <000b01ca70ec$4e7eb540$00426138@xbhqebcetv>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: linux-next: manual merge of the osd tree with the scsi tree
+Date: Sun, 29 Nov 2009 15:07:14 +0200
+Message-ID: <4B127202.1010900@panasas.com>
+References: <20091127143229.108298c6.sfr@canb.auug.org.au> <4B123A82.10104@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 251.222-136-217.adsl-static.isp.belgacom.be ([217.136.222.251]:53844
-	"EHLO 251.222-136-217.adsl-static.isp.belgacom.be"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751060AbZK2MFy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2009 07:05:54 -0500
+Received: from daytona.panasas.com ([67.152.220.89]:10222 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750956AbZK2NHL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2009 08:07:11 -0500
+In-Reply-To: <4B123A82.10104@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, open-osd <osd-dev@open-osd.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-Jag f=F6rst=E5r anledningen till att de har vunnit priser =96 allt p=E5=
- sidan =E4r s=E5 smart och urvalet av spel =E4r superbt.
+On 11/29/2009 11:10 AM, Boaz Harrosh wrote:
+> On 11/27/2009 05:32 AM, Stephen Rothwell wrote:
+>> Hi Boaz,
+>>
+>> Today's linux-next merge of the osd tree got a conflict in
+>> drivers/scsi/osd/osd_uld.c between commit
+>> f89b9ee4a722721ed205b8c29555ac75fbe8c2cc ("[SCSI] osduld: Use
+>> device->release instead of internal kref") from the scsi tree and commit
+>> 9b579fe8588b861dcf0c9b620757729643db4557 ("osduld: Use device->release
+>> instead of internal kref") from the osd tree.
+>>
+>> These are slightly different versions of the same patch ...
+>>
+>> And commit 01e4c32c668251e74eb179ee1207c075466c4ef8 ("osduld: No need to
+>> use dev_set_drvdata on embedded devices") from the osd also contributes
+>> to the conflict.
+>>
+> 
+> James has squashed these two patches together. Which do belong together
+> I should say. In my tree they are separate. I will change my tree to
+> match James's.
+> 
+> Thanks James, I prefer it much better this way.
+> 
 
-http://www.gamezroyalruby.net/sv/
+James hi.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In your merge of the patch:
+    [SCSI] osduld: Use device->release instead of internal kref
+at:
+    [jejb: fold in use of container_of]
+
+You have made a mistake, which renders the driver unusable.
+At osd_remove() you changed the use of dev_get_drvdata to an, container_of()
+but it is the *wrong* dev at this point this dev here is the grand-parent of
+the embedded dev in question.
+
+Also at the next patch:
+    [SCSI] libosd: osd_dev_info: Unique Identification of an OSD device
+
+a new use of dev_get_drvdata() is not converted to a container_of(), which by
+now will return NULL.
+
+Should I repost the correct two patches (my preference)? should I send in a fix to
+current scsi-misc tree? or should I send two SQUASH-ME patches to the two bad commits
+in your tree?
+
+How do you want to proceed?
+
+>> I fixed it up (the obvious way) and can carry the fix for a while.
+> 
+
+Stephan, I have not yet fixed up the conflict in -next, please carry that
+fix you have for a little while, until we resolve it.
+
+> Thanks
+> Boaz
+
+Boaz
