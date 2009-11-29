@@ -1,48 +1,30 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: linux-next: manual merge of the osd tree with the scsi tree
-Date: Sun, 29 Nov 2009 10:23:35 -0500
-Message-ID: <1259508215.2827.15.camel@mulgrave.site>
-References: <20091127143229.108298c6.sfr@canb.auug.org.au>
-	 <4B123A82.10104@panasas.com>  <4B127202.1010900@panasas.com>
-	 <1259502399.2827.14.camel@mulgrave.site>  <4B1283C9.1030002@panasas.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: locking bug in aacraid
+Date: Sun, 29 Nov 2009 18:01:43 +0200
+Message-ID: <20091129160143.GM10640@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <4B1283C9.1030002@panasas.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: open-osd <osd-dev@open-osd.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f215.google.com ([209.85.219.215]:55914 "EHLO
+	mail-ew0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbZK2QBg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2009 11:01:36 -0500
+Received: by ewy7 with SMTP id 7so3533501ewy.28
+        for <linux-scsi@vger.kernel.org>; Sun, 29 Nov 2009 08:01:41 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: aacraid@adaptec.com
 
-On Sun, 2009-11-29 at 16:23 +0200, Boaz Harrosh wrote:
-> On 11/29/2009 03:46 PM, James Bottomley wrote:
-> >>
-> >> Should I repost the correct two patches (my preference)? should I send in a fix to
-> >> current scsi-misc tree? or should I send two SQUASH-ME patches to the two bad commits
-> >> in your tree?
-> >>
-> >> How do you want to proceed?
-> > 
-> > Send me the replacement patch (and tell me which commit id in my tree
-> > it's replacing).
-> > 
-> 
-> Thank you James.
-> 
-> I'm posting two patches as reply to this mail.
-> 
-> [PATCH 1/2] osduld: Use device->release instead of internal kref
-> which replaces:
-> f89b9ee [SCSI] osduld: Use device->release instead of internal kref
-> 
-> and
-> 
-> [PATCH 2/2] libosd: osd_dev_info: Unique Identification of an OSD device
-> which replaces:
-> 3b616d4 [SCSI] libosd: osd_dev_info: Unique Identification of an OSD device
+drivers/scsi/aacraid/commsup.c
+   518                  } else if (down_interruptible(&fibptr->event_wait)) {
+   519                          fibptr->done = 2;
+   520                          up(&fibptr->event_wait);
+   521                  }
 
-OK, replacement should be done in scsi-misc (give an hour or two for
-mirror updates).
+If down_interruptible() returns -EINTR that means we don't need to call
+up() as we do on line 520.
 
-James
+regards,
+dan carpenter
