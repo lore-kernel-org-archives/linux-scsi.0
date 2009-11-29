@@ -1,24 +1,23 @@
-From: aaa bbb <ilana90@013net.net>
-Subject: Hello
-Date: Fri, 27 Nov 2009 23:36:17 +0000 (GMT)
-Message-ID: <f709a0203712.4b106271__16057.0999411449$1259384592$gmane$org@netvision.net.il>
-Reply-To: missojita@rediffmail.com
+From: tmhikaru@gmail.com
+Subject: Re: Weird I/O errors with USB hard drive not remounting filesystem readonly
+Date: Sat, 28 Nov 2009 23:30:57 -0500
+Message-ID: <20091129043057.GA6131@roll>
+References: <20091127094339.GA9047@roll> <Pine.LNX.4.44L0.0911271248210.30903-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxout5.netvision.net.il ([194.90.9.29]:27763 "EHLO
-	mxout5.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbZK1FCQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 Nov 2009 00:02:16 -0500
-Content-language: en
-Content-disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0911271248210.30903-100000@netrider.rowland.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: tmhikaru@gmail.com, Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Kernel development list <linux-kernel@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ext4@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+	Thank you for the time and effort you had to spend on this, all of
+you, I really appreciate all the hard work spent diagnosing my hardware
+issues as well as explaining what the various error messages were coming
+from.
 
 
-Hello
-How are you today? I hope you are fine.If so thank be to God almighty.My name is Miss Ojita,26 years, single girl looking for honest and nice person. whom i can partner with. i have the sum of $7,000,000.00(Seven Million US Dollars) which i intend to use for business purpose.I would like to know you more,most especially what you like and what you dislike, I don't care about your colour or ethnicity, I'm sending you this beautiful mail, with a wish for much happiness.I am looking forward to hear from you,
-Love from,
-Ojita
+	Hope to see you next time,
+	Tim McGrath
