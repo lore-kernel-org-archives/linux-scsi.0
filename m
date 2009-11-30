@@ -1,47 +1,55 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] mm: don't discard unused swap slots by default
-Date: Mon, 30 Nov 2009 13:58:39 -0500
-Message-ID: <yq1aay3261s.fsf@sermon.lab.mkp.net>
-References: <20091030065102.GA2896@lst.de>
-	<Pine.LNX.4.64.0910301629030.4106@sister.anvils>
-	<20091118171232.GB25541@lst.de> <20091130172243.GA30779@lst.de>
-	<Pine.LNX.4.64.0911301752070.10043@sister.anvils>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 2nd try] PCI legacy I/O port free driver - Making
+ MegaRAID SAS driver
+Date: Mon, 30 Nov 2009 12:14:16 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3B7D0D20C@cosmail02.lsi.com>
+References: <4AD52367.7050500@np.css.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <Pine.LNX.4.64.0911301752070.10043@sister.anvils> (Hugh Dickins's
-	message of "Mon, 30 Nov 2009 18:28:41 +0000 (GMT)")
-Sender: owner-linux-mm@kvack.org
-To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <jens.axboe@oracle.com>, Matthew Wilcox <matthew@wil.cx>, linux-mm@kvack.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:60315 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751017AbZK3T3l convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Nov 2009 14:29:41 -0500
+In-Reply-To: <4AD52367.7050500@np.css.fujitsu.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Noriyuki Fujii <n-fujii@np.css.fujitsu.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Hugh" == Hugh Dickins <hugh.dickins@tiscali.co.uk> writes:
+Noriyuki,
 
-Hugh> You mentioned an "-o discard" mount option before: so I think what
-Hugh> we ought to be doing is an option to swapon.  But you can imagine
-Hugh> that I'd prefer to avoid that too, if we can work this out without
-Hugh> it.
+The patch looks good for us.  ACK.
 
-The main problem we have is that the devices currently supporting TRIM
-are doing a piss poor job at it.
+Bo Yang  
 
-We have pretty good vendor guarantees that discards are going to be
-essentially free on SCSI-class hardware.  But in the ATA space things
-are currently being driven by early adopters / tweakers that care more
-about benchmarketing and feature checklists.  Whether things actually
-work as intended is mostly irrelevant.
+-----Original Message-----
+From: Noriyuki Fujii [mailto:n-fujii@np.css.fujitsu.com] 
+Sent: Tuesday, October 13, 2009 9:04 PM
+To: DL-MegaRAID Linux; linux-scsi@vger.kernel.org
+Subject: [PATCH 2nd try] PCI legacy I/O port free driver - Making MegaRAID SAS driver
 
-I think we'll need to give things a little bit of time for decent ATA
-TRIM implementations to materialize.  And then we can switch to an
-"assume it works, blacklist bad eggs" approach.  Until then I think we
-need to make discard an explicit opt-in feature.
+Hi,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Here's my 2nd try of the following post.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+http://marc.info/?l=linux-scsi&m=124962265606425&w=2
+
+I made a patch for MegaRAID sas driver to make PCI legacy I/O port free.
+
+The way to make PCI legacy I/O port free is the same as Fusion-MPT driver's and it has been merged into 2.6.30.4.
+
+This has already been fixed in e1000 and lpfc.
+
+As a result of the above, the driver can handle its device even when there are a huge number of PCI devices being used on the system and no I/O port region assigned to the device.
+
+I'm not in the linux-scsi mailing list.
+Please reply to the following address.
+
+ E-Mail: n-fujii@np.css.fujitsu.com
+
+Thanks,
+Noriyuki Fujii
+
