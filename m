@@ -1,63 +1,52 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: manual merge of the osd tree with the scsi tree
-Date: Mon, 30 Nov 2009 08:44:00 +1100
-Message-ID: <20091130084400.adb3e293.sfr@canb.auug.org.au>
-References: <20091127143229.108298c6.sfr@canb.auug.org.au>
-	<4B123A82.10104@panasas.com>
-	<4B127202.1010900@panasas.com>
-	<1259502399.2827.14.camel@mulgrave.site>
-	<4B1283C9.1030002@panasas.com>
-	<1259508215.2827.15.camel@mulgrave.site>
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 0/8] bfa: update bfa driver to version 2.1.2.1 (resubmit)
+Date: Sun, 29 Nov 2009 17:37:38 -0800
+Message-ID: <1259545058-4358-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Mon__30_Nov_2009_08_44_00_+1100_+Wsy2iDfX3DCvcaf"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753207AbZK2Vn7@vger.kernel.org>
-In-Reply-To: <1259508215.2827.15.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, open-osd <osd-dev@open-osd.org>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hq-exedge.brocade.com ([66.243.153.82]:36866 "EHLO
+	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751851AbZK3Bhd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Nov 2009 20:37:33 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: adapter_linux_open_src_team@brocade.com, Jing Huang <huangj@brocade.com>
 
---Signature=_Mon__30_Nov_2009_08_44_00_+1100_+Wsy2iDfX3DCvcaf
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi James,
 
-Hi James, Boaz,
+I went through our internal code checkin logs and bug tracker records for 2.1
+driver, and here is a summary of the changes:
 
-On Sun, 29 Nov 2009 10:23:35 -0500 James Bottomley <James.Bottomley@suse.de=
-> wrote:
->
-> > [PATCH 1/2] osduld: Use device->release instead of internal kref
-> > which replaces:
-> > f89b9ee [SCSI] osduld: Use device->release instead of internal kref
-> >=20
-> > and
-> >=20
-> > [PATCH 2/2] libosd: osd_dev_info: Unique Identification of an OSD device
-> > which replaces:
-> > 3b616d4 [SCSI] libosd: osd_dev_info: Unique Identification of an OSD de=
-vice
->=20
-> OK, replacement should be done in scsi-misc (give an hour or two for
-> mirror updates).
+ - Update driver to version 2.1.2.1
+ - Fixed various IOC down issues in driver and firmware.
+ - IOC state machine fixes.
+ - Fixed issues in IOC auto recovery.
+ - Hardware/firmware related fixes.
+ - FC state machine fixes.
+ - Added more stats for FC and fixed issues in FCOE stats collection
+ - Vport fixes.
+ - Added new portlog entries for events and enhanced bfa loging.
+ - Renamed port data structures to avoid confusion between driver and firmware.
+ - code reorganizations and cleanups.
 
-Thanks guys.
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+2.1 driver is our latest major release. The development and testing cycle has
+spanned for several months, and there have been numerous checkins for both bug
+fixes and cleanups. Clearly splitting them is very difficult and also
+error-prone. For this reason, I still include all the changes we have made to
+2.1 in one patch set instead of splitting them into multiple ones.
 
---Signature=_Mon__30_Nov_2009_08_44_00_+1100_+Wsy2iDfX3DCvcaf
-Content-Type: application/pgp-signature
+Going forward, the upstream driver will be in sync with our latest internal
+development, so we wil be able to submit patches that are specific
+to bug fixe or code cleanup.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+As you suggested, this patch set is based off a combination of scsi-misc-2.6
+and Linus's upstream tree, and it is intended to be include in 2.6.33 merger
+window.
 
-iEYEARECAAYFAksS6yAACgkQjjKRsyhoI8ztnwCgiyTn1vlei1/ZWGXDqSmV8GVm
-r5cAnRlPwtzuKy5gPX7QCmBsYbR31Znz
-=5407
------END PGP SIGNATURE-----
+Thanks
 
---Signature=_Mon__30_Nov_2009_08_44_00_+1100_+Wsy2iDfX3DCvcaf--
+Jing
+
+Signed-off-by: Jing Huang <huangj@brocade.com>
