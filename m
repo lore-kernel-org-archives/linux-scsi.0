@@ -1,47 +1,83 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: OCZ Z-drive p84 read performance
-Date: Mon, 30 Nov 2009 09:11:58 -0700
-Message-ID: <20091130161158.GR9482@parisc-linux.org>
-References: <b30d1c3b0911300137n2736664fxab0e9f3c55877e73@mail.gmail.com> <0D1E8821739E724A86F4D16902CE275C1C93C7556B@inbmail01.lsi.com> <b30d1c3b0911300607w43f2b2a2mdd8957ffc5d3f74d@mail.gmail.com> <0D1E8821739E724A86F4D16902CE275C1C93C7557A@inbmail01.lsi.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] mm: don't discard unused swap slots by default
+Date: Mon, 30 Nov 2009 18:22:44 +0100
+Message-ID: <20091130172243.GA30779@lst.de>
+References: <20091030065102.GA2896@lst.de> <Pine.LNX.4.64.0910301629030.4106@sister.anvils> <20091118171232.GB25541@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48814 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861AbZK3QLx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2009 11:11:53 -0500
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1C93C7557A@inbmail01.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20091118171232.GB25541@lst.de>
+Sender: owner-linux-mm@kvack.org
+To: Hugh Dickins <hugh.dickins@tiscali.co.uk>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Matthew Wilcox <matthew@wil.cx>, linux-mm@kvack.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: Ryousei Takano <ryousei@gmail.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "Support, Software" <support@lsi.com>, "takano-ryousei@aist.go.jp" <takano-ryousei@aist.go.jp>, "Yang, Bo" <Bo.Yang@lsi.com>
 
-On Mon, Nov 30, 2009 at 08:07:58PM +0530, Desai, Kashyap wrote:
-> > for i in 1 4 16 64 256 512 1024 2048 4096 8192 16384 32768 65536; do
-> >         bs=$((BS * i))
-> >         count=$((COUNT / i))
-> > 
-> >         echo bs=$bs count=$count
-> >         sudo mount /dev/sdb1 /media/test
-> >         dd if=/dev/zero of=/media/test/foo bs=$bs count=$count
-> >         sudo umount /media/test
-> >         sleep 1
-> >         sudo mount /dev/sdb1 /media/test
-> >         dd if=/media/test/foo of=/dev/null bs=$bs count=$count
-> Replace /media/test/foo with /dev/sdb1, you will see raw read
-> >         rm /media/test/foo
-> >         sudo umount /media/test
-> > done
-> > 
-> This test is not purely RAW read/write test. In you test File system performance is also included. While read operation, (sequential read) File system buffering will give huge advantage to data transfer.
+Current TRIM/UNMAP/etc implementation are slow enough that discarding
+small chunk during run time is a bad idea.  So only discard the whole
+swap space on swapon by default, but require the admin to enable it
+for run-time discards using the new vm.discard_swapspace sysctl.
 
-Both filesystem and block access will use the page cache.  You should
-use iflag=direct (or oflag=direct as appropriate) in order to bypass
-the page cache.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/include/linux/swap.h
+===================================================================
+--- linux-2.6.orig/include/linux/swap.h	2009-11-27 11:50:47.319003920 +0100
++++ linux-2.6/include/linux/swap.h	2009-11-27 11:51:55.617286868 +0100
+@@ -247,6 +247,7 @@ extern unsigned long mem_cgroup_shrink_n
+ extern int __isolate_lru_page(struct page *page, int mode, int file);
+ extern unsigned long shrink_all_memory(unsigned long nr_pages);
+ extern int vm_swappiness;
++extern int vm_discard_swapspace;
+ extern int remove_mapping(struct address_space *mapping, struct page *page);
+ extern long vm_total_pages;
+ 
+Index: linux-2.6/kernel/sysctl.c
+===================================================================
+--- linux-2.6.orig/kernel/sysctl.c	2009-11-27 11:49:02.935254088 +0100
++++ linux-2.6/kernel/sysctl.c	2009-11-27 11:53:10.333006621 +0100
+@@ -1163,6 +1163,16 @@ static struct ctl_table vm_table[] = {
+ 		.extra1		= &zero,
+ 		.extra2		= &one_hundred,
+ 	},
++	{
++		.ctl_name	= CTL_UNNUMBERED,
++		.procname	= "discard_swapspace",
++		.data		= &vm_discard_swapspace,
++		.maxlen		= sizeof(vm_discard_swapspace),
++		.mode		= 0644,
++		.proc_handler	= &proc_dointvec_minmax,
++		.extra1		= &zero,
++		.extra2		= &one,
++	},
+ #ifdef CONFIG_HUGETLB_PAGE
+ 	 {
+ 		.procname	= "nr_hugepages",
+Index: linux-2.6/mm/swapfile.c
+===================================================================
+--- linux-2.6.orig/mm/swapfile.c	2009-11-27 11:53:19.449254088 +0100
++++ linux-2.6/mm/swapfile.c	2009-11-27 11:54:07.883255931 +0100
+@@ -41,6 +41,7 @@ long nr_swap_pages;
+ long total_swap_pages;
+ static int swap_overflow;
+ static int least_priority;
++int vm_discard_swapspace;
+ 
+ static const char Bad_file[] = "Bad swap file entry ";
+ static const char Unused_file[] = "Unused swap file entry ";
+@@ -1978,7 +1979,7 @@ SYSCALL_DEFINE2(swapon, const char __use
+ 			p->flags |= SWP_SOLIDSTATE;
+ 			p->cluster_next = 1 + (random32() % p->highest_bit);
+ 		}
+-		if (discard_swap(p) == 0)
++		if (discard_swap(p) == 0 && vm_discard_swapspace)
+ 			p->flags |= SWP_DISCARDABLE;
+ 	}
+ 
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
