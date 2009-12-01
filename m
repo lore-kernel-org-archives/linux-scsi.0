@@ -1,106 +1,98 @@
-From: Noriyuki Fujii <n-fujii@np.css.fujitsu.com>
-Subject: Re: [PATCH 2nd try] PCI legacy I/O port free driver - Making MegaRAID
- SAS driver
-Date: Tue, 01 Dec 2009 10:15:34 +0900
-Message-ID: <4B146E36.7080506@np.css.fujitsu.com>
-References: <4AD52367.7050500@np.css.fujitsu.com> <1259614182.11762.5.camel@mulgrave.site>
+From: Ryousei Takano <ryousei@gmail.com>
+Subject: Re: OCZ Z-drive p84 read performance
+Date: Tue, 1 Dec 2009 10:30:29 +0900
+Message-ID: <b30d1c3b0911301730i1a5b2c73w3a0fdea68ef0b3ec@mail.gmail.com>
+References: <b30d1c3b0911300137n2736664fxab0e9f3c55877e73@mail.gmail.com>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C7556B@inbmail01.lsi.com>
+	 <b30d1c3b0911300607w43f2b2a2mdd8957ffc5d3f74d@mail.gmail.com>
+	 <0D1E8821739E724A86F4D16902CE275C1C93C7557A@inbmail01.lsi.com>
+	 <20091130161158.GR9482@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:48474 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828AbZLABQP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2009 20:16:15 -0500
-Received: from m6.gw.fujitsu.co.jp ([10.0.50.76])
-	by fgwmail5.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id nB11GKHx023702
-	for <linux-scsi@vger.kernel.org> (envelope-from n-fujii@np.css.fujitsu.com);
-	Tue, 1 Dec 2009 10:16:20 +0900
-Received: from smail (m6 [127.0.0.1])
-	by outgoing.m6.gw.fujitsu.co.jp (Postfix) with ESMTP id 1ED5745DE4E
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Dec 2009 10:16:20 +0900 (JST)
-Received: from s6.gw.fujitsu.co.jp (s6.gw.fujitsu.co.jp [10.0.50.96])
-	by m6.gw.fujitsu.co.jp (Postfix) with ESMTP id 021B945DE4C
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Dec 2009 10:16:20 +0900 (JST)
-Received: from s6.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id D0D7C1DB8041
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Dec 2009 10:16:19 +0900 (JST)
-Received: from ml0.s.css.fujitsu.com (ml0.s.css.fujitsu.com [10.23.4.190])
-	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id 8C3601DB8038
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Dec 2009 10:16:19 +0900 (JST)
-In-Reply-To: <1259614182.11762.5.camel@mulgrave.site>
+Received: from mail-pw0-f42.google.com ([209.85.160.42]:45473 "EHLO
+	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333AbZLABaX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Nov 2009 20:30:23 -0500
+Received: by pwi3 with SMTP id 3so2209579pwi.21
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Nov 2009 17:30:30 -0800 (PST)
+In-Reply-To: <20091130161158.GR9482@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "Support, Software" <support@lsi.com>, "takano-ryousei@aist.go.jp" <takano-ryousei@aist.go.jp>, "Yang, Bo" <Bo.Yang@lsi.com>
 
-James,
+Hi Matthew and Kashyap,
 
- > I need a Signed-off-by for this (see Documentation/SubmittingPatches).
+Thanks for your comments!
 
- > This is taking away a tab and substituting spaces ... our style is to
- > use tabs.  You can run the patch through scripts/checkpatch.pl and it
- > will advise on problems like this.
-
-I've already posted the patch obeying the community rules.
-Could you see the following URL?
-
-http://marc.info/?l=linux-scsi&m=125870212508167&w=2
-
-Thanks,
-Noriyuki Fujii
-
-> On Wed, 2009-10-14 at 10:03 +0900, Noriyuki Fujii wrote:
->> Hi,
->>
->> Here's my 2nd try of the following post.
->>
->> http://marc.info/?l=linux-scsi&m=124962265606425&w=2
->>
->> I made a patch for MegaRAID sas driver to make PCI legacy I/O port free.
->>
->> The way to make PCI legacy I/O port free is the same as Fusion-MPT
->> driver's and it has been merged into 2.6.30.4.
->>
->> This has already been fixed in e1000 and lpfc.
->>
->> As a result of the above, the driver can handle its device even when
->> there are a huge number of PCI devices being used on the system and no
->> I/O port region assigned to the device.
->>
->> I'm not in the linux-scsi mailing list.
->> Please reply to the following address.
-> 
-> I need a Signed-off-by for this (see Documentation/SubmittingPatches).
-> 
->>  E-Mail: n-fujii@np.css.fujitsu.com
->>
->> Thanks,
->> Noriyuki Fujii
->>
->> plain text document attachment
->> (linux-2.6-scsi-megaraid-sas-make-legacy-i-o-port-free.patch)
->> --- megaraid_sasOrg.c	2009-07-02 16:31:17.000000000 +0900
->> +++ megaraid_sasMod.c	2009-08-06 11:24:42.000000000 +0900
->> @@ -2573,7 +2573,9 @@ static int megasas_init_mfi(struct megas
->>  		instance->base_addr = pci_resource_start(instance->pdev, 0);
->>  	}
->>  
->> -	if (pci_request_regions(instance->pdev, "megasas: LSI")) {
->> +        if (pci_request_selected_regions(instance->pdev,
-> 
-> This is taking away a tab and substituting spaces ... our style is to
-> use tabs.  You can run the patch through scripts/checkpatch.pl and it
-> will advise on problems like this.
-> 
-> James
-> 
-> 
+On Tue, Dec 1, 2009 at 1:11 AM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Mon, Nov 30, 2009 at 08:07:58PM +0530, Desai, Kashyap wrote:
+>> > for i in 1 4 16 64 256 512 1024 2048 4096 8192 16384 32768 65536; =
+do
+>> > =A0 =A0 =A0 =A0 bs=3D$((BS * i))
+>> > =A0 =A0 =A0 =A0 count=3D$((COUNT / i))
+>> >
+>> > =A0 =A0 =A0 =A0 echo bs=3D$bs count=3D$count
+>> > =A0 =A0 =A0 =A0 sudo mount /dev/sdb1 /media/test
+>> > =A0 =A0 =A0 =A0 dd if=3D/dev/zero of=3D/media/test/foo bs=3D$bs co=
+unt=3D$count
+>> > =A0 =A0 =A0 =A0 sudo umount /media/test
+>> > =A0 =A0 =A0 =A0 sleep 1
+>> > =A0 =A0 =A0 =A0 sudo mount /dev/sdb1 /media/test
+>> > =A0 =A0 =A0 =A0 dd if=3D/media/test/foo of=3D/dev/null bs=3D$bs co=
+unt=3D$count
+>> Replace /media/test/foo with /dev/sdb1, you will see raw read
+>> > =A0 =A0 =A0 =A0 rm /media/test/foo
+>> > =A0 =A0 =A0 =A0 sudo umount /media/test
+>> > done
+>> >
+>> This test is not purely RAW read/write test. In you test File system=
+ performance is also included. While read operation, (sequential read) =
+=46ile system buffering will give huge advantage to data transfer.
+>
+> Both filesystem and block access will use the page cache. =A0You shou=
+ld
+> use iflag=3Ddirect (or oflag=3Ddirect as appropriate) in order to byp=
+ass
+> the page cache.
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> Matthew Wilcox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Int=
+el Open Source Technology Centre
+> "Bill, look, we understand that you're interested in selling us this
+> operating system, but compare it to ours. =A0We can't possibly take s=
+uch
+> a retrograde step."
+>
 
+The bottleneck is in the file system.
+I retried dd with the direct I/O option.  The performance improves
+with large block sizes.
+The cross point is about 256 KB.
 
+bs  write (MB/s)  read (MB/s)
+1024	9.5	9.7=09
+4096	34.4	28.3=09
+16384	95.8	47.0=09
+65536	186	121=09
+262144	382	307=09
+524288	417	366=09
+1048576	449	380=09
+2097152	497	467=09
+4194304	511	532=09
+8388608	498	560
+16777216	523	545=09
+33554432	555	541=09
+67108864	554	543=09
+
+My page is also updated.
+
+Best regards,
+Ryousei
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
