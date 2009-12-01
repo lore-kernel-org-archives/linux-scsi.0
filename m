@@ -1,109 +1,64 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [GIT PATCH] SCSI fixes for 2.6.32-rc8
-Date: Tue, 1 Dec 2009 22:40:48 +0100
-Message-ID: <200912012240.48249.rjw@sisk.pl>
-References: <1259620194.11762.137.camel@mulgrave.site> <1259687627.11762.307.camel@mulgrave.site> <20091201091832.418d5fca@jbarnes-piketon>
+From: Michael Reed <mdr@sgi.com>
+Subject: PATCH [1/1]: sd_remove() hangs waiting on async_synchronize of unrelated
+ threads
+Date: Tue, 01 Dec 2009 15:45:31 -0600
+Message-ID: <4B158E7B.3040708@sgi.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:46663 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753934AbZLAVkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Dec 2009 16:40:24 -0500
-In-Reply-To: <20091201091832.418d5fca@jbarnes-piketon>
+Received: from relay2.sgi.com ([192.48.179.30]:59506 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754056AbZLAVp0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Dec 2009 16:45:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Jeremy Higdon <jeremy@sgi.com>, James Smart <James.Smart@Emulex.Com>
 
-On Tuesday 01 December 2009, Jesse Barnes wrote:
-> On Tue, 01 Dec 2009 12:13:47 -0500
-> James Bottomley <James.Bottomley@suse.de> wrote:
-> 
-> > On Tue, 2009-12-01 at 14:54 -0200, Kleber Sacilotto de Souza wrote:
-> > > Can you please add the patch from "[PATCH] ipr: fix EEH recovery"
-> > > sent to this list?
-> > 
-> > Adding linux-pci because this hack actually tampers with internal PCI
-> > device state, which looks wrong.
-> > 
-> > The thread is here:
-> > 
-> > http://marc.info/?l=linux-scsi&m=125918723218627
-> > 
-> > and the proposed full patch and explanation below.
-> > 
-> > PCI people, is this correct, or is there a better way to do it?
-> > 
-> > James
-> > 
-> > ---
-> > 
-> > Hi,
-> > 
-> > After commits c82f63e411f1b58427c103bd95af2863b1c96dd1 (PCI: check
-> > saved state before restore) and
-> > 4b77b0a2ba27d64f58f16d8d4d48d8319dda36ff (PCI: Clear saved_state
-> > after the state has been restored) PCI drivers are prevented from
-> > restoring the device standard configuration registers twice in a row.
-> > These changes introduced a regression on ipr EEH recovery.
-> > 
-> > The ipr device driver saves the PCI state only during the device probe
-> > and restores it on ipr_reset_restore_cfg_space() during IOA resets.
-> > This behavior is causing the EEH recovery to fail after the second
-> > error detected, since the registers are not being restored.
-> > 
-> > One possible solution would be saving the registers after restoring
-> > them. The problem with this approach is that while recovering from an
-> > EEH error if pci_save_state() results in an EEH error, the
-> > adapter/slot will be reset, and end up back in
-> > ipr_reset_restore_cfg_space(), but it won't have a valid saved state
-> > to restore, so pci_restore_state() will fail.
-> > 
-> > The following patch introduces a workaround for this problem, hacking
-> > around the PCI API by setting pdev->state_saved = true before we do
-> > the restore. It fixes the EEH regression and prevents that we hit
-> > another EEH error during EEH recovery.
-> > 
-> > 
-> > Thanks,
-> > Kleber
-> > 
-> > 
-> > 
-> > Signed-off-by: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
-> > ---
-> >  drivers/scsi/ipr.c |    1 +
-> >  1 files changed, 1 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> > index 76d294f..c3ff9a6 100644
-> > --- a/drivers/scsi/ipr.c
-> > +++ b/drivers/scsi/ipr.c
-> > @@ -6516,6 +6516,7 @@ static int ipr_reset_restore_cfg_space(struct
-> > ipr_cmnd *ipr_cmd)
-> >         int rc;
-> >  
-> >         ENTER;
-> > +       ioa_cfg->pdev->state_saved = true;
-> >         rc = pci_restore_state(ioa_cfg->pdev);
-> >  
-> >         if (rc != PCIBIOS_SUCCESSFUL) {
-> 
-> Rafael may have input here, but it seems like we need a low level
-> save/restore routine that ignores the flag (which is generally used for
-> suspend/resume I think?).
+Prevent delays and hangs due to sd_remove() waiting for the completion of
+async threads executing sd_probe_async of disks on unrelated host adapters.
+This patch executes every sd_probe_async in its own async domain allowing
+sd_remove() to wait for just the completion of the async thread associated with
+the scsi_disk being removed.
 
-There are some other users, but they are only a few.
+Found via fault insertion on a large fibre channel fabric.
 
-> Maybe adding low level _pci_save_state/_pci_restore_state that don't
-> check/set the flags would help?
+Applies to 2.6.32-rc8.
 
-That might work, but how do we know that the state we're going to restore
-is actually valid at this particular point?
+Signed-off-by: Michael Reed <mdr@sgi.com>
 
-Perhaps we need a version using a separate storage area?
 
-Rafael
+--- linux-2.6.32-rc8/drivers/scsi/sd.h	2009-11-19 16:32:38.000000000 -0600
++++ linux-2.6.32-rc8-modified/drivers/scsi/sd.h	2009-12-01 15:25:33.686651715 -0600
+@@ -60,6 +60,7 @@ struct scsi_disk {
+ 	unsigned	RCD : 1;	/* state of disk RCD bit, unused */
+ 	unsigned	DPOFUA : 1;	/* state of disk DPOFUA bit */
+ 	unsigned	first_scan : 1;
++	struct list_head async_domain;	/* for sd_probe_async */
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
+--- linux-2.6.32-rc8/drivers/scsi/sd.c	2009-11-19 16:32:38.000000000 -0600
++++ linux-2.6.32-rc8-modified/drivers/scsi/sd.c	2009-12-01 15:26:17.686653817 -0600
+@@ -2171,7 +2171,8 @@ static int sd_probe(struct device *dev)
+ 	get_device(&sdp->sdev_gendev);
+ 
+ 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
+-	async_schedule(sd_probe_async, sdkp);
++	INIT_LIST_HEAD(&sdkp->async_domain);
++	async_schedule_domain(sd_probe_async, sdkp, &sdkp->async_domain);
+ 
+ 	return 0;
+ 
+@@ -2202,8 +2203,9 @@ static int sd_remove(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp;
+ 
+-	async_synchronize_full();
+ 	sdkp = dev_get_drvdata(dev);
++	async_synchronize_full_domain(&sdkp->async_domain);
++
+ 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
+ 	device_del(&sdkp->dev);
+ 	del_gendisk(sdkp->disk);
