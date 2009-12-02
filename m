@@ -1,70 +1,111 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] mac_esp: fix PIO mode
-Date: Wed, 02 Dec 2009 15:40:45 -0800 (PST)
-Message-ID: <20091202.154045.142858043.davem@davemloft.net>
-References: <alpine.OSX.2.00.0911231452300.468@localhost>
+From: Torsten Duwe <duwe@lst.de>
+Subject: Re: [Patch] fix <scsi/scsi.h> for userland
+Date: Thu, 3 Dec 2009 00:57:04 +0100
+Message-ID: <200912030057.08731.duwe@lst.de>
+References: <200912030031.43645.duwe@lst.de> <20091202233523.GA27579@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart6117300.0PDsCI96Bq";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.OSX.2.00.0911231452300.468@localhost>
-Sender: linux-m68k-owner@vger.kernel.org
-To: fthain@telegraphics.com.au
-Cc: linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:35373 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753841AbZLBX5I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2009 18:57:08 -0500
+In-Reply-To: <20091202233523.GA27579@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Greg KH <gregkh@suse.de>, agraf@suse.de
 
-From: Finn Thain <fthain@telegraphics.com.au>
-Date: Mon, 23 Nov 2009 14:57:42 +1100 (EST)
+--nextPart6117300.0PDsCI96Bq
+Content-Type: multipart/mixed;
+  boundary="Boundary-01=_Q7vFL+8MPzbioKA"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> 
-> The mac_esp PIO algorithm no longer works in 2.6.31 and crashes my Centris 
-> 660av. So here's a better one.
-> 
-> One of the SCSI drives I tested still doesn't like the PIO mode and fails 
-> with "esp: esp0: Reconnect IRQ2 timeout" (the same drive works fine in 
-> PDMA mode).
-> 
-> This failure happens when esp_reconnect_with_tag() tries to read in two 
-> tag bytes but the chip only provides one (0x20). I don't know what causes 
-> this. I decided not to waste any more time trying to fix it because the 
-> best solution is to rip out the PIO mode altogether and use the DMA 
-> engine.
-> 
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+--Boundary-01=_Q7vFL+8MPzbioKA
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Can you explain why the esp_slave_configure() part of your patch
-is necessary?
+On Thursday 03 December 2009, Greg KH wrote:
+> On Thu, Dec 03, 2009 at 12:31:39AM +0100, Torsten Duwe wrote:
+> > Hi Greg!
+> >
+> > When I recompiled my system yesterday with includes from the latest
+> > stable kernel(s) I found especially CD IO and similar breaking due to
+> > <scsi/scsi.h>. At least 2.6.32-rc8 and 2.6.31.6 need fixing. Please apply
+> > attached patch or equivalent.
+>
+> Is the patch upstream already?
+>
+> If not, please send this to the scsi maintainer, it needs to be there
+> before I can apply it to the -stable releases.
 
-> Index: linux-2.6.31/drivers/scsi/esp_scsi.c
-> ===================================================================
-> --- linux-2.6.31.orig/drivers/scsi/esp_scsi.c	2009-11-23 12:52:45.000000000 +1100
-> +++ linux-2.6.31/drivers/scsi/esp_scsi.c	2009-11-23 12:53:30.000000000 +1100
-> @@ -2405,12 +2405,6 @@ static int esp_slave_configure(struct sc
->  	struct esp_target_data *tp = &esp->target[dev->id];
->  	int goal_tags, queue_depth;
->  
-> -	if (esp->flags & ESP_FLAG_DISABLE_SYNC) {
-> -		/* Bypass async domain validation */
-> -		dev->ppr  = 0;
-> -		dev->sdtr = 0;
-> -	}
-> -
->  	goal_tags = 0;
->  
->  	if (dev->tagged_supported) {
-> @@ -2433,6 +2427,11 @@ static int esp_slave_configure(struct sc
->  	}
->  	tp->flags |= ESP_TGT_DISCONNECT;
->  
-> +	if (esp->flags & ESP_FLAG_DISABLE_SYNC) {
-> +		dev->wdtr = spi_support_wide(dev->sdev_target) = 0;
-> +		dev->sdtr = spi_support_sync(dev->sdev_target) = 0;
-> +	}
-> +
->  	if (!spi_initial_dv(dev->sdev_target))
->  		spi_dv_device(dev);
->  
+Given that 2.6.32-rc8 and 2.6.31.6 are affected I don't think so. Resending.
+linux-scsi, feel free to ignore this if it's already fixed. Otherwise:
 
-That part...
+Signed-off-by: Torsten Duwe <duwe@lst.de>
 
-Thanks.
+--Boundary-01=_Q7vFL+8MPzbioKA
+Content-Type: text/x-diff;
+  charset="iso 8859-15";
+  name="compile-fix"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="compile-fix"
+
+=2D-- linux-2.6.31/include/scsi/scsi.h.orig	2009-09-10 00:13:59.000000000 +=
+0200
++++ linux-2.6.31/include/scsi/scsi.h	2009-12-02 01:00:34.000000000 +0100
+@@ -142,10 +142,10 @@ struct scsi_cmnd;
+=20
+ /* defined in T10 SCSI Primary Commands-2 (SPC2) */
+ struct scsi_varlen_cdb_hdr {
+=2D	u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
+=2D	u8 control;
+=2D	u8 misc[5];
+=2D	u8 additional_cdb_length;         /* total cdb length - 8 */
++	__u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
++	__u8 control;
++	__u8 misc[5];
++	__u8 additional_cdb_length;         /* total cdb length - 8 */
+ 	__be16 service_action;
+ 	/* service specific data follows */
+ };
+@@ -156,6 +156,7 @@ scsi_varlen_cdb_length(const void *hdr)
+ 	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
+ }
+=20
++#ifdef __KERNEL__
+ extern const unsigned char scsi_command_size_tbl[8];
+ #define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
+=20
+@@ -165,6 +166,7 @@ scsi_command_size(const unsigned char *c
+ 	return (cmnd[0] =3D=3D VARIABLE_LENGTH_CMD) ?
+ 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
+ }
++#endif
+=20
+ /*
+  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+
+--Boundary-01=_Q7vFL+8MPzbioKA--
+
+--nextPart6117300.0PDsCI96Bq
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQBLFv7Q83adOIaM1d4RAsBfAKCMDr2uV3PbvkJDTE9NZ+lhRKdeqACbBjaN
+0a8iGbZuJkBnLBgSMnX+Epw=
+=cPtw
+-----END PGP SIGNATURE-----
+
+--nextPart6117300.0PDsCI96Bq--
