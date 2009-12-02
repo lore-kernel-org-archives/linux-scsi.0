@@ -1,54 +1,46 @@
-From: Yinghai Lu <yhlu.kernel@gmail.com>
-Subject: Re: [PATCH] PCI legacy I/O port free driver - Making MegaRAID SAS
-	driver
-Date: Tue, 1 Dec 2009 23:41:08 -0800
-Message-ID: <86802c440912012341q278a1169m242db29a9d5242e0@mail.gmail.com>
-References: <4B0644D8.8010000@np.css.fujitsu.com>
+From: Vineet Agarwal <checkout.vineet@gmail.com>
+Subject: [PATCH 0/1] libosd bug fixing
+Date: Wed, 2 Dec 2009 15:05:18 +0530
+Message-ID: <425904320912020135m428b7eacwfabcaa3288dfff83@mail.gmail.com>
+References: <4B15367C.9040405@panasas.com> <425904320912020131k46b34cdfmfa64a25196a5b44e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-px0-f188.google.com ([209.85.216.188]:50053 "EHLO
-	mail-px0-f188.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbZLBHlC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2009 02:41:02 -0500
-Received: by pxi26 with SMTP id 26so4559462pxi.21
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Dec 2009 23:41:09 -0800 (PST)
-In-Reply-To: <4B0644D8.8010000@np.css.fujitsu.com>
+Received: from mail-iw0-f171.google.com ([209.85.223.171]:59291 "EHLO
+	mail-iw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbZLBJfb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2009 04:35:31 -0500
+Received: by iwn1 with SMTP id 1so1606iwn.33
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Dec 2009 01:35:38 -0800 (PST)
+In-Reply-To: <425904320912020131k46b34cdfmfa64a25196a5b44e@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Noriyuki Fujii <n-fujii@np.css.fujitsu.com>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-2009/11/19 Noriyuki Fujii <n-fujii@np.css.fujitsu.com>:
-> Hi,
->
-> On the large servers, I/O port resource may not be assigned to all
-> the PCI devices since it is limited (to 64KB on Intel Architecture[1])
-> and it may also be fragmented (I/O base register of PCI-to-PCI bridge
-> will usually be aligned to a 4KB boundary[2]).
-> If no I/O port resource is assigned to devices, those devices do not
-> work.
-> [1] Some machines support 64KB I/O port space per PCI segment.
-> [2] Some P2P bridges support optional 1KB aligned I/O base.
->
-> Therefore, I made a patch for MegaRAID SAS driver to make PCI legacy I/O
-> port free.
-> I have also tested the patch and it had no problem.
->
-> The way to make PCI legacy I/O port free is the same as Fusion-MPT
-> driver's and it has been merged into 2.6.30.4.
->
-> This has already been fixed in e1000 and lpfc.
->
-> As a result of the above, the driver can handle its device even when
-> there are a huge number of PCI devices being used on the system and no
-> I/O port region assigned to the device.
->
-> Thanks,
-> Noriyuki Fujii
->
-> Signed-off-by: Noriyuki Fujii n-fujii@np.css.fujitsu.com
+Hi Boaz,
 
-Tested-by: Yinghai Lu <yinghai@kernel.org>
+On Tue, Dec 1, 2009 at 9:00 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
+>
+> James hi.
+>
+> Users have found an annoying bug in latest osd/exofs code. Actually this
+> deficiency exists for a long time, but only most recent exofs code has
+> exposed it.
+>
+> Please include the fix to the patches queued for 2.6.33. No need for it
+> to go into stable as current users will not hit it.
+>
+> [PATCH 1/1] libosd: Fix blk_put_request locking again
+>
+> Vineet Please test this new patch, the previous fix was crap
 
-YH
+I applied the patch and it's working at my end.
+
+>
+> Thanks
+> Boaz
+>
+
+-- 
+Regards:
+Vineet Agarwal
