@@ -1,90 +1,55 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: PATCH [1/1]: sd_remove() hangs waiting on async_synchronize of
- unrelated threads
-Date: Wed, 02 Dec 2009 11:06:04 -0600
-Message-ID: <4B169E7C.8030003@sgi.com>
-References: <4B158E7B.3040708@sgi.com>	 <1259704166.11762.516.camel@mulgrave.site>  <4B15989C.80108@sgi.com>	 <1259707816.11762.539.camel@mulgrave.site>  <4B167942.400@sgi.com> <1259765040.5430.19.camel@mulgrave.site>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 0/1] libosd bug fixing
+Date: Wed, 02 Dec 2009 19:16:10 +0200
+Message-ID: <4B16A0DA.5080205@panasas.com>
+References: <4B15367C.9040405@panasas.com> <425904320912020131k46b34cdfmfa64a25196a5b44e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.179.30]:57789 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755151AbZLBRGB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2009 12:06:01 -0500
-In-Reply-To: <1259765040.5430.19.camel@mulgrave.site>
+Received: from daytona.panasas.com ([67.152.220.89]:27264 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754256AbZLBRQH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2009 12:16:07 -0500
+In-Reply-To: <425904320912020131k46b34cdfmfa64a25196a5b44e@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Jeremy Higdon <jeremy@sgi.com>, James Smart <James.Smart@Emulex.Com>
+To: Vineet Agarwal <checkout.vineet@gmail.com>, James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
+On 12/02/2009 11:31 AM, Vineet Agarwal wrote:
+> Hi Boaz,
+> 
+> On Tue, Dec 1, 2009 at 9:00 PM, Boaz Harrosh <bharrosh@panasas.com
+> <mailto:bharrosh@panasas.com>> wrote:
+> 
+>     James hi.
+> 
+>     Users have found an annoying bug in latest osd/exofs code. Actually this
+>     deficiency exists for a long time, but only most recent exofs code has
+>     exposed it.
+> 
+>     Please include the fix to the patches queued for 2.6.33. No need for it
+>     to go into stable as current users will not hit it.
+> 
+>     [PATCH 1/1] libosd: Fix blk_put_request locking again
+> 
+>     Vineet Please test this new patch, the previous fix was crap
+> 
+> I applied the patch and it's working at my end.
+> 
 
+Thank you Vineet for testing. I was also able to reproduce the same problem
+you had, and now it runs smoothly.
 
-James Bottomley wrote:
-> On Wed, 2009-12-02 at 08:27 -0600, Michael Reed wrote:
->> James Bottomley wrote:
->>> On Tue, 2009-12-01 at 16:28 -0600, Michael Reed wrote:
->>>> James Bottomley wrote:
->>>>> On Tue, 2009-12-01 at 15:45 -0600, Michael Reed wrote:
->>>>>> Prevent delays and hangs due to sd_remove() waiting for the completion of
->>>>>> async threads executing sd_probe_async of disks on unrelated host adapters.
->>>>>> This patch executes every sd_probe_async in its own async domain allowing
->>>>>> sd_remove() to wait for just the completion of the async thread associated with
->>>>>> the scsi_disk being removed.
->>>>> This patch was thought of a while ago. Unfortunately, some of the
->>>>> unrelated threads we end up waiting on are libata ones.  you confine sd
->>>>> to only its own probes, we end up unsynchronised with respect to libata
->>>>> probes and we might cause ordering problems amongst the ata devices.
->>>>>
->>>> Isn't sd_remove() only concerned with the removal of a a single scsi_disk?
->>>> Shouldn't libata use reference counting if it has is an issue with a scsi_disk
->>>> being prematurely removed?  Or is this a concern about "sd" naming?  Or something
->>>> else that I admittedly don't understand (but should)?
->>> Well, no ... the sync on remove is preventing us removing a device whose
->>> async part is still running.  That async part for libata includes pieces
->>> kicked off from the sd probe.
->> What does the call stack look like that spawns the async part of libata?
-> 
-> it's in libata-core (and some in ahci) just do a git grep async in
-> drivers/ata
-> 
->> What kind of hardware do I need to demonstrate this?
-> 
-> To demonstrate what?  The out of order sequencing that can arise?  any
-> ata based system with > 1 device should do.
-> 
-> There's actually another problem with the previous patch ...
-> scsi_wait_scan() also needs to synchronise with the sd probes.
-> 
->>>> I would truly like to better understand the issue.  Would someone mind expanding
->>>> upon the concern about ata ordering issues associated with the removal of a
->>>> single scsi_disk?
->>> The problem isn't removal per se ... it's the fact that remove can't
->>> complete until any async pieces remaining from probe have run. 
->> Yes, I understand that.  I didn't realize that the sd_probe resulted in any
->> async work other than sd_probe_async().  It does complicate serialization
->> at removal.
->>
->> I'll try to capture the "motivation" from within my fibre channel centric world
->> for the change and see if anyone's got some ideas on how to resolve the issue.
-> 
-> OK ... actually describing the problem would be helpful.  The async
-> schedule is only in sd_remove() to guard against add/remove races ...
-> usually when we do removal, the async probing parts should be long
-> finished so I don't understand why you think we would be waiting for
-> stuff.
+James please submit for 2.6.33. It is an important bug fix for the exofs code
+that I want to push for next merge window.
 
-As I've been working out of 2.6.31 and things have changed pretty dramatically
-in scsi-misc, I'm going to update my test environment to scsi-misc and see
-if I continue to observe the same behavior.
-
-Moving targets are good.  Moving targets are good.  Moving targets are good.
-
-:)
-
-Mike
-
+Boaz
+>     Thanks
+>     Boaz
 > 
-> James
+> Regards:
+> Vineet Agarwal
 > 
-> 
+
