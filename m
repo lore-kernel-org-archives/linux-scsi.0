@@ -1,34 +1,170 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/1] scsi_dh_emc: fix mode select request setup
-Date: Wed, 02 Dec 2009 14:46:24 -0600
-Message-ID: <4B16D220.90108@cs.wisc.edu>
-References: <1259785728-20419-1-git-send-email-michaelc@cs.wisc.edu> <1259786182.5430.138.camel@mulgrave.site>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH 1/1]: qla2xxx: dpc thread can execute before scsi host
+ has been added
+Date: Wed, 02 Dec 2009 15:25:46 -0600
+Message-ID: <4B16DB5A.5030505@sgi.com>
+References: <4B168394.1050408@sgi.com> <EEB120F6-ED84-417A-B134-EB6AE7FA4156@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53451 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754357AbZLBUqb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2009 15:46:31 -0500
-In-Reply-To: <1259786182.5430.138.camel@mulgrave.site>
+Received: from relay3.sgi.com ([192.48.152.1]:53725 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753638AbZLBVZl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2009 16:25:41 -0500
+In-Reply-To: <EEB120F6-ED84-417A-B134-EB6AE7FA4156@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jeremy Higdon <jeremy@sgi.com>
 
-James Bottomley wrote:
-> On Wed, 2009-12-02 at 14:28 -0600, michaelc@cs.wisc.edu wrote:
->> From: Mike Christie <michaelc@cs.wisc.edu>
+As there has been some discussion about what tree other qla2xxx
+patches should apply, I'd like to add my $.02 and suggest that, if
+possible, this patch should be applied to rc-fixes.
+
+Thanks,
+ Mike
+
+Giridhar Malavali wrote:
+> Thanks Michael,
+> 
+> Acked-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> 
+> On Dec 2, 2009, at 7:11 AM, Michael Reed wrote:
+> 
+>> Fix crash in qla2x00_fdmi_register() due to the dpc
+>> thread executing before the scsi host has been fully
+>> added.
 >>
->> This patch fixes the request setup code for mode selects. I got the fixes from
->> Hannes Reinecke while trying to hunt down some problems and merged it
->> into one patch. I am sending it because Hannes is busy with other things.
+>> Unable to handle kernel NULL pointer dereference (address  
+>> 00000000000001d0)
+>> qla2xxx_7_dpc[4140]: Oops 8813272891392 [1]
+>>
+>> Call Trace:
+>> [<a000000100016910>] show_stack+0x50/0xa0
+>>                                sp=e00000b07c59f930  
+>> bsp=e00000b07c591400
+>> [<a000000100017180>] show_regs+0x820/0x860
+>>                                sp=e00000b07c59fb00  
+>> bsp=e00000b07c5913a0
+>> [<a00000010003bd60>] die+0x1a0/0x2e0
+>>                                sp=e00000b07c59fb00  
+>> bsp=e00000b07c591360
+>> [<a0000001000681a0>] ia64_do_page_fault+0x8c0/0x9e0
+>>                                sp=e00000b07c59fb00  
+>> bsp=e00000b07c591310
+>> [<a00000010000c8e0>] ia64_native_leave_kernel+0x0/0x270
+>>                                sp=e00000b07c59fb90  
+>> bsp=e00000b07c591310
+>> [<a000000207197350>] qla2x00_fdmi_register+0x850/0xbe0 [qla2xxx]
+>>                                sp=e00000b07c59fd60  
+>> bsp=e00000b07c591290
+>> [<a000000207171570>] qla2x00_configure_loop+0x1930/0x34c0 [qla2xxx]
+>>                                sp=e00000b07c59fd60  
+>> bsp=e00000b07c591128
+>> [<a0000002071732b0>] qla2x00_loop_resync+0x1b0/0x2e0 [qla2xxx]
+>>                                sp=e00000b07c59fdf0  
+>> bsp=e00000b07c5910c0
+>> [<a000000207166d40>] qla2x00_do_dpc+0x9a0/0xce0 [qla2xxx]
+>>                                sp=e00000b07c59fdf0  
+>> bsp=e00000b07c590fa0
+>> [<a0000001000d5bb0>] kthread+0x110/0x140
+>>                                sp=e00000b07c59fe00  
+>> bsp=e00000b07c590f68
+>> [<a000000100014a30>] kernel_thread_helper+0xd0/0x100
+>>                                sp=e00000b07c59fe30  
+>> bsp=e00000b07c590f40
+>> [<a00000010000a4c0>] start_kernel_thread+0x20/0x40
+>>                                sp=e00000b07c59fe30  
+>> bsp=e00000b07c590f40
+>>
+>> crash> dis a000000207197350
+>> 0xa000000207197350 <qla2x00_fdmi_register+2128>:        [MMI]        
+>> ld1 r45=[r14];;
+>> crash> scsi_qla_host.host 0xe00000b058c73ff8
+>>  host = 0xe00000b058c73be0,
+>> crash> Scsi_Host.shost_data 0xe00000b058c73be0
+>>  shost_data = 0x0,  <<<<<<<<<<<
+>>
+>>
+>> The fc_transport fc_* workqueue threads have yet to be created.
+>>
+>> crash> ps | grep _7
+>>   3891      2   2  e00000b075c80000  IN   0.0       0      0   
+>> [scsi_eh_7]
+>>   4140      2   3  e00000b07c590000  RU   0.0       0      0   
+>> [qla2xxx_7_dpc]
+>>
+>> The thread creating adding the Scsi_Host is blocked due to other
+>> activity in sysfs.
+>>
+>> crash> bt 3762
+>> PID: 3762   TASK: e00000b071e70000  CPU: 3   COMMAND: "modprobe"
+>> #0 [BSP:e00000b071e71548] schedule at a000000100727e00
+>> #1 [BSP:e00000b071e714c8] __mutex_lock_slowpath at a0000001007295a0
+>> #2 [BSP:e00000b071e714a8] mutex_lock at a000000100729830
+>> #3 [BSP:e00000b071e71478] sysfs_addrm_start at a0000001002584f0
+>> #4 [BSP:e00000b071e71440] create_dir at a000000100259350
+>> #5 [BSP:e00000b071e71410] sysfs_create_subdir at a000000100259510
+>> #6 [BSP:e00000b071e713b0] internal_create_group at a00000010025c880
+>> #7 [BSP:e00000b071e71388] sysfs_create_group at a00000010025cc50
+>> #8 [BSP:e00000b071e71368] dpm_sysfs_add at a000000100425050
+>> #9 [BSP:e00000b071e71310] device_add at a000000100417d90
+>> #10 [BSP:e00000b071e712d8] scsi_add_host at a00000010045a380
+>> #11 [BSP:e00000b071e71268] qla2x00_probe_one at a0000002071be950
+>> #12 [BSP:e00000b071e71248] local_pci_probe at a00000010032e490
+>> #13 [BSP:e00000b071e71218] pci_device_probe at a00000010032ecd0
+>> #14 [BSP:e00000b071e711d8] driver_probe_device at a00000010041d480
+>> #15 [BSP:e00000b071e711a8] __driver_attach at a00000010041d6e0
+>> #16 [BSP:e00000b071e71170] bus_for_each_dev at a00000010041c240
+>> #17 [BSP:e00000b071e71150] driver_attach at a00000010041d0a0
+>> #18 [BSP:e00000b071e71108] bus_add_driver at a00000010041b080
+>> #19 [BSP:e00000b071e710c0] driver_register at a00000010041dea0
+>> #20 [BSP:e00000b071e71088] __pci_register_driver at a00000010032f610
+>> #21 [BSP:e00000b071e71058] (unknown) at a000000207200270
+>> #22 [BSP:e00000b071e71018] do_one_initcall at a00000010000a9c0
+>> #23 [BSP:e00000b071e70f98] sys_init_module at a0000001000fef00
+>> #24 [BSP:e00000b071e70f98] ia64_ret_from_syscall at a00000010000c740
+>>
+>> So, it appears that qla2xxx dpc thread is moving forward before the
+>> scsi host has been completely added.
+>>
+>> This patch moves the setting of the init_done (and online) flag to
+>> after the call to scsi_add_host() to hold off the dpc thread.
+>>
+>> Found via large lun count testing using 2.6.31.
+>>
+>> Signed-off-by: Michael Reed <mdr@sgi.com>
+>>
+>>
+>> --- linux-2.6.32-rc8/drivers/scsi/qla2xxx/qla_os.c	2009-11-19  
+>> 16:32:38.000000000 -0600
+>> +++ linux-2.6.32-rc8-modified/drivers/scsi/qla2xxx/qla_os.c	 
+>> 2009-12-02 08:46:04.962724212 -0600
+>> @@ -2016,13 +2016,13 @@ skip_dpc:
+>> 	DEBUG2(printk("DEBUG: detect hba %ld at address = %p\n",
+>> 	    base_vha->host_no, ha));
+>>
+>> -	base_vha->flags.init_done = 1;
+>> -	base_vha->flags.online = 1;
+>> -
+>> 	ret = scsi_add_host(host, &pdev->dev);
+>> 	if (ret)
+>> 		goto probe_failed;
+>>
+>> +	base_vha->flags.init_done = 1;
+>> +	base_vha->flags.online = 1;
+>> +
+>> 	ha->isp_ops->enable_intrs(ha);
+>>
+>> 	scsi_scan_host(host);
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux- 
+>> scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> So that should be From: Hannes Reineke at the top then?  (I can fix it
-> up if it is)
-> 
-
-Yeah, I think it should. I was not sure, because I merged his fixes into 
-one patch and wrote the email. He wrote all the code though. I am just 
-forwarding the fixes since he was busy.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
