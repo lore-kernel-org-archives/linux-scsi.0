@@ -1,50 +1,72 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [PATCH 0/3] qla2xxx: fixes for 2.6.32-rc8
-Date: Wed, 2 Dec 2009 12:25:39 -0800
-Message-ID: <7A072011-F24C-4044-98B3-BC650079EC85@qlogic.com>
-References: <1259779016-1762-1-git-send-email-giridhar.malavali@qlogic.com> <1259784260.5430.136.camel@mulgrave.site>
-Mime-Version: 1.0 (Apple Message framework v912)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] scsi_dh_emc: fix mode select request setup
+Date: Wed,  2 Dec 2009 14:28:48 -0600
+Message-ID: <1259785728-20419-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:16715 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352AbZLBUZd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2009 15:25:33 -0500
-In-Reply-To: <1259784260.5430.136.camel@mulgrave.site>
+Received: from mx1.redhat.com ([209.132.183.28]:56123 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752929AbZLBU2x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2009 15:28:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
 
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-On Dec 2, 2009, at 12:04 PM, James Bottomley wrote:
+This patch fixes the request setup code for mode selects. I got the fixes from
+Hannes Reinecke while trying to hunt down some problems and merged it
+into one patch. I am sending it because Hannes is busy with other things.
 
-> On Wed, 2009-12-02 at 10:36 -0800, giridhar.malavali@qlogic.com wrote:
->> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
->>
->> Please apply...
->>
->> Anirban Chakraborty (1):
->>  Fix to accommodate a hardware bug in multiqueue mode that does not
->>    work properly when acknowledgement of MSIX Interrupts is disabled.
->
-> OK, so this looks like a bug fix
->
->> Giridhar Malavali (2):
->>  qla2xxx: Queue depth ramp up/down modification changes.
->
-> But this looks like an enhancement
->
-> Which tree did you want these in?  scsi-misc is fine ... if you want
-> them in rc-fixes, I need the enhancement removed.
->
+The patch fixes:
+- setting of the length for mode selects.
+- setting of the data direction for mode select 10.
 
-scsi-misc is fine
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/device_handler/scsi_dh_emc.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> Thanks,
->
-> James
->
->
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index 6196675..63032ec 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -272,7 +272,7 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
+ 	int len = 0;
+ 
+ 	rq = blk_get_request(sdev->request_queue,
+-			(cmd == MODE_SELECT) ? WRITE : READ, GFP_NOIO);
++			(cmd != INQUIRY) ? WRITE : READ, GFP_NOIO);
+ 	if (!rq) {
+ 		sdev_printk(KERN_INFO, sdev, "get_req: blk_get_request failed");
+ 		return NULL;
+@@ -286,14 +286,17 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
+ 		len = sizeof(short_trespass);
+ 		rq->cmd_flags |= REQ_RW;
+ 		rq->cmd[1] = 0x10;
++		rq->cmd[4] = len;
+ 		break;
+ 	case MODE_SELECT_10:
+ 		len = sizeof(long_trespass);
+ 		rq->cmd_flags |= REQ_RW;
+ 		rq->cmd[1] = 0x10;
++		rq->cmd[8] = len;
+ 		break;
+ 	case INQUIRY:
+ 		len = CLARIION_BUFFER_SIZE;
++		rq->cmd[4] = len;
+ 		memset(buffer, 0, len);
+ 		break;
+ 	default:
+@@ -301,7 +304,6 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
+ 		break;
+ 	}
+ 
+-	rq->cmd[4] = len;
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+ 	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
+ 			 REQ_FAILFAST_DRIVER;
+-- 
+1.5.2.1
 
