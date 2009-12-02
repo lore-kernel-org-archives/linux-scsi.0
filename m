@@ -1,82 +1,127 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: PATCH [1/1]: sd_remove() hangs waiting on async_synchronize of
- unrelated threads
-Date: Wed, 02 Dec 2009 09:44:00 -0500
-Message-ID: <1259765040.5430.19.camel@mulgrave.site>
-References: <4B158E7B.3040708@sgi.com>
-	 <1259704166.11762.516.camel@mulgrave.site>  <4B15989C.80108@sgi.com>
-	 <1259707816.11762.539.camel@mulgrave.site>  <4B167942.400@sgi.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1]: qla2xxx: dpc thread can execute before scsi host has
+ been added
+Date: Wed, 02 Dec 2009 09:11:16 -0600
+Message-ID: <4B168394.1050408@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40066 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754618AbZLBOn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2009 09:43:58 -0500
-In-Reply-To: <4B167942.400@sgi.com>
+Received: from relay2.sgi.com ([192.48.179.30]:33746 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754745AbZLBPLL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2009 10:11:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Jeremy Higdon <jeremy@sgi.com>, James Smart <James.Smart@Emulex.Com>
-
-On Wed, 2009-12-02 at 08:27 -0600, Michael Reed wrote:
-> James Bottomley wrote:
-> > On Tue, 2009-12-01 at 16:28 -0600, Michael Reed wrote:
-> >> James Bottomley wrote:
-> >>> On Tue, 2009-12-01 at 15:45 -0600, Michael Reed wrote:
-> >>>> Prevent delays and hangs due to sd_remove() waiting for the completion of
-> >>>> async threads executing sd_probe_async of disks on unrelated host adapters.
-> >>>> This patch executes every sd_probe_async in its own async domain allowing
-> >>>> sd_remove() to wait for just the completion of the async thread associated with
-> >>>> the scsi_disk being removed.
-> >>> This patch was thought of a while ago. Unfortunately, some of the
-> >>> unrelated threads we end up waiting on are libata ones.  you confine sd
-> >>> to only its own probes, we end up unsynchronised with respect to libata
-> >>> probes and we might cause ordering problems amongst the ata devices.
-> >>>
-> >> Isn't sd_remove() only concerned with the removal of a a single scsi_disk?
-> >> Shouldn't libata use reference counting if it has is an issue with a scsi_disk
-> >> being prematurely removed?  Or is this a concern about "sd" naming?  Or something
-> >> else that I admittedly don't understand (but should)?
-> > 
-> > Well, no ... the sync on remove is preventing us removing a device whose
-> > async part is still running.  That async part for libata includes pieces
-> > kicked off from the sd probe.
-> 
-> What does the call stack look like that spawns the async part of libata?
-
-it's in libata-core (and some in ahci) just do a git grep async in
-drivers/ata
-
-> What kind of hardware do I need to demonstrate this?
-
-To demonstrate what?  The out of order sequencing that can arise?  any
-ata based system with > 1 device should do.
-
-There's actually another problem with the previous patch ...
-scsi_wait_scan() also needs to synchronise with the sd probes.
-
-> >> I would truly like to better understand the issue.  Would someone mind expanding
-> >> upon the concern about ata ordering issues associated with the removal of a
-> >> single scsi_disk?
-> > 
-> > The problem isn't removal per se ... it's the fact that remove can't
-> > complete until any async pieces remaining from probe have run. 
-> 
-> Yes, I understand that.  I didn't realize that the sd_probe resulted in any
-> async work other than sd_probe_async().  It does complicate serialization
-> at removal.
-> 
-> I'll try to capture the "motivation" from within my fibre channel centric world
-> for the change and see if anyone's got some ideas on how to resolve the issue.
-
-OK ... actually describing the problem would be helpful.  The async
-schedule is only in sd_remove() to guard against add/remove races ...
-usually when we do removal, the async probing parts should be long
-finished so I don't understand why you think we would be waiting for
-stuff.
-
-James
+To: linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Jeremy Higdon <jeremy@sgi.com>
 
 
+Fix crash in qla2x00_fdmi_register() due to the dpc
+thread executing before the scsi host has been fully
+added.
+
+Unable to handle kernel NULL pointer dereference (address 00000000000001d0)
+qla2xxx_7_dpc[4140]: Oops 8813272891392 [1]
+
+Call Trace:
+ [<a000000100016910>] show_stack+0x50/0xa0
+                                sp=e00000b07c59f930 bsp=e00000b07c591400
+ [<a000000100017180>] show_regs+0x820/0x860
+                                sp=e00000b07c59fb00 bsp=e00000b07c5913a0
+ [<a00000010003bd60>] die+0x1a0/0x2e0
+                                sp=e00000b07c59fb00 bsp=e00000b07c591360
+ [<a0000001000681a0>] ia64_do_page_fault+0x8c0/0x9e0
+                                sp=e00000b07c59fb00 bsp=e00000b07c591310
+ [<a00000010000c8e0>] ia64_native_leave_kernel+0x0/0x270
+                                sp=e00000b07c59fb90 bsp=e00000b07c591310
+ [<a000000207197350>] qla2x00_fdmi_register+0x850/0xbe0 [qla2xxx]
+                                sp=e00000b07c59fd60 bsp=e00000b07c591290
+ [<a000000207171570>] qla2x00_configure_loop+0x1930/0x34c0 [qla2xxx]
+                                sp=e00000b07c59fd60 bsp=e00000b07c591128
+ [<a0000002071732b0>] qla2x00_loop_resync+0x1b0/0x2e0 [qla2xxx]
+                                sp=e00000b07c59fdf0 bsp=e00000b07c5910c0
+ [<a000000207166d40>] qla2x00_do_dpc+0x9a0/0xce0 [qla2xxx]
+                                sp=e00000b07c59fdf0 bsp=e00000b07c590fa0
+ [<a0000001000d5bb0>] kthread+0x110/0x140
+                                sp=e00000b07c59fe00 bsp=e00000b07c590f68
+ [<a000000100014a30>] kernel_thread_helper+0xd0/0x100
+                                sp=e00000b07c59fe30 bsp=e00000b07c590f40
+ [<a00000010000a4c0>] start_kernel_thread+0x20/0x40
+                                sp=e00000b07c59fe30 bsp=e00000b07c590f40
+
+crash> dis a000000207197350
+0xa000000207197350 <qla2x00_fdmi_register+2128>:        [MMI]       ld1 r45=[r14];;
+crash> scsi_qla_host.host 0xe00000b058c73ff8
+  host = 0xe00000b058c73be0,
+crash> Scsi_Host.shost_data 0xe00000b058c73be0
+  shost_data = 0x0,  <<<<<<<<<<<
+
+
+The fc_transport fc_* workqueue threads have yet to be created.
+
+crash> ps | grep _7
+   3891      2   2  e00000b075c80000  IN   0.0       0      0  [scsi_eh_7]
+   4140      2   3  e00000b07c590000  RU   0.0       0      0  [qla2xxx_7_dpc]
+
+The thread creating adding the Scsi_Host is blocked due to other
+activity in sysfs.
+
+crash> bt 3762
+PID: 3762   TASK: e00000b071e70000  CPU: 3   COMMAND: "modprobe"
+ #0 [BSP:e00000b071e71548] schedule at a000000100727e00
+ #1 [BSP:e00000b071e714c8] __mutex_lock_slowpath at a0000001007295a0
+ #2 [BSP:e00000b071e714a8] mutex_lock at a000000100729830
+ #3 [BSP:e00000b071e71478] sysfs_addrm_start at a0000001002584f0
+ #4 [BSP:e00000b071e71440] create_dir at a000000100259350
+ #5 [BSP:e00000b071e71410] sysfs_create_subdir at a000000100259510
+ #6 [BSP:e00000b071e713b0] internal_create_group at a00000010025c880
+ #7 [BSP:e00000b071e71388] sysfs_create_group at a00000010025cc50
+ #8 [BSP:e00000b071e71368] dpm_sysfs_add at a000000100425050
+ #9 [BSP:e00000b071e71310] device_add at a000000100417d90
+#10 [BSP:e00000b071e712d8] scsi_add_host at a00000010045a380
+#11 [BSP:e00000b071e71268] qla2x00_probe_one at a0000002071be950
+#12 [BSP:e00000b071e71248] local_pci_probe at a00000010032e490
+#13 [BSP:e00000b071e71218] pci_device_probe at a00000010032ecd0
+#14 [BSP:e00000b071e711d8] driver_probe_device at a00000010041d480
+#15 [BSP:e00000b071e711a8] __driver_attach at a00000010041d6e0
+#16 [BSP:e00000b071e71170] bus_for_each_dev at a00000010041c240
+#17 [BSP:e00000b071e71150] driver_attach at a00000010041d0a0
+#18 [BSP:e00000b071e71108] bus_add_driver at a00000010041b080
+#19 [BSP:e00000b071e710c0] driver_register at a00000010041dea0
+#20 [BSP:e00000b071e71088] __pci_register_driver at a00000010032f610
+#21 [BSP:e00000b071e71058] (unknown) at a000000207200270
+#22 [BSP:e00000b071e71018] do_one_initcall at a00000010000a9c0
+#23 [BSP:e00000b071e70f98] sys_init_module at a0000001000fef00
+#24 [BSP:e00000b071e70f98] ia64_ret_from_syscall at a00000010000c740
+
+So, it appears that qla2xxx dpc thread is moving forward before the
+scsi host has been completely added.
+
+This patch moves the setting of the init_done (and online) flag to
+after the call to scsi_add_host() to hold off the dpc thread.
+
+Found via large lun count testing using 2.6.31.
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
+
+
+--- linux-2.6.32-rc8/drivers/scsi/qla2xxx/qla_os.c	2009-11-19 16:32:38.000000000 -0600
++++ linux-2.6.32-rc8-modified/drivers/scsi/qla2xxx/qla_os.c	2009-12-02 08:46:04.962724212 -0600
+@@ -2016,13 +2016,13 @@ skip_dpc:
+ 	DEBUG2(printk("DEBUG: detect hba %ld at address = %p\n",
+ 	    base_vha->host_no, ha));
+ 
+-	base_vha->flags.init_done = 1;
+-	base_vha->flags.online = 1;
+-
+ 	ret = scsi_add_host(host, &pdev->dev);
+ 	if (ret)
+ 		goto probe_failed;
+ 
++	base_vha->flags.init_done = 1;
++	base_vha->flags.online = 1;
++
+ 	ha->isp_ops->enable_intrs(ha);
+ 
+ 	scsi_scan_host(host);
