@@ -1,87 +1,36 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH 1/1] lpfc causes hang on SGI ia64 platform
-Date: Thu, 03 Dec 2009 12:02:48 -0600
-Message-ID: <4B17FD48.60005@sgi.com>
-References: <4AB3BD0D.8090902@sgi.com> <4AB3CFC0.7010906@emulex.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
+Date: Thu, 3 Dec 2009 22:17:58 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.0912032214040.23464@uplift.swm.pp.se>
+References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca> <4AA7F965.6020408@garzik.org> <4AF0CFE1.8050407@tomt.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay1.sgi.com ([192.48.179.29]:45208 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753207AbZLCSCn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2009 13:02:43 -0500
-In-Reply-To: <4AB3CFC0.7010906@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756242AbZLCVRx@vger.kernel.org>
+In-Reply-To: <4AF0CFE1.8050407@tomt.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andre Tomt <andre@tomt.net>
+Cc: Jeff Garzik <jeff@garzik.org>, tfjellstrom@shaw.ca, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Smart <James.Smart@Emulex.Com>
 
-Hi James (and James),
+On Wed, 4 Nov 2009, Andre Tomt wrote:
 
-This patch does not yet appear to have been integrated.
+> Identical issues with the AOC-SASLP-MV8 card with 8 Seagate Barracuda 
+> 7200.11 1.5TB drives using the mvsas driver. Creating a md raid array 
+> seems to trigger it nearly instantly, however other loads do not trigger 
+> it as fast (if at all, only tested briefly with paralell dd).
 
-Mike
+Would just like to chime in with a "me too" on this. I've tried both 
+ubuntu 9.10 kernel (2.6.31) and their 10.04 pre-alpha (guess it's 
+2.6.32-rc8) and mvsas + AOC-SASLP-MV8 is pretty much unusable. If I start 
+md creation it stalls immediately and gets nowhere, last time I tried it 
+md claimed it had written 160 blocks then it stalled (all drive LEDs on 
+the controller is constantly lit).
 
+If I boot without drives and then hot-plug the drives, it immediately 
+oops:es.
 
+Any code/fixes I can try, this is a lab machine so I can easily do 
+whatever needed with it...
 
-James Smart wrote:
-> Looks good Mike.
-> 
-> 
-> Acked-by: James Smart <james.smart@emulex.com>
-> 
-> -- james s
-> 
-> Michael Reed wrote:
->> In testing 2.6.31 on one of our ia64 platforms I've encountered a hang
->> due to the driver using hardware ATEs which are a limited resource.
->> This is because the driver does not set the dma consistent mask to
->> 64 bits.
->>
->> Here's a patch against 2.6.31 which addresses the issue.
->>
->> Signed-off-by: Michael Reed <mdr@sgi.com>
->>
->>
->> --- linux-2.6.31-kdb/drivers/scsi/lpfc/lpfc_init.c	2009-09-09 17:13:59.000000000 -0500
->> +++ linux-2.6.31-kdb-modified/drivers/scsi/lpfc/lpfc_init.c	2009-09-11 14:46:34.894488062 -0500
->> @@ -4355,9 +4355,13 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *
->>  		pdev = phba->pcidev;
->>  
->>  	/* Set the device DMA mask size */
->> -	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)
->> -		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0)
->> +	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0
->> +	 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(64)) != 0) {
->> +		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0
->> +		 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(32)) != 0) {
->>  			return error;
->> +		}
->> +	}
->>  
->>  	/* Get the bus address of Bar0 and Bar2 and the number of bytes
->>  	 * required by each mapping.
->> @@ -5911,9 +5915,13 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba
->>  		pdev = phba->pcidev;
->>  
->>  	/* Set the device DMA mask size */
->> -	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)
->> -		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0)
->> +	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0
->> +	 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(64)) != 0) {
->> +		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0
->> +		 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(32)) != 0) {
->>  			return error;
->> +		}
->> +	}
->>  
->>  	/* Get the bus address of SLI4 device Bar0, Bar1, and Bar2 and the
->>  	 * number of bytes required by each mapping. They are actually
->>
->>
->>   
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
