@@ -1,40 +1,32 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 4/5] libata: Report zeroed read after Trim and max discard
- size
-Date: Thu, 03 Dec 2009 18:02:05 -0500
-Message-ID: <4B18436D.4080409@pobox.com>
-References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com>	<1259254843-8326-5-git-send-email-martin.petersen@oracle.com>	<4B0F3186.6000903@teksavvy.com> <yq18wds3a10.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 5/5] libata: Clarify ata_set_lba_range_entries function
+Date: Thu, 03 Dec 2009 18:02:17 -0500
+Message-ID: <4B184379.6000702@pobox.com>
+References: <1259254843-8326-1-git-send-email-martin.petersen@oracle.com> <1259254843-8326-6-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq18wds3a10.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mark Lord <kernel@teksavvy.com>, jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f182.google.com ([209.85.211.182]:53131 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752518AbZLCXCP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2009 18:02:15 -0500
+In-Reply-To: <1259254843-8326-6-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jens.axboe@oracle.com, james.bottomley@hansenpartnership.com, hch@infradead.org, willy@wil.cx, sandeen@redhat.com, rwheeler@redhat.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 11/26/2009 10:46 PM, Martin K. Petersen wrote:
->>>>>> "Mark" == Mark Lord<kernel@teksavvy.com>  writes:
->
-> Mark>  Is that correct, or should it be this:
->
-> Mark>         if (ata_id_has_trim(id)&&  (id[ATA_ID_ADDITIONAL_SUPP]&
-> Mark>         0x4020) == 0x4020)
->
-> Good spotting!  You are right, I need both bits to be set...
->
->
-> libata: Report zeroed read after Trim and max discard size
->
-> Our current Trim payload is a single sector that can accommodate 64 *
-> 65535 blocks being unmapped.  Report this value in the Block Limits
-> Maximum Unmap LBA count field.
->
-> If a storage device supports Trim and the DRAT and RZAT bits are set,
-> report TPRZ=1 in Read Capacity(16).
+On 11/26/2009 12:00 PM, Martin K. Petersen wrote:
+> ata_set_lba_range_entries used the variable max for two different things
+> which was confusing.  Make the function take a buffer size in bytes as
+> argument and return the used buffer size upon completion.
 >
 > Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
+> ---
+>   drivers/ata/libata-scsi.c |    2 +-
+>   include/linux/ata.h       |   20 ++++++++++----------
+>   2 files changed, 11 insertions(+), 11 deletions(-)
 
 applied
 
