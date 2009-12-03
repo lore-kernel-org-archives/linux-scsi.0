@@ -1,46 +1,40 @@
-From: Pravin Bathija <pbathija@amcc.com>
-Subject: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit resources.
-Date: Wed,  2 Dec 2009 17:51:46 -0800
-Message-ID: <1259805106-23636-1-git-send-email-pbathija@amcc.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] lsscsi-0.23 released
+Date: Thu, 03 Dec 2009 02:55:31 +0100
+Message-ID: <4B171A93.2040202@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sdcmail01.amcc.com ([198.137.200.72]:2490 "EHLO
-	sdcmail01.amcc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbZLCBvk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Dec 2009 20:51:40 -0500
+Received: from smtp.infotech.no ([82.134.31.41]:38906 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753735AbZLCBza (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Dec 2009 20:55:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linuxppc-dev@ozlabs.org, jwboyer@linux.vnet.ibm.com, benh@kernel.crashing.org, Eric.Moore@lsi.com, Pravin Bathija <pbathija@amcc.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Matt Taggart <taggart@debian.org>
 
-    Powerpc 44x uses 36 bit real address while the real address defined
-    in MPT Fusion driver is of type 32 bit. This causes ioremap to fail and driver
-    fails to initialize. This fix changes the data types representing the real
-    address from unsigned long 32-bit types to resource_size_t which is 64-bit. The
-    driver has been tested, the disks get discovered correctly and can do IO.
+lsscsi is a utility that uses sysfs in linux 2.6 series kernels
+to list information about SCSI devices and SCSI hosts. Both a
+compact format which is one line per device and a "classic"
+format (like the output of 'cat /proc/scsi/scsi') are supported.
 
-Signed-off-by: Pravin Bathija <pbathija@amcc.com>
-Acked-by: Feng Kan <fkan@amcc.com>
-Acked-by: Fushen Chen <fchen@amcc.com>
-Acked-by: Loc Ho <lho@amcc.com>
-Acked-by: Tirumala Reddy Marri <tmarri@amcc.com>
-Acked-by: Victor Gallardo <vgallardo@amcc.com>
----
- drivers/message/fusion/mptbase.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Version 0.23 is available at
+http://sg.danny.cz/scsi/lsscsi.html
+More information can be found on that page including examples
+and a Download section for tarballs, rpm** and deb packages.
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 5d496a9..9f14a60 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1511,7 +1511,7 @@ mpt_mapresources(MPT_ADAPTER *ioc)
- {
- 	u8		__iomem *mem;
- 	int		 ii;
--	unsigned long	 mem_phys;
-+	resource_size_t	 mem_phys;
- 	unsigned long	 port;
- 	u32		 msize;
- 	u32		 psize;
--- 
-1.5.5
+ChangeLog:
+Version 0.23 2009/12/01 [svn: r76]
+   - remove /proc/mounts scan for sysfs mount point, assume
+     /sys unless overridden by re-instated '--sysfsroot' option
+Version 0.22 2008/12/26 [svn: r71]
+...
 
+
+** The rpm and srpm packages are not currently there but will
+    appear in the next day or so. They can be built from the
+    lsscsi.spec file in the appropriate environment.
+
+Doug Gilbert
