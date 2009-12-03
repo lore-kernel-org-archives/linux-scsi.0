@@ -1,40 +1,60 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] lsscsi-0.23 released
-Date: Thu, 03 Dec 2009 02:55:31 +0100
-Message-ID: <4B171A93.2040202@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit
+	resources.
+Date: Thu, 03 Dec 2009 13:59:50 +1100
+Message-ID: <1259809190.2076.1194.camel@pasglop>
+References: <1259805106-23636-1-git-send-email-pbathija@amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:38906 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753735AbZLCBza (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Dec 2009 20:55:30 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1259805106-23636-1-git-send-email-pbathija@amcc.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@lists.ozlabs.org
+To: Pravin Bathija <pbathija@amcc.com>
+Cc: linuxppc-dev@ozlabs.org, Eric.Moore@lsi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Matt Taggart <taggart@debian.org>
 
-lsscsi is a utility that uses sysfs in linux 2.6 series kernels
-to list information about SCSI devices and SCSI hosts. Both a
-compact format which is one line per device and a "classic"
-format (like the output of 'cat /proc/scsi/scsi') are supported.
+On Wed, 2009-12-02 at 17:51 -0800, Pravin Bathija wrote:
+> Powerpc 44x uses 36 bit real address while the real address defined
+>     in MPT Fusion driver is of type 32 bit. This causes ioremap to fail and driver
+>     fails to initialize. This fix changes the data types representing the real
+>     address from unsigned long 32-bit types to resource_size_t which is 64-bit. The
+>     driver has been tested, the disks get discovered correctly and can do IO.
+> 
+> Signed-off-by: Pravin Bathija <pbathija@amcc.com>
 
-Version 0.23 is available at
-http://sg.danny.cz/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for tarballs, rpm** and deb packages.
+Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+---
 
-ChangeLog:
-Version 0.23 2009/12/01 [svn: r76]
-   - remove /proc/mounts scan for sysfs mount point, assume
-     /sys unless overridden by re-instated '--sysfsroot' option
-Version 0.22 2008/12/26 [svn: r71]
-...
+James, this one should be good ;-)
 
-
-** The rpm and srpm packages are not currently there but will
-    appear in the next day or so. They can be built from the
-    lsscsi.spec file in the appropriate environment.
-
-Doug Gilbert
+> Acked-by: Feng Kan <fkan@amcc.com>
+> Acked-by: Fushen Chen <fchen@amcc.com>
+> Acked-by: Loc Ho <lho@amcc.com>
+> Acked-by: Tirumala Reddy Marri <tmarri@amcc.com>
+> Acked-by: Victor Gallardo <vgallardo@amcc.com>
+> ---
+>  drivers/message/fusion/mptbase.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index 5d496a9..9f14a60 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -1511,7 +1511,7 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+>  {
+>  	u8		__iomem *mem;
+>  	int		 ii;
+> -	unsigned long	 mem_phys;
+> +	resource_size_t	 mem_phys;
+>  	unsigned long	 port;
+>  	u32		 msize;
+>  	u32		 psize;
