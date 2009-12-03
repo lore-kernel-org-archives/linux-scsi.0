@@ -1,57 +1,87 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH] [SCSI] megaraid_sas: remove sysfs dbg_lvl world
- writeable permissions
-Date: Thu, 3 Dec 2009 08:01:16 -0700
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3B78D7030@cosmail02.lsi.com>
-References: <1259767064-13738-1-git-send-email-cdahlin@redhat.com>,<4B170174.5030805@redhat.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH 1/1] lpfc causes hang on SGI ia64 platform
+Date: Thu, 03 Dec 2009 12:02:48 -0600
+Message-ID: <4B17FD48.60005@sgi.com>
+References: <4AB3BD0D.8090902@sgi.com> <4AB3CFC0.7010906@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:51475 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756125AbZLCPCY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2009 10:02:24 -0500
-In-Reply-To: <4B170174.5030805@redhat.com>
-Content-Language: en-US
+Received: from relay1.sgi.com ([192.48.179.29]:45208 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753207AbZLCSCn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Dec 2009 13:02:43 -0500
+In-Reply-To: <4AB3CFC0.7010906@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eugene Teo <eteo@redhat.com>, Casey Dahlin <cdahlin@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Bryn M. Reeves" <bmr@redhat.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Yang Hongyang <yanghy@cn.fujitsu.com>, Anand Gadiyar <gadiyar@ti.com>, Jiri Kosina <jkosina@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Smart <James.Smart@Emulex.Com>
 
-How do you turn on poll_mode_io?
+Hi James (and James),
 
-Thanks,
+This patch does not yet appear to have been integrated.
 
-Bo Yang
+Mike
 
-________________________________________
-From: Eugene Teo [eteo@redhat.com]
-Sent: Wednesday, December 02, 2009 7:08 PM
-To: Casey Dahlin
-Cc: linux-kernel@vger.kernel.org; Bryn M. Reeves; DL-MegaRAID Linux; James E.J. Bottomley; Andrew Morton; Yang Hongyang; Anand Gadiyar; Jiri Kosina; linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] [SCSI] megaraid_sas: remove sysfs dbg_lvl world writeable permissions
 
-On 12/02/2009 11:17 PM, Casey Dahlin wrote:
-> From: Bryn M. Reeves<bmr@redhat.com>
->
-> /sys/bus/pci/drivers/megaraid_sas/poll_mode_io defaults to being
-> world-writable, which seems bad (letting any user affect kernel driver
-> behavior).
->
-> This turns off group and user write permissions, so that on typical
-> production systems only root can write to it.
->
-> Signed-off-by: Bryn M. Reeves<bmr@redhat.com>
-> Signed-off-by: Casey Dahlin<cdahlin@redhat.com>
 
-CC: Eugene Teo <eteo@redhat.com>
-
-The subject should read: megaraid_sas: remove poll_mode_io world
-writeable permissions instead, and this has been assigned with
-CVE-2009-3939.
-
-Thanks, Eugene
---
-Eugene Teo / Red Hat Security Response Team
+James Smart wrote:
+> Looks good Mike.
+> 
+> 
+> Acked-by: James Smart <james.smart@emulex.com>
+> 
+> -- james s
+> 
+> Michael Reed wrote:
+>> In testing 2.6.31 on one of our ia64 platforms I've encountered a hang
+>> due to the driver using hardware ATEs which are a limited resource.
+>> This is because the driver does not set the dma consistent mask to
+>> 64 bits.
+>>
+>> Here's a patch against 2.6.31 which addresses the issue.
+>>
+>> Signed-off-by: Michael Reed <mdr@sgi.com>
+>>
+>>
+>> --- linux-2.6.31-kdb/drivers/scsi/lpfc/lpfc_init.c	2009-09-09 17:13:59.000000000 -0500
+>> +++ linux-2.6.31-kdb-modified/drivers/scsi/lpfc/lpfc_init.c	2009-09-11 14:46:34.894488062 -0500
+>> @@ -4355,9 +4355,13 @@ lpfc_sli_pci_mem_setup(struct lpfc_hba *
+>>  		pdev = phba->pcidev;
+>>  
+>>  	/* Set the device DMA mask size */
+>> -	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)
+>> -		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0)
+>> +	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0
+>> +	 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(64)) != 0) {
+>> +		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0
+>> +		 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(32)) != 0) {
+>>  			return error;
+>> +		}
+>> +	}
+>>  
+>>  	/* Get the bus address of Bar0 and Bar2 and the number of bytes
+>>  	 * required by each mapping.
+>> @@ -5911,9 +5915,13 @@ lpfc_sli4_pci_mem_setup(struct lpfc_hba
+>>  		pdev = phba->pcidev;
+>>  
+>>  	/* Set the device DMA mask size */
+>> -	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)
+>> -		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0)
+>> +	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0
+>> +	 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(64)) != 0) {
+>> +		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0
+>> +		 || pci_set_consistent_dma_mask(pdev,DMA_BIT_MASK(32)) != 0) {
+>>  			return error;
+>> +		}
+>> +	}
+>>  
+>>  	/* Get the bus address of SLI4 device Bar0, Bar1, and Bar2 and the
+>>  	 * number of bytes required by each mapping. They are actually
+>>
+>>
+>>   
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
