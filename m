@@ -1,70 +1,57 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: RE: [PATCH] [SCSI] mpt fusion: Fix 32 bit platforms with 64 bit
- resources.
-Date: Fri, 04 Dec 2009 10:48:38 +1100
-Message-ID: <1259884118.2076.1232.camel@pasglop>
-References: <1259805106-23636-1-git-send-email-pbathija@amcc.com>
-	 <20091203085628.5140FE6D391@gemini.denx.de>
-	 <9D1E2BDCB5C57B46B56E6D80843439EB097BB063@SDCEXCHANGE01.ad.amcc.com>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: be2iscsi: Merging multiple patches and new ones
+Date: Fri, 4 Dec 2009 08:46:26 +0530
+Message-ID: <20091204031614.GA5947@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:37376 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753155AbZLCXtE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Dec 2009 18:49:04 -0500
-In-Reply-To: <9D1E2BDCB5C57B46B56E6D80843439EB097BB063@SDCEXCHANGE01.ad.amcc.com>
+Received: from segment-124-30.sify.net ([124.30.166.146]:6441 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751728AbZLDDQO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2009 22:16:14 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pravin Bathija <pbathija@amcc.com>
-Cc: Wolfgang Denk <wd@denx.de>, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Eric.Moore@lsi.com, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-On Thu, 2009-12-03 at 15:21 -0800, Pravin Bathija wrote:
-> Hi Wolfgang,
+Hi James
 
- .../...
+    There are multiple patches from me that are floating around and Mike
+had wanted me to submit individual patches for every issue.
+
+I have gone ahead and redone all the patches and added some more fixes/features.
+So, pl ignore all my previous patches that have not been applied yet.
  
-> > I'm not sure if this one-liner really covers all the related issues.
-> > We submitted a similar (but apparently more complete) patch more than
-> > a year ago. Dunno why it has never been picked up. See
-> > http://thread.gmane.org/gmane.linux.scsi/46082 for reference.
-> > 
-> 
-> I submitted a patch on similar lines several weeks ago and it wasn't
-> accepted on grounds that it was too tied to the powerpc platform. Below
-> is a link
-> 
-> http://article.gmane.org/gmane.linux.scsi/55794
+These patches are made on your latest scsi-misc tree pulled today
 
-I believe the simple patch is fine. But only testing can tell, so it's
-up to you guys to test it :-)
+The patches are
 
-None of the churn related to PIO that was in the previous patches is
-necessary.
+[0001/15] :	Usei start cid and number of cid and icd from FW
+[0002/15] :	Move freeing of resources to stop_conn
+[0003/15] :	Link Wrb with next Wrb
+[0004/15] :	Added opcode for ISCSI_OP_LOGOUT_RSP, ISCSI_OP_SCSI_TMFUNC_RSP
+[0005/15] :	be2iscsi moved pci_set_drvdata to inside beiscsi_hba	
+[0006/15] :	Use of opcode in beiscsi_alloc_pdu
+[0007/15] :	This patch decides whether ack based completion is required or not
+[0008/15] :	removes the endianess change that was wrongly
+				added for data_count	
+[0009/15] :	removes index from alloc_wrb_index
+[0010/15] :	Enables support for TEXT RESPONSE processing
+[0011/15] :	enables async mode for mcc rings so that
+				multiple requests can be queued
+[0012/15] :	Fixed a bug where LinUP killed sessions
+[0013/15] :	Removed BUG_ON from Async Notifications from the chip
+[0014/15] :	Fixes a bug where can_queue was not initiallized. Found by Mike Christie
+[0015/15] :	Enables TEXT Request / Response processing
 
-PIO on powerpc "appears" to work just like x86, the illusion is
-maintained by the arch code. PIO resources always fit inside 32-bit,
-never need to be ioremapped etc... so as long as you use the result of
-pci_resource_start() and pass that (or an offset from that) to
-inb/outb/intw/outw... PIO should just work, no change is required to the
-driver. IE. PIO resources don't contain physical addresses. The powerpc
-PCI code puts in there an offset from _IO_BASE to an already ioremapped
-area mapping the PCI host bridge IO space. It can use funky pointer
-arithmetic so don't be surprised if the values look like negative 32-bit
-ints, but it should just work.
 
-The only problem I can see with the driver, which is fixed by the simple
-patch, is that for -MMIO-, the resources (which in the case of MMIO do
-contain physical addresses) can be >32 bit, and thus must be stored into
-a type of the right size before being passed to ioremap(). This is what
-the one-liner patch does and according to the patch author, it was
-tested and appears to work.
+Thank You
 
-So I'm happy with the one liner patch. If you have more concerns, please
-explain precisely what you believe will not work :-)
+Jayamohan Kallickal
 
-Cheers,
-Ben.
+Signed-off-by:  Jayamohan Kallickal <jayamohank@serverengines.com>
 
+---
 
