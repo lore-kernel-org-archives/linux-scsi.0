@@ -1,41 +1,111 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH 1/1] lpfc: lpfc no longer discovers lun 255
-Date: Fri, 04 Dec 2009 10:04:10 -0600
-Message-ID: <4B1932FA.7080407@sgi.com>
+From: Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH 1/1] cxgb3i: Fix a login over vlan issue
+Date: Fri,  4 Dec 2009 16:34:25 +0530
+Message-ID: <1259924665-2301-1-git-send-email-rakesh@chelsio.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay3.sgi.com ([192.48.152.1]:41494 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757017AbZLDQEF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Dec 2009 11:04:05 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <38UUZSwYLCpsM5F9NC7C9GNDJ.7JHJK9I-DN7NDBJJBG9BMJPKN.7JH-JX7+OpRa80S8N/ZHIG5xj07CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=>,
+	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=>,
+	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Cc: swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Smart <James.Smart@Emulex.Com>
 
-A change in lun scanning range in scsi_scan.c ( ">" becomes ">=") results
-in lpfc no longer discovering lun 255 of my test configuration.  This
-patch adjusts lpfc_attr.c to discover lun 255 again.
+Fix a login over vlan issue, when parent interface is vlan and we are using cxgb3i sepecific
+private ip address in '/etc/iscsi/ifaces/' iface file.
 
-scsi: host 3 channel 0 id 17 lun255 has a LUN larger than allowed by the host adapter
+Acked-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+---
+ drivers/scsi/cxgb3i/cxgb3i_offload.c |   34 +++++++++++++++++++++++++++++++++-
+ 1 files changed, 33 insertions(+), 1 deletions(-)
 
-
-Signed-off-by: Michael Reed <mdr@sgi.com>
-
-
---- scsi-misc-2.6/drivers/scsi/lpfc/lpfc_attr.c	2009-12-01 16:18:40.000000000 -0600
-+++ scsi-misc-2.6-modified/drivers/scsi/lpfc/lpfc_attr.c	2009-12-04 10:01:52.091503203 -0600
-@@ -3099,10 +3099,10 @@ LPFC_VPORT_ATTR(discovery_threads, 32, 1
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+index c1d5be4..66d52e4 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+@@ -1440,6 +1440,10 @@ void cxgb3i_c3cn_release(struct s3_conn *c3cn)
+ static int is_cxgb3_dev(struct net_device *dev)
+ {
+ 	struct cxgb3i_sdev_data *cdata;
++	struct net_device *ndev = dev;
++
++	if (dev->priv_flags & IFF_802_1Q_VLAN)
++		ndev = vlan_dev_real_dev(dev);
  
- /*
- # lpfc_max_luns: maximum allowed LUN.
--# Value range is [0,65535]. Default value is 255.
-+# Value range is [0,65535]. Default value is 256, 1 greater than max lun number.
- # NOTE: The SCSI layer might probe all allowed LUN on some old targets.
- */
--LPFC_VPORT_ATTR_R(max_luns, 255, 0, 65535, "Maximum allowed LUN");
-+LPFC_VPORT_ATTR_R(max_luns, 256, 0, 65535, "Maximum allowed LUN");
+ 	write_lock(&cdata_rwlock);
+ 	list_for_each_entry(cdata, &cdata_list, list) {
+@@ -1447,7 +1451,7 @@ static int is_cxgb3_dev(struct net_device *dev)
+ 		int i;
  
- /*
- # lpfc_poll_tmo: .Milliseconds driver will wait between polling FCP ring.
+ 		for (i = 0; i < ports->nports; i++)
+-			if (dev == ports->lldevs[i]) {
++			if (ndev == ports->lldevs[i]) {
+ 				write_unlock(&cdata_rwlock);
+ 				return 1;
+ 			}
+@@ -1566,6 +1570,26 @@ out_err:
+ 	return -1;
+ }
+ 
++/**
++ * cxgb3i_find_dev - find the interface associated with the given address
++ * @ipaddr: ip address
++ */
++static struct net_device *
++cxgb3i_find_dev(__be32 ipaddr)
++{
++	struct flowi fl;
++	int err;
++	struct rtable *rt;
++
++	memset(&fl, 0, sizeof(fl));
++	fl.nl_u.ip4_u.daddr = ipaddr;
++
++	err = ip_route_output_key(&init_net, &rt, &fl);
++	if (!err)
++		return (&rt->u.dst)->dev;
++
++	return NULL;
++}
+ 
+ /**
+  * cxgb3i_c3cn_connect - initiates an iscsi tcp connection to a given address
+@@ -1581,6 +1605,7 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
+ 	struct cxgb3i_sdev_data *cdata;
+ 	struct t3cdev *cdev;
+ 	__be32 sipv4;
++	struct net_device *dstdev;
+ 	int err;
+ 
+ 	c3cn_conn_debug("c3cn 0x%p, dev 0x%p.\n", c3cn, dev);
+@@ -1591,6 +1616,13 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
+ 	c3cn->daddr.sin_port = usin->sin_port;
+ 	c3cn->daddr.sin_addr.s_addr = usin->sin_addr.s_addr;
+ 
++	dstdev = cxgb3i_find_dev(usin->sin_addr.s_addr);
++	if (!dstdev || !is_cxgb3_dev(dstdev))
++		return -ENETUNREACH;
++
++	if (dstdev->priv_flags & IFF_802_1Q_VLAN)
++		dev = dstdev;
++
+ 	rt = find_route(dev, c3cn->saddr.sin_addr.s_addr,
+ 			c3cn->daddr.sin_addr.s_addr,
+ 			c3cn->saddr.sin_port,
+-- 
+1.6.0.6
+
+--
+
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
