@@ -1,65 +1,41 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] mac_esp: fix PIO mode
-Date: Fri, 04 Dec 2009 09:31:24 -0600
-Message-ID: <1259940684.2701.8.camel@mulgrave.site>
-References: <alpine.OSX.2.00.0911231452300.468@localhost>
-	 <20091202.154045.142858043.davem@davemloft.net>
-	 <alpine.OSX.2.00.0912042321220.596@localhost>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1] lpfc: lpfc no longer discovers lun 255
+Date: Fri, 04 Dec 2009 10:04:10 -0600
+Message-ID: <4B1932FA.7080407@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.OSX.2.00.0912042321220.596@localhost>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay3.sgi.com ([192.48.152.1]:41494 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757017AbZLDQEF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Dec 2009 11:04:05 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Smart <James.Smart@Emulex.Com>
 
-On Fri, 2009-12-04 at 23:58 +1100, Finn Thain wrote:
-> On Wed, 2 Dec 2009, David Miller wrote:
-> 
-> ...
-> > 
-> > Can you explain why the esp_slave_configure() part of your patch is 
-> > necessary?
-> > 
-> > > Index: linux-2.6.31/drivers/scsi/esp_scsi.c
-> > > ===================================================================
-> > > --- linux-2.6.31.orig/drivers/scsi/esp_scsi.c	2009-11-23 12:52:45.000000000 +1100
-> > > +++ linux-2.6.31/drivers/scsi/esp_scsi.c	2009-11-23 12:53:30.000000000 +1100
-> > > @@ -2405,12 +2405,6 @@ static int esp_slave_configure(struct sc
-> > >  	struct esp_target_data *tp = &esp->target[dev->id];
-> > >  	int goal_tags, queue_depth;
-> > >  
-> > > -	if (esp->flags & ESP_FLAG_DISABLE_SYNC) {
-> > > -		/* Bypass async domain validation */
-> > > -		dev->ppr  = 0;
-> > > -		dev->sdtr = 0;
-> > > -	}
-> > > -
-> > >  	goal_tags = 0;
-> > >  
-> > >  	if (dev->tagged_supported) {
-> > > @@ -2433,6 +2427,11 @@ static int esp_slave_configure(struct sc
-> > >  	}
-> > >  	tp->flags |= ESP_TGT_DISCONNECT;
-> > >  
-> > > +	if (esp->flags & ESP_FLAG_DISABLE_SYNC) {
-> > > +		dev->wdtr = spi_support_wide(dev->sdev_target) = 0;
-> > > +		dev->sdtr = spi_support_sync(dev->sdev_target) = 0;
-> > > +	}
-> > > +
-> > >  	if (!spi_initial_dv(dev->sdev_target))
-> > >  		spi_dv_device(dev);
-> > >  
-> 
-> The aim is that domain validation will not test for sync when we know it 
-> can't work (in PIO mode). This is the result:
+A change in lun scanning range in scsi_scan.c ( ">" becomes ">=") results
+in lpfc no longer discovering lun 255 of my test configuration.  This
+patch adjusts lpfc_attr.c to discover lun 255 again.
 
-So this isn't the correct way to handle the problem.  You're altering
-the disk capability flags to trick the transport class.  What you want
-to be doing is updating esp_set_period so it won't go under whatever you
-deem to be a correct period setting (or if it's really async then it
-won't set the period at all).
+scsi: host 3 channel 0 id 17 lun255 has a LUN larger than allowed by the host adapter
 
-James
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
+
+
+--- scsi-misc-2.6/drivers/scsi/lpfc/lpfc_attr.c	2009-12-01 16:18:40.000000000 -0600
++++ scsi-misc-2.6-modified/drivers/scsi/lpfc/lpfc_attr.c	2009-12-04 10:01:52.091503203 -0600
+@@ -3099,10 +3099,10 @@ LPFC_VPORT_ATTR(discovery_threads, 32, 1
+ 
+ /*
+ # lpfc_max_luns: maximum allowed LUN.
+-# Value range is [0,65535]. Default value is 255.
++# Value range is [0,65535]. Default value is 256, 1 greater than max lun number.
+ # NOTE: The SCSI layer might probe all allowed LUN on some old targets.
+ */
+-LPFC_VPORT_ATTR_R(max_luns, 255, 0, 65535, "Maximum allowed LUN");
++LPFC_VPORT_ATTR_R(max_luns, 256, 0, 65535, "Maximum allowed LUN");
+ 
+ /*
+ # lpfc_poll_tmo: .Milliseconds driver will wait between polling FCP ring.
