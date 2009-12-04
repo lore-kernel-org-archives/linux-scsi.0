@@ -1,90 +1,60 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 03/15] be2iscsi: Link Wrb with next Wrb
-Date: Fri, 4 Dec 2009 08:48:57 +0530
-Message-ID: <20091204031848.GA6035@serverengines.com>
+Subject: [PATCH 04/15] be2iscsi: Added opcode for ISCSI_OP_LOGOUT_RSP,
+ ISCSI_OP_SCSI_TMFUNC_RSP
+Date: Fri, 4 Dec 2009 08:49:50 +0530
+Message-ID: <20091204031940.GA6057@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:6581 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:6644 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753374AbZLDDSn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2009 22:18:43 -0500
+	by vger.kernel.org with ESMTP id S1753429AbZLDDTg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Dec 2009 22:19:36 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-     This patch will link the current allocated wrb with the next
- wrb that will be allocated. This is a requirement from the chip.
+	This patch adds opcodes in thecompletion path that were
+missed out earlier
 
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   19 ++++++++++---------
- 1 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 1390023..ac76b14 100644
+index ac76b14..b24be79 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -629,29 +629,30 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
-  * alloc_wrb_handle - To allocate a wrb handle
-  * @phba: The hba pointer
-  * @cid: The cid to use for allocation
-- * @index: index allocation and wrb index
-  *
-  * This happens under session_lock until submission to chip
-  */
--struct wrb_handle *alloc_wrb_handle(struct beiscsi_hba *phba, unsigned int cid,
--				    int index)
-+struct wrb_handle *alloc_wrb_handle(struct beiscsi_hba *phba, unsigned int cid)
- {
- 	struct hwi_wrb_context *pwrb_context;
- 	struct hwi_controller *phwi_ctrlr;
--	struct wrb_handle *pwrb_handle;
-+	struct wrb_handle *pwrb_handle, *pwrb_handle_tmp;
+@@ -810,6 +810,7 @@ be_complete_logout(struct beiscsi_conn *beiscsi_conn,
+ 	struct iscsi_conn *conn = beiscsi_conn->conn;
  
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	pwrb_context = &phwi_ctrlr->wrb_context[cid];
--	if (pwrb_context->wrb_handles_available) {
-+	if (pwrb_context->wrb_handles_available >= 2) {
- 		pwrb_handle = pwrb_context->pwrb_handle_base[
- 					    pwrb_context->alloc_index];
- 		pwrb_context->wrb_handles_available--;
--		pwrb_handle->nxt_wrb_index = pwrb_handle->wrb_index;
- 		if (pwrb_context->alloc_index ==
- 						(phba->params.wrbs_per_cxn - 1))
- 			pwrb_context->alloc_index = 0;
- 		else
- 			pwrb_context->alloc_index++;
-+
-+		pwrb_handle_tmp = pwrb_context->pwrb_handle_base[
-+						pwrb_context->alloc_index];
-+		pwrb_handle->nxt_wrb_index = pwrb_handle_tmp->wrb_index;
- 	} else
- 		pwrb_handle = NULL;
- 	return pwrb_handle;
-@@ -3206,7 +3207,7 @@ beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
- 	 * login/startup related tasks.
- 	 */
- 	pwrb_handle = alloc_wrb_handle(phba, (beiscsi_conn->beiscsi_conn_cid -
--				       phba->fw_config.iscsi_cid_start), 0);
-+				       phba->fw_config.iscsi_cid_start));
- 	pwrb = (struct iscsi_target_context_update_wrb *)pwrb_handle->pwrb;
- 	memset(pwrb, 0, sizeof(*pwrb));
- 	AMAP_SET_BITS(struct amap_iscsi_target_context_update_wrb,
-@@ -3316,8 +3317,8 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 	io_task->libiscsi_itt = (itt_t)task->itt;
- 	io_task->pwrb_handle = alloc_wrb_handle(phba,
- 						beiscsi_conn->beiscsi_conn_cid -
--						phba->fw_config.iscsi_cid_start,
--						task->itt);
-+						phba->fw_config.iscsi_cid_start
-+						);
- 	io_task->conn = beiscsi_conn;
+ 	hdr = (struct iscsi_logout_rsp *)task->hdr;
++	hdr->opcode = ISCSI_OP_LOGOUT_RSP;
+ 	hdr->t2wait = 5;
+ 	hdr->t2retain = 0;
+ 	hdr->flags = ((psol->dw[offsetof(struct amap_sol_cqe, i_flags) / 32]
+@@ -824,6 +825,9 @@ be_complete_logout(struct beiscsi_conn *beiscsi_conn,
+ 					& SOL_EXP_CMD_SN_MASK) +
+ 			((psol->dw[offsetof(struct amap_sol_cqe, i_cmd_wnd)
+ 					/ 32] & SOL_CMD_WND_MASK) >> 24) - 1);
++	hdr->dlength[0] = 0;
++	hdr->dlength[1] = 0;
++	hdr->dlength[2] = 0;
+ 	hdr->hlength = 0;
+ 	hdr->itt = io_task->libiscsi_itt;
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)hdr, NULL, 0);
+@@ -838,6 +842,7 @@ be_complete_tmf(struct beiscsi_conn *beiscsi_conn,
+ 	struct beiscsi_io_task *io_task = task->dd_data;
  
- 	task->hdr = (struct iscsi_hdr *)&io_task->cmd_bhs->iscsi_hdr;
+ 	hdr = (struct iscsi_tm_rsp *)task->hdr;
++	hdr->opcode = ISCSI_OP_SCSI_TMFUNC_RSP;
+ 	hdr->flags = ((psol->dw[offsetof(struct amap_sol_cqe, i_flags) / 32]
+ 					& SOL_FLAGS_MASK) >> 24) | 0x80;
+ 	hdr->response = (psol->dw[offsetof(struct amap_sol_cqe, i_resp) /
 -- 
 1.6.4
 
