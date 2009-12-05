@@ -1,56 +1,40 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
-Date: Sat, 5 Dec 2009 11:54:21 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.0912051116400.23464@uplift.swm.pp.se>
-References: <200909090414.41274.tfjellstrom@shaw.ca> <200909091030.13147.tfjellstrom@shaw.ca>  <4AA7F965.6020408@garzik.org> <4AF0CFE1.8050407@tomt.net>  <alpine.DEB.1.10.0912032214040.23464@uplift.swm.pp.se> <73e903670912031336n749c0bb4l5f2e46d5347e5875@mail.gmail.com>
-  <alpine.DEB.1.10.0912041952370.23464@uplift.swm.pp.se> <73e903670912041108o32c28af3q5a61e5a2e33edd0a@mail.gmail.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] potential null deref in lpfc_els.c
+Date: Sat, 5 Dec 2009 14:35:19 +0200
+Message-ID: <20091205123519.GF5224@bicker>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-137064504-360227408-1260008334=:23464"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <73e903670912041108o32c28af3q5a61e5a2e33edd0a@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: =?ISO-8859-15?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ey-out-2122.google.com ([74.125.78.25]:58453 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754670AbZLEMgG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Dec 2009 07:36:06 -0500
+Received: by ey-out-2122.google.com with SMTP id d26so796787eyd.19
+        for <linux-scsi@vger.kernel.org>; Sat, 05 Dec 2009 04:36:11 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: james.smart@emulex.com, James.Bottomley@suse.de
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This patch is against 2.6.32-rc8.
 
----137064504-360227408-1260008334=:23464
-Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-15; FORMAT=flowed
-Content-Transfer-Encoding: 8BIT
+The issue was found by a static checker.  If cmd == ELS_CMD_PLOGI, it
+is possible for ndlp to be NULL.  We do check ndlp further down the 
+function so that would also indicate that we should check ndlp here.
 
-On Fri, 4 Dec 2009, Kristleifur Daðason wrote:
+Compile tested.
 
-> Cheers for trying them out! For the record, I think they were made
-> against 2.6.31, perhaps the original 2.6.31 rather than later 2.6.31.x
-> releases.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-It doesn't apply cleanly against vanilla 2.6.31, it does however apply 
-cleanly against vanilla 2.6.32, but with the following compile error:
-
-drivers/scsi/mvsas/mv_sas.c: In function âmvs_slave_configureâ:
-drivers/scsi/mvsas/mv_sas.c:417: error: âSCSI_QDEPTH_DEFAULTâ undeclared 
-(first use in this function)
-drivers/scsi/mvsas/mv_sas.c:417: error: (Each undeclared identifier is 
-reported only once
-drivers/scsi/mvsas/mv_sas.c:417: error: for each function it appears in.)
-drivers/scsi/mvsas/mv_sas.c:417: error: too many arguments to function 
-âsas_change_queue_depthâ
-make[4]: *** [drivers/scsi/mvsas/mv_sas.o] Error 1
-
-When removing this extra option, it compiles with vanilla 2.6.32 just 
-fine. I crashes the same way as the ubuntu kernel when hot-plugging a disk 
-as well (this time I did it without gdm/x running and it oopses, but 
-unfortunately the highest part of the oops scrolled off). It's 100% 
-reproducible anyway, so basically the controller is a no-go in 2.6.31.6 
-and 2.6.32 both vanilla and ubuntu versions, both without and including 
-the nov09 mvsas patch (at least the original version of the patch as 
-posted). Different failure scenarios though... With the stock kernel the 
-controller seems to get stuck in writing and nothing more happens but at 
-least the machine doesn't crash and burn like it does with the 
-mvsas-patch.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
----137064504-360227408-1260008334=:23464--
+--- orig/drivers/scsi/lpfc/lpfc_els.c	2009-12-05 10:52:02.000000000 +0200
++++ devel/drivers/scsi/lpfc/lpfc_els.c	2009-12-05 11:43:49.000000000 +0200
+@@ -2548,7 +2548,7 @@ lpfc_els_retry(struct lpfc_hba *phba, st
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+ 		"Retry ELS:       wd7:x%x wd4:x%x did:x%x",
+-		*(((uint32_t *) irsp) + 7), irsp->un.ulpWord[4], ndlp->nlp_DID);
++		*(((uint32_t *) irsp) + 7), irsp->un.ulpWord[4], (ndlp ? ndlp->nlp_DID : 0));
+ 
+ 	switch (irsp->ulpStatus) {
+ 	case IOSTAT_FCP_RSP_ERROR:
