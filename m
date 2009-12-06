@@ -1,8 +1,7 @@
 From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 3/4] scsi: megaraid_sas -  driver fixed the device update
- issue
-Date: Sun, 6 Dec 2009 08:39:25 -0700
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3B7EAC2CC@cosmail02.lsi.com>
+Subject: [PATCH 4/4] scsi: megaraid_sas - version and documentation update
+Date: Sun, 6 Dec 2009 08:42:28 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3B7EAC2CE@cosmail02.lsi.com>
 References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
  <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
  <4B6A08C587958942AA3002690DD4F8C3B7EAC2C7@cosmail02.lsi.com>
@@ -10,192 +9,72 @@ References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:38741 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933831AbZLFPja convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Dec 2009 10:39:30 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933878AbZLFPmc@vger.kernel.org>
 In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3B7EAC2C9@cosmail02.lsi.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Yang, Bo" <Bo.Yang@lsi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Austria, Winston" <Winston.Austria@lsi.com>, "Mukker, Atul" <Atul.Mukker@lsi.com>
+List-Id: linux-scsi@vger.kernel.org
 
-driver fixed the device update issue after get the AEN PD delete/ADD and LD add/delete from FW.
+Update the version and documentation.
 
 Signed-off-by Bo Yang<bo.yang@lsi.com>
 
 ---
-megaraid_sas.c |  142 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 142 insertions(+)
+Documentation/scsi/ChangeLog.megaraid_sas |   16 ++++++++++++++++
+ drivers/scsi/megaraid/megaraid_sas.c      |    2 +-
+ drivers/scsi/megaraid/megaraid_sas.h      |    6 +++---
+ 3 files changed, 20 insertions(+), 4 deletions(-)
 
+diff -rupN old/Documentation/scsi/ChangeLog.megaraid_sas new/Documentation/scsi/ChangeLog.megaraid_sas
+--- old/Documentation/scsi/ChangeLog.megaraid_sas	2009-12-06 04:53:06.000000000 -0500
++++ new/Documentation/scsi/ChangeLog.megaraid_sas	2009-12-06 05:10:00.000000000 -0500
+@@ -1,3 +1,19 @@
++1 Release Date    : Thur.  Oct 29, 2009 09:12:45 PST 2009 -
++			(emaild-id:megaraidlinux@lsi.com)
++			Bo Yang
++
++2 Current Version : 00.00.04.17.1-rc1
++3 Older Version   : 00.00.04.12
++
++1.	Add the pad_0 in mfi frame structure to 0 to fix the
++	context value larger than 32bit value issue.
++
++2.	Add the logic drive list to the driver.  Driver will
++	keep the logic drive list internal after driver load.
++
++3.	driver fixed the device update issue after get the AEN
++	PD delete/ADD, LD add/delete from FW.
++
+ 1 Release Date    : Tues.  July 28, 2009 10:12:45 PST 2009 -
+ 			(emaild-id:megaraidlinux@lsi.com)
+ 			Bo Yang
 diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c new/drivers/scsi/megaraid/megaraid_sas.c
---- old/drivers/scsi/megaraid/megaraid_sas.c	2009-12-06 03:51:57.000000000 -0500
-+++ new/drivers/scsi/megaraid/megaraid_sas.c	2009-12-06 04:42:17.000000000 -0500
-@@ -4068,6 +4068,7 @@ megasas_aen_polling(struct work_struct *
- 	struct  Scsi_Host *host;
- 	struct  scsi_device *sdev1;
- 	u16     pd_index = 0;
-+	u16	ld_index = 0;
- 	int     i, j, doscan = 0;
- 	u32 seq_num;
- 	int error;
-@@ -4083,8 +4084,124 @@ megasas_aen_polling(struct work_struct *
+--- old/drivers/scsi/megaraid/megaraid_sas.c	2009-12-06 04:53:06.000000000 -0500
++++ new/drivers/scsi/megaraid/megaraid_sas.c	2009-12-06 04:53:58.000000000 -0500
+@@ -10,7 +10,7 @@
+  *	   2 of the License, or (at your option) any later version.
+  *
+  * FILE		: megaraid_sas.c
+- * Version     : v00.00.04.12-rc1
++ * Version     : v00.00.04.17.1-rc1
+  *
+  * Authors:
+  *	(email-id : megaraidlinux@lsi.com)
+diff -rupN old/drivers/scsi/megaraid/megaraid_sas.h new/drivers/scsi/megaraid/megaraid_sas.h
+--- old/drivers/scsi/megaraid/megaraid_sas.h	2009-12-06 04:53:06.000000000 -0500
++++ new/drivers/scsi/megaraid/megaraid_sas.h	2009-12-06 05:12:28.000000000 -0500
+@@ -18,9 +18,9 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION				"00.00.04.12-rc1"
+-#define MEGASAS_RELDATE				"Sep. 17, 2009"
+-#define MEGASAS_EXT_VERSION			"Thu Sep. 17 11:41:51 PST 2009"
++#define MEGASAS_VERSION			"00.00.04.17.1-rc1"
++#define MEGASAS_RELDATE			"Oct. 29, 2009"
++#define MEGASAS_EXT_VERSION		"Thu. Oct. 29, 11:41:51 PST 2009"
  
- 		switch (instance->evt_detail->code) {
- 		case MR_EVT_PD_INSERTED:
-+			if (megasas_get_pd_list(instance) == 0) {
-+			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
-+				for (j = 0;
-+				j < MEGASAS_MAX_DEV_PER_CHANNEL;
-+				j++) {
-+
-+				pd_index =
-+				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
-+
-+				sdev1 =
-+				scsi_device_lookup(host, i, j, 0);
-+
-+				if (instance->pd_list[pd_index].driveState
-+						== MR_PD_STATE_SYSTEM) {
-+						if (!sdev1) {
-+						scsi_add_device(host, i, j, 0);
-+						}
-+
-+					if (sdev1)
-+						scsi_device_put(sdev1);
-+					}
-+				}
-+			}
-+			}
-+			doscan = 0;
-+			break;
-+
- 		case MR_EVT_PD_REMOVED:
-+			if (megasas_get_pd_list(instance) == 0) {
-+			megasas_get_pd_list(instance);
-+			for (i = 0; i < MEGASAS_MAX_PD_CHANNELS; i++) {
-+				for (j = 0;
-+				j < MEGASAS_MAX_DEV_PER_CHANNEL;
-+				j++) {
-+
-+				pd_index =
-+				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
-+
-+				sdev1 =
-+				scsi_device_lookup(host, i, j, 0);
-+
-+				if (instance->pd_list[pd_index].driveState
-+					== MR_PD_STATE_SYSTEM) {
-+					if (sdev1) {
-+						scsi_device_put(sdev1);
-+					}
-+				} else {
-+					if (sdev1) {
-+						scsi_remove_device(sdev1);
-+						scsi_device_put(sdev1);
-+					}
-+				}
-+				}
-+			}
-+			}
-+			doscan = 0;
-+			break;
-+
-+		case MR_EVT_LD_OFFLINE:
-+		case MR_EVT_LD_DELETED:
-+			megasas_get_ld_list(instance);
-+			for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
-+				for (j = 0;
-+				j < MEGASAS_MAX_DEV_PER_CHANNEL;
-+				j++) {
-+
-+				ld_index =
-+				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
-+
-+				sdev1 = scsi_device_lookup(host,
-+					i + MEGASAS_MAX_LD_CHANNELS,
-+					j,
-+					0);
-+
-+				if (instance->ld_ids[ld_index] != 0xff) {
-+					if (sdev1) {
-+						scsi_device_put(sdev1);
-+					}
-+				} else {
-+					if (sdev1) {
-+						scsi_remove_device(sdev1);
-+						scsi_device_put(sdev1);
-+					}
-+				}
-+				}
-+			}
-+			doscan = 0;
-+			break;
-+		case MR_EVT_LD_CREATED:
-+			megasas_get_ld_list(instance);
-+			for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
-+				for (j = 0;
-+					j < MEGASAS_MAX_DEV_PER_CHANNEL;
-+					j++) {
-+					ld_index =
-+					(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
-+
-+					sdev1 = scsi_device_lookup(host,
-+						i+MEGASAS_MAX_LD_CHANNELS,
-+						j, 0);
-+
-+					if (instance->ld_ids[ld_index] !=
-+								0xff) {
-+						if (!sdev1) {
-+							scsi_add_device(host,
-+								i + 2,
-+								j, 0);
-+						}
-+					}
-+					if (sdev1) {
-+						scsi_device_put(sdev1);
-+					}
-+				}
-+			}
-+			doscan = 0;
-+			break;
- 		case MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED:
-+		case MR_EVT_FOREIGN_CFG_IMPORTED:
- 			doscan = 1;
- 			break;
- 		default:
-@@ -4119,6 +4236,31 @@ megasas_aen_polling(struct work_struct *
- 				}
- 			}
- 		}
-+
-+		megasas_get_ld_list(instance);
-+		for (i = 0; i < MEGASAS_MAX_LD_CHANNELS; i++) {
-+			for (j = 0; j < MEGASAS_MAX_DEV_PER_CHANNEL; j++) {
-+				ld_index =
-+				(i * MEGASAS_MAX_DEV_PER_CHANNEL) + j;
-+
-+				sdev1 = scsi_device_lookup(host,
-+					i+MEGASAS_MAX_LD_CHANNELS, j, 0);
-+				if (instance->ld_ids[ld_index] != 0xff) {
-+					if (!sdev1) {
-+						scsi_add_device(host,
-+								i+2,
-+								j, 0);
-+					} else {
-+						scsi_device_put(sdev1);
-+					}
-+				} else {
-+					if (sdev1) {
-+						scsi_remove_device(sdev1);
-+						scsi_device_put(sdev1);
-+					}
-+				}
-+			}
-+		}
- 	}
- 
- 	if ( instance->aen_cmd != NULL ) {
+ /*
+  * Device IDs
