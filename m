@@ -1,47 +1,43 @@
-From: Peter Korsgaard <jacmet@sunsite.dk>
-Subject: Re: [PATCH] scsi: use __uX types for headers exported to user space
-Date: Sun, 06 Dec 2009 21:34:37 +0100
-Message-ID: <87k4wzrgde.fsf@macbook.be.48ers.dk>
-References: <1259317748-27167-1-git-send-email-jacmet@sunsite.dk>
+From: "jack wang" <jack_wang@usish.com>
+Subject: [PATCH 0/9] pm8001 updates for scsi-misc.git (2.6.33)
+Date: Mon, 7 Dec 2009 17:21:12 +0800
+Message-ID: <B1DA6F706B1742F38A47B81FB81A3715@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:42680 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757962AbZLFUee convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Dec 2009 15:34:34 -0500
-Received: by ey-out-2122.google.com with SMTP id 4so229459eyf.5
-        for <linux-scsi@vger.kernel.org>; Sun, 06 Dec 2009 12:34:40 -0800 (PST)
-In-Reply-To: <1259317748-27167-1-git-send-email-jacmet@sunsite.dk> (Peter
-	Korsgaard's message of "Fri, 27 Nov 2009 11:29:08 +0100")
+Received: from sr-smtp.usish.com ([210.5.144.203]:53004 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759275AbZLGJVO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2009 04:21:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: james.smart@emulex.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, 'Lindar Liu' <lindar_liu@usish.com>, 'Kevin Ao' <aoqingyun@usish.com>, 'jack wang' <jack_wang@usish.com>
 
->>>>> "Peter" =3D=3D Peter Korsgaard <jacmet@sunsite.dk> writes:
+Hi, James
+I send 5 patches for pm8001 in 18th Nov, and It still out of misc tree. I
+resend this patches by separate these patches to one fix in one patch and
+along with other minor fix.
 
- Peter> Commit 9e4f5e29 (FC Pass Thru support) exported a number of hea=
-der files
- Peter> in include/scsi to user space, but didn't change the uX types t=
-o the
- Peter> userspace-compatible __uX types. Without that you'll get compil=
-e errors
- Peter> when including them - E.G.:
+These patches are:
+1/9 : Fix for sata io circular lock dependency.
+2/9 : enhance error handle for io patch, when the port is down, fast return
+phy down for it.
+3/9 : fix endian issues 
+4/9 : set SSC down-spreading only to get less error on some 6G device.
+5/9 : fix potential NULL pointer dereference
+6/9 : bit set pm8001_ha->flags
+7/9 : do not reset local sata as it will not be found if reset.
+8/9 : enable read HBA SAS address from VPD
+9/9 : misc code cleanup
+   
+Because of mail client issues I will send the patch both in content for
+reviewing and in attachment for applying.
 
- Peter> /tmp/include/scsi/scsi.h:145: error: expected specifier-qualifi=
-er-list
- Peter> before =E2=80=98u8=E2=80=99
+Thanks
+Jack Wang
 
- Peter> Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
+Signed-off-by: Jack Wang <jack_wang@usish.com>
 
-Comments?
-
---=20
-Bye, Peter Korsgaard
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
