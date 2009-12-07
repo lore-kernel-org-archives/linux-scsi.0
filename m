@@ -1,59 +1,48 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] mpt2sas : missing initialization of scsih_cmds is
- included
-Date: Tue, 8 Dec 2009 00:19:35 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C1C93CDE413@inbmail01.lsi.com>
-References: <20091117074622.GA20953@lsi.com>
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: [PATCH 1/5] BNX2I - Add 5771E device support to bnx2i driver
+Date: Mon, 7 Dec 2009 11:39:33 -0800
+Message-ID: <1260214773.31468.92.camel@anilgv-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:59052 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758119AbZLGStl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Dec 2009 13:49:41 -0500
-In-Reply-To: <20091117074622.GA20953@lsi.com>
-Content-Language: en-US
+Received: from mms1.broadcom.com ([216.31.210.17]:1603 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932146AbZLGTje (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Dec 2009 14:39:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, mchan@broadcom.com, poswald@novell.com
 
-James,
+    * Add code to enumerate 5771E device
 
-This patch is fix in mpt2sas 03.100.03.00 included in 2.6.33.
-Can you please include this patch in 2.6.33?
+Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+---
+ drivers/scsi/bnx2i/bnx2i_init.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-- Kashyap
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index 0c4210d..3c46458 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -83,8 +83,12 @@ void bnx2i_identify_device(struct bnx2i_hba *hba)
+ 		set_bit(BNX2I_NX2_DEV_5709, &hba->cnic_dev_type);
+ 		hba->mail_queue_access = BNX2I_MQ_BIN_MODE;
+ 	} else if (hba->pci_did == PCI_DEVICE_ID_NX2_57710 ||
+-		   hba->pci_did == PCI_DEVICE_ID_NX2_57711)
++		   hba->pci_did == PCI_DEVICE_ID_NX2_57711 ||
++		   hba->pci_did == PCI_DEVICE_ID_NX2_57711E)
+ 		set_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type);
++	else
++		printk(KERN_ALERT "bnx2i: unknown device, 0x%x\n", 
++				  hba->pci_did);
+ }
+ 
+ 
+-- 
+1.6.5.1
 
-> -----Original Message-----
-> From: Kashyap, Desai [mailto:kashyap.desai@lsi.com]
-> Sent: Tuesday, November 17, 2009 1:17 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: James.Bottomley@HansenPartnership.com; Moore, Eric; Prakash, Sathya
-> Subject: [PATCH] mpt2sas : missing initialization of scsih_cmds is
-> included
-> 
-> 
-> Internal command scsih_cmds init is included in mpt2sas_base_attach.
-> 
-> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-> ---
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 6422e25..89d0240 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -3583,6 +3583,11 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
->  	ioc->transport_cmds.status = MPT2_CMD_NOT_USED;
->  	mutex_init(&ioc->transport_cmds.mutex);
-> 
-> +	/* scsih internal command bits */
-> +	ioc->scsih_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
-> +	ioc->scsih_cmds.status = MPT2_CMD_NOT_USED;
-> +	mutex_init(&ioc->scsih_cmds.mutex);
-> +
->  	/* task management internal command bits */
->  	ioc->tm_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
->  	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+
+
+
