@@ -1,88 +1,65 @@
 From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
-Subject: [PATCH 4/5] BNX2I - Task management ABORT TASK fixes
-Date: Mon, 7 Dec 2009 11:40:29 -0800
-Message-ID: <1260214829.31468.99.camel@anilgv-desktop>
+Subject: [PATCH 5/5] BNX2I - minor code cleanup and update driver
+ version
+Date: Mon, 7 Dec 2009 11:40:39 -0800
+Message-ID: <1260214839.31468.100.camel@anilgv-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2181 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3577 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932273AbZLGTkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Dec 2009 14:40:24 -0500
+	id S932721AbZLGTke (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Dec 2009 14:40:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, mchan@broadcom.com, poswald@novell.com
 
 
-    * Due to typo error driver was failing TMF Abort Task request
-      when ctask->sc != NULL. Fixed code to fail TMF ABORT Task
-      request only when ctask->sc == NULL
-    * Clear age component (19 most significant bits) of reference ITT
-      carried in iSCSI TMF PDU. Age component is internal to initiator
-      side and only lower bits of ITT as defined by ISCSI_ITT_MASK is
-      is sent on wire
-    * Retrieve LUN directly from the ref_sc and update SQ wqe as per
-      chip HSI (Host Software Interface) specification
+    * Removed duplicate function call and not-so-useful comment line
 
 Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i_hwi.c |   17 +++++++++++++----
- 1 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_init.c  |    4 ++--
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |    2 --
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 57f4ca9..af350b2 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -384,6 +384,7 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
- 	struct bnx2i_cmd *bnx2i_cmd;
- 	struct bnx2i_tmf_request *tmfabort_wqe;
- 	u32 dword;
-+	u32 scsi_lun[2];
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index ad551c5..1e111ac 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -17,8 +17,8 @@ static struct list_head adapter_list = LIST_HEAD_INIT(adapter_list);
+ static u32 adapter_count;
  
- 	bnx2i_cmd = (struct bnx2i_cmd *)mtask->dd_data;
- 	tmfabort_hdr = (struct iscsi_tm *)mtask->hdr;
-@@ -394,27 +395,35 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
- 	tmfabort_wqe->op_attr = 0;
- 	tmfabort_wqe->op_attr =
- 		ISCSI_TMF_REQUEST_ALWAYS_ONE | ISCSI_TM_FUNC_ABORT_TASK;
--	tmfabort_wqe->lun[0] = be32_to_cpu(tmfabort_hdr->lun[0]);
--	tmfabort_wqe->lun[1] = be32_to_cpu(tmfabort_hdr->lun[1]);
+ #define DRV_MODULE_NAME		"bnx2i"
+-#define DRV_MODULE_VERSION	"2.0.1e"
+-#define DRV_MODULE_RELDATE	"June 22, 2009"
++#define DRV_MODULE_VERSION	"2.1.0"
++#define DRV_MODULE_RELDATE	"Dec 06, 2009"
  
- 	tmfabort_wqe->itt = (mtask->itt | (ISCSI_TASK_TYPE_MPATH << 14));
- 	tmfabort_wqe->reserved2 = 0;
- 	tmfabort_wqe->cmd_sn = be32_to_cpu(tmfabort_hdr->cmdsn);
+ static char version[] __devinitdata =
+ 		"Broadcom NetXtreme II iSCSI Driver " DRV_MODULE_NAME \
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 070118a..54dc251 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -485,7 +485,6 @@ static int bnx2i_setup_cmd_pool(struct bnx2i_hba *hba,
+ 		struct iscsi_task *task = session->cmds[i];
+ 		struct bnx2i_cmd *cmd = task->dd_data;
  
- 	ctask = iscsi_itt_to_task(conn, tmfabort_hdr->rtt);
--	if (!ctask || ctask->sc)
-+	if (!ctask || !ctask->sc)
- 		/*
- 		 * the iscsi layer must have completed the cmd while this
- 		 * was starting up.
-+		 * 
-+		 * Note: In the case of a SCSI cmd timeout, the task's sc
-+		 *       is still active; hence ctask->sc != 0
-+		 *       In this case, the task must be aborted
- 		 */
- 		return 0;
-+
- 	ref_sc = ctask->sc;
+-		/* Anil */
+ 		task->hdr = &cmd->hdr;
+ 		task->hdr_max = sizeof(struct iscsi_hdr);
  
-+	/* Retrieve LUN directly from the ref_sc */
-+	int_to_scsilun(ref_sc->device->lun, (struct scsi_lun *) scsi_lun);
-+	tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
-+	tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);	
-+
- 	if (ref_sc->sc_data_direction == DMA_TO_DEVICE)
- 		dword = (ISCSI_TASK_TYPE_WRITE << ISCSI_CMD_REQUEST_TYPE_SHIFT);
- 	else
- 		dword = (ISCSI_TASK_TYPE_READ << ISCSI_CMD_REQUEST_TYPE_SHIFT);
--	tmfabort_wqe->ref_itt = (dword | tmfabort_hdr->rtt);
-+	tmfabort_wqe->ref_itt = (dword | (tmfabort_hdr->rtt & ISCSI_ITT_MASK));
- 	tmfabort_wqe->ref_cmd_sn = be32_to_cpu(tmfabort_hdr->refcmdsn);
+@@ -765,7 +764,6 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 	hba->pci_svid = hba->pcidev->subsystem_vendor;
+ 	hba->pci_func = PCI_FUNC(hba->pcidev->devfn);
+ 	hba->pci_devno = PCI_SLOT(hba->pcidev->devfn);
+-	bnx2i_identify_device(hba);
  
- 	tmfabort_wqe->bd_list_addr_lo = (u32) bnx2i_conn->hba->mp_bd_dma;
+ 	bnx2i_identify_device(hba);
+ 	bnx2i_setup_host_queue_size(hba, shost);
 -- 
 1.6.5.1
 
