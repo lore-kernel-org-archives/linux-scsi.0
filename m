@@ -1,134 +1,87 @@
 From: "jack wang" <jack_wang@usish.com>
-Subject: [PATCH 4/9] pm8001: set SSC down-spreading only to get less errors on some 6G device.
-Date: Mon, 7 Dec 2009 17:22:51 +0800
-Message-ID: <BB92EEE91A2A4B728CA91756755A67D6@usish.com.cn>
+Subject: [PATCH 6/9] pm8001:bit set pm8001_ha->flags
+Date: Mon, 7 Dec 2009 17:22:59 +0800
+Message-ID: <804297FD5BE0487C810E2C0C6E62EFD9@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0026_01CA7761.ECB0E730"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:53055 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:53061 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759291AbZLGJWr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2009 04:22:47 -0500
+	with ESMTP id S1759302AbZLGJW7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Dec 2009 04:22:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: linux-scsi@vger.kernel.org, 'Lindar Liu' <lindar_liu@usish.com>, 'Kevin Ao' <aoqingyun@usish.com>, 'jack wang' <jack_wang@usish.com>
 
-Set SSC down-spreading only to get less error on some 6G device.
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0026_01CA7761.ECB0E730
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+
 
 Signed-off-by: Jack Wang <jack_wang@usish.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c |   65
-++++++++++++-------------------------
- 1 files changed, 21 insertions(+), 44 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
-b/drivers/scsi/pm8001/pm8001_hwi.c
-index b4426b5..6e1bdd8 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -373,10 +373,7 @@ static int bar4_shift(struct pm8001_hba_info
-*pm8001_ha, u32 shiftValue)
- static void __devinit
- mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha, u32 SSCbit)
- {
--	u32 offset;
--	u32 value;
--	u32 i, j;
--	u32 bit_cnt;
-+	u32 value, offset, i;
- 
- #define SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR 0x00030000
- #define SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR 0x00040000
-@@ -392,55 +389,35 @@ mpi_set_phys_g3_with_ssc(struct pm8001_hba_info
-*pm8001_ha, u32 SSCbit)
-     */
- 	if (-1 == bar4_shift(pm8001_ha,
-SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR))
- 		return;
--	/* set SSC bit of PHY 0 - 3 */
-+
- 	for (i = 0; i < 4; i++) {
- 		offset = SAS2_SETTINGS_LOCAL_PHY_0_3_OFFSET + 0x4000 * i;
--		value = pm8001_cr32(pm8001_ha, 2, offset);
--		if (SSCbit) {
--			value |= 0x00000001 << PHY_G3_WITH_SSC_BIT_SHIFT;
--			value &= ~(0x00000001 <<
-PHY_G3_WITHOUT_SSC_BIT_SHIFT);
--		} else {
--			value |= 0x00000001 << PHY_G3_WITHOUT_SSC_BIT_SHIFT;
--			value &= ~(0x00000001 << PHY_G3_WITH_SSC_BIT_SHIFT);
--		}
--		bit_cnt = 0;
--		for (j = 0; j < 31; j++)
--			if ((value >> j) & 0x00000001)
--				bit_cnt++;
--		if (bit_cnt % 2)
--			value &= ~(0x00000001 <<
-SNW3_PHY_CAPABILITIES_PARITY);
--		else
--			value |= 0x00000001 << SNW3_PHY_CAPABILITIES_PARITY;
--
--		pm8001_cw32(pm8001_ha, 2, offset, value);
-+		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
- 	}
--
- 	/* shift membase 3 for SAS2_SETTINGS_LOCAL_PHY 4 - 7 */
- 	if (-1 == bar4_shift(pm8001_ha,
-SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR))
- 		return;
--
--	/* set SSC bit of PHY 4 - 7 */
- 	for (i = 4; i < 8; i++) {
- 		offset = SAS2_SETTINGS_LOCAL_PHY_4_7_OFFSET + 0x4000 *
-(i-4);
--		value = pm8001_cr32(pm8001_ha, 2, offset);
--		if (SSCbit) {
--			value |= 0x00000001 << PHY_G3_WITH_SSC_BIT_SHIFT;
--			value &= ~(0x00000001 <<
-PHY_G3_WITHOUT_SSC_BIT_SHIFT);
--		} else {
--			value |= 0x00000001 << PHY_G3_WITHOUT_SSC_BIT_SHIFT;
--			value &= ~(0x00000001 << PHY_G3_WITH_SSC_BIT_SHIFT);
--		}
--		bit_cnt = 0;
--		for (j = 0; j < 31; j++)
--			if ((value >> j) & 0x00000001)
--				bit_cnt++;
--		if (bit_cnt % 2)
--			value &= ~(0x00000001 <<
-SNW3_PHY_CAPABILITIES_PARITY);
--		else
--			value |= 0x00000001 << SNW3_PHY_CAPABILITIES_PARITY;
--
--		pm8001_cw32(pm8001_ha, 2, offset, value);
-+		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
- 	}
-+	/*************************************************************
-+	Change the SSC upspreading value to 0x0 so that upspreading is
-disabled.
-+	Device MABC SMOD0 Controls
-+	Address: (via MEMBASE-III):
-+	Using shifted destination address 0x0_0000: with Offset 0xD8
-+
-+	31:28 R/W Reserved Do not change
-+	27:24 R/W SAS_SMOD_SPRDUP 0000
-+	23:20 R/W SAS_SMOD_SPRDDN 0000
-+	19:0  R/W  Reserved Do not change
-+	Upon power-up this register will read as 0x8990c016,
-+	and I would like you to change the SAS_SMOD_SPRDUP bits to 0b0000
-+	so that the written value will be 0x8090c016.
-+	This will ensure only down-spreading SSC is enabled on the SPC.
-+	*************************************************************/
-+	value = pm8001_cr32(pm8001_ha, 2, 0xd8);
-+	pm8001_cw32(pm8001_ha, 2, 0xd8, 0x8000C016);
- 
- 	/*set the shifted destination address to 0x0 to avoid error
-operation */
- 	bar4_shift(pm8001_ha, 0x0);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c
+b/drivers/scsi/pm8001/pm8001_sas.c
+index 487f78f..c86f921 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -656,7 +656,7 @@ static int pm8001_dev_found_notify(struct domain_device
+*dev)
+ 	wait_for_completion(&completion);
+ 	if (dev->dev_type == SAS_END_DEV)
+ 		msleep(50);
+-	pm8001_ha->flags = PM8001F_RUN_TIME ;
++	pm8001_ha->flags |= PM8001F_RUN_TIME ;
+ 	return 0;
+ found_out:
+ 	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
 -- 
 1.6.5.1.1367.gcd48
 
+
+------=_NextPart_000_0026_01CA7761.ECB0E730
+Content-Type: application/octet-stream;
+	name="0006-bit-set-for-hba-flags.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0006-bit-set-for-hba-flags.patch"
+
+>From 1c048fed463455116bb0ff0f55e4d11cb867825d Mon Sep 17 00:00:00 2001=0A=
+From: Jack Wang <jack_wang@usish.com>=0A=
+Date: Mon, 7 Dec 2009 15:48:03 +0800=0A=
+Subject: [PATCH 6/9] bit set for hba flags=0A=
+=0A=
+Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
+---=0A=
+ drivers/scsi/pm8001/pm8001_sas.c |    2 +-=0A=
+ 1 files changed, 1 insertions(+), 1 deletions(-)=0A=
+=0A=
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c =
+b/drivers/scsi/pm8001/pm8001_sas.c=0A=
+index 487f78f..c86f921 100644=0A=
+--- a/drivers/scsi/pm8001/pm8001_sas.c=0A=
++++ b/drivers/scsi/pm8001/pm8001_sas.c=0A=
+@@ -656,7 +656,7 @@ static int pm8001_dev_found_notify(struct =
+domain_device *dev)=0A=
+ 	wait_for_completion(&completion);=0A=
+ 	if (dev->dev_type =3D=3D SAS_END_DEV)=0A=
+ 		msleep(50);=0A=
+-	pm8001_ha->flags =3D PM8001F_RUN_TIME ;=0A=
++	pm8001_ha->flags |=3D PM8001F_RUN_TIME ;=0A=
+ 	return 0;=0A=
+ found_out:=0A=
+ 	spin_unlock_irqrestore(&pm8001_ha->lock, flags);=0A=
+-- =0A=
+1.6.5.1.1367.gcd48=0A=
+=0A=
+
+------=_NextPart_000_0026_01CA7761.ECB0E730--
 
