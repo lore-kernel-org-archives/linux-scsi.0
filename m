@@ -1,68 +1,62 @@
-From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
-Subject: [PATCH 5/5] BNX2I - minor code cleanup and update driver
- version
-Date: Mon, 7 Dec 2009 11:40:39 -0800
-Message-ID: <1260214839.31468.100.camel@anilgv-desktop>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: libsrp, the SRP_CMD request and additional CDB's
+Date: Tue, 8 Dec 2009 08:35:18 +0900
+Message-ID: <20091208082337J.fujita.tomonori@lab.ntt.co.jp>
+References: <e2e108260912060204x475b8499j4e267e3995f6ff8@mail.gmail.com>
+	<e2e108260912060207s243a018cj422f852fdf57c1cf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3577 "EHLO mms2.broadcom.com"
+Received: from sh.osrg.net ([192.16.179.4]:54193 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932721AbZLGTke (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Dec 2009 14:40:34 -0500
+	id S935067AbZLGXfW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Dec 2009 18:35:22 -0500
+In-Reply-To: <e2e108260912060207s243a018cj422f852fdf57c1cf@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, michaelc@cs.wisc.edu, mchan@broadcom.com, poswald@novell.com
+To: bart.vanassche@gmail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+
+On Sun, 6 Dec 2009 11:07:03 +0100
+Bart Van Assche <bart.vanassche@gmail.com> wrote:
+
+> While reverse engineering the libsrp source code I came across the
+> following statement in the function called srp_transfer_data():
+> 
+> offset = cmd->add_cdb_len * 4;
+> 
+> This offset is computed such that the code below it can skip the
+> ADDITIONAL CDB section in SRP_CMD requests. According to the header
+> file include/scsi/srp.h, the field add_cdb_len corresponds to the
+> one-byte field at byte offset 31 in the SRP_CMD request. And according
+> to the SRP spec (draft r16a), the layout of the field at offset 31 is
+> as follows:
+> * Bits 0 and 1 are reserved.
+> * Bits 2 to 7 represent the ADDITIONAL CDB LENGTH field, symbolically
+> represented as n.
+> The SRP spec also makes clear that the ADDITIONAL CDB section takes 4*n bytes.
+> 
+> If my interpretation of the srp.h header file and the SRP spec is
+> correct, the above statement should be replaced by:
+> 
+> offset = (cmd->add_cdb_len >> 2) * 4;
+> 
+> or, equivalently:
+> 
+> offset = cmd->add_cdb_len & ~3;
+
+Oops, good catch.
+
+Either is fine by me. The reserved bits shall be set to zero in SCSI
+though.
 
 
-    * Removed duplicate function call and not-so-useful comment line
+> Not ignoring the lower two bits of the add_cdb_len field would be
+> dangerous because at least the ibmvscsi driver uses these bits as
+> flags.
 
-Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_init.c  |    4 ++--
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    2 --
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index ad551c5..1e111ac 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -17,8 +17,8 @@ static struct list_head adapter_list = LIST_HEAD_INIT(adapter_list);
- static u32 adapter_count;
- 
- #define DRV_MODULE_NAME		"bnx2i"
--#define DRV_MODULE_VERSION	"2.0.1e"
--#define DRV_MODULE_RELDATE	"June 22, 2009"
-+#define DRV_MODULE_VERSION	"2.1.0"
-+#define DRV_MODULE_RELDATE	"Dec 06, 2009"
- 
- static char version[] __devinitdata =
- 		"Broadcom NetXtreme II iSCSI Driver " DRV_MODULE_NAME \
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 070118a..54dc251 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -485,7 +485,6 @@ static int bnx2i_setup_cmd_pool(struct bnx2i_hba *hba,
- 		struct iscsi_task *task = session->cmds[i];
- 		struct bnx2i_cmd *cmd = task->dd_data;
- 
--		/* Anil */
- 		task->hdr = &cmd->hdr;
- 		task->hdr_max = sizeof(struct iscsi_hdr);
- 
-@@ -765,7 +764,6 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
- 	hba->pci_svid = hba->pcidev->subsystem_vendor;
- 	hba->pci_func = PCI_FUNC(hba->pcidev->devfn);
- 	hba->pci_devno = PCI_SLOT(hba->pcidev->devfn);
--	bnx2i_identify_device(hba);
- 
- 	bnx2i_identify_device(hba);
- 	bnx2i_setup_host_queue_size(hba, shost);
--- 
-1.6.5.1
+Hmm, where does the ibmvscsi driver use these bits?
 
 
-
-
+Thanks,
