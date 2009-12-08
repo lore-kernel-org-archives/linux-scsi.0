@@ -1,56 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 13/17] drivers/scsi: Remove unnecessary NULL test
-Date: Tue, 08 Dec 2009 14:09:07 -0800
-Message-ID: <200912082209.nB8M97fH007485@imap1.linux-foundation.org>
+Subject: [patch 10/17] zfcp: test kmalloc failure in scsi_get_vpd_page()
+Date: Tue, 08 Dec 2009 14:09:03 -0800
+Message-ID: <200912082209.nB8M93vP007291@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55442 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59952 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966567AbZLHWLx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:11:53 -0500
+	by vger.kernel.org with ESMTP id S966691AbZLHWMG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:12:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, bharrosh@panasas.com, michaelc@cs.wisc.edu, yjwei@cn.fujitsu.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-At the point where cmnd is initialized, it is tested for NULL, so it
-doesn't have to be tested again here.
+kmalloc() may fail, so test whether it succeeded.
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
-
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
-
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Wei Yongjun <yjwei@cn.fujitsu.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/initio.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/scsi.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff -puN drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test drivers/scsi/initio.c
---- a/drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test
-+++ a/drivers/scsi/initio.c
-@@ -2817,7 +2817,6 @@ static void i91uSCBPost(u8 * host_mem, u
- 	}
+diff -puN drivers/scsi/scsi.c~zfcp-test-kmalloc-failure-in-scsi_get_vpd_page drivers/scsi/scsi.c
+--- a/drivers/scsi/scsi.c~zfcp-test-kmalloc-failure-in-scsi_get_vpd_page
++++ a/drivers/scsi/scsi.c
+@@ -1066,6 +1066,8 @@ unsigned char *scsi_get_vpd_page(struct 
  
- 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
--	WARN_ON(cmnd == NULL);
- 	i91u_unmap_scb(host->pci_dev, cmnd);
- 	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
- 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
+ 	kfree(buf);
+ 	buf = kmalloc(len, GFP_KERNEL);
++	if (!buf)
++		return NULL;
+ 	result = scsi_vpd_inquiry(sdev, buf, page, len);
+ 	if (result)
+ 		goto fail;
 _
