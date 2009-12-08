@@ -1,87 +1,43 @@
 From: akpm@linux-foundation.org
-Subject: [patch 14/17] drivers/message: Move dereference after NULL test
-Date: Tue, 08 Dec 2009 14:09:08 -0800
-Message-ID: <200912082209.nB8M98t2007512@imap1.linux-foundation.org>
+Subject: [patch 09/17] gdth: unmap ccb_phys when scsi_add_host() fails in gdth_eisa_probe_one()
+Date: Tue, 08 Dec 2009 14:09:02 -0800
+Message-ID: <200912082209.nB8M92im007246@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33486 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50978 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966582AbZLHWL4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:11:56 -0500
+	by vger.kernel.org with ESMTP id S966678AbZLHWL5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:11:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, James.Bottomley@suse.de, kashyap.desai@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, achim_leubner@adaptec.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-If the NULL test on dev->i2o_dev or i2o_dev is needed, then the dereference
-should be after the NULL test.
+unmap ccb_phys as well when scsi_add_host() fails
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
-
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
-
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: Achim Leubner <achim_leubner@adaptec.com>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/i2o/i2o_block.c |    3 ++-
- drivers/message/i2o/i2o_scsi.c  |    3 +--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/gdth.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_block.c
---- a/drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_block.c
-@@ -711,7 +711,7 @@ static int i2o_block_transfer(struct req
- {
- 	struct i2o_block_device *dev = req->rq_disk->private_data;
- 	struct i2o_controller *c;
--	u32 tid = dev->i2o_dev->lct_data.tid;
-+	u32 tid;
- 	struct i2o_message *msg;
- 	u32 *mptr;
- 	struct i2o_block_request *ireq = req->special;
-@@ -727,6 +727,7 @@ static int i2o_block_transfer(struct req
- 		goto exit;
- 	}
+diff -puN drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one
++++ a/drivers/scsi/gdth.c
+@@ -4903,7 +4903,7 @@ static int __init gdth_eisa_probe_one(us
  
-+	tid = dev->i2o_dev->lct_data.tid;
- 	c = dev->i2o_dev->iop;
+ 	error = scsi_add_host(shp, NULL);
+ 	if (error)
+-		goto out_free_coal_stat;
++		goto out_free_ccb_phys;
+ 	list_add_tail(&ha->list, &gdth_instances);
+ 	gdth_timer_init();
  
- 	msg = i2o_msg_get(c);
-diff -puN drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_scsi.c
---- a/drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_scsi.c
-@@ -528,7 +528,6 @@ static int i2o_scsi_queuecommand(struct 
- 	 *      Do the incoming paperwork
- 	 */
- 	i2o_dev = SCpnt->device->hostdata;
--	c = i2o_dev->iop;
- 
- 	SCpnt->scsi_done = done;
- 
-@@ -538,7 +537,7 @@ static int i2o_scsi_queuecommand(struct 
- 		done(SCpnt);
- 		goto exit;
- 	}
--
-+	c = i2o_dev->iop;
- 	tid = i2o_dev->lct_data.tid;
- 
- 	osm_debug("qcmd: Tid = %03x\n", tid);
 _
