@@ -1,38 +1,26 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: libsrp, the SRP_CMD request and additional CDB's
-Date: Tue, 8 Dec 2009 16:34:47 +0900
-Message-ID: <20091208163430H.fujita.tomonori@lab.ntt.co.jp>
-References: <e2e108260912060207s243a018cj422f852fdf57c1cf@mail.gmail.com>
-	<20091208082337J.fujita.tomonori@lab.ntt.co.jp>
-	<e2e108260912072324q313234a2oda50e1bdc8373149@mail.gmail.com>
+From: yukta eswar <yukta.eswar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Invoking of "Abort_Task_Set"
+Date: Tue, 8 Dec 2009 20:25:03 +0530
+Message-ID: <ac9fc6790912080655m3832e587tf266990b5ac9b75@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:36785 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753366AbZLHHer (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Dec 2009 02:34:47 -0500
-In-Reply-To: <e2e108260912072324q313234a2oda50e1bdc8373149@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: bart.vanassche@gmail.com
-Cc: fujita.tomonori@lab.ntt.co.jp, brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-On Tue, 8 Dec 2009 08:24:23 +0100
-Bart Van Assche <bart.vanassche@gmail.com> wrote:
+Dear All,
 
-> >> Not ignoring the lower two bits of the add_cdb_len field would be
-> >> dangerous because at least the ibmvscsi driver uses these bits as
-> >> flags.
-> >
-> > Hmm, where does the ibmvscsi driver use these bits?
-> 
-> I might have confused the fields ibmvfc_cmd::add_cdb_len and
-> srp_cmd::add_cdb_len.
+Can any one explain how to invoke the "Abort_Task_Set" in task management.
+My driver supports Abort task. But I am not aware of how to invoke
+Abort_Task_Set.
 
-Yeah, I think that you were mistaken. ibmvfc driver is unrelated with
-SRP.
+Is there any reference code available ?
 
-The ibmvscsi driver doesn't support large cdb so this bug doesn't
-cause any real problems, I think.
+
+Regards,
+Yukta
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
