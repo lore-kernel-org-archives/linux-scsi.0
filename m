@@ -1,129 +1,149 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [GIT PATCH] SCSI fixes for 2.6.32-rc8
-Date: Tue, 8 Dec 2009 21:07:03 +0100
-Message-ID: <200912082107.03585.rjw@sisk.pl>
-References: <1259620194.11762.137.camel@mulgrave.site> <20091201141035.2c0165df@jbarnes-piketon> <1260295225.4147.25.camel@mulgrave.site>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 1/5] Use msleep() instead of schedule_timeout
+Date: Tue, 08 Dec 2009 15:38:12 -0600
+Message-ID: <20091208213812.23493.20587.stgit@beardog.cce.hp.com>
+References: <20091208213514.23493.86458.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1260295225.4147.25.camel@mulgrave.site>
-Sender: linux-pci-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:31559 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756124AbZLHVgQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 16:36:16 -0500
+In-Reply-To: <20091208213514.23493.86458.stgit@beardog.cce.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, smcameron@yahoo.com
 
-On Tuesday 08 December 2009, James Bottomley wrote:
-> On Tue, 2009-12-01 at 14:10 -0800, Jesse Barnes wrote:
-> > On Tue, 1 Dec 2009 22:40:48 +0100
-> > "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> > 
-> > > On Tuesday 01 December 2009, Jesse Barnes wrote:
-> > > > On Tue, 01 Dec 2009 12:13:47 -0500
-> > > > James Bottomley <James.Bottomley@suse.de> wrote:
-> > > > 
-> > > > > On Tue, 2009-12-01 at 14:54 -0200, Kleber Sacilotto de Souza
-> > > > > wrote:
-> > > > > > Can you please add the patch from "[PATCH] ipr: fix EEH
-> > > > > > recovery" sent to this list?
-> > > > > 
-> > > > > Adding linux-pci because this hack actually tampers with internal
-> > > > > PCI device state, which looks wrong.
-> > > > > 
-> > > > > The thread is here:
-> > > > > 
-> > > > > http://marc.info/?l=linux-scsi&m=125918723218627
-> > > > > 
-> > > > > and the proposed full patch and explanation below.
-> > > > > 
-> > > > > PCI people, is this correct, or is there a better way to do it?
-> > > > > 
-> > > > > James
-> > > > > 
-> > > > > ---
-> > > > > 
-> > > > > Hi,
-> > > > > 
-> > > > > After commits c82f63e411f1b58427c103bd95af2863b1c96dd1 (PCI: check
-> > > > > saved state before restore) and
-> > > > > 4b77b0a2ba27d64f58f16d8d4d48d8319dda36ff (PCI: Clear saved_state
-> > > > > after the state has been restored) PCI drivers are prevented from
-> > > > > restoring the device standard configuration registers twice in a
-> > > > > row. These changes introduced a regression on ipr EEH recovery.
-> > > > > 
-> > > > > The ipr device driver saves the PCI state only during the device
-> > > > > probe and restores it on ipr_reset_restore_cfg_space() during IOA
-> > > > > resets. This behavior is causing the EEH recovery to fail after
-> > > > > the second error detected, since the registers are not being
-> > > > > restored.
-> > > > > 
-> > > > > One possible solution would be saving the registers after
-> > > > > restoring them. The problem with this approach is that while
-> > > > > recovering from an EEH error if pci_save_state() results in an
-> > > > > EEH error, the adapter/slot will be reset, and end up back in
-> > > > > ipr_reset_restore_cfg_space(), but it won't have a valid saved
-> > > > > state to restore, so pci_restore_state() will fail.
-> > > > > 
-> > > > > The following patch introduces a workaround for this problem,
-> > > > > hacking around the PCI API by setting pdev->state_saved = true
-> > > > > before we do the restore. It fixes the EEH regression and
-> > > > > prevents that we hit another EEH error during EEH recovery.
-> > > > > 
-> > > > > 
-> > > > > Thanks,
-> > > > > Kleber
-> > > > > 
-> > > > > 
-> > > > > 
-> > > > > Signed-off-by: Kleber Sacilotto de Souza
-> > > > > <klebers@linux.vnet.ibm.com> ---
-> > > > >  drivers/scsi/ipr.c |    1 +
-> > > > >  1 files changed, 1 insertions(+), 0 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-> > > > > index 76d294f..c3ff9a6 100644
-> > > > > --- a/drivers/scsi/ipr.c
-> > > > > +++ b/drivers/scsi/ipr.c
-> > > > > @@ -6516,6 +6516,7 @@ static int
-> > > > > ipr_reset_restore_cfg_space(struct ipr_cmnd *ipr_cmd)
-> > > > >         int rc;
-> > > > >  
-> > > > >         ENTER;
-> > > > > +       ioa_cfg->pdev->state_saved = true;
-> > > > >         rc = pci_restore_state(ioa_cfg->pdev);
-> > > > >  
-> > > > >         if (rc != PCIBIOS_SUCCESSFUL) {
-> > > > 
-> > > > Rafael may have input here, but it seems like we need a low level
-> > > > save/restore routine that ignores the flag (which is generally used
-> > > > for suspend/resume I think?).
-> > > 
-> > > There are some other users, but they are only a few.
-> > > 
-> > > > Maybe adding low level _pci_save_state/_pci_restore_state that don't
-> > > > check/set the flags would help?
-> > > 
-> > > That might work, but how do we know that the state we're going to
-> > > restore is actually valid at this particular point?
-> > > 
-> > > Perhaps we need a version using a separate storage area?
-> > 
-> > Yeah, that would probably be best.  Let the caller allocate the space
-> > and save/restore it all it wants for special cases like error handling.
-> 
-> OK, so could I have a resolution for this, please, guys?
-> 
-> Do I just apply the patch to fiddle with the internal state which looks
-> ugly but will fix the bug, or are you going to provide us with the
-> correct interface to use?
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-I guess at the moment it's better to apply the workaround first and then
-remove it when the correct interface is ready.
+Use msleep() instead of schedule_timeout
 
-I really wouldn't like to hurry with reworking pci_save_state(), because that
-has a potential of infroducing some new nasty bugs if not done with care.
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |   27 ++++++++++++++-------------
+ drivers/scsi/hpsa.h |    4 ++--
+ 2 files changed, 16 insertions(+), 15 deletions(-)
 
-Jesse, what's your opinion?
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 3c079a4..dc5e518 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1933,7 +1933,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ {
+ 	int rc = 0;
+ 	int count = 0;
+-	int waittime = HZ;
++	int waittime = 1; /* seconds */
+ 	struct CommandList *c;
+ 
+ 	c = cmd_special_alloc(h);
+@@ -1950,11 +1950,11 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 		 * the TUR right away, the reset will just abort it.
+ 		 */
+ 		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(waittime);
++		msleep(1000 * waittime);
+ 		count++;
+ 
+ 		/* Increase wait time with each try, up to a point. */
+-		if (waittime < (HZ * HPSA_MAX_WAIT_INTERVAL_SECS))
++		if (waittime < HPSA_MAX_WAIT_INTERVAL_SECS)
+ 			waittime = waittime * 2;
+ 
+ 		/* Send the Test Unit Ready */
+@@ -1972,7 +1972,7 @@ static int wait_for_device_to_become_ready(struct ctlr_info *h,
+ 			break;
+ 
+ 		dev_warn(&h->pdev->dev, "waiting %d secs "
+-			"for device to become ready.\n", waittime / HZ);
++			"for device to become ready.\n", waittime);
+ 		rc = 1; /* device not ready. */
+ 	}
+ 
+@@ -2838,8 +2838,8 @@ static __devinit int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ 		tag = readl(vaddr + SA5_REPLY_PORT_OFFSET);
+ 		if (HPSA_TAG_DISCARD_ERROR_BITS(tag) == paddr32)
+ 			break;
+-		schedule_timeout_uninterruptible(
+-			HPSA_MSG_SEND_RETRY_INTERVAL_SECS * HZ);
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		msleep(HPSA_MSG_SEND_RETRY_INTERVAL_MSECS);
+ 	}
+ 
+ 	iounmap(vaddr);
+@@ -2953,7 +2953,7 @@ static __devinit int hpsa_hard_reset_controller(struct pci_dev *pdev)
+ 	pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+ 
+ 	set_current_state(TASK_UNINTERRUPTIBLE);
+-	schedule_timeout(HZ >> 1);
++	msleep(500);
+ 
+ 	/* enter the D0 power management state */
+ 	pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+@@ -2961,7 +2961,7 @@ static __devinit int hpsa_hard_reset_controller(struct pci_dev *pdev)
+ 	pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+ 
+ 	set_current_state(TASK_UNINTERRUPTIBLE);
+-	schedule_timeout(HZ >> 1);
++	msleep(500);
+ 
+ 	/* Restore the PCI configuration space.  The Open CISS
+ 	 * Specification says, "Restore the PCI Configuration
+@@ -3187,8 +3187,8 @@ static int hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
+ 		scratchpad = readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
+ 		if (scratchpad == HPSA_FIRMWARE_READY)
+ 			break;
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule_timeout(HPSA_BOARD_READY_POLL_INTERVAL);
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		msleep(HPSA_BOARD_READY_POLL_INTERVAL_MSECS);
+ 	}
+ 	if (scratchpad != HPSA_FIRMWARE_READY) {
+ 		dev_warn(&pdev->dev, "board not ready, timed out.\n");
+@@ -3262,8 +3262,8 @@ static int hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
+ 		if (!(readl(h->vaddr + SA5_DOORBELL) & CFGTBL_ChangeReq))
+ 			break;
+ 		/* delay and try again */
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule_timeout(10);
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		msleep(10);
+ 	}
+ 
+ #ifdef HPSA_DEBUG
+@@ -3302,7 +3302,8 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 
+ 		/* Some devices (notably the HP Smart Array 5i Controller)
+ 		   need a little pause here */
+-		schedule_timeout_uninterruptible(HPSA_POST_RESET_PAUSE);
++		set_current_state(TASK_UNINTERRUPTIBLE);
++		msleep(HPSA_POST_RESET_PAUSE_MSECS);
+ 
+ 		/* Now try to get the controller to respond to a no-op */
+ 		for (i = 0; i < HPSA_POST_RESET_NOOP_RETRIES; i++) {
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index ffa8c50..6bd1949 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -108,7 +108,7 @@ struct ctlr_info {
+ #define HPSA_BUS_RESET_MSG 2
+ #define HPSA_HOST_RESET_MSG 3
+ #define HPSA_MSG_SEND_RETRY_LIMIT 10
+-#define HPSA_MSG_SEND_RETRY_INTERVAL_SECS 1
++#define HPSA_MSG_SEND_RETRY_INTERVAL_MSECS 1000
+ 
+ /* Maximum time in seconds driver will wait for command completions
+  * when polling before giving up.
+@@ -139,7 +139,7 @@ struct ctlr_info {
+ #define HPSA_BOARD_READY_ITERATIONS \
+ 	((HPSA_BOARD_READY_WAIT_SECS * 1000) / \
+ 		HPSA_BOARD_READY_POLL_INTERVAL_MSECS)
+-#define HPSA_POST_RESET_PAUSE (30 * HZ)
++#define HPSA_POST_RESET_PAUSE_MSECS (3000)
+ #define HPSA_POST_RESET_NOOP_RETRIES (12)
+ 
+ /*  Defining the diffent access_menthods */
 
-Rafael
