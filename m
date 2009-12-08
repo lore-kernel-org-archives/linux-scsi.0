@@ -1,45 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/17] drivers/scsi/u14-34f.c: fix uffer overflow
-Date: Tue, 08 Dec 2009 14:08:59 -0800
-Message-ID: <200912082209.nB8M90AR007144@imap1.linux-foundation.org>
+Subject: [patch 08/17] osst: fix read buffer overflow
+Date: Tue, 08 Dec 2009 14:09:01 -0800
+Message-ID: <200912082209.nB8M91Nw007211@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51351 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:32978 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966665AbZLHWJU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:09:20 -0500
+	by vger.kernel.org with ESMTP id S966650AbZLHWJO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:09:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, osst@riede.org
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-This allows i == MAX_INT_PARAM, which is out of range for ints[]
-
-Found with Parfait, http://research.sun.com/projects/parfait/
+Check whether index is within bounds before testing the element.
 
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Dario Ballabio <ballabio_dario@emc.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Willem Riede <osst@riede.org>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/u14-34f.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/osst.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow drivers/scsi/u14-34f.c
---- a/drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow
-+++ a/drivers/scsi/u14-34f.c
-@@ -1070,7 +1070,7 @@ static int option_setup(char *str) {
-    char *cur = str;
-    int i = 1;
+diff -puN drivers/scsi/osst.c~osst-fix-read-buffer-overflow drivers/scsi/osst.c
+--- a/drivers/scsi/osst.c~osst-fix-read-buffer-overflow
++++ a/drivers/scsi/osst.c
+@@ -5860,7 +5860,8 @@ static int osst_probe(struct device *dev
+ 	}
  
--   while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+   while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
-       ints[i++] = simple_strtoul(cur, NULL, 0);
+ 	/* find a free minor number */
+-	for (i=0; os_scsi_tapes[i] && i<osst_max_dev; i++);
++	for (i = 0; i < osst_max_dev && os_scsi_tapes[i]; i++)
++		;
+ 	if(i >= osst_max_dev) panic ("Scsi_devices corrupt (osst)");
+ 	dev_num = i;
  
-       if ((cur = strchr(cur, ',')) != NULL) cur++;
 _
