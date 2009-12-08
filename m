@@ -1,43 +1,56 @@
 From: akpm@linux-foundation.org
-Subject: [patch 09/17] gdth: unmap ccb_phys when scsi_add_host() fails in gdth_eisa_probe_one()
-Date: Tue, 08 Dec 2009 14:09:02 -0800
-Message-ID: <200912082209.nB8M92im007246@imap1.linux-foundation.org>
+Subject: [patch 13/17] drivers/scsi: Remove unnecessary NULL test
+Date: Tue, 08 Dec 2009 14:09:07 -0800
+Message-ID: <200912082209.nB8M97fH007485@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50978 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55442 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966678AbZLHWL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:11:57 -0500
+	by vger.kernel.org with ESMTP id S966567AbZLHWLx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:11:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, achim_leubner@adaptec.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Julia Lawall <julia@diku.dk>
 
-unmap ccb_phys as well when scsi_add_host() fails
+At the point where cmnd is initialized, it is tested for NULL, so it
+doesn't have to be tested again here.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Achim Leubner <achim_leubner@adaptec.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+A simplified version of the semantic match that detects this problem is as
+follows (http://coccinelle.lip6.fr/):
+
+// <smpl>
+@match exists@
+expression x, E;
+identifier fld;
+@@
+
+* x->fld
+  ... when != \(x = E\|&x\)
+* x == NULL
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/initio.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff -puN drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one
-+++ a/drivers/scsi/gdth.c
-@@ -4903,7 +4903,7 @@ static int __init gdth_eisa_probe_one(us
+diff -puN drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test drivers/scsi/initio.c
+--- a/drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test
++++ a/drivers/scsi/initio.c
+@@ -2817,7 +2817,6 @@ static void i91uSCBPost(u8 * host_mem, u
+ 	}
  
- 	error = scsi_add_host(shp, NULL);
- 	if (error)
--		goto out_free_coal_stat;
-+		goto out_free_ccb_phys;
- 	list_add_tail(&ha->list, &gdth_instances);
- 	gdth_timer_init();
- 
+ 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
+-	WARN_ON(cmnd == NULL);
+ 	i91u_unmap_scb(host->pci_dev, cmnd);
+ 	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
+ 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
 _
