@@ -1,89 +1,100 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/5] Use msleep() instead of schedule_timeout
-Date: Tue, 8 Dec 2009 14:02:45 -0800
-Message-ID: <20091208140245.e654805c.akpm@linux-foundation.org>
-References: <20091208213514.23493.86458.stgit@beardog.cce.hp.com>
-	<20091208213812.23493.20587.stgit@beardog.cce.hp.com>
+From: akpm@linux-foundation.org
+Subject: [patch 02/17] drivers/scsi/fnic/fnic_scsi.c: clean up
+Date: Tue, 08 Dec 2009 14:08:55 -0800
+Message-ID: <200912082208.nB8M8t9m006937@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:60923 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:54528 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966481AbZLHWDK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:03:10 -0500
-In-Reply-To: <20091208213812.23493.20587.stgit@beardog.cce.hp.com>
+	by vger.kernel.org with ESMTP id S966539AbZLHWJN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:09:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, smcameron@yahoo.com
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, abjoglek@cisco.com
 
-On Tue, 08 Dec 2009 15:38:12 -0600
-"Stephen M. Cameron" <scameron@beardog.cce.hp.com> wrote:
+From: Roel Kluin <roel.kluin@gmail.com>
 
-> Use msleep() instead of schedule_timeout
+In fnic_abort_cmd() and fnic_device_reset() assign `rport' earlier to make
+FNIC_SCSI_DBG() calls cleaner.
 
-msleep() does set_current_state() itself.
+In fnic_clean_pending_aborts() `rport' is not used.
 
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Acked-by: Abhijeet Joglekar <abjoglek@cisco.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
---- a/drivers/scsi/hpsa.c~hpsa-use-msleep-instead-of-schedule_timeout-fix
-+++ a/drivers/scsi/hpsa.c
-@@ -1949,7 +1949,6 @@ static int wait_for_device_to_become_rea
- 		/* Wait for a bit.  do this first, because if we send
- 		 * the TUR right away, the reset will just abort it.
- 		 */
--		set_current_state(TASK_UNINTERRUPTIBLE);
- 		msleep(1000 * waittime);
- 		count++;
+ drivers/scsi/fnic/fnic_scsi.c |   22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
+
+diff -puN drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up drivers/scsi/fnic/fnic_scsi.c
+--- a/drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up
++++ a/drivers/scsi/fnic/fnic_scsi.c
+@@ -1245,11 +1245,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	lp = shost_priv(sc->device->host);
  
-@@ -2838,7 +2837,6 @@ static __devinit int hpsa_message(struct
- 		tag = readl(vaddr + SA5_REPLY_PORT_OFFSET);
- 		if (HPSA_TAG_DISCARD_ERROR_BITS(tag) == paddr32)
- 			break;
--		set_current_state(TASK_UNINTERRUPTIBLE);
- 		msleep(HPSA_MSG_SEND_RETRY_INTERVAL_MSECS);
- 	}
+ 	fnic = lport_priv(lp);
+-	FNIC_SCSI_DBG(KERN_DEBUG,
+-		      fnic->lport->host,
+-		      "Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
+-		      (starget_to_rport(scsi_target(sc->device)))->port_id,
+-		      sc->device->lun, sc->request->tag);
++	rport = starget_to_rport(scsi_target(sc->device));
++	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
++			rport->port_id, sc->device->lun, sc->request->tag);
  
-@@ -2952,7 +2950,6 @@ static __devinit int hpsa_hard_reset_con
- 	pmcsr |= PCI_D3hot;
- 	pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
+ 		ret = FAILED;
+@@ -1298,7 +1297,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	 * port is up, then send abts to the remote port to terminate
+ 	 * the IO. Else, just locally terminate the IO in the firmware
+ 	 */
+-	rport = starget_to_rport(scsi_target(sc->device));
+ 	if (fc_remote_port_chkready(rport) == 0)
+ 		task_req = FCPIO_ITMF_ABT_TASK;
+ 	else
+@@ -1417,7 +1415,6 @@ static int fnic_clean_pending_aborts(str
+ 	unsigned long flags;
+ 	int ret = 0;
+ 	struct scsi_cmnd *sc;
+-	struct fc_rport *rport;
+ 	struct scsi_lun fc_lun;
+ 	struct scsi_device *lun_dev = lr_sc->device;
+ 	DECLARE_COMPLETION_ONSTACK(tm_done);
+@@ -1457,7 +1454,6 @@ static int fnic_clean_pending_aborts(str
  
--	set_current_state(TASK_UNINTERRUPTIBLE);
- 	msleep(500);
+ 		/* Now queue the abort command to firmware */
+ 		int_to_scsilun(sc->device->lun, &fc_lun);
+-		rport = starget_to_rport(scsi_target(sc->device));
  
- 	/* enter the D0 power management state */
-@@ -2960,7 +2957,6 @@ static __devinit int hpsa_hard_reset_con
- 	pmcsr |= PCI_D0;
- 	pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+ 		if (fnic_queue_abort_io_req(fnic, tag,
+ 					    FCPIO_ITMF_ABT_TASK_TERM,
+@@ -1527,18 +1523,16 @@ int fnic_device_reset(struct scsi_cmnd *
+ 	lp = shost_priv(sc->device->host);
  
--	set_current_state(TASK_UNINTERRUPTIBLE);
- 	msleep(500);
+ 	fnic = lport_priv(lp);
+-	FNIC_SCSI_DBG(KERN_DEBUG,
+-		      fnic->lport->host,
+-		      "Device reset called FCID 0x%x, LUN 0x%x\n",
+-		      (starget_to_rport(scsi_target(sc->device)))->port_id,
+-		      sc->device->lun);
  
- 	/* Restore the PCI configuration space.  The Open CISS
-@@ -3187,7 +3183,6 @@ static int hpsa_pci_init(struct ctlr_inf
- 		scratchpad = readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
- 		if (scratchpad == HPSA_FIRMWARE_READY)
- 			break;
--		set_current_state(TASK_UNINTERRUPTIBLE);
- 		msleep(HPSA_BOARD_READY_POLL_INTERVAL_MSECS);
- 	}
- 	if (scratchpad != HPSA_FIRMWARE_READY) {
-@@ -3262,7 +3257,6 @@ static int hpsa_pci_init(struct ctlr_inf
- 		if (!(readl(h->vaddr + SA5_DOORBELL) & CFGTBL_ChangeReq))
- 			break;
- 		/* delay and try again */
--		set_current_state(TASK_UNINTERRUPTIBLE);
- 		msleep(10);
- 	}
++	rport = starget_to_rport(scsi_target(sc->device));
++	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"Device reset called FCID 0x%x, LUN 0x%x\n",
++			rport->port_id, sc->device->lun);
  
-@@ -3302,7 +3296,6 @@ static int __devinit hpsa_init_one(struc
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
+ 		goto fnic_device_reset_end;
  
- 		/* Some devices (notably the HP Smart Array 5i Controller)
- 		   need a little pause here */
--		set_current_state(TASK_UNINTERRUPTIBLE);
- 		msleep(HPSA_POST_RESET_PAUSE_MSECS);
+ 	/* Check if remote port up */
+-	rport = starget_to_rport(scsi_target(sc->device));
+ 	if (fc_remote_port_chkready(rport))
+ 		goto fnic_device_reset_end;
  
- 		/* Now try to get the controller to respond to a no-op */
-diff -puN drivers/scsi/hpsa.h~hpsa-use-msleep-instead-of-schedule_timeout-fix drivers/scsi/hpsa.h
 _
-
