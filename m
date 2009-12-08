@@ -1,44 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/17] drivers/scsi/lpfc/lpfc_vport.c: fix read buffer overflow
-Date: Tue, 08 Dec 2009 14:09:00 -0800
-Message-ID: <200912082209.nB8M905V007185@imap1.linux-foundation.org>
+Subject: [patch 01/17] scsi: add __init/__exit macros to ibmvstgt.c
+Date: Tue, 08 Dec 2009 14:08:54 -0800
+Message-ID: <200912082208.nB8M8s3u006890@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35313 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47281 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966661AbZLHWJR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:09:17 -0500
+	by vger.kernel.org with ESMTP id S966659AbZLHWJQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Dec 2009 17:09:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, James.Smart@Emulex.Com, jeykholt@cisco.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Peter Huewe <peterhuewe@gmx.de>
 
-Check whether index is within bounds before testing the element.
+Add the __init and __exit macros to the module_init / module_exit
+functions from drivers/scsi/ibmvscsi/ibmvstgt.c
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: James Smart <James.Smart@Emulex.Com>
-Cc: Joe Eykholt <jeykholt@cisco.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/lpfc/lpfc_vport.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow drivers/scsi/lpfc/lpfc_vport.c
---- a/drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow
-+++ a/drivers/scsi/lpfc/lpfc_vport.c
-@@ -771,7 +771,7 @@ lpfc_destroy_vport_work_array(struct lpf
- 	int i;
- 	if (vports == NULL)
- 		return;
--	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
-+	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
- 		scsi_host_put(lpfc_shost_from_vport(vports[i]));
- 	kfree(vports);
+diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
+--- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
++++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -955,7 +955,7 @@ static struct srp_function_template ibmv
+ 	.it_nexus_response = ibmvstgt_it_nexus_response,
+ };
+ 
+-static int ibmvstgt_init(void)
++static int __init ibmvstgt_init(void)
+ {
+ 	int err = -ENOMEM;
+ 
+@@ -986,7 +986,7 @@ release_transport:
+ 	return err;
  }
+ 
+-static void ibmvstgt_exit(void)
++static void __exit ibmvstgt_exit(void)
+ {
+ 	printk("Unregister IBM virtual SCSI driver\n");
+ 
 _
