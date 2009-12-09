@@ -1,35 +1,57 @@
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: [GIT PATCH] SCSI fixes for 2.6.32-rc8
-Date: Wed, 09 Dec 2009 10:17:53 -0800
-Message-ID: <1260382673.1309.1.camel@jbarnes-desktop.localdomain>
-References: <1259620194.11762.137.camel@mulgrave.site>
-	 <20091201141035.2c0165df@jbarnes-piketon>
-	 <1260295225.4147.25.camel@mulgrave.site>  <200912082107.03585.rjw@sisk.pl>
+From: Bart Van Assche <bart.vanassche@gmail.com>
+Subject: [PATCH] SCSI/libsrp: fix bug in ADDITIONAL CDB LENGTH interpretation
+Date: Wed, 9 Dec 2009 19:52:19 +0100
+Message-ID: <200912091952.19978.bart.vanassche@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outbound-mail-302.bluehost.com ([67.222.53.9]:42771 "HELO
-	outbound-mail-302.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756554AbZLIS3l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2009 13:29:41 -0500
-In-Reply-To: <200912082107.03585.rjw@sisk.pl>
+Received: from jester.euphonynet.be ([212.87.96.13]:39132 "EHLO
+	mailpush2.euphonynet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755628AbZLISw1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Dec 2009 13:52:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: James Bottomley <James.Bottomley@suse.de>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
 
-On Tue, 2009-12-08 at 21:07 +0100, Rafael J. Wysocki wrote:
-> I guess at the moment it's better to apply the workaround first and then
-> remove it when the correct interface is ready.
-> 
-> I really wouldn't like to hurry with reworking pci_save_state(), because that
-> has a potential of infroducing some new nasty bugs if not done with care.
-> 
-> Jesse, what's your opinion?
+Fix a bug in the interpretation of the ADDITIONAL CDB LENGTH (add_cdb_len)
+field of SRP_CMD requests. According to the SRP specification, the layout
+of this single-byte field is as follows:
+* Bits 0 and 1 are reserved.
+* Bits 2 to 7 represent the ADDITIONAL CDB LENGTH field, symbolically
+  represented as n.
+* Still according to the SRP specification, the ADDITIONAL CDB section
+  takes 4*n bytes.
 
-Yeah, that's fine.  I won't have time to hack anything together for a
-week or two either, and I don't want to hold up a valid fix.
+Currently libsrp is only used by the ibmvscsi driver. Since the ibmvscsi
+driver doesn't support large CDB's, this bug hasn't caused any problems yet.
 
-Jesse
+Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Brian King <brking@linux.vnet.ibm.com>
 
+diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+index 9ad38e8..710919f 100644
+--- a/drivers/scsi/libsrp.c
++++ b/drivers/scsi/libsrp.c
+@@ -327,7 +327,7 @@ int srp_transfer_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
+ 	int offset, err = 0;
+ 	u8 format;
+ 
+-	offset = cmd->add_cdb_len * 4;
++	offset = (cmd->add_cdb_len >> 2) * 4;
+ 
+ 	dir = srp_cmd_direction(cmd);
+ 	if (dir == DMA_FROM_DEVICE)
+@@ -365,7 +365,7 @@ static int vscsis_data_length(struct srp_cmd *cmd, enum dma_data_direction dir)
+ {
+ 	struct srp_direct_buf *md;
+ 	struct srp_indirect_buf *id;
+-	int len = 0, offset = cmd->add_cdb_len * 4;
++	int len = 0, offset = (cmd->add_cdb_len >> 2) * 4;
+ 	u8 fmt;
+ 
+ 	if (dir == DMA_TO_DEVICE)
