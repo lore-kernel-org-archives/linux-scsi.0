@@ -1,48 +1,50 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/5] BNX2I - Add 5771E device support to bnx2i driver
-Date: Wed, 09 Dec 2009 20:45:02 -0600
-Message-ID: <4B2060AE.7090005@cs.wisc.edu>
-References: <1260214773.31468.92.camel@anilgv-desktop>
+Subject: Re: [PATCH 2/5 ] BNX2I - Adjust sq_size module parametr to power
+ of 2 only if a non-zero value is specified
+Date: Wed, 09 Dec 2009 20:45:44 -0600
+Message-ID: <4B2060D8.2080207@cs.wisc.edu>
+References: <1260214794.31468.93.camel@anilgv-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57298 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57304 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757342AbZLJCpH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Dec 2009 21:45:07 -0500
-In-Reply-To: <1260214773.31468.92.camel@anilgv-desktop>
+	id S1758000AbZLJCps (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Dec 2009 21:45:48 -0500
+In-Reply-To: <1260214794.31468.93.camel@anilgv-desktop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Veerabhadrappa <anilgv@broadcom.com>
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, mchan@broadcom.com, poswald@novell.com
+To: open-iscsi@googlegroups.com
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, mchan@broadcom.com, poswald@novell.com
 
 Anil Veerabhadrappa wrote:
->     * Add code to enumerate 5771E device
+>     * This issue was discovered during 10G iscsi testing
+>     * Default value of 'sq_size' module parameter is '0' which means
+>       driver should use predefined SQ queue size when setting up iscsi
+>       connection.
+>     * roundup_pow_of_two(0) results in '1' and forces driver to setup
+>       connections with send queue size of '1' and results in lower
+>       performance as well
 > 
 > Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 > ---
->  drivers/scsi/bnx2i/bnx2i_init.c |    6 +++++-
->  1 files changed, 5 insertions(+), 1 deletions(-)
+>  drivers/scsi/bnx2i/bnx2i_init.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
 > diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-> index 0c4210d..3c46458 100644
+> index 3c46458..dc6b56c 100644
 > --- a/drivers/scsi/bnx2i/bnx2i_init.c
 > +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-> @@ -83,8 +83,12 @@ void bnx2i_identify_device(struct bnx2i_hba *hba)
->  		set_bit(BNX2I_NX2_DEV_5709, &hba->cnic_dev_type);
->  		hba->mail_queue_access = BNX2I_MQ_BIN_MODE;
->  	} else if (hba->pci_did == PCI_DEVICE_ID_NX2_57710 ||
-> -		   hba->pci_did == PCI_DEVICE_ID_NX2_57711)
-> +		   hba->pci_did == PCI_DEVICE_ID_NX2_57711 ||
-> +		   hba->pci_did == PCI_DEVICE_ID_NX2_57711E)
->  		set_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type);
-> +	else
-> +		printk(KERN_ALERT "bnx2i: unknown device, 0x%x\n", 
-> +				  hba->pci_did);
->  }
+> @@ -367,7 +367,7 @@ static int __init bnx2i_mod_init(void)
 >  
+>  	printk(KERN_INFO "%s", version);
 >  
+> -	if (!is_power_of_2(sq_size))
+> +	if (sq_size && !is_power_of_2(sq_size))
+>  		sq_size = roundup_pow_of_two(sq_size);
+>  
+>  	mutex_init(&bnx2i_dev_lock);
 
 Ok.
 
