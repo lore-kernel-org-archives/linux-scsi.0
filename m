@@ -1,95 +1,105 @@
-From: "Ed Lin - PTU" <ed.lin@promise.com>
-Subject: RE: [PATCH 1/1] lpfc: lpfc no longer discovers lun 255
-Date: Thu, 10 Dec 2009 12:03:59 -0800
-Message-ID: <85ABFDC4641C4847BA6088F2982EFD8F03200AB8@nonamew.ptu.promise.com>
-References: <1260459787.2457.74.camel@mulgrave.site>
+From: kxie@chelsio.com
+Subject: [PATCH 1/1 v2] cxgb3i: Fix a login over vlan issue
+Date: Thu, 10 Dec 2009 13:03:48 -0800
+Message-ID: <200912102103.nBAL3mkn001507@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-2022-jp"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway.promise.com ([67.111.72.2]:37491 "EHLO
-	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751757AbZLJUTE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2009 15:19:04 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1260459787.2457.74.camel@mulgrave.site>
+Received: from stargate.chelsio.com ([67.207.112.58]:29242 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757045AbZLJVDx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2009 16:03:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, Brian King <brking@linux.vnet.ibm.com>
-Cc: Michael Reed <mdr@sgi.com>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, rakesh@chelsio.com, kxie@chelsio.com, davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+
+[PATCH 1/1 v2] cxgb3i: Fix a login over vlan issue
+
+From: Rakesh Ranjan <rakesh@chelsio.com>
+
+Fix a target login issue, when parent interface is vlan and we are using
+cxgb3i sepecific private ip address in '/etc/iscsi/ifaces/' iface file.
+
+Acked-by: Karen Xie <kxie@chelsio.com>
+Signed-off-by: Rakesh Ranjan <rakesh@chelsio.com>
+---
+
+ drivers/scsi/cxgb3i/cxgb3i_offload.c |   34 +++++++++++++++++++++++++++++++++-
+ 1 files changed, 33 insertions(+), 1 deletions(-)
 
 
-
->-----Original Message-----
->From: James Bottomley [mailto:James.Bottomley@suse.de] 
->Sent: 2009年12月10日 7:43
->To: Brian King
->Cc: Michael Reed; James Smart; linux-scsi; Ed Lin - PTU
->Subject: Re: [PATCH 1/1] lpfc: lpfc no longer discovers lun 255
->
->
->On Thu, 2009-12-10 at 07:01 -0600, Brian King wrote:
->> Michael Reed wrote:
->> > 
->> > James Bottomley wrote:
->> >> On Fri, 2009-12-04 at 11:55 -0600, Michael Reed wrote:
->> >>> Yeah.  I'm working on a patch for qla1280.c also.  
->Probably others
->> >>> have been hit.  It would have been nice if the patch author had
->> >>> fixed all the drivers instead of introducing this change 
->and waiting
->> >>> for people to discover their last lun is now missing.
->> >> Actually, lets just revert this:
->> >>
->> >> commit 71c309995bff5b5e84253931888b6e8163ee1df0
->> >> Author: Ed Lin <ed.lin@promise.com>
->> >> Date:   Fri Oct 9 15:23:27 2009 -0700
->> >>
->> >>     [SCSI] fix inconsistent usage of max_lun
->> >>
->> >> Which is causing all the problems.  Perhaps we need to update the
->> >> documentation instead?
->> >>
->> >> James
->> > 
->> > As much as I would whine about it, I think moving to a consistent
->> > usage of max_lun is a good thing.  There are only about 
->140 references
->> > to max_lun in the cscope output so it wouldn't be that difficult
->> > for people to go through and fix up their drivers.  And, I suspect
->> > a good portion will not require any change as they already either
->> > work correctly with sequential lun scan by design or have 
->misinterpreted
->> > the meaning of max_lun, and thus will continue to work correctly
->> > with report lun scan with Mr. Lin's patch applied.
->> 
->> The ibmvfc driver was using 0xffffffff to indicate it 
->essentially had no limit
->> on the number of LUNs. It appears this can no longer be done 
->with the commit
->> above since max_lun is an unsigned int.
->
->Right, I've pulled the commit.  It was largely cosmetic ... moving what
->we actually do to match the documentation.  However, since it appears
->everyone reads the code not the docs, the better course might be moving
->the documentation to match what we actually do.
->
-
-Well, for the stex driver it is not just cosmetic. Unfortunately the member
-"lun" in a request message of stex driver is only u8, which means, if user
-manually scans lun 256, it will become lun 0. The original patch was intended
-to address the issue.
-
-But I didn't notice the repost lun case could have problem when preparing
-the original patch. It seems there is no easy fix for it. There is no indication
-which case is using sequential scan and which one is using report lun. The
-confusion in the manual scan case will continue (but it may do no harm if
-no one reported problem). So, I may need to prepare a patch to the stex
-driver, either changing max_lun to 255 (so that user can not manually scan
-lun 256), or comparing lun in the scsi command with max_lun to make sure
-it is in a valid range.
-
-Thanks,
-
-Ed Lin
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+index 26ffdcd..15a00e8 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+@@ -1440,6 +1440,10 @@ void cxgb3i_c3cn_release(struct s3_conn *c3cn)
+ static int is_cxgb3_dev(struct net_device *dev)
+ {
+ 	struct cxgb3i_sdev_data *cdata;
++	struct net_device *ndev = dev;
++
++	if (dev->priv_flags & IFF_802_1Q_VLAN)
++		ndev = vlan_dev_real_dev(dev);
+ 
+ 	write_lock(&cdata_rwlock);
+ 	list_for_each_entry(cdata, &cdata_list, list) {
+@@ -1447,7 +1451,7 @@ static int is_cxgb3_dev(struct net_device *dev)
+ 		int i;
+ 
+ 		for (i = 0; i < ports->nports; i++)
+-			if (dev == ports->lldevs[i]) {
++			if (ndev == ports->lldevs[i]) {
+ 				write_unlock(&cdata_rwlock);
+ 				return 1;
+ 			}
+@@ -1566,6 +1570,26 @@ out_err:
+ 	return -EINVAL;
+ }
+ 
++/**
++ * cxgb3i_find_dev - find the interface associated with the given address
++ * @ipaddr: ip address
++ */
++static struct net_device *
++cxgb3i_find_dev(struct net_device *dev, __be32 ipaddr)
++{
++	struct flowi fl;
++	int err;
++	struct rtable *rt;
++
++	memset(&fl, 0, sizeof(fl));
++	fl.nl_u.ip4_u.daddr = ipaddr;
++
++	err = ip_route_output_key(dev ? dev_net(dev) : &init_net, &rt, &fl);
++	if (!err)
++		return (&rt->u.dst)->dev;
++
++	return NULL;
++}
+ 
+ /**
+  * cxgb3i_c3cn_connect - initiates an iscsi tcp connection to a given address
+@@ -1581,6 +1605,7 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
+ 	struct cxgb3i_sdev_data *cdata;
+ 	struct t3cdev *cdev;
+ 	__be32 sipv4;
++	struct net_device *dstdev;
+ 	int err;
+ 
+ 	c3cn_conn_debug("c3cn 0x%p, dev 0x%p.\n", c3cn, dev);
+@@ -1591,6 +1616,13 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
+ 	c3cn->daddr.sin_port = usin->sin_port;
+ 	c3cn->daddr.sin_addr.s_addr = usin->sin_addr.s_addr;
+ 
++	dstdev = cxgb3i_find_dev(dev, usin->sin_addr.s_addr);
++	if (!dstdev || !is_cxgb3_dev(dstdev))
++		return -ENETUNREACH;
++
++	if (dstdev->priv_flags & IFF_802_1Q_VLAN)
++		dev = dstdev;
++
+ 	rt = find_route(dev, c3cn->saddr.sin_addr.s_addr,
+ 			c3cn->daddr.sin_addr.s_addr,
+ 			c3cn->saddr.sin_port,
