@@ -1,47 +1,49 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH 4/5] BNX2I - Task management ABORT TASK fixes
-Date: Wed, 09 Dec 2009 20:44:03 -0600
-Message-ID: <4B206073.9060107@cs.wisc.edu>
-References: <1260214829.31468.99.camel@anilgv-desktop>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/5] BNX2I - Add 5771E device support to bnx2i driver
+Date: Wed, 09 Dec 2009 20:45:02 -0600
+Message-ID: <4B2060AE.7090005@cs.wisc.edu>
+References: <1260214773.31468.92.camel@anilgv-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <3fmAgSwgLCkoyuotmqxoo4.8u4o.qp601qz-u4o4us00sxqs30614.o0y-JX7+OpRa80S8N/ZHIG5xj07CuiCeIGUxQQ4Iyu8u01E@public.gmane.org>
-In-Reply-To: <1260214829.31468.99.camel@anilgv-desktop>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=>,
-	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=>,
-	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Cc: James.Bottomley-l3A5Bk7waGM@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, poswald-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57298 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757342AbZLJCpH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Dec 2009 21:45:07 -0500
+In-Reply-To: <1260214773.31468.92.camel@anilgv-desktop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Anil Veerabhadrappa <anilgv@broadcom.com>
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, mchan@broadcom.com, poswald@novell.com
 
 Anil Veerabhadrappa wrote:
->     * Due to typo error driver was failing TMF Abort Task request
->       when ctask->sc != NULL. Fixed code to fail TMF ABORT Task
->       request only when ctask->sc == NULL
->     * Clear age component (19 most significant bits) of reference ITT
->       carried in iSCSI TMF PDU. Age component is internal to initiator
->       side and only lower bits of ITT as defined by ISCSI_ITT_MASK is
->       is sent on wire
->     * Retrieve LUN directly from the ref_sc and update SQ wqe as per
->       chip HSI (Host Software Interface) specification
+>     * Add code to enumerate 5771E device
 > 
-> Signed-off-by: Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+> Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_init.c |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+> index 0c4210d..3c46458 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_init.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_init.c
+> @@ -83,8 +83,12 @@ void bnx2i_identify_device(struct bnx2i_hba *hba)
+>  		set_bit(BNX2I_NX2_DEV_5709, &hba->cnic_dev_type);
+>  		hba->mail_queue_access = BNX2I_MQ_BIN_MODE;
+>  	} else if (hba->pci_did == PCI_DEVICE_ID_NX2_57710 ||
+> -		   hba->pci_did == PCI_DEVICE_ID_NX2_57711)
+> +		   hba->pci_did == PCI_DEVICE_ID_NX2_57711 ||
+> +		   hba->pci_did == PCI_DEVICE_ID_NX2_57711E)
+>  		set_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type);
+> +	else
+> +		printk(KERN_ALERT "bnx2i: unknown device, 0x%x\n", 
+> +				  hba->pci_did);
+>  }
+>  
+>  
 
+Ok.
 
-Looks ok
-
-Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-
---
-
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
