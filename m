@@ -1,8 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 1/3] libfc: remote port gets stuck in restart state without
-	really restarting
-Date: Thu, 10 Dec 2009 09:59:20 -0800
-Message-ID: <20091210175920.12227.814.stgit@localhost.localdomain>
+Subject: [PATCH 2/3] libfc: reduce hold time on SCSI host lock
+Date: Thu, 10 Dec 2009 09:59:26 -0800
+Message-ID: <20091210175926.12227.98818.stgit@localhost.localdomain>
 References: <20091210175915.12227.50544.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,85 +9,213 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:5074 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761225AbZLJR7R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Dec 2009 12:59:17 -0500
+	id S1761232AbZLJR7T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Dec 2009 12:59:19 -0500
 In-Reply-To: <20091210175915.12227.50544.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Abhijeet Joglekar <abjoglek@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Abhijeet Joglekar <abjoglek@cisco.com>
+From: Chris Leech <christopher.leech@intel.com>
 
-We ran into a scenario where a remote port goes into RESTART state, but
-never gets added to scsi transport. The running vmcore showed the following:
-a) Port was in RESTART state
-b) rdata->event was STOP
-c) no work gets scheduled for the remote work to fc_rport_work
+Introduce a new lock to protect the list of fc_fcp_pkt structs in libfc
+instead of using the host lock.  This reduces the contention of this heavily
+used lock, and I see up to a 25% performance gain in CPU bound small I/O
+tests when scaling out across multiple quad-core CPUs.
 
-After this point, shut/no-shut of the remote port did not cause the port
-to get re-discovered. The port would move betwen DELETE and RESTART states,
-but the event would always be STOP, no work would get scheduled to
-fc_rport_work and the port would not get added to scsi_transport.
+The big win is in removing the host lock from the completion path
+completely, as it does not need to be held around the call to scsi_done.
 
-The problem is that rdata->event is not set to NONE after a port is
-restarted. After this point, no more work gets scheduled for the remote port
-since new work is scheduled only if rdata->event is non-NONE. So, the event
-and state keep changing, but fc_rport_work does not get scheduled to actually
-handle the event.
-
-Here's a transition of states that explains the above observation:
-
-) Port is first in READY State, event is NONE
-
-2) RSCN on shut, port goes to DELETED, event is stop
-
-3) Before fc_rport_work runs, RSCN on no-shut, port goes to RESTART, event is
-still STOP
-
-4) fc_rport_work gets scheduled, removes the port from transport, sees state
-as RESTART, begins the PLOGI state machine, event remains as STOP (event NOT
-changed to NONE, this is the bug)
-
-5) Plogi state machine completes, port state goes to READY, event goes to
-READY, but no work is scheduled since event was STOP (non-NONE) before.
-Fc_rport_work is not scheduled, port remains in READY state, but is not added
-to transport.
-
-Things are broken at this point. Libfc rport is ready, but no transport rport
-created.
-
-6) now a shut causes port state to change to DELETE, event to change to STOP,
-no work gets scheduled
-
-7) no-shut causes port state to change to RESTART, event remains at STOP,
-no work gets scheduled
-
-(6) and (7) now get repeated everytime we do shut/no-shut. No way to get out
-of this state. Fcc reset does not help too.
-
-Only way to get out is to load/unload module.
-
-Fix is to set rdata->event to NONE while processing the STOP/LOGO/FAILED
-events, inside the discovery and rport locks.
-
-Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
+Signed-off-by: Chris Leech <christopher.leech@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_rport.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |   65 ++++++++++++++++++++++++-------------------
+ 1 files changed, 36 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 35ca0e7..0230052 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -310,6 +310,7 @@ static void fc_rport_work(struct work_struct *work)
- 				restart = 1;
- 			else
- 				list_del(&rdata->peers);
-+			rdata->event = RPORT_EV_NONE;
- 			mutex_unlock(&rdata->rp_mutex);
- 			mutex_unlock(&lport->disc.disc_mutex);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index c4b58d0..881d5df 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -68,18 +68,20 @@ struct kmem_cache *scsi_pkt_cachep;
+ 
+ /**
+  * struct fc_fcp_internal - FCP layer internal data
+- * @scsi_pkt_pool:  Memory pool to draw FCP packets from
++ * @scsi_pkt_pool: Memory pool to draw FCP packets from
++ * @scsi_queue_lock: Protects the scsi_pkt_queue
+  * @scsi_pkt_queue: Current FCP packets
+  * @last_can_queue_ramp_down_time: ramp down time
+  * @last_can_queue_ramp_up_time: ramp up time
+  * @max_can_queue: max can_queue size
+  */
+ struct fc_fcp_internal {
+-	mempool_t	 *scsi_pkt_pool;
+-	struct list_head scsi_pkt_queue;
+-	unsigned long last_can_queue_ramp_down_time;
+-	unsigned long last_can_queue_ramp_up_time;
+-	int max_can_queue;
++	mempool_t		*scsi_pkt_pool;
++	spinlock_t		scsi_queue_lock;
++	struct list_head	scsi_pkt_queue;
++	unsigned long		last_can_queue_ramp_down_time;
++	unsigned long		last_can_queue_ramp_up_time;
++	int			max_can_queue;
+ };
+ 
+ #define fc_get_scsi_internal(x)	((struct fc_fcp_internal *)(x)->scsi_priv)
+@@ -410,12 +412,14 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
+ 	unsigned long flags;
+ 
+ 	fp = fc_frame_alloc(lport, len);
+-	if (!fp) {
+-		spin_lock_irqsave(lport->host->host_lock, flags);
+-		fc_fcp_can_queue_ramp_down(lport);
+-		spin_unlock_irqrestore(lport->host->host_lock, flags);
+-	}
+-	return fp;
++	if (likely(fp))
++		return fp;
++
++	/* error case */
++	spin_lock_irqsave(lport->host->host_lock, flags);
++	fc_fcp_can_queue_ramp_down(lport);
++	spin_unlock_irqrestore(lport->host->host_lock, flags);
++	return NULL;
+ }
+ 
+ /**
+@@ -990,7 +994,7 @@ static void fc_fcp_cleanup_each_cmd(struct fc_lport *lport, unsigned int id,
+ 	struct scsi_cmnd *sc_cmd;
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(lport->host->host_lock, flags);
++	spin_lock_irqsave(&si->scsi_queue_lock, flags);
+ restart:
+ 	list_for_each_entry(fsp, &si->scsi_pkt_queue, list) {
+ 		sc_cmd = fsp->cmd;
+@@ -1001,7 +1005,7 @@ restart:
+ 			continue;
+ 
+ 		fc_fcp_pkt_hold(fsp);
+-		spin_unlock_irqrestore(lport->host->host_lock, flags);
++		spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+ 
+ 		if (!fc_fcp_lock_pkt(fsp)) {
+ 			fc_fcp_cleanup_cmd(fsp, error);
+@@ -1010,14 +1014,14 @@ restart:
  		}
+ 
+ 		fc_fcp_pkt_release(fsp);
+-		spin_lock_irqsave(lport->host->host_lock, flags);
++		spin_lock_irqsave(&si->scsi_queue_lock, flags);
+ 		/*
+ 		 * while we dropped the lock multiple pkts could
+ 		 * have been released, so we have to start over.
+ 		 */
+ 		goto restart;
+ 	}
+-	spin_unlock_irqrestore(lport->host->host_lock, flags);
++	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+ }
+ 
+ /**
+@@ -1035,11 +1039,12 @@ static void fc_fcp_abort_io(struct fc_lport *lport)
+  * @fsp:   The FCP packet to send
+  *
+  * Return:  Zero for success and -1 for failure
+- * Locks:   Called with the host lock and irqs disabled.
++ * Locks:   Called without locks held
+  */
+ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
+ {
+ 	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
++	unsigned long flags;
+ 	int rc;
+ 
+ 	fsp->cmd->SCp.ptr = (char *)fsp;
+@@ -1049,13 +1054,16 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
+ 	int_to_scsilun(fsp->cmd->device->lun,
+ 		       (struct scsi_lun *)fsp->cdb_cmd.fc_lun);
+ 	memcpy(fsp->cdb_cmd.fc_cdb, fsp->cmd->cmnd, fsp->cmd->cmd_len);
+-	list_add_tail(&fsp->list, &si->scsi_pkt_queue);
+ 
+-	spin_unlock_irq(lport->host->host_lock);
++	spin_lock_irqsave(&si->scsi_queue_lock, flags);
++	list_add_tail(&fsp->list, &si->scsi_pkt_queue);
++	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+ 	rc = lport->tt.fcp_cmd_send(lport, fsp, fc_fcp_recv);
+-	spin_lock_irq(lport->host->host_lock);
+-	if (rc)
++	if (unlikely(rc)) {
++		spin_lock_irqsave(&si->scsi_queue_lock, flags);
+ 		list_del(&fsp->list);
++		spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
++	}
+ 
+ 	return rc;
+ }
+@@ -1752,6 +1760,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 	struct fcoe_dev_stats *stats;
+ 
+ 	lport = shost_priv(sc_cmd->device->host);
++	spin_unlock_irq(lport->host->host_lock);
+ 
+ 	rval = fc_remote_port_chkready(rport);
+ 	if (rval) {
+@@ -1834,6 +1843,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ out:
++	spin_lock_irq(lport->host->host_lock);
+ 	return rc;
+ }
+ EXPORT_SYMBOL(fc_queuecommand);
+@@ -1864,11 +1874,8 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 
+ 	lport = fsp->lp;
+ 	si = fc_get_scsi_internal(lport);
+-	spin_lock_irqsave(lport->host->host_lock, flags);
+-	if (!fsp->cmd) {
+-		spin_unlock_irqrestore(lport->host->host_lock, flags);
++	if (!fsp->cmd)
+ 		return;
+-	}
+ 
+ 	/*
+ 	 * if can_queue ramp down is done then try can_queue ramp up
+@@ -1880,10 +1887,8 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 	sc_cmd = fsp->cmd;
+ 	fsp->cmd = NULL;
+ 
+-	if (!sc_cmd->SCp.ptr) {
+-		spin_unlock_irqrestore(lport->host->host_lock, flags);
++	if (!sc_cmd->SCp.ptr)
+ 		return;
+-	}
+ 
+ 	CMD_SCSI_STATUS(sc_cmd) = fsp->cdb_status;
+ 	switch (fsp->status_code) {
+@@ -1945,10 +1950,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 		break;
+ 	}
+ 
++	spin_lock_irqsave(&si->scsi_queue_lock, flags);
+ 	list_del(&fsp->list);
++	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+ 	sc_cmd->SCp.ptr = NULL;
+ 	sc_cmd->scsi_done(sc_cmd);
+-	spin_unlock_irqrestore(lport->host->host_lock, flags);
+ 
+ 	/* release ref from initial allocation in queue command */
+ 	fc_fcp_pkt_release(fsp);
+@@ -2216,6 +2222,7 @@ int fc_fcp_init(struct fc_lport *lport)
+ 	lport->scsi_priv = si;
+ 	si->max_can_queue = lport->host->can_queue;
+ 	INIT_LIST_HEAD(&si->scsi_pkt_queue);
++	spin_lock_init(&si->scsi_queue_lock);
+ 
+ 	si->scsi_pkt_pool = mempool_create_slab_pool(2, scsi_pkt_cachep);
+ 	if (!si->scsi_pkt_pool) {
 
