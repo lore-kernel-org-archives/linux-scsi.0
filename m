@@ -1,71 +1,46 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: Patch added to scsi-misc-2.6:  [SCSI] libosd: Fix blk_put_request
- locking again
-Date: Thu, 10 Dec 2009 19:03:47 +0200
-Message-ID: <4B2129F3.9040906@panasas.com>
-References: <200912101549.nBAFnWkY032077@hera.kernel.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [dm-devel] Re: [PATCH] Always pass result and sense on request
+ completion
+Date: Thu, 10 Dec 2009 11:03:33 -0600
+Message-ID: <4B2129E5.9020205@cs.wisc.edu>
+References: <20091119122454.71A7D3A174@ochil.suse.de>	<4B20C417.4020201@suse.de> <1260463457.2457.80.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:12363 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761129AbZLJRDo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2009 12:03:44 -0500
-In-Reply-To: <200912101549.nBAFnWkY032077@hera.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:46941 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761190AbZLJRDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Dec 2009 12:03:50 -0500
+In-Reply-To: <1260463457.2457.80.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@kernel.org>
-Cc: Vineet Agarwal <checkout.vineet@gmail.com>, Stable Tree <stable@kernel.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On 12/10/2009 05:49 PM, James Bottomley wrote:
-> Your commit:
+James Bottomley wrote:
+> On Thu, 2009-12-10 at 10:49 +0100, Hannes Reinecke wrote:
+>> Hi James,
+>>
+>> would you mind commenting on this patch?
+>> We really need this if we ever want to be able to do proper error code
+>> handling from multipath.
 > 
->     [SCSI] libosd: Fix blk_put_request locking again
->     
->     So libosd has decided to sacrifice some code simplicity for the sake of
->     a clean API. One of these things is the possibility for users to call
->     osd_end_request, in any condition at any state. This opens up some
->     problems with calling blk_put_request when out-side of the completion
->     callback but calling __blk_put_request when detecting a from-completion
->     state.
->     
->     The current hack was working just fine until exofs decided to operate on
->     all devices in parallel and wait for the sum of the requests, before
->     deallocating all osd-requests at once. There are two new possible cases
->     1. All request in a group are deallocated as part of the last request's
->        async-done, request_queue is locked.
->     2. All request in a group where executed asynchronously, but
->        de-allocation was delayed to after the async-done, in the context of
->        another thread. Async execution but request_queue is not locked.
->     
->     The solution I chose was to separate the deallocation of the osd_request
->     which has the information users need, from the deallocation of the
->     internal(2) requests which impose the locking problem. The internal
->     block-requests are freed unconditionally inside the async-done-callback,
->     when we know the queue is always locked. If at osd_end_request time we
->     still have a bock-request, then we know it did not come from within an
->     async-done-callback and we can call the regular blk_put_request.
->     
->     The internal requests were used for carrying error information after
->     execution. This information is now copied to osd_request members for
->     later analysis by user code.
->     
->     The external API and behaviour was unchanged, except now it really
->     supports what was previously advertised.
->     
->     Reported-by: Vineet Agarwal <checkout.vineet@gmail.com>
->     Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->     Cc: Stable Tree <stable@kernel.org>
-
-The patch in it's current form will not apply to 2.6.32 and down. Since it is based
-on current 2.6.33-rc0 code.
-
-Anyway stable@kernel need *not* apply, because even though the bug does exist in older
-Kernels, there where no clients that would exercise it, before 2.6.33-rc0.
-
->     Signed-off-by: James Bottomley <James.Bottomley@suse.de>
+> OK, not keen on the way you're setting req->errors.
+> 
+> Our big problem with FS requests is deferred or corrected errors
+> (basically we never want the FS to think we had a problem with them).  I
+> think it's currently OK because block tends to believe the returned
+> error code rather than req->errors ... I'd just hate it if that changed
+> and suddenly lots of stuff broke.
+> 
+> I think you're just looking for the sense data, so could you look at
+> that and not set req->errors?
 > 
 
-Thanks
-Boaz
+For the specific bug Hannes is fixing we only need the sense code, so 
+that would work. If you also pass info like the host_byte bits then we 
+can do something like fail a path right away for a DID_TRANSPORT* or 
+DID_NO_CONNECT failure, but then for other errors do something else. 
+RAID could also not fail the drive on transport errors, and do something 
+different too.
