@@ -1,221 +1,208 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 2/3] libfc: reduce hold time on SCSI host lock
-Date: Thu, 10 Dec 2009 09:59:26 -0800
-Message-ID: <20091210175926.12227.98818.stgit@localhost.localdomain>
+Subject: [PATCH 3/3] fcoe, libfc: adds enable/disable for fcoe interface
+Date: Thu, 10 Dec 2009 09:59:31 -0800
+Message-ID: <20091210175931.12227.44974.stgit@localhost.localdomain>
 References: <20091210175915.12227.50544.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5074 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:47459 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761232AbZLJR7T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Dec 2009 12:59:19 -0500
+	id S1761305AbZLJR7Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Dec 2009 12:59:25 -0500
 In-Reply-To: <20091210175915.12227.50544.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Chris Leech <christopher.leech@intel.com>
+From: Vasu Dev <vasu.dev@intel.com>
 
-Introduce a new lock to protect the list of fc_fcp_pkt structs in libfc
-instead of using the host lock.  This reduces the contention of this heavily
-used lock, and I see up to a 25% performance gain in CPU bound small I/O
-tests when scaling out across multiple quad-core CPUs.
+This is to allow fcoemon util to enable or disable a fcoe interface
+according to DCB link state change.
 
-The big win is in removing the host lock from the completion path
-completely, as it does not need to be held around the call to scsi_done.
+Adds sysfs module param enable and disable for this and also
+updates existing other module param description to be consistent
+and more accurate since older description had double "fcoe" word
+with less meaningful netdev reference to user space.
 
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
+Adds code to ignore redundant fc_lport_enter_reset handling for a
+already disabled fcoe interface by checking LPORT_ST_DISABLED
+or LPORT_ST_LOGO states, this also prevents lport state transition
+on link flap on a disabled interface.
+
+Above changes required lport state transition to get out of
+disabled or logo state on call to fc_fabric_login.
+
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |   65 ++++++++++++++++++++++++-------------------
- 1 files changed, 36 insertions(+), 29 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |  110 ++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libfc/fc_lport.c |    7 ++-
+ 2 files changed, 114 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index c4b58d0..881d5df 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -68,18 +68,20 @@ struct kmem_cache *scsi_pkt_cachep;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index a30ffaa..2ecb2f0 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -101,6 +101,8 @@ static int fcoe_cpu_callback(struct notifier_block *, unsigned long, void *);
+ 
+ static int fcoe_create(const char *, struct kernel_param *);
+ static int fcoe_destroy(const char *, struct kernel_param *);
++static int fcoe_enable(const char *, struct kernel_param *);
++static int fcoe_disable(const char *, struct kernel_param *);
+ 
+ static struct fc_seq *fcoe_elsct_send(struct fc_lport *,
+ 				      u32 did, struct fc_frame *,
+@@ -115,10 +117,16 @@ static void fcoe_get_lesb(struct fc_lport *, struct fc_els_lesb *);
+ 
+ module_param_call(create, fcoe_create, NULL, NULL, S_IWUSR);
+ __MODULE_PARM_TYPE(create, "string");
+-MODULE_PARM_DESC(create, "Create fcoe fcoe using net device passed in.");
++MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet interface");
+ module_param_call(destroy, fcoe_destroy, NULL, NULL, S_IWUSR);
+ __MODULE_PARM_TYPE(destroy, "string");
+-MODULE_PARM_DESC(destroy, "Destroy fcoe fcoe");
++MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet interface");
++module_param_call(enable, fcoe_enable, NULL, NULL, S_IWUSR);
++__MODULE_PARM_TYPE(enable, "string");
++MODULE_PARM_DESC(enable, " Enables fcoe on a ethernet interface.");
++module_param_call(disable, fcoe_disable, NULL, NULL, S_IWUSR);
++__MODULE_PARM_TYPE(disable, "string");
++MODULE_PARM_DESC(disable, " Disables fcoe on a ethernet interface.");
+ 
+ /* notification function for packets from net device */
+ static struct notifier_block fcoe_notifier = {
+@@ -1838,6 +1846,104 @@ static struct net_device *fcoe_if_to_netdev(const char *buffer)
+ }
  
  /**
-  * struct fc_fcp_internal - FCP layer internal data
-- * @scsi_pkt_pool:  Memory pool to draw FCP packets from
-+ * @scsi_pkt_pool: Memory pool to draw FCP packets from
-+ * @scsi_queue_lock: Protects the scsi_pkt_queue
-  * @scsi_pkt_queue: Current FCP packets
-  * @last_can_queue_ramp_down_time: ramp down time
-  * @last_can_queue_ramp_up_time: ramp up time
-  * @max_can_queue: max can_queue size
-  */
- struct fc_fcp_internal {
--	mempool_t	 *scsi_pkt_pool;
--	struct list_head scsi_pkt_queue;
--	unsigned long last_can_queue_ramp_down_time;
--	unsigned long last_can_queue_ramp_up_time;
--	int max_can_queue;
-+	mempool_t		*scsi_pkt_pool;
-+	spinlock_t		scsi_queue_lock;
-+	struct list_head	scsi_pkt_queue;
-+	unsigned long		last_can_queue_ramp_down_time;
-+	unsigned long		last_can_queue_ramp_up_time;
-+	int			max_can_queue;
- };
- 
- #define fc_get_scsi_internal(x)	((struct fc_fcp_internal *)(x)->scsi_priv)
-@@ -410,12 +412,14 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
- 	unsigned long flags;
- 
- 	fp = fc_frame_alloc(lport, len);
--	if (!fp) {
--		spin_lock_irqsave(lport->host->host_lock, flags);
--		fc_fcp_can_queue_ramp_down(lport);
--		spin_unlock_irqrestore(lport->host->host_lock, flags);
--	}
--	return fp;
-+	if (likely(fp))
-+		return fp;
++ * fcoe_disable() - Disables a FCoE interface
++ * @buffer: The name of the Ethernet interface to be disabled
++ * @kp:	    The associated kernel parameter
++ *
++ * Called from sysfs.
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_disable(const char *buffer, struct kernel_param *kp)
++{
++	struct fcoe_interface *fcoe;
++	struct net_device *netdev;
++	int rc = 0;
 +
-+	/* error case */
-+	spin_lock_irqsave(lport->host->host_lock, flags);
-+	fc_fcp_can_queue_ramp_down(lport);
-+	spin_unlock_irqrestore(lport->host->host_lock, flags);
-+	return NULL;
- }
- 
- /**
-@@ -990,7 +994,7 @@ static void fc_fcp_cleanup_each_cmd(struct fc_lport *lport, unsigned int id,
- 	struct scsi_cmnd *sc_cmd;
- 	unsigned long flags;
- 
--	spin_lock_irqsave(lport->host->host_lock, flags);
-+	spin_lock_irqsave(&si->scsi_queue_lock, flags);
- restart:
- 	list_for_each_entry(fsp, &si->scsi_pkt_queue, list) {
- 		sc_cmd = fsp->cmd;
-@@ -1001,7 +1005,7 @@ restart:
- 			continue;
- 
- 		fc_fcp_pkt_hold(fsp);
--		spin_unlock_irqrestore(lport->host->host_lock, flags);
-+		spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
- 
- 		if (!fc_fcp_lock_pkt(fsp)) {
- 			fc_fcp_cleanup_cmd(fsp, error);
-@@ -1010,14 +1014,14 @@ restart:
- 		}
- 
- 		fc_fcp_pkt_release(fsp);
--		spin_lock_irqsave(lport->host->host_lock, flags);
-+		spin_lock_irqsave(&si->scsi_queue_lock, flags);
- 		/*
- 		 * while we dropped the lock multiple pkts could
- 		 * have been released, so we have to start over.
- 		 */
- 		goto restart;
- 	}
--	spin_unlock_irqrestore(lport->host->host_lock, flags);
-+	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
- }
- 
- /**
-@@ -1035,11 +1039,12 @@ static void fc_fcp_abort_io(struct fc_lport *lport)
-  * @fsp:   The FCP packet to send
-  *
-  * Return:  Zero for success and -1 for failure
-- * Locks:   Called with the host lock and irqs disabled.
-+ * Locks:   Called without locks held
-  */
- static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
- {
- 	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
-+	unsigned long flags;
- 	int rc;
- 
- 	fsp->cmd->SCp.ptr = (char *)fsp;
-@@ -1049,13 +1054,16 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
- 	int_to_scsilun(fsp->cmd->device->lun,
- 		       (struct scsi_lun *)fsp->cdb_cmd.fc_lun);
- 	memcpy(fsp->cdb_cmd.fc_cdb, fsp->cmd->cmnd, fsp->cmd->cmd_len);
--	list_add_tail(&fsp->list, &si->scsi_pkt_queue);
- 
--	spin_unlock_irq(lport->host->host_lock);
-+	spin_lock_irqsave(&si->scsi_queue_lock, flags);
-+	list_add_tail(&fsp->list, &si->scsi_pkt_queue);
-+	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
- 	rc = lport->tt.fcp_cmd_send(lport, fsp, fc_fcp_recv);
--	spin_lock_irq(lport->host->host_lock);
--	if (rc)
-+	if (unlikely(rc)) {
-+		spin_lock_irqsave(&si->scsi_queue_lock, flags);
- 		list_del(&fsp->list);
-+		spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
++	mutex_lock(&fcoe_config_mutex);
++#ifdef CONFIG_FCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module paramter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
++		rc = -ENODEV;
++		goto out_nodev;
 +	}
++#endif
++
++	netdev = fcoe_if_to_netdev(buffer);
++	if (!netdev) {
++		rc = -ENODEV;
++		goto out_nodev;
++	}
++
++	rtnl_lock();
++	fcoe = fcoe_hostlist_lookup_port(netdev);
++	rtnl_unlock();
++
++	if (fcoe)
++		fc_fabric_logoff(fcoe->ctlr.lp);
++	else
++		rc = -ENODEV;
++
++	dev_put(netdev);
++out_nodev:
++	mutex_unlock(&fcoe_config_mutex);
++	return rc;
++}
++
++/**
++ * fcoe_enable() - Enables a FCoE interface
++ * @buffer: The name of the Ethernet interface to be enabled
++ * @kp:     The associated kernel parameter
++ *
++ * Called from sysfs.
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_enable(const char *buffer, struct kernel_param *kp)
++{
++	struct fcoe_interface *fcoe;
++	struct net_device *netdev;
++	int rc = 0;
++
++	mutex_lock(&fcoe_config_mutex);
++#ifdef CONFIG_FCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module paramter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
++		rc = -ENODEV;
++		goto out_nodev;
++	}
++#endif
++
++	netdev = fcoe_if_to_netdev(buffer);
++	if (!netdev) {
++		rc = -ENODEV;
++		goto out_nodev;
++	}
++
++	rtnl_lock();
++	fcoe = fcoe_hostlist_lookup_port(netdev);
++	rtnl_unlock();
++
++	if (fcoe)
++		rc = fc_fabric_login(fcoe->ctlr.lp);
++	else
++		rc = -ENODEV;
++
++	dev_put(netdev);
++out_nodev:
++	mutex_unlock(&fcoe_config_mutex);
++	return rc;
++}
++
++/**
+  * fcoe_destroy() - Destroy a FCoE interface
+  * @buffer: The name of the Ethernet interface to be destroyed
+  * @kp:	    The associated kernel parameter
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index bbf4152..99fcef9 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -537,7 +537,9 @@ int fc_fabric_login(struct fc_lport *lport)
+ 	int rc = -1;
  
- 	return rc;
- }
-@@ -1752,6 +1760,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 	struct fcoe_dev_stats *stats;
- 
- 	lport = shost_priv(sc_cmd->device->host);
-+	spin_unlock_irq(lport->host->host_lock);
- 
- 	rval = fc_remote_port_chkready(rport);
- 	if (rval) {
-@@ -1834,6 +1843,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 	mutex_lock(&lport->lp_mutex);
+-	if (lport->state == LPORT_ST_DISABLED) {
++	if (lport->state == LPORT_ST_DISABLED ||
++	    lport->state == LPORT_ST_LOGO) {
++		fc_lport_state_enter(lport, LPORT_ST_RESET);
+ 		fc_lport_enter_reset(lport);
+ 		rc = 0;
  	}
- out:
-+	spin_lock_irq(lport->host->host_lock);
- 	return rc;
- }
- EXPORT_SYMBOL(fc_queuecommand);
-@@ -1864,11 +1874,8 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+@@ -967,6 +969,9 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
+ 	FC_LPORT_DBG(lport, "Entered RESET state from %s state\n",
+ 		     fc_lport_state(lport));
  
- 	lport = fsp->lp;
- 	si = fc_get_scsi_internal(lport);
--	spin_lock_irqsave(lport->host->host_lock, flags);
--	if (!fsp->cmd) {
--		spin_unlock_irqrestore(lport->host->host_lock, flags);
-+	if (!fsp->cmd)
- 		return;
--	}
- 
- 	/*
- 	 * if can_queue ramp down is done then try can_queue ramp up
-@@ -1880,10 +1887,8 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
- 	sc_cmd = fsp->cmd;
- 	fsp->cmd = NULL;
- 
--	if (!sc_cmd->SCp.ptr) {
--		spin_unlock_irqrestore(lport->host->host_lock, flags);
-+	if (!sc_cmd->SCp.ptr)
- 		return;
--	}
- 
- 	CMD_SCSI_STATUS(sc_cmd) = fsp->cdb_status;
- 	switch (fsp->status_code) {
-@@ -1945,10 +1950,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
- 		break;
- 	}
- 
-+	spin_lock_irqsave(&si->scsi_queue_lock, flags);
- 	list_del(&fsp->list);
-+	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
- 	sc_cmd->SCp.ptr = NULL;
- 	sc_cmd->scsi_done(sc_cmd);
--	spin_unlock_irqrestore(lport->host->host_lock, flags);
- 
- 	/* release ref from initial allocation in queue command */
- 	fc_fcp_pkt_release(fsp);
-@@ -2216,6 +2222,7 @@ int fc_fcp_init(struct fc_lport *lport)
- 	lport->scsi_priv = si;
- 	si->max_can_queue = lport->host->can_queue;
- 	INIT_LIST_HEAD(&si->scsi_pkt_queue);
-+	spin_lock_init(&si->scsi_queue_lock);
- 
- 	si->scsi_pkt_pool = mempool_create_slab_pool(2, scsi_pkt_cachep);
- 	if (!si->scsi_pkt_pool) {
++	if (lport->state == LPORT_ST_DISABLED || lport->state == LPORT_ST_LOGO)
++		return;
++
+ 	if (lport->vport) {
+ 		if (lport->link_up)
+ 			fc_vport_set_state(lport->vport, FC_VPORT_INITIALIZING);
 
