@@ -1,113 +1,95 @@
-From: adam radford <aradford@gmail.com>
-Subject: [PATCH] 3w-9xxx fix bug in sgl loading
-Date: Thu, 10 Dec 2009 11:53:31 -0800
-Message-ID: <b1bc6a000912101153y19e9d874lef179da9d326b392@mail.gmail.com>
+From: "Ed Lin - PTU" <ed.lin@promise.com>
+Subject: RE: [PATCH 1/1] lpfc: lpfc no longer discovers lun 255
+Date: Thu, 10 Dec 2009 12:03:59 -0800
+Message-ID: <85ABFDC4641C4847BA6088F2982EFD8F03200AB8@nonamew.ptu.promise.com>
+References: <1260459787.2457.74.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=00504502ad10697dcc047a65298f
+Content-Type: text/plain;
+	charset="iso-2022-jp"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f42.google.com ([209.85.160.42]:59191 "EHLO
-	mail-pw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755049AbZLJTxZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2009 14:53:25 -0500
-Received: by pwj9 with SMTP id 9so121293pwj.21
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2009 11:53:32 -0800 (PST)
+Received: from gateway.promise.com ([67.111.72.2]:37491 "EHLO
+	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751757AbZLJUTE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2009 15:19:04 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1260459787.2457.74.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Raoul Bhatia [IPAX]" <r.bhatia@ipax.at>
+To: James Bottomley <James.Bottomley@suse.de>, Brian King <brking@linux.vnet.ibm.com>
+Cc: Michael Reed <mdr@sgi.com>, James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---00504502ad10697dcc047a65298f
-Content-Type: text/plain; charset=ISO-8859-1
 
-James, linux-scsi,
 
-This small patch fixes a bug in the 3w-9xxx driver where it would load
-an invalid sgl address in the ioctl path even if request length was zero.
+>-----Original Message-----
+>From: James Bottomley [mailto:James.Bottomley@suse.de] 
+>Sent: 2009年12月10日 7:43
+>To: Brian King
+>Cc: Michael Reed; James Smart; linux-scsi; Ed Lin - PTU
+>Subject: Re: [PATCH 1/1] lpfc: lpfc no longer discovers lun 255
+>
+>
+>On Thu, 2009-12-10 at 07:01 -0600, Brian King wrote:
+>> Michael Reed wrote:
+>> > 
+>> > James Bottomley wrote:
+>> >> On Fri, 2009-12-04 at 11:55 -0600, Michael Reed wrote:
+>> >>> Yeah.  I'm working on a patch for qla1280.c also.  
+>Probably others
+>> >>> have been hit.  It would have been nice if the patch author had
+>> >>> fixed all the drivers instead of introducing this change 
+>and waiting
+>> >>> for people to discover their last lun is now missing.
+>> >> Actually, lets just revert this:
+>> >>
+>> >> commit 71c309995bff5b5e84253931888b6e8163ee1df0
+>> >> Author: Ed Lin <ed.lin@promise.com>
+>> >> Date:   Fri Oct 9 15:23:27 2009 -0700
+>> >>
+>> >>     [SCSI] fix inconsistent usage of max_lun
+>> >>
+>> >> Which is causing all the problems.  Perhaps we need to update the
+>> >> documentation instead?
+>> >>
+>> >> James
+>> > 
+>> > As much as I would whine about it, I think moving to a consistent
+>> > usage of max_lun is a good thing.  There are only about 
+>140 references
+>> > to max_lun in the cscope output so it wouldn't be that difficult
+>> > for people to go through and fix up their drivers.  And, I suspect
+>> > a good portion will not require any change as they already either
+>> > work correctly with sequential lun scan by design or have 
+>misinterpreted
+>> > the meaning of max_lun, and thus will continue to work correctly
+>> > with report lun scan with Mr. Lin's patch applied.
+>> 
+>> The ibmvfc driver was using 0xffffffff to indicate it 
+>essentially had no limit
+>> on the number of LUNs. It appears this can no longer be done 
+>with the commit
+>> above since max_lun is an unsigned int.
+>
+>Right, I've pulled the commit.  It was largely cosmetic ... moving what
+>we actually do to match the documentation.  However, since it appears
+>everyone reads the code not the docs, the better course might be moving
+>the documentation to match what we actually do.
+>
 
-Please apply on top of the current scsi-misc-2.6.
+Well, for the stex driver it is not just cosmetic. Unfortunately the member
+"lun" in a request message of stex driver is only u8, which means, if user
+manually scans lun 256, it will become lun 0. The original patch was intended
+to address the issue.
 
-Thanks!
+But I didn't notice the repost lun case could have problem when preparing
+the original patch. It seems there is no easy fix for it. There is no indication
+which case is using sequential scan and which one is using report lun. The
+confusion in the manual scan case will continue (but it may do no harm if
+no one reported problem). So, I may need to prepare a patch to the stex
+driver, either changing max_lun to 255 (so that user can not manually scan
+lun 256), or comparing lun in the scsi command with max_lun to make sure
+it is in a valid range.
 
-Signed-off-by: Adam Radford <aradford@gmail.com>
+Thanks,
 
--Adam
-
-Note: This patch is included in-line below and also as an attachment.
-
-diff -Naur scsi-misc/drivers/scsi/3w-9xxx.c scsi-misc.new/drivers/scsi/3w-9xxx.c
---- scsi-misc/drivers/scsi/3w-9xxx.c	2009-12-09 15:57:44.000000000 -0800
-+++ scsi-misc.new/drivers/scsi/3w-9xxx.c	2009-12-09 16:00:36.000000000 -0800
-@@ -76,6 +76,7 @@
-                  Fix bug in twa_get_param() on 4GB+.
-                  Use pci_resource_len() for ioremap().
-    2.26.02.012 - Add power management support.
-+   2.26.02.013 - Fix bug in twa_load_sgl().
- */
-
- #include <linux/module.h>
-@@ -100,7 +101,7 @@
- #include "3w-9xxx.h"
-
- /* Globals */
--#define TW_DRIVER_VERSION "2.26.02.012"
-+#define TW_DRIVER_VERSION "2.26.02.013"
- static TW_Device_Extension *twa_device_extension_list[TW_MAX_SLOT];
- static unsigned int twa_device_extension_count;
- static int twa_major = -1;
-@@ -1382,10 +1383,12 @@
- 		newcommand = &full_command_packet->command.newcommand;
- 		newcommand->request_id__lunl =
- 			cpu_to_le16(TW_REQ_LUN_IN(TW_LUN_OUT(newcommand->request_id__lunl),
-request_id));
--		newcommand->sg_list[0].address = TW_CPU_TO_SGL(dma_handle +
-sizeof(TW_Ioctl_Buf_Apache) - 1);
--		newcommand->sg_list[0].length = cpu_to_le32(length);
-+		if (length) {
-+			newcommand->sg_list[0].address = TW_CPU_TO_SGL(dma_handle +
-sizeof(TW_Ioctl_Buf_Apache) - 1);
-+			newcommand->sg_list[0].length = cpu_to_le32(length);
-+		}
- 		newcommand->sgl_entries__lunh =
--			cpu_to_le16(TW_REQ_LUN_IN(TW_LUN_OUT(newcommand->sgl_entries__lunh), 1));
-+			cpu_to_le16(TW_REQ_LUN_IN(TW_LUN_OUT(newcommand->sgl_entries__lunh),
-length ? 1 : 0));
- 	} else {
- 		oldcommand = &full_command_packet->command.oldcommand;
- 		oldcommand->request_id = request_id;
-
---00504502ad10697dcc047a65298f
-Content-Type: text/x-patch; charset=US-ASCII; name="3w-9xxx_2.6.33.patch"
-Content-Disposition: attachment; filename="3w-9xxx_2.6.33.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g31xzyjf0
-
-ZGlmZiAtTmF1ciBzY3NpLW1pc2MvZHJpdmVycy9zY3NpLzN3LTl4eHguYyBzY3NpLW1pc2MubmV3
-L2RyaXZlcnMvc2NzaS8zdy05eHh4LmMKLS0tIHNjc2ktbWlzYy9kcml2ZXJzL3Njc2kvM3ctOXh4
-eC5jCTIwMDktMTItMDkgMTU6NTc6NDQuMDAwMDAwMDAwIC0wODAwCisrKyBzY3NpLW1pc2MubmV3
-L2RyaXZlcnMvc2NzaS8zdy05eHh4LmMJMjAwOS0xMi0wOSAxNjowMDozNi4wMDAwMDAwMDAgLTA4
-MDAKQEAgLTc2LDYgKzc2LDcgQEAKICAgICAgICAgICAgICAgICAgRml4IGJ1ZyBpbiB0d2FfZ2V0
-X3BhcmFtKCkgb24gNEdCKy4KICAgICAgICAgICAgICAgICAgVXNlIHBjaV9yZXNvdXJjZV9sZW4o
-KSBmb3IgaW9yZW1hcCgpLgogICAgMi4yNi4wMi4wMTIgLSBBZGQgcG93ZXIgbWFuYWdlbWVudCBz
-dXBwb3J0LgorICAgMi4yNi4wMi4wMTMgLSBGaXggYnVnIGluIHR3YV9sb2FkX3NnbCgpLgogKi8K
-IAogI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPgpAQCAtMTAwLDcgKzEwMSw3IEBACiAjaW5jbHVk
-ZSAiM3ctOXh4eC5oIgogCiAvKiBHbG9iYWxzICovCi0jZGVmaW5lIFRXX0RSSVZFUl9WRVJTSU9O
-ICIyLjI2LjAyLjAxMiIKKyNkZWZpbmUgVFdfRFJJVkVSX1ZFUlNJT04gIjIuMjYuMDIuMDEzIgog
-c3RhdGljIFRXX0RldmljZV9FeHRlbnNpb24gKnR3YV9kZXZpY2VfZXh0ZW5zaW9uX2xpc3RbVFdf
-TUFYX1NMT1RdOwogc3RhdGljIHVuc2lnbmVkIGludCB0d2FfZGV2aWNlX2V4dGVuc2lvbl9jb3Vu
-dDsKIHN0YXRpYyBpbnQgdHdhX21ham9yID0gLTE7CkBAIC0xMzgyLDEwICsxMzgzLDEyIEBACiAJ
-CW5ld2NvbW1hbmQgPSAmZnVsbF9jb21tYW5kX3BhY2tldC0+Y29tbWFuZC5uZXdjb21tYW5kOwog
-CQluZXdjb21tYW5kLT5yZXF1ZXN0X2lkX19sdW5sID0KIAkJCWNwdV90b19sZTE2KFRXX1JFUV9M
-VU5fSU4oVFdfTFVOX09VVChuZXdjb21tYW5kLT5yZXF1ZXN0X2lkX19sdW5sKSwgcmVxdWVzdF9p
-ZCkpOwotCQluZXdjb21tYW5kLT5zZ19saXN0WzBdLmFkZHJlc3MgPSBUV19DUFVfVE9fU0dMKGRt
-YV9oYW5kbGUgKyBzaXplb2YoVFdfSW9jdGxfQnVmX0FwYWNoZSkgLSAxKTsKLQkJbmV3Y29tbWFu
-ZC0+c2dfbGlzdFswXS5sZW5ndGggPSBjcHVfdG9fbGUzMihsZW5ndGgpOworCQlpZiAobGVuZ3Ro
-KSB7CisJCQluZXdjb21tYW5kLT5zZ19saXN0WzBdLmFkZHJlc3MgPSBUV19DUFVfVE9fU0dMKGRt
-YV9oYW5kbGUgKyBzaXplb2YoVFdfSW9jdGxfQnVmX0FwYWNoZSkgLSAxKTsKKwkJCW5ld2NvbW1h
-bmQtPnNnX2xpc3RbMF0ubGVuZ3RoID0gY3B1X3RvX2xlMzIobGVuZ3RoKTsKKwkJfQogCQluZXdj
-b21tYW5kLT5zZ2xfZW50cmllc19fbHVuaCA9Ci0JCQljcHVfdG9fbGUxNihUV19SRVFfTFVOX0lO
-KFRXX0xVTl9PVVQobmV3Y29tbWFuZC0+c2dsX2VudHJpZXNfX2x1bmgpLCAxKSk7CisJCQljcHVf
-dG9fbGUxNihUV19SRVFfTFVOX0lOKFRXX0xVTl9PVVQobmV3Y29tbWFuZC0+c2dsX2VudHJpZXNf
-X2x1bmgpLCBsZW5ndGggPyAxIDogMCkpOwogCX0gZWxzZSB7CiAJCW9sZGNvbW1hbmQgPSAmZnVs
-bF9jb21tYW5kX3BhY2tldC0+Y29tbWFuZC5vbGRjb21tYW5kOwogCQlvbGRjb21tYW5kLT5yZXF1
-ZXN0X2lkID0gcmVxdWVzdF9pZDsK
---00504502ad10697dcc047a65298f--
+Ed Lin
