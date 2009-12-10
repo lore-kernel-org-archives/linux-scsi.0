@@ -1,51 +1,66 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/5 ] BNX2I - Adjust sq_size module parametr to power
- of 2 only if a non-zero value is specified
-Date: Wed, 09 Dec 2009 20:45:44 -0600
-Message-ID: <4B2060D8.2080207@cs.wisc.edu>
-References: <1260214794.31468.93.camel@anilgv-desktop>
+Subject: Re: [PATCH 5/5] BNX2I - minor code cleanup and update driver version
+Date: Wed, 09 Dec 2009 20:46:16 -0600
+Message-ID: <4B2060F8.3090904@cs.wisc.edu>
+References: <1260214839.31468.100.camel@anilgv-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57304 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57309 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758000AbZLJCps (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Dec 2009 21:45:48 -0500
-In-Reply-To: <1260214794.31468.93.camel@anilgv-desktop>
+	id S1754210AbZLJCqU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Dec 2009 21:46:20 -0500
+In-Reply-To: <1260214839.31468.100.camel@anilgv-desktop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: open-iscsi@googlegroups.com
 Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, mchan@broadcom.com, poswald@novell.com
 
 Anil Veerabhadrappa wrote:
->     * This issue was discovered during 10G iscsi testing
->     * Default value of 'sq_size' module parameter is '0' which means
->       driver should use predefined SQ queue size when setting up iscsi
->       connection.
->     * roundup_pow_of_two(0) results in '1' and forces driver to setup
->       connections with send queue size of '1' and results in lower
->       performance as well
+>     * Removed duplicate function call and not-so-useful comment line
 > 
 > Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 > ---
->  drivers/scsi/bnx2i/bnx2i_init.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/scsi/bnx2i/bnx2i_init.c  |    4 ++--
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c |    2 --
+>  2 files changed, 2 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-> index 3c46458..dc6b56c 100644
+> index ad551c5..1e111ac 100644
 > --- a/drivers/scsi/bnx2i/bnx2i_init.c
 > +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-> @@ -367,7 +367,7 @@ static int __init bnx2i_mod_init(void)
+> @@ -17,8 +17,8 @@ static struct list_head adapter_list = LIST_HEAD_INIT(adapter_list);
+>  static u32 adapter_count;
 >  
->  	printk(KERN_INFO "%s", version);
+>  #define DRV_MODULE_NAME		"bnx2i"
+> -#define DRV_MODULE_VERSION	"2.0.1e"
+> -#define DRV_MODULE_RELDATE	"June 22, 2009"
+> +#define DRV_MODULE_VERSION	"2.1.0"
+> +#define DRV_MODULE_RELDATE	"Dec 06, 2009"
 >  
-> -	if (!is_power_of_2(sq_size))
-> +	if (sq_size && !is_power_of_2(sq_size))
->  		sq_size = roundup_pow_of_two(sq_size);
+>  static char version[] __devinitdata =
+>  		"Broadcom NetXtreme II iSCSI Driver " DRV_MODULE_NAME \
+> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> index 070118a..54dc251 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> @@ -485,7 +485,6 @@ static int bnx2i_setup_cmd_pool(struct bnx2i_hba *hba,
+>  		struct iscsi_task *task = session->cmds[i];
+>  		struct bnx2i_cmd *cmd = task->dd_data;
 >  
->  	mutex_init(&bnx2i_dev_lock);
-
-Ok.
+> -		/* Anil */
+>  		task->hdr = &cmd->hdr;
+>  		task->hdr_max = sizeof(struct iscsi_hdr);
+>  
+> @@ -765,7 +764,6 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+>  	hba->pci_svid = hba->pcidev->subsystem_vendor;
+>  	hba->pci_func = PCI_FUNC(hba->pcidev->devfn);
+>  	hba->pci_devno = PCI_SLOT(hba->pcidev->devfn);
+> -	bnx2i_identify_device(hba);
+>  
+>  	bnx2i_identify_device(hba);
+>  	bnx2i_setup_host_queue_size(hba, shost);
 
 Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
