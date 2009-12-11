@@ -1,52 +1,127 @@
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-Subject: Re: 2.6.31-rc9 kernel BUG and mvsas
-Date: Thu, 10 Dec 2009 14:04:25 -0700
-Message-ID: <200912101404.26094.tfjellstrom@shaw.ca>
-References: <200909090414.41274.tfjellstrom@shaw.ca> <alpine.DEB.1.10.0912051116400.23464@uplift.swm.pp.se> <alpine.DEB.1.10.0912102022460.23464@uplift.swm.pp.se>
-Reply-To: tfjellstrom@shaw.ca
+From: Min Zhang <mzhang@mvista.com>
+Subject: [PATCH] scsi: timeout reset timer before command is queued
+Date: Thu, 10 Dec 2009 18:41:07 -0800
+Message-ID: <4B21B143.0@mvista.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:8734 "EHLO
-	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759434AbZLJVE3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Dec 2009 16:04:29 -0500
-In-Reply-To: <alpine.DEB.1.10.0912102022460.23464@uplift.swm.pp.se>
+Received: from hu47.mvista.com ([206.112.117.47]:52093 "HELO
+	gateway-1237.mvista.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1755881AbZLKClE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Dec 2009 21:41:04 -0500
+Received: from localhost.localdomain (unknown [10.0.11.146])
+	by hermes.mvista.com (Postfix) with ESMTP id D863F1D6F7
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Dec 2009 18:41:08 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, linux-scsi <linux-scsi@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu December 10 2009, Mikael Abrahamsson wrote:
-> On Sat, 5 Dec 2009, Mikael Abrahamsson wrote:
-> > When removing this extra option, it compiles with vanilla 2.6.32 just
-> > fine. I crashes the same way as the ubuntu kernel when hot-plugging a
-> > disk as well (this time I did it without gdm/x running and it oopses,
-> > but unfortunately the highest part of the oops scrolled off). It's 100%
-> > reproducible anyway, so basically the controller is a no-go in 2.6.31.6
-> > and 2.6.32 both vanilla and ubuntu versions, both without and including
-> > the nov09 mvsas patch (at least the original version of the patch as
-> > posted). Different failure scenarios though... With the stock kernel
-> > the controller seems to get stuck in writing and nothing more happens
-> > but at least the machine doesn't crash and burn like it does with the
-> > mvsas-patch.
-> 
-> Would it make sense for me to log this problem in bugzilla? There seems
->  to be a similar issue with equal hw:
-> 
-> <http://bugzilla.kernel.org/show_bug.cgi?id=14534>
-> 
-> did these fixes ever go upstream? Are they scheduled to go into the
-> stable rebuilds of 2.6.32 ? The patches mentioned in there, are these the
-> ones I already tried that didn't solve my problem?
-> 
+Kernel panic of NULL pointer in scsi_dispatch_cmd during fiber channel 
+scsi disk access. It is because scsi command can time out even before 
+dispatcher queues it to lower level driver, then scsi_times_out error 
+handler could complete the request and free the command memory while 
+scsi_dispatch_cmd still uses the command pointer.
 
-I'm really hoping Andy Yan or someone else on the project can get some time 
-to polish up the last patch set posted to linux-scsi. There were a few 
-comments regarding them, but no one has responded to them yet.
+This patch adds new SCSI_EH_RESET_TIMER flag per command to indicate the 
+command hasn't been queued, so scsi_times_out won't complete and free 
+the command.  req->special command pointer is also NULLed when the 
+command is freed.
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+This premature time out is rare, mostly triggered by occasional network 
+delay for fibre channel scsi disk. The patch is verified by 
+instrumenting a testing delay to force scsi_times_out and then 
+monitoring the command pointer integrity.
+
+Signed-off-by: Min Zhang <mzhang@mvista.com>
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index dd098ca..9be78a5 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -743,6 +743,9 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+      */
+     scsi_cmd_get_serial(host, cmd);
+ 
++    /* Timeout error handler can start processing cmd now */
++    cmd->eh_eflags &= ~SCSI_EH_RESET_TIMER;
++
+     if (unlikely(host->shost_state == SHOST_DEL)) {
+         cmd->result = (DID_NO_CONNECT << 16);
+         scsi_done(cmd);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1b0060b..94dca64 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -128,6 +128,14 @@ enum blk_eh_timer_return scsi_times_out(struct 
+request *req)
+ 
+     scsi_log_completion(scmd, TIMEOUT_ERROR);
+ 
++    /*
++     * Extend timeout if cmd has not been queued yet, otherwise error
++     * handler could complete request and free the cmd memory while
++     * the dispatch handler still uses the cmd pointer.
++     */
++    if (scmd->eh_eflags | SCSI_EH_RESET_TIMER)
++        return BLK_EH_RESET_TIMER;
++
+     if (scmd->device->host->transportt->eh_timed_out)
+         rtn = scmd->device->host->transportt->eh_timed_out(scmd);
+     else if (scmd->device->host->hostt->eh_timed_out)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5987da8..fd1afb6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -492,11 +492,13 @@ void scsi_next_command(struct scsi_cmnd *cmd)
+ {
+     struct scsi_device *sdev = cmd->device;
+     struct request_queue *q = sdev->request_queue;
++    struct request *req = cmd->request;
+ 
+     /* need to hold a reference on the device before we let go of the 
+cmd */
+     get_device(&sdev->sdev_gendev);
+ 
+     scsi_put_command(cmd);
++    req->special = NULL;
+     scsi_run_queue(q);
+ 
+     /* ok to remove device now */
+@@ -1491,12 +1493,21 @@ static void scsi_request_fn(struct request_queue *q)
+         /*
+          * Remove the request from the request list.
+          */
++        cmd = req->special;
+         if (!(blk_queue_tagged(q) && !blk_queue_start_tag(q, req)))
++        {
++            /*
++             * Prevent timeout error handler from processing
++             * the cmd until it is queued in scsi_dispatch_cmd,
++             * otherwise cmd pointer might be freed by error handle
++             */
++            cmd->eh_eflags |= SCSI_EH_RESET_TIMER;
++
+             blk_start_request(req);
++        }
+         sdev->device_busy++;
+ 
+         spin_unlock(q->queue_lock);
+-        cmd = req->special;
+         if (unlikely(cmd == NULL)) {
+             printk(KERN_CRIT "impossible request in %s.\n"
+                      "please mail a stack trace to "
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 1fbf7c7..4c71010 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -16,6 +16,7 @@ struct scsi_nl_hdr;
+  * Scsi Error Handler Flags
+  */
+ #define SCSI_EH_CANCEL_CMD    0x0001    /* Cancel this cmd */
++#define SCSI_EH_RESET_TIMER    0x0002    /* Reset timer on the this cmd */
+ 
+ #define SCSI_SENSE_VALID(scmd) \
+     (((scmd)->sense_buffer[0] & 0x70) == 0x70)
+
