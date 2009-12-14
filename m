@@ -1,50 +1,51 @@
-From: Erik Ekman <erik@kryo.se>
-Subject: [PATCH -tip] fusion: fix warning when not using procfs
-Date: Mon, 14 Dec 2009 21:21:56 +0100
-Message-ID: <20091214212156.7c9f18c2.erik@kryo.se>
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: how to recover from "medium format corrupted"?
+Date: Mon, 14 Dec 2009 13:24:26 -0800 (PST)
+Message-ID: <alpine.DEB.2.01.0912141307190.2915@bogon.housecafe.de>
+References: <alpine.DEB.2.01.0912140158580.2915@bogon.housecafe.de> <4B264C83.4080009@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f227.google.com ([209.85.218.227]:57443 "EHLO
-	mail-bw0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758228AbZLNUWB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2009 15:22:01 -0500
-Received: by bwz27 with SMTP id 27so2385009bwz.21
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Dec 2009 12:21:59 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.187]:56656 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933059AbZLNVYb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Dec 2009 16:24:31 -0500
+In-Reply-To: <4B264C83.4080009@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com
+To: Douglas Gilbert <dgilbert@interlog.com>
 Cc: linux-scsi@vger.kernel.org
 
-fusion: fix warning when not using procfs
+On Mon, 14 Dec 2009 at 15:32, Douglas Gilbert wrote:
+> Could you try the '--wait' option on the sg_format?
 
-Fixes the following warning:
-drivers/message/fusion/mptbase.c:129: warning: 'mpt_proc_root_dir' defined but not used
-also moves it from public data section since it is static.
+After sending out my mail to linux-scsi (as a last resort, I thought) I 
+decided to boot into Solaris again. Although "format" was not too happy 
+accessing the disk (and was even dumping core quite often), it was able to 
+get hold of the disk, somehow. I issued to FORMAT command again but this 
+time let it run and it completed to 97% - when it exited with a segfault. 
+But that must've been enough, as I'm now able to access the disk again, 
+under Linux too.
 
-Signed-off-by: Erik Ekman <erik@kryo.se>
----
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 85bc6a6..cb2dc59 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -126,8 +126,6 @@ static int mfcounter = 0;
-  *  Public data...
-  */
- 
--static struct proc_dir_entry *mpt_proc_root_dir;
--
- #define WHOINIT_UNKNOWN		0xAA
- 
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-@@ -146,6 +144,9 @@ static MPT_EVHANDLER		 MptEvHandlers[MPT_MAX_PROTOCOL_DRIVERS];
- static MPT_RESETHANDLER		 MptResetHandlers[MPT_MAX_PROTOCOL_DRIVERS];
- static struct mpt_pci_driver 	*MptDeviceDriverHandlers[MPT_MAX_PROTOCOL_DRIVERS];
- 
-+#ifdef CONFIG_PROC_FS
-+static struct proc_dir_entry 	*mpt_proc_root_dir;
-+#endif
- 
- /*
-  *  Driver Callback Index's
+> The disk
+> does not seem to respond to the TEST UNIT READY poll. If
+> it is a modern disk it might respond to a REQUEST SENSE poll
+> but sg_format doesn't support that yet.
+
+It's a ST373307LC (Cheetah 10K.6), I think they were made 2003 or 
+something. I'll see if I can use lsiutil to send those commands directly 
+from the HBA.
+
+> The '--wait' option will leave sg_format hanging until the
+> FORMAT UNIT finishes or 4 hours expires.
+
+I'm tempted to try that again - the box is a testsystem anyway and I'm 
+curious if I can reprodue this "media format corrupted" state to see if 
+the --wait option does anything.
+
+Thanks for the prompt reply!
+Christian.
+-- 
+BOFH excuse #287:
+
+Telecommunications is downshifting.
