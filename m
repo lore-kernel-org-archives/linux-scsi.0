@@ -1,104 +1,92 @@
-From: Rakesh Ranjan <rakesh@chelsio.com>
-Subject: [RESEND PATCH 1/1]cxgb3i: Fix a login over vlan issue
-Date: Tue, 15 Dec 2009 12:19:19 +0530 (IST)
-Message-ID: <alpine.LFD.2.00.0912151214230.11944@rakeshpc.asicdesigner.com>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] Remove capping from dev_loss_tmo
+Date: Tue, 15 Dec 2009 09:26:06 +0100
+Message-ID: <20091215082606.A45B037AD2@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:9448 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902AbZLOGxp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2009 01:53:45 -0500
+Received: from cantor.suse.de ([195.135.220.2]:48787 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750987AbZLOI0L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Dec 2009 03:26:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: OISCSIML <open-iscsi@googlegroups.com>, LSCSIML <linux-scsi@vger.kernel.org>, LNDML <netdev@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, David Miller <davem@davemloft.net>, James Bottomley <james.bottomley@hansenpartnership.com>, Karen Xie <kxie@chelsio.com>, Rakesh Ranjan <rakesh@chelsio.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-From: Rakesh Ranjan <rakesh@chelsio.com>
 
-Fix a target login issue, when parent interface is vlan and we are using cxgb3i sepecific
-private ip address in '/etc/iscsi/ifaces/' iface file.
+Currently dev_loss_tmo is capped by SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
+This causes problem with multipathing when the 'no_path_retry' setting
+exceeds the dev_loss_tmo setting, as then the system might run into
+a deadlock when all paths have been removed temporarily for longer
+than dev_loss_tmo.
+The principal reasons for the capping has been that we should
+not allow a remote port to remain in status 'blocked' indefinitely,
+so the capping is there to ensure that the port status is being reset
+eventually.
+However, the fast_io_fail_tmo will also move the remote port out of
+the 'blocked' state, so for any HBA driver implementing both the
+capping should really be on the fast_io_fail_tmo, and not on the
+dev_loss_tmo.
+This patch implements just that, ie the fast_io_fail_tmo is capped
+to SCSI_DEVICE_BLOCK_TIMEOUT and the capping is removed from
+dev_loss_tmo when fast_io_fail_tmo is set.
+This allows us to synchronize the dev_loss_tmo setting to the
+'no_path_retry' setting from multipathing thus avoiding the deadlock.
 
-Acked-by: Karen Xie <kxie@chelsio.com>
-Signed-off-by: Rakesh Ranjan <rakesh@chelsio.com>
----
- drivers/scsi/cxgb3i/cxgb3i_offload.c |   34 +++++++++++++++++++++++++++++++++-
- 1 files changed, 33 insertions(+), 1 deletions(-)
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-index 26ffdcd..15a00e8 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-@@ -1440,6 +1440,10 @@ void cxgb3i_c3cn_release(struct s3_conn *c3cn)
- static int is_cxgb3_dev(struct net_device *dev)
- {
- 	struct cxgb3i_sdev_data *cdata;
-+	struct net_device *ndev = dev;
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 573ce21..6f39bf4 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -475,7 +475,8 @@ MODULE_PARM_DESC(dev_loss_tmo,
+ 		 "Maximum number of seconds that the FC transport should"
+ 		 " insulate the loss of a remote port. Once this value is"
+ 		 " exceeded, the scsi target is removed. Value should be"
+-		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
++		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT if"
++		 " fast_io_fail_tmo is not set.");
+ 
+ /*
+  * Netlink Infrastructure
+@@ -831,9 +832,17 @@ store_fc_rport_dev_loss_tmo(struct device *dev, struct device_attribute *attr,
+ 	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))
+ 		return -EBUSY;
+ 	val = simple_strtoul(buf, &cp, 0);
+-	if ((*cp && (*cp != '\n')) ||
+-	    (val < 0) || (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
++	if ((*cp && (*cp != '\n')) || (val < 0))
+ 		return -EINVAL;
 +
-+	if (dev->priv_flags & IFF_802_1Q_VLAN)
-+		ndev = vlan_dev_real_dev(dev);
- 
- 	write_lock(&cdata_rwlock);
- 	list_for_each_entry(cdata, &cdata_list, list) {
-@@ -1447,7 +1451,7 @@ static int is_cxgb3_dev(struct net_device *dev)
- 		int i;
- 
- 		for (i = 0; i < ports->nports; i++)
--			if (dev == ports->lldevs[i]) {
-+			if (ndev == ports->lldevs[i]) {
- 				write_unlock(&cdata_rwlock);
- 				return 1;
- 			}
-@@ -1566,6 +1570,26 @@ out_err:
- 	return -EINVAL;
++	/*
++	 * If fast_io_fail is off we have to cap
++	 * dev_loss_tmo at SCSI_DEVICE_BLOCK_MAX_TIMEOUT
++	 */
++	if (rport->fast_io_fail_tmo == -1 &&
++	    val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
++		return -EINVAL;
++
+ 	i->f->set_rport_dev_loss_tmo(rport, val);
+ 	return count;
  }
- 
-+/**
-+ * cxgb3i_find_dev - find the interface associated with the given address
-+ * @ipaddr: ip address
-+ */
-+static struct net_device *
-+cxgb3i_find_dev(struct net_device *dev, __be32 ipaddr)
-+{
-+	struct flowi fl;
-+	int err;
-+	struct rtable *rt;
+@@ -914,9 +923,16 @@ store_fc_rport_fast_io_fail_tmo(struct device *dev,
+ 		rport->fast_io_fail_tmo = -1;
+ 	else {
+ 		val = simple_strtoul(buf, &cp, 0);
+-		if ((*cp && (*cp != '\n')) ||
+-		    (val < 0) || (val >= rport->dev_loss_tmo))
++		if ((*cp && (*cp != '\n')) || (val < 0))
+ 			return -EINVAL;
++		/*
++		 * Cap fast_io_fail by dev_loss_tmo or
++		 * SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
++		 */
++		if ((val >= rport->dev_loss_tmo) ||
++		    (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
++			return -EINVAL;
 +
-+	memset(&fl, 0, sizeof(fl));
-+	fl.nl_u.ip4_u.daddr = ipaddr;
-+
-+	err = ip_route_output_key(dev ? dev_net(dev) : &init_net, &rt, &fl);
-+	if (!err)
-+		return (&rt->u.dst)->dev;
-+
-+	return NULL;
-+}
- 
- /**
-  * cxgb3i_c3cn_connect - initiates an iscsi tcp connection to a given address
-@@ -1581,6 +1605,7 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
- 	struct cxgb3i_sdev_data *cdata;
- 	struct t3cdev *cdev;
- 	__be32 sipv4;
-+	struct net_device *dstdev;
- 	int err;
- 
- 	c3cn_conn_debug("c3cn 0x%p, dev 0x%p.\n", c3cn, dev);
-@@ -1591,6 +1616,13 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
- 	c3cn->daddr.sin_port = usin->sin_port;
- 	c3cn->daddr.sin_addr.s_addr = usin->sin_addr.s_addr;
- 
-+	dstdev = cxgb3i_find_dev(dev, usin->sin_addr.s_addr);
-+	if (!dstdev || !is_cxgb3_dev(dstdev))
-+		return -ENETUNREACH;
-+
-+	if (dstdev->priv_flags & IFF_802_1Q_VLAN)
-+		dev = dstdev;
-+
- 	rt = find_route(dev, c3cn->saddr.sin_addr.s_addr,
- 			c3cn->daddr.sin_addr.s_addr,
- 			c3cn->saddr.sin_port,
--- 
-1.6.0.6
-
-
+ 		rport->fast_io_fail_tmo = val;
+ 	}
+ 	return count;
