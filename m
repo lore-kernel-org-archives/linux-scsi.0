@@ -1,57 +1,36 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Remove capping from dev_loss_tmo
-Date: Tue, 15 Dec 2009 10:53:33 +0100
-Message-ID: <4B275C9D.2060606@suse.de>
-References: <20091215082606.A45B037AD2@ochil.suse.de> <4B274EB1.50500@cs.wisc.edu>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] scsi: timeout reset timer before command is queued
+Date: Tue, 15 Dec 2009 03:40:33 -0700
+Message-ID: <20091215104032.GM7812@parisc-linux.org>
+References: <4B21B143.0@mvista.com> <4B24B962.4070804@panasas.com> <4B26E38C.1000605@mvista.com> <20091215022126.GK7812@parisc-linux.org> <4B26F70D.6090409@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52586 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbZLOJxf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2009 04:53:35 -0500
-In-Reply-To: <4B274EB1.50500@cs.wisc.edu>
+Received: from palinux.external.hp.com ([192.25.206.14]:52180 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755706AbZLOKke (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2009 05:40:34 -0500
+Content-Disposition: inline
+In-Reply-To: <4B26F70D.6090409@mvista.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@suse.de>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: Min Zhang <mzhang@mvista.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> Hannes Reinecke wrote:
->> diff --git a/drivers/scsi/scsi_transport_fc.c
->> b/drivers/scsi/scsi_transport_fc.c
->> index 573ce21..6f39bf4 100644
->> --- a/drivers/scsi/scsi_transport_fc.c
->> +++ b/drivers/scsi/scsi_transport_fc.c
->> @@ -475,7 +475,8 @@ MODULE_PARM_DESC(dev_loss_tmo,
->>           "Maximum number of seconds that the FC transport should"
->>           " insulate the loss of a remote port. Once this value is"
->>           " exceeded, the scsi target is removed. Value should be"
->> -         " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
->> +         " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT if"
->> +         " fast_io_fail_tmo is not set.");
->> =20
->=20
-> What was the largest timeout value you tried? I think I am hitting a =
-bug
-> with iscsi where if you pass queue_delayed_work a large enough value =
-it
-> will overflow and instead of getting 100 minutes you get 1.
+On Mon, Dec 14, 2009 at 06:40:13PM -0800, Min Zhang wrote:
+> +    /*
+> +     * Extend timeout if cmd has not been queued yet, otherwise error
+> +     * handler could complete request and free the cmd memory while
+> +     * the dispatch handler still uses the cmd pointer.
+> +     */
+> +    if (scmd->eh_eflags | SCSI_EH_RESET_TIMER)
+> +        return BLK_EH_RESET_TIMER;
 
-Well, 0x7fffffff works, 0xffffffff is rejected with -EINVAL.
-And so should every other value with the top bit set.
+Oh, and what on earth is this?  The condition will always be true.  I
+think you meant '&', not '|'.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
