@@ -1,92 +1,41 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH] Remove capping from dev_loss_tmo
-Date: Tue, 15 Dec 2009 09:26:06 +0100
-Message-ID: <20091215082606.A45B037AD2@ochil.suse.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] Remove capping from dev_loss_tmo
+Date: Tue, 15 Dec 2009 02:54:09 -0600
+Message-ID: <4B274EB1.50500@cs.wisc.edu>
+References: <20091215082606.A45B037AD2@ochil.suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:48787 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750987AbZLOI0L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Dec 2009 03:26:11 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20091215082606.A45B037AD2@ochil.suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: dm-devel@redhat.com, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
+Hannes Reinecke wrote:
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index 573ce21..6f39bf4 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -475,7 +475,8 @@ MODULE_PARM_DESC(dev_loss_tmo,
+>  		 "Maximum number of seconds that the FC transport should"
+>  		 " insulate the loss of a remote port. Once this value is"
+>  		 " exceeded, the scsi target is removed. Value should be"
+> -		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
+> +		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT if"
+> +		 " fast_io_fail_tmo is not set.");
+>  
 
-Currently dev_loss_tmo is capped by SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
-This causes problem with multipathing when the 'no_path_retry' setting
-exceeds the dev_loss_tmo setting, as then the system might run into
-a deadlock when all paths have been removed temporarily for longer
-than dev_loss_tmo.
-The principal reasons for the capping has been that we should
-not allow a remote port to remain in status 'blocked' indefinitely,
-so the capping is there to ensure that the port status is being reset
-eventually.
-However, the fast_io_fail_tmo will also move the remote port out of
-the 'blocked' state, so for any HBA driver implementing both the
-capping should really be on the fast_io_fail_tmo, and not on the
-dev_loss_tmo.
-This patch implements just that, ie the fast_io_fail_tmo is capped
-to SCSI_DEVICE_BLOCK_TIMEOUT and the capping is removed from
-dev_loss_tmo when fast_io_fail_tmo is set.
-This allows us to synchronize the dev_loss_tmo setting to the
-'no_path_retry' setting from multipathing thus avoiding the deadlock.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 573ce21..6f39bf4 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -475,7 +475,8 @@ MODULE_PARM_DESC(dev_loss_tmo,
- 		 "Maximum number of seconds that the FC transport should"
- 		 " insulate the loss of a remote port. Once this value is"
- 		 " exceeded, the scsi target is removed. Value should be"
--		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
-+		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT if"
-+		 " fast_io_fail_tmo is not set.");
- 
- /*
-  * Netlink Infrastructure
-@@ -831,9 +832,17 @@ store_fc_rport_dev_loss_tmo(struct device *dev, struct device_attribute *attr,
- 	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))
- 		return -EBUSY;
- 	val = simple_strtoul(buf, &cp, 0);
--	if ((*cp && (*cp != '\n')) ||
--	    (val < 0) || (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
-+	if ((*cp && (*cp != '\n')) || (val < 0))
- 		return -EINVAL;
-+
-+	/*
-+	 * If fast_io_fail is off we have to cap
-+	 * dev_loss_tmo at SCSI_DEVICE_BLOCK_MAX_TIMEOUT
-+	 */
-+	if (rport->fast_io_fail_tmo == -1 &&
-+	    val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
-+		return -EINVAL;
-+
- 	i->f->set_rport_dev_loss_tmo(rport, val);
- 	return count;
- }
-@@ -914,9 +923,16 @@ store_fc_rport_fast_io_fail_tmo(struct device *dev,
- 		rport->fast_io_fail_tmo = -1;
- 	else {
- 		val = simple_strtoul(buf, &cp, 0);
--		if ((*cp && (*cp != '\n')) ||
--		    (val < 0) || (val >= rport->dev_loss_tmo))
-+		if ((*cp && (*cp != '\n')) || (val < 0))
- 			return -EINVAL;
-+		/*
-+		 * Cap fast_io_fail by dev_loss_tmo or
-+		 * SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
-+		 */
-+		if ((val >= rport->dev_loss_tmo) ||
-+		    (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
-+			return -EINVAL;
-+
- 		rport->fast_io_fail_tmo = val;
- 	}
- 	return count;
+What was the largest timeout value you tried? I think I am hitting a bug 
+with iscsi where if you pass queue_delayed_work a large enough value it 
+will overflow and instead of getting 100 minutes you get 1.
