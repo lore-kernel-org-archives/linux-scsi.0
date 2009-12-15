@@ -1,38 +1,65 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: mvsas:Issues with write and erase of SATA DVD ROM
-Date: Tue, 15 Dec 2009 07:08:08 -0700
-Message-ID: <20091215140808.GN7812@parisc-linux.org>
-References: <6B62480106F2B34D8404CF2FDAA4D9EF52C9F9B792@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN> <6B62480106F2B34D8404CF2FDAA4D9EF5C783A59A4@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] scsi_lib: Bug in completion of bidi commands
+Date: Tue, 15 Dec 2009 17:25:43 +0200
+Message-ID: <4B27AA77.3040002@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:36020 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760271AbZLOOIL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2009 09:08:11 -0500
-Content-Disposition: inline
-In-Reply-To: <6B62480106F2B34D8404CF2FDAA4D9EF5C783A59A4@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+Received: from daytona.panasas.com ([67.152.220.89]:22003 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754187AbZLOPZr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2009 10:25:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech" <satyasrinivasp@hcl.in>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ayan@marvell.com" <ayan@marvell.com>, "kewei@marvell.com" <kewei@marvell.com>, "jack_wang@usish.com" <jack_wang@usish.com>, "tom_peng@usish.com" <tom_peng@usish.com>
+To: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, Benny Halevy <bhalevy@panasas.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Stable Tree <stable@kernel.org>
 
-On Tue, Dec 15, 2009 at 07:32:53PM +0530, Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech wrote:
-> ANALYSIS for erase Issue:
-> -------------------------
-> Linux-sles11:~ # cdrecord --dev=x,x,x -blank all
-> Timeout happened after issuing the above operation to target and LLD is initiating Abort-TMF.
-> Here is my analysis and solution for the same.
-> If we issue "blank command" to CDROM, the processing of that request will take some time to complete, mean while my timer has expired and issuing abort-task TMF.  So to avoid this situation set IMMED bit 1 in "blank command" then send to it target.
 
-That's a terrible solution.  cdrecord should be setting the timeout
-for the command to a high (or even infinite) value.  Maybe it is, in
-which case, you need to find out why the timer is expiring too soon.
-More investigation needed to find out why the timer expires so soon
-rather than this horrible hack.
+Because of the terrible structuring of scsi-bidi-commands
+it breaks some of the life time rules of a scsi-command.
+It is now not allowed to free up the block-request before
+cleanup and partial deallocation of the scsi-command. (Which
+is not so for none bidi commands)
 
+The right fix to this problem would be to make bidi command
+a first citizen by allocating a scsi_sdb pointer at scsi command
+just like cmd->prot_sdb. The bidi sdb should be allocated/deallocated
+as part of the get/put_command (Again like the prot_sdb) and the
+current decoupling of scsi_cmnd and blk-request should be kept.
+
+For now make sure scsi_release_buffers() is called before the
+call to blk_end_request_all() which might cause the suicide of
+the block requests. At best the leak of bidi buffers, at worse
+a crash, as there is a race between the existence of the bidi_request
+and the free of the associated bidi_sdb.
+
+The reason this was never hit before is because only OSD has the potential
+of doing asynchronous bidi commands. (So does bsg but it is never used)
+And OSD clients just happen to do all their bidi commands synchronously, up
+until recently.
+
+CC: Stable Tree <stable@kernel.org>
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/scsi_lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5987da8..bc9a881 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -749,9 +749,9 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			 */
+ 			req->next_rq->resid_len = scsi_in(cmd)->resid;
+ 
++			scsi_release_buffers(cmd);
+ 			blk_end_request_all(req, 0);
+ 
+-			scsi_release_buffers(cmd);
+ 			scsi_next_command(cmd);
+ 			return;
+ 		}
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.6.5.2
+
