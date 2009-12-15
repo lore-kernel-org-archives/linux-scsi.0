@@ -1,38 +1,47 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: query regarding command conversion
-Date: Tue, 15 Dec 2009 15:02:01 +0200
-Message-ID: <4B2788C9.9070003@panasas.com>
-References: <9ff69a5d0912150356w583bfdefs1a9046842609cfba@mail.gmail.com>
+Subject: Re: [PATCH] scsi: timeout reset timer before command is queued
+Date: Tue, 15 Dec 2009 15:16:32 +0200
+Message-ID: <4B278C30.9020209@panasas.com>
+References: <4B21B143.0@mvista.com> <4B24B962.4070804@panasas.com> <4B26E38C.1000605@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:52629 "EHLO
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:61976 "EHLO
 	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756522AbZLONCK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2009 08:02:10 -0500
-Received: by fxm21 with SMTP id 21so4333918fxm.21
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2009 05:02:08 -0800 (PST)
-In-Reply-To: <9ff69a5d0912150356w583bfdefs1a9046842609cfba@mail.gmail.com>
+	with ESMTP id S1753146AbZLONQi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2009 08:16:38 -0500
+Received: by fxm21 with SMTP id 21so4347810fxm.21
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2009 05:16:36 -0800 (PST)
+In-Reply-To: <4B26E38C.1000605@mvista.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Prashant Bhole <prashantsmailcenter@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Min Zhang <mzhang@mvista.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On 12/15/2009 01:56 PM, Prashant Bhole wrote:
-> Hi,
-> I have a SATA disk which is represented by node /dev/sdb.
-> I opened that device using open_blk_excl() to perform IO from a kernel module.
-> IO request is submitted using generic_make_request() which is in terms
-> of struct bio.
-> As per my knowledge LLDs do not deal with struct bio.
-> 
-> My question is, where does the struct bio to struct scatterlist
-> conversion takes place
-> before SCSI layer calls hostt->queuecommand()?
-> 
-> Thanks,
+On 12/15/2009 03:17 AM, Min Zhang wrote:
+<snip>
 
-It is done in scsi_init_sgtable() scsi_lib.c. As part of scsi's prep_fn
+> 
+> Boaz, i think your patch will make scsi_request_fn always goto not_ready 
+> and skip scsi_dispatch_cmd, because after removing blk_queue_start_tag, 
+> subsequent if (blk_queue_tagged(q) && !blk_rq_tagged(req)) is always 
+> true. The original blk_queue_start_tag is necessary to set REQ_QUEUE so 
+> that blk_rq_tagged check can pass for dispatching. I don't see the other 
+> blk_queue_start_tag call.
+> 
+
+You're absolutely right. I got mixed up between blk_queue_start_tag && blk_rq_tagged
+So I missed the call to blk_queue_start_tag.
+
+> Also timeout failure can still occur after scsi_request_fn unlock the 
+> host_lock and before scsi_dispatch_cmd re-lock it.
+> 
+
+This was exactly my intention, to do all the things that can fail and the unlocking
+then relocking before we start the request. And leave no failing possibility and lock
+released between the start of the request and the dispatching. I think it would be wroth it.
+
+But it's your call
 
 Boaz
