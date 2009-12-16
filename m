@@ -1,47 +1,50 @@
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: how to recover from "medium format corrupted"?
-Date: Tue, 15 Dec 2009 21:18:31 -0800 (PST)
-Message-ID: <alpine.DEB.2.01.0912152104090.3483@bogon.housecafe.de>
-References: <alpine.DEB.2.01.0912140158580.2915@bogon.housecafe.de> <4B264C83.4080009@interlog.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 0/5] qla2xxx: fixes for 2.6.33-rc1 [8.03.01-k9]
+Date: Tue, 15 Dec 2009 21:29:43 -0800
+Message-ID: <1260941388-548-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:56267 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752549AbZLPFSi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 00:18:38 -0500
-In-Reply-To: <4B264C83.4080009@interlog.com>
+Received: from vpn.pathscale.com ([198.186.3.75]:57209 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751283AbZLPF3u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Dec 2009 00:29:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Mon, 14 Dec 2009 at 15:32, Douglas Gilbert wrote:
-> Could you try the '--wait' option on the sg_format?
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-OK, I was curious enough to try this again: interrupt a FORMAT command, 
-now the disk responds with ASC=0x31 ASCQ=0x0 again. However, the --wait 
-option (sg_format version: 1.17 20090324) doesn't do anything:
+James,
 
-v40z1# sg_format --format --wait -vvv /dev/sdb 
-open /dev/sdb with flags=0x802
-    inquiry cdb: 12 00 00 00 24 00 
-      duration=0 ms
-    SEAGATE   ST373307LC        0007   peripheral_type: disk [0x0]
-      PROTECT=0
-    mode sense (10) cdb: 5a 00 01 00 00 00 00 00 fc 00 
-      duration=0 ms
-sense buffer empty
-    requested 252 bytes but got 0 bytes
-MODE SENSE (10) command failed
+Please apply following patches..
 
+The patch 2/5 (qla2xxx: Fix for a multiqueue bug in CPU affinity mode) needs
+to be backported to stable kernel.
 
-I can leave the disk in this state if you want to play around some more 
-and will bring back the disk in a usable state in a few days then.
+Andrew Vasquez (1):
+  qla2xxx: Extend base EEH support in qla2xxx.
 
-Thanks,
-Christian.
--- 
-BOFH excuse #403:
+Anirban Chakraborty (1):
+  qla2xxx: Fix for a multiqueue bug in CPU affinity mode
 
-Sysadmin didn't hear pager go off due to loud music from bar-room speakers.
+Duane Grigsby (1):
+  qla2xxx: Added to EEH support.
+
+Giridhar Malavali (1):
+  qla2xxx: Update version number to 8.03.01-k9.
+
+Michael Hernandez (1):
+  qla2xxx: Get the link data rate explicitly during device resync.
+
+ drivers/scsi/qla2xxx/qla_attr.c    |   32 +++++++++++--
+ drivers/scsi/qla2xxx/qla_dbg.h     |    9 +++-
+ drivers/scsi/qla2xxx/qla_def.h     |    2 +
+ drivers/scsi/qla2xxx/qla_gbl.h     |    1 +
+ drivers/scsi/qla2xxx/qla_init.c    |   22 +++++++++
+ drivers/scsi/qla2xxx/qla_isr.c     |    9 ++-
+ drivers/scsi/qla2xxx/qla_mbx.c     |   64 ++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_mid.c     |    2 +
+ drivers/scsi/qla2xxx/qla_os.c      |   90 ++++++++++++++++++++++++++++++++---
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 10 files changed, 211 insertions(+), 22 deletions(-)
+
