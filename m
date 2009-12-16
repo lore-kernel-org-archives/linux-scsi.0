@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 2/10] mpt2sas: Return -ENODATA on IOCTL timeout
-Date: Wed, 16 Dec 2009 18:51:05 +0530
-Message-ID: <20091216132057.GC31161@lsi.com>
+Subject: [PATCH 3/10] mpt2sas: User resource_size_t instead of unsigned long
+Date: Wed, 16 Dec 2009 18:51:45 +0530
+Message-ID: <20091216132138.GD31161@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:54871 "HELO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754764AbZLPNs2 (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:58257 "HELO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756201AbZLPNtJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 08:48:28 -0500
+	Wed, 16 Dec 2009 08:49:09 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,21 +17,78 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-The driver was modified to return -ENODATA when there is a timeout
-via ioctl path.
+Use resource_size_t to define the type resource for the system interface
+register set.
+The existing implementation was using "unsigned long" which would be 32 bit
+in 32 bit OS.  If 32 bit OS is using 64 bit physical
+address space for the system interface register set, we need to shift to
+using resource_size_t which takes care of physical address space.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Reviewed-by: Eric Moore <eric.moore@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 84a124f..198ecdd 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -891,6 +891,7 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 89d0240..bbd4f71 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1222,6 +1222,8 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	u32 memap_sz;
+ 	u32 pio_sz;
+ 	int i, r = 0;
++	u64 pio_chip = 0;
++	u64 chip_phys = 0;
  
-  issue_host_reset:
- 	if (issue_reset) {
-+		ret = -ENODATA;
- 		if ((mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
- 		    mpi_request->Function ==
- 		    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)) {
+ 	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n",
+ 	    ioc->name, __func__));
+@@ -1255,12 +1257,13 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 		if (pci_resource_flags(pdev, i) & PCI_BASE_ADDRESS_SPACE_IO) {
+ 			if (pio_sz)
+ 				continue;
+-			ioc->pio_chip = pci_resource_start(pdev, i);
++			pio_chip = (u64)pci_resource_start(pdev, i);
+ 			pio_sz = pci_resource_len(pdev, i);
+ 		} else {
+ 			if (memap_sz)
+ 				continue;
+ 			ioc->chip_phys = pci_resource_start(pdev, i);
++			chip_phys = (u64)ioc->chip_phys;
+ 			memap_sz = pci_resource_len(pdev, i);
+ 			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
+ 			if (ioc->chip == NULL) {
+@@ -1280,10 +1283,10 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	printk(MPT2SAS_INFO_FMT "%s: IRQ %d\n",
+ 	    ioc->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
+ 	    "IO-APIC enabled"), ioc->pci_irq);
+-	printk(MPT2SAS_INFO_FMT "iomem(0x%lx), mapped(0x%p), size(%d)\n",
+-	    ioc->name, ioc->chip_phys, ioc->chip, memap_sz);
+-	printk(MPT2SAS_INFO_FMT "ioport(0x%lx), size(%d)\n",
+-	    ioc->name, ioc->pio_chip, pio_sz);
++	printk(MPT2SAS_INFO_FMT "iomem(0x%016llx), mapped(0x%p), size(%d)\n",
++	    ioc->name, (unsigned long long)chip_phys, ioc->chip, memap_sz);
++	printk(MPT2SAS_INFO_FMT "ioport(0x%016llx), size(%d)\n",
++	    ioc->name, (unsigned long long)pio_chip, pio_sz);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index bb4f146..12fa18b 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -464,7 +464,6 @@ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
+  * @pdev: pci pdev object
+  * @chip: memory mapped register space
+  * @chip_phys: physical addrss prior to mapping
+- * @pio_chip: I/O mapped register space
+  * @logging_level: see mpt2sas_debug.h
+  * @fwfault_debug: debuging FW timeouts
+  * @ir_firmware: IR firmware present
+@@ -587,8 +586,7 @@ struct MPT2SAS_ADAPTER {
+ 	char		tmp_string[MPT_STRING_LENGTH];
+ 	struct pci_dev	*pdev;
+ 	Mpi2SystemInterfaceRegs_t __iomem *chip;
+-	unsigned long	chip_phys;
+-	unsigned long	pio_chip;
++	resource_size_t	chip_phys;
+ 	int		logging_level;
+ 	int		fwfault_debug;
+ 	u8		ir_firmware;
