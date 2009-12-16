@@ -1,63 +1,47 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: Looking for LSI contact for mptsas driver
-Date: Tue, 15 Dec 2009 17:32:02 -0800
-Message-ID: <da824cf30912151732t20d7c73tf220a6941c91a413@mail.gmail.com>
-References: <02B16CD25461354295D12236BDA8C0E1707ECBF208@EXMAIL.ad.emulex.com>
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: how to recover from "medium format corrupted"?
+Date: Tue, 15 Dec 2009 21:18:31 -0800 (PST)
+Message-ID: <alpine.DEB.2.01.0912152104090.3483@bogon.housecafe.de>
+References: <alpine.DEB.2.01.0912140158580.2915@bogon.housecafe.de> <4B264C83.4080009@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:42432 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934422AbZLPBcJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Dec 2009 20:32:09 -0500
-Received: from spaceape13.eur.corp.google.com (spaceape13.eur.corp.google.com [172.28.16.147])
-	by smtp-out.google.com with ESMTP id nBG1W6AG003047
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2009 01:32:06 GMT
-Received: from ewy7 (ewy7.prod.google.com [10.241.103.7])
-	by spaceape13.eur.corp.google.com with ESMTP id nBG1W3aI023272
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2009 17:32:04 -0800
-Received: by ewy7 with SMTP id 7so522421ewy.38
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Dec 2009 17:32:03 -0800 (PST)
-In-Reply-To: <02B16CD25461354295D12236BDA8C0E1707ECBF208@EXMAIL.ad.emulex.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:56267 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549AbZLPFSi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 00:18:38 -0500
+In-Reply-To: <4B264C83.4080009@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bill.Hooper@emulex.com
+To: Douglas Gilbert <dgilbert@interlog.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, Dec 15, 2009 at 5:05 PM,  <Bill.Hooper@emulex.com> wrote:
-> I am looking for a LSI contact for the mptsas driver. I have encounte=
-red some issues and would like to talk to someone about them.
+On Mon, 14 Dec 2009 at 15:32, Douglas Gilbert wrote:
+> Could you try the '--wait' option on the sg_format?
 
-1)  fgrep lsi.com MAINTAINERS
-M:      Eric Moore <Eric.Moore@lsi.com>
-M:      support@lsi.com
-L:      DL-MPTFusionLinux@lsi.com
-M:      Neela Syam Kolli <megaraidlinux@lsi.com>
+OK, I was curious enough to try this again: interrupt a FORMAT command, 
+now the disk responds with ASC=0x31 ASCQ=0x0 again. However, the --wait 
+option (sg_format version: 1.17 20090324) doesn't do anything:
 
-2) Look for Signed-off-by lines in git source tree:
-    http://git.kernel.org/?p=3Dlinux/kernel/git/jejb/scsi-misc-2.6.git;=
-a=3Dshortlog
-then select a mpt fusion driver patch:
-    http://git.kernel.org/?p=3Dlinux/kernel/git/jejb/scsi-misc-2.6.git;=
-a=3Dcommit;h=3De46b63b37c3296f0aca92d8b62bbf130f2bec7dd
+v40z1# sg_format --format --wait -vvv /dev/sdb 
+open /dev/sdb with flags=0x802
+    inquiry cdb: 12 00 00 00 24 00 
+      duration=0 ms
+    SEAGATE   ST373307LC        0007   peripheral_type: disk [0x0]
+      PROTECT=0
+    mode sense (10) cdb: 5a 00 01 00 00 00 00 00 fc 00 
+      duration=0 ms
+sense buffer empty
+    requested 252 bytes but got 0 bytes
+MODE SENSE (10) command failed
 
-cheers,
-grant
 
->
-> Thanks,
->
-> Bill Hooper
-> Emulex--
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I can leave the disk in this state if you want to play around some more 
+and will bring back the disk in a usable state in a few days then.
+
+Thanks,
+Christian.
+-- 
+BOFH excuse #403:
+
+Sysadmin didn't hear pager go off due to loud music from bar-room speakers.
