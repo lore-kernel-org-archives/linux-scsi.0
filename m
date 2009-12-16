@@ -1,122 +1,43 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] Remove capping from dev_loss_tmo
-Date: Wed, 16 Dec 2009 10:34:31 -0500
-Message-ID: <4B28FE07.4020503@emulex.com>
-References: <20091215082606.A45B037AD2@ochil.suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: Applying MVSAS Patch
+Date: Wed, 16 Dec 2009 08:13:01 -0800
+Message-ID: <20091216081301.59d1698e.randy.dunlap@oracle.com>
+References: <67980649284293627495293095942659870934-Webmail@me.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20091215082606.A45B037AD2@ochil.suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:34646 "EHLO
+	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932139AbZLPQNI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 11:13:08 -0500
+In-Reply-To: <67980649284293627495293095942659870934-Webmail@me.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Tehonica <matt.tehonica@mac.com>
+Cc: linux-scsi@vger.kernel.org, ayan@marvell.com
 
-Hannes,
+On Wed, 16 Dec 2009 09:22:40 -0500 Matthew Tehonica wrote:
 
-Not sure I quite agree with your description of the two timers - but relative 
-to the goal of
-allowing a larger dev_loss_tmo when fast_io_fail_tmo is enabled, it's fine. 
-Interestingly, I
-was looking at when it's disabled, does the cap kick back in - and realized 
-that once we
-enable fast fail, we don't allow it to be turned off.
-
-Looks good.
-
-Acked-by:  James Smart  <james.smart@emulex.com>
-
--- james s
-
-
-Hannes Reinecke wrote:
-> Currently dev_loss_tmo is capped by SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
-> This causes problem with multipathing when the 'no_path_retry' setting
-> exceeds the dev_loss_tmo setting, as then the system might run into
-> a deadlock when all paths have been removed temporarily for longer
-> than dev_loss_tmo.
-> The principal reasons for the capping has been that we should
-> not allow a remote port to remain in status 'blocked' indefinitely,
-> so the capping is there to ensure that the port status is being reset
-> eventually.
-> However, the fast_io_fail_tmo will also move the remote port out of
-> the 'blocked' state, so for any HBA driver implementing both the
-> capping should really be on the fast_io_fail_tmo, and not on the
-> dev_loss_tmo.
-> This patch implements just that, ie the fast_io_fail_tmo is capped
-> to SCSI_DEVICE_BLOCK_TIMEOUT and the capping is removed from
-> dev_loss_tmo when fast_io_fail_tmo is set.
-> This allows us to synchronize the dev_loss_tmo setting to the
-> 'no_path_retry' setting from multipathing thus avoiding the deadlock.
+> Hi All,
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> I am trying to apply the first patch to fix the mvsas issue and getting an error that I can't figure out. See below:
 > 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 573ce21..6f39bf4 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -475,7 +475,8 @@ MODULE_PARM_DESC(dev_loss_tmo,
->  		 "Maximum number of seconds that the FC transport should"
->  		 " insulate the loss of a remote port. Once this value is"
->  		 " exceeded, the scsi target is removed. Value should be"
-> -		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
-> +		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT if"
-> +		 " fast_io_fail_tmo is not set.");
->  
->  /*
->   * Netlink Infrastructure
-> @@ -831,9 +832,17 @@ store_fc_rport_dev_loss_tmo(struct device *dev, struct device_attribute *attr,
->  	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))
->  		return -EBUSY;
->  	val = simple_strtoul(buf, &cp, 0);
-> -	if ((*cp && (*cp != '\n')) ||
-> -	    (val < 0) || (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
-> +	if ((*cp && (*cp != '\n')) || (val < 0))
->  		return -EINVAL;
-> +
-> +	/*
-> +	 * If fast_io_fail is off we have to cap
-> +	 * dev_loss_tmo at SCSI_DEVICE_BLOCK_MAX_TIMEOUT
-> +	 */
-> +	if (rport->fast_io_fail_tmo == -1 &&
-> +	    val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
-> +		return -EINVAL;
-> +
->  	i->f->set_rport_dev_loss_tmo(rport, val);
->  	return count;
->  }
-> @@ -914,9 +923,16 @@ store_fc_rport_fast_io_fail_tmo(struct device *dev,
->  		rport->fast_io_fail_tmo = -1;
->  	else {
->  		val = simple_strtoul(buf, &cp, 0);
-> -		if ((*cp && (*cp != '\n')) ||
-> -		    (val < 0) || (val >= rport->dev_loss_tmo))
-> +		if ((*cp && (*cp != '\n')) || (val < 0))
->  			return -EINVAL;
-> +		/*
-> +		 * Cap fast_io_fail by dev_loss_tmo or
-> +		 * SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
-> +		 */
-> +		if ((val >= rport->dev_loss_tmo) ||
-> +		    (val > SCSI_DEVICE_BLOCK_MAX_TIMEOUT))
-> +			return -EINVAL;
-> +
->  		rport->fast_io_fail_tmo = val;
->  	}
->  	return count;
+> mtehonica@ghostrider:/usr/src/linux-2.6.32$ sudo patch -p1 < /home/mtehonica/Downloads/0001-Update-chip-init-code-to-enhance-performance.patch 
+> patching file drivers/scsi/mvsas/mv_64xx.c
+> patch: **** malformed patch at line 65:  	/* interrupt coalescing may cause missing HW interrput in some case,
 > 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
-> 
+> I have played around with removing the line that it complains about and it just then says the next line is malformed.  Can anyone help with this???
+
+
+It would help if you pointed us at the specific patch that you are
+referring to.
+
+malformed patch (to me) usually means that some (long-ish) lines were
+split by a mail app or mail server and those lines need to be joined
+together.  That's the reason that I see most often, although I expect
+that there could be other reasons for it.
+
+
+---
+~Randy
