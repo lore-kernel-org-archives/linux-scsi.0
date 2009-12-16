@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 3/10] mpt2sas: User resource_size_t instead of unsigned long
-Date: Wed, 16 Dec 2009 18:51:45 +0530
-Message-ID: <20091216132138.GD31161@lsi.com>
+Subject: [PATCH 4/10] mpt2sas: Set ioc->fwfault_debug to the cmd line option mpt2sas_fwfault_debug.
+Date: Wed, 16 Dec 2009 18:52:39 +0530
+Message-ID: <20091216132231.GE31161@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:58257 "HELO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756201AbZLPNtJ (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:44407 "HELO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756833AbZLPNuB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 08:49:09 -0500
+	Wed, 16 Dec 2009 08:50:01 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,78 +17,33 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Use resource_size_t to define the type resource for the system interface
-register set.
-The existing implementation was using "unsigned long" which would be 32 bit
-in 32 bit OS.  If 32 bit OS is using 64 bit physical
-address space for the system interface register set, we need to shift to
-using resource_size_t which takes care of physical address space.
+(1) change the formentioned string from logging_level to fwfault_debug
+(2) set ioc->fwfault_debug to the command line option mpt2sas_fwfault_debug
+setting at driver load time.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Reviewed-by: Eric Moore <eric.moore@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 89d0240..bbd4f71 100644
+index bbd4f71..88e6eeb 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1222,6 +1222,8 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 	u32 memap_sz;
- 	u32 pio_sz;
- 	int i, r = 0;
-+	u64 pio_chip = 0;
-+	u64 chip_phys = 0;
+@@ -107,8 +107,7 @@ _scsih_set_fwfault_debug(const char *val, struct kernel_param *kp)
+ 	if (ret)
+ 		return ret;
  
- 	dinitprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s\n",
- 	    ioc->name, __func__));
-@@ -1255,12 +1257,13 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 		if (pci_resource_flags(pdev, i) & PCI_BASE_ADDRESS_SPACE_IO) {
- 			if (pio_sz)
- 				continue;
--			ioc->pio_chip = pci_resource_start(pdev, i);
-+			pio_chip = (u64)pci_resource_start(pdev, i);
- 			pio_sz = pci_resource_len(pdev, i);
- 		} else {
- 			if (memap_sz)
- 				continue;
- 			ioc->chip_phys = pci_resource_start(pdev, i);
-+			chip_phys = (u64)ioc->chip_phys;
- 			memap_sz = pci_resource_len(pdev, i);
- 			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
- 			if (ioc->chip == NULL) {
-@@ -1280,10 +1283,10 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 	printk(MPT2SAS_INFO_FMT "%s: IRQ %d\n",
- 	    ioc->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
- 	    "IO-APIC enabled"), ioc->pci_irq);
--	printk(MPT2SAS_INFO_FMT "iomem(0x%lx), mapped(0x%p), size(%d)\n",
--	    ioc->name, ioc->chip_phys, ioc->chip, memap_sz);
--	printk(MPT2SAS_INFO_FMT "ioport(0x%lx), size(%d)\n",
--	    ioc->name, ioc->pio_chip, pio_sz);
-+	printk(MPT2SAS_INFO_FMT "iomem(0x%016llx), mapped(0x%p), size(%d)\n",
-+	    ioc->name, (unsigned long long)chip_phys, ioc->chip, memap_sz);
-+	printk(MPT2SAS_INFO_FMT "ioport(0x%016llx), size(%d)\n",
-+	    ioc->name, (unsigned long long)pio_chip, pio_sz);
- 
+-	printk(KERN_INFO "setting logging_level(0x%08x)\n",
+-				mpt2sas_fwfault_debug);
++	printk(KERN_INFO "setting fwfault_debug(%d)\n", mpt2sas_fwfault_debug);
+ 	list_for_each_entry(ioc, &mpt2sas_ioc_list, list)
+ 		ioc->fwfault_debug = mpt2sas_fwfault_debug;
  	return 0;
+@@ -3576,6 +3575,8 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
  
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index bb4f146..12fa18b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -464,7 +464,6 @@ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
-  * @pdev: pci pdev object
-  * @chip: memory mapped register space
-  * @chip_phys: physical addrss prior to mapping
-- * @pio_chip: I/O mapped register space
-  * @logging_level: see mpt2sas_debug.h
-  * @fwfault_debug: debuging FW timeouts
-  * @ir_firmware: IR firmware present
-@@ -587,8 +586,7 @@ struct MPT2SAS_ADAPTER {
- 	char		tmp_string[MPT_STRING_LENGTH];
- 	struct pci_dev	*pdev;
- 	Mpi2SystemInterfaceRegs_t __iomem *chip;
--	unsigned long	chip_phys;
--	unsigned long	pio_chip;
-+	resource_size_t	chip_phys;
- 	int		logging_level;
- 	int		fwfault_debug;
- 	u8		ir_firmware;
+ 	init_waitqueue_head(&ioc->reset_wq);
+ 
++	ioc->fwfault_debug = mpt2sas_fwfault_debug;
++
+ 	/* base internal command bits */
+ 	mutex_init(&ioc->base_cmds.mutex);
+ 	ioc->base_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
