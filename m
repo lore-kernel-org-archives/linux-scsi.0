@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 4/5] mptfusion: corrected if condition check for SCSIIO and PASSTHROUGH commands
-Date: Wed, 16 Dec 2009 19:02:59 +0530
-Message-ID: <20091216133252.GQ31161@lsi.com>
+Subject: [PATCH 5/5] mptfusion: Bump version 03.04.14
+Date: Wed, 16 Dec 2009 19:04:49 +0530
+Message-ID: <20091216133442.GR31161@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:33318 "HELO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933962AbZLPOAW (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:43855 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933982AbZLPOC3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 09:00:22 -0500
+	Wed, 16 Dec 2009 09:02:29 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,23 +17,23 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Modified the function type check to verify it is not
-MPI_FUNCTION_RAID_SCSI_IO_PASSTHROUGH or MPI_FUNCTION_SCSI_IO_REQUEST.
+Version upgrade to 3.04.14.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 352acd0..caa8f56 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -360,8 +360,8 @@ static int mptctl_bus_reset(MPT_ADAPTER *ioc, u8 function)
- 	u16		 iocstatus;
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b494867..9718c8f 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -76,8 +76,8 @@
+ #define COPYRIGHT	"Copyright (c) 1999-2008 " MODULEAUTHOR
+ #endif
  
- 	/* bus reset is only good for SCSI IO, RAID PASSTHRU */
--	if (!(function == MPI_FUNCTION_RAID_SCSI_IO_PASSTHROUGH) ||
--	    (function == MPI_FUNCTION_SCSI_IO_REQUEST)) {
-+	if (!(function == MPI_FUNCTION_RAID_SCSI_IO_PASSTHROUGH ||
-+		function == MPI_FUNCTION_SCSI_IO_REQUEST)) {
- 		dtmprintk(ioc, printk(MYIOC_s_WARN_FMT
- 			"TaskMgmt, not SCSI_IO!!\n", ioc->name));
- 		return -EPERM;
+-#define MPT_LINUX_VERSION_COMMON	"3.04.13"
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.13"
++#define MPT_LINUX_VERSION_COMMON	"3.04.14"
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.14"
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
+ 
+ #define show_mptmod_ver(s,ver)  \
+ 
