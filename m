@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 6/10] mpt2sas: Added raid transport support
-Date: Wed, 16 Dec 2009 18:54:42 +0530
-Message-ID: <20091216132434.GG31161@lsi.com>
+Subject: [PATCH 7/10] mpt2sas: Added phy_enable and set_phy_speed sysfs callback support.
+Date: Wed, 16 Dec 2009 18:55:26 +0530
+Message-ID: <20091216132518.GH31161@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:41277 "HELO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756238AbZLPNwI (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:47546 "HELO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757014AbZLPNwt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 08:52:08 -0500
+	Wed, 16 Dec 2009 08:52:49 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,324 +17,370 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Adding support for raid transport layer.  This will provide sysfs attributes
-containing raid level, state, and resync rate.
+Added new callbacks phy_enable and set_phy_speed in the
+mpt2sas_transport_functions template. This will allow end user to
+enable/disable phys and change links rates using the SysFS interface.
+Current implementation only supports direct attached phys, but we
+could in the future add support for expander based phys.
+A new subroutine mpt2sas_config_set_sas_iounit_pg1 was added;
+this wrapper function used to send request to controller firmware to modify
+the phys and link rates. A new subroutine _transport_find_local_phy was added;
+a function for easly obtaining the local phy object for direct attached.
 
-MPT2SAS module will select RAID_ATTRS.
+Example to disable a phy
+echo 0 > /sys/class/phy3:0/enable
+
+Example to enable the same phy
+echo 1 > /sys/class/phy3:0/enable
+
+Example to change the link rate to 1.5
+#echo "1.5 Gbit" > /sys/class/phy3:0/maximum_linkrate
+#cat /sys/class/phy3:0/negotiated_linkrate
+1.5 Gbit
+
+Example to change the link rate to 3.0
+#echo "3.0 Gbit" > /sys/class/phy3:0/maximum_linkrate
+#cat /sys/class/phy3:0/negotiated_linkrate
+3.0 Gbit
+
+Example to change the link rate to 6.0
+#echo "6.0 Gbit" > /sys/class/phy3:0/maximum_linkrate
+#cat /sys/class/phy3:0/negotiated_linkrate
+6.0 Gbit
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Reviewed-by: Eric Moore <eric.moore@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/Kconfig b/drivers/scsi/mpt2sas/Kconfig
-index 70c4c24..ba8e128 100644
---- a/drivers/scsi/mpt2sas/Kconfig
-+++ b/drivers/scsi/mpt2sas/Kconfig
-@@ -44,6 +44,7 @@ config SCSI_MPT2SAS
- 	tristate "LSI MPT Fusion SAS 2.0 Device Driver"
- 	depends on PCI && SCSI
- 	select SCSI_SAS_ATTRS
-+	select RAID_ATTRS
- 	---help---
- 	This driver supports PCI-Express SAS 6Gb/s Host Adapters.
- 
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 12fa18b..014318f 100644
+index 014318f..93c067f 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -323,6 +323,7 @@ struct _sas_device {
-  * @device_info: bitfield provides detailed info about the hidden components
-  * @num_pds: number of hidden raid components
-  * @responding: used in _scsih_raid_device_mark_responding
-+ * @percent_complete: resync percent complete
-  */
- struct _raid_device {
- 	struct list_head list;
-@@ -336,6 +337,7 @@ struct _raid_device {
- 	u32	device_info;
- 	u8	num_pds;
- 	u8	responding;
-+	u8	percent_complete;
- };
- 
- /**
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index c2b455e..b748893 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -52,6 +52,7 @@
- #include <linux/delay.h>
- #include <linux/pci.h>
- #include <linux/interrupt.h>
-+#include <linux/raid_class.h>
- 
- #include "mpt2sas_base.h"
- 
-@@ -133,6 +134,9 @@ struct fw_event_work {
- 	void			*event_data;
- };
- 
-+/* raid transport support */
-+static struct raid_template *mpt2sas_raid_template;
-+
- /**
-  * struct _scsi_io_transfer - scsi io transfer
-  * @handle: sas device handle (assigned by firmware)
-@@ -1419,6 +1423,140 @@ _scsih_display_sata_capabilities(struct MPT2SAS_ADAPTER *ioc,
+@@ -853,6 +853,8 @@ int mpt2sas_config_set_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+     *mpi_reply, Mpi2IOUnitPage1_t *config_page);
+ int mpt2sas_config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+     *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16 sz);
++int mpt2sas_config_set_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc,
++    Mpi2ConfigReply_t *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16 sz);
+ int mpt2sas_config_get_ioc_pg8(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+     *mpi_reply, Mpi2IOCPage8_t *config_page);
+ int mpt2sas_config_get_expander_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
+index 594a389..411c27d 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_config.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
+@@ -324,7 +324,9 @@ _config_request(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigRequest_t
+ 		if (r != 0)
+ 			goto out;
+ 		if (mpi_request->Action ==
+-		    MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT) {
++		    MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT ||
++		    mpi_request->Action ==
++		    MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM) {
+ 			ioc->base_add_sg_single(&mpi_request->PageBufferSGE,
+ 			    MPT2_CONFIG_COMMON_WRITE_SGLFLAGS | mem.sz,
+ 			    mem.page_dma);
+@@ -882,7 +884,7 @@ mpt2sas_config_get_sas_iounit_pg0(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
  }
  
  /**
-+ * _scsih_is_raid - return boolean indicating device is raid volume
-+ * @dev the device struct object
+- * mpt2sas_config_get_sas_iounit_pg1 - obtain sas iounit page 0
++ * mpt2sas_config_get_sas_iounit_pg1 - obtain sas iounit page 1
+  * @ioc: per adapter object
+  * @mpi_reply: reply mf payload returned from firmware
+  * @config_page: contents of the config page
+@@ -907,7 +909,7 @@ mpt2sas_config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ 	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_EXTENDED;
+ 	mpi_request.ExtPageType = MPI2_CONFIG_EXTPAGETYPE_SAS_IO_UNIT;
+ 	mpi_request.Header.PageNumber = 1;
+-	mpi_request.Header.PageVersion = MPI2_SASIOUNITPAGE0_PAGEVERSION;
++	mpi_request.Header.PageVersion = MPI2_SASIOUNITPAGE1_PAGEVERSION;
+ 	mpt2sas_base_build_zero_len_sge(ioc, &mpi_request.PageBufferSGE);
+ 	r = _config_request(ioc, &mpi_request, mpi_reply,
+ 	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
+@@ -922,6 +924,49 @@ mpt2sas_config_get_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
+ }
+ 
+ /**
++ * mpt2sas_config_set_sas_iounit_pg1 - send sas iounit page 1
++ * @ioc: per adapter object
++ * @mpi_reply: reply mf payload returned from firmware
++ * @config_page: contents of the config page
++ * @sz: size of buffer passed in config_page
++ * Context: sleep.
++ *
++ * Calling function should call config_get_number_hba_phys prior to
++ * this function, so enough memory is allocated for config_page.
++ *
++ * Returns 0 for success, non-zero for failure.
++ */
++int
++mpt2sas_config_set_sas_iounit_pg1(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
++    *mpi_reply, Mpi2SasIOUnitPage1_t *config_page, u16 sz)
++{
++	Mpi2ConfigRequest_t mpi_request;
++	int r;
++
++	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
++	mpi_request.Function = MPI2_FUNCTION_CONFIG;
++	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
++	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_EXTENDED;
++	mpi_request.ExtPageType = MPI2_CONFIG_EXTPAGETYPE_SAS_IO_UNIT;
++	mpi_request.Header.PageNumber = 1;
++	mpi_request.Header.PageVersion = MPI2_SASIOUNITPAGE1_PAGEVERSION;
++	mpt2sas_base_build_zero_len_sge(ioc, &mpi_request.PageBufferSGE);
++	r = _config_request(ioc, &mpi_request, mpi_reply,
++	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
++	if (r)
++		goto out;
++
++	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
++	_config_request(ioc, &mpi_request, mpi_reply,
++	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page, sz);
++	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_NVRAM;
++	r = _config_request(ioc, &mpi_request, mpi_reply,
++	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page, sz);
++ out:
++	return r;
++}
++
++/**
+  * mpt2sas_config_get_expander_pg0 - obtain expander page 0
+  * @ioc: per adapter object
+  * @mpi_reply: reply mf payload returned from firmware
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+index 3a82872..c797c42 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -855,6 +855,17 @@ rphy_to_ioc(struct sas_rphy *rphy)
+ 	return shost_priv(shost);
+ }
+ 
++static struct _sas_phy *
++_transport_find_local_phy(struct MPT2SAS_ADAPTER *ioc, struct sas_phy *phy)
++{
++	int i;
++
++	for (i = 0; i < ioc->sas_hba.num_phys; i++)
++		if (ioc->sas_hba.phy[i].phy == phy)
++			return(&ioc->sas_hba.phy[i]);
++	return NULL;
++}
++
+ /**
+  * _transport_get_linkerrors -
+  * @phy: The sas phy object
+@@ -870,14 +881,8 @@ _transport_get_linkerrors(struct sas_phy *phy)
+ 	struct _sas_phy *mpt2sas_phy;
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	Mpi2SasPhyPage1_t phy_pg1;
+-	int i;
+ 
+-	for (i = 0, mpt2sas_phy = NULL; i < ioc->sas_hba.num_phys &&
+-	    !mpt2sas_phy; i++) {
+-		if (ioc->sas_hba.phy[i].phy != phy)
+-			continue;
+-		mpt2sas_phy = &ioc->sas_hba.phy[i];
+-	}
++	mpt2sas_phy = _transport_find_local_phy(ioc, phy);
+ 
+ 	if (!mpt2sas_phy) /* this phy not on sas_host */
+ 		return -EINVAL;
+@@ -971,14 +976,8 @@ _transport_phy_reset(struct sas_phy *phy, int hard_reset)
+ 	struct _sas_phy *mpt2sas_phy;
+ 	Mpi2SasIoUnitControlReply_t mpi_reply;
+ 	Mpi2SasIoUnitControlRequest_t mpi_request;
+-	int i;
+ 
+-	for (i = 0, mpt2sas_phy = NULL; i < ioc->sas_hba.num_phys &&
+-	    !mpt2sas_phy; i++) {
+-		if (ioc->sas_hba.phy[i].phy != phy)
+-			continue;
+-		mpt2sas_phy = &ioc->sas_hba.phy[i];
+-	}
++	mpt2sas_phy = _transport_find_local_phy(ioc, phy);
+ 
+ 	if (!mpt2sas_phy) /* this phy not on sas_host */
+ 		return -EINVAL;
+@@ -1006,6 +1005,173 @@ _transport_phy_reset(struct sas_phy *phy, int hard_reset)
+ }
+ 
+ /**
++ * _transport_phy_enable - enable/disable phys
++ * @phy: The sas phy object
++ * @enable: enable phy when true
++ *
++ * Only support sas_host direct attached phys.
++ * Returns 0 for success, non-zero for failure.
 + */
 +static int
-+_scsih_is_raid(struct device *dev)
++_transport_phy_enable(struct sas_phy *phy, int enable)
 +{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	return (sdev->channel == RAID_CHANNEL) ? 1 : 0;
-+}
-+
-+/**
-+ * _scsih_get_resync - get raid volume resync percent complete
-+ * @dev the device struct object
-+ */
-+static void
-+_scsih_get_resync(struct device *dev)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(sdev->host);
-+	static struct _raid_device *raid_device;
-+	unsigned long flags;
-+	Mpi2RaidVolPage0_t vol_pg0;
++	struct MPT2SAS_ADAPTER *ioc = phy_to_ioc(phy);
++	struct _sas_phy *mpt2sas_phy;
++	Mpi2SasIOUnitPage1_t *sas_iounit_pg1 = NULL;
 +	Mpi2ConfigReply_t mpi_reply;
-+	u32 volume_status_flags;
-+	u8 percent_complete = 0;
++	u16 ioc_status;
++	u16 sz;
++	int rc = 0;
 +
-+	spin_lock_irqsave(&ioc->raid_device_lock, flags);
-+	raid_device = _scsih_raid_device_find_by_id(ioc, sdev->id,
-+	    sdev->channel);
-+	spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
++	mpt2sas_phy = _transport_find_local_phy(ioc, phy);
 +
-+	if (!raid_device)
-+		goto out;
++	if (!mpt2sas_phy) /* this phy not on sas_host */
++		return -EINVAL;
 +
-+	if (mpt2sas_config_get_raid_volume_pg0(ioc, &mpi_reply, &vol_pg0,
-+	     MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, raid_device->handle,
-+	     sizeof(Mpi2RaidVolPage0_t))) {
++	/* sas_iounit page 1 */
++	sz = offsetof(Mpi2SasIOUnitPage1_t, PhyData) + (ioc->sas_hba.num_phys *
++	    sizeof(Mpi2SasIOUnit1PhyData_t));
++	sas_iounit_pg1 = kzalloc(sz, GFP_KERNEL);
++	if (!sas_iounit_pg1) {
 +		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
 +		    ioc->name, __FILE__, __LINE__, __func__);
++		rc = -ENOMEM;
 +		goto out;
 +	}
-+
-+	volume_status_flags = le32_to_cpu(vol_pg0.VolumeStatusFlags);
-+	if (volume_status_flags & MPI2_RAIDVOL0_STATUS_FLAG_RESYNC_IN_PROGRESS)
-+		percent_complete = raid_device->percent_complete;
-+ out:
-+	raid_set_resync(mpt2sas_raid_template, dev, percent_complete);
-+}
-+
-+/**
-+ * _scsih_get_state - get raid volume level
-+ * @dev the device struct object
-+ */
-+static void
-+_scsih_get_state(struct device *dev)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(sdev->host);
-+	static struct _raid_device *raid_device;
-+	unsigned long flags;
-+	Mpi2RaidVolPage0_t vol_pg0;
-+	Mpi2ConfigReply_t mpi_reply;
-+	u32 volstate;
-+	enum raid_state state = RAID_STATE_UNKNOWN;
-+
-+	spin_lock_irqsave(&ioc->raid_device_lock, flags);
-+	raid_device = _scsih_raid_device_find_by_id(ioc, sdev->id,
-+	    sdev->channel);
-+	spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
-+
-+	if (!raid_device)
-+		goto out;
-+
-+	if (mpt2sas_config_get_raid_volume_pg0(ioc, &mpi_reply, &vol_pg0,
-+	     MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, raid_device->handle,
-+	     sizeof(Mpi2RaidVolPage0_t))) {
++	if ((mpt2sas_config_get_sas_iounit_pg1(ioc, &mpi_reply,
++	    sas_iounit_pg1, sz))) {
 +		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
 +		    ioc->name, __FILE__, __LINE__, __func__);
++		rc = -ENXIO;
++		goto out;
++	}
++	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++	    MPI2_IOCSTATUS_MASK;
++	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		rc = -EIO;
 +		goto out;
 +	}
 +
-+	volstate = le32_to_cpu(vol_pg0.VolumeStatusFlags);
-+	if (volstate & MPI2_RAIDVOL0_STATUS_FLAG_RESYNC_IN_PROGRESS) {
-+		state = RAID_STATE_RESYNCING;
-+		goto out;
-+	}
++	if (enable)
++		sas_iounit_pg1->PhyData[mpt2sas_phy->phy_id].PhyFlags
++		    &= ~MPI2_SASIOUNIT1_PHYFLAGS_PHY_DISABLE;
++	else
++		sas_iounit_pg1->PhyData[mpt2sas_phy->phy_id].PhyFlags
++		    |= MPI2_SASIOUNIT1_PHYFLAGS_PHY_DISABLE;
 +
-+	switch (vol_pg0.VolumeState) {
-+	case MPI2_RAID_VOL_STATE_OPTIMAL:
-+	case MPI2_RAID_VOL_STATE_ONLINE:
-+		state = RAID_STATE_ACTIVE;
-+		break;
-+	case  MPI2_RAID_VOL_STATE_DEGRADED:
-+		state = RAID_STATE_DEGRADED;
-+		break;
-+	case MPI2_RAID_VOL_STATE_FAILED:
-+	case MPI2_RAID_VOL_STATE_MISSING:
-+		state = RAID_STATE_OFFLINE;
-+		break;
-+	}
++	mpt2sas_config_set_sas_iounit_pg1(ioc, &mpi_reply, sas_iounit_pg1, sz);
++
 + out:
-+	raid_set_state(mpt2sas_raid_template, dev, state);
++	kfree(sas_iounit_pg1);
++	return rc;
 +}
 +
 +/**
-+ * _scsih_set_level - set raid level
-+ * @sdev: scsi device struct
-+ * @raid_device: raid_device object
++ * _transport_phy_speed - set phy min/max link rates
++ * @phy: The sas phy object
++ * @rates: rates defined in sas_phy_linkrates
++ *
++ * Only support sas_host direct attached phys.
++ * Returns 0 for success, non-zero for failure.
 + */
-+static void
-+_scsih_set_level(struct scsi_device *sdev, struct _raid_device *raid_device)
++static int
++_transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
 +{
-+	enum raid_level level = RAID_LEVEL_UNKNOWN;
++	struct MPT2SAS_ADAPTER *ioc = phy_to_ioc(phy);
++	struct _sas_phy *mpt2sas_phy;
++	Mpi2SasIOUnitPage1_t *sas_iounit_pg1 = NULL;
++	Mpi2SasPhyPage0_t phy_pg0;
++	Mpi2ConfigReply_t mpi_reply;
++	u16 ioc_status;
++	u16 sz;
++	int i;
++	int rc = 0;
 +
-+	switch (raid_device->volume_type) {
-+	case MPI2_RAID_VOL_TYPE_RAID0:
-+		level = RAID_LEVEL_0;
-+		break;
-+	case MPI2_RAID_VOL_TYPE_RAID10:
-+		level = RAID_LEVEL_10;
-+		break;
-+	case MPI2_RAID_VOL_TYPE_RAID1E:
-+		level = RAID_LEVEL_1E;
-+		break;
-+	case MPI2_RAID_VOL_TYPE_RAID1:
-+		level = RAID_LEVEL_1;
-+		break;
++	mpt2sas_phy = _transport_find_local_phy(ioc, phy);
++
++	if (!mpt2sas_phy) /* this phy not on sas_host */
++		return -EINVAL;
++
++	if (!rates->minimum_linkrate)
++		rates->minimum_linkrate = phy->minimum_linkrate;
++	else if (rates->minimum_linkrate < phy->minimum_linkrate_hw)
++		rates->minimum_linkrate = phy->minimum_linkrate_hw;
++
++	if (!rates->maximum_linkrate)
++		rates->maximum_linkrate = phy->maximum_linkrate;
++	else if (rates->maximum_linkrate > phy->maximum_linkrate_hw)
++		rates->maximum_linkrate = phy->maximum_linkrate_hw;
++
++	/* sas_iounit page 1 */
++	sz = offsetof(Mpi2SasIOUnitPage1_t, PhyData) + (ioc->sas_hba.num_phys *
++	    sizeof(Mpi2SasIOUnit1PhyData_t));
++	sas_iounit_pg1 = kzalloc(sz, GFP_KERNEL);
++	if (!sas_iounit_pg1) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		rc = -ENOMEM;
++		goto out;
++	}
++	if ((mpt2sas_config_get_sas_iounit_pg1(ioc, &mpi_reply,
++	    sas_iounit_pg1, sz))) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		rc = -ENXIO;
++		goto out;
++	}
++	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++	    MPI2_IOCSTATUS_MASK;
++	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		rc = -EIO;
++		goto out;
 +	}
 +
-+	raid_set_level(mpt2sas_raid_template, &sdev->sdev_gendev, level);
++	for (i = 0; i < ioc->sas_hba.num_phys; i++) {
++		if (mpt2sas_phy->phy_id != i) {
++			sas_iounit_pg1->PhyData[i].MaxMinLinkRate =
++			    (ioc->sas_hba.phy[i].phy->minimum_linkrate +
++			    (ioc->sas_hba.phy[i].phy->maximum_linkrate << 4));
++		} else {
++			sas_iounit_pg1->PhyData[i].MaxMinLinkRate =
++			    (rates->minimum_linkrate +
++			    (rates->maximum_linkrate << 4));
++		}
++	}
++
++	if (mpt2sas_config_set_sas_iounit_pg1(ioc, &mpi_reply, sas_iounit_pg1,
++	    sz)) {
++		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
++		    ioc->name, __FILE__, __LINE__, __func__);
++		rc = -ENXIO;
++		goto out;
++	}
++
++	/* link reset */
++	_transport_phy_reset(phy, 0);
++
++	/* read phy page 0, then update the rates in the sas transport phy */
++	if (!mpt2sas_config_get_phy_pg0(ioc, &mpi_reply, &phy_pg0,
++	    mpt2sas_phy->phy_id)) {
++		phy->minimum_linkrate = _transport_convert_phy_link_rate(
++		    phy_pg0.ProgrammedLinkRate & MPI2_SAS_PRATE_MIN_RATE_MASK);
++		phy->maximum_linkrate = _transport_convert_phy_link_rate(
++		    phy_pg0.ProgrammedLinkRate >> 4);
++		phy->negotiated_linkrate = _transport_convert_phy_link_rate(
++		    phy_pg0.NegotiatedLinkRate &
++		    MPI2_SAS_NEG_LINK_RATE_MASK_PHYSICAL);
++	}
++
++ out:
++	kfree(sas_iounit_pg1);
++	return rc;
 +}
 +
++
 +/**
-  * _scsih_get_volume_capabilities - volume capabilities
-  * @ioc: per adapter object
-  * @sas_device: the raid_device object
-@@ -1574,6 +1712,8 @@ _scsih_slave_configure(struct scsi_device *sdev)
- 		    (unsigned long long)raid_device->wwid,
- 		    raid_device->num_pds, ds);
- 		_scsih_change_queue_depth(sdev, qdepth, SCSI_QDEPTH_DEFAULT);
-+		/* raid transport support */
-+		_scsih_set_level(sdev, raid_device);
- 		return 0;
- 	}
- 
-@@ -5170,11 +5310,33 @@ static void
- _scsih_sas_ir_operation_status_event(struct MPT2SAS_ADAPTER *ioc,
-     struct fw_event_work *fw_event)
- {
-+	Mpi2EventDataIrOperationStatus_t *event_data = fw_event->event_data;
-+	static struct _raid_device *raid_device;
-+	unsigned long flags;
-+	u16 handle;
-+
- #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
- 	if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
- 		_scsih_sas_ir_operation_status_event_debug(ioc,
--		     fw_event->event_data);
-+		     event_data);
- #endif
-+
-+	/* code added for raid transport support */
-+	if (event_data->RAIDOperation == MPI2_EVENT_IR_RAIDOP_RESYNC) {
-+
-+		handle = le16_to_cpu(event_data->VolDevHandle);
-+
-+		spin_lock_irqsave(&ioc->raid_device_lock, flags);
-+		raid_device = _scsih_raid_device_find_by_handle(ioc, handle);
-+		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
-+
-+		if (!raid_device)
-+			return;
-+
-+		if (event_data->RAIDOperation == MPI2_EVENT_IR_RAIDOP_RESYNC)
-+			raid_device->percent_complete =
-+			    event_data->PercentComplete;
-+	}
- }
- 
- /**
-@@ -6390,6 +6552,13 @@ static struct pci_driver scsih_driver = {
- #endif
+  * _transport_smp_handler - transport portal for smp passthru
+  * @shost: shost object
+  * @rphy: sas transport rphy object
+@@ -1207,6 +1373,8 @@ struct sas_function_template mpt2sas_transport_functions = {
+ 	.get_enclosure_identifier = _transport_get_enclosure_identifier,
+ 	.get_bay_identifier	= _transport_get_bay_identifier,
+ 	.phy_reset		= _transport_phy_reset,
++	.phy_enable		= _transport_phy_enable,
++	.set_phy_speed		= _transport_phy_speed,
+ 	.smp_handler		= _transport_smp_handler,
  };
  
-+/* raid transport support */
-+static struct raid_function_template mpt2sas_raid_functions = {
-+	.cookie		= &scsih_driver_template,
-+	.is_raid	= _scsih_is_raid,
-+	.get_resync	= _scsih_get_resync,
-+	.get_state	= _scsih_get_state,
-+};
- 
- /**
-  * _scsih_init - main entry point for this driver.
-@@ -6409,6 +6578,12 @@ _scsih_init(void)
- 	    sas_attach_transport(&mpt2sas_transport_functions);
- 	if (!mpt2sas_transport_template)
- 		return -ENODEV;
-+	/* raid transport support */
-+	mpt2sas_raid_template = raid_class_attach(&mpt2sas_raid_functions);
-+	if (!mpt2sas_raid_template) {
-+		sas_release_transport(mpt2sas_transport_template);
-+		return -ENODEV;
-+	}
- 
- 	mpt2sas_base_initialize_callback_handler();
- 
-@@ -6443,8 +6618,11 @@ _scsih_init(void)
- 	mpt2sas_ctl_init();
- 
- 	error = pci_register_driver(&scsih_driver);
--	if (error)
-+	if (error) {
-+		/* raid transport support */
-+		raid_class_release(mpt2sas_raid_template);
- 		sas_release_transport(mpt2sas_transport_template);
-+	}
- 
- 	return error;
- }
-@@ -6462,7 +6640,8 @@ _scsih_exit(void)
- 
- 	pci_unregister_driver(&scsih_driver);
- 
--	sas_release_transport(mpt2sas_transport_template);
-+	mpt2sas_ctl_exit();
-+
- 	mpt2sas_base_release_callback_handler(scsi_io_cb_idx);
- 	mpt2sas_base_release_callback_handler(tm_cb_idx);
- 	mpt2sas_base_release_callback_handler(base_cb_idx);
-@@ -6474,7 +6653,10 @@ _scsih_exit(void)
- 	mpt2sas_base_release_callback_handler(tm_tr_cb_idx);
- 	mpt2sas_base_release_callback_handler(tm_sas_control_cb_idx);
- 
--	mpt2sas_ctl_exit();
-+	/* raid transport support */
-+	raid_class_release(mpt2sas_raid_template);
-+	sas_release_transport(mpt2sas_transport_template);
-+
- }
- 
- module_init(_scsih_init);
-diff --git a/include/linux/raid_class.h b/include/linux/raid_class.h
-index 6b537f1..31e1ff6 100644
---- a/include/linux/raid_class.h
-+++ b/include/linux/raid_class.h
-@@ -32,6 +32,7 @@ enum raid_level {
- 	RAID_LEVEL_0,
- 	RAID_LEVEL_1,
- 	RAID_LEVEL_10,
-+	RAID_LEVEL_1E,
- 	RAID_LEVEL_3,
- 	RAID_LEVEL_4,
- 	RAID_LEVEL_5,
