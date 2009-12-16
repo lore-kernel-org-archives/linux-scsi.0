@@ -1,106 +1,80 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH, v2] SCSI/libsrp: document the libsrp source code
-Date: Wed, 16 Dec 2009 13:08:39 -0800
-Message-ID: <20091216130839.6e939ec4.randy.dunlap@oracle.com>
-References: <200912162010.24325.bart.vanassche@gmail.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1] fusion: hold off error recovery while alternate ioc is
+ initializing
+Date: Wed, 16 Dec 2009 15:20:49 -0600
+Message-ID: <4B294F31.5030109@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:61725 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756699AbZLPVIr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 16:08:47 -0500
-In-Reply-To: <200912162010.24325.bart.vanassche@gmail.com>
+Received: from relay1.sgi.com ([192.48.179.29]:36741 "EHLO relay.sgi.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756127AbZLPVUu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Dec 2009 16:20:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Jeremy Higdon <jeremy@sgi.com>, Robin Holt <holt@sgi.com>, kashyap.desai@lsi.com
 
-On Wed, 16 Dec 2009 20:10:24 +0100 Bart Van Assche wrote:
+Fusion FC chips are two function with some shared resources.  During
+initialization of one function its driver inhibits the ability of the
+other function's driver to allocate message frames by clearing its
+"active" flag.  Should mid-layer error recovery be initiated for a
+scsi command during this initialization (which can take many seconds)
+error recovery will escalate to the level of host reset.  This host
+reset might fail resulting in all connected targets being taken offline.
 
-> Adds documentation to the libsrp source code.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
-> Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> ----
-> This is the second version of this patch. While the first version of this
-> patch did not adhere strictly to the kernel-doc format, this version should.
+This patch holds off mid-layer error recovery for up to 60 seconds
+to permit initialization of the other function to complete.
 
-Not entirely :(
-Just a few more to add, then you can include this line:
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
+Applies to scsi-misc.
 
-Thanks!
+Signed-off-by: Michael Reed <mdr@sgi.com>
 
-> 
-> diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
-> index 9ad38e8..83c0f45 100644
-> --- a/drivers/scsi/libsrp.c
-> +++ b/drivers/scsi/libsrp.c
-> @@ -29,6 +29,10 @@
->  #include <scsi/srp.h>
->  #include <scsi/libsrp.h>
->  
-> +/*
-> + * Allowed values for the 'TASK ATTRIBUTE' field of an SRP_CMD request. See
-> + * also section 6.8 of the T10 SRP r16a document.
-> + */
->  enum srp_task_attributes {
->  	SRP_SIMPLE_TASK = 0,
->  	SRP_HEAD_TASK = 1,
-> @@ -44,6 +48,16 @@ do {								\
->  /* #define dprintk eprintk */
->  #define dprintk(fmt, args...)
->  
-> +/**
-> + * Allocate a pool of information units for use by an SRP target.
+==
 
-Missing function_name: above.
-
-> + * @q: pointer to the pool structure that will be initialized.
-> + * @max: number of information units the pool will contain.
-> + * @ring: pointer to an array of 'max' SRP buffer pointers. Each information
-> + *   unit allocated for the pool will be initialized such that it points to
-> + *   the corresponding SRP buffer in array 'ring'.
-> + *
-> + * Returns zero upon success and a negative error code upon failure.
-> + */
->  static int srp_iu_pool_alloc(struct srp_queue *q, size_t max,
->  			     struct srp_buf **ring)
->  {
-
-
-> @@ -393,6 +512,10 @@ static int vscsis_data_length(struct srp_cmd *cmd, enum dma_data_direction dir)
->  	return len;
->  }
->  
-> +/**
-> + * srp_cmd_queue() - Queue an SRP_CMD request for processing by appropriate
-> + * target software, e.g. the user space process tgtd.
-
-Missng function arguments in kernel-doc.
-
-
-> + */
->  int srp_cmd_queue(struct Scsi_Host *shost, struct srp_cmd *cmd, void *info,
->  		  u64 itn_id, u64 addr)
->  {
-
-
-> diff --git a/include/scsi/libsrp.h b/include/scsi/libsrp.h
-> index ba615e4..f5da2cc 100644
-> --- a/include/scsi/libsrp.h
-> +++ b/include/scsi/libsrp.h
-> @@ -1,11 +1,17 @@
-...
-
-Data structs look good.
-
-
-
----
-~Randy
+--- a/drivers/message/fusion/mptfc.c	2009-12-16 15:09:22.817382765 -0600
++++ b/drivers/message/fusion/mptfc.c	2009-12-16 15:10:31.949380663 -0600
+@@ -195,29 +195,31 @@ mptfc_block_error_handler(struct scsi_cm
+ 	unsigned long		flags;
+ 	int			ready;
+ 	MPT_ADAPTER 		*ioc;
++	int			sleep_interval = 1000;
++	int			loops = 60 * sleep_interval;
+ 
+ 	hd = shost_priv(SCpnt->device->host);
+ 	ioc = hd->ioc;
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	while ((ready = fc_remote_port_chkready(rport) >> 16) == DID_IMM_RETRY) {
++
++	while ((loops > 0 && ioc->active == 0)
++	 || (ready = fc_remote_port_chkready(rport) >> 16) == DID_IMM_RETRY) {
++
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+-		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+-			"mptfc_block_error_handler.%d: %d:%d, port status is "
+-			"DID_IMM_RETRY, deferring %s recovery.\n",
+-			ioc->name, ioc->sh->host_no,
+-			SCpnt->device->id, SCpnt->device->lun, caller));
+-		msleep(1000);
++		msleep(sleep_interval);
++		loops -= sleep_interval;
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-	if (ready == DID_NO_CONNECT || !SCpnt->device->hostdata) {
++	if (ioc->active == 0
++	 || ready == DID_NO_CONNECT || !SCpnt->device->hostdata) {
+ 		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+-			"%s.%d: %d:%d, failing recovery, "
++			"%s.%d: %d:%d, failing recovery, active %d, "
+ 			"port state %d, vdevice %p.\n", caller,
+ 			ioc->name, ioc->sh->host_no,
+-			SCpnt->device->id, SCpnt->device->lun, ready,
+-			SCpnt->device->hostdata));
++			SCpnt->device->id, SCpnt->device->lun,
++			ioc->active, ready, SCpnt->device->hostdata));
+ 		return FAILED;
+ 	}
+ 	dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
