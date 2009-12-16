@@ -1,7 +1,7 @@
 From: James Smart <James.Smart@Emulex.Com>
 Subject: Re: [PATCH] Remove capping from dev_loss_tmo
-Date: Wed, 16 Dec 2009 10:33:27 -0500
-Message-ID: <4B28FDC7.6020006@emulex.com>
+Date: Wed, 16 Dec 2009 10:34:31 -0500
+Message-ID: <4B28FE07.4020503@emulex.com>
 References: <20091215082606.A45B037AD2@ochil.suse.de>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -24,12 +24,12 @@ List-Id: linux-scsi@vger.kernel.org
 
 Hannes,
 
-Not sure I quite agree with your description of the two timers - but 
-relative to the goal of
-allowing a larger dev_loss_tmo when fast_io_fail_tmo is enabled, it's 
-fine.  Interestingly, I
-was looking at when it's disabled, does the cap kick back in - and 
-realized that once we
+Not sure I quite agree with your description of the two timers - but relative 
+to the goal of
+allowing a larger dev_loss_tmo when fast_io_fail_tmo is enabled, it's fine. 
+Interestingly, I
+was looking at when it's disabled, does the cap kick back in - and realized 
+that once we
 enable fast fail, we don't allow it to be turned off.
 
 Looks good.
@@ -37,6 +37,7 @@ Looks good.
 Acked-by:  James Smart  <james.smart@emulex.com>
 
 -- james s
+
 
 Hannes Reinecke wrote:
 > Currently dev_loss_tmo is capped by SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
@@ -57,9 +58,9 @@ Hannes Reinecke wrote:
 > dev_loss_tmo when fast_io_fail_tmo is set.
 > This allows us to synchronize the dev_loss_tmo setting to the
 > 'no_path_retry' setting from multipathing thus avoiding the deadlock.
->
+> 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
->
+> 
 > diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
 > index 573ce21..6f39bf4 100644
 > --- a/drivers/scsi/scsi_transport_fc.c
@@ -113,10 +114,9 @@ Hannes Reinecke wrote:
 >  		rport->fast_io_fail_tmo = val;
 >  	}
 >  	return count;
->
+> 
 > --
 > dm-devel mailing list
 > dm-devel@redhat.com
 > https://www.redhat.com/mailman/listinfo/dm-devel
->
->   
+> 
