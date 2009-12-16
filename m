@@ -1,124 +1,419 @@
-From: Clemens Fruhwirth <clemens@endorphin.org>
-Subject: Re: [PATCH] Forcing SCSI capacity for broken SD Card readers
-Date: Wed, 16 Dec 2009 17:51:34 +0100
-Message-ID: <2f83750a0912160851u4279d39v6165a82f78d17b5c@mail.gmail.com>
-References: <2f83750a0910141408m44082639m13cb0bfdb5cbd5cb@mail.gmail.com>
-	 <2f83750a0910141413s58df3658k5ed170541e637f1e@mail.gmail.com>
-	 <da824cf30910141629m1c30521ftd6ee2ed9970a0edb@mail.gmail.com>
+From: Matthew Tehonica <matt.tehonica@mac.com>
+Subject: Re: Applying MVSAS Patch
+Date: Wed, 16 Dec 2009 11:54:16 -0500
+Message-ID: <93017718277361587250366956065608636194-Webmail@me.com>
+References: <67980649284293627495293095942659870934-Webmail@me.com>
+ <20091216081301.59d1698e.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001485f7d6e8bcc235047adb51fa
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:41661 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbZLPQvh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 11:51:37 -0500
-Received: by fxm21 with SMTP id 21so1086729fxm.21
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Dec 2009 08:51:35 -0800 (PST)
-In-Reply-To: <da824cf30910141629m1c30521ftd6ee2ed9970a0edb@mail.gmail.com>
+Received: from asmtpout013.mac.com ([17.148.16.88]:43800 "EHLO
+	asmtpout013.mac.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760335AbZLPQyS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 11:54:18 -0500
+Received: from spool001.mac.com ([10.150.69.51])
+ by asmtp013.mac.com (Sun Java(tm) System Messaging Server 6.3-8.01 (built Dec
+ 16 2008; 32bit)) with ESMTP id <0KUR001LJ8AGVC00@asmtp013.mac.com> for
+ linux-scsi@vger.kernel.org; Wed, 16 Dec 2009 08:54:18 -0800 (PST)
+In-reply-to: <20091216081301.59d1698e.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-scsi@vger.kernel.org, ayan@marvell.com
 
---001485f7d6e8bcc235047adb51fa
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Oct 15, 2009 at 1:29 AM, Grant Grundler <grundler@google.com> wrote=
-:
-> On Wed, Oct 14, 2009 at 2:13 PM, Clemens Fruhwirth
-> <clemens@endorphin.org> wrote:
->> Short: Attached is an incomplete patch that allows user space to force
->> the capacity of an scsi device to a specific value. Any not over
->> my-dead-body objections with that?
+ 
+On Wednesday, December 16, 2009, at 11:13AM, "Randy Dunlap" <randy.dunlap@oracle.com> wrote:
+>On Wed, 16 Dec 2009 09:22:40 -0500 Matthew Tehonica wrote:
 >
-> No major objection - just the usual nits:
-> Why not make /sys/block/sdX/size writeable?
-> =C2=A0 =C2=A0(instead of adding an ioctl())
-
-Oh, I like that. Sorry it took me so long to reply. It turned out that
-this is a much better idea. The value that is printed when reading the
-size attribute is to the value that I set in my patch indirectly
-through set_capacity. So, making size writable replaces that totally.
-
-Patch attached.
-
-> After reading the wiki page[1], my impression is that the block size
-> gets reported wrong and thus the total capacity is miscalculated for
-> 1GB-4GB SD cards with 1024 or 2048 byte blocks. Two questions around this=
-:
-> a) Does the host need to know the correct block size for correct operatio=
-n?
-
->From experiments it does not look like that's the case. This is
-surprising though, as one would suspect the card not to  function
-properly otherwise. Frankly speaking, I have not looked down the
-calling chain, especially how usb-storage treats these blocks, but I'd
-say not at all. Seems like the USB reader, I have, just doesn't get
-the capacity right, by not considering BLOCK_LEN > 512.
-
-> b) Do the devices report which SD Card Association spec they are complian=
-t
-> =C2=A0 with in the USB headers?
+>> Hi All,
+>> 
+>> I am trying to apply the first patch to fix the mvsas issue and getting an error that I can't figure out. See below:
+>> 
+>> mtehonica@ghostrider:/usr/src/linux-2.6.32$ sudo patch -p1 < /home/mtehonica/Downloads/0001-Update-chip-init-code-to-enhance-performance.patch 
+>> patching file drivers/scsi/mvsas/mv_64xx.c
+>> patch: **** malformed patch at line 65:  	/* interrupt coalescing may cause missing HW interrput in some case,
+>> 
+>> I have played around with removing the line that it complains about and it just then says the next line is malformed.  Can anyone help with this???
 >
-> I'm asking (b) to start the conversation about if it's feasible to
-> auto-detect this in the kernel and spare all the distro's from having
-> to frob the device size.
 >
-> If we can autodetect this case, *and* the device has a valid FAT
-> partition, it should be trivial
-> to use the FAT partition info instead of what the USB card reader is
-> reporting. Partitioning
-> a new card will probably still need "size" to be writable.
+>It would help if you pointed us at the specific patch that you are
+>referring to.
+>
+>malformed patch (to me) usually means that some (long-ish) lines were
+>split by a mail app or mail server and those lines need to be joined
+>together.  That's the reason that I see most often, although I expect
+>that there could be other reasons for it.
+>
+>
+>---
+>~Randy
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
-I'm sorry, I can't really answer (b).
+Sorry, didn't think to include the patch.  Here it is:
 
-Autofixing this doesn't seem possible to me (except for the partition
-trick) as the capacity =3D BLOCK_LEN * BLOCKS. If BLOCK_LEN isn't
-detected correctly, we can't distinguish a 1GB from 2GB card.
+mtehonica@ghostrider:/usr/src/linux-2.6.32$ cat /home/mtehonica/Downloads/0001-Update-chip-init-code-to-enhance-performance.patch 
+>From 60ba00f2f2263c52e4b2f5a614b1800a36f4cb9e Mon Sep 17 00:00:00 2001
 
-Best Regards,
---=20
-Fruhwirth Clemens http://clemens.endorphin.org
+From: andy
 
---001485f7d6e8bcc235047adb51fa
-Content-Type: application/octet-stream; name="size-setter.patch"
-Content-Disposition: attachment; filename="size-setter.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g3acaakl0
+Date: Fri, 6 Nov 2009 16:54:50 +0800
 
-LS0tIGxpbnV4LTIuNi4zMi9ibG9jay9nZW5oZC5jCTIwMDktMTItMDMgMDQ6NTE6MjEuMDAwMDAw
-MDAwICswMTAwCisrKyBsaW51eC0yLjYuMzItcGF0Y2hlZC9ibG9jay9nZW5oZC5jCTIwMDktMTIt
-MTUgMDg6NDk6MzEuNjA4OTU5MDM4ICswMTAwCkBAIC04NjUsNyArODY1LDcgQEAKIHN0YXRpYyBE
-RVZJQ0VfQVRUUihleHRfcmFuZ2UsIFNfSVJVR08sIGRpc2tfZXh0X3JhbmdlX3Nob3csIE5VTEwp
-Owogc3RhdGljIERFVklDRV9BVFRSKHJlbW92YWJsZSwgU19JUlVHTywgZGlza19yZW1vdmFibGVf
-c2hvdywgTlVMTCk7CiBzdGF0aWMgREVWSUNFX0FUVFIocm8sIFNfSVJVR08sIGRpc2tfcm9fc2hv
-dywgTlVMTCk7Ci1zdGF0aWMgREVWSUNFX0FUVFIoc2l6ZSwgU19JUlVHTywgcGFydF9zaXplX3No
-b3csIE5VTEwpOworc3RhdGljIERFVklDRV9BVFRSKHNpemUsIFNfSVJVR08gfCBTX0lXVVNSLCBw
-YXJ0X3NpemVfc2hvdywgcGFydF9zaXplX3NldCk7CiBzdGF0aWMgREVWSUNFX0FUVFIoYWxpZ25t
-ZW50X29mZnNldCwgU19JUlVHTywgZGlza19hbGlnbm1lbnRfb2Zmc2V0X3Nob3csIE5VTEwpOwog
-c3RhdGljIERFVklDRV9BVFRSKGNhcGFiaWxpdHksIFNfSVJVR08sIGRpc2tfY2FwYWJpbGl0eV9z
-aG93LCBOVUxMKTsKIHN0YXRpYyBERVZJQ0VfQVRUUihzdGF0LCBTX0lSVUdPLCBwYXJ0X3N0YXRf
-c2hvdywgTlVMTCk7Ci0tLSBsaW51eC0yLjYuMzIvZnMvcGFydGl0aW9ucy9jaGVjay5jCTIwMDkt
-MTItMDMgMDQ6NTE6MjEuMDAwMDAwMDAwICswMTAwCisrKyBsaW51eC0yLjYuMzItcGF0Y2hlZC9m
-cy9wYXJ0aXRpb25zL2NoZWNrLmMJMjAwOS0xMi0xNSAwODo0OTowMS4wNjM0NjU4MTkgKzAxMDAK
-QEAgLTIxOSw2ICsyMTksMTkgQEAKIAlyZXR1cm4gc3ByaW50ZihidWYsICIlbGx1XG4iLCh1bnNp
-Z25lZCBsb25nIGxvbmcpcC0+bnJfc2VjdHMpOwogfQogCitzc2l6ZV90IHBhcnRfc2l6ZV9zZXQo
-c3RydWN0IGRldmljZSAqZGV2LAorCQkgICAgICBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0
-ciwgY2hhciAqYnVmLCBzaXplX3QgbGVuKQoreworCXN0cnVjdCBoZF9zdHJ1Y3QgKnAgPSBkZXZf
-dG9fcGFydChkZXYpOworCWNoYXIgKmVuZHA7CisJdW5zaWduZWQgbG9uZyBsb25nIHZhbCA9IHNp
-bXBsZV9zdHJ0b3VsbChidWYsICZlbmRwLCAxMCk7CisJaWYgKGVuZHAgPT0gYnVmKQorCQlyZXR1
-cm4gLUVJTlZBTDsKKwkKKwlwLT5ucl9zZWN0cyA9IHZhbDsKKwlyZXR1cm4gbGVuOworfQorCiBz
-c2l6ZV90IHBhcnRfYWxpZ25tZW50X29mZnNldF9zaG93KHN0cnVjdCBkZXZpY2UgKmRldiwKIAkJ
-CQkgICBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwgY2hhciAqYnVmKQogewotLS0gbGlu
-dXgtMi42LjMyL2luY2x1ZGUvbGludXgvZ2VuaGQuaAkyMDA5LTEyLTAzIDA0OjUxOjIxLjAwMDAw
-MDAwMCArMDEwMAorKysgbGludXgtMi42LjMyLXBhdGNoZWQvaW5jbHVkZS9saW51eC9nZW5oZC5o
-CTIwMDktMTItMTUgMDk6MTg6NDQuNzkzMDg4Nzc4ICswMTAwCkBAIC01NDksNiArNTQ5LDggQEAK
-IAogZXh0ZXJuIHNzaXplX3QgcGFydF9zaXplX3Nob3coc3RydWN0IGRldmljZSAqZGV2LAogCQkJ
-ICAgICAgc3RydWN0IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsIGNoYXIgKmJ1Zik7CitleHRlcm4g
-c3NpemVfdCBwYXJ0X3NpemVfc2V0KHN0cnVjdCBkZXZpY2UgKmRldiwKKwkJCSAgICAgc3RydWN0
-IGRldmljZV9hdHRyaWJ1dGUgKmF0dHIsIGNoYXIgKmJ1Ziwgc2l6ZV90IGxlbik7CiBleHRlcm4g
-c3NpemVfdCBwYXJ0X3N0YXRfc2hvdyhzdHJ1Y3QgZGV2aWNlICpkZXYsCiAJCQkgICAgICBzdHJ1
-Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwgY2hhciAqYnVmKTsKIGV4dGVybiBzc2l6ZV90IHBh
-cnRfaW5mbGlnaHRfc2hvdyhzdHJ1Y3QgZGV2aWNlICpkZXYsCg==
---001485f7d6e8bcc235047adb51fa--
+Subject: [PATCH 1/6] Update chip initialization
+
+
+Update chip init code to enhance performance,correct some settings
+
+for 6G phy negotiation.
+
+
+Signed-off-by: Andy
+
+Signed-off-by: Jacky
+
+Signed-off-by: Ke 
+
+
+---
+
+ drivers/scsi/mvsas/mv_64xx.c  |   18 +++++++++++++-----
+
+ drivers/scsi/mvsas/mv_94xx.c  |   41 ++++++++++++++++++++++++++++-------------
+
+ drivers/scsi/mvsas/mv_94xx.h  |    5 +++--
+
+ drivers/scsi/mvsas/mv_chips.h |    5 -----
+
+ 4 files changed, 44 insertions(+), 25 deletions(-)
+
+
+diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
+
+index 10a5077..4c005fa 100644
+
+--- a/drivers/scsi/mvsas/mv_64xx.c
+
++++ b/drivers/scsi/mvsas/mv_64xx.c
+
+@@ -373,15 +373,23 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
+
+ 	/* reset CMD queue */
+
+ 	tmp = mr32(MVS_PCS);
+
+ 	tmp |= PCS_CMD_RST;
+
++	tmp &= ~PCS_SELF_CLEAR;
+
++
+
++	/* enable cmd_cmpl bit self-clearing */
+
++	if (mvi->flags & MVF_MSI)
+
++		tmp |= PCS_SELF_CLEAR;
+
++
+
+ 	mw32(MVS_PCS, tmp);
+
+ 	/* interrupt coalescing may cause missing HW interrput in some case,
+
+ 	 * and the max count is 0x1ff, while our max slot is 0x200,
+
+ 	 * it will make count 0.
+
+ 	 */
+
+ 	tmp = 0;
+
+-	mw32(MVS_INT_COAL, tmp);
+
+-
+
+-	tmp = 0x100;
+
++	if (MVS_CHIP_SLOT_SZ > 0x1ff)
+
++		mw32(MVS_INT_COAL, 0x1ff|COAL_EN);
+
++	else
+
++		mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ|COAL_EN);
+
++	tmp = 0x10400;
+
+ 	mw32(MVS_INT_COAL_TMOUT, tmp);
+
+
+ 	/* ladies and gentlemen, start your engines */
+
+@@ -393,8 +401,8 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
+
+ 		PCS_CMD_EN | PCS_CMD_STOP_ERR);
+
+
+ 	/* enable completion queue interrupt */
+
+-	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM | CINT_SRS | CINT_CI_STOP |
+
+-		CINT_DMA_PCIE);
+
++	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM |
+
++		CINT_SRS | CINT_CI_STOP | CINT_DMA_PCIE);
+
+
+ 	mw32(MVS_INT_MASK, tmp);
+
+
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+
+index 0940fae..f0017fc 100644
+
+--- a/drivers/scsi/mvsas/mv_94xx.c
+
++++ b/drivers/scsi/mvsas/mv_94xx.c
+
+@@ -102,7 +102,9 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+
+ 	void __iomem *regs = mvi->regs;
+
+ 	int i;
+
+ 	u32 tmp, cctl;
+
++	u8 revision;
+
+
++	revision = mvi->pdev->revision;
+
+ 	mvs_show_pcie_usage(mvi);
+
+ 	if (mvi->flags & MVF_FLAG_SOC) {
+
+ 		tmp = mr32(MVS_PHY_CTL);
+
+@@ -132,6 +134,21 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+
+ 		msleep(100);
+
+ 	}
+
+
++	/* disable Multiplexing, enable phy implemented */
+
++	mw32(MVS_PORTS_IMP, 0xFF);
+
++
+
++	if (revision == 0xa0) {
+
++		mw32(MVS_PA_VSR_ADDR, 0x00000104);
+
++		mw32(MVS_PA_VSR_PORT, 0x00018080);
+
++	}
+
++	mw32(MVS_PA_VSR_ADDR, VSR_PHY_MODE8);
+
++	mw32(MVS_PA_VSR_PORT, 0x0084d4ff);
+
++	if (revision == 0x01) {
+
++		mw32(MVS_PA_VSR_ADDR, 0x00000144);
+
++		mw32(MVS_PA_VSR_PORT, 0x08001006);
+
++		mw32(MVS_PA_VSR_ADDR, 0x000001b4);
+
++		mw32(MVS_PA_VSR_PORT, 0x0000705f);
+
++	}
+
+ 	/* reset control */
+
+ 	mw32(MVS_PCS, 0);		/* MVS_PCS */
+
+ 	mw32(MVS_STP_REG_SET_0, 0);
+
+@@ -140,14 +157,6 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+
+ 	/* init phys */
+
+ 	mvs_phy_hacks(mvi);
+
+
+-	/* disable Multiplexing, enable phy implemented */
+
+-	mw32(MVS_PORTS_IMP, 0xFF);
+
+-
+
+-
+
+-	mw32(MVS_PA_VSR_ADDR, 0x00000104);
+
+-	mw32(MVS_PA_VSR_PORT, 0x00018080);
+
+-	mw32(MVS_PA_VSR_ADDR, VSR_PHY_MODE8);
+
+-	mw32(MVS_PA_VSR_PORT, 0x0084ffff);
+
+
+ 	/* set LED blink when IO*/
+
+ 	mw32(MVS_PA_VSR_ADDR, 0x00000030);
+
+@@ -227,15 +236,21 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+
+ 	/* reset CMD queue */
+
+ 	tmp = mr32(MVS_PCS);
+
+ 	tmp |= PCS_CMD_RST;
+
++	tmp &= ~PCS_SELF_CLEAR;
+
++	/* enable cmd_cmpl bit self-clearing */
+
++	if (mvi->flags & MVF_MSI)
+
++		tmp |= PCS_SELF_CLEAR;
+
+ 	mw32(MVS_PCS, tmp);
+
+ 	/* interrupt coalescing may cause missing HW interrput in some case,
+
+ 	 * and the max count is 0x1ff, while our max slot is 0x200,
+
+ 	 * it will make count 0.
+
+ 	 */
+
+ 	tmp = 0;
+
+-	mw32(MVS_INT_COAL, tmp);
+
+-
+
+-	tmp = 0x100;
+
++	if (MVS_CHIP_SLOT_SZ > 0x1ff)
+
++		mw32(MVS_INT_COAL, 0x1ff|COAL_EN);
+
++	else
+
++		mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ|COAL_EN);
+
++	tmp = 0x10400;
+
+ 	mw32(MVS_INT_COAL_TMOUT, tmp);
+
+
+ 	/* ladies and gentlemen, start your engines */
+
+@@ -247,8 +262,8 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+
+ 		PCS_CMD_EN | PCS_CMD_STOP_ERR);
+
+
+ 	/* enable completion queue interrupt */
+
+-	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM | CINT_SRS | CINT_CI_STOP |
+
+-		CINT_DMA_PCIE);
+
++	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM |
+
++		CINT_SRS | CINT_CI_STOP | CINT_DMA_PCIE);
+
+ 	tmp |= CINT_PHY_MASK;
+
+ 	mw32(MVS_INT_MASK, tmp);
+
+
+diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
+
+index 23ed9b1..a510ad8 100644
+
+--- a/drivers/scsi/mvsas/mv_94xx.h
+
++++ b/drivers/scsi/mvsas/mv_94xx.h
+
+@@ -100,6 +100,7 @@ enum hw_registers {
+
+ 	MVS_P4_VSR_DATA 	= 0x254, /* phy4 VSR data */
+
+ 	MVS_PA_VSR_ADDR		= 0x290, /* All port VSR addr */
+
+ 	MVS_PA_VSR_PORT		= 0x294, /* All port VSR data */
+
++	MVS_COMMAND_ACTIVE 	= 0x300, /* ACTIVE COMMAND */
+
+ };
+
+
+ enum pci_cfg_registers {
+
+@@ -129,8 +130,8 @@ enum sas_sata_vsp_regs {
+
+
+ enum chip_register_bits {
+
+ 	PHY_MIN_SPP_PHYS_LINK_RATE_MASK = (0x7 << 8),
+
+-	PHY_MAX_SPP_PHYS_LINK_RATE_MASK = (0x7 << 8),
+
+-	PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET = (12),
+
++	PHY_MAX_SPP_PHYS_LINK_RATE_MASK = (0x7 << 12),
+
++	PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET = (16),
+
+ 	PHY_NEG_SPP_PHYS_LINK_RATE_MASK =
+
+ 			(0x3 << PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET),
+
+ };
+
+diff --git a/drivers/scsi/mvsas/mv_chips.h b/drivers/scsi/mvsas/mv_chips.h
+
+index a67e1c4..68736f4 100644
+
+--- a/drivers/scsi/mvsas/mv_chips.h
+
++++ b/drivers/scsi/mvsas/mv_chips.h
+
+@@ -190,11 +190,6 @@ static inline void __devinit mvs_phy_hacks(struct mvs_info *mvi)
+
+ 	tmp &= 0x0000ffff;
+
+ 	tmp |= 0x00fa0000;
+
+ 	mvs_cw32(mvi, CMD_PHY_MODE_21, tmp);
+
+-
+
+-	tmp = mvs_cr32(mvi, CMD_PHY_TIMER);
+
+-	tmp &= 0x1fffffff;
+
+-	tmp |= (2U << 29);	/* 8 ms retry */
+
+-	mvs_cw32(mvi, CMD_PHY_TIMER, tmp);
+
+ }
+
+
+ static inline void mvs_int_sata(struct mvs_info *mvi)
+
+--
+
+1.6.2.2
