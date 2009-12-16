@@ -1,105 +1,106 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] Forcing SCSI capacity for broken SD Card readers
-Date: Wed, 16 Dec 2009 14:43:54 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0912161438270.2909-100000@iolanthe.rowland.org>
-References: <da824cf30912161038r690e0032lb047c4a667f06c50@mail.gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH, v2] SCSI/libsrp: document the libsrp source code
+Date: Wed, 16 Dec 2009 13:08:39 -0800
+Message-ID: <20091216130839.6e939ec4.randy.dunlap@oracle.com>
+References: <200912162010.24325.bart.vanassche@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:32914 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757376AbZLPTnz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 14:43:55 -0500
-In-Reply-To: <da824cf30912161038r690e0032lb047c4a667f06c50@mail.gmail.com>
+Received: from acsinet12.oracle.com ([141.146.126.234]:61725 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756699AbZLPVIr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 16:08:47 -0500
+In-Reply-To: <200912162010.24325.bart.vanassche@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Clemens Fruhwirth <clemens@endorphin.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Wed, 16 Dec 2009, Grant Grundler wrote:
+On Wed, 16 Dec 2009 20:10:24 +0100 Bart Van Assche wrote:
 
-> +linux-usb
->=20
-> On Wed, Dec 16, 2009 at 8:51 AM, Clemens Fruhwirth
-> <clemens@endorphin.org> wrote:
-> > On Thu, Oct 15, 2009 at 1:29 AM, Grant Grundler <grundler@google.co=
-m> wrote:
-> >> On Wed, Oct 14, 2009 at 2:13 PM, Clemens Fruhwirth
-> >> <clemens@endorphin.org> wrote:
-> >>> Short: Attached is an incomplete patch that allows user space to =
-force
-> >>> the capacity of an scsi device to a specific value. Any not over
-> >>> my-dead-body objections with that?
-> >>
-> >> No major objection - just the usual nits:
-> >> Why not make /sys/block/sdX/size writeable?
-> >> =C2=A0 =C2=A0(instead of adding an ioctl())
-> >
-> > Oh, I like that. Sorry it took me so long to reply. It turned out t=
-hat
-> > this is a much better idea. The value that is printed when reading =
-the
-> > size attribute is to the value that I set in my patch indirectly
-> > through set_capacity. So, making size writable replaces that totall=
-y.
-> >
-> > Patch attached.
+> Adds documentation to the libsrp source code.
+> 
+> Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
+> Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> ----
+> This is the second version of this patch. While the first version of this
+> patch did not adhere strictly to the kernel-doc format, this version should.
 
-Isn't just changing a block device's size at random times a bad thing=20
-to do?  The size gets used a for a bunch of different things (checking=20
-partition boundaries, validating I/O block ranges, and so on).
+Not entirely :(
+Just a few more to add, then you can include this line:
+Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-> >> After reading the wiki page[1], my impression is that the block si=
-ze
-> >> gets reported wrong and thus the total capacity is miscalculated f=
-or
-> >> 1GB-4GB SD cards with 1024 or 2048 byte blocks. Two questions arou=
-nd this:
-> >> a) Does the host need to know the correct block size for correct o=
-peration?
-> >
-> > From experiments it does not look like that's the case. This is
-> > surprising though, as one would suspect the card not to =C2=A0funct=
-ion
-> > properly otherwise. Frankly speaking, I have not looked down the
-> > calling chain, especially how usb-storage treats these blocks, but =
-I'd
-> > say not at all. Seems like the USB reader, I have, just doesn't get
-> > the capacity right, by not considering BLOCK_LEN > 512.
+Thanks!
 
-A lot of older card readers can't handle cards larger than 1 or 2 GB (I=
-=20
-forget which).  Or they see that the card has a larger block size and=20
-then don't report it to the host.
+> 
+> diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+> index 9ad38e8..83c0f45 100644
+> --- a/drivers/scsi/libsrp.c
+> +++ b/drivers/scsi/libsrp.c
+> @@ -29,6 +29,10 @@
+>  #include <scsi/srp.h>
+>  #include <scsi/libsrp.h>
+>  
+> +/*
+> + * Allowed values for the 'TASK ATTRIBUTE' field of an SRP_CMD request. See
+> + * also section 6.8 of the T10 SRP r16a document.
+> + */
+>  enum srp_task_attributes {
+>  	SRP_SIMPLE_TASK = 0,
+>  	SRP_HEAD_TASK = 1,
+> @@ -44,6 +48,16 @@ do {								\
+>  /* #define dprintk eprintk */
+>  #define dprintk(fmt, args...)
+>  
+> +/**
+> + * Allocate a pool of information units for use by an SRP target.
 
-> >> b) Do the devices report which SD Card Association spec they are c=
-ompliant
-> >> =C2=A0 with in the USB headers?
+Missing function_name: above.
 
-No.  Cards don't report anything but block data; only the reader
-provides meta-information.  And it doesn't necessarily know anything
-about the card -- in fact, the card might not even be inserted when the
-reader is queried.
+> + * @q: pointer to the pool structure that will be initialized.
+> + * @max: number of information units the pool will contain.
+> + * @ring: pointer to an array of 'max' SRP buffer pointers. Each information
+> + *   unit allocated for the pool will be initialized such that it points to
+> + *   the corresponding SRP buffer in array 'ring'.
+> + *
+> + * Returns zero upon success and a negative error code upon failure.
+> + */
+>  static int srp_iu_pool_alloc(struct srp_queue *q, size_t max,
+>  			     struct srp_buf **ring)
+>  {
 
-> > Autofixing this doesn't seem possible to me (except for the partiti=
-on
-> > trick) as the capacity =3D BLOCK_LEN * BLOCKS. If BLOCK_LEN isn't
-> > detected correctly, we can't distinguish a 1GB from 2GB card.
->=20
-> Agreed. That's why I'm thinking getting BLOCK_LEN right is more impor=
-tant
-> than hacking the resulting partition size. I'd be surprised if this c=
-onversation
-> hasn't already occurred on linux-usb mailing list.
 
-It has.  Even if you managed to fix the block size, there's a good=20
-chance the reader wouldn't work with large cards.
+> @@ -393,6 +512,10 @@ static int vscsis_data_length(struct srp_cmd *cmd, enum dma_data_direction dir)
+>  	return len;
+>  }
+>  
+> +/**
+> + * srp_cmd_queue() - Queue an SRP_CMD request for processing by appropriate
+> + * target software, e.g. the user space process tgtd.
 
-Alan Stern
+Missng function arguments in kernel-doc.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> + */
+>  int srp_cmd_queue(struct Scsi_Host *shost, struct srp_cmd *cmd, void *info,
+>  		  u64 itn_id, u64 addr)
+>  {
+
+
+> diff --git a/include/scsi/libsrp.h b/include/scsi/libsrp.h
+> index ba615e4..f5da2cc 100644
+> --- a/include/scsi/libsrp.h
+> +++ b/include/scsi/libsrp.h
+> @@ -1,11 +1,17 @@
+...
+
+Data structs look good.
+
+
+
+---
+~Randy
