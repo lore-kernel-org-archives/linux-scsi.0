@@ -1,35 +1,41 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH 0/8] bfa: update bfa driver to version 2.1.2.1 (resubmit)
-Date: Thu, 17 Dec 2009 17:04:15 -0800
-Message-ID: <04391A4E90BB2149B010D22452FA16875EF12D01@HQ-EXCH-6.corp.brocade.com>
-References: <1259545058-4358-1-git-send-email-huangj@brocade.com>
-	 <04391A4E90BB2149B010D22452FA16875EF12BFE@HQ-EXCH-6.corp.brocade.com>
- <1261095063.2752.34.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14822] Spelling check Documentation/scsi/
+Date: Wed, 16 Dec 2009 16:07:59 GMT
+Message-ID: <200912161607.nBGG7xFS002451@demeter.kernel.org>
+References: <bug-14822-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:10561 "EHLO
-	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750778AbZLRBET convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2009 20:04:19 -0500
-In-Reply-To: <1261095063.2752.34.camel@mulgrave.site>
-Content-Language: en-US
+Received: from demeter.kernel.org ([140.211.167.39]:55984 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753927AbZLREjX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2009 23:39:23 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id nBI4cATh027150
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Dec 2009 04:39:22 GMT
+In-Reply-To: <bug-14822-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
+To: linux-scsi@vger.kernel.org
 
-> So what I can do this once is accumulate all the change logs (which were
-> better than the first time around) and do a single update for 2.6.33 on
-> promise of better change sets in future.
-> 
-> Is that OK?
-> 
+http://bugzilla.kernel.org/show_bug.cgi?id=14822
 
-Thanks James, 
 
-It sounds great if you can make this one time exception for us. For this particular case, due to the amount of the changes and the span of time, creating one patch per logic change will be a very error prone and time consuming process for us. Once this updated in included, the upstream driver will be in sync with our latest internal development, and I promise this will not happen again.
+Randy Dunlap <randy.dunlap@oracle.com> changed:
 
-Jing
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |randy.dunlap@oracle.com
 
+
+
+
+--- Comment #2 from Randy Dunlap <randy.dunlap@oracle.com>  2009-12-16 16:07:45 ---
+Please send the patch to linux-scsi@vger.kernel.org and cc:
+the SCSI maintainer ("James E.J. Bottomley" <James.Bottomley@suse.de>).
+Thanks.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
