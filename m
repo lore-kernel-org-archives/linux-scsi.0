@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 4/10] mpt2sas: Set ioc->fwfault_debug to the cmd line option mpt2sas_fwfault_debug.
-Date: Wed, 16 Dec 2009 18:52:39 +0530
-Message-ID: <20091216132231.GE31161@lsi.com>
+Subject: [PATCH 5/10] mpt2sas: Use compat_ptr to setup the pointer compatibility.
+Date: Wed, 16 Dec 2009 18:53:04 +0530
+Message-ID: <20091216132256.GF31161@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:44407 "HELO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756833AbZLPNuB (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:48478 "HELO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757220AbZLPNu1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 08:50:01 -0500
+	Wed, 16 Dec 2009 08:50:27 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,33 +17,35 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-(1) change the formentioned string from logging_level to fwfault_debug
-(2) set ioc->fwfault_debug to the command line option mpt2sas_fwfault_debug
-setting at driver load time.
+On ppc64, an 32bit application was failing due to data buffers not being
+copied properly from user to kernel memory.  The problem due to improper
+conversion of 32 to 64 bit pointers.  The fix is to use compat_ptr to
+setup the pointer compatibility in the routine _ctl_compat_mpt_command.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 Reviewed-by: Eric Moore <eric.moore@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index bbd4f71..88e6eeb 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -107,8 +107,7 @@ _scsih_set_fwfault_debug(const char *val, struct kernel_param *kp)
- 	if (ret)
- 		return ret;
- 
--	printk(KERN_INFO "setting logging_level(0x%08x)\n",
--				mpt2sas_fwfault_debug);
-+	printk(KERN_INFO "setting fwfault_debug(%d)\n", mpt2sas_fwfault_debug);
- 	list_for_each_entry(ioc, &mpt2sas_ioc_list, list)
- 		ioc->fwfault_debug = mpt2sas_fwfault_debug;
- 	return 0;
-@@ -3576,6 +3575,8 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 
- 	init_waitqueue_head(&ioc->reset_wq);
- 
-+	ioc->fwfault_debug = mpt2sas_fwfault_debug;
-+
- 	/* base internal command bits */
- 	mutex_init(&ioc->base_cmds.mutex);
- 	ioc->base_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 198ecdd..fa9bf83 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -2203,14 +2203,10 @@ _ctl_compat_mpt_command(struct file *file, unsigned cmd, unsigned long arg)
+ 	karg.data_out_size = karg32.data_out_size;
+ 	karg.max_sense_bytes = karg32.max_sense_bytes;
+ 	karg.data_sge_offset = karg32.data_sge_offset;
+-	memcpy(&karg.reply_frame_buf_ptr, &karg32.reply_frame_buf_ptr,
+-	    sizeof(uint32_t));
+-	memcpy(&karg.data_in_buf_ptr, &karg32.data_in_buf_ptr,
+-	    sizeof(uint32_t));
+-	memcpy(&karg.data_out_buf_ptr, &karg32.data_out_buf_ptr,
+-	    sizeof(uint32_t));
+-	memcpy(&karg.sense_data_ptr, &karg32.sense_data_ptr,
+-	    sizeof(uint32_t));
++	karg.reply_frame_buf_ptr = compat_ptr(karg32.reply_frame_buf_ptr);
++	karg.data_in_buf_ptr = compat_ptr(karg32.data_in_buf_ptr);
++	karg.data_out_buf_ptr = compat_ptr(karg32.data_out_buf_ptr);
++	karg.sense_data_ptr = compat_ptr(karg32.sense_data_ptr);
+ 	state = (file->f_flags & O_NONBLOCK) ? NON_BLOCKING : BLOCKING;
+ 	return _ctl_do_mpt_command(ioc, karg, &uarg->mf, state);
+ }
