@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 8/10] mpt2sas: Update driver header to latest MPI Spec.
-Date: Wed, 16 Dec 2009 18:55:54 +0530
-Message-ID: <20091216132544.GI31161@lsi.com>
+Subject: [PATCH 9/10] mpt2sas: Enable TLR for SSP TAPE drives (Added SAS Transport APIs)
+Date: Wed, 16 Dec 2009 18:56:28 +0530
+Message-ID: <20091216132620.GJ31161@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:47675 "HELO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757502AbZLPNxS (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:49447 "HELO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759231AbZLPNxw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 08:53:18 -0500
+	Wed, 16 Dec 2009 08:53:52 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,546 +17,216 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Update header to latest MPI SPEC revision.
+Added tlr_enabled bit in sas_device structure, which will have boolean
+value 0 for disabled and 1 for enabled.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-Reviewed-by: Eric Moore <eric.moore@lsi.com>
+As suggested by James B, I have added sas_tlr_supported(),sas_enable_tlr(),
+sas_disable_tlr() functions at SAS transport layer so that any other
+Low layer driver can use those APIs.
+
+SAS transport API sas_tlr_supported() will send vpd page 0x90,
+to check the TLR support. If TLR is supported for end device, MPT2SAS driver
+will enable the TLR bit in the SCSI_IO for every request. If there is a
+response with MPI2_SCSITASKMGMT_RSP_INVALID_FRAME, the driver will turn off
+the TLR logic.
+
+Signed-off-by: Kashyap Desai <kashyap.desai@xxxxxxx>
+Reviewed-by: Eric Moore <Eric.moore@xxxxxxx>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index 9141681..9958d84 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
-  *
-- *  mpi2.h Version:  02.00.13
-+ *  mpi2.h Version:  02.00.14
-  *
-  *  Version History
-  *  ---------------
-@@ -53,6 +53,10 @@
-  *                      bytes reserved.
-  *                      Added RAID Accelerator functionality.
-  *  07-30-09  02.00.13  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  10-28-09  02.00.14  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *                      Added MSI-x index mask and shift for Reply Post Host
-+ *                      Index register.
-+ *                      Added function code for Host Based Discovery Action.
-  *  --------------------------------------------------------------------------
-  */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index b748893..d9492a9 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -1309,7 +1309,6 @@ _scsih_slave_alloc(struct scsi_device *sdev)
+ 	struct MPT2SAS_DEVICE *sas_device_priv_data;
+ 	struct scsi_target *starget;
+ 	struct _raid_device *raid_device;
+-	struct _sas_device *sas_device;
+ 	unsigned long flags;
  
-@@ -78,7 +82,7 @@
- #define MPI2_VERSION_02_00                  (0x0200)
+ 	sas_device_priv_data = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
+@@ -1336,21 +1335,8 @@ _scsih_slave_alloc(struct scsi_device *sdev)
+ 		if (raid_device)
+ 			raid_device->sdev = sdev; /* raid is single lun */
+ 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+-	} else {
+-		/* set TLR bit for SSP devices */
+-		if (!(ioc->facts.IOCCapabilities &
+-		     MPI2_IOCFACTS_CAPABILITY_TLR))
+-			goto out;
+-		spin_lock_irqsave(&ioc->sas_device_lock, flags);
+-		sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+-		   sas_device_priv_data->sas_target->sas_address);
+-		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-		if (sas_device && sas_device->device_info &
+-		    MPI2_SAS_DEVICE_INFO_SSP_TARGET)
+-			sas_device_priv_data->flags |= MPT_DEVICE_TLR_ON;
+ 	}
  
- /* versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x0D)
-+#define MPI2_HEADER_VERSION_UNIT            (0x0E)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-@@ -232,9 +236,12 @@ typedef volatile struct _MPI2_SYSTEM_INTERFACE_REGS
- #define MPI2_REPLY_FREE_HOST_INDEX_OFFSET       (0x00000048)
+- out:
+ 	return 0;
+ }
+ 
+@@ -1617,6 +1603,32 @@ _scsih_get_volume_capabilities(struct MPT2SAS_ADAPTER *ioc,
+ }
+ 
+ /**
++ * _scsih_enable_tlr - setting TLR flags
++ * @ioc: per adapter object
++ * @sdev: scsi device struct
++ *
++ * Enabling Transaction Layer Retries for tape devices when
++ * vpd page 0x90 is present
++ *
++ */
++static void
++_scsih_enable_tlr(struct MPT2SAS_ADAPTER *ioc, struct scsi_device *sdev)
++{
++	/* only for TAPE */
++	if (sdev->type != TYPE_TAPE)
++		return;
++
++	if (!(ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_TLR))
++		return;
++
++	sas_enable_tlr(sdev);
++	sdev_printk(KERN_INFO, sdev, "TLR %s\n",
++	    sdev->tlr_enabled ? "Enabled" : "Disabled");
++	return;
++
++}
++
++/**
+  * _scsih_slave_configure - device configure routine.
+  * @sdev: scsi device struct
+  *
+@@ -1761,8 +1773,10 @@ _scsih_slave_configure(struct scsi_device *sdev)
+ 
+ 	_scsih_change_queue_depth(sdev, qdepth, SCSI_QDEPTH_DEFAULT);
+ 
+-	if (ssp_target)
++	if (ssp_target) {
+ 		sas_read_port_mode_page(sdev);
++		_scsih_enable_tlr(ioc, sdev);
++	}
+ 	return 0;
+ }
+ 
+@@ -3049,7 +3063,7 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	} else
+ 		mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
+ 
+-	if ((sas_device_priv_data->flags & MPT_DEVICE_TLR_ON))
++	if (scmd->device->tlr_enabled)
+ 		mpi_control |= MPI2_SCSIIO_CONTROL_TLR_ON;
+ 
+ 	smid = mpt2sas_base_get_smid_scsiio(ioc, ioc->scsi_io_cb_idx, scmd);
+@@ -3438,10 +3452,11 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		    le32_to_cpu(mpi_reply->ResponseInfo) & 0xFF;
+ 	if (!sas_device_priv_data->tlr_snoop_check) {
+ 		sas_device_priv_data->tlr_snoop_check++;
+-		if ((sas_device_priv_data->flags & MPT_DEVICE_TLR_ON) &&
+-		    response_code == MPI2_SCSITASKMGMT_RSP_INVALID_FRAME)
+-			sas_device_priv_data->flags &=
+-			    ~MPT_DEVICE_TLR_ON;
++		if ((scmd->device->tlr_enabled) &&
++		    response_code == MPI2_SCSITASKMGMT_RSP_INVALID_FRAME) {
++			sas_disable_tlr(scmd->device);
++			sdev_printk(KERN_INFO, scmd->device, "TLR disabled\n");
++		}
+ 	}
+ 
+ 	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index fd47cb1..41b8eab 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -358,6 +358,61 @@ void sas_remove_host(struct Scsi_Host *shost)
+ }
+ EXPORT_SYMBOL(sas_remove_host);
+ 
++/**
++ * sas_tlr_supported - checking TLR bit in vpd 0x90
++ * @sdev: scsi device struct
++ *
++ * Check Transport Layer Retries are supported or not.
++ * If vpd page 0x90 is present, TRL is supported.
++ *
++ */
++unsigned int
++sas_tlr_supported(struct scsi_device *sdev)
++{
++	char *buffer;
++
++	buffer = scsi_get_vpd_page(sdev, 0x90);
++	if (buffer == NULL)
++		return 0;
++
++	kfree(buffer);
++	return 1;
++
++}
++EXPORT_SYMBOL(sas_tlr_supported);
++
++/**
++ * sas_disable_tlr - setting TLR flags
++ * @sdev: scsi device struct
++ *
++ * Seting tlr_enabled flag to 0.
++ *
++ */
++void
++sas_disable_tlr(struct scsi_device *sdev)
++{
++	sdev->tlr_enabled = 0;
++}
++EXPORT_SYMBOL(sas_disable_tlr);
++
++/**
++ * sas_enable_tlr - setting TLR flags
++ * @sdev: scsi device struct
++ *
++ * Seting tlr_enabled flag 1.
++ *
++ */
++void sas_enable_tlr(struct scsi_device *sdev)
++{
++	unsigned int tlr_supported = 0;
++	tlr_supported  = sas_tlr_supported(sdev);
++
++	if (tlr_supported)
++		sdev->tlr_enabled = 1;
++
++	return;
++}
++EXPORT_SYMBOL(sas_enable_tlr);
  
  /*
-- * Offset for the Reply Descriptor Post Queue
-+ * Defines for the Reply Descriptor Post Queue
-  */
- #define MPI2_REPLY_POST_HOST_INDEX_OFFSET       (0x0000006C)
-+#define MPI2_REPLY_POST_HOST_INDEX_MASK         (0x00FFFFFF)
-+#define MPI2_RPHI_MSIX_INDEX_MASK               (0xFF000000)
-+#define MPI2_RPHI_MSIX_INDEX_SHIFT              (24)
+  * SAS Phy attributes
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 68d185c..7c1361b 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -112,6 +112,7 @@ struct scsi_device {
+ 				 * scsi_devinfo.[hc]. For now used only to
+ 				 * pass settings from slave_alloc to scsi
+ 				 * core. */
++	unsigned tlr_enabled:1;	/* set tlr flags */
+ 	unsigned writeable:1;
+ 	unsigned removable:1;
+ 	unsigned changed:1;	/* Data invalid due to media change */
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 61ad359..2fb099f 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -181,6 +181,10 @@ extern int sas_phy_add(struct sas_phy *);
+ extern void sas_phy_delete(struct sas_phy *);
+ extern int scsi_is_sas_phy(const struct device *);
  
- /*
-  * Defines for the HCBSize and address
-@@ -497,12 +504,13 @@ typedef union _MPI2_REPLY_DESCRIPTORS_UNION
- #define MPI2_FUNCTION_TARGET_CMD_BUF_BASE_POST      (0x24) /* Target Command Buffer Post Base */
- #define MPI2_FUNCTION_TARGET_CMD_BUF_LIST_POST      (0x25) /* Target Command Buffer Post List */
- #define MPI2_FUNCTION_RAID_ACCELERATOR              (0x2C) /* RAID Accelerator*/
-+/* Host Based Discovery Action */
-+#define MPI2_FUNCTION_HOST_BASED_DISCOVERY_ACTION   (0x2F)
- 
- 
- 
- /* Doorbell functions */
- #define MPI2_FUNCTION_IOC_MESSAGE_UNIT_RESET        (0x40)
--/* #define MPI2_FUNCTION_IO_UNIT_RESET                 (0x41) */
- #define MPI2_FUNCTION_HANDSHAKE                     (0x42)
- 
- 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-index 1611c57..cf0ac9f 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI Configuration messages and pages
-  *  Creation Date:  November 10, 2006
-  *
-- *    mpi2_cnfg.h Version:  02.00.12
-+ *    mpi2_cnfg.h Version:  02.00.13
-  *
-  *  Version History
-  *  ---------------
-@@ -107,6 +107,8 @@
-  *                      to SAS Device Page 0 Flags field.
-  *                      Added PhyInfo defines for power condition.
-  *                      Added Ethernet configuration pages.
-+ *  10-28-09  02.00.13  Added MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY.
-+ *                      Added SAS PHY Page 4 structure and defines.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -712,6 +714,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1
- #define MPI2_IOUNITPAGE1_PAGEVERSION                    (0x04)
- 
- /* IO Unit Page 1 Flags defines */
-+#define MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY    (0x00000800)
- #define MPI2_IOUNITPAGE1_MASK_SATA_WRITE_CACHE          (0x00000600)
- #define MPI2_IOUNITPAGE1_ENABLE_SATA_WRITE_CACHE        (0x00000000)
- #define MPI2_IOUNITPAGE1_DISABLE_SATA_WRITE_CACHE       (0x00000200)
-@@ -2291,6 +2294,26 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_PHY_3 {
- #define MPI2_SASPHY3_PAGEVERSION            (0x00)
- 
- 
-+/* SAS PHY Page 4 */
++unsigned int sas_tlr_supported(struct scsi_device *);
++void sas_disable_tlr(struct scsi_device *);
++void sas_enable_tlr(struct scsi_device *);
 +
-+typedef struct _MPI2_CONFIG_PAGE_SAS_PHY_4 {
-+    MPI2_CONFIG_EXTENDED_PAGE_HEADER    Header;                     /* 0x00 */
-+    U16                                 Reserved1;                  /* 0x08 */
-+    U8                                  Reserved2;                  /* 0x0A */
-+    U8                                  Flags;                      /* 0x0B */
-+    U8                                  InitialFrame[28];           /* 0x0C */
-+} MPI2_CONFIG_PAGE_SAS_PHY_4, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SAS_PHY_4,
-+  Mpi2SasPhyPage4_t, MPI2_POINTER pMpi2SasPhyPage4_t;
-+
-+#define MPI2_SASPHY4_PAGEVERSION            (0x00)
-+
-+/* values for the Flags field */
-+#define MPI2_SASPHY4_FLAGS_FRAME_VALID        (0x02)
-+#define MPI2_SASPHY4_FLAGS_SATA_FRAME         (0x01)
-+
-+
-+
-+
- /****************************************************************************
- *   SAS Port Config Pages
- ****************************************************************************/
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_history.txt b/drivers/scsi/mpt2sas/mpi/mpi2_history.txt
-index 65fcaa3..c4adf76 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_history.txt
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_history.txt
-@@ -5,23 +5,24 @@
-  Copyright (c) 2000-2009 LSI Corporation.
- 
-  ---------------------------------------
-- Header Set Release Version:    02.00.12
-- Header Set Release Date:       05-06-09
-+ Header Set Release Version:    02.00.14
-+ Header Set Release Date:       10-28-09
-  ---------------------------------------
- 
-  Filename               Current version     Prior version
-  ----------             ---------------     -------------
-- mpi2.h                 02.00.12            02.00.11
-- mpi2_cnfg.h            02.00.11            02.00.10
-- mpi2_init.h            02.00.07            02.00.06
-- mpi2_ioc.h             02.00.11            02.00.10
-- mpi2_raid.h            02.00.03            02.00.03
-- mpi2_sas.h             02.00.02            02.00.02
-+ mpi2.h                 02.00.14            02.00.13
-+ mpi2_cnfg.h            02.00.13            02.00.12
-+ mpi2_init.h            02.00.08            02.00.07
-+ mpi2_ioc.h             02.00.13            02.00.12
-+ mpi2_raid.h            02.00.04            02.00.04
-+ mpi2_sas.h             02.00.03            02.00.02
-  mpi2_targ.h            02.00.03            02.00.03
-- mpi2_tool.h            02.00.03            02.00.02
-+ mpi2_tool.h            02.00.04            02.00.04
-  mpi2_type.h            02.00.00            02.00.00
-- mpi2_ra.h              02.00.00
-- mpi2_history.txt       02.00.11            02.00.12
-+ mpi2_ra.h              02.00.00            02.00.00
-+ mpi2_hbd.h             02.00.00
-+ mpi2_history.txt       02.00.14            02.00.13
- 
- 
-  *  Date      Version   Description
-@@ -65,6 +66,11 @@ mpi2.h
-  *                      MPI2_SCSI_IO_SUCCESS_REPLY_DESCRIPTOR and made those
-  *                      bytes reserved.
-  *                      Added RAID Accelerator functionality.
-+ *  07-30-09  02.00.13  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  10-28-09  02.00.14  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *                      Added MSI-x index mask and shift for Reply Post Host
-+ *                      Index register.
-+ *                      Added function code for Host Based Discovery Action.
-  *  --------------------------------------------------------------------------
- 
- mpi2_cnfg.h
-@@ -155,6 +161,15 @@ mpi2_cnfg.h
-  *                      Added expander reduced functionality data to SAS
-  *                      Expander Page 0.
-  *                      Added SAS PHY Page 2 and SAS PHY Page 3.
-+ *  07-30-09  02.00.12  Added IO Unit Page 7.
-+ *                      Added new device ids.
-+ *                      Added SAS IO Unit Page 5.
-+ *                      Added partial and slumber power management capable flags
-+ *                      to SAS Device Page 0 Flags field.
-+ *                      Added PhyInfo defines for power condition.
-+ *                      Added Ethernet configuration pages.
-+ *  10-28-09  02.00.13  Added MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY.
-+ *                      Added SAS PHY Page 4 structure and defines.
-  *  --------------------------------------------------------------------------
- 
- mpi2_init.h
-@@ -172,6 +187,10 @@ mpi2_init.h
-  *                      Query Asynchronous Event.
-  *                      Defined two new bits in the SlotStatus field of the SCSI
-  *                      Enclosure Processor Request and Reply.
-+ *  10-28-09  02.00.08  Added defines for decoding the ResponseInfo bytes for
-+ *                      both SCSI IO Error Reply and SCSI Task Management Reply.
-+ *                      Added ResponseInfo field to MPI2_SCSI_TASK_MANAGE_REPLY.
-+ *                      Added MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG define.
-  *  --------------------------------------------------------------------------
- 
- mpi2_ioc.h
-@@ -246,6 +265,20 @@ mpi2_ioc.h
-  *                      Added two new reason codes for SAS Device Status Change
-  *                      Event.
-  *                      Added new event: SAS PHY Counter.
-+ *  07-30-09  02.00.12  Added GPIO Interrupt event define and structure.
-+ *                      Added MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER define.
-+ *                      Added new product id family for 2208.
-+ *  10-28-09  02.00.13  Added HostMSIxVectors field to MPI2_IOC_INIT_REQUEST.
-+ *                      Added MaxMSIxVectors field to MPI2_IOC_FACTS_REPLY.
-+ *                      Added MinDevHandle field to MPI2_IOC_FACTS_REPLY.
-+ *                      Added MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY.
-+ *                      Added MPI2_EVENT_HOST_BASED_DISCOVERY_PHY define.
-+ *                      Added MPI2_EVENT_SAS_TOPO_ES_NO_EXPANDER define.
-+ *                      Added Host Based Discovery Phy Event data.
-+ *                      Added defines for ProductID Product field
-+ *                      (MPI2_FW_HEADER_PID_).
-+ *                      Modified values for SAS ProductID Family
-+ *                      (MPI2_FW_HEADER_PID_FAMILY_).
-  *  --------------------------------------------------------------------------
- 
- mpi2_raid.h
-@@ -256,6 +289,8 @@ mpi2_raid.h
-  *  05-21-08  02.00.03  Added MPI2_RAID_VOL_CREATION_NUM_PHYSDISKS so that
-  *                      the PhysDisk array in MPI2_RAID_VOLUME_CREATION_STRUCT
-  *                      can be sized by the build environment.
-+ *  07-30-09  02.00.04  Added proper define for the Use Default Settings bit of
-+ *                      VolumeCreationFlags and marked the old one as obsolete.
-  *  --------------------------------------------------------------------------
- 
- mpi2_sas.h
-@@ -264,6 +299,8 @@ mpi2_sas.h
-  *                      Control Request.
-  *  10-02-08  02.00.02  Added Set IOC Parameter Operation to SAS IO Unit Control
-  *                      Request.
-+ *  10-28-09  02.00.03  Changed the type of SGL in MPI2_SATA_PASSTHROUGH_REQUEST
-+ *                      to MPI2_SGE_IO_UNION since it supports chained SGLs.
-  *  --------------------------------------------------------------------------
- 
- mpi2_targ.h
-@@ -283,6 +320,10 @@ mpi2_tool.h
-  *                      structures and defines.
-  *  02-29-08  02.00.02  Modified various names to make them 32-character unique.
-  *  05-06-09  02.00.03  Added ISTWI Read Write Tool and Diagnostic CLI Tool.
-+ *  07-30-09  02.00.04  Added ExtendedType field to DiagnosticBufferPost request
-+ *                      and reply messages.
-+ *                      Added MPI2_DIAG_BUF_TYPE_EXTENDED.
-+ *                      Incremented MPI2_DIAG_BUF_TYPE_COUNT.
-  *  --------------------------------------------------------------------------
- 
- mpi2_type.h
-@@ -293,20 +334,26 @@ mpi2_ra.h
-  *  05-06-09  02.00.00  Initial version.
-  *  --------------------------------------------------------------------------
- 
-+mpi2_hbd.h
-+ *  10-28-09  02.00.00  Initial version.
-+ *  --------------------------------------------------------------------------
-+
-+
- mpi2_history.txt         Parts list history
- 
--Filename     02.00.12
------------   --------
--mpi2.h       02.00.12
--mpi2_cnfg.h  02.00.11
--mpi2_init.h  02.00.07
--mpi2_ioc.h   02.00.11
--mpi2_raid.h  02.00.03
--mpi2_sas.h   02.00.02
--mpi2_targ.h  02.00.03
--mpi2_tool.h  02.00.03
--mpi2_type.h  02.00.00
--mpi2_ra.h    02.00.00
-+Filename     02.00.14  02.00.13  02.00.12
-+----------   --------  --------  --------
-+mpi2.h       02.00.14  02.00.13  02.00.12
-+mpi2_cnfg.h  02.00.13  02.00.12  02.00.11
-+mpi2_init.h  02.00.08  02.00.07  02.00.07
-+mpi2_ioc.h   02.00.13  02.00.12  02.00.11
-+mpi2_raid.h  02.00.04  02.00.04  02.00.03
-+mpi2_sas.h   02.00.03  02.00.02  02.00.02
-+mpi2_targ.h  02.00.03  02.00.03  02.00.03
-+mpi2_tool.h  02.00.04  02.00.04  02.00.03
-+mpi2_type.h  02.00.00  02.00.00  02.00.00
-+mpi2_ra.h    02.00.00  02.00.00  02.00.00
-+mpi2_hbd.h   02.00.00
- 
- Filename     02.00.11  02.00.10  02.00.09  02.00.08  02.00.07  02.00.06
- ----------   --------  --------  --------  --------  --------  --------
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-index 563e56d..6541945 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI SCSI initiator mode messages and structures
-  *  Creation Date:  June 23, 2006
-  *
-- *    mpi2_init.h Version:  02.00.07
-+ *    mpi2_init.h Version:  02.00.08
-  *
-  *  Version History
-  *  ---------------
-@@ -27,6 +27,10 @@
-  *                      Query Asynchronous Event.
-  *                      Defined two new bits in the SlotStatus field of the SCSI
-  *                      Enclosure Processor Request and Reply.
-+ *  10-28-09  02.00.08  Added defines for decoding the ResponseInfo bytes for
-+ *                      both SCSI IO Error Reply and SCSI Task Management Reply.
-+ *                      Added ResponseInfo field to MPI2_SCSI_TASK_MANAGE_REPLY.
-+ *                      Added MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG define.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -254,6 +258,11 @@ typedef struct _MPI2_SCSI_IO_REPLY
- #define MPI2_SCSI_STATE_AUTOSENSE_FAILED        (0x02)
- #define MPI2_SCSI_STATE_AUTOSENSE_VALID         (0x01)
- 
-+/* masks and shifts for the ResponseInfo field */
-+
-+#define MPI2_SCSI_RI_MASK_REASONCODE            (0x000000FF)
-+#define MPI2_SCSI_RI_SHIFT_REASONCODE           (0)
-+
- #define MPI2_SCSI_TASKTAG_UNKNOWN               (0xFFFF)
- 
- 
-@@ -327,6 +336,7 @@ typedef struct _MPI2_SCSI_TASK_MANAGE_REPLY
-     U16                     IOCStatus;                      /* 0x0E */
-     U32                     IOCLogInfo;                     /* 0x10 */
-     U32                     TerminationCount;               /* 0x14 */
-+    U32                     ResponseInfo;                   /* 0x18 */
- } MPI2_SCSI_TASK_MANAGE_REPLY,
-   MPI2_POINTER PTR_MPI2_SCSI_TASK_MANAGE_REPLY,
-   Mpi2SCSITaskManagementReply_t, MPI2_POINTER pMpi2SCSIManagementReply_t;
-@@ -339,8 +349,20 @@ typedef struct _MPI2_SCSI_TASK_MANAGE_REPLY
- #define MPI2_SCSITASKMGMT_RSP_TM_FAILED                 (0x05)
- #define MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED              (0x08)
- #define MPI2_SCSITASKMGMT_RSP_TM_INVALID_LUN            (0x09)
-+#define MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG         (0x0A)
- #define MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC          (0x80)
- 
-+/* masks and shifts for the ResponseInfo field */
-+
-+#define MPI2_SCSITASKMGMT_RI_MASK_REASONCODE            (0x000000FF)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_REASONCODE           (0)
-+#define MPI2_SCSITASKMGMT_RI_MASK_ARI2                  (0x0000FF00)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI2                 (8)
-+#define MPI2_SCSITASKMGMT_RI_MASK_ARI1                  (0x00FF0000)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI1                 (16)
-+#define MPI2_SCSITASKMGMT_RI_MASK_ARI0                  (0xFF000000)
-+#define MPI2_SCSITASKMGMT_RI_SHIFT_ARI0                 (24)
-+
- 
- /****************************************************************************
- *  SCSI Enclosure Processor messages
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index ea51ce8..7549384 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  *  Creation Date:  October 11, 2006
-  *
-- *  mpi2_ioc.h Version:  02.00.12
-+ *  mpi2_ioc.h Version:  02.00.13
-  *
-  *  Version History
-  *  ---------------
-@@ -87,6 +87,17 @@
-  *  07-30-09  02.00.12  Added GPIO Interrupt event define and structure.
-  *                      Added MPI2_IOCFACTS_CAPABILITY_EXTENDED_BUFFER define.
-  *                      Added new product id family for 2208.
-+ *  10-28-09  02.00.13  Added HostMSIxVectors field to MPI2_IOC_INIT_REQUEST.
-+ *                      Added MaxMSIxVectors field to MPI2_IOC_FACTS_REPLY.
-+ *                      Added MinDevHandle field to MPI2_IOC_FACTS_REPLY.
-+ *                      Added MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY.
-+ *                      Added MPI2_EVENT_HOST_BASED_DISCOVERY_PHY define.
-+ *                      Added MPI2_EVENT_SAS_TOPO_ES_NO_EXPANDER define.
-+ *                      Added Host Based Discovery Phy Event data.
-+ *                      Added defines for ProductID Product field
-+ *                      (MPI2_FW_HEADER_PID_).
-+ *                      Modified values for SAS ProductID Family
-+ *                      (MPI2_FW_HEADER_PID_FAMILY_).
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -119,8 +130,10 @@ typedef struct _MPI2_IOC_INIT_REQUEST
-     U16                     MsgVersion;                     /* 0x0C */
-     U16                     HeaderVersion;                  /* 0x0E */
-     U32                     Reserved5;                      /* 0x10 */
--    U32                     Reserved6;                      /* 0x14 */
--    U16                     Reserved7;                      /* 0x18 */
-+    U16                     Reserved6;                      /* 0x14 */
-+    U8                      Reserved7;                      /* 0x16 */
-+    U8                      HostMSIxVectors;                /* 0x17 */
-+    U16                     Reserved8;                      /* 0x18 */
-     U16                     SystemRequestFrameSize;         /* 0x1A */
-     U16                     ReplyDescriptorPostQueueDepth;  /* 0x1C */
-     U16                     ReplyFreeQueueDepth;            /* 0x1E */
-@@ -215,7 +228,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY
-     U8                      MaxChainDepth;                  /* 0x14 */
-     U8                      WhoInit;                        /* 0x15 */
-     U8                      NumberOfPorts;                  /* 0x16 */
--    U8                      Reserved2;                      /* 0x17 */
-+    U8                      MaxMSIxVectors;                 /* 0x17 */
-     U16                     RequestCredit;                  /* 0x18 */
-     U16                     ProductID;                      /* 0x1A */
-     U32                     IOCCapabilities;                /* 0x1C */
-@@ -233,7 +246,8 @@ typedef struct _MPI2_IOC_FACTS_REPLY
-     U8                      MaxVolumes;                     /* 0x37 */
-     U16                     MaxDevHandle;                   /* 0x38 */
-     U16                     MaxPersistentEntries;           /* 0x3A */
--    U32                     Reserved4;                      /* 0x3C */
-+    U16                     MinDevHandle;                   /* 0x3C */
-+    U16                     Reserved4;                      /* 0x3E */
- } MPI2_IOC_FACTS_REPLY, MPI2_POINTER PTR_MPI2_IOC_FACTS_REPLY,
-   Mpi2IOCFactsReply_t, MPI2_POINTER pMpi2IOCFactsReply_t;
- 
-@@ -269,6 +283,7 @@ typedef struct _MPI2_IOC_FACTS_REPLY
- /* ProductID field uses MPI2_FW_HEADER_PID_ */
- 
- /* IOCCapabilities */
-+#define MPI2_IOCFACTS_CAPABILITY_HOST_BASED_DISCOVERY   (0x00010000)
- #define MPI2_IOCFACTS_CAPABILITY_MSI_X_INDEX            (0x00008000)
- #define MPI2_IOCFACTS_CAPABILITY_RAID_ACCELERATOR       (0x00004000)
- #define MPI2_IOCFACTS_CAPABILITY_EVENT_REPLAY           (0x00002000)
-@@ -453,6 +468,7 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REPLY
- #define MPI2_EVENT_LOG_ENTRY_ADDED                  (0x0021)
- #define MPI2_EVENT_SAS_PHY_COUNTER                  (0x0022)
- #define MPI2_EVENT_GPIO_INTERRUPT                   (0x0023)
-+#define MPI2_EVENT_HOST_BASED_DISCOVERY_PHY         (0x0024)
- 
- 
- /* Log Entry Added Event data */
-@@ -793,6 +809,7 @@ typedef struct _MPI2_EVENT_DATA_SAS_TOPOLOGY_CHANGE_LIST
-   MPI2_POINTER pMpi2EventDataSasTopologyChangeList_t;
- 
- /* values for the ExpStatus field */
-+#define MPI2_EVENT_SAS_TOPO_ES_NO_EXPANDER                  (0x00)
- #define MPI2_EVENT_SAS_TOPO_ES_ADDED                        (0x01)
- #define MPI2_EVENT_SAS_TOPO_ES_NOT_RESPONDING               (0x02)
- #define MPI2_EVENT_SAS_TOPO_ES_RESPONDING                   (0x03)
-@@ -878,6 +895,44 @@ typedef struct _MPI2_EVENT_DATA_SAS_PHY_COUNTER {
-  * */
- 
- 
-+/* Host Based Discovery Phy Event data */
-+
-+typedef struct _MPI2_EVENT_HBD_PHY_SAS {
-+    U8          Flags;                      /* 0x00 */
-+    U8          NegotiatedLinkRate;         /* 0x01 */
-+    U8          PhyNum;                     /* 0x02 */
-+    U8          PhysicalPort;               /* 0x03 */
-+    U32         Reserved1;                  /* 0x04 */
-+    U8          InitialFrame[28];           /* 0x08 */
-+} MPI2_EVENT_HBD_PHY_SAS, MPI2_POINTER PTR_MPI2_EVENT_HBD_PHY_SAS,
-+  Mpi2EventHbdPhySas_t, MPI2_POINTER pMpi2EventHbdPhySas_t;
-+
-+/* values for the Flags field */
-+#define MPI2_EVENT_HBD_SAS_FLAGS_FRAME_VALID        (0x02)
-+#define MPI2_EVENT_HBD_SAS_FLAGS_SATA_FRAME         (0x01)
-+
-+/* use MPI2_SAS_NEG_LINK_RATE_ defines from mpi2_cnfg.h for
-+ * the NegotiatedLinkRate field */
-+
-+typedef union _MPI2_EVENT_HBD_DESCRIPTOR {
-+    MPI2_EVENT_HBD_PHY_SAS      Sas;
-+} MPI2_EVENT_HBD_DESCRIPTOR, MPI2_POINTER PTR_MPI2_EVENT_HBD_DESCRIPTOR,
-+  Mpi2EventHbdDescriptor_t, MPI2_POINTER pMpi2EventHbdDescriptor_t;
-+
-+typedef struct _MPI2_EVENT_DATA_HBD_PHY {
-+    U8                          DescriptorType;     /* 0x00 */
-+    U8                          Reserved1;          /* 0x01 */
-+    U16                         Reserved2;          /* 0x02 */
-+    U32                         Reserved3;          /* 0x04 */
-+    MPI2_EVENT_HBD_DESCRIPTOR   Descriptor;         /* 0x08 */
-+} MPI2_EVENT_DATA_HBD_PHY, MPI2_POINTER PTR_MPI2_EVENT_DATA_HBD_PHY,
-+  Mpi2EventDataHbdPhy_t, MPI2_POINTER pMpi2EventDataMpi2EventDataHbdPhy_t;
-+
-+/* values for the DescriptorType field */
-+#define MPI2_EVENT_HBD_DT_SAS               (0x01)
-+
-+
-+
- /****************************************************************************
- *  EventAck message
- ****************************************************************************/
-@@ -1126,13 +1181,17 @@ typedef struct _MPI2_FW_IMAGE_HEADER
- #define MPI2_FW_HEADER_PID_TYPE_MASK            (0xF000)
- #define MPI2_FW_HEADER_PID_TYPE_SAS             (0x2000)
- 
--#define MPI2_FW_HEADER_PID_PROD_MASK            (0x0F00)
--#define MPI2_FW_HEADER_PID_PROD_A               (0x0000)
-+#define MPI2_FW_HEADER_PID_PROD_MASK                    (0x0F00)
-+#define MPI2_FW_HEADER_PID_PROD_A                       (0x0000)
-+#define MPI2_FW_HEADER_PID_PROD_MASK                    (0x0F00)
-+#define MPI2_FW_HEADER_PID_PROD_TARGET_INITIATOR_SCSI   (0x0200)
-+#define MPI2_FW_HEADER_PID_PROD_IR_SCSI                 (0x0700)
-+
- 
- #define MPI2_FW_HEADER_PID_FAMILY_MASK          (0x00FF)
- /* SAS */
--#define MPI2_FW_HEADER_PID_FAMILY_2108_SAS      (0x0010)
--#define MPI2_FW_HEADER_PID_FAMILY_2208_SAS      (0x0011)
-+#define MPI2_FW_HEADER_PID_FAMILY_2108_SAS      (0x0013)
-+#define MPI2_FW_HEADER_PID_FAMILY_2208_SAS      (0x0014)
- 
- /* use MPI2_IOCFACTS_PROTOCOL_ defines for ProtocolFlags field */
- 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-index 8a42b13..2d8aeed 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_sas.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI Serial Attached SCSI structures and definitions
-  *  Creation Date:  February 9, 2007
-  *
-- *  mpi2.h Version:  02.00.02
-+ *  mpi2.h Version:  02.00.03
-  *
-  *  Version History
-  *  ---------------
-@@ -18,6 +18,8 @@
-  *                      Control Request.
-  *  10-02-08  02.00.02  Added Set IOC Parameter Operation to SAS IO Unit Control
-  *                      Request.
-+ *  10-28-09  02.00.03  Changed the type of SGL in MPI2_SATA_PASSTHROUGH_REQUEST
-+ *                      to MPI2_SGE_IO_UNION since it supports chained SGLs.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -160,7 +162,7 @@ typedef struct _MPI2_SATA_PASSTHROUGH_REQUEST
-     U32                     Reserved4;          /* 0x14 */
-     U32                     DataLength;         /* 0x18 */
-     U8                      CommandFIS[20];     /* 0x1C */
--    MPI2_SIMPLE_SGE_UNION   SGL;                /* 0x20 */
-+    MPI2_SGE_IO_UNION       SGL;                /* 0x20 */
- } MPI2_SATA_PASSTHROUGH_REQUEST, MPI2_POINTER PTR_MPI2_SATA_PASSTHROUGH_REQUEST,
-   Mpi2SataPassthroughRequest_t, MPI2_POINTER pMpi2SataPassthroughRequest_t;
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+ extern struct sas_rphy *sas_end_device_alloc(struct sas_port *);
+ extern struct sas_rphy *sas_expander_alloc(struct sas_port *, enum sas_device_type);
+ void sas_rphy_free(struct sas_rphy *);
