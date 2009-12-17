@@ -1,61 +1,79 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Re: [PATCH] Remove capping from dev_loss_tmo
-Date: Wed, 16 Dec 2009 20:43:43 -0600
-Message-ID: <4B299ADF.9000907@cs.wisc.edu>
-References: <20091215082606.A45B037AD2@ochil.suse.de>	<4B274EB1.50500@cs.wisc.edu>
-	<4B275C9D.2060606@suse.de> <4B299A30.6030404@cs.wisc.edu>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH 0/8] bfa: update bfa driver to version 2.1.2.1 (resubmit)
+Date: Wed, 16 Dec 2009 19:55:24 -0800
+Message-ID: <04391A4E90BB2149B010D22452FA16875EF12BFE@HQ-EXCH-6.corp.brocade.com>
+References: <1259545058-4358-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4B299A30.6030404@cs.wisc.edu>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hq-exedge.brocade.com ([66.243.153.83]:52062 "EHLO
+	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757873AbZLQDz1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 22:55:27 -0500
+In-Reply-To: <1259545058-4358-1-git-send-email-huangj@brocade.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jing Huang <huangj@Brocade.COM>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 
-Mike Christie wrote:
-> Hannes Reinecke wrote:
->> Mike Christie wrote:
->>> Hannes Reinecke wrote:
->>>> diff --git a/drivers/scsi/scsi_transport_fc.c
->>>> b/drivers/scsi/scsi_transport_fc.c
->>>> index 573ce21..6f39bf4 100644
->>>> --- a/drivers/scsi/scsi_transport_fc.c
->>>> +++ b/drivers/scsi/scsi_transport_fc.c
->>>> @@ -475,7 +475,8 @@ MODULE_PARM_DESC(dev_loss_tmo,
->>>>           "Maximum number of seconds that the FC transport should"
->>>>           " insulate the loss of a remote port. Once this value is"
->>>>           " exceeded, the scsi target is removed. Value should be"
->>>> -         " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
->>>> +         " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT if"
->>>> +         " fast_io_fail_tmo is not set.");
->>>>  
->>> What was the largest timeout value you tried? I think I am hitting a bug
->>> with iscsi where if you pass queue_delayed_work a large enough value it
->>> will overflow and instead of getting 100 minutes you get 1.
->>
->> Well, 0x7fffffff works, 0xffffffff is rejected with -EINVAL.
->> And so should every other value with the top bit set.
->>
-> 
-> If someone did 0x7fffffff, then we do 0x7fffffff * HZ in
-> 
-> fc_queue_devloss_work(shost, &rport->dev_loss_work, timeout * HZ);
-> 
-> on a 32bit box, it won't overflow to the value the user wanted will it? 
-> I think it will not happen normally, but users will try it like they 
-> have with iscsi and they will end up not knowing how to set it really high.
-> 
+Hi James,
 
-Oh yeah, I think the idea of the patch is right. If I am reading the 
-code right, I was just worried about how to handle that issue.
+What is the status of this patch set? Is there anything I can do in order to get it accepted in 2.6.33 merger window?
+
+Thanks
+
+Jing
+
+> -----Original Message-----
+> From: Jing Huang
+> Sent: Sunday, November 29, 2009 5:38 PM
+> To: James.Bottomley@suse.de; linux-scsi@vger.kernel.org
+> Cc: Adapter Linux Open SRC Team; Jing Huang
+> Subject: [PATCH 0/8] bfa: update bfa driver to version 2.1.2.1 (resubmit)
+> 
+> Hi James,
+> 
+> I went through our internal code checkin logs and bug tracker records for
+> 2.1
+> driver, and here is a summary of the changes:
+> 
+>  - Update driver to version 2.1.2.1
+>  - Fixed various IOC down issues in driver and firmware.
+>  - IOC state machine fixes.
+>  - Fixed issues in IOC auto recovery.
+>  - Hardware/firmware related fixes.
+>  - FC state machine fixes.
+>  - Added more stats for FC and fixed issues in FCOE stats collection
+>  - Vport fixes.
+>  - Added new portlog entries for events and enhanced bfa loging.
+>  - Renamed port data structures to avoid confusion between driver and
+> firmware.
+>  - code reorganizations and cleanups.
+> 
+> 2.1 driver is our latest major release. The development and testing cycle
+> has
+> spanned for several months, and there have been numerous checkins for both
+> bug
+> fixes and cleanups. Clearly splitting them is very difficult and also
+> error-prone. For this reason, I still include all the changes we have made
+> to
+> 2.1 in one patch set instead of splitting them into multiple ones.
+> 
+> Going forward, the upstream driver will be in sync with our latest
+> internal
+> development, so we wil be able to submit patches that are specific
+> to bug fixe or code cleanup.
+> 
+> As you suggested, this patch set is based off a combination of scsi-misc-
+> 2.6
+> and Linus's upstream tree, and it is intended to be include in 2.6.33
+> merger
+> window.
+> 
+> Thanks
+> 
+> Jing
+> 
+> Signed-off-by: Jing Huang <huangj@brocade.com>
