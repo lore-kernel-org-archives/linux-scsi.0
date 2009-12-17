@@ -1,34 +1,54 @@
-From: Andy Yan <ayan@marvell.com>
-Subject: RE: Applying MVSAS Patch
-Date: Wed, 16 Dec 2009 18:13:14 -0800
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF595055FFB614F@SC-VEXCH1.marvell.com>
-References: <67980649284293627495293095942659870934-Webmail@me.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [GIT PULL] final set of SCSI updates for the merge window
+Date: Thu, 17 Dec 2009 13:22:49 +1100
+Message-ID: <20091217132249.d35661de.sfr@canb.auug.org.au>
+References: <1261003896.14435.157.camel@mulgrave.site>
+	<20091216151622.f74b2b97.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:54471 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbZLQCNR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Dec 2009 21:13:17 -0500
-In-Reply-To: <67980649284293627495293095942659870934-Webmail@me.com>
-Content-Language: en-US
+Received: from chilli.pcug.org.au ([203.10.76.44]:41200 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758484AbZLQCW4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Dec 2009 21:22:56 -0500
+In-Reply-To: <20091216151622.f74b2b97.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Tehonica <matt.tehonica@mac.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Q2FuIHlvdSBzZW5kIHRoZSBwYXRjaCBmaWxlIHRvIG1lPyBJIHdpbGwgY2hlY2sgaXQuDQoNCi0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBNYXR0aGV3IFRlaG9uaWNhIFttYWlsdG86
-bWF0dC50ZWhvbmljYUBtYWMuY29tXSANClNlbnQ6IDIwMDnE6jEy1MIxNsjVIDIyOjIzDQpUbzog
-bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCkNjOiBBbmR5IFlhbg0KU3ViamVjdDogQXBwbHlp
-bmcgTVZTQVMgUGF0Y2gNCg0KSGkgQWxsLA0KDQpJIGFtIHRyeWluZyB0byBhcHBseSB0aGUgZmly
-c3QgcGF0Y2ggdG8gZml4IHRoZSBtdnNhcyBpc3N1ZSBhbmQgZ2V0dGluZyBhbiBlcnJvciB0aGF0
-IEkgY2FuJ3QgZmlndXJlIG91dC4gU2VlIGJlbG93Og0KDQptdGVob25pY2FAZ2hvc3RyaWRlcjov
-dXNyL3NyYy9saW51eC0yLjYuMzIkIHN1ZG8gcGF0Y2ggLXAxIDwgL2hvbWUvbXRlaG9uaWNhL0Rv
-d25sb2Fkcy8wMDAxLVVwZGF0ZS1jaGlwLWluaXQtY29kZS10by1lbmhhbmNlLXBlcmZvcm1hbmNl
-LnBhdGNoIA0KcGF0Y2hpbmcgZmlsZSBkcml2ZXJzL3Njc2kvbXZzYXMvbXZfNjR4eC5jDQpwYXRj
-aDogKioqKiBtYWxmb3JtZWQgcGF0Y2ggYXQgbGluZSA2NTogIAkvKiBpbnRlcnJ1cHQgY29hbGVz
-Y2luZyBtYXkgY2F1c2UgbWlzc2luZyBIVyBpbnRlcnJwdXQgaW4gc29tZSBjYXNlLA0KDQpJIGhh
-dmUgcGxheWVkIGFyb3VuZCB3aXRoIHJlbW92aW5nIHRoZSBsaW5lIHRoYXQgaXQgY29tcGxhaW5z
-IGFib3V0IGFuZCBpdCBqdXN0IHRoZW4gc2F5cyB0aGUgbmV4dCBsaW5lIGlzIG1hbGZvcm1lZC4g
-IENhbiBhbnlvbmUgaGVscCB3aXRoIHRoaXM/Pz8NCg0KVGhhbmtzIQ0KTWF0dA0K
+--Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Andrew, James,
+
+On Wed, 16 Dec 2009 15:16:22 -0800 Andrew Morton <akpm@linux-foundation.org=
+> wrote:
+>
+> I've been sitting on some of these since June.
+>=20
+> This is just broken.  How do I fix it?
+
+We could try hooking James up to a linux-scsi patchwork repository?  :-)
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAksplfkACgkQjjKRsyhoI8zSDwCgkssPdVtBCRnk4tNwu/9S+DFE
+ktEAnAhAN65DK/LuWGmDTjs8ggijWQQX
+=duUS
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma--
