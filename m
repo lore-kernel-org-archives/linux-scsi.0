@@ -1,102 +1,82 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: ses: enclosure_unregister oops
-Date: Thu, 17 Dec 2009 00:22:52 +0100
-Message-ID: <1261005772.14435.164.camel@mulgrave.site>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: ses: enclosure_unregister oops
+Date: Wed, 16 Dec 2009 17:58:55 -0700
+Message-ID: <4565AEA676113A449269C2F3A549520F04362DF7@cosmail03.lsi.com>
 References: <4565AEA676113A449269C2F3A549520F04362D9F@cosmail03.lsi.com>
+ <1261005772.14435.164.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49507 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935277AbZLPXXB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 18:23:01 -0500
-In-Reply-To: <4565AEA676113A449269C2F3A549520F04362D9F@cosmail03.lsi.com>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:44602 "HELO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759565AbZLQA7D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Dec 2009 19:59:03 -0500
+In-Reply-To: <1261005772.14435.164.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 2009-12-16 at 15:44 -0700, Moore, Eric wrote:
-> James -  Is there a way to turn of the enclosure services from the
-> SCSI LLD, command line option, or some other method that doesn't
-> require recompiling the kernel? 
-
-Assuming you built it as a module, then just remove the module.  If
-you're using a monolithic kernel, there's no real way to influence the
-ULD binding apart from by disabling it.
-
->   The oops we are getting occurs on SLES11(2.6.27) when pulling the
-> cable on certain enclosures.   I see this with a HP and Xyratex
-> enclosure.  I don't see it on Engineo enclosures.   On the enclosures
-> where it hangs, there are no slot subfolders
-> under /sys/class/enclosure.
-> 
-> Apparently you have fixed this issue with the patch's that went into 2.6.32, e.g. 
-> 
->       ses: update enclosure data on hot add
-> 		http://marc.info/?l=linux-scsi&m=124908744713234&w=2
->       ses: add support for enclosure component hot removal 
-> 		http://marc.info/?l=linux-scsi&m=124908728913082&w=2
->       ses: fix hotplug with multiple devices and expanders
-> 		http://marc.info/?l=linux-scsi&m=124908718512951&w=2
-> 
-> Here is the sg_ses output
-> 
-> (1) Xyratex; FAILS
-> 
->   XYRATEX   RS1603-SAS-01     0605
->     enclosure services device
-> Supported diagnostic pages:
->   Supported diagnostic pages [0x0]
->   Configuration (SES) [0x1]
->   Enclosure status/control (SES) [0x2]
->   String In/Out (SES) [0x4]
->   Threshold In/Out (SES) [0x5]
->   Element descriptor (SES) [0x7]
->   Additional element status (SES-2) [0xa]
->   <unknown> [0x80]
->   <unknown> [0x81]
->   <unknown> [0x84]
->   <unknown> [0x85]
->   <unknown> [0x88]
->   <unknown> [0x89]
-> 
-> (2)  HP: FAILS
-> 
->   HP        D2700 SAS AJ941A  0038
->     enclosure services device
-> Supported diagnostic pages:
->   Supported diagnostic pages [0x0]
->   Configuration (SES) [0x1]
->   Enclosure status/control (SES) [0x2]
->   Threshold In/Out (SES) [0x5]
->   Element descriptor (SES) [0x7]
->   Additional element status (SES-2) [0xa]
->   Supported SES diagnostic pages (SES-2) [0xd]
->   <unknown> [0x11]
-> 
-> (3) Engineo: WORKS
-> 
->   LSI  DE5300-SAS  0216
->     enclosure services device
-> Supported diagnostic pages:
->   Supported diagnostic pages [0x0]
->   Configuration (SES) [0x1]
->   Enclosure status/control (SES) [0x2]
->   String In/Out (SES) [0x4]
->   Element descriptor (SES) [0x7]
->   Additional element status (SES-2) [0xa]
-> 
-> 
-> The backtrace below is from enclosure_unregister, seems its deleting a NULL pointer from device_pm_remove.   
-> 
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-
-So if you're sure it's fixed, what happens when you try with a current
-kernel?
-
-James
-
-
+T24gV2VkbmVzZGF5LCBEZWNlbWJlciAxNiwgMjAwOSA0OjIzIFBNLCBKYW1lcyBCb3R0b21sZXkg
+d3JvdGU6DQo+IE9uIFdlZCwgMjAwOS0xMi0xNiBhdCAxNTo0NCAtMDcwMCwgTW9vcmUsIEVyaWMg
+d3JvdGU6DQo+ID4gSmFtZXMgLSAgSXMgdGhlcmUgYSB3YXkgdG8gdHVybiBvZiB0aGUgZW5jbG9z
+dXJlIHNlcnZpY2VzIGZyb20gdGhlDQo+ID4gU0NTSSBMTEQsIGNvbW1hbmQgbGluZSBvcHRpb24s
+IG9yIHNvbWUgb3RoZXIgbWV0aG9kIHRoYXQgZG9lc24ndA0KPiA+IHJlcXVpcmUgcmVjb21waWxp
+bmcgdGhlIGtlcm5lbD8NCj4gDQo+IEFzc3VtaW5nIHlvdSBidWlsdCBpdCBhcyBhIG1vZHVsZSwg
+dGhlbiBqdXN0IHJlbW92ZSB0aGUgbW9kdWxlLiAgSWYNCj4geW91J3JlIHVzaW5nIGEgbW9ub2xp
+dGhpYyBrZXJuZWwsIHRoZXJlJ3Mgbm8gcmVhbCB3YXkgdG8gaW5mbHVlbmNlIHRoZQ0KPiBVTEQg
+YmluZGluZyBhcGFydCBmcm9tIGJ5IGRpc2FibGluZyBpdC4NCg0KVGhhbmtzIGZvciB0aGUgc3Vn
+Z2VzdGlvbi4gIA0KDQpJIGp1c3QgYWRkZWQgZW5jbG9zdXJlLmtvIHRvIC9ldGMvbW9kcHJvYmUu
+ZC9ibGFja2xpc3QsIGFuZCBJIGF2b2lkIHRoaXMgc2l0dWF0aW9uLg0KDQo+ID4gVGhlIGJhY2t0
+cmFjZSBiZWxvdyBpcyBmcm9tIGVuY2xvc3VyZV91bnJlZ2lzdGVyLCBzZWVtcyBpdHMgZGVsZXRp
+bmcgYSBOVUxMIHBvaW50ZXIgZnJvbSBkZXZpY2VfcG1fcmVtb3ZlLg0KPiA+DQo+ID4NCj4gPiBC
+VUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAw
+MDAwMDAwMDAwMDAwMDA4DQo+IA0KPiBTbyBpZiB5b3UncmUgc3VyZSBpdCdzIGZpeGVkLCB3aGF0
+IGhhcHBlbnMgd2hlbiB5b3UgdHJ5IHdpdGggYSBjdXJyZW50DQo+IGtlcm5lbD8NCj4gDQoNCkkg
+Z3Vlc3MgaXQgZml4ZWQsIGJ1dCBub3QgMTAwJSBzdXJlLiAgSGFzIGFueWJvZHkgZWxzZSByZXBv
+cnRlZCB0aGlzIG9vcHM/DQoNCkknbSBydW5uaW5nIGEgc2NzaS1taXNjIHRyZWUgSSBwdWxsZWQg
+YWJvdXQgYSB3ZWVrIGFnbywgSSBkb24ndCBoYW5nIGluIGVuY2xvc3VyZV91bnJlZ2lzdGVyLiAg
+SXQgc2F5cyBpdOKAmXMgYSAyLjYuMzIga2VybmVsLg0KDQpJIGhhdmUgbm90IGRlZXAgZGl2ZWQg
+aW50byBpdC4gIEknbSBndWVzc2luZyB5b3VyIG5ldyBmdW5jdGlvbiBzZXNfZW5jbG9zdXJlX2Rh
+dGFfcHJvY2VzcyBtaWdodCBvZiBwcm9wZXJseSBkZXRlY3RlZCBpdC4gIERvIHdlIHdhbnQgdG8g
+cm9vdCBjYXVzZSB0aGlzIGZ1cnRoZXI/ICBUaGlzIGltcGFjdHMgSFAgYW5kIFh5cmF0ZXggZW5j
+bG9zdXJlIHVuZGVyIFNMRVMxMSAuICAgSSB3b3VsZCBpbWFnaW5lIHRoYXQgTWFydmVsbCBhbmQg
+UE1DIHdvdWxkIHNlZSB0aGUgc2FtZSBwcm9ibGVtLg0KDQpJZiB5b3Ugd2FudCwgIEkgY2FuIHNl
+bmQgYW55IG9mIFNFUyBkaWFnbm9zdGljIHBhZ2VzLiAgUGxlYXNlIGFkdmlzZS4NCg0KV2l0aCB0
+aGUgZGVmYXVsdCBTTEVTMTEga2VybmVsICgyLjYuMjcuMTktNSkgaXRzIG1pc3NpbmcgYWxsIHRo
+ZSBzbG90cyBzdWJmb2xkZXJzOg0KDQoJZGVsbDI5MDB1Oi9zeXMvY2xhc3MvZW5jbG9zdXJlLzQ6
+MDowOjAgIyBscyAtbGENCg0KCXRvdGFsIDANCglkcnd4ci14ci14IDMgcm9vdCByb290ICAgIDAg
+MjAwOS0xMi0xNiAxNzoyOSAuDQoJZHJ3eHIteHIteCAzIHJvb3Qgcm9vdCAgICAwIDIwMDktMTIt
+MTYgMTc6MjkgLi4NCgktci0tci0tci0tIDEgcm9vdCByb290IDQwOTYgMjAwOS0xMi0xNiAxNzoy
+OSBjb21wb25lbnRzDQoJbHJ3eHJ3eHJ3eCAxIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6
+MjkgZGV2aWNlIC0+IC4uLy4uLy4uLzQ6MDowOjANCglkcnd4ci14ci14IDIgcm9vdCByb290ICAg
+IDAgMjAwOS0xMi0xNiAxNzoyOSBwb3dlcg0KCWxyd3hyd3hyd3ggMSByb290IHJvb3QgICAgMCAy
+MDA5LTEyLTE2IDE3OjI5IHN1YnN5c3RlbSAtPiAuLi8uLi8uLi8uLi8uLi8uLi8uLi8uLi8uLi8u
+Li8uLi8uLi8uLi9jbGFzcy9lbmNsb3N1cmUNCgktcnctci0tci0tIDEgcm9vdCByb290IDQwOTYg
+MjAwOS0xMi0xNiAxNzoyOSB1ZXZlbnQNCg0KDQpVbmRlciAyLjYuMzIga2VybmVsIGFsbCB0aGUg
+c2xvdHMgc3ViZm9sZGVycyBhcmUgdGhlcmU6DQoNCglkZWxsMjkwMHU6L3N5cy9jbGFzcy9lbmNs
+b3N1cmUvNDowOjA6MCAjIGxzIC1sYQ0KCXRvdGFsIDANCglkcnd4ci14ci14IDE5IHJvb3Qgcm9v
+dCAgICAwIDIwMDktMTItMTYgMTc6MzcgLg0KCWRyd3hyLXhyLXggIDMgcm9vdCByb290ICAgIDAg
+MjAwOS0xMi0xNiAxNzozNyAuLg0KCWRyd3hyLXhyLXggIDMgcm9vdCByb290ICAgIDAgMjAwOS0x
+Mi0xNiAxNzozNyAwDQoJZHJ3eHIteHIteCAgMyByb290IHJvb3QgICAgMCAyMDA5LTEyLTE2IDE3
+OjM3IDENCglkcnd4ci14ci14ICAzIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgMTAN
+Cglkcnd4ci14ci14ICAzIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgMTENCglkcnd4
+ci14ci14ICAzIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgMTINCglkcnd4ci14ci14
+ICAzIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgMTMNCglkcnd4ci14ci14ICAzIHJv
+b3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgMTQNCglkcnd4ci14ci14ICAzIHJvb3Qgcm9v
+dCAgICAwIDIwMDktMTItMTYgMTc6MzcgMTUNCglkcnd4ci14ci14ICAzIHJvb3Qgcm9vdCAgICAw
+IDIwMDktMTItMTYgMTc6MzcgMg0KCWRyd3hyLXhyLXggIDMgcm9vdCByb290ICAgIDAgMjAwOS0x
+Mi0xNiAxNzozNyAzDQoJZHJ3eHIteHIteCAgMyByb290IHJvb3QgICAgMCAyMDA5LTEyLTE2IDE3
+OjM3IDQNCglkcnd4ci14ci14ICAzIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgNQ0K
+CWRyd3hyLXhyLXggIDMgcm9vdCByb290ICAgIDAgMjAwOS0xMi0xNiAxNzozNyA2DQoJZHJ3eHIt
+eHIteCAgMyByb290IHJvb3QgICAgMCAyMDA5LTEyLTE2IDE3OjM3IDcNCglkcnd4ci14ci14ICAz
+IHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgOA0KCWRyd3hyLXhyLXggIDMgcm9vdCBy
+b290ICAgIDAgMjAwOS0xMi0xNiAxNzozNyA5DQoJLXItLXItLXItLSAgMSByb290IHJvb3QgNDA5
+NiAyMDA5LTEyLTE2IDE3OjM3IGNvbXBvbmVudHMNCglscnd4cnd4cnd4ICAxIHJvb3Qgcm9vdCAg
+ICAwIDIwMDktMTItMTYgMTc6MzcgZGV2aWNlIC0+IC4uLy4uLy4uLzQ6MDowOjANCglkcnd4ci14
+ci14ICAyIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6MzcgcG93ZXINCglscnd4cnd4cnd4
+ICAxIHJvb3Qgcm9vdCAgICAwIDIwMDktMTItMTYgMTc6Mzcgc3Vic3lzdGVtIC0+IC4uLy4uLy4u
+Ly4uLy4uLy4uLy4uLy4uLy4uLy4uLy4uLy4uLy4uL2NsYXNzL2VuY2xvc3VyZQ0KCS1ydy1yLS1y
+LS0gIDEgcm9vdCByb290IDQwOTYgMjAwOS0xMi0xNiAxNzozNyB1ZXZlbnQNCg0K
