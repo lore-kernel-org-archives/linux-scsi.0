@@ -1,134 +1,267 @@
-From: Peter Korsgaard <jacmet@sunsite.dk>
-Subject: Re: [PATCH] scsi: use __uX types for headers exported to user space
-Date: Thu, 17 Dec 2009 12:58:24 +0100
-Message-ID: <87zl5h4xsv.fsf@macbook.be.48ers.dk>
-References: <1259317748-27167-1-git-send-email-jacmet@sunsite.dk>
+From: "Caspar Smit" <c.smit@truebit.nl>
+Subject: Re: [PATCH 6/7]MVSAS: Enhanced hot plug handling
+Date: Thu, 17 Dec 2009 14:44:43 +0100 (CET)
+Message-ID: <26320.87.210.74.220.1261057483.squirrel@ketsers.dhs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;boundary="----=_20091217144443_67798"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:35307 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbZLQL6a convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2009 06:58:30 -0500
-Received: by ewy19 with SMTP id 19so317040ewy.21
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Dec 2009 03:58:28 -0800 (PST)
-In-Reply-To: <1259317748-27167-1-git-send-email-jacmet@sunsite.dk> (Peter
-	Korsgaard's message of "Fri, 27 Nov 2009 11:29:08 +0100")
+Received: from 80-69-81-65.colo.transip.net ([80.69.81.65]:55828 "EHLO
+	ns1.emsolutions.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935615AbZLQNoo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Dec 2009 08:44:44 -0500
+Received: from ns1.emsolutions.nl (www-data@localhost.localdomain [127.0.0.1])
+	by ns1.emsolutions.nl (8.13.8/8.13.8/Debian-3) with ESMTP id nBHDihDg008561
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Dec 2009 14:44:43 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: james.smart@emulex.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->>>>> "Peter" =3D=3D Peter Korsgaard <jacmet@sunsite.dk> writes:
-
- Peter> Commit 9e4f5e29 (FC Pass Thru support) exported a number of hea=
-der files
- Peter> in include/scsi to user space, but didn't change the uX types t=
-o the
- Peter> userspace-compatible __uX types. Without that you'll get compil=
-e errors
- Peter> when including them - E.G.:
-
- Peter> /tmp/include/scsi/scsi.h:145: error: expected specifier-qualifi=
-er-list
- Peter> before =E2=80=98u8=E2=80=99
-
-Still no feedback?
+------=_20091217144443_67798
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 
 
- Peter> Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
- Peter> ---
- Peter>  include/scsi/scsi.h         |    8 ++++----
- Peter>  include/scsi/scsi_netlink.h |   20 ++++++++++----------
- Peter>  2 files changed, 14 insertions(+), 14 deletions(-)
 
- Peter> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
- Peter> index 34c46ab..b3cffec 100644
- Peter> --- a/include/scsi/scsi.h
- Peter> +++ b/include/scsi/scsi.h
- Peter> @@ -145,10 +145,10 @@ struct scsi_cmnd;
-=20
- Peter>  /* defined in T10 SCSI Primary Commands-2 (SPC2) */
- Peter>  struct scsi_varlen_cdb_hdr {
- Peter> -	u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD=
- */
- Peter> -	u8 control;
- Peter> -	u8 misc[5];
- Peter> -	u8 additional_cdb_length;         /* total cdb length - 8 */
- Peter> +	__u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_C=
-MD */
- Peter> +	__u8 control;
- Peter> +	__u8 misc[5];
- Peter> +	__u8 additional_cdb_length;         /* total cdb length - 8 *=
-/
- Peter>  	__be16 service_action;
- Peter>  	/* service specific data follows */
- Peter>  };
- Peter> diff --git a/include/scsi/scsi_netlink.h b/include/scsi/scsi_ne=
-tlink.h
- Peter> index 536752c..7445c46 100644
- Peter> --- a/include/scsi/scsi_netlink.h
- Peter> +++ b/include/scsi/scsi_netlink.h
- Peter> @@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
- Peter>   *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
- Peter>   */
- Peter>  #define SCSI_NL_VID_TYPE_SHIFT		56
- Peter> -#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_=
-SHIFT)
- Peter> -#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_S=
-HIFT)
- Peter> +#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYP=
-E_SHIFT)
- Peter> +#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE=
-_SHIFT)
- Peter>  #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
-=20
-=20
- Peter> @@ -125,21 +125,21 @@ struct scsi_nl_host_vendor_msg {
- Peter>  #include <scsi/scsi_host.h>
-=20
- Peter>  /* Exported Kernel Interfaces */
- Peter> -int scsi_nl_add_transport(u8 tport,
- Peter> +int scsi_nl_add_transport(__u8 tport,
- Peter>  	 int (*msg_handler)(struct sk_buff *),
- Peter>  	void (*event_handler)(struct notifier_block *, unsigned long,=
- void *));
- Peter> -void scsi_nl_remove_transport(u8 tport);
- Peter> +void scsi_nl_remove_transport(__u8 tport);
-=20
- Peter> -int scsi_nl_add_driver(u64 vendor_id, struct scsi_host_templat=
-e *hostt,
- Peter> +int scsi_nl_add_driver(__u64 vendor_id, struct scsi_host_templ=
-ate *hostt,
- Peter>  	int (*nlmsg_handler)(struct Scsi_Host *shost, void *payload,
- Peter> -				 u32 len, u32 pid),
- Peter> +				 __u32 len, __u32 pid),
- Peter>  	void (*nlevt_handler)(struct notifier_block *nb,
- Peter>  				 unsigned long event, void *notify_ptr));
- Peter> -void scsi_nl_remove_driver(u64 vendor_id);
- Peter> +void scsi_nl_remove_driver(__u64 vendor_id);
-=20
- Peter> -void scsi_nl_send_transport_msg(u32 pid, struct scsi_nl_hdr *h=
-dr);
- Peter> -int scsi_nl_send_vendor_msg(u32 pid, unsigned short host_no, u=
-64 vendor_id,
- Peter> -			 char *data_buf, u32 data_len);
- Peter> +void scsi_nl_send_transport_msg(__u32 pid, struct scsi_nl_hdr =
-*hdr);
- Peter> +int scsi_nl_send_vendor_msg(__u32 pid, unsigned short host_no,=
- __u64 vendor_id,
- Peter> +			 char *data_buf, __u32 data_len);
-=20
- Peter>  #endif /* __KERNEL__ */
-=20
- Peter> --=20
- Peter> 1.6.5
+Hi Andy,
 
---=20
-Bye, Peter Korsgaard
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+After apllying this patch (and 1-5) to the 2.6.32
+vanilla kernel I still get lots and lots of kernel panics when
+hotplugging a disk.
+
+ps. And I posted a mvsas related bug that
+causes an
+instant kernel panic at boot when using 3 Marvell 6480
+controllers in one machine. Any news on that?
+
+ Kind regards,
+ Caspar Smit
+ 
+---
+
+[  222.575814] BUG: unable
+to handle kernel
+NULL pointer dereference at 0000000000000118
+[  222.575999] IP:
+[<ffffffffa013beb1>]
+mvs_int_port+0x1d3/0x4ef [mvsas]
+[ 
+222.576001] PGD
+7f0ea067 PUD 0 
+[  222.576001] Oops: 0000 [#1]
+SMP 
+[  222.576001] last sysfs file:
+/sys/devices/platform/coretemp.3/temp1_input
+[  222.576001]
+CPU
+3 
+[  222.576001] Modules linked in: iscsi_trgt crc32c
+nfsd
+lockd nfs_acl auth_rpcgss sunrpc exportfs ib_iser rdma_cm ib_cm
+iw_cm ib_sa ib_mad ib_core ib_addr iscsi_tcp libiscsi_tcp libiscsi
+scsi_transport_iscsi bonding coretemp w83627hf w83793 hwmon_vid loop
+netconsole configfs rng_core i5k_amb evdev snd_pcm snd_timer snd soundcore
+snd_page_alloc i2c_i801 i2c_core pcspkr uhci_hcd ehci_hcd ioatdma
+i5000_edac edac_core floppy parport_pc parport container button
+processor shpchp pci_hotplug dm_mirror dm_region_hash dm_log dm_snapshot
+dm_mod raid456 async_raid6_recov async_pq raid6_pq async_xor xor
+async_memcpy async_tx raid10 md_mod thermal fan thermal_sys mvsas
+libsas
+scsi_transport_sas sata_mv e1000e igb dca ext3 jbd mbcache
+sd_mod
+crc_t10dif ata_piix libata scsi_mod
+[  222.576001]
+Pid: 0, comm:
+swapper Not tainted 2.6.32 #1 X7DB8
+[ 
+222.576001] RIP:
+0010:[<ffffffffa013beb1>] 
+[<ffffffffa013beb1>]
+mvs_int_port+0x1d3/0x4ef [mvsas]
+[  222.576001] RSP:
+0018:ffff880001983e58  EFLAGS:
+00010246
+[  222.576001] RAX:
+0000000000000000 RBX:
+0000000000000000 RCX: ffff88007f095e98
+[ 
+222.576001] RDX:
+0000000000000873 RSI: ffffffffa0141ccd RDI:
+ffffffffa0141fab
+[  222.576001] RBP: ffff88007d840000 R08:
+0000000000000000
+R09: ffffffff810531c2
+[  222.576001] R10:
+0000000000000092
+R11: 0000000000000400 R12: ffff88007d8408b8
+[ 
+222.576001]
+R13: 0000000000000003 R14: 0000000000000001 R15:
+0000000000000003
+[  222.576001] FS:  0000000000000000(0000)
+GS:ffff880001980000(0000) knlGS:0000000000000000
+[ 
+222.576001]
+CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+[ 
+222.576001] CR2: 0000000000000118 CR3: 000000007eba3000
+CR4:
+00000000000406e0
+[  222.576001] DR0: 0000000000000000
+DR1:
+0000000000000000 DR2: 0000000000000000
+[  222.576001]
+DR3:
+0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[ 
+222.576001] Process swapper (pid: 0, threadinfo
+ffff88007f084000, task ffff88007f066780)
+[  222.576001]
+Stack:
+[ 
+222.576001]  ffffffff8105983c
+0000000000000003 ffff88007d840000
+0000000000000800
+[ 
+222.576001] <0> ffffc90001b20150
+0000000000000001
+0000000000000000 ffffffffa013e863
+[ 
+222.576001] <0>
+ffff88007dcf2f18 ffff88007d840000 0000000000000001 ffff88007d840008
+[  222.576001] Call Trace:
+[ 
+222.576001] 
+<IRQ> 
+[  222.576001] 
+[<ffffffff8105983c>] ? run_timer_softirq+0x4c/0x268
+[ 
+222.576001]  [<ffffffffa013e863>] ?
+mvs_int_full+0x42/0x88
+[mvsas]
+[  222.576001] 
+[<ffffffffa013e8da>] ?
+mvs_64xx_isr+0x31/0x40 [mvsas]
+[  222.576001] 
+[<ffffffffa013a0da>] ?
+mvs_interrupt+0x61/0x78 [mvsas]
+[ 
+222.576001] 
+[<ffffffff81092554>] ?
+handle_IRQ_event+0x58/0x126
+[ 
+222.576001] 
+[<ffffffff81093e26>] ?
+handle_fasteoi_irq+0x7d/0xb5
+[ 
+222.576001] 
+[<ffffffff81013817>] ? handle_irq+0x17/0x1d
+[ 
+222.576001]  [<ffffffff81012e71>] ?
+do_IRQ+0x57/0xb6
+[  222.576001]  [<ffffffff81011393>]
+?
+ret_from_intr+0x0/0x11
+[  222.576001]  <EOI> 
+[  222.576001]  [<ffffffff81017cdd>] ?
+mwait_idle+0x72/0x7d
+[  222.576001] 
+[<ffffffff81017c8d>] ? mwait_idle+0x22/0x7d
+[ 
+222.576001]  [<ffffffff8100fdf3>] ? cpu_idle+0x59/0x91
+[  222.576001] Code: a0 00 00 00 ba 73 08 00 00 48 c7 c6 cd 1c
+14
+a0 48 c7 c7 ab 1f 14 a0 44 8b 40 04 49 8b 84 24 b8 02 00 00 44 0f
+af 85 40 24 00 00 <8b> 88 18 01 00 00 31 c0 47 8d 44 05 00 e8 fc 56
+1b e1 41 83 e6 
+[  222.576001] RIP 
+[<ffffffffa013beb1>]
+mvs_int_port+0x1d3/0x4ef [mvsas]
+[  222.576001]  RSP
+<ffff880001983e58>
+[ 
+222.576001] CR2: 0000000000000118
+[  222.593420] ---[ end trace
+f9b64cadb09cc87c ]---
+[ 
+222.593489] Kernel panic - not
+syncing: Fatal exception in interrupt [  222.593561] Pid: 0, comm:
+swapper Tainted:
+G      D   
+2.6.32 #1
+[ 
+222.593631] Call Trace:
+[ 
+222.593694]  <IRQ> 
+[<ffffffff812f1504>] ?
+panic+0x86/0x141
+[ 
+222.593820] 
+[<ffffffff81011533>] ?
+apic_timer_interrupt+0x13/0x20
+[  222.593896] 
+[<ffffffff810148e7>] ?
+oops_end+0x64/0xb4
+[ 
+222.593968] 
+[<ffffffff8101492a>] ? oops_end+0xa7/0xb4
+
+------=_20091217144443_67798
+Content-Type: text/x-log; name="mvsas-kernel-panic-on-hotplug.log"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment;
+      filename="mvsas-kernel-panic-on-hotplug.log"
+
+[  222.575814] BUG: unable to handle kernel NULL pointer dereference at 0000000000000118
+[  222.575999] IP: [<ffffffffa013beb1>] mvs_int_port+0x1d3/0x4ef [mvsas]
+[  222.576001] PGD 7f0ea067 PUD 0 
+[  222.576001] Oops: 0000 [#1] SMP 
+[  222.576001] last sysfs file: /sys/devices/platform/coretemp.3/temp1_input
+[  222.576001] CPU 3 
+[  222.576001] Modules linked in: iscsi_trgt crc32c nfsd lockd nfs_acl auth_rpcgss sunrpc exportfs ib_iser rdma_cm ib_cm iw_cm ib_sa ib_mad ib_core ib_addr iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi bonding coretemp w83627hf w83793 hwmon_vid loop netconsole configfs rng_core i5k_amb evdev snd_pcm snd_timer snd soundcore snd_page_alloc i2c_i801 i2c_core pcspkr uhci_hcd ehci_hcd ioatdma i5000_edac edac_core floppy parport_pc parport container button processor shpchp pci_hotplug dm_mirror dm_region_hash dm_log dm_snapshot dm_mod raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy async_tx raid10 md_mod thermal fan thermal_sys mvsas libsas scsi_transport_sas sata_mv e1000e igb dca ext3 jbd mbcache sd_mod crc_t10dif ata_piix libata scsi_mod
+[  222.576001] Pid: 0, comm: swapper Not tainted 2.6.32 #1 X7DB8
+[  222.576001] RIP: 0010:[<ffffffffa013beb1>]  [<ffffffffa013beb1>] mvs_int_port+0x1d3/0x4ef [mvsas]
+[  222.576001] RSP: 0018:ffff880001983e58  EFLAGS: 00010246
+[  222.576001] RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff88007f095e98
+[  222.576001] RDX: 0000000000000873 RSI: ffffffffa0141ccd RDI: ffffffffa0141fab
+[  222.576001] RBP: ffff88007d840000 R08: 0000000000000000 R09: ffffffff810531c2
+[  222.576001] R10: 0000000000000092 R11: 0000000000000400 R12: ffff88007d8408b8
+[  222.576001] R13: 0000000000000003 R14: 0000000000000001 R15: 0000000000000003
+[  222.576001] FS:  0000000000000000(0000) GS:ffff880001980000(0000) knlGS:0000000000000000
+[  222.576001] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+[  222.576001] CR2: 0000000000000118 CR3: 000000007eba3000 CR4: 00000000000406e0
+[  222.576001] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  222.576001] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  222.576001] Process swapper (pid: 0, threadinfo ffff88007f084000, task ffff88007f066780)
+[  222.576001] Stack:
+[  222.576001]  ffffffff8105983c 0000000000000003 ffff88007d840000 0000000000000800
+[  222.576001] <0> ffffc90001b20150 0000000000000001 0000000000000000 ffffffffa013e863
+[  222.576001] <0> ffff88007dcf2f18 ffff88007d840000 0000000000000001 ffff88007d840008
+[  222.576001] Call Trace:
+[  222.576001]  <IRQ> 
+[  222.576001]  [<ffffffff8105983c>] ? run_timer_softirq+0x4c/0x268
+[  222.576001]  [<ffffffffa013e863>] ? mvs_int_full+0x42/0x88 [mvsas]
+[  222.576001]  [<ffffffffa013e8da>] ? mvs_64xx_isr+0x31/0x40 [mvsas]
+[  222.576001]  [<ffffffffa013a0da>] ? mvs_interrupt+0x61/0x78 [mvsas]
+[  222.576001]  [<ffffffff81092554>] ? handle_IRQ_event+0x58/0x126
+[  222.576001]  [<ffffffff81093e26>] ? handle_fasteoi_irq+0x7d/0xb5
+[  222.576001]  [<ffffffff81013817>] ? handle_irq+0x17/0x1d
+[  222.576001]  [<ffffffff81012e71>] ? do_IRQ+0x57/0xb6
+[  222.576001]  [<ffffffff81011393>] ? ret_from_intr+0x0/0x11
+[  222.576001]  <EOI> 
+[  222.576001]  [<ffffffff81017cdd>] ? mwait_idle+0x72/0x7d
+[  222.576001]  [<ffffffff81017c8d>] ? mwait_idle+0x22/0x7d
+[  222.576001]  [<ffffffff8100fdf3>] ? cpu_idle+0x59/0x91
+[  222.576001] Code: a0 00 00 00 ba 73 08 00 00 48 c7 c6 cd 1c 14 a0 48 c7 c7 ab 1f 14 a0 44 8b 40 04 49 8b 84 24 b8 02 00 00 44 0f af 85 40 24 00 00 <8b> 88 18 01 00 00 31 c0 47 8d 44 05 00 e8 fc 56 1b e1 41 83 e6 
+[  222.576001] RIP  [<ffffffffa013beb1>] mvs_int_port+0x1d3/0x4ef [mvsas]
+[  222.576001]  RSP <ffff880001983e58>
+[  222.576001] CR2: 0000000000000118
+[  222.593420] ---[ end trace f9b64cadb09cc87c ]---
+[  222.593489] Kernel panic - not syncing: Fatal exception in interrupt
+[  222.593561] Pid: 0, comm: swapper Tainted: G      D    2.6.32 #1
+[  222.593631] Call Trace:
+[  222.593694]  <IRQ>  [<ffffffff812f1504>] ? panic+0x86/0x141
+[  222.593820]  [<ffffffff81011533>] ? apic_timer_interrupt+0x13/0x20
+[  222.593896]  [<ffffffff810148e7>] ? oops_end+0x64/0xb4
+[  222.593968]  [<ffffffff8101492a>] ? oops_end+0xa7/0xb4
+------=_20091217144443_67798--
+
