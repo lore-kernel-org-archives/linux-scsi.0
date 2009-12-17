@@ -1,54 +1,56 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [GIT PULL] final set of SCSI updates for the merge window
-Date: Thu, 17 Dec 2009 13:22:49 +1100
-Message-ID: <20091217132249.d35661de.sfr@canb.auug.org.au>
-References: <1261003896.14435.157.camel@mulgrave.site>
-	<20091216151622.f74b2b97.akpm@linux-foundation.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] Remove capping from dev_loss_tmo
+Date: Wed, 16 Dec 2009 20:40:48 -0600
+Message-ID: <4B299A30.6030404@cs.wisc.edu>
+References: <20091215082606.A45B037AD2@ochil.suse.de>
+	<4B274EB1.50500@cs.wisc.edu> <4B275C9D.2060606@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:41200 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758484AbZLQCW4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Dec 2009 21:22:56 -0500
-In-Reply-To: <20091216151622.f74b2b97.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <4B275C9D.2060606@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: dm-devel@redhat.com, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
---Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hannes Reinecke wrote:
+> Mike Christie wrote:
+>> Hannes Reinecke wrote:
+>>> diff --git a/drivers/scsi/scsi_transport_fc.c
+>>> b/drivers/scsi/scsi_transport_fc.c
+>>> index 573ce21..6f39bf4 100644
+>>> --- a/drivers/scsi/scsi_transport_fc.c
+>>> +++ b/drivers/scsi/scsi_transport_fc.c
+>>> @@ -475,7 +475,8 @@ MODULE_PARM_DESC(dev_loss_tmo,
+>>>           "Maximum number of seconds that the FC transport should"
+>>>           " insulate the loss of a remote port. Once this value is"
+>>>           " exceeded, the scsi target is removed. Value should be"
+>>> -         " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
+>>> +         " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT if"
+>>> +         " fast_io_fail_tmo is not set.");
+>>>  
+>> What was the largest timeout value you tried? I think I am hitting a bug
+>> with iscsi where if you pass queue_delayed_work a large enough value it
+>> will overflow and instead of getting 100 minutes you get 1.
+> 
+> Well, 0x7fffffff works, 0xffffffff is rejected with -EINVAL.
+> And so should every other value with the top bit set.
+> 
 
-Hi Andrew, James,
+If someone did 0x7fffffff, then we do 0x7fffffff * HZ in
 
-On Wed, 16 Dec 2009 15:16:22 -0800 Andrew Morton <akpm@linux-foundation.org=
-> wrote:
->
-> I've been sitting on some of these since June.
->=20
-> This is just broken.  How do I fix it?
+fc_queue_devloss_work(shost, &rport->dev_loss_work, timeout * HZ);
 
-We could try hooking James up to a linux-scsi patchwork repository?  :-)
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAksplfkACgkQjjKRsyhoI8zSDwCgkssPdVtBCRnk4tNwu/9S+DFE
-ktEAnAhAN65DK/LuWGmDTjs8ggijWQQX
-=duUS
------END PGP SIGNATURE-----
-
---Signature=_Thu__17_Dec_2009_13_22_49_+1100_+rpwhSUv3.E59Zma--
+on a 32bit box, it won't overflow to the value the user wanted will it? 
+I think it will not happen normally, but users will try it like they 
+have with iscsi and they will end up not knowing how to set it really high.
