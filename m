@@ -1,30 +1,58 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: Applying MVSAS Patch
-Date: Fri, 18 Dec 2009 15:50:03 +0100 (CET)
-Message-ID: <alpine.DEB.1.10.0912181549210.23464@uplift.swm.pp.se>
-References: <67980649284293627495293095942659870934-Webmail@me.com> <20091216081301.59d1698e.randy.dunlap@oracle.com> <93017718277361587250366956065608636194-Webmail@me.com> <20091216090430.66b7f389.randy.dunlap@oracle.com> <29479280-86A1-4DF5-BA64-F2F0F1A4838B@mac.com>
- <20091216101617.a6499cad.randy.dunlap@oracle.com> <105495033028979535461096937726809251647-Webmail@me.com> <alpine.DEB.1.10.0912181519510.23464@uplift.swm.pp.se> <4D393076-4B36-49EC-AA69-ED0E52298943@mac.com>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH] cciss: fix reporting of scsi status again.
+Date: Fri, 18 Dec 2009 09:15:39 -0600
+Message-ID: <20091218151539.GI8515@beardog.cce.hp.com>
+References: <20091217142253.10824.4149.stgit@beardog.cce.hp.com> <20091218114137.GP4489@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swm.pp.se ([212.247.200.143]:53217 "EHLO uplift.swm.pp.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753891AbZLROuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Dec 2009 09:50:05 -0500
-In-Reply-To: <4D393076-4B36-49EC-AA69-ED0E52298943@mac.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754244AbZLRPNr@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20091218114137.GP4489@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, smcameron@yahoo.com
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Tehonica <matt.tehonica@mac.com>
-Cc: linux-scsi@vger.kernel.org, ayan@marvell.com
 
-On Fri, 18 Dec 2009, Matt Tehonica wrote:
+On Fri, Dec 18, 2009 at 12:41:37PM +0100, Jens Axboe wrote:
+> On Thu, Dec 17 2009, Stephen M. Cameron wrote:
+> > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > 
+> > cciss: fix reporting of scsi status again.  This reverts an earlier
+> > attempt to fix the status byte reporting.  The status byte does
+> > not need to be shifted << 1.  Code like "scp-result |= CHECK_CONDITION << 1"
+> > in other drivers works because CHECK_CONDITION is 0x01, not 0x02 --
+> > CHECK_CONDITION is pre-shifted to the right 1 bit for some reason.
+> 
+> What's this against? Current -git (2.6.33-rc1) already looks correct.
 
-> Should these mvsas patches be applied against 2.6.32 or 2.6.31?
+Oh, hmm.  Well, I guess that's good.
 
-Please read the thread I referenced.
+I had sent up a patch previously which "fixed" this (botched it).
+Maybe my botched patch was recognized as crap and not picked up.
 
-They do not at all apply cleanly to 2.6.31, so I deduct that they're 
-against 2.6.32-rc(something).
+-- steve
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+> 
+> > 
+> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > ---
+> >  drivers/block/cciss_scsi.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
+> > index 75a9ca9..0634ec7 100644
+> > --- a/drivers/block/cciss_scsi.c
+> > +++ b/drivers/block/cciss_scsi.c
+> > @@ -728,7 +728,7 @@ complete_scsi_command( CommandList_struct *cp, int timeout, __u32 tag)
+> >  
+> >  	cmd->result = (DID_OK << 16); 		/* host byte */
+> >  	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
+> > -	cmd->result |= (ei->ScsiStatus << 1);
+> > +	cmd->result |= ei->ScsiStatus;
+> >  	/* printk("Scsistatus is 0x%02x\n", ei->ScsiStatus);  */
+> >  
+> >  	/* copy the sense data whether we need to or not. */
+> > 
+> 
+> -- 
+> Jens Axboe
