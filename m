@@ -1,58 +1,60 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH] cciss: fix reporting of scsi status again.
-Date: Fri, 18 Dec 2009 09:15:39 -0600
-Message-ID: <20091218151539.GI8515@beardog.cce.hp.com>
-References: <20091217142253.10824.4149.stgit@beardog.cce.hp.com> <20091218114137.GP4489@kernel.dk>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Fri, 18 Dec 2009 15:18:39 GMT
+Message-ID: <200912181518.nBIFIdaB015575@demeter.kernel.org>
+References: <bug-14831-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754244AbZLRPNr@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20091218114137.GP4489@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, smcameron@yahoo.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:42267 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753751AbZLRPSk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Dec 2009 10:18:40 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id nBIFIdZ8015576
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Dec 2009 15:18:39 GMT
+In-Reply-To: <bug-14831-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Dec 18, 2009 at 12:41:37PM +0100, Jens Axboe wrote:
-> On Thu, Dec 17 2009, Stephen M. Cameron wrote:
-> > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > 
-> > cciss: fix reporting of scsi status again.  This reverts an earlier
-> > attempt to fix the status byte reporting.  The status byte does
-> > not need to be shifted << 1.  Code like "scp-result |= CHECK_CONDITION << 1"
-> > in other drivers works because CHECK_CONDITION is 0x01, not 0x02 --
-> > CHECK_CONDITION is pre-shifted to the right 1 bit for some reason.
-> 
-> What's this against? Current -git (2.6.33-rc1) already looks correct.
+http://bugzilla.kernel.org/show_bug.cgi?id=14831
 
-Oh, hmm.  Well, I guess that's good.
 
-I had sent up a patch previously which "fixed" this (botched it).
-Maybe my botched patch was recognized as crap and not picked up.
 
--- steve
 
-> 
-> > 
-> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > ---
-> >  drivers/block/cciss_scsi.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
-> > index 75a9ca9..0634ec7 100644
-> > --- a/drivers/block/cciss_scsi.c
-> > +++ b/drivers/block/cciss_scsi.c
-> > @@ -728,7 +728,7 @@ complete_scsi_command( CommandList_struct *cp, int timeout, __u32 tag)
-> >  
-> >  	cmd->result = (DID_OK << 16); 		/* host byte */
-> >  	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
-> > -	cmd->result |= (ei->ScsiStatus << 1);
-> > +	cmd->result |= ei->ScsiStatus;
-> >  	/* printk("Scsistatus is 0x%02x\n", ei->ScsiStatus);  */
-> >  
-> >  	/* copy the sense data whether we need to or not. */
-> > 
-> 
-> -- 
-> Jens Axboe
+
+--- Comment #2 from Tim Small <tim@seoss.co.uk>  2009-12-18 15:18:37 ---
+For the 1068 (Dell PE860):
+
+     Port Name         Chip Vendor/Type/Rev    MPT Rev  Firmware Rev
+ 1.  /proc/mpt/ioc0    LSI Logic SAS1068 B0      105      000a3300
+
+Current active firmware version is 0.10.51
+Firmware image's version is MPTFW-00.10.51.00-IE
+  LSI Logic
+x86 BIOS image's version is MPTBIOS-6.12.05.00 (2007.09.29)
+
+
+For the 1068E: (Dell PE1950):
+     Port Name         Chip Vendor/Type/Rev    MPT Rev  Firmware Rev
+ 1.  /proc/mpt/ioc0    LSI Logic SAS1068E 08     105      00192f00
+
+Current active firmware version is 0.25.47
+Firmware image's version is MPTFW-00.25.47.00-IE
+  LSI Logic
+x86 BIOS image's version is MPTBIOS-6.22.03.00 (2008.08.06)
+
+
+I've just started a test on a SAS1064 (Intel S5000PSL).  Will leave it on test
+and report back here...
+
+Thanks,
+
+Tim.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
