@@ -1,59 +1,81 @@
-From: "jack_wang" <jack_wang@usish.com>
-Subject: Re: [PATCH 5/7] drivers/scsi/pm8001: Use kzalloc for allocating onlyone thing
-Date: Sat, 19 Dec 2009 22:08:11 +0800
-Message-ID: <200912192208103123212@usish.com>
-References: <Pine.LNX.4.64.0912190817110.30546@ask.diku.dk>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
+From: Thiago Farina <tfransosi@gmail.com>
+Subject: [PATCH] scsi/libfc: Clean up hard coded array size calculation.
+Date: Sat, 19 Dec 2009 18:26:16 -0500
+Message-ID: <1261265176-5241-1-git-send-email-tfransosi@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:51865 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752148AbZLSOHI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Dec 2009 09:07:08 -0500
+Received: from qw-out-2122.google.com ([74.125.92.25]:39909 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753313AbZLSX03 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Dec 2009 18:26:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <julia@diku.dk>, lindar_liu <lindar_liu@usish.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>linux-kernel <linu>
+To: linux-kernel@vger.kernel.org
+Cc: James.Bottomley@suse.de, robert.w.love@intel.com, vasu.dev@intel.com, jeykholt@cisco.com, linux-scsi@vger.kernel.org
 
-RE:[PATCH 5/7] drivers/scsi/pm8001: Use kzalloc for allocating onlyone thing
+Use ARRAY_SIZE macro from kernel.h api instead.
 
-From: Julia Lawall <julia@diku.dk>
-
-Use kzalloc rather than kcalloc(1,...)
-
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-@@
-
-- kcalloc(1,
-+ kzalloc(
-          ...)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Thiago Farina <tfransosi@gmail.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libfc/fc_exch.c  |    9 ++++-----
+ drivers/scsi/libfc/fc_lport.c |    3 ++-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff -u -p a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
---- a/drivers/scsi/pm8001/pm8001_init.c 2009-12-12 00:23:19.000000000 +0100
-+++ b/drivers/scsi/pm8001/pm8001_init.c 2009-12-19 07:52:44.000000000 +0100
-@@ -654,7 +654,7 @@ static int __devinit pm8001_pci_probe(st
- 	}
- 	chip = &pm8001_chips[ent->driver_data];
- 	SHOST_TO_SAS_HA(shost) =
--		kcalloc(1, sizeof(struct sas_ha_struct), GFP_KERNEL);
-+		kzalloc(sizeof(struct sas_ha_struct), GFP_KERNEL);
- 	if (!SHOST_TO_SAS_HA(shost)) {
- 		rc = -ENOMEM;
- 		goto err_out_free_host;
-
-
-[Jack]Acked-by:Jack Wang <jack_wang@usish.com>
-Thanks, Julia
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index c1c1574..b65652a 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -23,9 +23,10 @@
+  * Fibre Channel exchange and sequence handling.
+  */
+ 
+-#include <linux/timer.h>
+-#include <linux/gfp.h>
+ #include <linux/err.h>
++#include <linux/gfp.h>
++#include <linux/kernel.h>
++#include <linux/timer.h>
+ 
+ #include <scsi/fc/fc_fc2.h>
+ 
+@@ -194,8 +195,6 @@ static struct fc_seq *fc_seq_start_next_locked(struct fc_seq *sp);
+  */
+ static char *fc_exch_rctl_names[] = FC_RCTL_NAMES_INIT;
+ 
+-#define FC_TABLE_SIZE(x)   (sizeof(x) / sizeof(x[0]))
+-
+ static inline const char *fc_exch_name_lookup(unsigned int op, char **table,
+ 					      unsigned int max_index)
+ {
+@@ -211,7 +210,7 @@ static inline const char *fc_exch_name_lookup(unsigned int op, char **table,
+ static const char *fc_exch_rctl_name(unsigned int op)
+ {
+ 	return fc_exch_name_lookup(op, fc_exch_rctl_names,
+-				   FC_TABLE_SIZE(fc_exch_rctl_names));
++				   ARRAY_SIZE(fc_exch_rctl_names));
+ }
+ 
+ /*
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index bd2f771..98b4eaf 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -87,6 +87,7 @@
+  * (i.e. _enter_* function).
+  */
+ 
++#include <linux/kernel.h>
+ #include <linux/timer.h>
+ #include <asm/unaligned.h>
+ 
+@@ -1137,7 +1138,7 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
+ 	fc_lport_state_enter(lport, LPORT_ST_RFT_ID);
+ 
+ 	lps = &lport->fcts;
+-	i = sizeof(lps->ff_type_map) / sizeof(lps->ff_type_map[0]);
++	i = ARRAY_SIZE(lps->ff_type_map);
+ 	while (--i >= 0)
+ 		if (ntohl(lps->ff_type_map[i]) != 0)
+ 			break;
+-- 
+1.6.6.rc0.61.g41d5b
 
