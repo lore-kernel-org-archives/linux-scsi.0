@@ -1,39 +1,59 @@
 From: "jack_wang" <jack_wang@usish.com>
 Subject: Re: [PATCH 5/7] drivers/scsi/pm8001: Use kzalloc for allocating onlyone thing
-Date: Sat, 19 Dec 2009 22:08:03 +0800
-Message-ID: <200912192208027036843@usish.com>
+Date: Sat, 19 Dec 2009 22:08:11 +0800
+Message-ID: <200912192208103123212@usish.com>
 References: <Pine.LNX.4.64.0912190817110.30546@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:51859 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:51865 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbZLSOHC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Dec 2009 09:07:02 -0500
+	with ESMTP id S1752148AbZLSOHI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Dec 2009 09:07:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Julia Lawall <julia@diku.dk>, lindar_liu <lindar_liu@usish.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>linux-kernel <linu>
 
-UkWjultQQVRDSCA1LzddIGRyaXZlcnMvc2NzaS9wbTgwMDE6IFVzZSBremFsbG9jIGZvciBhbGxv
-Y2F0aW5nIG9ubHlvbmUgdGhpbmcNCg0KRnJvbTogSnVsaWEgTGF3YWxsIDxqdWxpYUBkaWt1LmRr
-Pg0KDQpVc2Uga3phbGxvYyByYXRoZXIgdGhhbiBrY2FsbG9jKDEsLi4uKQ0KDQpUaGUgc2VtYW50
-aWMgcGF0Y2ggdGhhdCBtYWtlcyB0aGlzIGNoYW5nZSBpcyBhcyBmb2xsb3dzOg0KKGh0dHA6Ly9j
-b2NjaW5lbGxlLmxpcDYuZnIvKQ0KDQovLyA8c21wbD4NCkBADQpAQA0KDQotIGtjYWxsb2MoMSwN
-Cisga3phbGxvYygNCiAgICAgICAgICAuLi4pDQovLyA8L3NtcGw+DQoNClNpZ25lZC1vZmYtYnk6
-IEp1bGlhIExhd2FsbCA8anVsaWFAZGlrdS5kaz4NCg0KLS0tDQogZHJpdmVycy9zY3NpL3BtODAw
-MS9wbTgwMDFfaW5pdC5jIHwgICAgMiArLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
-KSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC11IC1wIGEvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgw
-MDFfaW5pdC5jIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfaW5pdC5jDQotLS0gYS9kcml2
-ZXJzL3Njc2kvcG04MDAxL3BtODAwMV9pbml0LmMgMjAwOS0xMi0xMiAwMDoyMzoxOS4wMDAwMDAw
-MDAgKzAxMDANCisrKyBiL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2luaXQuYyAyMDA5LTEy
-LTE5IDA3OjUyOjQ0LjAwMDAwMDAwMCArMDEwMA0KQEAgLTY1NCw3ICs2NTQsNyBAQCBzdGF0aWMg
-aW50IF9fZGV2aW5pdCBwbTgwMDFfcGNpX3Byb2JlKHN0DQogCX0NCiAJY2hpcCA9ICZwbTgwMDFf
-Y2hpcHNbZW50LT5kcml2ZXJfZGF0YV07DQogCVNIT1NUX1RPX1NBU19IQShzaG9zdCkgPQ0KLQkJ
-a2NhbGxvYygxLCBzaXplb2Yoc3RydWN0IHNhc19oYV9zdHJ1Y3QpLCBHRlBfS0VSTkVMKTsNCisJ
-CWt6YWxsb2Moc2l6ZW9mKHN0cnVjdCBzYXNfaGFfc3RydWN0KSwgR0ZQX0tFUk5FTCk7DQogCWlm
-ICghU0hPU1RfVE9fU0FTX0hBKHNob3N0KSkgew0KIAkJcmMgPSAtRU5PTUVNOw0KIAkJZ290byBl
-cnJfb3V0X2ZyZWVfaG9zdDsNCg0KDQpbSmFja11BY2tlZC1ieTpKYWNrIFdhbmcgPGphY2tfd2Fu
-Z0B1c2lzaC5jb20+DQpUaGFua3MsIEp1bGlhDQo=
+RE:[PATCH 5/7] drivers/scsi/pm8001: Use kzalloc for allocating onlyone thing
+
+From: Julia Lawall <julia@diku.dk>
+
+Use kzalloc rather than kcalloc(1,...)
+
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+@@
+
+- kcalloc(1,
++ kzalloc(
+          ...)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/scsi/pm8001/pm8001_init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -u -p a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+--- a/drivers/scsi/pm8001/pm8001_init.c 2009-12-12 00:23:19.000000000 +0100
++++ b/drivers/scsi/pm8001/pm8001_init.c 2009-12-19 07:52:44.000000000 +0100
+@@ -654,7 +654,7 @@ static int __devinit pm8001_pci_probe(st
+ 	}
+ 	chip = &pm8001_chips[ent->driver_data];
+ 	SHOST_TO_SAS_HA(shost) =
+-		kcalloc(1, sizeof(struct sas_ha_struct), GFP_KERNEL);
++		kzalloc(sizeof(struct sas_ha_struct), GFP_KERNEL);
+ 	if (!SHOST_TO_SAS_HA(shost)) {
+ 		rc = -ENOMEM;
+ 		goto err_out_free_host;
+
+
+[Jack]Acked-by:Jack Wang <jack_wang@usish.com>
+Thanks, Julia
 
