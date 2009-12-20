@@ -1,81 +1,84 @@
-From: Thiago Farina <tfransosi@gmail.com>
-Subject: [PATCH] scsi/libfc: Clean up hard coded array size calculation.
-Date: Sat, 19 Dec 2009 18:26:16 -0500
-Message-ID: <1261265176-5241-1-git-send-email-tfransosi@gmail.com>
+From: Clemens Fruhwirth <clemens@endorphin.org>
+Subject: [PATCH] Forcing capacity sizes for block devices
+Date: Sun, 20 Dec 2009 13:05:35 +0100
+Message-ID: <2f83750a0912200405v77f39a7eifef024cc4cb10a20@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.25]:39909 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753313AbZLSX03 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Dec 2009 18:26:29 -0500
+Received: from fg-out-1718.google.com ([72.14.220.153]:2062 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753523AbZLTMFi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2009 07:05:38 -0500
+Received: by fg-out-1718.google.com with SMTP id 22so1746963fge.1
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Dec 2009 04:05:36 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: James.Bottomley@suse.de, robert.w.love@intel.com, vasu.dev@intel.com, jeykholt@cisco.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, grundler@google.com
 
-Use ARRAY_SIZE macro from kernel.h api instead.
+Make the size attribute of block devices writable via sysfs. This
+allows userspace to force
+device boundaries in cases where the device driver is unable to detect
+the correct size, as
+with spec-incompliant SD card readers. Also see
+http://marc.info/?t=125555550200010&r=1&w=2
 
-Signed-off-by: Thiago Farina <tfransosi@gmail.com>
----
- drivers/scsi/libfc/fc_exch.c  |    9 ++++-----
- drivers/scsi/libfc/fc_lport.c |    3 ++-
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index c1c1574..b65652a 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -23,9 +23,10 @@
-  * Fibre Channel exchange and sequence handling.
-  */
- 
--#include <linux/timer.h>
--#include <linux/gfp.h>
- #include <linux/err.h>
-+#include <linux/gfp.h>
-+#include <linux/kernel.h>
-+#include <linux/timer.h>
- 
- #include <scsi/fc/fc_fc2.h>
- 
-@@ -194,8 +195,6 @@ static struct fc_seq *fc_seq_start_next_locked(struct fc_seq *sp);
-  */
- static char *fc_exch_rctl_names[] = FC_RCTL_NAMES_INIT;
- 
--#define FC_TABLE_SIZE(x)   (sizeof(x) / sizeof(x[0]))
--
- static inline const char *fc_exch_name_lookup(unsigned int op, char **table,
- 					      unsigned int max_index)
- {
-@@ -211,7 +210,7 @@ static inline const char *fc_exch_name_lookup(unsigned int op, char **table,
- static const char *fc_exch_rctl_name(unsigned int op)
- {
- 	return fc_exch_name_lookup(op, fc_exch_rctl_names,
--				   FC_TABLE_SIZE(fc_exch_rctl_names));
-+				   ARRAY_SIZE(fc_exch_rctl_names));
+diff -uprN -X linux-2.6.32-vanilla/Documentation/dontdiff
+linux-2.6.32-vanilla/block/genhd.c linux-2.6.32-patched/block/genhd.c
+--- linux-2.6.32-vanilla/block/genhd.c	2009-12-03 04:51:21.000000000 +0100
++++ linux-2.6.32-patched/block/genhd.c	2009-12-15 14:38:24.962463446 +0100
+@@ -865,7 +865,7 @@ static DEVICE_ATTR(range, S_IRUGO, disk_
+ static DEVICE_ATTR(ext_range, S_IRUGO, disk_ext_range_show, NULL);
+ static DEVICE_ATTR(removable, S_IRUGO, disk_removable_show, NULL);
+ static DEVICE_ATTR(ro, S_IRUGO, disk_ro_show, NULL);
+-static DEVICE_ATTR(size, S_IRUGO, part_size_show, NULL);
++static DEVICE_ATTR(size, S_IRUGO | S_IWUSR, part_size_show, part_size_set);
+ static DEVICE_ATTR(alignment_offset, S_IRUGO,
+disk_alignment_offset_show, NULL);
+ static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
+ static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
+diff -uprN -X linux-2.6.32-vanilla/Documentation/dontdiff
+linux-2.6.32-vanilla/fs/partitions/check.c
+linux-2.6.32-patched/fs/partitions/check.c
+--- linux-2.6.32-vanilla/fs/partitions/check.c	2009-12-03
+04:51:21.000000000 +0100
++++ linux-2.6.32-patched/fs/partitions/check.c	2009-12-19
+10:38:58.745294907 +0100
+@@ -219,6 +219,18 @@ ssize_t part_size_show(struct device *de
+ 	return sprintf(buf, "%llu\n",(unsigned long long)p->nr_sects);
  }
- 
- /*
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index bd2f771..98b4eaf 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -87,6 +87,7 @@
-  * (i.e. _enter_* function).
-  */
- 
-+#include <linux/kernel.h>
- #include <linux/timer.h>
- #include <asm/unaligned.h>
- 
-@@ -1137,7 +1138,7 @@ static void fc_lport_enter_rft_id(struct fc_lport *lport)
- 	fc_lport_state_enter(lport, LPORT_ST_RFT_ID);
- 
- 	lps = &lport->fcts;
--	i = sizeof(lps->ff_type_map) / sizeof(lps->ff_type_map[0]);
-+	i = ARRAY_SIZE(lps->ff_type_map);
- 	while (--i >= 0)
- 		if (ntohl(lps->ff_type_map[i]) != 0)
- 			break;
--- 
-1.6.6.rc0.61.g41d5b
 
++ssize_t part_size_set(struct device *dev,
++		      struct device_attribute *attr, char *buf, size_t len)
++{
++	struct hd_struct *p = dev_to_part(dev);
++	unsigned long long val;
++	if (strict_strtoull(buf, 0, &val))
++		return -EINVAL;
++
++	p->nr_sects = val;
++	return len;
++}
++
+ ssize_t part_alignment_offset_show(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+diff -uprN -X linux-2.6.32-vanilla/Documentation/dontdiff
+linux-2.6.32-vanilla/include/linux/genhd.h
+linux-2.6.32-patched/include/linux/genhd.h
+--- linux-2.6.32-vanilla/include/linux/genhd.h	2009-12-03
+04:51:21.000000000 +0100
++++ linux-2.6.32-patched/include/linux/genhd.h	2009-12-19
+10:40:30.900871273 +0100
+@@ -549,6 +549,9 @@ extern void blk_unregister_region(dev_t
+
+ extern ssize_t part_size_show(struct device *dev,
+ 			      struct device_attribute *attr, char *buf);
++extern ssize_t part_size_set(struct device *dev,
++			     struct device_attribute *attr, char *buf,
++			     size_t len);
+ extern ssize_t part_stat_show(struct device *dev,
+ 			      struct device_attribute *attr, char *buf);
+ extern ssize_t part_inflight_show(struct device *dev,
+
+Signed-off-by: Clemens Fruhwirth <clemens@endorphin.org>
+Reviewed-by: Grant Grundler <grundler@google.com>
