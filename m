@@ -1,12 +1,13 @@
 From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: [PATCH] Forcing SCSI capacity for broken SD Card readers
-Date: Sun, 20 Dec 2009 12:26:44 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0912201221480.24162-100000@netrider.rowland.org>
-References: <2f83750a0912200511n76b95489u57f2c4c62471bbd5@mail.gmail.com>
+Date: Sun, 20 Dec 2009 12:31:10 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0912201226520.24162-100000@netrider.rowland.org>
+References: <2f83750a0912200520l8e16fe6vdb436e67868c8f07@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <2f83750a0912200511n76b95489u57f2c4c62471bbd5-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <2f83750a0912200520l8e16fe6vdb436e67868c8f07-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: Clemens Fruhwirth <clemens-Yy/aLhJqNSaEi8DpZVb4nw@public.gmane.org>
 Cc: Grant Grundler <grundler-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -14,23 +15,28 @@ List-Id: linux-scsi@vger.kernel.org
 
 On Sun, 20 Dec 2009, Clemens Fruhwirth wrote:
 
-> > Can you run USBMON (see Documentation/usb/usbmon.txt) to capture
-> > the initialization sequence and post that to linux-usb? (CC'd already)
-> 
-> I attached the usbmon dump. I hope you can make sense of it.
+> On Wed, Dec 16, 2009 at 8:43 PM, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLsd9G2dDO2Ms@public.gmane.org=
+u> wrote:
+>=20
+> > Isn't just changing a block device's size at random times a bad thi=
+ng
+> > to do? =C2=A0The size gets used a for a bunch of different things (=
+checking
+> > partition boundaries, validating I/O block ranges, and so on).
+>=20
+> Forcefully extending partition boundaries and I/O block ranges was
+> just what I had in mind. My card reader was listed as being compatibl=
+e
+> with card >1GB, and I suspected that this was only verified under
+> Windows. I knew that Windows believed in the partition table more
+> strongly than into device boundaries, so I figured that would probabl=
+y
+> work. And it did.
 
-Here's the relevant part of the usbmon trace:
-
-> f6a3da00 145121701 S Bo:6:002:1 -115 31 = 55534243 49e50000 08000000 80010a25 00000000 00000000 00000000 000000
-> f6a3da00 145122669 C Bo:6:002:1 0 31 >
-> f042d280 145122683 S Bi:6:002:2 -115 8 <
-> f042d280 145123663 C Bi:6:002:2 0 8 = 001d87ff 00000200
-> f6a3da00 145123675 S Bi:6:002:2 -115 13 <
-> f6a3da00 145124659 C Bi:6:002:2 0 13 = 55534253 49e50000 00000000 00
-
-The reader reports that the card has 0x1d87ff (= 1935359) blocks, each
-containing 0x200 (= 512) bytes, yielding a total size slightly under 1
-GB.
+Just out of curiousity, what happens if you try to repartition and
+format a card using this reader under Windows?  Does it restrict the
+total available size to 1 GB?  If it does, doesn't that indicate the
+reader _isn't_ compatible with large cards?
 
 Alan Stern
 
