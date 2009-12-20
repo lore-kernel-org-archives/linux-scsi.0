@@ -1,46 +1,35 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: [PATCH] Forcing SCSI capacity for broken SD Card readers
-Date: Sun, 20 Dec 2009 12:31:10 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0912201226520.24162-100000@netrider.rowland.org>
-References: <2f83750a0912200520l8e16fe6vdb436e67868c8f07@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] Forcing capacity sizes for block devices
+Date: Sun, 20 Dec 2009 18:43:40 +0100
+Message-ID: <200912201843.40169.bzolnier@gmail.com>
+References: <2f83750a0912200405v77f39a7eifef024cc4cb10a20@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <2f83750a0912200520l8e16fe6vdb436e67868c8f07-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Clemens Fruhwirth <clemens-Yy/aLhJqNSaEi8DpZVb4nw@public.gmane.org>
-Cc: Grant Grundler <grundler-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:61572 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755436AbZLTRpY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2009 12:45:24 -0500
+Received: by ewy1 with SMTP id 1so5528864ewy.28
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Dec 2009 09:45:23 -0800 (PST)
+In-Reply-To: <2f83750a0912200405v77f39a7eifef024cc4cb10a20@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Clemens Fruhwirth <clemens@endorphin.org>
+Cc: linux-scsi@vger.kernel.org, grundler@google.com
 
-On Sun, 20 Dec 2009, Clemens Fruhwirth wrote:
+On Sunday 20 December 2009 01:05:35 pm Clemens Fruhwirth wrote:
+> Make the size attribute of block devices writable via sysfs. This
+> allows userspace to force
+> device boundaries in cases where the device driver is unable to detect
+> the correct size, as
+> with spec-incompliant SD card readers. Also see
+> http://marc.info/?t=125555550200010&r=1&w=2
 
-> On Wed, Dec 16, 2009 at 8:43 PM, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLsd9G2dDO2Ms@public.gmane.org=
-u> wrote:
->=20
-> > Isn't just changing a block device's size at random times a bad thi=
-ng
-> > to do? =C2=A0The size gets used a for a bunch of different things (=
-checking
-> > partition boundaries, validating I/O block ranges, and so on).
->=20
-> Forcefully extending partition boundaries and I/O block ranges was
-> just what I had in mind. My card reader was listed as being compatibl=
-e
-> with card >1GB, and I suspected that this was only verified under
-> Windows. I knew that Windows believed in the partition table more
-> strongly than into device boundaries, so I figured that would probabl=
-y
-> work. And it did.
-
-Just out of curiousity, what happens if you try to repartition and
-format a card using this reader under Windows?  Does it restrict the
-total available size to 1 GB?  If it does, doesn't that indicate the
-reader _isn't_ compatible with large cards?
-
-Alan Stern
-
+Just a wild idea but maybe the current block infrastructure for handling
+ATA HPA (see commit db429e9 and e957b60 one) can be used to automatically
+detect and workaround the issue?  
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bartlomiej Zolnierkiewicz
