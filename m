@@ -1,90 +1,50 @@
 From: Clemens Fruhwirth <clemens@endorphin.org>
-Subject: Re: [PATCH] Forcing capacity sizes for block devices - (sorry, gmail
- ruined inlining with wordwrapping in the last mail)
-Date: Sun, 20 Dec 2009 14:19:08 +0100
-Message-ID: <4B2E244C.8070705@endorphin.org>
-References: <2f83750a0912200405v77f39a7eifef024cc4cb10a20@mail.gmail.com>
+Subject: Re: [PATCH] Forcing SCSI capacity for broken SD Card readers
+Date: Sun, 20 Dec 2009 14:20:38 +0100
+Message-ID: <2f83750a0912200520l8e16fe6vdb436e67868c8f07@mail.gmail.com>
+References: <da824cf30912161038r690e0032lb047c4a667f06c50@mail.gmail.com>
+	 <Pine.LNX.4.44L0.0912161438270.2909-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:52679 "EHLO
+Received: from mail-fx0-f221.google.com ([209.85.220.221]:46017 "EHLO
 	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754828AbZLTNTR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2009 08:19:17 -0500
-Received: by fxm21 with SMTP id 21so4023386fxm.21
-        for <linux-scsi@vger.kernel.org>; Sun, 20 Dec 2009 05:19:15 -0800 (PST)
-In-Reply-To: <2f83750a0912200405v77f39a7eifef024cc4cb10a20@mail.gmail.com>
+	with ESMTP id S1755155AbZLTNUm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2009 08:20:42 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0912161438270.2909-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, grundler@google.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Grant Grundler <grundler@google.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-Make the size attribute of block devices writable via sysfs. This allows 
-userspace to force
-device boundaries in cases where the device driver is unable to detect 
-the correct size, as
-with spec-incompliant SD card readers.
+On Wed, Dec 16, 2009 at 8:43 PM, Alan Stern <stern@rowland.harvard.edu>=
+ wrote:
 
-diff -uprN -X linux-2.6.32-vanilla/Documentation/dontdiff 
-linux-2.6.32-vanilla/block/genhd.c linux-2.6.32-patched/block/genhd.c
---- linux-2.6.32-vanilla/block/genhd.c    2009-12-03 04:51:21.000000000 
-+0100
-+++ linux-2.6.32-patched/block/genhd.c    2009-12-15 14:38:24.962463446 
-+0100
-@@ -865,7 +865,7 @@ static DEVICE_ATTR(range, S_IRUGO, disk_
-  static DEVICE_ATTR(ext_range, S_IRUGO, disk_ext_range_show, NULL);
-  static DEVICE_ATTR(removable, S_IRUGO, disk_removable_show, NULL);
-  static DEVICE_ATTR(ro, S_IRUGO, disk_ro_show, NULL);
--static DEVICE_ATTR(size, S_IRUGO, part_size_show, NULL);
-+static DEVICE_ATTR(size, S_IRUGO | S_IWUSR, part_size_show, 
-part_size_set);
-  static DEVICE_ATTR(alignment_offset, S_IRUGO, 
-disk_alignment_offset_show, NULL);
-  static DEVICE_ATTR(capability, S_IRUGO, disk_capability_show, NULL);
-  static DEVICE_ATTR(stat, S_IRUGO, part_stat_show, NULL);
-diff -uprN -X linux-2.6.32-vanilla/Documentation/dontdiff 
-linux-2.6.32-vanilla/fs/partitions/check.c 
-linux-2.6.32-patched/fs/partitions/check.c
---- linux-2.6.32-vanilla/fs/partitions/check.c    2009-12-03 
-04:51:21.000000000 +0100
-+++ linux-2.6.32-patched/fs/partitions/check.c    2009-12-19 
-10:38:58.745294907 +0100
-@@ -219,6 +219,18 @@ ssize_t part_size_show(struct device *de
-      return sprintf(buf, "%llu\n",(unsigned long long)p->nr_sects);
-  }
+> Isn't just changing a block device's size at random times a bad thing
+> to do? =C2=A0The size gets used a for a bunch of different things (ch=
+ecking
+> partition boundaries, validating I/O block ranges, and so on).
 
-+ssize_t part_size_set(struct device *dev,
-+              struct device_attribute *attr, char *buf, size_t len)
-+{
-+    struct hd_struct *p = dev_to_part(dev);
-+    unsigned long long val;
-+    if (strict_strtoull(buf, 0, &val))
-+        return -EINVAL;
-+
-+    p->nr_sects = val;
-+    return len;
-+}
-+
-  ssize_t part_alignment_offset_show(struct device *dev,
-                     struct device_attribute *attr, char *buf)
-  {
-diff -uprN -X linux-2.6.32-vanilla/Documentation/dontdiff 
-linux-2.6.32-vanilla/include/linux/genhd.h 
-linux-2.6.32-patched/include/linux/genhd.h
---- linux-2.6.32-vanilla/include/linux/genhd.h    2009-12-03 
-04:51:21.000000000 +0100
-+++ linux-2.6.32-patched/include/linux/genhd.h    2009-12-19 
-10:40:30.900871273 +0100
-@@ -549,6 +549,9 @@ extern void blk_unregister_region(dev_t
+=46orcefully extending partition boundaries and I/O block ranges was
+just what I had in mind. My card reader was listed as being compatible
+with card >1GB, and I suspected that this was only verified under
+Windows. I knew that Windows believed in the partition table more
+strongly than into device boundaries, so I figured that would probably
+work. And it did.
 
-  extern ssize_t part_size_show(struct device *dev,
-                    struct device_attribute *attr, char *buf);
-+extern ssize_t part_size_set(struct device *dev,
-+                 struct device_attribute *attr, char *buf,
-+                 size_t len);
-  extern ssize_t part_stat_show(struct device *dev,
-                    struct device_attribute *attr, char *buf);
-  extern ssize_t part_inflight_show(struct device *dev,
+> A lot of older card readers can't handle cards larger than 1 or 2 GB =
+(I
+> forget which). =C2=A0Or they see that the card has a larger block siz=
+e and
+> then don't report it to the host.
 
-Signed-off-by: Clemens Fruhwirth <clemens@endorphin.org>
-Reviewed-by: Grant Grundler <grundler@google.com>
+That was quite helpful to me
+http://www.hjreggel.net/cardspeed/special-sd.html
+--=20
+=46ruhwirth Clemens http://clemens.endorphin.org
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
