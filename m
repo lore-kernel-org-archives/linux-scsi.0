@@ -1,50 +1,67 @@
-From: Clemens Fruhwirth <clemens@endorphin.org>
-Subject: Re: [PATCH] Forcing SCSI capacity for broken SD Card readers
-Date: Sun, 20 Dec 2009 14:20:38 +0100
-Message-ID: <2f83750a0912200520l8e16fe6vdb436e67868c8f07@mail.gmail.com>
-References: <da824cf30912161038r690e0032lb047c4a667f06c50@mail.gmail.com>
-	 <Pine.LNX.4.44L0.0912161438270.2909-100000@iolanthe.rowland.org>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 1/2] drivers/scsi: Eliminate double free
+Date: Sun, 20 Dec 2009 18:06:52 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0912201806360.26912@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f221.google.com ([209.85.220.221]:46017 "EHLO
-	mail-fx0-f221.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755155AbZLTNUm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Dec 2009 08:20:42 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0912161438270.2909-100000@iolanthe.rowland.org>
+Received: from mgw1.diku.dk ([130.225.96.91]:60947 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750871AbZLTRGz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Dec 2009 12:06:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Grant Grundler <grundler@google.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Wed, Dec 16, 2009 at 8:43 PM, Alan Stern <stern@rowland.harvard.edu>=
- wrote:
+From: Julia Lawall <julia@diku.dk>
 
-> Isn't just changing a block device's size at random times a bad thing
-> to do? =C2=A0The size gets used a for a bunch of different things (ch=
-ecking
-> partition boundaries, validating I/O block ranges, and so on).
+The few lines below the kfree of hdr_buf may go to the label err_free which
+will also free hdr_buf.  The most straightforward solution seems to be to
+just move the kfree of hdr_buf after these gotos.
 
-=46orcefully extending partition boundaries and I/O block ranges was
-just what I had in mind. My card reader was listed as being compatible
-with card >1GB, and I suspected that this was only verified under
-Windows. I knew that Windows believed in the partition table more
-strongly than into device boundaries, so I figured that would probably
-work. And it did.
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-> A lot of older card readers can't handle cards larger than 1 or 2 GB =
-(I
-> forget which). =C2=A0Or they see that the card has a larger block siz=
-e and
-> then don't report it to the host.
+// <smpl>
+@r@
+identifier E;
+expression E1;
+iterator I;
+statement S;
+@@
 
-That was quite helpful to me
-http://www.hjreggel.net/cardspeed/special-sd.html
---=20
-=46ruhwirth Clemens http://clemens.endorphin.org
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+*kfree(E);
+... when != E = E1
+    when != I(E,...) S
+    when != &E
+*kfree(E);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/scsi/ses.c                  |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index 55b034b..3c8a024 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -591,8 +591,6 @@ static int ses_intf_add(struct device *cdev,
+ 		ses_dev->page10_len = len;
+ 		buf = NULL;
+ 	}
+-	kfree(hdr_buf);
+-
+ 	scomp = kzalloc(sizeof(struct ses_component) * components, GFP_KERNEL);
+ 	if (!scomp)
+ 		goto err_free;
+@@ -604,6 +602,8 @@ static int ses_intf_add(struct device *cdev,
+ 		goto err_free;
+ 	}
+ 
++	kfree(hdr_buf);
++
+ 	edev->scratch = ses_dev;
+ 	for (i = 0; i < components; i++)
+ 		edev->component[i].scratch = scomp + i;
