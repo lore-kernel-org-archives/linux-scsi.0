@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/6] lpfc 8.3.7: Fix hardware/SLI relates issues
-Date: Mon, 21 Dec 2009 17:02:28 -0500
-Message-ID: <1261432968.12238.14.camel@wookie>
+Subject: [PATCH 5/6] lpfc 8.3.7: Fix discovery failures.
+Date: Mon, 21 Dec 2009 17:03:15 -0500
+Message-ID: <1261433015.12238.16.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,163 +9,118 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:38078 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755710AbZLUWIN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2009 17:08:13 -0500
+	with ESMTP id S1757351AbZLUWIO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2009 17:08:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix hardware/SLI relates issues:
-- Fix CNA uses more than one EQ when in INTx interrupt mode.
-- Fix driver tries to process failed read FCF record mailbox request.
-- Fix allocating single receive buffer breaks FCoE receive queue.
-- Support new read FCF record mailbox error case.
+Fix discovery failures:
+- Move all accesses to the fc_flag field inside the host lock.
+- Restore link state after going through linkdown processing for FCF DEAD event.
 
 Signed-off-by: James Smart <james.smart@emulex.com>
 
 ---
 
- drivers/scsi/lpfc/lpfc_hbadisc.c |   14 ++++++++++----
- drivers/scsi/lpfc/lpfc_hw4.h     |    1 +
- drivers/scsi/lpfc/lpfc_init.c    |    3 +++
- drivers/scsi/lpfc/lpfc_sli.c     |   27 +++++++++++++++------------
- drivers/scsi/lpfc/lpfc_sli4.h    |    2 +-
- 5 files changed, 30 insertions(+), 17 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c     |    2 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c |    6 ++++++
+ drivers/scsi/lpfc/lpfc_init.c    |    6 +++++-
+ drivers/scsi/lpfc/lpfc_vport.c   |    2 ++
+ 4 files changed, 14 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index bb2e43a..2cc3968 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -4142,8 +4142,8 @@ lpfc_els_rcv_rscn(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 	spin_lock_irq(shost->host_lock);
+ 	if (vport->fc_rscn_flush) {
+ 		/* Another thread is walking fc_rscn_id_list on this vport */
+-		spin_unlock_irq(shost->host_lock);
+ 		vport->fc_flag |= FC_RSCN_DISCOVERY;
++		spin_unlock_irq(shost->host_lock);
+ 		/* Send back ACC */
+ 		lpfc_els_rsp_acc(vport, ELS_CMD_ACC, cmdiocb, ndlp, NULL);
+ 		return 0;
 diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 401167d..f40b960 100755
+index 1c27372..2445e39 100755
 --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
 +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -1555,10 +1555,16 @@ lpfc_mbx_cmpl_read_fcf_record(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	 * to book keeping the FCFIs can be used.
- 	 */
- 	if (shdr_status || shdr_add_status) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"2521 READ_FCF_RECORD mailbox failed "
--				"with status x%x add_status x%x, mbx\n",
--				shdr_status, shdr_add_status);
-+		if (shdr_status == STATUS_FCF_TABLE_EMPTY) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"2726 READ_FCF_RECORD Indicates empty "
-+					"FCF table.\n");
-+		} else {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"2521 READ_FCF_RECORD mailbox failed "
-+					"with status x%x add_status x%x, mbx\n",
-+					shdr_status, shdr_add_status);
-+		}
- 		goto out;
+@@ -1708,7 +1708,9 @@ lpfc_init_vpi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 		lpfc_vport_set_state(vport, FC_VPORT_FAILED);
+ 		return;
  	}
- 	/* Interpreting the returned information of FCF records */
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-old mode 100644
-new mode 100755
-index 09c8e36..8a2a1c5
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -1371,6 +1371,7 @@ struct lpfc_mbx_query_fw_cfg {
- #define STATUS_ERROR_ACITMAIN				0x2a
- #define STATUS_REBOOT_REQUIRED				0x2c
- #define STATUS_FCF_IN_USE				0x3a
-+#define STATUS_FCF_TABLE_EMPTY				0x43
++	spin_lock_irq(&phba->hbalock);
+ 	vport->fc_flag &= ~FC_VPORT_NEEDS_INIT_VPI;
++	spin_unlock_irq(&phba->hbalock);
  
- struct lpfc_mbx_sli4_config {
- 	struct mbox_header header;
+ 	if (phba->link_flag & LS_NPIV_FAB_SUPPORTED)
+ 		lpfc_initial_fdisc(vport);
+@@ -2269,8 +2271,10 @@ lpfc_mbx_cmpl_unreg_vpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 				 mb->mbxStatus);
+ 		break;
+ 	}
++	spin_lock_irq(&phba->hbalock);
+ 	vport->vpi_state &= ~LPFC_VPI_REGISTERED;
+ 	vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
++	spin_unlock_irq(&phba->hbalock);
+ 	vport->unreg_vpi_cmpl = VPORT_OK;
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+ 	/*
+@@ -4486,8 +4490,10 @@ lpfc_unregister_unused_fcf(struct lpfc_hba *phba)
+ 		(phba->sli3_options & LPFC_SLI3_NPIV_ENABLED))
+ 		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
+ 			lpfc_mbx_unreg_vpi(vports[i]);
++			spin_lock_irq(&phba->hbalock);
+ 			vports[i]->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
+ 			vports[i]->vpi_state &= ~LPFC_VPI_REGISTERED;
++			spin_unlock_irq(&phba->hbalock);
+ 		}
+ 	lpfc_destroy_vport_work_array(phba, vports);
+ 
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index d4da6bd..7083ef3 100644
+index 974ea6d..b8eb1b6 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7507,6 +7507,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
- 			error = -ENODEV;
- 			goto out_free_sysfs_attr;
- 		}
-+		/* Default to single FCP EQ for non-MSI-X */
-+		if (phba->intr_type != MSIX)
-+			phba->cfg_fcp_eq_count = 1;
- 		/* Set up SLI-4 HBA */
- 		if (lpfc_sli4_hba_setup(phba)) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 50f72bf..589549b 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1383,7 +1383,7 @@ lpfc_sli_hbq_to_firmware_s4(struct lpfc_hba *phba, uint32_t hbqno,
- /* HBQ for ELS and CT traffic. */
- static struct lpfc_hbq_init lpfc_els_hbq = {
- 	.rn = 1,
--	.entry_count = 200,
-+	.entry_count = 256,
- 	.mask_count = 0,
- 	.profile = 0,
- 	.ring_mask = (1 << LPFC_ELS_RING),
-@@ -1482,8 +1482,11 @@ err:
- int
- lpfc_sli_hbqbuf_add_hbqs(struct lpfc_hba *phba, uint32_t qno)
- {
--	return(lpfc_sli_hbqbuf_fill_hbqs(phba, qno,
--					 lpfc_hbq_defs[qno]->add_count));
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		return 0;
-+	else
-+		return lpfc_sli_hbqbuf_fill_hbqs(phba, qno,
-+					 lpfc_hbq_defs[qno]->add_count);
- }
+@@ -3006,6 +3006,7 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba *phba,
+ 	struct lpfc_vport *vport;
+ 	struct lpfc_nodelist *ndlp;
+ 	struct Scsi_Host  *shost;
++	uint32_t link_state;
  
- /**
-@@ -1498,8 +1501,12 @@ lpfc_sli_hbqbuf_add_hbqs(struct lpfc_hba *phba, uint32_t qno)
- static int
- lpfc_sli_hbqbuf_init_hbqs(struct lpfc_hba *phba, uint32_t qno)
- {
--	return(lpfc_sli_hbqbuf_fill_hbqs(phba, qno,
--					 lpfc_hbq_defs[qno]->init_count));
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		return lpfc_sli_hbqbuf_fill_hbqs(phba, qno,
-+					 lpfc_hbq_defs[qno]->entry_count);
-+	else
-+		return lpfc_sli_hbqbuf_fill_hbqs(phba, qno,
-+					 lpfc_hbq_defs[qno]->init_count);
- }
- 
- /**
-@@ -4110,6 +4117,7 @@ lpfc_sli4_read_rev(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
- 	if (rc) {
- 		dma_free_coherent(&phba->pcidev->dev, dma_size,
- 				  dmabuf->virt, dmabuf->phys);
-+		kfree(dmabuf);
- 		return -EIO;
+ 	phba->fc_eventTag = acqe_fcoe->event_tag;
+ 	phba->fcoe_eventtag = acqe_fcoe->event_tag;
+@@ -3052,9 +3053,12 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba *phba,
+ 			break;
+ 		/*
+ 		 * Currently, driver support only one FCF - so treat this as
+-		 * a link down.
++		 * a link down, but save the link state because we don't want
++		 * it to be changed to Link Down unless it is already down.
+ 		 */
++		link_state = phba->link_state;
+ 		lpfc_linkdown(phba);
++		phba->link_state = link_state;
+ 		/* Unregister FCF if no devices connected to it */
+ 		lpfc_unregister_unused_fcf(phba);
+ 		break;
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index c3a70c4..e3c7fa6 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -512,8 +512,10 @@ enable_vport(struct fc_vport *fc_vport)
+ 		return VPORT_OK;
  	}
  
-@@ -11409,14 +11417,9 @@ lpfc_sli4_handle_received_buffer(struct lpfc_hba *phba,
- 		return;
- 	}
- 	/* If not last frame in sequence continue processing frames. */
--	if (!lpfc_seq_complete(seq_dmabuf)) {
--		/*
--		 * When saving off frames post a new one and mark this
--		 * frame to be freed when it is finished.
--		 **/
--		lpfc_sli_hbqbuf_fill_hbqs(phba, LPFC_ELS_HBQ, 1);
-+	if (!lpfc_seq_complete(seq_dmabuf))
- 		return;
--	}
-+
- 	/* Send the complete sequence to the upper layer protocol */
- 	lpfc_sli4_send_seq_to_ulp(vport, seq_dmabuf);
- }
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 25d66d0..44e5f57 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -28,7 +28,7 @@
- /* Multi-queue arrangement for fast-path FCP work queues */
- #define LPFC_FN_EQN_MAX       8
- #define LPFC_SP_EQN_DEF       1
--#define LPFC_FP_EQN_DEF       1
-+#define LPFC_FP_EQN_DEF       4
- #define LPFC_FP_EQN_MIN       1
- #define LPFC_FP_EQN_MAX       (LPFC_FN_EQN_MAX - LPFC_SP_EQN_DEF)
++	spin_lock_irq(&phba->hbalock);
+ 	vport->load_flag |= FC_LOADING;
+ 	vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
++	spin_unlock_irq(&phba->hbalock);
  
+ 	/* Use the Physical nodes Fabric NDLP to determine if the link is
+ 	 * up and ready to FDISC.
 -- 
 1.6.5.2
 
