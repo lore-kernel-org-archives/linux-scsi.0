@@ -1,59 +1,125 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: does scsi_io_completion need to dump sense data for ata pass
- through (ck_cond = 1) ?
-Date: Tue, 22 Dec 2009 14:44:01 -0500
-Message-ID: <4B312181.30000@interlog.com>
-References: <200912221917.36495.kb@sysmikro.com.pl>
-Reply-To: dgilbert@interlog.com
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH] Forcing capacity sizes for block devices
+Date: Tue, 22 Dec 2009 12:15:55 -0800
+Message-ID: <da824cf30912221215w5fb9bce4w4cd4165cd6f7a870@mail.gmail.com>
+References: <2f83750a0912200405v77f39a7eifef024cc4cb10a20@mail.gmail.com>
+	 <200912201843.40169.bzolnier@gmail.com>
+	 <da824cf30912211204jc70fc10ta6f6de1208d2b364@mail.gmail.com>
+	 <200912212259.34808.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:48008 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754867AbZLVTok (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Dec 2009 14:44:40 -0500
-In-Reply-To: <200912221917.36495.kb@sysmikro.com.pl>
+Received: from smtp-out.google.com ([216.239.33.17]:1968 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbZLVUQB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Dec 2009 15:16:01 -0500
+Received: from wpaz29.hot.corp.google.com (wpaz29.hot.corp.google.com [172.24.198.93])
+	by smtp-out.google.com with ESMTP id nBMKFwhB001950
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2009 20:15:59 GMT
+Received: from ewy3 (ewy3.prod.google.com [10.241.103.3])
+	by wpaz29.hot.corp.google.com with ESMTP id nBMKFuOv000360
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2009 12:15:57 -0800
+Received: by ewy3 with SMTP id 3so7673454ewy.13
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Dec 2009 12:15:56 -0800 (PST)
+In-Reply-To: <200912212259.34808.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?S3J6eXN6dG9mIELFgmFzemtvd3NraQ==?= <kb@sysmikro.com.pl>
-Cc: eric@andante.org, linux-scsi@vger.kernel.org, Krzysztof.b@id-7.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Clemens Fruhwirth <clemens@endorphin.org>, linux-scsi@vger.kernel.org
 
-Krzysztof B=C5=82aszkowski wrote:
-> Hello Eric,
->=20
-> I think it is not necessary and current behavior of kernel like 2.6.3=
-1=20
-> confuses QA people.=20
-> They need explanation that message like below:
->=20
-> sd 5:0:1:0: [sdb] Sense Key : Recovered Error [current] [descriptor]
-> Descriptor sense data with sense descriptors (in hex):
->         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
->         00 00 00 00 00 50
-> sd 5:0:1:0: [sdb] Add. Sense: ATA pass through information available
->=20
-> stands for that sense data contains ata registers file and the comman=
-d was=20
-> executed properly.
->=20
-> Here is additional condition i used in scsi_io_completion() which sup=
-presses=20
-> this message. Is it okay ?
+On Mon, Dec 21, 2009 at 1:59 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+=2E..
+>> > Just a wild idea but maybe the current block infrastructure for ha=
+ndling
+>> > ATA HPA (see commit db429e9 and e957b60 one) can be used to automa=
+tically
+>> > detect and workaround the issue?
+>>
+>> Are you referring to this change?
+>> + =C2=A0 =C2=A0 =C2=A0 libata.ignore_hpa=3D =C2=A0 =C2=A0 =C2=A0[LIB=
+ATA] Ignore HPA limit
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 libata.ignore_hpa=3D0 =C2=A0 =C2=A0 =C2=A0 keep BIOS limits =
+(default)
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 libata.ignore_hpa=3D1 =C2=A0 =C2=A0 =C2=A0 ignore limits, us=
+ing full disk
+>
+> Nah.
+>
+>> My git-foo isn't very good...what command will display the two chang=
+es
+>> you refer to above?
+>
+> git log -p --color db429e9^1..e957b60
 
-Close but I would like to see a filter on the additional
-sense code ATA PASS-THROUGH INFORMATION AVAILABLE [0x0, 0x1d].
-There is nothing in SAT that precludes the return of a RECOVERED
-ERROR sense code for a read on a SATA disk that was recovered
-after some extra work (for example).
-With that filter in place there is no need to filter on the command.
+Perfect!
 
-IOWs just filter on sense code RECOVERED ERROR and additional
-sense code ATA PASS-THROUGH INFORMATION AVAILABLE. SAT and SAT-2
-compliant implementations should then dump less to the log.
+> We should be able to detect working SD reader/card combination in sd
+> driver's ->set_capacity method implementation (i.e. by issuing read
+> request for the last partitioned sector outside of the reported devic=
+e
+> capacity) during the initial partition table scan and at the same tim=
+e
+> adjust the device capacity used by the kernel if necessary.
 
-Doug Gilbert
+Yup - I think you are right.
+
+> New/empty cards would still need to be 'force partitioned' first usin=
+g
+> fdisk (or sfdisk if fdisk doesn't allow such operation) but after it'=
+s
+> done the partition rescan on fdisk's exit will recognize new device's
+> capacity automatically..
+>
+>> about b0rked HW, the user (or udev maybe?) can workaround this issue=
+=2E
+>> Given how simple the patch, I don't see any reason to reject it.
+>
+> Simple to write or simple to maintain? ;)
+
+Write of course. :)
+And in retrospect, even that statement is wrong since nothing in the
+storage stack is as simple as it looks.
+
+> To be honest the patch looks like a gross and dangerous hack..
+
+Agreed.  I expect there will always be some devices that will get the
+partition/device size wrong and it would be expedient use this hack to
+work around "non-compliant" devices. Clemens already proved it works
+for him (even though it's not quite right).
+
+> Firstly block layer needs to be properly informed about capacity chan=
+ges
+> (set_capacity() + request for partition rescan which the patch doesn'=
+t do)
+> and secondly fixing the problem at the sysfs block/partition layer se=
+ems
+> to be a layering violation (i.e. it also allows partition size change=
+s).
+
+It's the exported interface to user space. So while it's not
+implemented correctly to deal with resizing (which I didn't realize,
+Clemens will have to fix that), I don't consider it a layering
+violation if there are APIs this code can call to notify of the
+partition size change.
+
+thanks!
+grant
+
+
+>
+> --
+> Bartlomiej Zolnierkiewicz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
