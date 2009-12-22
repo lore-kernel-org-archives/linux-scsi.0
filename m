@@ -1,55 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 01/19] scsi: add __init/__exit macros to ibmvstgt.c
-Date: Mon, 21 Dec 2009 16:27:38 -0800
-Message-ID: <200912220027.nBM0Rcrj005361@imap1.linux-foundation.org>
+Subject: [patch 08/19] osst: fix read buffer overflow
+Date: Mon, 21 Dec 2009 16:27:45 -0800
+Message-ID: <200912220027.nBM0Rj86005382@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:43633 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42562 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752564AbZLVA2K (ORCPT
+	by vger.kernel.org with ESMTP id S1752472AbZLVA2I (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Dec 2009 19:28:10 -0500
+	Mon, 21 Dec 2009 19:28:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, osst@riede.org
 
-From: Peter Huewe <peterhuewe@gmx.de>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Add the __init and __exit macros to the module_init / module_exit
-functions from drivers/scsi/ibmvscsi/ibmvstgt.c
+Check whether index is within bounds before testing the element.
 
-Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: Willem Riede <osst@riede.org>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/osst.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
-+++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -955,7 +955,7 @@ static struct srp_function_template ibmv
- 	.it_nexus_response = ibmvstgt_it_nexus_response,
- };
+diff -puN drivers/scsi/osst.c~osst-fix-read-buffer-overflow drivers/scsi/osst.c
+--- a/drivers/scsi/osst.c~osst-fix-read-buffer-overflow
++++ a/drivers/scsi/osst.c
+@@ -5860,7 +5860,8 @@ static int osst_probe(struct device *dev
+ 	}
  
--static int ibmvstgt_init(void)
-+static int __init ibmvstgt_init(void)
- {
- 	int err = -ENOMEM;
- 
-@@ -986,7 +986,7 @@ release_transport:
- 	return err;
- }
- 
--static void ibmvstgt_exit(void)
-+static void __exit ibmvstgt_exit(void)
- {
- 	printk("Unregister IBM virtual SCSI driver\n");
+ 	/* find a free minor number */
+-	for (i=0; os_scsi_tapes[i] && i<osst_max_dev; i++);
++	for (i = 0; i < osst_max_dev && os_scsi_tapes[i]; i++)
++		;
+ 	if(i >= osst_max_dev) panic ("Scsi_devices corrupt (osst)");
+ 	dev_num = i;
  
 _
