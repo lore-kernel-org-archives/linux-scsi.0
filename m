@@ -1,44 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 11/19] drivers/scsi/libsas: use SAM_GOOD
-Date: Mon, 21 Dec 2009 16:27:49 -0800
-Message-ID: <200912220027.nBM0RnEG005391@imap1.linux-foundation.org>
+Subject: [patch 19/19] scsi: lpfc, fix memory leak
+Date: Mon, 21 Dec 2009 16:27:55 -0800
+Message-ID: <200912220027.nBM0Rtko005431@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49794 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39104 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752630AbZLVAcL (ORCPT
+	by vger.kernel.org with ESMTP id S1752618AbZLVAcN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Dec 2009 19:32:11 -0500
+	Mon, 21 Dec 2009 19:32:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jirislaby@gmail.com, james.smart@emulex.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Jiri Slaby <jirislaby@gmail.com>
 
-The field stat->stat should be compared to SAM_GOOD, not SAM_STAT_GOOD, as
-done elsewhere in the same function.  Both constants have the same value.
+Stanse found a memory leak on one fail path in lpfc_sli4_read_rev.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Add there kfree.
+
+Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+Acked-by: James Smart <james.smart@emulex.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/libsas/sas_ata.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff -puN drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good drivers/scsi/libsas/sas_ata.c
---- a/drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good
-+++ a/drivers/scsi/libsas/sas_ata.c
-@@ -112,7 +112,7 @@ static void sas_ata_task_done(struct sas
- 		dev->sata_dev.sstatus = resp->sstatus;
- 		dev->sata_dev.serror = resp->serror;
- 		dev->sata_dev.scontrol = resp->scontrol;
--	} else if (stat->stat != SAM_STAT_GOOD) {
-+	} else if (stat->stat != SAM_GOOD) {
- 		ac = sas_to_ata_err(stat);
- 		if (ac) {
- 			SAS_DPRINTK("%s: SAS error %x\n", __func__,
+diff -puN drivers/scsi/lpfc/lpfc_sli.c~scsi-lpfc-fix-memory-leak drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c~scsi-lpfc-fix-memory-leak
++++ a/drivers/scsi/lpfc/lpfc_sli.c
+@@ -4110,6 +4110,7 @@ lpfc_sli4_read_rev(struct lpfc_hba *phba
+ 	if (rc) {
+ 		dma_free_coherent(&phba->pcidev->dev, dma_size,
+ 				  dmabuf->virt, dmabuf->phys);
++		kfree(dmabuf);
+ 		return -EIO;
+ 	}
+ 
 _
