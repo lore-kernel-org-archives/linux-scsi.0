@@ -1,46 +1,55 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/19] drivers/scsi/u14-34f.c: fix uffer overflow
-Date: Mon, 21 Dec 2009 16:27:43 -0800
-Message-ID: <200912220027.nBM0Rhwl005376@imap1.linux-foundation.org>
+Subject: [patch 01/19] scsi: add __init/__exit macros to ibmvstgt.c
+Date: Mon, 21 Dec 2009 16:27:38 -0800
+Message-ID: <200912220027.nBM0Rcrj005361@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40043 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43633 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752552AbZLVA2H (ORCPT
+	by vger.kernel.org with ESMTP id S1752564AbZLVA2K (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Dec 2009 19:28:07 -0500
+	Mon, 21 Dec 2009 19:28:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Peter Huewe <peterhuewe@gmx.de>
 
-This allows i == MAX_INT_PARAM, which is out of range for ints[]
+Add the __init and __exit macros to the module_init / module_exit
+functions from drivers/scsi/ibmvscsi/ibmvstgt.c
 
-Found with Parfait, http://research.sun.com/projects/parfait/
-
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Dario Ballabio <ballabio_dario@emc.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/u14-34f.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow drivers/scsi/u14-34f.c
---- a/drivers/scsi/u14-34f.c~drivers-scsi-u14-34fc-fix-uffer-overflow
-+++ a/drivers/scsi/u14-34f.c
-@@ -1070,7 +1070,7 @@ static int option_setup(char *str) {
-    char *cur = str;
-    int i = 1;
+diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
+--- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
++++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -955,7 +955,7 @@ static struct srp_function_template ibmv
+ 	.it_nexus_response = ibmvstgt_it_nexus_response,
+ };
  
--   while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+   while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
-       ints[i++] = simple_strtoul(cur, NULL, 0);
+-static int ibmvstgt_init(void)
++static int __init ibmvstgt_init(void)
+ {
+ 	int err = -ENOMEM;
  
-       if ((cur = strchr(cur, ',')) != NULL) cur++;
+@@ -986,7 +986,7 @@ release_transport:
+ 	return err;
+ }
+ 
+-static void ibmvstgt_exit(void)
++static void __exit ibmvstgt_exit(void)
+ {
+ 	printk("Unregister IBM virtual SCSI driver\n");
+ 
 _
