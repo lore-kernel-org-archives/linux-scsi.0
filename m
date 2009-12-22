@@ -1,75 +1,43 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 2/6] lpfc 8.3.7: Fix NPIV operation errors
-Date: Mon, 21 Dec 2009 17:02:00 -0500
-Message-ID: <1261432940.12238.13.camel@wookie>
-Reply-To: james.smart@emulex.com
+From: akpm@linux-foundation.org
+Subject: [patch 05/19] drivers/scsi/gdth.c: fix buffer overflow
+Date: Mon, 21 Dec 2009 16:27:43 -0800
+Message-ID: <200912220027.nBM0RhlK005373@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:38078 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757373AbZLUWIP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Dec 2009 17:08:15 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36308 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752530AbZLVA2F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Dec 2009 19:28:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com
 
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Fix NPIV operation errors:
-- Fix vport not logging out of fabric when being deleted
-- Fix vport fails to discover targets after devloss timeout.
+This allows i == MAXHA, which is out of range
 
-Signed-off-by: James Smart <james.smart@emulex.com>
-
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/lpfc/lpfc_els.c     |    2 +-
- drivers/scsi/lpfc/lpfc_hbadisc.c |    1 +
- drivers/scsi/lpfc/lpfc_vport.c   |    2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/gdth.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index ce52270..bb2e43a 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5948,8 +5948,8 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 				lpfc_initial_fdisc(vport);
- 			break;
- 		}
--
- 	} else {
-+		vport->vpi_state |= LPFC_VPI_REGISTERED;
- 		if (vport == phba->pport)
- 			if (phba->sli_rev < LPFC_SLI_REV4)
- 				lpfc_issue_fabric_reglogin(vport);
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 3b94244..401167d 100755
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -2260,6 +2260,7 @@ lpfc_mbx_cmpl_unreg_vpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 		break;
- 	}
- 	vport->vpi_state &= ~LPFC_VPI_REGISTERED;
-+	vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
- 	vport->unreg_vpi_cmpl = VPORT_OK;
- 	mempool_free(pmb, phba->mbox_mem_pool);
- 	/*
-diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
-index 7d6dd83..c3a70c4 100644
---- a/drivers/scsi/lpfc/lpfc_vport.c
-+++ b/drivers/scsi/lpfc/lpfc_vport.c
-@@ -700,7 +700,7 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
- 			}
- 			spin_unlock_irq(&phba->ndlp_lock);
- 		}
--		if (vport->vpi_state != LPFC_VPI_REGISTERED)
-+		if (!(vport->vpi_state & LPFC_VPI_REGISTERED))
- 			goto skip_logo;
- 		vport->unreg_vpi_cmpl = VPORT_INVAL;
- 		timeout = msecs_to_jiffies(phba->fc_ratov * 2000);
--- 
-1.6.5.2
-
-
-
+diff -puN drivers/scsi/gdth.c~drivers-scsi-gdthc-fix-buffer-overflow drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~drivers-scsi-gdthc-fix-buffer-overflow
++++ a/drivers/scsi/gdth.c
+@@ -3841,7 +3841,7 @@ int __init option_setup(char *str)
+ 
+     TRACE2(("option_setup() str %s\n", str ? str:"NULL")); 
+ 
+-    while (cur && isdigit(*cur) && i <= MAXHA) {
++    while (cur && isdigit(*cur) && i < MAXHA) {
+         ints[i++] = simple_strtoul(cur, NULL, 0);
+         if ((cur = strchr(cur, ',')) != NULL) cur++;
+     }
+_
