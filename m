@@ -1,45 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/19] scsi/eata: fix buffer overflow
-Date: Mon, 21 Dec 2009 16:27:41 -0800
-Message-ID: <200912220027.nBM0Rfdx005370@imap1.linux-foundation.org>
+Subject: [patch 07/19] drivers/scsi/lpfc/lpfc_vport.c: fix read buffer overflow
+Date: Mon, 21 Dec 2009 16:27:44 -0800
+Message-ID: <200912220027.nBM0RiX4005379@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57438 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55509 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752594AbZLVA2L (ORCPT
+	by vger.kernel.org with ESMTP id S1752575AbZLVA2I (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Dec 2009 19:28:11 -0500
+	Mon, 21 Dec 2009 19:28:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, ballabio_dario@emc.com, mike@i-Connect.Net
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, James.Smart@Emulex.Com, jeykholt@cisco.com
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-Allows i == MAX_INT_PARAM, which is out of range.
+Check whether index is within bounds before testing the element.
 
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Michael Neuffer <mike@i-Connect.Net>
-Cc: Dario Ballabio <ballabio_dario@emc.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: James Smart <James.Smart@Emulex.Com>
+Cc: Joe Eykholt <jeykholt@cisco.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/eata.c |    2 +-
+ drivers/scsi/lpfc/lpfc_vport.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow drivers/scsi/eata.c
---- a/drivers/scsi/eata.c~scsi-eata-fix-buffer-overflow
-+++ a/drivers/scsi/eata.c
-@@ -1509,7 +1509,7 @@ static int option_setup(char *str)
- 	char *cur = str;
- 	int i = 1;
- 
--	while (cur && isdigit(*cur) && i <= MAX_INT_PARAM) {
-+	while (cur && isdigit(*cur) && i < MAX_INT_PARAM) {
- 		ints[i++] = simple_strtoul(cur, NULL, 0);
- 
- 		if ((cur = strchr(cur, ',')) != NULL)
+diff -puN drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow drivers/scsi/lpfc/lpfc_vport.c
+--- a/drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow
++++ a/drivers/scsi/lpfc/lpfc_vport.c
+@@ -771,7 +771,7 @@ lpfc_destroy_vport_work_array(struct lpf
+ 	int i;
+ 	if (vports == NULL)
+ 		return;
+-	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
++	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+ 		scsi_host_put(lpfc_shost_from_vport(vports[i]));
+ 	kfree(vports);
+ }
 _
