@@ -1,125 +1,113 @@
-From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
-Subject: Re: does scsi_io_completion need to dump sense data for ata pass through (ck_cond = 1) ?
-Date: Wed, 23 Dec 2009 12:16:58 +0100
-Message-ID: <200912231216.59143.kb@sysmikro.com.pl>
-References: <200912221917.36495.kb@sysmikro.com.pl> <200912230011.44703.kb@sysmikro.com.pl> <4B31AE8F.6070409@interlog.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [scsi] linux-2.6.32.1 drivers/message/fusion/mptsas.c:106:
+ sorry, unimplemented: inlining failed in call to 'mptsas_set_rphy': function
+ body not available
+Date: Wed, 23 Dec 2009 17:15:32 +0530
+Message-ID: <0D1E8821739E724A86F4D16902CE275C1C93D49895@inbmail01.lsi.com>
+References: <alpine.LNX.2.01.0912181032500.9874@filesrv1.baby-dragons.com>
+ <alpine.LNX.2.01.0912181213060.9874@filesrv1.baby-dragons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from v007470.home.net.pl ([212.85.125.104]:61199 "HELO
-	v007470.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751139AbZLWLRP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Dec 2009 06:17:15 -0500
-In-Reply-To: <4B31AE8F.6070409@interlog.com>
-Content-Disposition: inline
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:60069 "HELO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752015AbZLWLpo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Dec 2009 06:45:44 -0500
+In-Reply-To: <alpine.LNX.2.01.0912181213060.9874@filesrv1.baby-dragons.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: eric@andante.org, linux-scsi@vger.kernel.org, Krzysztof.b@id-7.com
-
-On Wednesday 23 December 2009 06:45, Douglas Gilbert wrote:
-> Krzysztof B=C5=82aszkowski wrote:
-> > On Tuesday 22 December 2009 20:44, Douglas Gilbert wrote:
-> >> Krzysztof B=C5=82aszkowski wrote:
-> >>> Hello Eric,
-> >>>
-> >>> I think it is not necessary and current behavior of kernel like 2=
-=2E6.31
-> >>> confuses QA people.
-> >>> They need explanation that message like below:
-> >>>
-> >>> sd 5:0:1:0: [sdb] Sense Key : Recovered Error [current] [descript=
-or]
-> >>> Descriptor sense data with sense descriptors (in hex):
-> >>>         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
-> >>>         00 00 00 00 00 50
-> >>> sd 5:0:1:0: [sdb] Add. Sense: ATA pass through information availa=
-ble
-> >>>
-> >>> stands for that sense data contains ata registers file and the co=
-mmand
-> >>> was executed properly.
-> >>>
-> >>> Here is additional condition i used in scsi_io_completion() which
-> >>> suppresses this message. Is it okay ?
-> >>
-> >> Close but I would like to see a filter on the additional
-> >> sense code ATA PASS-THROUGH INFORMATION AVAILABLE [0x0, 0x1d].
-> >> There is nothing in SAT that precludes the return of a RECOVERED
-> >> ERROR sense code for a read on a SATA disk that was recovered
-> >> after some extra work (for example).
-> >
-> > of course but is it good idea to log sense data if:
-> > - it is created on demand by application. (sat-2 ch 12.2.2 and .3)
-> > - it doesn't contain some failure status
-> >
-> > ?
-> >
-> >> With that filter in place there is no need to filter on the comman=
-d.
-> >
-> > right but OTOH if filter used asc/ascq then it would filter out all
-> > commands even these with some failures.
-> >
-> > i am not sure if this is really what you want to have, ie block all=
- dumps
-> > of ATA PASS-THROUGH sense data.
-> >
-> >> IOWs just filter on sense code RECOVERED ERROR and additional
-> >> sense code ATA PASS-THROUGH INFORMATION AVAILABLE. SAT and SAT-2
-> >> compliant implementations should then dump less to the log.
-> >
-> > i would say that asc/ascq filter will stop logging all SAT/SAT-2 ch=
-eck
-> > conditions instead of "less".
-> >
-> > that improvement i sent has better "granularity".
->
-> I disagree.
->
-> This is the code sequence I had in mind:
->
->          if (sense_valid && (sshdr.sense_key =3D=3D RECOVERED_ERROR))=
- {
->                  /* if ATA PASS-THROUGH INFORMATION AVAILABLE skip
->                   * print since app wants ATA registers */
->                  if ((sshdr.asc =3D=3D 0x0) && (sshdr.ascq =3D=3D 0x1=
-d))
->                          ;
->                  else if (!(req->cmd_flags & REQ_QUIET))
->                          scsi_print_sense("", cmd);
->                  result =3D 0;
->                  /* BLOCK_PC may have set error */
->                  error =3D 0;
->          }
->
-> This will suppress logging the sense data associated with the
-> ATA PASS-THROUGH INFORMATION AVAILABLE additional sense code.
-> That is only generated in the situation when a SCSI ATA PASS-THROUGH
-> command sets the CK_COND bit _and_ there was no other error from
-> the ATA disk or the transport (e.g. SAS can issue an ABORTED COMMAND
-> sense key). This is shown in sat2r09.pdf section 12.2.5 table 113.
-
-I think you are right that checking CK_COND bit here is not necessary b=
-ecause=20
-if command was failed due to drive error then sense key wouldn't be=20
-RECOVERED_ERROR according to section 11 (sat2).
-
-Krzysztof Blaszkowski
->
-> Doug Gilbert
->
-> P.S. Haven't seen Eric Youngdale's email address for a while
+To: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
+Cc: Linux Scsi maillist <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 
 
-P.S. I took his address from scsi_lib header (2.6.31.5) and i don't thi=
-nk i=20
-should bother if this address is valid or invalid or if he wishes to re=
-ply or=20
-he doesn't. This is why i posted my conclusions to linux-scsi too.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mr. James,
+
+I tried reproducing things here; I found your fix is valid.
+
+Your proposed solution is well understood.
+I will submit this patch to upstream.
+
+Thanks for adding my name in MAINTAINER list. It should be done well before by me.
+
+- Kashyap
+
+> -----Original Message-----
+> From: Mr. James W. Laferriere [mailto:babydr@baby-dragons.com]
+> Sent: Saturday, December 19, 2009 2:45 AM
+> To: Moore, Eric; Desai, Kashyap
+> Cc: Linux Scsi maillist
+> Subject: Re: [scsi] linux-2.6.32.1 drivers/message/fusion/mptsas.c:106:
+> sorry, unimplemented: inlining failed in call to 'mptsas_set_rphy':
+> function body not available
+> 
+>  	Hello Eric & Kashyap,
+> 
+> On Fri, 18 Dec 2009, Mr. James W. Laferriere wrote:
+> > 	Hello Eric & Kashyap,  I see the maintainers file (& may not have
+> > been updated) still shows you as the maintainer .  	I've added Kashyap
+> to
+> > the to list as well .
+> > 	I and Paul E. McKenney have just ran thru a simular 'inline'ing
+> > difficulty with the new RCU implementation in 2.6.32.1 .
+> >
+> >
+> > 	error snippit ...
+> >
+> >  gcc -Wp,-MD,drivers/message/fusion/.mptsas.o.d  -nostdinc -isystem
+> > /usr/lib/gcc/i486-slackware-linux/3.4.6/include -Iinclude
+> > -I/usr/src/linux-2.6.32.1/arch/x86/include -include
+> include/linux/autoconf.h
+> > -D__KERNEL__ -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+> > -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+> > -Wno-format-security -fno-delete-null-pointer-checks -O2 -m32 -msoft-
+> float
+> > -mregparm=3 -freg-struct-return -mpreferred-stack-boundary=2
+> > -fno-unit-at-a-time -march=i686 -ffreestanding -DCONFIG_AS_CFI=1 -pipe
+> > -Wno-sign-compare -fno-asynchronous-unwind-tables -mno-sse -mno-mmx -
+> mno-sse2
+> > -mno-3dnow -fno-omit-frame-pointer -fno-optimize-sibling-calls -g
+> > -Wdeclaration-after-statement   -D"KBUILD_STR(s)=#s"
+> > -D"KBUILD_BASENAME=KBUILD_STR(mptsas)"  -
+> D"KBUILD_MODNAME=KBUILD_STR(mptsas)"
+> > -c -o drivers/message/fusion/mptsas.o drivers/message/fusion/mptsas.c
+> > drivers/message/fusion/mptsas.c: In function `mptsas_port_delete':
+> > drivers/message/fusion/mptsas.c:106: sorry, unimplemented: inlining
+> failed in
+> > call to 'mptsas_set_rphy': function body not available
+> > drivers/message/fusion/mptsas.c:462: sorry, unimplemented: called from
+> here
+> > make[3]: *** [drivers/message/fusion/mptsas.o] Error 1
+> > make[2]: *** [drivers/message/fusion] Error 2
+> > make[1]: *** [drivers/message] Error 2
+> > make: *** [drivers] Error 2
+> 
+>  	Fyi ,  The following patch cures the compile time error .
+> 
+> 
+> # diff -u drivers/message/fusion/mptsas.c.orig
+> drivers/message/fusion/mptsas.c
+> --- drivers/message/fusion/mptsas.c.orig        2009-12-18
+> 21:07:31.000000000 +0000
+> +++ drivers/message/fusion/mptsas.c     2009-12-18 20:30:14.000000000
+> +0000
+> @@ -102,7 +102,7 @@
+>   static void mptsas_send_ir2_event(struct fw_event_work *fw_event);
+>   static void mptsas_parse_device_info(struct sas_identify *identify,
+>                  struct mptsas_devinfo *device_info);
+> -static inline void mptsas_set_rphy(MPT_ADAPTER *ioc,
+> +static void mptsas_set_rphy(MPT_ADAPTER *ioc,
+>                  struct mptsas_phyinfo *phy_info, struct sas_rphy *rphy);
+>   static struct mptsas_phyinfo   *mptsas_find_phyinfo_by_sas_address
+>                  (MPT_ADAPTER *ioc, u64 sas_address);
+> 
+> 
+>  		Hth ,  JimL
+> --
+> +------------------------------------------------------------------+
+> | James   W.   Laferriere | System    Techniques | Give me VMS     |
+> | Network&System Engineer | 3237     Holden Road |  Give me Linux  |
+> | babydr@baby-dragons.com | Fairbanks, AK. 99709 |   only  on  AXP |
+> +------------------------------------------------------------------+
