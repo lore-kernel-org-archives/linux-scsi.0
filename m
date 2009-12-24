@@ -1,135 +1,81 @@
-From: "Penchala Narasimha Reddy Chilakala, ERS-HCLTech"
-	<narasimhareddyc@hcl.in>
-Subject: RE:  [PATCH ]  scsi-misc-2.6:  File System going into read-only
- mode
-Date: Thu, 24 Dec 2009 11:59:58 +0530
-Message-ID: <4F2B1A2459C7AD4D96A23CE911C352CB1E91679286@CHN-HCLT-EVS07.HCLT.CORP.HCL.IN>
+From: Clemens Fruhwirth <clemens@endorphin.org>
+Subject: Re: [PATCH] Forcing capacity sizes for block devices
+Date: Thu, 24 Dec 2009 14:40:50 +0100
+Message-ID: <2f83750a0912240540p2bb9fe21i7129e9cc5dbb9c09@mail.gmail.com>
+References: <2f83750a0912200405v77f39a7eifef024cc4cb10a20@mail.gmail.com>
+	 <200912201843.40169.bzolnier@gmail.com>
+	 <da824cf30912211204jc70fc10ta6f6de1208d2b364@mail.gmail.com>
+	 <200912212259.34808.bzolnier@gmail.com>
+	 <2f83750a0912240503g3aa7bcbw876a164d0e350b27@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws08.mail.hcl.in ([203.105.186.28]:51550 "EHLO gws08.hcl.in"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754183AbZLXGbl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Dec 2009 01:31:41 -0500
-Content-Language: en-US
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:59002 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754499AbZLXNkv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Dec 2009 08:40:51 -0500
+Received: by fxm25 with SMTP id 25so2791927fxm.21
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Dec 2009 05:40:50 -0800 (PST)
+In-Reply-To: <2f83750a0912240503g3aa7bcbw876a164d0e350b27@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@kernel.org>, "'linux-scsi@vger.kernel.org'" <'linux-scsi@vger.kernel.org'>
-Cc: ServeRAID Driver <ServeRAIDDriver@hcl.in>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Grant Grundler <grundler@google.com>, linux-scsi@vger.kernel.org
 
-Hi James and linux-scsi community,
+Hi Bartlomiej, Hi Grant!
 
-Please let us your comments on the patch (community_aac24702.patch) we =
-submitted on December 21, 2009.
+(sorry for resending this mail, gmail switched into HTML mode for
+unknown reasons, and vger.kernel.org rightfully rejected this mail)
 
-Thanks,
-Narasimha Reddy
+On Mon, Dec 21, 2009 at 10:59 PM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+>
+> We should be able to detect working SD reader/card combination in sd
+> driver's ->set_capacity method implementation (i.e. by issuing read
+> request for the last partitioned sector outside of the reported device
+> capacity) during the initial partition table scan and at the same time
+> adjust the device capacity used by the kernel if necessary.
 
------Original Message-----
-=46rom: Penchala Narasimha Reddy Chilakala, ERS-HCLTech=20
-Sent: Monday, December 21, 2009 6:39 PM
-To: 'linux-scsi@vger.kernel.org'; 'James Bottomley'
-Cc: ServeRAID Driver
-Subject: [PATCH ] scsi-misc-2.6: File System going into read-only mode=20
+1. I disagree with the strategy to add some automatism that does not
+work for all cases (unformated cards in this case). Do you want the
+user to jump through the additional hop of creating oversized
+partition tables that fdisk and friends might not even allow easily?
+The case with manual override is easier and more straight forward.
+Also this approach is tied to using partition tables and in my case SD
+cards work fine without partition tables.
 
-Hi James and linux-scsi community,
+2. I strongly opt for not-creating a kernel that tries to domineer[1]
+over its users. If I say my device is size X I want the kernel to
+follow that order. Also I dislike the kernel to probe beyond the
+device boundaries unless I told it do so. I don't want to be this
+behavior to be auto enabled by (probably broken) partition tables that
+I can not even see before plugging that disk into my device (and
+naturally triggering this behavior)
 
-       I would request you that please review the attached updated patc=
-h, which contains the fix for racy issue (which was raised by James) an=
-d do the needful to incorporate the patch in up-coming release.=20
+3. The kernel is not supposed to work correctly when writing incorrect
+junk to random sysfs files. So assuming the required knowledge for
+manual intervention is ok at /sys.
 
-Note: The patch was generated against the "kernel 2.6.33-rc1"
+> Firstly block layer needs to be properly informed about capacity changes
+> (set_capacity() + request for partition rescan which the patch doesn't do)
+> and secondly fixing the problem at the sysfs block/partition layer seems
+> to be a layering violation (i.e. it also allows partition size changes).
 
-=46rom: Narasimha Reddy <ServeRAIDDriver@hcl.in>
+git log -p --color db429e9^1..e957b60 does not seem related to me. The
+implementation of ide_disk_set_capacity suggests that the semantic of
+set_capacity is that the caller can make the device smaller than
+probed_capacity with the intention to protect stuff (Host Protect
+Area?). The caller can not enlarge the device beyond the device
+boundaries because of its first line "u64 set = min(capacity,
+drive->probed_capacity)". The intention of my patch and its potential
+use of any set_capacity is exactly that, namely to override these
+device limits. So it's seems a bit orthogonal.
 
-	The attached patch was generated for fixing the following issues. Thes=
-e issues were reported by Cisco, SAP and some other customers as well.
+I don't object to inform the device layer somehow about the forceful
+size change, however is set_capacity really the intended place to do
+it? Where do we set nr_sects, if so?
 
-Regarding the testing of fixes:
---------------------------------
-
-	These particular problems were reported by Cisco and SAP and customers=
- as well. Cisco reported on RHEL4 U6 and SAP reported on SLES9 SP4 and =
-SLES10 SP2. We added these fixes on RHEL4 U6 and gave a private build t=
-o IBM and Cisco. Cisco and IBM tested it for more than 15 days and they=
- reported that they did not see the issue so far. Before the fix, Cisco=
- used to see the issue within 5 days. We generated a patch for SLES9 SP=
-4 and SLES10 SP2 and submitted to Novell. Novell applied the patch and =
-gave a test build to SAP. SAP tested and reported that the build is wor=
-king properly.
-
-We also tested in our lab using the tools "dishogsync", which is IO str=
-ess tool and the tool was provided by Cisco.
-
-Issue1: File System going into read-only mode
----------
-
-Root cause:
------------
-=A0=A0=A0=A0=A0=A0 The driver tends to not free the memory (FIB) when t=
-he management request exits prematurely. The accumulation of such un-fr=
-eed memory causes the driver to fail to allocate anymore memory (FIB) a=
-nd hence return 0x70000 value to the upper layer, which puts the file s=
-ystem into read only mode.
-
-=46ix details:
-------------
-=A0=A0=A0=A0 The fix makes sure to free the memory (FIB) even if the re=
-quest exits prematurely hence ensuring the driver wouldn't run out of m=
-emory (FIBs).
-
-
-Issue2:
--------=20
-	False Raid Alert occurs- when the Physical Drives and Logical drives a=
-re reported as deleted or added, even though there is no change done on=
- the system
-
-Root cause:
------------
-=A0=A0=A0=A0=A0=A0=A0 Driver IOCTLs is signaled with EINTR while waitin=
-g on response from the lower layers. Returning "EINTR" will never initi=
-ate internal retry.=20
-
-=46ix details:
-------------
-=A0=A0=A0=A0=A0=A0=A0 The issue was fixed by replacing "EINTR" with "ER=
-ESTARTSYS" for mid-layer retries.
-
-
-Signed-off-by: Narasimha Reddy <ServeRAIDDriver@hcl.in>
-
-       Please find the attached patch file "community_aac24701.patch", =
-which has been generated for the issues we fixed and "email" file "comm=
-unity_aac24701.email", which has been generated for the statistics like=
- number of lines inserted and deleted, errors etc.
-      =20
-Regards - Narasimha Reddy
-
-
-DISCLAIMER:
------------------------------------------------------------------------=
-------------------------------------------------
-
-The contents of this e-mail and any attachment(s) are confidential and =
-intended for the named recipient(s) only.=20
-It shall not attach any liability on the originator or HCL or its affil=
-iates. Any views or opinions presented in=20
-this email are solely those of the author and may not necessarily refle=
-ct the opinions of HCL or its affiliates.=20
-Any form of reproduction, dissemination, copying, disclosure, modificat=
-ion, distribution and / or publication of=20
-this message without the prior written consent of the author of this e-=
-mail is strictly prohibited. If you have=20
-received this email in error please delete it and notify the sender imm=
-ediately. Before opening any mail and=20
-attachments please check them for viruses and defect.
-
------------------------------------------------------------------------=
-------------------------------------------------
+[1] Sorry if that translation sounds strange:
+http://dict.leo.org/ende?search=bevormunden
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Fruhwirth Clemens http://clemens.endorphin.org
