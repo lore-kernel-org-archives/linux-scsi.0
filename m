@@ -1,26 +1,49 @@
-From: Eric Youngdale <eric@andante.org>
-Subject: Re: does scsi_io_completion need to dump sense data for ata pass
- through (ck_cond = 1) ?
-Date: Sun, 27 Dec 2009 14:56:29 -0500
-Message-ID: <4B37BBED.4060506@andante.org>
-References: <200912221917.36495.kb@sysmikro.com.pl> <4B312181.30000@interlog.com> <200912230011.44703.kb@sysmikro.com.pl> <4B31AE8F.6070409@interlog.com>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: Re: [patch] off by one in FlashPoint.c
+Date: Mon, 28 Dec 2009 12:14:39 -0500
+Message-ID: <4B38E77F.2070201@cisco.com>
+References: <20091227131446.GI6075@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gwyn.tux.org ([207.172.156.132]:34125 "EHLO gwyn.tux.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751131AbZL0UVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Dec 2009 15:21:33 -0500
-In-Reply-To: <4B31AE8F.6070409@interlog.com>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:16427 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751311AbZL1ROk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Dec 2009 12:14:40 -0500
+In-Reply-To: <20091227131446.GI6075@bicker>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: =?UTF-8?B?S3J6eXN6dG9mIELFgmFzemtvd3NraQ==?= <kb@sysmikro.com.pl>, linux-scsi@vger.kernel.org, Krzysztof.b@id-7.com
+To: Dan Carpenter <error27@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
 
-> P.S. Haven't seen Eric Youngdale's email address for a while
 
-Still around, but busy with Real Work(tm).  I don't have much to add 
-here as I haven't looked at that source code in years now...
+Dan Carpenter wrote:
+> The check should be >= instead of > or we could go past the end of the
+> array.
 
+What about the LUN check?   I'm not sure either way, but usually MAX LUN
+is the max number of LUNs, not the max LU number, although that's been
+in flux lately.
+
+> 
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> 
+> --- orig/drivers/scsi/FlashPoint.c	2009-12-27 11:35:58.000000000 +0200
+> +++ devel/drivers/scsi/FlashPoint.c	2009-12-27 11:36:19.000000000 +0200
+> @@ -3924,7 +3924,7 @@
+>  {
+>  	struct sccb_mgr_tar_info *currTar_Info;
+>  
+> -	if ((p_sccb->TargID > MAX_SCSI_TAR) || (p_sccb->Lun > MAX_LUN)) {
+> +	if ((p_sccb->TargID >= MAX_SCSI_TAR) || (p_sccb->Lun > MAX_LUN)) {
+>  		return;
+>  	}
+>  	currTar_Info = &FPT_sccbMgrTbl[p_card][p_sccb->TargID];
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
