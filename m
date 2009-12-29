@@ -1,74 +1,40 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: Re: [PATCH 3/5] drivers/scsi : Correct the size argument to kmalloc
-Date: Tue, 29 Dec 2009 21:13:26 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0912292113110.4001@ask.diku.dk>
-References: <Pine.LNX.4.64.0912292015420.4001@ask.diku.dk>
- <200912292102.43373.eike-kernel@sf-tec.de>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.33-rc2: Reported regressions from 2.6.32
+Date: Tue, 29 Dec 2009 21:46:35 +0100
+Message-ID: <200912292146.35119.rjw@sisk.pl>
+References: <LptzGUUXbTK.A.MSF.ymhOLB@chimera> <b170af450912291200r73a56d55n5e9a68043a503907@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:53334 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751554AbZL2UN2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Dec 2009 15:13:28 -0500
-In-Reply-To: <200912292102.43373.eike-kernel@sf-tec.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <b170af450912291200r73a56d55n5e9a68043a503907@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>, Greg KH <gregkh@suse.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+On Tuesday 29 December 2009, Rafa=C5=82 Mi=C5=82ecki wrote:
+> 2009/12/29 Rafael J. Wysocki <rjw@sisk.pl>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1491=
+0
+> > Subject         : Stable version 2.6.32.2 broke my KMS Radeon setup
+> > Submitter       : Ruud Linders <kernelml@xs4all.nl>
+> > Date            : 2009-12-20 12:02 (10 days old)
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1261311056=
+08871&w=3D4
+>=20
+> Has patch (I think it was even submitted to Linus).
 
-In each case, the destination of the allocation has type struct **, so the
-elements of the array should have pointer type, not structure type.
+This is a -stable only issue in fact, so I'm not going to track it from=
+ now on.
 
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
+Please watch the next -stable announcement from Greg and remind him abo=
+ut this
+issue if the patch isn't there.
 
-// <smpl>
-@disable sizeof_type_expr@
-type T;
-T **x;
-@@
-
-  x =
-  <+...sizeof(
-- T
-+ *x
-  )...+>
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/aic94xx/aic94xx_init.c |    4 ++--
- drivers/scsi/ch.c                   |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff -u -p a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -687,9 +687,9 @@ static int asd_register_sas_ha(struct as
- {
- 	int i;
- 	struct asd_sas_phy   **sas_phys =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_phy), GFP_KERNEL);
-+		kcalloc(ASD_MAX_PHYS, sizeof(*sas_phys), GFP_KERNEL);
- 	struct asd_sas_port  **sas_ports =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_port), GFP_KERNEL);
-+		kcalloc(ASD_MAX_PHYS, sizeof(*sas_ports), GFP_KERNEL);
- 
- 	if (!sas_phys || !sas_ports) {
- 		kfree(sas_phys);
-diff -u -p a/drivers/scsi/ch.c b/drivers/scsi/ch.c
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -351,7 +351,7 @@ ch_readconfig(scsi_changer *ch)
- 	}
- 
- 	/* look up the devices of the data transfer elements */
--	ch->dt = kmalloc(ch->counts[CHET_DT]*sizeof(struct scsi_device),
-+	ch->dt = kcalloc(ch->counts[CHET_DT], sizeof(*ch->dt),
- 			 GFP_KERNEL);
- 
- 	if (!ch->dt) {
+Rafael
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
