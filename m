@@ -1,41 +1,33 @@
-From: =?UTF-8?B?TsOpbWV0aCBNw6FydG9u?= <nm127@freemail.hu>
-Subject: Re: 2.6.33-rc2: Reported regressions 2.6.31 -> 2.6.32
-Date: Tue, 29 Dec 2009 21:55:13 +0100
-Message-ID: <4B3A6CB1.3030305@freemail.hu>
-References: <oBElxfTZdhL.A.bx.-vhOLB@chimera> <4B3A5BC2.10207@gmail.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 3/5] drivers/scsi : Correct the size argument to kmalloc
+Date: Tue, 29 Dec 2009 13:23:16 -0800
+Message-ID: <1262121796.1888.190.camel@Joe-Laptop.home>
+References: <Pine.LNX.4.64.0912292015420.4001@ask.diku.dk>
+	 <200912292102.43373.eike-kernel@sf-tec.de>
+	 <Pine.LNX.4.64.0912292103180.4001@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <4B3A5BC2.10207@gmail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Jarek Poplawski <jarkao2@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752468AbZL2VXU@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0912292103180.4001@ask.diku.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia Lawall <julia@diku.dk>
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Jarek Poplawski wrote:
-> Rafael J. Wysocki wrote, On 12/29/2009 04:26 PM:
->=20
-> ...
->> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14794
->> Subject		: IP address assigned by DHCP is dropped after ~40 seconds
->> Submitter	: M=C3=A1rton N=C3=A9meth <nm127@freemail.hu>
->> Date		: 2009-12-13 08:59 (17 days old)
->>
->=20
->=20
-> IMHO this bug might be considered as fixed by updating a userspace to=
-ol
-> (KNetworkManager) - unless somebody wants to seek for the exact reaso=
-n...
+On Tue, 2009-12-29 at 21:04 +0100, Julia Lawall wrote:
+> On Tue, 29 Dec 2009, Rolf Eike Beer wrote:
+> > Julia Lawall wrote:
+> > > From: Julia Lawall <julia@diku.dk>
+> > > In each case, the destination of the allocation has type struct **, so the
+> > > elements of the array should have pointer type, not structure type.
+> > Maybe they should even by kcalloc'ed?
+> I thought about that, but in response to another patch someone seemed to 
+> think kcalloc was not very useful.  But I can certainly change it in this 
+> case.
 
-=46or me (I am the reporter) the problem was solved by upgrading a user=
-space
-tool, so I think the bug filed against the kernel can be closed marking
-that this was not really a kernel bug.
+I think kcalloc is useful and should be used when the
+allocated array of elements needs to be zeroed.
 
-Regards,
-
-	M=C3=A1rton N=C3=A9meth
-
-
+It appears the uses in 1/5 and 3/5 don't need it but
+maybe patch 2/5 and 4/5 should use kcalloc.
