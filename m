@@ -1,70 +1,30 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 3/5] drivers/scsi : Correct the size argument to kmalloc
-Date: Tue, 29 Dec 2009 20:16:03 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0912292015420.4001@ask.diku.dk>
+From: Jarek Poplawski <jarkao2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.33-rc2: Reported regressions 2.6.31 -> 2.6.32
+Date: Tue, 29 Dec 2009 20:42:58 +0100
+Message-ID: <4B3A5BC2.10207@gmail.com>
+References: <oBElxfTZdhL.A.bx.-vhOLB@chimera>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:59597 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752389AbZL2TQF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Dec 2009 14:16:05 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <oBElxfTZdhL.A.bx.-vhOLB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, =?UTF-8?B?TcOhcnRvbiBOw6ltZXRo?= <nm127-Y8qEzhMunLyT9ig0jae3mg@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+Rafael J. Wysocki wrote, On 12/29/2009 04:26 PM:
 
-In each case, the destination of the allocation has type struct **, so the
-elements of the array should have pointer type, not structure type.
+=2E..
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14794
+> Subject		: IP address assigned by DHCP is dropped after ~40 seconds
+> Submitter	: M=C3=A1rton N=C3=A9meth <nm127-Y8qEzhMunLyT9ig0jae3mg@public.gmane.org>
+> Date		: 2009-12-13 08:59 (17 days old)
+>=20
 
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
 
-// <smpl>
-@disable sizeof_type_expr@
-type T;
-T **x;
-@@
+IMHO this bug might be considered as fixed by updating a userspace tool
+(KNetworkManager) - unless somebody wants to seek for the exact reason.=
+=2E.
 
-  x =
-  <+...sizeof(
-- T
-+ *x
-  )...+>
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/aic94xx/aic94xx_init.c |    4 ++--
- drivers/scsi/ch.c                   |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff -u -p a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -687,9 +687,9 @@ static int asd_register_sas_ha(struct as
- {
- 	int i;
- 	struct asd_sas_phy   **sas_phys =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_phy), GFP_KERNEL);
-+		kmalloc(ASD_MAX_PHYS * sizeof(*sas_phys), GFP_KERNEL);
- 	struct asd_sas_port  **sas_ports =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_port), GFP_KERNEL);
-+		kmalloc(ASD_MAX_PHYS * sizeof(*sas_ports), GFP_KERNEL);
- 
- 	if (!sas_phys || !sas_ports) {
- 		kfree(sas_phys);
-diff -u -p a/drivers/scsi/ch.c b/drivers/scsi/ch.c
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -351,7 +351,7 @@ ch_readconfig(scsi_changer *ch)
- 	}
- 
- 	/* look up the devices of the data transfer elements */
--	ch->dt = kmalloc(ch->counts[CHET_DT]*sizeof(struct scsi_device),
-+	ch->dt = kmalloc(ch->counts[CHET_DT]*sizeof(*ch->dt),
- 			 GFP_KERNEL);
- 
- 	if (!ch->dt) {
+Jarek P.
