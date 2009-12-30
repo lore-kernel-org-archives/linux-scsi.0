@@ -1,47 +1,42 @@
-From: Jarek Poplawski <jarkao2@gmail.com>
-Subject: Re: 2.6.33-rc2: Reported regressions 2.6.31 -> 2.6.32
-Date: Tue, 29 Dec 2009 23:00:51 +0100
-Message-ID: <20091229220051.GA3185@del.dom.local>
-References: <oBElxfTZdhL.A.bx.-vhOLB@chimera>
- <4B3A5BC2.10207@gmail.com>
- <4B3A6CB1.3030305@freemail.hu>
+From: Julia Lawall <julia@diku.dk>
+Subject: Re: [PATCH 3/5] drivers/scsi : Correct the size argument to kmalloc
+Date: Wed, 30 Dec 2009 12:29:20 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0912301228540.23134@ask.diku.dk>
+References: <Pine.LNX.4.64.0912292015420.4001@ask.diku.dk>
+ <200912292102.43373.eike-kernel@sf-tec.de>  <Pine.LNX.4.64.0912292103180.4001@ask.diku.dk>
+ <1262121796.1888.190.camel@Joe-Laptop.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4B3A6CB1.3030305@freemail.hu>
-Sender: netdev-owner@vger.kernel.org
-To: =?iso-8859-1?Q?N=E9meth_M=E1rton?= <nm127@freemail.hu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mgw1.diku.dk ([130.225.96.91]:45382 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751605AbZL3L3X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Dec 2009 06:29:23 -0500
+In-Reply-To: <1262121796.1888.190.camel@Joe-Laptop.home>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Tue, Dec 29, 2009 at 09:55:13PM +0100, N=E9meth M=E1rton wrote:
-> Jarek Poplawski wrote:
-> > Rafael J. Wysocki wrote, On 12/29/2009 04:26 PM:
-> >=20
-> > ...
-> >> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14794
-> >> Subject		: IP address assigned by DHCP is dropped after ~40 second=
-s
-> >> Submitter	: M=E1rton N=E9meth <nm127@freemail.hu>
-> >> Date		: 2009-12-13 08:59 (17 days old)
-> >>
-> >=20
-> >=20
-> > IMHO this bug might be considered as fixed by updating a userspace =
-tool
-> > (KNetworkManager) - unless somebody wants to seek for the exact rea=
-son...
->=20
-> For me (I am the reporter) the problem was solved by upgrading a user=
-space
-> tool, so I think the bug filed against the kernel can be closed marki=
-ng
-> that this was not really a kernel bug.
+On Tue, 29 Dec 2009, Joe Perches wrote:
 
-Yes, let's hope author(s) of KNetworkManager would let us know if they
-had to change it because of the kernel error.
+> On Tue, 2009-12-29 at 21:04 +0100, Julia Lawall wrote:
+> > On Tue, 29 Dec 2009, Rolf Eike Beer wrote:
+> > > Julia Lawall wrote:
+> > > > From: Julia Lawall <julia@diku.dk>
+> > > > In each case, the destination of the allocation has type struct **, so the
+> > > > elements of the array should have pointer type, not structure type.
+> > > Maybe they should even by kcalloc'ed?
+> > I thought about that, but in response to another patch someone seemed to 
+> > think kcalloc was not very useful.  But I can certainly change it in this 
+> > case.
+> 
+> I think kcalloc is useful and should be used when the
+> allocated array of elements needs to be zeroed.
+> 
+> It appears the uses in 1/5 and 3/5 don't need it but
+> maybe patch 2/5 and 4/5 should use kcalloc.
 
-Regards,
-Jarek P.
+I will look into changing them too.
+
+julia
