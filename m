@@ -1,36 +1,32 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14961] Very old and buggy ARCMSR drivers are included
-Date: Wed, 30 Dec 2009 12:39:44 GMT
-Message-ID: <200912301239.nBUCdiWQ012732@demeter.kernel.org>
-References: <bug-14961-11613@http.bugzilla.kernel.org/>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] mpt2sas: Fix &&/|| confusion in _scsih_sas_device_status_change_event()
+Date: Wed, 30 Dec 2009 17:58:52 +0100
+Message-ID: <4B3B86CC.5010205@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35078 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604AbZL3Mjp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Dec 2009 07:39:45 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id nBUCdii3012733
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Dec 2009 12:39:44 GMT
-In-Reply-To: <bug-14961-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752731AbZL3Qzq@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, kashyap.desai@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14961
+This never evaluates to true.
 
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-mikki@hugo.dk changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-           Severity|normal                      |high
-
-
-
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index efabea1..82c5474 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -4363,7 +4363,7 @@ _scsih_sas_device_status_change_event(struct MPT2SAS_ADAPTER *ioc,
+ #endif
+ 
+ 	if (!(event_data->ReasonCode ==
+-	    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
++	    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET ||
+ 	   event_data->ReasonCode ==
+ 	    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET))
+ 		return;
