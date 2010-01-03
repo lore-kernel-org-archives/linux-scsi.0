@@ -1,43 +1,76 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [osd-dev] [PATCH] scsi_lib: Bug in completion of bidi commands
-Date: Sun, 3 Jan 2010 11:55:10 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1001031149380.29885-100000@netrider.rowland.org>
-References: <4B406D62.8060500@panasas.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] skip sense logging for some ATA PASS-THROUGH cdbs
+Date: Sun, 03 Jan 2010 13:51:15 -0500
+Message-ID: <4B40E723.7050607@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+ boundary="------------010708090709080600010104"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:55141 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750782Ab0ACQzN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jan 2010 11:55:13 -0500
-In-Reply-To: <4B406D62.8060500@panasas.com>
+Received: from smtp.infotech.no ([82.134.31.41]:56417 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751741Ab0ACSvW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 Jan 2010 13:51:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, Benny Halevy <bhalevy@panasas.com>, Stable Tree <stable@kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: kb@sysmikro.com.pl
 
-On Sun, 3 Jan 2010, Boaz Harrosh wrote:
+This is a multi-part message in MIME format.
+--------------010708090709080600010104
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> > What patch of mine are you referring to?  So far James has rejected all
-> > the patches I have submitted recently.  I'm going to try again in the 
-> > near future...
-> > 
-> 
-> OK, that's my answer, I didn't know.
-> 
-> Would you want that I attempt that collapsing of scsi_end_request() into scsi_io_completion
-> and the cleanup that implies? (that's the patch I meant.)
+Further to the lsml thread titled:
+"does scsi_io_completion need to dump sense data for ata pass through (ck_cond =
+1) ?"
 
-Okay, I don't mind if you would like to rewrite that patch.  The 
-version I wrote didn't just move code from one subroutine to another; 
-it also made a few semantic changes (the retry counter and the "error" 
-argument to blk_end_request()).  You'll probably want to break it 
-up into a few patches, where the first simply moves the code around and 
-the later ones do more significant things.
+This is a patch to skip logging when the sense data is
+associated with a SENSE_KEY of "RECOVERED_ERROR" and the
+additional sense code is "ATA PASS-THROUGH INFORMATION
+AVAILABLE". This only occurs with the SAT ATA PASS-THROUGH
+commands when CK_COND=1 (in the cdb). It indicates that
+the sense data contains ATA registers.
 
-As I recall, the most recent version of that patch is here:
+Smartmontools uses such commands on ATA disks connected via
+SAT. Periodic checks such as those done by smartd cause
+nuisance entries into logs that are:
+    - neither errors nor warnings
+    - pointless unless the cdb that caused them are also logged
 
-	http://marc.info/?l=linux-scsi&m=123991011815404&w=2
+The patch is against lk 2.6.32
 
-Alan Stern
+Doug Gilbert
 
+
+--------------010708090709080600010104
+Content-Type: text/x-patch;
+ name="scsi_lib2632smart1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_lib2632smart1.patch"
+
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+
+--- linux/drivers/scsi/scsi_lib.c2632	2009-12-03 11:11:18.000000000 -0500
++++ linux/drivers/scsi/scsi_lib.c	2010-01-03 13:18:04.000000000 -0500
+@@ -773,8 +773,14 @@
+ 	 * we already took a copy of the original into rq->errors which
+ 	 * is what gets returned to the user
+ 	 */
+-	if (sense_valid && sshdr.sense_key == RECOVERED_ERROR) {
+-		if (!(req->cmd_flags & REQ_QUIET))
++	if (sense_valid && (sshdr.sense_key == RECOVERED_ERROR)) {
++		/* if ATA PASS-THROUGH INFORMATION AVAILABLE skip
++ 		 * print since caller wants ATA registers. Only occurs on
++		 * SCSI ATA PASS_THROUGH commands when CK_COND=1
++		 */
++		if ((sshdr.asc == 0x0) && (sshdr.ascq == 0x1d))
++			;
++		else if (!(req->cmd_flags & REQ_QUIET))
+ 			scsi_print_sense("", cmd);
+ 		result = 0;
+ 		/* BLOCK_PC may have set error */
+
+
+--------------010708090709080600010104--
