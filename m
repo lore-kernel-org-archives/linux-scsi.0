@@ -1,37 +1,34 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [osd-dev] [PATCH] scsi_lib: Bug in completion of bidi commands
-Date: Thu, 31 Dec 2009 21:46:05 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0912312144080.16709-100000@netrider.rowland.org>
-References: <4B3C586F.8020200@panasas.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13783] udev causes high cpu usage
+Date: Sun, 3 Jan 2010 01:42:39 GMT
+Message-ID: <201001030142.o031gdZe006974@demeter.kernel.org>
+References: <bug-13783-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:51755 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751799Ab0AACqG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Dec 2009 21:46:06 -0500
-In-Reply-To: <4B3C586F.8020200@panasas.com>
+Received: from demeter.kernel.org ([140.211.167.39]:55173 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191Ab0ACBmk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jan 2010 20:42:40 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o031gdK4006983
+	for <linux-scsi@vger.kernel.org>; Sun, 3 Jan 2010 01:42:39 GMT
+In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, Benny Halevy <bhalevy@panasas.com>, Stable Tree <stable@kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 31 Dec 2009, Boaz Harrosh wrote:
+http://bugzilla.kernel.org/show_bug.cgi?id=13783
 
-> James hi.
-> 
-> What about this BUG. It affects anybody doing bidi commands. The possibilities
-> are an sglist leak at best, and a crash at worse.
-> 
-> I understand this code needs cleanup, but first things first. Lets first fix the
-> bug, which should also go to stable. Then the cleanup can go to next merge window.
-> 
-> BTW: Should I attempt a cleanup on current code, or should I wait for Alan's Patch
-> to go in first?
 
-What patch of mine are you referring to?  So far James has rejected all
-the patches I have submitted recently.  I'm going to try again in the 
-near future...
 
-Alan Stern
 
+
+--- Comment #24 from jt512@jt512.dyndns.org  2010-01-03 01:42:32 ---
+Is anybody working on this bug?  It is being reported by numerous people in the
+Archlinux forums.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
