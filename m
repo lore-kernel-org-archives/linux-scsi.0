@@ -1,40 +1,46 @@
-From: Jiri Kosina <jkosina@suse.cz>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] libsrp: fix compile failure
-Date: Mon, 4 Jan 2010 23:00:40 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1001042300160.2277@pobox.suse.cz>
-References: <1262200866.2749.226.camel@mulgrave.site> <alpine.LFD.2.00.0912301132260.11961@localhost.localdomain> <alpine.LRH.2.00.1001041619130.15694@twin.jikos.cz> <1262625721.2724.158.camel@mulgrave.site> <alpine.LNX.2.00.1001042206340.2277@pobox.suse.cz>
- <20100104133555.d5231884.akpm@linux-foundation.org>
+Date: Mon, 4 Jan 2010 22:36:20 +0000
+Message-ID: <20100104223620.4659a241@lxorguk.ukuu.org.uk>
+References: <1262200866.2749.226.camel@mulgrave.site>
+	<alpine.LFD.2.00.0912301132260.11961@localhost.localdomain>
+	<alpine.LRH.2.00.1001041619130.15694@twin.jikos.cz>
+	<1262625721.2724.158.camel@mulgrave.site>
+	<20100104173530.48690e39@lxorguk.ukuu.org.uk>
+	<1262633054.4814.21.camel@wall-e>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:59974 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753095Ab0ADWAl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Jan 2010 17:00:41 -0500
-In-Reply-To: <20100104133555.d5231884.akpm@linux-foundation.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53850 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753668Ab0ADWdE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2010 17:33:04 -0500
+In-Reply-To: <1262633054.4814.21.camel@wall-e>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, Stefani Seibold <stefani@seibold.net>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>
+To: Stefani Seibold <stefani@seibold.net>
+Cc: James Bottomley <James.Bottomley@suse.de>, Jiri Kosina <jkosina@suse.cz>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 4 Jan 2010, Andrew Morton wrote:
+On Mon, 04 Jan 2010 20:24:14 +0100
+Stefani Seibold <stefani@seibold.net> wrote:
 
-> > Yes, it indeed is that way -- Andew pulls whole linux-next as one of the 
-> > patches into -mm series.
+> Am Montag, den 04.01.2010, 17:35 +0000 schrieb Alan Cox:
+> > > least once before it goes to Linus.  There were originally technical
+> > > reasons why -mm wasn't in ... I just thought they'd been fixed by now.
 > > 
-> > To make linux-next really working the way it is intended to work we need 
-> > to have -mm part of it, as it is used as a last point for a non-trivial 
-> > amount of patches before they enter Linus' tree.
+> > No - mm also caused problems with the kfifo merge of a core API change
+> > that didn't go via -next.
 > > 
-> > Andrew, why do we have the current setup, and not the other way around?
+> > Alan
 > 
-> Because I suck.  I haven't yet got around to feeding -mm into 
-> linux-next.  It's a bit tricky, because -mm is based on linux-next. 
-> Probably we'll address this by adding a "linux-next before the mm bits" 
-> marker to linux-next.
+> I tried my best to port everything to the new kfifo API. But it was not
+> possible to check it against every architecture. x86 and x86_64 was
+> compile clean. I think the missing #include was not a big thing.
 
-Yup. That should work and would be really helpful.
+Not your fault - -next is there so stuff is visible for merging and to
+avoid collisions. Andrew not going via -next broke various pending
+patches.
 
--- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+Conversion is easy enough, it just wasn't visible at the right time. 
+
