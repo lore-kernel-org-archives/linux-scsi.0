@@ -1,174 +1,79 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 3/3] scsi_lib: Collapse scsi_end_request into only user
-Date: Mon, 4 Jan 2010 06:23:38 -0700
-Message-ID: <20100104132338.GA9882@parisc-linux.org>
-References: <4B41DADD.4000102@panasas.com> <4B41DC42.1090706@panasas.com>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: Re: [RFC] let LLD handle bsg_job_timeout
+Date: Mon, 04 Jan 2010 14:36:52 +0100
+Message-ID: <1262612212.4650.6.camel@localhost.localdomain>
+References: <1260434723.2955.25.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43543 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212Ab0ADNXk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2010 08:23:40 -0500
-Content-Disposition: inline
-In-Reply-To: <4B41DC42.1090706@panasas.com>
+Received: from mtagate2.uk.ibm.com ([194.196.100.162]:33658 "EHLO
+	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785Ab0ADNgy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2010 08:36:54 -0500
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate2.uk.ibm.com (8.13.1/8.13.1) with ESMTP id o04DareI024231
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Jan 2010 13:36:53 GMT
+Received: from d06av01.portsmouth.uk.ibm.com (d06av01.portsmouth.uk.ibm.com [9.149.37.212])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o04Dar6o667846
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Jan 2010 13:36:53 GMT
+Received: from d06av01.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av01.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o04Daq23006703
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Jan 2010 13:36:53 GMT
+In-Reply-To: <1260434723.2955.25.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, James.Smart@emulex.com
 
-On Mon, Jan 04, 2010 at 02:17:06PM +0200, Boaz Harrosh wrote:
-> Embedding scsi_end_request() into scsi_io_completion actually simplifies the
-> code and makes it clearer what's going on.
+James
 
-I'm not entirely convinced about that -- scsi_io_completion is currently
-over 200 lines long and needs to be made shorter, not longer.  That said,
-I see no reason that the current factoring of scsi_io_completion() makes
-sense; pushing the decoding of the sense key into a separate function
-looks like a more profitable idea.  It would also let you do without
-the nasty gotos you add in this patch.
+unfortunately I posted below RFC not to you but to James B.
+Anyhow, it appeared on the SCSI list, have you read it by accident ?
 
-> There is absolutely no functional and/or side effects changes after this patch.
+Could you give me an idea whether the suggested change is an option ?
+
+Thanks in advance.
+Swen
+
+On Thu, 2009-12-10 at 09:45 +0100, Swen Schillig wrote:
+> The current fc_bsg_job_timeout function offers 
+> only two possibilities to a LLD to deal with timed out requests.
+> Either you deal with it offering a callback or not, 
+> in both scenarios the environment is cleaned up afterwards.
 > 
-> Patch was inspired by Alan Stern.
+> Unfortunately we (zfcp) don't have the option
+> to easily abort a request. Our hardware is running its 
+> own timer taking care of requests but unfortunately our only chance is
+> to wait until we receive a response. Up until then we need
+> the environment because the hardware might write into the provided
+> buffers.
 > 
-> CC: Alan Stern <stern@rowland.harvard.edu>
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> The following code snippet would solve the issue for us
+> but maybe someone has a better idea on how to deal with the
+> described situation.
+> 
+> Cheers Swen
 > ---
->  drivers/scsi/scsi_lib.c |   90 +++++++++++-----------------------------------
->  1 files changed, 22 insertions(+), 68 deletions(-)
+>  drivers/scsi/scsi_transport_fc.c |    7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 8d8b4eb..326b228 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -512,66 +512,6 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
->  		scsi_run_queue(sdev->request_queue);
->  }
->  
-> -/*
-> - * Function:    scsi_end_request()
-> - *
-> - * Purpose:     Post-processing of completed commands (usually invoked at end
-> - *		of upper level post-processing and scsi_io_completion).
-> - *
-> - * Arguments:   cmd	 - command that is complete.
-> - *              error    - 0 if I/O indicates success, < 0 for I/O error.
-> - *              bytes    - number of bytes of completed I/O
-> - *		requeue  - indicates whether we should requeue leftovers.
-> - *
-> - * Lock status: Assumed that lock is not held upon entry.
-> - *
-> - * Returns:     cmd if requeue required, NULL otherwise.
-> - *
-> - * Notes:       This is called for block device requests in order to
-> - *              mark some number of sectors as complete.
-> - * 
-> - *		We are guaranteeing that the request queue will be goosed
-> - *		at some point during this call.
-> - * Notes:	If cmd was requeued, upon return it will be a stale pointer.
-> - */
-> -static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
-> -					  int bytes, int requeue)
-> -{
-> -	struct request *req = cmd->request;
-> -
-> -	/*
-> -	 * If there are blocks left over at the end, set up the command
-> -	 * to queue the remainder of them.
-> -	 */
-> -	if (blk_end_request(req, error, bytes)) {
-> -		/* kill remainder if no retrys */
-> -		if (error && scsi_noretry_cmd(cmd))
-> -			blk_end_request_all(req, error);
-> -		else {
-> -			if (requeue) {
-> -				/*
-> -				 * Bleah.  Leftovers again.  Stick the
-> -				 * leftovers in the front of the
-> -				 * queue, and goose the queue again.
-> -				 */
-> -				scsi_release_buffers(cmd);
-> -				scsi_requeue_command(cmd);
-> -				cmd = NULL;
-> -			}
-> -			return cmd;
-> -		}
-> -	}
-> -
-> -	cmd->request = NULL;
-> -	/*
-> -	 * This will goose the queue request function at the end, so we don't
-> -	 * need to worry about launching another command.
-> -	 */
-> -	scsi_release_buffers(cmd);
-> -	scsi_next_command(cmd);
-> -	return NULL;
-> -}
-> -
->  static inline unsigned int scsi_sgtable_index(unsigned short nents)
->  {
->  	unsigned int index;
-> @@ -704,7 +644,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  	struct scsi_sense_hdr sshdr;
->  	int sense_valid = 0;
->  	int sense_deferred = 0;
-> -	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
-> +	enum {ACTION_FAIL, ACTION_REPREP, ACTION_NEXT_CMND, ACTION_RETRY,
->  	      ACTION_DELAYED_RETRY} action;
->  	char *description = NULL;
->  
-> @@ -773,13 +713,22 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  		error = 0;
+> Index: HEAD/drivers/scsi/scsi_transport_fc.c
+> ===================================================================
+> --- HEAD.orig/drivers/scsi/scsi_transport_fc.c
+> +++ HEAD/drivers/scsi/scsi_transport_fc.c
+> @@ -3500,7 +3500,10 @@ fc_bsg_job_timeout(struct request *req)
+>  	if (!done && i->f->bsg_timeout) {
+>  		/* call LLDD to abort the i/o as it has timed out */
+>  		err = i->f->bsg_timeout(job);
+> -		if (err)
+> +		if (err == -EAGAIN) {
+> +			job->ref_cnt--;
+> +			return BLK_EH_RESET_TIMER;
+> +		} else if (err)
+>  			printk(KERN_ERR "ERROR: FC BSG request timeout - LLD "
+>  				"abort failed with status %d\n", err);
 >  	}
->  
-> -	/*
-> -	 * A number of bytes were successfully read.  If there
-> -	 * are leftovers and there is some kind of error
-> -	 * (result != 0), retry the rest.
-> -	 */
-> -	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
-> -		return;
-> +	if (!blk_end_request(req, error, good_bytes)) {
-> +		cmd->request = NULL;
-> +		action = ACTION_NEXT_CMND;
-> +		goto do_action;
-> +	}
-> +
-> +	if (error && scsi_noretry_cmd(cmd)) {
-> +		/* kill remainder if no retrys */
-> +		blk_end_request_all(req, error);
-> +		cmd->request = NULL;
-> +		action = ACTION_NEXT_CMND;
-> +		goto do_action;
-> +	} else if (result == 0) {
-> +		action = ACTION_REPREP;
-> +		goto do_action;
-> +	}
->  
->  	error = -EIO;
->  
-> @@ -878,6 +827,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  		action = ACTION_FAIL;
->  	}
->  
-> +do_action:
->  	switch (action) {
->  	case ACTION_FAIL:
->  		/* Give up and fail the remainder of the request */
-> @@ -896,6 +846,10 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  		else
->  			scsi_next_command(cmd);
->  		break;
-> +	case ACTION_NEXT_CMND:
-> +		scsi_release_buffers(cmd);
-> +		scsi_next_command(cmd);
-> +		break;
->  	case ACTION_REPREP:
->  		/* Unprep the request and put it back at the head of the queue.
->  		 * A new command will be prepared and issued.
-> -- 
-> 1.6.6
+> 
 > 
 > 
 > --
@@ -176,8 +81,4 @@ the nasty gotos you add in this patch.
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
