@@ -1,58 +1,63 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [osd-dev] [PATCH] scsi_lib: Bug in completion of bidi commands
-Date: Mon, 04 Jan 2010 09:26:18 +0200
-Message-ID: <4B41981A.6080204@panasas.com>
-References: <Pine.LNX.4.44L0.1001031149380.29885-100000@netrider.rowland.org>
+From: Bart Van Assche <bart.vanassche@gmail.com>
+Subject: Re: [PATCH] SCSI/libsrp: fix typo -- replace RDAM by RDMA
+Date: Mon, 4 Jan 2010 12:37:47 +0100
+Message-ID: <e2e108261001040337i3cf5bf3cp69cb6b8abfc4fa43@mail.gmail.com>
+References: <200912042038.49266.bart.vanassche@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:49054 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752711Ab0ADH0W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2010 02:26:22 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1001031149380.29885-100000@netrider.rowland.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:47010 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770Ab0ADLht convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jan 2010 06:37:49 -0500
+Received: by ewy19 with SMTP id 19so7158335ewy.21
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Jan 2010 03:37:47 -0800 (PST)
+In-Reply-To: <200912042038.49266.bart.vanassche@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, Benny Halevy <bhalevy@panasas.com>, Stable Tree <stable@kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On 01/03/2010 06:55 PM, Alan Stern wrote:
-> On Sun, 3 Jan 2010, Boaz Harrosh wrote:
-> 
->>> What patch of mine are you referring to?  So far James has rejected all
->>> the patches I have submitted recently.  I'm going to try again in the 
->>> near future...
->>>
->>
->> OK, that's my answer, I didn't know.
->>
->> Would you want that I attempt that collapsing of scsi_end_request() into scsi_io_completion
->> and the cleanup that implies? (that's the patch I meant.)
-> 
-> Okay, I don't mind if you would like to rewrite that patch.  The 
-> version I wrote didn't just move code from one subroutine to another; 
-> it also made a few semantic changes (the retry counter and the "error" 
-> argument to blk_end_request()).  You'll probably want to break it 
-> up into a few patches, where the first simply moves the code around and 
-> the later ones do more significant things.
-> 
+On Fri, Dec 4, 2009 at 8:38 PM, Bart Van Assche
+<bart.vanassche@gmail.com> wrote:
+>
+> Fixed a typo in libsrp.c: replaced two occurrences of 'RDAM' by 'RDMA=
+'.
+>
+> Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
+> Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>
+> diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+> index 9ad38e8..f5bfbc5 100644
+> --- a/drivers/scsi/libsrp.c
+> +++ b/drivers/scsi/libsrp.c
+> @@ -1,5 +1,5 @@
+> =A0/*
+> - * SCSI RDAM Protocol lib functions
+> + * SCSI RDMA Protocol lib functions
+> =A0*
+> =A0* Copyright (C) 2006 FUJITA Tomonori <tomof@acm.org>
+> =A0*
+> @@ -439,6 +439,6 @@ int srp_cmd_queue(struct Scsi_Host *shost, struct=
+ srp_cmd *cmd, void *info,
+> =A0}
+> =A0EXPORT_SYMBOL_GPL(srp_cmd_queue);
+>
+> -MODULE_DESCRIPTION("SCSI RDAM Protocol lib functions");
+> +MODULE_DESCRIPTION("SCSI RDMA Protocol lib functions");
+> =A0MODULE_AUTHOR("FUJITA Tomonori");
+> =A0MODULE_LICENSE("GPL");
 
-Hi Alan, thanks
+Hello Fujita,
 
-I'll only do the former and I'll let you continue with the later. .I.E the
-code rearrangement and cleanup. Then perhaps it would be easier for you to
-enhance the code with the retries and error returns. I do not have the setup
-that can test / demonstrate those fixes, I'd rather you did them.
+Did you perhaps miss the above e-mail ? It's now one month ago that I
+posted this patch, and I still did not receive an ACK or NAK.
 
-> As I recall, the most recent version of that patch is here:
-> 
-> 	http://marc.info/?l=linux-scsi&m=123991011815404&w=2
-> 
-
-Thanks
-
-> Alan Stern
-> 
-
-Boaz
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
