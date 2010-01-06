@@ -1,66 +1,52 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bug 14961] New: Very old and buggy ARCMSR drivers are included
-Date: Wed, 6 Jan 2010 15:20:30 -0800
-Message-ID: <20100106152030.fdf71c56.akpm@linux-foundation.org>
-References: <bug-14961-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: BSG - 32 bit application running on 64 bit kernel
+Date: Wed, 6 Jan 2010 15:57:35 -0800
+Message-ID: <DE68D24E-3326-4BB6-90F7-D4F58EC86C16@qlogic.com>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41946 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932593Ab0AFXWI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2010 18:22:08 -0500
-In-Reply-To: <bug-14961-11613@http.bugzilla.kernel.org/>
+Received: from avexch1.qlogic.com ([198.70.193.115]:18232 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756526Ab0AFX5g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2010 18:57:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, mikki@hugo.dk, Nick Cheng <nick.cheng@areca.com.tw>
+To: "James.Smart@Emulex.Com Smart" <James.Smart@Emulex.Com>, LinuxSCSI <linux-scsi@vger.kernel.org>
+Cc: Harish Zunjarrao <harish.zunjarrao@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Wed, 30 Dec 2009 12:38:06 GMT
-bugzilla-daemon@bugzilla.kernel.org wrote:
+Hi James,
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=14961
-> 
->            Summary: Very old and buggy ARCMSR drivers are included
->            Product: SCSI Drivers
->            Version: 2.5
->     Kernel Version: 2.6.18 etc
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
->         ReportedBy: mikki@hugo.dk
->         Regression: No
-> 
-> 
-> Created an attachment (id=24377)
->  --> (http://bugzilla.kernel.org/attachment.cgi?id=24377)
-> Latest arcmsr
-> 
-> Hello,
-> 
-> Some very buggy ARCMSR drivers are included in the kernels dating from early
-> 2008.
-> 
-> The new drivers with the same version number, but a later date exists and
-> should be included instead.
-> 
-> This is the latest
-> ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/DRIVER/SourceCode/arcmsr.1.20.0X.15-90605.zip
-> 
-> With the older .15 driver i had several system lockups under heavy load.
-> 
+Running  32 bit BSG application on a 64 bit kernel fails because of   
+mismatch in fc_bsg_request structure elements. Packing the  
+fc_bsg_request structure solves the issue. Please find the changes  
+below. Can u please review.
 
-Well that's bad.  I'm not seeing any commits against that driver from
-Areca staff since February 2008.
+Thanks,
+Giridhar Malavali
 
-So it may be that the manufacturer has abandoned this driver.  If so,
-then it would be useful if someone who has the hardware could pick
-apart the differences between the above driver and the in-kernel
-version, and send the updates into the mainline kernel.
 
+The 32bit kernel does not add padding bytes in the fc_bsg_request  
+structure
+whereas the 64bit kernel adds padding bytes in the fc_bsg_request  
+structure.
+Due to this, structure elements gets mismatched with 32bit application  
+and
+64bit kernel.
+To resolve this, used packed modifier to avoid adding padding bytes.
+
+Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+---
+include/scsi/scsi_bsg_fc.h |    2 +-
+1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/include/scsi/scsi_bsg_fc.h b/include/scsi/scsi_bsg_fc.h
+index a4b2333..00e50ff 100644
+--- a/include/scsi/scsi_bsg_fc.h
++++ b/include/scsi/scsi_bsg_fc.h
+@@ -292,7 +292,7 @@ struct fc_bsg_request {
+                struct fc_bsg_rport_els         r_els;
+                struct fc_bsg_rport_ct          r_ct;
+        } rqst_data;
+-};
++} __attribute__ ((packed));
