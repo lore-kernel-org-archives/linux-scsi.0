@@ -1,40 +1,49 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.33-rc3
-Date: Wed, 06 Jan 2010 13:42:13 -0500
-Message-ID: <1262803333.2946.249.camel@mulgrave.site>
-References: <1262797332.2946.147.camel@mulgrave.site>
-	 <alpine.LFD.2.00.1001060907560.3630@localhost.localdomain>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: be2iscsi: Bug Fixes Needed
+Date: Thu, 7 Jan 2010 01:49:33 +0530
+Message-ID: <20100106201918.GA19887@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:46325 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932390Ab0AFSmU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jan 2010 13:42:20 -0500
-In-Reply-To: <alpine.LFD.2.00.1001060907560.3630@localhost.localdomain>
+Received: from segment-124-30.sify.net ([124.30.166.146]:26817 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932717Ab0AFUTN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2010 15:19:13 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-On Wed, 2010-01-06 at 09:08 -0800, Linus Torvalds wrote:
-> 
-> On Wed, 6 Jan 2010, James Bottomley wrote:
-> > 
-> > The patch is available at:
-> > 
-> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> 
-> No it's not. That has a commit from Dec 10th as the top commit.
-> 
-> Forgot to push?
+Hi James
 
-No, sorry, asleep at the wheel, that's my merge window repo.  The
-correct URL for the bug fixes repo is
+	These patches contains some bug fixes that are important for
+the driver.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+These patches are created using the latest scsi-misc tree and after
+applying the following patches sent earlier
 
-James
+http://www.spinics.net/lists/linux-scsi/msg41363.html
+http://www.spinics.net/lists/linux-scsi/msg41364.html
 
+		to
+http://www.spinics.net/lists/linux-scsi/msg41375.html
+
+The current patches are
+
+[0001/3] :	Fixing-Bug-for-multiple-SGEs
+[0002/3] : 	Fixing-the-number-of-SGE supported	
+[0003/3] :	Fix-to-allow-driver-to-load-when-the-FW-allows more cids
+		than driver supports  
+
+I request you to apply these patches to your tree 
+
+Thank You
+
+Jayamohan Kallickal
+
+Signed-off-by:  Jayamohan Kallickal <jayamohank@serverengines.com>
+
+---
 
