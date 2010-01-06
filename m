@@ -1,68 +1,79 @@
-From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
-Subject: Re: [PATCH 2/3] be2iscsi: Fixing the number of SGE's
-Date: Wed, 06 Jan 2010 14:10:32 -0800
-Message-ID: <20100106221032.6104c233@mailhost.serverengines.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14961] Very old and buggy ARCMSR drivers are included
+Date: Wed, 6 Jan 2010 23:21:56 GMT
+Message-ID: <201001062321.o06NLu6g025884@demeter.kernel.org>
+References: <bug-14961-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail142.messagelabs.com ([216.82.249.99]:37730 "EHLO
-	mail142.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756265Ab0AFWHa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2010 17:07:30 -0500
-In-Reply-To: 4B44F2FC.9060903@cs.wisc.edu
+Received: from demeter.kernel.org ([140.211.167.39]:58571 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932415Ab0AFXV5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2010 18:21:57 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o06NLuej025886
+	for <linux-scsi@vger.kernel.org>; Wed, 6 Jan 2010 23:21:56 GMT
+In-Reply-To: <bug-14961-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org
 
-It is used in be_main.c (num_sge_per_io). 
-
-The FW expects and sglist with 32 SGE's but 2 are used internally.
+http://bugzilla.kernel.org/show_bug.cgi?id=14961
 
 
--Jay
 
 
---
-  _____  
-From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-To: Jayamohan Kalickal [mailto:jayamohank@serverengines.com]
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
-Sent: Wed, 06 Jan 2010 12:30:52 -0800
-Subject: Re: [PATCH 2/3] be2iscsi: Fixing the number of SGE's
 
-On 01/06/2010 02:21 PM, Jayamohan Kallickal wrote:
-> 	The number of SGE's supported is fixed to what the
-> chip expects. Also, the max sectors set to tested values
->
-> Signed-off-by: Jayamohan Kallickal<jayamohank@serverengines.com>
-> ---
->   drivers/scsi/be2iscsi/be_main.h |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-> index 4cde8f6..13ff02c 100644
-> --- a/drivers/scsi/be2iscsi/be_main.h
-> +++ b/drivers/scsi/be2iscsi/be_main.h
-> @@ -56,10 +56,10 @@
->   #define BE2_DEFPDU_DATA_SZ	8192
->
->   #define MAX_CPUS		31
-> -#define BEISCSI_SGLIST_ELEMENTS	BE2_SGE
-> +#define BEISCSI_SGLIST_ELEMENTS	30
+--- Comment #1 from Andrew Morton <akpm@linux-foundation.org>  2010-01-06 23:21:38 ---
+On Wed, 30 Dec 2009 12:38:06 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
 
-BE2_SGE is now not used, so you can kill it.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> http://bugzilla.kernel.org/show_bug.cgi?id=14961
+> 
+>            Summary: Very old and buggy ARCMSR drivers are included
+>            Product: SCSI Drivers
+>            Version: 2.5
+>     Kernel Version: 2.6.18 etc
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+>         ReportedBy: mikki@hugo.dk
+>         Regression: No
+> 
+> 
+> Created an attachment (id=24377)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=24377)
+>  --> (http://bugzilla.kernel.org/attachment.cgi?id=24377)
+> Latest arcmsr
+> 
+> Hello,
+> 
+> Some very buggy ARCMSR drivers are included in the kernels dating from early
+> 2008.
+> 
+> The new drivers with the same version number, but a later date exists and
+> should be included instead.
+> 
+> This is the latest
+> ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/DRIVER/SourceCode/arcmsr.1.20.0X.15-90605.zip
+> 
+> With the older .15 driver i had several system lockups under heavy load.
+> 
 
-___________________________________________________________________________________
-This message, together with any attachment(s), contains confidential and proprietary information of
-ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
-review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
-intended recipient of this message, please immediately advise the sender by reply email message and
-delete all copies of this message and any attachment(s). Thank you.
+Well that's bad.  I'm not seeing any commits against that driver from
+Areca staff since February 2008.
 
+So it may be that the manufacturer has abandoned this driver.  If so,
+then it would be useful if someone who has the hardware could pick
+apart the differences between the above driver and the in-kernel
+version, and send the updates into the mainline kernel.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
