@@ -1,30 +1,22 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14961] Very old and buggy ARCMSR drivers are included
-Date: Wed, 6 Jan 2010 23:21:56 GMT
-Message-ID: <201001062321.o06NLu6g025884@demeter.kernel.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 14961] New: Very old and buggy ARCMSR drivers are included
+Date: Wed, 6 Jan 2010 15:20:30 -0800
+Message-ID: <20100106152030.fdf71c56.akpm@linux-foundation.org>
 References: <bug-14961-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58571 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932415Ab0AFXV5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2010 18:21:57 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o06NLuej025886
-	for <linux-scsi@vger.kernel.org>; Wed, 6 Jan 2010 23:21:56 GMT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41946 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932593Ab0AFXWI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jan 2010 18:22:08 -0500
 In-Reply-To: <bug-14961-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, mikki@hugo.dk, Nick Cheng <nick.cheng@areca.com.tw>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14961
-
-
-
-
-
---- Comment #1 from Andrew Morton <akpm@linux-foundation.org>  2010-01-06 23:21:38 ---
 On Wed, 30 Dec 2009 12:38:06 GMT
 bugzilla-daemon@bugzilla.kernel.org wrote:
 
@@ -47,7 +39,6 @@ bugzilla-daemon@bugzilla.kernel.org wrote:
 > 
 > 
 > Created an attachment (id=24377)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=24377)
 >  --> (http://bugzilla.kernel.org/attachment.cgi?id=24377)
 > Latest arcmsr
 > 
@@ -73,7 +64,3 @@ then it would be useful if someone who has the hardware could pick
 apart the differences between the above driver and the in-kernel
 version, and send the updates into the mainline kernel.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
