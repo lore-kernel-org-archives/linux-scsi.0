@@ -1,38 +1,78 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 0/8] Remove most uses of NIPQUAD and NIPQUAD_FMT
-Date: Tue,  5 Jan 2010 17:20:12 -0800
-Message-ID: <cover.1262726222.git.joe@perches.com>
-Return-path: <netfilter-devel-owner@vger.kernel.org>
-Sender: netfilter-devel-owner@vger.kernel.org
+Subject: [PATCH 1/8] drivers/scsi: Remove uses of NIPQUAD, use %pI4
+Date: Tue,  5 Jan 2010 17:20:13 -0800
+Message-ID: <60710fff0b8c934d8fc78c5f5cda6409ba20ee92.1262726222.git.joe@perches.com>
+References: <cover.1262726222.git.joe@perches.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755377Ab0AFBU0@vger.kernel.org>
+In-Reply-To: <cover.1262726222.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Greg Kroah-Hartman <gregkh@suse.de>, Mark Fasheh <mfasheh@suse.com>, Joel Becker <joel.becker@oracle.com>, Patrick McHardy <kaber@trash.net>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Wensong Zhang <wensong@linux-vs.org>, Simon Horman <horms@verge.net.au>, Julian Anastasov <ja@ssi.bg>, Andy Grover <andy.grover@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Neil Brown <neilb@suse.de>, Trond Myklebust <Trond.Myklebust@netapp.com>, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, ocfs2-devel@oss.oracle.com, netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org, coreteam@netfilter.org, netdev@vger.kernel.org, lvs-devel@vger.kernel.org, rds
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Convert them to the %pI4 format extension where possible
-Only a couple uses are left in netfilter.
-
-Joe Perches (8):
-  drivers/scsi: Remove uses of NIPQUAD, use %pI4
-  drivers/staging/pohmelfs/inode.c: Remove uses of NIPQUAD, use %pI4
-  net/rds: Remove uses of NIPQUAD, use %pI4
-  net/sunrpc: Remove uses of NIPQUAD, use %pI4
-  net/ipv4/netfilter/nf_nat_ftp.c: Convert NIPQUAD to %pI4
-  net/netfilter/ipvs/ip_vs_ftp.c: Use standardized format in sprintf
-  fs/ocfs2/cluster/tcp.c: Remove use of NIPQUAD, use %pI4
-  drivers/firmware/iscsi_ibft.c: Remove NIPQUAD_FMT, use %pI4
-
- drivers/firmware/iscsi_ibft.c        |    8 +++-----
+Signed-off-by: Joe Perches <joe@perches.com>
+---
  drivers/scsi/bnx2i/bnx2i_iscsi.c     |    4 ++--
  drivers/scsi/cxgb3i/cxgb3i_iscsi.c   |    5 ++---
  drivers/scsi/cxgb3i/cxgb3i_offload.c |    7 ++++---
- drivers/staging/pohmelfs/inode.c     |    3 +--
- fs/ocfs2/cluster/tcp.c               |    4 ++--
- net/ipv4/netfilter/nf_nat_ftp.c      |    2 +-
- net/netfilter/ipvs/ip_vs_ftp.c       |    2 +-
- net/rds/tcp_connect.c                |    7 +++----
- net/rds/tcp_listen.c                 |    6 +++---
- net/rds/tcp_send.c                   |    4 ++--
- net/sunrpc/xprtrdma/transport.c      |    3 +--
- net/sunrpc/xprtsock.c                |    5 ++---
- 13 files changed, 27 insertions(+), 33 deletions(-)
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 33b2294..51709cb 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1426,8 +1426,8 @@ static int bnx2i_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 		break;
+ 	case ISCSI_PARAM_CONN_ADDRESS:
+ 		if (bnx2i_conn->ep)
+-			len = sprintf(buf, NIPQUAD_FMT "\n",
+-				      NIPQUAD(bnx2i_conn->ep->cm_sk->dst_ip));
++			len = sprintf(buf, "%pI4\n",
++				      &bnx2i_conn->ep->cm_sk->dst_ip);
+ 		break;
+ 	default:
+ 		return iscsi_conn_get_param(cls_conn, param, buf);
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+index 969c831..1fd89b2 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+@@ -591,8 +591,7 @@ static int cxgb3i_conn_bind(struct iscsi_cls_session *cls_session,
+ 	cxgb3i_conn_max_recv_dlength(conn);
+ 
+ 	spin_lock_bh(&conn->session->lock);
+-	sprintf(conn->portal_address, NIPQUAD_FMT,
+-		NIPQUAD(c3cn->daddr.sin_addr.s_addr));
++	sprintf(conn->portal_address, "%pI4", &c3cn->daddr.sin_addr.s_addr);
+ 	conn->portal_port = ntohs(c3cn->daddr.sin_port);
+ 	spin_unlock_bh(&conn->session->lock);
+ 
+@@ -753,7 +752,7 @@ static int cxgb3i_host_get_param(struct Scsi_Host *shost,
+ 		__be32 addr;
+ 
+ 		addr = cxgb3i_get_private_ipv4addr(hba->ndev);
+-		len = sprintf(buf, NIPQUAD_FMT, NIPQUAD(addr));
++		len = sprintf(buf, "%pI4", &addr);
+ 		break;
+ 	}
+ 	default:
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+index 26ffdcd..edef61c 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+@@ -1643,10 +1643,11 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
+ 	} else
+ 		c3cn->saddr.sin_addr.s_addr = sipv4;
+ 
+-	c3cn_conn_debug("c3cn 0x%p, %u.%u.%u.%u,%u-%u.%u.%u.%u,%u SYN_SENT.\n",
+-			c3cn, NIPQUAD(c3cn->saddr.sin_addr.s_addr),
++	c3cn_conn_debug("c3cn 0x%p, %pI4,%u-%pI4,%u SYN_SENT.\n",
++			c3cn,
++			&c3cn->saddr.sin_addr.s_addr,
+ 			ntohs(c3cn->saddr.sin_port),
+-			NIPQUAD(c3cn->daddr.sin_addr.s_addr),
++			&c3cn->daddr.sin_addr.s_addr,
+ 			ntohs(c3cn->daddr.sin_port));
+ 
+ 	c3cn_set_state(c3cn, C3CN_STATE_CONNECTING);
+-- 
+1.6.6.rc0.57.gad7a
