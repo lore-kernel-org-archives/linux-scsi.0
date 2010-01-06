@@ -1,53 +1,38 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH] dm-mpath: Two minor fixes while processing activate_path
-Date: Tue, 5 Jan 2010 15:43:44 -0700
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4877BC98C@cosmail01.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:51353 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751770Ab0AEWnx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jan 2010 17:43:53 -0500
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 0/8] Remove most uses of NIPQUAD and NIPQUAD_FMT
+Date: Tue,  5 Jan 2010 17:20:12 -0800
+Message-ID: <cover.1262726222.git.joe@perches.com>
+Return-path: <netfilter-devel-owner@vger.kernel.org>
+Sender: netfilter-devel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Greg Kroah-Hartman <gregkh@suse.de>, Mark Fasheh <mfasheh@suse.com>, Joel Becker <joel.becker@oracle.com>, Patrick McHardy <kaber@trash.net>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Wensong Zhang <wensong@linux-vs.org>, Simon Horman <horms@verge.net.au>, Julian Anastasov <ja@ssi.bg>, Andy Grover <andy.grover@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Neil Brown <neilb@suse.de>, Trond Myklebust <Trond.Myklebust@netapp.com>, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, ocfs2-devel@oss.oracle.com, netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org, coreteam@netfilter.org, netdev@vger.kernel.org, lvs-devel@vger.kernel.org, rds
 List-Id: linux-scsi@vger.kernel.org
-To: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This patch adds two minor fixes while processing device mapper path activation.
+Convert them to the %pI4 format extension where possible
+Only a couple uses are left in netfilter.
 
-1. Skip failed paths while calling activate_path.
-   If the path is already failed then activate_path will fail for sure. We 
-   don't have to call in that case. In some case this might cause prolonged retries unnecessarily.
+Joe Perches (8):
+  drivers/scsi: Remove uses of NIPQUAD, use %pI4
+  drivers/staging/pohmelfs/inode.c: Remove uses of NIPQUAD, use %pI4
+  net/rds: Remove uses of NIPQUAD, use %pI4
+  net/sunrpc: Remove uses of NIPQUAD, use %pI4
+  net/ipv4/netfilter/nf_nat_ftp.c: Convert NIPQUAD to %pI4
+  net/netfilter/ipvs/ip_vs_ftp.c: Use standardized format in sprintf
+  fs/ocfs2/cluster/tcp.c: Remove use of NIPQUAD, use %pI4
+  drivers/firmware/iscsi_ibft.c: Remove NIPQUAD_FMT, use %pI4
 
-2. changed the mis-leading message if the activate path fails with SCSI_DH_NOSYS.
-
-Signed-off-by: Babu Moger <babu.moger@lsi.com>
-
----
---- linux-2.6.33-rc2/drivers/md/dm-mpath.c.orig	2010-01-05 12:47:26.000000000 -0400
-+++ linux-2.6.33-rc2/drivers/md/dm-mpath.c	2010-01-05 17:07:35.000000000 -0400
-@@ -461,6 +461,9 @@ static void process_queued_ios(struct wo
- 		m->pg_init_count++;
- 		m->pg_init_required = 0;
- 		list_for_each_entry(tmp, &pgpath->pg->pgpaths, list) {
-+			/* Skip failed paths */
-+			if (!tmp->is_active)
-+				continue;
- 			if (queue_work(kmpath_handlerd, &tmp->activate_path))
- 				m->pg_init_in_progress++;
- 		}
-@@ -1143,8 +1146,7 @@ static void pg_init_done(void *data, int
- 			errors = 0;
- 			break;
- 		}
--		DMERR("Cannot failover device because scsi_dh_%s was not "
--		      "loaded.", m->hw_handler_name);
-+		DMERR("Could not failover device. Error %d.", errors);
- 		/*
- 		 * Fail path for now, so we do not ping pong
- 		 */
-
+ drivers/firmware/iscsi_ibft.c        |    8 +++-----
+ drivers/scsi/bnx2i/bnx2i_iscsi.c     |    4 ++--
+ drivers/scsi/cxgb3i/cxgb3i_iscsi.c   |    5 ++---
+ drivers/scsi/cxgb3i/cxgb3i_offload.c |    7 ++++---
+ drivers/staging/pohmelfs/inode.c     |    3 +--
+ fs/ocfs2/cluster/tcp.c               |    4 ++--
+ net/ipv4/netfilter/nf_nat_ftp.c      |    2 +-
+ net/netfilter/ipvs/ip_vs_ftp.c       |    2 +-
+ net/rds/tcp_connect.c                |    7 +++----
+ net/rds/tcp_listen.c                 |    6 +++---
+ net/rds/tcp_send.c                   |    4 ++--
+ net/sunrpc/xprtrdma/transport.c      |    3 +--
+ net/sunrpc/xprtsock.c                |    5 ++---
+ 13 files changed, 27 insertions(+), 33 deletions(-)
 
