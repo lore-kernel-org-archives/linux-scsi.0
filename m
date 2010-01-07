@@ -1,26 +1,52 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/3] be2iscsi: Fixing the number of SGE's
-Date: Thu, 07 Jan 2010 13:57:35 -0600
-Message-ID: <4B463CAF.7030501@cs.wisc.edu>
-References: <20100106221032.6104c233@mailhost.serverengines.com>
+From: roel kluin <roel.kluin@gmail.com>
+Subject: Re: [PATCH] mpt2sas: Fix &&/|| confusion in _scsih_sas_device_status_change_event()
+Date: Thu, 7 Jan 2010 20:58:10 +0100
+Message-ID: <25e057c01001071158n1755ee99iae17522e269aa1ff@mail.gmail.com>
+References: <4B3B86CC.5010205@gmail.com> <4565AEA676113A449269C2F3A549520F04463B74@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48334 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753303Ab0AGT5o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Jan 2010 14:57:44 -0500
-In-Reply-To: <20100106221032.6104c233@mailhost.serverengines.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753990Ab0AGT6e@vger.kernel.org>
+In-Reply-To: <4565AEA676113A449269C2F3A549520F04463B74@cosmail03.lsi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On 01/06/2010 04:10 PM, Jayamohan Kalickal wrote:
-> It is used in be_main.c (num_sge_per_io).
+On Thu, Jan 7, 2010 at 8:31 PM, Moore, Eric <Eric.Moore@lsi.com> wrote:
+> nack
 >
-> The FW expects and sglist with 32 SGE's but 2 are used internally.
+> The code beyond this check is intended for either INTERNAL_DEVICE_RES=
+ET or CMP_DEVICE_RESET. =C2=A0 If the reason code is something else, we=
+ will want to return. =C2=A0There are 10 other types of reason codes be=
+sides these two. This proposed patch means we return only when the reas=
+on code is either INTERNAL_DEVICE_RESET or CMP_INTERNAL_RESET.
 >
+> Eric Moore
 
-My fault. Patches look ok to me.
+my patch is correct but my changelog was wrong. Sorry for the
+confusion. It should have been:
+
+Even if the ReasonCode is not INTERNAL_DEVICE_RESET nor CMP_DEVICE_RESE=
+T
+this still evaluates to true.
+
+you can test this with:
+
+#include <stdio.h>
+
+int main()
+{
+        int d;
+        for (d=3D0;d<4;++d)
+                printf("!(%d =3D=3D 1 && %d =3D=3D 2) =3D %d\n", d, d, =
+!(d =3D=3D 1
+&& d =3D=3D 2));
+        for (d=3D0;d<4;++d)
+                printf("!(%d =3D=3D 1 || %d =3D=3D 2) =3D %d\n", d, d, =
+!(d =3D=3D 1
+|| d =3D=3D 2));
+        return 0;
+}
+
+Roel
