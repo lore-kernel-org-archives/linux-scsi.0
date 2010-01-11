@@ -1,53 +1,38 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/6] qla2xxx: qla2xxx: fixes for 2.6.33-rc3 [8.03.02-k0]
-Date: Mon, 11 Jan 2010 15:02:53 -0600
-Message-ID: <1263243773.2799.359.camel@mulgrave.site>
-References: <1263238337-363-1-git-send-email-giridhar.malavali@qlogic.com>
+From: Nick Bowler <nbowler@elliptictech.com>
+Subject: Re: 2.6.33-rc3-git3: Reported regressions from 2.6.32
+Date: Mon, 11 Jan 2010 16:47:10 -0500
+Message-ID: <20100111214603.GA4335@emergent.ellipticsemi.com>
+References: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:34337 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753887Ab0AKVDB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Jan 2010 16:03:01 -0500
-In-Reply-To: <1263238337-363-1-git-send-email-giridhar.malavali@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752562Ab0AKVsk@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Natalie Protasevich <protasnb@gmail.com>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: giridhar.malavali@qlogic.com
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Mon, 2010-01-11 at 11:32 -0800, giridhar.malavali@qlogic.com wrote:
-> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+On 23:27 Sun 10 Jan     , Rafael J. Wysocki wrote:
+> This message contains a list of some regressions from 2.6.32, for which there
+> are no fixes in the mainline I know of.  If any of them have been fixed already,
+> please let me know.
 > 
-> James,
-> 
-> Please apply following patches.
-> 
-> Andrew Vasquez (2):
->   qla2xxx: Correct FCP2 recovery handling.
->   qla2xxx: Perform fast mailbox read  of flash regardless of size nor
->     address alignment.
-> 
-> Giridhar Malavali (2):
->   qla2xxx: Add BSG support for FC ELS/CT passthrough and vendor
->     commands.
+> If you know of any other unresolved regressions from 2.6.32, please let me know
+> either and I'll add them to the list.  Also, please let me know if any of the
+> entries below are invalid.
 
-This one.
+Here are two that I don't see in the list:
 
->   qla2xxx: Update version number to 8.03.02-k0.
-> 
-> Harish Zunjarrao (1):
->   fc-transport: Use packed modifier for fc_bsg_request structure.
-> 
-> Joe Carnuccio (1):
->   qla2xxx: Enhance EEH support and enable AER support.
+ * LVDS downclocking breaks on G45/thinkpad T500
 
-And this one
+     LKML: http://lkml.org/lkml/2009/12/26/40
+     FDO:  http://bugs.freedesktop.org/show_bug.cgi?id=25809
+ 
+ * Receive failure in et131x (Alan Cox sent me a patch for this but
+                              it's not in mainline yet)
 
-Don't remotely qualify as bug fixes.  How about redoing the series minus
-these and it can go in rc-fixes (the other two can go in scsi-misc)?
+     LKML: http://lkml.org/lkml/2009/12/29/210
 
-James
-
-
+-- 
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
