@@ -1,83 +1,51 @@
-From: "Bryn M. Reeves" <bmr@redhat.com>
-Subject: [PATCH] [CVE-2009-3939] megaraid_sas: remove sysfs poll_mode_io
- world writable permissions
-Date: Mon, 11 Jan 2010 15:26:39 +0000
-Message-ID: <1263223599.1847.158.camel@localhost>
+From: "Luis R. Rodriguez" <mcgrof-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.33-rc3-git3: Reported regressions from 2.6.32
+Date: Mon, 11 Jan 2010 08:00:37 -0800
+Message-ID: <43e72e891001110800h283b534aj1d60f83266fa215a@mail.gmail.com>
+References: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-SgIFMRxIRsxwF3+OjGMH"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37984 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753153Ab0AKPXp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Jan 2010 10:23:45 -0500
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o0BFNiui008907
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Jan 2010 10:23:45 -0500
-Received: from [10.33.0.40] (breeves.fab.redhat.com [10.33.0.40])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o0BFNhEv011571
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Jan 2010 10:23:44 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <wnS54-l8PVO.A.TlF.oMlSLB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Adrian Bunk <bunk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+On Sun, Jan 10, 2010 at 2:27 PM, Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wrote:
+> This message contains a list of some regressions from 2.6.32, for whi=
+ch there
+> are no fixes in the mainline I know of. =C2=A0If any of them have bee=
+n fixed already,
+> please let me know.
+>
+> If you know of any other unresolved regressions from 2.6.32, please l=
+et me know
+> either and I'll add them to the list. =C2=A0Also, please let me know =
+if any of the
+> entries below are invalid.
+>
+> Each entry from the list will be sent additionally in an automatic re=
+ply to
+> this message with CCs to the people involved in reporting and handlin=
+g the
+> issue.
+>
 
---=-SgIFMRxIRsxwF3+OjGMH
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Of these only the one below was wireless, which is actually fixed now.
+Not bad, rc3 and no wireless regressions yet.
 
-Hi Linus,
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D14874
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : Ath5k regression with commit 8b=
+f3d79bc401ca417ccf9fc076d3295d1a71dbf5
+> Submitter =C2=A0 =C2=A0 =C2=A0 : Joshua Covington <joshuacov@googlema=
+il.com>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-12-25 00:49 (17 =
+days old)
+> Handled-By =C2=A0 =C2=A0 =C2=A0: Luis R. Rodriguez <mcgrof-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Patch =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org=
+/attachment.cgi?id=3D24335
 
-Posted twice to linux-scsi and once to lkml - doesn't seem to have been
-picked up yet.
-
-Similar to the problem with dbg_lvl fixed in commit
-66dca9b8c50b5e59d3bea8b21cee5c6dae6c9c46 last year.
-
-/sys/bus/pci/drivers/megaraid_sas/poll_mode_io defaults to being
-world-writable, which seems bad (letting any user affect kernel driver
-behavior).
-
-This turns off group and user write permissions, so that on typical
-production systems only root can write to it.
-
-Signed-off-by: Bryn M. Reeves <bmr@redhat.com>
-
-Cheers,
-Bryn.
-
-
---=-SgIFMRxIRsxwF3+OjGMH
-Content-Disposition: attachment; filename=megaraid_sas-restrict-poll_mode_io-write-perms.patch
-Content-Type: text/x-patch; name=megaraid_sas-restrict-poll_mode_io-write-perms.patch; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-Author: Bryn M. Reeves <bmr@redhat.com>
-Date:   Thu Nov 12 18:31:54 2009 +0000
-
-    [SCSI] megaraid_sas: remove sysfs poll_mode_io world writeable permissions
-    
-    /sys/bus/pci/drivers/megaraid_sas/poll_mode_io defaults to being
-    world-writable, which seems bad (letting any user affect kernel driver
-    behavior).
-    
-    This turns off group and user write permissions, so that on typical
-    production systems only root can write to it.
-    
-    Signed-off-by: Bryn M. Reeves <bmr@redhat.com>
-
-diff -up linux-2.6.18.noarch/drivers/scsi/megaraid/megaraid_sas.c.bmr0 linux-2.6.18.noarch/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.18.noarch/drivers/scsi/megaraid/megaraid_sas.c.bmr0	2009-09-28 17:37:47.000000000 +0100
-+++ linux-2.6.18.noarch/drivers/scsi/megaraid/megaraid_sas.c	2009-09-28 17:38:16.000000000 +0100
-@@ -3548,7 +3548,7 @@ out:
- 	return retval;
- }
- 
--static DRIVER_ATTR(poll_mode_io, S_IRUGO|S_IWUGO,
-+static DRIVER_ATTR(poll_mode_io, S_IRUGO|S_IWUSR,
- 			megasas_sysfs_show_poll_mode_io,
- 			megasas_sysfs_set_poll_mode_io);
- 
-
---=-SgIFMRxIRsxwF3+OjGMH--
-
+  Luis
