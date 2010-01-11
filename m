@@ -1,46 +1,29 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Mon, 11 Jan 2010 11:59:42 GMT
-Message-ID: <201001111159.o0BBxg6c024153@demeter.kernel.org>
-References: <bug-14831-11613@http.bugzilla.kernel.org/>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.33-rc3-git3: Reported regressions 2.6.31 -> 2.6.32
+Date: Mon, 11 Jan 2010 13:49:54 +0100
+Message-ID: <b170af451001110449w134af1f9we804205a5febcaca@mail.gmail.com>
+References: <nzLqtSp97aP.A.RGB.hglSLB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47982 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920Ab0AKL7n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jan 2010 06:59:43 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0BBxhah024158
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Jan 2010 11:59:43 GMT
-In-Reply-To: <bug-14831-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <nzLqtSp97aP.A.RGB.hglSLB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14831
+2010/1/10 Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>:
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D14747
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : bisected 2.6.32 regression: syn=
+aptics touchpad doesn't work
+> Submitter =C2=A0 =C2=A0 =C2=A0 : Fran=C3=A7ois Valenduc <francois.val=
+enduc-bmtTS95sd5BUM80lpFwj4w@public.gmane.org>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2009-12-06 11:16 (36 =
+days old)
 
+Not sure if this is hackish or not, but some patch exists.
 
-
-
-
---- Comment #8 from amf <andy.fletcher@ukdedicated.com>  2010-01-11 11:59:39 ---
-We see this on numerous Dell hosts running the SAS6iR based on the LSISAS1068E
-chip. Running the stock RHEL5 driver.
-
-It's simple to reproduce with SMART commands, but we actually see huge issues
-with drives dropping off cards even during heavy I/O and no SMART commands
-involved at all. It seems to be all the worse when the disk reallocates a bad
-sector. The disks are Dell-supplied and therefore 'enterprise' models capable
-of TLER type behaviour.
-
-I believe the SMART command method makes it easier to reproduce what may be a
-problem not specifically related to SMART, but that's just my own feeling.
-
-HTH.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--=20
+Rafa=C5=82
