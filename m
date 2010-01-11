@@ -1,99 +1,53 @@
-From: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
-Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
-Date: Mon, 11 Jan 2010 21:18:02 +0100
-Message-ID: <4B4B877A.8060106@googlemail.com>
-References: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com> <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 0/6] qla2xxx: qla2xxx: fixes for 2.6.33-rc3 [8.03.02-k0]
+Date: Mon, 11 Jan 2010 15:02:53 -0600
+Message-ID: <1263243773.2799.359.camel@mulgrave.site>
+References: <1263238337-363-1-git-send-email-giridhar.malavali@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754236Ab0AKURk@vger.kernel.org>
-In-Reply-To: <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marc Bejarano <beej@beej.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:34337 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753887Ab0AKVDB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Jan 2010 16:03:01 -0500
+In-Reply-To: <1263238337-363-1-git-send-email-giridhar.malavali@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: giridhar.malavali@qlogic.com
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On 01/11/10 20:41, Marc Bejarano wrote:
-> and once more in plain text.  (sorry vger)
->
-> 2010/1/11 Marc Bejarano<beej@beej.org>:
->> oops.  seems that GMANE's reply function only goes to a single "news=
-group".
->>   original recipients re-added.
->> marc
->> ----
->> From: Marc Bejarano<beej<at>  beej.org>
->> Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
->> Newsgroups: gmane.linux.scsi
->> Date: 2010-01-08 22:21:09 GMT (2 days, 20 hours and 40 minutes ago)
->>
->> Ren=E9 Bolldorf<xsecute<at>  googlemail.com>  writes:
->>> On 01/08/10 16:28, James Bottomley wrote:
->>>> On Thu, 2010-01-07 at 14:15 -0500, Jeff Garzik wrote:
->>>>> On 12/30/2009 05:59 PM, Ren=E9 Bolldorf wrote:
->>>>>> We don't need this .
->>
->>>>>> - /* FIXME: is this needed? */
->>>>>> - memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
->>>>>
->>>>> I need a little bit more detail than an unqualified statement... =
- Did
->>>>> you audit all paths leading to this code point?
->>
->>>> But one also here:
->>>>
->>>> u8 *sense_buffer =3D dev->link->ap->sector_buf;
->>>> [...]
->>>> err_mask =3D atapi_eh_request_sense(dev, sense_buffer, sense_key);
->>>>
->>>> Which doesn't look OK because it looks like the sector_buf isn't c=
-leared
->>>> (and it is reused).
->>>>
->>>> James
->>>>
->>>>
->>>
->>> Thank's, you're right. I have overseen this, sry for that.
->>
->> Ren=E9: perhaps you'd like to submit a patch that substitutes FIXME =
-comment
->> for one that explains why the memset is needed, crediting James in t=
-he
->> description?  we may as well gain something permanent from this disc=
-ussion
->> that you started :)
->>
->> cheers,
->> marc
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo<at>  vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> ----
+On Mon, 2010-01-11 at 11:32 -0800, giridhar.malavali@qlogic.com wrote:
+> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> 
+> James,
+> 
+> Please apply following patches.
+> 
+> Andrew Vasquez (2):
+>   qla2xxx: Correct FCP2 recovery handling.
+>   qla2xxx: Perform fast mailbox read  of flash regardless of size nor
+>     address alignment.
+> 
+> Giridhar Malavali (2):
+>   qla2xxx: Add BSG support for FC ELS/CT passthrough and vendor
+>     commands.
 
-I hope that's good enough explained :-).
+This one.
 
-Best regards
-Ren=E9
+>   qla2xxx: Update version number to 8.03.02-k0.
+> 
+> Harish Zunjarrao (1):
+>   fc-transport: Use packed modifier for fc_bsg_request structure.
+> 
+> Joe Carnuccio (1):
+>   qla2xxx: Enhance EEH support and enable AER support.
 
---- ./drivers/ata/libata-eh.c   2010-01-07 23:21:23.622464012 +0100
-+++ ./drivers/ata/libata-eh.c   2010-01-11 21:11:19.869092897 +0100
-@@ -1505,7 +1505,10 @@ static unsigned int atapi_eh_request_sen
+And this one
 
-         DPRINTK("ATAPI request sense\n");
+Don't remotely qualify as bug fixes.  How about redoing the series minus
+these and it can go in rc-fixes (the other two can go in scsi-misc)?
 
--       /* FIXME: is this needed? */
-+       /* make sure sense_buf is cleared then atapi_eh_request_sense i=
-s=20
-called.
-+        * (to make sure nothing get's reused.)
-+        * thanks to James Bottomley
-+        */
-         memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
+James
 
-         /* initialize sense_buf with the error register,
+
