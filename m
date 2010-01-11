@@ -1,75 +1,33 @@
-From: Marc Bejarano <beej@beej.org>
-Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
-Date: Mon, 11 Jan 2010 11:41:35 -0800
-Message-ID: <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
-References: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: Re: 2.6.33-rc3-git3: Reported regressions 2.6.31 -> 2.6.32
+Date: Mon, 11 Jan 2010 20:56:18 +0100
+Message-ID: <201001112056.19042.rjw@sisk.pl>
+References: <nzLqtSp97aP.A.RGB.hglSLB@chimera> <b170af451001110449w134af1f9we804205a5febcaca@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753995Ab0AKTll@vger.kernel.org>
-In-Reply-To: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <b170af451001110449w134af1f9we804205a5febcaca-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Natalie Protasevich <protasnb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-and once more in plain text. =A0(sorry vger)
+On Monday 11 January 2010, Rafa=C5=82 Mi=C5=82ecki wrote:
+> 2010/1/10 Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1474=
+7
+> > Subject         : bisected 2.6.32 regression: synaptics touchpad do=
+esn't work
+> > Submitter       : Fran=C3=A7ois Valenduc <francois.valenduc@tvcable=
+net.be>
+> > Date            : 2009-12-06 11:16 (36 days old)
+>=20
+> Not sure if this is hackish or not, but some patch exists.
 
-2010/1/11 Marc Bejarano <beej@beej.org>:
-> oops. =A0seems that GMANE's reply function only goes to a single "new=
-sgroup".
-> =A0original recipients re-added.
-> marc
-> ----
-> From: Marc Bejarano <beej <at> beej.org>
-> Subject:=A0Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
-> Newsgroups:=A0gmane.linux.scsi
-> Date: 2010-01-08 22:21:09 GMT (2 days, 20 hours and 40 minutes ago)
->
-> Ren=E9 Bolldorf <xsecute <at> googlemail.com> writes:
->> On 01/08/10 16:28, James Bottomley wrote:
->> > On Thu, 2010-01-07 at 14:15 -0500, Jeff Garzik wrote:
->> >> On 12/30/2009 05:59 PM, Ren=E9 Bolldorf wrote:
->> >>> We don't need this .
->
->> >>> - /* FIXME: is this needed? */
->> >>> - memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
->> >>
->> >> I need a little bit more detail than an unqualified statement... =
-=A0Did
->> >> you audit all paths leading to this code point?
->
->> > But one also here:
->> >
->> > u8 *sense_buffer =3D dev->link->ap->sector_buf;
->> > [...]
->> > err_mask =3D atapi_eh_request_sense(dev, sense_buffer, sense_key);
->> >
->> > Which doesn't look OK because it looks like the sector_buf isn't c=
-leared
->> > (and it is reused).
->> >
->> > James
->> >
->> >
->>
->> Thank's, you're right. I have overseen this, sry for that.
->
-> Ren=E9: perhaps you'd like to submit a patch that substitutes FIXME c=
-omment
-> for one that explains why the memset is needed, crediting James in th=
-e
-> description? =A0we may as well gain something permanent from this dis=
-cussion
-> that you started :)
->
-> cheers,
-> marc
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo <at> vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
-> ----
+Thanks, updated.
+
+Well, I guess the hackish is rather inevitable in this particular case =
+=2E..
+
+Rafael
