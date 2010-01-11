@@ -1,43 +1,43 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 3/6] fc-transport: Use packed modifier for fc_bsg_request structure.
-Date: Mon, 11 Jan 2010 11:32:14 -0800
-Message-ID: <1263238337-363-4-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 6/6] qla2xxx: Update version number to 8.03.02-k0.
+Date: Mon, 11 Jan 2010 11:32:17 -0800
+Message-ID: <1263238337-363-7-git-send-email-giridhar.malavali@qlogic.com>
 References: <1263238337-363-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:60663 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:60669 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753953Ab0AKTcS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753954Ab0AKTcS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 11 Jan 2010 14:32:18 -0500
 In-Reply-To: <1263238337-363-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-The 32bit kernel does not add padding bytes in the fc_bsg_request structure
-whereas the 64bit kernel adds padding bytes in the fc_bsg_request structure.
-Due to this, structure elements gets mismatched with 32bit application and
-64bit kernel.To resolve this, used packed modifier to avoid adding padding bytes.
+
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- include/scsi/scsi_bsg_fc.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/scsi/scsi_bsg_fc.h b/include/scsi/scsi_bsg_fc.h
-index a4b2333..91a4e4f 100644
---- a/include/scsi/scsi_bsg_fc.h
-+++ b/include/scsi/scsi_bsg_fc.h
-@@ -292,7 +292,7 @@ struct fc_bsg_request {
- 		struct fc_bsg_rport_els		r_els;
- 		struct fc_bsg_rport_ct		r_ct;
- 	} rqst_data;
--};
-+} __attribute__((packed));
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index a65dd95..082394b 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.03.01-k9"
++#define QLA2XXX_VERSION      "8.03.02-k0"
  
- 
- /* response (request sense data) structure of the sg_io_v4 */
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	3
+-#define QLA_DRIVER_PATCH_VER	1
++#define QLA_DRIVER_PATCH_VER	2
+ #define QLA_DRIVER_BETA_VER	0
 -- 
 1.6.2.rc1.30.gd43c
 
