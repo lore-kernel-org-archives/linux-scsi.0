@@ -1,40 +1,29 @@
-From: Marc Bejarano <beej@beej.org>
-Subject: Re: [PATCH]drivers/ata/libata-eh.c:1509 unneeded memset()
-Date: Mon, 11 Jan 2010 16:55:45 -0800
-Message-ID: <5543f88f1001111655t7ae4a4eamd4f010b5ab7e7c82@mail.gmail.com>
-References: <5543f88f1001111129u362be554kd97027d977b5dff3@mail.gmail.com>
-	 <5543f88f1001111141r5375d2a3kd726d2b70e124b94@mail.gmail.com>
-	 <4B4B877A.8060106@googlemail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] bfa: Files to support BFA debugfs node creation,
+	node query and node deletion.
+Date: Tue, 12 Jan 2010 03:52:28 -0500
+Message-ID: <20100112085228.GA21015@infradead.org>
+References: <1263254172-18675-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4B4B877A.8060106@googlemail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:35949 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741Ab0ALIwc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2010 03:52:32 -0500
+Content-Disposition: inline
+In-Reply-To: <1263254172-18675-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Krishna Gudipati <kgudipat@brocade.com>
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, adapter_linux_open_src_team@brocade.com, huangj@brocade.com, xmzhang@brocade.com
 
-2010/1/11 Ren=E9 Bolldorf <xsecute@googlemail.com>:
-> I hope that's good enough explained :-).
+Please add documentation for each file what it's useful for and how
+users can use it.  And some files should not be there at all - e.g. the
+trace file - please use the standard kernel tracing infrastructure
+instead.
 
-definitely an improvement, but i think jeff is going to want your
-S-O-B and at least a patch title, if no description :)
+And to be frank - as long as the driver is such a fucking mess as it is
+right now adding any additional features should be postponed until that
+is sorted out.
 
-
-> + =A0 =A0 =A0 /* make sure sense_buf is cleared then atapi_eh_request=
-_sense is
-> called.
-
-s/then/when/ ?
-
-> + =A0 =A0 =A0 =A0* (to make sure nothing get's reused.)
-
-probably not necessary
-
-> + =A0 =A0 =A0 =A0* thanks to James Bottomley
-
-this may be better in a patch description
-
-cheers,
-marc
