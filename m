@@ -1,85 +1,40 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [osd-dev] [PATCH] scsi_lib: Bug in completion of bidi commands
-Date: Tue, 12 Jan 2010 13:16:35 +0200
-Message-ID: <4B4C5A13.6090709@panasas.com>
-References: <4B27AA77.3040002@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752154Ab0ALLQl@vger.kernel.org>
-In-Reply-To: <4B27AA77.3040002@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, Benny Halevy <bhalevy@panasas.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Stable Tree <stable@kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 4/4] qla2xxx: Update version number to 8.03.01-k10.
+Date: Tue, 12 Jan 2010 12:59:51 -0800
+Message-ID: <1263329991-307-5-git-send-email-giridhar.malavali@qlogic.com>
+References: <1263329991-307-1-git-send-email-giridhar.malavali@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vpn.pathscale.com ([198.186.3.75]:54865 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752259Ab0ALU74 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jan 2010 15:59:56 -0500
+In-Reply-To: <1263329991-307-1-git-send-email-giridhar.malavali@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On 12/15/2009 05:25 PM, Boaz Harrosh wrote:
-> 
-> Because of the terrible structuring of scsi-bidi-commands
-> it breaks some of the life time rules of a scsi-command.
-> It is now not allowed to free up the block-request before
-> cleanup and partial deallocation of the scsi-command. (Which
-> is not so for none bidi commands)
-> 
-> The right fix to this problem would be to make bidi command
-> a first citizen by allocating a scsi_sdb pointer at scsi command
-> just like cmd->prot_sdb. The bidi sdb should be allocated/deallocated
-> as part of the get/put_command (Again like the prot_sdb) and the
-> current decoupling of scsi_cmnd and blk-request should be kept.
-> 
-> For now make sure scsi_release_buffers() is called before the
-> call to blk_end_request_all() which might cause the suicide of
-> the block requests. At best the leak of bidi buffers, at worse
-> a crash, as there is a race between the existence of the bidi_request
-> and the free of the associated bidi_sdb.
-> 
-> The reason this was never hit before is because only OSD has the potential
-> of doing asynchronous bidi commands. (So does bsg but it is never used)
-> And OSD clients just happen to do all their bidi commands synchronously, up
-> until recently.
-> 
-> CC: Stable Tree <stable@kernel.org>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-James hi.
 
-Have you had the chance on looking at this issue. It's a serious bug
-dated back a long time.
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Technically it is quite simple.
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index a65dd95..ed36279 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,7 +7,7 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.03.01-k9"
++#define QLA2XXX_VERSION      "8.03.01-k10"
+ 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	3
+-- 
+1.6.2.rc1.30.gd43c
 
-It used to be:
-	blk_end_request_all(req, 0);
-	scsi_release_buffers(cmd);
-
-Now scsi_release_buffers tries to use cmd->req for inspecting the req->next
-pointer, but req was just freed by blk_end_request_all()
-
-Reversing the call to:
-	scsi_release_buffers(cmd);
-	blk_end_request_all(req, 0);
-
-Is the right thing to do and does not have any side effects what's so ever.
-
-Please put me out of my misery ;-)
-Boaz
-
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/scsi_lib.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 5987da8..bc9a881 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -749,9 +749,9 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  			 */
->  			req->next_rq->resid_len = scsi_in(cmd)->resid;
->  
-> +			scsi_release_buffers(cmd);
->  			blk_end_request_all(req, 0);
->  
-> -			scsi_release_buffers(cmd);
->  			scsi_next_command(cmd);
->  			return;
->  		}
