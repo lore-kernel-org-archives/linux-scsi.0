@@ -1,61 +1,85 @@
-From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-Subject: [PATCH] lpfc: fix typo of LOG_SECURITY
-Date: Tue, 12 Jan 2010 19:57:09 +0900
-Message-ID: <4B4C5585.9030603@jp.fujitsu.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [osd-dev] [PATCH] scsi_lib: Bug in completion of bidi commands
+Date: Tue, 12 Jan 2010 13:16:35 +0200
+Message-ID: <4B4C5A13.6090709@panasas.com>
+References: <4B27AA77.3040002@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:51050 "EHLO
-	fgwmail7.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033Ab0ALK5b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2010 05:57:31 -0500
-Received: from m2.gw.fujitsu.co.jp ([10.0.50.72])
-	by fgwmail7.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id o0CAvT21022292
-	for <linux-scsi@vger.kernel.org> (envelope-from tokunaga.keiich@jp.fujitsu.com);
-	Tue, 12 Jan 2010 19:57:30 +0900
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id CC83345DE51
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2010 19:57:29 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id A8B0B45DE4F
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2010 19:57:29 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 59B38E78001
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2010 19:57:29 +0900 (JST)
-Received: from m021.s.css.fujitsu.com (m021.s.css.fujitsu.com [10.0.81.61])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 16C1D1DB8038
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2010 19:57:29 +0900 (JST)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752154Ab0ALLQl@vger.kernel.org>
+In-Reply-To: <4B27AA77.3040002@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>, Benny Halevy <bhalevy@panasas.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Stable Tree <stable@kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@suse.de>, James Smart <James.Smart@Emulex.Com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-Hi,
+On 12/15/2009 05:25 PM, Boaz Harrosh wrote:
+> 
+> Because of the terrible structuring of scsi-bidi-commands
+> it breaks some of the life time rules of a scsi-command.
+> It is now not allowed to free up the block-request before
+> cleanup and partial deallocation of the scsi-command. (Which
+> is not so for none bidi commands)
+> 
+> The right fix to this problem would be to make bidi command
+> a first citizen by allocating a scsi_sdb pointer at scsi command
+> just like cmd->prot_sdb. The bidi sdb should be allocated/deallocated
+> as part of the get/put_command (Again like the prot_sdb) and the
+> current decoupling of scsi_cmnd and blk-request should be kept.
+> 
+> For now make sure scsi_release_buffers() is called before the
+> call to blk_end_request_all() which might cause the suicide of
+> the block requests. At best the leak of bidi buffers, at worse
+> a crash, as there is a race between the existence of the bidi_request
+> and the free of the associated bidi_sdb.
+> 
+> The reason this was never hit before is because only OSD has the potential
+> of doing asynchronous bidi commands. (So does bsg but it is never used)
+> And OSD clients just happen to do all their bidi commands synchronously, up
+> until recently.
+> 
+> CC: Stable Tree <stable@kernel.org>
 
-Fix a typo emerged at this commit:
+James hi.
 
-  f4b4c68f74dcd5da03df851090cad28ad4e8d7cc
+Have you had the chance on looking at this issue. It's a serious bug
+dated back a long time.
 
-Obviously, no one is using it now, but someone probably will.
+Technically it is quite simple.
 
-Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
----
- drivers/scsi/lpfc/lpfc_logmsg.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+It used to be:
+	blk_end_request_all(req, 0);
+	scsi_release_buffers(cmd);
 
-diff --git a/drivers/scsi/lpfc/lpfc_logmsg.h b/drivers/scsi/lpfc/lpfc_logmsg.h
-index 954ba57..f8370cb 100644
---- a/drivers/scsi/lpfc/lpfc_logmsg.h
-+++ b/drivers/scsi/lpfc/lpfc_logmsg.h
-@@ -33,7 +33,7 @@
- #define LOG_FCP_ERROR	0x00001000	/* log errors, not underruns */
- #define LOG_LIBDFC	0x00002000	/* Libdfc events */
- #define LOG_VPORT	0x00004000	/* NPIV events */
--#define LOF_SECURITY	0x00008000	/* Security events */
-+#define LOG_SECURITY	0x00008000	/* Security events */
- #define LOG_EVENT	0x00010000	/* CT,TEMP,DUMP, logging */
- #define LOG_ALL_MSG	0xffffffff	/* LOG all messages */
+Now scsi_release_buffers tries to use cmd->req for inspecting the req->next
+pointer, but req was just freed by blk_end_request_all()
 
+Reversing the call to:
+	scsi_release_buffers(cmd);
+	blk_end_request_all(req, 0);
 
+Is the right thing to do and does not have any side effects what's so ever.
 
+Please put me out of my misery ;-)
+Boaz
+
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/scsi_lib.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 5987da8..bc9a881 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -749,9 +749,9 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  			 */
+>  			req->next_rq->resid_len = scsi_in(cmd)->resid;
+>  
+> +			scsi_release_buffers(cmd);
+>  			blk_end_request_all(req, 0);
+>  
+> -			scsi_release_buffers(cmd);
+>  			scsi_next_command(cmd);
+>  			return;
+>  		}
