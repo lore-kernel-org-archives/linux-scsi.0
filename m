@@ -1,62 +1,80 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Tue, 12 Jan 2010 23:15:41 GMT
-Message-ID: <201001122315.o0CNFfNA030971@demeter.kernel.org>
-References: <bug-14831-11613@http.bugzilla.kernel.org/>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH] mpt2sas: Fix &&/|| confusion in
+ _scsih_sas_device_status_change_event()
+Date: Tue, 12 Jan 2010 17:23:41 -0700
+Message-ID: <4565AEA676113A449269C2F3A549520F044646D4@cosmail03.lsi.com>
+References: <4B3B86CC.5010205@gmail.com>
+	<4565AEA676113A449269C2F3A549520F04463B74@cosmail03.lsi.com>
+	<25e057c01001071158n1755ee99iae17522e269aa1ff@mail.gmail.com>
+ <20100112135410.1506be72.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35233 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929Ab0ALXPm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jan 2010 18:15:42 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0CNFfsW030972
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jan 2010 23:15:41 GMT
-In-Reply-To: <bug-14831-11613@http.bugzilla.kernel.org/>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:53541 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751545Ab0AMAX7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jan 2010 19:23:59 -0500
+In-Reply-To: <20100112135410.1506be72.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, roel kluin <roel.kluin@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14831
+Yes your patch will work.  I just have tested it by sending INTERNAL_DEVICE_RESETS events, and the code is getting executed.
+
+Regards,
+Eric
+
+-----Original Message-----
+From: Andrew Morton [mailto:akpm@linux-foundation.org] 
+Sent: Tuesday, January 12, 2010 2:54 PM
+To: roel kluin
+Cc: Moore, Eric; James E.J. Bottomley; linux-scsi@vger.kernel.org; LKML; Desai, Kashyap
+Subject: Re: [PATCH] mpt2sas: Fix &&/|| confusion in _scsih_sas_device_status_change_event()
+
+On Thu, 7 Jan 2010 20:58:10 +0100
+roel kluin <roel.kluin@gmail.com> wrote:
+
+> On Thu, Jan 7, 2010 at 8:31 PM, Moore, Eric <Eric.Moore@lsi.com> wrote:
+> > nack
+> >
+> > The code beyond this check is intended for either INTERNAL_DEVICE_RESET or CMP_DEVICE_RESET. __ If the reason code is something else, we will want to return. __There are 10 other types of reason codes besides these two. This proposed patch means we return only when the reason code is either INTERNAL_DEVICE_RESET or CMP_INTERNAL_RESET.
+> >
+> > Eric Moore
+> 
+> my patch is correct but my changelog was wrong. Sorry for the
+> confusion. It should have been:
+> 
+> Even if the ReasonCode is not INTERNAL_DEVICE_RESET nor CMP_DEVICE_RESET
+> this still evaluates to true.
+> 
+
+yup, the current code is wrong.
+
+	if (!(event_data->ReasonCode ==
+	    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
+	   event_data->ReasonCode ==
+	    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET))
+		return;
+
+ReasonCode cannot equal two different things at the same time.
+
+This is what we want:
+
+	if (event_data->ReasonCode !=
+	      MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
+	    event_data->ReasonCode !=
+	      MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
+		return;
+
+Eric, the fix needs runtime testing please - it enables code which
+hasn't been executed in a long time, if ever.
+
+In fact the compiler wasn't even emitting any code for the second half
+of _scsih_sas_device_status_change_event() because it worked out that
+there was no path to it.
 
 
-Aaron Williams <aaron.w2@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |aaron.w2@gmail.com
-
-
-
-
---- Comment #9 from Aaron Williams <aaron.w2@gmail.com>  2010-01-12 23:15:37 ---
-I am seeing similar events with my current computer and with my last computer.
-My setup consists of two WD Black Edition 1TB drives:
-
-Model=WDC WD1001FALS-00J7B0, FwRev=05.00K05, SerialNo=WD-WMATV0705568
- Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs FmtGapReq }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=50
- BuffType=unknown, BuffSize=unknown, MaxMultSect=16, MultSect=off
- CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=1953525168
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes:  pio0 pio3 pio4
- DMA modes:  mdma0 mdma1 mdma2
- UDMA modes: udma0 udma1 udma2 udma3 udma4 udma5 *udma6
- AdvancedPM=no WriteCache=enabled
- Drive conforms to: Unspecified:  ATA/ATAPI-1,2,3,4,5,6,7
-
-00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI
-Controller
-
-I also have smartmond running to periodically query the drive. In my case I
-have two drives running in a mirrored configuration and this will arbitrarily
-kick one of the drives out of my RAID array (using md). I just spent the last
-few days recovering from a RAID event that killed the entire array (due to this
-problem I believe).
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
