@@ -1,51 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Wed, 13 Jan 2010 12:30:50 GMT
-Message-ID: <201001131230.o0DCUoHD001496@demeter.kernel.org>
-References: <bug-14831-11613@http.bugzilla.kernel.org/>
+From: scameron@beardog.cce.hp.com
+Subject: Re: your mail
+Date: Wed, 13 Jan 2010 08:57:38 -0600
+Message-ID: <20100113145738.GQ13413@beardog.cce.hp.com>
+References: <20100113004939.289333186@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41003 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402Ab0AMMav (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2010 07:30:51 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0DCUok3001497
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2010 12:30:50 GMT
-In-Reply-To: <bug-14831-11613@http.bugzilla.kernel.org/>
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:17211 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755469Ab0AMOzO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2010 09:55:14 -0500
+Content-Disposition: inline
+In-Reply-To: <20100113004939.289333186@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Mahoney <jeffm@suse.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14831
+On Tue, Jan 12, 2010 at 07:49:00PM -0500, Jeff Mahoney wrote:
+> Subject: [patch 5/6] hpsa: Fix section mismatch
+> References: <20100113004855.550486769@suse.com>
+> Content-Disposition: inline; filename=patches.rpmify/hpsa-fix-section-mismatch
+> 
+>  hpsa_pci_init calls hpsa_interrupt_mode which is a __devinit function.
+>  hpsa_pci_init is only called by hpsa_init_one which is also __devinit, so
+>  mark it __devinit as well.
+> 
+> Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+> ---
+>  drivers/scsi/hpsa.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -3111,7 +3111,7 @@ default_int_mode:
+>  	return;
+>  }
+>  
+> -static int hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
+> +static int __devinit hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
+>  {
+>  	ushort subsystem_vendor_id, subsystem_device_id, command;
+>  	__u32 board_id, scratchpad = 0;
+> 
 
+Thanks.
 
+-- steve
 
-
-
---- Comment #10 from Tim Small <tim@seoss.co.uk>  2010-01-13 12:30:47 ---
-Hi Aaron,
-
-It's possible that this is an unrelated issue.  On one of the systems with the
-MPT SAS controllers, I have moved a drive from an MPT SAS channel onto an Intel
-631xESB/632xESB SATA channel, and the unreliable behaviour appeared to stop.
-
-Do you have any other drives which you can test in place of the WD drives? 
-Personally I have found Hitachi SATA drives to be well engineered in recent
-years from a SMART PoV.
-
-If you'd like to open another bug, the script included in this bug might help
-you reproduce the problems.  You could also try disabling NCQ and/or using a
-different SATA controller (Silicon Image SiI 3132 based PCIe cards are
-available very inexpensively) to see if this helps.
-
-Thanks,
-
-Tim.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
