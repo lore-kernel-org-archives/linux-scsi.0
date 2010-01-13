@@ -1,48 +1,45 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] iscsi_tcp regression: remove bogus warn on in write path
-Date: Tue, 12 Jan 2010 22:48:00 -0600
-Message-ID: <1263358080-5265-1-git-send-email-michaelc@cs.wisc.edu>
+From: Anatolij Gustschin <agust@denx.de>
+Subject: Re: [PATCH] [SCSI] mptsas: Fix issue with chain pools allocation on
+ katmai
+Date: Wed, 13 Jan 2010 11:13:13 +0100
+Message-ID: <20100113111313.3a6f0399@wker>
+References: <1260625941-12179-1-git-send-email-agust@denx.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21346 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752085Ab0AMEsJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jan 2010 23:48:09 -0500
+Received: from mail-out.m-online.net ([212.18.0.10]:53671 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191Ab0AMKNW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2010 05:13:22 -0500
+In-Reply-To: <1260625941-12179-1-git-send-email-agust@denx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Kashyap Desai <kashyap.desai@lsi.com>, Eric Moore <Eric.Moore@lsi.com>, James Bottomley <James.Bottomley@suse.de>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Sat, 12 Dec 2009 14:52:21 +0100
+Anatolij Gustschin <agust@denx.de> wrote:
 
-An empty r2tqueue is a valid state. It just means that we have
-processed all that there was to do. This patch removes the WARN_ON
-that was added when the kfifo changes were merged.
+> Since commit 9d2e9d66a3f032667934144cd61c396ba49f090d
+> mptsas driver fails to allocate memory for the MPT chain buffers
+> for second LSI adapter on PPC440SPe Katmai platform:
+> ...
+> ioc1: LSISAS1068E B3: Capabilities={Initiator}
+> mptbase: ioc1: ERROR - Unable to allocate Reply, Request, Chain Buffers!
+> mptbase: ioc1: ERROR - didn't initialize properly! (-3)
+> mptsas: probe of 0002:31:00.0 failed with error -3
+> 
+> This commit increased MPT_FC_CAN_QUEUE value but initChainBuffers()
+> doesn't differentiate between SAS and FC causing increased allocation
+> for SAS case, too. Later pci_alloc_consistent() fails to allocate
+> increased chain buffer pool size for SAS case.
+> 
+> Provide a fix by looking at the bus type and using appropriate
+> MPT_SAS_CAN_QUEUE value while calculation of the number of chain
+> buffers.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/libiscsi_tcp.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+Could someone please comment on this patch? Thanks!
 
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index db6856c..4ad87fd 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -992,12 +992,10 @@ static struct iscsi_r2t_info *iscsi_tcp_get_curr_r2t(struct iscsi_task *task)
- 		if (r2t == NULL) {
- 			if (kfifo_out(&tcp_task->r2tqueue,
- 			    (void *)&tcp_task->r2t, sizeof(void *)) !=
--			    sizeof(void *)) {
--				WARN_ONCE(1, "unexpected fifo state");
-+			    sizeof(void *))
- 				r2t = NULL;
--			}
--
--			r2t = tcp_task->r2t;
-+			else
-+				r2t = tcp_task->r2t;
- 		}
- 		spin_unlock_bh(&session->lock);
- 	}
--- 
-1.6.5.2
+Anatolij
 
