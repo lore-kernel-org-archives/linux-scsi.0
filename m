@@ -1,63 +1,51 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] [SCSI] mptsas: Fix issue with chain pools allocation on
- katmai
-Date: Wed, 13 Jan 2010 15:56:17 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C1C93DBC3F4@inbmail01.lsi.com>
-References: <1260625941-12179-1-git-send-email-agust@denx.de>
- <20100113111313.3a6f0399@wker>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Wed, 13 Jan 2010 12:30:50 GMT
+Message-ID: <201001131230.o0DCUoHD001496@demeter.kernel.org>
+References: <bug-14831-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:54292 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752518Ab0AMK0p convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jan 2010 05:26:45 -0500
-In-Reply-To: <20100113111313.3a6f0399@wker>
-Content-Language: en-US
+Received: from demeter.kernel.org ([140.211.167.39]:41003 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402Ab0AMMav (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2010 07:30:51 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0DCUok3001497
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2010 12:30:50 GMT
+In-Reply-To: <bug-14831-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anatolij Gustschin <agust@denx.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, James Bottomley <James.Bottomley@suse.de>
+To: linux-scsi@vger.kernel.org
 
-Anatolij,
+http://bugzilla.kernel.org/show_bug.cgi?id=14831
 
-Patch provided by you is OK to me.
-Please consider it as ACKED.
 
-- Kashyap
 
-> -----Original Message-----
-> From: Anatolij Gustschin [mailto:agust@denx.de]
-> Sent: Wednesday, January 13, 2010 3:43 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: Desai, Kashyap; Moore, Eric; James Bottomley
-> Subject: Re: [PATCH] [SCSI] mptsas: Fix issue with chain pools allocation
-> on katmai
-> 
-> On Sat, 12 Dec 2009 14:52:21 +0100
-> Anatolij Gustschin <agust@denx.de> wrote:
-> 
-> > Since commit 9d2e9d66a3f032667934144cd61c396ba49f090d
-> > mptsas driver fails to allocate memory for the MPT chain buffers
-> > for second LSI adapter on PPC440SPe Katmai platform:
-> > ...
-> > ioc1: LSISAS1068E B3: Capabilities={Initiator}
-> > mptbase: ioc1: ERROR - Unable to allocate Reply, Request, Chain Buffers!
-> > mptbase: ioc1: ERROR - didn't initialize properly! (-3)
-> > mptsas: probe of 0002:31:00.0 failed with error -3
-> >
-> > This commit increased MPT_FC_CAN_QUEUE value but initChainBuffers()
-> > doesn't differentiate between SAS and FC causing increased allocation
-> > for SAS case, too. Later pci_alloc_consistent() fails to allocate
-> > increased chain buffer pool size for SAS case.
-> >
-> > Provide a fix by looking at the bus type and using appropriate
-> > MPT_SAS_CAN_QUEUE value while calculation of the number of chain
-> > buffers.
-> 
-> Could someone please comment on this patch? Thanks!
-> 
-> Anatolij
 
+
+--- Comment #10 from Tim Small <tim@seoss.co.uk>  2010-01-13 12:30:47 ---
+Hi Aaron,
+
+It's possible that this is an unrelated issue.  On one of the systems with the
+MPT SAS controllers, I have moved a drive from an MPT SAS channel onto an Intel
+631xESB/632xESB SATA channel, and the unreliable behaviour appeared to stop.
+
+Do you have any other drives which you can test in place of the WD drives? 
+Personally I have found Hitachi SATA drives to be well engineered in recent
+years from a SMART PoV.
+
+If you'd like to open another bug, the script included in this bug might help
+you reproduce the problems.  You could also try disabling NCQ and/or using a
+different SATA controller (Silicon Image SiI 3132 based PCIe cards are
+available very inexpensively) to see if this helps.
+
+Thanks,
+
+Tim.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
