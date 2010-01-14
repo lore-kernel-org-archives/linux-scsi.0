@@ -1,58 +1,55 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 3/3] zfcp: add missing compat ptr conversion
-Date: Wed, 13 Jan 2010 17:52:38 +0100
-Message-ID: <20100113165513.637868000@de.ibm.com>
-References: <20100113165235.299592000@de.ibm.com>
+From: George Kadianakis <desnacked@gmail.com>
+Subject: [PATCH 1/1] SCSI: lpfc, restore MSI-X/MSI support
+Date: Thu, 14 Jan 2010 02:20:00 +0200
+Message-ID: <87r5pta66n.fsf@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.17.166]:37431 "EHLO
-	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755995Ab0AMQzP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2010 11:55:15 -0500
-Content-Disposition: inline; filename=705-zfcp-compat-ptr.diff
+Received: from mail-ew0-f209.google.com ([209.85.219.209]:37450 "EHLO
+	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754625Ab0ANAUX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2010 19:20:23 -0500
+Received: by ewy1 with SMTP id 1so277442ewy.28
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2010 16:20:21 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: james.smart@emulex.com
 
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
+From: George Kadianakis <desnacked {bomb} gmail {point} com>
 
-Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+A Gentoo bug report [1] showed that as of 2.6.31 lpfc only uses INTx interrupts.
+This patch restores lpfc's ability to support MSI-X/MSI interrupts that the 
+"Addition of SLI4 Interface - Base Support" patch [2] broke.
+It reestablishes MSI-X as the default interrupt method and in case MSI-X is not 
+supported lpfc_sli{4,}_enable_intr fallbacks to MSI and then to INTx.
+
+[1]: http://bugs.gentoo.org/show_bug.cgi?id=296319
+[2]: commit da0436e915a5c17ee79e72c1bf978a4ebb1cbf4d
+
+Signed-off-by:  George Kadianakis <desnacked {cat} gmail {dog} com>
 ---
+ drivers/scsi/lpfc/lpfc_attr.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- drivers/s390/scsi/zfcp_cfdc.c |    9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_cfdc.c	2010-01-13 17:41:07.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_cfdc.c	2010-01-13 17:45:39.000000000 +0100
-@@ -12,6 +12,7 @@
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index e1a30a1..936ecaf 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -2890,12 +2890,12 @@ LPFC_ATTR_RW(poll_tmo, 10, 1, 255,
+ /*
+ # lpfc_use_msi: Use MSI (Message Signaled Interrupts) in systems that
+ # 				 support this feature
+-#       0  = MSI disabled (default)
++#       0  = MSI disabled
+ #       1  = MSI enabled
+-#       2  = MSI-X enabled
++#       2  = MSI-X enabled (default)
+ # Value range is [0,2]. Default value is 0.
+ */
+-LPFC_ATTR_R(use_msi, 0, 0, 2, "Use Message Signaled Interrupts (1) or "
++LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Message Signaled Interrupts (1) or "
+ 					      "MSI-X (2), if possible");
  
- #include <linux/types.h>
- #include <linux/miscdevice.h>
-+#include <asm/compat.h>
- #include <asm/ccwdev.h>
- #include "zfcp_def.h"
- #include "zfcp_ext.h"
-@@ -163,7 +164,7 @@ static void zfcp_cfdc_req_to_sense(struc
- }
- 
- static long zfcp_cfdc_dev_ioctl(struct file *file, unsigned int command,
--				unsigned long buffer)
-+				unsigned long arg)
- {
- 	struct zfcp_cfdc_data *data;
- 	struct zfcp_cfdc_data __user *data_user;
-@@ -175,7 +176,11 @@ static long zfcp_cfdc_dev_ioctl(struct f
- 	if (command != ZFCP_CFDC_IOC)
- 		return -ENOTTY;
- 
--	data_user = (void __user *) buffer;
-+	if (is_compat_task())
-+		data_user = compat_ptr(arg);
-+	else
-+		data_user = (void __user *)arg;
-+
- 	if (!data_user)
- 		return -EINVAL;
- 
-
+ /*
