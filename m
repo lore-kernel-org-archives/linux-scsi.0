@@ -1,55 +1,95 @@
-From: George Kadianakis <desnacked@gmail.com>
-Subject: [PATCH 1/1] SCSI: lpfc, restore MSI-X/MSI support
-Date: Thu, 14 Jan 2010 02:20:00 +0200
-Message-ID: <87r5pta66n.fsf@gmail.com>
+From: H Hartley Sweeten <hartleys@visionengravers.com>
+Subject: [PATCH] scsi/sd.c: quiet all sparse noise
+Date: Wed, 13 Jan 2010 18:45:31 -0700
+Message-ID: <201001131845.32125.hartleys@visionengravers.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:37450 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754625Ab0ANAUX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jan 2010 19:20:23 -0500
-Received: by ewy1 with SMTP id 1so277442ewy.28
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Jan 2010 16:20:21 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755339Ab0ANBp0@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: james.smart@emulex.com
 
-From: George Kadianakis <desnacked {bomb} gmail {point} com>
+scsi/sd.c: quiet all sparse noise
 
-A Gentoo bug report [1] showed that as of 2.6.31 lpfc only uses INTx interrupts.
-This patch restores lpfc's ability to support MSI-X/MSI interrupts that the 
-"Addition of SLI4 Interface - Base Support" patch [2] broke.
-It reestablishes MSI-X as the default interrupt method and in case MSI-X is not 
-supported lpfc_sli{4,}_enable_intr fallbacks to MSI and then to INTx.
+In sd_store_cache_type the symbol 'len' is declared twice.
+Remove the second declaration to quiet the following
+sparse warning.
 
-[1]: http://bugs.gentoo.org/show_bug.cgi?id=296319
-[2]: commit da0436e915a5c17ee79e72c1bf978a4ebb1cbf4d
+warning: symbol 'len' shadows an earlier one
 
-Signed-off-by:  George Kadianakis <desnacked {cat} gmail {dog} com>
+In sd_probe the variable 'index' is declared as a u32. This variable is
+used in a call to ida_get_new which is expecting an int *. Make
+the variable an int to quiet the following sparse warning.
+
+warning: incorrect type in argument 2 (different signedness)
+
+There are 4 symbols in the file that are not exported and produce
+the following sparse warnings.
+
+warning: symbol 'sd_cdb_cache' was not declared. Should it be static?
+warning: symbol 'sd_cdb_pool' was not declared. Should it be static?
+warning: symbol 'sd_read_protection_type' was not declared. Should it be static?
+warning: symbol 'sd_read_app_tag_own' was not declared. Should it be static?
+
+Make them static to quiet the warnings.
+
+H Hartley Sweeten <hsweeten@visionengravers.com>
+James E.J. Bottomley <James.Bottomley@suse.de>
+
 ---
- drivers/scsi/lpfc/lpfc_attr.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index e1a30a1..936ecaf 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2890,12 +2890,12 @@ LPFC_ATTR_RW(poll_tmo, 10, 1, 255,
- /*
- # lpfc_use_msi: Use MSI (Message Signaled Interrupts) in systems that
- # 				 support this feature
--#       0  = MSI disabled (default)
-+#       0  = MSI disabled
- #       1  = MSI enabled
--#       2  = MSI-X enabled
-+#       2  = MSI-X enabled (default)
- # Value range is [0,2]. Default value is 0.
- */
--LPFC_ATTR_R(use_msi, 0, 0, 2, "Use Message Signaled Interrupts (1) or "
-+LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Message Signaled Interrupts (1) or "
- 					      "MSI-X (2), if possible");
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 255da53..987a12e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -116,8 +116,8 @@ static DEFINE_IDA(sd_index_ida);
+  * object after last put) */
+ static DEFINE_MUTEX(sd_ref_mutex);
  
+-struct kmem_cache *sd_cdb_cache;
+-mempool_t *sd_cdb_pool;
++static struct kmem_cache *sd_cdb_cache;
++static mempool_t *sd_cdb_pool;
+ 
+ static const char *sd_cache_types[] = {
+ 	"write through", "none", "write back",
+@@ -144,7 +144,7 @@ sd_store_cache_type(struct device *dev, struct device_attribute *attr,
+ 		return -EINVAL;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sd_cache_types); i++) {
+-		const int len = strlen(sd_cache_types[i]);
++		len = strlen(sd_cache_types[i]);
+ 		if (strncmp(sd_cache_types[i], buf, len) == 0 &&
+ 		    buf[len] == '\n') {
+ 			ct = i;
+@@ -1369,7 +1369,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
  /*
+  * Determine whether disk supports Data Integrity Field.
+  */
+-void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
++static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ {
+ 	struct scsi_device *sdp = sdkp->device;
+ 	u8 type;
+@@ -1896,7 +1896,7 @@ defaults:
+  * The ATO bit indicates whether the DIF application tag is available
+  * for use by the operating system.
+  */
+-void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
++static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ {
+ 	int res, offset;
+ 	struct scsi_device *sdp = sdkp->device;
+@@ -2217,7 +2217,7 @@ static int sd_probe(struct device *dev)
+ 	struct scsi_device *sdp = to_scsi_device(dev);
+ 	struct scsi_disk *sdkp;
+ 	struct gendisk *gd;
+-	u32 index;
++	int index;
+ 	int error;
+ 
+ 	error = -ENODEV;
