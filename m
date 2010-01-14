@@ -1,62 +1,145 @@
-From: George Kadianakis <desnacked@gmail.com>
-Subject: Re: [PATCH 1/1] SCSI: lpfc, restore MSI-X/MSI support
-Date: Thu, 14 Jan 2010 19:26:17 +0200
-Message-ID: <87aawga98m.fsf@gmail.com>
-References: <87r5pta66n.fsf@gmail.com> <4B4F4E55.4030206@emulex.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Is this a known problem with the SCSI mid layer?
+Date: Thu, 14 Jan 2010 13:24:59 -0500
+Message-ID: <4B4F617B.5050609@interlog.com>
+References: <20100114165602.GY13413@beardog.cce.hp.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f209.google.com ([209.85.219.209]:45539 "EHLO
-	mail-ew0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751411Ab0ANR1P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 12:27:15 -0500
-Received: by ewy1 with SMTP id 1so7038ewy.28
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Jan 2010 09:27:10 -0800 (PST)
-In-Reply-To: <4B4F4E55.4030206@emulex.com> (James Smart's message of "Thu, 14
-	Jan 2010 12:03:17 -0500")
+Received: from smtp.infotech.no ([82.134.31.41]:40181 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751791Ab0ANSZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jan 2010 13:25:13 -0500
+In-Reply-To: <20100114165602.GY13413@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: scameron@beardog.cce.hp.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, mikem@beardog.cce.hp.com, dab@hp.com, hch@infradead.com, axboe@kernel.dk, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-James Smart <james.smart@emulex.com> writes:
+scameron@beardog.cce.hp.com wrote:
+> I'm seeing a problem which I think is a problem in the SCSI mid layer.
+> 
+> Check this out:
+> 
+> I can rmmod and insmod hpsa (a modified version from 
+> what's currently in the mainline tree, but I don't think
+> that matters.)
+> 
+> I have one logical drive present
+> 
+> [root@slicer ~]# rmmod hpsa
+> [root@slicer ~]# insmod /usr/src/linux-2.6.27.42/drivers/scsi/hpsa.ko
+> [root@slicer ~]# cat /proc/scsi/scsi
+> Attached devices:
+> Host: scsi1 Channel: 00 Id: 00 Lun: 00
+>   Vendor: HP       Model: 1210m            Rev: 0150
+>   Type:   RAID                             ANSI  SCSI revision: 05
+> Host: scsi1 Channel: 00 Id: 00 Lun: 01
+>   Vendor: HP       Model: 1210m VOLUME     Rev: 0150
+>   Type:   Direct-Access                    ANSI  SCSI revision: 05
+> [root@slicer ~]# rmmod hpsa
+> [root@slicer ~]# insmod /usr/src/linux-2.6.27.42/drivers/scsi/hpsa.ko
+> [root@slicer ~]# cat /proc/scsi/scsi
+> Attached devices:
+> Host: scsi2 Channel: 00 Id: 00 Lun: 00
+>   Vendor: HP       Model: 1210m            Rev: 0150
+>   Type:   RAID                             ANSI  SCSI revision: 05
+> Host: scsi2 Channel: 00 Id: 00 Lun: 01
+>   Vendor: HP       Model: 1210m VOLUME     Rev: 0150
+>   Type:   Direct-Access                    ANSI  SCSI revision: 05
+> [root@slicer ~]# lsscsi -g
+> [2:0:0:0]    storage HP       1210m            0150  -         /dev/sg0
+> [2:0:0:1]    disk    HP       1210m VOLUME     0150  /dev/sda  /dev/sg1
+> 
+> So far, so good.
+> 
+> Now, watch this.  Remove the device while something has it open:
+> 
+> [root@slicer ~]# sleep 10 < /dev/sg1 & ( sleep 1 && echo scsi remove-single-device 2 0 0 1 > /proc/scsi/scsi )
+> [1] 6077
+> [root@slicer ~]# 
+> [1]+  Done                    sleep 10 < /dev/sg1
+> [root@slicer ~]# lsof /dev/sg1
+> lsof: status error on /dev/sg1: No such file or directory
+> lsof 4.78
+>  latest revision: ftp://lsof.itap.purdue.edu/pub/tools/unix/lsof/
+>  latest FAQ: ftp://lsof.itap.purdue.edu/pub/tools/unix/lsof/FAQ
+>  latest man page: ftp://lsof.itap.purdue.edu/pub/tools/unix/lsof/lsof_man
+>  usage: [-?abhlnNoOPRstUvVX] [+|-c c] [+|-d s] [+D D] [+|-f]
+>  [-F [f]] [-g [s]] [-i [i]] [+|-L [l]] [+m [m]] [+|-M] [-o [o]]
+>  [-p s] [+|-r [t]] [-S [t]] [-T [t]] [-u s] [+|-w] [-x [fl]] [-Z [Z]] [--] [names]
+> Use the ``-h'' option to get more help information.
+> [root@slicer ~]# rmmod hpsa
+> ERROR: Module hpsa is in use
+> [root@slicer ~]#
+> 
+> Hmm, that's not cool.
 
-> The short response:
-> Acked-by: James Smart  <james.smart@emulex.com>
->
->
-> Background:
-> Nothing Broke. This was intended.
->
-> We had originally enabled MSI-X by default, but in qualification
-> within the last 12 months, we encountered a major catch-22:
->
-> There were at least 4 platforms, from 2 major OEMs, that :
-> - Say they support MSI-X - platform routines work and act as if they do.
-> - We enable it, generate a test interrupt to check they really do
-> deliver it, and it works.
-> - But shortly after attachment, the system hangs or loses interrupts,
-> resulting in a bad system behavior.
->
-> Given the distro's picking up the 2.6.32 kernel, we had to stick with
-> a default of MSI-X off, with user-enabled MSI-X as these platforms
-> couldn't get fixed.
->
-> However, we're also now encountering platforms that require MSI-X and
-> never INTx, so we must change. It's desired also for also for
-> performance reasons.
->
-> So - now (2.6.33) is the right time to re-enable MSI-X by default.
->
->
-> -- james s
->
+Steve,
+That 'sleep 10 < /dev/sg1' worries me. The purpose of a
+read() on a sg device is to fetch the response of a SCSI
+command sent by a preceding write(). So with nothing to
+read and a blocking sg device file descriptor the read()
+probably hangs. IMO the valid use of the sg driver should
+not have a read() hanging for a SCSI command that was
+never sent. While that is happening you remove the
+device.
 
-So I see! Thanks for the clarification.
-It was just that your commit's description didn't mention the
-interrupt method change at all (and I also couldn't find any
-information on the internet), and I thought it was accidental.
+That may be a valid torture test for the sg driver but
+isn't something that should be encouraged from the
+user space.
 
-Anyway, all in all, I think that the correct course of action here is
-to have MSI-X as the default (for the reasons you described) and users
-with defective systems can enable INTx manually.
+On a Ubuntu kernel 2.6.31-17-generic using a virtual
+device owned by the scsi_debug driver and the same
+torture test, I don't have a problem with 'rmmod scsi_debug'
+
+IMO the usb-storage driver is not a good yardstick.
+
+Doug Gilbert
+
+
+> Maybe it's my driver.  Let me try with USB.
+> 
+> [root@slicer ~]# cat /proc/scsi/scsi
+> Attached devices:
+> Host: scsi1 Channel: 00 Id: 00 Lun: 00
+>   Vendor: USB      Model: DISK 2.0         Rev: 0403
+>   Type:   Direct-Access                    ANSI  SCSI revision: 00
+> [root@slicer ~]# lsmod | grep sd
+> sd_mod                 59592  0 
+> scsi_mod              189304  9 usb_storage,ib_iser,iscsi_tcp,libiscsi,scsi_transport_iscsi,scsi_dh,sg,cciss,sd_mod
+> [root@slicer ~]# rmmod usb_storage
+> [root@slicer ~]# cat /proc/scsi/scsi
+> Attached devices:
+> [root@slicer ~]# modprobe usb_storage
+> [root@slicer ~]# cat /proc/scsi/scsi
+> Attached devices:
+> [root@slicer ~]# echo scsi add-single-device 1 0 0 0 > /proc/scsi/scsi
+> -bash: echo: write error: No such device or address
+> 
+> Oh yeah, the host number increments, forgot about that...
+> 
+> [root@slicer ~]# echo scsi add-single-device 2 0 0 0 > /proc/scsi/scsi
+> [root@slicer ~]# cat /proc/scsi/scsi
+> Attached devices:
+> Host: scsi2 Channel: 00 Id: 00 Lun: 00
+>   Vendor: USB      Model: DISK 2.0         Rev: 0403
+>   Type:   Direct-Access                    ANSI  SCSI revision: 00
+> [root@slicer ~]# lsscsi -g
+> [2:0:0:0]    disk    USB      DISK 2.0         0403  /dev/sda  /dev/sg0
+> [root@slicer ~]# sleep 10 < /dev/sg0 & ( sleep 1 && echo scsi remove-single-device 2 0 0 0 > /proc/scsi/scsi )
+> [1] 6073
+> [root@slicer ~]# 
+> [root@slicer ~]# 
+> [1]+  Done                    sleep 10 < /dev/sg0
+> [root@slicer ~]# rmmod usb_storage
+> ERROR: Module usb_storage is in use
+> [root@slicer ~]#
+> 
+> Hmm, same thing.
+> 
+> Any thoughts?  (other than "don't do that."  Our array configuration
+> utility for smart arrays is causing similar trouble, as it rapidly creates
+> and deletes logical drives, etc. so it would be nice if this didn't happen.)
