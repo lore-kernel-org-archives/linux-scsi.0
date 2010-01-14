@@ -1,21 +1,21 @@
 From: scameron@beardog.cce.hp.com
 Subject: Re: Is this a known problem with the SCSI mid layer?
-Date: Thu, 14 Jan 2010 13:00:46 -0600
-Message-ID: <20100114190046.GA13413@beardog.cce.hp.com>
+Date: Thu, 14 Jan 2010 14:07:15 -0600
+Message-ID: <20100114200715.GB13413@beardog.cce.hp.com>
 References: <20100114165602.GY13413@beardog.cce.hp.com> <4B4F617B.5050609@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:23004 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757464Ab0ANS6V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 13:58:21 -0500
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:18489 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932300Ab0ANUFr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 15:05:47 -0500
 Content-Disposition: inline
 In-Reply-To: <4B4F617B.5050609@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, mikem@beardog.cce.hp.com, dab@hp.com, hch@infradead.com, axboe@kernel.dk, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, mikem@beardog.cce.hp.com, dab@hp.com, hch@infradead.org, axboe@kernel.dk, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
 On Thu, Jan 14, 2010 at 01:24:59PM -0500, Douglas Gilbert wrote:
 > scameron@beardog.cce.hp.com wrote:
@@ -88,80 +88,91 @@ On Thu, Jan 14, 2010 at 01:24:59PM -0500, Douglas Gilbert wrote:
 > not have a read() hanging for a SCSI command that was
 > never sent. While that is happening you remove the
 > device.
-
-I don't think the sleep does a read from stdin.  As far
-as I can tell, There is no read, just an open(), by the shell,
-to connect to sleep's stdin, but sleep never reads from stdin.
-It does some reads for locale stuff, but not from stdin.
-According to strace, all reads by sleep are from file descriptor
-3, which is opened to various things, locale, random, library
-stuff, but no reads from stdin.  Just an open() by the shell.
-
 > 
 > That may be a valid torture test for the sg driver but
 > isn't something that should be encouraged from the
 > user space.
-
-Yeah, of course this test isn't exactly a sane thing to do,
-but, if someone happens to "echo scsi remove-single-device ... "
-while some process has the corresponding /dev/sg node merely opened, 
-wedging things seems, well, kinda bad.  And it was something
-we ran into testing other software, I just isolated it down to this
-test case. 
-
-This, however, appears to work:
-
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-  Vendor: USB      Model: DISK 2.0         Rev: 0403
-  Type:   Direct-Access                    ANSI  SCSI revision: 00
-[root@slicer ~]# lsscsi
-[1:0:0:0]    disk    USB      DISK 2.0         0403  /dev/sdb
-[root@slicer ~]# sleep 10 < /dev/sdb & ( sleep 1 && echo scsi remove-single-device 1 0 0 0 > /proc/scsi/scsi )
-[1] 5942
-[root@slicer ~]# 
-[1]+  Done                    sleep 10 < /dev/sdb
-[root@slicer ~]# rmmod usb_storage
-
-and this works too:
-
-[root@slicer ~]# insmod /usr/src/linux-2.6.27.42/drivers/scsi/hpsa.ko
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi2 Channel: 00 Id: 00 Lun: 00
-  Vendor: HP       Model: 1210m            Rev: 0150
-  Type:   RAID                             ANSI  SCSI revision: 05
-Host: scsi2 Channel: 00 Id: 00 Lun: 01
-  Vendor: HP       Model: 1210m VOLUME     Rev: 0150
-  Type:   Direct-Access                    ANSI  SCSI revision: 05
-[root@slicer ~]# lsscsi
-[2:0:0:0]    storage HP       1210m            0150  -       
-[2:0:0:1]    disk    HP       1210m VOLUME     0150  /dev/sda
-[root@slicer ~]# sleep 10 < /dev/sda & ( sleep 1 && echo scsi remove-single-device 2 0 0 1 > /proc/scsi/scsi )
-[1] 6087
-[root@slicer ~]# 
-[1]+  Done                    sleep 10 < /dev/sda
-[root@slicer ~]# rmmod hpsa
-[root@slicer ~]#
-
-
-
 > 
 > On a Ubuntu kernel 2.6.31-17-generic using a virtual
 > device owned by the scsi_debug driver and the same
 > torture test, I don't have a problem with 'rmmod scsi_debug'
 > 
 > IMO the usb-storage driver is not a good yardstick.
+
+I tried it with mptsas with the same results:
+
+mptlinuxtest:~ # cat /proc/scsi/scsi
+mptlinuxtest:~ # modprobe mptsas
+mptlinuxtest:~ # cat /proc/scsi/scsi
+Attached devices:
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: HP       Model: DG072A9BB7       Rev: HPD0
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi2 Channel: 00 Id: 01 Lun: 00
+  Vendor: HP       Model: DG072A8B54       Rev: HPD4
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi2 Channel: 01 Id: 03 Lun: 00
+  Vendor: LSILOGIC Model: Logical Volume   Rev: 3000
+  Type:   Direct-Access                    ANSI  SCSI revision: 02
+mptlinuxtest:~ # rmmod mptsas
+mptlinuxtest:~ # modprobe mptsas
+mptlinuxtest:~ # cat /proc/scsi/scsi
+Attached devices:
+Host: scsi3 Channel: 00 Id: 00 Lun: 00
+  Vendor: HP       Model: DG072A9BB7       Rev: HPD0
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi3 Channel: 00 Id: 01 Lun: 00
+  Vendor: HP       Model: DG072A8B54       Rev: HPD4
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi3 Channel: 01 Id: 03 Lun: 00
+  Vendor: LSILOGIC Model: Logical Volume   Rev: 3000
+  Type:   Direct-Access                    ANSI  SCSI revision: 02
+mptlinuxtest:~ # lsscsi -g
+[3:0:0:0]    disk    HP       DG072A9BB7       HPD0  -         /dev/sg0
+[3:0:1:0]    disk    HP       DG072A8B54       HPD4  -         /dev/sg1
+[3:1:3:0]    disk    LSILOGIC Logical Volume   3000  /dev/sda  /dev/sg2
+mptlinuxtest:~ # sleep 10 < /dev/sg2 & ( sleep 1 && echo scsi remove-single-device 3 1 3 0 > /proc/scsi/scsi )
+[1] 797
+mptlinuxtest:~ # 
+[1]+  Done                    sleep 10 < /dev/sg2
+mptlinuxtest:~ # echo $?
+0
+mptlinuxtest:~ # rmmod mptsas
+ERROR: Module mptsas is in use
+mptlinuxtest:~ #
+
+
+Also I tried using a C program rather than the sleep command, to remove
+the possibility of a read from stdin by sleep command (even though
+I think it doesn't, according to strace.)
+
+[root@slicer ~]# cat sleeptest.c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+
+int main(int argc, char *argv[])
+{
+	int fd;
+	
+	fd = open(argv[1], O_RDONLY);
+	if (fd < 0) {
+		perror("open");
+		return 1;	
+	}
+	sleep(10);
+	return 0;
+}
+
+Using that, used in place of the "sleep < /dev/sg1", made no difference.
+
+-- steve
+
+
 > 
-
-Yeah, wasn't my first choice for a guinea pig, as I know it
-does some strange things compared to other scsi drivers, but
-it was what I had handy, hardware-wise.
-
-I'll try to scrounge up some different hardware, and see if they
-behave the same.
-
 > Doug Gilbert
 > 
 > 
