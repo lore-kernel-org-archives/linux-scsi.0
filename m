@@ -1,122 +1,90 @@
-From: scameron@beardog.cce.hp.com
-Subject: Is this a known problem with the SCSI mid layer?
-Date: Thu, 14 Jan 2010 10:56:02 -0600
-Message-ID: <20100114165602.GY13413@beardog.cce.hp.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 1/1] SCSI: lpfc, restore MSI-X/MSI support
+Date: Thu, 14 Jan 2010 12:03:17 -0500
+Message-ID: <4B4F4E55.4030206@emulex.com>
+References: <87r5pta66n.fsf@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:13767 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756229Ab0ANQxh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 11:53:37 -0500
-Content-Disposition: inline
+Received: from exht1.emulex.com ([138.239.113.183]:6758 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757102Ab0ANRDl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 12:03:41 -0500
+In-Reply-To: <87r5pta66n.fsf@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, mikem@beardog.cce.hp.com, dab@hp.com, hch@infradead.com, axboe@kernel.dk
+To: George Kadianakis <desnacked@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-I'm seeing a problem which I think is a problem in the SCSI mid layer.
+The short response:
+Acked-by: James Smart  <james.smart@emulex.com>
 
-Check this out:
 
-I can rmmod and insmod hpsa (a modified version from 
-what's currently in the mainline tree, but I don't think
-that matters.)
+Background:
+Nothing Broke. This was intended.
 
-I have one logical drive present
+We had originally enabled MSI-X by default, but in qualification within the 
+last 12 months, we encountered a major catch-22:
 
-[root@slicer ~]# rmmod hpsa
-[root@slicer ~]# insmod /usr/src/linux-2.6.27.42/drivers/scsi/hpsa.ko
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-  Vendor: HP       Model: 1210m            Rev: 0150
-  Type:   RAID                             ANSI  SCSI revision: 05
-Host: scsi1 Channel: 00 Id: 00 Lun: 01
-  Vendor: HP       Model: 1210m VOLUME     Rev: 0150
-  Type:   Direct-Access                    ANSI  SCSI revision: 05
-[root@slicer ~]# rmmod hpsa
-[root@slicer ~]# insmod /usr/src/linux-2.6.27.42/drivers/scsi/hpsa.ko
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi2 Channel: 00 Id: 00 Lun: 00
-  Vendor: HP       Model: 1210m            Rev: 0150
-  Type:   RAID                             ANSI  SCSI revision: 05
-Host: scsi2 Channel: 00 Id: 00 Lun: 01
-  Vendor: HP       Model: 1210m VOLUME     Rev: 0150
-  Type:   Direct-Access                    ANSI  SCSI revision: 05
-[root@slicer ~]# lsscsi -g
-[2:0:0:0]    storage HP       1210m            0150  -         /dev/sg0
-[2:0:0:1]    disk    HP       1210m VOLUME     0150  /dev/sda  /dev/sg1
+There were at least 4 platforms, from 2 major OEMs, that :
+- Say they support MSI-X - platform routines work and act as if they do.
+- We enable it, generate a test interrupt to check they really do deliver it, 
+and it works.
+- But shortly after attachment, the system hangs or loses interrupts, 
+resulting in a bad system behavior.
 
-So far, so good.
+Given the distro's picking up the 2.6.32 kernel, we had to stick with a 
+default of MSI-X off, with user-enabled MSI-X as these platforms couldn't get 
+fixed.
 
-Now, watch this.  Remove the device while something has it open:
+However, we're also now encountering platforms that require MSI-X and never 
+INTx, so we must change. It's desired also for also for performance reasons.
 
-[root@slicer ~]# sleep 10 < /dev/sg1 & ( sleep 1 && echo scsi remove-single-device 2 0 0 1 > /proc/scsi/scsi )
-[1] 6077
-[root@slicer ~]# 
-[1]+  Done                    sleep 10 < /dev/sg1
-[root@slicer ~]# lsof /dev/sg1
-lsof: status error on /dev/sg1: No such file or directory
-lsof 4.78
- latest revision: ftp://lsof.itap.purdue.edu/pub/tools/unix/lsof/
- latest FAQ: ftp://lsof.itap.purdue.edu/pub/tools/unix/lsof/FAQ
- latest man page: ftp://lsof.itap.purdue.edu/pub/tools/unix/lsof/lsof_man
- usage: [-?abhlnNoOPRstUvVX] [+|-c c] [+|-d s] [+D D] [+|-f]
- [-F [f]] [-g [s]] [-i [i]] [+|-L [l]] [+m [m]] [+|-M] [-o [o]]
- [-p s] [+|-r [t]] [-S [t]] [-T [t]] [-u s] [+|-w] [-x [fl]] [-Z [Z]] [--] [names]
-Use the ``-h'' option to get more help information.
-[root@slicer ~]# rmmod hpsa
-ERROR: Module hpsa is in use
-[root@slicer ~]#
+So - now (2.6.33) is the right time to re-enable MSI-X by default.
 
-Hmm, that's not cool.
 
-Maybe it's my driver.  Let me try with USB.
+-- james s
 
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-  Vendor: USB      Model: DISK 2.0         Rev: 0403
-  Type:   Direct-Access                    ANSI  SCSI revision: 00
-[root@slicer ~]# lsmod | grep sd
-sd_mod                 59592  0 
-scsi_mod              189304  9 usb_storage,ib_iser,iscsi_tcp,libiscsi,scsi_transport_iscsi,scsi_dh,sg,cciss,sd_mod
-[root@slicer ~]# rmmod usb_storage
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-[root@slicer ~]# modprobe usb_storage
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-[root@slicer ~]# echo scsi add-single-device 1 0 0 0 > /proc/scsi/scsi
--bash: echo: write error: No such device or address
 
-Oh yeah, the host number increments, forgot about that...
 
-[root@slicer ~]# echo scsi add-single-device 2 0 0 0 > /proc/scsi/scsi
-[root@slicer ~]# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi2 Channel: 00 Id: 00 Lun: 00
-  Vendor: USB      Model: DISK 2.0         Rev: 0403
-  Type:   Direct-Access                    ANSI  SCSI revision: 00
-[root@slicer ~]# lsscsi -g
-[2:0:0:0]    disk    USB      DISK 2.0         0403  /dev/sda  /dev/sg0
-[root@slicer ~]# sleep 10 < /dev/sg0 & ( sleep 1 && echo scsi remove-single-device 2 0 0 0 > /proc/scsi/scsi )
-[1] 6073
-[root@slicer ~]# 
-[root@slicer ~]# 
-[1]+  Done                    sleep 10 < /dev/sg0
-[root@slicer ~]# rmmod usb_storage
-ERROR: Module usb_storage is in use
-[root@slicer ~]#
-
-Hmm, same thing.
-
-Any thoughts?  (other than "don't do that."  Our array configuration
-utility for smart arrays is causing similar trouble, as it rapidly creates
-and deletes logical drives, etc. so it would be nice if this didn't happen.)
-
--- steve
-
+George Kadianakis wrote:
+> From: George Kadianakis <desnacked {bomb} gmail {point} com>
+> 
+> A Gentoo bug report [1] showed that as of 2.6.31 lpfc only uses INTx interrupts.
+> This patch restores lpfc's ability to support MSI-X/MSI interrupts that the 
+> "Addition of SLI4 Interface - Base Support" patch [2] broke.
+> It reestablishes MSI-X as the default interrupt method and in case MSI-X is not 
+> supported lpfc_sli{4,}_enable_intr fallbacks to MSI and then to INTx.
+> 
+> [1]: http://bugs.gentoo.org/show_bug.cgi?id=296319
+> [2]: commit da0436e915a5c17ee79e72c1bf978a4ebb1cbf4d
+> 
+> Signed-off-by:  George Kadianakis <desnacked {cat} gmail {dog} com>
+> ---
+>  drivers/scsi/lpfc/lpfc_attr.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+> index e1a30a1..936ecaf 100644
+> --- a/drivers/scsi/lpfc/lpfc_attr.c
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -2890,12 +2890,12 @@ LPFC_ATTR_RW(poll_tmo, 10, 1, 255,
+>  /*
+>  # lpfc_use_msi: Use MSI (Message Signaled Interrupts) in systems that
+>  # 				 support this feature
+> -#       0  = MSI disabled (default)
+> +#       0  = MSI disabled
+>  #       1  = MSI enabled
+> -#       2  = MSI-X enabled
+> +#       2  = MSI-X enabled (default)
+>  # Value range is [0,2]. Default value is 0.
+>  */
+> -LPFC_ATTR_R(use_msi, 0, 0, 2, "Use Message Signaled Interrupts (1) or "
+> +LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Message Signaled Interrupts (1) or "
+>  					      "MSI-X (2), if possible");
+>  
+>  /*
+> 
