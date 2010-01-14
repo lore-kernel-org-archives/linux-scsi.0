@@ -1,31 +1,26 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14877] MSI/MSI-X support in 2.6.31.xx and 2.6.32.xx seems
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 14877] MSI/MSI-X support in 2.6.31.xx and 2.6.32.xx seems
  broken
-Date: Thu, 14 Jan 2010 23:02:20 GMT
-Message-ID: <201001142302.o0EN2KoJ024874@demeter.kernel.org>
+Date: Thu, 14 Jan 2010 15:01:59 -0800
+Message-ID: <20100114150159.caffb336.akpm@linux-foundation.org>
 References: <bug-14877-11613@http.bugzilla.kernel.org/>
+	<201001142227.o0EMRIVt019573@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47929 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754087Ab0ANXCV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 18:02:21 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0EN2Kqk024875
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jan 2010 23:02:20 GMT
-In-Reply-To: <bug-14877-11613@http.bugzilla.kernel.org/>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53881 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755762Ab0ANXCe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jan 2010 18:02:34 -0500
+In-Reply-To: <201001142227.o0EMRIVt019573@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14877
-
+To: barzog@telecom.by
+Cc: linux-scsi@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, James Smart <James.Smart@Emulex.Com>
 
 
-
-
---- Comment #3 from Andrew Morton <akpm@linux-foundation.org>  2010-01-14 23:02:19 ---
 (switched to email.  Please respond via emailed reply-to-all, not via the
 bugzilla web interface).
 
@@ -59,7 +54,4 @@ Oleg, please send that lpfc patch via emailed reply-to-all to this email.
 Include a brief description for the changelog and a Signed-off-by: as
 per Documentation/SubmittingPatches, thanks.
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
