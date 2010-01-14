@@ -1,22 +1,31 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Bug 15007] SCSI host adapter's scatter-gather list size Issue
-Date: Thu, 14 Jan 2010 21:49:51 +0900
-Message-ID: <20100114214157I.fujita.tomonori@lab.ntt.co.jp>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15007] SCSI host adapter's scatter-gather list size Issue
+Date: Thu, 14 Jan 2010 12:49:56 GMT
+Message-ID: <201001141249.o0ECnuTH008110@demeter.kernel.org>
 References: <bug-15007-11613@http.bugzilla.kernel.org/>
-	<201001141227.o0ECRCAb002637@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:39145 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755804Ab0ANMtz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jan 2010 07:49:55 -0500
-In-Reply-To: <201001141227.o0ECRCAb002637@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:50852 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756174Ab0ANMt5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 07:49:57 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0ECnul0008111
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Jan 2010 12:49:56 GMT
+In-Reply-To: <bug-15007-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=15007
+
+
+
+
+
+--- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-01-14 12:49:54 ---
+Reply-To: fujita.tomonori@lab.ntt.co.jp
 
 On Thu, 14 Jan 2010 12:27:12 GMT
 bugzilla-daemon@bugzilla.kernel.org wrote:
@@ -52,4 +61,7 @@ that you hit this bug.
 > But it is my guess. Do you know why? 
 > Anyway, will you or anybody take care of this issue?
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
