@@ -1,45 +1,45 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Is this a known problem with the SCSI mid layer?
-Date: Fri, 15 Jan 2010 00:43:33 +0100
-Message-ID: <4B4FAC25.1050504@s5r6.in-berlin.de>
-References: <20100114165602.GY13413@beardog.cce.hp.com> <4B4F617B.5050609@interlog.com> <20100114200715.GB13413@beardog.cce.hp.com>
+From: H Hartley Sweeten <hartleys@visionengravers.com>
+Subject: [PATCH] scsi_scan.c: quiet sparse noise
+Date: Thu, 14 Jan 2010 17:47:32 -0700
+Message-ID: <201001141747.32906.hartleys@visionengravers.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:43904 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757412Ab0ANXon (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jan 2010 18:44:43 -0500
-In-Reply-To: <20100114200715.GB13413@beardog.cce.hp.com>
+Received: from [206.15.93.42] ([206.15.93.42]:15422 "EHLO
+	visionfs1.visionengravers.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751156Ab0AOArb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jan 2010 19:47:31 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, mikem@beardog.cce.hp.com, dab@hp.com, hch@infradead.org, axboe@kernel.dk, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de
 
-scameron@beardog.cce.hp.com wrote:
-> On Thu, Jan 14, 2010 at 01:24:59PM -0500, Douglas Gilbert wrote:
->> scameron@beardog.cce.hp.com wrote:
->>> I'm seeing a problem which I think is a problem in the SCSI mid layer.
-[...]
->>> Remove the device while something has it open:
-[...]
->>> [root@slicer ~]# rmmod hpsa
->>> ERROR: Module hpsa is in use
+scsi_scan.c: quiet sparse noise
 
-The sg driver's open method takes a reference to the underlying SCSI
-device representation of the mid layer.  Among else, this step increases
-the module use count of the respective low-level driver (transport layer
-driver) so that the SCSI mid layer can be sure that function pointers to
-driver methods stay valid during the lifetime of the SCSI device
-representation.
+Include the <scsi/scsi_scan.h> header to pick up the extern
+prototype of scsi_complete_async_scans in order to quiet
+the following sparse warning:
 
-This reference taking is of course being reversed when the sg driver
-finishes its last uses of the underlying SCSI device.  This may be at
-the respective close() or even later.
+warning: symbol 'scsi_complete_async_scans' was not declared. Should it be static?
 
-In short, it is normal, expected, and necessary what you are seeing.
--- 
-Stefan Richter
--=====-==-=- ---= -====
-http://arcgraph.de/sr/
+Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+
+---
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 012f73a..6e3ca0a 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -42,6 +42,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_eh.h>
++#include <scsi/scsi_scan.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
