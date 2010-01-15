@@ -1,56 +1,56 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH][RESUBMIT] dm-mpath: Two minor fixes while processing
- activate_path
-Date: Fri, 15 Jan 2010 13:26:07 -0700
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF487870633@cosmail01.lsi.com>
+From: scameron@beardog.cce.hp.com
+Subject: Re: Is this a known problem with the SCSI mid layer?
+Date: Fri, 15 Jan 2010 15:44:55 -0600
+Message-ID: <20100115214455.GG13413@beardog.cce.hp.com>
+References: <20100114165602.GY13413@beardog.cce.hp.com> <4B4F617B.5050609@interlog.com> <20100114200715.GB13413@beardog.cce.hp.com> <4B4FAC25.1050504@s5r6.in-berlin.de> <20100115081030.GZ13771@kernel.dk> <tkrat.956a5012a91df155@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:56711 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758241Ab0AOU0O convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jan 2010 15:26:14 -0500
-Content-Language: en-US
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:26911 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758410Ab0AOVm3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2010 16:42:29 -0500
+Content-Disposition: inline
+In-Reply-To: <tkrat.956a5012a91df155@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Alasdair G Kergon <agk@redhat.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, mikem@beardog.cce.hp.com, dab@hp.com, hch@infradead.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-This patch adds two minor fixes while processing device mapper path activation.
+On Fri, Jan 15, 2010 at 10:03:09AM +0100, Stefan Richter wrote:
+> On 15 Jan, Jens Axboe wrote:
+> > On Fri, Jan 15 2010, Stefan Richter wrote:
+> >> The sg driver's open method takes a reference to the underlying SCSI
+> >> device representation of the mid layer.  Among else, this step increases
+> >> the module use count of the respective low-level driver
+> ...
+> >> In short, it is normal, expected, and necessary what you are seeing.
+> > 
+> > Hmm... Unless I'm reading Stephens email incorrectly, he's holding the
+> > device open, removing it, closing the device, and then attempting to
+> > remove the host driver. So at the point that he wants to rmmod the
+> > module, there is indeed no references to it anymore.
+> > 
+> > It looks like a bug.
+> 
+> Oh, right, I missed that the device file was indeed closed ( = the
+> seemingly last user of it exited) before rmmod was attempted.
+> 
+> I.e. remove-single-device while an sg file is open leaves a dangling
+> reference, while remove-single-device while an sd file is open does
+> not...
+> -- 
+> Stefan Richter
+> -=====-==-=- ---= -====
+> http://arcgraph.de/sr/
+> 
 
-1. Skip failed paths while calling activate_path.
-   If the path is already failed then activate_path will fail for sure. We 
-   don't have to call in that case. In some case this might cause prolonged retries unnecessarily.
+I've since tried this on a newer kernel, 2.6.33rc4 (previously I 
+was using a 2.6.27 kernel). 
 
-2. changed the mis-leading message if the activate path fails with SCSI_DH_NOSYS.
+With the 2.6.33rc4 kernel, so far the problem hasn't appeared. 
 
-Signed-off-by: Babu Moger <babu.moger@lsi.com>
+Thanks, and sorry I didn't try the newer kernel first.
 
----
---- linux-2.6.33-rc2/drivers/md/dm-mpath.c.orig	2010-01-15 15:04:37.000000000 -0400
-+++ linux-2.6.33-rc2/drivers/md/dm-mpath.c	2010-01-15 15:11:48.000000000 -0400
-@@ -461,6 +461,9 @@ static void process_queued_ios(struct wo
- 		m->pg_init_count++;
- 		m->pg_init_required = 0;
- 		list_for_each_entry(tmp, &pgpath->pg->pgpaths, list) {
-+			/* Skip failed paths */
-+			if (!tmp->is_active)
-+				continue;
- 			if (queue_work(kmpath_handlerd, &tmp->activate_path))
- 				m->pg_init_in_progress++;
- 		}
-@@ -1143,8 +1146,8 @@ static void pg_init_done(void *data, int
- 			errors = 0;
- 			break;
- 		}
--		DMERR("Cannot failover device because scsi_dh_%s was not "
--		      "loaded.", m->hw_handler_name);
-+		DMERR("Could not failover the device, Handler scsi_dh_%s "
-+			"Error %d.", m->hw_handler_name, errors);
- 		/*
- 		 * Fail path for now, so we do not ping pong
- 		 */
-
+-- steve
 
