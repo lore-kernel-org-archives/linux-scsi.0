@@ -1,64 +1,71 @@
-From: Stephen Cameron <smcameron@yahoo.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
 Subject: Re: Is this a known problem with the SCSI mid layer?
-Date: Fri, 15 Jan 2010 06:18:17 -0800 (PST)
-Message-ID: <938826.85923.qm@web33005.mail.mud.yahoo.com>
-References: <4B50675C.8070402@s5r6.in-berlin.de>
+Date: Fri, 15 Jan 2010 12:50:26 -0500
+Message-ID: <4B50AAE2.2000202@interlog.com>
+References: <938826.85923.qm@web33005.mail.mud.yahoo.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web33005.mail.mud.yahoo.com ([209.191.69.120]:28128 "HELO
-	web33005.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757701Ab0AOOSS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jan 2010 09:18:18 -0500
-In-Reply-To: <4B50675C.8070402@s5r6.in-berlin.de>
+Received: from smtp.infotech.no ([82.134.31.41]:53079 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752730Ab0AORuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jan 2010 12:50:35 -0500
+In-Reply-To: <938826.85923.qm@web33005.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org
+To: Stephen Cameron <smcameron@yahoo.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 
---- On Fri, 1/15/10, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+Steve,
+Could you confirm whether, in your environment, the scsi_debug
+driver has the same problem.
 
-=2E..
-
->=20
-> Did you check that also after, say, several minutes?=A0
-> I suppose you
-> already looked at the kernel log for possibly related
-> messages and would
-> have reported them as well...=A0 Nevertheless, I have
-> seen some cases of
-> device removal or driver removal where the SCSI layer spent
-> many minutes
-> (5? 15? I'm not sure anymore) in error handling although
-> the lower layer
-> had done its best (best but perhaps not well) to report the
-> device as
-> physically gone.
->=20
-> Did you already test really long after device removal and
-> last close,
-> along the lines of this?
-> # while ((i++ < 20)); do rmmod $driver && break;
-> sleep 60; done
+Doug Gilbert
 
 
-I had left it sitting since last night (~6:00pm localtime), and this mo=
-rning (~8:00am localtime), it still won't rmmod... so ~14 hours.
+Stephen Cameron wrote:
+> --- On Fri, 1/15/10, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+> 
+> ...
+> 
+>> Did you check that also after, say, several minutes? 
+>> I suppose you
+>> already looked at the kernel log for possibly related
+>> messages and would
+>> have reported them as well...  Nevertheless, I have
+>> seen some cases of
+>> device removal or driver removal where the SCSI layer spent
+>> many minutes
+>> (5? 15? I'm not sure anymore) in error handling although
+>> the lower layer
+>> had done its best (best but perhaps not well) to report the
+>> device as
+>> physically gone.
+>>
+>> Did you already test really long after device removal and
+>> last close,
+>> along the lines of this?
+>> # while ((i++ < 20)); do rmmod $driver && break;
+>> sleep 60; done
+> 
+> 
+> I had left it sitting since last night (~6:00pm localtime), and this morning (~8:00am localtime), it still won't rmmod... so ~14 hours.
+> 
+> -- steve
+> 
+>> -- 
+>> Stefan Richter
+>> -=====-==-=- ---= -====
+>> http://arcgraph.de/sr/
+>>
+> 
+> 
+>       
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
--- steve
-
-> --=20
-> Stefan Richter
-> -=3D=3D=3D=3D=3D-=3D=3D-=3D- ---=3D -=3D=3D=3D=3D
-> http://arcgraph.de/sr/
->=20
-
-
-     =20
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
