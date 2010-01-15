@@ -1,48 +1,117 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Is this a known problem with the SCSI mid layer?
-Date: Fri, 15 Jan 2010 10:03:09 +0100 (CET)
-Message-ID: <tkrat.956a5012a91df155@s5r6.in-berlin.de>
-References: <20100114165602.GY13413@beardog.cce.hp.com>
- <4B4F617B.5050609@interlog.com> <20100114200715.GB13413@beardog.cce.hp.com>
- <4B4FAC25.1050504@s5r6.in-berlin.de> <20100115081030.GZ13771@kernel.dk>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] aic79xx: check for non-NULL scb in
+ ahd_handle_nonpkt_busfree
+Date: Fri, 15 Jan 2010 13:07:34 +0100
+Message-ID: <20100115120734.CCC193A4EC@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:46805 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756229Ab0AOJD7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2010 04:03:59 -0500
-In-Reply-To: <20100115081030.GZ13771@kernel.dk>
-Content-Disposition: INLINE
+Received: from cantor.suse.de ([195.135.220.2]:48677 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756882Ab0AOMHg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jan 2010 07:07:36 -0500
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 026B090975
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jan 2010 13:07:35 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: scameron@beardog.cce.hp.com, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, mikem@beardog.cce.hp.com, dab@hp.com, hch@infradead.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On 15 Jan, Jens Axboe wrote:
-> On Fri, Jan 15 2010, Stefan Richter wrote:
->> The sg driver's open method takes a reference to the underlying SCSI
->> device representation of the mid layer.  Among else, this step increases
->> the module use count of the respective low-level driver
-...
->> In short, it is normal, expected, and necessary what you are seeing.
-> 
-> Hmm... Unless I'm reading Stephens email incorrectly, he's holding the
-> device open, removing it, closing the device, and then attempting to
-> remove the host driver. So at the point that he wants to rmmod the
-> module, there is indeed no references to it anymore.
-> 
-> It looks like a bug.
+aic79xx: check for non-NULL scb in ahd_handle_nonpkt_busfree
 
-Oh, right, I missed that the device file was indeed closed ( = the
-seemingly last user of it exited) before rmmod was attempted.
+When removing several devices aic79xx will occasionally Oops
+in ahd_handle_nonpkt_busfree during rescan. Looking at the
+code I found that we're indeed not checking if the scb in
+question is NULL. So check for it before accessing it.
 
-I.e. remove-single-device while an sg file is open leaves a dangling
-reference, while remove-single-device while an sd file is open does
-not...
--- 
-Stefan Richter
--=====-==-=- ---= -====
-http://arcgraph.de/sr/
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index 4d419c1..92cc866 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -3171,13 +3171,16 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
+ 				tinfo->curr.transport_version = 2;
+ 				tinfo->goal.transport_version = 2;
+ 				tinfo->goal.ppr_options = 0;
+-				/*
+-				 * Remove any SCBs in the waiting for selection
+-				 * queue that may also be for this target so
+-				 * that command ordering is preserved.
+-				 */
+-				ahd_freeze_devq(ahd, scb);
+-				ahd_qinfifo_requeue_tail(ahd, scb);
++				if (scb != NULL) {
++					/*
++					 * Remove any SCBs in the waiting
++					 * for selection queue that may
++					 * also be for this target so that
++					 * command ordering is preserved.
++					 */
++					ahd_freeze_devq(ahd, scb);
++					ahd_qinfifo_requeue_tail(ahd, scb);
++				}
+ 				printerror = 0;
+ 			}
+ 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_WDTR, FALSE)
+@@ -3194,13 +3197,16 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
+ 				      MSG_EXT_WDTR_BUS_8_BIT,
+ 				      AHD_TRANS_CUR|AHD_TRANS_GOAL,
+ 				      /*paused*/TRUE);
+-			/*
+-			 * Remove any SCBs in the waiting for selection
+-			 * queue that may also be for this target so that
+-			 * command ordering is preserved.
+-			 */
+-			ahd_freeze_devq(ahd, scb);
+-			ahd_qinfifo_requeue_tail(ahd, scb);
++			if (scb != NULL) {
++				/*
++				 * Remove any SCBs in the waiting for
++				 * selection queue that may also be for
++				 * this target so that command ordering
++				 * is preserved.
++				 */
++				ahd_freeze_devq(ahd, scb);
++				ahd_qinfifo_requeue_tail(ahd, scb);
++			}
+ 			printerror = 0;
+ 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_SDTR, FALSE)
+ 			&& ppr_busfree == 0) {
+@@ -3217,13 +3223,16 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
+ 					/*ppr_options*/0,
+ 					AHD_TRANS_CUR|AHD_TRANS_GOAL,
+ 					/*paused*/TRUE);
+-			/*
+-			 * Remove any SCBs in the waiting for selection
+-			 * queue that may also be for this target so that
+-			 * command ordering is preserved.
+-			 */
+-			ahd_freeze_devq(ahd, scb);
+-			ahd_qinfifo_requeue_tail(ahd, scb);
++			if (scb != NULL) {
++				/*
++				 * Remove any SCBs in the waiting for
++				 * selection queue that may also be for
++				 * this target so that command ordering
++				 * is preserved.
++				 */
++				ahd_freeze_devq(ahd, scb);
++				ahd_qinfifo_requeue_tail(ahd, scb);
++			}
+ 			printerror = 0;
+ 		} else if ((ahd->msg_flags & MSG_FLAG_EXPECT_IDE_BUSFREE) != 0
+ 			&& ahd_sent_msg(ahd, AHDMSG_1B,
+@@ -3251,7 +3260,7 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
+ 	 * the message phases.  We check it last in case we
+ 	 * had to send some other message that caused a busfree.
+ 	 */
+-	if (printerror != 0
++	if (scb != NULL && printerror != 0
+ 	 && (lastphase == P_MESGIN || lastphase == P_MESGOUT)
+ 	 && ((ahd->msg_flags & MSG_FLAG_EXPECT_PPR_BUSFREE) != 0)) {
+ 
