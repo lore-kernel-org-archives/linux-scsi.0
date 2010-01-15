@@ -1,71 +1,33 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Is this a known problem with the SCSI mid layer?
-Date: Fri, 15 Jan 2010 12:50:26 -0500
-Message-ID: <4B50AAE2.2000202@interlog.com>
-References: <938826.85923.qm@web33005.mail.mud.yahoo.com>
-Reply-To: dgilbert@interlog.com
+From: Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [dm-devel] [PATCH] dm-mpath: Two minor fixes while processing
+	activate_path
+Date: Fri, 15 Jan 2010 17:57:08 +0000
+Message-ID: <20100115175708.GE17760@agk-dp.fab.redhat.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF4877BC98C@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:53079 "EHLO elrond.infotech.no"
+Received: from mx1.redhat.com ([209.132.183.28]:29269 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752730Ab0AORuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jan 2010 12:50:35 -0500
-In-Reply-To: <938826.85923.qm@web33005.mail.mud.yahoo.com>
+	id S1752192Ab0AOR5P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jan 2010 12:57:15 -0500
+Received: from int-mx05.intmail.prod.int.phx2.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.18])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o0FHvFMA010964
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jan 2010 12:57:15 -0500
+Content-Disposition: inline
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4877BC98C@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Cameron <smcameron@yahoo.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Steve,
-Could you confirm whether, in your environment, the scsi_debug
-driver has the same problem.
+On Tue, Jan 05, 2010 at 03:43:44PM -0700, Moger, Babu wrote:
+> -		DMERR("Cannot failover device because scsi_dh_%s was not "
+> -		      "loaded.", m->hw_handler_name);
+> +		DMERR("Could not failover device. Error %d.", errors);
 
-Doug Gilbert
+Would it be meaningful still to include m->hw_handler_name in that message?
 
-
-Stephen Cameron wrote:
-> --- On Fri, 1/15/10, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> 
-> ...
-> 
->> Did you check that also after, say, several minutes? 
->> I suppose you
->> already looked at the kernel log for possibly related
->> messages and would
->> have reported them as well...  Nevertheless, I have
->> seen some cases of
->> device removal or driver removal where the SCSI layer spent
->> many minutes
->> (5? 15? I'm not sure anymore) in error handling although
->> the lower layer
->> had done its best (best but perhaps not well) to report the
->> device as
->> physically gone.
->>
->> Did you already test really long after device removal and
->> last close,
->> along the lines of this?
->> # while ((i++ < 20)); do rmmod $driver && break;
->> sleep 60; done
-> 
-> 
-> I had left it sitting since last night (~6:00pm localtime), and this morning (~8:00am localtime), it still won't rmmod... so ~14 hours.
-> 
-> -- steve
-> 
->> -- 
->> Stefan Richter
->> -=====-==-=- ---= -====
->> http://arcgraph.de/sr/
->>
-> 
-> 
->       
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Alasdair
 
