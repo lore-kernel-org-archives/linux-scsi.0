@@ -1,56 +1,64 @@
-From: H Hartley Sweeten <hartleys@visionengravers.com>
-Subject: [PATCH] scsi_sysfs.c: make local symbols static
-Date: Thu, 14 Jan 2010 18:39:52 -0700
-Message-ID: <201001141839.52462.hartleys@visionengravers.com>
+From: Stephen Cameron <smcameron@yahoo.com>
+Subject: Re: Is this a known problem with the SCSI mid layer?
+Date: Thu, 14 Jan 2010 18:14:34 -0800 (PST)
+Message-ID: <364432.14309.qm@web33001.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [206.15.93.42] ([206.15.93.42]:15476 "EHLO
-	visionfs1.visionengravers.com" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750743Ab0AOBjs (ORCPT
+Received: from web33001.mail.mud.yahoo.com ([209.191.69.116]:25429 "HELO
+	web33001.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751603Ab0AOCOf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jan 2010 20:39:48 -0500
-Content-Disposition: inline
+	Thu, 14 Jan 2010 21:14:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org
 
-scsi_sysfs.c: make local symbols static
+stefanr@s5r6.in-berlin.de wrote:
+> scameron@beardog.cce.hp.com wrote:
+> > On Thu, Jan 14, 2010 at 01:24:59PM -0500, Douglas Gilbert wrote:
+> >> scameron@beardog.cce.hp.com wrote:
+> >>> I'm seeing a problem which I think is a problem in the SCSI mid layer.
+> [...]
+> >>> Remove the device while something has it open:
+> [...]
+> >>> [root@slicer ~]# rmmod hpsa
+> >>> ERROR: Module hpsa is in use
+> 
+> The sg driver's open method takes a reference to the underlying SCSI
+> device representation of the mid layer.  Among else, this step increases
+> the module use count of the respective low-level driver (transport layer
+> driver) so that the SCSI mid layer can be sure that function pointers to
+> driver methods stay valid during the lifetime of the SCSI device
+> representation.
+> 
+> This reference taking is of course being reversed when the sg driver
+> finishes its last uses of the underlying SCSI device.  This may be at
+> the respective close() or even later.
+> 
+> In short, it is normal, expected, and necessary what you are seeing.
+> -- 
+> Stefan Richter
+> 
 
-The symbols dev_attr_hstate and scsi_shost_attr_group
-are only used locally in this file. Make them static to prevent
-the following sparse warnings:
+I don't think you are correct.  Look more closely at my test cases.
 
-warning: symbol 'dev_attr_hstate' was not declared. Should it be static?
-warning: symbol 'scsi_shost_attr_group' was not declared. Should it be static?
+When I attempt the rmmod, *nothing* has the device open.  The last
+close has already occurred -- albeit *after* the device was
+removed.  
 
-Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+In my test, the module *never* becomes rmmod-able.  Doesn't matter
+how long you wait, and nothing will ever decrement the reference
+count.
 
----
+Are you saying that this is correct behavior, that once a device
+is removed while a process has it open that it shoule *never*
+be rmmod'able?
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 5a06505..5016ab6 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -195,7 +195,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
- }
- 
- /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
--struct device_attribute dev_attr_hstate =
-+static struct device_attribute dev_attr_hstate =
- 	__ATTR(state, S_IRUGO | S_IWUSR, show_shost_state, store_shost_state);
- 
- static ssize_t
-@@ -271,7 +271,7 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
- 	NULL
- };
- 
--struct attribute_group scsi_shost_attr_group = {
-+static struct attribute_group scsi_shost_attr_group = {
- 	.attrs =	scsi_sysfs_shost_attrs,
- };
- 
+Because that is the behavior I am seeing.
+
+-- steve
+
+
+
+      
