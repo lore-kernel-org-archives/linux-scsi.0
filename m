@@ -1,117 +1,64 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH] aic79xx: check for non-NULL scb in
- ahd_handle_nonpkt_busfree
-Date: Fri, 15 Jan 2010 13:07:34 +0100
-Message-ID: <20100115120734.CCC193A4EC@ochil.suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15001] megaraid_sas fills dmesg with megasas: Failed to copy
+ out to user sense data
+Date: Fri, 15 Jan 2010 12:09:45 GMT
+Message-ID: <201001151209.o0FC9jFq000931@demeter.kernel.org>
+References: <bug-15001-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:48677 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756882Ab0AOMHg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jan 2010 07:07:36 -0500
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 026B090975
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Jan 2010 13:07:35 +0100 (CET)
+Received: from demeter.kernel.org ([140.211.167.39]:59942 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203Ab0AOMJq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2010 07:09:46 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0FC9jUi000932
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jan 2010 12:09:45 GMT
+In-Reply-To: <bug-15001-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-aic79xx: check for non-NULL scb in ahd_handle_nonpkt_busfree
+http://bugzilla.kernel.org/show_bug.cgi?id=15001
 
-When removing several devices aic79xx will occasionally Oops
-in ahd_handle_nonpkt_busfree during rescan. Looking at the
-code I found that we're indeed not checking if the scb in
-question is NULL. So check for it before accessing it.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+mi_whitebrook_13@gmx.at changed:
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
-index 4d419c1..92cc866 100644
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -3171,13 +3171,16 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
- 				tinfo->curr.transport_version = 2;
- 				tinfo->goal.transport_version = 2;
- 				tinfo->goal.ppr_options = 0;
--				/*
--				 * Remove any SCBs in the waiting for selection
--				 * queue that may also be for this target so
--				 * that command ordering is preserved.
--				 */
--				ahd_freeze_devq(ahd, scb);
--				ahd_qinfifo_requeue_tail(ahd, scb);
-+				if (scb != NULL) {
-+					/*
-+					 * Remove any SCBs in the waiting
-+					 * for selection queue that may
-+					 * also be for this target so that
-+					 * command ordering is preserved.
-+					 */
-+					ahd_freeze_devq(ahd, scb);
-+					ahd_qinfifo_requeue_tail(ahd, scb);
-+				}
- 				printerror = 0;
- 			}
- 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_WDTR, FALSE)
-@@ -3194,13 +3197,16 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
- 				      MSG_EXT_WDTR_BUS_8_BIT,
- 				      AHD_TRANS_CUR|AHD_TRANS_GOAL,
- 				      /*paused*/TRUE);
--			/*
--			 * Remove any SCBs in the waiting for selection
--			 * queue that may also be for this target so that
--			 * command ordering is preserved.
--			 */
--			ahd_freeze_devq(ahd, scb);
--			ahd_qinfifo_requeue_tail(ahd, scb);
-+			if (scb != NULL) {
-+				/*
-+				 * Remove any SCBs in the waiting for
-+				 * selection queue that may also be for
-+				 * this target so that command ordering
-+				 * is preserved.
-+				 */
-+				ahd_freeze_devq(ahd, scb);
-+				ahd_qinfifo_requeue_tail(ahd, scb);
-+			}
- 			printerror = 0;
- 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_SDTR, FALSE)
- 			&& ppr_busfree == 0) {
-@@ -3217,13 +3223,16 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
- 					/*ppr_options*/0,
- 					AHD_TRANS_CUR|AHD_TRANS_GOAL,
- 					/*paused*/TRUE);
--			/*
--			 * Remove any SCBs in the waiting for selection
--			 * queue that may also be for this target so that
--			 * command ordering is preserved.
--			 */
--			ahd_freeze_devq(ahd, scb);
--			ahd_qinfifo_requeue_tail(ahd, scb);
-+			if (scb != NULL) {
-+				/*
-+				 * Remove any SCBs in the waiting for
-+				 * selection queue that may also be for
-+				 * this target so that command ordering
-+				 * is preserved.
-+				 */
-+				ahd_freeze_devq(ahd, scb);
-+				ahd_qinfifo_requeue_tail(ahd, scb);
-+			}
- 			printerror = 0;
- 		} else if ((ahd->msg_flags & MSG_FLAG_EXPECT_IDE_BUSFREE) != 0
- 			&& ahd_sent_msg(ahd, AHDMSG_1B,
-@@ -3251,7 +3260,7 @@ ahd_handle_nonpkt_busfree(struct ahd_softc *ahd)
- 	 * the message phases.  We check it last in case we
- 	 * had to send some other message that caused a busfree.
- 	 */
--	if (printerror != 0
-+	if (scb != NULL && printerror != 0
- 	 && (lastphase == P_MESGIN || lastphase == P_MESGOUT)
- 	 && ((ahd->msg_flags & MSG_FLAG_EXPECT_PPR_BUSFREE) != 0)) {
- 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |mi_whitebrook_13@gmx.at
+
+
+
+
+--- Comment #4 from mi_whitebrook_13@gmx.at  2010-01-15 12:09:43 ---
+This is a "me too" post...
+
+I have a problem since the commit (SCSI: megaraid_sas: fix 64 bit sense pointer
+truncation) with several Dell 2950 Servers. It happens both on the Perc 5/i and
+the Perc 6/i controllers. All of these machines have 8GB RAM and are running
+x86_64 kernels (currently 2.6.32.2). I always get messages like this in the
+Kernel Log (plus on the console, which is VERY annoying:
+[69274.972038] megasas: Failed to copy out to user sense data
+[69274.972182] megasas: Failed to copy out to user sense data
+[71168.206030] megasas: Failed to copy out to user sense data
+[71168.206175] megasas: Failed to copy out to user sense data
+
+It happens about 2-5 times per hour, most of the time several of those errors
+(2-3) are reported in close timely vicinity, like within a few seconds. Other
+than this these servers seem to be stable, so i guess it is a spurious message
+caused by above commit. Replacing megaraid_sas.c with the version from Kernel
+2.6.32 cures the problem.
+
+I've also tried using version v00.00.04.12-rc1 of megaraid_sas.c (and .h)
+from Kernel 2.6.33-rc3 and i can confirm that it shows the same problems
+on my hardware:
+[70120.567013] megasas: Failed to copy out to user sense data
+[70120.576426] megasas: Failed to copy out to user sense data
+[70120.576869] megasas: Failed to copy out to user sense data
+[70120.587822] megasas: Failed to copy out to user sense data
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
