@@ -1,64 +1,67 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Is this a known problem with the SCSI mid layer?
-Date: Fri, 15 Jan 2010 14:02:20 +0100
-Message-ID: <4B50675C.8070402@s5r6.in-berlin.de>
-References: <364432.14309.qm@web33001.mail.mud.yahoo.com>
+From: Anatolij Gustschin <agust@denx.de>
+Subject: Re: [PATCH] [SCSI] mptsas: Fix issue with chain pools allocation on
+ katmai
+Date: Fri, 15 Jan 2010 14:12:12 +0100
+Message-ID: <20100115141212.3c245f5d@wker>
+References: <1260625941-12179-1-git-send-email-agust@denx.de>
+	<20100113111313.3a6f0399@wker>
+	<0D1E8821739E724A86F4D16902CE275C1C93DBC3F4@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:48917 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757270Ab0AONCX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2010 08:02:23 -0500
-In-Reply-To: <364432.14309.qm@web33001.mail.mud.yahoo.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:48323 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753951Ab0AONMT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jan 2010 08:12:19 -0500
+In-Reply-To: <0D1E8821739E724A86F4D16902CE275C1C93DBC3F4@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephen Cameron <smcameron@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, James Bottomley <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-Stephen Cameron wrote:
-> stefanr@s5r6.in-berlin.de wrote:
->> The sg driver's open method takes a reference to the underlying SCSI
->> device representation of the mid layer.  Among else, this step increases
->> the module use count of the respective low-level driver (transport layer
->> driver) so that the SCSI mid layer can be sure that function pointers to
->> driver methods stay valid during the lifetime of the SCSI device
->> representation.
->>
->> This reference taking is of course being reversed when the sg driver
->> finishes its last uses of the underlying SCSI device.  This may be at
->> the respective close() or even later.
->>
->> In short, it is normal, expected, and necessary what you are seeing.
->> -- 
->> Stefan Richter
->>
+On Wed, 13 Jan 2010 15:56:17 +0530
+"Desai, Kashyap" <Kashyap.Desai@lsi.com> wrote:
+
+> Anatolij,
 > 
-> I don't think you are correct.  Look more closely at my test cases.
-> 
-> When I attempt the rmmod, *nothing* has the device open.  The last
-> close has already occurred -- albeit *after* the device was
-> removed.  
+> Patch provided by you is OK to me.
+> Please consider it as ACKED.
 
-Yep, sorry, I didn't read your report as carefully as necessary.
+OK, thanks. James, could you apply this patch then?
 
-> In my test, the module *never* becomes rmmod-able.  Doesn't matter
-> how long you wait, and nothing will ever decrement the reference
-> count.
+Anatolij
+ 
+> > -----Original Message-----
+> > From: Anatolij Gustschin [mailto:agust@denx.de]
+> > Sent: Wednesday, January 13, 2010 3:43 PM
+> > To: linux-scsi@vger.kernel.org
+> > Cc: Desai, Kashyap; Moore, Eric; James Bottomley
+> > Subject: Re: [PATCH] [SCSI] mptsas: Fix issue with chain pools allocation
+> > on katmai
+> > 
+> > On Sat, 12 Dec 2009 14:52:21 +0100
+> > Anatolij Gustschin <agust@denx.de> wrote:
+> > 
+> > > Since commit 9d2e9d66a3f032667934144cd61c396ba49f090d
+> > > mptsas driver fails to allocate memory for the MPT chain buffers
+> > > for second LSI adapter on PPC440SPe Katmai platform:
+> > > ...
+> > > ioc1: LSISAS1068E B3: Capabilities={Initiator}
+> > > mptbase: ioc1: ERROR - Unable to allocate Reply, Request, Chain Buffers!
+> > > mptbase: ioc1: ERROR - didn't initialize properly! (-3)
+> > > mptsas: probe of 0002:31:00.0 failed with error -3
+> > >
+> > > This commit increased MPT_FC_CAN_QUEUE value but initChainBuffers()
+> > > doesn't differentiate between SAS and FC causing increased allocation
+> > > for SAS case, too. Later pci_alloc_consistent() fails to allocate
+> > > increased chain buffer pool size for SAS case.
+> > >
+> > > Provide a fix by looking at the bus type and using appropriate
+> > > MPT_SAS_CAN_QUEUE value while calculation of the number of chain
+> > > buffers.
+> > 
+> > Could someone please comment on this patch? Thanks!
+> > 
+> > Anatolij
 
-Did you check that also after, say, several minutes?  I suppose you
-already looked at the kernel log for possibly related messages and would
-have reported them as well...  Nevertheless, I have seen some cases of
-device removal or driver removal where the SCSI layer spent many minutes
-(5? 15? I'm not sure anymore) in error handling although the lower layer
-had done its best (best but perhaps not well) to report the device as
-physically gone.
-
-Did you already test really long after device removal and last close,
-along the lines of this?
-# while ((i++ < 20)); do rmmod $driver && break; sleep 60; done
--- 
-Stefan Richter
--=====-==-=- ---= -====
-http://arcgraph.de/sr/
