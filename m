@@ -1,73 +1,40 @@
-From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
-Subject: [PATCH] scsi: allow SCSI_WAIT_SCAN to be disabled in embedded systems
-Date: Sun, 17 Jan 2010 18:27:53 -0200
-Message-ID: <1263760073-7018-1-git-send-email-cascardo@holoscopio.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13783] udev causes high cpu usage
+Date: Sun, 17 Jan 2010 21:15:29 GMT
+Message-ID: <201001172115.o0HLFTKa017863@demeter.kernel.org>
+References: <bug-13783-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from liberdade.minaslivre.org ([72.232.254.139]:43808 "EHLO
-	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753463Ab0AQUam (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 15:30:42 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:38845 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752911Ab0AQVP3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 16:15:29 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0HLFTY8017864
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Jan 2010 21:15:29 GMT
+In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org
 
-I know scsi_wait_scan is too little and is always built as a module,
-but:
+http://bugzilla.kernel.org/show_bug.cgi?id=13783
 
-* This allows it to be disabled in cases that modules are enabled but
-all configuration is built-in. It will not surprise users that a module
-has been built.
 
-* It still does not surprise users that have disabled it by accident,
-because they only have a choice if they've picked up EMBEDDED.
+Bruno Yporti <bruno@yporti.com> changed:
 
-* This change allows it to be built-in. It uses late_initcall, which
-will put it ahead of other (SCSI) drivers.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bruno@yporti.com
 
-Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
----
- drivers/scsi/Kconfig |   24 ++++++++++++------------
- 1 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 9191d1e..2c56857 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -258,21 +258,21 @@ config SCSI_SCAN_ASYNC
- 	  or async on the kernel's command line.
- 
- config SCSI_WAIT_SCAN
--	tristate  # No prompt here, this is an invisible symbol.
-+	tristate "Waits for all SCSI async bus scans to complete" if EMBEDDED
- 	default m
- 	depends on SCSI
- 	depends on MODULES
--# scsi_wait_scan is a loadable module which waits until all the async scans are
--# complete.  The idea is to use it in initrd/ initramfs scripts.  You modprobe
--# it after all the modprobes of the root SCSI drivers and it will wait until
--# they have all finished scanning their buses before allowing the boot to
--# proceed.  (This method is not applicable if targets boot independently in
--# parallel with the initiator, or with transports with non-deterministic target
--# discovery schemes, or if a transport driver does not support scsi_wait_scan.)
--#
--# This symbol is not exposed as a prompt because little is to be gained by
--# disabling it, whereas people who accidentally switch it off may wonder why
--# their mkinitrd gets into trouble.
-+	help
-+
-+	   scsi_wait_scan is a loadable module which waits until all the async
-+	   scans are complete.  The idea is to use it in initrd/ initramfs
-+	   scripts.  You modprobe it after all the modprobes of the root SCSI
-+	   drivers and it will wait until they have all finished scanning their
-+	   buses before allowing the boot to proceed.  (This method is not
-+	   applicable if targets boot independently in parallel with the
-+	   initiator, or with transports with non-deterministic target
-+	   discovery schemes, or if a transport driver does not support
-+	   scsi_wait_scan.)
- 
- menu "SCSI Transports"
- 	depends on SCSI
+
+
+--- Comment #25 from Bruno Yporti <bruno@yporti.com>  2010-01-17 21:15:26 ---
+I have the same problem here in my Lenovo 3000 G530 with
+Optiarc_DVD_RW_AD_7580S.
+
 -- 
-1.6.6
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
