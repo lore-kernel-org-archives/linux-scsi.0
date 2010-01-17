@@ -1,57 +1,73 @@
-From: George Kadianakis <desnacked@gmail.com>
-Subject: Re: [PATCH 1/1] SCSI: lpfc, restore MSI-X/MSI support
-Date: Sun, 17 Jan 2010 21:19:31 +0200
-Message-ID: <87k4vglet8.fsf@gmail.com>
-References: <87r5pta66n.fsf@gmail.com> <1263754052.2802.2.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Subject: [PATCH] scsi: allow SCSI_WAIT_SCAN to be disabled in embedded systems
+Date: Sun, 17 Jan 2010 18:27:53 -0200
+Message-ID: <1263760073-7018-1-git-send-email-cascardo@holoscopio.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:51931 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752214Ab0AQTVl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 14:21:41 -0500
-Received: by ewy19 with SMTP id 19so2634876ewy.21
-        for <linux-scsi@vger.kernel.org>; Sun, 17 Jan 2010 11:21:39 -0800 (PST)
-In-Reply-To: <1263754052.2802.2.camel@mulgrave.site> (James Bottomley's
-	message of "Sun, 17 Jan 2010 12:47:32 -0600")
+Received: from liberdade.minaslivre.org ([72.232.254.139]:43808 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753463Ab0AQUam (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 15:30:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, james.smart@emulex.com
+To: linux-scsi@vger.kernel.org
+Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org
 
-From: George Kadianakis <desnacked {bomb} gmail {point} com>
+I know scsi_wait_scan is too little and is always built as a module,
+but:
 
-A Gentoo bug report [1] showed that as of 2.6.31 lpfc only uses INTx interrupts.
-This patch restores lpfc's ability to support MSI-X/MSI interrupts that the 
-"Addition of SLI4 Interface - Base Support" patch [2] broke.
-It reestablishes MSI-X as the default interrupt method and in case MSI-X is not 
-supported lpfc_sli{4,}_enable_intr fallbacks to MSI and then to INTx.
+* This allows it to be disabled in cases that modules are enabled but
+all configuration is built-in. It will not surprise users that a module
+has been built.
 
-[1]: http://bugs.gentoo.org/show_bug.cgi?id=296319
-[2]: commit da0436e915a5c17ee79e72c1bf978a4ebb1cbf4d
+* It still does not surprise users that have disabled it by accident,
+because they only have a choice if they've picked up EMBEDDED.
 
-Signed-off-by:  George Kadianakis <desnacked@gmail.com>
+* This change allows it to be built-in. It uses late_initcall, which
+will put it ahead of other (SCSI) drivers.
+
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/Kconfig |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index e1a30a1..936ecaf 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2890,12 +2890,12 @@ LPFC_ATTR_RW(poll_tmo, 10, 1, 255,
- /*
- # lpfc_use_msi: Use MSI (Message Signaled Interrupts) in systems that
- #		support this feature
--#       0  = MSI disabled (default)
-+#       0  = MSI disabled
- #       1  = MSI enabled
--#       2  = MSI-X enabled
-+#       2  = MSI-X enabled (default)
- # Value range is [0,2]. Default value is 0.
- */
--LPFC_ATTR_R(use_msi, 0, 0, 2, "Use Message Signaled Interrupts (1) or "
-+LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Message Signaled Interrupts (1) or "
- 	    "MSI-X (2), if possible");
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 9191d1e..2c56857 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -258,21 +258,21 @@ config SCSI_SCAN_ASYNC
+ 	  or async on the kernel's command line.
  
- /*
+ config SCSI_WAIT_SCAN
+-	tristate  # No prompt here, this is an invisible symbol.
++	tristate "Waits for all SCSI async bus scans to complete" if EMBEDDED
+ 	default m
+ 	depends on SCSI
+ 	depends on MODULES
+-# scsi_wait_scan is a loadable module which waits until all the async scans are
+-# complete.  The idea is to use it in initrd/ initramfs scripts.  You modprobe
+-# it after all the modprobes of the root SCSI drivers and it will wait until
+-# they have all finished scanning their buses before allowing the boot to
+-# proceed.  (This method is not applicable if targets boot independently in
+-# parallel with the initiator, or with transports with non-deterministic target
+-# discovery schemes, or if a transport driver does not support scsi_wait_scan.)
+-#
+-# This symbol is not exposed as a prompt because little is to be gained by
+-# disabling it, whereas people who accidentally switch it off may wonder why
+-# their mkinitrd gets into trouble.
++	help
++
++	   scsi_wait_scan is a loadable module which waits until all the async
++	   scans are complete.  The idea is to use it in initrd/ initramfs
++	   scripts.  You modprobe it after all the modprobes of the root SCSI
++	   drivers and it will wait until they have all finished scanning their
++	   buses before allowing the boot to proceed.  (This method is not
++	   applicable if targets boot independently in parallel with the
++	   initiator, or with transports with non-deterministic target
++	   discovery schemes, or if a transport driver does not support
++	   scsi_wait_scan.)
+ 
+ menu "SCSI Transports"
+ 	depends on SCSI
+-- 
+1.6.6
+
