@@ -1,41 +1,42 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] lpfc: two branches the same in lpfc_decode_firmware_rev()
-Date: Sun, 17 Jan 2010 16:15:57 +0100
-Message-ID: <4B5329AD.9010100@gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: be2iscsi: Bug Fixes Needed
+Date: Sun, 17 Jan 2010 12:30:14 -0600
+Message-ID: <1263753014.2802.1.camel@mulgrave.site>
+References: <20100106201918.GA19887@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:61355 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754062Ab0AQPLO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 10:11:14 -0500
+Received: from cantor.suse.de ([195.135.220.2]:60702 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753169Ab0AQSaX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Jan 2010 13:30:23 -0500
+In-Reply-To: <20100106201918.GA19887@serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Regardless of the flag state, the branches execute the same code
+On Thu, 2010-01-07 at 01:49 +0530, Jayamohan Kallickal wrote:
+> Hi James
+> 
+> 	These patches contains some bug fixes that are important for
+> the driver.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
- drivers/scsi/lpfc/lpfc_ct.c |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+This phraseology usually means apply to the linus kernel now.
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 0ebcd9b..bf7bf62 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1843,12 +1843,7 @@ lpfc_decode_firmware_rev(struct lpfc_hba *phba, char *fwrevision, int flag)
- 		c  = (rev & 0x0000ff00) >> 8;
- 		b4 = (rev & 0x000000ff);
- 
--		if (flag)
--			sprintf(fwrevision, "%d.%d%d%c%d ", b1,
--				b2, b3, c, b4);
--		else
--			sprintf(fwrevision, "%d.%d%d%c%d ", b1,
--				b2, b3, c, b4);
-+		sprintf(fwrevision, "%d.%d%d%c%d", b1, b2, b3, c, b4);
- 	}
- 	return;
- }
+> These patches are created using the latest scsi-misc tree and after
+> applying the following patches sent earlier
+> 
+> http://www.spinics.net/lists/linux-scsi/msg41363.html
+> http://www.spinics.net/lists/linux-scsi/msg41364.html
+
+However, these are an enhancement stream for the kernel.
+
+So I'm assuming these aren't essential bug fixes, but can wait until the
+next merge window?  If not, they need to be made against current
+upstream (because they won't apply without the updates patches).
+
+James
+
+
