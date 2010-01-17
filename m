@@ -1,52 +1,41 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 5/9] drivers/scsi: Eliminate useless code
-Date: Sat, 16 Jan 2010 16:58:58 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.1001161658410.28745@ask.diku.dk>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] lpfc: two branches the same in lpfc_decode_firmware_rev()
+Date: Sun, 17 Jan 2010 16:15:57 +0100
+Message-ID: <4B5329AD.9010100@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754961Ab0APP7H@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f219.google.com ([209.85.219.219]:61355 "EHLO
+	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754062Ab0AQPLO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 10:11:14 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+Regardless of the flag state, the branches execute the same code
 
-The variable bfa_itnim is initialized twice to the same (side effect-free)
-expression.  Drop one initialization.
-
-A simplified version of the semantic match that finds this problem is:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@forall@
-idexpression *x;
-identifier f!=ERR_PTR;
-@@
-
-x = f(...)
-... when != x
-(
-x = f(...,<+...x...+>,...)
-|
-* x = f(...)
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 ---
- drivers/scsi/bfa/bfad_im.c          |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index f788c2a..37b0fa1 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -243,9 +243,8 @@ bfad_im_target_reset_send(struct bfad_s *bfad, struct scsi_cmnd *cmnd,
- 	struct bfa_itnim_s *bfa_itnim;
- 	bfa_status_t    rc = BFA_STATUS_OK;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 0ebcd9b..bf7bf62 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -1843,12 +1843,7 @@ lpfc_decode_firmware_rev(struct lpfc_hba *phba, char *fwrevision, int flag)
+ 		c  = (rev & 0x0000ff00) >> 8;
+ 		b4 = (rev & 0x000000ff);
  
--	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
- 	tskim = bfa_tskim_alloc(&bfad->bfa, (struct bfad_tskim_s *) cmnd);
- 	if (!tskim) {
- 		BFA_DEV_PRINTF(bfad, BFA_ERR,
+-		if (flag)
+-			sprintf(fwrevision, "%d.%d%d%c%d ", b1,
+-				b2, b3, c, b4);
+-		else
+-			sprintf(fwrevision, "%d.%d%d%c%d ", b1,
+-				b2, b3, c, b4);
++		sprintf(fwrevision, "%d.%d%d%c%d", b1, b2, b3, c, b4);
+ 	}
+ 	return;
+ }
