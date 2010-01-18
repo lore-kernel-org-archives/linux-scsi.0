@@ -1,59 +1,77 @@
-From: George Kadianakis <desnacked@gmail.com>
-Subject: Re: [PATCH 1/1] SCSI: lpfc, restore MSI-X/MSI support
-Date: Mon, 18 Jan 2010 20:06:08 +0200
-Message-ID: <87aawbthin.fsf@gmail.com>
-References: <87r5pta66n.fsf@gmail.com> <1263754052.2802.2.camel@mulgrave.site>
-	<87k4vglet8.fsf@gmail.com> <201001181549.13534.eike-kernel@sf-tec.de>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 2/4] qla2xxx: Add BSG support for FC ELS/CT passthrough
+ and vendor commands.
+Date: Mon, 18 Jan 2010 16:47:24 -0600
+Message-ID: <1263854844.2773.92.camel@mulgrave.site>
+References: <1263330169-347-1-git-send-email-giridhar.malavali@qlogic.com>
+	 <1263330169-347-3-git-send-email-giridhar.malavali@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.25]:19853 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090Ab0ARSIo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2010 13:08:44 -0500
-Received: by ey-out-2122.google.com with SMTP id 22so525384eye.5
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 10:08:43 -0800 (PST)
-In-Reply-To: <201001181549.13534.eike-kernel@sf-tec.de> (Rolf Eike Beer's
-	message of "Mon, 18 Jan 2010 15:48:50 +0100")
+Received: from cantor2.suse.de ([195.135.220.15]:38661 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753394Ab0ARWrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jan 2010 17:47:33 -0500
+In-Reply-To: <1263330169-347-3-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, james.smart@emulex.com
+To: giridhar.malavali@qlogic.com
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: George Kadianakis <desnacked {bomb} gmail {point} com>
+On Tue, 2010-01-12 at 13:02 -0800, giridhar.malavali@qlogic.com wrote:
+> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> 
+> Signed-off-by: Sarang Radke <sarang.radke@qlogic.com>
+> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_attr.c |  746
+> ++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/qla2xxx/qla_def.h  |  155 ++++++++
+>  drivers/scsi/qla2xxx/qla_fw.h   |   33 ++
+>  drivers/scsi/qla2xxx/qla_gbl.h  |    5 +
+>  drivers/scsi/qla2xxx/qla_init.c |   14 +-
+>  drivers/scsi/qla2xxx/qla_iocb.c |  120 +++++++
+>  drivers/scsi/qla2xxx/qla_isr.c  |  105 ++++++-
+>  drivers/scsi/qla2xxx/qla_mbx.c  |  151 ++++++++
+>  drivers/scsi/qla2xxx/qla_os.c   |    1 +
+>  9 files changed, 1326 insertions(+), 4 deletions(-)
 
-A Gentoo bug report [1] showed that as of 2.6.31 lpfc only uses INTx interrupts.
-This patch restores lpfc's ability to support MSI-X/MSI interrupts that the 
-"Addition of SLI4 Interface - Base Support" patch [2] broke.
-It reestablishes MSI-X as the default interrupt method and in case MSI-X is not 
-supported lpfc_sli{4,}_enable_intr fallbacks to MSI and then to INTx.
+Did this actually get compile checked?  It's giving me this error:
 
-[1]: http://bugs.gentoo.org/show_bug.cgi?id=296319
-[2]: commit da0436e915a5c17ee79e72c1bf978a4ebb1cbf4d
+drivers/scsi/qla2xxx/qla_attr.c: In function 'qla2x00_process_vendor_specific':
+drivers/scsi/qla2xxx/qla_attr.c:2233: warning: format '%llx' expects type 'long long unsigned int', but argument 5 has type 'dma_addr_t'
+drivers/scsi/qla2xxx/qla_attr.c:2233: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'dma_addr_t'
+drivers/scsi/qla2xxx/qla_attr.c:2251: warning: format '%llx' expects type 'long long unsigned int', but argument 5 has type 'dma_addr_t'
+drivers/scsi/qla2xxx/qla_attr.c:2251: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'dma_addr_t'
 
-Signed-off-by:  George Kadianakis <desnacked@gmail.com>
+A simple cast fixes it.
+
+James
+
 ---
- drivers/scsi/lpfc/lpfc_attr.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index e1a30a1..61c7f4b 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2890,12 +2890,12 @@ LPFC_ATTR_RW(poll_tmo, 10, 1, 255,
- /*
- # lpfc_use_msi: Use MSI (Message Signaled Interrupts) in systems that
- #		support this feature
--#       0  = MSI disabled (default)
-+#       0  = MSI disabled
- #       1  = MSI enabled
--#       2  = MSI-X enabled
--# Value range is [0,2]. Default value is 0.
-+#       2  = MSI-X enabled (default)
-+# Value range is [0,2]. Default value is 2.
- */
--LPFC_ATTR_R(use_msi, 0, 0, 2, "Use Message Signaled Interrupts (1) or "
-+LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Message Signaled Interrupts (1) or "
- 	    "MSI-X (2), if possible");
- 
- /*
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 6ecbda9..5a19aea 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2232,7 +2232,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 				vha->host_no, type, vendor_cmd, elreq.options));
+ 			DEBUG2(qla_printk(KERN_INFO, ha,
+ 				"scsi(%ld) tx_addr: 0x%llx rx_addr: 0x%llx tx_sg_cnt: %x rx_sg_cnt: %x\n",
+-				vha->host_no, elreq.send_dma, elreq.rcv_dma, elreq.req_sg_cnt, elreq.rsp_sg_cnt));
++				vha->host_no, (unsigned long long)elreq.send_dma, (unsigned long long)elreq.rcv_dma, elreq.req_sg_cnt, elreq.rsp_sg_cnt));
+ 			command_sent = INT_DEF_LB_LOOPBACK_CMD;
+ 			rval = qla2x00_loopback_test(vha, &elreq, response);
+ 			if (IS_QLA81XX(ha)) {
+@@ -2250,7 +2250,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 				vha->host_no, type, vendor_cmd, elreq.options));
+ 			DEBUG2(qla_printk(KERN_INFO, ha,
+ 				"scsi(%ld) tx_addr: 0x%llx rx_addr: 0x%llx tx_sg_cnt: %x rx_sg_cnt: %x\n",
+-				vha->host_no, elreq.send_dma, elreq.rcv_dma, elreq.req_sg_cnt, elreq.rsp_sg_cnt));
++				vha->host_no, (unsigned long long)elreq.send_dma, (unsigned long long)elreq.rcv_dma, elreq.req_sg_cnt, elreq.rsp_sg_cnt));
+ 			command_sent = INT_DEF_LB_ECHO_CMD;
+ 			rval = qla2x00_echo_test(vha, &elreq, response);
+ 		}
+
+
