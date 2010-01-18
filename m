@@ -1,71 +1,86 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: scsi device is not available in enclosure any more after hot
- plugging
-Date: Mon, 18 Jan 2010 11:46:24 +0100
-Message-ID: <20100118114624.fea646be.taeuber@bbaw.de>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/1] SCSI: lpfc, restore MSI-X/MSI support
+Date: Mon, 18 Jan 2010 15:48:50 +0100
+Message-ID: <201001181549.13534.eike-kernel@sf-tec.de>
+References: <87r5pta66n.fsf@gmail.com> <1263754052.2802.2.camel@mulgrave.site> <87k4vglet8.fsf@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed;
+  boundary="nextPart10828444.1dEv8PZR09";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:43433 "EHLO mail.bbaw.de"
+Received: from mail.sf-mail.de ([62.27.20.61]:53330 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753375Ab0ARKq0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2010 05:46:26 -0500
-Received: from mailhub.bbaw.de (unknown [192.168.4.1])
-	by mail.bbaw.de (Postfix) with ESMTP id 3796B4A8097
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 11:46:24 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by mailhub.bbaw.de (Postfix) with ESMTP id 290B3937F0
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 11:46:25 +0100 (CET)
-Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
-	by mailhub.bbaw.de (Postfix) with SMTP id E79EA937B4
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 11:46:24 +0100 (CET)
+	id S1752843Ab0AROtU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jan 2010 09:49:20 -0500
+In-Reply-To: <87k4vglet8.fsf@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: George Kadianakis <desnacked@gmail.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, james.smart@emulex.com
 
-Hi there!
+--nextPart10828444.1dEv8PZR09
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-One of my servers contains two scsi enclosures.
-After hot removing a disk and hot adding another in the same slot the n=
-ew disk gets assigned a device file but the enclosure (in sysfs) doesn'=
-t want to see it.
+George Kadianakis wrote:
+> From: George Kadianakis <desnacked {bomb} gmail {point} com>
+>=20
+> A Gentoo bug report [1] showed that as of 2.6.31 lpfc only uses INTx
+> interrupts. This patch restores lpfc's ability to support MSI-X/MSI
+> interrupts that the "Addition of SLI4 Interface - Base Support" patch [2]
+> broke.
+> It reestablishes MSI-X as the default interrupt method and in case MSI-X =
+is
+> not supported lpfc_sli{4,}_enable_intr fallbacks to MSI and then to INTx.
+>=20
+> [1]: http://bugs.gentoo.org/show_bug.cgi?id=3D296319
+> [2]: commit da0436e915a5c17ee79e72c1bf978a4ebb1cbf4d
+>=20
+> Signed-off-by:  George Kadianakis <desnacked@gmail.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_attr.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+> index e1a30a1..936ecaf 100644
+> --- a/drivers/scsi/lpfc/lpfc_attr.c
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -2890,12 +2890,12 @@ LPFC_ATTR_RW(poll_tmo, 10, 1, 255,
+>  /*
+>  # lpfc_use_msi: Use MSI (Message Signaled Interrupts) in systems that
+>  #		support this feature
+> -#       0  =3D MSI disabled (default)
+> +#       0  =3D MSI disabled
+>  #       1  =3D MSI enabled
+> -#       2  =3D MSI-X enabled
+> +#       2  =3D MSI-X enabled (default)
+>  # Value range is [0,2]. Default value is 0.
+                                            ^
 
-How can I force the enclosure to recognise the hot added disk.
+This is still wrong.
 
-Situation in sysfs:
-# ls -l "/sys/class/enclosure/10:0:24:0/SLOT 010"
-insgesamt 0
--rw-r--r-- 1 root root 4096 2010-01-15 14:30 active
-lrwxrwxrwx 1 root root 0 2010-01-15 12:56 device -> ../../../../../../.=
-=2E/port-10:0:11/end_device-10:0:11/target10:0:10/10:0:10:0
--rw-r--r-- 1 root root 4096 2010-01-15 14:31 fault
--rw-r--r-- 1 root root 4096 2010-01-15 14:40 locate
-drwxr-xr-x 2 root root 0 2010-01-15 14:01 power
--rw-r--r-- 1 root root 4096 2010-01-15 14:01 status
--r--r--r-- 1 root root 4096 2010-01-15 14:01 type
--rw-r--r-- 1 root root 4096 2010-01-15 14:01 uevent
+>  */
+> -LPFC_ATTR_R(use_msi, 0, 0, 2, "Use Message Signaled Interrupts (1) or "
+> +LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Message Signaled Interrupts (1) or "
+>  	    "MSI-X (2), if possible");
+>=20
+>  /*
 
-The link =C2=ABdevice=C2=BB is dead after hot removing the device and k=
-eeps vanished after hot adding the new device.
-The hot added device gets assigned a device file and it is reachable.
-Even
-# echo 1 > /sys/bus/scsi/devices/10\:0\:24\:0/rescan
-doesn't change anything.
+Eike
 
-How can I force the link to be updated towards
--> ../../../../../../../port-10:0:26/end_device-10:0:26/target10:0:25/1=
-0:0:25:0
-???
+--nextPart10828444.1dEv8PZR09
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
-Is there a detailed description of the sysfs regarding scsi on the web?
+iEYEABECAAYFAktUdNoACgkQXKSJPmm5/E5O7ACgjzeK4pnJAUesi7cJipPnpaaF
+d7kAn3C19yXz5EUuwpbEKOHWtL8oqxZV
+=TwvY
+-----END PGP SIGNATURE-----
 
-Thanks
-Lars
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nextPart10828444.1dEv8PZR09--
