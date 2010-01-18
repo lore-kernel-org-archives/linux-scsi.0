@@ -1,40 +1,34 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Sun, 17 Jan 2010 21:15:29 GMT
-Message-ID: <201001172115.o0HLFTKa017863@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Bug 15007] SCSI host adapter's scatter-gather list size Issue
+Date: Mon, 18 Jan 2010 13:18:05 +0900
+Message-ID: <20100118131653L.fujita.tomonori@lab.ntt.co.jp>
+References: <bug-15007-11613@http.bugzilla.kernel.org/>
+	<201001151223.o0FCNGa8002934@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:38845 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752911Ab0AQVP3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 16:15:29 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0HLFTY8017864
-	for <linux-scsi@vger.kernel.org>; Sun, 17 Jan 2010 21:15:29 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from sh.osrg.net ([192.16.179.4]:51544 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753212Ab0ARESK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Jan 2010 23:18:10 -0500
+In-Reply-To: <201001151223.o0FCNGa8002934@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+On Fri, 15 Jan 2010 12:23:16 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
 
+> What does sg_tablesize in scsi_host_template mean?
+> It means the max sg entry number which the HW can handle once?
 
-Bruno Yporti <bruno@yporti.com> changed:
+Yes. A driver should set it to hardware limit.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |bruno@yporti.com
+Can you close this bug report on bugzilla.kernel.org? The bug is not
+in mainline. If you have any further questions related with this
+topic, please send to linux-scsi mailing list instead of using the
+kernel bug tracker.
 
-
-
-
---- Comment #25 from Bruno Yporti <bruno@yporti.com>  2010-01-17 21:15:26 ---
-I have the same problem here in my Lenovo 3000 G530 with
-Optiarc_DVD_RW_AD_7580S.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Thanks,
