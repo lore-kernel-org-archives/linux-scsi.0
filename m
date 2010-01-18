@@ -1,45 +1,48 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Bug 15007] SCSI host adapter's scatter-gather list size Issue
-Date: Mon, 18 Jan 2010 13:18:04 +0900
-Message-ID: <20100118130236M.fujita.tomonori@lab.ntt.co.jp>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15007] SCSI host adapter's scatter-gather list size Issue
+Date: Mon, 18 Jan 2010 04:18:17 GMT
+Message-ID: <201001180418.o0I4IH77008657@demeter.kernel.org>
 References: <bug-15007-11613@http.bugzilla.kernel.org/>
-	<201001150249.o0F2nrcc021199@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:51543 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752207Ab0ARESK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Jan 2010 23:18:10 -0500
-In-Reply-To: <201001150249.o0F2nrcc021199@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:55814 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755584Ab0ARESR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jan 2010 23:18:17 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0I4IHGx008658
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 04:18:17 GMT
+In-Reply-To: <bug-15007-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 15 Jan 2010 02:49:53 GMT
+http://bugzilla.kernel.org/show_bug.cgi?id=15007
+
+
+
+
+
+--- Comment #9 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-01-18 04:18:16 ---
+Reply-To: fujita.tomonori@lab.ntt.co.jp
+
+On Fri, 15 Jan 2010 12:23:16 GMT
 bugzilla-daemon@bugzilla.kernel.org wrote:
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=15007
-> 
-> 
-> 
-> 
-> 
-> --- Comment #6 from nick cheng <nick.cheng@areca.com.tw>  2010-01-15 02:49:48 ---
-> OK. I got it.
-> But based on 128 sg entries issue on my original driver I found it bugs every
-> time while doing mkfs.ext3 on a default NTFS filesystem, but if I do it on a
-> ext3 filesystem, it works smoothly.
+> What does sg_tablesize in scsi_host_template mean?
+> It means the max sg entry number which the HW can handle once?
 
-Do you mean that 128 sg entries don't cause any problems during
-performing mkfs on ext3? If so, I have no idea.
+Yes. A driver should set it to hardware limit.
 
+Can you close this bug report on bugzilla.kernel.org? The bug is not
+in mainline. If you have any further questions related with this
+topic, please send to linux-scsi mailing list instead of using the
+kernel bug tracker.
 
-> Besides, it bugs on SMP platforms always but doesn't on non-SMP plaform.
-> Can your inference explain it?
+Thanks,
 
-Do you mean that 128 sg entries don't cause any problems on non SMP
-boxes? If so, I have no idea. Your driver should hit this bug with any
-boxes.
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
