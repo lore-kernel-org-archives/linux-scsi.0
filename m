@@ -1,25 +1,25 @@
 From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
 Subject: scsi device is not available in enclosure any more after hot
  plugging
-Date: Mon, 18 Jan 2010 10:29:39 +0100
-Message-ID: <20100118102939.d1104b22.taeuber@bbaw.de>
+Date: Mon, 18 Jan 2010 11:46:24 +0100
+Message-ID: <20100118114624.fea646be.taeuber@bbaw.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:37562 "EHLO mail.bbaw.de"
+Received: from mail.bbaw.de ([194.95.188.6]:43433 "EHLO mail.bbaw.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752920Ab0ARJrM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2010 04:47:12 -0500
+	id S1753375Ab0ARKq0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2010 05:46:26 -0500
 Received: from mailhub.bbaw.de (unknown [192.168.4.1])
-	by mail.bbaw.de (Postfix) with ESMTP id 862524A8071
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 10:29:39 +0100 (CET)
+	by mail.bbaw.de (Postfix) with ESMTP id 3796B4A8097
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 11:46:24 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-	by mailhub.bbaw.de (Postfix) with ESMTP id 8CB01937FD
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 10:29:39 +0100 (CET)
+	by mailhub.bbaw.de (Postfix) with ESMTP id 290B3937F0
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 11:46:25 +0100 (CET)
 Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
-	by mailhub.bbaw.de (Postfix) with SMTP id 025E8937B4
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 10:29:39 +0100 (CET)
+	by mailhub.bbaw.de (Postfix) with SMTP id E79EA937B4
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 11:46:24 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
