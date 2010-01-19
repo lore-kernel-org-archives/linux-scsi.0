@@ -1,16 +1,16 @@
 From: James Smart <james.smart@emulex.com>
 Subject: Re: [PATCH] lpfc: two branches the same in lpfc_decode_firmware_rev()
-Date: Tue, 19 Jan 2010 17:40:25 -0500
-Message-ID: <4B5634D9.2060303@emulex.com>
+Date: Tue, 19 Jan 2010 17:41:06 -0500
+Message-ID: <4B563502.6070908@emulex.com>
 References: <4B5329AD.9010100@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:13950 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:13962 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755322Ab0ASWks (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 17:40:48 -0500
+	with ESMTP id S1753934Ab0ASWl1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 17:41:27 -0500
 In-Reply-To: <4B5329AD.9010100@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,14 +22,15 @@ Acked-by:  James Smart <james.smart@emulex.com>
 -- james s
 
 
+
 Roel Kluin wrote:
 > Regardless of the flag state, the branches execute the same code
->
+> 
 > Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 > ---
 >  drivers/scsi/lpfc/lpfc_ct.c |    7 +------
 >  1 files changed, 1 insertions(+), 6 deletions(-)
->
+> 
 > diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
 > index 0ebcd9b..bf7bf62 100644
 > --- a/drivers/scsi/lpfc/lpfc_ct.c
@@ -48,5 +49,4 @@ Roel Kluin wrote:
 >  	}
 >  	return;
 >  }
->
->   
+> 
