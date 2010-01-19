@@ -1,26 +1,43 @@
-From: Madhukar G <madhukar.linux@gmail.com>
-Subject: DCD Driver
-Date: Tue, 19 Jan 2010 19:26:50 +0530
-Message-ID: <e79524561001190556h221c4edawf7004195402e1cb0@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: TASK Vs TASK_SET
+Date: Tue, 19 Jan 2010 11:11:02 -0500
+Message-ID: <4B55D996.4000603@interlog.com>
+References: <ac9fc6791001182248j3e523641i6c9d5a29dab088d2@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:58775 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760Ab0ASN4v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 08:56:51 -0500
-Received: by gxk9 with SMTP id 9so5044468gxk.8
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2010 05:56:51 -0800 (PST)
+Received: from smtp.infotech.no ([82.134.31.41]:37741 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754228Ab0ASQLI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jan 2010 11:11:08 -0500
+In-Reply-To: <ac9fc6791001182248j3e523641i6c9d5a29dab088d2@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: yukta eswar <yukta.eswar@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi All,
+yukta eswar wrote:
+> Dear All,
+> 
+> I am a newbie in SCSI task management.
+> When I read the sam-4 document, I got confusion about TASK and TASK_SET.
+> Can anyone let me know the difference.
 
-Is the source code for "DCD Device Driver for UNIX" available in any
-of the kernel version.
+I think George Penokie (SAM-5 editor) is going through the
+SAM-5 (draft) and changing many usages of "TASK" to "COMMAND".
+So a TASK is usually a single SCSI command that is being
+processed by a logical unit. A TASK_SET is a set of SCSI
+commands that are being processed by a logical unit at a point
+of time.
 
-I was actually looking for it.
+Notice that a task management function like ABORT TASK
+takes a I_T_L_Q nexus (identifying a command identifier within
+a logical unit) while ABORT TASK SET takes a I_T_L nexus
+(identifying a logical unit).
 
-Thanks and Regards,
-Madhukar
+Doug Gilbert
+
+
+
