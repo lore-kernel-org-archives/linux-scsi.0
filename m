@@ -1,43 +1,78 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] ses: double free
-Date: Tue, 19 Jan 2010 12:36:39 +0300
-Message-ID: <20100119093639.GB23956@bicker>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] scsi: Fix printing of variable length commands
+Date: Tue, 19 Jan 2010 11:49:36 +0200
+Message-ID: <4B558030.90006@panasas.com>
+References: <yq1aawbt3rr.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f225.google.com ([209.85.220.225]:62467 "EHLO
-	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755622Ab0ASJhE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 04:37:04 -0500
-Received: by fxm25 with SMTP id 25so339507fxm.21
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2010 01:37:02 -0800 (PST)
-Content-Disposition: inline
+Received: from daytona.panasas.com ([67.152.220.89]:48959 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755448Ab0ASJtj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 04:49:39 -0500
+In-Reply-To: <yq1aawbt3rr.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-There are some code paths that go to err_free after already calling
-kfree(hdr_buf).  I moved the kfree() lower to avoid the double free.
+On 01/19/2010 01:03 AM, Martin K. Petersen wrote:
+> 
+> The MAINTENANCE IN array is incorrectly used when decoding variable
+> length commands.  Use the right array.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+> index 9129bcf..db68e3b 100644
+> --- a/drivers/scsi/constants.c
+> +++ b/drivers/scsi/constants.c
+> @@ -219,7 +219,7 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+>  			break;
+>  		}
+>  		sa = (cdbp[8] << 8) + cdbp[9];
+> -		name = get_sa_name(maint_in_arr, MAINT_IN_SZ, sa);
+> +		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ, sa);
+>  		if (name) {
+>  			printk("%s", name);
+>  			if ((cdb_len > 0) && (len != cdb_len))
+> --
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-Cc: stable@kernel.org
+If you are already at it could you also add the things that bothered me? I did stare
+at this function before, but did not see the bug you are fixing, thanks.
+(Did see other less important stuff)
 
---- orig/drivers/scsi/ses.c	2010-01-18 21:54:14.000000000 +0300
-+++ devel/drivers/scsi/ses.c	2010-01-18 21:54:25.000000000 +0300
-@@ -591,7 +591,6 @@ static int ses_intf_add(struct device *c
- 		ses_dev->page10_len = len;
- 		buf = NULL;
- 	}
--	kfree(hdr_buf);
- 
- 	scomp = kzalloc(sizeof(struct ses_component) * components, GFP_KERNEL);
- 	if (!scomp)
-@@ -618,6 +617,7 @@ static int ses_intf_add(struct device *c
- 		ses_match_to_enclosure(edev, tmp_sdev);
- 	}
- 
-+	kfree(hdr_buf);
- 	return 0;
- 
-  recv_failed:
+(Below also includes your change)
+---
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 9129bcf..6c3c31e 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -218,19 +218,16 @@ static void print_opcode_name(unsigned char * cdbp, int cdb_len)
+ 			       "len=%d ext_len=%d", len, cdb_len);
+ 			break;
+ 		}
+-		sa = (cdbp[8] << 8) + cdbp[9];
+-		name = get_sa_name(maint_in_arr, MAINT_IN_SZ, sa);
++		sa = be16_to_cpu(
++			((struct scsi_varlen_cdb_hdr *)cdbp)->service_action);
++		name = get_sa_name(variable_length_arr, VARIABLE_LENGTH_SZ, sa);
+ 		if (name) {
+ 			printk("%s", name);
+-			if ((cdb_len > 0) && (len != cdb_len))
+-				printk(", in_cdb_len=%d, ext_len=%d",
+-				       len, cdb_len);
+ 		} else {
+ 			printk("cdb[0]=0x%x, sa=0x%x", cdb0, sa);
+-			if ((cdb_len > 0) && (len != cdb_len))
+-				printk(", in_cdb_len=%d, ext_len=%d",
+-				       len, cdb_len);
+ 		}
++		if ((cdb_len > 0) && (len != cdb_len))
++			printk(", in_cdb_len=%d, ext_len=%d", len, cdb_len);
+ 		break;
+ 	case MAINTENANCE_IN:
+ 		sa = cdbp[1] & 0x1f;
