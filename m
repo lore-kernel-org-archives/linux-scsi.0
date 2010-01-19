@@ -1,64 +1,43 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: [PATCH] SCSI/libsrp: fix bug in ADDITIONAL CDB LENGTH
-	interpretation
-Date: Tue, 19 Jan 2010 08:04:47 +0100
-Message-ID: <e2e108261001182304x1f9be8arda2ae37905d6c8bb@mail.gmail.com>
-References: <200912091952.19978.bart.vanassche@gmail.com>
-	 <20091210083727O.fujita.tomonori@lab.ntt.co.jp>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] ses: double free
+Date: Tue, 19 Jan 2010 12:36:39 +0300
+Message-ID: <20100119093639.GB23956@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f219.google.com ([209.85.219.219]:41986 "EHLO
-	mail-ew0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753233Ab0ASHEv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 02:04:51 -0500
-Received: by ewy19 with SMTP id 19so1391565ewy.21
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 23:04:49 -0800 (PST)
-In-Reply-To: <20091210083727O.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-fx0-f225.google.com ([209.85.220.225]:62467 "EHLO
+	mail-fx0-f225.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755622Ab0ASJhE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 04:37:04 -0500
+Received: by fxm25 with SMTP id 25so339507fxm.21
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Jan 2010 01:37:02 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, brking@linux.vnet.ibm.com
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Dec 10, 2009 at 12:37 AM, FUJITA Tomonori
-<fujita.tomonori@lab.ntt.co.jp> wrote:
->
-> On Wed, 9 Dec 2009 19:52:19 +0100
-> Bart Van Assche <bart.vanassche@gmail.com> wrote:
->
-> > Fix a bug in the interpretation of the ADDITIONAL CDB LENGTH (add_c=
-db_len)
-> > field of SRP_CMD requests. According to the SRP specification, the =
-layout
-> > of this single-byte field is as follows:
-> > * Bits 0 and 1 are reserved.
-> > * Bits 2 to 7 represent the ADDITIONAL CDB LENGTH field, symbolical=
-ly
-> > =A0 represented as n.
-> > * Still according to the SRP specification, the ADDITIONAL CDB sect=
-ion
-> > =A0 takes 4*n bytes.
-> >
-> > Currently libsrp is only used by the ibmvscsi driver. Since the ibm=
-vscsi
-> > driver doesn't support large CDB's, this bug hasn't caused any prob=
-lems yet.
-> >
-> > Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
-> > Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-> > Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Cc: Brian King <brking@linux.vnet.ibm.com>
->
-> Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+There are some code paths that go to err_free after already calling
+kfree(hdr_buf).  I moved the kfree() lower to avoid the double free.
 
-Hello James,
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+Cc: stable@kernel.org
 
-In which kernel version will this patch be included ?
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- orig/drivers/scsi/ses.c	2010-01-18 21:54:14.000000000 +0300
++++ devel/drivers/scsi/ses.c	2010-01-18 21:54:25.000000000 +0300
+@@ -591,7 +591,6 @@ static int ses_intf_add(struct device *c
+ 		ses_dev->page10_len = len;
+ 		buf = NULL;
+ 	}
+-	kfree(hdr_buf);
+ 
+ 	scomp = kzalloc(sizeof(struct ses_component) * components, GFP_KERNEL);
+ 	if (!scomp)
+@@ -618,6 +617,7 @@ static int ses_intf_add(struct device *c
+ 		ses_match_to_enclosure(edev, tmp_sdev);
+ 	}
+ 
++	kfree(hdr_buf);
+ 	return 0;
+ 
+  recv_failed:
