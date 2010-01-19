@@ -1,51 +1,26 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sd: Combine DIF/DIX error handling
-Date: Mon, 18 Jan 2010 18:43:18 -0500
-Message-ID: <yq11vhnt1wp.fsf@sermon.lab.mkp.net>
+From: yukta eswar <yukta.eswar@gmail.com>
+Subject: TASK Vs TASK_SET
+Date: Tue, 19 Jan 2010 12:18:04 +0530
+Message-ID: <ac9fc6791001182248j3e523641i6c9d5a29dab088d2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:47110 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753Ab0ARXo6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jan 2010 18:44:58 -0500
+Received: from mail-px0-f182.google.com ([209.85.216.182]:54736 "EHLO
+	mail-px0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271Ab0ASGsF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 01:48:05 -0500
+Received: by pxi12 with SMTP id 12so4225525pxi.33
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Jan 2010 22:48:04 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org
 
+Dear All,
 
-DIF and DIX errors are handled identically at this point.  Collapse the
-switch cases into one and let scsi_io_completion print result and sense
-data.
+I am a newbie in SCSI task management.
+When I read the sam-4 document, I got confusion about TASK and TASK_SET.
+Can anyone let me know the difference.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
----
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index ad15c2e..f1687df 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1196,19 +1196,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		SCpnt->result = 0;
- 		memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 		break;
--	case ABORTED_COMMAND:
--		if (sshdr.asc == 0x10) { /* DIF: Disk detected corruption */
--			scsi_print_result(SCpnt);
--			scsi_print_sense("sd", SCpnt);
-+	case ABORTED_COMMAND: /* DIF: Target detected corruption */
-+	case ILLEGAL_REQUEST: /* DIX: Host detected corruption */
-+		if (sshdr.asc == 0x10)
- 			good_bytes = sd_completed_bytes(SCpnt);
--		}
--		break;
--	case ILLEGAL_REQUEST:
--		if (sshdr.asc == 0x10) { /* DIX: HBA detected corruption */
--			scsi_print_result(SCpnt);
--			scsi_print_sense("sd", SCpnt);
--			good_bytes = sd_completed_bytes(SCpnt);
--		}
- 		break;
- 	default:
- 		break;
+Thanks in advance,
+Regards,
+YE
