@@ -1,91 +1,45 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] scsi: Fix printing of failed 32-byte commands
-Date: Wed, 20 Jan 2010 10:47:06 +0200
-Message-ID: <4B56C30A.6040107@panasas.com>
-References: <yq1636zt1yr.fsf@sermon.lab.mkp.net>	<4B5588B4.4030608@panasas.com> <yq1ska1kzsk.fsf@sermon.lab.mkp.net>
+From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
+Subject: entries in sysfs regarding enclosures seem not being updated after
+ hot plugging
+Date: Wed, 20 Jan 2010 09:57:33 +0100
+Message-ID: <20100120095733.f65474fa.taeuber@bbaw.de>
+References: <20100118114624.fea646be.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:38191 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750703Ab0ATIrK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2010 03:47:10 -0500
-In-Reply-To: <yq1ska1kzsk.fsf@sermon.lab.mkp.net>
+Received: from mail.bbaw.de ([194.95.188.6]:33070 "EHLO mail.bbaw.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751466Ab0ATI5f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jan 2010 03:57:35 -0500
+Received: from mailhub.bbaw.de (unknown [192.168.4.1])
+	by mail.bbaw.de (Postfix) with ESMTP id DC1BE4A806C
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2010 09:57:32 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by mailhub.bbaw.de (Postfix) with ESMTP id 90ED8937FD
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2010 09:57:33 +0100 (CET)
+Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
+	by mailhub.bbaw.de (Postfix) with SMTP id 7B3DF937B4
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jan 2010 09:57:33 +0100 (CET)
+In-Reply-To: <20100118114624.fea646be.taeuber@bbaw.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org
 
-On 01/20/2010 09:20 AM, Martin K. Petersen wrote:
->>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
-> 
-> Boaz> I don't like that flag. If cmd->cmnd is invalid after the call to
-> Boaz> sd_done.  Then I prefer if sd_done could NULL the pointer and any
-> Boaz> access will BUG, instead of a dangerous use after free, which you
-> Boaz> never know when it will bite.
-> 
-> Boaz> Then if so scsi_print_command() can just silently ignore any
-> cmd-> cmnd == NULL cases. (And a fat comment somewhere)
-> 
-> Yeah, that's a better idea.  I considered that flag a wart from the
-> get-go...
-> 
-> 
-> scsi: Fix printing of failed 32-byte commands
-> 
-> Having the large CDB allocation logic in sd.c means that
-> scsi_io_completion does not have access to the command buffer. That in
-> turn causes garbage to be printed when a 32-byte command fails. Move the
-> command printing to sd_done where the command buffer is intact.  Clear
-> the command buffer pointer after the extended CDB has been freed.
-> 
-> Make scsi_print_command ignore commands with NULL CDB pointers to
-> inhibit printing of garbled command strings.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
+Hallo!
 
-Grate, thanks looks much better.
-Reviewed-by: Boaz Harrosh <bharrosh@panasas.com>
+I might be wrong on this mailing list. Is there a special sysfs ML?
 
-> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-> index db68e3b..93606bc 100644
-> --- a/drivers/scsi/constants.c
-> +++ b/drivers/scsi/constants.c
-> @@ -349,6 +349,9 @@ void scsi_print_command(struct scsi_cmnd *cmd)
->  {
->  	int k;
->  
-> +	if (cmd->cmnd == NULL)
-> +		return;
-> +
->  	scmd_printk(KERN_INFO, cmd, "CDB: ");
->  	print_opcode_name(cmd->cmnd, cmd->cmd_len);
->  
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 255da53..5f0f6c7 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1218,8 +1218,19 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->  		sd_dif_complete(SCpnt, good_bytes);
->  
->  	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
-> -	    == SD_DIF_TYPE2_PROTECTION && SCpnt->cmnd != SCpnt->request->cmd)
-> +	    == SD_DIF_TYPE2_PROTECTION && SCpnt->cmnd != SCpnt->request->cmd) {
-> +
-> +		/* We have to print a failed command here as the
-> +		 * extended CDB gets freed before scsi_io_completion()
-> +		 * is called.
-> +		 */
-> +		if (result)
-> +			scsi_print_command(SCpnt);
-> +
->  		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-> +		SCpnt->cmnd = NULL;
-> +		SCpnt->cmd_len = 0;
-> +	}
->  
->  	return good_bytes;
->  }
+Please point me out a place to look next with my problem.
 
+I should have mentioned the kernel version and enclosure type:
+# uname -a
+Linux speicher48 2.6.31-17-server #54-Ubuntu SMP Thu Dec 10 18:06:56 UTC 2009 x86_64 GNU/Linux
+# cat /sys/class/enclosure/10\:0\:24\:0/device/vendor 
+CHENBRO 
+# cat /sys/class/enclosure/10\:0\:24\:0/device/model 
+SASX36 B0       
+
+
+Regards
+Lars
