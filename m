@@ -1,61 +1,88 @@
 From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-Subject: [PATCH 0/2] scsi: ftrace based scsi tracing feature
-Date: Wed, 20 Jan 2010 15:42:55 +0900
-Message-ID: <4B56A5EF.40703@jp.fujitsu.com>
+Subject: [PATCH 1/2] scsi: add __print_hex() to ftrace
+Date: Wed, 20 Jan 2010 15:43:27 +0900
+Message-ID: <4B56A60F.6060207@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:40256 "EHLO
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:40283 "EHLO
 	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751319Ab0ATGn0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2010 01:43:26 -0500
+	with ESMTP id S1751365Ab0ATGnz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2010 01:43:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, Ingo Molnar <mingo@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-Hi,
+From: Li Zefan <lizf@cn.fujitsu.com>
 
-We'd like to propose this patchset (ftrace based scsi tracing)
-as the first attempt for SCSI tracing, starting with the minimum
-trace points.
+__print_hex() prints values in an array in hex (w/o '0x') (space separated)
+EX) 92 33 32 f3 ee 4d
 
-Tracing gives us an idea how far SCSI processing goes, for
-example, even in a case that a SCSI IRQ handling is blocked by
-other drivers that disable interrupts for a long time.  Also,
-trace could be used for debugging purpose in development similar
-to how USB developers use usbmon for collecting submitted and
-completed URBs for debugging.  In a mission critical area, there
-is sometimes a case that we have to analyze a problem at customers
-without taking a memory dump as much as possible.  There is also
-a case to solve a problem which reproducibility is very low (but
-we can not just leave the problem) so collecting additional data
-afterwards is difficult.
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+---
 
-In this version, it prints host#, channel, id, lun, and CDB (and
-a value of 'result' if it's called in scsi_done().)  All fields
-of CDB are printed in hex, and some of them are printed in ascii
-as well.  That makes the outputs be more user-friendly.  For
-example, retrieving 'lba' and 'transfer length (txlen)' data from
-CDB of "SCSI3 block command READ/WRITE," and printing them in the
-friendly format, users can easily correlate the info from SCSI
-layer with block layer.  (All the conversions to ascii that requires
-relatively large costs are done in TP_printk(), making the overheads
-at storing trace be minimum.)
+ linux-2.6.33-rc4-trace-kei/include/linux/ftrace_event.h |    3 +++
+ linux-2.6.33-rc4-trace-kei/include/trace/ftrace.h       |    3 +++
+ linux-2.6.33-rc4-trace-kei/kernel/trace/trace_output.c  |   15 +++++++++++++++
+ 3 files changed, 21 insertions(+)
 
-CDB has various lengths for its size and that made us end up
-creating __print_hex().
+diff -puN include/linux/ftrace_event.h~ftrace_print_hex include/linux/ftrace_event.h
+--- linux-2.6.33-rc4-trace/include/linux/ftrace_event.h~ftrace_print_hex	2010-01-14 19:55:24.000000000 +0900
++++ linux-2.6.33-rc4-trace-kei/include/linux/ftrace_event.h	2010-01-14 19:56:59.000000000 +0900
+@@ -24,6 +24,9 @@ const char *ftrace_print_flags_seq(struc
+ const char *ftrace_print_symbols_seq(struct trace_seq *p, unsigned long val,
+ 				     const struct trace_print_flags *symbol_array);
+ 
++const char *ftrace_print_hex_seq(struct trace_seq *p,
++				 const unsigned char *buf, int len);
++
+ /*
+  * The trace entry - the most basic unit of tracing. This is what
+  * is printed in the end as a single line in the trace output, such as:
+diff -puN kernel/trace/trace_output.c~ftrace_print_hex kernel/trace/trace_output.c
+--- linux-2.6.33-rc4-trace/kernel/trace/trace_output.c~ftrace_print_hex	2010-01-14 19:55:45.000000000 +0900
++++ linux-2.6.33-rc4-trace-kei/kernel/trace/trace_output.c	2010-01-14 20:02:49.000000000 +0900
+@@ -355,6 +355,21 @@ ftrace_print_symbols_seq(struct trace_se
+ }
+ EXPORT_SYMBOL(ftrace_print_symbols_seq);
+ 
++const char *
++ftrace_print_hex_seq(struct trace_seq *p, const unsigned char *buf, int buf_len)
++{
++	int i;
++	const char *ret = p->buffer + p->len;
++
++	for (i = 0; i < buf_len; i++)
++		trace_seq_printf(p, "%s%2.2x", i == 0 ? "" : " ", buf[i]);
++
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++EXPORT_SYMBOL(ftrace_print_hex_seq);
++
+ #ifdef CONFIG_KRETPROBES
+ static inline const char *kretprobed(const char *name)
+ {
+diff -puN include/trace/ftrace.h~ftrace_print_hex include/trace/ftrace.h
+--- linux-2.6.33-rc4-trace/include/trace/ftrace.h~ftrace_print_hex	2010-01-14 20:00:39.000000000 +0900
++++ linux-2.6.33-rc4-trace-kei/include/trace/ftrace.h	2010-01-14 20:01:42.000000000 +0900
+@@ -321,6 +321,9 @@ ftrace_format_##name(struct ftrace_event
+ 		ftrace_print_symbols_seq(p, value, symbols);		\
+ 	})
+ 
++#undef __print_hex
++#define __print_hex(buf, buf_len) ftrace_print_hex_seq(p, buf, buf_len)
++
+ #undef DECLARE_EVENT_CLASS
+ #define DECLARE_EVENT_CLASS(call, proto, args, tstruct, assign, print)	\
+ static enum print_line_t						\
 
-This patchset applies to 2.6.33-rc4.
-
- ([PATCH 0/2] scsi: ftrace based scsi tracing feature)
-  [PATCH 1/2] scsi: add __print_hex() to ftrace
-  [PATCH 2/2] scsi: add scsi trace core function and put trace points
-
-Thanks,
-Kei
-
+_
 
 
 
