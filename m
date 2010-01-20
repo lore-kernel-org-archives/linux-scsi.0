@@ -1,86 +1,52 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: Fix printing of failed 32-byte commands
-Date: Wed, 20 Jan 2010 02:20:43 -0500
-Message-ID: <yq1ska1kzsk.fsf@sermon.lab.mkp.net>
-References: <yq1636zt1yr.fsf@sermon.lab.mkp.net>
-	<4B5588B4.4030608@panasas.com>
+Subject: Re: [PATCH 2/2] scsi: add scsi trace core function and put trace points
+Date: Wed, 20 Jan 2010 02:58:34 -0500
+Message-ID: <yq1ockpky1h.fsf@sermon.lab.mkp.net>
+References: <4B56A621.2070301@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:22691 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756201Ab0ATHVx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2010 02:21:53 -0500
-In-Reply-To: <4B5588B4.4030608@panasas.com> (Boaz Harrosh's message of "Tue,
-	19 Jan 2010 12:25:56 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756118Ab0ATH7p@vger.kernel.org>
+In-Reply-To: <4B56A621.2070301@jp.fujitsu.com> (Kei Tokunaga's message of
+	"Wed, 20 Jan 2010 15:43:45 +0900")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, Ingo Molnar <mingo@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
->>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+>>>>> "Kei" == Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com> writes:
 
-Boaz> I don't like that flag. If cmd->cmnd is invalid after the call to
-Boaz> sd_done.  Then I prefer if sd_done could NULL the pointer and any
-Boaz> access will BUG, instead of a dangerous use after free, which you
-Boaz> never know when it will bite.
++	TP_printk("host_no=%u channel=%u id=%u lun=%u cmnd=(%s %s raw=%s) "
+                              ^^^^^^^^^^
 
-Boaz> Then if so scsi_print_command() can just silently ignore any
-cmd-> cmnd == NULL cases. (And a fat comment somewhere)
-
-Yeah, that's a better idea.  I considered that flag a wart from the
-get-go...
+I'm not sure anybody cares about channels in this millennium so that may
+be a waste of space.
 
 
-scsi: Fix printing of failed 32-byte commands
++scsi_trace_rw10(struct trace_seq *p, unsigned char *cdb, int len)
++scsi_trace_rw12(struct trace_seq *p, unsigned char *cdb, int len)
++scsi_trace_rw16(struct trace_seq *p, unsigned char *cdb, int len)
++scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
 
-Having the large CDB allocation logic in sd.c means that
-scsi_io_completion does not have access to the command buffer. That in
-turn causes garbage to be printed when a 32-byte command fails. Move the
-command printing to sd_done where the command buffer is intact.  Clear
-the command buffer pointer after the extended CDB has been freed.
+Would be handy to get FUA and {RD,WR}PROTECT decoded in these commands.
+And prot_op would be nice too.
 
-Make scsi_print_command ignore commands with NULL CDB pointers to
-inhibit printing of garbled command strings.
+Other decode-worthy commands might be WRITE SAME(16) and UNMAP.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index db68e3b..93606bc 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -349,6 +349,9 @@ void scsi_print_command(struct scsi_cmnd *cmd)
- {
- 	int k;
- 
-+	if (cmd->cmnd == NULL)
-+		return;
-+
- 	scmd_printk(KERN_INFO, cmd, "CDB: ");
- 	print_opcode_name(cmd->cmnd, cmd->cmd_len);
- 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 255da53..5f0f6c7 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1218,8 +1218,19 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 		sd_dif_complete(SCpnt, good_bytes);
- 
- 	if (scsi_host_dif_capable(sdkp->device->host, sdkp->protection_type)
--	    == SD_DIF_TYPE2_PROTECTION && SCpnt->cmnd != SCpnt->request->cmd)
-+	    == SD_DIF_TYPE2_PROTECTION && SCpnt->cmnd != SCpnt->request->cmd) {
-+
-+		/* We have to print a failed command here as the
-+		 * extended CDB gets freed before scsi_io_completion()
-+		 * is called.
-+		 */
-+		if (result)
-+			scsi_print_command(SCpnt);
-+
- 		mempool_free(SCpnt->cmnd, sd_cdb_pool);
-+		SCpnt->cmnd = NULL;
-+		SCpnt->cmd_len = 0;
-+	}
- 
- 	return good_bytes;
- }
++scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
++{
+        [...]
++	case READ_32:
++	case WRITE_32:
++		return scsi_trace_rw32(p, cdb, len);
+
+This won't work.  READ/WRITE(32) are variable length commands.  They
+share the same operation code and are distinguished by the service
+action field.  Several of the most recent additions to the SCSI
+protocols are implemented like this.
+
+Other commands requiring two-level parsing are READ CAPACITY(16) and GET
+LBA STATUS.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
