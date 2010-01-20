@@ -1,103 +1,61 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 9/10] mpt2sas: Enable TLR for SSP TAPE drives (Added SAS
- Transport APIs)
-Date: Wed, 20 Jan 2010 12:06:09 +0530
-Message-ID: <0D1E8821739E724A86F4D16902CE275C1C95DFE7BE@inbmail01.lsi.com>
-References: <20091216132620.GJ31161@lsi.com>
-	 <1263831291.2773.54.camel@mulgrave.site>
-	 <0D1E8821739E724A86F4D16902CE275C1C95DFE75A@inbmail01.lsi.com>
- <1263928705.4398.35.camel@mulgrave.site>
+From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+Subject: [PATCH 0/2] scsi: ftrace based scsi tracing feature
+Date: Wed, 20 Jan 2010 15:42:55 +0900
+Message-ID: <4B56A5EF.40703@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:55933 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751973Ab0ATGgc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jan 2010 01:36:32 -0500
-In-Reply-To: <1263928705.4398.35.camel@mulgrave.site>
-Content-Language: en-US
+Received: from fgwmail6.fujitsu.co.jp ([192.51.44.36]:40256 "EHLO
+	fgwmail6.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319Ab0ATGn0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jan 2010 01:43:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, Ingo Molnar <mingo@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>
+Cc: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QHN1c2UuZGVdDQo+IFNlbnQ6IFdlZG5lc2RheSwgSmFu
-dWFyeSAyMCwgMjAxMCAxMjo0OCBBTQ0KPiBUbzogRGVzYWksIEthc2h5YXANCj4gQ2M6IGxpbnV4
-LXNjc2lAdmdlci5rZXJuZWwub3JnOyBNb29yZSwgRXJpYzsgUHJha2FzaCwgU2F0aHlhDQo+IFN1
-YmplY3Q6IFJFOiBbUEFUQ0ggOS8xMF0gbXB0MnNhczogRW5hYmxlIFRMUiBmb3IgU1NQIFRBUEUg
-ZHJpdmVzDQo+IChBZGRlZCBTQVMgVHJhbnNwb3J0IEFQSXMpDQo+IA0KPiBPbiBUdWUsIDIwMTAt
-MDEtMTkgYXQgMjM6NTcgKzA1MzAsIERlc2FpLCBLYXNoeWFwIHdyb3RlOg0KPiA+DQo+ID4gPiAt
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogSmFtZXMgQm90dG9tbGV5IFtt
-YWlsdG86SmFtZXMuQm90dG9tbGV5QHN1c2UuZGVdDQo+ID4gPiBTZW50OiBNb25kYXksIEphbnVh
-cnkgMTgsIDIwMTAgOTo0NSBQTQ0KPiA+ID4gVG86IERlc2FpLCBLYXNoeWFwDQo+ID4gPiBDYzog
-bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IE1vb3JlLCBFcmljOyBQcmFrYXNoLCBTYXRoeWEN
-Cj4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggOS8xMF0gbXB0MnNhczogRW5hYmxlIFRMUiBmb3Ig
-U1NQIFRBUEUgZHJpdmVzDQo+ID4gPiAoQWRkZWQgU0FTIFRyYW5zcG9ydCBBUElzKQ0KPiA+ID4N
-Cj4gPiA+IE9uIFdlZCwgMjAwOS0xMi0xNiBhdCAxODo1NiArMDUzMCwgS2FzaHlhcCwgRGVzYWkg
-d3JvdGU6DQo+ID4gPiA+IEFkZGVkIHRscl9lbmFibGVkIGJpdCBpbiBzYXNfZGV2aWNlIHN0cnVj
-dHVyZSwgd2hpY2ggd2lsbCBoYXZlDQo+ID4gPiBib29sZWFuDQo+ID4gPiA+IHZhbHVlIDAgZm9y
-IGRpc2FibGVkIGFuZCAxIGZvciBlbmFibGVkLg0KPiA+ID4gPg0KPiA+ID4gPiBBcyBzdWdnZXN0
-ZWQgYnkgSmFtZXMgQiwgSSBoYXZlIGFkZGVkDQo+ID4gPiBzYXNfdGxyX3N1cHBvcnRlZCgpLHNh
-c19lbmFibGVfdGxyKCksDQo+ID4gPiA+IHNhc19kaXNhYmxlX3RscigpIGZ1bmN0aW9ucyBhdCBT
-QVMgdHJhbnNwb3J0IGxheWVyIHNvIHRoYXQgYW55DQo+IG90aGVyDQo+ID4gPiA+IExvdyBsYXll
-ciBkcml2ZXIgY2FuIHVzZSB0aG9zZSBBUElzLg0KPiA+ID4gPg0KPiA+ID4gPiBTQVMgdHJhbnNw
-b3J0IEFQSSBzYXNfdGxyX3N1cHBvcnRlZCgpIHdpbGwgc2VuZCB2cGQgcGFnZSAweDkwLA0KPiA+
-ID4gPiB0byBjaGVjayB0aGUgVExSIHN1cHBvcnQuIElmIFRMUiBpcyBzdXBwb3J0ZWQgZm9yIGVu
-ZCBkZXZpY2UsDQo+IE1QVDJTQVMNCj4gPiA+IGRyaXZlcg0KPiA+ID4gPiB3aWxsIGVuYWJsZSB0
-aGUgVExSIGJpdCBpbiB0aGUgU0NTSV9JTyBmb3IgZXZlcnkgcmVxdWVzdC4gSWYNCj4gdGhlcmUg
-aXMNCj4gPiA+IGENCj4gPiA+ID4gcmVzcG9uc2Ugd2l0aCBNUEkyX1NDU0lUQVNLTUdNVF9SU1Bf
-SU5WQUxJRF9GUkFNRSwgdGhlIGRyaXZlcg0KPiB3aWxsDQo+ID4gPiB0dXJuIG9mZg0KPiA+ID4g
-PiB0aGUgVExSIGxvZ2ljLg0KPiA+ID4gPg0KPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBLYXNoeWFw
-IERlc2FpIDxrYXNoeWFwLmRlc2FpQHh4eHh4eHg+DQo+ID4gPiA+IFJldmlld2VkLWJ5OiBFcmlj
-IE1vb3JlIDxFcmljLm1vb3JlQHh4eHh4eHg+DQo+ID4gPg0KPiA+ID4gV2hhdCdzIHdpdGggdGhl
-IHh4eHg/ICBJJ3ZlIGdvdCBiZXR0ZXIgdGhpbmdzIHRvIGRvIHRoYW4gZml4IHVwDQo+ID4gPiBj
-aGFuZ2Vsb2cgc2lnbm9mZnMuDQo+ID4NCj4gPiBSZWFsbHkgU29ycnkgYWJvdXQgdGhpcyBnYWZm
-ZS4NCj4gPiA+DQo+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2NzaV90cmFuc3Bv
-cnRfc2FzLmMNCj4gPiA+IGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X3Nhcy5jDQo+ID4g
-PiA+IGluZGV4IGZkNDdjYjEuLjQxYjhlYWIgMTAwNjQ0DQo+ID4gPiA+IC0tLSBhL2RyaXZlcnMv
-c2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMuYw0KPiA+ID4gPiArKysgYi9kcml2ZXJzL3Njc2kvc2Nz
-aV90cmFuc3BvcnRfc2FzLmMNCj4gPiA+ID4gQEAgLTM1OCw2ICszNTgsNjEgQEAgdm9pZCBzYXNf
-cmVtb3ZlX2hvc3Qoc3RydWN0IFNjc2lfSG9zdA0KPiAqc2hvc3QpDQo+ID4gPiA+ICB9DQo+ID4g
-PiA+ICBFWFBPUlRfU1lNQk9MKHNhc19yZW1vdmVfaG9zdCk7DQo+ID4gPiA+DQo+ID4gPiA+ICsv
-KioNCj4gPiA+ID4gKyAqIHNhc190bHJfc3VwcG9ydGVkIC0gY2hlY2tpbmcgVExSIGJpdCBpbiB2
-cGQgMHg5MA0KPiA+ID4gPiArICogQHNkZXY6IHNjc2kgZGV2aWNlIHN0cnVjdA0KPiA+ID4gPiAr
-ICoNCj4gPiA+ID4gKyAqIENoZWNrIFRyYW5zcG9ydCBMYXllciBSZXRyaWVzIGFyZSBzdXBwb3J0
-ZWQgb3Igbm90Lg0KPiA+ID4gPiArICogSWYgdnBkIHBhZ2UgMHg5MCBpcyBwcmVzZW50LCBUUkwg
-aXMgc3VwcG9ydGVkLg0KPiA+ID4gPiArICoNCj4gPiA+ID4gKyAqLw0KPiA+ID4gPiArdW5zaWdu
-ZWQgaW50DQo+ID4gPiA+ICtzYXNfdGxyX3N1cHBvcnRlZChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNk
-ZXYpDQo+ID4gPiA+ICt7DQo+ID4gPiA+ICsJY2hhciAqYnVmZmVyOw0KPiA+ID4gPiArDQo+ID4g
-PiA+ICsJYnVmZmVyID0gc2NzaV9nZXRfdnBkX3BhZ2Uoc2RldiwgMHg5MCk7DQo+ID4gPiA+ICsJ
-aWYgKGJ1ZmZlciA9PSBOVUxMKQ0KPiA+ID4gPiArCQlyZXR1cm4gMDsNCj4gPiA+ID4gKw0KPiA+
-ID4gPiArCWtmcmVlKGJ1ZmZlcik7DQo+ID4gPiA+ICsJcmV0dXJuIDE7DQo+ID4gPg0KPiA+ID4g
-VGhpcyBjYW4ndCBiZSByaWdodC4gIFRMUiBzdXBwb3J0ZWQgaXMgdGhlIGxvd2VzdCBiaXQgb2Yg
-dGhlIDh0aA0KPiBieXRlDQo+ID4gPiBvZg0KPiA+ID4gdGhlIHBvcnQgZW50cnkgLi4uIHlvdSBj
-YW4ndCBjb25kaXRpb24gdGhpcyBvbiB3aGV0aGVyIHRoZSBwcm90b2NvbA0KPiA+ID4gcGFnZQ0K
-PiA+ID4gZXhpc3RzIG9yIG5vdC4NCj4gPiBHb3QgdGhpcyBwb2ludC4gSSB3aWxsIGNoYW5nZSBh
-Y2NvcmRpbmdseS4NCj4gPiA+DQo+ID4gPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3Njc2kvc2Nz
-aV9kZXZpY2UuaA0KPiBiL2luY2x1ZGUvc2NzaS9zY3NpX2RldmljZS5oDQo+ID4gPiA+IGluZGV4
-IDY4ZDE4NWMuLjdjMTM2MWIgMTAwNjQ0DQo+ID4gPiA+IC0tLSBhL2luY2x1ZGUvc2NzaS9zY3Np
-X2RldmljZS5oDQo+ID4gPiA+ICsrKyBiL2luY2x1ZGUvc2NzaS9zY3NpX2RldmljZS5oDQo+ID4g
-PiA+IEBAIC0xMTIsNiArMTEyLDcgQEAgc3RydWN0IHNjc2lfZGV2aWNlIHsNCj4gPiA+ID4gIAkJ
-CQkgKiBzY3NpX2RldmluZm8uW2hjXS4gRm9yIG5vdyB1c2VkIG9ubHkNCj4gdG8NCj4gPiA+ID4g
-IAkJCQkgKiBwYXNzIHNldHRpbmdzIGZyb20gc2xhdmVfYWxsb2MgdG8gc2NzaQ0KPiA+ID4gPiAg
-CQkJCSAqIGNvcmUuICovDQo+ID4gPiA+ICsJdW5zaWduZWQgdGxyX2VuYWJsZWQ6MTsJLyogc2V0
-IHRsciBmbGFncyAqLw0KPiA+ID4NCj4gPiA+IEFuZCB0aGlzIGlzIHdyb25nOiAgdGhlIHRsciBp
-cyBTQVMgc3BlY2lmaWMsIGl0IGJlbG9uZ3MgaW4gdGhlIGVuZA0KPiA+ID4gZGV2aWNlIGZsYWdz
-IGxpa2UgYWxsIHRoZSBvdGhlciBTQVMgc3BlY2lmaWMgZW50cmllcy4NCj4gPiBJIGdvdCBpdC4g
-SSB3aWxsIG1vdmUgdGhpcyBpbnRvIHNjc2lfdHJhbnNwb3J0X3Nhcy5oIGluDQo+IHNhc19lbmRf
-ZGV2aWNlICBhcyBmbGFncy4NCj4gPiA+DQo+ID4gPiBXZSBhbHNvIG5lZWQgdG8gZXhwb3NlIGl0
-IHRvIHRoZSB1c2VyIGluIGNhc2UgdGhleSB3YW50IHRvIGNoYW5nZQ0KPiB0aGUNCj4gPiA+IGZs
-YWcuDQo+ID4gPg0KPiA+IEkgYW0gbGl0dGxlIGNvbmZ1c2VkIG9uIHRoaXMgcG9pbnQuIEhvcGUg
-eW91IGRvbuKAmXQgbWluZCBzaW1wbGlmeWluZw0KPiBpdC4NCj4gPg0KPiA+ID4gSG93IGFib3V0
-IHNlcGFyYXRpbmcgdGhlIHR3byBwYXRjaGVzIGFuZCBkb2luZyB0aGlzIGZvciB0aGUNCj4gdHJh
-bnNwb3J0DQo+ID4gPiBjbGFzcz8gIElmIGl0IGxvb2tzIE9LLCBJJ2xsIGFkZCBpdCB0byB0aGUg
-cGF0Y2ggc2VxdWVuY2UgYW5kIGFsdGVyDQo+ID4gPiB0aGlzDQo+ID4gPiBjb21taXQuDQo+ID4g
-SmFtZXMsIFdoYXQgZG9lcyB0aGlzIG1lYW4gPw0KPiANCj4gSXQgbWVhbnMgZG9lcyB0aGUgcGF0
-Y2ggbG9vayBPSyB0byB5b3U/ICBBcyBpbiBzdG9yaW5nIHRoZSBkYXRhIGluIHRoZQ0KPiB0cmFu
-c3BvcnQgY2xhc3MgYW5kIHNlcGFyYXRpbmcgaXQgaW50byBzdXBwb3J0ZWQgYW5kIGVuYWJsZWQu
-ICBUaGUNClRoYW5rcyBKYW1lcy4gTm93IEkgdW5kZXJzdG9vZCB5b3VyIGNoYW5nZS4NClRoaXMg
-bG9va3MgT0sgdG8gbWUuIA0KDQotIEthc2h5YXANCg0KPiBhY3R1YWwgQVBJIHlvdSB1c2UgZm9y
-IG1wdDJzYXMgaXMgdW5jaGFuZ2VkLg0KPiANCj4gSmFtZXMNCj4gDQoNCg0K
+Hi,
+
+We'd like to propose this patchset (ftrace based scsi tracing)
+as the first attempt for SCSI tracing, starting with the minimum
+trace points.
+
+Tracing gives us an idea how far SCSI processing goes, for
+example, even in a case that a SCSI IRQ handling is blocked by
+other drivers that disable interrupts for a long time.  Also,
+trace could be used for debugging purpose in development similar
+to how USB developers use usbmon for collecting submitted and
+completed URBs for debugging.  In a mission critical area, there
+is sometimes a case that we have to analyze a problem at customers
+without taking a memory dump as much as possible.  There is also
+a case to solve a problem which reproducibility is very low (but
+we can not just leave the problem) so collecting additional data
+afterwards is difficult.
+
+In this version, it prints host#, channel, id, lun, and CDB (and
+a value of 'result' if it's called in scsi_done().)  All fields
+of CDB are printed in hex, and some of them are printed in ascii
+as well.  That makes the outputs be more user-friendly.  For
+example, retrieving 'lba' and 'transfer length (txlen)' data from
+CDB of "SCSI3 block command READ/WRITE," and printing them in the
+friendly format, users can easily correlate the info from SCSI
+layer with block layer.  (All the conversions to ascii that requires
+relatively large costs are done in TP_printk(), making the overheads
+at storing trace be minimum.)
+
+CDB has various lengths for its size and that made us end up
+creating __print_hex().
+
+This patchset applies to 2.6.33-rc4.
+
+ ([PATCH 0/2] scsi: ftrace based scsi tracing feature)
+  [PATCH 1/2] scsi: add __print_hex() to ftrace
+  [PATCH 2/2] scsi: add scsi trace core function and put trace points
+
+Thanks,
+Kei
+
+
+
+
