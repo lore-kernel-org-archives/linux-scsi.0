@@ -1,52 +1,99 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH] lpfc: two branches the same in lpfc_decode_firmware_rev()
-Date: Tue, 19 Jan 2010 17:41:06 -0500
-Message-ID: <4B563502.6070908@emulex.com>
-References: <4B5329AD.9010100@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [PATCH 2/4] qla2xxx: Add BSG support for FC ELS/CT passthrough and vendor commands.
+Date: Tue, 19 Jan 2010 16:12:07 -0800
+Message-ID: <EA4BF48E-5778-4BB2-97D4-61F307B4E363@qlogic.com>
+References: <1263330169-347-1-git-send-email-giridhar.malavali@qlogic.com> <1263330169-347-3-git-send-email-giridhar.malavali@qlogic.com> <1263854844.2773.92.camel@mulgrave.site>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:13962 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753934Ab0ASWl1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 17:41:27 -0500
-In-Reply-To: <4B5329AD.9010100@gmail.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:56289 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756168Ab0ATAMO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jan 2010 19:12:14 -0500
+In-Reply-To: <1263854844.2773.92.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
-
-Acked-by:  James Smart <james.smart@emulex.com>
-
--- james s
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
+On Jan 18, 2010, at 2:47 PM, James Bottomley wrote:
 
-Roel Kluin wrote:
-> Regardless of the flag state, the branches execute the same code
-> 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> On Tue, 2010-01-12 at 13:02 -0800, giridhar.malavali@qlogic.com wrote:
+>> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>>
+>> Signed-off-by: Sarang Radke <sarang.radke@qlogic.com>
+>> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>> ---
+>> drivers/scsi/qla2xxx/qla_attr.c |  746
+>> ++++++++++++++++++++++++++++++++++++++-
+>> drivers/scsi/qla2xxx/qla_def.h  |  155 ++++++++
+>> drivers/scsi/qla2xxx/qla_fw.h   |   33 ++
+>> drivers/scsi/qla2xxx/qla_gbl.h  |    5 +
+>> drivers/scsi/qla2xxx/qla_init.c |   14 +-
+>> drivers/scsi/qla2xxx/qla_iocb.c |  120 +++++++
+>> drivers/scsi/qla2xxx/qla_isr.c  |  105 ++++++-
+>> drivers/scsi/qla2xxx/qla_mbx.c  |  151 ++++++++
+>> drivers/scsi/qla2xxx/qla_os.c   |    1 +
+>> 9 files changed, 1326 insertions(+), 4 deletions(-)
+>
+> Did this actually get compile checked?  It's giving me this error:
+
+Thanks for the fix. Yes, it compiled without any warnings or errors on  
+my X86 64 bit system. It missed compilation on 32 bit system.
+I will make sure I cross compile in future before submitting.
+
+>
+>
+> drivers/scsi/qla2xxx/qla_attr.c: In function  
+> 'qla2x00_process_vendor_specific':
+> drivers/scsi/qla2xxx/qla_attr.c:2233: warning: format '%llx' expects  
+> type 'long long unsigned int', but argument 5 has type 'dma_addr_t'
+> drivers/scsi/qla2xxx/qla_attr.c:2233: warning: format '%llx' expects  
+> type 'long long unsigned int', but argument 6 has type 'dma_addr_t'
+> drivers/scsi/qla2xxx/qla_attr.c:2251: warning: format '%llx' expects  
+> type 'long long unsigned int', but argument 5 has type 'dma_addr_t'
+> drivers/scsi/qla2xxx/qla_attr.c:2251: warning: format '%llx' expects  
+> type 'long long unsigned int', but argument 6 has type 'dma_addr_t'
+>
+> A simple cast fixes it.
+>
+> James
+>
 > ---
->  drivers/scsi/lpfc/lpfc_ct.c |    7 +------
->  1 files changed, 1 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-> index 0ebcd9b..bf7bf62 100644
-> --- a/drivers/scsi/lpfc/lpfc_ct.c
-> +++ b/drivers/scsi/lpfc/lpfc_ct.c
-> @@ -1843,12 +1843,7 @@ lpfc_decode_firmware_rev(struct lpfc_hba *phba, char *fwrevision, int flag)
->  		c  = (rev & 0x0000ff00) >> 8;
->  		b4 = (rev & 0x000000ff);
->  
-> -		if (flag)
-> -			sprintf(fwrevision, "%d.%d%d%c%d ", b1,
-> -				b2, b3, c, b4);
-> -		else
-> -			sprintf(fwrevision, "%d.%d%d%c%d ", b1,
-> -				b2, b3, c, b4);
-> +		sprintf(fwrevision, "%d.%d%d%c%d", b1, b2, b3, c, b4);
->  	}
->  	return;
->  }
-> 
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/ 
+> qla_attr.c
+> index 6ecbda9..5a19aea 100644
+> --- a/drivers/scsi/qla2xxx/qla_attr.c
+> +++ b/drivers/scsi/qla2xxx/qla_attr.c
+> @@ -2232,7 +2232,7 @@ qla2x00_process_vendor_specific(struct  
+> fc_bsg_job *bsg_job)
+> 				vha->host_no, type, vendor_cmd, elreq.options));
+> 			DEBUG2(qla_printk(KERN_INFO, ha,
+> 				"scsi(%ld) tx_addr: 0x%llx rx_addr: 0x%llx tx_sg_cnt: %x  
+> rx_sg_cnt: %x\n",
+> -				vha->host_no, elreq.send_dma, elreq.rcv_dma, elreq.req_sg_cnt,  
+> elreq.rsp_sg_cnt));
+> +				vha->host_no, (unsigned long long)elreq.send_dma, (unsigned  
+> long long)elreq.rcv_dma, elreq.req_sg_cnt, elreq.rsp_sg_cnt));
+> 			command_sent = INT_DEF_LB_LOOPBACK_CMD;
+> 			rval = qla2x00_loopback_test(vha, &elreq, response);
+> 			if (IS_QLA81XX(ha)) {
+> @@ -2250,7 +2250,7 @@ qla2x00_process_vendor_specific(struct  
+> fc_bsg_job *bsg_job)
+> 				vha->host_no, type, vendor_cmd, elreq.options));
+> 			DEBUG2(qla_printk(KERN_INFO, ha,
+> 				"scsi(%ld) tx_addr: 0x%llx rx_addr: 0x%llx tx_sg_cnt: %x  
+> rx_sg_cnt: %x\n",
+> -				vha->host_no, elreq.send_dma, elreq.rcv_dma, elreq.req_sg_cnt,  
+> elreq.rsp_sg_cnt));
+> +				vha->host_no, (unsigned long long)elreq.send_dma, (unsigned  
+> long long)elreq.rcv_dma, elreq.req_sg_cnt, elreq.rsp_sg_cnt));
+> 			command_sent = INT_DEF_LB_ECHO_CMD;
+> 			rval = qla2x00_echo_test(vha, &elreq, response);
+> 		}
+>
+>
+
