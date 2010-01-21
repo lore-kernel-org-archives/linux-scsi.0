@@ -1,103 +1,30 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 5/5] fcoe: Only rmmod fcoe.ko if there are no active
-	connections
-Date: Thu, 21 Jan 2010 10:16:05 -0800
-Message-ID: <20100121181605.16741.1755.stgit@localhost.localdomain>
-References: <20100121181538.16741.33676.stgit@localhost.localdomain>
+From: krike@sci.fi
+Subject: Userspace scsi.h type mismatch.
+Date: Thu, 21 Jan 2010 20:29:51 +0200
+Message-ID: <20100121182951.GA2746@satellite>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1073 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754879Ab0AUSQF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jan 2010 13:16:05 -0500
-In-Reply-To: <20100121181538.16741.33676.stgit@localhost.localdomain>
+Received: from gw01.mail.saunalahti.fi ([195.197.172.115]:49952 "EHLO
+	gw01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194Ab0AUShe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2010 13:37:34 -0500
+Received: from localhost (YYMYCVI.gprs.sl-laajakaista.fi [85.76.217.7])
+	by gw01.mail.saunalahti.fi (Postfix) with ESMTP id 61F2F151407
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Jan 2010 20:29:53 +0200 (EET)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
+To: linux-scsi@vger.kernel.org
 
-From: Rob Love <robert.w.love@intel.com>
+Hello.
 
-Currently we're gracefully tearing down each active connection
-when fcoe.ko is removed. We shouldn't allow the user to destroy
-connections by removing the module. We should force the user to
-destroy each connection and then the module can be removed.
+ I think that there is mistake in linux/2.6.32.4/include/scsi/scsi.h:
 
-This patch makes it so a refrerence count on the module is taken
-each time a fcoe_interface is created. The reference count
-is dropped when the fcoe_interface is destroyed. This makes it
-so that module_exit() doesn't get called unless all fcoe_interfaces
-have been destroyed.
+ the first type defination of u8 should be type of __u8 on userspace
+ (struct scsi_varlen_cdb_hdr).
 
-This patch leaves the removal of interfaces in the module_exit
-routine so that if the user does a 'rmmod -f' we'll clean everything
-up before removing the module.
+ I founded this problem when I try compile the util-linux-ng-2.17.
+ This should cause problems many other packages also that includes scsi.h
 
-The module_put line was put before the out_putdev goto line because
-we should only be decrementing the reference count if a
-fcoe_interface is actually destroyed. If we can't find the netdev
-or the fcoe_interface then it's assumed that something else has
-destroyed the fcoe_interface and it would have decremented the
-reference count at that time.
-
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
-
- drivers/scsi/fcoe/fcoe.c |   18 ++++++++++++++++--
- 1 files changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 10be9f3..2f47ae7 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2009,6 +2009,8 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
- 	fcoe_interface_cleanup(fcoe);
- 	rtnl_unlock();
- 	fcoe_if_destroy(fcoe->ctlr.lp);
-+	module_put(THIS_MODULE);
-+
- out_putdev:
- 	dev_put(netdev);
- out_nodev:
-@@ -2059,6 +2061,11 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 	}
- #endif
- 
-+	if (!try_module_get(THIS_MODULE)) {
-+		rc = -EINVAL;
-+		goto out_nomod;
-+	}
-+
- 	rtnl_lock();
- 	netdev = fcoe_if_to_netdev(buffer);
- 	if (!netdev) {
-@@ -2099,17 +2106,24 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
- 	if (!fcoe_link_ok(lport))
- 		fcoe_ctlr_link_up(&fcoe->ctlr);
- 
--	rc = 0;
--out_free:
- 	/*
- 	 * Release from init in fcoe_interface_create(), on success lport
- 	 * should be holding a reference taken in fcoe_if_create().
- 	 */
- 	fcoe_interface_put(fcoe);
-+	dev_put(netdev);
-+	rtnl_unlock();
-+	mutex_unlock(&fcoe_config_mutex);
-+
-+	return 0;
-+out_free:
-+	fcoe_interface_put(fcoe);
- out_putdev:
- 	dev_put(netdev);
- out_nodev:
- 	rtnl_unlock();
-+	module_put(THIS_MODULE);
-+out_nomod:
- 	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
- }
-
+Best regards: Kristian Rainio <krike@sci.fi>
