@@ -1,37 +1,44 @@
-From: Xiaotian Feng <xtfeng@gmail.com>
-Subject: Re: qlogic lockdep warning
-Date: Thu, 21 Jan 2010 17:14:14 +0800
-Message-ID: <7b6bb4a51001210114g1b2ec290g3fdf098a651b6b38@mail.gmail.com>
-References: <86802c441001201710heee6a1g744f69f4edcbc52c@mail.gmail.com>
-	 <1264062159.4283.1125.camel@laptop>
-	 <7b6bb4a51001210046mdb48624xf3efc8bf756efb40@mail.gmail.com>
-	 <1264064527.4283.1139.camel@laptop>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/5] libfc/libfcoe/fcoe fixes for 2.6.33-rc
+Date: Thu, 21 Jan 2010 10:15:39 -0800
+Message-ID: <20100121181538.16741.33676.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752592Ab0AUJOS@vger.kernel.org>
-In-Reply-To: <1264064527.4283.1139.camel@laptop>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Yinghai Lu <yinghai@kernel.org>, Ingo Molnar <mingo@elte.hu>, James Bottomley <James.Bottomley@hansenpartnership.com>, James.Bottomley@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:19785 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753201Ab0AUSPj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jan 2010 13:15:39 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 
-On Thu, Jan 21, 2010 at 5:02 PM, Peter Zijlstra <peterz@infradead.org> wrote:
-> On Thu, 2010-01-21 at 16:46 +0800, Xiaotian Feng wrote:
->> qla24xx_msix_default is using spin_lock_irq and spin_unlock_irq within
->> the irq handler...
->> I think convert to spin_lock_irqsave/spin_unlock_irqrestore can solve
->> this warning.
->
-> Not only that it'll actually solve a bug too ;-)
->
-> Also,
->
-> A: Because it messes up the order in which people normally read text.
-> Q: Why is top-posting such a bad thing?
-> A: Top-posting.
-> Q: What is the most annoying thing in e-mail?
+The following series implements a few fixes to libfc, libfcoe and fcoe.
 
-Ah, just realized it by your examples :-) Sorry for the bad manner in e-mail...
+---
 
->
->
+Bhanu Prakash Gollapudi (1):
+      libfcoe: Send port LKA every FIP_VN_KA_PERIOD secs.
+
+Hugh Daschbach (2):
+      libfc: Don't assume response request present.
+      libfc: Fix e_d_tov ns -> ms scaling factor in PLOGI response.
+
+Rob Love (1):
+      fcoe: Only rmmod fcoe.ko if there are no active connections
+
+Vasu Dev (1):
+      libfc: call ddp setup for only FCP reads to avoid accessing junk fsp pointer
+
+
+ drivers/scsi/fcoe/fcoe.c      |   18 ++++++++++++++++--
+ drivers/scsi/fcoe/libfcoe.c   |    2 +-
+ drivers/scsi/libfc/fc_exch.c  |    2 +-
+ drivers/scsi/libfc/fc_fcp.c   |    3 ---
+ drivers/scsi/libfc/fc_lport.c |    3 ++-
+ drivers/scsi/libfc/fc_rport.c |    2 +-
+ 6 files changed, 21 insertions(+), 9 deletions(-)
+
+-- 
+//Rob
