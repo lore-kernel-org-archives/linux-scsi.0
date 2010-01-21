@@ -1,7 +1,8 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 4/5] libfcoe: Send port LKA every FIP_VN_KA_PERIOD secs.
-Date: Thu, 21 Jan 2010 10:16:00 -0800
-Message-ID: <20100121181600.16741.17265.stgit@localhost.localdomain>
+Subject: [PATCH 5/5] fcoe: Only rmmod fcoe.ko if there are no active
+	connections
+Date: Thu, 21 Jan 2010 10:16:05 -0800
+Message-ID: <20100121181605.16741.1755.stgit@localhost.localdomain>
 References: <20100121181538.16741.33676.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,41 +10,94 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:1073 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754879Ab0AUSQA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jan 2010 13:16:00 -0500
+	id S1754879Ab0AUSQF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jan 2010 13:16:05 -0500
 In-Reply-To: <20100121181538.16741.33676.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Bhanu Gollapudi <bprakash@broadcom.com>, Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
 
-From: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+From: Rob Love <robert.w.love@intel.com>
 
-libfcoe module doesnt send port keep alive every
-FIP_VN_KA_PERIOD due to improper assignment of timeout value.
-Update the port_ka_time appropriately by incrementing it by
-FIP_VN_KA_PERIOD in fcoe_ctlr_timeout(), so that the link_work
-is scheduled to send the port LKA.
+Currently we're gracefully tearing down each active connection
+when fcoe.ko is removed. We shouldn't allow the user to destroy
+connections by removing the module. We should force the user to
+destroy each connection and then the module can be removed.
 
-Signed-off-by: Bhanu Gollapudi <bprakash@broadcom.com>
-Acked-by: Joe Eykholt <jeykholt@cisco.com>
+This patch makes it so a refrerence count on the module is taken
+each time a fcoe_interface is created. The reference count
+is dropped when the fcoe_interface is destroyed. This makes it
+so that module_exit() doesn't get called unless all fcoe_interfaces
+have been destroyed.
+
+This patch leaves the removal of interfaces in the module_exit
+routine so that if the user does a 'rmmod -f' we'll clean everything
+up before removing the module.
+
+The module_put line was put before the out_putdev goto line because
+we should only be decrementing the reference count if a
+fcoe_interface is actually destroyed. If we can't find the netdev
+or the fcoe_interface then it's assumed that something else has
+destroyed the fcoe_interface and it would have decremented the
+reference count at that time.
+
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 9823291..511cb6b 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -1187,7 +1187,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
- 			next_timer = fip->ctlr_ka_time;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 10be9f3..2f47ae7 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2009,6 +2009,8 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ 	fcoe_interface_cleanup(fcoe);
+ 	rtnl_unlock();
+ 	fcoe_if_destroy(fcoe->ctlr.lp);
++	module_put(THIS_MODULE);
++
+ out_putdev:
+ 	dev_put(netdev);
+ out_nodev:
+@@ -2059,6 +2061,11 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 	}
+ #endif
  
- 		if (time_after_eq(jiffies, fip->port_ka_time)) {
--			fip->port_ka_time += jiffies +
-+			fip->port_ka_time = jiffies +
- 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
- 			fip->send_port_ka = 1;
- 		}
++	if (!try_module_get(THIS_MODULE)) {
++		rc = -EINVAL;
++		goto out_nomod;
++	}
++
+ 	rtnl_lock();
+ 	netdev = fcoe_if_to_netdev(buffer);
+ 	if (!netdev) {
+@@ -2099,17 +2106,24 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 	if (!fcoe_link_ok(lport))
+ 		fcoe_ctlr_link_up(&fcoe->ctlr);
+ 
+-	rc = 0;
+-out_free:
+ 	/*
+ 	 * Release from init in fcoe_interface_create(), on success lport
+ 	 * should be holding a reference taken in fcoe_if_create().
+ 	 */
+ 	fcoe_interface_put(fcoe);
++	dev_put(netdev);
++	rtnl_unlock();
++	mutex_unlock(&fcoe_config_mutex);
++
++	return 0;
++out_free:
++	fcoe_interface_put(fcoe);
+ out_putdev:
+ 	dev_put(netdev);
+ out_nodev:
+ 	rtnl_unlock();
++	module_put(THIS_MODULE);
++out_nomod:
+ 	mutex_unlock(&fcoe_config_mutex);
+ 	return rc;
+ }
 
