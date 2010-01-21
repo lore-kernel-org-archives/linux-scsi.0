@@ -1,48 +1,49 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 3/5] libfc: Don't assume response request present.
-Date: Thu, 21 Jan 2010 10:15:55 -0800
-Message-ID: <20100121181555.16741.22367.stgit@localhost.localdomain>
+Subject: [PATCH 4/5] libfcoe: Send port LKA every FIP_VN_KA_PERIOD secs.
+Date: Thu, 21 Jan 2010 10:16:00 -0800
+Message-ID: <20100121181600.16741.17265.stgit@localhost.localdomain>
 References: <20100121181538.16741.33676.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3123 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:1073 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754862Ab0AUSPz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jan 2010 13:15:55 -0500
+	id S1754879Ab0AUSQA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jan 2010 13:16:00 -0500
 In-Reply-To: <20100121181538.16741.33676.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Hugh Daschbach <hdasch@broadcom.com>, Robert Love <robert.w.love@intel.com>
+Cc: Bhanu Gollapudi <bprakash@broadcom.com>, Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-From: Hugh Daschbach <hdasch@broadcom.com>
+From: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Fix NULL pointer dereference crash occurs in fc_lport_bsg_request()
-for bsg requests that do not contain a response request.
-Specifically, FC_BSG_HST_ADD_RPORT and FC_BSG_HST_DEL_RPORT bsg
-requests are not guaranteed to include a response request.
+libfcoe module doesnt send port keep alive every
+FIP_VN_KA_PERIOD due to improper assignment of timeout value.
+Update the port_ka_time appropriately by incrementing it by
+FIP_VN_KA_PERIOD in fcoe_ctlr_timeout(), so that the link_work
+is scheduled to send the port LKA.
 
-Signed-off-by: Hugh Daschbach <hdasch@broadcom.com>
+Signed-off-by: Bhanu Gollapudi <bprakash@broadcom.com>
+Acked-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_lport.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 0b16502..7ec8ce7 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1800,7 +1800,8 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
- 	u32 did;
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 9823291..511cb6b 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -1187,7 +1187,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
+ 			next_timer = fip->ctlr_ka_time;
  
- 	job->reply->reply_payload_rcv_len = 0;
--	rsp->resid_len = job->reply_payload.payload_len;
-+	if (rsp)
-+		rsp->resid_len = job->reply_payload.payload_len;
- 
- 	mutex_lock(&lport->lp_mutex);
- 
+ 		if (time_after_eq(jiffies, fip->port_ka_time)) {
+-			fip->port_ka_time += jiffies +
++			fip->port_ka_time = jiffies +
+ 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
+ 			fip->send_port_ka = 1;
+ 		}
 
