@@ -1,85 +1,54 @@
-From: Gal Rosen <galr@storwize.com>
-Subject: [PATCH] SCSI: Synchronization issue while deleting vport
-Date: Thu, 21 Jan 2010 10:15:32 +0200
-Message-ID: <1264061732.31083.51.camel@galr-linux>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: qlogic lockdep warning
+Date: Thu, 21 Jan 2010 09:22:39 +0100
+Message-ID: <1264062159.4283.1125.camel@laptop>
+References: <86802c441001201710heee6a1g744f69f4edcbc52c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-s3WZHaF+ArCv6LlANkVV"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.storwize.com ([62.90.10.208]:37456 "EHLO swdc2.storwiz.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752707Ab0AUIQo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jan 2010 03:16:44 -0500
+Received: from casper.infradead.org ([85.118.1.10]:54629 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752796Ab0AUIW5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jan 2010 03:22:57 -0500
+In-Reply-To: <86802c441001201710heee6a1g744f69f4edcbc52c@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Smart@Emulex.Com
-Cc: Gal Rosen <galr@storwize.com>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Ingo Molnar <mingo@elte.hu>, James Bottomley <James.Bottomley@hansenpartnership.com>, James.Bottomley@suse.de, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 
+On Wed, 2010-01-20 at 17:10 -0800, Yinghai Lu wrote:
 
---=-s3WZHaF+ArCv6LlANkVV
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> [   77.962879] ------------[ cut here ]------------
+> [   77.965784] WARNING: at kernel/lockdep.c:2332
+> trace_hardirqs_on_caller+0xc6/0x14b()
+> [   77.977492] Hardware name: Sun
+> [   77.979485] Modules linked in:
+> [   77.994337] Pid: 0, comm: swapper Not tainted
+> 2.6.33-rc4-tip-yh-03949-g3a8e3f5-dirty #64
+> [   78.000120] Call Trace:
+> [   78.013298]  <IRQ>  [<ffffffff81076b54>] warn_slowpath_common+0x7c/0x94
+> [   78.017746]  [<ffffffff81cd712c>] ? _raw_spin_unlock_irq+0x30/0x36
+> [   78.035171]  [<ffffffff81076b80>] warn_slowpath_null+0x14/0x16
+> [   78.040152]  [<ffffffff810a2ae8>] trace_hardirqs_on_caller+0xc6/0x14b
+> [   78.055400]  [<ffffffff810a2b7a>] trace_hardirqs_on+0xd/0xf
+> [   78.058951]  [<ffffffff81cd712c>] _raw_spin_unlock_irq+0x30/0x36
+> [   78.074889]  [<ffffffff816461ef>] qla24xx_msix_default+0x243/0x281
+> [   78.091598]  [<ffffffff810a5752>] ? __lock_release+0xa5/0xae
+> [   78.096799]  [<ffffffff810c02ae>] handle_IRQ_event+0x53/0x113
+> [   78.111568]  [<ffffffff810c2061>] handle_edge_irq+0xf3/0x13b
+> [   78.116255]  [<ffffffff81035109>] handle_irq+0x24/0x2f
+> [   78.132063]  [<ffffffff81cdc4b4>] do_IRQ+0x5c/0xc3
+> [   78.134684]  [<ffffffff81cd7393>] ret_from_intr+0x0/0xf
+> [   78.137903]  <EOI>  [<ffffffff81039a56>] ? mwait_idle+0xaf/0xbb
+> [   78.155674]  [<ffffffff81039a4d>] ? mwait_idle+0xa6/0xbb
+> [   78.158600]  [<ffffffff81031c7c>] cpu_idle+0x61/0xa1
+> [   78.174333]  [<ffffffff81c85d7a>] rest_init+0x7e/0x80
+> [   78.178122]  [<ffffffff82832d1f>] start_kernel+0x316/0x31d
+> [   78.193623]  [<ffffffff82832297>] x86_64_start_reservations+0xa7/0xab
+> [   78.198924]  [<ffffffff8283237f>] x86_64_start_kernel+0xe4/0xeb
+> [   78.214540] ---[ end trace be4529f30a2e4ef5 ]---
 
-Hi,
+It appears the thing tries to enable IRQs from within an IRQ handler,
+naughty.
 
-Attach proposed patch for the PROBLEM: Synchronization issue in
-scsi_transport_fc.
-
-Gal Rosen.
-
---=-s3WZHaF+ArCv6LlANkVV
-Content-Disposition: attachment; filename="0001-Synchronization-issue-while-deleting-vport.patch"
-Content-Transfer-Encoding: base64
-Content-Type: text/x-patch; name="0001-Synchronization-issue-while-deleting-vport.patch"; charset="UTF-8"
-
-RnJvbSBlZDI0NTU3ZTJmOThmOTYxN2QwODM4NTNmZDJjYjQwZjkzZTFjNDg2IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQ0KRnJvbTogR2FsIFJvc2VuIDxnYWxyQHN0b3J3aXplLmNvbT4NCkRhdGU6
-IFRodSwgMjEgSmFuIDIwMTAgMDk6NTM6NDIgKzAyMDANClN1YmplY3Q6IFN5bmNocm9uaXphdGlv
-biBpc3N1ZSB3aGlsZSBkZWxldGluZyB2cG9ydA0KDQpUaGUgaXNzdWUgb2NjdXIgd2hpbGUgZGVs
-ZXRpbmcgNjAgdmlydHVhbCBwb3J0cyB0aHJvdWdoIHRoZSBzeXMNCmludGVyZmFjZSAvc3lzL2Ns
-YXNzL2ZjX3Zwb3J0cy92cG9ydC1YL3Zwb3J0X2RlbGV0ZS4gSXQgaGFwcGVuIHdoaWxlIGluDQph
-IG1pc3Rha2UgZWFjaCByZXF1ZXN0IHNlbnQgdHdpY2UgZm9yIHRoZSBzYW1lIHZwb3J0LiBUaGlz
-IGludGVyZmFjZSBpcw0KYXN5bmNocm9ub3VzLCBlbnRlcmluZyB0aGUgZGVsZXRlIHJlcXVlc3Qg
-aW50byBhIHdvcmsgcXVldWUsIGFsbG93aW5nDQptb3JlIHRoYW4gb25lIHJlcXVlc3QgdG8gZW50
-ZXIgdG8gdGhlIGRlbGV0ZSB3b3JrIHF1ZXVlLiBUaGUgcmVzdWx0IGlzIGENCk5VTEwgcG9pbnRl
-ci4gVGhlIGZpcnN0IHJlcXVlc3QgYWxyZWFkeSBkZWxldGUgdGhlIHZwb3J0LCB3aGlsZSB0aGUN
-CnNlY29uZCByZXF1ZXN0IGdvdCBhIHBvaW50ZXIgdG8gdGhlIHZwb3J0IGJlZm9yZSB0aGUgZGV2
-aWNlIGRlc3Ryb3llZC4NClJlLWNyZWF0ZSB2cG9ydCBsYXRlciBjYXVzZSBzeXN0ZW0gZnJlZXpl
-Lg0KDQpTb2x1dGlvbjogQ2hlY2sgdnBvcnQgZmxhZ3MgYmVmb3JlIGVudGVyaW5nIHRoZSByZXF1
-ZXN0IHRvIHRoZSB3b3JrIHF1ZXVlLg0KDQpTaWduZWQtb2ZmLWJ5OiBHYWwgUm9zZW4gPGdhbHJA
-c3RvcndpemUuY29tPg0KLS0tDQogZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X2ZjLmMgfCAg
-IDI0ICsrKysrKysrKysrKy0tLS0tLS0tLS0tLQ0KIDEgZmlsZXMgY2hhbmdlZCwgMTIgaW5zZXJ0
-aW9ucygrKSwgMTIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvc2Nz
-aV90cmFuc3BvcnRfZmMuYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jDQppbmRl
-eCA1ZmQ2NGU3Li5iZTk2ZWIwIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNw
-b3J0X2ZjLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9mYy5jDQpAQCAtMTIx
-Nyw2ICsxMjE3LDE1IEBAIHN0b3JlX2ZjX3Zwb3J0X2RlbGV0ZShzdHJ1Y3QgZGV2aWNlICpkZXYs
-IHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICphdHRyLA0KIHsNCiAJc3RydWN0IGZjX3Zwb3J0ICp2
-cG9ydCA9IHRyYW5zcG9ydF9jbGFzc190b192cG9ydChkZXYpOw0KIAlzdHJ1Y3QgU2NzaV9Ib3N0
-ICpzaG9zdCA9IHZwb3J0X3RvX3Nob3N0KHZwb3J0KTsNCisJdW5zaWduZWQgaW50IGZsYWdzOw0K
-Kw0KKwlzcGluX2xvY2tfaXJxc2F2ZShzaG9zdC0+aG9zdF9sb2NrLCBmbGFncyk7DQorCWlmICh2
-cG9ydC0+ZmxhZ3MgJiAoRkNfVlBPUlRfREVMIHwgRkNfVlBPUlRfQ1JFQVRJTkcpKSB7DQorCQlz
-cGluX3VubG9ja19pcnFyZXN0b3JlKHNob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCisJCXJldHVy
-biAtRUJVU1k7DQorCX0NCisJdnBvcnQtPmZsYWdzIHw9IEZDX1ZQT1JUX0RFTEVUSU5HOw0KKwlz
-cGluX3VubG9ja19pcnFyZXN0b3JlKHNob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCiANCiAJZmNf
-cXVldWVfd29yayhzaG9zdCwgJnZwb3J0LT52cG9ydF9kZWxldGVfd29yayk7DQogCXJldHVybiBj
-b3VudDsNCkBAIC0xODA2LDYgKzE4MTUsOSBAQCBzdG9yZV9mY19ob3N0X3Zwb3J0X2RlbGV0ZShz
-dHJ1Y3QgZGV2aWNlICpkZXYsIHN0cnVjdCBkZXZpY2VfYXR0cmlidXRlICphdHRyLA0KIAlsaXN0
-X2Zvcl9lYWNoX2VudHJ5KHZwb3J0LCAmZmNfaG9zdC0+dnBvcnRzLCBwZWVycykgew0KIAkJaWYg
-KCh2cG9ydC0+Y2hhbm5lbCA9PSAwKSAmJg0KIAkJICAgICh2cG9ydC0+cG9ydF9uYW1lID09IHd3
-cG4pICYmICh2cG9ydC0+bm9kZV9uYW1lID09IHd3bm4pKSB7DQorCQkJaWYgKHZwb3J0LT5mbGFn
-cyAmIChGQ19WUE9SVF9ERUwgfCBGQ19WUE9SVF9DUkVBVElORykpDQorCQkJCWJyZWFrOw0KKwkJ
-CXZwb3J0LT5mbGFncyB8PSBGQ19WUE9SVF9ERUxFVElORzsNCiAJCQltYXRjaCA9IDE7DQogCQkJ
-YnJlYWs7DQogCQl9DQpAQCAtMzI1MSwxOCArMzI2Myw2IEBAIGZjX3Zwb3J0X3Rlcm1pbmF0ZShz
-dHJ1Y3QgZmNfdnBvcnQgKnZwb3J0KQ0KIAl1bnNpZ25lZCBsb25nIGZsYWdzOw0KIAlpbnQgc3Rh
-dDsNCiANCi0Jc3Bpbl9sb2NrX2lycXNhdmUoc2hvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KLQlp
-ZiAodnBvcnQtPmZsYWdzICYgRkNfVlBPUlRfQ1JFQVRJTkcpIHsNCi0JCXNwaW5fdW5sb2NrX2ly
-cXJlc3RvcmUoc2hvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KLQkJcmV0dXJuIC1FQlVTWTsNCi0J
-fQ0KLQlpZiAodnBvcnQtPmZsYWdzICYgKEZDX1ZQT1JUX0RFTCkpIHsNCi0JCXNwaW5fdW5sb2Nr
-X2lycXJlc3RvcmUoc2hvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KLQkJcmV0dXJuIC1FQUxSRUFE
-WTsNCi0JfQ0KLQl2cG9ydC0+ZmxhZ3MgfD0gRkNfVlBPUlRfREVMRVRJTkc7DQotCXNwaW5fdW5s
-b2NrX2lycXJlc3RvcmUoc2hvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KLQ0KIAlpZiAoaS0+Zi0+
-dnBvcnRfZGVsZXRlKQ0KIAkJc3RhdCA9IGktPmYtPnZwb3J0X2RlbGV0ZSh2cG9ydCk7DQogCWVs
-c2UNCi0tIA0KMS42LjMuMw0KDQo=
-
-
---=-s3WZHaF+ArCv6LlANkVV--
