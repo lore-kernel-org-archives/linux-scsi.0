@@ -1,68 +1,88 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [PATCH] compat_ioct: fix bsg SG_IO
-Date: Fri, 22 Jan 2010 13:00:56 -0800
-Message-ID: <79BF0CE4-4067-4F6E-ADF9-7CD8A073DF10@qlogic.com>
-References: <20100105194104F.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0 (Apple Message framework v912)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14877] MSI/MSI-X support in 2.6.31.xx and 2.6.32.xx seems
+ broken
+Date: Fri, 22 Jan 2010 23:18:21 GMT
+Message-ID: <201001222318.o0MNILxt016027@demeter.kernel.org>
+References: <bug-14877-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:25453 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754136Ab0AVVA6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2010 16:00:58 -0500
-In-Reply-To: <20100105194104F.fujita.tomonori@lab.ntt.co.jp>
+Received: from demeter.kernel.org ([140.211.167.39]:34367 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628Ab0AVXSW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2010 18:18:22 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0MNIL6i016028
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2010 23:18:21 GMT
+In-Reply-To: <bug-14877-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: LinuxSCSI <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi@vger.kernel.org
 
-James,
-
-I don't see this patch from Fujita included in your scsi-rc- 
-fixes-2.6.git. This is required to run 32 bit BSG application on 64  
-bit system. Can u please include this.
-
-Thanks,
-Giridhar Malavali
+http://bugzilla.kernel.org/show_bug.cgi?id=14877
 
 
-On Jan 5, 2010, at 2:41 AM, FUJITA Tomonori wrote:
 
-> bsg's SG_IO doesn't work on 32-bit userspace and 64-bit kernelspace.
->
-> The problem is that both sg and bsg drivers use SG_IO
-> ioctl. sg_ioctl_trans() does 32/64-bit conversion even against bsg
-> header. It messes up bsg header. bsg driver gets garbage.
->
-> This patch fixes sg_ioctl_trans to handle only sg header (struct
-> sg_io_hdr).
->
-> Reported-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+
+
+--- Comment #6 from Andrew Morton <akpm@linux-foundation.org>  2010-01-22 23:18:19 ---
+On Fri, 15 Jan 2010 09:23:50 +0200
+Oleg Gawriloff <barzog@telecom.by> wrote:
+
+> 15.01.2010 1:01, Andrew Morton __________:
+> 
+> > Oleg, please send that lpfc patch via emailed reply-to-all to this email.
+> > Include a brief description for the changelog and a Signed-off-by: as
+> > per Documentation/SubmittingPatches, thanks.
+> Signed-off-by version available at
+> http://marc.info/?l=linux-scsi&m=126342842601776&w=2
+> 
+> From: George Kadianakis <desnacked {bomb} gmail {point} com>
+> 
+> A Gentoo bug report [1] showed that as of 2.6.31 lpfc only uses INTx 
+> interrupts.
+> This patch restores lpfc's ability to support MSI-X/MSI interrupts that the
+> "Addition of SLI4 Interface - Base Support" patch [2] broke.
+> It reestablishes MSI-X as the default interrupt method and in case MSI-X 
+> is not
+> supported lpfc_sli{4,}_enable_intr fallbacks to MSI and then to INTx.
+> 
+> [1]: http://bugs.gentoo.org/show_bug.cgi?id=296319
+> [2]: commit da0436e915a5c17ee79e72c1bf978a4ebb1cbf4d
+> 
+> Signed-off-by:  George Kadianakis <desnacked {cat} gmail {dog} com>
 > ---
-> fs/compat_ioctl.c |    6 ++++++
-> 1 files changed, 6 insertions(+), 0 deletions(-)
->
-> diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
-> index 332dd00..86690cf 100644
-> --- a/fs/compat_ioctl.c
-> +++ b/fs/compat_ioctl.c
-> @@ -301,6 +301,12 @@ static int sg_ioctl_trans(unsigned int fd,  
-> unsigned int cmd,
-> 	u32 data;
-> 	void __user *dxferp;
-> 	int err;
-> +	int interface_id;
-> +
-> +	if (get_user(interface_id, &sgio32->interface_id))
-> +		return -EFAULT;
-> +	if (interface_id != 'S')
-> +		return sys_ioctl(fd, cmd, (unsigned long)sgio32);
->
-> 	if (get_user(iovec_count, &sgio32->iovec_count))
-> 		return -EFAULT;
-> -- 
-> 1.5.6.5
->
+>   drivers/scsi/lpfc/lpfc_attr.c |    6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+> index e1a30a1..936ecaf 100644
+> --- a/drivers/scsi/lpfc/lpfc_attr.c
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -2890,12 +2890,12 @@ LPFC_ATTR_RW(poll_tmo, 10, 1, 255,
+>   /*
+>   # lpfc_use_msi: Use MSI (Message Signaled Interrupts) in systems that
+>   # 				 support this feature
+> -#       0  = MSI disabled (default)
+> +#       0  = MSI disabled
+>   #       1  = MSI enabled
+> -#       2  = MSI-X enabled
+> +#       2  = MSI-X enabled (default)
+>   # Value range is [0,2]. Default value is 0.
+>   */
+> -LPFC_ATTR_R(use_msi, 0, 0, 2, "Use Message Signaled Interrupts (1) or "
+> +LPFC_ATTR_R(use_msi, 2, 0, 2, "Use Message Signaled Interrupts (1) or "
+>   					      "MSI-X (2), if possible");
+> 
 
+This is committed to the scsi tree without a cc:stable, so it won't get
+backported into 2.6.32.x and might not make it into 2.6.33 either.
+
+Was that all intentional?
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
