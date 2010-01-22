@@ -1,42 +1,51 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH] bfa: comparison with wrong msgtag in bfa_pport_isr()
-Date: Thu, 21 Jan 2010 17:59:35 -0800
-Message-ID: <04391A4E90BB2149B010D22452FA16875F0348DF@HQ-EXCH-6.corp.brocade.com>
-References: <4B56136F.3070709@gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: entries in sysfs regarding enclosures seem not being updated
+ after hot plugging
+Date: Fri, 22 Jan 2010 10:28:00 -0500
+Message-ID: <1264174080.5704.107.camel@mulgrave.site>
+References: <20100118114624.fea646be.taeuber@bbaw.de>
+	 <20100120095733.f65474fa.taeuber@bbaw.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755763Ab0AVB7j@vger.kernel.org>
-In-Reply-To: <4B56136F.3070709@gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:36788 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754341Ab0AVP2F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jan 2010 10:28:05 -0500
+In-Reply-To: <20100120095733.f65474fa.taeuber@bbaw.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lars =?ISO-8859-1?Q?T=E4uber?= <taeuber@bbaw.de>
+Cc: linux-scsi@vger.kernel.org
 
-> Was this maybe intended? otherwise in case BFI_PPORT_I2H_ENABLE_RSP:
-> the same code is executed. Please review.
+On Wed, 2010-01-20 at 09:57 +0100, Lars T=C3=A4uber wrote:
+> I might be wrong on this mailing list. Is there a special sysfs ML?
 
-Making this change alone will break compilation since bfa_pport_disable_rsp_s is not defined. To fix this, we should also replace it with bfa_pport_generic_rsp_s in bfi_pport_i2h_msg_u.
+No, this is the right list.
 
-But please keep this as it is for now since I am working on resubmitting 2.1.2.1 patch, and there are a lot of changes in this area.
+> Please point me out a place to look next with my problem.
+>=20
+> I should have mentioned the kernel version and enclosure type:
+> # uname -a
+> Linux speicher48 2.6.31-17-server #54-Ubuntu SMP Thu Dec 10 18:06:56 =
+UTC 2009 x86_64 GNU/Linux
+> # cat /sys/class/enclosure/10\:0\:24\:0/device/vendor=20
+> CHENBRO=20
+> # cat /sys/class/enclosure/10\:0\:24\:0/device/model=20
+> SASX36 B0      =20
 
-Thanks
+So the bug reports sound like something is going wrong in the device
+unbinding ... I don't see what from the code, so I need to play with an
+actual enclosure.  Unfortunately, that can only be done when physically
+present (unlike most of the SCSI development which I can do remotely),
+so it has to wait until I get back home.
 
-Jing
+James
 
-> 
-> diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-> index aef648b..f00d07b 100644
-> --- a/drivers/scsi/bfa/bfa_fcport.c
-> +++ b/drivers/scsi/bfa/bfa_fcport.c
-> @@ -918,7 +918,7 @@ bfa_pport_isr(struct bfa_s *bfa, struct bfi_msg_s
-> *msg)
->  		break;
-> 
->  	case BFI_PPORT_I2H_DISABLE_RSP:
-> -		if (pport->msgtag == i2hmsg.enable_rsp->msgtag)
-> +		if (pport->msgtag == i2hmsg.disable_rsp->msgtag)
->  			bfa_sm_send_event(pport, BFA_PPORT_SM_FWRSP);
->  		break;
-> 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
