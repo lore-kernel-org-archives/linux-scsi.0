@@ -1,70 +1,68 @@
-From: Lars =?UTF-8?B?VMOkdWJlcg==?= <taeuber@bbaw.de>
-Subject: Re: entries in sysfs regarding enclosures seem not being updated
- after hot plugging
-Date: Fri, 22 Jan 2010 16:48:30 +0100
-Message-ID: <20100122164830.be5e8ee7.taeuber@bbaw.de>
-References: <20100118114624.fea646be.taeuber@bbaw.de>
-	<20100120095733.f65474fa.taeuber@bbaw.de>
-	<1264174080.5704.107.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [PATCH] compat_ioct: fix bsg SG_IO
+Date: Fri, 22 Jan 2010 13:00:56 -0800
+Message-ID: <79BF0CE4-4067-4F6E-ADF9-7CD8A073DF10@qlogic.com>
+References: <20100105194104F.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0 (Apple Message framework v912)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.bbaw.de ([194.95.188.6]:39613 "EHLO mail.bbaw.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754012Ab0AVPsc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2010 10:48:32 -0500
-Received: from mailhub.bbaw.de (unknown [192.168.4.1])
-	by mail.bbaw.de (Postfix) with ESMTP id DDEFA4A80A5
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2010 16:48:29 +0100 (CET)
-Received: from localhost (localhost [127.0.0.1])
-	by mailhub.bbaw.de (Postfix) with ESMTP id 9B98A93801
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2010 16:48:30 +0100 (CET)
-Received: from taeuber.bbaw.de (taeuber.bbaw.de [192.168.1.148])
-	by mailhub.bbaw.de (Postfix) with SMTP id 927E6937B4
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jan 2010 16:48:30 +0100 (CET)
-In-Reply-To: <1264174080.5704.107.camel@mulgrave.site>
+Received: from avexch1.qlogic.com ([198.70.193.115]:25453 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754136Ab0AVVA6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jan 2010 16:00:58 -0500
+In-Reply-To: <20100105194104F.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: LinuxSCSI <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Hi James!
+James,
 
-James Bottomley <James.Bottomley@suse.de> schrieb:
-> On Wed, 2010-01-20 at 09:57 +0100, Lars T=C3=A4uber wrote:
-> > I might be wrong on this mailing list. Is there a special sysfs ML?
->=20
-> No, this is the right list.
+I don't see this patch from Fujita included in your scsi-rc- 
+fixes-2.6.git. This is required to run 32 bit BSG application on 64  
+bit system. Can u please include this.
 
-Ok.
+Thanks,
+Giridhar Malavali
 
 
-> > Please point me out a place to look next with my problem.
-> >=20
-> > I should have mentioned the kernel version and enclosure type:
-> > # uname -a
-> > Linux speicher48 2.6.31-17-server #54-Ubuntu SMP Thu Dec 10 18:06:5=
-6 UTC 2009 x86_64 GNU/Linux
-> > # cat /sys/class/enclosure/10\:0\:24\:0/device/vendor=20
-> > CHENBRO=20
-> > # cat /sys/class/enclosure/10\:0\:24\:0/device/model=20
-> > SASX36 B0      =20
->=20
-> So the bug reports sound like something is going wrong in the device
-> unbinding ... I don't see what from the code, so I need to play with =
-an
-> actual enclosure.  Unfortunately, that can only be done when physical=
-ly
-> present (unlike most of the SCSI development which I can do remotely)=
-,
-> so it has to wait until I get back home.
+On Jan 5, 2010, at 2:41 AM, FUJITA Tomonori wrote:
 
-Thanks. I'm looking forward to.
-If I can help any further just ask. The server isn't productive yet.
+> bsg's SG_IO doesn't work on 32-bit userspace and 64-bit kernelspace.
+>
+> The problem is that both sg and bsg drivers use SG_IO
+> ioctl. sg_ioctl_trans() does 32/64-bit conversion even against bsg
+> header. It messes up bsg header. bsg driver gets garbage.
+>
+> This patch fixes sg_ioctl_trans to handle only sg header (struct
+> sg_io_hdr).
+>
+> Reported-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+> fs/compat_ioctl.c |    6 ++++++
+> 1 files changed, 6 insertions(+), 0 deletions(-)
+>
+> diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+> index 332dd00..86690cf 100644
+> --- a/fs/compat_ioctl.c
+> +++ b/fs/compat_ioctl.c
+> @@ -301,6 +301,12 @@ static int sg_ioctl_trans(unsigned int fd,  
+> unsigned int cmd,
+> 	u32 data;
+> 	void __user *dxferp;
+> 	int err;
+> +	int interface_id;
+> +
+> +	if (get_user(interface_id, &sgio32->interface_id))
+> +		return -EFAULT;
+> +	if (interface_id != 'S')
+> +		return sys_ioctl(fd, cmd, (unsigned long)sgio32);
+>
+> 	if (get_user(iovec_count, &sgio32->iovec_count))
+> 		return -EFAULT;
+> -- 
+> 1.5.6.5
+>
 
-Lars
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
