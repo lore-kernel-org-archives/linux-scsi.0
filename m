@@ -1,7 +1,7 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 3/8] PM: Add a switch for disabling/enabling asynchronous suspend/resume
-Date: Sun, 24 Jan 2010 00:36:26 +0100
-Message-ID: <201001240036.27069.rjw@sisk.pl>
+Subject: [PATCH 5/8] PM: Start asynchronous resume threads upfront
+Date: Sun, 24 Jan 2010 00:38:56 +0100
+Message-ID: <201001240038.56372.rjw@sisk.pl>
 References: <201001240033.34253.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
@@ -16,137 +16,122 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Rafael J. Wysocki <rjw@sisk.pl>
 
-Add sysfs attribute /sys/power/pm_async allowing the user space to
-disable/enable asynchronous suspend/resume of devices.
+It has been shown by testing that total device resume time can be
+reduced significantly (by as much as 50% or more) if the async
+threads executing some devices' resume routines are all started
+before the main resume thread starts to handle the "synchronous"
+devices.
+
+This is a consequence of the fact that the slowest devices tend to be
+located at the end of dpm_list, so their resume routines are started
+very late.  Consequently, they have to wait for all the preceding
+"synchronous" devices before their resume routines can be started
+by the main resume thread, even if they are "asynchronous".  By
+starting their async threads upfront we effectively move those
+devices towards the beginning of dpm_list, without breaking their
+ordering with respect to their parents and children.  As a result,
+their resume routines are started much earlier and we are able to
+save much more device resume time this way.
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- Documentation/ABI/testing/sysfs-power |   13 +++++++++++++
- drivers/base/power/main.c             |    7 ++++---
- drivers/base/power/power.h            |    6 +++---
- kernel/power/main.c                   |   31 ++++++++++++++++++++++++++++++-
- 4 files changed, 50 insertions(+), 7 deletions(-)
+ drivers/base/power/main.c |   43 ++++++++++++++++++++++++-------------------
+ 1 file changed, 24 insertions(+), 19 deletions(-)
 
-Index: linux-2.6/kernel/power/main.c
-===================================================================
---- linux-2.6.orig/kernel/power/main.c
-+++ linux-2.6/kernel/power/main.c
-@@ -44,6 +44,32 @@ int pm_notifier_call_chain(unsigned long
- 			== NOTIFY_BAD) ? -EINVAL : 0;
- }
- 
-+/* If set, devices may be suspended and resumed asynchronously. */
-+int pm_async_enabled = 1;
-+
-+static ssize_t pm_async_show(struct kobject *kobj, struct kobj_attribute *attr,
-+			     char *buf)
-+{
-+	return sprintf(buf, "%d\n", pm_async_enabled);
-+}
-+
-+static ssize_t pm_async_store(struct kobject *kobj, struct kobj_attribute *attr,
-+			      const char *buf, size_t n)
-+{
-+	unsigned long val;
-+
-+	if (strict_strtoul(buf, 10, &val))
-+		return -EINVAL;
-+
-+	if (val > 1)
-+		return -EINVAL;
-+
-+	pm_async_enabled = val;
-+	return n;
-+}
-+
-+power_attr(pm_async);
-+
- #ifdef CONFIG_PM_DEBUG
- int pm_test_level = TEST_NONE;
- 
-@@ -208,9 +234,12 @@ static struct attribute * g[] = {
- #ifdef CONFIG_PM_TRACE
- 	&pm_trace_attr.attr,
- #endif
--#if defined(CONFIG_PM_SLEEP) && defined(CONFIG_PM_DEBUG)
-+#ifdef CONFIG_PM_SLEEP
-+	&pm_async_attr.attr,
-+#ifdef CONFIG_PM_DEBUG
- 	&pm_test_attr.attr,
- #endif
-+#endif
- 	NULL,
- };
- 
-Index: linux-2.6/drivers/base/power/power.h
-===================================================================
---- linux-2.6.orig/drivers/base/power/power.h
-+++ linux-2.6/drivers/base/power/power.h
-@@ -12,10 +12,10 @@ static inline void pm_runtime_remove(str
- 
- #ifdef CONFIG_PM_SLEEP
- 
--/*
-- * main.c
-- */
-+/* kernel/power/main.c */
-+extern int pm_async_enabled;
- 
-+/* drivers/base/power/main.c */
- extern struct list_head dpm_list;	/* The active device list */
- 
- static inline struct device *to_device(struct list_head *entry)
 Index: linux-2.6/drivers/base/power/main.c
 ===================================================================
 --- linux-2.6.orig/drivers/base/power/main.c
 +++ linux-2.6/drivers/base/power/main.c
-@@ -201,7 +201,7 @@ static void dpm_wait(struct device *dev,
- 	if (!dev)
- 		return;
- 
--	if (async || dev->power.async_suspend)
-+	if (async || (pm_async_enabled && dev->power.async_suspend))
- 		wait_for_completion(&dev->power.completion);
+@@ -495,12 +495,12 @@ static int legacy_resume(struct device *
  }
  
-@@ -563,7 +563,8 @@ static int device_resume(struct device *
+ /**
+- * __device_resume - Execute "resume" callbacks for given device.
++ * device_resume - Execute "resume" callbacks for given device.
+  * @dev: Device to handle.
+  * @state: PM transition of the system being carried out.
+  * @async: If true, the device is being resumed asynchronously.
+  */
+-static int __device_resume(struct device *dev, pm_message_t state, bool async)
++static int device_resume(struct device *dev, pm_message_t state, bool async)
  {
- 	INIT_COMPLETION(dev->power.completion);
+ 	int error = 0;
  
--	if (dev->power.async_suspend && !pm_trace_is_enabled()) {
-+	if (pm_async_enabled && dev->power.async_suspend
-+	    && !pm_trace_is_enabled()) {
- 		get_device(dev);
- 		async_schedule(async_resume, dev);
- 		return 0;
-@@ -867,7 +868,7 @@ static int device_suspend(struct device 
- {
- 	INIT_COMPLETION(dev->power.completion);
+@@ -510,6 +510,8 @@ static int __device_resume(struct device
+ 	dpm_wait(dev->parent, async);
+ 	down(&dev->sem);
  
--	if (dev->power.async_suspend) {
-+	if (pm_async_enabled && dev->power.async_suspend) {
- 		get_device(dev);
- 		async_schedule(async_suspend, dev);
- 		return 0;
-Index: linux-2.6/Documentation/ABI/testing/sysfs-power
-===================================================================
---- linux-2.6.orig/Documentation/ABI/testing/sysfs-power
-+++ linux-2.6/Documentation/ABI/testing/sysfs-power
-@@ -101,3 +101,16 @@ Description:
- 
- 		CAUTION: Using it will cause your machine's real-time (CMOS)
- 		clock to be set to a random invalid time after a resume.
++	dev->power.status = DPM_RESUMING;
 +
-+What:		/sys/power/pm_async
-+Date:		January 2009
-+Contact:	Rafael J. Wysocki <rjw@sisk.pl>
-+Description:
-+		The /sys/power/pm_async file controls the switch allowing the
-+		user space to enable or disable asynchronous suspend and resume
-+		of devices.  If enabled, this feature will cause some device
-+		drivers' suspend and resume callbacks to be executed in parallel
-+		with each other and with the main suspend thread.  It is enabled
-+		if this file contains "1", which is the default.  It may be
-+		disabled by writing "0" to this file, in which case all devices
-+		will be suspended and resumed synchronously.
+ 	if (dev->bus) {
+ 		if (dev->bus->pm) {
+ 			pm_dev_dbg(dev, state, "");
+@@ -553,24 +555,16 @@ static void async_resume(void *data, asy
+ 	struct device *dev = (struct device *)data;
+ 	int error;
+ 
+-	error = __device_resume(dev, pm_transition, true);
++	error = device_resume(dev, pm_transition, true);
+ 	if (error)
+ 		pm_dev_err(dev, pm_transition, " async", error);
+ 	put_device(dev);
+ }
+ 
+-static int device_resume(struct device *dev)
++static bool is_async(struct device *dev)
+ {
+-	INIT_COMPLETION(dev->power.completion);
+-
+-	if (pm_async_enabled && dev->power.async_suspend
+-	    && !pm_trace_is_enabled()) {
+-		get_device(dev);
+-		async_schedule(async_resume, dev);
+-		return 0;
+-	}
+-
+-	return __device_resume(dev, pm_transition, false);
++	return dev->power.async_suspend && pm_async_enabled
++		&& !pm_trace_is_enabled();
+ }
+ 
+ /**
+@@ -583,22 +577,33 @@ static int device_resume(struct device *
+ static void dpm_resume(pm_message_t state)
+ {
+ 	struct list_head list;
++	struct device *dev;
+ 	ktime_t starttime = ktime_get();
+ 
+ 	INIT_LIST_HEAD(&list);
+ 	mutex_lock(&dpm_list_mtx);
+ 	pm_transition = state;
+-	while (!list_empty(&dpm_list)) {
+-		struct device *dev = to_device(dpm_list.next);
+ 
++	list_for_each_entry(dev, &dpm_list, power.entry) {
++		if (dev->power.status < DPM_OFF)
++			continue;
++
++		INIT_COMPLETION(dev->power.completion);
++		if (is_async(dev)) {
++			get_device(dev);
++			async_schedule(async_resume, dev);
++		}
++	}
++
++	while (!list_empty(&dpm_list)) {
++		dev = to_device(dpm_list.next);
+ 		get_device(dev);
+-		if (dev->power.status >= DPM_OFF) {
++		if (dev->power.status >= DPM_OFF && !is_async(dev)) {
+ 			int error;
+ 
+-			dev->power.status = DPM_RESUMING;
+ 			mutex_unlock(&dpm_list_mtx);
+ 
+-			error = device_resume(dev);
++			error = device_resume(dev, state, false);
+ 
+ 			mutex_lock(&dpm_list_mtx);
+ 			if (error)
 
