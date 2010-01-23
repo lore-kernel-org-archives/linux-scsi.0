@@ -1,45 +1,60 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 7/8] be2iscsi: changing the chip opcode for TEXT
-Date: Sat, 23 Jan 2010 05:38:56 +0530
-Message-ID: <20100123000846.GA12676@serverengines.com>
+Subject: [PATCH 8/8] be2iscsi: correction in the claculation for num_cxn_wrb
+Date: Sat, 23 Jan 2010 05:39:37 +0530
+Message-ID: <20100123000927.GA12701@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:40050 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:40070 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751466Ab0AWAIw (ORCPT
+	by vger.kernel.org with ESMTP id S1753073Ab0AWAJc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jan 2010 19:08:52 -0500
+	Fri, 22 Jan 2010 19:09:32 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-	This patch corrects the chipopcode for text and chooses
-correct paramters for that command
+	This patch correct the math done for num_cxn_wrb
 
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   13 ++++++-------
+ 1 files changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 85c0e80..932cb8a 100644
+index 932cb8a..687d535 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3513,9 +3513,8 @@ static int beiscsi_mtask(struct iscsi_task *task)
- 		break;
- 	case ISCSI_OP_TEXT:
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, type, pwrb,
--			      INI_WR_CMD);
-+			      TGT_DM_CMD);
- 		AMAP_SET_BITS(struct amap_iscsi_wrb, dmsg, pwrb, 0);
--		AMAP_SET_BITS(struct amap_iscsi_wrb, dsp, pwrb, 1);
- 		hwi_write_buffer(pwrb, task);
- 		break;
- 	case ISCSI_OP_SCSI_TMFUNC:
+@@ -2042,10 +2042,9 @@ static void beiscsi_init_wrb_handle(struct beiscsi_hba *phba)
+ 	}
+ 	idx = 0;
+ 	pwrb = mem_descr_wrb->mem_array[idx].virtual_address;
+-	num_cxn_wrb =
+-	    ((mem_descr_wrb->mem_array[idx].size) / (sizeof(struct iscsi_wrb)) *
+-	     phba->params.wrbs_per_cxn);
+-
++	num_cxn_wrb = (mem_descr_wrb->mem_array[idx].size) /
++		      ((sizeof(struct iscsi_wrb) *
++			phba->params.wrbs_per_cxn));
+ 	for (index = 0; index < phba->params.cxns_per_ctrl; index += 2) {
+ 		pwrb_context = &phwi_ctrlr->wrb_context[index];
+ 		if (num_cxn_wrb) {
+@@ -2058,9 +2057,9 @@ static void beiscsi_init_wrb_handle(struct beiscsi_hba *phba)
+ 		} else {
+ 			idx++;
+ 			pwrb = mem_descr_wrb->mem_array[idx].virtual_address;
+-			num_cxn_wrb = ((mem_descr_wrb->mem_array[idx].size) /
+-					(sizeof(struct iscsi_wrb)) *
+-					phba->params.wrbs_per_cxn);
++			num_cxn_wrb = (mem_descr_wrb->mem_array[idx].size) /
++				      ((sizeof(struct iscsi_wrb) *
++					phba->params.wrbs_per_cxn));
+ 			for (j = 0; j < phba->params.wrbs_per_cxn; j++) {
+ 				pwrb_handle = pwrb_context->pwrb_handle_base[j];
+ 				pwrb_handle->pwrb = pwrb;
 -- 
 1.6.4
 
