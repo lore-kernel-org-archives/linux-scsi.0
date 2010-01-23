@@ -1,7 +1,7 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 5/8] PM: Start asynchronous resume threads upfront
-Date: Sun, 24 Jan 2010 00:38:56 +0100
-Message-ID: <201001240038.56372.rjw@sisk.pl>
+Subject: [PATCH 8/8] PM: Allow SCSI devices to suspend/resume asynchronously
+Date: Sun, 24 Jan 2010 00:41:30 +0100
+Message-ID: <201001240041.30899.rjw@sisk.pl>
 References: <201001240033.34253.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
@@ -16,122 +16,72 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Rafael J. Wysocki <rjw@sisk.pl>
 
-It has been shown by testing that total device resume time can be
-reduced significantly (by as much as 50% or more) if the async
-threads executing some devices' resume routines are all started
-before the main resume thread starts to handle the "synchronous"
-devices.
+Set power.async_suspend for all SCSI devices, targets and hosts, so
+that they can be suspended and resumed in parallel with the main
+suspend/resume thread and possibly with other devices they don't
+depend on in a known way (i.e. devices which are not their parents or
+children).
 
-This is a consequence of the fact that the slowest devices tend to be
-located at the end of dpm_list, so their resume routines are started
-very late.  Consequently, they have to wait for all the preceding
-"synchronous" devices before their resume routines can be started
-by the main resume thread, even if they are "asynchronous".  By
-starting their async threads upfront we effectively move those
-devices towards the beginning of dpm_list, without breaking their
-ordering with respect to their parents and children.  As a result,
-their resume routines are started much earlier and we are able to
-save much more device resume time this way.
+The power.async_suspend flag is also set for devices that don't have
+suspend or resume callbacks, because otherwise they would make the
+main suspend/resume thread wait for their "asynchronous" children
+(during suspend) or parents (during resume), effectively negating the
+possible gains from executing these devices' suspend and resume
+callbacks asynchronously.
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- drivers/base/power/main.c |   43 ++++++++++++++++++++++++-------------------
- 1 file changed, 24 insertions(+), 19 deletions(-)
+ drivers/scsi/hosts.c      |    4 ++++
+ drivers/scsi/scsi_sysfs.c |    4 ++++
+ 2 files changed, 8 insertions(+)
 
-Index: linux-2.6/drivers/base/power/main.c
+Index: linux-2.6/drivers/scsi/hosts.c
 ===================================================================
---- linux-2.6.orig/drivers/base/power/main.c
-+++ linux-2.6/drivers/base/power/main.c
-@@ -495,12 +495,12 @@ static int legacy_resume(struct device *
- }
+--- linux-2.6.orig/drivers/scsi/hosts.c
++++ linux-2.6/drivers/scsi/hosts.c
+@@ -215,6 +215,8 @@ int scsi_add_host_with_dma(struct Scsi_H
+ 		shost->shost_gendev.parent = dev ? dev : &platform_bus;
+ 	shost->dma_dev = dma_dev;
  
- /**
-- * __device_resume - Execute "resume" callbacks for given device.
-+ * device_resume - Execute "resume" callbacks for given device.
-  * @dev: Device to handle.
-  * @state: PM transition of the system being carried out.
-  * @async: If true, the device is being resumed asynchronously.
-  */
--static int __device_resume(struct device *dev, pm_message_t state, bool async)
-+static int device_resume(struct device *dev, pm_message_t state, bool async)
- {
- 	int error = 0;
- 
-@@ -510,6 +510,8 @@ static int __device_resume(struct device
- 	dpm_wait(dev->parent, async);
- 	down(&dev->sem);
- 
-+	dev->power.status = DPM_RESUMING;
++	device_enable_async_suspend(&shost->shost_gendev);
 +
- 	if (dev->bus) {
- 		if (dev->bus->pm) {
- 			pm_dev_dbg(dev, state, "");
-@@ -553,24 +555,16 @@ static void async_resume(void *data, asy
- 	struct device *dev = (struct device *)data;
- 	int error;
- 
--	error = __device_resume(dev, pm_transition, true);
-+	error = device_resume(dev, pm_transition, true);
+ 	error = device_add(&shost->shost_gendev);
  	if (error)
- 		pm_dev_err(dev, pm_transition, " async", error);
- 	put_device(dev);
- }
+ 		goto out;
+@@ -222,6 +224,8 @@ int scsi_add_host_with_dma(struct Scsi_H
+ 	scsi_host_set_state(shost, SHOST_RUNNING);
+ 	get_device(shost->shost_gendev.parent);
  
--static int device_resume(struct device *dev)
-+static bool is_async(struct device *dev)
- {
--	INIT_COMPLETION(dev->power.completion);
--
--	if (pm_async_enabled && dev->power.async_suspend
--	    && !pm_trace_is_enabled()) {
--		get_device(dev);
--		async_schedule(async_resume, dev);
--		return 0;
--	}
--
--	return __device_resume(dev, pm_transition, false);
-+	return dev->power.async_suspend && pm_async_enabled
-+		&& !pm_trace_is_enabled();
- }
- 
- /**
-@@ -583,22 +577,33 @@ static int device_resume(struct device *
- static void dpm_resume(pm_message_t state)
- {
- 	struct list_head list;
-+	struct device *dev;
- 	ktime_t starttime = ktime_get();
- 
- 	INIT_LIST_HEAD(&list);
- 	mutex_lock(&dpm_list_mtx);
- 	pm_transition = state;
--	while (!list_empty(&dpm_list)) {
--		struct device *dev = to_device(dpm_list.next);
- 
-+	list_for_each_entry(dev, &dpm_list, power.entry) {
-+		if (dev->power.status < DPM_OFF)
-+			continue;
++	device_enable_async_suspend(&shost->shost_dev);
 +
-+		INIT_COMPLETION(dev->power.completion);
-+		if (is_async(dev)) {
-+			get_device(dev);
-+			async_schedule(async_resume, dev);
-+		}
-+	}
+ 	error = device_add(&shost->shost_dev);
+ 	if (error)
+ 		goto out_del_gendev;
+Index: linux-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_sysfs.c
++++ linux-2.6/drivers/scsi/scsi_sysfs.c
+@@ -847,6 +847,8 @@ static int scsi_target_add(struct scsi_t
+ 	if (starget->state != STARGET_CREATED)
+ 		return 0;
+ 
++	device_enable_async_suspend(&starget->dev);
 +
-+	while (!list_empty(&dpm_list)) {
-+		dev = to_device(dpm_list.next);
- 		get_device(dev);
--		if (dev->power.status >= DPM_OFF) {
-+		if (dev->power.status >= DPM_OFF && !is_async(dev)) {
- 			int error;
+ 	error = device_add(&starget->dev);
+ 	if (error) {
+ 		dev_err(&starget->dev, "target device_add failed, error %d\n", error);
+@@ -886,11 +888,13 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 		return error;
  
--			dev->power.status = DPM_RESUMING;
- 			mutex_unlock(&dpm_list_mtx);
- 
--			error = device_resume(dev);
-+			error = device_resume(dev, state, false);
- 
- 			mutex_lock(&dpm_list_mtx);
- 			if (error)
+ 	transport_configure_device(&starget->dev);
++	device_enable_async_suspend(&sdev->sdev_gendev);
+ 	error = device_add(&sdev->sdev_gendev);
+ 	if (error) {
+ 		printk(KERN_INFO "error 1\n");
+ 		goto out_remove;
+ 	}
++	device_enable_async_suspend(&sdev->sdev_dev);
+ 	error = device_add(&sdev->sdev_dev);
+ 	if (error) {
+ 		printk(KERN_INFO "error 2\n");
 
