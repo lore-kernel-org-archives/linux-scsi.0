@@ -1,103 +1,152 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 0/8] PM: Asynchronous suspen and resume
-Date: Sun, 24 Jan 2010 00:33:34 +0100
-Message-ID: <201001240033.34253.rjw@sisk.pl>
+Subject: [PATCH 3/8] PM: Add a switch for disabling/enabling asynchronous suspend/resume
+Date: Sun, 24 Jan 2010 00:36:26 +0100
+Message-ID: <201001240036.27069.rjw@sisk.pl>
+References: <201001240033.34253.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <201001240033.34253.rjw@sisk.pl>
 Sender: linux-acpi-owner@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Alan Stern <stern@rowland.harvard.edu>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PCI <linux-pci@vger.kernel.org>, pm list <linux-pm@lists.linux-foundation.org>, linux-usb@vger.kernel.org, Greg KH <gregkh@suse.de>, Jesse Barnes <jbarnes@virtuousgeek.org>, James Bottomley <James.Bottomley@suse.de>, Linux SCSI <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Len Brown <lenb@kernel.org>, Nigel Cunningham <ncunningham@crca.org.au>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-This has been discussed to some extent, but without the last three patches that
-actually enable the feature for the PCI, USB and SCSI subsystems.
+Add sysfs attribute /sys/power/pm_async allowing the user space to
+disable/enable asynchronous suspend/resume of devices.
 
-First, the motivation.  At least on some machines (well, let's face it, most
-likely on all of them) resume (from suspend to RAM) takes more time than
-booting the kernel, which is not really surprising given that it's done
-completely synchronously, even on systems with many CPUs, and which sucks
-(especially in the case of hibernation, where devices are "suspended" three
-times and "resumed" two times in each cycle).  Testing shows that with the
-patches below applied the suspend time can be reduced by half and the resume
-time even more (on one of my test systems it takes ~4 s without the patches
-and ~1 s with them, which is a huge gain).
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ Documentation/ABI/testing/sysfs-power |   13 +++++++++++++
+ drivers/base/power/main.c             |    7 ++++---
+ drivers/base/power/power.h            |    6 +++---
+ kernel/power/main.c                   |   31 ++++++++++++++++++++++++++++++-
+ 4 files changed, 50 insertions(+), 7 deletions(-)
 
-Second, why at the core level.  In short, this is the most straightforward way
-to take dependencies between devices, following from the structure of the
-device tree, into account.  Namely, a device can only be suspended if all
-of its children have been suspended and it can only be resumed after its
-parent.  Moreover, devices are resumed in the order in which they have been
-registered (and are suspended in the reverse order), which is reflected by the
-ordering of the list of devices used by the PM core, dpm_list.  Generally
-speaking, it's not really advisable to change the ordering of this list
-arbitrarily, because that may lead into problems with some devices and only
-the PM core knows what the "right" ordering actually is.
-
-So, the idea is to execute the entire suspend and resume callbacks of devices
-in parallel with the main suspend/resume thread and possibly in parallel with
-each other, but do that only for the devices known to take substantial amounts
-of time to suspend or resume and for the devices that depend on them this
-way or another (ie. that are their parents or children, or parents of their
-parents and so on).  [It generally wouldn't make sense to suspend and resume
-a device asynchronously if at least one of its children or its parent were
-suspended and resumed synchronously, because in that case the main
-suspend/resume thread would have to wait for the "asynchronous" devices'
-callbacks to return before handling their "synchronous relatives".]
-
-Now, testing shows that the slowest to suspend or resume are PCI, USB and SCSI
-devices, so it makes sense to make them suspend and resume asynchronously,
-which is done by the last three patches.  The dangerous part is that for things
-to be efficient we need to make the whole subtrees of the device tree suspend
-and resume asynchronously and it can only be verified by testing if things work
-or break.  So far, I haven't seen any breakage resulting from this patchset on
-any of my test machines, even though I have only a few of them.  That's why the
-third patch leaves the switch blocking this feature in the "enabled" position.
-Still, if it turns out that these changes introduce any problems on the other
-people's machines, the default can be easily changed to "disabled".
-
-Finally, the patches.
-
-[1/8] - Nothing really interesting, modifies debug printk()s to show the parent
-        name in addition to the information about the device being handled at
-        the moment.  This is quite useful if one wants to learn about the device
-        tree structure from the logs.
-
-[2/8] - The actual implementation of the asynchronous suspend/resume at the
-        PM core level.  However, it doesn't change the functionality as long as
-        no devices have power.async_suspend set.
-
-[3/8] - Adds the sysfs switch to disable/enable the asychronous suspend/resume
-        at the high level.  It's /sys/power/pm_async and it's equal to 1 by
-        default, which means "enabled".
-
-[4/8] - Adds switches to disable/enable the asychronous suspend/resume for
-        individual devices.  This really is regaded as a debugging feature,
-        so it's enabled by means of a separate .config option.
-
-[5/8] - Optimisation reducing resume time even more.  Actually, on some systems
-        it's necessary to get _any_ resume speedup, but then it can be _huge_.
-
-[6/8] - Set power.async_suspend for PCI devices.
-
-[7/8] - Set power.async_suspend for USB devices.
-
-[8/8] - Set power.async_suspend for SCSI devices.
-
-Patches [2/8] - [5/8] have already been discussed in detail, [6/8] - [8/8] are
-new (well, the PCI patch was discussed too, but then I didn't have the testing
-data showing that PCI devices can be the slowest ones to suspend or resume
-in some configurations).
-
-Hopefully, I didn't get anything wrong this time, but if I did, please let me know.
-
-The patches are available from the async branch of the suspend-2.6 tree at
-git://git.kernel.org/pub/scm/linux/kernel/git/rafael/suspend-2.6.git
-
-Thanks,
-Rafael
+Index: linux-2.6/kernel/power/main.c
+===================================================================
+--- linux-2.6.orig/kernel/power/main.c
++++ linux-2.6/kernel/power/main.c
+@@ -44,6 +44,32 @@ int pm_notifier_call_chain(unsigned long
+ 			== NOTIFY_BAD) ? -EINVAL : 0;
+ }
+ 
++/* If set, devices may be suspended and resumed asynchronously. */
++int pm_async_enabled = 1;
++
++static ssize_t pm_async_show(struct kobject *kobj, struct kobj_attribute *attr,
++			     char *buf)
++{
++	return sprintf(buf, "%d\n", pm_async_enabled);
++}
++
++static ssize_t pm_async_store(struct kobject *kobj, struct kobj_attribute *attr,
++			      const char *buf, size_t n)
++{
++	unsigned long val;
++
++	if (strict_strtoul(buf, 10, &val))
++		return -EINVAL;
++
++	if (val > 1)
++		return -EINVAL;
++
++	pm_async_enabled = val;
++	return n;
++}
++
++power_attr(pm_async);
++
+ #ifdef CONFIG_PM_DEBUG
+ int pm_test_level = TEST_NONE;
+ 
+@@ -208,9 +234,12 @@ static struct attribute * g[] = {
+ #ifdef CONFIG_PM_TRACE
+ 	&pm_trace_attr.attr,
+ #endif
+-#if defined(CONFIG_PM_SLEEP) && defined(CONFIG_PM_DEBUG)
++#ifdef CONFIG_PM_SLEEP
++	&pm_async_attr.attr,
++#ifdef CONFIG_PM_DEBUG
+ 	&pm_test_attr.attr,
+ #endif
++#endif
+ 	NULL,
+ };
+ 
+Index: linux-2.6/drivers/base/power/power.h
+===================================================================
+--- linux-2.6.orig/drivers/base/power/power.h
++++ linux-2.6/drivers/base/power/power.h
+@@ -12,10 +12,10 @@ static inline void pm_runtime_remove(str
+ 
+ #ifdef CONFIG_PM_SLEEP
+ 
+-/*
+- * main.c
+- */
++/* kernel/power/main.c */
++extern int pm_async_enabled;
+ 
++/* drivers/base/power/main.c */
+ extern struct list_head dpm_list;	/* The active device list */
+ 
+ static inline struct device *to_device(struct list_head *entry)
+Index: linux-2.6/drivers/base/power/main.c
+===================================================================
+--- linux-2.6.orig/drivers/base/power/main.c
++++ linux-2.6/drivers/base/power/main.c
+@@ -201,7 +201,7 @@ static void dpm_wait(struct device *dev,
+ 	if (!dev)
+ 		return;
+ 
+-	if (async || dev->power.async_suspend)
++	if (async || (pm_async_enabled && dev->power.async_suspend))
+ 		wait_for_completion(&dev->power.completion);
+ }
+ 
+@@ -563,7 +563,8 @@ static int device_resume(struct device *
+ {
+ 	INIT_COMPLETION(dev->power.completion);
+ 
+-	if (dev->power.async_suspend && !pm_trace_is_enabled()) {
++	if (pm_async_enabled && dev->power.async_suspend
++	    && !pm_trace_is_enabled()) {
+ 		get_device(dev);
+ 		async_schedule(async_resume, dev);
+ 		return 0;
+@@ -867,7 +868,7 @@ static int device_suspend(struct device 
+ {
+ 	INIT_COMPLETION(dev->power.completion);
+ 
+-	if (dev->power.async_suspend) {
++	if (pm_async_enabled && dev->power.async_suspend) {
+ 		get_device(dev);
+ 		async_schedule(async_suspend, dev);
+ 		return 0;
+Index: linux-2.6/Documentation/ABI/testing/sysfs-power
+===================================================================
+--- linux-2.6.orig/Documentation/ABI/testing/sysfs-power
++++ linux-2.6/Documentation/ABI/testing/sysfs-power
+@@ -101,3 +101,16 @@ Description:
+ 
+ 		CAUTION: Using it will cause your machine's real-time (CMOS)
+ 		clock to be set to a random invalid time after a resume.
++
++What:		/sys/power/pm_async
++Date:		January 2009
++Contact:	Rafael J. Wysocki <rjw@sisk.pl>
++Description:
++		The /sys/power/pm_async file controls the switch allowing the
++		user space to enable or disable asynchronous suspend and resume
++		of devices.  If enabled, this feature will cause some device
++		drivers' suspend and resume callbacks to be executed in parallel
++		with each other and with the main suspend thread.  It is enabled
++		if this file contains "1", which is the default.  It may be
++		disabled by writing "0" to this file, in which case all devices
++		will be suspended and resumed synchronously.
 
