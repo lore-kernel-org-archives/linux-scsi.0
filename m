@@ -1,38 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14877] MSI/MSI-X support in 2.6.31.xx and 2.6.32.xx seems
- broken
-Date: Sat, 23 Jan 2010 15:36:41 GMT
-Message-ID: <201001231536.o0NFafvr009935@demeter.kernel.org>
-References: <bug-14877-11613@http.bugzilla.kernel.org/>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH] qla1280: Drop host_lock while requesting firmware
+Date: Sat, 23 Jan 2010 18:40:29 +0000
+Message-ID: <1264272029.373.95.camel@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:33359 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755725Ab0AWPgm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jan 2010 10:36:42 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0NFafxZ009936
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Jan 2010 15:36:41 GMT
-In-Reply-To: <bug-14877-11613@http.bugzilla.kernel.org/>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:55018 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752503Ab0AWSlZ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Jan 2010 13:41:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, 543244@bugs.debian.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14877
+request_firmware() may sleep and it appears to be safe to release the
+spinlock here.
 
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Cc: stable@kernel.org
+---
+This change was made in Debian kernel packages to address this bug
+report: <http://bugs.debian.org/543244>.  We have applied it to 2.6.31
+and 2.6.32 and there have been no further bug reports on this driver.
 
+Ben.
 
+ drivers/scsi/qla1280.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-
---- Comment #10 from Oleg Gawriloff <barzog@telecom.by>  2010-01-23 15:36:40 ---
-Tried (I'm on Gentoo) on 2.6.32.4 kernel:
-/etc/modules.autoload.d/kernel-2.6:
-lpfc lpfc_use_msi=2
-
-nothing changes (still on IO-APIC-fasteoi).
-
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 8371d91..49ac414 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -1640,8 +1640,10 @@ qla1280_load_firmware_pio(struct scsi_qla_host *ha)
+ 	uint16_t mb[MAILBOX_REGISTER_COUNT], i;
+ 	int err;
+ 
++	spin_unlock_irq(ha->host->host_lock);
+ 	err = request_firmware(&fw, ql1280_board_tbl[ha->devnum].fwname,
+ 			       &ha->pdev->dev);
++	spin_lock_irq(ha->host->host_lock);
+ 	if (err) {
+ 		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
+ 		       ql1280_board_tbl[ha->devnum].fwname, err);
+@@ -1699,8 +1701,10 @@ qla1280_load_firmware_dma(struct scsi_qla_host *ha)
+ 		return -ENOMEM;
+ #endif
+ 
++	spin_unlock_irq(ha->host->host_lock);
+ 	err = request_firmware(&fw, ql1280_board_tbl[ha->devnum].fwname,
+ 			       &ha->pdev->dev);
++	spin_lock_irq(ha->host->host_lock);
+ 	if (err) {
+ 		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
+ 		       ql1280_board_tbl[ha->devnum].fwname, err);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.6.6
+
+
