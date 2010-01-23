@@ -1,33 +1,26 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14877] MSI/MSI-X support in 2.6.31.xx and 2.6.32.xx seems
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Bug 14877] MSI/MSI-X support in 2.6.31.xx and 2.6.32.xx seems
  broken
-Date: Sat, 23 Jan 2010 14:25:29 GMT
-Message-ID: <201001231425.o0NEPTCp031659@demeter.kernel.org>
+Date: Fri, 22 Jan 2010 20:21:16 -0500
+Message-ID: <1264209676.5900.3.camel@mulgrave.site>
 References: <bug-14877-11613@http.bugzilla.kernel.org/>
+	 <201001142227.o0EMRIVt019573@demeter.kernel.org>
+	 <20100114150159.caffb336.akpm@linux-foundation.org>
+	 <4B501806.4070804@telecom.by>
+	 <20100122151814.b9ed4a21.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:52478 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675Ab0AWOZa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jan 2010 09:25:30 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0NEPTdq031660
-	for <linux-scsi@vger.kernel.org>; Sat, 23 Jan 2010 14:25:29 GMT
-In-Reply-To: <bug-14877-11613@http.bugzilla.kernel.org/>
+Received: from cantor.suse.de ([195.135.220.2]:39273 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752341Ab0AWOZR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Jan 2010 09:25:17 -0500
+In-Reply-To: <20100122151814.b9ed4a21.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14877
-
-
-
-
-
---- Comment #7 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-01-23 14:25:26 ---
-Reply-To: James.Bottomley@suse.de
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Oleg Gawriloff <barzog@telecom.by>, linux-scsi@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, James Smart <James.Smart@Emulex.Com>
 
 On Fri, 2010-01-22 at 15:18 -0800, Andrew Morton wrote:
 > On Fri, 15 Jan 2010 09:23:50 +0200
@@ -94,7 +87,4 @@ deliberate.
 
 James
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
