@@ -1,35 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14877] MSI/MSI-X support in 2.6.31.xx and 2.6.32.xx seems
- broken
-Date: Sun, 24 Jan 2010 01:22:33 GMT
-Message-ID: <201001240122.o0O1MX1O028895@demeter.kernel.org>
-References: <bug-14877-11613@http.bugzilla.kernel.org/>
+From: Gal Rosen <galr@storwize.com>
+Subject: Re: [PATCH] SCSI: Synchronization issue while deleting vport
+Date: Sun, 24 Jan 2010 09:20:16 +0200
+Message-ID: <1264317616.17255.4.camel@galr-linux>
+References: <1264061732.31083.51.camel@galr-linux>
+	 <4B5A5859.1010006@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:55032 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752108Ab0AXBWe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jan 2010 20:22:34 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0O1MXwB028896
-	for <linux-scsi@vger.kernel.org>; Sun, 24 Jan 2010 01:22:33 GMT
-In-Reply-To: <bug-14877-11613@http.bugzilla.kernel.org/>
+Received: from mail.storwize.com ([62.90.10.208]:3005 "EHLO swdc2.storwiz.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752520Ab0AXHVe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Jan 2010 02:21:34 -0500
+In-Reply-To: <4B5A5859.1010006@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=14877
+James,
 
+What is the process until it will enter to the code ?
+and for what version 2.6.26 or 2.6.33 ?
 
+Thanks,
+Gal.
+On Fri, 2010-01-22 at 21:00 -0500, James Smart wrote:
+> Gal,
+> 
+> Thanks for correcting this issue.  Patch looks good.
+> 
+> Signed-off-by: James Smart <james.smart@emulex.com>
+> 
+> 
+> 
+> Gal Rosen wrote:
+> > Hi,
+> > 
+> > Attach proposed patch for the PROBLEM: Synchronization issue in
+> > scsi_transport_fc.
+> > 
+> > Gal Rosen.
+> > 
+> 
 
-
-
---- Comment #12 from James Smart <james.smart@emulex.com>  2010-01-24 01:22:30 ---
-BTW: for your test - it depends on what adapter you have as to whether it
-supports MSI-X, MSI, or only INTx.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
