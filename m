@@ -1,37 +1,42 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH] mptfusion : mptscsih_abort return value should be SUCCESS instead of value 0.
-Date: Mon, 25 Jan 2010 16:20:52 +0530
-Message-ID: <20100125105052.GA32336@lsi.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12945] SCSI Generic (sg): BUG: sleeping function called from
+ invalid context
+Date: Mon, 25 Jan 2010 13:10:48 GMT
+Message-ID: <201001251310.o0PDAmRl028446@demeter.kernel.org>
+References: <bug-12945-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:47333 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752173Ab0AYLUC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jan 2010 06:20:02 -0500
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:37159 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752786Ab0AYNKt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jan 2010 08:10:49 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.2) with ESMTP id o0PDAmeV028447
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Jan 2010 13:10:48 GMT
+In-Reply-To: <bug-12945-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com, stable@kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=12945
 
 
-retval should be SUCCESS/FAILED which is defined at scsi.h
-retval = 0 is directing wrong return value. It must be retval = SUCCESS.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 8128d30..4a7d1af 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -1801,7 +1801,7 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
- 		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "task abort: "
- 		   "Command not in the active list! (sc=%p)\n", ioc->name,
- 		   SCpnt));
--		retval = 0;
-+		retval = SUCCESS;
- 		goto out;
- 	}
- 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |CODE_FIX
+
+
+
+
+--- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk>  2010-01-25 13:10:46 ---
+commit c96952ed7031e7c576ecf90cf95b8ec099d5295a
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
