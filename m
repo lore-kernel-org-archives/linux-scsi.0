@@ -1,583 +1,606 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/8] lpfc 8.3.8: BugFixes: SLI relates changes
-Date: Tue, 26 Jan 2010 23:07:37 -0500
-Message-ID: <1264565277.2972.1.camel@wookie>
+Subject: [PATCH 2/8] lpfc 8.3.8: BugFixes: Discovery relates changes
+Date: Tue, 26 Jan 2010 23:08:03 -0500
+Message-ID: <1264565303.2972.2.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:39129 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:39133 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751236Ab0A0EIU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2010 23:08:20 -0500
+	with ESMTP id S1751042Ab0A0EIp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2010 23:08:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix hardware/SLI relates issues:
-- Handle XB bit so that ELS XRIs are not prematurely released.
-- Handle XB bit so that FCP XRIs are not prematurely released.
-- Define new security SLI Commands.
-- Remove unused security SLI commands
-- Skip receive data size parameter check on received FLOGI.
-- Added LPFC_USE_FCPWQIDX flag to iocb to force SLI layer
-  to submit abort WQE on same WQ as the command WQE.
+Discovery relates changes:
+- Separated VPI_REGISTERED state of physical port into VFI_REGISTERED and
+  VPI_REGISTERED state so that driver can unregister physical port VPI
+  independent of VFI.
+- Add code to unregister, re-init and re-register physical port VPI
+  when physical port NportID change.
+- Add code to unregister and re-register VPI of a vport when its Nport
+  ID change.
+- Add code in FDISC completion path to re-start FLOGI discovery when
+  a FDISC complete with LOGIN_REQUIRED reason code.
+- Fix a memory leak in lpfc_init_vpi_cmpl
+- Add code to start a timer for vport to retry FDISC when CVL is received
+  by a vport or physical port. If all Nports receive CVLs, then all timers
+  are cancelled and a logical link level discovery will be started after
+  one second.
+- Flush ELS commands after killing all delayed ELS commands.
 
 
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_crtn.h      |    2 
- lpfc_els.c       |    2 
- lpfc_hw.h        |   16 ++-----
- lpfc_nportdisc.c |   83 ++++++++++++++++++++++------------------
- lpfc_scsi.c      |   29 ++++++++------
- lpfc_scsi.h      |    1 
- lpfc_sli.c       |  112 ++++++++++++++++++++++++++++++++++++++++++++-----------
- lpfc_sli.h       |   10 ++--
- 8 files changed, 169 insertions(+), 86 deletions(-)
+ lpfc.h           |    3 +
+ lpfc_crtn.h      |    5 ++
+ lpfc_els.c       |  129 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ lpfc_hbadisc.c   |   36 ++++++++++++++-
+ lpfc_init.c      |   44 +++++++++++++++++-
+ lpfc_nportdisc.c |    2 
+ lpfc_sli.c       |   62 ++++++++++++++++++++++++++
+ lpfc_vport.c     |    2 
+ 8 files changed, 265 insertions(+), 18 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2010-01-07 08:20:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2010-01-22 21:24:10.000000000 -0500
-@@ -99,7 +99,7 @@ int lpfc_disc_state_machine(struct lpfc_
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2010-01-22 21:24:10.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2010-01-22 21:25:35.000000000 -0500
+@@ -44,6 +44,8 @@ int lpfc_reg_rpi(struct lpfc_hba *, uint
+ void lpfc_unreg_login(struct lpfc_hba *, uint16_t, uint32_t, LPFC_MBOXQ_t *);
+ void lpfc_unreg_did(struct lpfc_hba *, uint16_t, uint32_t, LPFC_MBOXQ_t *);
+ void lpfc_reg_vpi(struct lpfc_vport *, LPFC_MBOXQ_t *);
++void lpfc_register_new_vport(struct lpfc_hba *, struct lpfc_vport *,
++			struct lpfc_nodelist *);
+ void lpfc_unreg_vpi(struct lpfc_hba *, uint16_t, LPFC_MBOXQ_t *);
+ void lpfc_init_link(struct lpfc_hba *, LPFC_MBOXQ_t *, uint32_t, uint32_t);
+ void lpfc_request_features(struct lpfc_hba *, struct lpfcMboxq *);
+@@ -52,10 +54,13 @@ struct lpfc_vport *lpfc_find_vport_by_di
+ void lpfc_cleanup_rcv_buffers(struct lpfc_vport *);
+ void lpfc_rcv_seq_check_edtov(struct lpfc_vport *);
+ void lpfc_cleanup_rpis(struct lpfc_vport *, int);
++void lpfc_cleanup_pending_mbox(struct lpfc_vport *);
+ int lpfc_linkdown(struct lpfc_hba *);
+ void lpfc_linkdown_port(struct lpfc_vport *);
+ void lpfc_port_link_failure(struct lpfc_vport *);
+ void lpfc_mbx_cmpl_read_la(struct lpfc_hba *, LPFC_MBOXQ_t *);
++void lpfc_init_vpi_cmpl(struct lpfc_hba *, LPFC_MBOXQ_t *);
++void lpfc_retry_pport_discovery(struct lpfc_hba *);
  
- void lpfc_do_scr_ns_plogi(struct lpfc_hba *, struct lpfc_vport *);
- int lpfc_check_sparm(struct lpfc_vport *, struct lpfc_nodelist *,
--		     struct serv_parm *, uint32_t);
-+		     struct serv_parm *, uint32_t, int);
- int lpfc_els_abort(struct lpfc_hba *, struct lpfc_nodelist *);
- void lpfc_more_plogi(struct lpfc_vport *);
- void lpfc_more_adisc(struct lpfc_vport *);
+ void lpfc_mbx_cmpl_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_mbx_cmpl_dflt_rpi(struct lpfc_hba *, LPFC_MBOXQ_t *);
 diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2010-01-07 08:20:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2010-01-22 21:24:10.000000000 -0500
-@@ -4385,7 +4385,7 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
+--- a/drivers/scsi/lpfc/lpfc_els.c	2010-01-22 21:24:10.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2010-01-22 21:25:35.000000000 -0500
+@@ -50,9 +50,6 @@ static int lpfc_issue_els_fdisc(struct l
+ 				struct lpfc_nodelist *ndlp, uint8_t retry);
+ static int lpfc_issue_fabric_iocb(struct lpfc_hba *phba,
+ 				  struct lpfc_iocbq *iocb);
+-static void lpfc_register_new_vport(struct lpfc_hba *phba,
+-				    struct lpfc_vport *vport,
+-				    struct lpfc_nodelist *ndlp);
  
- 	did = Fabric_DID;
+ static int lpfc_max_els_tries = 3;
  
--	if ((lpfc_check_sparm(vport, ndlp, sp, CLASS3))) {
-+	if ((lpfc_check_sparm(vport, ndlp, sp, CLASS3, 1))) {
- 		/* For a FLOGI we accept, then if our portname is greater
- 		 * then the remote portname we initiate Nport login.
- 		 */
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2010-01-07 08:20:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2010-01-22 21:23:51.000000000 -0500
-@@ -1465,17 +1465,13 @@ typedef struct {		/* FireFly BIU registe
- #define CMD_IOCB_LOGENTRY_CN		0x94
- #define CMD_IOCB_LOGENTRY_ASYNC_CN	0x96
- 
--/* Unhandled Data Security SLI Commands */
--#define DSSCMD_IWRITE64_CR 		0xD8
--#define DSSCMD_IWRITE64_CX		0xD9
--#define DSSCMD_IREAD64_CR		0xDA
--#define DSSCMD_IREAD64_CX		0xDB
--#define DSSCMD_INVALIDATE_DEK		0xDC
--#define DSSCMD_SET_KEK			0xDD
--#define DSSCMD_GET_KEK_ID		0xDE
--#define DSSCMD_GEN_XFER			0xDF
-+/* Data Security SLI Commands */
-+#define DSSCMD_IWRITE64_CR		0xF8
-+#define DSSCMD_IWRITE64_CX		0xF9
-+#define DSSCMD_IREAD64_CR		0xFA
-+#define DSSCMD_IREAD64_CX		0xFB
- 
--#define CMD_MAX_IOCB_CMD        0xE6
-+#define CMD_MAX_IOCB_CMD        0xFB
- #define CMD_IOCB_MASK           0xff
- 
- #define MAX_MSG_DATA            28	/* max msg data in CMD_ADAPTER_MSG
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2010-01-07 08:20:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2010-01-22 21:24:10.000000000 -0500
-@@ -62,7 +62,7 @@ lpfc_check_adisc(struct lpfc_vport *vpor
- 
- int
- lpfc_check_sparm(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
--		 struct serv_parm * sp, uint32_t class)
-+		 struct serv_parm *sp, uint32_t class, int flogi)
- {
- 	volatile struct serv_parm *hsp = &vport->fc_sparam;
- 	uint16_t hsp_value, ssp_value = 0;
-@@ -75,49 +75,56 @@ lpfc_check_sparm(struct lpfc_vport *vpor
- 	 * correcting the byte values.
- 	 */
- 	if (sp->cls1.classValid) {
--		hsp_value = (hsp->cls1.rcvDataSizeMsb << 8) |
--				hsp->cls1.rcvDataSizeLsb;
--		ssp_value = (sp->cls1.rcvDataSizeMsb << 8) |
--				sp->cls1.rcvDataSizeLsb;
--		if (!ssp_value)
--			goto bad_service_param;
--		if (ssp_value > hsp_value) {
--			sp->cls1.rcvDataSizeLsb = hsp->cls1.rcvDataSizeLsb;
--			sp->cls1.rcvDataSizeMsb = hsp->cls1.rcvDataSizeMsb;
-+		if (!flogi) {
-+			hsp_value = ((hsp->cls1.rcvDataSizeMsb << 8) |
-+				     hsp->cls1.rcvDataSizeLsb);
-+			ssp_value = ((sp->cls1.rcvDataSizeMsb << 8) |
-+				     sp->cls1.rcvDataSizeLsb);
-+			if (!ssp_value)
-+				goto bad_service_param;
-+			if (ssp_value > hsp_value) {
-+				sp->cls1.rcvDataSizeLsb =
-+					hsp->cls1.rcvDataSizeLsb;
-+				sp->cls1.rcvDataSizeMsb =
-+					hsp->cls1.rcvDataSizeMsb;
-+			}
- 		}
--	} else if (class == CLASS1) {
-+	} else if (class == CLASS1)
- 		goto bad_service_param;
--	}
--
- 	if (sp->cls2.classValid) {
--		hsp_value = (hsp->cls2.rcvDataSizeMsb << 8) |
--				hsp->cls2.rcvDataSizeLsb;
--		ssp_value = (sp->cls2.rcvDataSizeMsb << 8) |
--				sp->cls2.rcvDataSizeLsb;
--		if (!ssp_value)
--			goto bad_service_param;
--		if (ssp_value > hsp_value) {
--			sp->cls2.rcvDataSizeLsb = hsp->cls2.rcvDataSizeLsb;
--			sp->cls2.rcvDataSizeMsb = hsp->cls2.rcvDataSizeMsb;
-+		if (!flogi) {
-+			hsp_value = ((hsp->cls2.rcvDataSizeMsb << 8) |
-+				     hsp->cls2.rcvDataSizeLsb);
-+			ssp_value = ((sp->cls2.rcvDataSizeMsb << 8) |
-+				     sp->cls2.rcvDataSizeLsb);
-+			if (!ssp_value)
-+				goto bad_service_param;
-+			if (ssp_value > hsp_value) {
-+				sp->cls2.rcvDataSizeLsb =
-+					hsp->cls2.rcvDataSizeLsb;
-+				sp->cls2.rcvDataSizeMsb =
-+					hsp->cls2.rcvDataSizeMsb;
-+			}
- 		}
--	} else if (class == CLASS2) {
-+	} else if (class == CLASS2)
- 		goto bad_service_param;
--	}
--
- 	if (sp->cls3.classValid) {
--		hsp_value = (hsp->cls3.rcvDataSizeMsb << 8) |
--				hsp->cls3.rcvDataSizeLsb;
--		ssp_value = (sp->cls3.rcvDataSizeMsb << 8) |
--				sp->cls3.rcvDataSizeLsb;
--		if (!ssp_value)
--			goto bad_service_param;
--		if (ssp_value > hsp_value) {
--			sp->cls3.rcvDataSizeLsb = hsp->cls3.rcvDataSizeLsb;
--			sp->cls3.rcvDataSizeMsb = hsp->cls3.rcvDataSizeMsb;
-+		if (!flogi) {
-+			hsp_value = ((hsp->cls3.rcvDataSizeMsb << 8) |
-+				     hsp->cls3.rcvDataSizeLsb);
-+			ssp_value = ((sp->cls3.rcvDataSizeMsb << 8) |
-+				     sp->cls3.rcvDataSizeLsb);
-+			if (!ssp_value)
-+				goto bad_service_param;
-+			if (ssp_value > hsp_value) {
-+				sp->cls3.rcvDataSizeLsb =
-+					hsp->cls3.rcvDataSizeLsb;
-+				sp->cls3.rcvDataSizeMsb =
-+					hsp->cls3.rcvDataSizeMsb;
-+			}
- 		}
--	} else if (class == CLASS3) {
-+	} else if (class == CLASS3)
- 		goto bad_service_param;
--	}
+@@ -604,10 +601,13 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_v
+ 	} else {
+ 		ndlp->nlp_type |= NLP_FABRIC;
+ 		lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
+-		if (vport->vpi_state & LPFC_VPI_REGISTERED) {
++		if ((!(vport->fc_flag & FC_VPORT_NEEDS_REG_VPI)) &&
++			(vport->vpi_state & LPFC_VPI_REGISTERED)) {
+ 			lpfc_start_fdiscs(phba);
+ 			lpfc_do_scr_ns_plogi(phba, vport);
+-		} else
++		} else if (vport->fc_flag & FC_VFI_REGISTERED)
++			lpfc_register_new_vport(phba, vport, ndlp);
++		else
+ 			lpfc_issue_reg_vfi(vport);
+ 	}
+ 	return 0;
+@@ -804,6 +804,9 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phb
+ 				 irsp->ulpTimeout);
+ 		goto flogifail;
+ 	}
++	spin_lock_irq(shost->host_lock);
++	vport->fc_flag &= ~FC_VPORT_CVL_RCVD;
++	spin_unlock_irq(shost->host_lock);
  
  	/*
- 	 * Preserve the upper four bits of the MSB from the PLOGI response.
-@@ -295,7 +302,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport,
- 			NULL);
- 		return 0;
- 	}
--	if ((lpfc_check_sparm(vport, ndlp, sp, CLASS3) == 0)) {
-+	if ((lpfc_check_sparm(vport, ndlp, sp, CLASS3, 0) == 0)) {
- 		/* Reject this request because invalid parameters */
- 		stat.un.b.lsRjtRsnCode = LSRJT_UNABLE_TPC;
- 		stat.un.b.lsRjtRsnCodeExp = LSEXP_SPARM_OPTIONS;
-@@ -831,7 +838,7 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_
- 				 "0142 PLOGI RSP: Invalid WWN.\n");
- 		goto out;
- 	}
--	if (!lpfc_check_sparm(vport, ndlp, sp, CLASS3))
-+	if (!lpfc_check_sparm(vport, ndlp, sp, CLASS3, 0))
- 		goto out;
- 	/* PLOGI chkparm OK */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-01-07 08:20:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-01-22 21:24:42.000000000 -0500
-@@ -626,6 +626,7 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hb
- 		&phba->sli4_hba.lpfc_abts_scsi_buf_list, list) {
- 		if (psb->cur_iocbq.sli4_xritag == xri) {
- 			list_del(&psb->list);
-+			psb->exch_busy = 0;
- 			psb->status = IOSTAT_SUCCESS;
- 			spin_unlock_irqrestore(
- 				&phba->sli4_hba.abts_scsi_buf_list_lock,
-@@ -688,11 +689,12 @@ lpfc_sli4_repost_scsi_sgl_list(struct lp
- 					 list);
- 			if (status) {
- 				/* Put this back on the abort scsi list */
--				psb->status = IOSTAT_LOCAL_REJECT;
--				psb->result = IOERR_ABORT_REQUESTED;
-+				psb->exch_busy = 1;
- 				rc++;
--			} else
-+			} else {
-+				psb->exch_busy = 0;
- 				psb->status = IOSTAT_SUCCESS;
-+			}
- 			/* Put it back into the SCSI buffer list */
- 			lpfc_release_scsi_buf_s4(phba, psb);
- 		}
-@@ -839,11 +841,12 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *
- 						psb->cur_iocbq.sli4_xritag);
- 			if (status) {
- 				/* Put this back on the abort scsi list */
--				psb->status = IOSTAT_LOCAL_REJECT;
--				psb->result = IOERR_ABORT_REQUESTED;
-+				psb->exch_busy = 1;
- 				rc++;
--			} else
-+			} else {
-+				psb->exch_busy = 0;
- 				psb->status = IOSTAT_SUCCESS;
-+			}
- 			/* Put it back into the SCSI buffer list */
- 			lpfc_release_scsi_buf_s4(phba, psb);
+ 	 * The FLogI succeeded.  Sync the data for the CPU before
+@@ -2720,7 +2723,7 @@ lpfc_els_retry(struct lpfc_hba *phba, st
+ 	if (did == FDMI_DID)
+ 		retry = 1;
+ 
+-	if ((cmd == ELS_CMD_FLOGI) &&
++	if (((cmd == ELS_CMD_FLOGI) || (cmd == ELS_CMD_FDISC)) &&
+ 	    (phba->fc_topology != TOPOLOGY_LOOP) &&
+ 	    !lpfc_error_lost_link(irsp)) {
+ 		/* FLOGI retry policy */
+@@ -5915,6 +5918,7 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba 
+ 	struct Scsi_Host  *shost = lpfc_shost_from_vport(vport);
+ 	struct lpfc_nodelist *ndlp = (struct lpfc_nodelist *) pmb->context2;
+ 	MAILBOX_t *mb = &pmb->u.mb;
++	int rc;
+ 
+ 	spin_lock_irq(shost->host_lock);
+ 	vport->fc_flag &= ~FC_VPORT_NEEDS_REG_VPI;
+@@ -5936,6 +5940,26 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba 
+ 			spin_unlock_irq(shost->host_lock);
+ 			lpfc_can_disctmo(vport);
  			break;
-@@ -857,11 +860,12 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *
- 				 list);
- 			if (status) {
- 				/* Put this back on the abort scsi list */
--				psb->status = IOSTAT_LOCAL_REJECT;
--				psb->result = IOERR_ABORT_REQUESTED;
-+				psb->exch_busy = 1;
- 				rc++;
--			} else
++		/* If reg_vpi fail with invalid VPI status, re-init VPI */
++		case 0x20:
++			spin_lock_irq(shost->host_lock);
++			vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
++			spin_unlock_irq(shost->host_lock);
++			lpfc_init_vpi(phba, pmb, vport->vpi);
++			pmb->vport = vport;
++			pmb->mbox_cmpl = lpfc_init_vpi_cmpl;
++			rc = lpfc_sli_issue_mbox(phba, pmb,
++				MBX_NOWAIT);
++			if (rc == MBX_NOT_FINISHED) {
++				lpfc_printf_vlog(vport,
++					KERN_ERR, LOG_MBOX,
++					"2732 Failed to issue INIT_VPI"
++					" mailbox command\n");
 +			} else {
-+				psb->exch_busy = 0;
- 				psb->status = IOSTAT_SUCCESS;
++				lpfc_nlp_put(ndlp);
++				return;
 +			}
- 			/* Put it back into the SCSI buffer list */
- 			lpfc_release_scsi_buf_s4(phba, psb);
++
+ 		default:
+ 			/* Try to recover from this error */
+ 			lpfc_mbx_unreg_vpi(vport);
+@@ -5949,13 +5973,17 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba 
+ 			break;
  		}
-@@ -951,8 +955,7 @@ lpfc_release_scsi_buf_s4(struct lpfc_hba
- {
- 	unsigned long iflag = 0;
- 
--	if (psb->status == IOSTAT_LOCAL_REJECT
--		&& psb->result == IOERR_ABORT_REQUESTED) {
-+	if (psb->exch_busy) {
- 		spin_lock_irqsave(&phba->sli4_hba.abts_scsi_buf_list_lock,
- 					iflag);
- 		psb->pCmd = NULL;
-@@ -2221,6 +2224,9 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
- 
- 	lpfc_cmd->result = pIocbOut->iocb.un.ulpWord[4];
- 	lpfc_cmd->status = pIocbOut->iocb.ulpStatus;
-+	/* pick up SLI4 exhange busy status from HBA */
-+	lpfc_cmd->exch_busy = pIocbOut->iocb_flag & LPFC_EXCHANGE_BUSY;
-+
- 	if (pnode && NLP_CHK_NODE_ACT(pnode))
- 		atomic_dec(&pnode->cmd_pending);
- 
-@@ -2990,6 +2996,7 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abtsiocb->fcp_wqidx = iocb->fcp_wqidx;
-+	abtsiocb->iocb_flag |= LPFC_USE_FCPWQIDX;
- 
- 	if (lpfc_is_link_up(phba))
- 		icmd->ulpCommand = CMD_ABORT_XRI_CN;
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
---- a/drivers/scsi/lpfc/lpfc_scsi.h	2009-12-21 16:39:54.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.h	2010-01-22 21:23:51.000000000 -0500
-@@ -118,6 +118,7 @@ struct lpfc_scsi_buf {
- 
- 	uint32_t timeout;
- 
-+	uint16_t exch_busy;     /* SLI4 hba reported XB on complete WCQE */
- 	uint16_t status;	/* From IOCB Word 7- ulpStatus */
- 	uint32_t result;	/* From IOCB Word 4. */
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2010-01-07 08:20:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-01-22 21:24:42.000000000 -0500
-@@ -580,10 +580,7 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_
- 	else
- 		sglq = __lpfc_clear_active_sglq(phba, iocbq->sli4_xritag);
- 	if (sglq)  {
--		if (iocbq->iocb_flag & LPFC_DRIVER_ABORTED
--			&& ((iocbq->iocb.ulpStatus == IOSTAT_LOCAL_REJECT)
--			&& (iocbq->iocb.un.ulpWord[4]
--				== IOERR_ABORT_REQUESTED))) {
-+		if (iocbq->iocb_flag & LPFC_EXCHANGE_BUSY) {
- 			spin_lock_irqsave(&phba->sli4_hba.abts_sgl_list_lock,
- 					iflag);
- 			list_add(&sglq->list,
-@@ -764,10 +761,6 @@ lpfc_sli_iocb_cmd_type(uint8_t iocb_cmnd
- 	case DSSCMD_IWRITE64_CX:
- 	case DSSCMD_IREAD64_CR:
- 	case DSSCMD_IREAD64_CX:
--	case DSSCMD_INVALIDATE_DEK:
--	case DSSCMD_SET_KEK:
--	case DSSCMD_GET_KEK_ID:
--	case DSSCMD_GEN_XFER:
- 		type = LPFC_SOL_IOCB;
- 		break;
- 	case CMD_ABORT_XRI_CN:
-@@ -2228,9 +2221,15 @@ lpfc_sli_process_sol_iocb(struct lpfc_hb
- 			 * All other are passed to the completion callback.
- 			 */
- 			if (pring->ringno == LPFC_ELS_RING) {
--				if (cmdiocbp->iocb_flag & LPFC_DRIVER_ABORTED) {
-+				if ((phba->sli_rev < LPFC_SLI_REV4) &&
-+				    (cmdiocbp->iocb_flag &
-+							LPFC_DRIVER_ABORTED)) {
-+					spin_lock_irqsave(&phba->hbalock,
-+							  iflag);
- 					cmdiocbp->iocb_flag &=
- 						~LPFC_DRIVER_ABORTED;
-+					spin_unlock_irqrestore(&phba->hbalock,
-+							       iflag);
- 					saveq->iocb.ulpStatus =
- 						IOSTAT_LOCAL_REJECT;
- 					saveq->iocb.un.ulpWord[4] =
-@@ -2240,7 +2239,47 @@ lpfc_sli_process_sol_iocb(struct lpfc_hb
- 					 * of DMAing payload, so don't free data
- 					 * buffer till after a hbeat.
- 					 */
-+					spin_lock_irqsave(&phba->hbalock,
-+							  iflag);
-+					saveq->iocb_flag |= LPFC_DELAY_MEM_FREE;
-+					spin_unlock_irqrestore(&phba->hbalock,
-+							       iflag);
-+				}
-+				if ((phba->sli_rev == LPFC_SLI_REV4) &&
-+				    (saveq->iocb_flag & LPFC_EXCHANGE_BUSY)) {
-+					/* Set cmdiocb flag for the exchange
-+					 * busy so sgl (xri) will not be
-+					 * released until the abort xri is
-+					 * received from hba, clear the
-+					 * LPFC_DRIVER_ABORTED bit in case
-+					 * it was driver initiated abort.
-+					 */
-+					spin_lock_irqsave(&phba->hbalock,
-+							  iflag);
-+					cmdiocbp->iocb_flag &=
-+						~LPFC_DRIVER_ABORTED;
-+					cmdiocbp->iocb_flag |=
-+						LPFC_EXCHANGE_BUSY;
-+					spin_unlock_irqrestore(&phba->hbalock,
-+							       iflag);
-+					cmdiocbp->iocb.ulpStatus =
-+						IOSTAT_LOCAL_REJECT;
-+					cmdiocbp->iocb.un.ulpWord[4] =
-+						IOERR_ABORT_REQUESTED;
-+					/*
-+					 * For SLI4, irsiocb contains NO_XRI
-+					 * in sli_xritag, it shall not affect
-+					 * releasing sgl (xri) process.
-+					 */
-+					saveq->iocb.ulpStatus =
-+						IOSTAT_LOCAL_REJECT;
-+					saveq->iocb.un.ulpWord[4] =
-+						IOERR_SLI_ABORTED;
-+					spin_lock_irqsave(&phba->hbalock,
-+							  iflag);
- 					saveq->iocb_flag |= LPFC_DELAY_MEM_FREE;
-+					spin_unlock_irqrestore(&phba->hbalock,
-+							       iflag);
- 				}
- 			}
- 			(cmdiocbp->iocb_cmpl) (phba, cmdiocbp, saveq);
-@@ -5987,12 +6026,10 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		else
- 			bf_set(abort_cmd_ia, &wqe->abort_cmd, 0);
- 		bf_set(abort_cmd_criteria, &wqe->abort_cmd, T_XRI_TAG);
--		abort_tag = iocbq->iocb.un.acxri.abortIoTag;
- 		wqe->words[5] = 0;
- 		bf_set(lpfc_wqe_gen_ct, &wqe->generic,
- 			((iocbq->iocb.ulpCt_h << 1) | iocbq->iocb.ulpCt_l));
- 		abort_tag = iocbq->iocb.un.acxri.abortIoTag;
--		wqe->generic.abort_tag = abort_tag;
- 		/*
- 		 * The abort handler will send us CMD_ABORT_XRI_CN or
- 		 * CMD_CLOSE_XRI_CN and the fw only accepts CMD_ABORT_XRI_CX
-@@ -6121,15 +6158,15 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba
- 	if (lpfc_sli4_iocb2wqe(phba, piocb, &wqe))
- 		return IOCB_ERROR;
- 
--	if (piocb->iocb_flag &  LPFC_IO_FCP) {
-+	if ((piocb->iocb_flag & LPFC_IO_FCP) ||
-+		(piocb->iocb_flag & LPFC_USE_FCPWQIDX)) {
- 		/*
- 		 * For FCP command IOCB, get a new WQ index to distribute
- 		 * WQE across the WQsr. On the other hand, for abort IOCB,
- 		 * it carries the same WQ index to the original command
- 		 * IOCB.
- 		 */
--		if ((piocb->iocb.ulpCommand != CMD_ABORT_XRI_CN) &&
--		    (piocb->iocb.ulpCommand != CMD_CLOSE_XRI_CN))
-+		if (piocb->iocb_flag & LPFC_IO_FCP)
- 			piocb->fcp_wqidx = lpfc_sli4_scmd_to_wqidx_distr(phba);
- 		if (lpfc_sli4_wq_put(phba->sli4_hba.fcp_wq[piocb->fcp_wqidx],
- 				     &wqe))
-@@ -7004,7 +7041,14 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba 
- 		    abort_iocb->iocb.ulpContext != abort_context ||
- 		    (abort_iocb->iocb_flag & LPFC_DRIVER_ABORTED) == 0)
- 			spin_unlock_irq(&phba->hbalock);
--		else {
-+		else if (phba->sli_rev < LPFC_SLI_REV4) {
-+			/*
-+			 * leave the SLI4 aborted command on the txcmplq
-+			 * list and the command complete WCQE's XB bit
-+			 * will tell whether the SGL (XRI) can be released
-+			 * immediately or to the aborted SGL list for the
-+			 * following abort XRI from the HBA.
-+			 */
- 			list_del_init(&abort_iocb->list);
- 			pring->txcmplq_cnt--;
- 			spin_unlock_irq(&phba->hbalock);
-@@ -7013,11 +7057,13 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba 
- 			 * payload, so don't free data buffer till after
- 			 * a hbeat.
- 			 */
-+			spin_lock_irq(&phba->hbalock);
- 			abort_iocb->iocb_flag |= LPFC_DELAY_MEM_FREE;
--
- 			abort_iocb->iocb_flag &= ~LPFC_DRIVER_ABORTED;
-+			spin_unlock_irq(&phba->hbalock);
-+
- 			abort_iocb->iocb.ulpStatus = IOSTAT_LOCAL_REJECT;
--			abort_iocb->iocb.un.ulpWord[4] = IOERR_SLI_ABORTED;
-+			abort_iocb->iocb.un.ulpWord[4] = IOERR_ABORT_REQUESTED; 
- 			(abort_iocb->iocb_cmpl)(phba, abort_iocb, abort_iocb);
- 		}
+ 	} else {
++		spin_lock_irq(shost->host_lock);
+ 		vport->vpi_state |= LPFC_VPI_REGISTERED;
+-		if (vport == phba->pport)
++		spin_unlock_irq(shost->host_lock);
++		if (vport == phba->pport) {
+ 			if (phba->sli_rev < LPFC_SLI_REV4)
+ 				lpfc_issue_fabric_reglogin(vport);
+-			else
+-				lpfc_issue_reg_vfi(vport);
+-		else
++			else {
++				lpfc_start_fdiscs(phba);
++				lpfc_do_scr_ns_plogi(phba, vport);
++			}
++		} else
+ 			lpfc_do_scr_ns_plogi(phba, vport);
  	}
-@@ -7106,7 +7152,7 @@ lpfc_sli_issue_abort_iotag(struct lpfc_h
- 		return 0;
  
- 	/* This signals the response to set the correct status
--	 * before calling the completion handler.
-+	 * before calling the completion handler
- 	 */
- 	cmdiocb->iocb_flag |= LPFC_DRIVER_ABORTED;
- 
-@@ -7124,6 +7170,8 @@ lpfc_sli_issue_abort_iotag(struct lpfc_h
- 
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abtsiocbp->fcp_wqidx = cmdiocb->fcp_wqidx;
-+	if (cmdiocb->iocb_flag & LPFC_IO_FCP)
-+		abtsiocbp->iocb_flag |= LPFC_USE_FCPWQIDX;
- 
- 	if (phba->link_state >= LPFC_LINK_UP)
- 		iabt->ulpCommand = CMD_ABORT_XRI_CN;
-@@ -7330,6 +7378,8 @@ lpfc_sli_abort_iocb(struct lpfc_vport *v
- 
- 		/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 		abtsiocb->fcp_wqidx = iocbq->fcp_wqidx;
-+		if (iocbq->iocb_flag & LPFC_IO_FCP)
-+			abtsiocb->iocb_flag |= LPFC_USE_FCPWQIDX;
- 
- 		if (lpfc_is_link_up(phba))
- 			abtsiocb->iocb.ulpCommand = CMD_ABORT_XRI_CN;
-@@ -8359,11 +8409,24 @@ void lpfc_sli4_els_xri_abort_event_proc(
- 	}
- }
- 
-+/**
-+ * lpfc_sli4_iocb_param_transfer - Transfer pIocbOut and cmpl status to pIocbIn
-+ * @phba: pointer to lpfc hba data structure
-+ * @pIocbIn: pointer to the rspiocbq
-+ * @pIocbOut: pointer to the cmdiocbq
-+ * @wcqe: pointer to the complete wcqe
-+ *
-+ * This routine transfers the fields of a command iocbq to a response iocbq
-+ * by copying all the IOCB fields from command iocbq and transferring the
-+ * completion status information from the complete wcqe.
-+ **/
- static void
--lpfc_sli4_iocb_param_transfer(struct lpfc_iocbq *pIocbIn,
-+lpfc_sli4_iocb_param_transfer(struct lpfc_hba *phba,
-+			      struct lpfc_iocbq *pIocbIn,
- 			      struct lpfc_iocbq *pIocbOut,
- 			      struct lpfc_wcqe_complete *wcqe)
+@@ -5977,7 +6005,7 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba 
+  * This routine registers the @vport as a new virtual port with a HBA.
+  * It is done through a registering vpi mailbox command.
+  **/
+-static void
++void
+ lpfc_register_new_vport(struct lpfc_hba *phba, struct lpfc_vport *vport,
+ 			struct lpfc_nodelist *ndlp)
  {
-+	unsigned long iflags;
- 	size_t offset = offsetof(struct lpfc_iocbq, iocb);
- 
- 	memcpy((char *)pIocbIn + offset, (char *)pIocbOut + offset,
-@@ -8379,6 +8442,13 @@ lpfc_sli4_iocb_param_transfer(struct lpf
- 			pIocbIn->iocb.un.ulpWord[4] = wcqe->parameter;
- 	else
- 		pIocbIn->iocb.un.ulpWord[4] = wcqe->parameter;
-+
-+	/* Pick up HBA exchange busy condition */
-+	if (bf_get(lpfc_wcqe_c_xb, wcqe)) {
-+		spin_lock_irqsave(&phba->hbalock, iflags);
-+		pIocbIn->iocb_flag |= LPFC_EXCHANGE_BUSY;
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
-+	}
+@@ -6018,6 +6046,78 @@ mbox_err_exit:
  }
  
  /**
-@@ -8419,7 +8489,7 @@ lpfc_sli4_els_wcqe_to_rspiocbq(struct lp
- 	}
- 
- 	/* Fake the irspiocbq and copy necessary response information */
--	lpfc_sli4_iocb_param_transfer(irspiocbq, cmdiocbq, wcqe);
-+	lpfc_sli4_iocb_param_transfer(phba, irspiocbq, cmdiocbq, wcqe);
- 
- 	return irspiocbq;
- }
-@@ -8976,7 +9046,7 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc
- 	}
- 
- 	/* Fake the irspiocb and copy necessary response information */
--	lpfc_sli4_iocb_param_transfer(&irspiocbq, cmdiocbq, wcqe);
-+	lpfc_sli4_iocb_param_transfer(phba, &irspiocbq, cmdiocbq, wcqe);
- 
- 	/* Pass the cmd_iocb and the rsp state to the upper layer */
- 	(cmdiocbq->iocb_cmpl)(phba, cmdiocbq, &irspiocbq);
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2010-01-07 08:20:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2010-01-22 21:24:42.000000000 -0500
-@@ -53,17 +53,19 @@ struct lpfc_iocbq {
- 
- 	IOCB_t iocb;		/* IOCB cmd */
- 	uint8_t retry;		/* retry counter for IOCB cmd - if needed */
--	uint8_t iocb_flag;
-+	uint16_t iocb_flag;
- #define LPFC_IO_LIBDFC		1	/* libdfc iocb */
- #define LPFC_IO_WAKE		2	/* High Priority Queue signal flag */
- #define LPFC_IO_FCP		4	/* FCP command -- iocbq in scsi_buf */
- #define LPFC_DRIVER_ABORTED	8	/* driver aborted this request */
- #define LPFC_IO_FABRIC		0x10	/* Iocb send using fabric scheduler */
- #define LPFC_DELAY_MEM_FREE	0x20    /* Defer free'ing of FC data */
--#define LPFC_FIP_ELS_ID_MASK	0xc0	/* ELS_ID range 0-3 */
--#define LPFC_FIP_ELS_ID_SHIFT	6
-+#define LPFC_EXCHANGE_BUSY	0x40    /* SLI4 hba reported XB in response */
-+#define LPFC_USE_FCPWQIDX	0x80    /* Submit to specified FCPWQ index */
++ * lpfc_retry_pport_discovery - Start timer to retry FLOGI.
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine abort all pending discovery commands and
++ * start a timer to retry FLOGI for the physical port
++ * discovery.
++ **/
++void
++lpfc_retry_pport_discovery(struct lpfc_hba *phba)
++{
++	struct lpfc_vport **vports;
++	struct lpfc_nodelist *ndlp;
++	struct Scsi_Host  *shost;
++	int i;
++	uint32_t link_state;
 +
-+#define LPFC_FIP_ELS_ID_MASK	0xc000	/* ELS_ID range 0-3, non-shifted mask */
-+#define LPFC_FIP_ELS_ID_SHIFT	14
++	/* Treat this failure as linkdown for all vports */
++	link_state = phba->link_state;
++	lpfc_linkdown(phba);
++	phba->link_state = link_state;
++
++	vports = lpfc_create_vport_work_array(phba);
++
++	if (vports) {
++		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
++			ndlp = lpfc_findnode_did(vports[i], Fabric_DID);
++			if (ndlp)
++				lpfc_cancel_retry_delay_tmo(vports[i], ndlp);
++			lpfc_els_flush_cmd(vports[i]);
++		}
++		lpfc_destroy_vport_work_array(phba, vports);
++	}
++
++	/* If fabric require FLOGI, then re-instantiate physical login */
++	ndlp = lpfc_findnode_did(phba->pport, Fabric_DID);
++	if (!ndlp)
++		return;
++
++
++	shost = lpfc_shost_from_vport(phba->pport);
++	mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
++	spin_lock_irq(shost->host_lock);
++	ndlp->nlp_flag |= NLP_DELAY_TMO;
++	spin_unlock_irq(shost->host_lock);
++	ndlp->nlp_last_elscmd = ELS_CMD_FLOGI;
++	phba->pport->port_state = LPFC_FLOGI;
++	return;
++}
++
++/**
++ * lpfc_fabric_login_reqd - Check if FLOGI required.
++ * @phba: pointer to lpfc hba data structure.
++ * @cmdiocb: pointer to FDISC command iocb.
++ * @rspiocb: pointer to FDISC response iocb.
++ *
++ * This routine checks if a FLOGI is reguired for FDISC
++ * to succeed.
++ **/
++static int
++lpfc_fabric_login_reqd(struct lpfc_hba *phba,
++		struct lpfc_iocbq *cmdiocb,
++		struct lpfc_iocbq *rspiocb)
++{
++
++	if ((rspiocb->iocb.ulpStatus != IOSTAT_FABRIC_RJT) ||
++		(rspiocb->iocb.un.ulpWord[4] != RJT_LOGIN_REQUIRED))
++		return 0;
++	else
++		return 1;
++}
++
++/**
+  * lpfc_cmpl_els_fdisc - Completion function for fdisc iocb command
+  * @phba: pointer to lpfc hba data structure.
+  * @cmdiocb: pointer to lpfc command iocb data structure.
+@@ -6066,6 +6166,12 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phb
+ 		irsp->ulpStatus, irsp->un.ulpWord[4], vport->fc_prevDID);
  
--	uint8_t abort_count;
- 	uint8_t rsvd2;
- 	uint32_t drvrTimeout;	/* driver timeout in seconds */
- 	uint32_t fcp_wqidx;	/* index to FCP work queue */
+ 	if (irsp->ulpStatus) {
++
++		if (lpfc_fabric_login_reqd(phba, cmdiocb, rspiocb)) {
++			lpfc_retry_pport_discovery(phba);
++			goto out;
++		}
++
+ 		/* Check for retry */
+ 		if (lpfc_els_retry(phba, cmdiocb, rspiocb))
+ 			goto out;
+@@ -6076,6 +6182,7 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phb
+ 		goto fdisc_failed;
+ 	}
+ 	spin_lock_irq(shost->host_lock);
++	vport->fc_flag &= ~FC_VPORT_CVL_RCVD;
+ 	vport->fc_flag |= FC_FABRIC;
+ 	if (vport->phba->fc_topology == TOPOLOGY_LOOP)
+ 		vport->fc_flag |=  FC_PUBLIC_LOOP;
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2010-01-07 08:20:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc.h	2010-01-22 21:25:35.000000000 -0500
+@@ -315,6 +315,9 @@ struct lpfc_vport {
+ #define FC_VPORT_NEEDS_REG_VPI	0x80000  /* Needs to have its vpi registered */
+ #define FC_RSCN_DEFERRED	0x100000 /* A deferred RSCN being processed */
+ #define FC_VPORT_NEEDS_INIT_VPI 0x200000 /* Need to INIT_VPI before FDISC */
++#define FC_VPORT_CVL_RCVD	0x400000 /* VLink failed due to CVL	 */
++#define FC_VFI_REGISTERED	0x800000 /* VFI is registered */
++#define FC_FDISC_COMPLETED	0x1000000/* FDISC completed */
+ 
+ 	uint32_t ct_flags;
+ #define FC_CT_RFF_ID		0x1	 /* RFF_ID accepted by switch */
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-01-22 12:35:18.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-01-22 21:25:35.000000000 -0500
+@@ -706,6 +706,8 @@ lpfc_cleanup_rpis(struct lpfc_vport *vpo
+ void
+ lpfc_port_link_failure(struct lpfc_vport *vport)
+ {
++	lpfc_vport_set_state(vport, FC_VPORT_LINKDOWN);
++
+ 	/* Cleanup any outstanding received buffers */
+ 	lpfc_cleanup_rcv_buffers(vport);
+ 
+@@ -1695,10 +1697,11 @@ out:
+  *
+  * This function handles completion of init vpi mailbox command.
+  */
+-static void
++void
+ lpfc_init_vpi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ {
+ 	struct lpfc_vport *vport = mboxq->vport;
++	struct lpfc_nodelist *ndlp;
+ 	if (mboxq->u.mb.mbxStatus) {
+ 		lpfc_printf_vlog(vport, KERN_ERR,
+ 				LOG_MBOX,
+@@ -1712,6 +1715,20 @@ lpfc_init_vpi_cmpl(struct lpfc_hba *phba
+ 	vport->fc_flag &= ~FC_VPORT_NEEDS_INIT_VPI;
+ 	spin_unlock_irq(&phba->hbalock);
+ 
++	/* If this port is physical port or FDISC is done, do reg_vpi */
++	if ((phba->pport == vport) || (vport->port_state == LPFC_FDISC)) {
++			ndlp = lpfc_findnode_did(vport, Fabric_DID);
++			if (!ndlp)
++				lpfc_printf_vlog(vport, KERN_ERR,
++					LOG_DISCOVERY,
++					"2731 Cannot find fabric "
++					"controller node\n");
++			else
++				lpfc_register_new_vport(phba, vport, ndlp);
++			mempool_free(mboxq, phba->mbox_mem_pool);
++			return;
++	}
++
+ 	if (phba->link_flag & LS_NPIV_FAB_SUPPORTED)
+ 		lpfc_initial_fdisc(vport);
+ 	else {
+@@ -1719,6 +1736,7 @@ lpfc_init_vpi_cmpl(struct lpfc_hba *phba
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
+ 				 "2606 No NPIV Fabric support\n");
+ 	}
++	mempool_free(mboxq, phba->mbox_mem_pool);
+ 	return;
+ }
+ 
+@@ -1814,6 +1832,9 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 	}
+ 	/* The VPI is implicitly registered when the VFI is registered */
+ 	vport->vpi_state |= LPFC_VPI_REGISTERED;
++	vport->fc_flag |= FC_VFI_REGISTERED;
++
++	vport->fc_flag &= ~FC_VPORT_NEEDS_REG_VPI;
+ 
+ 	if (vport->port_state == LPFC_FABRIC_CFG_LINK) {
+ 		lpfc_start_fdiscs(phba);
+@@ -2333,6 +2354,7 @@ lpfc_mbx_cmpl_reg_vpi(struct lpfc_hba *p
+ 	}
+ 
+ 	vport->vpi_state |= LPFC_VPI_REGISTERED;
++	vport->fc_flag &= ~FC_VPORT_NEEDS_REG_VPI;
+ 	vport->num_disc_nodes = 0;
+ 	/* go thru NPR list and issue ELS PLOGIs */
+ 	if (vport->fc_npr_cnt)
+@@ -4462,6 +4484,7 @@ lpfc_unregister_unused_fcf(struct lpfc_h
+ 	int rc;
+ 	struct lpfc_vport **vports;
+ 	int i;
++	struct lpfc_nodelist *ndlp;
+ 
+ 	spin_lock_irq(&phba->hbalock);
+ 	/*
+@@ -4489,6 +4512,10 @@ lpfc_unregister_unused_fcf(struct lpfc_h
+ 	if (vports &&
+ 		(phba->sli3_options & LPFC_SLI3_NPIV_ENABLED))
+ 		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
++			/* Stop FLOGI/FDISC retries */
++			ndlp = lpfc_findnode_did(vports[i], Fabric_DID);
++			if (ndlp)
++				lpfc_cancel_retry_delay_tmo(vports[i], ndlp);
+ 			lpfc_mbx_unreg_vpi(vports[i]);
+ 			spin_lock_irq(&phba->hbalock);
+ 			vports[i]->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
+@@ -4497,6 +4524,9 @@ lpfc_unregister_unused_fcf(struct lpfc_h
+ 		}
+ 	lpfc_destroy_vport_work_array(phba, vports);
+ 
++	/* Cleanup any outstanding ELS commands */
++	lpfc_els_flush_all_cmd(phba);
++
+ 	/* Unregister VFI */
+ 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox) {
+@@ -4521,6 +4551,10 @@ lpfc_unregister_unused_fcf(struct lpfc_h
+ 		return;
+ 	}
+ 
++	spin_lock_irq(&phba->hbalock);
++	phba->pport->fc_flag &= ~FC_VFI_REGISTERED;
++	spin_unlock_irq(&phba->hbalock);
++
+ 	/* Unregister FCF */
+ 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!mbox) {
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2010-01-07 08:20:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2010-01-22 21:25:35.000000000 -0500
+@@ -2246,6 +2246,9 @@ lpfc_offline_prep(struct lpfc_hba * phba
+ 			if (vports[i]->load_flag & FC_UNLOADING)
+ 				continue;
+ 			vports[i]->vpi_state &= ~LPFC_VPI_REGISTERED;
++			vports[i]->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
++			vports[i]->fc_flag &= ~FC_VFI_REGISTERED;
++
+ 			shost =	lpfc_shost_from_vport(vports[i]);
+ 			list_for_each_entry_safe(ndlp, next_ndlp,
+ 						 &vports[i]->fc_nodes,
+@@ -3007,6 +3010,9 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba
+ 	struct lpfc_nodelist *ndlp;
+ 	struct Scsi_Host  *shost;
+ 	uint32_t link_state;
++	int active_vlink_present;
++	struct lpfc_vport **vports;
++	int i;
+ 
+ 	phba->fc_eventTag = acqe_fcoe->event_tag;
+ 	phba->fcoe_eventtag = acqe_fcoe->event_tag;
+@@ -3074,14 +3080,46 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba
+ 		if (!ndlp)
+ 			break;
+ 		shost = lpfc_shost_from_vport(vport);
++		if (phba->pport->port_state <= LPFC_FLOGI)
++			break;
++		/* If virtual link is not yet instantiated ignore CVL */
++		if (vport->port_state <= LPFC_FDISC)
++			break;
++
+ 		lpfc_linkdown_port(vport);
+-		if (vport->port_type != LPFC_NPIV_PORT) {
++		lpfc_cleanup_pending_mbox(vport);
++		spin_lock_irq(shost->host_lock);
++		vport->fc_flag |= FC_VPORT_CVL_RCVD;
++		spin_unlock_irq(shost->host_lock);
++		active_vlink_present = 0;
++
++		vports = lpfc_create_vport_work_array(phba);
++		if (vports) {
++			for (i = 0; i <= phba->max_vports && vports[i] != NULL;
++					i++) {
++				if ((!(vports[i]->fc_flag &
++					FC_VPORT_CVL_RCVD)) &&
++					(vports[i]->port_state > LPFC_FDISC)) {
++					active_vlink_present = 1;
++					break;
++				}
++			}
++			lpfc_destroy_vport_work_array(phba, vports);
++		}
++
++		if (active_vlink_present) {
++			/*
++			 * If there are other active VLinks present,
++			 * re-instantiate the Vlink using FDISC.
++			 */
+ 			mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
+ 			spin_lock_irq(shost->host_lock);
+ 			ndlp->nlp_flag |= NLP_DELAY_TMO;
+ 			spin_unlock_irq(shost->host_lock);
+-			ndlp->nlp_last_elscmd = ELS_CMD_FLOGI;
+-			vport->port_state = LPFC_FLOGI;
++			ndlp->nlp_last_elscmd = ELS_CMD_FDISC;
++			vport->port_state = LPFC_FDISC;
++		} else {
++			lpfc_retry_pport_discovery(phba);
+ 		}
+ 		break;
+ 	default:
+diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2010-01-22 21:24:10.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2010-01-22 21:25:35.000000000 -0500
+@@ -254,7 +254,7 @@ lpfc_rcv_plogi(struct lpfc_vport *vport,
+ 	int rc;
+ 
+ 	memset(&stat, 0, sizeof (struct ls_rjt));
+-	if (vport->port_state <= LPFC_FLOGI) {
++	if (vport->port_state <= LPFC_FDISC) {
+ 		/* Before responding to PLOGI, check for pt2pt mode.
+ 		 * If we are pt2pt, with an outstanding FLOGI, abort
+ 		 * the FLOGI and resend it first.
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2010-01-22 21:24:42.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-01-22 21:25:35.000000000 -0500
+@@ -1710,6 +1710,7 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *
+ 	struct lpfc_dmabuf *mp;
+ 	uint16_t rpi, vpi;
+ 	int rc;
++	struct lpfc_vport  *vport = pmb->vport;
+ 
+ 	mp = (struct lpfc_dmabuf *) (pmb->context1);
+ 
+@@ -1738,6 +1739,18 @@ lpfc_sli_def_mbox_cmpl(struct lpfc_hba *
+ 			return;
+ 	}
+ 
++	/* Unreg VPI, if the REG_VPI succeed after VLink failure */
++	if ((pmb->u.mb.mbxCommand == MBX_REG_VPI) &&
++		!(phba->pport->load_flag & FC_UNLOADING) &&
++		!pmb->u.mb.mbxStatus) {
++		lpfc_unreg_vpi(phba, pmb->u.mb.un.varRegVpi.vpi, pmb);
++		pmb->vport = vport;
++		pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
++		rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
++		if (rc != MBX_NOT_FINISHED)
++			return;
++	}
++
+ 	if (bf_get(lpfc_mqe_command, &pmb->u.mqe) == MBX_SLI4_CONFIG)
+ 		lpfc_sli4_mbox_cmd_free(phba, pmb);
+ 	else
+@@ -8440,8 +8453,10 @@ lpfc_sli4_iocb_param_transfer(struct lpf
+ 					wcqe->total_data_placed;
+ 		else
+ 			pIocbIn->iocb.un.ulpWord[4] = wcqe->parameter;
+-	else
++	else {
+ 		pIocbIn->iocb.un.ulpWord[4] = wcqe->parameter;
++		pIocbIn->iocb.un.genreq64.bdl.bdeSize = wcqe->total_data_placed;
++	}
+ 
+ 	/* Pick up HBA exchange busy condition */
+ 	if (bf_get(lpfc_wcqe_c_xb, wcqe)) {
+@@ -12139,3 +12154,48 @@ out:
+ 	kfree(rgn23_data);
+ 	return;
+ }
++
++/**
++ * lpfc_cleanup_pending_mbox - Free up vport discovery mailbox commands.
++ * @vport: pointer to vport data structure.
++ *
++ * This function iterate through the mailboxq and clean up all REG_LOGIN
++ * and REG_VPI mailbox commands associated with the vport. This function
++ * is called when driver want to restart discovery of the vport due to
++ * a Clear Virtual Link event.
++ **/
++void
++lpfc_cleanup_pending_mbox(struct lpfc_vport *vport)
++{
++	struct lpfc_hba *phba = vport->phba;
++	LPFC_MBOXQ_t *mb, *nextmb;
++	struct lpfc_dmabuf *mp;
++
++	spin_lock_irq(&phba->hbalock);
++	list_for_each_entry_safe(mb, nextmb, &phba->sli.mboxq, list) {
++		if (mb->vport != vport)
++			continue;
++
++		if ((mb->u.mb.mbxCommand != MBX_REG_LOGIN64) &&
++			(mb->u.mb.mbxCommand != MBX_REG_VPI))
++			continue;
++
++		if (mb->u.mb.mbxCommand == MBX_REG_LOGIN64) {
++			mp = (struct lpfc_dmabuf *) (mb->context1);
++			if (mp) {
++				__lpfc_mbuf_free(phba, mp->virt, mp->phys);
++				kfree(mp);
++			}
++		}
++		list_del(&mb->list);
++		mempool_free(mb, phba->mbox_mem_pool);
++	}
++	mb = phba->sli.mbox_active;
++	if (mb && (mb->vport == vport)) {
++		if ((mb->u.mb.mbxCommand == MBX_REG_LOGIN64) ||
++			(mb->u.mb.mbxCommand == MBX_REG_VPI))
++			mb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
++	}
++	spin_unlock_irq(&phba->hbalock);
++}
++
+diff -upNr a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+--- a/drivers/scsi/lpfc/lpfc_vport.c	2010-01-07 08:20:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_vport.c	2010-01-22 21:25:35.000000000 -0500
+@@ -389,7 +389,7 @@ lpfc_vport_create(struct fc_vport *fc_vp
+ 	 * by the port.
+ 	 */
+ 	if ((phba->sli_rev == LPFC_SLI_REV4) &&
+-	    (pport->vpi_state & LPFC_VPI_REGISTERED)) {
++		(pport->fc_flag & FC_VFI_REGISTERED)) {
+ 		rc = lpfc_sli4_init_vpi(phba, vpi);
+ 		if (rc) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_VPORT,
 
 
