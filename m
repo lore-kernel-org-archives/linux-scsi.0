@@ -1,59 +1,48 @@
-From: devzero@web.de
-Subject: fw: smartd crashing recent 2.6.32 kernel
-Date: Tue, 26 Jan 2010 23:01:07 +0100
-Message-ID: <1114886585@web.de>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/8] lpfc 8.3.8: BugFixes: SLI relates changes
+Date: Tue, 26 Jan 2010 23:07:02 -0500
+Message-ID: <1264565242.2972.0.camel@wookie>
+Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmmailgate05.web.de ([217.72.192.243]:64212 "EHLO
-	fmmailgate05.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974Ab0AZWWE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2010 17:22:04 -0500
+Received: from exht1.emulex.com ([138.239.113.183]:39123 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751229Ab0A0EHu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jan 2010 23:07:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: support@lsi.com
-
-maybe someone has a clue....!?
-
-see https://bugzillafiles.novell.org/attachment.cgi?id=3D338427
-
-that box seems to crash in megaraid_mbox driver as soon as smartd is st=
-arting - even with recent 2.6.32 kernel.
-
-as this box will go into production between mid/end of february, i thin=
-k that is not much time if there is something to fix (and then being te=
-sted/confirmed to be fixed)
-
-regards
-roland
 
 
-> -----Urspr=FCngliche Nachricht-----
-> Von: <devzero@web.de>
-> Gesendet: 25.01.10 12:15:09
-> An: smartmontools-support@lists.sourceforge.net
-> Betreff: smartd crashing recent 2.6.32 kernel
-> Hi,=20
->=20
-> just wanted to let you know that smartd is crashing my system at late=
- installation stage.
->=20
-> have opened novell bugticket #573244 ( https://bugzilla.novell.com/sh=
-ow_bug.cgi?id=3D573244 ) for this.
->=20
-> regards
-> roland
->=20
+This patch set updates the lpfc driver to revision 8.3.8
+
+The patches for 8.3.8 contain:
+BugFixes:
+- SLI relates changes
+- Discovery relates changes
+Additions:
+- Add code to display logical link speed
+- (BSG1) Update BSG infrastructure
+- (BSG2) Create lpfc_bsg.h
+- (BSG3) Modify BSG commands to operate asynchronously
+- (BSG4) Add new vendor specific BSG Commands
+- Update Driver version to 8.3.8
+
+The bugfixes were cut against scsi-rc-fixes-2.6, but apply w/o change to
+scsi-misc-2.6
+
+The additions features were cut against scsi-misc-2.6. They did not assume
+that patches 1 & 2 were applied. If combined w/ 1 & 2 there will be a little
+fuzz in patches 3 & 4, but still apply fine.
 
 
-________________________________________________________________
-Nur noch bis 31.01.2010: DSL Komplettpaket f=FCr 16,99 Euro/mtl.!*
-http://produkte.web.de/go/02/
+-- james s
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+  Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
