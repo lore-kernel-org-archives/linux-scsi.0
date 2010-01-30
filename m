@@ -1,54 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15171] New: smartd crashing recent 2.6.32 kernel
-Date: Fri, 29 Jan 2010 20:55:38 GMT
-Message-ID: <bug-15171-11613@http.bugzilla.kernel.org/>
+From: ranand <ravi.anand@qlogic.com>
+Subject: [PATCH 0/11] qla4xxx: Driver Fixes [v5.01.00-k10]
+Date: Fri, 29 Jan 2010 22:27:47 -0800
+Message-ID: <20100130062747.GA10274@linux-qf4p>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:53081 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab0A2Uzi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jan 2010 15:55:38 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o0TKtcNj018284
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Jan 2010 20:55:38 GMT
+Received: from avexch1.qlogic.com ([198.70.193.115]:8948 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919Ab0A3GZ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2010 01:25:58 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <james.bottomley@suse.de>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15171
+James,
 
-           Summary: smartd crashing recent 2.6.32 kernel
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.32
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: devzero@web.de
-        Regression: No
+Please apply following patches which I have generated against
+your latest scsi-misc tree pulled today :
 
 
-This bugticket is used to track an issue already opened in novell-bugzilla
-(https://bugzilla.novell.com/show_bug.cgi?id=573244) and reported on linux-scsi
-and smartmontools-support
-(http://marc.info/?l=smartmontools-support&m=126462075603274&w=2)
+Ravi Anand (1):
+      qla4xxx: Update version number to 5.01.00-k10
 
-as it appears to be an upstream issue, i`m additionally adding it here. i only
-have that box for another week or two so it`s a small timeslot to test fixes on
-that box.
+Vikas Chaudhary (10):
+      qla4xxx: Wait for device to come online.
+      qla4xxx: added IPv6 support.
+      qla4xxx: Link Down -> Mark all devices missing
+      qla4xxx: Code Clean up - remove "marker_needed"
+      qla4xxx: Updated firmware ready timeout algorithm to prevent long delays
+      qla4xxx: added srb referance counter
+      qla4xxx: Avoid relogin on device marked missing
+      qla4xxx: fixed NULL pointer dereference in eh_device_reset
+      qla4xxx: do not retry login to CHAP auth failed targets
+      qla4xxx: added support for abort task management command
 
-short description:
-linux kernel crashes (system freeze) at late installation stage when smartd
-being started. seems smartd sends an ioctl which the driver (megaraid_mbox)
-doesn`t like.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Thanks
+Ravi Anand
