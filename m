@@ -1,36 +1,49 @@
-From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: [PATCH 11/11]  qla4xxx: Update version number to 5.01.00-k10
-Date: Fri, 29 Jan 2010 22:29:42 -0800
-Message-ID: <20100130062942.GL10274@linux-qf4p>
+From: Howard Thomson <howard.thomson@dial.pipex.com>
+Subject: Wangtek 5150EQ SCSI-1 QIC-150 tape drive -- not detected
+Date: Sat, 30 Jan 2010 23:17:04 +0000
+Message-ID: <201001302317.04550.howard.thomson@dial.pipex.com>
+Reply-To: howard.thomson@dial.pipex.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:9068 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209Ab0A3G1w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2010 01:27:52 -0500
+Received: from mk-outboundfilter-1.mail.uk.tiscali.com ([212.74.114.37]:18578
+	"EHLO mk-outboundfilter-1.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753588Ab0A3XRJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Jan 2010 18:17:09 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@suse.de>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
 
-Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_version.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hi,
 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 6980cb2..f588db9 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,5 +5,5 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.01.00-k9"
-+#define QLA4XXX_DRIVER_VERSION	"5.01.00-k10"
- 
--- 
-1.6.0.2
+I have a Wangtek 5150EQ tape drive for 150Mb QIC tape cartridges, last used
+some ten years ago, which I would like to get working to read off some old tapes
+before I finally move it on [sell, recycle, whatever ...]
+
+It was working when removed from its original PC, connected to a Wangtek ISA
+SCSI card, which I still have.
+
+I am currently attempting to access it using an Adaptec AHA2940U adaptor, which
+is being recognised as a host adaptor [AIC-7861] by Knoppix.
+
+'dmesg' shows many messages of the form: 'Someone reset channel A'.
+
+It also shows: "Driver 'st' needs updating, please use bus_type methods".
+
+Would trying any later software be likely to fix such problems, or is a complete
+failure to detect the tape-drive indicative of hardware failure while on-the-shelf ?
+
+Any suggestions welcome ...
+
+Regards,
+
+Howard Thomson
+
+--
+"Only two things are infinite, the universe and human stupidity,
+and I'm not sure about the former." -- Albert Einstein 
 
