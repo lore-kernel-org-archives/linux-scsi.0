@@ -1,40 +1,83 @@
-From: ranand <ravi.anand@qlogic.com>
-Subject: [PATCH 0/11] qla4xxx: Driver Fixes [v5.01.00-k10]
-Date: Fri, 29 Jan 2010 22:27:47 -0800
-Message-ID: <20100130062747.GA10274@linux-qf4p>
+From: Ravi Anand <ravi.anand@qlogic.com>
+Subject: [PATCH 01/11] qla4xxx: Wait for device to come online.
+Date: Fri, 29 Jan 2010 22:28:13 -0800
+Message-ID: <20100130062813.GB10274@linux-qf4p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:8948 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:8976 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919Ab0A3GZ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2010 01:25:58 -0500
+	with ESMTP id S1751629Ab0A3G0X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jan 2010 01:26:23 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@suse.de>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
-
-James,
-
-Please apply following patches which I have generated against
-your latest scsi-misc tree pulled today :
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
 
-Ravi Anand (1):
-      qla4xxx: Update version number to 5.01.00-k10
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Vikas Chaudhary (10):
-      qla4xxx: Wait for device to come online.
-      qla4xxx: added IPv6 support.
-      qla4xxx: Link Down -> Mark all devices missing
-      qla4xxx: Code Clean up - remove "marker_needed"
-      qla4xxx: Updated firmware ready timeout algorithm to prevent long delays
-      qla4xxx: added srb referance counter
-      qla4xxx: Avoid relogin on device marked missing
-      qla4xxx: fixed NULL pointer dereference in eh_device_reset
-      qla4xxx: do not retry login to CHAP auth failed targets
-      qla4xxx: added support for abort task management command
+Wait upto 10s for device to come online otherwise indicate
+an error condition.
 
-Thanks
-Ravi Anand
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_def.h |    1 +
+ drivers/scsi/qla4xxx/ql4_mbx.c |   22 ++++++++++++++++++++++
+ 2 files changed, 23 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 81b5f29..38e261d 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -146,6 +146,7 @@
+ #define ISNS_DEREG_TOV			5
+ 
+ #define MAX_RESET_HA_RETRIES		2
++#define DEVICE_ONLINE_TOV		10
+ 
+ /*
+  * SCSI Request Block structure	 (srb)	that is placed
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 09d6d4b..37c8fcb 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -679,11 +679,33 @@ int qla4xxx_reset_lun(struct scsi_qla_host * ha, struct ddb_entry * ddb_entry,
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+ 	int status = QLA_SUCCESS;
++	unsigned long wait_online;
+ 
+ 	DEBUG2(printk("scsi%ld:%d:%d: lun reset issued\n", ha->host_no,
+ 		      ddb_entry->os_target_id, lun));
+ 
+ 	/*
++	 * If device is not online wait for 10 sec for device to come online.
++	 * else return error
++	 */
++	if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
++		wait_online = jiffies + (DEVICE_ONLINE_TOV * HZ);
++		while (time_before(jiffies, wait_online)) {
++			set_current_state(TASK_INTERRUPTIBLE);
++			schedule_timeout(HZ);
++			if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
++				break;
++		}
++
++		if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
++			DEBUG2(printk("scsi%ld: %s: Unable to reset lun."
++					"Device is not online.\n", ha->host_no
++					, __func__));
++			return QLA_ERROR;
++		}
++	}
++
++	/*
+ 	 * Send lun reset command to ISP, so that the ISP will return all
+ 	 * outstanding requests with RESET status
+ 	 */
+-- 
+1.6.0.2
+
