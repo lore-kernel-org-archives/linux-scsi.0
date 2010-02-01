@@ -1,58 +1,28 @@
-From: Frans Pop <elendil@planet.nl>
-Subject: Re: [PATCH 05/10] drivers/scsi/arcmsr: Fix continuation line formats
-Date: Mon, 1 Feb 2010 20:07:24 +0100
-Message-ID: <201002012007.25498.elendil@planet.nl>
-References: <cover.1264967493.git.joe@perches.com> <cover.1264967493.git.joe@perches.com> <m2n.s.201002011906064544@fjphome.nl>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 10/11] qla4xxx: added support for abort task management
+ command
+Date: Mon, 01 Feb 2010 13:19:08 -0600
+Message-ID: <4B67292C.9020101@cs.wisc.edu>
+References: <20100130062934.GK10274@linux-qf4p> <4B67232F.2020304@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-To: <m2n.s.201002011906064544@fjphome.nl>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: support@areca.com.tw, linux-kernel@vger.kernel.org, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36494 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755787Ab0BATT0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Feb 2010 14:19:26 -0500
+In-Reply-To: <4B67232F.2020304@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-> String constants that are continued on subsequent lines with \
-> are not good.
-> Fix rebulid/rebuild typos
->
-> Signed-off-by: Joe Perches <joe@perches.com>
+On 02/01/2010 12:53 PM, Mike Christie wrote:
+> If you do not need to send a abort for firmware cleanup, and if doing
+> erl0, then it is fastest to just escalate to the target reset callout
+> for this case. We can wait just once there instead of waiting 10 secs *
+> num_commands.
 
-Hmmm. Would it be an idea to also get rid of all the trailing spaces in=
- the
-printks, or is that for another cleanup?
-
-If you'd prefer a separate patch, I can do it.
-
-A few random examples:
-
-> =A0drivers/scsi/arcmsr/arcmsr_hba.c | =A0 49
-> +++++++++++++++++-------------------- 1 files changed, 23 insertions(=
-+),
-> 26 deletions(-)
->
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c
-> b/drivers/scsi/arcmsr/arcmsr_hba.c index 47d5d19..a0378d5 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-[...]
-+                       printk(KERN_NOTICE "arcmsr%d: wait 'flush adapt=
-er cache' timeout, retry count down =3D %d \n",
-+                              acb->host->host_no, retry_count);
-[...]
-+               printk(KERN_NOTICE "arcmsr%d: isr get an illegal ccb co=
-mmand done acb =3D '0x%p'"
-                                "ccb =3D '0x%p' ccbacb =3D '0x%p' start=
-done =3D 0x%x"
-                                " ccboutstandingcount =3D %d \n"
-                                , acb->host->host_no
-[...]
-                printk(KERN_NOTICE
-+                       "arcmsr%d: wait 'stop adapter background rebuil=
-d' timeout \n"
-                        , acb->host->host_no);
-[...]
-+                       printk(KERN_NOTICE "arcmsr%d: 'can not set dive=
-r mode \n"
+Oh yeah, you want to wait in the target reset handler for the session to 
+come back or for qla4xxx_recovery_timedout to be called.
