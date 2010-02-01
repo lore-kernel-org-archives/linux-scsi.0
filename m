@@ -1,159 +1,116 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 10/11] qla4xxx: added support for abort task management
- command
-Date: Mon, 01 Feb 2010 12:53:35 -0600
-Message-ID: <4B67232F.2020304@cs.wisc.edu>
-References: <20100130062934.GK10274@linux-qf4p>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15185] Sending a 48bit ATA-Command with "CheckCondition"
+ through SG_IO does not return correct 48bit sense descriptor
+Date: Mon, 1 Feb 2010 19:01:57 GMT
+Message-ID: <201002011901.o11J1vCd031310@demeter.kernel.org>
+References: <bug-15185-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50037 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752164Ab0BASx4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Feb 2010 13:53:56 -0500
-In-Reply-To: <20100130062934.GK10274@linux-qf4p>
+Received: from demeter.kernel.org ([140.211.167.39]:41639 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755243Ab0BATB6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2010 14:01:58 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o11J1v74031320
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Feb 2010 19:01:57 GMT
+In-Reply-To: <bug-15185-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-On 01/30/2010 12:29 AM, Ravi Anand wrote:
->
->   /**
-> + * qla4xxx_eh_abort - callback for abort task.
-> + * @cmd: Pointer to Linux's SCSI command structure
-> + *
-> + * This routine is called by the Linux OS to abort the specified
-> + * command.
-> + **/
-> +static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
-> +{
-> +	struct scsi_qla_host *ha;
-> +	struct srb *srb = NULL;
-> +	struct ddb_entry *ddb_entry;
-> +	struct scsi_cmnd *srb_cmd = NULL;
-> +	int ret = SUCCESS;
-> +	unsigned int channel;
-> +	unsigned int id;
-> +	unsigned int lun;
-> +	unsigned long serial;
-> +	unsigned long flags = 0;
-> +	int i = 0;
-> +	int got_ref = 0;
-> +	unsigned long wait_online;
-> +
-> +	if (cmd == NULL) {
-> +		DEBUG2(printk("ABORT - **** SCSI mid-layer passing in NULL cmd\n"));
-> +		return SUCCESS;
-> +	}
-> +
-> +	ha = to_qla_host(cmd->device->host);
-> +	ddb_entry = cmd->device->hostdata;
-> +	channel = cmd->device->channel;
-> +	id = cmd->device->id;
-> +	lun = cmd->device->lun;
-> +	serial = cmd->serial_number;
-> +
-> +	if (!ddb_entry) {
-> +		DEBUG2(printk("scsi%ld: ABORT - NULL ddb entry.\n", ha->host_no));
-> +		return FAILED;
-> +	}
-> +
-> +	if (!cmd->SCp.ptr) {
-> +		DEBUG2(printk("scsi%ld: ABORT - cmd already completed.\n",
-> +			      ha->host_no));
-> +		return ret;
-
-
-Not a big deal, but a couple lines above you keep switching between 
-using ret or SUCCESS/FAILED. In the cmd == NULL check you use SUCESS. 
-Here is use ret, but ret is never changed. Not a big deal, but harder to 
-read, because we have to double check if we missed ret getting changed 
-since we keep switching back and forth using it.
+http://bugzilla.kernel.org/show_bug.cgi?id=15185
 
 
 
-> +	}
-> +
-> +
-> +
-> +	srb = (struct srb *) cmd->SCp.ptr;
-> +
-> +	dev_info(&ha->pdev->dev, "scsi%ld:%d:%d:%d: ABORT ISSUED "
-> +		 "cmd=%p, pid=%ld, ref=%d\n", ha->host_no, channel, id, lun,
-> +		 cmd, serial, atomic_read(&srb->ref_count));
-> +
-> +	if (qla4xxx_wait_for_hba_online(ha) != QLA_SUCCESS) {
-> +		DEBUG2(printk("scsi%ld:%d: %s: Unable to abort task. Adapter "
-> +				"DEAD.\n", ha->host_no, cmd->device->channel
-> +				, __func__));
-> +
-> +		return FAILED;
-> +	}
-> +
-> +	/* Check active list for command */
-> +	spin_lock_irqsave(&ha->hardware_lock, flags);
-> +	for (i = 1; i<  MAX_SRBS; i++) {
-> +		srb_cmd = scsi_host_find_tag(ha->host, i);
-> +		if (srb_cmd == NULL)
-> +			continue;
-> +
-> +		srb = (struct srb *)srb_cmd->host_scribble;
-> +		if (srb == NULL)
-> +			continue;
-> +
-> +		if (srb->cmd != cmd)
-> +			continue;
-> +
-> +		DEBUG2(printk("scsi%ld:%d:%d:%d %s: aborting srb %p from RISC. "
-> +			      "pid=%ld.\n", ha->host_no, channel, id, lun,
-> +			      __func__, srb, serial));
-> +		DEBUG3(qla4xxx_print_scsi_cmd(cmd));
-> +
-> +		/* Get a reference to the sp and drop the lock.*/
-> +		sp_get(srb);
-> +		got_ref++;
-> +
-> +		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-> +
-> +		/*
-> +		 * If device is not online wait for 10 sec for device to come online,
-> +		 * else return error and do not issue abort task.
-> +		 */
-> +		if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
-> +			wait_online = jiffies + (DEVICE_ONLINE_TOV * HZ);
-> +			while (time_before(jiffies, wait_online)) {
-> +				set_current_state(TASK_INTERRUPTIBLE);
-> +				schedule_timeout(HZ);
-> +				if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
-> +					break;
-> +			}
-> +			if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
-> +				DEBUG2(printk("scsi%ld:%d: %s: Unable to abort task."
-> +						"Device is not online.\n", ha->host_no
-> +						, cmd->device->channel, __func__));
-> +
-> +				return FAILED;
-> +			}
-> +		}
 
-Does the abort command for your card do a abort task tmf and do some 
-firmware cleanup?
 
-If the session is went down, and it is now back up, do you have to send 
-a abort to the firmware? In other places, like for a ddb changed or link 
-down handling, you do not do that.
+--- Comment #1 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-02-01 19:01:55 ---
+Reply-To: dgilbert@interlog.com
 
-For iscsi in erl0, the tasks are wiped out when you relogin, so if you 
-went from ddb state non online to online, there is no point in sending 
-the tmf to the target since the relogin had the same clearing effects.
+Douglas Gilbert wrote:
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+>> http://bugzilla.kernel.org/show_bug.cgi?id=15185
+>>
+>>            Summary: Sending a 48bit ATA-Command with "CheckCondition"
+>>                     through SG_IO does not return correct 48bit sense
+>>                     descriptor
+>>            Product: SCSI Drivers
+>>            Version: 2.5
+>>     Kernel Version: 2.6.31
+>>           Platform: All
+>>         OS/Version: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: normal
+>>           Priority: P1
+>>          Component: Other
+>>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+>>         ReportedBy: stefan.huebner@stud.tu-ilmenau.de
+>>         Regression: No
+>>
+>>
+>> Example: sending a correct "READ_NATIVE_MAX_ADDRESS_EXT" to /dev/sdd 
+>> (opened
+>> O_RDWR | O_NONBLOCK) via ATA_PASSTHROUGH_16 (SCSI-Command 0x85) with 
+>> the EXTEND
+>> and the CHECK_CONDITION bits set to 1 yields sense data in 
+>> descriptor-format. Unfortunately, the descriptor does not have EXTEND 
+>> set, and by that only
+>> returns 24 Bits of LBA.
+>>
+>> This obviously is a bug, as the SAT-2 Draft says: "If the sense data 
+>> is for an
+>> ATA PASS-THROUGH (16) command with the EXTEND bit set to one, then the 
+>> SATL
+>> shall return the 48-bit extended status and shall set the EXTEND bit 
+>> to one."
+>>
+>> Contents of important data-structures for SG_IO:
+>> sg_io_hdr.cmdlen = 16
+>> *sg_io_hdr.cmdp = {0x85 0x07 0x20 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
+>> 0x00 0x00
+>> 0x00 0x00 0x27 0x00}
+>>
+>> sense-data after command:
+>> 0x72 0x00 0x00 0x00 0x00 0x00 0x00 0x0e 0x09 0x0c 0x00 0x00 0x00 0x00 
+>> 0x00 0xaf
+>> 0x00 0x6d 0x00 0x70 0x00 0x50
+>> meaning: descriptor-sense, no error
+>> descriptor:
+>>  code=0x09 -> ATA-Return descriptor
+>>  length=0x0c
+>>  EXTEND=0
+>>  Error = 0x00
+>>  SectorCount = 0x00
+>>  LBA_Low = 0xaf
+>>  LBA_Mid = 0x6d
+>>  LBA_High= 0x70
+>>  Device  = 0
+>>  Status  = DeviceReady | DeferredWriteError
+>>
+>> The drive used should be reporting a native max lba of 0x74706daf 
+>> (1.02TB), so
+>> the expected sense data should look like:
+>> 0x72 0x00 0x00 0x00 0x00 0x00 0x00 0x0e 0x09 0x0c 0x01 0x00 0x00 0x00 
+>> 0x6d 0xaf
+>> 0x74 0x70 0x00 0x00 0x00 0x50
+> 
+> This bug does not occur in lk 2.6.30 but does in lk
+> 2.6.32 . There was a pretty large rework of libata
+> in that period and there is obvious bug in
+> drivers/ata/libata-scsi.c that causes this.
+> 
+> The attached patch fixes this problem in lk 2.6.32 in
+> my test.
+> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-If you need to send this to clear up some firmware stuff, then it seems 
-like you have a bug in the other paths when the session does offline (it 
-does not like we are sending a abort to the card there).
+Changelog:
+   - Fix assignment which overwrote SAT ATA PASS-THROUGH
+     command EXTEND bit setting (ATA_TFLAG_LBA48)
 
-If you do not need to send a abort for firmware cleanup, and if doing 
-erl0, then it is fastest to just escalate to the target reset callout 
-for this case. We can wait just once there instead of waiting 10 secs * 
-num_commands.
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
