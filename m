@@ -1,28 +1,49 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 10/11] qla4xxx: added support for abort task management
- command
-Date: Mon, 01 Feb 2010 13:19:08 -0600
-Message-ID: <4B67292C.9020101@cs.wisc.edu>
-References: <20100130062934.GK10274@linux-qf4p> <4B67232F.2020304@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15185] Sending a 48bit ATA-Command with "CheckCondition"
+ through SG_IO does not return correct 48bit sense descriptor
+Date: Mon, 1 Feb 2010 21:22:04 GMT
+Message-ID: <201002012122.o11LM4ca007859@demeter.kernel.org>
+References: <bug-15185-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36494 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755787Ab0BATT0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Feb 2010 14:19:26 -0500
-In-Reply-To: <4B67232F.2020304@cs.wisc.edu>
+Received: from demeter.kernel.org ([140.211.167.39]:33197 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754884Ab0BAVWH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2010 16:22:07 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o11LM4U7007861
+	for <linux-scsi@vger.kernel.org>; Mon, 1 Feb 2010 21:22:04 GMT
+In-Reply-To: <bug-15185-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-On 02/01/2010 12:53 PM, Mike Christie wrote:
-> If you do not need to send a abort for firmware cleanup, and if doing
-> erl0, then it is fastest to just escalate to the target reset callout
-> for this case. We can wait just once there instead of waiting 10 secs *
-> num_commands.
+http://bugzilla.kernel.org/show_bug.cgi?id=3D15185
 
-Oh yeah, you want to wait in the target reset handler for the session to 
-come back or for qla4xxx_recovery_timedout to be called.
+
+Stefan H=C3=BCbner <stefan.huebner@stud.tu-ilmenau.de> changed:
+
+           What    |Removed                     |Added
+-----------------------------------------------------------------------=
+-----
+     Kernel Version|2.6.31                      |2.6.32
+
+
+
+
+--- Comment #3 from Stefan H=C3=BCbner <stefan.huebner@stud.tu-ilmenau.=
+de>  2010-02-01 21:22:04 ---
+Just to clear up: sorry, I forgot I recently updated to 2.6.32.  Change=
+d
+bug-description accordingly.
+
+--=20
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=3Demail
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
