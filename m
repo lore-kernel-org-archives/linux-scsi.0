@@ -1,104 +1,79 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [Bug 15185] New: Sending a 48bit ATA-Command with "CheckCondition"
- through SG_IO does not return correct 48bit sense descriptor
-Date: Mon, 01 Feb 2010 13:25:05 -0500
-Message-ID: <4B671C81.9010709@interlog.com>
-References: <bug-15185-11613@http.bugzilla.kernel.org/> <4B67195A.9060806@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 07/11] qla4xxx: Avoid relogin on device marked missing
+Date: Mon, 01 Feb 2010 12:41:12 -0600
+Message-ID: <4B672048.4090600@cs.wisc.edu>
+References: <20100130062900.GH10274@linux-qf4p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:50491 "EHLO elrond.infotech.no"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38232 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755265Ab0BASZK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Feb 2010 13:25:10 -0500
-In-Reply-To: <4B67195A.9060806@interlog.com>
+	id S1755228Ab0BASla (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Feb 2010 13:41:30 -0500
+In-Reply-To: <20100130062900.GH10274@linux-qf4p>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
 
-Douglas Gilbert wrote:
-> bugzilla-daemon@bugzilla.kernel.org wrote:
->> http://bugzilla.kernel.org/show_bug.cgi?id=15185
->>
->>            Summary: Sending a 48bit ATA-Command with "CheckCondition"
->>                     through SG_IO does not return correct 48bit sense
->>                     descriptor
->>            Product: SCSI Drivers
->>            Version: 2.5
->>     Kernel Version: 2.6.31
->>           Platform: All
->>         OS/Version: Linux
->>               Tree: Mainline
->>             Status: NEW
->>           Severity: normal
->>           Priority: P1
->>          Component: Other
->>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
->>         ReportedBy: stefan.huebner@stud.tu-ilmenau.de
->>         Regression: No
->>
->>
->> Example: sending a correct "READ_NATIVE_MAX_ADDRESS_EXT" to /dev/sdd 
->> (opened
->> O_RDWR | O_NONBLOCK) via ATA_PASSTHROUGH_16 (SCSI-Command 0x85) with 
->> the EXTEND
->> and the CHECK_CONDITION bits set to 1 yields sense data in 
->> descriptor-format. Unfortunately, the descriptor does not have EXTEND 
->> set, and by that only
->> returns 24 Bits of LBA.
->>
->> This obviously is a bug, as the SAT-2 Draft says: "If the sense data 
->> is for an
->> ATA PASS-THROUGH (16) command with the EXTEND bit set to one, then the 
->> SATL
->> shall return the 48-bit extended status and shall set the EXTEND bit 
->> to one."
->>
->> Contents of important data-structures for SG_IO:
->> sg_io_hdr.cmdlen = 16
->> *sg_io_hdr.cmdp = {0x85 0x07 0x20 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
->> 0x00 0x00
->> 0x00 0x00 0x27 0x00}
->>
->> sense-data after command:
->> 0x72 0x00 0x00 0x00 0x00 0x00 0x00 0x0e 0x09 0x0c 0x00 0x00 0x00 0x00 
->> 0x00 0xaf
->> 0x00 0x6d 0x00 0x70 0x00 0x50
->> meaning: descriptor-sense, no error
->> descriptor:
->>  code=0x09 -> ATA-Return descriptor
->>  length=0x0c
->>  EXTEND=0
->>  Error = 0x00
->>  SectorCount = 0x00
->>  LBA_Low = 0xaf
->>  LBA_Mid = 0x6d
->>  LBA_High= 0x70
->>  Device  = 0
->>  Status  = DeviceReady | DeferredWriteError
->>
->> The drive used should be reporting a native max lba of 0x74706daf 
->> (1.02TB), so
->> the expected sense data should look like:
->> 0x72 0x00 0x00 0x00 0x00 0x00 0x00 0x0e 0x09 0x0c 0x01 0x00 0x00 0x00 
->> 0x6d 0xaf
->> 0x74 0x70 0x00 0x00 0x00 0x50
-> 
-> This bug does not occur in lk 2.6.30 but does in lk
-> 2.6.32 . There was a pretty large rework of libata
-> in that period and there is obvious bug in
-> drivers/ata/libata-scsi.c that causes this.
-> 
-> The attached patch fixes this problem in lk 2.6.32 in
-> my test.
-> 
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+On 01/30/2010 12:29 AM, Ravi Anand wrote:
+>
+> From: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+>
+> Signed-off-by: Nilesh Javali<nilesh.javali@qlogic.com>
+> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
+> ---
+>   drivers/scsi/qla4xxx/ql4_os.c |   27 ++++++++++++++++++++++++---
+>   1 files changed, 24 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 9057860..e5c9b85 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -370,6 +370,7 @@ void qla4xxx_mark_device_missing(struct scsi_qla_host *ha,
+>   		      ddb_entry->fw_ddb_index));
+>   	iscsi_block_session(ddb_entry->sess);
+>   	iscsi_conn_error_event(ddb_entry->conn, ISCSI_ERR_CONN_FAILED);
+> +	set_bit(DF_NO_RELOGIN,&ddb_entry->flags);
+>   }
+>
+>   /***
+> @@ -642,6 +643,24 @@ static void qla4xxx_timer(struct scsi_qla_host *ha)
+>
+>   	/* Search for relogin's to time-out and port down retry. */
+>   	list_for_each_entry_safe(ddb_entry, dtemp,&ha->ddb_list, list) {
+> +		/* First check to see if the device has exhausted the
+> +		 * port down retry count */
+> +		if (atomic_read(&ddb_entry->state) == DDB_STATE_MISSING) {
+> +			if (atomic_read(&ddb_entry->port_down_timer) == 0)
+> +				continue;
+> +
 
-Changelog:
-   - Fix assignment which overwrote SAT ATA PASS-THROUGH
-     command EXTEND bit setting (ATA_TFLAG_LBA48)
 
+How does the relogin work in this case?
+
+- If you pull a cable and we mark devices missing, then when link up is 
+detected will qla4xxx_isr_decode_mailbox set the AF_LINK_UP bit and then 
+the driver will start to try and relogin? Or would you get a 
+MBOX_ASTS_DATABASE_CHANGED aen, and then that notifies you that that the 
+firmware detected link up and logged back in (so the state would then be 
+DDB_DS_SESSION_ACTIVE?)?
+
+
+- What cases do you get a databased change aen where the new device 
+state indicates the session is non active so qla4xxx_process_ddb_changed 
+calls qla4xxx_mark_device_missing? Would it be where the target logs us 
+out, or when the firmware detects a problem with the session/connection 
+and drop the session, what about if the firmware detects a link down?
+
+In the case qla4xxx_process_ddb_changed calls 
+qla4xxx_mark_device_missing will we get some sort of databased change 
+aen indicating that the state is again DDB_DS_SESSION_ACTIVE?
+
+- What cases do we now use the relogin code now? Do we always call 
+qla4xxx_mark_device_missing in cases where a relogin is needed, so can 
+we just remove the relogin code? Or is the relogin code still used for 
+the initial driver initialization or something else?
 
