@@ -1,37 +1,42 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Mon, 1 Feb 2010 23:35:44 GMT
-Message-ID: <201002012335.o11NZiva010254@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 06/10] drivers/scsi/qla2xxx/qua_os.c: Fix continuation line formats
+Date: Mon,  1 Feb 2010 23:22:12 -0800
+Message-ID: <0a97686bba6798d01420fdd9536e25324242b3c8.1265095094.git.joe@perches.com>
+References: <cover.1265095093.git.joe@perches.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47859 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab0BAXfp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Feb 2010 18:35:45 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o11NZid1010257
-	for <linux-scsi@vger.kernel.org>; Mon, 1 Feb 2010 23:35:44 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from mail.perches.com ([173.55.12.10]:1773 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755530Ab0BBHWX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Feb 2010 02:22:23 -0500
+In-Reply-To: <cover.1265095093.git.joe@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+String constants that are continued on subsequent lines with \
+are not good.
 
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-
-
-
---- Comment #26 from jt512@jt512.dyndns.org  2010-02-01 23:35:39 ---
-This but persists in version 151.
-
-I also have the Optiarc_DVD_RW_AD_7580S.
-
-It's been nearly six months since this bug was reported.  What's up?
-
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8529eb1..134ed38 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -88,8 +88,8 @@ int ql2xmaxqueues = 1;
+ module_param(ql2xmaxqueues, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xmaxqueues,
+ 		"Enables MQ settings "
+-		"Default is 1 for single queue. Set it to number \
+-			of queues in MQ mode.");
++		"Default is 1 for single queue. Set it to number "
++		"of queues in MQ mode.");
+ 
+ int ql2xmultique_tag;
+ module_param(ql2xmultique_tag, int, S_IRUGO|S_IRUSR);
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.6.6.rc0.57.gad7a
+
