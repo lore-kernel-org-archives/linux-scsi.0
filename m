@@ -1,42 +1,58 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 06/10] drivers/scsi/qla2xxx/qua_os.c: Fix continuation line formats
-Date: Mon,  1 Feb 2010 23:22:12 -0800
-Message-ID: <0a97686bba6798d01420fdd9536e25324242b3c8.1265095094.git.joe@perches.com>
-References: <cover.1265095093.git.joe@perches.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1773 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755530Ab0BBHWX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Feb 2010 02:22:23 -0500
-In-Reply-To: <cover.1265095093.git.joe@perches.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 00/10] Non-printk continuation line fixes
+Date: Mon,  1 Feb 2010 23:22:06 -0800
+Message-ID: <cover.1265095093.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dri-devel-bounces@lists.sourceforge.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
+	<mailto:dri-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=dri-devel>
+List-Post: <mailto:dri-devel@lists.sourceforge.net>
+List-Help: <mailto:dri-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/dri-devel>,
+	<mailto:dri-devel-request@lists.sourceforge.net?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.sourceforge.net
 To: linux-kernel@vger.kernel.org
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+Cc: linux-fbdev@vger.kernel.org, Mark Brown <broonie@opensource.wolfsonmicro.com>, linux-ia64@vger.kernel.org, kvm@vger.kernel.org, David Airlie <airlied@linux.ie>, alsa-devel@alsa-project.org, Jaroslav Kysela <perex@perex.cz>, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, devel@driverdev.osuosl.org, David Brownell <dbrownell@users.sourceforge.net>, linux-scsi@vger.kernel.org, lm-sensors@lm-sensors.org, Takashi Iwai <tiwai@suse.de>, Scott Fang <ScottFang@viatech.com.cn>, Avi Kivity <avi@redhat.com>, dri-devel@lists.sourceforge.net, Jeff Garzik <jgarzik@pobox.com>, Xiantao Zhang <xiantao.zhang@intel.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Fenghua Yu <fenghua.yu@intel.com>, Roger Lucas <vt8231@hiddenengine.co.uk>, Greg Kroah-Hartman <gregkh@suse.de>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Liam Girdwood <lrg@slimlogic.co.uk>, Tony
+List-Id: linux-scsi@vger.kernel.org
 
-String constants that are continued on subsequent lines with \
-are not good.
+Some more fixes to formats with continuation lines
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Joe Perches (10):
+  arch/ia64: Fix continuation line formats
+  drivers/ata: Fix continuation line formats
+  drivers/gpu/drm/i915/intel_bios.c: Fix continuation line formats
+  drivers/hwmon/vt8231.c: Fix continuation line formats
+  drivers/net/davinci_emac.c: Fix continuation line formats
+  drivers/scsi/qla2xxx/qua_os.c: Fix continuation line formats
+  drivers/spi/spi_s3c64xx.c: Fix continuation line formats
+  drivers/staging: Fix continuation line formats
+  drivers/video/via: Fix continuation line formats
+  sound/soc/s3c24xx/s2c-pcm.c: Fix continuation line formats
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 8529eb1..134ed38 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -88,8 +88,8 @@ int ql2xmaxqueues = 1;
- module_param(ql2xmaxqueues, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ql2xmaxqueues,
- 		"Enables MQ settings "
--		"Default is 1 for single queue. Set it to number \
--			of queues in MQ mode.");
-+		"Default is 1 for single queue. Set it to number "
-+		"of queues in MQ mode.");
- 
- int ql2xmultique_tag;
- module_param(ql2xmultique_tag, int, S_IRUGO|S_IRUSR);
--- 
-1.6.6.rc0.57.gad7a
+ arch/ia64/kvm/mmio.c                   |    4 ++--
+ arch/ia64/kvm/vcpu.c                   |    4 ++--
+ drivers/ata/pata_at91.c                |    4 ++--
+ drivers/gpu/drm/i915/intel_bios.c      |    3 +--
+ drivers/hwmon/vt8231.c                 |    3 +--
+ drivers/net/davinci_emac.c             |    3 +--
+ drivers/scsi/qla2xxx/qla_os.c          |    4 ++--
+ drivers/spi/spi_s3c64xx.c              |   11 +++++------
+ drivers/staging/rtl8192su/r8192S_phy.c |   16 ++++++++--------
+ drivers/staging/sep/sep_driver.c       |    5 +++--
+ drivers/staging/slicoss/slicoss.c      |    6 ++----
+ drivers/video/via/dvi.c                |    8 ++++----
+ drivers/video/via/lcd.c                |   12 ++++++------
+ sound/soc/s3c24xx/s3c-pcm.c            |    3 +--
+ 14 files changed, 40 insertions(+), 46 deletions(-)
 
+
+------------------------------------------------------------------------------
+The Planet: dedicated and managed hosting, cloud storage, colocation
+Stay online with enterprise data centers and the best network in the business
+Choose flexible plans and management services without long-term contracts
+Personal 24x7 support from experience hosting pros just a phone call away.
+http://p.sf.net/sfu/theplanet-com
+--
