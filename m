@@ -1,35 +1,42 @@
-From: jennifer kohne <janifer.khone@btinternet.com>
-Subject: Donation to Haiti.
-Date: Wed, 3 Feb 2010 11:27:20 +0000 (GMT)
-Message-ID: <603106.22572.qm__49454.3093177073$1265196450$gmane$org@web87009.mail.ird.yahoo.com>
-Reply-To: jennifakohne@yahoo.co.jp
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15001] megaraid_sas fills dmesg with megasas: Failed to copy
+ out to user sense data
+Date: Wed, 3 Feb 2010 13:41:48 GMT
+Message-ID: <201002031341.o13DfmY0000507@demeter.kernel.org>
+References: <bug-15001-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from n25.bullet.mail.ukl.yahoo.com ([87.248.110.142]:21371 "HELO
-	n25.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756942Ab0BCL1W convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Feb 2010 06:27:22 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:59975 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757274Ab0BCNlt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Feb 2010 08:41:49 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o13DfmSJ000510
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Feb 2010 13:41:48 GMT
+In-Reply-To: <bug-15001-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Donation to Haiti.
- 
-I have a proposal for you,this however is not  mandatory nor will I in any manner compel you to honor against your will. Your profile pushed me to send you this mail,
- I am Mrs Jennifer Kohne. from Kuwait. I am married to Mr. Jean Kohne who worked with Kuwait embassy i Ivory Coast for nine years before he died in the year 2006. We were married for eleven years without a child. He died after a brief illness that lasted for only four days. 
- 
- Since his death I decided not to remarry or get a child outside my matrimonial home which. When my late husband was alive he deposited the sum of US$3.8million dollars in a Bank here in Abidjan Cote d'Ivoire. Presently, this money is still in bank. Recently, my Doctor told me that I would not last for the next Eight months due to cancer problem. 
- 
-The one that disturbs me most is my stroke sickness. Having known my condition I decided to donate this fund to a charity organization that will utilize this money the way I am going to instruct herein. I want to donate this fund to Haiti toward recoery efforts.
- 
- I took this decision because I don't have any child that will inherit this money. This is why I am taking this decision, And I don't need any telephone communication in this regard because of my health,
- 
- As soon as I receive your reply I shall give you the contact of the Bank here in  Abidjan Cote d'Ivoire. I will also issue you an authority  letter that will prove you the present beneficiary of this fund. I want you and the organization to always pray for me. 
- 
-Any  delay in your reply will give me room in sourcing  of another organization or good person for this same  purpose. Please assure me that you will act accordingly as I Stated herein. Hoping to receive your reply. 
- 
-Thank Yours 
-Mrs Jennifer Kohne
+http://bugzilla.kernel.org/show_bug.cgi?id=15001
 
+
+
+
+
+--- Comment #5 from Tomas Henzl <thenzl@redhat.com>  2010-02-03 13:41:44 ---
+Created an attachment (id=24890)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=24890)
+patch to handle compat apps
+
+The issue is probably caused by a 32bit application in a 64bit os. The 'open
+manage' here uses a 32bit pointer and the driver after the 'SCSI: megaraid_sas:
+fix 64 bit sense pointer truncation' works with it as if it was a 64bit
+pointer.
+The attached patch handles the situation on my test box.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
