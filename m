@@ -1,44 +1,35 @@
-From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-Subject: Re: [PATCH 2/2 v2] scsi: add scsi trace core function and put trace
- points
-Date: Wed, 03 Feb 2010 14:55:25 +0900
-Message-ID: <4B690FCD.2040405@jp.fujitsu.com>
-References: <4B665EC9.6000608@jp.fujitsu.com>	<4B666181.7080200@jp.fujitsu.com> <yq1636fqlkv.fsf@sermon.lab.mkp.net>
+From: jennifer kohne <janifer.khone@btinternet.com>
+Subject: Donation to Haiti.
+Date: Wed, 3 Feb 2010 11:27:20 +0000 (GMT)
+Message-ID: <603106.22572.qm__49454.3093177073$1265196450$gmane$org@web87009.mail.ird.yahoo.com>
+Reply-To: jennifakohne@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1636fqlkv.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, Ingo Molnar <mingo@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Frederic Weisbecker <fweisbec@gmail.com>, Christoph Hellwig <hch@infradead.org>, Joe Perches <joe@perches.com>, Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from n25.bullet.mail.ukl.yahoo.com ([87.248.110.142]:21371 "HELO
+	n25.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756942Ab0BCL1W convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Feb 2010 06:27:22 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Martin K. Petersen wrote:
->>>>>> "Kei" == Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com> writes:
-> 
-> I'm traveling so I won't have time to look at this closely until next
-> week.  However, this caught my eye:
-> 
-> +static const char *
-> +scsi_trace_varlen(struct trace_seq *p, unsigned char *cdb, int len)
-> +{
-> +	switch (SERVICE_ACTION(cdb)) {
-> +	case READ_32:
-> +	case WRITE_32:
-> +		/* if protection is enabled */
-> +		if (((cdb[10] >> 5) & 0x7) == 1)
-> +			return scsi_trace_rw32(p, cdb, len);
-> +		/* fall through */
-> +	default:
-> +		return scsi_trace_misc(p, cdb, len);
-> +	}
-> +}
-> 
-> It is not a requirement that a 32-byte READ/WRITE request must have
-> PROTECT set.  So that if statement is bogus.
+Donation to Haiti.
+ 
+I have a proposal for you,this however is not  mandatory nor will I in any manner compel you to honor against your will. Your profile pushed me to send you this mail,
+ I am Mrs Jennifer Kohne. from Kuwait. I am married to Mr. Jean Kohne who worked with Kuwait embassy i Ivory Coast for nine years before he died in the year 2006. We were married for eleven years without a child. He died after a brief illness that lasted for only four days. 
+ 
+ Since his death I decided not to remarry or get a child outside my matrimonial home which. When my late husband was alive he deposited the sum of US$3.8million dollars in a Bank here in Abidjan Cote d'Ivoire. Presently, this money is still in bank. Recently, my Doctor told me that I would not last for the next Eight months due to cancer problem. 
+ 
+The one that disturbs me most is my stroke sickness. Having known my condition I decided to donate this fund to a charity organization that will utilize this money the way I am going to instruct herein. I want to donate this fund to Haiti toward recoery efforts.
+ 
+ I took this decision because I don't have any child that will inherit this money. This is why I am taking this decision, And I don't need any telephone communication in this regard because of my health,
+ 
+ As soon as I receive your reply I shall give you the contact of the Bank here in  Abidjan Cote d'Ivoire. I will also issue you an authority  letter that will prove you the present beneficiary of this fund. I want you and the organization to always pray for me. 
+ 
+Any  delay in your reply will give me room in sourcing  of another organization or good person for this same  purpose. Please assure me that you will act accordingly as I Stated herein. Hoping to receive your reply. 
+ 
+Thank Yours 
+Mrs Jennifer Kohne
 
-Yes.  I agree that the if statement is not necessary here.  I'll
-fix it.  Thanks for having your time for the review.
-
-Kei
