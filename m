@@ -1,78 +1,46 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Linux Storage and Filesystems Summit 8-9 August
-Date: Wed, 03 Feb 2010 22:56:07 -0600
-Message-ID: <1265259367.2873.1795.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15001] megaraid_sas fills dmesg with megasas: Failed to copy
+ out to user sense data
+Date: Thu, 4 Feb 2010 11:00:57 GMT
+Message-ID: <201002041100.o14B0vfY016040@demeter.kernel.org>
+References: <bug-15001-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:59396 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756899Ab0BDE4Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Feb 2010 23:56:16 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:37829 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235Ab0BDLA6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2010 06:00:58 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o14B0vnt016046
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Feb 2010 11:00:57 GMT
+In-Reply-To: <bug-15001-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: lsf10-pc@lists.linux-foundation.org
 
-This year we'll hold the Linux Storage and Filesystems summit jointly
-with the VM summit on the two days before LinuxCon in Boston (that's
-Sunday and Monday) at the Renaissance Hotel:
-
-http://events.linuxfoundation.org/events/linuxcon
-
-We're planning to hold some sessions jointly and split into three tracks
-(Filesystems, Storage and VM) for others, so we're encouraging proposals
-for discussion that cover areas relevant to all three groups as well as
-more specific technical topics.
-
-Suggestions for agenda topics should be sent to
-
-lsf10-pc@lists.linuxfoundation.org
-
-and optionally cc the Linux list which would be most interested in it:
-
-SCSI: linux-scsi@vger.kernel.org
-FS: linux-fsdevel@vger.kernel.org (plus relevant fs specific list)
-MM: linux-mm@kvack.org
-
-Please tag your subject with [LSF/VM TOPIC] so those of us who're not
-very organised can find them easily in our inboxes.  The agenda topics
-and attendees will be selected by the programme committee, but the final
-agenda will be by formed by consensus of the attendees on the day.
-
-We'll try to cap attendance at around 20 per track to facilitate
-discussions although the final numbers will depend on the room sizes
-at the venue.
-
-Requests to attend should be sent to:
-
-lsf10-pc@lists.linuxfoundation.org
-
-please summarise what you'll bring to the meeting, and what you'd like
-to discuss.  please also tag your email with [ATTEND] so there's less
-chance of it getting lost in the large mail pile.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged.  There will be no recording or audio bridge, however
-written minutes will be published as in previous years:
-
-2009:
-http://lwn.net/Articles/327601/
-http://lwn.net/Articles/327740/
-http://lwn.net/Articles/328347/
-
-Prior years:
-http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
-
-If you have feedback on last year's meeting that we can use to improve
-this year's, please also send that to:
-
-lsf10-pc@lists.linuxfoundation.org
-
-Thanks,
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=15001
 
 
+
+
+
+--- Comment #6 from Alex <mailatgoogl@gmail.com>  2010-02-04 11:00:54 ---
+(In reply to comment #5)
+> Created an attachment (id=24890)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=24890) [details]
+> patch to handle compat apps
+> 
+> The issue is probably caused by a 32bit application in a 64bit os. The 'open
+> manage' here uses a 32bit pointer and the driver after the 'SCSI: megaraid_sas:
+> fix 64 bit sense pointer truncation' works with it as if it was a 64bit
+> pointer.
+> The attached patch handles the situation on my test box.
+
+thank you for the patch , it handles the issue , tested on 2.6.32.7 .
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
