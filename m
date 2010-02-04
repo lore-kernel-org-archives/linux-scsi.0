@@ -1,7 +1,8 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 06/30] hpsa: remove superfluous returns from void functions.
-Date: Thu, 04 Feb 2010 08:41:54 -0600
-Message-ID: <20100204144154.10406.41188.stgit@beardog.cce.hp.com>
+Subject: [PATCH 18/30] hpsa: Return DID_RESET for commands which complete with
+	status of UNSOLICITED ABORT
+Date: Thu, 04 Feb 2010 08:42:55 -0600
+Message-ID: <20100204144255.10406.57450.stgit@beardog.cce.hp.com>
 References: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,49 +14,28 @@ To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
 Cc: mikem@beardog.cce.hp.com, brace@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: Matt Gates <matthew.gates@hp.com>
 
-hpsa: remove superfluous returns from void functions.
+hpsa: Return DID_RESET for commands which complete with status of UNSOLICITED ABORT.
+The commands should be retried, and this will make that happen, instead of resulting
+in an i/o error.
 
+Signed-off-by: Matt Gates <matthew.gates@hp.com>
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+ drivers/scsi/hpsa.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 6fe5142..9017e64 100644
+index cc9e92a..bcc51f9 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -898,7 +898,7 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
- 
- static void hpsa_slave_destroy(struct scsi_device *sdev)
- {
--	return; /* nothing to do. */
-+	/* nothing to do. */
- }
- 
- static void hpsa_scsi_setup(struct ctlr_info *h)
-@@ -906,7 +906,6 @@ static void hpsa_scsi_setup(struct ctlr_info *h)
- 	h->ndevices = 0;
- 	h->scsi_host = NULL;
- 	spin_lock_init(&h->devlock);
--	return;
- }
- 
- static void complete_scsi_command(struct CommandList *cp,
-@@ -1775,7 +1774,6 @@ out:
- 	kfree(inq_buff);
- 	kfree(physdev_list);
- 	kfree(logdev_list);
--	return;
- }
- 
- /* hpsa_scatter_gather takes a struct scsi_cmnd, (cmd), and does the pci
-@@ -3106,7 +3104,6 @@ default_int_mode:
- #endif				/* CONFIG_PCI_MSI */
- 	/* if we get here we're going to use the default interrupt mode */
- 	h->intr[SIMPLE_MODE_INT] = pdev->irq;
--	return;
- }
- 
- static int hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
+@@ -1128,7 +1128,7 @@ static void complete_scsi_command(struct CommandList *cp,
+ 		dev_warn(&h->pdev->dev, "cp %p reports abort failed\n", cp);
+ 		break;
+ 	case CMD_UNSOLICITED_ABORT:
+-		cmd->result = DID_ABORT << 16;
++		cmd->result = DID_RESET << 16;
+ 		dev_warn(&h->pdev->dev, "cp %p aborted do to an unsolicited "
+ 			"abort\n", cp);
+ 		break;
