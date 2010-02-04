@@ -1,45 +1,128 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15001] megaraid_sas fills dmesg with megasas: Failed to copy
- out to user sense data
-Date: Thu, 4 Feb 2010 14:29:48 GMT
-Message-ID: <201002041429.o14ETm6u017334@demeter.kernel.org>
-References: <bug-15001-11613@http.bugzilla.kernel.org/>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 07/30] hpsa: return proper error codes not minus one.
+Date: Thu, 04 Feb 2010 08:41:59 -0600
+Message-ID: <20100204144159.10406.19763.stgit@beardog.cce.hp.com>
+References: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:55947 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758237Ab0BDO3s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2010 09:29:48 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o14ETm9C017340
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Feb 2010 14:29:48 GMT
-In-Reply-To: <bug-15001-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
+Cc: mikem@beardog.cce.hp.com, brace@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15001
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
+hpsa: return proper error codes not minus one.
 
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |   37 ++++++++++++++++++++++---------------
+ 1 files changed, 22 insertions(+), 15 deletions(-)
 
-
-
---- Comment #8 from Alex <mailatgoogl@gmail.com>  2010-02-04 14:29:46 ---
-(In reply to comment #7)
-> (In reply to comment #6)
-> > thank you for the patch , it handles the issue , tested on 2.6.32.7 .
-> 
-> That means that you no more see the 
-> "megasas: Failed to copy out to user sense data" 
-Yes , that means that I don't see this message any more , 
-and what does it mean "Failed to copy out to user sense data" ?
-> or have you also verified that the management software works as expected?
-And I still can retrieve information with MegaCli utility , should I check
-something special ?
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 9017e64..8389cce 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1130,11 +1130,11 @@ static int hpsa_scsi_detect(struct ctlr_info *h)
+ 	dev_err(&h->pdev->dev, "hpsa_scsi_detect: scsi_add_host"
+ 		" failed for controller %d\n", h->ctlr);
+ 	scsi_host_put(sh);
+-	return -1;
++	return error;
+  fail:
+ 	dev_err(&h->pdev->dev, "hpsa_scsi_detect: scsi_host_alloc"
+ 		" failed for controller %d\n", h->ctlr);
+-	return -1;
++	return -ENOMEM;
+ }
+ 
+ static void hpsa_pci_unmap(struct pci_dev *pdev,
+@@ -1271,7 +1271,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
+ 
+ 	if (c == NULL) {			/* trouble... */
+ 		dev_warn(&h->pdev->dev, "cmd_special_alloc returned NULL!\n");
+-		return -1;
++		return -ENOMEM;
+ 	}
+ 
+ 	fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize, page, scsi3addr, TYPE_CMD);
+@@ -3284,7 +3284,7 @@ err_out_free_res:
+ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 				    const struct pci_device_id *ent)
+ {
+-	int i;
++	int i, rc;
+ 	int dac;
+ 	struct ctlr_info *h;
+ 
+@@ -3312,14 +3312,15 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 	BUILD_BUG_ON(sizeof(struct CommandList) % 8);
+ 	h = kzalloc(sizeof(*h), GFP_KERNEL);
+ 	if (!h)
+-		return -1;
++		return -ENOMEM;
+ 
+ 	h->busy_initializing = 1;
+ 	INIT_HLIST_HEAD(&h->cmpQ);
+ 	INIT_HLIST_HEAD(&h->reqQ);
+ 	mutex_init(&h->busy_shutting_down);
+ 	init_completion(&h->scan_wait);
+-	if (hpsa_pci_init(h, pdev) != 0)
++	rc = hpsa_pci_init(h, pdev);
++	if (rc != 0)
+ 		goto clean1;
+ 
+ 	sprintf(h->devname, "hpsa%d", number_of_controllers);
+@@ -3328,19 +3329,24 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 	h->pdev = pdev;
+ 
+ 	/* configure PCI DMA stuff */
+-	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64)))
++	rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
++	if (rc == 0) {
+ 		dac = 1;
+-	else if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32)))
+-		dac = 0;
+-	else {
+-		dev_err(&pdev->dev, "no suitable DMA available\n");
+-		goto clean1;
++	} else {
++		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (rc == 0) {
++			dac = 0;
++		} else {
++			dev_err(&pdev->dev, "no suitable DMA available\n");
++			goto clean1;
++		}
+ 	}
+ 
+ 	/* make sure the board interrupts are off */
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+-	if (request_irq(h->intr[SIMPLE_MODE_INT], do_hpsa_intr,
+-			IRQF_DISABLED | IRQF_SHARED, h->devname, h)) {
++	rc = request_irq(h->intr[SIMPLE_MODE_INT], do_hpsa_intr,
++			IRQF_DISABLED | IRQF_SHARED, h->devname, h);
++	if (rc) {
+ 		dev_err(&pdev->dev, "unable to get irq %d for %s\n",
+ 		       h->intr[SIMPLE_MODE_INT], h->devname);
+ 		goto clean2;
+@@ -3363,6 +3369,7 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 	    || (h->cmd_pool == NULL)
+ 	    || (h->errinfo_pool == NULL)) {
+ 		dev_err(&pdev->dev, "out of memory");
++		rc = -ENOMEM;
+ 		goto clean4;
+ 	}
+ 	spin_lock_init(&h->lock);
+@@ -3397,7 +3404,7 @@ clean2:
+ clean1:
+ 	h->busy_initializing = 0;
+ 	kfree(h);
+-	return -1;
++	return rc;
+ }
+ 
+ static void hpsa_flush_cache(struct ctlr_info *h)
