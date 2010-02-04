@@ -1,47 +1,69 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 03/30] hpsa: avoid unwanted promotion from unsigned to signed
-	for raid level index
-Date: Thu, 04 Feb 2010 08:41:38 -0600
-Message-ID: <20100204144138.10406.57370.stgit@beardog.cce.hp.com>
+Subject: [PATCH 11/30] hpsa: eliminate unnecessary memcpys
+Date: Thu, 04 Feb 2010 08:42:19 -0600
+Message-ID: <20100204144219.10406.86923.stgit@beardog.cce.hp.com>
 References: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:28608 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932722Ab0BDOjk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2010 09:39:40 -0500
 In-Reply-To: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
 Cc: mikem@beardog.cce.hp.com, brace@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: avoid unwanted promotion from unsigned to signed for raid level index
+hpsa: eliminate unnecessary memcpys
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 0f4a1f3..ee9db5e 100644
+index 4594200..ba3dead 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -431,7 +431,7 @@ static ssize_t raid_level_show(struct device *dev,
- 	     struct device_attribute *attr, char *buf)
+@@ -1483,14 +1483,11 @@ static void figure_bus_target_lun(struct ctlr_info *h,
+ 	u8 *lunaddrbytes, int *bus, int *target, int *lun,
+ 	struct hpsa_scsi_dev_t *device)
  {
- 	ssize_t l = 0;
--	int rlevel;
-+	unsigned char rlevel;
- 	struct ctlr_info *h;
- 	struct scsi_device *sdev;
- 	struct hpsa_scsi_dev_t *hdev;
-@@ -455,7 +455,7 @@ static ssize_t raid_level_show(struct device *dev,
+-
+ 	u32 lunid;
  
- 	rlevel = hdev->raid_level;
- 	spin_unlock_irqrestore(&h->lock, flags);
--	if (rlevel < 0 || rlevel > RAID_UNKNOWN)
-+	if (rlevel > RAID_UNKNOWN)
- 		rlevel = RAID_UNKNOWN;
- 	l = snprintf(buf, PAGE_SIZE, "RAID %s\n", raid_label[rlevel]);
- 	return l;
+ 	if (is_logical_dev_addr_mode(lunaddrbytes)) {
+ 		/* logical device */
+-		memcpy(&lunid, lunaddrbytes, sizeof(lunid));
+-		lunid = le32_to_cpu(lunid);
+-
++		lunid = le32_to_cpu(*((__le32 *) lunaddrbytes));
+ 		if (is_msa2xxx(h, device)) {
+ 			*bus = 1;
+ 			*target = (lunid >> 16) & 0x3fff;
+@@ -1578,8 +1575,7 @@ static int hpsa_gather_lun_info(struct ctlr_info *h,
+ 		dev_err(&h->pdev->dev, "report physical LUNs failed.\n");
+ 		return -1;
+ 	}
+-	memcpy(nphysicals, &physdev->LUNListLength[0], sizeof(*nphysicals));
+-	*nphysicals = be32_to_cpu(*nphysicals) / 8;
++	*nphysicals = be32_to_cpu(*((__be32 *)physdev->LUNListLength)) / 8;
+ 	if (*nphysicals > HPSA_MAX_PHYS_LUN) {
+ 		dev_warn(&h->pdev->dev, "maximum physical LUNs (%d) exceeded."
+ 			"  %d LUNs ignored.\n", HPSA_MAX_PHYS_LUN,
+@@ -1590,8 +1586,7 @@ static int hpsa_gather_lun_info(struct ctlr_info *h,
+ 		dev_err(&h->pdev->dev, "report logical LUNs failed.\n");
+ 		return -1;
+ 	}
+-	memcpy(nlogicals, &logdev->LUNListLength[0], sizeof(*nlogicals));
+-	*nlogicals = be32_to_cpu(*nlogicals) / 8;
++	*nlogicals = be32_to_cpu(*((__be32 *) logdev->LUNListLength)) / 8;
+ 	/* Reject Logicals in excess of our max capability. */
+ 	if (*nlogicals > HPSA_MAX_LUN) {
+ 		dev_warn(&h->pdev->dev,
+
