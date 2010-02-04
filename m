@@ -1,105 +1,74 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 27/30] hpsa: fix bug in adjust_hpsa_scsi_table
-Date: Thu, 04 Feb 2010 08:43:41 -0600
-Message-ID: <20100204144341.10406.14452.stgit@beardog.cce.hp.com>
+Subject: [PATCH 28/30] hpsa: eliminate lock_kernel in compat_ioctl
+Date: Thu, 04 Feb 2010 08:43:46 -0600
+Message-ID: <20100204144346.10406.76704.stgit@beardog.cce.hp.com>
 References: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:30661 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933073Ab0BDOky (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Feb 2010 09:40:54 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org
 Cc: mikem@beardog.cce.hp.com, brace@beardog.cce.hp.com, matthew.gates@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: fix bug in adjust_hpsa_scsi_table which caused devices
-which have changed size, etc. to do the wrong thing.
-
-The problem was as follows:
-
-The driver maintains its current idea of what devices are present
-in the h->dev[] array.  When it updates this array, it scans the
-hardware, and produces a new list of devices, call it sd[], for
-scsi devices.
-
-Then, it compares each item in h->dev[] vs. sd[], and any items which
-are not present sd it removes from h->dev[], and any items present
-in sd[], but different, it modifies in h->dev[].
-
-Then, it looks for items in sd[] which are not present in h->dev[],
-and adds those items into h->dev[].  All the while, it keeps track
-of what items were added and removed to/from h->dev[].
-
-Finally, it updates the SCSI mid-layer by removing and adding
-the same devices it removed and added to/from h->dev[]. (modified
-devices count as a remove then add.)
-
-originally, when a "changed" device was discovered, it was
-removed then added to h->dev[].  The item was added to the *end*
-of h->dev[].  And, the item was removed from sd[] as well
-(nulled out).  As it processed h->dev[], these newly added items
-at the end of the list were encountered, and sd[] was searched,
-but those items were nulled out.  So they ended up getting removed
-immediately after they were added.
-
-The solution is to have a way to replace items in the h->dev[]
-array instead of doing a remove + add.  Then the "changed" items.
-are not encountered a second time, and removed.
+hpsa: eliminate lock_kernel in compat_ioctl
+The use of the big kernel lock here  appears
+to be ancient cruft that is no longer needed.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   26 ++++++++++++++++++++------
- 1 files changed, 20 insertions(+), 6 deletions(-)
+ drivers/scsi/hpsa.c |   16 +++-------------
+ 1 files changed, 3 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 2764cb6..6b40221 100644
+index 6b40221..225a787 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -675,6 +675,24 @@ lun_assigned:
- 	return 0;
- }
+@@ -2287,16 +2287,6 @@ static void cmd_special_free(struct ctlr_info *h, struct CommandList *c)
  
-+/* Replace an entry from h->dev[] array. */
-+static void hpsa_scsi_replace_entry(struct ctlr_info *h, int hostno,
-+	int entry, struct hpsa_scsi_dev_t *new_entry,
-+	struct hpsa_scsi_dev_t *added[], int *nadded,
-+	struct hpsa_scsi_dev_t *removed[], int *nremoved)
-+{
-+	/* assumes h->devlock is held */
-+	BUG_ON(entry < 0 || entry >= HPSA_MAX_SCSI_DEVS_PER_HBA);
-+	removed[*nremoved] = h->dev[entry];
-+	(*nremoved)++;
-+	h->dev[entry] = new_entry;
-+	added[*nadded] = new_entry;
-+	(*nadded)++;
-+	dev_info(&h->pdev->dev, "%s device c%db%dt%dl%d changed.\n",
-+		scsi_device_type(new_entry->devtype), hostno, new_entry->bus,
-+			new_entry->target, new_entry->lun);
-+}
-+
- /* Remove an entry from h->dev[] array. */
- static void hpsa_scsi_remove_entry(struct ctlr_info *h, int hostno, int entry,
- 	struct hpsa_scsi_dev_t *removed[], int *nremoved)
-@@ -835,12 +853,8 @@ static void adjust_hpsa_scsi_table(struct ctlr_info *h, int hostno,
- 			continue; /* remove ^^^, hence i not incremented */
- 		} else if (device_change == DEVICE_CHANGED) {
- 			changes++;
--			hpsa_scsi_remove_entry(h, hostno, i,
--				removed, &nremoved);
--			(void) hpsa_scsi_add_entry(h, hostno, sd[entry],
--				added, &nadded);
--			/* add can't fail, we just removed one. */
+ #ifdef CONFIG_COMPAT
+ 
+-static int do_ioctl(struct scsi_device *dev, int cmd, void *arg)
+-{
+-	int ret;
 -
-+			hpsa_scsi_replace_entry(h, hostno, i, sd[entry],
-+				added, &nadded, removed, &nremoved);
- 			/* Set it to NULL to prevent it from being freed
- 			 * at the bottom of hpsa_update_scsi_devices()
- 			 */
-
+-	lock_kernel();
+-	ret = hpsa_ioctl(dev, cmd, arg);
+-	unlock_kernel();
+-	return ret;
+-}
+-
+ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd, void *arg);
+ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+ 	int cmd, void *arg);
+@@ -2319,7 +2309,7 @@ static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void *arg)
+ 	case CCISS_REGNEWD:
+ 	case CCISS_RESCANDISK:
+ 	case CCISS_GETLUNINFO:
+-		return do_ioctl(dev, cmd, arg);
++		return hpsa_ioctl(dev, cmd, arg);
+ 
+ 	case CCISS_PASSTHRU32:
+ 		return hpsa_ioctl32_passthru(dev, cmd, arg);
+@@ -2355,7 +2345,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd, void *arg)
+ 	if (err)
+ 		return -EFAULT;
+ 
+-	err = do_ioctl(dev, CCISS_PASSTHRU, (void *)p);
++	err = hpsa_ioctl(dev, CCISS_PASSTHRU, (void *)p);
+ 	if (err)
+ 		return err;
+ 	err |= copy_in_user(&arg32->error_info, &p->error_info,
+@@ -2392,7 +2382,7 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+ 	if (err)
+ 		return -EFAULT;
+ 
+-	err = do_ioctl(dev, CCISS_BIG_PASSTHRU, (void *)p);
++	err = hpsa_ioctl(dev, CCISS_BIG_PASSTHRU, (void *)p);
+ 	if (err)
+ 		return err;
+ 	err |= copy_in_user(&arg32->error_info, &p->error_info,
