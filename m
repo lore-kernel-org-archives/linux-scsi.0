@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 07/30] hpsa: return proper error codes not minus one.
-Date: Thu, 04 Feb 2010 08:41:59 -0600
-Message-ID: <20100204144159.10406.19763.stgit@beardog.cce.hp.com>
+Subject: [PATCH 08/30] hpsa: use sizeof() not an inline constant in memset.
+Date: Thu, 04 Feb 2010 08:42:04 -0600
+Message-ID: <20100204144204.10406.68867.stgit@beardog.cce.hp.com>
 References: <20100204144012.10406.14868.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,114 +15,26 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: return proper error codes not minus one.
+hpsa: use sizeof() not an inline constant in memset.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   37 ++++++++++++++++++++++---------------
- 1 files changed, 22 insertions(+), 15 deletions(-)
+ drivers/scsi/hpsa.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 9017e64..8389cce 100644
+index 8389cce..add2ed5 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1130,11 +1130,11 @@ static int hpsa_scsi_detect(struct ctlr_info *h)
- 	dev_err(&h->pdev->dev, "hpsa_scsi_detect: scsi_add_host"
- 		" failed for controller %d\n", h->ctlr);
- 	scsi_host_put(sh);
--	return -1;
-+	return error;
-  fail:
- 	dev_err(&h->pdev->dev, "hpsa_scsi_detect: scsi_host_alloc"
- 		" failed for controller %d\n", h->ctlr);
--	return -1;
-+	return -ENOMEM;
- }
- 
- static void hpsa_pci_unmap(struct pci_dev *pdev,
-@@ -1271,7 +1271,7 @@ static int hpsa_scsi_do_inquiry(struct ctlr_info *h, unsigned char *scsi3addr,
- 
- 	if (c == NULL) {			/* trouble... */
- 		dev_warn(&h->pdev->dev, "cmd_special_alloc returned NULL!\n");
--		return -1;
-+		return -ENOMEM;
+@@ -1363,9 +1363,8 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
+ 		dev_err(&h->pdev->dev, "cmd_special_alloc returned NULL!\n");
+ 		return -1;
  	}
- 
- 	fill_cmd(c, HPSA_INQUIRY, h, buf, bufsize, page, scsi3addr, TYPE_CMD);
-@@ -3284,7 +3284,7 @@ err_out_free_res:
- static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 				    const struct pci_device_id *ent)
- {
--	int i;
-+	int i, rc;
- 	int dac;
- 	struct ctlr_info *h;
- 
-@@ -3312,14 +3312,15 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 	BUILD_BUG_ON(sizeof(struct CommandList) % 8);
- 	h = kzalloc(sizeof(*h), GFP_KERNEL);
- 	if (!h)
--		return -1;
-+		return -ENOMEM;
- 
- 	h->busy_initializing = 1;
- 	INIT_HLIST_HEAD(&h->cmpQ);
- 	INIT_HLIST_HEAD(&h->reqQ);
- 	mutex_init(&h->busy_shutting_down);
- 	init_completion(&h->scan_wait);
--	if (hpsa_pci_init(h, pdev) != 0)
-+	rc = hpsa_pci_init(h, pdev);
-+	if (rc != 0)
- 		goto clean1;
- 
- 	sprintf(h->devname, "hpsa%d", number_of_controllers);
-@@ -3328,19 +3329,24 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 	h->pdev = pdev;
- 
- 	/* configure PCI DMA stuff */
--	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(64)))
-+	rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
-+	if (rc == 0) {
- 		dac = 1;
--	else if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32)))
--		dac = 0;
--	else {
--		dev_err(&pdev->dev, "no suitable DMA available\n");
--		goto clean1;
-+	} else {
-+		rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-+		if (rc == 0) {
-+			dac = 0;
-+		} else {
-+			dev_err(&pdev->dev, "no suitable DMA available\n");
-+			goto clean1;
-+		}
- 	}
- 
- 	/* make sure the board interrupts are off */
- 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
--	if (request_irq(h->intr[SIMPLE_MODE_INT], do_hpsa_intr,
--			IRQF_DISABLED | IRQF_SHARED, h->devname, h)) {
-+	rc = request_irq(h->intr[SIMPLE_MODE_INT], do_hpsa_intr,
-+			IRQF_DISABLED | IRQF_SHARED, h->devname, h);
-+	if (rc) {
- 		dev_err(&pdev->dev, "unable to get irq %d for %s\n",
- 		       h->intr[SIMPLE_MODE_INT], h->devname);
- 		goto clean2;
-@@ -3363,6 +3369,7 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 	    || (h->cmd_pool == NULL)
- 	    || (h->errinfo_pool == NULL)) {
- 		dev_err(&pdev->dev, "out of memory");
-+		rc = -ENOMEM;
- 		goto clean4;
- 	}
- 	spin_lock_init(&h->lock);
-@@ -3397,7 +3404,7 @@ clean2:
- clean1:
- 	h->busy_initializing = 0;
- 	kfree(h);
--	return -1;
-+	return rc;
- }
- 
- static void hpsa_flush_cache(struct ctlr_info *h)
+-
+-	memset(&scsi3addr[0], 0, 8); /* address the controller */
+-
++	/* address the controller */
++	memset(scsi3addr, 0, sizeof(scsi3addr));
+ 	fill_cmd(c, logical ? HPSA_REPORT_LOG : HPSA_REPORT_PHYS, h,
+ 		buf, bufsize, 0, scsi3addr, TYPE_CMD);
+ 	if (extended_response)
