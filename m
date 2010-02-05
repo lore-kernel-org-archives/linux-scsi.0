@@ -1,50 +1,39 @@
-From: Yong Zhang <yong.zhang0@gmail.com>
-Subject: [PATCH 2/4] [SCSI] bfa: correct onstack wait_queue_head declaration
-Date: Fri,  5 Feb 2010 21:52:38 +0800
-Message-ID: <b47c0527f1471857fec4662da1bfd0bb9e6071a7.1265375697.git.yong.zhang0@gmail.com>
-References: <1265377920-5898-1-git-send-email-yong.zhang0@gmail.com>
- <b1dccd762d3d04ab75d79d1d9b097d593a89f32a.1265375697.git.yong.zhang0@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b1dccd762d3d04ab75d79d1d9b097d593a89f32a.1265375697.git.yong.zhang0@gmail.com>
-In-Reply-To: <b1dccd762d3d04ab75d79d1d9b097d593a89f32a.1265375697.git.yong.zhang0@gmail.com>
-References: <b1dccd762d3d04ab75d79d1d9b097d593a89f32a.1265375697.git.yong.zhang0@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: a.p.zijlstra@chello.nl, mingo@elte.hu, Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Roel Kluin <roel.kluin@gmail.com>, linux-scsi@vger.kernel.org
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15001] megaraid_sas fills dmesg with megasas: Failed to copy
+ out to user sense data
+Date: Fri, 5 Feb 2010 14:16:40 GMT
+Message-ID: <201002051416.o15EGe5u005961@demeter.kernel.org>
+References: <bug-15001-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:37818 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932838Ab0BEOQk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2010 09:16:40 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o15EGeU6005962
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Feb 2010 14:16:40 GMT
+In-Reply-To: <bug-15001-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Use DECLARE_WAIT_QUEUE_HEAD_ONSTACK to make lockdep happy
+http://bugzilla.kernel.org/show_bug.cgi?id=15001
 
-Signed-off-by: Yong Zhang <yong.zhang0@gmail.com>
-Cc: Jing Huang <huangj@brocade.com>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-Cc: Roel Kluin <roel.kluin@gmail.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/bfa/bfad_im.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index f788c2a..3299c7e 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -282,7 +282,7 @@ bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd)
- 	struct bfa_tskim_s *tskim;
- 	struct bfad_itnim_s   *itnim;
- 	struct bfa_itnim_s *bfa_itnim;
--	DECLARE_WAIT_QUEUE_HEAD(wq);
-+	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
- 	int             rc = SUCCESS;
- 	unsigned long   flags;
- 	enum bfi_tskim_status task_status;
-@@ -344,7 +344,7 @@ bfad_im_reset_bus_handler(struct scsi_cmnd *cmnd)
- 	struct bfad_itnim_s   *itnim;
- 	unsigned long   flags;
- 	u32        i, rc, err_cnt = 0;
--	DECLARE_WAIT_QUEUE_HEAD(wq);
-+	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
- 	enum bfi_tskim_status task_status;
- 
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+Alex <mailatgoogl@gmail.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |PATCH_ALREADY_AVAILABLE
+
+
+
+
 -- 
-1.6.3.3
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
