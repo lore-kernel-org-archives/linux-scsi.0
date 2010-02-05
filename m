@@ -1,41 +1,96 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15001] megaraid_sas fills dmesg with megasas: Failed to copy
- out to user sense data
-Date: Fri, 5 Feb 2010 14:51:42 GMT
-Message-ID: <201002051451.o15EpgVI008524@demeter.kernel.org>
-References: <bug-15001-11613@http.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] obsolete config in kernel source (BUFFER_DEBUG)
+Date: Fri, 05 Feb 2010 09:18:07 -0600
+Message-ID: <1265383087.14404.35.camel@mulgrave.site>
+References: <20100205133500.GC6874@faui49.informatik.uni-erlangen.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35802 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932766Ab0BEOvm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Feb 2010 09:51:42 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o15Epg4q008526
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Feb 2010 14:51:42 GMT
-In-Reply-To: <bug-15001-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100205133500.GC6874@faui49.informatik.uni-erlangen.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Cc: oliver@neukum.name, aliakc@web.de, lenehan@twibble.org, u.kleine-koenig@pengutronix.de, jkosina@suse.cz, dc395x@twibble.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, vamos@i4.informatik.uni-erlangen.de
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15001
+On Fri, 2010-02-05 at 14:35 +0100, Christoph Egger wrote:
+> 	As part of the VAMOS[0] research project at the University of
+> Erlangen we're checking referential integrity between kernel KConfig
+> options and in-code Conditional blocks.
+> 
+> 	This is another example of a block of code, here since ever
+> and never compiled in modern history. Couldn't find out much more
+> about it but as it can't be set for ages it might be wise to just
+> remove it right now?
 
+To be honest, not really unless the person maintaining the driver
+agrees.  The reason for not doing this to obsolete drivers is that
+although in theory git will remember it, trying to find a lost block of
+code in git is time consuming and you often have to know where to look
+for it.  Secondly, the code might be relevant to someone actually
+needing to fix or use the driver.  Sometimes the code in non compiled
+blocks can give valuable insights into how the driver actually worked.
 
+Often, for dead code we don't quite know what to do with, we surround it
+with #if 0/#endif blocks to make it quite clear it's not compiled, but
+for nonexistent config options, that's not really necessary.
 
+> 	Please keep me informed of this patch getting confirmed /
+> merged so we can keep track of it.
+> 
+> Regards
+> 
+> 	Christoph Egger
+> 
+> [0] http://vamos1.informatik.uni-erlangen.de/
+> 
+> ----
+> From 5cb8acd3f6939c617d6f28bd3eabb276c443c34e Mon Sep 17 00:00:00 2001
+> From: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+> Date: Fri, 5 Feb 2010 13:39:33 +0100
+> Subject: [PATCH] Remove config SCSI_DC395x_TRMS1040_TRADMAP
+> 
+> There's exactly one in source-check for SCSI_DC395x_TRMS1040_TRADMAP
+> imported with the first git revision and no corresponding KConfig Item
+> ever. Removing this single left-over block from the kernel config.
+> 
+> Signed-off-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+> ---
+>  drivers/scsi/dc395x.c |   22 ----------------------
+>  1 files changed, 0 insertions(+), 22 deletions(-)
+> 
+> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+> index 6c59c02..7b3d0d3 100644
+> --- a/drivers/scsi/dc395x.c
+> +++ b/drivers/scsi/dc395x.c
+> @@ -1160,29 +1160,7 @@ complete:
+>  static int dc395x_bios_param(struct scsi_device *sdev,
+>  		struct block_device *bdev, sector_t capacity, int *info)
+>  {
+> -#ifdef CONFIG_SCSI_DC395x_TRMS1040_TRADMAP
+> -	int heads, sectors, cylinders;
+> -	struct AdapterCtlBlk *acb;
+> -	int size = capacity;
+> -
+> -	dprintkdbg(DBG_0, "dc395x_bios_param..............\n");
+> -	acb = (struct AdapterCtlBlk *)sdev->host->hostdata;
+> -	heads = 64;
+> -	sectors = 32;
+> -	cylinders = size / (heads * sectors);
+> -
+> -	if ((acb->gmode2 & NAC_GREATER_1G) && (cylinders > 1024)) {
+> -		heads = 255;
+> -		sectors = 63;
+> -		cylinders = size / (heads * sectors);
+> -	}
+> -	geom[0] = heads;
+> -	geom[1] = sectors;
+> -	geom[2] = cylinders;
+> -	return 0;
 
+So this looks like a standard bios remapping for something ... I'd guess
+a traditional mapping flag for the TekRam 1040.  Someone would likely
+have to dig into history to find out what it was originally for and why
+it's still here.
 
---- Comment #11 from Tomas Henzl <thenzl@redhat.com>  2010-02-05 14:51:36 ---
-(In reply to comment #10) 
-> I guess it is ok , 
-> OMSA is 6.0.1-8 . For example 
-> omreport storage vdisk 
-> omreport storage pdisk controller=0 
-> works as expected .
-OK, thanks for testing.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+James
