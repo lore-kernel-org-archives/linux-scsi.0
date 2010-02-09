@@ -1,47 +1,41 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15185] Sending a 48bit ATA-Command with "CheckCondition"
- through SG_IO does not return correct 48bit sense descriptor
-Date: Tue, 9 Feb 2010 16:13:29 GMT
-Message-ID: <201002091613.o19GDTSn011406@demeter.kernel.org>
-References: <bug-15185-11613@http.bugzilla.kernel.org/>
+From: Cosimo Streppone <cosimo@cpan.org>
+Subject: [PATCH] scsi: zorro7xx: braces code style fix
+Date: Tue, 09 Feb 2010 22:41:43 +0100
+Message-ID: <1265751703-25745-1-git-send-email-cosimo@cpan.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:56437 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754206Ab0BIQNa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2010 11:13:30 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o19GDT5j011414
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Feb 2010 16:13:30 GMT
-In-Reply-To: <bug-15185-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E . J . Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@suse.de>, Cosimo Streppone <cosimo@cpan.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15185
+This is just a tiny coding style fix for the scsi/zorro7xx.c file.
+FOSDEM GregKH talk helped this patch come to life.
 
+Signed-off-by: Cosimo Streppone <cosimo@cpan.org>
+---
+ drivers/scsi/zorro7xx.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-          Component|Other                       |Serial ATA
-         Resolution|                            |CODE_FIX
-         AssignedTo|scsi_drivers-other@kernel-b |jgarzik@pobox.com
-                   |ugs.osdl.org                |
-            Product|SCSI Drivers                |IO/Storage
-
-
-
-
---- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk>  2010-02-09 16:13:13 ---
-commit bc496ed00ab1411d3efaf295b72e0c9eb343e1a3
-
+diff --git a/drivers/scsi/zorro7xx.c b/drivers/scsi/zorro7xx.c
+index 64d40a2..a666f20 100644
+--- a/drivers/scsi/zorro7xx.c
++++ b/drivers/scsi/zorro7xx.c
+@@ -80,11 +80,10 @@ static int __devinit zorro7xx_init_one(struct zorro_dev *z,
+ 	board = zorro_resource_start(z);
+ 	zdd = (struct zorro_driver_data *)ent->driver_data;
+ 
+-	if (zdd->absolute) {
++	if (zdd->absolute)
+ 		ioaddr = zdd->offset;
+-	} else {
++	else
+ 		ioaddr = board + zdd->offset;
+-	}
+ 
+ 	if (!zorro_request_device(z, zdd->name)) {
+ 		printk(KERN_ERR "zorro7xx: cannot reserve region 0x%lx, abort\n",
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.6.0.4
