@@ -1,41 +1,37 @@
-From: Cosimo Streppone <cosimo@cpan.org>
-Subject: [PATCH] scsi: zorro7xx: braces code style fix
-Date: Tue, 09 Feb 2010 22:41:43 +0100
-Message-ID: <1265751703-25745-1-git-send-email-cosimo@cpan.org>
+From: Orion Poplawski <orion@cora.nwra.com>
+Subject: MVSAS status
+Date: Tue, 9 Feb 2010 23:32:11 +0000 (UTC)
+Message-ID: <loom.20100210T002935-813@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E . J . Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@suse.de>, Cosimo Streppone <cosimo@cpan.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from lo.gmane.org ([80.91.229.12]:52645 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751644Ab0BIXcg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Feb 2010 18:32:36 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1NezZK-0001nN-0i
+	for linux-scsi@vger.kernel.org; Wed, 10 Feb 2010 00:32:34 +0100
+Received: from inferno.cora.nwra.com ([65.44.101.162])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Feb 2010 00:32:34 +0100
+Received: from orion by inferno.cora.nwra.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Feb 2010 00:32:34 +0100
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is just a tiny coding style fix for the scsi/zorro7xx.c file.
-FOSDEM GregKH talk helped this patch come to life.
+What's the status of the MVSAS patches posted in November '09?  I'm just trying
+to get started with mvsas and running into the mvs_abort_task issue.  At least
+one person has reported that stability improved, but it looks like there were
+some other issues with the patches.  Any chance on seeing this in the mainline
+kernel soon?  Are there updated versions?  A git tree to pull from?
 
-Signed-off-by: Cosimo Streppone <cosimo@cpan.org>
----
- drivers/scsi/zorro7xx.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+Thanks!
 
-diff --git a/drivers/scsi/zorro7xx.c b/drivers/scsi/zorro7xx.c
-index 64d40a2..a666f20 100644
---- a/drivers/scsi/zorro7xx.c
-+++ b/drivers/scsi/zorro7xx.c
-@@ -80,11 +80,10 @@ static int __devinit zorro7xx_init_one(struct zorro_dev *z,
- 	board = zorro_resource_start(z);
- 	zdd = (struct zorro_driver_data *)ent->driver_data;
- 
--	if (zdd->absolute) {
-+	if (zdd->absolute)
- 		ioaddr = zdd->offset;
--	} else {
-+	else
- 		ioaddr = board + zdd->offset;
--	}
- 
- 	if (!zorro_request_device(z, zdd->name)) {
- 		printk(KERN_ERR "zorro7xx: cannot reserve region 0x%lx, abort\n",
--- 
-1.6.0.4
+- Orion Poplawski
+
