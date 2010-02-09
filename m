@@ -1,56 +1,47 @@
-From: scameron@beardog.cce.hp.com
-Subject: [PATCH] hpsa: fix hpsa_pci_init section mismatch
-Date: Tue, 9 Feb 2010 08:46:13 -0600
-Message-ID: <20100209144613.GI14493@beardog.cce.hp.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15185] Sending a 48bit ATA-Command with "CheckCondition"
+ through SG_IO does not return correct 48bit sense descriptor
+Date: Tue, 9 Feb 2010 16:13:29 GMT
+Message-ID: <201002091613.o19GDTSn011406@demeter.kernel.org>
+References: <bug-15185-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:36582 "EHLO
-	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754406Ab0BIOnq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2010 09:43:46 -0500
-Received: from g5t0029.atlanta.hp.com (g5t0029.atlanta.hp.com [16.228.8.141])
-	by g5t0006.atlanta.hp.com (Postfix) with ESMTP id 5F049C31C
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Feb 2010 14:43:45 +0000 (UTC)
-Received: from beardog.cce.hp.com (beardog.cce.hp.com [16.84.84.24])
-	by g5t0029.atlanta.hp.com (Postfix) with ESMTP id 39E1B200C4
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Feb 2010 14:43:30 +0000 (UTC)
-Received: from beardog.cce.hp.com (beardog.cce.hp.com [127.0.0.1])
-	by beardog.cce.hp.com (8.13.8/8.13.8) with ESMTP id o19EkDcm019393
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Feb 2010 08:46:13 -0600
-Received: (from scameron@localhost)
-	by beardog.cce.hp.com (8.13.8/8.13.8/Submit) id o19EkDH5019392
-	for linux-scsi@vger.kernel.org; Tue, 9 Feb 2010 08:46:13 -0600
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:56437 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754206Ab0BIQNa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Feb 2010 11:13:30 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o19GDT5j011414
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Feb 2010 16:13:30 GMT
+In-Reply-To: <bug-15185-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-From: Jeff Mahoney <jeffm@suse.com>
+http://bugzilla.kernel.org/show_bug.cgi?id=15185
 
-hpsa_pci_init() calls hpsa_interrupt_mode() which is a __devinit function.
- hpsa_pci_init() is only called by hpsa_init_one() which is also
-__devinit, so mark it __devinit as well.
 
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
-Acked-by: "Stephen M.Cameron" <scameron@beardog.cce.hp.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
- drivers/scsi/hpsa.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+          Component|Other                       |Serial ATA
+         Resolution|                            |CODE_FIX
+         AssignedTo|scsi_drivers-other@kernel-b |jgarzik@pobox.com
+                   |ugs.osdl.org                |
+            Product|SCSI Drivers                |IO/Storage
 
-diff -puN drivers/scsi/hpsa.c~drivers-scsi-hpsac-fix-section-mismatch drivers/scsi/hpsa.c
---- a/drivers/scsi/hpsa.c~drivers-scsi-hpsac-fix-section-mismatch
-+++ a/drivers/scsi/hpsa.c
-@@ -3111,7 +3111,7 @@ default_int_mode:
- 	return;
- }
- 
--static int hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
-+static int __devinit hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
- {
- 	ushort subsystem_vendor_id, subsystem_device_id, command;
- 	__u32 board_id, scratchpad = 0;
-_
+
+
+
+--- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk>  2010-02-09 16:13:13 ---
+commit bc496ed00ab1411d3efaf295b72e0c9eb343e1a3
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
