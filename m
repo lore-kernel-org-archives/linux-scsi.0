@@ -1,87 +1,89 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 6/6] qla4xxx: fix compile warning due to invalid extHwConfig
-Date: Wed, 10 Feb 2010 16:51:48 -0600
-Message-ID: <1265842308-2051-7-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/6] cxgb3i, bnx2i: remove uses of nipquad use %pi4
+Date: Wed, 10 Feb 2010 16:51:43 -0600
+Message-ID: <1265842308-2051-2-git-send-email-michaelc@cs.wisc.edu>
 References: <1265842308-2051-1-git-send-email-michaelc@cs.wisc.edu>
- <1265842308-2051-2-git-send-email-michaelc@cs.wisc.edu>
- <1265842308-2051-3-git-send-email-michaelc@cs.wisc.edu>
- <1265842308-2051-4-git-send-email-michaelc@cs.wisc.edu>
- <1265842308-2051-5-git-send-email-michaelc@cs.wisc.edu>
- <1265842308-2051-6-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37501 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59871 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755900Ab0BJWuQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Feb 2010 17:50:16 -0500
-In-Reply-To: <1265842308-2051-6-git-send-email-michaelc@cs.wisc.edu>
+	id S1755770Ab0BJWuj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Feb 2010 17:50:39 -0500
+In-Reply-To: <1265842308-2051-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Joe Perches <joe@perches.com>, Andrew Morton <akpm@linux-foundation.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Joe Perches <joe@perches.com>
 
-If the nvram is invalid qla4xxx tries to set Asuint32_t
-based on the card type. If the card type is not listed
-then Asuint32_t is going to be gargabe. This just fixes
-that if/elseif by adding a else to catch the case for
-new hardware that might not be listed yet.
+Remove uses of NIPQUAD, use %pI4
 
+Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/qla4xxx/ql4_init.c |   14 ++++++--------
- 1 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c     |    4 ++--
+ drivers/scsi/cxgb3i/cxgb3i_iscsi.c   |    5 ++---
+ drivers/scsi/cxgb3i/cxgb3i_offload.c |    7 ++++---
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index af8c323..92329a4 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -844,10 +844,10 @@ static int qla4xxx_config_nvram(struct scsi_qla_host *ha)
- 	DEBUG2(printk("scsi%ld: %s: Get EEProm parameters \n", ha->host_no,
- 		      __func__));
- 	if (ql4xxx_lock_flash(ha) != QLA_SUCCESS)
--		return (QLA_ERROR);
-+		return QLA_ERROR;
- 	if (ql4xxx_lock_nvram(ha) != QLA_SUCCESS) {
- 		ql4xxx_unlock_flash(ha);
--		return (QLA_ERROR);
-+		return QLA_ERROR;
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 33b2294..51709cb 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1426,8 +1426,8 @@ static int bnx2i_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 		break;
+ 	case ISCSI_PARAM_CONN_ADDRESS:
+ 		if (bnx2i_conn->ep)
+-			len = sprintf(buf, NIPQUAD_FMT "\n",
+-				      NIPQUAD(bnx2i_conn->ep->cm_sk->dst_ip));
++			len = sprintf(buf, "%pI4\n",
++				      &bnx2i_conn->ep->cm_sk->dst_ip);
+ 		break;
+ 	default:
+ 		return iscsi_conn_get_param(cls_conn, param, buf);
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+index 969c831..1fd89b2 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
+@@ -591,8 +591,7 @@ static int cxgb3i_conn_bind(struct iscsi_cls_session *cls_session,
+ 	cxgb3i_conn_max_recv_dlength(conn);
+ 
+ 	spin_lock_bh(&conn->session->lock);
+-	sprintf(conn->portal_address, NIPQUAD_FMT,
+-		NIPQUAD(c3cn->daddr.sin_addr.s_addr));
++	sprintf(conn->portal_address, "%pI4", &c3cn->daddr.sin_addr.s_addr);
+ 	conn->portal_port = ntohs(c3cn->daddr.sin_port);
+ 	spin_unlock_bh(&conn->session->lock);
+ 
+@@ -753,7 +752,7 @@ static int cxgb3i_host_get_param(struct Scsi_Host *shost,
+ 		__be32 addr;
+ 
+ 		addr = cxgb3i_get_private_ipv4addr(hba->ndev);
+-		len = sprintf(buf, NIPQUAD_FMT, NIPQUAD(addr));
++		len = sprintf(buf, "%pI4", &addr);
+ 		break;
  	}
+ 	default:
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+index 15a00e8..3e08c43 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+@@ -1675,10 +1675,11 @@ int cxgb3i_c3cn_connect(struct net_device *dev, struct s3_conn *c3cn,
+ 	} else
+ 		c3cn->saddr.sin_addr.s_addr = sipv4;
  
- 	/* Get EEPRom Parameters from NVRAM and validate */
-@@ -858,20 +858,18 @@ static int qla4xxx_config_nvram(struct scsi_qla_host *ha)
- 			rd_nvram_word(ha, eeprom_ext_hw_conf_offset(ha));
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	} else {
--		/*
--		 * QLogic adapters should always have a valid NVRAM.
--		 * If not valid, do not load.
--		 */
- 		dev_warn(&ha->pdev->dev,
- 			   "scsi%ld: %s: EEProm checksum invalid.  "
- 			   "Please update your EEPROM\n", ha->host_no,
- 			   __func__);
+-	c3cn_conn_debug("c3cn 0x%p, %u.%u.%u.%u,%u-%u.%u.%u.%u,%u SYN_SENT.\n",
+-			c3cn, NIPQUAD(c3cn->saddr.sin_addr.s_addr),
++	c3cn_conn_debug("c3cn 0x%p, %pI4,%u-%pI4,%u SYN_SENT.\n",
++			c3cn,
++			&c3cn->saddr.sin_addr.s_addr,
+ 			ntohs(c3cn->saddr.sin_port),
+-			NIPQUAD(c3cn->daddr.sin_addr.s_addr),
++			&c3cn->daddr.sin_addr.s_addr,
+ 			ntohs(c3cn->daddr.sin_port));
  
--		/* set defaults */
-+		/* Attempt to set defaults */
- 		if (is_qla4010(ha))
- 			extHwConfig.Asuint32_t = 0x1912;
- 		else if (is_qla4022(ha) | is_qla4032(ha))
- 			extHwConfig.Asuint32_t = 0x0023;
-+		else
-+			return QLA_ERROR;
- 	}
- 	DEBUG(printk("scsi%ld: %s: Setting extHwConfig to 0xFFFF%04x\n",
- 		     ha->host_no, __func__, extHwConfig.Asuint32_t));
-@@ -884,7 +882,7 @@ static int qla4xxx_config_nvram(struct scsi_qla_host *ha)
- 	ql4xxx_unlock_nvram(ha);
- 	ql4xxx_unlock_flash(ha);
- 
--	return (QLA_SUCCESS);
-+	return QLA_SUCCESS;
- }
- 
- static void qla4x00_pci_config(struct scsi_qla_host *ha)
+ 	c3cn_set_state(c3cn, C3CN_STATE_CONNECTING);
 -- 
 1.6.6
 
