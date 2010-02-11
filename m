@@ -1,44 +1,38 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: MVSAS status
-Date: Thu, 11 Feb 2010 11:21:43 +0000
-Message-ID: <73e903671002110321xed4f721kfb705de8235f7874@mail.gmail.com>
-References: <loom.20100210T002935-813@post.gmane.org> <73e903671002110150h3c4ae0dcq17625f6d9b545bf4@mail.gmail.com>
-	<alpine.DEB.1.10.1002111214230.31777@uplift.swm.pp.se>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15001] megaraid_sas fills dmesg with megasas: Failed to copy
+ out to user sense data
+Date: Thu, 11 Feb 2010 13:31:02 GMT
+Message-ID: <201002111331.o1BDV2Qg022221@demeter.kernel.org>
+References: <bug-15001-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:40895 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110Ab0BKLWH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2010 06:22:07 -0500
-Received: by fxm7 with SMTP id 7so1019315fxm.28
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2010 03:22:03 -0800 (PST)
-In-Reply-To: <alpine.DEB.1.10.1002111214230.31777@uplift.swm.pp.se>
+Received: from demeter.kernel.org ([140.211.167.39]:55075 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672Ab0BKNbF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Feb 2010 08:31:05 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1BDV3OZ022235
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Feb 2010 13:31:03 GMT
+In-Reply-To: <bug-15001-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Feb 11, 2010 at 11:20 AM, Mikael Abrahamsson <swmike@swm.pp.se>=
- wrote:
-> On Thu, 11 Feb 2010, Kristleifur Da=C4=91ason wrote:
->
->> I will PERSONALLY buy two of these cards to send to any reasonably
->> experienced Linux driver programmer willing to help finish these
->
-> If someone gets involved in fixing mvsas for (preferrably) 2.6.32 and=
- makes
-> it reliably work with hotswap and SMART, I'll personally donate $100 =
-to
-> charity or Linux related organisation of that programmers choice (mus=
-t
-> accept paypal payments).
->
+http://bugzilla.kernel.org/show_bug.cgi?id=15001
 
-+1
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+
+--- Comment #12 from mi_whitebrook_13@gmx.at  2010-02-11 13:30:16 ---
+Applied the patch on all our systems which were exhibiting this bug. The error
+message in dmesg is gone now. Dell OMSA still works as expected, including
+omreport and the Dell OpenManage Web Application.
+Thanks for the fast fix!
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
