@@ -1,133 +1,120 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] megaraid_sas: fix for 32bit apps
-Date: Thu, 11 Feb 2010 18:01:50 +0100
-Message-ID: <4B7437FE.4030009@redhat.com>
-References: <4B6C4F81.6090806@redhat.com> <1265830601.2769.346.camel@mulgrave.site>
+From: Bernd Schubert <bs_lists@aakef.fastmail.fm>
+Subject: Re: [PATCH 1/1] fusion: hold off error recovery while alternate ioc is initializing
+Date: Thu, 11 Feb 2010 18:53:12 +0100
+Message-ID: <201002111853.12306.bs_lists@aakef.fastmail.fm>
+References: <4B7317C0.8080209@sgi.com> <1C9608B8A4CD534FB19C7C7543CBB24901291B5D32@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44549 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753336Ab0BKRCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Feb 2010 12:02:12 -0500
-In-Reply-To: <1265830601.2769.346.camel@mulgrave.site>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:51668 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755894Ab0BKRxO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Feb 2010 12:53:14 -0500
+In-Reply-To: <1C9608B8A4CD534FB19C7C7543CBB24901291B5D32@inbmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, "Yang, Bo" <Bo.Yang@lsi.com>, hch@infradead.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: Michael Reed <mdr@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, Jeremy Higdon <jeremy@sgi.com>, Robin Holt <holt@sgi.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>
 
-On 02/10/2010 08:36 PM, James Bottomley wrote:
-> On Fri, 2010-02-05 at 18:04 +0100, Tomas Henzl wrote:
->   
->> It looks like this patch -
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=7b2519afa1abd1b9f63aa1e90879307842422dae
->> has caused a problem for 32bit programs with 64bit os - 
->> http://bugzilla.kernel.org/show_bug.cgi?id=15001
->>
->> megaraid: convert user space 32bit pointer 
->> to a 64 bit one when needed.
->>
->> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
->>
->> diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
->> index 708ea31..7617b8e 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas.c
->> @@ -3781,6 +3781,8 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
->>  	    compat_alloc_user_space(sizeof(struct megasas_iocpacket));
->>  	int i;
->>  	int error = 0;
->> +	compat_uptr_t ptr;
->> +	u8 *sense_ptr;
->>  
->>  	if (clear_user(ioc, sizeof(*ioc)))
->>  		return -EFAULT;
->> @@ -3793,9 +3795,19 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
->>  	    copy_in_user(&ioc->sge_count, &cioc->sge_count, sizeof(u32)))
->>  		return -EFAULT;
->>  
->> -	for (i = 0; i < MAX_IOCTL_SGE; i++) {
->> -		compat_uptr_t ptr;
->> +	/*
->> +	 * The sense_ptr is used in megasas_mgmt_fw_ioctl only when
->> +	 * sense_len is not null, so prepare the 64bit value under
->> +	 * the same condition.
->> +	 */
->> +	if (ioc->sense_len) {
->> +		sense_ptr = ioc->frame.raw + ioc->sense_off;
->> +		if (get_user(ptr, (compat_uptr_t *)sense_ptr) ||
->> +		    put_user(ptr, (unsigned long *)sense_ptr))
->>     
-> This should be put_user(compat_ptr(ptr) ...) to make sure we get proper
-> warn free promotion.
->   
-ok
+Shouldn't we create a similar patch for scsi and sas as well? This issue might 
+explain why any hard-reset (for scsi systems of my former employer) always 
+caused a complete failure of both ports.
 
-> For symmetry, shouldn't we be reading from cioc?  I know technically the
-> copy_in_user(ioc->frame.raw, cioc->frame.raw, 128) above did this, but
-> it might look confusing to someone coming to the code for the first
-> time.
->   
-You are right, I just wanted to save some lines, but it could be confusing.
 
-> To be honest, I also don't think ioc->frame.raw + ioc->sense_off is
-> legal: it's dereferencing a userspace pointer (ioc->sense_off), which
-> will fault on non-x86 boxes, but this isn't a criticism of the patch so
-> much as the whole driver.
->
-> Bo, this looks like a security fix, because userspace can cause
-> arbitrary data scribble currently by stuffing carefully crafted values
-> into the four bytes after the 32 bit sense pointer, so I'd like to apply
-> it asap.
->
+Thanks,
+Bernd
+
+On Thursday 11 February 2010, Desai, Kashyap wrote:
+> Please consider this patch as an ACKed.
+> 
 > Thanks,
->
-> James
->   
-
-New version, compile tested.
-
-megaraid: convert user space 32bit pointer 
-to a 64 bit one when needed.
-
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
-index 708ea31..cb70224 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -3781,6 +3781,8 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
- 	    compat_alloc_user_space(sizeof(struct megasas_iocpacket));
- 	int i;
- 	int error = 0;
-+	compat_uptr_t ptr;
-+	u8 *sense_cioc_ptr, *sense_ioc_ptr;
- 
- 	if (clear_user(ioc, sizeof(*ioc)))
- 		return -EFAULT;
-@@ -3793,9 +3795,20 @@ static int megasas_mgmt_compat_ioctl_fw(struct file *file, unsigned long arg)
- 	    copy_in_user(&ioc->sge_count, &cioc->sge_count, sizeof(u32)))
- 		return -EFAULT;
- 
--	for (i = 0; i < MAX_IOCTL_SGE; i++) {
--		compat_uptr_t ptr;
-+	/*
-+	 * The sense_ptr is used in megasas_mgmt_fw_ioctl only when
-+	 * sense_len is not null, so prepare the 64bit value under
-+	 * the same condition.
-+	 */
-+	if (ioc->sense_len) {
-+		sense_ioc_ptr = ioc->frame.raw + ioc->sense_off;
-+		sense_cioc_ptr = cioc->frame.raw + cioc->sense_off;
-+		if (get_user(ptr, (compat_uptr_t *)sense_cioc_ptr) ||
-+		    put_user(compat_ptr(ptr), (unsigned long *)sense_ioc_ptr))
-+			return -EFAULT;
-+	}
- 
-+	for (i = 0; i < MAX_IOCTL_SGE; i++) {
- 		if (get_user(ptr, &cioc->sgl[i].iov_base) ||
- 		    put_user(compat_ptr(ptr), &ioc->sgl[i].iov_base) ||
- 		    copy_in_user(&ioc->sgl[i].iov_len,
-
+> Kashyap
+> 
+> > -----Original Message-----
+> > From: Michael Reed [mailto:mdr@sgi.com]
+> > Sent: Thursday, February 11, 2010 2:02 AM
+> > To: linux-scsi; Desai, Kashyap; Prakash, Sathya
+> > Cc: Moore, Eric; Jeremy Higdon; Robin Holt
+> > Subject: [PATCH 1/1] fusion: hold off error recovery while alternate
+> > ioc is initializing
+> >
+> > After discussing this patch with LSI, I resubmitting with a recommended
+> > 40 second wait for the alternate ioc's initialization to complete.
+> > --
+> > Fusion FC chips are two function with some shared resources.  During
+> > initialization of one function its driver inhibits the ability of the
+> > other function's driver to allocate message frames by clearing its
+> > "active" flag.  Should mid-layer error recovery be initiated for a
+> > scsi command during this initialization (which can take up to 40
+> > seconds)
+> > error recovery will escalate to the level of host reset.  This host
+> > reset might fail (as the other function is resetting) resulting in
+> > all connected targets being taken offline.
+> >
+> > This patch holds off mid-layer error recovery for up to 40 seconds
+> > to permit initialization of the other function to complete.
+> >
+> > Applies to scsi-misc.
+> >
+> > Signed-off-by: Michael Reed <mdr@sgi.com>
+> >
+> > ==
+> >
+> > --- scsi-misc-2.6/drivers/message/fusion/mptfc.c	2010-02-08
+> > 11:19:47.000000000 -0600
+> > +++ scsi-misc-2.6-2010_02_08-modified/drivers/message/fusion/mptfc.c
+> > 	2010-02-10 12:40:23.184510802 -0600
+> > @@ -195,29 +195,34 @@ mptfc_block_error_handler(struct scsi_cm
+> >  	unsigned long		flags;
+> >  	int			ready;
+> >  	MPT_ADAPTER 		*ioc;
+> > +	int			loops = 40;	/* seconds */
+> >
+> >  	hd = shost_priv(SCpnt->device->host);
+> >  	ioc = hd->ioc;
+> >  	spin_lock_irqsave(shost->host_lock, flags);
+> > -	while ((ready = fc_remote_port_chkready(rport) >> 16) ==
+> > DID_IMM_RETRY) {
+> > +	while ((ready = fc_remote_port_chkready(rport) >> 16) ==
+> > DID_IMM_RETRY
+> > +	 || (loops > 0 && ioc->active == 0)) {
+> >  		spin_unlock_irqrestore(shost->host_lock, flags);
+> >  		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+> >  			"mptfc_block_error_handler.%d: %d:%d, port status is
+> > "
+> > -			"DID_IMM_RETRY, deferring %s recovery.\n",
+> > +			"%x, active flag %d, deferring %s recovery.\n",
+> >  			ioc->name, ioc->sh->host_no,
+> > -			SCpnt->device->id, SCpnt->device->lun, caller));
+> > +			SCpnt->device->id, SCpnt->device->lun,
+> > +			ready, ioc->active, caller));
+> >  		msleep(1000);
+> >  		spin_lock_irqsave(shost->host_lock, flags);
+> > +		loops --;
+> >  	}
+> >  	spin_unlock_irqrestore(shost->host_lock, flags);
+> >
+> > -	if (ready == DID_NO_CONNECT || !SCpnt->device->hostdata) {
+> > +	if (ready == DID_NO_CONNECT || !SCpnt->device->hostdata
+> > +	 || ioc->active == 0) {
+> >  		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+> >  			"%s.%d: %d:%d, failing recovery, "
+> > -			"port state %d, vdevice %p.\n", caller,
+> > +			"port state %x, active %d, vdevice %p.\n", caller,
+> >  			ioc->name, ioc->sh->host_no,
+> >  			SCpnt->device->id, SCpnt->device->lun, ready,
+> > -			SCpnt->device->hostdata));
+> > +			ioc->active, SCpnt->device->hostdata));
+> >  		return FAILED;
+> >  	}
+> >  	dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
