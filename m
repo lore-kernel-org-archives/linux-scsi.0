@@ -1,18 +1,33 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 15283] New: PROBLEM: kernel 2.6.32-7 will not boot --
- could not find /dev/root Dell Vostro 1000
-Date: Fri, 12 Feb 2010 08:13:22 -0500
-Message-ID: <1265980402.4621.1.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15283] PROBLEM: kernel 2.6.32-7 will not boot -- could not find
+ /dev/root Dell Vostro 1000
+Date: Fri, 12 Feb 2010 13:48:40 GMT
+Message-ID: <201002121348.o1CDmeoI008488@demeter.kernel.org>
 References: <bug-15283-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:49885 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752727Ab0BLNsl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Feb 2010 08:48:41 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1CDme54008489
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Feb 2010 13:48:40 GMT
 In-Reply-To: <bug-15283-11613@http.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-ide <linux-ide@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=15283
+
+
+
+
+
+--- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-02-12 13:48:02 ---
+Reply-To: James.Bottomley@suse.de
 
 On Fri, 2010-02-12 at 12:58 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -39,6 +54,7 @@ Adding cc to linux-ide because this looks to be a SATA controller error
 > 
 > 
 > Created an attachment (id=25002)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=25002)
 >  --> (http://bugzilla.kernel.org/attachment.cgi?id=25002)
 > .config file from kernel build
 > 
@@ -705,6 +721,9 @@ James
 >        (please look in /proc and include all information that you
 >        think to be relevant):
 > [X.] Other notes, patches, fixes, workarounds:Hello
-> 
+>
 
-
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
