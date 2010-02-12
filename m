@@ -1,70 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 5/5] SCSI: fix target allocation outside of scan_mutex
-Date: Fri, 12 Feb 2010 12:14:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1002121212020.1307-100000@iolanthe.rowland.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 06/11] qla4xxx: added srb referance counter
+Date: Fri, 12 Feb 2010 11:29:16 -0600
+Message-ID: <4B758FEC.9090407@cs.wisc.edu>
+References: <20100130062856.GG10274@linux-qf4p> <4B671BFC.90107@cs.wisc.edu> <20100211110852.GB8237@linux-qf4p>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:35481 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757308Ab0BLROT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Feb 2010 12:14:19 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:53022 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752711Ab0BLR3e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Feb 2010 12:29:34 -0500
+In-Reply-To: <20100211110852.GB8237@linux-qf4p>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-This patch (as1337) fixes a bug in __scsi_add_device().  It calls
-scsi_alloc_target() outside the protection of the host's scan_mutex,
-meaning that it might find an incompletely-initialized target or it
-might create a duplicate target.
+On 02/11/2010 05:08 AM, Ravi Anand wrote:
+> On Mon, 01 Feb 2010, Mike Christie wrote:
+>>
+>> On 01/30/2010 12:28 AM, Ravi Anand wrote:
+>>>
+>>> -		msleep(2000);
+>>> -	} while (max_wait_time--);
+>>> +		if (got_ref&&   (atomic_read(&rp->ref_count) == 1)) {
+>>> +			done++;
+>>> +			break;
+>>> +		}
+>>> +
+>>> +		msleep(ABORT_POLLING_PERIOD);
+>>
+>>
+>> Did you want to use krefs for the refcounting?
+>
+> We will add it to our to do list and submit a patch later on.
+> For right now we will like to stick to it as kref will require
+> additional testing.
+>
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-Index: usb-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_scan.c
-+++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -1506,25 +1506,29 @@ struct scsi_device *__scsi_add_device(st
- {
- 	struct scsi_device *sdev = ERR_PTR(-ENODEV);
- 	struct device *parent = &shost->shost_gendev;
--	struct scsi_target *starget;
-+	struct scsi_target *starget = NULL;
- 
- 	if (strncmp(scsi_scan_type, "none", 4) == 0)
--		return ERR_PTR(-ENODEV);
--
--	starget = scsi_alloc_target(parent, channel, id);
--	if (!starget)
--		return ERR_PTR(-ENOMEM);
-+		return sdev;
- 
- 	mutex_lock(&shost->scan_mutex);
- 	if (!shost->async_scan)
- 		scsi_complete_async_scans();
- 
--	if (scsi_host_scan_allowed(shost))
--		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
-+	if (scsi_host_scan_allowed(shost)) {
-+		starget = scsi_alloc_target(parent, channel, id);
-+		if (starget)
-+			scsi_probe_and_add_lun(starget, lun, NULL, &sdev,
-+					1, hostdata);
-+		else
-+			sdev = ERR_PTR(-ENOMEM);
-+	}
- 	mutex_unlock(&shost->scan_mutex);
--	scsi_target_reap(starget);
--	put_device(&starget->dev);
- 
-+	if (starget) {
-+		scsi_target_reap(starget);
-+		put_device(&starget->dev);
-+	}
- 	return sdev;
- }
- EXPORT_SYMBOL(__scsi_add_device);
-
+Please use krefs from the start. Other drivers like beiscsi have had to 
+switch from its own refcount code to krefs, and have had to retest their 
+patchsets. You have to change your code in some other patches and maybe 
+this one too, so you have to retest everything either way.
