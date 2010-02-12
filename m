@@ -1,63 +1,56 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] scsi_transport_fc: handle transient error on multipath
- environment
-Date: Fri, 12 Feb 2010 12:03:32 -0600
-Message-ID: <4B7597F4.6070403@cs.wisc.edu>
-References: <4B750CB7.4030805@jp.fujitsu.com> <4B7593F4.2050102@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 06/11] qla4xxx: added srb referance counter
+Date: Fri, 12 Feb 2010 13:19:08 -0500
+Message-ID: <1265998748.4621.39.camel@mulgrave.site>
+References: <20100130062856.GG10274@linux-qf4p> <4B671BFC.90107@cs.wisc.edu>
+	 <20100211110852.GB8237@linux-qf4p>  <4B758FEC.9090407@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B7593F4.2050102@cs.wisc.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59383 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754056Ab0BLSTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Feb 2010 13:19:16 -0500
+In-Reply-To: <4B758FEC.9090407@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Ravi Anand <ravi.anand@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-On 02/12/2010 11:46 AM, Mike Christie wrote:
-> - Maybe you want to instead hook something into the dm-mutlipath's
-> request (no more bios like in 2004 :)). Can you set a timer on that
-> level of request. If that times out then, dm-multipath could do
-> something like call blk_abort_queue.
-
-Some more detail. I was thinking maybe you could stack the timeout
-handlers like is done for request_fn handlers or maybe the scsi cmd
-would use the upper layer's timer somehow. Not sure... but at the least
-I think we would not want both a scsi request and dm request timers
-running at the same time.
-
-Then for the error handling and timeout handling, most FC drivers have a
-terminate_rport_io which works without having to block the entire host.
-Those drivers could implement a newer eh where instead of firing the
-code in scsi_error.c when a cmd times out, it would run
-terminate_rport_io from some workqueue.
-
-new dm request timed out()
-	-> scsi_timed_out
-		-> fc_timed_out()
-			{
-				run new eh from workqueue();
-			}
-
-
-new_eh()
-	/* no new cmds should be started until we figure out what is going on */
-	block rport()
-	/* releases cmds upwards so they can run while we try to figure out
-what is going on */
-	terminate_rport_io()
-	/* check if devices are ok */
-	send_tur()
-	if (tur failed)
-		start old scsi_error.c code to unjam us.
-	else
-		/* everything looks ok so let IO run to this path again */
-		unblock rport()
-
-
+On Fri, 2010-02-12 at 11:29 -0600, Mike Christie wrote:
+> On 02/11/2010 05:08 AM, Ravi Anand wrote:
+> > On Mon, 01 Feb 2010, Mike Christie wrote:
+> >>
+> >> On 01/30/2010 12:28 AM, Ravi Anand wrote:
+> >>>
+> >>> -		msleep(2000);
+> >>> -	} while (max_wait_time--);
+> >>> +		if (got_ref&&   (atomic_read(&rp->ref_count) == 1)) {
+> >>> +			done++;
+> >>> +			break;
+> >>> +		}
+> >>> +
+> >>> +		msleep(ABORT_POLLING_PERIOD);
+> >>
+> >>
+> >> Did you want to use krefs for the refcounting?
+> >
+> > We will add it to our to do list and submit a patch later on.
+> > For right now we will like to stick to it as kref will require
+> > additional testing.
+> >
 > 
-> I think the problem with blk_abort_queue might be that it stops all IO
-> to the entire host where you probably just want to work on the remote
-> port/path. For that you could call something like
-> recover_transient_error. Maybe it could just be a call to
-> terminate_rport_io from a workqueue though.
+> Please use krefs from the start. Other drivers like beiscsi have had to 
+> switch from its own refcount code to krefs, and have had to retest their 
+> patchsets. You have to change your code in some other patches and maybe 
+> this one too, so you have to retest everything either way.
+
+That goes for me too, please ... it's a standard kernel paradigm and all
+the queries about what the refs were doing earlier would have been a lot
+simpler since the embedded krefs would largely have answered the
+questions.
+
+James
+
+
