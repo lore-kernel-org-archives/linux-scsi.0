@@ -1,838 +1,473 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/6] lpfc 8.3.9: SLI enhancments to support new hardware.
-Date: Fri, 12 Feb 2010 14:42:03 -0500
-Message-ID: <1266003743.2939.16.camel@wookie>
+Subject: [PATCH 4/6] lpfc 8.3.9: Changes to sysfs interface for the lpfc
+ driver.
+Date: Fri, 12 Feb 2010 14:42:33 -0500
+Message-ID: <1266003773.2939.17.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:49972 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:49984 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757181Ab0BLTmq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Feb 2010 14:42:46 -0500
+	with ESMTP id S1757181Ab0BLTnM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Feb 2010 14:43:12 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-- Add support for the INTF (Interface) PCI register.
-- Add support for greater than 2 page SGLs.
-- Add support for up to 32 bit BDE lengths.
-- Implement the Port Capabilities Mailbox command.
-- Stop checking the Minor Code in the EQE structure.
+- Convert all sysfs parameters to uint instead of int.
+- Add lpfc_supress_link_up parameter.
+- Change link_state to writable sysfs parameter.
+- Add support to be able to "up" or "down" link from link_state parameter.
 
 
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_crtn.h |    3 
- lpfc_hw4.h  |  242 ++++++++++++++++++++++++++++++++++++++++++++++++++----------
- lpfc_init.c |  189 ++++++++++++++++++++++++++++++++++++----------
- lpfc_mbox.c |   38 +++++++++
- lpfc_scsi.c |    9 --
- lpfc_sli.c  |   27 ++----
- lpfc_sli4.h |   45 ++++++++++-
- 7 files changed, 452 insertions(+), 101 deletions(-)
+ lpfc.h      |    5 ++
+ lpfc_attr.c |  110 ++++++++++++++++++++++++++++++++++++++++++------------------
+ lpfc_init.c |  100 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ lpfc_scsi.c |    1 
+ 4 files changed, 183 insertions(+), 33 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2010-02-12 10:52:43.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2010-02-12 10:53:08.000000000 -0500
-@@ -49,6 +49,9 @@ void lpfc_register_new_vport(struct lpfc
- void lpfc_unreg_vpi(struct lpfc_hba *, uint16_t, LPFC_MBOXQ_t *);
- void lpfc_init_link(struct lpfc_hba *, LPFC_MBOXQ_t *, uint32_t, uint32_t);
- void lpfc_request_features(struct lpfc_hba *, struct lpfcMboxq *);
-+void lpfc_supported_pages(struct lpfcMboxq *);
-+void lpfc_sli4_params(struct lpfcMboxq *);
-+int lpfc_pc_sli4_params_get(struct lpfc_hba *, LPFC_MBOXQ_t *);
- 
- struct lpfc_vport *lpfc_find_vport_by_did(struct lpfc_hba *, uint32_t);
- void lpfc_cleanup_rcv_buffers(struct lpfc_vport *);
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2010-02-12 10:52:43.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2010-02-12 10:53:08.000000000 -0500
-@@ -52,29 +52,35 @@ struct dma_address {
- 	uint32_t addr_hi;
- };
- 
--#define LPFC_SLIREV_CONF_WORD	0x58
- struct lpfc_sli_intf {
- 	uint32_t word0;
--#define lpfc_sli_intf_iftype_MASK 	0x00000007
--#define lpfc_sli_intf_iftype_SHIFT	0
--#define lpfc_sli_intf_iftype_WORD	word0
--#define lpfc_sli_intf_rev_MASK 		0x0000000f
--#define lpfc_sli_intf_rev_SHIFT		4
--#define lpfc_sli_intf_rev_WORD		word0
--#define LPFC_SLIREV_CONF_SLI4	4
--#define lpfc_sli_intf_family_MASK 	0x000000ff
--#define lpfc_sli_intf_family_SHIFT	8
--#define lpfc_sli_intf_family_WORD	word0
--#define lpfc_sli_intf_feat1_MASK 	0x000000ff
--#define lpfc_sli_intf_feat1_SHIFT	16
--#define lpfc_sli_intf_feat1_WORD	word0
--#define lpfc_sli_intf_feat2_MASK 	0x0000001f
--#define lpfc_sli_intf_feat2_SHIFT	24
--#define lpfc_sli_intf_feat2_WORD	word0
--#define lpfc_sli_intf_valid_MASK 	0x00000007
--#define lpfc_sli_intf_valid_SHIFT	29
--#define lpfc_sli_intf_valid_WORD	word0
-+#define lpfc_sli_intf_valid_SHIFT		29
-+#define lpfc_sli_intf_valid_MASK		0x00000007
-+#define lpfc_sli_intf_valid_WORD		word0
- #define LPFC_SLI_INTF_VALID		6
-+#define lpfc_sli_intf_featurelevel2_SHIFT	24
-+#define lpfc_sli_intf_featurelevel2_MASK	0x0000001F
-+#define lpfc_sli_intf_featurelevel2_WORD	word0
-+#define lpfc_sli_intf_featurelevel1_SHIFT	16
-+#define lpfc_sli_intf_featurelevel1_MASK	0x000000FF
-+#define lpfc_sli_intf_featurelevel1_WORD	word0
-+#define LPFC_SLI_INTF_FEATURELEVEL1_1	1
-+#define LPFC_SLI_INTF_FEATURELEVEL1_2	2
-+#define lpfc_sli_intf_sli_family_SHIFT		8
-+#define lpfc_sli_intf_sli_family_MASK		0x000000FF
-+#define lpfc_sli_intf_sli_family_WORD		word0
-+#define LPFC_SLI_INTF_FAMILY_BE2	0
-+#define LPFC_SLI_INTF_FAMILY_BE3	1
-+#define lpfc_sli_intf_slirev_SHIFT		4
-+#define lpfc_sli_intf_slirev_MASK		0x0000000F
-+#define lpfc_sli_intf_slirev_WORD		word0
-+#define LPFC_SLI_INTF_REV_SLI3		3
-+#define LPFC_SLI_INTF_REV_SLI4		4
-+#define lpfc_sli_intf_if_type_SHIFT		0
-+#define lpfc_sli_intf_if_type_MASK		0x00000007
-+#define lpfc_sli_intf_if_type_WORD		word0
-+#define LPFC_SLI_INTF_IF_TYPE_0		0
-+#define LPFC_SLI_INTF_IF_TYPE_1		1
- };
- 
- #define LPFC_SLI4_MBX_EMBED	true
-@@ -157,6 +163,9 @@ struct lpfc_sli_intf {
- #define LPFC_FP_DEF_IMAX       10000
- #define LPFC_SP_DEF_IMAX       10000
- 
-+/* PORT_CAPABILITIES constants. */
-+#define LPFC_MAX_SUPPORTED_PAGES	8
-+
- struct ulp_bde64 {
- 	union ULP_BDE_TUS {
- 		uint32_t w;
-@@ -512,7 +521,7 @@ struct lpfc_register {
- #define LPFC_UERR_STATUS_LO		0x00A0
- #define LPFC_UE_MASK_HI			0x00AC
- #define LPFC_UE_MASK_LO			0x00A8
--#define LPFC_SCRATCHPAD			0x0058
-+#define LPFC_SLI_INTF			0x0058
- 
- /* BAR0 Registers */
- #define LPFC_HST_STATE			0x00AC
-@@ -572,19 +581,6 @@ struct lpfc_register {
- #define LPFC_POST_STAGE_ARMFW_READY			0xC000
- #define LPFC_POST_STAGE_ARMFW_UE 			0xF000
- 
--#define lpfc_scratchpad_slirev_SHIFT			4
--#define lpfc_scratchpad_slirev_MASK			0xF
--#define lpfc_scratchpad_slirev_WORD			word0
--#define lpfc_scratchpad_chiptype_SHIFT			8
--#define lpfc_scratchpad_chiptype_MASK			0xFF
--#define lpfc_scratchpad_chiptype_WORD			word0
--#define lpfc_scratchpad_featurelevel1_SHIFT		16
--#define lpfc_scratchpad_featurelevel1_MASK		0xFF
--#define lpfc_scratchpad_featurelevel1_WORD		word0
--#define lpfc_scratchpad_featurelevel2_SHIFT		24
--#define lpfc_scratchpad_featurelevel2_MASK		0xFF
--#define lpfc_scratchpad_featurelevel2_WORD		word0
--
- /* BAR1 Registers */
- #define LPFC_IMR_MASK_ALL	0xFFFFFFFF
- #define LPFC_ISCR_CLEAR_ALL	0xFFFFFFFF
-@@ -1146,10 +1142,7 @@ struct sli4_sge {	/* SLI-4 */
- 						this  flag !! */
- #define lpfc_sli4_sge_last_MASK		0x00000001
- #define lpfc_sli4_sge_last_WORD		word2
--	uint32_t word3;
--#define lpfc_sli4_sge_len_SHIFT		0
--#define lpfc_sli4_sge_len_MASK		0x0001FFFF
--#define lpfc_sli4_sge_len_WORD		word3
-+	uint32_t sge_len;
- };
- 
- struct fcf_record {
-@@ -1844,6 +1837,177 @@ struct lpfc_mbx_request_features {
- #define lpfc_mbx_rq_ftr_rsp_ifip_WORD		word3
- };
- 
-+struct lpfc_mbx_supp_pages {
-+	uint32_t word1;
-+#define qs_SHIFT 				0
-+#define qs_MASK					0x00000001
-+#define qs_WORD					word1
-+#define wr_SHIFT				1
-+#define wr_MASK 				0x00000001
-+#define wr_WORD					word1
-+#define pf_SHIFT				8
-+#define pf_MASK					0x000000ff
-+#define pf_WORD					word1
-+#define cpn_SHIFT				16
-+#define cpn_MASK				0x000000ff
-+#define cpn_WORD				word1
-+	uint32_t word2;
-+#define list_offset_SHIFT 			0
-+#define list_offset_MASK			0x000000ff
-+#define list_offset_WORD			word2
-+#define next_offset_SHIFT			8
-+#define next_offset_MASK			0x000000ff
-+#define next_offset_WORD			word2
-+#define elem_cnt_SHIFT				16
-+#define elem_cnt_MASK				0x000000ff
-+#define elem_cnt_WORD				word2
-+	uint32_t word3;
-+#define pn_0_SHIFT				24
-+#define pn_0_MASK  				0x000000ff
-+#define pn_0_WORD				word3
-+#define pn_1_SHIFT				16
-+#define pn_1_MASK				0x000000ff
-+#define pn_1_WORD				word3
-+#define pn_2_SHIFT				8
-+#define pn_2_MASK				0x000000ff
-+#define pn_2_WORD				word3
-+#define pn_3_SHIFT				0
-+#define pn_3_MASK				0x000000ff
-+#define pn_3_WORD				word3
-+	uint32_t word4;
-+#define pn_4_SHIFT				24
-+#define pn_4_MASK				0x000000ff
-+#define pn_4_WORD				word4
-+#define pn_5_SHIFT				16
-+#define pn_5_MASK				0x000000ff
-+#define pn_5_WORD				word4
-+#define pn_6_SHIFT				8
-+#define pn_6_MASK				0x000000ff
-+#define pn_6_WORD				word4
-+#define pn_7_SHIFT				0
-+#define pn_7_MASK				0x000000ff
-+#define pn_7_WORD				word4
-+	uint32_t rsvd[27];
-+#define LPFC_SUPP_PAGES			0
-+#define LPFC_BLOCK_GUARD_PROFILES	1
-+#define LPFC_SLI4_PARAMETERS		2
-+};
-+
-+struct lpfc_mbx_sli4_params {
-+	uint32_t word1;
-+#define qs_SHIFT				0
-+#define qs_MASK					0x00000001
-+#define qs_WORD					word1
-+#define wr_SHIFT				1
-+#define wr_MASK					0x00000001
-+#define wr_WORD					word1
-+#define pf_SHIFT				8
-+#define pf_MASK					0x000000ff
-+#define pf_WORD					word1
-+#define cpn_SHIFT				16
-+#define cpn_MASK				0x000000ff
-+#define cpn_WORD				word1
-+	uint32_t word2;
-+#define if_type_SHIFT				0
-+#define if_type_MASK				0x00000007
-+#define if_type_WORD				word2
-+#define sli_rev_SHIFT				4
-+#define sli_rev_MASK				0x0000000f
-+#define sli_rev_WORD				word2
-+#define sli_family_SHIFT			8
-+#define sli_family_MASK				0x000000ff
-+#define sli_family_WORD				word2
-+#define featurelevel_1_SHIFT			16
-+#define featurelevel_1_MASK			0x000000ff
-+#define featurelevel_1_WORD			word2
-+#define featurelevel_2_SHIFT			24
-+#define featurelevel_2_MASK			0x0000001f
-+#define featurelevel_2_WORD			word2
-+	uint32_t word3;
-+#define fcoe_SHIFT 				0
-+#define fcoe_MASK				0x00000001
-+#define fcoe_WORD				word3
-+#define fc_SHIFT				1
-+#define fc_MASK					0x00000001
-+#define fc_WORD					word3
-+#define nic_SHIFT				2
-+#define nic_MASK				0x00000001
-+#define nic_WORD				word3
-+#define iscsi_SHIFT				3
-+#define iscsi_MASK				0x00000001
-+#define iscsi_WORD				word3
-+#define rdma_SHIFT				4
-+#define rdma_MASK				0x00000001
-+#define rdma_WORD				word3
-+	uint32_t sge_supp_len;
-+	uint32_t word5;
-+#define if_page_sz_SHIFT			0
-+#define if_page_sz_MASK				0x0000ffff
-+#define if_page_sz_WORD				word5
-+#define loopbk_scope_SHIFT			24
-+#define loopbk_scope_MASK			0x0000000f
-+#define loopbk_scope_WORD			word5
-+#define rq_db_window_SHIFT			28
-+#define rq_db_window_MASK			0x0000000f
-+#define rq_db_window_WORD			word5
-+	uint32_t word6;
-+#define eq_pages_SHIFT				0
-+#define eq_pages_MASK				0x0000000f
-+#define eq_pages_WORD				word6
-+#define eqe_size_SHIFT				8
-+#define eqe_size_MASK				0x000000ff
-+#define eqe_size_WORD				word6
-+	uint32_t word7;
-+#define cq_pages_SHIFT				0
-+#define cq_pages_MASK				0x0000000f
-+#define cq_pages_WORD				word7
-+#define cqe_size_SHIFT				8
-+#define cqe_size_MASK				0x000000ff
-+#define cqe_size_WORD				word7
-+	uint32_t word8;
-+#define mq_pages_SHIFT				0
-+#define mq_pages_MASK				0x0000000f
-+#define mq_pages_WORD				word8
-+#define mqe_size_SHIFT				8
-+#define mqe_size_MASK				0x000000ff
-+#define mqe_size_WORD				word8
-+#define mq_elem_cnt_SHIFT			16
-+#define mq_elem_cnt_MASK			0x000000ff
-+#define mq_elem_cnt_WORD			word8
-+	uint32_t word9;
-+#define wq_pages_SHIFT				0
-+#define wq_pages_MASK				0x0000ffff
-+#define wq_pages_WORD				word9
-+#define wqe_size_SHIFT				8
-+#define wqe_size_MASK				0x000000ff
-+#define wqe_size_WORD				word9
-+	uint32_t word10;
-+#define rq_pages_SHIFT				0
-+#define rq_pages_MASK				0x0000ffff
-+#define rq_pages_WORD				word10
-+#define rqe_size_SHIFT				8
-+#define rqe_size_MASK				0x000000ff
-+#define rqe_size_WORD				word10
-+	uint32_t word11;
-+#define hdr_pages_SHIFT				0
-+#define hdr_pages_MASK				0x0000000f
-+#define hdr_pages_WORD				word11
-+#define hdr_size_SHIFT				8
-+#define hdr_size_MASK				0x0000000f
-+#define hdr_size_WORD				word11
-+#define hdr_pp_align_SHIFT			16
-+#define hdr_pp_align_MASK			0x0000ffff
-+#define hdr_pp_align_WORD			word11
-+	uint32_t word12;
-+#define sgl_pages_SHIFT				0
-+#define sgl_pages_MASK				0x0000000f
-+#define sgl_pages_WORD				word12
-+#define sgl_pp_align_SHIFT			16
-+#define sgl_pp_align_MASK			0x0000ffff
-+#define sgl_pp_align_WORD			word12
-+	uint32_t rsvd_13_63[51];
-+};
-+
- /* Mailbox Completion Queue Error Messages */
- #define MB_CQE_STATUS_SUCCESS 			0x0
- #define MB_CQE_STATUS_INSUFFICIENT_PRIVILEGES	0x1
-@@ -1894,6 +2058,8 @@ struct lpfc_mqe {
- 		struct lpfc_mbx_request_features req_ftrs;
- 		struct lpfc_mbx_post_hdr_tmpl hdr_tmpl;
- 		struct lpfc_mbx_query_fw_cfg query_fw_cfg;
-+		struct lpfc_mbx_supp_pages supp_pages;
-+		struct lpfc_mbx_sli4_params sli4_params;
- 		struct lpfc_mbx_nop nop;
- 	} un;
- };
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2010-02-12 10:52:43.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2010-02-12 10:53:08.000000000 -0500
-@@ -2443,7 +2443,8 @@ lpfc_create_port(struct lpfc_hba *phba, 
- 	shost->this_id = -1;
- 	shost->max_cmd_len = 16;
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
--		shost->dma_boundary = LPFC_SLI4_MAX_SEGMENT_SIZE;
-+		shost->dma_boundary =
-+			phba->sli4_hba.pc_sli4_params.sge_supp_len;
- 		shost->sg_tablesize = phba->cfg_sg_seg_cnt;
- 	}
- 
-@@ -3621,8 +3622,10 @@ static int
- lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- {
- 	struct lpfc_sli *psli;
--	int rc;
--	int i, hbq_count;
-+	LPFC_MBOXQ_t *mboxq;
-+	int rc, i, hbq_count, buf_size, dma_buf_size, max_buf_size;
-+	uint8_t pn_page[LPFC_MAX_SUPPORTED_PAGES] = {0};
-+	struct lpfc_mqe *mqe;
- 
- 	/* Before proceed, wait for POST done and device ready */
- 	rc = lpfc_sli4_post_status_check(phba);
-@@ -3680,31 +3683,26 @@ lpfc_sli4_driver_resource_setup(struct l
- 	 * used to create the sg_dma_buf_pool must be dynamically calculated.
- 	 * 2 segments are added since the IOCB needs a command and response bde.
- 	 * To insure that the scsi sgl does not cross a 4k page boundary only
--	 * sgl sizes of 1k, 2k, 4k, and 8k are supported.
--	 * Table of sgl sizes and seg_cnt:
--	 * sgl size, 	sg_seg_cnt	total seg
--	 * 1k		50		52
--	 * 2k		114		116
--	 * 4k		242		244
--	 * 8k		498		500
--	 * cmd(32) + rsp(160) + (52 * sizeof(sli4_sge)) = 1024
--	 * cmd(32) + rsp(160) + (116 * sizeof(sli4_sge)) = 2048
--	 * cmd(32) + rsp(160) + (244 * sizeof(sli4_sge)) = 4096
--	 * cmd(32) + rsp(160) + (500 * sizeof(sli4_sge)) = 8192
--	 */
--	if (phba->cfg_sg_seg_cnt <= LPFC_DEFAULT_SG_SEG_CNT)
--		phba->cfg_sg_seg_cnt = 50;
--	else if (phba->cfg_sg_seg_cnt <= 114)
--		phba->cfg_sg_seg_cnt = 114;
--	else if (phba->cfg_sg_seg_cnt <= 242)
--		phba->cfg_sg_seg_cnt = 242;
-+	 * sgl sizes of must be a power of 2.
-+	 */
-+	buf_size = (sizeof(struct fcp_cmnd) + sizeof(struct fcp_rsp) +
-+		    ((phba->cfg_sg_seg_cnt + 2) * sizeof(struct sli4_sge)));
-+	/* Feature Level 1 hardware is limited to 2 pages */
-+	if ((bf_get(lpfc_sli_intf_featurelevel1, &phba->sli4_hba.sli_intf) ==
-+	     LPFC_SLI_INTF_FEATURELEVEL1_1))
-+		max_buf_size = LPFC_SLI4_FL1_MAX_BUF_SIZE;
- 	else
--		phba->cfg_sg_seg_cnt = 498;
--
--	phba->cfg_sg_dma_buf_size = sizeof(struct fcp_cmnd)
--					+ sizeof(struct fcp_rsp);
--	phba->cfg_sg_dma_buf_size +=
--		((phba->cfg_sg_seg_cnt + 2) * sizeof(struct sli4_sge));
-+		max_buf_size = LPFC_SLI4_MAX_BUF_SIZE;
-+	for (dma_buf_size = LPFC_SLI4_MIN_BUF_SIZE;
-+	     dma_buf_size < max_buf_size && buf_size > dma_buf_size;
-+	     dma_buf_size = dma_buf_size << 1)
-+		;
-+	if (dma_buf_size == max_buf_size)
-+		phba->cfg_sg_seg_cnt = (dma_buf_size -
-+			sizeof(struct fcp_cmnd) - sizeof(struct fcp_rsp) -
-+			(2 * sizeof(struct sli4_sge))) /
-+				sizeof(struct sli4_sge);
-+	phba->cfg_sg_dma_buf_size = dma_buf_size;
- 
- 	/* Initialize buffer queue management fields */
- 	hbq_count = lpfc_sli_hbq_count();
-@@ -3822,6 +3820,43 @@ lpfc_sli4_driver_resource_setup(struct l
- 		goto out_free_fcp_eq_hdl;
- 	}
- 
-+	mboxq = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool,
-+						       GFP_KERNEL);
-+	if (!mboxq) {
-+		rc = -ENOMEM;
-+		goto out_free_fcp_eq_hdl;
-+	}
-+
-+	/* Get the Supported Pages. It is always available. */
-+	lpfc_supported_pages(mboxq);
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	if (unlikely(rc)) {
-+		rc = -EIO;
-+		mempool_free(mboxq, phba->mbox_mem_pool);
-+		goto out_free_fcp_eq_hdl;
-+	}
-+
-+	mqe = &mboxq->u.mqe;
-+	memcpy(&pn_page[0], ((uint8_t *)&mqe->un.supp_pages.word3),
-+	       LPFC_MAX_SUPPORTED_PAGES);
-+	for (i = 0; i < LPFC_MAX_SUPPORTED_PAGES; i++) {
-+		switch (pn_page[i]) {
-+		case LPFC_SLI4_PARAMETERS:
-+			phba->sli4_hba.pc_sli4_params.supported = 1;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	/* Read the port's SLI4 Parameters capabilities if supported. */
-+	if (phba->sli4_hba.pc_sli4_params.supported)
-+		rc = lpfc_pc_sli4_params_get(phba, mboxq);
-+	mempool_free(mboxq, phba->mbox_mem_pool);
-+	if (rc) {
-+		rc = -EIO;
-+		goto out_free_fcp_eq_hdl;
-+	}
- 	return rc;
- 
- out_free_fcp_eq_hdl:
-@@ -4825,7 +4860,7 @@ lpfc_sli_pci_mem_unset(struct lpfc_hba *
- int
- lpfc_sli4_post_status_check(struct lpfc_hba *phba)
- {
--	struct lpfc_register sta_reg, uerrlo_reg, uerrhi_reg, scratchpad;
-+	struct lpfc_register sta_reg, uerrlo_reg, uerrhi_reg;
- 	int i, port_error = -ENODEV;
- 
- 	if (!phba->sli4_hba.STAregaddr)
-@@ -4861,14 +4896,21 @@ lpfc_sli4_post_status_check(struct lpfc_
- 			bf_get(lpfc_hst_state_port_status, &sta_reg));
- 
- 	/* Log device information */
--	scratchpad.word0 =  readl(phba->sli4_hba.SCRATCHPADregaddr);
--	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--			"2534 Device Info: ChipType=0x%x, SliRev=0x%x, "
--			"FeatureL1=0x%x, FeatureL2=0x%x\n",
--			bf_get(lpfc_scratchpad_chiptype, &scratchpad),
--			bf_get(lpfc_scratchpad_slirev, &scratchpad),
--			bf_get(lpfc_scratchpad_featurelevel1, &scratchpad),
--			bf_get(lpfc_scratchpad_featurelevel2, &scratchpad));
-+	phba->sli4_hba.sli_intf.word0 = readl(phba->sli4_hba.SLIINTFregaddr);
-+	if (bf_get(lpfc_sli_intf_valid,
-+		   &phba->sli4_hba.sli_intf) == LPFC_SLI_INTF_VALID) {
-+		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+				"2534 Device Info: ChipType=0x%x, SliRev=0x%x, "
-+				"FeatureL1=0x%x, FeatureL2=0x%x\n",
-+				bf_get(lpfc_sli_intf_sli_family,
-+				       &phba->sli4_hba.sli_intf),
-+				bf_get(lpfc_sli_intf_slirev,
-+				       &phba->sli4_hba.sli_intf),
-+				bf_get(lpfc_sli_intf_featurelevel1,
-+				       &phba->sli4_hba.sli_intf),
-+				bf_get(lpfc_sli_intf_featurelevel2,
-+				       &phba->sli4_hba.sli_intf));
-+	}
- 	phba->sli4_hba.ue_mask_lo = readl(phba->sli4_hba.UEMASKLOregaddr);
- 	phba->sli4_hba.ue_mask_hi = readl(phba->sli4_hba.UEMASKHIregaddr);
- 	/* With uncoverable error, log the error message and return error */
-@@ -4907,8 +4949,8 @@ lpfc_sli4_bar0_register_memmap(struct lp
- 					LPFC_UE_MASK_LO;
- 	phba->sli4_hba.UEMASKHIregaddr = phba->sli4_hba.conf_regs_memmap_p +
- 					LPFC_UE_MASK_HI;
--	phba->sli4_hba.SCRATCHPADregaddr = phba->sli4_hba.conf_regs_memmap_p +
--					LPFC_SCRATCHPAD;
-+	phba->sli4_hba.SLIINTFregaddr = phba->sli4_hba.conf_regs_memmap_p +
-+					LPFC_SLI_INTF;
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2010-01-22 12:03:43.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2010-02-12 10:53:25.000000000 -0500
+@@ -482,6 +482,41 @@ lpfc_link_state_show(struct device *dev,
  }
  
  /**
-@@ -6981,6 +7023,73 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phb
- 	phba->pport->work_port_events = 0;
- }
- 
-+ /**
-+ * lpfc_pc_sli4_params_get - Get the SLI4_PARAMS port capabilities.
-+ * @phba: Pointer to HBA context object.
-+ * @mboxq: Pointer to the mailboxq memory for the mailbox command response.
++ * lpfc_link_state_store - Transition the link_state on an HBA port
++ * @dev: class device that is converted into a Scsi_host.
++ * @attr: device attribute, not used.
++ * @buf: one or more lpfc_polling_flags values.
++ * @count: not used.
 + *
-+ * This function is called in the SLI4 code path to read the port's
-+ * sli4 capabilities.
-+ *
-+ * This function may be be called from any context that can block-wait
-+ * for the completion.  The expectation is that this routine is called
-+ * typically from probe_one or from the online routine.
++ * Returns:
++ * -EINVAL if the buffer is not "up" or "down"
++ * return from link state change function if non-zero
++ * length of the buf on success
 + **/
-+int
-+lpfc_pc_sli4_params_get(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
++static ssize_t
++lpfc_link_state_store(struct device *dev, struct device_attribute *attr,
++		const char *buf, size_t count)
 +{
-+	int rc;
-+	struct lpfc_mqe *mqe;
-+	struct lpfc_pc_sli4_params *sli4_params;
-+	uint32_t mbox_tmo;
++	struct Scsi_Host  *shost = class_to_shost(dev);
++	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
++	struct lpfc_hba   *phba = vport->phba;
 +
-+	rc = 0;
-+	mqe = &mboxq->u.mqe;
++	int status = -EINVAL;
 +
-+	/* Read the port's SLI4 Parameters port capabilities */
-+	lpfc_sli4_params(mboxq);
-+	if (!phba->sli4_hba.intr_enable)
-+		rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	else {
-+		mbox_tmo = lpfc_mbox_tmo_val(phba, MBX_PORT_CAPABILITIES);
-+		rc = lpfc_sli_issue_mbox_wait(phba, mboxq, mbox_tmo);
-+	}
++	if ((strncmp(buf, "up", sizeof("up") - 1) == 0) &&
++			(phba->link_state == LPFC_LINK_DOWN))
++		status = phba->lpfc_hba_init_link(phba);
++	else if ((strncmp(buf, "down", sizeof("down") - 1) == 0) &&
++			(phba->link_state >= LPFC_LINK_UP))
++		status = phba->lpfc_hba_down_link(phba);
 +
-+	if (unlikely(rc))
-+		return 1;
-+
-+	sli4_params = &phba->sli4_hba.pc_sli4_params;
-+	sli4_params->if_type = bf_get(if_type, &mqe->un.sli4_params);
-+	sli4_params->sli_rev = bf_get(sli_rev, &mqe->un.sli4_params);
-+	sli4_params->sli_family = bf_get(sli_family, &mqe->un.sli4_params);
-+	sli4_params->featurelevel_1 = bf_get(featurelevel_1,
-+					     &mqe->un.sli4_params);
-+	sli4_params->featurelevel_2 = bf_get(featurelevel_2,
-+					     &mqe->un.sli4_params);
-+	sli4_params->proto_types = mqe->un.sli4_params.word3;
-+	sli4_params->sge_supp_len = mqe->un.sli4_params.sge_supp_len;
-+	sli4_params->if_page_sz = bf_get(if_page_sz, &mqe->un.sli4_params);
-+	sli4_params->rq_db_window = bf_get(rq_db_window, &mqe->un.sli4_params);
-+	sli4_params->loopbk_scope = bf_get(loopbk_scope, &mqe->un.sli4_params);
-+	sli4_params->eq_pages_max = bf_get(eq_pages, &mqe->un.sli4_params);
-+	sli4_params->eqe_size = bf_get(eqe_size, &mqe->un.sli4_params);
-+	sli4_params->cq_pages_max = bf_get(cq_pages, &mqe->un.sli4_params);
-+	sli4_params->cqe_size = bf_get(cqe_size, &mqe->un.sli4_params);
-+	sli4_params->mq_pages_max = bf_get(mq_pages, &mqe->un.sli4_params);
-+	sli4_params->mqe_size = bf_get(mqe_size, &mqe->un.sli4_params);
-+	sli4_params->mq_elem_cnt = bf_get(mq_elem_cnt, &mqe->un.sli4_params);
-+	sli4_params->wq_pages_max = bf_get(wq_pages, &mqe->un.sli4_params);
-+	sli4_params->wqe_size = bf_get(wqe_size, &mqe->un.sli4_params);
-+	sli4_params->rq_pages_max = bf_get(rq_pages, &mqe->un.sli4_params);
-+	sli4_params->rqe_size = bf_get(rqe_size, &mqe->un.sli4_params);
-+	sli4_params->hdr_pages_max = bf_get(hdr_pages, &mqe->un.sli4_params);
-+	sli4_params->hdr_size = bf_get(hdr_size, &mqe->un.sli4_params);
-+	sli4_params->hdr_pp_align = bf_get(hdr_pp_align, &mqe->un.sli4_params);
-+	sli4_params->sgl_pages_max = bf_get(sgl_pages, &mqe->un.sli4_params);
-+	sli4_params->sgl_pp_align = bf_get(sgl_pp_align, &mqe->un.sli4_params);
-+	return rc;
-+}
-+
- /**
-  * lpfc_pci_probe_one_s3 - PCI probe func to reg SLI-3 device to PCI subsystem.
-  * @pdev: pointer to PCI device
-@@ -8053,11 +8162,11 @@ lpfc_pci_probe_one(struct pci_dev *pdev,
- 	int rc;
- 	struct lpfc_sli_intf intf;
- 
--	if (pci_read_config_dword(pdev, LPFC_SLIREV_CONF_WORD, &intf.word0))
-+	if (pci_read_config_dword(pdev, LPFC_SLI_INTF, &intf.word0))
- 		return -ENODEV;
- 
- 	if ((bf_get(lpfc_sli_intf_valid, &intf) == LPFC_SLI_INTF_VALID) &&
--		(bf_get(lpfc_sli_intf_rev, &intf) == LPFC_SLIREV_CONF_SLI4))
-+	    (bf_get(lpfc_sli_intf_slirev, &intf) == LPFC_SLI_INTF_REV_SLI4))
- 		rc = lpfc_pci_probe_one_s4(pdev, pid);
- 	else
- 		rc = lpfc_pci_probe_one_s3(pdev, pid);
-diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
---- a/drivers/scsi/lpfc/lpfc_mbox.c	2010-02-12 10:52:43.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c	2010-02-12 10:53:08.000000000 -0500
-@@ -2052,3 +2052,41 @@ lpfc_resume_rpi(struct lpfcMboxq *mbox, 
- 	bf_set(lpfc_resume_rpi_ii, resume_rpi, RESUME_INDEX_RPI);
- 	resume_rpi->event_tag = ndlp->phba->fc_eventTag;
- }
-+
-+/**
-+ * lpfc_supported_pages - Initialize the PORT_CAPABILITIES supported pages
-+ *                        mailbox command.
-+ * @mbox: pointer to lpfc mbox command to initialize.
-+ *
-+ * The PORT_CAPABILITIES supported pages mailbox command is issued to
-+ * retrieve the particular feature pages supported by the port.
-+ **/
-+void
-+lpfc_supported_pages(struct lpfcMboxq *mbox)
-+{
-+	struct lpfc_mbx_supp_pages *supp_pages;
-+
-+	memset(mbox, 0, sizeof(*mbox));
-+	supp_pages = &mbox->u.mqe.un.supp_pages;
-+	bf_set(lpfc_mqe_command, &mbox->u.mqe, MBX_PORT_CAPABILITIES);
-+	bf_set(cpn, supp_pages, LPFC_SUPP_PAGES);
++	if (status == 0)
++		return strlen(buf);
++	else
++		return status;
 +}
 +
 +/**
-+ * lpfc_sli4_params - Initialize the PORT_CAPABILITIES SLI4 Params
-+ *                    mailbox command.
-+ * @mbox: pointer to lpfc mbox command to initialize.
-+ *
-+ * The PORT_CAPABILITIES SLI4 parameters mailbox command is issued to
-+ * retrieve the particular SLI4 features supported by the port.
-+ **/
-+void
-+lpfc_sli4_params(struct lpfcMboxq *mbox)
-+{
-+	struct lpfc_mbx_sli4_params *sli4_params;
-+
-+	memset(mbox, 0, sizeof(*mbox));
-+	sli4_params = &mbox->u.mqe.un.sli4_params;
-+	bf_set(lpfc_mqe_command, &mbox->u.mqe, MBX_PORT_CAPABILITIES);
-+	bf_set(cpn, sli4_params, LPFC_SLI4_PARAMETERS);
-+}
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-02-11 17:26:54.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-02-12 10:53:08.000000000 -0500
-@@ -798,19 +798,17 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *
- 		 */
- 		sgl->addr_hi = cpu_to_le32(putPaddrHigh(pdma_phys_fcp_cmd));
- 		sgl->addr_lo = cpu_to_le32(putPaddrLow(pdma_phys_fcp_cmd));
--		bf_set(lpfc_sli4_sge_len, sgl, sizeof(struct fcp_cmnd));
- 		bf_set(lpfc_sli4_sge_last, sgl, 0);
- 		sgl->word2 = cpu_to_le32(sgl->word2);
--		sgl->word3 = cpu_to_le32(sgl->word3);
-+		sgl->sge_len = cpu_to_le32(sizeof(struct fcp_cmnd));
- 		sgl++;
+  * lpfc_num_discovered_ports_show - Return sum of mapped and unmapped vports
+  * @dev: class device that is converted into a Scsi_host.
+  * @attr: device attribute, not used.
+@@ -1219,7 +1254,7 @@ lpfc_##attr##_show(struct device *dev, s
+ 	struct Scsi_Host  *shost = class_to_shost(dev);\
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;\
+ 	struct lpfc_hba   *phba = vport->phba;\
+-	int val = 0;\
++	uint val = 0;\
+ 	val = phba->cfg_##attr;\
+ 	return snprintf(buf, PAGE_SIZE, "%d\n",\
+ 			phba->cfg_##attr);\
+@@ -1247,7 +1282,7 @@ lpfc_##attr##_show(struct device *dev, s
+ 	struct Scsi_Host  *shost = class_to_shost(dev);\
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;\
+ 	struct lpfc_hba   *phba = vport->phba;\
+-	int val = 0;\
++	uint val = 0;\
+ 	val = phba->cfg_##attr;\
+ 	return snprintf(buf, PAGE_SIZE, "%#x\n",\
+ 			phba->cfg_##attr);\
+@@ -1274,7 +1309,7 @@ lpfc_##attr##_show(struct device *dev, s
+  **/
+ #define lpfc_param_init(attr, default, minval, maxval)	\
+ static int \
+-lpfc_##attr##_init(struct lpfc_hba *phba, int val) \
++lpfc_##attr##_init(struct lpfc_hba *phba, uint val) \
+ { \
+ 	if (val >= minval && val <= maxval) {\
+ 		phba->cfg_##attr = val;\
+@@ -1309,7 +1344,7 @@ lpfc_##attr##_init(struct lpfc_hba *phba
+  **/
+ #define lpfc_param_set(attr, default, minval, maxval)	\
+ static int \
+-lpfc_##attr##_set(struct lpfc_hba *phba, int val) \
++lpfc_##attr##_set(struct lpfc_hba *phba, uint val) \
+ { \
+ 	if (val >= minval && val <= maxval) {\
+ 		phba->cfg_##attr = val;\
+@@ -1350,7 +1385,7 @@ lpfc_##attr##_store(struct device *dev, 
+ 	struct Scsi_Host  *shost = class_to_shost(dev);\
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;\
+ 	struct lpfc_hba   *phba = vport->phba;\
+-	int val=0;\
++	uint val = 0;\
+ 	if (!isdigit(buf[0]))\
+ 		return -EINVAL;\
+ 	if (sscanf(buf, "%i", &val) != 1)\
+@@ -1382,7 +1417,7 @@ lpfc_##attr##_show(struct device *dev, s
+ { \
+ 	struct Scsi_Host  *shost = class_to_shost(dev);\
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;\
+-	int val = 0;\
++	uint val = 0;\
+ 	val = vport->cfg_##attr;\
+ 	return snprintf(buf, PAGE_SIZE, "%d\n", vport->cfg_##attr);\
+ }
+@@ -1409,7 +1444,7 @@ lpfc_##attr##_show(struct device *dev, s
+ { \
+ 	struct Scsi_Host  *shost = class_to_shost(dev);\
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;\
+-	int val = 0;\
++	uint val = 0;\
+ 	val = vport->cfg_##attr;\
+ 	return snprintf(buf, PAGE_SIZE, "%#x\n", vport->cfg_##attr);\
+ }
+@@ -1434,7 +1469,7 @@ lpfc_##attr##_show(struct device *dev, s
+  **/
+ #define lpfc_vport_param_init(attr, default, minval, maxval)	\
+ static int \
+-lpfc_##attr##_init(struct lpfc_vport *vport, int val) \
++lpfc_##attr##_init(struct lpfc_vport *vport, uint val) \
+ { \
+ 	if (val >= minval && val <= maxval) {\
+ 		vport->cfg_##attr = val;\
+@@ -1466,7 +1501,7 @@ lpfc_##attr##_init(struct lpfc_vport *vp
+  **/
+ #define lpfc_vport_param_set(attr, default, minval, maxval)	\
+ static int \
+-lpfc_##attr##_set(struct lpfc_vport *vport, int val) \
++lpfc_##attr##_set(struct lpfc_vport *vport, uint val) \
+ { \
+ 	if (val >= minval && val <= maxval) {\
+ 		vport->cfg_##attr = val;\
+@@ -1502,7 +1537,7 @@ lpfc_##attr##_store(struct device *dev, 
+ { \
+ 	struct Scsi_Host  *shost = class_to_shost(dev);\
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;\
+-	int val=0;\
++	uint val = 0;\
+ 	if (!isdigit(buf[0]))\
+ 		return -EINVAL;\
+ 	if (sscanf(buf, "%i", &val) != 1)\
+@@ -1515,22 +1550,22 @@ lpfc_##attr##_store(struct device *dev, 
  
- 		/* Setup the physical region for the FCP RSP */
- 		sgl->addr_hi = cpu_to_le32(putPaddrHigh(pdma_phys_fcp_rsp));
- 		sgl->addr_lo = cpu_to_le32(putPaddrLow(pdma_phys_fcp_rsp));
--		bf_set(lpfc_sli4_sge_len, sgl, sizeof(struct fcp_rsp));
- 		bf_set(lpfc_sli4_sge_last, sgl, 1);
- 		sgl->word2 = cpu_to_le32(sgl->word2);
--		sgl->word3 = cpu_to_le32(sgl->word3);
-+		sgl->sge_len = cpu_to_le32(sizeof(struct fcp_rsp));
+
+ #define LPFC_ATTR(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_init(name, defval, minval, maxval)
  
- 		/*
- 		 * Since the IOCB for the FCP I/O is built into this
-@@ -1872,7 +1870,6 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
- 		scsi_for_each_sg(scsi_cmnd, sgel, nseg, num_bde) {
- 			physaddr = sg_dma_address(sgel);
- 			dma_len = sg_dma_len(sgel);
--			bf_set(lpfc_sli4_sge_len, sgl, sg_dma_len(sgel));
- 			sgl->addr_lo = cpu_to_le32(putPaddrLow(physaddr));
- 			sgl->addr_hi = cpu_to_le32(putPaddrHigh(physaddr));
- 			if ((num_bde + 1) == nseg)
-@@ -1881,7 +1878,7 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
- 				bf_set(lpfc_sli4_sge_last, sgl, 0);
- 			bf_set(lpfc_sli4_sge_offset, sgl, dma_offset);
- 			sgl->word2 = cpu_to_le32(sgl->word2);
--			sgl->word3 = cpu_to_le32(sgl->word3);
-+			sgl->sge_len = cpu_to_le32(dma_len);
- 			dma_offset += dma_len;
- 			sgl++;
- 		}
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2010-02-12 10:52:43.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2010-02-12 10:53:08.000000000 -0500
-@@ -264,7 +264,10 @@ struct lpfc_bmbx {
- #define SLI4_CT_VFI 2
- #define SLI4_CT_FCFI 3
+ #define LPFC_ATTR_R(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+ static DEVICE_ATTR(lpfc_##name, S_IRUGO , lpfc_##name##_show, NULL)
  
--#define LPFC_SLI4_MAX_SEGMENT_SIZE 0x10000
-+#define LPFC_SLI4_FL1_MAX_SEGMENT_SIZE	0x10000
-+#define LPFC_SLI4_FL1_MAX_BUF_SIZE	0X2000
-+#define LPFC_SLI4_MIN_BUF_SIZE		0x400
-+#define LPFC_SLI4_MAX_BUF_SIZE		0x20000
+ #define LPFC_ATTR_RW(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+@@ -1540,16 +1575,16 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 		   lpfc_##name##_show, lpfc_##name##_store)
+ 
+ #define LPFC_ATTR_HEX_R(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_hex_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+ static DEVICE_ATTR(lpfc_##name, S_IRUGO , lpfc_##name##_show, NULL)
+ 
+ #define LPFC_ATTR_HEX_RW(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_hex_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+@@ -1559,22 +1594,22 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 		   lpfc_##name##_show, lpfc_##name##_store)
+ 
+ #define LPFC_VPORT_ATTR(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_init(name, defval, minval, maxval)
+ 
+ #define LPFC_VPORT_ATTR_R(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+ static DEVICE_ATTR(lpfc_##name, S_IRUGO , lpfc_##name##_show, NULL)
+ 
+ #define LPFC_VPORT_ATTR_RW(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+@@ -1584,16 +1619,16 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 		   lpfc_##name##_show, lpfc_##name##_store)
+ 
+ #define LPFC_VPORT_ATTR_HEX_R(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_hex_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+ static DEVICE_ATTR(lpfc_##name, S_IRUGO , lpfc_##name##_show, NULL)
+ 
+ #define LPFC_VPORT_ATTR_HEX_RW(name, defval, minval, maxval, desc) \
+-static int lpfc_##name = defval;\
+-module_param(lpfc_##name, int, 0);\
++static uint lpfc_##name = defval;\
++module_param(lpfc_##name, uint, 0);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_hex_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+@@ -1614,7 +1649,8 @@ static DEVICE_ATTR(programtype, S_IRUGO,
+ static DEVICE_ATTR(portnum, S_IRUGO, lpfc_vportnum_show, NULL);
+ static DEVICE_ATTR(fwrev, S_IRUGO, lpfc_fwrev_show, NULL);
+ static DEVICE_ATTR(hdw, S_IRUGO, lpfc_hdw_show, NULL);
+-static DEVICE_ATTR(link_state, S_IRUGO, lpfc_link_state_show, NULL);
++static DEVICE_ATTR(link_state, S_IRUGO | S_IWUSR, lpfc_link_state_show,
++		lpfc_link_state_store);
+ static DEVICE_ATTR(option_rom_version, S_IRUGO,
+ 		   lpfc_option_rom_version_show, NULL);
+ static DEVICE_ATTR(num_discovered_ports, S_IRUGO,
+@@ -1897,6 +1933,15 @@ static DEVICE_ATTR(lpfc_enable_npiv, S_I
+ 			 lpfc_enable_npiv_show, NULL);
  
  /*
-  * SLI4 specific data structures
-@@ -298,6 +301,42 @@ struct lpfc_fcp_eq_hdl {
- 	struct lpfc_hba *phba;
++# lpfc_suppress_link_up:  Bring link up at initialization
++#            0x0  = bring link up (issue MBX_INIT_LINK)
++#            0x1  = do NOT bring link up at initialization(MBX_INIT_LINK)
++#            0x2  = never bring up link
++# Default value is 0.
++*/
++LPFC_ATTR_R(suppress_link_up, 0, 0, 2, "Suppress Link Up at initialization");
++
++/*
+ # lpfc_nodev_tmo: If set, it will hold all I/O errors on devices that disappear
+ # until the timer expires. Value range is [0,255]. Default value is 30.
+ */
+@@ -3278,6 +3323,7 @@ struct device_attribute *lpfc_hba_attrs[
+ 	&dev_attr_lpfc_prot_sg_seg_cnt,
+ 	&dev_attr_lpfc_aer_support,
+ 	&dev_attr_lpfc_aer_state_cleanup,
++	&dev_attr_lpfc_suppress_link_up,
+ 	NULL,
  };
  
-+/* Port Capabilities for SLI4 Parameters */
-+struct lpfc_pc_sli4_params {
-+	uint32_t supported;
-+	uint32_t if_type;
-+	uint32_t sli_rev;
-+	uint32_t sli_family;
-+	uint32_t featurelevel_1;
-+	uint32_t featurelevel_2;
-+	uint32_t proto_types;
-+#define LPFC_SLI4_PROTO_FCOE	0x0000001
-+#define LPFC_SLI4_PROTO_FC	0x0000002
-+#define LPFC_SLI4_PROTO_NIC	0x0000004
-+#define LPFC_SLI4_PROTO_ISCSI	0x0000008
-+#define LPFC_SLI4_PROTO_RDMA	0x0000010
-+	uint32_t sge_supp_len;
-+	uint32_t if_page_sz;
-+	uint32_t rq_db_window;
-+	uint32_t loopbk_scope;
-+	uint32_t eq_pages_max;
-+	uint32_t eqe_size;
-+	uint32_t cq_pages_max;
-+	uint32_t cqe_size;
-+	uint32_t mq_pages_max;
-+	uint32_t mqe_size;
-+	uint32_t mq_elem_cnt;
-+	uint32_t wq_pages_max;
-+	uint32_t wqe_size;
-+	uint32_t rq_pages_max;
-+	uint32_t rqe_size;
-+	uint32_t hdr_pages_max;
-+	uint32_t hdr_size;
-+	uint32_t hdr_pp_align;
-+	uint32_t sgl_pages_max;
-+	uint32_t sgl_pp_align;
-+};
-+
- /* SLI4 HBA data structure entries */
- struct lpfc_sli4_hba {
- 	void __iomem *conf_regs_memmap_p; /* Kernel memory mapped address for
-@@ -311,7 +350,7 @@ struct lpfc_sli4_hba {
- 	void __iomem *UERRHIregaddr; /* Address to UERR_STATUS_HI register */
- 	void __iomem *UEMASKLOregaddr; /* Address to UE_MASK_LO register */
- 	void __iomem *UEMASKHIregaddr; /* Address to UE_MASK_HI register */
--	void __iomem *SCRATCHPADregaddr; /* Address to scratchpad register */
-+	void __iomem *SLIINTFregaddr; /* Address to SLI_INTF register */
- 	/* BAR1 FCoE function CSR register memory map */
- 	void __iomem *STAregaddr;    /* Address to HST_STATE register */
- 	void __iomem *ISRregaddr;    /* Address to HST_ISR register */
-@@ -326,6 +365,8 @@ struct lpfc_sli4_hba {
- 
- 	uint32_t ue_mask_lo;
- 	uint32_t ue_mask_hi;
-+	struct lpfc_register sli_intf;
-+	struct lpfc_pc_sli4_params pc_sli4_params;
- 	struct msix_entry *msix_entries;
- 	uint32_t cfg_eqn;
- 	struct lpfc_fcp_eq_hdl *fcp_eq_hdl; /* FCP per-WQ handle */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2010-02-12 10:52:43.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-02-12 10:53:08.000000000 -0500
-@@ -5739,19 +5739,19 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
- 
- 		for (i = 0; i < numBdes; i++) {
- 			/* Should already be byte swapped. */
--			sgl->addr_hi =  bpl->addrHigh;
--			sgl->addr_lo =  bpl->addrLow;
--			/* swap the size field back to the cpu so we
--			 * can assign it to the sgl.
--			 */
--			bde.tus.w  = le32_to_cpu(bpl->tus.w);
--			bf_set(lpfc_sli4_sge_len, sgl, bde.tus.f.bdeSize);
-+			sgl->addr_hi = bpl->addrHigh;
-+			sgl->addr_lo = bpl->addrLow;
-+
- 			if ((i+1) == numBdes)
- 				bf_set(lpfc_sli4_sge_last, sgl, 1);
- 			else
- 				bf_set(lpfc_sli4_sge_last, sgl, 0);
- 			sgl->word2 = cpu_to_le32(sgl->word2);
--			sgl->word3 = cpu_to_le32(sgl->word3);
-+			/* swap the size field back to the cpu so we
-+			 * can assign it to the sgl.
-+			 */
-+			bde.tus.w = le32_to_cpu(bpl->tus.w);
-+			sgl->sge_len = cpu_to_le32(bde.tus.f.bdeSize);
- 			bpl++;
- 			sgl++;
- 		}
-@@ -5764,11 +5764,10 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
- 				cpu_to_le32(icmd->un.genreq64.bdl.addrHigh);
- 			sgl->addr_lo =
- 				cpu_to_le32(icmd->un.genreq64.bdl.addrLow);
--			bf_set(lpfc_sli4_sge_len, sgl,
--				icmd->un.genreq64.bdl.bdeSize);
- 			bf_set(lpfc_sli4_sge_last, sgl, 1);
- 			sgl->word2 = cpu_to_le32(sgl->word2);
--			sgl->word3 = cpu_to_le32(sgl->word3);
-+			sgl->sge_len =
-+				cpu_to_le32(icmd->un.genreq64.bdl.bdeSize);
- 	}
- 	return sglq->sli4_xritag;
+@@ -4456,7 +4502,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	lpfc_hba_queue_depth_init(phba, lpfc_hba_queue_depth);
+ 	lpfc_hba_log_verbose_init(phba, lpfc_log_verbose);
+ 	lpfc_aer_support_init(phba, lpfc_aer_support);
+-
++	lpfc_suppress_link_up_init(phba, lpfc_suppress_link_up);
+ 	return;
  }
-@@ -8934,8 +8933,7 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba 
- 	int ecount = 0;
- 	uint16_t cqid;
  
--	if (bf_get(lpfc_eqe_major_code, eqe) != 0 ||
--	    bf_get(lpfc_eqe_minor_code, eqe) != 0) {
-+	if (bf_get(lpfc_eqe_major_code, eqe) != 0) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"0359 Not a valid slow-path completion "
- 				"event: majorcode=x%x, minorcode=x%x\n",
-@@ -9167,8 +9165,7 @@ lpfc_sli4_fp_handle_eqe(struct lpfc_hba 
- 	uint16_t cqid;
- 	int ecount = 0;
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2010-02-11 17:26:54.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc.h	2010-02-12 10:53:25.000000000 -0500
+@@ -504,6 +504,10 @@ struct lpfc_hba {
+ 		(struct lpfc_hba *);
+ 	void (*lpfc_stop_port)
+ 		(struct lpfc_hba *);
++	int (*lpfc_hba_init_link)
++		(struct lpfc_hba *);
++	int (*lpfc_hba_down_link)
++		(struct lpfc_hba *);
  
--	if (unlikely(bf_get(lpfc_eqe_major_code, eqe) != 0) ||
--	    unlikely(bf_get(lpfc_eqe_minor_code, eqe) != 0)) {
-+	if (unlikely(bf_get(lpfc_eqe_major_code, eqe) != 0)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 				"0366 Not a valid fast-path completion "
- 				"event: majorcode=x%x, minorcode=x%x\n",
+
+ 	/* SLI4 specific HBA data structure */
+@@ -618,6 +622,7 @@ struct lpfc_hba {
+ 	uint32_t cfg_enable_bg;
+ 	uint32_t cfg_log_verbose;
+ 	uint32_t cfg_aer_support;
++	uint32_t cfg_suppress_link_up;
+ 
+ 	lpfc_vpd_t vpd;		/* vital product data */
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2010-02-12 10:53:08.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2010-02-12 10:53:25.000000000 -0500
+@@ -544,7 +544,7 @@ lpfc_config_port_post(struct lpfc_hba *p
+ 			mempool_free(pmb, phba->mbox_mem_pool);
+ 			return -EIO;
+ 		}
+-	} else {
++	} else if (phba->cfg_suppress_link_up == 0) {
+ 		lpfc_init_link(phba, pmb, phba->cfg_topology,
+ 			phba->cfg_link_speed);
+ 		pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+@@ -603,6 +603,102 @@ lpfc_config_port_post(struct lpfc_hba *p
+ }
+ 
+ /**
++ * lpfc_hba_init_link - Initialize the FC link
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This routine will issue the INIT_LINK mailbox command call.
++ * It is available to other drivers through the lpfc_hba data
++ * structure for use as a delayed link up mechanism with the
++ * module parameter lpfc_suppress_link_up.
++ *
++ * Return code
++ *		0 - success
++ *		Any other value - error
++ **/
++int
++lpfc_hba_init_link(struct lpfc_hba *phba)
++{
++	struct lpfc_vport *vport = phba->pport;
++	LPFC_MBOXQ_t *pmb;
++	MAILBOX_t *mb;
++	int rc;
++
++	pmb = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!pmb) {
++		phba->link_state = LPFC_HBA_ERROR;
++		return -ENOMEM;
++	}
++	mb = &pmb->u.mb;
++	pmb->vport = vport;
++
++	lpfc_init_link(phba, pmb, phba->cfg_topology,
++		phba->cfg_link_speed);
++	pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
++	lpfc_set_loopback_flag(phba);
++	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
++	if (rc != MBX_SUCCESS) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++			"0498 Adapter failed to init, mbxCmd x%x "
++			"INIT_LINK, mbxStatus x%x\n",
++			mb->mbxCommand, mb->mbxStatus);
++		/* Clear all interrupt enable conditions */
++		writel(0, phba->HCregaddr);
++		readl(phba->HCregaddr); /* flush */
++		/* Clear all pending interrupts */
++		writel(0xffffffff, phba->HAregaddr);
++		readl(phba->HAregaddr); /* flush */
++		phba->link_state = LPFC_HBA_ERROR;
++		if (rc != MBX_BUSY)
++			mempool_free(pmb, phba->mbox_mem_pool);
++		return -EIO;
++	}
++	phba->cfg_suppress_link_up = 0;
++
++	return 0;
++}
++
++/**
++ * lpfc_hba_down_link - this routine downs the FC link
++ *
++ * This routine will issue the DOWN_LINK mailbox command call.
++ * It is available to other drivers through the lpfc_hba data
++ * structure for use to stop the link.
++ *
++ * Return code
++ *		0 - success
++ *		Any other value - error
++ **/
++int
++lpfc_hba_down_link(struct lpfc_hba *phba)
++{
++	LPFC_MBOXQ_t *pmb;
++	int rc;
++
++	pmb = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!pmb) {
++		phba->link_state = LPFC_HBA_ERROR;
++		return -ENOMEM;
++	}
++
++	lpfc_printf_log(phba,
++		KERN_ERR, LOG_INIT,
++		"0491 Adapter Link is disabled.\n");
++	lpfc_down_link(phba, pmb);
++	pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
++	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
++	if ((rc != MBX_SUCCESS) && (rc != MBX_BUSY)) {
++		lpfc_printf_log(phba,
++		KERN_ERR, LOG_INIT,
++		"2522 Adapter failed to issue DOWN_LINK"
++		" mbox command rc 0x%x\n", rc);
++
++		mempool_free(pmb, phba->mbox_mem_pool);
++		return -EIO;
++	}
++	return 0;
++}
++
++/**
+  * lpfc_hba_down_prep - Perform lpfc uninitialization prior to HBA reset
+  * @phba: pointer to lpfc HBA data structure.
+  *
+@@ -3952,6 +4048,8 @@ lpfc_sli4_driver_resource_unset(struct l
+ int
+ lpfc_init_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
+ {
++	phba->lpfc_hba_init_link = lpfc_hba_init_link;
++	phba->lpfc_hba_down_link = lpfc_hba_down_link;
+ 	switch (dev_grp) {
+ 	case LPFC_PCI_DEV_LP:
+ 		phba->lpfc_hba_down_post = lpfc_hba_down_post_s3;
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-02-12 10:53:08.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-02-12 10:53:25.000000000 -0500
+@@ -2640,6 +2640,7 @@ lpfc_scsi_api_table_setup(struct lpfc_hb
+ 	}
+ 	phba->lpfc_get_scsi_buf = lpfc_get_scsi_buf;
+ 	phba->lpfc_rampdown_queue_depth = lpfc_rampdown_queue_depth;
++	phba->lpfc_scsi_cmd_iocb_cmpl = lpfc_scsi_cmd_iocb_cmpl;
+ 	return 0;
+ }
+ 
 
 
