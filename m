@@ -1,52 +1,52 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: question on detecting a media change
-Date: Sat, 13 Feb 2010 17:42:21 +0100
-Message-ID: <4B76D66D.9050602@interlog.com>
-References: <201002122301.31366.oliver@neukum.org>
-Reply-To: dgilbert@interlog.com
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: megaraid sparse warnings
+Date: Sat, 13 Feb 2010 21:23:04 -0800
+Message-ID: <4B7788B8.8090005@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:44196 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756954Ab0BMQm0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Feb 2010 11:42:26 -0500
-In-Reply-To: <201002122301.31366.oliver@neukum.org>
+Received: from xenotime.net ([72.52.64.118]:59952 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750900Ab0BNFXG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Feb 2010 00:23:06 -0500
+Received: from chimera.site ([71.245.98.113]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sat, 13 Feb 2010 21:23:05 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>, Neela Syam Kolli <megaraidlinux@lsi.com>
 
-Oliver Neukum wrote:
-> Hi,
-> 
-> how can I find out a medium has been actually changed?
-> I find ASC 0x28 ASCQ 0x00 NOT READY TO READY CHANGE, MEDIUM MAY HAVE CHANGED
-> in the tables but my card reader emits this when it wakes up from runtime
-> suspension. How do you find out whether the medium has actually been
-> changed?
+Hi,
 
-Oliver,
-What you see is what you get ... In the absence of
-Asynchronous Notifications (with USB, forget it)
-a SCSI target is passive. It knows the media might
-have changed but does not know if the same media
-has been put back in (or if something else caused the
-READY->NOT_READY->READY transitions).
+sparse produces these warnings:
 
-So the next SCSI command sent to the device gets ignored
-and a Unit Attention (sense key) is issued with an
-additional sense code like the one you have shown.
-[At least that is what should happen.]
-If you are lucky the SCSI subsystem does not swallow
-this deferred notification (a real pain for pass-throughs).
+drivers/scsi/megaraid.c:307:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:309:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:313:67: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:315:67: warning: right shift by bigger than source value
 
-To detect the media has changed something at a higher
-level needed to get a unique key associated with the
-media before the Unit attention then generate another
-unique key from the media after the Unit attention.
-The comparison tells you the answer.
+on this source code:
 
-Doug Gilbert
+	/* use HP firmware and bios version encoding */
+	if (adapter->product_info.subsysvid == HP_SUBSYS_VID) {
+		sprintf (adapter->fw_version, "%c%d%d.%d%d",
+			 adapter->product_info.fw_version[2],
+			 adapter->product_info.fw_version[1] >> 8,
+			 adapter->product_info.fw_version[1] & 0x0f,
+			 adapter->product_info.fw_version[0] >> 8,
+			 adapter->product_info.fw_version[0] & 0x0f);
+		sprintf (adapter->bios_version, "%c%d%d.%d%d",
+			 adapter->product_info.bios_version[2],
+			 adapter->product_info.bios_version[1] >> 8,
+			 adapter->product_info.bios_version[1] & 0x0f,
+			 adapter->product_info.bios_version[0] >> 8,
+			 adapter->product_info.bios_version[0] & 0x0f);
+	} else {
 
+
+Are the fw_version and bios_version fields more than 8 bits each for HP subsys VID
+products?  Do HP VID products need a different struct so that they print this info
+correctly?
+
+thanks,
+-- 
+~Randy
