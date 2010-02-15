@@ -1,50 +1,37 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13783] udev causes high cpu usage
-Date: Mon, 15 Feb 2010 16:42:21 GMT
-Message-ID: <201002151642.o1FGgLMG007771@demeter.kernel.org>
-References: <bug-13783-11613@http.bugzilla.kernel.org/>
+From: "Mukker, Atul" <Atul.Mukker@lsi.com>
+Subject: [RFC]: new LSI MegaRAID driver implementation
+Date: Mon, 15 Feb 2010 10:09:23 -0700
+Message-ID: <6C678488C5CEE74F813A4D1948FD2DC7B7668C0E@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:59148 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753422Ab0BOQmX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Feb 2010 11:42:23 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1FGgLuR007772
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Feb 2010 16:42:21 GMT
-In-Reply-To: <bug-13783-11613@http.bugzilla.kernel.org/>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:57307 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754851Ab0BORan convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Feb 2010 12:30:43 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=13783
+Hi,
 
+We (LSI MegaRAID team) are working on enhancing the functionality of the MegaRAID driver. These enhancements include support for next generation HBAs.
 
-Ian Goodacre <Ian.Goodacre@xtra.co.nz> changed:
+The new generation HBA interface would be significant different than the current interface. There would not be any changes for raid management application driver interfaces though.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |Ian.Goodacre@xtra.co.nz
+We are anticipating about 70-80% of the current driver code to be changed. These changes would not be functional in nature though. The current functionality would be re-aligned in supporting functions. A parallel stream of functions would be created to support new HBAs.
 
+We are not anticipating changes in ways the new driver would work with the current generation of the HBAs and therefore we do not foresee any impact on the current functionality for these HBAs.
 
+We would like to solicit community feedback if this approach is acceptable. Alternative would be to leave the current driver untouched and submit a new driver for next generation of HBAs.
 
+Your inputs would be highly appreciated.
 
---- Comment #30 from Ian Goodacre <Ian.Goodacre@xtra.co.nz>  2010-02-15 16:42:10 ---
-(In reply to comment #8)
-> After I entered "hal-disable-polling --device /dev/scd0"...
+Regards,
 
-I had to run "hal-disable-polling --device /dev/sr0" three times before the
-stream of events stopped. I now have three files in /etc/hal/fdi/information:
-
-media-check-disable-storage_model_DVD_RW_AD_7580S.fdi
-media-check-disable-storage_model_Optiarc_DVD_RW_AD_7580S_0.fdi
-media-check-disable-storage_model_Optiarc_DVD_RW_AD_7580S.fdi
-
-They were produced in the order listed.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Atul Mukker
+LSI Corp.
