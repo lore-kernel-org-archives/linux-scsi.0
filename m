@@ -1,28 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC]: new LSI MegaRAID driver implementation
-Date: Mon, 15 Feb 2010 13:18:23 -0500
-Message-ID: <20100215181823.GA25776@infradead.org>
-References: <6C678488C5CEE74F813A4D1948FD2DC7B7668C0E@cosmail02.lsi.com>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: Re: 2.6.33-rc8: Reported regressions from 2.6.32
+Date: Mon, 15 Feb 2010 21:59:03 +0100
+Message-ID: <201002152159.03458.rjw@sisk.pl>
+References: <Z5cmiqDComP.A.gyF.OiIeLB@chimera> <b170af451002150152r43d7d916kd3d2013b8990627d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <6C678488C5CEE74F813A4D1948FD2DC7B7668C0E@cosmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Mukker, Atul" <Atul.Mukker@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <b170af451002150152r43d7d916kd3d2013b8990627d-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 15, 2010 at 10:09:23AM -0700, Mukker, Atul wrote:
-> We are anticipating about 70-80% of the current driver code to be changed. These changes would not be functional in nature though. The current functionality would be re-aligned in supporting functions. A parallel stream of functions would be created to support new HBAs.
-> 
-> We are not anticipating changes in ways the new driver would work with the current generation of the HBAs and therefore we do not foresee any impact on the current functionality for these HBAs.
-> 
-> We would like to solicit community feedback if this approach is acceptable. Alternative would be to leave the current driver untouched and submit a new driver for next generation of HBAs.
-> 
-> Your inputs would be highly appreciated.
+On Monday 15 February 2010, Rafa=C5=82 Mi=C5=82ecki wrote:
+> 2010/2/15 Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1528=
+7
+> > Subject         : RadeonKMS segfaults kdm on mobility radeon x700 p=
+cie
+> > Submitter       : Jan Kreuzer <kontrollator-Mmb7MZpHnFY@public.gmane.org>
+> > Date            : 2010-02-12 17:58 (3 days old)
+>=20
+> Can you reassign this according to last comments, please?
 
-Please just add a new megaraid_<foo> driver, similar to how megaraid_sas
-is split from the legacy megaraid driver.  If the shared code is easy
-enough to factor it could be moved into a megaraid_common module, but
-in doubt I would not even bother with that.
+Reassigned to PCI.
+
+Thanks,
+Rafael
