@@ -1,28 +1,29 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: SYNCHRONIZE CACHE command from sd on close
-Date: Mon, 15 Feb 2010 17:48:47 -0500
-Message-ID: <20100215224847.GA2490@infradead.org>
-References: <4B79460A.7040207@interlog.com> <20100215132502.GA15360@infradead.org> <4B79515A.6020507@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 0/1] qla2xxx: fix for 2.6.33-rcX
+Date: Mon, 15 Feb 2010 16:42:08 -0800
+Message-ID: <1266280929-12445-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54892 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756574Ab0BOWss (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Feb 2010 17:48:48 -0500
-Content-Disposition: inline
-In-Reply-To: <4B79515A.6020507@interlog.com>
+Received: from vpn.pathscale.com ([198.186.3.75]:50351 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S932299Ab0BPAmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Feb 2010 19:42:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: greg@kroah.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, stable@kernel.org
 
-On Mon, Feb 15, 2010 at 02:51:22PM +0100, Douglas Gilbert wrote:
-> What about O_NONBLOCK (which stops a hang on open)?
-> The open code common to my utilities in Linux is
-> below.
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-No, O_NONBLOCK should have nothing to do with it and your code
-snipplet looks fine.  We'll need to figure out what's really going
-on here.
+Hi Greg,
+
+Please find the patch which applies fine with stable kernel 2.6.32-8.
+
+Anirban Chakraborty (1):
+  qla2xxx: Obtain proper host structure during response-queue
+    processing.
+
+ drivers/scsi/qla2xxx/qla_gbl.h |    1 -
+ drivers/scsi/qla2xxx/qla_isr.c |   29 +----------------------------
+ drivers/scsi/qla2xxx/qla_mid.c |    6 +++++-
+ 3 files changed, 6 insertions(+), 30 deletions(-)
 
