@@ -1,44 +1,49 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 8/9] fnic: Set fnic driver version
-Date: Tue, 16 Feb 2010 12:15:55 -0800
-Message-ID: <20100216201555.26581.56050.stgit@localhost.localdomain>
+Subject: [PATCH 9/9] MAINTAINERS: Adding FCoE information to the MAINTAINERS
+	file.
+Date: Tue, 16 Feb 2010 12:16:00 -0800
+Message-ID: <20100216201600.26581.47528.stgit@localhost.localdomain>
 References: <20100216201513.26581.83756.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7244 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:14429 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933293Ab0BPUP4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Feb 2010 15:15:56 -0500
+	id S933313Ab0BPUQB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Feb 2010 15:16:01 -0500
 In-Reply-To: <20100216201513.26581.83756.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Robert Love <robert.w.love@intel.com>
 
-From: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
-
-Update fnic driver version.
-
-Signed-off-by: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fnic/fnic.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ MAINTAINERS |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index bb208a6..3966c71 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -36,7 +36,7 @@
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3f59162..358a827 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2145,6 +2145,17 @@ S:	Supported
+ F:	Documentation/fault-injection/
+ F:	lib/fault-inject.c
  
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.0.0.1121"
-+#define DRV_VERSION		"1.4.0.98"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
++FCOE SUBSYSTEM (libfc, libfcoe, fcoe)
++M:	Robert Love <robert.w.love@intel.com>
++L:	devel@open-fcoe.org
++W:	www.Open-FCoE.org
++S:	Supported
++F:	drivers/scsi/libfc/
++F:	drivers/scsi/fcoe/
++F:	include/scsi/fc/
++F:	include/scsi/libfc.h
++F:	include/scsi/libfcoe.h
++
+ FILE LOCKING (flock() and fcntl()/lockf())
+ M:	Matthew Wilcox <matthew@wil.cx>
+ L:	linux-fsdevel@vger.kernel.org
 
