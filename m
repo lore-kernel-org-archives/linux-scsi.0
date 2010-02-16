@@ -1,108 +1,44 @@
-From: giridhar.malavali@qlogic.com
-Subject: [PATCH 1/1] qla2xxx: Obtain proper host structure during response-queue processing.
-Date: Mon, 15 Feb 2010 16:42:09 -0800
-Message-ID: <1266280929-12445-2-git-send-email-giridhar.malavali@qlogic.com>
-References: <1266280929-12445-1-git-send-email-giridhar.malavali@qlogic.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15288] kernel 2.6.31 loading goes in loop on IBM xSeries 330
+Date: Tue, 16 Feb 2010 06:43:02 GMT
+Message-ID: <201002160643.o1G6h2Hn020824@demeter.kernel.org>
+References: <bug-15288-11613@http.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:50352 "HELO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S932384Ab0BPAmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Feb 2010 19:42:11 -0500
-In-Reply-To: <1266280929-12445-1-git-send-email-giridhar.malavali@qlogic.com>
+Received: from demeter.kernel.org ([140.211.167.39]:58297 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753438Ab0BPGnF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Feb 2010 01:43:05 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1G6h2XH020828
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Feb 2010 06:43:02 GMT
+In-Reply-To: <bug-15288-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: greg@kroah.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, stable@kernel.org, Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-From: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+http://bugzilla.kernel.org/show_bug.cgi?id=15288
 
-Original code incorrectly assumed only status-type-0
-IOCBs would be queued to the response-queue, and thus all
-entries would safely reference a VHA from the IOCB
-'handle.'
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_gbl.h |    1 -
- drivers/scsi/qla2xxx/qla_isr.c |   29 +----------------------------
- drivers/scsi/qla2xxx/qla_mid.c |    6 +++++-
- 3 files changed, 6 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index f3d1d1a..65ef03c 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -453,6 +453,5 @@ extern void qla24xx_wrt_req_reg(struct qla_hw_data *, uint16_t, uint16_t);
- extern void qla25xx_wrt_req_reg(struct qla_hw_data *, uint16_t, uint16_t);
- extern void qla25xx_wrt_rsp_reg(struct qla_hw_data *, uint16_t, uint16_t);
- extern void qla24xx_wrt_rsp_reg(struct qla_hw_data *, uint16_t, uint16_t);
--extern struct scsi_qla_host * qla25xx_get_host(struct rsp_que *);
- 
- #endif /* _QLA_GBL_H */
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index b20a716..b79481e 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2018,7 +2018,7 @@ qla24xx_msix_rsp_q(int irq, void *dev_id)
- 
- 	spin_lock_irq(&ha->hardware_lock);
- 
--	vha = qla25xx_get_host(rsp);
-+	vha = pci_get_drvdata(ha->pdev);
- 	qla24xx_process_response_queue(vha, rsp);
- 	if (!ha->mqenable) {
- 		WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
-@@ -2357,30 +2357,3 @@ int qla25xx_request_irq(struct rsp_que *rsp)
- 	msix->rsp = rsp;
- 	return ret;
- }
--
--struct scsi_qla_host *
--qla25xx_get_host(struct rsp_que *rsp)
--{
--	srb_t *sp;
--	struct qla_hw_data *ha = rsp->hw;
--	struct scsi_qla_host *vha = NULL;
--	struct sts_entry_24xx *pkt;
--	struct req_que *req;
--	uint16_t que;
--	uint32_t handle;
--
--	pkt = (struct sts_entry_24xx *) rsp->ring_ptr;
--	que = MSW(pkt->handle);
--	handle = (uint32_t) LSW(pkt->handle);
--	req = ha->req_q_map[que];
--	if (handle < MAX_OUTSTANDING_COMMANDS) {
--		sp = req->outstanding_cmds[handle];
--		if (sp)
--			return  sp->fcport->vha;
--		else
--			goto base_que;
--	}
--base_que:
--	vha = pci_get_drvdata(ha->pdev);
--	return vha;
--}
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index e07b361..4a69cc8 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -638,11 +638,15 @@ failed:
- 
- static void qla_do_work(struct work_struct *work)
- {
-+	unsigned long flags;
- 	struct rsp_que *rsp = container_of(work, struct rsp_que, q_work);
- 	struct scsi_qla_host *vha;
-+	struct qla_hw_data *ha = rsp->hw;
- 
--	vha = qla25xx_get_host(rsp);
-+	spin_lock_irqsave(&rsp->hw->hardware_lock, flags);
-+	vha = pci_get_drvdata(ha->pdev);
- 	qla24xx_process_response_queue(vha, rsp);
-+	spin_unlock_irqrestore(&rsp->hw->hardware_lock, flags);
- }
- 
- /* create response queue */
+Antti Louko <diu@mail.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |diu@mail.com
+
+
+
+
+--- Comment #8 from Antti Louko <diu@mail.com>  2010-02-16 06:42:55 ---
+This bug also applies to kernel 2.6.32.6 (vanilla, patched with grsec) with
+exactly same symptoms.
+
+The system is IBM xSeries 220 (also Pentium III Coppermine)
+01:03.0 SCSI storage controller: Adaptec AIC-7892P U160/m (rev 02)
+
 -- 
-1.6.2.rc1.30.gd43c
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
