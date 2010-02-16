@@ -1,49 +1,64 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 4/9] libfcoe: Send port LKA every FIP_VN_KA_PERIOD secs.
-Date: Tue, 16 Feb 2010 12:15:34 -0800
-Message-ID: <20100216201534.26581.76389.stgit@localhost.localdomain>
+Subject: [PATCH 6/9] fnic: Allow multicast and unicast address registrations
+	for fnic
+Date: Tue, 16 Feb 2010 12:15:44 -0800
+Message-ID: <20100216201544.26581.37215.stgit@localhost.localdomain>
 References: <20100216201513.26581.83756.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:53830 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:33235 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933293Ab0BPUPf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Feb 2010 15:15:35 -0500
+	id S933293Ab0BPUPp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Feb 2010 15:15:45 -0500
 In-Reply-To: <20100216201513.26581.83756.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Bhanu Gollapudi <bprakash@broadcom.com>, Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Brian Uchino <buchino@cisco.com>, Herman Lee <hermlee@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-From: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+From: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
 
-libfcoe module doesnt send port keep alive every
-FIP_VN_KA_PERIOD due to improper assignment of timeout value.
-Update the port_ka_time appropriately by incrementing it by
-FIP_VN_KA_PERIOD in fcoe_ctlr_timeout(), so that the link_work
-is scheduled to send the port LKA.
+To enable FIP support in fnic, we have to register with hardware to receive
+FIP solication frames on a well-known multicast address.
+Before FIP support, the firmware interface allowed multicast address
+registrations only for enic devices. This is a minor change in fnic to
+allow the firmware interface to now register mcast addresses for fnic too.
 
-Signed-off-by: Bhanu Gollapudi <bprakash@broadcom.com>
-Acked-by: Joe Eykholt <jeykholt@cisco.com>
+Signed-off-by: Brian Uchino <buchino@cisco.com>
+Signed-off-by: Herman Lee <hermlee@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/fnic/fnic_main.c   |    2 ++
+ drivers/scsi/fnic/vnic_devcmd.h |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 9823291..511cb6b 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -1187,7 +1187,7 @@ static void fcoe_ctlr_timeout(unsigned long arg)
- 			next_timer = fip->ctlr_ka_time;
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index fe1b103..5bab7e0 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -620,6 +620,8 @@ static int __devinit fnic_probe(struct pci_dev *pdev,
+ 	if (fnic->config.flags & VFCF_FIP_CAPABLE) {
+ 		shost_printk(KERN_INFO, fnic->lport->host,
+ 			     "firmware supports FIP\n");
++		/* enable directed and multicast */
++		vnic_dev_packet_filter(fnic->vdev, 1, 1, 0, 0, 0);
+ 		vnic_dev_add_addr(fnic->vdev, FIP_ALL_ENODE_MACS);
+ 		vnic_dev_add_addr(fnic->vdev, fnic->ctlr.ctl_src_addr);
+ 	} else {
+diff --git a/drivers/scsi/fnic/vnic_devcmd.h b/drivers/scsi/fnic/vnic_devcmd.h
+index d62b906..7c9ccbd 100644
+--- a/drivers/scsi/fnic/vnic_devcmd.h
++++ b/drivers/scsi/fnic/vnic_devcmd.h
+@@ -94,7 +94,7 @@ enum vnic_devcmd_cmd {
+ 	CMD_STATS_DUMP          = _CMDC(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 4),
  
- 		if (time_after_eq(jiffies, fip->port_ka_time)) {
--			fip->port_ka_time += jiffies +
-+			fip->port_ka_time = jiffies +
- 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
- 			fip->send_port_ka = 1;
- 		}
+ 	/* set Rx packet filter: (u32)a0=filters (see CMD_PFILTER_*) */
+-	CMD_PACKET_FILTER	= _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ENET, 7),
++	CMD_PACKET_FILTER       = _CMDCNW(_CMD_DIR_WRITE, _CMD_VTYPE_ALL, 7),
+ 
+ 	/* hang detection notification */
+ 	CMD_HANG_NOTIFY         = _CMDC(_CMD_DIR_NONE, _CMD_VTYPE_ALL, 8),
 
