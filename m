@@ -1,55 +1,43 @@
-From: =?ISO-8859-1?Q?Kristleifur_Da=F0ason?= <kristleifur@gmail.com>
-Subject: Re: [PATCH] MVSAS: hot plug handling and IO issues
-Date: Wed, 17 Feb 2010 13:16:12 +0000
-Message-ID: <73e903671002170516r6df93ea6o6e0ee256cb8f7a59@mail.gmail.com>
-References: <6B62480106F2B34D8404CF2FDAA4D9EF71F646BECA@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-	<alpine.DEB.1.10.1002161446470.4986@uplift.swm.pp.se> <7746.87.210.74.220.1266331278.squirrel@ketsers.dhs.org>
-	<6B62480106F2B34D8404CF2FDAA4D9EF71F646C228@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+From: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Wed, 17 Feb 2010 09:02:32 -0600
+Message-ID: <1266418952.2787.5.camel@mulgrave.site>
+References: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f215.google.com ([209.85.220.215]:43495 "EHLO
-	mail-fx0-f215.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757372Ab0BQNQe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 08:16:34 -0500
-Received: by fxm7 with SMTP id 7so8638723fxm.28
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Feb 2010 05:16:32 -0800 (PST)
-In-Reply-To: <6B62480106F2B34D8404CF2FDAA4D9EF71F646C228@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech" <satyasrinivasp@hcl.in>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Feb 17, 2010 at 12:53 PM, Srinivas Naga Venkatasatya
-Pasagadugula - ERS, HCL Tech <satyasrinivasp@hcl.in> wrote:
-> Hi Smit,
->
-> This patch is not exactly replaced with Nov-09 patches.
-> My patch addresses the RAID5/6 issues also. Below issues are addresse=
-d by my patch.
-> 1. Tape issues.
-> 2. RAID-5/6 I/O fails.
-> 3. LVM IO fails and subsequent init 6 hang (connect SAS+SATA in casca=
-ded =A0 =A0 =A0 =A0expanders, crate volume group and logical volumes, r=
-un file I/O =A0 =A0 =A0 =A0 (alltest), unplug one drive)
-> 4. Disk stress I/O on 4096 sector size.
-> 5. Hot insertion of drives giving panic.
-> 6. 'fdisk -l' hangs with hot plugging of SATA/SAS drives in expander =
-while =A0 =A0 =A0IO (Diskstress and alltest) is going on and IO stopped=
-=2E
->
-> I can't combined my patch with November-09 patches. James also reject=
-ed those patches as those are not proper. Let me know if you have issue=
-s with my patch.
->
-> --Srini.
+On Wed, 2010-02-17 at 18:07 +0530, Ramya Desai wrote:
+> What is  the number of maximum sectors that SCSI can send to MS driver
+> in a single data transfer?
+
+I have no idea what the MS driver is, so it's impossible to answer
+specifically.  Generically, for drivers that expect a contiguous sg
+list, then 128 elements (512k) is the maximum.  For drivers updated to
+use the sg chaining API (which is at least all of those in
+drivers/scsi), there is no maximum except what the hardware is limited
+to.
+
+> I changed the max_sectors in struct scsi_host_template
+> usb_stor_host_template structure to 2048. Still, SCSI is sending 1024
+> sectors (512 KB) in a single data transfer.
+> I know that my device supports 1 MB data in a sigle transfer.  How can
+> I change this to 1 MB?
+
+As long as the driver supports chaining, you increase it
+in /sys/block/dev>/queue/max_sectors_kb.  For compatibility reasons this
+stays clamped at 512 unless a user specifically raises it.
+
+James
 
 
-I haven't tested yet, but looks like you're doing excellent work, and
-your documentation/overview of the work is superb.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
