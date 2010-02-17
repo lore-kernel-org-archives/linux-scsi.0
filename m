@@ -1,104 +1,89 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH 1/1] mid-layer unblocks blocked sdev leaving queue stopped
-Date: Tue, 16 Feb 2010 15:48:39 -0600
-Message-ID: <4B7B12B7.8050601@sgi.com>
-References: <4B29628D.9090208@sgi.com> <4B73322F.2000001@sgi.com> <4B7339C7.10403@cs.wisc.edu>
+From: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech"
+	<satyasrinivasp@hcl.in>
+Subject: RE: [PATCH] MVSAS: hot plug handling and IO issues
+Date: Wed, 17 Feb 2010 12:07:47 +0530
+Message-ID: <6B62480106F2B34D8404CF2FDAA4D9EF71F646C0C3@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+References: <6B62480106F2B34D8404CF2FDAA4D9EF71F646BECA@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+ <19942.87.210.74.220.1266327794.squirrel@ketsers.dhs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.179.30]:39701 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933264Ab0BPVsu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Feb 2010 16:48:50 -0500
-In-Reply-To: <4B7339C7.10403@cs.wisc.edu>
+Received: from gws08.hcl.in ([203.105.186.28]:41422 "EHLO gws08.hcl.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751827Ab0BQGiT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 01:38:19 -0500
+In-Reply-To: <19942.87.210.74.220.1266327794.squirrel@ketsers.dhs.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@suse.de>
+To: Caspar Smit <caspar@ketsers.dhs.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, "swmike@swm.pp.se" <swmike@swm.pp.se>, "c.smit@truebit.nl" <c.smit@truebit.nl>
 
-Mike Christie wrote:
-> On 02/10/2010 04:24 PM, Michael Reed wrote:
->>> +	/*
->>> +	 * If device is blocked, leave state alone and let blocker
->>> +	 * unblock when appropriate.  Otherwise, set the device
->>> +	 * running here so that slave configure may perform i/o.
->>> +	 */
->>> +	if (sdev->sdev_state != SDEV_BLOCK) {
->>> +		ret = scsi_device_set_state(sdev, SDEV_RUNNING);
-> 
-> Do we need locking here? Is it possible that right after we check the 
-> sdev_state for being blocked, it could be be set to blocked?
 
-Since the sdev_state can be set to blocked upon entry to the routines,
-it seems likely that it could transition as you describe.  The host_lock
-appears to be the right lock for this.  Nice catch.  It does, however,
-open a can of worms.  The documentation for the _block()/_unblock()
-functions state that it is assumed the host_lock is held upon entry.
-This doesn't line up with the code, which explicitly releases the
-host_lock before calling scsi_internal_device_[un]block().
+Hi Smit,
 
-I previously toyed around with an alternate method of resolving this which
-put the onus on the unblocking thread which doesn't care about the
-sdev_state.  As scsi_internal_device_block() is the routine which stops
-the queue, I made scsi_internal_device_unblock() allow for the
-possibility that another thread had transitioned sdev_state from SDEV_BLOCK.
+This patch can't be combined with the November patch. This patch is based on kernel-2.6.32.7. Yes you need to unpatch all of them and you have to apply freshly.
+This is not the combined patch including November patches. My patch addresses the IO issues and tape issues and RAID issues also. 
 
-It's been long enough that I don't recall why I chose the patch I
-posted to resolve the issue, but this patch was also effective at
-resolving the issue.  It also confines the change to the _block()/
-_unblock() pair of routines and doesn't require changes to the
-existing locking logic.  In retrospect, this patch was probably the
-one I should have chosen to post.
+I can't create a combined patch because after applying the November patches I have faced so many issues. I guess PATCH [6/7] is giving problem with November patches.
 
-Please review.
+--Srini.
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Caspar Smit
+Sent: Tuesday, February 16, 2010 7:13 PM
+To: Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] MVSAS: hot plug handling and IO issues
 
---- a/drivers/scsi/scsi_lib.c	2010-02-08 11:19:57.000000000 -0600
-+++ b/drivers/scsi/scsi_lib.c	2010-02-11 14:35:26.249142688 -0600
-@@ -2376,7 +2376,7 @@ EXPORT_SYMBOL(scsi_target_resume);
-  *	(which must be a legal transition).  When the device is in this
-  *	state, all commands are deferred until the scsi lld reenables
-  *	the device with scsi_device_unblock or device_block_tmo fires.
-- *	This routine assumes the host_lock is held on entry.
-+ *	This routine assumes the host_lock is not held on entry.
-  */
- int
- scsi_internal_device_block(struct scsi_device *sdev)
-@@ -2420,7 +2420,7 @@ EXPORT_SYMBOL_GPL(scsi_internal_device_b
-  *	This routine transitions the device to the SDEV_RUNNING state
-  *	(which must be a legal transition) allowing the midlayer to
-  *	goose the queue for this device.  This routine assumes the 
-- *	host_lock is held upon entry.
-+ *	host_lock is not held upon entry.
-  */
- int
- scsi_internal_device_unblock(struct scsi_device *sdev)
-@@ -2431,15 +2431,23 @@ scsi_internal_device_unblock(struct scsi
- 	/* 
- 	 * Try to transition the scsi device to SDEV_RUNNING
- 	 * and goose the device queue if successful.  
-+	 * It's possible that an sdev may be blocked before it is
-+	 * completely set up.  scsi_sysfs_add_sdev() and scsi_add_lun()
-+	 * will unconditionally attempt to transition the sdev to
-+	 * SDEV_RUNNING.  To avoid leaving the queue stopped, we
-+	 * allow for the sdev to already be in the SDEV_RUNNING state.
- 	 */
-+	spin_lock_irqsave(q->queue_lock, flags);
-+
- 	if (sdev->sdev_state == SDEV_BLOCK)
- 		sdev->sdev_state = SDEV_RUNNING;
- 	else if (sdev->sdev_state == SDEV_CREATED_BLOCK)
- 		sdev->sdev_state = SDEV_CREATED;
--	else
-+	else if (sdev->sdev_state != SDEV_RUNNING || !blk_queue_stopped(q)) {
-+		spin_unlock_irqrestore(q->queue_lock, flags);
- 		return -EINVAL;
-+	}
- 
--	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_start_queue(q);
- 	spin_unlock_irqrestore(q->queue_lock, flags);
- 
+Hi Srinivas,
+
+Can this patch be combined with the november patches by Andy Yan?
+
+I patched the 2.6.32.2 kernel with patch 1,2,3,4,5,6 (NOT 7) from the
+november patches and now if I try to apply this patch it gives numerous
+errors.
+
+Do I need to unpatch any of them or can you create a combined patch or is
+this already a combined patch including the november patches?
+
+Kind regards,
+Caspar Smit
+
+> From: Srinivas <satyasrinivasp@hcl.in>
+> Date: Mon, 15 Feb 2010
+> Subject: [PATCH]: Fix for hot plug handling and IO issues.
+> 	Added code for handling of hot-plugging drives and tape issues.
+>
+> Signed-off-by: Srinivas <satyasrinivasp@hcl.in>
+> ---
+> Thanks
+> Srini
+>
+>
+> DISCLAIMER:
+> -----------------------------------------------------------------------------------------------------------------------
+>
+> The contents of this e-mail and any attachment(s) are confidential and
+> intended for the named recipient(s) only.
+> It shall not attach any liability on the originator or HCL or its
+> affiliates. Any views or opinions presented in
+> this email are solely those of the author and may not necessarily reflect
+> the opinions of HCL or its affiliates.
+> Any form of reproduction, dissemination, copying, disclosure,
+> modification, distribution and / or publication of
+> this message without the prior written consent of the author of this
+> e-mail is strictly prohibited. If you have
+> received this email in error please delete it and notify the sender
+> immediately. Before opening any mail and
+> attachments please check them for viruses and defect.
+>
+> -----------------------------------------------------------------------------------------------------------------------
+>
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
