@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 03/11] zfcp: Remove two FIXME comments
-Date: Wed, 17 Feb 2010 11:18:51 +0100
-Message-ID: <20100217102018.282212000@de.ibm.com>
+Subject: [patch 05/11] zfcp: Fix warnings from smatch
+Date: Wed, 17 Feb 2010 11:18:53 +0100
+Message-ID: <20100217102018.541503000@de.ibm.com>
 References: <20100217101848.662299000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.17.167]:57272 "EHLO
+Received: from mtagate7.de.ibm.com ([195.212.17.167]:57286 "EHLO
 	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642Ab0BQKUV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 05:20:21 -0500
-Content-Disposition: inline; filename=702-zfcp-fixme.diff
+	with ESMTP id S1752175Ab0BQKUX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 05:20:23 -0500
+Content-Disposition: inline; filename=704-zfcp-smatch-warnings.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,45 +16,56 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-On a link down, the adapter reopen is not strictly necessary, but it
-helps flushing pending requests as quickly as possible. Add a comment
-mentioning this.
+The smatch tool from http://repo.or.cz/w/smatch.git warns about this:
 
-qdio returning a problem on the response queue is an unlikely event.
-The recovery mentioned in the comment might resolve it, so implement
-it. This also has the advantage that it creates an entry in the
-recovery trace to see if and when this is occurring.
+drivers/s390/scsi/zfcp_scsi.c +64 zfcp_scsi_command_fail(5) warn: variable dereferenced before check 'scpnt->device'
+drivers/s390/scsi/zfcp_scsi.c +64 zfcp_scsi_command_fail(5) warn: variable dereferenced before check 'scpnt->device->host'
+drivers/s390/scsi/zfcp_scsi.c +93 zfcp_scsi_queuecommand(23) warn: variable dereferenced before check 'unit'
+
+Fix the first two warnings by removing the checks for scpnt->device
+and -> host: As long as the SCSI command exists, there is also a
+scsi_device and a Scsi_Host.
+
+Fix the last warning by removing the BUG_ON checks in
+zfcp_scsi_queuecommand, they are leftovers from previous paranoia
+about wrong pointers between data structures.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_fsf.c  |    2 +-
- drivers/s390/scsi/zfcp_qdio.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/s390/scsi/zfcp_scsi.c |   13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2010-02-16 09:43:29.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2010-02-16 09:43:29.000000000 +0100
-@@ -394,7 +394,7 @@ static void zfcp_fsf_protstatus_eval(str
- 	case FSF_PROT_LINK_DOWN:
- 		zfcp_fsf_link_down_info_eval(req, "fspse_5",
- 					     &psq->link_down_info);
--		/* FIXME: reopening adapter now? better wait for link up */
-+		/* go through reopen to flush pending requests */
- 		zfcp_erp_adapter_reopen(adapter, 0, "fspse_6", req);
- 		break;
- 	case FSF_PROT_REEST_QUEUE:
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_qdio.c linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c
---- linux-2.6/drivers/s390/scsi/zfcp_qdio.c	2010-02-16 09:43:26.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c	2010-02-16 09:43:29.000000000 +0100
-@@ -106,7 +106,7 @@ static void zfcp_qdio_resp_put_back(stru
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c
+--- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	2010-02-16 09:43:29.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c	2010-02-16 09:43:30.000000000 +0100
+@@ -60,10 +60,9 @@ static void zfcp_scsi_command_fail(struc
+ {
+ 	struct zfcp_adapter *adapter =
+ 		(struct zfcp_adapter *) scpnt->device->host->hostdata[0];
++
+ 	set_host_byte(scpnt, result);
+-	if ((scpnt->device != NULL) && (scpnt->device->host != NULL))
+-		zfcp_dbf_scsi_result("fail", 4, adapter->dbf, scpnt, NULL);
+-	/* return directly */
++	zfcp_dbf_scsi_result("fail", 4, adapter->dbf, scpnt, NULL);
+ 	scpnt->scsi_done(scpnt);
+ }
  
- 	if (unlikely(retval)) {
- 		atomic_set(&queue->count, count);
--		/* FIXME: Recover this with an adapter reopen? */
-+		zfcp_erp_adapter_reopen(qdio->adapter, 0, "qdrpb_1", NULL);
- 	} else {
- 		queue->first += count;
- 		queue->first %= QDIO_MAX_BUFFERS_PER_Q;
+@@ -87,14 +86,6 @@ static int zfcp_scsi_queuecommand(struct
+ 	adapter = (struct zfcp_adapter *) scpnt->device->host->hostdata[0];
+ 	unit = scpnt->device->hostdata;
+ 
+-	BUG_ON(!adapter || (adapter != unit->port->adapter));
+-	BUG_ON(!scpnt->scsi_done);
+-
+-	if (unlikely(!unit)) {
+-		zfcp_scsi_command_fail(scpnt, DID_NO_CONNECT);
+-		return 0;
+-	}
+-
+ 	scsi_result = fc_remote_port_chkready(rport);
+ 	if (unlikely(scsi_result)) {
+ 		scpnt->result = scsi_result;
 
