@@ -1,81 +1,52 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 06/11] zfcp: Dont use 0 to indicate invalid LUN in rec trace
-Date: Wed, 17 Feb 2010 11:18:54 +0100
-Message-ID: <20100217102018.671750000@de.ibm.com>
-References: <20100217101848.662299000@de.ibm.com>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH] mpt2sas : Do not call sas_is_tlr_enabled for RAID volumes.
+Date: Wed, 17 Feb 2010 16:08:36 +0530
+Message-ID: <20100217103826.GB24075@lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.17.165]:46627 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009Ab0BQKUX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 05:20:23 -0500
-Content-Disposition: inline; filename=706-zfcp-invalid-lun.diff
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:47704 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752223Ab0BQLIT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Feb 2010 06:08:19 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-0 is a valid value for a LUN. It is slightly confusing to also see 0
-in the trace entries relating to adapter and port. Change this to use
-0xFFFFFFFFFFFFFFFF in the LUN field when the trace entry does not 
-relate to a LUN or unit.
+For RAID volume sas_is_tlr_enabled call will hit BUG at
+scsi_transport_sas.c:163, since raid volume
+is not visible to sas transport layer.
+Now Added check to make sure arg pass in sas_is_tlr_enabled() is not a volume.
 
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-
- drivers/s390/scsi/zfcp_dbf.c |   12 ++++++------
- drivers/s390/scsi/zfcp_dbf.h |    2 ++
- 2 files changed, 8 insertions(+), 6 deletions(-)
-
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.c linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c
---- linux-2.6/drivers/s390/scsi/zfcp_dbf.c	2010-02-16 09:43:29.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c	2010-02-16 09:43:30.000000000 +0100
-@@ -576,7 +576,8 @@ void zfcp_dbf_rec_adapter(char *id, void
- 	struct zfcp_adapter *adapter = dbf->adapter;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 344a22a..4d04f57 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -3062,8 +3062,9 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
  
- 	zfcp_dbf_rec_target(id, ref, dbf, &adapter->status,
--				  &adapter->erp_counter, 0, 0, 0);
-+			    &adapter->erp_counter, 0, 0,
-+			    ZFCP_DBF_INVALID_LUN);
- }
+ 	} else
+ 		mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
+-
+-	if (sas_is_tlr_enabled(scmd->device))
++	/* Make sure Device is not raid volume */
++	if (!_scsih_is_raid(&scmd->device->sdev_gendev) &&
++	    	sas_is_tlr_enabled(scmd->device))
+ 		mpi_control |= MPI2_SCSIIO_CONTROL_TLR_ON;
  
- /**
-@@ -590,8 +591,8 @@ void zfcp_dbf_rec_port(char *id, void *r
- 	struct zfcp_dbf *dbf = port->adapter->dbf;
- 
- 	zfcp_dbf_rec_target(id, ref, dbf, &port->status,
--				  &port->erp_counter, port->wwpn, port->d_id,
--				  0);
-+			    &port->erp_counter, port->wwpn, port->d_id,
-+			    ZFCP_DBF_INVALID_LUN);
- }
- 
- /**
-@@ -642,10 +643,9 @@ void zfcp_dbf_rec_trigger(char *id2, voi
- 		r->u.trigger.ps = atomic_read(&port->status);
- 		r->u.trigger.wwpn = port->wwpn;
- 	}
--	if (unit) {
-+	if (unit)
- 		r->u.trigger.us = atomic_read(&unit->status);
--		r->u.trigger.fcp_lun = unit->fcp_lun;
--	}
-+	r->u.trigger.fcp_lun = unit ? unit->fcp_lun : ZFCP_DBF_INVALID_LUN;
- 	debug_event(dbf->rec, action ? 1 : 4, r, sizeof(*r));
- 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
- }
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.h linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h
---- linux-2.6/drivers/s390/scsi/zfcp_dbf.h	2010-02-16 09:43:30.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h	2010-02-16 09:43:30.000000000 +0100
-@@ -30,6 +30,8 @@
- #define ZFCP_DBF_TAG_SIZE      4
- #define ZFCP_DBF_ID_SIZE       7
- 
-+#define ZFCP_DBF_INVALID_LUN	0xFFFFFFFFFFFFFFFFull
-+
- struct zfcp_dbf_dump {
- 	u8 tag[ZFCP_DBF_TAG_SIZE];
- 	u32 total_size;		/* size of total dump data */
-
+ 	smid = mpt2sas_base_get_smid_scsiio(ioc, ioc->scsi_io_cb_idx, scmd);
+@@ -3452,7 +3453,8 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 		    le32_to_cpu(mpi_reply->ResponseInfo) & 0xFF;
+ 	if (!sas_device_priv_data->tlr_snoop_check) {
+ 		sas_device_priv_data->tlr_snoop_check++;
+-		if (sas_is_tlr_enabled(scmd->device) &&
++	if (!_scsih_is_raid(&scmd->device->sdev_gendev) &&
++		sas_is_tlr_enabled(scmd->device) &&
+ 		    response_code == MPI2_SCSITASKMGMT_RSP_INVALID_FRAME) {
+ 			sas_disable_tlr(scmd->device);
+ 			sdev_printk(KERN_INFO, scmd->device, "TLR disabled\n");
