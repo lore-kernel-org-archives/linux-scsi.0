@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 02/11] zfcp: Move FSF request tracking code to new file
-Date: Wed, 17 Feb 2010 11:18:50 +0100
-Message-ID: <20100217102018.152432000@de.ibm.com>
+Subject: [patch 08/11] zfcp: Rename sysfs_device attribute to dev in zfcp_unit and zfcp_port
+Date: Wed, 17 Feb 2010 11:18:56 +0100
+Message-ID: <20100217102018.932281000@de.ibm.com>
 References: <20100217101848.662299000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.17.165]:46624 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830Ab0BQKUX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 05:20:23 -0500
-Content-Disposition: inline; filename=701-zfcp-fsf-tracking.diff
+Received: from mtagate3.de.ibm.com ([195.212.17.163]:60054 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752223Ab0BQKUY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 05:20:24 -0500
+Content-Disposition: inline; filename=708-zfcp-sysfs-attrib.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,505 +16,656 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Move the code for tracking FSF requests to new file to have this code
-in one place. The functions for adding and removing requests on the
-I/O path are already inline. The alloc and free functions are only
-called once, so it does not hurt to inline them and add them to the
-same file.
+Kernel code uses dev as short name for the struct device. Rename the
+sysfs_device in zfcp_unit and zfcp_port to match this convention.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_aux.c     |   36 -------
- drivers/s390/scsi/zfcp_ccw.c     |    3 
- drivers/s390/scsi/zfcp_def.h     |   34 -------
- drivers/s390/scsi/zfcp_erp.c     |    7 -
- drivers/s390/scsi/zfcp_ext.h     |    1 
- drivers/s390/scsi/zfcp_fsf.c     |   32 +-----
- drivers/s390/scsi/zfcp_reqlist.h |  183 +++++++++++++++++++++++++++++++++++++++
- drivers/s390/scsi/zfcp_scsi.c    |    5 -
- 8 files changed, 203 insertions(+), 98 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c   |   54 ++++++++++++++++++-----------------------
+ drivers/s390/scsi/zfcp_ccw.c   |    8 ++----
+ drivers/s390/scsi/zfcp_def.h   |    6 ++--
+ drivers/s390/scsi/zfcp_erp.c   |   14 +++++-----
+ drivers/s390/scsi/zfcp_fc.c    |   23 ++++++++---------
+ drivers/s390/scsi/zfcp_fsf.c   |   14 +++++-----
+ drivers/s390/scsi/zfcp_scsi.c  |   18 ++++++-------
+ drivers/s390/scsi/zfcp_sysfs.c |   37 ++++++++++++----------------
+ 8 files changed, 81 insertions(+), 93 deletions(-)
 
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_aux.c linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c
---- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2010-02-16 09:43:05.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2010-02-16 09:43:29.000000000 +0100
-@@ -32,6 +32,7 @@
- #include <linux/seq_file.h>
- #include "zfcp_ext.h"
- #include "zfcp_fc.h"
-+#include "zfcp_reqlist.h"
+--- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2010-02-16 09:43:29.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Module interface and handling of zfcp data structures.
+  *
+- * Copyright IBM Corporation 2002, 2009
++ * Copyright IBM Corporation 2002, 2010
+  */
  
- #define ZFCP_BUS_ID_SIZE	20
+ /*
+@@ -81,7 +81,7 @@ static void __init zfcp_init_device_conf
+ 	flush_work(&unit->scsi_work);
  
-@@ -49,36 +50,6 @@ static struct kmem_cache *zfcp_cache_hw_
- 	return kmem_cache_create(name, size, roundup_pow_of_two(size), 0, NULL);
+ out_unit:
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ out_port:
+ 	zfcp_ccw_adapter_put(adapter);
+ out_ccw_device:
+@@ -226,7 +226,7 @@ struct zfcp_unit *zfcp_get_unit_by_lun(s
+ 	read_lock_irqsave(&port->unit_list_lock, flags);
+ 	list_for_each_entry(unit, &port->unit_list, list)
+ 		if (unit->fcp_lun == fcp_lun) {
+-			if (!get_device(&unit->sysfs_device))
++			if (!get_device(&unit->dev))
+ 				unit = NULL;
+ 			read_unlock_irqrestore(&port->unit_list_lock, flags);
+ 			return unit;
+@@ -251,7 +251,7 @@ struct zfcp_port *zfcp_get_port_by_wwpn(
+ 	read_lock_irqsave(&adapter->port_list_lock, flags);
+ 	list_for_each_entry(port, &adapter->port_list, list)
+ 		if (port->wwpn == wwpn) {
+-			if (!get_device(&port->sysfs_device))
++			if (!get_device(&port->dev))
+ 				port = NULL;
+ 			read_unlock_irqrestore(&adapter->port_list_lock, flags);
+ 			return port;
+@@ -269,10 +269,9 @@ struct zfcp_port *zfcp_get_port_by_wwpn(
+  */
+ static void zfcp_unit_release(struct device *dev)
+ {
+-	struct zfcp_unit *unit = container_of(dev, struct zfcp_unit,
+-					      sysfs_device);
++	struct zfcp_unit *unit = container_of(dev, struct zfcp_unit, dev);
+ 
+-	put_device(&unit->port->sysfs_device);
++	put_device(&unit->port->dev);
+ 	kfree(unit);
  }
  
--static int zfcp_reqlist_alloc(struct zfcp_adapter *adapter)
--{
--	int idx;
--
--	adapter->req_list = kcalloc(REQUEST_LIST_SIZE, sizeof(struct list_head),
--				    GFP_KERNEL);
--	if (!adapter->req_list)
--		return -ENOMEM;
--
--	for (idx = 0; idx < REQUEST_LIST_SIZE; idx++)
--		INIT_LIST_HEAD(&adapter->req_list[idx]);
--	return 0;
--}
--
--/**
-- * zfcp_reqlist_isempty - is the request list empty
-- * @adapter: pointer to struct zfcp_adapter
-- *
-- * Returns: true if list is empty, false otherwise
-- */
--int zfcp_reqlist_isempty(struct zfcp_adapter *adapter)
--{
--	unsigned int idx;
--
--	for (idx = 0; idx < REQUEST_LIST_SIZE; idx++)
--		if (!list_empty(&adapter->req_list[idx]))
--			return 0;
--	return 1;
--}
--
- static void __init zfcp_init_device_configure(char *busid, u64 wwpn, u64 lun)
- {
- 	struct ccw_device *cdev;
-@@ -539,7 +510,8 @@ struct zfcp_adapter *zfcp_adapter_enqueu
- 	if (zfcp_allocate_low_mem_buffers(adapter))
- 		goto failed;
+@@ -289,11 +288,11 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
+ 	struct zfcp_unit *unit;
+ 	int retval = -ENOMEM;
  
--	if (zfcp_reqlist_alloc(adapter))
-+	adapter->req_list = zfcp_reqlist_alloc();
-+	if (!adapter->req_list)
- 		goto failed;
+-	get_device(&port->sysfs_device);
++	get_device(&port->dev);
  
- 	if (zfcp_dbf_adapter_register(adapter))
-@@ -560,8 +532,6 @@ struct zfcp_adapter *zfcp_adapter_enqueu
- 	INIT_LIST_HEAD(&adapter->erp_ready_head);
- 	INIT_LIST_HEAD(&adapter->erp_running_head);
+ 	unit = zfcp_get_unit_by_lun(port, fcp_lun);
+ 	if (unit) {
+-		put_device(&unit->sysfs_device);
++		put_device(&unit->dev);
+ 		retval = -EEXIST;
+ 		goto err_out;
+ 	}
+@@ -304,10 +303,10 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
  
--	spin_lock_init(&adapter->req_list_lock);
--
- 	rwlock_init(&adapter->erp_lock);
- 	rwlock_init(&adapter->abort_lock);
+ 	unit->port = port;
+ 	unit->fcp_lun = fcp_lun;
+-	unit->sysfs_device.parent = &port->sysfs_device;
+-	unit->sysfs_device.release = zfcp_unit_release;
++	unit->dev.parent = &port->dev;
++	unit->dev.release = zfcp_unit_release;
  
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ccw.c linux-2.6-patched/drivers/s390/scsi/zfcp_ccw.c
---- linux-2.6/drivers/s390/scsi/zfcp_ccw.c	2010-02-16 09:43:05.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_ccw.c	2010-02-16 09:43:29.000000000 +0100
-@@ -10,6 +10,7 @@
- #define pr_fmt(fmt) KMSG_COMPONENT ": " fmt
+-	if (dev_set_name(&unit->sysfs_device, "0x%016llx",
++	if (dev_set_name(&unit->dev, "0x%016llx",
+ 			 (unsigned long long) fcp_lun)) {
+ 		kfree(unit);
+ 		goto err_out;
+@@ -324,13 +323,12 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
+ 	unit->latencies.cmd.channel.min = 0xFFFFFFFF;
+ 	unit->latencies.cmd.fabric.min = 0xFFFFFFFF;
  
- #include "zfcp_ext.h"
-+#include "zfcp_reqlist.h"
- 
- #define ZFCP_MODEL_PRIV 0x4
- 
-@@ -162,7 +163,7 @@ static int zfcp_ccw_set_online(struct cc
+-	if (device_register(&unit->sysfs_device)) {
+-		put_device(&unit->sysfs_device);
++	if (device_register(&unit->dev)) {
++		put_device(&unit->dev);
+ 		goto err_out;
  	}
  
- 	/* initialize request counter */
--	BUG_ON(!zfcp_reqlist_isempty(adapter));
-+	BUG_ON(!zfcp_reqlist_isempty(adapter->req_list));
- 	adapter->req_no = 0;
+-	if (sysfs_create_group(&unit->sysfs_device.kobj,
+-			       &zfcp_sysfs_unit_attrs))
++	if (sysfs_create_group(&unit->dev.kobj, &zfcp_sysfs_unit_attrs))
+ 		goto err_out_put;
  
- 	zfcp_erp_modify_adapter_status(adapter, "ccsonl1", NULL,
+ 	write_lock_irq(&port->unit_list_lock);
+@@ -342,9 +340,9 @@ struct zfcp_unit *zfcp_unit_enqueue(stru
+ 	return unit;
+ 
+ err_out_put:
+-	device_unregister(&unit->sysfs_device);
++	device_unregister(&unit->dev);
+ err_out:
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ 	return ERR_PTR(retval);
+ }
+ 
+@@ -610,8 +608,7 @@ void zfcp_device_unregister(struct devic
+ 
+ static void zfcp_port_release(struct device *dev)
+ {
+-	struct zfcp_port *port = container_of(dev, struct zfcp_port,
+-					      sysfs_device);
++	struct zfcp_port *port = container_of(dev, struct zfcp_port, dev);
+ 
+ 	zfcp_ccw_adapter_put(port->adapter);
+ 	kfree(port);
+@@ -639,7 +636,7 @@ struct zfcp_port *zfcp_port_enqueue(stru
+ 
+ 	port = zfcp_get_port_by_wwpn(adapter, wwpn);
+ 	if (port) {
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ 		retval = -EEXIST;
+ 		goto err_out;
+ 	}
+@@ -659,22 +656,21 @@ struct zfcp_port *zfcp_port_enqueue(stru
+ 	port->d_id = d_id;
+ 	port->wwpn = wwpn;
+ 	port->rport_task = RPORT_NONE;
+-	port->sysfs_device.parent = &adapter->ccw_device->dev;
+-	port->sysfs_device.release = zfcp_port_release;
++	port->dev.parent = &adapter->ccw_device->dev;
++	port->dev.release = zfcp_port_release;
+ 
+-	if (dev_set_name(&port->sysfs_device, "0x%016llx",
+-			 (unsigned long long)wwpn)) {
++	if (dev_set_name(&port->dev, "0x%016llx", (unsigned long long)wwpn)) {
+ 		kfree(port);
+ 		goto err_out;
+ 	}
+ 	retval = -EINVAL;
+ 
+-	if (device_register(&port->sysfs_device)) {
+-		put_device(&port->sysfs_device);
++	if (device_register(&port->dev)) {
++		put_device(&port->dev);
+ 		goto err_out;
+ 	}
+ 
+-	if (sysfs_create_group(&port->sysfs_device.kobj,
++	if (sysfs_create_group(&port->dev.kobj,
+ 			       &zfcp_sysfs_port_attrs))
+ 		goto err_out_put;
+ 
+@@ -687,7 +683,7 @@ struct zfcp_port *zfcp_port_enqueue(stru
+ 	return port;
+ 
+ err_out_put:
+-	device_unregister(&port->sysfs_device);
++	device_unregister(&port->dev);
+ err_out:
+ 	zfcp_ccw_adapter_put(adapter);
+ 	return ERR_PTR(retval);
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ccw.c linux-2.6-patched/drivers/s390/scsi/zfcp_ccw.c
+--- linux-2.6/drivers/s390/scsi/zfcp_ccw.c	2010-02-16 09:43:29.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_ccw.c	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Registration and callback for the s390 common I/O layer.
+  *
+- * Copyright IBM Corporation 2002, 2009
++ * Copyright IBM Corporation 2002, 2010
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -123,12 +123,10 @@ static void zfcp_ccw_remove(struct ccw_d
+ 	zfcp_ccw_adapter_put(adapter); /* put from zfcp_ccw_adapter_by_cdev */
+ 
+ 	list_for_each_entry_safe(unit, u, &unit_remove_lh, list)
+-		zfcp_device_unregister(&unit->sysfs_device,
+-				       &zfcp_sysfs_unit_attrs);
++		zfcp_device_unregister(&unit->dev, &zfcp_sysfs_unit_attrs);
+ 
+ 	list_for_each_entry_safe(port, p, &port_remove_lh, list)
+-		zfcp_device_unregister(&port->sysfs_device,
+-				       &zfcp_sysfs_port_attrs);
++		zfcp_device_unregister(&port->dev, &zfcp_sysfs_port_attrs);
+ 
+ 	zfcp_adapter_unregister(adapter);
+ }
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
 --- linux-2.6/drivers/s390/scsi/zfcp_def.h	2010-02-16 09:43:29.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2010-02-16 09:43:29.000000000 +0100
-@@ -39,9 +39,7 @@
- #include <asm/sysinfo.h>
- #include "zfcp_fsf.h"
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Global definitions for the zfcp device driver.
+  *
+- * Copyright IBM Corporation 2002, 2009
++ * Copyright IBM Corporation 2002, 2010
+  */
  
--/********************* GENERAL DEFINES *********************************/
--
--#define REQUEST_LIST_SIZE 128
-+struct zfcp_reqlist;
+ #ifndef ZFCP_DEF_H
+@@ -237,7 +237,7 @@ struct zfcp_adapter {
+ };
  
- /********************* SCSI SPECIFIC DEFINES *********************************/
- #define ZFCP_SCSI_ER_TIMEOUT                    (10*HZ)
-@@ -206,8 +204,7 @@ struct zfcp_adapter {
- 	struct list_head	port_list;	   /* remote port list */
- 	rwlock_t		port_list_lock;    /* port list lock */
- 	unsigned long		req_no;		   /* unique FSF req number */
--	struct list_head	*req_list;	   /* list of pending reqs */
--	spinlock_t		req_list_lock;	   /* request list lock */
-+	struct zfcp_reqlist	*req_list;
- 	u32			fsf_req_seq_no;	   /* FSF cmnd seq number */
- 	rwlock_t		abort_lock;        /* Protects against SCSI
- 						      stack abort/command
-@@ -351,31 +348,4 @@ struct zfcp_data {
- #define ZFCP_SET                0x00000100
- #define ZFCP_CLEAR              0x00000200
+ struct zfcp_port {
+-	struct device          sysfs_device;   /* sysfs device */
++	struct device          dev;
+ 	struct fc_rport        *rport;         /* rport of fc transport class */
+ 	struct list_head       list;	       /* list of remote ports */
+ 	struct zfcp_adapter    *adapter;       /* adapter used to access port */
+@@ -259,7 +259,7 @@ struct zfcp_port {
+ };
  
--/*
-- * Helper functions for request ID management.
-- */
--static inline int zfcp_reqlist_hash(unsigned long req_id)
--{
--	return req_id % REQUEST_LIST_SIZE;
--}
--
--static inline void zfcp_reqlist_remove(struct zfcp_adapter *adapter,
--				       struct zfcp_fsf_req *fsf_req)
--{
--	list_del(&fsf_req->list);
--}
--
--static inline struct zfcp_fsf_req *
--zfcp_reqlist_find(struct zfcp_adapter *adapter, unsigned long req_id)
--{
--	struct zfcp_fsf_req *request;
--	unsigned int idx;
--
--	idx = zfcp_reqlist_hash(req_id);
--	list_for_each_entry(request, &adapter->req_list[idx], list)
--		if (request->req_id == req_id)
--			return request;
--	return NULL;
--}
--
- #endif /* ZFCP_DEF_H */
+ struct zfcp_unit {
+-	struct device          sysfs_device;   /* sysfs device */
++	struct device          dev;
+ 	struct list_head       list;	       /* list of logical units */
+ 	struct zfcp_port       *port;	       /* remote port of unit */
+ 	atomic_t	       status;	       /* status of this logical unit */
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
 --- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2010-02-16 09:43:29.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2010-02-16 09:43:29.000000000 +0100
-@@ -11,6 +11,7 @@
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Error Recovery Procedures (ERP).
+  *
+- * Copyright IBM Corporation 2002, 2009
++ * Copyright IBM Corporation 2002, 2010
+  */
  
- #include <linux/kthread.h>
- #include "zfcp_ext.h"
-+#include "zfcp_reqlist.h"
+ #define KMSG_COMPONENT "zfcp"
+@@ -175,7 +175,7 @@ static struct zfcp_erp_action *zfcp_erp_
  
- #define ZFCP_MAX_ERPS                   3
+ 	switch (need) {
+ 	case ZFCP_ERP_ACTION_REOPEN_UNIT:
+-		if (!get_device(&unit->sysfs_device))
++		if (!get_device(&unit->dev))
+ 			return NULL;
+ 		atomic_set_mask(ZFCP_STATUS_COMMON_ERP_INUSE, &unit->status);
+ 		erp_action = &unit->erp_action;
+@@ -185,7 +185,7 @@ static struct zfcp_erp_action *zfcp_erp_
  
-@@ -483,8 +484,8 @@ static void zfcp_erp_strategy_check_fsfr
- 	if (!act->fsf_req_id)
- 		return;
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT:
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
+-		if (!get_device(&port->sysfs_device))
++		if (!get_device(&port->dev))
+ 			return NULL;
+ 		zfcp_erp_action_dismiss_port(port);
+ 		atomic_set_mask(ZFCP_STATUS_COMMON_ERP_INUSE, &port->status);
+@@ -1181,19 +1181,19 @@ static void zfcp_erp_action_cleanup(stru
+ 	switch (act->action) {
+ 	case ZFCP_ERP_ACTION_REOPEN_UNIT:
+ 		if ((result == ZFCP_ERP_SUCCEEDED) && !unit->device) {
+-			get_device(&unit->sysfs_device);
++			get_device(&unit->dev);
+ 			if (scsi_queue_work(unit->port->adapter->scsi_host,
+ 					    &unit->scsi_work) <= 0)
+-				put_device(&unit->sysfs_device);
++				put_device(&unit->dev);
+ 		}
+-		put_device(&unit->sysfs_device);
++		put_device(&unit->dev);
+ 		break;
  
--	spin_lock(&adapter->req_list_lock);
--	req = zfcp_reqlist_find(adapter, act->fsf_req_id);
-+	spin_lock(&adapter->req_list->lock);
-+	req = _zfcp_reqlist_find(adapter->req_list, act->fsf_req_id);
- 	if (req && req->erp_action == act) {
- 		if (act->status & (ZFCP_STATUS_ERP_DISMISSED |
- 				   ZFCP_STATUS_ERP_TIMEDOUT)) {
-@@ -498,7 +499,7 @@ static void zfcp_erp_strategy_check_fsfr
- 			act->fsf_req_id = 0;
- 	} else
- 		act->fsf_req_id = 0;
--	spin_unlock(&adapter->req_list_lock);
-+	spin_unlock(&adapter->req_list->lock);
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT:
+ 		if (result == ZFCP_ERP_SUCCEEDED)
+ 			zfcp_scsi_schedule_rport_register(port);
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ 		break;
+ 
+ 	case ZFCP_ERP_ACTION_REOPEN_ADAPTER:
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
+--- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2010-02-16 09:43:05.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Fibre Channel related functions for the zfcp device driver.
+  *
+- * Copyright IBM Corporation 2008, 2009
++ * Copyright IBM Corporation 2008, 2010
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -316,7 +316,7 @@ void zfcp_fc_port_did_lookup(struct work
+ 
+ 	zfcp_erp_port_reopen(port, 0, "fcgpn_3", NULL);
+ out:
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
  }
  
  /**
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h
---- linux-2.6/drivers/s390/scsi/zfcp_ext.h	2010-02-16 09:43:05.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h	2010-02-16 09:43:29.000000000 +0100
-@@ -21,7 +21,6 @@ extern struct zfcp_adapter *zfcp_adapter
- extern struct zfcp_port *zfcp_port_enqueue(struct zfcp_adapter *, u64, u32,
- 					   u32);
- extern struct zfcp_unit *zfcp_unit_enqueue(struct zfcp_port *, u64);
--extern int zfcp_reqlist_isempty(struct zfcp_adapter *);
- extern void zfcp_sg_free_table(struct scatterlist *, int);
- extern int zfcp_sg_setup_table(struct scatterlist *, int);
- extern void zfcp_device_unregister(struct device *,
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2010-02-16 09:43:29.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2010-02-16 09:43:29.000000000 +0100
-@@ -14,6 +14,7 @@
- #include "zfcp_ext.h"
- #include "zfcp_fc.h"
- #include "zfcp_dbf.h"
-+#include "zfcp_reqlist.h"
- 
- static void zfcp_fsf_request_timeout_handler(unsigned long data)
+@@ -325,9 +325,9 @@ out:
+  */
+ void zfcp_fc_trigger_did_lookup(struct zfcp_port *port)
  {
-@@ -457,15 +458,10 @@ static void zfcp_fsf_req_complete(struct
- void zfcp_fsf_req_dismiss_all(struct zfcp_adapter *adapter)
+-	get_device(&port->sysfs_device);
++	get_device(&port->dev);
+ 	if (!queue_work(port->adapter->work_queue, &port->gid_pn_work))
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ }
+ 
+ /**
+@@ -389,7 +389,7 @@ static void zfcp_fc_adisc_handler(void *
+ 	zfcp_scsi_schedule_rport_register(port);
+  out:
+ 	atomic_clear_mask(ZFCP_STATUS_PORT_LINK_TEST, &port->status);
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ 	kmem_cache_free(zfcp_data.adisc_cache, adisc);
+ }
+ 
+@@ -436,7 +436,7 @@ void zfcp_fc_link_test_work(struct work_
+ 		container_of(work, struct zfcp_port, test_link_work);
+ 	int retval;
+ 
+-	get_device(&port->sysfs_device);
++	get_device(&port->dev);
+ 	port->rport_task = RPORT_DEL;
+ 	zfcp_scsi_rport_work(&port->rport_work);
+ 
+@@ -455,7 +455,7 @@ void zfcp_fc_link_test_work(struct work_
+ 	zfcp_erp_port_forced_reopen(port, 0, "fcltwk1", NULL);
+ 
+ out:
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ }
+ 
+ /**
+@@ -468,9 +468,9 @@ out:
+  */
+ void zfcp_fc_test_link(struct zfcp_port *port)
  {
- 	struct zfcp_fsf_req *req, *tmp;
--	unsigned long flags;
- 	LIST_HEAD(remove_queue);
--	unsigned int i;
+-	get_device(&port->sysfs_device);
++	get_device(&port->dev);
+ 	if (!queue_work(port->adapter->work_queue, &port->test_link_work))
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ }
  
- 	BUG_ON(atomic_read(&adapter->status) & ZFCP_STATUS_ADAPTER_QDIOUP);
--	spin_lock_irqsave(&adapter->req_list_lock, flags);
--	for (i = 0; i < REQUEST_LIST_SIZE; i++)
--		list_splice_init(&adapter->req_list[i], &remove_queue);
--	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
-+	zfcp_reqlist_move(adapter->req_list, &remove_queue);
+ static void zfcp_free_sg_env(struct zfcp_fc_gpn_ft *gpn_ft, int buf_num)
+@@ -617,8 +617,7 @@ static int zfcp_fc_eval_gpn_ft(struct zf
  
- 	list_for_each_entry_safe(req, tmp, &remove_queue, list) {
- 		list_del(&req->list);
-@@ -770,27 +766,17 @@ static int zfcp_fsf_req_send(struct zfcp
- {
- 	struct zfcp_adapter *adapter = req->adapter;
- 	struct zfcp_qdio *qdio = adapter->qdio;
--	unsigned long	     flags;
--	int		     idx;
--	int		     with_qtcb = (req->qtcb != NULL);
-+	int with_qtcb = (req->qtcb != NULL);
- 	int req_id = req->req_id;
- 
--	/* put allocated FSF request into hash table */
--	spin_lock_irqsave(&adapter->req_list_lock, flags);
--	idx = zfcp_reqlist_hash(req_id);
--	list_add_tail(&req->list, &adapter->req_list[idx]);
--	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
-+	zfcp_reqlist_add(adapter->req_list, req);
- 
- 	req->queue_req.qdio_outb_usage = atomic_read(&qdio->req_q.count);
- 	req->issued = get_clock();
- 	if (zfcp_qdio_send(qdio, &req->queue_req)) {
- 		del_timer(&req->timer);
--		spin_lock_irqsave(&adapter->req_list_lock, flags);
- 		/* lookup request again, list might have changed */
--		req = zfcp_reqlist_find(adapter, req_id);
--		if (req)
--			zfcp_reqlist_remove(adapter, req);
--		spin_unlock_irqrestore(&adapter->req_list_lock, flags);
-+		zfcp_reqlist_find_rm(adapter->req_list, req_id);
- 		zfcp_erp_adapter_reopen(adapter, 0, "fsrs__1", req);
- 		return -EIO;
+ 	list_for_each_entry_safe(port, tmp, &remove_lh, list) {
+ 		zfcp_erp_port_shutdown(port, 0, "fcegpf2", NULL);
+-		zfcp_device_unregister(&port->sysfs_device,
+-				       &zfcp_sysfs_port_attrs);
++		zfcp_device_unregister(&port->dev, &zfcp_sysfs_port_attrs);
  	}
-@@ -2518,15 +2504,14 @@ void zfcp_fsf_reqid_check(struct zfcp_qd
- 	struct qdio_buffer *sbal = qdio->resp_q.sbal[sbal_idx];
- 	struct qdio_buffer_element *sbale;
- 	struct zfcp_fsf_req *fsf_req;
--	unsigned long flags, req_id;
-+	unsigned long req_id;
- 	int idx;
  
- 	for (idx = 0; idx < QDIO_MAX_ELEMENTS_PER_BUFFER; idx++) {
+ 	return ret;
+@@ -731,7 +730,7 @@ static int zfcp_fc_exec_els_job(struct f
+ 			return -EINVAL;
  
- 		sbale = &sbal->element[idx];
- 		req_id = (unsigned long) sbale->addr;
--		spin_lock_irqsave(&adapter->req_list_lock, flags);
--		fsf_req = zfcp_reqlist_find(adapter, req_id);
-+		fsf_req = zfcp_reqlist_find_rm(adapter->req_list, req_id);
+ 		d_id = port->d_id;
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ 	} else
+ 		d_id = ntoh24(job->request->rqst_data.h_els.port_id);
  
- 		if (!fsf_req)
- 			/*
-@@ -2536,9 +2521,6 @@ void zfcp_fsf_reqid_check(struct zfcp_qd
- 			panic("error: unknown req_id (%lx) on adapter %s.\n",
- 			      req_id, dev_name(&adapter->ccw_device->dev));
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
+--- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2010-02-16 09:43:31.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Implementation of FSF commands.
+  *
+- * Copyright IBM Corporation 2002, 2009
++ * Copyright IBM Corporation 2002, 2010
+  */
  
--		list_del(&fsf_req->list);
--		spin_unlock_irqrestore(&adapter->req_list_lock, flags);
--
- 		fsf_req->queue_req.sbal_response = sbal_idx;
- 		fsf_req->queue_req.qdio_inb_usage =
- 			atomic_read(&qdio->resp_q.count);
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_reqlist.h linux-2.6-patched/drivers/s390/scsi/zfcp_reqlist.h
---- linux-2.6/drivers/s390/scsi/zfcp_reqlist.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_reqlist.h	2010-02-16 09:43:29.000000000 +0100
-@@ -0,0 +1,183 @@
-+/*
-+ * zfcp device driver
-+ *
-+ * Data structure and helper functions for tracking pending FSF
-+ * requests.
-+ *
-+ * Copyright IBM Corporation 2009
-+ */
-+
-+#ifndef ZFCP_REQLIST_H
-+#define ZFCP_REQLIST_H
-+
-+/* number of hash buckets */
-+#define ZFCP_REQ_LIST_BUCKETS 128
-+
-+/**
-+ * struct zfcp_reqlist - Container for request list (reqlist)
-+ * @lock: Spinlock for protecting the hash list
-+ * @list: Array of hashbuckets, each is a list of requests in this bucket
-+ */
-+struct zfcp_reqlist {
-+	spinlock_t lock;
-+	struct list_head buckets[ZFCP_REQ_LIST_BUCKETS];
-+};
-+
-+static inline int zfcp_reqlist_hash(unsigned long req_id)
-+{
-+	return req_id % ZFCP_REQ_LIST_BUCKETS;
-+}
-+
-+/**
-+ * zfcp_reqlist_alloc - Allocate and initialize reqlist
-+ *
-+ * Returns pointer to allocated reqlist on success, or NULL on
-+ * allocation failure.
-+ */
-+static inline struct zfcp_reqlist *zfcp_reqlist_alloc(void)
-+{
-+	unsigned int i;
-+	struct zfcp_reqlist *rl;
-+
-+	rl = kzalloc(sizeof(struct zfcp_reqlist), GFP_KERNEL);
-+	if (!rl)
-+		return NULL;
-+
-+	spin_lock_init(&rl->lock);
-+
-+	for (i = 0; i < ZFCP_REQ_LIST_BUCKETS; i++)
-+		INIT_LIST_HEAD(&rl->buckets[i]);
-+
-+	return rl;
-+}
-+
-+/**
-+ * zfcp_reqlist_isempty - Check whether the request list empty
-+ * @rl: pointer to reqlist
-+ *
-+ * Returns: 1 if list is empty, 0 if not
-+ */
-+static inline int zfcp_reqlist_isempty(struct zfcp_reqlist *rl)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i < ZFCP_REQ_LIST_BUCKETS; i++)
-+		if (!list_empty(&rl->buckets[i]))
-+			return 0;
-+	return 1;
-+}
-+
-+/**
-+ * zfcp_reqlist_free - Free allocated memory for reqlist
-+ * @rl: The reqlist where to free memory
-+ */
-+static inline void zfcp_reqlist_free(struct zfcp_reqlist *rl)
-+{
-+	/* sanity check */
-+	BUG_ON(!zfcp_reqlist_isempty(rl));
-+
-+	kfree(rl);
-+}
-+
-+static inline struct zfcp_fsf_req *
-+_zfcp_reqlist_find(struct zfcp_reqlist *rl, unsigned long req_id)
-+{
-+	struct zfcp_fsf_req *req;
-+	unsigned int i;
-+
-+	i = zfcp_reqlist_hash(req_id);
-+	list_for_each_entry(req, &rl->buckets[i], list)
-+		if (req->req_id == req_id)
-+			return req;
-+	return NULL;
-+}
-+
-+/**
-+ * zfcp_reqlist_find - Lookup FSF request by its request id
-+ * @rl: The reqlist where to lookup the FSF request
-+ * @req_id: The request id to look for
-+ *
-+ * Returns a pointer to the FSF request with the specified request id
-+ * or NULL if there is no known FSF request with this id.
-+ */
-+static inline struct zfcp_fsf_req *
-+zfcp_reqlist_find(struct zfcp_reqlist *rl, unsigned long req_id)
-+{
-+	unsigned long flags;
-+	struct zfcp_fsf_req *req;
-+
-+	spin_lock_irqsave(&rl->lock, flags);
-+	req = _zfcp_reqlist_find(rl, req_id);
-+	spin_unlock_irqrestore(&rl->lock, flags);
-+
-+	return req;
-+}
-+
-+/**
-+ * zfcp_reqlist_find_rm - Lookup request by id and remove it from reqlist
-+ * @rl: reqlist where to search and remove entry
-+ * @req_id: The request id of the request to look for
-+ *
-+ * This functions tries to find the FSF request with the specified
-+ * id and then removes it from the reqlist. The reqlist lock is held
-+ * during both steps of the operation.
-+ *
-+ * Returns: Pointer to the FSF request if the request has been found,
-+ * NULL if it has not been found.
-+ */
-+static inline struct zfcp_fsf_req *
-+zfcp_reqlist_find_rm(struct zfcp_reqlist *rl, unsigned long req_id)
-+{
-+	unsigned long flags;
-+	struct zfcp_fsf_req *req;
-+
-+	spin_lock_irqsave(&rl->lock, flags);
-+	req = _zfcp_reqlist_find(rl, req_id);
-+	if (req)
-+		list_del(&req->list);
-+	spin_unlock_irqrestore(&rl->lock, flags);
-+
-+	return req;
-+}
-+
-+/**
-+ * zfcp_reqlist_add - Add entry to reqlist
-+ * @rl: reqlist where to add the entry
-+ * @req: The entry to add
-+ *
-+ * The request id always increases. As an optimization new requests
-+ * are added here with list_add_tail at the end of the bucket lists
-+ * while old requests are looked up starting at the beginning of the
-+ * lists.
-+ */
-+static inline void zfcp_reqlist_add(struct zfcp_reqlist *rl,
-+				    struct zfcp_fsf_req *req)
-+{
-+	unsigned int i;
-+	unsigned long flags;
-+
-+	i = zfcp_reqlist_hash(req->req_id);
-+
-+	spin_lock_irqsave(&rl->lock, flags);
-+	list_add_tail(&req->list, &rl->buckets[i]);
-+	spin_unlock_irqrestore(&rl->lock, flags);
-+}
-+
-+/**
-+ * zfcp_reqlist_move - Move all entries from reqlist to simple list
-+ * @rl: The zfcp_reqlist where to remove all entries
-+ * @list: The list where to move all entries
-+ */
-+static inline void zfcp_reqlist_move(struct zfcp_reqlist *rl,
-+				     struct list_head *list)
-+{
-+	unsigned int i;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&rl->lock, flags);
-+	for (i = 0; i < ZFCP_REQ_LIST_BUCKETS; i++)
-+		list_splice_init(&rl->buckets[i], list);
-+	spin_unlock_irqrestore(&rl->lock, flags);
-+}
-+
-+#endif /* ZFCP_REQLIST_H */
+ #define KMSG_COMPONENT "zfcp"
+@@ -1471,7 +1471,7 @@ static void zfcp_fsf_open_port_handler(s
+ 	}
+ 
+ out:
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ }
+ 
+ /**
+@@ -1509,14 +1509,14 @@ int zfcp_fsf_open_port(struct zfcp_erp_a
+ 	req->data = port;
+ 	req->erp_action = erp_action;
+ 	erp_action->fsf_req_id = req->req_id;
+-	get_device(&port->sysfs_device);
++	get_device(&port->dev);
+ 
+ 	zfcp_fsf_start_erp_timer(req);
+ 	retval = zfcp_fsf_req_send(req);
+ 	if (retval) {
+ 		zfcp_fsf_req_free(req);
+ 		erp_action->fsf_req_id = 0;
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ 	}
+ out:
+ 	spin_unlock_bh(&qdio->req_q_lock);
+@@ -2261,7 +2261,7 @@ skip_fsfstatus:
+ 	else {
+ 		zfcp_fsf_send_fcp_command_task_handler(req);
+ 		req->unit = NULL;
+-		put_device(&unit->sysfs_device);
++		put_device(&unit->dev);
+ 	}
+ }
+ 
+@@ -2299,7 +2299,7 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 	}
+ 
+ 	req->status |= ZFCP_STATUS_FSFREQ_CLEANUP;
+-	get_device(&unit->sysfs_device);
++	get_device(&unit->dev);
+ 	req->unit = unit;
+ 	req->data = scsi_cmnd;
+ 	req->handler = zfcp_fsf_send_fcp_command_handler;
+@@ -2356,7 +2356,7 @@ int zfcp_fsf_send_fcp_command_task(struc
+ 	goto out;
+ 
+ failed_scsi_cmnd:
+-	put_device(&unit->sysfs_device);
++	put_device(&unit->dev);
+ 	zfcp_fsf_req_free(req);
+ 	scsi_cmnd->host_scribble = NULL;
+ out:
 diff -urpN linux-2.6/drivers/s390/scsi/zfcp_scsi.c linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c
---- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	2010-02-16 09:43:05.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c	2010-02-16 09:43:29.000000000 +0100
-@@ -15,6 +15,7 @@
- #include "zfcp_ext.h"
- #include "zfcp_dbf.h"
- #include "zfcp_fc.h"
-+#include "zfcp_reqlist.h"
+--- linux-2.6/drivers/s390/scsi/zfcp_scsi.c	2010-02-16 09:43:30.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_scsi.c	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * Interface to Linux SCSI midlayer.
+  *
+- * Copyright IBM Corporation 2002, 2009
++ * Copyright IBM Corporation 2002, 2010
+  */
  
- static unsigned int default_depth = 32;
- module_param_named(queue_depth, default_depth, uint, 0600);
-@@ -189,9 +190,7 @@ static int zfcp_scsi_eh_abort_handler(st
- 	/* avoid race condition between late normal completion and abort */
- 	write_lock_irqsave(&adapter->abort_lock, flags);
+ #define KMSG_COMPONENT "zfcp"
+@@ -44,7 +44,7 @@ static void zfcp_scsi_slave_destroy(stru
+ {
+ 	struct zfcp_unit *unit = (struct zfcp_unit *) sdpnt->hostdata;
+ 	unit->device = NULL;
+-	put_device(&unit->sysfs_device);
++	put_device(&unit->dev);
+ }
  
--	spin_lock(&adapter->req_list_lock);
--	old_req = zfcp_reqlist_find(adapter, old_reqid);
--	spin_unlock(&adapter->req_list_lock);
-+	old_req = zfcp_reqlist_find(adapter->req_list, old_reqid);
- 	if (!old_req) {
- 		write_unlock_irqrestore(&adapter->abort_lock, flags);
- 		zfcp_dbf_scsi_abort("lte1", adapter->dbf, scpnt, NULL,
+ static int zfcp_scsi_slave_configure(struct scsi_device *sdp)
+@@ -511,7 +511,7 @@ static void zfcp_scsi_terminate_rport_io
+ 
+ 	if (port) {
+ 		zfcp_erp_port_reopen(port, 0, "sctrpi1", NULL);
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ 	}
+ }
+ 
+@@ -553,23 +553,23 @@ static void zfcp_scsi_rport_block(struct
+ 
+ void zfcp_scsi_schedule_rport_register(struct zfcp_port *port)
+ {
+-	get_device(&port->sysfs_device);
++	get_device(&port->dev);
+ 	port->rport_task = RPORT_ADD;
+ 
+ 	if (!queue_work(port->adapter->work_queue, &port->rport_work))
+-		put_device(&port->sysfs_device);
++		put_device(&port->dev);
+ }
+ 
+ void zfcp_scsi_schedule_rport_block(struct zfcp_port *port)
+ {
+-	get_device(&port->sysfs_device);
++	get_device(&port->dev);
+ 	port->rport_task = RPORT_DEL;
+ 
+ 	if (port->rport && queue_work(port->adapter->work_queue,
+ 				      &port->rport_work))
+ 		return;
+ 
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ }
+ 
+ void zfcp_scsi_schedule_rports_block(struct zfcp_adapter *adapter)
+@@ -598,7 +598,7 @@ void zfcp_scsi_rport_work(struct work_st
+ 		}
+ 	}
+ 
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ }
+ 
+ 
+@@ -616,7 +616,7 @@ void zfcp_scsi_scan(struct work_struct *
+ 				 scsilun_to_int((struct scsi_lun *)
+ 						&unit->fcp_lun), 0);
+ 
+-	put_device(&unit->sysfs_device);
++	put_device(&unit->dev);
+ }
+ 
+ struct fc_function_template zfcp_transport_functions = {
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_sysfs.c linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c
+--- linux-2.6/drivers/s390/scsi/zfcp_sysfs.c	2010-02-16 09:43:05.000000000 +0100
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_sysfs.c	2010-02-16 09:43:31.000000000 +0100
+@@ -3,7 +3,7 @@
+  *
+  * sysfs attributes.
+  *
+- * Copyright IBM Corporation 2008, 2009
++ * Copyright IBM Corporation 2008, 2010
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -19,8 +19,7 @@ static ssize_t zfcp_sysfs_##_feat##_##_n
+ 						   struct device_attribute *at,\
+ 						   char *buf)		       \
+ {									       \
+-	struct _feat_def *_feat = container_of(dev, struct _feat_def,	       \
+-					       sysfs_device);		       \
++	struct _feat_def *_feat = container_of(dev, struct _feat_def, dev);    \
+ 									       \
+ 	return sprintf(buf, _format, _value);				       \
+ }									       \
+@@ -87,8 +86,7 @@ static ssize_t zfcp_sysfs_##_feat##_fail
+ 						struct device_attribute *attr, \
+ 						char *buf)		       \
+ {									       \
+-	struct _feat_def *_feat = container_of(dev, struct _feat_def,	       \
+-					       sysfs_device);		       \
++	struct _feat_def *_feat = container_of(dev, struct _feat_def, dev);    \
+ 									       \
+ 	if (atomic_read(&_feat->status) & ZFCP_STATUS_COMMON_ERP_FAILED)       \
+ 		return sprintf(buf, "1\n");				       \
+@@ -99,12 +97,11 @@ static ssize_t zfcp_sysfs_##_feat##_fail
+ 						 struct device_attribute *attr,\
+ 						 const char *buf, size_t count)\
+ {									       \
+-	struct _feat_def *_feat = container_of(dev, struct _feat_def,	       \
+-					       sysfs_device);		       \
++	struct _feat_def *_feat = container_of(dev, struct _feat_def, dev);    \
+ 	unsigned long val;						       \
+ 	int retval = 0;							       \
+ 									       \
+-	if (!(_feat && get_device(&_feat->sysfs_device)))		       \
++	if (!(_feat && get_device(&_feat->dev)))			       \
+ 		return -EBUSY;						       \
+ 									       \
+ 	if (strict_strtoul(buf, 0, &val) || val != 0) {			       \
+@@ -118,7 +115,7 @@ static ssize_t zfcp_sysfs_##_feat##_fail
+ 				  _reopen_id, NULL);			       \
+ 	zfcp_erp_wait(_adapter);					       \
+ out:									       \
+-	put_device(&_feat->sysfs_device);				       \
++	put_device(&_feat->dev);					       \
+ 	return retval ? retval : (ssize_t) count;			       \
+ }									       \
+ static ZFCP_DEV_ATTR(_feat, failed, S_IWUSR | S_IRUGO,			       \
+@@ -224,10 +221,10 @@ static ssize_t zfcp_sysfs_port_remove_st
+ 	list_del(&port->list);
+ 	write_unlock_irq(&adapter->port_list_lock);
+ 
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ 
+ 	zfcp_erp_port_shutdown(port, 0, "syprs_1", NULL);
+-	zfcp_device_unregister(&port->sysfs_device, &zfcp_sysfs_port_attrs);
++	zfcp_device_unregister(&port->dev, &zfcp_sysfs_port_attrs);
+  out:
+ 	zfcp_ccw_adapter_put(adapter);
+ 	return retval ? retval : (ssize_t) count;
+@@ -258,13 +255,12 @@ static ssize_t zfcp_sysfs_unit_add_store
+ 					 struct device_attribute *attr,
+ 					 const char *buf, size_t count)
+ {
+-	struct zfcp_port *port = container_of(dev, struct zfcp_port,
+-					      sysfs_device);
++	struct zfcp_port *port = container_of(dev, struct zfcp_port, dev);
+ 	struct zfcp_unit *unit;
+ 	u64 fcp_lun;
+ 	int retval = -EINVAL;
+ 
+-	if (!(port && get_device(&port->sysfs_device)))
++	if (!(port && get_device(&port->dev)))
+ 		return -EBUSY;
+ 
+ 	if (strict_strtoull(buf, 0, (unsigned long long *) &fcp_lun))
+@@ -280,7 +276,7 @@ static ssize_t zfcp_sysfs_unit_add_store
+ 	zfcp_erp_wait(unit->port->adapter);
+ 	flush_work(&unit->scsi_work);
+ out:
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ 	return retval ? retval : (ssize_t) count;
+ }
+ static DEVICE_ATTR(unit_add, S_IWUSR, NULL, zfcp_sysfs_unit_add_store);
+@@ -289,13 +285,12 @@ static ssize_t zfcp_sysfs_unit_remove_st
+ 					    struct device_attribute *attr,
+ 					    const char *buf, size_t count)
+ {
+-	struct zfcp_port *port = container_of(dev, struct zfcp_port,
+-					      sysfs_device);
++	struct zfcp_port *port = container_of(dev, struct zfcp_port, dev);
+ 	struct zfcp_unit *unit;
+ 	u64 fcp_lun;
+ 	int retval = -EINVAL;
+ 
+-	if (!(port && get_device(&port->sysfs_device)))
++	if (!(port && get_device(&port->dev)))
+ 		return -EBUSY;
+ 
+ 	if (strict_strtoull(buf, 0, (unsigned long long *) &fcp_lun))
+@@ -314,12 +309,12 @@ static ssize_t zfcp_sysfs_unit_remove_st
+ 	list_del(&unit->list);
+ 	write_unlock_irq(&port->unit_list_lock);
+ 
+-	put_device(&unit->sysfs_device);
++	put_device(&unit->dev);
+ 
+ 	zfcp_erp_unit_shutdown(unit, 0, "syurs_1", NULL);
+-	zfcp_device_unregister(&unit->sysfs_device, &zfcp_sysfs_unit_attrs);
++	zfcp_device_unregister(&unit->dev, &zfcp_sysfs_unit_attrs);
+ out:
+-	put_device(&port->sysfs_device);
++	put_device(&port->dev);
+ 	return retval ? retval : (ssize_t) count;
+ }
+ static DEVICE_ATTR(unit_remove, S_IWUSR, NULL, zfcp_sysfs_unit_remove_store);
 
