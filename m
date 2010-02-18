@@ -1,13 +1,13 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 5/8] qla2xxx: Correct loop-resync issues during SNS scans.
-Date: Thu, 18 Feb 2010 10:07:27 -0800
-Message-ID: <1266516450-472-6-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 3/8] qla2xxx: Correct EH bus-reset handling.
+Date: Thu, 18 Feb 2010 10:07:25 -0800
+Message-ID: <1266516450-472-4-git-send-email-giridhar.malavali@qlogic.com>
 References: <1266516450-472-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:54305 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:54299 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753198Ab0BRSHi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Feb 2010 13:07:38 -0500
+	id S1751524Ab0BRSHg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2010 13:07:36 -0500
 In-Reply-To: <1266516450-472-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,35 +16,61 @@ Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.ker
 
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Original code could inadvertently skip the post processing of
-port information returned from the SNS scan, if any link-flopping
-asynchronous-events were received (noticed in FCAL topologies).
+Target-level resets are unlikely to complete if done after the
+bus (LIP/OLS/NOS) has been reset.  Perform target-level resets,
+if necessary, prior to hitting the bus.
 Cc: stable@kernel.org
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |   27 ++++++++++++++-------------
+ 1 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 1128c8d..96a609b 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2910,8 +2910,13 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
- 		if (qla2x00_is_reserved_id(vha, loop_id))
- 			continue;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 7649005..cdb089c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1095,6 +1095,20 @@ qla2x00_loop_reset(scsi_qla_host_t *vha)
+ 	struct fc_port *fcport;
+ 	struct qla_hw_data *ha = vha->hw;
  
--		if (atomic_read(&vha->loop_down_timer) || LOOP_TRANSITION(vha))
-+		if (atomic_read(&vha->loop_down_timer) ||
-+		    LOOP_TRANSITION(vha)) {
-+			atomic_set(&vha->loop_down_timer, 0);
-+			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
-+			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
- 			break;
++	if (ha->flags.enable_target_reset) {
++		list_for_each_entry(fcport, &vha->vp_fcports, list) {
++			if (fcport->port_type != FCT_TARGET)
++				continue;
++
++			ret = ha->isp_ops->target_reset(fcport, 0, 0);
++			if (ret != QLA_SUCCESS) {
++				DEBUG2_3(printk("%s(%ld): bus_reset failed: "
++				    "target_reset=%d d_id=%x.\n", __func__,
++				    vha->host_no, ret, fcport->d_id.b24));
++			}
 +		}
++	}
++
+ 	if (ha->flags.enable_lip_full_login && !IS_QLA81XX(ha)) {
+ 		ret = qla2x00_full_login_lip(vha);
+ 		if (ret != QLA_SUCCESS) {
+@@ -1117,19 +1131,6 @@ qla2x00_loop_reset(scsi_qla_host_t *vha)
+ 			qla2x00_wait_for_loop_ready(vha);
+ 	}
  
- 		if (swl != NULL) {
- 			if (last_dev) {
+-	if (ha->flags.enable_target_reset) {
+-		list_for_each_entry(fcport, &vha->vp_fcports, list) {
+-			if (fcport->port_type != FCT_TARGET)
+-				continue;
+-
+-			ret = ha->isp_ops->target_reset(fcport, 0, 0);
+-			if (ret != QLA_SUCCESS) {
+-				DEBUG2_3(printk("%s(%ld): bus_reset failed: "
+-				    "target_reset=%d d_id=%x.\n", __func__,
+-				    vha->host_no, ret, fcport->d_id.b24));
+-			}
+-		}
+-	}
+ 	/* Issue marker command only when we are going to start the I/O */
+ 	vha->marker_needed = 1;
+ 
 -- 
 1.6.2.rc1.30.gd43c
 
