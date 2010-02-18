@@ -1,45 +1,43 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 18 Feb 2010 09:47:29 -0600
-Message-ID: <1266508049.4355.37.camel@mulgrave.site>
-References: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef@mail.gmail.com>
-	 <1266418952.2787.5.camel@mulgrave.site>
-	 <3e7aae31002180046i771f2e1encfcda864f564c87e@mail.gmail.com>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH] lpfc: correct linux-next: PPC build failure
+Date: Thu, 18 Feb 2010 11:07:15 -0500
+Message-ID: <1266509235.29149.9.camel@wookie>
+Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:59013 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758515Ab0BRPrg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Feb 2010 10:47:36 -0500
-In-Reply-To: <3e7aae31002180046i771f2e1encfcda864f564c87e@mail.gmail.com>
+Received: from exht1.emulex.com ([138.239.113.183]:29197 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751544Ab0BRQHj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2010 11:07:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ramya Desai <ramya.desai@gmail.com>
-Cc: USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>
+To: linux-next@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: james.bottomley@hansenpartnership.com, sfr@canb.auug.org.au
 
-On Thu, 2010-02-18 at 14:16 +0530, Ramya Desai wrote:
-> On Wed, Feb 17, 2010 at 8:32 PM, James Bottomley
-> <James.Bottomley@suse.de> wrote:
-> 
-> > I have no idea what the MS driver is, so it's impossible to answer
-> > specifically.
-> 
-> MS means mass storage driver only.
+This corrects a linux-next build issue on PPC64
 
-OK, still don't know what that is ... but Randy decoded this for me; he
-said you mean a driver under drivers/usb/storage?  
+-- james s
 
-In that case, it looks like the helpers in protocol.c do use chaining
-correctly (as long as the driver isn't doing direct dma), but there's a
-clamp on the sg table size in scsiglue.c:
+ Signed-off-by: James Smart <james.smart@emulex.com>
 
-.sg_tablesize = SG_ALL
+ ---
 
-That would have to be changed to SCSI_MAX_SG_CHAIN_SEGMENTS to enable
-chaining.
+ lpfc_bsg.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-James
+
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-11 17:26:54.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-17 09:26:47.000000000 -0500
+@@ -21,6 +21,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/mempool.h>
+ #include <linux/pci.h>
++#include <linux/delay.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
 
 
