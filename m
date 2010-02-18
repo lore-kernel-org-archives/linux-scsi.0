@@ -1,58 +1,40 @@
-From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 7/7] be2iscsi: Alloc only one EQ if intr mode
-Date: Thu, 18 Feb 2010 07:21:47 +0530
-Message-ID: <20100218015136.GA31242@serverengines.com>
-Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15341] Load goes up very high when we traverse the large tree
+Date: Thu, 18 Feb 2010 03:18:54 GMT
+Message-ID: <201002180318.o1I3Is5I029984@demeter.kernel.org>
+References: <bug-15341-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:35346 "EHLO
-	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754310Ab0BRBvl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Feb 2010 20:51:41 -0500
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:38234 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630Ab0BRDS6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 22:18:58 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1I3Isk4029985
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Feb 2010 03:18:54 GMT
+In-Reply-To: <bug-15341-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-   This patch ensures that we alloc only one EQ
-if we are if we are not in msix mode
+http://bugzilla.kernel.org/show_bug.cgi?id=15341
 
-Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
----
- drivers/scsi/be2iscsi/be_main.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 5887d7a..fcfb29e 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3190,14 +3190,18 @@ static unsigned char hwi_enable_intr(struct beiscsi_hba *phba)
- 		reg |= MEMBAR_CTRL_INT_CTRL_HOSTINTR_MASK;
- 		SE_DEBUG(DBG_LVL_8, "reg =x%08x addr=%p \n", reg, addr);
- 		iowrite32(reg, addr);
--		for (i = 0; i <= phba->num_cpus; i++) {
--			eq = &phwi_context->be_eq[i].q;
-+		if (!phba->msix_enabled) {
-+			eq = &phwi_context->be_eq[0].q;
- 			SE_DEBUG(DBG_LVL_8, "eq->id=%d \n", eq->id);
- 			hwi_ring_eq_db(phba, eq->id, 0, 0, 1, 1);
-+		} else {
-+			for (i = 0; i <= phba->num_cpus; i++) {
-+				eq = &phwi_context->be_eq[i].q;
-+				SE_DEBUG(DBG_LVL_8, "eq->id=%d \n", eq->id);
-+				hwi_ring_eq_db(phba, eq->id, 0, 0, 1, 1);
-+			}
- 		}
--	} else
--		shost_printk(KERN_WARNING, phba->shost,
--			     "In hwi_enable_intr, Not Enabled \n");
-+	}
- 	return true;
- }
- 
+Andrew Morton <akpm@linux-foundation.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org
+
+
+
+
+--- Comment #2 from Andrew Morton <akpm@linux-foundation.org>  2010-02-18 03:18:44 ---
+Please do a `
+
 -- 
-1.6.4
-
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
