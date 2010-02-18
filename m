@@ -1,60 +1,41 @@
-From: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 18 Feb 2010 10:30:27 -0600
-Message-ID: <1266510627.4355.41.camel@mulgrave.site>
-References: <Pine.LNX.4.44L0.1002181115120.1294-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1002181115120.1294-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 1/8] qla2xxx: Initialize payload receive lenght in failure path of vendor commands
+Date: Thu, 18 Feb 2010 08:38:27 -0800
+Message-ID: <1266511114-307-2-git-send-email-giridhar.malavali@qlogic.com>
+References: <1266511114-307-1-git-send-email-giridhar.malavali@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vpn.pathscale.com ([198.186.3.75]:34756 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1758521Ab0BRQik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2010 11:38:40 -0500
+In-Reply-To: <1266511114-307-1-git-send-email-giridhar.malavali@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Sarang Radke <sarang.radke@qlogic.com>
 
-On Thu, 2010-02-18 at 11:24 -0500, Alan Stern wrote:
-> On Thu, 18 Feb 2010, James Bottomley wrote:
-> 
-> > On Thu, 2010-02-18 at 14:16 +0530, Ramya Desai wrote:
-> > > On Wed, Feb 17, 2010 at 8:32 PM, James Bottomley
-> > > <James.Bottomley-l3A5Bk7waGM@public.gmane.org> wrote:
-> > > 
-> > > > I have no idea what the MS driver is, so it's impossible to answer
-> > > > specifically.
-> > > 
-> > > MS means mass storage driver only.
-> > 
-> > OK, still don't know what that is ... but Randy decoded this for me; he
-> > said you mean a driver under drivers/usb/storage?  
-> 
-> Yes, Ramya is talking about usb-storage.
-> 
-> > In that case, it looks like the helpers in protocol.c do use chaining
-> > correctly (as long as the driver isn't doing direct dma), but there's a
-> > clamp on the sg table size in scsiglue.c:
-> > 
-> > .sg_tablesize = SG_ALL
-> > 
-> > That would have to be changed to SCSI_MAX_SG_CHAIN_SEGMENTS to enable
-> > chaining.
-> 
-> Is there any reason not to make this change in the standard kernel?  I 
-> believe that the subdrivers which don't use the helpers in protocol.c 
-> also handle chaining correctly.
+From: Sarang Radke <sarang.radke@qlogic.com>
 
-As long as you're sure that's the case, it should be perfectly fine to
-do this.  On some platforms you'll see the transfer sg list length jump
-from 128 to 2048 ... so any drivers not using the protocol.c helpers not
-only have to be using chaining ... they also have to have enough
-hardware slots (or manually tune sg_tablesize themselves) ... this was
-the reason why we've been raising the limit individually in SCSI drivers
-(a lot can't handle the large sg list table sizes).
+Since bsg_job->reply->reply_payload_rcv_len is uninitialized
+in case of failure, fc-transport triggers a warning for each command
+failed.
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-James
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 5a19aea..cbce52e 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2284,6 +2284,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 			"scsi(%ld) Vendor request %s failed\n", vha->host_no, type));
+ 		rval = 0;
+ 		bsg_job->reply->result = (DID_ERROR << 16);
++		bsg_job->reply->reply_payload_rcv_len = 0;
+ 		fw_sts_ptr = ((uint8_t*)bsg_job->req->sense) + sizeof(struct fc_bsg_reply);
+ 		memcpy( fw_sts_ptr, response, sizeof(response));
+ 		fw_sts_ptr += sizeof(response);
+-- 
+1.6.2.rc1.30.gd43c
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
