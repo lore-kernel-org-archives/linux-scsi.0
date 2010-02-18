@@ -1,54 +1,44 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 18 Feb 2010 11:51:36 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1002181141410.1294-100000@iolanthe.rowland.org>
-References: <1266510627.4355.41.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1266510627.4355.41.camel-0iu6Cu4xQGLYCGPCin2YbQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
-Cc: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 0/8] qla2xxx: Updates for scsi-misc-2.6.
+Date: Thu, 18 Feb 2010 10:07:22 -0800
+Message-ID: <1266516450-472-1-git-send-email-giridhar.malavali@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vpn.pathscale.com ([198.186.3.75]:54290 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751364Ab0BRSHd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2010 13:07:33 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, 18 Feb 2010, James Bottomley wrote:
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-> > > In that case, it looks like the helpers in protocol.c do use chaining
-> > > correctly (as long as the driver isn't doing direct dma), but there's a
-> > > clamp on the sg table size in scsiglue.c:
-> > > 
-> > > .sg_tablesize = SG_ALL
-> > > 
-> > > That would have to be changed to SCSI_MAX_SG_CHAIN_SEGMENTS to enable
-> > > chaining.
-> > 
-> > Is there any reason not to make this change in the standard kernel?  I 
-> > believe that the subdrivers which don't use the helpers in protocol.c 
-> > also handle chaining correctly.
-> 
-> As long as you're sure that's the case, it should be perfectly fine to
-> do this.  On some platforms you'll see the transfer sg list length jump
-> from 128 to 2048 ... so any drivers not using the protocol.c helpers not
-> only have to be using chaining ... they also have to have enough
-> hardware slots (or manually tune sg_tablesize themselves) ... this was
-> the reason why we've been raising the limit individually in SCSI drivers
-> (a lot can't handle the large sg list table sizes).
+James,
 
-It shouldn't be much of a problem.  The slots aren't stored in the
-hardware anyway; they are data structures set up in RAM and accessed
-via a coherent DMA mapping.  The only limitations are available memory 
-and latency.
+Please apply following patches.
 
-(In fact the memory issue is not always trivial.  With one type of USB
-controller, the memory required for the transfer descriptors is half as
-large as the data buffers themselves!  Luckily these controllers don't
-support high-speed operation, so they won't be used very often with
-large storage devices.)
+Andrew Vasquez (4):
+  qla2xxx: Correct EH bus-reset handling.
+  qla2xxx: Correct use-after-free issue in terminate_rport_io callback.
+  qla2xxx: Correct loop-resync issues during SNS scans.
+  qla2xxx: Add firmware ETS burst support.
 
-Alan Stern
+Giridhar Malavali (2):
+  qla2xxx: Proper clean-up of BSG requests when request times out.
+  qla2xxx: Update version number to 8.03.02-k1.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Richard Lary (1):
+  qla2xxx: EEH: Restore PCI saved state during pci slot reset.
+
+Sarang Radke (1):
+  qla2xxx: Initialize payload receive lenght in failure path of vendor
+    commands
+
+ drivers/scsi/qla2xxx/qla_attr.c    |  128 +++++++++++++++--------------------
+ drivers/scsi/qla2xxx/qla_gbl.h     |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c    |   18 +++++-
+ drivers/scsi/qla2xxx/qla_os.c      |   91 +++++++++++---------------
+ drivers/scsi/qla2xxx/qla_version.h |    4 +-
+ 5 files changed, 112 insertions(+), 131 deletions(-)
+
