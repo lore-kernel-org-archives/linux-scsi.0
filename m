@@ -1,43 +1,44 @@
-From: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Wed, 17 Feb 2010 09:02:32 -0600
-Message-ID: <1266418952.2787.5.camel@mulgrave.site>
-References: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef@mail.gmail.com>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: Updates to be2iscsi
+Date: Thu, 18 Feb 2010 07:16:23 +0530
+Message-ID: <20100218014609.GA31105@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from segment-124-30.sify.net ([124.30.166.146]:34859 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932126Ab0BRBqZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Feb 2010 20:46:25 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-On Wed, 2010-02-17 at 18:07 +0530, Ramya Desai wrote:
-> What is  the number of maximum sectors that SCSI can send to MS driver
-> in a single data transfer?
+Hi James
 
-I have no idea what the MS driver is, so it's impossible to answer
-specifically.  Generically, for drivers that expect a contiguous sg
-list, then 128 elements (512k) is the maximum.  For drivers updated to
-use the sg chaining API (which is at least all of those in
-drivers/scsi), there is no maximum except what the hardware is limited
-to.
+	These patches contains some updates for the be2iscsi driver
+intended to go into scsi-misc tree
 
-> I changed the max_sectors in struct scsi_host_template
-> usb_stor_host_template structure to 2048. Still, SCSI is sending 1024
-> sectors (512 KB) in a single data transfer.
-> I know that my device supports 1 MB data in a sigle transfer.  How can
-> I change this to 1 MB?
+The current patches are
 
-As long as the driver supports chaining, you increase it
-in /sys/block/dev>/queue/max_sectors_kb.  For compatibility reasons this
-stays clamped at 512 unless a user specifically raises it.
+Patch[1/7]: Modified target reset handling  for libiscsi and other drivers
+Patch[2/7]: Cleaned up device and target reset handling 
+Patch[3/7]: Fix for a possible sleep while holding spin_lock
+Patch[4/7]: Cleanup of abort handling
+Patch[5/7]: Removing some debug prints
+Patch[6/7]: Ensure all connections have resources allocated
+Patch[7/7]: Allocate only one EQ if msix not enabled
 
-James
+	I request you to apply these patches to your scsi-misc tree 
 
+Thank You
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jayamohan Kallickal
+
+Signed-off-by:  Jayamohan Kallickal <jayamohank@serverengines.com>
+
+---
+
