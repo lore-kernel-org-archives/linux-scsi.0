@@ -1,29 +1,42 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] scsi: fix timer setup in fas216.c
-Date: Thu, 18 Feb 2010 16:40:53 +0000
-Message-ID: <20100218164053.GE20243@n2100.arm.linux.org.uk>
-References: <Pine.LNX.4.64.1002181058140.4373@axis700.grange>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 0/8] qla2xxx: fixes for 2.6.33-rcX [8.03.02-k1]
+Date: Thu, 18 Feb 2010 10:42:48 -0600
+Message-ID: <1266511368.4355.44.camel@mulgrave.site>
+References: <1266511114-307-1-git-send-email-giridhar.malavali@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:37614 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756226Ab0BRQlE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2010 11:41:04 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.1002181058140.4373@axis700.grange>
+Received: from cantor2.suse.de ([195.135.220.15]:42347 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758079Ab0BRQm4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2010 11:42:56 -0500
+In-Reply-To: <1266511114-307-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: giridhar.malavali@qlogic.com
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, Feb 18, 2010 at 11:02:01AM +0100, Guennadi Liakhovetski wrote:
-> mod_timer() takes an absolute time and not a delay as its argument.
+On Thu, 2010-02-18 at 08:38 -0800, giridhar.malavali@qlogic.com wrote:
+> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+> 
+> James,
+> 
+> Please apply..
 
-Looks entirely valid, and has been around for a while.
+You're very late for this.  I was stabilising the final fixes in
+linux-next to send on tomorrow ... assuming Linus plans a Saturday
+release, so it might be better just to add cc: stable tags and put them
+in scsi-misc.
 
-I'll take it via the ARM tree, so please submit to the ARM patch system
-with a 'CC: <stable@kernel.org>' attributation to allow stable folk to
-pick up on it.
+> Andrew Vasquez (4):
+>   qla2xxx: Correct EH bus-reset handling.
+>   qla2xxx: Correct use-after-free issue in terminate_rport_io callback.
+>   qla2xxx: Correct loop-resync issues during SNS scans.
+>   qla2xxx: Add firmware ETS burst support.
 
-Thanks.
+How is that last one a bug fix?
+
+James
+
+
