@@ -1,36 +1,45 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: [PATCH] scsi: fix timer setup in fas216.c
-Date: Thu, 18 Feb 2010 11:02:01 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.1002181058140.4373@axis700.grange>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Thu, 18 Feb 2010 09:47:29 -0600
+Message-ID: <1266508049.4355.37.camel@mulgrave.site>
+References: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef@mail.gmail.com>
+	 <1266418952.2787.5.camel@mulgrave.site>
+	 <3e7aae31002180046i771f2e1encfcda864f564c87e@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:33049 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755741Ab0BRKCE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Feb 2010 05:02:04 -0500
+Received: from cantor.suse.de ([195.135.220.2]:59013 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758515Ab0BRPrg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Feb 2010 10:47:36 -0500
+In-Reply-To: <3e7aae31002180046i771f2e1encfcda864f564c87e@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Russell King <linux@arm.linux.org.uk>, James.Bottomley@HansenPartnership.com
+To: Ramya Desai <ramya.desai@gmail.com>
+Cc: USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>
 
-mod_timer() takes an absolute time and not a delay as its argument.
+On Thu, 2010-02-18 at 14:16 +0530, Ramya Desai wrote:
+> On Wed, Feb 17, 2010 at 8:32 PM, James Bottomley
+> <James.Bottomley@suse.de> wrote:
+> 
+> > I have no idea what the MS driver is, so it's impossible to answer
+> > specifically.
+> 
+> MS means mass storage driver only.
 
-Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
----
+OK, still don't know what that is ... but Randy decoded this for me; he
+said you mean a driver under drivers/usb/storage?  
 
-Not even compile-tested, but seems trivial enough...
+In that case, it looks like the helpers in protocol.c do use chaining
+correctly (as long as the driver isn't doing direct dma), but there's a
+clamp on the sg table size in scsiglue.c:
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 4775426..9e71ac6 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2516,7 +2516,7 @@ int fas216_eh_device_reset(struct scsi_cmnd *SCpnt)
- 		if (info->scsi.phase == PHASE_IDLE)
- 			fas216_kick(info);
- 
--		mod_timer(&info->eh_timer, 30 * HZ);
-+		mod_timer(&info->eh_timer, jiffies + 30 * HZ);
- 		spin_unlock_irqrestore(&info->host_lock, flags);
- 
- 		/*
+.sg_tablesize = SG_ALL
+
+That would have to be changed to SCSI_MAX_SG_CHAIN_SEGMENTS to enable
+chaining.
+
+James
+
+
