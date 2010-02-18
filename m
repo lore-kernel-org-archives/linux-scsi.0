@@ -1,71 +1,61 @@
-From: krike@sci.fi
-Subject: include/scsi/scsi.h: type mismatch in userspace
-Date: Thu, 18 Feb 2010 08:44:15 +0200
-Message-ID: <20100218064414.GA15724@sci.fi>
-References: <20100121090042.GA2083@satellite>
- <20100121170158.GB13617@suse.de>
+From: Ramya Desai <ramya.desai@gmail.com>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Thu, 18 Feb 2010 14:16:13 +0530
+Message-ID: <3e7aae31002180046i771f2e1encfcda864f564c87e@mail.gmail.com>
+References: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef@mail.gmail.com>
+	 <1266418952.2787.5.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="n8g4imXOkfNTN/H1"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw02.mail.saunalahti.fi ([195.197.172.116]:41001 "EHLO
-	gw02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750728Ab0BRGoS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2010 01:44:18 -0500
-Content-Disposition: inline
-In-Reply-To: <20100121170158.GB13617@suse.de>
+Received: from qw-out-2122.google.com ([74.125.92.27]:33384 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955Ab0BRIqP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2010 03:46:15 -0500
+In-Reply-To: <1266418952.2787.5.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>
 
+On Wed, Feb 17, 2010 at 8:32 PM, James Bottomley
+<James.Bottomley@suse.de> wrote:
 
---n8g4imXOkfNTN/H1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+> I have no idea what the MS driver is, so it's impossible to answer
+> specifically.
 
-Hello.
+MS means mass storage driver only.
 
-I think that there is mistake in linux/2.6.32.4/include/scsi/scsi.h:
+> As long as the driver supports chaining, you increase it
+> in /sys/block/dev>/queue/max_sectors_kb.  For compatibility reasons this
+> stays clamped at 512 unless a user specifically raises it.
 
-the type defination of u8 should be type of __u8 on userspace 
-(struct scsi_varlen_cdb_hdr).
-I founded this problem when I try compile the util-linux-ng-2.17.
-This should cause problems many other packages also that includes scsi.h
+The max_sectors value is defined in struct scsi_host_template
+usb_stor_host_template structure in scsiglue.c file
+(drivers/usb/storage).  If I change the max_sectors value in this
+scsiglue.c file it reflects in the
+/sys/block/<dev>/queue/max_sectors_kb and
+/sys/block/<dev>/queue/max_hw_sectors_kb. However, when I set the
+max_sectors to 1024 it reflected as 512 in
+/sys/block/<dev>/queue/max_sectors_kb and
+/sys/block/<dev>/queue/max_hw_sectors_kb. If I change the max_sectors
+to 1536 or 2048 in scsiglue.c file, still it reflected as 512 in
+/sys/block/<dev>/queue/max_sectors_kb and 768 or 1024 in
+/sys/block/<dev>/queue/max_hw_sectors_kb.
 
-> 
-> Please let the Linux SCSI developers know about this, they are the ones
-> responsible for fixing it.  Once they have done so in the upstream tree,
-> can I add it to the -stable tree.
-> 
-> thanks,
-> 
-> greg k-h
+I have changed the value in /sys/block/<dev>/queue/max_sectors_kb to
+1024 with the following command.
 
-Best regards: Kristian Rainio <krike@sci.fi>
+echo 1024 > /sys/block/<dev>/queue/max_sectors_kb.
 
---n8g4imXOkfNTN/H1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="linux-2.6.32.5-scsi_h.patch"
+The file shows 1024, but still, I received only 512 KB data transfer
+buffers (transfer length in srb) from SCSI layer in my mass storage
+driver.
 
-Patch by Kristian Rainio
-Little fix.
+Here, my question is, how can my mass storage driver receives the 1024
+KB data transfer buffers (transfer length in srb) from SCSI layer.
+Please let me know.
 
---- linux-2.6.32/include/scsi/scsi.h.orig	2010-01-23 12:39:06.970791908 +0200
-+++ linux-2.6.32/include/scsi/scsi.h	2010-01-23 12:39:25.427462244 +0200
-@@ -145,10 +145,10 @@
- 
- /* defined in T10 SCSI Primary Commands-2 (SPC2) */
- struct scsi_varlen_cdb_hdr {
--	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
--	u8 control;
--	u8 misc[5];
--	u8 additional_cdb_length;         /* total cdb length - 8 */
-+	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
-+	__u8 control;
-+	__u8 misc[5];
-+	__u8 additional_cdb_length;         /* total cdb length - 8 */
- 	__be16 service_action;
- 	/* service specific data follows */
- };
+Thanks in advance.
 
---n8g4imXOkfNTN/H1--
+Thanks and Regards,
+RD
