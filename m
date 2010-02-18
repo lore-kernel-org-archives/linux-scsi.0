@@ -1,61 +1,71 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/7] be2iscsi: Modification of  iscsi_eh_target_reset
-Date: Wed, 17 Feb 2010 22:17:23 -0600
-Message-ID: <4B7CBF53.5020401@cs.wisc.edu>
-References: <20100218014705.GA31130@serverengines.com>
+From: krike@sci.fi
+Subject: include/scsi/scsi.h: type mismatch in userspace
+Date: Thu, 18 Feb 2010 08:44:15 +0200
+Message-ID: <20100218064414.GA15724@sci.fi>
+References: <20100121090042.GA2083@satellite>
+ <20100121170158.GB13617@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="n8g4imXOkfNTN/H1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:45334 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753417Ab0BRERh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Feb 2010 23:17:37 -0500
-In-Reply-To: <20100218014705.GA31130@serverengines.com>
+Received: from gw02.mail.saunalahti.fi ([195.197.172.116]:41001 "EHLO
+	gw02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750728Ab0BRGoS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2010 01:44:18 -0500
+Content-Disposition: inline
+In-Reply-To: <20100121170158.GB13617@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
-
-On 02/17/2010 07:47 PM, Jayamohan Kallickal wrote:
-> @@ -2449,7 +2449,6 @@ int iscsi_eh_target_reset(struct scsi_cmnd *sc)
->   		break;
->   	case TMF_TIMEDOUT:
->   		spin_unlock_bh(&session->lock);
-> -		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-
-It is harmless to keep this, right? Just keep it for now so the reset 
-handler code behaves the same for all TMF_TIMEDOUT cases.
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org
 
 
->   		goto done;
->   	default:
->   		conn->tmf_state = TMF_INITIAL;
-> @@ -2476,12 +2475,27 @@ done:
->   	ISCSI_DBG_EH(session, "tgt %s reset result = %s\n", session->targetname,
->   		     rc == SUCCESS ? "SUCCESS" : "FAILED");
->   	mutex_unlock(&session->eh_mutex);
-> +	return rc;
-> +}
-> +EXPORT_SYMBOL_GPL(iscsi_eh_target_reset);
-> +
+--n8g4imXOkfNTN/H1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-You can remove the export symbol since no one is using it now, and 
-remove the libiscsi.h iscsi_eh_target_reset code too.
+Hello.
 
-> +/**
-> + * iscsi_eh_recover_target - reset target and possibly the session
-> + * @sc: scsi command
-> + *
-> + * This will attempt to send a warm target reset. If that fails,
-> + * we will escalate to ERL0 session recovery.
-> + */
-> +int iscsi_eh_recover_target(struct scsi_cmnd *sc)
-> +{
-> +	int rc;
->
-> +	rc = iscsi_eh_target_reset(sc);	
+I think that there is mistake in linux/2.6.32.4/include/scsi/scsi.h:
 
-Some extra whitespace at the end of that line. You can do a git am 
---wihtespace=fix on your patches before you send and that will fix them 
-up for you (just remember to respit the new ones out and send them).
+the type defination of u8 should be type of __u8 on userspace 
+(struct scsi_varlen_cdb_hdr).
+I founded this problem when I try compile the util-linux-ng-2.17.
+This should cause problems many other packages also that includes scsi.h
+
+> 
+> Please let the Linux SCSI developers know about this, they are the ones
+> responsible for fixing it.  Once they have done so in the upstream tree,
+> can I add it to the -stable tree.
+> 
+> thanks,
+> 
+> greg k-h
+
+Best regards: Kristian Rainio <krike@sci.fi>
+
+--n8g4imXOkfNTN/H1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="linux-2.6.32.5-scsi_h.patch"
+
+Patch by Kristian Rainio
+Little fix.
+
+--- linux-2.6.32/include/scsi/scsi.h.orig	2010-01-23 12:39:06.970791908 +0200
++++ linux-2.6.32/include/scsi/scsi.h	2010-01-23 12:39:25.427462244 +0200
+@@ -145,10 +145,10 @@
+ 
+ /* defined in T10 SCSI Primary Commands-2 (SPC2) */
+ struct scsi_varlen_cdb_hdr {
+-	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
+-	u8 control;
+-	u8 misc[5];
+-	u8 additional_cdb_length;         /* total cdb length - 8 */
++	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
++	__u8 control;
++	__u8 misc[5];
++	__u8 additional_cdb_length;         /* total cdb length - 8 */
+ 	__be16 service_action;
+ 	/* service specific data follows */
+ };
+
+--n8g4imXOkfNTN/H1--
