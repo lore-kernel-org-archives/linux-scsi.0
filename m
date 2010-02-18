@@ -1,42 +1,54 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/8] qla2xxx: fixes for 2.6.33-rcX [8.03.02-k1]
-Date: Thu, 18 Feb 2010 10:42:48 -0600
-Message-ID: <1266511368.4355.44.camel@mulgrave.site>
-References: <1266511114-307-1-git-send-email-giridhar.malavali@qlogic.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Thu, 18 Feb 2010 11:51:36 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1002181141410.1294-100000@iolanthe.rowland.org>
+References: <1266510627.4355.41.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42347 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758079Ab0BRQm4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Feb 2010 11:42:56 -0500
-In-Reply-To: <1266511114-307-1-git-send-email-giridhar.malavali@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1266510627.4355.41.camel-0iu6Cu4xQGLYCGPCin2YbQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+Cc: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: giridhar.malavali@qlogic.com
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, 2010-02-18 at 08:38 -0800, giridhar.malavali@qlogic.com wrote:
-> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+On Thu, 18 Feb 2010, James Bottomley wrote:
+
+> > > In that case, it looks like the helpers in protocol.c do use chaining
+> > > correctly (as long as the driver isn't doing direct dma), but there's a
+> > > clamp on the sg table size in scsiglue.c:
+> > > 
+> > > .sg_tablesize = SG_ALL
+> > > 
+> > > That would have to be changed to SCSI_MAX_SG_CHAIN_SEGMENTS to enable
+> > > chaining.
+> > 
+> > Is there any reason not to make this change in the standard kernel?  I 
+> > believe that the subdrivers which don't use the helpers in protocol.c 
+> > also handle chaining correctly.
 > 
-> James,
-> 
-> Please apply..
+> As long as you're sure that's the case, it should be perfectly fine to
+> do this.  On some platforms you'll see the transfer sg list length jump
+> from 128 to 2048 ... so any drivers not using the protocol.c helpers not
+> only have to be using chaining ... they also have to have enough
+> hardware slots (or manually tune sg_tablesize themselves) ... this was
+> the reason why we've been raising the limit individually in SCSI drivers
+> (a lot can't handle the large sg list table sizes).
 
-You're very late for this.  I was stabilising the final fixes in
-linux-next to send on tomorrow ... assuming Linus plans a Saturday
-release, so it might be better just to add cc: stable tags and put them
-in scsi-misc.
+It shouldn't be much of a problem.  The slots aren't stored in the
+hardware anyway; they are data structures set up in RAM and accessed
+via a coherent DMA mapping.  The only limitations are available memory 
+and latency.
 
-> Andrew Vasquez (4):
->   qla2xxx: Correct EH bus-reset handling.
->   qla2xxx: Correct use-after-free issue in terminate_rport_io callback.
->   qla2xxx: Correct loop-resync issues during SNS scans.
->   qla2xxx: Add firmware ETS burst support.
+(In fact the memory issue is not always trivial.  With one type of USB
+controller, the memory required for the transfer descriptors is half as
+large as the data buffers themselves!  Luckily these controllers don't
+support high-speed operation, so they won't be used very often with
+large storage devices.)
 
-How is that last one a bug fix?
+Alan Stern
 
-James
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
