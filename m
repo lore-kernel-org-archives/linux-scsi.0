@@ -1,28 +1,95 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [Bug 15288] kernel 2.6.31 loading goes in loop on IBM xSeries 330
-Date: Wed, 17 Feb 2010 19:29:44 -0800
-Message-ID: <86802c441002171929p1939680au492934badf5ccc19@mail.gmail.com>
-References: <bug-15288-11613@http.bugzilla.kernel.org/>
-	 <201002180320.o1I3KhQU031006@demeter.kernel.org>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCH] [SCSI] qla2xxx: improve error returns in
+ qla2x00_process_vendor_specific
+Date: Thu, 18 Feb 2010 15:11:07 +1100
+Message-ID: <20100218151107.3684ebdf.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:50342 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177Ab0BRD3q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Feb 2010 22:29:46 -0500
-Received: by pwj8 with SMTP id 8so1348745pwj.19
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Feb 2010 19:29:45 -0800 (PST)
-In-Reply-To: <201002180320.o1I3KhQU031006@demeter.kernel.org>
+Received: from chilli.pcug.org.au ([203.10.76.44]:56204 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752854Ab0BRELL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Feb 2010 23:11:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, Sarang Radke <sarang.radke@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, LKML <linux-kernel@vger.kernel.org>
 
-please check if
+These changes mean that the request sg will be unmapped if the response
+sg map fails, both the dma_allocs are freed and the dma_allocs only get
+freed if necessary.  There are still two places that return from this
+routine without doing either the unmaps or the dma_frees.
 
-http://git.kernel.org/?p=linux/kernel/git/tip/linux-2.6-tip.git;a=commitdiff;h=18dce6ba5c8c6bd0f3ab4efa4cbdd698dab5c40a
+This gets rid of these warnings:
 
-fix the problem.
+drivers/scsi/qla2xxx/qla_attr.c: In function 'qla2x00_process_vendor_specific':
+drivers/scsi/qla2xxx/qla_attr.c:2150: warning: 'req_data' may be used uninitialized in this function
+drivers/scsi/qla2xxx/qla_attr.c:2152: warning: 'req_data_len' may be used uninitialized in this function
 
-Yinghai
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |   20 ++++++++++++--------
+ 1 files changed, 12 insertions(+), 8 deletions(-)
+
+I have only build tested these changes as I do not have the hardware
+involved.  Also, I am not sure if some of the infrastructure does the
+dma_free_coherent() for the rsp_data.
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 5a19aea..d8c5bf3 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2173,7 +2173,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
+         if (!elreq.rsp_sg_cnt) {
+ 		rval = -ENOMEM;
+-                goto done;
++                goto done_unmap_sg_req;
+ 	}
+ 
+ 	if ((elreq.req_sg_cnt !=  bsg_job->request_payload.sg_cnt) ||
+@@ -2224,7 +2224,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 				DEBUG2(qla_printk(KERN_INFO, ha, "scsi(%ld)"
+ 				"loopback option:0x%x not supported\n", vha->host_no, elreq.options));
+ 				rval = -EINVAL;
+-				goto done_unmap_sg;
++				goto done_dma_free;
+ 			}
+ 
+ 			DEBUG2(qla_printk(KERN_INFO, ha,
+@@ -2304,17 +2304,21 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
+ 	}
+ 	bsg_job->job_done(bsg_job);
+ 
++done_dma_free:
++	dma_free_coherent(&ha->pdev->dev, rsp_data_len,
++		rsp_data, rsp_data_dma);
++	dma_free_coherent(&ha->pdev->dev, req_data_len,
++		req_data, req_data_dma);
++
+ done_unmap_sg:
++	dma_unmap_sg(&ha->pdev->dev,
++	    bsg_job->reply_payload.sg_list,
++	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
+ 
+-	if(req_data)
+-		dma_free_coherent(&ha->pdev->dev, req_data_len,
+-			req_data, req_data_dma);
++done_unmap_sg_req:
+ 	dma_unmap_sg(&ha->pdev->dev,
+ 	    bsg_job->request_payload.sg_list,
+ 	    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
+-	dma_unmap_sg(&ha->pdev->dev,
+-	    bsg_job->reply_payload.sg_list,
+-	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
+ 
+ done:
+         return rval;
+-- 
+1.6.6.2
+
+-- 
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
