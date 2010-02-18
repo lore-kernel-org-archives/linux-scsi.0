@@ -1,95 +1,61 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: [PATCH] [SCSI] qla2xxx: improve error returns in
- qla2x00_process_vendor_specific
-Date: Thu, 18 Feb 2010 15:11:07 +1100
-Message-ID: <20100218151107.3684ebdf.sfr@canb.auug.org.au>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/7] be2iscsi: Modification of  iscsi_eh_target_reset
+Date: Wed, 17 Feb 2010 22:17:23 -0600
+Message-ID: <4B7CBF53.5020401@cs.wisc.edu>
+References: <20100218014705.GA31130@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:56204 "EHLO smtps.tip.net.au"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45334 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752854Ab0BRELL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Feb 2010 23:11:11 -0500
+	id S1753417Ab0BRERh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Feb 2010 23:17:37 -0500
+In-Reply-To: <20100218014705.GA31130@serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, Sarang Radke <sarang.radke@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, LKML <linux-kernel@vger.kernel.org>
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-These changes mean that the request sg will be unmapped if the response
-sg map fails, both the dma_allocs are freed and the dma_allocs only get
-freed if necessary.  There are still two places that return from this
-routine without doing either the unmaps or the dma_frees.
+On 02/17/2010 07:47 PM, Jayamohan Kallickal wrote:
+> @@ -2449,7 +2449,6 @@ int iscsi_eh_target_reset(struct scsi_cmnd *sc)
+>   		break;
+>   	case TMF_TIMEDOUT:
+>   		spin_unlock_bh(&session->lock);
+> -		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
 
-This gets rid of these warnings:
+It is harmless to keep this, right? Just keep it for now so the reset 
+handler code behaves the same for all TMF_TIMEDOUT cases.
 
-drivers/scsi/qla2xxx/qla_attr.c: In function 'qla2x00_process_vendor_specific':
-drivers/scsi/qla2xxx/qla_attr.c:2150: warning: 'req_data' may be used uninitialized in this function
-drivers/scsi/qla2xxx/qla_attr.c:2152: warning: 'req_data_len' may be used uninitialized in this function
 
-Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
----
- drivers/scsi/qla2xxx/qla_attr.c |   20 ++++++++++++--------
- 1 files changed, 12 insertions(+), 8 deletions(-)
+>   		goto done;
+>   	default:
+>   		conn->tmf_state = TMF_INITIAL;
+> @@ -2476,12 +2475,27 @@ done:
+>   	ISCSI_DBG_EH(session, "tgt %s reset result = %s\n", session->targetname,
+>   		     rc == SUCCESS ? "SUCCESS" : "FAILED");
+>   	mutex_unlock(&session->eh_mutex);
+> +	return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(iscsi_eh_target_reset);
+> +
 
-I have only build tested these changes as I do not have the hardware
-involved.  Also, I am not sure if some of the infrastructure does the
-dma_free_coherent() for the rsp_data.
+You can remove the export symbol since no one is using it now, and 
+remove the libiscsi.h iscsi_eh_target_reset code too.
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 5a19aea..d8c5bf3 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2173,7 +2173,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-         if (!elreq.rsp_sg_cnt) {
- 		rval = -ENOMEM;
--                goto done;
-+                goto done_unmap_sg_req;
- 	}
- 
- 	if ((elreq.req_sg_cnt !=  bsg_job->request_payload.sg_cnt) ||
-@@ -2224,7 +2224,7 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 				DEBUG2(qla_printk(KERN_INFO, ha, "scsi(%ld)"
- 				"loopback option:0x%x not supported\n", vha->host_no, elreq.options));
- 				rval = -EINVAL;
--				goto done_unmap_sg;
-+				goto done_dma_free;
- 			}
- 
- 			DEBUG2(qla_printk(KERN_INFO, ha,
-@@ -2304,17 +2304,21 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 	}
- 	bsg_job->job_done(bsg_job);
- 
-+done_dma_free:
-+	dma_free_coherent(&ha->pdev->dev, rsp_data_len,
-+		rsp_data, rsp_data_dma);
-+	dma_free_coherent(&ha->pdev->dev, req_data_len,
-+		req_data, req_data_dma);
-+
- done_unmap_sg:
-+	dma_unmap_sg(&ha->pdev->dev,
-+	    bsg_job->reply_payload.sg_list,
-+	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
- 
--	if(req_data)
--		dma_free_coherent(&ha->pdev->dev, req_data_len,
--			req_data, req_data_dma);
-+done_unmap_sg_req:
- 	dma_unmap_sg(&ha->pdev->dev,
- 	    bsg_job->request_payload.sg_list,
- 	    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
--	dma_unmap_sg(&ha->pdev->dev,
--	    bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
- 
- done:
-         return rval;
--- 
-1.6.6.2
+> +/**
+> + * iscsi_eh_recover_target - reset target and possibly the session
+> + * @sc: scsi command
+> + *
+> + * This will attempt to send a warm target reset. If that fails,
+> + * we will escalate to ERL0 session recovery.
+> + */
+> +int iscsi_eh_recover_target(struct scsi_cmnd *sc)
+> +{
+> +	int rc;
+>
+> +	rc = iscsi_eh_target_reset(sc);	
 
--- 
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+Some extra whitespace at the end of that line. You can do a git am 
+--wihtespace=fix on your patches before you send and that will fix them 
+up for you (just remember to respit the new ones out and send them).
