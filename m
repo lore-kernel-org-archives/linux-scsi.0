@@ -1,43 +1,49 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH] lpfc: correct linux-next: PPC build failure
-Date: Thu, 18 Feb 2010 11:07:15 -0500
-Message-ID: <1266509235.29149.9.camel@wookie>
-Reply-To: james.smart@emulex.com
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Thu, 18 Feb 2010 11:24:41 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1002181115120.1294-100000@iolanthe.rowland.org>
+References: <1266508049.4355.37.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:29197 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751544Ab0BRQHj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Feb 2010 11:07:39 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1266508049.4355.37.camel-0iu6Cu4xQGLYCGPCin2YbQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+Cc: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-next@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: james.bottomley@hansenpartnership.com, sfr@canb.auug.org.au
 
-This corrects a linux-next build issue on PPC64
+On Thu, 18 Feb 2010, James Bottomley wrote:
 
--- james s
+> On Thu, 2010-02-18 at 14:16 +0530, Ramya Desai wrote:
+> > On Wed, Feb 17, 2010 at 8:32 PM, James Bottomley
+> > <James.Bottomley-l3A5Bk7waGM@public.gmane.org> wrote:
+> > 
+> > > I have no idea what the MS driver is, so it's impossible to answer
+> > > specifically.
+> > 
+> > MS means mass storage driver only.
+> 
+> OK, still don't know what that is ... but Randy decoded this for me; he
+> said you mean a driver under drivers/usb/storage?  
 
- Signed-off-by: James Smart <james.smart@emulex.com>
+Yes, Ramya is talking about usb-storage.
 
- ---
+> In that case, it looks like the helpers in protocol.c do use chaining
+> correctly (as long as the driver isn't doing direct dma), but there's a
+> clamp on the sg table size in scsiglue.c:
+> 
+> .sg_tablesize = SG_ALL
+> 
+> That would have to be changed to SCSI_MAX_SG_CHAIN_SEGMENTS to enable
+> chaining.
 
- lpfc_bsg.c |    1 +
- 1 file changed, 1 insertion(+)
+Is there any reason not to make this change in the standard kernel?  I 
+believe that the subdrivers which don't use the helpers in protocol.c 
+also handle chaining correctly.
 
+Alan Stern
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-11 17:26:54.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-17 09:26:47.000000000 -0500
-@@ -21,6 +21,7 @@
- #include <linux/interrupt.h>
- #include <linux/mempool.h>
- #include <linux/pci.h>
-+#include <linux/delay.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
