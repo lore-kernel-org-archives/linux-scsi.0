@@ -1,388 +1,267 @@
 From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: [patch 6/9] ipr: implement shutdown changes and remove obsolete write
- cache parameter
-Date: Fri, 19 Feb 2010 13:24:21 -0800
-Message-ID: <4B7F0185.8070808@linux.vnet.ibm.com>
+Subject: [patch 5/9] ipr: add hardware assisted smart dump functionality
+Date: Fri, 19 Feb 2010 13:24:14 -0800
+Message-ID: <4B7F017E.70608@linux.vnet.ibm.com>
 References: <20100219210900.066268168@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:33905 "EHLO e3.ny.us.ibm.com"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:33887 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754918Ab0BSVYY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 16:24:24 -0500
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by e3.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JLDZq1023222
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:13:35 -0500
+	id S1754847Ab0BSVYR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2010 16:24:17 -0500
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by e3.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JLDSLM023042
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:13:28 -0500
 Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o1JLON6h1921038
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:24:23 -0500
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o1JLOGXT153084
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:24:16 -0500
 Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JLOML4024190
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 19:24:22 -0200
+	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JLOFhO023929
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 19:24:16 -0200
 In-Reply-To: <20100219210900.066268168@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
 
-This patch adds a reboot notifier that will issue a shutdown prepare command
-to all adapters.  This helps to prevent a problem where the primary adapter can
-get shut down before the secondary adapter and cause the secondary adapter to
-fail over and log and error.
-This patch also removes the "enable_cache" paramater as it is obsolete.  Write
-cache for an adapter is now controlled from the iprconfig utility.
+This patch adds the hardware assisted smart dump functionality for the next
+generation IOA PCI interface chip.
 
-Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Signea-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ipr.c |  208 ++++++++++++++++-------------------------------------
- drivers/scsi/ipr.h |   10 --
- 2 files changed, 66 insertions(+), 152 deletions(-)
+ drivers/scsi/ipr.c |   79 ++++++++++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/ipr.h |   16 ++++++----
+ 2 files changed, 74 insertions(+), 21 deletions(-)
 
 Index: b/drivers/scsi/ipr.c
 ===================================================================
---- a/drivers/scsi/ipr.c	2010-02-19 08:08:37.000000000 -0800
-+++ b/drivers/scsi/ipr.c	2010-02-19 08:08:40.000000000 -0800
-@@ -72,6 +72,7 @@
- #include <linux/moduleparam.h>
- #include <linux/libata.h>
- #include <linux/hdreg.h>
-+#include <linux/reboot.h>
- #include <linux/stringify.h>
- #include <asm/io.h>
- #include <asm/irq.h>
-@@ -92,7 +93,6 @@ static unsigned int ipr_max_speed = 1;
- static int ipr_testmode = 0;
- static unsigned int ipr_fastfail = 0;
- static unsigned int ipr_transop_timeout = 0;
--static unsigned int ipr_enable_cache = 1;
- static unsigned int ipr_debug = 0;
- static unsigned int ipr_max_devs = IPR_DEFAULT_SIS64_DEVS;
- static unsigned int ipr_dual_ioa_raid = 1;
-@@ -175,8 +175,6 @@ module_param_named(fastfail, ipr_fastfai
- MODULE_PARM_DESC(fastfail, "Reduce timeouts and retries");
- module_param_named(transop_timeout, ipr_transop_timeout, int, 0);
- MODULE_PARM_DESC(transop_timeout, "Time in seconds to wait for adapter to come operational (default: 300)");
--module_param_named(enable_cache, ipr_enable_cache, int, 0);
--MODULE_PARM_DESC(enable_cache, "Enable adapter's non-volatile write cache (default: 1)");
- module_param_named(debug, ipr_debug, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(debug, "Enable device driver debugging logging. Set to 1 to enable. (default: 0)");
- module_param_named(dual_ioa_raid, ipr_dual_ioa_raid, int, 0);
-@@ -3097,105 +3095,6 @@ static struct bin_attribute ipr_trace_at
+--- a/drivers/scsi/ipr.c	2010-02-19 08:08:33.000000000 -0800
++++ b/drivers/scsi/ipr.c	2010-02-19 08:08:37.000000000 -0800
+@@ -142,7 +142,9 @@ static const struct ipr_chip_cfg_t ipr_c
+ 			.ioarrin_reg = 0x00070,
+ 			.sense_uproc_interrupt_reg = 0x00020,
+ 			.set_uproc_interrupt_reg = 0x00020,
+-			.clr_uproc_interrupt_reg = 0x00028
++			.clr_uproc_interrupt_reg = 0x00028,
++			.dump_addr_reg = 0x00064,
++			.dump_data_reg = 0x00068
+ 		}
+ 	},
  };
- #endif
-
--static const struct {
--	enum ipr_cache_state state;
--	char *name;
--} cache_state [] = {
--	{ CACHE_NONE, "none" },
--	{ CACHE_DISABLED, "disabled" },
--	{ CACHE_ENABLED, "enabled" }
--};
--
--/**
-- * ipr_show_write_caching - Show the write caching attribute
-- * @dev:	device struct
-- * @buf:	buffer
-- *
-- * Return value:
-- *	number of bytes printed to buffer
-- **/
--static ssize_t ipr_show_write_caching(struct device *dev,
--				      struct device_attribute *attr, char *buf)
--{
--	struct Scsi_Host *shost = class_to_shost(dev);
--	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
--	unsigned long lock_flags = 0;
--	int i, len = 0;
--
--	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
--	for (i = 0; i < ARRAY_SIZE(cache_state); i++) {
--		if (cache_state[i].state == ioa_cfg->cache_state) {
--			len = snprintf(buf, PAGE_SIZE, "%s\n", cache_state[i].name);
--			break;
--		}
--	}
--	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
--	return len;
--}
--
--
--/**
-- * ipr_store_write_caching - Enable/disable adapter write cache
-- * @dev:	device struct
-- * @buf:	buffer
-- * @count:	buffer size
-- *
-- * This function will enable/disable adapter write cache.
-- *
-- * Return value:
-- * 	count on success / other on failure
-- **/
--static ssize_t ipr_store_write_caching(struct device *dev,
--				       struct device_attribute *attr,
--				       const char *buf, size_t count)
--{
--	struct Scsi_Host *shost = class_to_shost(dev);
--	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
--	unsigned long lock_flags = 0;
--	enum ipr_cache_state new_state = CACHE_INVALID;
--	int i;
--
--	if (!capable(CAP_SYS_ADMIN))
--		return -EACCES;
--	if (ioa_cfg->cache_state == CACHE_NONE)
--		return -EINVAL;
--
--	for (i = 0; i < ARRAY_SIZE(cache_state); i++) {
--		if (!strncmp(cache_state[i].name, buf, strlen(cache_state[i].name))) {
--			new_state = cache_state[i].state;
--			break;
--		}
--	}
--
--	if (new_state != CACHE_DISABLED && new_state != CACHE_ENABLED)
--		return -EINVAL;
--
--	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
--	if (ioa_cfg->cache_state == new_state) {
--		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
--		return count;
--	}
--
--	ioa_cfg->cache_state = new_state;
--	dev_info(&ioa_cfg->pdev->dev, "%s adapter write cache.\n",
--		 new_state == CACHE_ENABLED ? "Enabling" : "Disabling");
--	if (!ioa_cfg->in_reset_reload)
--		ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NORMAL);
--	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
--	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
--
--	return count;
--}
--
--static struct device_attribute ipr_ioa_cache_attr = {
--	.attr = {
--		.name =		"write_cache",
--		.mode =		S_IRUGO | S_IWUSR,
--	},
--	.show = ipr_show_write_caching,
--	.store = ipr_store_write_caching
--};
--
- /**
-  * ipr_show_fw_version - Show the firmware version
-  * @dev:	class device struct
-@@ -3797,7 +3696,6 @@ static struct device_attribute *ipr_ioa_
- 	&ipr_ioa_state_attr,
- 	&ipr_ioa_reset_attr,
- 	&ipr_update_fw_attr,
--	&ipr_ioa_cache_attr,
- 	NULL,
- };
-
-@@ -6293,36 +6191,6 @@ static int ipr_set_supported_devs(struct
+@@ -2514,6 +2516,31 @@ static int ipr_wait_iodbg_ack(struct ipr
  }
 
  /**
-- * ipr_setup_write_cache - Disable write cache if needed
-- * @ipr_cmd:	ipr command struct
-- *
-- * This function sets up adapters write cache to desired setting
-- *
-- * Return value:
-- * 	IPR_RC_JOB_CONTINUE / IPR_RC_JOB_RETURN
-- **/
--static int ipr_setup_write_cache(struct ipr_cmnd *ipr_cmd)
--{
--	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
--
--	ipr_cmd->job_step = ipr_set_supported_devs;
--	ipr_cmd->u.res = list_entry(ioa_cfg->used_res_q.next,
--				    struct ipr_resource_entry, queue);
--
--	if (ioa_cfg->cache_state != CACHE_DISABLED)
--		return IPR_RC_JOB_CONTINUE;
--
--	ipr_cmd->ioarcb.res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
--	ipr_cmd->ioarcb.cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
--	ipr_cmd->ioarcb.cmd_pkt.cdb[0] = IPR_IOA_SHUTDOWN;
--	ipr_cmd->ioarcb.cmd_pkt.cdb[1] = IPR_SHUTDOWN_PREPARE_FOR_NORMAL;
--
--	ipr_do_req(ipr_cmd, ipr_reset_ioa_job, ipr_timeout, IPR_INTERNAL_TIMEOUT);
--
--	return IPR_RC_JOB_RETURN;
--}
--
--/**
-  * ipr_get_mode_page - Locate specified mode page
-  * @mode_pages:	mode page buffer
-  * @page_code:	page code to find
-@@ -6522,7 +6390,9 @@ static int ipr_ioafp_mode_select_page28(
- 			      ioa_cfg->vpd_cbs_dma + offsetof(struct ipr_misc_cbs, mode_pages),
- 			      length);
++ * ipr_get_sis64_dump_data_section - Dump IOA memory
++ * @ioa_cfg:			ioa config struct
++ * @start_addr:			adapter address to dump
++ * @dest:			destination kernel buffer
++ * @length_in_words:		length to dump in 4 byte words
++ *
++ * Return value:
++ * 	0 on success
++ **/
++static int ipr_get_sis64_dump_data_section(struct ipr_ioa_cfg *ioa_cfg,
++					   u32 start_addr,
++					   __be32 *dest, u32 length_in_words)
++{
++	int i;
++
++	for (i = 0; i < length_in_words; i++) {
++		writel(start_addr+(i*4), ioa_cfg->regs.dump_addr_reg);
++		*dest = cpu_to_be32(readl(ioa_cfg->regs.dump_data_reg));
++		dest++;
++	}
++
++	return 0;
++}
++
++/**
+  * ipr_get_ldump_data_section - Dump IOA memory
+  * @ioa_cfg:			ioa config struct
+  * @start_addr:			adapter address to dump
+@@ -2530,6 +2557,10 @@ static int ipr_get_ldump_data_section(st
+ 	volatile u32 temp_pcii_reg;
+ 	int i, delay = 0;
 
--	ipr_cmd->job_step = ipr_setup_write_cache;
-+	ipr_cmd->job_step = ipr_set_supported_devs;
-+	ipr_cmd->u.res = list_entry(ioa_cfg->used_res_q.next,
-+				    struct ipr_resource_entry, queue);
- 	ipr_do_req(ipr_cmd, ipr_reset_ioa_job, ipr_timeout, IPR_INTERNAL_TIMEOUT);
-
- 	LEAVE;
-@@ -6590,10 +6460,13 @@ static int ipr_reset_cmd_failed(struct i
-  **/
- static int ipr_reset_mode_sense_failed(struct ipr_cmnd *ipr_cmd)
- {
-+	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
-
- 	if (ioasc == IPR_IOASC_IR_INVALID_REQ_TYPE_OR_PKT) {
--		ipr_cmd->job_step = ipr_setup_write_cache;
-+		ipr_cmd->job_step = ipr_set_supported_devs;
-+		ipr_cmd->u.res = list_entry(ioa_cfg->used_res_q.next,
-+					    struct ipr_resource_entry, queue);
- 		return IPR_RC_JOB_CONTINUE;
- 	}
-
-@@ -6944,13 +6817,9 @@ static int ipr_ioafp_cap_inquiry(struct 
- static int ipr_ioafp_page3_inquiry(struct ipr_cmnd *ipr_cmd)
- {
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
--	struct ipr_inquiry_page0 *page0 = &ioa_cfg->vpd_cbs->page0_data;
++	if (ioa_cfg->sis64)
++		return ipr_get_sis64_dump_data_section(ioa_cfg, start_addr,
++						       dest, length_in_words);
++
+ 	/* Write IOA interrupt reg starting LDUMP state  */
+ 	writel((IPR_UPROCI_RESET_ALERT | IPR_UPROCI_IO_DEBUG_ALERT),
+ 	       ioa_cfg->regs.set_uproc_interrupt_reg);
+@@ -2787,6 +2818,7 @@ static void ipr_get_ioa_dump(struct ipr_
+ 	u32 num_entries, start_off, end_off;
+ 	u32 bytes_to_copy, bytes_copied, rc;
+ 	struct ipr_sdt *sdt;
++	int valid = 1;
+ 	int i;
 
  	ENTER;
+@@ -2800,7 +2832,7 @@ static void ipr_get_ioa_dump(struct ipr_
 
--	if (!ipr_inquiry_page_supported(page0, 1))
--		ioa_cfg->cache_state = CACHE_NONE;
--
- 	ipr_cmd->job_step = ipr_ioafp_cap_inquiry;
+ 	start_addr = readl(ioa_cfg->ioa_mailbox);
 
- 	ipr_ioafp_inquiry(ipr_cmd, 1, 3,
-@@ -8209,10 +8078,6 @@ static void __devinit ipr_init_ioa_cfg(s
- 	init_waitqueue_head(&ioa_cfg->reset_wait_q);
- 	init_waitqueue_head(&ioa_cfg->msi_wait_q);
- 	ioa_cfg->sdt_state = INACTIVE;
--	if (ipr_enable_cache)
--		ioa_cfg->cache_state = CACHE_ENABLED;
--	else
--		ioa_cfg->cache_state = CACHE_DISABLED;
+-	if (!ipr_sdt_is_fmt2(start_addr)) {
++	if (!ioa_cfg->sis64 && !ipr_sdt_is_fmt2(start_addr)) {
+ 		dev_err(&ioa_cfg->pdev->dev,
+ 			"Invalid dump table format: %lx\n", start_addr);
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+@@ -2829,7 +2861,6 @@ static void ipr_get_ioa_dump(struct ipr_
 
- 	ipr_initialize_bus_attr(ioa_cfg);
- 	ioa_cfg->max_devs_supported = ipr_max_devs;
-@@ -8842,6 +8707,61 @@ static struct pci_driver ipr_driver = {
- };
+ 	/* IOA Dump entry */
+ 	ipr_init_dump_entry_hdr(&ioa_dump->hdr);
+-	ioa_dump->format = IPR_SDT_FMT2;
+ 	ioa_dump->hdr.len = 0;
+ 	ioa_dump->hdr.data_type = IPR_DUMP_DATA_TYPE_BINARY;
+ 	ioa_dump->hdr.id = IPR_DUMP_IOA_DUMP_ID;
+@@ -2844,7 +2875,8 @@ static void ipr_get_ioa_dump(struct ipr_
+ 					sizeof(struct ipr_sdt) / sizeof(__be32));
+
+ 	/* Smart Dump table is ready to use and the first entry is valid */
+-	if (rc || (be32_to_cpu(sdt->hdr.state) != IPR_FMT2_SDT_READY_TO_USE)) {
++	if (rc || ((be32_to_cpu(sdt->hdr.state) != IPR_FMT3_SDT_READY_TO_USE) &&
++	    (be32_to_cpu(sdt->hdr.state) != IPR_FMT2_SDT_READY_TO_USE))) {
+ 		dev_err(&ioa_cfg->pdev->dev,
+ 			"Dump of IOA failed. Dump table not valid: %d, %X.\n",
+ 			rc, be32_to_cpu(sdt->hdr.state));
+@@ -2868,12 +2900,19 @@ static void ipr_get_ioa_dump(struct ipr_
+ 		}
+
+ 		if (sdt->entry[i].flags & IPR_SDT_VALID_ENTRY) {
+-			sdt_word = be32_to_cpu(sdt->entry[i].bar_str_offset);
+-			start_off = sdt_word & IPR_FMT2_MBX_ADDR_MASK;
+-			end_off = be32_to_cpu(sdt->entry[i].end_offset);
++			sdt_word = be32_to_cpu(sdt->entry[i].start_token);
++			if (ioa_cfg->sis64)
++				bytes_to_copy = be32_to_cpu(sdt->entry[i].end_token);
++			else {
++				start_off = sdt_word & IPR_FMT2_MBX_ADDR_MASK;
++				end_off = be32_to_cpu(sdt->entry[i].end_token);
+
+-			if (ipr_sdt_is_fmt2(sdt_word) && sdt_word) {
+-				bytes_to_copy = end_off - start_off;
++				if (ipr_sdt_is_fmt2(sdt_word) && sdt_word)
++					bytes_to_copy = end_off - start_off;
++				else
++					valid = 0;
++			}
++			if (valid) {
+ 				if (bytes_to_copy > IPR_MAX_IOA_DUMP_SIZE) {
+ 					sdt->entry[i].flags &= ~IPR_SDT_VALID_ENTRY;
+ 					continue;
+@@ -7202,7 +7241,7 @@ static void ipr_get_unit_check_buffer(st
+
+ 	mailbox = readl(ioa_cfg->ioa_mailbox);
+
+-	if (!ipr_sdt_is_fmt2(mailbox)) {
++	if (!ioa_cfg->sis64 && !ipr_sdt_is_fmt2(mailbox)) {
+ 		ipr_unit_check_no_data(ioa_cfg);
+ 		return;
+ 	}
+@@ -7211,15 +7250,20 @@ static void ipr_get_unit_check_buffer(st
+ 	rc = ipr_get_ldump_data_section(ioa_cfg, mailbox, (__be32 *) &sdt,
+ 					(sizeof(struct ipr_uc_sdt)) / sizeof(__be32));
+
+-	if (rc || (be32_to_cpu(sdt.hdr.state) != IPR_FMT2_SDT_READY_TO_USE) ||
+-	    !(sdt.entry[0].flags & IPR_SDT_VALID_ENTRY)) {
++	if (rc || !(sdt.entry[0].flags & IPR_SDT_VALID_ENTRY) ||
++	    ((be32_to_cpu(sdt.hdr.state) != IPR_FMT3_SDT_READY_TO_USE) &&
++	    (be32_to_cpu(sdt.hdr.state) != IPR_FMT2_SDT_READY_TO_USE))) {
+ 		ipr_unit_check_no_data(ioa_cfg);
+ 		return;
+ 	}
+
+ 	/* Find length of the first sdt entry (UC buffer) */
+-	length = (be32_to_cpu(sdt.entry[0].end_offset) -
+-		  be32_to_cpu(sdt.entry[0].bar_str_offset)) & IPR_FMT2_MBX_ADDR_MASK;
++	if (be32_to_cpu(sdt.hdr.state) == IPR_FMT3_SDT_READY_TO_USE)
++		length = be32_to_cpu(sdt.entry[0].end_token);
++	else
++		length = (be32_to_cpu(sdt.entry[0].end_token) -
++			  be32_to_cpu(sdt.entry[0].start_token)) &
++			  IPR_FMT2_MBX_ADDR_MASK;
+
+ 	hostrcb = list_entry(ioa_cfg->hostrcb_free_q.next,
+ 			     struct ipr_hostrcb, queue);
+@@ -7227,7 +7271,7 @@ static void ipr_get_unit_check_buffer(st
+ 	memset(&hostrcb->hcam, 0, sizeof(hostrcb->hcam));
+
+ 	rc = ipr_get_ldump_data_section(ioa_cfg,
+-					be32_to_cpu(sdt.entry[0].bar_str_offset),
++					be32_to_cpu(sdt.entry[0].start_token),
+ 					(__be32 *)&hostrcb->hcam,
+ 					min(length, (int)sizeof(hostrcb->hcam)) / sizeof(__be32));
+
+@@ -8202,6 +8246,11 @@ static void __devinit ipr_init_ioa_cfg(s
+ 	t->sense_uproc_interrupt_reg = base + p->sense_uproc_interrupt_reg;
+ 	t->set_uproc_interrupt_reg = base + p->set_uproc_interrupt_reg;
+ 	t->clr_uproc_interrupt_reg = base + p->clr_uproc_interrupt_reg;
++
++	if (ioa_cfg->sis64) {
++		t->dump_addr_reg = base + p->dump_addr_reg;
++		t->dump_data_reg = base + p->dump_data_reg;
++	}
+ }
 
  /**
-+ * ipr_halt_done - Shutdown prepare completion
-+ *
-+ * Return value:
-+ * 	none
-+ **/
-+static void ipr_halt_done(struct ipr_cmnd *ipr_cmd)
-+{
-+	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-+
-+	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
-+}
-+
-+/**
-+ * ipr_halt - Issue shutdown prepare to all adapters
-+ *
-+ * Return value:
-+ * 	NOTIFY_OK on success / NOTIFY_DONE on failure
-+ **/
-+static int ipr_halt(struct notifier_block *nb, ulong event, void *buf)
-+{
-+	struct ipr_cmnd *ipr_cmd;
-+	struct ipr_ioa_cfg *ioa_cfg;
-+	unsigned long flags = 0;
-+
-+	if (event != SYS_RESTART && event != SYS_HALT && event != SYS_POWER_OFF)
-+		return NOTIFY_DONE;
-+
-+	spin_lock(&ipr_driver_lock);
-+
-+	list_for_each_entry(ioa_cfg, &ipr_ioa_head, queue) {
-+		spin_lock_irqsave(ioa_cfg->host->host_lock, flags);
-+		if (!ioa_cfg->allow_cmds) {
-+			spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
-+			continue;
-+		}
-+
-+		ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
-+		ipr_cmd->ioarcb.res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
-+		ipr_cmd->ioarcb.cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
-+		ipr_cmd->ioarcb.cmd_pkt.cdb[0] = IPR_IOA_SHUTDOWN;
-+		ipr_cmd->ioarcb.cmd_pkt.cdb[1] = IPR_SHUTDOWN_PREPARE_FOR_NORMAL;
-+
-+		ipr_do_req(ipr_cmd, ipr_halt_done, ipr_timeout, IPR_DEVICE_RESET_TIMEOUT);
-+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
-+	}
-+	spin_unlock(&ipr_driver_lock);
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block ipr_notifier = {
-+	ipr_halt, NULL, 0
-+};
-+
-+/**
-  * ipr_init - Module entry point
-  *
-  * Return value:
-@@ -8852,6 +8772,7 @@ static int __init ipr_init(void)
- 	ipr_info("IBM Power RAID SCSI Device Driver version: %s %s\n",
- 		 IPR_DRIVER_VERSION, IPR_DRIVER_DATE);
-
-+	register_reboot_notifier(&ipr_notifier);
- 	return pci_register_driver(&ipr_driver);
- }
-
-@@ -8865,6 +8786,7 @@ static int __init ipr_init(void)
-  **/
- static void __exit ipr_exit(void)
- {
-+	unregister_reboot_notifier(&ipr_notifier);
- 	pci_unregister_driver(&ipr_driver);
- }
-
 Index: b/drivers/scsi/ipr.h
 ===================================================================
---- a/drivers/scsi/ipr.h	2010-02-19 08:08:37.000000000 -0800
-+++ b/drivers/scsi/ipr.h	2010-02-19 08:08:40.000000000 -0800
-@@ -136,7 +136,7 @@
+--- a/drivers/scsi/ipr.h	2010-02-19 08:08:33.000000000 -0800
++++ b/drivers/scsi/ipr.h	2010-02-19 08:08:37.000000000 -0800
+@@ -228,6 +228,7 @@
+ #define IPR_SDT_FMT2_BAR5_SEL				0x5
+ #define IPR_SDT_FMT2_EXP_ROM_SEL			0x8
+ #define IPR_FMT2_SDT_READY_TO_USE			0xC4D4E3F2
++#define IPR_FMT3_SDT_READY_TO_USE			0xC4D4E3F3
+ #define IPR_DOORBELL					0x82800000
+ #define IPR_RUNTIME_RESET				0x40000000
 
- /* We need resources for HCAMS, IOA reset, IOA bringdown, and ERP */
- #define IPR_NUM_INTERNAL_CMD_BLKS	(IPR_NUM_HCAMS + \
--                                     ((IPR_NUM_RESET_RELOAD_RETRIES + 1) * 2) + 3)
-+                                     ((IPR_NUM_RESET_RELOAD_RETRIES + 1) * 2) + 4)
+@@ -1093,10 +1094,9 @@ struct ipr_hostrcb {
 
- #define IPR_MAX_COMMANDS		IPR_NUM_BASE_CMD_BLKS
- #define IPR_NUM_CMD_BLKS		(IPR_NUM_BASE_CMD_BLKS + \
-@@ -1284,13 +1284,6 @@ enum ipr_sdt_state {
- 	DUMP_OBTAINED
+ /* IPR smart dump table structures */
+ struct ipr_sdt_entry {
+-	__be32 bar_str_offset;
+-	__be32 end_offset;
+-	u8 entry_byte;
+-	u8 reserved[3];
++	__be32 start_token;
++	__be32 end_token;
++	u8 reserved[4];
+
+ 	u8 flags;
+ #define IPR_SDT_ENDIAN		0x80
+@@ -1204,6 +1204,9 @@ struct ipr_interrupt_offsets {
+ 	unsigned long sense_uproc_interrupt_reg;
+ 	unsigned long set_uproc_interrupt_reg;
+ 	unsigned long clr_uproc_interrupt_reg;
++
++	unsigned long dump_addr_reg;
++	unsigned long dump_data_reg;
  };
 
--enum ipr_cache_state {
--	CACHE_NONE,
--	CACHE_DISABLED,
--	CACHE_ENABLED,
--	CACHE_INVALID
--};
--
- /* Per-controller data */
- struct ipr_ioa_cfg {
- 	char eye_catcher[8];
-@@ -1321,7 +1314,6 @@ struct ipr_ioa_cfg {
- 	unsigned long *array_ids;
- 	unsigned long *vset_ids;
+ struct ipr_interrupts {
+@@ -1217,6 +1220,9 @@ struct ipr_interrupts {
+ 	void __iomem *sense_uproc_interrupt_reg;
+ 	void __iomem *set_uproc_interrupt_reg;
+ 	void __iomem *clr_uproc_interrupt_reg;
++
++	void __iomem *dump_addr_reg;
++	void __iomem *dump_data_reg;
+ };
 
--	enum ipr_cache_state cache_state;
- 	u16 type; /* CCIN of the card */
+ struct ipr_chip_cfg_t {
+@@ -1536,8 +1542,6 @@ struct ipr_ioa_dump {
+ 	u32 next_page_index;
+ 	u32 page_offset;
+ 	u32 format;
+-#define IPR_SDT_FMT2		2
+-#define IPR_SDT_UNKNOWN		3
+ }__attribute__((packed, aligned (4)));
 
- 	u8 log_level;
+ struct ipr_dump {
 
