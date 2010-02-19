@@ -1,1252 +1,639 @@
 From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: [patch 3/9] ipr: update the configuration table code for the next
- generation chip
-Date: Fri, 19 Feb 2010 13:23:59 -0800
-Message-ID: <4B7F016F.3000803@linux.vnet.ibm.com>
+Subject: [patch 4/9] ipr: add error handling updates for the next generation
+ chip
+Date: Fri, 19 Feb 2010 13:24:07 -0800
+Message-ID: <4B7F0177.5070408@linux.vnet.ibm.com>
 References: <20100219210900.066268168@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:43922 "EHLO e5.ny.us.ibm.com"
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:33252 "EHLO e9.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754613Ab0BSVYC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 16:24:02 -0500
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e5.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JLAV2E024802
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:10:31 -0500
+	id S1754847Ab0BSVYK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2010 16:24:10 -0500
+Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
+	by e9.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JLEaGk018847
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:14:36 -0500
 Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o1JLO1HX120300
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:24:01 -0500
+	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o1JLO9Hq113000
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:24:09 -0500
 Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JLO059023317
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 19:24:01 -0200
+	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JLO8jf023619
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 19:24:09 -0200
 In-Reply-To: <20100219210900.066268168@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
 
-This patch changes the configuration table structures and related code such
-that both 32 bit and 64 bit based adapters can work with the driver.
-
-This patch also implements the code to generate the virtual bus/id/lun values
-for devices connected to the new adapters.  It also implements support for the
-new device resource path.
+Add support for the new log data notification and overlay IDs.
 
 Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ipr.c |  512 +++++++++++++++++++++++++++++++++++++++++++----------
- drivers/scsi/ipr.h |  172 ++++++++++++-----
- 2 files changed, 537 insertions(+), 147 deletions(-)
+ drivers/scsi/ipr.c |  257 ++++++++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/ipr.h |  158 ++++++++++++++++++++++++++++----
+ 2 files changed, 387 insertions(+), 28 deletions(-)
 
-Index: b/drivers/scsi/ipr.c
+Index: b/drivers/scsi/ipr.h
 ===================================================================
---- a/drivers/scsi/ipr.c	2010-02-08 20:57:16.000000000 -0800
-+++ b/drivers/scsi/ipr.c	2010-02-19 08:07:35.000000000 -0800
-@@ -72,6 +72,7 @@
- #include <linux/moduleparam.h>
- #include <linux/libata.h>
- #include <linux/hdreg.h>
-+#include <linux/stringify.h>
- #include <asm/io.h>
- #include <asm/irq.h>
- #include <asm/processor.h>
-@@ -93,6 +94,7 @@ static unsigned int ipr_fastfail = 0;
- static unsigned int ipr_transop_timeout = 0;
- static unsigned int ipr_enable_cache = 1;
- static unsigned int ipr_debug = 0;
-+static unsigned int ipr_max_devs = IPR_DEFAULT_SIS64_DEVS;
- static unsigned int ipr_dual_ioa_raid = 1;
- static DEFINE_SPINLOCK(ipr_driver_lock);
+--- a/drivers/scsi/ipr.h	2010-02-19 07:59:49.000000000 -0800
++++ b/drivers/scsi/ipr.h	2010-02-19 08:08:33.000000000 -0800
+@@ -754,12 +754,29 @@ struct ipr_hostrcb_device_data_entry_enh
+ 	struct ipr_ext_vpd cfc_last_with_dev_vpd;
+ }__attribute__((packed, aligned (4)));
 
-@@ -177,6 +179,9 @@ module_param_named(debug, ipr_debug, int
- MODULE_PARM_DESC(debug, "Enable device driver debugging logging. Set to 1 to enable. (default: 0)");
- module_param_named(dual_ioa_raid, ipr_dual_ioa_raid, int, 0);
- MODULE_PARM_DESC(dual_ioa_raid, "Enable dual adapter RAID support. Set to 1 to enable. (default: 1)");
-+module_param_named(max_devs, ipr_max_devs, int, 0);
-+MODULE_PARM_DESC(max_devs, "Specify the maximum number of physical devices. "
-+		 "[Default=" __stringify(IPR_DEFAULT_SIS64_DEVS) "]");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(IPR_DRIVER_VERSION);
++struct ipr_hostrcb64_device_data_entry_enhanced {
++	struct ipr_ext_vpd vpd;
++	u8 ccin[4];
++	u8 res_path[8];
++	struct ipr_ext_vpd new_vpd;
++	u8 new_ccin[4];
++	struct ipr_ext_vpd ioa_last_with_dev_vpd;
++	struct ipr_ext_vpd cfc_last_with_dev_vpd;
++}__attribute__((packed, aligned (4)));
++
+ struct ipr_hostrcb_array_data_entry {
+ 	struct ipr_vpd vpd;
+ 	struct ipr_res_addr expected_dev_res_addr;
+ 	struct ipr_res_addr dev_res_addr;
+ }__attribute__((packed, aligned (4)));
 
-@@ -921,14 +926,46 @@ static void ipr_send_hcam(struct ipr_ioa
++struct ipr_hostrcb64_array_data_entry {
++	struct ipr_ext_vpd vpd;
++	u8 ccin[4];
++	u8 expected_res_path[8];
++	u8 res_path[8];
++}__attribute__((packed, aligned (4)));
++
+ struct ipr_hostrcb_array_data_entry_enhanced {
+ 	struct ipr_ext_vpd vpd;
+ 	u8 ccin[4];
+@@ -811,6 +828,14 @@ struct ipr_hostrcb_type_13_error {
+ 	struct ipr_hostrcb_device_data_entry_enhanced dev[3];
+ }__attribute__((packed, aligned (4)));
+
++struct ipr_hostrcb_type_23_error {
++	struct ipr_ext_vpd ioa_vpd;
++	struct ipr_ext_vpd cfc_vpd;
++	__be32 errors_detected;
++	__be32 errors_logged;
++	struct ipr_hostrcb64_device_data_entry_enhanced dev[3];
++}__attribute__((packed, aligned (4)));
++
+ struct ipr_hostrcb_type_04_error {
+ 	struct ipr_vpd ioa_vpd;
+ 	struct ipr_vpd cfc_vpd;
+@@ -838,6 +863,22 @@ struct ipr_hostrcb_type_14_error {
+ 	struct ipr_hostrcb_array_data_entry_enhanced array_member[18];
+ }__attribute__((packed, aligned (4)));
+
++struct ipr_hostrcb_type_24_error {
++	struct ipr_ext_vpd ioa_vpd;
++	struct ipr_ext_vpd cfc_vpd;
++	u8 reserved[2];
++	u8 exposed_mode_adn;
++#define IPR_INVALID_ARRAY_DEV_NUM		0xff
++	u8 array_id;
++	u8 last_res_path[8];
++	u8 protection_level[8];
++	struct ipr_ext_vpd array_vpd;
++	u8 description[16];
++	u8 reserved2[3];
++	u8 num_entries;
++	struct ipr_hostrcb64_array_data_entry array_member[32];
++}__attribute__((packed, aligned (4)));
++
+ struct ipr_hostrcb_type_07_error {
+ 	u8 failure_reason[64];
+ 	struct ipr_vpd vpd;
+@@ -875,6 +916,22 @@ struct ipr_hostrcb_config_element {
+ 	__be32 wwid[2];
+ }__attribute__((packed, aligned (4)));
+
++struct ipr_hostrcb64_config_element {
++	__be16 length;
++	u8 descriptor_id;
++#define IPR_DESCRIPTOR_MASK		0xC0
++#define IPR_DESCRIPTOR_SIS64		0x00
++
++	u8 reserved;
++	u8 type_status;
++
++	u8 reserved2[2];
++	u8 link_rate;
++
++	u8 res_path[8];
++	__be32 wwid[2];
++}__attribute__((packed, aligned (8)));
++
+ struct ipr_hostrcb_fabric_desc {
+ 	__be16 length;
+ 	u8 ioa_port;
+@@ -896,6 +953,20 @@ struct ipr_hostrcb_fabric_desc {
+ 	struct ipr_hostrcb_config_element elem[1];
+ }__attribute__((packed, aligned (4)));
+
++struct ipr_hostrcb64_fabric_desc {
++	__be16 length;
++	u8 descriptor_id;
++
++	u8 reserved;
++	u8 path_state;
++
++	u8 reserved2[2];
++	u8 res_path[8];
++	u8 reserved3[6];
++	__be16 num_entries;
++	struct ipr_hostrcb64_config_element elem[1];
++}__attribute__((packed, aligned (8)));
++
+ #define for_each_fabric_cfg(fabric, cfg) \
+ 		for (cfg = (fabric)->elem; \
+ 			cfg < ((fabric)->elem + be16_to_cpu((fabric)->num_entries)); \
+@@ -908,10 +979,17 @@ struct ipr_hostrcb_type_20_error {
+ 	struct ipr_hostrcb_fabric_desc desc[1];
+ }__attribute__((packed, aligned (4)));
+
++struct ipr_hostrcb_type_30_error {
++	u8 failure_reason[64];
++	u8 reserved[3];
++	u8 num_entries;
++	struct ipr_hostrcb64_fabric_desc desc[1];
++}__attribute__((packed, aligned (4)));
++
+ struct ipr_hostrcb_error {
+-	__be32 failing_dev_ioasc;
+-	struct ipr_res_addr failing_dev_res_addr;
+-	__be32 failing_dev_res_handle;
++	__be32 fd_ioasc;
++	struct ipr_res_addr fd_res_addr;
++	__be32 fd_res_handle;
+ 	__be32 prc;
+ 	union {
+ 		struct ipr_hostrcb_type_ff_error type_ff_error;
+@@ -928,6 +1006,26 @@ struct ipr_hostrcb_error {
+ 	} u;
+ }__attribute__((packed, aligned (4)));
+
++struct ipr_hostrcb64_error {
++	__be32 fd_ioasc;
++	__be32 ioa_fw_level;
++	__be32 fd_res_handle;
++	__be32 prc;
++	__be64 fd_dev_id;
++	__be64 fd_lun;
++	u8 fd_res_path[8];
++	__be64 time_stamp;
++	u8 reserved[2];
++	union {
++		struct ipr_hostrcb_type_ff_error type_ff_error;
++		struct ipr_hostrcb_type_12_error type_12_error;
++		struct ipr_hostrcb_type_17_error type_17_error;
++		struct ipr_hostrcb_type_23_error type_23_error;
++		struct ipr_hostrcb_type_24_error type_24_error;
++		struct ipr_hostrcb_type_30_error type_30_error;
++	} u;
++}__attribute__((packed, aligned (8)));
++
+ struct ipr_hostrcb_raw {
+ 	__be32 data[sizeof(struct ipr_hostrcb_error)/sizeof(__be32)];
+ }__attribute__((packed, aligned (4)));
+@@ -965,7 +1063,11 @@ struct ipr_hcam {
+ #define IPR_HOST_RCB_OVERLAY_ID_16				0x16
+ #define IPR_HOST_RCB_OVERLAY_ID_17				0x17
+ #define IPR_HOST_RCB_OVERLAY_ID_20				0x20
+-#define IPR_HOST_RCB_OVERLAY_ID_DEFAULT			0xFF
++#define IPR_HOST_RCB_OVERLAY_ID_23				0x23
++#define IPR_HOST_RCB_OVERLAY_ID_24				0x24
++#define IPR_HOST_RCB_OVERLAY_ID_26				0x26
++#define IPR_HOST_RCB_OVERLAY_ID_30				0x30
++#define IPR_HOST_RCB_OVERLAY_ID_DEFAULT				0xFF
+
+ 	u8 reserved1[3];
+ 	__be32 ilid;
+@@ -975,6 +1077,7 @@ struct ipr_hcam {
+
+ 	union {
+ 		struct ipr_hostrcb_error error;
++		struct ipr_hostrcb64_error error64;
+ 		struct ipr_hostrcb_cfg_ch_not ccn;
+ 		struct ipr_hostrcb_raw raw;
+ 	} u;
+@@ -985,6 +1088,7 @@ struct ipr_hostrcb {
+ 	dma_addr_t hostrcb_dma;
+ 	struct list_head queue;
+ 	struct ipr_ioa_cfg *ioa_cfg;
++	char rp_buffer[IPR_MAX_RES_PATH_LENGTH];
+ };
+
+ /* IPR smart dump table structures */
+@@ -1521,14 +1625,21 @@ struct ipr_ucode_image_header {
+ }
+
+ #define ipr_hcam_err(hostrcb, fmt, ...)					\
+-{													\
+-	if (ipr_is_device(&(hostrcb)->hcam.u.error.failing_dev_res_addr)) {		\
+-		ipr_ra_err((hostrcb)->ioa_cfg,							\
+-				(hostrcb)->hcam.u.error.failing_dev_res_addr,			\
+-				fmt, ##__VA_ARGS__);							\
+-	} else {											\
+-		dev_err(&(hostrcb)->ioa_cfg->pdev->dev, fmt, ##__VA_ARGS__);		\
+-	}												\
++{									\
++	if (ipr_is_device(hostrcb)) {					\
++		if ((hostrcb)->ioa_cfg->sis64) {			\
++			printk(KERN_ERR IPR_NAME ": %s: " fmt, 		\
++				ipr_format_resource_path(&hostrcb->hcam.u.error64.fd_res_path[0], \
++					&hostrcb->rp_buffer[0]),	\
++				__VA_ARGS__);				\
++		} else {						\
++			ipr_ra_err((hostrcb)->ioa_cfg,			\
++				(hostrcb)->hcam.u.error.fd_res_addr,	\
++				fmt, __VA_ARGS__);			\
++		}							\
++	} else {							\
++		dev_err(&(hostrcb)->ioa_cfg->pdev->dev, fmt, __VA_ARGS__); \
++	}								\
+ }
+
+ #define ipr_trace ipr_dbg("%s: %s: Line: %d\n",\
+@@ -1637,18 +1748,29 @@ static inline int ipr_is_naca_model(stru
  }
 
  /**
-+ * ipr_update_ata_class - Update the ata class in the resource entry
-+ * @res:	resource entry struct
-+ * @proto:	cfgte device bus protocol value
+- * ipr_is_device - Determine if resource address is that of a device
+- * @res_addr:	resource address struct
++ * ipr_is_device - Determine if the hostrcb structure is related to a device
++ * @hostrcb:	host resource control blocks struct
+  *
+  * Return value:
+  * 	1 if AF / 0 if not AF
+  **/
+-static inline int ipr_is_device(struct ipr_res_addr *res_addr)
++static inline int ipr_is_device(struct ipr_hostrcb *hostrcb)
+ {
+-	if ((res_addr->bus < IPR_MAX_NUM_BUSES) &&
+-	    (res_addr->target < (IPR_MAX_NUM_TARGETS_PER_BUS - 1)))
+-		return 1;
++	struct ipr_res_addr *res_addr;
++	u8 *res_path;
+
++	if (hostrcb->ioa_cfg->sis64) {
++		res_path = &hostrcb->hcam.u.error64.fd_res_path[0];
++		if ((res_path[0] == 0x00 || res_path[0] == 0x80 ||
++		    res_path[0] == 0x81) && res_path[2] != 0xFF)
++			return 1;
++	} else {
++		res_addr = &hostrcb->hcam.u.error.fd_res_addr;
++
++		if ((res_addr->bus < IPR_MAX_NUM_BUSES) &&
++		    (res_addr->target < (IPR_MAX_NUM_TARGETS_PER_BUS - 1)))
++			return 1;
++	}
+ 	return 0;
+ }
+
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2010-02-19 08:07:35.000000000 -0800
++++ b/drivers/scsi/ipr.c	2010-02-19 08:08:33.000000000 -0800
+@@ -1079,7 +1079,7 @@ static char *ipr_format_resource_path(u8
+
+ 	sprintf(buffer, "%02X", res_path[0]);
+ 	for (i=1; res_path[i] != 0xff; i++)
+-		sprintf(buffer, "%s:%02X", buffer, res_path[i]);
++		sprintf(buffer, "%s-%02X", buffer, res_path[i]);
+
+ 	return buffer;
+ }
+@@ -1385,8 +1385,12 @@ static void ipr_log_ext_vpd(struct ipr_e
+ static void ipr_log_enhanced_cache_error(struct ipr_ioa_cfg *ioa_cfg,
+ 					 struct ipr_hostrcb *hostrcb)
+ {
+-	struct ipr_hostrcb_type_12_error *error =
+-		&hostrcb->hcam.u.error.u.type_12_error;
++	struct ipr_hostrcb_type_12_error *error;
++
++	if (ioa_cfg->sis64)
++		error = &hostrcb->hcam.u.error64.u.type_12_error;
++	else
++		error = &hostrcb->hcam.u.error.u.type_12_error;
+
+ 	ipr_err("-----Current Configuration-----\n");
+ 	ipr_err("Cache Directory Card Information:\n");
+@@ -1479,6 +1483,48 @@ static void ipr_log_enhanced_config_erro
+ }
+
+ /**
++ * ipr_log_sis64_config_error - Log a device error.
++ * @ioa_cfg:	ioa config struct
++ * @hostrcb:	hostrcb struct
 + *
 + * Return value:
 + * 	none
 + **/
-+static void ipr_update_ata_class(struct ipr_resource_entry *res, unsigned int proto)
++static void ipr_log_sis64_config_error(struct ipr_ioa_cfg *ioa_cfg,
++				       struct ipr_hostrcb *hostrcb)
 +{
-+	switch(proto) {
-+	case IPR_PROTO_SATA:
-+	case IPR_PROTO_SAS_STP:
-+		res->ata_class = ATA_DEV_ATA;
-+		break;
-+	case IPR_PROTO_SATA_ATAPI:
-+	case IPR_PROTO_SAS_STP_ATAPI:
-+		res->ata_class = ATA_DEV_ATAPI;
-+		break;
-+	default:
-+		res->ata_class = ATA_DEV_UNKNOWN;
-+		break;
-+	};
-+}
-+
-+/**
-  * ipr_init_res_entry - Initialize a resource entry struct.
-  * @res:	resource entry struct
-+ * @cfgtew:	config table entry wrapper struct
-  *
-  * Return value:
-  * 	none
-  **/
--static void ipr_init_res_entry(struct ipr_resource_entry *res)
-+static void ipr_init_res_entry(struct ipr_resource_entry *res,
-+			       struct ipr_config_table_entry_wrapper *cfgtew)
- {
-+	int found = 0;
-+	unsigned int proto;
-+	struct ipr_ioa_cfg *ioa_cfg = res->ioa_cfg;
-+	struct ipr_resource_entry *gscsi_res = NULL;
-+
- 	res->needs_sync_complete = 0;
- 	res->in_erp = 0;
- 	res->add_to_ml = 0;
-@@ -936,6 +973,205 @@ static void ipr_init_res_entry(struct ip
- 	res->resetting_device = 0;
- 	res->sdev = NULL;
- 	res->sata_port = NULL;
-+
-+	if (ioa_cfg->sis64) {
-+		proto = cfgtew->u.cfgte64->proto;
-+		res->res_flags = cfgtew->u.cfgte64->res_flags;
-+		res->qmodel = IPR_QUEUEING_MODEL64(res);
-+		res->type = cfgtew->u.cfgte64->res_type & 0x0f;
-+
-+		memcpy(res->res_path, &cfgtew->u.cfgte64->res_path,
-+			sizeof(res->res_path));
-+
-+		res->bus = 0;
-+		res->lun = scsilun_to_int(&res->dev_lun);
-+
-+		if (res->type == IPR_RES_TYPE_GENERIC_SCSI) {
-+			list_for_each_entry(gscsi_res, &ioa_cfg->used_res_q, queue) {
-+				if (gscsi_res->dev_id == cfgtew->u.cfgte64->dev_id) {
-+					found = 1;
-+					res->target = gscsi_res->target;
-+					break;
-+				}
-+			}
-+			if (!found) {
-+				res->target = find_first_zero_bit(ioa_cfg->target_ids,
-+								  ioa_cfg->max_devs_supported);
-+				set_bit(res->target, ioa_cfg->target_ids);
-+			}
-+
-+			memcpy(&res->dev_lun.scsi_lun, &cfgtew->u.cfgte64->lun,
-+				sizeof(res->dev_lun.scsi_lun));
-+		} else if (res->type == IPR_RES_TYPE_IOAFP) {
-+			res->bus = IPR_IOAFP_VIRTUAL_BUS;
-+			res->target = 0;
-+		} else if (res->type == IPR_RES_TYPE_ARRAY) {
-+			res->bus = IPR_ARRAY_VIRTUAL_BUS;
-+			res->target = find_first_zero_bit(ioa_cfg->array_ids,
-+							  ioa_cfg->max_devs_supported);
-+			set_bit(res->target, ioa_cfg->array_ids);
-+		} else if (res->type == IPR_RES_TYPE_VOLUME_SET) {
-+			res->bus = IPR_VSET_VIRTUAL_BUS;
-+			res->target = find_first_zero_bit(ioa_cfg->vset_ids,
-+							  ioa_cfg->max_devs_supported);
-+			set_bit(res->target, ioa_cfg->vset_ids);
-+		} else {
-+			res->target = find_first_zero_bit(ioa_cfg->target_ids,
-+							  ioa_cfg->max_devs_supported);
-+			set_bit(res->target, ioa_cfg->target_ids);
-+		}
-+	} else {
-+		proto = cfgtew->u.cfgte->proto;
-+		res->qmodel = IPR_QUEUEING_MODEL(res);
-+		res->flags = cfgtew->u.cfgte->flags;
-+		if (res->flags & IPR_IS_IOA_RESOURCE)
-+			res->type = IPR_RES_TYPE_IOAFP;
-+		else
-+			res->type = cfgtew->u.cfgte->rsvd_subtype & 0x0f;
-+
-+		res->bus = cfgtew->u.cfgte->res_addr.bus;
-+		res->target = cfgtew->u.cfgte->res_addr.target;
-+		res->lun = cfgtew->u.cfgte->res_addr.lun;
-+	}
-+
-+	ipr_update_ata_class(res, proto);
-+}
-+
-+/**
-+ * ipr_is_same_device - Determine if two devices are the same.
-+ * @res:	resource entry struct
-+ * @cfgtew:	config table entry wrapper struct
-+ *
-+ * Return value:
-+ * 	1 if the devices are the same / 0 otherwise
-+ **/
-+static int ipr_is_same_device(struct ipr_resource_entry *res,
-+			      struct ipr_config_table_entry_wrapper *cfgtew)
-+{
-+	if (res->ioa_cfg->sis64) {
-+		if (!memcmp(&res->dev_id, &cfgtew->u.cfgte64->dev_id,
-+					sizeof(cfgtew->u.cfgte64->dev_id)) &&
-+			!memcmp(&res->lun, &cfgtew->u.cfgte64->lun,
-+					sizeof(cfgtew->u.cfgte64->lun))) {
-+			return 1;
-+		}
-+	} else {
-+		if (res->bus == cfgtew->u.cfgte->res_addr.bus &&
-+		    res->target == cfgtew->u.cfgte->res_addr.target &&
-+		    res->lun == cfgtew->u.cfgte->res_addr.lun)
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * ipr_format_resource_path - Format the resource path for printing.
-+ * @res_path:	resource path
-+ * @buf:	buffer
-+ *
-+ * Return value:
-+ * 	pointer to buffer
-+ **/
-+static char *ipr_format_resource_path(u8 *res_path, char *buffer)
-+{
-+	int i;
-+
-+	sprintf(buffer, "%02X", res_path[0]);
-+	for (i=1; res_path[i] != 0xff; i++)
-+		sprintf(buffer, "%s:%02X", buffer, res_path[i]);
-+
-+	return buffer;
-+}
-+
-+/**
-+ * ipr_update_res_entry - Update the resource entry.
-+ * @res:	resource entry struct
-+ * @cfgtew:	config table entry wrapper struct
-+ *
-+ * Return value:
-+ *      none
-+ **/
-+static void ipr_update_res_entry(struct ipr_resource_entry *res,
-+				 struct ipr_config_table_entry_wrapper *cfgtew)
-+{
++	int errors_logged, i;
++	struct ipr_hostrcb64_device_data_entry_enhanced *dev_entry;
++	struct ipr_hostrcb_type_23_error *error;
 +	char buffer[IPR_MAX_RES_PATH_LENGTH];
-+	unsigned int proto;
-+	int new_path = 0;
 +
-+	if (res->ioa_cfg->sis64) {
-+		res->flags = cfgtew->u.cfgte64->flags;
-+		res->res_flags = cfgtew->u.cfgte64->res_flags;
-+		res->type = cfgtew->u.cfgte64->res_type & 0x0f;
++	error = &hostrcb->hcam.u.error64.u.type_23_error;
++	errors_logged = be32_to_cpu(error->errors_logged);
 +
-+		memcpy(&res->std_inq_data, &cfgtew->u.cfgte64->std_inq_data,
-+			sizeof(struct ipr_std_inq_data));
++	ipr_err("Device Errors Detected/Logged: %d/%d\n",
++		be32_to_cpu(error->errors_detected), errors_logged);
 +
-+		res->qmodel = IPR_QUEUEING_MODEL64(res);
-+		proto = cfgtew->u.cfgte64->proto;
-+		res->res_handle = cfgtew->u.cfgte64->res_handle;
-+		res->dev_id = cfgtew->u.cfgte64->dev_id;
++	dev_entry = error->dev;
 +
-+		memcpy(&res->dev_lun.scsi_lun, &cfgtew->u.cfgte64->lun,
-+			sizeof(res->dev_lun.scsi_lun));
++	for (i = 0; i < errors_logged; i++, dev_entry++) {
++		ipr_err_separator;
 +
-+		if (memcmp(res->res_path, &cfgtew->u.cfgte64->res_path,
-+					sizeof(res->res_path))) {
-+			memcpy(res->res_path, &cfgtew->u.cfgte64->res_path,
-+				sizeof(res->res_path));
-+			new_path = 1;
-+		}
++		ipr_err("Device %d : %s", i + 1,
++			 ipr_format_resource_path(&dev_entry->res_path[0], &buffer[0]));
++		ipr_log_ext_vpd(&dev_entry->vpd);
 +
-+		if (res->sdev && new_path)
-+			sdev_printk(KERN_INFO, res->sdev, "Resource path: %s\n",
-+				    ipr_format_resource_path(&res->res_path[0], &buffer[0]));
-+	} else {
-+		res->flags = cfgtew->u.cfgte->flags;
-+		if (res->flags & IPR_IS_IOA_RESOURCE)
-+			res->type = IPR_RES_TYPE_IOAFP;
-+		else
-+			res->type = cfgtew->u.cfgte->rsvd_subtype & 0x0f;
++		ipr_err("-----New Device Information-----\n");
++		ipr_log_ext_vpd(&dev_entry->new_vpd);
 +
-+		memcpy(&res->std_inq_data, &cfgtew->u.cfgte->std_inq_data,
-+			sizeof(struct ipr_std_inq_data));
++		ipr_err("Cache Directory Card Information:\n");
++		ipr_log_ext_vpd(&dev_entry->ioa_last_with_dev_vpd);
 +
-+		res->qmodel = IPR_QUEUEING_MODEL(res);
-+		proto = cfgtew->u.cfgte->proto;
-+		res->res_handle = cfgtew->u.cfgte->res_handle;
++		ipr_err("Adapter Card Information:\n");
++		ipr_log_ext_vpd(&dev_entry->cfc_last_with_dev_vpd);
 +	}
-+
-+	ipr_update_ata_class(res, proto);
 +}
 +
 +/**
-+ * ipr_clear_res_target - Clear the bit in the bit map representing the target
-+ * 			  for the resource.
-+ * @res:	resource entry struct
-+ * @cfgtew:	config table entry wrapper struct
+  * ipr_log_config_error - Log a configuration error.
+  * @ioa_cfg:	ioa config struct
+  * @hostrcb:	hostrcb struct
+@@ -1672,7 +1718,11 @@ static void ipr_log_enhanced_dual_ioa_er
+ {
+ 	struct ipr_hostrcb_type_17_error *error;
+
+-	error = &hostrcb->hcam.u.error.u.type_17_error;
++	if (ioa_cfg->sis64)
++		error = &hostrcb->hcam.u.error64.u.type_17_error;
++	else
++		error = &hostrcb->hcam.u.error.u.type_17_error;
++
+ 	error->failure_reason[sizeof(error->failure_reason) - 1] = '\0';
+ 	strim(error->failure_reason);
+
+@@ -1779,6 +1829,42 @@ static void ipr_log_fabric_path(struct i
+ 		fabric->ioa_port, fabric->cascaded_expander, fabric->phy);
+ }
+
++/**
++ * ipr_log64_fabric_path - Log a fabric path error
++ * @hostrcb:	hostrcb struct
++ * @fabric:		fabric descriptor
 + *
 + * Return value:
-+ *      none
++ * 	none
 + **/
-+static void ipr_clear_res_target(struct ipr_resource_entry *res)
++static void ipr_log64_fabric_path(struct ipr_hostrcb *hostrcb,
++				  struct ipr_hostrcb64_fabric_desc *fabric)
 +{
-+	struct ipr_resource_entry *gscsi_res = NULL;
-+	struct ipr_ioa_cfg *ioa_cfg = res->ioa_cfg;
++	int i, j;
++	u8 path_state = fabric->path_state;
++	u8 active = path_state & IPR_PATH_ACTIVE_MASK;
++	u8 state = path_state & IPR_PATH_STATE_MASK;
++	char buffer[IPR_MAX_RES_PATH_LENGTH];
 +
-+	if (!ioa_cfg->sis64)
++	for (i = 0; i < ARRAY_SIZE(path_active_desc); i++) {
++		if (path_active_desc[i].active != active)
++			continue;
++
++		for (j = 0; j < ARRAY_SIZE(path_state_desc); j++) {
++			if (path_state_desc[j].state != state)
++				continue;
++
++			ipr_hcam_err(hostrcb, "%s %s: Resource Path=%s\n",
++				     path_active_desc[i].desc, path_state_desc[j].desc,
++				     ipr_format_resource_path(&fabric->res_path[0], &buffer[0]));
++			return;
++		}
++	}
++
++	ipr_err("Path state=%02X Resource Path=%s\n", path_state,
++		ipr_format_resource_path(&fabric->res_path[0], &buffer[0]));
++}
++
+ static const struct {
+ 	u8 type;
+ 	char *desc;
+@@ -1888,6 +1974,49 @@ static void ipr_log_path_elem(struct ipr
+ }
+
+ /**
++ * ipr_log64_path_elem - Log a fabric path element.
++ * @hostrcb:	hostrcb struct
++ * @cfg:		fabric path element struct
++ *
++ * Return value:
++ * 	none
++ **/
++static void ipr_log64_path_elem(struct ipr_hostrcb *hostrcb,
++				struct ipr_hostrcb64_config_element *cfg)
++{
++	int i, j;
++	u8 desc_id = cfg->descriptor_id & IPR_DESCRIPTOR_MASK;
++	u8 type = cfg->type_status & IPR_PATH_CFG_TYPE_MASK;
++	u8 status = cfg->type_status & IPR_PATH_CFG_STATUS_MASK;
++	char buffer[IPR_MAX_RES_PATH_LENGTH];
++
++	if (type == IPR_PATH_CFG_NOT_EXIST || desc_id != IPR_DESCRIPTOR_SIS64)
 +		return;
 +
-+	if (res->bus == IPR_ARRAY_VIRTUAL_BUS)
-+		clear_bit(res->target, ioa_cfg->array_ids);
-+	else if (res->bus == IPR_VSET_VIRTUAL_BUS)
-+		clear_bit(res->target, ioa_cfg->vset_ids);
-+	else if (res->bus == 0 && res->type == IPR_RES_TYPE_GENERIC_SCSI) {
-+		list_for_each_entry(gscsi_res, &ioa_cfg->used_res_q, queue)
-+			if (gscsi_res->dev_id == res->dev_id && gscsi_res != res)
-+				return;
-+		clear_bit(res->target, ioa_cfg->target_ids);
++	for (i = 0; i < ARRAY_SIZE(path_type_desc); i++) {
++		if (path_type_desc[i].type != type)
++			continue;
 +
-+	} else if (res->bus == 0)
-+		clear_bit(res->target, ioa_cfg->target_ids);
- }
-
- /**
-@@ -947,17 +1183,24 @@ static void ipr_init_res_entry(struct ip
-  * 	none
-  **/
- static void ipr_handle_config_change(struct ipr_ioa_cfg *ioa_cfg,
--			      struct ipr_hostrcb *hostrcb)
-+				     struct ipr_hostrcb *hostrcb)
- {
- 	struct ipr_resource_entry *res = NULL;
--	struct ipr_config_table_entry *cfgte;
-+	struct ipr_config_table_entry_wrapper cfgtew;
-+	__be32 cc_res_handle;
++		for (j = 0; j < ARRAY_SIZE(path_status_desc); j++) {
++			if (path_status_desc[j].status != status)
++				continue;
 +
- 	u32 is_ndn = 1;
-
--	cfgte = &hostrcb->hcam.u.ccn.cfgte;
-+	if (ioa_cfg->sis64) {
-+		cfgtew.u.cfgte64 = &hostrcb->hcam.u.ccn.u.cfgte64;
-+		cc_res_handle = cfgtew.u.cfgte64->res_handle;
-+	} else {
-+		cfgtew.u.cfgte = &hostrcb->hcam.u.ccn.u.cfgte;
-+		cc_res_handle = cfgtew.u.cfgte->res_handle;
-+	}
-
- 	list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
--		if (!memcmp(&res->cfgte.res_addr, &cfgte->res_addr,
--			    sizeof(cfgte->res_addr))) {
-+		if (res->res_handle == cc_res_handle) {
- 			is_ndn = 0;
- 			break;
- 		}
-@@ -975,20 +1218,22 @@ static void ipr_handle_config_change(str
- 				 struct ipr_resource_entry, queue);
-
- 		list_del(&res->queue);
--		ipr_init_res_entry(res);
-+		ipr_init_res_entry(res, &cfgtew);
- 		list_add_tail(&res->queue, &ioa_cfg->used_res_q);
- 	}
-
--	memcpy(&res->cfgte, cfgte, sizeof(struct ipr_config_table_entry));
-+	ipr_update_res_entry(res, &cfgtew);
-
- 	if (hostrcb->hcam.notify_type == IPR_HOST_RCB_NOTIF_TYPE_REM_ENTRY) {
- 		if (res->sdev) {
- 			res->del_from_ml = 1;
--			res->cfgte.res_handle = IPR_INVALID_RES_HANDLE;
-+			res->res_handle = IPR_INVALID_RES_HANDLE;
- 			if (ioa_cfg->allow_ml_add_del)
- 				schedule_work(&ioa_cfg->work_q);
--		} else
-+		} else {
-+			ipr_clear_res_target(res);
- 			list_move_tail(&res->queue, &ioa_cfg->free_res_q);
++			ipr_hcam_err(hostrcb, "%s %s: Resource Path=%s, Link rate=%s, WWN=%08X%08X\n",
++				     path_status_desc[j].desc, path_type_desc[i].desc,
++				     ipr_format_resource_path(&cfg->res_path[0], &buffer[0]),
++				     link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
++				     be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
++			return;
 +		}
- 	} else if (!res->sdev) {
- 		res->add_to_ml = 1;
- 		if (ioa_cfg->allow_ml_add_del)
-@@ -1941,12 +2186,14 @@ static const struct ipr_ses_table_entry 
- ipr_find_ses_entry(struct ipr_resource_entry *res)
- {
- 	int i, j, matches;
-+	struct ipr_std_inq_vpids *vpids;
- 	const struct ipr_ses_table_entry *ste = ipr_ses_table;
-
- 	for (i = 0; i < ARRAY_SIZE(ipr_ses_table); i++, ste++) {
- 		for (j = 0, matches = 0; j < IPR_PROD_ID_LEN; j++) {
- 			if (ste->compare_product_id_byte[j] == 'X') {
--				if (res->cfgte.std_inq_data.vpids.product_id[j] == ste->product_id[j])
-+				vpids = &res->std_inq_data.vpids;
-+				if (vpids->product_id[j] == ste->product_id[j])
- 					matches++;
- 				else
- 					break;
-@@ -1981,10 +2228,10 @@ static u32 ipr_get_max_scsi_speed(struct
-
- 	/* Loop through each config table entry in the config table buffer */
- 	list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
--		if (!(IPR_IS_SES_DEVICE(res->cfgte.std_inq_data)))
-+		if (!(IPR_IS_SES_DEVICE(res->std_inq_data)))
- 			continue;
-
--		if (bus != res->cfgte.res_addr.bus)
-+		if (bus != res->bus)
- 			continue;
-
- 		if (!(ste = ipr_find_ses_entry(res)))
-@@ -2518,9 +2765,9 @@ restart:
-
- 	list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
- 		if (res->add_to_ml) {
--			bus = res->cfgte.res_addr.bus;
--			target = res->cfgte.res_addr.target;
--			lun = res->cfgte.res_addr.lun;
-+			bus = res->bus;
-+			target = res->target;
-+			lun = res->lun;
- 			res->add_to_ml = 0;
- 			spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 			scsi_add_device(ioa_cfg->host, bus, target, lun);
-@@ -3578,7 +3825,7 @@ static ssize_t ipr_show_adapter_handle(s
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	res = (struct ipr_resource_entry *)sdev->hostdata;
- 	if (res)
--		len = snprintf(buf, PAGE_SIZE, "%08X\n", res->cfgte.res_handle);
-+		len = snprintf(buf, PAGE_SIZE, "%08X\n", res->res_handle);
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 	return len;
- }
-@@ -3591,8 +3838,43 @@ static struct device_attribute ipr_adapt
- 	.show = ipr_show_adapter_handle
- };
-
-+/**
-+ * ipr_show_resource_path - Show the resource path for this device.
-+ * @dev:	device struct
-+ * @buf:	buffer
-+ *
-+ * Return value:
-+ * 	number of bytes printed to buffer
-+ **/
-+static ssize_t ipr_show_resource_path(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)sdev->host->hostdata;
-+	struct ipr_resource_entry *res;
-+	unsigned long lock_flags = 0;
-+	ssize_t len = -ENXIO;
-+	char buffer[IPR_MAX_RES_PATH_LENGTH];
-+
-+	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-+	res = (struct ipr_resource_entry *)sdev->hostdata;
-+	if (res)
-+		len = snprintf(buf, PAGE_SIZE, "%s\n",
-+			       ipr_format_resource_path(&res->res_path[0], &buffer[0]));
-+	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+	return len;
++	}
++	ipr_hcam_err(hostrcb, "Path element=%02X: Resource Path=%s, Link rate=%s "
++		     "WWN=%08X%08X\n", cfg->type_status,
++		     ipr_format_resource_path(&cfg->res_path[0], &buffer[0]),
++		     link_rate[cfg->link_rate & IPR_PHY_LINK_RATE_MASK],
++		     be32_to_cpu(cfg->wwid[0]), be32_to_cpu(cfg->wwid[1]));
 +}
 +
-+static struct device_attribute ipr_resource_path_attr = {
-+	.attr = {
-+		.name = 	"resource_path",
-+		.mode =		S_IRUSR,
-+	},
-+	.show = ipr_show_resource_path
-+};
-+
- static struct device_attribute *ipr_dev_attrs[] = {
- 	&ipr_adapter_handle_attr,
-+	&ipr_resource_path_attr,
- 	NULL,
- };
++/**
+  * ipr_log_fabric_error - Log a fabric error.
+  * @ioa_cfg:	ioa config struct
+  * @hostrcb:	hostrcb struct
+@@ -1925,6 +2054,96 @@ static void ipr_log_fabric_error(struct 
+ }
 
-@@ -3645,9 +3927,9 @@ static struct ipr_resource_entry *ipr_fi
- 	struct ipr_resource_entry *res;
-
- 	list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
--		if ((res->cfgte.res_addr.bus == starget->channel) &&
--		    (res->cfgte.res_addr.target == starget->id) &&
--		    (res->cfgte.res_addr.lun == 0)) {
-+		if ((res->bus == starget->channel) &&
-+		    (res->target == starget->id) &&
-+		    (res->lun == 0)) {
- 			return res;
- 		}
- 	}
-@@ -3717,6 +3999,17 @@ static int ipr_target_alloc(struct scsi_
- static void ipr_target_destroy(struct scsi_target *starget)
- {
- 	struct ipr_sata_port *sata_port = starget->hostdata;
-+	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
-+	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *) shost->hostdata;
-+
-+	if (ioa_cfg->sis64) {
-+		if (starget->channel == IPR_ARRAY_VIRTUAL_BUS)
-+			clear_bit(starget->id, ioa_cfg->array_ids);
-+		else if (starget->channel == IPR_VSET_VIRTUAL_BUS)
-+			clear_bit(starget->id, ioa_cfg->vset_ids);
-+		else if (starget->channel == 0)
-+			clear_bit(starget->id, ioa_cfg->target_ids);
-+	}
-
- 	if (sata_port) {
- 		starget->hostdata = NULL;
-@@ -3738,9 +4031,9 @@ static struct ipr_resource_entry *ipr_fi
- 	struct ipr_resource_entry *res;
-
- 	list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
--		if ((res->cfgte.res_addr.bus == sdev->channel) &&
--		    (res->cfgte.res_addr.target == sdev->id) &&
--		    (res->cfgte.res_addr.lun == sdev->lun))
-+		if ((res->bus == sdev->channel) &&
-+		    (res->target == sdev->id) &&
-+		    (res->lun == sdev->lun))
- 			return res;
- 	}
-
-@@ -3789,6 +4082,7 @@ static int ipr_slave_configure(struct sc
- 	struct ipr_resource_entry *res;
- 	struct ata_port *ap = NULL;
- 	unsigned long lock_flags = 0;
+ /**
++ * ipr_log_sis64_array_error - Log a sis64 array error.
++ * @ioa_cfg:	ioa config struct
++ * @hostrcb:	hostrcb struct
++ *
++ * Return value:
++ * 	none
++ **/
++static void ipr_log_sis64_array_error(struct ipr_ioa_cfg *ioa_cfg,
++				      struct ipr_hostrcb *hostrcb)
++{
++	int i, num_entries;
++	struct ipr_hostrcb_type_24_error *error;
++	struct ipr_hostrcb64_array_data_entry *array_entry;
 +	char buffer[IPR_MAX_RES_PATH_LENGTH];
-
- 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 	res = sdev->hostdata;
-@@ -3815,6 +4109,9 @@ static int ipr_slave_configure(struct sc
- 			ata_sas_slave_configure(sdev, ap);
- 		} else
- 			scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
-+		if (ioa_cfg->sis64)
-+			sdev_printk(KERN_INFO, sdev, "Resource path: %s\n",
-+			            ipr_format_resource_path(&res->res_path[0], &buffer[0]));
- 		return 0;
- 	}
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-@@ -3963,7 +4260,7 @@ static int ipr_device_reset(struct ipr_i
- 	} else
- 		regs = &ioarcb->u.add_data.u.regs;
-
--	ioarcb->res_handle = res->cfgte.res_handle;
-+	ioarcb->res_handle = res->res_handle;
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
- 	cmd_pkt->cdb[0] = IPR_RESET_DEVICE;
- 	if (ipr_is_gata(res)) {
-@@ -4013,19 +4310,7 @@ static int ipr_sata_reset(struct ata_lin
- 	res = sata_port->res;
- 	if (res) {
- 		rc = ipr_device_reset(ioa_cfg, res);
--		switch(res->cfgte.proto) {
--		case IPR_PROTO_SATA:
--		case IPR_PROTO_SAS_STP:
--			*classes = ATA_DEV_ATA;
--			break;
--		case IPR_PROTO_SATA_ATAPI:
--		case IPR_PROTO_SAS_STP_ATAPI:
--			*classes = ATA_DEV_ATAPI;
--			break;
--		default:
--			*classes = ATA_DEV_UNKNOWN;
--			break;
--		};
-+		*classes = res->ata_class;
- 	}
-
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-@@ -4070,7 +4355,7 @@ static int __ipr_eh_dev_reset(struct scs
- 		return FAILED;
-
- 	list_for_each_entry(ipr_cmd, &ioa_cfg->pending_q, queue) {
--		if (ipr_cmd->ioarcb.res_handle == res->cfgte.res_handle) {
-+		if (ipr_cmd->ioarcb.res_handle == res->res_handle) {
- 			if (ipr_cmd->scsi_cmd)
- 				ipr_cmd->done = ipr_scsi_eh_done;
- 			if (ipr_cmd->qc)
-@@ -4092,7 +4377,7 @@ static int __ipr_eh_dev_reset(struct scs
- 		spin_lock_irq(scsi_cmd->device->host->host_lock);
-
- 		list_for_each_entry(ipr_cmd, &ioa_cfg->pending_q, queue) {
--			if (ipr_cmd->ioarcb.res_handle == res->cfgte.res_handle) {
-+			if (ipr_cmd->ioarcb.res_handle == res->res_handle) {
- 				rc = -EIO;
- 				break;
- 			}
-@@ -4131,13 +4416,13 @@ static void ipr_bus_reset_done(struct ip
- 	struct ipr_resource_entry *res;
-
- 	ENTER;
--	list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
--		if (!memcmp(&res->cfgte.res_handle, &ipr_cmd->ioarcb.res_handle,
--			    sizeof(res->cfgte.res_handle))) {
--			scsi_report_bus_reset(ioa_cfg->host, res->cfgte.res_addr.bus);
--			break;
-+	if (!ioa_cfg->sis64)
-+		list_for_each_entry(res, &ioa_cfg->used_res_q, queue) {
-+			if (res->res_handle == ipr_cmd->ioarcb.res_handle) {
-+				scsi_report_bus_reset(ioa_cfg->host, res->bus);
-+				break;
-+			}
- 		}
--	}
-
- 	/*
- 	 * If abort has not completed, indicate the reset has, else call the
-@@ -4235,7 +4520,7 @@ static int ipr_cancel_op(struct scsi_cmn
- 		return SUCCESS;
-
- 	ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
--	ipr_cmd->ioarcb.res_handle = res->cfgte.res_handle;
-+	ipr_cmd->ioarcb.res_handle = res->res_handle;
- 	cmd_pkt = &ipr_cmd->ioarcb.cmd_pkt;
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
- 	cmd_pkt->cdb[0] = IPR_CANCEL_ALL_REQUESTS;
-@@ -5071,9 +5356,9 @@ static int ipr_queuecommand(struct scsi_
-
- 	memcpy(ioarcb->cmd_pkt.cdb, scsi_cmd->cmnd, scsi_cmd->cmd_len);
- 	ipr_cmd->scsi_cmd = scsi_cmd;
--	ioarcb->res_handle = res->cfgte.res_handle;
-+	ioarcb->res_handle = res->res_handle;
- 	ipr_cmd->done = ipr_scsi_done;
--	ipr_trc_hook(ipr_cmd, IPR_TRACE_START, IPR_GET_PHYS_LOC(res->cfgte.res_addr));
-+	ipr_trc_hook(ipr_cmd, IPR_TRACE_START, IPR_GET_RES_PHYS_LOC(res));
-
- 	if (ipr_is_gscsi(res) || ipr_is_vset_device(res)) {
- 		if (scsi_cmd->underflow == 0)
-@@ -5216,20 +5501,9 @@ static void ipr_ata_phy_reset(struct ata
- 		goto out_unlock;
- 	}
-
--	switch(res->cfgte.proto) {
--	case IPR_PROTO_SATA:
--	case IPR_PROTO_SAS_STP:
--		ap->link.device[0].class = ATA_DEV_ATA;
--		break;
--	case IPR_PROTO_SATA_ATAPI:
--	case IPR_PROTO_SAS_STP_ATAPI:
--		ap->link.device[0].class = ATA_DEV_ATAPI;
--		break;
--	default:
--		ap->link.device[0].class = ATA_DEV_UNKNOWN;
-+	ap->link.device[0].class = res->ata_class;
-+	if (ap->link.device[0].class == ATA_DEV_UNKNOWN)
- 		ata_port_disable(ap);
--		break;
--	};
-
- out_unlock:
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
-@@ -5315,8 +5589,7 @@ static void ipr_sata_done(struct ipr_cmn
- 	ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
-
- 	if (be32_to_cpu(ipr_cmd->ioasa.ioasc_specific) & IPR_ATA_DEVICE_WAS_RESET)
--		scsi_report_device_reset(ioa_cfg->host, res->cfgte.res_addr.bus,
--					 res->cfgte.res_addr.target);
-+		scsi_report_device_reset(ioa_cfg->host, res->bus, res->target);
-
- 	if (IPR_IOASC_SENSE_KEY(ioasc) > RECOVERED_ERROR)
- 		qc->err_mask |= __ac_err_mask(ipr_cmd->ioasa.u.gata.status);
-@@ -5452,7 +5725,7 @@ static unsigned int ipr_qc_issue(struct 
- 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->pending_q);
- 	ipr_cmd->qc = qc;
- 	ipr_cmd->done = ipr_sata_done;
--	ipr_cmd->ioarcb.res_handle = res->cfgte.res_handle;
-+	ipr_cmd->ioarcb.res_handle = res->res_handle;
- 	ioarcb->cmd_pkt.request_type = IPR_RQTYPE_ATA_PASSTHRU;
- 	ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_LINK_DESC;
- 	ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_ULEN_CHK;
-@@ -5466,7 +5739,7 @@ static unsigned int ipr_qc_issue(struct 
- 	regs->flags |= IPR_ATA_FLAG_STATUS_ON_GOOD_COMPLETION;
- 	ipr_copy_sata_tf(regs, &qc->tf);
- 	memcpy(ioarcb->cmd_pkt.cdb, qc->cdb, IPR_MAX_CDB_LEN);
--	ipr_trc_hook(ipr_cmd, IPR_TRACE_START, IPR_GET_PHYS_LOC(res->cfgte.res_addr));
-+	ipr_trc_hook(ipr_cmd, IPR_TRACE_START, IPR_GET_RES_PHYS_LOC(res));
-
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_NODATA:
-@@ -5715,13 +5988,14 @@ static int ipr_set_supported_devs(struct
- 			continue;
-
- 		ipr_cmd->u.res = res;
--		ipr_set_sup_dev_dflt(supp_dev, &res->cfgte.std_inq_data.vpids);
-+		ipr_set_sup_dev_dflt(supp_dev, &res->std_inq_data.vpids);
-
- 		ioarcb->res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
- 		ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_WRITE_NOT_READ;
- 		ioarcb->cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
-
- 		ioarcb->cmd_pkt.cdb[0] = IPR_SET_SUPPORTED_DEVICES;
-+		ioarcb->cmd_pkt.cdb[1] = IPR_SET_ALL_SUPPORTED_DEVICES;
- 		ioarcb->cmd_pkt.cdb[7] = (sizeof(struct ipr_supported_device) >> 8) & 0xff;
- 		ioarcb->cmd_pkt.cdb[8] = sizeof(struct ipr_supported_device) & 0xff;
-
-@@ -5734,7 +6008,8 @@ static int ipr_set_supported_devs(struct
- 		ipr_do_req(ipr_cmd, ipr_reset_ioa_job, ipr_timeout,
- 			   IPR_SET_SUP_DEVICE_TIMEOUT);
-
--		ipr_cmd->job_step = ipr_set_supported_devs;
-+		if (!ioa_cfg->sis64)
-+			ipr_cmd->job_step = ipr_set_supported_devs;
- 		return IPR_RC_JOB_RETURN;
- 	}
-
-@@ -6182,24 +6457,36 @@ static int ipr_init_res_table(struct ipr
- {
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	struct ipr_resource_entry *res, *temp;
--	struct ipr_config_table_entry *cfgte;
--	int found, i;
-+	struct ipr_config_table_entry_wrapper cfgtew;
-+	int entries, found, flag, i;
- 	LIST_HEAD(old_res);
-
- 	ENTER;
--	if (ioa_cfg->cfg_table->hdr.flags & IPR_UCODE_DOWNLOAD_REQ)
-+	if (ioa_cfg->sis64)
-+		flag = ioa_cfg->u.cfg_table64->hdr64.flags;
-+	else
-+		flag = ioa_cfg->u.cfg_table->hdr.flags;
++	const u8 zero_sn[IPR_SERIAL_NUM_LEN] = { [0 ... IPR_SERIAL_NUM_LEN-1] = '0' };
 +
-+	if (flag & IPR_UCODE_DOWNLOAD_REQ)
- 		dev_err(&ioa_cfg->pdev->dev, "Microcode download required\n");
-
- 	list_for_each_entry_safe(res, temp, &ioa_cfg->used_res_q, queue)
- 		list_move_tail(&res->queue, &old_res);
-
--	for (i = 0; i < ioa_cfg->cfg_table->hdr.num_entries; i++) {
--		cfgte = &ioa_cfg->cfg_table->dev[i];
-+	if (ioa_cfg->sis64)
-+		entries = ioa_cfg->u.cfg_table64->hdr64.num_entries;
-+	else
-+		entries = ioa_cfg->u.cfg_table->hdr.num_entries;
++	error = &hostrcb->hcam.u.error64.u.type_24_error;
 +
-+	for (i = 0; i < entries; i++) {
-+		if (ioa_cfg->sis64)
-+			cfgtew.u.cfgte64 = &ioa_cfg->u.cfg_table64->dev[i];
++	ipr_err_separator;
++
++	ipr_err("RAID %s Array Configuration: %s\n",
++		error->protection_level,
++		ipr_format_resource_path(&error->last_res_path[0], &buffer[0]));
++
++	ipr_err_separator;
++
++	array_entry = error->array_member;
++	num_entries = min_t(u32, be32_to_cpu(error->num_entries),
++			    sizeof(error->array_member));
++
++	for (i = 0; i < num_entries; i++, array_entry++) {
++
++		if (!memcmp(array_entry->vpd.vpd.sn, zero_sn, IPR_SERIAL_NUM_LEN))
++			continue;
++
++		if (error->exposed_mode_adn == i)
++			ipr_err("Exposed Array Member %d:\n", i);
 +		else
-+			cfgtew.u.cfgte = &ioa_cfg->u.cfg_table->dev[i];
- 		found = 0;
-
- 		list_for_each_entry_safe(res, temp, &old_res, queue) {
--			if (!memcmp(&res->cfgte.res_addr,
--				    &cfgte->res_addr, sizeof(cfgte->res_addr))) {
-+			if (ipr_is_same_device(res, &cfgtew)) {
- 				list_move_tail(&res->queue, &ioa_cfg->used_res_q);
- 				found = 1;
- 				break;
-@@ -6216,24 +6503,27 @@ static int ipr_init_res_table(struct ipr
- 			res = list_entry(ioa_cfg->free_res_q.next,
- 					 struct ipr_resource_entry, queue);
- 			list_move_tail(&res->queue, &ioa_cfg->used_res_q);
--			ipr_init_res_entry(res);
-+			ipr_init_res_entry(res, &cfgtew);
- 			res->add_to_ml = 1;
- 		}
-
- 		if (found)
--			memcpy(&res->cfgte, cfgte, sizeof(struct ipr_config_table_entry));
-+			ipr_update_res_entry(res, &cfgtew);
- 	}
-
- 	list_for_each_entry_safe(res, temp, &old_res, queue) {
- 		if (res->sdev) {
- 			res->del_from_ml = 1;
--			res->cfgte.res_handle = IPR_INVALID_RES_HANDLE;
-+			res->res_handle = IPR_INVALID_RES_HANDLE;
- 			list_move_tail(&res->queue, &ioa_cfg->used_res_q);
--		} else {
--			list_move_tail(&res->queue, &ioa_cfg->free_res_q);
- 		}
- 	}
-
-+	list_for_each_entry_safe(res, temp, &old_res, queue) {
-+		ipr_clear_res_target(res);
-+		list_move_tail(&res->queue, &ioa_cfg->free_res_q);
++			ipr_err("Array Member %d:\n", i);
++
++		ipr_err("Array Member %d:\n", i);
++		ipr_log_ext_vpd(&array_entry->vpd);
++		ipr_err("Current Location: %s",
++			 ipr_format_resource_path(&array_entry->res_path[0], &buffer[0]));
++		ipr_err("Expected Location: %s",
++			 ipr_format_resource_path(&array_entry->expected_res_path[0], &buffer[0]));
++
++		ipr_err_separator;
++	}
++}
++
++/**
++ * ipr_log_sis64_fabric_error - Log a sis64 fabric error.
++ * @ioa_cfg:	ioa config struct
++ * @hostrcb:	hostrcb struct
++ *
++ * Return value:
++ * 	none
++ **/
++static void ipr_log_sis64_fabric_error(struct ipr_ioa_cfg *ioa_cfg,
++				       struct ipr_hostrcb *hostrcb)
++{
++	struct ipr_hostrcb_type_30_error *error;
++	struct ipr_hostrcb64_fabric_desc *fabric;
++	struct ipr_hostrcb64_config_element *cfg;
++	int i, add_len;
++
++	error = &hostrcb->hcam.u.error64.u.type_30_error;
++
++	error->failure_reason[sizeof(error->failure_reason) - 1] = '\0';
++	ipr_hcam_err(hostrcb, "%s\n", error->failure_reason);
++
++	add_len = be32_to_cpu(hostrcb->hcam.length) -
++		(offsetof(struct ipr_hostrcb64_error, u) +
++		 offsetof(struct ipr_hostrcb_type_30_error, desc));
++
++	for (i = 0, fabric = error->desc; i < error->num_entries; i++) {
++		ipr_log64_fabric_path(hostrcb, fabric);
++		for_each_fabric_cfg(fabric, cfg)
++			ipr_log64_path_elem(hostrcb, cfg);
++
++		add_len -= be16_to_cpu(fabric->length);
++		fabric = (struct ipr_hostrcb64_fabric_desc *)
++			((unsigned long)fabric + be16_to_cpu(fabric->length));
 +	}
 +
- 	if (ioa_cfg->dual_raid && ipr_dual_ioa_raid)
- 		ipr_cmd->job_step = ipr_ioafp_mode_sense_page24;
- 	else
-@@ -6270,11 +6560,10 @@ static int ipr_ioafp_query_ioa_cfg(struc
- 	ioarcb->res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
-
- 	ioarcb->cmd_pkt.cdb[0] = IPR_QUERY_IOA_CONFIG;
--	ioarcb->cmd_pkt.cdb[7] = (sizeof(struct ipr_config_table) >> 8) & 0xff;
--	ioarcb->cmd_pkt.cdb[8] = sizeof(struct ipr_config_table) & 0xff;
-+	ioarcb->cmd_pkt.cdb[7] = (ioa_cfg->cfg_table_size >> 8) & 0xff;
-+	ioarcb->cmd_pkt.cdb[8] = ioa_cfg->cfg_table_size & 0xff;
-
--	ipr_init_ioadl(ipr_cmd, ioa_cfg->cfg_table_dma,
--		       sizeof(struct ipr_config_table),
-+	ipr_init_ioadl(ipr_cmd, ioa_cfg->cfg_table_dma, ioa_cfg->cfg_table_size,
- 		       IPR_IOADL_FLAGS_READ_LAST);
-
- 	ipr_cmd->job_step = ipr_init_res_table;
-@@ -6567,7 +6856,7 @@ static void ipr_init_ioa_mem(struct ipr_
- 	ioa_cfg->toggle_bit = 1;
-
- 	/* Zero out config table */
--	memset(ioa_cfg->cfg_table, 0, sizeof(struct ipr_config_table));
-+	memset(ioa_cfg->u.cfg_table, 0, ioa_cfg->cfg_table_size);
- }
-
- /**
-@@ -7370,8 +7659,8 @@ static void ipr_free_mem(struct ipr_ioa_
- 	ipr_free_cmd_blks(ioa_cfg);
- 	pci_free_consistent(ioa_cfg->pdev, sizeof(u32) * IPR_NUM_CMD_BLKS,
- 			    ioa_cfg->host_rrq, ioa_cfg->host_rrq_dma);
--	pci_free_consistent(ioa_cfg->pdev, sizeof(struct ipr_config_table),
--			    ioa_cfg->cfg_table,
-+	pci_free_consistent(ioa_cfg->pdev, ioa_cfg->cfg_table_size,
-+			    ioa_cfg->u.cfg_table,
- 			    ioa_cfg->cfg_table_dma);
-
- 	for (i = 0; i < IPR_NUM_HCAMS; i++) {
-@@ -7488,13 +7777,24 @@ static int __devinit ipr_alloc_mem(struc
-
- 	ENTER;
- 	ioa_cfg->res_entries = kzalloc(sizeof(struct ipr_resource_entry) *
--				       IPR_MAX_PHYSICAL_DEVS, GFP_KERNEL);
-+				       ioa_cfg->max_devs_supported, GFP_KERNEL);
-
- 	if (!ioa_cfg->res_entries)
- 		goto out;
-
--	for (i = 0; i < IPR_MAX_PHYSICAL_DEVS; i++)
-+	if (ioa_cfg->sis64) {
-+		ioa_cfg->target_ids = kzalloc(sizeof(unsigned long) *
-+					      BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
-+		ioa_cfg->array_ids = kzalloc(sizeof(unsigned long) *
-+					     BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
-+		ioa_cfg->vset_ids = kzalloc(sizeof(unsigned long) *
-+					    BITS_TO_LONGS(ioa_cfg->max_devs_supported), GFP_KERNEL);
-+	}
++	ipr_log_hex_data(ioa_cfg, (u32 *)fabric, add_len);
++}
 +
-+	for (i = 0; i < ioa_cfg->max_devs_supported; i++) {
- 		list_add_tail(&ioa_cfg->res_entries[i].queue, &ioa_cfg->free_res_q);
-+		ioa_cfg->res_entries[i].ioa_cfg = ioa_cfg;
-+	}
++/**
+  * ipr_log_generic_error - Log an adapter error.
+  * @ioa_cfg:	ioa config struct
+  * @hostrcb:	hostrcb struct
+@@ -1983,13 +2202,16 @@ static void ipr_handle_log_data(struct i
+ 	if (hostrcb->hcam.notifications_lost == IPR_HOST_RCB_NOTIFICATIONS_LOST)
+ 		dev_err(&ioa_cfg->pdev->dev, "Error notifications lost\n");
 
- 	ioa_cfg->vpd_cbs = pci_alloc_consistent(ioa_cfg->pdev,
- 						sizeof(struct ipr_misc_cbs),
-@@ -7513,11 +7813,11 @@ static int __devinit ipr_alloc_mem(struc
- 	if (!ioa_cfg->host_rrq)
- 		goto out_ipr_free_cmd_blocks;
-
--	ioa_cfg->cfg_table = pci_alloc_consistent(ioa_cfg->pdev,
--						  sizeof(struct ipr_config_table),
--						  &ioa_cfg->cfg_table_dma);
-+	ioa_cfg->u.cfg_table = pci_alloc_consistent(ioa_cfg->pdev,
-+						    ioa_cfg->cfg_table_size,
-+						    &ioa_cfg->cfg_table_dma);
-
--	if (!ioa_cfg->cfg_table)
-+	if (!ioa_cfg->u.cfg_table)
- 		goto out_free_host_rrq;
-
- 	for (i = 0; i < IPR_NUM_HCAMS; i++) {
-@@ -7551,8 +7851,9 @@ out_free_hostrcb_dma:
- 				    ioa_cfg->hostrcb[i],
- 				    ioa_cfg->hostrcb_dma[i]);
- 	}
--	pci_free_consistent(pdev, sizeof(struct ipr_config_table),
--			    ioa_cfg->cfg_table, ioa_cfg->cfg_table_dma);
-+	pci_free_consistent(pdev, ioa_cfg->cfg_table_size,
-+			    ioa_cfg->u.cfg_table,
-+			    ioa_cfg->cfg_table_dma);
- out_free_host_rrq:
- 	pci_free_consistent(pdev, sizeof(u32) * IPR_NUM_CMD_BLKS,
- 			    ioa_cfg->host_rrq, ioa_cfg->host_rrq_dma);
-@@ -7633,9 +7934,19 @@ static void __devinit ipr_init_ioa_cfg(s
- 		ioa_cfg->cache_state = CACHE_DISABLED;
-
- 	ipr_initialize_bus_attr(ioa_cfg);
-+	ioa_cfg->max_devs_supported = ipr_max_devs;
-
--	host->max_id = IPR_MAX_NUM_TARGETS_PER_BUS;
--	host->max_lun = IPR_MAX_NUM_LUNS_PER_TARGET;
-+	if (ioa_cfg->sis64) {
-+		host->max_id = IPR_MAX_SIS64_TARGETS_PER_BUS;
-+		host->max_lun = IPR_MAX_SIS64_LUNS_PER_TARGET;
-+		if (ipr_max_devs > IPR_MAX_SIS64_DEVS)
-+			ioa_cfg->max_devs_supported = IPR_MAX_SIS64_DEVS;
-+	} else {
-+		host->max_id = IPR_MAX_NUM_TARGETS_PER_BUS;
-+		host->max_lun = IPR_MAX_NUM_LUNS_PER_TARGET;
-+		if (ipr_max_devs > IPR_MAX_PHYSICAL_DEVS)
-+			ioa_cfg->max_devs_supported = IPR_MAX_PHYSICAL_DEVS;
-+	}
- 	host->max_channel = IPR_MAX_BUS_TO_SCAN;
- 	host->unique_id = host->host_no;
- 	host->max_cmd_len = IPR_MAX_CDB_LEN;
-@@ -7896,6 +8207,15 @@ static int __devinit ipr_probe_ioa(struc
- 	if ((rc = ipr_set_pcix_cmd_reg(ioa_cfg)))
- 		goto cleanup_nomem;
-
+-	ioasc = be32_to_cpu(hostrcb->hcam.u.error.failing_dev_ioasc);
 +	if (ioa_cfg->sis64)
-+		ioa_cfg->cfg_table_size = (sizeof(struct ipr_config_table_hdr64)
-+				+ ((sizeof(struct ipr_config_table_entry64)
-+				* ioa_cfg->max_devs_supported)));
++		ioasc = be32_to_cpu(hostrcb->hcam.u.error64.fd_ioasc);
 +	else
-+		ioa_cfg->cfg_table_size = (sizeof(struct ipr_config_table_hdr)
-+				+ ((sizeof(struct ipr_config_table_entry)
-+				* ioa_cfg->max_devs_supported)));
++		ioasc = be32_to_cpu(hostrcb->hcam.u.error.fd_ioasc);
+
+-	if (ioasc == IPR_IOASC_BUS_WAS_RESET ||
+-	    ioasc == IPR_IOASC_BUS_WAS_RESET_BY_OTHER) {
++	if (!ioa_cfg->sis64 && (ioasc == IPR_IOASC_BUS_WAS_RESET ||
++	    ioasc == IPR_IOASC_BUS_WAS_RESET_BY_OTHER)) {
+ 		/* Tell the midlayer we had a bus reset so it will handle the UA properly */
+ 		scsi_report_bus_reset(ioa_cfg->host,
+-				      hostrcb->hcam.u.error.failing_dev_res_addr.bus);
++				      hostrcb->hcam.u.error.fd_res_addr.bus);
+ 	}
+
+ 	error_index = ipr_get_error(ioasc);
+@@ -2037,6 +2259,16 @@ static void ipr_handle_log_data(struct i
+ 	case IPR_HOST_RCB_OVERLAY_ID_20:
+ 		ipr_log_fabric_error(ioa_cfg, hostrcb);
+ 		break;
++	case IPR_HOST_RCB_OVERLAY_ID_23:
++		ipr_log_sis64_config_error(ioa_cfg, hostrcb);
++		break;
++	case IPR_HOST_RCB_OVERLAY_ID_24:
++	case IPR_HOST_RCB_OVERLAY_ID_26:
++		ipr_log_sis64_array_error(ioa_cfg, hostrcb);
++		break;
++	case IPR_HOST_RCB_OVERLAY_ID_30:
++		ipr_log_sis64_fabric_error(ioa_cfg, hostrcb);
++		break;
+ 	case IPR_HOST_RCB_OVERLAY_ID_1:
+ 	case IPR_HOST_RCB_OVERLAY_ID_DEFAULT:
+ 	default:
+@@ -2061,7 +2293,12 @@ static void ipr_process_error(struct ipr
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct ipr_hostrcb *hostrcb = ipr_cmd->u.hostrcb;
+ 	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
+-	u32 fd_ioasc = be32_to_cpu(hostrcb->hcam.u.error.failing_dev_ioasc);
++	u32 fd_ioasc;
 +
- 	rc = ipr_alloc_mem(ioa_cfg);
- 	if (rc < 0) {
- 		dev_err(&pdev->dev,
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2010-02-08 20:57:16.000000000 -0800
-+++ b/drivers/scsi/ipr.h	2010-02-19 07:59:49.000000000 -0800
-@@ -118,6 +118,10 @@
- #define IPR_NUM_LOG_HCAMS				2
- #define IPR_NUM_CFG_CHG_HCAMS				2
- #define IPR_NUM_HCAMS	(IPR_NUM_LOG_HCAMS + IPR_NUM_CFG_CHG_HCAMS)
-+
-+#define IPR_MAX_SIS64_TARGETS_PER_BUS			1024
-+#define IPR_MAX_SIS64_LUNS_PER_TARGET			0xffffffff
-+
- #define IPR_MAX_NUM_TARGETS_PER_BUS			256
- #define IPR_MAX_NUM_LUNS_PER_TARGET			256
- #define IPR_MAX_NUM_VSET_LUNS_PER_TARGET	8
-@@ -139,6 +143,8 @@
- 						IPR_NUM_INTERNAL_CMD_BLKS)
++	if (ioa_cfg->sis64)
++		fd_ioasc = be32_to_cpu(hostrcb->hcam.u.error64.fd_ioasc);
++	else
++		fd_ioasc = be32_to_cpu(hostrcb->hcam.u.error.fd_ioasc);
 
- #define IPR_MAX_PHYSICAL_DEVS				192
-+#define IPR_DEFAULT_SIS64_DEVS				1024
-+#define IPR_MAX_SIS64_DEVS				4096
+ 	list_del(&hostrcb->queue);
+ 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
+@@ -6996,7 +7233,7 @@ static void ipr_get_unit_check_buffer(st
 
- #define IPR_MAX_SGLIST					64
- #define IPR_IOA_MAX_SECTORS				32767
-@@ -173,6 +179,7 @@
- #define	IPR_HCAM_CDB_OP_CODE_CONFIG_CHANGE	0x01
- #define	IPR_HCAM_CDB_OP_CODE_LOG_DATA		0x02
- #define IPR_SET_SUPPORTED_DEVICES			0xFB
-+#define IPR_SET_ALL_SUPPORTED_DEVICES			0x80
- #define IPR_IOA_SHUTDOWN				0xF7
- #define	IPR_WR_BUF_DOWNLOAD_AND_SAVE			0x05
-
-@@ -318,27 +325,27 @@ struct ipr_std_inq_data {
- 	u8 serial_num[IPR_SERIAL_NUM_LEN];
- }__attribute__ ((packed));
-
-+#define IPR_RES_TYPE_AF_DASD		0x00
-+#define IPR_RES_TYPE_GENERIC_SCSI	0x01
-+#define IPR_RES_TYPE_VOLUME_SET		0x02
-+#define IPR_RES_TYPE_REMOTE_AF_DASD	0x03
-+#define IPR_RES_TYPE_GENERIC_ATA	0x04
-+#define IPR_RES_TYPE_ARRAY		0x05
-+#define IPR_RES_TYPE_IOAFP		0xff
-+
- struct ipr_config_table_entry {
- 	u8 proto;
- #define IPR_PROTO_SATA			0x02
- #define IPR_PROTO_SATA_ATAPI		0x03
- #define IPR_PROTO_SAS_STP		0x06
--#define IPR_PROTO_SAS_STP_ATAPI	0x07
-+#define IPR_PROTO_SAS_STP_ATAPI		0x07
- 	u8 array_id;
- 	u8 flags;
--#define IPR_IS_IOA_RESOURCE	0x80
--#define IPR_IS_ARRAY_MEMBER 0x20
--#define IPR_IS_HOT_SPARE	0x10
--
-+#define IPR_IS_IOA_RESOURCE		0x80
- 	u8 rsvd_subtype;
--#define IPR_RES_SUBTYPE(res) (((res)->cfgte.rsvd_subtype) & 0x0f)
--#define IPR_SUBTYPE_AF_DASD			0
--#define IPR_SUBTYPE_GENERIC_SCSI	1
--#define IPR_SUBTYPE_VOLUME_SET		2
--#define IPR_SUBTYPE_GENERIC_ATA	4
-
--#define IPR_QUEUEING_MODEL(res)	((((res)->cfgte.flags) & 0x70) >> 4)
--#define IPR_QUEUE_FROZEN_MODEL	0
-+#define IPR_QUEUEING_MODEL(res)	((((res)->flags) & 0x70) >> 4)
-+#define IPR_QUEUE_FROZEN_MODEL		0
- #define IPR_QUEUE_NACA_MODEL		1
-
- 	struct ipr_res_addr res_addr;
-@@ -347,6 +354,28 @@ struct ipr_config_table_entry {
- 	struct ipr_std_inq_data std_inq_data;
- }__attribute__ ((packed, aligned (4)));
-
-+struct ipr_config_table_entry64 {
-+	u8 res_type;
-+	u8 proto;
-+	u8 vset_num;
-+	u8 array_id;
-+	__be16 flags;
-+	__be16 res_flags;
-+#define IPR_QUEUEING_MODEL64(res) ((((res)->res_flags) & 0x7000) >> 12)
-+	__be32 res_handle;
-+	u8 dev_id_type;
-+	u8 reserved[3];
-+	__be64 dev_id;
-+	__be64 lun;
-+	__be64 lun_wwn[2];
-+#define IPR_MAX_RES_PATH_LENGTH		24
-+	__be64 res_path;
-+	struct ipr_std_inq_data std_inq_data;
-+	u8 reserved2[4];
-+	__be64 reserved3[2]; // description text
-+	u8 reserved4[8];
-+}__attribute__ ((packed, aligned (8)));
-+
- struct ipr_config_table_hdr {
- 	u8 num_entries;
- 	u8 flags;
-@@ -354,13 +383,35 @@ struct ipr_config_table_hdr {
- 	__be16 reserved;
- }__attribute__((packed, aligned (4)));
-
-+struct ipr_config_table_hdr64 {
-+	__be16 num_entries;
-+	__be16 reserved;
-+	u8 flags;
-+	u8 reserved2[11];
-+}__attribute__((packed, aligned (4)));
-+
- struct ipr_config_table {
- 	struct ipr_config_table_hdr hdr;
--	struct ipr_config_table_entry dev[IPR_MAX_PHYSICAL_DEVS];
-+	struct ipr_config_table_entry dev[0];
- }__attribute__((packed, aligned (4)));
-
-+struct ipr_config_table64 {
-+	struct ipr_config_table_hdr64 hdr64;
-+	struct ipr_config_table_entry64 dev[0];
-+}__attribute__((packed, aligned (8)));
-+
-+struct ipr_config_table_entry_wrapper {
-+	union {
-+		struct ipr_config_table_entry *cfgte;
-+		struct ipr_config_table_entry64 *cfgte64;
-+	} u;
-+};
-+
- struct ipr_hostrcb_cfg_ch_not {
--	struct ipr_config_table_entry cfgte;
-+	union {
-+		struct ipr_config_table_entry cfgte;
-+		struct ipr_config_table_entry64 cfgte64;
-+	} u;
- 	u8 reserved[936];
- }__attribute__((packed, aligned (4)));
-
-@@ -987,28 +1038,48 @@ struct ipr_sata_port {
- };
-
- struct ipr_resource_entry {
--	struct ipr_config_table_entry cfgte;
- 	u8 needs_sync_complete:1;
- 	u8 in_erp:1;
- 	u8 add_to_ml:1;
- 	u8 del_from_ml:1;
- 	u8 resetting_device:1;
-
-+	u32 bus;		/* AKA channel */
-+	u32 target;		/* AKA id */
-+	u32 lun;
-+#define IPR_ARRAY_VIRTUAL_BUS			0x1
-+#define IPR_VSET_VIRTUAL_BUS			0x2
-+#define IPR_IOAFP_VIRTUAL_BUS			0x3
-+
-+#define IPR_GET_RES_PHYS_LOC(res) \
-+	(((res)->bus << 24) | ((res)->target << 8) | (res)->lun)
-+
-+	u8 ata_class;
-+
-+	u8 flags;
-+	__be16 res_flags;
-+
-+	__be32 type;
-+
-+	u8 qmodel;
-+	struct ipr_std_inq_data std_inq_data;
-+
-+	__be32 res_handle;
-+	__be64 dev_id;
-+	struct scsi_lun dev_lun;
-+	u8 res_path[8];
-+
-+	struct ipr_ioa_cfg *ioa_cfg;
- 	struct scsi_device *sdev;
- 	struct ipr_sata_port *sata_port;
- 	struct list_head queue;
--};
-+}; /* struct ipr_resource_entry */
-
- struct ipr_resource_hdr {
- 	u16 num_entries;
- 	u16 reserved;
- };
-
--struct ipr_resource_table {
--	struct ipr_resource_hdr hdr;
--	struct ipr_resource_entry dev[IPR_MAX_PHYSICAL_DEVS];
--};
--
- struct ipr_misc_cbs {
- 	struct ipr_ioa_vpd ioa_vpd;
- 	struct ipr_inquiry_page0 page0_data;
-@@ -1133,6 +1204,13 @@ struct ipr_ioa_cfg {
-
- 	u8 revid;
-
-+	/*
-+	 * Bitmaps for SIS64 generated target values
-+	 */
-+	unsigned long *target_ids;
-+	unsigned long *array_ids;
-+	unsigned long *vset_ids;
-+
- 	enum ipr_cache_state cache_state;
- 	u16 type; /* CCIN of the card */
-
-@@ -1164,8 +1242,13 @@ struct ipr_ioa_cfg {
-
- 	char cfg_table_start[8];
- #define IPR_CFG_TBL_START		"cfg"
--	struct ipr_config_table *cfg_table;
-+	union {
-+		struct ipr_config_table *cfg_table;
-+		struct ipr_config_table64 *cfg_table64;
-+	} u;
- 	dma_addr_t cfg_table_dma;
-+	u32 cfg_table_size;
-+	u32 max_devs_supported;
-
- 	char resource_table_label[8];
- #define IPR_RES_TABLE_LABEL		"res_tbl"
-@@ -1234,7 +1317,7 @@ struct ipr_ioa_cfg {
- #define IPR_CMD_LABEL		"ipr_cmd"
- 	struct ipr_cmnd *ipr_cmnd_list[IPR_NUM_CMD_BLKS];
- 	dma_addr_t ipr_cmnd_list_dma[IPR_NUM_CMD_BLKS];
--};
-+}; /* struct ipr_ioa_cfg */
-
- struct ipr_cmnd {
- 	struct ipr_ioarcb ioarcb;
-@@ -1412,6 +1495,13 @@ struct ipr_ucode_image_header {
- #define ipr_info(...) printk(KERN_INFO IPR_NAME ": "__VA_ARGS__)
- #define ipr_dbg(...) IPR_DBG_CMD(printk(KERN_INFO IPR_NAME ": "__VA_ARGS__))
-
-+#define ipr_res_printk(level, ioa_cfg, bus, target, lun, fmt, ...) \
-+	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, (ioa_cfg)->host->host_no, \
-+		bus, target, lun, ##__VA_ARGS__)
-+
-+#define ipr_res_err(ioa_cfg, res, fmt, ...) \
-+	ipr_res_printk(KERN_ERR, ioa_cfg, (res)->bus, (res)->target, (res)->lun, fmt, ##__VA_ARGS__)
-+
- #define ipr_ra_printk(level, ioa_cfg, ra, fmt, ...) \
- 	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, (ioa_cfg)->host->host_no, \
- 		(ra).bus, (ra).target, (ra).lun, ##__VA_ARGS__)
-@@ -1419,9 +1509,6 @@ struct ipr_ucode_image_header {
- #define ipr_ra_err(ioa_cfg, ra, fmt, ...) \
- 	ipr_ra_printk(KERN_ERR, ioa_cfg, ra, fmt, ##__VA_ARGS__)
-
--#define ipr_res_err(ioa_cfg, res, fmt, ...) \
--	ipr_ra_err(ioa_cfg, (res)->cfgte.res_addr, fmt, ##__VA_ARGS__)
--
- #define ipr_phys_res_err(ioa_cfg, res, fmt, ...)			\
- {									\
- 	if ((res).bus >= IPR_MAX_NUM_BUSES) {				\
-@@ -1467,7 +1554,7 @@ ipr_err("-------------------------------
-  **/
- static inline int ipr_is_ioa_resource(struct ipr_resource_entry *res)
- {
--	return (res->cfgte.flags & IPR_IS_IOA_RESOURCE) ? 1 : 0;
-+	return res->type == IPR_RES_TYPE_IOAFP;
- }
-
- /**
-@@ -1479,12 +1566,8 @@ static inline int ipr_is_ioa_resource(st
-  **/
- static inline int ipr_is_af_dasd_device(struct ipr_resource_entry *res)
- {
--	if (IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data) &&
--	    !ipr_is_ioa_resource(res) &&
--	    IPR_RES_SUBTYPE(res) == IPR_SUBTYPE_AF_DASD)
--		return 1;
--	else
--		return 0;
-+	return res->type == IPR_RES_TYPE_AF_DASD ||
-+		res->type == IPR_RES_TYPE_REMOTE_AF_DASD;
- }
-
- /**
-@@ -1496,12 +1579,7 @@ static inline int ipr_is_af_dasd_device(
-  **/
- static inline int ipr_is_vset_device(struct ipr_resource_entry *res)
- {
--	if (IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data) &&
--	    !ipr_is_ioa_resource(res) &&
--	    IPR_RES_SUBTYPE(res) == IPR_SUBTYPE_VOLUME_SET)
--		return 1;
--	else
--		return 0;
-+	return res->type == IPR_RES_TYPE_VOLUME_SET;
- }
-
- /**
-@@ -1513,11 +1591,7 @@ static inline int ipr_is_vset_device(str
-  **/
- static inline int ipr_is_gscsi(struct ipr_resource_entry *res)
- {
--	if (!ipr_is_ioa_resource(res) &&
--	    IPR_RES_SUBTYPE(res) == IPR_SUBTYPE_GENERIC_SCSI)
--		return 1;
--	else
--		return 0;
-+	return res->type == IPR_RES_TYPE_GENERIC_SCSI;
- }
-
- /**
-@@ -1530,7 +1604,7 @@ static inline int ipr_is_gscsi(struct ip
- static inline int ipr_is_scsi_disk(struct ipr_resource_entry *res)
- {
- 	if (ipr_is_af_dasd_device(res) ||
--	    (ipr_is_gscsi(res) && IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data)))
-+	    (ipr_is_gscsi(res) && IPR_IS_DASD_DEVICE(res->std_inq_data)))
- 		return 1;
- 	else
- 		return 0;
-@@ -1545,11 +1619,7 @@ static inline int ipr_is_scsi_disk(struc
-  **/
- static inline int ipr_is_gata(struct ipr_resource_entry *res)
- {
--	if (!ipr_is_ioa_resource(res) &&
--	    IPR_RES_SUBTYPE(res) == IPR_SUBTYPE_GENERIC_ATA)
--		return 1;
--	else
--		return 0;
-+	return res->type == IPR_RES_TYPE_GENERIC_ATA;
- }
-
- /**
-@@ -1561,7 +1631,7 @@ static inline int ipr_is_gata(struct ipr
-  **/
- static inline int ipr_is_naca_model(struct ipr_resource_entry *res)
- {
--	if (ipr_is_gscsi(res) && IPR_QUEUEING_MODEL(res) == IPR_QUEUE_NACA_MODEL)
-+	if (ipr_is_gscsi(res) && res->qmodel == IPR_QUEUE_NACA_MODEL)
- 		return 1;
- 	return 0;
- }
+ 	if (!rc) {
+ 		ipr_handle_log_data(ioa_cfg, hostrcb);
+-		ioasc = be32_to_cpu(hostrcb->hcam.u.error.failing_dev_ioasc);
++		ioasc = be32_to_cpu(hostrcb->hcam.u.error.fd_ioasc);
+ 		if (ioasc == IPR_IOASC_NR_IOA_RESET_REQUIRED &&
+ 		    ioa_cfg->sdt_state == GET_DUMP)
+ 			ioa_cfg->sdt_state = WAIT_FOR_DUMP;
 
