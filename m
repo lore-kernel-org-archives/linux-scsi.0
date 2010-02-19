@@ -1,45 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15341] Load goes up very high when we traverse the large tree
-Date: Fri, 19 Feb 2010 17:55:35 GMT
-Message-ID: <201002191755.o1JHtZqP021457@demeter.kernel.org>
-References: <bug-15341-11613@http.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH resend for-2.6.34] libosd: Fix unchecked err return found
+ by smatch
+Date: Fri, 19 Feb 2010 11:46:24 -0800
+Message-ID: <4B7EEA90.3090105@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:50565 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754598Ab0BSRzg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2010 12:55:36 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1JHtZHZ021460
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 17:55:35 GMT
-In-Reply-To: <bug-15341-11613@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:34251 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754892Ab0BSTq3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2010 14:46:29 -0500
+Received: by bwz1 with SMTP id 1so381956bwz.21
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 11:46:27 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=15341
+To: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, open-osd <osd-dev@open-osd.org>
 
 
-Andrew Morton <akpm@linux-foundation.org> changed:
+Doing CHECK="smatch --two-passes gives:
+drivers/scsi/osd/osd_initiator.c +1435 osd_finalize_request warning: assignment to 'ret' was never used
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |axboe@kernel.dk
-         Regression|No                          |Yes
+Which is an unchecked possible allocation failure, Fixed.
 
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/osd/osd_initiator.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-
-
---- Comment #8 from Andrew Morton <akpm@linux-foundation.org>  2010-02-19 17:54:48 ---
-OK, thanks.  Looks like pretty widespread disk starvation caused by the single
-seeky reader process.  It's unlikely to be scsi-specific, more likely due to
-iosched changes.
-
-I set the regression flag (2.6.31 -> 2.6.32) and cc'ed Jens.
-
+diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
+index 2422347..60de850 100644
+--- a/drivers/scsi/osd/osd_initiator.c
++++ b/drivers/scsi/osd/osd_initiator.c
+@@ -1433,6 +1433,10 @@ int osd_finalize_request(struct osd_request *or,
+ 	cdbh->command_specific_options |= or->attributes_mode;
+ 	if (or->attributes_mode == OSD_CDB_GET_ATTR_PAGE_SET_ONE) {
+ 		ret = _osd_req_finalize_attr_page(or);
++		if (ret) {
++			OSD_DEBUG("_osd_req_finalize_attr_page failed\n");
++			return ret;
++		}
+ 	} else {
+ 		/* TODO: I think that for the GET_ATTR command these 2 should
+ 		 * be reversed to keep them in execution order (for embeded
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.6.6
+
