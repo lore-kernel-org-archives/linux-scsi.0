@@ -1,44 +1,45 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] scsi_dh_alua: Add IBM Power Virtual SCSI ALUA device to dev list
-Date: Fri, 19 Feb 2010 10:08:31 -0600
-Message-ID: <201002191610.o1JGAgdW025950@d03av06.boulder.ibm.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 4/5] SCSI: fix bad method call in scsi_target_destroy
+Date: Fri, 19 Feb 2010 10:29:43 -0600
+Message-ID: <1266596983.2822.40.camel@mulgrave.site>
+References: <Pine.LNX.4.44L0.1002121211190.1307-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:35588 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553Ab0BSQJQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2010 11:09:16 -0500
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e35.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JG5at4027807
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 09:05:36 -0700
-Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id o1JG9CpF189730
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 09:09:12 -0700
-Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JGAhWR025982
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 09:10:43 -0700
+Received: from cantor.suse.de ([195.135.220.2]:46363 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750879Ab0BSQ3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2010 11:29:51 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1002121211190.1307-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
+
+On Fri, 2010-02-12 at 12:14 -0500, Alan Stern wrote:
+> This patch (as1336) fixes a bug in scsi_target_destroy().  It calls
+> the host template's target_destroy method even if the target_alloc
+> method failed.  (Also, the target_destroy method is called inside the
+> scope of the host lock, which is unnecessary and probably a mistake.)
+
+OK, so this isn't a mistake.  The act of create/destroy on the target
+and removing it from the lists has to be atomic for devices which use
+fixed slots (most SPI cards).  If the target is still in the list after
+destroy, it could end up getting spuriously reused.  Conversely, if you
+remove it from the list and then destroy, we could end up getting target
+alloc for a new target called *before* the target_destroy of the old
+one.
+
+> A new flag is added to struct scsi_target to remember whether or not
+> the target_alloc has succeeded.  There also are a couple of minor
+> whitespace formatting improvements.
+
+I don't really see the need for this.  None of the users assumes the
+target was created ... if they do allocations, they all check before
+unwinding.  If there is a case for needing this, it should be part of
+the target state flags.
+
+James
 
 
-Adds IBM Power Virtual SCSI ALUA devices to the ALUA device handler.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/device_handler/scsi_dh_alua.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff -puN drivers/scsi/device_handler/scsi_dh_alua.c~scsi_dh_alua_nvdisk drivers/scsi/device_handler/scsi_dh_alua.c
---- linux-2.6/drivers/scsi/device_handler/scsi_dh_alua.c~scsi_dh_alua_nvdisk	2010-02-18 21:49:47.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/device_handler/scsi_dh_alua.c	2010-02-18 21:50:22.000000000 -0600
-@@ -717,6 +717,7 @@ static const struct scsi_dh_devlist alua
- 	{"IBM", "2145" },
- 	{"Pillar", "Axiom" },
- 	{"Intel", "Multi-Flex"},
-+	{"AIX", "NVDISK"},
- 	{NULL, NULL}
- };
- 
-_
