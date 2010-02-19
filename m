@@ -1,267 +1,495 @@
 From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: [patch 5/9] ipr: add hardware assisted smart dump functionality
-Date: Fri, 19 Feb 2010 13:24:14 -0800
-Message-ID: <4B7F017E.70608@linux.vnet.ibm.com>
+Subject: [patch 7/9] ipr: add support for multiple stages of initialization
+Date: Fri, 19 Feb 2010 13:24:26 -0800
+Message-ID: <4B7F018A.60508@linux.vnet.ibm.com>
 References: <20100219210900.066268168@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:33887 "EHLO e3.ny.us.ibm.com"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:40980 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754847Ab0BSVYR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 16:24:17 -0500
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by e3.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JLDSLM023042
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:13:28 -0500
+	id S1754918Ab0BSVYa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2010 16:24:30 -0500
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by e6.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JLLC7V008631
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:21:12 -0500
 Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o1JLOGXT153084
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:24:16 -0500
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o1JLOSsg1900612
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 16:24:28 -0500
 Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JLOFhO023929
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 19:24:16 -0200
+	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JLOShP024455
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 19:24:28 -0200
 In-Reply-To: <20100219210900.066268168@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
 
-This patch adds the hardware assisted smart dump functionality for the next
-generation IOA PCI interface chip.
+This patch adds support for using the new IOA initialization feedback register.
+It also enables 64 bit support in the ipr_ioafp_identify_hrrq and
+ipr_mask_and_clear_interrupts routines.
 
-Signea-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+
 ---
-
- drivers/scsi/ipr.c |   79 ++++++++++++++++++++++++++++++++++++++++++-----------
- drivers/scsi/ipr.h |   16 ++++++----
- 2 files changed, 74 insertions(+), 21 deletions(-)
+ drivers/scsi/ipr.c |  185 ++++++++++++++++++++++++++++++++++++++++++++---------
+ drivers/scsi/ipr.h |   25 +++++++
+ 2 files changed, 180 insertions(+), 30 deletions(-)
 
 Index: b/drivers/scsi/ipr.c
 ===================================================================
---- a/drivers/scsi/ipr.c	2010-02-19 08:08:33.000000000 -0800
-+++ b/drivers/scsi/ipr.c	2010-02-19 08:08:37.000000000 -0800
-@@ -142,7 +142,9 @@ static const struct ipr_chip_cfg_t ipr_c
- 			.ioarrin_reg = 0x00070,
- 			.sense_uproc_interrupt_reg = 0x00020,
- 			.set_uproc_interrupt_reg = 0x00020,
--			.clr_uproc_interrupt_reg = 0x00028
-+			.clr_uproc_interrupt_reg = 0x00028,
-+			.dump_addr_reg = 0x00064,
-+			.dump_data_reg = 0x00068
+--- a/drivers/scsi/ipr.c	2010-02-19 08:08:40.000000000 -0800
++++ b/drivers/scsi/ipr.c	2010-02-19 12:52:30.000000000 -0800
+@@ -106,13 +106,20 @@ static const struct ipr_chip_cfg_t ipr_c
+ 		{
+ 			.set_interrupt_mask_reg = 0x0022C,
+ 			.clr_interrupt_mask_reg = 0x00230,
++			.clr_interrupt_mask_reg32 = 0x00230,
+ 			.sense_interrupt_mask_reg = 0x0022C,
++			.sense_interrupt_mask_reg32 = 0x0022C,
+ 			.clr_interrupt_reg = 0x00228,
++			.clr_interrupt_reg32 = 0x00228,
+ 			.sense_interrupt_reg = 0x00224,
++			.sense_interrupt_reg32 = 0x00224,
+ 			.ioarrin_reg = 0x00404,
+ 			.sense_uproc_interrupt_reg = 0x00214,
++			.sense_uproc_interrupt_reg32 = 0x00214,
+ 			.set_uproc_interrupt_reg = 0x00214,
+-			.clr_uproc_interrupt_reg = 0x00218
++			.set_uproc_interrupt_reg32 = 0x00214,
++			.clr_uproc_interrupt_reg = 0x00218,
++			.clr_uproc_interrupt_reg32 = 0x00218
  		}
  	},
- };
-@@ -2514,6 +2516,31 @@ static int ipr_wait_iodbg_ack(struct ipr
+ 	{ /* Snipe and Scamp */
+@@ -121,13 +128,20 @@ static const struct ipr_chip_cfg_t ipr_c
+ 		{
+ 			.set_interrupt_mask_reg = 0x00288,
+ 			.clr_interrupt_mask_reg = 0x0028C,
++			.clr_interrupt_mask_reg32 = 0x0028C,
+ 			.sense_interrupt_mask_reg = 0x00288,
++			.sense_interrupt_mask_reg32 = 0x00288,
+ 			.clr_interrupt_reg = 0x00284,
++			.clr_interrupt_reg32 = 0x00284,
+ 			.sense_interrupt_reg = 0x00280,
++			.sense_interrupt_reg32 = 0x00280,
+ 			.ioarrin_reg = 0x00504,
+ 			.sense_uproc_interrupt_reg = 0x00290,
++			.sense_uproc_interrupt_reg32 = 0x00290,
+ 			.set_uproc_interrupt_reg = 0x00290,
+-			.clr_uproc_interrupt_reg = 0x00294
++			.set_uproc_interrupt_reg32 = 0x00290,
++			.clr_uproc_interrupt_reg = 0x00294,
++			.clr_uproc_interrupt_reg32 = 0x00294
+ 		}
+ 	},
+ 	{ /* CRoC */
+@@ -136,13 +150,21 @@ static const struct ipr_chip_cfg_t ipr_c
+ 		{
+ 			.set_interrupt_mask_reg = 0x00010,
+ 			.clr_interrupt_mask_reg = 0x00018,
++			.clr_interrupt_mask_reg32 = 0x0001C,
+ 			.sense_interrupt_mask_reg = 0x00010,
++			.sense_interrupt_mask_reg32 = 0x00014,
+ 			.clr_interrupt_reg = 0x00008,
++			.clr_interrupt_reg32 = 0x0000C,
+ 			.sense_interrupt_reg = 0x00000,
++			.sense_interrupt_reg32 = 0x00004,
+ 			.ioarrin_reg = 0x00070,
+ 			.sense_uproc_interrupt_reg = 0x00020,
++			.sense_uproc_interrupt_reg32 = 0x00024,
+ 			.set_uproc_interrupt_reg = 0x00020,
++			.set_uproc_interrupt_reg32 = 0x00024,
+ 			.clr_uproc_interrupt_reg = 0x00028,
++			.clr_uproc_interrupt_reg32 = 0x0002C,
++			.init_feedback_reg = 0x0005C,
+ 			.dump_addr_reg = 0x00064,
+ 			.dump_data_reg = 0x00068
+ 		}
+@@ -592,10 +614,15 @@ static void ipr_mask_and_clear_interrupt
+ 	ioa_cfg->allow_interrupts = 0;
+
+ 	/* Set interrupt mask to stop all new interrupts */
+-	writel(~0, ioa_cfg->regs.set_interrupt_mask_reg);
++	if (ioa_cfg->sis64)
++		writeq(~0, ioa_cfg->regs.set_interrupt_mask_reg);
++	else
++		writel(~0, ioa_cfg->regs.set_interrupt_mask_reg);
+
+ 	/* Clear any pending interrupts */
+-	writel(clr_ints, ioa_cfg->regs.clr_interrupt_reg);
++	if (ioa_cfg->sis64)
++		writel(~0, ioa_cfg->regs.clr_interrupt_reg);
++	writel(clr_ints, ioa_cfg->regs.clr_interrupt_reg32);
+ 	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg);
+ }
+
+@@ -2561,7 +2588,7 @@ static int ipr_get_ldump_data_section(st
+
+ 	/* Write IOA interrupt reg starting LDUMP state  */
+ 	writel((IPR_UPROCI_RESET_ALERT | IPR_UPROCI_IO_DEBUG_ALERT),
+-	       ioa_cfg->regs.set_uproc_interrupt_reg);
++	       ioa_cfg->regs.set_uproc_interrupt_reg32);
+
+ 	/* Wait for IO debug acknowledge */
+ 	if (ipr_wait_iodbg_ack(ioa_cfg,
+@@ -2580,7 +2607,7 @@ static int ipr_get_ldump_data_section(st
+
+ 	/* Signal address valid - clear IOA Reset alert */
+ 	writel(IPR_UPROCI_RESET_ALERT,
+-	       ioa_cfg->regs.clr_uproc_interrupt_reg);
++	       ioa_cfg->regs.clr_uproc_interrupt_reg32);
+
+ 	for (i = 0; i < length_in_words; i++) {
+ 		/* Wait for IO debug acknowledge */
+@@ -2605,10 +2632,10 @@ static int ipr_get_ldump_data_section(st
+
+ 	/* Signal end of block transfer. Set reset alert then clear IO debug ack */
+ 	writel(IPR_UPROCI_RESET_ALERT,
+-	       ioa_cfg->regs.set_uproc_interrupt_reg);
++	       ioa_cfg->regs.set_uproc_interrupt_reg32);
+
+ 	writel(IPR_UPROCI_IO_DEBUG_ALERT,
+-	       ioa_cfg->regs.clr_uproc_interrupt_reg);
++	       ioa_cfg->regs.clr_uproc_interrupt_reg32);
+
+ 	/* Signal dump data received - Clear IO debug Ack */
+ 	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE,
+@@ -2617,7 +2644,7 @@ static int ipr_get_ldump_data_section(st
+ 	/* Wait for IOA to signal LDUMP exit - IOA reset alert will be cleared */
+ 	while (delay < IPR_LDUMP_MAX_SHORT_ACK_DELAY_IN_USEC) {
+ 		temp_pcii_reg =
+-		    readl(ioa_cfg->regs.sense_uproc_interrupt_reg);
++		    readl(ioa_cfg->regs.sense_uproc_interrupt_reg32);
+
+ 		if (!(temp_pcii_reg & IPR_UPROCI_RESET_ALERT))
+ 			return 0;
+@@ -4831,11 +4858,29 @@ static irqreturn_t ipr_isr(int irq, void
+ 		return IRQ_NONE;
+ 	}
+
+-	int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+-	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
++	int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg32);
++	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32) & ~int_mask_reg;
+
+-	/* If an interrupt on the adapter did not occur, ignore it */
++	/* If an interrupt on the adapter did not occur, ignore it.
++	 * Or in the case of SIS 64, check for a stage change interrupt.
++	 */
+ 	if (unlikely((int_reg & IPR_PCII_OPER_INTERRUPTS) == 0)) {
++		if (ioa_cfg->sis64) {
++			int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
++			int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
++			if (int_reg & IPR_PCII_IPL_STAGE_CHANGE) {
++
++				/* clear stage change */
++				writel(IPR_PCII_IPL_STAGE_CHANGE, ioa_cfg->regs.clr_interrupt_reg);
++				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
++				list_del(&ioa_cfg->reset_cmd->queue);
++				del_timer(&ioa_cfg->reset_cmd->timer);
++				ipr_reset_ioa_job(ioa_cfg->reset_cmd);
++				spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++				return IRQ_HANDLED;
++			}
++		}
++
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 		return IRQ_NONE;
+ 	}
+@@ -4878,8 +4923,8 @@ static irqreturn_t ipr_isr(int irq, void
+ 		if (ipr_cmd != NULL) {
+ 			/* Clear the PCI interrupt */
+ 			do {
+-				writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg);
+-				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
++				writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg32);
++				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32) & ~int_mask_reg;
+ 			} while (int_reg & IPR_PCII_HRRQ_UPDATED &&
+ 					num_hrrq++ < IPR_MAX_HRRQ_RETRIES);
+
+@@ -6887,7 +6932,7 @@ static int ipr_ioafp_std_inquiry(struct 
  }
 
  /**
-+ * ipr_get_sis64_dump_data_section - Dump IOA memory
-+ * @ioa_cfg:			ioa config struct
-+ * @start_addr:			adapter address to dump
-+ * @dest:			destination kernel buffer
-+ * @length_in_words:		length to dump in 4 byte words
-+ *
-+ * Return value:
-+ * 	0 on success
-+ **/
-+static int ipr_get_sis64_dump_data_section(struct ipr_ioa_cfg *ioa_cfg,
-+					   u32 start_addr,
-+					   __be32 *dest, u32 length_in_words)
-+{
-+	int i;
-+
-+	for (i = 0; i < length_in_words; i++) {
-+		writel(start_addr+(i*4), ioa_cfg->regs.dump_addr_reg);
-+		*dest = cpu_to_be32(readl(ioa_cfg->regs.dump_data_reg));
-+		dest++;
+- * ipr_ioafp_indentify_hrrq - Send Identify Host RRQ.
++ * ipr_ioafp_identify_hrrq - Send Identify Host RRQ.
+  * @ipr_cmd:	ipr command struct
+  *
+  * This function send an Identify Host Request Response Queue
+@@ -6896,7 +6941,7 @@ static int ipr_ioafp_std_inquiry(struct 
+  * Return value:
+  * 	IPR_RC_JOB_RETURN
+  **/
+-static int ipr_ioafp_indentify_hrrq(struct ipr_cmnd *ipr_cmd)
++static int ipr_ioafp_identify_hrrq(struct ipr_cmnd *ipr_cmd)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+@@ -6908,19 +6953,32 @@ static int ipr_ioafp_indentify_hrrq(stru
+ 	ioarcb->res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
+
+ 	ioarcb->cmd_pkt.request_type = IPR_RQTYPE_IOACMD;
++	if (ioa_cfg->sis64)
++		ioarcb->cmd_pkt.cdb[1] = 0x1;
+ 	ioarcb->cmd_pkt.cdb[2] =
+-		((u32) ioa_cfg->host_rrq_dma >> 24) & 0xff;
++		((u64) ioa_cfg->host_rrq_dma >> 24) & 0xff;
+ 	ioarcb->cmd_pkt.cdb[3] =
+-		((u32) ioa_cfg->host_rrq_dma >> 16) & 0xff;
++		((u64) ioa_cfg->host_rrq_dma >> 16) & 0xff;
+ 	ioarcb->cmd_pkt.cdb[4] =
+-		((u32) ioa_cfg->host_rrq_dma >> 8) & 0xff;
++		((u64) ioa_cfg->host_rrq_dma >> 8) & 0xff;
+ 	ioarcb->cmd_pkt.cdb[5] =
+-		((u32) ioa_cfg->host_rrq_dma) & 0xff;
++		((u64) ioa_cfg->host_rrq_dma) & 0xff;
+ 	ioarcb->cmd_pkt.cdb[7] =
+ 		((sizeof(u32) * IPR_NUM_CMD_BLKS) >> 8) & 0xff;
+ 	ioarcb->cmd_pkt.cdb[8] =
+ 		(sizeof(u32) * IPR_NUM_CMD_BLKS) & 0xff;
+
++	if (ioa_cfg->sis64) {
++		ioarcb->cmd_pkt.cdb[10] =
++			((u64) ioa_cfg->host_rrq_dma >> 56) & 0xff;
++		ioarcb->cmd_pkt.cdb[11] =
++			((u64) ioa_cfg->host_rrq_dma >> 48) & 0xff;
++		ioarcb->cmd_pkt.cdb[12] =
++			((u64) ioa_cfg->host_rrq_dma >> 40) & 0xff;
++		ioarcb->cmd_pkt.cdb[13] =
++			((u64) ioa_cfg->host_rrq_dma >> 32) & 0xff;
 +	}
 +
-+	return 0;
+ 	ipr_cmd->job_step = ipr_ioafp_std_inquiry;
+
+ 	ipr_do_req(ipr_cmd, ipr_reset_ioa_job, ipr_timeout, IPR_INTERNAL_TIMEOUT);
+@@ -7005,6 +7063,57 @@ static void ipr_init_ioa_mem(struct ipr_
+ }
+
+ /**
++ * ipr_reset_next_stage - Process IPL stage change based on feedback register.
++ * @ipr_cmd:	ipr command struct
++ *
++ * Return value:
++ * 	IPR_RC_JOB_CONTINUE / IPR_RC_JOB_RETURN
++ **/
++static int ipr_reset_next_stage(struct ipr_cmnd *ipr_cmd)
++{
++	unsigned long stage, stage_time;
++	u32 feedback;
++	volatile u32 int_reg;
++	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
++	u64 maskval = 0;
++
++	feedback = readl(ioa_cfg->regs.init_feedback_reg);
++	stage = feedback & IPR_IPL_INIT_STAGE_MASK;
++	stage_time = feedback & IPR_IPL_INIT_STAGE_TIME_MASK;
++
++	ipr_dbg("IPL stage = 0x%lx, IPL stage time = %ld\n", stage, stage_time);
++
++	/* sanity check the stage_time value */
++	if (stage_time < IPR_IPL_INIT_MIN_STAGE_TIME)
++		stage_time = IPR_IPL_INIT_MIN_STAGE_TIME;
++	else if (stage_time > IPR_LONG_OPERATIONAL_TIMEOUT)
++		stage_time = IPR_LONG_OPERATIONAL_TIMEOUT;
++
++	if (stage == IPR_IPL_INIT_STAGE_UNKNOWN) {
++		writel(IPR_PCII_IPL_STAGE_CHANGE, ioa_cfg->regs.set_interrupt_mask_reg);
++		int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
++		stage_time = ioa_cfg->transop_timeout;
++		ipr_cmd->job_step = ipr_ioafp_identify_hrrq;
++	} else if (stage == IPR_IPL_INIT_STAGE_TRANSOP) {
++		ipr_cmd->job_step = ipr_ioafp_identify_hrrq;
++		maskval = IPR_PCII_IPL_STAGE_CHANGE;
++		maskval = (maskval << 32) | IPR_PCII_IOA_TRANS_TO_OPER;
++		writeq(maskval, ioa_cfg->regs.set_interrupt_mask_reg);
++		int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
++		return IPR_RC_JOB_CONTINUE;
++	}
++
++	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
++	ipr_cmd->timer.expires = jiffies + stage_time * HZ;
++	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
++	ipr_cmd->done = ipr_reset_ioa_job;
++	add_timer(&ipr_cmd->timer);
++	list_add_tail(&ipr_cmd->queue, &ioa_cfg->pending_q);
++
++	return IPR_RC_JOB_RETURN;
 +}
 +
 +/**
-  * ipr_get_ldump_data_section - Dump IOA memory
-  * @ioa_cfg:			ioa config struct
-  * @start_addr:			adapter address to dump
-@@ -2530,6 +2557,10 @@ static int ipr_get_ldump_data_section(st
- 	volatile u32 temp_pcii_reg;
- 	int i, delay = 0;
-
-+	if (ioa_cfg->sis64)
-+		return ipr_get_sis64_dump_data_section(ioa_cfg, start_addr,
-+						       dest, length_in_words);
-+
- 	/* Write IOA interrupt reg starting LDUMP state  */
- 	writel((IPR_UPROCI_RESET_ALERT | IPR_UPROCI_IO_DEBUG_ALERT),
- 	       ioa_cfg->regs.set_uproc_interrupt_reg);
-@@ -2787,6 +2818,7 @@ static void ipr_get_ioa_dump(struct ipr_
- 	u32 num_entries, start_off, end_off;
- 	u32 bytes_to_copy, bytes_copied, rc;
- 	struct ipr_sdt *sdt;
-+	int valid = 1;
- 	int i;
+  * ipr_reset_enable_ioa - Enable the IOA following a reset.
+  * @ipr_cmd:	ipr command struct
+  *
+@@ -7020,7 +7129,7 @@ static int ipr_reset_enable_ioa(struct i
+ 	volatile u32 int_reg;
 
  	ENTER;
-@@ -2800,7 +2832,7 @@ static void ipr_get_ioa_dump(struct ipr_
+-	ipr_cmd->job_step = ipr_ioafp_indentify_hrrq;
++	ipr_cmd->job_step = ipr_ioafp_identify_hrrq;
+ 	ipr_init_ioa_mem(ioa_cfg);
 
- 	start_addr = readl(ioa_cfg->ioa_mailbox);
+ 	ioa_cfg->allow_interrupts = 1;
+@@ -7028,19 +7137,27 @@ static int ipr_reset_enable_ioa(struct i
 
--	if (!ipr_sdt_is_fmt2(start_addr)) {
-+	if (!ioa_cfg->sis64 && !ipr_sdt_is_fmt2(start_addr)) {
- 		dev_err(&ioa_cfg->pdev->dev,
- 			"Invalid dump table format: %lx\n", start_addr);
- 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-@@ -2829,7 +2861,6 @@ static void ipr_get_ioa_dump(struct ipr_
-
- 	/* IOA Dump entry */
- 	ipr_init_dump_entry_hdr(&ioa_dump->hdr);
--	ioa_dump->format = IPR_SDT_FMT2;
- 	ioa_dump->hdr.len = 0;
- 	ioa_dump->hdr.data_type = IPR_DUMP_DATA_TYPE_BINARY;
- 	ioa_dump->hdr.id = IPR_DUMP_IOA_DUMP_ID;
-@@ -2844,7 +2875,8 @@ static void ipr_get_ioa_dump(struct ipr_
- 					sizeof(struct ipr_sdt) / sizeof(__be32));
-
- 	/* Smart Dump table is ready to use and the first entry is valid */
--	if (rc || (be32_to_cpu(sdt->hdr.state) != IPR_FMT2_SDT_READY_TO_USE)) {
-+	if (rc || ((be32_to_cpu(sdt->hdr.state) != IPR_FMT3_SDT_READY_TO_USE) &&
-+	    (be32_to_cpu(sdt->hdr.state) != IPR_FMT2_SDT_READY_TO_USE))) {
- 		dev_err(&ioa_cfg->pdev->dev,
- 			"Dump of IOA failed. Dump table not valid: %d, %X.\n",
- 			rc, be32_to_cpu(sdt->hdr.state));
-@@ -2868,12 +2900,19 @@ static void ipr_get_ioa_dump(struct ipr_
- 		}
-
- 		if (sdt->entry[i].flags & IPR_SDT_VALID_ENTRY) {
--			sdt_word = be32_to_cpu(sdt->entry[i].bar_str_offset);
--			start_off = sdt_word & IPR_FMT2_MBX_ADDR_MASK;
--			end_off = be32_to_cpu(sdt->entry[i].end_offset);
-+			sdt_word = be32_to_cpu(sdt->entry[i].start_token);
-+			if (ioa_cfg->sis64)
-+				bytes_to_copy = be32_to_cpu(sdt->entry[i].end_token);
-+			else {
-+				start_off = sdt_word & IPR_FMT2_MBX_ADDR_MASK;
-+				end_off = be32_to_cpu(sdt->entry[i].end_token);
-
--			if (ipr_sdt_is_fmt2(sdt_word) && sdt_word) {
--				bytes_to_copy = end_off - start_off;
-+				if (ipr_sdt_is_fmt2(sdt_word) && sdt_word)
-+					bytes_to_copy = end_off - start_off;
-+				else
-+					valid = 0;
-+			}
-+			if (valid) {
- 				if (bytes_to_copy > IPR_MAX_IOA_DUMP_SIZE) {
- 					sdt->entry[i].flags &= ~IPR_SDT_VALID_ENTRY;
- 					continue;
-@@ -7202,7 +7241,7 @@ static void ipr_get_unit_check_buffer(st
-
- 	mailbox = readl(ioa_cfg->ioa_mailbox);
-
--	if (!ipr_sdt_is_fmt2(mailbox)) {
-+	if (!ioa_cfg->sis64 && !ipr_sdt_is_fmt2(mailbox)) {
- 		ipr_unit_check_no_data(ioa_cfg);
- 		return;
- 	}
-@@ -7211,15 +7250,20 @@ static void ipr_get_unit_check_buffer(st
- 	rc = ipr_get_ldump_data_section(ioa_cfg, mailbox, (__be32 *) &sdt,
- 					(sizeof(struct ipr_uc_sdt)) / sizeof(__be32));
-
--	if (rc || (be32_to_cpu(sdt.hdr.state) != IPR_FMT2_SDT_READY_TO_USE) ||
--	    !(sdt.entry[0].flags & IPR_SDT_VALID_ENTRY)) {
-+	if (rc || !(sdt.entry[0].flags & IPR_SDT_VALID_ENTRY) ||
-+	    ((be32_to_cpu(sdt.hdr.state) != IPR_FMT3_SDT_READY_TO_USE) &&
-+	    (be32_to_cpu(sdt.hdr.state) != IPR_FMT2_SDT_READY_TO_USE))) {
- 		ipr_unit_check_no_data(ioa_cfg);
- 		return;
+ 	if (int_reg & IPR_PCII_IOA_TRANS_TO_OPER) {
+ 		writel((IPR_PCII_ERROR_INTERRUPTS | IPR_PCII_HRRQ_UPDATED),
+-		       ioa_cfg->regs.clr_interrupt_mask_reg);
++		       ioa_cfg->regs.clr_interrupt_mask_reg32);
+ 		int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+ 		return IPR_RC_JOB_CONTINUE;
  	}
 
- 	/* Find length of the first sdt entry (UC buffer) */
--	length = (be32_to_cpu(sdt.entry[0].end_offset) -
--		  be32_to_cpu(sdt.entry[0].bar_str_offset)) & IPR_FMT2_MBX_ADDR_MASK;
-+	if (be32_to_cpu(sdt.hdr.state) == IPR_FMT3_SDT_READY_TO_USE)
-+		length = be32_to_cpu(sdt.entry[0].end_token);
-+	else
-+		length = (be32_to_cpu(sdt.entry[0].end_token) -
-+			  be32_to_cpu(sdt.entry[0].start_token)) &
-+			  IPR_FMT2_MBX_ADDR_MASK;
-
- 	hostrcb = list_entry(ioa_cfg->hostrcb_free_q.next,
- 			     struct ipr_hostrcb, queue);
-@@ -7227,7 +7271,7 @@ static void ipr_get_unit_check_buffer(st
- 	memset(&hostrcb->hcam, 0, sizeof(hostrcb->hcam));
-
- 	rc = ipr_get_ldump_data_section(ioa_cfg,
--					be32_to_cpu(sdt.entry[0].bar_str_offset),
-+					be32_to_cpu(sdt.entry[0].start_token),
- 					(__be32 *)&hostrcb->hcam,
- 					min(length, (int)sizeof(hostrcb->hcam)) / sizeof(__be32));
-
-@@ -8202,6 +8246,11 @@ static void __devinit ipr_init_ioa_cfg(s
- 	t->sense_uproc_interrupt_reg = base + p->sense_uproc_interrupt_reg;
- 	t->set_uproc_interrupt_reg = base + p->set_uproc_interrupt_reg;
- 	t->clr_uproc_interrupt_reg = base + p->clr_uproc_interrupt_reg;
+ 	/* Enable destructive diagnostics on IOA */
+-	writel(ioa_cfg->doorbell, ioa_cfg->regs.set_uproc_interrupt_reg);
++	writel(ioa_cfg->doorbell, ioa_cfg->regs.set_uproc_interrupt_reg32);
 +
-+	if (ioa_cfg->sis64) {
-+		t->dump_addr_reg = base + p->dump_addr_reg;
-+		t->dump_data_reg = base + p->dump_data_reg;
-+	}
- }
++	writel(IPR_PCII_OPER_INTERRUPTS, ioa_cfg->regs.clr_interrupt_mask_reg32);
++	if (ioa_cfg->sis64)
++		writel(IPR_PCII_IPL_STAGE_CHANGE, ioa_cfg->regs.clr_interrupt_mask_reg);
 
- /**
+-	writel(IPR_PCII_OPER_INTERRUPTS, ioa_cfg->regs.clr_interrupt_mask_reg);
+ 	int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+
+ 	dev_info(&ioa_cfg->pdev->dev, "Initializing IOA.\n");
+
++	if (ioa_cfg->sis64) {
++		ipr_cmd->job_step = ipr_reset_next_stage;
++		return IPR_RC_JOB_CONTINUE;
++	}
++
+ 	ipr_cmd->timer.data = (unsigned long) ipr_cmd;
+ 	ipr_cmd->timer.expires = jiffies + (ioa_cfg->transop_timeout * HZ);
+ 	ipr_cmd->timer.function = (void (*)(unsigned long))ipr_oper_timeout;
+@@ -7374,7 +7491,7 @@ static int ipr_reset_alert(struct ipr_cm
+
+ 	if ((rc == PCIBIOS_SUCCESSFUL) && (cmd_reg & PCI_COMMAND_MEMORY)) {
+ 		ipr_mask_and_clear_interrupts(ioa_cfg, ~0);
+-		writel(IPR_UPROCI_RESET_ALERT, ioa_cfg->regs.set_uproc_interrupt_reg);
++		writel(IPR_UPROCI_RESET_ALERT, ioa_cfg->regs.set_uproc_interrupt_reg32);
+ 		ipr_cmd->job_step = ipr_reset_wait_to_start_bist;
+ 	} else {
+ 		ipr_cmd->job_step = ioa_cfg->reset;
+@@ -8104,15 +8221,23 @@ static void __devinit ipr_init_ioa_cfg(s
+
+ 	t->set_interrupt_mask_reg = base + p->set_interrupt_mask_reg;
+ 	t->clr_interrupt_mask_reg = base + p->clr_interrupt_mask_reg;
++	t->clr_interrupt_mask_reg32 = base + p->clr_interrupt_mask_reg32;
+ 	t->sense_interrupt_mask_reg = base + p->sense_interrupt_mask_reg;
++	t->sense_interrupt_mask_reg32 = base + p->sense_interrupt_mask_reg32;
+ 	t->clr_interrupt_reg = base + p->clr_interrupt_reg;
++	t->clr_interrupt_reg32 = base + p->clr_interrupt_reg32;
+ 	t->sense_interrupt_reg = base + p->sense_interrupt_reg;
++	t->sense_interrupt_reg32 = base + p->sense_interrupt_reg32;
+ 	t->ioarrin_reg = base + p->ioarrin_reg;
+ 	t->sense_uproc_interrupt_reg = base + p->sense_uproc_interrupt_reg;
++	t->sense_uproc_interrupt_reg32 = base + p->sense_uproc_interrupt_reg32;
+ 	t->set_uproc_interrupt_reg = base + p->set_uproc_interrupt_reg;
++	t->set_uproc_interrupt_reg32 = base + p->set_uproc_interrupt_reg32;
+ 	t->clr_uproc_interrupt_reg = base + p->clr_uproc_interrupt_reg;
++	t->clr_uproc_interrupt_reg32 = base + p->clr_uproc_interrupt_reg32;
+
+ 	if (ioa_cfg->sis64) {
++		t->init_feedback_reg = base + p->init_feedback_reg;
+ 		t->dump_addr_reg = base + p->dump_addr_reg;
+ 		t->dump_data_reg = base + p->dump_data_reg;
+ 	}
+@@ -8187,7 +8312,7 @@ static int __devinit ipr_test_msi(struct
+ 	init_waitqueue_head(&ioa_cfg->msi_wait_q);
+ 	ioa_cfg->msi_received = 0;
+ 	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+-	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.clr_interrupt_mask_reg);
++	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.clr_interrupt_mask_reg32);
+ 	int_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+
+@@ -8198,7 +8323,7 @@ static int __devinit ipr_test_msi(struct
+ 	} else if (ipr_debug)
+ 		dev_info(&pdev->dev, "IRQ assigned: %d\n", pdev->irq);
+
+-	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.sense_interrupt_reg);
++	writel(IPR_PCII_IO_DEBUG_ACKNOWLEDGE, ioa_cfg->regs.sense_interrupt_reg32);
+ 	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg);
+ 	wait_event_timeout(ioa_cfg->msi_wait_q, ioa_cfg->msi_received, HZ);
+ 	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+@@ -8378,9 +8503,9 @@ static int __devinit ipr_probe_ioa(struc
+ 	 * If HRRQ updated interrupt is not masked, or reset alert is set,
+ 	 * the card is in an unknown state and needs a hard reset
+ 	 */
+-	mask = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+-	interrupts = readl(ioa_cfg->regs.sense_interrupt_reg);
+-	uproc = readl(ioa_cfg->regs.sense_uproc_interrupt_reg);
++	mask = readl(ioa_cfg->regs.sense_interrupt_mask_reg32);
++	interrupts = readl(ioa_cfg->regs.sense_interrupt_reg32);
++	uproc = readl(ioa_cfg->regs.sense_uproc_interrupt_reg32);
+ 	if ((mask & IPR_PCII_HRRQ_UPDATED) == 0 || (uproc & IPR_UPROCI_RESET_ALERT))
+ 		ioa_cfg->needs_hard_reset = 1;
+ 	if (interrupts & IPR_PCII_ERROR_INTERRUPTS)
 Index: b/drivers/scsi/ipr.h
 ===================================================================
---- a/drivers/scsi/ipr.h	2010-02-19 08:08:33.000000000 -0800
-+++ b/drivers/scsi/ipr.h	2010-02-19 08:08:37.000000000 -0800
-@@ -228,6 +228,7 @@
- #define IPR_SDT_FMT2_BAR5_SEL				0x5
- #define IPR_SDT_FMT2_EXP_ROM_SEL			0x8
- #define IPR_FMT2_SDT_READY_TO_USE			0xC4D4E3F2
-+#define IPR_FMT3_SDT_READY_TO_USE			0xC4D4E3F3
+--- a/drivers/scsi/ipr.h	2010-02-19 08:08:40.000000000 -0800
++++ b/drivers/scsi/ipr.h	2010-02-19 08:27:10.000000000 -0800
+@@ -232,6 +232,13 @@
  #define IPR_DOORBELL					0x82800000
  #define IPR_RUNTIME_RESET				0x40000000
 
-@@ -1093,10 +1094,9 @@ struct ipr_hostrcb {
++#define IPR_IPL_INIT_MIN_STAGE_TIME			5
++#define IPR_IPL_INIT_STAGE_UNKNOWN			0x0
++#define IPR_IPL_INIT_STAGE_TRANSOP			0xB0000000
++#define IPR_IPL_INIT_STAGE_MASK				0xff000000
++#define IPR_IPL_INIT_STAGE_TIME_MASK			0x0000ffff
++#define IPR_PCII_IPL_STAGE_CHANGE			(0x80000000 >> 0)
++
+ #define IPR_PCII_IOA_TRANS_TO_OPER			(0x80000000 >> 0)
+ #define IPR_PCII_IOARCB_XFER_FAILED			(0x80000000 >> 3)
+ #define IPR_PCII_IOA_UNIT_CHECKED			(0x80000000 >> 4)
+@@ -1196,14 +1203,23 @@ struct ipr_misc_cbs {
+ struct ipr_interrupt_offsets {
+ 	unsigned long set_interrupt_mask_reg;
+ 	unsigned long clr_interrupt_mask_reg;
++	unsigned long clr_interrupt_mask_reg32;
+ 	unsigned long sense_interrupt_mask_reg;
++	unsigned long sense_interrupt_mask_reg32;
+ 	unsigned long clr_interrupt_reg;
++	unsigned long clr_interrupt_reg32;
 
- /* IPR smart dump table structures */
- struct ipr_sdt_entry {
--	__be32 bar_str_offset;
--	__be32 end_offset;
--	u8 entry_byte;
--	u8 reserved[3];
-+	__be32 start_token;
-+	__be32 end_token;
-+	u8 reserved[4];
-
- 	u8 flags;
- #define IPR_SDT_ENDIAN		0x80
-@@ -1204,6 +1204,9 @@ struct ipr_interrupt_offsets {
+ 	unsigned long sense_interrupt_reg;
++	unsigned long sense_interrupt_reg32;
+ 	unsigned long ioarrin_reg;
  	unsigned long sense_uproc_interrupt_reg;
++	unsigned long sense_uproc_interrupt_reg32;
  	unsigned long set_uproc_interrupt_reg;
++	unsigned long set_uproc_interrupt_reg32;
  	unsigned long clr_uproc_interrupt_reg;
++	unsigned long clr_uproc_interrupt_reg32;
 +
-+	unsigned long dump_addr_reg;
-+	unsigned long dump_data_reg;
- };
++	unsigned long init_feedback_reg;
 
+ 	unsigned long dump_addr_reg;
+ 	unsigned long dump_data_reg;
+@@ -1212,14 +1228,23 @@ struct ipr_interrupt_offsets {
  struct ipr_interrupts {
-@@ -1217,6 +1220,9 @@ struct ipr_interrupts {
+ 	void __iomem *set_interrupt_mask_reg;
+ 	void __iomem *clr_interrupt_mask_reg;
++	void __iomem *clr_interrupt_mask_reg32;
+ 	void __iomem *sense_interrupt_mask_reg;
++	void __iomem *sense_interrupt_mask_reg32;
+ 	void __iomem *clr_interrupt_reg;
++	void __iomem *clr_interrupt_reg32;
+
+ 	void __iomem *sense_interrupt_reg;
++	void __iomem *sense_interrupt_reg32;
+ 	void __iomem *ioarrin_reg;
  	void __iomem *sense_uproc_interrupt_reg;
++	void __iomem *sense_uproc_interrupt_reg32;
  	void __iomem *set_uproc_interrupt_reg;
++	void __iomem *set_uproc_interrupt_reg32;
  	void __iomem *clr_uproc_interrupt_reg;
++	void __iomem *clr_uproc_interrupt_reg32;
 +
-+	void __iomem *dump_addr_reg;
-+	void __iomem *dump_data_reg;
- };
++	void __iomem *init_feedback_reg;
 
- struct ipr_chip_cfg_t {
-@@ -1536,8 +1542,6 @@ struct ipr_ioa_dump {
- 	u32 next_page_index;
- 	u32 page_offset;
- 	u32 format;
--#define IPR_SDT_FMT2		2
--#define IPR_SDT_UNKNOWN		3
- }__attribute__((packed, aligned (4)));
-
- struct ipr_dump {
+ 	void __iomem *dump_addr_reg;
+ 	void __iomem *dump_data_reg;
 
