@@ -1,35 +1,44 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] atp870u: Split long udelay()
-Date: Fri, 19 Feb 2010 09:28:19 -0600
-Message-ID: <1266593299.2822.7.camel@mulgrave.site>
-References: <1266544619.10567.715.camel@localhost>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] scsi_dh_alua: Add IBM Power Virtual SCSI ALUA device to dev list
+Date: Fri, 19 Feb 2010 10:08:31 -0600
+Message-ID: <201002191610.o1JGAgdW025950@d03av06.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:44129 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751864Ab0BSP20 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 10:28:26 -0500
-In-Reply-To: <1266544619.10567.715.camel@localhost>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:35588 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751553Ab0BSQJQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2010 11:09:16 -0500
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e35.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o1JG5at4027807
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 09:05:36 -0700
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id o1JG9CpF189730
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 09:09:12 -0700
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o1JGAhWR025982
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Feb 2010 09:10:43 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: linux-scsi@vger.kernel.org
-
-On Fri, 2010-02-19 at 01:56 +0000, Ben Hutchings wrote:
-> udelay() is supposed to be limited to 1 ms, and will generate a
-> __bad_udelay() on ARM for constant arguments > 2000.  Split
-> udelay(0x800) into mdelay(2); udelay(48).  (I suspect that msleep(3)
-> would work but I do not know how critical the timing is here.)
-
-So no to this one.  Either ARM is right and udelay > 2000 is wrong
-(which actually sounds correct given how long this will eat CPU for) so
-the driver needs fixing, or ARM is wrong and the warning needs fixing.
-
-Splitting the delay to defeat the warning while retaining the behaviour
-it was trying to warn about is the wrong thing to do.
-
-James
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
+Adds IBM Power Virtual SCSI ALUA devices to the ALUA device handler.
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/device_handler/scsi_dh_alua.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff -puN drivers/scsi/device_handler/scsi_dh_alua.c~scsi_dh_alua_nvdisk drivers/scsi/device_handler/scsi_dh_alua.c
+--- linux-2.6/drivers/scsi/device_handler/scsi_dh_alua.c~scsi_dh_alua_nvdisk	2010-02-18 21:49:47.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/device_handler/scsi_dh_alua.c	2010-02-18 21:50:22.000000000 -0600
+@@ -717,6 +717,7 @@ static const struct scsi_dh_devlist alua
+ 	{"IBM", "2145" },
+ 	{"Pillar", "Axiom" },
+ 	{"Intel", "Multi-Flex"},
++	{"AIX", "NVDISK"},
+ 	{NULL, NULL}
+ };
+ 
+_
