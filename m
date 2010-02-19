@@ -1,59 +1,38 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: SYNCHRONIZE CACHE command from sd on close
-Date: Fri, 19 Feb 2010 12:56:46 +0100
-Message-ID: <4B7E7C7E.5050701@interlog.com>
-References: <4B79460A.7040207@interlog.com> <20100215132502.GA15360@infradead.org> <4B79515A.6020507@interlog.com> <20100215224847.GA2490@infradead.org> <4B7DD949.3010907@interlog.com> <20100219080407.GA21905@infradead.org>
-Reply-To: dgilbert@interlog.com
+From: Ramya Desai <ramya.desai@gmail.com>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Fri, 19 Feb 2010 18:13:36 +0530
+Message-ID: <3e7aae31002190443w44418778u6180c74d51a0f783@mail.gmail.com>
+References: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef@mail.gmail.com>
+	 <1266418952.2787.5.camel@mulgrave.site>
+	 <3e7aae31002180046i771f2e1encfcda864f564c87e@mail.gmail.com>
+	 <1266508049.4355.37.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:40979 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751185Ab0BSL4v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 06:56:51 -0500
-In-Reply-To: <20100219080407.GA21905@infradead.org>
+Received: from qw-out-2122.google.com ([74.125.92.24]:21801 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762Ab0BSMnh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Feb 2010 07:43:37 -0500
+In-Reply-To: <1266508049.4355.37.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Dan Hor??k <dhorak@redhat.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>
 
-Christoph Hellwig wrote:
-> On Fri, Feb 19, 2010 at 01:20:25AM +0100, Douglas Gilbert wrote:
->> So send a START_STOP_UNIT(stop) through the SG_IO
->> ioctl on a sd device opened RW and as a bonus get
->> three INQUIRYs (one standard, two VPD pages) and 5 READ
->> commands!
->>
->> If the device is SCSI (as the scsi_debug driver is
->> simulating) then those READs fail because the drive
->> is stopped. However if that is an ATA disk behind a
->> SAT layer, then the disk will be spun up. That defeats
->> the purpose of the pass-though, especially when it
->> is being used to spin down the disk.
->>
->> My guess, reviewing the bug reports flowing into me is
->> that this nonsense started around lk 2.6.29 .
-> 
-> We should never send INQUIRY or READ commands from the kernel
-> in response to opening a device.  But the combination sounds
-> like something udev might be doing for it's stable device
-> indentifier and manual partition scan because I don't trust
-> the kernel thing.  Can you check if these commands come from
-> udev or one of the realted tools (hal, device-kit-blah, udisks
-> whatever it is called today)
+> In that case, it looks like the helpers in protocol.c do use chaining
+> correctly (as long as the driver isn't doing direct dma), but there's a
+> clamp on the sg table size in scsiglue.c:
+>
+> .sg_tablesize = SG_ALL
+>
+> That would have to be changed to SCSI_MAX_SG_CHAIN_SEGMENTS to enable
+> chaining.
 
-Adding some sleep()s to sg_start it seems that all nasty
-stuff gets sent to the device synchronized with the close()
-of the /dev/sd* file descriptor (not the open() ).
+Even after changing .sg_tablesize  to SCSI_MAX_SG_CHAIN_SEGMENTS, I am
+getting the same results (maximum 512KB of data transfer buffers in
+scsi_command).
+Is there any thing, that I am missing. Do I need to send any logs to
+analyze the problem?
 
-The sg_start sequence is:
-    a)  fd = open("/dev/sdb", O_RDWR | O_NOBLOCK)
-    b)  ioctl(fd, SG_IO, <START_STOP_UNIT(stop) command>)
-    c)  close(fd)
-
-a) sends no SCSI commands to the device
-b) sends the START_STOP_UNIT(stop) only
-c) sends 3 INQUIRYs and 5 READs !?
-
-
+Regards,
+RD
