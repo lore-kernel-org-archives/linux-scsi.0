@@ -1,37 +1,43 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 5/5] SCSI: fix target allocation outside of scan_mutex
-Date: Fri, 19 Feb 2010 10:34:55 -0600
-Message-ID: <1266597295.2822.50.camel@mulgrave.site>
-References: <Pine.LNX.4.44L0.1002121212020.1307-100000@iolanthe.rowland.org>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCH] atp870u: Split long udelay()
+Date: Fri, 19 Feb 2010 16:44:57 +0000
+Message-ID: <20100219164457.GX21665@decadent.org.uk>
+References: <1266544619.10567.715.camel@localhost> <1266593299.2822.7.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:46531 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751645Ab0BSQfD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 11:35:03 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1002121212020.1307-100000@iolanthe.rowland.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46968 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751864Ab0BSQpA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2010 11:45:00 -0500
+Content-Disposition: inline
+In-Reply-To: <1266593299.2822.7.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2010-02-12 at 12:14 -0500, Alan Stern wrote:
-> This patch (as1337) fixes a bug in __scsi_add_device().  It calls
-> scsi_alloc_target() outside the protection of the host's scan_mutex,
-> meaning that it might find an incompletely-initialized target or it
-> might create a duplicate target.
+On Fri, Feb 19, 2010 at 09:28:19AM -0600, James Bottomley wrote:
+> On Fri, 2010-02-19 at 01:56 +0000, Ben Hutchings wrote:
+> > udelay() is supposed to be limited to 1 ms, and will generate a
+> > __bad_udelay() on ARM for constant arguments > 2000.  Split
+> > udelay(0x800) into mdelay(2); udelay(48).  (I suspect that msleep(3)
+> > would work but I do not know how critical the timing is here.)
+> 
+> So no to this one.  Either ARM is right and udelay > 2000 is wrong
+> (which actually sounds correct given how long this will eat CPU for) so
+> the driver needs fixing, or ARM is wrong and the warning needs fixing.
+> 
+> Splitting the delay to defeat the warning while retaining the behaviour
+> it was trying to warn about is the wrong thing to do.
+ 
+AIUI the restrictions on udelay() are there because the delay is likely
+to be inaccurate for large arguments.  If it was actually wrong to wait
+for over a millisecond then mdelay() would not exist.
 
-I don't think this is correct.  scsi_alloc_target should be completely
-atomic on the host lock, if you look.  It allocates the proposed target,
-takes the lock and searches the host target list ... if it finds
-something it drops the lock, destroys the proposed target allocations
-and returns what it found.  If it finds nothing, it adds the proposed
-target to the list drops the lock and returns it.  There's some
-complexity around finding dying targets, but nothing that I think needs
-to be mediated by the scan mutex.
+Ben.
 
-James
-
-
+-- 
+Ben Hutchings
+The two most common things in the universe are hydrogen and stupidity.
