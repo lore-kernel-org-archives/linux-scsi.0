@@ -1,62 +1,68 @@
-From: Dave Young <hidave.darkstar@gmail.com>
-Subject: [PATCH 13/18] sysctl extern cleanup - sg
-Date: Sat, 20 Feb 2010 22:19:03 +0800
-Message-ID: <20100220141903.GL3195__33904.004834085$1266675584$gmane$org@darkstar>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15362] New: MPT Fusion SCSI drives no longer appear - suspect
+ PCI bus scan bug
+Date: Sat, 20 Feb 2010 15:04:31 GMT
+Message-ID: <bug-15362-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yx0-f200.google.com ([209.85.210.200]:51465 "EHLO
-	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755974Ab0BTOTM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2010 09:19:12 -0500
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:47068 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754325Ab0BTPEj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2010 10:04:39 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1KF4V9O026224
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Feb 2010 15:04:32 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zi>
+To: linux-scsi@vger.kernel.org
 
-Extern declarations in sysctl.c should be move to their own head file,
-and then include them in relavant .c files.
+http://bugzilla.kernel.org/show_bug.cgi?id=15362
 
-Move sg_big_buff extern declaration to scsi/sg.h
+           Summary: MPT Fusion SCSI drives no longer appear - suspect PCI
+                    bus scan bug
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.30-1, 2.6.30-2, 2.6.32-trunk
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: pegasus@renegadetech.com
+        Regression: Yes
 
-Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
----
- include/scsi/sg.h |    5 +++++
- kernel/sysctl.c   |    5 +----
- 2 files changed, 6 insertions(+), 4 deletions(-)
 
---- linux-2.6.32.orig/include/scsi/sg.h	2010-02-20 14:02:18.708258892 +0800
-+++ linux-2.6.32/include/scsi/sg.h	2010-02-20 14:39:48.631369361 +0800
-@@ -70,6 +70,11 @@ Major new features in SG 3.x driver (cf 
-  (for the lk 2.2 series).
- */
- 
-+#ifdef __KERNEL__
-+#if defined(CONFIG_SYSCTL) && defined(CONFIG_CHR_DEV_SG)
-+extern int sg_big_buff;
-+#endif
-+#endif
- 
- /* New interface introduced in the 3.x SG drivers follows */
- 
---- linux-2.6.32.orig/kernel/sysctl.c	2010-02-20 14:27:50.691439411 +0800
-+++ linux-2.6.32/kernel/sysctl.c	2010-02-20 14:38:51.008872869 +0800
-@@ -62,6 +62,7 @@
- #include <linux/latencytop.h>
- #include <linux/file.h>
- #include <linux/blk-iopoll.h>
-+#include <scsi/sg.h>
- 
- #include <asm/uaccess.h>
- #include <asm/processor.h>
-@@ -100,10 +101,6 @@ static int min_percpu_pagelist_fract = 8
- 
- static int ngroups_max = NGROUPS_MAX;
- 
--#ifdef CONFIG_CHR_DEV_SG
--extern int sg_big_buff;
--#endif
--
- #ifdef CONFIG_SPARC
- #include <asm/system.h>
- #endif
+Created an attachment (id=25130)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=25130)
+2.6.26 dmesg
+
+Since upgrading to the 2.6.30 kernel on an AMD64 platform, drives attached to
+my LSI/MPT SCSI controller are no longer visible. If I boot using the 2.6.26-2
+kernel, it works fine. The SCSI controller doesn't even show up in lspci in
+kernel versions above 2.6.26. (I do have the controller's BIOS disabled
+however, but I understand that doesn't matter since the kernel will poll it
+anyway, as 2.6.26 does. I tested with the controller's BIOS enabled too and it
+doesn't make a difference.)
+
+This has already been submitted to Debian as bug #543308, but evidence points
+to a bug in the kernel PCI bus scanning code, since the following PCI devices
+show up on 2.6.26-2 but not 2.6.30-1 and up:
+
+0001:40:01.0 0604: 1022:7450 (rev 12)
+0001:40:01.1 0800: 1022:7451 (rev 01)
+0001:40:02.0 0604: 1022:7450 (rev 12)
+0001:40:02.1 0800: 1022:7451 (rev 01)
+0001:61:06.0 0100: 1000:0030 (rev 07)
+0001:61:06.1 0100: 1000:0030 (rev 07)
+0002:80:00.0 0580: 10de:005e (rev a3)
+0002:80:01.0 0580: 10de:00d3 (rev a3)
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
