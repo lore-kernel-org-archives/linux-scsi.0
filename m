@@ -1,177 +1,293 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 1/7] be2iscsi: Modification of  iscsi_eh_target_reset V2
-Date: Sat, 20 Feb 2010 08:02:10 +0530
-Message-ID: <20100220023201.GA13568@serverengines.com>
+Subject: [PATCH 2/7] be2iscsi: Cleanup of resets for device and target V2
+Date: Sat, 20 Feb 2010 08:02:39 +0530
+Message-ID: <20100220023229.GA13603@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:53388 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:53432 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755307Ab0BTCcK (ORCPT
+	by vger.kernel.org with ESMTP id S1755518Ab0BTCci (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 21:32:10 -0500
+	Fri, 19 Feb 2010 21:32:38 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-The iscsi_eh_target_reset has been modified to attempt
-target reset only. If it fails, then iscsi_eh_session_reset
-will be called.
+     This patch cleans up device and target reset handling
+for the driver
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |    2 +-
- drivers/scsi/be2iscsi/be_main.c          |    2 +-
- drivers/scsi/bnx2i/bnx2i_iscsi.c         |    2 +-
- drivers/scsi/cxgb3i/cxgb3i_iscsi.c       |    2 +-
- drivers/scsi/iscsi_tcp.c                 |    2 +-
- drivers/scsi/libiscsi.c                  |   23 +++++++++++++++++++----
- include/scsi/libiscsi.h                  |    3 ++-
- 7 files changed, 26 insertions(+), 10 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |  134 +++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/be2iscsi/be_main.h |    7 ++
+ drivers/scsi/be2iscsi/be_mgmt.c |   14 +++--
+ drivers/scsi/be2iscsi/be_mgmt.h |    8 +--
+ 4 files changed, 145 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 5f7a6fc..7e73c48 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -596,7 +596,7 @@ static struct scsi_host_template iscsi_iser_sht = {
- 	.cmd_per_lun            = ISER_DEF_CMD_PER_LUN,
- 	.eh_abort_handler       = iscsi_eh_abort,
- 	.eh_device_reset_handler= iscsi_eh_device_reset,
--	.eh_target_reset_handler= iscsi_eh_target_reset,
-+	.eh_target_reset_handler = iscsi_eh_recover_target,
- 	.target_alloc		= iscsi_target_alloc,
- 	.use_clustering         = DISABLE_CLUSTERING,
- 	.proc_name              = "iscsi_iser",
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 7c22616..4d269b4 100644
+index 4d269b4..eab31a5 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -79,7 +79,7 @@ static struct scsi_host_template beiscsi_sht = {
- 	.slave_configure = beiscsi_slave_configure,
- 	.target_alloc = iscsi_target_alloc,
- 	.eh_device_reset_handler = iscsi_eh_device_reset,
--	.eh_target_reset_handler = iscsi_eh_target_reset,
-+	.eh_target_reset_handler = iscsi_eh_session_reset,
- 	.sg_tablesize = BEISCSI_SGLIST_ELEMENTS,
- 	.can_queue = BE2_IO_DEPTH,
- 	.this_id = -1,
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 1c4d121..cb71dc9 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1989,7 +1989,7 @@ static struct scsi_host_template bnx2i_host_template = {
- 	.queuecommand		= iscsi_queuecommand,
- 	.eh_abort_handler	= iscsi_eh_abort,
- 	.eh_device_reset_handler = iscsi_eh_device_reset,
--	.eh_target_reset_handler = iscsi_eh_target_reset,
-+	.eh_target_reset_handler = iscsi_eh_recover_target,
- 	.change_queue_depth	= iscsi_change_queue_depth,
- 	.can_queue		= 1024,
- 	.max_sectors		= 127,
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-index 412853c..b7c3058 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_iscsi.c
-@@ -915,7 +915,7 @@ static struct scsi_host_template cxgb3i_host_template = {
- 	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
- 	.eh_abort_handler	= iscsi_eh_abort,
- 	.eh_device_reset_handler = iscsi_eh_device_reset,
--	.eh_target_reset_handler = iscsi_eh_target_reset,
-+	.eh_target_reset_handler = iscsi_eh_recover_target,
- 	.target_alloc		= iscsi_target_alloc,
- 	.use_clustering		= DISABLE_CLUSTERING,
- 	.this_id		= -1,
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 8a89ba9..310a5a7 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -874,7 +874,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
- 	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
- 	.eh_abort_handler       = iscsi_eh_abort,
- 	.eh_device_reset_handler= iscsi_eh_device_reset,
--	.eh_target_reset_handler= iscsi_eh_target_reset,
-+	.eh_target_reset_handler = iscsi_eh_recover_target,
- 	.use_clustering         = DISABLE_CLUSTERING,
- 	.slave_alloc            = iscsi_sw_tcp_slave_alloc,
- 	.slave_configure        = iscsi_sw_tcp_slave_configure,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 703eb6a..08e441e 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2338,7 +2338,7 @@ EXPORT_SYMBOL_GPL(iscsi_session_recovery_timedout);
-  * This function will wait for a relogin, session termination from
-  * userspace, or a recovery/replacement timeout.
-  */
--static int iscsi_eh_session_reset(struct scsi_cmnd *sc)
-+int iscsi_eh_session_reset(struct scsi_cmnd *sc)
- {
- 	struct iscsi_cls_session *cls_session;
- 	struct iscsi_session *session;
-@@ -2389,6 +2389,7 @@ failed:
- 	mutex_unlock(&session->eh_mutex);
- 	return SUCCESS;
+@@ -58,6 +58,123 @@ static int beiscsi_slave_configure(struct scsi_device *sdev)
+ 	return 0;
  }
-+EXPORT_SYMBOL_GPL(iscsi_eh_session_reset);
  
- static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
- {
-@@ -2403,8 +2404,7 @@ static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
-  * iscsi_eh_target_reset - reset target
-  * @sc: scsi command
-  *
-- * This will attempt to send a warm target reset. If that fails
-- * then we will drop the session and attempt ERL0 recovery.
-+ * This will attempt to send a warm target reset.
-  */
- int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- {
-@@ -2476,12 +2476,27 @@ done:
- 	ISCSI_DBG_EH(session, "tgt %s reset result = %s\n", session->targetname,
- 		     rc == SUCCESS ? "SUCCESS" : "FAILED");
- 	mutex_unlock(&session->eh_mutex);
++static int beiscsi_eh_abort(struct scsi_cmnd *sc)
++{
++	struct iscsi_cls_session *cls_session;
++	struct iscsi_task *aborted_task = (struct iscsi_task *)sc->SCp.ptr;
++	struct beiscsi_io_task *aborted_io_task;
++	struct iscsi_conn *conn;
++	struct beiscsi_conn *beiscsi_conn;
++	struct beiscsi_hba *phba;
++	struct iscsi_session *session;
++	struct invalidate_command_table *inv_tbl;
++	unsigned int cid, tag, num_invalidate;
++
++	cls_session = starget_to_session(scsi_target(sc->device));
++	session = cls_session->dd_data;
++
++	spin_lock_bh(&session->lock);
++	if (!aborted_task || !aborted_task->sc) {
++		/* we raced */
++		spin_unlock_bh(&session->lock);
++		return SUCCESS;
++	}
++
++	aborted_io_task = aborted_task->dd_data;
++	if (!aborted_io_task->scsi_cmnd) {
++		/* raced or invalid command */
++		spin_unlock_bh(&session->lock);
++		return SUCCESS;
++	}
++	spin_unlock_bh(&session->lock);
++	conn = aborted_task->conn;
++	beiscsi_conn = conn->dd_data;
++	phba = beiscsi_conn->phba;
++
++	/* invalidate iocb */
++	cid = beiscsi_conn->beiscsi_conn_cid;
++	inv_tbl = phba->inv_tbl;
++	memset(inv_tbl, 0x0, sizeof(*inv_tbl));
++	inv_tbl->cid = cid;
++	inv_tbl->icd = aborted_io_task->psgl_handle->sgl_index;
++	num_invalidate = 1;
++	tag = mgmt_invalidate_icds(phba, inv_tbl, num_invalidate, cid);
++	if (!tag) {
++		shost_printk(KERN_WARNING, phba->shost,
++			     "mgmt_invalidate_icds could not be"
++			     " submitted\n");
++		return FAILED;
++	} else {
++		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++					 phba->ctrl.mcc_numtag[tag]);
++		free_mcc_tag(&phba->ctrl, tag);
++	}
++
++	return iscsi_eh_abort(sc);
++}
++
++static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
++{
++	struct iscsi_task *abrt_task;
++	struct beiscsi_io_task *abrt_io_task;
++	struct iscsi_conn *conn;
++	struct beiscsi_conn *beiscsi_conn;
++	struct beiscsi_hba *phba;
++	struct iscsi_session *session;
++	struct iscsi_cls_session *cls_session;
++	struct invalidate_command_table *inv_tbl;
++	unsigned int cid, tag, i, num_invalidate;
++	int rc = FAILED;
++
++	/* invalidate iocbs */
++	cls_session = starget_to_session(scsi_target(sc->device));
++	session = cls_session->dd_data;
++	spin_lock_bh(&session->lock);
++	if (!session->leadconn || session->state != ISCSI_STATE_LOGGED_IN)
++		goto unlock;
++
++	conn = session->leadconn;
++	beiscsi_conn = conn->dd_data;
++	phba = beiscsi_conn->phba;
++	cid = beiscsi_conn->beiscsi_conn_cid;
++	inv_tbl = phba->inv_tbl;
++	memset(inv_tbl, 0x0, sizeof(*inv_tbl) * BE2_CMDS_PER_CXN);
++	num_invalidate = 0;
++	for (i = 0; i < conn->session->cmds_max; i++) {
++		abrt_task = conn->session->cmds[i];
++		abrt_io_task = abrt_task->dd_data;
++		if (!abrt_task->sc || abrt_task->state == ISCSI_TASK_FREE)
++			continue;
++
++		if (abrt_task->sc->device->lun != abrt_task->sc->device->lun)
++			continue;
++
++		inv_tbl->cid = cid;
++		inv_tbl->icd = abrt_io_task->psgl_handle->sgl_index;
++		num_invalidate++;
++		inv_tbl++;
++	}
++	spin_unlock_bh(&session->lock);
++	inv_tbl = phba->inv_tbl;
++
++	tag = mgmt_invalidate_icds(phba, inv_tbl, num_invalidate, cid);
++	if (!tag) {
++		shost_printk(KERN_WARNING, phba->shost,
++			     "mgmt_invalidate_icds could not be"
++			     " submitted\n");
++		return FAILED;
++	} else {
++		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++					 phba->ctrl.mcc_numtag[tag]);
++		free_mcc_tag(&phba->ctrl, tag);
++	}
++
++	return iscsi_eh_device_reset(sc);
++unlock:
++	spin_unlock_bh(&session->lock);
 +	return rc;
 +}
-+EXPORT_SYMBOL_GPL(iscsi_eh_target_reset);
- 
-+/**
-+ * iscsi_eh_recover_target - reset target and possibly the session
-+ * @sc: scsi command
-+ *
-+ * This will attempt to send a warm target reset. If that fails,
-+ * we will escalate to ERL0 session recovery.
-+ */
-+int iscsi_eh_recover_target(struct scsi_cmnd *sc)
-+{
-+	int rc;
 +
-+	rc = iscsi_eh_target_reset(sc);
- 	if (rc == FAILED)
- 		rc = iscsi_eh_session_reset(sc);
- 	return rc;
- }
--EXPORT_SYMBOL_GPL(iscsi_eh_target_reset);
-+EXPORT_SYMBOL_GPL(iscsi_eh_recover_target);
+ /*------------------- PCI Driver operations and data ----------------- */
+ static DEFINE_PCI_DEVICE_TABLE(beiscsi_pci_id_table) = {
+ 	{ PCI_DEVICE(BE_VENDOR_ID, BE_DEVICE_ID1) },
+@@ -74,11 +191,11 @@ static struct scsi_host_template beiscsi_sht = {
+ 	.name = "ServerEngines 10Gbe open-iscsi Initiator Driver",
+ 	.proc_name = DRV_NAME,
+ 	.queuecommand = iscsi_queuecommand,
+-	.eh_abort_handler = iscsi_eh_abort,
+ 	.change_queue_depth = iscsi_change_queue_depth,
+ 	.slave_configure = beiscsi_slave_configure,
+ 	.target_alloc = iscsi_target_alloc,
+-	.eh_device_reset_handler = iscsi_eh_device_reset,
++	.eh_abort_handler = beiscsi_eh_abort,
++	.eh_device_reset_handler = beiscsi_eh_device_reset,
+ 	.eh_target_reset_handler = iscsi_eh_session_reset,
+ 	.sg_tablesize = BEISCSI_SGLIST_ELEMENTS,
+ 	.can_queue = BE2_IO_DEPTH,
+@@ -3486,9 +3603,9 @@ static int beiscsi_mtask(struct iscsi_task *task)
+ 	struct hwi_wrb_context *pwrb_context;
+ 	struct wrb_handle *pwrb_handle;
+ 	unsigned int doorbell = 0;
+-	unsigned int i, cid;
++	struct invalidate_command_table *inv_tbl;
+ 	struct iscsi_task *aborted_task;
+-	unsigned int tag;
++	unsigned int i, cid, tag, num_invalidate;
  
- /*
-  * Pre-allocate a pool of @max items of @item_size. By default, the pool
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index ff92b46..ae5196a 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -338,7 +338,8 @@ struct iscsi_host {
- extern int iscsi_change_queue_depth(struct scsi_device *sdev, int depth,
- 				    int reason);
- extern int iscsi_eh_abort(struct scsi_cmnd *sc);
--extern int iscsi_eh_target_reset(struct scsi_cmnd *sc);
-+extern int iscsi_eh_recover_target(struct scsi_cmnd *sc);
-+extern int iscsi_eh_session_reset(struct scsi_cmnd *sc);
- extern int iscsi_eh_device_reset(struct scsi_cmnd *sc);
- extern int iscsi_queuecommand(struct scsi_cmnd *sc,
- 			      void (*done)(struct scsi_cmnd *));
+ 	cid = beiscsi_conn->beiscsi_conn_cid;
+ 	pwrb = io_task->pwrb_handle->pwrb;
+@@ -3538,9 +3655,12 @@ static int beiscsi_mtask(struct iscsi_task *task)
+ 		if (!aborted_io_task->scsi_cmnd)
+ 			return 0;
+ 
+-		tag = mgmt_invalidate_icds(phba,
+-				     aborted_io_task->psgl_handle->sgl_index,
+-				     cid);
++		inv_tbl = phba->inv_tbl;
++		memset(inv_tbl, 0x0, sizeof(*inv_tbl));
++		inv_tbl->cid = cid;
++		inv_tbl->icd = aborted_io_task->psgl_handle->sgl_index;
++		num_invalidate = 1;
++		tag = mgmt_invalidate_icds(phba, inv_tbl, num_invalidate, cid);
+ 		if (!tag) {
+ 			shost_printk(KERN_WARNING, phba->shost,
+ 				     "mgmt_invalidate_icds could not be"
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index c53a80a..d4d31dc 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -257,6 +257,11 @@ struct hba_parameters {
+ 	unsigned int num_sge;
+ };
+ 
++struct invalidate_command_table {
++	unsigned short icd;
++	unsigned short cid;
++} __packed;
++
+ struct beiscsi_hba {
+ 	struct hba_parameters params;
+ 	struct hwi_controller *phwi_ctrlr;
+@@ -329,6 +334,8 @@ struct beiscsi_hba {
+ 	struct work_struct work_cqs;	/* The work being queued */
+ 	struct be_ctrl_info ctrl;
+ 	unsigned int generation;
++	struct invalidate_command_table inv_tbl[128];
++
+ };
+ 
+ struct beiscsi_session {
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 317bcd0..72617b6 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -145,14 +145,15 @@ unsigned char mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
+ }
+ 
+ unsigned char mgmt_invalidate_icds(struct beiscsi_hba *phba,
+-				   unsigned int icd, unsigned int cid)
++				struct invalidate_command_table *inv_tbl,
++				unsigned int num_invalidate, unsigned int cid)
+ {
+ 	struct be_dma_mem nonemb_cmd;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 	struct be_mcc_wrb *wrb;
+ 	struct be_sge *sge;
+ 	struct invalidate_commands_params_in *req;
+-	unsigned int tag = 0;
++	unsigned int i, tag = 0;
+ 
+ 	spin_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+@@ -183,9 +184,12 @@ unsigned char mgmt_invalidate_icds(struct beiscsi_hba *phba,
+ 			sizeof(*req));
+ 	req->ref_handle = 0;
+ 	req->cleanup_type = CMD_ISCSI_COMMAND_INVALIDATE;
+-	req->icd_count = 0;
+-	req->table[req->icd_count].icd = icd;
+-	req->table[req->icd_count].cid = cid;
++	for (i = 0; i < num_invalidate; i++) {
++		req->table[i].icd = inv_tbl->icd;
++		req->table[i].cid = inv_tbl->cid;
++		req->icd_count++;
++		inv_tbl++;
++	}
+ 	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd.dma));
+ 	sge->pa_lo = cpu_to_le32(nonemb_cmd.dma & 0xFFFFFFFF);
+ 	sge->len = cpu_to_le32(nonemb_cmd.size);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index ecead6a..3d316b8 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -94,7 +94,8 @@ unsigned char mgmt_upload_connection(struct beiscsi_hba *phba,
+ 				     unsigned short cid,
+ 				     unsigned int upload_flag);
+ unsigned char mgmt_invalidate_icds(struct beiscsi_hba *phba,
+-				   unsigned int icd, unsigned int cid);
++				struct invalidate_command_table *inv_tbl,
++				unsigned int num_invalidate, unsigned int cid);
+ 
+ struct iscsi_invalidate_connection_params_in {
+ 	struct be_cmd_req_hdr hdr;
+@@ -116,11 +117,6 @@ union iscsi_invalidate_connection_params {
+ 	struct iscsi_invalidate_connection_params_out response;
+ } __packed;
+ 
+-struct invalidate_command_table {
+-	unsigned short icd;
+-	unsigned short cid;
+-} __packed;
+-
+ struct invalidate_commands_params_in {
+ 	struct be_cmd_req_hdr hdr;
+ 	unsigned int ref_handle;
 -- 
 1.6.4
 
