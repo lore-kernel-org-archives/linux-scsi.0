@@ -1,32 +1,44 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [BUG]  smartd crashing recent 2.6.32 kernel
-Date: Fri, 19 Feb 2010 19:16:42 -0600
-Message-ID: <4B7F37FA.2050608@gmail.com>
-References: <1151832579@web.de>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: Submission of patches for Error Handling V2
+Date: Sat, 20 Feb 2010 08:01:08 +0530
+Message-ID: <20100220023034.GA13528@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1151832579@web.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: devzero@web.de
-Cc: linux-kernel@vger.kernel.org, megaraidlinux@lsi.com, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from segment-124-30.sify.net ([124.30.166.146]:53349 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754435Ab0BTCbJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Feb 2010 21:31:09 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-Adding CCs. Looks like a megaraid_mbox bug..
+Hi James
 
-On 02/19/2010 04:13 PM, devzero@web.de wrote:
-> as time goes by, no real attempt or progress has been made to fix bug=
- #15171. ( http://bugzilla.kernel.org/show_bug.cgi?id=3D15171 )
->
-> when smartd starts, the kernel crashes with this trace:
-> https://bugzillafiles.novell.org/attachment.cgi?id=3D338427
->
-> the machine with this problem will be go into production very soon, s=
-o if anybody want`s to help on fixing this - we have a few days left...=
-=2E..
-> ______________________________________________________
-> GRATIS f=FCr alle WEB.DE-Nutzer: Die maxdome Movie-FLAT!
-> Jetzt freischalten unter http://movieflat.web.de
->
+	 I have redone the patches to include the suggestions made by Mike Christie.
+These patches  are made over scsi-misc tree.
+
+The current patches are
+
+Patch[1/7]: Modified target reset handling  for libiscsi and other drivers
+Patch[2/7]: Cleaned up device and target reset handling 
+Patch[3/7]: Fix for a possible sleep while holding spin_lock
+Patch[4/7]: Cleanup of abort handling
+Patch[5/7]: Removing some debug prints
+Patch[6/7]: Ensure all connections have resources allocated
+Patch[7/7]: Allocate only one EQ if msix not enabled
+
+	I request you to apply these patches to your scsi-misc tree 
+
+Thank You
+
+Jayamohan Kallickal
+
+Signed-off-by:  Jayamohan Kallickal <jayamohank@serverengines.com>
+
+---
+
