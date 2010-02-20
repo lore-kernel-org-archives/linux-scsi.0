@@ -1,58 +1,62 @@
-From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 7/7] be2iscsi: Alloc only one EQ if intr mode V2
-Date: Sat, 20 Feb 2010 08:05:43 +0530
-Message-ID: <20100220023533.GA13762@serverengines.com>
-Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
+From: Dave Young <hidave.darkstar@gmail.com>
+Subject: [PATCH 13/18] sysctl extern cleanup - sg
+Date: Sat, 20 Feb 2010 22:19:03 +0800
+Message-ID: <20100220141903.GL3195__33904.004834085$1266675584$gmane$org@darkstar>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:53659 "EHLO
-	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755104Ab0BTCfm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Feb 2010 21:35:42 -0500
+Received: from mail-yx0-f200.google.com ([209.85.210.200]:51465 "EHLO
+	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755974Ab0BTOTM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2010 09:19:12 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
+To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Ingo Molnar <mingo@elte.hu>, Andrew Morton <akpm@linux-foundation.org>, Peter Zijlstra <a.p.zi>
 
-   This patch ensures that we alloc only one EQ
-if we are if we are not in msix mode
+Extern declarations in sysctl.c should be move to their own head file,
+and then include them in relavant .c files.
 
-Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
+Move sg_big_buff extern declaration to scsi/sg.h
+
+Signed-off-by: Dave Young <hidave.darkstar@gmail.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+ include/scsi/sg.h |    5 +++++
+ kernel/sysctl.c   |    5 +----
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 5887d7a..fcfb29e 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3190,14 +3190,18 @@ static unsigned char hwi_enable_intr(struct beiscsi_hba *phba)
- 		reg |= MEMBAR_CTRL_INT_CTRL_HOSTINTR_MASK;
- 		SE_DEBUG(DBG_LVL_8, "reg =x%08x addr=%p \n", reg, addr);
- 		iowrite32(reg, addr);
--		for (i = 0; i <= phba->num_cpus; i++) {
--			eq = &phwi_context->be_eq[i].q;
-+		if (!phba->msix_enabled) {
-+			eq = &phwi_context->be_eq[0].q;
- 			SE_DEBUG(DBG_LVL_8, "eq->id=%d \n", eq->id);
- 			hwi_ring_eq_db(phba, eq->id, 0, 0, 1, 1);
-+		} else {
-+			for (i = 0; i <= phba->num_cpus; i++) {
-+				eq = &phwi_context->be_eq[i].q;
-+				SE_DEBUG(DBG_LVL_8, "eq->id=%d \n", eq->id);
-+				hwi_ring_eq_db(phba, eq->id, 0, 0, 1, 1);
-+			}
- 		}
--	} else
--		shost_printk(KERN_WARNING, phba->shost,
--			     "In hwi_enable_intr, Not Enabled \n");
-+	}
- 	return true;
- }
+--- linux-2.6.32.orig/include/scsi/sg.h	2010-02-20 14:02:18.708258892 +0800
++++ linux-2.6.32/include/scsi/sg.h	2010-02-20 14:39:48.631369361 +0800
+@@ -70,6 +70,11 @@ Major new features in SG 3.x driver (cf 
+  (for the lk 2.2 series).
+ */
  
--- 
-1.6.4
-
++#ifdef __KERNEL__
++#if defined(CONFIG_SYSCTL) && defined(CONFIG_CHR_DEV_SG)
++extern int sg_big_buff;
++#endif
++#endif
+ 
+ /* New interface introduced in the 3.x SG drivers follows */
+ 
+--- linux-2.6.32.orig/kernel/sysctl.c	2010-02-20 14:27:50.691439411 +0800
++++ linux-2.6.32/kernel/sysctl.c	2010-02-20 14:38:51.008872869 +0800
+@@ -62,6 +62,7 @@
+ #include <linux/latencytop.h>
+ #include <linux/file.h>
+ #include <linux/blk-iopoll.h>
++#include <scsi/sg.h>
+ 
+ #include <asm/uaccess.h>
+ #include <asm/processor.h>
+@@ -100,10 +101,6 @@ static int min_percpu_pagelist_fract = 8
+ 
+ static int ngroups_max = NGROUPS_MAX;
+ 
+-#ifdef CONFIG_CHR_DEV_SG
+-extern int sg_big_buff;
+-#endif
+-
+ #ifdef CONFIG_SPARC
+ #include <asm/system.h>
+ #endif
