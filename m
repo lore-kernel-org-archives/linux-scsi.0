@@ -1,20 +1,20 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 15362] MPT Fusion SCSI drives no longer appear - suspect PCI
  bus scan bug
-Date: Sat, 20 Feb 2010 15:07:13 GMT
-Message-ID: <201002201507.o1KF7DlC027165@demeter.kernel.org>
+Date: Sat, 20 Feb 2010 15:07:49 GMT
+Message-ID: <201002201507.o1KF7nrH027384@demeter.kernel.org>
 References: <bug-15362-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:45210 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:45215 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754717Ab0BTPHO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2010 10:07:14 -0500
+	with ESMTP id S1754684Ab0BTPHu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2010 10:07:50 -0500
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1KF7DDo027166
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1KF7njv027385
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Feb 2010 15:07:13 GMT
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Feb 2010 15:07:49 GMT
 In-Reply-To: <bug-15362-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,10 +26,10 @@ http://bugzilla.kernel.org/show_bug.cgi?id=15362
 
 
 
---- Comment #3 from Sean M. Pappalardo <pegasus@renegadetech.com>  2010-02-20 15:07:10 ---
-Created an attachment (id=25133)
- --> (http://bugzilla.kernel.org/attachment.cgi?id=25133)
-2.6.32 dmesg
+--- Comment #4 from Sean M. Pappalardo <pegasus@renegadetech.com>  2010-02-20 15:07:48 ---
+Created an attachment (id=25134)
+ --> (http://bugzilla.kernel.org/attachment.cgi?id=25134)
+2.6.32 lspci -n
 
 -- 
 Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
