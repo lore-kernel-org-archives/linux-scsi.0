@@ -1,46 +1,100 @@
-From: Ramya Desai <ramya.desai@gmail.com>
-Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Mon, 22 Feb 2010 19:45:44 +0530
-Message-ID: <3e7aae31002220615j118e5703hd6d80121db7b936d@mail.gmail.com>
-References: <3e7aae31002170437i52ba4ba1w10c1ff224d9b37ef@mail.gmail.com>
-	 <1266418952.2787.5.camel@mulgrave.site>
-	 <3e7aae31002180046i771f2e1encfcda864f564c87e@mail.gmail.com>
-	 <1266508049.4355.37.camel@mulgrave.site>
-	 <3e7aae31002190443w44418778u6180c74d51a0f783@mail.gmail.com>
-	 <1266589605.2822.2.camel@mulgrave.site>
-	 <3e7aae31002220450o6f83d2f3n45c795d70ef01f72@mail.gmail.com>
-	 <1266843999.4414.27.camel@mulgrave.site>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: [PATCH v2] scsi: fix kernel-doc, add kernel-doc
+Date: Mon, 22 Feb 2010 08:28:05 -0800
+Message-ID: <4B82B095.4070803@xenotime.net>
+References: <20100221194751.64b00c90.rdunlap@xenotime.net> <4B826FBD.7020000@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f191.google.com ([209.85.221.191]:43776 "EHLO
-	mail-qy0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752114Ab0BVOXM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2010 09:23:12 -0500
-In-Reply-To: <1266843999.4414.27.camel@mulgrave.site>
+Received: from xenotime.net ([72.52.64.118]:56697 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751171Ab0BVQ2G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Feb 2010 11:28:06 -0500
+Received: from chimera.site ([71.245.98.113]) by xenotime.net for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2010 08:28:05 -0800
+In-Reply-To: <4B826FBD.7020000@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: USB list <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: scsi <linux-scsi@vger.kernel.org>, james.bottomley@suse.de
 
-On Mon, Feb 22, 2010 at 6:36 PM, James Bottomley
-<James.Bottomley@suse.de> wrote:
-> OK, so now see what max_hw_sectors_kb says ... if it's still 512 and
-> you're sure you've got sg_tablesize set to something higher, there's
-> likely something in the USB stack resetting it ... I suppose it's
-> possible there's something else in your kernel doing that for the
-> architecture, but you could rule that out by looking at
-> max_hw_sectors_kb for either a SCSI or libata device and verifying it's
-> much higher than 512.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-when I set the max_sectors to 1024 in scsiglue.c(drivers/usb/storage),
-it reflected as 512 in
-/sys/block/<dev>/queue/max_sectors_kb and
-/sys/block/<dev>/queue/max_hw_sectors_kb.
-If I change the max_sectors to 1536 or 2048 in scsiglue.c file, still
-it reflected as 512 in
-/sys/block/<dev>/queue/max_sectors_kb and
-768 or 1024 in /sys/block/<dev>/queue/max_hw_sectors_kb.
+scsi_scan.c: fix incorrectly formatted kernel-doc notation
+& convert documentation of 2 functions into kernel-doc.
 
-Thanks and Regards,
-RD
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/scsi_scan.c |   26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
+
+--- linux-2.6.33-rc8-git6.orig/drivers/scsi/scsi_scan.c
++++ linux-2.6.33-rc8-git6/drivers/scsi/scsi_scan.c
+@@ -1220,7 +1220,7 @@ static void scsi_sequential_lun_scan(str
+ }
+ 
+ /**
+- * scsilun_to_int: convert a scsi_lun to an int
++ * scsilun_to_int - convert a scsi_lun to an int
+  * @scsilun:	struct scsi_lun to be converted.
+  *
+  * Description:
+@@ -1252,7 +1252,7 @@ int scsilun_to_int(struct scsi_lun *scsi
+ EXPORT_SYMBOL(scsilun_to_int);
+ 
+ /**
+- * int_to_scsilun: reverts an int into a scsi_lun
++ * int_to_scsilun - reverts an int into a scsi_lun
+  * @lun:        integer to be reverted
+  * @scsilun:	struct scsi_lun to be set.
+  *
+@@ -1874,12 +1874,9 @@ void scsi_forget_host(struct Scsi_Host *
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+-/*
+- * Function:    scsi_get_host_dev()
+- *
+- * Purpose:     Create a scsi_device that points to the host adapter itself.
+- *
+- * Arguments:   SHpnt   - Host that needs a scsi_device
++/**
++ * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
++ * @shost: Host that needs a scsi_device
+  *
+  * Lock status: None assumed.
+  *
+@@ -1892,7 +1889,7 @@ void scsi_forget_host(struct Scsi_Host *
+  *
+  *	Note - this device is not accessible from any high-level
+  *	drivers (including generics), which is probably not
+- *	optimal.  We can add hooks later to attach 
++ *	optimal.  We can add hooks later to attach.
+  */
+ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+ {
+@@ -1919,18 +1916,13 @@ struct scsi_device *scsi_get_host_dev(st
+ }
+ EXPORT_SYMBOL(scsi_get_host_dev);
+ 
+-/*
+- * Function:    scsi_free_host_dev()
+- *
+- * Purpose:     Free a scsi_device that points to the host adapter itself.
+- *
+- * Arguments:   SHpnt   - Host that needs a scsi_device
++/**
++ * scsi_free_host_dev - Free a scsi_device that points to the host adapter itself
++ * @sdev: Host device to be freed
+  *
+  * Lock status: None assumed.
+  *
+  * Returns:     Nothing
+- *
+- * Notes:
+  */
+ void scsi_free_host_dev(struct scsi_device *sdev)
+ {
+
+-- 
+~Randy
