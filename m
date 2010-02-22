@@ -1,48 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15362] MPT Fusion SCSI drives no longer appear - suspect PCI
- bus scan bug
-Date: Sat, 20 Feb 2010 15:22:15 GMT
-Message-ID: <201002201522.o1KFMFis032457@demeter.kernel.org>
-References: <bug-15362-11613@http.bugzilla.kernel.org/>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: [PATCH -next] scsi: RAID_ATTRS depends on SCSI
+Date: Sun, 21 Feb 2010 19:46:36 -0800
+Message-ID: <20100221194636.ef885e5a.rdunlap@xenotime.net>
+References: <20100219174711.5e7cc7be.sfr@canb.auug.org.au>
+	<4B7EC8AE.60200@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:42042 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754286Ab0BTPWQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Feb 2010 10:22:16 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1KFMFd8032458
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Feb 2010 15:22:16 GMT
-In-Reply-To: <bug-15362-11613@http.bugzilla.kernel.org/>
+Received: from xenotime.net ([72.52.64.118]:45393 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754558Ab0BVDqi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 21 Feb 2010 22:46:38 -0500
+Received: from chimera.site ([71.245.98.113]) by xenotime.net for <linux-scsi@vger.kernel.org>; Sun, 21 Feb 2010 19:46:36 -0800
+In-Reply-To: <4B7EC8AE.60200@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-next@vger.kernel.org, akpm <akpm@linux-foundation.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15362
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
+raid_class uses scsi interfaces, so it should depend on SCSI.
+Otherwise build errors occur when RAID_ATTRS=y and SCSI=m:
 
-Matthew Wilcox <matthew@wil.cx> changed:
+ERROR: "raid_class_release" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
+ERROR: "raid_class_attach" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |matthew@wil.cx
-          Component|SCSI                        |PCI
-         AssignedTo|linux-scsi@vger.kernel.org  |drivers_pci@kernel-bugs.osd
-                   |                            |l.org
-            Product|IO/Storage                  |Drivers
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/Kconfig |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-
-
-
---- Comment #6 from Matthew Wilcox <matthew@wil.cx>  2010-02-20 15:22:09 ---
-OK, this is clearly a PCI issue, nothing to do with SCSI.
-
-It looks like everything outside domain 0 is now not found.  This seems to be
-due to the MMCONFIG access option not being used.
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--- linux-next-20100219.orig/drivers/scsi/Kconfig
++++ linux-next-20100219/drivers/scsi/Kconfig
+@@ -1,12 +1,5 @@
+ menu "SCSI device support"
+ 
+-config RAID_ATTRS
+-	tristate "RAID Transport Class"
+-	default n
+-	depends on BLOCK
+-	---help---
+-	  Provides RAID
+-
+ config SCSI
+ 	tristate "SCSI device support"
+ 	depends on BLOCK
+@@ -34,6 +27,13 @@ config SCSI_DMA
+ 	bool
+ 	default n
+ 
++config RAID_ATTRS
++	tristate "RAID Transport Class"
++	default n
++	depends on BLOCK && SCSI
++	---help---
++	  Provides RAID
++
+ config SCSI_TGT
+ 	tristate "SCSI target support"
+ 	depends on SCSI && EXPERIMENTAL
