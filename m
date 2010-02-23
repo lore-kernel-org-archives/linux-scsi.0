@@ -1,754 +1,256 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 3/3] [TCM_Loop/ConfigFS]: Convert layout to use generic configfs struct config_item_types
-Date: Mon, 22 Feb 2010 17:04:20 -0800
-Message-ID: <1266887060-3875-1-git-send-email-nab@linux-iscsi.org>
+From: "Caspar Smit" <c.smit@truebit.nl>
+Subject: Re: [PATCH] MVSAS: hot plug handling and IO issues
+Date: Tue, 23 Feb 2010 11:11:17 +0100 (CET)
+Message-ID: <16370.87.210.74.220.1266919877.squirrel@ketsers.dhs.org>
+References: <6B62480106F2B34D8404CF2FDAA4D9EF71F646BECA@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+    <alpine.DEB.1.10.1002161446470.4986@uplift.swm.pp.se>
+    <7746.87.210.74.220.1266331278.squirrel@ketsers.dhs.org>
+    <6B62480106F2B34D8404CF2FDAA4D9EF71F646C228@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+    <73e903671002170516r6df93ea6o6e0ee256cb8f7a59@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;boundary="----=_20100223111117_99713"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp107.sbc.mail.gq1.yahoo.com ([67.195.14.110]:35648 "HELO
-	smtp107.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753569Ab0BWBLE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Feb 2010 20:11:04 -0500
+Received: from 80-69-81-65.colo.transip.net ([80.69.81.65]:33968 "EHLO
+	ns1.emsolutions.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654Ab0BWKLU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2010 05:11:20 -0500
+Received: from ns1.emsolutions.nl (www-data@localhost.localdomain [127.0.0.1])
+	by ns1.emsolutions.nl (8.13.8/8.13.8/Debian-3) with ESMTP id o1NABIlJ001909
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Feb 2010 11:11:18 +0100
+In-Reply-To: <73e903671002170516r6df93ea6o6e0ee256cb8f7a59@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+------=_20100223111117_99713
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8bit
 
-This patch converts the TCM_Loop virtual SAS fabric module configfs code in tcm_loop_configfs.c
-to use the new generic configfs infrastructure provied in target_core_fabric_configfs.c.  With this
-patch tcm_loop_configfs.c no longer defines it's own static struct config_item_type's, and uses
-the generic 'cits' hanging off struct target_fabric_configfs->tf_cit_tmpl. The following changes in
-tcm_loop_register_configfs() shows the adapted fabric API functions, and how local static
-attribute structures are setup to hang off the generic fabric cits.
+Hi Srinivas,
 
-       /*
-        * Setup function pointers for generic logic in target_core_fabric_configfs.c
-        */
-       fabric->tf_ops.fabric_make_wwn = &tcm_loop_make_scsi_hba;
-       fabric->tf_ops.fabric_drop_wwn = &tcm_loop_drop_scsi_hba;
-       fabric->tf_ops.fabric_make_tpg = &tcm_loop_make_naa_tpg;
-       fabric->tf_ops.fabric_drop_tpg = &tcm_loop_drop_naa_tpg;
-       /*
-        * fabric_post_link() and fabric_pre_unlink() are used for
-        * registration and release of TCM Loop Virtual SCSI LUNs.
-        */
-       fabric->tf_ops.fabric_post_link = &tcm_loop_port_link;
-       fabric->tf_ops.fabric_pre_unlink = &tcm_loop_port_unlink;
-       fabric->tf_ops.fabric_make_np = NULL;
-       fabric->tf_ops.fabric_drop_np = NULL;
-       /*
-        * Setup default attribute lists for various fabric->tf_cit_tmpl
-        */
-       TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_loop_wwn_attrs;
-       TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_loop_tpg_attrs;
-       TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
-       TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
-       TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
-       /*
+I finally had some time to test your new patch.
 
-The existing TCM_Loop v3.x fabric layout of /sys/kernel/config/target/loopback/$NAA_WWN/tpgt_$TPGT/
-is up and running with this patch.  The one notable change between this patch
-and existing TCM_Loop v3.x code is using a TF_TPG_BASE_ATTR() define for
-loopback/$NAA_WWN/tpgt_$TPG/nexus and echoing in the SAS Initiator Port WWN to create
-the virtual SAS I_T Nexus in a TCM session, instead of having a seperate 'nexus' default
-group under struct tcm_loop_tpg.
+1) After numerous hotplug actions with SAS and SATA disks I still can't
+get any kernel panic to occur :)
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/tcm_loop/tcm_loop_configfs.c    |  435 +++++++++---------------
- drivers/target/tcm_loop/tcm_loop_core.h        |   18 +-
- drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |    2 +-
- 3 files changed, 165 insertions(+), 290 deletions(-)
+2) I can finally boot a system with 3x 6480 controllers loaded with SATA
+disks without a kernel panic.
 
-diff --git a/drivers/target/tcm_loop/tcm_loop_configfs.c b/drivers/target/tcm_loop/tcm_loop_configfs.c
-index c4e4403..0f52e24 100644
---- a/drivers/target/tcm_loop/tcm_loop_configfs.c
-+++ b/drivers/target/tcm_loop/tcm_loop_configfs.c
-@@ -4,10 +4,10 @@
-  * This file contains the configfs implementation for TCM_Loop Virtual SAS
-  * target to Linux/SCSI SAS initiator node
-  *
-- * Copyright (c) 2009 Rising Tide, Inc.
-- * Copyright (c) 2009 Linux-iSCSI.org
-+ * Copyright (c) 2009, 2010 Rising Tide, Inc.
-+ * Copyright (c) 2009, 2010 Linux-iSCSI.org
-  *
-- * Copyright (c) 2009 Nicholas A. Bellinger <nab@linux-iscsi.org>
-+ * Copyright (c) 2009, 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -39,6 +39,7 @@
- #include <target/target_core_base.h>
- #include <target/target_core_transport.h>
- #include <target/target_core_fabric_ops.h>
-+#include <target/target_core_fabric_configfs.h>
- #include <target/target_core_device.h>
- #include <target/target_core_tpg.h>
- #include <target/target_core_configfs.h>
-@@ -59,63 +60,32 @@ static int tcm_loop_hba_no_cnt;
- 
- /* Start items for tcm_loop_port_cit */
- 
--static int tcm_loop_port_link(
--	struct config_item *tl_lun_ci,
--	struct config_item *se_dev_ci)
-+int tcm_loop_port_link(
-+	struct se_portal_group_s *se_tpg,
-+	struct se_lun_s *lun)
- {
--	se_lun_t *lun = container_of(to_config_group(tl_lun_ci),
--				se_lun_t, lun_group);
--	se_lun_t *lun_p;
--	se_portal_group_t *se_tpg;
--	struct config_item *tpg_ci;
--	struct tcm_loop_hba *tl_hba;
--	struct tcm_loop_tpg *tl_tpg;
--	se_subsystem_dev_t *se_sub_dev = container_of(
--		to_config_group(se_dev_ci), se_subsystem_dev_t, se_dev_group);
--
--	tpg_ci = &tl_lun_ci->ci_parent->ci_group->cg_item;
--	if (!(tpg_ci)) {
--		printk(KERN_ERR "Unable to locate config_item tpg_ci\n");
--		return -EINVAL;
--	}
--	se_tpg = container_of(to_config_group(tpg_ci),
--				se_portal_group_t, tpg_group);
--	tl_tpg = (struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
--	tl_hba = tl_tpg->tl_hba;
-+	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
-+				struct tcm_loop_tpg, tl_se_tpg);
-+	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
- 
--	lun_p = core_dev_add_lun(se_tpg,
--			se_sub_dev->se_dev_hba,
--			se_sub_dev->se_dev_ptr, lun->unpacked_lun);
--	if (IS_ERR(lun_p) || !(lun_p)) {
--		printk(KERN_ERR "core_dev_add_lun() failed\n");
--		return -EINVAL;
--	}
--	printk(KERN_INFO "TCM_Loop_ConfigFS: Port Link Successful\n");
- 	/*
- 	 * Add Linux/SCSI struct scsi_device by HCTL
- 	 */
- 	scsi_add_device(tl_hba->sh, 0, tl_tpg->tl_tpgt, lun->unpacked_lun);
-+
-+	printk(KERN_INFO "TCM_Loop_ConfigFS: Port Link Successful\n");
- 	return 0;
- }
- 
--static int tcm_loop_port_unlink(
--	struct config_item *tl_lun_ci,
--	struct config_item *se_dev_ci)
-+void tcm_loop_port_unlink(
-+	struct se_portal_group_s *se_tpg,
-+	struct se_lun_s *se_lun)
- {
--	se_lun_t *se_lun;
--	se_portal_group_t *se_tpg;
--	struct config_item *tpg_ci;
- 	struct scsi_device *sd;
- 	struct tcm_loop_hba *tl_hba;
- 	struct tcm_loop_tpg *tl_tpg;
- 
--	se_lun = container_of(to_config_group(tl_lun_ci), struct se_lun_s,
--			lun_group);
--
--	tpg_ci = &tl_lun_ci->ci_parent->ci_group->cg_item;
--	se_tpg = container_of(to_config_group(tpg_ci),
--				se_portal_group_t, tpg_group);
--	tl_tpg = (struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
-+	tl_tpg = container_of(se_tpg, struct tcm_loop_tpg, tl_se_tpg);
- 	tl_hba = tl_tpg->tl_hba;	
- 
- 	sd = scsi_device_lookup(tl_hba->sh, 0, tl_tpg->tl_tpgt,
-@@ -123,7 +93,7 @@ static int tcm_loop_port_unlink(
- 	if (!(sd)) {
- 		printk(KERN_ERR "Unable to locate struct scsi_device for %d:%d:"
- 			"%d\n", 0, tl_tpg->tl_tpgt, se_lun->unpacked_lun);
--		return -EINVAL;	
-+		return;
- 	}
- 	/*
- 	 * Remove Linux/SCSI struct scsi_device by HCTL
-@@ -131,108 +101,30 @@ static int tcm_loop_port_unlink(
- 	scsi_remove_device(sd);	
- 	scsi_device_put(sd);
- 
--	core_dev_del_lun(se_tpg, se_lun->unpacked_lun);
- 	printk(KERN_INFO "TCM_Loop_ConfigFS: Port Unlink Successful\n");
--	return 0;
- }
- 
--static struct configfs_item_operations tcm_loop_port_item_ops = {
--	.allow_link		= &tcm_loop_port_link,
--	.drop_link		= &tcm_loop_port_unlink,
--};
--
--static struct config_item_type tcm_loop_port_cit = {
--	.ct_item_ops		= &tcm_loop_port_item_ops,
--	.ct_group_ops		= NULL,
--	.ct_attrs		= NULL,
--	.ct_owner		= THIS_MODULE,			
--};
--
- /* End items for tcm_loop_port_cit */
- 
--/* Start items for tcm_loop_lun_cit */
--
--static struct config_group *tcm_loop_make_lun(
--	struct config_group *group,
--	const char *name)
--{
--	se_lun_t *lun;
--	struct tcm_loop_tpg *tl_tpg;	
--	char *str, *endptr;
--	u32 lun_id;
--
--	str = strstr(name, "_");
--	if (!(str)) {
--		printk(KERN_ERR "Unable to locate \'_\" in"
--				" \"lun_$LUN_NUMBER\"\n");
--		return ERR_PTR(-EINVAL);
--	}
--	str++; /* Advance over _ delim.. */
--	lun_id = simple_strtoul(str, &endptr, 0);
--	tl_tpg = container_of(group, struct tcm_loop_tpg,
--			tl_tpg_lun_group);
--
--	lun = core_get_lun_from_tpg(tl_tpg->tl_se_tpg, lun_id);
--	if (!(lun))
--		return ERR_PTR(-EINVAL);
--
--	config_group_init_type_name(&lun->lun_group, name,
--			&tcm_loop_port_cit);
--
--	return &lun->lun_group;
--}
--
--static void tcm_loop_drop_lun(
--	struct config_group *group,
--	struct config_item *item)
--{
--	config_item_put(item);
--	return;
--}
--
--static struct configfs_group_operations tcm_loop_lun_group_ops = {
--	.make_group		= &tcm_loop_make_lun,
--	.drop_item		= &tcm_loop_drop_lun,
--};
--
--static struct config_item_type tcm_loop_lun_cit = {
--	.ct_item_ops		= NULL,
--	.ct_group_ops		= &tcm_loop_lun_group_ops,
--	.ct_attrs		= NULL,
--	.ct_owner		= THIS_MODULE,
--};
--
--/* End items for tcm_loop_lun_cit */
--
--/* Start items for tcm_loop_iport_cit */
--
--static struct config_item_type tcm_loop_iport_cit = {
--	.ct_item_ops		= NULL,
--	.ct_group_ops		= NULL,
--	.ct_attrs		= NULL,
--	.ct_owner		= THIS_MODULE,
--};
--
--/* End items for tcm_loop_iport_cit */
--
- /* Start items for tcm_loop_nexus_cit */
- 
--static struct config_group *tcm_loop_make_nexus(
--	struct config_group *group,
-+static int tcm_loop_make_nexus(
-+	struct tcm_loop_tpg *tl_tpg,
- 	const char *name)
- {
- 	se_portal_group_t *se_tpg;
- 	struct tcm_loop_nexus *tl_nexus;
--	struct tcm_loop_tpg *tl_tpg;
- 
--	tl_tpg = container_of(group, struct tcm_loop_tpg,
--			tl_tpg_nexus_group);
--	se_tpg = tl_tpg->tl_se_tpg;
-+	if (tl_tpg->tl_hba->tl_nexus) {
-+		printk(KERN_INFO "tl_tpg->tl_hba->tl_nexus already exists\n");
-+		return -EEXIST;
-+	}
-+	se_tpg = &tl_tpg->tl_se_tpg;
- 
- 	tl_nexus = kzalloc(sizeof(struct tcm_loop_nexus), GFP_KERNEL);
- 	if (!(tl_nexus)) {
- 		printk(KERN_ERR "Unable to allocate struct tcm_loop_nexus\n");
--		return NULL;
-+		return -ENOMEM;
- 	}
- 	tl_tpg->tl_hba->tl_nexus = tl_nexus;
- 	/*
-@@ -259,74 +151,118 @@ static struct config_group *tcm_loop_make_nexus(
- 	__transport_register_session(se_tpg, tl_nexus->se_sess->se_node_acl,
- 			tl_nexus->se_sess, (void *)tl_nexus);
- 
--	config_group_init_type_name(&tl_nexus->tl_iport_group, name,
--				&tcm_loop_iport_cit);
--
- 	printk(KERN_INFO "TCM_Loop_ConfigFS: Established I_T Nexus to emulated"
- 			" SAS Initiator Port: %s\n", name);
--	return &tl_nexus->tl_iport_group;
-+	return 0;
- 
- out:
- 	kfree(tl_nexus);	
--	return NULL;
-+	return -ENOMEM;
- }
- 
- static void tcm_loop_drop_nexus(
--	struct config_group *group,
--	struct config_item *item)
-+	struct tcm_loop_tpg *tpg)
- {
- 	struct tcm_loop_nexus *tl_nexus;
--	struct config_item *tcm_loop_dev_ci;
- 
--	tcm_loop_dev_ci = &group->cg_item;
--	tl_nexus = container_of(to_config_group(item),
--			struct tcm_loop_nexus, tl_iport_group);
-+	tl_nexus = tpg->tl_hba->tl_nexus;
-+	if (!(tl_nexus))
-+		return;
- 
- 	printk(KERN_INFO "TCM_Loop_ConfigFS: Removing I_T Nexus to emulated"
--		" SAS Initiator Port: %s\n", config_item_name(item));
-+		" SAS Initiator Port: %s\n",
-+		tl_nexus->se_sess->se_node_acl->initiatorname);
- 	/*
- 	 * Release the SCSI I_T Nexus to the emulated SAS Target Port
- 	 */
- 	transport_deregister_session(tl_nexus->se_sess);
-+	tpg->tl_hba->tl_nexus = NULL;
- 	kfree(tl_nexus);
--
--	config_item_put(item);
- }
- 
--static struct configfs_group_operations tcm_loop_nexus_group_ops = {
--	.make_group		= &tcm_loop_make_nexus,
--	.drop_item		= &tcm_loop_drop_nexus,
--};
-+/* End items for tcm_loop_nexus_cit */
- 
--static struct config_item_type tcm_loop_nexus_cit = {
--	.ct_item_ops		= NULL,
--	.ct_group_ops		= &tcm_loop_nexus_group_ops,
--	.ct_attrs		= NULL,
--	.ct_owner		= THIS_MODULE,
--};
-+static ssize_t tcm_loop_tpg_show_nexus(
-+	struct se_portal_group_s *se_tpg,
-+	char *page)
-+{
-+	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
-+			struct tcm_loop_tpg, tl_se_tpg);
-+	struct tcm_loop_nexus *tl_nexus;
-+	ssize_t ret;
- 
--/* End items for tcm_loop_nexus_cit */
-+	tl_nexus = tl_tpg->tl_hba->tl_nexus;
-+	if (!(tl_nexus))
-+		return -ENODEV;
- 
--/* Start items for tcm_loop_tpg_cit */
-+	ret = snprintf(page, PAGE_SIZE, "%s",
-+		tl_nexus->se_sess->se_node_acl->initiatorname);
- 
--static struct config_item_type tcm_loop_tpg_cit = {
--	.ct_item_ops		= NULL,
--	.ct_group_ops		= NULL,
--	.ct_attrs		= NULL,
--	.ct_owner		= THIS_MODULE,
--};
-+	return ret;
-+}
- 
--/* End items for tcm_loop_tpg_cit */
-+static ssize_t tcm_loop_tpg_store_nexus(
-+	struct se_portal_group_s *se_tpg,
-+	const char *page,
-+	size_t count)
-+{
-+	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
-+			struct tcm_loop_tpg, tl_se_tpg);
-+	unsigned char i_port[TL_NAA_SAS_ADDR_LEN], *ptr;
-+	int ret;
-+	/*
-+	 * Shutdown the active I_T nexus if 'NULL' is passed..
-+	 */
-+	if (!(strncmp(page, "NULL", 4))) {
-+		tcm_loop_drop_nexus(tl_tpg);
-+		return count;
-+	}
-+	/*
-+	 * Otherwise validate the passed NAA WWN for the virtual SAS
-+	 * Initiator port, and call tcm_loop_make_nexus()
-+	 */
-+	if (strlen(page) > TL_NAA_SAS_ADDR_LEN) {
-+		printk(KERN_ERR "Emulated NAA Sas Address: %s, exceeds"
-+			" max: %d\n", page, TL_NAA_SAS_ADDR_LEN);
-+		return -EINVAL;
-+	}
-+	snprintf(&i_port[0], TL_NAA_SAS_ADDR_LEN, "%s", page);
-+
-+	ptr = strstr(i_port, "naa.");
-+	if (!(ptr)) {
-+		printk(KERN_ERR "Unable to locate \"naa.\" prefix for emulated"
-+                        " SAS Initiator Port\n");
-+		return -EINVAL;
-+	}
-+	/*
-+	 * Clear any trailing newline for the NAA WWN
-+	 */
-+	if (i_port[strlen(i_port)-1] == '\n')
-+		i_port[strlen(i_port)-1] = '\0';
-+		
-+	ret = tcm_loop_make_nexus(tl_tpg, i_port);
-+	if (ret < 0)
-+		return ret;
-+
-+	return count;
-+}
-+
-+TF_TPG_BASE_ATTR(tcm_loop, nexus, S_IRUGO | S_IWUSR);
-+
-+static struct configfs_attribute *tcm_loop_tpg_attrs[] = {
-+	&tcm_loop_tpg_nexus.attr,
-+	NULL,
-+};
- 
- /* Start items for tcm_loop_naa_cit */
- 
--static struct config_group *tcm_loop_make_naa_tpg(
-+struct se_portal_group_s *tcm_loop_make_naa_tpg(
-+	struct se_wwn_s *wwn,
- 	struct config_group *group,
- 	const char *name)
- {
--	struct config_group *tpg_cg;
--	struct tcm_loop_hba *tl_hba = container_of(group,
--			struct tcm_loop_hba, tl_hba_group);
-+	struct tcm_loop_hba *tl_hba = container_of(wwn,
-+			struct tcm_loop_hba, tl_hba_wwn);
- 	struct tcm_loop_tpg *tl_tpg;
- 	char *tpgt_str, *end_ptr;
- 	int ret;
-@@ -352,86 +288,54 @@ static struct config_group *tcm_loop_make_naa_tpg(
- 	/*
- 	 * Register the tl_tpg as a emulated SAS TCM Target Endpoint
- 	 */
--	tl_tpg->tl_se_tpg = core_tpg_register(&tcm_loop_fabric_configfs->tf_ops,
--			(void *)tl_tpg, TRANSPORT_TPG_TYPE_NORMAL);
--	if (IS_ERR(tl_tpg->tl_se_tpg))
-+	ret = core_tpg_register(&tcm_loop_fabric_configfs->tf_ops,
-+			wwn, &tl_tpg->tl_se_tpg, (void *)tl_tpg,
-+			TRANSPORT_TPG_TYPE_NORMAL);
-+	if (ret < 0)
- 		return ERR_PTR(-ENOMEM);
--	/*
--	 * Locate the pointer to the struct config_group that will be
--	 * registered below in order to setup the default groups.
--	 */
--	tpg_cg = &tl_tpg->tl_se_tpg->tpg_group;
- 
--	tpg_cg->default_groups = kzalloc(sizeof(struct config_group) * 3,
--			GFP_KERNEL);
--	if (!(tpg_cg->default_groups)) {
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	config_group_init_type_name(&tl_tpg->tl_tpg_lun_group, "lun",
--			&tcm_loop_lun_cit);
--	config_group_init_type_name(&tl_tpg->tl_tpg_nexus_group, "nexus",
--			&tcm_loop_nexus_cit);
--	tpg_cg->default_groups[0] = &tl_tpg->tl_tpg_lun_group;
--	tpg_cg->default_groups[1] = &tl_tpg->tl_tpg_nexus_group;
--	tpg_cg->default_groups[2] = NULL;
--	
--	config_group_init_type_name(tpg_cg, name, &tcm_loop_tpg_cit);
- 	printk(KERN_INFO "TCM_Loop_ConfigFS: Allocated Emulated SAS"
- 		" Target Port %s,t,0x%04x\n",
--		config_item_name(&tl_hba->tl_hba_group.cg_item), tpgt);
-+		config_item_name(&wwn->wwn_group.cg_item), tpgt);
- 
--	return tpg_cg;
-+	return &tl_tpg->tl_se_tpg;
- 
- out:
--	if (tl_tpg->tl_se_tpg)
--		core_tpg_deregister(tl_tpg->tl_se_tpg);
-+	core_tpg_deregister(&tl_tpg->tl_se_tpg);
- 	return ERR_PTR(ret);
- }
- 
--static void tcm_loop_drop_naa_tpg(
--	struct config_group *group,
--	struct config_item *item)
-+void tcm_loop_drop_naa_tpg(
-+	struct se_portal_group_s *se_tpg)
- {
--	se_portal_group_t *se_tpg = container_of(to_config_group(item),
--				struct se_portal_group_s, tpg_group);
--	struct tcm_loop_tpg *tl_tpg;
-+	struct se_wwn_s *wwn = se_tpg->se_tpg_wwn;
-+	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
-+				struct tcm_loop_tpg, tl_se_tpg);
- 	struct tcm_loop_hba *tl_hba;
- 	unsigned short tpgt;
- 
--	tl_tpg = (struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
- 	tl_hba = tl_tpg->tl_hba;
- 	tpgt = tl_tpg->tl_tpgt;
- 	/*
-+	 * Release the I_T Nexus for the Virtual SAS link if present
-+	 */
-+	tcm_loop_drop_nexus(tl_tpg);
-+	/*
- 	 * Deregister the tl_tpg as a emulated SAS TCM Target Endpoint
- 	 */
- 	core_tpg_deregister(se_tpg);
- 
- 	printk(KERN_INFO "TCM_Loop_ConfigFS: Deallocated Emulated SAS"
- 		" Target Port %s,t,0x%04x\n",
--		config_item_name(&tl_hba->tl_hba_group.cg_item), tpgt);
--
--	config_item_put(item);
-+		config_item_name(&wwn->wwn_group.cg_item), tpgt);
- }
- 
--static struct configfs_group_operations tcm_loop_naa_group_ops = {
--	.make_group		= &tcm_loop_make_naa_tpg,
--	.drop_item		= &tcm_loop_drop_naa_tpg,
--};
--
--static struct config_item_type tcm_loop_naa_cit = {
--	.ct_item_ops		= NULL,
--	.ct_group_ops		= &tcm_loop_naa_group_ops,
--	.ct_attrs		= NULL,
--	.ct_owner		= THIS_MODULE,
--};
--
- /* End items for tcm_loop_naa_cit */
- 
- /* Start items for tcm_loop_cit */
- 
--static struct config_group *tcm_loop_make_scsi_hba(
-+struct se_wwn_s *tcm_loop_make_scsi_hba(
-+	struct target_fabric_configfs *tf,
- 	struct config_group *group,
- 	const char *name)
- {
-@@ -504,37 +408,24 @@ static struct config_group *tcm_loop_make_scsi_hba(
- 	}
- 	wait_for_completion(&tl_hba->tl_hba_qobj->thread_create_comp);
- 
--	tl_hba_ci = &tl_hba->tl_hba_group.cg_item;
--	config_group_init_type_name(&tl_hba->tl_hba_group, name,
--				&tcm_loop_naa_cit);
--
- 	tcm_loop_hba_no_cnt++;
- 	printk(KERN_INFO "TCM_Loop_ConfigFS: Allocated emulated Target"
- 		" SAS Address: %s at Linux/SCSI Host ID: %d\n",
--			config_item_name(tl_hba_ci), sh->host_no);
--
--	return &tl_hba->tl_hba_group;
-+			name, sh->host_no);
- 
-+	return &tl_hba->tl_hba_wwn;
- out:
- 	kfree(tl_hba->tl_hba_qobj);
- 	kfree(tl_hba);
- 	return ERR_PTR(ret);
- }
- 
--static void tcm_loop_drop_scsi_hba(
--	struct config_group *group,
--	struct config_item *item)
-+void tcm_loop_drop_scsi_hba(
-+	struct se_wwn_s *wwn)
- {
--	struct tcm_loop_hba *tl_hba;
--	int host_no;
--
--	tl_hba = container_of(to_config_group(item),
--			struct tcm_loop_hba, tl_hba_group);
--	if (!(tl_hba)) {
--		printk(KERN_ERR "Unable to locate struct tcm_loop_hba\n");
--		return;
--	}
--	host_no = tl_hba->sh->host_no;
-+	struct tcm_loop_hba *tl_hba = container_of(wwn,
-+				struct tcm_loop_hba, tl_hba_wwn);
-+	int host_no = tl_hba->sh->host_no;
- 
- 	/*
- 	 * Shutdown the per HBA tcm_loop processing kthread
-@@ -550,17 +441,12 @@ static void tcm_loop_drop_scsi_hba(
- 
- 	printk(KERN_INFO "TCM_Loop_ConfigFS: Deallocated emulated Target"
- 		" SAS Address: %s at Linux/SCSI Host ID: %d\n",
--			config_item_name(item), host_no);
--	/*
--	 * Make last configfs callback to release struct config_item
--	 */
--	config_item_put(item);
-+		config_item_name(&wwn->wwn_group.cg_item), host_no);
- }
- 
- /* Start items for tcm_loop_cit */
--static ssize_t tcm_loop_attr_version(
--	struct config_item *item,
--	struct configfs_attribute *attr,
-+static ssize_t tcm_loop_wwn_show_attr_version(
-+	struct target_fabric_configfs *tf,
- 	char *page)
- {
- 	return sprintf(page, "TCM Loopback Fabric module %s on %s/%s"
-@@ -568,33 +454,13 @@ static ssize_t tcm_loop_attr_version(
- 		utsname()->machine);
- }
- 
--static struct configfs_item_operations tcm_loop_item_ops = {
--	.show_attribute	= &tcm_loop_attr_version,
--};
--
--static struct configfs_attribute tcm_loop_item_attr_version = {
--	.ca_owner	= THIS_MODULE,
--	.ca_name	= "version",
--	.ca_mode	= S_IRUGO,
--};
--
--static struct configfs_group_operations tcm_loop_hba_group_ops = {
--	.make_group	= &tcm_loop_make_scsi_hba,
--	.drop_item	= &tcm_loop_drop_scsi_hba,
--};
-+TF_WWN_ATTR_RO(tcm_loop, version);
- 
--static struct configfs_attribute *tcm_loop_attrs[] = {
--	&tcm_loop_item_attr_version,
-+static struct configfs_attribute *tcm_loop_wwn_attrs[] = {
-+	&tcm_loop_wwn_version.attr,
- 	NULL,
- };
- 
--static struct config_item_type tcm_loop_cit = {
--	.ct_item_ops	= &tcm_loop_item_ops,
--	.ct_group_ops	= &tcm_loop_hba_group_ops,
--	.ct_attrs	= tcm_loop_attrs,
--	.ct_owner	= THIS_MODULE,
--};
--
- /* End items for tcm_loop_cit */
- 
- int tcm_loop_register_configfs(void)
-@@ -609,7 +475,7 @@ int tcm_loop_register_configfs(void)
- 	/*
- 	 * Register the top level struct config_item_type with TCM core
- 	 */
--	fabric = target_fabric_configfs_init(&tcm_loop_cit, "loopback");
-+	fabric = target_fabric_configfs_init(THIS_MODULE, "loopback");
- 	if (!(fabric)) {
- 		printk(KERN_ERR "tcm_loop_register_configfs() failed!\n");
- 		return -1;
-@@ -685,6 +551,29 @@ int tcm_loop_register_configfs(void)
- 	fabric->reg_default_groups_callback = NULL;
- 	tf_cg = &fabric->tf_group;
- 	/*
-+	 * Setup function pointers for generic logic in target_core_fabric_configfs.c
-+	 */
-+	fabric->tf_ops.fabric_make_wwn = &tcm_loop_make_scsi_hba;
-+	fabric->tf_ops.fabric_drop_wwn = &tcm_loop_drop_scsi_hba;
-+	fabric->tf_ops.fabric_make_tpg = &tcm_loop_make_naa_tpg;
-+	fabric->tf_ops.fabric_drop_tpg = &tcm_loop_drop_naa_tpg;
-+	/*
-+	 * fabric_post_link() and fabric_pre_unlink() are used for
-+	 * registration and release of TCM Loop Virtual SCSI LUNs.
-+	 */
-+	fabric->tf_ops.fabric_post_link = &tcm_loop_port_link;
-+	fabric->tf_ops.fabric_pre_unlink = &tcm_loop_port_unlink;
-+	fabric->tf_ops.fabric_make_np = NULL;
-+	fabric->tf_ops.fabric_drop_np = NULL;
-+	/*
-+	 * Setup default attribute lists for various fabric->tf_cit_tmpl
-+	 */
-+	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_loop_wwn_attrs;
-+	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_loop_tpg_attrs;
-+	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
-+	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
-+	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
-+	/*
- 	 * Once fabric->tf_ops has been setup, now register the fabric for
- 	 * use within TCM
- 	 */
-diff --git a/drivers/target/tcm_loop/tcm_loop_core.h b/drivers/target/tcm_loop/tcm_loop_core.h
-index 762febe..9d876d5 100644
---- a/drivers/target/tcm_loop/tcm_loop_core.h
-+++ b/drivers/target/tcm_loop/tcm_loop_core.h
-@@ -30,30 +30,16 @@ struct tcm_loop_nexus {
- 	 * Pointer to TCM session for I_T Nexus
- 	 */
- 	struct se_session_s *se_sess;
--	/*
--	 * Used to reference the emulated SAS Address for SCSI Initiator Port
--	 */
--	struct config_group tl_iport_group;
- };
- 
- struct tcm_loop_nacl {
- 	struct se_node_acl_s *se_nacl;
- };
- 
--struct tcm_loop_dev {
--	struct se_device_s *se_dev;
--	struct scsi_device *sd;
--	struct tcm_loop_hba *tl_hba;
--	struct tcm_loop_nexus *tl_nexus;
--	struct config_group tl_dev_group;
--};
--
- struct tcm_loop_tpg {
- 	unsigned short tl_tpgt;
--	struct se_portal_group_s *tl_se_tpg;
-+	struct se_portal_group_s tl_se_tpg;
- 	struct tcm_loop_hba *tl_hba;
--	struct config_group tl_tpg_lun_group;
--	struct config_group tl_tpg_nexus_group;
- };
- 
- struct tcm_loop_hba {
-@@ -68,5 +54,5 @@ struct tcm_loop_hba {
- 	struct device dev;
- 	struct Scsi_Host *sh;
- 	struct tcm_loop_tpg tl_hba_tpgs[TL_TPGS_PER_HBA];
--	struct config_group tl_hba_group;
-+	struct se_wwn_s tl_hba_wwn;
- };
-diff --git a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-index 40743c4..1926043 100644
---- a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-+++ b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-@@ -324,7 +324,7 @@ static int tcm_loop_queuecommand(
- 		return 0;	
- 	}
- 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
--	se_tpg = tl_tpg->tl_se_tpg;
-+	se_tpg = &tl_tpg->tl_se_tpg;
- 
- 	if (sc->sc_data_direction == DMA_TO_DEVICE)
- 		data_direction = SE_DIRECTION_WRITE;
--- 
-1.5.6.5
+3) Raid5/6 initialization completes without dropping the disks one after
+another.
+
+4) One thing that occured was the following: during a raid1 initialization
+of 2 SAS disks and a raid5 init of 8x SSD's i got a call trace by
+libata-core.c (see attachment for details). The system continued to work
+fine after the trace.
+
+Great work, this is a much more stable driver now!
+
+Kind regards,
+Caspar Smit
+
+> On Wed, Feb 17, 2010 at 12:53 PM, Srinivas Naga Venkatasatya
+> Pasagadugula - ERS, HCL Tech <satyasrinivasp@hcl.in> wrote:
+>> Hi Smit,
+>>
+>> This patch is not exactly replaced with Nov-09 patches.
+>> My patch addresses the RAID5/6 issues also. Below issues are addressed
+>> by my patch.
+>> 1. Tape issues.
+>> 2. RAID-5/6 I/O fails.
+>> 3. LVM IO fails and subsequent init 6 hang (connect SAS+SATA in cascaded
+>>        expanders, crate volume group and logical volumes, run file I/O  
+>>       (alltest), unplug one drive)
+>> 4. Disk stress I/O on 4096 sector size.
+>> 5. Hot insertion of drives giving panic.
+>> 6. 'fdisk -l' hangs with hot plugging of SATA/SAS drives in expander
+>> while      IO (Diskstress and alltest) is going on and IO stopped.
+>>
+>> I can't combined my patch with November-09 patches. James also rejected
+>> those patches as those are not proper. Let me know if you have issues
+>> with my patch.
+>>
+>> --Srini.
+>
+>
+> I haven't tested yet, but looks like you're doing excellent work, and
+> your documentation/overview of the work is superb.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+------=_20100223111117_99713
+Content-Type: text/x-log; name="mvsas-patch.log"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename="mvsas-patch.log"
+
+[ 1100.142515] xfs_db[3741]: segfault at 40 ip 00007f77b49b14aa sp 00007fff97e87ec0 error 4 in libpthread-2.7.so[7f77b49a9000+16000]
+[ 1105.078922] xfs_db[3762]: segfault at 40 ip 00007f358fc264aa sp 00007fff802ba850 error 4 in libpthread-2.7.so[7f358fc1e000+16000]
+[ 1108.135893] xfs_db[3777]: segfault at 40 ip 00007f10890a04aa sp 00007fff2f96c140 error 4 in libpthread-2.7.so[7f1089098000+16000]
+[ 1131.700988] md: md1 stopped.
+[ 1131.701083] md: unbind<sdg>
+[ 1131.717573] md: export_rdev(sdg)
+[ 1131.717665] md: unbind<sdh>
+[ 1131.737511] md: export_rdev(sdh)
+[ 1131.737617] md: unbind<sdi>
+[ 1131.769010] md: export_rdev(sdi)
+[ 1131.769115] md: unbind<sdj>
+[ 1131.801010] md: export_rdev(sdj)
+[ 1131.801110] md: unbind<sdk>
+[ 1131.833010] md: export_rdev(sdk)
+[ 1131.833111] md: unbind<sdd>
+[ 1131.865009] md: export_rdev(sdd)
+[ 1131.865108] md: unbind<sde>
+[ 1131.897010] md: export_rdev(sde)
+[ 1131.897115] md: unbind<sdf>
+[ 1131.929009] md: export_rdev(sdf)
+[ 1140.771637] md: md0 stopped.
+[ 1140.771723] md: unbind<sdm>
+[ 1140.785584] md: export_rdev(sdm)
+[ 1140.785672] md: unbind<sdl>
+[ 1140.809512] md: export_rdev(sdl)
+[ 1160.695681] md: bind<sdb>
+[ 1160.729238] md: bind<sdc>
+[ 1160.771823] raid1: md0 is not clean -- starting background reconstruction
+[ 1160.771899] raid1: raid set md0 active with 2 out of 2 mirrors
+[ 1160.771991] md0: detected capacity change from 0 to 299999887360
+[ 1160.772138]  md0: unknown partition table
+[ 1160.777851] md: md0 switched to read-write mode.
+[ 1160.778032] md: resync of RAID array md0
+[ 1160.778103] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[ 1160.778176] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
+[ 1160.778277] md: using 128k window, over a total of 292968640 blocks.
+[ 1188.740257] md: bind<sdd>
+[ 1188.742869] md: bind<sde>
+[ 1188.746254] md: bind<sdf>
+[ 1188.748809] md: bind<sdg>
+[ 1188.752187] md: bind<sdh>
+[ 1188.754698] md: bind<sdi>
+[ 1188.758394] md: bind<sdj>
+[ 1188.762040] md: bind<sdk>
+[ 1188.805114] async_tx: api initialized (async)
+[ 1188.806118] xor: automatically using best checksumming function: generic_sse
+[ 1188.825503]    generic_sse:  7623.000 MB/sec
+[ 1188.825574] xor: using function: generic_sse (7623.000 MB/sec)
+[ 1188.893508] raid6: int64x1   1658 MB/s
+[ 1188.961522] raid6: int64x2   2219 MB/s
+[ 1189.029509] raid6: int64x4   1809 MB/s
+[ 1189.097524] raid6: int64x8   1476 MB/s
+[ 1189.165520] raid6: sse2x1    3208 MB/s
+[ 1189.233504] raid6: sse2x2    5342 MB/s
+[ 1189.301514] raid6: sse2x4    6115 MB/s
+[ 1189.301583] raid6: using algorithm sse2x4 (6115 MB/s)
+[ 1189.307208] md: raid6 personality registered for level 6
+[ 1189.307281] md: raid5 personality registered for level 5
+[ 1189.307351] md: raid4 personality registered for level 4
+[ 1189.307517] raid5: md1 is not clean -- starting background reconstruction
+[ 1189.307606] raid5: device sdk operational as raid disk 7
+[ 1189.307677] raid5: device sdj operational as raid disk 6
+[ 1189.307748] raid5: device sdi operational as raid disk 5
+[ 1189.307824] raid5: device sdh operational as raid disk 4
+[ 1189.307904] raid5: device sdg operational as raid disk 3
+[ 1189.307975] raid5: device sdf operational as raid disk 2
+[ 1189.308053] raid5: device sde operational as raid disk 1
+[ 1189.308124] raid5: device sdd operational as raid disk 0
+[ 1189.309007] raid5: allocated 8490kB for md1
+[ 1189.309106] 7: w=1 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309178] 6: w=2 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309249] 5: w=3 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309320] 4: w=4 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309402] 3: w=5 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309488] 2: w=6 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309560] 1: w=7 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309631] 0: w=8 pa=0 pr=8 m=1 a=2 r=8 op1=0 op2=0
+[ 1189.309704] raid5: raid level 5 set md1 active with 8 out of 8 devices, algorithm 2
+[ 1189.309793] RAID5 conf printout:
+[ 1189.309871]  --- rd:8 wd:8
+[ 1189.309952]  disk 0, o:1, dev:sdd
+[ 1189.310020]  disk 1, o:1, dev:sde
+[ 1189.310088]  disk 2, o:1, dev:sdf
+[ 1189.310155]  disk 3, o:1, dev:sdg
+[ 1189.310223]  disk 4, o:1, dev:sdh
+[ 1189.310290]  disk 5, o:1, dev:sdi
+[ 1189.310374]  disk 6, o:1, dev:sdj
+[ 1189.310452]  disk 7, o:1, dev:sdk
+[ 1189.310554] md1: detected capacity change from 0 to 1120292569088
+[ 1189.310798]  md1: unknown partition table
+[ 1189.316651] md: md1 switched to read-write mode.
+[ 1189.316769] md: resync of RAID array md1
+[ 1189.316841] md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+[ 1189.316913] md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec) for resync.
+[ 1189.317016] md: using 128k window, over a total of 156290816 blocks.
+[ 1284.699817] xfs_db[7994]: segfault at 40 ip 00007f70c0b364aa sp 00007fff884bea30 error 4 in libpthread-2.7.so[7f70c0b2e000+16000]
+[ 1296.888175] md: bind<sdl>
+[ 1297.219915] md: bind<sdm>
+[ 1297.276953] md: raid0 personality registered for level 0
+[ 1297.277236] raid0: looking at sdm
+[ 1297.277325] raid0:   comparing sdm(976772864)
+[ 1297.277431]  with sdm(976772864)
+[ 1297.277586] raid0:   END
+[ 1297.277667] raid0:   ==> UNIQUE
+[ 1297.277773] raid0: 1 zones
+[ 1297.284951] raid0: looking at sdl
+[ 1297.285020] raid0:   comparing sdl(976772864)
+[ 1297.285075]  with sdm(976772864)
+[ 1297.285232] raid0:   EQUAL
+[ 1297.285300] raid0: FINAL 1 zones
+[ 1297.285374] raid0: done.
+[ 1297.285443] raid0 : md_size is 1953545728 sectors.
+[ 1297.285513] ******* md2 configuration *********
+[ 1297.285613] zone0=[sdl/sdm/]
+[ 1297.285823]         zone offset=0kb device offset=0kb size=976772864kb
+[ 1297.285897] **********************************
+[ 1297.285898] 
+[ 1297.286080] md2: detected capacity change from 0 to 1000215412736
+[ 1297.288874]  md2: unknown partition table
+[ 1342.746487] xfs_db[9907]: segfault at 40 ip 00007f164988d4aa sp 00007fffcea0bc30 error 4 in libpthread-2.7.so[7f1649885000+16000]
+[ 1834.791615] ------------[ cut here ]------------
+[ 1834.791722] WARNING: at /tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/ata/libata-core.c:5186 ata_qc_issue+0x10a/0x347 [libata]()
+[ 1834.791823] Hardware name: X7DWU
+[ 1834.791890] Modules linked in: raid0 raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy async_tx iscsi_trgt crc32c nfsd lockd nfs_acl auth_rpcgss sunrpc exportfs coretemp w83627hf w83793 hwmon_vid loop netconsole configfs i2c_i801 evdev rng_core i2c_core ioatdma uhci_hcd ehci_hcd container usbcore nls_base i5k_amb snd_pcsp snd_pcm snd_timer snd soundcore snd_page_alloc i5400_edac edac_core button processor shpchp pci_hotplug dm_mirror dm_region_hash dm_log dm_snapshot dm_mod raid10 raid1 md_mod thermal fan thermal_sys mvsas libsas scsi_transport_sas sata_mv e1000e igb dca ext3 jbd mbcache sd_mod crc_t10dif ata_piix libata scsi_mod
+[ 1834.795527] Pid: 3070, comm: smartd Not tainted 2.6.32-bpo.2-amd64 #1
+[ 1834.795527] Call Trace:
+[ 1834.795527]  [<ffffffffa0034129>] ? ata_qc_issue+0x10a/0x347 [libata]
+[ 1834.795527]  [<ffffffffa0034129>] ? ata_qc_issue+0x10a/0x347 [libata]
+[ 1834.795527]  [<ffffffff8104dbe4>] ? warn_slowpath_common+0x77/0xa3
+[ 1834.795527]  [<ffffffffa0038471>] ? ata_scsi_pass_thru+0x0/0x238 [libata]
+[ 1834.795527]  [<ffffffffa0034129>] ? ata_qc_issue+0x10a/0x347 [libata]
+[ 1834.795527]  [<ffffffffa0038471>] ? ata_scsi_pass_thru+0x0/0x238 [libata]
+[ 1834.795527]  [<ffffffffa00008a5>] ? scsi_done+0x0/0xc [scsi_mod]
+[ 1834.795527]  [<ffffffffa003966a>] ? __ata_scsi_queuecmd+0x185/0x1dc [libata]
+[ 1834.795527]  [<ffffffffa00008a5>] ? scsi_done+0x0/0xc [scsi_mod]
+[ 1834.795527]  [<ffffffffa010ad48>] ? sas_queuecommand+0x93/0x283 [libsas]
+[ 1834.795527]  [<ffffffffa0000b77>] ? scsi_dispatch_cmd+0x1c0/0x23c [scsi_mod]
+[ 1834.795527]  [<ffffffffa0006325>] ? scsi_request_fn+0x4be/0x506 [scsi_mod]
+[ 1834.795527]  [<ffffffffa000620c>] ? scsi_request_fn+0x3a5/0x506 [scsi_mod]
+[ 1834.795527]  [<ffffffff81177ba0>] ? __blk_run_queue+0x35/0x66
+[ 1834.795527]  [<ffffffff8116f914>] ? elv_insert+0xad/0x260
+[ 1834.795527]  [<ffffffff8117af74>] ? blk_execute_rq_nowait+0x5d/0x89
+[ 1834.795527]  [<ffffffff8117b035>] ? blk_execute_rq+0x95/0xd0
+[ 1834.795527]  [<ffffffff81177077>] ? __freed_request+0x26/0x82
+[ 1834.795527]  [<ffffffff811770f6>] ? freed_request+0x23/0x41
+[ 1834.795527]  [<ffffffff81055efe>] ? capable+0x22/0x41
+[ 1834.795527]  [<ffffffff8117e1c1>] ? sg_io+0x280/0x3b5
+[ 1834.795527]  [<ffffffff8104a182>] ? try_to_wake_up+0x249/0x259
+[ 1834.795527]  [<ffffffff8117e7f5>] ? scsi_cmd_ioctl+0x217/0x3f2
+[ 1834.795527]  [<ffffffff8103a7a5>] ? scale_rt_power+0x1f/0x64
+[ 1834.795527]  [<ffffffff81188057>] ? kobject_get+0x12/0x17
+[ 1834.795527]  [<ffffffff8117ce78>] ? get_disk+0x95/0xb4
+[ 1834.795527]  [<ffffffffa0079a7e>] ? sd_ioctl+0x9d/0xcb [sd_mod]
+[ 1834.795527]  [<ffffffff8117c1e9>] ? __blkdev_driver_ioctl+0x69/0x7e
+[ 1834.795527]  [<ffffffff8117c9e4>] ? blkdev_ioctl+0x7e6/0x836
+[ 1834.795527]  [<ffffffff81110e93>] ? blkdev_open+0x0/0x96
+[ 1834.795527]  [<ffffffff81110efa>] ? blkdev_open+0x67/0x96
+[ 1834.795527]  [<ffffffff810ebc59>] ? __dentry_open+0x1c4/0x2bf
+[ 1834.795527]  [<ffffffff810f729a>] ? do_filp_open+0x4c4/0x92b
+[ 1834.795527]  [<ffffffff8110fcce>] ? block_ioctl+0x38/0x3c
+[ 1834.795527]  [<ffffffff810f8ede>] ? vfs_ioctl+0x21/0x6c
+[ 1834.795527]  [<ffffffff810f942c>] ? do_vfs_ioctl+0x48d/0x4cb
+[ 1834.795527]  [<ffffffff810e4405>] ? virt_to_head_page+0x9/0x2b
+[ 1834.795527]  [<ffffffff810f94bb>] ? sys_ioctl+0x51/0x70
+[ 1834.795527]  [<ffffffff81010b42>] ? system_call_fastpath+0x16/0x1b
+[ 1834.795527] ---[ end trace f12657df187e0997 ]---
+------=_20100223111117_99713--
 
