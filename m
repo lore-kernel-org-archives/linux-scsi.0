@@ -1,65 +1,63 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [Patch]: Enable SCSI Wait Scan only if BLK_DEV_INITRD is set.
-Date: Tue, 23 Feb 2010 17:08:30 +0100
-Message-ID: <4B83FD7E.1070601@s5r6.in-berlin.de>
-References: <4B830AEB.3010905@googlemail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Tue, 23 Feb 2010 11:49:21 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1002231143450.1308-100000@iolanthe.rowland.org>
+References: <3e7aae31002230729h823ba5dk374de6fdf32c5556@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:49388 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753291Ab0BWQJJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2010 11:09:09 -0500
-In-Reply-To: <4B830AEB.3010905@googlemail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:44243 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752620Ab0BWQtW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2010 11:49:22 -0500
+In-Reply-To: <3e7aae31002230729h823ba5dk374de6fdf32c5556@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Ramya Desai <ramya.desai@gmail.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Jens Axboe <jens.axboe@oracle.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-Ren=C3=A9 Bolldorf wrote:
+On Tue, 23 Feb 2010, Ramya Desai wrote:
 
-(I'm not sure whether the maintainers are going to accept that change
-this time around, but anyway:)
-
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 9191d1e..b785703 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -258,21 +258,22 @@ config SCSI_SCAN_ASYNC
->   	  or async on the kernel's command line.
+> On Mon, Feb 22, 2010 at 11:14 PM, Alan Stern <stern@rowland.harvard.e=
+du> wrote:
 >=20
->   config SCSI_WAIT_SCAN
-> -	tristate  # No prompt here, this is an invisible symbol.
-> +	tristate "SCSI Wait Scan"
->   	default m
->   	depends on SCSI
-> +	depends on SCSI_SCAN_ASYNC
->   	depends on MODULES
-[...]
-> +	depends on BLK_DEV_INITRD
+> Dear Alan,
+>=20
+> Thanks for the information.
+>=20
+> > Usb-storage sets max_sectors to 240 in the host template. =A0For so=
+me
+> > reason, the block layer also changes max_hw_sectors to the same val=
+ue
+> > (see block/blk-settings.c:blk_queue_max_sectors()).
+>=20
+> I am setting the max_sectors in host template (scsiglue.c file). When
+> the max_sectors value is <=3D 1024, then only the max_sectors_kb and
+> max_hw_sectors_kb are same in the sys interface. However, if the
+> max_sectors value is > 1024 then the values in the sys interface file=
+s
+> are different as shown in block/blk-setting.c:blk_queue_max_sectors()=
+=2E
+>=20
+> if (BLK_DEF_MAX_SECTORS > max_sectors)
+> 	q->limits.max_hw_sectors =3D q->limits.max_sectors =3D max_sectors;
+> else {
+> 	q->limits.max_sectors =3D BLK_DEF_MAX_SECTORS;
+> 	q->limits.max_hw_sectors =3D max_sectors;
+> }
 
-There needs to be an additional "depends on m" now that you made it
-visible, so that it cannot be set to y.
+James or Jens, is there a reason why this routine limits max_sectors to
+1024?
 
-> +	help
-> +	  scsi_wait_scan is a loadable module which waits until all the asy=
-nc scans are
-> +	  complete.  The idea is to use it in initrd/ initramfs scripts.  Y=
-ou modprobe
-> +	  it after all the modprobes of the root SCSI drivers and it will w=
-ait until
-> +	  they have all finished scanning their buses before allowing the b=
-oot to
-> +	  proceed.
-[...]
-> +	  People that use a initramfs should say Y or M.
+And is there a reason why it sets both max_sectors and max_hw_sectors,=20
+leaving no way to change one without the other?
 
-They "...should say M." actually.
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D=3D-=3D- --=3D- =3D-=3D=3D=3D
-http://arcgraph.de/sr/
+Are drivers supposed to assign values directly to=20
+q->limits.max_sectors?  Shouldn't there be a cleaner API for all this?
+
+Alan Stern
+
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
