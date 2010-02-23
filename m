@@ -1,79 +1,66 @@
-From: =?ISO-8859-1?Q?Ren=E9_Bolldorf?= <xsecute@googlemail.com>
-Subject: [Patch]: Enable SCSI Wait Scan only if BLK_DEV_INITRD is set.
-Date: Mon, 22 Feb 2010 23:53:31 +0100
-Message-ID: <4B830AEB.3010905@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:52839 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754758Ab0BVWxp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Feb 2010 17:53:45 -0500
-Received: by fxm19 with SMTP id 19so3096956fxm.21
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Feb 2010 14:53:43 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/3] Generic v4.0 fabric module configfs infrastructure
+Date: Mon, 22 Feb 2010 17:03:57 -0800
+Message-ID: <1266887037-3803-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-The scsi_wait_scan module should only be enabled if BLKD_DEV_INITRD is 
-set. And i think it's better then the user can enable/disable the module 
-of their own risk.
+Greetings SCSI and virtual filesystem folks,
 
-Signed-off-by: Rene Bolldorf <xsecute@googlemail.com>
+This patch series contains the initial commits to lio-core-2.6.git/lio-4.0 to
+support the new generic fabric module configfs infrastructure for TCM, and
+the subsequent changes to drivers/target/lio-target and drivers/target/tcm_loop
+to use generic configfs infrastructure from drivers/target/target_core_fabric_configfs.c.
 
-========================================================================
+The main idea behind the 4.0 configfs code is that fabric modules can use a generic
+set of struct config_item_types and struct config_groups hanging off fabric dependent
+structures, without having to explictly define a configfs layout of
+/sys/kernel/config/target/$FABRIC themselves.  This allows a generic layout to be used with
+fabric dependent attributes using struct config_item_type context specific macros in
+include/target/target_core_fabric_configfs.h.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 9191d1e..b785703 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -258,21 +258,22 @@ config SCSI_SCAN_ASYNC
-  	  or async on the kernel's command line.
+This is still a WIP, and this first series allows both lio-target and tcm_loop
+fabric modules to run in demo mode (eg: no ACLs) using the generic configfs code.
 
-  config SCSI_WAIT_SCAN
--	tristate  # No prompt here, this is an invisible symbol.
-+	tristate "SCSI Wait Scan"
-  	default m
-  	depends on SCSI
-+	depends on SCSI_SCAN_ASYNC
-  	depends on MODULES
--# scsi_wait_scan is a loadable module which waits until all the async 
-scans are
--# complete.  The idea is to use it in initrd/ initramfs scripts.  You 
-modprobe
--# it after all the modprobes of the root SCSI drivers and it will wait 
-until
--# they have all finished scanning their buses before allowing the boot to
--# proceed.  (This method is not applicable if targets boot independently in
--# parallel with the initiator, or with transports with 
-non-deterministic target
--# discovery schemes, or if a transport driver does not support 
-scsi_wait_scan.)
--#
--# This symbol is not exposed as a prompt because little is to be gained by
--# disabling it, whereas people who accidentally switch it off may 
-wonder why
--# their mkinitrd gets into trouble.
-+	depends on BLK_DEV_INITRD
-+	help
-+	  scsi_wait_scan is a loadable module which waits until all the async 
-scans are
-+	  complete.  The idea is to use it in initrd/ initramfs scripts.  You 
-modprobe
-+	  it after all the modprobes of the root SCSI drivers and it will wait 
-until
-+	  they have all finished scanning their buses before allowing the boot to
-+	  proceed.  (This method is not applicable if targets boot 
-independently in
-+	  parallel with the initiator, or with transports with 
-non-deterministic target
-+	  discovery schemes, or if a transport driver does not support 
-scsi_wait_scan.)
-+
-+	  People that use a initramfs should say Y or M.
+I am hoping to get some feedback on the current work and any thoughts on possible improvements..
 
-  menu "SCSI Transports"
-  	depends on SCSI
+Thanks!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (3):
+  [TCM/Configfs]: Generic fabric module configfs infrastructure WIP
+  [LIO-Target/ConfigFS]: Convert layout to use generic configfs struct
+    config_item_types WIP
+  [TCM_Loop/ConfigFS]: Convert layout to use generic configfs struct
+    config_item_types
+
+ drivers/target/Kbuild                             |    1 +
+ drivers/target/lio-target/iscsi_target.c          |    4 +-
+ drivers/target/lio-target/iscsi_target_configfs.c | 1010 +++------------------
+ drivers/target/lio-target/iscsi_target_core.h     |   15 +-
+ drivers/target/lio-target/iscsi_target_erl0.c     |    4 +-
+ drivers/target/lio-target/iscsi_target_login.c    |   10 +-
+ drivers/target/lio-target/iscsi_target_nego.c     |    2 +-
+ drivers/target/lio-target/iscsi_target_tpg.c      |   39 +-
+ drivers/target/lio-target/iscsi_target_version.h  |    2 +-
+ drivers/target/target_core_configfs.c             |   24 +-
+ drivers/target/target_core_fabric_configfs.c      |  612 +++++++++++++
+ drivers/target/target_core_tpg.c                  |   18 +-
+ drivers/target/tcm_loop/tcm_loop_configfs.c       |  435 ++++------
+ drivers/target/tcm_loop/tcm_loop_core.h           |   18 +-
+ drivers/target/tcm_loop/tcm_loop_fabric_scsi.c    |    2 +-
+ include/target/target_core_base.h                 |   22 +-
+ include/target/target_core_configfs.h             |   20 +-
+ include/target/target_core_fabric_configfs.h      |   50 +
+ include/target/target_core_fabric_ops.h           |   19 +
+ include/target/target_core_tpg.h                  |    6 +-
+ 20 files changed, 1079 insertions(+), 1234 deletions(-)
+ create mode 100644 drivers/target/target_core_fabric_configfs.c
+ create mode 100644 include/target/target_core_fabric_configfs.h
+
