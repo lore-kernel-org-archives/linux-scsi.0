@@ -1,67 +1,67 @@
-From: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Tue, 23 Feb 2010 20:59:55 +0530
-Message-ID: <3e7aae31002230729h823ba5dk374de6fdf32c5556@mail.gmail.com>
-References: <1266843999.4414.27.camel@mulgrave.site>
-	 <Pine.LNX.4.44L0.1002221232160.1251-100000@iolanthe.rowland.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [Patch]: Enable SCSI Wait Scan only if BLK_DEV_INITRD is set.
+Date: Tue, 23 Feb 2010 17:08:30 +0100
+Message-ID: <4B83FD7E.1070601@s5r6.in-berlin.de>
+References: <4B830AEB.3010905@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1002221232160.1251-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:49388 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753291Ab0BWQJJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Feb 2010 11:09:09 -0500
+In-Reply-To: <4B830AEB.3010905@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Feb 22, 2010 at 11:14 PM, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org=
-> wrote:
+Ren=C3=A9 Bolldorf wrote:
 
-Dear Alan,
+(I'm not sure whether the maintainers are going to accept that change
+this time around, but anyway:)
 
-Thanks for the information.
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 9191d1e..b785703 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -258,21 +258,22 @@ config SCSI_SCAN_ASYNC
+>   	  or async on the kernel's command line.
+>=20
+>   config SCSI_WAIT_SCAN
+> -	tristate  # No prompt here, this is an invisible symbol.
+> +	tristate "SCSI Wait Scan"
+>   	default m
+>   	depends on SCSI
+> +	depends on SCSI_SCAN_ASYNC
+>   	depends on MODULES
+[...]
+> +	depends on BLK_DEV_INITRD
 
-> Usb-storage sets max_sectors to 240 in the host template. =A0For some
-> reason, the block layer also changes max_hw_sectors to the same value
-> (see block/blk-settings.c:blk_queue_max_sectors()).
+There needs to be an additional "depends on m" now that you made it
+visible, so that it cannot be set to y.
 
-I am setting the max_sectors in host template (scsiglue.c file). When
-the max_sectors value is <=3D 1024, then only the max_sectors_kb and
-max_hw_sectors_kb are same in the sys interface. However, if the
-max_sectors value is > 1024 then the values in the sys interface files
-are different as shown in block/blk-setting.c:blk_queue_max_sectors().
+> +	help
+> +	  scsi_wait_scan is a loadable module which waits until all the asy=
+nc scans are
+> +	  complete.  The idea is to use it in initrd/ initramfs scripts.  Y=
+ou modprobe
+> +	  it after all the modprobes of the root SCSI drivers and it will w=
+ait until
+> +	  they have all finished scanning their buses before allowing the b=
+oot to
+> +	  proceed.
+[...]
+> +	  People that use a initramfs should say Y or M.
 
-if (BLK_DEF_MAX_SECTORS > max_sectors)
-	q->limits.max_hw_sectors =3D q->limits.max_sectors =3D max_sectors;
-else {
-	q->limits.max_sectors =3D BLK_DEF_MAX_SECTORS;
-	q->limits.max_hw_sectors =3D max_sectors;
-}
-
-I guess, in my case, it enters into the ELSE part. I tried to debug
-these sources (block/blk-setting.c), but I am not able to do it.
-Please let me know, how can I get the debug statements from this file?
-
-> The value can be changed by writing to
-> /sys/block/sdX/device/max_sectors (where X is the drive letter). =A0N=
-ote
-> that this value is in 512-byte blocks, not in KB. =A0However it is
-> limited to SCSI_DEFAULT_MAX_SECTORS, which is 1024, corresponding to
-> 512 MB. =A0If larger transfers are needed then
-> drivers/usb/storage/scsiglue.c:store_max_sectors() must be changed.
-
-I have chaged the value in /sys/block/sdb/queue/max_sectors_kb through
-echo command. Even after this change,  I have received only 1024
-sectors (512 KB) data transfer buffers in my SCSI command. Even I have
-modified the store_max_sectors() function code in the scsiglue.c file.
-But, there is no luck and still I received 1024 sectors (512 KB)
-transfer buffers in the scsi_command.
-
-Please let me know, if you need any additional information.
-
-Thanks and Regards,
-RD.
+They "...should say M." actually.
+--=20
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D=3D-=3D- --=3D- =3D-=3D=3D=3D
+http://arcgraph.de/sr/
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
