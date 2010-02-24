@@ -1,41 +1,46 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] qla4: fix shift precedence (sparse warning)
-Date: Wed, 24 Feb 2010 14:26:38 -0800
-Message-ID: <20100224142638.b88d5307.randy.dunlap@oracle.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15378] If packet writing is enabled it causes I/O errors.
+Date: Wed, 24 Feb 2010 22:47:48 GMT
+Message-ID: <201002242247.o1OMlm95002739@demeter.kernel.org>
+References: <bug-15378-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:53685 "EHLO
-	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758275Ab0BXW1a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2010 17:27:30 -0500
+Received: from demeter.kernel.org ([140.211.167.39]:42534 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758533Ab0BXWrt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2010 17:47:49 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1OMlm6C002740
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Feb 2010 22:47:48 GMT
+In-Reply-To: <bug-15378-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: james.bottomley@suse.de, Karen Higgins <karen.higgins@qlogic.com>, David C Somayajulu <david.somayajulu@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+http://bugzilla.kernel.org/show_bug.cgi?id=15378
 
-Fix qla4xxx sparse warning:
 
-drivers/scsi/qla4xxx/ql4_mbx.c:470:66: warning: right shift by bigger than source value
+Andrew Morton <akpm@linux-foundation.org> changed:
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Karen Higgins <karen.higgins@qlogic.com>
-Cc: David C Somayajulu <david.somayajulu@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_mbx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org,
+                   |                            |axboe@kernel.dk
+          Component|SCSI                        |Other
+         AssignedTo|linux-scsi@vger.kernel.org  |io_other@kernel-bugs.osdl.o
+                   |                            |rg
 
---- linux-2.6.33-rc8.orig/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ linux-2.6.33-rc8/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -467,7 +467,7 @@ int qla4xxx_get_fwddb_entry(struct scsi_
- 	if (conn_err_detail)
- 		*conn_err_detail = mbox_sts[5];
- 	if (tcp_source_port_num)
--		*tcp_source_port_num = (uint16_t) mbox_sts[6] >> 16;
-+		*tcp_source_port_num = (uint16_t) (mbox_sts[6] >> 16);
- 	if (connection_id)
- 		*connection_id = (uint16_t) mbox_sts[6] & 0x00FF;
- 	status = QLA_SUCCESS;
+
+
+
+--- Comment #1 from Andrew Morton <akpm@linux-foundation.org>  2010-02-24 22:47:41 ---
+I'll reassign it to io-storage/other.
+
+Nobody really maintains the packet-writing code any more ;(
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
