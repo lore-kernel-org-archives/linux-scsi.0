@@ -1,36 +1,32 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: A few SCSI patches for 2.6.34
-Date: Wed, 24 Feb 2010 18:58:27 +0100
-Message-ID: <e2e108261002240958g223e9602i7854eeb574b8e292@mail.gmail.com>
-References: <e2e108261002240941v33a089d5yc1843fd6b11db84c@mail.gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Maximum data size in a single transfer for MS driver
+Date: Wed, 24 Feb 2010 20:07:53 +0100
+Message-ID: <20100224190753.GF1025@kernel.dk>
+References: <3e7aae31002240507r5d5c4c2bj8e653a3d65fa6709@mail.gmail.com> <Pine.LNX.4.44L0.1002241123220.2436-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f212.google.com ([209.85.219.212]:54678 "EHLO
-	mail-ew0-f212.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757025Ab0BXR6j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Feb 2010 12:58:39 -0500
-Received: by ewy4 with SMTP id 4so1149731ewy.28
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Feb 2010 09:58:37 -0800 (PST)
-In-Reply-To: <e2e108261002240941v33a089d5yc1843fd6b11db84c@mail.gmail.com>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:43796 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757607Ab0BXTHy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Feb 2010 14:07:54 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1002241123220.2436-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Ramya Desai <ramya.desai@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-Hello James,
+On Wed, Feb 24 2010, Alan Stern wrote:
+> >  However, this time, still my device
+> > received 512 KB (1024) data transfer buffers in scsi_command.
+> 
+> At this point everything was set up correctly.  I don't know why the 
+> transfer lengths are still 512 KB.  Maybe someone else has an idea.
 
-Can you please have a look at the patches below ? All four patches
-have been acked but have not yet been integrated in the kernel as far
-as I know.
+What is the test case issuing the IO? Depending on the device, it may
+hit other restrictions aside from just maximum transfer length.
 
-[PATCH] SCSI/libsrp: fix typo -- replace RDAM by RDMA
-http://www.spinics.net/lists/linux-scsi/msg40963.html
-[PATCH] SCSI/ibmvscsi: fix a typo in a source code comment
-http://www.spinics.net/lists/linux-scsi/msg40964.html
-[PATCH] SCSI/libsrp: fix bug in ADDITIONAL CDB LENGTH interpretation
-http://www.spinics.net/lists/linux-scsi/msg41038.html
-[PATCH v3] SCSI/libsrp: document the libsrp source code
-http://www.spinics.net/lists/linux-scsi/msg41192.html
+-- 
+Jens Axboe
 
-Bart.
