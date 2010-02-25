@@ -1,64 +1,37 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 25 Feb 2010 13:28:13 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1002251324200.1686-100000@iolanthe.rowland.org>
-References: <yq1zl2xl0j3.fsf@sermon.lab.mkp.net>
+Date: Thu, 25 Feb 2010 14:05:58 -0500
+Message-ID: <yq1iq9lkueh.fsf@sermon.lab.mkp.net>
+References: <Pine.LNX.4.44L0.1002251324200.1686-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <yq1zl2xl0j3.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:64718 "EHLO
+	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932353Ab0BYTG5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 14:06:57 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1002251324200.1686-100000@iolanthe.rowland.org>
+	(Alan Stern's message of "Thu, 25 Feb 2010 13:28:13 -0500 (EST)")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ramya Desai <ramya.desai@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <jens.axboe@oracle.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Thu, 25 Feb 2010, Martin K. Petersen wrote:
+>>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
 
-> >>>>> "mkp" == Martin K Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> writes:
-> 
-> mkp> This one is a runt that came in as part of the DM topology
-> mkp> enablement.  DM ended up doing things differently and it is no
-> mkp> longer used.  I already have a patch in my queue that removes it.
-> 
-> Here it is, btw...
-> 
-> 
-> block: Remove blk_queue_max_hw_sectors
-> 
-> This function is no longer called by any subsystem and can be removed.
-> 
-> Also clarify test in blk_queue_max_sectors.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> 
-> ---
-> 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index aaa379b..69b7c67 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -226,7 +226,7 @@ void blk_queue_max_sectors(struct request_queue *q, unsigned int max_sectors)
->  		       __func__, max_sectors);
->  	}
->  
-> -	if (BLK_DEF_MAX_SECTORS > max_sectors)
-> +	if (max_sectors < BLK_DEF_MAX_SECTORS)
->  		q->limits.max_hw_sectors = q->limits.max_sectors = max_sectors;
->  	else {
->  		q->limits.max_sectors = BLK_DEF_MAX_SECTORS;
+Alan> Why is max_sectors changed?  If it is already smaller than the new
+Alan> value of max_hw_sectors, shouldn't it remain the same?
 
-Why is max_sectors changed?  If it is already smaller than the new 
-value of max_hw_sectors, shouldn't it remain the same?
+We have a lot of legacy device drivers kicking around in the tree so the
+default max request size remains the conservative SAFE_MAX_SECTORS
+(255).
 
-Or to put it another way, shouldn't the code look more like this?
+When a low level driver explicitly tells us that it can support bigger
+requests we take the opportunity to increase the soft limit to the block
+layer default (1024).
 
-	q->limits.max_hw_sectors = max(max_sectors, BLK_DEF_MAX_SECTORS);
-	if (q->limits.max_sectors > q->limits.max_hw_sectors)
-		q->limits.max_sectors = q->limits.max_hw_sectors;
+Also, this function is generally called at block device creation time so
+it's not like we're overwriting an existing user setting.
 
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Martin K. Petersen	Oracle Linux Engineering
