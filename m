@@ -1,136 +1,66 @@
-From: Audio Haven <audiohaven@gmail.com>
-Subject: Re: [PATCH] MVSAS: hot plug handling and IO issues
-Date: Thu, 25 Feb 2010 14:35:56 +0100
-Message-ID: <333bc7e11002250535p71420780g7d3803c2a83366fc@mail.gmail.com>
-References: <6B62480106F2B34D8404CF2FDAA4D9EF71F646BECA@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-	 <alpine.DEB.1.10.1002161446470.4986@uplift.swm.pp.se>
-	 <7746.87.210.74.220.1266331278.squirrel@ketsers.dhs.org>
-	 <6B62480106F2B34D8404CF2FDAA4D9EF71F646C228@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-	 <73e903671002170516r6df93ea6o6e0ee256cb8f7a59@mail.gmail.com>
-	 <16370.87.210.74.220.1266919877.squirrel@ketsers.dhs.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:54096 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932504Ab0BYNgA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 08:36:00 -0500
-Received: by bwz1 with SMTP id 1so2795063bwz.21
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2010 05:35:58 -0800 (PST)
-In-Reply-To: <16370.87.210.74.220.1266919877.squirrel@ketsers.dhs.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/4] Generic target fabric configfs NodeACL and MappedLUN logic
+Date: Thu, 25 Feb 2010 06:05:18 -0800
+Message-ID: <1267106718-7006-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: LIO-Target devel <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hello,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-I have similar findings related to the Srinivas patch.
+Greetings again folks,
 
-1) with the patch from Srinivas applied to 2.6.32.7, I cannot get my
-raid6 on it's knees (yet). Using 8 drives on the marvell controller, 1
-drive on onboard sata_nv .
+This is the second patch series to lio-core-2.6.git/lio-4.0 for enabling a generic target fabric
+module independent configfs infrastructure.  It contains the changes necessary to use generic
+struct config_item_types in target_core_fabric_configfs.c for reproducing existing v3.x configfs
+layout of NodeACL base, NodeACL attribute, NodeACL parameters, NodeACL authentication and MappedLUN
+groups.
 
-Created raid6:
-mdadm --create /dev/md2 --verbose --level=3D6 --chunk=3D1024
---raid-devices=3D9 /dev/sd[bcdefghij]1
+As with the previous patch series for generic WWN, TPG and LUN struct config_item_types, the new NodeACL
+and MappedLUN 'cits' have been added to struct target_fabric_configfs_template along with matching
+struct config_group_operations and struct config_item_operation handlers living in target_core_fabric_configfs.c 
+As before, fabric modules are allowed to hang fabric dependent attributes from these generic cits
+using the CONFIGFS_EATTR() style macros in include/target/target_core_fabric_configfs.c:TF_NACL_*() for
+existing attribute code.
 
-XFS on top
-mkfs.xfs -f -d su=3D1m,sw=3D7 /dev/md2
+With these second series of patches, the 4.0 generic fabric configfs code is now able to reproduce the
+entire existing configfs layout and functionality in /sys/kernel/config/target/iscsi for the LIO-Target v3.x
+fabric module using the existing fabric dependent attributes..  Which means that existing v3.x userspace
+code should be working as expected with the v4.0 code..!
 
-During the first raid resync, I'm also dumping 2TB of data on this
-11TB xfs volume. It no longer drops drives. Currently copied 1.4T
-without glitches.
+As before, any comments, suggestions, questions are welcome,
 
-2) with the patches from Andy Yan applied to 2.6.32.3, the first
-resync worked, but when also stressing the system by copying data
-during the initial resync, I observed mvs_abort_task which would make
-drives kick out of raid after 0.8TB of copying or even quicker.
+Thanks!
 
-3) without any patches and a stock Fedora Core 12 kernel, the initial
-resync NEVER worked.
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-So if I can fill my 11TB volume with data, and no drives are ever
-kicked out, and xfs does not get corrupt, this patch is a huge
-improvement. But this will take some more days to fill up. I'll report
-the status when done.
+Nicholas Bellinger (4):
+  [TCM/ConfigFS]: Add generic tfc_discovery_cit to
+    target_core_register_fabric()
+  [TCM/ConfigFS]: Add generic NodeACL and MappedLUN configfs logic
+  [LIO-Target/ConfigFS]: Convert NodeACl and MappedLUNs to use generic
+    configfs struct config_item_types
+  [TCM_Loop]: Update virtual SAS NodeACL allocation handling for v4.0
 
-Thanks !
+ drivers/target/lio-target/iscsi_auth_kernel.h      |    5 +-
+ drivers/target/lio-target/iscsi_target_configfs.c  |  956 ++++----------------
+ drivers/target/lio-target/iscsi_target_core.h      |    6 +-
+ .../target/lio-target/iscsi_target_nodeattrib.c    |    2 +-
+ drivers/target/lio-target/iscsi_target_tpg.c       |   58 +-
+ drivers/target/lio-target/iscsi_target_tpg.h       |    4 +-
+ drivers/target/target_core_configfs.c              |   25 +-
+ drivers/target/target_core_fabric_configfs.c       |  381 ++++++++-
+ drivers/target/target_core_tpg.c                   |   54 +-
+ drivers/target/tcm_loop/tcm_loop_configfs.c        |    5 +-
+ drivers/target/tcm_loop/tcm_loop_core.h            |    2 +-
+ drivers/target/tcm_loop/tcm_loop_fabric.c          |   10 +-
+ drivers/target/tcm_loop/tcm_loop_fabric.h          |    3 +-
+ include/target/target_core_base.h                  |    4 +-
+ include/target/target_core_configfs.h              |   11 +-
+ include/target/target_core_fabric_configfs.h       |   56 ++
+ include/target/target_core_fabric_ops.h            |    8 +-
+ include/target/target_core_tpg.h                   |    6 +-
+ 18 files changed, 715 insertions(+), 881 deletions(-)
 
-On Tue, Feb 23, 2010 at 11:11 AM, Caspar Smit <c.smit@truebit.nl> wrote=
-:
-> Hi Srinivas,
->
-> I finally had some time to test your new patch.
->
-> 1) After numerous hotplug actions with SAS and SATA disks I still can=
-'t
-> get any kernel panic to occur :)
->
-> 2) I can finally boot a system with 3x 6480 controllers loaded with S=
-ATA
-> disks without a kernel panic.
->
-> 3) Raid5/6 initialization completes without dropping the disks one af=
-ter
-> another.
->
-> 4) One thing that occured was the following: during a raid1 initializ=
-ation
-> of 2 SAS disks and a raid5 init of 8x SSD's i got a call trace by
-> libata-core.c (see attachment for details). The system continued to w=
-ork
-> fine after the trace.
->
-> Great work, this is a much more stable driver now!
->
-> Kind regards,
-> Caspar Smit
->
->> On Wed, Feb 17, 2010 at 12:53 PM, Srinivas Naga Venkatasatya
->> Pasagadugula - ERS, HCL Tech <satyasrinivasp@hcl.in> wrote:
->>> Hi Smit,
->>>
->>> This patch is not exactly replaced with Nov-09 patches.
->>> My patch addresses the RAID5/6 issues also. Below issues are addres=
-sed
->>> by my patch.
->>> 1. Tape issues.
->>> 2. RAID-5/6 I/O fails.
->>> 3. LVM IO fails and subsequent init 6 hang (connect SAS+SATA in cas=
-caded
->>> =A0 =A0 =A0 =A0expanders, crate volume group and logical volumes, r=
-un file I/O
->>> =A0 =A0 =A0 (alltest), unplug one drive)
->>> 4. Disk stress I/O on 4096 sector size.
->>> 5. Hot insertion of drives giving panic.
->>> 6. 'fdisk -l' hangs with hot plugging of SATA/SAS drives in expande=
-r
->>> while =A0 =A0 =A0IO (Diskstress and alltest) is going on and IO sto=
-pped.
->>>
->>> I can't combined my patch with November-09 patches. James also reje=
-cted
->>> those patches as those are not proper. Let me know if you have issu=
-es
->>> with my patch.
->>>
->>> --Srini.
->>
->>
->> I haven't tested yet, but looks like you're doing excellent work, an=
-d
->> your documentation/overview of the work is superb.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
