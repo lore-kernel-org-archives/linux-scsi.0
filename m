@@ -1,36 +1,64 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 25 Feb 2010 12:58:34 -0500
-Message-ID: <yq1mxyxkxit.fsf@sermon.lab.mkp.net>
-References: <20100225165901.GZ30797@beardog.cce.hp.com>
-	<20100225171826.GC30797@beardog.cce.hp.com>
-	<yq1vddlkyxo.fsf@sermon.lab.mkp.net> <4B86B666.2070806@panasas.com>
+Date: Thu, 25 Feb 2010 13:28:13 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1002251324200.1686-100000@iolanthe.rowland.org>
+References: <yq1zl2xl0j3.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:61889 "EHLO
-	rcsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932905Ab0BYSAS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 13:00:18 -0500
-In-Reply-To: <4B86B666.2070806@panasas.com> (Boaz Harrosh's message of "Thu,
-	25 Feb 2010 09:41:58 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <yq1zl2xl0j3.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, scameron@beardog.cce.hp.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, axboe@kernel.dk
 
->>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+On Thu, 25 Feb 2010, Martin K. Petersen wrote:
 
-Boaz> It seems like the confusion calls for a rename. We are made to
-Boaz> believe that the accessors naming convention is the same as the
-Boaz> queue member it changes. But here it is named as another very
-Boaz> confusing member.
+> >>>>> "mkp" == Martin K Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> writes:
+> 
+> mkp> This one is a runt that came in as part of the DM topology
+> mkp> enablement.  DM ended up doing things differently and it is no
+> mkp> longer used.  I already have a patch in my queue that removes it.
+> 
+> Here it is, btw...
+> 
+> 
+> block: Remove blk_queue_max_hw_sectors
+> 
+> This function is no longer called by any subsystem and can be removed.
+> 
+> Also clarify test in blk_queue_max_sectors.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> 
+> ---
+> 
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index aaa379b..69b7c67 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -226,7 +226,7 @@ void blk_queue_max_sectors(struct request_queue *q, unsigned int max_sectors)
+>  		       __func__, max_sectors);
+>  	}
+>  
+> -	if (BLK_DEF_MAX_SECTORS > max_sectors)
+> +	if (max_sectors < BLK_DEF_MAX_SECTORS)
+>  		q->limits.max_hw_sectors = q->limits.max_sectors = max_sectors;
+>  	else {
+>  		q->limits.max_sectors = BLK_DEF_MAX_SECTORS;
 
-Boaz> At least if the name is not changed, a big fat comment is do, that
-Boaz> says this is for drivers to change the *max_hw_sectors* though it
-Boaz> is named after that other - not for drivers - member.
+Why is max_sectors changed?  If it is already smaller than the new 
+value of max_hw_sectors, shouldn't it remain the same?
 
-I'm fine with renaming the function after the hw variant is gone.
+Or to put it another way, shouldn't the code look more like this?
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+	q->limits.max_hw_sectors = max(max_sectors, BLK_DEF_MAX_SECTORS);
+	if (q->limits.max_sectors > q->limits.max_hw_sectors)
+		q->limits.max_sectors = q->limits.max_hw_sectors;
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
