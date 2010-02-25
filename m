@@ -1,17 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 7/9] hpsa: Clarify calculation of padding for commandlist
-	structure
-Date: Thu, 25 Feb 2010 14:03:22 -0600
-Message-ID: <20100225200322.7508.41589.stgit@beardog.cce.hp.com>
+Subject: [PATCH 8/9] hpsa: Increase the number of scatter gather elements
+	supported.
+Date: Thu, 25 Feb 2010 14:03:27 -0600
+Message-ID: <20100225200327.7508.95536.stgit@beardog.cce.hp.com>
 References: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:11393 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933551Ab0BYUAN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 15:00:13 -0500
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:11009 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933551Ab0BYUAS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 15:00:18 -0500
 In-Reply-To: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,38 +20,286 @@ Cc: james.bottomley@suse.de, mikem@beardog.cce.hp.com
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: Clarify calculation of padding for commandlist structure
+hpsa: Increase the number of scatter gather elements supported.
+This uses the scatter-gather chaining feature of Smart Array
+controllers.  32 scatter-gather elements are embedded in the
+"command list", and the last element in the list may be marked
+as a "chain pointer", and point to an additional block of
+scatter gather elements.  The precise number of scatter gather
+elements supported is dependent on the particular kind of
+Smart Array, and is determined at runtime by querying the
+hardware.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa_cmd.h |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/scsi/hpsa.c     |  134 +++++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/hpsa.h     |    4 +
+ drivers/scsi/hpsa_cmd.h |    7 +-
+ 3 files changed, 131 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 2e1edce..183d3a4 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -187,7 +187,6 @@ static struct scsi_host_template hpsa_driver_template = {
+ 	.scan_finished		= hpsa_scan_finished,
+ 	.change_queue_depth	= hpsa_change_queue_depth,
+ 	.this_id		= -1,
+-	.sg_tablesize		= MAXSGENTRIES,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.eh_device_reset_handler = hpsa_eh_device_reset_handler,
+ 	.ioctl			= hpsa_ioctl,
+@@ -844,6 +843,76 @@ static void hpsa_scsi_setup(struct ctlr_info *h)
+ 	spin_lock_init(&h->devlock);
+ }
+ 
++static void hpsa_free_sg_chain_blocks(struct ctlr_info *h)
++{
++	int i;
++
++	if (!h->cmd_sg_list)
++		return;
++	for (i = 0; i < h->nr_cmds; i++) {
++		kfree(h->cmd_sg_list[i]);
++		h->cmd_sg_list[i] = NULL;
++	}
++	kfree(h->cmd_sg_list);
++	h->cmd_sg_list = NULL;
++}
++
++static int hpsa_allocate_sg_chain_blocks(struct ctlr_info *h)
++{
++	int i;
++
++	if (h->chainsize <= 0)
++		return 0;
++
++	h->cmd_sg_list = kzalloc(sizeof(*h->cmd_sg_list) * h->nr_cmds,
++				GFP_KERNEL);
++	if (!h->cmd_sg_list)
++		return -ENOMEM;
++	for (i = 0; i < h->nr_cmds; i++) {
++		h->cmd_sg_list[i] = kmalloc(sizeof(*h->cmd_sg_list[i]) *
++						h->chainsize, GFP_KERNEL);
++		if (!h->cmd_sg_list[i])
++			goto clean;
++	}
++	return 0;
++
++clean:
++	hpsa_free_sg_chain_blocks(h);
++	return -ENOMEM;
++}
++
++static void hpsa_map_sg_chain_block(struct ctlr_info *h,
++	struct CommandList *c)
++{
++	struct SGDescriptor *chain_sg, *chain_block;
++	u64 temp64;
++
++	chain_sg = &c->SG[h->max_cmd_sg_entries - 1];
++	chain_block = h->cmd_sg_list[c->cmdindex];
++	chain_sg->Ext = HPSA_SG_CHAIN;
++	chain_sg->Len = sizeof(*chain_sg) *
++		(c->Header.SGTotal - h->max_cmd_sg_entries);
++	temp64 = pci_map_single(h->pdev, chain_block, chain_sg->Len,
++				PCI_DMA_TODEVICE);
++	chain_sg->Addr.lower = (u32) (temp64 & 0x0FFFFFFFFULL);
++	chain_sg->Addr.upper = (u32) ((temp64 >> 32) & 0x0FFFFFFFFULL);
++}
++
++static void hpsa_unmap_sg_chain_block(struct ctlr_info *h,
++	struct CommandList *c)
++{
++	struct SGDescriptor *chain_sg;
++	union u64bit temp64;
++
++	if (c->Header.SGTotal <= h->max_cmd_sg_entries)
++		return;
++
++	chain_sg = &c->SG[h->max_cmd_sg_entries - 1];
++	temp64.val32.lower = chain_sg->Addr.lower;
++	temp64.val32.upper = chain_sg->Addr.upper;
++	pci_unmap_single(h->pdev, temp64.val, chain_sg->Len, PCI_DMA_TODEVICE);
++}
++
+ static void complete_scsi_command(struct CommandList *cp,
+ 	int timeout, u32 tag)
+ {
+@@ -860,6 +929,8 @@ static void complete_scsi_command(struct CommandList *cp,
+ 	h = cp->h;
+ 
+ 	scsi_dma_unmap(cmd); /* undo the DMA mappings */
++	if (cp->Header.SGTotal > h->max_cmd_sg_entries)
++		hpsa_unmap_sg_chain_block(h, cp);
+ 
+ 	cmd->result = (DID_OK << 16); 		/* host byte */
+ 	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
+@@ -1064,6 +1135,7 @@ static int hpsa_scsi_detect(struct ctlr_info *h)
+ 	sh->max_id = HPSA_MAX_LUN;
+ 	sh->can_queue = h->nr_cmds;
+ 	sh->cmd_per_lun = h->nr_cmds;
++	sh->sg_tablesize = h->maxsgentries;
+ 	h->scsi_host = sh;
+ 	sh->hostdata[0] = (unsigned long) h;
+ 	sh->irq = h->intr[PERF_MODE_INT];
+@@ -1765,16 +1837,17 @@ out:
+  * dma mapping  and fills in the scatter gather entries of the
+  * hpsa command, cp.
+  */
+-static int hpsa_scatter_gather(struct pci_dev *pdev,
++static int hpsa_scatter_gather(struct ctlr_info *h,
+ 		struct CommandList *cp,
+ 		struct scsi_cmnd *cmd)
+ {
+ 	unsigned int len;
+ 	struct scatterlist *sg;
+ 	u64 addr64;
+-	int use_sg, i;
++	int use_sg, i, sg_index, chained;
++	struct SGDescriptor *curr_sg;
+ 
+-	BUG_ON(scsi_sg_count(cmd) > MAXSGENTRIES);
++	BUG_ON(scsi_sg_count(cmd) > h->maxsgentries);
+ 
+ 	use_sg = scsi_dma_map(cmd);
+ 	if (use_sg < 0)
+@@ -1783,15 +1856,33 @@ static int hpsa_scatter_gather(struct pci_dev *pdev,
+ 	if (!use_sg)
+ 		goto sglist_finished;
+ 
++	curr_sg = cp->SG;
++	chained = 0;
++	sg_index = 0;
+ 	scsi_for_each_sg(cmd, sg, use_sg, i) {
++		if (i == h->max_cmd_sg_entries - 1 &&
++			use_sg > h->max_cmd_sg_entries) {
++			chained = 1;
++			curr_sg = h->cmd_sg_list[cp->cmdindex];
++			sg_index = 0;
++		}
+ 		addr64 = (u64) sg_dma_address(sg);
+ 		len  = sg_dma_len(sg);
+-		cp->SG[i].Addr.lower =
+-			(u32) (addr64 & (u64) 0x00000000FFFFFFFF);
+-		cp->SG[i].Addr.upper =
+-			(u32) ((addr64 >> 32) & (u64) 0x00000000FFFFFFFF);
+-		cp->SG[i].Len = len;
+-		cp->SG[i].Ext = 0;  /* we are not chaining */
++		curr_sg->Addr.lower = (u32) (addr64 & 0x0FFFFFFFFULL);
++		curr_sg->Addr.upper = (u32) ((addr64 >> 32) & 0x0FFFFFFFFULL);
++		curr_sg->Len = len;
++		curr_sg->Ext = 0;  /* we are not chaining */
++		curr_sg++;
++	}
++
++	if (use_sg + chained > h->maxSG)
++		h->maxSG = use_sg + chained;
++
++	if (chained) {
++		cp->Header.SGList = h->max_cmd_sg_entries;
++		cp->Header.SGTotal = (u16) (use_sg + 1);
++		hpsa_map_sg_chain_block(h, cp);
++		return 0;
+ 	}
+ 
+ sglist_finished:
+@@ -1887,7 +1978,7 @@ static int hpsa_scsi_queue_command(struct scsi_cmnd *cmd,
+ 		break;
+ 	}
+ 
+-	if (hpsa_scatter_gather(h->pdev, c, cmd) < 0) { /* Fill SG list */
++	if (hpsa_scatter_gather(h, c, cmd) < 0) { /* Fill SG list */
+ 		cmd_free(h, c);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+@@ -3283,6 +3374,23 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
+ 
+ 	h->board_id = board_id;
+ 	h->max_commands = readl(&(h->cfgtable->MaxPerformantModeCommands));
++	h->maxsgentries = readl(&(h->cfgtable->MaxScatterGatherElements));
++
++	/*
++	 * Limit in-command s/g elements to 32 save dma'able memory.
++	 * Howvever spec says if 0, use 31
++	 */
++
++	h->max_cmd_sg_entries = 31;
++	if (h->maxsgentries > 512) {
++		h->max_cmd_sg_entries = 32;
++		h->chainsize = h->maxsgentries - h->max_cmd_sg_entries + 1;
++		h->maxsgentries--; /* save one for chain pointer */
++	} else {
++		h->maxsgentries = 31; /* default to traditional values */
++		h->chainsize = 0;
++	}
++
+ 	h->product_name = products[prod_index].product_name;
+ 	h->access = *(products[prod_index].access);
+ 	/* Allow room for some ioctls */
+@@ -3463,6 +3571,8 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 		rc = -ENOMEM;
+ 		goto clean4;
+ 	}
++	if (hpsa_allocate_sg_chain_blocks(h))
++		goto clean4;
+ 	spin_lock_init(&h->lock);
+ 	spin_lock_init(&h->scan_lock);
+ 	init_waitqueue_head(&h->scan_wait_queue);
+@@ -3485,6 +3595,7 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 	return 1;
+ 
+ clean4:
++	hpsa_free_sg_chain_blocks(h);
+ 	kfree(h->cmd_pool_bits);
+ 	if (h->cmd_pool)
+ 		pci_free_consistent(h->pdev,
+@@ -3560,6 +3671,7 @@ static void __devexit hpsa_remove_one(struct pci_dev *pdev)
+ 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
+ 	hpsa_shutdown(pdev);
+ 	iounmap(h->vaddr);
++	hpsa_free_sg_chain_blocks(h);
+ 	pci_free_consistent(h->pdev,
+ 		h->nr_cmds * sizeof(struct CommandList),
+ 		h->cmd_pool, h->cmd_pool_dhandle);
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index fc15215..1bb5233 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -83,6 +83,10 @@ struct ctlr_info {
+ 	unsigned int maxQsinceinit;
+ 	unsigned int maxSG;
+ 	spinlock_t lock;
++	int maxsgentries;
++	u8 max_cmd_sg_entries;
++	int chainsize;
++	struct SGDescriptor **cmd_sg_list;
+ 
+ 	/* pointers to command and error info pool */
+ 	struct CommandList 	*cmd_pool;
 diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 3e0abdf..43b6f1c 100644
+index 43b6f1c..cb0c238 100644
 --- a/drivers/scsi/hpsa_cmd.h
 +++ b/drivers/scsi/hpsa_cmd.h
-@@ -313,12 +313,18 @@ struct CommandList {
- 	void   *scsi_cmd;
+@@ -23,7 +23,8 @@
  
- /* on 64 bit architectures, to get this to be 32-byte-aligned
-- * it so happens we need no padding, on 32 bit systems,
-- * we need 8 bytes of padding.   This does that.
-+ * it so happens we need PAD_64 bytes of padding, on 32 bit systems,
-+ * we need PAD_32 bytes of padding (see below).   This does that.
-+ * If it happens that 64 bit and 32 bit systems need different
-+ * padding, PAD_32 and PAD_64 can be set independently, and.
-+ * the code below will do the right thing.
+ /* general boundary defintions */
+ #define SENSEINFOBYTES          32 /* may vary between hbas */
+-#define MAXSGENTRIES            31
++#define MAXSGENTRIES            32
++#define HPSA_SG_CHAIN		0x80000000
+ #define MAXREPLYQS              256
+ 
+ /* Command Status value */
+@@ -321,8 +322,8 @@ struct CommandList {
   */
--#define COMMANDLIST_PAD ((8 - sizeof(long))/4 * 8)
-+#define IS_32_BIT ((8 - sizeof(long))/4)
-+#define IS_64_BIT (!IS_32_BIT)
-+#define PAD_32 (8)
-+#define PAD_64 (0)
-+#define COMMANDLIST_PAD (IS_32_BIT * PAD_32 + IS_64_BIT * PAD_64)
+ #define IS_32_BIT ((8 - sizeof(long))/4)
+ #define IS_64_BIT (!IS_32_BIT)
+-#define PAD_32 (8)
+-#define PAD_64 (0)
++#define PAD_32 (24)
++#define PAD_64 (16)
+ #define COMMANDLIST_PAD (IS_32_BIT * PAD_32 + IS_64_BIT * PAD_64)
  	u8 pad[COMMANDLIST_PAD];
--
  };
- 
- /* Configuration Table Structure */
 
