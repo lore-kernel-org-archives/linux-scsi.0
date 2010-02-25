@@ -1,16 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 3/9] hpsa: fix scsi status mis-shift
-Date: Thu, 25 Feb 2010 14:03:01 -0600
-Message-ID: <20100225200301.7508.64978.stgit@beardog.cce.hp.com>
+Subject: [PATCH 4/9] hpsa: return -ENOMEM, not -1
+Date: Thu, 25 Feb 2010 14:03:06 -0600
+Message-ID: <20100225200306.7508.14148.stgit@beardog.cce.hp.com>
 References: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:9415 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933430Ab0BYT7y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 14:59:54 -0500
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:40980 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933430Ab0BYT75 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 14:59:57 -0500
 In-Reply-To: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,7 +19,7 @@ Cc: james.bottomley@suse.de, mikem@beardog.cce.hp.com
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: fix scsi status mis-shift.  The SCSI status does not need to be shifted.
+hpsa: return -ENOMEM, not -1
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
@@ -27,16 +27,16 @@ Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3734f31..604b4c9 100644
+index 604b4c9..a72a18e 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1006,7 +1006,7 @@ static void complete_scsi_command(struct CommandList *cp,
+@@ -1386,7 +1386,7 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr)
  
- 	cmd->result = (DID_OK << 16); 		/* host byte */
- 	cmd->result |= (COMMAND_COMPLETE << 8);	/* msg byte */
--	cmd->result |= (ei->ScsiStatus << 1);
-+	cmd->result |= ei->ScsiStatus;
+ 	if (c == NULL) {			/* trouble... */
+ 		dev_warn(&h->pdev->dev, "cmd_special_alloc returned NULL!\n");
+-		return -1;
++		return -ENOMEM;
+ 	}
  
- 	/* copy the sense data whether we need to or not. */
- 	memcpy(cmd->sense_buffer, ei->SenseInfo,
+ 	fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0, scsi3addr, TYPE_MSG);
 
