@@ -1,28 +1,39 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 1/8] PM: Add parent information to timing messages
-Date: Thu, 25 Feb 2010 08:01:47 +0100
-Message-ID: <20100225070147.GA1601@ucw.cz>
-References: <201001240033.34253.rjw@sisk.pl> <201001240034.36423.rjw@sisk.pl>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15341] Load goes up very high when we traverse the large tree
+Date: Thu, 25 Feb 2010 12:04:58 GMT
+Message-ID: <201002251204.o1PC4wvH013998@demeter.kernel.org>
+References: <bug-15341-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201001240034.36423.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: LKML <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PCI <linux-pci@vger.kernel.org>, pm list <linux-pm@lists.linux-foundation.org>, linux-usb@vger.kernel.org, Greg KH <gregkh@suse.de>, Jesse Barnes <jbarnes@virtuousgeek.org>, James Bottomley <James.Bottomley@suse.de>, Linux SCSI <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Len Brown <lenb@kernel.org>, Nigel Cunningham <ncunningham@crca.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:45951 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758977Ab0BYME7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 07:04:59 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o1PC4wE8013999
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Feb 2010 12:04:58 GMT
+In-Reply-To: <bug-15341-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun 2010-01-24 00:34:36, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> Add parent information to the messages printed by the suspend/resume
-> core when initcall_debug is set.
-> 
-> Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+http://bugzilla.kernel.org/show_bug.cgi?id=15341
 
-ACK.
+
+
+
+
+--- Comment #12 from Frederic MASSOT <frederic@juliana-multimedia.com>  2010-02-25 12:04:29 ---
+Hi,
+
+I test the new kernel 2.6.33, I was able to run "find" on a large tree, the
+load has not exceeded 3.  :o)
+
+Regards.
 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
