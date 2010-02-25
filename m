@@ -1,41 +1,36 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 25 Feb 2010 18:54:02 +0100
-Message-ID: <20100225175402.GZ1025@kernel.dk>
-References: <Pine.LNX.4.44L0.1002251132170.1686-100000@iolanthe.rowland.org> <yq14ol5mfa1.fsf@sermon.lab.mkp.net> <yq1zl2xl0j3.fsf@sermon.lab.mkp.net>
+Date: Thu, 25 Feb 2010 12:58:34 -0500
+Message-ID: <yq1mxyxkxit.fsf@sermon.lab.mkp.net>
+References: <20100225165901.GZ30797@beardog.cce.hp.com>
+	<20100225171826.GC30797@beardog.cce.hp.com>
+	<yq1vddlkyxo.fsf@sermon.lab.mkp.net> <4B86B666.2070806@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:40827 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933137Ab0BYRyD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Feb 2010 12:54:03 -0500
-Content-Disposition: inline
-In-Reply-To: <yq1zl2xl0j3.fsf@sermon.lab.mkp.net>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:61889 "EHLO
+	rcsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932905Ab0BYSAS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 13:00:18 -0500
+In-Reply-To: <4B86B666.2070806@panasas.com> (Boaz Harrosh's message of "Thu,
+	25 Feb 2010 09:41:58 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Ramya Desai <ramya.desai@gmail.com>, James Bottomley <James.Bottomley@suse.de>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, scameron@beardog.cce.hp.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, axboe@kernel.dk
 
-On Thu, Feb 25 2010, Martin K. Petersen wrote:
-> >>>>> "mkp" == Martin K Petersen <martin.petersen@oracle.com> writes:
-> 
-> mkp> This one is a runt that came in as part of the DM topology
-> mkp> enablement.  DM ended up doing things differently and it is no
-> mkp> longer used.  I already have a patch in my queue that removes it.
-> 
-> Here it is, btw...
-> 
-> 
-> block: Remove blk_queue_max_hw_sectors
-> 
-> This function is no longer called by any subsystem and can be removed.
-> 
-> Also clarify test in blk_queue_max_sectors.
+>>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
 
-That works, we badly need to clean this crap up, I had not noticed it
-had gone this wrong. I'll shove this into 2.6.34, thanks.
+Boaz> It seems like the confusion calls for a rename. We are made to
+Boaz> believe that the accessors naming convention is the same as the
+Boaz> queue member it changes. But here it is named as another very
+Boaz> confusing member.
+
+Boaz> At least if the name is not changed, a big fat comment is do, that
+Boaz> says this is for drivers to change the *max_hw_sectors* though it
+Boaz> is named after that other - not for drivers - member.
+
+I'm fine with renaming the function after the hw variant is gone.
 
 -- 
-Jens Axboe
-
+Martin K. Petersen	Oracle Linux Engineering
