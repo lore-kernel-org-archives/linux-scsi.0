@@ -1,46 +1,40 @@
-From: Ramya Desai <ramya.desai@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 25 Feb 2010 20:17:02 +0530
-Message-ID: <3e7aae31002250647o2f7c380bwcc70fe4d19161681@mail.gmail.com>
-References: <3e7aae31002240507r5d5c4c2bj8e653a3d65fa6709@mail.gmail.com>
-	 <Pine.LNX.4.44L0.1002241123220.2436-100000@iolanthe.rowland.org>
-	 <20100224190753.GF1025@kernel.dk>
+Date: Thu, 25 Feb 2010 11:37:49 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1002251132170.1686-100000@iolanthe.rowland.org>
+References: <yq1aauzopk2.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f172.google.com ([209.85.221.172]:45373 "EHLO
-	mail-qy0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932770Ab0BYOrF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 09:47:05 -0500
-In-Reply-To: <20100224190753.GF1025@kernel.dk>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52988 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932884Ab0BYQhy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 11:37:54 -0500
+In-Reply-To: <yq1aauzopk2.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ramya Desai <ramya.desai@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <jens.axboe@oracle.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Thu, Feb 25, 2010 at 12:37 AM, Jens Axboe <jens.axboe@oracle.com> wr=
-ote:
+On Tue, 23 Feb 2010, Martin K. Petersen wrote:
 
->> At this point everything was set up correctly. =A0I don't know why t=
-he
->> transfer lengths are still 512 KB. =A0Maybe someone else has an idea=
-=2E
->
-> What is the test case issuing the IO? Depending on the device, it may
-> hit other restrictions aside from just maximum transfer length.
+> Alan> Are drivers supposed to assign values directly to
+> Alan> q-> limits.max_sectors?  Shouldn't there be a cleaner API for all
+> Alan> this?
+> 
+> Drivers are supposed to set the hard limit.  The soft limit is a
+> fs/block layer value and none of the device driver's business.
 
-Dear Jens,
+_How_ are drivers supposed to set the hard limit?
 
-We are just copying the data from PC to usb-storage device (drag and
-drop), host to device.
+If they call blk_queue_max_sectors() then both the hard and soft limits 
+are affected, but at least the hard limit is set correctly.
 
-Please let me know, if you need any additional information.
+If they call blk_queue_max_hw_sectors() then only the hard limit is 
+affected, but it cannot be set to a value less than 1024 
+(BLK_DEF_MAX_SECTORS).  Wouldn't it be more logical to allow the hard 
+limit to be set to anything at least as large as the page size, and 
+decrease the soft limit if it is larger than the new hard limit?
 
-Thansk and Regards,
-RD.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan Stern
+
