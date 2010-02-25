@@ -1,52 +1,41 @@
-From: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 25 Feb 2010 18:52:10 +0100
-Message-ID: <20100225175210.GY1025@kernel.dk>
-References: <yq1aauzopk2.fsf@sermon.lab.mkp.net> <Pine.LNX.4.44L0.1002251132170.1686-100000@iolanthe.rowland.org>
+Date: Thu, 25 Feb 2010 18:54:02 +0100
+Message-ID: <20100225175402.GZ1025@kernel.dk>
+References: <Pine.LNX.4.44L0.1002251132170.1686-100000@iolanthe.rowland.org> <yq14ol5mfa1.fsf@sermon.lab.mkp.net> <yq1zl2xl0j3.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:40827 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933137Ab0BYRyD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Feb 2010 12:54:03 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1002251132170.1686-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Ramya Desai <ramya.desai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <yq1zl2xl0j3.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Ramya Desai <ramya.desai@gmail.com>, James Bottomley <James.Bottomley@suse.de>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Thu, Feb 25 2010, Alan Stern wrote:
-> On Tue, 23 Feb 2010, Martin K. Petersen wrote:
+On Thu, Feb 25 2010, Martin K. Petersen wrote:
+> >>>>> "mkp" == Martin K Petersen <martin.petersen@oracle.com> writes:
 > 
-> > Alan> Are drivers supposed to assign values directly to
-> > Alan> q-> limits.max_sectors?  Shouldn't there be a cleaner API for all
-> > Alan> this?
-> > 
-> > Drivers are supposed to set the hard limit.  The soft limit is a
-> > fs/block layer value and none of the device driver's business.
+> mkp> This one is a runt that came in as part of the DM topology
+> mkp> enablement.  DM ended up doing things differently and it is no
+> mkp> longer used.  I already have a patch in my queue that removes it.
 > 
-> _How_ are drivers supposed to set the hard limit?
+> Here it is, btw...
 > 
-> If they call blk_queue_max_sectors() then both the hard and soft limits 
-> are affected, but at least the hard limit is set correctly.
+> 
+> block: Remove blk_queue_max_hw_sectors
+> 
+> This function is no longer called by any subsystem and can be removed.
+> 
+> Also clarify test in blk_queue_max_sectors.
 
-blk_queue_max_hw_sectors(). I can understand the confusion though, the
-comment is crap for blk_queue_max_sectors(). Mostly because the logic
-isn't as clean as it should be, I'll try and get that cleaned up.
-
-> If they call blk_queue_max_hw_sectors() then only the hard limit is 
-> affected, but it cannot be set to a value less than 1024 
-> (BLK_DEF_MAX_SECTORS).  Wouldn't it be more logical to allow the hard 
-> limit to be set to anything at least as large as the page size, and 
-> decrease the soft limit if it is larger than the new hard limit?
-
-The driver really should only set the hard limit, they should not change
-the soft setting.
-
-We cannot easily support < page size software not hardware limit.
+That works, we badly need to clean this crap up, I had not noticed it
+had gone this wrong. I'll shove this into 2.6.34, thanks.
 
 -- 
 Jens Axboe
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
