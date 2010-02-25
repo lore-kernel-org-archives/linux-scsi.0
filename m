@@ -1,16 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 6/9] hpsa: mark hpsa_pci_init as __devinit
-Date: Thu, 25 Feb 2010 14:03:17 -0600
-Message-ID: <20100225200317.7508.24610.stgit@beardog.cce.hp.com>
+Subject: [PATCH 7/9] hpsa: Clarify calculation of padding for commandlist
+	structure
+Date: Thu, 25 Feb 2010 14:03:22 -0600
+Message-ID: <20100225200322.7508.41589.stgit@beardog.cce.hp.com>
 References: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:8497 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933551Ab0BYUAJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 15:00:09 -0500
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:11393 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933551Ab0BYUAN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 15:00:13 -0500
 In-Reply-To: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,24 +20,38 @@ Cc: james.bottomley@suse.de, mikem@beardog.cce.hp.com
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: mark hpsa_pci_init as __devinit
+hpsa: Clarify calculation of padding for commandlist structure
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa_cmd.h |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3d43bb2..2e1edce 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3174,7 +3174,7 @@ default_int_mode:
- 	h->intr[PERF_MODE_INT] = pdev->irq;
- }
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 3e0abdf..43b6f1c 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -313,12 +313,18 @@ struct CommandList {
+ 	void   *scsi_cmd;
  
--static int hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
-+static int __devinit hpsa_pci_init(struct ctlr_info *h, struct pci_dev *pdev)
- {
- 	ushort subsystem_vendor_id, subsystem_device_id, command;
- 	u32 board_id, scratchpad = 0;
+ /* on 64 bit architectures, to get this to be 32-byte-aligned
+- * it so happens we need no padding, on 32 bit systems,
+- * we need 8 bytes of padding.   This does that.
++ * it so happens we need PAD_64 bytes of padding, on 32 bit systems,
++ * we need PAD_32 bytes of padding (see below).   This does that.
++ * If it happens that 64 bit and 32 bit systems need different
++ * padding, PAD_32 and PAD_64 can be set independently, and.
++ * the code below will do the right thing.
+  */
+-#define COMMANDLIST_PAD ((8 - sizeof(long))/4 * 8)
++#define IS_32_BIT ((8 - sizeof(long))/4)
++#define IS_64_BIT (!IS_32_BIT)
++#define PAD_32 (8)
++#define PAD_64 (0)
++#define COMMANDLIST_PAD (IS_32_BIT * PAD_32 + IS_64_BIT * PAD_64)
+ 	u8 pad[COMMANDLIST_PAD];
+-
+ };
+ 
+ /* Configuration Table Structure */
 
