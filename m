@@ -1,55 +1,39 @@
-From: scameron@beardog.cce.hp.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Maximum data size in a single transfer for MS driver
-Date: Thu, 25 Feb 2010 11:18:26 -0600
-Message-ID: <20100225171826.GC30797@beardog.cce.hp.com>
+Date: Thu, 25 Feb 2010 12:28:03 -0500
+Message-ID: <yq1vddlkyxo.fsf@sermon.lab.mkp.net>
 References: <20100225165901.GZ30797@beardog.cce.hp.com>
+	<20100225171826.GC30797@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:1059 "EHLO
-	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932681Ab0BYRPS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 12:15:18 -0500
-Content-Disposition: inline
-In-Reply-To: <20100225165901.GZ30797@beardog.cce.hp.com>
+Received: from acsinet11.oracle.com ([141.146.126.233]:44912 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932906Ab0BYR3R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 12:29:17 -0500
+In-Reply-To: <20100225171826.GC30797@beardog.cce.hp.com>
+	(scameron@beardog.cce.hp.com's message of "Thu, 25 Feb 2010 11:18:26
+	-0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, axboe@kernel.dk, scameron@beardog.cce.hp.com
+To: scameron@beardog.cce.hp.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, axboe@kernel.dk
 
+>>>>> "scameron" == scameron  <scameron@beardog.cce.hp.com> writes:
 
-BLK_DEF_MAX_SECTORS seems to act as a cap, as a MAXIMUM possible value for
-q->limits->max_sectors in blk_queue_max_sectors,
-but as a MINIMUM for q->limits.max_hw_sectors in blk_queue_max_hw_sectors.
+scameron> BLK_DEF_MAX_SECTORS seems to act as a cap, as a MAXIMUM
+scameron> possible value for q->limits->max_sectors in blk_queue_max_sectors,
+scameron> but as a MINIMUM for q->limits.max_hw_sectors in
+scameron> blk_queue_max_hw_sectors.
 
-Is that intentional?
+Please read the entire thread.
 
-Is this code in block/blk-settings.c correct?
+blk_queue_max_hw_sectors() is dead, it was never used except briefly by
+DM.  Device drivers should use blk_queue_max_sectors() to set their hard
+limit.
 
-void blk_queue_max_sectors(struct request_queue *q, unsigned int max_sectors)
-{
-        if ((max_sectors << 9) < PAGE_CACHE_SIZE) {
-                max_sectors = 1 << (PAGE_CACHE_SHIFT - 9);
-                printk(KERN_INFO "%s: set to minimum %d\n",
-                       __func__, max_sectors);
-        }
+max_sectors is a block layer soft limit that can be overridden on a
+per-device basis in /sys/block/foo/queue/max_sectors_kb.
 
-        if (BLK_DEF_MAX_SECTORS > max_sectors)
-                q->limits.max_hw_sectors = q->limits.max_sectors = max_sectors;
-        else {
-                q->limits.max_sectors = BLK_DEF_MAX_SECTORS;
-                q->limits.max_hw_sectors = max_sectors;
-        }
-}
-EXPORT_SYMBOL(blk_queue_max_sectors);
-
-void blk_queue_max_hw_sectors(struct request_queue *q, unsigned int max_sectors)
-{
-        if (BLK_DEF_MAX_SECTORS > max_sectors)
-                q->limits.max_hw_sectors = BLK_DEF_MAX_SECTORS;
-        else
-                q->limits.max_hw_sectors = max_sectors;
-}
-EXPORT_SYMBOL(blk_queue_max_hw_sectors);
-
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
