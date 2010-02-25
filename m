@@ -1,42 +1,287 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 4/9] hpsa: return -ENOMEM, not -1
-Date: Thu, 25 Feb 2010 14:03:06 -0600
-Message-ID: <20100225200306.7508.14148.stgit@beardog.cce.hp.com>
+Subject: [PATCH 5/9] hpsa: remove scan thread
+Date: Thu, 25 Feb 2010 14:03:12 -0600
+Message-ID: <20100225200312.7508.82719.stgit@beardog.cce.hp.com>
 References: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:40980 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933430Ab0BYT75 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 14:59:57 -0500
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:26619 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933551Ab0BYUAE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 15:00:04 -0500
 In-Reply-To: <20100225200125.7508.11486.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: james.bottomley@suse.de, mikem@beardog.cce.hp.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: Mike Miller <mikem@beardog.cce.hp.com>
 
-hpsa: return -ENOMEM, not -1
+hpsa: remove scan thread
+The intent of the scan thread was to allow a UNIT ATTENTION/LUN
+DATA CHANGED condition encountered in the interrupt handler
+to trigger a rescan of devices, which can't be done in interrupt
+context.  However, we weren't able to get this to work, due to
+multiple such UNIT ATTENTION conditions arriving during the rescan,
+during updating of the SCSI mid layer, etc.  There's no way to tell
+the devices, "stand still while I scan you!"  Since it doesn't work,
+there's no point in having the thread, as the rescan triggered via
+ioctl or sysfs can be done without such a thread.
 
+Signed-off-by: Mike Miller <mikem@beardog.cce.hp.com>
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |  167 +--------------------------------------------------
+ drivers/scsi/hpsa.h |    3 -
+ 2 files changed, 4 insertions(+), 166 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 604b4c9..a72a18e 100644
+index a72a18e..3d43bb2 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1386,7 +1386,7 @@ static int hpsa_send_reset(struct ctlr_info *h, unsigned char *scsi3addr)
+@@ -53,7 +53,7 @@
+ #include "hpsa.h"
  
- 	if (c == NULL) {			/* trouble... */
- 		dev_warn(&h->pdev->dev, "cmd_special_alloc returned NULL!\n");
--		return -1;
-+		return -ENOMEM;
+ /* HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.' */
+-#define HPSA_DRIVER_VERSION "2.0.1-3"
++#define HPSA_DRIVER_VERSION "2.0.2-1"
+ #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
+ 
+ /* How long to wait (in milliseconds) for board to go into simple mode */
+@@ -212,133 +212,6 @@ static inline struct ctlr_info *shost_to_hba(struct Scsi_Host *sh)
+ 	return (struct ctlr_info *) *priv;
+ }
+ 
+-static struct task_struct *hpsa_scan_thread;
+-static DEFINE_MUTEX(hpsa_scan_mutex);
+-static LIST_HEAD(hpsa_scan_q);
+-static int hpsa_scan_func(void *data);
+-
+-/**
+- * add_to_scan_list() - add controller to rescan queue
+- * @h:		      Pointer to the controller.
+- *
+- * Adds the controller to the rescan queue if not already on the queue.
+- *
+- * returns 1 if added to the queue, 0 if skipped (could be on the
+- * queue already, or the controller could be initializing or shutting
+- * down).
+- **/
+-static int add_to_scan_list(struct ctlr_info *h)
+-{
+-	struct ctlr_info *test_h;
+-	int found = 0;
+-	int ret = 0;
+-
+-	if (h->busy_initializing)
+-		return 0;
+-
+-	/*
+-	 * If we don't get the lock, it means the driver is unloading
+-	 * and there's no point in scheduling a new scan.
+-	 */
+-	if (!mutex_trylock(&h->busy_shutting_down))
+-		return 0;
+-
+-	mutex_lock(&hpsa_scan_mutex);
+-	list_for_each_entry(test_h, &hpsa_scan_q, scan_list) {
+-		if (test_h == h) {
+-			found = 1;
+-			break;
+-		}
+-	}
+-	if (!found && !h->busy_scanning) {
+-		INIT_COMPLETION(h->scan_wait);
+-		list_add_tail(&h->scan_list, &hpsa_scan_q);
+-		ret = 1;
+-	}
+-	mutex_unlock(&hpsa_scan_mutex);
+-	mutex_unlock(&h->busy_shutting_down);
+-
+-	return ret;
+-}
+-
+-/**
+- * remove_from_scan_list() - remove controller from rescan queue
+- * @h:			   Pointer to the controller.
+- *
+- * Removes the controller from the rescan queue if present. Blocks if
+- * the controller is currently conducting a rescan.  The controller
+- * can be in one of three states:
+- * 1. Doesn't need a scan
+- * 2. On the scan list, but not scanning yet (we remove it)
+- * 3. Busy scanning (and not on the list). In this case we want to wait for
+- *    the scan to complete to make sure the scanning thread for this
+- *    controller is completely idle.
+- **/
+-static void remove_from_scan_list(struct ctlr_info *h)
+-{
+-	struct ctlr_info *test_h, *tmp_h;
+-
+-	mutex_lock(&hpsa_scan_mutex);
+-	list_for_each_entry_safe(test_h, tmp_h, &hpsa_scan_q, scan_list) {
+-		if (test_h == h) { /* state 2. */
+-			list_del(&h->scan_list);
+-			complete_all(&h->scan_wait);
+-			mutex_unlock(&hpsa_scan_mutex);
+-			return;
+-		}
+-	}
+-	if (h->busy_scanning) { /* state 3. */
+-		mutex_unlock(&hpsa_scan_mutex);
+-		wait_for_completion(&h->scan_wait);
+-	} else { /* state 1, nothing to do. */
+-		mutex_unlock(&hpsa_scan_mutex);
+-	}
+-}
+-
+-/* hpsa_scan_func() - kernel thread used to rescan controllers
+- * @data:	 Ignored.
+- *
+- * A kernel thread used scan for drive topology changes on
+- * controllers. The thread processes only one controller at a time
+- * using a queue.  Controllers are added to the queue using
+- * add_to_scan_list() and removed from the queue either after done
+- * processing or using remove_from_scan_list().
+- *
+- * returns 0.
+- **/
+-static int hpsa_scan_func(__attribute__((unused)) void *data)
+-{
+-	struct ctlr_info *h;
+-	int host_no;
+-
+-	while (1) {
+-		set_current_state(TASK_INTERRUPTIBLE);
+-		schedule();
+-		if (kthread_should_stop())
+-			break;
+-
+-		while (1) {
+-			mutex_lock(&hpsa_scan_mutex);
+-			if (list_empty(&hpsa_scan_q)) {
+-				mutex_unlock(&hpsa_scan_mutex);
+-				break;
+-			}
+-			h = list_entry(hpsa_scan_q.next, struct ctlr_info,
+-					scan_list);
+-			list_del(&h->scan_list);
+-			h->busy_scanning = 1;
+-			mutex_unlock(&hpsa_scan_mutex);
+-			host_no = h->scsi_host ?  h->scsi_host->host_no : -1;
+-			hpsa_scan_start(h->scsi_host);
+-			complete_all(&h->scan_wait);
+-			mutex_lock(&hpsa_scan_mutex);
+-			h->busy_scanning = 0;
+-			mutex_unlock(&hpsa_scan_mutex);
+-		}
+-	}
+-	return 0;
+-}
+-
+ static int check_for_unit_attention(struct ctlr_info *h,
+ 	struct CommandList *c)
+ {
+@@ -356,21 +229,8 @@ static int check_for_unit_attention(struct ctlr_info *h,
+ 		break;
+ 	case REPORT_LUNS_CHANGED:
+ 		dev_warn(&h->pdev->dev, "hpsa%d: report LUN data "
+-			"changed\n", h->ctlr);
++			"changed, action required\n", h->ctlr);
+ 	/*
+-	 * Here, we could call add_to_scan_list and wake up the scan thread,
+-	 * except that it's quite likely that we will get more than one
+-	 * REPORT_LUNS_CHANGED condition in quick succession, which means
+-	 * that those which occur after the first one will likely happen
+-	 * *during* the hpsa_scan_thread's rescan.  And the rescan code is not
+-	 * robust enough to restart in the middle, undoing what it has already
+-	 * done, and it's not clear that it's even possible to do this, since
+-	 * part of what it does is notify the SCSI mid layer, which starts
+-	 * doing it's own i/o to read partition tables and so on, and the
+-	 * driver doesn't have visibility to know what might need undoing.
+-	 * In any event, if possible, it is horribly complicated to get right
+-	 * so we just don't do it for now.
+-	 *
+ 	 * Note: this REPORT_LUNS_CHANGED condition only occurs on the MSA2012.
+ 	 */
+ 		break;
+@@ -397,10 +257,7 @@ static ssize_t host_store_rescan(struct device *dev,
+ 	struct ctlr_info *h;
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	h = shost_to_hba(shost);
+-	if (add_to_scan_list(h)) {
+-		wake_up_process(hpsa_scan_thread);
+-		wait_for_completion_interruptible(&h->scan_wait);
+-	}
++	hpsa_scan_start(h->scsi_host);
+ 	return count;
+ }
+ 
+@@ -3553,8 +3410,6 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 	h->busy_initializing = 1;
+ 	INIT_HLIST_HEAD(&h->cmpQ);
+ 	INIT_HLIST_HEAD(&h->reqQ);
+-	mutex_init(&h->busy_shutting_down);
+-	init_completion(&h->scan_wait);
+ 	rc = hpsa_pci_init(h, pdev);
+ 	if (rc != 0)
+ 		goto clean1;
+@@ -3702,8 +3557,6 @@ static void __devexit hpsa_remove_one(struct pci_dev *pdev)
+ 		return;
  	}
+ 	h = pci_get_drvdata(pdev);
+-	mutex_lock(&h->busy_shutting_down);
+-	remove_from_scan_list(h);
+ 	hpsa_unregister_scsi(h);	/* unhook from SCSI subsystem */
+ 	hpsa_shutdown(pdev);
+ 	iounmap(h->vaddr);
+@@ -3724,7 +3577,6 @@ static void __devexit hpsa_remove_one(struct pci_dev *pdev)
+ 	 */
+ 	pci_release_regions(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+-	mutex_unlock(&h->busy_shutting_down);
+ 	kfree(h);
+ }
  
- 	fill_cmd(c, HPSA_DEVICE_RESET_MSG, h, NULL, 0, 0, scsi3addr, TYPE_MSG);
+@@ -3878,23 +3730,12 @@ clean_up:
+  */
+ static int __init hpsa_init(void)
+ {
+-	int err;
+-	/* Start the scan thread */
+-	hpsa_scan_thread = kthread_run(hpsa_scan_func, NULL, "hpsa_scan");
+-	if (IS_ERR(hpsa_scan_thread)) {
+-		err = PTR_ERR(hpsa_scan_thread);
+-		return -ENODEV;
+-	}
+-	err = pci_register_driver(&hpsa_pci_driver);
+-	if (err)
+-		kthread_stop(hpsa_scan_thread);
+-	return err;
++	return pci_register_driver(&hpsa_pci_driver);
+ }
+ 
+ static void __exit hpsa_cleanup(void)
+ {
+ 	pci_unregister_driver(&hpsa_pci_driver);
+-	kthread_stop(hpsa_scan_thread);
+ }
+ 
+ module_init(hpsa_init);
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index a0502b3..fc15215 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -97,9 +97,6 @@ struct ctlr_info {
+ 	int			scan_finished;
+ 	spinlock_t		scan_lock;
+ 	wait_queue_head_t	scan_wait_queue;
+-	struct mutex		busy_shutting_down;
+-	struct list_head	scan_list;
+-	struct completion	scan_wait;
+ 
+ 	struct Scsi_Host *scsi_host;
+ 	spinlock_t devlock; /* to protect hba[ctlr]->dev[];  */
 
