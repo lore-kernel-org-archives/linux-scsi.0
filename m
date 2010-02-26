@@ -1,7 +1,8 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 7/9] cciss: do not use void pointer for scsi hba data
-Date: Fri, 26 Feb 2010 16:01:42 -0600
-Message-ID: <20100226220142.11979.77215.stgit@beardog.cce.hp.com>
+Subject: [PATCH 3/9] cciss: factor out scatter gather chain block allocation
+	and freeing
+Date: Fri, 26 Feb 2010 16:01:22 -0600
+Message-ID: <20100226220122.11979.60399.stgit@beardog.cce.hp.com>
 References: <20100226220023.11979.4999.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,119 +16,153 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-cciss: do not use void pointer for scsi hba data
-and get rid of related unnecessary type casting
-and delete some superfluous and misleading comments nearby.
+cciss: factor out scatter gather chain block allocation and freeing
+Rationale is that I want to use this code from the scsi half of the
+driver.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/block/cciss.h      |    4 +---
- drivers/block/cciss_scsi.c |   23 ++++++++++-------------
- 2 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/block/cciss.c |  108 ++++++++++++++++++++++++++-----------------------
+ 1 files changed, 58 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
-index ac454fd..c5d4111 100644
---- a/drivers/block/cciss.h
-+++ b/drivers/block/cciss.h
-@@ -131,9 +131,7 @@ struct ctlr_info
- 	/* Disk structures we need to pass back */
- 	struct gendisk   *gendisk[CISS_MAX_LUN];
- #ifdef CONFIG_CISS_SCSI_TAPE
--	void *scsi_ctlr; /* ptr to structure containing scsi related stuff */
--	/* list of block side commands the scsi error handling sucked up */
--	/* and saved for later processing */
-+	struct cciss_scsi_adapter_data_t *scsi_ctlr;
- #endif
- 	unsigned char alive;
- 	struct list_head scan_list;
-diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
-index f203606..c458232 100644
---- a/drivers/block/cciss_scsi.c
-+++ b/drivers/block/cciss_scsi.c
-@@ -127,11 +127,9 @@ struct cciss_scsi_adapter_data_t {
- };
- 
- #define CPQ_TAPE_LOCK(ctlr, flags) spin_lock_irqsave( \
--	&(((struct cciss_scsi_adapter_data_t *) \
--	hba[ctlr]->scsi_ctlr)->lock), flags);
-+	&hba[ctlr]->scsi_ctlr->lock, flags);
- #define CPQ_TAPE_UNLOCK(ctlr, flags) spin_unlock_irqrestore( \
--	&(((struct cciss_scsi_adapter_data_t *) \
--	hba[ctlr]->scsi_ctlr)->lock), flags);
-+	&hba[ctlr]->scsi_ctlr->lock, flags);
- 
- static CommandList_struct *
- scsi_cmd_alloc(ctlr_info_t *h)
-@@ -147,7 +145,7 @@ scsi_cmd_alloc(ctlr_info_t *h)
- 	struct cciss_scsi_cmd_stack_t *stk;
- 	u64bit temp64;
- 
--	sa = (struct cciss_scsi_adapter_data_t *) h->scsi_ctlr;
-+	sa = h->scsi_ctlr;
- 	stk = &sa->cmd_stack; 
- 
- 	if (stk->top < 0) 
-@@ -186,7 +184,7 @@ scsi_cmd_free(ctlr_info_t *h, CommandList_struct *cmd)
- 	struct cciss_scsi_adapter_data_t *sa;
- 	struct cciss_scsi_cmd_stack_t *stk;
- 
--	sa = (struct cciss_scsi_adapter_data_t *) h->scsi_ctlr;
-+	sa = h->scsi_ctlr;
- 	stk = &sa->cmd_stack; 
- 	if (stk->top >= CMD_STACK_SIZE) {
- 		printk("cciss: scsi_cmd_free called too many times.\n");
-@@ -233,7 +231,7 @@ scsi_cmd_stack_free(int ctlr)
- 	struct cciss_scsi_cmd_stack_t *stk;
- 	size_t size;
- 
--	sa = (struct cciss_scsi_adapter_data_t *) hba[ctlr]->scsi_ctlr;
-+	sa = hba[ctlr]->scsi_ctlr;
- 	stk = &sa->cmd_stack; 
- 	if (stk->top != CMD_STACK_SIZE-1) {
- 		printk( "cciss: %d scsi commands are still outstanding.\n",
-@@ -534,8 +532,7 @@ adjust_cciss_scsi_table(int ctlr, int hostno,
- 	CPQ_TAPE_LOCK(ctlr, flags);
- 
- 	if (hostno != -1)  /* if it's not the first time... */
--		sh = ((struct cciss_scsi_adapter_data_t *)
--			hba[ctlr]->scsi_ctlr)->scsi_host;
-+		sh = hba[ctlr]->scsi_ctlr->scsi_host;
- 
- 	/* find any devices in ccissscsi[] that are not in 
- 	   sd[] and remove them from ccissscsi[] */
-@@ -706,7 +703,7 @@ cciss_scsi_setup(int cntl_num)
- 		kfree(shba);
- 		shba = NULL;
- 	}
--	hba[cntl_num]->scsi_ctlr = (void *) shba;
-+	hba[cntl_num]->scsi_ctlr = shba;
- 	return;
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index cd8c7c2..eddb916 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -257,6 +257,59 @@ static inline void removeQ(CommandList_struct *c)
+ 	hlist_del_init(&c->list);
  }
  
-@@ -853,7 +850,7 @@ cciss_scsi_detect(int ctlr)
- 	sh->this_id = SELF_SCSI_ID;  
++static void cciss_free_sg_chain_blocks(struct Cmd_sg_list **cmd_sg_list,
++	int nr_cmds)
++{
++	int i;
++
++	if (!cmd_sg_list)
++		return;
++	for (i = 0; i < nr_cmds; i++) {
++		if (cmd_sg_list[i]) {
++			kfree(cmd_sg_list[i]->sgchain);
++			kfree(cmd_sg_list[i]);
++			cmd_sg_list[i] = NULL;
++		}
++	}
++	kfree(cmd_sg_list);
++}
++
++static struct Cmd_sg_list **cciss_allocate_sg_chain_blocks(ctlr_info_t *h,
++	int chainsize, int nr_cmds)
++{
++	int j;
++	struct Cmd_sg_list **cmd_sg_list;
++
++	if (chainsize <= 0)
++		return NULL;
++
++	cmd_sg_list = kmalloc(sizeof(*cmd_sg_list) * nr_cmds, GFP_KERNEL);
++	if (!cmd_sg_list)
++		return NULL;
++
++	/* Build up chain blocks for each command */
++	for (j = 0; j < nr_cmds; j++) {
++		cmd_sg_list[j] = kmalloc(sizeof(*cmd_sg_list[j]), GFP_KERNEL);
++		if (!cmd_sg_list[j]) {
++			dev_err(&h->pdev->dev, "Cannot get memory "
++				"for chain block.\n");
++			goto clean;
++		}
++		/* Need a block of chainsized s/g elements. */
++		cmd_sg_list[j]->sgchain = kmalloc((chainsize *
++			sizeof(SGDescriptor_struct)), GFP_KERNEL);
++		if (!cmd_sg_list[j]->sgchain) {
++			dev_err(&h->pdev->dev, "Cannot get memory "
++				"for s/g chains.\n");
++			goto clean;
++		}
++	}
++	return cmd_sg_list;
++clean:
++	cciss_free_sg_chain_blocks(cmd_sg_list, nr_cmds);
++	return NULL;
++}
++
+ #include "cciss_scsi.c"		/* For SCSI tape support */
  
- 	((struct cciss_scsi_adapter_data_t *) 
--		hba[ctlr]->scsi_ctlr)->scsi_host = (void *) sh;
-+		hba[ctlr]->scsi_ctlr)->scsi_host = sh;
- 	sh->hostdata[0] = (unsigned long) hba[ctlr];
- 	sh->irq = hba[ctlr]->intr[SIMPLE_MODE_INT];
- 	sh->unique_id = sh->irq;
-@@ -1518,7 +1515,7 @@ cciss_unregister_scsi(int ctlr)
- 	/* we are being forcibly unloaded, and may not refuse. */
+ static const char *raid_label[] = { "0", "4", "1(1+0)", "5", "5+1", "ADG",
+@@ -4238,37 +4291,10 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+ 			goto clean4;
+ 		}
+ 	}
+-	hba[i]->cmd_sg_list = kmalloc(sizeof(struct Cmd_sg_list *) *
+-						hba[i]->nr_cmds,
+-						GFP_KERNEL);
+-	if (!hba[i]->cmd_sg_list) {
+-		printk(KERN_ERR "cciss%d: Cannot get memory for "
+-			"s/g chaining.\n", i);
++	hba[i]->cmd_sg_list = cciss_allocate_sg_chain_blocks(hba[i],
++		hba[i]->chainsize, hba[i]->nr_cmds);
++	if (!hba[i]->cmd_sg_list && hba[i]->chainsize > 0)
+ 		goto clean4;
+-	}
+-	/* Build up chain blocks for each command */
+-	if (hba[i]->chainsize > 0) {
+-		for (j = 0; j < hba[i]->nr_cmds; j++) {
+-			hba[i]->cmd_sg_list[j] =
+-					kmalloc(sizeof(struct Cmd_sg_list),
+-							GFP_KERNEL);
+-			if (!hba[i]->cmd_sg_list[j]) {
+-				printk(KERN_ERR "cciss%d: Cannot get memory "
+-					"for chain block.\n", i);
+-				goto clean4;
+-			}
+-			/* Need a block of chainsized s/g elements. */
+-			hba[i]->cmd_sg_list[j]->sgchain =
+-					kmalloc((hba[i]->chainsize *
+-						sizeof(SGDescriptor_struct)),
+-						GFP_KERNEL);
+-			if (!hba[i]->cmd_sg_list[j]->sgchain) {
+-				printk(KERN_ERR "cciss%d: Cannot get memory "
+-					"for s/g chains\n", i);
+-				goto clean4;
+-			}
+-		}
+-	}
  
- 	spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
--	sa = (struct cciss_scsi_adapter_data_t *) hba[ctlr]->scsi_ctlr;
-+	sa = hba[ctlr]->scsi_ctlr;
- 	stk = &sa->cmd_stack; 
+ 	spin_lock_init(&hba[i]->lock);
  
- 	/* if we weren't ever actually registered, don't unregister */ 
-@@ -1545,7 +1542,7 @@ cciss_engage_scsi(int ctlr)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
--	sa = (struct cciss_scsi_adapter_data_t *) hba[ctlr]->scsi_ctlr;
-+	sa = hba[ctlr]->scsi_ctlr;
- 	stk = &sa->cmd_stack; 
- 
- 	if (sa->registered) {
+@@ -4327,16 +4353,7 @@ clean4:
+ 	for (k = 0; k < hba[i]->nr_cmds; k++)
+ 		kfree(hba[i]->scatter_list[k]);
+ 	kfree(hba[i]->scatter_list);
+-	/* Only free up extra s/g lists if controller supports them */
+-	if (hba[i]->chainsize > 0) {
+-		for (j = 0; j < hba[i]->nr_cmds; j++) {
+-			if (hba[i]->cmd_sg_list[j]) {
+-				kfree(hba[i]->cmd_sg_list[j]->sgchain);
+-				kfree(hba[i]->cmd_sg_list[j]);
+-			}
+-		}
+-		kfree(hba[i]->cmd_sg_list);
+-	}
++	cciss_free_sg_chain_blocks(hba[i]->cmd_sg_list, hba[i]->nr_cmds);
+ 	if (hba[i]->cmd_pool)
+ 		pci_free_consistent(hba[i]->pdev,
+ 				    hba[i]->nr_cmds * sizeof(CommandList_struct),
+@@ -4454,16 +4471,7 @@ static void __devexit cciss_remove_one(struct pci_dev *pdev)
+ 	for (j = 0; j < hba[i]->nr_cmds; j++)
+ 		kfree(hba[i]->scatter_list[j]);
+ 	kfree(hba[i]->scatter_list);
+-	/* Only free up extra s/g lists if controller supports them */
+-	if (hba[i]->chainsize > 0) {
+-		for (j = 0; j < hba[i]->nr_cmds; j++) {
+-			if (hba[i]->cmd_sg_list[j]) {
+-				kfree(hba[i]->cmd_sg_list[j]->sgchain);
+-				kfree(hba[i]->cmd_sg_list[j]);
+-			}
+-		}
+-		kfree(hba[i]->cmd_sg_list);
+-	}
++	cciss_free_sg_chain_blocks(hba[i]->cmd_sg_list, hba[i]->nr_cmds);
+ 	/*
+ 	 * Deliberately omit pci_disable_device(): it does something nasty to
+ 	 * Smart Array controllers that pci_enable_device does not undo
