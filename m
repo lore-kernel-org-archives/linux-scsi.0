@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 32/32] bfa: Remove unused header files and did some cleanup.
-Date: Thu, 25 Feb 2010 17:50:13 -0800
-Message-ID: <1267149013-23752-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 19/32] bfa: AEN and byte alignment fixes.
+Date: Thu, 25 Feb 2010 17:49:03 -0800
+Message-ID: <1267148943-22940-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from hq-exedge.brocade.com ([66.243.153.83]:27249 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934962Ab0BZBw3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:29 -0500
+	with ESMTP id S934955Ab0BZBwh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,544 +16,355 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- Remove unused header files and cleanup unused functions.
+	- Replace enum types with int and rearrange the fields
+	  to fix some alignment issue.
+
+	- Local var ioc_attr is causing the stack to overflow, so removed
+	  the usage of the local ioc_attr var and now invoking an API to return
+	  the ioc_type.
+
+	- Fix some AEN issues.
 ---
- drivers/scsi/bfa/bfa_fcport.c                      |    4 +-
- drivers/scsi/bfa/bfa_ioc_cb.c                      |   12 ++--
- drivers/scsi/bfa/bfa_ioc_ct.c                      |   28 ++++----
- drivers/scsi/bfa/bfad_attr.h                       |    9 ---
- drivers/scsi/bfa/bfad_drv.h                        |   10 ---
- drivers/scsi/bfa/bfad_im.c                         |   10 ---
- drivers/scsi/bfa/bfad_im.h                         |    5 --
- drivers/scsi/bfa/fcpim.c                           |    1 -
- drivers/scsi/bfa/include/defs/bfa_defs_driver.h    |    3 +-
- drivers/scsi/bfa/include/defs/bfa_defs_im_common.h |   32 --------
- drivers/scsi/bfa/include/defs/bfa_defs_im_team.h   |   72 -------------------
- drivers/scsi/bfa/include/fcb/bfa_fcb_fcpim.h       |    1 -
- drivers/scsi/bfa/include/protocol/pcifw.h          |   75 --------------------
- 13 files changed, 24 insertions(+), 238 deletions(-)
- delete mode 100644 drivers/scsi/bfa/include/defs/bfa_defs_im_common.h
- delete mode 100644 drivers/scsi/bfa/include/defs/bfa_defs_im_team.h
- delete mode 100644 drivers/scsi/bfa/include/protocol/pcifw.h
+ drivers/scsi/bfa/bfa_fcport.c                  |    1 +
+ drivers/scsi/bfa/bfa_ioc.c                     |   32 ++++++++++-----
+ drivers/scsi/bfa/bfad.c                        |    9 +----
+ drivers/scsi/bfa/bfad_drv.h                    |   12 +-----
+ drivers/scsi/bfa/include/aen/bfa_aen.h         |   50 +++++++++++++-----------
+ drivers/scsi/bfa/include/defs/bfa_defs_aen.h   |   10 +++++
+ drivers/scsi/bfa/include/defs/bfa_defs_ioc.h   |    2 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_lport.h |    4 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_port.h  |   17 ++++----
+ 9 files changed, 73 insertions(+), 64 deletions(-)
 
 diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-index cfd3022..3daae73 100644
+index 29c8a6a..82858db 100644
 --- a/drivers/scsi/bfa/bfa_fcport.c
 +++ b/drivers/scsi/bfa/bfa_fcport.c
-@@ -851,9 +851,9 @@ bfa_fcport_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *ndm_len,
- static void
- bfa_fcport_qresume(void *cbarg)
- {
--	struct bfa_fcport_s *port = cbarg;
-+	struct bfa_fcport_s *fcport = cbarg;
+@@ -142,6 +142,7 @@ bfa_pport_aen_post(struct bfa_pport_s *pport, enum bfa_port_aen_event event)
+ 	char            pwwn_ptr[BFA_STRING_32];
+ 	struct bfa_ioc_attr_s ioc_attr;
  
--	bfa_sm_send_event(port, BFA_FCPORT_SM_QRESUME);
-+	bfa_sm_send_event(fcport, BFA_FCPORT_SM_QRESUME);
++	memset(&aen_data, 0, sizeof(aen_data));
+ 	wwn2str(pwwn_ptr, pwwn);
+ 	switch (event) {
+ 	case BFA_PORT_AEN_ONLINE:
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 0019ff7..2f09d17 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -1731,6 +1731,21 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
+ 	ad_attr->cna_capable = ioc->cna;
  }
  
- static void
-diff --git a/drivers/scsi/bfa/bfa_ioc_cb.c b/drivers/scsi/bfa/bfa_ioc_cb.c
-index e76448f..0a1f210 100644
---- a/drivers/scsi/bfa/bfa_ioc_cb.c
-+++ b/drivers/scsi/bfa/bfa_ioc_cb.c
-@@ -63,13 +63,13 @@ bfa_ioc_set_cb_hwif(struct bfa_ioc_s *ioc)
- 	ioc->ioc_hwif = &hwif_cb;
- }
- 
--static uint32_t *
--bfa_ioc_cb_fwimg_get_chunk(struct bfa_ioc_s *ioc, uint32_t off)
-+static u32 *
-+bfa_ioc_cb_fwimg_get_chunk(struct bfa_ioc_s *ioc, u32 off)
- {
- 	return bfi_image_cb_get_chunk(off);
- }
- 	
--static uint32_t
-+static u32
- bfa_ioc_cb_fwimg_get_size(struct bfa_ioc_s *ioc)
- {
- 	return bfi_image_cb_size;
-@@ -102,7 +102,7 @@ bfa_ioc_cb_notify_hbfail(struct bfa_ioc_s *ioc)
- /**
-  * Host to LPU mailbox message addresses
-  */
--static struct { uint32_t hfn_mbox, lpu_mbox, hfn_pgn; } iocreg_fnreg[] = {
-+static struct { u32 hfn_mbox, lpu_mbox, hfn_pgn; } iocreg_fnreg[] = {
- 	{ HOSTFN0_LPU_MBOX0_0, LPU_HOSTFN0_MBOX0_0, HOST_PAGE_NUM_FN0 },
- 	{ HOSTFN1_LPU_MBOX0_8, LPU_HOSTFN1_MBOX0_8, HOST_PAGE_NUM_FN1 }
- };
-@@ -110,7 +110,7 @@ static struct { uint32_t hfn_mbox, lpu_mbox, hfn_pgn; } iocreg_fnreg[] = {
- /**
-  * Host <-> LPU mailbox command/status registers
-  */
--static struct { uint32_t hfn, lpu; } iocreg_mbcmd[] = {
-+static struct { u32 hfn, lpu; } iocreg_mbcmd[] = {
- 	{ HOSTFN0_LPU0_CMD_STAT, LPU0_HOSTFN0_CMD_STAT },
- 	{ HOSTFN1_LPU1_CMD_STAT, LPU1_HOSTFN1_CMD_STAT }
- };
-@@ -192,7 +192,7 @@ static bfa_status_t
- bfa_ioc_cb_pll_init(struct bfa_ioc_s *ioc)
- {
- 	bfa_os_addr_t	rb = ioc->pcidev.pci_bar_kva;
--	uint32_t	pll_sclk, pll_fclk;
-+	u32	pll_sclk, pll_fclk;
- 
- 	/*
- 	 *  Hold semaphore so that nobody can access the chip during init.
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index 639aa5e..23c39e6 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -33,9 +33,9 @@ BFA_TRC_FILE(CNA, IOC_CT);
- static bfa_status_t bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc);
- static bfa_boolean_t bfa_ioc_ct_firmware_lock(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_firmware_unlock(struct bfa_ioc_s *ioc);
--static uint32_t * bfa_ioc_ct_fwimg_get_chunk(struct bfa_ioc_s *ioc,
--					uint32_t off);
--static uint32_t bfa_ioc_ct_fwimg_get_size(struct bfa_ioc_s *ioc);
-+static u32 * bfa_ioc_ct_fwimg_get_chunk(struct bfa_ioc_s *ioc,
-+					u32 off);
-+static u32 bfa_ioc_ct_fwimg_get_size(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_reg_init(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_map_port(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix);
-@@ -64,13 +64,13 @@ bfa_ioc_set_ct_hwif(struct bfa_ioc_s *ioc)
- 	ioc->ioc_hwif = &hwif_ct;
- }
- 
--static uint32_t *
--bfa_ioc_ct_fwimg_get_chunk(struct bfa_ioc_s *ioc, uint32_t off)
-+static u32 *
-+bfa_ioc_ct_fwimg_get_chunk(struct bfa_ioc_s *ioc, u32 off)
- {
- 	return bfi_image_ct_get_chunk(off);
- }
- 
--static uint32_t
-+static u32
- bfa_ioc_ct_fwimg_get_size(struct bfa_ioc_s *ioc)
- {
- 	return bfi_image_ct_size;
-@@ -83,7 +83,7 @@ static bfa_boolean_t
- bfa_ioc_ct_firmware_lock(struct bfa_ioc_s *ioc)
- {
- 	enum bfi_ioc_state ioc_fwstate;
--	uint32_t usecnt;
-+	u32 usecnt;
- 	struct bfi_ioc_image_hdr_s fwhdr;
- 
- 	/**
-@@ -143,7 +143,7 @@ bfa_ioc_ct_firmware_lock(struct bfa_ioc_s *ioc)
- static void
- bfa_ioc_ct_firmware_unlock(struct bfa_ioc_s *ioc)
- {
--	uint32_t usecnt;
-+	u32 usecnt;
- 
- 	/**
- 	 * Firmware lock is relevant only for CNA.
-@@ -185,7 +185,7 @@ bfa_ioc_ct_notify_hbfail(struct bfa_ioc_s *ioc)
- /**
-  * Host to LPU mailbox message addresses
-  */
--static struct { uint32_t hfn_mbox, lpu_mbox, hfn_pgn; } iocreg_fnreg[] = {
-+static struct { u32 hfn_mbox, lpu_mbox, hfn_pgn; } iocreg_fnreg[] = {
- 	{ HOSTFN0_LPU_MBOX0_0, LPU_HOSTFN0_MBOX0_0, HOST_PAGE_NUM_FN0 },
- 	{ HOSTFN1_LPU_MBOX0_8, LPU_HOSTFN1_MBOX0_8, HOST_PAGE_NUM_FN1 },
- 	{ HOSTFN2_LPU_MBOX0_0, LPU_HOSTFN2_MBOX0_0, HOST_PAGE_NUM_FN2 },
-@@ -195,7 +195,7 @@ static struct { uint32_t hfn_mbox, lpu_mbox, hfn_pgn; } iocreg_fnreg[] = {
- /**
-  * Host <-> LPU mailbox command/status registers - port 0
-  */
--static struct { uint32_t hfn, lpu; } iocreg_mbcmd_p0[] = {
-+static struct { u32 hfn, lpu; } iocreg_mbcmd_p0[] = {
- 	{ HOSTFN0_LPU0_MBOX0_CMD_STAT, LPU0_HOSTFN0_MBOX0_CMD_STAT },
- 	{ HOSTFN1_LPU0_MBOX0_CMD_STAT, LPU0_HOSTFN1_MBOX0_CMD_STAT },
- 	{ HOSTFN2_LPU0_MBOX0_CMD_STAT, LPU0_HOSTFN2_MBOX0_CMD_STAT },
-@@ -205,7 +205,7 @@ static struct { uint32_t hfn, lpu; } iocreg_mbcmd_p0[] = {
- /**
-  * Host <-> LPU mailbox command/status registers - port 1
-  */
--static struct { uint32_t hfn, lpu; } iocreg_mbcmd_p1[] = {
-+static struct { u32 hfn, lpu; } iocreg_mbcmd_p1[] = {
- 	{ HOSTFN0_LPU1_MBOX0_CMD_STAT, LPU1_HOSTFN0_MBOX0_CMD_STAT },
- 	{ HOSTFN1_LPU1_MBOX0_CMD_STAT, LPU1_HOSTFN1_MBOX0_CMD_STAT },
- 	{ HOSTFN2_LPU1_MBOX0_CMD_STAT, LPU1_HOSTFN2_MBOX0_CMD_STAT },
-@@ -275,7 +275,7 @@ static void
- bfa_ioc_ct_map_port(struct bfa_ioc_s *ioc)
- {
- 	bfa_os_addr_t	rb = ioc->pcidev.pci_bar_kva;
--	uint32_t	r32;
-+	u32	r32;
- 
- 	/**
- 	 * For catapult, base port id on personality register and IOC type
-@@ -295,7 +295,7 @@ static void
- bfa_ioc_ct_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix)
- {
- 	bfa_os_addr_t	rb = ioc->pcidev.pci_bar_kva;
--	uint32_t	r32, mode;
-+	u32	r32, mode;
- 
- 	r32 = bfa_reg_read(rb + FNC_PERS_REG);
- 	bfa_trc(ioc, r32);
-@@ -325,7 +325,7 @@ static bfa_status_t
- bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc)
- {
- 	bfa_os_addr_t	rb = ioc->pcidev.pci_bar_kva;
--	uint32_t	pll_sclk, pll_fclk, r32;
-+	u32	pll_sclk, pll_fclk, r32;
- 
- 	/*
- 	 *  Hold semaphore so that nobody can access the chip during init.
-diff --git a/drivers/scsi/bfa/bfad_attr.h b/drivers/scsi/bfa/bfad_attr.h
-index 4d3312d..bf01020 100644
---- a/drivers/scsi/bfa/bfad_attr.h
-+++ b/drivers/scsi/bfa/bfad_attr.h
-@@ -17,9 +17,6 @@
- 
- #ifndef __BFAD_ATTR_H__
- #define __BFAD_ATTR_H__
--/**
-- *  bfad_attr.h VMware driver configuration interface module.
-- */
- 
- /**
-  *  FC_transport_template FC transport template
-@@ -52,12 +49,6 @@ bfad_im_get_starget_port_name(struct scsi_target *starget);
++enum bfa_ioc_type_e
++bfa_ioc_get_type(struct bfa_ioc_s *ioc)
++{
++	if (!ioc->ctdev || ioc->fcmode)
++		return BFA_IOC_TYPE_FC;
++	else if (ioc->ioc_mc == BFI_MC_IOCFC)
++		return BFA_IOC_TYPE_FCoE;
++	else if (ioc->ioc_mc == BFI_MC_LL)
++		return BFA_IOC_TYPE_LL;
++	else {
++		bfa_assert(ioc->ioc_mc == BFI_MC_LL);
++		return BFA_IOC_TYPE_LL;
++	}
++}
++
  void
- bfad_im_get_host_port_id(struct Scsi_Host *shost);
+ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
+ {
+@@ -1739,12 +1754,7 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
+ 	ioc_attr->state = bfa_sm_to_state(ioc_sm_table, ioc->fsm);
+ 	ioc_attr->port_id = ioc->port_id;
  
--/**
-- * FC transport template entry, issue a LIP.
-- */
--int
--bfad_im_issue_fc_host_lip(struct Scsi_Host *shost);
--
- struct Scsi_Host*
- bfad_os_starget_to_shost(struct scsi_target *starget);
+-	if (!ioc->ctdev || ioc->fcmode)
+-		ioc_attr->ioc_type = BFA_IOC_TYPE_FC;
+-	else if (ioc->ioc_mc == BFI_MC_IOCFC)
+-		ioc_attr->ioc_type = BFA_IOC_TYPE_FCoE;
+-	else if (ioc->ioc_mc == BFI_MC_LL)
+-		ioc_attr->ioc_type = BFA_IOC_TYPE_LL;
++	ioc_attr->ioc_type = bfa_ioc_get_type(ioc);
  
+ 	bfa_ioc_get_adapter_attr(ioc, &ioc_attr->adapter_attr);
+ 
+@@ -1860,7 +1870,7 @@ bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
+ 	union bfa_aen_data_u aen_data;
+ 	struct bfa_log_mod_s *logmod = ioc->logm;
+ 	s32         inst_num = 0;
+-	struct bfa_ioc_attr_s ioc_attr;
++	enum bfa_ioc_type_e ioc_type;
+ 
+ 	switch (event) {
+ 	case BFA_IOC_AEN_HBGOOD:
+@@ -1884,8 +1894,8 @@ bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
+ 
+ 	memset(&aen_data.ioc.pwwn, 0, sizeof(aen_data.ioc.pwwn));
+ 	memset(&aen_data.ioc.mac, 0, sizeof(aen_data.ioc.mac));
+-	bfa_ioc_get_attr(ioc, &ioc_attr);
+-	switch (ioc_attr.ioc_type) {
++	ioc_type = bfa_ioc_get_type(ioc);
++	switch (ioc_type) {
+ 	case BFA_IOC_TYPE_FC:
+ 		aen_data.ioc.pwwn = bfa_ioc_get_pwwn(ioc);
+ 		break;
+@@ -1897,10 +1907,10 @@ bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
+ 		aen_data.ioc.mac = bfa_ioc_get_mac(ioc);
+ 		break;
+ 	default:
+-		bfa_assert(ioc_attr.ioc_type == BFA_IOC_TYPE_FC);
++		bfa_assert(ioc_type == BFA_IOC_TYPE_FC);
+ 		break;
+ 	}
+-	aen_data.ioc.ioc_type = ioc_attr.ioc_type;
++	aen_data.ioc.ioc_type = ioc_type;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index ebeca3a..73ec190 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -677,7 +677,6 @@ bfad_drv_init(struct bfad_s *bfad)
+ 	bfa_status_t    rc;
+ 	unsigned long   flags;
+ 	struct bfa_fcs_driver_info_s driver_info;
+-	int             i;
+ 
+ 	bfad->cfg_data.rport_del_timeout = rport_del_timeout;
+ 	bfad->cfg_data.lun_queue_depth = bfa_lun_queue_depth;
+@@ -697,12 +696,7 @@ bfad_drv_init(struct bfad_s *bfad)
+ 	bfa_init_log(&bfad->bfa, bfad->logmod);
+ 	bfa_init_trc(&bfad->bfa, bfad->trcmod);
+ 	bfa_init_aen(&bfad->bfa, bfad->aen);
+-	INIT_LIST_HEAD(&bfad->file_q);
+-	INIT_LIST_HEAD(&bfad->file_free_q);
+-	for (i = 0; i < BFAD_AEN_MAX_APPS; i++) {
+-		bfa_q_qe_init(&bfad->file_buf[i].qe);
+-		list_add_tail(&bfad->file_buf[i].qe, &bfad->file_free_q);
+-	}
++	memset(bfad->file_map, 0, sizeof(bfad->file_map));
+ 	bfa_init_plog(&bfad->bfa, &bfad->plog_buf);
+ 	bfa_plog_init(&bfad->plog_buf);
+ 	bfa_plog_str(&bfad->plog_buf, BFA_PL_MID_DRVR, BFA_PL_EID_DRIVER_START,
+@@ -799,7 +793,6 @@ bfad_drv_uninit(struct bfad_s *bfad)
+ 	bfa_isr_disable(&bfad->bfa);
+ 	bfa_detach(&bfad->bfa);
+ 	bfad_remove_intr(bfad);
+-	bfa_assert(list_empty(&bfad->file_q));
+ 	bfad_hal_mem_release(bfad);
+ 
+ 	bfad->bfad_flags &= ~BFAD_DRV_INIT_DONE;
 diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index d9390e5..107848c 100644
+index 3740a44..05769ee 100644
 --- a/drivers/scsi/bfa/bfad_drv.h
 +++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -196,11 +196,6 @@ struct bfad_s {
- 	bfa_boolean_t	ipfc_enabled;
- 	union bfad_tmp_buf tmp_buf;
- 	struct fc_host_statistics link_stats;
--
--	struct kobject *bfa_kobj;
--	struct kobject *ioc_kobj;
--	struct kobject *pport_kobj;
--	struct kobject *lport_kobj;
+@@ -139,14 +139,6 @@ struct bfad_cfg_param_s {
+ 	u32        binding_method;
  };
  
+-#define BFAD_AEN_MAX_APPS 8
+-struct bfad_aen_file_s {
+-	struct list_head  qe;
+-	struct bfad_s *bfad;
+-	s32 ri;
+-	s32 app_id;
+-};
+-
  /*
-@@ -286,11 +281,6 @@ void		bfad_drv_uninit(struct bfad_s *bfad);
- void		bfad_drv_log_level_set(struct bfad_s *bfad);
- bfa_status_t	bfad_fc4_module_init(void);
- void		bfad_fc4_module_exit(void);
--
--bfa_status_t	bfad_os_kthread_create(struct bfad_s *bfad);
--void		bfad_os_kthread_stop(struct bfad_s *bfad);
--void		bfad_os_kthread_wakeup(struct bfad_s *bfad);
--int		bfad_os_kthread_should_stop(void);
- int		bfad_worker (void *ptr);
+  * BFAD (PCI function) data structure
+  */
+@@ -186,9 +178,7 @@ struct bfad_s {
+ 	struct bfa_log_mod_s  *logmod;
+ 	struct bfa_aen_s      *aen;
+ 	struct bfa_aen_s       aen_buf;
+-	struct bfad_aen_file_s file_buf[BFAD_AEN_MAX_APPS];
+-	struct list_head         file_q;
+-	struct list_head         file_free_q;
++	void		*file_map[BFA_AEN_MAX_APP];
+ 	struct bfa_plog_s      plog_buf;
+ 	int             ref_count;
+ 	bfa_boolean_t	ipfc_enabled;
+diff --git a/drivers/scsi/bfa/include/aen/bfa_aen.h b/drivers/scsi/bfa/include/aen/bfa_aen.h
+index d9cbc2a..6abbab0 100644
+--- a/drivers/scsi/bfa/include/aen/bfa_aen.h
++++ b/drivers/scsi/bfa/include/aen/bfa_aen.h
+@@ -18,21 +18,24 @@
+ #define __BFA_AEN_H__
  
- void bfad_pci_remove(struct pci_dev *pdev);
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index fb7aefa..f9fc67a 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -509,16 +509,6 @@ void bfa_fcb_itnim_tov(struct bfad_itnim_s *itnim)
+ #include "defs/bfa_defs_aen.h"
++#include "defs/bfa_defs_status.h"
++#include "cs/bfa_debug.h"
+ 
+-#define BFA_AEN_MAX_ENTRY   512
++#define BFA_AEN_MAX_ENTRY	512
+ 
+-extern s32 bfa_aen_max_cfg_entry;
++extern int bfa_aen_max_cfg_entry;
+ struct bfa_aen_s {
+ 	void		*bfad;
+-	s32		max_entry;
+-	s32		write_index;
+-	s32		read_index;
+-	u32	bfad_num;
+-	u32	seq_num;
++	int		max_entry;
++	int		write_index;
++	int		read_index;
++	int		bfad_num;
++	int		seq_num;
+ 	void		(*aen_cb_notify)(void *bfad);
+ 	void		(*gettimeofday)(struct bfa_timeval_s *tv);
+-	struct bfa_trc_mod_s 	*trcmod;
+-	struct bfa_aen_entry_s	list[BFA_AEN_MAX_ENTRY]; /* Must be the last */
++	struct bfa_trc_mod_s *trcmod;
++	int		app_ri[BFA_AEN_MAX_APP]; /* For multiclient support */
++	struct bfa_aen_entry_s list[BFA_AEN_MAX_ENTRY]; /* Must be the last */
+ };
+ 
+ 
+@@ -45,48 +48,49 @@ bfa_aen_set_max_cfg_entry(int max_entry)
+ 	bfa_aen_max_cfg_entry = max_entry;
  }
  
- /**
-- * Path TOV processing begin notification -- dummy for linux
-- */
--void
--bfa_fcb_itnim_tov_begin(struct bfad_itnim_s *itnim)
--{
--}
--
--
--
--/**
-  * Allocate a Scsi_Host for a port.
-  */
- int
-diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
-index 189a5b2..85ab2da 100644
---- a/drivers/scsi/bfa/bfad_im.h
-+++ b/drivers/scsi/bfa/bfad_im.h
-@@ -23,7 +23,6 @@
- 
- #define FCPI_NAME " fcpim"
- 
--void bfad_flags_set(struct bfad_s *bfad, u32 flags);
- bfa_status_t bfad_im_module_init(void);
- void bfad_im_module_exit(void);
- bfa_status_t bfad_im_probe(struct bfad_s *bfad);
-@@ -126,7 +125,6 @@ bfa_status_t bfad_os_thread_workq(struct bfad_s *bfad);
- void bfad_os_destroy_workq(struct bfad_im_s *im);
- void bfad_os_itnim_process(struct bfad_itnim_s *itnim_drv);
- void bfad_os_fc_host_init(struct bfad_im_port_s *im_port);
--void bfad_os_init_work(struct bfad_im_port_s *im_port);
- void bfad_os_scsi_host_free(struct bfad_s *bfad,
- 				 struct bfad_im_port_s *im_port);
- void bfad_os_ramp_up_qdepth(struct bfad_itnim_s *itnim,
-@@ -136,9 +134,6 @@ struct bfad_itnim_s *bfad_os_get_itnim(struct bfad_im_port_s *im_port, int id);
- int bfad_os_scsi_add_host(struct Scsi_Host *shost,
- 		struct bfad_im_port_s *im_port, struct bfad_s *bfad);
- 
--/*
-- * scsi_host_template entries
-- */
- void bfad_im_itnim_unmap(struct bfad_im_port_s  *im_port,
- 			 struct bfad_itnim_s *itnim);
- 
-diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
-index ef50ec2..8ae4a2c 100644
---- a/drivers/scsi/bfa/fcpim.c
-+++ b/drivers/scsi/bfa/fcpim.c
-@@ -678,7 +678,6 @@ bfa_cb_itnim_tov_begin(void *cb_arg)
- 	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)cb_arg;
- 
- 	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_fcb_itnim_tov_begin(itnim->itnim_drv);
+-static inline s32
++static inline int
+ bfa_aen_get_max_cfg_entry(void)
+ {
+ 	return bfa_aen_max_cfg_entry;
  }
  
- /**
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_driver.h b/drivers/scsi/bfa/include/defs/bfa_defs_driver.h
-index 5704980..50382dd 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_driver.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_driver.h
-@@ -21,6 +21,7 @@
- /**
-  * Driver statistics
-  */
-+struct bfa_driver_stats_s {
- 	u16    tm_io_abort;
-     u16    tm_io_abort_comp;
-     u16    tm_lun_reset;
-@@ -34,7 +35,7 @@
-     u64    output_req;
-     u64    input_words;
-     u64    output_words;
--} bfa_driver_stats_t;
+-static inline s32
++static inline int
+ bfa_aen_get_meminfo(void)
+ {
+ 	return sizeof(struct bfa_aen_entry_s) * bfa_aen_get_max_cfg_entry();
+ }
+ 
+-static inline s32
++static inline int
+ bfa_aen_get_wi(struct bfa_aen_s *aen)
+ {
+ 	return aen->write_index;
+ }
+ 
+-static inline s32
++static inline int
+ bfa_aen_get_ri(struct bfa_aen_s *aen)
+ {
+ 	return aen->read_index;
+ }
+ 
+-static inline s32
+-bfa_aen_fetch_count(struct bfa_aen_s *aen, s32 read_index)
++static inline int
++bfa_aen_fetch_count(struct bfa_aen_s *aen, enum bfa_aen_app  app_id)
+ {
+-	return ((aen->write_index + aen->max_entry) - read_index)
++	bfa_assert((app_id < BFA_AEN_MAX_APP) && (app_id >= bfa_aen_app_bcu));
++	return ((aen->write_index + aen->max_entry) - aen->app_ri[app_id])
+ 		% aen->max_entry;
+ }
+ 
+-s32 bfa_aen_init(struct bfa_aen_s *aen, struct bfa_trc_mod_s *trcmod,
+-		void *bfad, u32 inst_id, void (*aen_cb_notify)(void *),
++int bfa_aen_init(struct bfa_aen_s *aen, struct bfa_trc_mod_s *trcmod,
++		void *bfad, int bfad_num, void (*aen_cb_notify)(void *),
+ 		void (*gettimeofday)(struct bfa_timeval_s *));
+ 
+-s32 bfa_aen_post(struct bfa_aen_s *aen, enum bfa_aen_category aen_category,
++void bfa_aen_post(struct bfa_aen_s *aen, enum bfa_aen_category aen_category,
+ 		     int aen_type, union bfa_aen_data_u *aen_data);
+ 
+-s32 bfa_aen_fetch(struct bfa_aen_s *aen, struct bfa_aen_entry_s *aen_entry,
+-		      s32 entry_space, s32 rii, s32 *ri_arr,
+-		      s32 ri_arr_cnt);
++bfa_status_t bfa_aen_fetch(struct bfa_aen_s *aen,
++			struct bfa_aen_entry_s *aen_entry,
++			int entry_req, enum bfa_aen_app app_id, int *entry_ret);
+ 
+-s32 bfa_aen_get_inst(struct bfa_aen_s *aen);
++int bfa_aen_get_inst(struct bfa_aen_s *aen);
+ 
+ #endif /* __BFA_AEN_H__ */
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_aen.h b/drivers/scsi/bfa/include/defs/bfa_defs_aen.h
+index 4c81a61..3524469 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_aen.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_aen.h
+@@ -30,6 +30,16 @@
+ #include <defs/bfa_defs_audit.h>
+ #include <defs/bfa_defs_ethport.h>
+ 
++#define BFA_AEN_MAX_APP         5
++
++enum bfa_aen_app {
++	bfa_aen_app_bcu = 0,    /* No thread for bcu */
++	bfa_aen_app_hcm = 1,
++	bfa_aen_app_cim = 2,
++	bfa_aen_app_snia = 3,
++	bfa_aen_app_test = 4,   /* To be removed after unit test */
 +};
- 
- 
- #endif /* __BFA_DEFS_DRIVER_H__ */
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_im_common.h b/drivers/scsi/bfa/include/defs/bfa_defs_im_common.h
-deleted file mode 100644
-index 9ccf53b..0000000
---- a/drivers/scsi/bfa/include/defs/bfa_defs_im_common.h
-+++ /dev/null
-@@ -1,32 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--#ifndef __BFA_DEFS_IM_COMMON_H__
--#define __BFA_DEFS_IM_COMMON_H__
--
--#define	BFA_ADAPTER_NAME_LEN	256
--#define BFA_ADAPTER_GUID_LEN    256
--#define RESERVED_VLAN_NAME      L"PORT VLAN"
--#define PASSTHRU_VLAN_NAME      L"PASSTHRU VLAN"
--
--	u64	tx_pkt_cnt;
--	u64	rx_pkt_cnt;
--	u32	duration;
--	u8		status;
--} bfa_im_stats_t, *pbfa_im_stats_t;
--
--#endif /* __BFA_DEFS_IM_COMMON_H__ */
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_im_team.h b/drivers/scsi/bfa/include/defs/bfa_defs_im_team.h
-deleted file mode 100644
-index a486a7e..0000000
---- a/drivers/scsi/bfa/include/defs/bfa_defs_im_team.h
-+++ /dev/null
-@@ -1,72 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--#ifndef __BFA_DEFS_IM_TEAM_H__
--#define __BFA_DEFS_IM_TEAM_H__
--
--#include <protocol/types.h>
--
--#define	BFA_TEAM_MAX_PORTS	8
--#define	BFA_TEAM_NAME_LEN	256
--#define BFA_MAX_NUM_TEAMS	16
--#define BFA_TEAM_INVALID_DELAY -1
--
--	BFA_LACP_RATE_SLOW = 1,
--	BFA_LACP_RATE_FAST
--} bfa_im_lacp_rate_t;
--
--	BFA_TEAM_MODE_FAIL_OVER = 1,
--	BFA_TEAM_MODE_FAIL_BACK,
--	BFA_TEAM_MODE_LACP,
--	BFA_TEAM_MODE_NONE
--} bfa_im_team_mode_t;
--
--	BFA_XMIT_POLICY_L2 = 1,
--	BFA_XMIT_POLICY_L3_L4
--} bfa_im_xmit_policy_t;
--
--	bfa_im_team_mode_t     team_mode;
--	bfa_im_lacp_rate_t     lacp_rate;
--	bfa_im_xmit_policy_t   xmit_policy;
--	int   	          delay;
--	wchar_t    	  primary[BFA_ADAPTER_NAME_LEN];
--	wchar_t        	  preferred_primary[BFA_ADAPTER_NAME_LEN];
--	mac_t	          mac;
--	u16       	  num_ports;
--	u16          num_vlans;
--	u16 vlan_list[BFA_MAX_VLANS_PER_PORT];
--	wchar_t	 team_guid_list[BFA_TEAM_MAX_PORTS][BFA_ADAPTER_GUID_LEN];
--	wchar_t	 ioc_name_list[BFA_TEAM_MAX_PORTS][BFA_ADAPTER_NAME_LEN];
--} bfa_im_team_attr_t;
--
--	wchar_t		             team_name[BFA_TEAM_NAME_LEN];
--	bfa_im_xmit_policy_t	 xmit_policy;
--	int                 	 delay;
--	wchar_t                	 primary[BFA_ADAPTER_NAME_LEN];
--	wchar_t               	 preferred_primary[BFA_ADAPTER_NAME_LEN];
--} bfa_im_team_edit_t, *pbfa_im_team_edit_t;
--
--	wchar_t					team_name[BFA_TEAM_NAME_LEN];
--	bfa_im_team_mode_t      team_mode;
--	mac_t	               	mac;
--} bfa_im_team_info_t;
--
--	bfa_im_team_info_t 		team_info[BFA_MAX_NUM_TEAMS];
--	u16 				num_teams;
--} bfa_im_team_list_t, *pbfa_im_team_list_t;
--
--#endif /* __BFA_DEFS_IM_TEAM_H__ */
-diff --git a/drivers/scsi/bfa/include/fcb/bfa_fcb_fcpim.h b/drivers/scsi/bfa/include/fcb/bfa_fcb_fcpim.h
-index a6c70ae..52585d3 100644
---- a/drivers/scsi/bfa/include/fcb/bfa_fcb_fcpim.h
-+++ b/drivers/scsi/bfa/include/fcb/bfa_fcb_fcpim.h
-@@ -70,7 +70,6 @@ void            bfa_fcb_itnim_online(struct bfad_itnim_s *itnim_drv);
++
+ enum bfa_aen_category {
+ 	BFA_AEN_CAT_ADAPTER 	= 1,
+ 	BFA_AEN_CAT_PORT 	= 2,
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h b/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
+index 6c721b1..8d8e6a9 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
+@@ -144,8 +144,8 @@ enum bfa_ioc_aen_event {
+  * BFA IOC level event data, now just a place holder
   */
- void            bfa_fcb_itnim_offline(struct bfad_itnim_s *itnim_drv);
+ struct bfa_ioc_aen_data_s {
+-	enum bfa_ioc_type_e ioc_type;
+ 	wwn_t	pwwn;
++	s16 ioc_type;
+ 	mac_t	mac;
+ };
  
--void            bfa_fcb_itnim_tov_begin(struct bfad_itnim_s *itnim_drv);
- void            bfa_fcb_itnim_tov(struct bfad_itnim_s *itnim_drv);
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_lport.h b/drivers/scsi/bfa/include/defs/bfa_defs_lport.h
+index 7359f82..0952a13 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_lport.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_lport.h
+@@ -59,8 +59,8 @@ enum bfa_lport_aen_event {
+  */
+ struct bfa_lport_aen_data_s {
+ 	u16        vf_id;	/*  vf_id of this logical port */
+-	u16        rsvd;
+-	enum bfa_port_role roles;	/*  Logical port mode,IM/TM/IP etc */
++	s16         roles;  /*  Logical port mode,IM/TM/IP etc */
++	u32        rsvd;
+ 	wwn_t           ppwwn;	/*  WWN of its physical port */
+ 	wwn_t           lpwwn;	/*  WWN of this logical port */
+ };
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_port.h b/drivers/scsi/bfa/include/defs/bfa_defs_port.h
+index b54b341..d898fac 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_port.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_port.h
+@@ -234,14 +234,15 @@ enum bfa_port_aen_sfp_pom {
+ };
  
- #endif /* __BFAD_FCB_FCPIM_H__ */
-diff --git a/drivers/scsi/bfa/include/protocol/pcifw.h b/drivers/scsi/bfa/include/protocol/pcifw.h
-deleted file mode 100644
-index 6830dc3..0000000
---- a/drivers/scsi/bfa/include/protocol/pcifw.h
-+++ /dev/null
-@@ -1,75 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--/**
-- *  pcifw.h PCI FW related headers
-- */
--
--#ifndef __PCIFW_H__
--#define __PCIFW_H__
--
--#pragma pack(1)
--
--struct pnp_hdr_s{
--  u32	signature;	/* "$PnP" */
--  u8	rev;		/* Struct revision */
--  u8 	len;		/* Header structure len in multiples
--				 * of 16 bytes */
--  u16  off;		/* Offset to next header 00 if none */
--  u8	rsvd;		/* Reserved byte */
--  u8	cksum;		/* 8-bit checksum for this header */
--  u32	pnp_dev_id;	/* PnP Device Id */
--  u16  mfstr;		/* Pointer to manufacturer string */
--  u16	prstr;		/* Pointer to product string */
--  u8	devtype[3];	/* Device Type Code */
--  u8	devind;		/* Device Indicator */
--  u16	bcventr;	/* Bootstrap entry vector */
--  u16	rsvd2;		/* Reserved */
--  u16  sriv;		/* Static resource information vector */
--};
--
--struct pci_3_0_ds_s{
-- u32	sig;   		/* Signature "PCIR" */
-- u16	vendid;		/* Vendor ID */
-- u16	devid;		/* Device ID */
-- u16	devlistoff;	/* Device List Offset */
-- u16	len;		/* PCI Data Structure Length */
-- u8	rev;		/* PCI Data Structure Revision */
-- u8	clcode[3];	/* Class Code */
-- u16	imglen;		/* Code image length in multiples of
--				 * 512 bytes */
-- u16	coderev;	/* Revision level of code/data */
-- u8	codetype;	/* Code type 0x00 - BIOS */
-- u8	indr;		/* Last image indicator */
-- u16	mrtimglen;	/* Max Run Time Image Length */
-- u16	cuoff;		/* Config Utility Code Header Offset */
-- u16	dmtfclp;	/* DMTF CLP entry point offset */
--};
--
--struct pci_optrom_hdr_s{
-- u16	sig;		/* Signature 0x55AA */
-- u8	len;		/* Option ROM length in units of 512 bytes */
-- u8	inivec[3];	/* Initialization vector */
-- u8	rsvd[16];	/* Reserved field */
-- u16	verptr;		/* Pointer to version string - private */
-- u16	pcids;		/* Pointer to PCI data structure */
-- u16	pnphdr;		/* Pointer to PnP expansion header */
--};
--
--#pragma pack()
--
--#endif
+ struct bfa_port_aen_data_s {
+-	enum bfa_ioc_type_e ioc_type;
+-	wwn_t           pwwn;	      /*  WWN of the physical port */
+-	wwn_t           fwwn;	      /*  WWN of the fabric port */
+-	mac_t           mac;	      /*  MAC address of the ethernet port,
+-				       * applicable to CNA port only */
+-	int             phy_port_num; /*! For SFP related events */
+-	enum bfa_port_aen_sfp_pom level; /*  Only transitions will
+-					  * be informed */
++	wwn_t           pwwn;         /*  WWN of the physical port */
++	wwn_t           fwwn;         /*  WWN of the fabric port */
++	s32         phy_port_num; /*! For SFP related events */
++	s16         ioc_type;
++	s16         level;        /*  Only transitions will
++					* be informed */
++	struct mac_s    mac;          /*  MAC address of the ethernet port,
++					* applicable to CNA port only */
++	s16         rsvd;
+ };
+ 
+ #endif /* __BFA_DEFS_PORT_H__ */
 -- 
 1.6.5.3
 
