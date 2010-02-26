@@ -1,454 +1,487 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/7] lpfc 8.3.10: Update SLI interface areas
-Date: Fri, 26 Feb 2010 14:14:23 -0500
-Message-ID: <1267211683.3372.4.camel@wookie>
+Subject: [PATCH 4/7] lpfc 8.3.10: Added management for LP21000 through BSG.
+Date: Fri, 26 Feb 2010 14:15:00 -0500
+Message-ID: <1267211720.3372.6.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:4831 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:4854 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965821Ab0BZTPS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2010 14:15:18 -0500
+	with ESMTP id S965809Ab0BZTPn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2010 14:15:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-- Clear LPFC_DRIVER_ABORTED on FCP command completion.
-- Clear exchange busy flag when I/O is aborted and found on aborted list.
-- Free sglq when XRI_ABORTED event is processed before release of IOCB.
-- Only process iocb as aborted when LPFC_DRIVER_ABORTED is set.
+Added management for LP21000 through BSG.
 
 
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h      |    1 
- lpfc_crtn.h |    2 
- lpfc_els.c  |   23 +++++++---
- lpfc_init.c |    7 +++
- lpfc_scsi.c |   35 +++++++++++++---
- lpfc_sli.c  |  128 ++++++++++++++++++++++++++++++++++++++----------------------
- lpfc_sli.h  |    1 
- lpfc_sli4.h |    7 +++
- 8 files changed, 141 insertions(+), 63 deletions(-)
+ lpfc.h      |    6 +
+ lpfc_bsg.c  |  332 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ lpfc_bsg.h  |   12 ++
+ lpfc_init.c |    8 +
+ 4 files changed, 358 insertions(+)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2010-02-21 10:49:13.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2010-02-25 16:33:47.000000000 -0500
-@@ -385,7 +385,7 @@ void lpfc_parse_fcoe_conf(struct lpfc_hb
- int lpfc_parse_vpd(struct lpfc_hba *, uint8_t *, int);
- void lpfc_start_fdiscs(struct lpfc_hba *phba);
- struct lpfc_vport *lpfc_find_vport_by_vpid(struct lpfc_hba *, uint16_t);
--
-+struct lpfc_sglq *__lpfc_get_active_sglq(struct lpfc_hba *, uint16_t);
- #define ScsiResult(host_code, scsi_code) (((host_code) << 16) | scsi_code)
- #define HBA_EVENT_RSCN                   5
- #define HBA_EVENT_LINK_UP                2
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2010-02-25 16:33:26.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2010-02-25 16:33:47.000000000 -0500
-@@ -6234,7 +6234,8 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phb
- 		lpfc_mbx_unreg_vpi(vport);
- 		spin_lock_irq(shost->host_lock);
- 		vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
--		vport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			vport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
- 		spin_unlock_irq(shost->host_lock);
- 	}
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-21 10:49:13.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-25 16:34:10.000000000 -0500
+@@ -83,15 +83,28 @@ struct lpfc_bsg_mbox {
+ 	struct fc_bsg_job *set_job;
+ };
  
-@@ -6812,21 +6813,27 @@ lpfc_sli4_els_xri_aborted(struct lpfc_hb
- 	struct lpfc_sglq *sglq_entry = NULL, *sglq_next = NULL;
- 	unsigned long iflag = 0;
- 
--	spin_lock_irqsave(&phba->sli4_hba.abts_sgl_list_lock, iflag);
-+	spin_lock_irqsave(&phba->hbalock, iflag);
-+	spin_lock(&phba->sli4_hba.abts_sgl_list_lock);
- 	list_for_each_entry_safe(sglq_entry, sglq_next,
- 			&phba->sli4_hba.lpfc_abts_els_sgl_list, list) {
- 		if (sglq_entry->sli4_xritag == xri) {
- 			list_del(&sglq_entry->list);
--			spin_unlock_irqrestore(
--					&phba->sli4_hba.abts_sgl_list_lock,
--					 iflag);
--			spin_lock_irqsave(&phba->hbalock, iflag);
--
- 			list_add_tail(&sglq_entry->list,
- 				&phba->sli4_hba.lpfc_sgl_list);
-+			sglq_entry->state = SGL_FREED;
-+			spin_unlock(&phba->sli4_hba.abts_sgl_list_lock);
- 			spin_unlock_irqrestore(&phba->hbalock, iflag);
- 			return;
- 		}
- 	}
--	spin_unlock_irqrestore(&phba->sli4_hba.abts_sgl_list_lock, iflag);
-+	spin_unlock(&phba->sli4_hba.abts_sgl_list_lock);
-+	sglq_entry = __lpfc_get_active_sglq(phba, xri);
-+	if (!sglq_entry || (sglq_entry->sli4_xritag != xri)) {
-+		spin_unlock_irqrestore(&phba->hbalock, iflag);
-+		return;
-+	}
-+	sglq_entry->state = SGL_XRI_ABORTED;
-+	spin_unlock_irqrestore(&phba->hbalock, iflag);
-+	return;
- }
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2010-02-25 16:33:26.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc.h	2010-02-25 16:33:47.000000000 -0500
-@@ -509,7 +509,6 @@ struct lpfc_hba {
- 	int (*lpfc_hba_down_link)
- 		(struct lpfc_hba *);
- 
--
- 	/* SLI4 specific HBA data structure */
- 	struct lpfc_sli4_hba sli4_hba;
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:33:26.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:33:47.000000000 -0500
-@@ -822,6 +822,8 @@ lpfc_hba_down_post_s4(struct lpfc_hba *p
- 	LIST_HEAD(aborts);
- 	int ret;
- 	unsigned long iflag = 0;
-+	struct lpfc_sglq *sglq_entry = NULL;
++#define MENLO_DID 0x0000FC0E
 +
- 	ret = lpfc_hba_down_post_s3(phba);
- 	if (ret)
- 		return ret;
-@@ -837,6 +839,10 @@ lpfc_hba_down_post_s4(struct lpfc_hba *p
- 	 * list.
- 	 */
- 	spin_lock(&phba->sli4_hba.abts_sgl_list_lock);
-+	list_for_each_entry(sglq_entry,
-+		&phba->sli4_hba.lpfc_abts_els_sgl_list, list)
-+		sglq_entry->state = SGL_FREED;
++struct lpfc_bsg_menlo {
++	struct lpfc_iocbq *cmdiocbq;
++	struct lpfc_iocbq *rspiocbq;
++	struct lpfc_dmabuf *bmp;
 +
- 	list_splice_init(&phba->sli4_hba.lpfc_abts_els_sgl_list,
- 			&phba->sli4_hba.lpfc_sgl_list);
- 	spin_unlock(&phba->sli4_hba.abts_sgl_list_lock);
-@@ -4412,6 +4418,7 @@ lpfc_init_sgl_list(struct lpfc_hba *phba
++	/* job waiting for this iocb to finish */
++	struct fc_bsg_job *set_job;
++};
++
+ #define TYPE_EVT 	1
+ #define TYPE_IOCB	2
+ #define TYPE_MBOX	3
++#define TYPE_MENLO	4
+ struct bsg_job_data {
+ 	uint32_t type;
+ 	union {
+ 		struct lpfc_bsg_event *evt;
+ 		struct lpfc_bsg_iocb iocb;
+ 		struct lpfc_bsg_mbox mbox;
++		struct lpfc_bsg_menlo menlo;
+ 	} context_un;
+ };
  
- 		/* The list order is used by later block SGL registraton */
- 		spin_lock_irq(&phba->hbalock);
-+		sglq_entry->state = SGL_FREED;
- 		list_add_tail(&sglq_entry->list, &phba->sli4_hba.lpfc_sgl_list);
- 		phba->sli4_hba.lpfc_els_sgl_array[i] = sglq_entry;
- 		phba->sli4_hba.total_sglq_bufs++;
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-02-25 16:33:26.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-02-25 16:33:47.000000000 -0500
-@@ -620,23 +620,40 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hb
- 	uint16_t xri = bf_get(lpfc_wcqe_xa_xri, axri);
- 	struct lpfc_scsi_buf *psb, *next_psb;
- 	unsigned long iflag = 0;
-+	struct lpfc_iocbq *iocbq;
-+	int i;
- 
--	spin_lock_irqsave(&phba->sli4_hba.abts_scsi_buf_list_lock, iflag);
-+	spin_lock_irqsave(&phba->hbalock, iflag);
-+	spin_lock(&phba->sli4_hba.abts_scsi_buf_list_lock);
- 	list_for_each_entry_safe(psb, next_psb,
- 		&phba->sli4_hba.lpfc_abts_scsi_buf_list, list) {
- 		if (psb->cur_iocbq.sli4_xritag == xri) {
- 			list_del(&psb->list);
- 			psb->exch_busy = 0;
- 			psb->status = IOSTAT_SUCCESS;
--			spin_unlock_irqrestore(
--				&phba->sli4_hba.abts_scsi_buf_list_lock,
--				iflag);
-+			spin_unlock(
-+				&phba->sli4_hba.abts_scsi_buf_list_lock);
-+			spin_unlock_irqrestore(&phba->hbalock, iflag);
- 			lpfc_release_scsi_buf_s4(phba, psb);
- 			return;
- 		}
- 	}
--	spin_unlock_irqrestore(&phba->sli4_hba.abts_scsi_buf_list_lock,
--				iflag);
-+	spin_unlock(&phba->sli4_hba.abts_scsi_buf_list_lock);
-+	for (i = 1; i <= phba->sli.last_iotag; i++) {
-+		iocbq = phba->sli.iocbq_lookup[i];
-+
-+		if (!(iocbq->iocb_flag &  LPFC_IO_FCP) ||
-+			(iocbq->iocb_flag & LPFC_IO_LIBDFC))
-+			continue;
-+		if (iocbq->sli4_xritag != xri)
-+			continue;
-+		psb = container_of(iocbq, struct lpfc_scsi_buf, cur_iocbq);
-+		psb->exch_busy = 0;
-+		spin_unlock_irqrestore(&phba->hbalock, iflag);
-+		return;
-+
-+	}
-+	spin_unlock_irqrestore(&phba->hbalock, iflag);
+@@ -2456,6 +2469,18 @@ static int lpfc_bsg_check_cmd_access(str
+ 	case MBX_PORT_IOV_CONTROL:
+ 		break;
+ 	case MBX_SET_VARIABLE:
++		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
++			"1226 mbox: set_variable 0x%x, 0x%x\n",
++			mb->un.varWords[0],
++			mb->un.varWords[1]);
++		if ((mb->un.varWords[0] == SETVAR_MLOMNT)
++			&& (mb->un.varWords[1] == 1)) {
++			phba->wait_4_mlo_maint_flg = 1;
++		} else if (mb->un.varWords[0] == SETVAR_MLORST) {
++			phba->link_flag &= ~LS_LOOPBACK_MODE;
++			phba->fc_topology = TOPOLOGY_PT_PT;
++		}
++		break;
+ 	case MBX_RUN_BIU_DIAG64:
+ 	case MBX_READ_EVENT_LOG:
+ 	case MBX_READ_SPARM64:
+@@ -2638,6 +2663,297 @@ job_error:
  }
  
  /**
-@@ -1006,6 +1023,7 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hb
- 	struct scatterlist *sgel = NULL;
- 	struct fcp_cmnd *fcp_cmnd = lpfc_cmd->fcp_cmnd;
- 	struct ulp_bde64 *bpl = lpfc_cmd->fcp_bpl;
-+	struct lpfc_iocbq *iocbq = &lpfc_cmd->cur_iocbq;
- 	IOCB_t *iocb_cmd = &lpfc_cmd->cur_iocbq.iocb;
- 	struct ulp_bde64 *data_bde = iocb_cmd->unsli3.fcp_ext.dbde;
- 	dma_addr_t physaddr;
-@@ -1056,6 +1074,7 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hb
- 			physaddr = sg_dma_address(sgel);
- 			if (phba->sli_rev == 3 &&
- 			    !(phba->sli3_options & LPFC_SLI3_BG_ENABLED) &&
-+			    !(iocbq->iocb_flag & DSS_SECURITY_OP) &&
- 			    nseg <= LPFC_EXT_DATA_BDE_COUNT) {
- 				data_bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
- 				data_bde->tus.f.bdeSize = sg_dma_len(sgel);
-@@ -1082,7 +1101,8 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hb
- 	 * explicitly reinitialized since all iocb memory resources are reused.
- 	 */
- 	if (phba->sli_rev == 3 &&
--	    !(phba->sli3_options & LPFC_SLI3_BG_ENABLED)) {
-+	    !(phba->sli3_options & LPFC_SLI3_BG_ENABLED) &&
-+	    !(iocbq->iocb_flag & DSS_SECURITY_OP)) {
- 		if (num_bde > LPFC_EXT_DATA_BDE_COUNT) {
- 			/*
- 			 * The extended IOCB format can only fit 3 BDE or a BPL.
-@@ -1107,6 +1127,7 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hb
- 	} else {
- 		iocb_cmd->un.fcpi64.bdl.bdeSize =
- 			((num_bde + 2) * sizeof(struct ulp_bde64));
-+		iocb_cmd->unsli3.fcp_ext.ebde_count = (num_bde + 1);
- 	}
- 	fcp_cmnd->fcpDl = cpu_to_be32(scsi_bufflen(scsi_cmnd));
++ * lpfc_bsg_menlo_cmd_cmp - lpfc_menlo_cmd completion handler
++ * @phba: Pointer to HBA context object.
++ * @cmdiocbq: Pointer to command iocb.
++ * @rspiocbq: Pointer to response iocb.
++ *
++ * This function is the completion handler for iocbs issued using
++ * lpfc_menlo_cmd function. This function is called by the
++ * ring event handler function without any lock held. This function
++ * can be called from both worker thread context and interrupt
++ * context. This function also can be called from another thread which
++ * cleans up the SLI layer objects.
++ * This function copies the contents of the response iocb to the
++ * response iocb memory object provided by the caller of
++ * lpfc_sli_issue_iocb_wait and then wakes up the thread which
++ * sleeps for the iocb completion.
++ **/
++static void
++lpfc_bsg_menlo_cmd_cmp(struct lpfc_hba *phba,
++			struct lpfc_iocbq *cmdiocbq,
++			struct lpfc_iocbq *rspiocbq)
++{
++	struct bsg_job_data *dd_data;
++	struct fc_bsg_job *job;
++	IOCB_t *rsp;
++	struct lpfc_dmabuf *bmp;
++	struct lpfc_bsg_menlo *menlo;
++	unsigned long flags;
++	struct menlo_response *menlo_resp;
++	int rc = 0;
++
++	spin_lock_irqsave(&phba->ct_ev_lock, flags);
++	dd_data = cmdiocbq->context1;
++	if (!dd_data) {
++		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
++		return;
++	}
++
++	menlo = &dd_data->context_un.menlo;
++	job = menlo->set_job;
++	job->dd_data = NULL; /* so timeout handler does not reply */
++
++	spin_lock_irqsave(&phba->hbalock, flags);
++	cmdiocbq->iocb_flag |= LPFC_IO_WAKE;
++	if (cmdiocbq->context2 && rspiocbq)
++		memcpy(&((struct lpfc_iocbq *)cmdiocbq->context2)->iocb,
++		       &rspiocbq->iocb, sizeof(IOCB_t));
++	spin_unlock_irqrestore(&phba->hbalock, flags);
++
++	bmp = menlo->bmp;
++	rspiocbq = menlo->rspiocbq;
++	rsp = &rspiocbq->iocb;
++
++	pci_unmap_sg(phba->pcidev, job->request_payload.sg_list,
++		     job->request_payload.sg_cnt, DMA_TO_DEVICE);
++	pci_unmap_sg(phba->pcidev, job->reply_payload.sg_list,
++		     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
++
++	/* always return the xri, this would be used in the case
++	 * of a menlo download to allow the data to be sent as a continuation
++	 * of the exchange.
++	 */
++	menlo_resp = (struct menlo_response *)
++		job->reply->reply_data.vendor_reply.vendor_rsp;
++	menlo_resp->xri = rsp->ulpContext;
++	if (rsp->ulpStatus) {
++		if (rsp->ulpStatus == IOSTAT_LOCAL_REJECT) {
++			switch (rsp->un.ulpWord[4] & 0xff) {
++			case IOERR_SEQUENCE_TIMEOUT:
++				rc = -ETIMEDOUT;
++				break;
++			case IOERR_INVALID_RPI:
++				rc = -EFAULT;
++				break;
++			default:
++				rc = -EACCES;
++				break;
++			}
++		} else
++			rc = -EACCES;
++	} else
++		job->reply->reply_payload_rcv_len =
++			rsp->un.genreq64.bdl.bdeSize;
++
++	lpfc_mbuf_free(phba, bmp->virt, bmp->phys);
++	lpfc_sli_release_iocbq(phba, rspiocbq);
++	lpfc_sli_release_iocbq(phba, cmdiocbq);
++	kfree(bmp);
++	kfree(dd_data);
++	/* make error code available to userspace */
++	job->reply->result = rc;
++	/* complete the job back to userspace */
++	job->job_done(job);
++	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
++	return;
++}
++
++/**
++ * lpfc_menlo_cmd - send an ioctl for menlo hardware
++ * @job: fc_bsg_job to handle
++ *
++ * This function issues a gen request 64 CR ioctl for all menlo cmd requests,
++ * all the command completions will return the xri for the command.
++ * For menlo data requests a gen request 64 CX is used to continue the exchange
++ * supplied in the menlo request header xri field.
++ **/
++static int
++lpfc_menlo_cmd(struct fc_bsg_job *job)
++{
++	struct lpfc_vport *vport = (struct lpfc_vport *)job->shost->hostdata;
++	struct lpfc_hba *phba = vport->phba;
++	struct lpfc_iocbq *cmdiocbq, *rspiocbq;
++	IOCB_t *cmd, *rsp;
++	int rc = 0;
++	struct menlo_command *menlo_cmd;
++	struct menlo_response *menlo_resp;
++	struct lpfc_dmabuf *bmp = NULL;
++	int request_nseg;
++	int reply_nseg;
++	struct scatterlist *sgel = NULL;
++	int numbde;
++	dma_addr_t busaddr;
++	struct bsg_job_data *dd_data;
++	struct ulp_bde64 *bpl = NULL;
++
++	/* in case no data is returned return just the return code */
++	job->reply->reply_payload_rcv_len = 0;
++
++	if (job->request_len <
++	    sizeof(struct fc_bsg_request) +
++		sizeof(struct menlo_command)) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"2784 Received MENLO_CMD request below "
++				"minimum size\n");
++		rc = -ERANGE;
++		goto no_dd_data;
++	}
++
++	if (job->reply_len <
++	    sizeof(struct fc_bsg_request) + sizeof(struct menlo_response)) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"2785 Received MENLO_CMD reply below "
++				"minimum size\n");
++		rc = -ERANGE;
++		goto no_dd_data;
++	}
++
++	if (!(phba->menlo_flag & HBA_MENLO_SUPPORT)) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"2786 Adapter does not support menlo "
++				"commands\n");
++		rc = -EPERM;
++		goto no_dd_data;
++	}
++
++	menlo_cmd = (struct menlo_command *)
++		job->request->rqst_data.h_vendor.vendor_cmd;
++
++	menlo_resp = (struct menlo_response *)
++		job->reply->reply_data.vendor_reply.vendor_rsp;
++
++	/* allocate our bsg tracking structure */
++	dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
++	if (!dd_data) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"2787 Failed allocation of dd_data\n");
++		rc = -ENOMEM;
++		goto no_dd_data;
++	}
++
++	bmp = kmalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
++	if (!bmp) {
++		rc = -ENOMEM;
++		goto free_dd;
++	}
++
++	cmdiocbq = lpfc_sli_get_iocbq(phba);
++	if (!cmdiocbq) {
++		rc = -ENOMEM;
++		goto free_bmp;
++	}
++
++	rspiocbq = lpfc_sli_get_iocbq(phba);
++	if (!rspiocbq) {
++		rc = -ENOMEM;
++		goto free_cmdiocbq;
++	}
++
++	rsp = &rspiocbq->iocb;
++
++	bmp->virt = lpfc_mbuf_alloc(phba, 0, &bmp->phys);
++	if (!bmp->virt) {
++		rc = -ENOMEM;
++		goto free_rspiocbq;
++	}
++
++	INIT_LIST_HEAD(&bmp->list);
++	bpl = (struct ulp_bde64 *) bmp->virt;
++	request_nseg = pci_map_sg(phba->pcidev, job->request_payload.sg_list,
++				  job->request_payload.sg_cnt, DMA_TO_DEVICE);
++	for_each_sg(job->request_payload.sg_list, sgel, request_nseg, numbde) {
++		busaddr = sg_dma_address(sgel);
++		bpl->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
++		bpl->tus.f.bdeSize = sg_dma_len(sgel);
++		bpl->tus.w = cpu_to_le32(bpl->tus.w);
++		bpl->addrLow = cpu_to_le32(putPaddrLow(busaddr));
++		bpl->addrHigh = cpu_to_le32(putPaddrHigh(busaddr));
++		bpl++;
++	}
++
++	reply_nseg = pci_map_sg(phba->pcidev, job->reply_payload.sg_list,
++				job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
++	for_each_sg(job->reply_payload.sg_list, sgel, reply_nseg, numbde) {
++		busaddr = sg_dma_address(sgel);
++		bpl->tus.f.bdeFlags = BUFF_TYPE_BDE_64I;
++		bpl->tus.f.bdeSize = sg_dma_len(sgel);
++		bpl->tus.w = cpu_to_le32(bpl->tus.w);
++		bpl->addrLow = cpu_to_le32(putPaddrLow(busaddr));
++		bpl->addrHigh = cpu_to_le32(putPaddrHigh(busaddr));
++		bpl++;
++	}
++
++	cmd = &cmdiocbq->iocb;
++	cmd->un.genreq64.bdl.ulpIoTag32 = 0;
++	cmd->un.genreq64.bdl.addrHigh = putPaddrHigh(bmp->phys);
++	cmd->un.genreq64.bdl.addrLow = putPaddrLow(bmp->phys);
++	cmd->un.genreq64.bdl.bdeFlags = BUFF_TYPE_BLP_64;
++	cmd->un.genreq64.bdl.bdeSize =
++	    (request_nseg + reply_nseg) * sizeof(struct ulp_bde64);
++	cmd->un.genreq64.w5.hcsw.Fctl = (SI | LA);
++	cmd->un.genreq64.w5.hcsw.Dfctl = 0;
++	cmd->un.genreq64.w5.hcsw.Rctl = FC_RCTL_DD_UNSOL_CMD;
++	cmd->un.genreq64.w5.hcsw.Type = MENLO_TRANSPORT_TYPE; /* 0xfe */
++	cmd->ulpBdeCount = 1;
++	cmd->ulpClass = CLASS3;
++	cmd->ulpOwner = OWN_CHIP;
++	cmd->ulpLe = 1; /* Limited Edition */
++	cmdiocbq->iocb_flag |= LPFC_IO_LIBDFC;
++	cmdiocbq->vport = phba->pport;
++	/* We want the firmware to timeout before we do */
++	cmd->ulpTimeout = MENLO_TIMEOUT - 5;
++	cmdiocbq->context3 = bmp;
++	cmdiocbq->context2 = rspiocbq;
++	cmdiocbq->iocb_cmpl = lpfc_bsg_menlo_cmd_cmp;
++	cmdiocbq->context1 = dd_data;
++	cmdiocbq->context2 = rspiocbq;
++	if (menlo_cmd->cmd == LPFC_BSG_VENDOR_MENLO_CMD) {
++		cmd->ulpCommand = CMD_GEN_REQUEST64_CR;
++		cmd->ulpPU = MENLO_PU; /* 3 */
++		cmd->un.ulpWord[4] = MENLO_DID; /* 0x0000FC0E */
++		cmd->ulpContext = MENLO_CONTEXT; /* 0 */
++	} else {
++		cmd->ulpCommand = CMD_GEN_REQUEST64_CX;
++		cmd->ulpPU = 1;
++		cmd->un.ulpWord[4] = 0;
++		cmd->ulpContext = menlo_cmd->xri;
++	}
++
++	dd_data->type = TYPE_MENLO;
++	dd_data->context_un.menlo.cmdiocbq = cmdiocbq;
++	dd_data->context_un.menlo.rspiocbq = rspiocbq;
++	dd_data->context_un.menlo.set_job = job;
++	dd_data->context_un.menlo.bmp = bmp;
++
++	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, cmdiocbq,
++		MENLO_TIMEOUT - 5);
++	if (rc == IOCB_SUCCESS)
++		return 0; /* done for now */
++
++	/* iocb failed so cleanup */
++	pci_unmap_sg(phba->pcidev, job->request_payload.sg_list,
++		     job->request_payload.sg_cnt, DMA_TO_DEVICE);
++	pci_unmap_sg(phba->pcidev, job->reply_payload.sg_list,
++		     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
++
++	lpfc_mbuf_free(phba, bmp->virt, bmp->phys);
++
++free_rspiocbq:
++	lpfc_sli_release_iocbq(phba, rspiocbq);
++free_cmdiocbq:
++	lpfc_sli_release_iocbq(phba, cmdiocbq);
++free_bmp:
++	kfree(bmp);
++free_dd:
++	kfree(dd_data);
++no_dd_data:
++	/* make error code available to userspace */
++	job->reply->result = rc;
++	job->dd_data = NULL;
++	return rc;
++}
++/**
+  * lpfc_bsg_hst_vendor - process a vendor-specific fc_bsg_job
+  * @job: fc_bsg_job to handle
+  **/
+@@ -2669,6 +2985,10 @@ lpfc_bsg_hst_vendor(struct fc_bsg_job *j
+ 	case LPFC_BSG_VENDOR_MBOX:
+ 		rc = lpfc_bsg_mbox_cmd(job);
+ 		break;
++	case LPFC_BSG_VENDOR_MENLO_CMD:
++	case LPFC_BSG_VENDOR_MENLO_DATA:
++		rc = lpfc_menlo_cmd(job);
++		break;
+ 	default:
+ 		rc = -EINVAL;
+ 		job->reply->reply_payload_rcv_len = 0;
+@@ -2728,6 +3048,7 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
+ 	struct lpfc_bsg_event *evt;
+ 	struct lpfc_bsg_iocb *iocb;
+ 	struct lpfc_bsg_mbox *mbox;
++	struct lpfc_bsg_menlo *menlo;
+ 	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
+ 	struct bsg_job_data *dd_data;
+ 	unsigned long flags;
+@@ -2775,6 +3096,17 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
+ 		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+ 		job->job_done(job);
+ 		break;
++	case TYPE_MENLO:
++		menlo = &dd_data->context_un.menlo;
++		cmdiocb = menlo->cmdiocbq;
++		/* hint to completion handler that the job timed out */
++		job->reply->result = -EAGAIN;
++		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
++		/* this will call our completion handler */
++		spin_lock_irq(&phba->hbalock);
++		lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb);
++		spin_unlock_irq(&phba->hbalock);
++		break;
+ 	default:
+ 		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+ 		break;
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.h b/drivers/scsi/lpfc/lpfc_bsg.h
+--- a/drivers/scsi/lpfc/lpfc_bsg.h	2010-02-11 17:26:54.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_bsg.h	2010-02-25 16:34:10.000000000 -0500
+@@ -31,6 +31,8 @@
+ #define LPFC_BSG_VENDOR_DIAG_TEST	5
+ #define LPFC_BSG_VENDOR_GET_MGMT_REV	6
+ #define LPFC_BSG_VENDOR_MBOX		7
++#define LPFC_BSG_VENDOR_MENLO_CMD	8
++#define LPFC_BSG_VENDOR_MENLO_DATA	9
  
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2010-02-21 10:49:13.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2010-02-25 16:33:47.000000000 -0500
-@@ -431,11 +431,18 @@ enum lpfc_sge_type {
- 	SCSI_BUFF_TYPE
+ struct set_ct_event {
+ 	uint32_t command;
+@@ -96,3 +98,13 @@ struct dfc_mbox_req {
+ 	uint8_t mbOffset;
  };
  
-+enum lpfc_sgl_state {
-+	SGL_FREED,
-+	SGL_ALLOCATED,
-+	SGL_XRI_ABORTED
++/* Used for menlo command or menlo data. The xri is only used for menlo data */
++struct menlo_command {
++	uint32_t cmd;
++	uint32_t xri;
 +};
 +
- struct lpfc_sglq {
- 	/* lpfc_sglqs are used in double linked lists */
- 	struct list_head list;
- 	struct list_head clist;
- 	enum lpfc_sge_type buff_type; /* is this a scsi sgl */
-+	enum lpfc_sgl_state state;
- 	uint16_t iotag;         /* pre-assigned IO tag */
- 	uint16_t sli4_xritag;   /* pre-assigned XRI, (OXID) tag. */
- 	struct sli4_sge *sgl;	/* pre-assigned SGL */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2010-02-25 16:33:26.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-02-25 16:33:47.000000000 -0500
-@@ -494,7 +494,7 @@ __lpfc_clear_active_sglq(struct lpfc_hba
-  *
-  * Returns sglq ponter = success, NULL = Failure.
-  **/
--static struct lpfc_sglq *
-+struct lpfc_sglq *
- __lpfc_get_active_sglq(struct lpfc_hba *phba, uint16_t xritag)
- {
- 	uint16_t adj_xri;
-@@ -526,6 +526,7 @@ __lpfc_sli_get_sglq(struct lpfc_hba *phb
- 		return NULL;
- 	adj_xri = sglq->sli4_xritag - phba->sli4_hba.max_cfg_param.xri_base;
- 	phba->sli4_hba.lpfc_sglq_active_list[adj_xri] = sglq;
-+	sglq->state = SGL_ALLOCATED;
- 	return sglq;
- }
++struct menlo_response {
++	uint32_t xri; /* return the xri of the iocb exchange */
++};
++
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2010-02-25 16:33:47.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc.h	2010-02-25 16:34:10.000000000 -0500
+@@ -37,6 +37,9 @@ struct lpfc_sli2_slim;
+ 					   the NameServer  before giving up. */
+ #define LPFC_CMD_PER_LUN	3	/* max outstanding cmds per lun */
+ #define LPFC_DEFAULT_SG_SEG_CNT 64	/* sg element count per scsi cmnd */
++#define LPFC_DEFAULT_MENLO_SG_SEG_CNT 128	/* sg element count per scsi
++		cmnd for menlo needs nearly twice as for firmware
++		downloads using bsg */
+ #define LPFC_DEFAULT_PROT_SG_SEG_CNT 4096 /* sg protection elements count */
+ #define LPFC_MAX_SG_SEG_CNT	4096	/* sg element count per scsi cmnd */
+ #define LPFC_MAX_PROT_SG_SEG_CNT 4096	/* prot sg element count per scsi cmd*/
+@@ -806,6 +809,9 @@ struct lpfc_hba {
+ 	struct list_head ct_ev_waiters;
+ 	struct unsol_rcv_ct_ctx ct_ctx[64];
+ 	uint32_t ctx_idx;
++
++	uint8_t menlo_flag;	/* menlo generic flags */
++#define HBA_MENLO_SUPPORT	0x1 /* HBA supports menlo commands */
+ };
  
-@@ -580,15 +581,18 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_
- 	else
- 		sglq = __lpfc_clear_active_sglq(phba, iocbq->sli4_xritag);
- 	if (sglq)  {
--		if (iocbq->iocb_flag & LPFC_EXCHANGE_BUSY) {
-+		if ((iocbq->iocb_flag & LPFC_EXCHANGE_BUSY) &&
-+			(sglq->state != SGL_XRI_ABORTED)) {
- 			spin_lock_irqsave(&phba->sli4_hba.abts_sgl_list_lock,
- 					iflag);
- 			list_add(&sglq->list,
- 				&phba->sli4_hba.lpfc_abts_els_sgl_list);
- 			spin_unlock_irqrestore(
- 				&phba->sli4_hba.abts_sgl_list_lock, iflag);
--		} else
-+		} else {
-+			sglq->state = SGL_FREED;
- 			list_add(&sglq->list, &phba->sli4_hba.lpfc_sgl_list);
+ static inline struct Scsi_Host *
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:33:47.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:34:10.000000000 -0500
+@@ -2597,6 +2597,14 @@ lpfc_create_port(struct lpfc_hba *phba, 
+ 	init_timer(&vport->els_tmofunc);
+ 	vport->els_tmofunc.function = lpfc_els_timeout;
+ 	vport->els_tmofunc.data = (unsigned long)vport;
++	if (phba->pcidev->device == PCI_DEVICE_ID_HORNET) {
++		phba->menlo_flag |= HBA_MENLO_SUPPORT;
++		/* check for menlo minimum sg count */
++		if (phba->cfg_sg_seg_cnt < LPFC_DEFAULT_MENLO_SG_SEG_CNT) {
++			phba->cfg_sg_seg_cnt = LPFC_DEFAULT_MENLO_SG_SEG_CNT;
++			shost->sg_tablesize = phba->cfg_sg_seg_cnt;
 +		}
- 	}
- 
-
-@@ -2258,41 +2262,56 @@ lpfc_sli_process_sol_iocb(struct lpfc_hb
- 					spin_unlock_irqrestore(&phba->hbalock,
- 							       iflag);
- 				}
--				if ((phba->sli_rev == LPFC_SLI_REV4) &&
--				    (saveq->iocb_flag & LPFC_EXCHANGE_BUSY)) {
--					/* Set cmdiocb flag for the exchange
--					 * busy so sgl (xri) will not be
--					 * released until the abort xri is
--					 * received from hba, clear the
--					 * LPFC_DRIVER_ABORTED bit in case
--					 * it was driver initiated abort.
--					 */
--					spin_lock_irqsave(&phba->hbalock,
--							  iflag);
--					cmdiocbp->iocb_flag &=
--						~LPFC_DRIVER_ABORTED;
--					cmdiocbp->iocb_flag |=
--						LPFC_EXCHANGE_BUSY;
--					spin_unlock_irqrestore(&phba->hbalock,
--							       iflag);
--					cmdiocbp->iocb.ulpStatus =
--						IOSTAT_LOCAL_REJECT;
--					cmdiocbp->iocb.un.ulpWord[4] =
--						IOERR_ABORT_REQUESTED;
--					/*
--					 * For SLI4, irsiocb contains NO_XRI
--					 * in sli_xritag, it shall not affect
--					 * releasing sgl (xri) process.
--					 */
--					saveq->iocb.ulpStatus =
--						IOSTAT_LOCAL_REJECT;
--					saveq->iocb.un.ulpWord[4] =
--						IOERR_SLI_ABORTED;
--					spin_lock_irqsave(&phba->hbalock,
--							  iflag);
--					saveq->iocb_flag |= LPFC_DELAY_MEM_FREE;
--					spin_unlock_irqrestore(&phba->hbalock,
--							       iflag);
-+				if (phba->sli_rev == LPFC_SLI_REV4) {
-+					if (saveq->iocb_flag &
-+					    LPFC_EXCHANGE_BUSY) {
-+						/* Set cmdiocb flag for the
-+						 * exchange busy so sgl (xri)
-+						 * will not be released until
-+						 * the abort xri is received
-+						 * from hba.
-+						 */
-+						spin_lock_irqsave(
-+							&phba->hbalock, iflag);
-+						cmdiocbp->iocb_flag |=
-+							LPFC_EXCHANGE_BUSY;
-+						spin_unlock_irqrestore(
-+							&phba->hbalock, iflag);
-+					}
-+					if (cmdiocbp->iocb_flag &
-+					    LPFC_DRIVER_ABORTED) {
-+						/*
-+						 * Clear LPFC_DRIVER_ABORTED
-+						 * bit in case it was driver
-+						 * initiated abort.
-+						 */
-+						spin_lock_irqsave(
-+							&phba->hbalock, iflag);
-+						cmdiocbp->iocb_flag &=
-+							~LPFC_DRIVER_ABORTED;
-+						spin_unlock_irqrestore(
-+							&phba->hbalock, iflag);
-+						cmdiocbp->iocb.ulpStatus =
-+							IOSTAT_LOCAL_REJECT;
-+						cmdiocbp->iocb.un.ulpWord[4] =
-+							IOERR_ABORT_REQUESTED;
-+						/*
-+						 * For SLI4, irsiocb contains
-+						 * NO_XRI in sli_xritag, it
-+						 * shall not affect releasing
-+						 * sgl (xri) process.
-+						 */
-+						saveq->iocb.ulpStatus =
-+							IOSTAT_LOCAL_REJECT;
-+						saveq->iocb.un.ulpWord[4] =
-+							IOERR_SLI_ABORTED;
-+						spin_lock_irqsave(
-+							&phba->hbalock, iflag);
-+						saveq->iocb_flag |=
-+							LPFC_DELAY_MEM_FREE;
-+						spin_unlock_irqrestore(
-+							&phba->hbalock, iflag);
-+					}
- 				}
- 			}
- 			(cmdiocbp->iocb_cmpl) (phba, cmdiocbp, saveq);
-@@ -2515,14 +2534,16 @@ lpfc_sli_handle_fast_ring_event(struct l
- 
- 			cmdiocbq = lpfc_sli_iocbq_lookup(phba, pring,
- 							 &rspiocbq);
--			if ((cmdiocbq) && (cmdiocbq->iocb_cmpl)) {
--					spin_unlock_irqrestore(&phba->hbalock,
--							       iflag);
--					(cmdiocbq->iocb_cmpl)(phba, cmdiocbq,
--							      &rspiocbq);
--					spin_lock_irqsave(&phba->hbalock,
--							  iflag);
--				}
-+			if (unlikely(!cmdiocbq))
-+				break;
-+			if (cmdiocbq->iocb_flag & LPFC_DRIVER_ABORTED)
-+				cmdiocbq->iocb_flag &= ~LPFC_DRIVER_ABORTED;
-+			if (cmdiocbq->iocb_cmpl) {
-+				spin_unlock_irqrestore(&phba->hbalock, iflag);
-+				(cmdiocbq->iocb_cmpl)(phba, cmdiocbq,
-+						      &rspiocbq);
-+				spin_lock_irqsave(&phba->hbalock, iflag);
-+			}
- 			break;
- 		case LPFC_UNSOL_IOCB:
- 			spin_unlock_irqrestore(&phba->hbalock, iflag);
-@@ -7451,6 +7472,7 @@ lpfc_sli_wake_iocb_wait(struct lpfc_hba 
- {
- 	wait_queue_head_t *pdone_q;
- 	unsigned long iflags;
-+	struct lpfc_scsi_buf *lpfc_cmd;
- 
- 	spin_lock_irqsave(&phba->hbalock, iflags);
- 	cmdiocbq->iocb_flag |= LPFC_IO_WAKE;
-@@ -7458,6 +7480,14 @@ lpfc_sli_wake_iocb_wait(struct lpfc_hba 
- 		memcpy(&((struct lpfc_iocbq *)cmdiocbq->context2)->iocb,
- 		       &rspiocbq->iocb, sizeof(IOCB_t));
- 
-+	/* Set the exchange busy flag for task management commands */
-+	if ((cmdiocbq->iocb_flag & LPFC_IO_FCP) &&
-+		!(cmdiocbq->iocb_flag & LPFC_IO_LIBDFC)) {
-+		lpfc_cmd = container_of(cmdiocbq, struct lpfc_scsi_buf,
-+			cur_iocbq);
-+		lpfc_cmd->exch_busy = rspiocbq->iocb_flag & LPFC_EXCHANGE_BUSY;
 +	}
-+
- 	pdone_q = cmdiocbq->context_un.wait_queue;
- 	if (pdone_q)
- 		wake_up(pdone_q);
-@@ -9076,6 +9106,12 @@ lpfc_sli4_fp_handle_fcp_wcqe(struct lpfc
- 	/* Fake the irspiocb and copy necessary response information */
- 	lpfc_sli4_iocb_param_transfer(phba, &irspiocbq, cmdiocbq, wcqe);
  
-+	if (cmdiocbq->iocb_flag & LPFC_DRIVER_ABORTED) {
-+		spin_lock_irqsave(&phba->hbalock, iflags);
-+		cmdiocbq->iocb_flag &= ~LPFC_DRIVER_ABORTED;
-+		spin_unlock_irqrestore(&phba->hbalock, iflags);
-+	}
-+
- 	/* Pass the cmd_iocb and the rsp state to the upper layer */
- 	(cmdiocbq->iocb_cmpl)(phba, cmdiocbq, &irspiocbq);
- }
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2010-02-11 17:26:55.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2010-02-25 16:33:47.000000000 -0500
-@@ -62,6 +62,7 @@ struct lpfc_iocbq {
- #define LPFC_DELAY_MEM_FREE	0x20    /* Defer free'ing of FC data */
- #define LPFC_EXCHANGE_BUSY	0x40    /* SLI4 hba reported XB in response */
- #define LPFC_USE_FCPWQIDX	0x80    /* Submit to specified FCPWQ index */
-+#define DSS_SECURITY_OP		0x100	/* security IO */
- 
- #define LPFC_FIP_ELS_ID_MASK	0xc000	/* ELS_ID range 0-3, non-shifted mask */
- #define LPFC_FIP_ELS_ID_SHIFT	14
+ 	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
+ 	if (error)
 
 
