@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 02/32] bfa: Added separate MSI-X module parameters.
-Date: Thu, 25 Feb 2010 17:46:57 -0800
-Message-ID: <1267148817-21754-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 16/32] bfa: FCS authentication related changes.
+Date: Thu, 25 Feb 2010 17:48:52 -0800
+Message-ID: <1267148932-22819-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:59518 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.82]:59514 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934929Ab0BZBwW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:22 -0500
+	with ESMTP id S934944Ab0BZBwL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,71 +16,121 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- Added separate MSI-X module parameters to selectively
-	  enable / disable MSI-X interrupts for both Brocade HBA and CNA's.
----
- drivers/scsi/bfa/bfad_attr.c |    3 +++
- drivers/scsi/bfa/bfad_intr.c |   11 ++++++++---
- 2 files changed, 11 insertions(+), 3 deletions(-)
+	- Made FCS authentication related changes to state machines and header files.
 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index 9129ae3..adf801d 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -229,7 +229,9 @@ bfad_im_get_host_speed(struct Scsi_Host *shost)
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
- 	struct bfa_pport_attr_s attr;
-+	unsigned long   flags;
- 
-+	spin_lock_irqsave(shost->host_lock, flags);
- 	bfa_pport_get_attr(&bfad->bfa, &attr);
- 	switch (attr.speed) {
- 	case BFA_PPORT_SPEED_8GBPS:
-@@ -248,6 +250,7 @@ bfad_im_get_host_speed(struct Scsi_Host *shost)
- 		fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
- 		break;
- 	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
+	- Made changes in FCS state machines to handle the case when secret string is NULL.
+---
+ drivers/scsi/bfa/bfa_fcs_lport.c               |    2 ++
+ drivers/scsi/bfa/fabric.c                      |    6 ++++++
+ drivers/scsi/bfa/fcs_fabric.h                  |    1 +
+ drivers/scsi/bfa/include/defs/bfa_defs_auth.h  |   22 ++++++++++++++++++++++
+ drivers/scsi/bfa/include/defs/bfa_defs_pport.h |    4 ++--
+ 5 files changed, 33 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 7bb182d..4a51aac 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -931,6 +931,8 @@ bfa_fcs_port_get_attr(struct bfa_fcs_port_s *port,
+ 	if (port->fabric) {
+ 		port_attr->port_type = bfa_fcs_fabric_port_type(port->fabric);
+ 		port_attr->loopback = bfa_fcs_fabric_is_loopback(port->fabric);
++		port_attr->authfail =
++				bfa_fcs_fabric_is_auth_failed(port->fabric);
+ 		port_attr->fabric_name = bfa_fcs_port_get_fabric_name(port);
+ 		memcpy(port_attr->fabric_ip_addr,
+ 		       bfa_fcs_port_get_fabric_ipaddr(port),
+diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
+index 2579fe8..37bf8ac 100644
+--- a/drivers/scsi/bfa/fabric.c
++++ b/drivers/scsi/bfa/fabric.c
+@@ -895,6 +895,12 @@ bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric)
+ 	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_loopback);
  }
  
- /**
-diff --git a/drivers/scsi/bfa/bfad_intr.c b/drivers/scsi/bfa/bfad_intr.c
-index 7de8832..2b7dbec 100644
---- a/drivers/scsi/bfa/bfad_intr.c
-+++ b/drivers/scsi/bfa/bfad_intr.c
-@@ -23,8 +23,10 @@ BFA_TRC_FILE(LDRV, INTR);
- /**
-  *  bfa_isr BFA driver interrupt functions
-  */
--static int msix_disable;
--module_param(msix_disable, int, S_IRUGO | S_IWUSR);
-+static int msix_disable_cb;
-+static int msix_disable_ct;
-+module_param(msix_disable_cb, int, S_IRUGO | S_IWUSR);
-+module_param(msix_disable_ct, int, S_IRUGO | S_IWUSR);
- /**
-  * Line based interrupt handler.
-  */
-@@ -141,6 +143,7 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	int error = 0;
- 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
- 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
-+	struct pci_dev *pdev = bfad->pcidev;
- 
- 	/* Call BFA to get the msix map for this PCI function.  */
- 	bfa_msix_getvecs(&bfad->bfa, &mask, &num_bit, &max_bit);
-@@ -148,7 +151,9 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	/* Set up the msix entry table */
- 	bfad_init_msix_entry(bfad, msix_entries, mask, max_bit);
- 
--	if (!msix_disable) {
-+	if ((pdev->device == BFA_PCI_DEVICE_ID_CT && !msix_disable_ct) ||
-+	    (pdev->device != BFA_PCI_DEVICE_ID_CT && !msix_disable_cb)) {
++bfa_boolean_t
++bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric)
++{
++	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_auth_failed);
++}
 +
- 		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
- 		if (error) {
- 			/*
+ enum bfa_pport_type
+ bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric)
+ {
+diff --git a/drivers/scsi/bfa/fcs_fabric.h b/drivers/scsi/bfa/fcs_fabric.h
+index 8237bd5..244c3f0 100644
+--- a/drivers/scsi/bfa/fcs_fabric.h
++++ b/drivers/scsi/bfa/fcs_fabric.h
+@@ -47,6 +47,7 @@ void            bfa_fcs_fabric_uf_recv(struct bfa_fcs_fabric_s *fabric,
+ 			struct fchs_s *fchs, u16 len);
+ u16        bfa_fcs_fabric_vport_count(struct bfa_fcs_fabric_s *fabric);
+ bfa_boolean_t   bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric);
++bfa_boolean_t	bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric);
+ enum bfa_pport_type bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric);
+ void     	bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric);
+ void bfa_fcs_fabric_port_delete_comp(struct bfa_fcs_fabric_s *fabric);
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
+index dd19c83..45df328 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
+@@ -23,6 +23,7 @@
+ #define PRIVATE_KEY			19009
+ #define KEY_LEN				32399
+ #define BFA_AUTH_SECRET_STRING_LEN	256
++#define BFA_AUTH_FAIL_NO_PASSWORD	0xFE
+ #define BFA_AUTH_FAIL_TIMEOUT		0xFF
+ 
+ /**
+@@ -41,6 +42,27 @@ enum bfa_auth_status {
+ 	BFA_AUTH_STATUS_UNKNOWN = 9,	/*  authentication status unknown */
+ };
+ 
++enum bfa_auth_rej_code {
++	BFA_AUTH_RJT_CODE_AUTH_FAILURE   = 1, /* auth failure */
++	BFA_AUTH_RJT_CODE_LOGICAL_ERR    = 2, /* logical error */
++};
++
++/**
++ * Authentication reject codes
++ */
++enum bfa_auth_rej_code_exp {
++	BFA_AUTH_MECH_NOT_USABLE        = 1, /* auth. mechanism not usable */
++	BFA_AUTH_DH_GROUP_NOT_USABLE    = 2, /* DH Group not usable */
++	BFA_AUTH_HASH_FUNC_NOT_USABLE   = 3, /* hash Function not usable */
++	BFA_AUTH_AUTH_XACT_STARTED      = 4, /* auth xact started */
++	BFA_AUTH_AUTH_FAILED            = 5, /* auth failed */
++	BFA_AUTH_INCORRECT_PLD          = 6, /* incorrect payload */
++	BFA_AUTH_INCORRECT_PROTO_MSG    = 7, /* incorrect proto msg */
++	BFA_AUTH_RESTART_AUTH_PROTO     = 8, /* restart auth protocol */
++	BFA_AUTH_AUTH_CONCAT_NOT_SUPP   = 9, /* auth concat not supported */
++	BFA_AUTH_PROTO_VER_NOT_SUPP     = 10,/* proto version not supported */
++};
++
+ struct auth_proto_stats_s {
+ 	u32        auth_rjts;
+ 	u32        auth_negs;
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+index bf32041..88662a1 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+@@ -232,7 +232,7 @@ struct bfa_pport_attr_s {
+ 	u32        	pid;		/*  port ID */
+ 	enum bfa_pport_type 	port_type;	/*  current topology */
+ 	u32        	loopback;	/*  external loopback */
+-	u32		rsvd1;
++	u32		authfail;	/* auth fail state */
+ 	u32		rsvd2;		/*  padding for 64 bit */
+ };
+ 
+@@ -247,7 +247,7 @@ struct bfa_pport_fc_stats_s {
+ 	u64        rx_words;	/*  received words */
+ 	u64        lip_count;	/*  LIPs seen */
+ 	u64        nos_count;	/*  NOS count */
+-	u64        error_frames;	/*  errored frames (sent?) */
++	u64        error_frames;	/*  errored frames */
+ 	u64        dropped_frames;	/*  dropped frames */
+ 	u64        link_failures;	/*  link failure count */
+ 	u64        loss_of_syncs;	/*  loss of sync count */
 -- 
 1.6.5.3
 
