@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 19/32] bfa: AEN and byte alignment fixes.
-Date: Thu, 25 Feb 2010 17:49:03 -0800
-Message-ID: <1267148943-22940-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 07/32] bfa: New interface to handle firmware upgrade scenario
+Date: Thu, 25 Feb 2010 17:47:59 -0800
+Message-ID: <1267148879-22185-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:27249 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.82]:59517 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934955Ab0BZBwh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:37 -0500
+	with ESMTP id S934938Ab0BZBwQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,355 +16,383 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- Replace enum types with int and rearrange the fields
-	  to fix some alignment issue.
-
-	- Local var ioc_attr is causing the stack to overflow, so removed
-	  the usage of the local ioc_attr var and now invoking an API to return
-	  the ioc_type.
-
-	- Fix some AEN issues.
+	- Split bfa_fcs_init() into bfa_fcs_attach() and bfa_fcs_init().
+	- Removed empty function definitions in FCS modules
+	- Modified driver to call bfa_fcs_attach() and bfa_fcs_init() as needed.
 ---
- drivers/scsi/bfa/bfa_fcport.c                  |    1 +
- drivers/scsi/bfa/bfa_ioc.c                     |   32 ++++++++++-----
- drivers/scsi/bfa/bfad.c                        |    9 +----
- drivers/scsi/bfa/bfad_drv.h                    |   12 +-----
- drivers/scsi/bfa/include/aen/bfa_aen.h         |   50 +++++++++++++-----------
- drivers/scsi/bfa/include/defs/bfa_defs_aen.h   |   10 +++++
- drivers/scsi/bfa/include/defs/bfa_defs_ioc.h   |    2 +-
- drivers/scsi/bfa/include/defs/bfa_defs_lport.h |    4 +-
- drivers/scsi/bfa/include/defs/bfa_defs_port.h  |   17 ++++----
- 9 files changed, 73 insertions(+), 64 deletions(-)
+ drivers/scsi/bfa/bfa_fcs.c             |   46 ++++++++++++++++++++------------
+ drivers/scsi/bfa/bfa_fcs_port.c        |   11 +------
+ drivers/scsi/bfa/bfa_fcs_uf.c          |    8 +-----
+ drivers/scsi/bfa/bfad.c                |    3 +-
+ drivers/scsi/bfa/fabric.c              |    9 +++++-
+ drivers/scsi/bfa/fcpim.c               |   19 -------------
+ drivers/scsi/bfa/fcs_fabric.h          |    1 +
+ drivers/scsi/bfa/fcs_fcpim.h           |    5 ---
+ drivers/scsi/bfa/fcs_port.h            |    3 +-
+ drivers/scsi/bfa/fcs_rport.h           |    3 --
+ drivers/scsi/bfa/fcs_uf.h              |    3 +-
+ drivers/scsi/bfa/fcs_vport.h           |    7 -----
+ drivers/scsi/bfa/include/fcs/bfa_fcs.h |    3 +-
+ drivers/scsi/bfa/rport.c               |   17 ------------
+ drivers/scsi/bfa/vport.c               |   17 ------------
+ 15 files changed, 46 insertions(+), 109 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-index 29c8a6a..82858db 100644
---- a/drivers/scsi/bfa/bfa_fcport.c
-+++ b/drivers/scsi/bfa/bfa_fcport.c
-@@ -142,6 +142,7 @@ bfa_pport_aen_post(struct bfa_pport_s *pport, enum bfa_port_aen_event event)
- 	char            pwwn_ptr[BFA_STRING_32];
- 	struct bfa_ioc_attr_s ioc_attr;
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 50120c2..3516172 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -36,6 +36,7 @@
+  * FCS sub-modules
+  */
+ struct bfa_fcs_mod_s {
++	void		(*attach) (struct bfa_fcs_s *fcs);
+ 	void            (*modinit) (struct bfa_fcs_s *fcs);
+ 	void            (*modexit) (struct bfa_fcs_s *fcs);
+ };
+@@ -43,12 +44,10 @@ struct bfa_fcs_mod_s {
+ #define BFA_FCS_MODULE(_mod) { _mod ## _modinit, _mod ## _modexit }
  
-+	memset(&aen_data, 0, sizeof(aen_data));
- 	wwn2str(pwwn_ptr, pwwn);
- 	switch (event) {
- 	case BFA_PORT_AEN_ONLINE:
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 0019ff7..2f09d17 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -1731,6 +1731,21 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
- 	ad_attr->cna_capable = ioc->cna;
- }
+ static struct bfa_fcs_mod_s fcs_modules[] = {
+-	BFA_FCS_MODULE(bfa_fcs_pport),
+-	BFA_FCS_MODULE(bfa_fcs_uf),
+-	BFA_FCS_MODULE(bfa_fcs_fabric),
+-	BFA_FCS_MODULE(bfa_fcs_vport),
+-	BFA_FCS_MODULE(bfa_fcs_rport),
+-	BFA_FCS_MODULE(bfa_fcs_fcpim),
++	{ bfa_fcs_pport_attach, NULL, NULL },
++	{ bfa_fcs_uf_attach, NULL, NULL },
++	{ bfa_fcs_fabric_attach, bfa_fcs_fabric_modinit,
++	 bfa_fcs_fabric_modexit },
+ };
  
-+enum bfa_ioc_type_e
-+bfa_ioc_get_type(struct bfa_ioc_s *ioc)
-+{
-+	if (!ioc->ctdev || ioc->fcmode)
-+		return BFA_IOC_TYPE_FC;
-+	else if (ioc->ioc_mc == BFI_MC_IOCFC)
-+		return BFA_IOC_TYPE_FCoE;
-+	else if (ioc->ioc_mc == BFI_MC_LL)
-+		return BFA_IOC_TYPE_LL;
-+	else {
-+		bfa_assert(ioc->ioc_mc == BFI_MC_LL);
-+		return BFA_IOC_TYPE_LL;
+ /**
+@@ -71,16 +70,10 @@ bfa_fcs_exit_comp(void *fcs_cbarg)
+  */
+ 
+ /**
+- * 		FCS instance initialization.
+- *
+- * 	param[in]		fcs		FCS instance
+- * 	param[in]		bfa		BFA instance
+- * 	param[in]		bfad		BFA driver instance
+- *
+- * 	return None
++ * fcs attach -- called once to initialize data structures at driver attach time
+  */
+ void
+-bfa_fcs_init(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
++bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
+ 			bfa_boolean_t min_cfg)
+ {
+ 	int             i;
+@@ -95,7 +88,24 @@ bfa_fcs_init(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
+ 
+ 	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
+ 		mod = &fcs_modules[i];
+-		mod->modinit(fcs);
++		if (mod->attach)
++			mod->attach(fcs);
 +	}
 +}
 +
- void
- bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
- {
-@@ -1739,12 +1754,7 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
- 	ioc_attr->state = bfa_sm_to_state(ioc_sm_table, ioc->fsm);
- 	ioc_attr->port_id = ioc->port_id;
- 
--	if (!ioc->ctdev || ioc->fcmode)
--		ioc_attr->ioc_type = BFA_IOC_TYPE_FC;
--	else if (ioc->ioc_mc == BFI_MC_IOCFC)
--		ioc_attr->ioc_type = BFA_IOC_TYPE_FCoE;
--	else if (ioc->ioc_mc == BFI_MC_LL)
--		ioc_attr->ioc_type = BFA_IOC_TYPE_LL;
-+	ioc_attr->ioc_type = bfa_ioc_get_type(ioc);
- 
- 	bfa_ioc_get_adapter_attr(ioc, &ioc_attr->adapter_attr);
- 
-@@ -1860,7 +1870,7 @@ bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
- 	union bfa_aen_data_u aen_data;
- 	struct bfa_log_mod_s *logmod = ioc->logm;
- 	s32         inst_num = 0;
--	struct bfa_ioc_attr_s ioc_attr;
-+	enum bfa_ioc_type_e ioc_type;
- 
- 	switch (event) {
- 	case BFA_IOC_AEN_HBGOOD:
-@@ -1884,8 +1894,8 @@ bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
- 
- 	memset(&aen_data.ioc.pwwn, 0, sizeof(aen_data.ioc.pwwn));
- 	memset(&aen_data.ioc.mac, 0, sizeof(aen_data.ioc.mac));
--	bfa_ioc_get_attr(ioc, &ioc_attr);
--	switch (ioc_attr.ioc_type) {
-+	ioc_type = bfa_ioc_get_type(ioc);
-+	switch (ioc_type) {
- 	case BFA_IOC_TYPE_FC:
- 		aen_data.ioc.pwwn = bfa_ioc_get_pwwn(ioc);
- 		break;
-@@ -1897,10 +1907,10 @@ bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
- 		aen_data.ioc.mac = bfa_ioc_get_mac(ioc);
- 		break;
- 	default:
--		bfa_assert(ioc_attr.ioc_type == BFA_IOC_TYPE_FC);
-+		bfa_assert(ioc_type == BFA_IOC_TYPE_FC);
- 		break;
++/**
++ * fcs initialization, called once after bfa initialization is complete
++ */
++void
++bfa_fcs_init(struct bfa_fcs_s *fcs)
++{
++	int             i;
++	struct bfa_fcs_mod_s  *mod;
++
++	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
++		mod = &fcs_modules[i];
++		if (mod->modinit)
++			mod->modinit(fcs);
  	}
--	aen_data.ioc.ioc_type = ioc_attr.ioc_type;
-+	aen_data.ioc.ioc_type = ioc_type;
+ }
+ 
+@@ -160,10 +170,12 @@ bfa_fcs_exit(struct bfa_fcs_s *fcs)
+ 	nmods = sizeof(fcs_modules) / sizeof(fcs_modules[0]);
+ 
+ 	for (i = 0; i < nmods; i++) {
+-		bfa_wc_up(&fcs->wc);
+ 
+ 		mod = &fcs_modules[i];
+-		mod->modexit(fcs);
++		if (mod->modexit) {
++			bfa_wc_up(&fcs->wc);
++			mod->modexit(fcs);
++		}
+ 	}
+ 
+ 	bfa_wc_wait(&fcs->wc);
+diff --git a/drivers/scsi/bfa/bfa_fcs_port.c b/drivers/scsi/bfa/bfa_fcs_port.c
+index 9c4b24e..3c27788 100644
+--- a/drivers/scsi/bfa/bfa_fcs_port.c
++++ b/drivers/scsi/bfa/bfa_fcs_port.c
+@@ -55,14 +55,7 @@ bfa_fcs_pport_event_handler(void *cbarg, bfa_pport_event_t event)
+ }
+ 
+ void
+-bfa_fcs_pport_modinit(struct bfa_fcs_s *fcs)
++bfa_fcs_pport_attach(struct bfa_fcs_s *fcs)
+ {
+-	bfa_pport_event_register(fcs->bfa, bfa_fcs_pport_event_handler,
+-				     fcs);
+-}
+-
+-void
+-bfa_fcs_pport_modexit(struct bfa_fcs_s *fcs)
+-{
+-	bfa_fcs_modexit_comp(fcs);
++	bfa_fcport_event_register(fcs->bfa, bfa_fcs_pport_event_handler, fcs);
+ }
+diff --git a/drivers/scsi/bfa/bfa_fcs_uf.c b/drivers/scsi/bfa/bfa_fcs_uf.c
+index ad01db6..3d57d48 100644
+--- a/drivers/scsi/bfa/bfa_fcs_uf.c
++++ b/drivers/scsi/bfa/bfa_fcs_uf.c
+@@ -93,13 +93,7 @@ bfa_fcs_uf_recv(void *cbarg, struct bfa_uf_s *uf)
+ }
+ 
+ void
+-bfa_fcs_uf_modinit(struct bfa_fcs_s *fcs)
++bfa_fcs_uf_attach(struct bfa_fcs_s *fcs)
+ {
+ 	bfa_uf_recv_register(fcs->bfa, bfa_fcs_uf_recv, fcs);
+ }
+-
+-void
+-bfa_fcs_uf_modexit(struct bfa_fcs_s *fcs)
+-{
+-	bfa_fcs_modexit_comp(fcs);
+-}
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 8e2b2a2..965dfb5 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -748,7 +748,8 @@ bfad_drv_init(struct bfad_s *bfad)
+ 	bfa_fcs_log_init(&bfad->bfa_fcs, bfad->logmod);
+ 	bfa_fcs_trc_init(&bfad->bfa_fcs, bfad->trcmod);
+ 	bfa_fcs_aen_init(&bfad->bfa_fcs, bfad->aen);
+-	bfa_fcs_init(&bfad->bfa_fcs, &bfad->bfa, bfad, BFA_FALSE);
++	bfa_fcs_attach(&bfad->bfa_fcs, &bfad->bfa, bfad, BFA_FALSE);
++	bfa_fcs_init(&bfad->bfa_fcs);
+ 	bfa_fcs_driver_info_init(&bfad->bfa_fcs, &driver_info);
+ 	bfa_fcs_set_fdmi_param(&bfad->bfa_fcs, fdmi_enable);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
+index a4b5dd4..b6294aa 100644
+--- a/drivers/scsi/bfa/fabric.c
++++ b/drivers/scsi/bfa/fabric.c
+@@ -814,10 +814,10 @@ bfa_fcs_fabric_delete_comp(void *cbarg)
+  */
+ 
+ /**
+- *   Module initialization
++ *   Attach time initialization
+  */
+ void
+-bfa_fcs_fabric_modinit(struct bfa_fcs_s *fcs)
++bfa_fcs_fabric_attach(struct bfa_fcs_s *fcs)
+ {
+ 	struct bfa_fcs_fabric_s *fabric;
+ 
+@@ -841,6 +841,11 @@ bfa_fcs_fabric_modinit(struct bfa_fcs_s *fcs)
+ 	bfa_wc_up(&fabric->wc);	/* For the base port */
+ 
+ 	bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_uninit);
++}
++
++void
++bfa_fcs_fabric_modinit(struct bfa_fcs_s *fcs)
++{
+ 	bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_CREATE);
+ 	bfa_trc(fcs, 0);
+ }
+diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
+index 1f3c06e..06f8a46 100644
+--- a/drivers/scsi/bfa/fcpim.c
++++ b/drivers/scsi/bfa/fcpim.c
+@@ -822,22 +822,3 @@ void
+ bfa_fcs_itnim_resume(struct bfa_fcs_itnim_s *itnim)
+ {
+ }
+-
+-/**
+- *   Module initialization
+- */
+-void
+-bfa_fcs_fcpim_modinit(struct bfa_fcs_s *fcs)
+-{
+-}
+-
+-/**
+- *   Module cleanup
+- */
+-void
+-bfa_fcs_fcpim_modexit(struct bfa_fcs_s *fcs)
+-{
+-	bfa_fcs_modexit_comp(fcs);
+-}
+-
+-
+diff --git a/drivers/scsi/bfa/fcs_fabric.h b/drivers/scsi/bfa/fcs_fabric.h
+index eee9608..8237bd5 100644
+--- a/drivers/scsi/bfa/fcs_fabric.h
++++ b/drivers/scsi/bfa/fcs_fabric.h
+@@ -29,6 +29,7 @@
+ /*
+ * fcs friend functions: only between fcs modules
+  */
++void		bfa_fcs_fabric_attach(struct bfa_fcs_s *fcs);
+ void            bfa_fcs_fabric_modinit(struct bfa_fcs_s *fcs);
+ void            bfa_fcs_fabric_modexit(struct bfa_fcs_s *fcs);
+ void            bfa_fcs_fabric_modsusp(struct bfa_fcs_s *fcs);
+diff --git a/drivers/scsi/bfa/fcs_fcpim.h b/drivers/scsi/bfa/fcs_fcpim.h
+index 61e9e26..11e6e7b 100644
+--- a/drivers/scsi/bfa/fcs_fcpim.h
++++ b/drivers/scsi/bfa/fcs_fcpim.h
+@@ -34,11 +34,6 @@ void bfa_fcs_itnim_is_initiator(struct bfa_fcs_itnim_s *itnim);
+ void bfa_fcs_itnim_pause(struct bfa_fcs_itnim_s *itnim);
+ void bfa_fcs_itnim_resume(struct bfa_fcs_itnim_s *itnim);
+ 
+-/*
+- * Modudle init/cleanup routines.
+- */
+-void bfa_fcs_fcpim_modinit(struct bfa_fcs_s *fcs);
+-void bfa_fcs_fcpim_modexit(struct bfa_fcs_s *fcs);
+ void bfa_fcs_fcpim_uf_recv(struct bfa_fcs_itnim_s *itnim, struct fchs_s *fchs,
+ 			u16 len);
+ #endif /* __FCS_FCPIM_H__ */
+diff --git a/drivers/scsi/bfa/fcs_port.h b/drivers/scsi/bfa/fcs_port.h
+index abb6519..408c06a 100644
+--- a/drivers/scsi/bfa/fcs_port.h
++++ b/drivers/scsi/bfa/fcs_port.h
+@@ -26,7 +26,6 @@
+ /*
+  * fcs friend functions: only between fcs modules
+  */
+-void bfa_fcs_pport_modinit(struct bfa_fcs_s *fcs);
+-void bfa_fcs_pport_modexit(struct bfa_fcs_s *fcs);
++void bfa_fcs_pport_attach(struct bfa_fcs_s *fcs);
+ 
+ #endif /* __FCS_PPORT_H__ */
+diff --git a/drivers/scsi/bfa/fcs_rport.h b/drivers/scsi/bfa/fcs_rport.h
+index f601e9d..9c8d1d2 100644
+--- a/drivers/scsi/bfa/fcs_rport.h
++++ b/drivers/scsi/bfa/fcs_rport.h
+@@ -24,9 +24,6 @@
+ 
+ #include <fcs/bfa_fcs_rport.h>
+ 
+-void bfa_fcs_rport_modinit(struct bfa_fcs_s *fcs);
+-void bfa_fcs_rport_modexit(struct bfa_fcs_s *fcs);
+-
+ void bfa_fcs_rport_uf_recv(struct bfa_fcs_rport_s *rport, struct fchs_s *fchs,
+ 			u16 len);
+ void bfa_fcs_rport_scn(struct bfa_fcs_rport_s *rport);
+diff --git a/drivers/scsi/bfa/fcs_uf.h b/drivers/scsi/bfa/fcs_uf.h
+index 96f1bdc..f591072 100644
+--- a/drivers/scsi/bfa/fcs_uf.h
++++ b/drivers/scsi/bfa/fcs_uf.h
+@@ -26,7 +26,6 @@
+ /*
+  * fcs friend functions: only between fcs modules
+  */
+-void bfa_fcs_uf_modinit(struct bfa_fcs_s *fcs);
+-void bfa_fcs_uf_modexit(struct bfa_fcs_s *fcs);
++void bfa_fcs_uf_attach(struct bfa_fcs_s *fcs);
+ 
+ #endif /* __FCS_UF_H__ */
+diff --git a/drivers/scsi/bfa/fcs_vport.h b/drivers/scsi/bfa/fcs_vport.h
+index 9e80b6a..32565ba 100644
+--- a/drivers/scsi/bfa/fcs_vport.h
++++ b/drivers/scsi/bfa/fcs_vport.h
+@@ -22,13 +22,6 @@
+ #include <fcs/bfa_fcs_vport.h>
+ #include <defs/bfa_defs_pci.h>
+ 
+-/*
+- * Modudle init/cleanup routines.
+- */
+-
+-void bfa_fcs_vport_modinit(struct bfa_fcs_s *fcs);
+-void bfa_fcs_vport_modexit(struct bfa_fcs_s *fcs);
+-
+ void bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_online(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_offline(struct bfa_fcs_vport_s *vport);
+diff --git a/drivers/scsi/bfa/include/fcs/bfa_fcs.h b/drivers/scsi/bfa/include/fcs/bfa_fcs.h
+index 0396ec4..f2fd35f 100644
+--- a/drivers/scsi/bfa/include/fcs/bfa_fcs.h
++++ b/drivers/scsi/bfa/include/fcs/bfa_fcs.h
+@@ -61,8 +61,9 @@ struct bfa_fcs_s {
+ /*
+  * bfa fcs API functions
+  */
+-void bfa_fcs_init(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
++void bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
+ 			bfa_boolean_t min_cfg);
++void bfa_fcs_init(struct bfa_fcs_s *fcs);
+ void bfa_fcs_driver_info_init(struct bfa_fcs_s *fcs,
+ 			struct bfa_fcs_driver_info_s *driver_info);
+ void bfa_fcs_set_fdmi_param(struct bfa_fcs_s *fcs, bfa_boolean_t fdmi_enable);
+diff --git a/drivers/scsi/bfa/rport.c b/drivers/scsi/bfa/rport.c
+index 9cf58bb..df714dc 100644
+--- a/drivers/scsi/bfa/rport.c
++++ b/drivers/scsi/bfa/rport.c
+@@ -2575,23 +2575,6 @@ bfa_fcs_rport_send_ls_rjt(struct bfa_fcs_rport_s *rport, struct fchs_s *rx_fchs,
  }
  
  /**
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index ebeca3a..73ec190 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -677,7 +677,6 @@ bfad_drv_init(struct bfad_s *bfad)
- 	bfa_status_t    rc;
- 	unsigned long   flags;
- 	struct bfa_fcs_driver_info_s driver_info;
--	int             i;
- 
- 	bfad->cfg_data.rport_del_timeout = rport_del_timeout;
- 	bfad->cfg_data.lun_queue_depth = bfa_lun_queue_depth;
-@@ -697,12 +696,7 @@ bfad_drv_init(struct bfad_s *bfad)
- 	bfa_init_log(&bfad->bfa, bfad->logmod);
- 	bfa_init_trc(&bfad->bfa, bfad->trcmod);
- 	bfa_init_aen(&bfad->bfa, bfad->aen);
--	INIT_LIST_HEAD(&bfad->file_q);
--	INIT_LIST_HEAD(&bfad->file_free_q);
--	for (i = 0; i < BFAD_AEN_MAX_APPS; i++) {
--		bfa_q_qe_init(&bfad->file_buf[i].qe);
--		list_add_tail(&bfad->file_buf[i].qe, &bfad->file_free_q);
--	}
-+	memset(bfad->file_map, 0, sizeof(bfad->file_map));
- 	bfa_init_plog(&bfad->bfa, &bfad->plog_buf);
- 	bfa_plog_init(&bfad->plog_buf);
- 	bfa_plog_str(&bfad->plog_buf, BFA_PL_MID_DRVR, BFA_PL_EID_DRIVER_START,
-@@ -799,7 +793,6 @@ bfad_drv_uninit(struct bfad_s *bfad)
- 	bfa_isr_disable(&bfad->bfa);
- 	bfa_detach(&bfad->bfa);
- 	bfad_remove_intr(bfad);
--	bfa_assert(list_empty(&bfad->file_q));
- 	bfad_hal_mem_release(bfad);
- 
- 	bfad->bfad_flags &= ~BFAD_DRV_INIT_DONE;
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 3740a44..05769ee 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -139,14 +139,6 @@ struct bfad_cfg_param_s {
- 	u32        binding_method;
- };
- 
--#define BFAD_AEN_MAX_APPS 8
--struct bfad_aen_file_s {
--	struct list_head  qe;
--	struct bfad_s *bfad;
--	s32 ri;
--	s32 app_id;
--};
+- *   Module initialization
+- */
+-void
+-bfa_fcs_rport_modinit(struct bfa_fcs_s *fcs)
+-{
+-}
 -
- /*
-  * BFAD (PCI function) data structure
+-/**
+- *   Module cleanup
+- */
+-void
+-bfa_fcs_rport_modexit(struct bfa_fcs_s *fcs)
+-{
+-	bfa_fcs_modexit_comp(fcs);
+-}
+-
+-/**
+  * Return state of rport.
   */
-@@ -186,9 +178,7 @@ struct bfad_s {
- 	struct bfa_log_mod_s  *logmod;
- 	struct bfa_aen_s      *aen;
- 	struct bfa_aen_s       aen_buf;
--	struct bfad_aen_file_s file_buf[BFAD_AEN_MAX_APPS];
--	struct list_head         file_q;
--	struct list_head         file_free_q;
-+	void		*file_map[BFA_AEN_MAX_APP];
- 	struct bfa_plog_s      plog_buf;
- 	int             ref_count;
- 	bfa_boolean_t	ipfc_enabled;
-diff --git a/drivers/scsi/bfa/include/aen/bfa_aen.h b/drivers/scsi/bfa/include/aen/bfa_aen.h
-index d9cbc2a..6abbab0 100644
---- a/drivers/scsi/bfa/include/aen/bfa_aen.h
-+++ b/drivers/scsi/bfa/include/aen/bfa_aen.h
-@@ -18,21 +18,24 @@
- #define __BFA_AEN_H__
- 
- #include "defs/bfa_defs_aen.h"
-+#include "defs/bfa_defs_status.h"
-+#include "cs/bfa_debug.h"
- 
--#define BFA_AEN_MAX_ENTRY   512
-+#define BFA_AEN_MAX_ENTRY	512
- 
--extern s32 bfa_aen_max_cfg_entry;
-+extern int bfa_aen_max_cfg_entry;
- struct bfa_aen_s {
- 	void		*bfad;
--	s32		max_entry;
--	s32		write_index;
--	s32		read_index;
--	u32	bfad_num;
--	u32	seq_num;
-+	int		max_entry;
-+	int		write_index;
-+	int		read_index;
-+	int		bfad_num;
-+	int		seq_num;
- 	void		(*aen_cb_notify)(void *bfad);
- 	void		(*gettimeofday)(struct bfa_timeval_s *tv);
--	struct bfa_trc_mod_s 	*trcmod;
--	struct bfa_aen_entry_s	list[BFA_AEN_MAX_ENTRY]; /* Must be the last */
-+	struct bfa_trc_mod_s *trcmod;
-+	int		app_ri[BFA_AEN_MAX_APP]; /* For multiclient support */
-+	struct bfa_aen_entry_s list[BFA_AEN_MAX_ENTRY]; /* Must be the last */
- };
- 
- 
-@@ -45,48 +48,49 @@ bfa_aen_set_max_cfg_entry(int max_entry)
- 	bfa_aen_max_cfg_entry = max_entry;
+ int
+diff --git a/drivers/scsi/bfa/vport.c b/drivers/scsi/bfa/vport.c
+index 8d18589..75d6f05 100644
+--- a/drivers/scsi/bfa/vport.c
++++ b/drivers/scsi/bfa/vport.c
+@@ -616,23 +616,6 @@ bfa_fcs_vport_delete_comp(struct bfa_fcs_vport_s *vport)
+ 	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_DELCOMP);
  }
  
--static inline s32
-+static inline int
- bfa_aen_get_max_cfg_entry(void)
+-/**
+- *   Module initialization
+- */
+-void
+-bfa_fcs_vport_modinit(struct bfa_fcs_s *fcs)
+-{
+-}
+-
+-/**
+- *   Module cleanup
+- */
+-void
+-bfa_fcs_vport_modexit(struct bfa_fcs_s *fcs)
+-{
+-	bfa_fcs_modexit_comp(fcs);
+-}
+-
+ u32
+ bfa_fcs_vport_get_max(struct bfa_fcs_s *fcs)
  {
- 	return bfa_aen_max_cfg_entry;
- }
- 
--static inline s32
-+static inline int
- bfa_aen_get_meminfo(void)
- {
- 	return sizeof(struct bfa_aen_entry_s) * bfa_aen_get_max_cfg_entry();
- }
- 
--static inline s32
-+static inline int
- bfa_aen_get_wi(struct bfa_aen_s *aen)
- {
- 	return aen->write_index;
- }
- 
--static inline s32
-+static inline int
- bfa_aen_get_ri(struct bfa_aen_s *aen)
- {
- 	return aen->read_index;
- }
- 
--static inline s32
--bfa_aen_fetch_count(struct bfa_aen_s *aen, s32 read_index)
-+static inline int
-+bfa_aen_fetch_count(struct bfa_aen_s *aen, enum bfa_aen_app  app_id)
- {
--	return ((aen->write_index + aen->max_entry) - read_index)
-+	bfa_assert((app_id < BFA_AEN_MAX_APP) && (app_id >= bfa_aen_app_bcu));
-+	return ((aen->write_index + aen->max_entry) - aen->app_ri[app_id])
- 		% aen->max_entry;
- }
- 
--s32 bfa_aen_init(struct bfa_aen_s *aen, struct bfa_trc_mod_s *trcmod,
--		void *bfad, u32 inst_id, void (*aen_cb_notify)(void *),
-+int bfa_aen_init(struct bfa_aen_s *aen, struct bfa_trc_mod_s *trcmod,
-+		void *bfad, int bfad_num, void (*aen_cb_notify)(void *),
- 		void (*gettimeofday)(struct bfa_timeval_s *));
- 
--s32 bfa_aen_post(struct bfa_aen_s *aen, enum bfa_aen_category aen_category,
-+void bfa_aen_post(struct bfa_aen_s *aen, enum bfa_aen_category aen_category,
- 		     int aen_type, union bfa_aen_data_u *aen_data);
- 
--s32 bfa_aen_fetch(struct bfa_aen_s *aen, struct bfa_aen_entry_s *aen_entry,
--		      s32 entry_space, s32 rii, s32 *ri_arr,
--		      s32 ri_arr_cnt);
-+bfa_status_t bfa_aen_fetch(struct bfa_aen_s *aen,
-+			struct bfa_aen_entry_s *aen_entry,
-+			int entry_req, enum bfa_aen_app app_id, int *entry_ret);
- 
--s32 bfa_aen_get_inst(struct bfa_aen_s *aen);
-+int bfa_aen_get_inst(struct bfa_aen_s *aen);
- 
- #endif /* __BFA_AEN_H__ */
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_aen.h b/drivers/scsi/bfa/include/defs/bfa_defs_aen.h
-index 4c81a61..3524469 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_aen.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_aen.h
-@@ -30,6 +30,16 @@
- #include <defs/bfa_defs_audit.h>
- #include <defs/bfa_defs_ethport.h>
- 
-+#define BFA_AEN_MAX_APP         5
-+
-+enum bfa_aen_app {
-+	bfa_aen_app_bcu = 0,    /* No thread for bcu */
-+	bfa_aen_app_hcm = 1,
-+	bfa_aen_app_cim = 2,
-+	bfa_aen_app_snia = 3,
-+	bfa_aen_app_test = 4,   /* To be removed after unit test */
-+};
-+
- enum bfa_aen_category {
- 	BFA_AEN_CAT_ADAPTER 	= 1,
- 	BFA_AEN_CAT_PORT 	= 2,
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h b/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
-index 6c721b1..8d8e6a9 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
-@@ -144,8 +144,8 @@ enum bfa_ioc_aen_event {
-  * BFA IOC level event data, now just a place holder
-  */
- struct bfa_ioc_aen_data_s {
--	enum bfa_ioc_type_e ioc_type;
- 	wwn_t	pwwn;
-+	s16 ioc_type;
- 	mac_t	mac;
- };
- 
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_lport.h b/drivers/scsi/bfa/include/defs/bfa_defs_lport.h
-index 7359f82..0952a13 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_lport.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_lport.h
-@@ -59,8 +59,8 @@ enum bfa_lport_aen_event {
-  */
- struct bfa_lport_aen_data_s {
- 	u16        vf_id;	/*  vf_id of this logical port */
--	u16        rsvd;
--	enum bfa_port_role roles;	/*  Logical port mode,IM/TM/IP etc */
-+	s16         roles;  /*  Logical port mode,IM/TM/IP etc */
-+	u32        rsvd;
- 	wwn_t           ppwwn;	/*  WWN of its physical port */
- 	wwn_t           lpwwn;	/*  WWN of this logical port */
- };
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_port.h b/drivers/scsi/bfa/include/defs/bfa_defs_port.h
-index b54b341..d898fac 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_port.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_port.h
-@@ -234,14 +234,15 @@ enum bfa_port_aen_sfp_pom {
- };
- 
- struct bfa_port_aen_data_s {
--	enum bfa_ioc_type_e ioc_type;
--	wwn_t           pwwn;	      /*  WWN of the physical port */
--	wwn_t           fwwn;	      /*  WWN of the fabric port */
--	mac_t           mac;	      /*  MAC address of the ethernet port,
--				       * applicable to CNA port only */
--	int             phy_port_num; /*! For SFP related events */
--	enum bfa_port_aen_sfp_pom level; /*  Only transitions will
--					  * be informed */
-+	wwn_t           pwwn;         /*  WWN of the physical port */
-+	wwn_t           fwwn;         /*  WWN of the fabric port */
-+	s32         phy_port_num; /*! For SFP related events */
-+	s16         ioc_type;
-+	s16         level;        /*  Only transitions will
-+					* be informed */
-+	struct mac_s    mac;          /*  MAC address of the ethernet port,
-+					* applicable to CNA port only */
-+	s16         rsvd;
- };
- 
- #endif /* __BFA_DEFS_PORT_H__ */
 -- 
 1.6.5.3
 
