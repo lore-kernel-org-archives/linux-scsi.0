@@ -1,487 +1,439 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 4/7] lpfc 8.3.10: Added management for LP21000 through BSG.
-Date: Fri, 26 Feb 2010 14:15:00 -0500
-Message-ID: <1267211720.3372.6.camel@wookie>
+Subject: [PATCH 5/7] lpfc 8.3.10: Fix Discovery issues
+Date: Fri, 26 Feb 2010 14:15:29 -0500
+Message-ID: <1267211749.3372.7.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:4854 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:4949 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965809Ab0BZTPn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2010 14:15:43 -0500
+	with ESMTP id S965813Ab0BZTQK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2010 14:16:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Added management for LP21000 through BSG.
+- Prevent Vport discovery after reg_new_vport completes when physical
+  logged in using FDISC.
+- Remove fast FCF failover fabric name matching. Allow failover to FCFs
+  connected to different fabrics.
+- Added fast FCF failover in response to FCF DEAD event on current
+  FCF record.
 
 
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h      |    6 +
- lpfc_bsg.c  |  332 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- lpfc_bsg.h  |   12 ++
- lpfc_init.c |    8 +
- 4 files changed, 358 insertions(+)
+ lpfc_crtn.h    |    1 
+ lpfc_els.c     |    7 ++
+ lpfc_hbadisc.c |   27 +++++-----
+ lpfc_init.c    |  140 +++++++++++++++++++++++++++++++++++++++++++++------------
+ lpfc_sli.c     |   54 +++++++++++++++++++--
+ lpfc_sli4.h    |    8 ++-
+ 6 files changed, 186 insertions(+), 51 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-21 10:49:13.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2010-02-25 16:34:10.000000000 -0500
-@@ -83,15 +83,28 @@ struct lpfc_bsg_mbox {
- 	struct fc_bsg_job *set_job;
- };
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2010-02-25 16:33:47.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2010-02-25 16:34:30.000000000 -0500
+@@ -221,6 +221,7 @@ void lpfc_unregister_fcf_rescan(struct l
+ void lpfc_unregister_unused_fcf(struct lpfc_hba *);
+ int lpfc_sli4_redisc_fcf_table(struct lpfc_hba *);
+ void lpfc_fcf_redisc_wait_start_timer(struct lpfc_hba *);
++void lpfc_sli4_fcf_dead_failthrough(struct lpfc_hba *);
  
-+#define MENLO_DID 0x0000FC0E
-+
-+struct lpfc_bsg_menlo {
-+	struct lpfc_iocbq *cmdiocbq;
-+	struct lpfc_iocbq *rspiocbq;
-+	struct lpfc_dmabuf *bmp;
-+
-+	/* job waiting for this iocb to finish */
-+	struct fc_bsg_job *set_job;
-+};
-+
- #define TYPE_EVT 	1
- #define TYPE_IOCB	2
- #define TYPE_MBOX	3
-+#define TYPE_MENLO	4
- struct bsg_job_data {
- 	uint32_t type;
- 	union {
- 		struct lpfc_bsg_event *evt;
- 		struct lpfc_bsg_iocb iocb;
- 		struct lpfc_bsg_mbox mbox;
-+		struct lpfc_bsg_menlo menlo;
- 	} context_un;
- };
+ int lpfc_mem_alloc(struct lpfc_hba *, int align);
+ void lpfc_mem_free(struct lpfc_hba *);
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2010-02-25 16:33:47.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2010-02-25 16:34:30.000000000 -0500
+@@ -6004,7 +6004,12 @@ lpfc_cmpl_reg_new_vport(struct lpfc_hba 
+ 			if (phba->sli_rev < LPFC_SLI_REV4)
+ 				lpfc_issue_fabric_reglogin(vport);
+ 			else {
+-				lpfc_start_fdiscs(phba);
++				/*
++				 * If the physical port is instantiated using
++				 * FDISC, do not start vport discovery.
++				 */
++				if (vport->port_state != LPFC_FDISC)
++					lpfc_start_fdiscs(phba);
+ 				lpfc_do_scr_ns_plogi(phba, vport);
+ 			}
+ 		} else
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-02-25 16:33:09.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-02-25 16:34:30.000000000 -0500
+@@ -1504,7 +1504,9 @@ lpfc_check_pending_fcoe_event(struct lpf
+ 		 */
+ 		spin_lock_irq(&phba->hbalock);
+ 		phba->hba_flag &= ~FCF_DISC_INPROGRESS;
+-		phba->fcf.fcf_flag &= ~FCF_REDISC_FOV;
++		phba->fcf.fcf_flag &= ~(FCF_REDISC_FOV |
++					FCF_DEAD_FOVER |
++					FCF_CVL_FOVER);
+ 		spin_unlock_irq(&phba->hbalock);
+ 	}
  
-@@ -2456,6 +2469,18 @@ static int lpfc_bsg_check_cmd_access(str
- 	case MBX_PORT_IOV_CONTROL:
- 		break;
- 	case MBX_SET_VARIABLE:
-+		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+			"1226 mbox: set_variable 0x%x, 0x%x\n",
-+			mb->un.varWords[0],
-+			mb->un.varWords[1]);
-+		if ((mb->un.varWords[0] == SETVAR_MLOMNT)
-+			&& (mb->un.varWords[1] == 1)) {
-+			phba->wait_4_mlo_maint_flg = 1;
-+		} else if (mb->un.varWords[0] == SETVAR_MLORST) {
-+			phba->link_flag &= ~LS_LOOPBACK_MODE;
-+			phba->fc_topology = TOPOLOGY_PT_PT;
-+		}
-+		break;
- 	case MBX_RUN_BIU_DIAG64:
- 	case MBX_READ_EVENT_LOG:
- 	case MBX_READ_SPARM64:
-@@ -2638,6 +2663,297 @@ job_error:
+@@ -1649,7 +1651,9 @@ lpfc_mbx_cmpl_read_fcf_record(struct lpf
+ 				__lpfc_sli4_stop_fcf_redisc_wait_timer(phba);
+ 			else if (phba->fcf.fcf_flag & FCF_REDISC_FOV)
+ 				/* If in fast failover, mark it's completed */
+-				phba->fcf.fcf_flag &= ~FCF_REDISC_FOV;
++				phba->fcf.fcf_flag &= ~(FCF_REDISC_FOV |
++							FCF_DEAD_FOVER |
++							FCF_CVL_FOVER);
+ 			spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 			goto out;
+ 		}
+@@ -1669,14 +1673,9 @@ lpfc_mbx_cmpl_read_fcf_record(struct lpf
+ 	 * Update on failover FCF record only if it's in FCF fast-failover
+ 	 * period; otherwise, update on current FCF record.
+ 	 */
+-	if (phba->fcf.fcf_flag & FCF_REDISC_FOV) {
+-		/* Fast FCF failover only to the same fabric name */
+-		if (lpfc_fab_name_match(phba->fcf.current_rec.fabric_name,
+-					new_fcf_record))
+-			fcf_rec = &phba->fcf.failover_rec;
+-		else
+-			goto read_next_fcf;
+-	} else
++	if (phba->fcf.fcf_flag & FCF_REDISC_FOV)
++		fcf_rec = &phba->fcf.failover_rec;
++	else
+ 		fcf_rec = &phba->fcf.current_rec;
+ 
+ 	if (phba->fcf.fcf_flag & FCF_AVAILABLE) {
+@@ -1705,8 +1704,7 @@ lpfc_mbx_cmpl_read_fcf_record(struct lpf
+ 		 * If the new hba FCF record has lower priority value
+ 		 * than the driver FCF record, use the new record.
+ 		 */
+-		if (lpfc_fab_name_match(fcf_rec->fabric_name, new_fcf_record) &&
+-		    (new_fcf_record->fip_priority < fcf_rec->priority)) {
++		if (new_fcf_record->fip_priority < fcf_rec->priority) {
+ 			/* Choose this FCF record */
+ 			__lpfc_update_fcf_record(phba, fcf_rec, new_fcf_record,
+ 					addr_mode, vlan_id, 0);
+@@ -1762,7 +1760,9 @@ read_next_fcf:
+ 			       sizeof(struct lpfc_fcf_rec));
+ 			/* mark the FCF fast failover completed */
+ 			spin_lock_irqsave(&phba->hbalock, iflags);
+-			phba->fcf.fcf_flag &= ~FCF_REDISC_FOV;
++			phba->fcf.fcf_flag &= ~(FCF_REDISC_FOV |
++						FCF_DEAD_FOVER |
++						FCF_CVL_FOVER);
+ 			spin_unlock_irqrestore(&phba->hbalock, iflags);
+ 			/* Register to the new FCF record */
+ 			lpfc_register_fcf(phba);
+@@ -4760,6 +4760,7 @@ lpfc_unregister_fcf_rescan(struct lpfc_h
+ 		return;
+ 	/* Reset HBA FCF states after successful unregister FCF */
+ 	phba->fcf.fcf_flag = 0;
++	phba->fcf.current_rec.flag = 0;
+ 
+ 	/*
+ 	 * If driver is not unloading, check if there is any other
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:34:10.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:34:30.000000000 -0500
+@@ -2199,8 +2199,10 @@ lpfc_stop_vport_timers(struct lpfc_vport
+ void
+ __lpfc_sli4_stop_fcf_redisc_wait_timer(struct lpfc_hba *phba)
+ {
+-	/* Clear pending FCF rediscovery wait timer */
+-	phba->fcf.fcf_flag &= ~FCF_REDISC_PEND;
++	/* Clear pending FCF rediscovery wait and failover in progress flags */
++	phba->fcf.fcf_flag &= ~(FCF_REDISC_PEND |
++				FCF_DEAD_FOVER  |
++				FCF_CVL_FOVER);
+ 	/* Now, try to stop the timer */
+ 	del_timer(&phba->fcf.redisc_wait);
+ }
+@@ -3212,6 +3214,68 @@ out_free_pmb:
  }
  
  /**
-+ * lpfc_bsg_menlo_cmd_cmp - lpfc_menlo_cmd completion handler
-+ * @phba: Pointer to HBA context object.
-+ * @cmdiocbq: Pointer to command iocb.
-+ * @rspiocbq: Pointer to response iocb.
++ * lpfc_sli4_perform_vport_cvl - Perform clear virtual link on a vport
++ * @vport: pointer to vport data structure.
 + *
-+ * This function is the completion handler for iocbs issued using
-+ * lpfc_menlo_cmd function. This function is called by the
-+ * ring event handler function without any lock held. This function
-+ * can be called from both worker thread context and interrupt
-+ * context. This function also can be called from another thread which
-+ * cleans up the SLI layer objects.
-+ * This function copies the contents of the response iocb to the
-+ * response iocb memory object provided by the caller of
-+ * lpfc_sli_issue_iocb_wait and then wakes up the thread which
-+ * sleeps for the iocb completion.
++ * This routine is to perform Clear Virtual Link (CVL) on a vport in
++ * response to a CVL event.
++ *
++ * Return the pointer to the ndlp with the vport if successful, otherwise
++ * return NULL.
++ **/
++static struct lpfc_nodelist *
++lpfc_sli4_perform_vport_cvl(struct lpfc_vport *vport)
++{
++	struct lpfc_nodelist *ndlp;
++	struct Scsi_Host *shost;
++	struct lpfc_hba *phba;
++
++	if (!vport)
++		return NULL;
++	ndlp = lpfc_findnode_did(vport, Fabric_DID);
++	if (!ndlp)
++		return NULL;
++	phba = vport->phba;
++	if (!phba)
++		return NULL;
++	if (phba->pport->port_state <= LPFC_FLOGI)
++		return NULL;
++	/* If virtual link is not yet instantiated ignore CVL */
++	if (vport->port_state <= LPFC_FDISC)
++		return NULL;
++	shost = lpfc_shost_from_vport(vport);
++	if (!shost)
++		return NULL;
++	lpfc_linkdown_port(vport);
++	lpfc_cleanup_pending_mbox(vport);
++	spin_lock_irq(shost->host_lock);
++	vport->fc_flag |= FC_VPORT_CVL_RCVD;
++	spin_unlock_irq(shost->host_lock);
++
++	return ndlp;
++}
++
++/**
++ * lpfc_sli4_perform_all_vport_cvl - Perform clear virtual link on all vports
++ * @vport: pointer to lpfc hba data structure.
++ *
++ * This routine is to perform Clear Virtual Link (CVL) on all vports in
++ * response to a FCF dead event.
 + **/
 +static void
-+lpfc_bsg_menlo_cmd_cmp(struct lpfc_hba *phba,
-+			struct lpfc_iocbq *cmdiocbq,
-+			struct lpfc_iocbq *rspiocbq)
++lpfc_sli4_perform_all_vport_cvl(struct lpfc_hba *phba)
 +{
-+	struct bsg_job_data *dd_data;
-+	struct fc_bsg_job *job;
-+	IOCB_t *rsp;
-+	struct lpfc_dmabuf *bmp;
-+	struct lpfc_bsg_menlo *menlo;
-+	unsigned long flags;
-+	struct menlo_response *menlo_resp;
-+	int rc = 0;
++	struct lpfc_vport **vports;
++	int i;
 +
-+	spin_lock_irqsave(&phba->ct_ev_lock, flags);
-+	dd_data = cmdiocbq->context1;
-+	if (!dd_data) {
-+		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
-+		return;
-+	}
++	vports = lpfc_create_vport_work_array(phba);
++	if (vports)
++		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
++			lpfc_sli4_perform_vport_cvl(vports[i]);
++	lpfc_destroy_vport_work_array(phba, vports);
++}
 +
-+	menlo = &dd_data->context_un.menlo;
-+	job = menlo->set_job;
-+	job->dd_data = NULL; /* so timeout handler does not reply */
-+
-+	spin_lock_irqsave(&phba->hbalock, flags);
-+	cmdiocbq->iocb_flag |= LPFC_IO_WAKE;
-+	if (cmdiocbq->context2 && rspiocbq)
-+		memcpy(&((struct lpfc_iocbq *)cmdiocbq->context2)->iocb,
-+		       &rspiocbq->iocb, sizeof(IOCB_t));
-+	spin_unlock_irqrestore(&phba->hbalock, flags);
-+
-+	bmp = menlo->bmp;
-+	rspiocbq = menlo->rspiocbq;
-+	rsp = &rspiocbq->iocb;
-+
-+	pci_unmap_sg(phba->pcidev, job->request_payload.sg_list,
-+		     job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+	pci_unmap_sg(phba->pcidev, job->reply_payload.sg_list,
-+		     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+
-+	/* always return the xri, this would be used in the case
-+	 * of a menlo download to allow the data to be sent as a continuation
-+	 * of the exchange.
-+	 */
-+	menlo_resp = (struct menlo_response *)
-+		job->reply->reply_data.vendor_reply.vendor_rsp;
-+	menlo_resp->xri = rsp->ulpContext;
-+	if (rsp->ulpStatus) {
-+		if (rsp->ulpStatus == IOSTAT_LOCAL_REJECT) {
-+			switch (rsp->un.ulpWord[4] & 0xff) {
-+			case IOERR_SEQUENCE_TIMEOUT:
-+				rc = -ETIMEDOUT;
-+				break;
-+			case IOERR_INVALID_RPI:
-+				rc = -EFAULT;
-+				break;
-+			default:
-+				rc = -EACCES;
++/**
+  * lpfc_sli4_async_fcoe_evt - Process the asynchronous fcoe event
+  * @phba: pointer to lpfc hba data structure.
+  * @acqe_link: pointer to the async fcoe completion queue entry.
+@@ -3227,7 +3291,6 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba
+ 	struct lpfc_vport *vport;
+ 	struct lpfc_nodelist *ndlp;
+ 	struct Scsi_Host  *shost;
+-	uint32_t link_state;
+ 	int active_vlink_present;
+ 	struct lpfc_vport **vports;
+ 	int i;
+@@ -3284,16 +3347,35 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba
+ 		/* If the event is not for currently used fcf do nothing */
+ 		if (phba->fcf.current_rec.fcf_indx != acqe_fcoe->index)
+ 			break;
+-		/*
+-		 * Currently, driver support only one FCF - so treat this as
+-		 * a link down, but save the link state because we don't want
+-		 * it to be changed to Link Down unless it is already down.
++		/* We request port to rediscover the entire FCF table for
++		 * a fast recovery from case that the current FCF record
++		 * is no longer valid if the last CVL event hasn't already
++		 * triggered process.
+ 		 */
+-		link_state = phba->link_state;
+-		lpfc_linkdown(phba);
+-		phba->link_state = link_state;
+-		/* Unregister FCF if no devices connected to it */
+-		lpfc_unregister_unused_fcf(phba);
++		spin_lock_irq(&phba->hbalock);
++		if (phba->fcf.fcf_flag & FCF_CVL_FOVER) {
++			spin_unlock_irq(&phba->hbalock);
++			break;
++		}
++		/* Mark the fast failover process in progress */
++		phba->fcf.fcf_flag |= FCF_DEAD_FOVER;
++		spin_unlock_irq(&phba->hbalock);
++		rc = lpfc_sli4_redisc_fcf_table(phba);
++		if (rc) {
++			spin_lock_irq(&phba->hbalock);
++			phba->fcf.fcf_flag &= ~FCF_DEAD_FOVER;
++			spin_unlock_irq(&phba->hbalock);
++			/*
++			 * Last resort will fail over by treating this
++			 * as a link down to FCF registration.
++			 */
++			lpfc_sli4_fcf_dead_failthrough(phba);
++		} else
++			/* Handling fast FCF failover to a DEAD FCF event
++			 * is considered equalivant to receiving CVL to all
++			 * vports.
++			 */
++			lpfc_sli4_perform_all_vport_cvl(phba);
+ 		break;
+ 	case LPFC_FCOE_EVENT_TYPE_CVL:
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY,
+@@ -3301,23 +3383,9 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba
+ 			" tag 0x%x\n", acqe_fcoe->index, acqe_fcoe->event_tag);
+ 		vport = lpfc_find_vport_by_vpid(phba,
+ 				acqe_fcoe->index - phba->vpi_base);
+-		if (!vport)
+-			break;
+-		ndlp = lpfc_findnode_did(vport, Fabric_DID);
++		ndlp = lpfc_sli4_perform_vport_cvl(vport);
+ 		if (!ndlp)
+ 			break;
+-		shost = lpfc_shost_from_vport(vport);
+-		if (phba->pport->port_state <= LPFC_FLOGI)
+-			break;
+-		/* If virtual link is not yet instantiated ignore CVL */
+-		if (vport->port_state <= LPFC_FDISC)
+-			break;
+-
+-		lpfc_linkdown_port(vport);
+-		lpfc_cleanup_pending_mbox(vport);
+-		spin_lock_irq(shost->host_lock);
+-		vport->fc_flag |= FC_VPORT_CVL_RCVD;
+-		spin_unlock_irq(shost->host_lock);
+ 		active_vlink_present = 0;
+ 
+ 		vports = lpfc_create_vport_work_array(phba);
+@@ -3340,6 +3408,7 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba
+ 			 * re-instantiate the Vlink using FDISC.
+ 			 */
+ 			mod_timer(&ndlp->nlp_delayfunc, jiffies + HZ);
++			shost = lpfc_shost_from_vport(vport);
+ 			spin_lock_irq(shost->host_lock);
+ 			ndlp->nlp_flag |= NLP_DELAY_TMO;
+ 			spin_unlock_irq(shost->host_lock);
+@@ -3350,15 +3419,28 @@ lpfc_sli4_async_fcoe_evt(struct lpfc_hba
+ 			 * Otherwise, we request port to rediscover
+ 			 * the entire FCF table for a fast recovery
+ 			 * from possible case that the current FCF
+-			 * is no longer valid.
++			 * is no longer valid if the FCF_DEAD event
++			 * hasn't already triggered process.
+ 			 */
++			spin_lock_irq(&phba->hbalock);
++			if (phba->fcf.fcf_flag & FCF_DEAD_FOVER) {
++				spin_unlock_irq(&phba->hbalock);
 +				break;
 +			}
-+		} else
-+			rc = -EACCES;
-+	} else
-+		job->reply->reply_payload_rcv_len =
-+			rsp->un.genreq64.bdl.bdeSize;
-+
-+	lpfc_mbuf_free(phba, bmp->virt, bmp->phys);
-+	lpfc_sli_release_iocbq(phba, rspiocbq);
-+	lpfc_sli_release_iocbq(phba, cmdiocbq);
-+	kfree(bmp);
-+	kfree(dd_data);
-+	/* make error code available to userspace */
-+	job->reply->result = rc;
-+	/* complete the job back to userspace */
-+	job->job_done(job);
-+	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
-+	return;
-+}
-+
-+/**
-+ * lpfc_menlo_cmd - send an ioctl for menlo hardware
-+ * @job: fc_bsg_job to handle
-+ *
-+ * This function issues a gen request 64 CR ioctl for all menlo cmd requests,
-+ * all the command completions will return the xri for the command.
-+ * For menlo data requests a gen request 64 CX is used to continue the exchange
-+ * supplied in the menlo request header xri field.
-+ **/
-+static int
-+lpfc_menlo_cmd(struct fc_bsg_job *job)
-+{
-+	struct lpfc_vport *vport = (struct lpfc_vport *)job->shost->hostdata;
-+	struct lpfc_hba *phba = vport->phba;
-+	struct lpfc_iocbq *cmdiocbq, *rspiocbq;
-+	IOCB_t *cmd, *rsp;
-+	int rc = 0;
-+	struct menlo_command *menlo_cmd;
-+	struct menlo_response *menlo_resp;
-+	struct lpfc_dmabuf *bmp = NULL;
-+	int request_nseg;
-+	int reply_nseg;
-+	struct scatterlist *sgel = NULL;
-+	int numbde;
-+	dma_addr_t busaddr;
-+	struct bsg_job_data *dd_data;
-+	struct ulp_bde64 *bpl = NULL;
-+
-+	/* in case no data is returned return just the return code */
-+	job->reply->reply_payload_rcv_len = 0;
-+
-+	if (job->request_len <
-+	    sizeof(struct fc_bsg_request) +
-+		sizeof(struct menlo_command)) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
-+				"2784 Received MENLO_CMD request below "
-+				"minimum size\n");
-+		rc = -ERANGE;
-+		goto no_dd_data;
-+	}
-+
-+	if (job->reply_len <
-+	    sizeof(struct fc_bsg_request) + sizeof(struct menlo_response)) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
-+				"2785 Received MENLO_CMD reply below "
-+				"minimum size\n");
-+		rc = -ERANGE;
-+		goto no_dd_data;
-+	}
-+
-+	if (!(phba->menlo_flag & HBA_MENLO_SUPPORT)) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
-+				"2786 Adapter does not support menlo "
-+				"commands\n");
-+		rc = -EPERM;
-+		goto no_dd_data;
-+	}
-+
-+	menlo_cmd = (struct menlo_command *)
-+		job->request->rqst_data.h_vendor.vendor_cmd;
-+
-+	menlo_resp = (struct menlo_response *)
-+		job->reply->reply_data.vendor_reply.vendor_rsp;
-+
-+	/* allocate our bsg tracking structure */
-+	dd_data = kmalloc(sizeof(struct bsg_job_data), GFP_KERNEL);
-+	if (!dd_data) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
-+				"2787 Failed allocation of dd_data\n");
-+		rc = -ENOMEM;
-+		goto no_dd_data;
-+	}
-+
-+	bmp = kmalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
-+	if (!bmp) {
-+		rc = -ENOMEM;
-+		goto free_dd;
-+	}
-+
-+	cmdiocbq = lpfc_sli_get_iocbq(phba);
-+	if (!cmdiocbq) {
-+		rc = -ENOMEM;
-+		goto free_bmp;
-+	}
-+
-+	rspiocbq = lpfc_sli_get_iocbq(phba);
-+	if (!rspiocbq) {
-+		rc = -ENOMEM;
-+		goto free_cmdiocbq;
-+	}
-+
-+	rsp = &rspiocbq->iocb;
-+
-+	bmp->virt = lpfc_mbuf_alloc(phba, 0, &bmp->phys);
-+	if (!bmp->virt) {
-+		rc = -ENOMEM;
-+		goto free_rspiocbq;
-+	}
-+
-+	INIT_LIST_HEAD(&bmp->list);
-+	bpl = (struct ulp_bde64 *) bmp->virt;
-+	request_nseg = pci_map_sg(phba->pcidev, job->request_payload.sg_list,
-+				  job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+	for_each_sg(job->request_payload.sg_list, sgel, request_nseg, numbde) {
-+		busaddr = sg_dma_address(sgel);
-+		bpl->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
-+		bpl->tus.f.bdeSize = sg_dma_len(sgel);
-+		bpl->tus.w = cpu_to_le32(bpl->tus.w);
-+		bpl->addrLow = cpu_to_le32(putPaddrLow(busaddr));
-+		bpl->addrHigh = cpu_to_le32(putPaddrHigh(busaddr));
-+		bpl++;
-+	}
-+
-+	reply_nseg = pci_map_sg(phba->pcidev, job->reply_payload.sg_list,
-+				job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+	for_each_sg(job->reply_payload.sg_list, sgel, reply_nseg, numbde) {
-+		busaddr = sg_dma_address(sgel);
-+		bpl->tus.f.bdeFlags = BUFF_TYPE_BDE_64I;
-+		bpl->tus.f.bdeSize = sg_dma_len(sgel);
-+		bpl->tus.w = cpu_to_le32(bpl->tus.w);
-+		bpl->addrLow = cpu_to_le32(putPaddrLow(busaddr));
-+		bpl->addrHigh = cpu_to_le32(putPaddrHigh(busaddr));
-+		bpl++;
-+	}
-+
-+	cmd = &cmdiocbq->iocb;
-+	cmd->un.genreq64.bdl.ulpIoTag32 = 0;
-+	cmd->un.genreq64.bdl.addrHigh = putPaddrHigh(bmp->phys);
-+	cmd->un.genreq64.bdl.addrLow = putPaddrLow(bmp->phys);
-+	cmd->un.genreq64.bdl.bdeFlags = BUFF_TYPE_BLP_64;
-+	cmd->un.genreq64.bdl.bdeSize =
-+	    (request_nseg + reply_nseg) * sizeof(struct ulp_bde64);
-+	cmd->un.genreq64.w5.hcsw.Fctl = (SI | LA);
-+	cmd->un.genreq64.w5.hcsw.Dfctl = 0;
-+	cmd->un.genreq64.w5.hcsw.Rctl = FC_RCTL_DD_UNSOL_CMD;
-+	cmd->un.genreq64.w5.hcsw.Type = MENLO_TRANSPORT_TYPE; /* 0xfe */
-+	cmd->ulpBdeCount = 1;
-+	cmd->ulpClass = CLASS3;
-+	cmd->ulpOwner = OWN_CHIP;
-+	cmd->ulpLe = 1; /* Limited Edition */
-+	cmdiocbq->iocb_flag |= LPFC_IO_LIBDFC;
-+	cmdiocbq->vport = phba->pport;
-+	/* We want the firmware to timeout before we do */
-+	cmd->ulpTimeout = MENLO_TIMEOUT - 5;
-+	cmdiocbq->context3 = bmp;
-+	cmdiocbq->context2 = rspiocbq;
-+	cmdiocbq->iocb_cmpl = lpfc_bsg_menlo_cmd_cmp;
-+	cmdiocbq->context1 = dd_data;
-+	cmdiocbq->context2 = rspiocbq;
-+	if (menlo_cmd->cmd == LPFC_BSG_VENDOR_MENLO_CMD) {
-+		cmd->ulpCommand = CMD_GEN_REQUEST64_CR;
-+		cmd->ulpPU = MENLO_PU; /* 3 */
-+		cmd->un.ulpWord[4] = MENLO_DID; /* 0x0000FC0E */
-+		cmd->ulpContext = MENLO_CONTEXT; /* 0 */
-+	} else {
-+		cmd->ulpCommand = CMD_GEN_REQUEST64_CX;
-+		cmd->ulpPU = 1;
-+		cmd->un.ulpWord[4] = 0;
-+		cmd->ulpContext = menlo_cmd->xri;
-+	}
-+
-+	dd_data->type = TYPE_MENLO;
-+	dd_data->context_un.menlo.cmdiocbq = cmdiocbq;
-+	dd_data->context_un.menlo.rspiocbq = rspiocbq;
-+	dd_data->context_un.menlo.set_job = job;
-+	dd_data->context_un.menlo.bmp = bmp;
-+
-+	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, cmdiocbq,
-+		MENLO_TIMEOUT - 5);
-+	if (rc == IOCB_SUCCESS)
-+		return 0; /* done for now */
-+
-+	/* iocb failed so cleanup */
-+	pci_unmap_sg(phba->pcidev, job->request_payload.sg_list,
-+		     job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+	pci_unmap_sg(phba->pcidev, job->reply_payload.sg_list,
-+		     job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+
-+	lpfc_mbuf_free(phba, bmp->virt, bmp->phys);
-+
-+free_rspiocbq:
-+	lpfc_sli_release_iocbq(phba, rspiocbq);
-+free_cmdiocbq:
-+	lpfc_sli_release_iocbq(phba, cmdiocbq);
-+free_bmp:
-+	kfree(bmp);
-+free_dd:
-+	kfree(dd_data);
-+no_dd_data:
-+	/* make error code available to userspace */
-+	job->reply->result = rc;
-+	job->dd_data = NULL;
-+	return rc;
-+}
-+/**
-  * lpfc_bsg_hst_vendor - process a vendor-specific fc_bsg_job
-  * @job: fc_bsg_job to handle
-  **/
-@@ -2669,6 +2985,10 @@ lpfc_bsg_hst_vendor(struct fc_bsg_job *j
- 	case LPFC_BSG_VENDOR_MBOX:
- 		rc = lpfc_bsg_mbox_cmd(job);
++			/* Mark the fast failover process in progress */
++			phba->fcf.fcf_flag |= FCF_CVL_FOVER;
++			spin_unlock_irq(&phba->hbalock);
+ 			rc = lpfc_sli4_redisc_fcf_table(phba);
+-			if (rc)
++			if (rc) {
++				spin_lock_irq(&phba->hbalock);
++				phba->fcf.fcf_flag &= ~FCF_CVL_FOVER;
++				spin_unlock_irq(&phba->hbalock);
+ 				/*
+ 				 * Last resort will be re-try on the
+ 				 * the current registered FCF entry.
+ 				 */
+ 				lpfc_retry_pport_discovery(phba);
++			}
+ 		}
  		break;
-+	case LPFC_BSG_VENDOR_MENLO_CMD:
-+	case LPFC_BSG_VENDOR_MENLO_DATA:
-+		rc = lpfc_menlo_cmd(job);
-+		break;
  	default:
- 		rc = -EINVAL;
- 		job->reply->reply_payload_rcv_len = 0;
-@@ -2728,6 +3048,7 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
- 	struct lpfc_bsg_event *evt;
- 	struct lpfc_bsg_iocb *iocb;
- 	struct lpfc_bsg_mbox *mbox;
-+	struct lpfc_bsg_menlo *menlo;
- 	struct lpfc_sli_ring *pring = &phba->sli.ring[LPFC_ELS_RING];
- 	struct bsg_job_data *dd_data;
- 	unsigned long flags;
-@@ -2775,6 +3096,17 @@ lpfc_bsg_timeout(struct fc_bsg_job *job)
- 		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 		job->job_done(job);
- 		break;
-+	case TYPE_MENLO:
-+		menlo = &dd_data->context_un.menlo;
-+		cmdiocb = menlo->cmdiocbq;
-+		/* hint to completion handler that the job timed out */
-+		job->reply->result = -EAGAIN;
-+		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
-+		/* this will call our completion handler */
-+		spin_lock_irq(&phba->hbalock);
-+		lpfc_sli_issue_abort_iotag(phba, pring, cmdiocb);
-+		spin_unlock_irq(&phba->hbalock);
-+		break;
- 	default:
- 		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 		break;
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.h b/drivers/scsi/lpfc/lpfc_bsg.h
---- a/drivers/scsi/lpfc/lpfc_bsg.h	2010-02-11 17:26:54.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_bsg.h	2010-02-25 16:34:10.000000000 -0500
-@@ -31,6 +31,8 @@
- #define LPFC_BSG_VENDOR_DIAG_TEST	5
- #define LPFC_BSG_VENDOR_GET_MGMT_REV	6
- #define LPFC_BSG_VENDOR_MBOX		7
-+#define LPFC_BSG_VENDOR_MENLO_CMD	8
-+#define LPFC_BSG_VENDOR_MENLO_DATA	9
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2010-02-25 16:33:47.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2010-02-25 16:34:30.000000000 -0500
+@@ -153,9 +153,11 @@ struct lpfc_fcf {
+ #define FCF_REGISTERED	0x02 /* FCF registered with FW */
+ #define FCF_SCAN_DONE	0x04 /* FCF table scan done */
+ #define FCF_IN_USE	0x08 /* Atleast one discovery completed */
+-#define FCF_REDISC_PEND	0x10 /* FCF rediscovery pending */
+-#define FCF_REDISC_EVT	0x20 /* FCF rediscovery event to worker thread */
+-#define FCF_REDISC_FOV	0x40 /* Post FCF rediscovery fast failover */
++#define FCF_DEAD_FOVER  0x10 /* FCF DEAD triggered fast FCF failover */
++#define FCF_CVL_FOVER	0x20 /* CVL triggered fast FCF failover */
++#define FCF_REDISC_PEND	0x40 /* FCF rediscovery pending */
++#define FCF_REDISC_EVT	0x80 /* FCF rediscovery event to worker thread */
++#define FCF_REDISC_FOV	0x100 /* Post FCF rediscovery fast failover */
+ 	uint32_t addr_mode;
+ 	struct lpfc_fcf_rec current_rec;
+ 	struct lpfc_fcf_rec failover_rec;
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2010-02-25 16:33:47.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-02-25 16:34:30.000000000 -0500
+@@ -4519,6 +4519,10 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
+ 	/* Post receive buffers to the device */
+ 	lpfc_sli4_rb_setup(phba);
  
- struct set_ct_event {
- 	uint32_t command;
-@@ -96,3 +98,13 @@ struct dfc_mbox_req {
- 	uint8_t mbOffset;
- };
- 
-+/* Used for menlo command or menlo data. The xri is only used for menlo data */
-+struct menlo_command {
-+	uint32_t cmd;
-+	uint32_t xri;
-+};
++	/* Reset HBA FCF states after HBA reset */
++	phba->fcf.fcf_flag = 0;
++	phba->fcf.current_rec.flag = 0;
 +
-+struct menlo_response {
-+	uint32_t xri; /* return the xri of the iocb exchange */
-+};
-+
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2010-02-25 16:33:47.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc.h	2010-02-25 16:34:10.000000000 -0500
-@@ -37,6 +37,9 @@ struct lpfc_sli2_slim;
- 					   the NameServer  before giving up. */
- #define LPFC_CMD_PER_LUN	3	/* max outstanding cmds per lun */
- #define LPFC_DEFAULT_SG_SEG_CNT 64	/* sg element count per scsi cmnd */
-+#define LPFC_DEFAULT_MENLO_SG_SEG_CNT 128	/* sg element count per scsi
-+		cmnd for menlo needs nearly twice as for firmware
-+		downloads using bsg */
- #define LPFC_DEFAULT_PROT_SG_SEG_CNT 4096 /* sg protection elements count */
- #define LPFC_MAX_SG_SEG_CNT	4096	/* sg element count per scsi cmnd */
- #define LPFC_MAX_PROT_SG_SEG_CNT 4096	/* prot sg element count per scsi cmd*/
-@@ -806,6 +809,9 @@ struct lpfc_hba {
- 	struct list_head ct_ev_waiters;
- 	struct unsol_rcv_ct_ctx ct_ctx[64];
- 	uint32_t ctx_idx;
-+
-+	uint8_t menlo_flag;	/* menlo generic flags */
-+#define HBA_MENLO_SUPPORT	0x1 /* HBA supports menlo commands */
- };
- 
- static inline struct Scsi_Host *
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:33:47.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2010-02-25 16:34:10.000000000 -0500
-@@ -2597,6 +2597,14 @@ lpfc_create_port(struct lpfc_hba *phba, 
- 	init_timer(&vport->els_tmofunc);
- 	vport->els_tmofunc.function = lpfc_els_timeout;
- 	vport->els_tmofunc.data = (unsigned long)vport;
-+	if (phba->pcidev->device == PCI_DEVICE_ID_HORNET) {
-+		phba->menlo_flag |= HBA_MENLO_SUPPORT;
-+		/* check for menlo minimum sg count */
-+		if (phba->cfg_sg_seg_cnt < LPFC_DEFAULT_MENLO_SG_SEG_CNT) {
-+			phba->cfg_sg_seg_cnt = LPFC_DEFAULT_MENLO_SG_SEG_CNT;
-+			shost->sg_tablesize = phba->cfg_sg_seg_cnt;
+ 	/* Start the ELS watchdog timer */
+ 	mod_timer(&vport->els_tmofunc,
+ 		  jiffies + HZ * (phba->fc_ratov * 2));
+@@ -12069,11 +12073,26 @@ lpfc_mbx_cmpl_redisc_fcf_table(struct lp
+ 				"2746 Requesting for FCF rediscovery failed "
+ 				"status x%x add_status x%x\n",
+ 				shdr_status, shdr_add_status);
+-		/*
+-		 * Request failed, last resort to re-try current
+-		 * registered FCF entry
+-		 */
+-		lpfc_retry_pport_discovery(phba);
++		if (phba->fcf.fcf_flag & FCF_CVL_FOVER) {
++			spin_lock_irq(&phba->hbalock);
++			phba->fcf.fcf_flag &= ~FCF_CVL_FOVER;
++			spin_unlock_irq(&phba->hbalock);
++			/*
++			 * CVL event triggered FCF rediscover request failed,
++			 * last resort to re-try current registered FCF entry.
++			 */
++			lpfc_retry_pport_discovery(phba);
++		} else {
++			spin_lock_irq(&phba->hbalock);
++			phba->fcf.fcf_flag &= ~FCF_DEAD_FOVER;
++			spin_unlock_irq(&phba->hbalock);
++			/*
++			 * DEAD FCF event triggered FCF rediscover request
++			 * failed, last resort to fail over as a link down
++			 * to FCF registration.
++			 */
++			lpfc_sli4_fcf_dead_failthrough(phba);
 +		}
-+	}
+ 	} else
+ 		/*
+ 		 * Start FCF rediscovery wait timer for pending FCF
+@@ -12129,6 +12148,31 @@ lpfc_sli4_redisc_fcf_table(struct lpfc_h
+ }
  
- 	error = scsi_add_host_with_dma(shost, dev, &phba->pcidev->dev);
- 	if (error)
+ /**
++ * lpfc_sli4_fcf_dead_failthrough - Failthrough routine to fcf dead event
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This function is the failover routine as a last resort to the FCF DEAD
++ * event when driver failed to perform fast FCF failover.
++ **/
++void
++lpfc_sli4_fcf_dead_failthrough(struct lpfc_hba *phba)
++{
++	uint32_t link_state;
++
++	/*
++	 * Last resort as FCF DEAD event failover will treat this as
++	 * a link down, but save the link state because we don't want
++	 * it to be changed to Link Down unless it is already down.
++	 */
++	link_state = phba->link_state;
++	lpfc_linkdown(phba);
++	phba->link_state = link_state;
++
++	/* Unregister FCF if no devices connected to it */
++	lpfc_unregister_unused_fcf(phba);
++}
++
++/**
+  * lpfc_sli_read_link_ste - Read region 23 to decide if link is disabled.
+  * @phba: pointer to lpfc hba data structure.
+  *
 
 
