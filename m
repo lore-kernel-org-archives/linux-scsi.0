@@ -1,1409 +1,170 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 12/32] bfa: Replace bfa_assert() with bfa_sm_fault()
-Date: Thu, 25 Feb 2010 17:48:18 -0800
-Message-ID: <1267148898-22408-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 00/32] bfa: update bfa driver to version 2.1.2.1 (resubmit)
+Date: Thu, 25 Feb 2010 17:46:20 -0800
+Message-ID: <1267148780-21472-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:27234 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:27233 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934901Ab0BZBvm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:42 -0500
+	with ESMTP id S934883Ab0BZBvd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocade.comKrishna Gudipati <kgudipat@brocade.com>
 
-Change details:
+Hi James,
 
-	- Replace bfa_assert() with bfa_sm_fault() to get unhandled events for debugging.
----
- drivers/scsi/bfa/bfa_fcs_lport.c |   10 ++++----
- drivers/scsi/bfa/bfa_ioim.c      |   22 +++++++++---------
- drivers/scsi/bfa/bfa_itnim.c     |   30 +++++++++++++-------------
- drivers/scsi/bfa/bfa_lps.c       |   12 +++++-----
- drivers/scsi/bfa/bfa_rport.c     |   26 +++++++++++-----------
- drivers/scsi/bfa/bfa_tskim.c     |   14 ++++++------
- drivers/scsi/bfa/fcpim.c         |   16 +++++++-------
- drivers/scsi/bfa/fdmi.c          |   22 +++++++++---------
- drivers/scsi/bfa/ms.c            |   22 +++++++++---------
- drivers/scsi/bfa/ns.c            |   34 ++++++++++++++--------------
- drivers/scsi/bfa/rport.c         |   44 +++++++++++++++++++-------------------
- drivers/scsi/bfa/rport_ftrs.c    |   12 +++++-----
- drivers/scsi/bfa/scn.c           |   10 ++++----
- drivers/scsi/bfa/vport.c         |   18 +++++++-------
- 14 files changed, 146 insertions(+), 146 deletions(-)
+We are resubmitting brocade bfa 2.1.2.1 driver patch. We completely reworked
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 3d62e45..960ae1a 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -114,7 +114,7 @@ bfa_fcs_port_sm_uninit(struct bfa_fcs_port_s *port,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -136,7 +136,7 @@ bfa_fcs_port_sm_init(struct bfa_fcs_port_s *port, enum bfa_fcs_port_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -176,7 +176,7 @@ bfa_fcs_port_sm_online(struct bfa_fcs_port_s *port,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -214,7 +214,7 @@ bfa_fcs_port_sm_offline(struct bfa_fcs_port_s *port,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -234,7 +234,7 @@ bfa_fcs_port_sm_deleting(struct bfa_fcs_port_s *port,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/bfa_ioim.c b/drivers/scsi/bfa/bfa_ioim.c
-index f81d359..5b107ab 100644
---- a/drivers/scsi/bfa/bfa_ioim.c
-+++ b/drivers/scsi/bfa/bfa_ioim.c
-@@ -149,7 +149,7 @@ bfa_ioim_sm_uninit(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -194,7 +194,7 @@ bfa_ioim_sm_sgalloc(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -259,7 +259,7 @@ bfa_ioim_sm_active(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -317,7 +317,7 @@ bfa_ioim_sm_abort(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -377,7 +377,7 @@ bfa_ioim_sm_cleanup(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -419,7 +419,7 @@ bfa_ioim_sm_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -467,7 +467,7 @@ bfa_ioim_sm_abort_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -516,7 +516,7 @@ bfa_ioim_sm_cleanup_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -544,7 +544,7 @@ bfa_ioim_sm_hcb(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -577,7 +577,7 @@ bfa_ioim_sm_hcb_free(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-@@ -605,7 +605,7 @@ bfa_ioim_sm_resfree(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ioim->bfa, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/bfa_itnim.c b/drivers/scsi/bfa/bfa_itnim.c
-index eabf7d3..a914ff2 100644
---- a/drivers/scsi/bfa/bfa_itnim.c
-+++ b/drivers/scsi/bfa/bfa_itnim.c
-@@ -144,7 +144,7 @@ bfa_itnim_sm_uninit(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -175,7 +175,7 @@ bfa_itnim_sm_created(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -212,7 +212,7 @@ bfa_itnim_sm_fwcreate(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -247,7 +247,7 @@ bfa_itnim_sm_fwcreate_qfull(struct bfa_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -275,7 +275,7 @@ bfa_itnim_sm_delete_pending(struct bfa_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -317,7 +317,7 @@ bfa_itnim_sm_online(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -348,7 +348,7 @@ bfa_itnim_sm_sler(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -385,7 +385,7 @@ bfa_itnim_sm_cleanup_offline(struct bfa_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -413,7 +413,7 @@ bfa_itnim_sm_cleanup_delete(struct bfa_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -442,7 +442,7 @@ bfa_itnim_sm_fwdelete(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -470,7 +470,7 @@ bfa_itnim_sm_fwdelete_qfull(struct bfa_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -502,7 +502,7 @@ bfa_itnim_sm_offline(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -538,7 +538,7 @@ bfa_itnim_sm_iocdisable(struct bfa_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -559,7 +559,7 @@ bfa_itnim_sm_deleting(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-@@ -583,7 +583,7 @@ bfa_itnim_sm_deleting_qfull(struct bfa_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->bfa, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/bfa_lps.c b/drivers/scsi/bfa/bfa_lps.c
-index 66b9b15..4c98bda 100644
---- a/drivers/scsi/bfa/bfa_lps.c
-+++ b/drivers/scsi/bfa/bfa_lps.c
-@@ -121,7 +121,7 @@ bfa_lps_sm_init(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(lps->bfa, event);
- 	}
- }
- 
-@@ -148,7 +148,7 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(lps->bfa, event);
- 	}
- }
- 
-@@ -180,7 +180,7 @@ bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(lps->bfa, event);
- 	}
- }
- 
-@@ -219,7 +219,7 @@ bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(lps->bfa, event);
- 	}
- }
- 
-@@ -243,7 +243,7 @@ bfa_lps_sm_logout(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(lps->bfa, event);
- 	}
- }
- 
-@@ -268,7 +268,7 @@ bfa_lps_sm_logowait(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(lps->bfa, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/bfa_rport.c b/drivers/scsi/bfa/bfa_rport.c
-index 3e1990a..7c509fa 100644
---- a/drivers/scsi/bfa/bfa_rport.c
-+++ b/drivers/scsi/bfa/bfa_rport.c
-@@ -114,7 +114,7 @@ bfa_rport_sm_uninit(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_un_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -146,7 +146,7 @@ bfa_rport_sm_created(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_cr_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -183,7 +183,7 @@ bfa_rport_sm_fwcreate(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_fwc_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -224,7 +224,7 @@ bfa_rport_sm_fwcreate_qfull(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_fwc_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -296,7 +296,7 @@ bfa_rport_sm_online(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_on_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -329,7 +329,7 @@ bfa_rport_sm_fwdelete(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_fwd_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -359,7 +359,7 @@ bfa_rport_sm_fwdelete_qfull(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_fwd_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -394,7 +394,7 @@ bfa_rport_sm_offline(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_off_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -421,7 +421,7 @@ bfa_rport_sm_deleting(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -446,7 +446,7 @@ bfa_rport_sm_deleting_qfull(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -477,7 +477,7 @@ bfa_rport_sm_delete_pending(struct bfa_rport_s *rp,
- 
- 	default:
- 		bfa_stats(rp, sm_delp_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -512,7 +512,7 @@ bfa_rport_sm_offline_pending(struct bfa_rport_s *rp,
- 
- 	default:
- 		bfa_stats(rp, sm_offp_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-@@ -550,7 +550,7 @@ bfa_rport_sm_iocdisable(struct bfa_rport_s *rp, enum bfa_rport_event event)
- 
- 	default:
- 		bfa_stats(rp, sm_iocd_unexp);
--		bfa_assert(0);
-+		bfa_sm_fault(rp->bfa, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/bfa_tskim.c b/drivers/scsi/bfa/bfa_tskim.c
-index ff7a4dc..ad9aaae 100644
---- a/drivers/scsi/bfa/bfa_tskim.c
-+++ b/drivers/scsi/bfa/bfa_tskim.c
-@@ -110,7 +110,7 @@ bfa_tskim_sm_uninit(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(tskim->bfa, event);
- 	}
- }
- 
-@@ -146,7 +146,7 @@ bfa_tskim_sm_active(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(tskim->bfa, event);
- 	}
- }
- 
-@@ -178,7 +178,7 @@ bfa_tskim_sm_cleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(tskim->bfa, event);
- 	}
- }
- 
-@@ -207,7 +207,7 @@ bfa_tskim_sm_iocleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(tskim->bfa, event);
- 	}
- }
- 
-@@ -242,7 +242,7 @@ bfa_tskim_sm_qfull(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(tskim->bfa, event);
- 	}
- }
- 
-@@ -277,7 +277,7 @@ bfa_tskim_sm_cleanup_qfull(struct bfa_tskim_s *tskim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(tskim->bfa, event);
- 	}
- }
- 
-@@ -303,7 +303,7 @@ bfa_tskim_sm_hcb(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(tskim->bfa, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
-index 06f8a46..71d23d1 100644
---- a/drivers/scsi/bfa/fcpim.c
-+++ b/drivers/scsi/bfa/fcpim.c
-@@ -126,7 +126,7 @@ bfa_fcs_itnim_sm_offline(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- 
- }
-@@ -161,7 +161,7 @@ bfa_fcs_itnim_sm_prli_send(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- }
- 
-@@ -205,7 +205,7 @@ bfa_fcs_itnim_sm_prli(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- }
- 
-@@ -240,7 +240,7 @@ bfa_fcs_itnim_sm_prli_retry(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- }
- 
-@@ -270,7 +270,7 @@ bfa_fcs_itnim_sm_hcb_online(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- }
- 
-@@ -298,7 +298,7 @@ bfa_fcs_itnim_sm_online(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- }
- 
-@@ -321,7 +321,7 @@ bfa_fcs_itnim_sm_hcb_offline(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- }
- 
-@@ -354,7 +354,7 @@ bfa_fcs_itnim_sm_initiator(struct bfa_fcs_itnim_s *itnim,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(itnim->fcs, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/fdmi.c b/drivers/scsi/bfa/fdmi.c
-index 3b193d2..10dadf7 100644
---- a/drivers/scsi/bfa/fdmi.c
-+++ b/drivers/scsi/bfa/fdmi.c
-@@ -158,7 +158,7 @@ bfa_fcs_port_fdmi_sm_offline(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -183,7 +183,7 @@ bfa_fcs_port_fdmi_sm_sending_rhba(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -230,7 +230,7 @@ bfa_fcs_port_fdmi_sm_rhba(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -258,7 +258,7 @@ bfa_fcs_port_fdmi_sm_rhba_retry(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -286,7 +286,7 @@ bfa_fcs_port_fdmi_sm_sending_rprt(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -331,7 +331,7 @@ bfa_fcs_port_fdmi_sm_rprt(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -359,7 +359,7 @@ bfa_fcs_port_fdmi_sm_rprt_retry(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -387,7 +387,7 @@ bfa_fcs_port_fdmi_sm_sending_rpa(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -431,7 +431,7 @@ bfa_fcs_port_fdmi_sm_rpa(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -459,7 +459,7 @@ bfa_fcs_port_fdmi_sm_rpa_retry(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-@@ -478,7 +478,7 @@ bfa_fcs_port_fdmi_sm_online(struct bfa_fcs_port_fdmi_s *fdmi,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(port->fcs, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/ms.c b/drivers/scsi/bfa/ms.c
-index c96b3ca..f0275a4 100644
---- a/drivers/scsi/bfa/ms.c
-+++ b/drivers/scsi/bfa/ms.c
-@@ -118,7 +118,7 @@ bfa_fcs_port_ms_sm_offline(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -141,7 +141,7 @@ bfa_fcs_port_ms_sm_plogi_sending(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -190,7 +190,7 @@ bfa_fcs_port_ms_sm_plogi(struct bfa_fcs_port_ms_s *ms, enum port_ms_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -216,7 +216,7 @@ bfa_fcs_port_ms_sm_plogi_retry(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -243,7 +243,7 @@ bfa_fcs_port_ms_sm_online(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -266,7 +266,7 @@ bfa_fcs_port_ms_sm_gmal_sending(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -304,7 +304,7 @@ bfa_fcs_port_ms_sm_gmal(struct bfa_fcs_port_ms_s *ms, enum port_ms_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -330,7 +330,7 @@ bfa_fcs_port_ms_sm_gmal_retry(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -466,7 +466,7 @@ bfa_fcs_port_ms_sm_gfn_sending(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -502,7 +502,7 @@ bfa_fcs_port_ms_sm_gfn(struct bfa_fcs_port_ms_s *ms, enum port_ms_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-@@ -528,7 +528,7 @@ bfa_fcs_port_ms_sm_gfn_retry(struct bfa_fcs_port_ms_s *ms,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ms->port->fcs, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/ns.c b/drivers/scsi/bfa/ns.c
-index 2f8b880..6de06a5 100644
---- a/drivers/scsi/bfa/ns.c
-+++ b/drivers/scsi/bfa/ns.c
-@@ -164,7 +164,7 @@ bfa_fcs_port_ns_sm_offline(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -187,7 +187,7 @@ bfa_fcs_port_ns_sm_plogi_sending(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -221,7 +221,7 @@ bfa_fcs_port_ns_sm_plogi(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -247,7 +247,7 @@ bfa_fcs_port_ns_sm_plogi_retry(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -270,7 +270,7 @@ bfa_fcs_port_ns_sm_sending_rspn_id(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -304,7 +304,7 @@ bfa_fcs_port_ns_sm_rspn_id(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -330,7 +330,7 @@ bfa_fcs_port_ns_sm_rspn_id_retry(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -353,7 +353,7 @@ bfa_fcs_port_ns_sm_sending_rft_id(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -390,7 +390,7 @@ bfa_fcs_port_ns_sm_rft_id(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -413,7 +413,7 @@ bfa_fcs_port_ns_sm_rft_id_retry(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -436,7 +436,7 @@ bfa_fcs_port_ns_sm_sending_rff_id(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -494,7 +494,7 @@ bfa_fcs_port_ns_sm_rff_id(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -517,7 +517,7 @@ bfa_fcs_port_ns_sm_rff_id_retry(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- static void
-@@ -539,7 +539,7 @@ bfa_fcs_port_ns_sm_sending_gid_ft(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -575,7 +575,7 @@ bfa_fcs_port_ns_sm_gid_ft(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -598,7 +598,7 @@ bfa_fcs_port_ns_sm_gid_ft_retry(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-@@ -626,7 +626,7 @@ bfa_fcs_port_ns_sm_online(struct bfa_fcs_port_ns_s *ns,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(ns->port->fcs, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/rport.c b/drivers/scsi/bfa/rport.c
-index df714dc..32cf180 100644
---- a/drivers/scsi/bfa/rport.c
-+++ b/drivers/scsi/bfa/rport.c
-@@ -224,7 +224,7 @@ bfa_fcs_rport_sm_uninit(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -276,7 +276,7 @@ bfa_fcs_rport_sm_plogi_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -332,7 +332,7 @@ bfa_fcs_rport_sm_plogiacc_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -406,7 +406,7 @@ bfa_fcs_rport_sm_plogi_retry(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -481,7 +481,7 @@ bfa_fcs_rport_sm_plogi(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -534,7 +534,7 @@ bfa_fcs_rport_sm_hal_online(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -589,7 +589,7 @@ bfa_fcs_rport_sm_online(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -646,7 +646,7 @@ bfa_fcs_rport_sm_nsquery_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -704,7 +704,7 @@ bfa_fcs_rport_sm_nsquery(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -754,7 +754,7 @@ bfa_fcs_rport_sm_adisc_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -816,7 +816,7 @@ bfa_fcs_rport_sm_adisc(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -846,7 +846,7 @@ bfa_fcs_rport_sm_fc4_logorcv(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -869,7 +869,7 @@ bfa_fcs_rport_sm_fc4_logosend(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -905,7 +905,7 @@ bfa_fcs_rport_sm_fc4_offline(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -951,7 +951,7 @@ bfa_fcs_rport_sm_hcb_offline(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -1011,7 +1011,7 @@ bfa_fcs_rport_sm_hcb_logorcv(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -1038,7 +1038,7 @@ bfa_fcs_rport_sm_hcb_logosend(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -1073,7 +1073,7 @@ bfa_fcs_rport_sm_logo_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -1132,7 +1132,7 @@ bfa_fcs_rport_sm_offline(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -1188,7 +1188,7 @@ bfa_fcs_rport_sm_nsdisc_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -1249,7 +1249,7 @@ bfa_fcs_rport_sm_nsdisc_retry(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -1334,7 +1334,7 @@ bfa_fcs_rport_sm_nsdisc_sent(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/rport_ftrs.c b/drivers/scsi/bfa/rport_ftrs.c
-index e1932c8..ae7bba6 100644
---- a/drivers/scsi/bfa/rport_ftrs.c
-+++ b/drivers/scsi/bfa/rport_ftrs.c
-@@ -91,7 +91,7 @@ bfa_fcs_rpf_sm_uninit(struct bfa_fcs_rpf_s *rpf, enum rpf_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -114,7 +114,7 @@ bfa_fcs_rpf_sm_rpsc_sending(struct bfa_fcs_rpf_s *rpf, enum rpf_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -160,7 +160,7 @@ bfa_fcs_rpf_sm_rpsc(struct bfa_fcs_rpf_s *rpf, enum rpf_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -186,7 +186,7 @@ bfa_fcs_rpf_sm_rpsc_retry(struct bfa_fcs_rpf_s *rpf, enum rpf_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -206,7 +206,7 @@ bfa_fcs_rpf_sm_online(struct bfa_fcs_rpf_s *rpf, enum rpf_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- 
-@@ -229,7 +229,7 @@ bfa_fcs_rpf_sm_offline(struct bfa_fcs_rpf_s *rpf, enum rpf_event event)
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(rport->fcs, event);
- 	}
- }
- /**
-diff --git a/drivers/scsi/bfa/scn.c b/drivers/scsi/bfa/scn.c
-index bd4771f..8fe09ba 100644
---- a/drivers/scsi/bfa/scn.c
-+++ b/drivers/scsi/bfa/scn.c
-@@ -90,7 +90,7 @@ bfa_fcs_port_scn_sm_offline(struct bfa_fcs_port_scn_s *scn,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(scn->port->fcs, event);
- 	}
- }
- 
-@@ -109,7 +109,7 @@ bfa_fcs_port_scn_sm_sending_scr(struct bfa_fcs_port_scn_s *scn,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(scn->port->fcs, event);
- 	}
- }
- 
-@@ -137,7 +137,7 @@ bfa_fcs_port_scn_sm_scr(struct bfa_fcs_port_scn_s *scn,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(scn->port->fcs, event);
- 	}
- }
- 
-@@ -157,7 +157,7 @@ bfa_fcs_port_scn_sm_scr_retry(struct bfa_fcs_port_scn_s *scn,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(scn->port->fcs, event);
- 	}
- }
- 
-@@ -171,7 +171,7 @@ bfa_fcs_port_scn_sm_online(struct bfa_fcs_port_scn_s *scn,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(scn->port->fcs, event);
- 	}
- }
- 
-diff --git a/drivers/scsi/bfa/vport.c b/drivers/scsi/bfa/vport.c
-index 13f7371..14fb7ac 100644
---- a/drivers/scsi/bfa/vport.c
-+++ b/drivers/scsi/bfa/vport.c
-@@ -122,7 +122,7 @@ bfa_fcs_vport_sm_uninit(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -165,7 +165,7 @@ bfa_fcs_vport_sm_created(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -202,7 +202,7 @@ bfa_fcs_vport_sm_offline(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -249,7 +249,7 @@ bfa_fcs_vport_sm_fdisc(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -283,7 +283,7 @@ bfa_fcs_vport_sm_fdisc_retry(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -310,7 +310,7 @@ bfa_fcs_vport_sm_online(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -339,7 +339,7 @@ bfa_fcs_vport_sm_deleting(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -387,7 +387,7 @@ bfa_fcs_vport_sm_cleanup(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
-@@ -419,7 +419,7 @@ bfa_fcs_vport_sm_logo(struct bfa_fcs_vport_s *vport,
- 		break;
- 
- 	default:
--		bfa_assert(0);
-+		bfa_sm_fault(__vport_fcs(vport), event);
- 	}
- }
- 
--- 
-1.6.5.3
+the patch by hand merging previous checkins so that each patch addresses a
+
+specific issue. We hope this patch set meets the upstream standard and gets
+
+included in your scsi-misc tree. In the following weeks, we will submit more
+
+patches to clean up the driver and reduce the number of files to be on par
+
+with most of the upstream drivers.
+
+
+Here are the changes we made in 2.1.2.1 driver:
+
+Krishna Gudipati (32):
+  bfa: Update the driver version to 2.1.2.1.
+  bfa: Added separate MSI-X module parameters.
+  bfa: Defined a new LPS event to clear virtual link on a vport
+  bfa: Enable IOC auto-recovery and IOC type fix.
+  bfa: Enable new halt interrupt in BFA.
+  bfa: Changes to support FDMI Driver Parameter
+  bfa: New interface to handle firmware upgrade scenario
+  bfa: Fix to allow creation of only 190 vports on CNA.
+  bfa: Resume BFA operations after firmware mismatch is resolved.
+  bfa: IOC changes: Support faster recovery and split bfa_ioc.c into
+    ASIC specific code.
+  bfa: Clear LL_HALT and PSS_ERR bit when IOC crashes.
+  bfa: Replace bfa_assert() with bfa_sm_fault()
+  bfa: RPORT state machine: direct attach mode fix.
+  bfa: Fix to copy fpma MAC when requested by user space application.
+  bfa: PCI VPD, FIP and include file changes.
+  bfa: FCS authentication related changes.
+  bfa: Added firmware save clear feature for BFA driver.
+  bfa: Introduce a link notification state machine.
+  bfa: AEN and byte alignment fixes.
+  bfa: IOC recovery fix in fcmode.
+  bfa: Fix Command Queue (CPE) full condition check and ack CPE
+    interrupt.
+  bfa: In MSIX mode, ignore spurious RME interrupts when FCoE ports are
+    in FW mismatch state.
+  bfa: IOC fixes, check for IOC down condition
+  bfa: Rename pport to fcport in BFA FCS.
+  bfa: New portlog entries for events (FIP/FLOGI/FDISC/LOGO).
+  bfa: Replace bfa_get_attr() with specific APIs
+  bfa: Modified the portstats get/clear logic
+  bfa: FCS and include file changes.
+  bfa: Makefile changes for upstream driver upgrade.
+  bfa: Handle SCSI IO underrun case.
+  bfa: Support vport create/delete from sysfs.
+  bfa: Remove unused header files and did some cleanup.
+
+ drivers/scsi/bfa/Makefile                          |    6 +-
+ drivers/scsi/bfa/bfa_core.c                        |   19 +
+ drivers/scsi/bfa/bfa_fcport.c                      | 1707 +++++++++++---------
+ drivers/scsi/bfa/bfa_fcs.c                         |   63 +-
+ drivers/scsi/bfa/bfa_fcs_lport.c                   |   75 +-
+ drivers/scsi/bfa/bfa_fcs_port.c                    |   11 +-
+ drivers/scsi/bfa/bfa_fcs_uf.c                      |    8 +-
+ drivers/scsi/bfa/bfa_hw_cb.c                       |   13 +
+ drivers/scsi/bfa/bfa_hw_ct.c                       |    9 +
+ drivers/scsi/bfa/bfa_intr.c                        |  111 +-
+ drivers/scsi/bfa/bfa_ioc.c                         |  762 +++------
+ drivers/scsi/bfa/bfa_ioc.h                         |   57 +-
+ drivers/scsi/bfa/bfa_ioc_cb.c                      |  274 ++++
+ drivers/scsi/bfa/bfa_ioc_ct.c                      |  424 +++++
+ drivers/scsi/bfa/bfa_iocfc.c                       |   24 +-
+ drivers/scsi/bfa/bfa_iocfc.h                       |    3 +
+ drivers/scsi/bfa/bfa_ioim.c                        |   22 +-
+ drivers/scsi/bfa/bfa_itnim.c                       |   30 +-
+ drivers/scsi/bfa/bfa_lps.c                         |  134 ++-
+ drivers/scsi/bfa/bfa_module.c                      |    4 +-
+ drivers/scsi/bfa/bfa_modules_priv.h                |    2 +-
+ drivers/scsi/bfa/bfa_port_priv.h                   |   57 +-
+ drivers/scsi/bfa/bfa_priv.h                        |    2 +-
+ drivers/scsi/bfa/bfa_rport.c                       |   26 +-
+ drivers/scsi/bfa/bfa_trcmod_priv.h                 |   62 +-
+ drivers/scsi/bfa/bfa_tskim.c                       |   14 +-
+ drivers/scsi/bfa/bfad.c                            |  208 ++-
+ drivers/scsi/bfa/bfad_attr.c                       |  180 ++-
+ drivers/scsi/bfa/bfad_attr.h                       |    9 -
+ drivers/scsi/bfa/bfad_drv.h                        |   35 +-
+ drivers/scsi/bfa/bfad_im.c                         |   53 +-
+ drivers/scsi/bfa/bfad_im.h                         |    5 -
+ drivers/scsi/bfa/bfad_intr.c                       |   11 +-
+ drivers/scsi/bfa/fabric.c                          |   59 +-
+ drivers/scsi/bfa/fcbuild.h                         |    6 +
+ drivers/scsi/bfa/fcpim.c                           |   51 +-
+ drivers/scsi/bfa/fcs_fabric.h                      |    2 +
+ drivers/scsi/bfa/fcs_fcpim.h                       |    5 -
+ drivers/scsi/bfa/fcs_lport.h                       |    7 +-
+ drivers/scsi/bfa/fcs_port.h                        |    3 +-
+ drivers/scsi/bfa/fcs_rport.h                       |    3 -
+ drivers/scsi/bfa/fcs_uf.h                          |    3 +-
+ drivers/scsi/bfa/fcs_vport.h                       |    8 -
+ drivers/scsi/bfa/fdmi.c                            |   78 +-
+ drivers/scsi/bfa/include/aen/bfa_aen.h             |   50 +-
+ drivers/scsi/bfa/include/bfa.h                     |   22 +
+ drivers/scsi/bfa/include/bfa_svc.h                 |  101 +-
+ drivers/scsi/bfa/include/bfa_timer.h               |    2 +-
+ drivers/scsi/bfa/include/bfi/bfi.h                 |    4 +-
+ drivers/scsi/bfa/include/bfi/bfi_cbreg.h           |   16 +-
+ drivers/scsi/bfa/include/bfi/bfi_ctreg.h           |   26 +
+ drivers/scsi/bfa/include/bfi/bfi_ioc.h             |    2 +-
+ drivers/scsi/bfa/include/bfi/bfi_lps.h             |    8 +
+ drivers/scsi/bfa/include/bfi/bfi_pport.h           |  172 +--
+ drivers/scsi/bfa/include/cna/bfa_cna_trcmod.h      |    4 +
+ drivers/scsi/bfa/include/cs/bfa_log.h              |    2 +-
+ drivers/scsi/bfa/include/cs/bfa_plog.h             |    9 +-
+ drivers/scsi/bfa/include/cs/bfa_sm.h               |    8 +
+ drivers/scsi/bfa/include/defs/bfa_defs_aen.h       |   10 +
+ drivers/scsi/bfa/include/defs/bfa_defs_auth.h      |   22 +
+ drivers/scsi/bfa/include/defs/bfa_defs_cee.h       |   14 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_driver.h    |    3 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_ethport.h   |    1 +
+ drivers/scsi/bfa/include/defs/bfa_defs_fcport.h    |   94 ++
+ drivers/scsi/bfa/include/defs/bfa_defs_im_common.h |   32 -
+ drivers/scsi/bfa/include/defs/bfa_defs_im_team.h   |   72 -
+ drivers/scsi/bfa/include/defs/bfa_defs_ioc.h       |    3 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_iocfc.h     |   12 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_lport.h     |    4 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_mfg.h       |  111 ++-
+ drivers/scsi/bfa/include/defs/bfa_defs_port.h      |   19 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_pport.h     |  151 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_status.h    |   17 +-
+ drivers/scsi/bfa/include/fcb/bfa_fcb_fcpim.h       |    1 -
+ drivers/scsi/bfa/include/fcs/bfa_fcs.h             |    5 +-
+ drivers/scsi/bfa/include/fcs/bfa_fcs_lport.h       |    8 -
+ drivers/scsi/bfa/include/log/bfa_log_hal.h         |    6 +
+ drivers/scsi/bfa/include/log/bfa_log_linux.h       |   16 +
+ drivers/scsi/bfa/include/protocol/fc.h             |    5 +
+ drivers/scsi/bfa/include/protocol/pcifw.h          |   75 -
+ drivers/scsi/bfa/loop.c                            |    2 +-
+ drivers/scsi/bfa/lport_api.c                       |    5 +-
+ drivers/scsi/bfa/ms.c                              |   29 +-
+ drivers/scsi/bfa/ns.c                              |   36 +-
+ drivers/scsi/bfa/rport.c                           |   91 +-
+ drivers/scsi/bfa/rport_api.c                       |    2 +-
+ drivers/scsi/bfa/rport_ftrs.c                      |   12 +-
+ drivers/scsi/bfa/scn.c                             |   10 +-
+ drivers/scsi/bfa/vport.c                           |   86 +-
+ 89 files changed, 3588 insertions(+), 2437 deletions(-)
+ create mode 100644 drivers/scsi/bfa/bfa_ioc_cb.c
+ create mode 100644 drivers/scsi/bfa/bfa_ioc_ct.c
+ create mode 100644 drivers/scsi/bfa/include/defs/bfa_defs_fcport.h
+ delete mode 100644 drivers/scsi/bfa/include/defs/bfa_defs_im_common.h
+ delete mode 100644 drivers/scsi/bfa/include/defs/bfa_defs_im_team.h
+ delete mode 100644 drivers/scsi/bfa/include/protocol/pcifw.h
+
+Thanks,
+Krishna Chaitanya Gudipati.
 
