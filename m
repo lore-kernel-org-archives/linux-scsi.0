@@ -1,42 +1,44 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 7/7] lpfc 8.3.10: Update Driver version to 8.3.10
-Date: Fri, 26 Feb 2010 14:16:25 -0500
-Message-ID: <1267211805.3372.9.camel@wookie>
-Reply-To: james.smart@emulex.com
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 0/9] cciss driver SCSI updates
+Date: Fri, 26 Feb 2010 16:01:06 -0600
+Message-ID: <20100226220023.11979.4999.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:4988 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965816Ab0BZTRK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2010 14:17:10 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: axboe@kernel.dk, akpm@linux-foundation.org, james.bottomley@suse.de
+Cc: linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, brace@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+
+The following series mainly fixes the scsi tape code in the cciss
+driver to take advantage of more scatter gather elements, enabling
+larger transfer sizes.  The first eight patches are mainly cleaning
+things up and getting ready for the 9th patch, which enables the
+SCSI half of the driver to use more than 31 scatter gather elements.
+
+I've tested on 32-bit and 64-bit systems, and written out tapes
+with block sizes up to 2Mb.
+
+These patches are vs. Jens's linux-2.6-block tree.
+
+Stephen M. Cameron (9):
+      cciss: clarify command list padding calculation
+      cciss: detect bad alignment of scsi commands at build time
+      cciss: factor out scatter gather chain block allocation and freeing
+      cciss: simplify scatter gather code
+      cciss: fix scatter gather chain block dma direction kludge
+      cciss: factor out scatter gather chain block mapping code
+      cciss: do not use void pointer for scsi hba data
+      cciss: eliminate unnecessary pointer use in cciss scsi code
+      cciss: Fix problem with scatter gather elements in the scsi half of the driver
 
 
-Update Driver version to 8.3.10
+ drivers/block/cciss.c      |  174 ++++++++++++++++++++++----------------------
+ drivers/block/cciss.h      |   12 +--
+ drivers/block/cciss_cmd.h  |   14 +++-
+ drivers/block/cciss_scsi.c |  145 +++++++++++++++++++++++--------------
+ 4 files changed, 188 insertions(+), 157 deletions(-)
 
- Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2010-02-21 10:49:13.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2010-02-25 16:35:06.000000000 -0500
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.9"
-+#define LPFC_DRIVER_VERSION "8.3.10"
- #define LPFC_DRIVER_NAME		"lpfc"
- #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
- #define LPFC_FP_DRIVER_HANDLER_NAME	"lpfc:fp"
-
-
+-- 
+-- steve
