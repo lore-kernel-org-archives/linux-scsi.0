@@ -1,86 +1,74 @@
-From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 23/32] bfa: IOC fixes, check for IOC down condition
-Date: Thu, 25 Feb 2010 17:49:23 -0800
-Message-ID: <1267148963-23118-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+From: <y@brocade.com>
+Subject: [PATCH 05/32] bfa: Enable new halt interrupt in BFA.
+Date: Thu, 25 Feb 2010 17:47:27 -0800
+Message-ID: <16203.823980368$1267149128@news.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:27234 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:27238 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934907Ab0BZBvf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:35 -0500
+	with ESMTP id S934915Ab0BZBvw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocade.comKrishna Gudipati <kgudipat@brocade.com>
 
+From: Krishna Gudipati <kgudipat@blc-10-2.brocade.com>
+
 Change details:
 
-	- Currently BFA was not checking for IOC down condition when issuing getstats/clearstats
-
-    - Add check to see if IOC is operational, before issuing getstats/clearstats.
+	- bfa_intr.c:  Enable new halt interrupt in BFA.
+	- bfi_ctreg.h: Expose new halt interrupt bit definition to host.
 ---
- drivers/scsi/bfa/bfa_ioc.c   |   11 ++++++++---
- drivers/scsi/bfa/bfa_iocfc.c |   10 ++++++++++
- 2 files changed, 18 insertions(+), 3 deletions(-)
+ drivers/scsi/bfa/bfa_intr.c              |    7 ++++---
+ drivers/scsi/bfa/include/bfi/bfi_ctreg.h |    1 +
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 2f09d17..4d9a47c 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -1129,9 +1129,6 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
- 	if (bfa_ioc_fwimg_get_size(ioc) < BFA_IOC_FWIMG_MINSZ)
- 		boot_type = BFI_BOOT_TYPE_FLASH;
- 	fwimg = bfa_ioc_fwimg_get_chunk(ioc, chunkno);
--	fwimg[BFI_BOOT_TYPE_OFF / sizeof(u32)] = bfa_os_swap32(boot_type);
--	fwimg[BFI_BOOT_PARAM_OFF / sizeof(u32)] =
--		bfa_os_swap32(boot_param);
+diff --git a/drivers/scsi/bfa/bfa_intr.c b/drivers/scsi/bfa/bfa_intr.c
+index b36540e..ab463db 100644
+--- a/drivers/scsi/bfa/bfa_intr.c
++++ b/drivers/scsi/bfa/bfa_intr.c
+@@ -15,7 +15,7 @@
+  * General Public License for more details.
+  */
+ #include <bfa.h>
+-#include <bfi/bfi_cbreg.h>
++#include <bfi/bfi_ctreg.h>
+ #include <bfa_port_priv.h>
+ #include <bfa_intr_priv.h>
+ #include <cs/bfa_debug.h>
+@@ -96,7 +96,8 @@ bfa_isr_enable(struct bfa_s *bfa)
  
- 	pgnum = bfa_ioc_smem_pgnum(ioc, loff);
- 	pgoff = bfa_ioc_smem_pgoff(ioc, loff);
-@@ -1166,6 +1163,14 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
+ 	bfa_msix_install(bfa);
+ 	intr_unmask = (__HFN_INT_ERR_EMC | __HFN_INT_ERR_LPU0 |
+-		       __HFN_INT_ERR_LPU1 | __HFN_INT_ERR_PSS);
++		       __HFN_INT_ERR_LPU1 | __HFN_INT_ERR_PSS |
++		       __HFN_INT_LL_HALT);
  
- 	bfa_reg_write(ioc->ioc_regs.host_page_num_fn,
- 		      bfa_ioc_smem_pgnum(ioc, 0));
-+
-+	/*
-+	 * Set boot type and boot param at the end.
-+	 */
-+	bfa_mem_write(ioc->ioc_regs.smem_page_start, BFI_BOOT_TYPE_OFF,
-+			bfa_os_swap32(boot_type));
-+	bfa_mem_write(ioc->ioc_regs.smem_page_start, BFI_BOOT_PARAM_OFF,
-+			bfa_os_swap32(boot_param));
+ 	if (pci_func == 0)
+ 		intr_unmask |= (__HFN_INT_CPE_Q0 | __HFN_INT_CPE_Q1 |
+@@ -205,7 +206,7 @@ bfa_msix_lpu_err(struct bfa_s *bfa, int vec)
+ 
+ 	if (intr & (__HFN_INT_ERR_EMC |
+ 		    __HFN_INT_ERR_LPU0 | __HFN_INT_ERR_LPU1 |
+-		    __HFN_INT_ERR_PSS))
++		    __HFN_INT_ERR_PSS | __HFN_INT_LL_HALT))
+ 		bfa_msix_errint(bfa, intr);
  }
  
- static void
-diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
-index 6677f83..a76de26 100644
---- a/drivers/scsi/bfa/bfa_iocfc.c
-+++ b/drivers/scsi/bfa/bfa_iocfc.c
-@@ -801,6 +801,11 @@ bfa_iocfc_get_stats(struct bfa_s *bfa, struct bfa_iocfc_stats_s *stats,
- 		return BFA_STATUS_DEVBUSY;
- 	}
+diff --git a/drivers/scsi/bfa/include/bfi/bfi_ctreg.h b/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
+index d3caa58..dd2992c 100644
+--- a/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
++++ b/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
+@@ -589,6 +589,7 @@ enum {
+ #define __HFN_INT_MBOX_LPU1                0x00200000U
+ #define __HFN_INT_MBOX1_LPU0               0x00400000U
+ #define __HFN_INT_MBOX1_LPU1               0x00800000U
++#define __HFN_INT_LL_HALT		   0x01000000U
+ #define __HFN_INT_CPE_MASK                 0x000000ffU
+ #define __HFN_INT_RME_MASK                 0x0000ff00U
  
-+	if (!bfa_iocfc_is_operational(bfa)) {
-+		bfa_trc(bfa, 0);
-+		return BFA_STATUS_IOC_NON_OP;
-+	}
-+
- 	iocfc->stats_busy = BFA_TRUE;
- 	iocfc->stats_ret = stats;
- 	iocfc->stats_cbfn = cbfn;
-@@ -821,6 +826,11 @@ bfa_iocfc_clear_stats(struct bfa_s *bfa, bfa_cb_ioc_t cbfn, void *cbarg)
- 		return BFA_STATUS_DEVBUSY;
- 	}
- 
-+	if (!bfa_iocfc_is_operational(bfa)) {
-+		bfa_trc(bfa, 0);
-+		return BFA_STATUS_IOC_NON_OP;
-+	}
-+
- 	iocfc->stats_busy = BFA_TRUE;
- 	iocfc->stats_cbfn = cbfn;
- 	iocfc->stats_cbarg = cbarg;
 -- 
 1.6.5.3
 
