@@ -1,13 +1,13 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 04/32] bfa: Enable IOC auto-recovery and IOC type fix.
-Date: Thu, 25 Feb 2010 17:51:00 -0800
-Message-ID: <1267149060-24159-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 28/32] bfa: FCS and include file changes.
+Date: Thu, 25 Feb 2010 17:49:59 -0800
+Message-ID: <1267148999-23570-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from hq-exedge.brocade.com ([66.243.153.82]:59512 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934941Ab0BZBwG (ORCPT
+	with ESMTP id S934938Ab0BZBwG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,71 +16,184 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- bfa_ioc.c:
-		- Enable IOC auto-recovery by default.
-		- When CNA is in FC mode, return IOC type as FC (not FCoE)
+	- MS module did not invoke fdmi offline in all cases,
+	  call fdmi offline when ms module receives a port offline,
+	  so that fdmi offline is from one place in the ms module.
 
-	- bfa_iocfc.c:
-		- Set fcmode before pci initialization/setup.
+	- Make changes to handle 10G speed in the conversion routine.
+
+	- Added new return status codes, and new PCI VPD support for DELL.
+
+	- Replaced the usage of bfa_adapter_attr_s struct with specific API's.
 ---
- drivers/scsi/bfa/bfa_ioc.c   |    6 +++---
- drivers/scsi/bfa/bfa_iocfc.c |    5 +++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/fabric.c                       |    8 ++---
+ drivers/scsi/bfa/fcbuild.h                      |    6 ++++
+ drivers/scsi/bfa/fdmi.c                         |   32 ++++++----------------
+ drivers/scsi/bfa/include/defs/bfa_defs_mfg.h    |    2 +
+ drivers/scsi/bfa/include/defs/bfa_defs_status.h |    5 +--
+ drivers/scsi/bfa/ms.c                           |    5 +---
+ 6 files changed, 23 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 397d7e9..569b35d 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -56,7 +56,7 @@ BFA_TRC_FILE(HAL, IOC);
- #define BFA_FLASH_CHUNK_NO(off)         (off / BFI_FLASH_CHUNK_SZ_WORDS)
- #define BFA_FLASH_OFFSET_IN_CHUNK(off)  (off % BFI_FLASH_CHUNK_SZ_WORDS)
- #define BFA_FLASH_CHUNK_ADDR(chunkno)   (chunkno * BFI_FLASH_CHUNK_SZ_WORDS)
--bfa_boolean_t   bfa_auto_recover = BFA_FALSE;
-+bfa_boolean_t   bfa_auto_recover = BFA_TRUE;
- 
- /*
-  * forward declarations
-@@ -1642,7 +1642,7 @@ bfa_ioc_boot(struct bfa_ioc_s *ioc, u32 boot_type, u32 boot_param)
- void
- bfa_ioc_auto_recover(bfa_boolean_t auto_recover)
+diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
+index b4e05ad..8166e97 100644
+--- a/drivers/scsi/bfa/fabric.c
++++ b/drivers/scsi/bfa/fabric.c
+@@ -562,17 +562,15 @@ void
+ bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric)
  {
--	bfa_auto_recover = BFA_FALSE;
-+	bfa_auto_recover = auto_recover;
+ 	struct bfa_port_cfg_s *port_cfg = &fabric->bport.port_cfg;
+-	struct bfa_adapter_attr_s adapter_attr;
++	char            model[BFA_ADAPTER_MODEL_NAME_LEN] = {0};
+ 	struct bfa_fcs_driver_info_s *driver_info = &fabric->fcs->driver_info;
+ 
+-	bfa_os_memset((void *)&adapter_attr, 0,
+-		      sizeof(struct bfa_adapter_attr_s));
+-	bfa_ioc_get_adapter_attr(&fabric->fcs->bfa->ioc, &adapter_attr);
++	bfa_ioc_get_adapter_model(&fabric->fcs->bfa->ioc, model);
+ 
+ 	/*
+ 	 * Model name/number
+ 	 */
+-	strncpy((char *)&port_cfg->sym_name, adapter_attr.model,
++	strncpy((char *)&port_cfg->sym_name, model,
+ 		BFA_FCS_PORT_SYMBNAME_MODEL_SZ);
+ 	strncat((char *)&port_cfg->sym_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
+ 		sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
+diff --git a/drivers/scsi/bfa/fcbuild.h b/drivers/scsi/bfa/fcbuild.h
+index 8fa7f27..97d3ea1 100644
+--- a/drivers/scsi/bfa/fcbuild.h
++++ b/drivers/scsi/bfa/fcbuild.h
+@@ -72,6 +72,9 @@ fc_rpsc_operspeed_to_bfa_speed(enum fc_rpsc_op_speed_s speed)
+ 	case RPSC_OP_SPEED_8G:
+ 		return BFA_PPORT_SPEED_8GBPS;
+ 
++	case RPSC_OP_SPEED_10G :
++		return BFA_PPORT_SPEED_10GBPS;
++
+ 	default:
+ 		return BFA_PPORT_SPEED_UNKNOWN;
+ 	}
+@@ -97,6 +100,9 @@ fc_bfa_speed_to_rpsc_operspeed(enum bfa_pport_speed op_speed)
+ 	case BFA_PPORT_SPEED_8GBPS:
+ 		return RPSC_OP_SPEED_8G;
+ 
++	case BFA_PPORT_SPEED_10GBPS:
++		return RPSC_OP_SPEED_10G;
++
+ 	default:
+ 		return RPSC_OP_SPEED_NOT_EST;
+ 	}
+diff --git a/drivers/scsi/bfa/fdmi.c b/drivers/scsi/bfa/fdmi.c
+index 2c9e713..808158e 100644
+--- a/drivers/scsi/bfa/fdmi.c
++++ b/drivers/scsi/bfa/fdmi.c
+@@ -1114,36 +1114,22 @@ bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_port_fdmi_s *fdmi,
+ {
+ 	struct bfa_fcs_port_s *port = fdmi->ms->port;
+ 	struct bfa_fcs_driver_info_s *driver_info = &port->fcs->driver_info;
+-	struct bfa_adapter_attr_s adapter_attr;
+ 
+ 	bfa_os_memset(hba_attr, 0, sizeof(struct bfa_fcs_fdmi_hba_attr_s));
+-	bfa_os_memset(&adapter_attr, 0, sizeof(struct bfa_adapter_attr_s));
+ 
+-	bfa_ioc_get_adapter_attr(&port->fcs->bfa->ioc, &adapter_attr);
+-
+-	strncpy(hba_attr->manufacturer, adapter_attr.manufacturer,
+-		sizeof(adapter_attr.manufacturer));
+-
+-	strncpy(hba_attr->serial_num, adapter_attr.serial_num,
+-		sizeof(adapter_attr.serial_num));
+-
+-	strncpy(hba_attr->model, adapter_attr.model, sizeof(hba_attr->model));
+-
+-	strncpy(hba_attr->model_desc, adapter_attr.model_descr,
+-		sizeof(hba_attr->model_desc));
+-
+-	strncpy(hba_attr->hw_version, adapter_attr.hw_ver,
+-		sizeof(hba_attr->hw_version));
++	bfa_ioc_get_adapter_manufacturer(&port->fcs->bfa->ioc,
++		hba_attr->manufacturer);
++	bfa_ioc_get_adapter_serial_num(&port->fcs->bfa->ioc, hba_attr->serial_num);
++	bfa_ioc_get_adapter_model(&port->fcs->bfa->ioc, hba_attr->model);
++	bfa_ioc_get_adapter_model(&port->fcs->bfa->ioc, hba_attr->model_desc);
++	bfa_ioc_get_pci_chip_rev(&port->fcs->bfa->ioc, hba_attr->hw_version);
++	bfa_ioc_get_adapter_optrom_ver(&port->fcs->bfa->ioc,
++		hba_attr->option_rom_ver);
++	bfa_ioc_get_adapter_fw_ver(&port->fcs->bfa->ioc, hba_attr->fw_version);
+ 
+ 	strncpy(hba_attr->driver_version, (char *)driver_info->version,
+ 		sizeof(hba_attr->driver_version));
+ 
+-	strncpy(hba_attr->option_rom_ver, adapter_attr.optrom_ver,
+-		sizeof(hba_attr->option_rom_ver));
+-
+-	strncpy(hba_attr->fw_version, adapter_attr.fw_ver,
+-		sizeof(hba_attr->fw_version));
+-
+ 	strncpy(hba_attr->os_name, driver_info->host_os_name,
+ 		sizeof(hba_attr->os_name));
+ 
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
+index bc61656..709549a 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
+@@ -118,8 +118,10 @@ enum {
+ 	BFA_MFG_VPD_UNKNOWN	= 0,     /*  vendor unknown 		*/
+ 	BFA_MFG_VPD_IBM 	= 1,     /*  vendor IBM 		*/
+ 	BFA_MFG_VPD_HP  	= 2,     /*  vendor HP  		*/
++	BFA_MFG_VPD_DELL        = 3,     /*  vendor DELL                */
+ 	BFA_MFG_VPD_PCI_IBM 	= 0x08,  /*  PCI VPD IBM     		*/
+ 	BFA_MFG_VPD_PCI_HP  	= 0x10,  /*  PCI VPD HP		*/
++	BFA_MFG_VPD_PCI_DELL    = 0x20,  /*  PCI VPD DELL        	*/
+ 	BFA_MFG_VPD_PCI_BRCD 	= 0xf8,  /*  PCI VPD Brocade 		*/
+ };
+ 
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_status.h b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
+index d8a74eb..4374494 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_status.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
+@@ -213,7 +213,7 @@ enum bfa_status {
+ 					     * loaded */
+ 	BFA_STATUS_CARD_TYPE_MISMATCH = 131, /*  Card type mismatch */
+ 	BFA_STATUS_BAD_ASICBLK = 132, /*  Bad ASIC block */
+-	BFA_STATUS_NO_DRIVER = 133, /*  Storage/Ethernet driver not loaded */
++	BFA_STATUS_NO_DRIVER = 133, /*  Brocade adapter/driver not installed or loaded */
+ 	BFA_STATUS_INVALID_MAC = 134, /*  Invalid mac address */
+ 	BFA_STATUS_IM_NO_VLAN = 135, /*  No VLANs configured on the adapter */
+ 	BFA_STATUS_IM_ETH_LB_FAILED = 136, /*  Ethernet loopback test failed */
+@@ -228,8 +228,7 @@ enum bfa_status {
+ 	BFA_STATUS_IM_GET_INETCFG_FAILED = 142, /*  Acquiring Network Subsytem
+ 						 * handle Failed. Please try
+ 						 * after some time */
+-	BFA_STATUS_IM_NOT_BOUND = 143, /*  Brocade 10G Ethernet Service is not
+-					* Enabled on this port */
++	BFA_STATUS_IM_NOT_BOUND = 143, /*  IM driver is not active */
+ 	BFA_STATUS_INSUFFICIENT_PERMS = 144, /*  User doesn't have sufficient
+ 					      * permissions to execute the BCU
+ 					      * application */
+diff --git a/drivers/scsi/bfa/ms.c b/drivers/scsi/bfa/ms.c
+index e6db5fd..5e8c8de 100644
+--- a/drivers/scsi/bfa/ms.c
++++ b/drivers/scsi/bfa/ms.c
+@@ -230,10 +230,6 @@ bfa_fcs_port_ms_sm_online(struct bfa_fcs_port_ms_s *ms,
+ 	switch (event) {
+ 	case MSSM_EVENT_PORT_OFFLINE:
+ 		bfa_sm_set_state(ms, bfa_fcs_port_ms_sm_offline);
+-		/*
+-		 * now invoke MS related sub-modules
+-		 */
+-		bfa_fcs_port_fdmi_offline(ms);
+ 		break;
+ 
+ 	case MSSM_EVENT_PORT_FABRIC_RSCN:
+@@ -735,6 +731,7 @@ bfa_fcs_port_ms_offline(struct bfa_fcs_port_s *port)
+ 
+ 	ms->port = port;
+ 	bfa_sm_send_event(ms, MSSM_EVENT_PORT_OFFLINE);
++	bfa_fcs_port_fdmi_offline(ms);
  }
  
- 
-@@ -2082,7 +2082,7 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
- 	ioc_attr->state = bfa_sm_to_state(ioc_sm_table, ioc->fsm);
- 	ioc_attr->port_id = ioc->port_id;
- 
--	if (!ioc->ctdev)
-+	if (!ioc->ctdev || ioc->fcmode)
- 		ioc_attr->ioc_type = BFA_IOC_TYPE_FC;
- 	else if (ioc->ioc_mc == BFI_MC_IOCFC)
- 		ioc_attr->ioc_type = BFA_IOC_TYPE_FCoE;
-diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
-index d7ab792..b5e7224 100644
---- a/drivers/scsi/bfa/bfa_iocfc.c
-+++ b/drivers/scsi/bfa/bfa_iocfc.c
-@@ -619,8 +619,6 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 
- 	bfa_ioc_attach(&bfa->ioc, bfa, &bfa_iocfc_cbfn, &bfa->timer_mod,
- 		bfa->trcmod, bfa->aen, bfa->logm);
--	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_MC_IOCFC);
--	bfa_ioc_mbox_register(&bfa->ioc, bfa_mbox_isrs);
- 
- 	/**
- 	 * Choose FC (ssid: 0x1C) v/s FCoE (ssid: 0x14) mode.
-@@ -628,6 +626,9 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	if (0)
- 		bfa_ioc_set_fcmode(&bfa->ioc);
- 
-+	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_MC_IOCFC);
-+	bfa_ioc_mbox_register(&bfa->ioc, bfa_mbox_isrs);
-+
- 	bfa_iocfc_init_mem(bfa, bfad, cfg, pcidev);
- 	bfa_iocfc_mem_claim(bfa, cfg, meminfo);
- 	bfa_timer_init(&bfa->timer_mod);
+ void
 -- 
 1.6.5.3
 
