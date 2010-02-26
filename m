@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 11/32] bfa: Clear LL_HALT and PSS_ERR bit when IOC crashes.
-Date: Thu, 25 Feb 2010 17:48:15 -0800
-Message-ID: <1267148895-22370-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 21/32] bfa: Fix Command Queue (CPE) full condition check and ack CPE interrupt.
+Date: Thu, 25 Feb 2010 17:49:16 -0800
+Message-ID: <1267148956-23034-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:59499 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:27231 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934883Ab0BZBv1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:27 -0500
+	with ESMTP id S934883Ab0BZBvZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,163 +16,234 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- Clear LL_HALT and PSS_ERR bit in the interrupt status register on an IOC crash.
----
- drivers/scsi/bfa/bfa_intr.c              |   35 ++++++++++++++++++++++++++---
- drivers/scsi/bfa/bfa_ioc.h               |    1 +
- drivers/scsi/bfa/bfa_ioc_cb.c            |    1 +
- drivers/scsi/bfa/bfa_ioc_ct.c            |    1 +
- drivers/scsi/bfa/include/bfi/bfi_cbreg.h |   13 +++++++++++
- drivers/scsi/bfa/include/bfi/bfi_ctreg.h |   23 +++++++++++++++++++
- 6 files changed, 70 insertions(+), 4 deletions(-)
+	- Fixed the issue of not acknowledging the command queue full-to-non-full interrupt.
+	  Implemented separate acknowledging functions for different ASIC and interrupt mode.
 
-diff --git a/drivers/scsi/bfa/bfa_intr.c b/drivers/scsi/bfa/bfa_intr.c
-index ab463db..c422546 100644
---- a/drivers/scsi/bfa/bfa_intr.c
-+++ b/drivers/scsi/bfa/bfa_intr.c
-@@ -197,17 +197,44 @@ bfa_msix_rspq(struct bfa_s *bfa, int rsp_qid)
- void
- bfa_msix_lpu_err(struct bfa_s *bfa, int vec)
- {
--	u32 intr;
-+	u32 intr, curr_value;
- 
- 	intr = bfa_reg_read(bfa->iocfc.bfa_regs.intr_status);
- 
- 	if (intr & (__HFN_INT_MBOX_LPU0 | __HFN_INT_MBOX_LPU1))
- 		bfa_msix_lpu(bfa);
- 
--	if (intr & (__HFN_INT_ERR_EMC |
--		    __HFN_INT_ERR_LPU0 | __HFN_INT_ERR_LPU1 |
--		    __HFN_INT_ERR_PSS | __HFN_INT_LL_HALT))
-+	intr &= (__HFN_INT_ERR_EMC | __HFN_INT_ERR_LPU0 |
-+		__HFN_INT_ERR_LPU1 | __HFN_INT_ERR_PSS | __HFN_INT_LL_HALT);
-+
-+	if (intr) {
-+		if (intr & __HFN_INT_LL_HALT) {
-+			/**
-+			 * If LL_HALT bit is set then FW Init Halt LL Port
-+			 * Register needs to be cleared as well so Interrupt
-+			 * Status Register will be cleared.
-+			 */
-+			curr_value = bfa_reg_read(bfa->ioc.ioc_regs.ll_halt);
-+			curr_value &= ~__FW_INIT_HALT_P;
-+			bfa_reg_write(bfa->ioc.ioc_regs.ll_halt, curr_value);
-+		}
-+
-+		if (intr & __HFN_INT_ERR_PSS) {
-+			/**
-+			 * ERR_PSS bit needs to be cleared as well in case
-+			 * interrups are shared so driver's interrupt handler is
-+			 * still called eventhough it is already masked out.
-+			 */
-+			curr_value = bfa_reg_read(
-+				bfa->ioc.ioc_regs.pss_err_status_reg);
-+			curr_value &= __PSS_ERR_STATUS_SET;
-+			bfa_reg_write(bfa->ioc.ioc_regs.pss_err_status_reg,
-+				curr_value);
-+		}
-+
-+		bfa_reg_write(bfa->iocfc.bfa_regs.intr_status, intr);
- 		bfa_msix_errint(bfa, intr);
-+	}
+	- Fixed the case of missing CPE interrupt by always processing the pending requests
+	  in the completion path.
+---
+ drivers/scsi/bfa/bfa_hw_cb.c |   13 ++++++++
+ drivers/scsi/bfa/bfa_hw_ct.c |    9 +++++
+ drivers/scsi/bfa/bfa_intr.c  |   69 ++++++++++++++++++++++++++++--------------
+ drivers/scsi/bfa/bfa_iocfc.c |    2 +
+ drivers/scsi/bfa/bfa_iocfc.h |    3 ++
+ 5 files changed, 73 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_hw_cb.c b/drivers/scsi/bfa/bfa_hw_cb.c
+index ede1438..871a4e2 100644
+--- a/drivers/scsi/bfa/bfa_hw_cb.c
++++ b/drivers/scsi/bfa/bfa_hw_cb.c
+@@ -53,6 +53,18 @@ bfa_hwcb_reginit(struct bfa_s *bfa)
  }
  
  void
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 1633a50..853cc31 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -74,6 +74,7 @@ struct bfa_ioc_regs_s {
- 	bfa_os_addr_t   lpu_mbox_cmd;
- 	bfa_os_addr_t   lpu_mbox;
- 	bfa_os_addr_t   pss_ctl_reg;
-+	bfa_os_addr_t   pss_err_status_reg;
- 	bfa_os_addr_t   app_pll_fast_ctl_reg;
- 	bfa_os_addr_t   app_pll_slow_ctl_reg;
- 	bfa_os_addr_t   ioc_sem_reg;
-diff --git a/drivers/scsi/bfa/bfa_ioc_cb.c b/drivers/scsi/bfa/bfa_ioc_cb.c
-index fefb496..e76448f 100644
---- a/drivers/scsi/bfa/bfa_ioc_cb.c
-+++ b/drivers/scsi/bfa/bfa_ioc_cb.c
-@@ -145,6 +145,7 @@ bfa_ioc_cb_reg_init(struct bfa_ioc_s *ioc)
- 	 * PSS control registers
++bfa_hwcb_reqq_ack(struct bfa_s *bfa, int reqq)
++{
++}
++
++static void
++bfa_hwcb_reqq_ack_msix(struct bfa_s *bfa, int reqq)
++{
++	bfa_reg_write(bfa->iocfc.bfa_regs.intr_status,
++		__HFN_INT_CPE_Q0 << CPE_Q_NUM(bfa_ioc_pcifn(&bfa->ioc), reqq));
++}
++
++void
+ bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq)
+ {
+ }
+@@ -136,6 +148,7 @@ bfa_hwcb_msix_uninstall(struct bfa_s *bfa)
+ void
+ bfa_hwcb_isr_mode_set(struct bfa_s *bfa, bfa_boolean_t msix)
+ {
++	bfa->iocfc.hwif.hw_reqq_ack = bfa_hwcb_reqq_ack_msix;
+ 	bfa->iocfc.hwif.hw_rspq_ack = bfa_hwcb_rspq_ack_msix;
+ }
+ 
+diff --git a/drivers/scsi/bfa/bfa_hw_ct.c b/drivers/scsi/bfa/bfa_hw_ct.c
+index 51ae574..76ceb9a 100644
+--- a/drivers/scsi/bfa/bfa_hw_ct.c
++++ b/drivers/scsi/bfa/bfa_hw_ct.c
+@@ -85,6 +85,15 @@ bfa_hwct_reginit(struct bfa_s *bfa)
+ }
+ 
+ void
++bfa_hwct_reqq_ack(struct bfa_s *bfa, int reqq)
++{
++	u32 r32;
++
++	r32 = bfa_reg_read(bfa->iocfc.bfa_regs.cpe_q_ctrl[reqq]);
++	bfa_reg_write(bfa->iocfc.bfa_regs.cpe_q_ctrl[reqq], r32);
++}
++
++void
+ bfa_hwct_rspq_ack(struct bfa_s *bfa, int rspq)
+ {
+ 	u32	r32;
+diff --git a/drivers/scsi/bfa/bfa_intr.c b/drivers/scsi/bfa/bfa_intr.c
+index c422546..eeb8c0b 100644
+--- a/drivers/scsi/bfa/bfa_intr.c
++++ b/drivers/scsi/bfa/bfa_intr.c
+@@ -34,6 +34,26 @@ bfa_msix_lpu(struct bfa_s *bfa)
+ 	bfa_ioc_mbox_isr(&bfa->ioc);
+ }
+ 
++static void
++bfa_reqq_resume(struct bfa_s *bfa, int qid)
++{
++	struct list_head *waitq, *qe, *qen;
++	struct bfa_reqq_wait_s *wqe;
++
++	waitq = bfa_reqq(bfa, qid);
++	list_for_each_safe(qe, qen, waitq) {
++		/**
++		 * Callback only as long as there is room in request queue
++		 */
++		if (bfa_reqq_full(bfa, qid))
++			break;
++
++		list_del(qe);
++		wqe = (struct bfa_reqq_wait_s *) qe;
++		wqe->qresume(wqe->cbarg);
++	}
++}
++
+ void
+ bfa_msix_all(struct bfa_s *bfa, int vec)
+ {
+@@ -128,23 +148,18 @@ bfa_isr_disable(struct bfa_s *bfa)
+ void
+ bfa_msix_reqq(struct bfa_s *bfa, int qid)
+ {
+-	struct list_head 		*waitq, *qe, *qen;
+-	struct bfa_reqq_wait_s	*wqe;
++	struct list_head *waitq;
+ 
+ 	qid &= (BFI_IOC_MAX_CQS - 1);
+ 
+-	waitq = bfa_reqq(bfa, qid);
+-	list_for_each_safe(qe, qen, waitq) {
+-		/**
+-		 * Callback only as long as there is room in request queue
+-		 */
+-		if (bfa_reqq_full(bfa, qid))
+-			break;
++	bfa->iocfc.hwif.hw_reqq_ack(bfa, qid);
+ 
+-		list_del(qe);
+-		wqe = (struct bfa_reqq_wait_s *) qe;
+-		wqe->qresume(wqe->cbarg);
+-	}
++	/**
++	 * Resume any pending requests in the corresponding reqq.
++	 */
++	waitq = bfa_reqq(bfa, qid);
++	if (!list_empty(waitq))
++		bfa_reqq_resume(bfa, qid);
+ }
+ 
+ void
+@@ -160,24 +175,25 @@ bfa_isr_unhandled(struct bfa_s *bfa, struct bfi_msg_s *m)
+ void
+ bfa_msix_rspq(struct bfa_s *bfa, int rsp_qid)
+ {
+-	struct bfi_msg_s      *m;
+-	u32        pi, ci;
++	struct bfi_msg_s *m;
++	u32 pi, ci;
++	struct list_head *waitq;
+ 
+-	bfa_trc_fp(bfa, rsp_qid);
++	bfa_trc_fp(bfa, qid);
+ 
+-	rsp_qid &= (BFI_IOC_MAX_CQS - 1);
++	qid &= (BFI_IOC_MAX_CQS - 1);
+ 
+-	bfa->iocfc.hwif.hw_rspq_ack(bfa, rsp_qid);
++	bfa->iocfc.hwif.hw_rspq_ack(bfa, qid);
+ 
+-	ci = bfa_rspq_ci(bfa, rsp_qid);
+-	pi = bfa_rspq_pi(bfa, rsp_qid);
++	ci = bfa_rspq_ci(bfa, qid);
++	pi = bfa_rspq_pi(bfa, qid);
+ 
+ 	bfa_trc_fp(bfa, ci);
+ 	bfa_trc_fp(bfa, pi);
+ 
+ 	if (bfa->rme_process) {
+ 		while (ci != pi) {
+-			m = bfa_rspq_elem(bfa, rsp_qid, ci);
++			m = bfa_rspq_elem(bfa, qid, ci);
+ 			bfa_assert_fp(m->mhdr.msg_class < BFI_MC_MAX);
+ 
+ 			bfa_isrs[m->mhdr.msg_class] (bfa, m);
+@@ -189,9 +205,16 @@ bfa_msix_rspq(struct bfa_s *bfa, int rsp_qid)
+ 	/**
+ 	 * update CI
  	 */
- 	ioc->ioc_regs.pss_ctl_reg = (rb + PSS_CTL_REG);
-+	ioc->ioc_regs.pss_err_status_reg = (rb + PSS_ERR_STATUS_REG);
- 	ioc->ioc_regs.app_pll_fast_ctl_reg = (rb + APP_PLL_400_CTL_REG);
- 	ioc->ioc_regs.app_pll_slow_ctl_reg = (rb + APP_PLL_212_CTL_REG);
+-	bfa_rspq_ci(bfa, rsp_qid) = pi;
+-	bfa_reg_write(bfa->iocfc.bfa_regs.rme_q_ci[rsp_qid], pi);
++	bfa_rspq_ci(bfa, qid) = pi;
++	bfa_reg_write(bfa->iocfc.bfa_regs.rme_q_ci[qid], pi);
+ 	bfa_os_mmiowb();
++
++	/**
++	 * Resume any pending requests in the corresponding reqq.
++	 */
++	waitq = bfa_reqq(bfa, qid);
++	if (!list_empty(waitq))
++		bfa_reqq_resume(bfa, qid);
+ }
  
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index 1798f01..e756713 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -238,6 +238,7 @@ bfa_ioc_ct_reg_init(struct bfa_ioc_s *ioc)
- 	 * PSS control registers
+ void
+diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
+index 137591c..a5551db 100644
+--- a/drivers/scsi/bfa/bfa_iocfc.c
++++ b/drivers/scsi/bfa/bfa_iocfc.c
+@@ -172,6 +172,7 @@ bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
  	 */
- 	ioc->ioc_regs.pss_ctl_reg = (rb + PSS_CTL_REG);
-+	ioc->ioc_regs.pss_err_status_reg = (rb + PSS_ERR_STATUS_REG);
- 	ioc->ioc_regs.app_pll_fast_ctl_reg = (rb + APP_PLL_425_CTL_REG);
- 	ioc->ioc_regs.app_pll_slow_ctl_reg = (rb + APP_PLL_312_CTL_REG);
+ 	if (bfa_ioc_devid(&bfa->ioc) == BFA_PCI_DEVICE_ID_CT) {
+ 		iocfc->hwif.hw_reginit = bfa_hwct_reginit;
++		iocfc->hwif.hw_reqq_ack = bfa_hwct_reqq_ack;
+ 		iocfc->hwif.hw_rspq_ack = bfa_hwct_rspq_ack;
+ 		iocfc->hwif.hw_msix_init = bfa_hwct_msix_init;
+ 		iocfc->hwif.hw_msix_install = bfa_hwct_msix_install;
+@@ -180,6 +181,7 @@ bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 		iocfc->hwif.hw_msix_getvecs = bfa_hwct_msix_getvecs;
+ 	} else {
+ 		iocfc->hwif.hw_reginit = bfa_hwcb_reginit;
++		iocfc->hwif.hw_reqq_ack = bfa_hwcb_reqq_ack;
+ 		iocfc->hwif.hw_rspq_ack = bfa_hwcb_rspq_ack;
+ 		iocfc->hwif.hw_msix_init = bfa_hwcb_msix_init;
+ 		iocfc->hwif.hw_msix_install = bfa_hwcb_msix_install;
+diff --git a/drivers/scsi/bfa/bfa_iocfc.h b/drivers/scsi/bfa/bfa_iocfc.h
+index ce9a830..fbb4bdc 100644
+--- a/drivers/scsi/bfa/bfa_iocfc.h
++++ b/drivers/scsi/bfa/bfa_iocfc.h
+@@ -54,6 +54,7 @@ struct bfa_msix_s {
+  */
+ struct bfa_hwif_s {
+ 	void (*hw_reginit)(struct bfa_s *bfa);
++	void (*hw_reqq_ack)(struct bfa_s *bfa, int reqq);
+ 	void (*hw_rspq_ack)(struct bfa_s *bfa, int rspq);
+ 	void (*hw_msix_init)(struct bfa_s *bfa, int nvecs);
+ 	void (*hw_msix_install)(struct bfa_s *bfa);
+@@ -143,6 +144,7 @@ void bfa_msix_rspq(struct bfa_s *bfa, int vec);
+ void bfa_msix_lpu_err(struct bfa_s *bfa, int vec);
  
-diff --git a/drivers/scsi/bfa/include/bfi/bfi_cbreg.h b/drivers/scsi/bfa/include/bfi/bfi_cbreg.h
-index 781cefa..a51ee61 100644
---- a/drivers/scsi/bfa/include/bfi/bfi_cbreg.h
-+++ b/drivers/scsi/bfa/include/bfi/bfi_cbreg.h
-@@ -177,6 +177,19 @@
- #define __PSS_LMEM_INIT_EN               0x00000100
- #define __PSS_LPU1_RESET                 0x00000002
- #define __PSS_LPU0_RESET                 0x00000001
-+#define PSS_ERR_STATUS_REG		 0x00018810
-+#define __PSS_LMEM1_CORR_ERR		 0x00000800
-+#define __PSS_LMEM0_CORR_ERR             0x00000400
-+#define __PSS_LMEM1_UNCORR_ERR           0x00000200
-+#define __PSS_LMEM0_UNCORR_ERR           0x00000100
-+#define __PSS_BAL_PERR                   0x00000080
-+#define __PSS_DIP_IF_ERR                 0x00000040
-+#define __PSS_IOH_IF_ERR                 0x00000020
-+#define __PSS_TDS_IF_ERR                 0x00000010
-+#define __PSS_RDS_IF_ERR                 0x00000008
-+#define __PSS_SGM_IF_ERR                 0x00000004
-+#define __PSS_LPU1_RAM_ERR               0x00000002
-+#define __PSS_LPU0_RAM_ERR               0x00000001
- #define ERR_SET_REG			 0x00018818
- #define __PSS_ERR_STATUS_SET		 0x00000fff
- 
-diff --git a/drivers/scsi/bfa/include/bfi/bfi_ctreg.h b/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
-index d84ebae..57a8497 100644
---- a/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
-+++ b/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
-@@ -430,6 +430,29 @@ enum {
- #define __PSS_LMEM_INIT_EN               0x00000100
- #define __PSS_LPU1_RESET                 0x00000002
- #define __PSS_LPU0_RESET                 0x00000001
-+#define PSS_ERR_STATUS_REG               0x00018810
-+#define __PSS_LPU1_TCM_READ_ERR          0x00200000
-+#define __PSS_LPU0_TCM_READ_ERR          0x00100000
-+#define __PSS_LMEM5_CORR_ERR             0x00080000
-+#define __PSS_LMEM4_CORR_ERR             0x00040000
-+#define __PSS_LMEM3_CORR_ERR             0x00020000
-+#define __PSS_LMEM2_CORR_ERR             0x00010000
-+#define __PSS_LMEM1_CORR_ERR             0x00008000
-+#define __PSS_LMEM0_CORR_ERR             0x00004000
-+#define __PSS_LMEM5_UNCORR_ERR           0x00002000
-+#define __PSS_LMEM4_UNCORR_ERR           0x00001000
-+#define __PSS_LMEM3_UNCORR_ERR           0x00000800
-+#define __PSS_LMEM2_UNCORR_ERR           0x00000400
-+#define __PSS_LMEM1_UNCORR_ERR           0x00000200
-+#define __PSS_LMEM0_UNCORR_ERR           0x00000100
-+#define __PSS_BAL_PERR                   0x00000080
-+#define __PSS_DIP_IF_ERR                 0x00000040
-+#define __PSS_IOH_IF_ERR                 0x00000020
-+#define __PSS_TDS_IF_ERR                 0x00000010
-+#define __PSS_RDS_IF_ERR                 0x00000008
-+#define __PSS_SGM_IF_ERR                 0x00000004
-+#define __PSS_LPU1_RAM_ERR               0x00000002
-+#define __PSS_LPU0_RAM_ERR               0x00000001
- #define ERR_SET_REG			 0x00018818
- #define __PSS_ERR_STATUS_SET		 0x003fffff
- #define HQM_QSET0_RXQ_DRBL_P0            0x00038000
+ void bfa_hwcb_reginit(struct bfa_s *bfa);
++void bfa_hwcb_reqq_ack(struct bfa_s *bfa, int rspq);
+ void bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq);
+ void bfa_hwcb_msix_init(struct bfa_s *bfa, int nvecs);
+ void bfa_hwcb_msix_install(struct bfa_s *bfa);
+@@ -151,6 +153,7 @@ void bfa_hwcb_isr_mode_set(struct bfa_s *bfa, bfa_boolean_t msix);
+ void bfa_hwcb_msix_getvecs(struct bfa_s *bfa, u32 *vecmap,
+ 			u32 *nvecs, u32 *maxvec);
+ void bfa_hwct_reginit(struct bfa_s *bfa);
++void bfa_hwct_reqq_ack(struct bfa_s *bfa, int rspq);
+ void bfa_hwct_rspq_ack(struct bfa_s *bfa, int rspq);
+ void bfa_hwct_msix_init(struct bfa_s *bfa, int nvecs);
+ void bfa_hwct_msix_install(struct bfa_s *bfa);
 -- 
 1.6.5.3
 
