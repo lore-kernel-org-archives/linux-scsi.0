@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 20/32] bfa: IOC recovery fix in fcmode.
-Date: Thu, 25 Feb 2010 17:49:12 -0800
-Message-ID: <1267148952-22989-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 22/32] bfa: In MSIX mode, ignore spurious RME interrupts when FCoE ports are in FW mismatch state.
+Date: Thu, 25 Feb 2010 17:49:20 -0800
+Message-ID: <1267148960-23077-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:59499 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.82]:59502 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934895Ab0BZBv0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:26 -0500
+	with ESMTP id S934903Ab0BZBvd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,61 +16,102 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- ioc_recover failed to work in fcmode, as a result,
+Root Cause:
 
-		bfa_ioc_ct_notify_hbfail(struct bfa_ioc_s ioc->*ioc) will do just
+	- Currently in MSIX mode, when FCoE ports are in FW  mismatch state, upgrading (or reloading)
+	  Ethernet drivers can generate spurious RME interrupts. The system can crash (Hardware Malfunction)
+	  or reboot if FCoE driver processes this RME interrupt as the queues are not yet initialized.
 
-		  bfa_reg_write(ioc->ioc_regs.err_set, __PSS_ERR_STATUS_SET);
-		  bfa_reg_read(ioc->ioc_regs.err_set);
+	- Fix is to not install MSIX handlers as part of bfa_init. MSIX handlers will be installed
+	  when bfa_isr_enable is called later (when chip reset completes). This will ensure
+	  that the spurious interrupts will be ignored by the dummy handlers.
 
-		However, ioc_regs.err_set is not initialized.
-
-    - Fixed the code to initialize the ioc_regs.err_set during the notify_hbfail.
+	- Also removed msix installation code in bfa_iocfc_init().
 ---
- drivers/scsi/bfa/bfa_ioc_ct.c |   19 ++++++++++++++-----
- 1 files changed, 14 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa_ioc_ct.c |   43 ++++++++++++++++------------------------
+ drivers/scsi/bfa/bfa_iocfc.c  |    1 -
+ 2 files changed, 17 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index e756713..45d82d6 100644
+index 45d82d6..639aa5e 100644
 --- a/drivers/scsi/bfa/bfa_ioc_ct.c
 +++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -34,7 +34,7 @@ static bfa_status_t bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc);
- static bfa_boolean_t bfa_ioc_ct_firmware_lock(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_firmware_unlock(struct bfa_ioc_s *ioc);
- static uint32_t * bfa_ioc_ct_fwimg_get_chunk(struct bfa_ioc_s *ioc,
--											uint32_t off);
-+					uint32_t off);
- static uint32_t bfa_ioc_ct_fwimg_get_size(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_reg_init(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_map_port(struct bfa_ioc_s *ioc);
-@@ -172,10 +172,14 @@ bfa_ioc_ct_firmware_unlock(struct bfa_ioc_s *ioc)
- static void
- bfa_ioc_ct_notify_hbfail(struct bfa_ioc_s *ioc)
- {
--
--	bfa_reg_write(ioc->ioc_regs.ll_halt, __FW_INIT_HALT_P);
--	/* Wait for halt to take effect */
--	bfa_reg_read(ioc->ioc_regs.ll_halt);
-+	if (ioc->cna) {
-+		bfa_reg_write(ioc->ioc_regs.ll_halt, __FW_INIT_HALT_P);
-+		/* Wait for halt to take effect */
-+		bfa_reg_read(ioc->ioc_regs.ll_halt);
-+	} else {
-+		bfa_reg_write(ioc->ioc_regs.err_set, __PSS_ERR_STATUS_SET);
-+		bfa_reg_read(ioc->ioc_regs.err_set);
-+	}
- }
- 
- /**
-@@ -255,6 +259,11 @@ bfa_ioc_ct_reg_init(struct bfa_ioc_s *ioc)
+@@ -332,12 +332,12 @@ bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc)
  	 */
- 	ioc->ioc_regs.smem_page_start = (rb + PSS_SMEM_PAGE_START);
- 	ioc->ioc_regs.smem_pg0 = BFI_IOC_SMEM_PG0_CT;
-+
-+	/*
-+	 * err set reg : for notification of hb failure in fcmode
-+	 */
-+	ioc->ioc_regs.err_set = (rb + ERR_SET_REG);
+ 	bfa_ioc_sem_get(ioc->ioc_regs.ioc_init_sem_reg);
+ 
+-	pll_sclk = __APP_PLL_312_ENABLE | __APP_PLL_312_LRESETN |
+-		__APP_PLL_312_RSEL200500 | __APP_PLL_312_P0_1(0U) |
++	pll_sclk = __APP_PLL_312_LRESETN | __APP_PLL_312_ENARST |
++		__APP_PLL_312_RSEL200500 | __APP_PLL_312_P0_1(3U) |
+ 		__APP_PLL_312_JITLMT0_1(3U) |
+ 		__APP_PLL_312_CNTLMT0_1(1U);
+-	pll_fclk = __APP_PLL_425_ENABLE | __APP_PLL_425_LRESETN |
+-		__APP_PLL_425_RSEL200500 | __APP_PLL_425_P0_1(0U) |
++	pll_fclk = __APP_PLL_425_LRESETN | __APP_PLL_425_ENARST |
++		__APP_PLL_425_RSEL200500 | __APP_PLL_425_P0_1(3U) |
+ 		__APP_PLL_425_JITLMT0_1(3U) |
+ 		__APP_PLL_425_CNTLMT0_1(1U);
+ 
+@@ -367,36 +367,27 @@ bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc)
+ 	bfa_reg_write((rb + HOSTFN0_INT_MSK), 0xffffffffU);
+ 	bfa_reg_write((rb + HOSTFN1_INT_MSK), 0xffffffffU);
+ 
+-	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
+-				__APP_PLL_312_LOGIC_SOFT_RESET);
+-	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
+-				__APP_PLL_312_BYPASS |
+-				__APP_PLL_312_LOGIC_SOFT_RESET);
+-	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
+-				__APP_PLL_425_LOGIC_SOFT_RESET);
+-	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
+-				__APP_PLL_425_BYPASS |
+-				__APP_PLL_425_LOGIC_SOFT_RESET);
+-	bfa_os_udelay(2);
+-	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
+-				__APP_PLL_312_LOGIC_SOFT_RESET);
+-	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
+-				__APP_PLL_425_LOGIC_SOFT_RESET);
+-
+-	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
+-				pll_sclk | __APP_PLL_312_LOGIC_SOFT_RESET);
+-	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
+-				pll_fclk | __APP_PLL_425_LOGIC_SOFT_RESET);
++	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk |
++		__APP_PLL_312_LOGIC_SOFT_RESET);
++	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk |
++		__APP_PLL_425_LOGIC_SOFT_RESET);
++	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk |
++		__APP_PLL_312_LOGIC_SOFT_RESET | __APP_PLL_312_ENABLE);
++	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk |
++		__APP_PLL_425_LOGIC_SOFT_RESET | __APP_PLL_425_ENABLE);
+ 
+ 	/**
+ 	 * Wait for PLLs to lock.
+ 	 */
++	bfa_reg_read(rb + HOSTFN0_INT_MSK);
+ 	bfa_os_udelay(2000);
+ 	bfa_reg_write((rb + HOSTFN0_INT_STATUS), 0xffffffffU);
+ 	bfa_reg_write((rb + HOSTFN1_INT_STATUS), 0xffffffffU);
+ 
+-	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk);
+-	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk);
++	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk |
++		__APP_PLL_312_ENABLE);
++	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk |
++		__APP_PLL_425_ENABLE);
+ 
+ 	bfa_reg_write((rb + MBIST_CTL_REG), __EDRAM_BISTR_START);
+ 	bfa_os_udelay(1000);
+diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
+index a5551db..6677f83 100644
+--- a/drivers/scsi/bfa/bfa_iocfc.c
++++ b/drivers/scsi/bfa/bfa_iocfc.c
+@@ -659,7 +659,6 @@ bfa_iocfc_init(struct bfa_s *bfa)
+ {
+ 	bfa->iocfc.action = BFA_IOCFC_ACT_INIT;
+ 	bfa_ioc_enable(&bfa->ioc);
+-	bfa_msix_install(bfa);
  }
  
  /**
