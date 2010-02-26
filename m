@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 16/32] bfa: FCS authentication related changes.
-Date: Thu, 25 Feb 2010 17:48:52 -0800
-Message-ID: <1267148932-22819-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 29/32] bfa: Makefile changes for upstream driver upgrade.
+Date: Thu, 25 Feb 2010 17:50:02 -0800
+Message-ID: <1267149002-23609-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:59514 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:27249 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934944Ab0BZBwL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:11 -0500
+	with ESMTP id S934948Ab0BZBwZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,121 +16,32 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- Made FCS authentication related changes to state machines and header files.
-
-	- Made changes in FCS state machines to handle the case when secret string is NULL.
+	- Makefile changes to upgrade the driver from 2.0.0.0 to 2.1.2.1.
 ---
- drivers/scsi/bfa/bfa_fcs_lport.c               |    2 ++
- drivers/scsi/bfa/fabric.c                      |    6 ++++++
- drivers/scsi/bfa/fcs_fabric.h                  |    1 +
- drivers/scsi/bfa/include/defs/bfa_defs_auth.h  |   22 ++++++++++++++++++++++
- drivers/scsi/bfa/include/defs/bfa_defs_pport.h |    4 ++--
- 5 files changed, 33 insertions(+), 2 deletions(-)
+ drivers/scsi/bfa/Makefile |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 7bb182d..4a51aac 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -931,6 +931,8 @@ bfa_fcs_port_get_attr(struct bfa_fcs_port_s *port,
- 	if (port->fabric) {
- 		port_attr->port_type = bfa_fcs_fabric_port_type(port->fabric);
- 		port_attr->loopback = bfa_fcs_fabric_is_loopback(port->fabric);
-+		port_attr->authfail =
-+				bfa_fcs_fabric_is_auth_failed(port->fabric);
- 		port_attr->fabric_name = bfa_fcs_port_get_fabric_name(port);
- 		memcpy(port_attr->fabric_ip_addr,
- 		       bfa_fcs_port_get_fabric_ipaddr(port),
-diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
-index 2579fe8..37bf8ac 100644
---- a/drivers/scsi/bfa/fabric.c
-+++ b/drivers/scsi/bfa/fabric.c
-@@ -895,6 +895,12 @@ bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric)
- 	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_loopback);
- }
+diff --git a/drivers/scsi/bfa/Makefile b/drivers/scsi/bfa/Makefile
+index 1d60094..619e62a 100644
+--- a/drivers/scsi/bfa/Makefile
++++ b/drivers/scsi/bfa/Makefile
+@@ -2,8 +2,8 @@ obj-$(CONFIG_SCSI_BFA_FC) := bfa.o
  
-+bfa_boolean_t
-+bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric)
-+{
-+	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_auth_failed);
-+}
-+
- enum bfa_pport_type
- bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric)
- {
-diff --git a/drivers/scsi/bfa/fcs_fabric.h b/drivers/scsi/bfa/fcs_fabric.h
-index 8237bd5..244c3f0 100644
---- a/drivers/scsi/bfa/fcs_fabric.h
-+++ b/drivers/scsi/bfa/fcs_fabric.h
-@@ -47,6 +47,7 @@ void            bfa_fcs_fabric_uf_recv(struct bfa_fcs_fabric_s *fabric,
- 			struct fchs_s *fchs, u16 len);
- u16        bfa_fcs_fabric_vport_count(struct bfa_fcs_fabric_s *fabric);
- bfa_boolean_t   bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric);
-+bfa_boolean_t	bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric);
- enum bfa_pport_type bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric);
- void     	bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric);
- void bfa_fcs_fabric_port_delete_comp(struct bfa_fcs_fabric_s *fabric);
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
-index dd19c83..45df328 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
-@@ -23,6 +23,7 @@
- #define PRIVATE_KEY			19009
- #define KEY_LEN				32399
- #define BFA_AUTH_SECRET_STRING_LEN	256
-+#define BFA_AUTH_FAIL_NO_PASSWORD	0xFE
- #define BFA_AUTH_FAIL_TIMEOUT		0xFF
+ bfa-y := bfad.o bfad_intr.o bfad_os.o bfad_im.o bfad_attr.o bfad_fwimg.o
  
- /**
-@@ -41,6 +42,27 @@ enum bfa_auth_status {
- 	BFA_AUTH_STATUS_UNKNOWN = 9,	/*  authentication status unknown */
- };
+-bfa-y += bfa_core.o bfa_ioc.o bfa_iocfc.o bfa_fcxp.o bfa_lps.o
+-bfa-y += bfa_hw_cb.o bfa_hw_ct.o bfa_intr.o bfa_timer.o bfa_rport.o 
++bfa-y += bfa_core.o bfa_ioc.o bfa_ioc_ct.o bfa_ioc_cb.o bfa_iocfc.o bfa_fcxp.o
++bfa-y += bfa_lps.o bfa_hw_cb.o bfa_hw_ct.o bfa_intr.o bfa_timer.o bfa_rport.o 
+ bfa-y += bfa_fcport.o bfa_port.o bfa_uf.o bfa_sgpg.o bfa_module.o bfa_ioim.o
+ bfa-y += bfa_itnim.o bfa_fcpim.o bfa_tskim.o bfa_log.o bfa_log_module.o
+ bfa-y += bfa_csdebug.o bfa_sm.o plog.o
+@@ -12,4 +12,4 @@ bfa-y += fcbuild.o fabric.o fcpim.o vfapi.o fcptm.o bfa_fcs.o bfa_fcs_port.o
+ bfa-y += bfa_fcs_uf.o bfa_fcs_lport.o fab.o fdmi.o ms.o ns.o scn.o loop.o
+ bfa-y += lport_api.o n2n.o rport.o rport_api.o rport_ftrs.o vport.o
  
-+enum bfa_auth_rej_code {
-+	BFA_AUTH_RJT_CODE_AUTH_FAILURE   = 1, /* auth failure */
-+	BFA_AUTH_RJT_CODE_LOGICAL_ERR    = 2, /* logical error */
-+};
-+
-+/**
-+ * Authentication reject codes
-+ */
-+enum bfa_auth_rej_code_exp {
-+	BFA_AUTH_MECH_NOT_USABLE        = 1, /* auth. mechanism not usable */
-+	BFA_AUTH_DH_GROUP_NOT_USABLE    = 2, /* DH Group not usable */
-+	BFA_AUTH_HASH_FUNC_NOT_USABLE   = 3, /* hash Function not usable */
-+	BFA_AUTH_AUTH_XACT_STARTED      = 4, /* auth xact started */
-+	BFA_AUTH_AUTH_FAILED            = 5, /* auth failed */
-+	BFA_AUTH_INCORRECT_PLD          = 6, /* incorrect payload */
-+	BFA_AUTH_INCORRECT_PROTO_MSG    = 7, /* incorrect proto msg */
-+	BFA_AUTH_RESTART_AUTH_PROTO     = 8, /* restart auth protocol */
-+	BFA_AUTH_AUTH_CONCAT_NOT_SUPP   = 9, /* auth concat not supported */
-+	BFA_AUTH_PROTO_VER_NOT_SUPP     = 10,/* proto version not supported */
-+};
-+
- struct auth_proto_stats_s {
- 	u32        auth_rjts;
- 	u32        auth_negs;
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-index bf32041..88662a1 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-@@ -232,7 +232,7 @@ struct bfa_pport_attr_s {
- 	u32        	pid;		/*  port ID */
- 	enum bfa_pport_type 	port_type;	/*  current topology */
- 	u32        	loopback;	/*  external loopback */
--	u32		rsvd1;
-+	u32		authfail;	/* auth fail state */
- 	u32		rsvd2;		/*  padding for 64 bit */
- };
- 
-@@ -247,7 +247,7 @@ struct bfa_pport_fc_stats_s {
- 	u64        rx_words;	/*  received words */
- 	u64        lip_count;	/*  LIPs seen */
- 	u64        nos_count;	/*  NOS count */
--	u64        error_frames;	/*  errored frames (sent?) */
-+	u64        error_frames;	/*  errored frames */
- 	u64        dropped_frames;	/*  dropped frames */
- 	u64        link_failures;	/*  link failure count */
- 	u64        loss_of_syncs;	/*  loss of sync count */
+-ccflags-y := -I$(obj) -I$(obj)/include -I$(obj)/include/cna
++ccflags-y := -I$(obj) -I$(obj)/include -I$(obj)/include/cna -DBFA_PERF_BUILD
 -- 
 1.6.5.3
 
