@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 18/32] bfa: Introduce a link notification state machine.
-Date: Thu, 25 Feb 2010 17:49:00 -0800
-Message-ID: <1267148940-22900-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 08/32] bfa: Fix to allow creation of only 190 vports on CNA.
+Date: Thu, 25 Feb 2010 17:48:03 -0800
+Message-ID: <1267148883-22229-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:59517 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:27249 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934950Ab0BZBwR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:17 -0500
+	with ESMTP id S934959Ab0BZBw0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,350 +16,160 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- Introduce a link notification state machine to handle next incoming link events
-	  while the current event is being delivered to the driver.
+	- Brocade CNA currently supports only 190 vports (instead of 191),
+	  since there are only 192 unicast cam entries reserved for FCoE.
 
-	- When the event has been processed by the driver, the link notification state machine
-	  will queue the next event (if there is any) to the driver.
+	- Brocade CNA has a total of 256 unicast cam entries (192 FCoE + 64 LL)
+
+	  192 cam entries = 1 burned in mac + 1 baseport FPMA mac + 190 vport FPMA macs.
+
+    - Made changes to the code to support only 190 vports.
 ---
- drivers/scsi/bfa/bfa_fcport.c    |  232 +++++++++++++++++++++++++++++++++++--
- drivers/scsi/bfa/bfa_port_priv.h |   13 ++-
- 2 files changed, 230 insertions(+), 15 deletions(-)
+ drivers/scsi/bfa/bfa_lps.c                   |   20 ++++++++++++++++++++
+ drivers/scsi/bfa/fcs_vport.h                 |    1 -
+ drivers/scsi/bfa/include/bfa_svc.h           |    1 +
+ drivers/scsi/bfa/include/fcs/bfa_fcs_lport.h |    8 --------
+ drivers/scsi/bfa/lport_api.c                 |    3 ++-
+ drivers/scsi/bfa/vport.c                     |   17 +----------------
+ 6 files changed, 24 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-index aef648b..29c8a6a 100644
---- a/drivers/scsi/bfa/bfa_fcport.c
-+++ b/drivers/scsi/bfa/bfa_fcport.c
-@@ -26,16 +26,6 @@
- BFA_TRC_FILE(HAL, PPORT);
- BFA_MODULE(pport);
+diff --git a/drivers/scsi/bfa/bfa_lps.c b/drivers/scsi/bfa/bfa_lps.c
+index c8c2564..66b9b15 100644
+--- a/drivers/scsi/bfa/bfa_lps.c
++++ b/drivers/scsi/bfa/bfa_lps.c
+@@ -18,6 +18,7 @@
+ #include <bfa.h>
+ #include <bfi/bfi_lps.h>
+ #include <cs/bfa_debug.h>
++#include <defs/bfa_defs_pci.h>
  
--#define bfa_pport_callback(__pport, __event) do {			\
--	if ((__pport)->bfa->fcs) {      \
--		(__pport)->event_cbfn((__pport)->event_cbarg, (__event));      \
--	} else {							\
--		(__pport)->hcb_event = (__event);      \
--		bfa_cb_queue((__pport)->bfa, &(__pport)->hcb_qe,	\
--		__bfa_cb_port_event, (__pport));      \
--	}								\
--} while (0)
--
- /*
-  * The port is considered disabled if corresponding physical port or IOC are
-  * disabled explicitly
-@@ -57,7 +47,10 @@ static void     __bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete);
- static void     __bfa_cb_port_stats_clr(void *cbarg, bfa_boolean_t complete);
- static void     bfa_port_stats_timeout(void *cbarg);
- static void     bfa_port_stats_clr_timeout(void *cbarg);
--
-+static void	bfa_pport_callback(struct bfa_pport_s *pport,
-+				enum bfa_pport_linkstate event);
-+static void	bfa_pport_queue_cb(struct bfa_pport_ln_s *ln,
-+				enum bfa_pport_linkstate event);
- /**
-  *  bfa_pport_private
-  */
-@@ -77,6 +70,16 @@ enum bfa_pport_sm_event {
- 	BFA_PPORT_SM_HWFAIL = 9,	/*  IOC h/w failure */
- };
+ BFA_TRC_FILE(HAL, LPS);
+ BFA_MODULE(lps);
+@@ -25,6 +26,12 @@ BFA_MODULE(lps);
+ #define BFA_LPS_MIN_LPORTS	(1)
+ #define BFA_LPS_MAX_LPORTS	(256)
  
-+/**
-+ * BFA port link notification state machine events
++/*
++ * Maximum Vports supported per physical port or vf.
 + */
++#define BFA_LPS_MAX_VPORTS_SUPP_CB  255
++#define BFA_LPS_MAX_VPORTS_SUPP_CT  190
 +
-+enum bfa_pport_ln_sm_event {
-+	BFA_PPORT_LN_SM_LINKUP         = 1,    /*  linkup event */
-+	BFA_PPORT_LN_SM_LINKDOWN       = 2,    /*  linkdown event */
-+	BFA_PPORT_LN_SM_NOTIFICATION   = 3     /*  done notification */
-+};
-+
- static void     bfa_pport_sm_uninit(struct bfa_pport_s *pport,
- 				    enum bfa_pport_sm_event event);
- static void     bfa_pport_sm_enabling_qwait(struct bfa_pport_s *pport,
-@@ -100,6 +103,21 @@ static void     bfa_pport_sm_iocdown(struct bfa_pport_s *pport,
- static void     bfa_pport_sm_iocfail(struct bfa_pport_s *pport,
- 				     enum bfa_pport_sm_event event);
- 
-+static void	bfa_pport_ln_sm_dn(struct bfa_pport_ln_s *ln,
-+					enum bfa_pport_ln_sm_event event);
-+static void	bfa_pport_ln_sm_dn_nf(struct bfa_pport_ln_s *ln,
-+					enum bfa_pport_ln_sm_event event);
-+static void	bfa_pport_ln_sm_dn_up_nf(struct bfa_pport_ln_s *ln,
-+					enum bfa_pport_ln_sm_event event);
-+static void     bfa_pport_ln_sm_up(struct bfa_pport_ln_s *ln,
-+					enum bfa_pport_ln_sm_event event);
-+static void	bfa_pport_ln_sm_up_nf(struct bfa_pport_ln_s *ln,
-+					enum bfa_pport_ln_sm_event event);
-+static void	bfa_pport_ln_sm_up_dn_nf(struct bfa_pport_ln_s *ln,
-+					enum bfa_pport_ln_sm_event event);
-+static void	bfa_pport_ln_sm_up_dn_up_nf(struct bfa_pport_ln_s *ln,
-+					enum bfa_pport_ln_sm_event event);
-+
- static struct bfa_sm_table_s hal_pport_sm_table[] = {
- 	{BFA_SM(bfa_pport_sm_uninit), BFA_PPORT_ST_UNINIT},
- 	{BFA_SM(bfa_pport_sm_enabling_qwait), BFA_PPORT_ST_ENABLING_QWAIT},
-@@ -619,7 +637,163 @@ bfa_pport_sm_iocfail(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
- 	}
+ /**
+  * forward declarations
+  */
+@@ -598,6 +605,19 @@ bfa_lps_cvl_event(struct bfa_lps_s *lps)
+ 		bfa_cb_lps_cvl_event(lps->bfa->bfad, lps->uarg);
  }
  
-+/**
-+ * Link state is down
-+ */
-+static void
-+bfa_pport_ln_sm_dn(struct bfa_pport_ln_s *ln,
-+		enum bfa_pport_ln_sm_event event)
++u32
++bfa_lps_get_max_vport(struct bfa_s *bfa)
 +{
-+	bfa_trc(ln->pport->bfa, event);
++	struct bfa_ioc_attr_s ioc_attr;
 +
-+	switch (event) {
-+	case BFA_PPORT_LN_SM_LINKUP:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_nf);
-+		bfa_pport_queue_cb(ln, BFA_PPORT_LINKUP);
-+		break;
++	bfa_get_attr(bfa, &ioc_attr);
 +
-+	default:
-+		bfa_sm_fault(ln->pport->bfa, event);
-+	}
-+}
-+
-+/**
-+ * Link state is waiting for down notification
-+ */
-+static void
-+bfa_pport_ln_sm_dn_nf(struct bfa_pport_ln_s *ln,
-+		enum bfa_pport_ln_sm_event event)
-+{
-+	bfa_trc(ln->pport->bfa, event);
-+
-+	switch (event) {
-+	case BFA_PPORT_LN_SM_LINKUP:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_up_nf);
-+		break;
-+
-+	case BFA_PPORT_LN_SM_NOTIFICATION:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ln->pport->bfa, event);
-+	}
-+}
-+
-+/**
-+ * Link state is waiting for down notification and there is a pending up
-+ */
-+static void
-+bfa_pport_ln_sm_dn_up_nf(struct bfa_pport_ln_s *ln,
-+		enum bfa_pport_ln_sm_event event)
-+{
-+	bfa_trc(ln->pport->bfa, event);
-+
-+	switch (event) {
-+	case BFA_PPORT_LN_SM_LINKDOWN:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_nf);
-+		break;
-+
-+	case BFA_PPORT_LN_SM_NOTIFICATION:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_nf);
-+		bfa_pport_queue_cb(ln, BFA_PPORT_LINKUP);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ln->pport->bfa, event);
-+	}
-+}
-+
-+/**
-+ * Link state is up
-+ */
-+static void
-+bfa_pport_ln_sm_up(struct bfa_pport_ln_s *ln,
-+                enum bfa_pport_ln_sm_event event)
-+{
-+	bfa_trc(ln->pport->bfa, event);
-+
-+	switch (event) {
-+	case BFA_PPORT_LN_SM_LINKDOWN:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_nf);
-+		bfa_pport_queue_cb(ln, BFA_PPORT_LINKDOWN);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ln->pport->bfa, event);
-+	}
-+}
-+
-+/**
-+ * Link state is waiting for up notification
-+ */
-+static void
-+bfa_pport_ln_sm_up_nf(struct bfa_pport_ln_s *ln,
-+		enum bfa_pport_ln_sm_event event)
-+{
-+	bfa_trc(ln->pport->bfa, event);
-+
-+	switch (event) {
-+	case BFA_PPORT_LN_SM_LINKDOWN:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_dn_nf);
-+		break;
-+
-+	case BFA_FCPORT_LN_SM_NOTIFICATION:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_up);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ln->pport->bfa, event);
-+	}
-+}
-+
-+/**
-+ * Link state is waiting for up notification and there is a pending down
-+ */
-+static void
-+bfa_pport_ln_sm_up_dn_nf(struct bfa_pport_ln_s *ln,
-+		enum bfa_pport_ln_sm_event event)
-+{
-+	bfa_trc(ln->pport->bfa, event);
- 
-+	switch (event) {
-+	case BFA_PPORT_LN_SM_LINKUP:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_dn_up_nf);
-+		break;
-+
-+	case BFA_PPORT_LN_SM_NOTIFICATION:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_nf);
-+		bfa_pport_queue_cb(ln, BFA_PPORT_LINKDOWN);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ln->pport->bfa, event);
-+	}
-+}
-+
-+/**
-+ * Link state is waiting for up notification and there are pending down and up
-+ */
-+static void
-+bfa_pport_ln_sm_up_dn_up_nf(struct bfa_pport_ln_s *ln,
-+			enum bfa_pport_ln_sm_event event)
-+{
-+	bfa_trc(ln->pport->bfa, event);
-+
-+	switch (event) {
-+	case BFA_PPORT_LN_SM_LINKDOWN:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_dn_nf);
-+		break;
-+
-+	case BFA_PPORT_LN_SM_NOTIFICATION:
-+		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_up_nf);
-+		bfa_pport_queue_cb(ln, BFA_PPORT_LINKDOWN);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ln->pport->bfa, event);
-+	}
-+}
- 
- /**
-  *  bfa_pport_private
-@@ -628,10 +802,12 @@ bfa_pport_sm_iocfail(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
- static void
- __bfa_cb_port_event(void *cbarg, bfa_boolean_t complete)
- {
--	struct bfa_pport_s *pport = cbarg;
-+	struct bfa_pport_ln_s *ln = cbarg;
- 
- 	if (complete)
--		pport->event_cbfn(pport->event_cbarg, pport->hcb_event);
-+		ln->pport->event_cbfn(ln->pport->event_cbarg, ln->ln_event);
++	if (ioc_attr.pci_attr.device_id == BFA_PCI_DEVICE_ID_CT)
++		return (BFA_LPS_MAX_VPORTS_SUPP_CT);
 +	else
-+		bfa_sm_send_event(ln, BFA_PPORT_LN_SM_NOTIFICATION);
- }
- 
- #define PPORT_STATS_DMA_SZ (BFA_ROUNDUP(sizeof(union bfa_pport_stats_u), \
-@@ -681,13 +857,16 @@ bfa_pport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- {
- 	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
- 	struct bfa_pport_cfg_s *port_cfg = &pport->cfg;
-+	struct bfa_pport_ln_s *ln = &pport->ln;
- 
- 	bfa_os_memset(pport, 0, sizeof(struct bfa_pport_s));
- 	pport->bfa = bfa;
-+	ln->pport = pport;
- 
- 	bfa_pport_mem_claim(pport, meminfo);
- 
- 	bfa_sm_set_state(pport, bfa_pport_sm_uninit);
-+	bfa_sm_set_state(ln, bfa_pport_ln_sm_dn);
- 
- 	/**
- 	 * initialize and set default configuration
-@@ -1369,6 +1548,33 @@ bfa_port_stats_clr_timeout(void *cbarg)
- }
- 
- static void
-+bfa_pport_callback(struct bfa_pport_s *pport, enum bfa_pport_linkstate event)
-+{
-+	if (pport->bfa->fcs) {
-+		pport->event_cbfn(pport->event_cbarg, event);
-+		return;
-+	}
-+
-+	switch (event) {
-+	case BFA_PPORT_LINKUP:
-+		bfa_sm_send_event(&pport->ln, BFA_PPORT_LN_SM_LINKUP);
-+		break;
-+	case BFA_PPORT_LINKDOWN:
-+		bfa_sm_send_event(&pport->ln, BFA_PPORT_LN_SM_LINKDOWN);
-+		break;
-+	default:
-+		bfa_assert(0);
-+	}
++		return (BFA_LPS_MAX_VPORTS_SUPP_CB);
 +}
 +
-+static void
-+bfa_pport_queue_cb(struct bfa_pport_ln_s *ln, enum bfa_pport_linkstate event)
-+{
-+	ln->ln_event = event;
-+	bfa_cb_queue(ln->pport->bfa, &ln->ln_qe, __bfa_cb_port_event, ln);
-+}
-+
-+static void
- __bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete)
- {
- 	struct bfa_pport_s *port = cbarg;
-diff --git a/drivers/scsi/bfa/bfa_port_priv.h b/drivers/scsi/bfa/bfa_port_priv.h
-index 51f698a..f29701b 100644
---- a/drivers/scsi/bfa/bfa_port_priv.h
-+++ b/drivers/scsi/bfa/bfa_port_priv.h
-@@ -23,6 +23,16 @@
- #include "bfa_intr_priv.h"
- 
  /**
-+ * Link notification data structure
-+ */
-+struct bfa_pport_ln_s {
-+	struct bfa_pport_s     *pport;
-+	bfa_sm_t                sm;
-+	struct bfa_cb_qe_s      ln_qe;  /*  BFA callback queue elem for ln */
-+	enum bfa_pport_linkstate ln_event; /*  ln event for callback */
-+};
-+
-+/**
-  * BFA physical port data structure
+  *  lps_public BFA LPS public functions
   */
- struct bfa_pport_s {
-@@ -52,9 +62,8 @@ struct bfa_pport_s {
- 		union bfi_pport_i2h_msg_u i2hmsg;
- 	} event_arg;
- 	void			*bfad;	/*  BFA driver handle */
-+	struct bfa_pport_ln_s   ln; /* Link Notification */
- 	struct bfa_cb_qe_s		hcb_qe;	/*  BFA callback queue elem */
--	enum bfa_pport_linkstate	hcb_event;
--					/*  link event for callback */
- 	u32		msgtag;	/*  fimrware msg tag for reply */
- 	u8			*stats_kva;
- 	u64		stats_pa;
+diff --git a/drivers/scsi/bfa/fcs_vport.h b/drivers/scsi/bfa/fcs_vport.h
+index 32565ba..13c32eb 100644
+--- a/drivers/scsi/bfa/fcs_vport.h
++++ b/drivers/scsi/bfa/fcs_vport.h
+@@ -26,7 +26,6 @@ void bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_online(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_offline(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_delete_comp(struct bfa_fcs_vport_s *vport);
+-u32 bfa_fcs_vport_get_max(struct bfa_fcs_s *fcs);
+ 
+ #endif /* __FCS_VPORT_H__ */
+ 
+diff --git a/drivers/scsi/bfa/include/bfa_svc.h b/drivers/scsi/bfa/include/bfa_svc.h
+index 2e4372f..0d7ed4d 100644
+--- a/drivers/scsi/bfa/include/bfa_svc.h
++++ b/drivers/scsi/bfa/include/bfa_svc.h
+@@ -293,6 +293,7 @@ void bfa_uf_free(struct bfa_uf_s *uf);
+  * bfa lport service api
+  */
+ 
++u32	bfa_lps_get_max_vport(struct bfa_s *bfa);
+ struct bfa_lps_s *bfa_lps_alloc(struct bfa_s *bfa);
+ void bfa_lps_delete(struct bfa_lps_s *lps);
+ void bfa_lps_discard(struct bfa_lps_s *lps);
+diff --git a/drivers/scsi/bfa/include/fcs/bfa_fcs_lport.h b/drivers/scsi/bfa/include/fcs/bfa_fcs_lport.h
+index 967ceb0..ceaefd3 100644
+--- a/drivers/scsi/bfa/include/fcs/bfa_fcs_lport.h
++++ b/drivers/scsi/bfa/include/fcs/bfa_fcs_lport.h
+@@ -34,14 +34,6 @@ struct bfa_fcs_s;
+ struct bfa_fcs_fabric_s;
+ 
+ /*
+-* @todo : need to move to a global config file.
+- * Maximum Vports supported per physical port or vf.
+- */
+-#define BFA_FCS_MAX_VPORTS_SUPP_CB  255
+-#define BFA_FCS_MAX_VPORTS_SUPP_CT  191
+-
+-/*
+-* @todo : need to move to a global config file.
+  * Maximum Rports supported per port (physical/logical).
+  */
+ #define BFA_FCS_MAX_RPORTS_SUPP  256	/* @todo : tentative value */
+diff --git a/drivers/scsi/bfa/lport_api.c b/drivers/scsi/bfa/lport_api.c
+index 1e06792..4a4ccce 100644
+--- a/drivers/scsi/bfa/lport_api.c
++++ b/drivers/scsi/bfa/lport_api.c
+@@ -235,7 +235,8 @@ bfa_fcs_port_get_info(struct bfa_fcs_port_s *port,
+ 		port_info->port_wwn = bfa_fcs_port_get_pwwn(port);
+ 		port_info->node_wwn = bfa_fcs_port_get_nwwn(port);
+ 
+-		port_info->max_vports_supp = bfa_fcs_vport_get_max(port->fcs);
++		port_info->max_vports_supp =
++			bfa_lps_get_max_vport(port->fcs->bfa);
+ 		port_info->num_vports_inuse =
+ 			bfa_fcs_fabric_vport_count(port->fabric);
+ 		port_info->max_rports_supp = BFA_FCS_MAX_RPORTS_SUPP;
+diff --git a/drivers/scsi/bfa/vport.c b/drivers/scsi/bfa/vport.c
+index 75d6f05..3dce9e1 100644
+--- a/drivers/scsi/bfa/vport.c
++++ b/drivers/scsi/bfa/vport.c
+@@ -616,21 +616,6 @@ bfa_fcs_vport_delete_comp(struct bfa_fcs_vport_s *vport)
+ 	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_DELCOMP);
+ }
+ 
+-u32
+-bfa_fcs_vport_get_max(struct bfa_fcs_s *fcs)
+-{
+-	struct bfa_ioc_attr_s ioc_attr;
+-
+-	bfa_get_attr(fcs->bfa, &ioc_attr);
+-
+-	if (ioc_attr.pci_attr.device_id == BFA_PCI_DEVICE_ID_CT)
+-		return BFA_FCS_MAX_VPORTS_SUPP_CT;
+-	else
+-		return BFA_FCS_MAX_VPORTS_SUPP_CB;
+-}
+-
+-
+-
+ /**
+  *  fcs_vport_api Virtual port API
+  */
+@@ -667,7 +652,7 @@ bfa_fcs_vport_create(struct bfa_fcs_vport_s *vport, struct bfa_fcs_s *fcs,
+ 		return BFA_STATUS_VPORT_EXISTS;
+ 
+ 	if (bfa_fcs_fabric_vport_count(&fcs->fabric) ==
+-	    bfa_fcs_vport_get_max(fcs))
++		bfa_lps_get_max_vport(fcs->bfa))
+ 		return BFA_STATUS_VPORT_MAX;
+ 
+ 	vport->lps = bfa_lps_alloc(fcs->bfa);
 -- 
 1.6.5.3
 
