@@ -1,125 +1,135 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 8/9] cciss: eliminate unnecessary pointer use in cciss scsi
-	code
-Date: Fri, 26 Feb 2010 16:01:47 -0600
-Message-ID: <20100226220147.11979.65187.stgit@beardog.cce.hp.com>
+Subject: [PATCH 6/9] cciss: factor out scatter gather chain block mapping code
+Date: Fri, 26 Feb 2010 16:01:37 -0600
+Message-ID: <20100226220137.11979.64414.stgit@beardog.cce.hp.com>
 References: <20100226220023.11979.4999.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:6780 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966401Ab0BZV61 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Feb 2010 16:58:27 -0500
 In-Reply-To: <20100226220023.11979.4999.stgit@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk, akpm@linux-foundation.org, james.bottomley@suse.de
 Cc: linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, brace@beardog.cce.hp.com
-List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-cciss: eliminate unnecessary pointer use in cciss scsi code
-An extra level of indirection was being used in some places
-for no real reason.
+cciss: factor out scatter gather chain block mapping code
+Rationale is I want to use this code from the scsi half of the
+driver.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/block/cciss_scsi.c |   31 +++++++++++++++----------------
- 1 files changed, 15 insertions(+), 16 deletions(-)
+ drivers/block/cciss.c |   63 ++++++++++++++++++++++++++-----------------------
+ 1 files changed, 34 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
-index c458232..6dc15b6 100644
---- a/drivers/block/cciss_scsi.c
-+++ b/drivers/block/cciss_scsi.c
-@@ -1400,7 +1400,7 @@ cciss_scatter_gather(struct pci_dev *pdev,
- static int
- cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
- {
--	ctlr_info_t **c;
-+	ctlr_info_t *c;
- 	int ctlr, rc;
- 	unsigned char scsi3addr[8];
- 	CommandList_struct *cp;
-@@ -1408,8 +1408,8 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index c0d794c..9e3af30 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -301,6 +301,35 @@ clean:
+ 	return NULL;
+ }
  
- 	// Get the ptr to our adapter structure (hba[i]) out of cmd->host.
- 	// We violate cmd->host privacy here.  (Is there another way?)
--	c = (ctlr_info_t **) &cmd->device->host->hostdata[0];	
--	ctlr = (*c)->ctlr;
-+	c = (ctlr_info_t *) cmd->device->host->hostdata[0];
-+	ctlr = c->ctlr;
++static void cciss_unmap_sg_chain_block(ctlr_info_t *h, CommandList_struct *c)
++{
++	SGDescriptor_struct *chain_sg;
++	u64bit temp64;
++
++	if (c->Header.SGTotal <= h->max_cmd_sgentries)
++		return;
++
++	chain_sg = &c->SG[h->max_cmd_sgentries - 1];
++	temp64.val32.lower = chain_sg->Addr.lower;
++	temp64.val32.upper = chain_sg->Addr.upper;
++	pci_unmap_single(h->pdev, temp64.val, chain_sg->Len, PCI_DMA_TODEVICE);
++}
++
++static void cciss_map_sg_chain_block(ctlr_info_t *h, CommandList_struct *c,
++	SGDescriptor_struct *chain_block, int len)
++{
++	SGDescriptor_struct *chain_sg;
++	u64bit temp64;
++
++	chain_sg = &c->SG[h->max_cmd_sgentries - 1];
++	chain_sg->Ext = CCISS_SG_CHAIN;
++	chain_sg->Len = len;
++	temp64.val = pci_map_single(h->pdev, chain_block, len,
++				PCI_DMA_TODEVICE);
++	chain_sg->Addr.lower = temp64.val32.lower;
++	chain_sg->Addr.upper = temp64.val32.upper;
++}
++
+ #include "cciss_scsi.c"		/* For SCSI tape support */
  
- 	rc = lookup_scsi3addr(ctlr, cmd->device->channel, cmd->device->id, 
- 			cmd->device->lun, scsi3addr);
-@@ -1432,7 +1432,7 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
-            see what the device thinks of it. */
+ static const char *raid_label[] = { "0", "4", "1(1+0)", "5", "5+1", "ADG",
+@@ -1715,10 +1744,7 @@ static void cciss_softirq_done(struct request *rq)
+ 	/* unmap the DMA mapping for all the scatter gather elements */
+ 	for (i = 0; i < cmd->Header.SGList; i++) {
+ 		if (curr_sg[sg_index].Ext == CCISS_SG_CHAIN) {
+-			temp64.val32.lower = cmd->SG[i].Addr.lower;
+-			temp64.val32.upper = cmd->SG[i].Addr.upper;
+-			pci_unmap_single(h->pdev, temp64.val,
+-				cmd->SG[i].Len, PCI_DMA_TODEVICE);
++			cciss_unmap_sg_chain_block(h, cmd);
+ 			/* Point to the next block */
+ 			curr_sg = h->cmd_sg_list[cmd->cmdindex];
+ 			sg_index = 0;
+@@ -3122,7 +3148,6 @@ static void do_cciss_request(struct request_queue *q)
+ 	SGDescriptor_struct *curr_sg;
+ 	drive_info_struct *drv;
+ 	int i, dir;
+-	int nseg = 0;
+ 	int sg_index = 0;
+ 	int chained = 0;
  
- 	spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
--	cp = scsi_cmd_alloc(*c);
-+	cp = scsi_cmd_alloc(c);
- 	spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
- 	if (cp == NULL) {			/* trouble... */
- 		printk("scsi_cmd_alloc returned NULL!\n");
-@@ -1490,15 +1490,14 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
- 		BUG();
- 		break;
+@@ -3189,11 +3214,6 @@ static void do_cciss_request(struct request_queue *q)
+ 	for (i = 0; i < seg; i++) {
+ 		if (((sg_index+1) == (h->max_cmd_sgentries)) &&
+ 			!chained && ((seg - i) > 1)) {
+-			nseg = seg - i;
+-			curr_sg[sg_index].Len = (nseg) *
+-					sizeof(SGDescriptor_struct);
+-			curr_sg[sg_index].Ext = CCISS_SG_CHAIN;
+-
+ 			/* Point to next chain block. */
+ 			curr_sg = h->cmd_sg_list[c->cmdindex];
+ 			sg_index = 0;
+@@ -3206,27 +3226,12 @@ static void do_cciss_request(struct request_queue *q)
+ 		curr_sg[sg_index].Addr.lower = temp64.val32.lower;
+ 		curr_sg[sg_index].Addr.upper = temp64.val32.upper;
+ 		curr_sg[sg_index].Ext = 0;  /* we are not chaining */
+-
+ 		++sg_index;
  	}
 -
--	cciss_scatter_gather((*c)->pdev, cp, cmd); // Fill the SG list
-+	cciss_scatter_gather(c->pdev, cp, cmd);
+-	if (chained) {
+-		int len;
+-		dma_addr_t dma_addr;
+-		curr_sg = c->SG;
+-		sg_index = h->max_cmd_sgentries - 1;
+-		len = curr_sg[sg_index].Len;
+-		/* Setup pointer to next chain block.
+-		 * Fill out last element in current chain
+-		 * block with address of next chain block.
+-		 */
+-		temp64.val = pci_map_single(h->pdev,
+-					h->cmd_sg_list[c->cmdindex], len,
+-					PCI_DMA_TODEVICE);
+-		dma_addr = temp64.val;
+-		curr_sg[sg_index].Addr.lower = temp64.val32.lower;
+-		curr_sg[sg_index].Addr.upper = temp64.val32.upper;
+-	}
++	if (chained)
++		cciss_map_sg_chain_block(h, c, h->cmd_sg_list[c->cmdindex],
++			(seg - (h->max_cmd_sgentries - 1)) *
++				sizeof(SGDescriptor_struct));
  
- 	/* Put the request on the tail of the request queue */
- 
- 	spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
--	addQ(&(*c)->reqQ, cp);
--	(*c)->Qdepth++;
--	start_io(*c);
-+	addQ(&c->reqQ, cp);
-+	c->Qdepth++;
-+	start_io(c);
- 	spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
- 
- 	/* the cmd'll come back via intr handler in complete_scsi_command()  */
-@@ -1655,14 +1654,14 @@ static int cciss_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	int rc;
- 	CommandList_struct *cmd_in_trouble;
- 	unsigned char lunaddr[8];
--	ctlr_info_t **c;
-+	ctlr_info_t *c;
- 	int ctlr;
- 
- 	/* find the controller to which the command to be aborted was sent */
--	c = (ctlr_info_t **) &scsicmd->device->host->hostdata[0];	
-+	c = (ctlr_info_t *) scsicmd->device->host->hostdata[0];
- 	if (c == NULL) /* paranoia */
- 		return FAILED;
--	ctlr = (*c)->ctlr;
-+	ctlr = c->ctlr;
- 	printk(KERN_WARNING "cciss%d: resetting tape drive or medium changer.\n", ctlr);
- 	/* find the command that's giving us trouble */
- 	cmd_in_trouble = (CommandList_struct *) scsicmd->host_scribble;
-@@ -1672,7 +1671,7 @@ static int cciss_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	/* send a reset to the SCSI LUN which the command was sent to */
- 	rc = sendcmd_withirq(CCISS_RESET_MSG, ctlr, NULL, 0, 0, lunaddr,
- 		TYPE_MSG);
--	if (rc == 0 && wait_for_device_to_become_ready(*c, lunaddr) == 0)
-+	if (rc == 0 && wait_for_device_to_become_ready(c, lunaddr) == 0)
- 		return SUCCESS;
- 	printk(KERN_WARNING "cciss%d: resetting device failed.\n", ctlr);
- 	return FAILED;
-@@ -1683,14 +1682,14 @@ static int  cciss_eh_abort_handler(struct scsi_cmnd *scsicmd)
- 	int rc;
- 	CommandList_struct *cmd_to_abort;
- 	unsigned char lunaddr[8];
--	ctlr_info_t **c;
-+	ctlr_info_t *c;
- 	int ctlr;
- 
- 	/* find the controller to which the command to be aborted was sent */
--	c = (ctlr_info_t **) &scsicmd->device->host->hostdata[0];	
-+	c = (ctlr_info_t *) scsicmd->device->host->hostdata[0];
- 	if (c == NULL) /* paranoia */
- 		return FAILED;
--	ctlr = (*c)->ctlr;
-+	ctlr = c->ctlr;
- 	printk(KERN_WARNING "cciss%d: aborting tardy SCSI cmd\n", ctlr);
- 
- 	/* find the command to be aborted */
+ 	/* track how many SG entries we are using */
+ 	if (seg > h->maxSG)
+
