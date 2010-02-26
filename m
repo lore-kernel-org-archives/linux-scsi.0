@@ -1,14 +1,14 @@
 From: Krishna Gudipati <kgudipat@brocade.com>
-Subject: [PATCH 14/32] bfa: Fix to copy fpma MAC when requested by user space application.
-Date: Thu, 25 Feb 2010 17:48:45 -0800
-Message-ID: <1267148925-22730-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Subject: [PATCH 17/32] bfa: Added firmware save clear feature for BFA driver.
+Date: Thu, 25 Feb 2010 17:48:56 -0800
+Message-ID: <1267148936-22861-1-git-send-email-kgudipat@blc-10-2.brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:27240 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:27243 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934920Ab0BZBv5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:51:57 -0500
+	with ESMTP id S934917Ab0BZBwE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Feb 2010 20:52:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -16,64 +16,86 @@ Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocad
 
 Change details:
 
-	- Copy fpma MAC when requested by user space application.
-	- Added FPMA mac address to the lport attributes structure.
+	- Added new fsave clear feature for the BFA driver.
 ---
- drivers/scsi/bfa/bfa_fcs_lport.c   |    7 ++++++-
- drivers/scsi/bfa/bfa_lps.c         |    8 ++++++++
- drivers/scsi/bfa/include/bfa_svc.h |    1 +
- 3 files changed, 15 insertions(+), 1 deletions(-)
+ drivers/scsi/bfa/bfa_core.c    |    9 +++++++++
+ drivers/scsi/bfa/bfa_ioc.c     |   10 +++++++++-
+ drivers/scsi/bfa/bfa_ioc.h     |    1 +
+ drivers/scsi/bfa/include/bfa.h |    1 +
+ 4 files changed, 20 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 960ae1a..7bb182d 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -936,8 +936,13 @@ bfa_fcs_port_get_attr(struct bfa_fcs_port_s *port,
- 		       bfa_fcs_port_get_fabric_ipaddr(port),
- 		       BFA_FCS_FABRIC_IPADDR_SZ);
- 
--		if (port->vport != NULL)
-+		if (port->vport != NULL) {
- 			port_attr->port_type = BFA_PPORT_TYPE_VPORT;
-+			port_attr->fpma_mac =
-+				bfa_lps_get_lp_mac(port->vport->lps);
-+		} else
-+			port_attr->fpma_mac =
-+				bfa_lps_get_lp_mac(port->fabric->lps);
- 
- 	} else {
- 		port_attr->port_type = BFA_PPORT_TYPE_UNKNOWN;
-diff --git a/drivers/scsi/bfa/bfa_lps.c b/drivers/scsi/bfa/bfa_lps.c
-index 4c98bda..38d0c8d 100644
---- a/drivers/scsi/bfa/bfa_lps.c
-+++ b/drivers/scsi/bfa/bfa_lps.c
-@@ -837,6 +837,14 @@ bfa_lps_get_lsrjt_expl(struct bfa_lps_s *lps)
- 	return lps->lsrjt_expl;
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 72e3f2f..0c08e18 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -385,6 +385,15 @@ bfa_debug_fwsave(struct bfa_s *bfa, void *trcdata, int *trclen)
  }
  
-+/**
-+ * Return fpma/spma MAC for lport
+ /**
++ * Clear the saved firmware trace information of an IOC.
 + */
-+struct mac_s
-+bfa_lps_get_lp_mac(struct bfa_lps_s *lps)
++void
++bfa_debug_fwsave_clear(struct bfa_s *bfa)
 +{
-+	return lps->lp_mac;
++	bfa_ioc_debug_fwsave_clear(&bfa->ioc);
 +}
++
++/**
+  * 		Fetch firmware trace data.
+  *
+  * @param[in]		bfa			BFA instance
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 8a6361c..0019ff7 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -1488,7 +1488,6 @@ return (auto_recover) ? BFA_DBG_FWTRC_LEN : 0;
+ void
+ bfa_ioc_debug_memclaim(struct bfa_ioc_s *ioc, void *dbg_fwsave)
+ {
+-	bfa_assert(ioc->auto_recover);
+ 	ioc->dbg_fwsave = dbg_fwsave;
+ 	ioc->dbg_fwsave_len = bfa_ioc_debug_trcsz(ioc->auto_recover);
+ }
+@@ -1925,6 +1924,15 @@ bfa_ioc_debug_fwsave(struct bfa_ioc_s *ioc, void *trcdata, int *trclen)
+ }
  
  /**
-  * LPS firmware message class handler.
-diff --git a/drivers/scsi/bfa/include/bfa_svc.h b/drivers/scsi/bfa/include/bfa_svc.h
-index 0d7ed4d..71ffb75 100644
---- a/drivers/scsi/bfa/include/bfa_svc.h
-+++ b/drivers/scsi/bfa/include/bfa_svc.h
-@@ -316,6 +316,7 @@ wwn_t bfa_lps_get_peer_pwwn(struct bfa_lps_s *lps);
- wwn_t bfa_lps_get_peer_nwwn(struct bfa_lps_s *lps);
- u8 bfa_lps_get_lsrjt_rsn(struct bfa_lps_s *lps);
- u8 bfa_lps_get_lsrjt_expl(struct bfa_lps_s *lps);
-+mac_t bfa_lps_get_lp_mac(struct bfa_lps_s *lps);
- void bfa_cb_lps_flogi_comp(void *bfad, void *uarg, bfa_status_t status);
- void bfa_cb_lps_flogo_comp(void *bfad, void *uarg);
- void bfa_cb_lps_fdisc_comp(void *bfad, void *uarg, bfa_status_t status);
++ * Clear saved firmware trace
++ */
++void
++bfa_ioc_debug_fwsave_clear(struct bfa_ioc_s *ioc)
++{
++	ioc->dbg_fwsave_once = BFA_TRUE;
++}
++
++/**
+  * Retrieve saved firmware trace from a prior IOC failure.
+  */
+ bfa_status_t
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 853cc31..4b73efa 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -270,6 +270,7 @@ int bfa_ioc_debug_trcsz(bfa_boolean_t auto_recover);
+ void bfa_ioc_debug_memclaim(struct bfa_ioc_s *ioc, void *dbg_fwsave);
+ bfa_status_t bfa_ioc_debug_fwsave(struct bfa_ioc_s *ioc, void *trcdata,
+ 		int *trclen);
++void bfa_ioc_debug_fwsave_clear(struct bfa_ioc_s *ioc);
+ bfa_status_t bfa_ioc_debug_fwtrc(struct bfa_ioc_s *ioc, void *trcdata,
+ 				 int *trclen);
+ u32 bfa_ioc_smem_pgnum(struct bfa_ioc_s *ioc, u32 fmaddr);
+diff --git a/drivers/scsi/bfa/include/bfa.h b/drivers/scsi/bfa/include/bfa.h
+index 942ae64..17654ca 100644
+--- a/drivers/scsi/bfa/include/bfa.h
++++ b/drivers/scsi/bfa/include/bfa.h
+@@ -172,6 +172,7 @@ void bfa_timer_tick(struct bfa_s *bfa);
+  */
+ bfa_status_t bfa_debug_fwtrc(struct bfa_s *bfa, void *trcdata, int *trclen);
+ bfa_status_t bfa_debug_fwsave(struct bfa_s *bfa, void *trcdata, int *trclen);
++void bfa_debug_fwsave_clear(struct bfa_s *bfa);
+ 
+ #include "bfa_priv.h"
+ 
 -- 
 1.6.5.3
 
