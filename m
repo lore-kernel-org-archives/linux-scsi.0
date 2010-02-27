@@ -1,168 +1,78 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 3/9] cciss: factor out scatter gather chain block allocation
-	and freeing
-Date: Fri, 26 Feb 2010 16:01:22 -0600
-Message-ID: <20100226220122.11979.60399.stgit@beardog.cce.hp.com>
-References: <20100226220023.11979.4999.stgit@beardog.cce.hp.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCH] atp870u: Split long udelay()
+Date: Sat, 27 Feb 2010 21:17:57 +0000
+Message-ID: <1267305477.16186.99.camel@localhost>
+References: <1266544619.10567.715.camel@localhost>
+	 <1266593299.2822.7.camel@mulgrave.site>
+	 <20100219164457.GX21665@decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100226220023.11979.4999.stgit@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk, akpm@linux-foundation.org, james.bottomley@suse.de
-Cc: linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, linux-scsi@vger.kernel.org, brace@beardog.cce.hp.com
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-/MH5oPK6t/6gLJO32lqQ"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:45756 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935475Ab0B0VSE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Feb 2010 16:18:04 -0500
+In-Reply-To: <20100219164457.GX21665@decadent.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-cciss: factor out scatter gather chain block allocation and freeing
-Rationale is that I want to use this code from the scsi half of the
-driver.
+--=-/MH5oPK6t/6gLJO32lqQ
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/block/cciss.c |  108 ++++++++++++++++++++++++++-----------------------
- 1 files changed, 58 insertions(+), 50 deletions(-)
+On Fri, 2010-02-19 at 16:44 +0000, Ben Hutchings wrote:
+> On Fri, Feb 19, 2010 at 09:28:19AM -0600, James Bottomley wrote:
+> > On Fri, 2010-02-19 at 01:56 +0000, Ben Hutchings wrote:
+> > > udelay() is supposed to be limited to 1 ms, and will generate a
+> > > __bad_udelay() on ARM for constant arguments > 2000.  Split
+> > > udelay(0x800) into mdelay(2); udelay(48).  (I suspect that msleep(3)
+> > > would work but I do not know how critical the timing is here.)
+> >=20
+> > So no to this one.  Either ARM is right and udelay > 2000 is wrong
+> > (which actually sounds correct given how long this will eat CPU for) so
+> > the driver needs fixing, or ARM is wrong and the warning needs fixing.
+> >=20
+> > Splitting the delay to defeat the warning while retaining the behaviour
+> > it was trying to warn about is the wrong thing to do.
+> =20
+> AIUI the restrictions on udelay() are there because the delay is likely
+> to be inaccurate for large arguments.  If it was actually wrong to wait
+> for over a millisecond then mdelay() would not exist.
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index cd8c7c2..eddb916 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -257,6 +257,59 @@ static inline void removeQ(CommandList_struct *c)
- 	hlist_del_init(&c->list);
- }
- 
-+static void cciss_free_sg_chain_blocks(struct Cmd_sg_list **cmd_sg_list,
-+	int nr_cmds)
-+{
-+	int i;
-+
-+	if (!cmd_sg_list)
-+		return;
-+	for (i = 0; i < nr_cmds; i++) {
-+		if (cmd_sg_list[i]) {
-+			kfree(cmd_sg_list[i]->sgchain);
-+			kfree(cmd_sg_list[i]);
-+			cmd_sg_list[i] = NULL;
-+		}
-+	}
-+	kfree(cmd_sg_list);
-+}
-+
-+static struct Cmd_sg_list **cciss_allocate_sg_chain_blocks(ctlr_info_t *h,
-+	int chainsize, int nr_cmds)
-+{
-+	int j;
-+	struct Cmd_sg_list **cmd_sg_list;
-+
-+	if (chainsize <= 0)
-+		return NULL;
-+
-+	cmd_sg_list = kmalloc(sizeof(*cmd_sg_list) * nr_cmds, GFP_KERNEL);
-+	if (!cmd_sg_list)
-+		return NULL;
-+
-+	/* Build up chain blocks for each command */
-+	for (j = 0; j < nr_cmds; j++) {
-+		cmd_sg_list[j] = kmalloc(sizeof(*cmd_sg_list[j]), GFP_KERNEL);
-+		if (!cmd_sg_list[j]) {
-+			dev_err(&h->pdev->dev, "Cannot get memory "
-+				"for chain block.\n");
-+			goto clean;
-+		}
-+		/* Need a block of chainsized s/g elements. */
-+		cmd_sg_list[j]->sgchain = kmalloc((chainsize *
-+			sizeof(SGDescriptor_struct)), GFP_KERNEL);
-+		if (!cmd_sg_list[j]->sgchain) {
-+			dev_err(&h->pdev->dev, "Cannot get memory "
-+				"for s/g chains.\n");
-+			goto clean;
-+		}
-+	}
-+	return cmd_sg_list;
-+clean:
-+	cciss_free_sg_chain_blocks(cmd_sg_list, nr_cmds);
-+	return NULL;
-+}
-+
- #include "cciss_scsi.c"		/* For SCSI tape support */
- 
- static const char *raid_label[] = { "0", "4", "1(1+0)", "5", "5+1", "ADG",
-@@ -4238,37 +4291,10 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 			goto clean4;
- 		}
- 	}
--	hba[i]->cmd_sg_list = kmalloc(sizeof(struct Cmd_sg_list *) *
--						hba[i]->nr_cmds,
--						GFP_KERNEL);
--	if (!hba[i]->cmd_sg_list) {
--		printk(KERN_ERR "cciss%d: Cannot get memory for "
--			"s/g chaining.\n", i);
-+	hba[i]->cmd_sg_list = cciss_allocate_sg_chain_blocks(hba[i],
-+		hba[i]->chainsize, hba[i]->nr_cmds);
-+	if (!hba[i]->cmd_sg_list && hba[i]->chainsize > 0)
- 		goto clean4;
--	}
--	/* Build up chain blocks for each command */
--	if (hba[i]->chainsize > 0) {
--		for (j = 0; j < hba[i]->nr_cmds; j++) {
--			hba[i]->cmd_sg_list[j] =
--					kmalloc(sizeof(struct Cmd_sg_list),
--							GFP_KERNEL);
--			if (!hba[i]->cmd_sg_list[j]) {
--				printk(KERN_ERR "cciss%d: Cannot get memory "
--					"for chain block.\n", i);
--				goto clean4;
--			}
--			/* Need a block of chainsized s/g elements. */
--			hba[i]->cmd_sg_list[j]->sgchain =
--					kmalloc((hba[i]->chainsize *
--						sizeof(SGDescriptor_struct)),
--						GFP_KERNEL);
--			if (!hba[i]->cmd_sg_list[j]->sgchain) {
--				printk(KERN_ERR "cciss%d: Cannot get memory "
--					"for s/g chains\n", i);
--				goto clean4;
--			}
--		}
--	}
- 
- 	spin_lock_init(&hba[i]->lock);
- 
-@@ -4327,16 +4353,7 @@ clean4:
- 	for (k = 0; k < hba[i]->nr_cmds; k++)
- 		kfree(hba[i]->scatter_list[k]);
- 	kfree(hba[i]->scatter_list);
--	/* Only free up extra s/g lists if controller supports them */
--	if (hba[i]->chainsize > 0) {
--		for (j = 0; j < hba[i]->nr_cmds; j++) {
--			if (hba[i]->cmd_sg_list[j]) {
--				kfree(hba[i]->cmd_sg_list[j]->sgchain);
--				kfree(hba[i]->cmd_sg_list[j]);
--			}
--		}
--		kfree(hba[i]->cmd_sg_list);
--	}
-+	cciss_free_sg_chain_blocks(hba[i]->cmd_sg_list, hba[i]->nr_cmds);
- 	if (hba[i]->cmd_pool)
- 		pci_free_consistent(hba[i]->pdev,
- 				    hba[i]->nr_cmds * sizeof(CommandList_struct),
-@@ -4454,16 +4471,7 @@ static void __devexit cciss_remove_one(struct pci_dev *pdev)
- 	for (j = 0; j < hba[i]->nr_cmds; j++)
- 		kfree(hba[i]->scatter_list[j]);
- 	kfree(hba[i]->scatter_list);
--	/* Only free up extra s/g lists if controller supports them */
--	if (hba[i]->chainsize > 0) {
--		for (j = 0; j < hba[i]->nr_cmds; j++) {
--			if (hba[i]->cmd_sg_list[j]) {
--				kfree(hba[i]->cmd_sg_list[j]->sgchain);
--				kfree(hba[i]->cmd_sg_list[j]);
--			}
--		}
--		kfree(hba[i]->cmd_sg_list);
--	}
-+	cciss_free_sg_chain_blocks(hba[i]->cmd_sg_list, hba[i]->nr_cmds);
- 	/*
- 	 * Deliberately omit pci_disable_device(): it does something nasty to
- 	 * Smart Array controllers that pci_enable_device does not undo
+Please could you respond to the above?
+
+Ben.
+
+--=20
+Ben Hutchings
+Horngren's Observation:
+                   Among economists, the real world is often a special case=
+.
+
+--=-/MH5oPK6t/6gLJO32lqQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUAS4mMBOe/yOyVhhEJAQIO+g/+LW51K42sai+I1GiPwJOMjPvIVmYcwXch
+B439D4H2ZNX/H2UeZ9xX3ioN1Kqh4Gh5XakThfcY9oEJw92mlDf2y93DtbfO8zk5
+ubKneXvAWSZGpFD4xBW2j9oe4zJWR5GwMTL6gZPOFT5qoitYXqvVBjpslE1YiFp9
+c0hmzklvmcLzvh9XEuVbekPjZ3hem6uiO5r3/c+JyZWE4laPgf5qDhhpZ89Rcaop
+Cc6T8VzKn6YLuGQ1ruQrneA00uLSsJOm0Sactg8VPik2g8637Zxiz7O7mT8TWl8x
+BS7FVAt7Q2V5kVgp9UDuaK9dizBLCc59cqUlbKmuROQXLMyyKo2Ht5LjXBUkoZHr
+6ftLDwovBtqw9QLIUtlZm3G7J7qDDy/9EWUF0mg+vBlvE7oeuzD6s8w1EA28pbQH
+qo84uBlj3aRESeFOYYPiUs+BRvsXnLvuVgCVyO6CYuVcQ4A2dnpGRhKQIqXkeyGy
+2fMeW1x8OK501jbSoSqXlVHFwQeuXEVTHFOwnkhAFzfdXNuQKNAlNWQilipFfWht
+XAiGINSxSNDtkW2qpYcmGOOjQu7fBIc+gz7BSd2OfVvfRhsDezwH0bUavRQ9S/QM
+ZwTC5ifi/EnfcZHMHff3iYa9F012ZI3e6ZTy2WFr5n6XZWQeEnhks+qTiSXQCIl4
+C51/UeFfNjw=
+=jRmg
+-----END PGP SIGNATURE-----
+
+--=-/MH5oPK6t/6gLJO32lqQ--
