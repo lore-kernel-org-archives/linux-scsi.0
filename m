@@ -1,67 +1,50 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Internal controllers for md-raid
-Date: Tue, 02 Mar 2010 19:11:29 +0100
-Message-ID: <4B8D54D1.3010000@shiftmail.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] qla4x: fix ql4_mbx tcp_source_port_num
+Date: Tue, 2 Mar 2010 14:41:13 -0800
+Message-ID: <20100302144113.28c15ee5.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: linux-raid <linux-raid@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from acsinet12.oracle.com ([141.146.126.234]:38487 "EHLO
+	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969Ab0CBWm6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2010 17:42:58 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>, james.bottomley@suse.de
+Cc: David C Somayajulu <david.somayajulu@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Hi all,
-excuse me if I resurrect this topic again.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-We need to buy some controllers for internal RAID (=same chassis as the 
-mainboard) with lots of ports: at least 16.
+Fix sparse warning, which indicates a precedence problem and the
+data value always being 0:
 
-Would be for MD RAID use (no HW raid).
+drivers/scsi/qla4xxx/ql4_mbx.c:470:66: warning: right shift by bigger than source value
 
-We have WD RE3 SATA drives, so SAS is not necessary. BTW the differences 
-between SATA and SAS are not yet that clear to me especially for 
-internal arrays i.e. no expanders.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: David C Somayajulu <david.somayajulu@qlogic.com>
+Cc: Karen Higgins <karen.higgins@qlogic.com>
+Cc: Ravi Anand <ravi.anand@qlogic.com>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
 
-The driver should be in the mainstream kernel otherwise upgrading or 
-using a new kernel is a pain. This seems to exclude all new LSI 
-controllers, which have been suggested on this linux-raid ML: by 
-grepping the 2.6.33 sources it seems I can't find drivers for LSI 84016E 
-16internal ports, nor for the LSI SAS 9200-8e which was suggested in 
-this ML.
+Sorry if you already received this patch; I thought that I had
+already sent it, but I can't find it anywhere.
 
-@ people using LSI SAS cards: how can you use the latest kernel? Latest 
-driver I see at the website is for RHEL5 and SLES10 so would be 2.6.16. 
-You are forced to use such an old kernel?
+And how about a MAINTAINERS entry for qla4xxx, please?
 
-We also need hot-swap, or "warm" swap whatever... I mean it's OK to type 
-commands at the console but we mustn't need to reboot the machine to see 
-new drives.
+ drivers/scsi/qla4xxx/ql4_mbx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looking around I have found the following controllers:
-
-    Areca ARC-1680ix-24 - (24int + 4 ext) - $1130
-    Areca ARC-1300ix-16  (16int + 4ext) - $330
-    Areca ARC-1280ML (24int) - (probably surpassed by the 1680ix) - $1100
-    Adaptec 51645 - (16int + 4ext) - $800
-    Intel SRCSASPH16I  (16int) - $630
-    3ware 9650SE  -16ML or -24M8: $850 or $1000
-
-3wares 9650SE we already have them: they are stable but it seems to me 
-that they are slow, especially for random I/O.
-
-The Areca ARC-1300ix-16 is very cheap but I read of big troubles with 
-that card or the  using the same Marvell chipset. I think there is a 
-discussion still going in linux-scsi. I'll try to follow there.
-
-For the Intel SRCSASPH16I card I don't see the driver mentioned 
-explicitly in the kernel sources. The card uses two LSI SAS1068 
-controllers for which I do see the driver in the kernel souces but I 
-don't know if this is enough to support the Intel card at least as an 
-HBA (no HW RAID). Linux-scsi people do you know?
-
-Regarding the Areca Adaptec cards (except the 1300ix), anybody having 
-any experience with these brands can comment on stability and speed on 
-linux MD raid?
-
-Thanks for your suggestions
-Asdo
+--- linux-2.6.33-git7.orig/drivers/scsi/qla4xxx/ql4_mbx.c
++++ linux-2.6.33-git7/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -467,7 +467,7 @@ int qla4xxx_get_fwddb_entry(struct scsi_
+ 	if (conn_err_detail)
+ 		*conn_err_detail = mbox_sts[5];
+ 	if (tcp_source_port_num)
+-		*tcp_source_port_num = (uint16_t) mbox_sts[6] >> 16;
++		*tcp_source_port_num = (uint16_t) (mbox_sts[6] >> 16);
+ 	if (connection_id)
+ 		*connection_id = (uint16_t) mbox_sts[6] & 0x00FF;
+ 	status = QLA_SUCCESS;
