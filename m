@@ -1,78 +1,64 @@
-From: Alexander Strakh <strakh@ispras.ru>
-Subject: question about del_gendisk function use in drivers/scsi/sr.c
-Date: Mon, 1 Mar 2010 18:27:41 +0000
-Message-ID: <201003011827.41818.strakh@ispras.ru>
+From: "Hugh Daschbach" <hdasch@broadcom.com>
+Subject: [PATCH] Don't change direction flags in struct request.
+Date: Tue, 2 Mar 2010 00:04:51 +0000 (UTC)
+Message-ID: <1268976690-3386-2-git-send-email-hdasch@broadcom.com>
+References: <1268976690-3386-1-git-send-email-hdasch@broadcom.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.ispras.ru ([83.149.198.201]:36124 "EHLO smtp.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750748Ab0CAP2I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Mar 2010 10:28:08 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 18 Mar 2010 22:31:30 -0700
+In-Reply-To: <1268976690-3386-1-git-send-email-hdasch@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, Eddie Williams <Eddie.Williams@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hugh Daschbach <hdasch@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Drew Eckhardt <drew@colorado.edu>, Thomas Quinot <thomas@melchior.cuivre.fdn.fr>, Gerd Knorr <kraxel@cs.tu-berlin.de>, Jens Axboe <axboe@suse.de>, Richard Gooch <rgooch@atnf.csiro.au>
-Cc: Eric Youngdale <ericy@andante.org>
 
-        KERNEL_VERSION: 2.6.33
-        SUBJECT: question about del_gendisk function use
-        SUBSCRIBE:
-        In driver drivers/scsi/sr.c in function sr_probe:
+The EMC multipath device handler should not change the I/O direction
+flags of its trespass command request.
 
-1. In line 588 we call  alloc_disk(1);
-2. If in line 593 function find_first_zero_bit returns SR_DISKS then we goto 
-label fail_put (line 597).
-3. In line 652 we call put_disk. But in some other drivers del_gendisk is 
-called before put_disk. Why didn't we call del_gendisk before put_disk here? 
-Is it an error?
+The CFQ elevator may BUG if the direction flags on an I/O request are
+changed after allocation.  cfq_set_request() and cfq_put_request()
+count READ and WRITE requests separately.  Changing the I/O request
+direction after blk_get_request() allocates the request throws off
+this CFQ accounting.
 
-570 static int sr_probe(struct device *dev)
-571 {
-572         struct scsi_device *sdev = to_scsi_device(dev);
-573         struct gendisk *disk;
-574         struct scsi_cd *cd;
-575         int minor, error;
-576
-577         error = -ENODEV;
-578         if (sdev->type != TYPE_ROM && sdev->type != TYPE_WORM)
-579                 goto fail;
-580
-581         error = -ENOMEM;
-582         cd = kzalloc(sizeof(*cd), GFP_KERNEL);
-583         if (!cd)
-584                 goto fail;
-585
-586         kref_init(&cd->kref);
-587
-588         disk = alloc_disk(1);
-589         if (!disk)
-590                 goto fail_free;
-591
-592         spin_lock(&sr_index_lock);
-593         minor = find_first_zero_bit(sr_index_bits, SR_DISKS);
-594         if (minor == SR_DISKS) {
-595                 spin_unlock(&sr_index_lock);
-596                 error = -EBUSY;
-597                 goto fail_put;
-598         }
+Signed-off-by: Hugh Daschbach <hdasch@broadcom.com>
+---
+ drivers/scsi/device_handler/scsi_dh_emc.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-...
-641                 goto fail_put;
-642
-643         dev_set_drvdata(dev, cd);
-644         disk->flags |= GENHD_FL_REMOVABLE;
-645         add_disk(disk);
-646
-647         sdev_printk(KERN_DEBUG, sdev,
-648                     "Attached scsi CD-ROM %s\n", cd->cdi.name);
-649         return 0;
-650
-651 fail_put:
-652         put_disk(disk);
-653 fail_free:
-654         kfree(cd);
-655 fail:
-656         return error;
-...
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index 6196675..3709342 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -269,10 +269,12 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
+ 				unsigned char *buffer)
+ {
+ 	struct request *rq;
++	int mode = READ;
+ 	int len = 0;
+ 
+-	rq = blk_get_request(sdev->request_queue,
+-			(cmd == MODE_SELECT) ? WRITE : READ, GFP_NOIO);
++	if (cmd == MODE_SELECT || cmd == MODE_SELECT_10)
++		mode = WRITE;
++	rq = blk_get_request(sdev->request_queue, mode, GFP_NOIO);
+ 	if (!rq) {
+ 		sdev_printk(KERN_INFO, sdev, "get_req: blk_get_request failed");
+ 		return NULL;
+@@ -284,12 +286,10 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
+ 	switch (cmd) {
+ 	case MODE_SELECT:
+ 		len = sizeof(short_trespass);
+-		rq->cmd_flags |= REQ_RW;
+ 		rq->cmd[1] = 0x10;
+ 		break;
+ 	case MODE_SELECT_10:
+ 		len = sizeof(long_trespass);
+-		rq->cmd_flags |= REQ_RW;
+ 		rq->cmd[1] = 0x10;
+ 		break;
+ 	case INQUIRY:
+-- 
+1.6.6.196.g1f735
