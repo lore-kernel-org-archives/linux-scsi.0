@@ -1,18 +1,22 @@
 From: "Hugh Daschbach" <hdasch@broadcom.com>
 Subject: [PATCH] Don't change direction flags in struct request.
 Date: Tue, 2 Mar 2010 00:04:51 +0000 (UTC)
-Message-ID: <1268976690-3386-2-git-send-email-hdasch@broadcom.com>
+Message-ID: <1268976690-3386-2-git-send-email-hdasch__4181.39024773172$1267488291$gmane$org@broadcom.com>
 References: <1268976690-3386-1-git-send-email-hdasch@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:2336 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752879Ab0CBAEd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Mar 2010 19:04:33 -0500
 Date: Thu, 18 Mar 2010 22:31:30 -0700
 In-Reply-To: <1268976690-3386-1-git-send-email-hdasch@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, Eddie Williams <Eddie.Williams@steeleye.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hugh Daschbach <hdasch@broadcom.com>
-List-Id: linux-scsi@vger.kernel.org
 
 The EMC multipath device handler should not change the I/O direction
 flags of its trespass command request.
@@ -62,3 +66,5 @@ index 6196675..3709342 100644
  	case INQUIRY:
 -- 
 1.6.6.196.g1f735
+
+
