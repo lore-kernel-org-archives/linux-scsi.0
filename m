@@ -1,50 +1,72 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] qla4x: fix ql4_mbx tcp_source_port_num
-Date: Tue, 2 Mar 2010 14:41:13 -0800
-Message-ID: <20100302144113.28c15ee5.randy.dunlap@oracle.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [origin tree build failure] Re: [PATCH -next] scsi: RAID_ATTRS
+ depends on SCSI
+Date: Wed, 3 Mar 2010 10:30:53 +1100
+Message-ID: <20100303103053.7be411ba.sfr@canb.auug.org.au>
+References: <20100219174711.5e7cc7be.sfr@canb.auug.org.au>
+	<4B7EC8AE.60200@oracle.com>
+	<20100221194636.ef885e5a.rdunlap@xenotime.net>
+	<20100302112603.GA27686@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:38487 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969Ab0CBWm6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2010 17:42:58 -0500
+Received: from chilli.pcug.org.au ([203.10.76.44]:36415 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754185Ab0CBXbA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Mar 2010 18:31:00 -0500
+In-Reply-To: <20100302112603.GA27686@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>, james.bottomley@suse.de
-Cc: David C Somayajulu <david.somayajulu@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Linus Torvalds <torvalds@linux-foundation.org>, linux-next@vger.kernel.org, akpm <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+--Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Fix sparse warning, which indicates a precedence problem and the
-data value always being 0:
+Hi Ingo,
 
-drivers/scsi/qla4xxx/ql4_mbx.c:470:66: warning: right shift by bigger than source value
+On Tue, 2 Mar 2010 12:26:03 +0100 Ingo Molnar <mingo@elte.hu> wrote:
+>
+> * Randy Dunlap <rdunlap@xenotime.net> wrote:
+>=20
+> > From: Randy Dunlap <randy.dunlap@oracle.com>
+> >=20
+> > raid_class uses scsi interfaces, so it should depend on SCSI.
+> > Otherwise build errors occur when RAID_ATTRS=3Dy and SCSI=3Dm:
+> >=20
+> > ERROR: "raid_class_release" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
+> > ERROR: "raid_class_attach" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
+>=20
+> FYI, this build bug has been pushed upstream via the SCSI tree, without=20
+> Randy's fix.
+>=20
+> I have applied Randy's drivers/scsi/Kconfig fix to tip:out-of-tree and th=
+at=20
+> solves the build bug here.
+>=20
+>  Tested-by: Ingo Molnar <mingo@elte.hu>
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: David C Somayajulu <david.somayajulu@qlogic.com>
-Cc: Karen Higgins <karen.higgins@qlogic.com>
-Cc: Ravi Anand <ravi.anand@qlogic.com>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
+Thanks for the heads up Ingo, I have added that to my fixes tree as well
+so it will be in linux-next today.
 
-Sorry if you already received this patch; I thought that I had
-already sent it, but I can't find it anywhere.
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-And how about a MAINTAINERS entry for qla4xxx, please?
+--Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS
+Content-Type: application/pgp-signature
 
- drivers/scsi/qla4xxx/ql4_mbx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
---- linux-2.6.33-git7.orig/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ linux-2.6.33-git7/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -467,7 +467,7 @@ int qla4xxx_get_fwddb_entry(struct scsi_
- 	if (conn_err_detail)
- 		*conn_err_detail = mbox_sts[5];
- 	if (tcp_source_port_num)
--		*tcp_source_port_num = (uint16_t) mbox_sts[6] >> 16;
-+		*tcp_source_port_num = (uint16_t) (mbox_sts[6] >> 16);
- 	if (connection_id)
- 		*connection_id = (uint16_t) mbox_sts[6] & 0x00FF;
- 	status = QLA_SUCCESS;
+iEYEARECAAYFAkuNn60ACgkQjjKRsyhoI8wlBwCfXSD3mJQSd9hYEgJ3wSq82zdG
+W6AAnR5ShF5g0nBKHmaS0/MwetrInYkW
+=39pg
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS--
