@@ -1,37 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: bug report: sd:  off by one in sd_read_block_limits()
-Date: Tue, 2 Mar 2010 06:31:24 -0700
-Message-ID: <20100302133124.GF6567@parisc-linux.org>
-References: <20100302082135.GA6218@bicker> <yq1tysy27ft.fsf@sermon.lab.mkp.net> <yq1k4tu2716.fsf@sermon.lab.mkp.net>
+Date: Tue, 02 Mar 2010 08:36:35 -0500
+Message-ID: <yq1fx4i26cc.fsf@sermon.lab.mkp.net>
+References: <20100302082135.GA6218@bicker>
+	<yq1tysy27ft.fsf@sermon.lab.mkp.net>
+	<yq1k4tu2716.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:58816 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753056Ab0CBNbZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2010 08:31:25 -0500
-Content-Disposition: inline
-In-Reply-To: <yq1k4tu2716.fsf@sermon.lab.mkp.net>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:64740 "EHLO
+	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753196Ab0CBNit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2010 08:38:49 -0500
+In-Reply-To: <yq1k4tu2716.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
+	message of "Tue, 02 Mar 2010 08:21:41 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Dan Carpenter <error27@gmail.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, Dan Carpenter <error27@gmail.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Tue, Mar 02, 2010 at 08:21:41AM -0500, Martin K. Petersen wrote:
-> >>>>> "Martin" == Martin K Petersen <martin.petersen@oracle.com> writes:
-> 
-> Actually, looking closer at the VPD mechanism in e3deec09 we need to fit
-> the page header as well...
 
-These aren't the only two bugs introduced either.  If a device has more VPD
-pages than the length of the buffer that the caller has allocated, we will
-now incorrectly report that the device doesn't support that page.
+James,
 
-James, was any problem actually observed that led to e3deec09?  I really
-think you should revert it.
+While I agree the original VPD code's double kmalloc() was a bit of a
+wart at least it did the right thing because it allocated a suitably
+sized buffer for page 0.
+
+My concern with the interface you introduced in e3deec09 is that for
+devices that support a large number of VPD pages we won't be able to fit
+the page list in the allocated buffer.  And callers are likely to pick a
+buffer size that makes sense for the VPD page they are interested in.
+It's not a big deal in the block limits/block device characteristics
+case because they are big enough.
+
+But at the very minimum that interface should come with a big fat
+warning in the comment section that describes that the page list must
+also be able to fit.
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Martin K. Petersen	Oracle Linux Engineering
