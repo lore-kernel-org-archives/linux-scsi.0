@@ -1,123 +1,98 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH -next] scsi: RAID_ATTRS depends on SCSI
-Date: Wed, 03 Mar 2010 08:56:36 -0800
-Message-ID: <4B8E94C4.8070106@xenotime.net>
-References: <20100219174711.5e7cc7be.sfr@canb.auug.org.au>	 <4B7EC8AE.60200@oracle.com>  <20100221194636.ef885e5a.rdunlap@xenotime.net> <1267594617.4383.24.camel@mulgrave.site>
+From: "Hugh Daschbach" <hdasch@broadcom.com>
+Subject: RE: System reboot hangs due to race against devices_kset->list
+ triggered by SCSI FC workqueue
+Date: Wed, 3 Mar 2010 11:16:57 -0800
+Message-ID: <233671224A0FED4688218FFDBED26E1A517AC38AB8@IRVEXCHCCR01.corp.ad.broadcom.com>
+References: <233671224A0FED4688218FFDBED26E1A517AC38638@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <20100303045433.GA27847@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1267594617.4383.24.camel@mulgrave.site>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-next@vger.kernel.org, akpm <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:1466 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754736Ab0CCTRR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 14:17:17 -0500
+In-Reply-To: <20100303045433.GA27847@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg KH <gregkh@suse.de>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Alan Stern <stern@rowland.harvard.edu>, Jan Blunck <jblunck@suse.de>, David Vrabel <david.vrabel@csr.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, james Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>
 
-On 03/02/10 21:36, James Bottomley wrote:
-> On Sun, 2010-02-21 at 19:46 -0800, Randy Dunlap wrote:
->> From: Randy Dunlap <randy.dunlap@oracle.com>
->>
->> raid_class uses scsi interfaces, so it should depend on SCSI.
->> Otherwise build errors occur when RAID_ATTRS=y and SCSI=m:
->>
->> ERROR: "raid_class_release" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
->> ERROR: "raid_class_attach" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
->>
->> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
->> ---
->>  drivers/scsi/Kconfig |   14 +++++++-------
->>  1 file changed, 7 insertions(+), 7 deletions(-)
->>
->> --- linux-next-20100219.orig/drivers/scsi/Kconfig
->> +++ linux-next-20100219/drivers/scsi/Kconfig
->> @@ -1,12 +1,5 @@
->>  menu "SCSI device support"
->>  
->> -config RAID_ATTRS
->> -	tristate "RAID Transport Class"
->> -	default n
->> -	depends on BLOCK
->> -	---help---
->> -	  Provides RAID
->> -
->>  config SCSI
->>  	tristate "SCSI device support"
->>  	depends on BLOCK
->> @@ -34,6 +27,13 @@ config SCSI_DMA
->>  	bool
->>  	default n
->>  
->> +config RAID_ATTRS
->> +	tristate "RAID Transport Class"
->> +	default n
->> +	depends on BLOCK && SCSI
->> +	---help---
->> +	  Provides RAID
->> +
-> 
-> This will fix the error, but it's not quite the right thing to do.  the
-> RAID class should be independent of SCSI, but it wants to do a SCSI
-> check if SCSI is compiled in the matching routines.  This gives us a
-> nasty dependency, the condition being that the raid class must be m if
-> SCSI is m.
-> 
-> I think this patch does the right thing.  Can someone test it on the
-> config checker?  Or I can just put it in linux-next and have Stephen's
-> builds do it.
++ James Bottomley
++ James Smart
 
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
+As the discussion tilts toward SCSI device shutdown.
 
-Thanks for the patch.
+Greg KH [mailto:gregkh@suse.de] writes:
 
-> Thanks,
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 9191d1e..75f2336 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -1,9 +1,15 @@
->  menu "SCSI device support"
->  
-> +config SCSI_MOD
-> +       tristate
-> +       default y if SCSI=n || SCSI=y
-> +       default m if SCSI=m
-> +
->  config RAID_ATTRS
->  	tristate "RAID Transport Class"
->  	default n
->  	depends on BLOCK
-> +	depends on SCSI_MOD
->  	---help---
->  	  Provides RAID
->  
-> diff --git a/drivers/scsi/raid_class.c b/drivers/scsi/raid_class.c
-> index bd88349..2c146b4 100644
-> --- a/drivers/scsi/raid_class.c
-> +++ b/drivers/scsi/raid_class.c
-> @@ -63,6 +63,7 @@ static int raid_match(struct attribute_container *cont, struct device *dev)
->  	 * emulated RAID devices, so start with SCSI */
->  	struct raid_internal *i = ac_to_raid_internal(cont);
->  
-> +#if defined(CONFIG_SCSI) || defined(CONFIG_SCSI_MODULE)
->  	if (scsi_is_sdev_device(dev)) {
->  		struct scsi_device *sdev = to_scsi_device(dev);
->  
-> @@ -71,6 +72,7 @@ static int raid_match(struct attribute_container *cont, struct device *dev)
->  
->  		return i->f->is_raid(dev);
->  	}
-> +#endif
->  	/* FIXME: look at other subsystems too */
->  	return 0;
->  }
-> 
-> 
+> On Tue, Mar 02, 2010 at 04:47:01PM -0800, Hugh Daschbach wrote:
+>> The system may fail to boot when the kernel's devices_kset->list gets
+>> written by another thread while device_shutdown() is traversing the
+>> list.  Though not common, this is fairly reproducible for some SCSI
+>> Fibre Channel topologies; particularly so with FCoE configurations.
+>
+> Really?  What a mess :(
+>
+>> The reboot thread calls device_shutdown() as part of system shutdown.
+>> device_shutdown() loops through devices_kset->list, shutting down each
+>> system device.  But devices_kset->list isn't protected from other
+>> writers while device_shutdown() traverses the list.
+>
+> Can't we just protect the list?  What is wanting to write to the list
+> while shutdown is happening?
 
+Indeed, Alan suggested holding the kset spinlock while iterating the
+list.  Unfortunately, the device shutdown routines may sleep.  At least
+the SCSI sd_shutdown routine issues I/O to the device as part of
+flushing device caches.  I would guess other subsystems sleep as well.
 
--- 
-~Randy
+>> One such secondary writer is the SCI Fibre Channel workqueue.  When
+>> fc_wq_N removes a device that device_shutdown() holds in it's "devn"
+>> (list traversal iterator) variable, device_shutdown() stalls, chasing
+>> what is essentially a broken link.
+>> 
+>> This is not a common occurrence.  But FC SCSI devices associated with a
+>> link that has gone down cause a race between device_shutdown() running
+>> in reboot's process and scsi_remove_target() running in a SCSI FC
+>> workqueue (fc_wq_N).
+>> 
+>> Network attached FC devices are particularly vulnerable because SysV
+>> init scripts shut network interfaces down before proceeding with the
+>> reboot request.  So by the time reboot is called, the link to the FC
+>> devices is already down.
+>> 
+>> When the link is down device_shutdown() stalls (in sd_shutdown() --
+>> which issues cache flush CDBs to what are, by that time, inaccessible
+>> devices).  The stall ends when the fc rport timer expires.  But the
+>> timer expiration also initiates fc_starget_delete() in the fc workqueue,
+>> causing the race with device_shutdown().
+>
+> Can't you just not do this?
+
+I'm not sure.  I'd punt this question to the SCSI maintainers.  From the
+FC transport point of view, the rport timeout simply looks like a device
+unplug event.  Should the unplug be handled differently if the system
+is already shutting down?
+
+Presumably any other subsystem that supports device unplug (usb, for
+example) could enter the same race.  But, FCoE devices seem uniquely
+poised to provoke the issue in a semi-repeatable fashion.
+
+...
+
+>> Does anyone have any guidance for what would make a more appropriate
+>> fix?
+>
+> So the scsi core is trying to remove a device at the same time shutdown
+> is happening, right?  So we need to protect the list somehow, maybe just
+> switch it over to use a klist which should handle this for us instead?
+> Can you try that?
+
+I'll try klist.  That looks like a good mediator between traversal and
+removal.
+
+Thanks,
+Hugh
