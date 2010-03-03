@@ -1,116 +1,81 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 03/32] bfa: Defined a new LPS event to clear virtual
- link on a vport
-Date: Wed, 03 Mar 2010 21:10:23 +0530
-Message-ID: <1267630823.15025.130.camel@mulgrave.site>
-References: <1267148837-21819-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System reboot hangs due to race against devices_kset->list
+ triggered by SCSI FC workqueue
+Date: Wed, 3 Mar 2010 10:50:36 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1003031046370.2821-100000@iolanthe.rowland.org>
+References: <233671224A0FED4688218FFDBED26E1A517AC38638@IRVEXCHCCR01.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57579 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753023Ab0CCPkh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Mar 2010 10:40:37 -0500
-In-Reply-To: <1267148837-21819-1-git-send-email-kgudipat@blc-10-2.brocade.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:50863 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753418Ab0CCPuh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 10:50:37 -0500
+In-Reply-To: <233671224A0FED4688218FFDBED26E1A517AC38638@IRVEXCHCCR01.corp.ad.broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Krishna Gudipati <kgudipat@brocade.com>
-Cc: linux-scsi@vger.kernel.org, adapter_linux_open_src_team@brocade.com, huangj@brocade.com
+To: Hugh Daschbach <hdasch@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, Jan Blunck <jblunck@suse.de>, David Vrabel <david.vrabel@csr.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2010-02-25 at 17:47 -0800, Krishna Gudipati wrote:
-> Change details:
+On Tue, 2 Mar 2010, Hugh Daschbach wrote:
+
+> The system may fail to boot when the kernel's devices_kset->list gets
+> written by another thread while device_shutdown() is traversing the
+> list.  Though not common, this is fairly reproducible for some SCSI
+> Fibre Channel topologies; particularly so with FCoE configurations.
 > 
->     - Clear virtual links was not propagated upwards to bfa from fw.
->       This resulted in HBA and switch being in an inconsistent state.
+> The reboot thread calls device_shutdown() as part of system shutdown.
+> device_shutdown() loops through devices_kset->list, shutting down each
+> system device.  But devices_kset->list isn't protected from other
+> writers while device_shutdown() traverses the list.
 > 
->     - So defined a new LPS event for clear virtual link on a vport,
-> 	  and also now clear virtual link on a baseport, is sent as a
-> 	  link down event from the fw.
-> ---
->  drivers/scsi/bfa/bfa_lps.c             |   71 +++++++++++++++++++++++++++++++-
->  drivers/scsi/bfa/include/bfa_svc.h     |    1 +
->  drivers/scsi/bfa/include/bfi/bfi_lps.h |    8 ++++
->  drivers/scsi/bfa/vport.c               |   11 +++++
->  4 files changed, 90 insertions(+), 1 deletions(-)
+> One such secondary writer is the SCI Fibre Channel workqueue.  When
+> fc_wq_N removes a device that device_shutdown() holds in it's "devn"
+> (list traversal iterator) variable, device_shutdown() stalls, chasing
+> what is essentially a broken link.
 > 
-> diff --git a/drivers/scsi/bfa/bfa_lps.c b/drivers/scsi/bfa/bfa_lps.c
-> index 9844b45..c8c2564 100644
-> --- a/drivers/scsi/bfa/bfa_lps.c
-> +++ b/drivers/scsi/bfa/bfa_lps.c
-> @@ -49,7 +49,7 @@ static void bfa_lps_send_login(struct bfa_lps_s *lps);
->  static void bfa_lps_send_logout(struct bfa_lps_s *lps);
->  static void bfa_lps_login_comp(struct bfa_lps_s *lps);
->  static void bfa_lps_logout_comp(struct bfa_lps_s *lps);
-> -
-> +static void bfa_lps_cvl_event(struct bfa_lps_s *lps);
->  
->  /**
->   *  lps_pvt BFA LPS private functions
-> @@ -62,6 +62,7 @@ enum bfa_lps_event {
->  	BFA_LPS_SM_RESUME	= 4,	/* space present in reqq queue	*/
->  	BFA_LPS_SM_DELETE	= 5,	/* lps delete from user		*/
->  	BFA_LPS_SM_OFFLINE	= 6,	/* Link is offline		*/
-> +	BFA_LPS_SM_RX_CVL       = 7,	/* Rx clear virtual link        */
->  };
->  
->  static void bfa_lps_sm_init(struct bfa_lps_s *lps, enum bfa_lps_event event);
-> @@ -101,6 +102,7 @@ bfa_lps_sm_init(struct bfa_lps_s *lps, enum bfa_lps_event event)
->  		bfa_lps_free(lps);
->  		break;
->  
-> +	case BFA_LPS_SM_RX_CVL:
->  	case BFA_LPS_SM_OFFLINE:
->  		break;
->  
-> @@ -162,6 +164,14 @@ bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event event)
->  		bfa_reqq_wcancel(&lps->wqe);
->  		break;
->  
-> +	case BFA_LPS_SM_RX_CVL:
-> +		/*
-> +		 * Login was not even sent out; so when getting out
-> +		 * of this state, it will appear like a login retry
-> +		 * after Clear virtual link
-> +		 */
-> +		break;
-> +
->  	default:
->  		bfa_assert(0);
->  	}
-> @@ -187,6 +197,15 @@ bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event)
->  		}
->  		break;
->  
-> +	case BFA_LPS_SM_RX_CVL:
-> +		bfa_sm_set_state(lps, bfa_lps_sm_init);
-> +
-> +		/* Let the vport module know about this event */
-> +		bfa_lps_cvl_event(lps);
-> +		bfa_plog_str(lps->bfa->plog, BFA_PL_MID_LPS,
-> +			BFA_PL_EID_FIP_FCF_CVL, 0, "FCF Clear Virt. Link Rx");
-> +		break;
+> This is not a common occurrence.  But FC SCSI devices associated with a
+> link that has gone down cause a race between device_shutdown() running
+> in reboot's process and scsi_remove_target() running in a SCSI FC
+> workqueue (fc_wq_N).
+> 
+> Network attached FC devices are particularly vulnerable because SysV
+> init scripts shut network interfaces down before proceeding with the
+> reboot request.  So by the time reboot is called, the link to the FC
+> devices is already down.
+> 
+> When the link is down device_shutdown() stalls (in sd_shutdown() --
+> which issues cache flush CDBs to what are, by that time, inaccessible
+> devices).  The stall ends when the fc rport timer expires.  But the
+> timer expiration also initiates fc_starget_delete() in the fc workqueue,
+> causing the race with device_shutdown().
+> 
+> The attached patch detects and attempts to recover from the
+> corruption.  But this can hardly be considered a fix, as it does not
+> address the race between device_shutdown() and scsi_remove_target().
+> 
+> Perhaps converting the list_for_each_entry_safe_reverse() to something
+> like.
+> 
+>         while (!list_empty(&devices_kset->list)) {
+>                 dev = list_last_entry(...);
+>                 ...
+>         }
+> 
+> might be appropriate.  But I have no idea if any devices don't fully
+> remove themselves from the list when shutdown.
 
-OK, so you can't do this in the patch set, it causes a compile error:
+You can't make any assumptions about that.  Probably most of them 
+don't.
 
-drivers/scsi/bfa/bfa_lps.c: In function 'bfa_lps_sm_online':
-drivers/scsi/bfa/bfa_lps.c:205: error: 'BFA_PL_MID_LPS' undeclared
-(first use in this function)
-drivers/scsi/bfa/bfa_lps.c:205: error: (Each undeclared identifier is
-reported only once
-drivers/scsi/bfa/bfa_lps.c:205: error: for each function it appears in.)
-drivers/scsi/bfa/bfa_lps.c:206: error: 'BFA_PL_EID_FIP_FCF_CVL'
-undeclared (first use in this function)
+> Does anyone have any guidance for what would make a more appropriate
+> fix?
 
-Because these constants aren't defined until PATCH 24.
+Your suggestion above ought to work out okay, if you remove each device
+from the list yourself as you come to it.  (I don't think that will
+cause problems elsewhere, but I could be wrong.)  However, struct kset
+contains a spinlock which is supposed to protect the list.  This loop
+should be using the spinlock.
 
-To be bisectable, each patch can only depend on things in its
-predecessor in the sequence.  Could you redo this so that everything is
-bisectable?  (And add the signoffs this time so I don't have to do it by
-hand).
-
-Thanks,
-
-James
-
+Alan Stern
 
