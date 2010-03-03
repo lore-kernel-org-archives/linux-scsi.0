@@ -1,65 +1,68 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] Don't change direction flags in struct request.
-Date: Wed, 03 Mar 2010 15:59:50 +0530
-Message-ID: <1267612190.15025.60.camel@mulgrave.site>
-References: <1268976690-3386-1-git-send-email-hdasch@broadcom.com>
-	 <1268976690-3386-2-git-send-email-hdasch@broadcom.com>
-	 <1267507618.7936.11.camel@mulgrave.site>  <4B8CC43D.9000108@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 11646] QLA2xxx: Kernel deadlock on high load somewhere after
+ 2.6.20
+Date: Wed, 3 Mar 2010 10:45:49 GMT
+Message-ID: <201003031045.o23Ajnjr020110@demeter.kernel.org>
+References: <bug-11646-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B8CC43D.9000108@cs.wisc.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hugh Daschbach <hdasch@broadcom.com>, Chandra Seetharaman <sekharan@us.ibm.com>, Eddie Williams <Eddie.Williams@steeleye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:48852 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108Ab0CCKpu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 05:45:50 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o23AjnUL020111
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Mar 2010 10:45:50 GMT
+In-Reply-To: <bug-11646-11613@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2010-03-02 at 01:54 -0600, Mike Christie wrote:
-> On 03/01/2010 11:26 PM, James Bottomley wrote:
-> > On Thu, 2010-03-18 at 22:31 -0700, Hugh Daschbach wrote:
-> >> The EMC multipath device handler should not change the I/O direction
-> >> flags of its trespass command request.
-> >>
-> >> The CFQ elevator may BUG if the direction flags on an I/O request are
-> >> changed after allocation.  cfq_set_request() and cfq_put_request()
-> >> count READ and WRITE requests separately.  Changing the I/O request
-> >> direction after blk_get_request() allocates the request throws off
-> >> this CFQ accounting.
-> >
-> > This description doesn't really match what the problem seems to be
-> > below:
-> >
-> >> Signed-off-by: Hugh Daschbach<hdasch@broadcom.com>
-> >> ---
-> >>   drivers/scsi/device_handler/scsi_dh_emc.c |    8 ++++----
-> >>   1 files changed, 4 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-> >> index 6196675..3709342 100644
-> >> --- a/drivers/scsi/device_handler/scsi_dh_emc.c
-> >> +++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-> >> @@ -269,10 +269,12 @@ static struct request *get_req(struct scsi_device *sdev, int cmd,
-> >>   				unsigned char *buffer)
-> >>   {
-> >>   	struct request *rq;
-> >> +	int mode = READ;
-> >>   	int len = 0;
-> >>
-> >> -	rq = blk_get_request(sdev->request_queue,
-> >> -			(cmd == MODE_SELECT) ? WRITE : READ, GFP_NOIO);
-> >> +	if (cmd == MODE_SELECT || cmd == MODE_SELECT_10)
-> >> +		mode = WRITE;
-> >> +	rq = blk_get_request(sdev->request_queue, mode, GFP_NOIO);
-> >
-> > So the actual bug is failure to set WRITE for MODE_SELECT_10.
-> >
+http://bugzilla.kernel.org/show_bug.cgi?id=11646
+
+
+
+
+
+--- Comment #34 from Bernd Zeimetz <bzed@debian.org>  2010-03-03 10:45:41 ---
+bugzilla-daemon@bugzilla.kernel.org wrote:
+> http://bugzilla.kernel.org/show_bug.cgi?id=11646
 > 
-> I think we have a fix for this and some len issues in that module that 
-> was sent here:
-> http://marc.info/?l=linux-scsi&m=125978574800618&w=2
+> 
+> 
+> 
+> 
+> --- Comment #33 from Csillag Tamas <cstamas@digitus.itk.ppke.hu>  2010-03-03 09:59:55 ---
+> Dear Bernd Zeimetz,
+> 
+> Can you tell us what version your qlogic bios is?
 
-Yes, you did ... the need to change the From: field caused me to mark it
-in a different way and ultimately lose it ... I'll add it this time ...
+The QLogic Bios was upgraded a few days ago to the latest versionfrom QLogic,
+without any changes in the behaviour.
 
-James
+--------------------------------------------------------------------------------
+HBA Instance 0: QLA2460 Port 1
+--------------------------------------------------------------------------------
+Product Identifier               : DS4000 FC 4Gb PCI-X Single Port HBA
+Misc. Information                : PW=15W;PCI=66MHZ;PCI-X=266MHz
+EFI Driver Version               : 2.04
+Firmware Version                 : 4.06.02
+BIOS Version                     : 2.10
+FCode Version                    : 2.04
+
+--------------------------------------------------------------------------------
+HBA Instance 1: QLA2460 Port 1
+--------------------------------------------------------------------------------
+Product Identifier               : DS4000 FC 4Gb PCI-X Single Port HBA
+Misc. Information                : PW=15W;PCI=66MHZ;PCI-X=266MHz
+EFI Driver Version               : 2.04
+Firmware Version                 : 4.06.02
+BIOS Version                     : 2.10
+FCode Version                    : 2.04
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
