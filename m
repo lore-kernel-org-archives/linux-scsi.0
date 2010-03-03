@@ -1,72 +1,47 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [origin tree build failure] Re: [PATCH -next] scsi: RAID_ATTRS
- depends on SCSI
-Date: Wed, 3 Mar 2010 10:30:53 +1100
-Message-ID: <20100303103053.7be411ba.sfr@canb.auug.org.au>
-References: <20100219174711.5e7cc7be.sfr@canb.auug.org.au>
-	<4B7EC8AE.60200@oracle.com>
-	<20100221194636.ef885e5a.rdunlap@xenotime.net>
-	<20100302112603.GA27686@elte.hu>
+From: <Bill.Hooper@Emulex.Com>
+Subject: Controlling mpt2sas busy retries
+Date: Tue, 2 Mar 2010 16:28:06 -0800
+Message-ID: <02B16CD25461354295D12236BDA8C0E195BF0794FB@EXMAIL.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:36415 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754185Ab0CBXbA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Mar 2010 18:31:00 -0500
-In-Reply-To: <20100302112603.GA27686@elte.hu>
+Received: from exht1.emulex.com ([138.239.113.183]:42547 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751343Ab0CCAds convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Mar 2010 19:33:48 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, Linus Torvalds <torvalds@linux-foundation.org>, linux-next@vger.kernel.org, akpm <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+To: linux-scsi@vger.kernel.org, Bill.Hooper@Emulex.Com
 
---Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I would like to control the number of times the mpt2sas driver retries a command on BUSY (I want to reduce the retry to zero or one). I found a document that explains I could use command_retry_count parameter when loading the driver, but the parameter does not exist for my driver. Any help would be appreciated.
 
-Hi Ingo,
+Bill Hooper
+Principal Software Engineer 
+Emulex
 
-On Tue, 2 Mar 2010 12:26:03 +0100 Ingo Molnar <mingo@elte.hu> wrote:
->
-> * Randy Dunlap <rdunlap@xenotime.net> wrote:
->=20
-> > From: Randy Dunlap <randy.dunlap@oracle.com>
-> >=20
-> > raid_class uses scsi interfaces, so it should depend on SCSI.
-> > Otherwise build errors occur when RAID_ATTRS=3Dy and SCSI=3Dm:
-> >=20
-> > ERROR: "raid_class_release" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
-> > ERROR: "raid_class_attach" [drivers/scsi/mpt2sas/mpt2sas.ko] undefined!
->=20
-> FYI, this build bug has been pushed upstream via the SCSI tree, without=20
-> Randy's fix.
->=20
-> I have applied Randy's drivers/scsi/Kconfig fix to tip:out-of-tree and th=
-at=20
-> solves the build bug here.
->=20
->  Tested-by: Ingo Molnar <mingo@elte.hu>
+root@spice (<-;)~ # uname -a
+Linux spice 2.6.31-19-generic #56-Ubuntu SMP Thu Jan 28 01:26:53 UTC 2010 i686 GNU/Linux
 
-Thanks for the heads up Ingo, I have added that to my fixes tree as well
-so it will be in linux-next today.
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkuNn60ACgkQjjKRsyhoI8wlBwCfXSD3mJQSd9hYEgJ3wSq82zdG
-W6AAnR5ShF5g0nBKHmaS0/MwetrInYkW
-=39pg
------END PGP SIGNATURE-----
-
---Signature=_Wed__3_Mar_2010_10_30_53_+1100_OdGpE+XMTWUzZ4kS--
+root@spice (<-;)~ # modinfo mpt2sas
+filename:       /lib/modules/2.6.31-19-generic/kernel/drivers/scsi/mpt2sas/mpt2sas.ko
+version:        01.100.04.00
+license:        GPL
+description:    LSI MPT Fusion SAS 2.0 Device Driver
+author:         LSI Corporation <DL-MPTFusionLinux@lsi.com>
+srcversion:     65EA54D38B5A4AB0E385215
+alias:          pci:v00001000d00000065sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000064sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000077sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000076sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000074sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000072sv*sd*bc*sc*i*
+alias:          pci:v00001000d00000070sv*sd*bc*sc*i*
+depends:        scsi_transport_sas
+vermagic:       2.6.31-19-generic SMP mod_unload modversions 586 
+parm:           logging_level: bits for enabling additional logging info (default=0)
+parm:           max_lun: max lun, default=16895  (int)
+parm:           max_queue_depth: max controller queue depth  (int)
+parm:           max_sgl_entries: max sg entries  (int)
+parm:           msix_disable: disable msix routed interrupts (default=0) (int)
