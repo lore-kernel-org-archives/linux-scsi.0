@@ -1,63 +1,52 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH -next] scsi: RAID_ATTRS depends on SCSI
-Date: Wed, 3 Mar 2010 17:17:20 +1100
-Message-ID: <20100303171720.95a558b6.sfr@canb.auug.org.au>
-References: <20100219174711.5e7cc7be.sfr@canb.auug.org.au>
-	<4B7EC8AE.60200@oracle.com>
-	<20100221194636.ef885e5a.rdunlap@xenotime.net>
-	<1267594617.4383.24.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: bug report: sd:  off by one in sd_read_block_limits()
+Date: Wed, 03 Mar 2010 12:38:31 +0530
+Message-ID: <1267600111.4383.43.camel@mulgrave.site>
+References: <20100302082135.GA6218@bicker>
+	 <yq1tysy27ft.fsf@sermon.lab.mkp.net> <yq1k4tu2716.fsf@sermon.lab.mkp.net>
+	 <yq1fx4i26cc.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__3_Mar_2010_17_17_20_+1100_6aF=io02THZmLivi"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:52663 "EHLO smtps.tip.net.au"
+Received: from cantor.suse.de ([195.135.220.2]:51047 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753040Ab0CCGRZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Mar 2010 01:17:25 -0500
-In-Reply-To: <1267594617.4383.24.camel@mulgrave.site>
+	id S1755335Ab0CCHIm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Mar 2010 02:08:42 -0500
+In-Reply-To: <yq1fx4i26cc.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, akpm <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Dan Carpenter <error27@gmail.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
---Signature=_Wed__3_Mar_2010_17_17_20_+1100_6aF=io02THZmLivi
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2010-03-02 at 08:36 -0500, Martin K. Petersen wrote:
+> James,
+> 
+> While I agree the original VPD code's double kmalloc() was a bit of a
+> wart at least it did the right thing because it allocated a suitably
+> sized buffer for page 0.
+> 
+> My concern with the interface you introduced in e3deec09 is that for
+> devices that support a large number of VPD pages we won't be able to fit
+> the page list in the allocated buffer.  And callers are likely to pick a
+> buffer size that makes sense for the VPD page they are interested in.
+> It's not a big deal in the block limits/block device characteristics
+> case because they are big enough.
 
-Hi James,
+Actually, I don't really think that's a problem.  The design is to weed
+out USB devices that have silly returns, either by not returning a
+correct page zero, or by only accepting VPDs to the few pages and
+crashing on ones they don't support.  If we run off the end of the
+buffer because there are 32 or more pages, then it's reasonably safe to
+assume the device will respond correctly to a VPD inquiry.
 
-On Wed, 03 Mar 2010 11:06:56 +0530 James Bottomley <James.Bottomley@suse.de=
-> wrote:
->
-> This will fix the error, but it's not quite the right thing to do.  the
-> RAID class should be independent of SCSI, but it wants to do a SCSI
-> check if SCSI is compiled in the matching routines.  This gives us a
-> nasty dependency, the condition being that the raid class must be m if
-> SCSI is m.
->=20
-> I think this patch does the right thing.  Can someone test it on the
-> config checker?  Or I can just put it in linux-next and have Stephen's
-> builds do it.
+> But at the very minimum that interface should come with a big fat
+> warning in the comment section that describes that the page list must
+> also be able to fit.
 
-My tree for today has Randy's fix in it.  Also, you should really test
-against Linus' tree as that is where the problem currently lies.
+But it doesn't have to ... if we correctly return more pages than will
+fit in the buffer, it will proceed to do the requested page VPD inquiry.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+James
 
---Signature=_Wed__3_Mar_2010_17_17_20_+1100_6aF=io02THZmLivi
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkuN/vAACgkQjjKRsyhoI8xjMwCeK4nQF/rU0yoffP9HOQ6gRW6F
-wakAn2W7oeUecJ75oFsezHBhiLQhr5fL
-=dOXd
------END PGP SIGNATURE-----
-
---Signature=_Wed__3_Mar_2010_17_17_20_+1100_6aF=io02THZmLivi--
