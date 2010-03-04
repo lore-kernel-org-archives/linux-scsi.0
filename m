@@ -1,14 +1,14 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 17/32] bfa: Added firmware save clear feature for BFA driver.
-Date: Wed, 3 Mar 2010 17:45:46 -0800
-Message-ID: <1267667146-26393-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 18/32] bfa: Introduce a link notification state machine.
+Date: Wed, 3 Mar 2010 17:45:56 -0800
+Message-ID: <1267667156-26551-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:33966 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.82]:33968 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755176Ab0CDBp4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 20:45:56 -0500
+	with ESMTP id S1755360Ab0CDBqH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 20:46:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,88 +18,352 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 
-	- Added new fsave clear feature for the BFA driver.
+	- Introduce a link notification state machine to handle next incoming link events
+	  while the current event is being delivered to the driver.
+
+	- When the event has been processed by the driver, the link notification state machine
+	  will queue the next event (if there is any) to the driver.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c    |    9 +++++++++
- drivers/scsi/bfa/bfa_ioc.c     |   10 +++++++++-
- drivers/scsi/bfa/bfa_ioc.h     |    1 +
- drivers/scsi/bfa/include/bfa.h |    1 +
- 4 files changed, 20 insertions(+), 1 deletions(-)
+ drivers/scsi/bfa/bfa_fcport.c    |  232 +++++++++++++++++++++++++++++++++++--
+ drivers/scsi/bfa/bfa_port_priv.h |   13 ++-
+ 2 files changed, 230 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 72e3f2f..0c08e18 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -385,6 +385,15 @@ bfa_debug_fwsave(struct bfa_s *bfa, void *trcdata, int *trclen)
+diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
+index aef648b..54fba9e 100644
+--- a/drivers/scsi/bfa/bfa_fcport.c
++++ b/drivers/scsi/bfa/bfa_fcport.c
+@@ -26,16 +26,6 @@
+ BFA_TRC_FILE(HAL, PPORT);
+ BFA_MODULE(pport);
+ 
+-#define bfa_pport_callback(__pport, __event) do {			\
+-	if ((__pport)->bfa->fcs) {      \
+-		(__pport)->event_cbfn((__pport)->event_cbarg, (__event));      \
+-	} else {							\
+-		(__pport)->hcb_event = (__event);      \
+-		bfa_cb_queue((__pport)->bfa, &(__pport)->hcb_qe,	\
+-		__bfa_cb_port_event, (__pport));      \
+-	}								\
+-} while (0)
+-
+ /*
+  * The port is considered disabled if corresponding physical port or IOC are
+  * disabled explicitly
+@@ -57,7 +47,10 @@ static void     __bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete);
+ static void     __bfa_cb_port_stats_clr(void *cbarg, bfa_boolean_t complete);
+ static void     bfa_port_stats_timeout(void *cbarg);
+ static void     bfa_port_stats_clr_timeout(void *cbarg);
+-
++static void	bfa_pport_callback(struct bfa_pport_s *pport,
++				enum bfa_pport_linkstate event);
++static void	bfa_pport_queue_cb(struct bfa_pport_ln_s *ln,
++				enum bfa_pport_linkstate event);
+ /**
+  *  bfa_pport_private
+  */
+@@ -77,6 +70,16 @@ enum bfa_pport_sm_event {
+ 	BFA_PPORT_SM_HWFAIL = 9,	/*  IOC h/w failure */
+ };
+ 
++/**
++ * BFA port link notification state machine events
++ */
++
++enum bfa_pport_ln_sm_event {
++	BFA_PPORT_LN_SM_LINKUP         = 1,    /*  linkup event */
++	BFA_PPORT_LN_SM_LINKDOWN       = 2,    /*  linkdown event */
++	BFA_PPORT_LN_SM_NOTIFICATION   = 3     /*  done notification */
++};
++
+ static void     bfa_pport_sm_uninit(struct bfa_pport_s *pport,
+ 				    enum bfa_pport_sm_event event);
+ static void     bfa_pport_sm_enabling_qwait(struct bfa_pport_s *pport,
+@@ -100,6 +103,21 @@ static void     bfa_pport_sm_iocdown(struct bfa_pport_s *pport,
+ static void     bfa_pport_sm_iocfail(struct bfa_pport_s *pport,
+ 				     enum bfa_pport_sm_event event);
+ 
++static void	bfa_pport_ln_sm_dn(struct bfa_pport_ln_s *ln,
++					enum bfa_pport_ln_sm_event event);
++static void	bfa_pport_ln_sm_dn_nf(struct bfa_pport_ln_s *ln,
++					enum bfa_pport_ln_sm_event event);
++static void	bfa_pport_ln_sm_dn_up_nf(struct bfa_pport_ln_s *ln,
++					enum bfa_pport_ln_sm_event event);
++static void     bfa_pport_ln_sm_up(struct bfa_pport_ln_s *ln,
++					enum bfa_pport_ln_sm_event event);
++static void	bfa_pport_ln_sm_up_nf(struct bfa_pport_ln_s *ln,
++					enum bfa_pport_ln_sm_event event);
++static void	bfa_pport_ln_sm_up_dn_nf(struct bfa_pport_ln_s *ln,
++					enum bfa_pport_ln_sm_event event);
++static void	bfa_pport_ln_sm_up_dn_up_nf(struct bfa_pport_ln_s *ln,
++					enum bfa_pport_ln_sm_event event);
++
+ static struct bfa_sm_table_s hal_pport_sm_table[] = {
+ 	{BFA_SM(bfa_pport_sm_uninit), BFA_PPORT_ST_UNINIT},
+ 	{BFA_SM(bfa_pport_sm_enabling_qwait), BFA_PPORT_ST_ENABLING_QWAIT},
+@@ -619,7 +637,163 @@ bfa_pport_sm_iocfail(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
+ 	}
  }
  
- /**
-+ * Clear the saved firmware trace information of an IOC.
++/**
++ * Link state is down
 + */
-+void
-+bfa_debug_fwsave_clear(struct bfa_s *bfa)
++static void
++bfa_pport_ln_sm_dn(struct bfa_pport_ln_s *ln,
++		enum bfa_pport_ln_sm_event event)
 +{
-+	bfa_ioc_debug_fwsave_clear(&bfa->ioc);
++	bfa_trc(ln->pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_LN_SM_LINKUP:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_nf);
++		bfa_pport_queue_cb(ln, BFA_PPORT_LINKUP);
++		break;
++
++	default:
++		bfa_sm_fault(ln->pport->bfa, event);
++	}
 +}
 +
 +/**
-  * 		Fetch firmware trace data.
-  *
-  * @param[in]		bfa			BFA instance
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 8a6361c..0019ff7 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -1488,7 +1488,6 @@ return (auto_recover) ? BFA_DBG_FWTRC_LEN : 0;
- void
- bfa_ioc_debug_memclaim(struct bfa_ioc_s *ioc, void *dbg_fwsave)
++ * Link state is waiting for down notification
++ */
++static void
++bfa_pport_ln_sm_dn_nf(struct bfa_pport_ln_s *ln,
++		enum bfa_pport_ln_sm_event event)
++{
++	bfa_trc(ln->pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_LN_SM_LINKUP:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_up_nf);
++		break;
++
++	case BFA_PPORT_LN_SM_NOTIFICATION:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn);
++		break;
++
++	default:
++		bfa_sm_fault(ln->pport->bfa, event);
++	}
++}
++
++/**
++ * Link state is waiting for down notification and there is a pending up
++ */
++static void
++bfa_pport_ln_sm_dn_up_nf(struct bfa_pport_ln_s *ln,
++		enum bfa_pport_ln_sm_event event)
++{
++	bfa_trc(ln->pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_LN_SM_LINKDOWN:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_nf);
++		break;
++
++	case BFA_PPORT_LN_SM_NOTIFICATION:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_nf);
++		bfa_pport_queue_cb(ln, BFA_PPORT_LINKUP);
++		break;
++
++	default:
++		bfa_sm_fault(ln->pport->bfa, event);
++	}
++}
++
++/**
++ * Link state is up
++ */
++static void
++bfa_pport_ln_sm_up(struct bfa_pport_ln_s *ln,
++                enum bfa_pport_ln_sm_event event)
++{
++	bfa_trc(ln->pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_LN_SM_LINKDOWN:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_nf);
++		bfa_pport_queue_cb(ln, BFA_PPORT_LINKDOWN);
++		break;
++
++	default:
++		bfa_sm_fault(ln->pport->bfa, event);
++	}
++}
++
++/**
++ * Link state is waiting for up notification
++ */
++static void
++bfa_pport_ln_sm_up_nf(struct bfa_pport_ln_s *ln,
++		enum bfa_pport_ln_sm_event event)
++{
++	bfa_trc(ln->pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_LN_SM_LINKDOWN:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_dn_nf);
++		break;
++
++	case BFA_PPORT_LN_SM_NOTIFICATION:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_up);
++		break;
++
++	default:
++		bfa_sm_fault(ln->pport->bfa, event);
++	}
++}
++
++/**
++ * Link state is waiting for up notification and there is a pending down
++ */
++static void
++bfa_pport_ln_sm_up_dn_nf(struct bfa_pport_ln_s *ln,
++		enum bfa_pport_ln_sm_event event)
++{
++	bfa_trc(ln->pport->bfa, event);
+ 
++	switch (event) {
++	case BFA_PPORT_LN_SM_LINKUP:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_dn_up_nf);
++		break;
++
++	case BFA_PPORT_LN_SM_NOTIFICATION:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_nf);
++		bfa_pport_queue_cb(ln, BFA_PPORT_LINKDOWN);
++		break;
++
++	default:
++		bfa_sm_fault(ln->pport->bfa, event);
++	}
++}
++
++/**
++ * Link state is waiting for up notification and there are pending down and up
++ */
++static void
++bfa_pport_ln_sm_up_dn_up_nf(struct bfa_pport_ln_s *ln,
++			enum bfa_pport_ln_sm_event event)
++{
++	bfa_trc(ln->pport->bfa, event);
++
++	switch (event) {
++	case BFA_PPORT_LN_SM_LINKDOWN:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_up_dn_nf);
++		break;
++
++	case BFA_PPORT_LN_SM_NOTIFICATION:
++		bfa_sm_set_state(ln, bfa_pport_ln_sm_dn_up_nf);
++		bfa_pport_queue_cb(ln, BFA_PPORT_LINKDOWN);
++		break;
++
++	default:
++		bfa_sm_fault(ln->pport->bfa, event);
++	}
++}
+ 
+ /**
+  *  bfa_pport_private
+@@ -628,10 +802,12 @@ bfa_pport_sm_iocfail(struct bfa_pport_s *pport, enum bfa_pport_sm_event event)
+ static void
+ __bfa_cb_port_event(void *cbarg, bfa_boolean_t complete)
  {
--	bfa_assert(ioc->auto_recover);
- 	ioc->dbg_fwsave = dbg_fwsave;
- 	ioc->dbg_fwsave_len = bfa_ioc_debug_trcsz(ioc->auto_recover);
- }
-@@ -1925,6 +1924,15 @@ bfa_ioc_debug_fwsave(struct bfa_ioc_s *ioc, void *trcdata, int *trclen)
+-	struct bfa_pport_s *pport = cbarg;
++	struct bfa_pport_ln_s *ln = cbarg;
+ 
+ 	if (complete)
+-		pport->event_cbfn(pport->event_cbarg, pport->hcb_event);
++		ln->pport->event_cbfn(ln->pport->event_cbarg, ln->ln_event);
++	else
++		bfa_sm_send_event(ln, BFA_PPORT_LN_SM_NOTIFICATION);
  }
  
- /**
-+ * Clear saved firmware trace
-+ */
-+void
-+bfa_ioc_debug_fwsave_clear(struct bfa_ioc_s *ioc)
+ #define PPORT_STATS_DMA_SZ (BFA_ROUNDUP(sizeof(union bfa_pport_stats_u), \
+@@ -681,13 +857,16 @@ bfa_pport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ {
+ 	struct bfa_pport_s *pport = BFA_PORT_MOD(bfa);
+ 	struct bfa_pport_cfg_s *port_cfg = &pport->cfg;
++	struct bfa_pport_ln_s *ln = &pport->ln;
+ 
+ 	bfa_os_memset(pport, 0, sizeof(struct bfa_pport_s));
+ 	pport->bfa = bfa;
++	ln->pport = pport;
+ 
+ 	bfa_pport_mem_claim(pport, meminfo);
+ 
+ 	bfa_sm_set_state(pport, bfa_pport_sm_uninit);
++	bfa_sm_set_state(ln, bfa_pport_ln_sm_dn);
+ 
+ 	/**
+ 	 * initialize and set default configuration
+@@ -1369,6 +1548,33 @@ bfa_port_stats_clr_timeout(void *cbarg)
+ }
+ 
+ static void
++bfa_pport_callback(struct bfa_pport_s *pport, enum bfa_pport_linkstate event)
 +{
-+	ioc->dbg_fwsave_once = BFA_TRUE;
++	if (pport->bfa->fcs) {
++		pport->event_cbfn(pport->event_cbarg, event);
++		return;
++	}
++
++	switch (event) {
++	case BFA_PPORT_LINKUP:
++		bfa_sm_send_event(&pport->ln, BFA_PPORT_LN_SM_LINKUP);
++		break;
++	case BFA_PPORT_LINKDOWN:
++		bfa_sm_send_event(&pport->ln, BFA_PPORT_LN_SM_LINKDOWN);
++		break;
++	default:
++		bfa_assert(0);
++	}
 +}
 +
++static void
++bfa_pport_queue_cb(struct bfa_pport_ln_s *ln, enum bfa_pport_linkstate event)
++{
++	ln->ln_event = event;
++	bfa_cb_queue(ln->pport->bfa, &ln->ln_qe, __bfa_cb_port_event, ln);
++}
++
++static void
+ __bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete)
+ {
+ 	struct bfa_pport_s *port = cbarg;
+diff --git a/drivers/scsi/bfa/bfa_port_priv.h b/drivers/scsi/bfa/bfa_port_priv.h
+index 51f698a..f29701b 100644
+--- a/drivers/scsi/bfa/bfa_port_priv.h
++++ b/drivers/scsi/bfa/bfa_port_priv.h
+@@ -23,6 +23,16 @@
+ #include "bfa_intr_priv.h"
+ 
+ /**
++ * Link notification data structure
++ */
++struct bfa_pport_ln_s {
++	struct bfa_pport_s     *pport;
++	bfa_sm_t                sm;
++	struct bfa_cb_qe_s      ln_qe;  /*  BFA callback queue elem for ln */
++	enum bfa_pport_linkstate ln_event; /*  ln event for callback */
++};
++
 +/**
-  * Retrieve saved firmware trace from a prior IOC failure.
+  * BFA physical port data structure
   */
- bfa_status_t
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 853cc31..4b73efa 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -270,6 +270,7 @@ int bfa_ioc_debug_trcsz(bfa_boolean_t auto_recover);
- void bfa_ioc_debug_memclaim(struct bfa_ioc_s *ioc, void *dbg_fwsave);
- bfa_status_t bfa_ioc_debug_fwsave(struct bfa_ioc_s *ioc, void *trcdata,
- 		int *trclen);
-+void bfa_ioc_debug_fwsave_clear(struct bfa_ioc_s *ioc);
- bfa_status_t bfa_ioc_debug_fwtrc(struct bfa_ioc_s *ioc, void *trcdata,
- 				 int *trclen);
- u32 bfa_ioc_smem_pgnum(struct bfa_ioc_s *ioc, u32 fmaddr);
-diff --git a/drivers/scsi/bfa/include/bfa.h b/drivers/scsi/bfa/include/bfa.h
-index 942ae64..17654ca 100644
---- a/drivers/scsi/bfa/include/bfa.h
-+++ b/drivers/scsi/bfa/include/bfa.h
-@@ -172,6 +172,7 @@ void bfa_timer_tick(struct bfa_s *bfa);
-  */
- bfa_status_t bfa_debug_fwtrc(struct bfa_s *bfa, void *trcdata, int *trclen);
- bfa_status_t bfa_debug_fwsave(struct bfa_s *bfa, void *trcdata, int *trclen);
-+void bfa_debug_fwsave_clear(struct bfa_s *bfa);
- 
- #include "bfa_priv.h"
- 
+ struct bfa_pport_s {
+@@ -52,9 +62,8 @@ struct bfa_pport_s {
+ 		union bfi_pport_i2h_msg_u i2hmsg;
+ 	} event_arg;
+ 	void			*bfad;	/*  BFA driver handle */
++	struct bfa_pport_ln_s   ln; /* Link Notification */
+ 	struct bfa_cb_qe_s		hcb_qe;	/*  BFA callback queue elem */
+-	enum bfa_pport_linkstate	hcb_event;
+-					/*  link event for callback */
+ 	u32		msgtag;	/*  fimrware msg tag for reply */
+ 	u8			*stats_kva;
+ 	u64		stats_pa;
 -- 
 1.6.5.3
 
