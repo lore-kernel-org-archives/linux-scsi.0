@@ -1,107 +1,83 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: LSI SAS changes SCSI address and by-path on hot-swap
-Date: Thu, 04 Mar 2010 17:55:14 +0100
-Message-ID: <4B8FE5F2.2040506@shiftmail.org>
+From: "Hugh Daschbach" <hdasch@broadcom.com>
+Subject: RE: System reboot hangs due to race against devices_kset->list
+ triggered by SCSI FC workqueue
+Date: Thu, 4 Mar 2010 11:09:01 -0800
+Message-ID: <233671224A0FED4688218FFDBED26E1A5181BF12D1@IRVEXCHCCR01.corp.ad.broadcom.com>
+References: <233671224A0FED4688218FFDBED26E1A517AC38CA5@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <Pine.LNX.4.44L0.1003041005530.1657-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from blade3.isti.cnr.it ([194.119.192.19]:63306 "EHLO
-	BLADE3.ISTI.CNR.IT" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755454Ab0CDQzh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Mar 2010 11:55:37 -0500
-Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it
- (PMDF V6.5-b2 #31825) id <01NKCZ276NDSBFE89A@mx.isti.cnr.it> for
- linux-scsi@vger.kernel.org; Thu, 04 Mar 2010 17:55:13 +0100
-Received: from [10.0.123.137] (firewall-itb.itb.cnr.it [155.253.6.254])
- by mx.isti.cnr.it (PMDF V6.5-b2 #31826)
- with ESMTPSA id <01NKCZ24WZM6C51C7W@mx.isti.cnr.it> for
- linux-scsi@vger.kernel.org; Thu, 04 Mar 2010 17:55:10 +0100
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1003041005530.1657-100000@iolanthe.rowland.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg KH <gregkh@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, Jan Blunck <jblunck@suse.de>, David Vrabel <david.vrabel@csr.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, james Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hello all,
+Alan Stern [mailto:stern@rowland.harvard.edu] writes:
 
-we need to buy new controllers for new storages we are building.
+> On Wed, 3 Mar 2010, Hugh Daschbach wrote:
+>
+>> Alan Stern [mailto:stern@rowland.harvard.edu] writes:
+>> 
+>> > On Wed, 3 Mar 2010, Hugh Daschbach wrote:
+>> >
+>> >> > Can't we just protect the list?  What is wanting to write to the list
+>> >> > while shutdown is happening?
+>> >> 
+>> >> Indeed, Alan suggested holding the kset spinlock while iterating the
+...
+>> > What I meant was that you should hold the spinlock while finding and 
+>> > unlinking the last device on the list.  Clearly you shouldn't hold it 
+>> > while calling the device shutdown routine.
+>> 
+>> I misunderstood.  But I believe insertion and deletion is properly
+>> serliaized.  It looks to me like the list structure is intact.  It's the
+>> iterator that's been driven off into the weeds.
+...
+>> Just to be clear, the list we're talking about is "list" in "struct
+>> kset"  And the nodes of the list are chained by "entry" in "struct
+>> kobject".
+...
+>> At a minimum the change looks something like the patch below.
+...
+> If you really want to do this then you should remove the lock member 
+> from struct kset.  However this seems like an awful lot of work 
+> compared to my original suggestion -- something like this (untested, 
+> and you'll want to add comments):
+...
 
-LSI SAS HBAs are very attractive for our purposes but I identified a 
-problem with our existing mainboard-integrated LSI SAS 1068E . The 
-problem is that it is apparently not possble to use the 
-/dev/disk/by-path feature of Linux with it. At least not with the kernel 
-2.6.24 we are using (excuse me if it has already been fixed on latest 
-kernels: the server is in production now and it's not easy for us to check).
+I'm not sure I do want to pursue this.  It does seem particularly
+invasive at a fundamental level of a core data structure.
 
-We need the /dev/disk/by-path feature because we commonly do hot-swaps 
-with drives and we need to know for sure which HDD slot corresponds to a 
-certain linux block device. With other controllers like 3ware 9650SE 
-there is no such problem, ok but that's a SATA controller... I don't 
-know if the problem is by design with SAS controllers.
+Apparently I still don't understand your original suggestion.  I'd
+prefer to, especially if it leads to a simpler fix.  The loop in
+device_shutdown() looks something like:
 
-Actually the problem is even more complicated because for the new 
-storages we have planned to assemble there would be SAS expanders in the 
-middle.
+       struct device *dev, *devn;
 
-Look, here is an hot-swap seen from the dmesg:
+        list_for_each_entry_safe_reverse(dev, devn, &devices_kset->list,
+                                kobj.entry) {
+                if (dev->bus && dev->bus->shutdown) {
+                        dev->bus->shutdown(dev);
+                } else if (dev->driver && dev->driver->shutdown) {
+                        dev->driver->shutdown(dev);
+                }
+        }
 
-        Feb 22 14:27:30 myserver kernel: [655437.601971] mptbase: ioc0: 
-LogInfo(0x31110d00): Originator={PL}, Code={Reset}, SubCode(0x0d00)
-        Feb 22 14:27:35 myserver kernel: [655442.781061] mptsas: ioc0: 
-removing sata device, channel 0, id 0, phy 0
-        Feb 22 14:27:35 myserver kernel: [655442.781453] sd 5:0:10:0: 
-[sdu] Synchronizing SCSI cache
-        Feb 22 14:27:35 myserver kernel: [655442.781495] sd 5:0:10:0: 
-[sdu] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
-        Feb 22 14:28:22 myserver kernel: [655489.237562] mptsas: ioc0: 
-attaching sata device, channel 0, id 0, phy 0
-        Feb 22 14:28:22 myserver kernel: [655489.241959] scsi 5:0:11:0: 
-Direct-Access     ATA      WDC WD10EADS-00P 0A01 PQ: 0 ANSI: 5
-        Feb 22 14:28:22 myserver kernel: [655489.242506] sd 5:0:11:0: 
-[sdu] 1953525168 512-byte hardware sectors (1000205 MB)
-        Feb 22 14:28:22 myserver kernel: [655489.248104] sd 5:0:11:0: 
-[sdu] Write Protect is off
-        Feb 22 14:28:22 myserver kernel: [655489.251847] sd 5:0:11:0: 
-[sdu] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-        Feb 22 14:28:22 myserver kernel: [655489.252161] sd 5:0:11:0: 
-[sdu] 1953525168 512-byte hardware sectors (1000205 MB)
-        Feb 22 14:28:22 myserver kernel: [655489.257758] sd 5:0:11:0: 
-[sdu] Write Protect is off
-        Feb 22 14:28:22 myserver kernel: [655489.261518] sd 5:0:11:0: 
-[sdu] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-        Feb 22 14:28:22 myserver kernel: [655489.261525]  sdu: unknown 
-partition table
-        Feb 22 14:28:22 myserver kernel: [655489.287152] sd 5:0:11:0: 
-[sdu] Attached SCSI disk
-        Feb 22 14:28:22 myserver kernel: [655489.287204] sd 5:0:11:0: 
-Attached scsi generic sg21 type 0
+*dev gets delinked kobj_kset_leave() indirectly called from
+dev->*->shutdown(dev).  This is protected by the spinlock.
 
-You see, when I remove the disk it takes away device sd 5:0:10:0 and 
-when I reinsert a new drive it becomes device sd 5:0:11:0.
+The secondary thread similarly calls kobj_kset_leave().  But when the
+secondary thread calls the shutdown routine for the device that devn
+points to, the loop hangs.
 
-the /dev/disk/by-path the file to the disk also changes, from:
-     
-/dev/disk/by-path/pci-0000:0b:00.0-sas-0x500e08101003c820:1:0-0x1221000000000000:0 
+Is there some way I can detect that devn no longer points to a valid
+device upon return from dev->*->shutdown(dev)?  Or, where else can I
+look to better understand your suggestion?
 
-to:
-     
-/dev/disk/by-path/pci-0000:0b:00.0-sas-0x500e08101003c824:1:4-0x1221000000000000:0
-(note: I'm not 100% sure that these two entries come from the same 
-hot-swap as the dmesg above)
-
-in rare cases I noticed that after an hot swap the file in 
-/dev/disk/by-path for the device is not even recreated.
-
-I also cannot trust drive letters because they can change across reboot, 
-and they also change if I remove drive A, remove drive B, insert drive 
-B, insert drive A... the letters would be swapped. So it's not reliable 
-enough for our use.
-
-So is this a real bug and is maybe fixed on newer kernels, or it is by 
-design?
-
-How can people reliably use hot-swap hardware in this situation...? Are 
-there other ways to determine the physical connections from within linux 
-(possibly through SAS expanders also), which I am not aware of?
-
-Thank you
-Asdo
+Thanks,
+Hugh
