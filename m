@@ -1,14 +1,14 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 26/32] bfa: Replace bfa_get_attr() with specific APIs
-Date: Wed, 3 Mar 2010 17:47:32 -0800
-Message-ID: <1267667252-28689-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 27/32] bfa: Modified the portstats get/clear logic
+Date: Wed, 3 Mar 2010 17:47:40 -0800
+Message-ID: <1267667260-28742-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:47687 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:47691 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755405Ab0CDBrl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 20:47:41 -0500
+	with ESMTP id S1755360Ab0CDBrw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 20:47:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,769 +18,1521 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 
-	- bfa_ioc_attr_s is a big structure and some times could cause
-	  stack overflow if defined locally, so add specific APIs that
-	  are needed to replace the use of ioc_attr local var.
+	- Modified the portstats get/clear logic for port physical/FCoE/QoS stats.
+	- Added more stats to FC
+	- Fixed some issues with FCoE stats collection.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fcport.c         |   33 ++------
- drivers/scsi/bfa/bfa_fcs_lport.c      |   26 +-----
- drivers/scsi/bfa/bfa_ioc.c            |  155 ++++++++++++++++++++-------------
- drivers/scsi/bfa/bfa_ioc.h            |   10 ++
- drivers/scsi/bfa/bfa_lps.c            |   10 +--
- drivers/scsi/bfa/bfad.c               |    4 +-
- drivers/scsi/bfa/bfad_attr.c          |   62 +++++--------
- drivers/scsi/bfa/bfad_drv.h           |   13 +++
- drivers/scsi/bfa/bfad_im.c            |   29 +++----
- drivers/scsi/bfa/fabric.c             |   10 +--
- drivers/scsi/bfa/fcpim.c              |   15 +---
- drivers/scsi/bfa/include/bfa.h        |   20 ++++
- drivers/scsi/bfa/include/cs/bfa_log.h |    2 +-
- drivers/scsi/bfa/rport.c              |    7 +-
- drivers/scsi/bfa/vport.c              |   18 +----
- 15 files changed, 197 insertions(+), 217 deletions(-)
+ drivers/scsi/bfa/bfa_fcport.c                  |  738 ++++++++----------------
+ drivers/scsi/bfa/bfa_port_priv.h               |   41 +-
+ drivers/scsi/bfa/bfad_attr.c                   |    5 +-
+ drivers/scsi/bfa/include/bfa_svc.h             |   24 +-
+ drivers/scsi/bfa/include/bfi/bfi.h             |    4 +-
+ drivers/scsi/bfa/include/bfi/bfi_pport.h       |  177 ++----
+ drivers/scsi/bfa/include/defs/bfa_defs_pport.h |  128 +++--
+ 7 files changed, 408 insertions(+), 709 deletions(-)
 
 diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-index bfd1ee0..d56a6c8 100644
+index d56a6c8..cfd3022 100644
 --- a/drivers/scsi/bfa/bfa_fcport.c
 +++ b/drivers/scsi/bfa/bfa_fcport.c
-@@ -145,35 +145,12 @@ bfa_fcport_aen_post(struct bfa_fcport_s *fcport, enum bfa_port_aen_event event)
- 	struct bfa_log_mod_s *logmod = fcport->bfa->logm;
- 	wwn_t           pwwn = fcport->pwwn;
- 	char            pwwn_ptr[BFA_STRING_32];
--	struct bfa_ioc_attr_s ioc_attr;
+@@ -47,16 +47,10 @@ static void     bfa_fcport_callback(struct bfa_fcport_s *fcport,
+ 				enum bfa_pport_linkstate event);
+ static void     bfa_fcport_queue_cb(struct bfa_fcport_ln_s *ln,
+ 				enum bfa_pport_linkstate event);
+-static void     __bfa_cb_fcport_stats(void *cbarg, bfa_boolean_t complete);
+ static void     __bfa_cb_fcport_stats_clr(void *cbarg, bfa_boolean_t complete);
+-static void     bfa_fcport_stats_timeout(void *cbarg);
++static void     bfa_fcport_stats_get_timeout(void *cbarg);
+ static void     bfa_fcport_stats_clr_timeout(void *cbarg);
  
- 	memset(&aen_data, 0, sizeof(aen_data));
- 	wwn2str(pwwn_ptr, pwwn);
--	switch (event) {
--	case BFA_PORT_AEN_ONLINE:
--		bfa_log(logmod, BFA_AEN_PORT_ONLINE, pwwn_ptr);
--		break;
--	case BFA_PORT_AEN_OFFLINE:
--		bfa_log(logmod, BFA_AEN_PORT_OFFLINE, pwwn_ptr);
--		break;
--	case BFA_PORT_AEN_ENABLE:
--		bfa_log(logmod, BFA_AEN_PORT_ENABLE, pwwn_ptr);
--		break;
--	case BFA_PORT_AEN_DISABLE:
--		bfa_log(logmod, BFA_AEN_PORT_DISABLE, pwwn_ptr);
--		break;
--	case BFA_PORT_AEN_DISCONNECT:
--		bfa_log(logmod, BFA_AEN_PORT_DISCONNECT, pwwn_ptr);
--		break;
--	case BFA_PORT_AEN_QOS_NEG:
--		bfa_log(logmod, BFA_AEN_PORT_QOS_NEG, pwwn_ptr);
--		break;
--	default:
--		break;
--	}
-+	bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_PORT, event), pwwn_ptr);
- 
--	bfa_ioc_get_attr(&fcport->bfa->ioc, &ioc_attr);
--	aen_data.port.ioc_type = ioc_attr.ioc_type;
-+	aen_data.port.ioc_type = bfa_get_type(fcport->bfa);
- 	aen_data.port.pwwn = pwwn;
- }
- 
-@@ -2041,11 +2018,15 @@ void
- bfa_fcport_cfg_qos(struct bfa_s *bfa, bfa_boolean_t on_off)
- {
- 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
-+	enum bfa_ioc_type_e ioc_type = bfa_get_type(bfa);
- 
- 	bfa_trc(bfa, on_off);
- 	bfa_trc(bfa, fcport->cfg.qos_enabled);
- 
--	fcport->cfg.qos_enabled = on_off;
-+	bfa_trc(bfa, ioc_type);
-+
-+	if (ioc_type == BFA_IOC_TYPE_FC)
-+		fcport->cfg.qos_enabled = on_off;
- }
- 
- void
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 4a51aac..7c1251c 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -263,30 +263,8 @@ bfa_fcs_port_aen_post(struct bfa_fcs_port_s *port,
- 
- 	bfa_assert(role <= BFA_PORT_ROLE_FCP_MAX);
- 
--	switch (event) {
--	case BFA_LPORT_AEN_ONLINE:
--		bfa_log(logmod, BFA_AEN_LPORT_ONLINE, lpwwn_ptr,
--			role_str[role / 2]);
--		break;
--	case BFA_LPORT_AEN_OFFLINE:
--		bfa_log(logmod, BFA_AEN_LPORT_OFFLINE, lpwwn_ptr,
--			role_str[role / 2]);
--		break;
--	case BFA_LPORT_AEN_NEW:
--		bfa_log(logmod, BFA_AEN_LPORT_NEW, lpwwn_ptr,
--			role_str[role / 2]);
--		break;
--	case BFA_LPORT_AEN_DELETE:
--		bfa_log(logmod, BFA_AEN_LPORT_DELETE, lpwwn_ptr,
--			role_str[role / 2]);
--		break;
--	case BFA_LPORT_AEN_DISCONNECT:
--		bfa_log(logmod, BFA_AEN_LPORT_DISCONNECT, lpwwn_ptr,
--			role_str[role / 2]);
--		break;
--	default:
--		break;
--	}
-+	bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_LPORT, event), lpwwn_ptr,
-+		role_str[role/2]);
- 
- 	aen_data.lport.vf_id = port->fabric->vf_id;
- 	aen_data.lport.roles = role;
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 4d9a47c..d1e15b3 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -1679,46 +1679,28 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
- 			 struct bfa_adapter_attr_s *ad_attr)
- {
- 	struct bfi_ioc_attr_s *ioc_attr;
--	char            model[BFA_ADAPTER_MODEL_NAME_LEN];
- 
- 	ioc_attr = ioc->attr;
--	bfa_os_memcpy((void *)&ad_attr->serial_num,
--		      (void *)ioc_attr->brcd_serialnum,
--		      BFA_ADAPTER_SERIAL_NUM_LEN);
+-static void     __bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete);
+-static void     __bfa_cb_port_stats_clr(void *cbarg, bfa_boolean_t complete);
+-static void     bfa_port_stats_timeout(void *cbarg);
+-static void     bfa_port_stats_clr_timeout(void *cbarg);
 -
--	bfa_os_memcpy(&ad_attr->fw_ver, ioc_attr->fw_version, BFA_VERSION_LEN);
--	bfa_os_memcpy(&ad_attr->optrom_ver, ioc_attr->optrom_version,
--		      BFA_VERSION_LEN);
--	bfa_os_memcpy(&ad_attr->manufacturer, BFA_MFG_NAME,
--		      BFA_ADAPTER_MFG_NAME_LEN);
-+
-+	bfa_ioc_get_adapter_serial_num(ioc, ad_attr->serial_num);
-+	bfa_ioc_get_adapter_fw_ver(ioc, ad_attr->fw_ver);
-+	bfa_ioc_get_adapter_optrom_ver(ioc, ad_attr->optrom_ver);
-+	bfa_ioc_get_adapter_manufacturer(ioc, ad_attr->manufacturer);
- 	bfa_os_memcpy(&ad_attr->vpd, &ioc_attr->vpd,
- 		      sizeof(struct bfa_mfg_vpd_s));
+ /**
+  *  bfa_pport_private
+  */
+@@ -301,7 +295,7 @@ bfa_fcport_sm_enabling(struct bfa_fcport_s *fcport, enum bfa_fcport_sm_event eve
+ static void
+ bfa_fcport_sm_linkdown(struct bfa_fcport_s *fcport, enum bfa_fcport_sm_event event)
+ {
+-	struct bfi_pport_event_s *pevent = fcport->event_arg.i2hmsg.event;
++	struct bfi_fcport_event_s *pevent = fcport->event_arg.i2hmsg.event;
+ 	bfa_trc(fcport->bfa, event);
  
--	ad_attr->nports = BFI_ADAPTER_GETP(NPORTS, ioc_attr->adapter_prop);
--	ad_attr->max_speed = BFI_ADAPTER_GETP(SPEED, ioc_attr->adapter_prop);
-+	ad_attr->nports = bfa_ioc_get_nports(ioc);
-+	ad_attr->max_speed = bfa_ioc_speed_sup(ioc);
- 
--	/**
--	 * model name
--	 */
--	if (BFI_ADAPTER_GETP(SPEED, ioc_attr->adapter_prop) == 10) {
--		strcpy(model, "BR-10?0");
--		model[5] = '0' + ad_attr->nports;
--	} else {
--		strcpy(model, "Brocade-??5");
--		model[8] =
--			'0' + BFI_ADAPTER_GETP(SPEED, ioc_attr->adapter_prop);
--		model[9] = '0' + ad_attr->nports;
--	}
-+	bfa_ioc_get_adapter_model(ioc, ad_attr->model);
-+	/* For now, model descr uses same model string */
-+	bfa_ioc_get_adapter_model(ioc, ad_attr->model_descr);
- 
- 	if (BFI_ADAPTER_IS_SPECIAL(ioc_attr->adapter_prop))
- 		ad_attr->prototype = 1;
- 	else
- 		ad_attr->prototype = 0;
- 
--	bfa_os_memcpy(&ad_attr->model, model, BFA_ADAPTER_MODEL_NAME_LEN);
--	bfa_os_memcpy(&ad_attr->model_descr, &ad_attr->model,
--		      BFA_ADAPTER_MODEL_NAME_LEN);
--
- 	ad_attr->pwwn = bfa_ioc_get_pwwn(ioc);
- 	ad_attr->mac = bfa_ioc_get_mac(ioc);
- 
-@@ -1726,13 +1708,9 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
- 	ad_attr->pcie_lanes = ioc_attr->pcie_lanes;
- 	ad_attr->pcie_lanes_orig = ioc_attr->pcie_lanes_orig;
- 	ad_attr->asic_rev = ioc_attr->asic_rev;
--	ad_attr->hw_ver[0] = 'R';
--	ad_attr->hw_ver[1] = 'e';
--	ad_attr->hw_ver[2] = 'v';
--	ad_attr->hw_ver[3] = '-';
--	ad_attr->hw_ver[4] = ioc_attr->asic_rev;
--	ad_attr->hw_ver[5] = '\0';
- 
-+	bfa_ioc_get_pci_chip_rev(ioc, ad_attr->hw_ver);
-+	
- 	ad_attr->cna_capable = ioc->cna;
+ 	switch (event) {
+@@ -817,8 +811,32 @@ __bfa_cb_fcport_event(void *cbarg, bfa_boolean_t complete)
+ 		bfa_sm_send_event(ln, BFA_FCPORT_LN_SM_NOTIFICATION);
  }
  
-@@ -1752,11 +1730,91 @@ bfa_ioc_get_type(struct bfa_ioc_s *ioc)
- }
- 
- void
-+bfa_ioc_get_adapter_serial_num(struct bfa_ioc_s *ioc, char *serial_num)
+-#define PPORT_STATS_DMA_SZ (BFA_ROUNDUP(sizeof(union bfa_fcport_stats_u), \
+-							BFA_CACHELINE_SZ))
++static void
++bfa_fcport_callback(struct bfa_fcport_s *fcport, enum bfa_pport_linkstate event)
 +{
-+	bfa_os_memset((void *)serial_num, 0, BFA_ADAPTER_SERIAL_NUM_LEN);
-+	bfa_os_memcpy((void *)serial_num,
-+			(void *)ioc->attr->brcd_serialnum,
-+			BFA_ADAPTER_SERIAL_NUM_LEN);
-+}
++	if (fcport->bfa->fcs) {
++		fcport->event_cbfn(fcport->event_cbarg, event);
++		return;
++	}
 +
-+void
-+bfa_ioc_get_adapter_fw_ver(struct bfa_ioc_s *ioc, char *fw_ver)
-+{
-+	bfa_os_memset((void *)fw_ver, 0, BFA_VERSION_LEN);
-+	bfa_os_memcpy(fw_ver, ioc->attr->fw_version, BFA_VERSION_LEN);
-+}
-+
-+void
-+bfa_ioc_get_pci_chip_rev(struct bfa_ioc_s *ioc, char *chip_rev)
-+{
-+	bfa_assert(chip_rev);
-+
-+	bfa_os_memset((void *)chip_rev, 0, BFA_IOC_CHIP_REV_LEN);
-+
-+	chip_rev[0] = 'R';
-+	chip_rev[1] = 'e';
-+	chip_rev[2] = 'v';
-+	chip_rev[3] = '-';
-+	chip_rev[4] = ioc->attr->asic_rev;
-+	chip_rev[5] = '\0';
-+}
-+
-+void
-+bfa_ioc_get_adapter_optrom_ver(struct bfa_ioc_s *ioc, char *optrom_ver)
-+{
-+	bfa_os_memset((void *)optrom_ver, 0, BFA_VERSION_LEN);
-+	bfa_os_memcpy(optrom_ver, ioc->attr->optrom_version,
-+		BFA_VERSION_LEN);
-+}
-+
-+void
-+bfa_ioc_get_adapter_manufacturer(struct bfa_ioc_s *ioc, char *manufacturer)
-+{
-+	bfa_os_memset((void *)manufacturer, 0, BFA_ADAPTER_MFG_NAME_LEN);
-+	bfa_os_memcpy(manufacturer, BFA_MFG_NAME, BFA_ADAPTER_MFG_NAME_LEN);
-+}
-+
-+void
-+bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
-+{
-+	struct bfi_ioc_attr_s   *ioc_attr;
-+	u8              nports;
-+	u8              max_speed;
-+
-+	bfa_assert(model);
-+	bfa_os_memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
-+
-+	ioc_attr = ioc->attr;
-+
-+	nports = bfa_ioc_get_nports(ioc);
-+	max_speed = bfa_ioc_speed_sup(ioc);
-+
-+	/**
-+	 * model name
-+	 */
-+	if (max_speed == 10) {
-+		strcpy(model, "BR-10?0");
-+		model[5] = '0' + nports;
-+	} else {
-+		strcpy(model, "Brocade-??5");
-+		model[8] = '0' + max_speed;
-+		model[9] = '0' + nports;
++	switch (event) {
++	case BFA_PPORT_LINKUP:
++		bfa_sm_send_event(&fcport->ln, BFA_FCPORT_LN_SM_LINKUP);
++		break;
++	case BFA_PPORT_LINKDOWN:
++		bfa_sm_send_event(&fcport->ln, BFA_FCPORT_LN_SM_LINKDOWN);
++		break;
++	default:
++		bfa_assert(0);
 +	}
 +}
 +
-+enum bfa_ioc_state
-+bfa_ioc_get_state(struct bfa_ioc_s *ioc)
++static void
++bfa_fcport_queue_cb(struct bfa_fcport_ln_s *ln, enum bfa_pport_linkstate event)
 +{
-+	return bfa_sm_to_state(ioc_sm_table, ioc->fsm);
++	ln->ln_event = event;
++	bfa_cb_queue(ln->fcport->bfa, &ln->ln_qe, __bfa_cb_fcport_event, ln);
 +}
-+
-+void
- bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
+ 
+ #define FCPORT_STATS_DMA_SZ (BFA_ROUNDUP(sizeof(union bfa_fcport_stats_u), \
+ 							BFA_CACHELINE_SZ))
+@@ -827,8 +845,7 @@ static void
+ bfa_fcport_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *ndm_len,
+ 		  u32 *dm_len)
  {
- 	bfa_os_memset((void *)ioc_attr, 0, sizeof(struct bfa_ioc_attr_s));
- 
--	ioc_attr->state = bfa_sm_to_state(ioc_sm_table, ioc->fsm);
-+	ioc_attr->state = bfa_ioc_get_state(ioc);
- 	ioc_attr->port_id = ioc->port_id;
- 
- 	ioc_attr->ioc_type = bfa_ioc_get_type(ioc);
-@@ -1765,12 +1823,7 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
- 
- 	ioc_attr->pci_attr.device_id = ioc->pcidev.device_id;
- 	ioc_attr->pci_attr.pcifn = ioc->pcidev.pci_func;
--	ioc_attr->pci_attr.chip_rev[0] = 'R';
--	ioc_attr->pci_attr.chip_rev[1] = 'e';
--	ioc_attr->pci_attr.chip_rev[2] = 'v';
--	ioc_attr->pci_attr.chip_rev[3] = '-';
--	ioc_attr->pci_attr.chip_rev[4] = ioc_attr->adapter_attr.asic_rev;
--	ioc_attr->pci_attr.chip_rev[5] = '\0';
-+	bfa_ioc_get_pci_chip_rev(ioc, ioc_attr->pci_attr.chip_rev);
- }
- 
- /**
-@@ -1877,25 +1930,7 @@ bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
- 	s32         inst_num = 0;
- 	enum bfa_ioc_type_e ioc_type;
- 
--	switch (event) {
--	case BFA_IOC_AEN_HBGOOD:
--		bfa_log(logmod, BFA_AEN_IOC_HBGOOD, inst_num);
--		break;
--	case BFA_IOC_AEN_HBFAIL:
--		bfa_log(logmod, BFA_AEN_IOC_HBFAIL, inst_num);
--		break;
--	case BFA_IOC_AEN_ENABLE:
--		bfa_log(logmod, BFA_AEN_IOC_ENABLE, inst_num);
--		break;
--	case BFA_IOC_AEN_DISABLE:
--		bfa_log(logmod, BFA_AEN_IOC_DISABLE, inst_num);
--		break;
--	case BFA_IOC_AEN_FWMISMATCH:
--		bfa_log(logmod, BFA_AEN_IOC_FWMISMATCH, inst_num);
--		break;
--	default:
--		break;
--	}
-+	bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_IOC, event), inst_num);
- 
- 	memset(&aen_data.ioc.pwwn, 0, sizeof(aen_data.ioc.pwwn));
- 	memset(&aen_data.ioc.mac, 0, sizeof(aen_data.ioc.mac));
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 4b73efa..d080440 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -263,6 +263,16 @@ bfa_boolean_t bfa_ioc_is_disabled(struct bfa_ioc_s *ioc);
- bfa_boolean_t bfa_ioc_fw_mismatch(struct bfa_ioc_s *ioc);
- bfa_boolean_t bfa_ioc_adapter_is_disabled(struct bfa_ioc_s *ioc);
- void bfa_ioc_cfg_complete(struct bfa_ioc_s *ioc);
-+enum bfa_ioc_type_e bfa_ioc_get_type(struct bfa_ioc_s *ioc);
-+void bfa_ioc_get_adapter_serial_num(struct bfa_ioc_s *ioc, char *serial_num);
-+void bfa_ioc_get_adapter_fw_ver(struct bfa_ioc_s *ioc, char *fw_ver);
-+void bfa_ioc_get_adapter_optrom_ver(struct bfa_ioc_s *ioc, char *optrom_ver);
-+void bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model);
-+void bfa_ioc_get_adapter_manufacturer(struct bfa_ioc_s *ioc,
-+	char *manufacturer);
-+void bfa_ioc_get_pci_chip_rev(struct bfa_ioc_s *ioc, char *chip_rev);
-+enum bfa_ioc_state bfa_ioc_get_state(struct bfa_ioc_s *ioc);
-+
- void bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr);
- void bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
- 		struct bfa_adapter_attr_s *ad_attr);
-diff --git a/drivers/scsi/bfa/bfa_lps.c b/drivers/scsi/bfa/bfa_lps.c
-index 1b4c883..ad06f61 100644
---- a/drivers/scsi/bfa/bfa_lps.c
-+++ b/drivers/scsi/bfa/bfa_lps.c
-@@ -631,14 +631,10 @@ bfa_lps_cvl_event(struct bfa_lps_s *lps)
- u32
- bfa_lps_get_max_vport(struct bfa_s *bfa)
- {
--	struct bfa_ioc_attr_s ioc_attr;
--
--	bfa_get_attr(bfa, &ioc_attr);
--
--	if (ioc_attr.pci_attr.device_id == BFA_PCI_DEVICE_ID_CT)
--		return (BFA_LPS_MAX_VPORTS_SUPP_CT);
-+	if (bfa_ioc_devid(&bfa->ioc) == BFA_PCI_DEVICE_ID_CT)
-+		return BFA_LPS_MAX_VPORTS_SUPP_CT;
- 	else
--		return (BFA_LPS_MAX_VPORTS_SUPP_CB);
-+		return BFA_LPS_MAX_VPORTS_SUPP_CB;
- }
- 
- /**
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index a8a529d..6bff08e 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -978,7 +978,6 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
- {
- 	struct bfad_s  *bfad;
- 	int             error = -ENODEV, retval;
--	char            buf[16];
- 
- 	/*
- 	 * For single port cards - only claim function 0
-@@ -1009,8 +1008,7 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	bfa_trc(bfad, bfad_inst);
- 
- 	bfad->logmod = &bfad->log_data;
--	sprintf(buf, "%d", bfad_inst);
--	bfa_log_init(bfad->logmod, buf, bfa_os_printf);
-+	bfa_log_init(bfad->logmod, (char *)pci_name(pdev), bfa_os_printf);
- 
- 	bfad_drv_log_level_set(bfad);
- 
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index a691133..dd5cb20 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -424,12 +424,10 @@ bfad_im_serial_num_show(struct device *dev, struct device_attribute *attr,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
-+	char serial_num[BFA_ADAPTER_SERIAL_NUM_LEN];
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--			ioc_attr.adapter_attr.serial_num);
-+	bfa_get_adapter_serial_num(&bfad->bfa, serial_num);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", serial_num);
- }
- 
- static ssize_t
-@@ -440,11 +438,10 @@ bfad_im_model_show(struct device *dev, struct device_attribute *attr,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
-+	char model[BFA_ADAPTER_MODEL_NAME_LEN];
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
--	return snprintf(buf, PAGE_SIZE, "%s\n", ioc_attr.adapter_attr.model);
-+	bfa_get_adapter_model(&bfad->bfa, model);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", model);
- }
- 
- static ssize_t
-@@ -455,12 +452,10 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
-+	char model_descr[BFA_ADAPTER_MODEL_DESCR_LEN];
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--			ioc_attr.adapter_attr.model_descr);
-+	bfa_get_adapter_model(&bfad->bfa, model_descr);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", model_descr);
- }
- 
- static ssize_t
-@@ -485,14 +480,13 @@ bfad_im_symbolic_name_show(struct device *dev, struct device_attribute *attr,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
--
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	char model[BFA_ADAPTER_MODEL_NAME_LEN];
-+	char fw_ver[BFA_VERSION_LEN];
- 
-+	bfa_get_adapter_model(&bfad->bfa, model);
-+	bfa_get_adapter_fw_ver(&bfad->bfa, fw_ver);
- 	return snprintf(buf, PAGE_SIZE, "Brocade %s FV%s DV%s\n",
--			ioc_attr.adapter_attr.model,
--			ioc_attr.adapter_attr.fw_ver, BFAD_DRIVER_VERSION);
-+		model, fw_ver, BFAD_DRIVER_VERSION);
- }
- 
- static ssize_t
-@@ -503,11 +497,10 @@ bfad_im_hw_version_show(struct device *dev, struct device_attribute *attr,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
-+	char hw_ver[BFA_VERSION_LEN];
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
--	return snprintf(buf, PAGE_SIZE, "%s\n", ioc_attr.adapter_attr.hw_ver);
-+	bfa_get_pci_chip_rev(&bfad->bfa, hw_ver);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", hw_ver);
- }
- 
- static ssize_t
-@@ -525,12 +518,10 @@ bfad_im_optionrom_version_show(struct device *dev,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
-+	char optrom_ver[BFA_VERSION_LEN];
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
--	return snprintf(buf, PAGE_SIZE, "%s\n",
--			ioc_attr.adapter_attr.optrom_ver);
-+	bfa_get_adapter_optrom_ver(&bfad->bfa, optrom_ver);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", optrom_ver);
- }
- 
- static ssize_t
-@@ -541,11 +532,10 @@ bfad_im_fw_version_show(struct device *dev, struct device_attribute *attr,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
-+	char fw_ver[BFA_VERSION_LEN];
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
--	return snprintf(buf, PAGE_SIZE, "%s\n", ioc_attr.adapter_attr.fw_ver);
-+	bfa_get_adapter_fw_ver(&bfad->bfa, fw_ver);
-+	return snprintf(buf, PAGE_SIZE, "%s\n", fw_ver);
- }
- 
- static ssize_t
-@@ -556,11 +546,9 @@ bfad_im_num_of_ports_show(struct device *dev, struct device_attribute *attr,
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
- 	struct bfad_s         *bfad = im_port->bfad;
--	struct bfa_ioc_attr_s  ioc_attr;
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
--	return snprintf(buf, PAGE_SIZE, "%d\n", ioc_attr.adapter_attr.nports);
-+	return snprintf(buf, PAGE_SIZE, "%d\n",
-+		bfa_get_nports(&bfad->bfa));
- }
- 
- static ssize_t
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 05769ee..d9390e5 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -139,6 +139,18 @@ struct bfad_cfg_param_s {
- 	u32        binding_method;
- };
- 
-+union bfad_tmp_buf {
-+	/* From struct bfa_adapter_attr_s */
-+	char            manufacturer[BFA_ADAPTER_MFG_NAME_LEN];
-+	char            serial_num[BFA_ADAPTER_SERIAL_NUM_LEN];
-+	char            model[BFA_ADAPTER_MODEL_NAME_LEN];
-+	char            fw_ver[BFA_VERSION_LEN];
-+	char            optrom_ver[BFA_VERSION_LEN];
-+
-+	/* From struct bfa_ioc_pci_attr_s */
-+	u8         chip_rev[BFA_IOC_CHIP_REV_LEN];  /*  chip revision */
-+};
-+
- /*
-  * BFAD (PCI function) data structure
-  */
-@@ -182,6 +194,7 @@ struct bfad_s {
- 	struct bfa_plog_s      plog_buf;
- 	int             ref_count;
- 	bfa_boolean_t	ipfc_enabled;
-+	union bfad_tmp_buf tmp_buf;
- 	struct fc_host_statistics link_stats;
- 
- 	struct kobject *bfa_kobj;
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 23390b4..cee3d89 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -167,17 +167,15 @@ bfad_im_info(struct Scsi_Host *shost)
- 	static char     bfa_buf[256];
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) shost->hostdata[0];
--	struct bfa_ioc_attr_s  ioc_attr;
- 	struct bfad_s         *bfad = im_port->bfad;
-+	char model[BFA_ADAPTER_MODEL_NAME_LEN];
- 
--	memset(&ioc_attr, 0, sizeof(ioc_attr));
--	bfa_get_attr(&bfad->bfa, &ioc_attr);
-+	bfa_get_adapter_model(&bfad->bfa, model);
- 
- 	memset(bfa_buf, 0, sizeof(bfa_buf));
- 	snprintf(bfa_buf, sizeof(bfa_buf),
--		 "Brocade FC/FCOE Adapter, " "model: %s hwpath: %s driver: %s",
--		 ioc_attr.adapter_attr.model, bfad->pci_name,
--		 BFAD_DRIVER_VERSION);
-+		"Brocade FC/FCOE Adapter, " "model: %s hwpath: %s driver: %s",
-+		model, bfad->pci_name, BFAD_DRIVER_VERSION);
- 	return bfa_buf;
- }
- 
-@@ -931,10 +929,9 @@ bfad_os_fc_host_init(struct bfad_im_port_s *im_port)
- 	struct Scsi_Host *host = im_port->shost;
- 	struct bfad_s         *bfad = im_port->bfad;
- 	struct bfad_port_s    *port = im_port->port;
--	union attr {
--		struct bfa_pport_attr_s pattr;
--		struct bfa_ioc_attr_s  ioc_attr;
--	} attr;
-+	struct bfa_pport_attr_s pattr;
-+	char model[BFA_ADAPTER_MODEL_NAME_LEN];
-+	char fw_ver[BFA_VERSION_LEN];
- 
- 	fc_host_node_name(host) =
- 		bfa_os_htonll((bfa_fcs_port_get_nwwn(port->fcs_port)));
-@@ -954,20 +951,18 @@ bfad_os_fc_host_init(struct bfad_im_port_s *im_port)
- 	/* For fibre channel services type 0x20 */
- 	fc_host_supported_fc4s(host)[7] = 1;
- 
--	memset(&attr.ioc_attr, 0, sizeof(attr.ioc_attr));
--	bfa_get_attr(&bfad->bfa, &attr.ioc_attr);
-+	bfa_get_adapter_model(&bfad->bfa, model);
-+	bfa_get_adapter_fw_ver(&bfad->bfa, fw_ver);
- 	sprintf(fc_host_symbolic_name(host), "Brocade %s FV%s DV%s",
--		attr.ioc_attr.adapter_attr.model,
--		attr.ioc_attr.adapter_attr.fw_ver, BFAD_DRIVER_VERSION);
-+		model, fw_ver, BFAD_DRIVER_VERSION);
- 
- 	fc_host_supported_speeds(host) = 0;
- 	fc_host_supported_speeds(host) |=
- 		FC_PORTSPEED_8GBIT | FC_PORTSPEED_4GBIT | FC_PORTSPEED_2GBIT |
- 		FC_PORTSPEED_1GBIT;
- 
--	memset(&attr.pattr, 0, sizeof(attr.pattr));
--	bfa_fcport_get_attr(&bfad->bfa, &attr.pattr);
--	fc_host_maxframe_size(host) = attr.pattr.pport_cfg.maxfrsize;
-+	bfa_fcport_get_attr(&bfad->bfa, &pattr);
-+	fc_host_maxframe_size(host) = pattr.pport_cfg.maxfrsize;
+-	*dm_len += PPORT_STATS_DMA_SZ;
+-	*dm_len += PPORT_STATS_DMA_SZ;
++	*dm_len += FCPORT_STATS_DMA_SZ;
  }
  
  static void
-diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
-index e1a4b31..b4e05ad 100644
---- a/drivers/scsi/bfa/fabric.c
-+++ b/drivers/scsi/bfa/fabric.c
-@@ -1235,14 +1235,8 @@ bfa_fcs_fabric_aen_post(struct bfa_fcs_port_s *port,
- 	wwn2str(pwwn_ptr, pwwn);
- 	wwn2str(fwwn_ptr, fwwn);
+@@ -850,16 +867,7 @@ bfa_fcport_mem_claim(struct bfa_fcport_s *fcport, struct bfa_meminfo_s *meminfo)
  
--	switch (event) {
--	case BFA_PORT_AEN_FABRIC_NAME_CHANGE:
--		bfa_log(logmod, BFA_AEN_PORT_FABRIC_NAME_CHANGE, pwwn_ptr,
--			fwwn_ptr);
--		break;
--	default:
--		break;
--	}
-+	bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_PORT, event),
-+		pwwn_ptr, fwwn_ptr);
+ 	fcport->stats_kva = dm_kva;
+ 	fcport->stats_pa = dm_pa;
+-	fcport->stats = (union bfa_pport_stats_u *)dm_kva;
+-
+-	dm_kva += PPORT_STATS_DMA_SZ;
+-	dm_pa += PPORT_STATS_DMA_SZ;
+-
+-	/* FC port stats */
+-
+-	fcport->fcport_stats_kva = dm_kva;
+-	fcport->fcport_stats_pa = dm_pa;
+-	fcport->fcport_stats = (union bfa_fcport_stats_u *) dm_kva;
++	fcport->stats = (union bfa_fcport_stats_u *)dm_kva;
  
- 	aen_data.port.pwwn = pwwn;
- 	aen_data.port.fwwn = fwwn;
-diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
-index 71d23d1..ef50ec2 100644
---- a/drivers/scsi/bfa/fcpim.c
-+++ b/drivers/scsi/bfa/fcpim.c
-@@ -385,19 +385,8 @@ bfa_fcs_itnim_aen_post(struct bfa_fcs_itnim_s *itnim,
- 	wwn2str(lpwwn_ptr, lpwwn);
- 	wwn2str(rpwwn_ptr, rpwwn);
+ 	dm_kva += FCPORT_STATS_DMA_SZ;
+ 	dm_pa += FCPORT_STATS_DMA_SZ;
+@@ -955,7 +963,7 @@ bfa_fcport_iocdisable(struct bfa_s *bfa)
+ static void
+ bfa_fcport_update_linkinfo(struct bfa_fcport_s *fcport)
+ {
+-	struct bfi_pport_event_s *pevent = fcport->event_arg.i2hmsg.event;
++	struct bfi_fcport_event_s *pevent = fcport->event_arg.i2hmsg.event;
  
--	switch (event) {
--	case BFA_ITNIM_AEN_ONLINE:
--		bfa_log(logmod, BFA_AEN_ITNIM_ONLINE, rpwwn_ptr, lpwwn_ptr);
--		break;
--	case BFA_ITNIM_AEN_OFFLINE:
--		bfa_log(logmod, BFA_AEN_ITNIM_OFFLINE, rpwwn_ptr, lpwwn_ptr);
--		break;
--	case BFA_ITNIM_AEN_DISCONNECT:
--		bfa_log(logmod, BFA_AEN_ITNIM_DISCONNECT, rpwwn_ptr, lpwwn_ptr);
--		break;
--	default:
--		break;
--	}
-+	bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_ITNIM, event),
-+		rpwwn_ptr, lpwwn_ptr);
+ 	fcport->speed = pevent->link_state.speed;
+ 	fcport->topology = pevent->link_state.topology;
+@@ -987,7 +995,7 @@ bfa_fcport_reset_linkinfo(struct bfa_fcport_s *fcport)
+ static          bfa_boolean_t
+ bfa_fcport_send_enable(struct bfa_fcport_s *fcport)
+ {
+-	struct bfi_pport_enable_req_s *m;
++	struct bfi_fcport_enable_req_s *m;
  
- 	aen_data.itnim.vf_id = rport->port->fabric->vf_id;
- 	aen_data.itnim.ppwwn =
-diff --git a/drivers/scsi/bfa/include/bfa.h b/drivers/scsi/bfa/include/bfa.h
-index 17654ca..1f5966c 100644
---- a/drivers/scsi/bfa/include/bfa.h
-+++ b/drivers/scsi/bfa/include/bfa.h
-@@ -106,6 +106,26 @@ struct bfa_sge_s {
- 	bfa_ioc_fetch_stats(&(__bfa)->ioc, __ioc_stats)
- #define bfa_ioc_clear_stats(__bfa)	\
- 	bfa_ioc_clr_stats(&(__bfa)->ioc)
-+#define bfa_get_nports(__bfa)   \
-+	bfa_ioc_get_nports(&(__bfa)->ioc)
-+#define bfa_get_adapter_manufacturer(__bfa, __manufacturer) \
-+	bfa_ioc_get_adapter_manufacturer(&(__bfa)->ioc, __manufacturer)
-+#define bfa_get_adapter_model(__bfa, __model)   \
-+	bfa_ioc_get_adapter_model(&(__bfa)->ioc, __model)
-+#define bfa_get_adapter_serial_num(__bfa, __serial_num) \
-+	bfa_ioc_get_adapter_serial_num(&(__bfa)->ioc, __serial_num)
-+#define bfa_get_adapter_fw_ver(__bfa, __fw_ver) \
-+	bfa_ioc_get_adapter_fw_ver(&(__bfa)->ioc, __fw_ver)
-+#define bfa_get_adapter_optrom_ver(__bfa, __optrom_ver) \
-+	bfa_ioc_get_adapter_optrom_ver(&(__bfa)->ioc, __optrom_ver)
-+#define bfa_get_pci_chip_rev(__bfa, __chip_rev) \
-+	bfa_ioc_get_pci_chip_rev(&(__bfa)->ioc, __chip_rev)
-+#define bfa_get_ioc_state(__bfa)    \
-+	bfa_ioc_get_state(&(__bfa)->ioc)
-+#define bfa_get_type(__bfa) \
-+	bfa_ioc_get_type(&(__bfa)->ioc)
-+#define bfa_get_mac(__bfa)  \
-+	bfa_ioc_get_mac(&(__bfa)->ioc)
+ 	/**
+ 	 * Increment message tag before queue check, so that responses to old
+@@ -1005,15 +1013,14 @@ bfa_fcport_send_enable(struct bfa_fcport_s *fcport)
+ 		return BFA_FALSE;
+ 	}
  
- /*
-  * bfa API functions
-diff --git a/drivers/scsi/bfa/include/cs/bfa_log.h b/drivers/scsi/bfa/include/cs/bfa_log.h
-index 761cbe2..bc334e0 100644
---- a/drivers/scsi/bfa/include/cs/bfa_log.h
-+++ b/drivers/scsi/bfa/include/cs/bfa_log.h
-@@ -157,7 +157,7 @@ typedef void (*bfa_log_cb_t)(struct bfa_log_mod_s *log_mod, u32 msg_id,
+-	bfi_h2i_set(m->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_ENABLE_REQ,
+-		    bfa_lpuid(fcport->bfa));
++	bfi_h2i_set(m->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_ENABLE_REQ,
++				bfa_lpuid(fcport->bfa));
+ 	m->nwwn = fcport->nwwn;
+ 	m->pwwn = fcport->pwwn;
+ 	m->port_cfg = fcport->cfg;
+ 	m->msgtag = fcport->msgtag;
+ 	m->port_cfg.maxfrsize = bfa_os_htons(fcport->cfg.maxfrsize);
+ 	bfa_dma_be_addr_set(m->stats_dma_addr, fcport->stats_pa);
+-	bfa_dma_be_addr_set(m->fcport_stats_dma_addr, fcport->fcport_stats_pa);
+ 	bfa_trc(fcport->bfa, m->stats_dma_addr.a32.addr_lo);
+ 	bfa_trc(fcport->bfa, m->stats_dma_addr.a32.addr_hi);
  
+@@ -1030,7 +1037,7 @@ bfa_fcport_send_enable(struct bfa_fcport_s *fcport)
+ static          bfa_boolean_t
+ bfa_fcport_send_disable(struct bfa_fcport_s *fcport)
+ {
+-	bfi_pport_disable_req_t *m;
++	struct bfi_fcport_req_s *m;
  
- struct bfa_log_mod_s {
--	char		instance_info[16];	/*  instance info */
-+	char		instance_info[BFA_STRING_32];	/*  instance info */
- 	int		log_level[BFA_LOG_MODULE_ID_MAX + 1];
- 						/*  log level for modules */
- 	bfa_log_cb_t	cbfn; 			/*  callback function */
-diff --git a/drivers/scsi/bfa/rport.c b/drivers/scsi/bfa/rport.c
-index b2184a3..11c5ce7 100644
---- a/drivers/scsi/bfa/rport.c
-+++ b/drivers/scsi/bfa/rport.c
-@@ -2039,13 +2039,10 @@ bfa_fcs_rport_aen_post(struct bfa_fcs_rport_s *rport,
+ 	/**
+ 	 * Increment message tag before queue check, so that responses to old
+@@ -1048,8 +1055,8 @@ bfa_fcport_send_disable(struct bfa_fcport_s *fcport)
+ 		return BFA_FALSE;
+ 	}
  
- 	switch (event) {
- 	case BFA_RPORT_AEN_ONLINE:
--		bfa_log(logmod, BFA_AEN_RPORT_ONLINE, rpwwn_ptr, lpwwn_ptr);
--		break;
- 	case BFA_RPORT_AEN_OFFLINE:
--		bfa_log(logmod, BFA_AEN_RPORT_OFFLINE, rpwwn_ptr, lpwwn_ptr);
--		break;
- 	case BFA_RPORT_AEN_DISCONNECT:
--		bfa_log(logmod, BFA_AEN_RPORT_DISCONNECT, rpwwn_ptr, lpwwn_ptr);
-+		bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_RPORT, event),
-+			rpwwn_ptr, lpwwn_ptr);
+-	bfi_h2i_set(m->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_DISABLE_REQ,
+-		    bfa_lpuid(fcport->bfa));
++	bfi_h2i_set(m->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_DISABLE_REQ,
++			bfa_lpuid(fcport->bfa));
+ 	m->msgtag = fcport->msgtag;
+ 
+ 	/**
+@@ -1075,7 +1082,7 @@ bfa_fcport_send_txcredit(void *port_cbarg)
+ {
+ 
+ 	struct bfa_fcport_s *fcport = port_cbarg;
+-	struct bfi_pport_set_svc_params_req_s *m;
++	struct bfi_fcport_set_svc_params_req_s *m;
+ 
+ 	/**
+ 	 * check for room in queue to send request now
+@@ -1086,8 +1093,8 @@ bfa_fcport_send_txcredit(void *port_cbarg)
+ 		return;
+ 	}
+ 
+-	bfi_h2i_set(m->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_SET_SVC_PARAMS_REQ,
+-		    bfa_lpuid(fcport->bfa));
++	bfi_h2i_set(m->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_SET_SVC_PARAMS_REQ,
++			bfa_lpuid(fcport->bfa));
+ 	m->tx_bbcredit = bfa_os_htons((u16) fcport->cfg.tx_bbcredit);
+ 
+ 	/**
+@@ -1096,7 +1103,158 @@ bfa_fcport_send_txcredit(void *port_cbarg)
+ 	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
+ }
+ 
++static void
++bfa_fcport_qos_stats_swap(struct bfa_qos_stats_s *d,
++	struct bfa_qos_stats_s *s)
++{
++	u32     *dip = (u32 *) d;
++	u32     *sip = (u32 *) s;
++	int             i;
++
++	/* Now swap the 32 bit fields */
++	for (i = 0; i < (sizeof(struct bfa_qos_stats_s)/sizeof(u32)); ++i)
++		dip[i] = bfa_os_ntohl(sip[i]);
++}
++
++static void
++bfa_fcport_fcoe_stats_swap(struct bfa_fcoe_stats_s *d,
++	struct bfa_fcoe_stats_s *s)
++{
++	u32     *dip = (u32 *) d;
++	u32     *sip = (u32 *) s;
++	int             i;
++
++	for (i = 0; i < ((sizeof(struct bfa_fcoe_stats_s))/sizeof(u32));
++		i = i + 2) {
++#ifdef __BIGENDIAN
++		dip[i] = bfa_os_ntohl(sip[i]);
++		dip[i + 1] = bfa_os_ntohl(sip[i + 1]);
++#else
++		dip[i] = bfa_os_ntohl(sip[i + 1]);
++		dip[i + 1] = bfa_os_ntohl(sip[i]);
++#endif
++	}
++}
++
++static void
++__bfa_cb_fcport_stats_get(void *cbarg, bfa_boolean_t complete)
++{
++	struct bfa_fcport_s *fcport = cbarg;
++
++	if (complete) {
++		if (fcport->stats_status == BFA_STATUS_OK) {
++
++			/* Swap FC QoS or FCoE stats */
++			if (bfa_ioc_get_fcmode(&fcport->bfa->ioc))
++				bfa_fcport_qos_stats_swap(
++					&fcport->stats_ret->fcqos,
++					&fcport->stats->fcqos);
++			else
++				bfa_fcport_fcoe_stats_swap(
++					&fcport->stats_ret->fcoe,
++					&fcport->stats->fcoe);
++		}
++		fcport->stats_cbfn(fcport->stats_cbarg, fcport->stats_status);
++	} else {
++		fcport->stats_busy = BFA_FALSE;
++		fcport->stats_status = BFA_STATUS_OK;
++	}
++}
++
++static void
++bfa_fcport_stats_get_timeout(void *cbarg)
++{
++	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
++
++	bfa_trc(fcport->bfa, fcport->stats_qfull);
++
++	if (fcport->stats_qfull) {
++		bfa_reqq_wcancel(&fcport->stats_reqq_wait);
++		fcport->stats_qfull = BFA_FALSE;
++	}
++
++	fcport->stats_status = BFA_STATUS_ETIMER;
++	bfa_cb_queue(fcport->bfa, &fcport->hcb_qe, __bfa_cb_fcport_stats_get,
++		fcport);
++}
++
++static void
++bfa_fcport_send_stats_get(void *cbarg)
++{
++	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
++	struct bfi_fcport_req_s *msg;
++
++	msg = bfa_reqq_next(fcport->bfa, BFA_REQQ_PORT);
++
++	if (!msg) {
++		fcport->stats_qfull = BFA_TRUE;
++		bfa_reqq_winit(&fcport->stats_reqq_wait,
++				bfa_fcport_send_stats_get, fcport);
++		bfa_reqq_wait(fcport->bfa, BFA_REQQ_PORT,
++				&fcport->stats_reqq_wait);
++		return;
++	}
++	fcport->stats_qfull = BFA_FALSE;
++
++	bfa_os_memset(msg, 0, sizeof(struct bfi_fcport_req_s));
++	bfi_h2i_set(msg->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_STATS_GET_REQ,
++		bfa_lpuid(fcport->bfa));
++	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
++}
++
++static void
++__bfa_cb_fcport_stats_clr(void *cbarg, bfa_boolean_t complete)
++{
++	struct bfa_fcport_s *fcport = cbarg;
++
++	if (complete) {
++		fcport->stats_cbfn(fcport->stats_cbarg, fcport->stats_status);
++	} else {
++		fcport->stats_busy = BFA_FALSE;
++		fcport->stats_status = BFA_STATUS_OK;
++	}
++}
+ 
++static void
++bfa_fcport_stats_clr_timeout(void *cbarg)
++{
++	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
++
++	bfa_trc(fcport->bfa, fcport->stats_qfull);
++
++	if (fcport->stats_qfull) {
++		bfa_reqq_wcancel(&fcport->stats_reqq_wait);
++		fcport->stats_qfull = BFA_FALSE;
++	}
++
++	fcport->stats_status = BFA_STATUS_ETIMER;
++	bfa_cb_queue(fcport->bfa, &fcport->hcb_qe,
++			__bfa_cb_fcport_stats_clr, fcport);
++}
++
++static void
++bfa_fcport_send_stats_clear(void *cbarg)
++{
++	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
++	struct bfi_fcport_req_s *msg;
++
++	msg = bfa_reqq_next(fcport->bfa, BFA_REQQ_PORT);
++
++	if (!msg) {
++		fcport->stats_qfull = BFA_TRUE;
++		bfa_reqq_winit(&fcport->stats_reqq_wait,
++				bfa_fcport_send_stats_clear, fcport);
++		bfa_reqq_wait(fcport->bfa, BFA_REQQ_PORT,
++				&fcport->stats_reqq_wait);
++		return;
++	}
++	fcport->stats_qfull = BFA_FALSE;
++
++	bfa_os_memset(msg, 0, sizeof(struct bfi_fcport_req_s));
++	bfi_h2i_set(msg->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_STATS_CLEAR_REQ,
++			bfa_lpuid(fcport->bfa));
++	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
++}
+ 
+ /**
+  *  bfa_pport_public
+@@ -1109,23 +1267,23 @@ void
+ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+-	union bfi_pport_i2h_msg_u i2hmsg;
++	union bfi_fcport_i2h_msg_u i2hmsg;
+ 
+ 	i2hmsg.msg = msg;
+ 	fcport->event_arg.i2hmsg = i2hmsg;
+ 
+ 	switch (msg->mhdr.msg_id) {
+-	case BFI_PPORT_I2H_ENABLE_RSP:
+-		if (fcport->msgtag == i2hmsg.enable_rsp->msgtag)
++	case BFI_FCPORT_I2H_ENABLE_RSP:
++		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
  		break;
- 	case BFA_RPORT_AEN_QOS_PRIO:
- 		aen_data.rport.priv.qos = data->priv.qos;
-diff --git a/drivers/scsi/bfa/vport.c b/drivers/scsi/bfa/vport.c
-index c5e534e..27cd619 100644
---- a/drivers/scsi/bfa/vport.c
-+++ b/drivers/scsi/bfa/vport.c
-@@ -447,22 +447,8 @@ bfa_fcs_vport_aen_post(bfa_fcs_lport_t *port, enum bfa_lport_aen_event event)
  
- 	bfa_assert(role <= BFA_PORT_ROLE_FCP_MAX);
+-	case BFI_PPORT_I2H_DISABLE_RSP:
+-		if (fcport->msgtag == i2hmsg.enable_rsp->msgtag)
++	case BFI_FCPORT_I2H_DISABLE_RSP:
++		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
+ 		break;
  
+-	case BFI_PPORT_I2H_EVENT:
++	case BFI_FCPORT_I2H_EVENT:
+ 		switch (i2hmsg.event->link_state.linkstate) {
+ 		case BFA_PPORT_LINKUP:
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_LINKUP);
+@@ -1139,58 +1297,27 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 		}
+ 		break;
+ 
+-	case BFI_PPORT_I2H_GET_STATS_RSP:
+-	case BFI_PPORT_I2H_GET_QOS_STATS_RSP:
+-		/*
+-		 * check for timer pop before processing the rsp
+-		 */
+-		if (fcport->stats_busy == BFA_FALSE
+-		    || fcport->stats_status == BFA_STATUS_ETIMER)
+-			break;
+-
+-		bfa_timer_stop(&fcport->timer);
+-		fcport->stats_status = i2hmsg.getstats_rsp->status;
+-		bfa_cb_queue(fcport->bfa, &fcport->hcb_qe, __bfa_cb_port_stats,
+-			     fcport);
+-		break;
+-	case BFI_PPORT_I2H_CLEAR_STATS_RSP:
+-	case BFI_PPORT_I2H_CLEAR_QOS_STATS_RSP:
+-		/*
+-		 * check for timer pop before processing the rsp
+-		 */
+-		if (fcport->stats_busy == BFA_FALSE
+-		    || fcport->stats_status == BFA_STATUS_ETIMER)
+-			break;
+-
+-		bfa_timer_stop(&fcport->timer);
+-		fcport->stats_status = BFA_STATUS_OK;
+-		bfa_cb_queue(fcport->bfa, &fcport->hcb_qe,
+-			     __bfa_cb_port_stats_clr, fcport);
+-		break;
+-
+-	case BFI_FCPORT_I2H_GET_STATS_RSP:
++	case BFI_FCPORT_I2H_STATS_GET_RSP:
+ 		/*
+ 		 * check for timer pop before processing the rsp
+ 		 */
+ 		if (fcport->stats_busy == BFA_FALSE ||
+-			fcport->stats_status == BFA_STATUS_ETIMER) {
++			fcport->stats_status == BFA_STATUS_ETIMER)
+ 			break;
+-		}
+ 
+ 		bfa_timer_stop(&fcport->timer);
+-		fcport->stats_status = i2hmsg.getstats_rsp->status;
++		fcport->stats_status = i2hmsg.pstatsget_rsp->status;
+ 		bfa_cb_queue(fcport->bfa, &fcport->hcb_qe,
+-				__bfa_cb_fcport_stats, fcport);
++				__bfa_cb_fcport_stats_get, fcport);
+ 		break;
+ 
+-	case BFI_FCPORT_I2H_CLEAR_STATS_RSP:
++	case BFI_FCPORT_I2H_STATS_CLEAR_RSP:
+ 		/*
+ 		 * check for timer pop before processing the rsp
+ 		 */
+ 		if (fcport->stats_busy == BFA_FALSE ||
+-			fcport->stats_status == BFA_STATUS_ETIMER) {
++			fcport->stats_status == BFA_STATUS_ETIMER)
+ 			break;
+-		}
+ 
+ 		bfa_timer_stop(&fcport->timer);
+ 		fcport->stats_status = BFA_STATUS_OK;
+@@ -1204,8 +1331,6 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 	}
+ }
+ 
+-
+-
+ /**
+  *  bfa_pport_api
+  */
+@@ -1470,330 +1595,14 @@ bfa_fcport_get_attr(struct bfa_s *bfa, struct bfa_pport_attr_s *attr)
+ 		attr->port_state = BFA_PPORT_ST_FWMISMATCH;
+ }
+ 
+-static void
+-bfa_port_stats_query(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *)cbarg;
+-	bfi_pport_get_stats_req_t *msg;
+-
+-	msg = bfa_reqq_next(fcport->bfa, BFA_REQQ_PORT);
+-
+-	if (!msg) {
+-		fcport->stats_qfull = BFA_TRUE;
+-		bfa_reqq_winit(&fcport->stats_reqq_wait, bfa_port_stats_query,
+-			       fcport);
+-		bfa_reqq_wait(fcport->bfa, BFA_REQQ_PORT,
+-				&fcport->stats_reqq_wait);
+-		return;
+-	}
+-	fcport->stats_qfull = BFA_FALSE;
+-
+-	bfa_os_memset(msg, 0, sizeof(bfi_pport_get_stats_req_t));
+-	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_GET_STATS_REQ,
+-		    bfa_lpuid(fcport->bfa));
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
+-}
+-
+-static void
+-bfa_port_stats_clear(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *)cbarg;
+-	bfi_pport_clear_stats_req_t *msg;
+-
+-	msg = bfa_reqq_next(fcport->bfa, BFA_REQQ_PORT);
+-
+-	if (!msg) {
+-		fcport->stats_qfull = BFA_TRUE;
+-		bfa_reqq_winit(&fcport->stats_reqq_wait, bfa_port_stats_clear,
+-			       fcport);
+-		bfa_reqq_wait(fcport->bfa, BFA_REQQ_PORT,
+-					&fcport->stats_reqq_wait);
+-		return;
+-	}
+-	fcport->stats_qfull = BFA_FALSE;
+-
+-	bfa_os_memset(msg, 0, sizeof(bfi_pport_clear_stats_req_t));
+-	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_CLEAR_STATS_REQ,
+-		    bfa_lpuid(fcport->bfa));
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
+-}
+-
+-static void
+-bfa_fcport_stats_query(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
+-	bfi_pport_get_stats_req_t *msg;
+-
+-	msg = bfa_reqq_next(fcport->bfa, BFA_REQQ_PORT);
+-
+-	if (!msg) {
+-		fcport->stats_qfull = BFA_TRUE;
+-		bfa_reqq_winit(&fcport->stats_reqq_wait,
+-			bfa_fcport_stats_query, fcport);
+-		bfa_reqq_wait(fcport->bfa, BFA_REQQ_PORT,
+-			&fcport->stats_reqq_wait);
+-		return;
+-	}
+-	fcport->stats_qfull = BFA_FALSE;
+-
+-	bfa_os_memset(msg, 0, sizeof(bfi_pport_get_stats_req_t));
+-	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_FCPORT_H2I_GET_STATS_REQ,
+-		bfa_lpuid(fcport->bfa));
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
+-}
+-
+-static void
+-bfa_fcport_stats_clear(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
+-	bfi_pport_clear_stats_req_t *msg;
+-
+-	msg = bfa_reqq_next(fcport->bfa, BFA_REQQ_PORT);
+-
+-	if (!msg) {
+-		fcport->stats_qfull = BFA_TRUE;
+-		bfa_reqq_winit(&fcport->stats_reqq_wait,
+-			bfa_fcport_stats_clear, fcport);
+-		bfa_reqq_wait(fcport->bfa, BFA_REQQ_PORT,
+-			&fcport->stats_reqq_wait);
+-		return;
+-	}
+-	fcport->stats_qfull = BFA_FALSE;
+-
+-	bfa_os_memset(msg, 0, sizeof(bfi_pport_clear_stats_req_t));
+-	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_FCPORT_H2I_CLEAR_STATS_REQ,
+-		bfa_lpuid(fcport->bfa));
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
+-}
+-
+-static void
+-bfa_port_qos_stats_clear(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *)cbarg;
+-	bfi_pport_clear_qos_stats_req_t *msg;
+-
+-	msg = bfa_reqq_next(fcport->bfa, BFA_REQQ_PORT);
+-
+-	if (!msg) {
+-		fcport->stats_qfull = BFA_TRUE;
+-		bfa_reqq_winit(&fcport->stats_reqq_wait, bfa_port_qos_stats_clear,
+-			       fcport);
+-		bfa_reqq_wait(fcport->bfa, BFA_REQQ_PORT,
+-				&fcport->stats_reqq_wait);
+-		return;
+-	}
+-	fcport->stats_qfull = BFA_FALSE;
+-
+-	bfa_os_memset(msg, 0, sizeof(bfi_pport_clear_qos_stats_req_t));
+-	bfi_h2i_set(msg->mh, BFI_MC_FC_PORT, BFI_PPORT_H2I_CLEAR_QOS_STATS_REQ,
+-		    bfa_lpuid(fcport->bfa));
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
+-}
+-
+-static void
+-bfa_fcport_stats_swap(union bfa_fcport_stats_u *d, union bfa_fcport_stats_u *s)
+-{
+-	u32        *dip = (u32 *) d;
+-	u32        *sip = (u32 *) s;
+-	int             i;
+-
+-	/* Do 64 bit fields swap first */
+-	for (i = 0; i < ((sizeof(union bfa_fcport_stats_u) -
+-			sizeof(struct bfa_qos_stats_s))/sizeof(u32)); i = i + 2) {
+-#ifdef __BIGENDIAN
+-		dip[i] = bfa_os_ntohl(sip[i]);
+-		dip[i + 1] = bfa_os_ntohl(sip[i + 1]);
+-#else
+-		dip[i] = bfa_os_ntohl(sip[i + 1]);
+-		dip[i + 1] = bfa_os_ntohl(sip[i]);
+-#endif
+-	}
+-
+-	/* Now swap the 32 bit fields */
+-	for (; i < (sizeof(union bfa_fcport_stats_u)/sizeof(u32)); ++i)
+-		dip[i] = bfa_os_ntohl(sip[i]);
+-}
+-
+-static void
+-bfa_port_stats_swap(union bfa_pport_stats_u *d, union bfa_pport_stats_u *s)
+-{
+-	u32    *dip = (u32 *) d;
+-	u32    *sip = (u32 *) s;
+-	int     i;
+-
+-	/* Do 64 bit fields swap first */
+-	for (i = 0; i < (sizeof(union bfa_pport_stats_u) / sizeof(u32));
+-		i = i + 2) {
+-#ifdef __BIGENDIAN
+-		dip[i] = bfa_os_ntohl(sip[i]);
+-		dip[i + 1] = bfa_os_ntohl(sip[i + 1]);
+-#else
+-		dip[i] = bfa_os_ntohl(sip[i + 1]);
+-		dip[i + 1] = bfa_os_ntohl(sip[i]);
+-#endif
+-	}
+-}
+-
+-static void
+-__bfa_cb_port_stats_clr(void *cbarg, bfa_boolean_t complete)
+-{
+-	struct bfa_fcport_s *fcport = cbarg;
+-
+-	if (complete) {
+-		fcport->stats_cbfn(fcport->stats_cbarg, fcport->stats_status);
+-	} else {
+-		fcport->stats_busy = BFA_FALSE;
+-		fcport->stats_status = BFA_STATUS_OK;
+-	}
+-}
+-
+-static void
+-__bfa_cb_fcport_stats_clr(void *cbarg, bfa_boolean_t complete)
+-{
+-	struct bfa_fcport_s *fcport = cbarg;
+-
+-	if (complete) {
+-		fcport->stats_cbfn(fcport->stats_cbarg, fcport->stats_status);
+-	} else {
+-		fcport->stats_busy = BFA_FALSE;
+-		fcport->stats_status = BFA_STATUS_OK;
+-	}
+-}
+-
+-static void
+-bfa_port_stats_clr_timeout(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *)cbarg;
+-
+-	bfa_trc(fcport->bfa, fcport->stats_qfull);
+-
+-	if (fcport->stats_qfull) {
+-		bfa_reqq_wcancel(&fcport->stats_reqq_wait);
+-		fcport->stats_qfull = BFA_FALSE;
+-	}
+-
+-	fcport->stats_status = BFA_STATUS_ETIMER;
+-	bfa_cb_queue(fcport->bfa, &fcport->hcb_qe,
+-				__bfa_cb_port_stats_clr, fcport);
+-}
+-
+-static void
+-bfa_fcport_callback(struct bfa_fcport_s *fcport, enum bfa_pport_linkstate event)
+-{
+-	if (fcport->bfa->fcs) {
+-		fcport->event_cbfn(fcport->event_cbarg, event);
+-		return;
+-	}
+-
 -	switch (event) {
--	case BFA_LPORT_AEN_NPIV_DUP_WWN:
--		bfa_log(logmod, BFA_AEN_LPORT_NPIV_DUP_WWN, lpwwn_ptr,
--			role_str[role / 2]);
+-	case BFA_PPORT_LINKUP:
+-		bfa_sm_send_event(&fcport->ln, BFA_FCPORT_LN_SM_LINKUP);
 -		break;
--	case BFA_LPORT_AEN_NPIV_FABRIC_MAX:
--		bfa_log(logmod, BFA_AEN_LPORT_NPIV_FABRIC_MAX, lpwwn_ptr,
--			role_str[role / 2]);
--		break;
--	case BFA_LPORT_AEN_NPIV_UNKNOWN:
--		bfa_log(logmod, BFA_AEN_LPORT_NPIV_UNKNOWN, lpwwn_ptr,
--			role_str[role / 2]);
+-	case BFA_PPORT_LINKDOWN:
+-		bfa_sm_send_event(&fcport->ln, BFA_FCPORT_LN_SM_LINKDOWN);
 -		break;
 -	default:
--		break;
+-		bfa_assert(0);
 -	}
-+	bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_LPORT, event), lpwwn_ptr,
-+			role_str[role/2]);
+-}
+-
+-static void
+-bfa_fcport_queue_cb(struct bfa_fcport_ln_s *ln, enum bfa_pport_linkstate event)
+-{
+-	ln->ln_event = event;
+-	bfa_cb_queue(ln->fcport->bfa, &ln->ln_qe, __bfa_cb_fcport_event, ln);
+-}
+-
+-static void
+-bfa_fcport_stats_clr_timeout(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
+-
+-	bfa_trc(fcport->bfa, fcport->stats_qfull);
+-
+-	if (fcport->stats_qfull) {
+-		bfa_reqq_wcancel(&fcport->stats_reqq_wait);
+-		fcport->stats_qfull = BFA_FALSE;
+-	}
+-
+-	fcport->stats_status = BFA_STATUS_ETIMER;
+-	bfa_cb_queue(fcport->bfa, &fcport->hcb_qe, __bfa_cb_fcport_stats_clr,
+-			fcport);
+-}
+-
+-static void
+-__bfa_cb_port_stats(void *cbarg, bfa_boolean_t complete)
+-{
+-	struct bfa_fcport_s *fcport = cbarg;
+-
+-	if (complete) {
+-		if (fcport->stats_status == BFA_STATUS_OK)
+-			bfa_port_stats_swap(fcport->stats_ret, fcport->stats);
+-		fcport->stats_cbfn(fcport->stats_cbarg, fcport->stats_status);
+-	} else {
+-		fcport->stats_busy = BFA_FALSE;
+-		fcport->stats_status = BFA_STATUS_OK;
+-	}
+-}
+-
+-static void
+-bfa_port_stats_timeout(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *)cbarg;
+-
+-	bfa_trc(fcport->bfa, fcport->stats_qfull);
+-
+-	if (fcport->stats_qfull) {
+-		bfa_reqq_wcancel(&fcport->stats_reqq_wait);
+-		fcport->stats_qfull = BFA_FALSE;
+-	}
+-
+-	fcport->stats_status = BFA_STATUS_ETIMER;
+-	bfa_cb_queue(fcport->bfa, &fcport->hcb_qe, __bfa_cb_port_stats, fcport);
+-}
+-
+-static void
+-__bfa_cb_fcport_stats(void *cbarg, bfa_boolean_t complete)
+-{
+-	struct bfa_fcport_s *fcport = cbarg;
+-
+-	if (complete) {
+-		if (fcport->stats_status == BFA_STATUS_OK) {
+-			bfa_fcport_stats_swap(fcport->fcport_stats_ret,
+-				fcport->fcport_stats);
+-		}
+-		fcport->stats_cbfn(fcport->stats_cbarg, fcport->stats_status);
+-	} else {
+-		fcport->stats_busy = BFA_FALSE;
+-		fcport->stats_status = BFA_STATUS_OK;
+-	}
+-}
+-
+-static void
+-bfa_fcport_stats_timeout(void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = (struct bfa_fcport_s *) cbarg;
+-
+-	bfa_trc(fcport->bfa, fcport->stats_qfull);
+-
+-	if (fcport->stats_qfull) {
+-		bfa_reqq_wcancel(&fcport->stats_reqq_wait);
+-		fcport->stats_qfull = BFA_FALSE;
+-	}
+-
+-	fcport->stats_status = BFA_STATUS_ETIMER;
+-	bfa_cb_queue(fcport->bfa, &fcport->hcb_qe, __bfa_cb_fcport_stats,
+-			fcport);
+-}
+-
+-#define BFA_PORT_STATS_TOV	1000
++#define BFA_FCPORT_STATS_TOV    1000
  
- 	aen_data.lport.vf_id = port->fabric->vf_id;
- 	aen_data.lport.roles = role;
+ /**
+- * Fetch port attributes.
++ * Fetch port statistics (FCQoS or FCoE).
+  */
+ bfa_status_t
+-bfa_pport_get_stats(struct bfa_s *bfa, union bfa_pport_stats_u *stats,
+-		    bfa_cb_pport_t cbfn, void *cbarg)
++bfa_fcport_get_stats(struct bfa_s *bfa, union bfa_fcport_stats_u *stats,
++	bfa_cb_pport_t cbfn, void *cbarg)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+ 
+@@ -1802,20 +1611,23 @@ bfa_pport_get_stats(struct bfa_s *bfa, union bfa_pport_stats_u *stats,
+ 		return BFA_STATUS_DEVBUSY;
+ 	}
+ 
+-	fcport->stats_busy = BFA_TRUE;
+-	fcport->stats_ret = stats;
+-	fcport->stats_cbfn = cbfn;
++	fcport->stats_busy  = BFA_TRUE;
++	fcport->stats_ret   = stats;
++	fcport->stats_cbfn  = cbfn;
+ 	fcport->stats_cbarg = cbarg;
+ 
+-	bfa_port_stats_query(fcport);
++	bfa_fcport_send_stats_get(fcport);
+ 
+-	bfa_timer_start(bfa, &fcport->timer, bfa_port_stats_timeout, fcport,
+-			BFA_PORT_STATS_TOV);
++	bfa_timer_start(bfa, &fcport->timer, bfa_fcport_stats_get_timeout,
++		fcport, BFA_FCPORT_STATS_TOV);
+ 	return BFA_STATUS_OK;
+ }
+ 
++/**
++ * Reset port statistics (FCQoS or FCoE).
++ */
+ bfa_status_t
+-bfa_pport_clear_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
++bfa_fcport_clear_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+ 
+@@ -1824,69 +1636,65 @@ bfa_pport_clear_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
+ 		return BFA_STATUS_DEVBUSY;
+ 	}
+ 
+-	fcport->stats_busy = BFA_TRUE;
+-	fcport->stats_cbfn = cbfn;
++	fcport->stats_busy  = BFA_TRUE;
++	fcport->stats_cbfn  = cbfn;
+ 	fcport->stats_cbarg = cbarg;
+ 
+-	bfa_port_stats_clear(fcport);
++	bfa_fcport_send_stats_clear(fcport);
+ 
+-	bfa_timer_start(bfa, &fcport->timer, bfa_port_stats_clr_timeout,
+-			fcport, BFA_PORT_STATS_TOV);
++	bfa_timer_start(bfa, &fcport->timer, bfa_fcport_stats_clr_timeout,
++		fcport, BFA_FCPORT_STATS_TOV);
+ 	return BFA_STATUS_OK;
+ }
+ 
+ /**
+- * @brief
+- * Fetch FCPort statistics.
+- * Todo TBD: sharing timer,stats_busy and other resources of fcport for now -
+- * ideally we want to create seperate ones for fcport once bfa_fcport_s is
+- * decided.
+- *
++ * Fetch FCQoS port statistics
+  */
+ bfa_status_t
+-bfa_fcport_get_stats(struct bfa_s *bfa, union bfa_fcport_stats_u *stats,
+-		bfa_cb_pport_t cbfn, void *cbarg)
++bfa_fcport_get_qos_stats(struct bfa_s *bfa, union bfa_fcport_stats_u *stats,
++	bfa_cb_pport_t cbfn, void *cbarg)
+ {
+-	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+-
+-	if (fcport->stats_busy) {
+-		bfa_trc(bfa, fcport->stats_busy);
+-		return (BFA_STATUS_DEVBUSY);
+-	}
+-
+-	fcport->stats_busy = BFA_TRUE;
+-	fcport->fcport_stats_ret = stats;
+-	fcport->stats_cbfn = cbfn;
+-	fcport->stats_cbarg = cbarg;
+-
+-	bfa_fcport_stats_query(fcport);
+-
+-	bfa_timer_start(bfa, &fcport->timer, bfa_fcport_stats_timeout, fcport,
+-			BFA_PORT_STATS_TOV);
++	/* Meaningful only for FC mode */
++	bfa_assert(bfa_ioc_get_fcmode(&bfa->ioc));
+ 
+-	return (BFA_STATUS_OK);
++	return bfa_fcport_get_stats(bfa, stats, cbfn, cbarg);
+ }
+ 
++/**
++ * Reset FCoE port statistics
++ */
+ bfa_status_t
+-bfa_fcport_clear_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
++bfa_fcport_clear_qos_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
+ {
+-	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++	/* Meaningful only for FC mode */
++	bfa_assert(bfa_ioc_get_fcmode(&bfa->ioc));
+ 
+-	if (fcport->stats_busy) {
+-		bfa_trc(bfa, fcport->stats_busy);
+-		return (BFA_STATUS_DEVBUSY);
+-	}
++	return bfa_fcport_clear_stats(bfa, cbfn, cbarg);
++}
+ 
+-	fcport->stats_busy = BFA_TRUE;
+-	fcport->stats_cbfn = cbfn;
+-	fcport->stats_cbarg = cbarg;
++/**
++ * Fetch FCQoS port statistics
++ */
++bfa_status_t
++bfa_fcport_get_fcoe_stats(struct bfa_s *bfa, union bfa_fcport_stats_u *stats,
++	bfa_cb_pport_t cbfn, void *cbarg)
++{
++	/* Meaningful only for FCoE mode */
++	bfa_assert(!bfa_ioc_get_fcmode(&bfa->ioc));
+ 
+-	bfa_fcport_stats_clear(fcport);
++	return bfa_fcport_get_stats(bfa, stats, cbfn, cbarg);
++}
+ 
+-	bfa_timer_start(bfa, &fcport->timer, bfa_fcport_stats_clr_timeout,
+-			fcport, BFA_PORT_STATS_TOV);
++/**
++ * Reset FCoE port statistics
++ */
++bfa_status_t
++bfa_fcport_clear_fcoe_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
++{
++	/* Meaningful only for FCoE mode */
++	bfa_assert(!bfa_ioc_get_fcmode(&bfa->ioc));
+ 
+-	return (BFA_STATUS_OK);
++	return bfa_fcport_clear_stats(bfa, cbfn, cbarg);
+ }
+ 
+ bfa_status_t
+@@ -1944,40 +1752,6 @@ bfa_fcport_qos_get_vc_attr(struct bfa_s *bfa,
+ }
+ 
+ /**
+- * Fetch QoS Stats.
+- */
+-bfa_status_t
+-bfa_fcport_get_qos_stats(struct bfa_s *bfa, union bfa_pport_stats_u *stats,
+-			bfa_cb_pport_t cbfn, void *cbarg)
+-{
+-	/*
+-	 * QoS stats is embedded in port stats
+-	 */
+-	return bfa_pport_get_stats(bfa, stats, cbfn, cbarg);
+-}
+-
+-bfa_status_t
+-bfa_fcport_clear_qos_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn, void *cbarg)
+-{
+-	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+-
+-	if (fcport->stats_busy) {
+-		bfa_trc(bfa, fcport->stats_busy);
+-		return BFA_STATUS_DEVBUSY;
+-	}
+-
+-	fcport->stats_busy = BFA_TRUE;
+-	fcport->stats_cbfn = cbfn;
+-	fcport->stats_cbarg = cbarg;
+-
+-	bfa_port_qos_stats_clear(fcport);
+-
+-	bfa_timer_start(bfa, &fcport->timer, bfa_port_stats_clr_timeout,
+-			fcport, BFA_PORT_STATS_TOV);
+-	return BFA_STATUS_OK;
+-}
+-
+-/**
+  * Fetch port attributes.
+  */
+ bfa_status_t
+diff --git a/drivers/scsi/bfa/bfa_port_priv.h b/drivers/scsi/bfa/bfa_port_priv.h
+index 6d315ff..40e256e 100644
+--- a/drivers/scsi/bfa/bfa_port_priv.h
++++ b/drivers/scsi/bfa/bfa_port_priv.h
+@@ -46,6 +46,8 @@ struct bfa_fcport_s {
+ 	enum bfa_pport_topology topology;	/*  current topology */
+ 	u8			myalpa;	/*  my ALPA in LOOP topology */
+ 	u8			rsvd[3];
++	u32             mypid:24;
++	u32             rsvd_b:8;
+ 	struct bfa_pport_cfg_s	cfg;	/*  current port configuration */
+ 	struct bfa_qos_attr_s  qos_attr;   /* QoS Attributes */
+ 	struct bfa_qos_vc_attr_s qos_vc_attr;  /*  VC info from ELP */
+@@ -59,40 +61,25 @@ struct bfa_fcport_s {
+ 	void			(*event_cbfn) (void *cbarg,
+ 						bfa_pport_event_t event);
+ 	union {
+-		union bfi_pport_i2h_msg_u i2hmsg;
++		union bfi_fcport_i2h_msg_u i2hmsg;
+ 	} event_arg;
+ 	void			*bfad;	/*  BFA driver handle */
+ 	struct bfa_fcport_ln_s   ln; /* Link Notification */
+ 	struct bfa_cb_qe_s		hcb_qe;	/*  BFA callback queue elem */
++	struct bfa_timer_s      timer;  /*  timer */
+ 	u32		msgtag;	/*  fimrware msg tag for reply */
+ 	u8			*stats_kva;
+ 	u64		stats_pa;
+-	union bfa_pport_stats_u *stats;	/*  pport stats */
+-	u32		mypid:24;
+-	u32		rsvd_b:8;
+-	struct bfa_timer_s 	timer;	/*  timer */
+-	union bfa_pport_stats_u 	*stats_ret;
+-					/*  driver stats location */
+-	bfa_status_t		stats_status;
+-					/*  stats/statsclr status */
+-	bfa_boolean_t   	stats_busy;
+-					/*  outstanding stats/statsclr */
+-	bfa_boolean_t   	stats_qfull;
+-	bfa_boolean_t   	diag_busy;
+-					/*  diag busy status */
+-	bfa_boolean_t   	beacon;
+-					/*  port beacon status */
+-	bfa_boolean_t   	link_e2e_beacon;
+-					/*  link beacon status */
+-	bfa_cb_pport_t		stats_cbfn;
+-					/*  driver callback function */
+-	void			*stats_cbarg;
+-					/* *!< user callback arg */
+-	/* FCport stats */
+-	u8         *fcport_stats_kva;
+-	u64        fcport_stats_pa;
+-	union bfa_fcport_stats_u *fcport_stats;
+-	union bfa_fcport_stats_u *fcport_stats_ret;
++	union bfa_fcport_stats_u *stats;
++	union bfa_fcport_stats_u *stats_ret; /*  driver stats location */
++	bfa_status_t            stats_status; /*  stats/statsclr status */
++	bfa_boolean_t           stats_busy; /*  outstanding stats/statsclr */
++	bfa_boolean_t           stats_qfull;
++	bfa_cb_pport_t          stats_cbfn; /*  driver callback function */
++	void                    *stats_cbarg; /* *!< user callback arg */
++	bfa_boolean_t           diag_busy; /*  diag busy status */
++	bfa_boolean_t           beacon; /*  port beacon status */
++	bfa_boolean_t           link_e2e_beacon; /*  link beacon status */
+ };
+ 
+ #define BFA_FCPORT_MOD(__bfa)	(&(__bfa)->modules.fcport)
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index dd5cb20..d97f691 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -288,7 +288,7 @@ bfad_im_get_stats(struct Scsi_Host *shost)
+ 	init_completion(&fcomp.comp);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	memset(hstats, 0, sizeof(struct fc_host_statistics));
+-	rc = bfa_pport_get_stats(&bfad->bfa,
++	rc =  bfa_port_get_stats(BFA_FCPORT(&bfad->bfa),
+ 				     (union bfa_pport_stats_u *) hstats,
+ 				     bfad_hcb_comp, &fcomp);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+@@ -315,7 +315,8 @@ bfad_im_reset_stats(struct Scsi_Host *shost)
+ 
+ 	init_completion(&fcomp.comp);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+-	rc = bfa_pport_clear_stats(&bfad->bfa, bfad_hcb_comp, &fcomp);
++	rc = bfa_port_clear_stats(BFA_FCPORT(&bfad->bfa), bfad_hcb_comp,
++		&fcomp);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+ 	if (rc != BFA_STATUS_OK)
+diff --git a/drivers/scsi/bfa/include/bfa_svc.h b/drivers/scsi/bfa/include/bfa_svc.h
+index 056cf20..ea38725 100644
+--- a/drivers/scsi/bfa/include/bfa_svc.h
++++ b/drivers/scsi/bfa/include/bfa_svc.h
+@@ -36,7 +36,7 @@ struct bfa_fcxp_s;
+ struct bfa_rport_info_s {
+ 	u16        max_frmsz;	/*  max rcv pdu size               */
+ 	u32        pid:24,		/*  remote port ID                 */
+-			lp_tag:8;
++			lp_tag:8;	/*  tag                     */
+ 	u32        local_pid:24,	/*  local port ID		    */
+ 			cisc:8;		/*  CIRO supported		    */
+ 	u8         fc_class;	/*  supported FC classes. enum fc_cos */
+@@ -55,7 +55,7 @@ struct bfa_rport_s {
+ 	void                  *rport_drv; /*  fcs/driver rport object */
+ 	u16              fw_handle; /*  firmware rport handle */
+ 	u16              rport_tag; /*  BFA rport tag */
+-	struct bfa_rport_info_s rport_info; /*  rport info from *fcs/driver */
++	struct bfa_rport_info_s rport_info; /*  rport info from fcs/driver */
+ 	struct bfa_reqq_wait_s reqq_wait; /*  to wait for room in reqq */
+ 	struct bfa_cb_qe_s    hcb_qe;	 /*  BFA callback qelem */
+ 	struct bfa_rport_hal_stats_s stats; /*  BFA rport statistics  */
+@@ -102,7 +102,7 @@ struct bfa_uf_buf_s {
+ struct bfa_uf_s {
+ 	struct list_head	qe;		/*  queue element	  */
+ 	struct bfa_s	*bfa;		/*  bfa instance	  */
+-	u16        uf_tag;		/*  identifying tag f/w messages */
++	u16        uf_tag;		/*  identifying tag fw msgs     */
+ 	u16        vf_id;
+ 	u16        src_rport_handle;
+ 	u16        rsvd;
+@@ -128,7 +128,7 @@ struct bfa_lps_s {
+ 	u8		reqq;		/*  lport request queue	*/
+ 	u8		alpa;		/*  ALPA for loop topologies	*/
+ 	u32	lp_pid;		/*  lport port ID		*/
+-	bfa_boolean_t	fdisc;		/*  send FDISC instead of FLOGI*/
++	bfa_boolean_t	fdisc;		/*  send FDISC instead of FLOGI  */
+ 	bfa_boolean_t	auth_en;	/*  enable authentication	*/
+ 	bfa_boolean_t	auth_req;	/*  authentication required	*/
+ 	bfa_boolean_t	npiv_en;	/*  NPIV is allowed by peer	*/
+@@ -178,11 +178,6 @@ bfa_status_t bfa_fcport_trunk_disable(struct bfa_s *bfa);
+ bfa_boolean_t bfa_fcport_trunk_query(struct bfa_s *bfa, u32 *bitmap);
+ void bfa_fcport_get_attr(struct bfa_s *bfa, struct bfa_pport_attr_s *attr);
+ wwn_t bfa_fcport_get_wwn(struct bfa_s *bfa, bfa_boolean_t node);
+-bfa_status_t bfa_pport_get_stats(struct bfa_s *bfa,
+-			union bfa_pport_stats_u *stats,
+-			bfa_cb_pport_t cbfn, void *cbarg);
+-bfa_status_t bfa_pport_clear_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn,
+-			void *cbarg);
+ void bfa_fcport_event_register(struct bfa_s *bfa,
+ 			void (*event_cbfn) (void *cbarg,
+ 			bfa_pport_event_t event), void *event_cbarg);
+@@ -198,14 +193,21 @@ void bfa_fcport_busy(struct bfa_s *bfa, bfa_boolean_t status);
+ void bfa_fcport_beacon(struct bfa_s *bfa, bfa_boolean_t beacon,
+ 			bfa_boolean_t link_e2e_beacon);
+ void bfa_cb_pport_event(void *cbarg, bfa_pport_event_t event);
+-void bfa_fcport_qos_get_attr(struct bfa_s *bfa, struct bfa_qos_attr_s *qos_attr);
++void bfa_fcport_qos_get_attr(struct bfa_s *bfa,
++			struct bfa_qos_attr_s *qos_attr);
+ void bfa_fcport_qos_get_vc_attr(struct bfa_s *bfa,
+ 			struct bfa_qos_vc_attr_s *qos_vc_attr);
+ bfa_status_t bfa_fcport_get_qos_stats(struct bfa_s *bfa,
+-			union bfa_pport_stats_u *stats,
++			union bfa_fcport_stats_u *stats,
+ 			bfa_cb_pport_t cbfn, void *cbarg);
+ bfa_status_t bfa_fcport_clear_qos_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn,
+ 			void *cbarg);
++bfa_status_t bfa_fcport_get_fcoe_stats(struct bfa_s *bfa,
++			union bfa_fcport_stats_u *stats,
++			bfa_cb_pport_t cbfn, void *cbarg);
++bfa_status_t bfa_fcport_clear_fcoe_stats(struct bfa_s *bfa, bfa_cb_pport_t cbfn,
++			void *cbarg);
++
+ bfa_boolean_t     bfa_fcport_is_ratelim(struct bfa_s *bfa);
+ bfa_boolean_t	bfa_fcport_is_linkup(struct bfa_s *bfa);
+ bfa_status_t bfa_fcport_get_stats(struct bfa_s *bfa,
+diff --git a/drivers/scsi/bfa/include/bfi/bfi.h b/drivers/scsi/bfa/include/bfi/bfi.h
+index 7042c18..a550e80 100644
+--- a/drivers/scsi/bfa/include/bfi/bfi.h
++++ b/drivers/scsi/bfa/include/bfi/bfi.h
+@@ -143,8 +143,8 @@ enum bfi_mclass {
+ 	BFI_MC_IOC		= 1,	/*  IO Controller (IOC)	    */
+ 	BFI_MC_DIAG		= 2,	/*  Diagnostic Msgs		    */
+ 	BFI_MC_FLASH		= 3,	/*  Flash message class	    */
+-	BFI_MC_CEE		= 4,
+-	BFI_MC_FC_PORT		= 5,	/*  FC port		   	    */
++	BFI_MC_CEE		= 4,	/*  CEE                     */
++	BFI_MC_FCPORT		= 5,	/*  FC port		   	    */
+ 	BFI_MC_IOCFC		= 6,	/*  FC - IO Controller (IOC)	    */
+ 	BFI_MC_LL		= 7,	/*  Link Layer		 	    */
+ 	BFI_MC_UF		= 8,	/*  Unsolicited frame receive	    */
+diff --git a/drivers/scsi/bfa/include/bfi/bfi_pport.h b/drivers/scsi/bfa/include/bfi/bfi_pport.h
+index 5c3d289..50dcf45 100644
+--- a/drivers/scsi/bfa/include/bfi/bfi_pport.h
++++ b/drivers/scsi/bfa/include/bfi/bfi_pport.h
+@@ -22,168 +22,97 @@
+ 
+ #pragma pack(1)
+ 
+-enum bfi_pport_h2i {
+-	BFI_PPORT_H2I_ENABLE_REQ		= (1),
+-	BFI_PPORT_H2I_DISABLE_REQ		= (2),
+-	BFI_PPORT_H2I_GET_STATS_REQ		= (3),
+-	BFI_PPORT_H2I_CLEAR_STATS_REQ	= (4),
+-	BFI_PPORT_H2I_SET_SVC_PARAMS_REQ	= (5),
+-	BFI_PPORT_H2I_ENABLE_RX_VF_TAG_REQ	= (6),
+-	BFI_PPORT_H2I_ENABLE_TX_VF_TAG_REQ	= (7),
+-	BFI_PPORT_H2I_GET_QOS_STATS_REQ		= (8),
+-	BFI_PPORT_H2I_CLEAR_QOS_STATS_REQ	= (9),
+-	BFI_FCPORT_H2I_GET_STATS_REQ            = (10),
+-	BFI_FCPORT_H2I_CLEAR_STATS_REQ          = (11),
++enum bfi_fcport_h2i {
++	BFI_FCPORT_H2I_ENABLE_REQ		= (1),
++	BFI_FCPORT_H2I_DISABLE_REQ		= (2),
++	BFI_FCPORT_H2I_SET_SVC_PARAMS_REQ	= (3),
++	BFI_FCPORT_H2I_STATS_GET_REQ		= (4),
++	BFI_FCPORT_H2I_STATS_CLEAR_REQ		= (5),
+ };
+ 
+-enum bfi_pport_i2h {
+-	BFI_PPORT_I2H_ENABLE_RSP		= BFA_I2HM(1),
+-	BFI_PPORT_I2H_DISABLE_RSP		= BFA_I2HM(2),
+-	BFI_PPORT_I2H_GET_STATS_RSP		= BFA_I2HM(3),
+-	BFI_PPORT_I2H_CLEAR_STATS_RSP	= BFA_I2HM(4),
+-	BFI_PPORT_I2H_SET_SVC_PARAMS_RSP	= BFA_I2HM(5),
+-	BFI_PPORT_I2H_ENABLE_RX_VF_TAG_RSP	= BFA_I2HM(6),
+-	BFI_PPORT_I2H_ENABLE_TX_VF_TAG_RSP	= BFA_I2HM(7),
+-	BFI_PPORT_I2H_EVENT			= BFA_I2HM(8),
+-	BFI_PPORT_I2H_GET_QOS_STATS_RSP		= BFA_I2HM(9),
+-	BFI_PPORT_I2H_CLEAR_QOS_STATS_RSP	= BFA_I2HM(10),
+-	BFI_FCPORT_I2H_GET_STATS_RSP            = BFA_I2HM(11),
+-	BFI_FCPORT_I2H_CLEAR_STATS_RSP          = BFA_I2HM(12),
++enum bfi_fcport_i2h {
++	BFI_FCPORT_I2H_ENABLE_RSP		= BFA_I2HM(1),
++	BFI_FCPORT_I2H_DISABLE_RSP		= BFA_I2HM(2),
++	BFI_FCPORT_I2H_SET_SVC_PARAMS_RSP	= BFA_I2HM(3),
++	BFI_FCPORT_I2H_STATS_GET_RSP		= BFA_I2HM(4),
++	BFI_FCPORT_I2H_STATS_CLEAR_RSP		= BFA_I2HM(5),
++	BFI_FCPORT_I2H_EVENT			= BFA_I2HM(6),
+ };
+ 
+ /**
+  * Generic REQ type
+  */
+-struct bfi_pport_generic_req_s {
++struct bfi_fcport_req_s {
+ 	struct bfi_mhdr_s  mh;		/*  msg header			    */
+-	u32        msgtag;		/*  msgtag for reply		    */
++	u32	   msgtag;	/*  msgtag for reply		    */
+ };
+ 
+ /**
+  * Generic RSP type
+  */
+-struct bfi_pport_generic_rsp_s {
++struct bfi_fcport_rsp_s {
+ 	struct bfi_mhdr_s  mh;		/*  common msg header		    */
+-	u8         status;		/*  port enable status		    */
+-	u8         rsvd[3];
+-	u32        msgtag;		/*  msgtag for reply		    */
++	u8		   status;	/*  port enable status		    */
++	u8		   rsvd[3];
++	u32	   msgtag;	/*  msgtag for reply		    */
+ };
+ 
+ /**
+- * BFI_PPORT_H2I_ENABLE_REQ
++ * BFI_FCPORT_H2I_ENABLE_REQ
+  */
+-struct bfi_pport_enable_req_s {
++struct bfi_fcport_enable_req_s {
+ 	struct bfi_mhdr_s  mh;		/*  msg header			    */
+-	u32        rsvd1;
+-	wwn_t           nwwn;		/*  node wwn of physical port	    */
+-	wwn_t           pwwn;		/*  port wwn of physical port	    */
+-	struct bfa_pport_cfg_s port_cfg;	/*  port configuration	    */
+-	union bfi_addr_u  stats_dma_addr;	/*  DMA address for stats  */
+-	union bfi_addr_u  fcport_stats_dma_addr;/*!< DMA address for stats  */
+-	u32        msgtag;		/*  msgtag for reply		    */
+-	u32        rsvd2;
++	u32	   rsvd1;
++	wwn_t		   nwwn;	/*  node wwn of physical port	    */
++	wwn_t		   pwwn;	/*  port wwn of physical port	    */
++	struct bfa_pport_cfg_s port_cfg; /*  port configuration	    */
++	union bfi_addr_u   stats_dma_addr; /*  DMA address for stats	    */
++	u32	   msgtag;	/*  msgtag for reply		    */
++	u32	   rsvd2;
+ };
+ 
+ /**
+- * BFI_PPORT_I2H_ENABLE_RSP
++ * BFI_FCPORT_H2I_SET_SVC_PARAMS_REQ
+  */
+-#define bfi_pport_enable_rsp_t struct bfi_pport_generic_rsp_s
+-
+-/**
+- * BFI_PPORT_H2I_DISABLE_REQ
+- */
+-#define bfi_pport_disable_req_t struct bfi_pport_generic_req_s
+-
+-/**
+- * BFI_PPORT_I2H_DISABLE_RSP
+- */
+-#define bfi_pport_disable_rsp_t struct bfi_pport_generic_rsp_s
+-
+-/**
+- * BFI_PPORT_H2I_GET_STATS_REQ
+- */
+-#define bfi_pport_get_stats_req_t struct bfi_pport_generic_req_s
+-
+-/**
+- * BFI_PPORT_I2H_GET_STATS_RSP
+- */
+-#define bfi_pport_get_stats_rsp_t struct bfi_pport_generic_rsp_s
+-
+-/**
+- * BFI_PPORT_H2I_CLEAR_STATS_REQ
+- */
+-#define bfi_pport_clear_stats_req_t struct bfi_pport_generic_req_s
+-
+-/**
+- * BFI_PPORT_I2H_CLEAR_STATS_RSP
+- */
+-#define bfi_pport_clear_stats_rsp_t struct bfi_pport_generic_rsp_s
+-
+-/**
+- * BFI_PPORT_H2I_GET_QOS_STATS_REQ
+- */
+-#define bfi_pport_get_qos_stats_req_t struct bfi_pport_generic_req_s
+-
+-/**
+- * BFI_PPORT_H2I_GET_QOS_STATS_RSP
+- */
+-#define bfi_pport_get_qos_stats_rsp_t struct bfi_pport_generic_rsp_s
+-
+-/**
+- * BFI_PPORT_H2I_CLEAR_QOS_STATS_REQ
+- */
+-#define bfi_pport_clear_qos_stats_req_t struct bfi_pport_generic_req_s
+-
+-/**
+- * BFI_PPORT_H2I_CLEAR_QOS_STATS_RSP
+- */
+-#define bfi_pport_clear_qos_stats_rsp_t struct bfi_pport_generic_rsp_s
+-
+-/**
+- * BFI_PPORT_H2I_SET_SVC_PARAMS_REQ
+- */
+-struct bfi_pport_set_svc_params_req_s {
++struct bfi_fcport_set_svc_params_req_s {
+ 	struct bfi_mhdr_s  mh;		/*  msg header */
+-	u16        tx_bbcredit;	/*  Tx credits */
+-	u16        rsvd;
++	u16	   tx_bbcredit;	/*  Tx credits */
++	u16	   rsvd;
+ };
+ 
+ /**
+- * BFI_PPORT_I2H_SET_SVC_PARAMS_RSP
+- */
+-
+-/**
+- * BFI_PPORT_I2H_EVENT
++ * BFI_FCPORT_I2H_EVENT
+  */
+-struct bfi_pport_event_s {
++struct bfi_fcport_event_s {
+ 	struct bfi_mhdr_s 	mh;	/*  common msg header */
+ 	struct bfa_pport_link_s	link_state;
+ };
+ 
+-union bfi_pport_h2i_msg_u {
++/**
++ * fcport H2I message
++ */
++union bfi_fcport_h2i_msg_u {
+ 	struct bfi_mhdr_s			*mhdr;
+-	struct bfi_pport_enable_req_s		*penable;
+-	struct bfi_pport_generic_req_s		*pdisable;
+-	struct bfi_pport_generic_req_s		*pgetstats;
+-	struct bfi_pport_generic_req_s		*pclearstats;
+-	struct bfi_pport_set_svc_params_req_s	*psetsvcparams;
+-	struct bfi_pport_get_qos_stats_req_s	*pgetqosstats;
+-	struct bfi_pport_generic_req_s		*pclearqosstats;
++	struct bfi_fcport_enable_req_s		*penable;
++	struct bfi_fcport_req_s			*pdisable;
++	struct bfi_fcport_set_svc_params_req_s	*psetsvcparams;
++	struct bfi_fcport_req_s			*pstatsget;
++	struct bfi_fcport_req_s			*pstatsclear;
+ };
+ 
+-union bfi_pport_i2h_msg_u {
++/**
++ * fcport I2H message
++ */
++union bfi_fcport_i2h_msg_u {
+ 	struct bfi_msg_s			*msg;
+-	struct bfi_pport_generic_rsp_s		*enable_rsp;
+-	struct bfi_pport_disable_rsp_s		*disable_rsp;
+-	struct bfi_pport_generic_rsp_s		*getstats_rsp;
+-	struct bfi_pport_clear_stats_rsp_s	*clearstats_rsp;
+-	struct bfi_pport_set_svc_params_rsp_s	*setsvcparasm_rsp;
+-	struct bfi_pport_get_qos_stats_rsp_s	*getqosstats_rsp;
+-	struct bfi_pport_clear_qos_stats_rsp_s	*clearqosstats_rsp;
+-	struct bfi_pport_event_s		*event;
++	struct bfi_fcport_rsp_s			*penable_rsp;
++	struct bfi_fcport_rsp_s			*pdisable_rsp;
++	struct bfi_fcport_rsp_s			*psetsvcparams_rsp;
++	struct bfi_fcport_rsp_s			*pstatsget_rsp;
++	struct bfi_fcport_rsp_s			*pstatsclear_rsp;
++	struct bfi_fcport_event_s		*event;
+ };
+ 
+ #pragma pack()
+ 
+ #endif /* __BFI_PPORT_H__ */
+-
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+index 164cfbe..26e5cc7 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+@@ -240,73 +240,79 @@ struct bfa_pport_attr_s {
+  * 		FC Port statistics.
+  */
+ struct bfa_pport_fc_stats_s {
+-	u64        secs_reset;	/*  seconds since stats is reset */
+-	u64        tx_frames;	/*  transmitted frames */
+-	u64        tx_words;	/*  transmitted words */
+-	u64        rx_frames;	/*  received frames */
+-	u64        rx_words;	/*  received words */
+-	u64        lip_count;	/*  LIPs seen */
+-	u64        nos_count;	/*  NOS count */
+-	u64        error_frames;	/*  errored frames */
+-	u64        dropped_frames;	/*  dropped frames */
+-	u64        link_failures;	/*  link failure count */
+-	u64        loss_of_syncs;	/*  loss of sync count */
+-	u64        loss_of_signals;/*  loss of signal count */
+-	u64        primseq_errs;	/*  primitive sequence protocol */
+-	u64        bad_os_count;	/*  invalid ordered set */
+-	u64        err_enc_out;	/*  Encoding error outside frame */
+-	u64        invalid_crcs;	/*  frames received with invalid CRC*/
+-	u64	undersized_frm; /*  undersized frames */
+-	u64	oversized_frm;	/*  oversized frames */
+-	u64	bad_eof_frm;	/*  frames with bad EOF */
+-	struct bfa_qos_stats_s	qos_stats;	/*  QoS statistics */
++	u64    secs_reset; /* Seconds since stats is reset     */
++	u64    tx_frames;  /* Tx frames                */
++	u64    tx_words;   /* Tx words                 */
++	u64    tx_lip;     /* TX LIP               */
++	u64    tx_nos;     /* Tx NOS               */
++	u64    tx_ols;     /* Tx OLS               */
++	u64    tx_lr;      /* Tx LR                */
++	u64    tx_lrr;     /* Tx LRR               */
++	u64    rx_frames;  /* Rx frames                */
++	u64    rx_words;   /* Rx words                 */
++	u64    lip_count;  /* Rx LIP                   */
++	u64    nos_count;  /* Rx NOS               */
++	u64    ols_count;  /* Rx OLS               */
++	u64    lr_count;   /* Rx LR                */
++	u64    lrr_count;  /* Rx LRR               */
++	u64    invalid_crcs;   /* Rx CRC err frames            */
++	u64    invalid_crc_gd_eof; /* Rx CRC err good EOF frames   */
++	u64    undersized_frm; /* Rx undersized frames         */
++	u64    oversized_frm;  /* Rx oversized frames          */
++	u64    bad_eof_frm;    /* Rx frames with bad EOF       */
++	u64    error_frames;   /* Errored frames           */
++	u64    dropped_frames; /* Dropped frames           */
++	u64    link_failures;  /* Link Failure (LF) count          */
++	u64    loss_of_syncs;  /* Loss of sync count           */
++	u64    loss_of_signals;/* Loss of signal count         */
++	u64    primseq_errs;   /* Primitive sequence protocol err. */
++	u64    bad_os_count;   /* Invalid ordered sets         */
++	u64    err_enc_out;    /* Encoding err nonframe_8b10b      */
++	u64    err_enc;    /* Encoding err frame_8b10b         */
+ };
+ 
+ /**
+  * 		Eth Port statistics.
+  */
+ struct bfa_pport_eth_stats_s {
+-	u64	secs_reset;	/*  seconds since stats is reset */
+-	u64	frame_64;      /*  both rx and tx counter */
+-	u64	frame_65_127;      /* both rx and tx counter */
+-	u64	frame_128_255;     /* both rx and tx counter */
+-	u64	frame_256_511;     /* both rx and tx counter */
+-	u64	frame_512_1023;    /* both rx and tx counter */
+-	u64	frame_1024_1518;   /* both rx and tx counter */
+-	u64	frame_1519_1522;   /* both rx and tx counter */
+-
+-	u64	tx_bytes;
+-	u64	tx_packets;
+-	u64	tx_mcast_packets;
+-	u64	tx_bcast_packets;
+-	u64	tx_control_frame;
+-	u64	tx_drop;
+-	u64	tx_jabber;
+-	u64	tx_fcs_error;
+-	u64	tx_fragments;
+-
+-	u64	rx_bytes;
+-	u64	rx_packets;
+-	u64	rx_mcast_packets;
+-	u64	rx_bcast_packets;
+-	u64	rx_control_frames;
+-	u64	rx_unknown_opcode;
+-	u64	rx_drop;
+-	u64	rx_jabber;
+-	u64	rx_fcs_error;
+-	u64	rx_alignment_error;
+-	u64	rx_frame_length_error;
+-	u64	rx_code_error;
+-	u64	rx_fragments;
+-
+-	u64	rx_pause; /* BPC */
+-	u64	rx_zero_pause; /*  BPC Pause cancellation */
+-	u64	tx_pause;      /* BPC */
+-	u64	tx_zero_pause; /*  BPC Pause cancellation */
+-	u64	rx_fcoe_pause; /* BPC */
+-	u64	rx_fcoe_zero_pause; /*  BPC Pause cancellation */
+-	u64	tx_fcoe_pause;      /* BPC */
+-	u64	tx_fcoe_zero_pause; /*  BPC Pause cancellation */
++	u64    secs_reset;   /* Seconds since stats is reset   */
++	u64    frame_64;     /* Frames 64 bytes            */
++	u64    frame_65_127;     /* Frames 65-127 bytes        */
++	u64    frame_128_255;    /* Frames 128-255 bytes       */
++	u64    frame_256_511;    /* Frames 256-511 bytes       */
++	u64    frame_512_1023;   /* Frames 512-1023 bytes          */
++	u64    frame_1024_1518;  /* Frames 1024-1518 bytes         */
++	u64    frame_1519_1522;  /* Frames 1519-1522 bytes         */
++	u64    tx_bytes;     /* Tx bytes               */
++	u64    tx_packets;   /* Tx packets             */
++	u64    tx_mcast_packets; /* Tx multicast packets       */
++	u64    tx_bcast_packets; /* Tx broadcast packets       */
++	u64    tx_control_frame; /* Tx control frame           */
++	u64    tx_drop;      /* Tx drops               */
++	u64    tx_jabber;    /* Tx jabber              */
++	u64    tx_fcs_error;     /* Tx FCS error           */
++	u64    tx_fragments;     /* Tx fragments           */
++	u64    rx_bytes;     /* Rx bytes               */
++	u64    rx_packets;   /* Rx packets             */
++	u64    rx_mcast_packets; /* Rx multicast packets       */
++	u64    rx_bcast_packets; /* Rx broadcast packets       */
++	u64    rx_control_frames; /* Rx control frames         */
++	u64    rx_unknown_opcode; /* Rx unknown opcode         */
++	u64    rx_drop;      /* Rx drops               */
++	u64    rx_jabber;    /* Rx jabber              */
++	u64    rx_fcs_error;     /* Rx FCS errors              */
++	u64    rx_alignment_error; /* Rx alignment errors          */
++	u64    rx_frame_length_error; /* Rx frame len errors       */
++	u64    rx_code_error;    /* Rx code errors             */
++	u64    rx_fragments;     /* Rx fragments           */
++	u64    rx_pause;     /* Rx pause               */
++	u64    rx_zero_pause;    /* Rx zero pause              */
++	u64    tx_pause;     /* Tx pause               */
++	u64    tx_zero_pause;    /* Tx zero pause              */
++	u64    rx_fcoe_pause;    /* Rx fcoe pause              */
++	u64    rx_fcoe_zero_pause; /* Rx FCoE zero pause       */
++	u64    tx_fcoe_pause;    /* Tx FCoE pause              */
++	u64    tx_fcoe_zero_pause; /* Tx FCoE zero pause       */
+ };
+ 
+ /**
 -- 
 1.6.5.3
 
