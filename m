@@ -1,66 +1,96 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 00/32] bfa: update bfa driver to version 2.1.2.1
- (resubmit)
-Date: Thu, 04 Mar 2010 16:55:05 +0530
-Message-ID: <1267701905.31654.152.camel@mulgrave.site>
-References: <1267666892-20243-1-git-send-email-kgudipat@brocade.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: System reboot hangs due to race against devices_kset->list
+ triggered by SCSI FC workqueue
+Date: Thu, 4 Mar 2010 10:18:19 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1003041005530.1657-100000@iolanthe.rowland.org>
+References: <233671224A0FED4688218FFDBED26E1A517AC38CA5@IRVEXCHCCR01.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34838 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754393Ab0CDLZS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Mar 2010 06:25:18 -0500
-In-Reply-To: <1267666892-20243-1-git-send-email-kgudipat@brocade.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <233671224A0FED4688218FFDBED26E1A517AC38CA5@IRVEXCHCCR01.corp.ad.broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hugh Daschbach <hdasch@broadcom.com>
+Cc: Greg KH <gregkh@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, Jan Blunck <jblunck@suse.de>, David Vrabel <david.vrabel@csr.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, james Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: kgudipat@brocade.com
-Cc: linux-scsi@vger.kernel.org, adapter_linux_open_src_team@brocade.com, huangj@brocade.com
 
-On Wed, 2010-03-03 at 17:41 -0800, kgudipat@brocade.com wrote:
-> From: Krishna Gudipati <kgudipat@brocade.com>
-> 
-> Hi James,
-> 
-> We are resubmitting brocade bfa 2.1.2.1 driver patch.
-> 
-> I have made the patches bisectable, now each patch depends only on things
-> 
-> in its predecessor and is compilable.
-> 
-> 
-> About this submission, we completely reworked the patch set by hand merging
-> 
-> previous checkins so that each patch addresses a specific issue.
-> 
-> We hope this patch set meets the upstream standard and gets included in
-> 
-> your scsi-misc tree. In the following weeks, we will submit more patches
-> 
-> to clean up the driver and reduce the number of files to be on par
-> 
-> with most of the upstream drivers.
+On Wed, 3 Mar 2010, Hugh Daschbach wrote:
 
-So it's a lot better, thanks! Unfortunately, it's still a modular
-compile failure bisection problem:
+> Alan Stern [mailto:stern@rowland.harvard.edu] writes:
+> 
+> > On Wed, 3 Mar 2010, Hugh Daschbach wrote:
+> >
+> >> > Can't we just protect the list?  What is wanting to write to the list
+> >> > while shutdown is happening?
+> >> 
+> >> Indeed, Alan suggested holding the kset spinlock while iterating the
+> >> list.  Unfortunately, the device shutdown routines may sleep.  At least
+> >> the SCSI sd_shutdown routine issues I/O to the device as part of
+> >> flushing device caches.  I would guess other subsystems sleep as well.
+> >
+> > What I meant was that you should hold the spinlock while finding and 
+> > unlinking the last device on the list.  Clearly you shouldn't hold it 
+> > while calling the device shutdown routine.
+> 
+> I misunderstood.  But I believe insertion and deletion is properly
+> serliaized.  It looks to me like the list structure is intact.  It's the
+> iterator that's been driven off into the weeds.
+> 
+> >> I'll try klist.  That looks like a good mediator between traversal and
+> >> removal.
+> >
+> > Yes, it removes a lot of difficulties.
+> >
+> > Alan Stern
+> 
+> Just to be clear, the list we're talking about is "list" in "struct
+> kset"  And the nodes of the list are chained by "entry" in "struct
+> kobject".  I just want to make sure that this is what's intended before
+> I get too far down the road.
+> 
+> At a minimum the change looks something like the patch below.  This
+> doesn't work yet.  And I'll need extensive testing in device plug and
+> unplug.  So I'm not looking for a detailed review.  But if I'm obviously
+> way off base, I'd like to know earlier rather than later.
+> 
+> Thanks for the guidance.
 
-MODPOST 904 modules
-ERROR: "bfa_ioc_set_ct_hwif" [drivers/scsi/bfa/bfa.ko] undefined!
-ERROR: "bfa_ioc_set_cb_hwif" [drivers/scsi/bfa/bfa.ko] undefined!
-make[1]: *** [__modpost] Error 1
-make: *** [modules] Error 2
+If you really want to do this then you should remove the lock member 
+from struct kset.  However this seems like an awful lot of work 
+compared to my original suggestion -- something like this (untested, 
+and you'll want to add comments):
 
-The reason for this is patch 10, which splits bfa_ioc_cb.c  and .._ct.c
-from bfa_ioc.c but doesn't actually add the new files into the Makefile.
+Index: usb-2.6/drivers/base/core.c
+===================================================================
+--- usb-2.6.orig/drivers/base/core.c
++++ usb-2.6/drivers/base/core.c
+@@ -1719,10 +1719,14 @@ EXPORT_SYMBOL_GPL(device_move);
+  */
+ void device_shutdown(void)
+ {
+-	struct device *dev, *devn;
++	struct device *dev;
++
++	spin_lock(&devices_kset->lock);
++	while (!list_empty(&devices_kset->list)) {
++		dev = list_entry(devices_kset->list.prev, struct device,
++				kobj.entry);
++		spin_unlock(&devices_kset->lock);
+ 
+-	list_for_each_entry_safe_reverse(dev, devn, &devices_kset->list,
+-				kobj.entry) {
+ 		if (dev->bus && dev->bus->shutdown) {
+ 			dev_dbg(dev, "shutdown\n");
+ 			dev->bus->shutdown(dev);
+@@ -1730,6 +1734,10 @@ void device_shutdown(void)
+ 			dev_dbg(dev, "shutdown\n");
+ 			dev->driver->shutdown(dev);
+ 		}
++
++		spin_lock(&devices_kset->lock);
++		list_del_init(&dev->kobj.entry);
+ 	}
++	spin_unlock(&devices_kset->lock);
+ 	async_synchronize_full();
+ }
 
-I'll apply patches 2-9 ... can you make sure 10-32 compile individually.
-I dropped patch 1, because I'm guessing you don't actually want the
-version number bumping on an incomplete patch set, so you'll need to
-change the version at the end of the new series.
-
-Thanks,
-
-James
-
-
+Alan Stern
