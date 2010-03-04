@@ -1,12 +1,14 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 0/2] qla2xxx: Updates for scsi-misc-2.6.
-Date: Thu,  4 Mar 2010 14:12:55 -0800
-Message-ID: <1267740777-3862-1-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 2/2] qla2xxx: Update version number to 8.03.03-k0.
+Date: Thu,  4 Mar 2010 14:12:57 -0800
+Message-ID: <1267740777-3862-3-git-send-email-giridhar.malavali@qlogic.com>
+References: <1267740777-3862-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:52118 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:52119 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755975Ab0CDWM6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755950Ab0CDWM6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 4 Mar 2010 17:12:58 -0500
+In-Reply-To: <1267740777-3862-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
@@ -14,31 +16,29 @@ Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.ker
 
 From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-James,
 
-Please apply following patches.
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_version.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Giridhar Malavali (2):
-  qla2xxx: Add ISP82XX support.
-  qla2xxx: Update version number to 8.03.03-k0.
-
- drivers/scsi/qla2xxx/Makefile      |    2 +-
- drivers/scsi/qla2xxx/qla_attr.c    |   12 +-
- drivers/scsi/qla2xxx/qla_dbg.c     |    3 +
- drivers/scsi/qla2xxx/qla_def.h     |   51 +-
- drivers/scsi/qla2xxx/qla_gbl.h     |   80 +
- drivers/scsi/qla2xxx/qla_gs.c      |    2 +-
- drivers/scsi/qla2xxx/qla_init.c    |  217 ++-
- drivers/scsi/qla2xxx/qla_inline.h  |    5 +-
- drivers/scsi/qla2xxx/qla_iocb.c    |   70 +-
- drivers/scsi/qla2xxx/qla_isr.c     |   38 +-
- drivers/scsi/qla2xxx/qla_mbx.c     |  136 ++-
- drivers/scsi/qla2xxx/qla_nx.c      | 3496 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_nx.h      |  807 +++++++++
- drivers/scsi/qla2xxx/qla_os.c      |  254 +++-
- drivers/scsi/qla2xxx/qla_sup.c     |   80 +-
- drivers/scsi/qla2xxx/qla_version.h |    6 +-
- 16 files changed, 5137 insertions(+), 122 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/qla_nx.c
- create mode 100644 drivers/scsi/qla2xxx/qla_nx.h
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index 8d2fc2f..9b49b08 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.03.02-k1"
++#define QLA2XXX_VERSION      "8.03.03-k0"
+ 
+ #define QLA_DRIVER_MAJOR_VER	8
+ #define QLA_DRIVER_MINOR_VER	3
+-#define QLA_DRIVER_PATCH_VER	2
+-#define QLA_DRIVER_BETA_VER	1
++#define QLA_DRIVER_PATCH_VER	3
++#define QLA_DRIVER_BETA_VER	0
+-- 
+1.6.0.2
 
