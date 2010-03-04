@@ -1,14 +1,14 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 04/32] bfa: Enable IOC auto-recovery and IOC type fix.
-Date: Wed, 3 Mar 2010 17:42:51 -0800
-Message-ID: <1267666971-20672-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 05/32] bfa: Enable new halt interrupt in BFA.
+Date: Wed, 3 Mar 2010 17:43:09 -0800
+Message-ID: <1267666989-20786-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:33947 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:47624 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184Ab0CDBnK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 20:43:10 -0500
+	with ESMTP id S1755184Ab0CDBnU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Mar 2010 20:43:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,73 +18,59 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 
-	- bfa_ioc.c:
-		- Enable IOC auto-recovery by default.
-		- When CNA is in FC mode, return IOC type as FC (not FCoE)
-
-	- bfa_iocfc.c:
-		- Set fcmode before pci initialization/setup.
+	- bfa_intr.c:  Enable new halt interrupt in BFA.
+	- bfi_ctreg.h: Expose new halt interrupt bit definition to host.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_ioc.c   |    6 +++---
- drivers/scsi/bfa/bfa_iocfc.c |    5 +++--
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa_intr.c              |    7 ++++---
+ drivers/scsi/bfa/include/bfi/bfi_ctreg.h |    1 +
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 397d7e9..569b35d 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -56,7 +56,7 @@ BFA_TRC_FILE(HAL, IOC);
- #define BFA_FLASH_CHUNK_NO(off)         (off / BFI_FLASH_CHUNK_SZ_WORDS)
- #define BFA_FLASH_OFFSET_IN_CHUNK(off)  (off % BFI_FLASH_CHUNK_SZ_WORDS)
- #define BFA_FLASH_CHUNK_ADDR(chunkno)   (chunkno * BFI_FLASH_CHUNK_SZ_WORDS)
--bfa_boolean_t   bfa_auto_recover = BFA_FALSE;
-+bfa_boolean_t   bfa_auto_recover = BFA_TRUE;
+diff --git a/drivers/scsi/bfa/bfa_intr.c b/drivers/scsi/bfa/bfa_intr.c
+index b36540e..ab463db 100644
+--- a/drivers/scsi/bfa/bfa_intr.c
++++ b/drivers/scsi/bfa/bfa_intr.c
+@@ -15,7 +15,7 @@
+  * General Public License for more details.
+  */
+ #include <bfa.h>
+-#include <bfi/bfi_cbreg.h>
++#include <bfi/bfi_ctreg.h>
+ #include <bfa_port_priv.h>
+ #include <bfa_intr_priv.h>
+ #include <cs/bfa_debug.h>
+@@ -96,7 +96,8 @@ bfa_isr_enable(struct bfa_s *bfa)
  
- /*
-  * forward declarations
-@@ -1642,7 +1642,7 @@ bfa_ioc_boot(struct bfa_ioc_s *ioc, u32 boot_type, u32 boot_param)
- void
- bfa_ioc_auto_recover(bfa_boolean_t auto_recover)
- {
--	bfa_auto_recover = BFA_FALSE;
-+	bfa_auto_recover = auto_recover;
+ 	bfa_msix_install(bfa);
+ 	intr_unmask = (__HFN_INT_ERR_EMC | __HFN_INT_ERR_LPU0 |
+-		       __HFN_INT_ERR_LPU1 | __HFN_INT_ERR_PSS);
++		       __HFN_INT_ERR_LPU1 | __HFN_INT_ERR_PSS |
++		       __HFN_INT_LL_HALT);
+ 
+ 	if (pci_func == 0)
+ 		intr_unmask |= (__HFN_INT_CPE_Q0 | __HFN_INT_CPE_Q1 |
+@@ -205,7 +206,7 @@ bfa_msix_lpu_err(struct bfa_s *bfa, int vec)
+ 
+ 	if (intr & (__HFN_INT_ERR_EMC |
+ 		    __HFN_INT_ERR_LPU0 | __HFN_INT_ERR_LPU1 |
+-		    __HFN_INT_ERR_PSS))
++		    __HFN_INT_ERR_PSS | __HFN_INT_LL_HALT))
+ 		bfa_msix_errint(bfa, intr);
  }
  
+diff --git a/drivers/scsi/bfa/include/bfi/bfi_ctreg.h b/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
+index d3caa58..dd2992c 100644
+--- a/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
++++ b/drivers/scsi/bfa/include/bfi/bfi_ctreg.h
+@@ -589,6 +589,7 @@ enum {
+ #define __HFN_INT_MBOX_LPU1                0x00200000U
+ #define __HFN_INT_MBOX1_LPU0               0x00400000U
+ #define __HFN_INT_MBOX1_LPU1               0x00800000U
++#define __HFN_INT_LL_HALT		   0x01000000U
+ #define __HFN_INT_CPE_MASK                 0x000000ffU
+ #define __HFN_INT_RME_MASK                 0x0000ff00U
  
-@@ -2082,7 +2082,7 @@ bfa_ioc_get_attr(struct bfa_ioc_s *ioc, struct bfa_ioc_attr_s *ioc_attr)
- 	ioc_attr->state = bfa_sm_to_state(ioc_sm_table, ioc->fsm);
- 	ioc_attr->port_id = ioc->port_id;
- 
--	if (!ioc->ctdev)
-+	if (!ioc->ctdev || ioc->fcmode)
- 		ioc_attr->ioc_type = BFA_IOC_TYPE_FC;
- 	else if (ioc->ioc_mc == BFI_MC_IOCFC)
- 		ioc_attr->ioc_type = BFA_IOC_TYPE_FCoE;
-diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
-index d7ab792..b5e7224 100644
---- a/drivers/scsi/bfa/bfa_iocfc.c
-+++ b/drivers/scsi/bfa/bfa_iocfc.c
-@@ -619,8 +619,6 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 
- 	bfa_ioc_attach(&bfa->ioc, bfa, &bfa_iocfc_cbfn, &bfa->timer_mod,
- 		bfa->trcmod, bfa->aen, bfa->logm);
--	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_MC_IOCFC);
--	bfa_ioc_mbox_register(&bfa->ioc, bfa_mbox_isrs);
- 
- 	/**
- 	 * Choose FC (ssid: 0x1C) v/s FCoE (ssid: 0x14) mode.
-@@ -628,6 +626,9 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	if (0)
- 		bfa_ioc_set_fcmode(&bfa->ioc);
- 
-+	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_MC_IOCFC);
-+	bfa_ioc_mbox_register(&bfa->ioc, bfa_mbox_isrs);
-+
- 	bfa_iocfc_init_mem(bfa, bfad, cfg, pcidev);
- 	bfa_iocfc_mem_claim(bfa, cfg, meminfo);
- 	bfa_timer_init(&bfa->timer_mod);
 -- 
 1.6.5.3
 
