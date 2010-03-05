@@ -1,30 +1,33 @@
-From: "Hope Moon" <hmoon@lorainccc.edu>
-Subject: Your Mailbox Account Exceeds Its Limit!
-Date: Fri, 5 Mar 2010 08:37:07 -0500
-Message-ID: <B1140E32924A054E94F9DDB8B85E396F034B5FD4__32753.6682285883$1267796880$gmane$org@es03.LCCC.LC3>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms01.lorainccc.edu ([192.232.30.8]:40610 "EHLO
-	ms01.lorainccc.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751611Ab0CENrF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 08:47:05 -0500
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: System reboot hangs due to race against devices_kset->list
+ triggered by SCSI FC workqueue
+Date: Fri, 5 Mar 2010 09:31:02 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1003050926090.1677-100000@iolanthe.rowland.org>
+References: <233671224A0FED4688218FFDBED26E1A5181BF12E4@IRVEXCHCCR01.corp.ad.broadcom.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <233671224A0FED4688218FFDBED26E1A5181BF12E4@IRVEXCHCCR01.corp.ad.broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hugh Daschbach <hdasch@broadcom.com>
+Cc: Greg KH <gregkh@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, Jan Blunck <jblunck@suse.de>, David Vrabel <david.vrabel@csr.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, james Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: info@webmailheldesk.com
 
+On Thu, 4 Mar 2010, Hugh Daschbach wrote:
 
- 
- 
-Your Webmail Quota Has Exceeded The Set Quota/Limit Which Is 20GB.
-You Are Currently Running On 23GB Due To Hidden Files And Folder On Your
-Mailbox.
-Please Click the Link Below To Validate Your Mailbox And Increase Your
-Quota.
- 
-Click Here To Validate Your Account <http://rzss8.9hz.com/> 
+> I have added get_device()/put_device() to ensure there's the device
+> hasn't fully disappeared before calling list_del_init().  Is this
+> needed?
 
-Failure To Click This Link And Validate Your Quota May Result In Loss Of
-Important Information In Your Mailbox/Or Cause Limited Access To It.
-Thanks
-HELP DESK
+Yes, it is.  In fact, it's necessary to insure the device doesn't
+disappear before you call the shutdown routines!
 
+>  If so, there's "might_sleep()" commented out in put_device().
+> Do I need to release the lock before calling put_device()?
+
+A better approach might be to do the list_del_init() while still 
+holding the initial spinlock, before you call the shutdown methods.  
+Then do the put_device() before reacquiring the spinlock at the end of 
+the loop.
+
+Alan Stern
