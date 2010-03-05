@@ -1,129 +1,203 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: LSI SAS changes SCSI address and by-path on hot-swap
-Date: Fri, 05 Mar 2010 11:52:52 +0530
-Message-ID: <1267770172.8894.24.camel@mulgrave.site>
-References: <4B8FE5F2.2040506@shiftmail.org>
+From: Audio Haven <audiohaven@gmail.com>
+Subject: Re: [PATCH] MVSAS: hot plug handling and IO issues
+Date: Fri, 5 Mar 2010 09:57:27 +0100
+Message-ID: <333bc7e11003050057h1fda525fj48a24d4eb2147681@mail.gmail.com>
+References: <6B62480106F2B34D8404CF2FDAA4D9EF71F646BECA@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+	 <alpine.DEB.1.10.1002161446470.4986@uplift.swm.pp.se>
+	 <7746.87.210.74.220.1266331278.squirrel@ketsers.dhs.org>
+	 <6B62480106F2B34D8404CF2FDAA4D9EF71F646C228@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+	 <73e903671002170516r6df93ea6o6e0ee256cb8f7a59@mail.gmail.com>
+	 <16370.87.210.74.220.1266919877.squirrel@ketsers.dhs.org>
+	 <333bc7e11002250535p71420780g7d3803c2a83366fc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51882 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752710Ab0CEGXD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Mar 2010 01:23:03 -0500
-In-Reply-To: <4B8FE5F2.2040506@shiftmail.org>
+Received: from fg-out-1718.google.com ([72.14.220.152]:41956 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539Ab0CEI5b convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 03:57:31 -0500
+Received: by fg-out-1718.google.com with SMTP id l26so148471fgb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 05 Mar 2010 00:57:29 -0800 (PST)
+In-Reply-To: <333bc7e11002250535p71420780g7d3803c2a83366fc@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
+To: Caspar Smit <c.smit@truebit.nl>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2010-03-04 at 17:55 +0100, Asdo wrote: 
-> we need to buy new controllers for new storages we are building.
-> 
-> LSI SAS HBAs are very attractive for our purposes but I identified a 
-> problem with our existing mainboard-integrated LSI SAS 1068E . The 
-> problem is that it is apparently not possble to use the 
-> /dev/disk/by-path feature of Linux with it. At least not with the kernel 
-> 2.6.24 we are using (excuse me if it has already been fixed on latest 
-> kernels: the server is in production now and it's not easy for us to check).
-> 
-> We need the /dev/disk/by-path feature because we commonly do hot-swaps 
-> with drives and we need to know for sure which HDD slot corresponds to a 
-> certain linux block device. With other controllers like 3ware 9650SE 
-> there is no such problem, ok but that's a SATA controller... I don't 
-> know if the problem is by design with SAS controllers.
-> 
-> Actually the problem is even more complicated because for the new 
-> storages we have planned to assemble there would be SAS expanders in the 
-> middle.
-> 
-> Look, here is an hot-swap seen from the dmesg:
-> 
->         Feb 22 14:27:30 myserver kernel: [655437.601971] mptbase: ioc0: 
-> LogInfo(0x31110d00): Originator={PL}, Code={Reset}, SubCode(0x0d00)
->         Feb 22 14:27:35 myserver kernel: [655442.781061] mptsas: ioc0: 
-> removing sata device, channel 0, id 0, phy 0
->         Feb 22 14:27:35 myserver kernel: [655442.781453] sd 5:0:10:0: 
-> [sdu] Synchronizing SCSI cache
->         Feb 22 14:27:35 myserver kernel: [655442.781495] sd 5:0:10:0: 
-> [sdu] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
->         Feb 22 14:28:22 myserver kernel: [655489.237562] mptsas: ioc0: 
-> attaching sata device, channel 0, id 0, phy 0
->         Feb 22 14:28:22 myserver kernel: [655489.241959] scsi 5:0:11:0: 
-> Direct-Access     ATA      WDC WD10EADS-00P 0A01 PQ: 0 ANSI: 5
->         Feb 22 14:28:22 myserver kernel: [655489.242506] sd 5:0:11:0: 
-> [sdu] 1953525168 512-byte hardware sectors (1000205 MB)
->         Feb 22 14:28:22 myserver kernel: [655489.248104] sd 5:0:11:0: 
-> [sdu] Write Protect is off
->         Feb 22 14:28:22 myserver kernel: [655489.251847] sd 5:0:11:0: 
-> [sdu] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->         Feb 22 14:28:22 myserver kernel: [655489.252161] sd 5:0:11:0: 
-> [sdu] 1953525168 512-byte hardware sectors (1000205 MB)
->         Feb 22 14:28:22 myserver kernel: [655489.257758] sd 5:0:11:0: 
-> [sdu] Write Protect is off
->         Feb 22 14:28:22 myserver kernel: [655489.261518] sd 5:0:11:0: 
-> [sdu] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
->         Feb 22 14:28:22 myserver kernel: [655489.261525]  sdu: unknown 
-> partition table
->         Feb 22 14:28:22 myserver kernel: [655489.287152] sd 5:0:11:0: 
-> [sdu] Attached SCSI disk
->         Feb 22 14:28:22 myserver kernel: [655489.287204] sd 5:0:11:0: 
-> Attached scsi generic sg21 type 0
-> 
-> You see, when I remove the disk it takes away device sd 5:0:10:0 and 
-> when I reinsert a new drive it becomes device sd 5:0:11:0.
-> 
-> the /dev/disk/by-path the file to the disk also changes, from:
->      
-> /dev/disk/by-path/pci-0000:0b:00.0-sas-0x500e08101003c820:1:0-0x1221000000000000:0 
-> 
-> to:
->      
-> /dev/disk/by-path/pci-0000:0b:00.0-sas-0x500e08101003c824:1:4-0x1221000000000000:0
-> (note: I'm not 100% sure that these two entries come from the same 
-> hot-swap as the dmesg above)
-> 
-> in rare cases I noticed that after an hot swap the file in 
-> /dev/disk/by-path for the device is not even recreated.
-> 
-> I also cannot trust drive letters because they can change across reboot, 
-> and they also change if I remove drive A, remove drive B, insert drive 
-> B, insert drive A... the letters would be swapped. So it's not reliable 
-> enough for our use.
-> 
-> So is this a real bug and is maybe fixed on newer kernels, or it is by 
-> design?
-> 
-> How can people reliably use hot-swap hardware in this situation...? Are 
-> there other ways to determine the physical connections from within linux 
-> (possibly through SAS expanders also), which I am not aware of?
+Hello all mvsas testers ...
 
-So what I think I hear in the foregoing is that you actually want to
-identify a device by slot number in the chassis?
+Some good test progress related to mvsas & the Srinivas patch:
 
-For that, /dev/disk/by-path will never work; you need to be using
-enclosure services.
+I have dumped 10TB of data on a 10.5TB net softraid RAID6 (9x1.5TB)
+volume while the initial resync was running. 8 drives were connected
+to an mvsas controller, 1 to sata_nv. No XFS corruption, no drives
+kicked out of raid. The raid synced without problems.
 
-However, since you mention you'll be using SAS and expanders, there is a
-way to get to the slot numbers without using enclosure services:  They
-phy numbers of the expander (and HBA) ports usually correspond one for
-one with the slot.
+I'm repeating the experiment with a RAID6 based on 12 1.5T drives: 8
+on mvsas, 4 on sata_nv. All of the mvsas attached drives remain
+stable. All devices connected to mvsas except for device[4] experience
+one of more mvs_I_T_nexus_reset :
 
-So for sda, if, in my system, you look at /sys/block/sda/device, it's a
-symbolic link for
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[0]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[2]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[1]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[7]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[3]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[2]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[7]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[6]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[3]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[3]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[2]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[3]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[3]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[1]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[7]:rc=3D=
+ 0
+drivers/scsi/mvsas/mv_sas.c 1630:mvs_query_task:rc=3D 5
+drivers/scsi/mvsas/mv_sas.c 1584:mvs_I_T_nexus_reset for device[5]:rc=3D=
+ 0
 
-/sys/devices/pci0000:00/0000:00:1c.0/0000:02:00.0/0000:03:04.0/host3/port-3:0/end_device-3:0/target3:0:0/3:0:0:0
+time window =3D +- 1 day
+This does not seem to affect raid, all drives are still in the set
+after 3TB of copying. Are the above warnings something to worry about
+?
 
-The thing you want is the port-3.0.  If you look in sysfs at this:
-
-ls /sys/class/sas_port/port-3\:0/device
-
-Mine contains phy-3:4  Showing this disk is actually connected to phy 4
-of the output device (as the HBA counts).
-
-For expanders it's a little more complex, you'll see multiple ports in
-the path, but it's the phy of the last one you want.
-
-James
-
-
+On Thu, Feb 25, 2010 at 2:35 PM, Audio Haven <audiohaven@gmail.com> wro=
+te:
+> Hello,
+>
+> I have similar findings related to the Srinivas patch.
+>
+> 1) with the patch from Srinivas applied to 2.6.32.7, I cannot get my
+> raid6 on it's knees (yet). Using 8 drives on the marvell controller, =
+1
+> drive on onboard sata_nv .
+>
+> Created raid6:
+> mdadm --create /dev/md2 --verbose --level=3D6 --chunk=3D1024
+> --raid-devices=3D9 /dev/sd[bcdefghij]1
+>
+> XFS on top
+> mkfs.xfs -f -d su=3D1m,sw=3D7 /dev/md2
+>
+> During the first raid resync, I'm also dumping 2TB of data on this
+> 11TB xfs volume. It no longer drops drives. Currently copied 1.4T
+> without glitches.
+>
+> So if I can fill my 11TB volume with data, and no drives are ever
+> kicked out, and xfs does not get corrupt, this patch is a huge
+> improvement. But this will take some more days to fill up. I'll repor=
+t
+> the status when done.
+>
+> Thanks !
+>
+> On Tue, Feb 23, 2010 at 11:11 AM, Caspar Smit <c.smit@truebit.nl> wro=
+te:
+>> Hi Srinivas,
+>>
+>> I finally had some time to test your new patch.
+>>
+>> 1) After numerous hotplug actions with SAS and SATA disks I still ca=
+n't
+>> get any kernel panic to occur :)
+>>
+>> 2) I can finally boot a system with 3x 6480 controllers loaded with =
+SATA
+>> disks without a kernel panic.
+>>
+>> 3) Raid5/6 initialization completes without dropping the disks one a=
+fter
+>> another.
+>>
+>> 4) One thing that occured was the following: during a raid1 initiali=
+zation
+>> of 2 SAS disks and a raid5 init of 8x SSD's i got a call trace by
+>> libata-core.c (see attachment for details). The system continued to =
+work
+>> fine after the trace.
+>>
+>> Great work, this is a much more stable driver now!
+>>
+>> Kind regards,
+>> Caspar Smit
+>>
+>>> On Wed, Feb 17, 2010 at 12:53 PM, Srinivas Naga Venkatasatya
+>>> Pasagadugula - ERS, HCL Tech <satyasrinivasp@hcl.in> wrote:
+>>>> Hi Smit,
+>>>>
+>>>> This patch is not exactly replaced with Nov-09 patches.
+>>>> My patch addresses the RAID5/6 issues also. Below issues are addre=
+ssed
+>>>> by my patch.
+>>>> 1. Tape issues.
+>>>> 2. RAID-5/6 I/O fails.
+>>>> 3. LVM IO fails and subsequent init 6 hang (connect SAS+SATA in ca=
+scaded
+>>>> =A0 =A0 =A0 =A0expanders, crate volume group and logical volumes, =
+run file I/O
+>>>> =A0 =A0 =A0 (alltest), unplug one drive)
+>>>> 4. Disk stress I/O on 4096 sector size.
+>>>> 5. Hot insertion of drives giving panic.
+>>>> 6. 'fdisk -l' hangs with hot plugging of SATA/SAS drives in expand=
+er
+>>>> while =A0 =A0 =A0IO (Diskstress and alltest) is going on and IO st=
+opped.
+>>>>
+>>>> I can't combined my patch with November-09 patches. James also rej=
+ected
+>>>> those patches as those are not proper. Let me know if you have iss=
+ues
+>>>> with my patch.
+>>>>
+>>>> --Srini.
+>>>
+>>>
+>>> I haven't tested yet, but looks like you're doing excellent work, a=
+nd
+>>> your documentation/overview of the work is superb.
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scs=
+i" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
+l
+>>>
+>>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
