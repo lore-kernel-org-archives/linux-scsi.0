@@ -1,14 +1,14 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 06/23] bfa: PCI VPD, FIP and include file changes.
-Date: Fri, 5 Mar 2010 19:35:45 -0800
-Message-ID: <1267846545-22065-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 07/23] bfa: FCS authentication related changes.
+Date: Fri, 5 Mar 2010 19:36:00 -0800
+Message-ID: <1267846560-22121-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:18078 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:18080 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535Ab0CFDgB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 22:36:01 -0500
+	with ESMTP id S1753535Ab0CFDgU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 22:36:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,430 +18,123 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 
-	- Changed PCI VPD to incorporate specific OEM vendors.
+	- Made FCS authentication related changes to state machines and header files.
 
-	- Added FCoE specific interrupt latency and delay params.
-
-	- Added some variables needed by FIP 2.0.
-
-	- Added some new logging and tracing definitions.
-
-	- Added reserved members to make the structures (IOC, IOCFC) 64bit aligned.
-
-	- Changed the module identifiers, as some files were moved.
+	- Made changes in FCS state machines to handle the case when secret string is NULL.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_ioc.c                      |    4 +-
- drivers/scsi/bfa/bfa_trcmod_priv.h              |   62 ++++++-------
- drivers/scsi/bfa/include/defs/bfa_defs_cee.h    |   14 ++--
- drivers/scsi/bfa/include/defs/bfa_defs_ioc.h    |    1 +
- drivers/scsi/bfa/include/defs/bfa_defs_iocfc.h  |   11 ++-
- drivers/scsi/bfa/include/defs/bfa_defs_mfg.h    |  111 ++++++++++++++++++++---
- drivers/scsi/bfa/include/defs/bfa_defs_status.h |   12 ++-
- drivers/scsi/bfa/include/log/bfa_log_hal.h      |    6 ++
- drivers/scsi/bfa/include/log/bfa_log_linux.h    |   16 ++++
- 9 files changed, 178 insertions(+), 59 deletions(-)
+ drivers/scsi/bfa/bfa_fcs_lport.c               |    2 ++
+ drivers/scsi/bfa/fabric.c                      |    6 ++++++
+ drivers/scsi/bfa/fcs_fabric.h                  |    1 +
+ drivers/scsi/bfa/include/defs/bfa_defs_auth.h  |   22 ++++++++++++++++++++++
+ drivers/scsi/bfa/include/defs/bfa_defs_pport.h |    4 ++--
+ 5 files changed, 33 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index a5f9745..8a6361c 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -18,7 +18,7 @@
- #include <bfa.h>
- #include <bfa_ioc.h>
- #include <bfa_fwimg_priv.h>
--#include <bfa_trcmod_priv.h>
-+#include <cna/bfa_cna_trcmod.h>
- #include <cs/bfa_debug.h>
- #include <bfi/bfi_ioc.h>
- #include <bfi/bfi_ctreg.h>
-@@ -27,7 +27,7 @@
- #include <log/bfa_log_hal.h>
- #include <defs/bfa_defs_pci.h>
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 7bb182d..4a51aac 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -931,6 +931,8 @@ bfa_fcs_port_get_attr(struct bfa_fcs_port_s *port,
+ 	if (port->fabric) {
+ 		port_attr->port_type = bfa_fcs_fabric_port_type(port->fabric);
+ 		port_attr->loopback = bfa_fcs_fabric_is_loopback(port->fabric);
++		port_attr->authfail =
++				bfa_fcs_fabric_is_auth_failed(port->fabric);
+ 		port_attr->fabric_name = bfa_fcs_port_get_fabric_name(port);
+ 		memcpy(port_attr->fabric_ip_addr,
+ 		       bfa_fcs_port_get_fabric_ipaddr(port),
+diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
+index 20a686a..b02ed76 100644
+--- a/drivers/scsi/bfa/fabric.c
++++ b/drivers/scsi/bfa/fabric.c
+@@ -895,6 +895,12 @@ bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric)
+ 	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_loopback);
+ }
  
--BFA_TRC_FILE(HAL, IOC);
-+BFA_TRC_FILE(CNA, IOC);
++bfa_boolean_t
++bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric)
++{
++	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_auth_failed);
++}
++
+ enum bfa_pport_type
+ bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric)
+ {
+diff --git a/drivers/scsi/bfa/fcs_fabric.h b/drivers/scsi/bfa/fcs_fabric.h
+index 8237bd5..244c3f0 100644
+--- a/drivers/scsi/bfa/fcs_fabric.h
++++ b/drivers/scsi/bfa/fcs_fabric.h
+@@ -47,6 +47,7 @@ void            bfa_fcs_fabric_uf_recv(struct bfa_fcs_fabric_s *fabric,
+ 			struct fchs_s *fchs, u16 len);
+ u16        bfa_fcs_fabric_vport_count(struct bfa_fcs_fabric_s *fabric);
+ bfa_boolean_t   bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric);
++bfa_boolean_t	bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric);
+ enum bfa_pport_type bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric);
+ void     	bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric);
+ void bfa_fcs_fabric_port_delete_comp(struct bfa_fcs_fabric_s *fabric);
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
+index dd19c83..45df328 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
+@@ -23,6 +23,7 @@
+ #define PRIVATE_KEY			19009
+ #define KEY_LEN				32399
+ #define BFA_AUTH_SECRET_STRING_LEN	256
++#define BFA_AUTH_FAIL_NO_PASSWORD	0xFE
+ #define BFA_AUTH_FAIL_TIMEOUT		0xFF
  
  /**
-  * IOC local definitions
-diff --git a/drivers/scsi/bfa/bfa_trcmod_priv.h b/drivers/scsi/bfa/bfa_trcmod_priv.h
-index b3562dc..3d947d4 100644
---- a/drivers/scsi/bfa/bfa_trcmod_priv.h
-+++ b/drivers/scsi/bfa/bfa_trcmod_priv.h
-@@ -29,38 +29,36 @@
-  * !!! needed between trace utility and driver version
-  */
- enum {
--	BFA_TRC_HAL_IOC		= 1,
--	BFA_TRC_HAL_INTR	= 2,
--	BFA_TRC_HAL_FCXP	= 3,
--	BFA_TRC_HAL_UF		= 4,
--	BFA_TRC_HAL_DIAG	= 5,
--	BFA_TRC_HAL_RPORT	= 6,
--	BFA_TRC_HAL_FCPIM	= 7,
--	BFA_TRC_HAL_IOIM	= 8,
--	BFA_TRC_HAL_TSKIM	= 9,
--	BFA_TRC_HAL_ITNIM	= 10,
--	BFA_TRC_HAL_PPORT	= 11,
--	BFA_TRC_HAL_SGPG	= 12,
--	BFA_TRC_HAL_FLASH	= 13,
--	BFA_TRC_HAL_DEBUG	= 14,
--	BFA_TRC_HAL_WWN		= 15,
--	BFA_TRC_HAL_FLASH_RAW	= 16,
--	BFA_TRC_HAL_SBOOT	= 17,
--	BFA_TRC_HAL_SBOOT_IO	= 18,
--	BFA_TRC_HAL_SBOOT_INTR	= 19,
--	BFA_TRC_HAL_SBTEST	= 20,
--	BFA_TRC_HAL_IPFC	= 21,
--	BFA_TRC_HAL_IOCFC	= 22,
--	BFA_TRC_HAL_FCPTM	= 23,
--	BFA_TRC_HAL_IOTM	= 24,
--	BFA_TRC_HAL_TSKTM	= 25,
--	BFA_TRC_HAL_TIN		= 26,
--	BFA_TRC_HAL_LPS		= 27,
--	BFA_TRC_HAL_FCDIAG	= 28,
--	BFA_TRC_HAL_PBIND	= 29,
--	BFA_TRC_HAL_IOCFC_CT	= 30,
--	BFA_TRC_HAL_IOCFC_CB	= 31,
--	BFA_TRC_HAL_IOCFC_Q	= 32,
-+	BFA_TRC_HAL_INTR	= 1,
-+	BFA_TRC_HAL_FCXP	= 2,
-+	BFA_TRC_HAL_UF		= 3,
-+	BFA_TRC_HAL_RPORT	= 4,
-+	BFA_TRC_HAL_FCPIM	= 5,
-+	BFA_TRC_HAL_IOIM	= 6,
-+	BFA_TRC_HAL_TSKIM	= 7,
-+	BFA_TRC_HAL_ITNIM	= 8,
-+	BFA_TRC_HAL_PPORT	= 9,
-+	BFA_TRC_HAL_SGPG	= 10,
-+	BFA_TRC_HAL_FLASH	= 11,
-+	BFA_TRC_HAL_DEBUG	= 12,
-+	BFA_TRC_HAL_WWN		= 13,
-+	BFA_TRC_HAL_FLASH_RAW	= 14,
-+	BFA_TRC_HAL_SBOOT	= 15,
-+	BFA_TRC_HAL_SBOOT_IO	= 16,
-+	BFA_TRC_HAL_SBOOT_INTR	= 17,
-+	BFA_TRC_HAL_SBTEST	= 18,
-+	BFA_TRC_HAL_IPFC	= 19,
-+	BFA_TRC_HAL_IOCFC	= 20,
-+	BFA_TRC_HAL_FCPTM	= 21,
-+	BFA_TRC_HAL_IOTM	= 22,
-+	BFA_TRC_HAL_TSKTM	= 23,
-+	BFA_TRC_HAL_TIN		= 24,
-+	BFA_TRC_HAL_LPS		= 25,
-+	BFA_TRC_HAL_FCDIAG	= 26,
-+	BFA_TRC_HAL_PBIND	= 27,
-+	BFA_TRC_HAL_IOCFC_CT	= 28,
-+	BFA_TRC_HAL_IOCFC_CB	= 29,
-+	BFA_TRC_HAL_IOCFC_Q	= 30,
+@@ -41,6 +42,27 @@ enum bfa_auth_status {
+ 	BFA_AUTH_STATUS_UNKNOWN = 9,	/*  authentication status unknown */
  };
  
- #endif /* __BFA_TRCMOD_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_cee.h b/drivers/scsi/bfa/include/defs/bfa_defs_cee.h
-index 520a22f..b0ac9ac 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_cee.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_cee.h
-@@ -28,10 +28,6 @@
- 
- #define BFA_CEE_LLDP_MAX_STRING_LEN (128)
- 
--
--/* FIXME: this is coming from the protocol spec. Can the host & apps share the
--   protocol .h files ?
-- */
- #define BFA_CEE_LLDP_SYS_CAP_OTHER       0x0001
- #define BFA_CEE_LLDP_SYS_CAP_REPEATER    0x0002
- #define BFA_CEE_LLDP_SYS_CAP_MAC_BRIDGE  0x0004
-@@ -94,9 +90,10 @@ struct bfa_cee_dcbx_cfg_s {
- /* CEE status */
- /* Making this to tri-state for the benefit of port list command */
- enum bfa_cee_status_e {
--    CEE_PHY_DOWN = 0,
--    CEE_PHY_UP = 1,
--    CEE_UP = 2,
-+	CEE_UP = 0,
-+	CEE_PHY_UP = 1,
-+	CEE_LOOPBACK = 2,
-+	CEE_PHY_DOWN = 3,
- };
- 
- /* CEE Query */
-@@ -107,7 +104,8 @@ struct bfa_cee_attr_s {
- 	struct bfa_cee_dcbx_cfg_s dcbx_remote;
- 	mac_t src_mac;
- 	u8 link_speed;
--	u8 filler[3];
-+	u8 nw_priority;
-+	u8 filler[2];
- };
- 
- 
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h b/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
-index b1d532d..6c721b1 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_ioc.h
-@@ -126,6 +126,7 @@ struct bfa_ioc_attr_s {
- 	struct bfa_ioc_driver_attr_s 	driver_attr;	/*  driver attr    */
- 	struct bfa_ioc_pci_attr_s	pci_attr;
- 	u8				port_id;	/*  port number    */
-+	u8				rsvd[7];	/*!< 64bit align    */
- };
- 
- /**
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_iocfc.h b/drivers/scsi/bfa/include/defs/bfa_defs_iocfc.h
-index d76bcbd..87f0401 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_iocfc.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_iocfc.h
-@@ -26,6 +26,8 @@
- 
- #define BFA_IOCFC_INTR_DELAY	1125
- #define BFA_IOCFC_INTR_LATENCY	225
-+#define BFA_IOCFCOE_INTR_DELAY  25
-+#define BFA_IOCFCOE_INTR_LATENCY 5
- 
- /**
-  * Interrupt coalescing configuration.
-@@ -50,7 +52,7 @@ struct bfa_iocfc_fwcfg_s {
- 	u16        num_fcxp_reqs;	/*  unassisted FC exchanges	*/
- 	u16        num_uf_bufs;	/*  unsolicited recv buffers	*/
- 	u8		num_cqs;
--	u8		rsvd;
-+	u8		rsvd[5];
- };
- 
- struct bfa_iocfc_drvcfg_s {
-@@ -224,6 +226,11 @@ struct bfa_fw_port_physm_stats_s {
- 
- 
- struct bfa_fw_fip_stats_s {
-+    u32    vlan_req;           /*  vlan discovery requests             */
-+    u32    vlan_notify;        /*  vlan notifications                  */
-+    u32    vlan_err;           /*  vlan response error                 */
-+    u32    vlan_timeouts;      /*  vlan disvoery timeouts              */
-+    u32    vlan_invalids;      /*  invalid vlan in discovery advert.   */
-     u32    disc_req;           /*  Discovery solicit requests          */
-     u32    disc_rsp;           /*  Discovery solicit response          */
-     u32    disc_err;           /*  Discovery advt. parse errors        */
-@@ -235,7 +242,7 @@ struct bfa_fw_fip_stats_s {
-     u32    clrvlink_req;       /*  Clear virtual link req              */
-     u32    op_unsupp;          /*  Unsupported FIP operation           */
-     u32    untagged;           /*  Untagged frames (ignored)           */
--    u32    rsvd;
-+    u32	   invalid_version;    /*!< Invalid FIP version           */
- };
- 
- 
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-index 13fd4ab..c5bd9c3 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-@@ -22,7 +22,47 @@
- /**
-  * Manufacturing block version
-  */
--#define BFA_MFG_VERSION				1
-+#define BFA_MFG_VERSION				2
-+
-+/**
-+ * Manufacturing block encrypted version
-+ */
-+#define BFA_MFG_ENC_VER				2
-+
-+/**
-+ * Manufacturing block version 1 length
-+ */
-+#define BFA_MFG_VER1_LEN			128
-+
-+/**
-+ * Manufacturing block header length
-+ */
-+#define BFA_MFG_HDR_LEN				4
-+
-+/**
-+ * Checksum size
-+ */
-+#define BFA_MFG_CHKSUM_SIZE			16
-+
-+/**
-+ * Manufacturing block encrypted version
-+ */
-+#define BFA_MFG_ENC_VER				2
-+
-+/**
-+ * Manufacturing block version 1 length
-+ */
-+#define BFA_MFG_VER1_LEN			128
-+
-+/**
-+ * Manufacturing block header length
-+ */
-+#define BFA_MFG_HDR_LEN				4
-+
-+/**
-+ * Checksum size
-+ */
-+#define BFA_MFG_CHKSUM_SIZE			16
- 
- /**
-  * Manufacturing block format
-@@ -30,29 +70,74 @@
- #define BFA_MFG_SERIALNUM_SIZE			11
- #define BFA_MFG_PARTNUM_SIZE			14
- #define BFA_MFG_SUPPLIER_ID_SIZE		10
--#define BFA_MFG_SUPPLIER_PARTNUM_SIZE	20
--#define BFA_MFG_SUPPLIER_SERIALNUM_SIZE	20
--#define BFA_MFG_SUPPLIER_REVISION_SIZE	4
-+#define BFA_MFG_SUPPLIER_PARTNUM_SIZE		20
-+#define BFA_MFG_SUPPLIER_SERIALNUM_SIZE		20
-+#define BFA_MFG_SUPPLIER_REVISION_SIZE		4
- #define STRSZ(_n)	(((_n) + 4) & ~3)
- 
- /**
-+ * Manufacturing card type
-+ */
-+enum {
-+	BFA_MFG_TYPE_CB_MAX  = 825,      /*  Crossbow card type max	*/
-+	BFA_MFG_TYPE_FC8P2   = 825,      /*  8G 2port FC card		*/
-+	BFA_MFG_TYPE_FC8P1   = 815,      /*  8G 1port FC card		*/
-+	BFA_MFG_TYPE_FC4P2   = 425,      /*  4G 2port FC card		*/
-+	BFA_MFG_TYPE_FC4P1   = 415,      /*  4G 1port FC card		*/
-+	BFA_MFG_TYPE_CNA10P2 = 1020,     /*  10G 2port CNA card	*/
-+	BFA_MFG_TYPE_CNA10P1 = 1010,     /*  10G 1port CNA card	*/
-+};
-+
-+#pragma pack(1)
-+
-+/**
-+ * Card type to port number conversion
-+ */
-+#define bfa_mfg_type2port_num(card_type) (((card_type) / 10) % 10)
-+
-+
-+/**
-+ * All numerical fields are in big-endian format.
-+ */
-+struct bfa_mfg_block_s {
++enum bfa_auth_rej_code {
++	BFA_AUTH_RJT_CODE_AUTH_FAILURE   = 1, /* auth failure */
++	BFA_AUTH_RJT_CODE_LOGICAL_ERR    = 2, /* logical error */
 +};
 +
 +/**
-  * VPD data length
-  */
--#define BFA_MFG_VPD_LEN     256
-+#define BFA_MFG_VPD_LEN		512
-+
-+#define BFA_MFG_VPD_PCI_HDR_OFF		137
-+#define BFA_MFG_VPD_PCI_VER_MASK	0x07	/*  version mask 3 bits */
-+#define BFA_MFG_VPD_PCI_VDR_MASK	0xf8	/*  vendor mask 5 bits */
-+
-+/**
-+ * VPD vendor tag
++ * Authentication reject codes
 + */
-+enum {
-+	BFA_MFG_VPD_UNKNOWN	= 0,     /*  vendor unknown 		*/
-+	BFA_MFG_VPD_IBM 	= 1,     /*  vendor IBM 		*/
-+	BFA_MFG_VPD_HP  	= 2,     /*  vendor HP  		*/
-+	BFA_MFG_VPD_DELL        = 3,	 /*  vendor DELL                */
-+	BFA_MFG_VPD_PCI_IBM 	= 0x08,  /*  PCI VPD IBM     		*/
-+	BFA_MFG_VPD_PCI_HP  	= 0x10,  /*  PCI VPD HP			*/
-+	BFA_MFG_VPD_PCI_DELL    = 0x20,  /*  PCI VPD DELL           	*/
-+	BFA_MFG_VPD_PCI_BRCD 	= 0xf8,  /*  PCI VPD Brocade 		*/
++enum bfa_auth_rej_code_exp {
++	BFA_AUTH_MECH_NOT_USABLE        = 1, /* auth. mechanism not usable */
++	BFA_AUTH_DH_GROUP_NOT_USABLE    = 2, /* DH Group not usable */
++	BFA_AUTH_HASH_FUNC_NOT_USABLE   = 3, /* hash Function not usable */
++	BFA_AUTH_AUTH_XACT_STARTED      = 4, /* auth xact started */
++	BFA_AUTH_AUTH_FAILED            = 5, /* auth failed */
++	BFA_AUTH_INCORRECT_PLD          = 6, /* incorrect payload */
++	BFA_AUTH_INCORRECT_PROTO_MSG    = 7, /* incorrect proto msg */
++	BFA_AUTH_RESTART_AUTH_PROTO     = 8, /* restart auth protocol */
++	BFA_AUTH_AUTH_CONCAT_NOT_SUPP   = 9, /* auth concat not supported */
++	BFA_AUTH_PROTO_VER_NOT_SUPP     = 10,/* proto version not supported */
 +};
- 
- /**
-  * All numerical fields are in big-endian format.
-  */
- struct bfa_mfg_vpd_s {
--    u8     version;    /*  vpd data version */
--    u8     vpd_sig[3]; /*  characters 'V', 'P', 'D' */
--    u8     chksum;     /*  u8 checksum */
--    u8     vendor;     /*  vendor */
--    u8     len;        /*  vpd data length excluding header */
--    u8     rsv;
--    u8     data[BFA_MFG_VPD_LEN];  /*  vpd data */
-+	u8		version;	/*  vpd data version */
-+	u8		vpd_sig[3];	/*  characters 'V', 'P', 'D' */
-+	u8		chksum;		/*  u8 checksum */
-+	u8		vendor;		/*  vendor */
-+	u8 	len;		/*  vpd data length excluding header */
-+	u8 	rsv;
-+	u8		data[BFA_MFG_VPD_LEN];	/*  vpd data */
++
+ struct auth_proto_stats_s {
+ 	u32        auth_rjts;
+ 	u32        auth_negs;
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+index bf32041..88662a1 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+@@ -232,7 +232,7 @@ struct bfa_pport_attr_s {
+ 	u32        	pid;		/*  port ID */
+ 	enum bfa_pport_type 	port_type;	/*  current topology */
+ 	u32        	loopback;	/*  external loopback */
+-	u32		rsvd1;
++	u32		authfail;	/* auth fail state */
+ 	u32		rsvd2;		/*  padding for 64 bit */
  };
  
--#pragma pack(1)
-+#pragma pack()
- 
- #endif /* __BFA_DEFS_MFG_H__ */
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_status.h b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
-index cdceaeb..d8a74eb 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_status.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
-@@ -180,8 +180,8 @@ enum bfa_status {
- 	BFA_STATUS_IM_ADAPT_ALREADY_IN_TEAM = 114, /*  Given adapter is part
- 						    * of another team */
- 	BFA_STATUS_IM_ADAPT_HAS_VLANS = 115, /*  Adapter has VLANs configured.
--					      * Delete all VLANs before
--					      * creating team */
-+					      * Delete all VLANs to become
-+					      * part of the team */
- 	BFA_STATUS_IM_PVID_MISMATCH = 116, /*  Mismatching PVIDs configured
- 					    * for adapters */
- 	BFA_STATUS_IM_LINK_SPEED_MISMATCH = 117, /*  Mismatching link speeds
-@@ -242,6 +242,14 @@ enum bfa_status {
- 					  * failed */
- 	BFA_STATUS_IM_UNBIND_FAILED = 149, /* ! < IM Driver unbind operation
- 					    * failed */
-+	BFA_STATUS_IM_PORT_IN_TEAM = 150, /*  Port is already part of the
-+					   * team */
-+	BFA_STATUS_IM_VLAN_NOT_FOUND = 151, /*  VLAN ID doesn't exists */
-+	BFA_STATUS_IM_TEAM_NOT_FOUND = 152, /*  Teaming configuration doesn't
-+					     * exists */
-+	BFA_STATUS_IM_TEAM_CFG_NOT_ALLOWED = 153, /*  Given settings are not
-+						* allowed for the current
-+						* Teaming mode */
- 	BFA_STATUS_MAX_VAL		/*  Unknown error code */
- };
- #define bfa_status_t enum bfa_status
-diff --git a/drivers/scsi/bfa/include/log/bfa_log_hal.h b/drivers/scsi/bfa/include/log/bfa_log_hal.h
-index 0412aea..5f8f5e3 100644
---- a/drivers/scsi/bfa/include/log/bfa_log_hal.h
-+++ b/drivers/scsi/bfa/include/log/bfa_log_hal.h
-@@ -27,4 +27,10 @@
- 	(((u32) BFA_LOG_HAL_ID << BFA_LOG_MODID_OFFSET) | 3)
- #define BFA_LOG_HAL_SM_ASSERT \
- 	(((u32) BFA_LOG_HAL_ID << BFA_LOG_MODID_OFFSET) | 4)
-+#define BFA_LOG_HAL_DRIVER_ERROR \
-+	(((u32) BFA_LOG_HAL_ID << BFA_LOG_MODID_OFFSET) | 5)
-+#define BFA_LOG_HAL_DRIVER_CONFIG_ERROR \
-+	(((u32) BFA_LOG_HAL_ID << BFA_LOG_MODID_OFFSET) | 6)
-+#define BFA_LOG_HAL_MBOX_ERROR \
-+	(((u32) BFA_LOG_HAL_ID << BFA_LOG_MODID_OFFSET) | 7)
- #endif
-diff --git a/drivers/scsi/bfa/include/log/bfa_log_linux.h b/drivers/scsi/bfa/include/log/bfa_log_linux.h
-index 317c054..bd451db 100644
---- a/drivers/scsi/bfa/include/log/bfa_log_linux.h
-+++ b/drivers/scsi/bfa/include/log/bfa_log_linux.h
-@@ -41,4 +41,20 @@
- 		(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 10)
- #define BFA_LOG_LINUX_SCSI_ABORT_COMP \
- 		(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 11)
-+#define BFA_LOG_LINUX_DRIVER_CONFIG_ERROR \
-+		(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 12)
-+#define BFA_LOG_LINUX_BNA_STATE_MACHINE \
-+		(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 13)
-+#define BFA_LOG_LINUX_IOC_ERROR \
-+	(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 14)
-+#define BFA_LOG_LINUX_RESOURCE_ALLOC_ERROR \
-+	(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 15)
-+#define BFA_LOG_LINUX_RING_BUFFER_ERROR \
-+	(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 16)
-+#define BFA_LOG_LINUX_DRIVER_ERROR \
-+	(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 17)
-+#define BFA_LOG_LINUX_DRIVER_DIAG \
-+	(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 18)
-+#define BFA_LOG_LINUX_DRIVER_AEN \
-+	(((u32) BFA_LOG_LINUX_ID << BFA_LOG_MODID_OFFSET) | 19)
- #endif
+@@ -247,7 +247,7 @@ struct bfa_pport_fc_stats_s {
+ 	u64        rx_words;	/*  received words */
+ 	u64        lip_count;	/*  LIPs seen */
+ 	u64        nos_count;	/*  NOS count */
+-	u64        error_frames;	/*  errored frames (sent?) */
++	u64        error_frames;	/*  errored frames */
+ 	u64        dropped_frames;	/*  dropped frames */
+ 	u64        link_failures;	/*  link failure count */
+ 	u64        loss_of_syncs;	/*  loss of sync count */
 -- 
 1.6.5.3
 
