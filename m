@@ -1,65 +1,76 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: Re: LSI SAS changes SCSI address and by-path on hot-swap
-Date: Sat, 06 Mar 2010 00:05:38 +0100
-Message-ID: <4B918E42.6030009@shiftmail.org>
-References: <4B8FE5F2.2040506@shiftmail.org>
- <1267770172.8894.24.camel@mulgrave.site>
- <627C309F4690914DAF54F22C0CD5F9001FCCFAD082@FRD01MAIL01.ads.invitrogen.net>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 00/23] bfa: update bfa driver to version 2.1.2.1 (resubmit)
+Date: Fri, 5 Mar 2010 19:34:19 -0800
+Message-ID: <1267846459-21559-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from blade3.isti.cnr.it ([194.119.192.19]:50223 "EHLO
-	BLADE3.ISTI.CNR.IT" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755670Ab0CEXGl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 18:06:41 -0500
-Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it
- (PMDF V6.5-b2 #31825) id <01NKEQAQL000BFGHET@mx.isti.cnr.it> for
- linux-scsi@vger.kernel.org; Sat, 06 Mar 2010 00:05:36 +0100
-In-reply-to: <627C309F4690914DAF54F22C0CD5F9001FCCFAD082@FRD01MAIL01.ads.invitrogen.net>
+Received: from hq-exedge.brocade.com ([66.243.153.82]:55926 "EHLO
+	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205Ab0CFDeZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 22:34:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Michael" <Michael.Moore@lifetech.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com, kgudipat@brocade.com
 
-Moore, Michael wrote:
-> I did this with a LSI-1068E HBA and 2 x 4 drive hot swap SATA bays.  I was able to create udev rules to map the drive slots to consistent /dev entries.  However, the bigger problem I had was that if I had a drive inserted and mounted (say in slot A) and then I added or swapped another drive on the same port ( 4 SAS channels per port on the external HBAs) it would cause some sort of reset on the bus that would end up unmounting the drive    
-> in slot A even though I never did anything to the drive in slot A.  Now, this was with SATA drives connected directly to the 1068 which should work, but since I needed this to work, I had to revert to the older setup that used Silicon Image 3124 eSATA cards.
->
-> I can try to dig up the udev rules I used if this would be helpful.
->
-> - Mike
->   
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-Michael, thanks for replying.
-The problem you describe would really be a showstopper for us, so I'd 
-really like to understand it well!...
-I tried to reread your post multiple times but I don't fully understand, 
-excuse my ignorance... this is because I am not really familiar with 
-SAS/SCSI terms.
+Hi James,
 
-You have an LSI-1068E attached directly to hot swap SATA bays, you don't 
-have expanders in the middle, right?
-Then you swapped one of the 8 drives and another one got disconnected 
-because of that?
+We are resubmitting rest of the brocade bfa 2.1.2.1 driver patch.
 
-This doesn't seem to happen on my setup. I have a mainboard-integrated 
-LSI-1068E and kernel 2.6.24. I only have 4 drives connected and they all 
-belong to "port-5:x" (x is different for each drive) I didn't try to 
-swap all of them, but I definitely tried swapping one, and no other 
-drive was disconnected because of this. The other drives were part of an 
-md-raid, it would have been disastrous if it happened.
-What kernel version do you have?
 
-The following sentence is not clear to me:
-"then I added or swapped another drive on the same port ( 4 SAS channels 
-per port on the external HBAs)"
-what is the "external HBAs"? Is that an expander?
+I have made the patches bisectable and also fixed the checkpatch errors
 
-Also... are you sure the problem was not maybe due to the udev rule? 
-Sorry I don't know udev, I don't know if it even has the power to 
-unmount a drive...
+you had pointed out. I have compiled the patches against your scsi-misc
 
-Thank you
-A.
+and linux-2.6.33.
 
+
+About this submission, we completely reworked the patch set by hand merging
+
+previous checkins so that each patch addresses a specific issue.
+
+We hope this patch set meets the upstream standard and gets included in
+
+your scsi-misc tree. In the following weeks, we will submit more patches
+
+to clean up the driver and reduce the number of files to be on par
+
+with most of the upstream drivers.
+
+
+Here are the changes we made in 2.1.2.1 driver:
+
+Krishna Gudipati (23):
+  bfa: IOC changes: Support faster recovery and split bfa_ioc.c into
+    ASIC specific code.
+  bfa: Clear LL_HALT and PSS_ERR bit when IOC crashes.
+  bfa: Replace bfa_assert() with bfa_sm_fault()
+  bfa: RPORT state machine: direct attach mode fix.
+  bfa: Fix to copy fpma MAC when requested by user space application.
+  bfa: PCI VPD, FIP and include file changes.
+  bfa: FCS authentication related changes.
+  bfa: Added firmware save clear feature for BFA driver.
+  bfa: Introduce a link notification state machine.
+  bfa: AEN and byte alignment fixes.
+  bfa: IOC recovery fix in fcmode.
+  bfa: Fix Command Queue (CPE) full condition check and ack CPE
+    interrupt.
+  bfa: In MSIX mode, ignore spurious RME interrupts when FCoE ports are
+    in FW mismatch state.
+  bfa: IOC fixes, check for IOC down condition.
+  bfa: Rename pport to fcport in BFA FCS.
+  bfa: New portlog entries for events (FIP/FLOGI/FDISC/LOGO).
+  bfa: Replace bfa_get_attr() with specific APIs
+  bfa: Modified the portstats get/clear logic
+  bfa: FCS and include file changes.
+  bfa: Handle SCSI IO underrun case.
+  bfa: Support vport create/delete from sysfs.
+  bfa: Remove unused header files and did some cleanup.
+  bfa: Update the driver version to 2.1.2.1.
+
+Thanks,
+
+Krishna Chaitanya Gudipati.
