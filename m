@@ -1,14 +1,14 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 07/23] bfa: FCS authentication related changes.
-Date: Fri, 5 Mar 2010 19:36:00 -0800
-Message-ID: <1267846560-22121-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 08/23] bfa: Added firmware save clear feature for BFA driver.
+Date: Fri, 5 Mar 2010 19:36:19 -0800
+Message-ID: <1267846579-22451-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.83]:18080 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.82]:55935 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535Ab0CFDgU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 22:36:20 -0500
+	with ESMTP id S1753535Ab0CFDgb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 22:36:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,123 +18,88 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 
-	- Made FCS authentication related changes to state machines and header files.
-
-	- Made changes in FCS state machines to handle the case when secret string is NULL.
+	- Added new fsave clear feature for the BFA driver.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fcs_lport.c               |    2 ++
- drivers/scsi/bfa/fabric.c                      |    6 ++++++
- drivers/scsi/bfa/fcs_fabric.h                  |    1 +
- drivers/scsi/bfa/include/defs/bfa_defs_auth.h  |   22 ++++++++++++++++++++++
- drivers/scsi/bfa/include/defs/bfa_defs_pport.h |    4 ++--
- 5 files changed, 33 insertions(+), 2 deletions(-)
+ drivers/scsi/bfa/bfa_core.c    |    9 +++++++++
+ drivers/scsi/bfa/bfa_ioc.c     |   10 +++++++++-
+ drivers/scsi/bfa/bfa_ioc.h     |    1 +
+ drivers/scsi/bfa/include/bfa.h |    1 +
+ 4 files changed, 20 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 7bb182d..4a51aac 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -931,6 +931,8 @@ bfa_fcs_port_get_attr(struct bfa_fcs_port_s *port,
- 	if (port->fabric) {
- 		port_attr->port_type = bfa_fcs_fabric_port_type(port->fabric);
- 		port_attr->loopback = bfa_fcs_fabric_is_loopback(port->fabric);
-+		port_attr->authfail =
-+				bfa_fcs_fabric_is_auth_failed(port->fabric);
- 		port_attr->fabric_name = bfa_fcs_port_get_fabric_name(port);
- 		memcpy(port_attr->fabric_ip_addr,
- 		       bfa_fcs_port_get_fabric_ipaddr(port),
-diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
-index 20a686a..b02ed76 100644
---- a/drivers/scsi/bfa/fabric.c
-+++ b/drivers/scsi/bfa/fabric.c
-@@ -895,6 +895,12 @@ bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric)
- 	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_loopback);
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 72e3f2f..0c08e18 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -385,6 +385,15 @@ bfa_debug_fwsave(struct bfa_s *bfa, void *trcdata, int *trclen)
  }
  
-+bfa_boolean_t
-+bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric)
+ /**
++ * Clear the saved firmware trace information of an IOC.
++ */
++void
++bfa_debug_fwsave_clear(struct bfa_s *bfa)
 +{
-+	return bfa_sm_cmp_state(fabric, bfa_fcs_fabric_sm_auth_failed);
++	bfa_ioc_debug_fwsave_clear(&bfa->ioc);
 +}
 +
- enum bfa_pport_type
- bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric)
++/**
+  * 		Fetch firmware trace data.
+  *
+  * @param[in]		bfa			BFA instance
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 8a6361c..0019ff7 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -1488,7 +1488,6 @@ return (auto_recover) ? BFA_DBG_FWTRC_LEN : 0;
+ void
+ bfa_ioc_debug_memclaim(struct bfa_ioc_s *ioc, void *dbg_fwsave)
  {
-diff --git a/drivers/scsi/bfa/fcs_fabric.h b/drivers/scsi/bfa/fcs_fabric.h
-index 8237bd5..244c3f0 100644
---- a/drivers/scsi/bfa/fcs_fabric.h
-+++ b/drivers/scsi/bfa/fcs_fabric.h
-@@ -47,6 +47,7 @@ void            bfa_fcs_fabric_uf_recv(struct bfa_fcs_fabric_s *fabric,
- 			struct fchs_s *fchs, u16 len);
- u16        bfa_fcs_fabric_vport_count(struct bfa_fcs_fabric_s *fabric);
- bfa_boolean_t   bfa_fcs_fabric_is_loopback(struct bfa_fcs_fabric_s *fabric);
-+bfa_boolean_t	bfa_fcs_fabric_is_auth_failed(struct bfa_fcs_fabric_s *fabric);
- enum bfa_pport_type bfa_fcs_fabric_port_type(struct bfa_fcs_fabric_s *fabric);
- void     	bfa_fcs_fabric_psymb_init(struct bfa_fcs_fabric_s *fabric);
- void bfa_fcs_fabric_port_delete_comp(struct bfa_fcs_fabric_s *fabric);
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
-index dd19c83..45df328 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_auth.h
-@@ -23,6 +23,7 @@
- #define PRIVATE_KEY			19009
- #define KEY_LEN				32399
- #define BFA_AUTH_SECRET_STRING_LEN	256
-+#define BFA_AUTH_FAIL_NO_PASSWORD	0xFE
- #define BFA_AUTH_FAIL_TIMEOUT		0xFF
+-	bfa_assert(ioc->auto_recover);
+ 	ioc->dbg_fwsave = dbg_fwsave;
+ 	ioc->dbg_fwsave_len = bfa_ioc_debug_trcsz(ioc->auto_recover);
+ }
+@@ -1925,6 +1924,15 @@ bfa_ioc_debug_fwsave(struct bfa_ioc_s *ioc, void *trcdata, int *trclen)
+ }
  
  /**
-@@ -41,6 +42,27 @@ enum bfa_auth_status {
- 	BFA_AUTH_STATUS_UNKNOWN = 9,	/*  authentication status unknown */
- };
- 
-+enum bfa_auth_rej_code {
-+	BFA_AUTH_RJT_CODE_AUTH_FAILURE   = 1, /* auth failure */
-+	BFA_AUTH_RJT_CODE_LOGICAL_ERR    = 2, /* logical error */
-+};
++ * Clear saved firmware trace
++ */
++void
++bfa_ioc_debug_fwsave_clear(struct bfa_ioc_s *ioc)
++{
++	ioc->dbg_fwsave_once = BFA_TRUE;
++}
 +
 +/**
-+ * Authentication reject codes
-+ */
-+enum bfa_auth_rej_code_exp {
-+	BFA_AUTH_MECH_NOT_USABLE        = 1, /* auth. mechanism not usable */
-+	BFA_AUTH_DH_GROUP_NOT_USABLE    = 2, /* DH Group not usable */
-+	BFA_AUTH_HASH_FUNC_NOT_USABLE   = 3, /* hash Function not usable */
-+	BFA_AUTH_AUTH_XACT_STARTED      = 4, /* auth xact started */
-+	BFA_AUTH_AUTH_FAILED            = 5, /* auth failed */
-+	BFA_AUTH_INCORRECT_PLD          = 6, /* incorrect payload */
-+	BFA_AUTH_INCORRECT_PROTO_MSG    = 7, /* incorrect proto msg */
-+	BFA_AUTH_RESTART_AUTH_PROTO     = 8, /* restart auth protocol */
-+	BFA_AUTH_AUTH_CONCAT_NOT_SUPP   = 9, /* auth concat not supported */
-+	BFA_AUTH_PROTO_VER_NOT_SUPP     = 10,/* proto version not supported */
-+};
-+
- struct auth_proto_stats_s {
- 	u32        auth_rjts;
- 	u32        auth_negs;
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-index bf32041..88662a1 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-@@ -232,7 +232,7 @@ struct bfa_pport_attr_s {
- 	u32        	pid;		/*  port ID */
- 	enum bfa_pport_type 	port_type;	/*  current topology */
- 	u32        	loopback;	/*  external loopback */
--	u32		rsvd1;
-+	u32		authfail;	/* auth fail state */
- 	u32		rsvd2;		/*  padding for 64 bit */
- };
+  * Retrieve saved firmware trace from a prior IOC failure.
+  */
+ bfa_status_t
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 853cc31..4b73efa 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -270,6 +270,7 @@ int bfa_ioc_debug_trcsz(bfa_boolean_t auto_recover);
+ void bfa_ioc_debug_memclaim(struct bfa_ioc_s *ioc, void *dbg_fwsave);
+ bfa_status_t bfa_ioc_debug_fwsave(struct bfa_ioc_s *ioc, void *trcdata,
+ 		int *trclen);
++void bfa_ioc_debug_fwsave_clear(struct bfa_ioc_s *ioc);
+ bfa_status_t bfa_ioc_debug_fwtrc(struct bfa_ioc_s *ioc, void *trcdata,
+ 				 int *trclen);
+ u32 bfa_ioc_smem_pgnum(struct bfa_ioc_s *ioc, u32 fmaddr);
+diff --git a/drivers/scsi/bfa/include/bfa.h b/drivers/scsi/bfa/include/bfa.h
+index 942ae64..17654ca 100644
+--- a/drivers/scsi/bfa/include/bfa.h
++++ b/drivers/scsi/bfa/include/bfa.h
+@@ -172,6 +172,7 @@ void bfa_timer_tick(struct bfa_s *bfa);
+  */
+ bfa_status_t bfa_debug_fwtrc(struct bfa_s *bfa, void *trcdata, int *trclen);
+ bfa_status_t bfa_debug_fwsave(struct bfa_s *bfa, void *trcdata, int *trclen);
++void bfa_debug_fwsave_clear(struct bfa_s *bfa);
  
-@@ -247,7 +247,7 @@ struct bfa_pport_fc_stats_s {
- 	u64        rx_words;	/*  received words */
- 	u64        lip_count;	/*  LIPs seen */
- 	u64        nos_count;	/*  NOS count */
--	u64        error_frames;	/*  errored frames (sent?) */
-+	u64        error_frames;	/*  errored frames */
- 	u64        dropped_frames;	/*  dropped frames */
- 	u64        link_failures;	/*  link failure count */
- 	u64        loss_of_syncs;	/*  loss of sync count */
+ #include "bfa_priv.h"
+ 
 -- 
 1.6.5.3
 
