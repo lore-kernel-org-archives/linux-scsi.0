@@ -1,14 +1,14 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 13/23] bfa: In MSIX mode, ignore spurious RME interrupts when FCoE ports are in FW mismatch state.
-Date: Fri, 5 Mar 2010 19:37:18 -0800
-Message-ID: <1267846638-22924-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 14/23] bfa: IOC fixes, check for IOC down condition.
+Date: Fri, 5 Mar 2010 19:37:29 -0800
+Message-ID: <1267846649-22984-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hq-exedge.brocade.com ([66.243.153.82]:55941 "EHLO
+Received: from hq-exedge.brocade.com ([66.243.153.83]:18087 "EHLO
 	hq-exedge.brocade.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754285Ab0CFDha (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 22:37:30 -0500
+	with ESMTP id S1754327Ab0CFDhi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Mar 2010 22:37:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,100 +18,73 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 
-	- Use dummy interrupt handlers till chip initialization is complete.
-	  Install real interrupt handlers after chip initialization.
+	- Currently BFA was not checking for IOC down condition when issuing getstats/clearstats
 
-	- Also removed msix installation code in bfa_iocfc_init().
+	- Add check to see if IOC is operational, before issuing getstats/clearstats.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_ioc_ct.c |   43 ++++++++++++++++------------------------
- drivers/scsi/bfa/bfa_iocfc.c  |    1 -
- 2 files changed, 17 insertions(+), 27 deletions(-)
+ drivers/scsi/bfa/bfa_ioc.c   |   11 ++++++++---
+ drivers/scsi/bfa/bfa_iocfc.c |   10 ++++++++++
+ 2 files changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index 469da95..2431922 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -331,12 +331,12 @@ bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc)
- 	 */
- 	bfa_ioc_sem_get(ioc->ioc_regs.ioc_init_sem_reg);
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 2f09d17..4d9a47c 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -1129,9 +1129,6 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
+ 	if (bfa_ioc_fwimg_get_size(ioc) < BFA_IOC_FWIMG_MINSZ)
+ 		boot_type = BFI_BOOT_TYPE_FLASH;
+ 	fwimg = bfa_ioc_fwimg_get_chunk(ioc, chunkno);
+-	fwimg[BFI_BOOT_TYPE_OFF / sizeof(u32)] = bfa_os_swap32(boot_type);
+-	fwimg[BFI_BOOT_PARAM_OFF / sizeof(u32)] =
+-		bfa_os_swap32(boot_param);
  
--	pll_sclk = __APP_PLL_312_ENABLE | __APP_PLL_312_LRESETN |
--		__APP_PLL_312_RSEL200500 | __APP_PLL_312_P0_1(0U) |
-+	pll_sclk = __APP_PLL_312_LRESETN | __APP_PLL_312_ENARST |
-+		__APP_PLL_312_RSEL200500 | __APP_PLL_312_P0_1(3U) |
- 		__APP_PLL_312_JITLMT0_1(3U) |
- 		__APP_PLL_312_CNTLMT0_1(1U);
--	pll_fclk = __APP_PLL_425_ENABLE | __APP_PLL_425_LRESETN |
--		__APP_PLL_425_RSEL200500 | __APP_PLL_425_P0_1(0U) |
-+	pll_fclk = __APP_PLL_425_LRESETN | __APP_PLL_425_ENARST |
-+		__APP_PLL_425_RSEL200500 | __APP_PLL_425_P0_1(3U) |
- 		__APP_PLL_425_JITLMT0_1(3U) |
- 		__APP_PLL_425_CNTLMT0_1(1U);
+ 	pgnum = bfa_ioc_smem_pgnum(ioc, loff);
+ 	pgoff = bfa_ioc_smem_pgoff(ioc, loff);
+@@ -1166,6 +1163,14 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
  
-@@ -366,36 +366,27 @@ bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc)
- 	bfa_reg_write((rb + HOSTFN0_INT_MSK), 0xffffffffU);
- 	bfa_reg_write((rb + HOSTFN1_INT_MSK), 0xffffffffU);
- 
--	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
--				__APP_PLL_312_LOGIC_SOFT_RESET);
--	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
--				__APP_PLL_312_BYPASS |
--				__APP_PLL_312_LOGIC_SOFT_RESET);
--	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
--				__APP_PLL_425_LOGIC_SOFT_RESET);
--	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
--				__APP_PLL_425_BYPASS |
--				__APP_PLL_425_LOGIC_SOFT_RESET);
--	bfa_os_udelay(2);
--	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
--				__APP_PLL_312_LOGIC_SOFT_RESET);
--	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
--				__APP_PLL_425_LOGIC_SOFT_RESET);
--
--	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg,
--				pll_sclk | __APP_PLL_312_LOGIC_SOFT_RESET);
--	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg,
--				pll_fclk | __APP_PLL_425_LOGIC_SOFT_RESET);
-+	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk |
-+		__APP_PLL_312_LOGIC_SOFT_RESET);
-+	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk |
-+		__APP_PLL_425_LOGIC_SOFT_RESET);
-+	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk |
-+		__APP_PLL_312_LOGIC_SOFT_RESET | __APP_PLL_312_ENABLE);
-+	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk |
-+		__APP_PLL_425_LOGIC_SOFT_RESET | __APP_PLL_425_ENABLE);
- 
- 	/**
- 	 * Wait for PLLs to lock.
- 	 */
-+	bfa_reg_read(rb + HOSTFN0_INT_MSK);
- 	bfa_os_udelay(2000);
- 	bfa_reg_write((rb + HOSTFN0_INT_STATUS), 0xffffffffU);
- 	bfa_reg_write((rb + HOSTFN1_INT_STATUS), 0xffffffffU);
- 
--	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk);
--	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk);
-+	bfa_reg_write(ioc->ioc_regs.app_pll_slow_ctl_reg, pll_sclk |
-+		__APP_PLL_312_ENABLE);
-+	bfa_reg_write(ioc->ioc_regs.app_pll_fast_ctl_reg, pll_fclk |
-+		__APP_PLL_425_ENABLE);
- 
- 	bfa_reg_write((rb + MBIST_CTL_REG), __EDRAM_BISTR_START);
- 	bfa_os_udelay(1000);
-diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
-index a5551db..6677f83 100644
---- a/drivers/scsi/bfa/bfa_iocfc.c
-+++ b/drivers/scsi/bfa/bfa_iocfc.c
-@@ -659,7 +659,6 @@ bfa_iocfc_init(struct bfa_s *bfa)
- {
- 	bfa->iocfc.action = BFA_IOCFC_ACT_INIT;
- 	bfa_ioc_enable(&bfa->ioc);
--	bfa_msix_install(bfa);
+ 	bfa_reg_write(ioc->ioc_regs.host_page_num_fn,
+ 		      bfa_ioc_smem_pgnum(ioc, 0));
++
++	/*
++	 * Set boot type and boot param at the end.
++	 */
++	bfa_mem_write(ioc->ioc_regs.smem_page_start, BFI_BOOT_TYPE_OFF,
++			bfa_os_swap32(boot_type));
++	bfa_mem_write(ioc->ioc_regs.smem_page_start, BFI_BOOT_PARAM_OFF,
++			bfa_os_swap32(boot_param));
  }
  
- /**
+ static void
+diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
+index 6677f83..a76de26 100644
+--- a/drivers/scsi/bfa/bfa_iocfc.c
++++ b/drivers/scsi/bfa/bfa_iocfc.c
+@@ -801,6 +801,11 @@ bfa_iocfc_get_stats(struct bfa_s *bfa, struct bfa_iocfc_stats_s *stats,
+ 		return BFA_STATUS_DEVBUSY;
+ 	}
+ 
++	if (!bfa_iocfc_is_operational(bfa)) {
++		bfa_trc(bfa, 0);
++		return BFA_STATUS_IOC_NON_OP;
++	}
++
+ 	iocfc->stats_busy = BFA_TRUE;
+ 	iocfc->stats_ret = stats;
+ 	iocfc->stats_cbfn = cbfn;
+@@ -821,6 +826,11 @@ bfa_iocfc_clear_stats(struct bfa_s *bfa, bfa_cb_ioc_t cbfn, void *cbarg)
+ 		return BFA_STATUS_DEVBUSY;
+ 	}
+ 
++	if (!bfa_iocfc_is_operational(bfa)) {
++		bfa_trc(bfa, 0);
++		return BFA_STATUS_IOC_NON_OP;
++	}
++
+ 	iocfc->stats_busy = BFA_TRUE;
+ 	iocfc->stats_cbfn = cbfn;
+ 	iocfc->stats_cbarg = cbarg;
 -- 
 1.6.5.3
 
