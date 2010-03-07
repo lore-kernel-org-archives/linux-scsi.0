@@ -1,170 +1,172 @@
-From: Ilia Mirkin <imirkin@alum.mit.edu>
-Subject: Re: mpt2sas: dma error?
-Date: Sun, 7 Mar 2010 02:00:43 -0500
-Message-ID: <87d699441003062300q48e1c7x4be2a1e5e30e3bb0@mail.gmail.com>
-References: <87d699441003062100y1804b007t406adc4dfec99f46@mail.gmail.com>
-	 <1267941919.2812.26.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 21/23] bfa: Support vport create/delete from sysfs.
+Date: Sun, 07 Mar 2010 13:27:15 +0530
+Message-ID: <1267948635.2812.38.camel@mulgrave.site>
+References: <1267846716-23559-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:55961 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194Ab0CGHAo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Mar 2010 02:00:44 -0500
-Received: by vws9 with SMTP id 9so2355997vws.19
-        for <linux-scsi@vger.kernel.org>; Sat, 06 Mar 2010 23:00:43 -0800 (PST)
-In-Reply-To: <1267941919.2812.26.camel@mulgrave.site>
+Received: from cantor.suse.de ([195.135.220.2]:38957 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751678Ab0CGH52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Mar 2010 02:57:28 -0500
+In-Reply-To: <1267846716-23559-1-git-send-email-kgudipat@brocade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: kgudipat@brocade.com
+Cc: linux-scsi@vger.kernel.org, adapter_linux_open_src_team@brocade.com, huangj@brocade.com
 
-On Sun, Mar 7, 2010 at 1:05 AM, James Bottomley <James.Bottomley@suse.d=
-e> wrote:
-> On Sun, 2010-03-07 at 00:00 -0500, Ilia Mirkin wrote:
->> Hi,
->>
->> I have an LSI 9211-4i card (aka SAS2004) with 4 drives attached. No
->> RAID-related setup in the card's BIOS, I'm just using the drives
->> directly. This is with kernel 2.6.33. The card starts up with
->>
->> [ =A0 =A01.714458] mpt2sas version 03.100.03.00 loaded
->> [ =A0 =A01.714757] scsi0 : Fusion MPT SAS Host
->> [ =A0 =A01.715174] =A0 alloc irq_desc for 16 on node -1
->> [ =A0 =A01.715175] =A0 alloc kstat_irqs on node -1
->> [ =A0 =A01.715178] alloc irq_2_iommu on node -1
->> [ =A0 =A01.715184] mpt2sas 0000:05:00.0: PCI INT A -> GSI 16 (level,=
- low) -> IRQ 16
->> [ =A0 =A01.715431] mpt2sas 0000:05:00.0: setting latency timer to 64
->> [ =A0 =A01.715435] mpt2sas0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED=
-,
->> total mem (12387344 kB)
->> [ =A0 =A01.715939] =A0 alloc irq_desc for 31 on node -1
->> [ =A0 =A01.715941] =A0 alloc kstat_irqs on node -1
->> [ =A0 =A01.715943] alloc irq_2_iommu on node -1
->> [ =A0 =A01.715947] mpt2sas 0000:05:00.0: irq 31 for MSI/MSI-X
->> [ =A0 =A01.715960] mpt2sas0: PCI-MSI-X enabled: IRQ 31
->> [ =A0 =A01.716199] mpt2sas0: iomem(0xfaefc000),
->> mapped(0xffffc90001878000), size(16384)
->> [ =A0 =A01.716643] mpt2sas0: ioport(0xd000), size(256)
->> [ =A0 =A01.788476] mpt2sas0: sending diag reset !!
->> [ =A0 =A02.726738] mpt2sas0: diag reset: SUCCESS
->> [ =A0 =A02.772789] mpt2sas0: Allocated physical memory: size(839 kB)
->> [ =A0 =A02.773034] mpt2sas0: Current Controller Queue Depth(339), Ma=
-x
->> Controller Queue Depth(2015)
->> [ =A0 =A02.773481] mpt2sas0: Scatter Gather Elements per IO(128)
->> [ =A0 =A02.831901] mpt2sas0: LSISAS2008: FWVersion(02.00.50.00),
->> ChipRevision(0x02), BiosVersion(07.01.00.00)
->> [ =A0 =A02.832360] mpt2sas0: Protocol=3D(Initiator,Target),
->> Capabilities=3D(Raid,TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task=
- Set
->> Full,NCQ)
->> [ =A0 =A02.833261] mpt2sas0: sending port enable !!
->> [ =A0 =A04.478515] mpt2sas0: host_add: handle(0x0001),
->> sas_addr(0x500605b0001d5848), phys(8)
->> [ =A0 11.712582] mpt2sas0: port enable: SUCCESS
->>
->> which looks all happy. However it seems that running SMART commands
->> (like smartctl -a, smartmontools 5.39) on the drives attached result=
-s
->> in the following, semi-reliably:
->>
->> [ 7069.168433] DRHD: handling fault status reg 2
->> [ 7069.168440] DMAR:[DMA Read] Request device [05:00.0] fault addr e=
-0000
->> [ 7069.168442] DMAR:[fault reason 06] PTE Read access is not set
->> [ 7069.815775] mpt2sas0: fault_state(0x2665)!
->> [ 7069.815778] mpt2sas0: sending diag reset !!
->> [ 7070.754176] mpt2sas0: diag reset: SUCCESS
->> [ 7070.823523] mpt2sas0: LSISAS2008: FWVersion(02.00.50.00),
->> ChipRevision(0x02), BiosVersion(07.01.00.00)
->> [ 7070.823526] mpt2sas0: Protocol=3D(Initiator,Target),
->> Capabilities=3D(Raid,TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task=
- Set
->> Full,NCQ)
->> [ 7070.823818] mpt2sas0: sending port enable !!
->> [ 7079.740367] mpt2sas0: port enable: SUCCESS
->> [ 7079.740446] mpt2sas0: _scsih_search_responding_sas_devices
->> [ 7079.741023] scsi target0:0:0: handle(0x0009),
->> sas_addr(0x4433221100000000), enclosure logical
->> id(0x500605b0001d5848), slot(0)
->> [ 7079.741089] scsi target0:0:1: handle(0x000a),
->> sas_addr(0x4433221101000000), enclosure logical
->> id(0x500605b0001d5848), slot(1)
->> [ 7079.741154] scsi target0:0:2: handle(0x000b),
->> sas_addr(0x4433221103000000), enclosure logical
->> id(0x500605b0001d5848), slot(3)
->> [ 7079.741220] scsi target0:0:3: handle(0x000c),
->> sas_addr(0x4433221102000000), enclosure logical
->> id(0x500605b0001d5848), slot(2)
->> [ 7079.741287] mpt2sas0: _scsih_search_responding_raid_devices
->> [ 7079.741289] mpt2sas0: _scsih_search_responding_expanders
->> [ 7079.741291] mpt2sas0: _base_fault_reset_work: hard reset: success
->>
->> I can just avoid doing any SMART-related stuff on here, but that see=
-ms
->> suboptimal. Anything I can do to debug this? Should I turn DMAR off?
->> The fault status reg changes with each attempt (2, 102, 202), but th=
-e
->> fault address is always e0000.
->>
->> Actually, it only happened 3 times, and I can't get it to happen a 4=
-th
->> time... perhaps it wasn't SMART, or harder to reproduce than I thoug=
-ht
->> originally. This still seems bad though.
->
-> So this is likely a firmware bug inside the mpt2sas. =A0All of the mp=
-t
-> cards use a fat firmware model meaning they take in pure SCSI command=
-s
-> and do the translation to SATA if necessary all within the firmware, =
-so
-> the first step would be to make sure your card has the latest firmwar=
-e.
+On Fri, 2010-03-05 at 19:38 -0800, kgudipat@brocade.com wrote:
+> From: Krishna Gudipati <kgudipat@brocade.com>
+> 
+> Change details:
+> 
+> 	- Made changes to handle vport creation/deletion from sysfs.
+> 
+> Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+> ---
+>  drivers/scsi/bfa/bfad_attr.c |  104 ++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 104 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+> index d97f691..d20d223 100644
+> --- a/drivers/scsi/bfa/bfad_attr.c
+> +++ b/drivers/scsi/bfa/bfad_attr.c
+> @@ -584,6 +584,106 @@ bfad_im_num_of_discovered_ports_show(struct device *dev,
+>  	return snprintf(buf, PAGE_SIZE, "%d\n", nrports);
+>  }
+>  
+> +static int
+> +bfad_im_parse_wwn(const char *buf, u8 *wwn)
+> +{
+> +	unsigned int i, j;
+> +	memset(wwn, 0, 8);
+> +
+> +	/* Validate and store the new name */
+> +	for (i = 0, j = 0; i < 16; i++) {
+> +		if ((*buf >= '0') && (*buf <= '9'))
+> +			j = ((j << 4) | (*buf++ - '0'));
+> +		else if ((*buf >= 'a') && (*buf <= 'f'))
+> +			j = ((j << 4) | ((*buf++ - 'a') + 10));
+> +		else if ((*buf >= 'A') && (*buf <= 'F'))
+> +			j = ((j << 4) | ((*buf++ - 'A') + 10));
+> +		else
+> +			return -EINVAL;
+> +		if (i % 2) {
+> +			wwn[i/2] = j & 0xff;
+> +			j = 0;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static ssize_t
+> +bfad_im_vport_create(struct device *cdev, struct device_attribute *attr,
+> +			const char *buf, size_t count)
+> +{
+> +	struct Scsi_Host *shost = class_to_shost(cdev);
+> +	struct bfad_im_port_s *im_port =
+> +			(struct bfad_im_port_s *) shost->hostdata[0];
+> +	struct bfad_s *bfad = im_port->bfad;
+> +	struct bfa_port_cfg_s port_cfg;
+> +	u8 wwn[8];
+> +	int status;
+> +
+> +	memset(&port_cfg, 0, sizeof(port_cfg));
+> +	status = bfad_im_parse_wwn(&buf[0], wwn);
+> +	if (status)
+> +		return status;
+> +	memcpy(&port_cfg.pwwn, wwn, sizeof(wwn));
+> +
+> +	status = bfad_im_parse_wwn(&buf[17], wwn);
+> +	if (status)
+> +		return status;
+> +	memcpy(&port_cfg.nwwn, wwn, sizeof(wwn));
+> +
+> +	port_cfg.roles = BFA_PORT_ROLE_FCP_IM;
+> +	status = bfad_vport_create(bfad, 0, &port_cfg);
+> +	if (status != BFA_STATUS_OK)
+> +		return -EIO;
+> +
+> +	return count;
+> +}
+> +
+> +static ssize_t
+> +bfad_im_vport_delete(struct device *cdev, struct device_attribute *attr,
+> +				const char *buf, size_t count)
+> +{
+> +	struct Scsi_Host  *shost = class_to_shost(cdev);
+> +	struct bfad_im_port_s *im_port =
+> +		(struct bfad_im_port_s *) shost->hostdata[0];
+> +	struct bfad_s *bfad = im_port->bfad;
+> +	u8 wwn[8];
+> +	int status;
+> +	unsigned long flags;
+> +	struct bfa_fcs_vport_s *fcs_vport;
+> +	struct bfad_vport_s *bfad_vport;
+> +	struct completion fcomp;
+> +
+> +	status = bfad_im_parse_wwn(&buf[0], wwn);
+> +	if (status)
+> +		return status;
+> +
+> +	spin_lock_irqsave(&bfad->bfad_lock, flags);
+> +	fcs_vport = bfa_fcs_vport_lookup(&bfad->bfa_fcs, 0, *(wwn_t *)wwn);
+> +	if (fcs_vport == NULL) {
+> +		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+> +		return -EINVAL;
+> +	}
+> +
+> +	bfad_vport = fcs_vport->vport_drv;
+> +	bfad_vport->drv_port.flags |= BFAD_PORT_DELETE;
+> +	bfad_vport->comp_del = &fcomp;
+> +	init_completion(bfad_vport->comp_del);
+> +
+> +	status = bfa_fcs_vport_delete(fcs_vport);
+> +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+> +
+> +	wait_for_completion(bfad_vport->comp_del);
+> +
+> +	if (status != BFA_STATUS_OK)
+> +		return -EIO;
+> +
+> +	bfad_os_scsi_host_free(bfad, bfad_vport->drv_port.im_port);
+> +	kfree(bfad_vport);
+> +	return count;
+> +}
+> +
+>  static          DEVICE_ATTR(serial_number, S_IRUGO,
+>  				bfad_im_serial_num_show, NULL);
+>  static          DEVICE_ATTR(model, S_IRUGO, bfad_im_model_show, NULL);
+> @@ -605,6 +705,8 @@ static          DEVICE_ATTR(number_of_ports, S_IRUGO,
+>  static          DEVICE_ATTR(driver_name, S_IRUGO, bfad_im_drv_name_show, NULL);
+>  static          DEVICE_ATTR(number_of_discovered_ports, S_IRUGO,
+>  				bfad_im_num_of_discovered_ports_show, NULL);
+> +static		DEVICE_ATTR(vport_create, S_IWUSR, NULL, bfad_im_vport_create);
+> +static		DEVICE_ATTR(vport_delete, S_IWUSR, NULL, bfad_im_vport_delete);
+>  
+>  struct device_attribute *bfad_im_host_attrs[] = {
+>  	&dev_attr_serial_number,
+> @@ -619,6 +721,8 @@ struct device_attribute *bfad_im_host_attrs[] = {
+>  	&dev_attr_number_of_ports,
+>  	&dev_attr_driver_name,
+>  	&dev_attr_number_of_discovered_ports,
+> +	&dev_attr_vport_create,
+> +	&dev_attr_vport_delete,
+>  	NULL,
+>  };
 
-Just upgraded the FW to 04.00.00.00, and the BIOS to 7.03, same issue.
-(These are the latest available on LSI's website.)
+So this isn't the correct way to do this.  vport handling should be done
+through the fc transport class: that way we have unified vport handling
+amongst all the FC drivers (currently it supports emulex, qla and zfcp),
+which makes consumers and distributions lives much easier.  A good model
+to follow for doing this is lpfc: it actually uses duplicate transport
+templates for the virtual and physical ports.  Most simply all you need
+to do is fill in the vport_create and vport_delete functions of the
+transport template.
 
->
-> Then, there are two methods of wrapping smart commands in SCSI: ATA_1=
-2
-> and ATA_16. =A0Try getting smartctl to use ATA_12, which is more wide=
-ly
-> supported, by using the -d sat,12 option to the command.
+James
 
-Hm, well first I did it without the sat,12 option and it had the
-issue, and then I added -d sat,12 and again same thing (that's 2 for
-2). Was having trouble getting it again for a while, but looks like
-just hitting it a few times in a row (i.e. if I run it in quick
-succession) triggered 2 more in a row. This time with addr d50e0000;
-the reg is still going up by 100 every time in the message. No other
-disk i/o was happening during this run, unlike during my initial
-e-mail. To be clear, all but the very first error was with smartctl -d
-sat,12 -a.
 
-It just seems surprising that retrieving SMART data would be _so_
-fragile off of a major manufacturer's controllers... Oh well.
-
-Thanks for taking a look.
-
-  -ilia
-
-P.S. I'm also getting messages like
-[  813.174509] sd 0:0:3:0: [sdd] Sense Key : Recovered Error [current]
-[descriptor]
-[  813.174514] Descriptor sense data with sense descriptors (in hex):
-[  813.174517]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
-[  813.174526]         00 4f 00 c2 00 50
-[  813.174530] sd 0:0:3:0: [sdd] Add. Sense: ATA pass through
-information available
-
-on every smartctl command, but I'm fairly sure I've seen this effect
-has been discussed before.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
