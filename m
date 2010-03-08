@@ -1,41 +1,76 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] iscsi: change & to &&
-Date: Mon, 8 Mar 2010 15:21:57 +0300
-Message-ID: <20100308122157.GI6469@bicker>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH] SCSI: Synchronization issue while deleting vport
+Date: Mon, 8 Mar 2010 11:42:31 -0500
+Message-ID: <4B9528F7.5040706@emulex.com>
+References: <1264061732.31083.51.camel@galr-linux>	 <4B5A5859.1010006@emulex.com> <1264317616.17255.4.camel@galr-linux>	 <4B5DBA51.9070500@emulex.com> <1268035525.2229.12.camel@galr-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:60739 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755112Ab0CHMWU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2010 07:22:20 -0500
-Content-Disposition: inline
+Received: from exht1.emulex.com ([138.239.113.183]:6986 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755463Ab0CHQmx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2010 11:42:53 -0500
+In-Reply-To: <1268035525.2229.12.camel@galr-linux>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Stefani Seibold <stefani@seibold.net>, Andi Kleen <ak@linux.intel.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Gal Rosen <galr@storwize.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This change is basically a clean up.
+James,
 
-datadgst_en is an int which comes from the user.  I didn't see anything
-limiting it to 1 and 0 although obviously that's what it's supposed to 
-be.  If the user passed in 2 this test would fail.
+Can you pick up the patch ?  http://marc.info/?l=linux-scsi&m=126406180628608&w=2
 
-This same if condition is repeated in another function and it uses && 
-there.
+-- james s
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index 4ad87fd..3794d29 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -420,7 +420,7 @@ iscsi_tcp_data_recv_prep(struct iscsi_tcp_conn *tcp_conn)
- 	struct iscsi_conn *conn = tcp_conn->iscsi_conn;
- 	struct hash_desc *rx_hash = NULL;
- 
--	if (conn->datadgst_en &
-+	if (conn->datadgst_en &&
- 	    !(conn->session->tt->caps & CAP_DIGEST_OFFLOAD))
- 		rx_hash = tcp_conn->rx_hash;
- 
+Gal Rosen wrote:
+> Hello James,
+> 
+> Do you know why the patch still not included even in scsi-rc-fixes-2.6 ?
+> 
+> Can you push it ?
+> 
+> Thanks,
+> Gal.
+> 
+> On Mon, 2010-01-25 at 10:35 -0500, James Smart wrote:
+>> James B controls the merge into upstream.  He will most likely include the 
+>> patch in scsi-rc-fixes-2.6, which will merge into one of the 2.6.33-rc? phases.
+>>
+>> I assume the process, to get it into an already released kernel rev, is to 
+>> petition the 2.6.<rev>-stable tree maintainer (usually GregKH) to pick it up. 
+>>   You do need to be careful, as some changes are dependent on other things 
+>> that may have changed since that kernel revision. However, I don't think this 
+>> change would have that problem.
+>>
+>> -- james s
+>>
+>>
+>>
+>> Gal Rosen wrote:
+>>> James,
+>>>
+>>> What is the process until it will enter to the code ?
+>>> and for what version 2.6.26 or 2.6.33 ?
+>>>
+>>> Thanks,
+>>> Gal.
+>>> On Fri, 2010-01-22 at 21:00 -0500, James Smart wrote:
+>>>> Gal,
+>>>>
+>>>> Thanks for correcting this issue.  Patch looks good.
+>>>>
+>>>> Signed-off-by: James Smart <james.smart@emulex.com>
+>>>>
+>>>>
+>>>>
+>>>> Gal Rosen wrote:
+>>>>> Hi,
+>>>>>
+>>>>> Attach proposed patch for the PROBLEM: Synchronization issue in
+>>>>> scsi_transport_fc.
+>>>>>
+>>>>> Gal Rosen.
+>>>>>
+> 
