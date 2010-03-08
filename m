@@ -1,60 +1,72 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 1/2] qla2xxx: Add ISP82XX support.
-Date: Sun, 07 Mar 2010 13:36:09 +0530
-Message-ID: <1267949169.2812.41.camel@mulgrave.site>
-References: <1267740777-3862-1-git-send-email-giridhar.malavali@qlogic.com>
-	 <1267740777-3862-2-git-send-email-giridhar.malavali@qlogic.com>
+From: Gal Rosen <galr@storwize.com>
+Subject: Re: [PATCH] SCSI: Synchronization issue while deleting vport
+Date: Mon, 08 Mar 2010 10:05:25 +0200
+Message-ID: <1268035525.2229.12.camel@galr-linux>
+References: <1264061732.31083.51.camel@galr-linux>
+	 <4B5A5859.1010006@emulex.com> <1264317616.17255.4.camel@galr-linux>
+	 <4B5DBA51.9070500@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47910 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751807Ab0CGIGT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Mar 2010 03:06:19 -0500
-In-Reply-To: <1267740777-3862-2-git-send-email-giridhar.malavali@qlogic.com>
+Received: from mx2.storwize.com ([217.163.48.114]:42414 "EHLO
+	barracuda.storwize.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752637Ab0CHIRN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Mar 2010 03:17:13 -0500
+Received: from swdc2.storwiz.com ([10.10.10.11]) by barracuda.storwize.com with ESMTP id HNjyckqb0c3NOAKf for <linux-scsi@vger.kernel.org>; Mon, 08 Mar 2010 10:16:31 +0200 (IST)
+In-Reply-To: <4B5DBA51.9070500@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: giridhar.malavali@qlogic.com
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, 2010-03-04 at 14:12 -0800, giridhar.malavali@qlogic.com wrote:
-> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> 
-> Enhanced the driver to support new FCoE board.
-> 
-> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> ---
->  drivers/scsi/qla2xxx/Makefile     |    2 +-
->  drivers/scsi/qla2xxx/qla_attr.c   |   12 +-
->  drivers/scsi/qla2xxx/qla_dbg.c    |    3 +
->  drivers/scsi/qla2xxx/qla_def.h    |   51 +-
->  drivers/scsi/qla2xxx/qla_gbl.h    |   80 +
->  drivers/scsi/qla2xxx/qla_gs.c     |    2 +-
->  drivers/scsi/qla2xxx/qla_init.c   |  217 ++-
->  drivers/scsi/qla2xxx/qla_inline.h |    5 +-
->  drivers/scsi/qla2xxx/qla_iocb.c   |   70 +-
->  drivers/scsi/qla2xxx/qla_isr.c    |   38 +-
->  drivers/scsi/qla2xxx/qla_mbx.c    |  136 ++-
->  drivers/scsi/qla2xxx/qla_nx.c     | 3496
-> +++++++++++++++++++++++++++++++++++++
->  drivers/scsi/qla2xxx/qla_nx.h     |  807 +++++++++
->  drivers/scsi/qla2xxx/qla_os.c     |  254 +++-
->  drivers/scsi/qla2xxx/qla_sup.c    |   80 +-
->  15 files changed, 5134 insertions(+), 119 deletions(-)
->  create mode 100644 drivers/scsi/qla2xxx/qla_nx.c
->  create mode 100644 drivers/scsi/qla2xxx/qla_nx.h
+Hello James,
 
-checkpatch.pl isn't very happy with this:
+Do you know why the patch still not included even in scsi-rc-fixes-2.6 ?
 
-total: 149 errors, 137 warnings, 6076 lines checked
-
-Can you at least fix the errors, which are mostly whitespace and spaces
-instead of tabs problems? (I'm not bothered much about the warnings,
-since that's more a style matter for driver writers).
+Can you push it ?
 
 Thanks,
+Gal.
 
-James
-
+On Mon, 2010-01-25 at 10:35 -0500, James Smart wrote:
+> James B controls the merge into upstream.  He will most likely include the 
+> patch in scsi-rc-fixes-2.6, which will merge into one of the 2.6.33-rc? phases.
+> 
+> I assume the process, to get it into an already released kernel rev, is to 
+> petition the 2.6.<rev>-stable tree maintainer (usually GregKH) to pick it up. 
+>   You do need to be careful, as some changes are dependent on other things 
+> that may have changed since that kernel revision. However, I don't think this 
+> change would have that problem.
+> 
+> -- james s
+> 
+> 
+> 
+> Gal Rosen wrote:
+> > James,
+> > 
+> > What is the process until it will enter to the code ?
+> > and for what version 2.6.26 or 2.6.33 ?
+> > 
+> > Thanks,
+> > Gal.
+> > On Fri, 2010-01-22 at 21:00 -0500, James Smart wrote:
+> >> Gal,
+> >>
+> >> Thanks for correcting this issue.  Patch looks good.
+> >>
+> >> Signed-off-by: James Smart <james.smart@emulex.com>
+> >>
+> >>
+> >>
+> >> Gal Rosen wrote:
+> >>> Hi,
+> >>>
+> >>> Attach proposed patch for the PROBLEM: Synchronization issue in
+> >>> scsi_transport_fc.
+> >>>
+> >>> Gal Rosen.
+> >>>
+> > 
 
