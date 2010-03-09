@@ -1,122 +1,107 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 1/1] mid-layer unblocks blocked sdev leaving queue stopped
-Date: Tue, 9 Mar 2010 11:14:25 -0500
-Message-ID: <4B9673E1.1030408@emulex.com>
-References: <4B29628D.9090208@sgi.com> <4B73322F.2000001@sgi.com> <4B7339C7.10403@cs.wisc.edu> <4B7B12B7.8050601@sgi.com>
+From: "Moore, Michael" <Michael.Moore@lifetech.com>
+Subject: RE: LSI SAS changes SCSI address and by-path on hot-swap
+Date: Tue, 9 Mar 2010 11:50:04 -0500
+Message-ID: <627C309F4690914DAF54F22C0CD5F9001FCD0266B9@FRD01MAIL01.ads.invitrogen.net>
+References: <4B8FE5F2.2040506@shiftmail.org>
+ <1267770172.8894.24.camel@mulgrave.site>
+ <627C309F4690914DAF54F22C0CD5F9001FCCFAD082@FRD01MAIL01.ads.invitrogen.net>
+ <4B918E42.6030009@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:31182 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754522Ab0CIQOs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2010 11:14:48 -0500
-In-Reply-To: <4B7B12B7.8050601@sgi.com>
+Received: from exprod7og111.obsmtp.com ([64.18.2.175]:54638 "EHLO
+	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813Ab0CIQwM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2010 11:52:12 -0500
+In-Reply-To: <4B918E42.6030009@shiftmail.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
+To: Asdo <asdo@shiftmail.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Re: locks-held comment : I went back to some of the original patches (Oct 
-2004) and see that the comments were wrong then too...
-
-Re: the patch...
-In review, seeing how many places allow for the sdev_state to change w/o being 
-under a lock (host lock or scan lock) is a real concern. But, as you mention 
-(prior post), really correcting it opens a rats nest.  This does get around 
-the primary issue - which is the overwrite of the blocked state by the scan 
-code.  I wasn't sure the queue lock synchronization was good relative to the 
-scan state, but I assume that's more for the potential blocked_queue_stopped() 
-call than for anything else.
-
-Acked-by: James Smart <james.smart@emulex.com>
-
--- james s
-
-
-Michael Reed wrote:
-> Mike Christie wrote:
->> On 02/10/2010 04:24 PM, Michael Reed wrote:
->>>> +	/*
->>>> +	 * If device is blocked, leave state alone and let blocker
->>>> +	 * unblock when appropriate.  Otherwise, set the device
->>>> +	 * running here so that slave configure may perform i/o.
->>>> +	 */
->>>> +	if (sdev->sdev_state != SDEV_BLOCK) {
->>>> +		ret = scsi_device_set_state(sdev, SDEV_RUNNING);
->> Do we need locking here? Is it possible that right after we check the 
->> sdev_state for being blocked, it could be be set to blocked?
-> 
-> Since the sdev_state can be set to blocked upon entry to the routines,
-> it seems likely that it could transition as you describe.  The host_lock
-> appears to be the right lock for this.  Nice catch.  It does, however,
-> open a can of worms.  The documentation for the _block()/_unblock()
-> functions state that it is assumed the host_lock is held upon entry.
-> This doesn't line up with the code, which explicitly releases the
-> host_lock before calling scsi_internal_device_[un]block().
-> 
-> I previously toyed around with an alternate method of resolving this which
-> put the onus on the unblocking thread which doesn't care about the
-> sdev_state.  As scsi_internal_device_block() is the routine which stops
-> the queue, I made scsi_internal_device_unblock() allow for the
-> possibility that another thread had transitioned sdev_state from SDEV_BLOCK.
-> 
-> It's been long enough that I don't recall why I chose the patch I
-> posted to resolve the issue, but this patch was also effective at
-> resolving the issue.  It also confines the change to the _block()/
-> _unblock() pair of routines and doesn't require changes to the
-> existing locking logic.  In retrospect, this patch was probably the
-> one I should have chosen to post.
-> 
-> Please review.
-> 
-> Signed-off-by: Michael Reed <mdr@sgi.com>
-> 
-> --- a/drivers/scsi/scsi_lib.c	2010-02-08 11:19:57.000000000 -0600
-> +++ b/drivers/scsi/scsi_lib.c	2010-02-11 14:35:26.249142688 -0600
-> @@ -2376,7 +2376,7 @@ EXPORT_SYMBOL(scsi_target_resume);
->   *	(which must be a legal transition).  When the device is in this
->   *	state, all commands are deferred until the scsi lld reenables
->   *	the device with scsi_device_unblock or device_block_tmo fires.
-> - *	This routine assumes the host_lock is held on entry.
-> + *	This routine assumes the host_lock is not held on entry.
->   */
->  int
->  scsi_internal_device_block(struct scsi_device *sdev)
-> @@ -2420,7 +2420,7 @@ EXPORT_SYMBOL_GPL(scsi_internal_device_b
->   *	This routine transitions the device to the SDEV_RUNNING state
->   *	(which must be a legal transition) allowing the midlayer to
->   *	goose the queue for this device.  This routine assumes the 
-> - *	host_lock is held upon entry.
-> + *	host_lock is not held upon entry.
->   */
->  int
->  scsi_internal_device_unblock(struct scsi_device *sdev)
-> @@ -2431,15 +2431,23 @@ scsi_internal_device_unblock(struct scsi
->  	/* 
->  	 * Try to transition the scsi device to SDEV_RUNNING
->  	 * and goose the device queue if successful.  
-> +	 * It's possible that an sdev may be blocked before it is
-> +	 * completely set up.  scsi_sysfs_add_sdev() and scsi_add_lun()
-> +	 * will unconditionally attempt to transition the sdev to
-> +	 * SDEV_RUNNING.  To avoid leaving the queue stopped, we
-> +	 * allow for the sdev to already be in the SDEV_RUNNING state.
->  	 */
-> +	spin_lock_irqsave(q->queue_lock, flags);
-> +
->  	if (sdev->sdev_state == SDEV_BLOCK)
->  		sdev->sdev_state = SDEV_RUNNING;
->  	else if (sdev->sdev_state == SDEV_CREATED_BLOCK)
->  		sdev->sdev_state = SDEV_CREATED;
-> -	else
-> +	else if (sdev->sdev_state != SDEV_RUNNING || !blk_queue_stopped(q)) {
-> +		spin_unlock_irqrestore(q->queue_lock, flags);
->  		return -EINVAL;
-> +	}
->  
-> -	spin_lock_irqsave(q->queue_lock, flags);
->  	blk_start_queue(q);
->  	spin_unlock_irqrestore(q->queue_lock, flags);
->  
-> 
-> 
+U29ycnkgZm9yIHRvcCBwb3N0aW5nLCBidXQgT3V0bG9vayBqdXN0IHNjcmV3cyBpdCBhbGwgdXAu
+DQoNClRoZSBjYXJkcyBJJ3ZlIHVzZWQgYXJlIGEgTFNJIExvZ2ljIFNBUyAzODAwWCAoOCBwb3J0
+IEV4dGVybmFsIFBDSS1YIGNhcmQgdy8gMiB4IFNGRi04NDcwIFNBUyBjb25uZWN0b3JzKSBhbmQg
+TFNJIFNBUyAzODAxRSAoIDggUG9ydCBFeHRlcm5hbCBQQ0ktZSBjYXJkIHdpdGggMiB4IFNGRi04
+MDg4IFNBUyBjb25uZWN0b3JzKS4gIEVhY2ggY29ubmVjdG9yIGhhcyA0IFNBUyBsaW5rcy4NClRo
+ZSBTQVMgcHJvdG9jb2wgaXMgZG93bndhcmRseSBjb21wYXRpYmxlIHdpdGggU0FUQSwgc28geW91
+IGNhbiBydW4gU0FUQSBkcml2ZXMgcmlnaHQgb24gYSBTQVMgY2FibGUuDQoNClNvLCBpbiBteSBz
+ZXR1cCwgSSBiYXNpY2FsbHkgaGF2ZSAxIGRyaXZlIHBlciBTQVMgbGluay4gIE5vIGV4cGFuZGVy
+cywgb3IgYW55dGhpbmcgZmFuY3kuICBUaGUgaXNzdWVzIEkgbWVudGlvbmVkIGhhcHBlbnMgdG8g
+dGhlIDQgZHJpdmVzIG9uIHRoZSBzYW1lIGNvbm5lY3Rvci4gIFdoZW4gdGhlIGRyaXZlciBpcyBk
+ZXRlY3RpbmcgdGhlIG5ldyBkcml2ZSwgaXQgbG9va3MgbGlrZSBpdCByZWRldGVjdHMgYWxsIG9m
+IHRoZSBkcml2ZXMgb24gdGhlIGNvbm5lY3RvciAob3IgaXQgYXQgbGVhc3QgcmVwb3J0cyBvbmUg
+bmV3IGRyaXZlIGFuZCB0aGUgb3RoZXIgZXhpc3RpbmcgZHJpdmVzKS4gIElmIHlvdSB3ZXJlIGlu
+IGEgZGlyZWN0b3J5IGZyb20gb25lIG9mIHRoZSBtb3VudGVkIGRyaXZlcywgeW91IGdldCBJTyBF
+cnJvcnMgYXMgaXQgYXBwZWFycyB0aGF0IHRoZSBkcml2ZSB3YXMgcmVtb3ZlZCwgYW5kIHRoZW4g
+cmVtb3VudGVkLCBidXQgaW4gYSB3YXkgdGhhdCB3YXMgbm90IGNsZWFuLiAgDQoNClRoaXMgaGFz
+IGhhcHBlbmVkIHdpdGggRGVmYXVsdCBDZW50T1MgNSBrZXJuZWxzICgyLjYuMTgtKi5lbDUpLCAy
+LjYuMjYgdmFuaWxsYSwgMi42LjMwIHZhbmlsbGEsIEZlZG9yYSBsYXRlc3QuDQpUaGUgaXNzdWUg
+YXBwZWFyZWQgbm8gbWF0dGVyIHdoYXQuDQoNClRoZSB1ZGV2IHJ1bGVzIHVzZWQgdGhlIEVOVntJ
+RF9QQVRIfSBvcHRpb24gdG8gdGllIHRvIHRoZSBzeXNmcyB2YWx1ZSB0aGF0IGluZGljYXRlZCB3
+aGljaCBQQ0kgSUQgKyBTQVMgcGh5IG9uIHRoZSBTQVMgSEJBIHVzZWQgYnkgdGhlIGRyaXZlcyB0
+byB0aGUgZGV2aWNlIGRldGVjdGVkIGJ5IHRoZSBrZXJuZWwsIGFuZCB0aGVuIGNyZWF0ZSBhIHN5
+bWxpbmsgZnJvbSB0aGUgL2Rldi9zZDxYPiBlbnRyeSB0byAvZGV2L3Nsb3Q8WT4sIHdoZXJlIFkg
+aXMgdGhlIGxhYmVsIG9uIHRoZSBzbG90IG9mIHRoZSBob3Qgc3dhcCBiYXlzIChhLWgpLiAgIEhl
+cmUgaXMgYW4gZXhhbXBsZSBvZiB0aGUgcnVsZToNCg0KS0VSTkVMPT0ic2QqIiwgRU5We0lEX1BB
+VEh9PT0icGNpLTAwMDA6MDQ6MDAuMC1zYXMtcGh5MDoxKiIsIFNZTUxJTksrPSJzbG90YSVuIg0K
+DQpJIGRpZCB0aGlzIGJlY2F1c2UgdGhlIGRldmljZSBJRCBudW1iZXIgdGhhdCB0aGUga2VybmVs
+IHJlcG9ydHMgaW5jcmVtZW50cyBldmVyeSB0aW1lIGEgZHJpdmUgaXMgc3dhcHBlZC4gIFNvLCBl
+dmVuIHRob3VnaCB5b3UgYXJlIHVzaW5nIHRoZSBzYW1lIFNBUyBjaGFubmVsLCB5b3UgZG8gbm90
+IGhhdmUgYSBjb25zaXN0ZW50IGRyaXZlIG51bWJlcmluZy4gIFNvIEkgaGFkIHRvIGdvIGRvd24g
+dG8gdGhlIFNBUyBwaHkgdG8gZ2V0IHNvbWV0aGluZyBjb25zaXN0ZW50LiAgVGhlIFNpSS0zMTI0
+L2xpYmF0YSBzZXR1cCBoYWQgY29uc2lzdGVudCBkZXZpY2UgSUQncyAodGhlIElEIHdhcyB0aWVk
+IHRvIHRoZSBTQVRBIGNoYW5uZWwsIGFuZCBJIHVzZWQgdGhlIGRldmljZSBJRCB0byBkbyB0aGUg
+bWFwcGluZy4gIFBlcmhhcHMgdWRldiBpcyB0aGUgcmVhc29uIGZvciB0aGUgaXNzdWVzLCBidXQg
+SSB0ZW5kIHRvIHRoaW5rIGl0IGlzIHRoZSB3YXkgdGhlIFNBUy9TQ1NJIHN1YnN5c3RlbSB3b3Jr
+cyBhcyBJIGhhdmUgbmV2ZXIgc2VlbiB0aGUgU0FUQS9saWJhdGEgc3Vic3lzdGVtIGhhdmUgdGhp
+cyAicmVzY2FuL3JlbW91bnQiIGJlaGF2aW9yLg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQpGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4
+LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQXNkbw0KU2VudDogRnJp
+ZGF5LCBNYXJjaCAwNSwgMjAxMCA2OjA2IFBNDQpUbzogTW9vcmUsIE1pY2hhZWwNCkNjOiBKYW1l
+cyBCb3R0b21sZXk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogTFNJ
+IFNBUyBjaGFuZ2VzIFNDU0kgYWRkcmVzcyBhbmQgYnktcGF0aCBvbiBob3Qtc3dhcA0KDQpNb29y
+ZSwgTWljaGFlbCB3cm90ZToNCj4gSSBkaWQgdGhpcyB3aXRoIGEgTFNJLTEwNjhFIEhCQSBhbmQg
+MiB4IDQgZHJpdmUgaG90IHN3YXAgU0FUQSBiYXlzLiAgSSB3YXMgYWJsZSB0byBjcmVhdGUgdWRl
+diBydWxlcyB0byBtYXAgdGhlIGRyaXZlIHNsb3RzIHRvIGNvbnNpc3RlbnQgL2RldiBlbnRyaWVz
+LiAgSG93ZXZlciwgdGhlIGJpZ2dlciBwcm9ibGVtIEkgaGFkIHdhcyB0aGF0IGlmIEkgaGFkIGEg
+ZHJpdmUgaW5zZXJ0ZWQgYW5kIG1vdW50ZWQgKHNheSBpbiBzbG90IEEpIGFuZCB0aGVuIEkgYWRk
+ZWQgb3Igc3dhcHBlZCBhbm90aGVyIGRyaXZlIG9uIHRoZSBzYW1lIHBvcnQgKCA0IFNBUyBjaGFu
+bmVscyBwZXIgcG9ydCBvbiB0aGUgZXh0ZXJuYWwgSEJBcykgaXQgd291bGQgY2F1c2Ugc29tZSBz
+b3J0IG9mIHJlc2V0IG9uIHRoZSBidXMgdGhhdCB3b3VsZCBlbmQgdXAgdW5tb3VudGluZyB0aGUg
+ZHJpdmUgICAgDQo+IGluIHNsb3QgQSBldmVuIHRob3VnaCBJIG5ldmVyIGRpZCBhbnl0aGluZyB0
+byB0aGUgZHJpdmUgaW4gc2xvdCBBLiAgTm93LCB0aGlzIHdhcyB3aXRoIFNBVEEgZHJpdmVzIGNv
+bm5lY3RlZCBkaXJlY3RseSB0byB0aGUgMTA2OCB3aGljaCBzaG91bGQgd29yaywgYnV0IHNpbmNl
+IEkgbmVlZGVkIHRoaXMgdG8gd29yaywgSSBoYWQgdG8gcmV2ZXJ0IHRvIHRoZSBvbGRlciBzZXR1
+cCB0aGF0IHVzZWQgU2lsaWNvbiBJbWFnZSAzMTI0IGVTQVRBIGNhcmRzLg0KPg0KPiBJIGNhbiB0
+cnkgdG8gZGlnIHVwIHRoZSB1ZGV2IHJ1bGVzIEkgdXNlZCBpZiB0aGlzIHdvdWxkIGJlIGhlbHBm
+dWwuDQo+DQo+IC0gTWlrZQ0KPiAgIA0KDQpNaWNoYWVsLCB0aGFua3MgZm9yIHJlcGx5aW5nLg0K
+VGhlIHByb2JsZW0geW91IGRlc2NyaWJlIHdvdWxkIHJlYWxseSBiZSBhIHNob3dzdG9wcGVyIGZv
+ciB1cywgc28gSSdkIA0KcmVhbGx5IGxpa2UgdG8gdW5kZXJzdGFuZCBpdCB3ZWxsIS4uLg0KSSB0
+cmllZCB0byByZXJlYWQgeW91ciBwb3N0IG11bHRpcGxlIHRpbWVzIGJ1dCBJIGRvbid0IGZ1bGx5
+IHVuZGVyc3RhbmQsIA0KZXhjdXNlIG15IGlnbm9yYW5jZS4uLiB0aGlzIGlzIGJlY2F1c2UgSSBh
+bSBub3QgcmVhbGx5IGZhbWlsaWFyIHdpdGggDQpTQVMvU0NTSSB0ZXJtcy4NCg0KWW91IGhhdmUg
+YW4gTFNJLTEwNjhFIGF0dGFjaGVkIGRpcmVjdGx5IHRvIGhvdCBzd2FwIFNBVEEgYmF5cywgeW91
+IGRvbid0IA0KaGF2ZSBleHBhbmRlcnMgaW4gdGhlIG1pZGRsZSwgcmlnaHQ/DQpUaGVuIHlvdSBz
+d2FwcGVkIG9uZSBvZiB0aGUgOCBkcml2ZXMgYW5kIGFub3RoZXIgb25lIGdvdCBkaXNjb25uZWN0
+ZWQgDQpiZWNhdXNlIG9mIHRoYXQ/DQoNClRoaXMgZG9lc24ndCBzZWVtIHRvIGhhcHBlbiBvbiBt
+eSBzZXR1cC4gSSBoYXZlIGEgbWFpbmJvYXJkLWludGVncmF0ZWQgDQpMU0ktMTA2OEUgYW5kIGtl
+cm5lbCAyLjYuMjQuIEkgb25seSBoYXZlIDQgZHJpdmVzIGNvbm5lY3RlZCBhbmQgdGhleSBhbGwg
+DQpiZWxvbmcgdG8gInBvcnQtNTp4IiAoeCBpcyBkaWZmZXJlbnQgZm9yIGVhY2ggZHJpdmUpIEkg
+ZGlkbid0IHRyeSB0byANCnN3YXAgYWxsIG9mIHRoZW0sIGJ1dCBJIGRlZmluaXRlbHkgdHJpZWQg
+c3dhcHBpbmcgb25lLCBhbmQgbm8gb3RoZXIgDQpkcml2ZSB3YXMgZGlzY29ubmVjdGVkIGJlY2F1
+c2Ugb2YgdGhpcy4gVGhlIG90aGVyIGRyaXZlcyB3ZXJlIHBhcnQgb2YgYW4gDQptZC1yYWlkLCBp
+dCB3b3VsZCBoYXZlIGJlZW4gZGlzYXN0cm91cyBpZiBpdCBoYXBwZW5lZC4NCldoYXQga2VybmVs
+IHZlcnNpb24gZG8geW91IGhhdmU/DQoNClRoZSBmb2xsb3dpbmcgc2VudGVuY2UgaXMgbm90IGNs
+ZWFyIHRvIG1lOg0KInRoZW4gSSBhZGRlZCBvciBzd2FwcGVkIGFub3RoZXIgZHJpdmUgb24gdGhl
+IHNhbWUgcG9ydCAoIDQgU0FTIGNoYW5uZWxzIA0KcGVyIHBvcnQgb24gdGhlIGV4dGVybmFsIEhC
+QXMpIg0Kd2hhdCBpcyB0aGUgImV4dGVybmFsIEhCQXMiPyBJcyB0aGF0IGFuIGV4cGFuZGVyPw0K
+DQpBbHNvLi4uIGFyZSB5b3Ugc3VyZSB0aGUgcHJvYmxlbSB3YXMgbm90IG1heWJlIGR1ZSB0byB0
+aGUgdWRldiBydWxlPyANClNvcnJ5IEkgZG9uJ3Qga25vdyB1ZGV2LCBJIGRvbid0IGtub3cgaWYg
+aXQgZXZlbiBoYXMgdGhlIHBvd2VyIHRvIA0KdW5tb3VudCBhIGRyaXZlLi4uDQoNClRoYW5rIHlv
+dQ0KQS4NCg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
+ICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1h
+am9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92
+Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
