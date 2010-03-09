@@ -1,107 +1,300 @@
-From: "Moore, Michael" <Michael.Moore@lifetech.com>
-Subject: RE: LSI SAS changes SCSI address and by-path on hot-swap
-Date: Tue, 9 Mar 2010 11:50:04 -0500
-Message-ID: <627C309F4690914DAF54F22C0CD5F9001FCD0266B9@FRD01MAIL01.ads.invitrogen.net>
-References: <4B8FE5F2.2040506@shiftmail.org>
- <1267770172.8894.24.camel@mulgrave.site>
- <627C309F4690914DAF54F22C0CD5F9001FCCFAD082@FRD01MAIL01.ads.invitrogen.net>
- <4B918E42.6030009@shiftmail.org>
+From: Joe Perches <joe@perches.com>
+Subject: [RESEND PATCH] drivers/scsi/ch.c: Don't use vprintk as macro
+Date: Tue, 09 Mar 2010 09:03:03 -0800
+Message-ID: <1268154183.8186.16.camel@Joe-Laptop.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod7og111.obsmtp.com ([64.18.2.175]:54638 "EHLO
-	exprod7og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813Ab0CIQwM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Mar 2010 11:52:12 -0500
-In-Reply-To: <4B918E42.6030009@shiftmail.org>
-Content-Language: en-US
+Received: from mail.perches.com ([173.55.12.10]:1550 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755259Ab0CIRDG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Mar 2010 12:03:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Davidlohr Bueso <dave@gnu.org>, Scott James Remnant <scott@canonical.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-U29ycnkgZm9yIHRvcCBwb3N0aW5nLCBidXQgT3V0bG9vayBqdXN0IHNjcmV3cyBpdCBhbGwgdXAu
-DQoNClRoZSBjYXJkcyBJJ3ZlIHVzZWQgYXJlIGEgTFNJIExvZ2ljIFNBUyAzODAwWCAoOCBwb3J0
-IEV4dGVybmFsIFBDSS1YIGNhcmQgdy8gMiB4IFNGRi04NDcwIFNBUyBjb25uZWN0b3JzKSBhbmQg
-TFNJIFNBUyAzODAxRSAoIDggUG9ydCBFeHRlcm5hbCBQQ0ktZSBjYXJkIHdpdGggMiB4IFNGRi04
-MDg4IFNBUyBjb25uZWN0b3JzKS4gIEVhY2ggY29ubmVjdG9yIGhhcyA0IFNBUyBsaW5rcy4NClRo
-ZSBTQVMgcHJvdG9jb2wgaXMgZG93bndhcmRseSBjb21wYXRpYmxlIHdpdGggU0FUQSwgc28geW91
-IGNhbiBydW4gU0FUQSBkcml2ZXMgcmlnaHQgb24gYSBTQVMgY2FibGUuDQoNClNvLCBpbiBteSBz
-ZXR1cCwgSSBiYXNpY2FsbHkgaGF2ZSAxIGRyaXZlIHBlciBTQVMgbGluay4gIE5vIGV4cGFuZGVy
-cywgb3IgYW55dGhpbmcgZmFuY3kuICBUaGUgaXNzdWVzIEkgbWVudGlvbmVkIGhhcHBlbnMgdG8g
-dGhlIDQgZHJpdmVzIG9uIHRoZSBzYW1lIGNvbm5lY3Rvci4gIFdoZW4gdGhlIGRyaXZlciBpcyBk
-ZXRlY3RpbmcgdGhlIG5ldyBkcml2ZSwgaXQgbG9va3MgbGlrZSBpdCByZWRldGVjdHMgYWxsIG9m
-IHRoZSBkcml2ZXMgb24gdGhlIGNvbm5lY3RvciAob3IgaXQgYXQgbGVhc3QgcmVwb3J0cyBvbmUg
-bmV3IGRyaXZlIGFuZCB0aGUgb3RoZXIgZXhpc3RpbmcgZHJpdmVzKS4gIElmIHlvdSB3ZXJlIGlu
-IGEgZGlyZWN0b3J5IGZyb20gb25lIG9mIHRoZSBtb3VudGVkIGRyaXZlcywgeW91IGdldCBJTyBF
-cnJvcnMgYXMgaXQgYXBwZWFycyB0aGF0IHRoZSBkcml2ZSB3YXMgcmVtb3ZlZCwgYW5kIHRoZW4g
-cmVtb3VudGVkLCBidXQgaW4gYSB3YXkgdGhhdCB3YXMgbm90IGNsZWFuLiAgDQoNClRoaXMgaGFz
-IGhhcHBlbmVkIHdpdGggRGVmYXVsdCBDZW50T1MgNSBrZXJuZWxzICgyLjYuMTgtKi5lbDUpLCAy
-LjYuMjYgdmFuaWxsYSwgMi42LjMwIHZhbmlsbGEsIEZlZG9yYSBsYXRlc3QuDQpUaGUgaXNzdWUg
-YXBwZWFyZWQgbm8gbWF0dGVyIHdoYXQuDQoNClRoZSB1ZGV2IHJ1bGVzIHVzZWQgdGhlIEVOVntJ
-RF9QQVRIfSBvcHRpb24gdG8gdGllIHRvIHRoZSBzeXNmcyB2YWx1ZSB0aGF0IGluZGljYXRlZCB3
-aGljaCBQQ0kgSUQgKyBTQVMgcGh5IG9uIHRoZSBTQVMgSEJBIHVzZWQgYnkgdGhlIGRyaXZlcyB0
-byB0aGUgZGV2aWNlIGRldGVjdGVkIGJ5IHRoZSBrZXJuZWwsIGFuZCB0aGVuIGNyZWF0ZSBhIHN5
-bWxpbmsgZnJvbSB0aGUgL2Rldi9zZDxYPiBlbnRyeSB0byAvZGV2L3Nsb3Q8WT4sIHdoZXJlIFkg
-aXMgdGhlIGxhYmVsIG9uIHRoZSBzbG90IG9mIHRoZSBob3Qgc3dhcCBiYXlzIChhLWgpLiAgIEhl
-cmUgaXMgYW4gZXhhbXBsZSBvZiB0aGUgcnVsZToNCg0KS0VSTkVMPT0ic2QqIiwgRU5We0lEX1BB
-VEh9PT0icGNpLTAwMDA6MDQ6MDAuMC1zYXMtcGh5MDoxKiIsIFNZTUxJTksrPSJzbG90YSVuIg0K
-DQpJIGRpZCB0aGlzIGJlY2F1c2UgdGhlIGRldmljZSBJRCBudW1iZXIgdGhhdCB0aGUga2VybmVs
-IHJlcG9ydHMgaW5jcmVtZW50cyBldmVyeSB0aW1lIGEgZHJpdmUgaXMgc3dhcHBlZC4gIFNvLCBl
-dmVuIHRob3VnaCB5b3UgYXJlIHVzaW5nIHRoZSBzYW1lIFNBUyBjaGFubmVsLCB5b3UgZG8gbm90
-IGhhdmUgYSBjb25zaXN0ZW50IGRyaXZlIG51bWJlcmluZy4gIFNvIEkgaGFkIHRvIGdvIGRvd24g
-dG8gdGhlIFNBUyBwaHkgdG8gZ2V0IHNvbWV0aGluZyBjb25zaXN0ZW50LiAgVGhlIFNpSS0zMTI0
-L2xpYmF0YSBzZXR1cCBoYWQgY29uc2lzdGVudCBkZXZpY2UgSUQncyAodGhlIElEIHdhcyB0aWVk
-IHRvIHRoZSBTQVRBIGNoYW5uZWwsIGFuZCBJIHVzZWQgdGhlIGRldmljZSBJRCB0byBkbyB0aGUg
-bWFwcGluZy4gIFBlcmhhcHMgdWRldiBpcyB0aGUgcmVhc29uIGZvciB0aGUgaXNzdWVzLCBidXQg
-SSB0ZW5kIHRvIHRoaW5rIGl0IGlzIHRoZSB3YXkgdGhlIFNBUy9TQ1NJIHN1YnN5c3RlbSB3b3Jr
-cyBhcyBJIGhhdmUgbmV2ZXIgc2VlbiB0aGUgU0FUQS9saWJhdGEgc3Vic3lzdGVtIGhhdmUgdGhp
-cyAicmVzY2FuL3JlbW91bnQiIGJlaGF2aW9yLg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
-LS0tDQpGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4
-LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQXNkbw0KU2VudDogRnJp
-ZGF5LCBNYXJjaCAwNSwgMjAxMCA2OjA2IFBNDQpUbzogTW9vcmUsIE1pY2hhZWwNCkNjOiBKYW1l
-cyBCb3R0b21sZXk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogTFNJ
-IFNBUyBjaGFuZ2VzIFNDU0kgYWRkcmVzcyBhbmQgYnktcGF0aCBvbiBob3Qtc3dhcA0KDQpNb29y
-ZSwgTWljaGFlbCB3cm90ZToNCj4gSSBkaWQgdGhpcyB3aXRoIGEgTFNJLTEwNjhFIEhCQSBhbmQg
-MiB4IDQgZHJpdmUgaG90IHN3YXAgU0FUQSBiYXlzLiAgSSB3YXMgYWJsZSB0byBjcmVhdGUgdWRl
-diBydWxlcyB0byBtYXAgdGhlIGRyaXZlIHNsb3RzIHRvIGNvbnNpc3RlbnQgL2RldiBlbnRyaWVz
-LiAgSG93ZXZlciwgdGhlIGJpZ2dlciBwcm9ibGVtIEkgaGFkIHdhcyB0aGF0IGlmIEkgaGFkIGEg
-ZHJpdmUgaW5zZXJ0ZWQgYW5kIG1vdW50ZWQgKHNheSBpbiBzbG90IEEpIGFuZCB0aGVuIEkgYWRk
-ZWQgb3Igc3dhcHBlZCBhbm90aGVyIGRyaXZlIG9uIHRoZSBzYW1lIHBvcnQgKCA0IFNBUyBjaGFu
-bmVscyBwZXIgcG9ydCBvbiB0aGUgZXh0ZXJuYWwgSEJBcykgaXQgd291bGQgY2F1c2Ugc29tZSBz
-b3J0IG9mIHJlc2V0IG9uIHRoZSBidXMgdGhhdCB3b3VsZCBlbmQgdXAgdW5tb3VudGluZyB0aGUg
-ZHJpdmUgICAgDQo+IGluIHNsb3QgQSBldmVuIHRob3VnaCBJIG5ldmVyIGRpZCBhbnl0aGluZyB0
-byB0aGUgZHJpdmUgaW4gc2xvdCBBLiAgTm93LCB0aGlzIHdhcyB3aXRoIFNBVEEgZHJpdmVzIGNv
-bm5lY3RlZCBkaXJlY3RseSB0byB0aGUgMTA2OCB3aGljaCBzaG91bGQgd29yaywgYnV0IHNpbmNl
-IEkgbmVlZGVkIHRoaXMgdG8gd29yaywgSSBoYWQgdG8gcmV2ZXJ0IHRvIHRoZSBvbGRlciBzZXR1
-cCB0aGF0IHVzZWQgU2lsaWNvbiBJbWFnZSAzMTI0IGVTQVRBIGNhcmRzLg0KPg0KPiBJIGNhbiB0
-cnkgdG8gZGlnIHVwIHRoZSB1ZGV2IHJ1bGVzIEkgdXNlZCBpZiB0aGlzIHdvdWxkIGJlIGhlbHBm
-dWwuDQo+DQo+IC0gTWlrZQ0KPiAgIA0KDQpNaWNoYWVsLCB0aGFua3MgZm9yIHJlcGx5aW5nLg0K
-VGhlIHByb2JsZW0geW91IGRlc2NyaWJlIHdvdWxkIHJlYWxseSBiZSBhIHNob3dzdG9wcGVyIGZv
-ciB1cywgc28gSSdkIA0KcmVhbGx5IGxpa2UgdG8gdW5kZXJzdGFuZCBpdCB3ZWxsIS4uLg0KSSB0
-cmllZCB0byByZXJlYWQgeW91ciBwb3N0IG11bHRpcGxlIHRpbWVzIGJ1dCBJIGRvbid0IGZ1bGx5
-IHVuZGVyc3RhbmQsIA0KZXhjdXNlIG15IGlnbm9yYW5jZS4uLiB0aGlzIGlzIGJlY2F1c2UgSSBh
-bSBub3QgcmVhbGx5IGZhbWlsaWFyIHdpdGggDQpTQVMvU0NTSSB0ZXJtcy4NCg0KWW91IGhhdmUg
-YW4gTFNJLTEwNjhFIGF0dGFjaGVkIGRpcmVjdGx5IHRvIGhvdCBzd2FwIFNBVEEgYmF5cywgeW91
-IGRvbid0IA0KaGF2ZSBleHBhbmRlcnMgaW4gdGhlIG1pZGRsZSwgcmlnaHQ/DQpUaGVuIHlvdSBz
-d2FwcGVkIG9uZSBvZiB0aGUgOCBkcml2ZXMgYW5kIGFub3RoZXIgb25lIGdvdCBkaXNjb25uZWN0
-ZWQgDQpiZWNhdXNlIG9mIHRoYXQ/DQoNClRoaXMgZG9lc24ndCBzZWVtIHRvIGhhcHBlbiBvbiBt
-eSBzZXR1cC4gSSBoYXZlIGEgbWFpbmJvYXJkLWludGVncmF0ZWQgDQpMU0ktMTA2OEUgYW5kIGtl
-cm5lbCAyLjYuMjQuIEkgb25seSBoYXZlIDQgZHJpdmVzIGNvbm5lY3RlZCBhbmQgdGhleSBhbGwg
-DQpiZWxvbmcgdG8gInBvcnQtNTp4IiAoeCBpcyBkaWZmZXJlbnQgZm9yIGVhY2ggZHJpdmUpIEkg
-ZGlkbid0IHRyeSB0byANCnN3YXAgYWxsIG9mIHRoZW0sIGJ1dCBJIGRlZmluaXRlbHkgdHJpZWQg
-c3dhcHBpbmcgb25lLCBhbmQgbm8gb3RoZXIgDQpkcml2ZSB3YXMgZGlzY29ubmVjdGVkIGJlY2F1
-c2Ugb2YgdGhpcy4gVGhlIG90aGVyIGRyaXZlcyB3ZXJlIHBhcnQgb2YgYW4gDQptZC1yYWlkLCBp
-dCB3b3VsZCBoYXZlIGJlZW4gZGlzYXN0cm91cyBpZiBpdCBoYXBwZW5lZC4NCldoYXQga2VybmVs
-IHZlcnNpb24gZG8geW91IGhhdmU/DQoNClRoZSBmb2xsb3dpbmcgc2VudGVuY2UgaXMgbm90IGNs
-ZWFyIHRvIG1lOg0KInRoZW4gSSBhZGRlZCBvciBzd2FwcGVkIGFub3RoZXIgZHJpdmUgb24gdGhl
-IHNhbWUgcG9ydCAoIDQgU0FTIGNoYW5uZWxzIA0KcGVyIHBvcnQgb24gdGhlIGV4dGVybmFsIEhC
-QXMpIg0Kd2hhdCBpcyB0aGUgImV4dGVybmFsIEhCQXMiPyBJcyB0aGF0IGFuIGV4cGFuZGVyPw0K
-DQpBbHNvLi4uIGFyZSB5b3Ugc3VyZSB0aGUgcHJvYmxlbSB3YXMgbm90IG1heWJlIGR1ZSB0byB0
-aGUgdWRldiBydWxlPyANClNvcnJ5IEkgZG9uJ3Qga25vdyB1ZGV2LCBJIGRvbid0IGtub3cgaWYg
-aXQgZXZlbiBoYXMgdGhlIHBvd2VyIHRvIA0KdW5tb3VudCBhIGRyaXZlLi4uDQoNClRoYW5rIHlv
-dQ0KQS4NCg0KLS0NClRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
-ICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1h
-am9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92
-Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+Hi Andrew.
+
+No response from maintainers after more than a week.
+http://patchwork.kernel.org/patch/82829/
+
+Can you pick this up for mm?
+
+------ Original email ------
+
+It's an exported symbol of kernel/printk.c
+
+Rename vprintk and dprintk macros to more common VPRINTK and DPRINTK
+Add do { } while(0) around macros
+Add level to VPRINTK so KERN_CONT can be used a couple of times.
+
+Signed-off-by: Joe Perches <joe@perches.com>
+ drivers/scsi/ch.c |   87 +++++++++++++++++++++++++++--------------------------
+ 1 files changed, 44 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index fe11c1d..5bd396f 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -83,10 +83,16 @@ static const char * vendor_labels[CH_TYPES-4] = {
+ };
+ // module_param_string_array(vendor_labels, NULL, 0444);
+ 
+-#define dprintk(fmt, arg...)    if (debug) \
+-        printk(KERN_DEBUG "%s: " fmt, ch->name , ## arg)
+-#define vprintk(fmt, arg...)    if (verbose) \
+-        printk(KERN_INFO "%s: " fmt, ch->name , ## arg)
++#define DPRINTK(fmt, arg...)						\
++do {									\
++	if (debug)							\
++		printk(KERN_DEBUG "%s: " fmt, ch->name, ##arg);		\
++} while (0)
++#define VPRINTK(level, fmt, arg...)					\
++do {									\
++	if (verbose)							\
++		printk(level "%s: " fmt, ch->name, ##arg);		\
++} while (0)
+ 
+ /* ------------------------------------------------------------------- */
+ 
+@@ -185,7 +191,7 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd,
+  retry:
+ 	errno = 0;
+ 	if (debug) {
+-		dprintk("command: ");
++		DPRINTK("command: ");
+ 		__scsi_print_command(cmd);
+ 	}
+ 
+@@ -193,7 +199,7 @@ ch_do_scsi(scsi_changer *ch, unsigned char *cmd,
+ 				  buflength, &sshdr, timeout * HZ,
+ 				  MAX_RETRIES, NULL);
+ 
+-	dprintk("result: 0x%x\n",result);
++	DPRINTK("result: 0x%x\n",result);
+ 	if (driver_byte(result) & DRIVER_SENSE) {
+ 		if (debug)
+ 			scsi_print_sense_hdr(ch->name, &sshdr);
+@@ -249,7 +255,7 @@ ch_read_element_status(scsi_changer *ch, u_int elem, char *data)
+ 	cmd[9] = 255;
+ 	if (0 == (result = ch_do_scsi(ch, cmd, buffer, 256, DMA_FROM_DEVICE))) {
+ 		if (((buffer[16] << 8) | buffer[17]) != elem) {
+-			dprintk("asked for element 0x%02x, got 0x%02x\n",
++			DPRINTK("asked for element 0x%02x, got 0x%02x\n",
+ 				elem,(buffer[16] << 8) | buffer[17]);
+ 			kfree(buffer);
+ 			return -EIO;
+@@ -258,10 +264,10 @@ ch_read_element_status(scsi_changer *ch, u_int elem, char *data)
+ 	} else {
+ 		if (ch->voltags) {
+ 			ch->voltags = 0;
+-			vprintk("device has no volume tag support\n");
++			VPRINTK(KERN_INFO, "device has no volume tag support\n");
+ 			goto retry;
+ 		}
+-		dprintk("READ ELEMENT STATUS for element 0x%x failed\n",elem);
++		DPRINTK("READ ELEMENT STATUS for element 0x%x failed\n",elem);
+ 	}
+ 	kfree(buffer);
+ 	return result;
+@@ -273,12 +279,12 @@ ch_init_elem(scsi_changer *ch)
+ 	int err;
+ 	u_char cmd[6];
+ 
+-	vprintk("INITIALIZE ELEMENT STATUS, may take some time ...\n");
++	VPRINTK(KERN_INFO, "INITIALIZE ELEMENT STATUS, may take some time ...\n");
+ 	memset(cmd,0,sizeof(cmd));
+ 	cmd[0] = INITIALIZE_ELEMENT_STATUS;
+ 	cmd[1] = ch->device->lun << 5;
+ 	err = ch_do_scsi(ch, cmd, NULL, 0, DMA_NONE);
+-	vprintk("... finished\n");
++	VPRINTK(KERN_INFO, "... finished\n");
+ 	return err;
+ }
+ 
+@@ -321,20 +327,20 @@ ch_readconfig(scsi_changer *ch)
+ 			(buffer[buffer[3]+18] << 8) | buffer[buffer[3]+19];
+ 		ch->counts[CHET_DT] =
+ 			(buffer[buffer[3]+20] << 8) | buffer[buffer[3]+21];
+-		vprintk("type #1 (mt): 0x%x+%d [medium transport]\n",
++		VPRINTK(KERN_INFO, "type #1 (mt): 0x%x+%d [medium transport]\n",
+ 			ch->firsts[CHET_MT],
+ 			ch->counts[CHET_MT]);
+-		vprintk("type #2 (st): 0x%x+%d [storage]\n",
++		VPRINTK(KERN_INFO, "type #2 (st): 0x%x+%d [storage]\n",
+ 			ch->firsts[CHET_ST],
+ 			ch->counts[CHET_ST]);
+-		vprintk("type #3 (ie): 0x%x+%d [import/export]\n",
++		VPRINTK(KERN_INFO, "type #3 (ie): 0x%x+%d [import/export]\n",
+ 			ch->firsts[CHET_IE],
+ 			ch->counts[CHET_IE]);
+-		vprintk("type #4 (dt): 0x%x+%d [data transfer]\n",
++		VPRINTK(KERN_INFO, "type #4 (dt): 0x%x+%d [data transfer]\n",
+ 			ch->firsts[CHET_DT],
+ 			ch->counts[CHET_DT]);
+ 	} else {
+-		vprintk("reading element address assigment page failed!\n");
++		VPRINTK(KERN_INFO, "reading element address assigment page failed!\n");
+ 	}
+ 
+ 	/* vendor specific element types */
+@@ -345,7 +351,7 @@ ch_readconfig(scsi_changer *ch)
+ 			continue;
+ 		ch->firsts[CHET_V1+i] = vendor_firsts[i];
+ 		ch->counts[CHET_V1+i] = vendor_counts[i];
+-		vprintk("type #%d (v%d): 0x%x+%d [%s, vendor specific]\n",
++		VPRINTK(KERN_INFO, "type #%d (v%d): 0x%x+%d [%s, vendor specific]\n",
+ 			i+5,i+1,vendor_firsts[i],vendor_counts[i],
+ 			vendor_labels[i]);
+ 	}
+@@ -365,21 +371,19 @@ ch_readconfig(scsi_changer *ch)
+ 		if (elem < CH_DT_MAX  &&  -1 != dt_id[elem]) {
+ 			id  = dt_id[elem];
+ 			lun = dt_lun[elem];
+-			vprintk("dt 0x%x: [insmod option] ",
++			VPRINTK(KERN_INFO, "dt 0x%x: [insmod option] ",
+ 				elem+ch->firsts[CHET_DT]);
+ 		} else if (0 != ch_read_element_status
+ 			   (ch,elem+ch->firsts[CHET_DT],data)) {
+-			vprintk("dt 0x%x: READ ELEMENT STATUS failed\n",
++			VPRINTK(KERN_INFO, "dt 0x%x: READ ELEMENT STATUS failed\n",
+ 				elem+ch->firsts[CHET_DT]);
+ 		} else {
+-			vprintk("dt 0x%x: ",elem+ch->firsts[CHET_DT]);
++			VPRINTK(KERN_INFO, "dt 0x%x: ",elem+ch->firsts[CHET_DT]);
+ 			if (data[6] & 0x80) {
+-				if (verbose)
+-					printk("not this SCSI bus\n");
++				VPRINTK(KERN_CONT, "not this SCSI bus\n");
+ 				ch->dt[elem] = NULL;
+ 			} else if (0 == (data[6] & 0x30)) {
+-				if (verbose)
+-					printk("ID/LUN unknown\n");
++				VPRINTK(KERN_CONT, "ID/LUN unknown\n");
+ 				ch->dt[elem] = NULL;
+ 			} else {
+ 				id  = ch->device->id;
+@@ -389,22 +393,19 @@ ch_readconfig(scsi_changer *ch)
+ 			}
+ 		}
+ 		if (-1 != id) {
+-			if (verbose)
+-				printk("ID %i, LUN %i, ",id,lun);
++			VPRINTK(KERN_CONT, "ID %i, LUN %i, ",id,lun);
+ 			ch->dt[elem] =
+ 				scsi_device_lookup(ch->device->host,
+ 						   ch->device->channel,
+ 						   id,lun);
+ 			if (!ch->dt[elem]) {
+ 				/* should not happen */
+-				if (verbose)
+-					printk("Huh? device not found!\n");
++				VPRINTK(KERN_CONT, "Huh? device not found!\n");
+ 			} else {
+-				if (verbose)
+-					printk("name: %8.8s %16.16s %4.4s\n",
+-					       ch->dt[elem]->vendor,
+-					       ch->dt[elem]->model,
+-					       ch->dt[elem]->rev);
++				VPRINTK(KERN_CONT, "name: %8.8s %16.16s %4.4s\n",
++					ch->dt[elem]->vendor,
++					ch->dt[elem]->model,
++					ch->dt[elem]->rev);
+ 			}
+ 		}
+ 	}
+@@ -421,7 +422,7 @@ ch_position(scsi_changer *ch, u_int trans, u_int elem, int rotate)
+ {
+ 	u_char  cmd[10];
+ 
+-	dprintk("position: 0x%x\n",elem);
++	DPRINTK("position: 0x%x\n",elem);
+ 	if (0 == trans)
+ 		trans = ch->firsts[CHET_MT];
+ 	memset(cmd,0,sizeof(cmd));
+@@ -440,7 +441,7 @@ ch_move(scsi_changer *ch, u_int trans, u_int src, u_int dest, int rotate)
+ {
+ 	u_char  cmd[12];
+ 
+-	dprintk("move: 0x%x => 0x%x\n",src,dest);
++	DPRINTK("move: 0x%x => 0x%x\n",src,dest);
+ 	if (0 == trans)
+ 		trans = ch->firsts[CHET_MT];
+ 	memset(cmd,0,sizeof(cmd));
+@@ -462,7 +463,7 @@ ch_exchange(scsi_changer *ch, u_int trans, u_int src,
+ {
+ 	u_char  cmd[12];
+ 
+-	dprintk("exchange: 0x%x => 0x%x => 0x%x\n",
++	DPRINTK("exchange: 0x%x => 0x%x => 0x%x\n",
+ 		src,dest1,dest2);
+ 	if (0 == trans)
+ 		trans = ch->firsts[CHET_MT];
+@@ -510,7 +511,7 @@ ch_set_voltag(scsi_changer *ch, u_int elem,
+ 	if (!buffer)
+ 		return -ENOMEM;
+ 
+-	dprintk("%s %s voltag: 0x%x => \"%s\"\n",
++	DPRINTK("%s %s voltag: 0x%x => \"%s\"\n",
+ 		clear     ? "clear"     : "set",
+ 		alternate ? "alternate" : "primary",
+ 		elem, tag);
+@@ -549,7 +550,7 @@ static int ch_gstatus(scsi_changer *ch, int type, unsigned char __user *dest)
+ 		}
+ 		put_user(data[2], dest+i);
+ 		if (data[2] & CESTATUS_EXCEPT)
+-			vprintk("element 0x%x: asc=0x%x, ascq=0x%x\n",
++			VPRINTK(KERN_INFO, "element 0x%x: asc=0x%x, ascq=0x%x\n",
+ 				ch->firsts[type]+i,
+ 				(int)data[4],(int)data[5]);
+ 		retval = ch_read_element_status
+@@ -659,7 +660,7 @@ static long ch_ioctl(struct file *file,
+ 			return -EFAULT;
+ 
+ 		if (0 != ch_checkrange(ch, pos.cp_type, pos.cp_unit)) {
+-			dprintk("CHIOPOSITION: invalid parameter\n");
++			DPRINTK("CHIOPOSITION: invalid parameter\n");
+ 			return -EBADSLT;
+ 		}
+ 		mutex_lock(&ch->lock);
+@@ -679,7 +680,7 @@ static long ch_ioctl(struct file *file,
+ 
+ 		if (0 != ch_checkrange(ch, mv.cm_fromtype, mv.cm_fromunit) ||
+ 		    0 != ch_checkrange(ch, mv.cm_totype,   mv.cm_tounit  )) {
+-			dprintk("CHIOMOVE: invalid parameter\n");
++			DPRINTK("CHIOMOVE: invalid parameter\n");
+ 			return -EBADSLT;
+ 		}
+ 
+@@ -702,7 +703,7 @@ static long ch_ioctl(struct file *file,
+ 		if (0 != ch_checkrange(ch, mv.ce_srctype,  mv.ce_srcunit ) ||
+ 		    0 != ch_checkrange(ch, mv.ce_fdsttype, mv.ce_fdstunit) ||
+ 		    0 != ch_checkrange(ch, mv.ce_sdsttype, mv.ce_sdstunit)) {
+-			dprintk("CHIOEXCHANGE: invalid parameter\n");
++			DPRINTK("CHIOEXCHANGE: invalid parameter\n");
+ 			return -EBADSLT;
+ 		}
+ 
+@@ -795,7 +796,7 @@ static long ch_ioctl(struct file *file,
+ 			}
+ 		} else if (ch->voltags) {
+ 			ch->voltags = 0;
+-			vprintk("device has no volume tag support\n");
++			VPRINTK(KERN_INFO, "device has no volume tag support\n");
+ 			goto voltag_retry;
+ 		}
+ 		kfree(buffer);
+@@ -823,7 +824,7 @@ static long ch_ioctl(struct file *file,
+ 			return -EFAULT;
+ 
+ 		if (0 != ch_checkrange(ch, csv.csv_type, csv.csv_unit)) {
+-			dprintk("CHIOSVOLTAG: invalid parameter\n");
++			DPRINTK("CHIOSVOLTAG: invalid parameter\n");
+ 			return -EBADSLT;
+ 		}
+ 		elem = ch->firsts[csv.csv_type] + csv.csv_unit;
+
+
+
