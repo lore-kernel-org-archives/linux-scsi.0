@@ -1,36 +1,78 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: quotes in reply messages (was Re: LSI SAS changes SCSI address and
- by-path on hot-swap)
-Date: Wed, 10 Mar 2010 14:49:03 +0100
-Message-ID: <4B97A34F.2030706@s5r6.in-berlin.de>
-References: <4B8FE5F2.2040506@shiftmail.org> <1267770172.8894.24.camel@mulgrave.site> <627C309F4690914DAF54F22C0CD5F9001FCCFAD082@FRD01MAIL01.ads.invitrogen.net> <4B918E42.6030009@shiftmail.org> <627C309F4690914DAF54F22C0CD5F9001FCD0266B9@FRD01MAIL01.ads.invitrogen.net> <4B977B9C.8040705@panasas.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [RFC PATCH] scsi_transport_fc: Make sure commands are completed
+ when rport is offline
+Date: Wed, 10 Mar 2010 09:50:24 -0500
+Message-ID: <4B97B1B0.1080802@emulex.com>
+References: <1FB7DC5E34DADB499463B6EA89DF40A4638369F937@MNEXMB1.qlogic.org> <4B965E15.8040103@emulex.com> <1FB7DC5E34DADB499463B6EA89DF40A4638369F9EB@MNEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:42595 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932152Ab0CJNt7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2010 08:49:59 -0500
-In-Reply-To: <4B977B9C.8040705@panasas.com>
+Received: from exht1.emulex.com ([138.239.113.183]:56023 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756664Ab0CJOur (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Mar 2010 09:50:47 -0500
+In-Reply-To: <1FB7DC5E34DADB499463B6EA89DF40A4638369F9EB@MNEXMB1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: "Moore, Michael" <Michael.Moore@lifetech.com>, Asdo <asdo@shiftmail.org>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Sarang Radke <sarang.radke@qlogic.com>
+Cc: "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
-Boaz Harrosh wrote:
-> On 03/09/2010 06:50 PM, Moore, Michael wrote:
->> Sorry for top posting, but Outlook just screws it all up.
->> 
+Acked-by:  James Smart  <james.smart@emulex.com>
+
+-- james s
+
+
+Sarang Radke wrote:
+> James S./Fujita,
 > 
-> Outlook is the root of all computers evil and should be avoided as the
-> plague. Exchange servers work just as well with ThunderBird or any other
-> none evil email client through the IMAP protocol.
-[...]
-
-There are also macros for Outlook which properly preformat quoted text
-when you hit reply.  Search the web for outlook quotefix.
--- 
-Stefan Richter
--=====-==-=- --== -=-=-
-http://arcgraph.de/sr/
+> Thanks for the comments. The description of scenario was the one with which I noted the issue. But yes, the same would be true for any rport which is offline.
+> 
+> I am resending the patch with the suggested modifications.
+> 
+> -Thanks,
+> Sarang
+> 
+>>From 84a1f847c71382f67f97ea956b2283cf6d737340 Mon Sep 17 00:00:00 2001
+> From: Sarang Radke <sarang.radke@qlogic.com>
+> Date: Tue, 9 Mar 2010 12:20:29 -0500
+> Subject: [PATCH] Make sure commands are completed for offline rport
+> 
+> blk_end_request doesn't complete a bidi request
+> successfully
+> 
+> The unfinished request eventually triggers a panic in
+> timeout handling routine fc_bsg_job_timeout as
+> req->special is NULL
+> 
+> Use blk_end_request_all to end the request unconditionally
+> 
+> Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
+> ---
+>  drivers/scsi/scsi_transport_fc.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index 79660ee..5819457 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -3852,7 +3852,7 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+>                 if (rport && (rport->port_state != FC_PORTSTATE_ONLINE)) {
+>                         req->errors = -ENXIO;
+>                         spin_unlock_irq(q->queue_lock);
+> -                       blk_end_request(req, -ENXIO, blk_rq_bytes(req));
+> +                       blk_end_request_all(req, -ENXIO);
+>                         spin_lock_irq(q->queue_lock);
+>                         continue;
+>                 }
+> @@ -3862,7 +3862,7 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+>                 ret = fc_req_to_bsgjob(shost, rport, req);
+>                 if (ret) {
+>                         req->errors = ret;
+> -                       blk_end_request(req, ret, blk_rq_bytes(req));
+> +                       blk_end_request_all(req, ret);
+>                         spin_lock_irq(q->queue_lock);
+>                         continue;
+>                 }
+> --
+> 1.5.6
