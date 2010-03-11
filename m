@@ -1,8 +1,8 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 23/37] drivers/i2c: use .dev.of_node instead of .node in
-	struct of_device
-Date: Thu, 11 Mar 2010 11:05:55 -0700
-Message-ID: <20100311180554.4824.52872.stgit@angua>
+Subject: [PATCH 37/37] arch/sparc: Remove .archdata.of_node and use .of_node
+	in struct device
+Date: Thu, 11 Mar 2010 11:07:12 -0700
+Message-ID: <20100311180711.4824.57524.stgit__18308.2609124996$1268330907$gmane$org@angua>
 References: <20100311174830.4824.19820.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,77 +10,106 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-pw0-f46.google.com ([209.85.160.46]:63703 "EHLO
 	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933732Ab0CKSF6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:05:58 -0500
+	with ESMTP id S933756Ab0CKSHV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:07:21 -0500
 In-Reply-To: <20100311174830.4824.19820.stgit@angua>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infrade
 
-.node is being removed
+.archdata.of_node is being removed from Microblaze, SPARC and PowerPC
+because it duplicates the struct device .of_node pointer.  This patch
+also removes .node from struct of_device for the same reason.
 
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/i2c/busses/i2c-mpc.c |   17 +++++++++--------
- 1 files changed, 9 insertions(+), 8 deletions(-)
+ arch/sparc/include/asm/device.h    |    9 ---------
+ arch/sparc/include/asm/of_device.h |    1 -
+ arch/sparc/kernel/of_device_32.c   |    3 ---
+ arch/sparc/kernel/of_device_64.c   |    2 --
+ arch/sparc/kernel/pci.c            |    1 -
+ 5 files changed, 0 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/i2c/busses/i2c-mpc.c b/drivers/i2c/busses/i2c-mpc.c
-index 78a15af..0123a6e 100644
---- a/drivers/i2c/busses/i2c-mpc.c
-+++ b/drivers/i2c/busses/i2c-mpc.c
-@@ -559,14 +559,14 @@ static int __devinit fsl_i2c_probe(struct of_device *op,
+diff --git a/arch/sparc/include/asm/device.h b/arch/sparc/include/asm/device.h
+index 55dadca..d4c4521 100644
+--- a/arch/sparc/include/asm/device.h
++++ b/arch/sparc/include/asm/device.h
+@@ -13,19 +13,10 @@ struct dev_archdata {
+ 	void			*iommu;
+ 	void			*stc;
+ 	void			*host_controller;
+-
+-	struct device_node	*prom_node;
+ 	struct of_device	*op;
+-
+ 	int			numa_node;
+ };
  
- 	init_waitqueue_head(&i2c->queue);
+-static inline void dev_archdata_set_node(struct dev_archdata *ad,
+-					 struct device_node *np)
+-{
+-	ad->prom_node = np;
+-}
+-
+ struct pdev_archdata {
+ };
  
--	i2c->base = of_iomap(op->node, 0);
-+	i2c->base = of_iomap(op->dev.of_node, 0);
- 	if (!i2c->base) {
- 		dev_err(i2c->dev, "failed to map controller\n");
- 		result = -ENOMEM;
- 		goto fail_map;
- 	}
+diff --git a/arch/sparc/include/asm/of_device.h b/arch/sparc/include/asm/of_device.h
+index a5d9811..f320246 100644
+--- a/arch/sparc/include/asm/of_device.h
++++ b/arch/sparc/include/asm/of_device.h
+@@ -14,7 +14,6 @@
+  */
+ struct of_device
+ {
+-	struct device_node		*node;
+ 	struct device			dev;
+ 	struct resource			resource[PROMREG_MAX];
+ 	unsigned int			irqs[PROMINTR_MAX];
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 909bee0..37ab163 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -345,12 +345,9 @@ static struct of_device * __init scan_one_device(struct device_node *dp,
+ 		return NULL;
  
--	i2c->irq = irq_of_parse_and_map(op->node, 0);
-+	i2c->irq = irq_of_parse_and_map(op->dev.of_node, 0);
- 	if (i2c->irq != NO_IRQ) { /* i2c->irq = NO_IRQ implies polling */
- 		result = request_irq(i2c->irq, mpc_i2c_isr,
- 				     IRQF_SHARED, "i2c-mpc", i2c);
-@@ -576,21 +576,22 @@ static int __devinit fsl_i2c_probe(struct of_device *op,
- 		}
- 	}
+ 	sd = &op->dev.archdata;
+-	sd->prom_node = dp; /* temporary */
+ 	sd->op = op;
+ 	op->dev.of_node = dp;
  
--	if (of_get_property(op->node, "fsl,preserve-clocking", NULL)) {
-+	if (of_get_property(op->dev.of_node, "fsl,preserve-clocking", NULL)) {
- 		clock = MPC_I2C_CLOCK_PRESERVE;
- 	} else {
--		prop = of_get_property(op->node, "clock-frequency", &plen);
-+		prop = of_get_property(op->dev.of_node, "clock-frequency",
-+					&plen);
- 		if (prop && plen == sizeof(u32))
- 			clock = *prop;
- 	}
+-	op->node = dp;
+-
+ 	op->clock_freq = of_getintprop_default(dp, "clock-frequency",
+ 					       (25*1000*1000));
+ 	op->portid = of_getintprop_default(dp, "upa-portid", -1);
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index e436381..1dae807 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -640,11 +640,9 @@ static struct of_device * __init scan_one_device(struct device_node *dp,
+ 		return NULL;
  
- 	if (match->data) {
- 		struct mpc_i2c_data *data = match->data;
--		data->setup(op->node, i2c, clock, data->prescaler);
-+		data->setup(op->dev.of_node, i2c, clock, data->prescaler);
- 	} else {
- 		/* Backwards compatibility */
--		if (of_get_property(op->node, "dfsrr", NULL))
--			mpc_i2c_setup_8xxx(op->node, i2c, clock, 0);
-+		if (of_get_property(op->dev.of_node, "dfsrr", NULL))
-+			mpc_i2c_setup_8xxx(op->dev.of_node, i2c, clock, 0);
- 	}
+ 	sd = &op->dev.archdata;
+-	sd->prom_node = dp; /* temporary */
+ 	sd->op = op;
  
- 	dev_set_drvdata(&op->dev, i2c);
-@@ -604,7 +605,7 @@ static int __devinit fsl_i2c_probe(struct of_device *op,
- 		dev_err(i2c->dev, "failed to add adapter\n");
- 		goto fail_add;
- 	}
--	of_register_i2c_devices(&i2c->adap, op->node);
-+	of_register_i2c_devices(&i2c->adap, op->dev.of_node);
+ 	op->dev.of_node = dp;
+-	op->node = dp;
  
- 	return result;
+ 	op->clock_freq = of_getintprop_default(dp, "clock-frequency",
+ 					       (25*1000*1000));
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 89c17d0..8a8363a 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -261,7 +261,6 @@ static struct pci_dev *of_create_pci_dev(struct pci_pbm_info *pbm,
+ 	sd->iommu = pbm->iommu;
+ 	sd->stc = &pbm->stc;
+ 	sd->host_controller = pbm;
+-	sd->prom_node = node; /* temporary */
+ 	sd->op = op = of_find_device_by_node(node);
+ 	sd->numa_node = pbm->numa_node;
  
 
