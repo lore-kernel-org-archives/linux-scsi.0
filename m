@@ -1,48 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 23/26] drivers/scsi/qla2xxx/qla_os.c: fix continuation line formats
-Date: Thu, 11 Mar 2010 14:09:56 -0800
-Message-ID: <201003112209.o2BM9vxu013682@imap1.linux-foundation.org>
+Subject: [patch 25/26] mptscsih: fix first line of kernel-doc for a few functions
+Date: Thu, 11 Mar 2010 14:09:58 -0800
+Message-ID: <201003112209.o2BM9wgJ013693@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48261 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58318 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758425Ab0CKWKF (ORCPT
+	by vger.kernel.org with ESMTP id S1758440Ab0CKWKO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:10:05 -0500
+	Thu, 11 Mar 2010 17:10:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, joe@perches.com, James.Bottomley@suse.de, anirban.chakraborty@qlogic.com, giridhar.malavali@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, ben@decadent.org.uk
 
-From: Joe Perches <joe@perches.com>
+From: Ben Hutchings <ben@decadent.org.uk>
 
-String constants that are continued on subsequent lines with \ will cause
-spurious whitespace in the resulting output.
+The function name must be followed by a space, hypen, space, and a short
+description.
 
-Signed-off-by: Joe Perches <joe@perches.com>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/message/fusion/mptscsih.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-fix-continuation-line-formats drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-fix-continuation-line-formats
-+++ a/drivers/scsi/qla2xxx/qla_os.c
-@@ -88,8 +88,8 @@ int ql2xmaxqueues = 1;
- module_param(ql2xmaxqueues, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ql2xmaxqueues,
- 		"Enables MQ settings "
--		"Default is 1 for single queue. Set it to number \
--			of queues in MQ mode.");
-+		"Default is 1 for single queue. Set it to number "
-+		"of queues in MQ mode.");
+diff -puN drivers/message/fusion/mptscsih.c~mptscsih-fix-first-line-of-kernel-doc-for-a-few-functions drivers/message/fusion/mptscsih.c
+--- a/drivers/message/fusion/mptscsih.c~mptscsih-fix-first-line-of-kernel-doc-for-a-few-functions
++++ a/drivers/message/fusion/mptscsih.c
+@@ -2560,9 +2560,7 @@ mptscsih_getclear_scsi_lookup(MPT_ADAPTE
+ }
  
- int ql2xmultique_tag;
- module_param(ql2xmultique_tag, int, S_IRUGO|S_IRUSR);
+ /**
+- * mptscsih_set_scsi_lookup
+- *
+- * writes a scmd entry into the ScsiLookup[] array list
++ * mptscsih_set_scsi_lookup - write a scmd entry into the ScsiLookup[] array list
+  *
+  * @ioc: Pointer to MPT_ADAPTER structure
+  * @i: index into the array
+@@ -2725,7 +2723,7 @@ mptscsih_scandv_complete(MPT_ADAPTER *io
+ 
+ 
+ /**
+- *	mptscsih_get_completion_code -
++ *	mptscsih_get_completion_code - get completion code from MPT request
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *	@req: Pointer to original MPT request frame
+  *	@reply: Pointer to MPT reply frame (NULL if TurboReply)
 _
