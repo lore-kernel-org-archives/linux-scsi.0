@@ -1,62 +1,46 @@
 From: akpm@linux-foundation.org
-Subject: [patch 21/26] drivers/scsi/bfa/bfad_im.c: eliminate useless code
-Date: Thu, 11 Mar 2010 14:09:55 -0800
-Message-ID: <201003112209.o2BM9tkd013676@imap1.linux-foundation.org>
+Subject: [patch 22/26] lpfc: positive error return into negative
+Date: Thu, 11 Mar 2010 14:09:56 -0800
+Message-ID: <201003112209.o2BM9uWY013679@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53815 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46548 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758348Ab0CKWKE (ORCPT
+	by vger.kernel.org with ESMTP id S1758348Ab0CKWKH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:10:04 -0500
+	Thu, 11 Mar 2010 17:10:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, huangj@brocade.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, james.smart@emulex.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-The variable bfa_itnim is initialized twice to the same (side effect-free)
-expression.  Drop one initialization.
+In the comment on top of lpfc_sli_hbq_setup() and of its caller which
+transmits this error, lpfc_sli_hba_setup(), it is stated that the function
+should return a negative error code.
 
-A simplified version of the semantic match that finds this problem is:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@forall@
-idexpression *x;
-identifier f!=ERR_PTR;
-@@
-
-x = f(...)
-... when != x
-(
-x = f(...,<+...x...+>,...)
-|
-* x = f(...)
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Acked-by: Jing Huang <huangj@brocade.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Acked-by: James Smart <james.smart@emulex.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/bfa/bfad_im.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/bfa/bfad_im.c~drivers-scsi-bfa-bfad_imc-eliminate-useless-code drivers/scsi/bfa/bfad_im.c
---- a/drivers/scsi/bfa/bfad_im.c~drivers-scsi-bfa-bfad_imc-eliminate-useless-code
-+++ a/drivers/scsi/bfa/bfad_im.c
-@@ -251,7 +251,6 @@ bfad_im_target_reset_send(struct bfad_s 
- 	struct bfa_itnim_s *bfa_itnim;
- 	bfa_status_t    rc = BFA_STATUS_OK;
+diff -puN drivers/scsi/lpfc/lpfc_sli.c~lpfc-positive-error-return-into-negative drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c~lpfc-positive-error-return-into-negative
++++ a/drivers/scsi/lpfc/lpfc_sli.c
+@@ -3791,7 +3791,7 @@ lpfc_sli_hbq_setup(struct lpfc_hba *phba
  
--	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
- 	tskim = bfa_tskim_alloc(&bfad->bfa, (struct bfad_tskim_s *) cmnd);
- 	if (!tskim) {
- 		BFA_DEV_PRINTF(bfad, BFA_ERR,
+ 			phba->link_state = LPFC_HBA_ERROR;
+ 			mempool_free(pmb, phba->mbox_mem_pool);
+-			return ENXIO;
++			return -ENXIO;
+ 		}
+ 	}
+ 	phba->hbq_count = hbq_count;
 _
