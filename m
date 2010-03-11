@@ -1,88 +1,92 @@
 From: akpm@linux-foundation.org
-Subject: [patch 10/26] drivers/message: Move dereference after NULL test
-Date: Thu, 11 Mar 2010 14:09:43 -0800
-Message-ID: <201003112209.o2BM9hpN013633@imap1.linux-foundation.org>
+Subject: [patch 15/26] g_NCR5380: fix missing pnp_device_detach and scsi_unregister on rmmod
+Date: Thu, 11 Mar 2010 14:09:47 -0800
+Message-ID: <201003112209.o2BM9lo2013651@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40114 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:58998 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758344Ab0CKWJw (ORCPT
+	by vger.kernel.org with ESMTP id S1758400Ab0CKWJw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 11 Mar 2010 17:09:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, James.Bottomley@suse.de, kashyap.desai@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux@rainbow-software.org
 
-From: Julia Lawall <julia@diku.dk>
+From: Ondrej Zary <linux@rainbow-software.org>
 
-If the NULL test on dev->i2o_dev or i2o_dev is needed, then the dereference
-should be after the NULL test.
+Add missing pnp_device_detach() and scsi_unregister() at rmmod time.
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
-
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
-
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/i2o/i2o_block.c |    3 ++-
- drivers/message/i2o/i2o_scsi.c  |    3 +--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/g_NCR5380.c |    7 ++++++-
+ drivers/scsi/g_NCR5380.h |    5 +++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-diff -puN drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_block.c
---- a/drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_block.c
-@@ -711,7 +711,7 @@ static int i2o_block_transfer(struct req
- {
- 	struct i2o_block_device *dev = req->rq_disk->private_data;
- 	struct i2o_controller *c;
--	u32 tid = dev->i2o_dev->lct_data.tid;
-+	u32 tid;
- 	struct i2o_message *msg;
- 	u32 *mptr;
- 	struct i2o_block_request *ireq = req->special;
-@@ -727,6 +727,7 @@ static int i2o_block_transfer(struct req
- 		goto exit;
- 	}
+diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-fix-missing-pnp_device_detach-and-scsi_unregister-on-rmmod drivers/scsi/g_NCR5380.c
+--- a/drivers/scsi/g_NCR5380.c~g_ncr5380-fix-missing-pnp_device_detach-and-scsi_unregister-on-rmmod
++++ a/drivers/scsi/g_NCR5380.c
+@@ -290,6 +290,7 @@ int __init generic_NCR5380_detect(struct
+ #ifndef SCSI_G_NCR5380_MEM
+ 	int i;
+ 	unsigned long region_size = 16;
++	struct pnp_dev *pnpdevs[NO_OVERRIDES];
+ #endif
+ 	static unsigned int __initdata ncr_53c400a_ports[] = {
+ 		0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
+@@ -337,6 +338,7 @@ int __init generic_NCR5380_detect(struct
+ 				pnp_device_detach(dev);
+ 				continue;
+ 			}
++			pnpdevs[count] = dev;
+ 			if (pnp_irq_valid(dev, 0))
+ 				overrides[count].irq = pnp_irq(dev, 0);
+ 			else
+@@ -449,6 +451,7 @@ int __init generic_NCR5380_detect(struct
+ 		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
+ #ifndef SCSI_G_NCR5380_MEM
+ 		instance->n_io_port = region_size;
++		((struct NCR5380_hostdata *)instance->hostdata)->pnpdev = pnpdevs[current_override];
+ #else
+ 		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
+ #endif
+@@ -520,12 +523,14 @@ int generic_NCR5380_release_resources(st
  
-+	tid = dev->i2o_dev->lct_data.tid;
- 	c = dev->i2o_dev->iop;
+ #ifndef SCSI_G_NCR5380_MEM
+ 	release_region(instance->NCR5380_instance_name, instance->n_io_port);
++	if (((struct NCR5380_hostdata *)instance->hostdata)->pnpdev)
++		pnp_device_detach(((struct NCR5380_hostdata *)instance->hostdata)->pnpdev);
+ #else
+ 	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
+ 	release_mem_region(instance->NCR5380_instance_name, NCR5380_region_size);
+ #endif
  
- 	msg = i2o_msg_get(c);
-diff -puN drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_scsi.c
---- a/drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_scsi.c
-@@ -528,7 +528,6 @@ static int i2o_scsi_queuecommand(struct 
- 	 *      Do the incoming paperwork
- 	 */
- 	i2o_dev = SCpnt->device->hostdata;
--	c = i2o_dev->iop;
- 
- 	SCpnt->scsi_done = done;
- 
-@@ -538,7 +537,7 @@ static int i2o_scsi_queuecommand(struct 
- 		done(SCpnt);
- 		goto exit;
- 	}
 -
-+	c = i2o_dev->iop;
- 	tid = i2o_dev->lct_data.tid;
++	scsi_unregister(instance);
+ 	return 0;
+ }
  
- 	osm_debug("qcmd: Tid = %03x\n", tid);
+diff -puN drivers/scsi/g_NCR5380.h~g_ncr5380-fix-missing-pnp_device_detach-and-scsi_unregister-on-rmmod drivers/scsi/g_NCR5380.h
+--- a/drivers/scsi/g_NCR5380.h~g_ncr5380-fix-missing-pnp_device_detach-and-scsi_unregister-on-rmmod
++++ a/drivers/scsi/g_NCR5380.h
+@@ -82,10 +82,11 @@ static const char* generic_NCR5380_info(
+ #define NCR5380_write(reg, value) (outb((value), (NCR5380_map_name + (reg))))
+ 
+ #define NCR5380_implementation_fields \
+-    NCR5380_map_type NCR5380_map_name
++    NCR5380_map_type NCR5380_map_name; \
++    struct pnp_dev *pnpdev;
+ 
+ #define NCR5380_local_declare() \
+-    register NCR5380_implementation_fields
++    NCR5380_map_type NCR5380_map_name
+ 
+ #define NCR5380_setup(instance) \
+     NCR5380_map_name = (NCR5380_map_type)((instance)->NCR5380_instance_name)
 _
