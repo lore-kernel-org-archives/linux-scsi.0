@@ -1,54 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 25/26] mptscsih: fix first line of kernel-doc for a few functions
-Date: Thu, 11 Mar 2010 14:09:58 -0800
-Message-ID: <201003112209.o2BM9wgJ013693@imap1.linux-foundation.org>
+Subject: [patch 24/26] scsi: bfa: correct onstack wait_queue_head declaration
+Date: Thu, 11 Mar 2010 14:09:57 -0800
+Message-ID: <201003112209.o2BM9wb5013690@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:58318 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39281 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758440Ab0CKWKO (ORCPT
+	by vger.kernel.org with ESMTP id S1758362Ab0CKWKI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:10:14 -0500
+	Thu, 11 Mar 2010 17:10:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, ben@decadent.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, yong.zhang0@gmail.com, James.Bottomley@suse.de, huangj@brocade.com, roel.kluin@gmail.com
 
-From: Ben Hutchings <ben@decadent.org.uk>
+From: Yong Zhang <yong.zhang0@gmail.com>
 
-The function name must be followed by a space, hypen, space, and a short
-description.
+Use DECLARE_WAIT_QUEUE_HEAD_ONSTACK to make lockdep happy
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Yong Zhang <yong.zhang0@gmail.com>
+Cc: Jing Huang <huangj@brocade.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: Roel Kluin <roel.kluin@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptscsih.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/bfa/bfad_im.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/message/fusion/mptscsih.c~mptscsih-fix-first-line-of-kernel-doc-for-a-few-functions drivers/message/fusion/mptscsih.c
---- a/drivers/message/fusion/mptscsih.c~mptscsih-fix-first-line-of-kernel-doc-for-a-few-functions
-+++ a/drivers/message/fusion/mptscsih.c
-@@ -2560,9 +2560,7 @@ mptscsih_getclear_scsi_lookup(MPT_ADAPTE
- }
+diff -puN drivers/scsi/bfa/bfad_im.c~scsi-bfa-correct-onstack-wait_queue_head-declaration drivers/scsi/bfa/bfad_im.c
+--- a/drivers/scsi/bfa/bfad_im.c~scsi-bfa-correct-onstack-wait_queue_head-declaration
++++ a/drivers/scsi/bfa/bfad_im.c
+@@ -289,7 +289,7 @@ bfad_im_reset_lun_handler(struct scsi_cm
+ 	struct bfa_tskim_s *tskim;
+ 	struct bfad_itnim_s   *itnim;
+ 	struct bfa_itnim_s *bfa_itnim;
+-	DECLARE_WAIT_QUEUE_HEAD(wq);
++	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+ 	int             rc = SUCCESS;
+ 	unsigned long   flags;
+ 	enum bfi_tskim_status task_status;
+@@ -351,7 +351,7 @@ bfad_im_reset_bus_handler(struct scsi_cm
+ 	struct bfad_itnim_s   *itnim;
+ 	unsigned long   flags;
+ 	u32        i, rc, err_cnt = 0;
+-	DECLARE_WAIT_QUEUE_HEAD(wq);
++	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+ 	enum bfi_tskim_status task_status;
  
- /**
-- * mptscsih_set_scsi_lookup
-- *
-- * writes a scmd entry into the ScsiLookup[] array list
-+ * mptscsih_set_scsi_lookup - write a scmd entry into the ScsiLookup[] array list
-  *
-  * @ioc: Pointer to MPT_ADAPTER structure
-  * @i: index into the array
-@@ -2725,7 +2723,7 @@ mptscsih_scandv_complete(MPT_ADAPTER *io
- 
- 
- /**
-- *	mptscsih_get_completion_code -
-+ *	mptscsih_get_completion_code - get completion code from MPT request
-  *	@ioc: Pointer to MPT_ADAPTER structure
-  *	@req: Pointer to original MPT request frame
-  *	@reply: Pointer to MPT reply frame (NULL if TurboReply)
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
 _
