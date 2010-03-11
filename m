@@ -1,59 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 18/26] scsi: remove superfluous NULL pointer check from scsi_kill_request()
-Date: Thu, 11 Mar 2010 14:09:51 -0800
-Message-ID: <201003112209.o2BM9pa9013667@imap1.linux-foundation.org>
+Subject: [patch 13/26] g_NCR5380: remove misleading pnp error message
+Date: Thu, 11 Mar 2010 14:09:45 -0800
+Message-ID: <201003112209.o2BM9jG1013642@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:33247 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35736 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758437Ab0CKWKM (ORCPT
+	by vger.kernel.org with ESMTP id S1758393Ab0CKWJw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:10:12 -0500
+	Thu, 11 Mar 2010 17:09:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bzolnier@gmail.com, corbet@lwn.net, error27@gmail.com, eteo@redhat.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux@rainbow-software.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Ondrej Zary <linux@rainbow-software.org>
 
-Dan's list included:
+Remove misleading error message that appears after pnp card has been
+detected correctly.
 
-drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced in initializer 'cmd'
-drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced before check 'cmd'
-
-We dereference cmd (and possible OOPS if cmd == NULL) before starting the
-request so just remove the superfluous debugging code altogether.
-
-[ bart: the potential NULL pointer dereference was finally fixed in
-  (much later than mine) commit 03b1470 but my patch is still valid ]
-
-Reported-by: Dan Carpenter <error27@gmail.com>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Eugene Teo <eteo@redhat.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_lib.c |    6 ------
- 1 file changed, 6 deletions(-)
+ drivers/scsi/g_NCR5380.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff -puN drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request
-+++ a/drivers/scsi/scsi_lib.c
-@@ -1372,12 +1372,6 @@ static void scsi_kill_request(struct req
- 
- 	blk_start_request(req);
- 
--	if (unlikely(cmd == NULL)) {
--		printk(KERN_CRIT "impossible request in %s.\n",
--				 __func__);
--		BUG();
--	}
--
- 	sdev = cmd->device;
- 	starget = scsi_target(sdev);
- 	shost = sdev->host;
+diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message drivers/scsi/g_NCR5380.c
+--- a/drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message
++++ a/drivers/scsi/g_NCR5380.c
+@@ -322,10 +322,8 @@ int __init generic_NCR5380_detect(struct
+ 		while ((dev = pnp_find_dev(NULL, ISAPNP_VENDOR('D', 'T', 'C'), ISAPNP_FUNCTION(0x436e), dev))) {
+ 			if (count >= NO_OVERRIDES)
+ 				break;
+-			if (pnp_device_attach(dev) < 0) {
+-				printk(KERN_ERR "dtc436e probe: attach failed\n");
++			if (pnp_device_attach(dev) < 0)
+ 				continue;
+-			}
+ 			if (pnp_activate_dev(dev) < 0) {
+ 				printk(KERN_ERR "dtc436e probe: activate failed\n");
+ 				pnp_device_detach(dev);
 _
