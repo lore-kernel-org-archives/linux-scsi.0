@@ -1,44 +1,55 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/26] drivers/scsi/libsas: use SAM_GOOD
-Date: Thu, 11 Mar 2010 14:09:40 -0800
-Message-ID: <201003112209.o2BM9eFn013622@imap1.linux-foundation.org>
+Subject: [patch 01/26] scsi: add __init/__exit macros to ibmvstgt.c
+Date: Thu, 11 Mar 2010 14:09:33 -0800
+Message-ID: <201003112209.o2BM9YaZ013599@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45989 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:36226 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758377Ab0CKWJo (ORCPT
+	by vger.kernel.org with ESMTP id S1758385Ab0CKWJq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:09:44 -0500
+	Thu, 11 Mar 2010 17:09:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
 
-From: Julia Lawall <julia@diku.dk>
+From: Peter Huewe <peterhuewe@gmx.de>
 
-The field stat->stat should be compared to SAM_GOOD, not SAM_STAT_GOOD, as
-done elsewhere in the same function.  Both constants have the same value.
+Add the __init and __exit macros to the module_init / module_exit
+functions from drivers/scsi/ibmvscsi/ibmvstgt.c
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/libsas/sas_ata.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good drivers/scsi/libsas/sas_ata.c
---- a/drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good
-+++ a/drivers/scsi/libsas/sas_ata.c
-@@ -112,7 +112,7 @@ static void sas_ata_task_done(struct sas
- 		dev->sata_dev.sstatus = resp->sstatus;
- 		dev->sata_dev.serror = resp->serror;
- 		dev->sata_dev.scontrol = resp->scontrol;
--	} else if (stat->stat != SAM_STAT_GOOD) {
-+	} else if (stat->stat != SAM_GOOD) {
- 		ac = sas_to_ata_err(stat);
- 		if (ac) {
- 			SAS_DPRINTK("%s: SAS error %x\n", __func__,
+diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
+--- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
++++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -955,7 +955,7 @@ static struct srp_function_template ibmv
+ 	.it_nexus_response = ibmvstgt_it_nexus_response,
+ };
+ 
+-static int ibmvstgt_init(void)
++static int __init ibmvstgt_init(void)
+ {
+ 	int err = -ENOMEM;
+ 
+@@ -986,7 +986,7 @@ release_transport:
+ 	return err;
+ }
+ 
+-static void ibmvstgt_exit(void)
++static void __exit ibmvstgt_exit(void)
+ {
+ 	printk("Unregister IBM virtual SCSI driver\n");
+ 
 _
