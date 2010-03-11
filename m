@@ -1,100 +1,62 @@
 From: akpm@linux-foundation.org
-Subject: [patch 20/26] scsi/sd.c: quiet all sparse noise
-Date: Thu, 11 Mar 2010 14:09:53 -0800
-Message-ID: <201003112209.o2BM9spK013673@imap1.linux-foundation.org>
+Subject: [patch 21/26] drivers/scsi/bfa/bfad_im.c: eliminate useless code
+Date: Thu, 11 Mar 2010 14:09:55 -0800
+Message-ID: <201003112209.o2BM9tkd013676@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:49142 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53815 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758410Ab0CKWJ6 (ORCPT
+	by vger.kernel.org with ESMTP id S1758348Ab0CKWKE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:09:58 -0500
+	Thu, 11 Mar 2010 17:10:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hartleys@visionengravers.com, James.Bottomley@suse.de, hsweeten@visionengravers.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, huangj@brocade.com
 
-From: H Hartley Sweeten <hartleys@visionengravers.com>
+From: Julia Lawall <julia@diku.dk>
 
-In sd_store_cache_type the symbol 'len' is declared twice.  Remove the
-second declaration to quiet the following sparse warning.
+The variable bfa_itnim is initialized twice to the same (side effect-free)
+expression.  Drop one initialization.
 
-warning: symbol 'len' shadows an earlier one
+A simplified version of the semantic match that finds this problem is:
+(http://coccinelle.lip6.fr/)
 
-In sd_probe the variable 'index' is declared as a u32.  This variable is
-used in a call to ida_get_new which is expecting an int *.  Make the
-variable an int to quiet the following sparse warning.
+// <smpl>
+@forall@
+idexpression *x;
+identifier f!=ERR_PTR;
+@@
 
-warning: incorrect type in argument 2 (different signedness)
+x = f(...)
+... when != x
+(
+x = f(...,<+...x...+>,...)
+|
+* x = f(...)
+)
+// </smpl>
 
-There are 4 symbols in the file that are not exported and produce
-the following sparse warnings.
-
-warning: symbol 'sd_cdb_cache' was not declared. Should it be static?
-warning: symbol 'sd_cdb_pool' was not declared. Should it be static?
-warning: symbol 'sd_read_protection_type' was not declared. Should it be static?
-warning: symbol 'sd_read_app_tag_own' was not declared. Should it be static?
-
-Make them static to quiet the warnings.
-
-Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Acked-by: Jing Huang <huangj@brocade.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sd.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/bfa/bfad_im.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff -puN drivers/scsi/sd.c~scsi-sdc-quiet-all-sparse-noise drivers/scsi/sd.c
---- a/drivers/scsi/sd.c~scsi-sdc-quiet-all-sparse-noise
-+++ a/drivers/scsi/sd.c
-@@ -116,8 +116,8 @@ static DEFINE_IDA(sd_index_ida);
-  * object after last put) */
- static DEFINE_MUTEX(sd_ref_mutex);
+diff -puN drivers/scsi/bfa/bfad_im.c~drivers-scsi-bfa-bfad_imc-eliminate-useless-code drivers/scsi/bfa/bfad_im.c
+--- a/drivers/scsi/bfa/bfad_im.c~drivers-scsi-bfa-bfad_imc-eliminate-useless-code
++++ a/drivers/scsi/bfa/bfad_im.c
+@@ -251,7 +251,6 @@ bfad_im_target_reset_send(struct bfad_s 
+ 	struct bfa_itnim_s *bfa_itnim;
+ 	bfa_status_t    rc = BFA_STATUS_OK;
  
--struct kmem_cache *sd_cdb_cache;
--mempool_t *sd_cdb_pool;
-+static struct kmem_cache *sd_cdb_cache;
-+static mempool_t *sd_cdb_pool;
- 
- static const char *sd_cache_types[] = {
- 	"write through", "none", "write back",
-@@ -144,7 +144,7 @@ sd_store_cache_type(struct device *dev, 
- 		return -EINVAL;
- 
- 	for (i = 0; i < ARRAY_SIZE(sd_cache_types); i++) {
--		const int len = strlen(sd_cache_types[i]);
-+		len = strlen(sd_cache_types[i]);
- 		if (strncmp(sd_cache_types[i], buf, len) == 0 &&
- 		    buf[len] == '\n') {
- 			ct = i;
-@@ -1371,7 +1371,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- /*
-  * Determine whether disk supports Data Integrity Field.
-  */
--void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
-+static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
- {
- 	struct scsi_device *sdp = sdkp->device;
- 	u8 type;
-@@ -1898,7 +1898,7 @@ defaults:
-  * The ATO bit indicates whether the DIF application tag is available
-  * for use by the operating system.
-  */
--void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
-+static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- {
- 	int res, offset;
- 	struct scsi_device *sdp = sdkp->device;
-@@ -2223,7 +2223,7 @@ static int sd_probe(struct device *dev)
- 	struct scsi_device *sdp = to_scsi_device(dev);
- 	struct scsi_disk *sdkp;
- 	struct gendisk *gd;
--	u32 index;
-+	int index;
- 	int error;
- 
- 	error = -ENODEV;
+-	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
+ 	tskim = bfa_tskim_alloc(&bfad->bfa, (struct bfad_tskim_s *) cmnd);
+ 	if (!tskim) {
+ 		BFA_DEV_PRINTF(bfad, BFA_ERR,
 _
