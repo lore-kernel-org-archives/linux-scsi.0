@@ -1,17 +1,17 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 24/37] drivers/char: use .dev.of_node instead of .node in
+Subject: [PATCH 26/37] drivers/mtd: use .dev.of_node instead of .node in
 	struct of_device
-Date: Thu, 11 Mar 2010 11:06:00 -0700
-Message-ID: <20100311180600.4824.44001.stgit__28908.0843249851$1268331226$gmane$org@angua>
+Date: Thu, 11 Mar 2010 11:06:11 -0700
+Message-ID: <20100311180611.4824.60029.stgit__48161.2288895578$1268331229$gmane$org@angua>
 References: <20100311174830.4824.19820.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:63703 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933740Ab0CKSGJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:06:09 -0500
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:34774 "EHLO
+	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933744Ab0CKSGO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:06:14 -0500
 In-Reply-To: <20100311174830.4824.19820.stgit@angua>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,57 +22,97 @@ To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-found
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/char/hw_random/n2-drv.c     |    2 +-
- drivers/char/hw_random/pasemi-rng.c |    2 +-
- drivers/char/ipmi/ipmi_si_intf.c    |    4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/mtd/maps/physmap_of.c    |    6 +++---
+ drivers/mtd/maps/sun_uflash.c    |    2 +-
+ drivers/mtd/nand/fsl_elbc_nand.c |    6 +++---
+ drivers/mtd/nand/pasemi_nand.c   |    2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/char/hw_random/n2-drv.c b/drivers/char/hw_random/n2-drv.c
-index 9b3e09c..4d05003 100644
---- a/drivers/char/hw_random/n2-drv.c
-+++ b/drivers/char/hw_random/n2-drv.c
-@@ -660,7 +660,7 @@ static int __devinit n2rng_probe(struct of_device *op,
- 				np->hvapi_major);
- 			goto out_hvapi_unregister;
- 		}
--		np->num_units = of_getintprop_default(op->node,
-+		np->num_units = of_getintprop_default(op->dev.of_node,
- 						      "rng-#units", 0);
- 		if (!np->num_units) {
- 			dev_err(&op->dev, "VF RNG lacks rng-#units property\n");
-diff --git a/drivers/char/hw_random/pasemi-rng.c b/drivers/char/hw_random/pasemi-rng.c
-index 7fa61dd..b213855 100644
---- a/drivers/char/hw_random/pasemi-rng.c
-+++ b/drivers/char/hw_random/pasemi-rng.c
-@@ -98,7 +98,7 @@ static int __devinit rng_probe(struct of_device *ofdev,
- 			       const struct of_device_id *match)
+diff --git a/drivers/mtd/maps/physmap_of.c b/drivers/mtd/maps/physmap_of.c
+index 61e4eb4..494af8e 100644
+--- a/drivers/mtd/maps/physmap_of.c
++++ b/drivers/mtd/maps/physmap_of.c
+@@ -142,7 +142,7 @@ static int of_flash_remove(struct of_device *dev)
+ static struct mtd_info * __devinit obsolete_probe(struct of_device *dev,
+ 						  struct map_info *map)
  {
- 	void __iomem *rng_regs;
--	struct device_node *rng_np = ofdev->node;
-+	struct device_node *rng_np = ofdev->dev.of_node;
+-	struct device_node *dp = dev->node;
++	struct device_node *dp = dev->dev.of_node;
+ 	const char *of_probe;
+ 	struct mtd_info *mtd;
+ 	static const char *rom_probe_types[]
+@@ -179,7 +179,7 @@ static int __devinit of_flash_probe(struct of_device *dev,
+ 	static const char *part_probe_types[]
+ 		= { "cmdlinepart", "RedBoot", NULL };
+ #endif
+-	struct device_node *dp = dev->node;
++	struct device_node *dp = dev->dev.of_node;
  	struct resource res;
+ 	struct of_flash *info;
+ 	const char *probe_type = match->data;
+@@ -203,7 +203,7 @@ static int __devinit of_flash_probe(struct of_device *dev,
+ 	p = of_get_property(dp, "reg", &count);
+ 	if (count % reg_tuple_size != 0) {
+ 		dev_err(&dev->dev, "Malformed reg property on %s\n",
+-				dev->node->full_name);
++				dev->dev.of_node->full_name);
+ 		err = -EINVAL;
+ 		goto err_flash_remove;
+ 	}
+diff --git a/drivers/mtd/maps/sun_uflash.c b/drivers/mtd/maps/sun_uflash.c
+index fd7a101..365811d 100644
+--- a/drivers/mtd/maps/sun_uflash.c
++++ b/drivers/mtd/maps/sun_uflash.c
+@@ -109,7 +109,7 @@ int uflash_devinit(struct of_device *op, struct device_node *dp)
+ 
+ static int __devinit uflash_probe(struct of_device *op, const struct of_device_id *match)
+ {
+-	struct device_node *dp = op->node;
++	struct device_node *dp = op->dev.of_node;
+ 
+ 	/* Flashprom must have the "user" property in order to
+ 	 * be used by this driver.
+diff --git a/drivers/mtd/nand/fsl_elbc_nand.c b/drivers/mtd/nand/fsl_elbc_nand.c
+index ae30fb6..4a60795 100644
+--- a/drivers/mtd/nand/fsl_elbc_nand.c
++++ b/drivers/mtd/nand/fsl_elbc_nand.c
+@@ -1030,14 +1030,14 @@ static int __devinit fsl_elbc_ctrl_probe(struct of_device *ofdev,
+ 	init_waitqueue_head(&ctrl->controller.wq);
+ 	init_waitqueue_head(&ctrl->irq_wait);
+ 
+-	ctrl->regs = of_iomap(ofdev->node, 0);
++	ctrl->regs = of_iomap(ofdev->dev.of_node, 0);
+ 	if (!ctrl->regs) {
+ 		dev_err(&ofdev->dev, "failed to get memory region\n");
+ 		ret = -ENODEV;
+ 		goto err;
+ 	}
+ 
+-	ctrl->irq = of_irq_to_resource(ofdev->node, 0, NULL);
++	ctrl->irq = of_irq_to_resource(ofdev->dev.of_node, 0, NULL);
+ 	if (ctrl->irq == NO_IRQ) {
+ 		dev_err(&ofdev->dev, "failed to get irq resource\n");
+ 		ret = -ENODEV;
+@@ -1058,7 +1058,7 @@ static int __devinit fsl_elbc_ctrl_probe(struct of_device *ofdev,
+ 		goto err;
+ 	}
+ 
+-	for_each_child_of_node(ofdev->node, child)
++	for_each_child_of_node(ofdev->dev.of_node, child)
+ 		if (of_device_is_compatible(child, "fsl,elbc-fcm-nand"))
+ 			fsl_elbc_chip_probe(ctrl, child);
+ 
+diff --git a/drivers/mtd/nand/pasemi_nand.c b/drivers/mtd/nand/pasemi_nand.c
+index a8b9376..edfc27b 100644
+--- a/drivers/mtd/nand/pasemi_nand.c
++++ b/drivers/mtd/nand/pasemi_nand.c
+@@ -93,7 +93,7 @@ static int __devinit pasemi_nand_probe(struct of_device *ofdev,
+ 				      const struct of_device_id *match)
+ {
+ 	struct pci_dev *pdev;
+-	struct device_node *np = ofdev->node;
++	struct device_node *np = ofdev->dev.of_node;
+ 	struct resource res;
+ 	struct nand_chip *chip;
  	int err = 0;
- 
-diff --git a/drivers/char/ipmi/ipmi_si_intf.c b/drivers/char/ipmi/ipmi_si_intf.c
-index 176f175..45305f2 100644
---- a/drivers/char/ipmi/ipmi_si_intf.c
-+++ b/drivers/char/ipmi/ipmi_si_intf.c
-@@ -2406,7 +2406,7 @@ static int __devinit ipmi_of_probe(struct of_device *dev,
- 	struct smi_info *info;
- 	struct resource resource;
- 	const int *regsize, *regspacing, *regshift;
--	struct device_node *np = dev->node;
-+	struct device_node *np = dev->dev.of_node;
- 	int ret;
- 	int proplen;
- 
-@@ -2462,7 +2462,7 @@ static int __devinit ipmi_of_probe(struct of_device *dev,
- 	info->io.regspacing	= regspacing ? *regspacing : DEFAULT_REGSPACING;
- 	info->io.regshift	= regshift ? *regshift : 0;
- 
--	info->irq		= irq_of_parse_and_map(dev->node, 0);
-+	info->irq		= irq_of_parse_and_map(dev->dev.of_node, 0);
- 	info->dev		= &dev->dev;
- 
- 	dev_dbg(&dev->dev, "addr 0x%lx regsize %d spacing %d irq %x\n",
 
