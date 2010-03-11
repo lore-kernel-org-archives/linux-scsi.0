@@ -1,17 +1,17 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 16/37] drivers/sbus: use .dev.of_node instead of .node in
+Subject: [PATCH 13/37] drivers/macintosh: use .dev.of_node instead of .node in
 	struct of_device
-Date: Thu, 11 Mar 2010 11:05:16 -0700
-Message-ID: <20100311180515.4824.50590.stgit__10165.5993647457$1268331453$gmane$org@angua>
+Date: Thu, 11 Mar 2010 11:04:59 -0700
+Message-ID: <20100311180459.4824.89079.stgit__22493.9997577623$1268331481$gmane$org@angua>
 References: <20100311174830.4824.19820.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:63703 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933665Ab0CKSFZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:05:25 -0500
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:53447 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933634Ab0CKSFD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:05:03 -0500
 In-Reply-To: <20100311174830.4824.19820.stgit@angua>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,111 +22,140 @@ To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-found
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/sbus/char/bbc_envctrl.c |    4 ++--
- drivers/sbus/char/bbc_i2c.c     |    4 ++--
- drivers/sbus/char/display7seg.c |    2 +-
- drivers/sbus/char/envctrl.c     |    2 +-
- drivers/sbus/char/flash.c       |    4 ++--
- drivers/sbus/char/uctrl.c       |    2 +-
- 6 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/macintosh/macio_asic.c  |   16 ++++++++--------
+ drivers/macintosh/macio_sysfs.c |    6 +++---
+ drivers/macintosh/rack-meter.c  |    4 ++--
+ drivers/macintosh/therm_pm72.c  |    2 +-
+ 4 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/sbus/char/bbc_envctrl.c b/drivers/sbus/char/bbc_envctrl.c
-index 28d86f9..53c0230 100644
---- a/drivers/sbus/char/bbc_envctrl.c
-+++ b/drivers/sbus/char/bbc_envctrl.c
-@@ -564,9 +564,9 @@ int bbc_envctrl_init(struct bbc_i2c_bus *bp)
- 	int devidx = 0;
+diff --git a/drivers/macintosh/macio_asic.c b/drivers/macintosh/macio_asic.c
+index 26a303a..67fe13f 100644
+--- a/drivers/macintosh/macio_asic.c
++++ b/drivers/macintosh/macio_asic.c
+@@ -248,7 +248,7 @@ static void macio_create_fixup_irq(struct macio_dev *dev, int index,
  
- 	while ((op = bbc_i2c_getdev(bp, devidx++)) != NULL) {
--		if (!strcmp(op->node->name, "temperature"))
-+		if (!strcmp(op->dev.of_node->name, "temperature"))
- 			attach_one_temp(bp, op, temp_index++);
--		if (!strcmp(op->node->name, "fan-control"))
-+		if (!strcmp(op->dev.of_node->name, "fan-control"))
- 			attach_one_fan(bp, op, fan_index++);
- 	}
- 	if (temp_index != 0 && fan_index != 0) {
-diff --git a/drivers/sbus/char/bbc_i2c.c b/drivers/sbus/char/bbc_i2c.c
-index 7e30e5f..1543ac3 100644
---- a/drivers/sbus/char/bbc_i2c.c
-+++ b/drivers/sbus/char/bbc_i2c.c
-@@ -97,7 +97,7 @@ struct bbc_i2c_client *bbc_i2c_attach(struct bbc_i2c_bus *bp, struct of_device *
- 	client->bp = bp;
- 	client->op = op;
- 
--	reg = of_get_property(op->node, "reg", NULL);
-+	reg = of_get_property(op->dev.of_node, "reg", NULL);
- 	if (!reg) {
- 		kfree(client);
- 		return NULL;
-@@ -327,7 +327,7 @@ static struct bbc_i2c_bus * __init attach_one_i2c(struct of_device *op, int inde
- 	spin_lock_init(&bp->lock);
- 
- 	entry = 0;
--	for (dp = op->node->child;
-+	for (dp = op->dev.of_node->child;
- 	     dp && entry < 8;
- 	     dp = dp->sibling, entry++) {
- 		struct of_device *child_op;
-diff --git a/drivers/sbus/char/display7seg.c b/drivers/sbus/char/display7seg.c
-index 4431578..d0a10f4 100644
---- a/drivers/sbus/char/display7seg.c
-+++ b/drivers/sbus/char/display7seg.c
-@@ -215,7 +215,7 @@ static int __devinit d7s_probe(struct of_device *op,
- 	writeb(regs,  p->regs);
- 
- 	printk(KERN_INFO PFX "7-Segment Display%s at [%s:0x%llx] %s\n",
--	       op->node->full_name,
-+	       op->dev.of_node->full_name,
- 	       (regs & D7S_FLIP) ? " (FLIPPED)" : "",
- 	       op->resource[0].start,
- 	       sol_compat ? "in sol_compat mode" : "");
-diff --git a/drivers/sbus/char/envctrl.c b/drivers/sbus/char/envctrl.c
-index aa2b60a..84a4310 100644
---- a/drivers/sbus/char/envctrl.c
-+++ b/drivers/sbus/char/envctrl.c
-@@ -1042,7 +1042,7 @@ static int __devinit envctrl_probe(struct of_device *op,
- 		return -ENOMEM;
- 
- 	index = 0;
--	dp = op->node->child;
-+	dp = op->dev.of_node->child;
- 	while (dp) {
- 		if (!strcmp(dp->name, "gpio")) {
- 			i2c_childlist[index].i2ctype = I2C_GPIO;
-diff --git a/drivers/sbus/char/flash.c b/drivers/sbus/char/flash.c
-index 4108347..dc8f95d 100644
---- a/drivers/sbus/char/flash.c
-+++ b/drivers/sbus/char/flash.c
-@@ -163,7 +163,7 @@ static struct miscdevice flash_dev = { FLASH_MINOR, "flash", &flash_fops };
- static int __devinit flash_probe(struct of_device *op,
- 				 const struct of_device_id *match)
+ static void macio_add_missing_resources(struct macio_dev *dev)
  {
--	struct device_node *dp = op->node;
-+	struct device_node *dp = op->dev.of_node;
- 	struct device_node *parent;
+-	struct device_node *np = dev->ofdev.node;
++	struct device_node *np = dev->ofdev.dev.of_node;
+ 	unsigned int irq_base;
  
- 	parent = dp->parent;
-@@ -185,7 +185,7 @@ static int __devinit flash_probe(struct of_device *op,
- 	flash.busy = 0;
+ 	/* Gatwick has some missing interrupts on child nodes */
+@@ -289,7 +289,7 @@ static void macio_add_missing_resources(struct macio_dev *dev)
  
- 	printk(KERN_INFO "%s: OBP Flash, RD %lx[%lx] WR %lx[%lx]\n",
--	       op->node->full_name,
-+	       op->dev.of_node->full_name,
- 	       flash.read_base, flash.read_size,
- 	       flash.write_base, flash.write_size);
+ static void macio_setup_interrupts(struct macio_dev *dev)
+ {
+-	struct device_node *np = dev->ofdev.node;
++	struct device_node *np = dev->ofdev.dev.of_node;
+ 	unsigned int irq;
+ 	int i = 0, j = 0;
  
-diff --git a/drivers/sbus/char/uctrl.c b/drivers/sbus/char/uctrl.c
-index 2c56fd5..acc6738 100644
---- a/drivers/sbus/char/uctrl.c
-+++ b/drivers/sbus/char/uctrl.c
-@@ -382,7 +382,7 @@ static int __devinit uctrl_probe(struct of_device *op,
+@@ -317,7 +317,7 @@ static void macio_setup_interrupts(struct macio_dev *dev)
+ static void macio_setup_resources(struct macio_dev *dev,
+ 				  struct resource *parent_res)
+ {
+-	struct device_node *np = dev->ofdev.node;
++	struct device_node *np = dev->ofdev.dev.of_node;
+ 	struct resource r;
+ 	int index;
  
- 	sbus_writel(UCTRL_INTR_RXNE_REQ|UCTRL_INTR_RXNE_MSK, &p->regs->uctrl_intr);
- 	printk(KERN_INFO "%s: uctrl regs[0x%p] (irq %d)\n",
--	       op->node->full_name, p->regs, p->irq);
-+	       op->dev.of_node->full_name, p->regs, p->irq);
- 	uctrl_get_event_status(p);
- 	uctrl_get_external_status(p);
+@@ -373,7 +373,7 @@ static struct macio_dev * macio_add_one_device(struct macio_chip *chip,
  
+ 	dev->bus = &chip->lbus;
+ 	dev->media_bay = in_bay;
+-	dev->ofdev.node = np;
++	dev->ofdev.dev.of_node = np;
+ 	dev->ofdev.dma_mask = 0xffffffffUL;
+ 	dev->ofdev.dev.dma_mask = &dev->ofdev.dma_mask;
+ 	dev->ofdev.dev.parent = parent;
+@@ -494,9 +494,9 @@ static void macio_pci_add_devices(struct macio_chip *chip)
+ 	}
+ 
+ 	/* Add media bay devices if any */
++	pnode = mbdev->ofdev.dev.of_node;
+ 	if (mbdev)
+-		for (np = NULL; (np = of_get_next_child(mbdev->ofdev.node, np))
+-			     != NULL;) {
++		for (np = NULL; (np = of_get_next_child(pnode, np)) != NULL;) {
+ 			if (macio_skip_device(np))
+ 				continue;
+ 			of_node_get(np);
+@@ -506,9 +506,9 @@ static void macio_pci_add_devices(struct macio_chip *chip)
+ 		}
+ 
+ 	/* Add serial ports if any */
++	pnode = sdev->ofdev.dev.of_node;
+ 	if (sdev) {
+-		for (np = NULL; (np = of_get_next_child(sdev->ofdev.node, np))
+-			     != NULL;) {
++		for (np = NULL; (np = of_get_next_child(pnode, np)) != NULL;) {
+ 			if (macio_skip_device(np))
+ 				continue;
+ 			of_node_get(np);
+diff --git a/drivers/macintosh/macio_sysfs.c b/drivers/macintosh/macio_sysfs.c
+index 9e9453b..6999ce5 100644
+--- a/drivers/macintosh/macio_sysfs.c
++++ b/drivers/macintosh/macio_sysfs.c
+@@ -9,7 +9,7 @@ field##_show (struct device *dev, struct device_attribute *attr,	\
+               char *buf)						\
+ {									\
+ 	struct macio_dev *mdev = to_macio_device (dev);			\
+-	return sprintf (buf, format_string, mdev->ofdev.node->field);	\
++	return sprintf (buf, format_string, mdev->ofdev.dev.of_node->field); \
+ }
+ 
+ static ssize_t
+@@ -21,7 +21,7 @@ compatible_show (struct device *dev, struct device_attribute *attr, char *buf)
+ 	int length = 0;
+ 
+ 	of = &to_macio_device (dev)->ofdev;
+-	compat = of_get_property(of->node, "compatible", &cplen);
++	compat = of_get_property(of->dev.of_node, "compatible", &cplen);
+ 	if (!compat) {
+ 		*buf = '\0';
+ 		return 0;
+@@ -58,7 +58,7 @@ static ssize_t devspec_show(struct device *dev,
+ 	struct of_device *ofdev;
+ 
+ 	ofdev = to_of_device(dev);
+-	return sprintf(buf, "%s\n", ofdev->node->full_name);
++	return sprintf(buf, "%s\n", ofdev->dev.of_node->full_name);
+ }
+ 
+ macio_config_of_attr (name, "%s\n");
+diff --git a/drivers/macintosh/rack-meter.c b/drivers/macintosh/rack-meter.c
+index 93fb320..6a715d0 100644
+--- a/drivers/macintosh/rack-meter.c
++++ b/drivers/macintosh/rack-meter.c
+@@ -374,7 +374,7 @@ static int __devinit rackmeter_probe(struct macio_dev* mdev,
+ 	pr_debug("rackmeter_probe()\n");
+ 
+ 	/* Get i2s-a node */
+-	while ((i2s = of_get_next_child(mdev->ofdev.node, i2s)) != NULL)
++	while ((i2s = of_get_next_child(mdev->ofdev.dev.of_node, i2s)) != NULL)
+ 	       if (strcmp(i2s->name, "i2s-a") == 0)
+ 		       break;
+ 	if (i2s == NULL) {
+@@ -430,7 +430,7 @@ static int __devinit rackmeter_probe(struct macio_dev* mdev,
+ 	    of_address_to_resource(i2s, 1, &rdma)) {
+ 		printk(KERN_ERR
+ 		       "rackmeter: found match but lacks resources: %s",
+-		       mdev->ofdev.node->full_name);
++		       mdev->ofdev.dev.of_node->full_name);
+ 		rc = -ENXIO;
+ 		goto bail_free;
+ 	}
+diff --git a/drivers/macintosh/therm_pm72.c b/drivers/macintosh/therm_pm72.c
+index 5738d8b..f5b0f9e 100644
+--- a/drivers/macintosh/therm_pm72.c
++++ b/drivers/macintosh/therm_pm72.c
+@@ -2198,7 +2198,7 @@ static int fcu_of_probe(struct of_device* dev, const struct of_device_id *match)
+ 	state = state_detached;
+ 
+ 	/* Lookup the fans in the device tree */
+-	fcu_lookup_fans(dev->node);
++	fcu_lookup_fans(dev->dev.of_node);
+ 
+ 	/* Add the driver */
+ 	return i2c_add_driver(&therm_pm72_driver);
 
