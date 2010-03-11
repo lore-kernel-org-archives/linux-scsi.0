@@ -1,86 +1,139 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 36/37] arch/microblaze: Remove .archdata.of_node and use
-	.of_node in struct device
-Date: Thu, 11 Mar 2010 11:07:06 -0700
-Message-ID: <20100311180706.4824.39674.stgit__30917.722421191$1268330916$gmane$org@angua>
+Subject: [PATCH 32/37] sound/aoa: use .dev.of_node instead of .node in struct
+	of_device
+Date: Thu, 11 Mar 2010 11:06:44 -0700
+Message-ID: <20100311180644.4824.41302.stgit__46973.9129687243$1268330926$gmane$org@angua>
 References: <20100311174830.4824.19820.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:44941 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933847Ab0CKSHU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:07:20 -0500
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:63703 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933816Ab0CKSG6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:06:58 -0500
 In-Reply-To: <20100311174830.4824.19820.stgit@angua>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infrade
 
-.archdata.of_node is being removed from Microblaze, SPARC and PowerPC
-because it duplicates the struct device .of_node pointer.  This patch
-also removes .node from struct of_device for the same reason.
+.node is being removed
 
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- arch/microblaze/include/asm/device.h    |    8 --------
- arch/microblaze/include/asm/of_device.h |    1 -
- arch/microblaze/kernel/of_device.c      |    4 +---
- 3 files changed, 1 insertions(+), 12 deletions(-)
+ sound/aoa/fabrics/layout.c          |    2 +-
+ sound/aoa/soundbus/core.c           |    8 ++++----
+ sound/aoa/soundbus/i2sbus/control.c |    2 +-
+ sound/aoa/soundbus/i2sbus/core.c    |    4 ++--
+ sound/aoa/soundbus/sysfs.c          |    4 ++--
+ 5 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/device.h b/arch/microblaze/include/asm/device.h
-index 2370888..8d46822 100644
---- a/arch/microblaze/include/asm/device.h
-+++ b/arch/microblaze/include/asm/device.h
-@@ -12,19 +12,11 @@
- struct device_node;
+diff --git a/sound/aoa/fabrics/layout.c b/sound/aoa/fabrics/layout.c
+index 7a437da..da38f2b 100644
+--- a/sound/aoa/fabrics/layout.c
++++ b/sound/aoa/fabrics/layout.c
+@@ -991,7 +991,7 @@ static int aoa_fabric_layout_probe(struct soundbus_dev *sdev)
+ 		return -ENODEV;
  
- struct dev_archdata {
--	/* Optional pointer to an OF device node */
--	struct device_node	*of_node;
- };
+ 	/* by breaking out we keep a reference */
+-	while ((sound = of_get_next_child(sdev->ofdev.node, sound))) {
++	while ((sound = of_get_next_child(sdev->ofdev.dev.of_node, sound))) {
+ 		if (sound->type && strcasecmp(sound->type, "soundchip") == 0)
+ 			break;
+ 	}
+diff --git a/sound/aoa/soundbus/core.c b/sound/aoa/soundbus/core.c
+index fa8ab28..99ca712 100644
+--- a/sound/aoa/soundbus/core.c
++++ b/sound/aoa/soundbus/core.c
+@@ -74,11 +74,11 @@ static int soundbus_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 	of = &soundbus_dev->ofdev;
  
- struct pdev_archdata {
- };
+ 	/* stuff we want to pass to /sbin/hotplug */
+-	retval = add_uevent_var(env, "OF_NAME=%s", of->node->name);
++	retval = add_uevent_var(env, "OF_NAME=%s", of->dev.of_node->name);
+ 	if (retval)
+ 		return retval;
  
--static inline void dev_archdata_set_node(struct dev_archdata *ad,
--					 struct device_node *np)
--{
--	ad->of_node = np;
--}
--
- #endif /* _ASM_MICROBLAZE_DEVICE_H */
+-	retval = add_uevent_var(env, "OF_TYPE=%s", of->node->type);
++	retval = add_uevent_var(env, "OF_TYPE=%s", of->dev.of_node->type);
+ 	if (retval)
+ 		return retval;
  
+@@ -86,7 +86,7 @@ static int soundbus_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 	 * it's not really legal to split it out with commas. We split it
+ 	 * up using a number of environment variables instead. */
  
-diff --git a/arch/microblaze/include/asm/of_device.h b/arch/microblaze/include/asm/of_device.h
-index ba917cf..ab25a40 100644
---- a/arch/microblaze/include/asm/of_device.h
-+++ b/arch/microblaze/include/asm/of_device.h
-@@ -21,7 +21,6 @@
-  * probed using OF properties.
-  */
- struct of_device {
--	struct device_node	*node; /* to be obsoleted */
- 	u64			dma_mask; /* DMA mask */
- 	struct device		dev; /* Generic device interface */
- };
-diff --git a/arch/microblaze/kernel/of_device.c b/arch/microblaze/kernel/of_device.c
-index ae165fc..ac7e6e1 100644
---- a/arch/microblaze/kernel/of_device.c
-+++ b/arch/microblaze/kernel/of_device.c
-@@ -49,12 +49,10 @@ struct of_device *of_device_alloc(struct device_node *np,
- 	if (!dev)
- 		return NULL;
+-	compat = of_get_property(of->node, "compatible", &cplen);
++	compat = of_get_property(of->dev.of_node, "compatible", &cplen);
+ 	while (compat && cplen > 0) {
+ 		int tmp = env->buflen;
+ 		retval = add_uevent_var(env, "OF_COMPATIBLE_%d=%s", seen, compat);
+@@ -169,7 +169,7 @@ int soundbus_add_one(struct soundbus_dev *dev)
  
--	dev->node = of_node_get(np);
-+	dev->dev.of_node = of_node_get(np);
- 	dev->dev.dma_mask = &dev->dma_mask;
- 	dev->dev.parent = parent;
- 	dev->dev.release = of_release_dev;
--	dev->dev.archdata.of_node = np; /* temporary; remove after merging */
--	dev->dev.of_node = np;
+ 	/* sanity checks */
+ 	if (!dev->attach_codec ||
+-	    !dev->ofdev.node ||
++	    !dev->ofdev.dev.of_node ||
+ 	    dev->pcmname ||
+ 	    dev->pcmid != -1) {
+ 		printk(KERN_ERR "soundbus: adding device failed sanity check!\n");
+diff --git a/sound/aoa/soundbus/i2sbus/control.c b/sound/aoa/soundbus/i2sbus/control.c
+index 87beb4a..799804d 100644
+--- a/sound/aoa/soundbus/i2sbus/control.c
++++ b/sound/aoa/soundbus/i2sbus/control.c
+@@ -41,7 +41,7 @@ int i2sbus_control_add_dev(struct i2sbus_control *c,
+ {
+ 	struct device_node *np;
  
- 	if (bus_id)
- 		dev_set_name(&dev->dev, bus_id);
+-	np = i2sdev->sound.ofdev.node;
++	np = i2sdev->sound.ofdev.dev.of_node;
+ 	i2sdev->enable = pmf_find_function(np, "enable");
+ 	i2sdev->cell_enable = pmf_find_function(np, "cell-enable");
+ 	i2sdev->clock_enable = pmf_find_function(np, "clock-enable");
+diff --git a/sound/aoa/soundbus/i2sbus/core.c b/sound/aoa/soundbus/i2sbus/core.c
+index 4e3b819..ddb1577 100644
+--- a/sound/aoa/soundbus/i2sbus/core.c
++++ b/sound/aoa/soundbus/i2sbus/core.c
+@@ -220,8 +220,8 @@ static int i2sbus_add_dev(struct macio_dev *macio,
+ 
+ 	mutex_init(&dev->lock);
+ 	spin_lock_init(&dev->low_lock);
+-	dev->sound.ofdev.node = np;
+ 	dev->sound.ofdev.dma_mask = macio->ofdev.dma_mask;
++	dev->sound.ofdev.dev.of_node = np;
+ 	dev->sound.ofdev.dev.dma_mask = &dev->sound.ofdev.dma_mask;
+ 	dev->sound.ofdev.dev.parent = &macio->ofdev.dev;
+ 	dev->sound.ofdev.dev.release = i2sbus_release_dev;
+@@ -345,7 +345,7 @@ static int i2sbus_probe(struct macio_dev* dev, const struct of_device_id *match)
+ 		return -ENODEV;
+ 	}
+ 
+-	while ((np = of_get_next_child(dev->ofdev.node, np))) {
++	while ((np = of_get_next_child(dev->ofdev.dev.of_node, np))) {
+ 		if (of_device_is_compatible(np, "i2sbus") ||
+ 		    of_device_is_compatible(np, "i2s-modem")) {
+ 			got += i2sbus_add_dev(dev, control, np);
+diff --git a/sound/aoa/soundbus/sysfs.c b/sound/aoa/soundbus/sysfs.c
+index f580942..6496e75 100644
+--- a/sound/aoa/soundbus/sysfs.c
++++ b/sound/aoa/soundbus/sysfs.c
+@@ -9,7 +9,7 @@ field##_show (struct device *dev, struct device_attribute *attr,	\
+               char *buf)						\
+ {									\
+ 	struct soundbus_dev *mdev = to_soundbus_device (dev);		\
+-	return sprintf (buf, format_string, mdev->ofdev.node->field);	\
++	return sprintf (buf, format_string, mdev->ofdev.dev.of_node->field); \
+ }
+ 
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+@@ -25,7 +25,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 		length = strlen(buf);
+ 	} else {
+ 		length = sprintf(buf, "of:N%sT%s\n",
+-				 of->node->name, of->node->type);
++				 of->dev.of_node->name, of->dev.of_node->type);
+ 	}
+ 
+ 	return length;
 
