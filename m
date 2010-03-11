@@ -1,45 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/26] drivers/scsi/lpfc/lpfc_vport.c: fix read buffer overflow
-Date: Thu, 11 Mar 2010 14:09:36 -0800
-Message-ID: <201003112209.o2BM9a9v013609@imap1.linux-foundation.org>
+Subject: [patch 07/26] drivers/scsi/libsas: use SAM_GOOD
+Date: Thu, 11 Mar 2010 14:09:40 -0800
+Message-ID: <201003112209.o2BM9eFn013622@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:36532 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:45989 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758372Ab0CKWJm (ORCPT
+	by vger.kernel.org with ESMTP id S1758377Ab0CKWJo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:09:42 -0500
+	Thu, 11 Mar 2010 17:09:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, James.Smart@Emulex.Com, jeykholt@cisco.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Julia Lawall <julia@diku.dk>
 
-Check whether index is within bounds before testing the element.
+The field stat->stat should be compared to SAM_GOOD, not SAM_STAT_GOOD, as
+done elsewhere in the same function.  Both constants have the same value.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: James Smart <James.Smart@Emulex.Com>
-Cc: Joe Eykholt <jeykholt@cisco.com>
+Signed-off-by: Julia Lawall <julia@diku.dk>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/lpfc/lpfc_vport.c |    2 +-
+ drivers/scsi/libsas/sas_ata.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow drivers/scsi/lpfc/lpfc_vport.c
---- a/drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow
-+++ a/drivers/scsi/lpfc/lpfc_vport.c
-@@ -779,7 +779,7 @@ lpfc_destroy_vport_work_array(struct lpf
- 	int i;
- 	if (vports == NULL)
- 		return;
--	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
-+	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
- 		scsi_host_put(lpfc_shost_from_vport(vports[i]));
- 	kfree(vports);
- }
+diff -puN drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good drivers/scsi/libsas/sas_ata.c
+--- a/drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good
++++ a/drivers/scsi/libsas/sas_ata.c
+@@ -112,7 +112,7 @@ static void sas_ata_task_done(struct sas
+ 		dev->sata_dev.sstatus = resp->sstatus;
+ 		dev->sata_dev.serror = resp->serror;
+ 		dev->sata_dev.scontrol = resp->scontrol;
+-	} else if (stat->stat != SAM_STAT_GOOD) {
++	} else if (stat->stat != SAM_GOOD) {
+ 		ac = sas_to_ata_err(stat);
+ 		if (ac) {
+ 			SAS_DPRINTK("%s: SAS error %x\n", __func__,
 _
