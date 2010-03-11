@@ -1,47 +1,52 @@
 From: akpm@linux-foundation.org
-Subject: [patch 13/26] g_NCR5380: remove misleading pnp error message
-Date: Thu, 11 Mar 2010 14:09:45 -0800
-Message-ID: <201003112209.o2BM9jG1013642@imap1.linux-foundation.org>
+Subject: [patch 19/26] mpt2sas: fix &&/|| confusion in _scsih_sas_device_status_change_event()
+Date: Thu, 11 Mar 2010 14:09:52 -0800
+Message-ID: <201003112209.o2BM9qRC013670@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35736 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33631 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758393Ab0CKWJw (ORCPT
+	by vger.kernel.org with ESMTP id S1758401Ab0CKWJ7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:09:52 -0500
+	Thu, 11 Mar 2010 17:09:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux@rainbow-software.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, Eric.moore@lsi.com, James.Bottomley@suse.de, kashyap.desai@lsi.com
 
-From: Ondrej Zary <linux@rainbow-software.org>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Remove misleading error message that appears after pnp card has been
-detected correctly.
+Even if the ReasonCode is not INTERNAL_DEVICE_RESET nor CMP_DEVICE_RESET
+this still evaluates to true.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: Kashyap Desai <kashyap.desai@lsi.com>
+Acked-by: Eric Moore <Eric.moore@lsi.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/g_NCR5380.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message drivers/scsi/g_NCR5380.c
---- a/drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message
-+++ a/drivers/scsi/g_NCR5380.c
-@@ -322,10 +322,8 @@ int __init generic_NCR5380_detect(struct
- 		while ((dev = pnp_find_dev(NULL, ISAPNP_VENDOR('D', 'T', 'C'), ISAPNP_FUNCTION(0x436e), dev))) {
- 			if (count >= NO_OVERRIDES)
- 				break;
--			if (pnp_device_attach(dev) < 0) {
--				printk(KERN_ERR "dtc436e probe: attach failed\n");
-+			if (pnp_device_attach(dev) < 0)
- 				continue;
--			}
- 			if (pnp_activate_dev(dev) < 0) {
- 				printk(KERN_ERR "dtc436e probe: activate failed\n");
- 				pnp_device_detach(dev);
+diff -puN drivers/scsi/mpt2sas/mpt2sas_scsih.c~mpt2sas-fix-confusion-in-_scsih_sas_device_status_change_event drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c~mpt2sas-fix-confusion-in-_scsih_sas_device_status_change_event
++++ a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -4519,10 +4519,10 @@ _scsih_sas_device_status_change_event(st
+ 		     event_data);
+ #endif
+ 
+-	if (!(event_data->ReasonCode ==
+-	    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
+-	   event_data->ReasonCode ==
+-	    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET))
++	if (event_data->ReasonCode !=
++	      MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
++	    event_data->ReasonCode !=
++	      MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
+ 		return;
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
 _
