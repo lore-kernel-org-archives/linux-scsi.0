@@ -1,17 +1,17 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 03/27] drivers/watchdog/of: don't use deprecated .name and
-	.owner in of_platform_driver
-Date: Thu, 11 Mar 2010 11:22:04 -0700
-Message-ID: <20100311182204.13103.79395.stgit__6296.86055840484$1268332193$gmane$org@angua>
+Subject: [PATCH 17/27] drivers/sbus/of: don't use deprecated field in
+	of_platform_driver
+Date: Thu, 11 Mar 2010 11:23:22 -0700
+Message-ID: <20100311182321.13103.29782.stgit__36737.7930474051$1268332266$gmane$org@angua>
 References: <20100311181604.13103.30088.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:34018 "EHLO
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:49500 "EHLO
 	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753945Ab0CKS3I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:29:08 -0500
+	with ESMTP id S933524Ab0CKSX0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Mar 2010 13:23:26 -0500
 In-Reply-To: <20100311181604.13103.30088.stgit@angua>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,86 +23,101 @@ and device_driver, so the of_platform_driver copies will be removed soon.
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/watchdog/cpwd.c        |    7 +++++--
- drivers/watchdog/gef_wdt.c     |    8 +++++---
- drivers/watchdog/mpc8xxx_wdt.c |    8 ++++----
- drivers/watchdog/riowd.c       |    7 +++++--
- 4 files changed, 19 insertions(+), 11 deletions(-)
+ drivers/sbus/char/bbc_i2c.c     |    7 +++++--
+ drivers/sbus/char/display7seg.c |    7 +++++--
+ drivers/sbus/char/envctrl.c     |    7 +++++--
+ drivers/sbus/char/flash.c       |    7 +++++--
+ drivers/sbus/char/uctrl.c       |    7 +++++--
+ 5 files changed, 25 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/watchdog/cpwd.c b/drivers/watchdog/cpwd.c
-index 89da14f..4215b5d 100644
---- a/drivers/watchdog/cpwd.c
-+++ b/drivers/watchdog/cpwd.c
-@@ -676,8 +676,11 @@ static const struct of_device_id cpwd_match[] = {
- MODULE_DEVICE_TABLE(of, cpwd_match);
+diff --git a/drivers/sbus/char/bbc_i2c.c b/drivers/sbus/char/bbc_i2c.c
+index 1543ac3..8bfdd63 100644
+--- a/drivers/sbus/char/bbc_i2c.c
++++ b/drivers/sbus/char/bbc_i2c.c
+@@ -414,8 +414,11 @@ static const struct of_device_id bbc_i2c_match[] = {
+ MODULE_DEVICE_TABLE(of, bbc_i2c_match);
  
- static struct of_platform_driver cpwd_driver = {
+ static struct of_platform_driver bbc_i2c_driver = {
+-	.name		= "bbc_i2c",
+-	.match_table	= bbc_i2c_match,
++	.driver = {
++		.name = "bbc_i2c",
++		.owner = THIS_MODULE,
++		.of_match_table = bbc_i2c_match,
++	},
+ 	.probe		= bbc_i2c_probe,
+ 	.remove		= __devexit_p(bbc_i2c_remove),
+ };
+diff --git a/drivers/sbus/char/display7seg.c b/drivers/sbus/char/display7seg.c
+index d0a10f4..e1db005 100644
+--- a/drivers/sbus/char/display7seg.c
++++ b/drivers/sbus/char/display7seg.c
+@@ -265,8 +265,11 @@ static const struct of_device_id d7s_match[] = {
+ MODULE_DEVICE_TABLE(of, d7s_match);
+ 
+ static struct of_platform_driver d7s_driver = {
 -	.name		= DRIVER_NAME,
--	.match_table	= cpwd_match,
+-	.match_table	= d7s_match,
 +	.driver = {
 +		.name = DRIVER_NAME,
 +		.owner = THIS_MODULE,
-+		.of_match_table = cpwd_match,
++		.of_match_table = d7s_match,
 +	},
- 	.probe		= cpwd_probe,
- 	.remove		= __devexit_p(cpwd_remove),
+ 	.probe		= d7s_probe,
+ 	.remove		= __devexit_p(d7s_remove),
  };
-diff --git a/drivers/watchdog/gef_wdt.c b/drivers/watchdog/gef_wdt.c
-index abdbad0..ca0f4c6 100644
---- a/drivers/watchdog/gef_wdt.c
-+++ b/drivers/watchdog/gef_wdt.c
-@@ -303,9 +303,11 @@ static const struct of_device_id gef_wdt_ids[] = {
- };
+diff --git a/drivers/sbus/char/envctrl.c b/drivers/sbus/char/envctrl.c
+index 84a4310..dc9e8ef 100644
+--- a/drivers/sbus/char/envctrl.c
++++ b/drivers/sbus/char/envctrl.c
+@@ -1130,8 +1130,11 @@ static const struct of_device_id envctrl_match[] = {
+ MODULE_DEVICE_TABLE(of, envctrl_match);
  
- static struct of_platform_driver gef_wdt_driver = {
--	.owner		= THIS_MODULE,
--	.name		= "gef_wdt",
--	.match_table	= gef_wdt_ids,
-+	.driver = {
-+		.name = "gef_wdt",
-+		.owner = THIS_MODULE,
-+		.of_match_table = gef_wdt_ids,
-+	},
- 	.probe		= gef_wdt_probe,
- };
- 
-diff --git a/drivers/watchdog/mpc8xxx_wdt.c b/drivers/watchdog/mpc8xxx_wdt.c
-index 4e3941c..7b55974 100644
---- a/drivers/watchdog/mpc8xxx_wdt.c
-+++ b/drivers/watchdog/mpc8xxx_wdt.c
-@@ -273,12 +273,12 @@ static const struct of_device_id mpc8xxx_wdt_match[] = {
- MODULE_DEVICE_TABLE(of, mpc8xxx_wdt_match);
- 
- static struct of_platform_driver mpc8xxx_wdt_driver = {
--	.match_table	= mpc8xxx_wdt_match,
- 	.probe		= mpc8xxx_wdt_probe,
- 	.remove		= __devexit_p(mpc8xxx_wdt_remove),
--	.driver		= {
--		.name	= "mpc8xxx_wdt",
--		.owner	= THIS_MODULE,
-+	.driver = {
-+		.name = "mpc8xxx_wdt",
-+		.owner = THIS_MODULE,
-+		.of_match_table = mpc8xxx_wdt_match,
- 	},
- };
- 
-diff --git a/drivers/watchdog/riowd.c b/drivers/watchdog/riowd.c
-index ae57bf9..e7973bf 100644
---- a/drivers/watchdog/riowd.c
-+++ b/drivers/watchdog/riowd.c
-@@ -238,8 +238,11 @@ static const struct of_device_id riowd_match[] = {
- MODULE_DEVICE_TABLE(of, riowd_match);
- 
- static struct of_platform_driver riowd_driver = {
+ static struct of_platform_driver envctrl_driver = {
 -	.name		= DRIVER_NAME,
--	.match_table	= riowd_match,
+-	.match_table	= envctrl_match,
 +	.driver = {
 +		.name = DRIVER_NAME,
 +		.owner = THIS_MODULE,
-+		.of_match_table = riowd_match,
++		.of_match_table = envctrl_match,
 +	},
- 	.probe		= riowd_probe,
- 	.remove		= __devexit_p(riowd_remove),
+ 	.probe		= envctrl_probe,
+ 	.remove		= __devexit_p(envctrl_remove),
+ };
+diff --git a/drivers/sbus/char/flash.c b/drivers/sbus/char/flash.c
+index dc8f95d..0e8ae6b 100644
+--- a/drivers/sbus/char/flash.c
++++ b/drivers/sbus/char/flash.c
+@@ -208,8 +208,11 @@ static const struct of_device_id flash_match[] = {
+ MODULE_DEVICE_TABLE(of, flash_match);
+ 
+ static struct of_platform_driver flash_driver = {
+-	.name		= "flash",
+-	.match_table	= flash_match,
++	.driver = {
++		.name = "flash",
++		.owner = THIS_MODULE,
++		.of_match_table = flash_match,
++	},
+ 	.probe		= flash_probe,
+ 	.remove		= __devexit_p(flash_remove),
+ };
+diff --git a/drivers/sbus/char/uctrl.c b/drivers/sbus/char/uctrl.c
+index acc6738..5f25366 100644
+--- a/drivers/sbus/char/uctrl.c
++++ b/drivers/sbus/char/uctrl.c
+@@ -425,8 +425,11 @@ static const struct of_device_id uctrl_match[] = {
+ MODULE_DEVICE_TABLE(of, uctrl_match);
+ 
+ static struct of_platform_driver uctrl_driver = {
+-	.name		= "uctrl",
+-	.match_table	= uctrl_match,
++	.driver = {
++		.name = "uctrl",
++		.owner = THIS_MODULE,
++		.of_match_table = uctrl_match,
++	},
+ 	.probe		= uctrl_probe,
+ 	.remove		= __devexit_p(uctrl_remove),
  };
 
