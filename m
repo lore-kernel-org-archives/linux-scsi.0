@@ -1,87 +1,32 @@
-From: Keith Mannthey <kmannth@us.ibm.com>
-Subject: Re: lpfc driver loading is rebooting the box: 2.6.33 and above.
-Date: Fri, 12 Mar 2010 00:41:25 -0800
-Message-ID: <1268383285.7818.58.camel@keith-laptop>
-References: <1268256548.7818.20.camel@keith-laptop>
+From: Alexander Schmidt <alexs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 25/37] drivers/infiniband: use .dev.of_node instead of
+ .node in struct of_device
+Date: Fri, 12 Mar 2010 14:30:22 +0100
+Message-ID: <20100312143022.18b954a5@alex-laptop>
+References: <20100311174830.4824.19820.stgit@angua>
+	<20100311180605.4824.3613.stgit@angua>
+	<adavdd2d41q.fsf@roland-alpha.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:53281 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755978Ab0CLIl0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 03:41:26 -0500
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by e35.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o2C8bBXb001931
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 01:37:11 -0700
-Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o2C8fPEH122330
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 01:41:25 -0700
-Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o2C8hp6W011968
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 01:43:52 -0700
-In-Reply-To: <1268256548.7818.20.camel@keith-laptop>
+Received: from mtagate6.uk.ibm.com ([194.196.100.166]:40627 "EHLO
+	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932850Ab0CLNa3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 08:30:29 -0500
+In-Reply-To: <adavdd2d41q.fsf@roland-alpha.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: rlary@us.ibm.com, James Smart <james.smart@Emulex.Com>
+To: Roland Dreier <rdreier@cisco.com>
+Cc: Grant Likely <grant.likely@secretlab.ca>, alsa-devel@alsa-project.org, broonie@opensource.wolfsonmicro.com, linux-ide@vger.kernel.org, James.Bottomley@suse.de, linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org, jeremy.kerr@canonical.com, sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, jgarzik@pobox.com, microblaze-uclinux@itee.uq.edu.au, devicetree-discuss@lists.ozlabs.org, Christoph Raisch <raisch@de.ibm.com>, ben-linux@fluff.org, monstr@monstr.eu, linuxppc-dev@ozlabs.org, netdev@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, dwmw2@infradead.org, davem@davemloft.net
 
-On Wed, 2010-03-10 at 13:29 -0800, Keith Mannthey wrote:
-> I moved forwarded and a server started rebooting while loading the
-> kernel current kernels. 
+On Thu, 11 Mar 2010 11:57:53 -0800
+Roland Dreier <rdreier@cisco.com> wrote:
+
+> Seems fine... adding EHCA guys just to make sure.
 > 
-> I isolated it to the lpfc driver. 
-> 
-> Upsteam kernels tried so far:
-> 
-> 3.6.34-rc1
-> 3.4.33-git15 
-Update on the issue. It gets weird. 
+>  > .node is being removed
+>  > 
+>  > Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
-2.6.33 stock worked ok. 
-
-A different .config file was working just fine on an identical setup so
-I started peeling away at .config changes. 
-
-
-I really have no idea about this option change and it will have to be
-punted to those more in the know. 
-
-the diff between a good and a bad kernel is....
-
-@@ -130,7 +130,7 @@
- CONFIG_RD_BZIP2=y
- # CONFIG_RD_LZMA is not set
- # CONFIG_RD_LZO is not set
--# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
-+CONFIG_CC_OPTIMIZE_FOR_SIZE=y
- CONFIG_SYSCTL=y
- CONFIG_ANON_INODES=y
- CONFIG_EMBEDDED=y
-
-This is some gcc optimization flag change. In the working config I have
-CONFIG_CC_OPTIMIZE_FOR_SIZE=y.  If I don't optimize I get the badness. 
-
-
- gcc -v
-Using built-in specs.
-Target: x86_64-suse-linux
-Configured with: ../configure --prefix=/usr --infodir=/usr/share/info
---mandir=/usr/share/man --libdir=/usr/lib64 --libexecdir=/usr/lib64
---enable-languages=c,c++,objc,fortran,obj-c++,java,ada
---enable-checking=release --with-gxx-include-dir=/usr/include/c++/4.3
---enable-ssp --disable-libssp --with-bugurl=http://bugs.opensuse.org/
---with-pkgversion='SUSE Linux' --disable-libgcj --disable-libmudflap
---with-slibdir=/lib64 --with-system-zlib --enable-__cxa_atexit
---enable-libstdcxx-allocator=new --disable-libstdcxx-pch
---enable-version-specific-runtime-libs --program-suffix=-4.3
---enable-linux-futex --without-system-libunwind --with-cpu=generic
---build=x86_64-suse-linux
-Thread model: posix
-gcc version 4.3.4 [gcc-4_3-branch revision 152973] (SUSE Linux)
-
-
-Thanks,
-  Keith Mannthey 
-  LTC LTC-FS 
-
+Acked-by: Alexander Schmidt <alexs@linux.vnet.ibm.com>
