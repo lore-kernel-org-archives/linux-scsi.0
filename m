@@ -1,87 +1,88 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [patch 15/26] g_NCR5380: fix missing pnp_device_detach and
- scsi_unregister on rmmod
-Date: Thu, 11 Mar 2010 16:37:43 -0600
-Message-ID: <1268347063.5344.90.camel@mulgrave.site>
-References: <201003112209.o2BM9lo2013651@imap1.linux-foundation.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15503] insmod: error inserting '/lib/aic7xxx.ko': -1 Invalid
+ modulkjournald starting
+Date: Fri, 12 Mar 2010 06:09:46 GMT
+Message-ID: <201003120609.o2C69kAP012924@demeter.kernel.org>
+References: <bug-15503-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49698 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751585Ab0CKWht (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Mar 2010 17:37:49 -0500
-In-Reply-To: <201003112209.o2BM9lo2013651@imap1.linux-foundation.org>
+Received: from demeter.kernel.org ([140.211.167.39]:58929 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995Ab0CLGJr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 01:09:47 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2C69kYY012925
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 06:09:46 GMT
+In-Reply-To: <bug-15503-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, linux@rainbow-software.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2010-03-11 at 14:09 -0800, akpm@linux-foundation.org wrote:
-> From: Ondrej Zary <linux@rainbow-software.org>
-> 
-> Add missing pnp_device_detach() and scsi_unregister() at rmmod time.
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> ---
-> 
->  drivers/scsi/g_NCR5380.c |    7 ++++++-
->  drivers/scsi/g_NCR5380.h |    5 +++--
->  2 files changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-fix-missing-pnp_device_detach-and-scsi_unregister-on-rmmod drivers/scsi/g_NCR5380.c
-> --- a/drivers/scsi/g_NCR5380.c~g_ncr5380-fix-missing-pnp_device_detach-and-scsi_unregister-on-rmmod
-> +++ a/drivers/scsi/g_NCR5380.c
-> @@ -290,6 +290,7 @@ int __init generic_NCR5380_detect(struct
->  #ifndef SCSI_G_NCR5380_MEM
->  	int i;
->  	unsigned long region_size = 16;
-> +	struct pnp_dev *pnpdevs[NO_OVERRIDES];
-
-This is a stack array, so initialised with random crap
-
->  #endif
->  	static unsigned int __initdata ncr_53c400a_ports[] = {
->  		0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
-> @@ -337,6 +338,7 @@ int __init generic_NCR5380_detect(struct
->  				pnp_device_detach(dev);
->  				continue;
->  			}
-> +			pnpdevs[count] = dev;
-
-This is only hit on isapnp_present() being true
-
->  			if (pnp_irq_valid(dev, 0))
->  				overrides[count].irq = pnp_irq(dev, 0);
->  			else
-> @@ -449,6 +451,7 @@ int __init generic_NCR5380_detect(struct
->  		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
->  #ifndef SCSI_G_NCR5380_MEM
->  		instance->n_io_port = region_size;
-> +		((struct NCR5380_hostdata *)instance->hostdata)->pnpdev = pnpdevs[current_override];
-
-This is unconditional, so in the non-pnp case it will transfer crap to
-->pnpdev.
-
->  #else
->  		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
->  #endif
-> @@ -520,12 +523,14 @@ int generic_NCR5380_release_resources(st
->  
->  #ifndef SCSI_G_NCR5380_MEM
->  	release_region(instance->NCR5380_instance_name, instance->n_io_port);
-> +	if (((struct NCR5380_hostdata *)instance->hostdata)->pnpdev)
-> +		pnp_device_detach(((struct NCR5380_hostdata *)instance->hostdata)->pnpdev);
-
-And here we'll feed random crap into php_device_detach, which I rather
-think will oops.
-
-This looks fixable with a memset, but it's a rather icky way to do
-things.
-
-James
+http://bugzilla.kernel.org/show_bug.cgi?id=15503
 
 
+
+
+
+--- Comment #3 from Will L Givens <wlgivens@gmail.com>  2010-03-12 06:09:37 ---
+Welp, back again. Tried adding -Wl,--no-relax to the CFLAGS... received the
+same error. Then turned around and downgraded build tools a bit, thinking they
+might be too new. Rebuilt with gcc-4.3.4 and Binutils-2.17. Got to the very end
+and received an error msg that LD didn't recognized the option '--build-id'.
+
+Removed the 'offending' string from the linker options and tried once more, and
+received a slightly different error msg:
+
+  IHEX2FW firmware/keyspan/usa28xb.fw
+  AS      firmware/keyspan/usa28xb.fw.gen.o
+  IHEX2FW firmware/keyspan/usa28x.fw
+  AS      firmware/keyspan/usa28x.fw.gen.o
+  IHEX2FW firmware/keyspan/usa49w.fw
+  AS      firmware/keyspan/usa49w.fw.gen.o
+  IHEX2FW firmware/keyspan/usa49wlc.fw
+  AS      firmware/keyspan/usa49wlc.fw.gen.o
+  LD      firmware/built-in.o
+  LD      vmlinux.o
+  MODPOST vmlinux.o
+WARNING: modpost: Found 1 section mismatch(es).
+To see full details build your kernel with:
+'make CONFIG_DEBUG_SECTION_MISMATCH=y'
+  GEN     .version
+  CHK     include/generated/compile.h
+  UPD     include/generated/compile.h
+  CC      init/version.o
+  LD      init/built-in.o
+  LD      vmlinux
+fs/built-in.o: In function `ep_unregister_pollwait':
+(.text+0x3c444): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `ep_ptable_queue_proc':
+(.text+0x3d228): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `anon_inode_getfile':
+(.text+0x3d4d0): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `anon_inode_getfile':
+(.text+0x3d564): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `anon_inode_getfile':
+(.text+0x3d588): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `anon_inode_getfile':
+(.text+0x3d5a4): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `anon_inode_getfile':
+(.text+0x3d608): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `ctx_rcu_free':
+(.text+0x3f64c): relocation truncated to fit: GPREL16 against `.sbss'
+fs/built-in.o: In function `ctx_rcu_free':
+(.text+0x3f66c): relocation truncated to fit: GPREL16 against symbol `aio_nr'
+defined in .sbss section in fs/built-in.o
+fs/built-in.o: In function `ctx_rcu_free':
+(.text+0x3f694): relocation truncated to fit: GPREL16 against symbol `aio_nr'
+defined in .sbss section in fs/built-in.o
+fs/built-in.o: In function `really_put_req':
+(.text+0x3f718): additional relocation overflows omitted from the output
+make: *** [vmlinux] Error 1
+[root@jericho linux]#
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
