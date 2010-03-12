@@ -1,41 +1,50 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] final scsi updates for 2.6.34-rc1
-Date: Fri, 12 Mar 2010 10:40:50 -0800 (PST)
-Message-ID: <alpine.LFD.2.00.1003121035490.3719@i5.linux-foundation.org>
-References: <1268242604.22601.25.camel@mulgrave.site>  <alpine.LFD.2.00.1003121008420.3719@i5.linux-foundation.org> <1268418441.2802.61.camel@mulgrave.site> <alpine.LFD.2.00.1003121028390.3719@i5.linux-foundation.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 4/5] SCSI: fix bad method call in scsi_target_destroy
+Date: Fri, 12 Mar 2010 16:37:50 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1003121619310.1320-100000@iolanthe.rowland.org>
+References: <1268416858.2802.23.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.1003121028390.3719@i5.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:33785 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932707Ab0CLVhw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 16:37:52 -0500
+In-Reply-To: <1268416858.2802.23.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
+On Fri, 12 Mar 2010, James Bottomley wrote:
 
-
-On Fri, 12 Mar 2010, Linus Torvalds wrote:
+> > Some time ago I did post a patch adding an new state (STARGET_NEW) in
+> > order to record whether or not target_alloc had failed.  I can't find
+> > your response in the email archives, but I vaguely recall you saying
+> > that adding a new state to the state machine wasn't an appropriate
+> > approach.
+> > 
+> > What do you think is the best way to handle this?
 > 
-> And the fact that you complain about the very fact that you were gaming 
-> the system and now you can't because it's not predictable enough to game 
-> is what just proves my f*cking point!
+> Just add documentation ... there's no real need for a new state or a
+> flag.
 
-Btw, just to clarify for next time: I'm not even going to mention in the 
-release notes how long the merge window is going to be.
+Okay.  I'll put it off for now... in fact, I had more or less reached
+the conclusion that this patch wasn't worth bothering with any further.
 
-Maybe I'll say "that's enough" after just one week, because the good 
-people did what they do, and sent me a lot of merges early, there were no 
-problems, and I might as well cut an -rc1 early since I have enough and 
-I'd like to occasionally get a _shorter_ release cycle not just because 
-the merge window was shorter, but because hopefully merging less might 
-result in an easier stabilization cycle too.
+The 5/5 patch is more important, though.  The race doesn't need to be
+fixed in the way I did it; another approach would be for
+scsi_alloc_target() to busy-wait if the old target it finds has not yet
+gone through the transport_setup_device() and
+shost->hostt->target_alloc() procedures.  Waiting on the scan_mutex
+seems more straightforward, though.
 
-Or maybe I'll be busy for a few days, and extend it past the two weeks 
-just because I was in the middle of another flame war and needed a few 
-extra days to catch up with real work.
+And it looks like there needs to be one more patch in addition.  The
+logic in scsi_alloc_target() is wrong.  When deciding whether or not
+the old target it found is dying, it needs to test reap_ref rather than
+found_target->state, because the state is changed outside the
+spinlocked region in scsi_target_reap().  Or the state change could be 
+moved inside the spinlocked region; that would work also.
 
-Who knows? The point being that being predictable has caused problems. 
-People have decided that they have an extra two weeks, and that the merge 
-window isn't a window at all, it's just a day when -rc1 gets done.
+Alan Stern
 
-			Linus
