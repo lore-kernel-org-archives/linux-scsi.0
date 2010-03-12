@@ -1,51 +1,87 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: Re: [PATCH 33/37] sound/soc: use .dev.of_node instead of .node in
-  struct of_device
-Date: Fri, 12 Mar 2010 09:26:19 +0100
-Message-ID: <20100312092619.6a6f5e20@hyperion.delvare>
-References: <20100311174830.4824.19820.stgit@angua>
-	<20100311180649.4824.10368.stgit@angua>
-	<20100311193458.GA13289@opensource.wolfsonmicro.com>
-	<fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
+From: Keith Mannthey <kmannth@us.ibm.com>
+Subject: Re: lpfc driver loading is rebooting the box: 2.6.33 and above.
+Date: Fri, 12 Mar 2010 00:41:25 -0800
+Message-ID: <1268383285.7818.58.camel@keith-laptop>
+References: <1268256548.7818.20.camel@keith-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>, monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infradead.org, jeremy.kerr@canonical.com, James.Bottomley@suse.de, microblaze-uclinux@itee.uq.edu.au, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-i2c@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, timur@freescale.com, lrg@slimlogic.co.uk
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:53281 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755978Ab0CLIl0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 03:41:26 -0500
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by e35.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o2C8bBXb001931
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 01:37:11 -0700
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o2C8fPEH122330
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 01:41:25 -0700
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o2C8hp6W011968
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 01:43:52 -0700
+In-Reply-To: <1268256548.7818.20.camel@keith-laptop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: rlary@us.ibm.com, James Smart <james.smart@Emulex.Com>
 
-On Thu, 11 Mar 2010 14:22:37 -0700, Grant Likely wrote:
-> On Thu, Mar 11, 2010 at 12:34 PM, Mark Brown
-> <broonie@opensource.wolfsonmicro.com> wrote:
-> > On Thu, Mar 11, 2010 at 11:06:50AM -0700, Grant Likely wrote:
-> >> .node is being removed
-> >>
-> >> Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
-> >
-> > Acked-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
-> >
-> > but please ensure that Liam and especially Timur also check this (both
-> > CCed).
-> >
-> > For enormous patch serieses like this it's really nice if you can ensure
-> > that each person is only CCed on the patches that they need to review.
-> > Much less stuff in the inbox.
+On Wed, 2010-03-10 at 13:29 -0800, Keith Mannthey wrote:
+> I moved forwarded and a server started rebooting while loading the
+> kernel current kernels. 
 > 
-> Yeah, sorry about that (and to everyone receiving this thread, I'm
-> really sorry.  I won't do it again).  I've already been yelled at for
-> that.  What happened is that on a previous series I was yelled at for
-> not sending all patches to everyone (so that the patches could be
-> reviewed in context).  So, naturally, I made sure to include everyone
-> on the whole series this time....  doh.
+> I isolated it to the lpfc driver. 
 > 
-> Next time I post I'll constrain it to small chunks.
+> Upsteam kernels tried so far:
+> 
+> 3.6.34-rc1
+> 3.4.33-git15 
+Update on the issue. It gets weird. 
 
-A good compromise IMHO is to send only the pieces they really have to
-see and ack to each person, and provide a pointer to somewhere the full
-series can be seen and downloaded for the interested.
+2.6.33 stock worked ok. 
 
--- 
-Jean Delvare
+A different .config file was working just fine on an identical setup so
+I started peeling away at .config changes. 
+
+
+I really have no idea about this option change and it will have to be
+punted to those more in the know. 
+
+the diff between a good and a bad kernel is....
+
+@@ -130,7 +130,7 @@
+ CONFIG_RD_BZIP2=y
+ # CONFIG_RD_LZMA is not set
+ # CONFIG_RD_LZO is not set
+-# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
++CONFIG_CC_OPTIMIZE_FOR_SIZE=y
+ CONFIG_SYSCTL=y
+ CONFIG_ANON_INODES=y
+ CONFIG_EMBEDDED=y
+
+This is some gcc optimization flag change. In the working config I have
+CONFIG_CC_OPTIMIZE_FOR_SIZE=y.  If I don't optimize I get the badness. 
+
+
+ gcc -v
+Using built-in specs.
+Target: x86_64-suse-linux
+Configured with: ../configure --prefix=/usr --infodir=/usr/share/info
+--mandir=/usr/share/man --libdir=/usr/lib64 --libexecdir=/usr/lib64
+--enable-languages=c,c++,objc,fortran,obj-c++,java,ada
+--enable-checking=release --with-gxx-include-dir=/usr/include/c++/4.3
+--enable-ssp --disable-libssp --with-bugurl=http://bugs.opensuse.org/
+--with-pkgversion='SUSE Linux' --disable-libgcj --disable-libmudflap
+--with-slibdir=/lib64 --with-system-zlib --enable-__cxa_atexit
+--enable-libstdcxx-allocator=new --disable-libstdcxx-pch
+--enable-version-specific-runtime-libs --program-suffix=-4.3
+--enable-linux-futex --without-system-libunwind --with-cpu=generic
+--build=x86_64-suse-linux
+Thread model: posix
+gcc version 4.3.4 [gcc-4_3-branch revision 152973] (SUSE Linux)
+
+
+Thanks,
+  Keith Mannthey 
+  LTC LTC-FS 
+
