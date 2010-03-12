@@ -1,65 +1,57 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [GIT PULL] final scsi updates for 2.6.34-rc1
-Date: Fri, 12 Mar 2010 12:27:21 -0600
-Message-ID: <1268418441.2802.61.camel@mulgrave.site>
-References: <1268242604.22601.25.camel@mulgrave.site>
-	 <alpine.LFD.2.00.1003121008420.3719@i5.linux-foundation.org>
+Date: Fri, 12 Mar 2010 10:34:30 -0800 (PST)
+Message-ID: <alpine.LFD.2.00.1003121028390.3719@i5.linux-foundation.org>
+References: <1268242604.22601.25.camel@mulgrave.site>  <alpine.LFD.2.00.1003121008420.3719@i5.linux-foundation.org> <1268418441.2802.61.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.1003121008420.3719@i5.linux-foundation.org>
+In-Reply-To: <1268418441.2802.61.camel@mulgrave.site>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
+To: James Bottomley <James.Bottomley@suse.de>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2010-03-12 at 10:10 -0800, Linus Torvalds wrote:
+
+
+On Fri, 12 Mar 2010, James Bottomley wrote:
 > 
-> On Wed, 10 Mar 2010, James Bottomley wrote:
-> >
-> > OK, I know this is a bit late, but no-one told me the merge window was
-> > going to close early, but even if they had I'd have been unable to do
-> > anything about it, since I've been in transit from India all this week
-> > so far (don't ask ...).
-> 
-> I'm not going to pull.
-> 
-> The whole "a few days early" was literally aimed at you and some similar 
-> people who _always_ send the pull request late, literally the last days.
-> 
-> I'm fed up with it.
-> 
-> The damn thing should have been ready when the merge window _opened_, not 
-> just before closing. And now there _is_ a tree waiting for me for the next 
-> merge window. Goodie.
+> I'm not objecting to a shorter merge window, just the unpredictability
+> of all of this.
 
-I do always have a tree ready in the first days of the merge window.  It
-was, in fact, here:
+If you read the 2.6.33 release notes, the unpredictability WAS THE WHOLE 
+F*CKING POINT!
 
-commit 654451748b779b28077d9058442d0f354251870d
-Merge: 64d497f 77c9cfc
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri Feb 26 16:55:27 2010 -0800
+I'm tired of people being able to predict exactly when the merge window 
+closes, and then using that to make the last days of the merge window be 
+hell on me, and sending all the merges within about 24 hours of the 
+closing.
 
-    Merge git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6
+So I'm not doing it.
 
-The slight problem is that I accumulate updates (like almost everyone
-else) from the few days before the merge window opened up until about
-the middle of the second week.  That's what goes into the final pull,
-plus assorted bug fixes that showed up during the window.
+If you had the major changes ready when the merge window opened, you 
+should damn well have sent it in _then_. 
 
-I'm not objecting to a shorter merge window, just the unpredictability
-of all of this.  The reason I delay the second pull until the last days
-of the merge window is so that the proposed changes get the maximum
-amount of shake down in linux-next ... and that usually means I close
-down the inclusion window about three days before the pull request goes
-out.
+End of story. I've told people before. The merge window is for _merging_, 
+not for doing development. If you send me something the last day, then 
+there is no "window" any more. And It is _really_ annoying to have fifty 
+pull requests on the last day. I'm not going to take it any more.
 
-Personally, I do like the two week merge window, because it shakes out
-contributors to me who should have got their act together but didn't.
-If you don't like the way this works, fine ... I just need to know what
-the parameters are to adjust accordingly, so what is it now?  A 10 day
-merge window?
+And the thing is, all your explanations make things WORSE. You're 
+basically saying that you're working exactly the way that I'm not going to 
+accept.
 
-James
+So you're now going to get to wait six or seven weeks, because I refuse to 
+work the way you have worked me for the last two years. I gave people a 
+heads-up, and I probably shouldn't have. Some people noticed. And other 
+people didn't even care, because they never gamed the system in the first 
+place.
+
+And some people - like you - both gamed the system, and didn't read the 
+release notes, and now you complain. Tough.
+
+And the fact that you complain about the very fact that you were gaming 
+the system and now you can't because it's not predictable enough to game 
+is what just proves my f*cking point!
+
+		Linus
