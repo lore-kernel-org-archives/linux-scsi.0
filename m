@@ -1,48 +1,97 @@
-From: "Hugh Daschbach" <hdasch@broadcom.com>
-Subject: RE: [PATCH] Don't change direction flags in struct request.
-Date: Fri, 12 Mar 2010 14:26:33 -0800
-Message-ID: <233671224A0FED4688218FFDBED26E1A55321707E4@IRVEXCHCCR01.corp.ad.broadcom.com>
-References: <1268976690-3386-1-git-send-email-hdasch@broadcom.com>
- <1268976690-3386-2-git-send-email-hdasch@broadcom.com>
- <4B9ABA84.9020801@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 5/5] SCSI: fix target allocation outside of scan_mutex
+Date: Fri, 12 Mar 2010 15:45:57 -0600
+Message-ID: <1268430358.2802.360.camel@mulgrave.site>
+References: <Pine.LNX.4.44L0.1002191453560.1506-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B9ABA84.9020801@cs.wisc.edu>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Chandra Seetharaman <sekharan@us.ibm.com>, Eddie Williams <Eddie.Williams@steeleye.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:57559 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932279Ab0CLXYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Mar 2010 18:24:35 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1002191453560.1506-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Mike Christie [mailto:michaelc@cs.wisc.edu] writes:
+On Fri, 2010-02-19 at 15:21 -0500, Alan Stern wrote:
+> On Fri, 19 Feb 2010, James Bottomley wrote:
+> 
+> > On Fri, 2010-02-12 at 12:14 -0500, Alan Stern wrote:
+> > > This patch (as1337) fixes a bug in __scsi_add_device().  It calls
+> > > scsi_alloc_target() outside the protection of the host's scan_mutex,
+> > > meaning that it might find an incompletely-initialized target or it
+> > > might create a duplicate target.
+> > 
+> > I don't think this is correct.  scsi_alloc_target should be completely
+> > atomic on the host lock, if you look.  It allocates the proposed target,
+> > takes the lock and searches the host target list ... if it finds
+> > something it drops the lock, destroys the proposed target allocations
+> > and returns what it found.  If it finds nothing, it adds the proposed
+> > target to the list drops the lock and returns it.  There's some
+> > complexity around finding dying targets, but nothing that I think needs
+> > to be mediated by the scan mutex.
+> 
+> You're right that a duplicate target wouldn't get created.  Still,
+> there really is a bug.  Suppose two different threads call
+> scsi_alloc_target() for the same target ID at about the same time.  The
+> first thread won't find an existing target on the list, so it will
+> allocate and initialize a new target structure.  However, it releases
+> the host lock before calling the host template's target_alloc method.
+> 
+> Meanwhile, the second thread will find the new target structure on the 
+> list and will therefore feel free to start using it.  If the timing 
+> works out, it could start using the new target before the first thread 
+> calls target_alloc.
 
-> On 03/19/2010 12:31 AM, Hugh Daschbach wrote:
->> The EMC multipath device handler should not change the I/O direction
->> flags of its trespass command request.
+So currently, that can't happen because of the scan mutex.
 
-...
+> Perhaps you would say a better solution to this race is to move the
+> target_alloc call into the spinlocked region.  Fine.  But there would
+> still be a problem.  The whole purpose of the scan_mutex is to prevent
+> threads from adding new devices below a host that's in the process of
+> removal.  Since __scsi_add_device() doesn't use the scan_mutex, there's
+> nothing to prevent it from doing exactly that.
+> 
+> In fact, there's yet another race.  This is between scsi_alloc_target()
+> and scsi_target_reap().  Because scsi_alloc_target() doesn't check
+> whether reap_ref is 0 before incrementing it, we could have something
+> like this:
+> 
+> 	Thread 0			Thread 1
+> 	--------			--------
+> 	call scsi_target_reap()
+> 	lock host_lock
+> 	--starget->reap_ref goes to 0
+> 	unlock host_lock
+> 					call scsi_target_alloc()
+> 					lock host_lock
+> 					find found_target = starget
+> 					found_target->reap_ref++
+> 					unlock host_lock
+> 					found_target->state != STARGET_DEL,
+> 						so begin using it
+> 	starget->state = STARGET_DEL
+> 	remove starget
 
-> Did you try the patch I linked to the last time you posted about this?
+Well, not really ... your race depends on us managing to execute the
+first five statements in thread 1 before we set starget->state in thread
+0 ... given the massive number of operations in thread 1 and the fact
+that setting the state is a single op in thread 0, that's not really
+feasible.
 
-I have not.  When I read it, I believed it would fix the issue.
+> To prevent this while relying only on the host lock,
+> scsi_alloc_target() should check the value of reap_ref before
+> incrementing it.  It also wouldn't hurt to make scsi_alloc_target()  
+> check the target state and scsi_target_reap() set the state all under 
+> the protection of the host lock.
 
-> I think there should be a patch which fixes this problem here:
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commitdiff;h=6c71dcb28ff9b63b814a0b76a256f5dae08d3e0d;hp=3a5b27bf6f29574d667230c7e76e4b83fe3014e0
-> I think it got into 2.6.34-rc1.
+That would be a complex way of fixing it ... a much simpler one would be
+to move the setting of STARGET_DEL in thread 0 under the host lock.
 
-Then I'll pull it and test it.
+James
 
-> With that patch mode selects should get set up as writes.
->
-> Does it work? If it does then I think we just need the attached cleanup 
-> patch which removes the cmd_flags setting. The patch that got merged 
-> fixed the problem of initializing the request properly, but it forgot to 
-> remove the cmd_flags setting.
 
-Agree.  I'll test it early next week and confirm.
-
-Thanks,
-Hugh
