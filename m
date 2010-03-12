@@ -1,88 +1,51 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15503] insmod: error inserting '/lib/aic7xxx.ko': -1 Invalid
- modulkjournald starting
-Date: Fri, 12 Mar 2010 06:09:46 GMT
-Message-ID: <201003120609.o2C69kAP012924@demeter.kernel.org>
-References: <bug-15503-11613@http.bugzilla.kernel.org/>
+From: Jean Delvare <khali@linux-fr.org>
+Subject: Re: [PATCH 33/37] sound/soc: use .dev.of_node instead of .node in
+  struct of_device
+Date: Fri, 12 Mar 2010 09:26:19 +0100
+Message-ID: <20100312092619.6a6f5e20@hyperion.delvare>
+References: <20100311174830.4824.19820.stgit@angua>
+	<20100311180649.4824.10368.stgit@angua>
+	<20100311193458.GA13289@opensource.wolfsonmicro.com>
+	<fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:58929 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995Ab0CLGJr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 01:09:47 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2C69kYY012925
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 06:09:46 GMT
-In-Reply-To: <bug-15503-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>, monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infradead.org, jeremy.kerr@canonical.com, James.Bottomley@suse.de, microblaze-uclinux@itee.uq.edu.au, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-i2c@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, timur@freescale.com, lrg@slimlogic.co.uk
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15503
+On Thu, 11 Mar 2010 14:22:37 -0700, Grant Likely wrote:
+> On Thu, Mar 11, 2010 at 12:34 PM, Mark Brown
+> <broonie@opensource.wolfsonmicro.com> wrote:
+> > On Thu, Mar 11, 2010 at 11:06:50AM -0700, Grant Likely wrote:
+> >> .node is being removed
+> >>
+> >> Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+> >
+> > Acked-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+> >
+> > but please ensure that Liam and especially Timur also check this (both
+> > CCed).
+> >
+> > For enormous patch serieses like this it's really nice if you can ensure
+> > that each person is only CCed on the patches that they need to review.
+> > Much less stuff in the inbox.
+> 
+> Yeah, sorry about that (and to everyone receiving this thread, I'm
+> really sorry.  I won't do it again).  I've already been yelled at for
+> that.  What happened is that on a previous series I was yelled at for
+> not sending all patches to everyone (so that the patches could be
+> reviewed in context).  So, naturally, I made sure to include everyone
+> on the whole series this time....  doh.
+> 
+> Next time I post I'll constrain it to small chunks.
 
-
-
-
-
---- Comment #3 from Will L Givens <wlgivens@gmail.com>  2010-03-12 06:09:37 ---
-Welp, back again. Tried adding -Wl,--no-relax to the CFLAGS... received the
-same error. Then turned around and downgraded build tools a bit, thinking they
-might be too new. Rebuilt with gcc-4.3.4 and Binutils-2.17. Got to the very end
-and received an error msg that LD didn't recognized the option '--build-id'.
-
-Removed the 'offending' string from the linker options and tried once more, and
-received a slightly different error msg:
-
-  IHEX2FW firmware/keyspan/usa28xb.fw
-  AS      firmware/keyspan/usa28xb.fw.gen.o
-  IHEX2FW firmware/keyspan/usa28x.fw
-  AS      firmware/keyspan/usa28x.fw.gen.o
-  IHEX2FW firmware/keyspan/usa49w.fw
-  AS      firmware/keyspan/usa49w.fw.gen.o
-  IHEX2FW firmware/keyspan/usa49wlc.fw
-  AS      firmware/keyspan/usa49wlc.fw.gen.o
-  LD      firmware/built-in.o
-  LD      vmlinux.o
-  MODPOST vmlinux.o
-WARNING: modpost: Found 1 section mismatch(es).
-To see full details build your kernel with:
-'make CONFIG_DEBUG_SECTION_MISMATCH=y'
-  GEN     .version
-  CHK     include/generated/compile.h
-  UPD     include/generated/compile.h
-  CC      init/version.o
-  LD      init/built-in.o
-  LD      vmlinux
-fs/built-in.o: In function `ep_unregister_pollwait':
-(.text+0x3c444): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `ep_ptable_queue_proc':
-(.text+0x3d228): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `anon_inode_getfile':
-(.text+0x3d4d0): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `anon_inode_getfile':
-(.text+0x3d564): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `anon_inode_getfile':
-(.text+0x3d588): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `anon_inode_getfile':
-(.text+0x3d5a4): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `anon_inode_getfile':
-(.text+0x3d608): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `ctx_rcu_free':
-(.text+0x3f64c): relocation truncated to fit: GPREL16 against `.sbss'
-fs/built-in.o: In function `ctx_rcu_free':
-(.text+0x3f66c): relocation truncated to fit: GPREL16 against symbol `aio_nr'
-defined in .sbss section in fs/built-in.o
-fs/built-in.o: In function `ctx_rcu_free':
-(.text+0x3f694): relocation truncated to fit: GPREL16 against symbol `aio_nr'
-defined in .sbss section in fs/built-in.o
-fs/built-in.o: In function `really_put_req':
-(.text+0x3f718): additional relocation overflows omitted from the output
-make: *** [vmlinux] Error 1
-[root@jericho linux]#
+A good compromise IMHO is to send only the pieces they really have to
+see and ack to each person, and provide a pointer to somewhere the full
+series can be seen and downloaded for the interested.
 
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Jean Delvare
