@@ -1,32 +1,39 @@
-From: Alexander Schmidt <alexs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 25/37] drivers/infiniband: use .dev.of_node instead of
- .node in struct of_device
-Date: Fri, 12 Mar 2010 14:30:22 +0100
-Message-ID: <20100312143022.18b954a5@alex-laptop>
-References: <20100311174830.4824.19820.stgit@angua>
-	<20100311180605.4824.3613.stgit@angua>
-	<adavdd2d41q.fsf@roland-alpha.cisco.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [PATCH 4/6] [SCSI] cxgb3i: remove unused #include <linux/version.h>
+Date: Fri, 12 Mar 2010 22:13:26 +0800
+Message-ID: <1268403206-5072-1-git-send-email-weiyi.huang@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.uk.ibm.com ([194.196.100.166]:40627 "EHLO
-	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932850Ab0CLNa3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 08:30:29 -0500
-In-Reply-To: <adavdd2d41q.fsf@roland-alpha.cisco.com>
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:63596 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754692Ab0CLONm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Mar 2010 09:13:42 -0500
+Received: by fxm19 with SMTP id 19so1194903fxm.21
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 06:13:41 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>, alsa-devel@alsa-project.org, broonie@opensource.wolfsonmicro.com, linux-ide@vger.kernel.org, James.Bottomley@suse.de, linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org, jeremy.kerr@canonical.com, sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, jgarzik@pobox.com, microblaze-uclinux@itee.uq.edu.au, devicetree-discuss@lists.ozlabs.org, Christoph Raisch <raisch@de.ibm.com>, ben-linux@fluff.org, monstr@monstr.eu, linuxppc-dev@ozlabs.org, netdev@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, dwmw2@infradead.org, davem@davemloft.net
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
 
-On Thu, 11 Mar 2010 11:57:53 -0800
-Roland Dreier <rdreier@cisco.com> wrote:
+Remove unused #include <linux/version.h>('s) in
+  drivers/scsi/cxgb3i/cxgb3i_offload.c
 
-> Seems fine... adding EHCA guys just to make sure.
-> 
->  > .node is being removed
->  > 
->  > Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+---
+ drivers/scsi/cxgb3i/cxgb3i_offload.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Acked-by: Alexander Schmidt <alexs@linux.vnet.ibm.com>
+diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+index 3e08c43..dd4fba5 100644
+--- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
++++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
+@@ -13,7 +13,6 @@
+  */
+ 
+ #include <linux/if_vlan.h>
+-#include <linux/version.h>
+ 
+ #include "cxgb3_defs.h"
+ #include "cxgb3_ctl_defs.h"
+-- 
+1.6.1.3
+
