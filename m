@@ -1,75 +1,103 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: 2.6.34-rc1: ACPI: BUG: key f71f0168 not in .data!
-Date: Fri, 12 Mar 2010 22:13:05 -0700
-Message-ID: <20100313051305.GA19498@parisc-linux.org>
-References: <a4423d671003081547v5c955d58t248db945c06d2a7f@mail.gmail.com> <86802c441003081612r2f44efd6n9664b4b7c98a636a@mail.gmail.com> <m1d3zel4b4.fsf@fess.ebiederm.org> <4B95F37E.6060309@kernel.org> <m14okqnczd.fsf@fess.ebiederm.org> <4B99A6F0.4080203@kernel.org> <4B9B0868.7080807@kernel.org> <1268455576.2802.750.camel@mulgrave.site> <m1sk843jib.fsf@fess.ebiederm.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 5/5] SCSI: fix target allocation outside of scan_mutex
+Date: Sat, 13 Mar 2010 10:51:41 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1003131017130.14655-100000@netrider.rowland.org>
+References: <1268430358.2802.360.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <m1sk843jib.fsf@fess.ebiederm.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Yinghai Lu <yinghai@kernel.org>, Alexander Beregalov <a.beregalov@gmail.com>, Greg KH <gregkh@suse.de>, linux-acpi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from netrider.rowland.org ([192.131.102.5]:54199 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759309Ab0CMPvq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Mar 2010 10:51:46 -0500
+In-Reply-To: <1268430358.2802.360.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 12, 2010 at 08:58:36PM -0800, Eric W. Biederman wrote:
-> The root problem is that we occasionally have unrecognized deadlocks
-> on the sysfs attributes.
+On Fri, 12 Mar 2010, James Bottomley wrote:
+
+> > You're right that a duplicate target wouldn't get created.  Still,
+> > there really is a bug.  Suppose two different threads call
+> > scsi_alloc_target() for the same target ID at about the same time.  The
+> > first thread won't find an existing target on the list, so it will
+> > allocate and initialize a new target structure.  However, it releases
+> > the host lock before calling the host template's target_alloc method.
+> > 
+> > Meanwhile, the second thread will find the new target structure on the 
+> > list and will therefore feel free to start using it.  If the timing 
+> > works out, it could start using the new target before the first thread 
+> > calls target_alloc.
 > 
-> For 2.6.33 I managed to get lockdep mostly working but there the way
-> I did it generated a lot of false positives.
-> 
-> For 2.6.34 I reworked the sysfs lockdep handling to remove the false
-> positives by treating each sysfs attribute as it's own class.  Most
-> sysfs attributes are declared statically and don't need any
-> initialization.  Unfortunately there are a handful of dynamically
-> allocated sysfs attributes that do need initialization.
-> 
-> This patch is a fix to get one of those last handful of dynamically
-> allocated sysfs attributes that I missed and apparently do not
-> exist in my test system.
+> So currently, that can't happen because of the scan mutex.
 
-There's a few more than this showing up on my laptop.  Looking in dmesg,
-the first gets a backtrace:
+True.  Okay, that's not a bug.  However I still have the feeling that
+the concurrency issues associated with targets haven't been thought out
+sufficiently.
 
-[    1.034471] BUG: key f6a26638 not in .data!
-[    1.034600] ------------[ cut here ]------------
-[    1.034736] WARNING: at kernel/lockdep.c:2706 lockdep_init_map+0xd1/0x40c()
-[    1.034867] Hardware name: LifeBook P8010
-[    1.034993] Modules linked in:
-[    1.035170] Pid: 1, comm: swapper Not tainted 2.6.34-rc1-00005-g522dba7 #80
-[    1.035300] Call Trace:
-[    1.035428]  [<c102caba>] warn_slowpath_common+0x60/0x90
-[    1.035561]  [<c102caf7>] warn_slowpath_null+0xd/0x10
-[    1.035694]  [<c104fa6a>] lockdep_init_map+0xd1/0x40c
-[    1.035827]  [<c10de32a>] ? sysfs_new_dirent+0x73/0xdb
-[    1.035959]  [<c10ddc56>] sysfs_add_file_mode+0x4c/0x88
-[    1.036132]  [<c10ddca0>] sysfs_add_file+0xe/0x13
-[    1.036264]  [<c10ddd32>] sysfs_create_file+0x20/0x22
-[    1.036394]  [<c11ee279>] device_create_file+0x13/0x15
-[    1.036528]  [<c129246e>] thermal_zone_device_register+0x3d0/0x5db
-[    1.036662]  [<c11b160f>] acpi_thermal_add+0x1f6/0x42d
+Here's another example.  Suppose that two threads probe two different 
+LUNs under the same target at the same time, and suppose that 
+scsi_target_add() fails:
 
-Subsequent ones don't:
+	Thread 0			Thread 1
+	--------			--------
+	scsi_alloc_target() creates a new target
+	Lock scan_mutex
+	Scan LUN1
+					scsi_alloc_target() finds the
+						existing target and
+						increments its reap_ref
+					Blocks waiting for scan_mutex
+	scsi_target_add() fails
+	Destroy the sdev for LUN1 (the target
+	  isn't destroyed because thread 1
+	  has incremented reap_ref)
+	Unlock scan_mutex
+					Scan LUN2
+					Call scsi_target_add() again
 
-[    1.039072] BUG: key f6a26668 not in .data!
-[    1.039220] BUG: key f6a2f488 not in .data!
-[    1.039358] BUG: key f6a2f408 not in .data!
-[    1.039571] thermal LNXTHERM:01: registered as thermal_zone0
-[    1.039719] ACPI: Thermal Zone [TZ00] (27 C)
-[    1.040515] BUG: key f6a18e38 not in .data!
-[    1.040648] BUG: key f6a18e68 not in .data!
-[    1.040800] BUG: key f6a9ef88 not in .data!
-[    1.040941] BUG: key f6a9ef08 not in .data!
-[    1.041185] thermal LNXTHERM:02: registered as thermal_zone1
+The code ends up calling device_add() twice for the same target
+structure.  Even though the first call fails, the driver core does not
+guarantee this will work properly.  AFAIK, nobody has ever audited that
+code to see if there are any fields assumed to be 0 which may end up
+being nonzero after a failed registration.
 
-[   25.196957] iwlagn 0000:14:00.0: firmware: requesting iwlwifi-4965-2.ucode
-[   25.197163] BUG: key f663393c not in .data!
-[   25.217340] iwlagn 0000:14:00.0: loaded firmware version 228.57.2.21
+Also, notice that in its failure path, scsi_alloc_target() calls 
+scsi_target_reap().  This doesn't seem right; it's unbalanced.  Here's 
+what can happen:
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+	__scsi_add_device() calls scsi_alloc_target(), creating a new
+	target with reap_ref = 1.
+
+	It then calls scsi_probe_and_add_lun(), which calls 
+	scsi_alloc_sdev(), increasing reap_ref to 2.
+
+	Next we call scsi_add_lun(), but scsi_target_add() fails
+	decreasing reap_ref back to 1.
+
+	scsi_add_lun() returns SCSI_SCAN_NO_RESPONSE because of
+	the failure, so scsi_probe_and_add_lun() goes on to call
+	__scsi_remove_device().
+
+	This causes scsi_device_dev_release_usercontext() to call
+	scsi_target_reap(), decreasing reap_ref to 0 and deallocating
+	the target structure.
+
+	Finally, __scsi_add_device() calls scsi_target_reap(), passing
+	a pointer to a structure that no longer exists.
+
+The last two steps may occur in the opposite order because of the use
+of a workqueue, but the end result is the same: scsi_target_reap() gets
+called with a stale pointer.  It certainly looks as though
+scsi_target_add() should not include the
+
+		get_device(&starget->dev);
+		scsi_target_reap(starget);
+		put_device(&starget->dev);
+
+sequence.  (Not to mention that the get_device and put_device calls are 
+totally gratuitous anyway.)
+
+Alan Stern
+
