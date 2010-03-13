@@ -1,82 +1,60 @@
-From: Richard A Lary <rlary@linux.vnet.ibm.com>
-Subject: [PATCH] mpt2sas: use correct pci_resource_flag for comparison with
- device pci ,resource
-Date: Fri, 12 Mar 2010 15:27:06 -0800
-Message-ID: <4B9ACDCA.6080803@linux.vnet.ibm.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 00/16] libfc, libfcoe and fcoe fixes for 2.6.34
+Date: Fri, 12 Mar 2010 16:07:31 -0800
+Message-ID: <20100313000730.22251.54662.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:41653 "EHLO e4.ny.us.ibm.com"
+Received: from mga11.intel.com ([192.55.52.93]:38226 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934705Ab0CLX1Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Mar 2010 18:27:16 -0500
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by e4.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o2CNGCEG004392
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 18:16:12 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o2CNRFfh1454124
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 18:27:15 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o2CNRFRg031783
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 20:27:15 -0300
-Received: from [127.0.0.1] (sig-9-48-87-249.mts.ibm.com [9.48.87.249])
-	by d01av03.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVin) with ESMTP id o2CNRCb7031768
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Mar 2010 20:27:14 -0300
+	id S932782Ab0CMAHb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Mar 2010 19:07:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 
-From: Richard A Lary <rlary@linux.vnet.ibm.com>
+The following series implements a few fixes to libfc, libfcoe and fcoe. The majority
+of fixes are to the Point-to-point code, but there are a few other fixes as well.
 
-This patch replaces incorrect  base address space flag with correct IO 
-resource
-flag.  Also, performs check of memory resource to validate resource before
-using.
-
-Signed-off-by: Richard A Lary <rlary@linux.vnet.ibm.com>
+These patches were applied and tested against 2.6.34-rc1 before submission.
 
 ---
 
-Index: b/drivers/scsi/mpt2sas/mpt2sas_base.c
-===================================================================
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1253,7 +1253,7 @@ mpt2sas_base_map_resources(struct MPT2SA
-  	}
+Joe Eykholt (12):
+      libfc, libfcoe, fcoe: use smp_processor_id() only when preempt disabled
+      libfc: fix sequence-initiative WARN in fc_seq_start_next
+      libfcoe: eliminate unused link and last_link fields
+      fcoe: remove an unused variable in fcoe_recv_frame()
+      libfc: send point-to-poin FLOGI LS_ACC to assigned D_DID
+      libfc: recognize incoming FLOGI for point-to-point mode
+      fcoe: save gateway address when receiving FLOGI request
+      libfcoe: fix debug message entering non-FIP mode
+      fcoe: call fcoe_ctlr_els_send even for ELS responses
+      libfc: fix oops in point-to-point mode
+      libfc: add definition for task attribute mask
+      libfc: recode incoming PRLI handling
 
-  	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE; i++) {
--		if (pci_resource_flags(pdev, i) & PCI_BASE_ADDRESS_SPACE_IO) {
-+		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
-  			if (pio_sz)
-  				continue;
-  			pio_chip = (u64)pci_resource_start(pdev, i);
-@@ -1261,15 +1261,18 @@ mpt2sas_base_map_resources(struct MPT2SA
-  		} else {
-  			if (memap_sz)
-  				continue;
--			ioc->chip_phys = pci_resource_start(pdev, i);
--			chip_phys = (u64)ioc->chip_phys;
--			memap_sz = pci_resource_len(pdev, i);
--			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
--			if (ioc->chip == NULL) {
--				printk(MPT2SAS_ERR_FMT "unable to map adapter "
--				    "memory!\n", ioc->name);
--				r = -EINVAL;
--				goto out_fail;
-+			/* verify memory resource is valid before using */
-+			if (pci_resource_flags(pdev, i) & IORESOURCE_MEM) {
-+				ioc->chip_phys = pci_resource_start(pdev, i);
-+				chip_phys = (u64)ioc->chip_phys;
-+				memap_sz = pci_resource_len(pdev, i);
-+				ioc->chip = ioremap(ioc->chip_phys, memap_sz);
-+				if (ioc->chip == NULL) {
-+					printk(MPT2SAS_ERR_FMT "unable to map "
-+					    "adapter memory!\n", ioc->name);
-+					r = -EINVAL;
-+					goto out_fail;
-+				}
-  			}
-  		}
-  	}
+Robert Love (1):
+      libfc: Add debug statements when fc_fcp returns DID_ERROR to scsi-ml
 
+Vasu Dev (3):
+      libfc: fix fcp pkt recovery in fc_fcp_recv_data
+      libfc: use offload EM instance again instead jumping to next EM
+      libfc: fixes unnecessary seq id jump
+
+
+ drivers/scsi/fcoe/fcoe.c      |   82 +++++++++++------
+ drivers/scsi/fcoe/libfcoe.c   |   65 ++++++--------
+ drivers/scsi/libfc/fc_exch.c  |   39 +++-----
+ drivers/scsi/libfc/fc_fcp.c   |   74 +++++++++++-----
+ drivers/scsi/libfc/fc_lport.c |   13 ++-
+ drivers/scsi/libfc/fc_npiv.c  |    3 +
+ drivers/scsi/libfc/fc_rport.c |  195 ++++++++++++++++++-----------------------
+ include/scsi/fc/fc_fcp.h      |    1 
+ include/scsi/libfc.h          |    9 --
+ include/scsi/libfcoe.h        |    8 --
+ 10 files changed, 243 insertions(+), 246 deletions(-)
+
+-- 
+//Rob
