@@ -1,36 +1,104 @@
-From: Asdo <asdo@shiftmail.org>
-Subject: LSISAS2008 stable?
-Date: Mon, 15 Mar 2010 00:09:43 +0100
-Message-ID: <4B9D6CB7.8060905@shiftmail.org>
+From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+Subject: [PATCH] mpt: modify mptctl_exit() to call proper deregister functions
+Date: Mon, 15 Mar 2010 14:48:43 +0900
+Message-ID: <4B9DCA3B.4080107@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from blade3.isti.cnr.it ([194.119.192.19]:62821 "EHLO
-	BLADE3.ISTI.CNR.IT" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757855Ab0CNXKh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Mar 2010 19:10:37 -0400
-Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it (PMDF V6.5 #31825)
- id <01NKRB1UQEHSCCNDA8@mx.isti.cnr.it> for linux-scsi@vger.kernel.org; Mon,
- 15 Mar 2010 00:09:37 +0100
-Received: from [10.0.0.3] (host-78-12-76-61.cust-adsl.tiscali.it [78.12.76.61])
- by mx.isti.cnr.it (PMDF V6.5 #31826)
- with ESMTPSA id <01NKRB1YH1W6CA1RSU@mx.isti.cnr.it> for
- linux-scsi@vger.kernel.org; Mon, 15 Mar 2010 00:09:43 +0100
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:37171 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759640Ab0COFtq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Mar 2010 01:49:46 -0400
+Received: from m5.gw.fujitsu.co.jp ([10.0.50.75])
+	by fgwmail5.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id o2F5nj6a015703
+	for <linux-scsi@vger.kernel.org> (envelope-from tokunaga.keiich@jp.fujitsu.com);
+	Mon, 15 Mar 2010 14:49:45 +0900
+Received: from smail (m5 [127.0.0.1])
+	by outgoing.m5.gw.fujitsu.co.jp (Postfix) with ESMTP id 6078F45DE52
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Mar 2010 14:49:45 +0900 (JST)
+Received: from s5.gw.fujitsu.co.jp (s5.gw.fujitsu.co.jp [10.0.50.95])
+	by m5.gw.fujitsu.co.jp (Postfix) with ESMTP id 34B7E45DE51
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Mar 2010 14:49:45 +0900 (JST)
+Received: from s5.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s5.gw.fujitsu.co.jp (Postfix) with ESMTP id 19A88E18004
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Mar 2010 14:49:45 +0900 (JST)
+Received: from m020.s.css.fujitsu.com (m020.s.css.fujitsu.com [10.0.81.60])
+	by s5.gw.fujitsu.co.jp (Postfix) with ESMTP id BB4C4E18005
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Mar 2010 14:49:44 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Desai Kashyap <kashyap.desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-Hi everybody
-we are probably going to invest on a number of LSI SAS 9200-16e SAS2 
-controllers which I believe are powered by the LSISAS2008 chipset, which 
-we will connect to SAS1 expanders made by AIC.
-We would not have time to test them in advance like buying a small 
-number in advance.
-So I am asking if there are any known problems with the Linux driver for 
-such chipset LSISAS2008..?
-(including hot-swap capability which we need, excluding the hot-swap 
-rescan bug for the previous chipset reported by Michael Moore which I 
-already read about in this ML... keeping fingers crossed on that...)
-Thanks in advance for any replies
-A.
+Hi Desai,
+
+This patch fixes some issues of mptctl_exit().
+
+  1) It doesn't call mpt_deregister() for mptctl_taskmgmt_id
+     => Insmoding/rmmoding mptctl.ko repeadtedly (up to
+        MPT_MAX_PROTOCOL_DRIVERS-1 at most) can eat up all cb_idx,
+        and that would cause a lack of MptCallbacks[], MptDriverClass[],
+        and MptEvHandlers[].
+
+  2) It doesn't call mpt_event_deregister() for mptctl_id
+     => Need to call it.
+
+  3) It calls mpt_reset_deregister() for mptctl_taskmgmt_id
+     => This could accidentally deregister an innocent reset handler
+        that you don't want to.
+
+This patch also adds a check for mptctl_taskmgmt_id.
+
+This applies to 2.6.34-rc1.
+
+Thanks,
+Kei
+
+
+Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+---
+
+ linux-2.6.34-rc1-kei/drivers/message/fusion/mptctl.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff -puN drivers/message/fusion/mptctl.c~fix-mptctl_exit drivers/message/fusion/mptctl.c
+--- linux-2.6.34-rc1/drivers/message/fusion/mptctl.c~fix-mptctl_exit	2010-03-15 09:40:43.000000000 +0900
++++ linux-2.6.34-rc1-kei/drivers/message/fusion/mptctl.c	2010-03-15 09:40:43.000000000 +0900
+@@ -2991,6 +2991,14 @@ static int __init mptctl_init(void)
+ 	}
+ 
+ 	mptctl_taskmgmt_id = mpt_register(mptctl_taskmgmt_reply, MPTCTL_DRIVER);
++	if (!mptctl_taskmgmt_id || mptctl_taskmgmt_id >= MPT_MAX_PROTOCOL_DRIVERS) {
++		printk(KERN_ERR MYNAM ": ERROR: Failed to register with Fusion MPT base driver\n");
++		mpt_deregister(mptctl_id);
++		misc_deregister(&mptctl_miscdev);
++		err = -EBUSY;
++		goto out_fail;
++	}
++
+ 	mpt_reset_register(mptctl_id, mptctl_ioc_reset);
+ 	mpt_event_register(mptctl_id, mptctl_event_process);
+ 
+@@ -3010,12 +3018,15 @@ static void mptctl_exit(void)
+ 	printk(KERN_INFO MYNAM ": Deregistered /dev/%s @ (major,minor=%d,%d)\n",
+ 			 mptctl_miscdev.name, MISC_MAJOR, mptctl_miscdev.minor);
+ 
++	/* De-register event handler from base module */
++	mpt_event_deregister(mptctl_id);
++
+ 	/* De-register reset handler from base module */
+ 	mpt_reset_deregister(mptctl_id);
+ 
+ 	/* De-register callback handler from base module */
++	mpt_deregister(mptctl_taskmgmt_id);
+ 	mpt_deregister(mptctl_id);
+-	mpt_reset_deregister(mptctl_taskmgmt_id);
+ 
+         mpt_device_driver_deregister(MPTCTL_DRIVER);
+ 
+
+_
+
+
+
