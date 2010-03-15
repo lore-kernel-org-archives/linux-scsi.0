@@ -1,77 +1,55 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] dpt_i20: several use after free issues
-Date: Mon, 15 Mar 2010 11:26:56 +0300
-Message-ID: <20100315082656.GJ18181@bicker>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] cciss: add 30 second initial timeout wait on controller reset
+Date: Mon, 15 Mar 2010 14:13:40 +0100
+Message-ID: <4B9E3284.3070003@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Yang Hongyang <yanghy@cn.fujitsu.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Alan Cox <alan@linux.intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:2569 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964844Ab0CONR1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Mar 2010 09:17:27 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: jens.axboe@oracle.com, James.Bottomley@HansenPartnership.com, Mike.Miller@hp.com, scameron@beardog.cce.hp.com
 
-adpt_i2o_delete_hba() calls kfree() so we have to save "pHba->next"
-before calling it.  Also inside adpt_i2o_delete_hba() itself, there
-was another use after free bug which I fixed by moving the kfree() 
-down a line.
+It looks like the patch - cciss: remove 30 second initial timeout on controller reset
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=5e18cfd04feca78cc08a6b8b71a60a610de81eaa
+has caused a regression. 
+During kdump a box with an 5i controller freezes.
+The HP Smart Array 5i Controller probably needs some more time 
+of inactivity after reset.
+To get rid of it we can revert the above mentioned patch or use
+the patch below which adds an additional timeout only for this 
+one controller (HP Smart Array 5i). I haven't seen this with other
+cciss controllers.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+cciss: add 30 second initial timeout wait on controller reset
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 4967643..0435d04 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -188,7 +188,8 @@ MODULE_DEVICE_TABLE(pci,dptids);
- static int adpt_detect(struct scsi_host_template* sht)
- {
- 	struct pci_dev *pDev = NULL;
--	adpt_hba* pHba;
-+	adpt_hba *pHba;
-+	adpt_hba *next;
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 9e3af30..34ec2c7 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -4172,9 +4172,13 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
+ 		if (cciss_hard_reset_controller(pdev) || cciss_reset_msi(pdev))
+ 			return -ENODEV;
  
- 	PINFO("Detecting Adaptec I2O RAID controllers...\n");
- 
-@@ -206,7 +207,8 @@ static int adpt_detect(struct scsi_host_template* sht)
- 	}
- 
- 	/* In INIT state, Activate IOPs */
--	for (pHba = hba_chain; pHba; pHba = pHba->next) {
-+	for (pHba = hba_chain; pHba; pHba = next) {
-+		next = pHba->next;
- 		// Activate does get status , init outbound, and get hrt
- 		if (adpt_i2o_activate_hba(pHba) < 0) {
- 			adpt_i2o_delete_hba(pHba);
-@@ -243,7 +245,8 @@ rebuild_sys_tab:
- 	PDEBUG("HBA's in OPERATIONAL state\n");
- 
- 	printk("dpti: If you have a lot of devices this could take a few minutes.\n");
--	for (pHba = hba_chain; pHba; pHba = pHba->next) {
-+	for (pHba = hba_chain; pHba; pHba = next) {
-+		next = pHba->next;
- 		printk(KERN_INFO"%s: Reading the hardware resource table.\n", pHba->name);
- 		if (adpt_i2o_lct_get(pHba) < 0){
- 			adpt_i2o_delete_hba(pHba);
-@@ -263,7 +266,8 @@ rebuild_sys_tab:
- 		adpt_sysfs_class = NULL;
- 	}
- 
--	for (pHba = hba_chain; pHba; pHba = pHba->next) {
-+	for (pHba = hba_chain; pHba; pHba = next) {
-+		next = pHba->next;
- 		if (adpt_scsi_host_alloc(pHba, sht) < 0){
- 			adpt_i2o_delete_hba(pHba);
- 			continue;
-@@ -1229,11 +1233,10 @@ static void adpt_i2o_delete_hba(adpt_hba* pHba)
- 		}
- 	}
- 	pci_dev_put(pHba->pDev);
--	kfree(pHba);
--
- 	if (adpt_sysfs_class)
- 		device_destroy(adpt_sysfs_class,
- 				MKDEV(DPTI_I2O_MAJOR, pHba->unit));
-+	kfree(pHba);
- 
- 	if(hba_count <= 0){
- 		unregister_chrdev(DPTI_I2O_MAJOR, DPT_DRIVER);   
+-		/* Now try to get the controller to respond to a no-op. Some
+-		   devices (notably the HP Smart Array 5i Controller) need
+-		   up to 30 seconds to respond. */
++		/* The HP Smart Array 5i Controller needs
++		 * at least 20 seconds before first status checking
++		 * set it to 30 seconds for this controller to be sure */
++		if (0x4080 == pdev->subsystem_device)
++			schedule_timeout_uninterruptible(30*HZ);
++
++		/* Now try to get the controller to respond to a no-op. */
+ 		for (i=0; i<30; i++) {
+ 			if (cciss_noop(pdev) == 0)
+ 				break;
+
+
