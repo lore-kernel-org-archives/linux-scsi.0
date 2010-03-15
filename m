@@ -1,34 +1,34 @@
 From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] pcmcia: add important if statement
-Date: Mon, 15 Mar 2010 11:25:10 +0300
-Message-ID: <20100315082510.GH18181@bicker>
+Subject: [patch] libsrp: remove dead code
+Date: Mon, 15 Mar 2010 11:25:56 +0300
+Message-ID: <20100315082556.GI18181@bicker>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:5630 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759866Ab0COIZX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Mar 2010 04:25:23 -0400
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:54778 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759866Ab0COI0I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Mar 2010 04:26:08 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Karsten Keil <keil@b1-systems.de>, Magnus Damm <damm@opensource.se>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+To: Stefani Seibold <stefani@seibold.net>
+Cc: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>
 
-There was a problem introduced in Jul 2008 by:
-0e6f9d270840 pcmcia: use pcmcia_loop_config in scsi pcmcia drivers
+There was a stray kfree() left over from:
+4546548789 kfifo: move struct kfifo in place
 
 Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
-index c2341af..0212464 100644
---- a/drivers/scsi/pcmcia/nsp_cs.c
-+++ b/drivers/scsi/pcmcia/nsp_cs.c
-@@ -1717,6 +1717,7 @@ static int nsp_cs_config(struct pcmcia_device *link)
- 	cfg_mem->data = data;
+diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+index 2277516..c06eaeb 100644
+--- a/drivers/scsi/libsrp.c
++++ b/drivers/scsi/libsrp.c
+@@ -67,7 +67,6 @@ static int srp_iu_pool_alloc(struct srp_queue *q, size_t max,
+ 	}
+ 	return 0;
  
- 	ret = pcmcia_loop_config(link, nsp_cs_config_check, cfg_mem);
-+	if (ret)
- 		goto cs_failed;
- 
- 	if (link->conf.Attributes & CONF_ENABLE_IRQ) {
+-	kfree(q->items);
+ free_pool:
+ 	kfree(q->pool);
+ 	return -ENOMEM;
