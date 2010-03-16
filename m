@@ -1,47 +1,63 @@
-From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 0/4] Some typo fixing
-Date: Tue, 16 Mar 2010 11:32:24 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1003161127340.18642@pobox.suse.cz>
-References: <1268686558-28171-1-git-send-email-swirl@gmx.li>
-	<4B9EA214.7010203@xenotime.net>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [PATCH] Protect against overflow in dev_loss_tmo
+Date: Tue, 16 Mar 2010 14:04:55 +0100
+Message-ID: <20100316130454.GA15772@schmichrtp.mainz.de.ibm.com>
+References: <20100309091848.4C7412BD8B@ochil.suse.de>
+ <4B9657CD.6000805@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <4B9EA214.7010203-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/containers>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
-Cc: Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>, Lin Ming <ming.m.lin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Pavel Machek <pavel-AlSwsSmVLrQ@public.gmane.org>, David Brownell <dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Bjorn Helgaas <bjorn.helgaas-VXdhtT5mjnY@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, "John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Steve Conklin <sconklin-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Ralph Campbell <infinipath-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Anton Vorontsov <avorontsov-hkdhdckH98+B+jHODAdFcQ@public.gmane.org>, cbe-oss-dev-mnsaURCQ41sdnm+yROfE0A@public.gmane.org, Liam Girdwood <lrg-kDsPt+C1G03kYMGBc/C6ZA@public.gmane.org>, Anthony Liguori <aliguori-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Andrew Morton <akpm>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate3.uk.ibm.com ([194.196.100.163]:42560 "EHLO
+	mtagate3.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932211Ab0CPNE5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2010 09:04:57 -0400
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate3.uk.ibm.com (8.13.1/8.13.1) with ESMTP id o2GD4tNH000320
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2010 13:04:55 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o2GD4tKn868438
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2010 13:04:55 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o2GD4tjs015344
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Mar 2010 13:04:55 GMT
+Content-Disposition: inline
+In-Reply-To: <4B9657CD.6000805@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 15 Mar 2010, Randy Dunlap wrote:
-
-> > I have fixed some typos.
+On Tue, Mar 09, 2010 at 09:14:37AM -0500, James Smart wrote:
+> I don't ever expect to see large dev_loss_tmo values, but the patch is fine.
 > 
-> Acked-by: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+> Acked-by: James Smart <james.smart@emulex.com>
 > 
-> Jiri, can you merge these, please, unless someone objects (?).
+> -- james s
+> 
+> 
+> Hannes Reinecke wrote:
+> >The rport structure defines dev_loss_tmo as u32, which is
+> >later multiplied with HZ to get the actual timeout value.
+> >This might overflow for large dev_loss_tmo values. So we
+> >should be better using u64 as intermediate variables here
+> >to protect against overflow.
+> >
+> >Signed-off-by: Hannes Reinecke <hare@suse.de>
+[...]
 
-Yes, I will take it, thanks. A couple comments though:
+I guess this is the intended use to prevent the dev_loss_tmo from
+removing the SCSI devices:
+http://git.kernel.org/?p=linux/kernel/git/hare/multipath-tools.git;a=commitdiff;h=b9903e2e8a6cdc5042897719fbae6c9346820bbf;hp=ed1dc6164fe530d146cfe65d4f99e44ec9b54b95
 
-- [important!] Thomas, it's not necessary to CC zillions of people on such 
-  patches. Just submit them to trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org (and eventually CC 
-  lkml), and that's it. I believe many people might get annoyed by this.
-- I will not be applying the drivers/staging hunks. Staging patches are 
-  moving target, the code is changing quickly (including complete 
-  drops/rewrites) so we'll likely be getting conflicts there. I will 
-  reroute them to Greg.
-- I will fold all the patches into one. We don't need one commit per one 
-  specific typo.
+But does this raise the question again how to run SCSI EH with remote
+port failures?
 
--- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+The SCSI FC LLDs call fc_block_scsi_eh to wait until the fc_rport
+leaves the state FC_PORTSTATE_BLOCKED. This effectively prevents SCSI
+devices from being taken offline when there is a command timeout and
+the fc_rport is BLOCKED. With the large dev_loss_tmo, the dev_loss_tmo
+never expires and a problem with a single remote port can block the
+host error handler.
+
+--
+Christof
