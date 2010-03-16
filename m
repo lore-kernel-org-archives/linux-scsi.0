@@ -1,53 +1,38 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [Suspected SPAM] [PATCH 3/3] SCSI: qla2xxx, fix lock imbalance
-Date: Tue, 16 Mar 2010 13:23:09 -0700
-Message-ID: <C7C536BD.5D55%giridhar.malavali@qlogic.com>
-References: <1268753039-17214-3-git-send-email-jslaby@suse.cz>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi_transport_fc: Initialize sysfs attributes with sysfs_attr_init
+Date: Tue, 16 Mar 2010 15:48:59 -0500
+Message-ID: <4B9FEEBB.8090809@cs.wisc.edu>
+References: <20100316101453.GA9734@schmichrtp.mainz.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:22357 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755426Ab0CPUXO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2010 16:23:14 -0400
-In-Reply-To: <1268753039-17214-3-git-send-email-jslaby@suse.cz>
-Content-Language: en
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39476 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751140Ab0CPUpd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Mar 2010 16:45:33 -0400
+In-Reply-To: <20100316101453.GA9734@schmichrtp.mainz.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>
-Cc: LinuxSCSI <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jirislaby@gmail.com" <jirislaby@gmail.com>
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
+On 03/16/2010 05:14 AM, Christof Schmitt wrote:
+> With the new lockdep tracking in sysfs, sysfs_attr_init has to be used
+> for initializing all non-static sysfs attributes. Otherwise, lockdep
+> will warn about the missing initialization with:
+>
+> Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae350 not in .data!
+> Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae388 not in .data!
+> Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae3c0 not in .data!
+> Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae3f8 not in .data!
+>
 
+I think iscsi needs this too, but I am not see this error message. I 
+just tried iscsi and fc/lpfc with linus's tree and did not see those 
+errors for either. What .config settings do I need for this? I have:
 
+CONFIG_LOCKDEP=y
+CONFIG_DEBUG_LOCKDEP=y
 
-On 3/16/10 8:23 AM, "Jiri Slaby" <jslaby@suse.cz> wrote:
-
-> Stanse found that one error path in qla24xx_bsg_timeout omits to
-> unlock ha->hardware_lock. Fix that.
-> 
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-> Cc: James Bottomley <James.Bottomley@suse.de>
-> ---
->  drivers/scsi/qla2xxx/qla_attr.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-> index 90d1e06..a3591e5 100644
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -2388,6 +2388,7 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
->         return 0;
-> 
->  done:
-> +       spin_unlock_irqrestore(&ha->hardware_lock, flags);
->         if (bsg_job->request->msgcode == FC_BSG_HST_CT)
->                 kfree(sp->fcport);
->         kfree(sp->ctx);
-> --
-> 1.7.0.1
-> 
-> 
-Acked-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-
+are there other lockdep settings?
