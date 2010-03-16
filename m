@@ -1,45 +1,96 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/3] SCSI: be2iscsi, fix lock imbalance
-Date: Tue, 16 Mar 2010 13:10:53 -0500
-Message-ID: <4B9FC9AD.3000409@cs.wisc.edu>
-References: <1268753039-17214-1-git-send-email-jslaby@suse.cz>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH 1/2 reresend] scsi: fix & convert kernel-doc in scan_scan.c
+Date: Tue, 16 Mar 2010 12:30:40 -0700
+Message-ID: <4B9FDC60.4060400@oracle.com>
+References: <1268759504.21384.29.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1268753039-17214-1-git-send-email-jslaby@suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jirislaby@gmail.com, Jayamohan Kallickal <jayamohank@serverengines.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:26294 "EHLO
+	rcsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753399Ab0CPTcD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Mar 2010 15:32:03 -0400
+In-Reply-To: <1268759504.21384.29.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 03/16/2010 10:23 AM, Jiri Slaby wrote:
-> Stanse found that one error path in mgmt_invalidate_icds omits to unlock
-> ctrl->mbox_lock. Fix that.
->
-> Added in 756d29c8c7ed8887ed7d752371ce2f (Enable async mode for mcc rings)
-> where the spinlock was moved.
->
-> Signed-off-by: Jiri Slaby<jslaby@suse.cz>
-> Cc: Jayamohan Kallickal<jayamohank@serverengines.com>
-> Cc: James Bottomley<James.Bottomley@suse.de>
-> ---
->   drivers/scsi/be2iscsi/be_mgmt.c |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-> index 72617b6..e641922 100644
-> --- a/drivers/scsi/be2iscsi/be_mgmt.c
-> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-> @@ -169,6 +169,7 @@ unsigned char mgmt_invalidate_icds(struct beiscsi_hba *phba,
->   		SE_DEBUG(DBG_LVL_1,
->   			 "Failed to allocate memory for"
->   			 "mgmt_invalidate_icds \n");
-> +		spin_unlock(&ctrl->mbox_lock);
->   		return -1;
->   	}
->   	nonemb_cmd.size = sizeof(struct invalidate_commands_params_in);
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Looks good.
+scsi_scan.c: fix incorrectly formatted kernel-doc notation
+& convert documentation of 2 functions into kernel-doc.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/scsi_scan.c |   26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
+
+--- linux-2.6.33-rc8-git6.orig/drivers/scsi/scsi_scan.c
++++ linux-2.6.33-rc8-git6/drivers/scsi/scsi_scan.c
+@@ -1220,7 +1220,7 @@ static void scsi_sequential_lun_scan(str
+ }
+ 
+ /**
+- * scsilun_to_int: convert a scsi_lun to an int
++ * scsilun_to_int - convert a scsi_lun to an int
+  * @scsilun:	struct scsi_lun to be converted.
+  *
+  * Description:
+@@ -1252,7 +1252,7 @@ int scsilun_to_int(struct scsi_lun *scsi
+ EXPORT_SYMBOL(scsilun_to_int);
+ 
+ /**
+- * int_to_scsilun: reverts an int into a scsi_lun
++ * int_to_scsilun - reverts an int into a scsi_lun
+  * @lun:        integer to be reverted
+  * @scsilun:	struct scsi_lun to be set.
+  *
+@@ -1874,12 +1874,9 @@ void scsi_forget_host(struct Scsi_Host *
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+-/*
+- * Function:    scsi_get_host_dev()
+- *
+- * Purpose:     Create a scsi_device that points to the host adapter itself.
+- *
+- * Arguments:   SHpnt   - Host that needs a scsi_device
++/**
++ * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
++ * @shost: Host that needs a scsi_device
+  *
+  * Lock status: None assumed.
+  *
+@@ -1892,7 +1889,7 @@ void scsi_forget_host(struct Scsi_Host *
+  *
+  *	Note - this device is not accessible from any high-level
+  *	drivers (including generics), which is probably not
+- *	optimal.  We can add hooks later to attach 
++ *	optimal.  We can add hooks later to attach.
+  */
+ struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+ {
+@@ -1919,18 +1916,13 @@ struct scsi_device *scsi_get_host_dev(st
+ }
+ EXPORT_SYMBOL(scsi_get_host_dev);
+ 
+-/*
+- * Function:    scsi_free_host_dev()
+- *
+- * Purpose:     Free a scsi_device that points to the host adapter itself.
+- *
+- * Arguments:   SHpnt   - Host that needs a scsi_device
++/**
++ * scsi_free_host_dev - Free a scsi_device that points to the host adapter itself
++ * @sdev: Host device to be freed
+  *
+  * Lock status: None assumed.
+  *
+  * Returns:     Nothing
+- *
+- * Notes:
+  */
+ void scsi_free_host_dev(struct scsi_device *sdev)
+ {
