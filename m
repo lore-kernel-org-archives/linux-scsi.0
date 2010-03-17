@@ -1,45 +1,49 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 01/11] mpt2sas: Corrected time stamp
-Date: Wed, 17 Mar 2010 16:21:33 +0530
-Message-ID: <20100317105121.GB21264@lsi.com>
+Subject: [PATCH 02/11] mpt2sas: Corrected conditional checks for Internal device Reset
+Date: Wed, 17 Mar 2010 16:22:21 +0530
+Message-ID: <20100317105210.GC21264@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:51635 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754337Ab0CQLWb (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:57967 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754405Ab0CQLXT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2010 07:22:31 -0400
+	Wed, 17 Mar 2010 07:23:19 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-
-incorrect timestamp on 32 bit platforms: The upper 32 bit of
-the timestamp was getting truncated when converting seconds to
-milliseconds, which was due to the variable being long. To fix the problem,
-the variable needs to be u64. Also the microseconds conversion to
-milliseconds was incorrect; it should be divide by 1000 instead of divide by
-8.
+bug fix in the handling of the internal device reset event
+The reason code check in scsih_sas_device_status_change_event never
+evaluates as true for internal device reset, hence driver never quiesce s IO
+when firmware is sending a device reset. The fix is to change the
+evaluate to:
+if (event_data->ReasonCode !=
+    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
+   event_data->ReasonCode !=
+    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
+        return;
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index da4bfbf..79ab9fa 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -3006,8 +3006,8 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 	 * since epoch ~ midnight January 1, 1970.
- 	 */
- 	do_gettimeofday(&current_time);
--	mpi_request.TimeStamp = (current_time.tv_sec * 1000) +
--	    (current_time.tv_usec >> 3);
-+	mpi_request.TimeStamp = cpu_to_le64((u64)current_time.tv_sec * 1000 +
-+	    (current_time.tv_usec / 1000));
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index b2d6d75..cd0f245 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -4434,10 +4434,10 @@ _scsih_sas_device_status_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 		     event_data);
+ #endif
  
- 	if (ioc->logging_level & MPT_DEBUG_INIT) {
- 		u32 *mfp;
+-	if (!(event_data->ReasonCode ==
++	if (event_data->ReasonCode !=
+ 	    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
+-	   event_data->ReasonCode ==
+-	    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET))
++	   event_data->ReasonCode !=
++	    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
+ 		return;
+ 
+ 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
