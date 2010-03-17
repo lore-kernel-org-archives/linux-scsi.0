@@ -1,269 +1,408 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 06/11] mpt2sas: Fix for little endian
-Date: Wed, 17 Mar 2010 16:24:52 +0530
-Message-ID: <20100317105440.GG21264@lsi.com>
+Subject: [PATCH 07/11] mpt2sas: removed use of tm_cmds.mutex in IOCTL branch.
+Date: Wed, 17 Mar 2010 16:25:59 +0530
+Message-ID: <20100317105547.GH21264@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:42933 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752839Ab0CQLZu (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:55719 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754422Ab0CQL05 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2010 07:25:50 -0400
+	Wed, 17 Mar 2010 07:26:57 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-
-1. Fixes for little endian issues.
-2. Now Debug info for Discovery event is more readable.
+Removed all the mutex's for ioc->tm_cmds.mutex, then created one
+single mutex inside the function mpt2sas_scsih_issue_tm. This is the
+single function used when sending task management. Also the sanity
+checks required for scsi mid layer escalation were moved to inside the
+same function because these checks need to be done while the mutex is
+held. The ioc->tm_cmds.mutex inside the IOCTL branch is really not
+required since there is another mutex in this code called for ctl_cmds
+handling this sync.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 4c62ee9..d3326e7 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -285,6 +285,9 @@ _base_sas_ioc_info(struct MPT2SAS_ADAPTER *ioc, MPI2DefaultReply_t *mpi_reply,
- 	    request_hdr->Function == MPI2_FUNCTION_EVENT_NOTIFICATION)
- 		return;
- 
-+	if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		return;
-+
- 	switch (ioc_status) {
- 
- /****************************************************************************
-@@ -517,8 +520,18 @@ _base_display_event_data(struct MPT2SAS_ADAPTER *ioc,
- 		desc = "IR Operation Status";
- 		break;
- 	case MPI2_EVENT_SAS_DISCOVERY:
--		desc =  "Discovery";
--		break;
-+	{
-+		Mpi2EventDataSasDiscovery_t *event_data =
-+		    (Mpi2EventDataSasDiscovery_t *)mpi_reply->EventData;
-+		printk(MPT2SAS_INFO_FMT "Discovery: (%s)", ioc->name,
-+		    (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED) ?
-+		    "start" : "stop");
-+		if (event_data->DiscoveryStatus)
-+			printk("discovery_status(0x%08x)",
-+			    le32_to_cpu(event_data->DiscoveryStatus));
-+			printk("\n");
-+		return;
-+	}
- 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
- 		desc = "SAS Broadcast Primitive";
- 		break;
-@@ -3181,7 +3194,7 @@ _base_event_notification(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 	mpi_request->VP_ID = 0;
- 	for (i = 0; i < MPI2_EVENT_NOTIFY_EVENTMASK_WORDS; i++)
- 		mpi_request->EventMasks[i] =
--		    le32_to_cpu(ioc->event_masks[i]);
-+		    cpu_to_le32(ioc->event_masks[i]);
- 	mpt2sas_base_put_smid_default(ioc, smid);
- 	init_completion(&ioc->base_cmds.done);
- 	timeleft = wait_for_completion_timeout(&ioc->base_cmds.done, 30*HZ);
-@@ -3645,6 +3658,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 	pci_set_drvdata(ioc->pdev, NULL);
- 	kfree(ioc->tm_cmds.reply);
- 	kfree(ioc->transport_cmds.reply);
-+	kfree(ioc->scsih_cmds.reply);
- 	kfree(ioc->config_cmds.reply);
- 	kfree(ioc->base_cmds.reply);
- 	kfree(ioc->ctl_cmds.reply);
-@@ -3652,6 +3666,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 	ioc->ctl_cmds.reply = NULL;
- 	ioc->base_cmds.reply = NULL;
- 	ioc->tm_cmds.reply = NULL;
-+	ioc->scsih_cmds.reply = NULL;
- 	ioc->transport_cmds.reply = NULL;
- 	ioc->config_cmds.reply = NULL;
- 	ioc->pfacts = NULL;
-@@ -3681,6 +3696,7 @@ mpt2sas_base_detach(struct MPT2SAS_ADAPTER *ioc)
- 	kfree(ioc->base_cmds.reply);
- 	kfree(ioc->tm_cmds.reply);
- 	kfree(ioc->transport_cmds.reply);
-+	kfree(ioc->scsih_cmds.reply);
- 	kfree(ioc->config_cmds.reply);
- }
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
-index 411c27d..360f64b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_config.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
-@@ -1389,12 +1389,12 @@ mpt2sas_config_get_volume_handle(struct MPT2SAS_ADAPTER *ioc, u16 pd_handle,
- 	if (ioc_status != MPI2_IOCSTATUS_SUCCESS)
- 		goto out;
- 	for (i = 0; i < config_page->NumElements; i++) {
--		if ((config_page->ConfigElement[i].ElementFlags &
-+		if ((le16_to_cpu(config_page->ConfigElement[i].ElementFlags) &
- 		    MPI2_RAIDCONFIG0_EFLAGS_MASK_ELEMENT_TYPE) !=
- 		    MPI2_RAIDCONFIG0_EFLAGS_VOL_PHYS_DISK_ELEMENT)
- 			continue;
--		if (config_page->ConfigElement[i].PhysDiskDevHandle ==
--		    pd_handle) {
-+		if (le16_to_cpu(config_page->ConfigElement[i].
-+		    PhysDiskDevHandle) == pd_handle) {
- 			*volume_handle = le16_to_cpu(config_page->
- 			    ConfigElement[i].VolDevHandle);
- 			r = 0;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index cccd4df..bd89a8c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -803,8 +803,9 @@ void mpt2sas_halt_firmware(struct MPT2SAS_ADAPTER *ioc);
+ /* scsih shared API */
+ u8 mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+     u32 reply);
+-void mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
+-    u8 type, u16 smid_task, ulong timeout);
++int mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle,
++    uint channel, uint id, uint lun, u8 type, u16 smid_task,
++    ulong timeout, struct scsi_cmnd *scmd);
+ void mpt2sas_scsih_set_tm_flag(struct MPT2SAS_ADAPTER *ioc, u16 handle);
+ void mpt2sas_scsih_clear_tm_flag(struct MPT2SAS_ADAPTER *ioc, u16 handle);
+ struct _sas_node *mpt2sas_scsih_expander_find_by_handle(struct MPT2SAS_ADAPTER *ioc,
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index fa9bf83..ae55a91 100644
+index ae55a91..9860e7e 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -533,7 +533,7 @@ _ctl_set_task_mid(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
- 	if (!found) {
- 		dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
- 		    "handle(0x%04x), lun(%d), no active mid!!\n", ioc->name,
--		    desc, tm_request->DevHandle, lun));
-+		    desc, le16_to_cpu(tm_request->DevHandle), lun));
- 		tm_reply = ioc->ctl_cmds.reply;
- 		tm_reply->DevHandle = tm_request->DevHandle;
- 		tm_reply->Function = MPI2_FUNCTION_SCSI_TASK_MGMT;
-@@ -551,7 +551,8 @@ _ctl_set_task_mid(struct MPT2SAS_ADAPTER *ioc, struct mpt2_ioctl_command *karg,
+@@ -753,6 +753,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 		Mpi2SCSITaskManagementRequest_t *tm_request =
+ 		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
  
- 	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
- 	    "handle(0x%04x), lun(%d), task_mid(%d)\n", ioc->name,
--	    desc, tm_request->DevHandle, lun, tm_request->TaskMID));
-+	    desc, le16_to_cpu(tm_request->DevHandle), lun,
-+	     le16_to_cpu(tm_request->TaskMID)));
- 	return 0;
- }
++		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "TASK_MGMT: "
++		    "handle(0x%04x), task_type(0x%02x)\n", ioc->name,
++		    le16_to_cpu(tm_request->DevHandle), tm_request->TaskType));
++
+ 		if (tm_request->TaskType ==
+ 		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK ||
+ 		    tm_request->TaskType ==
+@@ -763,7 +767,6 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 			}
+ 		}
  
-@@ -647,9 +648,9 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 
- 	if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
- 	    mpi_request->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH) {
--		if (!mpi_request->FunctionDependent1 ||
--		    mpi_request->FunctionDependent1 >
--		    cpu_to_le16(ioc->facts.MaxDevHandle)) {
-+		if (!le16_to_cpu(mpi_request->FunctionDependent1) ||
-+		    le16_to_cpu(mpi_request->FunctionDependent1) >
-+		    ioc->facts.MaxDevHandle) {
- 			ret = -EINVAL;
- 			mpt2sas_base_free_smid(ioc, smid);
- 			goto out;
-@@ -897,11 +898,11 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 		    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)) {
- 			printk(MPT2SAS_INFO_FMT "issue target reset: handle "
+-		mutex_lock(&ioc->tm_cmds.mutex);
+ 		mpt2sas_scsih_set_tm_flag(ioc, le16_to_cpu(
+ 		    tm_request->DevHandle));
+ 		mpt2sas_base_put_smid_hi_priority(ioc, smid);
+@@ -819,7 +822,6 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 	if (mpi_request->Function == MPI2_FUNCTION_SCSI_TASK_MGMT) {
+ 		Mpi2SCSITaskManagementRequest_t *tm_request =
+ 		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
+-		mutex_unlock(&ioc->tm_cmds.mutex);
+ 		mpt2sas_scsih_clear_tm_flag(ioc, le16_to_cpu(
+ 		    tm_request->DevHandle));
+ 	} else if ((mpi_request->Function == MPI2_FUNCTION_SMP_PASSTHROUGH ||
+@@ -900,12 +902,11 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
  			    "= (0x%04x)\n", ioc->name,
--			    mpi_request->FunctionDependent1);
-+			    le16_to_cpu(mpi_request->FunctionDependent1));
+ 			    le16_to_cpu(mpi_request->FunctionDependent1));
  			mpt2sas_halt_firmware(ioc);
- 			mutex_lock(&ioc->tm_cmds.mutex);
+-			mutex_lock(&ioc->tm_cmds.mutex);
  			mpt2sas_scsih_issue_tm(ioc,
--			    mpi_request->FunctionDependent1, 0,
-+			    le16_to_cpu(mpi_request->FunctionDependent1), 0,
- 			    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 10);
+-			    le16_to_cpu(mpi_request->FunctionDependent1), 0,
+-			    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 10);
++			    le16_to_cpu(mpi_request->FunctionDependent1), 0, 0,
++			    0, MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 10,
++			    NULL);
  			ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
- 			mutex_unlock(&ioc->tm_cmds.mutex);
-@@ -1373,7 +1374,8 @@ _ctl_diag_register_2(struct MPT2SAS_ADAPTER *ioc,
- 
- 	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: diag_buffer(0x%p), "
- 	    "dma(0x%llx), sz(%d)\n", ioc->name, __func__, request_data,
--	    (unsigned long long)request_data_dma, mpi_request->BufferLength));
-+	    (unsigned long long)request_data_dma,
-+	    le32_to_cpu(mpi_request->BufferLength)));
- 
- 	for (i = 0; i < MPT2_PRODUCT_SPECIFIC_DWORDS; i++)
- 		mpi_request->ProductSpecific[i] =
-@@ -2334,8 +2336,8 @@ _ctl_version_nvdata_persistent_show(struct device *cdev,
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%02xh\n",
--	    le16_to_cpu(ioc->iounit_pg0.NvdataVersionPersistent.Word));
-+	return snprintf(buf, PAGE_SIZE, "%08xh\n",
-+	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionPersistent.Word));
- }
- static DEVICE_ATTR(version_nvdata_persistent, S_IRUGO,
-     _ctl_version_nvdata_persistent_show, NULL);
-@@ -2354,8 +2356,8 @@ _ctl_version_nvdata_default_show(struct device *cdev,
- 	struct Scsi_Host *shost = class_to_shost(cdev);
- 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
- 
--	return snprintf(buf, PAGE_SIZE, "%02xh\n",
--	    le16_to_cpu(ioc->iounit_pg0.NvdataVersionDefault.Word));
-+	return snprintf(buf, PAGE_SIZE, "%08xh\n",
-+	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionDefault.Word));
- }
- static DEVICE_ATTR(version_nvdata_default, S_IRUGO,
-     _ctl_version_nvdata_default_show, NULL);
+-			mutex_unlock(&ioc->tm_cmds.mutex);
+ 		} else
+ 			mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
+ 			    FORCE_BIG_HAMMER);
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 7c01485..698ef37 100644
+index 5b09d0f..ff79462 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -1375,7 +1375,7 @@ _scsih_display_sata_capabilities(struct MPT2SAS_ADAPTER *ioc,
+@@ -1943,65 +1943,78 @@ mpt2sas_scsih_clear_tm_flag(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	}
+ }
+ 
++
+ /**
+  * mpt2sas_scsih_issue_tm - main routine for sending tm requests
+  * @ioc: per adapter struct
+  * @device_handle: device handle
++ * @channel: the channel assigned by the OS
++ * @id: the id assigned by the OS
+  * @lun: lun number
+  * @type: MPI2_SCSITASKMGMT_TASKTYPE__XXX (defined in mpi2_init.h)
+  * @smid_task: smid assigned to the task
+  * @timeout: timeout in seconds
+- * Context: The calling function needs to acquire the tm_cmds.mutex
++ * Context: user
+  *
+  * A generic API for sending task management requests to firmware.
+  *
+- * The ioc->tm_cmds.status flag should be MPT2_CMD_NOT_USED before calling
+- * this API.
+- *
+  * The callback index is set inside `ioc->tm_cb_idx`.
+  *
+- * Return nothing.
++ * Return SUCCESS or FAILED.
+  */
+-void
+-mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
+-    u8 type, u16 smid_task, ulong timeout)
++int
++mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint channel,
++    uint id, uint lun, u8 type, u16 smid_task, ulong timeout,
++    struct scsi_cmnd *scmd)
+ {
+ 	Mpi2SCSITaskManagementRequest_t *mpi_request;
+ 	Mpi2SCSITaskManagementReply_t *mpi_reply;
+ 	u16 smid = 0;
+ 	u32 ioc_state;
+ 	unsigned long timeleft;
++	struct scsi_cmnd *scmd_lookup;
++	int rc;
+ 
++	mutex_lock(&ioc->tm_cmds.mutex);
+ 	if (ioc->tm_cmds.status != MPT2_CMD_NOT_USED) {
+ 		printk(MPT2SAS_INFO_FMT "%s: tm_cmd busy!!!\n",
+ 		    __func__, ioc->name);
+-		return;
++		rc = FAILED;
++		goto err_out;
  	}
  
- 	flags = le16_to_cpu(sas_device_pg0.Flags);
--	device_info = le16_to_cpu(sas_device_pg0.DeviceInfo);
-+	device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
- 
- 	sdev_printk(KERN_INFO, sdev,
- 	    "atapi(%s), ncq(%s), asyn_notify(%s), smart(%s), fua(%s), "
-@@ -3209,8 +3209,8 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 		struct sense_info data;
- 		_scsih_normalize_sense(scmd->sense_buffer, &data);
- 		printk(MPT2SAS_WARN_FMT "\t[sense_key,asc,ascq]: "
--		    "[0x%02x,0x%02x,0x%02x]\n", ioc->name, data.skey,
--		    data.asc, data.ascq);
-+		    "[0x%02x,0x%02x,0x%02x], count(%d)\n", ioc->name, data.skey,
-+		    data.asc, data.ascq, le32_to_cpu(mpi_reply->SenseCount));
+ 	if (ioc->shost_recovery || ioc->remove_host) {
+ 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
+ 		    __func__, ioc->name);
+-		return;
++		rc = FAILED;
++		goto err_out;
  	}
  
- 	if (scsi_state & MPI2_SCSI_STATE_RESPONSE_INFO_VALID) {
-@@ -3264,7 +3264,7 @@ _scsih_smart_predicted_fault(struct MPT2SAS_ADAPTER *ioc, u16 handle)
- 		mpi_request.Function = MPI2_FUNCTION_SCSI_ENCLOSURE_PROCESSOR;
- 		mpi_request.Action = MPI2_SEP_REQ_ACTION_WRITE_STATUS;
- 		mpi_request.SlotStatus =
--		    MPI2_SEP_REQ_SLOTSTATUS_PREDICTED_FAULT;
-+		    cpu_to_le32(MPI2_SEP_REQ_SLOTSTATUS_PREDICTED_FAULT);
- 		mpi_request.DevHandle = cpu_to_le16(handle);
- 		mpi_request.Flags = MPI2_SEP_REQ_FLAGS_DEVHANDLE_ADDRESS;
- 		if ((mpt2sas_base_scsi_enclosure_processor(ioc, &mpi_reply,
-@@ -5933,6 +5933,7 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
- 	struct fw_event_work *fw_event;
- 	Mpi2EventNotificationReply_t *mpi_reply;
- 	u16 event;
-+	u16 sz;
- 
- 	/* events turned off due to host reset or driver unloading */
- 	if (ioc->remove_host)
-@@ -5983,8 +5984,8 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
- 		    ioc->name, __FILE__, __LINE__, __func__);
- 		return 1;
- 	}
--	fw_event->event_data =
--	    kzalloc(mpi_reply->EventDataLength*4, GFP_ATOMIC);
-+	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
-+	fw_event->event_data = kzalloc(sz, GFP_ATOMIC);
- 	if (!fw_event->event_data) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-@@ -5993,7 +5994,7 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
+ 	ioc_state = mpt2sas_base_get_iocstate(ioc, 0);
+ 	if (ioc_state & MPI2_DOORBELL_USED) {
+ 		dhsprintk(ioc, printk(MPT2SAS_DEBUG_FMT "unexpected doorbell "
+ 		    "active!\n", ioc->name));
+-		goto issue_host_reset;
++		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
++		    FORCE_BIG_HAMMER);
++		rc = SUCCESS;
++		goto err_out;
  	}
  
- 	memcpy(fw_event->event_data, mpi_reply->EventData,
--	    mpi_reply->EventDataLength*4);
-+	    sz);
- 	fw_event->ioc = ioc;
- 	fw_event->VF_ID = mpi_reply->VF_ID;
- 	fw_event->VP_ID = mpi_reply->VP_ID;
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index 789f9ee..9523130 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -1340,7 +1340,8 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		memcpy(req->sense, mpi_reply, sizeof(*mpi_reply));
- 		req->sense_len = sizeof(*mpi_reply);
- 		req->resid_len = 0;
--		rsp->resid_len -= mpi_reply->ResponseDataLength;
-+		rsp->resid_len -=
-+		    le16_to_cpu(mpi_reply->ResponseDataLength);
- 	} else {
- 		dtransportprintk(ioc, printk(MPT2SAS_DEBUG_FMT
- 		    "%s - no reply\n", ioc->name, __func__));
+ 	if ((ioc_state & MPI2_IOC_STATE_MASK) == MPI2_IOC_STATE_FAULT) {
+ 		mpt2sas_base_fault_info(ioc, ioc_state &
+ 		    MPI2_DOORBELL_DATA_MASK);
+-		goto issue_host_reset;
++		mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
++		    FORCE_BIG_HAMMER);
++		rc = SUCCESS;
++		goto err_out;
+ 	}
+ 
+ 	smid = mpt2sas_base_get_smid_hpr(ioc, ioc->tm_cb_idx);
+ 	if (!smid) {
+ 		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
+ 		    ioc->name, __func__);
+-		return;
++		rc = FAILED;
++		goto err_out;
+ 	}
+ 
+ 	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "sending tm: handle(0x%04x),"
+@@ -2015,21 +2028,24 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
+ 	mpi_request->DevHandle = cpu_to_le16(handle);
+ 	mpi_request->TaskType = type;
+ 	mpi_request->TaskMID = cpu_to_le16(smid_task);
+-	mpi_request->VP_ID = 0;  /* TODO */
+-	mpi_request->VF_ID = 0;
+ 	int_to_scsilun(lun, (struct scsi_lun *)mpi_request->LUN);
+ 	mpt2sas_scsih_set_tm_flag(ioc, handle);
+ 	init_completion(&ioc->tm_cmds.done);
+ 	mpt2sas_base_put_smid_hi_priority(ioc, smid);
+ 	timeleft = wait_for_completion_timeout(&ioc->tm_cmds.done, timeout*HZ);
+-	mpt2sas_scsih_clear_tm_flag(ioc, handle);
+ 	if (!(ioc->tm_cmds.status & MPT2_CMD_COMPLETE)) {
+ 		printk(MPT2SAS_ERR_FMT "%s: timeout\n",
+ 		    ioc->name, __func__);
+ 		_debug_dump_mf(mpi_request,
+ 		    sizeof(Mpi2SCSITaskManagementRequest_t)/4);
+-		if (!(ioc->tm_cmds.status & MPT2_CMD_RESET))
+-			goto issue_host_reset;
++		if (!(ioc->tm_cmds.status & MPT2_CMD_RESET)) {
++			mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
++			    FORCE_BIG_HAMMER);
++			rc = SUCCESS;
++			ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
++			mpt2sas_scsih_clear_tm_flag(ioc, handle);
++			goto err_out;
++		}
+ 	}
+ 
+ 	if (ioc->tm_cmds.status & MPT2_CMD_REPLY_VALID) {
+@@ -2039,12 +2055,57 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
+ 		    ioc->name, le16_to_cpu(mpi_reply->IOCStatus),
+ 		    le32_to_cpu(mpi_reply->IOCLogInfo),
+ 		    le32_to_cpu(mpi_reply->TerminationCount)));
+-		if (ioc->logging_level & MPT_DEBUG_TM)
++		if (ioc->logging_level & MPT_DEBUG_TM) {
+ 			_scsih_response_code(ioc, mpi_reply->ResponseCode);
++			if (mpi_reply->IOCStatus)
++				_debug_dump_mf(mpi_request,
++				    sizeof(Mpi2SCSITaskManagementRequest_t)/4);
++		}
+ 	}
+-	return;
+- issue_host_reset:
+-	mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP, FORCE_BIG_HAMMER);
++
++	/* sanity check:
++	 * Check to see the commands were terminated.
++	 * This is only needed for eh callbacks, hence the scmd check.
++	 */
++	rc = FAILED;
++	if (scmd == NULL)
++		goto bypass_sanity_checks;
++	switch (type) {
++	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
++		scmd_lookup = _scsih_scsi_lookup_get(ioc, smid_task);
++		if (scmd_lookup && (scmd_lookup->serial_number ==
++		    scmd->serial_number))
++			rc = FAILED;
++		else
++			rc = SUCCESS;
++		break;
++
++	case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
++		if (_scsih_scsi_lookup_find_by_target(ioc, id, channel))
++			rc = FAILED;
++		else
++			rc = SUCCESS;
++		break;
++
++	case MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET:
++		if (_scsih_scsi_lookup_find_by_lun(ioc, id, lun, channel))
++			rc = FAILED;
++		else
++			rc = SUCCESS;
++		break;
++	}
++
++ bypass_sanity_checks:
++
++	mpt2sas_scsih_clear_tm_flag(ioc, handle);
++	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
++	mutex_unlock(&ioc->tm_cmds.mutex);
++
++	return rc;
++
++ err_out:
++	mutex_unlock(&ioc->tm_cmds.mutex);
++	return rc;
+ }
+ 
+ /**
+@@ -2061,7 +2122,6 @@ _scsih_abort(struct scsi_cmnd *scmd)
+ 	u16 smid;
+ 	u16 handle;
+ 	int r;
+-	struct scsi_cmnd *scmd_lookup;
+ 
+ 	printk(MPT2SAS_INFO_FMT "attempting task abort! scmd(%p)\n",
+ 	    ioc->name, scmd);
+@@ -2096,19 +2156,10 @@ _scsih_abort(struct scsi_cmnd *scmd)
+ 
+ 	mpt2sas_halt_firmware(ioc);
+ 
+-	mutex_lock(&ioc->tm_cmds.mutex);
+ 	handle = sas_device_priv_data->sas_target->handle;
+-	mpt2sas_scsih_issue_tm(ioc, handle, sas_device_priv_data->lun,
+-	    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid, 30);
+-
+-	/* sanity check - see whether command actually completed */
+-	scmd_lookup = _scsih_scsi_lookup_get(ioc, smid);
+-	if (scmd_lookup && (scmd_lookup->serial_number == scmd->serial_number))
+-		r = FAILED;
+-	else
+-		r = SUCCESS;
+-	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+-	mutex_unlock(&ioc->tm_cmds.mutex);
++	r = mpt2sas_scsih_issue_tm(ioc, handle, scmd->device->channel,
++	    scmd->device->id, scmd->device->lun,
++	    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid, 30, scmd);
+ 
+  out:
+ 	printk(MPT2SAS_INFO_FMT "task abort: %s scmd(%p)\n",
+@@ -2165,22 +2216,9 @@ _scsih_dev_reset(struct scsi_cmnd *scmd)
+ 		goto out;
+ 	}
+ 
+-	mutex_lock(&ioc->tm_cmds.mutex);
+-	mpt2sas_scsih_issue_tm(ioc, handle, 0,
+-	    MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, scmd->device->lun,
+-	    30);
+-
+-	/*
+-	 *  sanity check see whether all commands to this device been
+-	 *  completed
+-	 */
+-	if (_scsih_scsi_lookup_find_by_lun(ioc, scmd->device->id,
+-	    scmd->device->lun, scmd->device->channel))
+-		r = FAILED;
+-	else
+-		r = SUCCESS;
+-	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+-	mutex_unlock(&ioc->tm_cmds.mutex);
++	r = mpt2sas_scsih_issue_tm(ioc, handle, scmd->device->channel,
++	    scmd->device->id, scmd->device->lun,
++	    MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 30, scmd);
+ 
+  out:
+ 	printk(MPT2SAS_INFO_FMT "device reset: %s scmd(%p)\n",
+@@ -2237,21 +2275,9 @@ _scsih_target_reset(struct scsi_cmnd *scmd)
+ 		goto out;
+ 	}
+ 
+-	mutex_lock(&ioc->tm_cmds.mutex);
+-	mpt2sas_scsih_issue_tm(ioc, handle, 0,
+-	    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 30);
+-
+-	/*
+-	 *  sanity check see whether all commands to this target been
+-	 *  completed
+-	 */
+-	if (_scsih_scsi_lookup_find_by_target(ioc, scmd->device->id,
+-	    scmd->device->channel))
+-		r = FAILED;
+-	else
+-		r = SUCCESS;
+-	ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+-	mutex_unlock(&ioc->tm_cmds.mutex);
++	r = mpt2sas_scsih_issue_tm(ioc, handle, scmd->device->channel,
++	    scmd->device->id, 0, MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
++	    30, scmd);
+ 
+  out:
+ 	printk(MPT2SAS_INFO_FMT "target reset: %s scmd(%p)\n",
+@@ -4182,8 +4208,8 @@ _scsih_remove_pd_device(struct MPT2SAS_ADAPTER *ioc, struct _sas_device
+ 		return;
+ 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "issue target reset: "
+ 	    "handle(0x%04x)\n", ioc->name, vol_handle));
+-	mpt2sas_scsih_issue_tm(ioc, vol_handle, 0,
+-	    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 30);
++	mpt2sas_scsih_issue_tm(ioc, vol_handle, 0, 0, 0,
++	    MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0, 30, NULL);
+ 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "issue target reset "
+ 	    "done: handle(0x%04x)\n", ioc->name, vol_handle));
+ 	if (ioc->shost_recovery)
+@@ -4667,7 +4693,6 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
+ 	dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: enter\n", ioc->name,
+ 	    __func__));
+ 
+-	mutex_lock(&ioc->tm_cmds.mutex);
+ 	termination_count = 0;
+ 	query_count = 0;
+ 	mpi_reply = ioc->tm_cmds.reply;
+@@ -4691,8 +4716,8 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
+ 		lun = sas_device_priv_data->lun;
+ 		query_count++;
+ 
+-		mpt2sas_scsih_issue_tm(ioc, handle, lun,
+-		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid, 30);
++		mpt2sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
++		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid, 30, NULL);
+ 		ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+ 		ioc_status = le16_to_cpu(mpi_reply->IOCStatus)
+ 		    & MPI2_IOCSTATUS_MASK;
+@@ -4703,13 +4728,11 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
+ 		     MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC))
+ 			continue;
+ 
+-		mpt2sas_scsih_issue_tm(ioc, handle, lun,
+-		    MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET, 0, 30);
+-		ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
++		mpt2sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
++		    MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET, 0, 30, NULL);
+ 		termination_count += le32_to_cpu(mpi_reply->TerminationCount);
+ 	}
+ 	ioc->broadcast_aen_busy = 0;
+-	mutex_unlock(&ioc->tm_cmds.mutex);
+ 
+ 	dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT
+ 	    "%s - exit, query_count = %d termination_count = %d\n",
