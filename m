@@ -1,80 +1,67 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 03/11] mpt2sas: Use of get_free_pages for huge memorary allocation.
-Date: Wed, 17 Mar 2010 16:22:52 +0530
-Message-ID: <20100317105241.GD21264@lsi.com>
+Subject: [PATCH 04/11] mpt2sas: Early return from function if shost is in recovery.
+Date: Wed, 17 Mar 2010 16:23:36 +0530
+Message-ID: <20100317105324.GE21264@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:54738 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754405Ab0CQLXu (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:39551 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754457Ab0CQLYe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2010 07:23:50 -0400
+	Wed, 17 Mar 2010 07:24:34 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-use the get_free_pages API for larger contigious physical memory chunk.
-Also, the ioc->chain_depth need to be changed from
-a 16bit to 32bit variable because the number of chains will exceed 64k
-when the queue depth is large.
+Aded checks for shost_recovery flag for early return from function.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 79ab9fa..3735886 100644
+index 3735886..4c62ee9 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1898,7 +1898,7 @@ _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
- 		    ioc->config_page, ioc->config_page_dma);
+@@ -3518,7 +3518,9 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	    __func__));
+ 
+ 	_base_mask_interrupts(ioc);
++	ioc->shost_recovery = 1;
+ 	_base_make_ioc_ready(ioc, CAN_SLEEP, SOFT_RESET);
++	ioc->shost_recovery = 0;
+ 	if (ioc->pci_irq) {
+ 		synchronize_irq(pdev->irq);
+ 		free_irq(ioc->pci_irq, ioc);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index cd0f245..4eb6be9 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -1978,7 +1978,7 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint lun,
+ 		return;
  	}
  
--	kfree(ioc->scsi_lookup);
-+	free_pages((ulong)ioc->scsi_lookup, ioc->scsi_lookup_pages);
- 	kfree(ioc->hpr_lookup);
- 	kfree(ioc->internal_lookup);
- }
-@@ -2110,11 +2110,13 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
- 	    ioc->name, (unsigned long long) ioc->request_dma));
- 	total_sz += sz;
+-	if (ioc->shost_recovery) {
++	if (ioc->shost_recovery || ioc->remove_host) {
+ 		printk(MPT2SAS_INFO_FMT "%s: host reset in progress!\n",
+ 		    __func__, ioc->name);
+ 		return;
+@@ -4245,7 +4245,7 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 		_scsih_sas_topology_change_event_debug(ioc, event_data);
+ #endif
  
--	ioc->scsi_lookup = kcalloc(ioc->scsiio_depth,
--	    sizeof(struct request_tracker), GFP_KERNEL);
-+	sz = ioc->scsiio_depth * sizeof(struct request_tracker);
-+	ioc->scsi_lookup_pages = get_order(sz);
-+	ioc->scsi_lookup = (struct request_tracker *)__get_free_pages(
-+	    GFP_KERNEL, ioc->scsi_lookup_pages);
- 	if (!ioc->scsi_lookup) {
--		printk(MPT2SAS_ERR_FMT "scsi_lookup: kcalloc failed\n",
--		    ioc->name);
-+		printk(MPT2SAS_ERR_FMT "scsi_lookup: get_free_pages failed, "
-+		    "sz(%d)\n", ioc->name, (int)sz);
- 		goto out;
- 	}
+-	if (ioc->shost_recovery)
++	if (ioc->shost_recovery || ioc->remove_host)
+ 		return;
  
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 1df5ec0..cccd4df 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -676,7 +676,8 @@ struct MPT2SAS_ADAPTER {
- 	dma_addr_t	request_dma;
- 	u32		request_dma_sz;
- 	struct request_tracker *scsi_lookup;
--	spinlock_t scsi_lookup_lock;
-+	ulong		scsi_lookup_pages;
-+	spinlock_t 	scsi_lookup_lock;
- 	struct list_head free_list;
- 	int		pending_io_count;
- 	wait_queue_head_t reset_wq;
-@@ -688,7 +689,7 @@ struct MPT2SAS_ADAPTER {
- 	u16		max_sges_in_chain_message;
- 	u16		chains_needed_per_io;
- 	u16		chain_offset_value_for_main_message;
--	u16		chain_depth;
-+	u32		chain_depth;
- 
- 	/* hi-priority queue */
- 	u16		hi_priority_smid;
+ 	if (!ioc->sas_hba.num_phys)
+@@ -4284,7 +4284,7 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
+ 			    "expander event\n", ioc->name));
+ 			return;
+ 		}
+-		if (ioc->shost_recovery)
++		if (ioc->shost_recovery || ioc->remove_host)
+ 			return;
+ 		phy_number = event_data->StartPhyNum + i;
+ 		reason_code = event_data->PHY[i].PhyStatus &
