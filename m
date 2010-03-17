@@ -1,25 +1,27 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15563] New: SCSI Generic timeout is NOOP
-Date: Wed, 17 Mar 2010 22:18:27 GMT
-Message-ID: <bug-15563-11613@http.bugzilla.kernel.org/>
+Subject: [Bug 15564] New: SCSI Generic queueing of insufficient dxferlen for
+ command can succeed
+Date: Wed, 17 Mar 2010 22:24:28 GMT
+Message-ID: <bug-15564-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37557 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:33332 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab0CQWSa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2010 18:18:30 -0400
+	with ESMTP id S1756122Ab0CQWYa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Mar 2010 18:24:30 -0400
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2HMIR5R015265
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2HMOSEV016678
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2010 22:18:28 GMT
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Mar 2010 22:24:29 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15563
+http://bugzilla.kernel.org/show_bug.cgi?id=15564
 
-           Summary: SCSI Generic timeout is NOOP
+           Summary: SCSI Generic queueing of insufficient dxferlen for
+                    command can succeed
            Product: IO/Storage
            Version: 2.5
     Kernel Version: 2.6.18-2.6.32
@@ -35,9 +37,10 @@ http://bugzilla.kernel.org/show_bug.cgi?id=15563
         Regression: No
 
 
-When sg_io_hdr.timeout is set to say 20000 ms, READ_10 and WRITE_10 commands
-succeed after 30 or even 40 seconds without an error.  SCSI Generic HOWTO
-documents timeout as an actual limit to how long the command has to run.
+If dxferlen is less than the READ_10 data transferlen, the SCSI
+command sometimes reports success when it shouldn't succeed.  This
+is corruption and makes debugging very difficult; don't ask me
+how I know :-)
 
 -- 
 Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
