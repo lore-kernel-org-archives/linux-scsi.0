@@ -1,49 +1,80 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 02/11] mpt2sas: Corrected conditional checks for Internal device Reset
-Date: Wed, 17 Mar 2010 16:22:21 +0530
-Message-ID: <20100317105210.GC21264@lsi.com>
+Subject: [PATCH 03/11] mpt2sas: Use of get_free_pages for huge memorary allocation.
+Date: Wed, 17 Mar 2010 16:22:52 +0530
+Message-ID: <20100317105241.GD21264@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:57967 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754405Ab0CQLXT (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:54738 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754405Ab0CQLXu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2010 07:23:19 -0400
+	Wed, 17 Mar 2010 07:23:50 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-bug fix in the handling of the internal device reset event
-The reason code check in scsih_sas_device_status_change_event never
-evaluates as true for internal device reset, hence driver never quiesce s IO
-when firmware is sending a device reset. The fix is to change the
-evaluate to:
-if (event_data->ReasonCode !=
-    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
-   event_data->ReasonCode !=
-    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
-        return;
+use the get_free_pages API for larger contigious physical memory chunk.
+Also, the ioc->chain_depth need to be changed from
+a 16bit to 32bit variable because the number of chains will exceed 64k
+when the queue depth is large.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index b2d6d75..cd0f245 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -4434,10 +4434,10 @@ _scsih_sas_device_status_change_event(struct MPT2SAS_ADAPTER *ioc,
- 		     event_data);
- #endif
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 79ab9fa..3735886 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1898,7 +1898,7 @@ _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
+ 		    ioc->config_page, ioc->config_page_dma);
+ 	}
  
--	if (!(event_data->ReasonCode ==
-+	if (event_data->ReasonCode !=
- 	    MPI2_EVENT_SAS_DEV_STAT_RC_INTERNAL_DEVICE_RESET &&
--	   event_data->ReasonCode ==
--	    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET))
-+	   event_data->ReasonCode !=
-+	    MPI2_EVENT_SAS_DEV_STAT_RC_CMP_INTERNAL_DEV_RESET)
- 		return;
+-	kfree(ioc->scsi_lookup);
++	free_pages((ulong)ioc->scsi_lookup, ioc->scsi_lookup_pages);
+ 	kfree(ioc->hpr_lookup);
+ 	kfree(ioc->internal_lookup);
+ }
+@@ -2110,11 +2110,13 @@ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
+ 	    ioc->name, (unsigned long long) ioc->request_dma));
+ 	total_sz += sz;
  
- 	spin_lock_irqsave(&ioc->sas_device_lock, flags);
+-	ioc->scsi_lookup = kcalloc(ioc->scsiio_depth,
+-	    sizeof(struct request_tracker), GFP_KERNEL);
++	sz = ioc->scsiio_depth * sizeof(struct request_tracker);
++	ioc->scsi_lookup_pages = get_order(sz);
++	ioc->scsi_lookup = (struct request_tracker *)__get_free_pages(
++	    GFP_KERNEL, ioc->scsi_lookup_pages);
+ 	if (!ioc->scsi_lookup) {
+-		printk(MPT2SAS_ERR_FMT "scsi_lookup: kcalloc failed\n",
+-		    ioc->name);
++		printk(MPT2SAS_ERR_FMT "scsi_lookup: get_free_pages failed, "
++		    "sz(%d)\n", ioc->name, (int)sz);
+ 		goto out;
+ 	}
+ 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 1df5ec0..cccd4df 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -676,7 +676,8 @@ struct MPT2SAS_ADAPTER {
+ 	dma_addr_t	request_dma;
+ 	u32		request_dma_sz;
+ 	struct request_tracker *scsi_lookup;
+-	spinlock_t scsi_lookup_lock;
++	ulong		scsi_lookup_pages;
++	spinlock_t 	scsi_lookup_lock;
+ 	struct list_head free_list;
+ 	int		pending_io_count;
+ 	wait_queue_head_t reset_wq;
+@@ -688,7 +689,7 @@ struct MPT2SAS_ADAPTER {
+ 	u16		max_sges_in_chain_message;
+ 	u16		chains_needed_per_io;
+ 	u16		chain_offset_value_for_main_message;
+-	u16		chain_depth;
++	u32		chain_depth;
+ 
+ 	/* hi-priority queue */
+ 	u16		hi_priority_smid;
