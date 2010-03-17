@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 0/11] mpt2sas : Description patch
-Date: Wed, 17 Mar 2010 16:20:55 +0530
-Message-ID: <20100317105042.GA21264@lsi.com>
+Subject: [PATCH 01/11] mpt2sas: Corrected time stamp
+Date: Wed, 17 Mar 2010 16:21:33 +0530
+Message-ID: <20100317105121.GB21264@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:37088 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754311Ab0CQLWA (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:51635 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754337Ab0CQLWb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Mar 2010 07:22:00 -0400
+	Wed, 17 Mar 2010 07:22:31 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,24 +17,29 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-MPT2SAS driver updates.
-Please consider it for next Merge window.
-patch is taken using 2.6.33-rc7. Base driver for this patch is 04.100.01.02.
-Before applying this patchset previous patch submission for 04.100.01.02
-need to be applied.
-
-[PATCH 01/11] mpt2sas: Corrected time stamp
-[PATCH 02/11] mpt2sas: Corrected conditional checks for Internal device
-			Reset
-[PATCH 03/11] mpt2sas: Use of get_free_pages for huge memorary allocation.
-[PATCH 04/11] mpt2sas: Early return from function if shost is in recovery.
-[PATCH 05/11] mpt2sas: Driver will not treat NEEDS_INIT as failure.
-[PATCH 06/11] mpt2sas: Fix for little endian.
-[PATCH 07/11] mpt2sas: removed use of tm_cmds.mutex in IOCTL branch.
-[PATCH 08/11] mpt2sas: return -ENOMEM if memory allocation failed.
-[PATCH 09/11] mpt2sas: Default descriptor for RAID Passthru command.
-[PATCH 10/11] mpt2sas: Copyright 2010.
-[PATCH 11/11] mpt2sas: Bump version 05.100.00.00
+incorrect timestamp on 32 bit platforms: The upper 32 bit of
+the timestamp was getting truncated when converting seconds to
+milliseconds, which was due to the variable being long. To fix the problem,
+the variable needs to be u64. Also the microseconds conversion to
+milliseconds was incorrect; it should be divide by 1000 instead of divide by
+8.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
+
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index da4bfbf..79ab9fa 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3006,8 +3006,8 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	 * since epoch ~ midnight January 1, 1970.
+ 	 */
+ 	do_gettimeofday(&current_time);
+-	mpi_request.TimeStamp = (current_time.tv_sec * 1000) +
+-	    (current_time.tv_usec >> 3);
++	mpi_request.TimeStamp = cpu_to_le64((u64)current_time.tv_sec * 1000 +
++	    (current_time.tv_usec / 1000));
+ 
+ 	if (ioc->logging_level & MPT_DEBUG_INIT) {
+ 		u32 *mfp;
