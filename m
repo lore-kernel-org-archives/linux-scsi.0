@@ -1,49 +1,100 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: An fc4 user appears
-Date: Thu, 18 Mar 2010 12:49:52 -0600
-Message-ID: <20100318184952.GB3875@parisc-linux.org>
-References: <17772.86388.qm@web52601.mail.re2.yahoo.com> <876254.4671.qm@web52601.mail.re2.yahoo.com> <20100317095222.GA16828@orion.carnet.hr>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [Bug 15565] SCSI Generic queueing completes commands in reverse
+ order
+Date: Thu, 18 Mar 2010 15:30:19 -0400
+Message-ID: <4BA27F4B.5080807@interlog.com>
+References: <bug-15565-11613@http.bugzilla.kernel.org/> <201003181721.o2IHLAFg009271@demeter.kernel.org> <4BA26ABC.3000908@panasas.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:50270 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923Ab0CRStx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2010 14:49:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20100317095222.GA16828@orion.carnet.hr>
+Received: from smtp.infotech.no ([82.134.31.41]:35899 "EHLO elrond.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751317Ab0CRTaZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Mar 2010 15:30:25 -0400
+In-Reply-To: <4BA26ABC.3000908@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Josip Rodin <joy@entuzijast.net>
-Cc: Mr Ian Primus <ian_primus@yahoo.com>, debian-sparc@lists.debian.org, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Mar 17, 2010 at 10:52:22AM +0100, Josip Rodin wrote:
-> On Tue, Mar 16, 2010 at 06:16:05PM -0700, Mr Ian Primus wrote:
-> > So, now I have Linux installed. Next task: getting the fibre channel
-> > working. I'm currently digging through the configuration options on the
-> > kernel. (Downloaded 2.6.33.1 from kernel.org) I can't for the life of me
-> > find the Sun fibre channel driver. I could have sworn it was SOC or
-> > something like that...
+Boaz Harrosh wrote:
+> Please switch to mail ?
 > 
-> On Tue, Mar 16, 2010 at 06:46:56PM -0700, Mr Ian Primus wrote:
-> > Doing some more digging, it seems that the Sun fibre channel driver is
-> > missing from recent versions of the kernel, the newest one I've been able
-> > to find that contains it is 2.6.23. On this kernel, it's in drivers/fc4,
-> > and Fibre Channel support is a menu option right in the main menu after
-> > make menuconfig. I can't find this driver in the newer kernels. Does
-> > anyone know what happened to it? Did it get merged in with another driver?
-> > 
-> > I really want to get this A5000 working :)
+> On 03/18/2010 07:21 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+>> http://bugzilla.kernel.org/show_bug.cgi?id=15565
+>>
+>>
+>>
+>>
+>>
+>> --- Comment #4 from Mike Hayward <mh-linux-kernel@loup.net>  2010-03-18 17:21:05 ---
+>> Hi Boaz,
+>>
+>>  > I have fixed that for bsg long ago. There is a flag
+>>  > that you put:
+>>  >     sg.flags = BSG_FLAG_Q_AT_TAIL;
+>>  > Which will do the by order, queue at tail. Zero was kept compatible
+>>  > to sg meaning "queue at head" i.e. jump the line.
+>>  > 
+>>  > It could be added to sg as well if needed
+>>
+>> I think that would be a huge improvement for disk drives.
+>>
+>> Isn't BSG driven with a blocking ioctl?  Maybe I'm using old docs, but
+>> from the HOWTO's I've read, I was under the impression it would issue
+>> one SCSI command at a time and block until it completed.  Queueing
+>> would effectively only be possible then with multiple threads, right?
+>>
 > 
-> fc4 was removed in October 2007 with this commit:
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1ecd3902c6e16c2445165b872c49e73770b72da7
+> There is a way to do write with multiple ios at once and then
+> do reads to get return status. (I have untested code that does
+> that but never needed it so badly as to finish it. But I know
+> of other people that did it)
+> 
+> bsg does not have all these mmap/shared buffers options like
+> sg does, though. Hell not even AIOs.
+> 
+>> Since sg allows multiple (only 16 right now) ios to be queued
+>> nonblocking to a block device from a single threaded process,
+>> an SG_FLAG_Q_AT_TAIL flag would seem particularly relevant.
+>>
+> 
+> Yes. Currently the queue of 16 does nothing because in effect the
+> Kernel will completely drain the Q on each "Q_AT_HEAD". So the Q
+> does nothing for IO with current sg.
+> 
+>> Nonblocking behavior is the primary reason why I am using sg... it
+>> seems really inefficient and complex to use dozens of threads and ipc
+>> just to try to submit a queue of ios to the kernel and hence a device.
+>>
+> 
+> There are surely other ways to do AIO, no?
+> (The A in AIO stands for Asynchronous)
+> 
+>> If bsg actually allowed tasks to be queued nonblocking like sg, I'd
+>> switch in a heart beat since having two filesystem names for the same
+>> device introduces locking problems, name translation complexity, and
+>> confusion in general for administrators.
+>>
+> 
+> Well bsg has it's own naming translation. You do not use /dev/sdX1. You
+> need to open the bsg char-device corresponding the particular scsi-device
 
-Yep, I removed it.  Resurrecting it will be quite a task.  Best of luck.
-I'm willing to answer questions (please cc linux-scsi), but not do
-the work.
+What might be useful is to tell the sd driver not to hook
+a particular logical unit with peripheral device type 0
+(i.e. a disk). Perhaps this could be done via the LU
+UUID. That way udev (?) would be less tempted to send
+crap commands to the device at random times.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+After that you only have to worry about the device node
+duality between bsg and sg :-)
+They are pretty well behaved, only sending commands when
+they are asked to.
+
+
+Adding a SG_FLAG_Q_AT_TAIL flag to sg seems like a
+good idea.
+
+Doug Gilbert
