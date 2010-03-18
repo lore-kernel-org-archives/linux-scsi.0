@@ -1,22 +1,33 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Bug 15565] SCSI Generic queueing completes commands in reverse
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15565] SCSI Generic queueing completes commands in reverse
  order
-Date: Thu, 18 Mar 2010 20:02:36 +0200
-Message-ID: <4BA26ABC.3000908@panasas.com>
-References: <bug-15565-11613@http.bugzilla.kernel.org/> <201003181721.o2IHLAFg009271@demeter.kernel.org>
+Date: Thu, 18 Mar 2010 18:03:21 GMT
+Message-ID: <201003181803.o2II3L2F020805@demeter.kernel.org>
+References: <bug-15565-11613@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:24634 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753755Ab0CRSCj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2010 14:02:39 -0400
-In-Reply-To: <201003181721.o2IHLAFg009271@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:33049 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201Ab0CRSDW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2010 14:03:22 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2II3LH3020806
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2010 18:03:21 GMT
+In-Reply-To: <bug-15565-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=15565
+
+
+
+
+
+--- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-03-18 18:03:17 ---
+Reply-To: bharrosh@panasas.com
 
 Please switch to mail ?
 
@@ -85,3 +96,8 @@ need to open the bsg char-device corresponding the particular scsi-device
 > 
 
 Boaz
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
