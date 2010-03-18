@@ -1,66 +1,89 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15565] SCSI Generic queueing completes commands in reverse
- order
-Date: Thu, 18 Mar 2010 08:23:59 GMT
-Message-ID: <201003180823.o2I8NxNo011903@demeter.kernel.org>
-References: <bug-15565-11613@http.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Bug 15565] New: SCSI Generic queueing completes commands in
+ reverse order
+Date: Thu, 18 Mar 2010 11:56:27 +0200
+Message-ID: <4BA1F8CB.9070406@panasas.com>
+References: <bug-15565-11613@http.bugzilla.kernel.org/> <4BA18DA5.6000902@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:57980 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145Ab0CRIYA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2010 04:24:00 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2I8O0fY011904
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Mar 2010 08:24:00 GMT
-In-Reply-To: <bug-15565-11613@http.bugzilla.kernel.org/>
+Received: from daytona.panasas.com ([67.152.220.89]:43108 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751579Ab0CRJ4d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Mar 2010 05:56:33 -0400
+In-Reply-To: <4BA18DA5.6000902@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15565
+On 03/18/2010 04:19 AM, Douglas Gilbert wrote:
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+>> http://bugzilla.kernel.org/show_bug.cgi?id=15565
+>>
+>>            Summary: SCSI Generic queueing completes commands in reverse
+>>                     order
+>>            Product: IO/Storage
+>>            Version: 2.5
+>>     Kernel Version: 2.6.18-2.6.32
+>>           Platform: All
+>>         OS/Version: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: normal
+>>           Priority: P1
+>>          Component: SCSI
+>>         AssignedTo: linux-scsi@vger.kernel.org
+>>         ReportedBy: mh-linux-kernel@loup.net
+>>         Regression: No
+>>
+>>
+>> I've noticed after queueing the first command, subsequent commands
+>> appear to be executed and complete in reverse order.  The SCSI Generic
+>> HOWTO says "By default, read() will return the oldest completed
+>> request that is queued up."
+>>
+>> This could also be a performance defect if it's what's really
+>> happening since it isn't desirable behavior if, for example, ios are
+>> typically ordered by lba and issued one at a time by kernel to a non
+>> queueing block device.
+>>
+>> This reverse order behavior is trivial to reproduce; just queue 16
+>> concurrent INQUIRY commands.  The following are typical results I get
+>> from initially queueing 16 READ_10 commands.
+>>
+>>    Completion Command #  hdr.driver_duration (us)
+>>    Order
+>>    1          22         14979
+>>    2          20         14981
+>>    3          19         14982
+>>    4          17         14984
+>>    5          16         14985
+>>    6          15         14986
+>>    7          14         14988
+>>    8          12         14990
+>>    9          11         14991
+>>    10         10         14992
+>>
+> 
+> I have been told that is a feature :-)
+> 
+> The SCSI mid level processes commands from
+> pass-throughs (e.g. sg and bsg) in LIFO order.
+> For certain types of error processing it makes
+> sense. For READs and WRITEs it makes no sense.
+> 
 
+I have fixed that for bsg long ago. There is a flag
+that you put:
+	sg.flags = BSG_FLAG_Q_AT_TAIL;
+Which will do the by order, queue at tail. Zero was kept compatible
+to sg meaning "queue at head" i.e. jump the line.
 
+> Doug Gilbert
+> 
 
+It could be added to sg as well if needed
 
-
---- Comment #2 from Mike Hayward <mh-linux-kernel@loup.net>  2010-03-18 08:23:55 ---
-Hey Doug,
-
- > bugzilla-daemon@bugzilla.kernel.org wrote:
- > > http://bugzilla.kernel.org/show_bug.cgi?id=15565
- > > 
- > >            Summary: SCSI Generic queueing completes commands in reverse
- > >                     order
- >
- > I have been told that is a feature :-)
- > 
- > The SCSI mid level processes commands from
- > pass-throughs (e.g. sg and bsg) in LIFO order.
- > For certain types of error processing it makes
- > sense. For READs and WRITEs it makes no sense.
-
-Thanks for the confirmation; it in fact it makes anti sense to a
-spinning disk drive!  Without drive command queueing it's causing the
-maximum rotational delay for reads or writes with caching disabled,
-maximizing latency and minimizing throughput to a given track.  Ouch.
-
-I assume libaio does not exhibit this behavior, or is everything
-running through the scsi mid level and just depending on adjacent io
-aggregation to help reduce rotational latency?  I'm guessing I'll have
-to use libaio to get good disk performance in the near future and save
-sg for controlling caching, etc.
-
-Bummer since SCSI gives much better control, like priority ios to a
-journal, which NCQ can actually grant and SCSI-ATA translation should
-support or SCSI drive can honor closer to the media.  Or FUA & DPO, or
-command ordering to pipeline a barrier.
-
-- Mike
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Boaz
