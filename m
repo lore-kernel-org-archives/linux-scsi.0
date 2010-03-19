@@ -1,119 +1,59 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15565] SCSI Generic queueing completes commands in reverse
- order
-Date: Fri, 19 Mar 2010 21:36:45 GMT
-Message-ID: <201003192136.o2JLajJw006053@demeter.kernel.org>
-References: <bug-15565-11613@http.bugzilla.kernel.org/>
+From: Marco Schindler <marco.schindler@gmail.com>
+Subject: Intel SASMF8I
+Date: Fri, 19 Mar 2010 23:39:58 +0100
+Message-ID: <4BA3FD3E.9070801@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed;
+ boundary="------------010605010907090106030604"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41500 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865Ab0CSVgq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2010 17:36:46 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2JLaj8B006054
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Mar 2010 21:36:45 GMT
-In-Reply-To: <bug-15565-11613@http.bugzilla.kernel.org/>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:42237 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079Ab0CSWkE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2010 18:40:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com
+Cc: support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15565
+This is a multi-part message in MIME format.
+--------------010605010907090106030604
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Hello,
+this card (using LSISAS1068(E)) is not recognized by FUSION_SAS, after
+patching the device code it appears to work nicely.
 
+--------------010605010907090106030604
+Content-Type: text/plain; x-mac-type="0"; x-mac-creator="0";
+ name="fusion.mpt.lsi8208elp.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="fusion.mpt.lsi8208elp.patch"
 
+Signed-off-by: Marco Schindler <marco.schindler@gmail.com>
+diff -ru --exclude=auto.conf --exclude=autoconf.h --exclude=mptsas.mod.c --exclude='*.o' --exclude='*.ko' linux.old/drivers/message/fusion/lsi/mpi_cnfg.h linux.new/drivers/message/fusion/lsi/mpi_cnfg.h
+--- linux.old/drivers/message/fusion/lsi/mpi_cnfg.h	2009-01-27 23:37:45.000000000 +0100
++++ linux.new/drivers/message/fusion/lsi/mpi_cnfg.h	2009-01-27 23:53:07.000000000 +0100
+@@ -569,6 +569,7 @@
+ #define MPI_MANUFACTPAGE_DEVID_SAS1066E             (0x005A)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1068              (0x0054)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1068E             (0x0058)
++#define MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP      (0x0059)
+ #define MPI_MANUFACTPAGE_DEVID_SAS1078              (0x0062)
+ 
+ 
+diff -ru --exclude=auto.conf --exclude=autoconf.h --exclude=mptsas.mod.c --exclude='*.o' --exclude='*.ko' linux.old/drivers/message/fusion/mptsas.c linux.new/drivers/message/fusion/mptsas.c
+--- linux.old/drivers/message/fusion/mptsas.c	2009-01-27 23:37:45.000000000 +0100
++++ linux.new/drivers/message/fusion/mptsas.c	2009-01-27 23:54:00.000000000 +0100
+@@ -3335,6 +3335,8 @@
+ 		PCI_ANY_ID, PCI_ANY_ID },
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1078,
+ 		PCI_ANY_ID, PCI_ANY_ID },
++	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP,
++		PCI_ANY_ID, PCI_ANY_ID },
+ 	{0}	/* Terminating entry */
+ };
+ MODULE_DEVICE_TABLE(pci, mptsas_pci_table);
 
-
---- Comment #8 from Michael Reed <mdr@sgi.com>  2010-03-19 21:36:40 ---
-Vladislav Bolkhovitin wrote:
-> Douglas Gilbert, on 03/18/2010 10:30 PM wrote:
->>>> Hi Boaz,
->>>>
->>>>  > I have fixed that for bsg long ago. There is a flag
->>>>  > that you put:
->>>>  >     sg.flags = BSG_FLAG_Q_AT_TAIL;
->>>>  > Which will do the by order, queue at tail. Zero was kept compatible
->>>>  > to sg meaning "queue at head" i.e. jump the line.
->>>>  > 
->>>>  > It could be added to sg as well if needed
->>>>
->>>> I think that would be a huge improvement for disk drives.
->>>>
->>>> Isn't BSG driven with a blocking ioctl?  Maybe I'm using old docs, but
->>>> from the HOWTO's I've read, I was under the impression it would issue
->>>> one SCSI command at a time and block until it completed.  Queueing
->>>> would effectively only be possible then with multiple threads, right?
->>>>
->>> There is a way to do write with multiple ios at once and then
->>> do reads to get return status. (I have untested code that does
->>> that but never needed it so badly as to finish it. But I know
->>> of other people that did it)
->>>
->>> bsg does not have all these mmap/shared buffers options like
->>> sg does, though. Hell not even AIOs.
->>>
->>>> Since sg allows multiple (only 16 right now) ios to be queued
->>>> nonblocking to a block device from a single threaded process,
->>>> an SG_FLAG_Q_AT_TAIL flag would seem particularly relevant.
->>>>
->>> Yes. Currently the queue of 16 does nothing because in effect the
->>> Kernel will completely drain the Q on each "Q_AT_HEAD". So the Q
->>> does nothing for IO with current sg.
->>>
->>>> Nonblocking behavior is the primary reason why I am using sg... it
->>>> seems really inefficient and complex to use dozens of threads and ipc
->>>> just to try to submit a queue of ios to the kernel and hence a device.
->>>>
->>> There are surely other ways to do AIO, no?
->>> (The A in AIO stands for Asynchronous)
->>>
->>>> If bsg actually allowed tasks to be queued nonblocking like sg, I'd
->>>> switch in a heart beat since having two filesystem names for the same
->>>> device introduces locking problems, name translation complexity, and
->>>> confusion in general for administrators.
->>>>
->>> Well bsg has it's own naming translation. You do not use /dev/sdX1. You
->>> need to open the bsg char-device corresponding the particular scsi-device
->> What might be useful is to tell the sd driver not to hook
->> a particular logical unit with peripheral device type 0
->> (i.e. a disk). Perhaps this could be done via the LU
->> UUID. That way udev (?) would be less tempted to send
->> crap commands to the device at random times.
->>
->> After that you only have to worry about the device node
->> duality between bsg and sg :-)
->> They are pretty well behaved, only sending commands when
->> they are asked to.
->>
->>
->> Adding a SG_FLAG_Q_AT_TAIL flag to sg seems like a
->> good idea.
-> 
-> Great so see the problem confirmed and it's going to move! I and other 
-> people have been asking this for 3 (or 4?) years and have had a silence 
-> in reply. It hasn't even been confirmed, so I'd prepare a patch.
-> 
-> Eventually, this should be fixed.
-> 
-> Vlad
-
-
-We're looking at supporting a non-disk scsi device which can effectively
-process a queue depth of nine in parallel.  Having our application access
-the hardware via the "sg" device is our first choice on how to proceed.
-
-My reading of this thread indicates that the 9 parallel commands we'll
-issue will be effectively single threaded by the kernel due to their
-being queued at the head of the queue.
-
-I'd like to encourage the implementation of SG_FLAG_Q_AT_TAIL for
-sg devices.
-
-Mike
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--------------010605010907090106030604--
