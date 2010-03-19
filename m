@@ -1,42 +1,98 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: An fc4 user appears
-Date: Fri, 19 Mar 2010 07:17:28 -0600
-Message-ID: <20100319131727.GE3875@parisc-linux.org>
-References: <20100318184952.GB3875@parisc-linux.org> <17772.86388.qm@web52601.mail.re2.yahoo.com> <876254.4671.qm@web52601.mail.re2.yahoo.com> <20100317095222.GA16828@orion.carnet.hr> <201003181931.o2IJVSFj029524@yagi.h-net.msu.edu>
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 5/5] bfa: sg addr big endian fix
+Date: Fri, 19 Mar 2010 11:07:36 -0700
+Message-ID: <1269022056-13611-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:45682 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368Ab0CSNR3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2010 09:17:29 -0400
-Content-Disposition: inline
-In-Reply-To: <201003181931.o2IJVSFj029524@yagi.h-net.msu.edu>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34423 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750865Ab0CSSRs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Mar 2010 14:17:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dennis Boone <drb@msu.edu>
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: adapter_linux_open_src_team@brocade.com, huangj@brocade.com
 
-On Thu, Mar 18, 2010 at 03:31:28PM -0400, Dennis Boone wrote:
->  > > fc4 was removed in October 2007 with this commit:
->  > > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=1ecd3902c6e16c2445165b872c49e73770b72da7
-> 
->  > Yep, I removed it.  Resurrecting it will be quite a task.  Best of luck.
->  > I'm willing to answer questions (please cc linux-scsi), but not do the
->  > work.
-> 
-> Arrrrgh.  This kills all of the Sun Ex500 boxes.
+sg address in IO request is not set up correctly for big endian platform.
+add new macros to properly swap the address.
 
-I'm OK with that.  According to http://en.wikipedia.org/wiki/Sun_Enterprise
-they haven't been produced since 2001.  I don't mind keeping support
-for old products in Linux, but the fc4 layer was getting in the way
-of improving the SCSI subsystem for current and future hardware.
-That's not acceptable, so with no maintainer for the fc4 layer, the
-only option was to remove it.  If you'd like to become fc4 maintainer,
-or can find someone else to do it for you, it can go back in, no problem.
+Signed-off-by: Jing Huang <huangj@brocade.com>
+---
+ drivers/scsi/bfa/bfa_ioim.c   |    4 ++--
+ drivers/scsi/bfa/bfa_os_inc.h |   15 +++++++++++++++
+ 2 files changed, 17 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_ioim.c b/drivers/scsi/bfa/bfa_ioim.c
+index 8a1be20..687f3d6 100644
+--- a/drivers/scsi/bfa/bfa_ioim.c
++++ b/drivers/scsi/bfa/bfa_ioim.c
+@@ -758,7 +758,7 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ 	sge = &m->sges[0];
+ 	if (ioim->nsges) {
+ 		sg = (struct scatterlist *)scsi_sglist(cmnd);
+-		addr = (u64) sg_dma_address(sg);
++		addr = bfa_os_sgaddr(sg_dma_address(sg));
+ 		sge->sga = *(union bfi_addr_u *) &addr;
+ 		pgdlen = sg_dma_len(sg);
+ 		sge->sg_len = pgdlen;
+@@ -891,7 +891,7 @@ bfa_ioim_sgpg_setup(struct bfa_ioim_s *ioim)
+ 
+ 		pgcumsz = 0;
+ 		for (i = 0; i < nsges; i++, sge++, sgeid++, sg = sg_next(sg)) {
+-			addr = (u64) sg_dma_address(sg);
++			addr = bfa_os_sgaddr(sg_dma_address(sg));
+ 			sge->sga = *(union bfi_addr_u *) &addr;
+ 			sge->sg_len = sg_dma_len(sg);
+ 			pgcumsz += sge->sg_len;
+diff --git a/drivers/scsi/bfa/bfa_os_inc.h b/drivers/scsi/bfa/bfa_os_inc.h
+index 10a89f7..4eb1330 100644
+--- a/drivers/scsi/bfa/bfa_os_inc.h
++++ b/drivers/scsi/bfa/bfa_os_inc.h
+@@ -50,6 +50,10 @@
+ #include <scsi/scsi_transport_fc.h>
+ #include <scsi/scsi_transport.h>
+ 
++#ifdef __BIG_ENDIAN
++#define __BIGENDIAN
++#endif
++
+ #define BFA_ERR			KERN_ERR
+ #define BFA_WARNING		KERN_WARNING
+ #define BFA_NOTICE		KERN_NOTICE
+@@ -123,6 +127,15 @@ int bfa_os_MWB(void *);
+ 	(((_x) & 0x00ff0000) >> 8)	|	\
+ 	(((_x) & 0xff000000) >> 24))
+ 
++#define bfa_os_swap_sgaddr(_x)	((u64)(					\
++	(((u64)(_x) & (u64)0x00000000000000ffull) << 32)	|	\
++	(((u64)(_x) & (u64)0x000000000000ff00ull) << 32)	|	\
++	(((u64)(_x) & (u64)0x0000000000ff0000ull) << 32)	|	\
++	(((u64)(_x) & (u64)0x00000000ff000000ull) << 32)	|	\
++	(((u64)(_x) & (u64)0x000000ff00000000ull) >> 32)	|	\
++	(((u64)(_x) & (u64)0x0000ff0000000000ull) >> 32)	|	\
++	(((u64)(_x) & (u64)0x00ff000000000000ull) >> 32)	|	\
++	(((u64)(_x) & (u64)0xff00000000000000ull) >> 32)))
+ 
+ #ifndef __BIGENDIAN
+ #define bfa_os_htons(_x) ((u16)((((_x) & 0xff00) >> 8) | \
+@@ -133,6 +146,7 @@ int bfa_os_MWB(void *);
+ #define bfa_os_hton3b(_x)	bfa_swap_3b(_x)
+ 
+ #define bfa_os_wtole(_x)   (_x)
++#define bfa_os_sgaddr(_x)  (_x)
+ 
+ #else
+ 
+@@ -141,6 +155,7 @@ int bfa_os_MWB(void *);
+ #define bfa_os_hton3b(_x)  (_x)
+ #define bfa_os_htonll(_x)  (_x)
+ #define bfa_os_wtole(_x)   bfa_os_swap32(_x)
++#define bfa_os_sgaddr(_x)  bfa_os_swap_sgaddr(_x)
+ 
+ #endif
+ 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.6.5.2
+
