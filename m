@@ -1,70 +1,115 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15565] SCSI Generic queueing completes commands in reverse
- order
-Date: Sat, 20 Mar 2010 03:28:40 GMT
-Message-ID: <201003200328.o2K3Sens022419@demeter.kernel.org>
-References: <bug-15565-11613@http.bugzilla.kernel.org/>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] scsi: fix lockdep warning
+Date: Sat, 20 Mar 2010 00:17:38 -0700
+Message-ID: <4BA47692.7040401@kernel.org>
+References: <a4423d671003081547v5c955d58t248db945c06d2a7f@mail.gmail.com>	<86802c441003081612r2f44efd6n9664b4b7c98a636a@mail.gmail.com>	<m1d3zel4b4.fsf@fess.ebiederm.org> <4B95F37E.6060309@kernel.org> <m14okqnczd.fsf@fess.ebiederm.org> <4B99A6F0.4080203@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:53395 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752818Ab0CTD2k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Mar 2010 23:28:40 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2K3Sex2022420
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Mar 2010 03:28:40 GMT
-In-Reply-To: <bug-15565-11613@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B99A6F0.4080203@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Eric W. Biederman" <ebiederm@xmission.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <gregkh@suse.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-http://bugzilla.kernel.org/show_bug.cgi?id=15565
 
 
+with qlogic and emulex card etc.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
+---
+ drivers/base/attribute_container.c |    1 +
+ drivers/scsi/lpfc/lpfc_attr.c      |    3 +++
+ drivers/scsi/scsi_sysfs.c          |   15 ++++++++++++---
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
---- Comment #9 from Mike Hayward <mh-linux-kernel@loup.net>  2010-03-20 03:28:33 ---
- > Great so see the problem confirmed and it's going to move! I and other 
- > people have been asking this for 3 (or 4?) years and have had a silence 
- > in reply. It hasn't even been confirmed, so I'd prepare a patch.
-
-I obtained more evidence today that not only is it reversing arbitrary
-subsets of commands nonsensically, but it is a starvation queue as
-well (no reasonable deadline to drain the LIFO).
-
-This time I ran sg queued io on a wimpier arm machine via usb to a
-real hard drive with only one drive on the bus to eliminate the
-possibility that the usb bus could be unfair between devices.  The
-slower cpu also helped quantify kernel cpu burn and latency issues.
-
-Blocking writes to a drive with the write cache on ran at 20MB/s, only
-10MB/s via sg with the exact same io load.  Not sure why it's so much
-lower bandwidth on an arm kernel but it seems it must have additional
-latency, mem copy, etc. going on.
-
-Regardless, it took over 33 seconds to complete a write to a drive
-which was bypassed by hundreds and hundreds of subsequent writes,
-starving until finally there was enough of a lull that the LIFO
-'queue' must have drained.
-
-A starving task queue is definitely not a SCSI task queue.  I must
-conclude that there isn't even a need for a "works correctly" flag to
-be added to support forward compatibility if someone fixes this.
-
-1. It is the SCSI target which should manage task ordering according
-   to command attributes, not the initiator.
-2. If an existing app can cope with starvation and arbitrary
-   reordering of commands, then simply fixing the queue to send
-   out commands in the order submitted shouldn't break it.  In all
-   likelihood it could speed up a simple target if command order
-   matters at all.  Am I missing something here?
-
-- Mike
-
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Index: linux-2.6/drivers/scsi/lpfc/lpfc_attr.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/lpfc/lpfc_attr.c
++++ linux-2.6/drivers/scsi/lpfc/lpfc_attr.c
+@@ -3780,6 +3780,7 @@ lpfc_alloc_sysfs_attr(struct lpfc_vport
+ 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
+ 	int error;
+ 
++	sysfs_bin_attr_init(&sysfs_drvr_stat_data_attr);
+ 	error = sysfs_create_bin_file(&shost->shost_dev.kobj,
+ 				      &sysfs_drvr_stat_data_attr);
+ 
+@@ -3787,11 +3788,13 @@ lpfc_alloc_sysfs_attr(struct lpfc_vport
+ 	if (error || vport->port_type == LPFC_NPIV_PORT)
+ 		goto out;
+ 
++	sysfs_bin_attr_init(&sysfs_ctlreg_attr);
+ 	error = sysfs_create_bin_file(&shost->shost_dev.kobj,
+ 				      &sysfs_ctlreg_attr);
+ 	if (error)
+ 		goto out_remove_stat_attr;
+ 
++	sysfs_bin_attr_init(&sysfs_mbox_attr);
+ 	error = sysfs_create_bin_file(&shost->shost_dev.kobj,
+ 				      &sysfs_mbox_attr);
+ 	if (error)
+Index: linux-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_sysfs.c
++++ linux-2.6/drivers/scsi/scsi_sysfs.c
+@@ -907,20 +907,27 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 
+ 	/* create queue files, which may be writable, depending on the host */
+ 	if (sdev->host->hostt->change_queue_depth) {
++		sysfs_bin_attr_init(&sdev_attr_queue_depth_rw);
+ 		error = device_create_file(&sdev->sdev_gendev,
+ 					   &sdev_attr_queue_depth_rw);
++		sysfs_bin_attr_init(&sdev_attr_queue_ramp_up_period);
+ 		error = device_create_file(&sdev->sdev_gendev,
+ 					   &sdev_attr_queue_ramp_up_period);
+ 	}
+-	else
++	else {
++		sysfs_bin_attr_init(&dev_attr_queue_depth);
+ 		error = device_create_file(&sdev->sdev_gendev, &dev_attr_queue_depth);
++	}
+ 	if (error)
+ 		return error;
+ 
+-	if (sdev->host->hostt->change_queue_type)
++	if (sdev->host->hostt->change_queue_type)  {
++		sysfs_bin_attr_init(&sdev_attr_queue_type_rw);
+ 		error = device_create_file(&sdev->sdev_gendev, &sdev_attr_queue_type_rw);
+-	else
++	} else {
++		sysfs_bin_attr_init(&dev_attr_queue_type);
+ 		error = device_create_file(&sdev->sdev_gendev, &dev_attr_queue_type);
++	}
+ 	if (error)
+ 		return error;
+ 
+@@ -935,6 +942,7 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 	/* add additional host specific attributes */
+ 	if (sdev->host->hostt->sdev_attrs) {
+ 		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
++			sysfs_bin_attr_init(sdev->host->hostt->sdev_attrs[i]);
+ 			error = device_create_file(&sdev->sdev_gendev,
+ 					sdev->host->hostt->sdev_attrs[i]);
+ 			if (error)
+@@ -1060,6 +1068,7 @@ int scsi_sysfs_add_host(struct Scsi_Host
+ 	/* add host specific attributes */
+ 	if (shost->hostt->shost_attrs) {
+ 		for (i = 0; shost->hostt->shost_attrs[i]; i++) {
++			sysfs_bin_attr_init(shost->hostt->shost_attrs[i]);
+ 			error = device_create_file(&shost->shost_dev,
+ 					shost->hostt->shost_attrs[i]);
+ 			if (error)
+Index: linux-2.6/drivers/base/attribute_container.c
+===================================================================
+--- linux-2.6.orig/drivers/base/attribute_container.c
++++ linux-2.6/drivers/base/attribute_container.c
+@@ -328,6 +328,7 @@ attribute_container_add_attrs(struct dev
+ 		return sysfs_create_group(&classdev->kobj, cont->grp);
+ 
+ 	for (i = 0; attrs[i]; i++) {
++		sysfs_bin_attr_init(attrs[i]);
+ 		error = device_create_file(classdev, attrs[i]);
+ 		if (error)
+ 			return error;
