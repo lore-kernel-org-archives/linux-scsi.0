@@ -1,369 +1,387 @@
-From: giridhar.malavali@qlogic.com
-Subject: [PATCH 5/5] qla2xxx: General checkpatch corrections.
-Date: Fri, 19 Mar 2010 17:04:02 -0700
-Message-ID: <1269043442-2306-6-git-send-email-giridhar.malavali@qlogic.com>
-References: <1269043442-2306-1-git-send-email-giridhar.malavali@qlogic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:36586 "HELO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752436Ab0CTAEH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Mar 2010 20:04:07 -0400
-In-Reply-To: <1269043442-2306-1-git-send-email-giridhar.malavali@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: [ANNOUNCE] TCM/ConfigFS v3.4.0-rc1
+Date: Fri, 19 Mar 2010 19:41:25 -0700
+Message-ID: <1269052885.23779.95.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, openfcoe-devel <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.c>
+Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Philipp Reisner <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Florian Haas <florian.haas-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Greetings all,
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_attr.c |    6 +--
- drivers/scsi/qla2xxx/qla_bsg.c  |   95 ++++++++++++++++++++-------------------
- drivers/scsi/qla2xxx/qla_init.c |    4 +-
- drivers/scsi/qla2xxx/qla_mbx.c  |    2 +-
- drivers/scsi/qla2xxx/qla_os.c   |   22 ++++++---
- 5 files changed, 69 insertions(+), 60 deletions(-)
+It is my great honor to announce the Target_Core_Mod/ConfigFS infrastructure project
+has reached v3.4.0-rc1 and is again tracking linux-2.6.git HEAD at v2.6.34-rc1.  The
+kernel code can be found here:
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 8918c2d..6e597d4 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1176,15 +1176,13 @@ qla24xx_84xx_fw_version_show(struct device *dev,
- 	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
- 	struct qla_hw_data *ha = vha->hw;
- 
--	if (IS_QLA84XX(ha) && ha->cs84xx) {
--		if (ha->cs84xx->op_fw_version == 0) {
-+	if (IS_QLA84XX(ha) && ha->cs84xx)
-+		if (ha->cs84xx->op_fw_version == 0)
- 			rval = qla84xx_verify_chip(vha, status);
--	}
- 
- 	if ((rval == QLA_SUCCESS) && (status[0] == 0))
- 		return snprintf(buf, PAGE_SIZE, "%u\n",
- 			(uint32_t)ha->cs84xx->op_fw_version);
--	}
- 
- 	return snprintf(buf, PAGE_SIZE, "\n");
- }
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index dc8bf10..387d694 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -274,7 +274,7 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 
- 	if (!vha->flags.online) {
- 		DEBUG2(qla_printk(KERN_WARNING, ha,
--		    "host not online\n"));
-+		"host not online\n"));
- 		rval = -EIO;
- 		goto done;
- 	}
-@@ -286,16 +286,16 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 		rval = -ENOMEM;
- 		goto done_free_fcport;
- 	}
--        rsp_sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+
-+	rsp_sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
-+		bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-         if (!rsp_sg_cnt) {
- 		rval = -ENOMEM;
- 		goto done_free_fcport;
- 	}
- 
- 	if ((req_sg_cnt !=  bsg_job->request_payload.sg_cnt) ||
--	    (rsp_sg_cnt != bsg_job->reply_payload.sg_cnt))
--	{
-+		(rsp_sg_cnt != bsg_job->reply_payload.sg_cnt)) {
- 		DEBUG2(printk(KERN_INFO
- 			"dma mapping resulted in different sg counts \
- 			[request_sg_cnt: %x dma_request_sg_cnt: %x\
-@@ -310,7 +310,7 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 	sp = qla2x00_get_ctx_bsg_sp(vha, fcport, sizeof(struct srb_bsg));
- 	if (!sp) {
- 		rval = -ENOMEM;
--                goto done_unmap_sg;
-+		goto done_unmap_sg;
- 	}
- 
- 	els = sp->ctx;
-@@ -364,10 +364,10 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	struct srb_bsg *ct;
- 
- 	/* pass through is supported only for ISP 4Gb or higher */
--        if (!IS_FWI2_CAPABLE(ha)) {
-+	if (!IS_FWI2_CAPABLE(ha)) {
- 		DEBUG2(qla_printk(KERN_INFO, ha,
--			"scsi(%ld):Firmware is not capable to support FC "
--			"CT pass thru\n", vha->host_no));
-+		    "scsi(%ld):Firmware is not capable to support FC "
-+		    "CT pass thru\n", vha->host_no));
- 		rval = -EPERM;
- 		goto done;
- 	}
-@@ -375,7 +375,7 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	req_sg_cnt =
- 		dma_map_sg(&ha->pdev->dev, bsg_job->request_payload.sg_list,
- 			bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
--        if (!req_sg_cnt) {
-+	if (!req_sg_cnt) {
- 		rval = -ENOMEM;
- 		goto done;
- 	}
-@@ -388,15 +388,14 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	}
- 
- 	if ((req_sg_cnt !=  bsg_job->request_payload.sg_cnt) ||
--		(rsp_sg_cnt != bsg_job->reply_payload.sg_cnt))
--	{
-+	    (rsp_sg_cnt != bsg_job->reply_payload.sg_cnt)) {
- 		DEBUG2(qla_printk(KERN_WARNING, ha,
--			"[request_sg_cnt: %x dma_request_sg_cnt: %x\
--			reply_sg_cnt: %x dma_reply_sg_cnt: %x]\n",
--			bsg_job->request_payload.sg_cnt, req_sg_cnt,
--			bsg_job->reply_payload.sg_cnt, rsp_sg_cnt));
-+		    "[request_sg_cnt: %x dma_request_sg_cnt: %x\
-+		    reply_sg_cnt: %x dma_reply_sg_cnt: %x]\n",
-+		    bsg_job->request_payload.sg_cnt, req_sg_cnt,
-+		    bsg_job->reply_payload.sg_cnt, rsp_sg_cnt));
- 		rval = -EAGAIN;
--                goto done_unmap_sg;
-+		goto done_unmap_sg;
- 	}
- 
- 	if (!vha->flags.online) {
-@@ -410,17 +409,17 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 		(bsg_job->request->rqst_data.h_ct.preamble_word1 & 0xFF000000)
- 			>> 24;
- 	switch (loop_id) {
--		case 0xFC:
--			loop_id = cpu_to_le16(NPH_SNS);
--			break;
--		case 0xFA:
--			loop_id = vha->mgmt_svr_loop_id;
--			break;
--		default:
--			DEBUG2(qla_printk(KERN_INFO, ha,
--			    "Unknown loop id: %x\n", loop_id));
--			rval = -EINVAL;
--			goto done_unmap_sg;
-+	case 0xFC:
-+		loop_id = cpu_to_le16(NPH_SNS);
-+		break;
-+	case 0xFA:
-+		loop_id = vha->mgmt_svr_loop_id;
-+		break;
-+	default:
-+		DEBUG2(qla_printk(KERN_INFO, ha,
-+		    "Unknown loop id: %x\n", loop_id));
-+		rval = -EINVAL;
-+		goto done_unmap_sg;
- 	}
- 
- 	/* Allocate a dummy fcport structure, since functions preparing the
-@@ -429,10 +428,9 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	 * no fcport structure allocated
- 	 */
- 	fcport = qla2x00_alloc_fcport(vha, GFP_KERNEL);
--	if (!fcport)
--	{
-+	if (!fcport) {
- 		rval = -ENOMEM;
--		goto  done_unmap_sg;
-+		goto done_unmap_sg;
- 	}
- 
- 	/* Initialize all required  fields of fcport */
-@@ -492,7 +490,7 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 	char *type;
- 	struct msg_echo_lb elreq;
- 	uint16_t response[MAILBOX_REGISTER_COUNT];
--	uint8_t* fw_sts_ptr;
-+	uint8_t *fw_sts_ptr;
- 	uint8_t *req_data = NULL;
- 	dma_addr_t req_data_dma;
- 	uint32_t req_data_len;
-@@ -524,7 +522,7 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 	if (!elreq.rsp_sg_cnt) {
- 		rval = -ENOMEM;
- 		goto done_unmap_req_sg;
--}
-+	}
- 
- 	if ((elreq.req_sg_cnt !=  bsg_job->request_payload.sg_cnt) ||
- 		(elreq.rsp_sg_cnt != bsg_job->reply_payload.sg_cnt)) {
-@@ -586,21 +584,21 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 	} else {
- 		type = "FC_BSG_HST_VENDOR_ECHO_DIAG";
- 		DEBUG2(qla_printk(KERN_INFO, ha,
--		    "scsi(%ld) bsg rqst type: %s\n" ,vha->host_no, type));
-+		    "scsi(%ld) bsg rqst type: %s\n", vha->host_no, type));
- 		command_sent = INT_DEF_LB_ECHO_CMD;
- 		rval = qla2x00_echo_test(vha, &elreq, response);
- 	}
- 
- 	if (rval) {
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
--			"request %s failed\n", vha->host_no, type));
-+		    "request %s failed\n", vha->host_no, type));
- 
- 		fw_sts_ptr = ((uint8_t *)bsg_job->req->sense) +
--			sizeof(struct fc_bsg_reply);
-+		    sizeof(struct fc_bsg_reply);
- 
- 		memcpy(fw_sts_ptr, response, sizeof(response));
- 		fw_sts_ptr += sizeof(response);
--                *fw_sts_ptr = command_sent;
-+		*fw_sts_ptr = command_sent;
- 		rval = 0;
- 		bsg_job->reply->reply_payload_rcv_len = 0;
- 		bsg_job->reply->result = (DID_ERROR << 16);
-@@ -637,7 +635,7 @@ done_unmap_req_sg:
- 	dma_unmap_sg(&ha->pdev->dev,
- 	    bsg_job->request_payload.sg_list,
- 	    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
--        return rval;
-+	return rval;
- }
- 
- static int
-@@ -975,7 +973,8 @@ qla84xx_mgmt_cmd(struct fc_bsg_job *bsg_job)
- 				bsg_job->reply_payload.payload_len;
- 
- 			sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--				bsg_job->reply_payload.sg_cnt, mgmt_b, data_len);
-+				bsg_job->reply_payload.sg_cnt, mgmt_b,
-+				data_len);
- 		}
- 	}
- 
-@@ -1062,7 +1061,8 @@ qla24xx_iidma(struct fc_bsg_job *bsg_job)
- 
- 	if (rval) {
- 		DEBUG16(printk(KERN_ERR "scsi(%ld): iIDMA cmd failed for "
--			"%02x%02x%02x%02x%02x%02x%02x%02x -- %04x %x %04x %04x.\n",
-+			"%02x%02x%02x%02x%02x%02x%02x%02x -- "
-+			"%04x %x %04x %04x.\n",
- 			vha->host_no, fcport->port_name[0],
- 			fcport->port_name[1],
- 			fcport->port_name[2], fcport->port_name[3],
-@@ -1142,7 +1142,7 @@ qla24xx_bsg_request(struct fc_bsg_job *bsg_job)
- 	default:
- 		DEBUG2(printk("qla2xxx: unsupported BSG request\n"));
- 		break;
--        }
-+	}
- 	return ret;
- }
- 
-@@ -1164,23 +1164,26 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
- 		if (!req)
- 			continue;
- 
--		for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++ ) {
-+		for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
- 			sp = req->outstanding_cmds[cnt];
--
- 			if (sp) {
--				sp_bsg = (struct srb_bsg*)sp->ctx;
-+				sp_bsg = (struct srb_bsg *)sp->ctx;
- 
- 				if (((sp_bsg->ctx.type == SRB_CT_CMD) ||
- 					(sp_bsg->ctx.type == SRB_ELS_CMD_HST))
- 					&& (sp_bsg->bsg_job == bsg_job)) {
- 					if (ha->isp_ops->abort_command(sp)) {
- 						DEBUG2(qla_printk(KERN_INFO, ha,
--						"scsi(%ld): mbx abort_command failed\n", vha->host_no));
-+						    "scsi(%ld): mbx "
-+						    "abort_command failed\n",
-+						    vha->host_no));
- 						bsg_job->req->errors =
- 						bsg_job->reply->result = -EIO;
- 					} else {
- 						DEBUG2(qla_printk(KERN_INFO, ha,
--						"scsi(%ld): mbx abort_command success\n", vha->host_no));
-+						    "scsi(%ld): mbx "
-+						    "abort_command success\n",
-+						    vha->host_no));
- 						bsg_job->req->errors =
- 						bsg_job->reply->result = 0;
- 					}
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 3714fec..56e8169 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -339,7 +339,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
- 	ha->flags.chip_reset_done = 1;
- 
- 	if (rval == QLA_SUCCESS && IS_QLA84XX(ha)) {
--	/* Issue verify 84xx FW IOCB to complete 84xx initialization */
-+		/* Issue verify 84xx FW IOCB to complete 84xx initialization */
- 		rval = qla84xx_init_chip(vha);
- 		if (rval != QLA_SUCCESS) {
- 			qla_printk(KERN_ERR, ha,
-@@ -4923,7 +4923,7 @@ qla81xx_update_fw_options(scsi_qla_host_t *vha)
-  *	fcport = port structure pointer.
-  *
-  * Return:
-- * 	non-zero (if found)
-+ *	non-zero (if found)
-  * 	0 (if not found)
-  *
-  * Context:
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index d1d66a1..513a0e3 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3839,7 +3839,7 @@ qla2x00_write_ram_word(scsi_qla_host_t *vha, uint32_t risc_addr, uint32_t data)
- 	mbx_cmd_t *mcp = &mc;
- 
- 	if (!IS_FWI2_CAPABLE(vha->hw))
--                return QLA_FUNCTION_FAILED;
-+		return QLA_FUNCTION_FAILED;
- 
- 	DEBUG11(printk("%s(%ld): entered.\n", __func__, vha->host_no));
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index be3f1d3..f4ffa30 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1129,18 +1129,26 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
- 					qla2x00_sp_compl(ha, sp);
- 				} else {
- 					ctx = sp->ctx;
--					if (ctx->type == SRB_LOGIN_CMD || ctx->type == SRB_LOGOUT_CMD) {
-+					if (ctx->type == SRB_LOGIN_CMD ||
-+					    ctx->type == SRB_LOGOUT_CMD) {
- 						del_timer_sync(&ctx->timer);
- 						ctx->free(sp);
- 					} else {
--						struct srb_bsg* sp_bsg = (struct srb_bsg*)sp->ctx;
--						if (sp_bsg->bsg_job->request->msgcode == FC_BSG_HST_CT)
-+						struct srb_bsg *sp_bsg =
-+						    (struct srb_bsg *)sp->ctx;
-+						struct fc_bsg_job *bsg_job =
-+						    sp_bsg->bsg_job;
-+
-+						if (bsg_job->request->msgcode
-+						    == FC_BSG_HST_CT)
- 							kfree(sp->fcport);
--						sp_bsg->bsg_job->req->errors = 0;
--						sp_bsg->bsg_job->reply->result = res;
--						sp_bsg->bsg_job->job_done(sp_bsg->bsg_job);
-+						bsg_job->req->errors = 0;
-+						bsg_job->reply->result = res;
-+						bsg_job->job_done(
-+						    sp_bsg->bsg_job);
- 						kfree(sp->ctx);
--						mempool_free(sp, ha->srb_mempool);
-+						mempool_free(sp,
-+						    ha->srb_mempool);
- 					}
- 				}
- 			}
--- 
-1.6.2.rc1.30.gd43c
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=summary
 
+With this release marks the merge of the Open-FCoE.org based target module (tcm_fc) for
+TCM/ConfigFS 3.x contributed by Joe Eykholt as the third fabric module available in
+lio-core-2.6.git/master. This has included in a seperate release announcement, and
+information for the TCM Open-FCoE.org target module can be found here:
+
+http://www.linux-iscsi.org/index.php/Openfcoe
+
+This release also reaches the milestone of TCM/ConfigFS becoming the first and only Linux
+target mode project to run in multi-fabric mode across all known feature bits for SPC-4
+defined persistent reservations (PR) using iSCSI, FCoE and Virtual SAS ports.  This patch series
+and test case to make that happen for PR features SPEC_I_PT=1 and REGISTER_AND_MOVE was originally
+posted here:
+
+http://permalink.gmane.org/gmane.linux.scsi/57831
+
+For more information about TCM/ConfigFS and fabric module usage with PR+ALUA, please have a look at:
+
+http://www.linux-iscsi.org/index.php/Target_Core_Mod/ConfigFS
+http://www.linux-iscsi.org/index.php/Persistent_Reservations
+http://www.linux-iscsi.org/index.php/ALUA
+
+Finally as no announcement would be complete without an multi-fabric demonstration, here is how
+explict/implict ALUA multipath using upstream scsi_dh_alua is looking with Open-iSCSI + Open-FCoE
+Initiators between TCM LIO-Target iSCSI and Open-FCoE.org target ports.  This is done by seperate
+the iSCSi and FCoE Target ports into two different ALUA Target Port Groups (1gb_iscsi and 1gb_fcoe
+respectively) for the same TCM/FILEIO LUN backstore.
+
+Any constructive comments or questions are welcome!
+
+--nab
+
+*) Example /etc/multipath.conf
+
+defaults {
+        udev_dir                /dev
+        polling_interval        2
+        default_getuid_callout  "/lib/udev/scsi_id -g -u -s /block/%n"
+        user_friendly_names     yes
+}
+
+devices {
+	device {
+		vendor "LIO-ORG"
+		product "FILEIO"
+		path_grouping_policy group_by_prio
+		path_checker tur
+		prio_callout "/sbin/mpath_prio_alua /dev/%n"
+		hardware_handler "1 alua"
+	}
+}
+
+*) Create fcoe association for eth0 on initiator side:
+
+echo eth0 > /sys/module/fcoe/parameters/create
+
+[  853.184640] scsi0 : FCoE Driver
+[  853.186064] host0: libfc: Link up on port (     0)
+[  856.754764] host0: Assigned Port ID  10101
+[  856.758376] scsi 0:0:0:0: Direct-Access     LIO-ORG  FILEIO           3.1  PQ: 0 ANSI: 5
+[  856.818511] sd 0:0:0:0: [sda] READ CAPACITY(16) failed
+[  856.819201] sd 0:0:0:0: [sda] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  856.820127] sd 0:0:0:0: [sda] Sense not available.
+[  856.820964] sd 0:0:0:0: [sda] 97656251 512-byte logical blocks: (50.0 GB/46.5 GiB)
+[  856.822580] sd 0:0:0:0: [sda] Write Protect is off
+[  856.823230] sd 0:0:0:0: [sda] Mode Sense: 2f 00 00 00
+[  856.823640] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[  856.825018] sd 0:0:0:0: [sda] READ CAPACITY(16) failed
+[  856.825688] sd 0:0:0:0: [sda] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  856.826620] sd 0:0:0:0: [sda] Sense not available.
+[  856.828304]  sda: unknown partition table
+[  856.830403] sd 0:0:0:0: [sda] READ CAPACITY(16) failed
+[  856.831109] sd 0:0:0:0: [sda] Result: hostbyte=DID_ABORT driverbyte=DRIVER_OK
+[  856.832039] sd 0:0:0:0: [sda] Sense not available.
+[  856.833689] sd 0:0:0:0: [sda] Attached SCSI disk
+<SNIP>
+[  857.265004] alua: device handler registered
+[  857.290275] device-mapper: multipath round-robin: version 1.0.0 loaded
+[  857.291599] sd 0:0:0:0: alua: supports implicit and explicit TPGS
+[  857.292794] sd 0:0:0:0: alua: port group 00 rel port 02
+[  857.293645] sd 0:0:0:0: alua: port group 00 state A supports TOUSNA
+[  857.300249] sd 0:0:0:0: alua: port group 00 state A supports TOUSNA
+
+*) Create iSCSI session using Open-iSCSI:
+
+iscsiadm -m node -T iqn.2003-01.org.linux-iscsi.lenny64guest1.x8664:sn.3074797efee0 --portal 192.168.0.250 --login
+
+[  893.969954] scsi1 : iSCSI Initiator over TCP/IP
+[  894.286774] scsi 1:0:0:0: Direct-Access     LIO-ORG  FILEIO           3.1  PQ: 0 ANSI: 5
+[  894.289767] sd 1:0:0:0: [sdb] 97656251 512-byte logical blocks: (50.0 GB/46.5 GiB)
+[  894.292437] sd 1:0:0:0: [sdb] Write Protect is off
+[  894.293254] sd 1:0:0:0: [sdb] Mode Sense: 2f 00 00 00
+[  894.293951] sd 1:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[  894.297422]  sdb: unknown partition table
+[  894.304374] sd 1:0:0:0: [sdb] Attached SCSI disk
+[  894.976821] sd 1:0:0:0: alua: supports implicit and explicit TPGS
+[  894.978378] sd 1:0:0:0: alua: port group 00 rel port 01
+[  894.979626] sd 1:0:0:0: alua: port group 00 state A supports TOUSNA
+[  894.989850] sd 1:0:0:0: alua: port group 00 state A supports TOUSNA
+[  894.990726] sd 0:0:0:0: alua: port group 00 state A supports TOUSNA
+
+*) lsscsi and multipath output:
+
+lenny64guest0:~# lsscsi
+[0:0:0:0]    disk    LIO-ORG  FILEIO           3.1   /dev/sda
+[1:0:0:0]    disk    LIO-ORG  FILEIO           3.1   /dev/sdb
+lenny64guest0:~# lsscsi --transport
+[0:0:0:0]    disk    fc:0x200000e081c090b3,0x010102  /dev/sda
+[1:0:0:0]    disk    iqn.2003-01.org.linux-iscsi.lenny64guest1.x8664:sn.3074797efee0,t,0x1  /dev/sdb
+
+lenny64guest0:~# multipath -ll
+mpath2 (36001405f776de20dc416d4382d8b16d0) dm-0 LIO-ORG ,FILEIO        
+[size=47G][features=0][hwhandler=1 alua]
+\_ round-robin 0 [prio=100][active]
+ \_ 1:0:0:0 sdb 8:16  [active][ready]
+ \_ 0:0:0:0 sda 8:0   [active][ready]
+
+*) Target side ALUA Target Port Group output
+
+lenny64guest1:/sys/kernel/config/target# tcm_node --listaluatpgs fileio_0/myfile
+\------> 1g_fcoe  Target Port Group ID: 2
+         Active ALUA Access Type(s): Implict and Explict
+         Primary Access State: Active/NonOptimized
+         Primary Access Status: Altered by Explict STPG
+         Preferred Bit: 0
+         Active/NonOptimized Delay in milliseconds: 100
+         Transition Delay in milliseconds: 0
+         \------> TG Port Group Members
+             fc/20:00:00:e0:81:c0:90:b3/tpgt_1/lun_0
+\------> 1g_iscsi  Target Port Group ID: 1
+         Active ALUA Access Type(s): Implict and Explict
+         Primary Access State: Active/Optimized
+         Primary Access Status: Altered by Explict STPG
+         Preferred Bit: 0
+         Active/NonOptimized Delay in milliseconds: 100
+         Transition Delay in milliseconds: 0
+         \------> TG Port Group Members
+             iSCSI/iqn.2003-01.org.linux-iscsi.lenny64guest1.x8664:sn.3074797efee0/tpgt_1/lun_0
+\------> default_tg_pt_gp  Target Port Group ID: 0
+         Active ALUA Access Type(s): Implict and Explict
+         Primary Access State: Active/NonOptimized
+         Primary Access Status: Altered by Explict STPG
+         Preferred Bit: 0
+         Active/NonOptimized Delay in milliseconds: 100
+         Transition Delay in milliseconds: 0
+         \------> TG Port Group Members
+             No Target Port Group Members
+
+*) TCM, LIO-Target and TCM_FC configfs layout
+
+|-- core
+|   |-- alua
+|   |   `-- lu_gps
+|   |       `-- default_lu_gp
+|   |           |-- lu_gp_id
+|   |           `-- members
+|   `-- fileio_0
+|       |-- hba_info
+|       |-- hba_mode
+|       `-- myfile
+|           |-- alias
+|           |-- alua
+|           |   |-- 1g_fcoe
+|           |   |   |-- alua_access_state
+|           |   |   |-- alua_access_status
+|           |   |   |-- alua_access_type
+|           |   |   |-- alua_write_metadata
+|           |   |   |-- members
+|           |   |   |-- nonop_delay_msecs
+|           |   |   |-- preferred
+|           |   |   |-- tg_pt_gp_id
+|           |   |   `-- trans_delay_msecs
+|           |   |-- 1g_iscsi
+|           |   |   |-- alua_access_state
+|           |   |   |-- alua_access_status
+|           |   |   |-- alua_access_type
+|           |   |   |-- alua_write_metadata
+|           |   |   |-- members
+|           |   |   |-- nonop_delay_msecs
+|           |   |   |-- preferred
+|           |   |   |-- tg_pt_gp_id
+|           |   |   `-- trans_delay_msecs
+|           |   `-- default_tg_pt_gp
+|           |       |-- alua_access_state
+|           |       |-- alua_access_status
+|           |       |-- alua_access_type
+|           |       |-- alua_write_metadata
+|           |       |-- members
+|           |       |-- nonop_delay_msecs
+|           |       |-- preferred
+|           |       |-- tg_pt_gp_id
+|           |       `-- trans_delay_msecs
+|           |-- alua_lu_gp
+|           |-- attrib
+|           |   |-- block_size
+|           |   |-- emulate_tas
+|           |   |-- emulate_ua_intlck_ctrl
+|           |   |-- hw_block_size
+|           |   |-- hw_max_sectors
+|           |   |-- hw_queue_depth
+|           |   |-- max_sectors
+|           |   |-- queue_depth
+|           |   `-- task_timeout
+|           |-- control
+|           |-- enable
+|           |-- fd
+|           |-- info
+|           |-- pr
+|           |   |-- res_aptpl_active
+|           |   |-- res_aptpl_metadata
+|           |   |-- res_holder
+|           |   |-- res_pr_all_tgt_pts
+|           |   |-- res_pr_generation
+|           |   |-- res_pr_holder_tg_port
+|           |   |-- res_pr_registered_i_pts
+|           |   |-- res_pr_type
+|           |   `-- res_type
+|           |-- snap
+|           |   |-- check_interval
+|           |   |-- contact
+|           |   |-- create_interval
+|           |   |-- enabled
+|           |   |-- lv_group
+|           |   |-- lvc_size
+|           |   |-- max_snapshots
+|           |   |-- max_warn
+|           |   |-- permissions
+|           |   |-- pid
+|           |   |-- usage
+|           |   |-- usage_warn
+|           |   `-- vgs_usage_warn
+|           |-- udev_path
+|           `-- wwn
+|               |-- vpd_assoc_logical_unit
+|               |-- vpd_assoc_scsi_target_device
+|               |-- vpd_assoc_target_port
+|               |-- vpd_protocol_identifier
+|               `-- vpd_unit_serial
+|-- fc
+|   |-- 20:00:00:e0:81:c0:90:b3
+|   |   `-- tpgt_1
+|   |       |-- acl
+|   |       |   `-- 20:00:00:e0:81:c0:90:b2
+|   |       |       |-- auth
+|   |       |       |   |-- node_name
+|   |       |       |   `-- port_name
+|   |       |       `-- lun_0
+|   |       |           `-- lun_0 -> ../../../../../../../target/fc/20:00:00:e0:81:c0:90:b3/tpgt_1/lun/lun_0
+|   |       `-- lun
+|   |           `-- lun_0
+|   |               |-- alua_tg_pt_gp
+|   |               |-- alua_tg_pt_offline
+|   |               |-- alua_tg_pt_status
+|   |               |-- alua_tg_pt_write_md
+|   |               `-- tcm_fc_port -> ../../../../../../target/core/fileio_0/myfile
+|   `-- version
+|-- iscsi
+|   |-- discovery_auth
+|   |   |-- authenticate_target
+|   |   |-- enforce_discovery_auth
+|   |   |-- password
+|   |   |-- password_mutual
+|   |   |-- userid
+|   |   `-- userid_mutual
+|   |-- iqn.2003-01.org.linux-iscsi.lenny64guest1.x8664:sn.3074797efee0
+|   |   `-- tpgt_1
+|   |       |-- acls
+|   |       |   `-- iqn.1993-08.org.debian:01:5640fc164638
+|   |       |       |-- attrib
+|   |       |       |   |-- dataout_timeout
+|   |       |       |   |-- dataout_timeout_retries
+|   |       |       |   |-- default_erl
+|   |       |       |   |-- nopin_response_timeout
+|   |       |       |   |-- nopin_timeout
+|   |       |       |   |-- random_datain_pdu_offsets
+|   |       |       |   |-- random_datain_seq_offsets
+|   |       |       |   `-- random_r2t_offsets
+|   |       |       |-- auth
+|   |       |       |   |-- authenticate_target
+|   |       |       |   |-- password
+|   |       |       |   |-- password_mutual
+|   |       |       |   |-- userid
+|   |       |       |   `-- userid_mutual
+|   |       |       |-- cmdsn_depth
+|   |       |       |-- info
+|   |       |       |-- lun_0
+|   |       |       |   |-- abe06ac681 -> ../../../../../../../target/iscsi/iqn.2003-01.org.linux-iscsi.lenny64guest1.x8664:sn.3074797efee0/tpgt_1/lun/lun_0
+|   |       |       |   `-- write_protect
+|   |       |       `-- param
+|   |       |           |-- DataPDUInOrder
+|   |       |           |-- DataSequenceInOrder
+|   |       |           |-- DefaultTime2Retain
+|   |       |           |-- DefaultTime2Wait
+|   |       |           |-- ErrorRecoveryLevel
+|   |       |           |-- FirstBurstLength
+|   |       |           |-- ImmediateData
+|   |       |           |-- InitialR2T
+|   |       |           |-- MaxBurstLength
+|   |       |           |-- MaxConnections
+|   |       |           `-- MaxOutstandingR2T
+|   |       |-- attrib
+|   |       |   |-- authentication
+|   |       |   |-- cache_dynamic_acls
+|   |       |   |-- default_cmdsn_depth
+|   |       |   |-- demo_mode_write_protect
+|   |       |   |-- generate_node_acls
+|   |       |   |-- login_timeout
+|   |       |   |-- netif_timeout
+|   |       |   `-- prod_mode_write_protect
+|   |       |-- control
+|   |       |-- enable
+|   |       |-- lun
+|   |       |   `-- lun_0
+|   |       |       |-- 9b5222b0c6 -> ../../../../../../target/core/fileio_0/myfile
+|   |       |       |-- alua_tg_pt_gp
+|   |       |       |-- alua_tg_pt_offline
+|   |       |       |-- alua_tg_pt_status
+|   |       |       `-- alua_tg_pt_write_md
+|   |       |-- np
+|   |       |   `-- 192.168.0.250:3260
+|   |       |       |-- info
+|   |       |       `-- sctp
+|   |       `-- param
+|   |           |-- AuthMethod
+|   |           |-- DataDigest
+|   |           |-- DataPDUInOrder
+|   |           |-- DataSequenceInOrder
+|   |           |-- DefaultTime2Retain
+|   |           |-- DefaultTime2Wait
+|   |           |-- ErrorRecoveryLevel
+|   |           |-- FirstBurstLength
+|   |           |-- HeaderDigest
+|   |           |-- IFMarkInt
+|   |           |-- IFMarker
+|   |           |-- ImmediateData
+|   |           |-- InitialR2T
+|   |           |-- MaxBurstLength
+|   |           |-- MaxConnections
+|   |           |-- MaxOutstandingR2T
+|   |           |-- MaxRecvDataSegmentLength
+|   |           |-- OFMarkInt
+|   |           |-- OFMarker
+|   |           `-- TargetAlias
+|   `-- lio_version
+`-- version
+
+*) lsmod output on target side:
+
+lenny64guest1:/sys/kernel/config/target# lsmod
+Module                  Size  Used by
+tcm_fc                 21970  6 
+fcoe                   16843  1 
+libfcoe                10914  1 fcoe
+libfc                  72344  3 tcm_fc,fcoe,libfcoe
+scsi_transport_fc      36413  2 fcoe,libfc
+iscsi_target_mod      212124  7 
+target_core_mod       243050  23 tcm_fc,iscsi_target_mod
+scsi_tgt                8418  2 scsi_transport_fc,target_core_mod
+configfs               19535  4 tcm_fc,iscsi_target_mod,target_core_mod
