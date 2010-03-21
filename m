@@ -1,22 +1,33 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Bug 15565] SCSI Generic queueing completes commands in reverse
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15565] SCSI Generic queueing completes commands in reverse
  order
-Date: Sun, 21 Mar 2010 13:45:43 +0200
-Message-ID: <4BA606E7.30807@panasas.com>
-References: <bug-15565-11613@http.bugzilla.kernel.org/> <201003181721.o2IHLAFg009271@demeter.kernel.org> <4BA26ABC.3000908@panasas.com> <4BA27F4B.5080807@interlog.com> <4BA3D36D.3090108@vlnb.net> <4BA3E537.30504@sgi.com>
+Date: Sun, 21 Mar 2010 11:46:31 GMT
+Message-ID: <201003211146.o2LBkV8G015009@demeter.kernel.org>
+References: <bug-15565-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:39374 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751911Ab0CULpq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Mar 2010 07:45:46 -0400
-In-Reply-To: <4BA3E537.30504@sgi.com>
+Received: from demeter.kernel.org ([140.211.167.39]:33480 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911Ab0CULqb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Mar 2010 07:46:31 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2LBkVdE015011
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 21 Mar 2010 11:46:31 GMT
+In-Reply-To: <bug-15565-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, dgilbert@interlog.com, bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=15565
+
+
+
+
+
+--- Comment #10 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-03-21 11:46:27 ---
+Reply-To: bharrosh@panasas.com
 
 On 03/19/2010 10:57 PM, Michael Reed wrote:
 > 
@@ -111,3 +122,8 @@ Why not use bsg, then?
 > Mike
 
 Boaz
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
