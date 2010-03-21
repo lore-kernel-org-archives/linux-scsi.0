@@ -1,140 +1,184 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] sg: retrofit SG_FLAG_Q_AT_TAIL flag
-Date: Sun, 21 Mar 2010 13:56:17 -0400
-Message-ID: <4BA65DC1.2020102@interlog.com>
-References: <4BA51EB6.5040401@interlog.com> <4BA604D8.9090604@panasas.com>
-Reply-To: dgilbert@interlog.com
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: 2.6.34-rc2: Reported regressions from 2.6.33
+Date: Sun, 21 Mar 2010 20:58:56 +0100 (CET)
+Message-ID: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:34435 "EHLO elrond.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751089Ab0CUR4Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Mar 2010 13:56:25 -0400
-In-Reply-To: <4BA604D8.9090604@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>, mh-linux-kernel@loup.net
 
-Boaz,
-Thanks for the review.
+[NOTES:
+ * In this cycle the regressions reported by e-mail will only be put in=
+to the
+   Bugzilla 1 week after they have been submitted, if not fixed in the
+   meantime.  The reason is that some regressions are fixed in less tha=
+n a
+   week time and there's no point listing them.  [We also hope that peo=
+ple will=20
+   try to fix bugs faster to avoid being listed. ;-)]  If that works, w=
+e'll
+   adopt it as a general rule.
 
-Now I decided to check the SG_IO ioctl used directly
-against block devices and it calls:
-    blk_execute_rq(q, bd_disk, rq, 0);
+ * All of the regressions reported by e-mail that are listed below have=
+ been
+   put into the Bugzilla by Maciej, because I literally didn't have the=
+ time
+   to do that (that's also why the summary reports are delayed).
+   Thanks Maciej!]
 
-The last argument is 'at_head' so it has been queuing
-at_tail for some time. How is that for compatibility??
+This message contains a list of some regressions from 2.6.33,
+for which there are no fixes in the mainline known to the tracking team=
+=2E
+If any of them have been fixed already, please let us know.
 
-That almost suggests there should be a
-   #define SG_FLAG_Q_AT_HEAD 0x20
+If you know of any other unresolved regressions from 2.6.33, please let=
+ us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-added to sg.h to cover all the bases.
+Each entry from the list will be sent additionally in an automatic repl=
+y
+to this message with CCs to the people involved in reporting and handli=
+ng
+the issue.
 
-Doug Gilbert
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2010-03-21       15       13          10
 
 
-Boaz Harrosh wrote:
-> On 03/20/2010 09:15 PM, Douglas Gilbert wrote:
->> In response to
->>     http://bugzilla.kernel.org/show_bug.cgi?id=15565
->> and the fact this capability has been present
->> in bsg for some time, add SG_FLAG_Q_AT_TAIL flag. It has
->> the same binary value as the bsg flag and the define name
->> is the same apart from the leading "B". The semantics are
->> the same, namely to override the default queue at head
->> action of the SCSI midlevel when a low level driver
->> blocks (i.e. when a LLD returns non-zero to a
->> queuecommand() ). Tested with scsi_debug.
->>
->> Changelog
->>    - add SG_FLAG_Q_AT_TAIL flag to override default
->>      queue at head semantics of the SCSI midlevel queue.
->>
->> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
-> 
-> Review-by: Boaz Harrosh <bharrosh@panasas.com>
-> 
->> --- linux/include/scsi/sg.h	2008-10-10 17:04:54.000000000 -0400
->> +++ linux/include/scsi/sg.h2633qat1	2010-03-20 14:28:31.000000000 -0400
->> @@ -11,9 +11,9 @@
->>  Original driver (sg.h):
->>  *       Copyright (C) 1992 Lawrence Foard
->>  Version 2 and 3 extensions to driver:
->> -*       Copyright (C) 1998 - 2006 Douglas Gilbert
->> +*       Copyright (C) 1998 - 2010 Douglas Gilbert
->>  
->> -    Version: 3.5.34 (20060920)
->> +    Version: 3.5.35 (20100319)
->>      This version is for 2.6 series kernels.
->>  
->>      For a full changelog see http://www.torque.net/sg
->> @@ -124,6 +124,7 @@
->>  #define SG_FLAG_UNUSED_LUN_INHIBIT 2   /* default is overwrite lun in SCSI */
->>  				/* command block (when <= SCSI_2) */
->>  #define SG_FLAG_MMAP_IO 4       /* request memory mapped IO */
->> +#define SG_FLAG_Q_AT_TAIL 0x10  /* default, without this flag, is Q_AT_HEAD */
-> 
-> I have chosen this value exactly so it can fit with SG
-> as well.
-> 
->>  #define SG_FLAG_NO_DXFER 0x10000 /* no transfer of kernel buffers to/from */
->>  				/* user space (debug indirect IO) */
->>  
->> --- linux/drivers/scsi/sg.c	2009-12-03 11:11:18.000000000 -0500
->> +++ linux/drivers/scsi/sg.c2633qat1	2010-03-19 19:42:10.000000000 -0400
->> @@ -18,8 +18,8 @@
->>   *
->>   */
->>  
->> -static int sg_version_num = 30534;	/* 2 digits for each component */
->> -#define SG_VERSION_STR "3.5.34"
->> +static int sg_version_num = 30535;	/* 2 digits for each component */
->> +#define SG_VERSION_STR "3.5.35"
->>  
->>  /*
->>   *  D. P. Gilbert (dgilbert@interlog.com, dougg@triode.net.au), notes:
->> @@ -61,7 +61,7 @@
->>  
->>  #ifdef CONFIG_SCSI_PROC_FS
->>  #include <linux/proc_fs.h>
->> -static char *sg_version_date = "20061027";
->> +static char *sg_version_date = "20100319";
->>  
->>  static int sg_proc_init(void);
->>  static void sg_proc_cleanup(void);
->> @@ -710,8 +710,11 @@
-> 
-> I wish you would have used diff "-p" option that shows us the function
-> this hunk is at. (git diff does that by default)
-> 
->>  	int k, data_dir;
->>  	Sg_device *sdp = sfp->parentdp;
->>  	sg_io_hdr_t *hp = &srp->header;
->> +	int at_head = 1;
->>  
->>  	srp->data.cmd_opcode = cmnd[0];	/* hold opcode of command */
->> +	if ('\0' != hp->interface_id)	/* old interface misuses flags */
->> +		at_head = (SG_FLAG_Q_AT_TAIL & hp->flags) ? 0 : 1;
->>  	hp->status = 0;
->>  	hp->masked_status = 0;
->>  	hp->msg_status = 0;
->> @@ -753,7 +756,7 @@
->>  	srp->rq->timeout = timeout;
->>  	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
->>  	blk_execute_rq_nowait(sdp->device->request_queue, sdp->disk,
->> -			      srp->rq, 1, sg_rq_end_io);
->> +			      srp->rq, at_head, sg_rq_end_io);
-> 
-> Grate, this simple thing does wonders to performance.
-> 
->>  	return 0;
->>  }
->>  
-> 
-> Thanks for doing this
-> Boaz
-> 
+Unresolved regressions
+----------------------
 
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15590
+Subject		: 2.6.34-rc1: regression: ^Z no longer stops sound
+Submitter	: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Date		: 2010-03-14 7:58 (8 days old)
+Message-ID	: <20100314075831.GA13457-I/5MKhXcvmPrBKCeMvbIDA@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D126855353122623&w=3D=
+2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15589
+Subject		: 2.6.34-rc1: Badness at fs/proc/generic.c:316
+Submitter	: Christian Kujau <lists-AanptEQQ3TL9uQeqpI+JUg@public.gmane.org>
+Date		: 2010-03-13 23:53 (9 days old)
+Message-ID	: <alpine.DEB.2.01.1003131544340.5493-uKsf7x9sgtqQ/Pez2Lbyp4QuADTiUCJX@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D126852442903680&w=3D=
+2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15584
+Subject		: 2.6.34-rc1: lockdep warning on geode subnotebook
+Submitter	: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Date		: 2010-03-13 10:51 (9 days old)
+Message-ID	: <20100313105109.GA9966-I/5MKhXcvmPrBKCeMvbIDA@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D126847750927601&w=3D=
+2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15555
+Subject		: 2.6.34-rc1: kernel BUG at mm/slab.c:2989!
+Submitter	: Am=C3=A9rico Wang <xiyou.wangcong-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2010-03-10 8:29 (12 days old)
+Message-ID	: <2375c9f91003100029q7d64bbf7xce15eee97f7e2190-JsoAwUIsXounXO2b/Sh1tA@public.gmane.org=
+om>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D126820979017089&w=3D=
+2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15549
+Subject		: [2.6.34-rc1][libata] regression?
+Submitter	: Etienne Basset <etienne.basset-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>
+Date		: 2010-03-09 21:47 (13 days old)
+Message-ID	: <4B96C202.6050606-Bf/eaXMDFuuXqB7oj33eUg@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D126817180811846&w=3D=
+2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15548
+Subject		: BUG: key f70f4b50 not in .data
+Submitter	: Sergey Senozhatsky <sergey.senozhatsky-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2010-03-09 10:27 (13 days old)
+Message-ID	: <20100309102754.GA3316-dY8u8AhHFaWtd10JCjopabkcH5ONE+aC@public.gmane.org>
+References	: http://marc.info/?l=3Dlinux-kernel&m=3D126813046113130&w=3D=
+2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15533
+Subject		: i915 fails to set mode in 2.6.34-rc1, ok in 2.6.33-rc8
+Submitter	: Pete Zaitcev <zaitcev-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Date		: 2010-03-13 20:37 (9 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15518
+Subject		: CONFIG_NO_BOOTMEM=3Dy breaks boot on 32bit
+Submitter	: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Date		: 2010-03-11 15:37 (11 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15496
+Subject		: 2.6.34-rc1 crashes early while startup
+Submitter	: Thomas Meyer <thomas-VsYtu1Qij5c@public.gmane.org>
+Date		: 2010-03-09 19:40 (13 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15495
+Subject		: Flood of SELinux denials on polkitd
+Submitter	: Alex Villacis Lasso <avillaci-x0m+Mc+nT7uljOmnV8AmnkElSqmLX1BE@public.gmane.org>
+Date		: 2010-03-09 16:47 (13 days old)
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15537
+Subject		: 2.6.34-rc1 hangs for 30 seconds when trying to access the di=
+sk
+Submitter	: Andrew Benton <b3nton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date		: 2010-03-14 23:26 (8 days old)
+Handled-By	: Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>
+Patch		: http://bugzilla.kernel.org/attachment.cgi?id=3D25516
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15505
+Subject		: No more b43 wireless interface since 2.6.34-rc1
+Submitter	: Christian Casteyde <casteyde.christian-GANU6spQydw@public.gmane.org>
+Date		: 2010-03-10 06:59 (12 days old)
+Handled-By	: Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=3D15505#c11
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15480
+Subject		: [regression] Fails to boot properly unless given pci=3Dnocrs
+Submitter	: Yanko Kaneti <yaneti-jUE9FD3ILm5BDgjK7y7TUQ@public.gmane.org>
+Date		: 2010-03-09 01:24 (13 days old)
+Handled-By	: Bjorn Helgaas <bjorn.helgaas-VXdhtT5mjnY@public.gmane.org>
+Patch		: http://lkml.org/lkml/2010/3/11/512
+
+
+=46or details, please visit the bug entries and follow the links given =
+in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regres=
+sions.
+There also is a Bugzilla entry used for tracking the regressions from 2=
+=2E6.33,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=3D15310
+
+Please let the tracking team know if there are any Bugzilla entries tha=
+t
+should be added to the list in there.
+
+Thanks!
