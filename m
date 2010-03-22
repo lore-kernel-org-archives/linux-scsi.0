@@ -1,35 +1,72 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.34-rc2: Reported regressions from 2.6.33
-Date: Mon, 22 Mar 2010 22:20:41 +0100
-Message-ID: <201003222220.41347.rjw@sisk.pl>
-References: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera> <alpine.LFD.2.00.1003221012270.18017@i5.linux-foundation.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: FW: [PATCH 2/2] RFC: The be2iscsi driver support for bsg
+Date: Mon, 22 Mar 2010 16:45:43 -0500
+Message-ID: <4BA7E507.1010605@cs.wisc.edu>
+References: <20100319224835.GA31748@linux-qf4p>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:36407 "EHLO ogre.sisk.pl"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:40868 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754738Ab0CVVRu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Mar 2010 17:17:50 -0400
-In-Reply-To: <alpine.LFD.2.00.1003221012270.18017@i5.linux-foundation.org>
+	id S1756259Ab0CVVmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Mar 2010 17:42:08 -0400
+In-Reply-To: <20100319224835.GA31748@linux-qf4p>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: fujita.tomonori@lab.ntt.co.jp, jayamohank@serverengines.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, open-iscsi@googlegroups.com
 
-On Monday 22 March 2010, Linus Torvalds wrote:
-> 
-> On Sun, 21 Mar 2010, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15495
-> > Subject		: Flood of SELinux denials on polkitd
-> > Submitter	: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
-> > Date		: 2010-03-09 16:47 (13 days old)
-> 
-> Fixed by commit 3836a03d978e68b0ae00d3589089343c998cd4ff ("anon_inodes: 
-> mark the anon inode private"), I'm pretty sure.
+On 03/19/2010 05:48 PM, Ravi Anand wrote:
+>> On Thu, 18 Mar 2010 16:02:52 -0500
+>> Mike Christie<michaelc@cs.wisc.edu>  wrote:
+>>
+>>> On 03/18/2010 08:58 AM, FUJITA Tomonori wrote:
+>>>>
+>>>> - You invent your hardware specific data structure for the simplest
+>>>>     operation such as setting IP address.
+>>>
+>>> I think this is what Jay is not trying to do. I think the patch has some
+>>> extra code like the ISCSI_BSG_HST_VENDOR parts that makes it confusing -
+>>> it got me too. The ISCSI_BSG_HST_VENDOR code in be2iscsi looks like it
+>>> is basically disabled (should remove for a formal patch when he sends
+>>> for merging).
+>>>
+>>> It looks like there is a common struct iscsi_bsg_common_format that is
+>>> getting passed around, and then in be2iscsi the driver is using that
+>>> info to make a be2iscsi specific command. So scsi_transport_iscsi /
+>>> ISCSI_SET_IP_ADDR / iscsi_bsg_common_format  gets translated by b2iscsi
+>>> to b2iscsi / OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR / be_modify_ip_addr.
+>>
+>> Yeah, seems you are right. But looks like this patchset also adds the
+>> vendor specific message support (ISCSI_BSG_HST_VENDOR)?
+>>
+.......
 
-Thanks, closed.
+> Here's an early snapshot of the patch which we are working on to add
+> the support using bsg vendor specific part - btw this is based on the previous
+> iscsi bsg patch  and need to be synced up with what was posted recently.
 
-Rafael
+Just to make sure we are all on the same page. Tomo's comments above 
+means that for your comment about updating to the new code does not mean 
+that you should just use the new HST_VENDOR cmd, and it does not mean 
+that we only should use a common struct/cmd for net operations that Jay 
+handled.
+
+For other common operations we should do like Tomo suggested, and Jay 
+started with the network stuff, and make common operations. You guys 
+should also not feel like you have to use the format Jay posted with. We 
+can modify it so it make sense for everyone.
+
+
+> +	switch (msgcode) {
+> +	case ISCSI_BSG_HST_VENDOR:
+> +		rval = qla4xxx_process_vendor_specific(job);
+> +		break;
+> +	case ISCSI_BSG_HST_PING:
+> +		rval = qla4xxx_ping(job);
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +
