@@ -1,66 +1,35 @@
-From: <Alex.Iannicelli@Emulex.Com>
-Subject: RE: [PATCH] scsi_transport_fc: Initialize sysfs attributes with
- sysfs_attr_init
-Date: Mon, 22 Mar 2010 12:16:48 -0700
-Message-ID: <412A05BA40734D4887DBC67661F433081FE17C96AF@EXMAIL.ad.emulex.com>
-References: <20100316101453.GA9734@schmichrtp.mainz.de.ibm.com>
-	 <4B9FEEBB.8090809@cs.wisc.edu>  <1268772544.30314.1.camel@mulgrave.site>
- <1269107052.4353.241.camel@mulgrave.site>
+From: Roel Kluin <roel.kluin@gmail.com>
+Subject: [PATCH] bfa: wrong fcport H2I message tested in bfa_fcport_isr()
+Date: Mon, 22 Mar 2010 21:48:59 +0100
+Message-ID: <4BA7D7BB.1080506@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht2.emulex.com ([138.239.113.184]:37200 "EHLO
-	exht2.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752272Ab0CVTW1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2010 15:22:27 -0400
-In-Reply-To: <1269107052.4353.241.camel@mulgrave.site>
-Content-Language: en-US
+Received: from mail-ew0-f216.google.com ([209.85.219.216]:49553 "EHLO
+	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754938Ab0CVUqr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2010 16:46:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, michaelc@cs.wisc.edu
-Cc: christof.schmitt@de.ibm.com, linux-scsi@vger.kernel.org, Alex.Iannicelli@Emulex.Com
+To: Jing Huang <huangj@brocade.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-VGhpcyBmaXggc2VlbXMgdG8gZG8gdGhlIHRyaWNrLiBJIHRlc3RlZCBpdCB3aXRoIHRoZSBscGZj
-IGRyaXZlciBhbmQgSSBkaWRuJ3Qgc2VlIGFueSBtb3JlIHdhcm5pbmdzLg0KDQpBbGV4DQoNCi0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2Vy
-bmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhh
-bGYgT2YgSmFtZXMgQm90dG9tbGV5DQpTZW50OiBTYXR1cmRheSwgTWFyY2ggMjAsIDIwMTAgMTo0
-NCBQTQ0KVG86IE1pa2UgQ2hyaXN0aWUNCkNjOiBDaHJpc3RvZiBTY2htaXR0OyBsaW51eC1zY3Np
-QHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSF0gc2NzaV90cmFuc3BvcnRfZmM6
-IEluaXRpYWxpemUgc3lzZnMgYXR0cmlidXRlcyB3aXRoIHN5c2ZzX2F0dHJfaW5pdA0KDQpPbiBU
-dWUsIDIwMTAtMDMtMTYgYXQgMTM6NDkgLTA3MDAsIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4g
-T24gVHVlLCAyMDEwLTAzLTE2IGF0IDE1OjQ4IC0wNTAwLCBNaWtlIENocmlzdGllIHdyb3RlOg0K
-PiA+IE9uIDAzLzE2LzIwMTAgMDU6MTQgQU0sIENocmlzdG9mIFNjaG1pdHQgd3JvdGU6DQo+ID4g
-PiBXaXRoIHRoZSBuZXcgbG9ja2RlcCB0cmFja2luZyBpbiBzeXNmcywgc3lzZnNfYXR0cl9pbml0
-IGhhcyB0byBiZSB1c2VkDQo+ID4gPiBmb3IgaW5pdGlhbGl6aW5nIGFsbCBub24tc3RhdGljIHN5
-c2ZzIGF0dHJpYnV0ZXMuIE90aGVyd2lzZSwgbG9ja2RlcA0KPiA+ID4gd2lsbCB3YXJuIGFib3V0
-IHRoZSBtaXNzaW5nIGluaXRpYWxpemF0aW9uIHdpdGg6DQo+ID4gPg0KPiA+ID4gTWFyIDE1IDA5
-OjE5OjQ5IHQ2MzQ1MDI5IGtlcm5lbDogQlVHOiBrZXkgMDAwMDAwMDAyZjVhZTM1MCBub3QgaW4g
-LmRhdGEhDQo+ID4gPiBNYXIgMTUgMDk6MTk6NDkgdDYzNDUwMjkga2VybmVsOiBCVUc6IGtleSAw
-MDAwMDAwMDJmNWFlMzg4IG5vdCBpbiAuZGF0YSENCj4gPiA+IE1hciAxNSAwOToxOTo0OSB0NjM0
-NTAyOSBrZXJuZWw6IEJVRzoga2V5IDAwMDAwMDAwMmY1YWUzYzAgbm90IGluIC5kYXRhIQ0KPiA+
-ID4gTWFyIDE1IDA5OjE5OjQ5IHQ2MzQ1MDI5IGtlcm5lbDogQlVHOiBrZXkgMDAwMDAwMDAyZjVh
-ZTNmOCBub3QgaW4gLmRhdGEhDQo+ID4gPg0KPiA+IA0KPiA+IEkgdGhpbmsgaXNjc2kgbmVlZHMg
-dGhpcyB0b28sIGJ1dCBJIGFtIG5vdCBzZWUgdGhpcyBlcnJvciBtZXNzYWdlLiBJIA0KPiA+IGp1
-c3QgdHJpZWQgaXNjc2kgYW5kIGZjL2xwZmMgd2l0aCBsaW51cydzIHRyZWUgYW5kIGRpZCBub3Qg
-c2VlIHRob3NlIA0KPiA+IGVycm9ycyBmb3IgZWl0aGVyLiBXaGF0IC5jb25maWcgc2V0dGluZ3Mg
-ZG8gSSBuZWVkIGZvciB0aGlzPyBJIGhhdmU6DQo+IA0KPiBJdCdzIGEgbG90IHdvcnNlIHRoYW4g
-dGhhdCAuLi4gZXZlcnkgdHJhbnNwb3J0IGNsYXNzIHBsdXMgc29tZSBvZiB0aGUNCj4gY29yZSBh
-dHRyaWJ1dGVzIHdpbGwgbmVlZCB0aGlzLg0KDQpBY3R1YWxseSwgaXQgbG9va3MgbGlrZSB3ZSBj
-YW4gZml4IGFsbCB0aGUgdHJhbnNwb3J0IGNsYXNzZXMgYXQgb25lIGdvDQppbiB0aGUgYXR0cmli
-dXRlIGNvbnRhaW5lciBjb2RlIHJhdGhlciB0aGFuIGRvaW5nIHRoaXMgcGVyLWF0dHJpYnV0ZS4N
-Cg0KQ2FuIHNvbWVvbmUgd2hvIHNlZXMgdGhlIHByb2JsZW0gY2hlY2sgdGhpcyBvdXQ/DQoNClRo
-YW5rcywNCg0KSmFtZXMNCg0KLS0tDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL2Jhc2UvYXR0cmli
-dXRlX2NvbnRhaW5lci5jIGIvZHJpdmVycy9iYXNlL2F0dHJpYnV0ZV9jb250YWluZXIuYw0KaW5k
-ZXggYjljZGEwNS4uOGZjMjAwYiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvYmFzZS9hdHRyaWJ1dGVf
-Y29udGFpbmVyLmMNCisrKyBiL2RyaXZlcnMvYmFzZS9hdHRyaWJ1dGVfY29udGFpbmVyLmMNCkBA
-IC0zMjgsNiArMzI4LDcgQEAgYXR0cmlidXRlX2NvbnRhaW5lcl9hZGRfYXR0cnMoc3RydWN0IGRl
-dmljZSAqY2xhc3NkZXYpDQogCQlyZXR1cm4gc3lzZnNfY3JlYXRlX2dyb3VwKCZjbGFzc2Rldi0+
-a29iaiwgY29udC0+Z3JwKTsNCiANCiAJZm9yIChpID0gMDsgYXR0cnNbaV07IGkrKykgew0KKwkJ
-c3lzZnNfYXR0cl9pbml0KCZhdHRyc1tpXS0+YXR0cik7DQogCQllcnJvciA9IGRldmljZV9jcmVh
-dGVfZmlsZShjbGFzc2RldiwgYXR0cnNbaV0pOw0KIAkJaWYgKGVycm9yKQ0KIAkJCXJldHVybiBl
-cnJvcjsNCg0KDQotLQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxp
-bmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQp0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8g
-bWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
+It appears that the wrong fcport H2I message was tested
+
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+Was this intended?
+
+diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
+index c589488..5e5e6fe 100644
+--- a/drivers/scsi/bfa/bfa_fcport.c
++++ b/drivers/scsi/bfa/bfa_fcport.c
+@@ -1281,7 +1281,7 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 		break;
+ 
+ 	case BFI_FCPORT_I2H_DISABLE_RSP:
+-		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
++		if (fcport->msgtag == i2hmsg.pdisable_rsp->msgtag)
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
+ 		break;
+ 
