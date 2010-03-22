@@ -1,35 +1,35 @@
-From: Roel Kluin <roel.kluin@gmail.com>
-Subject: [PATCH] bfa: wrong fcport H2I message tested in bfa_fcport_isr()
-Date: Mon, 22 Mar 2010 21:48:59 +0100
-Message-ID: <4BA7D7BB.1080506@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.34-rc2: Reported regressions from 2.6.33
+Date: Mon, 22 Mar 2010 22:20:41 +0100
+Message-ID: <201003222220.41347.rjw@sisk.pl>
+References: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera> <alpine.LFD.2.00.1003221012270.18017@i5.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ew0-f216.google.com ([209.85.219.216]:49553 "EHLO
-	mail-ew0-f216.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754938Ab0CVUqr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2010 16:46:47 -0400
+Received: from ogre.sisk.pl ([217.79.144.158]:36407 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754738Ab0CVVRu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Mar 2010 17:17:50 -0400
+In-Reply-To: <alpine.LFD.2.00.1003221012270.18017@i5.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 
-It appears that the wrong fcport H2I message was tested
+On Monday 22 March 2010, Linus Torvalds wrote:
+> 
+> On Sun, 21 Mar 2010, Rafael J. Wysocki wrote:
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15495
+> > Subject		: Flood of SELinux denials on polkitd
+> > Submitter	: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
+> > Date		: 2010-03-09 16:47 (13 days old)
+> 
+> Fixed by commit 3836a03d978e68b0ae00d3589089343c998cd4ff ("anon_inodes: 
+> mark the anon inode private"), I'm pretty sure.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
----
-Was this intended?
+Thanks, closed.
 
-diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-index c589488..5e5e6fe 100644
---- a/drivers/scsi/bfa/bfa_fcport.c
-+++ b/drivers/scsi/bfa/bfa_fcport.c
-@@ -1281,7 +1281,7 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
- 		break;
- 
- 	case BFI_FCPORT_I2H_DISABLE_RSP:
--		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
-+		if (fcport->msgtag == i2hmsg.pdisable_rsp->msgtag)
- 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
- 		break;
- 
+Rafael
