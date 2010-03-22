@@ -1,72 +1,51 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: FW: [PATCH 2/2] RFC: The be2iscsi driver support for bsg
-Date: Mon, 22 Mar 2010 16:45:43 -0500
-Message-ID: <4BA7E507.1010605@cs.wisc.edu>
-References: <20100319224835.GA31748@linux-qf4p>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH] bfa: wrong fcport H2I message tested in bfa_fcport_isr()
+Date: Mon, 22 Mar 2010 16:12:55 -0700
+Message-ID: <04391A4E90BB2149B010D22452FA16876F6C9279@HQ-EXCH-6.corp.brocade.com>
+References: <4BA7D7BB.1080506@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40868 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756259Ab0CVVmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Mar 2010 17:42:08 -0400
-In-Reply-To: <20100319224835.GA31748@linux-qf4p>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:60097 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750861Ab0CVXNG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Mar 2010 19:13:06 -0400
+In-Reply-To: <4BA7D7BB.1080506@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: fujita.tomonori@lab.ntt.co.jp, jayamohank@serverengines.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, open-iscsi@googlegroups.com
+To: Roel Kluin <roel.kluin@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 03/19/2010 05:48 PM, Ravi Anand wrote:
->> On Thu, 18 Mar 2010 16:02:52 -0500
->> Mike Christie<michaelc@cs.wisc.edu>  wrote:
->>
->>> On 03/18/2010 08:58 AM, FUJITA Tomonori wrote:
->>>>
->>>> - You invent your hardware specific data structure for the simplest
->>>>     operation such as setting IP address.
->>>
->>> I think this is what Jay is not trying to do. I think the patch has some
->>> extra code like the ISCSI_BSG_HST_VENDOR parts that makes it confusing -
->>> it got me too. The ISCSI_BSG_HST_VENDOR code in be2iscsi looks like it
->>> is basically disabled (should remove for a formal patch when he sends
->>> for merging).
->>>
->>> It looks like there is a common struct iscsi_bsg_common_format that is
->>> getting passed around, and then in be2iscsi the driver is using that
->>> info to make a be2iscsi specific command. So scsi_transport_iscsi /
->>> ISCSI_SET_IP_ADDR / iscsi_bsg_common_format  gets translated by b2iscsi
->>> to b2iscsi / OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR / be_modify_ip_addr.
->>
->> Yeah, seems you are right. But looks like this patchset also adds the
->> vendor specific message support (ISCSI_BSG_HST_VENDOR)?
->>
-.......
+This is not intended. Using penable_rsp or pdisable_rsp in this case doesn't have functional difference since it is a union, but it is confusing and should be fixed.
 
-> Here's an early snapshot of the patch which we are working on to add
-> the support using bsg vendor specific part - btw this is based on the previous
-> iscsi bsg patch  and need to be synced up with what was posted recently.
+Thanks
 
-Just to make sure we are all on the same page. Tomo's comments above 
-means that for your comment about updating to the new code does not mean 
-that you should just use the new HST_VENDOR cmd, and it does not mean 
-that we only should use a common struct/cmd for net operations that Jay 
-handled.
+Jing
 
-For other common operations we should do like Tomo suggested, and Jay 
-started with the network stuff, and make common operations. You guys 
-should also not feel like you have to use the format Jay posted with. We 
-can modify it so it make sense for everyone.
+-----Original Message-----
+From: Roel Kluin [mailto:roel.kluin@gmail.com] 
+Sent: Monday, March 22, 2010 1:49 PM
+To: Jing Huang; linux-scsi@vger.kernel.org; Andrew Morton; LKML
+Subject: [PATCH] bfa: wrong fcport H2I message tested in bfa_fcport_isr()
 
+It appears that the wrong fcport H2I message was tested
 
-> +	switch (msgcode) {
-> +	case ISCSI_BSG_HST_VENDOR:
-> +		rval = qla4xxx_process_vendor_specific(job);
-> +		break;
-> +	case ISCSI_BSG_HST_PING:
-> +		rval = qla4xxx_ping(job);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+Was this intended?
+
+diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
+index c589488..5e5e6fe 100644
+--- a/drivers/scsi/bfa/bfa_fcport.c
++++ b/drivers/scsi/bfa/bfa_fcport.c
+@@ -1281,7 +1281,7 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 		break;
+ 
+ 	case BFI_FCPORT_I2H_DISABLE_RSP:
+-		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
++		if (fcport->msgtag == i2hmsg.pdisable_rsp->msgtag)
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
+ 		break;
+ 
