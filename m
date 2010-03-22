@@ -1,86 +1,209 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [PATCH] scsi_transport_fc: Initialize sysfs attributes with
- sysfs_attr_init
-Date: Mon, 22 Mar 2010 11:13:09 +0100
-Message-ID: <20100322101308.GA6953@schmichrtp.mainz.de.ibm.com>
-References: <20100316101453.GA9734@schmichrtp.mainz.de.ibm.com>
- <4B9FEEBB.8090809@cs.wisc.edu>
- <1268772544.30314.1.camel@mulgrave.site>
- <1269107052.4353.241.camel@mulgrave.site>
+Subject: Re: [PATCH] Protect against overflow in dev_loss_tmo
+Date: Mon, 22 Mar 2010 15:12:40 +0100
+Message-ID: <20100322141239.GB6953@schmichrtp.mainz.de.ibm.com>
+References: <4BA1AB14.6020600@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.17.163]:55618 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241Ab0CVKNL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2010 06:13:11 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate3.de.ibm.com (8.13.1/8.13.1) with ESMTP id o2MAD9aZ007518
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2010 10:13:09 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o2MAD9811695900
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2010 11:13:09 +0100
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o2MAD9KE010045
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2010 11:13:09 +0100
+Received: from mtagate6.uk.ibm.com ([194.196.100.166]:35942 "EHLO
+	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753668Ab0CVOMm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2010 10:12:42 -0400
+Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
+	by mtagate6.uk.ibm.com (8.13.1/8.13.1) with ESMTP id o2MECeJg031994
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2010 14:12:40 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o2MECeIH868468
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2010 14:12:40 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o2MECeMr009645
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Mar 2010 14:12:40 GMT
 Content-Disposition: inline
-In-Reply-To: <1269107052.4353.241.camel@mulgrave.site>
+In-Reply-To: <4BA1AB14.6020600@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Smart <james.smart@emulex.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, Mar 20, 2010 at 12:44:12PM -0500, James Bottomley wrote:
-> On Tue, 2010-03-16 at 13:49 -0700, James Bottomley wrote:
-> > On Tue, 2010-03-16 at 15:48 -0500, Mike Christie wrote:
-> > > On 03/16/2010 05:14 AM, Christof Schmitt wrote:
-> > > > With the new lockdep tracking in sysfs, sysfs_attr_init has to be used
-> > > > for initializing all non-static sysfs attributes. Otherwise, lockdep
-> > > > will warn about the missing initialization with:
-> > > >
-> > > > Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae350 not in .data!
-> > > > Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae388 not in .data!
-> > > > Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae3c0 not in .data!
-> > > > Mar 15 09:19:49 t6345029 kernel: BUG: key 000000002f5ae3f8 not in .data!
-> > > >
-> > > 
-> > > I think iscsi needs this too, but I am not see this error message. I 
-> > > just tried iscsi and fc/lpfc with linus's tree and did not see those 
-> > > errors for either. What .config settings do I need for this? I have:
-> > 
-> > It's a lot worse than that ... every transport class plus some of the
-> > core attributes will need this.
+On Wed, Mar 17, 2010 at 11:24:52PM -0500, Mike Christie wrote:
+> On 03/16/2010 08:04 AM, Christof Schmitt wrote:
+> >On Tue, Mar 09, 2010 at 09:14:37AM -0500, James Smart wrote:
+> >>I don't ever expect to see large dev_loss_tmo values, but the patch is fine.
+> >>
+> >>Acked-by: James Smart<james.smart@emulex.com>
+> >>
+> >>-- james s
+> >>
+> >>
+> >>Hannes Reinecke wrote:
+> >>>The rport structure defines dev_loss_tmo as u32, which is
+> >>>later multiplied with HZ to get the actual timeout value.
+> >>>This might overflow for large dev_loss_tmo values. So we
+> >>>should be better using u64 as intermediate variables here
+> >>>to protect against overflow.
+> >>>
+> >>>Signed-off-by: Hannes Reinecke<hare@suse.de>
+> >[...]
+> >
+> >I guess this is the intended use to prevent the dev_loss_tmo from
+> >removing the SCSI devices:
+> >http://git.kernel.org/?p=linux/kernel/git/hare/multipath-tools.git;a=commitdiff;h=b9903e2e8a6cdc5042897719fbae6c9346820bbf;hp=ed1dc6164fe530d146cfe65d4f99e44ec9b54b95
+> >
+> >But does this raise the question again how to run SCSI EH with remote
+> >port failures?
+> >
+> >The SCSI FC LLDs call fc_block_scsi_eh to wait until the fc_rport
+> >leaves the state FC_PORTSTATE_BLOCKED. This effectively prevents SCSI
+> >devices from being taken offline when there is a command timeout and
+> >the fc_rport is BLOCKED. With the large dev_loss_tmo, the dev_loss_tmo
+> >never expires and a problem with a single remote port can block the
+> >host error handler.
+> >
 > 
-> Actually, it looks like we can fix all the transport classes at one go
-> in the attribute container code rather than doing this per-attribute.
+> I did the attached patch for a problem where we were supposed to be
+> getting a RSCN but we were not, so the scsi eh ended up running.
+> Then we sat in the scsi eh for a long time. multipath was being
+> used, so we wanted to fast fail, but the the fc block scsi eh helper
+> only waits for the rport state to change.
 > 
-> Can someone who sees the problem check this out?
+> It ended up the switch was busted and should have given a RSCN, but
+> I think the patch is helpful for your problem where we fall into the
+> long wait for legitimate reasons.
 > 
-> Thanks,
+> This patch works nicely when using multipath to get IO failed and
+> hosts unblocked, but the problem is that it could offline the
+> devices more quickly than what we are prepared for. We have
+> something similar for iscsi, but the iscsi userspace daemon has a
+> way to set the device back to running when it recovers. FC does not,
+> and dm-multipath does not do this, so I am not pushing the patch.
 > 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/base/attribute_container.c b/drivers/base/attribute_container.c
-> index b9cda05..8fc200b 100644
-> --- a/drivers/base/attribute_container.c
-> +++ b/drivers/base/attribute_container.c
-> @@ -328,6 +328,7 @@ attribute_container_add_attrs(struct device *classdev)
->  		return sysfs_create_group(&classdev->kobj, cont->grp);
-> 
->  	for (i = 0; attrs[i]; i++) {
-> +		sysfs_attr_init(&attrs[i]->attr);
->  		error = device_create_file(classdev, attrs[i]);
->  		if (error)
->  			return error;
-> 
+> I think if we can figure something out for that offline issue the
+> patch could be helpful. I was thinking that if the the scsi eh
+> failed because the fast io fail timer fired, then we could set the
+> devices to a new state. The scsi_transport_fc and
+> scsi_transport_iscsi code could use this new device state to
+> indicate that the fast io fail timer has fired and we are failing
+> IO, but the device is not in offline state and is not blocked.
 
-I just tested it with the zfcp driver and this approach works for me.
-However, this would put all transport attributes in the same class for
-the lock dependency tracker. For the fc_host and fc_remote_port
-attributes exported for zfcp, this is no problem. I don't know if this
-would be a problem for drivers using the vport_create and vport_delete
-attributes.
+Thanks for providing the information and ideas. I think the main point
+is to get the information that I/O has been failed to the scsi eh.
+What about introducing a return value to indicate that I/O has been
+failed with terminate_rport_io? This is a first shot to implement this
+for the abort callback, but it needs to be extended for the other
+callbacks as well. Or should a new SCSI device state be preferred?
 
-Christof
+---
+ drivers/scsi/scsi_error.c        |    5 +++--
+ drivers/scsi/scsi_transport_fc.c |   20 +++++++++++++++-----
+ include/scsi/scsi.h              |    1 +
+ include/scsi/scsi_transport_fc.h |    2 +-
+ 4 files changed, 20 insertions(+), 8 deletions(-)
+
+--- a/drivers/scsi/scsi_error.c	2009-12-03 17:41:27.000000000 +0100
++++ b/drivers/scsi/scsi_error.c	2010-03-22 14:58:07.000000000 +0100
+@@ -956,10 +956,11 @@ static int scsi_eh_abort_cmds(struct lis
+ 						  "0x%p\n", current->comm,
+ 						  scmd));
+ 		rtn = scsi_try_to_abort_cmd(scmd);
+-		if (rtn == SUCCESS) {
++		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+ 			scmd->eh_eflags &= ~SCSI_EH_CANCEL_CMD;
+ 			if (!scsi_device_online(scmd->device) ||
+-			    !scsi_eh_tur(scmd)) {
++			    !scsi_eh_tur(scmd) ||
++			    rtn == FAST_IO_FAIL) {
+ 				scsi_eh_finish_cmd(scmd, done_q);
+ 			}
+ 				
+--- a/drivers/scsi/scsi_transport_fc.c	2010-02-26 12:59:27.000000000 +0100
++++ b/drivers/scsi/scsi_transport_fc.c	2010-03-22 14:56:28.000000000 +0100
+@@ -3162,23 +3162,33 @@ fc_scsi_scan_rport(struct work_struct *w
+  *
+  * This routine can be called from a FC LLD scsi_eh callback. It
+  * blocks the scsi_eh thread until the fc_rport leaves the
+- * FC_PORTSTATE_BLOCKED. This is necessary to avoid the scsi_eh
+- * failing recovery actions for blocked rports which would lead to
+- * offlined SCSI devices.
++ * FC_PORTSTATE_BLOCKED, or the fast_io_fail_tmo fires. This is
++ * necessary to avoid the scsi_eh failing recovery actions for blocked
++ * rports which would lead to offlined SCSI devices.
++ *
++ * Returns: 0 if the fc_rport left the state FC_PORTSTATE_BLOCKED.
++ * 	    FAST_IO_FAIL if the fast_io_fail_tmo fired, this should be
++ * 	    passed back to scsi_eh.
+  */
+-void fc_block_scsi_eh(struct scsi_cmnd *cmnd)
++int fc_block_scsi_eh(struct scsi_cmnd *cmnd)
+ {
+ 	struct Scsi_Host *shost = cmnd->device->host;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	while (rport->port_state == FC_PORTSTATE_BLOCKED) {
++	while (rport->port_state == FC_PORTSTATE_BLOCKED &&
++	       !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)) {
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		msleep(1000);
+ 		spin_lock_irqsave(shost->host_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
++
++	if (rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)
++		return FAST_IO_FAIL;
++
++	return 0;
+ }
+ EXPORT_SYMBOL(fc_block_scsi_eh);
+ 
+--- a/include/scsi/scsi.h	2010-02-26 12:59:46.000000000 +0100
++++ b/include/scsi/scsi.h	2010-03-22 14:56:48.000000000 +0100
+@@ -423,6 +423,7 @@ static inline int scsi_is_wlun(unsigned 
+ #define ADD_TO_MLQUEUE  0x2006
+ #define TIMEOUT_ERROR   0x2007
+ #define SCSI_RETURN_NOT_HANDLED   0x2008
++#define FAST_IO_FAIL	0x2009
+ 
+ /*
+  * Midlevel queue return values.
+--- a/include/scsi/scsi_transport_fc.h	2009-11-05 16:59:33.000000000 +0100
++++ b/include/scsi/scsi_transport_fc.h	2010-03-22 14:41:36.000000000 +0100
+@@ -807,6 +807,6 @@ void fc_host_post_vendor_event(struct Sc
+ struct fc_vport *fc_vport_create(struct Scsi_Host *shost, int channel,
+ 		struct fc_vport_identifiers *);
+ int fc_vport_terminate(struct fc_vport *vport);
+-void fc_block_scsi_eh(struct scsi_cmnd *cmnd);
++int fc_block_scsi_eh(struct scsi_cmnd *cmnd);
+ 
+ #endif /* SCSI_TRANSPORT_FC_H */
+
+The low-level driver simply passes the FAST_IO_FAIL from the eh callback
+back to scsi eh:
+
+---
+ drivers/s390/scsi/zfcp_scsi.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+--- a/drivers/s390/scsi/zfcp_scsi.c	2010-03-02 14:02:37.000000000 +0100
++++ b/drivers/s390/scsi/zfcp_scsi.c	2010-03-22 14:50:31.000000000 +0100
+@@ -174,7 +174,7 @@ static int zfcp_scsi_eh_abort_handler(st
+ 	struct zfcp_fsf_req *old_req, *abrt_req;
+ 	unsigned long flags;
+ 	unsigned long old_reqid = (unsigned long) scpnt->host_scribble;
+-	int retval = SUCCESS;
++	int retval = SUCCESS, ret;
+ 	int retry = 3;
+ 	char *dbf_tag;
+ 
+@@ -199,7 +199,9 @@ static int zfcp_scsi_eh_abort_handler(st
+ 			break;
+ 
+ 		zfcp_erp_wait(adapter);
+-		fc_block_scsi_eh(scpnt);
++		ret = fc_block_scsi_eh(scpnt);
++		if (ret)
++			return ret;
+ 		if (!(atomic_read(&adapter->status) &
+ 		      ZFCP_STATUS_COMMON_RUNNING)) {
+ 			zfcp_dbf_scsi_abort("nres", adapter->dbf, scpnt, NULL,
