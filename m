@@ -1,46 +1,35 @@
-From: James Smart <james.smart-laKkSmNT4hbQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] RFC: The be2iscsi driver support for bsg
-Date: Mon, 22 Mar 2010 11:16:31 -0400
-Message-ID: <4BA789CF.3040100@emulex.com>
-References: <4BA294FC.3030400@cs.wisc.edu>	<20100319081016W.fujita.tomonori@lab.ntt.co.jp>	<4BA3747E.4020104@emulex.com> <20100322175704Y.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: 2.6.34-rc2: Reported regressions from 2.6.33
+Date: Mon, 22 Mar 2010 10:12:38 -0700 (PDT)
+Message-ID: <alpine.LFD.2.00.1003221012270.18017@i5.linux-foundation.org>
+References: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <324mnSwsKClg90C4I.IC0HJ4CKB4N.2ECEF4D-8I2I86EE6B46HEKFI.2EC-WNnxsJb2WYALHLMFiseIBxPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
-In-Reply-To: <20100322175704Y.fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
-	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-Cc: "michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org" <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, "jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org" <jayamohank-i5Eg4PDOvn3+uv41P6q33AC/G2K4zDHf@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "James.Bottomley-l3A5Bk7waGM@public.gmane.org" <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
+Cc: DRI <dri-devel@lists.sourceforge.net>, Linux SCSI List <linux-scsi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
 
-FUJITA Tomonori wrote:
-> If vendors use the common data structures via bsg, it's totally fine
-> by me. I see why bsg is preferable. The only thing that I care about
-> is managing any iSCSI HBA with iscsiadm instead of various vendor
-> specific utilities.
+On Sun, 21 Mar 2010, Rafael J. Wysocki wrote:
+> 
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15495
+> Subject		: Flood of SELinux denials on polkitd
+> Submitter	: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
+> Date		: 2010-03-09 16:47 (13 days old)
 
-agreed
+Fixed by commit 3836a03d978e68b0ae00d3589089343c998cd4ff ("anon_inodes: 
+mark the anon inode private"), I'm pretty sure.
 
-> About the implementation, I think that it's better to have the common
-> library code rather than just copying the fs bsg code into iscsi.
-
-Note: I tried to library-ize the transport implementation on the first pass of 
-the RFC. But it was making things more complex.  I tried to explain this, 
-perhaps not very well (http://marc.info/?l=linux-scsi&m=125725904205688&w=2).
-
--- james s
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+		Linus
