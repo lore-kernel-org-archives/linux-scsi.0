@@ -1,35 +1,66 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 2.6.34-rc2: Reported regressions from 2.6.33
-Date: Mon, 22 Mar 2010 10:12:38 -0700 (PDT)
-Message-ID: <alpine.LFD.2.00.1003221012270.18017@i5.linux-foundation.org>
-References: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera>
+From: <Alex.Iannicelli@Emulex.Com>
+Subject: RE: [PATCH] scsi_transport_fc: Initialize sysfs attributes with
+ sysfs_attr_init
+Date: Mon, 22 Mar 2010 12:16:48 -0700
+Message-ID: <412A05BA40734D4887DBC67661F433081FE17C96AF@EXMAIL.ad.emulex.com>
+References: <20100316101453.GA9734@schmichrtp.mainz.de.ibm.com>
+	 <4B9FEEBB.8090809@cs.wisc.edu>  <1268772544.30314.1.camel@mulgrave.site>
+ <1269107052.4353.241.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <M9dVcHY7TxH.A.2GC.ZBopLB@chimera>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
-Cc: DRI <dri-devel@lists.sourceforge.net>, Linux SCSI List <linux-scsi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exht2.emulex.com ([138.239.113.184]:37200 "EHLO
+	exht2.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752272Ab0CVTW1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Mar 2010 15:22:27 -0400
+In-Reply-To: <1269107052.4353.241.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, michaelc@cs.wisc.edu
+Cc: christof.schmitt@de.ibm.com, linux-scsi@vger.kernel.org, Alex.Iannicelli@Emulex.Com
 
-
-On Sun, 21 Mar 2010, Rafael J. Wysocki wrote:
-> 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15495
-> Subject		: Flood of SELinux denials on polkitd
-> Submitter	: Alex Villacis Lasso <avillaci@ceibo.fiec.espol.edu.ec>
-> Date		: 2010-03-09 16:47 (13 days old)
-
-Fixed by commit 3836a03d978e68b0ae00d3589089343c998cd4ff ("anon_inodes: 
-mark the anon inode private"), I'm pretty sure.
-
-		Linus
+VGhpcyBmaXggc2VlbXMgdG8gZG8gdGhlIHRyaWNrLiBJIHRlc3RlZCBpdCB3aXRoIHRoZSBscGZj
+IGRyaXZlciBhbmQgSSBkaWRuJ3Qgc2VlIGFueSBtb3JlIHdhcm5pbmdzLg0KDQpBbGV4DQoNCi0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2Vy
+bmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhh
+bGYgT2YgSmFtZXMgQm90dG9tbGV5DQpTZW50OiBTYXR1cmRheSwgTWFyY2ggMjAsIDIwMTAgMTo0
+NCBQTQ0KVG86IE1pa2UgQ2hyaXN0aWUNCkNjOiBDaHJpc3RvZiBTY2htaXR0OyBsaW51eC1zY3Np
+QHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQQVRDSF0gc2NzaV90cmFuc3BvcnRfZmM6
+IEluaXRpYWxpemUgc3lzZnMgYXR0cmlidXRlcyB3aXRoIHN5c2ZzX2F0dHJfaW5pdA0KDQpPbiBU
+dWUsIDIwMTAtMDMtMTYgYXQgMTM6NDkgLTA3MDAsIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4g
+T24gVHVlLCAyMDEwLTAzLTE2IGF0IDE1OjQ4IC0wNTAwLCBNaWtlIENocmlzdGllIHdyb3RlOg0K
+PiA+IE9uIDAzLzE2LzIwMTAgMDU6MTQgQU0sIENocmlzdG9mIFNjaG1pdHQgd3JvdGU6DQo+ID4g
+PiBXaXRoIHRoZSBuZXcgbG9ja2RlcCB0cmFja2luZyBpbiBzeXNmcywgc3lzZnNfYXR0cl9pbml0
+IGhhcyB0byBiZSB1c2VkDQo+ID4gPiBmb3IgaW5pdGlhbGl6aW5nIGFsbCBub24tc3RhdGljIHN5
+c2ZzIGF0dHJpYnV0ZXMuIE90aGVyd2lzZSwgbG9ja2RlcA0KPiA+ID4gd2lsbCB3YXJuIGFib3V0
+IHRoZSBtaXNzaW5nIGluaXRpYWxpemF0aW9uIHdpdGg6DQo+ID4gPg0KPiA+ID4gTWFyIDE1IDA5
+OjE5OjQ5IHQ2MzQ1MDI5IGtlcm5lbDogQlVHOiBrZXkgMDAwMDAwMDAyZjVhZTM1MCBub3QgaW4g
+LmRhdGEhDQo+ID4gPiBNYXIgMTUgMDk6MTk6NDkgdDYzNDUwMjkga2VybmVsOiBCVUc6IGtleSAw
+MDAwMDAwMDJmNWFlMzg4IG5vdCBpbiAuZGF0YSENCj4gPiA+IE1hciAxNSAwOToxOTo0OSB0NjM0
+NTAyOSBrZXJuZWw6IEJVRzoga2V5IDAwMDAwMDAwMmY1YWUzYzAgbm90IGluIC5kYXRhIQ0KPiA+
+ID4gTWFyIDE1IDA5OjE5OjQ5IHQ2MzQ1MDI5IGtlcm5lbDogQlVHOiBrZXkgMDAwMDAwMDAyZjVh
+ZTNmOCBub3QgaW4gLmRhdGEhDQo+ID4gPg0KPiA+IA0KPiA+IEkgdGhpbmsgaXNjc2kgbmVlZHMg
+dGhpcyB0b28sIGJ1dCBJIGFtIG5vdCBzZWUgdGhpcyBlcnJvciBtZXNzYWdlLiBJIA0KPiA+IGp1
+c3QgdHJpZWQgaXNjc2kgYW5kIGZjL2xwZmMgd2l0aCBsaW51cydzIHRyZWUgYW5kIGRpZCBub3Qg
+c2VlIHRob3NlIA0KPiA+IGVycm9ycyBmb3IgZWl0aGVyLiBXaGF0IC5jb25maWcgc2V0dGluZ3Mg
+ZG8gSSBuZWVkIGZvciB0aGlzPyBJIGhhdmU6DQo+IA0KPiBJdCdzIGEgbG90IHdvcnNlIHRoYW4g
+dGhhdCAuLi4gZXZlcnkgdHJhbnNwb3J0IGNsYXNzIHBsdXMgc29tZSBvZiB0aGUNCj4gY29yZSBh
+dHRyaWJ1dGVzIHdpbGwgbmVlZCB0aGlzLg0KDQpBY3R1YWxseSwgaXQgbG9va3MgbGlrZSB3ZSBj
+YW4gZml4IGFsbCB0aGUgdHJhbnNwb3J0IGNsYXNzZXMgYXQgb25lIGdvDQppbiB0aGUgYXR0cmli
+dXRlIGNvbnRhaW5lciBjb2RlIHJhdGhlciB0aGFuIGRvaW5nIHRoaXMgcGVyLWF0dHJpYnV0ZS4N
+Cg0KQ2FuIHNvbWVvbmUgd2hvIHNlZXMgdGhlIHByb2JsZW0gY2hlY2sgdGhpcyBvdXQ/DQoNClRo
+YW5rcywNCg0KSmFtZXMNCg0KLS0tDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL2Jhc2UvYXR0cmli
+dXRlX2NvbnRhaW5lci5jIGIvZHJpdmVycy9iYXNlL2F0dHJpYnV0ZV9jb250YWluZXIuYw0KaW5k
+ZXggYjljZGEwNS4uOGZjMjAwYiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvYmFzZS9hdHRyaWJ1dGVf
+Y29udGFpbmVyLmMNCisrKyBiL2RyaXZlcnMvYmFzZS9hdHRyaWJ1dGVfY29udGFpbmVyLmMNCkBA
+IC0zMjgsNiArMzI4LDcgQEAgYXR0cmlidXRlX2NvbnRhaW5lcl9hZGRfYXR0cnMoc3RydWN0IGRl
+dmljZSAqY2xhc3NkZXYpDQogCQlyZXR1cm4gc3lzZnNfY3JlYXRlX2dyb3VwKCZjbGFzc2Rldi0+
+a29iaiwgY29udC0+Z3JwKTsNCiANCiAJZm9yIChpID0gMDsgYXR0cnNbaV07IGkrKykgew0KKwkJ
+c3lzZnNfYXR0cl9pbml0KCZhdHRyc1tpXS0+YXR0cik7DQogCQllcnJvciA9IGRldmljZV9jcmVh
+dGVfZmlsZShjbGFzc2RldiwgYXR0cnNbaV0pOw0KIAkJaWYgKGVycm9yKQ0KIAkJCXJldHVybiBl
+cnJvcjsNCg0KDQotLQ0KVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxp
+bmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQp0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8g
+bWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
