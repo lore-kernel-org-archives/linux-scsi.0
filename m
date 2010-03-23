@@ -1,51 +1,106 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH] bfa: wrong fcport H2I message tested in bfa_fcport_isr()
-Date: Mon, 22 Mar 2010 16:12:55 -0700
-Message-ID: <04391A4E90BB2149B010D22452FA16876F6C9279@HQ-EXCH-6.corp.brocade.com>
-References: <4BA7D7BB.1080506@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi_debug: Block Limits VPD page fixes
+Date: Tue, 23 Mar 2010 01:12:27 -0400
+Message-ID: <yq1k4t3hb9g.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:60097 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750861Ab0CVXNG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Mar 2010 19:13:06 -0400
-In-Reply-To: <4BA7D7BB.1080506@gmail.com>
-Content-Language: en-US
+Received: from rcsinet11.oracle.com ([148.87.113.123]:41286 "EHLO
+	rcsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086Ab0CWFOX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Mar 2010 01:14:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roel Kluin <roel.kluin@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Douglas Gilbert <dgilbert@interlog.com>
 
-This is not intended. Using penable_rsp or pdisable_rsp in this case doesn't have functional difference since it is a union, but it is confusing and should be fixed.
 
-Thanks
+Add a few clarifying comments in the B0 page function and allow the
+optimal transfer length field to be specified on the command line using
+opt_blks=N.
 
-Jing
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
------Original Message-----
-From: Roel Kluin [mailto:roel.kluin@gmail.com] 
-Sent: Monday, March 22, 2010 1:49 PM
-To: Jing Huang; linux-scsi@vger.kernel.org; Andrew Morton; LKML
-Subject: [PATCH] bfa: wrong fcport H2I message tested in bfa_fcport_isr()
-
-It appears that the wrong fcport H2I message was tested
-
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 ---
-Was this intended?
 
-diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-index c589488..5e5e6fe 100644
---- a/drivers/scsi/bfa/bfa_fcport.c
-+++ b/drivers/scsi/bfa/bfa_fcport.c
-@@ -1281,7 +1281,7 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
- 		break;
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 0b575c8..6ebcdd1 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -107,6 +107,7 @@ static const char * scsi_debug_version_date = "20070104";
+ #define DEF_ATO 1
+ #define DEF_PHYSBLK_EXP 0
+ #define DEF_LOWEST_ALIGNED 0
++#define DEF_OPT_BLKS 64
+ #define DEF_UNMAP_MAX_BLOCKS 0
+ #define DEF_UNMAP_MAX_DESC 0
+ #define DEF_UNMAP_GRANULARITY 0
+@@ -168,6 +169,7 @@ static int scsi_debug_guard = DEF_GUARD;
+ static int scsi_debug_ato = DEF_ATO;
+ static int scsi_debug_physblk_exp = DEF_PHYSBLK_EXP;
+ static int scsi_debug_lowest_aligned = DEF_LOWEST_ALIGNED;
++static int scsi_debug_opt_blks = DEF_OPT_BLKS;
+ static int scsi_debug_unmap_max_desc = DEF_UNMAP_MAX_DESC;
+ static int scsi_debug_unmap_max_blocks = DEF_UNMAP_MAX_BLOCKS;
+ static int scsi_debug_unmap_granularity = DEF_UNMAP_GRANULARITY;
+@@ -698,9 +700,13 @@ static int inquiry_evpd_b0(unsigned char * arr)
+ 	unsigned int gran;
  
- 	case BFI_FCPORT_I2H_DISABLE_RSP:
--		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
-+		if (fcport->msgtag == i2hmsg.pdisable_rsp->msgtag)
- 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
- 		break;
+ 	memcpy(arr, vpdb0_data, sizeof(vpdb0_data));
++
++	/* Optimal transfer length granularity */
+ 	gran = 1 << scsi_debug_physblk_exp;
+ 	arr[2] = (gran >> 8) & 0xff;
+ 	arr[3] = gran & 0xff;
++
++	/* Maximum Transfer Length */
+ 	if (sdebug_store_sectors > 0x400) {
+ 		arr[4] = (sdebug_store_sectors >> 24) & 0xff;
+ 		arr[5] = (sdebug_store_sectors >> 16) & 0xff;
+@@ -708,6 +714,9 @@ static int inquiry_evpd_b0(unsigned char * arr)
+ 		arr[7] = sdebug_store_sectors & 0xff;
+ 	}
  
++	/* Optimal Transfer Length */
++	put_unaligned_be32(scsi_debug_opt_blks, &arr[8]);
++
+ 	if (scsi_debug_unmap_max_desc) {
+ 		unsigned int blocks;
+ 
+@@ -716,15 +725,20 @@ static int inquiry_evpd_b0(unsigned char * arr)
+ 		else
+ 			blocks = 0xffffffff;
+ 
++		/* Maximum Unmap LBA Count */
+ 		put_unaligned_be32(blocks, &arr[16]);
++
++		/* Maximum Unmap Block Descriptor Count */
+ 		put_unaligned_be32(scsi_debug_unmap_max_desc, &arr[20]);
+ 	}
+ 
++	/* Unmap Granularity Alignment */
+ 	if (scsi_debug_unmap_alignment) {
+ 		put_unaligned_be32(scsi_debug_unmap_alignment, &arr[28]);
+ 		arr[28] |= 0x80; /* UGAVALID */
+ 	}
+ 
++	/* Optimal Unmap Granularity */
+ 	if (scsi_debug_unmap_granularity) {
+ 		put_unaligned_be32(scsi_debug_unmap_granularity, &arr[24]);
+ 		return 0x3c; /* Mandatory page length for thin provisioning */
+@@ -2675,6 +2689,7 @@ module_param_named(dif, scsi_debug_dif, int, S_IRUGO);
+ module_param_named(guard, scsi_debug_guard, int, S_IRUGO);
+ module_param_named(ato, scsi_debug_ato, int, S_IRUGO);
+ module_param_named(physblk_exp, scsi_debug_physblk_exp, int, S_IRUGO);
++module_param_named(opt_blks, scsi_debug_opt_blks, int, S_IRUGO);
+ module_param_named(lowest_aligned, scsi_debug_lowest_aligned, int, S_IRUGO);
+ module_param_named(unmap_max_blocks, scsi_debug_unmap_max_blocks, int, S_IRUGO);
+ module_param_named(unmap_max_desc, scsi_debug_unmap_max_desc, int, S_IRUGO);
+@@ -2703,6 +2718,7 @@ MODULE_PARM_DESC(virtual_gb, "virtual gigabyte size (def=0 -> use dev_size_mb)")
+ MODULE_PARM_DESC(vpd_use_hostno, "0 -> dev ids ignore hostno (def=1 -> unique dev ids)");
+ MODULE_PARM_DESC(sector_size, "logical block size in bytes (def=512)");
+ MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
++MODULE_PARM_DESC(opt_blks, "optimal transfer length in block (def=64)");
+ MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=0)");
+ MODULE_PARM_DESC(dix, "data integrity extensions mask (def=0)");
+ MODULE_PARM_DESC(dif, "data integrity field type: 0-3 (def=0)");
