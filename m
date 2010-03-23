@@ -1,305 +1,201 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH][REPOST] qla1280: retain firmware for error recovery
-Date: Tue, 23 Mar 2010 15:00:58 -0500
-Message-ID: <4BA91DFA.80303@sgi.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [RFC PATCH] fc_transport: reduce scan_mutex contention. (was: Re:
+ 2.6.31 - scsi scanning / target deletion deadlock)
+Date: Tue, 23 Mar 2010 13:28:01 -0700
+Message-ID: <20100323202801.GA57672@plapa.local>
+References: <4AE8A70E.9070504@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay3.sgi.com ([192.48.152.1]:45272 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753815Ab0CWUBA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Mar 2010 16:01:00 -0400
+Received: from avexch1.qlogic.com ([198.70.193.115]:59198 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752915Ab0CWU2F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Mar 2010 16:28:05 -0400
+Content-Disposition: inline
+In-Reply-To: <4AE8A70E.9070504@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Jeremy Higdon <jeremy@sgi.com>, Jes Sorensen <jes.sorensen@redhat.com>, James Bottomley <James.Bottomley@suse.de>
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Smart <James.Smart@Emulex.Com>, Jeremy Higdon <jeremy@sgi.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-The qla1280 driver acquires its firmware via udev.  During boot the firmware
-is located in the initrd.  If, after root is mounted, the adapter needs to
-reload firmware (host reset), the firmware load may fail if the root device
-is on the adapter being reset.  This patch modifies qla1280 to retain the
-firmware loaded via the initial request_firmware() for use during error
-recovery.
+On Wed, 28 Oct 2009, Michael Reed wrote:
 
-Signed-off-by: Michael Reed <mdr@sgi.com>
-
-I tracked down Jes and he has authorized me to add
-
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-
-> On 03/18/10 21:58, Michael Reed wrote:
->> > Hi Jes,
->> >
->> > I've got a mod pending for qla1280.c.  Would you have time to take a look?
->> > This is the second of two patches.  The first (1/2) was also submitted by
->> > another person and James applied his version, so ignore my 1/2.
->> >
->> > http://marc.info/?l=linux-scsi&m=126566413024593&w=2
-> Hi Mike,
+> I encountered the following deadlock on the Scsi_Host's scan_lock.
+> Target device glitches have caused the qla2xxx driver to delete and
+> later attempt to re-add a scsi device.  (Sorry, I cannot present the
+> exact sequence of events.)
 > 
-> Nice to hear from you!
+> scsi_wq_3 is executing a scan on host 3, holds host's scan_lock.
+>    i/o has been queued to target3:0:0, on rport 0xe00000b0f02d6c20.
 > 
-> Just had a look through the patch and it looks good to me. You can add
-> an Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com> if you like.
+> qla2xxx_3_dpc is changing rport roles on rport 0xe00000b0f02d6c20.  Until
+>   this completes, the work on scsi_wq_3 cannot progress.  The change in
+>   rport roles results in a call to flush target delete work on fc_wq_3.
 > 
-> ...
+> fc_wq_3 is trying to remove scsi target 0xe0000030f5e86488 on rport 0xe0000030f1f432d0
+>   and needs to acquire the scan_lock held by scsi_wq_3.  
 > 
-> Cheers,
-> Jes
+> Perhaps the granularity of scan_lock is too great?
+> 
+> Would anyone have any thoughts on how best to eliminate this deadlock?
+> 
+> Thanks,
+>  Mike
+> 
+> [0]kdb> btp 3790
+> Stack traceback for pid 3790
+> 0xe0000034f5d30000     3790        2  0    1   D  0xe0000034f5d30570  fc_wq_3
+> 0xa0000001007280a0 schedule+0x14e0
+>         args (0x4000, 0x0, 0x0, 0xa000000100729720, 0x813, 0xe0000034f5d3fdb0, 0x1111111111111111, 0x0, 0x1010095a6000)
+> 0xa000000100729840 __mutex_lock_slowpath+0x320
+>         args (0xe0000034f4f24cf0, 0xe0000034f5d30000, 0x10095a6010, 0xe0000034f4f24cf4, 0xe0000034f4f24cf8, 0xa0000001011c2600, 0xa0000001011c1cb0, 0x7ffff00)
+> 0xa000000100729ad0 mutex_lock+0x30
+>         args (0xe0000034f4f24d08, 0xa000000100471d30, 0x286, 0x10095a6010)
+> 0xa000000100471d30 scsi_remove_device+0x30
+>         args (0xe0000030f5ea57a8, 0xe0000034f4f24cf0, 0xa000000100471f40, 0x48b, 0xe0000034f4f24c90)
+> 0xa000000100471f40 __scsi_remove_target+0x180
+>         args (0xe0000030f5e86488, 0xe0000030f5ea57a8, 0xe0000034f4f24c90, 0xe0000034f4f24ce8, 0xe0000030f5e865f0, 0xe0000030f5e865ec, 0xa000000100472120, 0x205, 0xa00000010096c950)
+> 0xa000000100472120 __remove_child+0x40
+>         args (0xe0000030f5e864b0, 0xa0000001004152c0, 0x389, 0x0)
+> 0xa0000001004152c0 device_for_each_child+0x80
+>         args (0xe0000030f1f43338, 0x0, 0xa00000010096c200, 0x0, 0xa0000001004720b0, 0x288, 0xa0000001013a6540)
+> 0xa0000001004720b0 scsi_remove_target+0x90
+>         args (0xe0000030f1f43330, 0xe0000030f1f43330, 0xa000000100485630, 0x205, 0xa0000001013a6540)
+> 0xa000000100485630 fc_starget_delete+0x30
+>         args (0xe0000030f1f43528, 0xa0000001000cbd00, 0x50e, 0xa0000001000cbb80)
+> 0xa0000001000cbd00 worker_thread+0x2a0
+>         args (0xe0000034f7f1b098, 0xa00000010096cec0, 0xe0000034f7f1b0a0, 0xe0000034f7f1b0c8, 0xe0000034f7f1b0a0, 0xe0000034f7f1b0b0, 0xffffffffbfffffff, 0xa0000001000d5bb0, 0x389)
+> 0xa0000001000d5bb0 kthread+0x110
+>         args (0xe00000b073a1fcf8, 0xe0000034f5d3fe18, 0xe0000034f7f1b098, 0xa00000010096f650, 0xa000000100014a30, 0x286, 0xa0000001013a6540)
+> 0xa000000100014a30 kernel_thread_helper+0xd0
+>         args (0xa00000010096ffd0, 0xe00000b073a1fcf8, 0xa00000010000a4c0, 0x2, 0xa0000001013a6540)
+> 0xa00000010000a4c0 start_kernel_thread+0x20
+>         args (0xa00000010096ffd0, 0xe00000b073a1fcf8)
+> 
+> 
+> 
+> 
+> [0]kdb> btp 3789
+> Stack traceback for pid 3789
+> 0xe0000034f5b50000     3789        2  0    1   D  0xe0000034f5b50570  scsi_wq_3
+> 0xa0000001007280a0 schedule+0x14e0
+>         args (0xe0000034f4ec7008, 0xe0000034f4f24d70, 0xe0000034f4ec6fe8, 0xe0000034f3669508, 0xe0000034f3669500, 0xe0000034f3669508, 0xe0000034f36694f8, 0xa0000001011c2cd0, 0x1010095a6000)
+> 0xa000000100728640 schedule_timeout+0x40
+>         args (0x7fffffffffffffff, 0x0, 0x0, 0xe0000034f64a6928, 0xa000000100726840, 0x50d, 0xe0000034f4ec7000)
+> 0xa000000100726840 wait_for_common+0x1a0
+>         args (0xe0000034f5b5fce0, 0x7fffffffffffffff, 0x2, 0xe0000034f5b5fce8, 0xe0000034f5b50000, 0xe0000034f5b5fce8, 0xa000000100726ba0, 0x207, 0xa0000001013a6540)
+> 0xa000000100726ba0 wait_for_completion+0x40
+>         args (0xe0000034f5b5fce0, 0xa0000001002b8460, 0x48e, 0x1)
+> 0xa0000001002b8460 blk_execute_rq+0x140
+>         args (0xe0000034f36692d0, 0x0, 0xe000003441024250, 0x1, 0xa0000001002b7b60, 0xe000003441024360, 0xa0000001002b8510, 0x38b, 0xe000003441024300)
+> 0xa0000001002b8510 scsi_execute_rq+0x30
+>         args (0xe0000034f36692d0, 0xe0000034f4ec6fb8, 0xe000003441024250, 0x1, 0xa000000100469050, 0x713, 0x713)
+> 0xa000000100469050 scsi_execute+0x190
+>         args (0xe0000034f4ec6fb8, 0xe000003441024250, 0xe0000034f03ec500, 0x1000, 0xe000003440f3e278, 0x5dc, 0x3, 0x4000000)
+> 0xa000000100469200 scsi_execute_req+0xe0
+>         args (0xe0000034f4ec6fb8, 0xe0000034f5b5fd8c, 0x2, 0xe0000034f03ec500, 0x1000, 0xe0000034f5b5fd84, 0x5dc, 0x3, 0xe000003440f3e278)
+> 0xa00000010046da70 __scsi_scan_target+0x530
+>         args (0x0, 0x0, 0x1000, 0xe0000034f03ec500, 0x1, 0xe0000034f4ec6fb8, 0xe0000030f14b55e0, 0xa0000001011c2cd0, 0xe0000034f5b5fd70)
+> 0xa00000010046f000 scsi_scan_target+0x120
+>         args (0xe00000b0f02d6c80, 0x0, 0x0, 0xffffffffffffffff, 0x1, 0xe0000034f4f24c90, 0xe0000034f4f24cf0, 0xa000000100485c20, 0x28a)
+> 0xa000000100485c20 fc_scsi_scan_rport+0x140
+>         args (0xe00000b0f02d6c20, 0xe0000034f4f24ce8, 0xa0000001000cbd00, 0x50e, 0x50e)
+> 0xa0000001000cbd00 worker_thread+0x2a0
+>         args (0xe0000034f7f1ada0, 0xa00000010096ceb0, 0xe0000034f7f1ada8, 0xe0000034f7f1add0, 0xe0000034f7f1ada8, 0xe0000034f7f1adb8, 0xffffffffbfffffff, 0xa0000001000d5bb0, 0x389)
+> 0xa0000001000d5bb0 kthread+0x110
+>         args (0xe00000b073a1fd18, 0xe0000034f5b5fe18, 0xe0000034f7f1ada0, 0xa00000010096f650, 0xa000000100014a30, 0x286, 0xa0000001013a6540)
+> 0xa000000100014a30 kernel_thread_helper+0xd0
+>         args (0xa00000010096ffd0, 0xe00000b073a1fd18, 0xa00000010000a4c0, 0x2, 0xa0000001013a6540)
+> 0xa00000010000a4c0 start_kernel_thread+0x20
+>         args (0xa00000010096ffd0, 0xe00000b073a1fd18)
+> 
+> [0]kdb> btp 3788
+> Stack traceback for pid 3788
+> 0xe0000034f3e40000     3788        2  0    0   D  0xe0000034f3e40570  qla2xxx_3_dpc
+> 0xa0000001007280a0 schedule+0x14e0
+>         args (0x0, 0x1, 0xf, 0x43, 0xa000000100f6d300, 0x0, 0x0, 0xa0000001011e5c80, 0x1010095a6000)
+> 0xa000000100728640 schedule_timeout+0x40
+>         args (0x7fffffffffffffff, 0x0, 0x0, 0xa0000001000cc150, 0xa000000100726840, 0x50d, 0xe0000034f7f1b0b0)
+> 0xa000000100726840 wait_for_common+0x1a0
+>         args (0xe0000034f3e4fd00, 0x7fffffffffffffff, 0x2, 0xe0000034f3e4fd08, 0xe0000034f3e40000, 0xe0000034f3e4fd08, 0xa000000100726ba0, 0x207, 0xe0000034f7f1b0b0)
+> 0xa000000100726ba0 wait_for_completion+0x40
+>         args (0xe0000034f3e4fd00, 0xa0000001000cc390, 0x288, 0xa0000001000cc350)
+> 0xa0000001000cc390 flush_cpu_workqueue+0x110
+>         args (0xe0000034f7f1b098, 0x1, 0xa0000001000cc750, 0x38a, 0xe0000034f7f1b458)
+> 0xa0000001000cc750 flush_workqueue+0x90
+>         args (0xe0000034f5c68140, 0x0, 0xa0000001007c13a8, 0xa000000100bd0200, 0xa000000100483850, 0x206, 0x4000)
+> 0xa000000100483850 fc_flush_work+0xb0
+>         args (0xe0000034f4f24c90, 0xa000000100483b70, 0x48b, 0xe0000034f4f24ce0)
+> 0xa000000100483b70 fc_remote_port_rolechg+0x2f0
+>         args (0xe00000b0f02d6c20, 0x1, 0xe00000b0f02d6c68, 0xe0000034f4f24ce8, 0xe0000030f442a608, 0xe0000034f4f24c90, 0xa000000206fdfa20, 0x38f, 0xe0000034f7d4d0c8)
+> 0xa000000206fdfa20 [qla2xxx]qla2x00_update_fcport+0x880
+>         args (0xe00000b0f02d6c20, 0xe0000030f442a5b0, 0xe0000034f62131c8, 0xe0000030f442a5c0, 0xa000000206fdfc00, 0x38c, 0xa00000020700d058)
+> 0xa000000206fdfc00 [qla2xxx]qla2x00_fabric_dev_login+0x160
+>         args (0xe0000034f4f250a8, 0xe0000030f442a5b0, 0x0, 0xe0000034f62131c8, 0xa000000206fe2900, 0x1634, 0xa00000020700d058)
+> 0xa000000206fe2900 [qla2xxx]qla2x00_configure_loop+0x2cc0
+>         args (0xe0000034f4f250a8, 0xe0000030f442a5b0, 0xe0000034f4f251a4, 0xe0000034f3e4fd88, 0x300000000, 0x0, 0x1000, 0xe0000034f4f25108, 0xe000003440efdda2)
+> 0xa000000206fe32b0 [qla2xxx]qla2x00_loop_resync+0x1b0
+>         args (0xe0000034f4f250a8, 0xe0000034f4f25108, 0x0, 0xfe, 0xe0000034f56dc000, 0xe0000034f4f251a4, 0xe0000034f4f2511c, 0xe0000034f4f25104, 0xe0000034f7f1bab0)
+> 0xa000000206fd6d40 [qla2xxx]qla2x00_do_dpc+0x9a0
+>         args (0xe0000034f62131c8, 0x1, 0xe0000034f3e4fe00, 0xe0000034f4f25108, 0xe0000034f4f250a8, 0xe0000034f3e4fe00, 0xe0000034f4f250e8, 0xa000000207048958, 0xe0000034f4f250c8)
+> 0xa0000001000d5bb0 kthread+0x110
+>         args (0xe00000b073a1fd28, 0xe0000034f3e4fe18, 0xe0000034f62131c8, 0xa00000020703cfd8, 0xa000000100014a30, 0x286, 0xa0000001013a6540)
+> 0xa000000100014a30 kernel_thread_helper+0xd0
+>         args (0xa00000010096ffd0, 0xe00000b073a1fd28, 0xa00000010000a4c0, 0x2, 0xa0000001013a6540)
+> 0xa00000010000a4c0 start_kernel_thread+0x20
+>         args (0xa00000010096ffd0, 0xe00000b073a1fd28)
+> 
+
+We've run into this several times before and have a fairly stable (in
+terms of reproducibility) configuration in our labs which can trigger
+this three-way deadlock -- thanks to a buggy software target.
+
+We've come up with a small patch which has had some success during
+extended-run testing.
+
+The patch basically avoids the potential deadlock by ensuring that any
+pending scan requests on the scsi-host's work-queue are serviced
+before the transport marks the rport's scsi-target as blocked.  Thus
+negating the possbility for the deadlock to manifest itself.
+
+There is though one (potentially large) caveat, mostly due to the
+potential of stalling the caller thread of fc_remote_port_delete() in
+order to fullful the scsi_host-work_q flush.  Alternative suggestions
+on how avoid this problem without heavy-lifting of changes to the
+granularity of scan_mutex would be appreciated.  If not, please
+consider.
+
+Deadlock noted:
+
+	[PATCH] FC transport: fixes for workq deadlocks
+	http://article.gmane.org/gmane.linux.scsi/23965
+
+Reported manifestations:
+
+	https://bugzilla.novell.com/show_bug.cgi?id=564933
+	https://bugzilla.novell.com/show_bug.cgi?id=590601
 
 
+-- av
 
---- linux-2.6.32.5-0.1/drivers/scsi/qla1280.c	2010-02-04 16:23:10.831352910 -0600
-+++ linux-2.6.32.5-0.1-modified/drivers/scsi/qla1280.c	2010-02-08 15:05:42.402094235 -0600
-@@ -17,9 +17,11 @@
- * General Public License for more details.
- *
- ******************************************************************************/
--#define QLA1280_VERSION      "3.27"
-+#define QLA1280_VERSION      "3.27.1"
- /*****************************************************************************
-     Revision History:
-+    Rev  3.27.1, February 8, 2010, Michael Reed
-+	- Retain firmware image for error recovery.
-     Rev  3.27, February 10, 2009, Michael Reed
- 	- General code cleanup.
- 	- Improve error recovery.
-@@ -538,9 +540,9 @@ __setup("qla1280=", qla1280_setup);
- /*****************************************/
- 
- struct qla_boards {
--	unsigned char name[9];	/* Board ID String */
-+	char *name;		/* Board ID String */
- 	int numPorts;		/* Number of SCSI ports */
--	char *fwname;		/* firmware name        */
-+	int fw_index;		/* index into qla1280_fw_tbl for firmware */
- };
- 
- /* NOTE: the last argument in each entry is used to index ql1280_board_tbl */
-@@ -561,15 +563,30 @@ static struct pci_device_id qla1280_pci_
- };
- MODULE_DEVICE_TABLE(pci, qla1280_pci_tbl);
- 
-+DEFINE_MUTEX(qla1280_firmware_mutex);
-+
-+struct qla_fw {
-+	char *fwname;
-+	const struct firmware *fw;
-+};
-+
-+#define QL_NUM_FW_IMAGES 3
-+
-+struct qla_fw qla1280_fw_tbl[QL_NUM_FW_IMAGES] = {
-+	{"qlogic/1040.bin",  NULL},	/* image 0 */
-+	{"qlogic/1280.bin",  NULL},	/* image 1 */
-+	{"qlogic/12160.bin", NULL},	/* image 2 */
-+};
-+
-+/* NOTE: Order of boards in this table must match order in qla1280_pci_tbl */
- static struct qla_boards ql1280_board_tbl[] = {
--	/* Name ,  Number of ports, FW details */
--	{"QLA12160",	2, "qlogic/12160.bin"},
--	{"QLA1040",	1, "qlogic/1040.bin"},
--	{"QLA1080",	1, "qlogic/1280.bin"},
--	{"QLA1240",	2, "qlogic/1280.bin"},
--	{"QLA1280",	2, "qlogic/1280.bin"},
--	{"QLA10160",	1, "qlogic/12160.bin"},
--	{"        ",	0, "   "},
-+	{.name="QLA12160", .numPorts=2, .fw_index=2},
-+	{.name="QLA1040" , .numPorts=1, .fw_index=0},
-+	{.name="QLA1080" , .numPorts=1, .fw_index=1},
-+	{.name="QLA1240" , .numPorts=2, .fw_index=1},
-+	{.name="QLA1280" , .numPorts=2, .fw_index=1},
-+	{.name="QLA10160", .numPorts=1, .fw_index=2},
-+	{.name="        ", .numPorts=0, .fw_index=-1},
- };
- 
- static int qla1280_verbose = 1;
-@@ -1512,6 +1529,63 @@ qla1280_initialize_adapter(struct scsi_q
- }
- 
- /*
-+ * qla1280_request_firmware
-+ *      Acquire firmware for chip.  Retain in memory
-+ *      for error recovery.
-+ *
-+ * Input:
-+ *      ha = adapter block pointer.
-+ *
-+ * Returns:
-+ *      Pointer to firmware image or an error code
-+ *      cast to pointer via ERR_PTR().
-+ */
-+static const struct firmware *
-+qla1280_request_firmware(struct scsi_qla_host *ha)
-+{
-+	const struct firmware *fw;
-+	int err;
-+	int index;
-+	char *fwname;
-+
-+	spin_unlock_irq(ha->host->host_lock);
-+	mutex_lock(&qla1280_firmware_mutex);
-+
-+	index = ql1280_board_tbl[ha->devnum].fw_index;
-+	fw = qla1280_fw_tbl[index].fw;
-+	if (fw)
-+		goto out;
-+
-+	fwname = qla1280_fw_tbl[index].fwname;
-+	err = request_firmware(&fw, fwname, &ha->pdev->dev);
-+	
-+	if (err) {
-+		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
-+		       fwname, err);
-+		fw = ERR_PTR(err);
-+		goto unlock;
-+	}
-+	if ((fw->size % 2) || (fw->size < 6)) {
-+		printk(KERN_ERR "Invalid firmware length %zu in image \"%s\"\n",
-+		       fw->size, fwname);
-+		release_firmware(fw);
-+		fw = ERR_PTR(-EINVAL);
-+		goto unlock;
-+	}
-+
-+	qla1280_fw_tbl[index].fw = fw;
-+
-+ out:
-+	ha->fwver1 = fw->data[0];
-+	ha->fwver2 = fw->data[1];
-+	ha->fwver3 = fw->data[2];
-+ unlock:
-+	mutex_unlock(&qla1280_firmware_mutex);
-+	spin_lock_irq(ha->host->host_lock);
-+	return fw;
-+}
-+
-+/*
-  * Chip diagnostics
-  *      Test chip for proper operation.
-  *
-@@ -1634,30 +1708,18 @@ qla1280_chip_diag(struct scsi_qla_host *
- static int
- qla1280_load_firmware_pio(struct scsi_qla_host *ha)
- {
-+	/* enter with host_lock acquired */
-+
- 	const struct firmware *fw;
- 	const __le16 *fw_data;
- 	uint16_t risc_address, risc_code_size;
- 	uint16_t mb[MAILBOX_REGISTER_COUNT], i;
--	int err;
-+	int err=0;
-+
-+	fw = qla1280_request_firmware(ha);
-+	if (IS_ERR(fw))
-+		return PTR_ERR(fw);
- 
--	spin_unlock_irq(ha->host->host_lock);
--	err = request_firmware(&fw, ql1280_board_tbl[ha->devnum].fwname,
--			       &ha->pdev->dev);
--	spin_lock_irq(ha->host->host_lock);
--	if (err) {
--		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
--		       ql1280_board_tbl[ha->devnum].fwname, err);
--		return err;
--	}
--	if ((fw->size % 2) || (fw->size < 6)) {
--		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
--		       fw->size, ql1280_board_tbl[ha->devnum].fwname);
--		err = -EINVAL;
--		goto out;
--	}
--	ha->fwver1 = fw->data[0];
--	ha->fwver2 = fw->data[1];
--	ha->fwver3 = fw->data[2];
- 	fw_data = (const __le16 *)&fw->data[0];
- 	ha->fwstart = __le16_to_cpu(fw_data[2]);
- 
-@@ -1675,11 +1737,10 @@ qla1280_load_firmware_pio(struct scsi_ql
- 		if (err) {
- 			printk(KERN_ERR "scsi(%li): Failed to load firmware\n",
- 					ha->host_no);
--			goto out;
-+			break;
- 		}
- 	}
--out:
--	release_firmware(fw);
-+
- 	return err;
- }
- 
-@@ -1687,6 +1748,7 @@ out:
- static int
- qla1280_load_firmware_dma(struct scsi_qla_host *ha)
- {
-+	/* enter with host_lock acquired */
- 	const struct firmware *fw;
- 	const __le16 *fw_data;
- 	uint16_t risc_address, risc_code_size;
-@@ -1701,24 +1763,10 @@ qla1280_load_firmware_dma(struct scsi_ql
- 		return -ENOMEM;
- #endif
- 
--	spin_unlock_irq(ha->host->host_lock);
--	err = request_firmware(&fw, ql1280_board_tbl[ha->devnum].fwname,
--			       &ha->pdev->dev);
--	spin_lock_irq(ha->host->host_lock);
--	if (err) {
--		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
--		       ql1280_board_tbl[ha->devnum].fwname, err);
--		return err;
--	}
--	if ((fw->size % 2) || (fw->size < 6)) {
--		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
--		       fw->size, ql1280_board_tbl[ha->devnum].fwname);
--		err = -EINVAL;
--		goto out;
--	}
--	ha->fwver1 = fw->data[0];
--	ha->fwver2 = fw->data[1];
--	ha->fwver3 = fw->data[2];
-+	fw = qla1280_request_firmware(ha);
-+	if (IS_ERR(fw))
-+		return PTR_ERR(fw);
-+
- 	fw_data = (const __le16 *)&fw->data[0];
- 	ha->fwstart = __le16_to_cpu(fw_data[2]);
- 
-@@ -1803,7 +1851,6 @@ qla1280_load_firmware_dma(struct scsi_ql
- #if DUMP_IT_BACK
- 	pci_free_consistent(ha->pdev, 8000, tbuf, p_tbuf);
- #endif
--	release_firmware(fw);
- 	return err;
- }
- 
-@@ -1842,6 +1889,7 @@ qla1280_start_firmware(struct scsi_qla_h
- static int
- qla1280_load_firmware(struct scsi_qla_host *ha)
- {
-+	/* enter with host_lock taken */
- 	int err;
- 
- 	err = qla1280_chip_diag(ha);
-@@ -4420,7 +4468,16 @@ qla1280_init(void)
- static void __exit
- qla1280_exit(void)
- {
-+	int i;
-+
- 	pci_unregister_driver(&qla1280_pci_driver);
-+	/* release any allocated firmware images */
-+	for (i=0; i<QL_NUM_FW_IMAGES; i++) {
-+		if (qla1280_fw_tbl[i].fw) {
-+			release_firmware(qla1280_fw_tbl[i].fw);
-+			qla1280_fw_tbl[i].fw = NULL;
-+		}
-+	}
- }
- 
- module_init(qla1280_init);
+---
 
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index e37aeeb..dfe2a9b 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -2905,6 +2905,14 @@ fc_remote_port_delete(struct fc_rport  *rport)
+ 	    shost->active_mode & MODE_TARGET)
+ 		fc_tgt_it_nexus_destroy(shost, (unsigned long)rport);
+ 
++	/*
++	 * If a scan is currently pending, flush the SCSI host's work_q
++	 * so that the follow-on target-block won't deadlock the scan-thread.
++	 */
++	if (!scsi_host_in_recovery(shost) &&
++	    rport->flags & FC_RPORT_SCAN_PENDING)
++		scsi_flush_work(shost);
++
+ 	scsi_target_block(&rport->dev);
+ 
+ 	/* see if we need to kill io faster than waiting for device loss */
