@@ -1,326 +1,521 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi_trace: Enhance SCSI command tracing
-Date: Tue, 23 Mar 2010 01:16:57 -0400
-Message-ID: <yq1bpefhb1y.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] [TCM/PR]: Add proper ALL_TG_PT=1 allocation support
+Date: Tue, 23 Mar 2010 05:11:47 -0700
+Message-ID: <1269346307-22944-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:45064 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858Ab0CWFSb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Mar 2010 01:18:31 -0400
+Received: from smtp125.sbc.mail.sp1.yahoo.com ([69.147.65.184]:20200 "HELO
+	smtp125.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752253Ab0CWL7L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Mar 2010 07:59:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>, Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, LIO-Target devel <linux-iscsi-target-dev@googlegroups.com>, Dave <wrightd@gmail.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Various SCSI trace enhancements:
+This patch adds proper per target port allocation of t10_pr_registration_t to handle
+the SPC4 defined ALL_TG_PT=1 feature bit using __core_scsi3_alloc_registration()
+The ALL_TG_PT=1 logic had only working as expected across multiple target ports
+the same I_T Nexus, so this patch adds proper support for doing ALL_TG_PT=1 across multiple
+I_T Nexus for all target ports within the same underlying fabric module.
 
- - Display data and protection information scatterlist lengths in the
-   trace output
+The main logic in __core_scsi3_alloc_registration() walks the se_device_t port list (
+dev->dev_sep_list) and grabs a local reference via se_port_t->sep_tg_pt_ref_cnt, then
+drops the port lock and walks se_port_t->sep_alua_list for the list of the SCSI Initiator
+Node ACL MappedLUNs entries for the matching target port.  From there this patch uses the
+existing reference logic in se_dev_entry_t->pr_ref_count and core_scsi3_lunacl_depend_item()
+in order to make sure that the underlying configfs group for the destination MappedLUN (and
+everything below) does not disappear before a successful PR registration with ALL_TG_PT=1
+can be completed.
 
- - Add support for VERIFY and WRITE SAME commands and decode the UNMAP
-   bit if applicable
+At this point the allocated ALL_TG_PT=1 registrations for I_T Nexus'es other than the one
+that the original PROUT REGISTER was received on will be added to t10_pr_registration_t->pr_reg_atp_list,
+and these PR registrations are added to se_device_t PR REG list by the existing calls to
+__core_scsi3_add_registration().  From there __core_scsi3_add_registration() will walk to
+pr_reg_atp_list and add each registration and drop any configfs group references with
+core_scsi3_lunacl_undepend_item() that where created in __core_scsi3_alloc_registration()
 
- - Add decoding of the PROTECT field for READ/VERIFY/WRITE/WRITE SAME
-   commands as well as the EXPECTED INITIAL REFERENCE TAG field for
-   their 32-byte variants
+This patch also adds proper exception path handling for ALL_TG_PT=1 failures with the
+SPEC_I_PT=1 feature bit in core_scsi3_decode_spec_i_port().  Here is how a multi I_T Nexus
+ALL_TG_PT=1 test case looks now between two SCSI Target Ports (LIO-Target iSCSI) across
+two SCSI I_T Nexuses (iSCSI Sessions) using APTPL=1.
 
- - Decode READ CAPACITY(16), GET LBA STATUS, and UNMAP
+root@ubuntu:~# multipath -ll
+<SNIP>
+mpath4 (36001405a97e4ce21c0711de829b000c2) dm-2 LIO-ORG,IBLOCK
+[size=1.5G][features=0][hwhandler=1 alua]
+\_ round-robin 0 [prio=50][enabled]
+ \_ 3:0:0:0 sde 8:64  [active][ready]
+\_ round-robin 0 [prio=10][active]
+ \_ 4:0:0:0 sdf 8:80  [active][ready]
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+root@ubuntu:~# lsscsi --transport
+<SNIP>
+[3:0:0:0]    disk    iqn.2003-01.org.linux-iscsi.target.i686:sn.cff3eedbd2fd,t,0x1  /dev/sde
+[4:0:0:0]    disk    iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0,t,0x1  /dev/sdf
 
+*) Call PROUT REGISTER with ALL_TG_PT=1 and APTPL=1 on SCSI RTPI=2 at /dev/sde
+
+root@ubuntu:~# sg_persist -vvv --out -Y -Z --device /dev/sde --register --param-sark=0x1234ffff
+open /dev/sde with flags=0x800
+    inquiry cdb: 12 00 00 00 24 00
+      duration=0 ms
+  LIO-ORG  IBLOCK  3.1
+  Peripheral device type: disk
+open /dev/sde with flags=0x802
+    Persistent Reservation Out cmd: 5f 00 00 00 00 00 00 00 18 00
+    Persistent Reservation Out parameters:
+ 00     00 00 00 00 00 00 00 00  00 00 00 00 12 34 ff ff    .............4..
+ 10     00 00 00 00 05 00 00 00                             ........
+      duration=8 ms
+PR out: command (Register) successful
+
+*) Call PROUT RESERVE on SCSI RPTI=1 at /dev/sdf
+
+root@ubuntu:~# sg_persist -vvv --out --device /dev/sdf --reserve --param-rk=0x1234ffff -T 5
+open /dev/sdf with flags=0x800
+    inquiry cdb: 12 00 00 00 24 00
+      duration=120 ms
+  LIO-ORG  IBLOCK  3.1
+  Peripheral device type: disk
+open /dev/sdf with flags=0x802
+    Persistent Reservation Out cmd: 5f 01 05 00 00 00 00 00 18 00
+    Persistent Reservation Out parameters:
+ 00     00 00 00 00 12 34 ff ff  00 00 00 00 00 00 00 00    .....4..........
+ 10     00 00 00 00 00 00 00 00                             ........
+      duration=112 ms
+PR out: command (Reserve) successful
+
+*) PRIN READ_FULL_STATUS
+
+root@ubuntu:~# sg_persist --in -s -d /dev/sde
+  LIO-ORG  IBLOCK  3.1
+  Peripheral device type: disk
+  PR generation=0x2
+    Key=0x1234ffff
+      All target ports bit set
+      not reservation holder
+      Transport Id of initiator:
+        iSCSI world wide unique port id: iqn.1993-08.org.debian:01:2dadf92d0ef
+    Key=0x1234ffff
+      All target ports bit set
+      << Reservation holder >>
+      scope: LU_SCOPE,  type: Write Exclusive, registrants only
+      Transport Id of initiator:
+        iSCSI world wide unique port id: iqn.1993-08.org.debian:01:2dadf92d0ef
+
+*) TCM side kernel ring buffer output
+
+SPC-3 PR [iSCSI] Service Action: REGISTER Initiator Node: iqn.1993-08.org.debian:01:2dadf92d0ef
+SPC-3 PR [iSCSI] registration on Target Port: iqn.2003-01.org.linux-iscsi.target.i686:sn.cff3eedbd2fd,0x0001
+SPC-3 PR [iSCSI] for ALL TCM Subsystem iblock Object Target Port(s)
+SPC-3 PR [iSCSI] SA Res Key: 0x000000001234ffff PRgeneration: 0x00000000  APTPL: 1
+SPC-3 PR [iSCSI] Service Action: REGISTER Initiator Node: iqn.1993-08.org.debian:01:2dadf92d0ef
+SPC-3 PR [iSCSI] registration on Target Port: iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0,0x0001
+SPC-3 PR [iSCSI] for ALL TCM Subsystem iblock Object Target Port(s)
+SPC-3 PR [iSCSI] SA Res Key: 0x000000001234ffff PRgeneration: 0x00000001  APTPL: 1
+SPC-3 PR: Set APTPL Bit Activated for REGISTER
+SPC-3 PR [iSCSI] Service Action: RESERVE created new reservation holder TYPE: Write Exclusive Access, Registrants Only ALL_TG_PT: 1
+SPC-3 PR [iSCSI] RESERVE Node: iqn.1993-08.org.debian:01:2dadf92d0ef
+SPC-3 PR: Updated APTPL metadata for RESERVE
+
+*) TCM side PR APTPL metadata for storage object backstore
+
+target:~/lio-core-2.6.git# cat /var/target/pr/aptpl_a97e4ce21c0711de829b000c2943d57b
+PR_REG_START: 0
+initiator_fabric=iSCSI
+initiator_node=iqn.1993-08.org.debian:01:2dadf92d0ef
+sa_res_key=305463295
+res_holder=0
+res_all_tg_pt=4
+mapped_lun=0
+target_fabric=iSCSI
+target_node=iqn.2003-01.org.linux-iscsi.target.i686:sn.cff3eedbd2fd
+tpgt=1
+port_rtpi=2
+target_lun=0
+PR_REG_END: 0
+PR_REG_START: 1
+initiator_fabric=iSCSI
+initiator_node=iqn.1993-08.org.debian:01:2dadf92d0ef
+sa_res_key=305463295
+res_holder=1
+res_type=05
+res_scope=00
+res_all_tg_pt=4
+mapped_lun=0
+target_fabric=iSCSI
+target_node=iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0
+tpgt=1
+port_rtpi=1
+target_lun=0
+PR_REG_END: 1
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Reported-by: Dave <wrightd@gmail.com>
 ---
+ drivers/target/target_core_device.c |    9 ++
+ drivers/target/target_core_pr.c     |  237 +++++++++++++++++++++++++++++++----
+ include/target/target_core_base.h   |    4 +
+ 3 files changed, 224 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/scsi_trace.c b/drivers/scsi/scsi_trace.c
-index f5ee7f7..0088140 100644
---- a/drivers/scsi/scsi_trace.c
-+++ b/drivers/scsi/scsi_trace.c
-@@ -19,7 +19,8 @@
- #include <linux/trace_seq.h>
- #include <trace/events/scsi.h>
- 
--#define SERVICE_ACTION(cdb) ((cdb[8] << 8) | cdb[9])
-+#define SERVICE_ACTION16(cdb) (cdb[1] & 0x1f)
-+#define SERVICE_ACTION32(cdb) ((cdb[8] << 8) | cdb[9])
- 
- static const char *
- scsi_trace_misc(struct trace_seq *, unsigned char *, int);
-@@ -55,8 +56,9 @@ scsi_trace_rw10(struct trace_seq *p, unsigned char *cdb, int len)
- 	txlen |= (cdb[7] << 8);
- 	txlen |=  cdb[8];
- 
--	trace_seq_printf(p, "lba=%llu txlen=%llu",
--			 (unsigned long long)lba, (unsigned long long)txlen);
-+	trace_seq_printf(p, "lba=%llu txlen=%llu protect=%u",
-+			 (unsigned long long)lba, (unsigned long long)txlen,
-+			 cdb[1] >> 5);
- 	trace_seq_putc(p, 0);
- 
- 	return ret;
-@@ -77,8 +79,9 @@ scsi_trace_rw12(struct trace_seq *p, unsigned char *cdb, int len)
- 	txlen |= (cdb[8] << 8);
- 	txlen |=  cdb[9];
- 
--	trace_seq_printf(p, "lba=%llu txlen=%llu",
--			 (unsigned long long)lba, (unsigned long long)txlen);
-+	trace_seq_printf(p, "lba=%llu txlen=%llu protect=%u",
-+			 (unsigned long long)lba, (unsigned long long)txlen,
-+			 cdb[1] >> 5);
- 	trace_seq_putc(p, 0);
- 
- 	return ret;
-@@ -103,8 +106,13 @@ scsi_trace_rw16(struct trace_seq *p, unsigned char *cdb, int len)
- 	txlen |= (cdb[12] << 8);
- 	txlen |=  cdb[13];
- 
--	trace_seq_printf(p, "lba=%llu txlen=%llu",
--			 (unsigned long long)lba, (unsigned long long)txlen);
-+	trace_seq_printf(p, "lba=%llu txlen=%llu protect=%u",
-+			 (unsigned long long)lba, (unsigned long long)txlen,
-+			 cdb[1] >> 5);
-+
-+	if (cdb[0] == WRITE_SAME_16)
-+		trace_seq_printf(p, " unmap=%u", cdb[1] >> 3 & 1);
-+
- 	trace_seq_putc(p, 0);
- 
- 	return ret;
-@@ -113,8 +121,27 @@ scsi_trace_rw16(struct trace_seq *p, unsigned char *cdb, int len)
- static const char *
- scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index c6a8eda..b0cbf8d 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -752,6 +752,15 @@ void core_export_port(
+  */
+ void core_release_port(se_device_t *dev, se_port_t *port)
  {
--	const char *ret = p->buffer + p->len;
-+	const char *ret = p->buffer + p->len, *cmd;
- 	sector_t lba = 0, txlen = 0;
-+	u32 ei_lbrt = 0;
++	/*
++	 * Wait for any port reference for PR ALL_TG_PT=1 operation
++	 * to complete in __core_scsi3_alloc_registration()
++	 */
++	spin_unlock(&dev->se_port_lock);
++	if (atomic_read(&port->sep_tg_pt_ref_cnt))
++		msleep(100);
++	spin_lock(&dev->se_port_lock);
 +
-+	switch (SERVICE_ACTION32(cdb)) {
-+	case READ_32:
-+		cmd = "READ";
-+		break;
-+	case VERIFY_32:
-+		cmd = "VERIFY";
-+		break;
-+	case WRITE_32:
-+		cmd = "WRITE";
-+		break;
-+	case WRITE_SAME_32:
-+		cmd = "WRITE_SAME";
-+		break;
-+	default:
-+		trace_seq_printf(p, "UNKNOWN");
-+		goto out;
+ 	core_alua_free_tg_pt_gp_mem(port);
+ 
+ 	list_del(&port->sep_list);
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 67fff09..9e3838f 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -568,7 +568,7 @@ static int core_scsi3_pr_reservation_check(
+ 	return ret;
+ }
+ 
+-static t10_pr_registration_t *__core_scsi3_alloc_registration(
++static t10_pr_registration_t *__core_scsi3_do_alloc_registration(
+ 	se_device_t *dev,
+ 	se_node_acl_t *nacl,
+ 	se_dev_entry_t *deve,
+@@ -596,6 +596,8 @@ static t10_pr_registration_t *__core_scsi3_alloc_registration(
+ 	INIT_LIST_HEAD(&pr_reg->pr_reg_list);
+ 	INIT_LIST_HEAD(&pr_reg->pr_reg_abort_list);
+ 	INIT_LIST_HEAD(&pr_reg->pr_reg_aptpl_list);
++	INIT_LIST_HEAD(&pr_reg->pr_reg_atp_list);
++	INIT_LIST_HEAD(&pr_reg->pr_reg_atp_mem_list);
+ 	atomic_set(&pr_reg->pr_res_holders, 0);
+ 	pr_reg->pr_reg_nacl = nacl;
+ 	pr_reg->pr_reg_deve = deve;
+@@ -609,6 +611,143 @@ static t10_pr_registration_t *__core_scsi3_alloc_registration(
+ 	return pr_reg;
+ }
+ 
++static int core_scsi3_lunacl_depend_item(se_dev_entry_t *);
++static void core_scsi3_lunacl_undepend_item(se_dev_entry_t *);
++
++/*
++ * Function used for handling PR registrations for ALL_TG_PT=1 and ALL_TG_PT=0
++ * modes.
++ */
++static t10_pr_registration_t *__core_scsi3_alloc_registration(
++	se_device_t *dev,
++	se_node_acl_t *nacl,
++	se_dev_entry_t *deve,
++	u64 sa_res_key,
++	int all_tg_pt,
++	int aptpl)
++{
++	se_dev_entry_t *deve_tmp;
++	se_node_acl_t *nacl_tmp;
++	se_port_t *port, *port_tmp;
++	struct target_core_fabric_ops *tfo = nacl->se_tpg->se_tpg_tfo;
++	t10_pr_registration_t *pr_reg, *pr_reg_atp, *pr_reg_tmp, *pr_reg_tmp_safe;
++	int ret;
++	/*
++	 * Create a registration for the I_T Nexus upon which the
++	 * PROUT REGISTER was received.
++	 */
++	pr_reg = __core_scsi3_do_alloc_registration(dev, nacl, deve,
++			sa_res_key, all_tg_pt, aptpl);
++	if (!(pr_reg))
++		return NULL;
++	/*
++	 * Return pointer to pr_reg for ALL_TG_PT=0
++	 */
++	if (!(all_tg_pt))
++		return pr_reg;
++	/*
++	 * Create list of matching SCSI Initiator Port registrations
++	 * for ALL_TG_PT=1
++	 */
++	spin_lock(&dev->se_port_lock);
++	list_for_each_entry_safe(port, port_tmp, &dev->dev_sep_list, sep_list) {
++		atomic_inc(&port->sep_tg_pt_ref_cnt);
++		smp_mb__after_atomic_inc();
++		spin_unlock(&dev->se_port_lock);
++
++		spin_lock_bh(&port->sep_alua_lock);
++		list_for_each_entry(deve_tmp, &port->sep_alua_list,
++					alua_port_list) {
++			/*
++			 * This pointer will be NULL for demo mode MappedLUNs
++			 * that have not been make explict via a ConfigFS
++			 * MappedLUN group for the SCSI Initiator Node ACL.
++			 */
++			if (!(deve_tmp->se_lun_acl))
++				continue;
++
++			nacl_tmp = deve_tmp->se_lun_acl->se_lun_nacl;
++			/*
++			 * Skip the matching se_node_acl_t that is allocated
++			 * above..
++			 */
++			if (nacl == nacl_tmp)
++				continue;
++			/*
++			 * Only perform PR registrations for target ports on
++			 * the same fabric module as the REGISTER w/ ALL_TG_PT=1			
++			 * arrived.
++			 */
++			if (tfo != nacl_tmp->se_tpg->se_tpg_tfo)
++				continue;
++			/*
++			 * Look for a matching Initiator Node ACL in ASCII format
++			 */
++			if (strcmp(nacl->initiatorname, nacl_tmp->initiatorname))
++				continue;
++
++			atomic_inc(&deve_tmp->pr_ref_count);
++			smp_mb__after_atomic_inc();
++			spin_unlock_bh(&port->sep_alua_lock);
++			/*
++			 * Grab a configfs group dependency that is released
++			 * for the exception path at label out: below, or upon
++			 * completion of adding ALL_TG_PT=1 registrations in
++			 * __core_scsi3_add_registration()
++			 */
++			ret = core_scsi3_lunacl_depend_item(deve_tmp);
++			if (ret < 0) {
++				printk(KERN_ERR "core_scsi3_lunacl_depend"
++						"_item() failed\n");
++				atomic_dec(&port->sep_tg_pt_ref_cnt);
++				smp_mb__after_atomic_dec();
++				atomic_dec(&deve_tmp->pr_ref_count);
++				smp_mb__after_atomic_dec();
++				goto out;
++			}
++			/*
++			 * Located a matching SCSI Initiator Port on a different
++			 * port, allocate the pr_reg_atp and attach it to the
++			 * pr_reg->pr_reg_atp_list that will be processed once
++			 * the original *pr_reg is processed in
++			 * __core_scsi3_add_registration()
++			 */
++			pr_reg_atp = __core_scsi3_do_alloc_registration(dev,
++						nacl_tmp, deve_tmp, sa_res_key,
++						all_tg_pt, aptpl);
++			if (!(pr_reg_atp)) {
++				atomic_dec(&port->sep_tg_pt_ref_cnt);
++				smp_mb__after_atomic_dec();
++				atomic_dec(&deve_tmp->pr_ref_count);
++				smp_mb__after_atomic_dec();
++				core_scsi3_lunacl_undepend_item(deve_tmp);
++				goto out;
++			}
++
++			list_add_tail(&pr_reg_atp->pr_reg_atp_mem_list,
++				      &pr_reg->pr_reg_atp_list);
++			spin_lock_bh(&port->sep_alua_lock);
++		}
++		spin_unlock_bh(&port->sep_alua_lock);
++
++		spin_lock(&dev->se_port_lock);
++		atomic_dec(&port->sep_tg_pt_ref_cnt);
++		smp_mb__after_atomic_dec();
 +	}
- 
- 	lba |= ((u64)cdb[12] << 56);
- 	lba |= ((u64)cdb[13] << 48);
-@@ -124,15 +151,76 @@ scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
- 	lba |= (cdb[17] << 16);
- 	lba |= (cdb[18] << 8);
- 	lba |=  cdb[19];
-+	ei_lbrt |= (cdb[20] << 24);
-+	ei_lbrt |= (cdb[21] << 16);
-+	ei_lbrt |= (cdb[22] << 8);
-+	ei_lbrt |=  cdb[23];
- 	txlen |= (cdb[28] << 24);
- 	txlen |= (cdb[29] << 16);
- 	txlen |= (cdb[30] << 8);
- 	txlen |=  cdb[31];
- 
--	trace_seq_printf(p, "%s_32 lba=%llu txlen=%llu",
--			(SERVICE_ACTION(cdb) == READ_32 ? "READ" : "WRITE"),
--			(unsigned long long)lba, (unsigned long long)txlen);
-+	trace_seq_printf(p, "%s_32 lba=%llu txlen=%llu protect=%u ei_lbrt=%u",
-+			 cmd, (unsigned long long)lba,
-+			 (unsigned long long)txlen, cdb[10] >> 5, ei_lbrt);
++	spin_unlock(&dev->se_port_lock);
 +
-+	if (SERVICE_ACTION32(cdb) == WRITE_SAME_32)
-+		trace_seq_printf(p, " unmap=%u", cdb[10] >> 3 & 1);
-+
++	return pr_reg;
 +out:
-+	trace_seq_putc(p, 0);
-+
-+	return ret;
++	list_for_each_entry_safe(pr_reg_tmp, pr_reg_tmp_safe,
++			&pr_reg->pr_reg_atp_list, pr_reg_atp_mem_list) {
++		list_del(&pr_reg_tmp->pr_reg_atp_mem_list);
++		core_scsi3_lunacl_undepend_item(pr_reg_tmp->pr_reg_deve);
++		kmem_cache_free(t10_pr_reg_cache, pr_reg_tmp);
++	}
++	kmem_cache_free(t10_pr_reg_cache, pr_reg);
++	return NULL;
 +}
 +
-+static const char *
-+scsi_trace_unmap(struct trace_seq *p, unsigned char *cdb, int len)
+ int core_scsi3_alloc_aptpl_registration(
+ 	t10_reservation_template_t *pr_tmpl,
+ 	u64 sa_res_key,
+@@ -638,6 +777,8 @@ int core_scsi3_alloc_aptpl_registration(
+ 	INIT_LIST_HEAD(&pr_reg->pr_reg_list);
+ 	INIT_LIST_HEAD(&pr_reg->pr_reg_abort_list);
+ 	INIT_LIST_HEAD(&pr_reg->pr_reg_aptpl_list);
++	INIT_LIST_HEAD(&pr_reg->pr_reg_atp_list);
++	INIT_LIST_HEAD(&pr_reg->pr_reg_atp_mem_list);
+ 	atomic_set(&pr_reg->pr_res_holders, 0);
+ 	pr_reg->pr_reg_nacl = NULL;
+ 	pr_reg->pr_reg_deve = NULL;
+@@ -774,6 +915,32 @@ int core_scsi3_check_aptpl_registration(
+ 				lun->unpacked_lun, nacl, deve);
+ }
+ 
++static void __core_scsi3_dump_registration(
++	struct target_core_fabric_ops *tfo,
++	se_device_t *dev,
++	se_node_acl_t *nacl,
++	t10_pr_registration_t *pr_reg,
++	int register_type)
 +{
-+	const char *ret = p->buffer + p->len;
-+	unsigned int regions = cdb[7] << 8 | cdb[8];
++	se_portal_group_t *se_tpg = nacl->se_tpg;
 +
-+	trace_seq_printf(p, "regions=%u", (regions - 8) / 16);
-+	trace_seq_putc(p, 0);
-+
-+	return ret;
++	printk(KERN_INFO "SPC-3 PR [%s] Service Action: REGISTER%s Initiator"
++		" Node: %s\n", tfo->get_fabric_name(), (register_type == 2) ?
++		"_AND_MOVE" : (register_type == 1) ?
++		"_AND_IGNORE_EXISTING_KEY" : "", nacl->initiatorname);
++	printk(KERN_INFO "SPC-3 PR [%s] registration on Target Port: %s,0x%04x\n",
++		 tfo->get_fabric_name(), tfo->tpg_get_wwn(se_tpg),
++		tfo->tpg_get_tag(se_tpg));
++	printk(KERN_INFO "SPC-3 PR [%s] for %s TCM Subsystem %s Object Target"
++		" Port(s)\n",  tfo->get_fabric_name(),
++		(pr_reg->pr_reg_all_tg_pt) ? "ALL" : "SINGLE",
++		TRANSPORT(dev)->name);
++	printk(KERN_INFO "SPC-3 PR [%s] SA Res Key: 0x%016Lx PRgeneration:"
++		" 0x%08x  APTPL: %d\n", tfo->get_fabric_name(),
++		pr_reg->pr_res_key, pr_reg->pr_res_generation,
++		pr_reg->pr_reg_aptpl);
 +}
 +
-+static const char *
-+scsi_trace_service_action_in(struct trace_seq *p, unsigned char *cdb, int len)
-+{
-+	const char *ret = p->buffer + p->len, *cmd;
-+	sector_t lba = 0;
-+	u32 alloc_len = 0;
-+
-+	switch (SERVICE_ACTION16(cdb)) {
-+	case SAI_READ_CAPACITY_16:
-+		cmd = "READ_CAPACITY_16";
-+		break;
-+	case SAI_GET_LBA_STATUS:
-+		cmd = "GET_LBA_STATUS";
-+		break;
-+	default:
-+		trace_seq_printf(p, "UNKNOWN");
-+		goto out;
-+	}
-+
-+	lba |= ((u64)cdb[2] << 56);
-+	lba |= ((u64)cdb[3] << 48);
-+	lba |= ((u64)cdb[4] << 40);
-+	lba |= ((u64)cdb[5] << 32);
-+	lba |= (cdb[6] << 24);
-+	lba |= (cdb[7] << 16);
-+	lba |= (cdb[8] << 8);
-+	lba |=  cdb[9];
-+	alloc_len |= (cdb[10] << 24);
-+	alloc_len |= (cdb[11] << 16);
-+	alloc_len |= (cdb[12] << 8);
-+	alloc_len |=  cdb[13];
-+
-+	trace_seq_printf(p, "%s lba=%llu alloc_len=%u", cmd,
-+			 (unsigned long long)lba, alloc_len);
- 
-+out:
- 	trace_seq_putc(p, 0);
- 
- 	return ret;
-@@ -141,9 +229,11 @@ scsi_trace_rw32(struct trace_seq *p, unsigned char *cdb, int len)
- static const char *
- scsi_trace_varlen(struct trace_seq *p, unsigned char *cdb, int len)
+ /*
+  * this function can be called with se_device_t->dev_reservation_lock
+  * when register_move = 1
+@@ -787,6 +954,7 @@ static void __core_scsi3_add_registration(
  {
--	switch (SERVICE_ACTION(cdb)) {
-+	switch (SERVICE_ACTION32(cdb)) {
- 	case READ_32:
-+	case VERIFY_32:
- 	case WRITE_32:
-+	case WRITE_SAME_32:
- 		return scsi_trace_rw32(p, cdb, len);
- 		/* fall through */
- 	default:
-@@ -170,14 +260,23 @@ scsi_trace_parse_cdb(struct trace_seq *p, unsigned char *cdb, int len)
- 	case WRITE_6:
- 		return scsi_trace_rw6(p, cdb, len);
- 	case READ_10:
-+	case VERIFY:
- 	case WRITE_10:
-+	case WRITE_SAME:
- 		return scsi_trace_rw10(p, cdb, len);
- 	case READ_12:
-+	case VERIFY_12:
- 	case WRITE_12:
- 		return scsi_trace_rw12(p, cdb, len);
- 	case READ_16:
-+	case VERIFY_16:
- 	case WRITE_16:
-+	case WRITE_SAME_16:
- 		return scsi_trace_rw16(p, cdb, len);
-+	case UNMAP:
-+		return scsi_trace_unmap(p, cdb, len);
-+	case SERVICE_ACTION_IN:
-+		return scsi_trace_service_action_in(p, cdb, len);
- 	case VARIABLE_LENGTH_CMD:
- 		return scsi_trace_varlen(p, cdb, len);
- 	default:
-diff --git a/include/trace/events/scsi.h b/include/trace/events/scsi.h
-index 76cbf82..25fbefd 100644
---- a/include/trace/events/scsi.h
-+++ b/include/trace/events/scsi.h
-@@ -200,6 +200,8 @@ TRACE_EVENT(scsi_dispatch_cmd_start,
- 		__field( unsigned int,	lun	)
- 		__field( unsigned int,	opcode	)
- 		__field( unsigned int,	cmd_len )
-+		__field( unsigned int,	data_sglen )
-+		__field( unsigned int,	prot_sglen )
- 		__dynamic_array(unsigned char,	cmnd, cmd->cmd_len)
- 	),
+ 	se_subsystem_dev_t *su_dev = SU_DEV(dev);
+ 	struct target_core_fabric_ops *tfo = nacl->se_tpg->se_tpg_tfo;
++	t10_pr_registration_t *pr_reg_tmp, *pr_reg_tmp_safe;
+ 	t10_reservation_template_t *pr_tmpl = &SU_DEV(dev)->t10_reservation;
  
-@@ -210,12 +212,16 @@ TRACE_EVENT(scsi_dispatch_cmd_start,
- 		__entry->lun		= cmd->device->lun;
- 		__entry->opcode		= cmd->cmnd[0];
- 		__entry->cmd_len	= cmd->cmd_len;
-+		__entry->data_sglen	= scsi_sg_count(cmd);
-+		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
- 		memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
- 	),
+ 	/*
+@@ -806,21 +974,38 @@ static void __core_scsi3_add_registration(
+ 	list_add_tail(&pr_reg->pr_reg_list, &pr_tmpl->registration_list);
+ 	pr_reg->pr_reg_deve->deve_flags |= DEF_PR_REGISTERED;
  
--	TP_printk("host_no=%u channel=%u id=%u lun=%u cmnd=(%s %s raw=%s)",
-+	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u" \
-+		  " cmnd=(%s %s raw=%s)",
- 		  __entry->host_no, __entry->channel, __entry->id,
--		  __entry->lun, show_opcode_name(__entry->opcode),
-+		  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
-+		  show_opcode_name(__entry->opcode),
- 		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
- 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len))
- );
-@@ -234,6 +240,8 @@ TRACE_EVENT(scsi_dispatch_cmd_error,
- 		__field( int,		rtn	)
- 		__field( unsigned int,	opcode	)
- 		__field( unsigned int,	cmd_len )
-+		__field( unsigned int,	data_sglen )
-+		__field( unsigned int,	prot_sglen )
- 		__dynamic_array(unsigned char,	cmnd, cmd->cmd_len)
- 	),
+-	printk(KERN_INFO "SPC-3 PR [%s] Service Action: REGISTER%s Initiator"
+-		" Node: %s\n", tfo->get_fabric_name(), (register_type == 2) ?
+-		"_AND_MOVE" : (register_type == 1) ?
+-		"_AND_IGNORE_EXISTING_KEY" : "", nacl->initiatorname);
+-	printk(KERN_INFO "SPC-3 PR [%s] for %s TCM Subsystem %s Object Target"
+-		" Port(s)\n",  tfo->get_fabric_name(),
+-		(pr_reg->pr_reg_all_tg_pt) ? "ALL" : "SINGLE",
+-		TRANSPORT(dev)->name);
+-	printk(KERN_INFO "SPC-3 PR [%s] SA Res Key: 0x%016Lx PRgeneration:"
+-		" 0x%08x  APTPL: %d\n", tfo->get_fabric_name(),
+-		pr_reg->pr_res_key, pr_reg->pr_res_generation,
+-		pr_reg->pr_reg_aptpl);
++	__core_scsi3_dump_registration(tfo, dev, nacl, pr_reg, register_type);
+ 	spin_unlock(&pr_tmpl->registration_lock);
++	/*
++	 * Skip extra processing for ALL_TG_PT=0 or REGISTER_AND_MOVE.
++	 */
++	if (!(pr_reg->pr_reg_all_tg_pt) || (register_move))
++		return;
++	/*
++	 * Walk pr_reg->pr_reg_atp_list and add registrations for ALL_TG_PT=1
++	 * allocated in __core_scsi3_alloc_registration()
++	 */
++	list_for_each_entry_safe(pr_reg_tmp, pr_reg_tmp_safe,
++			&pr_reg->pr_reg_atp_list, pr_reg_atp_mem_list) {
++		list_del(&pr_reg_tmp->pr_reg_atp_mem_list);
++
++		pr_reg_tmp->pr_res_generation = core_scsi3_pr_generation(dev);
  
-@@ -245,13 +253,16 @@ TRACE_EVENT(scsi_dispatch_cmd_error,
- 		__entry->rtn		= rtn;
- 		__entry->opcode		= cmd->cmnd[0];
- 		__entry->cmd_len	= cmd->cmd_len;
-+		__entry->data_sglen	= scsi_sg_count(cmd);
-+		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
- 		memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
- 	),
+-	return;
++		spin_lock(&pr_tmpl->registration_lock);
++		list_add_tail(&pr_reg_tmp->pr_reg_list,
++			      &pr_tmpl->registration_list);
++		pr_reg_tmp->pr_reg_deve->deve_flags |= DEF_PR_REGISTERED;
++
++		__core_scsi3_dump_registration(tfo, dev,
++				pr_reg_tmp->pr_reg_nacl, pr_reg_tmp,
++				register_type);
++		spin_unlock(&pr_tmpl->registration_lock);
++		/*
++		 * Drop configfs group dependency reference from
++		 * __core_scsi3_alloc_registration()
++		 */
++		core_scsi3_lunacl_undepend_item(pr_reg_tmp->pr_reg_deve);
++	}
+ }
  
--	TP_printk("host_no=%u channel=%u id=%u lun=%u cmnd=(%s %s raw=%s)"
--		  " rtn=%d",
-+	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u" \
-+		  " cmnd=(%s %s raw=%s) rtn=%d",
- 		  __entry->host_no, __entry->channel, __entry->id,
--		  __entry->lun, show_opcode_name(__entry->opcode),
-+		  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
-+		  show_opcode_name(__entry->opcode),
- 		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
- 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
- 		  __entry->rtn)
-@@ -271,6 +282,8 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
- 		__field( int,		result	)
- 		__field( unsigned int,	opcode	)
- 		__field( unsigned int,	cmd_len )
-+		__field( unsigned int,	data_sglen )
-+		__field( unsigned int,	prot_sglen )
- 		__dynamic_array(unsigned char,	cmnd, cmd->cmd_len)
- 	),
+ static int core_scsi3_alloc_registration(
+@@ -1134,6 +1319,7 @@ static int core_scsi3_decode_spec_i_port(
+ 	se_node_acl_t *dest_node_acl;
+ 	se_dev_entry_t *dest_se_deve = NULL, *local_se_deve;
+ 	t10_pr_registration_t *dest_pr_reg, *local_pr_reg;
++	t10_pr_registration_t *pr_reg_tmp, *pr_reg_tmp_safe;
+ 	struct list_head tid_dest_list;
+ 	struct pr_transport_id_holder *tidh_new, *tidh, *tidh_tmp;
+ 	struct target_core_fabric_ops *tmp_tf_ops;
+@@ -1503,6 +1689,17 @@ out:
  
-@@ -282,13 +295,17 @@ DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
- 		__entry->result		= cmd->result;
- 		__entry->opcode		= cmd->cmnd[0];
- 		__entry->cmd_len	= cmd->cmd_len;
-+		__entry->data_sglen	= scsi_sg_count(cmd);
-+		__entry->prot_sglen	= scsi_prot_sg_count(cmd);
- 		memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
- 	),
+ 		list_del(&tidh->dest_list);
+ 		kfree(tidh);
++		/*
++		 * Release any extra ALL_TG_PT=1 registrations for
++		 * the SPEC_I_PT=1 case.
++		 */
++		list_for_each_entry_safe(pr_reg_tmp, pr_reg_tmp_safe,
++				&dest_pr_reg->pr_reg_atp_list,
++				pr_reg_atp_mem_list) {
++			list_del(&pr_reg_tmp->pr_reg_atp_mem_list);
++			core_scsi3_lunacl_undepend_item(pr_reg_tmp->pr_reg_deve);
++			kmem_cache_free(t10_pr_reg_cache, pr_reg_tmp);
++		}
  
--	TP_printk("host_no=%u channel=%u id=%u lun=%u cmnd=(%s %s raw=%s) "
--		  "result=(driver=%s host=%s message=%s status=%s)",
-+	TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u " \
-+		  "prot_sgl=%u cmnd=(%s %s raw=%s) result=(driver=%s host=%s " \
-+		  "message=%s status=%s)",
- 		  __entry->host_no, __entry->channel, __entry->id,
--		  __entry->lun, show_opcode_name(__entry->opcode),
-+		  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
-+		  show_opcode_name(__entry->opcode),
- 		  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
- 		  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
- 		  show_driverbyte_name(((__entry->result) >> 24) & 0xff),
+ 		kfree(dest_pr_reg->pr_aptpl_buf);
+ 		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
+@@ -2003,18 +2200,6 @@ static int core_scsi3_pro_reserve(
+ 		return PYX_TRANSPORT_LU_COMM_FAILURE;
+ 	}
+ 	/*
+-	 * For a given ALL_TG_PT=0 PR registration, a recevied PR reserve must
+-	 * be on the same matching se_portal_group_t + se_lun_t.
+-	 */
+-	if (!(pr_reg->pr_reg_all_tg_pt) &&
+-	     (pr_reg->pr_reg_tg_pt_lun != se_lun)) {
+-		printk(KERN_ERR "SPC-3 PR: Unable to handle RESERVE because"
+-			" ALL_TG_PT=0 and RESERVE was not received on same"
+-			" target port as REGISTER\n");
+-		core_scsi3_put_pr_reg(pr_reg);
+-		return PYX_TRANSPORT_RESERVATION_CONFLICT;
+-	}
+-	/*
+ 	 * From spc4r17 Section 5.7.9: Reserving:
+ 	 *
+ 	 * An application client creates a persistent reservation by issuing
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index b6e4f0a..04741ae 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -361,6 +361,8 @@ typedef struct t10_pr_registration_s {
+ 	struct list_head pr_reg_list;
+ 	struct list_head pr_reg_abort_list;
+ 	struct list_head pr_reg_aptpl_list;
++	struct list_head pr_reg_atp_list;
++	struct list_head pr_reg_atp_mem_list;
+ } ____cacheline_aligned t10_pr_registration_t;
+ 
+ typedef struct t10_reservation_template_s {
+@@ -929,6 +931,8 @@ typedef struct se_port_s {
+ 	/* Used for ALUA Target Port Groups membership */
+ 	atomic_t	sep_tg_pt_gp_active;
+ 	atomic_t	sep_tg_pt_secondary_offline;
++	/* Used for PR ALL_TG_PT=1 */
++	atomic_t	sep_tg_pt_ref_cnt;
+ 	spinlock_t	sep_alua_lock;
+ 	struct mutex	sep_tg_pt_md_mutex;
+ 	struct t10_alua_tg_pt_gp_member_s *sep_alua_tg_pt_gp_mem;
+-- 
+1.5.6.5
+
