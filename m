@@ -1,104 +1,102 @@
-From: Jonathan Cameron <jic23@cam.ac.uk>
-Subject: LSI megaraid sata 150 do now own errors.
-Date: Thu, 25 Mar 2010 11:10:39 +0000
-Message-ID: <4BAB44AF.10409@cam.ac.uk>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] sym53c8xx_2: Avoid calling __sym_mfree with irqs
+ disabled
+Date: Thu, 25 Mar 2010 11:21:17 -0600
+Message-ID: <1269537678.9182.8.camel@mulgrave.site>
+References: <1269536751-2463-1-git-send-email-stefan.bader@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppsw-1.csi.cam.ac.uk ([131.111.8.131]:59236 "EHLO
-	ppsw-1.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab0CYLIO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Mar 2010 07:08:14 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:43536 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751396Ab0CYRVY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Mar 2010 13:21:24 -0400
+In-Reply-To: <1269536751-2463-1-git-send-email-stefan.bader@canonical.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Neela Syam Kolli <megaraidlinux@lsi.com>
+To: Stefan Bader <stefan.bader@canonical.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Dear All,
+On Thu, 2010-03-25 at 18:05 +0100, Stefan Bader wrote:
+> The following patch was tested and seemed to avoid the warning. Howver
+> I am not completely sure that none of the later functions need to be
+> protected with spinlocks. Though it feels ok. But maybe someone can do
+> some sanity checking.
 
-A bit of googling shows that quite a few people have encountered the following error,
-but I can't seem to track down any solutions.
+So, I'm afraid you're right, the patch as is won't work ... the problem
+is that __sym_mfree_dma does list manipulation and for safety that has
+to be under a lock.
 
-It is a large array consisting of 4 2TB physical drives with latest firmware from LSI.
+The inception of this problem is that ARM needs a sleeping function on
+DMA free but nothing else does so, on every platform that sym2 is
+supported, this warning is bogus.
 
-The are broken into 3 logical drives (2TB 2TB and 1.somethingTB) all raid 5.
+One way of getting rid of it might be to undef SYM_MEM_FREE_UNUSED which
+will prevent the free routines actually from releasing memory ...
+another might be to drop the lock and reacquire it around the free ...
+but that's sitting in a list traversal function so it may expose us to
+list races again, so really the whole of the freeing routines would have
+to be re-written to be list safe under lock ...
 
-[ 8687.145064] megaraid: 28 outstanding commands. Max wait 300 sec
-[ 8687.145067] megaraid mbox: Wait for 28 commands to complete:300
-[ 8688.150007] megaraid mbox: reset sequence completed sucessfully
-[10556.394566] sd 4:1:2:0: [sdd] Asking for cache data failed
-[10556.394579] sd 4:1:2:0: [sdd] Assuming drive cache: write through
-[10556.394591]  sdd: sdd1
-[13004.393214] megaraid: aborting-1476615 cmd=2a <c=1 t=2 l=0>
-[13004.393220] megaraid abort: scsi cmd:1476615, do now own
-[13004.393226] megaraid: aborting-1476616 cmd=2a <c=1 t=2 l=0>
-[13004.393229] megaraid abort: scsi cmd:1476616, do now own
-[13004.393232] megaraid: aborting-1476617 cmd=2a <c=1 t=2 l=0>
-[13004.393234] megaraid abort: scsi cmd:1476617, do now own
-[13004.393238] megaraid: aborting-1476618 cmd=2a <c=1 t=2 l=0>
-[13004.393240] megaraid abort: scsi cmd:1476618, do now own
-[13004.393243] megaraid: aborting-1476619 cmd=2a <c=1 t=2 l=0>
-[13004.393245] megaraid abort: scsi cmd:1476619, do now own
-[13004.393248] megaraid: aborting-1476620 cmd=2a <c=1 t=2 l=0>
-[13004.393251] megaraid abort: scsi cmd:1476620, do now own
-[13004.393254] megaraid: aborting-1476621 cmd=2a <c=1 t=2 l=0>
-[13004.393256] megaraid abort: scsi cmd:1476621, do now own
-[13004.393260] megaraid: aborting-1476622 cmd=2a <c=1 t=2 l=0>
-[13004.393262] megaraid abort: scsi cmd:1476622, do now own
-[13004.393265] megaraid: aborting-1476623 cmd=2a <c=1 t=2 l=0>
-[13004.393267] megaraid abort: scsi cmd:1476623, do now own
-[13004.393270] megaraid: aborting-1476624 cmd=2a <c=1 t=2 l=0>
-[13004.393272] megaraid abort: scsi cmd:1476624, do now own
-[13004.393276] megaraid: aborting-1476625 cmd=2a <c=1 t=2 l=0>
-[13004.393278] megaraid abort: scsi cmd:1476625, do now own
-[13004.393281] megaraid: aborting-1476626 cmd=2a <c=1 t=2 l=0>
-[13004.393284] megaraid abort: scsi cmd:1476626, do now own
-[13004.393287] megaraid: aborting-1476627 cmd=2a <c=1 t=2 l=0>
-[13004.393289] megaraid abort: scsi cmd:1476627, do now own
-[13004.393292] megaraid: aborting-1476628 cmd=2a <c=1 t=2 l=0>
-[13004.393294] megaraid abort: scsi cmd:1476628, do now own
-[13004.393297] megaraid: aborting-1476629 cmd=2a <c=1 t=2 l=0>
-[13004.393300] megaraid abort: scsi cmd:1476629, do now own
-[13004.393303] megaraid: aborting-1476630 cmd=2a <c=1 t=2 l=0>
-[13004.393305] megaraid abort: scsi cmd:1476630, do now own
-[13004.393309] megaraid: aborting-1476631 cmd=2a <c=1 t=2 l=0>
-[13004.393311] megaraid abort: scsi cmd:1476631, do now own
-[13004.393314] megaraid: aborting-1476632 cmd=2a <c=1 t=2 l=0>
-[13004.393316] megaraid abort: scsi cmd:1476632, do now own
-[13004.393319] megaraid: aborting-1476633 cmd=2a <c=1 t=2 l=0>
-[13004.393322] megaraid abort: scsi cmd:1476633, do now own
-[13004.393325] megaraid: aborting-1476634 cmd=2a <c=1 t=2 l=0>
-[13004.393327] megaraid abort: scsi cmd:1476634, do now own
-[13004.393330] megaraid: aborting-1476635 cmd=2a <c=1 t=2 l=0>
-[13004.393333] megaraid abort: scsi cmd:1476635, do now own
-[13004.393336] megaraid: aborting-1476636 cmd=2a <c=1 t=2 l=0>
-[13004.393338] megaraid abort: scsi cmd:1476636, do now own
-[13004.393341] megaraid: aborting-1476637 cmd=2a <c=1 t=2 l=0>
-[13004.393343] megaraid abort: scsi cmd:1476637, do now own
-[13004.393347] megaraid: aborting-1476638 cmd=2a <c=1 t=2 l=0>
-[13004.393349] megaraid abort: scsi cmd:1476638, do now own
-[13004.393352] megaraid: aborting-1476639 cmd=2a <c=1 t=2 l=0>
-[13004.393354] megaraid abort: scsi cmd:1476639, do now own
-[13004.393357] megaraid: aborting-1476640 cmd=2a <c=1 t=2 l=0>
-[13004.393359] megaraid abort: scsi cmd:1476640, do now own
-[13004.393362] megaraid: aborting-1476641 cmd=2a <c=1 t=2 l=0>
-[13004.393365] megaraid abort: scsi cmd:1476641, do now own
-[13004.393368] megaraid: aborting-1476642 cmd=2a <c=1 t=2 l=0>
-[13004.393370] megaraid abort: scsi cmd:1476642, do now own
+James
 
-The result is that some cifs transfers fail with input output errors.
-(at least I think the two are connected).
+> Thanks,
+> Stefan
+> 
+> From d8c94332b8c7422c9c3e20d236f7ba6f59170408 Mon Sep 17 00:00:00 2001
+> From: Stefan Bader <stefan.bader@canonical.com>
+> Date: Wed, 24 Mar 2010 17:06:05 +0000
+> Subject: [PATCH] sym53c8xx_2: Avoid calling __sym_mfree with irqs disabled
+> 
+> BugLink: http://bugs.launchpad.net/bugs/458201
+> 
+> Testing disk hotswap in kvm produced the following warning when removing
+> an inactive drive from the vm. Looking at the code it is __sym_mfree_dma,
+> that disables irqs and then calls __sym_mfree which at some point ends up
+> at code which checks for irqs disabled.
+> 
+> WARNING: at /build/buildd/linux-2.6.32/arch/x86/include/asm/dma-mapping.h:154 ___free_dma_mem_cluster+0x102/0x110()
+> Hardware name: Bochs
+> Pid: 17, comm: kacpi_notify Not tainted 2.6.32-16-server #25-Ubuntu
+> Call Trace:
+>  [<ffffffff81064f9b>] warn_slowpath_common+0x7b/0xc0
+>  [<ffffffff81064ff4>] warn_slowpath_null+0x14/0x20
+>  [<ffffffff8139a2a2>] ___free_dma_mem_cluster+0x102/0x110
+>  [<ffffffff8139a072>] __sym_mfree+0xd2/0x100
+>  [<ffffffff8139a109>] __sym_mfree_dma+0x69/0x100
+>  [<ffffffff8139245f>] sym_hcb_free+0x8f/0x1f0
+>  [<ffffffff8138fa96>] sym_free_resources+0x46/0x90
+>  [<ffffffff8138fb93>] sym_detach+0xb3/0xe0
+>  [<ffffffff8138fbfb>] sym2_remove+0x3b/0x60
+> 
+> Signed-off-by: Stefan Bader <stefan.bader@canonical.com>
+> CC: stable@kernel.org
+> ---
+>  drivers/scsi/sym53c8xx_2/sym_malloc.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/sym53c8xx_2/sym_malloc.c b/drivers/scsi/sym53c8xx_2/sym_malloc.c
+> index 883cac1..006a079 100644
+> --- a/drivers/scsi/sym53c8xx_2/sym_malloc.c
+> +++ b/drivers/scsi/sym53c8xx_2/sym_malloc.c
+> @@ -339,15 +339,14 @@ void __sym_mfree_dma(m_pool_ident_t dev_dmat, void *m, int size, char *name)
+>  
+>  	spin_lock_irqsave(&sym53c8xx_lock, flags);
+>  	mp = ___get_dma_pool(dev_dmat);
+> +	spin_unlock_irqrestore(&sym53c8xx_lock, flags);
+>  	if (!mp)
+> -		goto out;
+> +		return;
+>  	__sym_mfree(mp, m, size, name);
+>  #ifdef	SYM_MEM_FREE_UNUSED
+>  	if (!mp->nump)
+>  		___del_dma_pool(mp);
+>  #endif
+> - out:
+> -	spin_unlock_irqrestore(&sym53c8xx_lock, flags);
+>  }
+>  
+>  /*
 
-The load was reasonably high when the issue occured as there were about
-10 simultaneous writes occuring of 1-2 Gig files.  The actual
-bandwidth would have been fairly low though as the machine in question
-is on a 100MB switch.
 
-This is with ubuntu's 2.6.31-20-server.  I can check against 
-a more recent tree if anyone knows of a reason that might help.
-
-All suggests welcomed!
-
-Thanks,
-
-Jonathan
