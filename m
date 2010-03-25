@@ -1,63 +1,56 @@
-From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
-Subject: [PATCH 2/3] [BNX2I] link bnx2i hba and cnic device before
- registering the device
-Date: Thu, 25 Mar 2010 10:54:42 -0700
-Message-ID: <1269539682.28522.68949.camel@anilgv-desktop>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] sym53c8xx_2: Avoid calling __sym_mfree with irqs
+	disabled
+Date: Thu, 25 Mar 2010 12:05:38 -0600
+Message-ID: <20100325180538.GN3875@parisc-linux.org>
+References: <1269536751-2463-1-git-send-email-stefan.bader@canonical.com> <1269537678.9182.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4571 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753398Ab0CYRyc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Mar 2010 13:54:32 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:37165 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753645Ab0CYSFk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Mar 2010 14:05:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1269537678.9182.8.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, mchan@broadcom.com, waie@broadcom.com
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Stefan Bader <stefan.bader@canonical.com>, linux-scsi@vger.kernel.org
 
-	[BNX2I] link bnx2i hba and cnic device before registering the device
- 	
-	* When bnx2/cnic/bnx2i drivers are loaded in certain order, bnx2i will
-	  will not initialize the device correctly because 'hba->cnic' will
-	  be NULL when bnx2i_start() is called from register_device() context.
-	  Under this condition 'ifdown' and 'ifup' of associated network interface
-	  is required to bring iscsi adapter state to ready state so that it
-	  will accept iscsi connection setup within the chip
-	* Initializing 'hba->cnic' before calling register_device() will fix
-	  this issue
+On Thu, Mar 25, 2010 at 11:21:17AM -0600, James Bottomley wrote:
+> On Thu, 2010-03-25 at 18:05 +0100, Stefan Bader wrote:
+> > The following patch was tested and seemed to avoid the warning. Howver
+> > I am not completely sure that none of the later functions need to be
+> > protected with spinlocks. Though it feels ok. But maybe someone can do
+> > some sanity checking.
+> 
+> So, I'm afraid you're right, the patch as is won't work ... the problem
+> is that __sym_mfree_dma does list manipulation and for safety that has
+> to be under a lock.
+> 
+> The inception of this problem is that ARM needs a sleeping function on
+> DMA free but nothing else does so, on every platform that sym2 is
+> supported, this warning is bogus.
 
-Signed-off-by: Michael Chan <mchan@broadcom.com>
-Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_init.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Oh good, I'm glad you wrote this, it saves me the typing ;-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 6d8172e..737dce0 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -278,6 +278,7 @@ static int bnx2i_init_one(struct bnx2i_hba *hba, struct cnic_dev *cnic)
- 	int rc;
- 
- 	mutex_lock(&bnx2i_dev_lock);
-+	hba->cnic = cnic;
- 	rc = cnic->register_device(cnic, CNIC_ULP_ISCSI, hba);
- 	if (!rc) {
- 		hba->age++;
-@@ -324,8 +325,7 @@ void bnx2i_ulp_init(struct cnic_dev *dev)
- 	if (bnx2i_init_one(hba, dev)) {
- 		printk(KERN_ERR "bnx2i - hba %p init failed\n", hba);
- 		bnx2i_free_hba(hba);
--	} else
--		hba->cnic = dev;
-+	}
- }
- 
- 
+> One way of getting rid of it might be to undef SYM_MEM_FREE_UNUSED which
+> will prevent the free routines actually from releasing memory ...
+> another might be to drop the lock and reacquire it around the free ...
+> but that's sitting in a list traversal function so it may expose us to
+> list races again, so really the whole of the freeing routines would have
+> to be re-written to be list safe under lock ...
+
+The solution I'd suggest is to take out the WARN_ON in the x86 code.
+It's never going to cause trouble on x86.
+
+The real solution is to use DMA pools, but my supply of tuits is quite
+limited these days, and converting sym2 to modern APIs isn't high on
+my priority list.
+
 -- 
-1.6.5.1
-
-
-
-
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
