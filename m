@@ -1,186 +1,183 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH v2] advansys: fix regression with request_firmware
- change
-Date: Sun, 28 Mar 2010 15:25:20 +0000
-Message-ID: <1269789920.2801.25.camel@mulgrave.site>
-References: <201003262005.09121.herton@mandriva.com.br>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Jan Sanislo <oystr@cs.washington.edu>
+Subject: Peculiar Fusion MPT SPI driver behavior
+Date: 28 Mar 2010 15:02 PDT
+Message-ID: <1269813745/oystr@maui.cs.washington.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:60843 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753372Ab0C1PZ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Mar 2010 11:25:27 -0400
-In-Reply-To: <201003262005.09121.herton@mandriva.com.br>
+Received: from maui.cs.washington.edu ([128.208.5.86]:47403 "EHLO
+	maui.cs.washington.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754602Ab0C1Wa3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Mar 2010 18:30:29 -0400
+Received: from maui.cs.washington.edu (localhost [127.0.0.1])
+	by maui.cs.washington.edu (8.14.1/8.14.1/1.10) with ESMTP id o2SM3PME027292
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Mar 2010 15:03:25 -0700
+	(envelope-from oystr@maui.cs.washington.edu)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2010-03-26 at 20:05 -0300, Herton Ronaldo Krzesinski wrote:
-> On newer kernels users of advansys module are reporting system hang when
-> trying to load it without firmware files present. After looking closely
-> at description on https://qa.mandriva.com/show_bug.cgi?id=53220, I think
-> this is related to commit "[SCSI] advansys: use request_firmware". The
-> problem is that after switch to request_firmware, asc_dvc->err_code
-> isn't being set when firmware files aren't found or loading fails.
-> 
-> err_code is used by the driver to judge if there was a fatal error or
-> not, as can be seen for example on advansys_board_found, which will only
-> return -ENODEV when err_code is set. Because err_code isn't being set
-> when request_firmware fails, this is a change of behaviour of the code
-> before request_firmware addition, making it continue to load and it
-> fails later as the firmware wasn't really loaded.
-> 
-> Also, error handling on advansys_board_found is fixed, because it's
-> buggy in the case we have an ASC_NARROW_BOARD set and failure happens on
-> AscInitAsc1000Driver step: it was freeing items of wrong struct in the
-> dvc_var union of struct asc_board, which could lead to an oops in the
-> case we set some of the fields in struct of narrow board as code was
-> choosing to always freeing wide board fields, and not everything wasn't
-> being freed/released properly.
+I've noticed some problems with the Fusion MPT SPI driver in kernel versions
+2.6.31 and 2.6.33 using an LSI53C1030 card attached to a Storcase disk
+array.  When probing LUNs kernel log messages look like those below (note
+the complaints about "unknown device type", "capacity change", etc), with
+failure to detect all of the drives in the proper manner:
 
-This piece is nothing to do with a request_firmware regression, so it
-doesn't really belong here.
+============================================
 
-> Signed-off-by: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-> ---
->  drivers/scsi/advansys.c |   35 ++++++++++++++++++++++++++---------
->  1 files changed, 26 insertions(+), 9 deletions(-)
-> 
-> v2 fixes error handling in advansys_board_found, so code will not oops anymore
-> if firmware files are not found. users tested this change and reported it to be
-> ok (no more freeze or oops when firmware files are not found)
-> 
-> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-> index 22626ab..9a3c68f 100644
-> --- a/drivers/scsi/advansys.c
-> +++ b/drivers/scsi/advansys.c
-> @@ -4781,12 +4781,14 @@ static ushort AscInitAsc1000Driver(ASC_DVC_VAR *asc_dvc)
->  	if (err) {
->  		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
->  		       fwname, err);
-> +		asc_dvc->err_code |= ASC_IERR_MCODE_CHKSUM;
->  		return err;
->  	}
->  	if (fw->size < 4) {
->  		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
->  		       fw->size, fwname);
->  		release_firmware(fw);
-> +		asc_dvc->err_code |= ASC_IERR_MCODE_CHKSUM;
->  		return -EINVAL;
->  	}
->  	chksum = (fw->data[3] << 24) | (fw->data[2] << 16) |
-> @@ -5110,12 +5112,14 @@ static int AdvInitAsc3550Driver(ADV_DVC_VAR *asc_dvc)
->  	if (err) {
->  		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
->  		       fwname, err);
-> +		asc_dvc->err_code = ASC_IERR_MCODE_CHKSUM;
->  		return err;
->  	}
->  	if (fw->size < 4) {
->  		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
->  		       fw->size, fwname);
->  		release_firmware(fw);
-> +		asc_dvc->err_code = ASC_IERR_MCODE_CHKSUM;
->  		return -EINVAL;
->  	}
->  	chksum = (fw->data[3] << 24) | (fw->data[2] << 16) |
-> @@ -5624,12 +5628,14 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
->  	if (err) {
->  		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
->  		       fwname, err);
-> +		asc_dvc->err_code = ASC_IERR_MCODE_CHKSUM;
->  		return err;
->  	}
->  	if (fw->size < 4) {
->  		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
->  		       fw->size, fwname);
->  		release_firmware(fw);
-> +		asc_dvc->err_code = ASC_IERR_MCODE_CHKSUM;
->  		return -EINVAL;
->  	}
->  	chksum = (fw->data[3] << 24) | (fw->data[2] << 16) |
-> @@ -6124,12 +6130,14 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
->  	if (err) {
->  		printk(KERN_ERR "Failed to load image \"%s\" err %d\n",
->  		       fwname, err);
-> +		asc_dvc->err_code = ASC_IERR_MCODE_CHKSUM;
->  		return err;
->  	}
->  	if (fw->size < 4) {
->  		printk(KERN_ERR "Bogus length %zu in image \"%s\"\n",
->  		       fw->size, fwname);
->  		release_firmware(fw);
-> +		asc_dvc->err_code = ASC_IERR_MCODE_CHKSUM;
->  		return -EINVAL;
->  	}
->  	chksum = (fw->data[3] << 24) | (fw->data[2] << 16) |
-> @@ -12303,7 +12311,7 @@ static int __devinit advansys_board_found(struct Scsi_Host *shost,
->  		asc_dvc_varp->overrun_buf = kzalloc(ASC_OVERRUN_BSIZE, GFP_KERNEL);
->  		if (!asc_dvc_varp->overrun_buf) {
->  			ret = -ENOMEM;
-> -			goto err_free_wide_mem;
-> +			goto err_free_irq;
->  		}
->  		warn_code = AscInitAsc1000Driver(asc_dvc_varp);
->  
-> @@ -12314,28 +12322,37 @@ static int __devinit advansys_board_found(struct Scsi_Host *shost,
->  					asc_dvc_varp->err_code);
->  			if (asc_dvc_varp->err_code) {
->  				ret = -ENODEV;
-> -				kfree(asc_dvc_varp->overrun_buf);
-> +				goto err_free_mem;
->  			}
->  		}
->  	} else {
-> -		if (advansys_wide_init_chip(shost))
-> +		if (advansys_wide_init_chip(shost)) {
->  			ret = -ENODEV;
-> +			goto err_free_mem;
-> +		}
->  	}
->  
-> -	if (ret)
-> -		goto err_free_wide_mem;
-> -
->  	ASC_DBG_PRT_SCSI_HOST(2, shost);
->  
->  	ret = scsi_add_host(shost, boardp->dev);
->  	if (ret)
-> -		goto err_free_wide_mem;
-> +		goto err_free_mem;
->  
->  	scsi_scan_host(shost);
->  	return 0;
->  
-> - err_free_wide_mem:
-> -	advansys_wide_free_mem(boardp);
-> + err_free_mem:
-> +	if (ASC_NARROW_BOARD(boardp)) {
-> +		if ((asc_dvc_varp->err_code & ASC_IERR_SET_PC_ADDR) ||
-> +		    (asc_dvc_varp->err_code & ASC_IERR_START_STOP_CHIP) ||
-> +		    (!asc_dvc_varp->err_code))
-> +			dma_unmap_single(boardp->dev, asc_dvc_varp->overrun_dma,
-> +					 ASC_OVERRUN_BSIZE, DMA_FROM_DEVICE);
+kernel: Fusion MPT base driver 3.04.13
+kernel: Copyright (c) 1999-2008 LSI Corporation
+kernel: Fusion MPT SPI Host driver 3.04.13
+kernel: mptspi 0000:03:07.0: PCI INT A -> GSI 66 (level, low) -> IRQ 66
+kernel: mptbase: ioc0: Initiating bringup
+kernel: ioc0: LSI53C1030 C0: Capabilities={Initiator}
+kernel: scsi4 : ioc0: LSI53C1030 C0, FwRev=01032920h, Ports=1, MaxQ=222, IRQ=66
+kernel: scsi 4:0:0:0: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: scsi target4:0:0: Beginning Domain Validation
+kernel: scsi target4:0:0: Ending Domain Validation
+kernel: scsi target4:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU RTI WRFLOW PCOMP (6.25 ns, offset 127)
+kernel: sd 4:0:0:0: Attached scsi generic sg2 type 0
+kernel: scsi: On host 4 channel 0 id 0 only 511 (max_scsi_report_luns) of 460799999 luns reported, try increasing max_scsi_report_luns.
+kernel: sd 4:0:0:0: [sdb] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:0: [sdb] Write Protect is off
+kernel: scsi: unknown device type 25
+kernel: scsi 4:0:0:1: Unknown                                     R0.0 PQ: 0 ANSI: 0
+kernel: scsi 4:0:0:1: Information Units disabled by blacklist
+kernel: scsi 4:0:0:1: Attached scsi generic sg3 type 25
+kernel: sd 4:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: scsi scan: INQUIRY result too short (5), using 36
+kernel: scsi: unknown device type 27
+kernel: scsi 4:0:0:2: Unknown           SC U320/ SATA16R          R0.0 PQ: 6 ANSI: 7
+kernel: scsi 4:0:0:2: Attached scsi generic sg4 type 27
+kernel: scsi: unknown device type 25
+kernel: scsi 4:0:0:3: Unknown                                     R0.0 PQ: 0 ANSI: 0
+kernel: scsi 4:0:0:3: Information Units disabled by blacklist
+kernel: sdb:
+kernel: scsi 4:0:0:3: Attached scsi generic sg5 type 25
+kernel: scsi 4:0:0:4: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:4: Attached scsi generic sg6 type 0
+kernel: scsi 4:0:0:5: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:4: [sdc] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:5: Attached scsi generic sg7 type 0
+kernel: sd 4:0:0:4: [sdc] Write Protect is off
+kernel: scsi: unknown device type 25
+kernel: scsi 4:0:0:6: Unknown                                     R0.0 PQ: 0 ANSI: 0
+kernel: scsi 4:0:0:6: Information Units disabled by blacklist
+kernel: sd 4:0:0:4: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sd 4:0:0:5: [sdd] Write Protect is off
+kernel: scsi 4:0:0:6: Attached scsi generic sg8 type 25
+kernel: sdb1
+kernel: sd 4:0:0:5: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: scsi 4:0:0:7: Direct-Access              0                     PQ: 0 ANSI: 0
+kernel: sd 4:0:0:7: Attached scsi generic sg9 type 0
+kernel: sd 4:0:0:0: [sdb] Write Protect is on
+kernel: sd 4:0:0:5: [sdd] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sdc:
+kernel: sd 4:0:0:7: [sde] 1531461632 512-byte logical blocks: (784 GB/730 GiB)
+kernel: sd 4:0:0:0: [sdb] Got wrong page
+kernel: sd 4:0:0:0: [sdb] Assuming drive cache: write through
+kernel: sd 4:0:0:0: [sdb] Attached SCSI disk
+kernel: sd 4:0:0:7: [sde] Write Protect is off
+kernel: sdd: detected capacity change from 4608 to 1887436800000
+kernel: sdd:
+kernel: sd 4:0:0:7: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sde: sdc1
+kernel: mptspi 0000:03:07.1: PCI INT B -> GSI 67 (level, low) -> IRQ 67
+kernel: mptbase: ioc1: Initiating bringup
+kernel: ioc1: LSI53C1030 C0: Capabilities={Initiator}
+kernel: sdd1
+kernel: sd 4:0:0:4: [sdc] Attached SCSI disk
+kernel: scsi5 : ioc1: LSI53C1030 C0, FwRev=01032920h, Ports=1, MaxQ=222, IRQ=67
+kernel: sd 4:0:0:5: [sdd] Attached SCSI disk
+kernel: sde1
+kernel: sd 4:0:0:7: [sde] Attached SCSI disk
 
-This is both nasty and not really a fix:  the overrun buf is still
-mapped many times on the reset path and only ever unmapped once, which
-is still an unfixed bug in this code.  I think the map needs to be moved
-out of AscInitMicroCodeVar() to somewhere in here.
+============================================
 
-James
+I noticed that probing in 6.31 and 6.33 kernels is done basically
+asynchronously.  If I change the line of code in the sd_probe function
+in drivers/scsi/sd.c from:
 
-> +		kfree(asc_dvc_varp->overrun_buf);
-> +	} else {
-> +		advansys_wide_free_mem(boardp);
-> +	}
-> + err_free_irq:
->  	free_irq(boardp->irq, shost);
->   err_free_dma:
->  #ifdef CONFIG_ISA
+async_schedule(sd_probe_async, sdkp);
 
+to a direct call to sd_probe_async:
 
+sd_probe_async(sdkp, (async_cookie_t) 0);
 
+then all disks are detected properly, as shown in the following log
+messages:
 
+============================================
+
+kernel: Fusion MPT SPI Host driver 3.04.13
+kernel: mptspi 0000:03:07.0: PCI INT A -> GSI 66 (level, low) -> IRQ 66
+kernel: mptbase: ioc0: Initiating bringup
+kernel: e1000: 0000:04:03.0: e1000_probe: (PCI:33MHz:32-bit) 00:14:22:b0:6d:4e
+kernel: e1000: eth1: e1000_probe: Intel(R) PRO/1000 Network Connection
+kernel: ioc0: LSI53C1030 C0: Capabilities={Initiator}
+kernel: scsi4 : ioc0: LSI53C1030 C0, FwRev=01032920h, Ports=1, MaxQ=222, IRQ=66
+kernel: scsi 4:0:0:0: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: scsi target4:0:0: Beginning Domain Validation
+kernel: scsi target4:0:0: Ending Domain Validation
+kernel: scsi target4:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU RTI WRFLOW PCOMP (6.25 ns, offset 127)
+kernel: sd 4:0:0:0: [sdb] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:0: [sdb] Write Protect is off
+kernel: sd 4:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdb: sdb1
+kernel: sd 4:0:0:0: [sdb] Attached SCSI disk
+kernel: sd 4:0:0:0: Attached scsi generic sg2 type 0
+kernel: scsi 4:0:0:1: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:1: [sdc] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:1: [sdc] Write Protect is off
+kernel: sd 4:0:0:1: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdc: sdc1
+kernel: sd 4:0:0:1: [sdc] Attached SCSI disk
+kernel: sd 4:0:0:1: Attached scsi generic sg3 type 0
+kernel: scsi 4:0:0:2: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:2: [sdd] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:2: [sdd] Write Protect is off
+kernel: sd 4:0:0:2: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdd: sdd1
+kernel: sd 4:0:0:2: [sdd] Attached SCSI disk
+kernel: sd 4:0:0:2: Attached scsi generic sg4 type 0
+kernel: scsi 4:0:0:3: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:3: [sde] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:3: [sde] Write Protect is off
+kernel: sd 4:0:0:3: [sde] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sde: sde1
+kernel: sd 4:0:0:3: [sde] Attached SCSI disk
+kernel: sd 4:0:0:3: Attached scsi generic sg5 type 0
+kernel: scsi 4:0:0:4: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:4: [sdf] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:4: [sdf] Write Protect is off
+kernel: sd 4:0:0:4: [sdf] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdf: sdf1
+kernel: sd 4:0:0:4: [sdf] Attached SCSI disk
+kernel: sd 4:0:0:4: Attached scsi generic sg6 type 0
+kernel: scsi 4:0:0:5: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:5: [sdg] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:5: [sdg] Write Protect is off
+kernel: sd 4:0:0:5: [sdg] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdg: sdg1
+kernel: sd 4:0:0:5: [sdg] Attached SCSI disk
+kernel: sd 4:0:0:5: Attached scsi generic sg7 type 0
+kernel: scsi 4:0:0:6: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:6: [sdh] 3686400000 512-byte logical blocks: (1.88 TB/1.71 TiB)
+kernel: sd 4:0:0:6: [sdh] Write Protect is off
+kernel: sd 4:0:0:6: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdh: sdh1
+kernel: sd 4:0:0:6: [sdh] Attached SCSI disk
+kernel: sd 4:0:0:6: Attached scsi generic sg8 type 0
+kernel: scsi 4:0:0:7: Direct-Access     SC U320/ SATA16R          R0.0 PQ: 0 ANSI: 3
+kernel: sd 4:0:0:7: [sdi] 1531461632 512-byte logical blocks: (784 GB/730 GiB)
+kernel: sd 4:0:0:7: [sdi] Write Protect is off
+kernel: sd 4:0:0:7: [sdi] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+kernel: sdi: sdi1
+kernel: sd 4:0:0:7: [sdi] Attached SCSI disk
+kernel: sd 4:0:0:7: Attached scsi generic sg9 type 0
+kernel: mptspi 0000:03:07.1: PCI INT B -> GSI 67 (level, low) -> IRQ 67
+kernel: mptbase: ioc1: Initiating bringup
+kernel: ioc1: LSI53C1030 C0: Capabilities={Initiator}
+kernel: scsi5 : ioc1: LSI53C1030 C0, FwRev=01032920h, Ports=1, MaxQ=222, IRQ=67
+
+============================================
+
+Has anybody else seen this behavior or am I doing something wrong?
