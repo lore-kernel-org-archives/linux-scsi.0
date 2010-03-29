@@ -1,43 +1,59 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH] sd: spurious error messages in READ_CAPACITY(16)
-Date: Mon, 29 Mar 2010 09:29:24 +0200
-Message-ID: <20100329072924.1DB8F337C3@ochil.suse.de>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 8/12] drivers/scsi/lpfc: Unlock the lock that was locked
+Date: Mon, 29 Mar 2010 17:35:42 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1003291735250.21896@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46651 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754402Ab0C2H3Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Mar 2010 03:29:25 -0400
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	by mx2.suse.de (Postfix) with ESMTP id 30C8A86A2E
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Mar 2010 09:29:24 +0200 (CEST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
 
+From: Julia Lawall <julia@diku.dk>
 
-sd always tries to submit a READ_CAPACITY(16) CDB,
-regardless whether the host actually supports it.
-queuecommand() will then return DID_ABORT, which is
-not qualified enough to detect the true cause here.
-So better check in sd_try_rc16 first if the cdblen
-is supported.
+The lock taken was in the ct_ev_lock field, not the hbalock field.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+A simplified version of the semantic patch that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 9c8f4b5..1962bea 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1484,6 +1484,8 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+// <smpl>
+@r exists@
+expression E1;
+identifier f;
+@@
+
+f (...) { <+...
+* spin_lock_irqsave (E1,...);
+... when != E1
+* return ...;
+...+> }
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/scsi/lpfc/lpfc_bsg.c        |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index 692c29f..992efb1 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -432,7 +432,7 @@ lpfc_bsg_rport_els_cmp(struct lpfc_hba *phba,
+ 	dd_data = cmdiocbq->context1;
+ 	/* normal completion and timeout crossed paths, already done */
+ 	if (!dd_data) {
+-		spin_unlock_irqrestore(&phba->hbalock, flags);
++		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+ 		return;
+ 	}
  
- static int sd_try_rc16_first(struct scsi_device *sdp)
- {
-+	if (sdp->host->max_cmd_len < 16)
-+		return 0;
- 	if (sdp->scsi_level > SCSI_SPC_2)
- 		return 1;
- 	if (scsi_device_protection(sdp))
+@@ -1195,7 +1195,7 @@ lpfc_issue_ct_rsp_cmp(struct lpfc_hba *phba,
+ 	dd_data = cmdiocbq->context1;
+ 	/* normal completion and timeout crossed paths, already done */
+ 	if (!dd_data) {
+-		spin_unlock_irqrestore(&phba->hbalock, flags);
++		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+ 		return;
+ 	}
+ 
