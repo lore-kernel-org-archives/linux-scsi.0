@@ -1,55 +1,83 @@
-From: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Mon, 29 Mar 2010 14:28:53 -0700
-Message-ID: <20100329212853.GA6996@xanatos>
-References: <4BA9D74F.9040507@gmail.com>
- <4BA7797F.8060605@gmail.com>
- <20100324155917.GA4382@xanatos>
- <59ca64281003241107x40c5d83co29d1ee03d8d3a0d1@mail.gmail.com>
- <20100326184021.GA4350@xanatos>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH v2] advansys: fix regression with request_firmware
+ change
+Date: Mon, 29 Mar 2010 19:16:05 -0400
+Message-ID: <1269904565.22206.3.camel@mulgrave.site>
+References: <201003262005.09121.herton@mandriva.com.br>
+	 <201003291736.31066.herton@mandriva.com.br>
+	 <201003291749.08246.herton@mandriva.com.br>
+	 <201003291822.49062.herton@mandriva.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20100326184021.GA4350@xanatos>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:53463 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751014Ab0C2XQN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Mar 2010 19:16:13 -0400
+In-Reply-To: <201003291822.49062.herton@mandriva.com.br>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-On Fri, Mar 26, 2010 at 11:40:21AM -0700, Sarah Sharp wrote:
-> On Wed, Mar 24, 2010 at 07:07:58PM +0100, Jonas Schwertfeger wrote:
-> > On Wed, Mar 24, 2010 at 4:59 PM, Sarah Sharp
-> > <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
-> > > Despite the fact that this device probably won't work for 2.6.31 =
-or
-> > > 2.6.32, the xHCI driver shouldn't be hanging the system. =A0The r=
-eset
-> > > device API probably shouldn't be back ported to those kernels, bu=
-t I can
-> > > allow the USB core to disable the device's port instead.
+On Mon, 2010-03-29 at 18:22 -0300, Herton Ronaldo Krzesinski wrote:
+> Em Seg 29 Mar 2010, =C3=A0s 17:49:08, Herton Ronaldo Krzesinski escre=
+veu:
+> > Em Seg 29 Mar 2010, =C3=A0s 17:36:30, Herton Ronaldo Krzesinski esc=
+reveu:
+> > > Em Dom 28 Mar 2010, =C3=A0s 12:25:20, James Bottomley escreveu:
+> > > > On Fri, 2010-03-26 at 20:05 -0300, Herton Ronaldo Krzesinski wr=
+ote:
 > >=20
-> > In 2.6.31 the drive would show up as /dev/sdb and be mountable. The
-> > system froze when I mounted it and then tried to partition it. In
-> > 2.6.32 however the drive does not even show up in /dev/. Thus, I
-> > cannot reproduce a system hang here.
+> > <snip>
+> >=20
+> > > > This is both nasty and not really a fix:  the overrun buf is st=
+ill
+> > > > mapped many times on the reset path and only ever unmapped once=
+, which
+> > > > is still an unfixed bug in this code.  I think the map needs to=
+ be moved
+> > > > out of AscInitMicroCodeVar() to somewhere in here.
+> > >=20
+> > > I didn't want to do this since I think there will be much changes=
+ and I can't
+> > > test properly as I don't have the hardware (also may be too much =
+for what
+> > > looks like a legacy driver/hardware). But I aggree this if is ugl=
+y and not
+> > > unmapping when needed on reset. What I thought can be better is t=
+his, to fix
+> > > error handling also on AscInitMicroCodeVar then:
+> >=20
+> > Sorry the diff had some typos (didn't test it), but was only for th=
+e idea
 >=20
-> Hmm, ok, I would rather figure out why 2.6.31 is hanging, since 2.6.3=
-2
-> does not.  Can you compile the latest 2.6.31 stable tree and use
-> netconsole to capture the crash with CONFIG_USB_XHCI_HCD_DEBUGGING an=
-d
-> CONFIG_USB_STORAGE_DEBUG turned on?  (I assume you know how to use
-> netconsole, but if you don't, I've posted how I setup netconsole at
-> http://sarah.thesharps.us/2010-03-26-09-41)
+> Damn, and in the diff I also forgot about dma unmap on scsi_add_host =
+error...
+> please consider version below, also compile tested:
+>=20
+> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+> index 9201afe..43289e8 100644
+> --- a/drivers/scsi/advansys.c
+> +++ b/drivers/scsi/advansys.c
+> @@ -460,6 +460,7 @@ typedef struct asc_risc_sg_list_q {
+>  #define ASC_IERR_BIST_PRE_TEST		0x0800	/* BIST pre-test error */
+>  #define ASC_IERR_BIST_RAM_TEST		0x1000	/* BIST RAM test error */
+>  #define ASC_IERR_BAD_CHIPTYPE		0x2000	/* Invalid chip_type setting *=
+/
+> +#define ASC_IERR_DMA_MAP_SINGLE 	0x4000  /* Error with dma_map_singl=
+e */
 
-Ping?  Any luck reproducing the hang on 2.6.31 stable?  I tried with a
-different unpartitioned USB 3.0 hard drive (SIIG 2.5" drive) on
-2.6.31.12, but I didn't find any issues.
+You don't actually need another flag for this.  asc_board is in
+shost_priv and, as such, is zero initialised, so you can rely on
+overrun_dma being NULL unless it's mapped on a narrow board.
 
-Sarah Sharp
+James
+
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
