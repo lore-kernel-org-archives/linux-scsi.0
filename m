@@ -1,17 +1,22 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 8/12] drivers/scsi/lpfc: Unlock the lock that was locked
-Date: Mon, 29 Mar 2010 17:35:42 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1003291735250.21896@ask.diku.dk>
+Subject: [PATCH 9/12] drivers/scsi/qla2xxx: Add missing unlock
+Date: Mon, 29 Mar 2010 17:36:02 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1003291735420.21896@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@emulex.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mgw1.diku.dk ([130.225.96.91]:48591 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753034Ab0C2PgH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Mar 2010 11:36:07 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, "J, ames E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.orgker
 
 From: Julia Lawall <julia@diku.dk>
 
-The lock taken was in the ct_ev_lock field, not the hbalock field.
+This code represents error handling code.  Add an unlock as done in the
+normal exit path from the function.
 
 A simplified version of the semantic patch that finds this problem is as
 follows: (http://coccinelle.lip6.fr/)
@@ -32,28 +37,18 @@ f (...) { <+...
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- drivers/scsi/lpfc/lpfc_bsg.c        |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c     |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index 692c29f..992efb1 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -432,7 +432,7 @@ lpfc_bsg_rport_els_cmp(struct lpfc_hba *phba,
- 	dd_data = cmdiocbq->context1;
- 	/* normal completion and timeout crossed paths, already done */
- 	if (!dd_data) {
--		spin_unlock_irqrestore(&phba->hbalock, flags);
-+		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 		return;
- 	}
- 
-@@ -1195,7 +1195,7 @@ lpfc_issue_ct_rsp_cmp(struct lpfc_hba *phba,
- 	dd_data = cmdiocbq->context1;
- 	/* normal completion and timeout crossed paths, already done */
- 	if (!dd_data) {
--		spin_unlock_irqrestore(&phba->hbalock, flags);
-+		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
- 		return;
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 90d1e06..e8ace7a 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2392,6 +2392,7 @@ done:
+ 		kfree(sp->fcport);
+ 	kfree(sp->ctx);
+ 	mempool_free(sp, ha->srb_mempool);
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 	return 0;
+ }
  
