@@ -1,44 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_debug: add max_queue + no_uld parameters
-Date: Tue, 30 Mar 2010 13:30:41 -0400
-Message-ID: <yq18w99emym.fsf@sermon.lab.mkp.net>
-References: <4BABD5A1.4050003@interlog.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12544] megaraid kernel oops during smartd poll
+Date: Tue, 30 Mar 2010 18:56:01 GMT
+Message-ID: <201003301856.o2UIu1ga023218@demeter.kernel.org>
+References: <bug-12544-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet12.oracle.com ([141.146.126.234]:52864 "EHLO
-	acsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643Ab0C3Rct (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2010 13:32:49 -0400
-In-Reply-To: <4BABD5A1.4050003@interlog.com> (Douglas Gilbert's message of
-	"Thu, 25 Mar 2010 17:29:05 -0400")
+Received: from demeter.kernel.org ([140.211.167.39]:33670 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755219Ab0C3S4F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2010 14:56:05 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2UIu1Cs023219
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2010 18:56:01 GMT
+In-Reply-To: <bug-12544-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: James Bottomley <James.Bottomley@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org
 
->>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=12544
 
-Doug> While testing the midlevel q_at_head and q_at_tail patch for sg
-Doug> and the block SG_IO ioctl I found it useful to reduce the queuing
-Doug> within the scsi_debug driver. The reason is that the midlevel
-Doug> queue only comes into play when the corresponding LLD queue is
-Doug> full.
 
-Doug> It is also useful when testing to be confident that your program
-Doug> is the only thing issuing commands to the (virtual) scsi_debug
-Doug> device. The no_uld=1 parameter will stop a scsi_debug virtual disk
-Doug> appearing as /dev/sd* .
 
-Doug> Changelog:
-Doug>   - add max_queue parameter to reduce the number
-Doug>     of queued commands the driver will accept.  This parameter can
-Doug>     be changed after the driver is loaded.
-Doug>   - add no_uld parameter that restricts scsi_debug's
-Doug>     virtual devices to the sg and bsg drivers
-Doug>   - correct stale url
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+--- Comment #4 from Roland Kletzing <devzero@web.de>  2010-03-30 18:55:57 ---
+i did not yet have a chance to check if this one fixes the problem:
+
+https://bugzillafiles.novell.org/attachment.cgi?id=351428
+
+maybe you want to give it a try....
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
