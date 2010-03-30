@@ -1,140 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15623] doesn't allow SMART-passthrough on Adaptec Series 5
- controller
-Date: Tue, 30 Mar 2010 06:24:10 GMT
-Message-ID: <201003300624.o2U6OAZ8005463@demeter.kernel.org>
-References: <bug-15623-11613@https.bugzilla.kernel.org/>
+From: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Tue, 30 Mar 2010 09:24:04 +0200
+Message-ID: <59ca64281003300024m414d10eam7e0c5c8e0f0b24ab@mail.gmail.com>
+References: <4BA9D74F.9040507@gmail.com> <4BA7797F.8060605@gmail.com>
+	<20100324155917.GA4382@xanatos> <59ca64281003241107x40c5d83co29d1ee03d8d3a0d1@mail.gmail.com>
+	<20100326184021.GA4350@xanatos> <20100329212853.GA6996@xanatos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36578 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755619Ab0C3GYL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2010 02:24:11 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2U6OAjn005464
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2010 06:24:10 GMT
-In-Reply-To: <bug-15623-11613@https.bugzilla.kernel.org/>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:46385 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022Ab0C3HY0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2010 03:24:26 -0400
+In-Reply-To: <20100329212853.GA6996@xanatos>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15623
+On Mon, Mar 29, 2010 at 11:28 PM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+>> Hmm, ok, I would rather figure out why 2.6.31 is hanging, since 2.6.=
+32
+>> does not. =A0Can you compile the latest 2.6.31 stable tree and use
+>> netconsole to capture the crash with CONFIG_USB_XHCI_HCD_DEBUGGING a=
+nd
+>> CONFIG_USB_STORAGE_DEBUG turned on? =A0(I assume you know how to use
+>> netconsole, but if you don't, I've posted how I setup netconsole at
+>> http://sarah.thesharps.us/2010-03-26-09-41)
+>
+> Ping? =A0Any luck reproducing the hang on 2.6.31 stable? =A0I tried w=
+ith a
+> different unpartitioned USB 3.0 hard drive (SIIG 2.5" drive) on
+> 2.6.31.12, but I didn't find any issues.
 
+I just compiled 2.6.31.12 and couldn't reproduce the hang. The
+behavior seems the same as in 2.6.32. I have to note though, that due
+to the update from Ubuntu Karmic (which used a 2.6.31 kernel) to
+Ubuntu Lucid a great deal of my system changed. Specifically,
+userspace programs will differ for sure. Unfortunately I don't have
+another USB 3.0 host system lying around with Karmic installed.
 
-
-
-
---- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-03-30 06:24:01 ---
-Reply-To: Mahesh_Rajashekhara@adaptec.com
-
-Hi All,
-
-We've identified the root cause for this problem.
-
-Root cause:
-This issue is specific to ATA pass-through "CC" bit handling in driver.
-
-The in kernel tree driver(build: 24702), the below mentioned conditions were
-not handled.
-1. When the CC bit is SET by the host in ATA pass thru CDB, driver is supposed
-to return DID_OK.
-2. When the CC bit is RESET by the host, driver should return DID_ERROR.
-
-We're working on this issue high priority and in the process of preparing the
-driver patch to address this problem.
-
-Thanks,
-Mahesh R
-
------Original Message-----
-From: bugzilla-daemon@bugzilla.kernel.org
-[mailto:bugzilla-daemon@bugzilla.kernel.org] 
-Sent: Friday, March 26, 2010 3:12 AM
-To: AACRAID
-Subject: [Bug 15623] doesn't allow SMART-passthrough on Adaptec Series 5
-controller
-
-https://bugzilla.kernel.org/show_bug.cgi?id=15623
-
-
-
-
-
---- Comment #3 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> 
-2010-03-25 21:42:14 ---
-Reply-To: dgilbert@interlog.com
-
-bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=15623
-> 
-> 
-> 
-> 
-> 
-> --- Comment #2 from lkolbe@techfak.uni-bielefeld.de  2010-03-24 18:45:10 ---
->> So in lk 2.6.32 aacraid driver version 24900 was used
->> successfully but with lk 2.6.33 the aacraid driver
->> version reverted to 24702 and didn't work. It might be
->> interesting to find the aacraid changelog between those
->> two versions.
-> 
-> I wonder as well. Vanilla 2.6.32 has aacraid version 2461 (IIRC), vanilla
-> 2.6.33 has 24702, and Adaptec upstream has 24900, which is what they recommend
-> for using for the 'enterprise'. I have no idea about the politics side of this,
-> if there is any. There must be some reason why vanilla doesn't include 24900 by
-> default, though - it was released in 9/2009 IIRC.
-> 
->> Anyway the kernel messages shown by dmesg are just
->> noise and should disappear in lk 2.6.34 .
->> IOW "ATA pass through information available" indicates
->> normal operation of SAT.
-> 
-> Great, less noise ;)
-> 
->> smartctl will provide more debug information if a
->> '-r ioctl,3' option is added.
-> 
-> good to know, output follows:
-> 
-> smartctl version 5.38 [x86_64-unknown-linux-gnu] Copyright (C) 2002-8 Bruce
-> Allen
-> Home page is http://smartmontools.sourceforge.net/
-> 
-> 
-> REPORT-IOCTL: DeviceFD=3 Command=IDENTIFY DEVICE
->  [ata pass-through(16): 85 08 0e 00 00 00 01 00 00 00 00 00 00 00 ec 00 ]
->   scsi_status=0x0, host_status=0x0, driver_status=0x0
->   info=0x0  duration=12 milliseconds  resid=0
->   Incoming data, len=512 [only first 256 bytes shown]:
-
-<snip>
-
-> REPORT-IOCTL: DeviceFD=3 Command=SMART STATUS
->  [ata pass-through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00 ]
->   scsi_status=0x2, host_status=0x7, driver_status=0x8
-
-The aacraid driver could not handle this command.
-host_status=0x7 is DID_ERROR which is an internal
-driver (aacraid) error.
-
-What is being done by smartmontools is defined in
-the SAT standard.
-
->   info=0x1  duration=104 milliseconds  resid=0
-> sat_command_interface: do_scsi_cmnd_io() failed, status=-5
-> REPORT-IOCTL: DeviceFD=3 Command=SMART STATUS returned -1
-> SMART Disabled. Use option -s with argument 'on' to enable it.
-
-Doug Gilbert
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+-Jonas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
