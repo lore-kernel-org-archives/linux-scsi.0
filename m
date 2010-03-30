@@ -1,633 +1,850 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 1/2] Proposal for BSG Interface V2
-Date: Wed, 31 Mar 2010 05:18:49 +0530
-Message-ID: <20100330234839.GA5905@serverengines.com>
+Subject: [PATCH 2/2] The be2iscsi driver support for bsg V2
+Date: Wed, 31 Mar 2010 05:19:26 +0530
+Message-ID: <20100330234910.GA5929@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:10452 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:10510 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757282Ab0C3Xsm (ORCPT
+	by vger.kernel.org with ESMTP id S1757396Ab0C3XtS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2010 19:48:42 -0400
+	Tue, 30 Mar 2010 19:49:18 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-  Resubmitting the bsg patch for inclusion in scsi-misc tree
+  This patch contains the necessary changes to support
+the bsg interface
 
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c |  459 ++++++++++++++++++++++++++++++++++-
- include/scsi/Kbuild                 |    1 +
- include/scsi/scsi_bsg_iscsi.h       |  254 +++++++++++++++++++
- include/scsi/scsi_transport_iscsi.h |   47 ++++
- 4 files changed, 760 insertions(+), 1 deletions(-)
- create mode 100644 include/scsi/scsi_bsg_iscsi.h
+ drivers/scsi/be2iscsi/be_cmds.h  |  137 ++++++++++++++++++++---
+ drivers/scsi/be2iscsi/be_iscsi.c |    3 +-
+ drivers/scsi/be2iscsi/be_main.c  |   95 ++++++++++++++--
+ drivers/scsi/be2iscsi/be_main.h  |    4 +-
+ drivers/scsi/be2iscsi/be_mgmt.c  |  230 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/be2iscsi/be_mgmt.h  |   85 ++++++++++++++
+ 6 files changed, 519 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index ea3892e..2b7218c 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -29,6 +29,8 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_iscsi.h>
- #include <scsi/iscsi_if.h>
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index 49fcc78..d5c14cf 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -18,6 +18,7 @@
+ #ifndef BEISCSI_CMDS_H
+ #define BEISCSI_CMDS_H
+ 
 +#include <scsi/scsi_bsg_iscsi.h>
-+#include <scsi/scsi_cmnd.h>
+ /**
+  * The driver sends configuration and managements command requests to the
+  * firmware in the BE. These requests are communicated to the processor
+@@ -162,6 +163,13 @@ struct be_mcc_mailbox {
+ #define OPCODE_COMMON_ISCSI_CFG_POST_SGL_PAGES		2
+ #define OPCODE_COMMON_ISCSI_CFG_REMOVE_SGL_PAGES        3
+ #define OPCODE_COMMON_ISCSI_NTWK_GET_NIC_CONFIG		7
++#define OPCODE_COMMON_ISCSI_NTWK_SET_VLAN		14
++#define OPCODE_COMMON_ISCSI_NTWK_CONFIGURE_STATELESS_IP_ADDR	17
++#define OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR		21
++#define OPCODE_COMMON_ISCSI_NTWK_GET_DEFAULT_GATEWAY	22
++#define OPCODE_COMMON_ISCSI_NTWK_MODIFY_DEFAULT_GATEWAY 23
++#define OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID		24
++#define OPCODE_COMMON_ISCSI_NTWK_GET_IF_INFO		25
+ #define OPCODE_COMMON_ISCSI_SET_FRAGNUM_BITS_FOR_SGL_CRA 61
+ #define OPCODE_COMMON_ISCSI_DEFQ_CREATE                 64
+ #define OPCODE_COMMON_ISCSI_DEFQ_DESTROY 		65
+@@ -237,6 +245,86 @@ struct be_cmd_resp_eq_create {
+ 	u16 rsvd0;		/* sword */
+ } __packed;
  
- #define ISCSI_SESSION_ATTRS 22
- #define ISCSI_CONN_ATTRS 13
-@@ -268,6 +270,447 @@ struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle)
- }
- EXPORT_SYMBOL_GPL(iscsi_lookup_endpoint);
++struct mgmt_chap_format {
++	u32 flags;
++	u8  intr_chap_name[256];
++	u8  intr_secret[16];
++	u8  target_chap_name[256];
++	u8  target_secret[16];
++	u16 intr_chap_name_length;
++	u16 intr_secret_length;
++	u16 target_chap_name_length;
++	u16 target_secret_length;
++} __packed;
++
++struct mgmt_auth_method_format {
++	u8	auth_method_type;
++	u8	padding[3];
++	struct	mgmt_chap_format chap;
++} __packed;
++
++struct mgmt_conn_login_options {
++	u8 flags;
++	u8 header_digest;
++	u8 data_digest;
++	u8 rsvd0;
++	u32 max_recv_datasegment_len_ini;
++	u32 max_recv_datasegment_len_tgt;
++	u32 tcp_mss;
++	u32 tcp_window_size;
++	struct	mgmt_auth_method_format auth_data;
++} __packed;
++
++struct	mgmt_conn_info {
++	u32	connection_handle;
++	u32	connection_status;
++	u16	src_port;
++	u16	dest_port;
++	u16	dest_port_redirected;
++	u16	cid;
++	u32	estimated_throughput;
++	struct	ip_address_format	src_ipaddr;
++	struct	ip_address_format	dest_ipaddr;
++	struct	ip_address_format	dest_ipaddr_redirected;
++	struct	mgmt_conn_login_options	negotiated_login_options;
++} __packed;
++
++struct mgmt_session_login_options {
++	u8	flags;
++	u8	error_recovery_level;
++	u16	rsvd0;
++	u32	first_burst_length;
++	u32	max_burst_length;
++	u16	max_connections;
++	u16	max_outstanding_r2t;
++	u16	default_time2wait;
++	u16	default_time2retain;
++} __packed;
++
++struct mgmt_session_info {
++	u32	session_handle;
++	u32	status;
++	u8	isid[6];
++	u16	tsih;
++	u32	session_flags;
++	u16	conn_count;
++	u16	pad;
++	u8	target_name[224];
++	u8	initiator_iscsiname[224];
++	struct	mgmt_session_login_options	negotiated_login_options;
++	struct	mgmt_conn_info	conn_list[1];
++} __packed;
++
++struct  be_cmd_req_geta_session {
++	struct be_cmd_resp_hdr resp_hdr;
++	u32 session_handle;
++} __packed;
++
++struct  be_cmd_resp_geta_session {
++	struct be_cmd_resp_hdr resp_hdr;
++	struct mgmt_session_info session_info;
++} __packed;
++
+ struct mac_addr {
+ 	u16 size_of_struct;
+ 	u8 addr[ETH_ALEN];
+@@ -254,6 +342,16 @@ struct be_cmd_resp_mac_query {
+ 	struct mac_addr mac;
+ };
  
++struct be_cmd_req_get_boot_target {
++	struct be_cmd_req_hdr hdr;
++} __packed;
 +
-+/*
-+ * BSG support
-+ */
-+
-+/**
-+ * iscsi_destroy_bsgjob - routine to teardown/delete a iscsi bsg job
-+ * @job:	iscsi_bsg_job that is to be torn down
-+ */
-+static void
-+iscsi_destroy_bsgjob(struct iscsi_bsg_job *job)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&job->job_lock, flags);
-+	if (job->ref_cnt) {
-+		spin_unlock_irqrestore(&job->job_lock, flags);
-+		return;
-+	}
-+	spin_unlock_irqrestore(&job->job_lock, flags);
-+
-+	put_device(job->dev);	/* release reference for the request */
-+
-+	kfree(job->request_payload.sg_list);
-+	kfree(job->reply_payload.sg_list);
-+	kfree(job);
-+}
-+
-+/**
-+ * iscsi_bsg_jobdone - completion routine for bsg requests that the LLD has
-+ *                  completed
-+ * @job:	iscsi_bsg_job that is complete
-+ */
-+static void
-+iscsi_bsg_jobdone(struct iscsi_bsg_job *job)
-+{
-+	struct request *req = job->req;
-+	struct request *rsp = req->next_rq;
-+	int err;
-+
-+	err = job->req->errors = job->reply->result;
-+
-+	if (err < 0)
-+		/* we're only returning the result field in the reply */
-+		job->req->sense_len = sizeof(uint32_t);
-+	else
-+		job->req->sense_len = job->reply_len;
-+
-+	/* we assume all request payload was transferred, residual == 0 */
-+	req->resid_len = 0;
-+
-+	if (rsp) {
-+		WARN_ON(job->reply->reply_payload_rcv_len > rsp->resid_len);
-+
-+		/* set reply (bidi) residual */
-+		rsp->resid_len -= min(job->reply->reply_payload_rcv_len,
-+				      rsp->resid_len);
-+	}
-+	blk_complete_request(req);
-+}
-+
-+/**
-+ * iscsi_bsg_softirq_done - softirq done routine for destroying the bsg requests
-+ * @rq:        BSG request that holds the job to be destroyed
-+ */
-+static void
-+iscsi_bsg_softirq_done(struct request *rq)
-+{
-+	struct iscsi_bsg_job *job = rq->special;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&job->job_lock, flags);
-+	job->state_flags |= ISCSI_RQST_STATE_DONE;
-+	job->ref_cnt--;
-+	spin_unlock_irqrestore(&job->job_lock, flags);
-+
-+	blk_end_request_all(rq, rq->errors);
-+	iscsi_destroy_bsgjob(job);
-+}
-+
-+/**
-+ * iscsi_bsg_job_timeout - handler for when a bsg request timesout
-+ * @req:	request that timed out
-+ */
-+static enum blk_eh_timer_return
-+iscsi_bsg_job_timeout(struct request *req)
-+{
-+	struct iscsi_bsg_job *job = (void *) req->special;
-+	struct Scsi_Host *shost = job->shost;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	unsigned long flags;
-+	int err = 0, done = 0;
-+
-+	spin_lock_irqsave(&job->job_lock, flags);
-+	if (job->state_flags & ISCSI_RQST_STATE_DONE)
-+		done = 1;
-+	else
-+		job->ref_cnt++;
-+	spin_unlock_irqrestore(&job->job_lock, flags);
-+
-+	if (!done && i->iscsi_transport->bsg_timeout) {
-+		/* call LLDD to abort the i/o as it has timed out */
-+		err = i->iscsi_transport->bsg_timeout(job);
-+		if (err == -EAGAIN) {
-+			job->ref_cnt--;
-+			return BLK_EH_RESET_TIMER;
-+		} else if (err)
-+			printk(KERN_ERR "ERROR: iSCSI BSG request timeout - "
-+				"LLD abort failed with status %d\n", err);
-+	}
-+
-+	/* the blk_end_sync_io() doesn't check the error */
-+	if (done)
-+		return BLK_EH_NOT_HANDLED;
-+	else
-+		return BLK_EH_HANDLED;
-+}
-+
-+static int
-+iscsi_bsg_map_buffer(struct iscsi_bsg_buffer *buf, struct request *req)
-+{
-+	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
-+
-+	BUG_ON(!req->nr_phys_segments);
-+
-+	buf->sg_list = kzalloc(sz, GFP_KERNEL);
-+	if (!buf->sg_list)
-+		return -ENOMEM;
-+	sg_init_table(buf->sg_list, req->nr_phys_segments);
-+	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
-+	buf->payload_len = blk_rq_bytes(req);
-+	return 0;
-+}
-+
-+/**
-+ * iscsi_req_to_bsgjob - Allocate/create the iscsi_bsg_job structure for the
-+ *                   bsg request
-+ * @req:	BSG request that needs a job structure
-+ * @shost:	SCSI Host corresponding to the bsg object
-+ */
-+static int
-+iscsi_req_to_bsgjob(struct request *req, struct Scsi_Host *shost)
-+{
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	struct request *rsp = req->next_rq;
-+	struct iscsi_bsg_job *job;
-+	int ret;
-+
-+	BUG_ON(req->special);
-+
-+	job = kzalloc(sizeof(struct iscsi_bsg_job) +
-+				 i->iscsi_transport->dd_bsg_size, GFP_KERNEL);
-+	if (!job)
-+		return -ENOMEM;
-+
-+	/*
-+	 * Note: this is a bit silly.
-+	 * The request gets formatted as a SGIO v4 ioctl request, which
-+	 * then gets reformatted as a blk request, which then gets
-+	 * reformatted as a iscsi bsg request. And on completion, we have
-+	 * to wrap return results such that SGIO v4 thinks it was a scsi
-+	 * status.  I hope this was all worth it.
-+	 */
-+
-+	req->special = job;
-+	job->shost = shost;
-+	job->req = req;
-+	if (i->iscsi_transport->dd_bsg_size)
-+		job->dd_data = (void *)&job[1];
-+	spin_lock_init(&job->job_lock);
-+	job->request = (struct iscsi_bsg_request *)req->cmd;
-+	job->request_len = req->cmd_len;
-+	job->reply = req->sense;
-+	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
-+						 * allocated */
-+	if (req->bio) {
-+		ret = iscsi_bsg_map_buffer(&job->request_payload, req);
-+		if (ret)
-+			goto failjob_rls_job;
-+	}
-+	if (rsp && rsp->bio) {
-+		ret = iscsi_bsg_map_buffer(&job->reply_payload, rsp);
-+		if (ret)
-+			goto failjob_rls_rqst_payload;
-+	}
-+	job->job_done = iscsi_bsg_jobdone;
-+	job->dev = &shost->shost_gendev;
-+	get_device(job->dev);		/* take a reference for the request */
-+
-+	job->ref_cnt = 1;
-+
-+	return 0;
-+
-+
-+failjob_rls_rqst_payload:
-+	kfree(job->request_payload.sg_list);
-+failjob_rls_job:
-+	kfree(job);
-+	return -ENOMEM;
-+}
-+
-+
-+enum iscsi_dispatch_result {
-+	DISPATCH_BREAK,		/* on return, q is locked, break from q loop */
-+	DISPATCH_LOCKED,	/* on return, q is locked, continue on */
-+	DISPATCH_UNLOCKED,	/* on return, q is unlocked, continue on */
++struct be_cmd_resp_get_boot_target {
++	struct be_cmd_resp_hdr hdr;
++	u32  boot_session_count;
++	u32  boot_session_handle;
 +};
 +
-+/**
-+ * iscsi_bsg_host_dispatch - process iscsi host bsg requests and
-+ *                           dispatch to LLDD
-+ * @q:		iscsi host request queue
-+ * @shost:	scsi host request queue attached to
-+ * @job:	bsg job to be processed
-+ */
-+static enum iscsi_dispatch_result
-+iscsi_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
-+			 struct iscsi_bsg_job *job)
-+{
-+	unsigned char *pdata;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
-+	int ret, num;
-+	unsigned int tot_len = 0;
-+	struct scatterlist *sge = NULL;
+ /******************** Create CQ ***************************/
+ /**
+  * Pseudo amap definition in which each bit of the actual structure is defined
+@@ -601,14 +699,6 @@ struct be_eq_delay_params_in {
+ 	struct eq_delay delay[8];
+ } __packed;
+ 
+-struct ip_address_format {
+-	u16 size_of_structure;
+-	u8 reserved;
+-	u8 ip_type;
+-	u8 ip_address[16];
+-	u32 rsvd0;
+-} __packed;
+-
+ struct tcp_connect_and_offload_in {
+ 	struct be_cmd_req_hdr hdr;
+ 	struct ip_address_format ip_address;
+@@ -688,18 +778,31 @@ struct be_fw_cfg {
+ 	u32 function_caps;
+ } __packed;
+ 
+-#define CMD_ISCSI_COMMAND_INVALIDATE  1
+-#define ISCSI_OPCODE_SCSI_DATA_OUT      5
++struct be_all_if_id {
++	struct be_cmd_req_hdr hdr;
++	u32 if_count;
++	u32 if_hndl_list[1];
++} __packed;
 +
-+	/* Validate the host command */
-+	job->request_payload.va = NULL;
-+	switch (job->request->msgcode) {
-+	case ISCSI_BSG_HST_NET_CONFIG:
-+		cmdlen += sizeof(struct iscsi_bsg_host_net_config);
-+		/*
-+		 * Validate set ops have a request payload.
-+		 * Get ops are allowed to have none/partial/all reply payloads
-+		 */
-+		if ((job->request->rqst_data.h_netconfig.set_op) &&
-+		    (!job->request_payload.payload_len)) {
-+			ret = -EINVAL;
-+			goto fail_host_msg;
-+		}
-+		tot_len = 0;
-+		for_each_sg(job->request_payload.sg_list, sge,
-+			    job->request_payload.sg_cnt, num) {
-+			tot_len += sge->length;
-+		}
 +
-+		job->request_payload.va =  kmalloc(tot_len, GFP_KERNEL);
-+		if (job->request_payload.va == NULL) {
-+			ret = -EINVAL;
-+			goto fail_host_msg;
-+		}
-+		pdata = job->request_payload.va;
-+		job->request_payload.size = tot_len;
-+		for_each_sg(job->request_payload.sg_list, sge,
-+				 job->request_payload.sg_cnt, num) {
-+			memcpy(pdata, sg_virt(sge), sge->length);
-+			pdata += sge->length;
++#define ISCSI_OPCODE_SCSI_DATA_OUT		5
+ #define OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD 70
+-#define OPCODE_ISCSI_INI_DRIVER_OFFLOAD_SESSION 41
+-#define OPCODE_COMMON_MODIFY_EQ_DELAY	41
+-#define OPCODE_COMMON_ISCSI_CLEANUP	59
+-#define	OPCODE_COMMON_TCP_UPLOAD	56
++#define OPCODE_COMMON_MODIFY_EQ_DELAY		41
++#define OPCODE_COMMON_ISCSI_CLEANUP		59
++#define	OPCODE_COMMON_TCP_UPLOAD		56
+ #define OPCODE_COMMON_ISCSI_ERROR_RECOVERY_INVALIDATE_COMMANDS 1
+-/* --- CMD_ISCSI_INVALIDATE_CONNECTION_TYPE --- */
+-#define CMD_ISCSI_CONNECTION_INVALIDATE 0x8001
+-#define CMD_ISCSI_CONNECTION_ISSUE_TCP_RST 0x8002
++#define OPCODE_ISCSI_INI_CFG_GET_HBA_NAME	6
++#define OPCODE_ISCSI_INI_CFG_SET_HBA_NAME	7
++#define OPCODE_ISCSI_INI_SESSION_GET_A_SESSION  14
++#define OPCODE_ISCSI_INI_DRIVER_OFFLOAD_SESSION 41
+ #define OPCODE_ISCSI_INI_DRIVER_INVALIDATE_CONNECTION 42
++#define OPCODE_ISCSI_INI_BOOT_GET_BOOT_TARGET	52
 +
-+		}
-+		break;
++/* --- CMD_ISCSI_INVALIDATE_CONNECTION_TYPE --- */
++#define CMD_ISCSI_COMMAND_INVALIDATE		1
++#define CMD_ISCSI_CONNECTION_INVALIDATE		0x8001
++#define CMD_ISCSI_CONNECTION_ISSUE_TCP_RST	0x8002
 +
-+	case ISCSI_BSG_HST_VENDOR:
-+		cmdlen += sizeof(struct iscsi_bsg_host_vendor);
-+		if ((shost->hostt->vendor_id == 0L) ||
-+		    (job->request->rqst_data.h_vendor.vendor_id !=
-+			shost->hostt->vendor_id)) {
-+			ret = -ESRCH;
-+			goto fail_host_msg;
-+		}
-+		break;
+ 
+ #define INI_WR_CMD			1	/* Initiator write command */
+ #define INI_TMF_CMD			2	/* Initiator TMF command */
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index c3928cb..eae98de 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -696,8 +696,7 @@ void beiscsi_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
+ 	SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_stop  ep_cid = %d\n",
+ 			     beiscsi_ep->ep_cid);
+ 	tag = mgmt_invalidate_connection(phba, beiscsi_ep,
+-					    beiscsi_ep->ep_cid, 1,
+-					    savecfg_flag);
++					 beiscsi_ep->ep_cid, 0, savecfg_flag);
+ 	if (!tag) {
+ 		SE_DEBUG(DBG_LVL_1,
+ 			 "mgmt_invalidate_connection Failed for cid=%d \n",
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index fcfb29e..72ba61b 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -28,6 +28,7 @@
+ 
+ #include <scsi/libiscsi.h>
+ #include <scsi/scsi_transport_iscsi.h>
++#include <scsi/scsi_bsg_iscsi.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+@@ -73,6 +74,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+ 	cls_session = starget_to_session(scsi_target(sc->device));
+ 	session = cls_session->dd_data;
+ 
 +
-+	default:
-+		ret = -EBADR;
-+		goto fail_host_msg;
-+	}
-+
-+	/* check if we really have all the request data needed */
-+	if (job->request_len < cmdlen) {
-+		ret = -ENOMSG;
-+		goto fail_host_msg;
-+	}
-+
-+	ret = i->iscsi_transport->bsg_request(job);
-+	if (!ret) {
-+		kfree(job->request_payload.va);
-+		return DISPATCH_UNLOCKED;
-+	}
-+
-+fail_host_msg:
-+	kfree(job->request_payload.va);
-+
-+	/* return the errno failure code as the only status */
-+	BUG_ON(job->reply_len < sizeof(uint32_t));
-+	job->reply->reply_payload_rcv_len = 0;
-+	job->reply->result = ret;
-+	job->reply_len = sizeof(uint32_t);
-+	iscsi_bsg_jobdone(job);
-+	return DISPATCH_UNLOCKED;
-+}
-+
-+/**
-+ * iscsi_bsg_request_handler - generic handler for bsg requests
-+ * @q:		request queue to manage
-+ * @shost:	Scsi_Host related to the bsg object
-+ * @dev:	device structure for bsg object
-+ *
-+ * NOTE: only shost messages are expected
-+ */
-+static void
-+iscsi_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
-+			struct device *dev)
-+{
-+	struct request *req;
-+	struct iscsi_bsg_job *job;
-+	enum iscsi_dispatch_result ret;
-+
-+	if (!get_device(dev))
-+		return;
-+
-+	while (!blk_queue_plugged(q)) {
-+
-+		req = blk_fetch_request(q);
-+		if (!req)
-+			break;
-+
-+		spin_unlock_irq(q->queue_lock);
-+
-+		ret = iscsi_req_to_bsgjob(req, shost);
-+		if (ret) {
-+			req->errors = ret;
-+			blk_end_request(req, ret, blk_rq_bytes(req));
-+			spin_lock_irq(q->queue_lock);
-+			continue;
-+		}
-+
-+		job = req->special;
-+
-+		/* check if we have the msgcode value at least */
-+		if (job->request_len < sizeof(uint32_t)) {
-+			BUG_ON(job->reply_len < sizeof(uint32_t));
-+			job->reply->reply_payload_rcv_len = 0;
-+			job->reply->result = -ENOMSG;
-+			job->reply_len = sizeof(uint32_t);
-+			iscsi_bsg_jobdone(job);
-+			spin_lock_irq(q->queue_lock);
-+			continue;
-+		}
-+
-+		/* the dispatch routines will unlock the queue_lock */
-+		ret = iscsi_bsg_host_dispatch(q, shost, job);
-+
-+		/* did dispatcher hit state that can't process any more */
-+		if (ret == DISPATCH_BREAK)
-+			break;
-+
-+		/* did dispatcher had released the lock */
-+		if (ret == DISPATCH_UNLOCKED)
-+			spin_lock_irq(q->queue_lock);
-+	}
-+
-+	spin_unlock_irq(q->queue_lock);
-+	put_device(dev);
-+	spin_lock_irq(q->queue_lock);
-+}
-+
-+/**
-+ * iscsi_bsg_host_handler - handler for bsg requests for a iscsi host
-+ * @q:		iscsi host request queue
-+ */
-+static void
-+iscsi_bsg_host_handler(struct request_queue *q)
-+{
-+	struct Scsi_Host *shost = q->queuedata;
-+
-+	iscsi_bsg_request_handler(q, shost, &shost->shost_gendev);
-+}
-+
-+/**
-+ * iscsi_bsg_hostadd - Create and add the bsg hooks so we can receive requests
-+ * @shost:	shost for iscsi_host
-+ * @cls_host:	iscsi_cls_host adding the structures to
-+ */
-+static int
-+iscsi_bsg_hostadd(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
-+{
-+	struct device *dev = &shost->shost_gendev;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	struct request_queue *q;
-+	int err;
-+	char bsg_name[20];
-+
-+	ihost->rqst_q = NULL;
-+
-+	if (!i->iscsi_transport->bsg_request)
-+		return -ENOTSUPP;
-+
-+	snprintf(bsg_name, sizeof(bsg_name),
-+		 "iscsi_host%d", shost->host_no);
-+
-+	q = __scsi_alloc_queue(shost, iscsi_bsg_host_handler);
-+	if (!q) {
-+		printk(KERN_ERR "iscsi_host%d: bsg interface failed to "
-+				"initialize - no request queue\n",
-+				 shost->host_no);
-+		return -ENOMEM;
-+	}
-+
-+	q->queuedata = shost;
-+	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
-+	blk_queue_softirq_done(q, iscsi_bsg_softirq_done);
-+	blk_queue_rq_timed_out(q, iscsi_bsg_job_timeout);
-+	blk_queue_rq_timeout(q, ISCSI_DEFAULT_BSG_TIMEOUT);
-+
-+	err = bsg_register_queue(q, dev, bsg_name, NULL);
-+	if (err) {
-+		printk(KERN_ERR "iscsi_host%d: bsg interface failed to "
-+				"initialize - register queue\n",
-+				shost->host_no);
-+		blk_cleanup_queue(q);
-+		return err;
-+	}
-+
-+	ihost->rqst_q = q;
-+	return 0;
-+}
-+
-+/**
-+ * iscsi_bsg_remove - Deletes the bsg hooks on iscsi objects
-+ * @q:	the request_queue that is to be torn down.
-+ */
-+static void
-+iscsi_bsg_remove(struct request_queue *q)
-+{
-+	if (q) {
-+		bsg_unregister_queue(q);
-+		blk_cleanup_queue(q);
-+	}
-+}
-+
-+/* End BSG routines */
-+
- static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
- 			    struct device *cdev)
+ 	spin_lock_bh(&session->lock);
+ 	if (!aborted_task || !aborted_task->sc) {
+ 		/* we raced */
+@@ -229,6 +231,7 @@ static struct beiscsi_hba *beiscsi_hba_alloc(struct pci_dev *pcidev)
+ 	phba->shost = shost;
+ 	phba->pcidev = pci_dev_get(pcidev);
+ 	pci_set_drvdata(pcidev, phba);
++	phba->interface_handle = 0xFFFFFFFF;
+ 
+ 	if (iscsi_host_add(shost, &phba->pcidev->dev))
+ 		goto free_devices;
+@@ -1074,7 +1077,6 @@ static void hwi_complete_cmd(struct beiscsi_conn *beiscsi_conn,
+ 			be_complete_logout(beiscsi_conn, task, psol);
+ 		else
+ 			be_complete_tmf(beiscsi_conn, task, psol);
+-
+ 		break;
+ 
+ 	case HWH_TYPE_LOGIN:
+@@ -1763,7 +1765,7 @@ hwi_write_sgl(struct iscsi_wrb *pwrb, struct scatterlist *sg,
+ 	      unsigned int num_sg, struct beiscsi_io_task *io_task)
  {
-@@ -277,13 +720,27 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
- 	memset(ihost, 0, sizeof(*ihost));
- 	atomic_set(&ihost->nr_scans, 0);
- 	mutex_init(&ihost->mutex);
-+
-+	iscsi_bsg_hostadd(shost, ihost);
-+	/* ignore any bsg add error - we just can't do sgio */
-+
-+	return 0;
-+}
-+
-+static int iscsi_remove_host(struct transport_container *tc, struct device *dev,
-+			 struct device *cdev)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(dev);
-+	struct iscsi_cls_host *ihost = shost->shost_data;
-+
-+	iscsi_bsg_remove(ihost->rqst_q);
- 	return 0;
+ 	struct iscsi_sge *psgl;
+-	unsigned short sg_len, index;
++	unsigned int sg_len, index;
+ 	unsigned int sge_len = 0;
+ 	unsigned long long addr;
+ 	struct scatterlist *l_sg;
+@@ -3201,7 +3203,9 @@ static unsigned char hwi_enable_intr(struct beiscsi_hba *phba)
+ 				hwi_ring_eq_db(phba, eq->id, 0, 0, 1, 1);
+ 			}
+ 		}
+-	}
++	} else
++		shost_printk(KERN_WARNING, phba->shost,
++			     "In hwi_enable_intr, Not Enabled \n");
+ 	return true;
  }
  
- static DECLARE_TRANSPORT_CLASS(iscsi_host_class,
- 			       "iscsi_host",
- 			       iscsi_setup_host,
--			       NULL,
-+			       iscsi_remove_host,
- 			       NULL);
+@@ -3427,21 +3431,23 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 		return -ENOMEM;
+ 	io_task->bhs_pa.u.a64.address = paddr;
+ 	io_task->libiscsi_itt = (itt_t)task->itt;
+-	io_task->pwrb_handle = alloc_wrb_handle(phba,
+-						beiscsi_conn->beiscsi_conn_cid -
+-						phba->fw_config.iscsi_cid_start
+-						);
+ 	io_task->conn = beiscsi_conn;
  
- static DECLARE_TRANSPORT_CLASS(iscsi_session_class,
-diff --git a/include/scsi/Kbuild b/include/scsi/Kbuild
-index b3a0ee6..f513500 100644
---- a/include/scsi/Kbuild
-+++ b/include/scsi/Kbuild
-@@ -2,4 +2,5 @@ header-y += scsi.h
- header-y += scsi_netlink.h
- header-y += scsi_netlink_fc.h
- header-y += scsi_bsg_fc.h
-+header-y += scsi_bsg_iscsi.h
- header-y += fc/
-diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
-new file mode 100644
-index 0000000..2c85dd0
---- /dev/null
-+++ b/include/scsi/scsi_bsg_iscsi.h
-@@ -0,0 +1,254 @@
-+/*
-+ *  iSCSI Transport BSG Interface
-+ *
-+ *  Copyright (C) 2009   James Smart, Emulex Corporation
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
+ 	task->hdr = (struct iscsi_hdr *)&io_task->cmd_bhs->iscsi_hdr;
+ 	task->hdr_max = sizeof(struct be_cmd_bhs);
+-
++	io_task->psgl_handle = NULL;
++	io_task->psgl_handle = NULL;
+ 	if (task->sc) {
+ 		spin_lock(&phba->io_sgl_lock);
+ 		io_task->psgl_handle = alloc_io_sgl_handle(phba);
+ 		spin_unlock(&phba->io_sgl_lock);
+ 		if (!io_task->psgl_handle)
+ 			goto free_hndls;
++		io_task->pwrb_handle = alloc_wrb_handle(phba,
++					beiscsi_conn->beiscsi_conn_cid -
++					phba->fw_config.iscsi_cid_start);
++		if (!io_task->pwrb_handle)
++			goto free_io_hndls;
+ 	} else {
+ 		io_task->scsi_cmnd = NULL;
+ 		if ((opcode & ISCSI_OPCODE_MASK) == ISCSI_OP_LOGIN) {
+@@ -3456,9 +3462,19 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 				beiscsi_conn->login_in_progress = 1;
+ 				beiscsi_conn->plogin_sgl_handle =
+ 							io_task->psgl_handle;
++				io_task->pwrb_handle =
++					alloc_wrb_handle(phba,
++					beiscsi_conn->beiscsi_conn_cid -
++					phba->fw_config.iscsi_cid_start);
++				if (!io_task->pwrb_handle)
++					goto free_io_hndls;
++				beiscsi_conn->plogin_wrb_handle =
++							io_task->pwrb_handle;
+ 			} else {
+ 				io_task->psgl_handle =
+ 						beiscsi_conn->plogin_sgl_handle;
++				io_task->pwrb_handle =
++						beiscsi_conn->plogin_wrb_handle;
+ 			}
+ 		} else {
+ 			spin_lock(&phba->mgmt_sgl_lock);
+@@ -3466,6 +3482,12 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 			spin_unlock(&phba->mgmt_sgl_lock);
+ 			if (!io_task->psgl_handle)
+ 				goto free_hndls;
++			io_task->pwrb_handle =
++					alloc_wrb_handle(phba,
++					beiscsi_conn->beiscsi_conn_cid -
++					phba->fw_config.iscsi_cid_start);
++			if (!io_task->pwrb_handle)
++				goto free_mgmt_hndls;
+ 		}
+ 	}
+ 	itt = (itt_t) cpu_to_be32(((unsigned int)io_task->pwrb_handle->
+@@ -3475,13 +3497,22 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 
+ 	io_task->cmd_bhs->iscsi_hdr.itt = itt;
+ 	return 0;
+-
++free_io_hndls:
++	spin_lock(&phba->io_sgl_lock);
++	free_io_sgl_handle(phba, io_task->psgl_handle);
++	spin_unlock(&phba->io_sgl_lock);
++	goto free_hndls;
++free_mgmt_hndls:
++	spin_lock(&phba->mgmt_sgl_lock);
++	free_mgmt_sgl_handle(phba, io_task->psgl_handle);
++	spin_unlock(&phba->mgmt_sgl_lock);
+ free_hndls:
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	pwrb_context = &phwi_ctrlr->wrb_context[
+ 			beiscsi_conn->beiscsi_conn_cid -
+ 			phba->fw_config.iscsi_cid_start];
+-	free_wrb_handle(phba, pwrb_context, io_task->pwrb_handle);
++	if (io_task->pwrb_handle)
++		free_wrb_handle(phba, pwrb_context, io_task->pwrb_handle);
+ 	io_task->pwrb_handle = NULL;
+ 	pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
+ 		      io_task->bhs_pa.u.a64.address);
+@@ -3688,8 +3719,6 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
+ 		SE_DEBUG(DBG_LVL_1, " scsi_dma_map Failed\n")
+ 		return num_sg;
+ 	}
+-	SE_DEBUG(DBG_LVL_4, "xferlen=0x%08x scmd=%p num_sg=%d sernum=%lu\n",
+-		  (scsi_bufflen(sc)), sc, num_sg, sc->serial_number);
+ 	xferlen = scsi_bufflen(sc);
+ 	sg = scsi_sglist(sc);
+ 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
+@@ -3701,6 +3730,46 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
+ 	return beiscsi_iotask(task, sg, num_sg, xferlen, writedir);
+ }
+ 
++/**
++* beiscsi_bsg_request - handle bsg request from ISCSI transport
++ * @job: iscsi_bsg_job to handle
 + */
++static int beiscsi_bsg_request(struct iscsi_bsg_job *job)
++{
++	uint32_t msgcode;
++	int rc = -EINVAL;
++	unsigned int tag;
++	unsigned short status, extd_status;
++	struct beiscsi_hba *phba;
 +
-+#ifndef SCSI_BSG_ISCSI_H
-+#define SCSI_BSG_ISCSI_H
++	msgcode = job->request->msgcode;
++	phba = iscsi_host_priv(job->shost);
++	switch (msgcode) {
++	case ISCSI_BSG_HST_NET_CONFIG:
++		tag = mgmt_netcfg_fw_cmd(&phba->ctrl, phba, job);
++		if (!tag) {
++			SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed \n");
++			return -EAGAIN;
++		} else
++			wait_event_interruptible(phba->ctrl.mcc_wait[tag],
++						 phba->ctrl.mcc_numtag[tag]);
 +
-+/*
-+ * This file intended to be included by both kernel and user space
-+ */
++		extd_status = (phba->ctrl.mcc_numtag[tag] & 0x0000FF00) >> 8;
++		status = phba->ctrl.mcc_numtag[tag] & 0x000000FF;
++		free_mcc_tag(&phba->ctrl, tag);
++		if (status || extd_status) {
++			SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed"
++					    " status = %d extd_status = %d \n",
++					    status, extd_status);
++			return -EIO;
++		}
 +
-+#include <scsi/scsi.h>
++	default:
++		break;
++	}
++	return rc;
++}
 +
-+/*
-+ * iSCSI Transport SGIO v4 BSG Message Support
-+ */
+ static void beiscsi_remove(struct pci_dev *pcidev)
+ {
+ 	struct beiscsi_hba *phba = NULL;
+@@ -3736,6 +3805,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 
+ 	beiscsi_clean_port(phba);
+ 	beiscsi_free_mem(phba);
 +
-+/* Default BSG request timeout (in seconds) */
-+#define ISCSI_DEFAULT_BSG_TIMEOUT	(10 * HZ)
+ 	beiscsi_unmap_pci_function(phba);
+ 	pci_free_consistent(phba->pcidev,
+ 			    phba->ctrl.mbox_mem_alloced.size,
+@@ -3965,6 +4035,7 @@ struct iscsi_transport beiscsi_iscsi_transport = {
+ 	.ep_poll = beiscsi_ep_poll,
+ 	.ep_disconnect = beiscsi_ep_disconnect,
+ 	.session_recovery_timedout = iscsi_session_recovery_timedout,
++	.bsg_request = beiscsi_bsg_request,
+ };
+ 
+ static struct pci_driver beiscsi_pci_driver = {
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 87ec212..c3ac123 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -62,7 +62,7 @@
+ #define BEISCSI_SGLIST_ELEMENTS	30
+ 
+ #define BEISCSI_CMD_PER_LUN	128	/* scsi_host->cmd_per_lun */
+-#define BEISCSI_MAX_SECTORS	256	/* scsi_host->max_sectors */
++#define BEISCSI_MAX_SECTORS	2048	/* scsi_host->max_sectors */
+ 
+ #define BEISCSI_MAX_CMD_LEN	16	/* scsi_host->max_cmd_len */
+ #define BEISCSI_NUM_MAX_LUN	256	/* scsi_host->max_lun */
+@@ -334,6 +334,7 @@ struct beiscsi_hba {
+ 	struct work_struct work_cqs;	/* The work being queued */
+ 	struct be_ctrl_info ctrl;
+ 	unsigned int generation;
++	unsigned int interface_handle;
+ 	struct invalidate_command_table inv_tbl[128];
+ 
+ };
+@@ -353,6 +354,7 @@ struct beiscsi_conn {
+ 	struct beiscsi_endpoint *ep;
+ 	unsigned short login_in_progress;
+ 	struct sgl_handle *plogin_sgl_handle;
++	struct wrb_handle *plogin_wrb_handle;
+ 	struct beiscsi_session *beiscsi_sess;
+ 	struct iscsi_task *task;
+ };
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 72617b6..76ef55f 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -20,6 +20,8 @@
+ 
+ #include "be_mgmt.h"
+ #include "be_iscsi.h"
++#include <scsi/scsi_transport_iscsi.h>
++#include <scsi/scsi_bsg_iscsi.h>
+ 
+ unsigned char mgmt_get_fw_config(struct be_ctrl_info *ctrl,
+ 				struct beiscsi_hba *phba)
+@@ -112,11 +114,210 @@ unsigned char mgmt_check_supported_fw(struct be_ctrl_info *ctrl,
+ 	spin_unlock(&ctrl->mbox_lock);
+ 	if (nonemb_cmd.va)
+ 		pci_free_consistent(ctrl->pdev, nonemb_cmd.size,
+-				    nonemb_cmd.va, nonemb_cmd.dma);
++			    nonemb_cmd.va, nonemb_cmd.dma);
++
++	return status;
++}
++
++unsigned char mgmt_get_all_if_id(struct be_ctrl_info *ctrl,
++				struct beiscsi_hba *phba)
++{
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_all_if_id *req = embedded_payload(wrb);
++	struct be_all_if_id *pbe_allid = req;
++	int status = 0;
++
++	spin_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+ 
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
++			   sizeof(*req));
++	status = be_mbox_notify(ctrl);
++	if (!status) {
++
++		phba->interface_handle = pbe_allid->if_hndl_list[0];
++	} else {
++		shost_printk(KERN_WARNING, phba->shost,
++			     "Failed in mgmt_get_all_if_id\n");
++	}
++	spin_unlock(&ctrl->mbox_lock);
+ 	return status;
+ }
+ 
++int  mgmt_netcfg_fw_cmd(struct be_ctrl_info *ctrl,
++		 struct beiscsi_hba *phba,
++		 struct iscsi_bsg_job *job)
++{
++	struct be_dma_mem nonemb_cmd;
++	unsigned char *pdata;
++	int num, i, status = -EIO;
++	struct scatterlist *sge = NULL;
++	struct be_cmd_resp_hdr *resp;
++	struct be_mcc_wrb *wrb = wrb_from_mccq(phba);
++	struct be_cmd_req_hdr *phdr;
++	struct be_sge *mcc_sge = nonembedded_sgl(wrb);
++	struct iscsi_bsg_common_format *bsgdata;
++	struct be_modify_ip_addr *setip;
++	struct be_modify_default_gateway *setdefgw;
++	struct be_set_vlan *setvlan;
++	struct be_set_get_hba_name *sethbaname;
++	struct be_stateless_ip_addr *dhcp;
++	struct be_get_default_gateway_request *getdefgw;
++	struct be_get_if_info_request *getifinfo;
++	unsigned int tag = 0;
++
++	if (phba->interface_handle == 0xFFFFFFFF) {
++		if (mgmt_get_all_if_id(ctrl, phba)) {
++			shost_printk(KERN_WARNING, phba->shost,
++				"Did not get Interface ID \n");
++			return -EAGAIN;
++		}
++	}
 +
 +
-+/*
-+ * Request Message Codes supported by the iSCSI Transport
-+ */
++	nonemb_cmd.va = pci_alloc_consistent(ctrl->pdev,
++					     job->request_payload.size,
++					     &nonemb_cmd.dma);
++	if (nonemb_cmd.va == NULL) {
++		SE_DEBUG(DBG_LVL_1,
++			 "Failed to allocate memory for mgmt_netcfg_fw_cmd\n");
++		return -EIO;
++	}
 +
-+/* define the class masks for the message codes */
-+#define ISCSI_BSG_CLS_MASK	0xF0000000	/* find object class */
-+#define ISCSI_BSG_HST_MASK	0x80000000	/* iscsi host class */
++	phdr = nonemb_cmd.va;
++	nonemb_cmd.size = job->request_payload.size;
++	memset(nonemb_cmd.va, 0, nonemb_cmd.size);
++	resp = nonemb_cmd.va;
 +
-+	/* iscsi host Message Codes */
-+#define	ISCSI_BSG_HST_NET_CONFIG	(ISCSI_BSG_HST_MASK | 0x00000001)
-+#define ISCSI_BSG_HST_VENDOR		(ISCSI_BSG_HST_MASK | 0x000000FF)
++	bsgdata = (struct iscsi_bsg_common_format *)job->request_payload.va;
++	switch (job->request->rqst_data.h_netconfig.set_op) {
++	case ISCSI_SET_IP_ADDR:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR,
++			sizeof(struct be_modify_ip_addr));
++		setip = nonemb_cmd.va;
++		setip->ip_params.record_entry_count = bsgdata->ip_params.
++						      record_entry_count;
++		for (i = 0; i < setip->ip_params.record_entry_count; i++) {
++			memcpy(&setip->ip_params.ip_record[i],
++				&bsgdata->ip_params.ip_record[i],
++				sizeof(struct iscsi_ip_addr_record));
++		}
++		break;
 +
-+#define ISCSI_SET_IP_ADDR		1
-+#define ISCSI_SET_DEFAULT_GATEWAY	2
-+#define ISCSI_SET_VLAN			3
-+#define ISCSI_SET_HBA_NAME		4
-+#define ISCSI_CONFIGURE_STATELESS_IP	5
-+#define ISCSI_GET_HBA_NAME		6
-+#define ISCSI_GET_IF_INFO		7
-+#define ISCSI_GET_DEFAULT_GATEWAY	8
-+#define ISCSI_GET_MAC_ADDRESS           9
++	case ISCSI_SET_DEFAULT_GATEWAY:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_NTWK_MODIFY_DEFAULT_GATEWAY,
++			sizeof(struct be_modify_default_gateway));
++		setdefgw = nonemb_cmd.va;
++		setdefgw->action =  bsgdata->action;
++		memcpy(&setdefgw->gateway, &bsgdata->gateway,
++			sizeof(struct ip_address_format));
 +
-+/*
-+ * iSCSI Host Messages
-+ */
++		break;
 +
-+struct ip_address_subnet_format {
-+	u16 sizeofstructure;
-+	u8  iptype;
-+	u8  ipv6_prefix_length;
-+	u8  ipaddress[16];
-+	u8  subnetmask[16];
-+	u32 rsvd0;
++	case ISCSI_SET_VLAN:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_NTWK_SET_VLAN,
++			sizeof(struct be_set_vlan));
++		setvlan = nonemb_cmd.va;
++		setvlan->interface_hndl = bsgdata->interface_hndl;
++		setvlan->vlan_priority = bsgdata->vlan_priority;
++
++		break;
++
++	case ISCSI_SET_HBA_NAME:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI_INI,
++			OPCODE_ISCSI_INI_CFG_SET_HBA_NAME,
++			sizeof(struct be_set_get_hba_name));
++		sethbaname = nonemb_cmd.va;
++		sethbaname->flags = bsgdata->flags;
++		memcpy(&sethbaname->iscsiname, &bsgdata->iscsiname, 224);
++		memcpy(&sethbaname->iscsialias, &bsgdata->iscsialias, 32);
++		break;
++
++	case ISCSI_CONFIGURE_STATELESS_IP:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_NTWK_CONFIGURE_STATELESS_IP_ADDR,
++			sizeof(struct be_stateless_ip_addr));
++		dhcp = nonemb_cmd.va;
++		dhcp->interface_hndl = bsgdata->interface_hndl;
++		dhcp->ip_type = bsgdata->ip_type;
++		dhcp->flags = bsgdata->flags;
++		dhcp->retry_count = bsgdata->retry_count;
++		break;
++
++	case ISCSI_GET_HBA_NAME:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI_INI,
++			OPCODE_ISCSI_INI_CFG_GET_HBA_NAME,
++			sizeof(struct be_set_get_hba_name));
++		sethbaname = nonemb_cmd.va;
++		sethbaname->flags = bsgdata->flags;
++		break;
++	case ISCSI_GET_IF_INFO:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_NTWK_GET_IF_INFO,
++			sizeof(struct be_get_if_info_request));
++		getifinfo = nonemb_cmd.va;
++		getifinfo->interface_hndl = phba->interface_handle;
++		getifinfo->ip_type = bsgdata->ip_type;
++		break;
++	case ISCSI_GET_DEFAULT_GATEWAY:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI,
++			OPCODE_COMMON_ISCSI_NTWK_GET_DEFAULT_GATEWAY,
++			sizeof(struct be_get_default_gateway_request));
++		getdefgw = nonemb_cmd.va;
++		getdefgw->ip_type = bsgdata->ip_type;
++		break;
++	case ISCSI_GET_MAC_ADDRESS:
++		be_cmd_hdr_prepare(phdr, CMD_SUBSYSTEM_ISCSI,
++			   OPCODE_COMMON_ISCSI_NTWK_GET_NIC_CONFIG,
++			   sizeof(struct be_cmd_req_get_mac_addr));
++
++	default:
++		pci_free_consistent(ctrl->pdev, nonemb_cmd.size,
++				    nonemb_cmd.va, nonemb_cmd.dma);
++		return -EIO;
++	}
++
++	spin_lock(&ctrl->mbox_lock);
++	tag = alloc_mcc_tag(phba);
++	if (!tag) {
++		spin_unlock(&ctrl->mbox_lock);
++		return tag;
++	}
++
++	memset(wrb, 0, sizeof(*wrb));
++	be_wrb_hdr_prepare(wrb, nonemb_cmd.size, false,
++			   job->request_payload.sg_cnt);
++	mcc_sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd.dma));
++	mcc_sge->pa_lo = cpu_to_le32(nonemb_cmd.dma & 0xFFFFFFFF);
++	mcc_sge->len = cpu_to_le32(nonemb_cmd.size);
++	wrb->tag0 |= tag;
++
++	be_mcc_notify(phba);
++
++	pdata = nonemb_cmd.va;
++	for_each_sg(job->reply_payload.sg_list, sge,
++		    job->reply_payload.sg_cnt, num) {
++		if (sge->length) {
++			memcpy(sg_virt(sge), pdata, sge->length);
++			pdata += sge->length;
++		}
++	}
++
++	pci_free_consistent(ctrl->pdev, nonemb_cmd.size,
++				    nonemb_cmd.va, nonemb_cmd.dma);
++
++	spin_unlock(&ctrl->mbox_lock);
++	job->reply->reply_payload_rcv_len = resp->response_length;
++	job->reply->result = status;
++	job->job_done(job);
++	return tag;
++ }
+ 
+ unsigned char mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute)
+ {
+@@ -169,6 +370,7 @@ unsigned char mgmt_invalidate_icds(struct beiscsi_hba *phba,
+ 		SE_DEBUG(DBG_LVL_1,
+ 			 "Failed to allocate memory for"
+ 			 "mgmt_invalidate_icds \n");
++		spin_unlock(&ctrl->mbox_lock);
+ 		return -1;
+ 	}
+ 	nonemb_cmd.size = sizeof(struct invalidate_commands_params_in);
+@@ -277,6 +479,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	struct sockaddr_in6 *daddr_in6 = (struct sockaddr_in6 *)dst_addr;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+ 	struct be_mcc_wrb *wrb;
++	struct be_dma_mem nonemb_cmd;
+ 	struct tcp_connect_and_offload_in *req;
+ 	unsigned short def_hdr_id;
+ 	unsigned short def_data_id;
+@@ -285,6 +488,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	unsigned int tag = 0;
+ 	unsigned int i;
+ 	unsigned short cid = beiscsi_ep->ep_cid;
++	struct be_sge *sge;
+ 
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	phwi_context = phwi_ctrlr->phwi_ctxt;
+@@ -293,17 +497,34 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 
+ 	ptemplate_address = &template_address;
+ 	ISCSI_GET_PDU_TEMPLATE_ADDRESS(phba, ptemplate_address);
++
+ 	spin_lock(&ctrl->mbox_lock);
+ 	tag = alloc_mcc_tag(phba);
+ 	if (!tag) {
+ 		spin_unlock(&ctrl->mbox_lock);
+ 		return tag;
+ 	}
++
++	nonemb_cmd.va = pci_alloc_consistent(ctrl->pdev,
++				sizeof(struct tcp_connect_and_offload_in),
++				&nonemb_cmd.dma);
++	if (nonemb_cmd.va == NULL) {
++		SE_DEBUG(DBG_LVL_1,
++			 "Failed to allocate memory for mgmt_open_connection"
++			 "\n");
++		return -1;
++	}
++	nonemb_cmd.size = sizeof(struct tcp_connect_and_offload_in);
++
+ 	wrb = wrb_from_mccq(phba);
+-	req = embedded_payload(wrb);
++	memset(wrb, 0, sizeof(*wrb));
++	sge = nonembedded_sgl(wrb);
++
++	req = nonemb_cmd.va;
++	memset(req, 0, sizeof(*req));
+ 	wrb->tag0 |= tag;
+ 
+-	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
++	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD,
+ 			   sizeof(*req));
+@@ -346,6 +567,9 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	req->do_offload = 1;
+ 	req->dataout_template_pa.lo = ptemplate_address->lo;
+ 	req->dataout_template_pa.hi = ptemplate_address->hi;
++	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd.dma));
++	sge->pa_lo = cpu_to_le32(nonemb_cmd.dma & 0xFFFFFFFF);
++	sge->len = cpu_to_le32(nonemb_cmd.size);
+ 	be_mcc_notify(phba);
+ 	spin_unlock(&ctrl->mbox_lock);
+ 	return tag;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 3d316b8..eefee98 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -25,6 +25,7 @@
+ #include <linux/list.h>
+ #include "be_iscsi.h"
+ #include "be_main.h"
++#include <scsi/scsi_bsg_iscsi.h>
+ 
+ /**
+  * Pseudo amap definition in which each bit of the actual structure is defined
+@@ -202,6 +203,84 @@ struct be_mgmt_controller_attributes_resp {
+ 	struct mgmt_controller_attributes params;
+ } __packed;
+ 
++struct be_modify_ip_addr {
++	struct be_cmd_req_hdr hdr;
++	struct iscsi_ip_addr_record_params ip_params;
 +} __packed;
 +
-+struct iscsi_ip_addr_record {
-+	u32  action;
++struct be_modify_default_gateway {
++	struct be_cmd_req_hdr hdr;
++	u32    action;
++	struct ip_address_format gateway;
++} __packed;
++
++struct be_set_vlan {
++	struct be_cmd_req_hdr hdr;
 +	u32  interface_hndl;
-+	struct ip_address_subnet_format ip_address;
-+	u32  status;
++	u32  vlan_priority;
 +} __packed;
 +
-+struct iscsi_ip_addr_record_params {
-+	u32 record_entry_count;
-+	struct iscsi_ip_addr_record ip_record[1];
++struct be_set_get_hba_name {
++	struct be_cmd_req_hdr hdr;
++	u16 flags;
++	u16 rsvd0;
++	u8  iscsiname[224];
++	u8  iscsialias[32];
 +} __packed;
 +
-+struct ip_address_format {
-+	u16	sizeofstructure;
-+	u8	reserved;
-+	u8	ip_type;
-+	u8	ip_address[16];
-+	u32	rsvd0;
++struct be_stateless_ip_addr {
++	struct be_cmd_req_hdr hdr;
++	u32  interface_hndl;
++	u32  ip_type;
++	u32  flags;
++	u32  retry_count;
 +} __packed;
 +
-+struct iscsi_bsg_common_format {
++struct be_get_if_info_request {
++	struct be_cmd_req_hdr hdr;
++	u32 interface_hndl;
++	u32 ip_type;
++} __packed;
++
++struct be_get_if_info_response {
++	struct be_cmd_req_hdr hdr;
++	u32    interface_hndl;
++	u32    vlan_priority;
++	u32    ip_address_count;
++	u32    dhcp_state;
++	struct ip_address_subnet_format ip_address[1];
++} __packed;
++
++struct be_get_default_gateway_request {
++	struct be_cmd_req_hdr hdr;
++	u32    ip_type;
++} __packed;
++
++struct be_get_default_gateway_response {
++	struct be_cmd_req_hdr hdr;
++	struct ip_address_format gateway;
++} __packed;
++
++struct be_bsg_common_format {
 +	u8 opcode;		/* dword 0 */
 +	u8 subsystem;		/* dword 0 */
 +	u8 port_number;		/* dword 0 */
@@ -647,219 +864,20 @@ index 0000000..2c85dd0
 +	struct iscsi_ip_addr_record_params ip_params;
 +} __packed;
 +
-+/* ISCSI_BSG_HST_NET_CONFIG : */
-+
-+/* bsg network parameter ids */
-+enum iscsi_bsg_netparam {
-+	BSG_NETPARAM_UNKNOWN		= 0x00000000,
-+	BSG_NETPARAM_MAC		= BSG_NETPARAM_UNKNOWN + 1,
-+	BSG_NETPARAM_MTU		= BSG_NETPARAM_UNKNOWN + 2,
-+	BSG_NETPARAM_VLAN		= BSG_NETPARAM_UNKNOWN + 3,
-+	BSG_NETPARAM_BOOTPROTO		= BSG_NETPARAM_UNKNOWN + 4,
-+	BSG_NETPARAM_IPV4_ADDR		= BSG_NETPARAM_UNKNOWN + 5,
-+	BSG_NETPARAM_IPV4_MASK		= BSG_NETPARAM_UNKNOWN + 6,
-+	BSG_NETPARAM_IPV4_GW		= BSG_NETPARAM_UNKNOWN + 7,
-+	BSG_NETPARAM_IPV6_ADDR		= BSG_NETPARAM_UNKNOWN + 8,
-+	BSG_NETPARAM_IPV6_MASK		= BSG_NETPARAM_UNKNOWN + 9,
-+	BSG_NETPARAM_IPV6_GW		= BSG_NETPARAM_UNKNOWN + 10,
-+	BSG_NETPARAM_IPV6_AUTO_PARAM	= BSG_NETPARAM_UNKNOWN + 11,
-+};
-+
-+/* network parameter TLV (type, length, value) structure */
-+struct iscsi_bsg_netparam_tlv {
-+	uint32_t	netparam;
-+	uint32_t	length;
-+	uint8_t		value[1];
-+};
-+
-+/* Request:
-+ * This message sets or gets Network configuration parameters on/from the
-+ * iscsi host network interface.
-+ *
-+ * On set operations, the request payload buffer contains a set of
-+ * netparam tlv's with the values to be set.
-+ *
-+ * On get operations, the request payload is unused.
-+ */
-+struct iscsi_bsg_host_net_config {
-+	/*
-+	 * Specifies the operation type:  0x0 = GET;  0x1 = SET
-+	 */
-+	uint8_t		set_op;
-+
-+	/*
-+	 * If SET operation, contains the total number of netparam tlv's
-+	 * in the request payload.
-+	 */
-+	uint8_t		netparam_count;
-+};
-+
-+/* Response:
-+ *
-+ * On set operations, the response structure will specify the number of
-+ * successfully processed netparam TLVs from the request payload.
-+ * The reply payload will contain (as many as can fit) the successfully
-+ * processed TLVs and their new values.
-+ *
-+ * On get operations, the response structure will specify the total
-+ * number of netparam TLVs supported on the iscsi host network interface,
-+ * and the reply payload size that is required to obtain the entire
-+ * TLV list.  The reply payload will contain (as many as can fit) the
-+ * TLV's supported on the iscsi host network interface.
-+ *
-+ * Note: Reply payloads will be truncated to whole TLVs that fit within
-+ * the specified reply payload size.
-+ *
-+ */
-+struct iscsi_bsg_host_net_config_reply {
-+	/*
-+	 * On SET operations: contains the number of successfully
-+	 * processed netparam TLV elements.
-+	 *
-+	 * On GET operations: contains the total number of netparams
-+	 * that are supported on the iscsi host network interface.
-+	 */
-+	uint8_t		netparam_count;
-+
-+	/*
-+	 * On GET operations: specifies the size of the reply payload
-+	 * that is required to obtain the entire list of netparam TLVs.
-+	 */
-+	uint32_t	netparam_payload_len;
-+};
-+
-+
-+/* ISCSI_BSG_HST_VENDOR : */
-+
-+/* Request:
-+ * Note: When specifying vendor_id, be sure to read the Vendor Type and ID
-+ *   formatting requirements specified in scsi_netlink.h
-+ */
-+struct iscsi_bsg_host_vendor {
-+	/*
-+	 * Identifies the vendor that the message is formatted for. This
-+	 * should be the recipient of the message.
-+	 */
-+	uint64_t vendor_id;
-+
-+	/* start of vendor command area */
-+	uint32_t vendor_cmd[0];
-+};
-+
-+/* Response:
-+ */
-+struct iscsi_bsg_host_vendor_reply {
-+	/* start of vendor response area */
-+	uint32_t vendor_rsp[0];
-+};
-+
-+
-+/* request (CDB) structure of the sg_io_v4 */
-+struct iscsi_bsg_request {
-+	uint32_t msgcode;
-+	union {
-+		struct iscsi_bsg_host_net_config	h_netconfig;
-+		struct iscsi_bsg_host_vendor		h_vendor;
-+	} rqst_data;
-+} __attribute__((packed));
-+
-+
-+/* response (request sense data) structure of the sg_io_v4 */
-+struct iscsi_bsg_reply {
-+	/*
-+	 * The completion result. Result exists in two forms:
-+	 *  if negative, it is an -Exxx system errno value. There will
-+	 *    be no further reply information supplied.
-+	 *  else, it's the 4-byte scsi error result, with driver, host,
-+	 *    msg and status fields. The per-msgcode reply structure
-+	 *    will contain valid data.
-+	 */
-+	uint32_t result;
-+
-+	/* If there was reply_payload, how much was recevied ? */
-+	uint32_t reply_payload_rcv_len;
-+
-+	union {
-+		struct iscsi_bsg_host_vendor_reply	vendor_reply;
-+		struct iscsi_bsg_host_net_config_reply	h_netconfig_reply;
-+	} reply_data;
-+};
-+
-+
-+#endif /* SCSI_BSG_ISCSI_H */
-+
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 349c7f3..30a07ee 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -37,6 +37,47 @@ struct iscsi_conn;
- struct iscsi_task;
- struct sockaddr;
+ /* configuration management */
  
-+struct iscsi_bsg_buffer {
-+	unsigned int payload_len;
-+	int sg_cnt;
-+	struct scatterlist *sg_list;
-+	void *va;
-+	unsigned int size;
-+};
-+
-+/* Values for iscsi_bsg_job->state_flags (bitflags) */
-+#define ISCSI_RQST_STATE_INPROGRESS	0
-+#define ISCSI_RQST_STATE_DONE		1
-+
-+struct iscsi_bsg_job {
-+	struct Scsi_Host *shost;
-+	struct device *dev;
-+	struct request *req;
-+	spinlock_t job_lock;
-+	unsigned int state_flags;
-+	unsigned int ref_cnt;
-+	void (*job_done)(struct iscsi_bsg_job *);
-+
-+	struct iscsi_bsg_request *request;
-+	struct iscsi_bsg_reply *reply;
-+	unsigned int request_len;
-+	unsigned int reply_len;
-+	/*
-+	 * On entry : reply_len indicates the buffer size allocated for
-+	 * the reply.
-+	 *
-+	 * Upon completion : the message handler must set reply_len
-+	 *  to indicates the size of the reply to be returned to the
-+	 *  caller.
-+	 */
-+
-+	/* DMA payloads for the request/response */
-+	struct iscsi_bsg_buffer request_payload;
-+	struct iscsi_bsg_buffer reply_payload;
-+
-+	void *dd_data;			/* Used for driver-specific storage */
-+};
-+
- /**
-  * struct iscsi_transport - iSCSI Transport template
-  *
-@@ -134,6 +175,11 @@ struct iscsi_transport {
- 	int (*tgt_dscvr) (struct Scsi_Host *shost, enum iscsi_tgt_dscvr type,
- 			  uint32_t enable, struct sockaddr *dst_addr);
- 	int (*set_path) (struct Scsi_Host *shost, struct iscsi_path *params);
-+
-+	/* bsg support */
-+	int	(*bsg_request)(struct iscsi_bsg_job *);
-+	int	(*bsg_timeout)(struct iscsi_bsg_job *);
-+	u32	dd_bsg_size;	/* allocation length for host-specific data */
- };
+ #define GET_MGMT_CONTROLLER_WS(phba)    (phba->pmgmt_ws)
+@@ -246,4 +325,10 @@ unsigned char mgmt_invalidate_connection(struct beiscsi_hba *phba,
+ 					 unsigned short issue_reset,
+ 					 unsigned short savecfg_flag);
  
- /*
-@@ -212,6 +258,7 @@ struct iscsi_cls_session {
- struct iscsi_cls_host {
- 	atomic_t nr_scans;
- 	struct mutex mutex;
-+	struct request_queue *rqst_q;	/* bsg support */
- };
- 
- extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
++unsigned char mgmt_get_all_if_id(struct be_ctrl_info *ctrl,
++				struct beiscsi_hba *phba);
++
++int  mgmt_netcfg_fw_cmd(struct be_ctrl_info *ctrl,
++		 struct beiscsi_hba *phba,
++		 struct iscsi_bsg_job *job);
+ #endif
 -- 
 1.6.4
 
