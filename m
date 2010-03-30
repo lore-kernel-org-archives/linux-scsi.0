@@ -1,41 +1,31 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] scsi: fix lockdep warning
-Date: Tue, 30 Mar 2010 10:08:06 -0700
-Message-ID: <4BB22FF6.5040003@kernel.org>
-References: <a4423d671003081547v5c955d58t248db945c06d2a7f@mail.gmail.com>	<86802c441003081612r2f44efd6n9664b4b7c98a636a@mail.gmail.com>	<m1d3zel4b4.fsf@fess.ebiederm.org> <4B95F37E.6060309@kernel.org>	<m14okqnczd.fsf@fess.ebiederm.org> <4B99A6F0.4080203@kernel.org>	<4BA47692.7040401@kernel.org> <4bb21338.0d0db80a.1685.ffffb9e1@mx.google.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: spurious error messages in READ_CAPACITY(16)
+Date: Tue, 30 Mar 2010 13:21:05 -0400
+Message-ID: <yq1hbnxenem.fsf@sermon.lab.mkp.net>
+References: <20100329072924.1DB8F337C3@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60588 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755072Ab0C3RJO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2010 13:09:14 -0400
-In-Reply-To: <4bb21338.0d0db80a.1685.ffffb9e1@mx.google.com>
+Received: from acsinet11.oracle.com ([141.146.126.233]:58286 "EHLO
+	acsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754704Ab0C3RVP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2010 13:21:15 -0400
+In-Reply-To: <20100329072924.1DB8F337C3@ochil.suse.de> (Hannes Reinecke's
+	message of "Mon, 29 Mar 2010 09:29:24 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Gamari <bgamari.foss@gmail.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <gregkh@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-Scsi <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On 03/30/2010 08:05 AM, Ben Gamari wrote:
-> On Sat, 20 Mar 2010 00:17:38 -0700, Yinghai Lu <yinghai@kernel.org> wrote:
->>
->> with qlogic and emulex card etc.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>
-> 
-> As several others have pointed out, you appear to be call sysfs_bin_attr_init()
-> against statically allocated attributes. Is there an updated patchset that you've been meaning to send out?
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-not tracking it for while. it seems James had the same version in scsi-next 
+Hannes> sd always tries to submit a READ_CAPACITY(16) CDB, regardless
+Hannes> whether the host actually supports it.  queuecommand() will then
+Hannes> return DID_ABORT, which is not qualified enough to detect the
+Hannes> true cause here.  So better check in sd_try_rc16 first if the
+Hannes> cdblen is supported.
 
-> 
-> Moreover, there are still failures in the ACPI thermal driver (at very least)
-> on master (9623e5a23724d09283c238960946ec6f65733afe).
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-can you send out the trace?
-
-Thanks
-
-Yinghai
+-- 
+Martin K. Petersen	Oracle Linux Engineering
