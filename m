@@ -1,51 +1,96 @@
-From: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Tue, 30 Mar 2010 09:44:51 +0200
-Message-ID: <59ca64281003300044g53ae5170xaf198bf99964fc36@mail.gmail.com>
-References: <Pine.LNX.4.44L0.1003261705340.23253-100000@netrider.rowland.org>
-	<4BAD275A.7050903@interlog.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] mpt2sas: use correct pci_resource_flag for comparison
+ with device pci ,resource
+Date: Tue, 30 Mar 2010 16:18:05 +0530
+Message-ID: <1C9608B8A4CD534FB19C7C7543CBB249020E3946A6@inbmail02.lsi.com>
+References: <4B9ACDCA.6080803@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57180 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904Ab0C3HpO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2010 03:45:14 -0400
-In-Reply-To: <4BAD275A.7050903@interlog.com>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:54128 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755238Ab0C3KsT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Mar 2010 06:48:19 -0400
+In-Reply-To: <4B9ACDCA.6080803@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org
+To: Richard A Lary <rlary@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 26, 2010 at 11:30 PM, Douglas Gilbert <dgilbert@interlog.co=
-m> wrote:
->> Booting into a minimal userspace environment (for example, with
->> init=3D/bin/bash) might prove this.
->>
->> No doubt the reason the drive fails to respond is because it can't h=
-andle
->> these commands and gets fatally confused.
->
-> The ATA commands seem to be:
-> =A0 IDENTIFY DEVICE =A0(via the ATA_12 tunnel)
-> =A0 SET FEATURES =A0 =A0 (via the ATA_16 tunnel)
-> =A0 IDENTIFY DEVICE =A0(via the ATA_16 tunnel)
->
-> The last one fails but that could be caused by
-> the second last one. Doesn't look like smartd.
-> My money would be on udev.
+After reviewing your patch, your patch looks ok to me. Similar changes I will post it for mptfusion also.
 
-Doug was right. I switched into runlevel 1 and connected the drive.
-Same errors as before. Then, I unplugged it, stopped the udev daemon
-and plugged it back in. Voila, I was able to manually mount the drive
-with no issues.
+Please consider this patch as an Acked.
 
-Where do we go from here? Does anyone know how to debug udev?
+-- Kashyap
 
--Jonas
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Richard A Lary
+> Sent: Saturday, March 13, 2010 4:57 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: [PATCH] mpt2sas: use correct pci_resource_flag for comparison
+> with device pci ,resource
+> 
+> From: Richard A Lary <rlary@linux.vnet.ibm.com>
+> 
+> This patch replaces incorrect  base address space flag with correct IO
+> resource
+> flag.  Also, performs check of memory resource to validate resource
+> before
+> using.
+> 
+> Signed-off-by: Richard A Lary <rlary@linux.vnet.ibm.com>
+> 
+> ---
+> 
+> Index: b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> ===================================================================
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -1253,7 +1253,7 @@ mpt2sas_base_map_resources(struct MPT2SA
+>   	}
+> 
+>   	for (i = 0, memap_sz = 0, pio_sz = 0 ; i < DEVICE_COUNT_RESOURCE;
+> i++) {
+> -		if (pci_resource_flags(pdev, i) &
+> PCI_BASE_ADDRESS_SPACE_IO) {
+> +		if (pci_resource_flags(pdev, i) & IORESOURCE_IO) {
+>   			if (pio_sz)
+>   				continue;
+>   			pio_chip = (u64)pci_resource_start(pdev, i);
+> @@ -1261,15 +1261,18 @@ mpt2sas_base_map_resources(struct MPT2SA
+>   		} else {
+>   			if (memap_sz)
+>   				continue;
+> -			ioc->chip_phys = pci_resource_start(pdev, i);
+> -			chip_phys = (u64)ioc->chip_phys;
+> -			memap_sz = pci_resource_len(pdev, i);
+> -			ioc->chip = ioremap(ioc->chip_phys, memap_sz);
+> -			if (ioc->chip == NULL) {
+> -				printk(MPT2SAS_ERR_FMT "unable to map adapter "
+> -				    "memory!\n", ioc->name);
+> -				r = -EINVAL;
+> -				goto out_fail;
+> +			/* verify memory resource is valid before using */
+> +			if (pci_resource_flags(pdev, i) & IORESOURCE_MEM) {
+> +				ioc->chip_phys = pci_resource_start(pdev, i);
+> +				chip_phys = (u64)ioc->chip_phys;
+> +				memap_sz = pci_resource_len(pdev, i);
+> +				ioc->chip = ioremap(ioc->chip_phys, memap_sz);
+> +				if (ioc->chip == NULL) {
+> +					printk(MPT2SAS_ERR_FMT "unable to map "
+> +					    "adapter memory!\n", ioc->name);
+> +					r = -EINVAL;
+> +					goto out_fail;
+> +				}
+>   			}
+>   		}
+>   	}
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
