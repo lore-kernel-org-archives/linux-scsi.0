@@ -1,140 +1,140 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH] mpt2sas : IOs needs to be pause until handles are refreshed for all device after recovery
-Date: Tue, 30 Mar 2010 10:52:44 +0530
-Message-ID: <20100330052219.GB1271@lsi.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15623] doesn't allow SMART-passthrough on Adaptec Series 5
+ controller
+Date: Tue, 30 Mar 2010 06:24:10 GMT
+Message-ID: <201003300624.o2U6OAZ8005463@demeter.kernel.org>
+References: <bug-15623-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:36841 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753990Ab0C3FyZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Mar 2010 01:54:25 -0400
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:36578 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755619Ab0C3GYL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Mar 2010 02:24:11 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2U6OAjn005464
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Mar 2010 06:24:10 GMT
+In-Reply-To: <bug-15623-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-This patch is taken considering base
-mpt2sas version 05.100.00.00.
-Last patch set for 05.100.00.00 was sent on 3/17/2010.
-Subject lined : "[PATCH 11/11] mpt2sas : Bump version 05.100.00.00"
+https://bugzilla.kernel.org/show_bug.cgi?id=15623
 
-After Host Reset firmware will have new list of device handles for the target.
-Device handle refresh in driver is part of Rescan topology logic.
-(See functions like *_search_responding_*). This needs to be done from Host
-Reset context before making shost_recovery to 0. Currently it is done in
-Firwmare event context, which may leads IO to a wrong device.
 
-Now handler refresh is moved to HBA reset context.
-Apart from this, Now driver will stop IOs for all device setting deleted
-flag to 1 at the time of HBA Reset through _scsih_prep_device_scan.
-It will only unblock devices, if devices has been found as part of RESCAN.
-This way it will make more safe IO blocking at the time of HBA reset at
-mpt2sas driver layer.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 8e02218..9826139 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -5505,6 +5505,26 @@ _scsih_task_set_full(struct MPT2SAS_ADAPTER *ioc, struct fw_event_work
- }
- 
- /**
-+ * _scsih_prep_device_scan - initialize parameters prior to device scan
-+ * @ioc: per adapter object
-+ *
-+ * Set the deleted flag prior to device scan.  If the device is found during
-+ * the scan, then we clear the deleted flag.
-+ */
-+static void
-+_scsih_prep_device_scan(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	struct MPT2SAS_DEVICE *sas_device_priv_data;
-+	struct scsi_device *sdev;
-+
-+	shost_for_each_device(sdev, ioc->shost) {
-+		sas_device_priv_data = sdev->hostdata;
-+		if (sas_device_priv_data && sas_device_priv_data->sas_target)
-+			sas_device_priv_data->sas_target->deleted = 1;
-+	}
-+}
-+
-+/**
-  * _scsih_mark_responding_sas_device - mark a sas_devices as responding
-  * @ioc: per adapter object
-  * @sas_address: sas address
-@@ -5531,8 +5551,12 @@ _scsih_mark_responding_sas_device(struct MPT2SAS_ADAPTER *ioc, u64 sas_address,
- 		    sas_device->slot == slot && sas_device->starget) {
- 			sas_device->responding = 1;
- 			starget = sas_device->starget;
--			sas_target_priv_data = starget->hostdata;
--			sas_target_priv_data->tm_busy = 0;
-+			if (starget && starget->hostdata) {
-+				sas_target_priv_data = starget->hostdata;
-+				sas_target_priv_data->tm_busy = 0;
-+				sas_target_priv_data->deleted = 0;
-+			} else
-+				sas_target_priv_data = NULL;
- 			starget_printk(KERN_INFO, sas_device->starget,
- 			    "handle(0x%04x), sas_addr(0x%016llx), enclosure "
- 			    "logical id(0x%016llx), slot(%d)\n", handle,
-@@ -5545,7 +5569,8 @@ _scsih_mark_responding_sas_device(struct MPT2SAS_ADAPTER *ioc, u64 sas_address,
- 			printk(KERN_INFO "\thandle changed from(0x%04x)!!!\n",
- 			    sas_device->handle);
- 			sas_device->handle = handle;
--			sas_target_priv_data->handle = handle;
-+			if (sas_target_priv_data)
-+				sas_target_priv_data->handle = handle;
- 			goto out;
- 		}
- 	}
-@@ -5620,6 +5645,12 @@ _scsih_mark_responding_raid_device(struct MPT2SAS_ADAPTER *ioc, u64 wwid,
- 	spin_lock_irqsave(&ioc->raid_device_lock, flags);
- 	list_for_each_entry(raid_device, &ioc->raid_device_list, list) {
- 		if (raid_device->wwid == wwid && raid_device->starget) {
-+			starget = raid_device->starget;
-+			if (starget && starget->hostdata) {
-+				sas_target_priv_data = starget->hostdata;
-+				sas_target_priv_data->deleted = 0;
-+			} else
-+				sas_target_priv_data = NULL;
- 			raid_device->responding = 1;
- 			starget_printk(KERN_INFO, raid_device->starget,
- 			    "handle(0x%04x), wwid(0x%016llx)\n", handle,
-@@ -5629,9 +5660,8 @@ _scsih_mark_responding_raid_device(struct MPT2SAS_ADAPTER *ioc, u64 wwid,
- 			printk(KERN_INFO "\thandle changed from(0x%04x)!!!\n",
- 			    raid_device->handle);
- 			raid_device->handle = handle;
--			starget = raid_device->starget;
--			sas_target_priv_data = starget->hostdata;
--			sas_target_priv_data->handle = handle;
-+			if (sas_target_priv_data)
-+				sas_target_priv_data->handle = handle;
- 			goto out;
- 		}
- 	}
-@@ -5856,6 +5886,10 @@ mpt2sas_scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase)
- 		dtmprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: "
- 		    "MPT2_IOC_DONE_RESET\n", ioc->name, __func__));
- 		_scsih_sas_host_refresh(ioc);
-+		_scsih_prep_device_scan(ioc);
-+		_scsih_search_responding_sas_devices(ioc);
-+		_scsih_search_responding_raid_devices(ioc);
-+		_scsih_search_responding_expanders(ioc);
- 		break;
- 	}
- }
-@@ -5893,9 +5927,6 @@ _firmware_event_work(struct work_struct *work)
- 		} else
- 			spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock,
- 			    flags);
--		_scsih_search_responding_sas_devices(ioc);
--		_scsih_search_responding_raid_devices(ioc);
--		_scsih_search_responding_expanders(ioc);
- 		_scsih_remove_unresponding_sas_devices(ioc);
- 		return;
- 	}
+
+
+--- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-03-30 06:24:01 ---
+Reply-To: Mahesh_Rajashekhara@adaptec.com
+
+Hi All,
+
+We've identified the root cause for this problem.
+
+Root cause:
+This issue is specific to ATA pass-through "CC" bit handling in driver.
+
+The in kernel tree driver(build: 24702), the below mentioned conditions were
+not handled.
+1. When the CC bit is SET by the host in ATA pass thru CDB, driver is supposed
+to return DID_OK.
+2. When the CC bit is RESET by the host, driver should return DID_ERROR.
+
+We're working on this issue high priority and in the process of preparing the
+driver patch to address this problem.
+
+Thanks,
+Mahesh R
+
+-----Original Message-----
+From: bugzilla-daemon@bugzilla.kernel.org
+[mailto:bugzilla-daemon@bugzilla.kernel.org] 
+Sent: Friday, March 26, 2010 3:12 AM
+To: AACRAID
+Subject: [Bug 15623] doesn't allow SMART-passthrough on Adaptec Series 5
+controller
+
+https://bugzilla.kernel.org/show_bug.cgi?id=15623
+
+
+
+
+
+--- Comment #3 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> 
+2010-03-25 21:42:14 ---
+Reply-To: dgilbert@interlog.com
+
+bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=15623
+> 
+> 
+> 
+> 
+> 
+> --- Comment #2 from lkolbe@techfak.uni-bielefeld.de  2010-03-24 18:45:10 ---
+>> So in lk 2.6.32 aacraid driver version 24900 was used
+>> successfully but with lk 2.6.33 the aacraid driver
+>> version reverted to 24702 and didn't work. It might be
+>> interesting to find the aacraid changelog between those
+>> two versions.
+> 
+> I wonder as well. Vanilla 2.6.32 has aacraid version 2461 (IIRC), vanilla
+> 2.6.33 has 24702, and Adaptec upstream has 24900, which is what they recommend
+> for using for the 'enterprise'. I have no idea about the politics side of this,
+> if there is any. There must be some reason why vanilla doesn't include 24900 by
+> default, though - it was released in 9/2009 IIRC.
+> 
+>> Anyway the kernel messages shown by dmesg are just
+>> noise and should disappear in lk 2.6.34 .
+>> IOW "ATA pass through information available" indicates
+>> normal operation of SAT.
+> 
+> Great, less noise ;)
+> 
+>> smartctl will provide more debug information if a
+>> '-r ioctl,3' option is added.
+> 
+> good to know, output follows:
+> 
+> smartctl version 5.38 [x86_64-unknown-linux-gnu] Copyright (C) 2002-8 Bruce
+> Allen
+> Home page is http://smartmontools.sourceforge.net/
+> 
+> 
+> REPORT-IOCTL: DeviceFD=3 Command=IDENTIFY DEVICE
+>  [ata pass-through(16): 85 08 0e 00 00 00 01 00 00 00 00 00 00 00 ec 00 ]
+>   scsi_status=0x0, host_status=0x0, driver_status=0x0
+>   info=0x0  duration=12 milliseconds  resid=0
+>   Incoming data, len=512 [only first 256 bytes shown]:
+
+<snip>
+
+> REPORT-IOCTL: DeviceFD=3 Command=SMART STATUS
+>  [ata pass-through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00 ]
+>   scsi_status=0x2, host_status=0x7, driver_status=0x8
+
+The aacraid driver could not handle this command.
+host_status=0x7 is DID_ERROR which is an internal
+driver (aacraid) error.
+
+What is being done by smartmontools is defined in
+the SAT standard.
+
+>   info=0x1  duration=104 milliseconds  resid=0
+> sat_command_interface: do_scsi_cmnd_io() failed, status=-5
+> REPORT-IOCTL: DeviceFD=3 Command=SMART STATUS returned -1
+> SMART Disabled. Use option -s with argument 'on' to enable it.
+
+Doug Gilbert
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
