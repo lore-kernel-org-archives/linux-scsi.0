@@ -1,79 +1,33 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [PATCH 9/12] drivers/scsi/qla2xxx: Add missing unlock
-Date: Mon, 29 Mar 2010 18:23:41 -0700 (PDT)
-Message-ID: <alpine.LRH.2.00.1003291819330.28339@mvluser00.mv.qlogic.com>
+From: "rev.psalm" <rev.psalm@gmail.com>
+Subject: Good day,
+Date: Tue, 30 Mar 2010 04:01:00 +0100
+Message-ID: <5dbe04a51003292001v296e6eeen9305eafcca6404e8__19386.1180953265$1269919412$gmane$org@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: andrew.vasquez@qlogic.com, julia@diku.dk, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wy0-f194.google.com ([74.125.82.194]:36697 "EHLO
+	mail-wy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755179Ab0C3DW6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Mar 2010 23:22:58 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 1266109622.11290.10.camel@montroll.chem.mcgill.ca
 
-On Mon, 29 Mar 2010, Julia Lawall wrote:
+Good day,
 
-> From: Julia Lawall <julia@diku.dk>
->
-> This code represents error handling code.  Add an unlock as done in the
-> normal exit path from the function.
->
-> A simplified version of the semantic patch that finds this problem is as
-> follows: (http://coccinelle.lip6.fr/)
->
-> // <smpl>
-> @r exists@
-> expression E1;
-> identifier f;
-> @@
->
-> f (...) { <+...
-> * spin_lock_irqsave (E1,...);
-> ... when != E1
-> * return ...;
-> ...+> }
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <julia@diku.dk>
->
-> ---
-> drivers/scsi/qla2xxx/qla_attr.c     |    1 +
-> 1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-> index 90d1e06..e8ace7a 100644
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -2392,6 +2392,7 @@ done:
-> 		kfree(sp->fcport);
-> 	kfree(sp->ctx);
-> 	mempool_free(sp, ha->srb_mempool);
-> +	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-> 	return 0;
-> }
->
->
-James,
+I am Osmond Amu, a Banker. Please do not be embarrass am seeking your help
+in order to receive the sum of 30.7million as result of surfeit profit made
+decade ago.
 
-Can u please include this patch.
-Here is the pointer for the similar patch submitted previously which I acked.
-http://marc.info/?l=linux-scsi&m=126877099912968&w=2
+If you will be so kind enough to grant me the permission, I will be glad to
+give the details.
 
-With the new BSG patches submitted to scsi-misc at
-http://marc.info/?l=linux-scsi&m=126904344832176&w=2, the BSG related code
-is moved to new files bsg.[ch]. The patch below will fix the lock imbalance issue
-with latest patches submitted to scsi-misc.
+I am ready to offer you 40% of the total amount for your input.
 
-Giri
----
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 387d694..21e5bcd 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -1199,6 +1199,7 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
-   	return 0;
+If you are interested respond to rev.psalm@gmail.com Send your name in full,
+home address and telephone for cordial communication.
 
-   done:
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-   	if (bsg_job->request->msgcode == FC_BSG_HST_CT)
-   		kfree(sp->fcport);
-   	kfree(sp->ctx);
+Better still call my cell phone for easy communication: +2347066703751.
+
+Regards
+Osmond Amu.
