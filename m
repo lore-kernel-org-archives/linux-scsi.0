@@ -1,49 +1,57 @@
-From: David Zeuthen <david-o55+BOBDEFg@public.gmane.org>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 31 Mar 2010 13:17:54 -0400
-Message-ID: <1270055874.16657.28.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.1003311054500.1739-100000@iolanthe.rowland.org>
-	 <1270048801.16657.8.camel@localhost.localdomain>
-	 <4BB37454.8070808@interlog.com>
-	 <1270053444.16657.17.camel@localhost.localdomain>
-	 <20100331165807.GA20547@tango.0pointer.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20100331165807.GA20547-kS5D54t9nk0aINubkmmoJbNAH6kLmebB@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
-Cc: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] iscsi_tcp: fix relogin/shutdown hang
+Date: Wed, 31 Mar 2010 14:41:35 -0500
+Message-ID: <1270064495-4152-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48256 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752066Ab0CaThe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Mar 2010 15:37:34 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-On Wed, 2010-03-31 at 18:58 +0200, Lennart Poettering wrote:
-> > I actually don't think libatasmart has any business making such
-> > decisions on behalf of the user... Lennart, any chance we can stop
-> > libatasmart from doing this? Thanks.
-> 
-> Uh. I think it definitely needs to call this. I am pretty sure most USB
-> HDDs you plug in have SMART disabled by default until libatasmart
-> enables it. So, libatasmart would stop enabling it automatically you'd
-> end up with no SMART at all for these devices.
-> 
-> Also, on my desktop here, when you reset the BIOS settings to the
-> defaults, SMART is off. So, that means that somebody needs to enable
-> SMART from Linux, and who should do that if not libatasmart?
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Depends. If it's safe to enable SMART when available, sure, let's go for
-it. If it's not safe, we can prompt the user that SMART monitoring is
-available yet turned off. Much the same way we currently prompt the user
-when the disk is failing
+This is a bug fix patch for 2.6.34. It was built over
+scsi-rx-fixes.
 
-http://people.freedesktop.org/~david/smart-fail-1.png
+When I made this patch:
+b64e77f70b8c11766e967e3485331a9e6ef01390
+it was to solve a problem where we were already on the waitqueue
+becuase a connection problem/logout caused us to be on there
+when we were cleaning up the session. If we happen to get
+on queue for more normal reasons like their just does not happen
+to be any send space at the same time we are closing the connection
+we hit a race and get stuck in the wait.
 
-It wouldn't be much work to do this.
+We should not check if the waitqueue is active
+because we could race with the network code. If
+the network xmit code is just about to enter the
+prepare to wait when we check for the waitqueue to
+be active then we will miss each other and the
+network code will fall into the wait and we will
+not run wake_up.
 
-    David
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/iscsi_tcp.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 249053a..a36ad73 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -598,7 +598,7 @@ static void iscsi_sw_tcp_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
+ 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+ 	write_unlock_bh(&tcp_sw_conn->sock->sk->sk_callback_lock);
+ 
+-	if (sock->sk->sk_sleep && waitqueue_active(sock->sk->sk_sleep)) {
++	if (sock->sk->sk_sleep) {
+ 		sock->sk->sk_err = EIO;
+ 		wake_up_interruptible(sock->sk->sk_sleep);
+ 	}
+-- 
+1.6.6.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
