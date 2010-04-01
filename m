@@ -1,29 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Pending patches
-Date: Thu, 1 Apr 2010 11:21:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1004011118140.1616-100000@iolanthe.rowland.org>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] wd7000: typo spin_unlock_irq() => spin_lock_irq()
+Date: Thu, 1 Apr 2010 18:55:16 +0300
+Message-ID: <20100401155516.GF5265@bicker>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49822 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754719Ab0DAPVa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 11:21:30 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Miroslav Zagorac <zaga@fly.cc.fer.hr>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Adam Buchbinder <adam.buchbinder@gmail.com>, Jiri Kosina <jkosina@suse.cz>, jgarzik@pobox.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-James:
+This was introduced back in 2005 at the very start of the git era by:
+	df0ae2497ddefd72a87f3a3b34ff32455d7d4ae0
+	[SCSI] allow sleeping in ->eh_host_reset_handler()
 
-Have you had any time to review these three bug-fix patches?
+Signed-off-by: Dan Carpenter <error27@gmail.com>
+---
+Also this driver was written before some of our youngest kernel hackers
+were born.  Neat.  :)
 
-	http://marc.info/?l=linux-scsi&m=126894117503693&w=2
-	http://marc.info/?l=linux-scsi&m=126894127403891&w=2
-	http://marc.info/?l=linux-scsi&m=126894128403918&w=2
-
-Each one is quite short, and it should be easy to verify that they 
-really do what they claim.
-
-Alan Stern
-
+diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
+index 2f6e9d8..bdfe59d 100644
+--- a/drivers/scsi/wd7000.c
++++ b/drivers/scsi/wd7000.c
+@@ -1588,7 +1588,7 @@ static int wd7000_host_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
+ 
+-	spin_unlock_irq(SCpnt->device->host->host_lock);
++	spin_lock_irq(SCpnt->device->host->host_lock);
+ 
+ 	if (wd7000_adapter_reset(host) < 0) {
+ 		spin_unlock_irq(SCpnt->device->host->host_lock);
