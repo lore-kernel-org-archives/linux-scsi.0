@@ -1,57 +1,66 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] iscsi_tcp: fix relogin/shutdown hang
-Date: Wed, 31 Mar 2010 14:41:35 -0500
-Message-ID: <1270064495-4152-1-git-send-email-michaelc@cs.wisc.edu>
+From: "jack wang" <jack_wang@usish.com>
+Subject: RE: ATA / mvsas issue.
+Date: Thu, 1 Apr 2010 08:57:49 +0800
+Message-ID: <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>
+References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=gb2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48256 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752066Ab0CaThe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Mar 2010 15:37:34 -0400
+Received: from sr-smtp.usish.com ([210.5.144.203]:53765 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758066Ab0DAA5x convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Mar 2010 20:57:53 -0400
+In-Reply-To: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: 'Caspar Smit' <c.smit@truebit.nl>, linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Hi all,
 
-This is a bug fix patch for 2.6.34. It was built over
-scsi-rx-fixes.
+Today I installed 16 fresh Western Digital WD5000BEVT (2,5") drives in =
+one
+of our test servers.
 
-When I made this patch:
-b64e77f70b8c11766e967e3485331a9e6ef01390
-it was to solve a problem where we were already on the waitqueue
-becuase a connection problem/logout caused us to be on there
-when we were cleaning up the session. If we happen to get
-on queue for more normal reasons like their just does not happen
-to be any send space at the same time we are closing the connection
-we hit a race and get stuck in the wait.
+I created a software raid5 with a hotspare on these 16 disks.
 
-We should not check if the waitqueue is active
-because we could race with the network code. If
-the network xmit code is just about to enter the
-prepare to wait when we check for the waitqueue to
-be active then we will miss each other and the
-network code will fall into the wait and we will
-not run wake_up.
+I noticed that the detection of the disks during boottime was very very
+slow.
+Creating the md superblocks went very very slow.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/iscsi_tcp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+After that all seemed fine (speed of the raid5 init was normal).
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 249053a..a36ad73 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -598,7 +598,7 @@ static void iscsi_sw_tcp_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
- 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
- 	write_unlock_bh(&tcp_sw_conn->sock->sk->sk_callback_lock);
- 
--	if (sock->sk->sk_sleep && waitqueue_active(sock->sk->sk_sleep)) {
-+	if (sock->sk->sk_sleep) {
- 		sock->sk->sk_err = EIO;
- 		wake_up_interruptible(sock->sk->sk_sleep);
- 	}
--- 
-1.6.6.1
+I noticed many of these messages in the syslog (also attached):
 
+Mar 31 14:34:17 test ata_id[3752]: main: HDIO_GET_IDENTITY failed for
+'/dev/.tmp-8-112'
+Mar 31 14:34:17 test ata_id[3765]: main: HDIO_GET_IDENTITY failed for
+'/dev/.tmp-8-128'
+
+This seems to correspond to the slow detection of the disks.
+
+Is this an ATA problem, or a problem in the mvsas driver?
+
+I use the mvsas driver from 2.6.32 with the latest patch from Srinivas.
+
+Kind regards,
+Caspar Smit
+
+
+[Jack] It's normal behavior of SATA disk, SATA disk need more time than=
+ SAS=20
+disk to spin up to response command.
+
+Best Regards
+
+***********************************************************************=
+*
+Jack  Wang   =CD=F5=BD=F0=C6=D6                 Software Engineer
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
