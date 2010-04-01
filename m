@@ -1,37 +1,37 @@
-From: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH/RFC] UASP enhancement to usb-storage
-Date: Thu, 01 Apr 2010 15:28:52 -0400
-Message-ID: <4BB4F3F4.3060706@interlog.com>
-References: <201004011738.o31HcpDb025872@us01dwamd020.synopsys.com> <20100401175242.GA10642@xanatos>
-Reply-To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] SCSI: improve arcmsr's error handlers on lk2.6.33
+Date: Thu, 1 Apr 2010 13:12:09 -0700
+Message-ID: <20100401131209.7e98e169.akpm@linux-foundation.org>
+References: <5218DF384A2B48489336901AC84E6C09@areca4e4f859d4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20100401175242.GA10642@xanatos>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Hrant Dalalyan <Hrant.Dalalyan-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, USB mailing list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB storage mailing list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, Paul Zimmerman <Paul.Zimmerman-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, John Youn <John.Youn-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, Ashot Madatyan <Ashot.Madatyan-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43224 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752316Ab0DAUMP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 16:12:15 -0400
+In-Reply-To: <5218DF384A2B48489336901AC84E6C09@areca4e4f859d4>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nick.cheng@areca.com.tw
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
 
-Sarah Sharp wrote:
-> Forwarding to the linux-scsi list too.
+On Wed, 10 Mar 2010 12:39:21 +0800
+"Nick Cheng" <nick.cheng@areca.com.tw> wrote:
 
-Why "UASP"? The t10.org document defining it is
-called "UAS" (USB Attached SCSI).
+> This is to principally improve arcmsr's error handlers, eh_bus_reset_handler
+> and eh_abort_handler.
 
-It is a USB transport protocol but not a SCSI
-transport protocol in the sense that it hasn't
-been given a SCSI protocol identifier.
+The patch is horridly wordwrapped.  Please fix your email client and resend.
 
-Not that t10.org naming is very consistent for
-transports: some have a trailing P (e.g. FCP
-and SRP), some prefer I for interface (e.g.
-SPI and ADI) and some have neither (e.g. SAS
-and SRPC).
+Also, that's a large amount of code and a very small description.  It
+would help if you were to explain each of the changes, and the
+reasoning behind them.
 
-Doug Gilbert
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ideally this patch would have been presented as a series of patches,
+one-concept-per-patch.  A single rolled-up patch is OK I guess, but
+providing us with sufficient information to understand all the changes
+makes things a lot easier.
+
+Thanks.
