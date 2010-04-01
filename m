@@ -1,94 +1,107 @@
-From: Stefan *St0fF* Huebner <st0ff@gmx.net>
-Subject: Re: ATA / mvsas issue.
-Date: Thu, 01 Apr 2010 23:05:22 +0200
-Message-ID: <4BB50A92.3030205@gmx.net>
-References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>    <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>    <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>    <CDBC7B5488B245E689B39330542DC434@usish.com.cn> <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>
-Reply-To: st0ff@npl.de
+From: Richard Scobie <richard@sauce.co.nz>
+Subject: Re: LSI SAS HBA hard resets
+Date: Fri, 02 Apr 2010 11:36:03 +1300
+Message-ID: <4BB51FD3.2030801@sauce.co.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wega.rz.tu-ilmenau.de ([141.24.4.159]:35069 "EHLO
-	wega.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233Ab0DAV3H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 17:29:07 -0400
-In-Reply-To: <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>
+Received: from smtp.sauce.co.nz ([210.48.49.72]:50534 "EHLO smtp.sauce.co.nz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754302Ab0DAWmq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Apr 2010 18:42:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: jack wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Am 01.04.2010 09:55, schrieb Caspar Smit:
->>
->>     
->>> Hi all,
->>>
->>> Today I installed 16 fresh Western Digital WD5000BEVT (2,5") drives in
->>> one
->>> of our test servers.
->>>
->>> I created a software raid5 with a hotspare on these 16 disks.
->>>
->>> I noticed that the detection of the disks during boottime was very very
->>> slow.
->>> Creating the md superblocks went very very slow.
->>>
->>> After that all seemed fine (speed of the raid5 init was normal).
->>>
->>> I noticed many of these messages in the syslog (also attached):
->>>
->>> Mar 31 14:34:17 test ata_id[3752]: main: HDIO_GET_IDENTITY failed for
->>> '/dev/.tmp-8-112'
->>> Mar 31 14:34:17 test ata_id[3765]: main: HDIO_GET_IDENTITY failed for
->>> '/dev/.tmp-8-128'
->>>
->>> This seems to correspond to the slow detection of the disks.
->>>
->>> Is this an ATA problem, or a problem in the mvsas driver?
->>>
->>> I use the mvsas driver from 2.6.32 with the latest patch from Srinivas.
->>>
->>> Kind regards,
->>> Caspar Smit
->>>
->>>
->>> [Jack] It's normal behavior of SATA disk, SATA disk need more time than
->>> SAS
->>> disk to spin up to response command.
->>>       
->> I use loads of other SATA disks which don't have this behavior.
->>
->> Caspar
->>
->>
->> [Jack] In my test, some big SATA disks(ie 500G above)have this issues.
->> Best Regards
->>     
-@Jack: sorry, but that doesn't cause unresponsiveness.  Some 2TB
-SATA-Disks need >10s to spin up, but there shouldn't be any notes/logs
-like those.  As a matter of fact: these 2,5" drives should spin up in a
-matter of 2s.
-> Seagate 500G SATA disks are working fine.
->   
-Hitachi also.  And I've seen WD5000BEVT work great, too.  8 of a kind in
-a QNAP SS-839 (Atom based NAS with a pretty recent linux on it) work fine!
+I have just seen the same thing an hour into an md array check (echo 
+check > /sys/block/md8/md/sync_action) on a Supermicro X8DT3-LN4F, with 
+an LSISAS3442E attached to a Vitesse expander with 16 x WD1002FBYS-0 in 
+an md RAID6.
 
-Stefan
-> Caspar
->
->   
->> ************************************************************************
->> Jack  Wang
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>     
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+Kernel 2.6.30.8-64.fc11.x86_64
+
+SAS3442E B3 fw=01.29.00.00 BIOS=06.1c.00.00 Driver 3.04.07
+
+truncated dmesg output:
+
+md: data-check of RAID array md8
+md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+md: using maximum available idle IO bandwidth (but not more than 200000 
+KB/sec) for data-check.
+md: using 128k window, over a total of 976591104 blocks.
+mptbase: ioc0: LogInfo(0x31110b00): Originator={PL}, Code={Reset}, 
+SubCode(0x0b00)
+mptbase: ioc0: LogInfo(0x31110b00): Originator={PL}, Code={Reset}, 
+SubCode(0x0b00)
+mptbase: ioc0: LogInfo(0x31110b00): Originator={PL}, Code={Reset}, 
+SubCode(0x0b00)
+...
+...
+...
+mptbase: ioc0: WARNING - IOC is in FAULT state (7810h)!!!
+mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
+mptbase: ioc0: Initiating recovery
+mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+mptbase: ioc0: WARNING -            FAULT code = 7810h
+sd 6:0:3:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 10, 
+sc=ffff8801bb1b2000, mf = ffff880338842b80, idx=7
+sd 6:0:7:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 14, 
+sc=ffff8801bb1b2d00, mf = ffff880338843300, idx=16
+sd 6:0:4:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 11, 
+sc=ffff8802d9afe300, mf = ffff880338843580, idx=1b
+sd 6:0:7:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 14, 
+sc=ffff88009c0b9d00, mf = ffff880338843780, idx=1f
+sd 6:0:9:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 16, 
+sc=ffff880250b67200, mf = ffff880338843a80, idx=25
+sd 6:0:3:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 10, 
+sc=ffff88014a7fb700, mf = ffff880338843d00, idx=2a
+...
+...
+...
+mptbase: ioc0: Recovered from IOC FAULT
+mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
+end_request: I/O error, dev sdl, sector 1953182527
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdl1, disabling device.
+raid5: Operation continuing on 15 devices.
+end_request: I/O error, dev sdq, sector 1953182527
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdq1, disabling device.
+raid5: Operation continuing on 14 devices.
+end_request: I/O error, dev sdi, sector 1953182527
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdi1, disabling device.
+raid5: Operation continuing on 13 devices.
+end_request: I/O error, dev sde, sector 1953182527
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sde1, disabling device.
+raid5: Operation continuing on 12 devices.
+end_request: I/O error, dev sdo, sector 1953182527
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdo1, disabling device.
+raid5: Operation continuing on 11 devices.
+end_request: I/O error, dev sdn, sector 1953182527
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdn1, disabling device.
+raid5: Operation continuing on 10 devices.
+end_request: I/O error, dev sdr, sector 1953182527
+md: super_written gets error=-5, uptodate=0
+raid5: Disk failure on sdr1, disabling device.
+raid5: Operation continuing on 9 devices.
+md: md8: data-check done.
+Device md8, XFS metadata write error block 0x4937f0fe8 in md8
+
+Major disruption as md array members are failed out.
+
+This is the second time in couple of months this has happened - the 
+first was not doing anarray check.
+
+An almost guaranteed way to do a similar thing is to use smartd/smartctl 
+(smartmontools) to access individual devices in the array.
+
+Regards,
+
+Richard
+
 
