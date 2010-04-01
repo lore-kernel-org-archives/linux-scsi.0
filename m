@@ -1,81 +1,54 @@
-From: "Caspar Smit" <c.smit@truebit.nl>
-Subject: RE: ATA / mvsas issue.
-Date: Thu, 1 Apr 2010 09:55:09 +0200 (CEST)
-Message-ID: <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>
-References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>
-    <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>
-    <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>
-    <CDBC7B5488B245E689B39330542DC434@usish.com.cn>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
+Date: Thu, 01 Apr 2010 10:15:46 +0200
+Message-ID: <4BB45632.5020700@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 80-69-81-65.colo.transip.net ([80.69.81.65]:39077 "EHLO
-	ns1.emsolutions.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753833Ab0DAHzT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 03:55:19 -0400
-In-Reply-To: <CDBC7B5488B245E689B39330542DC434@usish.com.cn>
+Received: from cantor2.suse.de ([195.135.220.15]:60174 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753979Ab0DAIPs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Apr 2010 04:15:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org
+To: lsf10-pc@lists.linuxfoundation.org
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->
->
->> Hi all,
->>
->> Today I installed 16 fresh Western Digital WD5000BEVT (2,5") drives in
->> one
->> of our test servers.
->>
->> I created a software raid5 with a hotspare on these 16 disks.
->>
->> I noticed that the detection of the disks during boottime was very very
->> slow.
->> Creating the md superblocks went very very slow.
->>
->> After that all seemed fine (speed of the raid5 init was normal).
->>
->> I noticed many of these messages in the syslog (also attached):
->>
->> Mar 31 14:34:17 test ata_id[3752]: main: HDIO_GET_IDENTITY failed for
->> '/dev/.tmp-8-112'
->> Mar 31 14:34:17 test ata_id[3765]: main: HDIO_GET_IDENTITY failed for
->> '/dev/.tmp-8-128'
->>
->> This seems to correspond to the slow detection of the disks.
->>
->> Is this an ATA problem, or a problem in the mvsas driver?
->>
->> I use the mvsas driver from 2.6.32 with the latest patch from Srinivas.
->>
->> Kind regards,
->> Caspar Smit
->>
->>
->> [Jack] It's normal behavior of SATA disk, SATA disk need more time than
->> SAS
->> disk to spin up to response command.
->
-> I use loads of other SATA disks which don't have this behavior.
->
-> Caspar
->
->
-> [Jack] In my test, some big SATA disks(ie 500G above)have this issues.
-> Best Regards
+Hi all,
 
-Seagate 500G SATA disks are working fine.
+[Topic]
+Handling of invalid requests in virtual HBAs
 
-Caspar
+[Abstract]
+This discussion will focus on the problem of correct request handling w=
+ith virtual HBAs.
+=46or KVM I have implemented a 'megasas' HBA emulation which serves as =
+a backend for the
+megaraid_sas linux driver.
+It is now possible to connect several disks from different (physical) H=
+BAs to that
+HBA emulation, each having different logical capabilities wrt transfers=
+ize,
+sgl size, sgl length etc.
 
->
-> ************************************************************************
-> Jack  Wang
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+The goal of this discussion is how to determine the 'best' capability s=
+etting for the
+virtual HBA and how to handle hotplug scenarios, where a disk might be =
+plugged in
+which has incompatible settings from the one the virtual HBA is using c=
+urrently.
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
