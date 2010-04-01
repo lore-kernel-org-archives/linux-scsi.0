@@ -1,91 +1,70 @@
-From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-Subject: [PATCH 1/2 v4] scsi: add __print_hex() to ftrace
-Date: Thu, 01 Apr 2010 20:40:58 +0900
-Message-ID: <4BB4864A.3060406@jp.fujitsu.com>
-References: <4BB4855E.7030509@jp.fujitsu.com>
+From: Martin Peschke <mpeschke@linux.vnet.ibm.com>
+Subject: Re: [patch 1/2] zfcp: Update MAINTAINERS entry
+Date: Thu, 01 Apr 2010 13:42:43 +0200
+Message-ID: <1270122163.4902.1.camel@kitka>
+References: <20100401110406.973537000@de.ibm.com>
+	 <20100401110549.849117000@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:52846 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754713Ab0DALlp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 07:41:45 -0400
-In-Reply-To: <4BB4855E.7030509@jp.fujitsu.com>
+Received: from mtagate1.uk.ibm.com ([194.196.100.161]:45312 "EHLO
+	mtagate1.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755426Ab0DALmp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 07:42:45 -0400
+Received: from d06nrmr1707.portsmouth.uk.ibm.com (d06nrmr1707.portsmouth.uk.ibm.com [9.149.39.225])
+	by mtagate1.uk.ibm.com (8.13.1/8.13.1) with ESMTP id o31BgixU027644
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Apr 2010 11:42:44 GMT
+Received: from d06av03.portsmouth.uk.ibm.com (d06av03.portsmouth.uk.ibm.com [9.149.37.213])
+	by d06nrmr1707.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o31BgiYk880730
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Apr 2010 12:42:44 +0100
+Received: from d06av03.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av03.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o31Bghnp010139
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Apr 2010 12:42:44 +0100
+In-Reply-To: <20100401110549.849117000@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Ingo Molnar <mingo@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Frederic
-Cc: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-This is the same patch from v1.
+confirmed
 
-__print_hex() prints values in an array in hex (w/o '0x') (space separated)
-EX) 92 33 32 f3 ee 4d
+Cheers,
+Martin
 
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
-Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
-Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-
----
-
- linux-2.6.34-rc3-trace-kei/include/linux/ftrace_event.h |    3 +++
- linux-2.6.34-rc3-trace-kei/include/trace/ftrace.h       |    3 +++
- linux-2.6.34-rc3-trace-kei/kernel/trace/trace_output.c  |   15 +++++++++++++++
- 3 files changed, 21 insertions(+)
-
-diff -puN include/linux/ftrace_event.h~add__print_hex_to_ftrace include/linux/ftrace_event.h
---- linux-2.6.34-rc3-trace/include/linux/ftrace_event.h~add__print_hex_to_ftrace	2010-03-31 10:03:14.000000000 +0900
-+++ linux-2.6.34-rc3-trace-kei/include/linux/ftrace_event.h	2010-03-31 10:03:14.000000000 +0900
-@@ -25,6 +25,9 @@ const char *ftrace_print_flags_seq(struc
- const char *ftrace_print_symbols_seq(struct trace_seq *p, unsigned long val,
- 				     const struct trace_print_flags *symbol_array);
- 
-+const char *ftrace_print_hex_seq(struct trace_seq *p,
-+				 const unsigned char *buf, int len);
-+
- /*
-  * The trace entry - the most basic unit of tracing. This is what
-  * is printed in the end as a single line in the trace output, such as:
-diff -puN include/trace/ftrace.h~add__print_hex_to_ftrace include/trace/ftrace.h
---- linux-2.6.34-rc3-trace/include/trace/ftrace.h~add__print_hex_to_ftrace	2010-03-31 10:03:14.000000000 +0900
-+++ linux-2.6.34-rc3-trace-kei/include/trace/ftrace.h	2010-03-31 10:03:14.000000000 +0900
-@@ -198,6 +198,9 @@
- 		ftrace_print_symbols_seq(p, value, symbols);		\
- 	})
- 
-+#undef __print_hex
-+#define __print_hex(buf, buf_len) ftrace_print_hex_seq(p, buf, buf_len)
-+
- #undef DECLARE_EVENT_CLASS
- #define DECLARE_EVENT_CLASS(call, proto, args, tstruct, assign, print)	\
- static notrace enum print_line_t					\
-diff -puN kernel/trace/trace_output.c~add__print_hex_to_ftrace kernel/trace/trace_output.c
---- linux-2.6.34-rc3-trace/kernel/trace/trace_output.c~add__print_hex_to_ftrace	2010-03-31 10:03:14.000000000 +0900
-+++ linux-2.6.34-rc3-trace-kei/kernel/trace/trace_output.c	2010-04-01 20:38:30.000000000 +0900
-@@ -355,6 +355,21 @@ ftrace_print_symbols_seq(struct trace_se
- }
- EXPORT_SYMBOL(ftrace_print_symbols_seq);
- 
-+const char *
-+ftrace_print_hex_seq(struct trace_seq *p, const unsigned char *buf, int buf_len)
-+{
-+	int i;
-+	const char *ret = p->buffer + p->len;
-+
-+	for (i = 0; i < buf_len; i++)
-+		trace_seq_printf(p, "%s%2.2x", i == 0 ? "" : " ", buf[i]);
-+
-+	trace_seq_putc(p, 0);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(ftrace_print_hex_seq);
-+
- #ifdef CONFIG_KRETPROBES
- static inline const char *kretprobed(const char *name)
- {
-
-_
-
-
+On Thu, 2010-04-01 at 13:04 +0200, Christof Schmitt wrote:
+> plain text document attachment (700-zfcp-update-maintainers.diff)
+> From: Christof Schmitt <christof.schmitt@de.ibm.com>
+> 
+> Martin no longer works on zfcp, remove his entry from the MAINTAINERS
+> file and add Swen as co-maintainer.
+> 
+> Also remove the reference to the zfcpdump.txt file, zfcpdump is not
+> part of the zfcp device driver.
+> 
+> Cc: Martin Peschke <mp3@de.ibm.com>
+> Cc: Swen Schillig <swen@vnet.ibm.com>
+> Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+> ---
+> 
+>  MAINTAINERS |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> --- a/MAINTAINERS	2010-04-01 12:17:08.000000000 +0200
+> +++ b/MAINTAINERS	2010-04-01 12:22:54.000000000 +0200
+> @@ -4776,12 +4776,11 @@ F:	drivers/s390/crypto/
+> 
+>  S390 ZFCP DRIVER
+>  M:	Christof Schmitt <christof.schmitt@de.ibm.com>
+> -M:	Martin Peschke <mp3@de.ibm.com>
+> +M:	Swen Schillig <swen@vnet.ibm.com>
+>  M:	linux390@de.ibm.com
+>  L:	linux-s390@vger.kernel.org
+>  W:	http://www.ibm.com/developerworks/linux/linux390/
+>  S:	Supported
+> -F:	Documentation/s390/zfcpdump.txt
+>  F:	drivers/s390/scsi/zfcp_*
+> 
+>  S390 IUCV NETWORK LAYER
+> 
 
