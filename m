@@ -1,84 +1,91 @@
 From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-Subject: [PATCH 0/2 v4] scsi: ftrace based scsi tracer
-Date: Thu, 01 Apr 2010 20:37:02 +0900
-Message-ID: <4BB4855E.7030509@jp.fujitsu.com>
+Subject: [PATCH 1/2 v4] scsi: add __print_hex() to ftrace
+Date: Thu, 01 Apr 2010 20:40:58 +0900
+Message-ID: <4BB4864A.3060406@jp.fujitsu.com>
+References: <4BB4855E.7030509@jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:46474 "EHLO
-	fgwmail7.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754684Ab0DALhr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 07:37:47 -0400
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:52846 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754713Ab0DALlp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 07:41:45 -0400
+In-Reply-To: <4BB4855E.7030509@jp.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Ingo Molnar <mingo@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Frederic
 Cc: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-Hi,
+This is the same patch from v1.
 
-This is v4 patch series of SCSI trace.  Only a cosmetic change
-from v3.
+__print_hex() prints values in an array in hex (w/o '0x') (space separated)
+EX) 92 33 32 f3 ee 4d
 
-Because it's been a while since the first posting, I'll put brief
-descriptions of the patchset.
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-  Basically, this is a ftrace based SCSI tracer.  It prints the
-  following information for scsi-3 commands.
+---
 
-    o scsi bus number ("host")
-    o scsi channel number ("channel")
-    o scsi id ("id")
-    o LUN ("lun")
-    o command info
-      - op name (ex. "WRITE_10")
-      - LBA ("lba") (for certain commands only)
-      - transfer length ("txlen") (for certain commands only)
-      - CDB (ex. "raw=28 00 03 60 a2 cb 00 00 08 00")
-    o result of the command
-      (ex. "result=(driver=DRIVER_OK host=DID_OK
-message=COMMAND_COMPLETE status=SAM_STAT_GOOD")
+ linux-2.6.34-rc3-trace-kei/include/linux/ftrace_event.h |    3 +++
+ linux-2.6.34-rc3-trace-kei/include/trace/ftrace.h       |    3 +++
+ linux-2.6.34-rc3-trace-kei/kernel/trace/trace_output.c  |   15 +++++++++++++++
+ 3 files changed, 21 insertions(+)
 
-  Those information are printed either at a time:
+diff -puN include/linux/ftrace_event.h~add__print_hex_to_ftrace include/linux/ftrace_event.h
+--- linux-2.6.34-rc3-trace/include/linux/ftrace_event.h~add__print_hex_to_ftrace	2010-03-31 10:03:14.000000000 +0900
++++ linux-2.6.34-rc3-trace-kei/include/linux/ftrace_event.h	2010-03-31 10:03:14.000000000 +0900
+@@ -25,6 +25,9 @@ const char *ftrace_print_flags_seq(struc
+ const char *ftrace_print_symbols_seq(struct trace_seq *p, unsigned long val,
+ 				     const struct trace_print_flags *symbol_array);
+ 
++const char *ftrace_print_hex_seq(struct trace_seq *p,
++				 const unsigned char *buf, int len);
++
+ /*
+  * The trace entry - the most basic unit of tracing. This is what
+  * is printed in the end as a single line in the trace output, such as:
+diff -puN include/trace/ftrace.h~add__print_hex_to_ftrace include/trace/ftrace.h
+--- linux-2.6.34-rc3-trace/include/trace/ftrace.h~add__print_hex_to_ftrace	2010-03-31 10:03:14.000000000 +0900
++++ linux-2.6.34-rc3-trace-kei/include/trace/ftrace.h	2010-03-31 10:03:14.000000000 +0900
+@@ -198,6 +198,9 @@
+ 		ftrace_print_symbols_seq(p, value, symbols);		\
+ 	})
+ 
++#undef __print_hex
++#define __print_hex(buf, buf_len) ftrace_print_hex_seq(p, buf, buf_len)
++
+ #undef DECLARE_EVENT_CLASS
+ #define DECLARE_EVENT_CLASS(call, proto, args, tstruct, assign, print)	\
+ static notrace enum print_line_t					\
+diff -puN kernel/trace/trace_output.c~add__print_hex_to_ftrace kernel/trace/trace_output.c
+--- linux-2.6.34-rc3-trace/kernel/trace/trace_output.c~add__print_hex_to_ftrace	2010-03-31 10:03:14.000000000 +0900
++++ linux-2.6.34-rc3-trace-kei/kernel/trace/trace_output.c	2010-04-01 20:38:30.000000000 +0900
+@@ -355,6 +355,21 @@ ftrace_print_symbols_seq(struct trace_se
+ }
+ EXPORT_SYMBOL(ftrace_print_symbols_seq);
+ 
++const char *
++ftrace_print_hex_seq(struct trace_seq *p, const unsigned char *buf, int buf_len)
++{
++	int i;
++	const char *ret = p->buffer + p->len;
++
++	for (i = 0; i < buf_len; i++)
++		trace_seq_printf(p, "%s%2.2x", i == 0 ? "" : " ", buf[i]);
++
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++EXPORT_SYMBOL(ftrace_print_hex_seq);
++
+ #ifdef CONFIG_KRETPROBES
+ static inline const char *kretprobed(const char *name)
+ {
 
-    o when a command is to be dispatched,
-    o when a command dispatched returns in error,
-    o when a command is done,
-    o when an error handler is to waken up, or
-    o when timeout of a command is deteced.
+_
 
-  To use it quickly, try these steps:
 
-    1) Build a kernel with the patchset applied
-       (ftrace related kernel configs need to be enabled.)
-    2) Boot the kernel
-    3) Mount debugfs
-       ex. mount -t debugfs none /sys/kernel/debug/
-    4) Indicate events to trace
-       ex. echo "scsi:*" > /sys/kernel/debug/tracing/set_event
-    5) Make some I/Os on your scsi devices
-       ex. ls
-    6) Retrieve trace log
-       ex. cat /sys/kernel/debug/tracing/trace
-
-  Here is an outputs example:
-
-    # tracer: nop
-    #
-    #           TASK-PID    CPU#    TIMESTAMP  FUNCTION
-    #              | |       |          |         |
-           flush-8:0-3746  [001]  1374.517152:
-scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0
-cmnd=(WRITE_10 lba=32267539 txlen=8 raw=2a 00 01 ec 5d 13 00 00
-08 00)
-              <idle>-0     [000]  1374.524964:
-scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0
-cmnd=(WRITE_10 lba=32267539 txlen=8 raw=2a 00 01 ec 5d 13 00 00
-08 00) result=(driver=DRIVER_OK host=DID_OK
-message=COMMAND_COMPLETE status=SAM_STAT_GOOD)
-
-This patchset applies to 2.6.34-rc3.
-
-Thanks,
-Kei
 
