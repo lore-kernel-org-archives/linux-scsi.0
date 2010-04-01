@@ -1,54 +1,84 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 2/2] zfcp: Fix tracing of requests with error status
-Date: Thu, 01 Apr 2010 13:04:08 +0200
-Message-ID: <20100401110549.982943000@de.ibm.com>
-References: <20100401110406.973537000@de.ibm.com>
+From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+Subject: [PATCH 0/2 v4] scsi: ftrace based scsi tracer
+Date: Thu, 01 Apr 2010 20:37:02 +0900
+Message-ID: <4BB4855E.7030509@jp.fujitsu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.17.163]:38746 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754849Ab0DALFv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 07:05:51 -0400
-Content-Disposition: inline; filename=703-zfcp-request-tracing.diff
+Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:46474 "EHLO
+	fgwmail7.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754684Ab0DALhr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 07:37:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Ingo Molnar <mingo@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Frederic
+Cc: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>, lkml <linux-kernel@vger.kernel.org>, Li Zefan <lizf@cn.fujitsu.com>, Xiao Guangrong <xiaoguangrong@cn.fujitsu.com>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Hi,
 
-When a FSF request is returned with an error it should be reported
-through blktrace for the ziomon tools, but the latency information
-should not be read. Fix this by also calling zfcp_fsf_req_trace for
-the error case, but skip reading the latencies inside the function.
+This is v4 patch series of SCSI trace.  Only a cosmetic change
+from v3.
 
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
+Because it's been a while since the first posting, I'll put brief
+descriptions of the patchset.
 
- drivers/s390/scsi/zfcp_fsf.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+  Basically, this is a ftrace based SCSI tracer.  It prints the
+  following information for scsi-3 commands.
 
---- a/drivers/s390/scsi/zfcp_fsf.c	2010-04-01 12:23:11.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2010-04-01 12:23:12.000000000 +0200
-@@ -2104,7 +2104,8 @@ static void zfcp_fsf_req_trace(struct zf
- 	blktrc.inb_usage = req->qdio_req.qdio_inb_usage;
- 	blktrc.outb_usage = req->qdio_req.qdio_outb_usage;
- 
--	if (req->adapter->adapter_features & FSF_FEATURE_MEASUREMENT_DATA) {
-+	if (req->adapter->adapter_features & FSF_FEATURE_MEASUREMENT_DATA &&
-+	    !(req->status & ZFCP_STATUS_FSFREQ_ERROR)) {
- 		blktrc.flags |= ZFCP_BLK_LAT_VALID;
- 		blktrc.channel_lat = lat_in->channel_lat * ticks;
- 		blktrc.fabric_lat = lat_in->fabric_lat * ticks;
-@@ -2156,9 +2157,8 @@ static void zfcp_fsf_send_fcp_command_ta
- 	fcp_rsp = (struct fcp_resp_with_ext *) &req->qtcb->bottom.io.fcp_rsp;
- 	zfcp_fc_eval_fcp_rsp(fcp_rsp, scpnt);
- 
--	zfcp_fsf_req_trace(req, scpnt);
--
- skip_fsfstatus:
-+	zfcp_fsf_req_trace(req, scpnt);
- 	zfcp_dbf_scsi_result(req->adapter->dbf, scpnt, req);
- 
- 	scpnt->host_scribble = NULL;
+    o scsi bus number ("host")
+    o scsi channel number ("channel")
+    o scsi id ("id")
+    o LUN ("lun")
+    o command info
+      - op name (ex. "WRITE_10")
+      - LBA ("lba") (for certain commands only)
+      - transfer length ("txlen") (for certain commands only)
+      - CDB (ex. "raw=28 00 03 60 a2 cb 00 00 08 00")
+    o result of the command
+      (ex. "result=(driver=DRIVER_OK host=DID_OK
+message=COMMAND_COMPLETE status=SAM_STAT_GOOD")
+
+  Those information are printed either at a time:
+
+    o when a command is to be dispatched,
+    o when a command dispatched returns in error,
+    o when a command is done,
+    o when an error handler is to waken up, or
+    o when timeout of a command is deteced.
+
+  To use it quickly, try these steps:
+
+    1) Build a kernel with the patchset applied
+       (ftrace related kernel configs need to be enabled.)
+    2) Boot the kernel
+    3) Mount debugfs
+       ex. mount -t debugfs none /sys/kernel/debug/
+    4) Indicate events to trace
+       ex. echo "scsi:*" > /sys/kernel/debug/tracing/set_event
+    5) Make some I/Os on your scsi devices
+       ex. ls
+    6) Retrieve trace log
+       ex. cat /sys/kernel/debug/tracing/trace
+
+  Here is an outputs example:
+
+    # tracer: nop
+    #
+    #           TASK-PID    CPU#    TIMESTAMP  FUNCTION
+    #              | |       |          |         |
+           flush-8:0-3746  [001]  1374.517152:
+scsi_dispatch_cmd_start: host_no=0 channel=0 id=0 lun=0
+cmnd=(WRITE_10 lba=32267539 txlen=8 raw=2a 00 01 ec 5d 13 00 00
+08 00)
+              <idle>-0     [000]  1374.524964:
+scsi_dispatch_cmd_done: host_no=0 channel=0 id=0 lun=0
+cmnd=(WRITE_10 lba=32267539 txlen=8 raw=2a 00 01 ec 5d 13 00 00
+08 00) result=(driver=DRIVER_OK host=DID_OK
+message=COMMAND_COMPLETE status=SAM_STAT_GOOD)
+
+This patchset applies to 2.6.34-rc3.
+
+Thanks,
+Kei
 
