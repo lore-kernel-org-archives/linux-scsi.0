@@ -1,107 +1,97 @@
-From: Richard Scobie <richard@sauce.co.nz>
-Subject: Re: LSI SAS HBA hard resets
-Date: Fri, 02 Apr 2010 11:36:03 +1300
-Message-ID: <4BB51FD3.2030801@sauce.co.nz>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: Re: ATA / mvsas issue.
+Date: Thu, 01 Apr 2010 17:25:39 -0700
+Message-ID: <4BB53983.5050309@cisco.com>
+References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>    <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>    <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>    <CDBC7B5488B245E689B39330542DC434@usish.com.cn> <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org> <4BB50A92.3030205@gmx.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.sauce.co.nz ([210.48.49.72]:50534 "EHLO smtp.sauce.co.nz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754302Ab0DAWmq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Apr 2010 18:42:46 -0400
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:61582 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750867Ab0DBAZk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Apr 2010 20:25:40 -0400
+In-Reply-To: <4BB50A92.3030205@gmx.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: st0ff@npl.de
+Cc: Caspar Smit <c.smit@truebit.nl>, jack wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org
 
-I have just seen the same thing an hour into an md array check (echo 
-check > /sys/block/md8/md/sync_action) on a Supermicro X8DT3-LN4F, with 
-an LSISAS3442E attached to a Vitesse expander with 16 x WD1002FBYS-0 in 
-an md RAID6.
+Stefan *St0fF* Huebner wrote:
+> Am 01.04.2010 09:55, schrieb Caspar Smit:
+>>>     
+>>>> Hi all,
+>>>>
+>>>> Today I installed 16 fresh Western Digital WD5000BEVT (2,5") drives in
+>>>> one
+>>>> of our test servers.
+>>>>
+>>>> I created a software raid5 with a hotspare on these 16 disks.
+>>>>
+>>>> I noticed that the detection of the disks during boottime was very very
+>>>> slow.
+>>>> Creating the md superblocks went very very slow.
+>>>>
+>>>> After that all seemed fine (speed of the raid5 init was normal).
+>>>>
+>>>> I noticed many of these messages in the syslog (also attached):
+>>>>
+>>>> Mar 31 14:34:17 test ata_id[3752]: main: HDIO_GET_IDENTITY failed for
+>>>> '/dev/.tmp-8-112'
+>>>> Mar 31 14:34:17 test ata_id[3765]: main: HDIO_GET_IDENTITY failed for
+>>>> '/dev/.tmp-8-128'
+>>>>
+>>>> This seems to correspond to the slow detection of the disks.
+>>>>
+>>>> Is this an ATA problem, or a problem in the mvsas driver?
+>>>>
+>>>> I use the mvsas driver from 2.6.32 with the latest patch from Srinivas.
+>>>>
+>>>> Kind regards,
+>>>> Caspar Smit
+>>>>
+>>>>
+>>>> [Jack] It's normal behavior of SATA disk, SATA disk need more time than
+>>>> SAS
+>>>> disk to spin up to response command.
+>>>>       
+>>> I use loads of other SATA disks which don't have this behavior.
+>>>
+>>> Caspar
+>>>
+>>>
+>>> [Jack] In my test, some big SATA disks(ie 500G above)have this issues.
+>>> Best Regards
+>>>     
+> @Jack: sorry, but that doesn't cause unresponsiveness.  Some 2TB
+> SATA-Disks need >10s to spin up, but there shouldn't be any notes/logs
+> like those.  As a matter of fact: these 2,5" drives should spin up in a
+> matter of 2s.
 
-Kernel 2.6.30.8-64.fc11.x86_64
+That seems to match the log that Caspar Smit posted yesterday.  Each drive
+took about 2s to probe, and being that there are 16 of them, it took 32s.
+It would be good if it could somehow do that in parallel being that this
+is the 21st century :-)  Not sure how hard that is ...
 
-SAS3442E B3 fw=01.29.00.00 BIOS=06.1c.00.00 Driver 3.04.07
+I wonder if they spin up during probe or later during attach.
 
-truncated dmesg output:
+I don't know about the ata_id messages; I just wanted to point out the above.
 
-md: data-check of RAID array md8
-md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-md: using maximum available idle IO bandwidth (but not more than 200000 
-KB/sec) for data-check.
-md: using 128k window, over a total of 976591104 blocks.
-mptbase: ioc0: LogInfo(0x31110b00): Originator={PL}, Code={Reset}, 
-SubCode(0x0b00)
-mptbase: ioc0: LogInfo(0x31110b00): Originator={PL}, Code={Reset}, 
-SubCode(0x0b00)
-mptbase: ioc0: LogInfo(0x31110b00): Originator={PL}, Code={Reset}, 
-SubCode(0x0b00)
-...
-...
-...
-mptbase: ioc0: WARNING - IOC is in FAULT state (7810h)!!!
-mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
-mptbase: ioc0: Initiating recovery
-mptbase: ioc0: WARNING - IOC is in FAULT state!!!
-mptbase: ioc0: WARNING -            FAULT code = 7810h
-sd 6:0:3:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 10, 
-sc=ffff8801bb1b2000, mf = ffff880338842b80, idx=7
-sd 6:0:7:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 14, 
-sc=ffff8801bb1b2d00, mf = ffff880338843300, idx=16
-sd 6:0:4:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 11, 
-sc=ffff8802d9afe300, mf = ffff880338843580, idx=1b
-sd 6:0:7:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 14, 
-sc=ffff88009c0b9d00, mf = ffff880338843780, idx=1f
-sd 6:0:9:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 16, 
-sc=ffff880250b67200, mf = ffff880338843a80, idx=25
-sd 6:0:3:0: mptscsih: ioc0: completing cmds: fw_channel 0, fw_id 10, 
-sc=ffff88014a7fb700, mf = ffff880338843d00, idx=2a
-...
-...
-...
-mptbase: ioc0: Recovered from IOC FAULT
-mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
-end_request: I/O error, dev sdl, sector 1953182527
-md: super_written gets error=-5, uptodate=0
-raid5: Disk failure on sdl1, disabling device.
-raid5: Operation continuing on 15 devices.
-end_request: I/O error, dev sdq, sector 1953182527
-md: super_written gets error=-5, uptodate=0
-raid5: Disk failure on sdq1, disabling device.
-raid5: Operation continuing on 14 devices.
-end_request: I/O error, dev sdi, sector 1953182527
-md: super_written gets error=-5, uptodate=0
-raid5: Disk failure on sdi1, disabling device.
-raid5: Operation continuing on 13 devices.
-end_request: I/O error, dev sde, sector 1953182527
-md: super_written gets error=-5, uptodate=0
-raid5: Disk failure on sde1, disabling device.
-raid5: Operation continuing on 12 devices.
-end_request: I/O error, dev sdo, sector 1953182527
-md: super_written gets error=-5, uptodate=0
-raid5: Disk failure on sdo1, disabling device.
-raid5: Operation continuing on 11 devices.
-end_request: I/O error, dev sdn, sector 1953182527
-md: super_written gets error=-5, uptodate=0
-raid5: Disk failure on sdn1, disabling device.
-raid5: Operation continuing on 10 devices.
-end_request: I/O error, dev sdr, sector 1953182527
-md: super_written gets error=-5, uptodate=0
-raid5: Disk failure on sdr1, disabling device.
-raid5: Operation continuing on 9 devices.
-md: md8: data-check done.
-Device md8, XFS metadata write error block 0x4937f0fe8 in md8
+Maybe ata_id is waiting for spin up but not waiting long enough if there are
+so many disks and they spin up sequentially.  Spin up shouldn't be needed for
+identity info, I would think.
 
-Major disruption as md array members are failed out.
+	Joe
 
-This is the second time in couple of months this has happened - the 
-first was not doing anarray check.
-
-An almost guaranteed way to do a similar thing is to use smartd/smartctl 
-(smartmontools) to access individual devices in the array.
-
-Regards,
-
-Richard
-
+>> Seagate 500G SATA disks are working fine.
+>>   
+> Hitachi also.  And I've seen WD5000BEVT work great, too.  8 of a kind in
+> a QNAP SS-839 (Atom based NAS with a pretty recent linux on it) work fine!
+> 
+> Stefan
+>> Caspar
+>>
+>>   
+>>> ************************************************************************
+>>> Jack  Wang
 
