@@ -1,2762 +1,4629 @@
-From: "Nick Cheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH 2/3 ] SCSI: Support several features in arcmsr driver
-Date: Fri, 2 Apr 2010 12:44:57 +0800
-Message-ID: <5A3D2D419EAF4E1B8351FDF97550FF2C@areca4e4f859d4>
-Reply-To: <nick.cheng@areca.com.tw>
+From: Sachin Sant <sachinp@in.ibm.com>
+Subject: 2.6.34-rc3 : Badness at lib/dma-debug.c:820 during ibmvscsi init
+Date: Fri, 02 Apr 2010 10:48:55 +0530
+Message-ID: <4BB57E3F.3050502@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090406080809010606080909"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:55529 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751237Ab0DBEpL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2010 00:45:11 -0400
-References: 
-In-Reply-To: 
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:35705 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757954Ab0DBFTE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2010 01:19:04 -0400
+Received: from d23relay05.au.ibm.com (d23relay05.au.ibm.com [202.81.31.247])
+	by e23smtp08.au.ibm.com (8.14.3/8.13.1) with ESMTP id o325J0nJ029814
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Apr 2010 16:19:00 +1100
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay05.au.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o325CjD81339522
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Apr 2010 16:12:45 +1100
+Received: from d23av02.au.ibm.com (loopback [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o325J023029761
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Apr 2010 16:19:00 +1100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: brking@linux.vnet.ibm.com, Linux/PPC Development <linuxppc-dev@ozlabs.org>
 
-1. To support 4M/1024 scatter-gather list entry, reorganize struct
-ARCMSR_CDB and struct CommandControlBlock
-2. To modify arcmsr_probe
-3. In order to help fix F/W issue, add the driver mode for type B card
-4. To improve AP's behavior while F/W resets
-5. To unify struct MessageUnit_B's members' naming in all OS drivers'
-6. To improve error handlers, arcmsr_bus_reset(), arcmsr_abort()
-7. To fix the arcmsr_queue_command() in bus reset stage, just let the
-commands pass down to FW, don't block
-Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
----
-diff -Naurp --ignore-blank-lines --ignore-all-space --ignore-space-change
-arcmsr.1.20.00.15-81103/arcmsr.h arcmsr.1.20.00.15-91209/arcmsr.h
---- arcmsr.1.20.00.15-81103/arcmsr.h	2008-11-05 17:12:40.000000000 +0800
-+++ arcmsr.1.20.00.15-91209/arcmsr.h	2010-02-01 12:41:34.000000000 +0800
-@@ -48,16 +48,22 @@ struct device_attribute;
- /*The limit of outstanding scsi command that firmware can handle*/
- #define ARCMSR_MAX_OUTSTANDING_CMD
-256
- #define ARCMSR_MAX_FREECCB_NUM
-320
--#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15
-2008/11/03"
-+#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15
-2009/12/09"
- #define ARCMSR_SCSI_INITIATOR_ID
-255
- #define ARCMSR_MAX_XFER_SECTORS
-512
- #define ARCMSR_MAX_XFER_SECTORS_B
-4096
-+#define ARCMSR_MAX_XFER_SECTORS_C
-304
- #define ARCMSR_MAX_TARGETID
-17
- #define ARCMSR_MAX_TARGETLUN
-8
- #define ARCMSR_MAX_CMD_PERLUN
-ARCMSR_MAX_OUTSTANDING_CMD
- #define ARCMSR_MAX_QBUFFER
-4096
--#define ARCMSR_MAX_SG_ENTRIES
-38
-+#define ARCMSR_DEFAULT_SG_ENTRIES
-38
- #define ARCMSR_MAX_HBB_POSTQUEUE
-264
-+#define ARCMSR_MAX_XFER_LEN
-0x26000 /* 152K */
-+#define ARCMSR_CDB_SG_PAGE_LENGTH
-256 
-+#ifndef PCI_DEVICE_ID_ARECA_1880
-+#define PCI_DEVICE_ID_ARECA_1880 0x1880
-+ #endif
- /*
- 
-****************************************************************************
-******
- **
-@@ -152,26 +158,19 @@ struct CMD_MESSAGE_FIELD
- **   structure for holding DMA address data
- *************************************************************
- */
-+#define IS_DMA64			(sizeof(dma_addr_t) == 8)
- #define IS_SG64_ADDR                0x01000000 /* bit24 */
- struct  SG32ENTRY
- {
- 	__le32					length;
- 	__le32					address;
--};
-+}__attribute__ ((packed));
- struct  SG64ENTRY
- {
- 	__le32					length;
- 	__le32					address;
- 	__le32					addresshigh;
--};
--struct SGENTRY_UNION
--{
--	union
--	{
--		struct SG32ENTRY            sg32entry;
--		struct SG64ENTRY            sg64entry;
--	}u;
--};
-+}__attribute__ ((packed));
- /*
- ********************************************************************
- **      Q Buffer of IOP Message Transfer
-@@ -198,6 +197,9 @@ struct FIRMWARE_INFO
- 	char          model[8];			/*15, 60-67*/
- 	char          firmware_ver[16];     	/*17, 68-83*/
- 	char          device_map[16];		/*21, 84-99*/
-+	uint32_t		cfgVersion;               	/*25,100-103
-Added for checking of new firmware capability*/
-+	uint8_t		cfgSerial[16];           	/*26,104-119*/
-+	uint32_t		cfgPicStatus;
-/*30,120-123*/	
- };
- /* signature of set and get firmware config */
- #define ARCMSR_SIGNATURE_GET_CONFIG		      0x87974060
-@@ -224,6 +226,8 @@ struct FIRMWARE_INFO
- #define ARCMSR_CCBREPLY_FLAG_ERROR                    0x10000000
- /* outbound firmware ok */
- #define ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK             0x80000000
-+/* ARC-1680 Bus Reset*/
-+#define ARCMSR_ARC1680_BUS_RESET				0x00000003
- 
- /*
- ************************************************************************
-@@ -275,11 +279,11 @@ struct FIRMWARE_INFO
- 
- /* data tunnel buffer between user space program and its firmware */
- /* user space data to iop 128bytes */
--#define ARCMSR_IOCTL_WBUFFER			      0x0000fe00
-+#define ARCMSR_MESSAGE_WBUFFER			      0x0000fe00
- /* iop data to user space 128bytes */
--#define ARCMSR_IOCTL_RBUFFER			      0x0000ff00
-+#define ARCMSR_MESSAGE_RBUFFER			      0x0000ff00
- /* iop message_rwbuffer for message command */
--#define ARCMSR_MSGCODE_RWBUFFER			      0x0000fa00
-+#define ARCMSR_MESSAGE_RWBUFFER			      0x0000fa00
- /*
- 
-****************************************************************************
-***
- **    ARECA SCSI COMMAND DESCRIPTOR BLOCK size 0x1F8 (504)
-@@ -301,7 +305,7 @@ struct ARCMSR_CDB
- #define ARCMSR_CDB_FLAG_HEADQ              0x08
- #define ARCMSR_CDB_FLAG_ORDEREDQ           0x10
- 
--	uint8_t							Reserved1;
-+	uint8_t							msgPages;
- 	uint32_t						Context;
- 	uint32_t						DataLength;
- 	uint8_t							Cdb[16];
-@@ -314,10 +318,10 @@ struct ARCMSR_CDB
- 	uint8_t
-SenseData[15];
- 	union
- 	{
--		struct SG32ENTRY
-sg32entry[ARCMSR_MAX_SG_ENTRIES];
--		struct SG64ENTRY
-sg64entry[ARCMSR_MAX_SG_ENTRIES];
-+		struct SG32ENTRY                sg32entry[1];
-+		struct SG64ENTRY                sg64entry[1];
- 	} u;
--};
-+}__attribute__ ((packed));
- /*
- 
-****************************************************************************
-***
- **     Messaging Unit (MU) of the Intel R 80331 I/O processor(Type A) and
-Type B processor
-@@ -355,13 +359,13 @@ struct MessageUnit_B
- 	uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
- 	uint32_t	postq_index;
- 	uint32_t	doneq_index;
--	uint32_t		__iomem *drv2iop_doorbell_reg;
--	uint32_t		__iomem *drv2iop_doorbell_mask_reg;
--	uint32_t		__iomem *iop2drv_doorbell_reg;
--	uint32_t		__iomem *iop2drv_doorbell_mask_reg;
--	uint32_t		__iomem *msgcode_rwbuffer_reg;
--	uint32_t		__iomem *ioctl_wbuffer_reg;
--	uint32_t		__iomem *ioctl_rbuffer_reg;
-+	uint32_t		__iomem *drv2iop_doorbell;
-+	uint32_t		__iomem *drv2iop_doorbell_mask;
-+	uint32_t		__iomem *iop2drv_doorbell;
-+	uint32_t		__iomem *iop2drv_doorbell_mask;
-+	uint32_t		__iomem *message_rwbuffer;
-+	uint32_t		__iomem *message_wbuffer;
-+	uint32_t		__iomem *message_rbuffer;
- };
- 
- /*
-@@ -381,14 +385,17 @@ struct AdapterControlBlock
- 	unsigned long			vir2phy_offset;
- 	/* Offset is used in making arc cdb physical to virtual calculations
-*/
- 	uint32_t			outbound_int_enable;
--
-+	spinlock_t                      			eh_lock;
-+	spinlock_t
-ccblist_lock;
- 	union {
- 		struct MessageUnit_A __iomem *	pmuA;
- 		struct MessageUnit_B *		pmuB;
- 	};
- 	/* message unit ATU inbound base address0 */
--
-+	void __iomem *mem_base0;
-+	void __iomem *mem_base1;
- 	uint32_t			acb_flags;
-+	u16			dev_id;
- 	uint8_t                   		adapter_index;
- 	#define ACB_F_SCSISTOPADAPTER         	0x0001
- 	#define ACB_F_MSG_STOP_BGRB     	0x0002
-@@ -405,6 +412,7 @@ struct AdapterControlBlock
- 	#define ACB_F_BUS_RESET               	0x0080
- 	#define ACB_F_IOP_INITED              	0x0100
- 	/* iop init */
-+	#define ACB_F_ABORT				0x0200
- 	#define ACB_F_FIRMWARE_TRAP           		0x0400
- 	struct CommandControlBlock *
-pccb_pool[ARCMSR_MAX_FREECCB_NUM];
- 	/* used for memory free */
-@@ -419,7 +427,8 @@ struct AdapterControlBlock
- 	/* dma_coherent used for memory free */
- 	dma_addr_t			dma_coherent_handle;
- 	/* dma_coherent_handle used for memory free */
--
-+	dma_addr_t				dma_coherent_handle_hbb_mu;
-+	unsigned int				uncache_size;
- 	uint8_t				rqbuffer[ARCMSR_MAX_QBUFFER];
- 	/* data collection buffer for read from 80331 */
- 	int32_t				rqbuf_firstindex;
-@@ -443,14 +452,18 @@ struct AdapterControlBlock
- 	uint32_t			firm_numbers_queue;
- 	uint32_t			firm_sdram_size;
- 	uint32_t			firm_hd_channels;
-+	uint32_t                           	firm_cfg_version;	
- 	char			firm_model[12];
- 	char			firm_version[20];
- 	char			device_map[20];			/*21,84-99*/
- 	struct work_struct 		arcmsr_do_message_isr_bh;
- 	struct timer_list		eternal_timer;
--	unsigned short		fw_state;
-+	unsigned short		fw_flag;
-+				#define	FW_NORMAL	0x0000
-+				#define	FW_BOG		0x0001
-+				#define	FW_DEADLOCK	0x0010
- 	atomic_t 			rq_map_token;
--	int			ante_token_value;
-+	atomic_t			ante_token_value;
- };/* HW_DEVICE_EXTENSION */
- /*
- 
-****************************************************************************
-***
-@@ -459,66 +472,31 @@ struct AdapterControlBlock
- 
-****************************************************************************
-***
- */
- struct CommandControlBlock
--{
--	struct ARCMSR_CDB		arcmsr_cdb;
--	/*
--	** 0-503 (size of CDB = 504):
--	** arcmsr messenger scsi command descriptor size 504 bytes
--	*/
--	uint32_t			cdb_shifted_phyaddr;
--	/* 504-507 */
--	uint32_t			reserved1;
--	/* 508-511 */
--#if BITS_PER_LONG == 64
--	/*  ======================512+64 bytes========================  */
--	struct list_head		list;
--	/* 512-527 16 bytes next/prev ptrs for ccb lists */
--	struct scsi_cmnd *		pcmd;
--	/* 528-535 8 bytes pointer of linux scsi command */
--	struct AdapterControlBlock *	acb;
--	/* 536-543 8 bytes pointer of acb */
--
--	uint16_t			ccb_flags;
--	/* 544-545 */
-+{	/*x32:sizeof struct_CCB=(32+60)byte, x64:sizeof
-struct_CCB=(64+60)byte*/
-+	struct list_head		list;
-/*x32: 8byte, x64: 16byte*/
-+	struct scsi_cmnd		*pcmd;				/*8
-bytes pointer of linux scsi command */
-+	struct AdapterControlBlock	*acb;
-/*x32: 4byte, x64: 8byte*/
-+	uint32_t			shifted_cdb_phyaddr;
-/*x32: 4byte, x64: 4byte*/
-+	uint16_t			ccb_flags;
-/*x32: 2byte, x64: 2byte*/
- 	#define		CCB_FLAG_READ			0x0000
- 	#define		CCB_FLAG_WRITE			0x0001
- 	#define		CCB_FLAG_ERROR			0x0002
- 	#define		CCB_FLAG_FLUSHCACHE		0x0004
- 	#define		CCB_FLAG_MASTER_ABORTED		0x0008
--	uint16_t			startdone;
--	/* 546-547 */
-+	uint16_t                        	startdone;
-/*x32:2byte,x32:2byte*/
- 	#define		ARCMSR_CCB_DONE			0x0000
- 	#define		ARCMSR_CCB_START		0x55AA
- 	#define		ARCMSR_CCB_ABORTED		0xAA55
- 	#define		ARCMSR_CCB_ILLEGAL		0xFFFF
--	uint32_t			reserved2[7];
--	/* 548-551 552-555 556-559 560-563 564-567 568-571 572-575 */
-+	#if BITS_PER_LONG == 64
-+	/*  ======================512+64 bytes========================  */
-+		uint32_t                        	reserved[6];
-/*24 byte*/
- #else
- 	/*  ======================512+32 bytes========================  */
--	struct list_head		list;
--	/* 512-519 8 bytes next/prev ptrs for ccb lists */
--	struct scsi_cmnd *		pcmd;
--	/* 520-523 4 bytes pointer of linux scsi command */
--	struct AdapterControlBlock *	acb;
--	/* 524-527 4 bytes pointer of acb */
--
--	uint16_t			ccb_flags;
--	/* 528-529 */
--	#define		CCB_FLAG_READ			0x0000
--	#define		CCB_FLAG_WRITE			0x0001
--	#define		CCB_FLAG_ERROR			0x0002
--	#define		CCB_FLAG_FLUSHCACHE		0x0004
--	#define		CCB_FLAG_MASTER_ABORTED		0x0008
--	uint16_t			startdone;
--	/* 530-531 */
--	#define		ARCMSR_CCB_DONE			0x0000
--	#define		ARCMSR_CCB_START		0x55AA
--	#define		ARCMSR_CCB_ABORTED		0xAA55
--	#define		ARCMSR_CCB_ILLEGAL		0xFFFF
--	uint32_t			reserved2[3];
--	/* 532-535 536-539 540-543 */
-+		uint32_t                        	reserved[2];
-/*8  byte*/
- #endif
--	/*  ==========================================================  */
-+	/*  =======================================================   */
-+	struct ARCMSR_CDB		arcmsr_cdb;
- };
- /*
- 
-****************************************************************************
-***
-diff -Naurp --ignore-blank-lines --ignore-all-space --ignore-space-change
-arcmsr.1.20.00.15-81103/arcmsr_hba.c arcmsr.1.20.00.15-91209/arcmsr_hba.c
---- arcmsr.1.20.00.15-81103/arcmsr_hba.c	2008-11-11
-12:03:04.000000000 +0800
-+++ arcmsr.1.20.00.15-91209/arcmsr_hba.c	2010-03-10
-11:52:14.000000000 +0800
-@@ -70,20 +70,13 @@
- #include <scsi/scsi_transport.h>
- #include <scsi/scsicam.h>
- #include "arcmsr.h"
--
--#ifdef CONFIG_SCSI_ARCMSR_RESET
--	static int sleeptime = 20;
--	static int retrycount = 12;
--	module_param(sleeptime, int, S_IRUGO|S_IWUSR);
--	MODULE_PARM_DESC(sleeptime,"The waiting period for FW ready while
-bus reset");
--	module_param(retrycount, int, S_IRUGO|S_IWUSR);
--	MODULE_PARM_DESC(retrycount,"The retry count for FW ready while bus
-reset");
--#endif
--MODULE_AUTHOR("Erich Chen <support@areca.com.tw>");
--MODULE_DESCRIPTION("ARECA (ARC11xx/12xx/13xx/16xx) SATA/SAS RAID Host Bus
-Adapter");
-+MODULE_AUTHOR("Nick Cheng <support@areca.com.tw>");
-+MODULE_DESCRIPTION("ARECA (ARC11xx/12xx/16xx) SATA/SAS RAID Host Bus
-Adapter");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(ARCMSR_DRIVER_VERSION);
--
-+static int sleeptime = 20;
-+static int retrycount = 12;
-+wait_queue_head_t wait_q;
- static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
- 					struct scsi_cmnd *cmd);
- static int arcmsr_iop_confirm(struct AdapterControlBlock *acb);
-@@ -107,7 +100,7 @@ static void arcmsr_request_device_map(un
- static void arcmsr_request_hba_device_map(struct AdapterControlBlock *acb);
- static void arcmsr_request_hbb_device_map(struct AdapterControlBlock *acb);
- static void arcmsr_message_isr_bh_fn(struct work_struct *work);
--static void *arcmsr_get_firmware_spec(struct AdapterControlBlock *acb, int
-mode);
-+static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb);
- static void arcmsr_start_adapter_bgrb(struct AdapterControlBlock *acb);
- 
- static const char *arcmsr_info(struct Scsi_Host *);
-@@ -131,10 +124,10 @@ static struct scsi_host_template arcmsr_
- 	.eh_bus_reset_handler	= arcmsr_bus_reset,
- 	.bios_param		= arcmsr_bios_param,
- 	.change_queue_depth	= arcmsr_adjust_disk_queue_depth,
--	.can_queue		= ARCMSR_MAX_OUTSTANDING_CMD,
-+	.can_queue		= ARCMSR_MAX_FREECCB_NUM,
- 	.this_id			= ARCMSR_SCSI_INITIATOR_ID,
--	.sg_tablesize		= ARCMSR_MAX_SG_ENTRIES,
--	.max_sectors    		= ARCMSR_MAX_XFER_SECTORS,
-+	.sg_tablesize	        	= ARCMSR_DEFAULT_SG_ENTRIES, 
-+	.max_sectors    	    	= ARCMSR_MAX_XFER_SECTORS_C, 
- 	.cmd_per_lun		= ARCMSR_MAX_CMD_PERLUN,
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.shost_attrs		= arcmsr_host_attrs,
-@@ -168,6 +161,7 @@ static struct pci_device_id arcmsr_devic
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1381)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1680)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1681)},
-+	{PCI_DEVICE(PCI_VENDOR_ID_ARECA, PCI_DEVICE_ID_ARECA_1880)},
- 	{0, 0}, /* Terminating entry */
- };
- MODULE_DEVICE_TABLE(pci, arcmsr_device_id_table);
-@@ -182,15 +176,72 @@ static struct pci_driver arcmsr_pci_driv
- 	#endif
- };
- 
-+static void arcmsr_free_mu(struct AdapterControlBlock *acb)
-+{
-+	switch (acb->adapter_type) {
-+		case ACB_ADAPTER_TYPE_A:
-+			break;
-+		case ACB_ADAPTER_TYPE_B:{
-+			struct MessageUnit_B *reg = acb->pmuB;
-+			dma_free_coherent(&acb->pdev->dev,
-+				sizeof(struct MessageUnit_B),
-+				reg, acb->dma_coherent_handle_hbb_mu);
-+		}
-+	}
-+}
-+
-+static bool arcmsr_remap_pciregion(struct AdapterControlBlock *acb)
-+{
-+	struct pci_dev *pdev = acb->pdev;
-+
-+	switch (acb->adapter_type){
-+		case ACB_ADAPTER_TYPE_A:{
-+			acb->pmuA = ioremap(pci_resource_start(pdev,0),
-pci_resource_len(pdev,0));
-+			if (!acb->pmuA) {
-+				printk(KERN_NOTICE "arcmsr%d: memory mapping
-region fail \n", acb->host->host_no);
-+				return false;
-+			}
-+			break;
-+		}
-+		case ACB_ADAPTER_TYPE_B:{
-+			void __iomem *mem_base0, *mem_base1;
-+			mem_base0 = ioremap(pci_resource_start(pdev, 0),
-pci_resource_len(pdev, 0));
-+			if (!mem_base0) {
-+				printk(KERN_NOTICE "arcmsr%d: memory mapping
-region fail \n", acb->host->host_no);
-+				return false;
-+			}
-+			mem_base1 = ioremap(pci_resource_start(pdev, 2),
-pci_resource_len(pdev, 2));
-+			if (!mem_base1) {
-+				iounmap(mem_base0);
-+				printk(KERN_NOTICE "arcmsr%d: memory mapping
-region fail \n", acb->host->host_no);
-+				return false;
-+			}
-+			acb->mem_base0 = mem_base0;
-+			acb->mem_base1 = mem_base1;
-+		}
-+	}
-+	return true;
-+}
-+
-+static void arcmsr_unmap_pciregion(struct AdapterControlBlock *acb)
-+{
-+	switch (acb->adapter_type) {
-+		case ACB_ADAPTER_TYPE_A:{
-+			iounmap(acb->pmuA);
-+		}
-+		case ACB_ADAPTER_TYPE_B:{
-+			iounmap(acb->mem_base0);
-+			iounmap(acb->mem_base1);
-+		}
-+	}
-+}
-+
- static irqreturn_t arcmsr_do_interrupt(int irq, void *dev_id)
- {
- 	irqreturn_t handle_state;
- 	struct AdapterControlBlock *acb = dev_id;
- 
--	spin_lock(acb->host->host_lock);
- 	handle_state = arcmsr_interrupt(acb);
--	spin_unlock(acb->host->host_lock);
--
- 	return handle_state;
- }
- 
-@@ -227,6 +278,7 @@ static void arcmsr_define_adapter_type(s
- 	struct pci_dev *pdev = acb->pdev;
- 	u16 dev_id;
- 	pci_read_config_word(pdev, PCI_DEVICE_ID, &dev_id);
-+	acb->dev_id = dev_id;
- 	switch (dev_id) {
- 	case 0x1201 : {
- 		acb->adapter_type = ACB_ADAPTER_TYPE_B;
-@@ -237,141 +289,210 @@ static void arcmsr_define_adapter_type(s
- 	}
- }
- 
--static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
-+static uint8_t arcmsr_hba_wait_msgint_ready(struct AdapterControlBlock
-*acb)
-+{
-+	struct MessageUnit_A __iomem *reg = acb->pmuA;
-+	uint32_t Index;
-+	uint8_t Retries = 0x00;
-+
-+	do {
-+		for (Index = 0; Index < 100; Index++) {
-+			if (readl(&reg->outbound_intstatus) &
-+					ARCMSR_MU_OUTBOUND_MESSAGE0_INT) {
-+				writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT,
-+					&reg->outbound_intstatus);
-+				return 0x00;
-+			}
-+			msleep(10);
-+		}/*max 1 seconds*/
-+
-+	} while (Retries++ < 20);/*max 20 sec*/
-+	return 0xff;
-+}
-+
-+static uint8_t arcmsr_hbb_wait_msgint_ready(struct AdapterControlBlock
-*acb)
-+{
-+	struct MessageUnit_B *reg = acb->pmuB;
-+	uint32_t Index;
-+	uint8_t Retries = 0x00;
-+
-+	do {
-+		for (Index = 0; Index < 100; Index++) {
-+			if (readl(reg->iop2drv_doorbell)
-+				& ARCMSR_IOP2DRV_MESSAGE_CMD_DONE) {
-+				writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN
-+					, reg->iop2drv_doorbell);
-+				writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT,
-reg->drv2iop_doorbell);
-+				return 0x00;
-+			}
-+			msleep(10);
-+		}/*max 1 seconds*/
-+
-+	} while (Retries++ < 20);/*max 20 sec*/
-+	return 0xff;
-+}
-+
-+static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb)
-+{
-+	struct MessageUnit_A __iomem *reg = acb->pmuA;
-+	int retry_count = 30;
-+
-+	writel(ARCMSR_INBOUND_MESG0_FLUSH_CACHE, &reg->inbound_msgaddr0);
-+	do {
-+		if (!arcmsr_hba_wait_msgint_ready(acb))
-+			break;
-+		else {
-+			retry_count--;
-+			printk(KERN_NOTICE "arcmsr%d: wait 'flush adapter
-cache' \
-+			timeout, retry count down = %d \n",
-acb->host->host_no, retry_count);
-+		}
-+	} while (retry_count != 0);
-+}
-+
-+static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb)
- {
-+	struct MessageUnit_B *reg = acb->pmuB;
-+	int retry_count = 30;
- 
-+	writel(ARCMSR_MESSAGE_FLUSH_CACHE, reg->drv2iop_doorbell);
-+	do {
-+		if (!arcmsr_hbb_wait_msgint_ready(acb))
-+			break;
-+		else {
-+			retry_count--;
-+			printk(KERN_NOTICE "arcmsr%d: wait 'flush adapter
-cache' \
-+			timeout,retry count down = %d \n",
-acb->host->host_no, retry_count);
-+		}
-+	} while (retry_count != 0);
-+}
-+
-+static void arcmsr_flush_adapter_cache(struct AdapterControlBlock *acb)
-+{
- 	switch (acb->adapter_type) {
- 
- 	case ACB_ADAPTER_TYPE_A: {
-+		arcmsr_flush_hba_cache(acb);
-+		}
-+		break;
-+
-+	case ACB_ADAPTER_TYPE_B: {
-+		arcmsr_flush_hbb_cache(acb);
-+		}
-+	}
-+}
-+
-+static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
-+{
- 		struct pci_dev *pdev = acb->pdev;
-+	switch (acb->adapter_type) {
-+		case ACB_ADAPTER_TYPE_A: {
-+
- 		void *dma_coherent;
--		dma_addr_t dma_coherent_handle, dma_addr;
-+			dma_addr_t dma_coherent_handle;
- 		struct CommandControlBlock *ccb_tmp;
--		int i, j;
--
--		acb->pmuA = ioremap(pci_resource_start(pdev, 0),
-pci_resource_len(pdev, 0));
--		if (!acb->pmuA) {
--			printk(KERN_NOTICE "arcmsr%d: memory mapping region
-fail \n",
--							acb->host->host_no);
--			return -ENOMEM;
--		}
-+			int i = 0, j = 0;
-+			dma_addr_t cdb_phyaddr;
-+			unsigned long roundup_ccbsize = 0;
-+			unsigned long max_xfer_len;
-+			unsigned long max_sg_entrys;
-+			uint32_t  firm_config_version;
- 
--		dma_coherent = dma_alloc_coherent(&pdev->dev,
--			ARCMSR_MAX_FREECCB_NUM *
--			sizeof (struct CommandControlBlock) + 0x20,
--			&dma_coherent_handle, GFP_KERNEL);
-+			for (i = 0; i < ARCMSR_MAX_TARGETID; i++)
-+				for (j = 0; j < ARCMSR_MAX_TARGETLUN; j++)
-+					acb->devstate[i][j] =
-ARECA_RAID_GONE;
- 
-+			max_xfer_len = ARCMSR_MAX_XFER_LEN;
-+			max_sg_entrys = ARCMSR_DEFAULT_SG_ENTRIES;
-+			firm_config_version = acb->firm_cfg_version;
-+			if((firm_config_version & 0xFF) >= 3){
-+				max_xfer_len = (ARCMSR_CDB_SG_PAGE_LENGTH <<
-((firm_config_version >> 8) & 0xFF)) * 1024;/* max 16M byte */
-+				max_sg_entrys = (max_xfer_len/4096);	
-+			}
-+			acb->host->max_sectors = max_xfer_len/512;
-+			acb->host->sg_tablesize = max_sg_entrys;
-+			roundup_ccbsize = roundup(sizeof(struct
-CommandControlBlock) + max_sg_entrys * sizeof(struct SG64ENTRY), 32);
-+			acb->uncache_size = roundup_ccbsize *
-ARCMSR_MAX_FREECCB_NUM;
-+			dma_coherent = dma_alloc_coherent(&pdev->dev,
-acb->uncache_size, &dma_coherent_handle, GFP_KERNEL);
- 		if (!dma_coherent) {
--			iounmap(acb->pmuA);
-+				printk("arcmsr%d: dma_alloc_coherent got
-error \n", acb->host->host_no);
- 			return -ENOMEM;
- 		}
--
-+			memset(dma_coherent, 0, acb->uncache_size);
- 		acb->dma_coherent = dma_coherent;
- 		acb->dma_coherent_handle = dma_coherent_handle;
--
--		if (((unsigned long)dma_coherent & 0x1F)) {
--			dma_coherent = dma_coherent +
--				(0x20 - ((unsigned long)dma_coherent &
-0x1F));
--			dma_coherent_handle = dma_coherent_handle +
--				(0x20 - ((unsigned long)dma_coherent_handle
-& 0x1F));
--		}
--
--		dma_addr = dma_coherent_handle;
- 		ccb_tmp = (struct CommandControlBlock *)dma_coherent;
-+			acb->vir2phy_offset = (unsigned long)dma_coherent -
-(unsigned long)dma_coherent_handle;
- 		for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
--			ccb_tmp->cdb_shifted_phyaddr = dma_addr >> 5;
--			ccb_tmp->acb = acb;
-+				cdb_phyaddr = dma_coherent_handle +
-offsetof(struct CommandControlBlock, arcmsr_cdb);
-+				ccb_tmp->shifted_cdb_phyaddr = cdb_phyaddr
->> 5;
- 			acb->pccb_pool[i] = ccb_tmp;
-+				ccb_tmp->acb = acb;
-+				INIT_LIST_HEAD(&ccb_tmp->list);
- 			list_add_tail(&ccb_tmp->list, &acb->ccb_free_list);
--			dma_addr = dma_addr + sizeof(struct
-CommandControlBlock);
--			ccb_tmp++;
--		}
--
--		acb->vir2phy_offset = (unsigned long)ccb_tmp -(unsigned
-long)dma_addr;
--		for (i = 0; i < ARCMSR_MAX_TARGETID; i++)
--			for (j = 0; j < ARCMSR_MAX_TARGETLUN; j++)
--				acb->devstate[i][j] = ARECA_RAID_GONE;
-+				ccb_tmp = (struct CommandControlBlock
-*)((unsigned long)ccb_tmp + roundup_ccbsize);
-+				dma_coherent_handle = dma_coherent_handle +
-roundup_ccbsize;
- 		}
- 		break;
--
-+		}
- 	case ACB_ADAPTER_TYPE_B: {
- 
--		struct pci_dev *pdev = acb->pdev;
--		struct MessageUnit_B *reg;
--		void __iomem *mem_base0, *mem_base1;
- 		void *dma_coherent;
--		dma_addr_t dma_coherent_handle, dma_addr;
-+			dma_addr_t dma_coherent_handle;
- 		struct CommandControlBlock *ccb_tmp;
--		int i, j;
--
--		dma_coherent = dma_alloc_coherent(&pdev->dev,
--			((ARCMSR_MAX_FREECCB_NUM *
--			sizeof(struct CommandControlBlock) + 0x20) +
--			sizeof(struct MessageUnit_B)),
-+			uint32_t cdb_phyaddr;
-+			unsigned int roundup_ccbsize = 0;
-+			unsigned long max_xfer_len;
-+			unsigned long max_sg_entrys;
-+			unsigned long firm_config_version;
-+			unsigned long max_freeccb_num=0;
-+			int i = 0, j = 0;
-+
-+			max_freeccb_num = ARCMSR_MAX_FREECCB_NUM;
-+			max_xfer_len = ARCMSR_MAX_XFER_LEN;
-+			max_sg_entrys = ARCMSR_DEFAULT_SG_ENTRIES;
-+			firm_config_version = acb->firm_cfg_version;
-+			if((firm_config_version & 0xFF) >= 3){
-+				max_xfer_len = (ARCMSR_CDB_SG_PAGE_LENGTH <<
+This is a multi-part message in MIME format.
+--------------090406080809010606080909
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-+						((firm_config_version >> 8)
-& 0xFF)) * 1024;/* max 16M byte */
-+				max_sg_entrys = (max_xfer_len/4096);/* max
-4097 sg entry*/
-+			}
-+			acb->host->max_sectors = max_xfer_len / 512;
-+			acb->host->sg_tablesize = max_sg_entrys;
-+			roundup_ccbsize = roundup(sizeof(struct
-CommandControlBlock)+
-+				(max_sg_entrys - 1) * sizeof(struct
-SG64ENTRY), 32);
-+			acb->uncache_size = roundup_ccbsize *
-ARCMSR_MAX_FREECCB_NUM;
-+			dma_coherent =
-dma_alloc_coherent(&pdev->dev,acb->uncache_size,
- 			&dma_coherent_handle, GFP_KERNEL);
--		if (!dma_coherent)
--			return -ENOMEM;
- 
-+			if (!dma_coherent) {
-+				printk(KERN_NOTICE "DMA allocation
-failed...........................\n");
-+				return -ENOMEM;
-+			}
-+			memset(dma_coherent, 0, acb->uncache_size);
- 		acb->dma_coherent = dma_coherent;
- 		acb->dma_coherent_handle = dma_coherent_handle;
--
--		if (((unsigned long)dma_coherent & 0x1F)) {
--			dma_coherent = dma_coherent +
--				(0x20 - ((unsigned long)dma_coherent &
-0x1F));
--			dma_coherent_handle = dma_coherent_handle +
--				(0x20 - ((unsigned long)dma_coherent_handle
-& 0x1F));
--		}
--
--		dma_addr = dma_coherent_handle;
- 		ccb_tmp = (struct CommandControlBlock *)dma_coherent;
-+			acb->vir2phy_offset = (unsigned long)dma_coherent -
-+					(unsigned long)dma_coherent_handle;
- 		for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
--			ccb_tmp->cdb_shifted_phyaddr = dma_addr >> 5;
--			ccb_tmp->acb = acb;
-+				cdb_phyaddr = dma_coherent_handle +
-+					offsetof(struct CommandControlBlock,
-arcmsr_cdb);
-+				ccb_tmp->shifted_cdb_phyaddr = cdb_phyaddr
->> 5;
- 			acb->pccb_pool[i] = ccb_tmp;
-+				ccb_tmp->acb = acb;
-+				INIT_LIST_HEAD(&ccb_tmp->list);
- 			list_add_tail(&ccb_tmp->list, &acb->ccb_free_list);
--			dma_addr = dma_addr + sizeof(struct
-CommandControlBlock);
--			ccb_tmp++;
-+				ccb_tmp = (struct CommandControlBlock
-*)((unsigned long)ccb_tmp +
-+
-roundup_ccbsize);
-+				dma_coherent_handle = dma_coherent_handle +
-roundup_ccbsize;
- 		}
--
--		reg = (struct MessageUnit_B *)(dma_coherent +
--		ARCMSR_MAX_FREECCB_NUM * sizeof(struct
-CommandControlBlock));
--		acb->pmuB = reg;
--		mem_base0 = ioremap(pci_resource_start(pdev, 0),
--					pci_resource_len(pdev, 0));
--		if (!mem_base0)
--			goto out;
--
--		mem_base1 = ioremap(pci_resource_start(pdev, 2),
--					pci_resource_len(pdev, 2));
--		if (!mem_base1) {
--			iounmap(mem_base0);
--			goto out;
--		}
--
--		reg->drv2iop_doorbell_reg = mem_base0 +
-ARCMSR_DRV2IOP_DOORBELL;
--		reg->drv2iop_doorbell_mask_reg = mem_base0 +
--
-ARCMSR_DRV2IOP_DOORBELL_MASK;
--		reg->iop2drv_doorbell_reg = mem_base0 +
-ARCMSR_IOP2DRV_DOORBELL;
--		reg->iop2drv_doorbell_mask_reg = mem_base0 +
--
-ARCMSR_IOP2DRV_DOORBELL_MASK;
--		reg->ioctl_wbuffer_reg = mem_base1 + ARCMSR_IOCTL_WBUFFER;
--		reg->ioctl_rbuffer_reg = mem_base1 + ARCMSR_IOCTL_RBUFFER;
--		reg->msgcode_rwbuffer_reg = mem_base1 +
-ARCMSR_MSGCODE_RWBUFFER;
--
--		acb->vir2phy_offset = (unsigned long)ccb_tmp -(unsigned
-long)dma_addr;
- 		for (i = 0; i < ARCMSR_MAX_TARGETID; i++)
- 			for (j = 0; j < ARCMSR_MAX_TARGETLUN; j++)
--				acb->devstate[i][j] = ARECA_RAID_GOOD;
-+					acb->devstate[i][j] =
-ARECA_RAID_GONE;
- 		}
- 		break;
- 	}
- 	return 0;
--
--out:
--	dma_free_coherent(&acb->pdev->dev,
--		(ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock)
-+ 0x20 +
--		sizeof(struct MessageUnit_B)), acb->dma_coherent,
-acb->dma_coherent_handle);
--	return -ENOMEM;
- }
- static void arcmsr_message_isr_bh_fn(struct work_struct *work) 
- {
-@@ -420,8 +540,8 @@ static void arcmsr_message_isr_bh_fn(str
- 		case ACB_ADAPTER_TYPE_B: {
- 			struct MessageUnit_B *reg  = acb->pmuB;
- 			char *acb_dev_map = (char *)acb->device_map;
--			uint32_t __iomem *signature = (uint32_t
-__iomem*)(&reg->msgcode_rwbuffer_reg[0]);
--			char __iomem *devicemap = (char
-__iomem*)(&reg->msgcode_rwbuffer_reg[21]);
-+			uint32_t __iomem *signature = (uint32_t
-__iomem*)(&reg->message_rwbuffer[0]);
-+			char __iomem *devicemap = (char
-__iomem*)(&reg->message_rwbuffer[21]);
- 			int target, lun;
- 			struct scsi_device *psdev;
- 			char diff;
-@@ -456,8 +576,7 @@ static void arcmsr_message_isr_bh_fn(str
- 	}
- }
- 
--static int arcmsr_probe(struct pci_dev *pdev,
--	const struct pci_device_id *id)
-+static int arcmsr_probe(struct pci_dev *pdev, const struct pci_device_id
-*id)
- {
- 	struct Scsi_Host *host;
- 	struct AdapterControlBlock *acb;
-@@ -465,19 +584,13 @@ static int arcmsr_probe(struct pci_dev *
- 	int error;
- 
- 	error = pci_enable_device(pdev);
--	if (error)
--		goto out;
--	pci_set_master(pdev);
--
--	host = scsi_host_alloc(&arcmsr_scsi_host_template,
--			sizeof(struct AdapterControlBlock));
-+	if(error){
-+		return -ENODEV;
-+	}
-+	host = scsi_host_alloc(&arcmsr_scsi_host_template, sizeof(struct
-AdapterControlBlock));
- 	if (!host) {
--		error = -ENOMEM;
--		goto out_disable_device;
-+    		goto pci_disable_dev;
- 	}
--	acb = (struct AdapterControlBlock *)host->hostdata;
--	memset(acb, 0, sizeof (struct AdapterControlBlock));
--
- 	error = pci_set_dma_mask(pdev, DMA_64BIT_MASK);
- 	if (error) {
- 		error = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
-@@ -485,126 +598,93 @@ static int arcmsr_probe(struct pci_dev *
- 			printk(KERN_WARNING
- 			       "scsi%d: No suitable DMA mask available\n",
- 			       host->host_no);
--			goto out_host_put;
-+			goto scsi_host_release;
- 		}
- 	}
-+	init_waitqueue_head(&wait_q);
- 	bus = pdev->bus->number;
- 	dev_fun = pdev->devfn;
--	acb->host = host;
-+	acb = (struct AdapterControlBlock *) host->hostdata;
-+	memset(acb,0,sizeof(struct AdapterControlBlock));
- 	acb->pdev = pdev;
--	host->max_sectors = ARCMSR_MAX_XFER_SECTORS;
-+	acb->host = host;
- 	host->max_lun = ARCMSR_MAX_TARGETLUN;
- 	host->max_id = ARCMSR_MAX_TARGETID;/*16:8*/
- 	host->max_cmd_len = 16;    /*this is issue of 64bit LBA, over 2T
-byte*/
--	host->sg_tablesize = ARCMSR_MAX_SG_ENTRIES;
- 	host->can_queue = ARCMSR_MAX_FREECCB_NUM; /* max simultaneous cmds
-*/
- 	host->cmd_per_lun = ARCMSR_MAX_CMD_PERLUN;
- 	host->this_id = ARCMSR_SCSI_INITIATOR_ID;
- 	host->unique_id = (bus << 8) | dev_fun;
--	host->irq = pdev->irq;
-+	pci_set_drvdata(pdev, host);
-+	pci_set_master(pdev);
- 	error = pci_request_regions(pdev, "arcmsr");
- 	if (error) {
--		goto out_host_put;
-+		goto scsi_host_release;
- 	}
--	arcmsr_define_adapter_type(acb);
--
-+	spin_lock_init(&acb->eh_lock);
-+	spin_lock_init(&acb->ccblist_lock);
- 	acb->acb_flags |= (ACB_F_MESSAGE_WQBUFFER_CLEARED |
- 			   ACB_F_MESSAGE_RQBUFFER_CLEARED |
- 			   ACB_F_MESSAGE_WQBUFFER_READED);
- 	acb->acb_flags &= ~ACB_F_SCSISTOPADAPTER;
- 	INIT_LIST_HEAD(&acb->ccb_free_list);
--	INIT_WORK (&acb->arcmsr_do_message_isr_bh,
-arcmsr_message_isr_bh_fn);
-+	arcmsr_define_adapter_type(acb);
-+	error = arcmsr_remap_pciregion(acb);
-+	if(!error){
-+		goto pci_release_regs;
-+	}
-+	error = arcmsr_get_firmware_spec(acb);
-+	if(!error){
-+		goto unmap_pci_region;
-+	}
- 	error = arcmsr_alloc_ccb_pool(acb);
--	if (error)
--		goto out_release_regions;
--
-+	if(error){
-+		goto free_hbb_mu;
-+	}
- 	arcmsr_iop_init(acb);
--	error = request_irq(pdev->irq, arcmsr_do_interrupt,
--			    IRQF_SHARED, "arcmsr", acb);
--	if (error)
--		goto out_free_ccb_pool;
--
--	pci_set_drvdata(pdev, host);
--	if (strncmp(acb->firm_version, "V1.42", 5) >= 0)
--		host->max_sectors= ARCMSR_MAX_XFER_SECTORS_B;
--
- 	error = scsi_add_host(host, &pdev->dev);
--	if (error)
--		goto out_free_irq;
--
--	error = arcmsr_alloc_sysfs_attr(acb);
--	if (error)
--		goto out_free_sysfs;
--
-+	if(error){
-+		goto RAID_controller_stop;
-+	}
-+	error = request_irq(pdev->irq, arcmsr_do_interrupt, IRQF_SHARED,
-"arcmsr", acb);
-+	if(error){
-+		goto scsi_host_remove;
-+	}
-+	host->irq = pdev->irq;
- 	scsi_scan_host(host);
--	#ifdef CONFIG_SCSI_ARCMSR_AER
--	pci_enable_pcie_error_reporting(pdev);
--	#endif
-+	INIT_WORK (&acb->arcmsr_do_message_isr_bh,
-arcmsr_message_isr_bh_fn);
- 	atomic_set(&acb->rq_map_token, 16);
--	acb->fw_state = TRUE;
-+	atomic_set(&acb->ante_token_value, 16);
-+	acb->fw_flag = FW_NORMAL;
- 	init_timer(&acb->eternal_timer);
--	acb->eternal_timer.expires = jiffies + msecs_to_jiffies(10*HZ);
-+	acb->eternal_timer.expires = jiffies + msecs_to_jiffies(6 * HZ);
- 	acb->eternal_timer.data = (unsigned long) acb;
- 	acb->eternal_timer.function = &arcmsr_request_device_map;
- 	add_timer(&acb->eternal_timer);
--
-+	#ifdef CONFIG_SCSI_ARCMSR_AER
-+		pci_enable_pcie_error_reporting(pdev);
-+	#endif
-+	if(arcmsr_alloc_sysfs_attr(acb))
-+		goto out_free_sysfs;
- 	return 0;
-  out_free_sysfs:
-- out_free_irq:
--	free_irq(pdev->irq, acb);
-- out_free_ccb_pool:
-+	scsi_host_remove:
-+		scsi_remove_host(host);
-+	RAID_controller_stop:
-+		arcmsr_stop_adapter_bgrb(acb);
-+		arcmsr_flush_adapter_cache(acb);
- 	arcmsr_free_ccb_pool(acb);
-- out_release_regions:
-+	free_hbb_mu:
-+		arcmsr_free_mu(acb);
-+	unmap_pci_region:
-+		arcmsr_unmap_pciregion(acb);
-+	pci_release_regs:
- 	pci_release_regions(pdev);
-- out_host_put:
-+	scsi_host_release:
- 	scsi_host_put(host);
-- out_disable_device:
-+	pci_disable_dev:
- 	pci_disable_device(pdev);
-- out:
--	return error;
--}
--
--static uint8_t arcmsr_hba_wait_msgint_ready(struct AdapterControlBlock
-*acb)
--{
--	struct MessageUnit_A __iomem *reg = acb->pmuA;
--	uint32_t Index;
--	uint8_t Retries = 0x00;
--
--	do {
--		for (Index = 0; Index < 100; Index++) {
--			if (readl(&reg->outbound_intstatus) &
--					ARCMSR_MU_OUTBOUND_MESSAGE0_INT) {
--				writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT,
--					&reg->outbound_intstatus);
--				return 0x00;
--			}
--			msleep(10);
--		}/*max 1 seconds*/
--
--	} while (Retries++ < 20);/*max 20 sec*/
--	return 0xff;
--}
--
--static uint8_t arcmsr_hbb_wait_msgint_ready(struct AdapterControlBlock
-*acb)
--{
--	struct MessageUnit_B *reg = acb->pmuB;
--	uint32_t Index;
--	uint8_t Retries = 0x00;
--
--	do {
--		for (Index = 0; Index < 100; Index++) {
--			if (readl(reg->iop2drv_doorbell_reg)
--				& ARCMSR_IOP2DRV_MESSAGE_CMD_DONE) {
--				writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN
--					, reg->iop2drv_doorbell_reg);
--				writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT,
-reg->drv2iop_doorbell_reg);
--				return 0x00;
--			}
--			msleep(10);
--		}/*max 1 seconds*/
--
--	} while (Retries++ < 20);/*max 20 sec*/
--	return 0xff;
-+	return -ENODEV;
- }
- 
- static uint8_t arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
-@@ -625,7 +705,7 @@ static uint8_t arcmsr_abort_hbb_allcmd(s
- {
- 	struct MessageUnit_B *reg = acb->pmuB;
- 
--	writel(ARCMSR_MESSAGE_ABORT_CMD, reg->drv2iop_doorbell_reg);
-+	writel(ARCMSR_MESSAGE_ABORT_CMD, reg->drv2iop_doorbell);
- 	if (arcmsr_hbb_wait_msgint_ready(acb)) {
- 		printk(KERN_NOTICE
- 			"arcmsr%d: wait 'abort all outstanding command'
-timeout \n"
-@@ -651,74 +731,39 @@ static uint8_t arcmsr_abort_allcmd(struc
- 	return rtnval;
- }
- 
--static void arcmsr_pci_unmap_dma(struct CommandControlBlock *ccb)
--{
--	struct scsi_cmnd *pcmd = ccb->pcmd;
--
--	scsi_dma_unmap(pcmd);
--}
--
--static void arcmsr_ccb_complete(struct CommandControlBlock *ccb, int
-stand_flag)
--{
--	struct AdapterControlBlock *acb = ccb->acb;
--	struct scsi_cmnd *pcmd = ccb->pcmd;
--
--	arcmsr_pci_unmap_dma(ccb);
--	if (stand_flag == 1)
--		atomic_dec(&acb->ccboutstandingcount);
--	ccb->startdone = ARCMSR_CCB_DONE;
--	ccb->ccb_flags = 0;
--	list_add_tail(&ccb->list, &acb->ccb_free_list);
--	pcmd->scsi_done(pcmd);
--}
--
--static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb)
--{
--	struct MessageUnit_A __iomem *reg = acb->pmuA;
--	int retry_count = 30;
--
--	writel(ARCMSR_INBOUND_MESG0_FLUSH_CACHE, &reg->inbound_msgaddr0);
--	do {
--		if (!arcmsr_hba_wait_msgint_ready(acb))
--			break;
--		else {
--			retry_count--;
--			printk(KERN_NOTICE "arcmsr%d: wait 'flush adapter
-cache' \
--			timeout, retry count down = %d \n",
-acb->host->host_no, retry_count);
--		}
--	} while (retry_count != 0);
--}
--
--static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb)
-+static bool arcmsr_hbb_enable_driver_mode(struct AdapterControlBlock *pacb)
- {
--	struct MessageUnit_B *reg = acb->pmuB;
--	int retry_count = 30;
-+	struct MessageUnit_B *reg = pacb->pmuB;
- 
--	writel(ARCMSR_MESSAGE_FLUSH_CACHE, reg->drv2iop_doorbell_reg);
--	do {
--		if (!arcmsr_hbb_wait_msgint_ready(acb))
--			break;
--		else {
--			retry_count--;
--			printk(KERN_NOTICE "arcmsr%d: wait 'flush adapter
-cache' \
--			timeout,retry count down = %d \n",
-acb->host->host_no, retry_count);
-+	writel(ARCMSR_MESSAGE_START_DRIVER_MODE, reg->drv2iop_doorbell);
-+	if(arcmsr_hbb_wait_msgint_ready(pacb)){
-+		printk(KERN_ERR "arcmsr%d: can't set driver mode. \n",
-pacb->host->host_no);
-+		return false;
- 		}
--	} while (retry_count != 0);
-+    	return true;
- }
- 
--static void arcmsr_flush_adapter_cache(struct AdapterControlBlock *acb)
-+static void arcmsr_pci_unmap_dma(struct CommandControlBlock *ccb)
- {
--	switch (acb->adapter_type) {
--
--	case ACB_ADAPTER_TYPE_A: {
--		arcmsr_flush_hba_cache(acb);
--		}
--		break;
-+	struct scsi_cmnd *pcmd = ccb->pcmd;
- 
--	case ACB_ADAPTER_TYPE_B: {
--		arcmsr_flush_hbb_cache(acb);
--		}
-+	scsi_dma_unmap(pcmd);
- 	}
-+
-+static void arcmsr_ccb_complete(struct CommandControlBlock *ccb)
-+{
-+	struct AdapterControlBlock *acb = ccb->acb;
-+	struct scsi_cmnd *pcmd = ccb->pcmd;
-+	unsigned long flags;
-+
-+	atomic_dec(&acb->ccboutstandingcount);
-+	arcmsr_pci_unmap_dma(ccb);
-+	ccb->startdone = ARCMSR_CCB_DONE;
-+	ccb->ccb_flags = 0;
-+	spin_lock_irqsave(&acb->ccblist_lock, flags);
-+	list_add_tail(&ccb->list, &acb->ccb_free_list);
-+	spin_unlock_irqrestore(&acb->ccblist_lock, flags);
-+	pcmd->scsi_done(pcmd);
- }
- 
- static void arcmsr_report_sense_info(struct CommandControlBlock *ccb)
-@@ -754,15 +799,15 @@ static u32 arcmsr_disable_outbound_ints(
- 
- 	case ACB_ADAPTER_TYPE_B : {
- 		struct MessageUnit_B *reg = acb->pmuB;
--		orig_mask = readl(reg->iop2drv_doorbell_mask_reg);
--		writel(0, reg->iop2drv_doorbell_mask_reg);
-+		orig_mask = readl(reg->iop2drv_doorbell_mask);
-+		writel(0, reg->iop2drv_doorbell_mask);
- 		}
- 		break;
- 	}
- 	return orig_mask;
- }
- 
--static void arcmsr_report_ccb_state(struct AdapterControlBlock *acb, \
-+static void arcmsr_report_ccb_state(struct AdapterControlBlock *acb, 
- 			struct CommandControlBlock *ccb, uint32_t flag_ccb)
- {
- 
-@@ -773,13 +818,13 @@ static void arcmsr_report_ccb_state(stru
- 		if (acb->devstate[id][lun] == ARECA_RAID_GONE)
- 			acb->devstate[id][lun] = ARECA_RAID_GOOD;
- 			ccb->pcmd->result = DID_OK << 16;
--			arcmsr_ccb_complete(ccb, 1);
-+			arcmsr_ccb_complete(ccb);
- 	} else {
- 		switch (ccb->arcmsr_cdb.DeviceStatus) {
- 		case ARCMSR_DEV_SELECT_TIMEOUT: {
- 			acb->devstate[id][lun] = ARECA_RAID_GONE;
- 			ccb->pcmd->result = DID_NO_CONNECT << 16;
--			arcmsr_ccb_complete(ccb, 1);
-+			arcmsr_ccb_complete(ccb);
- 			}
- 			break;
- 
-@@ -788,14 +833,14 @@ static void arcmsr_report_ccb_state(stru
- 		case ARCMSR_DEV_INIT_FAIL: {
- 			acb->devstate[id][lun] = ARECA_RAID_GONE;
- 			ccb->pcmd->result = DID_BAD_TARGET << 16;
--			arcmsr_ccb_complete(ccb, 1);
-+			arcmsr_ccb_complete(ccb);
- 			}
- 			break;
- 
- 		case ARCMSR_DEV_CHECK_CONDITION: {
- 			acb->devstate[id][lun] = ARECA_RAID_GOOD;
- 			arcmsr_report_sense_info(ccb);
--			arcmsr_ccb_complete(ccb, 1);
-+			arcmsr_ccb_complete(ccb);
- 			}
- 			break;
- 
-@@ -810,7 +855,7 @@ static void arcmsr_report_ccb_state(stru
- 					, ccb->arcmsr_cdb.DeviceStatus);
- 					acb->devstate[id][lun] =
-ARECA_RAID_GONE;
- 					ccb->pcmd->result = DID_NO_CONNECT
-<< 16;
--					arcmsr_ccb_complete(ccb, 1);
-+					arcmsr_ccb_complete(ccb);
- 			break;
- 		}
- 	}
-@@ -820,14 +865,19 @@ static void arcmsr_drain_donequeue(struc
- 
- {
- 	struct CommandControlBlock *ccb;
-+	struct ARCMSR_CDB *arcmsr_cdb;
-+	int id, lun;
- 
--	ccb = (struct CommandControlBlock *)(acb->vir2phy_offset + (flag_ccb
-<< 5));
-+	arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset + (flag_ccb
-<< 5));
-+	ccb = container_of(arcmsr_cdb, struct CommandControlBlock,
-arcmsr_cdb);
- 	if ((ccb->acb != acb) || (ccb->startdone != ARCMSR_CCB_START)) {
- 		if (ccb->startdone == ARCMSR_CCB_ABORTED) {
- 			struct scsi_cmnd *abortcmd = ccb->pcmd;
- 			if (abortcmd) {
-+				id = abortcmd->device->id;
-+				lun = abortcmd->device->lun;
+2.6.34-rc3 boot on a power5 box produces this badness message
+during ibmvscsi initialization.
 
- 				abortcmd->result |= DID_ABORT << 16;
--				arcmsr_ccb_complete(ccb, 1);
-+				arcmsr_ccb_complete(ccb);
- 				printk(KERN_NOTICE "arcmsr%d: ccb ='0x%p' \
- 				isr got aborted command \n",
-acb->host->host_no, ccb);
- 			}
-@@ -892,6 +942,7 @@ static void arcmsr_remove(struct pci_dev
- 	int poll_count = 0;
- 	arcmsr_free_sysfs_attr(acb);
- 	scsi_remove_host(host);
-+	scsi_host_put(host);
- 	flush_scheduled_work();
- 	del_timer_sync(&acb->eternal_timer);
- 	arcmsr_disable_outbound_ints(acb);
-@@ -917,7 +968,7 @@ static void arcmsr_remove(struct pci_dev
- 			if (ccb->startdone == ARCMSR_CCB_START) {
- 				ccb->startdone = ARCMSR_CCB_ABORTED;
- 				ccb->pcmd->result = DID_ABORT << 16;
--				arcmsr_ccb_complete(ccb, 1);
-+				arcmsr_ccb_complete(ccb);
- 			}
- 		}
- 	}
-@@ -921,13 +972,10 @@ static void arcmsr_remove(struct pci_dev
- 			}
- 		}
- 	}
--
- 	free_irq(pdev->irq, acb);
- 	arcmsr_free_ccb_pool(acb);
-+	arcmsr_free_mu(acb);
- 	pci_release_regions(pdev);
--
--	scsi_host_put(host);
--
- 	pci_disable_device(pdev);
- 	pci_set_drvdata(pdev, NULL);
- }
-@@ -982,7 +1030,7 @@ static void arcmsr_enable_outbound_ints(
- 			ARCMSR_IOP2DRV_DATA_READ_OK |
- 			ARCMSR_IOP2DRV_CDB_DONE |
- 			ARCMSR_IOP2DRV_MESSAGE_CMD_DONE);
--		writel(mask, reg->iop2drv_doorbell_mask_reg);
-+		writel(mask, reg->iop2drv_doorbell_mask);
- 		acb->outbound_int_enable = (intmask_org | mask) &
-0x0000000f;
- 		}
- 	}
-@@ -995,6 +1043,9 @@ static int arcmsr_build_ccb(struct Adapt
- 	int8_t *psge = (int8_t *)&arcmsr_cdb->u;
- 	__le32 address_lo, address_hi;
- 	int arccdbsize = 0x30;
-+	__le32 length = 0;
-+	int i, cdb_sgcount = 0;
-+	struct scatterlist *sg;
- 	int nseg;
- 
- 	ccb->pcmd = pcmd;
-@@ -1004,19 +1055,12 @@ static int arcmsr_build_ccb(struct Adapt
- 	arcmsr_cdb->LUN = pcmd->device->lun;
- 	arcmsr_cdb->Function = 1;
- 	arcmsr_cdb->CdbLength = (uint8_t)pcmd->cmd_len;
--	arcmsr_cdb->Context = (unsigned long)arcmsr_cdb;
-+	arcmsr_cdb->Context = 0;
- 	memcpy(arcmsr_cdb->Cdb, pcmd->cmnd, pcmd->cmd_len);
- 
- 	nseg = scsi_dma_map(pcmd);
--	if (nseg > ARCMSR_MAX_SG_ENTRIES)
-+	if(nseg > acb->host->sg_tablesize || nseg < 0)
- 		return FAILED;
--	BUG_ON(nseg < 0);
--
--	if (nseg) {
--		__le32 length;
--		int i, cdb_sgcount = 0;
--		struct scatterlist *sg;
--
- 		/* map stor port SG list to our iop SG List. */
- 		scsi_for_each_sg(pcmd, sg, nseg, i) {
- 			/* Get the physical address of the current data
-pointer */
-@@ -1043,10 +1087,10 @@ static int arcmsr_build_ccb(struct Adapt
- 		}
- 		arcmsr_cdb->sgcount = (uint8_t)cdb_sgcount;
- 		arcmsr_cdb->DataLength = scsi_bufflen(pcmd);
-+	arcmsr_cdb->msgPages = arccdbsize/0x100 + (arccdbsize % 0x100 ? 1 :
-0);
- 		if ( arccdbsize > 256)
- 			arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_SGL_BSIZE;
--	}
--	if (pcmd->sc_data_direction == DMA_TO_DEVICE ) {
-+	if (pcmd->cmnd[0]|WRITE_6 || pcmd->cmnd[0]|WRITE_10 ||
-pcmd->cmnd[0]|WRITE_12 ){
- 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_WRITE;
- 		ccb->ccb_flags |= CCB_FLAG_WRITE;
- 	}
-@@ -1055,7 +1099,7 @@ static int arcmsr_build_ccb(struct Adapt
- 
- static void arcmsr_post_ccb(struct AdapterControlBlock *acb, struct
-CommandControlBlock *ccb)
- {
--	uint32_t cdb_shifted_phyaddr = ccb->cdb_shifted_phyaddr;
-+	uint32_t shifted_cdb_phyaddr = ccb->shifted_cdb_phyaddr;
- 	struct ARCMSR_CDB *arcmsr_cdb = (struct ARCMSR_CDB
-*)&ccb->arcmsr_cdb;
- 	atomic_inc(&acb->ccboutstandingcount);
- 	ccb->startdone = ARCMSR_CCB_START;
-@@ -1065,10 +1109,10 @@ static void arcmsr_post_ccb(struct Adapt
- 		struct MessageUnit_A __iomem *reg = acb->pmuA;
- 
- 		if (arcmsr_cdb->Flags & ARCMSR_CDB_FLAG_SGL_BSIZE)
--			writel(cdb_shifted_phyaddr |
-ARCMSR_CCBPOST_FLAG_SGL_BSIZE,
-+			writel(shifted_cdb_phyaddr |
-ARCMSR_CCBPOST_FLAG_SGL_BSIZE,
- 			&reg->inbound_queueport);
- 		else {
--				writel(cdb_shifted_phyaddr,
-&reg->inbound_queueport);
-+				writel(shifted_cdb_phyaddr,
-&reg->inbound_queueport);
- 		}
- 		}
- 		break;
-@@ -1080,16 +1124,16 @@ static void arcmsr_post_ccb(struct Adapt
- 		ending_index = ((index + 1) % ARCMSR_MAX_HBB_POSTQUEUE);
- 		writel(0, &reg->post_qbuffer[ending_index]);
- 		if (arcmsr_cdb->Flags & ARCMSR_CDB_FLAG_SGL_BSIZE) {
--			writel(cdb_shifted_phyaddr |
-ARCMSR_CCBPOST_FLAG_SGL_BSIZE,\
-+			writel(shifted_cdb_phyaddr |
-ARCMSR_CCBPOST_FLAG_SGL_BSIZE,\
- 						 &reg->post_qbuffer[index]);
- 		}
- 		else {
--			writel(cdb_shifted_phyaddr,
-&reg->post_qbuffer[index]);
-+			writel(shifted_cdb_phyaddr,
-&reg->post_qbuffer[index]);
- 		}
- 		index++;
- 		index %= ARCMSR_MAX_HBB_POSTQUEUE;/*if last index number set
-it to 0 */
- 		reg->postq_index = index;
--		writel(ARCMSR_DRV2IOP_CDB_POSTED,
-reg->drv2iop_doorbell_reg);
-+		writel(ARCMSR_DRV2IOP_CDB_POSTED, reg->drv2iop_doorbell);
- 		}
- 		break;
- 	}
-@@ -1112,7 +1156,7 @@ static void arcmsr_stop_hbb_bgrb(struct 
- {
- 	struct MessageUnit_B *reg = acb->pmuB;
- 	acb->acb_flags &= ~ACB_F_MSG_START_BGRB;
--	writel(ARCMSR_MESSAGE_STOP_BGRB, reg->drv2iop_doorbell_reg);
-+	writel(ARCMSR_MESSAGE_STOP_BGRB, reg->drv2iop_doorbell);
- 
- 	if (arcmsr_hbb_wait_msgint_ready(acb)) {
- 		printk(KERN_NOTICE
-@@ -1140,23 +1184,14 @@ static void arcmsr_free_ccb_pool(struct 
- {
- 	switch (acb->adapter_type) {
- 	case ACB_ADAPTER_TYPE_A: {
-+		dma_free_coherent(&acb->pdev->dev, acb->uncache_size,
-acb->dma_coherent, acb->dma_coherent_handle);
- 		iounmap(acb->pmuA);
--		dma_free_coherent(&acb->pdev->dev,
--		ARCMSR_MAX_FREECCB_NUM * sizeof (struct CommandControlBlock)
-+ 0x20,
--		acb->dma_coherent,
--		acb->dma_coherent_handle);
--		break;
- 	}
-+		break;
- 	case ACB_ADAPTER_TYPE_B: {
--		struct MessageUnit_B *reg = acb->pmuB;
--		iounmap((u8 *)reg->drv2iop_doorbell_reg -
-ARCMSR_DRV2IOP_DOORBELL);
--		iounmap((u8 *)reg->ioctl_wbuffer_reg -
-ARCMSR_IOCTL_WBUFFER);
--		dma_free_coherent(&acb->pdev->dev,
--		(ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock)
-+ 0x20 +
--		sizeof(struct MessageUnit_B)), acb->dma_coherent,
-acb->dma_coherent_handle);
-+		dma_free_coherent(&acb->pdev->dev, acb->uncache_size,
-acb->dma_coherent, acb->dma_coherent_handle);
- 	}
- 	}
--
- }
- 
- void arcmsr_iop_message_read(struct AdapterControlBlock *acb)
-@@ -1170,7 +1205,7 @@ void arcmsr_iop_message_read(struct Adap
- 
- 	case ACB_ADAPTER_TYPE_B: {
- 		struct MessageUnit_B *reg = acb->pmuB;
--		writel(ARCMSR_DRV2IOP_DATA_READ_OK,
-reg->drv2iop_doorbell_reg);
-+		writel(ARCMSR_DRV2IOP_DATA_READ_OK, reg->drv2iop_doorbell);
- 		}
- 		break;
- 	}
-@@ -1195,7 +1230,7 @@ static void arcmsr_iop_message_wrote(str
- 		** push inbound doorbell tell iop, driver data write ok
- 		** and wait reply on next hwinterrupt for next Qbuffer post
- 		*/
--		writel(ARCMSR_DRV2IOP_DATA_WRITE_OK,
-reg->drv2iop_doorbell_reg);
-+		writel(ARCMSR_DRV2IOP_DATA_WRITE_OK, reg->drv2iop_doorbell);
- 		}
- 		break;
- 	}
-@@ -1215,7 +1250,7 @@ struct QBUFFER __iomem *arcmsr_get_iop_r
- 
- 	case ACB_ADAPTER_TYPE_B: {
- 		struct MessageUnit_B *reg = acb->pmuB;
--		qbuffer = (struct QBUFFER __iomem *)reg->ioctl_rbuffer_reg;
-+		qbuffer = (struct QBUFFER __iomem *)reg->message_rbuffer;
- 		}
- 		break;
- 	}
-@@ -1236,7 +1271,7 @@ static struct QBUFFER __iomem *arcmsr_ge
- 
- 	case ACB_ADAPTER_TYPE_B: {
- 		struct MessageUnit_B  *reg = acb->pmuB;
--		pqbuffer = (struct QBUFFER __iomem *)reg->ioctl_wbuffer_reg;
-+		pqbuffer = (struct QBUFFER __iomem *)reg->message_wbuffer;
- 		}
- 		break;
- 	}
-@@ -1371,7 +1405,7 @@ static void arcmsr_hbb_message_isr(struc
- 	struct MessageUnit_B *reg  = acb->pmuB;
- 
- 	/*clear interrupt and message state*/
--	writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN, reg->iop2drv_doorbell_reg);
-+	writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN, reg->iop2drv_doorbell);
- 	schedule_work(&acb->arcmsr_do_message_isr_bh);
- }
- static int arcmsr_handle_hba_isr(struct AdapterControlBlock *acb)
-@@ -1403,16 +1437,16 @@ static int arcmsr_handle_hbb_isr(struct 
- 	uint32_t outbound_doorbell;
- 	struct MessageUnit_B *reg = acb->pmuB;
- 
--	outbound_doorbell = readl(reg->iop2drv_doorbell_reg) &
-+	outbound_doorbell = readl(reg->iop2drv_doorbell) &
- 				acb->outbound_int_enable;
- 	if (!outbound_doorbell)
- 		return 1;
- 
--	writel(~outbound_doorbell, reg->iop2drv_doorbell_reg);
-+	writel(~outbound_doorbell, reg->iop2drv_doorbell);
- 	/*in case the last action of doorbell interrupt clearance is cached,
- 	this action can push HW to write down the clear bit*/
--	readl(reg->iop2drv_doorbell_reg);
--	writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell_reg);
-+	readl(reg->iop2drv_doorbell);
-+	writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell);
- 	if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_WRITE_OK) {
- 		arcmsr_iop2drv_data_wrote_handle(acb);
- 	}
-@@ -1531,12 +1565,6 @@ static int arcmsr_iop_message_xfer(struc
- 			goto message_out;
- 		}
- 				
--		if(acb->fw_state == FALSE) {
--			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
--		}
--
- 		ptmpQbuffer = ver_addr;
- 		while ((acb->rqbuf_firstindex != acb->rqbuf_lastindex)
- 			&& (allxfer_len < 1031)) {
-@@ -1568,7 +1596,11 @@ static int arcmsr_iop_message_xfer(struc
- 		}
- 		memcpy(pcmdmessagefld->messagedatabuffer, ver_addr,
-allxfer_len);
- 		pcmdmessagefld->cmdmessage.Length = allxfer_len;
-+		if(acb->fw_flag == FW_DEADLOCK) {
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		}else{
- 		pcmdmessagefld->cmdmessage.ReturnCode =
-ARCMSR_MESSAGE_RETURNCODE_OK;
-+		}
- 		kfree(ver_addr);
- 		}
- 		break;
-@@ -1583,12 +1615,13 @@ static int arcmsr_iop_message_xfer(struc
- 			retvalue = ARCMSR_MESSAGE_FAIL;
- 			goto message_out;
- 		}
--		if(acb->fw_state == FALSE) {
-+		if(acb->fw_flag == FW_DEADLOCK) {
- 			pcmdmessagefld->cmdmessage.ReturnCode =
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
-+		}else{
-+			pcmdmessagefld->cmdmessage.ReturnCode = 
-+			ARCMSR_MESSAGE_RETURNCODE_OK;
- 		}
--
- 		ptmpuserbuffer = ver_addr;
- 		user_len = pcmdmessagefld->cmdmessage.Length;
- 		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer,
-user_len);
-@@ -1641,12 +1674,6 @@ static int arcmsr_iop_message_xfer(struc
- 
- 	case ARCMSR_MESSAGE_CLEAR_RQBUFFER: {
- 		uint8_t *pQbuffer = acb->rqbuffer;
--		if(acb->fw_state == FALSE) {
--			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
--		}
--
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
- 			acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
- 			arcmsr_iop_message_read(acb);
-@@ -1655,16 +1682,24 @@ static int arcmsr_iop_message_xfer(struc
- 		acb->rqbuf_firstindex = 0;
- 		acb->rqbuf_lastindex = 0;
- 		memset(pQbuffer, 0, ARCMSR_MAX_QBUFFER);
--		pcmdmessagefld->cmdmessage.ReturnCode =
-ARCMSR_MESSAGE_RETURNCODE_OK;
-+		if(acb->fw_flag == FW_DEADLOCK) {
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		}else{
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+			ARCMSR_MESSAGE_RETURNCODE_OK;
-+		}
- 		}
- 		break;
- 
- 	case ARCMSR_MESSAGE_CLEAR_WQBUFFER: {
- 		uint8_t *pQbuffer = acb->wqbuffer;
--		if(acb->fw_state == FALSE) {
-+		if(acb->fw_flag == FW_DEADLOCK) {
- 			pcmdmessagefld->cmdmessage.ReturnCode =
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
-+		}else{
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+			ARCMSR_MESSAGE_RETURNCODE_OK;
- 		}
- 
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
-@@ -1677,18 +1712,11 @@ static int arcmsr_iop_message_xfer(struc
- 		acb->wqbuf_firstindex = 0;
- 		acb->wqbuf_lastindex = 0;
- 		memset(pQbuffer, 0, ARCMSR_MAX_QBUFFER);
--		pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_OK;
- 		}
- 		break;
- 
- 	case ARCMSR_MESSAGE_CLEAR_ALLQBUFFER: {
- 		uint8_t *pQbuffer;
--		if(acb->fw_state == FALSE) {
--			pcmdmessagefld->cmdmessage.ReturnCode =
--			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
--		}
- 
- 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
- 			acb->acb_flags &= ~ACB_F_IOPDATA_OVERFLOW;
-@@ -1706,47 +1734,52 @@ static int arcmsr_iop_message_xfer(struc
- 		memset(pQbuffer, 0, sizeof(struct QBUFFER));
- 		pQbuffer = acb->wqbuffer;
- 		memset(pQbuffer, 0, sizeof(struct QBUFFER));
--		pcmdmessagefld->cmdmessage.ReturnCode =
-ARCMSR_MESSAGE_RETURNCODE_OK;
-+		if(acb->fw_flag == FW_DEADLOCK) {
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
-+		}else{
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+			ARCMSR_MESSAGE_RETURNCODE_OK;
-+		}
- 		}
- 		break;
- 
- 	case ARCMSR_MESSAGE_RETURN_CODE_3F: {
--		if(acb->fw_state == FALSE) {
-+		if(acb->fw_flag == FW_DEADLOCK) {
- 			pcmdmessagefld->cmdmessage.ReturnCode =
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
--		}
--		pcmdmessagefld->cmdmessage.ReturnCode =
-ARCMSR_MESSAGE_RETURNCODE_3F;
-+		}else{
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+			ARCMSR_MESSAGE_RETURNCODE_3F;
- 		}
- 		break;
--
-+		}
- 	case ARCMSR_MESSAGE_SAY_HELLO: {
- 		int8_t *hello_string = "Hello! I am ARCMSR";
--		if(acb->fw_state == FALSE) {
-+		if(acb->fw_flag == FW_DEADLOCK) {
- 			pcmdmessagefld->cmdmessage.ReturnCode =
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
-+		}else{
-+			pcmdmessagefld->cmdmessage.ReturnCode =
-+			ARCMSR_MESSAGE_RETURNCODE_OK;
- 		}
- 		memcpy(pcmdmessagefld->messagedatabuffer, hello_string
- 			, (int16_t)strlen(hello_string));
--		pcmdmessagefld->cmdmessage.ReturnCode =
-ARCMSR_MESSAGE_RETURNCODE_OK;
- 		}
- 		break;
- 
- 	case ARCMSR_MESSAGE_SAY_GOODBYE:
--		if(acb->fw_state == FALSE) {
-+		if(acb->fw_flag == FW_DEADLOCK) {
- 			pcmdmessagefld->cmdmessage.ReturnCode =
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
- 		}
- 		arcmsr_iop_parking(acb);
- 		break;
- 
- 	case ARCMSR_MESSAGE_FLUSH_ADAPTER_CACHE:
--		if(acb->fw_state == FALSE) {
-+		if(acb->fw_flag == FW_DEADLOCK) {
- 			pcmdmessagefld->cmdmessage.ReturnCode =
- 			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
--			goto message_out;
- 		}
- 		arcmsr_flush_adapter_cache(acb);
- 		break;
-@@ -1764,11 +1797,16 @@ static struct CommandControlBlock *arcms
- {
- 	struct list_head *head = &acb->ccb_free_list;
- 	struct CommandControlBlock *ccb = NULL;
--
-+	unsigned long flags;
-+	spin_lock_irqsave(&acb->ccblist_lock, flags);
- 	if (!list_empty(head)) {
- 		ccb = list_entry(head->next, struct CommandControlBlock,
-list);
--		list_del(head->next);
-+		list_del_init(&ccb->list);
-+	}else{
-+		spin_unlock_irqrestore(&acb->ccblist_lock, flags);
-+		return 0;
- 	}
-+	spin_unlock_irqrestore(&acb->ccblist_lock, flags);
- 	return ccb;
- }
- 
-@@ -1843,66 +1881,12 @@ static int arcmsr_queue_command(struct s
- 		return 0;
- 	}
- 
--	if (acb->acb_flags & ACB_F_BUS_RESET) {
--		switch (acb->adapter_type) {
--			case ACB_ADAPTER_TYPE_A: {
--				struct MessageUnit_A __iomem *reg =
-acb->pmuA;
--				uint32_t intmask_org,outbound_doorbell;
--
--				if((readl(&reg->outbound_msgaddr1) &
--					ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK)
-== 0 ) {
--					printk(KERN_NOTICE "arcmsr%d: bus
-reset and return busy \n",
--						acb->host->host_no);
--					return SCSI_MLQUEUE_HOST_BUSY;
--				}
--
--				acb->acb_flags &= ~ACB_F_FIRMWARE_TRAP;
--				printk(KERN_NOTICE "arcmsr%d: hardware bus
-reset and reset ok \n",
--					acb->host->host_no);
--				/* disable all outbound interrupt */
--				intmask_org =
-arcmsr_disable_outbound_ints(acb);
-- 				arcmsr_get_firmware_spec(acb,1);
--				/*start background rebuild*/
--				arcmsr_start_adapter_bgrb(acb);
--				/* clear Qbuffer if door bell ringed */
--				outbound_doorbell =
-readl(&reg->outbound_doorbell);
--				/*clear interrupt */
--				writel(outbound_doorbell,
-&reg->outbound_doorbell);
--   				writel(ARCMSR_INBOUND_DRIVER_DATA_READ_OK,
--					&reg->inbound_doorbell);
--				/* enable outbound Post Queue,outbound
-doorbell Interrupt */
--				arcmsr_enable_outbound_ints(acb,
-intmask_org);
--				acb->acb_flags |= ACB_F_IOP_INITED;
--				acb->acb_flags &= ~ACB_F_BUS_RESET;
--			}
--			break;
--			case ACB_ADAPTER_TYPE_B: {
--			}
--		}
--	}
--
- 	if (target == 16) {
- 		/* virtual device for iop message transfer */
- 		arcmsr_handle_virtual_command(acb, cmd);
- 		return 0;
- 	}
--	if (acb->devstate[target][lun] == ARECA_RAID_GONE) {
--		uint8_t block_cmd;
- 
--		block_cmd = cmd->cmnd[0] & 0x0f;
--		if (block_cmd == 0x08 || block_cmd == 0x0a) {
--			printk(KERN_NOTICE
--				"arcmsr%d: block 'read/write'"
--				"command with gone raid volume"
--				" Cmd = %2x, TargetId = %d, Lun = %d \n"
--				, acb->host->host_no
--				, cmd->cmnd[0]
--				, target, lun);
--			cmd->result = (DID_NO_CONNECT << 16);
--			cmd->scsi_done(cmd);
--			return 0;
--		}
--	}
- 	if (atomic_read(&acb->ccboutstandingcount) >=
- 			ARCMSR_MAX_OUTSTANDING_CMD)
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -1919,7 +1903,7 @@ static int arcmsr_queue_command(struct s
- 	return 0;
- }
- 
--static void *arcmsr_get_hba_config(struct AdapterControlBlock *acb, int
-mode){
-+static bool arcmsr_get_hba_config(struct AdapterControlBlock *acb){
- 	struct MessageUnit_A __iomem *reg = acb->pmuA;
- 	char *acb_firm_model = acb->firm_model;
- 	char *acb_firm_version = acb->firm_version;
-@@ -1933,10 +1917,8 @@ static void *arcmsr_get_hba_config(struc
- 	if (arcmsr_hba_wait_msgint_ready(acb)) {
- 		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
- 			miscellaneous data' timeout \n",
-acb->host->host_no);
--		return NULL;
-+		return false;
- 	}
--
--	if(mode == 1) {
- 		count = 8;
- 		while (count) {
- 			*acb_firm_model = readb(iop_firm_model);
-@@ -1960,44 +1942,61 @@ static void *arcmsr_get_hba_config(struc
- 			iop_device_map++;
- 			count--;
-  		}
--		
--		printk(KERN_INFO 	"ARECA RAID ADAPTER%d: FIRMWARE
-VERSION %s \n"
--			, acb->host->host_no
--			, acb->firm_version);
-+	printk(KERN_NOTICE "Areca RAID Controller%d: F/W %s & Model %s\n", 
-+		acb->host->host_no,
-+		acb->firm_version,
-+		acb->firm_model);
- 		acb->signature = readl(&reg->message_rwbuffer[0]);
- 		acb->firm_request_len = readl(&reg->message_rwbuffer[1]);
- 		acb->firm_numbers_queue = readl(&reg->message_rwbuffer[2]);
- 		acb->firm_sdram_size = readl(&reg->message_rwbuffer[3]);
- 		acb->firm_hd_channels = readl(&reg->message_rwbuffer[4]);
-+	acb->firm_cfg_version = readl(&reg->message_rwbuffer[25]);
-/*firm_cfg_version,25,100-103*/
-+	return true;
- 	}
--	return (reg->message_rwbuffer);
--}
--static void __iomem *arcmsr_get_hbb_config(struct AdapterControlBlock *acb,
-int mode)
-+static bool arcmsr_get_hbb_config(struct AdapterControlBlock *acb)
- {
- 	struct MessageUnit_B *reg = acb->pmuB;
--	uint32_t __iomem *lrwbuffer = reg->msgcode_rwbuffer_reg;
-+	struct pci_dev *pdev = acb->pdev;
-+	void *dma_coherent;
-+	dma_addr_t dma_coherent_handle;
- 	char *acb_firm_model = acb->firm_model;
- 	char *acb_firm_version = acb->firm_version;
- 	char *acb_device_map = acb->device_map;
--	char __iomem *iop_firm_model = (char __iomem *)(&lrwbuffer[15]);
-+	char __iomem *iop_firm_model;
- 	/*firm_model,15,60-67*/
--	char __iomem *iop_firm_version = (char __iomem *)(&lrwbuffer[17]);
-+	char __iomem *iop_firm_version;
- 	/*firm_version,17,68-83*/
--	char __iomem *iop_device_map = (char __iomem *) (&lrwbuffer[21]);
-+	char __iomem *iop_device_map;
- 	/*firm_version,21,84-99*/
- 	int count;
-+	dma_coherent = dma_alloc_coherent(&pdev->dev, sizeof(struct
-MessageUnit_B), &dma_coherent_handle, GFP_KERNEL);
-+	if (!dma_coherent){
-+		printk("arcmsr%d: dma_alloc_coherent got error for hbb
-mu\n", acb->host->host_no);
-+		return false;
-+	}
-+	acb->dma_coherent_handle_hbb_mu = dma_coherent_handle;
-+	reg = (struct MessageUnit_B *)dma_coherent;
-+	acb->pmuB = reg;
-+	reg->drv2iop_doorbell= (uint32_t __iomem *)((unsigned
-long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL);
-+	reg->drv2iop_doorbell_mask = (uint32_t __iomem *)((unsigned
-long)acb->mem_base0 + ARCMSR_DRV2IOP_DOORBELL_MASK);
-+	reg->iop2drv_doorbell = (uint32_t __iomem *)((unsigned
-long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL);
-+	reg->iop2drv_doorbell_mask = (uint32_t __iomem *)((unsigned
-long)acb->mem_base0 + ARCMSR_IOP2DRV_DOORBELL_MASK);
-+	reg->message_wbuffer = (uint32_t __iomem *)((unsigned
-long)acb->mem_base1 + ARCMSR_MESSAGE_WBUFFER);
-+	reg->message_rbuffer =  (uint32_t __iomem *)((unsigned
-long)acb->mem_base1 + ARCMSR_MESSAGE_RBUFFER);
-+	reg->message_rwbuffer = (uint32_t __iomem *)((unsigned
-long)acb->mem_base1 + ARCMSR_MESSAGE_RWBUFFER);
-+	iop_firm_model = (char __iomem *)(&reg->message_rwbuffer[15]);
-/*firm_model,15,60-67*/
-+	iop_firm_version = (char __iomem *)(&reg->message_rwbuffer[17]);
-/*firm_version,17,68-83*/
-+	iop_device_map = (char __iomem *)(&reg->message_rwbuffer[21]);
-/*firm_version,21,84-99*/
- 
--	writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell_reg);
-+	writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell);
- 	if (arcmsr_hbb_wait_msgint_ready(acb)) {
- 		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
- 			miscellaneous data' timeout \n",
-acb->host->host_no);
--		return NULL;
-+		return false;
- 	}
--
--	if(mode == 1) {
- 		count = 8;
--		while (count)
--		{
-+	while (count){
- 			*acb_firm_model = readb(iop_firm_model);
- 			acb_firm_model++;
- 			iop_firm_model++;
-@@ -2003,10 +2002,8 @@ static void __iomem *arcmsr_get_hbb_conf
- 			iop_firm_model++;
- 			count--;
- 		}
--
- 		count = 16;
--		while (count)
--		{
-+	while (count){
- 			*acb_firm_version = readb(iop_firm_version);
- 			acb_firm_version++;
- 			iop_firm_version++;
-@@ -2021,46 +2018,41 @@ static void __iomem *arcmsr_get_hbb_conf
- 			count--;
-  		}
- 		
--		printk(KERN_INFO "ARECA RAID ADAPTER%d: FIRMWARE VERSION %s
-\n",
-+	printk(KERN_NOTICE "Areca RAID Controller%d: F/W %s & Model %s\n",
- 				acb->host->host_no,
--				acb->firm_version);
-+		acb->firm_version,
-+		acb->firm_model);
- 
--		acb->signature = readl(lrwbuffer++);
-+	acb->signature = readl(&reg->message_rwbuffer[1]);
- 		/*firm_signature,1,00-03*/
--		acb->firm_request_len = readl(lrwbuffer++);
-+	acb->firm_request_len=readl(&reg->message_rwbuffer[2]); 
- 		/*firm_request_len,1,04-07*/
--		acb->firm_numbers_queue = readl(lrwbuffer++);
-+	acb->firm_numbers_queue=readl(&reg->message_rwbuffer[3]); 
- 		/*firm_numbers_queue,2,08-11*/
--		acb->firm_sdram_size = readl(lrwbuffer++);
-+	acb->firm_sdram_size=readl(&reg->message_rwbuffer[4]); 
- 		/*firm_sdram_size,3,12-15*/
--		acb->firm_hd_channels = readl(lrwbuffer);
-+	acb->firm_hd_channels=readl(&reg->message_rwbuffer[5]); 
- 		/*firm_ide_channels,4,16-19*/
-+	acb->firm_cfg_version=readl(&reg->message_rwbuffer[25]);
-/*firm_cfg_version,25,100-103*/
-+	/*firm_ide_channels,4,16-19*/
-+	return true;
- 	}
--	return (reg->msgcode_rwbuffer_reg);
--}
--static void *arcmsr_get_firmware_spec(struct AdapterControlBlock *acb, int
-mode)
-+static bool arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
- {
--	void *rtnval = 0;
--	switch (acb->adapter_type) {
--	case ACB_ADAPTER_TYPE_A: {
--		rtnval = arcmsr_get_hba_config(acb, mode);
--		}
--		break;
--
--	case ACB_ADAPTER_TYPE_B: {
--		rtnval = arcmsr_get_hbb_config(acb, mode);
--		}
--		break;
--	}
--	return rtnval;
-+	if(acb->adapter_type == ACB_ADAPTER_TYPE_A)
-+		return arcmsr_get_hba_config(acb);
-+	else
-+		return arcmsr_get_hbb_config(acb);
- }
- 
--static void arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
-+static int arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
- 	struct CommandControlBlock *poll_ccb)
- {
- 	struct MessageUnit_A __iomem *reg = acb->pmuA;
- 	struct CommandControlBlock *ccb;
-+	struct ARCMSR_CDB *arcmsr_cdb;
- 	uint32_t flag_ccb, outbound_intstatus, poll_ccb_done = 0, poll_count
-= 0;
-+	int rtn;
- 
- 	polling_hba_ccb_retry:
- 	poll_count++;
-@@ -2068,16 +2060,19 @@ static void arcmsr_polling_hba_ccbdone(s
- 	writel(outbound_intstatus, &reg->outbound_intstatus);/*clear
-interrupt*/
- 	while (1) {
- 		if ((flag_ccb = readl(&reg->outbound_queueport)) ==
-0xFFFFFFFF) {
--			if (poll_ccb_done)
-+			if (poll_ccb_done){
-+				rtn = SUCCESS;
- 				break;
--			else {
--				msleep(25);
--				if (poll_count > 100)
-+			}else {
-+				if (poll_count > 100){
-+					rtn = FAILED;
- 					break;
-+				}
- 				goto polling_hba_ccb_retry;
- 			}
- 		}
--		ccb = (struct CommandControlBlock *)(acb->vir2phy_offset +
-(flag_ccb << 5));
-+		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset +
-(flag_ccb << 5));
-+		ccb = container_of(arcmsr_cdb, struct CommandControlBlock,
-arcmsr_cdb);
- 		poll_ccb_done = (ccb == poll_ccb) ? 1:0;
- 		if ((ccb->acb != acb) || (ccb->startdone !=
-ARCMSR_CCB_START)) {
- 			if ((ccb->startdone == ARCMSR_CCB_ABORTED) || (ccb
-== poll_ccb)) {
-@@ -2088,8 +2083,7 @@ static void arcmsr_polling_hba_ccbdone(s
- 					, ccb->pcmd->device->lun
- 					, ccb);
- 				ccb->pcmd->result = DID_ABORT << 16;
--				arcmsr_ccb_complete(ccb, 1);
--				poll_ccb_done = 1;
-+				arcmsr_ccb_complete(ccb);
- 				continue;
- 			}
- 			printk(KERN_NOTICE "arcmsr%d: polling get an illegal
-ccb"
-@@ -2099,32 +2093,38 @@ static void arcmsr_polling_hba_ccbdone(s
- 				, ccb
- 				, atomic_read(&acb->ccboutstandingcount));
- 			continue;
--		}
-+		}else{
- 		arcmsr_report_ccb_state(acb, ccb, flag_ccb);
- 	}
- }
-+	return rtn;
-+}
- 
--static void arcmsr_polling_hbb_ccbdone(struct AdapterControlBlock *acb,
-+static int arcmsr_polling_hbb_ccbdone(struct AdapterControlBlock *acb,
- 					struct CommandControlBlock
-*poll_ccb)
- {
- 		struct MessageUnit_B *reg = acb->pmuB;
-+	struct ARCMSR_CDB *arcmsr_cdb;
- 		struct CommandControlBlock *ccb;
- 		uint32_t flag_ccb, poll_ccb_done = 0, poll_count = 0;
--		int index;
-+	int index, rtn;
- 
- 	polling_hbb_ccb_retry:
- 		poll_count++;
- 		/* clear doorbell interrupt */
--		writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN,
-reg->iop2drv_doorbell_reg);
-+	writel(ARCMSR_DOORBELL_INT_CLEAR_PATTERN, reg->iop2drv_doorbell);
- 		while (1) {
- 			index = reg->doneq_index;
- 			if ((flag_ccb = readl(&reg->done_qbuffer[index])) ==
-0) {
--				if (poll_ccb_done)
-+			if (poll_ccb_done){
-+				rtn = SUCCESS;
- 					break;
--				else {
-+			}else {
- 					msleep(25);
--					if (poll_count > 100)
-+				if (poll_count > 100){
-+					rtn = FAILED;
- 						break;
-+				}
- 					goto polling_hbb_ccb_retry;
- 				}
- 			}
-@@ -2134,19 +2134,19 @@ static void arcmsr_polling_hbb_ccbdone(s
- 			index %= ARCMSR_MAX_HBB_POSTQUEUE;
- 			reg->doneq_index = index;
- 			/* check ifcommand done with no error*/
--			ccb = (struct CommandControlBlock *)\
--      (acb->vir2phy_offset + (flag_ccb << 5));/*frame must be 32 bytes
-aligned*/
-+		arcmsr_cdb = (struct ARCMSR_CDB *)(acb->vir2phy_offset +
-(flag_ccb << 5));
-+		ccb = container_of(arcmsr_cdb, struct CommandControlBlock,
-arcmsr_cdb);
- 			poll_ccb_done = (ccb == poll_ccb) ? 1:0;
- 			if ((ccb->acb != acb) || (ccb->startdone !=
-ARCMSR_CCB_START)) {
- 				if ((ccb->startdone == ARCMSR_CCB_ABORTED)
-|| (ccb == poll_ccb)) {
--					printk(KERN_NOTICE "arcmsr%d: \
--		scsi id = %d lun = %d ccb = '0x%p' poll command abort
-successfully \n"
-+				printk(KERN_NOTICE "arcmsr%d: scsi id = %d
-lun = %d ccb = '0x%p'"
-+					" poll command abort successfully
-\n"
- 						,acb->host->host_no
- 						,ccb->pcmd->device->id
- 						,ccb->pcmd->device->lun
- 						,ccb);
- 					ccb->pcmd->result = DID_ABORT << 16;
--					arcmsr_ccb_complete(ccb, 1);
-+				arcmsr_ccb_complete(ccb);
- 					continue;
- 				}
- 				printk(KERN_NOTICE "arcmsr%d: polling get an
-illegal ccb"
-@@ -2156,30 +2156,34 @@ static void arcmsr_polling_hbb_ccbdone(s
- 					, ccb
- 					,
-atomic_read(&acb->ccboutstandingcount));
- 				continue;
--			}
-+		}else{
- 			arcmsr_report_ccb_state(acb, ccb, flag_ccb);
-+		}
- 		}	/*drain reply FIFO*/
-+	return rtn;
- }
- 
--static void arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
-+static int arcmsr_polling_ccbdone(struct AdapterControlBlock *acb,
- 					struct CommandControlBlock
-*poll_ccb)
- {
-+	int rtn = 0;
- 	switch (acb->adapter_type) {
- 
- 	case ACB_ADAPTER_TYPE_A: {
--		arcmsr_polling_hba_ccbdone(acb,poll_ccb);
-+		rtn = arcmsr_polling_hba_ccbdone(acb,poll_ccb);
- 		}
- 		break;
- 
- 	case ACB_ADAPTER_TYPE_B: {
--		arcmsr_polling_hbb_ccbdone(acb,poll_ccb);
-+		rtn = arcmsr_polling_hbb_ccbdone(acb,poll_ccb);
- 		}
- 	}
-+	return rtn;
- }
- 
- static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
- {
--	uint32_t cdb_phyaddr, ccb_phyaddr_hi32;
-+	uint32_t cdb_phyaddr, cdb_phyaddr_hi32;
- 	dma_addr_t dma_coherent_handle;
- 	/*
- 	********************************************************************
-@@ -2189,7 +2193,7 @@ static int arcmsr_iop_confirm(struct Ada
- 	*/
- 	dma_coherent_handle = acb->dma_coherent_handle;
- 	cdb_phyaddr = (uint32_t)(dma_coherent_handle);
--	ccb_phyaddr_hi32 = (uint32_t)((cdb_phyaddr >> 16) >> 16);
-+	cdb_phyaddr_hi32 = (uint32_t)((cdb_phyaddr >> 16) >> 16);
- 	/*
- 
-***********************************************************************
- 	**    if adapter type B, set window of "post command Q"
-@@ -2198,13 +2202,13 @@ static int arcmsr_iop_confirm(struct Ada
- 	switch (acb->adapter_type) {
- 
- 	case ACB_ADAPTER_TYPE_A: {
--		if (ccb_phyaddr_hi32 != 0) {
-+		if (cdb_phyaddr_hi32 != 0) {
- 			struct MessageUnit_A __iomem *reg = acb->pmuA;
- 			uint32_t intmask_org;
- 			intmask_org = arcmsr_disable_outbound_ints(acb);
- 			writel(ARCMSR_SIGNATURE_SET_CONFIG, \
- 						&reg->message_rwbuffer[0]);
--			writel(ccb_phyaddr_hi32, &reg->message_rwbuffer[1]);
-+			writel(cdb_phyaddr_hi32, &reg->message_rwbuffer[1]);
- 			writel(ARCMSR_INBOUND_MESG0_SET_CONFIG, \
- 
-&reg->inbound_msgaddr0);
- 			if (arcmsr_hba_wait_msgint_ready(acb)) {
-@@ -2227,19 +2231,18 @@ static int arcmsr_iop_confirm(struct Ada
- 		intmask_org = arcmsr_disable_outbound_ints(acb);
- 		reg->postq_index = 0;
- 		reg->doneq_index = 0;
--		writel(ARCMSR_MESSAGE_SET_POST_WINDOW,
-reg->drv2iop_doorbell_reg);
-+		writel(ARCMSR_MESSAGE_SET_POST_WINDOW,
-reg->drv2iop_doorbell);
- 		if (arcmsr_hbb_wait_msgint_ready(acb)) {
- 			printk(KERN_NOTICE "arcmsr%d:can not set diver
-mode\n", \
- 				acb->host->host_no);
- 			return 1;
- 		}
--		post_queue_phyaddr = cdb_phyaddr + ARCMSR_MAX_FREECCB_NUM *
-\
--		sizeof(struct CommandControlBlock) + offsetof(struct
-MessageUnit_B, post_qbuffer) ;
--		rwbuffer = reg->msgcode_rwbuffer_reg;
-+		post_queue_phyaddr = acb->dma_coherent_handle_hbb_mu;
-+		rwbuffer = reg->message_rwbuffer;
- 		/* driver "set config" signature */
- 		writel(ARCMSR_SIGNATURE_SET_CONFIG, rwbuffer++);
- 		/* normal should be zero */
--		writel(ccb_phyaddr_hi32, rwbuffer++);
-+		writel(cdb_phyaddr_hi32, rwbuffer++);
- 		/* postQ size (256 + 8)*4	 */
- 		writel(post_queue_phyaddr, rwbuffer++);
- 		/* doneQ size (256 + 8)*4	 */
-@@ -2247,19 +2250,13 @@ static int arcmsr_iop_confirm(struct Ada
- 		/* ccb maxQ size must be --> [(256 + 8)*4]*/
- 		writel(1056, rwbuffer);
- 
--		writel(ARCMSR_MESSAGE_SET_CONFIG,
-reg->drv2iop_doorbell_reg);
-+		writel(ARCMSR_MESSAGE_SET_CONFIG, reg->drv2iop_doorbell);
- 		if (arcmsr_hbb_wait_msgint_ready(acb)) {
- 			printk(KERN_NOTICE "arcmsr%d: 'set command Q window'
-\
- 			timeout \n",acb->host->host_no);
- 			return 1;
- 		}
--
--		writel(ARCMSR_MESSAGE_START_DRIVER_MODE,
-reg->drv2iop_doorbell_reg);
--		if (arcmsr_hbb_wait_msgint_ready(acb)) {
--			printk(KERN_NOTICE "arcmsr%d: 'can not set diver
-mode \n"\
--			,acb->host->host_no);
--			return 1;
--		}
-+		arcmsr_hbb_enable_driver_mode(acb);
- 		arcmsr_enable_outbound_ints(acb, intmask_org);
- 		}
- 		break;
-@@ -2284,9 +2281,9 @@ static void arcmsr_wait_firmware_ready(s
- 	case ACB_ADAPTER_TYPE_B: {
- 		struct MessageUnit_B *reg = acb->pmuB;
- 		do {
--			firmware_state = readl(reg->iop2drv_doorbell_reg);
-+			firmware_state = readl(reg->iop2drv_doorbell);
- 		} while ((firmware_state & ARCMSR_MESSAGE_FIRMWARE_OK) ==
-0);
--		writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT,
-reg->drv2iop_doorbell_reg);
-+		writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT,
-reg->drv2iop_doorbell);
- 		}
- 		break;
- 	}
-@@ -2295,23 +2292,19 @@ static void arcmsr_wait_firmware_ready(s
- static void arcmsr_request_hba_device_map(struct AdapterControlBlock *acb)
- {
- 	struct MessageUnit_A __iomem *reg = acb->pmuA;
--
--	if(unlikely(atomic_read(&acb->rq_map_token) == 0)) {
--		acb->fw_state = FALSE;
-+	if(unlikely(atomic_read(&acb->rq_map_token) == 0) ||
-((acb->acb_flags & ACB_F_BUS_RESET) != 0 ) || ((acb->acb_flags &
-ACB_F_ABORT) != 0 )){
-+		return;
- 	} else {
--	/*to prevent rq_map_token from changing by other interrupt, then
--	avoid the dead-lock*/
--		acb->fw_state = TRUE;
--		atomic_dec(&acb->rq_map_token);
--		if((acb->fw_state == FALSE)||
--
-(acb->ante_token_value==atomic_read(&acb->rq_map_token))){
--
-+		acb->fw_flag = FW_NORMAL;
-+		if(atomic_read(&acb->ante_token_value) ==
-atomic_read(&acb->rq_map_token)){
- 			atomic_set(&acb->rq_map_token,16);
- 		}
--		acb->ante_token_value=atomic_read(&acb->rq_map_token);
-+		atomic_set(&acb->ante_token_value,
-atomic_read(&acb->rq_map_token));
-+		if(atomic_dec_and_test(&acb->rq_map_token))
-+			return;
- 		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG,
-&reg->inbound_msgaddr0);
-+		mod_timer(&acb->eternal_timer, jiffies +
-msecs_to_jiffies(6*HZ));
- 	}
--	mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6000));
- 	return;
- }
- 
-@@ -2319,21 +2312,19 @@ static void arcmsr_request_hbb_device_ma
- {
- 	struct MessageUnit_B __iomem *reg = acb->pmuB;
- 
--	if(unlikely(atomic_read(&acb->rq_map_token) == 0)) {
--		acb->fw_state = FALSE;
-+	if(unlikely(atomic_read(&acb->rq_map_token) == 0) ||
-((acb->acb_flags & ACB_F_BUS_RESET) != 0 ) || ((acb->acb_flags &
-ACB_F_ABORT) != 0 )){
-+		return;
- 	} else {
--	/*to prevent rq_map_token from changing by other interrupt, then
--	avoid the dead-lock*/
--		acb->fw_state = TRUE;
--		atomic_dec(&acb->rq_map_token);
--		if((acb->fw_state == FALSE)||
--
-(acb->ante_token_value==atomic_read(&acb->rq_map_token))){
-+		acb->fw_flag = FW_NORMAL;
-+		if(atomic_read(&acb->ante_token_value) ==
-atomic_read(&acb->rq_map_token)){
- 			atomic_set(&acb->rq_map_token,16);
- 		}
--		acb->ante_token_value=atomic_read(&acb->rq_map_token);
--		writel(ARCMSR_MESSAGE_GET_CONFIG,
-reg->drv2iop_doorbell_reg);
-+		atomic_set(&acb->ante_token_value,
-atomic_read(&acb->rq_map_token));
-+		if(atomic_dec_and_test(&acb->rq_map_token))
-+			return;
-+		writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell);
-+		mod_timer(&acb->eternal_timer, jiffies +
-msecs_to_jiffies(6*HZ));
- 	}
--	mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6000));
- 	return;
- }
- 
-@@ -2368,7 +2359,7 @@ static void arcmsr_start_hbb_bgrb(struct
- {
- 	struct MessageUnit_B *reg = acb->pmuB;
- 	acb->acb_flags |= ACB_F_MSG_START_BGRB;
--	writel(ARCMSR_MESSAGE_START_BGRB, reg->drv2iop_doorbell_reg);
-+	writel(ARCMSR_MESSAGE_START_BGRB, reg->drv2iop_doorbell);
- 	if (arcmsr_hbb_wait_msgint_ready(acb)) {
- 		printk(KERN_NOTICE "arcmsr%d: wait 'start adapter background
-\
- 				rebulid' timeout \n",acb->host->host_no);
-@@ -2404,8 +2395,8 @@ static void arcmsr_clear_doorbell_queue_
- 	case ACB_ADAPTER_TYPE_B: {
- 		struct MessageUnit_B *reg = acb->pmuB;
- 		/*clear interrupt and message state*/
--		writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN,
-reg->iop2drv_doorbell_reg);
--		writel(ARCMSR_DRV2IOP_DATA_READ_OK,
-reg->drv2iop_doorbell_reg);
-+		writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN,
-reg->iop2drv_doorbell);
-+		writel(ARCMSR_DRV2IOP_DATA_READ_OK, reg->drv2iop_doorbell);
- 		/* let IOP know data has been read */
- 		}
- 		break;
-@@ -2420,7 +2411,7 @@ static void arcmsr_enable_eoi_mode(struc
- 	case ACB_ADAPTER_TYPE_B:
- 		{
- 			struct MessageUnit_B *reg = acb->pmuB;
--			writel(ARCMSR_MESSAGE_ACTIVE_EOI_MODE,
-reg->drv2iop_doorbell_reg);
-+			writel(ARCMSR_MESSAGE_ACTIVE_EOI_MODE,
-reg->drv2iop_doorbell);
- 			if(arcmsr_hbb_wait_msgint_ready(acb)) {
- 				printk(KERN_NOTICE "ARCMSR IOP enables
-EOI_MODE TIMEOUT");
- 				return;
-@@ -2435,13 +2426,19 @@ static void arcmsr_hardware_reset(struct
- {
- 	uint8_t value[64];
- 	int i;
-+	struct MessageUnit_A __iomem *reg = acb->pmuA;
- 
- 	/* backup pci config data */
-+	printk(KERN_ERR "arcmsr%d: executing hw bus reset .....\n",
-acb->host->host_no);
- 	for (i=0; i<64; i++) {
- 		pci_read_config_byte(acb->pdev, i, &value[i]);
- 	}
- 	/* hardware reset signal */
-+	if((acb->dev_id == 0x1680)){
-+		writel(ARCMSR_ARC1680_BUS_RESET, &reg->reserved1[0]);
-+	}else{
- 	pci_write_config_byte(acb->pdev, 0x84, 0x20);
-+	}
- 	msleep(1000);
- 	/* write back pci config data */
- 	for (i=0;i<64;i++) {
-@@ -2454,37 +2451,25 @@ static void arcmsr_hardware_reset(struct
- 
-****************************************************************************
- 
-****************************************************************************
- */
--#ifdef CONFIG_SCSI_ARCMSR_RESET
- 	int arcmsr_sleep_for_bus_reset(struct scsi_cmnd *cmd)
- 	{
- 			struct Scsi_Host *shost = NULL;
--			spinlock_t *host_lock = NULL;
- 			int i, isleep;
- 
- 			shost = cmd->device->host;
--			host_lock = shost->host_lock;
--
--			printk("Host %d bus reset over, sleep %d seconds
-(busy %d, can queue %d) ...........\n", 
--					shost->host_no, sleeptime,
-shost->host_busy, shost->can_queue);
- 			isleep = sleeptime / 10;
--			spin_unlock_irq(host_lock);
- 			if (isleep > 0) {
- 				for (i = 0; i < isleep; i ++) {
- 					msleep(10000);
--					printk("^%d^\n", i);
- 				}
- 			}
- 
- 			isleep = sleeptime % 10;
- 			if (isleep > 0) {
- 				msleep(isleep*1000);
--				printk("^v^\n");
- 			}
--			spin_lock_irq(host_lock);	        
--			printk("***** wake up *****\n");
- 			return 0;
- 	}
--#endif
- static void arcmsr_iop_init(struct AdapterControlBlock *acb)
- {
- 	uint32_t intmask_org;
-@@ -2493,7 +2478,6 @@ static void arcmsr_iop_init(struct Adapt
-        intmask_org = arcmsr_disable_outbound_ints(acb);
- 	arcmsr_wait_firmware_ready(acb);
- 	arcmsr_iop_confirm(acb);
--	arcmsr_get_firmware_spec(acb, 1);
- 	/*start background rebuild*/
- 	arcmsr_start_adapter_bgrb(acb);
- 	/* empty doorbell Qbuffer if door bell ringed */
-@@ -2516,14 +2499,12 @@ static uint8_t arcmsr_iop_reset(struct A
- 		intmask_org = arcmsr_disable_outbound_ints(acb);
- 		/* talk to iop 331 outstanding command aborted */
- 		rtnval = arcmsr_abort_allcmd(acb);
--		/* wait for 3 sec for all command aborted*/
--		ssleep(3);
- 		/* clear all outbound posted Q */
- 		arcmsr_done4abort_postqueue(acb);
- 		for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
- 			ccb = acb->pccb_pool[i];
- 			if (ccb->startdone == ARCMSR_CCB_START) {
--				arcmsr_ccb_complete(ccb, 1);
-+				arcmsr_ccb_complete(ccb);
- 			}
- 		}
- 		atomic_set(&acb->ccboutstandingcount, 0);
-@@ -2538,54 +2519,49 @@ static int arcmsr_bus_reset(struct scsi_
- {
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *)cmd->device->host->hostdata;
--	int retry = 0;
--	
--	if(acb->acb_flags & ACB_F_BUS_RESET)
--		return SUCCESS;
-+	uint32_t intmask_org, outbound_doorbell;
-+	int retry_count = 0;
-+	int rtn = FAILED;
- 
--	printk("arcmsr%d: bus reset ..... \n", acb->adapter_index);
--	acb->acb_flags |= ACB_F_BUS_RESET;
-+	acb = (struct AdapterControlBlock *) cmd->device->host->hostdata;
-+	printk(KERN_ERR "arcmsr: executing eh bus reset .....num_resets =
-%d, 
-+		num_aborts = %d \n", acb->num_resets, acb->num_aborts);
- 	acb->num_resets++;
--	while(atomic_read(&acb->ccboutstandingcount) != 0 && retry < 4) {
--		arcmsr_interrupt(acb);
--		retry++;
--	}
- 
--	if(arcmsr_iop_reset(acb)) {
- 		switch (acb->adapter_type) {
- 		case ACB_ADAPTER_TYPE_A: {
--			printk("arcmsr%d: do hardware bus reset, num_resets
-= %d num_aborts = %d \n",
--				acb->adapter_index, acb->num_resets,
-acb->num_aborts);
-+			if(acb->acb_flags & ACB_F_BUS_RESET){
-+				long timeout;
-+				timeout = wait_event_timeout(wait_q, 
-+					(acb->acb_flags & ACB_F_BUS_RESET)
-== 0, 220*HZ);
-+				if(timeout){
-+					return SUCCESS;
-+				}
-+			}
-+			acb->acb_flags |= ACB_F_BUS_RESET;
-+			if(arcmsr_iop_reset(acb)){
-+				struct MessageUnit_A __iomem *reg;
-+				reg = acb->pmuA;
- 			arcmsr_hardware_reset(acb);
--			acb->acb_flags |= ACB_F_FIRMWARE_TRAP;
- 			acb->acb_flags &= ~ACB_F_IOP_INITED;
--			#ifdef CONFIG_SCSI_ARCMSR_RESET
--			struct MessageUnit_A __iomem *reg = acb->pmuA;
--			uint32_t intmask_org, outbound_doorbell;
--			int retry_count = 0;
- 			sleep_again:
- 			arcmsr_sleep_for_bus_reset(cmd);
--			if(( readl(&reg->outbound_msgaddr1) &
--			ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) == 0 ) {
--			printk(KERN_NOTICE "arcmsr%d: hardware bus reset and
-return busy, retry=%d \n",
--			acb->host->host_no, retry_count);
-+				if((readl(&reg->outbound_msgaddr1) &
-ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) == 0){
-+					printk(KERN_ERR "arcmsr%d: waiting
-for hw bus reset return, 
-+						retry=%d \n",
-acb->host->host_no, retry_count);
- 			if(retry_count > retrycount) {
--				printk(KERN_NOTICE "arcmsr%d: hardware bus
-reset and return busy, retry aborted \n",
--				acb->host->host_no);
--			return SUCCESS;
-+						acb->fw_flag = FW_DEADLOCK;
-+						printk(KERN_ERR "arcmsr%d:
-waiting for hw bus reset return, 
-+							RETRY TERMINATED!!
-\n", acb->host->host_no);
-+						return FAILED;
- 			}
- 			retry_count++;
- 			goto sleep_again;
- 			}
--			acb->acb_flags &= ~ACB_F_FIRMWARE_TRAP;
- 			acb->acb_flags |= ACB_F_IOP_INITED;
--			acb->acb_flags &= ~ACB_F_BUS_RESET;
--			printk(KERN_NOTICE "arcmsr%d: hardware bus reset and
-reset ok \n",
--				acb->host->host_no);
- 			/* disable all outbound interrupt */
- 			intmask_org=arcmsr_disable_outbound_ints(acb);
--				arcmsr_get_firmware_spec(acb,1);
--			/*start	background rebuild*/
-+				arcmsr_get_firmware_spec(acb);
- 			arcmsr_start_adapter_bgrb(acb);
- 			/* clear Qbuffer if door bell ringed */
- 			outbound_doorbell=readl(&reg->outbound_doorbell);
-@@ -2594,42 +2570,74 @@ static int arcmsr_bus_reset(struct scsi_
- 			/* enable outbound Post Queue,outbound doorbell
-Interrupt */
- 			arcmsr_enable_outbound_ints(acb, intmask_org);
- 			atomic_set(&acb->rq_map_token, 16);
-+				atomic_set(&acb->ante_token_value, 16);
-+				acb->fw_flag = FW_NORMAL;
- 			init_timer(&acb->eternal_timer);
--			acb->eternal_timer.expires = jiffies +
-msecs_to_jiffies(20*HZ);
-+				acb->eternal_timer.expires = jiffies +
-msecs_to_jiffies(6*HZ);
- 			acb->eternal_timer.data = (unsigned long) acb;
- 			acb->eternal_timer.function =
-&arcmsr_request_device_map;
- 			add_timer(&acb->eternal_timer);
--			#endif
-+				acb->acb_flags &= ~ACB_F_BUS_RESET;
-+				rtn = SUCCESS;
-+				printk(KERN_ERR "arcmsr: scsi eh bus reset
-succeeds\n");
-+			}else{
-+				acb->acb_flags &= ~ACB_F_BUS_RESET;
-+				if(atomic_read(&acb->rq_map_token) == 0){
-+					atomic_set(&acb->rq_map_token, 16);
-+					atomic_set(&acb->ante_token_value,
-16);
-+					acb->fw_flag = FW_NORMAL;
-+					init_timer(&acb->eternal_timer);
-+						acb->eternal_timer.expires =
-jiffies + msecs_to_jiffies(6*HZ);
-+					acb->eternal_timer.data = (unsigned
-long) acb;
-+					acb->eternal_timer.function =
-&arcmsr_request_device_map;
-+					add_timer(&acb->eternal_timer);
-+				}else{
-+					atomic_set(&acb->rq_map_token, 16);
-+					atomic_set(&acb->ante_token_value,
-16);
-+					acb->fw_flag = FW_NORMAL;
-+					mod_timer(&acb->eternal_timer,
-jiffies + msecs_to_jiffies(6*HZ));
-+				}
-+				rtn = SUCCESS;
- 		}
- 		break;
-+		}
- 		case ACB_ADAPTER_TYPE_B: {
-+			acb->acb_flags |= ACB_F_BUS_RESET;
-+			if(arcmsr_iop_reset(acb)){
-+				acb->acb_flags &= ~ACB_F_BUS_RESET;
-+				rtn = FAILED;
-+			}else{
-+				acb->acb_flags &= ~ACB_F_BUS_RESET;
-+				if(atomic_read(&acb->rq_map_token) == 0){
-+					atomic_set(&acb->rq_map_token, 16);
-+					atomic_set(&acb->ante_token_value,
-16);
-+					acb->fw_flag = FW_NORMAL;
-+					init_timer(&acb->eternal_timer);
-+						acb->eternal_timer.expires =
-jiffies + msecs_to_jiffies(6*HZ);
-+					acb->eternal_timer.data = (unsigned
-long) acb;
-+					acb->eternal_timer.function =
-&arcmsr_request_device_map;
-+					add_timer(&acb->eternal_timer);
-+				}else{
-+					atomic_set(&acb->rq_map_token, 16);
-+					atomic_set(&acb->ante_token_value,
-16);
-+					acb->fw_flag = FW_NORMAL;
-+					mod_timer(&acb->eternal_timer,
-jiffies + msecs_to_jiffies(6*HZ));
- 		}
-+				rtn = SUCCESS;
- 		}
- 	}
--	else {
--       		 acb->acb_flags &= ~ACB_F_BUS_RESET;
- 	}	
--
--//	arcmsr_iop_reset(acb);
--//	acb->acb_flags &= ~ACB_F_BUS_RESET;
--	return SUCCESS;
-+	return rtn;
- }
- 
--static void arcmsr_abort_one_cmd(struct AdapterControlBlock *acb,
-+static int arcmsr_abort_one_cmd(struct AdapterControlBlock *acb,
- 		struct CommandControlBlock *ccb)
- {
--	u32 intmask;
--
--	ccb->startdone = ARCMSR_CCB_ABORTED;
--
--	/*
--	** Wait for 3 sec for all command done.
--	*/
--	ssleep(3);
--
--	intmask = arcmsr_disable_outbound_ints(acb);
--	arcmsr_polling_ccbdone(acb, ccb);
--	arcmsr_enable_outbound_ints(acb, intmask);
-+	int rtn;
-+	spin_lock_irq(&acb->eh_lock);
-+	rtn = arcmsr_polling_ccbdone(acb, ccb);
-+	spin_unlock_irq(&acb->eh_lock);
-+	return rtn;
- }
- 
- static int arcmsr_abort(struct scsi_cmnd *cmd)
-@@ -2637,10 +2645,12 @@ static int arcmsr_abort(struct scsi_cmnd
- 	struct AdapterControlBlock *acb =
- 		(struct AdapterControlBlock *)cmd->device->host->hostdata;
- 	int i = 0;
-+	int rtn = FAILED;
- 
- 	printk(KERN_NOTICE
- 		"arcmsr%d: abort device command of scsi id = %d lun = %d
-\n",
- 		acb->host->host_no, cmd->device->id, cmd->device->lun);
-+	acb->acb_flags |= ACB_F_ABORT;
- 	acb->num_aborts++;
- 	/*
- 	************************************************
-@@ -2649,17 +2659,20 @@ static int arcmsr_abort(struct scsi_cmnd
- 	************************************************
- 	*/
- 	if (!atomic_read(&acb->ccboutstandingcount))
--		return SUCCESS;
-+		return rtn;
- 
- 	for (i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
-+		printk("%s: loop %d\n", __FUNCTION__, i);
- 		struct CommandControlBlock *ccb = acb->pccb_pool[i];
- 		if (ccb->startdone == ARCMSR_CCB_START && ccb->pcmd == cmd)
-{
--			arcmsr_abort_one_cmd(acb, ccb);
-+			ccb->startdone = ARCMSR_CCB_ABORTED;
-+			rtn = arcmsr_abort_one_cmd(acb, ccb);
- 			break;
- 		}
- 	}
--
--	return SUCCESS;
-+	acb->acb_flags &= ~ACB_F_ABORT;
-+	printk("%s: leaving\n", __FUNCTION__);
-+	return rtn;
- }
- 
- static const char *arcmsr_info(struct Scsi_Host *host)
-@@ -2764,7 +2777,7 @@ static void arcmsr_pci_ers_need_reset_fo
- 			ccb = acb->pccb_pool[i];
- 			if (ccb->startdone == ARCMSR_CCB_START) {
- 				ccb->startdone = ARCMSR_CCB_ABORTED;
--				arcmsr_ccb_complete(ccb, 1);
-+				arcmsr_ccb_complete(ccb);
- 			}
- 		}
- 		/* enable all outbound interrupt */
+ibmvscsi 30000003: Client reserve enabled
+ibmvscsi 30000003: sent SRP login
+ibmvscsi 30000003: SRP_LOGIN succeeded
+ibmvscsi 30000003: DMA-API: device driver frees DMA memory with wrong function [device address=0x0000000000011520] [size=36 bytes] [mapped as scather-gather] [unmapped as single]
+------------[ cut here ]------------
+Badness at lib/dma-debug.c:820
+NIP: c00000000039bd24 LR: c00000000039bd20 CTR: c0000000000704a4
+REGS: c00000000f69f6f0 TRAP: 0700   Tainted: G        W   (2.6.34-rc3)
+MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 48000082  XER: 00000004
+TASK = c00000000125cc70[0] 'swapper' THREAD: c000000001324000 CPU: 0
+GPR00: c00000000039bd20 c00000000f69f970 c000000001322e38 00000000000000b6
+GPR04: 0000000000000001 c0000000000c1ea8 0000000000000000 0000000000000002
+GPR08: 0000000000000000 c00000000125cc70 0000000000000f66 0000000000000001
+GPR12: 0000000000000002 c00000000f669000 0000000000d47940 0000000001c00000
+GPR16: ffffffffffffffff 0000000002673148 00000000018ff984 0000000000000006
+GPR20: 0000000000000000 c000000000c7bb80 0000000000000000 0000000000000000
+GPR24: 0000000000000001 c000000001de6b00 0000000000000001 c000000001de6f80
+GPR28: c000000109c696b0 c00000000f69fa90 c0000000012acab0 c00000000f69f970
+NIP [c00000000039bd24] .check_unmap+0x3e0/0x784
+LR [c00000000039bd20] .check_unmap+0x3dc/0x784
+Call Trace:
+[c00000000f69f970] [c00000000039bd20] .check_unmap+0x3dc/0x784 (unreliable)
+[c00000000f69fa20] [c00000000039c3dc] .debug_dma_unmap_page+0x98/0xc8
+[c00000000f69fb60] [d000000001dd63f4] .unmap_cmd_data+0xd0/0x11c [ibmvscsic]
+[c00000000f69fc00] [d000000001dd8878] .handle_cmd_rsp+0xe0/0x154 [ibmvscsic]
+[c00000000f69fca0] [d000000001dd7694] .ibmvscsi_handle_crq+0x44c/0x500 [ibmvscsic]
+[c00000000f69fd40] [d000000001ddaca4] .rpavscsi_task+0x50/0xd8 [ibmvscsic]
+[c00000000f69fdf0] [c0000000000c9e84] .tasklet_action+0x108/0x1d4
+[c00000000f69fea0] [c0000000000cb778] .__do_softirq+0x168/0x2b8
+[c00000000f69ff90] [c0000000000337b0] .call_do_softirq+0x14/0x24
+[c000000001327840] [c000000000010664] .do_softirq+0xa0/0x104
+[c0000000013278e0] [c0000000000cb0e4] .irq_exit+0x70/0xd0
+[c000000001327960] [c00000000000fee4] .do_IRQ+0x214/0x2d8
+[c000000001327a20] [c000000000004d28] hardware_interrupt_entry+0x28/0x2c
+--- Exception: 501 at .raw_local_irq_restore+0xc0/0xdc
+    LR = .cpu_idle+0x12c/0x1d0
+[c000000001327d10] [c000000001290a28] mv88e6131_switch_driver+0x8da0/0x35588 (unreliable)
+[c000000001327db0] [c000000000017e14] .cpu_idle+0x12c/0x1d0
+[c000000001327e50] [c00000000000a71c] .rest_init+0xe8/0x10c
+[c000000001327ee0] [c000000000a12e38] .start_kernel+0x4ec/0x510
+[c000000001327f90] [c000000000008c64] .start_here_common+0x2c/0x48
+Instruction dump:
+e81c001a e93d001a e97e8030 78001f24 79291f24 e87e80c0 e8dd0028 e8fd0030
+7d0b002a 7d2b482a 48393a49 60000000 <0fe00000> 480000b8 2f800003 409e00f4
+Mapped at:
+ [<c00000000039c76c>] .debug_dma_map_sg+0xa0/0x220
+ [<c0000000005085c4>] .scsi_dma_map+0x120/0x164
+ [<d000000001dd8a6c>] .ibmvscsi_queuecommand+0x180/0x5d0 [ibmvscsic]
+ [<c0000000004fd9b4>] .scsi_dispatch_cmd+0x21c/0x2cc
+ [<c000000000506058>] .scsi_request_fn+0x3cc/0x57c
+scsi 0:0:1:0: Direct-Access     AIX      VDASD            0001 PQ: 0 ANSI: 3
 
+I first observed this with latest Fedora builds, and then tried the
+same config with rc3 kernel.
+
+Have attached the .config
+
+Thanks
+-Sachin
+
+
+-- 
+
+---------------------------------
+Sachin Sant
+IBM Linux Technology Center
+India Systems and Technology Labs
+Bangalore, India
+---------------------------------
+
+
+--------------090406080809010606080909
+Content-Type: text/plain;
+ name="config_rc3"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="config_rc3"
+
+#
+# Automatically generated make config: don't edit
+# Linux kernel version: 2.6.34-rc3
+# Fri Apr  2 09:06:10 2010
+#
+CONFIG_PPC64=y
+
+#
+# Processor support
+#
+CONFIG_PPC_BOOK3S_64=y
+# CONFIG_PPC_BOOK3E_64 is not set
+CONFIG_PPC_BOOK3S=y
+# CONFIG_POWER4_ONLY is not set
+CONFIG_POWER3=y
+CONFIG_POWER4=y
+CONFIG_TUNE_CELL=y
+CONFIG_PPC_FPU=y
+CONFIG_ALTIVEC=y
+CONFIG_VSX=y
+CONFIG_PPC_STD_MMU=y
+CONFIG_PPC_STD_MMU_64=y
+CONFIG_PPC_MM_SLICES=y
+CONFIG_VIRT_CPU_ACCOUNTING=y
+CONFIG_PPC_HAVE_PMU_SUPPORT=y
+CONFIG_PPC_PERF_CTRS=y
+CONFIG_SMP=y
+CONFIG_NR_CPUS=128
+CONFIG_64BIT=y
+CONFIG_WORD_SIZE=64
+CONFIG_ARCH_PHYS_ADDR_T_64BIT=y
+CONFIG_MMU=y
+CONFIG_GENERIC_CMOS_UPDATE=y
+CONFIG_GENERIC_TIME=y
+CONFIG_GENERIC_TIME_VSYSCALL=y
+CONFIG_GENERIC_CLOCKEVENTS=y
+CONFIG_GENERIC_HARDIRQS=y
+CONFIG_GENERIC_HARDIRQS_NO__DO_IRQ=y
+CONFIG_HAVE_SETUP_PER_CPU_AREA=y
+CONFIG_NEED_PER_CPU_EMBED_FIRST_CHUNK=y
+CONFIG_IRQ_PER_CPU=y
+CONFIG_NR_IRQS=512
+CONFIG_STACKTRACE_SUPPORT=y
+CONFIG_HAVE_LATENCYTOP_SUPPORT=y
+CONFIG_TRACE_IRQFLAGS_SUPPORT=y
+CONFIG_LOCKDEP_SUPPORT=y
+CONFIG_RWSEM_XCHGADD_ALGORITHM=y
+CONFIG_ARCH_HAS_ILOG2_U32=y
+CONFIG_ARCH_HAS_ILOG2_U64=y
+CONFIG_GENERIC_HWEIGHT=y
+CONFIG_GENERIC_FIND_NEXT_BIT=y
+CONFIG_GENERIC_GPIO=y
+CONFIG_ARCH_NO_VIRT_TO_BUS=y
+CONFIG_PPC=y
+CONFIG_EARLY_PRINTK=y
+CONFIG_COMPAT=y
+CONFIG_SYSVIPC_COMPAT=y
+CONFIG_SCHED_OMIT_FRAME_POINTER=y
+CONFIG_ARCH_MAY_HAVE_PC_FDC=y
+CONFIG_PPC_OF=y
+CONFIG_OF=y
+CONFIG_PPC_UDBG_16550=y
+CONFIG_GENERIC_TBSYNC=y
+CONFIG_AUDIT_ARCH=y
+CONFIG_GENERIC_BUG=y
+CONFIG_DTC=y
+# CONFIG_DEFAULT_UIMAGE is not set
+CONFIG_ARCH_HIBERNATION_POSSIBLE=y
+CONFIG_ARCH_SUSPEND_POSSIBLE=y
+# CONFIG_PPC_DCR_NATIVE is not set
+CONFIG_PPC_DCR_MMIO=y
+CONFIG_PPC_DCR=y
+CONFIG_PPC_OF_PLATFORM_PCI=y
+CONFIG_ARCH_SUPPORTS_DEBUG_PAGEALLOC=y
+CONFIG_DEFCONFIG_LIST="/lib/modules/$UNAME_RELEASE/.config"
+CONFIG_CONSTRUCTORS=y
+
+#
+# General setup
+#
+CONFIG_EXPERIMENTAL=y
+CONFIG_LOCK_KERNEL=y
+CONFIG_INIT_ENV_ARG_LIMIT=32
+CONFIG_LOCALVERSION=""
+# CONFIG_LOCALVERSION_AUTO is not set
+CONFIG_SWAP=y
+CONFIG_SYSVIPC=y
+CONFIG_SYSVIPC_SYSCTL=y
+CONFIG_POSIX_MQUEUE=y
+CONFIG_POSIX_MQUEUE_SYSCTL=y
+CONFIG_BSD_PROCESS_ACCT=y
+# CONFIG_BSD_PROCESS_ACCT_V3 is not set
+CONFIG_TASKSTATS=y
+CONFIG_TASK_DELAY_ACCT=y
+CONFIG_TASK_XACCT=y
+CONFIG_TASK_IO_ACCOUNTING=y
+CONFIG_AUDIT=y
+CONFIG_AUDITSYSCALL=y
+CONFIG_AUDIT_TREE=y
+
+#
+# RCU Subsystem
+#
+CONFIG_TREE_RCU=y
+# CONFIG_TREE_PREEMPT_RCU is not set
+# CONFIG_TINY_RCU is not set
+# CONFIG_RCU_TRACE is not set
+CONFIG_RCU_FANOUT=64
+# CONFIG_RCU_FANOUT_EXACT is not set
+# CONFIG_RCU_FAST_NO_HZ is not set
+# CONFIG_TREE_RCU_TRACE is not set
+# CONFIG_IKCONFIG is not set
+CONFIG_LOG_BUF_SHIFT=17
+CONFIG_CGROUPS=y
+CONFIG_CGROUP_DEBUG=y
+CONFIG_CGROUP_NS=y
+CONFIG_CGROUP_FREEZER=y
+CONFIG_CGROUP_DEVICE=y
+CONFIG_CPUSETS=y
+CONFIG_PROC_PID_CPUSET=y
+CONFIG_CGROUP_CPUACCT=y
+CONFIG_RESOURCE_COUNTERS=y
+CONFIG_CGROUP_MEM_RES_CTLR=y
+CONFIG_CGROUP_MEM_RES_CTLR_SWAP=y
+CONFIG_CGROUP_SCHED=y
+CONFIG_FAIR_GROUP_SCHED=y
+CONFIG_RT_GROUP_SCHED=y
+CONFIG_MM_OWNER=y
+# CONFIG_SYSFS_DEPRECATED_V2 is not set
+CONFIG_RELAY=y
+CONFIG_NAMESPACES=y
+CONFIG_UTS_NS=y
+CONFIG_IPC_NS=y
+CONFIG_USER_NS=y
+CONFIG_PID_NS=y
+CONFIG_NET_NS=y
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_INITRAMFS_SOURCE=""
+CONFIG_RD_GZIP=y
+CONFIG_RD_BZIP2=y
+CONFIG_RD_LZMA=y
+CONFIG_RD_LZO=y
+CONFIG_CC_OPTIMIZE_FOR_SIZE=y
+CONFIG_SYSCTL=y
+CONFIG_ANON_INODES=y
+# CONFIG_EMBEDDED is not set
+CONFIG_SYSCTL_SYSCALL=y
+CONFIG_KALLSYMS=y
+CONFIG_KALLSYMS_ALL=y
+CONFIG_KALLSYMS_EXTRA_PASS=y
+CONFIG_HOTPLUG=y
+CONFIG_PRINTK=y
+CONFIG_BUG=y
+CONFIG_ELF_CORE=y
+CONFIG_PCSPKR_PLATFORM=y
+CONFIG_BASE_FULL=y
+CONFIG_FUTEX=y
+CONFIG_EPOLL=y
+CONFIG_SIGNALFD=y
+CONFIG_TIMERFD=y
+CONFIG_EVENTFD=y
+CONFIG_SHMEM=y
+CONFIG_AIO=y
+CONFIG_HAVE_PERF_EVENTS=y
+CONFIG_PERF_USE_VMALLOC=y
+
+#
+# Kernel Performance Events And Counters
+#
+CONFIG_PERF_EVENTS=y
+CONFIG_PERF_COUNTERS=y
+CONFIG_DEBUG_PERF_USE_VMALLOC=y
+CONFIG_VM_EVENT_COUNTERS=y
+CONFIG_PCI_QUIRKS=y
+CONFIG_SLUB_DEBUG=y
+# CONFIG_COMPAT_BRK is not set
+# CONFIG_SLAB is not set
+CONFIG_SLUB=y
+# CONFIG_SLOB is not set
+CONFIG_PROFILING=y
+CONFIG_TRACEPOINTS=y
+CONFIG_OPROFILE=m
+CONFIG_HAVE_OPROFILE=y
+CONFIG_KPROBES=y
+CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS=y
+CONFIG_HAVE_SYSCALL_WRAPPERS=y
+CONFIG_KRETPROBES=y
+CONFIG_HAVE_IOREMAP_PROT=y
+CONFIG_HAVE_KPROBES=y
+CONFIG_HAVE_KRETPROBES=y
+CONFIG_HAVE_ARCH_TRACEHOOK=y
+CONFIG_HAVE_DMA_ATTRS=y
+CONFIG_USE_GENERIC_SMP_HELPERS=y
+CONFIG_HAVE_DMA_API_DEBUG=y
+
+#
+# GCOV-based kernel profiling
+#
+# CONFIG_GCOV_KERNEL is not set
+CONFIG_SLOW_WORK=y
+CONFIG_SLOW_WORK_DEBUG=y
+# CONFIG_HAVE_GENERIC_DMA_COHERENT is not set
+CONFIG_SLABINFO=y
+CONFIG_RT_MUTEXES=y
+CONFIG_BASE_SMALL=0
+CONFIG_MODULES=y
+# CONFIG_MODULE_FORCE_LOAD is not set
+CONFIG_MODULE_UNLOAD=y
+CONFIG_MODULE_FORCE_UNLOAD=y
+# CONFIG_MODVERSIONS is not set
+CONFIG_MODULE_SRCVERSION_ALL=y
+CONFIG_STOP_MACHINE=y
+CONFIG_BLOCK=y
+CONFIG_BLK_DEV_BSG=y
+CONFIG_BLK_DEV_INTEGRITY=y
+CONFIG_BLK_CGROUP=y
+CONFIG_DEBUG_BLK_CGROUP=y
+CONFIG_BLOCK_COMPAT=y
+
+#
+# IO Schedulers
+#
+CONFIG_IOSCHED_NOOP=y
+CONFIG_IOSCHED_DEADLINE=y
+CONFIG_IOSCHED_CFQ=y
+CONFIG_CFQ_GROUP_IOSCHED=y
+CONFIG_DEBUG_CFQ_IOSCHED=y
+# CONFIG_DEFAULT_DEADLINE is not set
+CONFIG_DEFAULT_CFQ=y
+# CONFIG_DEFAULT_NOOP is not set
+CONFIG_DEFAULT_IOSCHED="cfq"
+CONFIG_PREEMPT_NOTIFIERS=y
+# CONFIG_INLINE_SPIN_TRYLOCK is not set
+# CONFIG_INLINE_SPIN_TRYLOCK_BH is not set
+# CONFIG_INLINE_SPIN_LOCK is not set
+# CONFIG_INLINE_SPIN_LOCK_BH is not set
+# CONFIG_INLINE_SPIN_LOCK_IRQ is not set
+# CONFIG_INLINE_SPIN_LOCK_IRQSAVE is not set
+# CONFIG_INLINE_SPIN_UNLOCK is not set
+# CONFIG_INLINE_SPIN_UNLOCK_BH is not set
+# CONFIG_INLINE_SPIN_UNLOCK_IRQ is not set
+# CONFIG_INLINE_SPIN_UNLOCK_IRQRESTORE is not set
+# CONFIG_INLINE_READ_TRYLOCK is not set
+# CONFIG_INLINE_READ_LOCK is not set
+# CONFIG_INLINE_READ_LOCK_BH is not set
+# CONFIG_INLINE_READ_LOCK_IRQ is not set
+# CONFIG_INLINE_READ_LOCK_IRQSAVE is not set
+# CONFIG_INLINE_READ_UNLOCK is not set
+# CONFIG_INLINE_READ_UNLOCK_BH is not set
+# CONFIG_INLINE_READ_UNLOCK_IRQ is not set
+# CONFIG_INLINE_READ_UNLOCK_IRQRESTORE is not set
+# CONFIG_INLINE_WRITE_TRYLOCK is not set
+# CONFIG_INLINE_WRITE_LOCK is not set
+# CONFIG_INLINE_WRITE_LOCK_BH is not set
+# CONFIG_INLINE_WRITE_LOCK_IRQ is not set
+# CONFIG_INLINE_WRITE_LOCK_IRQSAVE is not set
+# CONFIG_INLINE_WRITE_UNLOCK is not set
+# CONFIG_INLINE_WRITE_UNLOCK_BH is not set
+# CONFIG_INLINE_WRITE_UNLOCK_IRQ is not set
+# CONFIG_INLINE_WRITE_UNLOCK_IRQRESTORE is not set
+# CONFIG_MUTEX_SPIN_ON_OWNER is not set
+CONFIG_FREEZER=y
+CONFIG_PPC_MSI_BITMAP=y
+
+#
+# Platform support
+#
+CONFIG_PPC_PSERIES=y
+CONFIG_PPC_SPLPAR=y
+CONFIG_EEH=y
+CONFIG_PSERIES_MSI=y
+CONFIG_SCANLOG=y
+CONFIG_LPARCFG=y
+# CONFIG_PPC_SMLPAR is not set
+CONFIG_DTL=y
+CONFIG_PPC_ISERIES=y
+
+#
+# iSeries device drivers
+#
+CONFIG_VIODASD=m
+CONFIG_VIOCD=m
+CONFIG_VIOTAPE=m
+CONFIG_VIOPATH=y
+CONFIG_PPC_PMAC=y
+CONFIG_PPC_PMAC64=y
+CONFIG_PPC_MAPLE=y
+CONFIG_PPC_PASEMI=y
+
+#
+# PA Semi PWRficient options
+#
+CONFIG_PPC_PASEMI_IOMMU=y
+# CONFIG_PPC_PASEMI_IOMMU_DMA_FORCE is not set
+CONFIG_PPC_PASEMI_MDIO=m
+CONFIG_PPC_PS3=y
+
+#
+# PS3 Platform Options
+#
+CONFIG_PS3_ADVANCED=y
+CONFIG_PS3_HTAB_SIZE=20
+# CONFIG_PS3_DYNAMIC_DMA is not set
+CONFIG_PS3_VUART=y
+CONFIG_PS3_PS3AV=y
+CONFIG_PS3_SYS_MANAGER=y
+CONFIG_PS3_STORAGE=m
+CONFIG_PS3_DISK=m
+CONFIG_PS3_ROM=m
+CONFIG_PS3_FLASH=m
+CONFIG_PS3_VRAM=m
+CONFIG_PS3_LPM=y
+CONFIG_PPC_CELL=y
+CONFIG_PPC_CELL_COMMON=y
+CONFIG_PPC_CELL_NATIVE=y
+CONFIG_PPC_IBM_CELL_BLADE=y
+CONFIG_PPC_CELLEB=y
+CONFIG_PPC_CELL_QPACE=y
+CONFIG_AXON_MSI=y
+
+#
+# Cell Broadband Engine options
+#
+CONFIG_SPU_FS=m
+CONFIG_SPU_FS_64K_LS=y
+CONFIG_SPU_BASE=y
+CONFIG_CBE_RAS=y
+CONFIG_PPC_IBM_CELL_RESETBUTTON=y
+CONFIG_PPC_IBM_CELL_POWERBUTTON=m
+CONFIG_CBE_THERM=m
+CONFIG_CBE_CPUFREQ=m
+CONFIG_CBE_CPUFREQ_PMI_ENABLE=y
+CONFIG_CBE_CPUFREQ_PMI=m
+CONFIG_PPC_PMI=m
+CONFIG_CBE_CPUFREQ_SPU_GOVERNOR=m
+CONFIG_OPROFILE_CELL=y
+# CONFIG_PQ2ADS is not set
+CONFIG_PPC_NATIVE=y
+CONFIG_PPC_OF_BOOT_TRAMPOLINE=y
+CONFIG_UDBG_RTAS_CONSOLE=y
+CONFIG_PPC_UDBG_BEAT=y
+CONFIG_XICS=y
+# CONFIG_IPIC is not set
+CONFIG_MPIC=y
+# CONFIG_MPIC_WEIRD is not set
+CONFIG_PPC_I8259=y
+CONFIG_U3_DART=y
+CONFIG_PPC_RTAS=y
+CONFIG_RTAS_ERROR_LOGGING=y
+CONFIG_PPC_RTAS_DAEMON=y
+CONFIG_RTAS_PROC=y
+CONFIG_RTAS_FLASH=y
+CONFIG_MMIO_NVRAM=y
+CONFIG_MPIC_U3_HT_IRQS=y
+CONFIG_MPIC_BROKEN_REGREAD=y
+CONFIG_IBMVIO=y
+CONFIG_IBMEBUS=y
+# CONFIG_PPC_MPC106 is not set
+CONFIG_PPC_970_NAP=y
+CONFIG_PPC_INDIRECT_IO=y
+CONFIG_GENERIC_IOMAP=y
+CONFIG_CPU_FREQ=y
+CONFIG_CPU_FREQ_TABLE=y
+CONFIG_CPU_FREQ_DEBUG=y
+CONFIG_CPU_FREQ_STAT=m
+CONFIG_CPU_FREQ_STAT_DETAILS=y
+# CONFIG_CPU_FREQ_DEFAULT_GOV_PERFORMANCE is not set
+# CONFIG_CPU_FREQ_DEFAULT_GOV_POWERSAVE is not set
+CONFIG_CPU_FREQ_DEFAULT_GOV_USERSPACE=y
+# CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND is not set
+# CONFIG_CPU_FREQ_DEFAULT_GOV_CONSERVATIVE is not set
+CONFIG_CPU_FREQ_GOV_PERFORMANCE=y
+CONFIG_CPU_FREQ_GOV_POWERSAVE=m
+CONFIG_CPU_FREQ_GOV_USERSPACE=y
+CONFIG_CPU_FREQ_GOV_ONDEMAND=m
+CONFIG_CPU_FREQ_GOV_CONSERVATIVE=m
+
+#
+# CPU Frequency drivers
+#
+CONFIG_CPU_FREQ_PMAC64=y
+CONFIG_PPC_PASEMI_CPUFREQ=y
+CONFIG_AXON_RAM=m
+# CONFIG_FSL_ULI1575 is not set
+CONFIG_SIMPLE_GPIO=y
+
+#
+# Kernel options
+#
+CONFIG_TICK_ONESHOT=y
+CONFIG_NO_HZ=y
+CONFIG_HIGH_RES_TIMERS=y
+CONFIG_GENERIC_CLOCKEVENTS_BUILD=y
+# CONFIG_HZ_100 is not set
+# CONFIG_HZ_250 is not set
+# CONFIG_HZ_300 is not set
+CONFIG_HZ_1000=y
+CONFIG_HZ=1000
+CONFIG_SCHED_HRTICK=y
+# CONFIG_PREEMPT_NONE is not set
+CONFIG_PREEMPT_VOLUNTARY=y
+# CONFIG_PREEMPT is not set
+CONFIG_BINFMT_ELF=y
+CONFIG_COMPAT_BINFMT_ELF=y
+CONFIG_CORE_DUMP_DEFAULT_ELF_HEADERS=y
+# CONFIG_HAVE_AOUT is not set
+CONFIG_BINFMT_MISC=y
+CONFIG_HUGETLB_PAGE_SIZE_VARIABLE=y
+CONFIG_IOMMU_HELPER=y
+CONFIG_SWIOTLB=y
+CONFIG_HOTPLUG_CPU=y
+CONFIG_ARCH_CPU_PROBE_RELEASE=y
+CONFIG_ARCH_ENABLE_MEMORY_HOTPLUG=y
+CONFIG_ARCH_HAS_WALK_MEMORY=y
+CONFIG_ARCH_ENABLE_MEMORY_HOTREMOVE=y
+CONFIG_KEXEC=y
+CONFIG_CRASH_DUMP=y
+CONFIG_PHYP_DUMP=y
+CONFIG_IRQ_ALL_CPUS=y
+CONFIG_SPARSE_IRQ=y
+CONFIG_NUMA=y
+CONFIG_NODES_SHIFT=8
+CONFIG_MAX_ACTIVE_REGIONS=256
+CONFIG_ARCH_SELECT_MEMORY_MODEL=y
+CONFIG_ARCH_SPARSEMEM_ENABLE=y
+CONFIG_ARCH_SPARSEMEM_DEFAULT=y
+CONFIG_ARCH_POPULATES_NODE_MAP=y
+CONFIG_SYS_SUPPORTS_HUGETLBFS=y
+CONFIG_SELECT_MEMORY_MODEL=y
+# CONFIG_FLATMEM_MANUAL is not set
+# CONFIG_DISCONTIGMEM_MANUAL is not set
+CONFIG_SPARSEMEM_MANUAL=y
+CONFIG_SPARSEMEM=y
+CONFIG_NEED_MULTIPLE_NODES=y
+CONFIG_HAVE_MEMORY_PRESENT=y
+CONFIG_SPARSEMEM_EXTREME=y
+CONFIG_SPARSEMEM_VMEMMAP_ENABLE=y
+CONFIG_SPARSEMEM_VMEMMAP=y
+CONFIG_MEMORY_HOTPLUG=y
+CONFIG_MEMORY_HOTPLUG_SPARSE=y
+# CONFIG_MEMORY_HOTREMOVE is not set
+CONFIG_PAGEFLAGS_EXTENDED=y
+CONFIG_SPLIT_PTLOCK_CPUS=999999
+CONFIG_MIGRATION=y
+CONFIG_PHYS_ADDR_T_64BIT=y
+CONFIG_ZONE_DMA_FLAG=1
+CONFIG_BOUNCE=y
+CONFIG_KSM=y
+CONFIG_DEFAULT_MMAP_MIN_ADDR=4096
+CONFIG_ARCH_MEMORY_PROBE=y
+CONFIG_NODES_SPAN_OTHER_NODES=y
+CONFIG_PPC_HAS_HASH_64K=y
+CONFIG_PPC_4K_PAGES=y
+# CONFIG_PPC_16K_PAGES is not set
+# CONFIG_PPC_64K_PAGES is not set
+# CONFIG_PPC_256K_PAGES is not set
+CONFIG_FORCE_MAX_ZONEORDER=13
+CONFIG_SCHED_SMT=y
+CONFIG_PROC_DEVICETREE=y
+# CONFIG_CMDLINE_BOOL is not set
+CONFIG_EXTRA_TARGETS=""
+CONFIG_ARCH_WANTS_FREEZER_CONTROL=y
+CONFIG_PM=y
+CONFIG_PM_DEBUG=y
+# CONFIG_PM_ADVANCED_DEBUG is not set
+# CONFIG_PM_VERBOSE is not set
+CONFIG_CAN_PM_TRACE=y
+CONFIG_PM_SLEEP_SMP=y
+CONFIG_PM_SLEEP=y
+CONFIG_SUSPEND=y
+CONFIG_PM_TEST_SUSPEND=y
+CONFIG_SUSPEND_FREEZER=y
+CONFIG_HIBERNATION_NVS=y
+CONFIG_HIBERNATION=y
+CONFIG_PM_STD_PARTITION=""
+CONFIG_PM_RUNTIME=y
+CONFIG_PM_OPS=y
+CONFIG_SECCOMP=y
+CONFIG_ISA_DMA_API=y
+
+#
+# Bus options
+#
+CONFIG_ZONE_DMA=y
+CONFIG_NEED_DMA_MAP_STATE=y
+CONFIG_GENERIC_ISA_DMA=y
+# CONFIG_PPC_INDIRECT_PCI is not set
+CONFIG_PPC_PCI_CHOICE=y
+CONFIG_PCI=y
+CONFIG_PCI_DOMAINS=y
+CONFIG_PCI_SYSCALL=y
+CONFIG_PCIEPORTBUS=y
+CONFIG_HOTPLUG_PCI_PCIE=y
+CONFIG_PCIEAER=y
+CONFIG_PCIE_ECRC=y
+CONFIG_PCIEAER_INJECT=m
+CONFIG_PCIEASPM=y
+# CONFIG_PCIEASPM_DEBUG is not set
+CONFIG_ARCH_SUPPORTS_MSI=y
+CONFIG_PCI_MSI=y
+# CONFIG_PCI_DEBUG is not set
+CONFIG_PCI_STUB=y
+CONFIG_PCI_IOV=y
+CONFIG_PCCARD=y
+CONFIG_PCMCIA=y
+CONFIG_PCMCIA_LOAD_CIS=y
+CONFIG_CARDBUS=y
+
+#
+# PC-card bridges
+#
+CONFIG_YENTA=m
+CONFIG_YENTA_O2=y
+CONFIG_YENTA_RICOH=y
+CONFIG_YENTA_TI=y
+CONFIG_YENTA_ENE_TUNE=y
+CONFIG_YENTA_TOSHIBA=y
+CONFIG_PD6729=m
+CONFIG_I82092=m
+CONFIG_ELECTRA_CF=m
+CONFIG_PCCARD_NONSTATIC=m
+CONFIG_HOTPLUG_PCI=y
+CONFIG_HOTPLUG_PCI_FAKE=m
+# CONFIG_HOTPLUG_PCI_CPCI is not set
+CONFIG_HOTPLUG_PCI_SHPC=m
+CONFIG_HOTPLUG_PCI_RPA=m
+CONFIG_HOTPLUG_PCI_RPA_DLPAR=m
+# CONFIG_HAS_RAPIDIO is not set
+CONFIG_RELOCATABLE=y
+CONFIG_PAGE_OFFSET=0xc000000000000000
+CONFIG_KERNEL_START=0xc000000000000000
+CONFIG_PHYSICAL_START=0x00000000
+CONFIG_NET=y
+CONFIG_COMPAT_NETLINK_MESSAGES=y
+
+#
+# Networking options
+#
+CONFIG_PACKET=y
+CONFIG_UNIX=y
+CONFIG_XFRM=y
+CONFIG_XFRM_USER=y
+CONFIG_XFRM_SUB_POLICY=y
+CONFIG_XFRM_MIGRATE=y
+CONFIG_XFRM_STATISTICS=y
+CONFIG_XFRM_IPCOMP=m
+CONFIG_NET_KEY=m
+CONFIG_NET_KEY_MIGRATE=y
+CONFIG_INET=y
+CONFIG_IP_MULTICAST=y
+CONFIG_IP_ADVANCED_ROUTER=y
+CONFIG_ASK_IP_FIB_HASH=y
+# CONFIG_IP_FIB_TRIE is not set
+CONFIG_IP_FIB_HASH=y
+CONFIG_IP_MULTIPLE_TABLES=y
+CONFIG_IP_ROUTE_MULTIPATH=y
+CONFIG_IP_ROUTE_VERBOSE=y
+# CONFIG_IP_PNP is not set
+CONFIG_NET_IPIP=m
+CONFIG_NET_IPGRE=m
+CONFIG_NET_IPGRE_BROADCAST=y
+CONFIG_IP_MROUTE=y
+CONFIG_IP_PIMSM_V1=y
+CONFIG_IP_PIMSM_V2=y
+CONFIG_ARPD=y
+CONFIG_SYN_COOKIES=y
+CONFIG_INET_AH=m
+CONFIG_INET_ESP=m
+CONFIG_INET_IPCOMP=m
+CONFIG_INET_XFRM_TUNNEL=m
+CONFIG_INET_TUNNEL=m
+CONFIG_INET_XFRM_MODE_TRANSPORT=m
+CONFIG_INET_XFRM_MODE_TUNNEL=m
+CONFIG_INET_XFRM_MODE_BEET=m
+CONFIG_INET_LRO=y
+CONFIG_INET_DIAG=m
+CONFIG_INET_TCP_DIAG=m
+CONFIG_TCP_CONG_ADVANCED=y
+CONFIG_TCP_CONG_BIC=m
+CONFIG_TCP_CONG_CUBIC=y
+CONFIG_TCP_CONG_WESTWOOD=m
+CONFIG_TCP_CONG_HTCP=m
+CONFIG_TCP_CONG_HSTCP=m
+CONFIG_TCP_CONG_HYBLA=m
+CONFIG_TCP_CONG_VEGAS=m
+CONFIG_TCP_CONG_SCALABLE=m
+CONFIG_TCP_CONG_LP=m
+CONFIG_TCP_CONG_VENO=m
+CONFIG_TCP_CONG_YEAH=m
+CONFIG_TCP_CONG_ILLINOIS=m
+# CONFIG_DEFAULT_BIC is not set
+CONFIG_DEFAULT_CUBIC=y
+# CONFIG_DEFAULT_HTCP is not set
+# CONFIG_DEFAULT_VEGAS is not set
+# CONFIG_DEFAULT_WESTWOOD is not set
+# CONFIG_DEFAULT_RENO is not set
+CONFIG_DEFAULT_TCP_CONG="cubic"
+CONFIG_TCP_MD5SIG=y
+CONFIG_IPV6=m
+CONFIG_IPV6_PRIVACY=y
+CONFIG_IPV6_ROUTER_PREF=y
+CONFIG_IPV6_ROUTE_INFO=y
+CONFIG_IPV6_OPTIMISTIC_DAD=y
+CONFIG_INET6_AH=m
+CONFIG_INET6_ESP=m
+CONFIG_INET6_IPCOMP=m
+CONFIG_IPV6_MIP6=m
+CONFIG_INET6_XFRM_TUNNEL=m
+CONFIG_INET6_TUNNEL=m
+CONFIG_INET6_XFRM_MODE_TRANSPORT=m
+CONFIG_INET6_XFRM_MODE_TUNNEL=m
+CONFIG_INET6_XFRM_MODE_BEET=m
+CONFIG_INET6_XFRM_MODE_ROUTEOPTIMIZATION=m
+CONFIG_IPV6_SIT=m
+CONFIG_IPV6_SIT_6RD=y
+CONFIG_IPV6_NDISC_NODETYPE=y
+CONFIG_IPV6_TUNNEL=m
+CONFIG_IPV6_MULTIPLE_TABLES=y
+CONFIG_IPV6_SUBTREES=y
+CONFIG_IPV6_MROUTE=y
+CONFIG_IPV6_PIMSM_V2=y
+CONFIG_NETLABEL=y
+CONFIG_NETWORK_SECMARK=y
+CONFIG_NETFILTER=y
+# CONFIG_NETFILTER_DEBUG is not set
+CONFIG_NETFILTER_ADVANCED=y
+CONFIG_BRIDGE_NETFILTER=y
+
+#
+# Core Netfilter Configuration
+#
+CONFIG_NETFILTER_NETLINK=m
+CONFIG_NETFILTER_NETLINK_QUEUE=m
+CONFIG_NETFILTER_NETLINK_LOG=m
+CONFIG_NF_CONNTRACK=y
+CONFIG_NF_CT_ACCT=y
+CONFIG_NF_CONNTRACK_MARK=y
+CONFIG_NF_CONNTRACK_SECMARK=y
+CONFIG_NF_CONNTRACK_EVENTS=y
+CONFIG_NF_CT_PROTO_DCCP=m
+CONFIG_NF_CT_PROTO_GRE=m
+CONFIG_NF_CT_PROTO_SCTP=m
+CONFIG_NF_CT_PROTO_UDPLITE=m
+CONFIG_NF_CONNTRACK_AMANDA=m
+CONFIG_NF_CONNTRACK_FTP=m
+CONFIG_NF_CONNTRACK_H323=m
+CONFIG_NF_CONNTRACK_IRC=m
+CONFIG_NF_CONNTRACK_NETBIOS_NS=m
+CONFIG_NF_CONNTRACK_PPTP=m
+CONFIG_NF_CONNTRACK_SANE=m
+CONFIG_NF_CONNTRACK_SIP=m
+CONFIG_NF_CONNTRACK_TFTP=m
+CONFIG_NF_CT_NETLINK=m
+CONFIG_NETFILTER_TPROXY=m
+CONFIG_NETFILTER_XTABLES=y
+CONFIG_NETFILTER_XT_TARGET_CLASSIFY=m
+CONFIG_NETFILTER_XT_TARGET_CONNMARK=m
+CONFIG_NETFILTER_XT_TARGET_CONNSECMARK=m
+# CONFIG_NETFILTER_XT_TARGET_CT is not set
+CONFIG_NETFILTER_XT_TARGET_DSCP=m
+CONFIG_NETFILTER_XT_TARGET_HL=m
+CONFIG_NETFILTER_XT_TARGET_LED=m
+CONFIG_NETFILTER_XT_TARGET_MARK=m
+CONFIG_NETFILTER_XT_TARGET_NFLOG=m
+CONFIG_NETFILTER_XT_TARGET_NFQUEUE=m
+CONFIG_NETFILTER_XT_TARGET_NOTRACK=m
+CONFIG_NETFILTER_XT_TARGET_RATEEST=m
+CONFIG_NETFILTER_XT_TARGET_TPROXY=m
+CONFIG_NETFILTER_XT_TARGET_TRACE=m
+CONFIG_NETFILTER_XT_TARGET_SECMARK=m
+CONFIG_NETFILTER_XT_TARGET_TCPMSS=m
+CONFIG_NETFILTER_XT_TARGET_TCPOPTSTRIP=m
+CONFIG_NETFILTER_XT_MATCH_CLUSTER=m
+CONFIG_NETFILTER_XT_MATCH_COMMENT=m
+CONFIG_NETFILTER_XT_MATCH_CONNBYTES=m
+CONFIG_NETFILTER_XT_MATCH_CONNLIMIT=m
+CONFIG_NETFILTER_XT_MATCH_CONNMARK=m
+CONFIG_NETFILTER_XT_MATCH_CONNTRACK=y
+CONFIG_NETFILTER_XT_MATCH_DCCP=m
+CONFIG_NETFILTER_XT_MATCH_DSCP=m
+CONFIG_NETFILTER_XT_MATCH_ESP=m
+CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=m
+CONFIG_NETFILTER_XT_MATCH_HELPER=m
+CONFIG_NETFILTER_XT_MATCH_HL=m
+CONFIG_NETFILTER_XT_MATCH_IPRANGE=m
+CONFIG_NETFILTER_XT_MATCH_LENGTH=m
+CONFIG_NETFILTER_XT_MATCH_LIMIT=m
+CONFIG_NETFILTER_XT_MATCH_MAC=m
+CONFIG_NETFILTER_XT_MATCH_MARK=m
+CONFIG_NETFILTER_XT_MATCH_MULTIPORT=m
+CONFIG_NETFILTER_XT_MATCH_OWNER=m
+CONFIG_NETFILTER_XT_MATCH_POLICY=m
+CONFIG_NETFILTER_XT_MATCH_PHYSDEV=m
+CONFIG_NETFILTER_XT_MATCH_PKTTYPE=m
+CONFIG_NETFILTER_XT_MATCH_QUOTA=m
+CONFIG_NETFILTER_XT_MATCH_RATEEST=m
+CONFIG_NETFILTER_XT_MATCH_REALM=m
+CONFIG_NETFILTER_XT_MATCH_RECENT=m
+# CONFIG_NETFILTER_XT_MATCH_RECENT_PROC_COMPAT is not set
+CONFIG_NETFILTER_XT_MATCH_SCTP=m
+CONFIG_NETFILTER_XT_MATCH_SOCKET=m
+CONFIG_NETFILTER_XT_MATCH_STATE=y
+CONFIG_NETFILTER_XT_MATCH_STATISTIC=m
+CONFIG_NETFILTER_XT_MATCH_STRING=m
+CONFIG_NETFILTER_XT_MATCH_TCPMSS=m
+CONFIG_NETFILTER_XT_MATCH_TIME=m
+CONFIG_NETFILTER_XT_MATCH_U32=m
+CONFIG_NETFILTER_XT_MATCH_OSF=m
+CONFIG_IP_VS=m
+# CONFIG_IP_VS_IPV6 is not set
+# CONFIG_IP_VS_DEBUG is not set
+CONFIG_IP_VS_TAB_BITS=12
+
+#
+# IPVS transport protocol load balancing support
+#
+CONFIG_IP_VS_PROTO_TCP=y
+CONFIG_IP_VS_PROTO_UDP=y
+CONFIG_IP_VS_PROTO_AH_ESP=y
+CONFIG_IP_VS_PROTO_ESP=y
+CONFIG_IP_VS_PROTO_AH=y
+# CONFIG_IP_VS_PROTO_SCTP is not set
+
+#
+# IPVS scheduler
+#
+CONFIG_IP_VS_RR=m
+CONFIG_IP_VS_WRR=m
+CONFIG_IP_VS_LC=m
+CONFIG_IP_VS_WLC=m
+CONFIG_IP_VS_LBLC=m
+CONFIG_IP_VS_LBLCR=m
+CONFIG_IP_VS_DH=m
+CONFIG_IP_VS_SH=m
+CONFIG_IP_VS_SED=m
+CONFIG_IP_VS_NQ=m
+
+#
+# IPVS application helper
+#
+CONFIG_IP_VS_FTP=m
+
+#
+# IP: Netfilter Configuration
+#
+CONFIG_NF_DEFRAG_IPV4=y
+CONFIG_NF_CONNTRACK_IPV4=y
+# CONFIG_NF_CONNTRACK_PROC_COMPAT is not set
+CONFIG_IP_NF_QUEUE=m
+CONFIG_IP_NF_IPTABLES=y
+CONFIG_IP_NF_MATCH_ADDRTYPE=m
+CONFIG_IP_NF_MATCH_AH=m
+CONFIG_IP_NF_MATCH_ECN=m
+CONFIG_IP_NF_MATCH_TTL=m
+CONFIG_IP_NF_FILTER=y
+CONFIG_IP_NF_TARGET_REJECT=y
+CONFIG_IP_NF_TARGET_LOG=m
+CONFIG_IP_NF_TARGET_ULOG=m
+CONFIG_NF_NAT=m
+CONFIG_NF_NAT_NEEDED=y
+CONFIG_IP_NF_TARGET_MASQUERADE=m
+CONFIG_IP_NF_TARGET_NETMAP=m
+CONFIG_IP_NF_TARGET_REDIRECT=m
+CONFIG_NF_NAT_SNMP_BASIC=m
+CONFIG_NF_NAT_PROTO_DCCP=m
+CONFIG_NF_NAT_PROTO_GRE=m
+CONFIG_NF_NAT_PROTO_UDPLITE=m
+CONFIG_NF_NAT_PROTO_SCTP=m
+CONFIG_NF_NAT_FTP=m
+CONFIG_NF_NAT_IRC=m
+CONFIG_NF_NAT_TFTP=m
+CONFIG_NF_NAT_AMANDA=m
+CONFIG_NF_NAT_PPTP=m
+CONFIG_NF_NAT_H323=m
+CONFIG_NF_NAT_SIP=m
+CONFIG_IP_NF_MANGLE=m
+CONFIG_IP_NF_TARGET_CLUSTERIP=m
+CONFIG_IP_NF_TARGET_ECN=m
+CONFIG_IP_NF_TARGET_TTL=m
+CONFIG_IP_NF_RAW=m
+CONFIG_IP_NF_SECURITY=m
+CONFIG_IP_NF_ARPTABLES=m
+CONFIG_IP_NF_ARPFILTER=m
+CONFIG_IP_NF_ARP_MANGLE=m
+
+#
+# IPv6: Netfilter Configuration
+#
+CONFIG_NF_CONNTRACK_IPV6=m
+CONFIG_IP6_NF_QUEUE=m
+CONFIG_IP6_NF_IPTABLES=m
+CONFIG_IP6_NF_MATCH_AH=m
+CONFIG_IP6_NF_MATCH_EUI64=m
+CONFIG_IP6_NF_MATCH_FRAG=m
+CONFIG_IP6_NF_MATCH_OPTS=m
+CONFIG_IP6_NF_MATCH_HL=m
+CONFIG_IP6_NF_MATCH_IPV6HEADER=m
+CONFIG_IP6_NF_MATCH_MH=m
+CONFIG_IP6_NF_MATCH_RT=m
+CONFIG_IP6_NF_TARGET_HL=m
+CONFIG_IP6_NF_TARGET_LOG=m
+CONFIG_IP6_NF_FILTER=m
+CONFIG_IP6_NF_TARGET_REJECT=m
+CONFIG_IP6_NF_MANGLE=m
+CONFIG_IP6_NF_RAW=m
+CONFIG_IP6_NF_SECURITY=m
+
+#
+# DECnet: Netfilter Configuration
+#
+# CONFIG_DECNET_NF_GRABULATOR is not set
+CONFIG_BRIDGE_NF_EBTABLES=m
+CONFIG_BRIDGE_EBT_BROUTE=m
+CONFIG_BRIDGE_EBT_T_FILTER=m
+CONFIG_BRIDGE_EBT_T_NAT=m
+CONFIG_BRIDGE_EBT_802_3=m
+CONFIG_BRIDGE_EBT_AMONG=m
+CONFIG_BRIDGE_EBT_ARP=m
+CONFIG_BRIDGE_EBT_IP=m
+CONFIG_BRIDGE_EBT_IP6=m
+CONFIG_BRIDGE_EBT_LIMIT=m
+CONFIG_BRIDGE_EBT_MARK=m
+CONFIG_BRIDGE_EBT_PKTTYPE=m
+CONFIG_BRIDGE_EBT_STP=m
+CONFIG_BRIDGE_EBT_VLAN=m
+CONFIG_BRIDGE_EBT_ARPREPLY=m
+CONFIG_BRIDGE_EBT_DNAT=m
+CONFIG_BRIDGE_EBT_MARK_T=m
+CONFIG_BRIDGE_EBT_REDIRECT=m
+CONFIG_BRIDGE_EBT_SNAT=m
+CONFIG_BRIDGE_EBT_LOG=m
+CONFIG_BRIDGE_EBT_ULOG=m
+CONFIG_BRIDGE_EBT_NFLOG=m
+CONFIG_IP_DCCP=m
+CONFIG_INET_DCCP_DIAG=m
+
+#
+# DCCP CCIDs Configuration (EXPERIMENTAL)
+#
+# CONFIG_IP_DCCP_CCID2_DEBUG is not set
+CONFIG_IP_DCCP_CCID3=y
+# CONFIG_IP_DCCP_CCID3_DEBUG is not set
+CONFIG_IP_DCCP_CCID3_RTO=100
+CONFIG_IP_DCCP_TFRC_LIB=y
+
+#
+# DCCP Kernel Hacking
+#
+# CONFIG_IP_DCCP_DEBUG is not set
+CONFIG_NET_DCCPPROBE=m
+CONFIG_IP_SCTP=m
+# CONFIG_SCTP_DBG_MSG is not set
+# CONFIG_SCTP_DBG_OBJCNT is not set
+# CONFIG_SCTP_HMAC_NONE is not set
+CONFIG_SCTP_HMAC_SHA1=y
+# CONFIG_SCTP_HMAC_MD5 is not set
+# CONFIG_RDS is not set
+CONFIG_TIPC=m
+# CONFIG_TIPC_ADVANCED is not set
+# CONFIG_TIPC_DEBUG is not set
+CONFIG_ATM=m
+CONFIG_ATM_CLIP=m
+# CONFIG_ATM_CLIP_NO_ICMP is not set
+CONFIG_ATM_LANE=m
+# CONFIG_ATM_MPOA is not set
+CONFIG_ATM_BR2684=m
+# CONFIG_ATM_BR2684_IPFILTER is not set
+CONFIG_STP=m
+CONFIG_GARP=m
+CONFIG_BRIDGE=m
+CONFIG_BRIDGE_IGMP_SNOOPING=y
+CONFIG_NET_DSA=y
+CONFIG_NET_DSA_TAG_DSA=y
+CONFIG_NET_DSA_TAG_EDSA=y
+CONFIG_NET_DSA_TAG_TRAILER=y
+CONFIG_NET_DSA_MV88E6XXX=y
+CONFIG_NET_DSA_MV88E6060=y
+CONFIG_NET_DSA_MV88E6XXX_NEED_PPU=y
+CONFIG_NET_DSA_MV88E6131=y
+CONFIG_NET_DSA_MV88E6123_61_65=y
+CONFIG_VLAN_8021Q=m
+CONFIG_VLAN_8021Q_GVRP=y
+CONFIG_DECNET=m
+CONFIG_DECNET_ROUTER=y
+CONFIG_LLC=m
+# CONFIG_LLC2 is not set
+CONFIG_IPX=m
+# CONFIG_IPX_INTERN is not set
+CONFIG_ATALK=m
+CONFIG_DEV_APPLETALK=m
+CONFIG_IPDDP=m
+CONFIG_IPDDP_ENCAP=y
+CONFIG_IPDDP_DECAP=y
+# CONFIG_X25 is not set
+# CONFIG_LAPB is not set
+# CONFIG_ECONET is not set
+CONFIG_WAN_ROUTER=m
+CONFIG_PHONET=m
+CONFIG_IEEE802154=m
+CONFIG_NET_SCHED=y
+
+#
+# Queueing/Scheduling
+#
+CONFIG_NET_SCH_CBQ=m
+CONFIG_NET_SCH_HTB=m
+CONFIG_NET_SCH_HFSC=m
+CONFIG_NET_SCH_ATM=m
+CONFIG_NET_SCH_PRIO=m
+CONFIG_NET_SCH_MULTIQ=m
+CONFIG_NET_SCH_RED=m
+CONFIG_NET_SCH_SFQ=m
+CONFIG_NET_SCH_TEQL=m
+CONFIG_NET_SCH_TBF=m
+CONFIG_NET_SCH_GRED=m
+CONFIG_NET_SCH_DSMARK=m
+CONFIG_NET_SCH_NETEM=m
+CONFIG_NET_SCH_DRR=m
+CONFIG_NET_SCH_INGRESS=m
+
+#
+# Classification
+#
+CONFIG_NET_CLS=y
+CONFIG_NET_CLS_BASIC=m
+CONFIG_NET_CLS_TCINDEX=m
+CONFIG_NET_CLS_ROUTE4=m
+CONFIG_NET_CLS_ROUTE=y
+CONFIG_NET_CLS_FW=m
+CONFIG_NET_CLS_U32=m
+CONFIG_CLS_U32_PERF=y
+CONFIG_CLS_U32_MARK=y
+CONFIG_NET_CLS_RSVP=m
+CONFIG_NET_CLS_RSVP6=m
+CONFIG_NET_CLS_FLOW=m
+CONFIG_NET_CLS_CGROUP=y
+CONFIG_NET_EMATCH=y
+CONFIG_NET_EMATCH_STACK=32
+CONFIG_NET_EMATCH_CMP=m
+CONFIG_NET_EMATCH_NBYTE=m
+CONFIG_NET_EMATCH_U32=m
+CONFIG_NET_EMATCH_META=m
+CONFIG_NET_EMATCH_TEXT=m
+CONFIG_NET_CLS_ACT=y
+CONFIG_NET_ACT_POLICE=m
+CONFIG_NET_ACT_GACT=m
+CONFIG_GACT_PROB=y
+CONFIG_NET_ACT_MIRRED=m
+CONFIG_NET_ACT_IPT=m
+CONFIG_NET_ACT_NAT=m
+CONFIG_NET_ACT_PEDIT=m
+CONFIG_NET_ACT_SIMP=m
+CONFIG_NET_ACT_SKBEDIT=m
+CONFIG_NET_CLS_IND=y
+CONFIG_NET_SCH_FIFO=y
+CONFIG_DCB=y
+
+#
+# Network testing
+#
+CONFIG_NET_PKTGEN=m
+# CONFIG_NET_TCPPROBE is not set
+CONFIG_NET_DROP_MONITOR=y
+CONFIG_HAMRADIO=y
+
+#
+# Packet Radio protocols
+#
+CONFIG_AX25=m
+CONFIG_AX25_DAMA_SLAVE=y
+CONFIG_NETROM=m
+CONFIG_ROSE=m
+
+#
+# AX.25 network device drivers
+#
+CONFIG_MKISS=m
+CONFIG_6PACK=m
+CONFIG_BPQETHER=m
+CONFIG_BAYCOM_SER_FDX=m
+CONFIG_BAYCOM_SER_HDX=m
+CONFIG_BAYCOM_PAR=m
+CONFIG_YAM=m
+CONFIG_CAN=m
+CONFIG_CAN_RAW=m
+CONFIG_CAN_BCM=m
+
+#
+# CAN Device Drivers
+#
+CONFIG_CAN_VCAN=m
+CONFIG_CAN_DEV=m
+CONFIG_CAN_CALC_BITTIMING=y
+CONFIG_CAN_MSCAN=m
+CONFIG_CAN_SJA1000=m
+CONFIG_CAN_SJA1000_PLATFORM=m
+CONFIG_CAN_SJA1000_OF_PLATFORM=m
+CONFIG_CAN_EMS_PCI=m
+CONFIG_CAN_KVASER_PCI=m
+# CONFIG_CAN_PLX_PCI is not set
+
+#
+# CAN USB interfaces
+#
+CONFIG_CAN_EMS_USB=m
+CONFIG_CAN_DEBUG_DEVICES=y
+CONFIG_IRDA=m
+
+#
+# IrDA protocols
+#
+CONFIG_IRLAN=m
+CONFIG_IRNET=m
+CONFIG_IRCOMM=m
+# CONFIG_IRDA_ULTRA is not set
+
+#
+# IrDA options
+#
+CONFIG_IRDA_CACHE_LAST_LSAP=y
+CONFIG_IRDA_FAST_RR=y
+# CONFIG_IRDA_DEBUG is not set
+
+#
+# Infrared-port device drivers
+#
+
+#
+# SIR device drivers
+#
+CONFIG_IRTTY_SIR=m
+
+#
+# Dongle support
+#
+CONFIG_DONGLE=y
+CONFIG_ESI_DONGLE=m
+CONFIG_ACTISYS_DONGLE=m
+CONFIG_TEKRAM_DONGLE=m
+CONFIG_TOIM3232_DONGLE=m
+CONFIG_LITELINK_DONGLE=m
+CONFIG_MA600_DONGLE=m
+CONFIG_GIRBIL_DONGLE=m
+CONFIG_MCP2120_DONGLE=m
+CONFIG_OLD_BELKIN_DONGLE=m
+CONFIG_ACT200L_DONGLE=m
+CONFIG_KINGSUN_DONGLE=m
+CONFIG_KSDAZZLE_DONGLE=m
+CONFIG_KS959_DONGLE=m
+
+#
+# FIR device drivers
+#
+CONFIG_USB_IRDA=m
+CONFIG_SIGMATEL_FIR=m
+CONFIG_NSC_FIR=m
+CONFIG_WINBOND_FIR=m
+CONFIG_SMC_IRCC_FIR=m
+CONFIG_ALI_FIR=m
+CONFIG_VLSI_FIR=m
+CONFIG_VIA_FIR=m
+CONFIG_MCS_FIR=m
+CONFIG_BT=m
+CONFIG_BT_L2CAP=m
+CONFIG_BT_SCO=m
+CONFIG_BT_RFCOMM=m
+CONFIG_BT_RFCOMM_TTY=y
+CONFIG_BT_BNEP=m
+CONFIG_BT_BNEP_MC_FILTER=y
+CONFIG_BT_BNEP_PROTO_FILTER=y
+CONFIG_BT_CMTP=m
+CONFIG_BT_HIDP=m
+
+#
+# Bluetooth device drivers
+#
+CONFIG_BT_HCIBTUSB=m
+CONFIG_BT_HCIBTSDIO=m
+CONFIG_BT_HCIUART=m
+CONFIG_BT_HCIUART_H4=y
+CONFIG_BT_HCIUART_BCSP=y
+CONFIG_BT_HCIUART_LL=y
+CONFIG_BT_HCIBCM203X=m
+CONFIG_BT_HCIBPA10X=m
+CONFIG_BT_HCIBFUSB=m
+CONFIG_BT_HCIDTL1=m
+CONFIG_BT_HCIBT3C=m
+CONFIG_BT_HCIBLUECARD=m
+CONFIG_BT_HCIBTUART=m
+CONFIG_BT_HCIVHCI=m
+CONFIG_BT_MRVL=m
+CONFIG_BT_MRVL_SDIO=m
+CONFIG_BT_ATH3K=m
+# CONFIG_AF_RXRPC is not set
+CONFIG_FIB_RULES=y
+CONFIG_WIRELESS=y
+CONFIG_WIRELESS_EXT=y
+CONFIG_WEXT_CORE=y
+CONFIG_WEXT_PROC=y
+CONFIG_WEXT_SPY=y
+CONFIG_WEXT_PRIV=y
+CONFIG_CFG80211=m
+# CONFIG_NL80211_TESTMODE is not set
+# CONFIG_CFG80211_DEVELOPER_WARNINGS is not set
+# CONFIG_CFG80211_REG_DEBUG is not set
+CONFIG_CFG80211_DEFAULT_PS=y
+CONFIG_CFG80211_DEBUGFS=y
+# CONFIG_CFG80211_INTERNAL_REGDB is not set
+CONFIG_CFG80211_WEXT=y
+CONFIG_WIRELESS_EXT_SYSFS=y
+CONFIG_LIB80211=m
+CONFIG_LIB80211_CRYPT_WEP=m
+CONFIG_LIB80211_CRYPT_CCMP=m
+CONFIG_LIB80211_CRYPT_TKIP=m
+# CONFIG_LIB80211_DEBUG is not set
+CONFIG_MAC80211=m
+CONFIG_MAC80211_RC_MINSTREL=y
+# CONFIG_MAC80211_RC_DEFAULT_PID is not set
+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+CONFIG_MAC80211_RC_DEFAULT="minstrel"
+CONFIG_MAC80211_MESH=y
+CONFIG_MAC80211_LEDS=y
+CONFIG_MAC80211_DEBUGFS=y
+# CONFIG_MAC80211_DEBUG_MENU is not set
+CONFIG_WIMAX=m
+CONFIG_WIMAX_DEBUG_LEVEL=8
+CONFIG_RFKILL=m
+CONFIG_RFKILL_LEDS=y
+CONFIG_RFKILL_INPUT=y
+CONFIG_NET_9P=m
+CONFIG_NET_9P_VIRTIO=m
+CONFIG_NET_9P_RDMA=m
+# CONFIG_NET_9P_DEBUG is not set
+
+#
+# Device Drivers
+#
+
+#
+# Generic Driver Options
+#
+CONFIG_UEVENT_HELPER_PATH=""
+CONFIG_DEVTMPFS=y
+CONFIG_DEVTMPFS_MOUNT=y
+CONFIG_STANDALONE=y
+CONFIG_PREVENT_FIRMWARE_BUILD=y
+CONFIG_FW_LOADER=y
+# CONFIG_FIRMWARE_IN_KERNEL is not set
+CONFIG_EXTRA_FIRMWARE=""
+# CONFIG_DEBUG_DRIVER is not set
+CONFIG_DEBUG_DEVRES=y
+# CONFIG_SYS_HYPERVISOR is not set
+CONFIG_CONNECTOR=y
+CONFIG_PROC_EVENTS=y
+CONFIG_MTD=m
+# CONFIG_MTD_DEBUG is not set
+# CONFIG_MTD_TESTS is not set
+CONFIG_MTD_CONCAT=m
+CONFIG_MTD_PARTITIONS=y
+CONFIG_MTD_REDBOOT_PARTS=m
+CONFIG_MTD_REDBOOT_DIRECTORY_BLOCK=-1
+# CONFIG_MTD_REDBOOT_PARTS_UNALLOCATED is not set
+# CONFIG_MTD_REDBOOT_PARTS_READONLY is not set
+CONFIG_MTD_OF_PARTS=m
+CONFIG_MTD_AR7_PARTS=m
+
+#
+# User Modules And Translation Layers
+#
+CONFIG_MTD_CHAR=m
+CONFIG_MTD_BLKDEVS=m
+CONFIG_MTD_BLOCK=m
+CONFIG_MTD_BLOCK_RO=m
+CONFIG_FTL=m
+CONFIG_NFTL=m
+CONFIG_NFTL_RW=y
+CONFIG_INFTL=m
+CONFIG_RFD_FTL=m
+CONFIG_SSFDC=m
+CONFIG_MTD_OOPS=m
+
+#
+# RAM/ROM/Flash chip drivers
+#
+CONFIG_MTD_CFI=m
+CONFIG_MTD_JEDECPROBE=m
+CONFIG_MTD_GEN_PROBE=m
+# CONFIG_MTD_CFI_ADV_OPTIONS is not set
+CONFIG_MTD_MAP_BANK_WIDTH_1=y
+CONFIG_MTD_MAP_BANK_WIDTH_2=y
+CONFIG_MTD_MAP_BANK_WIDTH_4=y
+# CONFIG_MTD_MAP_BANK_WIDTH_8 is not set
+# CONFIG_MTD_MAP_BANK_WIDTH_16 is not set
+# CONFIG_MTD_MAP_BANK_WIDTH_32 is not set
+CONFIG_MTD_CFI_I1=y
+CONFIG_MTD_CFI_I2=y
+# CONFIG_MTD_CFI_I4 is not set
+# CONFIG_MTD_CFI_I8 is not set
+CONFIG_MTD_CFI_INTELEXT=m
+CONFIG_MTD_CFI_AMDSTD=m
+CONFIG_MTD_CFI_STAA=m
+CONFIG_MTD_CFI_UTIL=m
+CONFIG_MTD_RAM=m
+CONFIG_MTD_ROM=m
+CONFIG_MTD_ABSENT=m
+
+#
+# Mapping drivers for chip access
+#
+CONFIG_MTD_COMPLEX_MAPPINGS=y
+# CONFIG_MTD_PHYSMAP is not set
+CONFIG_MTD_PHYSMAP_OF=m
+CONFIG_MTD_PCI=m
+# CONFIG_MTD_GPIO_ADDR is not set
+# CONFIG_MTD_INTEL_VR_NOR is not set
+# CONFIG_MTD_PLATRAM is not set
+
+#
+# Self-contained MTD device drivers
+#
+CONFIG_MTD_PMC551=m
+# CONFIG_MTD_PMC551_BUGFIX is not set
+# CONFIG_MTD_PMC551_DEBUG is not set
+# CONFIG_MTD_SLRAM is not set
+# CONFIG_MTD_PHRAM is not set
+CONFIG_MTD_MTDRAM=m
+CONFIG_MTDRAM_TOTAL_SIZE=4096
+CONFIG_MTDRAM_ERASE_SIZE=128
+CONFIG_MTD_BLOCK2MTD=m
+
+#
+# Disk-On-Chip Device Drivers
+#
+# CONFIG_MTD_DOC2000 is not set
+# CONFIG_MTD_DOC2001 is not set
+# CONFIG_MTD_DOC2001PLUS is not set
+CONFIG_MTD_NAND=m
+# CONFIG_MTD_NAND_VERIFY_WRITE is not set
+CONFIG_MTD_NAND_ECC_SMC=y
+# CONFIG_MTD_NAND_MUSEUM_IDS is not set
+CONFIG_MTD_NAND_IDS=m
+CONFIG_MTD_NAND_DISKONCHIP=m
+# CONFIG_MTD_NAND_DISKONCHIP_PROBE_ADVANCED is not set
+CONFIG_MTD_NAND_DISKONCHIP_PROBE_ADDRESS=0
+# CONFIG_MTD_NAND_DISKONCHIP_BBTWRITE is not set
+# CONFIG_MTD_NAND_CAFE is not set
+CONFIG_MTD_NAND_PASEMI=m
+CONFIG_MTD_NAND_NANDSIM=m
+# CONFIG_MTD_NAND_PLATFORM is not set
+CONFIG_MTD_ALAUDA=m
+# CONFIG_MTD_NAND_FSL_ELBC is not set
+# CONFIG_MTD_ONENAND is not set
+
+#
+# LPDDR flash memory drivers
+#
+CONFIG_MTD_LPDDR=m
+CONFIG_MTD_QINFO_PROBE=m
+
+#
+# UBI - Unsorted block images
+#
+CONFIG_MTD_UBI=m
+CONFIG_MTD_UBI_WL_THRESHOLD=4096
+CONFIG_MTD_UBI_BEB_RESERVE=1
+# CONFIG_MTD_UBI_GLUEBI is not set
+
+#
+# UBI debugging options
+#
+# CONFIG_MTD_UBI_DEBUG is not set
+CONFIG_OF_FLATTREE=y
+CONFIG_OF_DYNAMIC=y
+CONFIG_OF_DEVICE=y
+CONFIG_OF_GPIO=y
+CONFIG_OF_I2C=y
+CONFIG_OF_MDIO=y
+CONFIG_PARPORT=m
+CONFIG_PARPORT_PC=m
+CONFIG_PARPORT_SERIAL=m
+# CONFIG_PARPORT_PC_FIFO is not set
+# CONFIG_PARPORT_PC_SUPERIO is not set
+CONFIG_PARPORT_PC_PCMCIA=m
+# CONFIG_PARPORT_GSC is not set
+# CONFIG_PARPORT_AX88796 is not set
+CONFIG_PARPORT_1284=y
+CONFIG_PARPORT_NOT_PC=y
+CONFIG_BLK_DEV=y
+CONFIG_BLK_DEV_FD=m
+CONFIG_PARIDE=m
+
+#
+# Parallel IDE high-level drivers
+#
+CONFIG_PARIDE_PD=m
+CONFIG_PARIDE_PCD=m
+CONFIG_PARIDE_PF=m
+CONFIG_PARIDE_PT=m
+CONFIG_PARIDE_PG=m
+
+#
+# Parallel IDE protocol modules
+#
+CONFIG_PARIDE_ATEN=m
+CONFIG_PARIDE_BPCK=m
+CONFIG_PARIDE_COMM=m
+CONFIG_PARIDE_DSTR=m
+CONFIG_PARIDE_FIT2=m
+CONFIG_PARIDE_FIT3=m
+CONFIG_PARIDE_EPAT=m
+CONFIG_PARIDE_EPATC8=y
+CONFIG_PARIDE_EPIA=m
+CONFIG_PARIDE_FRIQ=m
+CONFIG_PARIDE_FRPW=m
+CONFIG_PARIDE_KBIC=m
+CONFIG_PARIDE_KTTI=m
+CONFIG_PARIDE_ON20=m
+CONFIG_PARIDE_ON26=m
+CONFIG_BLK_CPQ_CISS_DA=m
+CONFIG_CISS_SCSI_TAPE=y
+CONFIG_BLK_DEV_DAC960=m
+CONFIG_BLK_DEV_UMEM=m
+# CONFIG_BLK_DEV_COW_COMMON is not set
+CONFIG_BLK_DEV_LOOP=y
+CONFIG_BLK_DEV_CRYPTOLOOP=m
+CONFIG_BLK_DEV_DRBD=m
+CONFIG_DRBD_FAULT_INJECTION=y
+CONFIG_BLK_DEV_NBD=m
+CONFIG_BLK_DEV_OSD=m
+CONFIG_BLK_DEV_SX8=m
+# CONFIG_BLK_DEV_UB is not set
+CONFIG_BLK_DEV_RAM=y
+CONFIG_BLK_DEV_RAM_COUNT=16
+CONFIG_BLK_DEV_RAM_SIZE=16384
+# CONFIG_BLK_DEV_XIP is not set
+CONFIG_CDROM_PKTCDVD=m
+CONFIG_CDROM_PKTCDVD_BUFFERS=8
+# CONFIG_CDROM_PKTCDVD_WCACHE is not set
+CONFIG_ATA_OVER_ETH=m
+CONFIG_VIRTIO_BLK=m
+# CONFIG_BLK_DEV_HD is not set
+CONFIG_MISC_DEVICES=y
+# CONFIG_AD525X_DPOT is not set
+# CONFIG_PHANTOM is not set
+# CONFIG_SGI_IOC4 is not set
+CONFIG_TIFM_CORE=m
+CONFIG_TIFM_7XX1=m
+CONFIG_ICS932S401=m
+CONFIG_ENCLOSURE_SERVICES=m
+# CONFIG_HP_ILO is not set
+CONFIG_ISL29003=m
+CONFIG_SENSORS_TSL2550=m
+# CONFIG_DS1682 is not set
+# CONFIG_C2PORT is not set
+
+#
+# EEPROM support
+#
+CONFIG_EEPROM_AT24=m
+CONFIG_EEPROM_LEGACY=m
+CONFIG_EEPROM_MAX6875=m
+CONFIG_EEPROM_93CX6=m
+CONFIG_CB710_CORE=m
+# CONFIG_CB710_DEBUG is not set
+CONFIG_CB710_DEBUG_ASSUMPTIONS=y
+CONFIG_IWMC3200TOP=m
+# CONFIG_IWMC3200TOP_DEBUG is not set
+CONFIG_IWMC3200TOP_DEBUGFS=y
+CONFIG_HAVE_IDE=y
+CONFIG_IDE=y
+
+#
+# Please see Documentation/ide/ide.txt for help/info on IDE drives
+#
+CONFIG_IDE_XFER_MODE=y
+CONFIG_IDE_TIMINGS=y
+CONFIG_IDE_ATAPI=y
+# CONFIG_BLK_DEV_IDE_SATA is not set
+CONFIG_IDE_GD=y
+CONFIG_IDE_GD_ATA=y
+CONFIG_IDE_GD_ATAPI=y
+# CONFIG_BLK_DEV_IDECS is not set
+CONFIG_BLK_DEV_DELKIN=m
+CONFIG_BLK_DEV_IDECD=m
+CONFIG_BLK_DEV_IDECD_VERBOSE_ERRORS=y
+# CONFIG_BLK_DEV_IDETAPE is not set
+CONFIG_IDE_TASK_IOCTL=y
+CONFIG_IDE_PROC_FS=y
+
+#
+# IDE chipset support/bugfixes
+#
+# CONFIG_BLK_DEV_PLATFORM is not set
+CONFIG_BLK_DEV_IDEDMA_SFF=y
+
+#
+# PCI IDE chipsets support
+#
+CONFIG_BLK_DEV_IDEPCI=y
+# CONFIG_IDEPCI_PCIBUS_ORDER is not set
+# CONFIG_BLK_DEV_OFFBOARD is not set
+CONFIG_BLK_DEV_GENERIC=y
+# CONFIG_BLK_DEV_OPTI621 is not set
+CONFIG_BLK_DEV_IDEDMA_PCI=y
+# CONFIG_BLK_DEV_AEC62XX is not set
+# CONFIG_BLK_DEV_ALI15X3 is not set
+# CONFIG_BLK_DEV_AMD74XX is not set
+# CONFIG_BLK_DEV_CMD64X is not set
+# CONFIG_BLK_DEV_TRIFLEX is not set
+# CONFIG_BLK_DEV_CS5520 is not set
+# CONFIG_BLK_DEV_CS5530 is not set
+# CONFIG_BLK_DEV_HPT366 is not set
+# CONFIG_BLK_DEV_JMICRON is not set
+# CONFIG_BLK_DEV_SC1200 is not set
+# CONFIG_BLK_DEV_PIIX is not set
+CONFIG_BLK_DEV_IT8172=m
+# CONFIG_BLK_DEV_IT8213 is not set
+# CONFIG_BLK_DEV_IT821X is not set
+# CONFIG_BLK_DEV_NS87415 is not set
+# CONFIG_BLK_DEV_PDC202XX_OLD is not set
+# CONFIG_BLK_DEV_PDC202XX_NEW is not set
+# CONFIG_BLK_DEV_SVWKS is not set
+# CONFIG_BLK_DEV_SIIMAGE is not set
+# CONFIG_BLK_DEV_SL82C105 is not set
+# CONFIG_BLK_DEV_SLC90E66 is not set
+# CONFIG_BLK_DEV_TRM290 is not set
+# CONFIG_BLK_DEV_VIA82CXXX is not set
+# CONFIG_BLK_DEV_TC86C001 is not set
+# CONFIG_BLK_DEV_CELLEB is not set
+CONFIG_BLK_DEV_IDE_PMAC=y
+CONFIG_BLK_DEV_IDE_PMAC_ATA100FIRST=y
+CONFIG_BLK_DEV_IDEDMA=y
+
+#
+# SCSI device support
+#
+CONFIG_SCSI_MOD=y
+CONFIG_RAID_ATTRS=m
+CONFIG_SCSI=y
+CONFIG_SCSI_DMA=y
+CONFIG_SCSI_TGT=m
+CONFIG_SCSI_NETLINK=y
+CONFIG_SCSI_PROC_FS=y
+
+#
+# SCSI support type (disk, tape, CD-ROM)
+#
+CONFIG_BLK_DEV_SD=y
+CONFIG_CHR_DEV_ST=m
+CONFIG_CHR_DEV_OSST=m
+CONFIG_BLK_DEV_SR=y
+CONFIG_BLK_DEV_SR_VENDOR=y
+CONFIG_CHR_DEV_SG=y
+CONFIG_CHR_DEV_SCH=m
+CONFIG_SCSI_ENCLOSURE=m
+CONFIG_SCSI_MULTI_LUN=y
+CONFIG_SCSI_CONSTANTS=y
+CONFIG_SCSI_LOGGING=y
+CONFIG_SCSI_SCAN_ASYNC=y
+CONFIG_SCSI_WAIT_SCAN=m
+
+#
+# SCSI Transports
+#
+CONFIG_SCSI_SPI_ATTRS=m
+CONFIG_SCSI_FC_ATTRS=m
+CONFIG_SCSI_FC_TGT_ATTRS=y
+CONFIG_SCSI_ISCSI_ATTRS=m
+CONFIG_SCSI_SAS_ATTRS=m
+CONFIG_SCSI_SAS_LIBSAS=m
+CONFIG_SCSI_SAS_ATA=y
+CONFIG_SCSI_SAS_HOST_SMP=y
+# CONFIG_SCSI_SAS_LIBSAS_DEBUG is not set
+CONFIG_SCSI_SRP_ATTRS=m
+CONFIG_SCSI_SRP_TGT_ATTRS=y
+CONFIG_SCSI_LOWLEVEL=y
+CONFIG_ISCSI_TCP=m
+CONFIG_SCSI_CXGB3_ISCSI=m
+CONFIG_SCSI_BNX2_ISCSI=m
+CONFIG_BE2ISCSI=m
+CONFIG_BLK_DEV_3W_XXXX_RAID=m
+CONFIG_SCSI_HPSA=m
+CONFIG_SCSI_3W_9XXX=m
+CONFIG_SCSI_3W_SAS=m
+CONFIG_SCSI_ACARD=m
+CONFIG_SCSI_AACRAID=m
+CONFIG_SCSI_AIC7XXX=m
+CONFIG_AIC7XXX_CMDS_PER_DEVICE=4
+CONFIG_AIC7XXX_RESET_DELAY_MS=15000
+# CONFIG_AIC7XXX_DEBUG_ENABLE is not set
+CONFIG_AIC7XXX_DEBUG_MASK=0
+# CONFIG_AIC7XXX_REG_PRETTY_PRINT is not set
+CONFIG_SCSI_AIC7XXX_OLD=m
+CONFIG_SCSI_AIC79XX=m
+CONFIG_AIC79XX_CMDS_PER_DEVICE=4
+CONFIG_AIC79XX_RESET_DELAY_MS=15000
+# CONFIG_AIC79XX_DEBUG_ENABLE is not set
+CONFIG_AIC79XX_DEBUG_MASK=0
+# CONFIG_AIC79XX_REG_PRETTY_PRINT is not set
+CONFIG_SCSI_AIC94XX=m
+# CONFIG_AIC94XX_DEBUG is not set
+CONFIG_SCSI_MVSAS=m
+# CONFIG_SCSI_MVSAS_DEBUG is not set
+CONFIG_SCSI_ARCMSR=m
+CONFIG_SCSI_ARCMSR_AER=y
+CONFIG_MEGARAID_NEWGEN=y
+CONFIG_MEGARAID_MM=m
+CONFIG_MEGARAID_MAILBOX=m
+CONFIG_MEGARAID_LEGACY=m
+CONFIG_MEGARAID_SAS=m
+CONFIG_SCSI_MPT2SAS=m
+CONFIG_SCSI_MPT2SAS_MAX_SGE=128
+CONFIG_SCSI_MPT2SAS_LOGGING=y
+CONFIG_SCSI_HPTIOP=m
+CONFIG_LIBFC=m
+CONFIG_LIBFCOE=m
+CONFIG_FCOE=m
+# CONFIG_SCSI_DMX3191D is not set
+# CONFIG_SCSI_EATA is not set
+# CONFIG_SCSI_FUTURE_DOMAIN is not set
+CONFIG_SCSI_GDTH=m
+# CONFIG_SCSI_IPS is not set
+CONFIG_SCSI_IBMVSCSI=m
+CONFIG_SCSI_IBMVSCSIS=m
+CONFIG_SCSI_IBMVFC=m
+# CONFIG_SCSI_IBMVFC_TRACE is not set
+CONFIG_SCSI_INITIO=m
+CONFIG_SCSI_INIA100=m
+CONFIG_SCSI_PPA=m
+CONFIG_SCSI_IMM=m
+# CONFIG_SCSI_IZIP_EPP16 is not set
+# CONFIG_SCSI_IZIP_SLOW_CTR is not set
+CONFIG_SCSI_STEX=m
+CONFIG_SCSI_SYM53C8XX_2=m
+CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=1
+CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
+CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
+CONFIG_SCSI_SYM53C8XX_MMIO=y
+CONFIG_SCSI_IPR=m
+CONFIG_SCSI_IPR_TRACE=y
+CONFIG_SCSI_IPR_DUMP=y
+CONFIG_SCSI_QLOGIC_1280=m
+CONFIG_SCSI_QLA_FC=m
+CONFIG_SCSI_QLA_ISCSI=m
+CONFIG_SCSI_LPFC=m
+# CONFIG_SCSI_LPFC_DEBUG_FS is not set
+CONFIG_SCSI_DC395x=m
+# CONFIG_SCSI_DC390T is not set
+CONFIG_SCSI_DEBUG=m
+CONFIG_SCSI_PMCRAID=m
+CONFIG_SCSI_PM8001=m
+CONFIG_SCSI_SRP=m
+CONFIG_SCSI_BFA_FC=m
+CONFIG_SCSI_LOWLEVEL_PCMCIA=y
+# CONFIG_PCMCIA_FDOMAIN is not set
+CONFIG_PCMCIA_QLOGIC=m
+CONFIG_PCMCIA_SYM53C500=m
+CONFIG_SCSI_DH=y
+CONFIG_SCSI_DH_RDAC=m
+CONFIG_SCSI_DH_HP_SW=m
+CONFIG_SCSI_DH_EMC=m
+CONFIG_SCSI_DH_ALUA=m
+CONFIG_SCSI_OSD_INITIATOR=m
+CONFIG_SCSI_OSD_ULD=m
+CONFIG_SCSI_OSD_DPRINT_SENSE=1
+# CONFIG_SCSI_OSD_DEBUG is not set
+CONFIG_ATA=y
+CONFIG_ATA_NONSTANDARD=y
+CONFIG_ATA_VERBOSE_ERROR=y
+CONFIG_SATA_PMP=y
+CONFIG_SATA_AHCI=y
+CONFIG_SATA_SIL24=m
+CONFIG_ATA_SFF=y
+CONFIG_SATA_SVW=m
+CONFIG_ATA_PIIX=y
+CONFIG_SATA_MV=m
+CONFIG_SATA_NV=m
+CONFIG_PDC_ADMA=m
+CONFIG_SATA_QSTOR=m
+CONFIG_SATA_PROMISE=m
+CONFIG_SATA_SX4=m
+CONFIG_SATA_SIL=m
+CONFIG_SATA_SIS=m
+CONFIG_SATA_ULI=m
+CONFIG_SATA_VIA=m
+CONFIG_SATA_VITESSE=m
+CONFIG_SATA_INIC162X=m
+CONFIG_PATA_ALI=m
+CONFIG_PATA_AMD=m
+CONFIG_PATA_ARTOP=m
+CONFIG_PATA_ATP867X=m
+CONFIG_PATA_ATIIXP=m
+CONFIG_PATA_CMD640_PCI=m
+CONFIG_PATA_CMD64X=m
+CONFIG_PATA_CS5520=m
+CONFIG_PATA_CS5530=m
+CONFIG_PATA_CYPRESS=m
+CONFIG_PATA_EFAR=m
+CONFIG_ATA_GENERIC=m
+CONFIG_PATA_HPT366=m
+CONFIG_PATA_HPT37X=m
+CONFIG_PATA_HPT3X2N=m
+CONFIG_PATA_HPT3X3=m
+# CONFIG_PATA_HPT3X3_DMA is not set
+CONFIG_PATA_IT821X=m
+CONFIG_PATA_IT8213=m
+CONFIG_PATA_JMICRON=m
+# CONFIG_PATA_LEGACY is not set
+CONFIG_PATA_TRIFLEX=m
+CONFIG_PATA_MARVELL=m
+CONFIG_PATA_MPIIX=m
+CONFIG_PATA_OLDPIIX=m
+CONFIG_PATA_NETCELL=m
+CONFIG_PATA_NINJA32=m
+CONFIG_PATA_NS87410=m
+CONFIG_PATA_NS87415=m
+CONFIG_PATA_OPTI=m
+CONFIG_PATA_OPTIDMA=m
+CONFIG_PATA_PCMCIA=m
+CONFIG_PATA_PDC2027X=m
+CONFIG_PATA_PDC_OLD=m
+# CONFIG_PATA_RADISYS is not set
+CONFIG_PATA_RDC=m
+# CONFIG_PATA_RZ1000 is not set
+# CONFIG_PATA_SC1200 is not set
+CONFIG_PATA_SERVERWORKS=m
+CONFIG_PATA_SIL680=m
+CONFIG_PATA_SIS=m
+CONFIG_PATA_TOSHIBA=m
+CONFIG_PATA_VIA=m
+CONFIG_PATA_WINBOND=m
+CONFIG_PATA_PLATFORM=m
+CONFIG_PATA_OF_PLATFORM=m
+CONFIG_PATA_SCC=m
+CONFIG_PATA_SCH=m
+CONFIG_PATA_MACIO=m
+CONFIG_MD=y
+CONFIG_BLK_DEV_MD=y
+CONFIG_MD_AUTODETECT=y
+CONFIG_MD_LINEAR=m
+CONFIG_MD_RAID0=m
+CONFIG_MD_RAID1=m
+CONFIG_MD_RAID10=m
+CONFIG_MD_RAID456=m
+CONFIG_MULTICORE_RAID456=y
+CONFIG_MD_RAID6_PQ=m
+CONFIG_ASYNC_RAID6_TEST=m
+CONFIG_MD_MULTIPATH=m
+CONFIG_MD_FAULTY=m
+CONFIG_BLK_DEV_DM=y
+CONFIG_DM_DEBUG=y
+CONFIG_DM_CRYPT=m
+CONFIG_DM_SNAPSHOT=y
+CONFIG_DM_MIRROR=y
+CONFIG_DM_LOG_USERSPACE=m
+CONFIG_DM_ZERO=y
+CONFIG_DM_MULTIPATH=m
+CONFIG_DM_MULTIPATH_QL=m
+CONFIG_DM_MULTIPATH_ST=m
+# CONFIG_DM_DELAY is not set
+CONFIG_DM_UEVENT=y
+CONFIG_FUSION=y
+CONFIG_FUSION_SPI=m
+CONFIG_FUSION_FC=m
+CONFIG_FUSION_SAS=m
+CONFIG_FUSION_MAX_SGE=40
+CONFIG_FUSION_CTL=m
+CONFIG_FUSION_LAN=m
+CONFIG_FUSION_LOGGING=y
+
+#
+# IEEE 1394 (FireWire) support
+#
+
+#
+# You can enable one or both FireWire driver stacks.
+#
+
+#
+# The newer stack is recommended.
+#
+CONFIG_FIREWIRE=m
+CONFIG_FIREWIRE_OHCI=m
+CONFIG_FIREWIRE_OHCI_DEBUG=y
+CONFIG_FIREWIRE_SBP2=m
+CONFIG_FIREWIRE_NET=m
+# CONFIG_IEEE1394 is not set
+# CONFIG_I2O is not set
+CONFIG_MACINTOSH_DRIVERS=y
+CONFIG_ADB_PMU=y
+CONFIG_ADB_PMU_LED=y
+CONFIG_ADB_PMU_LED_IDE=y
+CONFIG_PMAC_SMU=y
+CONFIG_MAC_EMUMOUSEBTN=y
+CONFIG_THERM_PM72=y
+CONFIG_WINDFARM=y
+CONFIG_WINDFARM_PM81=y
+CONFIG_WINDFARM_PM91=y
+CONFIG_WINDFARM_PM112=y
+CONFIG_WINDFARM_PM121=y
+CONFIG_PMAC_RACKMETER=m
+CONFIG_NETDEVICES=y
+CONFIG_IFB=m
+CONFIG_DUMMY=m
+CONFIG_BONDING=m
+CONFIG_MACVLAN=m
+# CONFIG_MACVTAP is not set
+CONFIG_EQUALIZER=m
+CONFIG_TUN=m
+CONFIG_VETH=m
+# CONFIG_ARCNET is not set
+CONFIG_PHYLIB=y
+
+#
+# MII PHY device drivers
+#
+CONFIG_MARVELL_PHY=m
+CONFIG_DAVICOM_PHY=m
+CONFIG_QSEMI_PHY=m
+CONFIG_LXT_PHY=m
+CONFIG_CICADA_PHY=m
+CONFIG_VITESSE_PHY=m
+CONFIG_SMSC_PHY=m
+CONFIG_BROADCOM_PHY=m
+CONFIG_ICPLUS_PHY=m
+CONFIG_REALTEK_PHY=m
+CONFIG_NATIONAL_PHY=m
+CONFIG_STE10XP=m
+CONFIG_LSI_ET1011C_PHY=m
+CONFIG_FIXED_PHY=y
+CONFIG_MDIO_BITBANG=m
+CONFIG_MDIO_GPIO=m
+CONFIG_NET_ETHERNET=y
+CONFIG_MII=m
+CONFIG_HAPPYMEAL=m
+CONFIG_SUNGEM=m
+CONFIG_CASSINI=m
+CONFIG_NET_VENDOR_3COM=y
+CONFIG_VORTEX=m
+CONFIG_TYPHOON=m
+CONFIG_ETHOC=m
+CONFIG_DNET=m
+CONFIG_NET_TULIP=y
+CONFIG_DE2104X=m
+CONFIG_DE2104X_DSL=0
+CONFIG_TULIP=m
+# CONFIG_TULIP_MWI is not set
+CONFIG_TULIP_MMIO=y
+# CONFIG_TULIP_NAPI is not set
+CONFIG_DE4X5=m
+CONFIG_WINBOND_840=m
+CONFIG_DM9102=m
+CONFIG_ULI526X=m
+CONFIG_PCMCIA_XIRCOM=m
+# CONFIG_HP100 is not set
+CONFIG_IBMVETH=m
+CONFIG_IBM_NEW_EMAC=m
+CONFIG_IBM_NEW_EMAC_RXB=128
+CONFIG_IBM_NEW_EMAC_TXB=64
+CONFIG_IBM_NEW_EMAC_POLL_WEIGHT=32
+CONFIG_IBM_NEW_EMAC_RX_COPY_THRESHOLD=256
+CONFIG_IBM_NEW_EMAC_RX_SKB_HEADROOM=0
+# CONFIG_IBM_NEW_EMAC_DEBUG is not set
+CONFIG_IBM_NEW_EMAC_ZMII=y
+CONFIG_IBM_NEW_EMAC_RGMII=y
+CONFIG_IBM_NEW_EMAC_TAH=y
+CONFIG_IBM_NEW_EMAC_EMAC4=y
+# CONFIG_IBM_NEW_EMAC_NO_FLOW_CTRL is not set
+# CONFIG_IBM_NEW_EMAC_MAL_CLR_ICINTSTAT is not set
+# CONFIG_IBM_NEW_EMAC_MAL_COMMON_ERR is not set
+CONFIG_NET_PCI=y
+CONFIG_PCNET32=m
+CONFIG_AMD8111_ETH=m
+CONFIG_ADAPTEC_STARFIRE=m
+# CONFIG_KSZ884X_PCI is not set
+CONFIG_B44=m
+CONFIG_B44_PCI_AUTOSELECT=y
+CONFIG_B44_PCICORE_AUTOSELECT=y
+CONFIG_B44_PCI=y
+CONFIG_FORCEDETH=m
+CONFIG_FORCEDETH_NAPI=y
+CONFIG_E100=m
+CONFIG_FEALNX=m
+CONFIG_NATSEMI=m
+CONFIG_NE2K_PCI=m
+CONFIG_8139CP=m
+CONFIG_8139TOO=m
+# CONFIG_8139TOO_PIO is not set
+# CONFIG_8139TOO_TUNE_TWISTER is not set
+CONFIG_8139TOO_8129=y
+# CONFIG_8139_OLD_RX_RESET is not set
+CONFIG_R6040=m
+CONFIG_SIS900=m
+CONFIG_EPIC100=m
+CONFIG_SMSC9420=m
+CONFIG_SUNDANCE=m
+# CONFIG_SUNDANCE_MMIO is not set
+CONFIG_TLAN=m
+# CONFIG_KS8842 is not set
+# CONFIG_KS8851_MLL is not set
+CONFIG_VIA_RHINE=m
+CONFIG_VIA_RHINE_MMIO=y
+CONFIG_SC92031=m
+CONFIG_NET_POCKET=y
+CONFIG_DE600=m
+CONFIG_DE620=m
+CONFIG_ATL2=m
+CONFIG_NETDEV_1000=y
+CONFIG_ACENIC=m
+# CONFIG_ACENIC_OMIT_TIGON_I is not set
+CONFIG_DL2K=m
+CONFIG_E1000=m
+CONFIG_E1000E=m
+CONFIG_IP1000=m
+CONFIG_IGB=m
+CONFIG_IGBVF=m
+CONFIG_NS83820=m
+CONFIG_HAMACHI=m
+CONFIG_YELLOWFIN=m
+CONFIG_R8169=m
+CONFIG_R8169_VLAN=y
+CONFIG_SIS190=m
+CONFIG_SKGE=m
+# CONFIG_SKGE_DEBUG is not set
+CONFIG_SKY2=m
+# CONFIG_SKY2_DEBUG is not set
+CONFIG_VIA_VELOCITY=m
+CONFIG_TIGON3=m
+CONFIG_BNX2=m
+CONFIG_CNIC=m
+CONFIG_SPIDER_NET=m
+CONFIG_GELIC_NET=m
+CONFIG_GELIC_WIRELESS=y
+CONFIG_QLA3XXX=m
+CONFIG_ATL1=m
+CONFIG_ATL1E=m
+CONFIG_ATL1C=m
+CONFIG_JME=m
+CONFIG_NETDEV_10000=y
+CONFIG_MDIO=m
+CONFIG_CHELSIO_T1=m
+CONFIG_CHELSIO_T1_1G=y
+CONFIG_CHELSIO_T3_DEPENDS=y
+CONFIG_CHELSIO_T3=m
+CONFIG_EHEA=m
+CONFIG_ENIC=m
+CONFIG_IXGBE=m
+CONFIG_IXGBE_DCB=y
+# CONFIG_IXGBEVF is not set
+CONFIG_IXGB=m
+CONFIG_S2IO=m
+CONFIG_VXGE=m
+# CONFIG_VXGE_DEBUG_TRACE_ALL is not set
+CONFIG_MYRI10GE=m
+CONFIG_NETXEN_NIC=m
+CONFIG_NIU=m
+CONFIG_PASEMI_MAC=m
+CONFIG_MLX4_EN=m
+CONFIG_MLX4_CORE=m
+CONFIG_MLX4_DEBUG=y
+CONFIG_TEHUTI=m
+CONFIG_BNX2X=m
+# CONFIG_QLCNIC is not set
+CONFIG_QLGE=m
+CONFIG_SFC=m
+CONFIG_SFC_MTD=y
+CONFIG_BE2NET=m
+# CONFIG_TR is not set
+CONFIG_WLAN=y
+# CONFIG_PCMCIA_RAYCS is not set
+CONFIG_LIBERTAS_THINFIRM=m
+CONFIG_LIBERTAS_THINFIRM_USB=m
+CONFIG_AIRO=m
+CONFIG_ATMEL=m
+CONFIG_PCI_ATMEL=m
+CONFIG_PCMCIA_ATMEL=m
+CONFIG_AT76C50X_USB=m
+CONFIG_AIRO_CS=m
+CONFIG_PCMCIA_WL3501=m
+# CONFIG_PRISM54 is not set
+CONFIG_USB_ZD1201=m
+CONFIG_USB_NET_RNDIS_WLAN=m
+CONFIG_RTL8180=m
+CONFIG_RTL8187=m
+CONFIG_RTL8187_LEDS=y
+CONFIG_ADM8211=m
+CONFIG_MAC80211_HWSIM=m
+CONFIG_MWL8K=m
+CONFIG_ATH_COMMON=m
+CONFIG_ATH_DEBUG=y
+CONFIG_ATH5K=m
+CONFIG_ATH5K_DEBUG=y
+CONFIG_ATH9K_HW=m
+CONFIG_ATH9K_COMMON=m
+CONFIG_ATH9K=m
+CONFIG_ATH9K_DEBUGFS=y
+CONFIG_AR9170_USB=m
+CONFIG_AR9170_LEDS=y
+CONFIG_B43=m
+CONFIG_B43_PCI_AUTOSELECT=y
+CONFIG_B43_PCICORE_AUTOSELECT=y
+CONFIG_B43_PCMCIA=y
+CONFIG_B43_SDIO=y
+CONFIG_B43_PIO=y
+CONFIG_B43_PHY_LP=y
+CONFIG_B43_LEDS=y
+CONFIG_B43_HWRNG=y
+CONFIG_B43_DEBUG=y
+# CONFIG_B43_FORCE_PIO is not set
+CONFIG_B43LEGACY=m
+CONFIG_B43LEGACY_PCI_AUTOSELECT=y
+CONFIG_B43LEGACY_PCICORE_AUTOSELECT=y
+CONFIG_B43LEGACY_LEDS=y
+CONFIG_B43LEGACY_HWRNG=y
+CONFIG_B43LEGACY_DEBUG=y
+CONFIG_B43LEGACY_DMA=y
+CONFIG_B43LEGACY_PIO=y
+CONFIG_B43LEGACY_DMA_AND_PIO_MODE=y
+# CONFIG_B43LEGACY_DMA_MODE is not set
+# CONFIG_B43LEGACY_PIO_MODE is not set
+CONFIG_HOSTAP=m
+CONFIG_HOSTAP_FIRMWARE=y
+CONFIG_HOSTAP_FIRMWARE_NVRAM=y
+CONFIG_HOSTAP_PLX=m
+CONFIG_HOSTAP_PCI=m
+CONFIG_HOSTAP_CS=m
+# CONFIG_IPW2100 is not set
+# CONFIG_IPW2200 is not set
+CONFIG_IWLWIFI=m
+CONFIG_IWLWIFI_DEBUG=y
+CONFIG_IWLWIFI_DEBUGFS=y
+CONFIG_IWLWIFI_DEVICE_TRACING=y
+CONFIG_IWLAGN=m
+CONFIG_IWL4965=y
+CONFIG_IWL5000=y
+CONFIG_IWL3945=m
+CONFIG_IWM=m
+# CONFIG_IWM_DEBUG is not set
+CONFIG_LIBERTAS=m
+CONFIG_LIBERTAS_USB=m
+CONFIG_LIBERTAS_CS=m
+CONFIG_LIBERTAS_SDIO=m
+CONFIG_LIBERTAS_DEBUG=y
+# CONFIG_LIBERTAS_MESH is not set
+CONFIG_HERMES=m
+CONFIG_HERMES_CACHE_FW_ON_INIT=y
+CONFIG_APPLE_AIRPORT=m
+CONFIG_PLX_HERMES=m
+CONFIG_TMD_HERMES=m
+CONFIG_NORTEL_HERMES=m
+CONFIG_PCI_HERMES=m
+CONFIG_PCMCIA_HERMES=m
+CONFIG_PCMCIA_SPECTRUM=m
+CONFIG_P54_COMMON=m
+CONFIG_P54_USB=m
+CONFIG_P54_PCI=m
+CONFIG_P54_LEDS=y
+CONFIG_RT2X00=m
+CONFIG_RT2400PCI=m
+CONFIG_RT2500PCI=m
+CONFIG_RT61PCI=m
+CONFIG_RT2800PCI_PCI=y
+CONFIG_RT2800PCI=m
+# CONFIG_RT2800PCI_RT30XX is not set
+# CONFIG_RT2800PCI_RT35XX is not set
+CONFIG_RT2500USB=m
+CONFIG_RT73USB=m
+CONFIG_RT2800USB=m
+# CONFIG_RT2800USB_RT30XX is not set
+# CONFIG_RT2800USB_RT35XX is not set
+# CONFIG_RT2800USB_UNKNOWN is not set
+CONFIG_RT2800_LIB=m
+CONFIG_RT2X00_LIB_PCI=m
+CONFIG_RT2X00_LIB_USB=m
+CONFIG_RT2X00_LIB=m
+CONFIG_RT2X00_LIB_HT=y
+CONFIG_RT2X00_LIB_FIRMWARE=y
+CONFIG_RT2X00_LIB_CRYPTO=y
+CONFIG_RT2X00_LIB_LEDS=y
+CONFIG_RT2X00_LIB_DEBUGFS=y
+# CONFIG_RT2X00_DEBUG is not set
+CONFIG_WL12XX=m
+CONFIG_WL1251=m
+CONFIG_WL1251_SDIO=m
+CONFIG_ZD1211RW=m
+# CONFIG_ZD1211RW_DEBUG is not set
+
+#
+# WiMAX Wireless Broadband devices
+#
+CONFIG_WIMAX_I2400M=m
+CONFIG_WIMAX_I2400M_USB=m
+CONFIG_WIMAX_I2400M_SDIO=m
+CONFIG_WIMAX_IWMC3200_SDIO=y
+CONFIG_WIMAX_I2400M_DEBUG_LEVEL=8
+
+#
+# USB Network Adapters
+#
+CONFIG_USB_CATC=m
+CONFIG_USB_KAWETH=m
+CONFIG_USB_PEGASUS=m
+CONFIG_USB_RTL8150=m
+CONFIG_USB_USBNET=m
+CONFIG_USB_NET_AX8817X=m
+CONFIG_USB_NET_CDCETHER=m
+CONFIG_USB_NET_CDC_EEM=m
+CONFIG_USB_NET_DM9601=m
+# CONFIG_USB_NET_SMSC75XX is not set
+CONFIG_USB_NET_SMSC95XX=m
+CONFIG_USB_NET_GL620A=m
+CONFIG_USB_NET_NET1080=m
+CONFIG_USB_NET_PLUSB=m
+CONFIG_USB_NET_MCS7830=m
+CONFIG_USB_NET_RNDIS_HOST=m
+CONFIG_USB_NET_CDC_SUBSET=m
+CONFIG_USB_ALI_M5632=y
+CONFIG_USB_AN2720=y
+CONFIG_USB_BELKIN=y
+CONFIG_USB_ARMLINUX=y
+CONFIG_USB_EPSON2888=y
+CONFIG_USB_KC2190=y
+CONFIG_USB_NET_ZAURUS=m
+CONFIG_USB_HSO=m
+CONFIG_USB_NET_INT51X1=m
+CONFIG_USB_CDC_PHONET=m
+CONFIG_NET_PCMCIA=y
+CONFIG_PCMCIA_3C589=m
+CONFIG_PCMCIA_3C574=m
+CONFIG_PCMCIA_FMVJ18X=m
+CONFIG_PCMCIA_PCNET=m
+CONFIG_PCMCIA_NMCLAN=m
+CONFIG_PCMCIA_SMC91C92=m
+CONFIG_PCMCIA_XIRC2PS=m
+CONFIG_PCMCIA_AXNET=m
+# CONFIG_WAN is not set
+CONFIG_ATM_DRIVERS=y
+# CONFIG_ATM_DUMMY is not set
+CONFIG_ATM_TCP=m
+# CONFIG_ATM_LANAI is not set
+CONFIG_ATM_ENI=m
+# CONFIG_ATM_ENI_DEBUG is not set
+# CONFIG_ATM_ENI_TUNE_BURST is not set
+# CONFIG_ATM_IDT77252 is not set
+# CONFIG_ATM_IA is not set
+# CONFIG_ATM_FORE200E is not set
+CONFIG_ATM_HE=m
+# CONFIG_ATM_HE_USE_SUNI is not set
+CONFIG_ATM_SOLOS=m
+CONFIG_IEEE802154_DRIVERS=m
+CONFIG_IEEE802154_FAKEHARD=m
+CONFIG_ISERIES_VETH=m
+CONFIG_FDDI=y
+# CONFIG_DEFXX is not set
+CONFIG_SKFP=m
+# CONFIG_HIPPI is not set
+CONFIG_PLIP=m
+CONFIG_PPP=m
+CONFIG_PPP_MULTILINK=y
+CONFIG_PPP_FILTER=y
+CONFIG_PPP_ASYNC=m
+CONFIG_PPP_SYNC_TTY=m
+CONFIG_PPP_DEFLATE=m
+# CONFIG_PPP_BSDCOMP is not set
+CONFIG_PPP_MPPE=m
+CONFIG_PPPOE=m
+CONFIG_PPPOATM=m
+CONFIG_PPPOL2TP=m
+CONFIG_SLIP=m
+CONFIG_SLIP_COMPRESSED=y
+CONFIG_SLHC=m
+CONFIG_SLIP_SMART=y
+# CONFIG_SLIP_MODE_SLIP6 is not set
+CONFIG_NET_FC=y
+CONFIG_NETCONSOLE=m
+CONFIG_NETCONSOLE_DYNAMIC=y
+CONFIG_NETPOLL=y
+CONFIG_NETPOLL_TRAP=y
+CONFIG_NET_POLL_CONTROLLER=y
+CONFIG_VIRTIO_NET=m
+CONFIG_VMXNET3=m
+CONFIG_ISDN=y
+CONFIG_ISDN_I4L=m
+CONFIG_ISDN_PPP=y
+CONFIG_ISDN_PPP_VJ=y
+CONFIG_ISDN_MPP=y
+CONFIG_IPPP_FILTER=y
+# CONFIG_ISDN_PPP_BSDCOMP is not set
+CONFIG_ISDN_AUDIO=y
+CONFIG_ISDN_TTY_FAX=y
+
+#
+# ISDN feature submodules
+#
+CONFIG_ISDN_DIVERSION=m
+
+#
+# ISDN4Linux hardware drivers
+#
+
+#
+# Passive cards
+#
+CONFIG_ISDN_DRV_HISAX=m
+
+#
+# D-channel protocol features
+#
+CONFIG_HISAX_EURO=y
+CONFIG_DE_AOC=y
+CONFIG_HISAX_NO_SENDCOMPLETE=y
+CONFIG_HISAX_NO_LLC=y
+CONFIG_HISAX_NO_KEYPAD=y
+CONFIG_HISAX_1TR6=y
+CONFIG_HISAX_NI1=y
+CONFIG_HISAX_MAX_CARDS=8
+
+#
+# HiSax supported cards
+#
+CONFIG_HISAX_16_3=y
+CONFIG_HISAX_S0BOX=y
+CONFIG_HISAX_AVM_A1_PCMCIA=y
+CONFIG_HISAX_ELSA=y
+CONFIG_HISAX_DIEHLDIVA=y
+CONFIG_HISAX_SEDLBAUER=y
+CONFIG_HISAX_NICCY=y
+CONFIG_HISAX_BKM_A4T=y
+CONFIG_HISAX_SCT_QUADRO=y
+CONFIG_HISAX_GAZEL=y
+CONFIG_HISAX_W6692=y
+CONFIG_HISAX_HFC_SX=y
+# CONFIG_HISAX_DEBUG is not set
+
+#
+# HiSax PCMCIA card service modules
+#
+CONFIG_HISAX_SEDLBAUER_CS=m
+CONFIG_HISAX_ELSA_CS=m
+CONFIG_HISAX_AVM_A1_CS=m
+CONFIG_HISAX_TELES_CS=m
+
+#
+# HiSax sub driver modules
+#
+CONFIG_HISAX_ST5481=m
+# CONFIG_HISAX_HFCUSB is not set
+CONFIG_HISAX_HFC4S8S=m
+CONFIG_HISAX_FRITZ_PCIPNP=m
+
+#
+# Active cards
+#
+CONFIG_ISDN_CAPI=m
+CONFIG_ISDN_DRV_AVMB1_VERBOSE_REASON=y
+# CONFIG_CAPI_TRACE is not set
+CONFIG_ISDN_CAPI_MIDDLEWARE=y
+CONFIG_ISDN_CAPI_CAPI20=m
+CONFIG_ISDN_CAPI_CAPIFS_BOOL=y
+CONFIG_ISDN_CAPI_CAPIFS=m
+CONFIG_ISDN_CAPI_CAPIDRV=m
+
+#
+# CAPI hardware drivers
+#
+CONFIG_CAPI_AVM=y
+CONFIG_ISDN_DRV_AVMB1_B1PCI=m
+CONFIG_ISDN_DRV_AVMB1_B1PCIV4=y
+CONFIG_ISDN_DRV_AVMB1_B1PCMCIA=m
+CONFIG_ISDN_DRV_AVMB1_AVM_CS=m
+CONFIG_ISDN_DRV_AVMB1_T1PCI=m
+CONFIG_ISDN_DRV_AVMB1_C4=m
+CONFIG_CAPI_EICON=y
+CONFIG_ISDN_DIVAS=m
+CONFIG_ISDN_DIVAS_BRIPCI=y
+CONFIG_ISDN_DIVAS_PRIPCI=y
+CONFIG_ISDN_DIVAS_DIVACAPI=m
+CONFIG_ISDN_DIVAS_USERIDI=m
+CONFIG_ISDN_DIVAS_MAINT=m
+CONFIG_ISDN_DRV_GIGASET=m
+CONFIG_GIGASET_CAPI=y
+# CONFIG_GIGASET_I4L is not set
+# CONFIG_GIGASET_DUMMYLL is not set
+CONFIG_GIGASET_BASE=m
+CONFIG_GIGASET_M105=m
+CONFIG_GIGASET_M101=m
+# CONFIG_GIGASET_DEBUG is not set
+CONFIG_HYSDN=m
+CONFIG_HYSDN_CAPI=y
+CONFIG_MISDN=m
+CONFIG_MISDN_DSP=m
+CONFIG_MISDN_L1OIP=m
+
+#
+# mISDN hardware drivers
+#
+CONFIG_MISDN_HFCPCI=m
+CONFIG_MISDN_HFCMULTI=m
+CONFIG_MISDN_HFCUSB=m
+CONFIG_MISDN_AVMFRITZ=m
+CONFIG_MISDN_SPEEDFAX=m
+CONFIG_MISDN_INFINEON=m
+CONFIG_MISDN_W6692=m
+CONFIG_MISDN_NETJET=m
+CONFIG_MISDN_IPAC=m
+CONFIG_MISDN_ISAR=m
+CONFIG_ISDN_HDLC=m
+# CONFIG_PHONE is not set
+
+#
+# Input device support
+#
+CONFIG_INPUT=y
+CONFIG_INPUT_FF_MEMLESS=y
+CONFIG_INPUT_POLLDEV=m
+CONFIG_INPUT_SPARSEKMAP=m
+
+#
+# Userland interfaces
+#
+CONFIG_INPUT_MOUSEDEV=y
+# CONFIG_INPUT_MOUSEDEV_PSAUX is not set
+CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
+CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
+CONFIG_INPUT_JOYDEV=m
+CONFIG_INPUT_EVDEV=y
+# CONFIG_INPUT_EVBUG is not set
+
+#
+# Input Device Drivers
+#
+CONFIG_INPUT_KEYBOARD=y
+CONFIG_KEYBOARD_ADP5588=m
+CONFIG_KEYBOARD_ATKBD=y
+CONFIG_QT2160=m
+# CONFIG_KEYBOARD_LKKBD is not set
+# CONFIG_KEYBOARD_GPIO is not set
+# CONFIG_KEYBOARD_MATRIX is not set
+# CONFIG_KEYBOARD_LM8323 is not set
+CONFIG_KEYBOARD_MAX7359=m
+# CONFIG_KEYBOARD_NEWTON is not set
+CONFIG_KEYBOARD_OPENCORES=m
+# CONFIG_KEYBOARD_STOWAWAY is not set
+# CONFIG_KEYBOARD_SUNKBD is not set
+# CONFIG_KEYBOARD_XTKBD is not set
+CONFIG_INPUT_MOUSE=y
+CONFIG_MOUSE_PS2=y
+CONFIG_MOUSE_PS2_ALPS=y
+CONFIG_MOUSE_PS2_LOGIPS2PP=y
+CONFIG_MOUSE_PS2_SYNAPTICS=y
+CONFIG_MOUSE_PS2_TRACKPOINT=y
+CONFIG_MOUSE_PS2_ELANTECH=y
+CONFIG_MOUSE_PS2_SENTELIC=y
+# CONFIG_MOUSE_PS2_TOUCHKIT is not set
+CONFIG_MOUSE_SERIAL=m
+CONFIG_MOUSE_APPLETOUCH=m
+CONFIG_MOUSE_BCM5974=m
+CONFIG_MOUSE_VSXXXAA=m
+# CONFIG_MOUSE_GPIO is not set
+CONFIG_MOUSE_SYNAPTICS_I2C=m
+CONFIG_INPUT_JOYSTICK=y
+CONFIG_JOYSTICK_ANALOG=m
+CONFIG_JOYSTICK_A3D=m
+CONFIG_JOYSTICK_ADI=m
+CONFIG_JOYSTICK_COBRA=m
+CONFIG_JOYSTICK_GF2K=m
+CONFIG_JOYSTICK_GRIP=m
+CONFIG_JOYSTICK_GRIP_MP=m
+CONFIG_JOYSTICK_GUILLEMOT=m
+CONFIG_JOYSTICK_INTERACT=m
+CONFIG_JOYSTICK_SIDEWINDER=m
+CONFIG_JOYSTICK_TMDC=m
+CONFIG_JOYSTICK_IFORCE=m
+CONFIG_JOYSTICK_IFORCE_USB=y
+CONFIG_JOYSTICK_IFORCE_232=y
+CONFIG_JOYSTICK_WARRIOR=m
+CONFIG_JOYSTICK_MAGELLAN=m
+CONFIG_JOYSTICK_SPACEORB=m
+CONFIG_JOYSTICK_SPACEBALL=m
+CONFIG_JOYSTICK_STINGER=m
+CONFIG_JOYSTICK_TWIDJOY=m
+CONFIG_JOYSTICK_ZHENHUA=m
+CONFIG_JOYSTICK_DB9=m
+CONFIG_JOYSTICK_GAMECON=m
+CONFIG_JOYSTICK_TURBOGRAFX=m
+CONFIG_JOYSTICK_JOYDUMP=m
+CONFIG_JOYSTICK_XPAD=m
+CONFIG_JOYSTICK_XPAD_FF=y
+CONFIG_JOYSTICK_XPAD_LEDS=y
+CONFIG_JOYSTICK_WALKERA0701=m
+CONFIG_INPUT_TABLET=y
+CONFIG_TABLET_USB_ACECAD=m
+CONFIG_TABLET_USB_AIPTEK=m
+CONFIG_TABLET_USB_GTCO=m
+CONFIG_TABLET_USB_KBTAB=m
+CONFIG_TABLET_USB_WACOM=m
+CONFIG_INPUT_TOUCHSCREEN=y
+CONFIG_TOUCHSCREEN_AD7879_I2C=m
+CONFIG_TOUCHSCREEN_AD7879=m
+CONFIG_TOUCHSCREEN_DA9034=m
+CONFIG_TOUCHSCREEN_DYNAPRO=m
+CONFIG_TOUCHSCREEN_EETI=m
+CONFIG_TOUCHSCREEN_FUJITSU=m
+CONFIG_TOUCHSCREEN_GUNZE=m
+CONFIG_TOUCHSCREEN_ELO=m
+CONFIG_TOUCHSCREEN_WACOM_W8001=m
+CONFIG_TOUCHSCREEN_MCS5000=m
+CONFIG_TOUCHSCREEN_MTOUCH=m
+CONFIG_TOUCHSCREEN_INEXIO=m
+CONFIG_TOUCHSCREEN_MK712=m
+CONFIG_TOUCHSCREEN_PENMOUNT=m
+CONFIG_TOUCHSCREEN_TOUCHRIGHT=m
+CONFIG_TOUCHSCREEN_TOUCHWIN=m
+# CONFIG_TOUCHSCREEN_WM97XX is not set
+CONFIG_TOUCHSCREEN_USB_COMPOSITE=m
+CONFIG_TOUCHSCREEN_USB_EGALAX=y
+CONFIG_TOUCHSCREEN_USB_PANJIT=y
+CONFIG_TOUCHSCREEN_USB_3M=y
+CONFIG_TOUCHSCREEN_USB_ITM=y
+CONFIG_TOUCHSCREEN_USB_ETURBO=y
+CONFIG_TOUCHSCREEN_USB_GUNZE=y
+CONFIG_TOUCHSCREEN_USB_DMC_TSC10=y
+CONFIG_TOUCHSCREEN_USB_IRTOUCH=y
+CONFIG_TOUCHSCREEN_USB_IDEALTEK=y
+CONFIG_TOUCHSCREEN_USB_GENERAL_TOUCH=y
+CONFIG_TOUCHSCREEN_USB_GOTOP=y
+CONFIG_TOUCHSCREEN_USB_JASTEC=y
+CONFIG_TOUCHSCREEN_USB_E2I=y
+CONFIG_TOUCHSCREEN_USB_ZYTRONIC=y
+CONFIG_TOUCHSCREEN_USB_ETT_TC5UH=y
+CONFIG_TOUCHSCREEN_USB_NEXIO=y
+CONFIG_TOUCHSCREEN_TOUCHIT213=m
+CONFIG_TOUCHSCREEN_TSC2007=m
+CONFIG_INPUT_MISC=y
+# CONFIG_INPUT_PCSPKR is not set
+CONFIG_INPUT_ATI_REMOTE=m
+CONFIG_INPUT_ATI_REMOTE2=m
+CONFIG_INPUT_KEYSPAN_REMOTE=m
+CONFIG_INPUT_POWERMATE=m
+CONFIG_INPUT_YEALINK=m
+CONFIG_INPUT_CM109=m
+CONFIG_INPUT_UINPUT=m
+CONFIG_INPUT_GPIO_ROTARY_ENCODER=m
+
+#
+# Hardware I/O ports
+#
+CONFIG_SERIO=y
+CONFIG_SERIO_I8042=y
+CONFIG_SERIO_SERPORT=y
+# CONFIG_SERIO_PARKBD is not set
+# CONFIG_SERIO_PCIPS2 is not set
+CONFIG_SERIO_LIBPS2=y
+CONFIG_SERIO_RAW=m
+CONFIG_SERIO_XILINX_XPS_PS2=m
+CONFIG_SERIO_ALTERA_PS2=m
+CONFIG_GAMEPORT=m
+CONFIG_GAMEPORT_NS558=m
+CONFIG_GAMEPORT_L4=m
+CONFIG_GAMEPORT_EMU10K1=m
+CONFIG_GAMEPORT_FM801=m
+
+#
+# Character devices
+#
+CONFIG_VT=y
+CONFIG_CONSOLE_TRANSLATIONS=y
+CONFIG_VT_CONSOLE=y
+CONFIG_HW_CONSOLE=y
+CONFIG_VT_HW_CONSOLE_BINDING=y
+# CONFIG_DEVKMEM is not set
+CONFIG_SERIAL_NONSTANDARD=y
+# CONFIG_COMPUTONE is not set
+CONFIG_ROCKETPORT=m
+CONFIG_CYCLADES=m
+# CONFIG_CYZ_INTR is not set
+# CONFIG_DIGIEPCA is not set
+# CONFIG_MOXA_INTELLIO is not set
+# CONFIG_MOXA_SMARTIO is not set
+# CONFIG_ISI is not set
+CONFIG_SYNCLINK=m
+CONFIG_SYNCLINKMP=m
+CONFIG_SYNCLINK_GT=m
+CONFIG_N_HDLC=m
+# CONFIG_RISCOM8 is not set
+# CONFIG_SPECIALIX is not set
+# CONFIG_STALDRV is not set
+CONFIG_NOZOMI=m
+
+#
+# Serial drivers
+#
+CONFIG_SERIAL_8250=y
+CONFIG_SERIAL_8250_CONSOLE=y
+CONFIG_SERIAL_8250_PCI=y
+CONFIG_SERIAL_8250_CS=m
+CONFIG_SERIAL_8250_NR_UARTS=32
+CONFIG_SERIAL_8250_RUNTIME_UARTS=4
+CONFIG_SERIAL_8250_EXTENDED=y
+CONFIG_SERIAL_8250_MANY_PORTS=y
+CONFIG_SERIAL_8250_SHARE_IRQ=y
+CONFIG_SERIAL_8250_DETECT_IRQ=y
+CONFIG_SERIAL_8250_RSA=y
+
+#
+# Non-8250 serial port support
+#
+CONFIG_SERIAL_CORE=y
+CONFIG_SERIAL_CORE_CONSOLE=y
+CONFIG_CONSOLE_POLL=y
+CONFIG_SERIAL_PMACZILOG=m
+# CONFIG_SERIAL_PMACZILOG_TTYS is not set
+CONFIG_SERIAL_ICOM=m
+CONFIG_SERIAL_TXX9=y
+CONFIG_HAS_TXX9_SERIAL=y
+CONFIG_SERIAL_TXX9_NR_UARTS=6
+CONFIG_SERIAL_TXX9_CONSOLE=y
+CONFIG_SERIAL_JSM=m
+CONFIG_SERIAL_OF_PLATFORM=m
+CONFIG_SERIAL_OF_PLATFORM_NWPSERIAL=m
+# CONFIG_SERIAL_TIMBERDALE is not set
+CONFIG_SERIAL_GRLIB_GAISLER_APBUART=m
+CONFIG_UNIX98_PTYS=y
+CONFIG_DEVPTS_MULTIPLE_INSTANCES=y
+# CONFIG_LEGACY_PTYS is not set
+CONFIG_PRINTER=m
+CONFIG_LP_CONSOLE=y
+CONFIG_PPDEV=m
+CONFIG_HVC_DRIVER=y
+CONFIG_HVC_IRQ=y
+CONFIG_HVC_CONSOLE=y
+CONFIG_HVC_ISERIES=y
+CONFIG_HVC_RTAS=y
+CONFIG_HVC_BEAT=y
+# CONFIG_HVC_UDBG is not set
+CONFIG_VIRTIO_CONSOLE=m
+CONFIG_HVCS=m
+CONFIG_IBM_BSR=m
+CONFIG_IPMI_HANDLER=m
+# CONFIG_IPMI_PANIC_EVENT is not set
+CONFIG_IPMI_DEVICE_INTERFACE=m
+CONFIG_IPMI_SI=m
+CONFIG_IPMI_WATCHDOG=m
+CONFIG_IPMI_POWEROFF=m
+CONFIG_HW_RANDOM=y
+CONFIG_HW_RANDOM_TIMERIOMEM=m
+CONFIG_HW_RANDOM_PASEMI=m
+CONFIG_HW_RANDOM_VIRTIO=m
+CONFIG_R3964=m
+# CONFIG_APPLICOM is not set
+
+#
+# PCMCIA character devices
+#
+# CONFIG_SYNCLINK_CS is not set
+CONFIG_CARDMAN_4000=m
+CONFIG_CARDMAN_4040=m
+CONFIG_IPWIRELESS=m
+CONFIG_RAW_DRIVER=y
+CONFIG_MAX_RAW_DEVS=8192
+CONFIG_HANGCHECK_TIMER=m
+CONFIG_TCG_TPM=m
+CONFIG_TCG_NSC=m
+CONFIG_TCG_ATMEL=m
+CONFIG_DEVPORT=y
+CONFIG_I2C=y
+CONFIG_I2C_BOARDINFO=y
+CONFIG_I2C_COMPAT=y
+CONFIG_I2C_CHARDEV=m
+CONFIG_I2C_HELPER_AUTO=y
+CONFIG_I2C_SMBUS=m
+CONFIG_I2C_ALGOBIT=y
+CONFIG_I2C_ALGOPCA=m
+
+#
+# I2C Hardware Bus support
+#
+
+#
+# PC SMBus host controller drivers
+#
+# CONFIG_I2C_ALI1535 is not set
+# CONFIG_I2C_ALI1563 is not set
+# CONFIG_I2C_ALI15X3 is not set
+# CONFIG_I2C_AMD756 is not set
+# CONFIG_I2C_AMD8111 is not set
+# CONFIG_I2C_I801 is not set
+# CONFIG_I2C_ISCH is not set
+# CONFIG_I2C_PIIX4 is not set
+CONFIG_I2C_NFORCE2=m
+# CONFIG_I2C_SIS5595 is not set
+# CONFIG_I2C_SIS630 is not set
+# CONFIG_I2C_SIS96X is not set
+# CONFIG_I2C_VIA is not set
+# CONFIG_I2C_VIAPRO is not set
+
+#
+# Mac SMBus host controller drivers
+#
+CONFIG_I2C_POWERMAC=y
+
+#
+# I2C system bus drivers (mostly embedded / system-on-chip)
+#
+# CONFIG_I2C_GPIO is not set
+# CONFIG_I2C_OCORES is not set
+CONFIG_I2C_PASEMI=m
+CONFIG_I2C_SIMTEC=m
+# CONFIG_I2C_XILINX is not set
+
+#
+# External I2C/SMBus adapter drivers
+#
+CONFIG_I2C_PARPORT=m
+CONFIG_I2C_PARPORT_LIGHT=m
+# CONFIG_I2C_TAOS_EVM is not set
+CONFIG_I2C_TINY_USB=m
+
+#
+# Other I2C/SMBus bus drivers
+#
+CONFIG_I2C_PCA_PLATFORM=m
+CONFIG_I2C_STUB=m
+# CONFIG_I2C_DEBUG_CORE is not set
+# CONFIG_I2C_DEBUG_ALGO is not set
+# CONFIG_I2C_DEBUG_BUS is not set
+# CONFIG_SPI is not set
+
+#
+# PPS support
+#
+CONFIG_PPS=m
+# CONFIG_PPS_DEBUG is not set
+
+#
+# PPS clients support
+#
+# CONFIG_PPS_CLIENT_KTIMER is not set
+# CONFIG_PPS_CLIENT_LDISC is not set
+CONFIG_ARCH_WANT_OPTIONAL_GPIOLIB=y
+CONFIG_ARCH_REQUIRE_GPIOLIB=y
+CONFIG_GPIOLIB=y
+# CONFIG_DEBUG_GPIO is not set
+# CONFIG_GPIO_SYSFS is not set
+
+#
+# Memory mapped GPIO expanders:
+#
+# CONFIG_GPIO_IT8761E is not set
+CONFIG_GPIO_XILINX=y
+# CONFIG_GPIO_SCH is not set
+
+#
+# I2C GPIO expanders:
+#
+# CONFIG_GPIO_MAX7300 is not set
+# CONFIG_GPIO_MAX732X is not set
+CONFIG_GPIO_PCA953X=m
+CONFIG_GPIO_PCF857X=m
+# CONFIG_GPIO_ADP5588 is not set
+
+#
+# PCI GPIO expanders:
+#
+# CONFIG_GPIO_CS5535 is not set
+# CONFIG_GPIO_LANGWELL is not set
+
+#
+# SPI GPIO expanders:
+#
+
+#
+# AC97 GPIO expanders:
+#
+CONFIG_W1=m
+CONFIG_W1_CON=y
+
+#
+# 1-wire Bus Masters
+#
+# CONFIG_W1_MASTER_MATROX is not set
+CONFIG_W1_MASTER_DS2490=m
+CONFIG_W1_MASTER_DS2482=m
+# CONFIG_W1_MASTER_GPIO is not set
+
+#
+# 1-wire Slaves
+#
+CONFIG_W1_SLAVE_THERM=m
+CONFIG_W1_SLAVE_SMEM=m
+CONFIG_W1_SLAVE_DS2431=m
+CONFIG_W1_SLAVE_DS2433=m
+CONFIG_W1_SLAVE_DS2433_CRC=y
+CONFIG_W1_SLAVE_DS2760=m
+CONFIG_W1_SLAVE_BQ27000=m
+CONFIG_POWER_SUPPLY=m
+# CONFIG_POWER_SUPPLY_DEBUG is not set
+# CONFIG_PDA_POWER is not set
+# CONFIG_BATTERY_DS2760 is not set
+# CONFIG_BATTERY_DS2782 is not set
+CONFIG_BATTERY_BQ27x00=m
+CONFIG_BATTERY_DA9030=m
+CONFIG_BATTERY_MAX17040=m
+CONFIG_HWMON=m
+CONFIG_HWMON_VID=m
+# CONFIG_HWMON_DEBUG_CHIP is not set
+
+#
+# Native drivers
+#
+CONFIG_SENSORS_AD7414=m
+CONFIG_SENSORS_AD7418=m
+CONFIG_SENSORS_ADM1021=m
+CONFIG_SENSORS_ADM1025=m
+CONFIG_SENSORS_ADM1026=m
+CONFIG_SENSORS_ADM1029=m
+CONFIG_SENSORS_ADM1031=m
+CONFIG_SENSORS_ADM9240=m
+# CONFIG_SENSORS_ADT7411 is not set
+CONFIG_SENSORS_ADT7462=m
+CONFIG_SENSORS_ADT7470=m
+CONFIG_SENSORS_ADT7475=m
+# CONFIG_SENSORS_ASC7621 is not set
+CONFIG_SENSORS_ATXP1=m
+CONFIG_SENSORS_DS1621=m
+# CONFIG_SENSORS_I5K_AMB is not set
+CONFIG_SENSORS_F71805F=m
+CONFIG_SENSORS_F71882FG=m
+CONFIG_SENSORS_F75375S=m
+CONFIG_SENSORS_G760A=m
+CONFIG_SENSORS_GL518SM=m
+CONFIG_SENSORS_GL520SM=m
+CONFIG_SENSORS_IBMAEM=m
+CONFIG_SENSORS_IBMPEX=m
+CONFIG_SENSORS_IT87=m
+CONFIG_SENSORS_LM63=m
+CONFIG_SENSORS_LM73=m
+CONFIG_SENSORS_LM75=m
+CONFIG_SENSORS_LM77=m
+CONFIG_SENSORS_LM78=m
+CONFIG_SENSORS_LM80=m
+CONFIG_SENSORS_LM83=m
+CONFIG_SENSORS_LM85=m
+CONFIG_SENSORS_LM87=m
+CONFIG_SENSORS_LM90=m
+CONFIG_SENSORS_LM92=m
+CONFIG_SENSORS_LM93=m
+CONFIG_SENSORS_LTC4215=m
+CONFIG_SENSORS_LTC4245=m
+CONFIG_SENSORS_LM95241=m
+CONFIG_SENSORS_MAX1619=m
+CONFIG_SENSORS_MAX6650=m
+CONFIG_SENSORS_PC87360=m
+CONFIG_SENSORS_PC87427=m
+CONFIG_SENSORS_PCF8591=m
+CONFIG_SENSORS_SHT15=m
+CONFIG_SENSORS_SIS5595=m
+CONFIG_SENSORS_DME1737=m
+CONFIG_SENSORS_SMSC47M1=m
+CONFIG_SENSORS_SMSC47M192=m
+CONFIG_SENSORS_SMSC47B397=m
+CONFIG_SENSORS_ADS7828=m
+CONFIG_SENSORS_AMC6821=m
+CONFIG_SENSORS_THMC50=m
+CONFIG_SENSORS_TMP401=m
+CONFIG_SENSORS_TMP421=m
+CONFIG_SENSORS_VIA686A=m
+CONFIG_SENSORS_VT1211=m
+CONFIG_SENSORS_VT8231=m
+CONFIG_SENSORS_W83781D=m
+CONFIG_SENSORS_W83791D=m
+CONFIG_SENSORS_W83792D=m
+CONFIG_SENSORS_W83793=m
+CONFIG_SENSORS_W83L785TS=m
+CONFIG_SENSORS_W83L786NG=m
+CONFIG_SENSORS_W83627HF=m
+CONFIG_SENSORS_W83627EHF=m
+CONFIG_SENSORS_LIS3_I2C=m
+CONFIG_THERMAL=y
+CONFIG_WATCHDOG=y
+# CONFIG_WATCHDOG_NOWAYOUT is not set
+
+#
+# Watchdog Device Drivers
+#
+CONFIG_SOFT_WATCHDOG=m
+# CONFIG_MAX63XX_WATCHDOG is not set
+CONFIG_ALIM7101_WDT=m
+CONFIG_WATCHDOG_RTAS=m
+
+#
+# PCI-based Watchdog Cards
+#
+CONFIG_PCIPCWATCHDOG=m
+CONFIG_WDTPCI=m
+
+#
+# USB-based Watchdog Cards
+#
+CONFIG_USBPCWATCHDOG=m
+CONFIG_SSB_POSSIBLE=y
+
+#
+# Sonics Silicon Backplane
+#
+CONFIG_SSB=m
+CONFIG_SSB_SPROM=y
+CONFIG_SSB_BLOCKIO=y
+CONFIG_SSB_PCIHOST_POSSIBLE=y
+CONFIG_SSB_PCIHOST=y
+CONFIG_SSB_B43_PCI_BRIDGE=y
+CONFIG_SSB_PCMCIAHOST_POSSIBLE=y
+CONFIG_SSB_PCMCIAHOST=y
+CONFIG_SSB_SDIOHOST_POSSIBLE=y
+CONFIG_SSB_SDIOHOST=y
+# CONFIG_SSB_DEBUG is not set
+CONFIG_SSB_DRIVER_PCICORE_POSSIBLE=y
+CONFIG_SSB_DRIVER_PCICORE=y
+
+#
+# Multifunction device drivers
+#
+CONFIG_MFD_CORE=m
+# CONFIG_MFD_88PM860X is not set
+CONFIG_MFD_SM501=m
+CONFIG_MFD_SM501_GPIO=y
+# CONFIG_HTC_PASIC3 is not set
+# CONFIG_HTC_I2CPLD is not set
+# CONFIG_UCB1400_CORE is not set
+# CONFIG_TPS65010 is not set
+# CONFIG_TWL4030_CORE is not set
+# CONFIG_MFD_TMIO is not set
+CONFIG_PMIC_DA903X=y
+# CONFIG_PMIC_ADP5520 is not set
+# CONFIG_MFD_MAX8925 is not set
+CONFIG_MFD_WM8400=m
+# CONFIG_MFD_WM831X is not set
+# CONFIG_MFD_WM8350_I2C is not set
+# CONFIG_MFD_WM8994 is not set
+# CONFIG_MFD_PCF50633 is not set
+# CONFIG_AB3100_CORE is not set
+# CONFIG_MFD_TIMBERDALE is not set
+# CONFIG_LPC_SCH is not set
+CONFIG_REGULATOR=y
+# CONFIG_REGULATOR_DEBUG is not set
+# CONFIG_REGULATOR_DUMMY is not set
+CONFIG_REGULATOR_FIXED_VOLTAGE=m
+# CONFIG_REGULATOR_VIRTUAL_CONSUMER is not set
+CONFIG_REGULATOR_USERSPACE_CONSUMER=m
+CONFIG_REGULATOR_BQ24022=m
+CONFIG_REGULATOR_MAX1586=m
+# CONFIG_REGULATOR_MAX8649 is not set
+CONFIG_REGULATOR_MAX8660=m
+CONFIG_REGULATOR_WM8400=m
+CONFIG_REGULATOR_DA903X=m
+CONFIG_REGULATOR_LP3971=m
+CONFIG_REGULATOR_TPS65023=m
+CONFIG_REGULATOR_TPS6507X=m
+CONFIG_MEDIA_SUPPORT=m
+
+#
+# Multimedia core support
+#
+CONFIG_VIDEO_DEV=m
+CONFIG_VIDEO_V4L2_COMMON=m
+CONFIG_VIDEO_ALLOW_V4L1=y
+CONFIG_VIDEO_V4L1_COMPAT=y
+CONFIG_DVB_CORE=m
+CONFIG_VIDEO_MEDIA=m
+
+#
+# Multimedia drivers
+#
+CONFIG_VIDEO_SAA7146=m
+CONFIG_VIDEO_SAA7146_VV=m
+CONFIG_IR_CORE=m
+CONFIG_VIDEO_IR=m
+CONFIG_MEDIA_ATTACH=y
+CONFIG_MEDIA_TUNER=m
+# CONFIG_MEDIA_TUNER_CUSTOMISE is not set
+CONFIG_MEDIA_TUNER_SIMPLE=m
+CONFIG_MEDIA_TUNER_TDA8290=m
+CONFIG_MEDIA_TUNER_TDA827X=m
+CONFIG_MEDIA_TUNER_TDA18271=m
+CONFIG_MEDIA_TUNER_TDA9887=m
+CONFIG_MEDIA_TUNER_TEA5761=m
+CONFIG_MEDIA_TUNER_TEA5767=m
+CONFIG_MEDIA_TUNER_MT20XX=m
+CONFIG_MEDIA_TUNER_MT2060=m
+CONFIG_MEDIA_TUNER_MT2266=m
+CONFIG_MEDIA_TUNER_MT2131=m
+CONFIG_MEDIA_TUNER_QT1010=m
+CONFIG_MEDIA_TUNER_XC2028=m
+CONFIG_MEDIA_TUNER_XC5000=m
+CONFIG_MEDIA_TUNER_MXL5005S=m
+CONFIG_MEDIA_TUNER_MXL5007T=m
+CONFIG_MEDIA_TUNER_MC44S803=m
+CONFIG_MEDIA_TUNER_MAX2165=m
+CONFIG_VIDEO_V4L2=m
+CONFIG_VIDEO_V4L1=m
+CONFIG_VIDEOBUF_GEN=m
+CONFIG_VIDEOBUF_DMA_SG=m
+CONFIG_VIDEOBUF_VMALLOC=m
+CONFIG_VIDEOBUF_DVB=m
+CONFIG_VIDEO_BTCX=m
+CONFIG_VIDEO_TVEEPROM=m
+CONFIG_VIDEO_TUNER=m
+CONFIG_VIDEO_CAPTURE_DRIVERS=y
+# CONFIG_VIDEO_ADV_DEBUG is not set
+# CONFIG_VIDEO_FIXED_MINOR_RANGES is not set
+CONFIG_VIDEO_HELPER_CHIPS_AUTO=y
+CONFIG_VIDEO_IR_I2C=m
+CONFIG_VIDEO_TVAUDIO=m
+CONFIG_VIDEO_TDA7432=m
+CONFIG_VIDEO_TDA9840=m
+CONFIG_VIDEO_TEA6415C=m
+CONFIG_VIDEO_TEA6420=m
+CONFIG_VIDEO_MSP3400=m
+CONFIG_VIDEO_CS5345=m
+CONFIG_VIDEO_CS53L32A=m
+CONFIG_VIDEO_M52790=m
+CONFIG_VIDEO_WM8775=m
+CONFIG_VIDEO_WM8739=m
+CONFIG_VIDEO_VP27SMPX=m
+CONFIG_VIDEO_SAA6588=m
+CONFIG_VIDEO_MT9V011=m
+CONFIG_VIDEO_SAA711X=m
+CONFIG_VIDEO_SAA717X=m
+CONFIG_VIDEO_TVP5150=m
+CONFIG_VIDEO_CX25840=m
+CONFIG_VIDEO_CX2341X=m
+CONFIG_VIDEO_SAA7127=m
+CONFIG_VIDEO_UPD64031A=m
+CONFIG_VIDEO_UPD64083=m
+# CONFIG_VIDEO_VIVI is not set
+CONFIG_VIDEO_BT848=m
+CONFIG_VIDEO_BT848_DVB=y
+CONFIG_VIDEO_BWQCAM=m
+CONFIG_VIDEO_CQCAM=m
+CONFIG_VIDEO_W9966=m
+# CONFIG_VIDEO_CPIA is not set
+CONFIG_VIDEO_CPIA2=m
+CONFIG_VIDEO_SAA5246A=m
+CONFIG_VIDEO_SAA5249=m
+CONFIG_VIDEO_SAA7134=m
+CONFIG_VIDEO_SAA7134_ALSA=m
+CONFIG_VIDEO_SAA7134_DVB=m
+CONFIG_VIDEO_MXB=m
+CONFIG_VIDEO_HEXIUM_ORION=m
+CONFIG_VIDEO_HEXIUM_GEMINI=m
+CONFIG_VIDEO_CX88=m
+CONFIG_VIDEO_CX88_ALSA=m
+CONFIG_VIDEO_CX88_BLACKBIRD=m
+CONFIG_VIDEO_CX88_DVB=m
+CONFIG_VIDEO_CX88_MPEG=m
+CONFIG_VIDEO_CX88_VP3054=m
+CONFIG_VIDEO_CX23885=m
+CONFIG_VIDEO_AU0828=m
+CONFIG_VIDEO_IVTV=m
+CONFIG_VIDEO_FB_IVTV=m
+CONFIG_VIDEO_CX18=m
+# CONFIG_VIDEO_CX18_ALSA is not set
+CONFIG_VIDEO_SAA7164=m
+# CONFIG_VIDEO_CAFE_CCIC is not set
+CONFIG_SOC_CAMERA=m
+CONFIG_SOC_CAMERA_MT9M001=m
+CONFIG_SOC_CAMERA_MT9M111=m
+CONFIG_SOC_CAMERA_MT9T031=m
+CONFIG_SOC_CAMERA_MT9T112=m
+CONFIG_SOC_CAMERA_MT9V022=m
+CONFIG_SOC_CAMERA_RJ54N1=m
+CONFIG_SOC_CAMERA_TW9910=m
+CONFIG_SOC_CAMERA_PLATFORM=m
+CONFIG_SOC_CAMERA_OV772X=m
+CONFIG_SOC_CAMERA_OV9640=m
+CONFIG_V4L_USB_DRIVERS=y
+CONFIG_USB_VIDEO_CLASS=m
+CONFIG_USB_VIDEO_CLASS_INPUT_EVDEV=y
+CONFIG_USB_GSPCA=m
+CONFIG_USB_M5602=m
+CONFIG_USB_STV06XX=m
+CONFIG_USB_GL860=m
+CONFIG_USB_GSPCA_BENQ=m
+CONFIG_USB_GSPCA_CONEX=m
+CONFIG_USB_GSPCA_CPIA1=m
+CONFIG_USB_GSPCA_ETOMS=m
+CONFIG_USB_GSPCA_FINEPIX=m
+CONFIG_USB_GSPCA_JEILINJ=m
+CONFIG_USB_GSPCA_MARS=m
+CONFIG_USB_GSPCA_MR97310A=m
+CONFIG_USB_GSPCA_OV519=m
+CONFIG_USB_GSPCA_OV534=m
+CONFIG_USB_GSPCA_OV534_9=m
+CONFIG_USB_GSPCA_PAC207=m
+CONFIG_USB_GSPCA_PAC7302=m
+CONFIG_USB_GSPCA_PAC7311=m
+CONFIG_USB_GSPCA_SN9C2028=m
+CONFIG_USB_GSPCA_SN9C20X=m
+CONFIG_USB_GSPCA_SN9C20X_EVDEV=y
+CONFIG_USB_GSPCA_SONIXB=m
+CONFIG_USB_GSPCA_SONIXJ=m
+CONFIG_USB_GSPCA_SPCA500=m
+CONFIG_USB_GSPCA_SPCA501=m
+CONFIG_USB_GSPCA_SPCA505=m
+CONFIG_USB_GSPCA_SPCA506=m
+CONFIG_USB_GSPCA_SPCA508=m
+CONFIG_USB_GSPCA_SPCA561=m
+CONFIG_USB_GSPCA_SQ905=m
+CONFIG_USB_GSPCA_SQ905C=m
+CONFIG_USB_GSPCA_STK014=m
+CONFIG_USB_GSPCA_STV0680=m
+CONFIG_USB_GSPCA_SUNPLUS=m
+CONFIG_USB_GSPCA_T613=m
+CONFIG_USB_GSPCA_TV8532=m
+CONFIG_USB_GSPCA_VC032X=m
+CONFIG_USB_GSPCA_ZC3XX=m
+CONFIG_VIDEO_PVRUSB2=m
+CONFIG_VIDEO_PVRUSB2_SYSFS=y
+CONFIG_VIDEO_PVRUSB2_DVB=y
+# CONFIG_VIDEO_PVRUSB2_DEBUGIFC is not set
+CONFIG_VIDEO_HDPVR=m
+CONFIG_VIDEO_EM28XX=m
+CONFIG_VIDEO_EM28XX_ALSA=m
+CONFIG_VIDEO_EM28XX_DVB=m
+# CONFIG_VIDEO_TLG2300 is not set
+CONFIG_VIDEO_CX231XX=m
+CONFIG_VIDEO_CX231XX_ALSA=m
+CONFIG_VIDEO_CX231XX_DVB=m
+CONFIG_VIDEO_USBVISION=m
+CONFIG_VIDEO_USBVIDEO=m
+CONFIG_USB_VICAM=m
+CONFIG_USB_IBMCAM=m
+CONFIG_USB_KONICAWC=m
+# CONFIG_USB_QUICKCAM_MESSENGER is not set
+# CONFIG_USB_ET61X251 is not set
+# CONFIG_VIDEO_OVCAMCHIP is not set
+# CONFIG_USB_OV511 is not set
+CONFIG_USB_SE401=m
+# CONFIG_USB_SN9C102 is not set
+# CONFIG_USB_STV680 is not set
+# CONFIG_USB_ZC0301 is not set
+CONFIG_USB_PWC=m
+# CONFIG_USB_PWC_DEBUG is not set
+CONFIG_USB_PWC_INPUT_EVDEV=y
+CONFIG_USB_ZR364XX=m
+CONFIG_USB_STKWEBCAM=m
+CONFIG_USB_S2255=m
+CONFIG_RADIO_ADAPTERS=y
+CONFIG_RADIO_GEMTEK_PCI=m
+CONFIG_RADIO_MAXIRADIO=m
+CONFIG_RADIO_MAESTRO=m
+CONFIG_I2C_SI4713=m
+CONFIG_RADIO_SI4713=m
+CONFIG_USB_DSBR=m
+CONFIG_RADIO_SI470X=y
+CONFIG_USB_SI470X=m
+CONFIG_I2C_SI470X=m
+CONFIG_USB_MR800=m
+# CONFIG_RADIO_TEA5764 is not set
+# CONFIG_RADIO_SAA7706H is not set
+# CONFIG_RADIO_TEF6862 is not set
+CONFIG_DVB_MAX_ADAPTERS=8
+CONFIG_DVB_DYNAMIC_MINORS=y
+CONFIG_DVB_CAPTURE_DRIVERS=y
+
+#
+# Supported SAA7146 based PCI Adapters
+#
+CONFIG_TTPCI_EEPROM=m
+CONFIG_DVB_AV7110=m
+CONFIG_DVB_AV7110_OSD=y
+CONFIG_DVB_BUDGET_CORE=m
+CONFIG_DVB_BUDGET=m
+CONFIG_DVB_BUDGET_CI=m
+CONFIG_DVB_BUDGET_AV=m
+CONFIG_DVB_BUDGET_PATCH=m
+
+#
+# Supported USB Adapters
+#
+CONFIG_DVB_USB=m
+# CONFIG_DVB_USB_DEBUG is not set
+CONFIG_DVB_USB_A800=m
+CONFIG_DVB_USB_DIBUSB_MB=m
+# CONFIG_DVB_USB_DIBUSB_MB_FAULTY is not set
+CONFIG_DVB_USB_DIBUSB_MC=m
+CONFIG_DVB_USB_DIB0700=m
+CONFIG_DVB_USB_UMT_010=m
+CONFIG_DVB_USB_CXUSB=m
+CONFIG_DVB_USB_M920X=m
+CONFIG_DVB_USB_GL861=m
+CONFIG_DVB_USB_AU6610=m
+CONFIG_DVB_USB_DIGITV=m
+CONFIG_DVB_USB_VP7045=m
+CONFIG_DVB_USB_VP702X=m
+CONFIG_DVB_USB_GP8PSK=m
+CONFIG_DVB_USB_NOVA_T_USB2=m
+CONFIG_DVB_USB_TTUSB2=m
+CONFIG_DVB_USB_DTT200U=m
+CONFIG_DVB_USB_OPERA1=m
+CONFIG_DVB_USB_AF9005=m
+CONFIG_DVB_USB_AF9005_REMOTE=m
+CONFIG_DVB_USB_DW2102=m
+CONFIG_DVB_USB_CINERGY_T2=m
+CONFIG_DVB_USB_ANYSEE=m
+CONFIG_DVB_USB_DTV5100=m
+CONFIG_DVB_USB_AF9015=m
+CONFIG_DVB_USB_CE6230=m
+CONFIG_DVB_USB_FRIIO=m
+CONFIG_DVB_USB_EC168=m
+# CONFIG_DVB_USB_AZ6027 is not set
+CONFIG_DVB_TTUSB_BUDGET=m
+CONFIG_DVB_TTUSB_DEC=m
+CONFIG_SMS_SIANO_MDTV=m
+
+#
+# Siano module components
+#
+CONFIG_SMS_USB_DRV=m
+CONFIG_SMS_SDIO_DRV=m
+
+#
+# Supported FlexCopII (B2C2) Adapters
+#
+CONFIG_DVB_B2C2_FLEXCOP=m
+CONFIG_DVB_B2C2_FLEXCOP_PCI=m
+CONFIG_DVB_B2C2_FLEXCOP_USB=m
+# CONFIG_DVB_B2C2_FLEXCOP_DEBUG is not set
+
+#
+# Supported BT878 Adapters
+#
+CONFIG_DVB_BT8XX=m
+
+#
+# Supported Pluto2 Adapters
+#
+CONFIG_DVB_PLUTO2=m
+
+#
+# Supported SDMC DM1105 Adapters
+#
+CONFIG_DVB_DM1105=m
+CONFIG_DVB_FIREDTV=m
+CONFIG_DVB_FIREDTV_FIREWIRE=y
+# CONFIG_DVB_FIREDTV_IEEE1394 is not set
+CONFIG_DVB_FIREDTV_INPUT=y
+
+#
+# Supported Earthsoft PT1 Adapters
+#
+CONFIG_DVB_PT1=m
+
+#
+# Supported Mantis Adapters
+#
+CONFIG_MANTIS_CORE=m
+CONFIG_DVB_MANTIS=m
+CONFIG_DVB_HOPPER=m
+
+#
+# Supported nGene Adapters
+#
+# CONFIG_DVB_NGENE is not set
+
+#
+# Supported DVB Frontends
+#
+# CONFIG_DVB_FE_CUSTOMISE is not set
+CONFIG_DVB_STB0899=m
+CONFIG_DVB_STB6100=m
+CONFIG_DVB_CX24110=m
+CONFIG_DVB_CX24123=m
+CONFIG_DVB_MT312=m
+CONFIG_DVB_ZL10036=m
+CONFIG_DVB_ZL10039=m
+CONFIG_DVB_S5H1420=m
+CONFIG_DVB_STV0288=m
+CONFIG_DVB_STB6000=m
+CONFIG_DVB_STV0299=m
+CONFIG_DVB_STV6110=m
+CONFIG_DVB_STV0900=m
+CONFIG_DVB_TDA8083=m
+CONFIG_DVB_TDA10086=m
+CONFIG_DVB_TDA8261=m
+CONFIG_DVB_VES1X93=m
+CONFIG_DVB_TUNER_ITD1000=m
+CONFIG_DVB_TUNER_CX24113=m
+CONFIG_DVB_TDA826X=m
+CONFIG_DVB_TUA6100=m
+CONFIG_DVB_CX24116=m
+CONFIG_DVB_SI21XX=m
+CONFIG_DVB_DS3000=m
+CONFIG_DVB_MB86A16=m
+CONFIG_DVB_SP8870=m
+CONFIG_DVB_SP887X=m
+CONFIG_DVB_CX22700=m
+CONFIG_DVB_CX22702=m
+CONFIG_DVB_L64781=m
+CONFIG_DVB_TDA1004X=m
+CONFIG_DVB_NXT6000=m
+CONFIG_DVB_MT352=m
+CONFIG_DVB_ZL10353=m
+CONFIG_DVB_DIB3000MB=m
+CONFIG_DVB_DIB3000MC=m
+CONFIG_DVB_DIB7000M=m
+CONFIG_DVB_DIB7000P=m
+CONFIG_DVB_TDA10048=m
+CONFIG_DVB_AF9013=m
+CONFIG_DVB_EC100=m
+CONFIG_DVB_VES1820=m
+CONFIG_DVB_TDA10021=m
+CONFIG_DVB_TDA10023=m
+CONFIG_DVB_STV0297=m
+CONFIG_DVB_NXT200X=m
+CONFIG_DVB_OR51211=m
+CONFIG_DVB_OR51132=m
+CONFIG_DVB_BCM3510=m
+CONFIG_DVB_LGDT330X=m
+CONFIG_DVB_LGDT3305=m
+CONFIG_DVB_S5H1409=m
+CONFIG_DVB_AU8522=m
+CONFIG_DVB_S5H1411=m
+CONFIG_DVB_DIB8000=m
+CONFIG_DVB_PLL=m
+CONFIG_DVB_TUNER_DIB0070=m
+CONFIG_DVB_LNBP21=m
+CONFIG_DVB_ISL6405=m
+CONFIG_DVB_ISL6421=m
+CONFIG_DVB_LGS8GXX=m
+CONFIG_DVB_ATBM8830=m
+CONFIG_DAB=y
+CONFIG_USB_DABUSB=m
+
+#
+# Graphics support
+#
+CONFIG_AGP=y
+CONFIG_AGP_UNINORTH=y
+CONFIG_VGA_ARB=y
+CONFIG_VGA_ARB_MAX_GPUS=16
+CONFIG_DRM=m
+CONFIG_DRM_KMS_HELPER=m
+CONFIG_DRM_TTM=m
+CONFIG_DRM_TDFX=m
+CONFIG_DRM_R128=m
+CONFIG_DRM_RADEON=m
+# CONFIG_DRM_RADEON_KMS is not set
+CONFIG_DRM_MGA=m
+CONFIG_DRM_SIS=m
+CONFIG_DRM_VIA=m
+CONFIG_DRM_SAVAGE=m
+CONFIG_VGASTATE=m
+CONFIG_VIDEO_OUTPUT_CONTROL=m
+CONFIG_FB=y
+# CONFIG_FIRMWARE_EDID is not set
+CONFIG_FB_DDC=y
+# CONFIG_FB_BOOT_VESA_SUPPORT is not set
+CONFIG_FB_CFB_FILLRECT=y
+CONFIG_FB_CFB_COPYAREA=y
+CONFIG_FB_CFB_IMAGEBLIT=y
+# CONFIG_FB_CFB_REV_PIXELS_IN_BYTE is not set
+CONFIG_FB_SYS_FILLRECT=y
+CONFIG_FB_SYS_COPYAREA=y
+CONFIG_FB_SYS_IMAGEBLIT=y
+# CONFIG_FB_FOREIGN_ENDIAN is not set
+CONFIG_FB_SYS_FOPS=y
+CONFIG_FB_DEFERRED_IO=y
+CONFIG_FB_SVGALIB=m
+CONFIG_FB_MACMODES=y
+CONFIG_FB_BACKLIGHT=y
+CONFIG_FB_MODE_HELPERS=y
+CONFIG_FB_TILEBLITTING=y
+
+#
+# Frame buffer hardware drivers
+#
+CONFIG_FB_CIRRUS=m
+# CONFIG_FB_PM2 is not set
+# CONFIG_FB_CYBER2000 is not set
+CONFIG_FB_OF=y
+# CONFIG_FB_ASILIANT is not set
+# CONFIG_FB_IMSTT is not set
+# CONFIG_FB_VGA16 is not set
+# CONFIG_FB_UVESA is not set
+# CONFIG_FB_S1D13XXX is not set
+CONFIG_FB_NVIDIA=m
+CONFIG_FB_NVIDIA_I2C=y
+# CONFIG_FB_NVIDIA_DEBUG is not set
+CONFIG_FB_NVIDIA_BACKLIGHT=y
+CONFIG_FB_RIVA=m
+# CONFIG_FB_RIVA_I2C is not set
+# CONFIG_FB_RIVA_DEBUG is not set
+CONFIG_FB_RIVA_BACKLIGHT=y
+CONFIG_FB_MATROX=y
+CONFIG_FB_MATROX_MILLENIUM=y
+CONFIG_FB_MATROX_MYSTIQUE=y
+CONFIG_FB_MATROX_G=y
+CONFIG_FB_MATROX_I2C=m
+CONFIG_FB_MATROX_MAVEN=m
+CONFIG_FB_RADEON=y
+CONFIG_FB_RADEON_I2C=y
+CONFIG_FB_RADEON_BACKLIGHT=y
+# CONFIG_FB_RADEON_DEBUG is not set
+# CONFIG_FB_ATY128 is not set
+# CONFIG_FB_ATY is not set
+CONFIG_FB_S3=m
+CONFIG_FB_SAVAGE=m
+CONFIG_FB_SAVAGE_I2C=y
+CONFIG_FB_SAVAGE_ACCEL=y
+# CONFIG_FB_SIS is not set
+CONFIG_FB_VIA=m
+CONFIG_FB_NEOMAGIC=m
+CONFIG_FB_KYRO=m
+CONFIG_FB_3DFX=m
+CONFIG_FB_3DFX_ACCEL=y
+CONFIG_FB_3DFX_I2C=y
+CONFIG_FB_VOODOO1=m
+# CONFIG_FB_VT8623 is not set
+CONFIG_FB_TRIDENT=m
+# CONFIG_FB_ARK is not set
+# CONFIG_FB_PM3 is not set
+# CONFIG_FB_CARMINE is not set
+# CONFIG_FB_TMIO is not set
+CONFIG_FB_SM501=m
+CONFIG_FB_IBM_GXT4500=y
+CONFIG_FB_PS3=y
+CONFIG_FB_PS3_DEFAULT_SIZE_M=18
+CONFIG_FB_VIRTUAL=m
+CONFIG_FB_METRONOME=m
+CONFIG_FB_MB862XX=m
+CONFIG_FB_MB862XX_PCI_GDC=y
+# CONFIG_FB_BROADSHEET is not set
+CONFIG_BACKLIGHT_LCD_SUPPORT=y
+CONFIG_LCD_CLASS_DEVICE=m
+# CONFIG_LCD_ILI9320 is not set
+CONFIG_LCD_PLATFORM=m
+CONFIG_BACKLIGHT_CLASS_DEVICE=y
+# CONFIG_BACKLIGHT_GENERIC is not set
+CONFIG_BACKLIGHT_DA903X=m
+
+#
+# Display device support
+#
+CONFIG_DISPLAY_SUPPORT=m
+
+#
+# Display hardware drivers
+#
+
+#
+# Console display driver support
+#
+CONFIG_VGA_CONSOLE=y
+CONFIG_VGACON_SOFT_SCROLLBACK=y
+CONFIG_VGACON_SOFT_SCROLLBACK_SIZE=64
+CONFIG_DUMMY_CONSOLE=y
+CONFIG_FRAMEBUFFER_CONSOLE=y
+CONFIG_FRAMEBUFFER_CONSOLE_DETECT_PRIMARY=y
+CONFIG_FRAMEBUFFER_CONSOLE_ROTATION=y
+# CONFIG_FONTS is not set
+CONFIG_FONT_8x8=y
+CONFIG_FONT_8x16=y
+CONFIG_LOGO=y
+CONFIG_FB_LOGO_EXTRA=y
+# CONFIG_LOGO_LINUX_MONO is not set
+# CONFIG_LOGO_LINUX_VGA16 is not set
+CONFIG_LOGO_LINUX_CLUT224=y
+CONFIG_SOUND=m
+CONFIG_SOUND_OSS_CORE=y
+CONFIG_SOUND_OSS_CORE_PRECLAIM=y
+CONFIG_SND=m
+CONFIG_SND_TIMER=m
+CONFIG_SND_PCM=m
+CONFIG_SND_HWDEP=m
+CONFIG_SND_RAWMIDI=m
+CONFIG_SND_JACK=y
+CONFIG_SND_SEQUENCER=m
+CONFIG_SND_SEQ_DUMMY=m
+CONFIG_SND_OSSEMUL=y
+CONFIG_SND_MIXER_OSS=m
+CONFIG_SND_PCM_OSS=m
+CONFIG_SND_PCM_OSS_PLUGINS=y
+CONFIG_SND_SEQUENCER_OSS=y
+CONFIG_SND_HRTIMER=m
+CONFIG_SND_SEQ_HRTIMER_DEFAULT=y
+CONFIG_SND_DYNAMIC_MINORS=y
+# CONFIG_SND_SUPPORT_OLD_API is not set
+CONFIG_SND_VERBOSE_PROCFS=y
+CONFIG_SND_VERBOSE_PRINTK=y
+CONFIG_SND_DEBUG=y
+# CONFIG_SND_DEBUG_VERBOSE is not set
+CONFIG_SND_PCM_XRUN_DEBUG=y
+CONFIG_SND_VMASTER=y
+CONFIG_SND_RAWMIDI_SEQ=m
+CONFIG_SND_OPL3_LIB_SEQ=m
+# CONFIG_SND_OPL4_LIB_SEQ is not set
+# CONFIG_SND_SBAWE_SEQ is not set
+CONFIG_SND_EMU10K1_SEQ=m
+CONFIG_SND_MPU401_UART=m
+CONFIG_SND_OPL3_LIB=m
+CONFIG_SND_VX_LIB=m
+CONFIG_SND_AC97_CODEC=m
+CONFIG_SND_DRIVERS=y
+CONFIG_SND_DUMMY=m
+CONFIG_SND_VIRMIDI=m
+CONFIG_SND_MTPAV=m
+CONFIG_SND_MTS64=m
+CONFIG_SND_SERIAL_U16550=m
+CONFIG_SND_MPU401=m
+CONFIG_SND_PORTMAN2X4=m
+CONFIG_SND_AC97_POWER_SAVE=y
+CONFIG_SND_AC97_POWER_SAVE_DEFAULT=0
+CONFIG_SND_SB_COMMON=m
+CONFIG_SND_SB16_DSP=m
+CONFIG_SND_PCI=y
+CONFIG_SND_AD1889=m
+CONFIG_SND_ALS300=m
+CONFIG_SND_ALS4000=m
+CONFIG_SND_ALI5451=m
+CONFIG_SND_ATIIXP=m
+CONFIG_SND_ATIIXP_MODEM=m
+CONFIG_SND_AU8810=m
+CONFIG_SND_AU8820=m
+CONFIG_SND_AU8830=m
+# CONFIG_SND_AW2 is not set
+CONFIG_SND_AZT3328=m
+CONFIG_SND_BT87X=m
+# CONFIG_SND_BT87X_OVERCLOCK is not set
+CONFIG_SND_CA0106=m
+CONFIG_SND_CMIPCI=m
+CONFIG_SND_OXYGEN_LIB=m
+CONFIG_SND_OXYGEN=m
+CONFIG_SND_CS4281=m
+CONFIG_SND_CS46XX=m
+CONFIG_SND_CS46XX_NEW_DSP=y
+CONFIG_SND_CS5530=m
+CONFIG_SND_CS5535AUDIO=m
+CONFIG_SND_CTXFI=m
+CONFIG_SND_DARLA20=m
+CONFIG_SND_GINA20=m
+CONFIG_SND_LAYLA20=m
+CONFIG_SND_DARLA24=m
+CONFIG_SND_GINA24=m
+CONFIG_SND_LAYLA24=m
+CONFIG_SND_MONA=m
+CONFIG_SND_MIA=m
+CONFIG_SND_ECHO3G=m
+CONFIG_SND_INDIGO=m
+CONFIG_SND_INDIGOIO=m
+CONFIG_SND_INDIGODJ=m
+CONFIG_SND_INDIGOIOX=m
+CONFIG_SND_INDIGODJX=m
+CONFIG_SND_EMU10K1=m
+CONFIG_SND_EMU10K1X=m
+CONFIG_SND_ENS1370=m
+CONFIG_SND_ENS1371=m
+CONFIG_SND_ES1938=m
+CONFIG_SND_ES1968=m
+CONFIG_SND_FM801=m
+CONFIG_SND_FM801_TEA575X_BOOL=y
+CONFIG_SND_FM801_TEA575X=m
+CONFIG_SND_HDA_INTEL=m
+CONFIG_SND_HDA_HWDEP=y
+CONFIG_SND_HDA_RECONFIG=y
+CONFIG_SND_HDA_INPUT_BEEP=y
+CONFIG_SND_HDA_INPUT_BEEP_MODE=0
+CONFIG_SND_HDA_INPUT_JACK=y
+CONFIG_SND_HDA_PATCH_LOADER=y
+CONFIG_SND_HDA_CODEC_REALTEK=y
+CONFIG_SND_HDA_CODEC_ANALOG=y
+CONFIG_SND_HDA_CODEC_SIGMATEL=y
+CONFIG_SND_HDA_CODEC_VIA=y
+CONFIG_SND_HDA_CODEC_ATIHDMI=y
+CONFIG_SND_HDA_CODEC_NVHDMI=y
+CONFIG_SND_HDA_CODEC_INTELHDMI=y
+CONFIG_SND_HDA_ELD=y
+CONFIG_SND_HDA_CODEC_CIRRUS=y
+CONFIG_SND_HDA_CODEC_CONEXANT=y
+CONFIG_SND_HDA_CODEC_CA0110=y
+CONFIG_SND_HDA_CODEC_CMEDIA=y
+CONFIG_SND_HDA_CODEC_SI3054=y
+CONFIG_SND_HDA_GENERIC=y
+CONFIG_SND_HDA_POWER_SAVE=y
+CONFIG_SND_HDA_POWER_SAVE_DEFAULT=0
+CONFIG_SND_HDSP=m
+CONFIG_SND_HDSPM=m
+CONFIG_SND_HIFIER=m
+CONFIG_SND_ICE1712=m
+CONFIG_SND_ICE1724=m
+CONFIG_SND_INTEL8X0=m
+CONFIG_SND_INTEL8X0M=m
+CONFIG_SND_KORG1212=m
+CONFIG_SND_LX6464ES=m
+CONFIG_SND_MAESTRO3=m
+CONFIG_SND_MIXART=m
+CONFIG_SND_NM256=m
+CONFIG_SND_PCXHR=m
+CONFIG_SND_RIPTIDE=m
+CONFIG_SND_RME32=m
+CONFIG_SND_RME96=m
+CONFIG_SND_RME9652=m
+CONFIG_SND_SONICVIBES=m
+CONFIG_SND_TRIDENT=m
+CONFIG_SND_VIA82XX=m
+CONFIG_SND_VIA82XX_MODEM=m
+CONFIG_SND_VIRTUOSO=m
+CONFIG_SND_VX222=m
+CONFIG_SND_YMFPCI=m
+CONFIG_SND_PPC=y
+CONFIG_SND_POWERMAC=m
+CONFIG_SND_POWERMAC_AUTO_DRC=y
+CONFIG_SND_PS3=m
+CONFIG_SND_PS3_DEFAULT_START_DELAY=1000
+CONFIG_SND_AOA=m
+CONFIG_SND_AOA_FABRIC_LAYOUT=m
+CONFIG_SND_AOA_ONYX=m
+CONFIG_SND_AOA_TAS=m
+CONFIG_SND_AOA_TOONIE=m
+CONFIG_SND_AOA_SOUNDBUS=m
+CONFIG_SND_AOA_SOUNDBUS_I2S=m
+CONFIG_SND_USB=y
+CONFIG_SND_USB_AUDIO=m
+# CONFIG_SND_USB_UA101 is not set
+CONFIG_SND_USB_USX2Y=m
+CONFIG_SND_USB_CAIAQ=m
+CONFIG_SND_USB_CAIAQ_INPUT=y
+CONFIG_SND_PCMCIA=y
+CONFIG_SND_VXPOCKET=m
+CONFIG_SND_PDAUDIOCF=m
+# CONFIG_SND_SOC is not set
+# CONFIG_SOUND_PRIME is not set
+CONFIG_AC97_BUS=m
+CONFIG_HID_SUPPORT=y
+CONFIG_HID=y
+CONFIG_HIDRAW=y
+
+#
+# USB Input Devices
+#
+CONFIG_USB_HID=y
+CONFIG_HID_PID=y
+CONFIG_USB_HIDDEV=y
+
+#
+# Special HID drivers
+#
+# CONFIG_HID_3M_PCT is not set
+CONFIG_HID_A4TECH=y
+CONFIG_HID_APPLE=y
+CONFIG_HID_BELKIN=y
+CONFIG_HID_CHERRY=y
+CONFIG_HID_CHICONY=y
+CONFIG_HID_CYPRESS=y
+CONFIG_HID_DRAGONRISE=y
+CONFIG_DRAGONRISE_FF=y
+CONFIG_HID_EZKEY=y
+CONFIG_HID_KYE=y
+CONFIG_HID_GYRATION=y
+CONFIG_HID_TWINHAN=y
+CONFIG_HID_KENSINGTON=y
+CONFIG_HID_LOGITECH=y
+CONFIG_LOGITECH_FF=y
+CONFIG_LOGIRUMBLEPAD2_FF=y
+# CONFIG_LOGIG940_FF is not set
+# CONFIG_HID_MAGICMOUSE is not set
+CONFIG_HID_MICROSOFT=y
+# CONFIG_HID_MOSART is not set
+CONFIG_HID_MONTEREY=y
+CONFIG_HID_NTRIG=y
+CONFIG_HID_ORTEK=y
+CONFIG_HID_PANTHERLORD=y
+CONFIG_PANTHERLORD_FF=y
+CONFIG_HID_PETALYNX=y
+# CONFIG_HID_QUANTA is not set
+CONFIG_HID_SAMSUNG=y
+CONFIG_HID_SONY=y
+# CONFIG_HID_STANTUM is not set
+CONFIG_HID_SUNPLUS=y
+CONFIG_HID_GREENASIA=y
+CONFIG_GREENASIA_FF=y
+CONFIG_HID_SMARTJOYPLUS=y
+CONFIG_SMARTJOYPLUS_FF=y
+CONFIG_HID_TOPSEED=y
+CONFIG_HID_THRUSTMASTER=y
+CONFIG_THRUSTMASTER_FF=y
+CONFIG_HID_WACOM=m
+CONFIG_HID_ZEROPLUS=y
+CONFIG_ZEROPLUS_FF=y
+CONFIG_USB_SUPPORT=y
+CONFIG_USB_ARCH_HAS_HCD=y
+CONFIG_USB_ARCH_HAS_OHCI=y
+CONFIG_USB_ARCH_HAS_EHCI=y
+CONFIG_USB=y
+# CONFIG_USB_DEBUG is not set
+CONFIG_USB_ANNOUNCE_NEW_DEVICES=y
+
+#
+# Miscellaneous USB options
+#
+CONFIG_USB_DEVICEFS=y
+# CONFIG_USB_DEVICE_CLASS is not set
+# CONFIG_USB_DYNAMIC_MINORS is not set
+CONFIG_USB_SUSPEND=y
+# CONFIG_USB_OTG is not set
+CONFIG_USB_MON=y
+CONFIG_USB_WUSB=m
+CONFIG_USB_WUSB_CBAF=m
+# CONFIG_USB_WUSB_CBAF_DEBUG is not set
+
+#
+# USB Host Controller Drivers
+#
+# CONFIG_USB_C67X00_HCD is not set
+CONFIG_USB_XHCI_HCD=m
+# CONFIG_USB_XHCI_HCD_DEBUGGING is not set
+CONFIG_USB_EHCI_HCD=y
+CONFIG_USB_EHCI_ROOT_HUB_TT=y
+CONFIG_USB_EHCI_TT_NEWSCHED=y
+CONFIG_USB_EHCI_BIG_ENDIAN_MMIO=y
+CONFIG_USB_EHCI_HCD_PPC_OF=y
+# CONFIG_USB_OXU210HP_HCD is not set
+# CONFIG_USB_ISP116X_HCD is not set
+# CONFIG_USB_ISP1760_HCD is not set
+CONFIG_USB_ISP1362_HCD=m
+CONFIG_USB_OHCI_HCD=y
+CONFIG_USB_OHCI_HCD_PPC_OF_BE=y
+CONFIG_USB_OHCI_HCD_PPC_OF_LE=y
+CONFIG_USB_OHCI_HCD_PPC_OF=y
+CONFIG_USB_OHCI_HCD_PCI=y
+CONFIG_USB_OHCI_BIG_ENDIAN_DESC=y
+CONFIG_USB_OHCI_BIG_ENDIAN_MMIO=y
+CONFIG_USB_OHCI_LITTLE_ENDIAN=y
+CONFIG_USB_UHCI_HCD=y
+CONFIG_USB_U132_HCD=m
+CONFIG_USB_SL811_HCD=m
+# CONFIG_USB_SL811_CS is not set
+# CONFIG_USB_R8A66597_HCD is not set
+CONFIG_USB_WHCI_HCD=m
+CONFIG_USB_HWA_HCD=m
+
+#
+# USB Device Class drivers
+#
+CONFIG_USB_ACM=m
+CONFIG_USB_PRINTER=m
+CONFIG_USB_WDM=m
+CONFIG_USB_TMC=m
+
+#
+# NOTE: USB_STORAGE depends on SCSI but BLK_DEV_SD may
+#
+
+#
+# also be needed; see USB_STORAGE Help for more info
+#
+CONFIG_USB_STORAGE=m
+# CONFIG_USB_STORAGE_DEBUG is not set
+CONFIG_USB_STORAGE_DATAFAB=m
+CONFIG_USB_STORAGE_FREECOM=m
+# CONFIG_USB_STORAGE_ISD200 is not set
+CONFIG_USB_STORAGE_USBAT=m
+CONFIG_USB_STORAGE_SDDR09=m
+CONFIG_USB_STORAGE_SDDR55=m
+CONFIG_USB_STORAGE_JUMPSHOT=m
+CONFIG_USB_STORAGE_ALAUDA=m
+CONFIG_USB_STORAGE_ONETOUCH=m
+CONFIG_USB_STORAGE_KARMA=m
+CONFIG_USB_STORAGE_CYPRESS_ATACB=m
+# CONFIG_USB_LIBUSUAL is not set
+
+#
+# USB Imaging devices
+#
+CONFIG_USB_MDC800=m
+CONFIG_USB_MICROTEK=m
+
+#
+# USB port drivers
+#
+CONFIG_USB_USS720=m
+CONFIG_USB_SERIAL=m
+CONFIG_USB_EZUSB=y
+CONFIG_USB_SERIAL_GENERIC=y
+CONFIG_USB_SERIAL_AIRCABLE=m
+CONFIG_USB_SERIAL_ARK3116=m
+CONFIG_USB_SERIAL_BELKIN=m
+CONFIG_USB_SERIAL_CH341=m
+CONFIG_USB_SERIAL_WHITEHEAT=m
+CONFIG_USB_SERIAL_DIGI_ACCELEPORT=m
+CONFIG_USB_SERIAL_CP210X=m
+CONFIG_USB_SERIAL_CYPRESS_M8=m
+CONFIG_USB_SERIAL_EMPEG=m
+CONFIG_USB_SERIAL_FTDI_SIO=m
+CONFIG_USB_SERIAL_FUNSOFT=m
+CONFIG_USB_SERIAL_VISOR=m
+CONFIG_USB_SERIAL_IPAQ=m
+CONFIG_USB_SERIAL_IR=m
+CONFIG_USB_SERIAL_EDGEPORT=m
+CONFIG_USB_SERIAL_EDGEPORT_TI=m
+CONFIG_USB_SERIAL_GARMIN=m
+CONFIG_USB_SERIAL_IPW=m
+CONFIG_USB_SERIAL_IUU=m
+CONFIG_USB_SERIAL_KEYSPAN_PDA=m
+CONFIG_USB_SERIAL_KEYSPAN=m
+CONFIG_USB_SERIAL_KLSI=m
+CONFIG_USB_SERIAL_KOBIL_SCT=m
+CONFIG_USB_SERIAL_MCT_U232=m
+CONFIG_USB_SERIAL_MOS7720=m
+CONFIG_USB_SERIAL_MOS7840=m
+CONFIG_USB_SERIAL_MOTOROLA=m
+CONFIG_USB_SERIAL_NAVMAN=m
+CONFIG_USB_SERIAL_PL2303=m
+CONFIG_USB_SERIAL_OTI6858=m
+# CONFIG_USB_SERIAL_QCAUX is not set
+CONFIG_USB_SERIAL_QUALCOMM=m
+CONFIG_USB_SERIAL_SPCP8X5=m
+CONFIG_USB_SERIAL_HP4X=m
+CONFIG_USB_SERIAL_SAFE=m
+CONFIG_USB_SERIAL_SAFE_PADDED=y
+CONFIG_USB_SERIAL_SIEMENS_MPI=m
+CONFIG_USB_SERIAL_SIERRAWIRELESS=m
+CONFIG_USB_SERIAL_SYMBOL=m
+CONFIG_USB_SERIAL_TI=m
+CONFIG_USB_SERIAL_CYBERJACK=m
+CONFIG_USB_SERIAL_XIRCOM=m
+CONFIG_USB_SERIAL_OPTION=m
+CONFIG_USB_SERIAL_OMNINET=m
+CONFIG_USB_SERIAL_OPTICON=m
+# CONFIG_USB_SERIAL_VIVOPAY_SERIAL is not set
+CONFIG_USB_SERIAL_DEBUG=m
+
+#
+# USB Miscellaneous drivers
+#
+CONFIG_USB_EMI62=m
+CONFIG_USB_EMI26=m
+CONFIG_USB_ADUTUX=m
+CONFIG_USB_SEVSEG=m
+# CONFIG_USB_RIO500 is not set
+CONFIG_USB_LEGOTOWER=m
+CONFIG_USB_LCD=m
+CONFIG_USB_LED=m
+# CONFIG_USB_CYPRESS_CY7C63 is not set
+# CONFIG_USB_CYTHERM is not set
+CONFIG_USB_IDMOUSE=m
+CONFIG_USB_FTDI_ELAN=m
+CONFIG_USB_APPLEDISPLAY=m
+CONFIG_USB_SISUSBVGA=m
+CONFIG_USB_SISUSBVGA_CON=y
+CONFIG_USB_LD=m
+CONFIG_USB_TRANCEVIBRATOR=m
+CONFIG_USB_IOWARRIOR=m
+# CONFIG_USB_TEST is not set
+CONFIG_USB_ISIGHTFW=m
+CONFIG_USB_ATM=m
+CONFIG_USB_SPEEDTOUCH=m
+CONFIG_USB_CXACRU=m
+CONFIG_USB_UEAGLEATM=m
+CONFIG_USB_XUSBATM=m
+# CONFIG_USB_GADGET is not set
+
+#
+# OTG and related infrastructure
+#
+CONFIG_USB_OTG_UTILS=y
+# CONFIG_USB_GPIO_VBUS is not set
+CONFIG_NOP_USB_XCEIV=m
+CONFIG_UWB=m
+CONFIG_UWB_HWA=m
+CONFIG_UWB_WHCI=m
+CONFIG_UWB_WLP=m
+CONFIG_UWB_I1480U=m
+CONFIG_UWB_I1480U_WLP=m
+CONFIG_MMC=m
+# CONFIG_MMC_DEBUG is not set
+# CONFIG_MMC_UNSAFE_RESUME is not set
+
+#
+# MMC/SD/SDIO Card Drivers
+#
+CONFIG_MMC_BLOCK=m
+CONFIG_MMC_BLOCK_BOUNCE=y
+CONFIG_SDIO_UART=m
+# CONFIG_MMC_TEST is not set
+
+#
+# MMC/SD/SDIO Host Controller Drivers
+#
+CONFIG_MMC_SDHCI=m
+CONFIG_MMC_SDHCI_PCI=m
+# CONFIG_MMC_RICOH_MMC is not set
+CONFIG_MMC_SDHCI_OF=m
+# CONFIG_MMC_SDHCI_OF_ESDHC is not set
+# CONFIG_MMC_SDHCI_OF_HLWD is not set
+CONFIG_MMC_SDHCI_PLTFM=m
+CONFIG_MMC_WBSD=m
+CONFIG_MMC_TIFM_SD=m
+CONFIG_MMC_SDRICOH_CS=m
+CONFIG_MMC_CB710=m
+CONFIG_MMC_VIA_SDMMC=m
+CONFIG_MEMSTICK=m
+# CONFIG_MEMSTICK_DEBUG is not set
+
+#
+# MemoryStick drivers
+#
+# CONFIG_MEMSTICK_UNSAFE_RESUME is not set
+CONFIG_MSPRO_BLOCK=m
+
+#
+# MemoryStick Host Controller Drivers
+#
+CONFIG_MEMSTICK_TIFM_MS=m
+CONFIG_MEMSTICK_JMICRON_38X=m
+CONFIG_NEW_LEDS=y
+CONFIG_LEDS_CLASS=y
+
+#
+# LED drivers
+#
+# CONFIG_LEDS_PCA9532 is not set
+# CONFIG_LEDS_GPIO is not set
+CONFIG_LEDS_LP3944=m
+# CONFIG_LEDS_PCA955X is not set
+CONFIG_LEDS_DA903X=m
+CONFIG_LEDS_REGULATOR=m
+# CONFIG_LEDS_BD2802 is not set
+CONFIG_LEDS_LT3593=m
+CONFIG_LEDS_TRIGGERS=y
+
+#
+# LED Triggers
+#
+CONFIG_LEDS_TRIGGER_TIMER=m
+CONFIG_LEDS_TRIGGER_IDE_DISK=y
+CONFIG_LEDS_TRIGGER_HEARTBEAT=m
+CONFIG_LEDS_TRIGGER_BACKLIGHT=m
+CONFIG_LEDS_TRIGGER_GPIO=m
+CONFIG_LEDS_TRIGGER_DEFAULT_ON=m
+
+#
+# iptables trigger is under Netfilter config (LED target)
+#
+CONFIG_ACCESSIBILITY=y
+CONFIG_A11Y_BRAILLE_CONSOLE=y
+CONFIG_INFINIBAND=m
+CONFIG_INFINIBAND_USER_MAD=m
+CONFIG_INFINIBAND_USER_ACCESS=m
+CONFIG_INFINIBAND_USER_MEM=y
+CONFIG_INFINIBAND_ADDR_TRANS=y
+CONFIG_INFINIBAND_MTHCA=m
+CONFIG_INFINIBAND_MTHCA_DEBUG=y
+CONFIG_INFINIBAND_IPATH=m
+CONFIG_INFINIBAND_EHCA=m
+CONFIG_INFINIBAND_AMSO1100=m
+# CONFIG_INFINIBAND_AMSO1100_DEBUG is not set
+CONFIG_INFINIBAND_CXGB3=m
+# CONFIG_INFINIBAND_CXGB3_DEBUG is not set
+CONFIG_MLX4_INFINIBAND=m
+CONFIG_INFINIBAND_NES=m
+# CONFIG_INFINIBAND_NES_DEBUG is not set
+CONFIG_INFINIBAND_IPOIB=m
+CONFIG_INFINIBAND_IPOIB_CM=y
+CONFIG_INFINIBAND_IPOIB_DEBUG=y
+CONFIG_INFINIBAND_IPOIB_DEBUG_DATA=y
+CONFIG_INFINIBAND_SRP=m
+CONFIG_INFINIBAND_ISER=m
+CONFIG_EDAC=y
+
+#
+# Reporting subsystems
+#
+# CONFIG_EDAC_DEBUG is not set
+CONFIG_EDAC_MM_EDAC=m
+CONFIG_EDAC_PASEMI=m
+CONFIG_EDAC_CELL=m
+CONFIG_EDAC_AMD8131=m
+CONFIG_EDAC_AMD8111=m
+CONFIG_EDAC_CPC925=m
+CONFIG_RTC_LIB=y
+CONFIG_RTC_CLASS=y
+CONFIG_RTC_HCTOSYS=y
+CONFIG_RTC_HCTOSYS_DEVICE="rtc0"
+# CONFIG_RTC_DEBUG is not set
+
+#
+# RTC interfaces
+#
+CONFIG_RTC_INTF_SYSFS=y
+CONFIG_RTC_INTF_PROC=y
+CONFIG_RTC_INTF_DEV=y
+# CONFIG_RTC_INTF_DEV_UIE_EMUL is not set
+# CONFIG_RTC_DRV_TEST is not set
+
+#
+# I2C RTC drivers
+#
+CONFIG_RTC_DRV_DS1307=m
+CONFIG_RTC_DRV_DS1374=m
+CONFIG_RTC_DRV_DS1672=m
+CONFIG_RTC_DRV_MAX6900=m
+CONFIG_RTC_DRV_RS5C372=m
+CONFIG_RTC_DRV_ISL1208=m
+CONFIG_RTC_DRV_X1205=m
+CONFIG_RTC_DRV_PCF8563=m
+CONFIG_RTC_DRV_PCF8583=m
+CONFIG_RTC_DRV_M41T80=m
+CONFIG_RTC_DRV_M41T80_WDT=y
+CONFIG_RTC_DRV_BQ32K=m
+# CONFIG_RTC_DRV_S35390A is not set
+CONFIG_RTC_DRV_FM3130=m
+CONFIG_RTC_DRV_RX8581=m
+CONFIG_RTC_DRV_RX8025=m
+
+#
+# SPI RTC drivers
+#
+
+#
+# Platform RTC drivers
+#
+CONFIG_RTC_DRV_CMOS=y
+CONFIG_RTC_DRV_DS1286=m
+CONFIG_RTC_DRV_DS1511=m
+CONFIG_RTC_DRV_DS1553=m
+CONFIG_RTC_DRV_DS1742=m
+CONFIG_RTC_DRV_STK17TA8=m
+# CONFIG_RTC_DRV_M48T86 is not set
+CONFIG_RTC_DRV_M48T35=m
+CONFIG_RTC_DRV_M48T59=m
+CONFIG_RTC_DRV_MSM6242=m
+CONFIG_RTC_DRV_BQ4802=m
+CONFIG_RTC_DRV_RP5C01=m
+CONFIG_RTC_DRV_V3020=m
+
+#
+# on-CPU RTC drivers
+#
+CONFIG_RTC_DRV_GENERIC=y
+CONFIG_RTC_DRV_PS3=y
+CONFIG_DMADEVICES=y
+# CONFIG_DMADEVICES_DEBUG is not set
+
+#
+# DMA Devices
+#
+CONFIG_AUXDISPLAY=y
+CONFIG_KS0108=m
+CONFIG_KS0108_PORT=0x378
+CONFIG_KS0108_DELAY=2
+CONFIG_UIO=m
+CONFIG_UIO_CIF=m
+CONFIG_UIO_PDRV=m
+CONFIG_UIO_PDRV_GENIRQ=m
+CONFIG_UIO_AEC=m
+CONFIG_UIO_SERCOS3=m
+CONFIG_UIO_PCI_GENERIC=m
+# CONFIG_UIO_NETX is not set
+
+#
+# TI VLYNQ
+#
+CONFIG_STAGING=y
+# CONFIG_STAGING_EXCLUDE_BUILD is not set
+# CONFIG_ET131X is not set
+# CONFIG_VIDEO_GO7007 is not set
+# CONFIG_VIDEO_CX25821 is not set
+# CONFIG_USB_IP_COMMON is not set
+# CONFIG_W35UND is not set
+# CONFIG_PRISM2_USB is not set
+# CONFIG_ECHO is not set
+# CONFIG_POCH is not set
+# CONFIG_OTUS is not set
+# CONFIG_COMEDI is not set
+# CONFIG_ASUS_OLED is not set
+# CONFIG_PANEL is not set
+# CONFIG_R8187SE is not set
+# CONFIG_RTL8192SU is not set
+# CONFIG_RTL8192U is not set
+# CONFIG_RTL8192E is not set
+# CONFIG_TRANZPORT is not set
+
+#
+# Qualcomm MSM Camera And Video
+#
+
+#
+# Camera Sensor Selection
+#
+# CONFIG_INPUT_GPIO is not set
+# CONFIG_POHMELFS is not set
+# CONFIG_IDE_PHISON is not set
+# CONFIG_LINE6_USB is not set
+CONFIG_DRM_VMWGFX=m
+CONFIG_DRM_NOUVEAU=m
+CONFIG_DRM_NOUVEAU_BACKLIGHT=y
+CONFIG_DRM_NOUVEAU_DEBUG=y
+
+#
+# I2C encoder or helper chips
+#
+CONFIG_DRM_I2C_CH7006=m
+# CONFIG_USB_SERIAL_QUATECH2 is not set
+# CONFIG_USB_SERIAL_QUATECH_USB2 is not set
+# CONFIG_VT6655 is not set
+# CONFIG_VT6656 is not set
+# CONFIG_FB_UDL is not set
+# CONFIG_VME_BUS is not set
+
+#
+# RAR Register Driver
+#
+# CONFIG_RAR_REGISTER is not set
+# CONFIG_IIO is not set
+# CONFIG_RAMZSWAP is not set
+# CONFIG_BATMAN_ADV is not set
+# CONFIG_STRIP is not set
+CONFIG_PCMCIA_WAVELAN=m
+CONFIG_PCMCIA_NETWAVE=m
+# CONFIG_FB_SM7XX is not set
+# CONFIG_DT3155 is not set
+CONFIG_CRYSTALHD=m
+
+#
+# File systems
+#
+CONFIG_EXT2_FS=m
+CONFIG_EXT2_FS_XATTR=y
+CONFIG_EXT2_FS_POSIX_ACL=y
+CONFIG_EXT2_FS_SECURITY=y
+CONFIG_EXT2_FS_XIP=y
+CONFIG_EXT3_FS=y
+CONFIG_EXT3_DEFAULTS_TO_ORDERED=y
+CONFIG_EXT3_FS_XATTR=y
+CONFIG_EXT3_FS_POSIX_ACL=y
+CONFIG_EXT3_FS_SECURITY=y
+CONFIG_EXT4_FS=y
+CONFIG_EXT4_FS_XATTR=y
+CONFIG_EXT4_FS_POSIX_ACL=y
+CONFIG_EXT4_FS_SECURITY=y
+CONFIG_EXT4_DEBUG=y
+CONFIG_FS_XIP=y
+CONFIG_JBD=y
+# CONFIG_JBD_DEBUG is not set
+CONFIG_JBD2=y
+CONFIG_JBD2_DEBUG=y
+CONFIG_FS_MBCACHE=y
+CONFIG_REISERFS_FS=m
+# CONFIG_REISERFS_CHECK is not set
+CONFIG_REISERFS_PROC_INFO=y
+CONFIG_REISERFS_FS_XATTR=y
+CONFIG_REISERFS_FS_POSIX_ACL=y
+CONFIG_REISERFS_FS_SECURITY=y
+CONFIG_JFS_FS=m
+CONFIG_JFS_POSIX_ACL=y
+CONFIG_JFS_SECURITY=y
+# CONFIG_JFS_DEBUG is not set
+# CONFIG_JFS_STATISTICS is not set
+CONFIG_FS_POSIX_ACL=y
+CONFIG_XFS_FS=m
+CONFIG_XFS_QUOTA=y
+CONFIG_XFS_POSIX_ACL=y
+# CONFIG_XFS_RT is not set
+# CONFIG_XFS_DEBUG is not set
+CONFIG_GFS2_FS=m
+CONFIG_GFS2_FS_LOCKING_DLM=y
+CONFIG_OCFS2_FS=m
+CONFIG_OCFS2_FS_O2CB=m
+CONFIG_OCFS2_FS_USERSPACE_CLUSTER=m
+# CONFIG_OCFS2_FS_STATS is not set
+# CONFIG_OCFS2_DEBUG_MASKLOG is not set
+# CONFIG_OCFS2_DEBUG_FS is not set
+CONFIG_BTRFS_FS=m
+CONFIG_BTRFS_FS_POSIX_ACL=y
+CONFIG_NILFS2_FS=m
+CONFIG_FILE_LOCKING=y
+CONFIG_FSNOTIFY=y
+CONFIG_DNOTIFY=y
+CONFIG_INOTIFY=y
+CONFIG_INOTIFY_USER=y
+CONFIG_QUOTA=y
+CONFIG_QUOTA_NETLINK_INTERFACE=y
+# CONFIG_PRINT_QUOTA_WARNING is not set
+CONFIG_QUOTA_TREE=y
+# CONFIG_QFMT_V1 is not set
+CONFIG_QFMT_V2=y
+CONFIG_QUOTACTL=y
+# CONFIG_AUTOFS_FS is not set
+CONFIG_AUTOFS4_FS=m
+CONFIG_FUSE_FS=m
+CONFIG_CUSE=m
+CONFIG_GENERIC_ACL=y
+
+#
+# Caches
+#
+CONFIG_FSCACHE=m
+CONFIG_FSCACHE_STATS=y
+# CONFIG_FSCACHE_HISTOGRAM is not set
+# CONFIG_FSCACHE_DEBUG is not set
+CONFIG_FSCACHE_OBJECT_LIST=y
+CONFIG_CACHEFILES=m
+# CONFIG_CACHEFILES_DEBUG is not set
+# CONFIG_CACHEFILES_HISTOGRAM is not set
+
+#
+# CD-ROM/DVD Filesystems
+#
+CONFIG_ISO9660_FS=y
+CONFIG_JOLIET=y
+CONFIG_ZISOFS=y
+CONFIG_UDF_FS=m
+CONFIG_UDF_NLS=y
+
+#
+# DOS/FAT/NT Filesystems
+#
+CONFIG_FAT_FS=m
+CONFIG_MSDOS_FS=m
+CONFIG_VFAT_FS=m
+CONFIG_FAT_DEFAULT_CODEPAGE=437
+CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
+# CONFIG_NTFS_FS is not set
+
+#
+# Pseudo filesystems
+#
+CONFIG_PROC_FS=y
+CONFIG_PROC_KCORE=y
+CONFIG_PROC_VMCORE=y
+CONFIG_PROC_SYSCTL=y
+CONFIG_PROC_PAGE_MONITOR=y
+CONFIG_SYSFS=y
+CONFIG_TMPFS=y
+CONFIG_TMPFS_POSIX_ACL=y
+CONFIG_HUGETLBFS=y
+CONFIG_HUGETLB_PAGE=y
+CONFIG_CONFIGFS_FS=m
+CONFIG_MISC_FILESYSTEMS=y
+# CONFIG_ADFS_FS is not set
+CONFIG_AFFS_FS=m
+CONFIG_ECRYPT_FS=m
+CONFIG_HFS_FS=m
+CONFIG_HFSPLUS_FS=m
+CONFIG_BEFS_FS=m
+# CONFIG_BEFS_DEBUG is not set
+CONFIG_BFS_FS=m
+CONFIG_EFS_FS=m
+CONFIG_JFFS2_FS=m
+CONFIG_JFFS2_FS_DEBUG=0
+CONFIG_JFFS2_FS_WRITEBUFFER=y
+# CONFIG_JFFS2_FS_WBUF_VERIFY is not set
+CONFIG_JFFS2_SUMMARY=y
+CONFIG_JFFS2_FS_XATTR=y
+CONFIG_JFFS2_FS_POSIX_ACL=y
+CONFIG_JFFS2_FS_SECURITY=y
+# CONFIG_JFFS2_COMPRESSION_OPTIONS is not set
+CONFIG_JFFS2_ZLIB=y
+# CONFIG_JFFS2_LZO is not set
+CONFIG_JFFS2_RTIME=y
+# CONFIG_JFFS2_RUBIN is not set
+CONFIG_UBIFS_FS=m
+CONFIG_UBIFS_FS_XATTR=y
+# CONFIG_UBIFS_FS_ADVANCED_COMPR is not set
+CONFIG_UBIFS_FS_LZO=y
+CONFIG_UBIFS_FS_ZLIB=y
+# CONFIG_UBIFS_FS_DEBUG is not set
+# CONFIG_LOGFS is not set
+CONFIG_CRAMFS=m
+CONFIG_SQUASHFS=m
+# CONFIG_SQUASHFS_EMBEDDED is not set
+CONFIG_SQUASHFS_FRAGMENT_CACHE_SIZE=3
+CONFIG_VXFS_FS=m
+CONFIG_MINIX_FS=m
+CONFIG_OMFS_FS=m
+# CONFIG_HPFS_FS is not set
+CONFIG_QNX4FS_FS=m
+CONFIG_ROMFS_FS=m
+CONFIG_ROMFS_BACKED_BY_BLOCK=y
+# CONFIG_ROMFS_BACKED_BY_MTD is not set
+# CONFIG_ROMFS_BACKED_BY_BOTH is not set
+CONFIG_ROMFS_ON_BLOCK=y
+CONFIG_SYSV_FS=m
+CONFIG_UFS_FS=m
+# CONFIG_UFS_FS_WRITE is not set
+# CONFIG_UFS_DEBUG is not set
+CONFIG_EXOFS_FS=m
+# CONFIG_EXOFS_DEBUG is not set
+CONFIG_NETWORK_FILESYSTEMS=y
+CONFIG_NFS_FS=m
+CONFIG_NFS_V3=y
+CONFIG_NFS_V3_ACL=y
+CONFIG_NFS_V4=y
+CONFIG_NFS_V4_1=y
+CONFIG_NFS_FSCACHE=y
+CONFIG_NFSD=m
+CONFIG_NFSD_V2_ACL=y
+CONFIG_NFSD_V3=y
+CONFIG_NFSD_V3_ACL=y
+CONFIG_NFSD_V4=y
+CONFIG_LOCKD=m
+CONFIG_LOCKD_V4=y
+CONFIG_EXPORTFS=m
+CONFIG_NFS_ACL_SUPPORT=m
+CONFIG_NFS_COMMON=y
+CONFIG_SUNRPC=m
+CONFIG_SUNRPC_GSS=m
+CONFIG_SUNRPC_XPRT_RDMA=m
+CONFIG_RPCSEC_GSS_KRB5=m
+CONFIG_RPCSEC_GSS_SPKM3=m
+# CONFIG_SMB_FS is not set
+# CONFIG_CEPH_FS is not set
+CONFIG_CIFS=m
+CONFIG_CIFS_STATS=y
+# CONFIG_CIFS_STATS2 is not set
+CONFIG_CIFS_WEAK_PW_HASH=y
+CONFIG_CIFS_UPCALL=y
+CONFIG_CIFS_XATTR=y
+CONFIG_CIFS_POSIX=y
+# CONFIG_CIFS_DEBUG2 is not set
+CONFIG_CIFS_DFS_UPCALL=y
+CONFIG_CIFS_EXPERIMENTAL=y
+CONFIG_NCP_FS=m
+CONFIG_NCPFS_PACKET_SIGNING=y
+CONFIG_NCPFS_IOCTL_LOCKING=y
+CONFIG_NCPFS_STRONG=y
+CONFIG_NCPFS_NFS_NS=y
+CONFIG_NCPFS_OS2_NS=y
+CONFIG_NCPFS_SMALLDOS=y
+CONFIG_NCPFS_NLS=y
+CONFIG_NCPFS_EXTRAS=y
+CONFIG_CODA_FS=m
+# CONFIG_AFS_FS is not set
+CONFIG_9P_FS=m
+CONFIG_9P_FSCACHE=y
+
+#
+# Partition Types
+#
+CONFIG_PARTITION_ADVANCED=y
+# CONFIG_ACORN_PARTITION is not set
+CONFIG_OSF_PARTITION=y
+CONFIG_AMIGA_PARTITION=y
+# CONFIG_ATARI_PARTITION is not set
+CONFIG_MAC_PARTITION=y
+CONFIG_MSDOS_PARTITION=y
+CONFIG_BSD_DISKLABEL=y
+CONFIG_MINIX_SUBPARTITION=y
+CONFIG_SOLARIS_X86_PARTITION=y
+CONFIG_UNIXWARE_DISKLABEL=y
+# CONFIG_LDM_PARTITION is not set
+CONFIG_SGI_PARTITION=y
+# CONFIG_ULTRIX_PARTITION is not set
+CONFIG_SUN_PARTITION=y
+CONFIG_KARMA_PARTITION=y
+CONFIG_EFI_PARTITION=y
+# CONFIG_SYSV68_PARTITION is not set
+CONFIG_NLS=y
+CONFIG_NLS_DEFAULT="utf8"
+CONFIG_NLS_CODEPAGE_437=y
+CONFIG_NLS_CODEPAGE_737=m
+CONFIG_NLS_CODEPAGE_775=m
+CONFIG_NLS_CODEPAGE_850=m
+CONFIG_NLS_CODEPAGE_852=m
+CONFIG_NLS_CODEPAGE_855=m
+CONFIG_NLS_CODEPAGE_857=m
+CONFIG_NLS_CODEPAGE_860=m
+CONFIG_NLS_CODEPAGE_861=m
+CONFIG_NLS_CODEPAGE_862=m
+CONFIG_NLS_CODEPAGE_863=m
+CONFIG_NLS_CODEPAGE_864=m
+CONFIG_NLS_CODEPAGE_865=m
+CONFIG_NLS_CODEPAGE_866=m
+CONFIG_NLS_CODEPAGE_869=m
+CONFIG_NLS_CODEPAGE_936=m
+CONFIG_NLS_CODEPAGE_950=m
+CONFIG_NLS_CODEPAGE_932=m
+CONFIG_NLS_CODEPAGE_949=m
+CONFIG_NLS_CODEPAGE_874=m
+CONFIG_NLS_ISO8859_8=m
+CONFIG_NLS_CODEPAGE_1250=m
+CONFIG_NLS_CODEPAGE_1251=m
+CONFIG_NLS_ASCII=y
+CONFIG_NLS_ISO8859_1=m
+CONFIG_NLS_ISO8859_2=m
+CONFIG_NLS_ISO8859_3=m
+CONFIG_NLS_ISO8859_4=m
+CONFIG_NLS_ISO8859_5=m
+CONFIG_NLS_ISO8859_6=m
+CONFIG_NLS_ISO8859_7=m
+CONFIG_NLS_ISO8859_9=m
+CONFIG_NLS_ISO8859_13=m
+CONFIG_NLS_ISO8859_14=m
+CONFIG_NLS_ISO8859_15=m
+CONFIG_NLS_KOI8_R=m
+CONFIG_NLS_KOI8_U=m
+CONFIG_NLS_UTF8=m
+CONFIG_DLM=m
+CONFIG_DLM_DEBUG=y
+CONFIG_BINARY_PRINTF=y
+
+#
+# Library routines
+#
+CONFIG_BITREVERSE=y
+CONFIG_GENERIC_FIND_LAST_BIT=y
+CONFIG_CRC_CCITT=m
+CONFIG_CRC16=y
+CONFIG_CRC_T10DIF=y
+CONFIG_CRC_ITU_T=m
+CONFIG_CRC32=y
+CONFIG_CRC7=m
+CONFIG_LIBCRC32C=m
+CONFIG_ZLIB_INFLATE=y
+CONFIG_ZLIB_DEFLATE=m
+CONFIG_LZO_COMPRESS=m
+CONFIG_LZO_DECOMPRESS=y
+CONFIG_DECOMPRESS_GZIP=y
+CONFIG_DECOMPRESS_BZIP2=y
+CONFIG_DECOMPRESS_LZMA=y
+CONFIG_DECOMPRESS_LZO=y
+CONFIG_GENERIC_ALLOCATOR=y
+CONFIG_REED_SOLOMON=m
+CONFIG_REED_SOLOMON_DEC16=y
+CONFIG_TEXTSEARCH=y
+CONFIG_TEXTSEARCH_KMP=m
+CONFIG_TEXTSEARCH_BM=m
+CONFIG_TEXTSEARCH_FSM=m
+CONFIG_HAS_IOMEM=y
+CONFIG_HAS_IOPORT=y
+CONFIG_HAS_DMA=y
+CONFIG_HAVE_LMB=y
+CONFIG_NLATTR=y
+CONFIG_LRU_CACHE=m
+
+#
+# Kernel hacking
+#
+# CONFIG_PRINTK_TIME is not set
+# CONFIG_ENABLE_WARN_DEPRECATED is not set
+CONFIG_ENABLE_MUST_CHECK=y
+CONFIG_FRAME_WARN=2048
+CONFIG_MAGIC_SYSRQ=y
+CONFIG_STRIP_ASM_SYMS=y
+CONFIG_UNUSED_SYMBOLS=y
+CONFIG_DEBUG_FS=y
+CONFIG_HEADERS_CHECK=y
+CONFIG_DEBUG_KERNEL=y
+CONFIG_DEBUG_SHIRQ=y
+CONFIG_DETECT_SOFTLOCKUP=y
+# CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC is not set
+CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC_VALUE=0
+CONFIG_DETECT_HUNG_TASK=y
+# CONFIG_BOOTPARAM_HUNG_TASK_PANIC is not set
+CONFIG_BOOTPARAM_HUNG_TASK_PANIC_VALUE=0
+CONFIG_SCHED_DEBUG=y
+CONFIG_SCHEDSTATS=y
+CONFIG_TIMER_STATS=y
+CONFIG_DEBUG_OBJECTS=y
+# CONFIG_DEBUG_OBJECTS_SELFTEST is not set
+CONFIG_DEBUG_OBJECTS_FREE=y
+CONFIG_DEBUG_OBJECTS_TIMERS=y
+CONFIG_DEBUG_OBJECTS_WORK=y
+CONFIG_DEBUG_OBJECTS_ENABLE_DEFAULT=1
+CONFIG_SLUB_DEBUG_ON=y
+# CONFIG_SLUB_STATS is not set
+CONFIG_DEBUG_RT_MUTEXES=y
+CONFIG_DEBUG_PI_LIST=y
+# CONFIG_RT_MUTEX_TESTER is not set
+CONFIG_DEBUG_SPINLOCK=y
+CONFIG_DEBUG_MUTEXES=y
+CONFIG_DEBUG_LOCK_ALLOC=y
+CONFIG_PROVE_LOCKING=y
+# CONFIG_PROVE_RCU is not set
+CONFIG_LOCKDEP=y
+CONFIG_LOCK_STAT=y
+# CONFIG_DEBUG_LOCKDEP is not set
+CONFIG_TRACE_IRQFLAGS=y
+CONFIG_DEBUG_SPINLOCK_SLEEP=y
+# CONFIG_DEBUG_LOCKING_API_SELFTESTS is not set
+CONFIG_STACKTRACE=y
+# CONFIG_DEBUG_KOBJECT is not set
+CONFIG_DEBUG_BUGVERBOSE=y
+CONFIG_DEBUG_INFO=y
+CONFIG_DEBUG_VM=y
+CONFIG_DEBUG_WRITECOUNT=y
+CONFIG_DEBUG_MEMORY_INIT=y
+CONFIG_DEBUG_LIST=y
+CONFIG_DEBUG_SG=y
+CONFIG_DEBUG_NOTIFIERS=y
+CONFIG_DEBUG_CREDENTIALS=y
+CONFIG_FRAME_POINTER=y
+# CONFIG_RCU_TORTURE_TEST is not set
+# CONFIG_RCU_CPU_STALL_DETECTOR is not set
+# CONFIG_KPROBES_SANITY_TEST is not set
+# CONFIG_BACKTRACE_SELF_TEST is not set
+# CONFIG_DEBUG_BLOCK_EXT_DEVT is not set
+CONFIG_DEBUG_FORCE_WEAK_PER_CPU=y
+# CONFIG_LKDTM is not set
+CONFIG_FAULT_INJECTION=y
+CONFIG_FAILSLAB=y
+CONFIG_FAIL_PAGE_ALLOC=y
+CONFIG_FAIL_MAKE_REQUEST=y
+CONFIG_FAIL_IO_TIMEOUT=y
+CONFIG_FAULT_INJECTION_DEBUG_FS=y
+CONFIG_FAULT_INJECTION_STACKTRACE_FILTER=y
+CONFIG_LATENCYTOP=y
+CONFIG_SYSCTL_SYSCALL_CHECK=y
+CONFIG_NOP_TRACER=y
+CONFIG_HAVE_FUNCTION_TRACER=y
+CONFIG_HAVE_FUNCTION_GRAPH_TRACER=y
+CONFIG_HAVE_DYNAMIC_FTRACE=y
+CONFIG_HAVE_FTRACE_MCOUNT_RECORD=y
+CONFIG_TRACER_MAX_TRACE=y
+CONFIG_RING_BUFFER=y
+CONFIG_EVENT_TRACING=y
+CONFIG_CONTEXT_SWITCH_TRACER=y
+CONFIG_RING_BUFFER_ALLOW_SWAP=y
+CONFIG_TRACING=y
+CONFIG_GENERIC_TRACER=y
+CONFIG_TRACING_SUPPORT=y
+CONFIG_FTRACE=y
+CONFIG_FUNCTION_TRACER=y
+# CONFIG_FUNCTION_GRAPH_TRACER is not set
+# CONFIG_IRQSOFF_TRACER is not set
+CONFIG_SCHED_TRACER=y
+CONFIG_BOOT_TRACER=y
+CONFIG_BRANCH_PROFILE_NONE=y
+# CONFIG_PROFILE_ANNOTATED_BRANCHES is not set
+# CONFIG_PROFILE_ALL_BRANCHES is not set
+CONFIG_STACK_TRACER=y
+CONFIG_KMEMTRACE=y
+CONFIG_WORKQUEUE_TRACER=y
+CONFIG_BLK_DEV_IO_TRACE=y
+CONFIG_DYNAMIC_FTRACE=y
+CONFIG_FUNCTION_PROFILER=y
+CONFIG_FTRACE_MCOUNT_RECORD=y
+# CONFIG_FTRACE_STARTUP_TEST is not set
+CONFIG_RING_BUFFER_BENCHMARK=m
+# CONFIG_FIREWIRE_OHCI_REMOTE_DMA is not set
+CONFIG_BUILD_DOCSRC=y
+CONFIG_DYNAMIC_DEBUG=y
+CONFIG_DMA_API_DEBUG=y
+# CONFIG_SAMPLES is not set
+CONFIG_HAVE_ARCH_KGDB=y
+CONFIG_KGDB=y
+CONFIG_KGDB_SERIAL_CONSOLE=y
+CONFIG_KGDB_TESTS=y
+# CONFIG_KGDB_TESTS_ON_BOOT is not set
+CONFIG_PPC_DISABLE_WERROR=y
+CONFIG_PRINT_STACK_DEPTH=64
+CONFIG_DEBUG_STACKOVERFLOW=y
+CONFIG_DEBUG_STACK_USAGE=y
+CONFIG_HCALL_STATS=y
+CONFIG_PPC_EMULATED_STATS=y
+# CONFIG_CODE_PATCHING_SELFTEST is not set
+# CONFIG_FTR_FIXUP_SELFTEST is not set
+CONFIG_MSI_BITMAP_SELFTEST=y
+CONFIG_XMON=y
+# CONFIG_XMON_DEFAULT is not set
+CONFIG_XMON_DISASSEMBLY=y
+CONFIG_DEBUGGER=y
+CONFIG_IRQSTACKS=y
+# CONFIG_VIRQ_DEBUG is not set
+CONFIG_BOOTX_TEXT=y
+
+#
+# Security options
+#
+CONFIG_KEYS=y
+CONFIG_KEYS_DEBUG_PROC_KEYS=y
+CONFIG_SECURITY=y
+CONFIG_SECURITYFS=y
+CONFIG_SECURITY_NETWORK=y
+CONFIG_SECURITY_NETWORK_XFRM=y
+# CONFIG_SECURITY_PATH is not set
+CONFIG_LSM_MMAP_MIN_ADDR=65536
+CONFIG_SECURITY_SELINUX=y
+CONFIG_SECURITY_SELINUX_BOOTPARAM=y
+CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=1
+CONFIG_SECURITY_SELINUX_DISABLE=y
+CONFIG_SECURITY_SELINUX_DEVELOP=y
+CONFIG_SECURITY_SELINUX_AVC_STATS=y
+CONFIG_SECURITY_SELINUX_CHECKREQPROT_VALUE=1
+# CONFIG_SECURITY_SELINUX_POLICYDB_VERSION_MAX is not set
+# CONFIG_SECURITY_SMACK is not set
+# CONFIG_SECURITY_TOMOYO is not set
+CONFIG_DEFAULT_SECURITY_SELINUX=y
+# CONFIG_DEFAULT_SECURITY_SMACK is not set
+# CONFIG_DEFAULT_SECURITY_TOMOYO is not set
+# CONFIG_DEFAULT_SECURITY_DAC is not set
+CONFIG_DEFAULT_SECURITY="selinux"
+CONFIG_KEYS_COMPAT=y
+CONFIG_XOR_BLOCKS=m
+CONFIG_ASYNC_CORE=m
+CONFIG_ASYNC_MEMCPY=m
+CONFIG_ASYNC_XOR=m
+CONFIG_ASYNC_PQ=m
+CONFIG_ASYNC_RAID6_RECOV=m
+CONFIG_CRYPTO=y
+
+#
+# Crypto core or helper
+#
+CONFIG_CRYPTO_FIPS=y
+CONFIG_CRYPTO_ALGAPI=y
+CONFIG_CRYPTO_ALGAPI2=y
+CONFIG_CRYPTO_AEAD=m
+CONFIG_CRYPTO_AEAD2=y
+CONFIG_CRYPTO_BLKCIPHER=m
+CONFIG_CRYPTO_BLKCIPHER2=y
+CONFIG_CRYPTO_HASH=y
+CONFIG_CRYPTO_HASH2=y
+CONFIG_CRYPTO_RNG=m
+CONFIG_CRYPTO_RNG2=y
+CONFIG_CRYPTO_PCOMP=y
+CONFIG_CRYPTO_MANAGER=y
+CONFIG_CRYPTO_MANAGER2=y
+CONFIG_CRYPTO_GF128MUL=m
+CONFIG_CRYPTO_NULL=m
+# CONFIG_CRYPTO_PCRYPT is not set
+CONFIG_CRYPTO_WORKQUEUE=y
+# CONFIG_CRYPTO_CRYPTD is not set
+CONFIG_CRYPTO_AUTHENC=m
+CONFIG_CRYPTO_TEST=m
+
+#
+# Authenticated Encryption with Associated Data
+#
+CONFIG_CRYPTO_CCM=m
+CONFIG_CRYPTO_GCM=m
+CONFIG_CRYPTO_SEQIV=m
+
+#
+# Block modes
+#
+CONFIG_CRYPTO_CBC=m
+CONFIG_CRYPTO_CTR=m
+CONFIG_CRYPTO_CTS=m
+CONFIG_CRYPTO_ECB=m
+CONFIG_CRYPTO_LRW=m
+CONFIG_CRYPTO_PCBC=m
+CONFIG_CRYPTO_XTS=m
+
+#
+# Hash modes
+#
+CONFIG_CRYPTO_HMAC=y
+CONFIG_CRYPTO_XCBC=m
+CONFIG_CRYPTO_VMAC=m
+
+#
+# Digest
+#
+CONFIG_CRYPTO_CRC32C=y
+CONFIG_CRYPTO_GHASH=m
+CONFIG_CRYPTO_MD4=m
+CONFIG_CRYPTO_MD5=y
+CONFIG_CRYPTO_MICHAEL_MIC=m
+CONFIG_CRYPTO_RMD128=m
+CONFIG_CRYPTO_RMD160=m
+CONFIG_CRYPTO_RMD256=m
+CONFIG_CRYPTO_RMD320=m
+CONFIG_CRYPTO_SHA1=y
+CONFIG_CRYPTO_SHA256=m
+CONFIG_CRYPTO_SHA512=m
+CONFIG_CRYPTO_TGR192=m
+CONFIG_CRYPTO_WP512=m
+
+#
+# Ciphers
+#
+CONFIG_CRYPTO_AES=m
+CONFIG_CRYPTO_ANUBIS=m
+CONFIG_CRYPTO_ARC4=m
+CONFIG_CRYPTO_BLOWFISH=m
+CONFIG_CRYPTO_CAMELLIA=m
+CONFIG_CRYPTO_CAST5=m
+CONFIG_CRYPTO_CAST6=m
+CONFIG_CRYPTO_DES=m
+CONFIG_CRYPTO_FCRYPT=m
+CONFIG_CRYPTO_KHAZAD=m
+CONFIG_CRYPTO_SALSA20=m
+CONFIG_CRYPTO_SEED=m
+CONFIG_CRYPTO_SERPENT=m
+CONFIG_CRYPTO_TEA=m
+CONFIG_CRYPTO_TWOFISH=m
+CONFIG_CRYPTO_TWOFISH_COMMON=m
+
+#
+# Compression
+#
+CONFIG_CRYPTO_DEFLATE=m
+CONFIG_CRYPTO_ZLIB=m
+CONFIG_CRYPTO_LZO=m
+
+#
+# Random Number Generation
+#
+CONFIG_CRYPTO_ANSI_CPRNG=m
+CONFIG_CRYPTO_HW=y
+CONFIG_CRYPTO_DEV_HIFN_795X=m
+CONFIG_CRYPTO_DEV_HIFN_795X_RNG=y
+# CONFIG_PPC_CLOCK is not set
+CONFIG_KVM_MMIO=y
+CONFIG_VIRTUALIZATION=y
+CONFIG_KVM=y
+CONFIG_KVM_BOOK3S_64_HANDLER=y
+CONFIG_KVM_BOOK3S_64=m
+CONFIG_VHOST_NET=m
+CONFIG_VIRTIO=m
+CONFIG_VIRTIO_RING=m
+CONFIG_VIRTIO_PCI=m
+CONFIG_VIRTIO_BALLOON=m
+
+--------------090406080809010606080909--
