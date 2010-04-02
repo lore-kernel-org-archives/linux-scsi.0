@@ -1,124 +1,83 @@
-From: "Caspar Smit" <c.smit@truebit.nl>
-Subject: Re: ATA / mvsas issue.
-Date: Fri, 2 Apr 2010 16:14:41 +0200 (CEST)
-Message-ID: <43193.87.210.74.220.1270217681.squirrel@ketsers.dhs.org>
-References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>
-    <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>
-    <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>
-    <CDBC7B5488B245E689B39330542DC434@usish.com.cn>
-    <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>
-    <4BB50A92.3030205@gmx.net> <4BB53983.5050309@cisco.com>
+From: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Fri, 02 Apr 2010 10:41:07 -0400
+Message-ID: <1270219267.2899.73.camel@mulgrave.site>
+References: <Pine.LNX.4.44L0.1004021010130.1615-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 80-69-81-65.colo.transip.net ([80.69.81.65]:40825 "EHLO
-	ns1.emsolutions.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754719Ab0DBOOz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2010 10:14:55 -0400
-In-Reply-To: <4BB53983.5050309@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1004021010130.1615-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>
-Cc: st0ff@npl.de, jack wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org
 
-Thanks for all input but I can now definatly address this as an MVSAS issue.
+On Fri, 2010-04-02 at 10:12 -0400, Alan Stern wrote:
+> On Fri, 2 Apr 2010, Jonas Schwertfeger wrote:
+>=20
+> > Actually, you hit the nail on the head Kay. I moved the hdparm rule
+> > out of the way and voil=C3=A0, the drive mounts. I then manually ra=
+n hdparm
+> > on the device:
+> >=20
+> > sudo hdparm --verbose /dev/sdb
+> >=20
+> > /dev/sdb:
+> > outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 ec 00
+> > SG_IO: ATA_16 status=3D0x0, host_status=3D0x7, driver_status=3D0x0
+> > SG_IO: bad response (not CHECK_CONDITION)
+> > outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 a1 00
+> > SG_IO: ATA_16 status=3D0x0, host_status=3D0x7, driver_status=3D0x0
+> > SG_IO: bad response (not CHECK_CONDITION)
+> >  HDIO_DRIVE_CMD(identify) failed: Invalid exchange
+> >  readonly      =3D  0 (off)
+> >  readahead     =3D 256 (on)
+> >  geometry      =3D 36365/64/32, sectors =3D 0, start =3D 0
+> >=20
+> > Does the command sent by hdparm look familiar? Exactly, it is the
+> > third ATA command (IDENTIFY DEVICE) we discovered earlier and cause=
+d
+> > the drive to stall.
+>=20
+> That's nice to know.  Other people have been reporting similar=20
+> problems.  Now we can tell where they come from.
 
-I put other controllers (AOC-SAT2-MV8, which use the sata_mv kernel
-driver) in the system and now all is working fine with the same disks!
+Yes ... I think we're starting to need to get a handle on all these
+userspace random pokes which can disrupt (the admittedly badly written
+and badly tested) devices which the kernel tries so hard not to upset.
 
-Maybe someone can find out what is wrong with the mvsas code that causes
-this behavior.
+> > Does anyone know why the drive would not be able to cope with this
+> > command?
+>=20
+> No idea.  Except that it's probably not the drive's fault, but rather=
+=20
+> the fault of the USB-(S)ATA chip that controls the drive.
 
-Kind regards,
-Caspar Smit
+Best guess (and it's a guess only) would be that the USB bridge SAT
+layer doesn't implement ATA_16 and so fails in interesting ways when it
+comes in.  Does the ATA_12 version of IDENTIFY DEVICE succeed?
+
+James
+
+> > And also, why does it not choke on it in USB 2.0 mode but
+> > only in USB 3.0?
+>=20
+> That's easy: It chokes in USB-2.0 mode also.  But the ehci-hcd
+> driver is able to reset the drive and recover, whereas xhci-hcd has n=
+ot=20
+> yet implemented reset.  Hence no recovery is possible.
+>=20
+> Alan Stern
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-
-> Stefan *St0fF* Huebner wrote:
->> Am 01.04.2010 09:55, schrieb Caspar Smit:
->>>>
->>>>> Hi all,
->>>>>
->>>>> Today I installed 16 fresh Western Digital WD5000BEVT (2,5") drives
->>>>> in
->>>>> one
->>>>> of our test servers.
->>>>>
->>>>> I created a software raid5 with a hotspare on these 16 disks.
->>>>>
->>>>> I noticed that the detection of the disks during boottime was very
->>>>> very
->>>>> slow.
->>>>> Creating the md superblocks went very very slow.
->>>>>
->>>>> After that all seemed fine (speed of the raid5 init was normal).
->>>>>
->>>>> I noticed many of these messages in the syslog (also attached):
->>>>>
->>>>> Mar 31 14:34:17 test ata_id[3752]: main: HDIO_GET_IDENTITY failed for
->>>>> '/dev/.tmp-8-112'
->>>>> Mar 31 14:34:17 test ata_id[3765]: main: HDIO_GET_IDENTITY failed for
->>>>> '/dev/.tmp-8-128'
->>>>>
->>>>> This seems to correspond to the slow detection of the disks.
->>>>>
->>>>> Is this an ATA problem, or a problem in the mvsas driver?
->>>>>
->>>>> I use the mvsas driver from 2.6.32 with the latest patch from
->>>>> Srinivas.
->>>>>
->>>>> Kind regards,
->>>>> Caspar Smit
->>>>>
->>>>>
->>>>> [Jack] It's normal behavior of SATA disk, SATA disk need more time
->>>>> than
->>>>> SAS
->>>>> disk to spin up to response command.
->>>>>
->>>> I use loads of other SATA disks which don't have this behavior.
->>>>
->>>> Caspar
->>>>
->>>>
->>>> [Jack] In my test, some big SATA disks(ie 500G above)have this issues.
->>>> Best Regards
->>>>
->> @Jack: sorry, but that doesn't cause unresponsiveness.  Some 2TB
->> SATA-Disks need >10s to spin up, but there shouldn't be any notes/logs
->> like those.  As a matter of fact: these 2,5" drives should spin up in a
->> matter of 2s.
->
-> That seems to match the log that Caspar Smit posted yesterday.  Each drive
-> took about 2s to probe, and being that there are 16 of them, it took 32s.
-> It would be good if it could somehow do that in parallel being that this
-> is the 21st century :-)  Not sure how hard that is ...
->
-> I wonder if they spin up during probe or later during attach.
->
-> I don't know about the ata_id messages; I just wanted to point out the
-> above.
->
-> Maybe ata_id is waiting for spin up but not waiting long enough if there
-> are
-> so many disks and they spin up sequentially.  Spin up shouldn't be needed
-> for
-> identity info, I would think.
->
-> 	Joe
->
->>> Seagate 500G SATA disks are working fine.
->>>
->> Hitachi also.  And I've seen WD5000BEVT work great, too.  8 of a kind in
->> a QNAP SS-839 (Atom based NAS with a pretty recent linux on it) work
->> fine!
->>
->> Stefan
->>> Caspar
->>>
->>>
->>>> ************************************************************************
->>>> Jack  Wang
->
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
