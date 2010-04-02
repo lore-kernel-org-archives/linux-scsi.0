@@ -1,77 +1,60 @@
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Fri, 2 Apr 2010 10:36:25 -0700
-Message-ID: <20100402173625.GB4864@xanatos>
-References: <t2t59ca64281004020609sa0f67f0dj5c127e3f0b2e4db2@mail.gmail.com>
- <Pine.LNX.4.44L0.1004021010130.1615-100000@iolanthe.rowland.org>
+From: Julian Bangert <jbangert@acm.org>
+Subject: SG_IO
+Date: Fri, 02 Apr 2010 19:16:20 +0200
+Message-ID: <1270228580.12985.45.camel@fermat>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga10.intel.com ([192.55.52.92]:9076 "EHLO
-	fmsmga102.fm.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755683Ab0DBRgt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2010 13:36:49 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1004021010130.1615-100000@iolanthe.rowland.org>
+Received: from xa5.serverdomain.org ([89.107.186.22]:43769 "EHLO
+	xa5.serverdomain.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755369Ab0DBRj0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2010 13:39:26 -0400
+Received: from [192.168.178.28] (xa5 [89.107.186.22])
+	(Authenticated sender: xa5508p1)
+	by xa5.serverdomain.org (xa5.serverdomain.org) with ESMTP id 9E79A1A2001D
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Apr 2010 19:16:18 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jonas Schwertfeger <jschwertfeger@gmail.com>, Kay Sievers <kay.sievers@vrfy.org>, Douglas Gilbert <dgilbert@interlog.com>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Apr 02, 2010 at 10:12:35AM -0400, Alan Stern wrote:
-> On Fri, 2 Apr 2010, Jonas Schwertfeger wrote:
->=20
-> > Actually, you hit the nail on the head Kay. I moved the hdparm rule
-> > out of the way and voil=E0, the drive mounts. I then manually ran h=
-dparm
-> > on the device:
-> >=20
-> > sudo hdparm --verbose /dev/sdb
-> >=20
-> > /dev/sdb:
-> > outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 ec 00
-> > SG_IO: ATA_16 status=3D0x0, host_status=3D0x7, driver_status=3D0x0
-> > SG_IO: bad response (not CHECK_CONDITION)
-> > outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 a1 00
-> > SG_IO: ATA_16 status=3D0x0, host_status=3D0x7, driver_status=3D0x0
-> > SG_IO: bad response (not CHECK_CONDITION)
-> >  HDIO_DRIVE_CMD(identify) failed: Invalid exchange
-> >  readonly      =3D  0 (off)
-> >  readahead     =3D 256 (on)
-> >  geometry      =3D 36365/64/32, sectors =3D 0, start =3D 0
-> >=20
-> > Does the command sent by hdparm look familiar? Exactly, it is the
-> > third ATA command (IDENTIFY DEVICE) we discovered earlier and cause=
-d
-> > the drive to stall.
->=20
-> That's nice to know.  Other people have been reporting similar=20
-> problems.  Now we can tell where they come from.
->=20
-> > Does anyone know why the drive would not be able to cope with this
-> > command?
->=20
-> No idea.  Except that it's probably not the drive's fault, but rather=
-=20
-> the fault of the USB-(S)ATA chip that controls the drive.
->=20
-> > And also, why does it not choke on it in USB 2.0 mode but
-> > only in USB 3.0?
->=20
-> That's easy: It chokes in USB-2.0 mode also.  But the ehci-hcd
-> driver is able to reset the drive and recover, whereas xhci-hcd has n=
-ot=20
-> yet implemented reset.  Hence no recovery is possible.
+Hello, 
+I want to write a tape utility using the SG_IO interface (because I
+don't have the expensive IBM one ;) ) but I have got a problem with the
+SCSI interface. 
+My program looks as follows:
 
-The xhci-hcd driver in 2.6.32 doesn't support configured device reset,
-but it was added in 2.6.33.  So an update to a later kernel should allo=
-w
-the device to work in USB 3.0 mode.
+    ioctl(g_fd,SG_IO,&io_hdr);
+    memset(&io_hdr, 0, sizeof(struct sg_io_hdr));
+        struct read_attr_cmd cmd;
+        cmd.opcode = 0x8C;
+        cmd.s_action = 0;
+        cmd.pad1 = cmd.pad2 = cmd.pad3 = cmd.pad4 = 0;
+        cmd.volid = cmd.partition = 0;
+        cmd.attrib_id = htons(attribs[idx].id);
+        cmd.size = htonl(buffer_size);
+        cmd.control = 0;
+        
+        assert(sizeof(struct read_attr_cmd) == 16);
+    
+        io_hdr.interface_id='S';
+        io_hdr.cmd_len = 16;//sizeof cmd;
+        io_hdr.mx_sb_len= sizeof(sense_b);
+        io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+        io_hdr.dxferp = buffer;
+        io_hdr.dxfer_len = buffer_size;
+        io_hdr.cmdp = (unsigned char *) &cmd;
+        io_hdr.sbp = sense_b;
+        io_hdr.timeout = 10000;
+        
+        if(ioctl(g_fd,SG_IO,&io_hdr) == -1)
 
-Sarah Sharp
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The IOCTL succeeds, but io_hdr.host_status contains SG_ERR_DID_ABORT.
+All other fields are not touched. I am using an Adaptec 29160N(AIC7892)
+with the adaptec aix7xxx driver  on Linux  2.6.31 (ubuntu). As far as I
+know this driver supports 16 Byte commands.
+
+Thank you very much for your assistance,
+
+-- Julian Bangert
+
