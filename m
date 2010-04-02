@@ -1,117 +1,53 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: 2.6.34-rc3 : Badness at lib/dma-debug.c:820 during ibmvscsi
- init
-Date: Fri, 2 Apr 2010 15:50:24 +0900
-Message-ID: <20100402154959K.fujita.tomonori@lab.ntt.co.jp>
-References: <4BB57E3F.3050502@in.ibm.com>
-	<20100402151229V.fujita.tomonori@lab.ntt.co.jp>
-	<4BB590C6.3090108@in.ibm.com>
+From: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Fri, 2 Apr 2010 14:40:34 +0200
+Message-ID: <m2l59ca64281004020540z7e502130g22dfc035f1ceda6a@mail.gmail.com>
+References: <4BB37454.8070808@interlog.com> <Pine.LNX.4.44L0.1003311229460.1739-100000@iolanthe.rowland.org>
+	<n2r59ca64281004010632h9dec0e98pdc0bc9a923b43206@mail.gmail.com>
+	<s2zac3eb2511004010642ic2e8f973h2e038d3c90c6ca75@mail.gmail.com>
+	<r2k59ca64281004010655z93fedfa8rdeb447d82a848d9f@mail.gmail.com>
+	<k2zac3eb2511004010705he844fff8wfa8e18626b8f3e45@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:46447 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758193Ab0DBGuc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Apr 2010 02:50:32 -0400
-In-Reply-To: <4BB590C6.3090108@in.ibm.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55859 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753491Ab0DBMk5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Apr 2010 08:40:57 -0400
+In-Reply-To: <k2zac3eb2511004010705he844fff8wfa8e18626b8f3e45@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sachinp@in.ibm.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, linuxppc-dev@ozlabs.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dgilbert@interlog.com>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
 
-On Fri, 02 Apr 2010 12:07:58 +0530
-Sachin Sant <sachinp@in.ibm.com> wrote:
+On Thu, Apr 1, 2010 at 4:05 PM, Kay Sievers <kay.sievers@vrfy.org> wrot=
+e:
+>> Since the drive doesn't even show up as a block device when connecte=
+d
+>> to the USB 3.0 port I can't run that command for the device directly=
+=2E
+>
+> That means it does not show up, or it disappears after something is
+> trying to do something with it. If it does not appear at all, we don'=
+t
+> need to look in userspace, I guess. :)
 
-> FUJITA Tomonori wrote:
-> > On Fri, 02 Apr 2010 10:48:55 +0530
-> > Sachin Sant <sachinp@in.ibm.com> wrote:
-> >
-> >   
-> >> 2.6.34-rc3 boot on a power5 box produces this badness message
-> >> during ibmvscsi initialization.
-> >>
-> >> ibmvscsi 30000003: Client reserve enabled
-> >> ibmvscsi 30000003: sent SRP login
-> >> ibmvscsi 30000003: SRP_LOGIN succeeded
-> >> ibmvscsi 30000003: DMA-API: device driver frees DMA memory with wrong function [device address=0x0000000000011520] [size=36 bytes] [mapped as scather-gather] [unmapped as single]
-> >>     
-> >
-> > ibmvscsi has been incompatible with the dma debug facility, I
-> > guess. The driver uses dma_unmap_single for buffers mapped via
-> > dma_map_sg. It works but it's the API violation.
-> >
-> > Does this patch work?
-> >   
-> Yes, this patch fixed the issue for me. Thanks
+I assume it is there for a very brief moment but then disappears.
 
-Thanks, here's the patch in the proper format.
+> What are your rules trying to do with hdparm on the drive, that seems
+> rather odd to apply to a USB device:
+> =A0RUN '/lib/udev/hdparm' /lib/udev/rules.d/85-hdparm.rules:2
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] ibmvscsi: fix DMA API misuse
+Why would you think so? From the hdparm man page:
 
-ibmvscsi uses dma_unmap_single() for buffers mapped via
-dma_map_sg(). It works however it's the API violation. The DMA debug
-facility complains about it:
+"Many newer (2008 and later) USB drive enclosures now also support
+"SAT" (SCSI-ATA Command Translation) and therefore may also  work
+with  hdparm."
 
-http://marc.info/?l=linux-scsi&m=127018555013151&w=2
-
-Reported-by: Sachin Sant <sachinp@in.ibm.com>
-Tested-by: Sachin Sant <sachinp@in.ibm.com>
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/ibmvscsi/ibmvscsi.c |   29 ++---------------------------
- 1 files changed, 2 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index dc1bcbe..0856436 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -322,16 +322,6 @@ static void set_srp_direction(struct scsi_cmnd *cmd,
- 		srp_cmd->buf_fmt = fmt;
- }
- 
--static void unmap_sg_list(int num_entries,
--		struct device *dev,
--		struct srp_direct_buf *md)
--{
--	int i;
--
--	for (i = 0; i < num_entries; ++i)
--		dma_unmap_single(dev, md[i].va, md[i].len, DMA_BIDIRECTIONAL);
--}
--
- /**
-  * unmap_cmd_data: - Unmap data pointed in srp_cmd based on the format
-  * @cmd:	srp_cmd whose additional_data member will be unmapped
-@@ -349,24 +339,9 @@ static void unmap_cmd_data(struct srp_cmd *cmd,
- 
- 	if (out_fmt == SRP_NO_DATA_DESC && in_fmt == SRP_NO_DATA_DESC)
- 		return;
--	else if (out_fmt == SRP_DATA_DESC_DIRECT ||
--		 in_fmt == SRP_DATA_DESC_DIRECT) {
--		struct srp_direct_buf *data =
--			(struct srp_direct_buf *) cmd->add_data;
--		dma_unmap_single(dev, data->va, data->len, DMA_BIDIRECTIONAL);
--	} else {
--		struct srp_indirect_buf *indirect =
--			(struct srp_indirect_buf *) cmd->add_data;
--		int num_mapped = indirect->table_desc.len /
--			sizeof(struct srp_direct_buf);
- 
--		if (num_mapped <= MAX_INDIRECT_BUFS) {
--			unmap_sg_list(num_mapped, dev, &indirect->desc_list[0]);
--			return;
--		}
--
--		unmap_sg_list(num_mapped, dev, evt_struct->ext_list);
--	}
-+	if (evt_struct->cmnd)
-+		scsi_dma_unmap(evt_struct->cmnd);
- }
- 
- static int map_sg_list(struct scsi_cmnd *cmd, int nseg,
--- 
-1.7.0
-
+-Jonas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
