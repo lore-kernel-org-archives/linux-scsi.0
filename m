@@ -1,85 +1,176 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Sat, 3 Apr 2010 16:58:17 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1004031648230.21507-100000@netrider.rowland.org>
-References: <4BB77584.9060702@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
+ errors
+Date: Sat, 3 Apr 2010 22:07:59 GMT
+Message-ID: <201004032207.o33M7xgB004051@demeter.kernel.org>
+References: <bug-13594-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4BB77584.9060702@gmail.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Cc: Mark Lord <mlord@pobox.com>, dgilbert@interlog.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:54473 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752917Ab0DCWIC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Apr 2010 18:08:02 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o33M80xW004055
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 3 Apr 2010 22:08:00 GMT
+In-Reply-To: <bug-13594-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, 3 Apr 2010, Jonas Schwertfeger wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D13594
 
-> On 04/03/2010 06:42 PM, Alan Stern wrote:
-> > Can you acquire a usbmon trace showing what happens when you run this?
-> > Instructions are in the kernel source file
-> > Documentation/usb/usbmon.txt.
-> 
-> Here you go:
-> 
-> ffff8802123996c0 4253708718 S Bo:10:002:2 -115 31 = 55534243 9c000000 
-> 00020000 80001085 082e0000 00010000 00000000 40ec00
 
-That's the first command.
+Cl=C3=A1udio Martins <ctpm@ist.utl.pt> changed:
 
-> ffff8802123996c0 4253708828 C Bo:10:002:2 0 31 >
-> ffff8801f36c6a80 4253708841 S Bi:10:002:1 -115 512 <
-> ffff8801f36c6a80 4253714580 C Bi:10:002:1 0 512 Z
-> ffff8802123996c0 4253714599 S Bi:10:002:1 -115 13 <
-> ffff8802123996c0 4253714639 C Bi:10:002:1 0 13 = 55534253 9c000000 
-> 00000000 00
+           What    |Removed                     |Added
+-----------------------------------------------------------------------=
+-----
+                 CC|                            |ctpm@ist.utl.pt
 
-And it apparently succeeded.  It's not clear why hdparm reports "bad 
-response".  Maybe it just doesn't like the data returned by the device.
 
-> ffff8802123996c0 4253714778 S Bo:10:002:2 -115 31 = 55534243 9d000000 
-> 00020000 80001085 082e0000 00010000 00000000 40a100
 
-That's the second command, now presumably specifying a sector count of 
-1.
 
-> ffff8802123996c0 4253714813 C Bo:10:002:2 0 31 >
-> ffff8801f36c6a80 4253714823 S Bi:10:002:1 -115 512 <
-> ffff8801f36c6a80 4253715081 C Bi:10:002:1 -32 0
-> ffff8802123996c0 4253715119 S Co:10:002:0 s 02 01 0000 0081 0000 0
-> ffff8802123996c0 4253715383 C Co:10:002:0 0 0
-> ffff8802123996c0 4253715406 S Bi:10:002:1 -115 13 <
-> ffff8802123996c0 4253715648 C Bi:10:002:1 0 13 = 55534253 9d000000 
-> 00020000 01
+--- Comment #9 from Cl=C3=A1udio Martins <ctpm@ist.utl.pt>  2010-04-03 =
+22:07:47 ---
+Hello,
 
-It failed.  But unlike your earlier experience, it didn't get a 
-transport error.  A failure is more benign than an error; in particular 
-it doesn't call for a reset.
+ I'd like to point out that this bug is still present on kernel version
+2.6.34-rc3-00163-g5e11611.
 
-> ffff8802123996c0 4253715661 S Bo:10:002:2 -115 31 = 55534243 9e000000 
-> 60000000 80000603 00000060 00000000 00000000 000000
-> ffff8802123996c0 4253715707 C Bo:10:002:2 0 31 >
-> ffff8801f36c6a80 4253715723 S Bi:10:002:1 -115 96 <
-> ffff8801f36c6a80 4253715763 C Bi:10:002:1 0 96 Z
-> ffff8802123996c0 4253715779 S Bi:10:002:1 -115 13 <
-> ffff8802123996c0 4253715819 C Bi:10:002:1 0 13 = 55534253 9e000000 
-> 00000000 00
+ I'm using a Supermicro enclosure with a SAS backplane and 16 SATA 1.5T=
+B drives
+(ST31500341AS).
 
-Here usb-storage asked the reason for the failure.  Unfortunately we 
-can't see the response.  Did you run this on a computer with more than 
-1 GB of memory?  If you did, can you boot with "mem=900M" and try 
-again?
+The onboard controller, as reported by lspci:
 
-> ffff8802123996c0 4253717330 S Bo:10:002:2 -115 31 = 55534243 9f000000 
-> 00100000 80000a28 00000000 00000008 00000000 000000
-> ffff8802123996c0 4253717373 C Bo:10:002:2 0 31 >
-> ffff880211ace240 4253717386 S Bi:10:002:1 -115 4096 <
-> ffff880211ace240 4253731794 C Bi:10:002:1 0 4096 Z
-> ffff8802123996c0 4253731815 S Bi:10:002:1 -115 13 <
-> ffff8802123996c0 4253731854 C Bi:10:002:1 0 13 = 55534253 9f000000 
-> 00000000 00
+05:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E PCI=
+-Express
+=46usion-MPT SAS (rev 08)
 
-This is a standard READ(10) command, asking for the first 8 sectors on 
-the disk.  It succeeded.
+At boot time the mptsas kernel driver reports:
 
-Alan Stern
+scsi4 : ioc0: LSISAS1068E B3, FwRev=3D011a0000h, Ports=3D1, MaxQ=3D478,=
+ IRQ=3D16
 
+Smartmontools is version 5.38-2+lenny1 (v5.38 from Debian Lenny)
+
+
+While generating I/O in the disks, I can easily make all I/O stall for =
+several
+minutes and even kick drives out of an MD Array by running "smartctl -a
+/dev/sdX" repeatedly on several drives. During the stall, the kernel lo=
+gged the
+following messages:
+
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptscsih: ioc0: attempting task abort! (sc=3Dffff8802b57aa100)
+sd 4:0:10:0: [sdk] CDB: ATA command pass through(16): 85 08 0e 00 d5 00=
+ 01 00
+09 00 4f 00 c2 00 b0 00
+mptbase: ioc0: LogInfo(0x31140000): Originator=3D{PL}, Code=3D{IO Execu=
+ted},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=3Dffff8802b57aa100)
+mptscsih: ioc0: attempting task abort! (sc=3Dffff8802b57aa100)
+sd 4:0:10:0: [sdk] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31140000): Originator=3D{PL}, Code=3D{IO Execu=
+ted},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=3Dffff8802b57aa100)
+mptscsih: ioc0: attempting task abort! (sc=3Dffff8802be35ec00)
+sd 4:0:10:0: [sdk] CDB: Write(10): 2a 00 96 27 78 00 00 04 00 00
+mptscsih: ioc0: task abort: SUCCESS (sc=3Dffff8802be35ec00)
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptscsih: ioc0: attempting task abort! (sc=3Dffff8802be35eb00)
+sd 4:0:10:0: [sdk] CDB: Write(10): 2a 00 96 27 7c 00 00 04 00 00
+mptscsih: ioc0: task abort: SUCCESS (sc=3Dffff8802be35eb00)
+mptscsih: ioc0: attempting task abort! (sc=3Dffff8802be35eb00)
+sd 4:0:10:0: [sdk] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator=3D{PL}, Code=3D{IO Not Y=
+et
+Executed}, SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=3Dffff8802be35eb00)
+mptscsih: ioc0: attempting target reset! (sc=3Dffff8802b57aa100)
+sd 4:0:10:0: [sdk] CDB: ATA command pass through(16): 85 08 0e 00 d5 00=
+ 01 00
+09 00 4f 00 c2 00 b0 00
+mptscsih: ioc0: target reset: FAILED (sc=3Dffff8802b57aa100)
+mptscsih: ioc0: attempting bus reset! (sc=3Dffff8802b57aa100)
+sd 4:0:10:0: [sdk] CDB: ATA command pass through(16): 85 08 0e 00 d5 00=
+ 01 00
+09 00 4f 00 c2 00 b0 00
+mptscsih: ioc0: bus reset: SUCCESS (sc=3Dffff8802b57aa100)
+mptscsih: ioc0: attempting task abort! (sc=3Dffff8802b57aa100)
+sd 4:0:10:0: [sdk] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator=3D{PL}, Code=3D{IO Not Y=
+et
+Executed}, SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=3Dffff8802b57aa100)
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptbase: ioc0: LogInfo(0x31123000): Originator=3D{PL}, Code=3D{Abort},
+SubCode(0x3000)
+mptscsih: ioc0: attempting task abort! (sc=3Dffff8802be35eb00)
+sd 4:0:10:0: [sdk] CDB: Test Unit Ready: 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31130000): Originator=3D{PL}, Code=3D{IO Not Y=
+et
+Executed}, SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=3Dffff8802be35eb00)
+mptscsih: ioc0: attempting host reset! (sc=3Dffff8802b57aa100)
+mptbase: ioc0: Initiating recovery
+mptscsih: ioc0: host reset: SUCCESS (sc=3Dffff8802b57aa100)
+end_request: I/O error, dev sdb, sector 3903551
+md: super_written gets error=3D-5, uptodate=3D0
+raid1: Disk failure on sdb1, disabling device.
+raid1: Operation continuing on 1 devices.
+end_request: I/O error, dev sda, sector 3903551
+md: super_written gets error=3D-5, uptodate=3D0
+RAID1 conf printout:
+ --- wd:1 rd:2
+ disk 0, wo:0, o:1, dev:sda1
+ disk 1, wo:1, o:0, dev:sdb1
+RAID1 conf printout:
+ --- wd:1 rd:2
+ disk 0, wo:0, o:1, dev:sda1
+
+
+--------------
+
+ I have this hardware available for a few weeks, so I am willing to hel=
+p with
+any tests, diagnostic operations, patches or firmware, that you might h=
+ave.
+
+ Any help with this is appreciated, since the fact that drives are bein=
+g kicked
+from MD arrays, makes Smartmontools use quite difficult.
+
+ Thanks in advance for your help.
+
+Best regards=20
+
+Cl=C3=A1udio
+
+--=20
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
+l
+------- You are receiving this mail because: -------
+You are the assignee for the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
