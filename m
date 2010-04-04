@@ -1,139 +1,113 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 01/21] scsi: wd33c93 - Kill empty wd33c93_release()
-Date: Sun,  4 Apr 2010 11:00:31 +0200
-Message-ID: <1270371651-2584-2-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH 13/21] m68k/scsi: mvme147 - Kill static global mvme147_host
+Date: Sun,  4 Apr 2010 11:00:43 +0200
+Message-ID: <1270371651-2584-14-git-send-email-geert@linux-m68k.org>
 References: <1270371651-2584-1-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-2-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-3-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-4-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-5-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-6-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-7-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-8-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-9-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-10-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-12-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-13-git-send-email-geert@linux-m68k.org>
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1270371651-2584-1-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <1270371651-2584-13-git-send-email-geert@linux-m68k.org>
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-wd33c93_release() has been empty since ages, and sgiwd93.c no longer calls it
-since its conversion to a proper platform driver 2 years ago. Also remove the
-callers in the m68k wd33c93 shims.
-
 Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Ralf Baechle <ralf@linux-mips.org>
 ---
- drivers/scsi/a2091.c   |    2 --
- drivers/scsi/a3000.c   |    2 --
- drivers/scsi/gvp11.c   |    2 --
- drivers/scsi/mvme147.c |    2 --
- drivers/scsi/wd33c93.c |    6 ------
- drivers/scsi/wd33c93.h |    1 -
- 6 files changed, 0 insertions(+), 15 deletions(-)
+ drivers/scsi/mvme147.c |   30 ++++++++++++++++--------------
+ 1 files changed, 16 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
-index 4b38c47..f2731a7 100644
---- a/drivers/scsi/a2091.c
-+++ b/drivers/scsi/a2091.c
-@@ -192,7 +192,6 @@ static int __init a2091_detect(struct scsi_host_template *tpnt)
- 
- unregister:
- 	scsi_unregister(instance);
--	wd33c93_release();
- release:
- 	release_mem_region(address, 256);
-     }
-@@ -241,7 +240,6 @@ static int a2091_release(struct Scsi_Host *instance)
- 	DMA(instance)->CNTR = 0;
- 	release_mem_region(ZTWO_PADDR(instance->base), 256);
- 	free_irq(IRQ_AMIGA_PORTS, instance);
--	wd33c93_release();
- #endif
- 	return 1;
- }
-diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
-index 6970ce8..50b10df 100644
---- a/drivers/scsi/a3000.c
-+++ b/drivers/scsi/a3000.c
-@@ -192,7 +192,6 @@ static int __init a3000_detect(struct scsi_host_template *tpnt)
-     return 1;
- 
- fail_irq:
--    wd33c93_release();
-     scsi_unregister(a3000_host);
- fail_register:
-     release_mem_region(0xDD0000, 256);
-@@ -236,7 +235,6 @@ static struct scsi_host_template driver_template = {
- 
- static int a3000_release(struct Scsi_Host *instance)
- {
--    wd33c93_release();
-     DMA(instance)->CNTR = 0;
-     release_mem_region(0xDD0000, 256);
-     free_irq(IRQ_AMIGA_PORTS, a3000_intr);
-diff --git a/drivers/scsi/gvp11.c b/drivers/scsi/gvp11.c
-index 5d1bf7e..0b09c0d 100644
---- a/drivers/scsi/gvp11.c
-+++ b/drivers/scsi/gvp11.c
-@@ -338,7 +338,6 @@ int __init gvp11_detect(struct scsi_host_template *tpnt)
- 
- unregister:
- 	scsi_unregister(instance);
--	wd33c93_release();
- release:
- 	release_mem_region(address, 256);
-     }
-@@ -391,7 +390,6 @@ int gvp11_release(struct Scsi_Host *instance)
-     DMA(instance)->CNTR = 0;
-     release_mem_region(ZTWO_PADDR(instance->base), 256);
-     free_irq(IRQ_AMIGA_PORTS, instance);
--    wd33c93_release();
- #endif
-     return 1;
- }
 diff --git a/drivers/scsi/mvme147.c b/drivers/scsi/mvme147.c
-index d722235..a423fcc 100644
+index 716d178..1b6195b 100644
 --- a/drivers/scsi/mvme147.c
 +++ b/drivers/scsi/mvme147.c
-@@ -108,7 +108,6 @@ int mvme147_detect(struct scsi_host_template *tpnt)
-  err_free_irq:
-     free_irq(MVME147_IRQ_SCSI_PORT, mvme147_intr);
-  err_unregister:
--    wd33c93_release();
-     scsi_unregister(mvme147_host);
-  err_out:
-     return 0;
-@@ -155,7 +154,6 @@ int mvme147_release(struct Scsi_Host *instance)
- {
- #ifdef MODULE
-     /* XXX Make sure DMA is stopped! */
--    wd33c93_release();
-     free_irq(MVME147_IRQ_SCSI_PORT, mvme147_intr);
-     free_irq(MVME147_IRQ_SCSI_DMA, mvme147_intr);
- #endif
-diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-index 5fda881..b701bf2 100644
---- a/drivers/scsi/wd33c93.c
-+++ b/drivers/scsi/wd33c93.c
-@@ -2224,14 +2224,8 @@ wd33c93_proc_info(struct Scsi_Host *instance, char *buf, char **start, off_t off
+@@ -16,12 +16,12 @@
+ #include <linux/stat.h>
  
- }
  
--void
--wd33c93_release(void)
--{
--}
+-static struct Scsi_Host *mvme147_host = NULL;
 -
- EXPORT_SYMBOL(wd33c93_host_reset);
- EXPORT_SYMBOL(wd33c93_init);
--EXPORT_SYMBOL(wd33c93_release);
- EXPORT_SYMBOL(wd33c93_abort);
- EXPORT_SYMBOL(wd33c93_queuecommand);
- EXPORT_SYMBOL(wd33c93_intr);
-diff --git a/drivers/scsi/wd33c93.h b/drivers/scsi/wd33c93.h
-index 00123f2..1ed5f3b 100644
---- a/drivers/scsi/wd33c93.h
-+++ b/drivers/scsi/wd33c93.h
-@@ -348,6 +348,5 @@ int wd33c93_queuecommand (struct scsi_cmnd *cmd,
- void wd33c93_intr (struct Scsi_Host *instance);
- int wd33c93_proc_info(struct Scsi_Host *, char *, char **, off_t, int, int);
- int wd33c93_host_reset (struct scsi_cmnd *);
--void wd33c93_release(void);
+-static irqreturn_t mvme147_intr(int irq, void *dummy)
++static irqreturn_t mvme147_intr(int irq, void *data)
+ {
++	struct Scsi_Host *instance = data;
++
+ 	if (irq == MVME147_IRQ_SCSI_PORT)
+-		wd33c93_intr(mvme147_host);
++		wd33c93_intr(instance);
+ 	else
+ 		m147_pcc->dma_intr = 0x89;	/* Ack and enable ints */
+ 	return IRQ_HANDLED;
+@@ -29,7 +29,8 @@ static irqreturn_t mvme147_intr(int irq, void *dummy)
  
- #endif /* WD33C93_H */
+ static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
+ {
+-	struct WD33C93_hostdata *hdata = shost_priv(mvme147_host);
++	struct Scsi_Host *instance = cmd->device->host;
++	struct WD33C93_hostdata *hdata = shost_priv(instance);
+ 	unsigned char flags = 0x01;
+ 	unsigned long addr = virt_to_bus(cmd->SCp.ptr);
+ 
+@@ -66,6 +67,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ int mvme147_detect(struct scsi_host_template *tpnt)
+ {
+ 	static unsigned char called = 0;
++	struct Scsi_Host *instance;
+ 	wd33c93_regs regs;
+ 	struct WD33C93_hostdata *hdata;
+ 
+@@ -76,25 +78,25 @@ int mvme147_detect(struct scsi_host_template *tpnt)
+ 	tpnt->proc_name = "MVME147";
+ 	tpnt->proc_info = &wd33c93_proc_info;
+ 
+-	mvme147_host = scsi_register(tpnt, sizeof(struct WD33C93_hostdata));
+-	if (!mvme147_host)
++	instance = scsi_register(tpnt, sizeof(struct WD33C93_hostdata));
++	if (!instance)
+ 		goto err_out;
+ 
+-	mvme147_host->base = 0xfffe4000;
+-	mvme147_host->irq = MVME147_IRQ_SCSI_PORT;
++	instance->base = 0xfffe4000;
++	instance->irq = MVME147_IRQ_SCSI_PORT;
+ 	regs.SASR = (volatile unsigned char *)0xfffe4000;
+ 	regs.SCMD = (volatile unsigned char *)0xfffe4001;
+-	hdata = shost_priv(mvme147_host);
++	hdata = shost_priv(instance);
+ 	hdata->no_sync = 0xff;
+ 	hdata->fast = 0;
+ 	hdata->dma_mode = CTRL_DMA;
+-	wd33c93_init(mvme147_host, regs, dma_setup, dma_stop, WD33C93_FS_8_10);
++	wd33c93_init(instance, regs, dma_setup, dma_stop, WD33C93_FS_8_10);
+ 
+ 	if (request_irq(MVME147_IRQ_SCSI_PORT, mvme147_intr, 0,
+-			"MVME147 SCSI PORT", mvme147_intr))
++			"MVME147 SCSI PORT", instance))
+ 		goto err_unregister;
+ 	if (request_irq(MVME147_IRQ_SCSI_DMA, mvme147_intr, 0,
+-			"MVME147 SCSI DMA", mvme147_intr))
++			"MVME147 SCSI DMA", instance))
+ 		goto err_free_irq;
+ #if 0	/* Disabled; causes problems booting */
+ 	m147_pcc->scsi_interrupt = 0x10;	/* Assert SCSI bus reset */
+@@ -113,7 +115,7 @@ int mvme147_detect(struct scsi_host_template *tpnt)
+ err_free_irq:
+ 	free_irq(MVME147_IRQ_SCSI_PORT, mvme147_intr);
+ err_unregister:
+-	scsi_unregister(mvme147_host);
++	scsi_unregister(instance);
+ err_out:
+ 	return 0;
+ }
 -- 
 1.6.0.4
