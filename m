@@ -1,7 +1,7 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 08/21] m68k/scsi: mvme147 - Use shost_priv() and kill ugly HDATA() macro
-Date: Sun,  4 Apr 2010 11:00:38 +0200
-Message-ID: <1270371651-2584-9-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH 18/21] m68k/scsi: a3000 - Kill a3000_scsiregs typedef
+Date: Sun,  4 Apr 2010 11:00:48 +0200
+Message-ID: <1270371651-2584-19-git-send-email-geert@linux-m68k.org>
 References: <1270371651-2584-1-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-2-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-3-git-send-email-geert@linux-m68k.org>
@@ -10,8 +10,18 @@ References: <1270371651-2584-1-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-6-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-7-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-8-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-9-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-10-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-12-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-13-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-14-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-15-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-16-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-17-git-send-email-geert@linux-m68k.org>
+ <1270371651-2584-18-git-send-email-geert@linux-m68k.org>
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1270371651-2584-8-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <1270371651-2584-18-git-send-email-geert@linux-m68k.org>
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@suse.de>
 Cc: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
@@ -19,60 +29,89 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 ---
- drivers/scsi/mvme147.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/scsi/a3000.c |   12 ++++++------
+ drivers/scsi/a3000.h |    4 ++--
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/mvme147.c b/drivers/scsi/mvme147.c
-index b236d72..716d178 100644
---- a/drivers/scsi/mvme147.c
-+++ b/drivers/scsi/mvme147.c
-@@ -16,8 +16,6 @@
- #include <linux/stat.h>
- 
- 
--#define HDATA(ptr)	((struct WD33C93_hostdata *)((ptr)->hostdata))
--
- static struct Scsi_Host *mvme147_host = NULL;
- 
- static irqreturn_t mvme147_intr(int irq, void *dummy)
-@@ -31,6 +29,7 @@ static irqreturn_t mvme147_intr(int irq, void *dummy)
- 
- static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
+diff --git a/drivers/scsi/a3000.c b/drivers/scsi/a3000.c
+index 008a999..cf3a345 100644
+--- a/drivers/scsi/a3000.c
++++ b/drivers/scsi/a3000.c
+@@ -26,7 +26,7 @@ static int a3000_release(struct Scsi_Host *instance);
+ static irqreturn_t a3000_intr(int irq, void *data)
  {
-+	struct WD33C93_hostdata *hdata = shost_priv(mvme147_host);
- 	unsigned char flags = 0x01;
+ 	struct Scsi_Host *instance = data;
+-	a3000_scsiregs *regs = (a3000_scsiregs *)(instance->base);
++	struct a3000_scsiregs *regs = (struct a3000_scsiregs *)(instance->base);
+ 	unsigned int status = regs->ISTR;
+ 	unsigned long flags;
+ 
+@@ -46,7 +46,7 @@ static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
+ {
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct WD33C93_hostdata *hdata = shost_priv(instance);
+-	a3000_scsiregs *regs = (a3000_scsiregs *)(instance->base);
++	struct a3000_scsiregs *regs = (struct a3000_scsiregs *)(instance->base);
+ 	unsigned short cntr = CNTR_PDMD | CNTR_INTEN;
  	unsigned long addr = virt_to_bus(cmd->SCp.ptr);
  
-@@ -39,7 +38,7 @@ static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
- 		flags |= 0x04;
- 
- 	/* remember direction */
--	HDATA(mvme147_host)->dma_dir = dir_in;
-+	hdata->dma_dir = dir_in;
- 
- 	if (dir_in) {
- 		/* invalidate any cache */
-@@ -68,6 +67,7 @@ int mvme147_detect(struct scsi_host_template *tpnt)
+@@ -109,7 +109,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 		     int status)
  {
- 	static unsigned char called = 0;
- 	wd33c93_regs regs;
-+	struct WD33C93_hostdata *hdata;
+ 	struct WD33C93_hostdata *hdata = shost_priv(instance);
+-	a3000_scsiregs *regs = (a3000_scsiregs *)(instance->base);
++	struct a3000_scsiregs *regs = (struct a3000_scsiregs *)(instance->base);
  
- 	if (!MACH_IS_MVME147 || called)
- 		return 0;
-@@ -84,9 +84,10 @@ int mvme147_detect(struct scsi_host_template *tpnt)
- 	mvme147_host->irq = MVME147_IRQ_SCSI_PORT;
- 	regs.SASR = (volatile unsigned char *)0xfffe4000;
- 	regs.SCMD = (volatile unsigned char *)0xfffe4001;
--	HDATA(mvme147_host)->no_sync = 0xff;
--	HDATA(mvme147_host)->fast = 0;
--	HDATA(mvme147_host)->dma_mode = CTRL_DMA;
-+	hdata = shost_priv(mvme147_host);
-+	hdata->no_sync = 0xff;
-+	hdata->fast = 0;
-+	hdata->dma_mode = CTRL_DMA;
- 	wd33c93_init(mvme147_host, regs, dma_setup, dma_stop, WD33C93_FS_8_10);
+ 	/* disable SCSI interrupts */
+ 	unsigned short cntr = CNTR_PDMD;
+@@ -165,7 +165,7 @@ static int __init a3000_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct Scsi_Host *instance;
+ 	wd33c93_regs wdregs;
+-	a3000_scsiregs *regs;
++	struct a3000_scsiregs *regs;
+ 	struct WD33C93_hostdata *hdata;
  
- 	if (request_irq(MVME147_IRQ_SCSI_PORT, mvme147_intr, 0,
+ 	if (!MACH_IS_AMIGA || !AMIGAHW_PRESENT(A3000_SCSI))
+@@ -182,7 +182,7 @@ static int __init a3000_detect(struct scsi_host_template *tpnt)
+ 
+ 	instance->base = ZTWO_VADDR(0xDD0000);
+ 	instance->irq = IRQ_AMIGA_PORTS;
+-	regs = (a3000_scsiregs *)(instance->base);
++	regs = (struct a3000_scsiregs *)(instance->base);
+ 	regs->DAWR = DAWR_A3000;
+ 	wdregs.SASR = &regs->SASR;
+ 	wdregs.SCMD = &regs->SCMD;
+@@ -242,7 +242,7 @@ static struct scsi_host_template driver_template = {
+ 
+ static int a3000_release(struct Scsi_Host *instance)
+ {
+-	a3000_scsiregs *regs = (a3000_scsiregs *)(instance->base);
++	struct a3000_scsiregs *regs = (struct a3000_scsiregs *)(instance->base);
+ 
+ 	regs->CNTR = 0;
+ 	release_mem_region(0xDD0000, 256);
+diff --git a/drivers/scsi/a3000.h b/drivers/scsi/a3000.h
+index 684813e..49db4a3 100644
+--- a/drivers/scsi/a3000.h
++++ b/drivers/scsi/a3000.h
+@@ -25,7 +25,7 @@
+  */
+ #define A3000_XFER_MASK		(0x00000003)
+ 
+-typedef struct {
++struct a3000_scsiregs {
+ 		 unsigned char	pad1[2];
+ 	volatile unsigned short	DAWR;
+ 	volatile unsigned int	WTC;
+@@ -46,7 +46,7 @@ typedef struct {
+ 	volatile unsigned char	SASR;
+ 		 unsigned char	pad9;
+ 	volatile unsigned char	SCMD;
+-} a3000_scsiregs;
++};
+ 
+ #define DAWR_A3000		(3)
+ 
 -- 
 1.6.0.4
