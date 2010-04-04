@@ -1,7 +1,7 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 15/21] m68k/scsi: gvp11 - Extract check_wd33c93()
-Date: Sun,  4 Apr 2010 11:00:45 +0200
-Message-ID: <1270371651-2584-16-git-send-email-geert@linux-m68k.org>
+Subject: [PATCH 10/21] m68k/scsi: a2091 - Kill ugly DMA() macro
+Date: Sun,  4 Apr 2010 11:00:40 +0200
+Message-ID: <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
 References: <1270371651-2584-1-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-2-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-3-git-send-email-geert@linux-m68k.org>
@@ -12,13 +12,8 @@ References: <1270371651-2584-1-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-8-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-9-git-send-email-geert@linux-m68k.org>
  <1270371651-2584-10-git-send-email-geert@linux-m68k.org>
- <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
- <1270371651-2584-12-git-send-email-geert@linux-m68k.org>
- <1270371651-2584-13-git-send-email-geert@linux-m68k.org>
- <1270371651-2584-14-git-send-email-geert@linux-m68k.org>
- <1270371651-2584-15-git-send-email-geert@linux-m68k.org>
 Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1270371651-2584-15-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <1270371651-2584-10-git-send-email-geert@linux-m68k.org>
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@suse.de>
 Cc: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
@@ -26,208 +21,149 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 ---
- drivers/scsi/gvp11.c |  160 ++++++++++++++++++++++++++------------------------
- 1 files changed, 83 insertions(+), 77 deletions(-)
+ drivers/scsi/a2091.c |   48 ++++++++++++++++++++++++++----------------------
+ 1 files changed, 26 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/gvp11.c b/drivers/scsi/gvp11.c
-index 5f07648..265cd27 100644
---- a/drivers/scsi/gvp11.c
-+++ b/drivers/scsi/gvp11.c
-@@ -21,6 +21,8 @@
+diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
+index b890b60..e762cae 100644
+--- a/drivers/scsi/a2091.c
++++ b/drivers/scsi/a2091.c
+@@ -21,17 +21,15 @@
  #include <linux/stat.h>
  
  
-+#define CHECK_WD33C93
-+
- static irqreturn_t gvp11_intr(int irq, void *data)
+-#define DMA(ptr)	((a2091_scsiregs *)((ptr)->base))
+-
+ static int a2091_release(struct Scsi_Host *instance);
+ 
+-static irqreturn_t a2091_intr(int irq, void *_instance)
++static irqreturn_t a2091_intr(int irq, void *data)
  {
- 	struct Scsi_Host *instance = data;
-@@ -166,7 +168,85 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
++	struct Scsi_Host *instance = data;
++	a2091_scsiregs *regs = (a2091_scsiregs *)(instance->base);
++	unsigned int status = regs->ISTR;
+ 	unsigned long flags;
+-	unsigned int status;
+-	struct Scsi_Host *instance = (struct Scsi_Host *)_instance;
+ 
+-	status = DMA(instance)->ISTR;
+ 	if (!(status & (ISTR_INT_F | ISTR_INT_P)) || !(status & ISTR_INTS))
+ 		return IRQ_NONE;
+ 
+@@ -45,6 +43,7 @@ static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
+ {
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct WD33C93_hostdata *hdata = shost_priv(instance);
++	a2091_scsiregs *regs = (a2091_scsiregs *)(instance->base);
+ 	unsigned short cntr = CNTR_PDMD | CNTR_INTEN;
+ 	unsigned long addr = virt_to_bus(cmd->SCp.ptr);
+ 
+@@ -86,10 +85,10 @@ static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
+ 	/* remember direction */
+ 	hdata->dma_dir = dir_in;
+ 
+-	DMA(cmd->device->host)->CNTR = cntr;
++	regs->CNTR = cntr;
+ 
+ 	/* setup DMA *physical* address */
+-	DMA(cmd->device->host)->ACR = addr;
++	regs->ACR = addr;
+ 
+ 	if (dir_in) {
+ 		/* invalidate any cache */
+@@ -99,7 +98,7 @@ static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
+ 		cache_push(addr, cmd->SCp.this_residual);
  	}
- }
+ 	/* start DMA */
+-	DMA(cmd->device->host)->ST_DMA = 1;
++	regs->ST_DMA = 1;
  
--#define CHECK_WD33C93
-+static int __init check_wd33c93(gvp11_scsiregs *regs)
-+{
-+#ifdef CHECK_WD33C93
-+	volatile unsigned char *sasr_3393, *scmd_3393;
-+	unsigned char save_sasr;
-+	unsigned char q, qq;
-+
-+	/*
-+	 * These darn GVP boards are a problem - it can be tough to tell
-+	 * whether or not they include a SCSI controller. This is the
-+	 * ultimate Yet-Another-GVP-Detection-Hack in that it actually
-+	 * probes for a WD33c93 chip: If we find one, it's extremely
-+	 * likely that this card supports SCSI, regardless of Product_
-+	 * Code, Board_Size, etc.
-+	 */
-+
-+	/* Get pointers to the presumed register locations and save contents */
-+
-+	sasr_3393 = &regs->SASR;
-+	scmd_3393 = &regs->SCMD;
-+	save_sasr = *sasr_3393;
-+
-+	/* First test the AuxStatus Reg */
-+
-+	q = *sasr_3393;	/* read it */
-+	if (q & 0x08)	/* bit 3 should always be clear */
-+		return -ENODEV;
-+	*sasr_3393 = WD_AUXILIARY_STATUS;	/* setup indirect address */
-+	if (*sasr_3393 == WD_AUXILIARY_STATUS) {	/* shouldn't retain the write */
-+		*sasr_3393 = save_sasr;	/* Oops - restore this byte */
-+		return -ENODEV;
-+	}
-+	if (*sasr_3393 != q) {	/* should still read the same */
-+		*sasr_3393 = save_sasr;	/* Oops - restore this byte */
-+		return -ENODEV;
-+	}
-+	if (*scmd_3393 != q)	/* and so should the image at 0x1f */
-+		return -ENODEV;
-+
-+	/*
-+	 * Ok, we probably have a wd33c93, but let's check a few other places
-+	 * for good measure. Make sure that this works for both 'A and 'B
-+	 * chip versions.
-+	 */
-+
-+	*sasr_3393 = WD_SCSI_STATUS;
-+	q = *scmd_3393;
-+	*sasr_3393 = WD_SCSI_STATUS;
-+	*scmd_3393 = ~q;
-+	*sasr_3393 = WD_SCSI_STATUS;
-+	qq = *scmd_3393;
-+	*sasr_3393 = WD_SCSI_STATUS;
-+	*scmd_3393 = q;
-+	if (qq != q)	/* should be read only */
-+		return -ENODEV;
-+	*sasr_3393 = 0x1e;	/* this register is unimplemented */
-+	q = *scmd_3393;
-+	*sasr_3393 = 0x1e;
-+	*scmd_3393 = ~q;
-+	*sasr_3393 = 0x1e;
-+	qq = *scmd_3393;
-+	*sasr_3393 = 0x1e;
-+	*scmd_3393 = q;
-+	if (qq != q || qq != 0xff)	/* should be read only, all 1's */
-+		return -ENODEV;
-+	*sasr_3393 = WD_TIMEOUT_PERIOD;
-+	q = *scmd_3393;
-+	*sasr_3393 = WD_TIMEOUT_PERIOD;
-+	*scmd_3393 = ~q;
-+	*sasr_3393 = WD_TIMEOUT_PERIOD;
-+	qq = *scmd_3393;
-+	*sasr_3393 = WD_TIMEOUT_PERIOD;
-+	*scmd_3393 = q;
-+	if (qq != (~q & 0xff))	/* should be read/write */
-+		return -ENODEV;
-+#endif /* CHECK_WD33C93 */
-+
-+	return 0;
-+}
- 
- int __init gvp11_detect(struct scsi_host_template *tpnt)
+ 	/* return success */
+ 	return 0;
+@@ -109,6 +108,7 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 		     int status)
  {
-@@ -180,11 +260,6 @@ int __init gvp11_detect(struct scsi_host_template *tpnt)
- 	gvp11_scsiregs *regs;
- 	wd33c93_regs wdregs;
- 	int num_gvp11 = 0;
--#ifdef CHECK_WD33C93
--	volatile unsigned char *sasr_3393, *scmd_3393;
--	unsigned char save_sasr;
--	unsigned char q, qq;
--#endif
+ 	struct WD33C93_hostdata *hdata = shost_priv(instance);
++	a2091_scsiregs *regs = (a2091_scsiregs *)(instance->base);
  
- 	if (!MACH_IS_AMIGA || called)
- 		return 0;
-@@ -225,77 +300,9 @@ int __init gvp11_detect(struct scsi_host_template *tpnt)
- 		if (!request_mem_region(address, 256, "wd33c93"))
- 			continue;
+ 	/* disable SCSI interrupts */
+ 	unsigned short cntr = CNTR_PDMD;
+@@ -117,23 +117,23 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 		cntr |= CNTR_DDIR;
  
--#ifdef CHECK_WD33C93
--
--		/*
--		 * These darn GVP boards are a problem - it can be tough to tell
--		 * whether or not they include a SCSI controller. This is the
--		 * ultimate Yet-Another-GVP-Detection-Hack in that it actually
--		 * probes for a WD33c93 chip: If we find one, it's extremely
--		 * likely that this card supports SCSI, regardless of Product_
--		 * Code, Board_Size, etc.
--		 */
--
--		/* Get pointers to the presumed register locations and save contents */
--
--		sasr_3393 = &(((gvp11_scsiregs *)(ZTWO_VADDR(address)))->SASR);
--		scmd_3393 = &(((gvp11_scsiregs *)(ZTWO_VADDR(address)))->SCMD);
--		save_sasr = *sasr_3393;
--
--		/* First test the AuxStatus Reg */
--
--		q = *sasr_3393;	/* read it */
--		if (q & 0x08)	/* bit 3 should always be clear */
--			goto release;
--		*sasr_3393 = WD_AUXILIARY_STATUS;	/* setup indirect address */
--		if (*sasr_3393 == WD_AUXILIARY_STATUS) {	/* shouldn't retain the write */
--			*sasr_3393 = save_sasr;	/* Oops - restore this byte */
--			goto release;
--		}
--		if (*sasr_3393 != q) {	/* should still read the same */
--			*sasr_3393 = save_sasr;	/* Oops - restore this byte */
--			goto release;
--		}
--		if (*scmd_3393 != q)	/* and so should the image at 0x1f */
--			goto release;
--
--		/*
--		 * Ok, we probably have a wd33c93, but let's check a few other places
--		 * for good measure. Make sure that this works for both 'A and 'B
--		 * chip versions.
--		 */
--
--		*sasr_3393 = WD_SCSI_STATUS;
--		q = *scmd_3393;
--		*sasr_3393 = WD_SCSI_STATUS;
--		*scmd_3393 = ~q;
--		*sasr_3393 = WD_SCSI_STATUS;
--		qq = *scmd_3393;
--		*sasr_3393 = WD_SCSI_STATUS;
--		*scmd_3393 = q;
--		if (qq != q)	/* should be read only */
--			goto release;
--		*sasr_3393 = 0x1e;	/* this register is unimplemented */
--		q = *scmd_3393;
--		*sasr_3393 = 0x1e;
--		*scmd_3393 = ~q;
--		*sasr_3393 = 0x1e;
--		qq = *scmd_3393;
--		*sasr_3393 = 0x1e;
--		*scmd_3393 = q;
--		if (qq != q || qq != 0xff)	/* should be read only, all 1's */
-+		regs = (gvp11_scsiregs *)(ZTWO_VADDR(address));
-+		if (check_wd33c93(regs))
- 			goto release;
--		*sasr_3393 = WD_TIMEOUT_PERIOD;
--		q = *scmd_3393;
--		*sasr_3393 = WD_TIMEOUT_PERIOD;
--		*scmd_3393 = ~q;
--		*sasr_3393 = WD_TIMEOUT_PERIOD;
--		qq = *scmd_3393;
--		*sasr_3393 = WD_TIMEOUT_PERIOD;
--		*scmd_3393 = q;
--		if (qq != (~q & 0xff))	/* should be read/write */
--			goto release;
--#endif
+ 	/* disable SCSI interrupts */
+-	DMA(instance)->CNTR = cntr;
++	regs->CNTR = cntr;
  
- 		instance = scsi_register(tpnt, sizeof(struct WD33C93_hostdata));
- 		if (instance == NULL)
-@@ -310,7 +317,6 @@ int __init gvp11_detect(struct scsi_host_template *tpnt)
- 		else
- 			hdata->dma_xfer_mask = default_dma_xfer_mask;
+ 	/* flush if we were reading */
+ 	if (hdata->dma_dir) {
+-		DMA(instance)->FLUSH = 1;
+-		while (!(DMA(instance)->ISTR & ISTR_FE_FLG))
++		regs->FLUSH = 1;
++		while (!(regs->ISTR & ISTR_FE_FLG))
+ 			;
+ 	}
  
--		regs = (gvp11_scsiregs *)(instance->base);
- 		regs->secret2 = 1;
- 		regs->secret1 = 0;
- 		regs->secret3 = 15;
+ 	/* clear a possible interrupt */
+-	DMA(instance)->CINT = 1;
++	regs->CINT = 1;
+ 
+ 	/* stop DMA */
+-	DMA(instance)->SP_DMA = 1;
++	regs->SP_DMA = 1;
+ 
+ 	/* restore the CONTROL bits (minus the direction flag) */
+-	DMA(instance)->CNTR = CNTR_PDMD | CNTR_INTEN;
++	regs->CNTR = CNTR_PDMD | CNTR_INTEN;
+ 
+ 	/* copy from a bounce buffer, if necessary */
+ 	if (status && hdata->dma_bounce_buffer) {
+@@ -152,7 +152,8 @@ static int __init a2091_detect(struct scsi_host_template *tpnt)
+ 	struct Scsi_Host *instance;
+ 	unsigned long address;
+ 	struct zorro_dev *z = NULL;
+-	wd33c93_regs regs;
++	wd33c93_regs wdregs;
++	a2091_scsiregs *regs;
+ 	struct WD33C93_hostdata *hdata;
+ 	int num_a2091 = 0;
+ 
+@@ -177,19 +178,20 @@ static int __init a2091_detect(struct scsi_host_template *tpnt)
+ 		instance->base = ZTWO_VADDR(address);
+ 		instance->irq = IRQ_AMIGA_PORTS;
+ 		instance->unique_id = z->slotaddr;
+-		DMA(instance)->DAWR = DAWR_A2091;
+-		regs.SASR = &(DMA(instance)->SASR);
+-		regs.SCMD = &(DMA(instance)->SCMD);
++		regs = (a2091_scsiregs *)(instance->base);
++		regs->DAWR = DAWR_A2091;
++		wdregs.SASR = &regs->SASR;
++		wdregs.SCMD = &regs->SCMD;
+ 		hdata = shost_priv(instance);
+ 		hdata->no_sync = 0xff;
+ 		hdata->fast = 0;
+ 		hdata->dma_mode = CTRL_DMA;
+-		wd33c93_init(instance, regs, dma_setup, dma_stop,
++		wd33c93_init(instance, wdregs, dma_setup, dma_stop,
+ 			     WD33C93_FS_8_10);
+ 		if (request_irq(IRQ_AMIGA_PORTS, a2091_intr, IRQF_SHARED,
+ 				"A2091 SCSI", instance))
+ 			goto unregister;
+-		DMA(instance)->CNTR = CNTR_PDMD | CNTR_INTEN;
++		regs->CNTR = CNTR_PDMD | CNTR_INTEN;
+ 		num_a2091++;
+ 		continue;
+ 
+@@ -240,7 +242,9 @@ static struct scsi_host_template driver_template = {
+ static int a2091_release(struct Scsi_Host *instance)
+ {
+ #ifdef MODULE
+-	DMA(instance)->CNTR = 0;
++	a2091_scsiregs *regs = (a2091_scsiregs *)(instance->base);
++
++	regs->CNTR = 0;
+ 	release_mem_region(ZTWO_PADDR(instance->base), 256);
+ 	free_irq(IRQ_AMIGA_PORTS, instance);
+ #endif
 -- 
 1.6.0.4
