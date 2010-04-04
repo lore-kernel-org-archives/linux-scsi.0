@@ -1,98 +1,76 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Sat, 03 Apr 2010 21:29:18 -0400
-Message-ID: <4BB7EB6E.3010302@pobox.com>
-References: <Pine.LNX.4.44L0.1004031648230.21507-100000@netrider.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a-pb-sasl-quonix.pobox.com ([208.72.237.25]:54568 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754991Ab0DDB3s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Apr 2010 21:29:48 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1004031648230.21507-100000@netrider.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 0/21] m68k/scsi: wd33c93 driver cleanups
+Date: Sun,  4 Apr 2010 11:00:30 +0200
+Message-ID: <1270371651-2584-1-git-send-email-geert@linux-m68k.org>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jonas Schwertfeger <jschwertfeger@gmail.com>, dgilbert@interlog.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
 
-On 03/04/10 04:58 PM, Alan Stern wrote:
-> On Sat, 3 Apr 2010, Jonas Schwertfeger wrote:
->
->> On 04/03/2010 06:42 PM, Alan Stern wrote:
->>> Can you acquire a usbmon trace showing what happens when you run this?
->>> Instructions are in the kernel source file
->>> Documentation/usb/usbmon.txt.
->>
->> Here you go:
->>
->> ffff8802123996c0 4253708718 S Bo:10:002:2 -115 31 = 55534243 9c000000
->> 00020000 80001085 082e0000 00010000 00000000 40ec00
->
-> That's the first command.
->
->> ffff8802123996c0 4253708828 C Bo:10:002:2 0 31>
->> ffff8801f36c6a80 4253708841 S Bi:10:002:1 -115 512<
->> ffff8801f36c6a80 4253714580 C Bi:10:002:1 0 512 Z
->> ffff8802123996c0 4253714599 S Bi:10:002:1 -115 13<
->> ffff8802123996c0 4253714639 C Bi:10:002:1 0 13 = 55534253 9c000000
->> 00000000 00
->
-> And it apparently succeeded.  It's not clear why hdparm reports "bad
-> response".  Maybe it just doesn't like the data returned by the device.
->
->> ffff8802123996c0 4253714778 S Bo:10:002:2 -115 31 = 55534243 9d000000
->> 00020000 80001085 082e0000 00010000 00000000 40a100
->
-> That's the second command, now presumably specifying a sector count of
-> 1.
->
->> ffff8802123996c0 4253714813 C Bo:10:002:2 0 31>
->> ffff8801f36c6a80 4253714823 S Bi:10:002:1 -115 512<
->> ffff8801f36c6a80 4253715081 C Bi:10:002:1 -32 0
->> ffff8802123996c0 4253715119 S Co:10:002:0 s 02 01 0000 0081 0000 0
->> ffff8802123996c0 4253715383 C Co:10:002:0 0 0
->> ffff8802123996c0 4253715406 S Bi:10:002:1 -115 13<
->> ffff8802123996c0 4253715648 C Bi:10:002:1 0 13 = 55534253 9d000000
->> 00020000 01
->
-> It failed.  But unlike your earlier experience, it didn't get a
-> transport error.  A failure is more benign than an error; in particular
-> it doesn't call for a reset.
->
->> ffff8802123996c0 4253715661 S Bo:10:002:2 -115 31 = 55534243 9e000000
->> 60000000 80000603 00000060 00000000 00000000 000000
->> ffff8802123996c0 4253715707 C Bo:10:002:2 0 31>
->> ffff8801f36c6a80 4253715723 S Bi:10:002:1 -115 96<
->> ffff8801f36c6a80 4253715763 C Bi:10:002:1 0 96 Z
->> ffff8802123996c0 4253715779 S Bi:10:002:1 -115 13<
->> ffff8802123996c0 4253715819 C Bi:10:002:1 0 13 = 55534253 9e000000
->> 00000000 00
->
-> Here usb-storage asked the reason for the failure.  Unfortunately we
-> can't see the response.  Did you run this on a computer with more than
-> 1 GB of memory?  If you did, can you boot with "mem=900M" and try
-> again?
->
->> ffff8802123996c0 4253717330 S Bo:10:002:2 -115 31 = 55534243 9f000000
->> 00100000 80000a28 00000000 00000008 00000000 000000
->> ffff8802123996c0 4253717373 C Bo:10:002:2 0 31>
->> ffff880211ace240 4253717386 S Bi:10:002:1 -115 4096<
->> ffff880211ace240 4253731794 C Bi:10:002:1 0 4096 Z
->> ffff8802123996c0 4253731815 S Bi:10:002:1 -115 13<
->> ffff8802123996c0 4253731854 C Bi:10:002:1 0 13 = 55534253 9f000000
->> 00000000 00
->
-> This is a standard READ(10) command, asking for the first 8 sectors on
-> the disk.  It succeeded.
->
-> Alan Stern
 
-I'll have a look at this stuff next week, after the Easter holiday.
+	Hi all,
 
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+Here's a series of easter eggs for the m68k wd33c93 SCSI drivers:
+  - [01] scsi: wd33c93 - Kill empty wd33c93_release()
+  - [02] m68k/scsi: a2091 - Reindentation
+  - [03] m68k/scsi: gvp11 - Reindentation
+  - [04] m68k/scsi: mvme147 - Reindentation
+  - [05] m68k/scsi: a3000 - Reindentation
+  - [06] m68k/scsi: a2091 - Use shost_priv() and kill ugly HDATA() macro
+  - [07] m68k/scsi: gvp11 - Use shost_priv() and kill ugly HDATA() macro
+  - [08] m68k/scsi: mvme147 - Use shost_priv() and kill ugly HDATA() macro
+  - [09] m68k/scsi: a3000 - Use shost_priv() and kill ugly HDATA() macro
+  - [10] m68k/scsi: a2091 - Kill ugly DMA() macro
+  - [11] m68k/scsi: gvp11 - Kill ugly DMA() macro
+  - [12] m68k/scsi: a3000 - Kill ugly DMA() macro
+  - [13] m68k/scsi: mvme147 - Kill static global mvme147_host
+  - [14] m68k/scsi: a3000 - Kill static global a3000_host
+  - [15] m68k/scsi: gvp11 - Extract check_wd33c93()
+  - [16] m68k/scsi: a2091 - Kill a2091_scsiregs typedef
+  - [17] m68k/scsi: gvp11 - Kill gvp11_scsiregs typedef
+  - [18] m68k/scsi: a3000 - Kill a3000_scsiregs typedef
+  - [19] m68k/scsi: mvme147 - Kill obsolete HOSTS_C logic
+  - [20] m68k: amiga - A2091/A590 SCSI zorro_driver conversion
+  - [21] m68k: amiga - GVP Series II SCSI zorro_driver conversion
+
+This series consists of 3 parts:
+  - Easter egg 01 is a trivial cleanup for the wd33c93 core,
+  - Easter eggs 02-19 do various cleanups for the m68k wd33c93 SCSI drivers,
+  - Easter eggs 20 and 21 convert the A2091/A590 and GVP Series II SCSI drivers
+    to proper new-style Zorro drivers.
+
+ drivers/scsi/a2091.c   |  389 +++++++++++++++++---------------
+ drivers/scsi/a2091.h   |   46 ++--
+ drivers/scsi/a3000.c   |  301 +++++++++++++------------
+ drivers/scsi/a3000.h   |   50 ++--
+ drivers/scsi/gvp11.c   |  573 +++++++++++++++++++++++++-----------------------
+ drivers/scsi/gvp11.h   |   49 ++---
+ drivers/scsi/mvme147.c |  178 ++++++++--------
+ drivers/scsi/mvme147.h |    4 +-
+ drivers/scsi/wd33c93.c |    6 -
+ drivers/scsi/wd33c93.h |    1 -
+ 10 files changed, 820 insertions(+), 777 deletions(-)
+
+Unfortunately I do not have the hardware, so none of this has been actually
+tested. Especially easter eggs 20 and 21 are non-trivial and could use some
+testing.
+
+Question: If approved, should this go in through the SCSI tree, or can I take
+it via the m68k tree?
+I have another series of easter eggs to convert all drivers for built-in Amiga
+hardware to proper platform drivers, but the A3000 SCSI part depends on this
+series.
+
+Thanks for your comments!
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
