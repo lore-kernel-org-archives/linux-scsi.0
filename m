@@ -1,54 +1,22 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Add US_FL_NO_ULD_ATTACH usb mass storage unusal dev flag ?
-Date: Sun, 04 Apr 2010 23:39:09 +0200
-Message-ID: <4BB906FD.8000207@redhat.com>
-References: <4BB8A7BF.6090908@redhat.com> <4BB8E0DC.8090606@draisberghof.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/21] m68k/scsi: a2091 - Kill ugly DMA() macro
+Date: Mon, 5 Apr 2010 02:25:29 -0400
+Message-ID: <20100405062529.GA28950@infradead.org>
+References: <1270371651-2584-2-git-send-email-geert@linux-m68k.org> <1270371651-2584-3-git-send-email-geert@linux-m68k.org> <1270371651-2584-4-git-send-email-geert@linux-m68k.org> <1270371651-2584-5-git-send-email-geert@linux-m68k.org> <1270371651-2584-6-git-send-email-geert@linux-m68k.org> <1270371651-2584-7-git-send-email-geert@linux-m68k.org> <1270371651-2584-8-git-send-email-geert@linux-m68k.org> <1270371651-2584-9-git-send-email-geert@linux-m68k.org> <1270371651-2584-10-git-send-email-geert@linux-m68k.org> <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4BB8E0DC.8090606-Pw1IEfbnKvGTBPm/0KVrCA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Josua Dietze <digidietze-Pw1IEfbnKvGTBPm/0KVrCA@public.gmane.org>
-Cc: linux-usb <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:45360 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751050Ab0DEGZk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2010 02:25:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org
 
-Hi,
+Instead of abusing the ScsiHost base field I'd prefer if you stick
+a properly typed pointer into the device specific host data.
 
-On 04/04/2010 08:56 PM, Josua Dietze wrote:
-> Hans de Goede schrieb:
->
->> But one of the variants (usb id 1908:1320) still hits a usb-reset
->> when drivers/scsi/sr.c does a READ_CAPACITY from get_sector_size().
->> After the initial READ_CAPACITY failure and the usb reset, the
->> second READ_CAPACITY succeeds.
->
->
-> Did you try to set the AVOID_RESET_QUIRK attribute? This was
-> originally targeted at those mode-switching devices, but might be
-> useful in this case too.
->
-
-Thanks for the hint. although not really what I was looking for
-this has prompted me to investigate this issue further as I was
-not completely happy with the NO_ULD_ATTACH solution.
-
-After turning on full debugging in the usb-storage driver it
-turns out the out enabling of US_FL_SANE_SENSE was the culprit,
-when I explicitly specify US_FL_BAD_SENSE, thus disabling the
-auto enabling of SANE_SENSE, things are much better, the
-first 2 READ_CAPACITY calls still fail (stalled endpoint), but
-no longer result in a full device reset.
-
-I'll do a patch adding these devices to unusual_devs.h with
-the US_FL_BAD_SENSE quirk tomorrow.
-
-Thanks all for your input.
-
-Regards,
-
-Hans
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
