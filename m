@@ -1,14 +1,14 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 03/05] mpt2sas: Added support for PCIe Advanced Error Recovery.
-Date: Mon, 5 Apr 2010 14:20:07 +0530
-Message-ID: <20100405084958.GD28900@lsi.com>
+Subject: [PATCH 04/05] mpt2sas: Check for NULL pointer before free_pages is added.
+Date: Mon, 5 Apr 2010 14:21:07 +0530
+Message-ID: <20100405085057.GE28900@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:46158 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751145Ab0DEJWA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2010 05:22:00 -0400
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:46343 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752103Ab0DEJXA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2010 05:23:00 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,193 +16,23 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-Added support in the driver to support EEH and
-PCIe Advanced Error Recovery. This involves adding new
-pci_error_handler interface for recovering the controller from PCI Bus
-errors, such as SERR and PERR. Some tools are available for simulating
-PCI errors in order to validate this interface:
-http://www.kernel.org/pub/linux/utils/pci/aer-inject
+Added check before free_pages just to make sure ioc->scsi_lookup is not NULL.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 3ae89e4..42d00dd 100644
+index 42d00dd..254557e 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -58,6 +58,7 @@
- #include <linux/sort.h>
- #include <linux/io.h>
- #include <linux/time.h>
-+#include <linux/aer.h>
- 
- #include "mpt2sas_base.h"
- 
-@@ -1256,6 +1257,9 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 		goto out_fail;
+@@ -1916,7 +1916,10 @@ _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
+ 		    ioc->config_page, ioc->config_page_dma);
  	}
  
-+	/* AER (Advanced Error Reporting) hooks */
-+	pci_enable_pcie_error_reporting(pdev);
-+
- 	pci_set_master(pdev);
- 
- 	if (_base_config_dma_addressing(ioc, pdev) != 0) {
-@@ -1308,6 +1312,7 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
- 	ioc->chip_phys = 0;
- 	ioc->pci_irq = -1;
- 	pci_release_selected_regions(ioc->pdev, ioc->bars);
-+	pci_disable_pcie_error_reporting(pdev);
- 	pci_disable_device(pdev);
- 	return r;
- }
-@@ -3544,6 +3549,7 @@ mpt2sas_base_free_resources(struct MPT2SAS_ADAPTER *ioc)
- 	ioc->pci_irq = -1;
- 	ioc->chip_phys = 0;
- 	pci_release_selected_regions(ioc->pdev, ioc->bars);
-+	pci_disable_pcie_error_reporting(pdev);
- 	pci_disable_device(pdev);
- 	return;
- }
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 9826139..d19c32c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -52,6 +52,7 @@
- #include <linux/delay.h>
- #include <linux/pci.h>
- #include <linux/interrupt.h>
-+#include <linux/aer.h>
- #include <linux/raid_class.h>
- 
- #include "mpt2sas_base.h"
-@@ -6663,6 +6664,122 @@ _scsih_resume(struct pci_dev *pdev)
- }
- #endif /* CONFIG_PM */
- 
-+/**
-+ * _scsih_pci_error_detected - Called when a PCI error is detected.
-+ * @pdev: PCI device struct
-+ * @state: PCI channel state
-+ *
-+ * Description: Called when a PCI error is detected.
-+ *
-+ * Return value:
-+ *      PCI_ERS_RESULT_NEED_RESET or PCI_ERS_RESULT_DISCONNECT
-+ */
-+static pci_ers_result_t
-+_scsih_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
-+
-+	printk(MPT2SAS_INFO_FMT "PCI error: detected callback, state(%d)!!\n",
-+	    ioc->name, state);
-+
-+	switch (state) {
-+	case pci_channel_io_normal:
-+		return PCI_ERS_RESULT_CAN_RECOVER;
-+	case pci_channel_io_frozen:
-+		scsi_block_requests(ioc->shost);
-+		mpt2sas_base_stop_watchdog(ioc);
-+		mpt2sas_base_free_resources(ioc);
-+		return PCI_ERS_RESULT_NEED_RESET;
-+	case pci_channel_io_perm_failure:
-+		_scsih_remove(pdev);
-+		return PCI_ERS_RESULT_DISCONNECT;
+-	free_pages((ulong)ioc->scsi_lookup, ioc->scsi_lookup_pages);
++	if (ioc->scsi_lookup) {
++		free_pages((ulong)ioc->scsi_lookup, ioc->scsi_lookup_pages);
++		ioc->scsi_lookup = NULL;
 +	}
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+/**
-+ * _scsih_pci_slot_reset - Called when PCI slot has been reset.
-+ * @pdev: PCI device struct
-+ *
-+ * Description: This routine is called by the pci error recovery
-+ * code after the PCI slot has been reset, just before we
-+ * should resume normal operations.
-+ */
-+static pci_ers_result_t
-+_scsih_pci_slot_reset(struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
-+	int rc;
-+
-+	printk(MPT2SAS_INFO_FMT "PCI error: slot reset callback!!\n",
-+		ioc->name);
-+
-+	ioc->pdev = pdev;
-+	rc = mpt2sas_base_map_resources(ioc);
-+	if (rc)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+
-+	rc = mpt2sas_base_hard_reset_handler(ioc, CAN_SLEEP,
-+	    FORCE_BIG_HAMMER);
-+
-+	printk(MPT2SAS_WARN_FMT "hard reset: %s\n", ioc->name,
-+	    (rc == 0) ? "success" : "failed");
-+
-+	if (!rc)
-+		return PCI_ERS_RESULT_RECOVERED;
-+	else
-+		return PCI_ERS_RESULT_DISCONNECT;
-+}
-+
-+/**
-+ * _scsih_pci_resume() - resume normal ops after PCI reset
-+ * @pdev: pointer to PCI device
-+ *
-+ * Called when the error recovery driver tells us that its
-+ * OK to resume normal operation. Use completion to allow
-+ * halted scsi ops to resume.
-+ */
-+static void
-+_scsih_pci_resume(struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
-+
-+	printk(MPT2SAS_INFO_FMT "PCI error: resume callback!!\n", ioc->name);
-+
-+	pci_cleanup_aer_uncorrect_error_status(pdev);
-+	mpt2sas_base_start_watchdog(ioc);
-+	scsi_unblock_requests(ioc->shost);
-+}
-+
-+/**
-+ * _scsih_pci_mmio_enabled - Enable MMIO and dump debug registers
-+ * @pdev: pointer to PCI device
-+ */
-+static pci_ers_result_t
-+_scsih_pci_mmio_enabled(struct pci_dev *pdev)
-+{
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
-+
-+	printk(MPT2SAS_INFO_FMT "PCI error: mmio enabled callback!!\n",
-+	    ioc->name);
-+
-+	/* TODO - dump whatever for debugging purposes */
-+
-+	/* Request a slot reset. */
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+static struct pci_error_handlers _scsih_err_handler = {
-+	.error_detected = _scsih_pci_error_detected,
-+	.mmio_enabled = _scsih_pci_mmio_enabled,
-+	.slot_reset =	_scsih_pci_slot_reset,
-+	.resume =	_scsih_pci_resume,
-+};
- 
- static struct pci_driver scsih_driver = {
- 	.name		= MPT2SAS_DRIVER_NAME,
-@@ -6670,6 +6787,7 @@ static struct pci_driver scsih_driver = {
- 	.probe		= _scsih_probe,
- 	.remove		= __devexit_p(_scsih_remove),
- 	.shutdown	= _scsih_shutdown,
-+	.err_handler	= &_scsih_err_handler,
- #ifdef CONFIG_PM
- 	.suspend	= _scsih_suspend,
- 	.resume		= _scsih_resume,
+ 	kfree(ioc->hpr_lookup);
+ 	kfree(ioc->internal_lookup);
+ }
