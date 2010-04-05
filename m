@@ -1,22 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 10/21] m68k/scsi: a2091 - Kill ugly DMA() macro
-Date: Mon, 5 Apr 2010 02:25:29 -0400
-Message-ID: <20100405062529.GA28950@infradead.org>
-References: <1270371651-2584-2-git-send-email-geert@linux-m68k.org> <1270371651-2584-3-git-send-email-geert@linux-m68k.org> <1270371651-2584-4-git-send-email-geert@linux-m68k.org> <1270371651-2584-5-git-send-email-geert@linux-m68k.org> <1270371651-2584-6-git-send-email-geert@linux-m68k.org> <1270371651-2584-7-git-send-email-geert@linux-m68k.org> <1270371651-2584-8-git-send-email-geert@linux-m68k.org> <1270371651-2584-9-git-send-email-geert@linux-m68k.org> <1270371651-2584-10-git-send-email-geert@linux-m68k.org> <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH] mpt2sas : Description patch.
+Date: Mon, 5 Apr 2010 14:17:13 +0530
+Message-ID: <20100405084706.GA28900@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45360 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050Ab0DEGZk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2010 02:25:40 -0400
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:45085 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751145Ab0DEJTL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Apr 2010 05:19:11 -0400
 Content-Disposition: inline
-In-Reply-To: <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-m68k@lists.linux-m68k.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Instead of abusing the ScsiHost base field I'd prefer if you stick
-a properly typed pointer into the device specific host data.
 
+MPT2SAS driver updates.
+Please consider it for next Merge window.
+Before applying this patchset previous patch submission for mpt2sas 05.100.00.00
+need to be applied.
+
+[PATCH 01/05] mpt2sas: sanity added to remove duplicate port from topology
+[PATCH 02/05] mpt2sas: Send default descriptor for RAID pass through in mpt2ctl
+[PATCH 03/05] mpt2sas: Added support for PCIe Advanced Error Recovery.
+[PATCH 04/05] mpt2sas: Check for NULL pointer before free_pages is added.
+[PATCH 05/05] mpt2sas: Upgrade version 05.100.00.01
+
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+---
