@@ -1,293 +1,256 @@
 From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: [PATCH 07/12] qla4xxx: do not retry login to CHAP auth failed
-	targets
-Date: Tue, 6 Apr 2010 03:14:18 -0700
-Message-ID: <20100406101418.GN22922@linux-qf4p>
+Subject: [PATCH 08/12] qla4xxx: added support for abort task management
+	command
+Date: Tue, 6 Apr 2010 03:14:24 -0700
+Message-ID: <20100406101423.GO22922@linux-qf4p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:27595 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:27605 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752603Ab0DFKP5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 06:15:57 -0400
+	with ESMTP id S1753426Ab0DFKQC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 06:16:02 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <james.bottomley@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Per RFC 3720, Login Response Status Code 0x02 should not be retried.
-Condensed connection error checking code to a single routine, and
-added check for status class 0x02.
+Handles SCSI aborts.
 
 Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_glbl.h |    5 +-
- drivers/scsi/qla4xxx/ql4_init.c |  130 +++++++++++++++++++++++++++------------
- drivers/scsi/qla4xxx/ql4_isr.c  |    2 +-
- 3 files changed, 94 insertions(+), 43 deletions(-)
+ drivers/scsi/qla4xxx/ql4_fw.h   |    1 +
+ drivers/scsi/qla4xxx/ql4_glbl.h |    1 +
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   49 +++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_os.c   |  112 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 163 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index dfe7b4d..855226e 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -215,6 +215,7 @@ union external_hw_config_reg {
+ /*  Mailbox command definitions */
+ #define MBOX_CMD_ABOUT_FW			0x0009
+ #define MBOX_CMD_PING				0x000B
++#define MBOX_CMD_ABORT_TASK			0x0015
+ #define MBOX_CMD_LUN_RESET			0x0016
+ #define MBOX_CMD_TARGET_WARM_RESET		0x0017
+ #define MBOX_CMD_GET_MANAGEMENT_DATA		0x001E
 diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 96ebfb0..987658f 100644
+index 987658f..3c8f753 100644
 --- a/drivers/scsi/qla4xxx/ql4_glbl.h
 +++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -67,11 +67,12 @@ struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha,
- 					uint32_t index);
- void qla4xxx_srb_compl(struct scsi_qla_host *ha, struct srb *srb);
- int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host * ha);
--int qla4xxx_process_ddb_changed(struct scsi_qla_host * ha,
--				uint32_t fw_ddb_index, uint32_t state);
-+int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
-+		uint32_t state, uint32_t conn_error);
- void qla4xxx_dump_buffer(void *b, uint32_t size);
- int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
- 	struct ddb_entry *ddb_entry, int lun, uint16_t mrkr_mod);
-+int qla4_is_relogin_allowed(struct scsi_qla_host *ha, uint32_t conn_err);
- 
- extern int ql4xextended_error_logging;
- extern int ql4xdiscoverywait;
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index e91b33a..0a15b31 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -505,6 +505,7 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
- 	struct dev_db_entry *fw_ddb_entry = NULL;
- 	dma_addr_t fw_ddb_entry_dma;
- 	int status = QLA_ERROR;
-+	uint32_t conn_err;
- 
- 	if (ddb_entry == NULL) {
- 		DEBUG2(printk("scsi%ld: %s: ddb_entry is NULL\n", ha->host_no,
-@@ -525,7 +526,7 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
- 
- 	if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, fw_ddb_entry,
- 				    fw_ddb_entry_dma, NULL, NULL,
--				    &ddb_entry->fw_ddb_device_state, NULL,
-+				    &ddb_entry->fw_ddb_device_state, &conn_err,
- 				    &ddb_entry->tcp_source_port_num,
- 				    &ddb_entry->connection_id) ==
- 	    QLA_ERROR) {
-@@ -578,12 +579,26 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
- 			fw_ddb_entry->link_local_ipv6_addr,
- 			min(sizeof(ddb_entry->link_local_ipv6_addr),
- 			sizeof(fw_ddb_entry->link_local_ipv6_addr)));
--	}
--
--	DEBUG2(printk("scsi%ld: %s: ddb[%d] - State= %x status= %d.\n",
--			ha->host_no, __func__, fw_ddb_index,
--			ddb_entry->fw_ddb_device_state, status));
- 
-+		DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
-+					"State %04x ConnErr %08x IP %pI6 "
-+					":%04d \"%s\"\n",
-+					__func__, fw_ddb_index,
-+					ddb_entry->os_target_id,
-+					ddb_entry->fw_ddb_device_state,
-+					conn_err, fw_ddb_entry->ip_addr,
-+					le16_to_cpu(fw_ddb_entry->port),
-+					fw_ddb_entry->iscsi_name));
-+	} else
-+		DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
-+					"State %04x ConnErr %08x IP %pI4 "
-+					":%04d \"%s\"\n",
-+					__func__, fw_ddb_index,
-+					ddb_entry->os_target_id,
-+					ddb_entry->fw_ddb_device_state,
-+					conn_err, fw_ddb_entry->ip_addr,
-+					le16_to_cpu(fw_ddb_entry->port),
-+					fw_ddb_entry->iscsi_name));
- exit_update_ddb:
- 	if (fw_ddb_entry)
- 		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
-@@ -630,6 +645,40 @@ static struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
+@@ -25,6 +25,7 @@ void qla4xxx_process_aen(struct scsi_qla_host * ha, uint8_t process_aen);
+ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host * ha);
+ int qla4xxx_relogin_device(struct scsi_qla_host * ha,
+ 			   struct ddb_entry * ddb_entry);
++int qla4xxx_abort_task(struct scsi_qla_host *ha, struct srb *srb);
+ int qla4xxx_reset_lun(struct scsi_qla_host * ha, struct ddb_entry * ddb_entry,
+ 		      int lun);
+ int qla4xxx_reset_target(struct scsi_qla_host * ha,
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 12e17a3..ad073a6 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -762,6 +762,55 @@ exit_get_event_log:
  }
  
  /**
-+ * qla4_is_relogin_allowed - Are we allowed to login?
++ * qla4xxx_abort_task - issues Abort Task
 + * @ha: Pointer to host adapter structure.
-+ * @conn_err: Last connection error associated with the ddb
++ * @srb: Pointer to srb entry
 + *
-+ * This routine tests the given connection error to determine if
-+ * we are allowed to login.
++ * This routine performs a LUN RESET on the specified target/lun.
++ * The caller must ensure that the ddb_entry and lun_entry pointers
++ * are valid before calling this routine.
 + **/
-+int qla4_is_relogin_allowed(struct scsi_qla_host *ha, uint32_t conn_err)
++int qla4xxx_abort_task(struct scsi_qla_host *ha, struct srb *srb)
 +{
-+	uint32_t err_code, login_rsp_sts_class;
-+	int relogin = 1;
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++	struct scsi_cmnd *cmd = srb->cmd;
++	int status = QLA_SUCCESS;
 +
-+	err_code = ((conn_err & 0x00ff0000) >> 16);
-+	login_rsp_sts_class = ((conn_err & 0x0000ff00) >> 8);
-+	if (err_code == 0x1c || err_code == 0x06) {
-+		DEBUG2(dev_info(&ha->pdev->dev,
-+				": conn_err=0x%08x, send target completed"
-+				" or access denied failure\n", conn_err));
-+		relogin = 0;
-+	}
-+	if ((err_code == 0x08) && (login_rsp_sts_class == 0x02)) {
-+		/* Login Response PDU returned an error.
-+		   Login Response Status in Error Code Detail
-+		   indicates login should not be retried.*/
-+		DEBUG2(dev_info(&ha->pdev->dev,
-+				": conn_err=0x%08x, do not retry relogin\n",
-+				conn_err));
-+		relogin = 0;
++	DEBUG2(printk(KERN_INFO "scsi%ld:%d:%d:%d: abort task issued\n",
++			ha->host_no, cmd->device->channel, cmd->device->id,
++			cmd->device->lun));
++
++	/*
++	 * Send abort task command to ISP, so that the ISP will return
++	 * request with ABORT status
++	 */
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
++
++	mbox_cmd[0] = MBOX_CMD_ABORT_TASK;
++	mbox_cmd[1] = srb->fw_ddb_index;
++	mbox_cmd[2] = (unsigned long)(unsigned char *)cmd->host_scribble;
++	mbox_cmd[5] = 0x01;     /* Immediate Command Enable */
++
++	qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0],
++				&mbox_sts[0]);
++	if (mbox_sts[0] != MBOX_STS_COMMAND_COMPLETE) {
++		status = QLA_ERROR;
++
++		DEBUG2(printk(KERN_WARNING "scsi%ld:%d:%d:%d: abort task "
++				"FAILED: ", ha->host_no, cmd->device->channel,
++				cmd->device->id, cmd->device->lun));
++		DEBUG2(printk(KERN_WARNING "mbx0=%04X, mb1=%04X, mb2=%04X,"
++				" mb3=%04X, mb4=%04X\n", mbox_sts[0],
++				mbox_sts[1], mbox_sts[2], mbox_sts[3],
++				mbox_sts[4]));
 +	}
 +
-+	return relogin;
++	return status;
 +}
 +
 +/**
-  * qla4xxx_configure_ddbs - builds driver ddb list
+  * qla4xxx_reset_lun - issues LUN Reset
   * @ha: Pointer to host adapter structure.
-  *
-@@ -643,18 +692,30 @@ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
- 	uint32_t fw_ddb_index = 0;
- 	uint32_t next_fw_ddb_index = 0;
- 	uint32_t ddb_state;
--	uint32_t conn_err, err_code;
-+	uint32_t conn_err;
- 	struct ddb_entry *ddb_entry;
-+	struct dev_db_entry *fw_ddb_entry = NULL;
-+	dma_addr_t fw_ddb_entry_dma;
-+	uint32_t ipv6_device;
- 	uint32_t new_tgt;
+  * @db_entry: Pointer to device database entry
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index ca1d293..2ca5659 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -73,6 +73,7 @@ static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc);
+  */
+ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
+ 				void (*done) (struct scsi_cmnd *));
++static int qla4xxx_eh_abort(struct scsi_cmnd *cmd);
+ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd);
+ static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd);
+ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd);
+@@ -87,6 +88,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
+ 	.proc_name		= DRIVER_NAME,
+ 	.queuecommand		= qla4xxx_queuecommand,
  
-+	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
-+			&fw_ddb_entry_dma, GFP_KERNEL);
-+	if (fw_ddb_entry == NULL) {
-+		DEBUG2(dev_info(&ha->pdev->dev, "%s: DMA alloc failed\n",
-+				__func__));
-+		return QLA_ERROR;
++	.eh_abort_handler	= qla4xxx_eh_abort,
+ 	.eh_device_reset_handler = qla4xxx_eh_device_reset,
+ 	.eh_target_reset_handler = qla4xxx_eh_target_reset,
+ 	.eh_host_reset_handler	= qla4xxx_eh_host_reset,
+@@ -1579,6 +1581,116 @@ static int qla4xxx_eh_wait_for_commands(struct scsi_qla_host *ha,
+ }
+ 
+ /**
++ * qla4xxx_eh_abort - callback for abort task.
++ * @cmd: Pointer to Linux's SCSI command structure
++ *
++ * This routine is called by the Linux OS to abort the specified
++ * command.
++ **/
++static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
++{
++	struct scsi_qla_host *ha;
++	struct srb *srb = NULL;
++	struct ddb_entry *ddb_entry;
++	struct scsi_cmnd *srb_cmd = NULL;
++	int ret = FAILED;
++	unsigned int channel;
++	unsigned int id;
++	unsigned int lun;
++	unsigned long serial;
++	unsigned long flags = 0;
++	int i = 0;
++
++	if (cmd == NULL) {
++		DEBUG2(printk(KERN_INFO "ABORT - **** SCSI mid-layer passing"
++				" in NULL cmd\n"));
++		return SUCCESS;
 +	}
 +
- 	dev_info(&ha->pdev->dev, "Initializing DDBs ...\n");
- 	for (fw_ddb_index = 0; fw_ddb_index < MAX_DDB_ENTRIES;
- 	     fw_ddb_index = next_fw_ddb_index) {
- 		/* First, let's see if a device exists here */
--		if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, NULL, 0, NULL,
--					    &next_fw_ddb_index, &ddb_state,
--					    &conn_err, NULL, NULL) ==
--		    QLA_ERROR) {
-+		if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, fw_ddb_entry,
-+					    0, NULL, &next_fw_ddb_index,
-+					    &ddb_state, &conn_err,
-+					    NULL, NULL) ==
-+					    QLA_ERROR) {
- 			DEBUG2(printk("scsi%ld: %s: get_ddb_entry, "
- 				      "fw_ddb_index %d failed", ha->host_no,
- 				      __func__, fw_ddb_index));
-@@ -671,18 +732,19 @@ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
- 			/* Try and login to device */
- 			DEBUG2(printk("scsi%ld: %s: Login to DDB[%d]\n",
- 				      ha->host_no, __func__, fw_ddb_index));
--			err_code = ((conn_err & 0x00ff0000) >> 16);
--			if (err_code == 0x1c || err_code == 0x06) {
--				DEBUG2(printk("scsi%ld: %s send target "
--					      "completed "
--					      "or access denied failure\n",
--					      ha->host_no, __func__));
--			} else {
-+			ipv6_device = le16_to_cpu(fw_ddb_entry->options) &
-+					DDB_OPT_IPV6_DEVICE;
-+			if (qla4_is_relogin_allowed(ha, conn_err) &&
-+					((!ipv6_device &&
-+					  *((uint32_t *)fw_ddb_entry->ip_addr))
-+					 || ipv6_device)) {
- 				qla4xxx_set_ddb_entry(ha, fw_ddb_index, 0);
- 				if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index,
--					NULL, 0, NULL, &next_fw_ddb_index,
--					&ddb_state, &conn_err, NULL, NULL)
--					== QLA_ERROR) {
-+							NULL, 0, NULL,
-+							&next_fw_ddb_index,
-+							&ddb_state, &conn_err,
-+							NULL, NULL)
-+						== QLA_ERROR) {
- 					DEBUG2(printk("scsi%ld: %s:"
- 						"get_ddb_entry %d failed\n",
- 						ha->host_no,
-@@ -737,7 +799,6 @@ next_one:
- struct qla4_relog_scan {
- 	int halt_wait;
- 	uint32_t conn_err;
--	uint32_t err_code;
- 	uint32_t fw_ddb_index;
- 	uint32_t next_fw_ddb_index;
- 	uint32_t fw_ddb_device_state;
-@@ -747,18 +808,7 @@ static int qla4_test_rdy(struct scsi_qla_host *ha, struct qla4_relog_scan *rs)
- {
- 	struct ddb_entry *ddb_entry;
- 
--	/*
--	 * Don't want to do a relogin if connection
--	 * error is 0x1c.
--	 */
--	rs->err_code = ((rs->conn_err & 0x00ff0000) >> 16);
--	if (rs->err_code == 0x1c || rs->err_code == 0x06) {
--		DEBUG2(printk(
--			       "scsi%ld: %s send target"
--			       " completed or "
--			       "access denied failure\n",
--			       ha->host_no, __func__));
--	} else {
-+	if (qla4_is_relogin_allowed(ha, rs->conn_err)) {
- 		/* We either have a device that is in
- 		 * the process of relogging in or a
- 		 * device that is waiting to be
-@@ -1411,8 +1461,8 @@ static void qla4xxx_add_device_dynamically(struct scsi_qla_host *ha,
++	ha = to_qla_host(cmd->device->host);
++	ddb_entry = cmd->device->hostdata;
++	channel = cmd->device->channel;
++	id = cmd->device->id;
++	lun = cmd->device->lun;
++	serial = cmd->serial_number;
++
++	if (!ddb_entry) {
++		DEBUG2(printk(KERN_WARNING "scsi%ld: ABORT - NULL ddb entry.\n",
++				ha->host_no));
++		return FAILED;
++	}
++
++	if (!cmd->SCp.ptr) {
++		DEBUG2(printk(KERN_INFO "scsi%ld: ABORT - cmd already"
++				" completed.\n", ha->host_no));
++		return SUCCESS;
++	}
++
++	srb = (struct srb *) cmd->SCp.ptr;
++
++	dev_info(&ha->pdev->dev, "scsi%ld:%d:%d:%d: ABORT ISSUED "
++		 "cmd=%p, pid=%ld, ref=%d\n", ha->host_no, channel, id, lun,
++		 cmd, serial, atomic_read(&srb->ref_count));
++
++	if (qla4xxx_wait_for_hba_online(ha) != QLA_SUCCESS) {
++		DEBUG2(printk(KERN_WARNING "scsi%ld:%d: %s: Unable to abort "
++				"task. Adapter DEAD.\n", ha->host_no,
++				cmd->device->channel, __func__));
++		return FAILED;
++	}
++
++	/* Check active list for command */
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	for (i = 1; i < MAX_SRBS; i++) {
++		srb_cmd = scsi_host_find_tag(ha->host, i);
++		if (srb_cmd == NULL)
++			continue;
++
++		srb = (struct srb *)srb_cmd->host_scribble;
++		if (srb == NULL)
++			continue;
++
++		if (srb->cmd != cmd)
++			continue;
++
++		DEBUG2(printk(KERN_INFO "scsi%ld:%d:%d:%d %s: aborting srb %p "
++				"from RISC. pid=%ld.\n", ha->host_no, channel,
++				id, lun, __func__, srb, serial));
++		DEBUG3(qla4xxx_print_scsi_cmd(cmd));
++
++		spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++		if (qla4xxx_abort_task(ha, srb) != QLA_SUCCESS) {
++			dev_info(&ha->pdev->dev,
++				"scsi%ld:%d:%d:%d: ABORT TASK - FAILED.\n",
++				ha->host_no, channel, id, lun);
++		} else {
++			dev_info(&ha->pdev->dev,
++				"scsi%ld:%d:%d:%d: ABORT TASK - mbx success.\n",
++				ha->host_no, channel, id, lun);
++		}
++		spin_lock_irqsave(&ha->hardware_lock, flags);
++		break;
++	}
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++	/* Wait for command to complete */
++	if (qla4xxx_eh_wait_on_command(ha, cmd)) {
++		dev_info(&ha->pdev->dev,
++			 "scsi%ld:%d:%d:%d: ABORT SUCCEEDED - "
++			 "cmd returned back to OS.\n",
++			 ha->host_no, channel, id, lun);
++		ret = SUCCESS;
++	}
++
++	DEBUG2(printk("scsi%ld:%d:%d:%d: ABORT cmd=%p, pid=%ld, ref=%d, "
++		      "ret=%x\n", ha->host_no, channel, id, lun, cmd,
++		      serial, atomic_read(&srb->ref_count), ret));
++
++	return ret;
++}
++
++/**
+  * qla4xxx_eh_device_reset - callback for target reset.
+  * @cmd: Pointer to Linux's SCSI command structure
   *
-  * This routine processes a Decive Database Changed AEN Event.
-  **/
--int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha,
--				uint32_t fw_ddb_index, uint32_t state)
-+int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
-+		uint32_t state, uint32_t conn_err)
- {
- 	struct ddb_entry * ddb_entry;
- 	uint32_t old_fw_ddb_device_state;
-@@ -1470,13 +1520,13 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha,
- 
- 		/*
- 		 * Relogin if device state changed to a not active state.
--		 * However, do not relogin if this aen is a result of an IOCTL
--		 * logout (DF_NO_RELOGIN) or if this is a discovered device.
-+		 * However, do not relogin if a RELOGIN is in process, or
-+		 * we are not allowed to relogin to this DDB.
- 		 */
- 		if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_FAILED &&
- 		    !test_bit(DF_RELOGIN, &ddb_entry->flags) &&
- 		    !test_bit(DF_NO_RELOGIN, &ddb_entry->flags) &&
--		    !test_bit(DF_ISNS_DISCOVERED, &ddb_entry->flags)) {
-+		    qla4_is_relogin_allowed(ha, conn_err)) {
- 			/*
- 			 * This triggers a relogin.  After the relogin_timer
- 			 * expires, the relogin gets scheduled.	 We must wait a
-@@ -1484,7 +1534,7 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha,
- 			 * with failed device_state or a logout response before
- 			 * we can issue another relogin.
- 			 */
--			/* Firmware padds this timeout: (time2wait +1).
-+			/* Firmware pads this timeout: (time2wait +1).
- 			 * Driver retry to login should be longer than F/W.
- 			 * Otherwise F/W will fail
- 			 * set_ddb() mbx cmd with 0x4005 since it still
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 9db286d..ce5838e 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -838,7 +838,7 @@ void qla4xxx_process_aen(struct scsi_qla_host * ha, uint8_t process_aen)
- 				qla4xxx_reinitialize_ddb_list(ha);
- 			} else if (mbox_sts[1] == 1) {	/* Specific device. */
- 				qla4xxx_process_ddb_changed(ha, mbox_sts[2],
--							    mbox_sts[3]);
-+						mbox_sts[3], mbox_sts[4]);
- 			}
- 			break;
- 		}
 -- 
 1.6.0.2
 
