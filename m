@@ -1,15 +1,14 @@
 From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: [PATCH 08/12] qla4xxx: added support for abort task management
-	command
-Date: Tue, 6 Apr 2010 03:14:24 -0700
-Message-ID: <20100406101423.GO22922@linux-qf4p>
+Subject: [PATCH 09/12] qla4xxx: added srb reference counter
+Date: Tue, 6 Apr 2010 03:14:32 -0700
+Message-ID: <20100406101432.GP22922@linux-qf4p>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:27605 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:27616 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753426Ab0DFKQC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 06:16:02 -0400
+	with ESMTP id S1753426Ab0DFKQK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 06:16:10 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,239 +17,194 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>, Linux-SCSI Mailing List <linux-scsi@vg
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Handles SCSI aborts.
+Serialization srb between error handler and command completion path.
 
-Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_fw.h   |    1 +
- drivers/scsi/qla4xxx/ql4_glbl.h |    1 +
- drivers/scsi/qla4xxx/ql4_mbx.c  |   49 +++++++++++++++++
- drivers/scsi/qla4xxx/ql4_os.c   |  112 +++++++++++++++++++++++++++++++++++++++
- 4 files changed, 163 insertions(+), 0 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h  |    2 +-
+ drivers/scsi/qla4xxx/ql4_glbl.h |    2 +-
+ drivers/scsi/qla4xxx/ql4_isr.c  |    6 ++--
+ drivers/scsi/qla4xxx/ql4_os.c   |   50 +++++++++++++++++++++++---------------
+ 4 files changed, 35 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index dfe7b4d..855226e 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -215,6 +215,7 @@ union external_hw_config_reg {
- /*  Mailbox command definitions */
- #define MBOX_CMD_ABOUT_FW			0x0009
- #define MBOX_CMD_PING				0x000B
-+#define MBOX_CMD_ABORT_TASK			0x0015
- #define MBOX_CMD_LUN_RESET			0x0016
- #define MBOX_CMD_TARGET_WARM_RESET		0x0017
- #define MBOX_CMD_GET_MANAGEMENT_DATA		0x001E
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index af339be..8ff06f0 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -171,7 +171,7 @@ struct srb {
+ 
+ 	struct scsi_cmnd *cmd;	/* (4) SCSI command block */
+ 	dma_addr_t dma_handle;	/* (4) for unmap of single transfers */
+-	atomic_t ref_count;	/* reference count for this srb */
++	struct kref srb_ref;	/* reference count for this srb */
+ 	uint32_t fw_ddb_index;
+ 	uint8_t err_id;		/* error id */
+ #define SRB_ERR_PORT	   1	/* Request failed because "port down" */
 diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 987658f..3c8f753 100644
+index 3c8f753..c4636f6 100644
 --- a/drivers/scsi/qla4xxx/ql4_glbl.h
 +++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -25,6 +25,7 @@ void qla4xxx_process_aen(struct scsi_qla_host * ha, uint8_t process_aen);
- int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host * ha);
- int qla4xxx_relogin_device(struct scsi_qla_host * ha,
- 			   struct ddb_entry * ddb_entry);
-+int qla4xxx_abort_task(struct scsi_qla_host *ha, struct srb *srb);
- int qla4xxx_reset_lun(struct scsi_qla_host * ha, struct ddb_entry * ddb_entry,
- 		      int lun);
- int qla4xxx_reset_target(struct scsi_qla_host * ha,
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 12e17a3..ad073a6 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -762,6 +762,55 @@ exit_get_event_log:
+@@ -66,7 +66,7 @@ void qla4xxx_interrupt_service_routine(struct scsi_qla_host * ha,
+ int qla4xxx_init_rings(struct scsi_qla_host * ha);
+ struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha,
+ 					uint32_t index);
+-void qla4xxx_srb_compl(struct scsi_qla_host *ha, struct srb *srb);
++void qla4xxx_srb_compl(struct kref *ref);
+ int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host * ha);
+ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 		uint32_t state, uint32_t conn_error);
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index ce5838e..596c303 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -97,7 +97,7 @@ qla4xxx_status_cont_entry(struct scsi_qla_host *ha,
+ 
+ 	/* Place command on done queue. */
+ 	if (srb->req_sense_len == 0) {
+-		qla4xxx_srb_compl(ha, srb);
++		kref_put(&srb->srb_ref, qla4xxx_srb_compl);
+ 		ha->status_srb = NULL;
+ 	}
+ }
+@@ -329,7 +329,7 @@ status_entry_exit:
+ 	/* complete the request, if not waiting for status_continuation pkt */
+ 	srb->cc_stat = sts_entry->completionStatus;
+ 	if (ha->status_srb == NULL)
+-		qla4xxx_srb_compl(ha, srb);
++		kref_put(&srb->srb_ref, qla4xxx_srb_compl);
  }
  
  /**
-+ * qla4xxx_abort_task - issues Abort Task
-+ * @ha: Pointer to host adapter structure.
-+ * @srb: Pointer to srb entry
-+ *
-+ * This routine performs a LUN RESET on the specified target/lun.
-+ * The caller must ensure that the ddb_entry and lun_entry pointers
-+ * are valid before calling this routine.
-+ **/
-+int qla4xxx_abort_task(struct scsi_qla_host *ha, struct srb *srb)
-+{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	struct scsi_cmnd *cmd = srb->cmd;
-+	int status = QLA_SUCCESS;
-+
-+	DEBUG2(printk(KERN_INFO "scsi%ld:%d:%d:%d: abort task issued\n",
-+			ha->host_no, cmd->device->channel, cmd->device->id,
-+			cmd->device->lun));
-+
-+	/*
-+	 * Send abort task command to ISP, so that the ISP will return
-+	 * request with ABORT status
-+	 */
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
-+	mbox_cmd[0] = MBOX_CMD_ABORT_TASK;
-+	mbox_cmd[1] = srb->fw_ddb_index;
-+	mbox_cmd[2] = (unsigned long)(unsigned char *)cmd->host_scribble;
-+	mbox_cmd[5] = 0x01;     /* Immediate Command Enable */
-+
-+	qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0],
-+				&mbox_sts[0]);
-+	if (mbox_sts[0] != MBOX_STS_COMMAND_COMPLETE) {
-+		status = QLA_ERROR;
-+
-+		DEBUG2(printk(KERN_WARNING "scsi%ld:%d:%d:%d: abort task "
-+				"FAILED: ", ha->host_no, cmd->device->channel,
-+				cmd->device->id, cmd->device->lun));
-+		DEBUG2(printk(KERN_WARNING "mbx0=%04X, mb1=%04X, mb2=%04X,"
-+				" mb3=%04X, mb4=%04X\n", mbox_sts[0],
-+				mbox_sts[1], mbox_sts[2], mbox_sts[3],
-+				mbox_sts[4]));
-+	}
-+
-+	return status;
-+}
-+
-+/**
-  * qla4xxx_reset_lun - issues LUN Reset
-  * @ha: Pointer to host adapter structure.
-  * @db_entry: Pointer to device database entry
+@@ -393,7 +393,7 @@ static void qla4xxx_process_response_queue(struct scsi_qla_host * ha)
+ 			/* ETRY normally by sending it back with
+ 			 * DID_BUS_BUSY */
+ 			srb->cmd->result = DID_BUS_BUSY << 16;
+-			qla4xxx_srb_compl(ha, srb);
++			kref_put(&srb->srb_ref, qla4xxx_srb_compl);
+ 			break;
+ 
+ 		case ET_CONTINUE:
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index ca1d293..2ca5659 100644
+index 2ca5659..720f9dc 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -73,6 +73,7 @@ static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc);
-  */
- static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
- 				void (*done) (struct scsi_cmnd *));
-+static int qla4xxx_eh_abort(struct scsi_cmnd *cmd);
- static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd);
- static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd);
- static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd);
-@@ -87,6 +88,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
- 	.proc_name		= DRIVER_NAME,
- 	.queuecommand		= qla4xxx_queuecommand,
+@@ -385,7 +385,7 @@ static struct srb* qla4xxx_get_new_srb(struct scsi_qla_host *ha,
+ 	if (!srb)
+ 		return srb;
  
-+	.eh_abort_handler	= qla4xxx_eh_abort,
- 	.eh_device_reset_handler = qla4xxx_eh_device_reset,
- 	.eh_target_reset_handler = qla4xxx_eh_target_reset,
- 	.eh_host_reset_handler	= qla4xxx_eh_host_reset,
-@@ -1579,6 +1581,116 @@ static int qla4xxx_eh_wait_for_commands(struct scsi_qla_host *ha,
+-	atomic_set(&srb->ref_count, 1);
++	kref_init(&srb->srb_ref);
+ 	srb->ha = ha;
+ 	srb->ddb = ddb_entry;
+ 	srb->cmd = cmd;
+@@ -407,9 +407,11 @@ static void qla4xxx_srb_free_dma(struct scsi_qla_host *ha, struct srb *srb)
+ 	cmd->SCp.ptr = NULL;
  }
  
+-void qla4xxx_srb_compl(struct scsi_qla_host *ha, struct srb *srb)
++void qla4xxx_srb_compl(struct kref *ref)
+ {
++	struct srb *srb = container_of(ref, struct srb, srb_ref);
+ 	struct scsi_cmnd *cmd = srb->cmd;
++	struct scsi_qla_host *ha = srb->ha;
+ 
+ 	qla4xxx_srb_free_dma(ha, srb);
+ 
+@@ -888,7 +890,7 @@ static void qla4xxx_flush_active_srbs(struct scsi_qla_host *ha)
+ 		srb = qla4xxx_del_from_active_array(ha, i);
+ 		if (srb != NULL) {
+ 			srb->cmd->result = DID_RESET << 16;
+-			qla4xxx_srb_compl(ha, srb);
++			kref_put(&srb->srb_ref, qla4xxx_srb_compl);
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+@@ -1497,7 +1499,7 @@ struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha, uint32_t in
+ 
  /**
-+ * qla4xxx_eh_abort - callback for abort task.
-+ * @cmd: Pointer to Linux's SCSI command structure
-+ *
-+ * This routine is called by the Linux OS to abort the specified
-+ * command.
-+ **/
-+static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
-+{
-+	struct scsi_qla_host *ha;
-+	struct srb *srb = NULL;
-+	struct ddb_entry *ddb_entry;
-+	struct scsi_cmnd *srb_cmd = NULL;
-+	int ret = FAILED;
-+	unsigned int channel;
-+	unsigned int id;
-+	unsigned int lun;
-+	unsigned long serial;
-+	unsigned long flags = 0;
-+	int i = 0;
-+
-+	if (cmd == NULL) {
-+		DEBUG2(printk(KERN_INFO "ABORT - **** SCSI mid-layer passing"
-+				" in NULL cmd\n"));
-+		return SUCCESS;
-+	}
-+
-+	ha = to_qla_host(cmd->device->host);
-+	ddb_entry = cmd->device->hostdata;
-+	channel = cmd->device->channel;
-+	id = cmd->device->id;
-+	lun = cmd->device->lun;
-+	serial = cmd->serial_number;
-+
-+	if (!ddb_entry) {
-+		DEBUG2(printk(KERN_WARNING "scsi%ld: ABORT - NULL ddb entry.\n",
-+				ha->host_no));
-+		return FAILED;
-+	}
-+
-+	if (!cmd->SCp.ptr) {
-+		DEBUG2(printk(KERN_INFO "scsi%ld: ABORT - cmd already"
-+				" completed.\n", ha->host_no));
-+		return SUCCESS;
-+	}
-+
-+	srb = (struct srb *) cmd->SCp.ptr;
-+
-+	dev_info(&ha->pdev->dev, "scsi%ld:%d:%d:%d: ABORT ISSUED "
-+		 "cmd=%p, pid=%ld, ref=%d\n", ha->host_no, channel, id, lun,
-+		 cmd, serial, atomic_read(&srb->ref_count));
-+
-+	if (qla4xxx_wait_for_hba_online(ha) != QLA_SUCCESS) {
-+		DEBUG2(printk(KERN_WARNING "scsi%ld:%d: %s: Unable to abort "
-+				"task. Adapter DEAD.\n", ha->host_no,
-+				cmd->device->channel, __func__));
-+		return FAILED;
-+	}
-+
-+	/* Check active list for command */
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	for (i = 1; i < MAX_SRBS; i++) {
-+		srb_cmd = scsi_host_find_tag(ha->host, i);
-+		if (srb_cmd == NULL)
-+			continue;
-+
-+		srb = (struct srb *)srb_cmd->host_scribble;
-+		if (srb == NULL)
-+			continue;
-+
-+		if (srb->cmd != cmd)
-+			continue;
-+
-+		DEBUG2(printk(KERN_INFO "scsi%ld:%d:%d:%d %s: aborting srb %p "
-+				"from RISC. pid=%ld.\n", ha->host_no, channel,
-+				id, lun, __func__, srb, serial));
-+		DEBUG3(qla4xxx_print_scsi_cmd(cmd));
-+
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+		if (qla4xxx_abort_task(ha, srb) != QLA_SUCCESS) {
-+			dev_info(&ha->pdev->dev,
-+				"scsi%ld:%d:%d:%d: ABORT TASK - FAILED.\n",
-+				ha->host_no, channel, id, lun);
-+		} else {
-+			dev_info(&ha->pdev->dev,
-+				"scsi%ld:%d:%d:%d: ABORT TASK - mbx success.\n",
-+				ha->host_no, channel, id, lun);
-+		}
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
-+		break;
-+	}
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	/* Wait for command to complete */
-+	if (qla4xxx_eh_wait_on_command(ha, cmd)) {
-+		dev_info(&ha->pdev->dev,
-+			 "scsi%ld:%d:%d:%d: ABORT SUCCEEDED - "
-+			 "cmd returned back to OS.\n",
-+			 ha->host_no, channel, id, lun);
-+		ret = SUCCESS;
-+	}
-+
-+	DEBUG2(printk("scsi%ld:%d:%d:%d: ABORT cmd=%p, pid=%ld, ref=%d, "
-+		      "ret=%x\n", ha->host_no, channel, id, lun, cmd,
-+		      serial, atomic_read(&srb->ref_count), ret));
-+
-+	return ret;
-+}
-+
-+/**
-  * qla4xxx_eh_device_reset - callback for target reset.
-  * @cmd: Pointer to Linux's SCSI command structure
+  * qla4xxx_eh_wait_on_command - waits for command to be returned by firmware
+- * @ha: actual ha whose done queue will contain the comd returned by firmware.
++ * @ha: Pointer to host adapter structure.
+  * @cmd: Scsi Command to wait on.
   *
+  * This routine waits for the command to be returned by the Firmware
+@@ -1507,17 +1509,14 @@ static int qla4xxx_eh_wait_on_command(struct scsi_qla_host *ha,
+ 				      struct scsi_cmnd *cmd)
+ {
+ 	int done = 0;
+-	struct srb *rp;
+ 	uint32_t max_wait_time = EH_WAIT_CMD_TOV;
+ 
+ 	do {
+ 		/* Checking to see if its returned to OS */
+-		rp = (struct srb *) cmd->SCp.ptr;
+-		if (rp == NULL) {
++		if (cmd->host_scribble == NULL) {
+ 			done++;
+ 			break;
+ 		}
+-
+ 		msleep(2000);
+ 	} while (max_wait_time--);
+ 
+@@ -1630,7 +1629,7 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
+ 
+ 	dev_info(&ha->pdev->dev, "scsi%ld:%d:%d:%d: ABORT ISSUED "
+ 		 "cmd=%p, pid=%ld, ref=%d\n", ha->host_no, channel, id, lun,
+-		 cmd, serial, atomic_read(&srb->ref_count));
++		 cmd, serial, atomic_read(&srb->srb_ref.refcount));
+ 
+ 	if (qla4xxx_wait_for_hba_online(ha) != QLA_SUCCESS) {
+ 		DEBUG2(printk(KERN_WARNING "scsi%ld:%d: %s: Unable to abort "
+@@ -1658,6 +1657,8 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
+ 				id, lun, __func__, srb, serial));
+ 		DEBUG3(qla4xxx_print_scsi_cmd(cmd));
+ 
++		kref_get(&srb->srb_ref);
++
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 		if (qla4xxx_abort_task(ha, srb) != QLA_SUCCESS) {
+@@ -1674,18 +1675,27 @@ static int qla4xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	}
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+-	/* Wait for command to complete */
+-	if (qla4xxx_eh_wait_on_command(ha, cmd)) {
+-		dev_info(&ha->pdev->dev,
+-			 "scsi%ld:%d:%d:%d: ABORT SUCCEEDED - "
+-			 "cmd returned back to OS.\n",
+-			 ha->host_no, channel, id, lun);
+-		ret = SUCCESS;
+-	}
+ 
+-	DEBUG2(printk("scsi%ld:%d:%d:%d: ABORT cmd=%p, pid=%ld, ref=%d, "
+-		      "ret=%x\n", ha->host_no, channel, id, lun, cmd,
+-		      serial, atomic_read(&srb->ref_count), ret));
++	if (i < MAX_SRBS) {
++		/* Wait for command to complete */
++		if (qla4xxx_eh_wait_on_command(ha, cmd)) {
++			dev_info(&ha->pdev->dev,
++			    "scsi%ld:%d:%d:%d: ABORT SUCCEEDED - "
++			    "cmd returned back to OS.\n",
++			    ha->host_no, channel, id, lun);
++			ret = SUCCESS;
++		}
++
++		DEBUG2(printk("scsi%ld:%d:%d:%d: ABORT cmd=%p, pid=%ld, ref=%d, "
++		    "ret=%x\n", ha->host_no, channel, id, lun, cmd,
++		    serial, atomic_read(&srb->srb_ref.refcount), ret));
++
++		kref_put(&srb->srb_ref, qla4xxx_srb_compl);
++	} else {
++		dev_info(&ha->pdev->dev, "scsi%ld:%d:%d:%d: ABORT FAILED",
++		    ha->host_no, channel, id, lun);
++		ret = FAILED;
++	}
+ 
+ 	return ret;
+ }
 -- 
 1.6.0.2
 
