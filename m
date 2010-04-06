@@ -1,30 +1,42 @@
-From: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Tue, 06 Apr 2010 16:56:48 +0200
-Message-ID: <4BBB4BB0.9040203@gmail.com>
-References: <Pine.LNX.4.44L0.1004061048590.1722-100000@iolanthe.rowland.org>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/7] lpfc 8.3.12: Update lpfc to revision 8.3.12
+Date: Tue, 6 Apr 2010 14:48:42 -0400
+Message-ID: <1270579743.19178.20.camel@wookie>
+Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1004061048590.1722-100000@iolanthe.rowland.org>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mark Lord <mlord@pobox.com>, dgilbert@interlog.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exht1.emulex.com ([138.239.113.183]:15611 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757428Ab0DFStp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 14:49:45 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Argh, I'll send you the correct trace in a bit.
+This patch set updates the lpfc driver to revision 8.3.12
 
-On 04/06/2010 04:49 PM, Alan Stern wrote:
-> On Tue, 6 Apr 2010, Jonas Schwertfeger wrote:
->
->> Here is the trace after limiting memory to 900M:
->>
->> ffff88001fc82780 3529669229 S Bo:10:002:2 -115 31 = 55534243 ca000000
->> 00020000 80001085 082e0000 00000000 00000000 40ec00
->
-> This trace was made using the original version of hdparm, not the
-> updated version.
->
-> Alan Stern
->
+The patches for 8.3.12 contain:
+- Emulex SLI enhancements
+- Miscellaneous Changes
+- T10-PI/DIF changes
+- Critical fixes 
+- BSG Fixes and enhancements
+- Fix discovery issues
+- Update Driver version to 8.3.12
+
+The bugfixes were cut against scsi-misc-2.6, and are dependent
+upon the prior 8.3.11 patch set
+(http://marc.info/?l=linux-scsi&m=126866671501612&w=2)
+
+
+-- james s
+
+
+  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
+  Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
