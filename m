@@ -1,136 +1,38 @@
-From: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Tue, 06 Apr 2010 08:43:11 +0200
-Message-ID: <4BBAD7FF.5000605@gmail.com>
-References: <Pine.LNX.4.44L0.1004031648230.21507-100000@netrider.rowland.org>
+From: Chris Rankin <rankincj@yahoo.com>
+Subject: Failed to install from Linux CD - HP Lightscribe 640b implicated.
+Date: Tue, 6 Apr 2010 01:32:36 -0700 (PDT)
+Message-ID: <946035.84294.qm@web52901.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1004031648230.21507-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web52901.mail.re2.yahoo.com ([206.190.49.11]:33741 "HELO
+	web52901.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751157Ab0DFIjS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Apr 2010 04:39:18 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 04/03/2010 10:58 PM, Alan Stern wrote:
->> ffff8802123996c0 4253715661 S Bo:10:002:2 -115 31 = 55534243 9e000000
->> 60000000 80000603 00000060 00000000 00000000 000000
->> ffff8802123996c0 4253715707 C Bo:10:002:2 0 31>
->> ffff8801f36c6a80 4253715723 S Bi:10:002:1 -115 96<
->> ffff8801f36c6a80 4253715763 C Bi:10:002:1 0 96 Z
->> ffff8802123996c0 4253715779 S Bi:10:002:1 -115 13<
->> ffff8802123996c0 4253715819 C Bi:10:002:1 0 13 = 55534253 9e000000
->> 00000000 00
->
-> Here usb-storage asked the reason for the failure.  Unfortunately we
-> can't see the response.  Did you run this on a computer with more than
-> 1 GB of memory?  If you did, can you boot with "mem=900M" and try
-> again?
+Hi,
 
-Here is the trace after limiting memory to 900M:
+I tried to install Linux on someone's PC (after replacing a failed hard disc) over Easter using both a pre-pressed Fedora 10 installation DVD and a home-burnt Ubuntu 9.10 CD. However, the installation was a complete failure in both cases, apparently because the HP LightScribe 640b drive in the PC could not read either CD/DVD correctly.
 
-ffff88001fc82780 3529669229 S Bo:10:002:2 -115 31 = 55534243 ca000000 
-00020000 80001085 082e0000 00000000 00000000 40ec00
-ffff88001fc82780 3529669272 C Bo:10:002:2 0 31 >
-ffff880009312840 3529669349 S Bi:10:002:1 -115 512 <
-ffff880009312840 3529669382 C Bi:10:002:1 -32 0
-ffff88001fc82780 3529669400 S Co:10:002:0 s 02 01 0000 0081 0000 0
-ffff88001fc82780 3529669680 C Co:10:002:0 0 0
-ffff88001fc82780 3529669701 S Bi:10:002:1 -115 13 <
-ffff88001fc82780 3529669959 C Bi:10:002:1 0 13 = 55534253 ca000000 
-00020000 02
-ffff880009312840 3529669979 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff880009312840 3529669982 C Co:10:001:0 -32 0
-ffff880009312840 3529669991 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff880009312840 3529669994 C Co:10:001:0 -32 0
-ffff880009312840 3529670000 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff880009312840 3529670002 C Co:10:001:0 -32 0
-ffff880009312840 3529670007 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff880009312840 3529670010 C Co:10:001:0 -32 0
-ffff880009312840 3529670015 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff880009312840 3529670017 C Co:10:001:0 -32 0
-ffff88001c6780c0 3529670069 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
-ffff88001c6780c0 3529670079 C Ci:10:001:0 0 4 = 03090000
-ffff88001c678d80 3530198291 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff88001c678d80 3530198297 C Co:10:001:0 -32 0
-ffff88001c678d80 3530618318 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff88001c678d80 3530618323 C Co:10:001:0 -32 0
-ffff88001c678d80 3531038299 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff88001c678d80 3531038305 C Co:10:001:0 -32 0
-ffff88001c678d80 3531458316 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff88001c678d80 3531458322 C Co:10:001:0 -32 0
-ffff88001c678d80 3531458339 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff88001c678d80 3531458342 C Co:10:001:0 -32 0
-ffff8800240da900 3534018309 C Ii:10:001:1 -2:8 0
-ffff8800093d9840 3534018323 S Ci:10:001:0 s a3 00 0000 0001 0004 4 <
-ffff8800093d9840 3534018328 C Ci:10:001:0 0 4 = 00010000
-ffff8800093d9840 3534018331 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
-ffff8800093d9840 3534018334 C Ci:10:001:0 0 4 = 03090000
-ffff8800093d9840 3534018335 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3534018338 C Co:10:001:0 -32 0
-ffff8800093d9840 3534018339 S Ci:10:001:0 s a3 00 0000 0003 0004 4 <
-ffff8800093d9840 3534018342 C Ci:10:001:0 0 4 = 00010000
-ffff8800093d9840 3534018343 S Ci:10:001:0 s a3 00 0000 0004 0004 4 <
-ffff8800093d9840 3534018346 C Ci:10:001:0 0 4 = 00010000
-ffff8800240da900 3534018347 S Ii:10:001:1 -115:8 4 <
-ffff88001c678d80 3534018358 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
-ffff88001c678d80 3534018362 C Ci:10:001:0 0 4 = 03090000
-ffff8800093d9840 3534438322 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3534438329 C Co:10:001:0 -32 0
-ffff8800093d9840 3534858284 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3534858289 C Co:10:001:0 -32 0
-ffff8800093d9840 3535278319 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3535278325 C Co:10:001:0 -32 0
-ffff8800093d9840 3535698317 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3535698324 C Co:10:001:0 -32 0
-ffff8800093d9840 3535698345 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3535698348 C Co:10:001:0 -32 0
-ffff8800240da900 3538138309 C Ii:10:001:1 -2:8 0
-ffff8800093d9840 3538138316 S Ci:10:001:0 s a3 00 0000 0001 0004 4 <
-ffff8800093d9840 3538138320 C Ci:10:001:0 0 4 = 00010000
-ffff8800093d9840 3538138322 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
-ffff8800093d9840 3538138327 C Ci:10:001:0 0 4 = 03090000
-ffff8800093d9840 3538138328 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3538138331 C Co:10:001:0 -32 0
-ffff8800093d9840 3538138332 S Ci:10:001:0 s a3 00 0000 0003 0004 4 <
-ffff8800093d9840 3538138335 C Ci:10:001:0 0 4 = 00010000
-ffff8800093d9840 3538138336 S Ci:10:001:0 s a3 00 0000 0004 0004 4 <
-ffff8800093d9840 3538138338 C Ci:10:001:0 0 4 = 00010000
-ffff8800240da900 3538138339 S Ii:10:001:1 -115:8 4 <
-ffff8800093d9840 3538138347 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
-ffff8800093d9840 3538138349 C Ci:10:001:0 0 4 = 03090000
-ffff8800093d9840 3538558292 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3538558298 C Co:10:001:0 -32 0
-ffff8800093d9840 3538978287 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3538978293 C Co:10:001:0 -32 0
-ffff8800093d9840 3539398284 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3539398291 C Co:10:001:0 -32 0
-ffff8800093d9840 3539818282 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3539818288 C Co:10:001:0 -32 0
-ffff8800093d9840 3539818308 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3539818311 C Co:10:001:0 -32 0
-ffff8800240da900 3542138321 C Ii:10:001:1 -2:8 0
-ffff8800093d9840 3542138328 S Ci:10:001:0 s a3 00 0000 0001 0004 4 <
-ffff8800093d9840 3542138332 C Ci:10:001:0 0 4 = 00010000
-ffff8800093d9840 3542138334 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
-ffff8800093d9840 3542138337 C Ci:10:001:0 0 4 = 03090000
-ffff8800093d9840 3542138339 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3542138342 C Co:10:001:0 -32 0
-ffff8800093d9840 3542138345 S Ci:10:001:0 s a3 00 0000 0003 0004 4 <
-ffff8800093d9840 3542138348 C Ci:10:001:0 0 4 = 00010000
-ffff8800093d9840 3542138349 S Ci:10:001:0 s a3 00 0000 0004 0004 4 <
-ffff8800093d9840 3542138352 C Ci:10:001:0 0 4 = 00010000
-ffff8800240da900 3542138353 S Ii:10:001:1 -115:8 4 <
-ffff8800093d9840 3542138363 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
-ffff8800093d9840 3542138366 C Ci:10:001:0 0 4 = 03090000
-ffff8800093d9840 3542558309 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3542558316 C Co:10:001:0 -32 0
-ffff8800093d9840 3542978288 S Co:10:001:0 s 23 01 0001 0002 0000 0
-ffff8800093d9840 3542978294 C Co:10:001:0 -32 0
+With the F10 DVD, the installer crashed, shut itself down and requested a reboot before I could reach a shell. With the Ubuntu 9.10 CD, the "verify media" step consistently failed with errors in two files, despite the CD verifying correctly on 3 other PCs. Trying to install a "Live CD" session from the disc resulted in a far uglier crash than from the F10 DVD. Adding the options "noapic nolapic noacpi" to the Ubuntu "verify CD" boot options made no difference.
 
--Jonas
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cleaning the LightScribe drive, updating its firmware and even updating the host PC's BIOS also made no difference. However, the LightScribe drive did successfully read a pair of "Windows XP System Restore" CDs, so that the PC is now "happily" running XP-SP3 again.
+
+I am forced to conclude that the Linux kernel was "doing something" with the HP LightScribe 640b drive that the Windows installer wasn't, and that this "something" meant that Linux could not read from it reliably. But the only Linux kernels I could even begin to run on the PC were the two on the boot discs, and so I am stumped as to what the actual errors there were, or how to work around them.
+
+Does anyone know of any issues with HP LightScribe 640b drives under Linux, please? The drive is an IDE device from 2005 and so Linux would presumably have been using the PATA driver in both cases. Precise information about the PC in question can be found here:
+
+http://h10025.www1.hp.com/ewfrf/wc/document?docname=c00384724&tmp_task=prodinfoCategory&lc=en&dlc=en&cc=uk&lang=en&product=482528
+
+Thanks for any help here,
+Cheers,
+Chris
+
+
+
+      
