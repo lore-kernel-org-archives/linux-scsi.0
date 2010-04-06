@@ -1,76 +1,30 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: sense data for status GOOD
-Date: Tue, 06 Apr 2010 15:15:58 +0300
-Message-ID: <4BBB25FE.2000906@panasas.com>
-References: <4BB2203F.1060409@interlog.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Tue, 6 Apr 2010 10:49:58 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1004061048590.1722-100000@iolanthe.rowland.org>
+References: <4BBAD7FF.5000605@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:61515 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752404Ab0DFMQD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 08:16:03 -0400
-In-Reply-To: <4BB2203F.1060409@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4BBAD7FF.5000605-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: linux-scsi@vger.kernel.org
 
-On 03/30/2010 07:01 PM, Douglas Gilbert wrote:
-> The folk at t10.org slipped this innocuous looking
-> addition into sam5r04 section 5.3.1 on status codes.
+On Tue, 6 Apr 2010, Jonas Schwertfeger wrote:
+
+> Here is the trace after limiting memory to 900M:
 > 
-> "Sense data may be delivered in the buffer defined by
-> the Sense Data argument of the Execute Command
-> procedure call (see 5.1) for any status code."
-> 
-> Previously sense data was only valid for status
-> CHECK_CONDITION [0x2] (and the obsolete
-> COMMAND_TERMINATED [0x22]). The quoted section in
-> the previous paragraph means that sense data could
-> arrive with any status code.
-> 
-> And now with draft sbc3r22 there is an example:
-> status=GOOD, sense_key=COMPLETED (recently added)
-> additional_sense_qualifier="INSPECT REFERRALS
-> SENSE DESCRIPTORS". Referrals are new and explained
-> in sbc3r22. IMO only a very small audience would
-> be interested in them. However it does indicate
-> a new trend.
-> 
-> 
-> So the question for the Linux scsi subsystem is
-> does it (or can it without many changes) convey
-> "non CHECK_CONDITION" sense data back up from
-> an initiator (LLD) to code that might care?
-> 
+> ffff88001fc82780 3529669229 S Bo:10:002:2 -115 31 = 55534243 ca000000 
+> 00020000 80001085 082e0000 00000000 00000000 40ec00
 
-scsi_cmnd->sense_buffer has an hard coded max_size and no associated
-current_size member. the scsi-ml, given a CHECK_CONDITION, will
-analyse the ->sense_buffer and determine it's size, then will copy
-the content and set the size into request's sense members. All this
-you already know.
+This trace was made using the original version of hdparm, not the 
+updated version.
 
-Now what do you want to happen?
-A. Only LLD knows when sense is available through host specific flags.
-  In that case:
-   I propose a new scsi_set_sense() that will just set the proper
-   request members. It should be called only if != CHECK_CONDITION,
-   since in that case it will just be over-written by the scsi-ml again.
-   (Or not that can be changed as well).
-   [This is a simple change, but needs LLD specific code every time]
+Alan Stern
 
-B. The protocol defines when a sense is available, by status + cmnd
-   combination, the sense is set by the target, the LLD has no special
-   knowledge if sense is present or not. In this case scsi-ml can just
-   inspect for these conditions and copy sense up the stack as before.
-
-Next step is for some ULD, to actually inspect these fields.
-
-> Doug Gilbert
-> 
-
-It does not look too complicated either way.
-
-Boaz
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
