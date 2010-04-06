@@ -1,43 +1,136 @@
-From: Grant Likely <grant.likely-s3s/WqlpOiPyB63q8FvJNQ@public.gmane.org>
-Subject: Re: [PATCH 33/37] sound/soc: use .dev.of_node instead of .node in
-	struct of_device
-Date: Mon, 5 Apr 2010 17:47:48 -0600
-Message-ID: <q2tfa686aa41004051647p4c8182d0h807583d09714761a@mail.gmail.com>
-References: <20100311174830.4824.19820.stgit@angua> <20100311180649.4824.10368.stgit@angua>
-	<20100405230301.GF32401@fluff.org.uk>
+From: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Tue, 06 Apr 2010 08:43:11 +0200
+Message-ID: <4BBAD7FF.5000605@gmail.com>
+References: <Pine.LNX.4.44L0.1004031648230.21507-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20100405230301.GF32401-elnMNo+KYs3pIgCt6eIbzw@public.gmane.org>
-Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ben Dooks <ben-linux-elnMNo+KYs3YtjvyW6yDsg@public.gmane.org>
-Cc: monstr-pSz03upnqPeHXe+LvDLADg@public.gmane.org, gregkh-l3A5Bk7waGM@public.gmane.org, benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org, dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, jeremy.kerr-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, James.Bottomley-l3A5Bk7waGM@public.gmane.org, broonie-yzvPICuk2AATkU/dhu1WVueM+bqZidxxQQ4Iyu8u01E@public.gmane.org, microblaze-uclinux-rVRm/Wmeqae7NGdpmJTKYQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-mnsaURCQ41sdnm+yROfE0A@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1004031648230.21507-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Ben, thanks for the comment.  Reply below...
-
-On Mon, Apr 5, 2010 at 5:03 PM, Ben Dooks <ben-linux-elnMNo+KYs3YtjvyW6yDsg@public.gmane.org> wrote:
-> On Thu, Mar 11, 2010 at 11:06:50AM -0700, Grant Likely wrote:
->> .node is being removed
-[...]
->> --- a/sound/soc/fsl/mpc8610_hpcd.c
->> +++ b/sound/soc/fsl/mpc8610_hpcd.c
->> @@ -202,7 +202,7 @@ static struct snd_soc_ops mpc8610_hpcd_ops =3D {
->> =A0static int mpc8610_hpcd_probe(struct of_device *ofdev,
->> =A0 =A0 =A0 const struct of_device_id *match)
->> =A0{
->> - =A0 =A0 struct device_node *np =3D ofdev->node;
->> + =A0 =A0 struct device_node *np =3D ofdev->dev.of_node;
->> =A0 =A0 =A0 struct device_node *codec_np =3D NULL;
->> =A0 =A0 =A0 struct device_node *guts_np =3D NULL;
->> =A0 =A0 =A0 struct device_node *dma_np =3D NULL;
+On 04/03/2010 10:58 PM, Alan Stern wrote:
+>> ffff8802123996c0 4253715661 S Bo:10:002:2 -115 31 = 55534243 9e000000
+>> 60000000 80000603 00000060 00000000 00000000 000000
+>> ffff8802123996c0 4253715707 C Bo:10:002:2 0 31>
+>> ffff8801f36c6a80 4253715723 S Bi:10:002:1 -115 96<
+>> ffff8801f36c6a80 4253715763 C Bi:10:002:1 0 96 Z
+>> ffff8802123996c0 4253715779 S Bi:10:002:1 -115 13<
+>> ffff8802123996c0 4253715819 C Bi:10:002:1 0 13 = 55534253 9e000000
+>> 00000000 00
 >
-> This looks like one case where an inline function would have been a
-> help.
+> Here usb-storage asked the reason for the failure.  Unfortunately we
+> can't see the response.  Did you run this on a computer with more than
+> 1 GB of memory?  If you did, can you boot with "mem=900M" and try
+> again?
 
-In what regard (how would you like it to look)?  The node pointer
-location is very unlikely to move again, and I prefer the clarity of
-direct dereferencing.
+Here is the trace after limiting memory to 900M:
 
-g.
+ffff88001fc82780 3529669229 S Bo:10:002:2 -115 31 = 55534243 ca000000 
+00020000 80001085 082e0000 00000000 00000000 40ec00
+ffff88001fc82780 3529669272 C Bo:10:002:2 0 31 >
+ffff880009312840 3529669349 S Bi:10:002:1 -115 512 <
+ffff880009312840 3529669382 C Bi:10:002:1 -32 0
+ffff88001fc82780 3529669400 S Co:10:002:0 s 02 01 0000 0081 0000 0
+ffff88001fc82780 3529669680 C Co:10:002:0 0 0
+ffff88001fc82780 3529669701 S Bi:10:002:1 -115 13 <
+ffff88001fc82780 3529669959 C Bi:10:002:1 0 13 = 55534253 ca000000 
+00020000 02
+ffff880009312840 3529669979 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff880009312840 3529669982 C Co:10:001:0 -32 0
+ffff880009312840 3529669991 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff880009312840 3529669994 C Co:10:001:0 -32 0
+ffff880009312840 3529670000 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff880009312840 3529670002 C Co:10:001:0 -32 0
+ffff880009312840 3529670007 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff880009312840 3529670010 C Co:10:001:0 -32 0
+ffff880009312840 3529670015 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff880009312840 3529670017 C Co:10:001:0 -32 0
+ffff88001c6780c0 3529670069 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
+ffff88001c6780c0 3529670079 C Ci:10:001:0 0 4 = 03090000
+ffff88001c678d80 3530198291 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff88001c678d80 3530198297 C Co:10:001:0 -32 0
+ffff88001c678d80 3530618318 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff88001c678d80 3530618323 C Co:10:001:0 -32 0
+ffff88001c678d80 3531038299 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff88001c678d80 3531038305 C Co:10:001:0 -32 0
+ffff88001c678d80 3531458316 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff88001c678d80 3531458322 C Co:10:001:0 -32 0
+ffff88001c678d80 3531458339 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff88001c678d80 3531458342 C Co:10:001:0 -32 0
+ffff8800240da900 3534018309 C Ii:10:001:1 -2:8 0
+ffff8800093d9840 3534018323 S Ci:10:001:0 s a3 00 0000 0001 0004 4 <
+ffff8800093d9840 3534018328 C Ci:10:001:0 0 4 = 00010000
+ffff8800093d9840 3534018331 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
+ffff8800093d9840 3534018334 C Ci:10:001:0 0 4 = 03090000
+ffff8800093d9840 3534018335 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3534018338 C Co:10:001:0 -32 0
+ffff8800093d9840 3534018339 S Ci:10:001:0 s a3 00 0000 0003 0004 4 <
+ffff8800093d9840 3534018342 C Ci:10:001:0 0 4 = 00010000
+ffff8800093d9840 3534018343 S Ci:10:001:0 s a3 00 0000 0004 0004 4 <
+ffff8800093d9840 3534018346 C Ci:10:001:0 0 4 = 00010000
+ffff8800240da900 3534018347 S Ii:10:001:1 -115:8 4 <
+ffff88001c678d80 3534018358 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
+ffff88001c678d80 3534018362 C Ci:10:001:0 0 4 = 03090000
+ffff8800093d9840 3534438322 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3534438329 C Co:10:001:0 -32 0
+ffff8800093d9840 3534858284 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3534858289 C Co:10:001:0 -32 0
+ffff8800093d9840 3535278319 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3535278325 C Co:10:001:0 -32 0
+ffff8800093d9840 3535698317 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3535698324 C Co:10:001:0 -32 0
+ffff8800093d9840 3535698345 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3535698348 C Co:10:001:0 -32 0
+ffff8800240da900 3538138309 C Ii:10:001:1 -2:8 0
+ffff8800093d9840 3538138316 S Ci:10:001:0 s a3 00 0000 0001 0004 4 <
+ffff8800093d9840 3538138320 C Ci:10:001:0 0 4 = 00010000
+ffff8800093d9840 3538138322 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
+ffff8800093d9840 3538138327 C Ci:10:001:0 0 4 = 03090000
+ffff8800093d9840 3538138328 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3538138331 C Co:10:001:0 -32 0
+ffff8800093d9840 3538138332 S Ci:10:001:0 s a3 00 0000 0003 0004 4 <
+ffff8800093d9840 3538138335 C Ci:10:001:0 0 4 = 00010000
+ffff8800093d9840 3538138336 S Ci:10:001:0 s a3 00 0000 0004 0004 4 <
+ffff8800093d9840 3538138338 C Ci:10:001:0 0 4 = 00010000
+ffff8800240da900 3538138339 S Ii:10:001:1 -115:8 4 <
+ffff8800093d9840 3538138347 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
+ffff8800093d9840 3538138349 C Ci:10:001:0 0 4 = 03090000
+ffff8800093d9840 3538558292 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3538558298 C Co:10:001:0 -32 0
+ffff8800093d9840 3538978287 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3538978293 C Co:10:001:0 -32 0
+ffff8800093d9840 3539398284 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3539398291 C Co:10:001:0 -32 0
+ffff8800093d9840 3539818282 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3539818288 C Co:10:001:0 -32 0
+ffff8800093d9840 3539818308 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3539818311 C Co:10:001:0 -32 0
+ffff8800240da900 3542138321 C Ii:10:001:1 -2:8 0
+ffff8800093d9840 3542138328 S Ci:10:001:0 s a3 00 0000 0001 0004 4 <
+ffff8800093d9840 3542138332 C Ci:10:001:0 0 4 = 00010000
+ffff8800093d9840 3542138334 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
+ffff8800093d9840 3542138337 C Ci:10:001:0 0 4 = 03090000
+ffff8800093d9840 3542138339 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3542138342 C Co:10:001:0 -32 0
+ffff8800093d9840 3542138345 S Ci:10:001:0 s a3 00 0000 0003 0004 4 <
+ffff8800093d9840 3542138348 C Ci:10:001:0 0 4 = 00010000
+ffff8800093d9840 3542138349 S Ci:10:001:0 s a3 00 0000 0004 0004 4 <
+ffff8800093d9840 3542138352 C Ci:10:001:0 0 4 = 00010000
+ffff8800240da900 3542138353 S Ii:10:001:1 -115:8 4 <
+ffff8800093d9840 3542138363 S Ci:10:001:0 s a3 00 0000 0002 0004 4 <
+ffff8800093d9840 3542138366 C Ci:10:001:0 0 4 = 03090000
+ffff8800093d9840 3542558309 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3542558316 C Co:10:001:0 -32 0
+ffff8800093d9840 3542978288 S Co:10:001:0 s 23 01 0001 0002 0000 0
+ffff8800093d9840 3542978294 C Co:10:001:0 -32 0
+
+-Jonas
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
