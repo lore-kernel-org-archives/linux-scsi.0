@@ -1,416 +1,559 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/7] lpfc 8.3.12: Emulex SLI enhancements
-Date: Tue, 6 Apr 2010 14:48:51 -0400
-Message-ID: <1270579763.19178.21.camel@wookie>
+Subject: [PATCH 3/7] lpfc 8.3.12: T10-PI/DIF changes
+Date: Tue, 6 Apr 2010 14:49:53 -0400
+Message-ID: <1270579813.19178.24.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:15622 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:15710 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757428Ab0DFSuD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 14:50:03 -0400
+	with ESMTP id S1757539Ab0DFSud (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Apr 2010 14:50:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-- Add the new Logical Link speed event support.
-- Add RATOV and EDTOV to the REG_VFI mailbox command.
+Update driver for change in T10-PI interface on adapter
+- Remove Profiles.
+- Add new SLI Opcodes.
+- Add new PDE structures used for BlockGuard.
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_hw.h   |    1 
- lpfc_hw4.h  |   53 ++++++++++++++++++++++++++-
- lpfc_init.c |   30 +++++++++++++++
- lpfc_mbox.c |    2 +
- lpfc_sli.c  |  116 +++++++++++++++++++++++++++++++++++++++++++++++++++---------
- lpfc_sli.h  |    1 
- lpfc_sli4.h |    4 +-
- 7 files changed, 187 insertions(+), 20 deletions(-)
+ lpfc_hw.h   |  173 +++++++++++++++++++++++++++---------------------------------
+ lpfc_scsi.c |  147 ++++++++++++++++++++++++++++++++++----------------
+ 2 files changed, 179 insertions(+), 141 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2010-04-06 12:46:53.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2010-04-06 12:56:53.000000000 -0400
-@@ -787,6 +787,7 @@ struct mbox_header {
- #define LPFC_MBOX_OPCODE_EQ_DESTROY		0x37
- #define LPFC_MBOX_OPCODE_QUERY_FW_CFG		0x3A
- #define LPFC_MBOX_OPCODE_FUNCTION_RESET		0x3D
-+#define LPFC_MBOX_OPCODE_MQ_CREATE_EXT		0x5A
- 
- /* FCoE Opcodes */
- #define LPFC_MBOX_OPCODE_FCOE_WQ_CREATE			0x01
-@@ -1108,6 +1109,39 @@ struct lpfc_mbx_mq_create {
- 	} u;
- };
- 
-+struct lpfc_mbx_mq_create_ext {
-+	struct mbox_header header;
-+	union {
-+		struct {
-+			uint32_t word0;
-+#define lpfc_mbx_mq_create_ext_num_pages_SHIFT		0
-+#define lpfc_mbx_mq_create_ext_num_pages_MASK		0x0000FFFF
-+#define lpfc_mbx_mq_create_ext_num_pages_WORD		word0
-+			uint32_t async_evt_bmap;
-+#define lpfc_mbx_mq_create_ext_async_evt_link_SHIFT	LPFC_TRAILER_CODE_LINK
-+#define lpfc_mbx_mq_create_ext_async_evt_link_MASK	0x00000001
-+#define lpfc_mbx_mq_create_ext_async_evt_link_WORD	async_evt_bmap
-+#define lpfc_mbx_mq_create_ext_async_evt_fcfste_SHIFT	LPFC_TRAILER_CODE_FCOE
-+#define lpfc_mbx_mq_create_ext_async_evt_fcfste_MASK	0x00000001
-+#define lpfc_mbx_mq_create_ext_async_evt_fcfste_WORD	async_evt_bmap
-+#define lpfc_mbx_mq_create_ext_async_evt_group5_SHIFT	LPFC_TRAILER_CODE_GRP5
-+#define lpfc_mbx_mq_create_ext_async_evt_group5_MASK	0x00000001
-+#define lpfc_mbx_mq_create_ext_async_evt_group5_WORD	async_evt_bmap
-+			struct mq_context context;
-+			struct dma_address page[LPFC_MAX_MQ_PAGE];
-+		} request;
-+		struct {
-+			uint32_t word0;
-+#define lpfc_mbx_mq_create_q_id_SHIFT	0
-+#define lpfc_mbx_mq_create_q_id_MASK	0x0000FFFF
-+#define lpfc_mbx_mq_create_q_id_WORD	word0
-+		} response;
-+	} u;
-+#define LPFC_ASYNC_EVENT_LINK_STATE	0x2
-+#define LPFC_ASYNC_EVENT_FCF_STATE	0x4
-+#define LPFC_ASYNC_EVENT_GROUP5		0x20
-+};
-+
- struct lpfc_mbx_mq_destroy {
- 	struct mbox_header header;
- 	union {
-@@ -1434,8 +1468,8 @@ struct lpfc_mbx_reg_vfi {
- #define lpfc_reg_vfi_fcfi_WORD		word2
- 	uint32_t wwn[2];
- 	struct ulp_bde64 bde;
--	uint32_t word8_rsvd;
--	uint32_t word9_rsvd;
-+	uint32_t e_d_tov;
-+	uint32_t r_a_tov;
- 	uint32_t word10;
- #define lpfc_reg_vfi_nport_id_SHIFT		0
- #define lpfc_reg_vfi_nport_id_MASK		0x00FFFFFF
-@@ -2048,6 +2082,7 @@ struct lpfc_mqe {
- 		struct lpfc_mbx_reg_fcfi reg_fcfi;
- 		struct lpfc_mbx_unreg_fcfi unreg_fcfi;
- 		struct lpfc_mbx_mq_create mq_create;
-+		struct lpfc_mbx_mq_create_ext mq_create_ext;
- 		struct lpfc_mbx_eq_create eq_create;
- 		struct lpfc_mbx_cq_create cq_create;
- 		struct lpfc_mbx_wq_create wq_create;
-@@ -2106,6 +2141,7 @@ struct lpfc_mcqe {
- #define LPFC_TRAILER_CODE_LINK	0x1
- #define LPFC_TRAILER_CODE_FCOE	0x2
- #define LPFC_TRAILER_CODE_DCBX	0x3
-+#define LPFC_TRAILER_CODE_GRP5	0x5
- };
- 
- struct lpfc_acqe_link {
-@@ -2175,6 +2211,19 @@ struct lpfc_acqe_dcbx {
- 	uint32_t trailer;
- };
- 
-+struct lpfc_acqe_grp5 {
-+	uint32_t word0;
-+#define lpfc_acqe_grp5_pport_SHIFT	0
-+#define lpfc_acqe_grp5_pport_MASK	0x000000FF
-+#define lpfc_acqe_grp5_pport_WORD	word0
-+	uint32_t word1;
-+#define lpfc_acqe_grp5_llink_spd_SHIFT	16
-+#define lpfc_acqe_grp5_llink_spd_MASK	0x0000FFFF
-+#define lpfc_acqe_grp5_llink_spd_WORD	word1
-+	uint32_t event_tag;
-+	uint32_t trailer;
-+};
-+
- /*
-  * Define the bootstrap mailbox (bmbx) region used to communicate
-  * mailbox command between the host and port. The mailbox consists
 diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2010-04-06 12:46:53.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2010-04-06 12:56:53.000000000 -0400
-@@ -1500,6 +1500,7 @@ typedef struct {		/* FireFly BIU registe
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2010-04-06 12:56:53.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2010-04-06 12:57:42.000000000 -0400
+@@ -1500,7 +1500,6 @@ typedef struct {		/* FireFly BIU registe
  #define MBXERR_BAD_RCV_LENGTH       14
  #define MBXERR_DMA_ERROR            15
  #define MBXERR_ERROR                16
-+#define MBXERR_UNKNOWN_CMD          18
+-#define MBXERR_UNKNOWN_CMD          18
  #define MBXERR_LINK_DOWN            0x33
  #define MBX_NOT_FINISHED           255
  
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2010-04-06 12:46:53.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2010-04-06 12:56:53.000000000 -0400
-@@ -3525,6 +3525,32 @@ lpfc_sli4_async_dcbx_evt(struct lpfc_hba
+@@ -1566,94 +1565,82 @@ enum lpfc_protgrp_type {
+ };
+ 
+ /* PDE Descriptors */
+-#define LPFC_PDE1_DESCRIPTOR		0x81
+-#define LPFC_PDE2_DESCRIPTOR		0x82
+-#define LPFC_PDE3_DESCRIPTOR		0x83
+-
+-/* BlockGuard Profiles */
+-enum lpfc_bg_prof_codes {
+-	LPFC_PROF_INVALID,
+-	LPFC_PROF_A1	= 128,	/* Full Protection			      */
+-	LPFC_PROF_A2,		/* Disabled Protection Checks:A2~A4           */
+-	LPFC_PROF_A3,
+-	LPFC_PROF_A4,
+-	LPFC_PROF_B1,		/* Embedded DIFs: B1~B3	                      */
+-	LPFC_PROF_B2,
+-	LPFC_PROF_B3,
+-	LPFC_PROF_C1,		/* Separate DIFs: C1~C3                       */
+-	LPFC_PROF_C2,
+-	LPFC_PROF_C3,
+-	LPFC_PROF_D1,		/* Full Protection                            */
+-	LPFC_PROF_D2,		/* Partial Protection & Check Disabling       */
+-	LPFC_PROF_D3,
+-	LPFC_PROF_E1,		/* E1~E4:out - check-only, in - update apptag */
+-	LPFC_PROF_E2,
+-	LPFC_PROF_E3,
+-	LPFC_PROF_E4,
+-	LPFC_PROF_F1,		/* Full Translation - F1 Prot Descriptor      */
+-				/* F1 Translation BDE                         */
+-	LPFC_PROF_ANT1,		/* TCP checksum, DIF inline with data buffers */
+-	LPFC_PROF_AST1,		/* TCP checksum, DIF split from data buffer   */
+-	LPFC_PROF_ANT2,
+-	LPFC_PROF_AST2
+-};
+-
+-/* BlockGuard error-control defines */
+-#define BG_EC_STOP_ERR			0x00
+-#define BG_EC_CONT_ERR			0x01
+-#define BG_EC_IGN_UNINIT_STOP_ERR	0x10
+-#define BG_EC_IGN_UNINIT_CONT_ERR	0x11
+-
+-/* PDE (Protection Descriptor Entry) word 0 bit masks and shifts */
+-#define PDE_DESC_TYPE_MASK		0xff000000
+-#define PDE_DESC_TYPE_SHIFT		24
+-#define PDE_BG_PROFILE_MASK		0x00ff0000
+-#define PDE_BG_PROFILE_SHIFT		16
+-#define PDE_BLOCK_LEN_MASK		0x0000fffc
+-#define PDE_BLOCK_LEN_SHIFT		2
+-#define PDE_ERR_CTRL_MASK		0x00000003
+-#define PDE_ERR_CTRL_SHIFT		0
+-/* PDE word 1 bit masks and shifts */
+-#define PDE_APPTAG_MASK_MASK		0xffff0000
+-#define PDE_APPTAG_MASK_SHIFT		16
+-#define PDE_APPTAG_VAL_MASK		0x0000ffff
+-#define PDE_APPTAG_VAL_SHIFT		0
+-struct lpfc_pde {
+-	uint32_t parms;     /* bitfields of descriptor, prof, len, and ec */
+-	uint32_t apptag;    /* bitfields of app tag maskand app tag value */
+-	uint32_t reftag;    /* reference tag occupying all 32 bits        */
+-};
+-
+-/* inline function to set fields in parms of PDE */
+-static inline void
+-lpfc_pde_set_bg_parms(struct lpfc_pde *p, u8 desc, u8 prof, u16 len, u8 ec)
+-{
+-	uint32_t *wp = &p->parms;
+-
+-	/* spec indicates that adapter appends two 0's to length field */
+-	len = len >> 2;
+-
+-	*wp &= 0;
+-	*wp |= ((desc << PDE_DESC_TYPE_SHIFT) & PDE_DESC_TYPE_MASK);
+-	*wp |= ((prof << PDE_BG_PROFILE_SHIFT) & PDE_BG_PROFILE_MASK);
+-	*wp |= ((len << PDE_BLOCK_LEN_SHIFT) & PDE_BLOCK_LEN_MASK);
+-	*wp |= ((ec << PDE_ERR_CTRL_SHIFT) & PDE_ERR_CTRL_MASK);
+-	*wp = le32_to_cpu(*wp);
+-}
+-
+-/* inline function to set apptag and reftag fields of PDE */
+-static inline void
+-lpfc_pde_set_dif_parms(struct lpfc_pde *p, u16 apptagmask, u16 apptagval,
+-		u32 reftag)
+-{
+-	uint32_t *wp = &p->apptag;
+-	*wp &= 0;
+-	*wp |= ((apptagmask << PDE_APPTAG_MASK_SHIFT) & PDE_APPTAG_MASK_MASK);
+-	*wp |= ((apptagval << PDE_APPTAG_VAL_SHIFT) & PDE_APPTAG_VAL_MASK);
+-	*wp = le32_to_cpu(*wp);
+-	wp = &p->reftag;
+-	*wp = le32_to_cpu(reftag);
+-}
++#define LPFC_PDE5_DESCRIPTOR		0x85
++#define LPFC_PDE6_DESCRIPTOR		0x86
++#define LPFC_PDE7_DESCRIPTOR		0x87
++
++/* BlockGuard Opcodes */
++#define BG_OP_IN_NODIF_OUT_CRC		0x0
++#define	BG_OP_IN_CRC_OUT_NODIF		0x1
++#define	BG_OP_IN_NODIF_OUT_CSUM		0x2
++#define	BG_OP_IN_CSUM_OUT_NODIF		0x3
++#define	BG_OP_IN_CRC_OUT_CRC		0x4
++#define	BG_OP_IN_CSUM_OUT_CSUM		0x5
++#define	BG_OP_IN_CRC_OUT_CSUM		0x6
++#define	BG_OP_IN_CSUM_OUT_CRC		0x7
++
++struct lpfc_pde5 {
++	uint32_t word0;
++#define pde5_type_SHIFT		24
++#define pde5_type_MASK		0x000000ff
++#define pde5_type_WORD		word0
++#define pde5_rsvd0_SHIFT	0
++#define pde5_rsvd0_MASK		0x00ffffff
++#define pde5_rsvd0_WORD		word0
++	uint32_t reftag;	/* Reference Tag Value			*/
++	uint32_t reftagtr;	/* Reference Tag Translation Value 	*/
++};
++
++struct lpfc_pde6 {
++	uint32_t word0;
++#define pde6_type_SHIFT		24
++#define pde6_type_MASK		0x000000ff
++#define pde6_type_WORD		word0
++#define pde6_rsvd0_SHIFT	0
++#define pde6_rsvd0_MASK		0x00ffffff
++#define pde6_rsvd0_WORD		word0
++	uint32_t word1;
++#define pde6_rsvd1_SHIFT	26
++#define pde6_rsvd1_MASK		0x0000003f
++#define pde6_rsvd1_WORD		word1
++#define pde6_na_SHIFT		25
++#define pde6_na_MASK		0x00000001
++#define pde6_na_WORD		word1
++#define pde6_rsvd2_SHIFT	16
++#define pde6_rsvd2_MASK		0x000001FF
++#define pde6_rsvd2_WORD		word1
++#define pde6_apptagtr_SHIFT	0
++#define pde6_apptagtr_MASK	0x0000ffff
++#define pde6_apptagtr_WORD	word1
++	uint32_t word2;
++#define pde6_optx_SHIFT		28
++#define pde6_optx_MASK		0x0000000f
++#define pde6_optx_WORD		word2
++#define pde6_oprx_SHIFT		24
++#define pde6_oprx_MASK		0x0000000f
++#define pde6_oprx_WORD		word2
++#define pde6_nr_SHIFT		23
++#define pde6_nr_MASK		0x00000001
++#define pde6_nr_WORD		word2
++#define pde6_ce_SHIFT		22
++#define pde6_ce_MASK		0x00000001
++#define pde6_ce_WORD		word2
++#define pde6_re_SHIFT		21
++#define pde6_re_MASK		0x00000001
++#define pde6_re_WORD		word2
++#define pde6_ae_SHIFT		20
++#define pde6_ae_MASK		0x00000001
++#define pde6_ae_WORD		word2
++#define pde6_ai_SHIFT		19
++#define pde6_ai_MASK		0x00000001
++#define pde6_ai_WORD		word2
++#define pde6_bs_SHIFT		16
++#define pde6_bs_MASK		0x00000007
++#define pde6_bs_WORD		word2
++#define pde6_apptagval_SHIFT	0
++#define pde6_apptagval_MASK	0x0000ffff
++#define pde6_apptagval_WORD	word2
++};
+ 
+
+ /* Structure for MB Command LOAD_SM and DOWN_LOAD */
+@@ -2488,8 +2475,8 @@ typedef struct {
+ #define  DMP_VPORT_REGION_SIZE	 0x200
+ #define  DMP_MBOX_OFFSET_WORD	 0x5
+ 
+-#define  DMP_REGION_23	 	 0x17   /* fcoe param  and port state region */
+-#define  DMP_RGN23_SIZE	 	 0x400
++#define  DMP_REGION_23		 0x17   /* fcoe param  and port state region */
++#define  DMP_RGN23_SIZE		 0x400
+ 
+ #define  WAKE_UP_PARMS_REGION_ID    4
+ #define  WAKE_UP_PARMS_WORD_SIZE   15
+@@ -2504,9 +2491,9 @@ struct vport_rec {
+ #define VPORT_INFO_REV 0x1
+ #define MAX_STATIC_VPORT_COUNT 16
+ struct static_vport_info {
+-	uint32_t 		signature;
++	uint32_t		signature;
+ 	uint32_t		rev;
+-	struct vport_rec 	vport_list[MAX_STATIC_VPORT_COUNT];
++	struct vport_rec	vport_list[MAX_STATIC_VPORT_COUNT];
+ 	uint32_t		resvd[66];
+ };
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-04-06 12:42:57.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-04-06 12:57:42.000000000 -0400
+@@ -1140,37 +1140,47 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hb
  }
  
- /**
-+ * lpfc_sli4_async_grp5_evt - Process the asynchronous group5 event
-+ * @phba: pointer to lpfc hba data structure.
-+ * @acqe_link: pointer to the async grp5 completion queue entry.
+ /*
+- * Given a scsi cmnd, determine the BlockGuard profile to be used
+- * with the cmd
++ * Given a scsi cmnd, determine the BlockGuard opcodes to be used with it
++ * @sc: The SCSI command to examine
++ * @txopt: (out) BlockGuard operation for transmitted data
++ * @rxopt: (out) BlockGuard operation for received data
 + *
-+ * This routine is to handle the SLI4 asynchronous grp5 event. A grp5 event
-+ * is an asynchronous notified of a logical link speed change.  The Port
-+ * reports the logical link speed in units of 10Mbps.
-+ **/
-+static void
-+lpfc_sli4_async_grp5_evt(struct lpfc_hba *phba,
-+			 struct lpfc_acqe_grp5 *acqe_grp5)
-+{
-+	uint16_t prev_ll_spd;
-+
-+	phba->fc_eventTag = acqe_grp5->event_tag;
-+	phba->fcoe_eventtag = acqe_grp5->event_tag;
-+	prev_ll_spd = phba->sli4_hba.link_state.logical_speed;
-+	phba->sli4_hba.link_state.logical_speed =
-+		(bf_get(lpfc_acqe_grp5_llink_spd, acqe_grp5));
-+	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+			"2789 GRP5 Async Event: Updating logical link speed "
-+			"from %dMbps to %dMbps\n", (prev_ll_spd * 10),
-+			(phba->sli4_hba.link_state.logical_speed*10));
-+}
-+
-+/**
-  * lpfc_sli4_async_event_proc - Process all the pending asynchronous event
-  * @phba: pointer to lpfc hba data structure.
-  *
-@@ -3560,6 +3586,10 @@ void lpfc_sli4_async_event_proc(struct l
- 			lpfc_sli4_async_dcbx_evt(phba,
- 						 &cq_event->cqe.acqe_dcbx);
- 			break;
-+		case LPFC_TRAILER_CODE_GRP5:
-+			lpfc_sli4_async_grp5_evt(phba,
-+						 &cq_event->cqe.acqe_grp5);
-+			break;
- 		default:
- 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 					"1804 Invalid asynchrous event code: "
-diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
---- a/drivers/scsi/lpfc/lpfc_mbox.c	2010-04-06 12:46:53.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c	2010-04-06 12:56:53.000000000 -0400
-@@ -1898,6 +1898,8 @@ lpfc_reg_vfi(struct lpfcMboxq *mbox, str
- 	memcpy(reg_vfi->wwn, &vport->fc_portname, sizeof(struct lpfc_name));
- 	reg_vfi->wwn[0] = cpu_to_le32(reg_vfi->wwn[0]);
- 	reg_vfi->wwn[1] = cpu_to_le32(reg_vfi->wwn[1]);
-+	reg_vfi->e_d_tov = vport->phba->fc_edtov;
-+	reg_vfi->r_a_tov = vport->phba->fc_ratov;
- 	reg_vfi->bde.addrHigh = putPaddrHigh(phys);
- 	reg_vfi->bde.addrLow = putPaddrLow(phys);
- 	reg_vfi->bde.tus.f.bdeSize = sizeof(vport->fc_sparam);
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2010-04-06 12:46:53.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2010-04-06 12:56:53.000000000 -0400
-@@ -493,8 +493,8 @@ void lpfc_sli4_queue_free(struct lpfc_qu
- uint32_t lpfc_eq_create(struct lpfc_hba *, struct lpfc_queue *, uint16_t);
- uint32_t lpfc_cq_create(struct lpfc_hba *, struct lpfc_queue *,
- 			struct lpfc_queue *, uint32_t, uint32_t);
--uint32_t lpfc_mq_create(struct lpfc_hba *, struct lpfc_queue *,
--			struct lpfc_queue *, uint32_t);
-+int32_t lpfc_mq_create(struct lpfc_hba *, struct lpfc_queue *,
-+		       struct lpfc_queue *, uint32_t);
- uint32_t lpfc_wq_create(struct lpfc_hba *, struct lpfc_queue *,
- 			struct lpfc_queue *, uint32_t);
- uint32_t lpfc_rq_create(struct lpfc_hba *, struct lpfc_queue *,
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2010-04-06 12:46:53.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-04-06 12:56:53.000000000 -0400
-@@ -9833,9 +9833,70 @@ out:
- }
- 
- /**
-+ * lpfc_mq_create_fb_init - Send MCC_CREATE without async events registration
-+ * @phba: HBA structure that indicates port to create a queue on.
-+ * @mq: The queue structure to use to create the mailbox queue.
-+ * @mbox: An allocated pointer to type LPFC_MBOXQ_t
-+ * @cq: The completion queue to associate with this cq.
++ * Returns: zero on success; non-zero if tx and/or rx op cannot be determined
 + *
-+ * This function provides failback (fb) functionality when the
-+ * mq_create_ext fails on older FW generations.  It's purpose is identical
-+ * to mq_create_ext otherwise.
-+ *
-+ * This routine cannot fail as all attributes were previously accessed and
-+ * initialized in mq_create_ext.
-+ **/
-+static void
-+lpfc_mq_create_fb_init(struct lpfc_hba *phba, struct lpfc_queue *mq,
-+		       LPFC_MBOXQ_t *mbox, struct lpfc_queue *cq)
-+{
-+	struct lpfc_mbx_mq_create *mq_create;
-+	struct lpfc_dmabuf *dmabuf;
-+	int length;
-+
-+	length = (sizeof(struct lpfc_mbx_mq_create) -
-+		  sizeof(struct lpfc_sli4_cfg_mhdr));
-+	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
-+			 LPFC_MBOX_OPCODE_MQ_CREATE,
-+			 length, LPFC_SLI4_MBX_EMBED);
-+	mq_create = &mbox->u.mqe.un.mq_create;
-+	bf_set(lpfc_mbx_mq_create_num_pages, &mq_create->u.request,
-+	       mq->page_count);
-+	bf_set(lpfc_mq_context_cq_id, &mq_create->u.request.context,
-+	       cq->queue_id);
-+	bf_set(lpfc_mq_context_valid, &mq_create->u.request.context, 1);
-+	switch (mq->entry_count) {
-+	case 16:
-+		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		       LPFC_MQ_CNT_16);
-+		break;
-+	case 32:
-+		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		       LPFC_MQ_CNT_32);
-+		break;
-+	case 64:
-+		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		       LPFC_MQ_CNT_64);
-+		break;
-+	case 128:
-+		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		       LPFC_MQ_CNT_128);
-+		break;
-+	}
-+	list_for_each_entry(dmabuf, &mq->page_list, list) {
-+		mq_create->u.request.page[dmabuf->buffer_tag].addr_lo =
-+			putPaddrLow(dmabuf->phys);
-+		mq_create->u.request.page[dmabuf->buffer_tag].addr_hi =
-+			putPaddrHigh(dmabuf->phys);
-+	}
-+}
-+
-+/**
-  * lpfc_mq_create - Create a mailbox Queue on the HBA
-  * @phba: HBA structure that indicates port to create a queue on.
-  * @mq: The queue structure to use to create the mailbox queue.
-+ * @cq: The completion queue to associate with this cq.
-+ * @subtype: The queue's subtype.
-  *
-  * This function creates a mailbox queue, as detailed in @mq, on a port,
-  * described by @phba by sending a MQ_CREATE mailbox command to the HBA.
-@@ -9851,31 +9912,40 @@ out:
-  * memory this function will return ENOMEM. If the queue create mailbox command
-  * fails this function will return ENXIO.
-  **/
--uint32_t
-+int32_t
- lpfc_mq_create(struct lpfc_hba *phba, struct lpfc_queue *mq,
- 	       struct lpfc_queue *cq, uint32_t subtype)
+  */
+ static int
+-lpfc_sc_to_sli_prof(struct lpfc_hba *phba, struct scsi_cmnd *sc)
++lpfc_sc_to_bg_opcodes(struct lpfc_hba *phba, struct scsi_cmnd *sc,
++		uint8_t *txop, uint8_t *rxop)
  {
- 	struct lpfc_mbx_mq_create *mq_create;
-+	struct lpfc_mbx_mq_create_ext *mq_create_ext;
- 	struct lpfc_dmabuf *dmabuf;
- 	LPFC_MBOXQ_t *mbox;
- 	int rc, length, status = 0;
- 	uint32_t shdr_status, shdr_add_status;
- 	union lpfc_sli4_cfg_shdr *shdr;
+ 	uint8_t guard_type = scsi_host_get_guard(sc->device->host);
+-	uint8_t ret_prof = LPFC_PROF_INVALID;
++	uint8_t ret = 0;
  
-+
- 	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!mbox)
- 		return -ENOMEM;
--	length = (sizeof(struct lpfc_mbx_mq_create) -
-+	length = (sizeof(struct lpfc_mbx_mq_create_ext) -
- 		  sizeof(struct lpfc_sli4_cfg_mhdr));
- 	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
--			 LPFC_MBOX_OPCODE_MQ_CREATE,
-+			 LPFC_MBOX_OPCODE_MQ_CREATE_EXT,
- 			 length, LPFC_SLI4_MBX_EMBED);
--	mq_create = &mbox->u.mqe.un.mq_create;
--	bf_set(lpfc_mbx_mq_create_num_pages, &mq_create->u.request,
-+
-+	mq_create_ext = &mbox->u.mqe.un.mq_create_ext;
-+	bf_set(lpfc_mbx_mq_create_ext_num_pages, &mq_create_ext->u.request,
- 		    mq->page_count);
--	bf_set(lpfc_mq_context_cq_id, &mq_create->u.request.context,
--		    cq->queue_id);
--	bf_set(lpfc_mq_context_valid, &mq_create->u.request.context, 1);
-+	bf_set(lpfc_mbx_mq_create_ext_async_evt_link, &mq_create_ext->u.request,
-+	       1);
-+	bf_set(lpfc_mbx_mq_create_ext_async_evt_fcfste,
-+	       &mq_create_ext->u.request, 1);
-+	bf_set(lpfc_mbx_mq_create_ext_async_evt_group5,
-+	       &mq_create_ext->u.request, 1);
-+	bf_set(lpfc_mq_context_cq_id, &mq_create_ext->u.request.context,
-+	       cq->queue_id);
-+	bf_set(lpfc_mq_context_valid, &mq_create_ext->u.request.context, 1);
- 	switch (mq->entry_count) {
- 	default:
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-@@ -9885,31 +9955,46 @@ lpfc_mq_create(struct lpfc_hba *phba, st
- 			return -EINVAL;
- 		/* otherwise default to smallest count (drop through) */
- 	case 16:
--		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		bf_set(lpfc_mq_context_count, &mq_create_ext->u.request.context,
- 		       LPFC_MQ_CNT_16);
- 		break;
- 	case 32:
--		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		bf_set(lpfc_mq_context_count, &mq_create_ext->u.request.context,
- 		       LPFC_MQ_CNT_32);
- 		break;
- 	case 64:
--		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		bf_set(lpfc_mq_context_count, &mq_create_ext->u.request.context,
- 		       LPFC_MQ_CNT_64);
- 		break;
- 	case 128:
--		bf_set(lpfc_mq_context_count, &mq_create->u.request.context,
-+		bf_set(lpfc_mq_context_count, &mq_create_ext->u.request.context,
- 		       LPFC_MQ_CNT_128);
- 		break;
+ 	if (guard_type == SHOST_DIX_GUARD_IP) {
+ 		switch (scsi_get_prot_op(sc)) {
+ 		case SCSI_PROT_READ_INSERT:
+ 		case SCSI_PROT_WRITE_STRIP:
+-			ret_prof = LPFC_PROF_AST2;
++			*txop = BG_OP_IN_CSUM_OUT_NODIF;
++			*rxop = BG_OP_IN_NODIF_OUT_CSUM;
+ 			break;
+ 
+ 		case SCSI_PROT_READ_STRIP:
+ 		case SCSI_PROT_WRITE_INSERT:
+-			ret_prof = LPFC_PROF_A1;
++			*txop = BG_OP_IN_NODIF_OUT_CRC;
++			*rxop = BG_OP_IN_CRC_OUT_NODIF;
+ 			break;
+ 
+ 		case SCSI_PROT_READ_PASS:
+ 		case SCSI_PROT_WRITE_PASS:
+-			ret_prof = LPFC_PROF_AST1;
++			*txop = BG_OP_IN_CSUM_OUT_CRC;
++			*rxop = BG_OP_IN_CRC_OUT_CSUM;
+ 			break;
+ 
+ 		case SCSI_PROT_NORMAL:
+ 		default:
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+-				"9063 BLKGRD:Bad op/guard:%d/%d combination\n",
++				"9063 BLKGRD: Bad op/guard:%d/%d combination\n",
+ 					scsi_get_prot_op(sc), guard_type);
++			ret = 1;
+ 			break;
+ 
+ 		}
+@@ -1178,12 +1188,14 @@ lpfc_sc_to_sli_prof(struct lpfc_hba *phb
+ 		switch (scsi_get_prot_op(sc)) {
+ 		case SCSI_PROT_READ_STRIP:
+ 		case SCSI_PROT_WRITE_INSERT:
+-			ret_prof = LPFC_PROF_A1;
++			*txop = BG_OP_IN_NODIF_OUT_CRC;
++			*rxop = BG_OP_IN_CRC_OUT_NODIF;
+ 			break;
+ 
+ 		case SCSI_PROT_READ_PASS:
+ 		case SCSI_PROT_WRITE_PASS:
+-			ret_prof = LPFC_PROF_C1;
++			*txop = BG_OP_IN_CRC_OUT_CRC;
++			*rxop = BG_OP_IN_CRC_OUT_CRC;
+ 			break;
+ 
+ 		case SCSI_PROT_READ_INSERT:
+@@ -1193,6 +1205,7 @@ lpfc_sc_to_sli_prof(struct lpfc_hba *phb
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+ 				"9075 BLKGRD: Bad op/guard:%d/%d combination\n",
+ 					scsi_get_prot_op(sc), guard_type);
++			ret = 1;
+ 			break;
+ 		}
+ 	} else {
+@@ -1200,7 +1213,7 @@ lpfc_sc_to_sli_prof(struct lpfc_hba *phb
+ 		BUG();
  	}
- 	list_for_each_entry(dmabuf, &mq->page_list, list) {
--		mq_create->u.request.page[dmabuf->buffer_tag].addr_lo =
-+		mq_create_ext->u.request.page[dmabuf->buffer_tag].addr_lo =
- 					putPaddrLow(dmabuf->phys);
--		mq_create->u.request.page[dmabuf->buffer_tag].addr_hi =
-+		mq_create_ext->u.request.page[dmabuf->buffer_tag].addr_hi =
- 					putPaddrHigh(dmabuf->phys);
- 	}
- 	rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
-+	shdr = (union lpfc_sli4_cfg_shdr *) &mq_create_ext->header.cfg_shdr;
-+	mq->queue_id = bf_get(lpfc_mbx_mq_create_q_id,
-+			      &mq_create_ext->u.response);
-+	if (rc != MBX_SUCCESS) {
-+		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+				"2795 MQ_CREATE_EXT failed with "
-+				"status x%x. Failback to MQ_CREATE.\n",
-+				rc);
-+		lpfc_mq_create_fb_init(phba, mq, mbox, cq);
-+		mq_create = &mbox->u.mqe.un.mq_create;
-+		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
-+		shdr = (union lpfc_sli4_cfg_shdr *) &mq_create->header.cfg_shdr;
-+		mq->queue_id = bf_get(lpfc_mbx_mq_create_q_id,
-+				      &mq_create->u.response);
+ 
+-	return ret_prof;
++	return ret;
+ }
+ 
+ struct scsi_dif_tuple {
+@@ -1265,7 +1278,9 @@ lpfc_get_cmd_dif_parms(struct scsi_cmnd 
+  * The buffer list consists of just one protection group described
+  * below:
+  *                                +-------------------------+
+- *   start of prot group  -->     |          PDE_1          |
++ *   start of prot group  -->     |          PDE_5          |
++ *                                +-------------------------+
++ *                                |          PDE_6          |
+  *                                +-------------------------+
+  *                                |         Data BDE        |
+  *                                +-------------------------+
+@@ -1283,30 +1298,49 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba,
+ 		struct ulp_bde64 *bpl, int datasegcnt)
+ {
+ 	struct scatterlist *sgde = NULL; /* s/g data entry */
+-	struct lpfc_pde *pde1 = NULL;
++	struct lpfc_pde5 *pde5 = NULL;
++	struct lpfc_pde6 *pde6 = NULL;
+ 	dma_addr_t physaddr;
+-	int i = 0, num_bde = 0;
++	int i = 0, num_bde = 0, status;
+ 	int datadir = sc->sc_data_direction;
+-	int prof = LPFC_PROF_INVALID;
+ 	unsigned blksize;
+ 	uint32_t reftag;
+ 	uint16_t apptagmask, apptagval;
++	uint8_t txop, rxop;
+ 
+-	pde1 = (struct lpfc_pde *) bpl;
+-	prof = lpfc_sc_to_sli_prof(phba, sc);
+-
+-	if (prof == LPFC_PROF_INVALID)
++	status  = lpfc_sc_to_bg_opcodes(phba, sc, &txop, &rxop);
++	if (status)
+ 		goto out;
+ 
+-	/* extract some info from the scsi command for PDE1*/
++	/* extract some info from the scsi command for pde*/
+ 	blksize = lpfc_cmd_blksize(sc);
+ 	lpfc_get_cmd_dif_parms(sc, &apptagmask, &apptagval, &reftag);
+ 
+-	/* setup PDE1 with what we have */
+-	lpfc_pde_set_bg_parms(pde1, LPFC_PDE1_DESCRIPTOR, prof, blksize,
+-			BG_EC_STOP_ERR);
+-	lpfc_pde_set_dif_parms(pde1, apptagmask, apptagval, reftag);
++	/* setup PDE5 with what we have */
++	pde5 = (struct lpfc_pde5 *) bpl;
++	memset(pde5, 0, sizeof(struct lpfc_pde5));
++	bf_set(pde5_type, pde5, LPFC_PDE5_DESCRIPTOR);
++	pde5->reftag = reftag;
++
++	/* advance bpl and increment bde count */
++	num_bde++;
++	bpl++;
++	pde6 = (struct lpfc_pde6 *) bpl;
++
++	/* setup PDE6 with the rest of the info */
++	memset(pde6, 0, sizeof(struct lpfc_pde6));
++	bf_set(pde6_type, pde6, LPFC_PDE6_DESCRIPTOR);
++	bf_set(pde6_optx, pde6, txop);
++	bf_set(pde6_oprx, pde6, rxop);
++	if (datadir == DMA_FROM_DEVICE) {
++		bf_set(pde6_ce, pde6, 1);
++		bf_set(pde6_re, pde6, 1);
++		bf_set(pde6_ae, pde6, 1);
 +	}
-+
- 	/* The IOCTL status is embedded in the mailbox subheader. */
--	shdr = (union lpfc_sli4_cfg_shdr *) &mq_create->header.cfg_shdr;
- 	shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
- 	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
- 	if (shdr_status || shdr_add_status || rc) {
-@@ -9920,7 +10005,6 @@ lpfc_mq_create(struct lpfc_hba *phba, st
- 		status = -ENXIO;
- 		goto out;
++	bf_set(pde6_ai, pde6, 1);
++	bf_set(pde6_apptagval, pde6, apptagval);
+ 
++	/* advance bpl and increment bde count */
+ 	num_bde++;
+ 	bpl++;
+ 
+@@ -1341,15 +1375,17 @@ out:
+  * The buffer list for this type consists of one or more of the
+  * protection groups described below:
+  *                                    +-------------------------+
+- *   start of first prot group  -->   |          PDE_1          |
++ *   start of first prot group  -->   |          PDE_5          |
+  *                                    +-------------------------+
+- *                                    |      PDE_3 (Prot BDE)   |
++ *                                    |          PDE_6          |
++ *                                    +-------------------------+
++ *                                    |      PDE_7 (Prot BDE)   |
+  *                                    +-------------------------+
+  *                                    |        Data BDE         |
+  *                                    +-------------------------+
+  *                                    |more Data BDE's ... (opt)|
+  *                                    +-------------------------+
+- *   start of new  prot group  -->    |          PDE_1          |
++ *   start of new  prot group  -->    |          PDE_5          |
+  *                                    +-------------------------+
+  *                                    |          ...            |
+  *                                    +-------------------------+
+@@ -1368,19 +1404,21 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
+ {
+ 	struct scatterlist *sgde = NULL; /* s/g data entry */
+ 	struct scatterlist *sgpe = NULL; /* s/g prot entry */
+-	struct lpfc_pde *pde1 = NULL;
++	struct lpfc_pde5 *pde5 = NULL;
++	struct lpfc_pde6 *pde6 = NULL;
+ 	struct ulp_bde64 *prot_bde = NULL;
+ 	dma_addr_t dataphysaddr, protphysaddr;
+ 	unsigned short curr_data = 0, curr_prot = 0;
+ 	unsigned int split_offset, protgroup_len;
+ 	unsigned int protgrp_blks, protgrp_bytes;
+ 	unsigned int remainder, subtotal;
+-	int prof = LPFC_PROF_INVALID;
++	int status;
+ 	int datadir = sc->sc_data_direction;
+ 	unsigned char pgdone = 0, alldone = 0;
+ 	unsigned blksize;
+ 	uint32_t reftag;
+ 	uint16_t apptagmask, apptagval;
++	uint8_t txop, rxop;
+ 	int num_bde = 0;
+ 
+ 	sgpe = scsi_prot_sglist(sc);
+@@ -1393,31 +1431,47 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
+ 		return 0;
  	}
--	mq->queue_id = bf_get(lpfc_mbx_mq_create_q_id, &mq_create->u.response);
- 	if (mq->queue_id == 0xFFFF) {
- 		status = -ENXIO;
+ 
+-	prof = lpfc_sc_to_sli_prof(phba, sc);
+-	if (prof == LPFC_PROF_INVALID)
++	status = lpfc_sc_to_bg_opcodes(phba, sc, &txop, &rxop);
++	if (status)
  		goto out;
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2010-04-06 12:46:53.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2010-04-06 12:56:53.000000000 -0400
-@@ -36,6 +36,7 @@ struct lpfc_cq_event {
- 		struct lpfc_acqe_link		acqe_link;
- 		struct lpfc_acqe_fcoe		acqe_fcoe;
- 		struct lpfc_acqe_dcbx		acqe_dcbx;
-+		struct lpfc_acqe_grp5		acqe_grp5;
- 		struct lpfc_rcqe		rcqe_cmpl;
- 		struct sli4_wcqe_xri_aborted	wcqe_axri;
- 		struct lpfc_wcqe_complete	wcqe_cmpl;
+ 
+-	/* extract some info from the scsi command for PDE1*/
++	/* extract some info from the scsi command */
+ 	blksize = lpfc_cmd_blksize(sc);
+ 	lpfc_get_cmd_dif_parms(sc, &apptagmask, &apptagval, &reftag);
+ 
+ 	split_offset = 0;
+ 	do {
+-		/* setup the first PDE_1 */
+-		pde1 = (struct lpfc_pde *) bpl;
++		/* setup PDE5 with what we have */
++		pde5 = (struct lpfc_pde5 *) bpl;
++		memset(pde5, 0, sizeof(struct lpfc_pde5));
++		bf_set(pde5_type, pde5, LPFC_PDE5_DESCRIPTOR);
++		pde5->reftag = reftag;
++
++		/* advance bpl and increment bde count */
++		num_bde++;
++		bpl++;
++		pde6 = (struct lpfc_pde6 *) bpl;
+ 
+-		lpfc_pde_set_bg_parms(pde1, LPFC_PDE1_DESCRIPTOR, prof, blksize,
+-				BG_EC_STOP_ERR);
+-		lpfc_pde_set_dif_parms(pde1, apptagmask, apptagval, reftag);
++		/* setup PDE6 with the rest of the info */
++		memset(pde6, 0, sizeof(struct lpfc_pde6));
++		bf_set(pde6_type, pde6, LPFC_PDE6_DESCRIPTOR);
++		bf_set(pde6_optx, pde6, txop);
++		bf_set(pde6_oprx, pde6, rxop);
++		bf_set(pde6_ce, pde6, 1);
++		bf_set(pde6_re, pde6, 1);
++		bf_set(pde6_ae, pde6, 1);
++		bf_set(pde6_ai, pde6, 1);
++		bf_set(pde6_apptagval, pde6, apptagval);
+ 
++		/* advance bpl and increment bde count */
+ 		num_bde++;
+ 		bpl++;
+ 
+ 		/* setup the first BDE that points to protection buffer */
+ 		prot_bde = (struct ulp_bde64 *) bpl;
+ 		protphysaddr = sg_dma_address(sgpe);
+-		prot_bde->addrLow = le32_to_cpu(putPaddrLow(protphysaddr));
+-		prot_bde->addrHigh = le32_to_cpu(putPaddrHigh(protphysaddr));
++		prot_bde->addrHigh = le32_to_cpu(putPaddrLow(protphysaddr));
++		prot_bde->addrLow = le32_to_cpu(putPaddrHigh(protphysaddr));
+ 		protgroup_len = sg_dma_len(sgpe);
+ 
+
+@@ -1428,10 +1482,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
+ 		protgrp_bytes = protgrp_blks * blksize;
+ 
+ 		prot_bde->tus.f.bdeSize = protgroup_len;
+-		if (datadir == DMA_TO_DEVICE)
+-			prot_bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
+-		else
+-			prot_bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64I;
++		prot_bde->tus.f.bdeFlags = LPFC_PDE7_DESCRIPTOR;
+ 		prot_bde->tus.w = le32_to_cpu(bpl->tus.w);
+ 
+ 		curr_prot++;
+@@ -1483,6 +1534,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
+ 
+ 			/* Move to the next s/g segment if possible */
+ 			sgde = sg_next(sgde);
++
+ 		}
+ 
+ 		/* are we done ? */
+@@ -1505,7 +1557,6 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
+ 
+ out:
+ 
+-
+ 	return num_bde;
+ }
+ /*
+@@ -1827,8 +1878,8 @@ out:
+  * field of @lpfc_cmd for device with SLI-4 interface spec.
+  *
+  * Return codes:
+- * 	1 - Error
+- * 	0 - Success
++ *	1 - Error
++ *	0 - Success
+  **/
+ static int
+ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
+@@ -1936,8 +1987,8 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
+  * lpfc_hba struct.
+  *
+  * Return codes:
+- * 	1 - Error
+- * 	0 - Success
++ *	1 - Error
++ *	0 - Success
+  **/
+ static inline int
+ lpfc_scsi_prep_dma_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
 
 
