@@ -1,71 +1,79 @@
-From: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 07 Apr 2010 08:27:21 +0200
-Message-ID: <4BBC25C9.5030201@gmail.com>
-References: <Pine.LNX.4.44L0.1004061048590.1722-100000@iolanthe.rowland.org>
+From: Peter Korsgaard <jacmet@sunsite.dk>
+Subject: [PATCH,RESENDv2] scsi: use __uX types for headers exported to user space
+Date: Wed,  7 Apr 2010 09:33:10 +0200
+Message-ID: <1270625590-21164-1-git-send-email-jacmet@sunsite.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1004061048590.1722-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:51545 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228Ab0DGHd2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 03:33:28 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, james.smart@emulex.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
+Cc: Peter Korsgaard <jacmet@sunsite.dk>
 
-Here is the trace with Mark's fix:
+Commit 9e4f5e29 (FC Pass Thru support) exported a number of header file=
+s
+in include/scsi to user space, but didn't change the uX types to the
+userspace-compatible __uX types. Without that you'll get compile errors
+when including them - E.G.:
 
-ffff88003772c0c0 1008628966 S Bo:10:002:2 -115 31 = 55534243 95000000 
-00020000 80001085 082e0000 00010000 00000000 40ec00
-ffff88003772c0c0 1008629074 C Bo:10:002:2 0 31 >
-ffff880035b1d600 1008629094 S Bi:10:002:1 -115 512 <
-ffff880035b1d600 1008634784 C Bi:10:002:1 0 512 Z
-ffff88003772c0c0 1008634827 S Bi:10:002:1 -115 13 <
-ffff88003772c0c0 1008634861 C Bi:10:002:1 0 13 = 55534253 95000000 
-00000000 00
-ffff88003772c0c0 1008635021 S Bo:10:002:2 -115 31 = 55534243 96000000 
-00020000 80001085 082e0000 00010000 00000000 40a100
-ffff88003772c0c0 1008635050 C Bo:10:002:2 0 31 >
-ffff880035b1d600 1008635058 S Bi:10:002:1 -115 512 <
-ffff880035b1d600 1008635305 C Bi:10:002:1 -32 0
-ffff88003772c0c0 1008635375 S Co:10:002:0 s 02 01 0000 0081 0000 0
-ffff88003772c0c0 1008635645 C Co:10:002:0 0 0
-ffff88003772c0c0 1008635665 S Bi:10:002:1 -115 13 <
-ffff88003772c0c0 1008635910 C Bi:10:002:1 0 13 = 55534253 96000000 
-00020000 01
-ffff88003772c0c0 1008635925 S Bo:10:002:2 -115 31 = 55534243 97000000 
-60000000 80000603 00000060 00000000 00000000 000000
-ffff88003772c0c0 1008636017 C Bo:10:002:2 0 31 >
-ffff880035b1d600 1008636032 S Bi:10:002:1 -115 96 <
-ffff880035b1d600 1008636123 C Bi:10:002:1 0 96 Z
-ffff88003772c0c0 1008636137 S Bi:10:002:1 -115 13 <
-ffff88003772c0c0 1008636207 C Bi:10:002:1 0 13 = 55534253 97000000 
-00000000 00
-ffff88003772c0c0 1008638008 S Bo:10:002:2 -115 31 = 55534243 98000000 
-00100000 80000a28 00000000 00000008 00000000 000000
-ffff88003772c0c0 1008638101 C Bo:10:002:2 0 31 >
-ffff880008c53b40 1008638179 S Bi:10:002:1 -115 4096 <
-ffff880008c53b40 1008648547 C Bi:10:002:1 0 4096 Z
-ffff88003772c0c0 1008648627 S Bi:10:002:1 -115 13 <
-ffff88003772c0c0 1008648715 C Bi:10:002:1 0 13 = 55534253 98000000 
-00000000 00
+/tmp/include/scsi/scsi.h:145: error: expected specifier-qualifier-list
+before =E2=80=98u8=E2=80=99
 
--Jonas
+Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
+---
+- It seems like this didn't get committed after the last discussion, so
+  resending: http://lkml.org/lkml/2010/1/7/154
 
-On 04/06/2010 04:49 PM, Alan Stern wrote:
-> On Tue, 6 Apr 2010, Jonas Schwertfeger wrote:
->
->> Here is the trace after limiting memory to 900M:
->>
->> ffff88001fc82780 3529669229 S Bo:10:002:2 -115 31 = 55534243 ca000000
->> 00020000 80001085 082e0000 00000000 00000000 40ec00
->
-> This trace was made using the original version of hdparm, not the
-> updated version.
->
-> Alan Stern
->
+- Dropped unneeded 2nd hunk of scsi_netlink.h as noted by Boaz Harrosh.
+
+ include/scsi/scsi.h         |    8 ++++----
+ include/scsi/scsi_netlink.h |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 8b4deca..ec3053e 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -149,10 +149,10 @@ struct scsi_cmnd;
+=20
+ /* defined in T10 SCSI Primary Commands-2 (SPC2) */
+ struct scsi_varlen_cdb_hdr {
+-	u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
+-	u8 control;
+-	u8 misc[5];
+-	u8 additional_cdb_length;         /* total cdb length - 8 */
++	__u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
++	__u8 control;
++	__u8 misc[5];
++	__u8 additional_cdb_length;         /* total cdb length - 8 */
+ 	__be16 service_action;
+ 	/* service specific data follows */
+ };
+diff --git a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
+index 536752c..58ce8fe 100644
+--- a/include/scsi/scsi_netlink.h
++++ b/include/scsi/scsi_netlink.h
+@@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
+  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
+  */
+ #define SCSI_NL_VID_TYPE_SHIFT		56
+-#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
+-#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
+ #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
+=20
+=20
+--=20
+1.7.0
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
