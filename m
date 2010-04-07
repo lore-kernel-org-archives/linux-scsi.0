@@ -1,60 +1,93 @@
-From: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 07 Apr 2010 17:10:25 +0200
-Message-ID: <4BBCA061.80906@gmail.com>
-References: <Pine.LNX.4.44L0.1004071101560.1779-100000@iolanthe.rowland.org>
+From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
+Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
+Date: Wed, 07 Apr 2010 10:26:45 -0700
+Message-ID: <20100407172645.0434d49b@mailhost.serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1004071101560.1779-100000@iolanthe.rowland.org>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mark Lord <mlord@pobox.com>, dgilbert@interlog.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail96.messagelabs.com ([216.82.254.19]:50361 "EHLO
+	mail96.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758115Ab0DGR0s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 13:26:48 -0400
+In-Reply-To: 4BBBFF62.9090900@cs.wisc.edu
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, "ravi.anand" <ravi.anand@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Karen Xie <kxie@chelsio.com>
 
-On 04/07/2010 05:03 PM, Alan Stern wrote:
-> In that case, can you repeat the test using an EHCI controller instead
-> of xHCI?
+Mike,
 
-ffff8800345dbb40 2336453775 S Bo:1:004:2 -115 31 = 55534243 95000000 
-00020000 80001085 082e0000 00010000 00000000 40ec00
-ffff8800345dbb40 2336453948 C Bo:1:004:2 0 31 >
-ffff880035f30f00 2336453969 S Bi:1:004:1 -115 512 <
-ffff880035f30f00 2336459710 C Bi:1:004:1 0 512 = 4000ff3f 37c81000 
-00000000 3f000000 00000000 32534d35 394a5a30 30313237
-ffff8800345dbb40 2336459731 S Bi:1:004:1 -115 13 <
-ffff8800345dbb40 2336459822 C Bi:1:004:1 0 13 = 55534253 95000000 
-00000000 00
-ffff8800345dbb40 2336460054 S Bo:1:004:2 -115 31 = 55534243 96000000 
-00020000 80001085 082e0000 00010000 00000000 40a100
-ffff8800345dbb40 2336460204 C Bo:1:004:2 0 31 >
-ffff880035f30f00 2336460222 S Bi:1:004:1 -115 512 <
-ffff880035f30f00 2336460472 C Bi:1:004:1 -32 0
-ffff8800345dbb40 2336460492 S Co:1:004:0 s 02 01 0000 0081 0000 0
-ffff8800345dbb40 2336460579 C Co:1:004:0 0 0
-ffff8800345dbb40 2336460596 S Bi:1:004:1 -115 13 <
-ffff8800345dbb40 2336460711 C Bi:1:004:1 0 13 = 55534253 96000000 
-00020000 01
-ffff8800345dbb40 2336460729 S Bo:1:004:2 -115 31 = 55534243 97000000 
-60000000 80000603 00000060 00000000 00000000 000000
-ffff8800345dbb40 2336460823 C Bo:1:004:2 0 31 >
-ffff880035f30f00 2336460841 S Bi:1:004:1 -115 96 <
-ffff880035f30f00 2336460952 C Bi:1:004:1 0 96 = 720b0000 0000000e 
-090c0004 00010000 00000000 40510000 00000000 00000000
-ffff8800345dbb40 2336460970 S Bi:1:004:1 -115 13 <
-ffff8800345dbb40 2336461086 C Bi:1:004:1 0 13 = 55534253 97000000 
-00000000 00
-ffff8800345dbb40 2336462673 S Bo:1:004:2 -115 31 = 55534243 98000000 
-00100000 80000a28 00000000 00000008 00000000 000000
-ffff8800345dbb40 2336462826 C Bo:1:004:2 0 31 >
-ffff880035f30f00 2336462844 S Bi:1:004:1 -115 4096 <
-ffff880035f30f00 2336474954 C Bi:1:004:1 0 4096 = fab80010 8ed0bc00 
-b0b80000 8ed88ec0 fbbe007c bf0006b9 0002f3a4 ea210600
-ffff8800345dbb40 2336474975 S Bi:1:004:1 -115 13 <
-ffff8800345dbb40 2336475078 C Bi:1:004:1 0 13 = 55534253 98000000 
-00000000 00
+   Yes, IPV6 works for be2iscsi. One of our guys had set it up and we were able to do login etc.
 
-Here you go.
+You mentioned that be2iscsi handling is incorrect, can you let me know the details
 
--Jonas
+-Jay
+
+  _____  
+From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+To: ravi.anand [mailto:ravi.anand@qlogic.com]
+Cc: James Bottomley [mailto:james.bottomley@suse.de], Linux-SCSI Mailing List [mailto:linux-scsi@vger.kernel.org], Vikas Chaudhary [mailto:vikas.chaudhary@qlogic.com], open-iscsi [mailto:open-iscsi@googlegroups.com], Karen Xie [mailto:kxie@chelsio.com], Jayamohan Kalickal [mailto:jayamohank@serverengines.com]
+Sent: Tue, 06 Apr 2010 20:43:30 -0700
+Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
+
+On 04/06/2010 05:21 AM, ravi.anand wrote:
+>
+> On Feb 1, 2010, at 10:15 AM, Mike Christie wrote:
+>
+>> On 01/30/2010 12:28 AM, Ravi Anand wrote:
+>>>
+>>
+>>> + DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
+>>> + "State %04x ConnErr %08x "
+>>> + NIPQUAD_FMT ":%04d \"%s\"\n",
+>>
+>>
+>> Do you go down this path for ipv6 (looked like it did and did in other
+>> places)? NIPQUAD_FMT will not work, and we are trying to not use it
+>> NIPQUAD_FMT/NIPQUAD. See %pI4 use in qla4xxx_conn_get_param. There is
+>> also a %pI6 for ipv6.
+>>
+>> Also you need to update qla4xxx_conn_get_param and
+>> qla4xxx_host_get_param ip handling.
+>>>
+>>
+>
+> While trying to address the IPV6 part for conn_get_param() and
+> host_get_param(), we ran into
+> the dilemma how to populate IPV4 and IPV6 address at the same time.
+> Currently on our adapter IPV4 and IPV6 can be enabled at the same time
+> and can be active.
+>
+> So we wanted to find out if for following param mask :
+>
+> ISCSI_HOST_PARAM_IPADDRESS
+>
+> should we just fill the buffer for IPV4 and IPV6 address or should
+> we need define new param mask sepeartely for IPV6 ?
+>
+> Basically we will like to follow up with another patch to address this part
+> on to of the patches which we have just pushed.
+>
+
+Right now iscsi_tcp supports ipv4 and ipv6 for that param. I think 
+people have been saying it might be easier to break it up into a ipv4 
+and ipv6 param.
+
+Karen, it seems like you are only supporting ipv4 right now. Any thoughts?
+
+Jay, it seems be2iscsi handling is incorrect. Is your driver supporting 
+ipv6 right now?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+___________________________________________________________________________________
+This message, together with any attachment(s), contains confidential and proprietary information of
+ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
+review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
+intended recipient of this message, please immediately advise the sender by reply email message and
+delete all copies of this message and any attachment(s). Thank you.
+
