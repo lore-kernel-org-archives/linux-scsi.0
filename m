@@ -1,52 +1,29 @@
-From: <lemons_terry@emc.com>
-Subject: SCSI persistent reservation terms
-Date: Wed, 7 Apr 2010 10:55:49 -0400
-Message-ID: <3BEB5F9B6605A140847DEEEDF7439C5D040A06C8@CORPUSMX50A.corp.emc.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Wed, 7 Apr 2010 11:03:18 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1004071101560.1779-100000@iolanthe.rowland.org>
+References: <4BBC99ED.30306@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:10840 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932684Ab0DGO6u convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 10:58:50 -0400
-Received: from hop04-l1d11-si02.isus.emc.com (HOP04-L1D11-SI02.isus.emc.com [10.254.111.55])
-	by mexforward.lss.emc.com (Switch-3.3.2/Switch-3.1.7) with ESMTP id o37Ewm09009103
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Apr 2010 10:58:48 -0400
-Received: from mailhub.lss.emc.com (nagas.lss.emc.com [10.254.144.15]) by hop04-l1d11-si02.isus.emc.com (RSA Interceptor) for <linux-scsi@vger.kernel.org>; Wed, 7 Apr 2010 10:58:37 -0400
-Received: from corpussmtp4.corp.emc.com (corpussmtp4.corp.emc.com [10.254.169.197])
-	by mailhub.lss.emc.com (Switch-3.4.2/Switch-3.3.2mp) with ESMTP id o37EwZnq028924
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Apr 2010 10:58:36 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <4BBC99ED.30306@gmail.com>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Cc: Mark Lord <mlord@pobox.com>, dgilbert@interlog.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi
+On Wed, 7 Apr 2010, Jonas Schwertfeger wrote:
 
-I'm trying to understand one aspect of the SCSI persistent reservation =
-functionality. SPC-4 mentions the terms 'All Registrants' and 'Registra=
-nts Only', and applies these to both 'Write Exclusive' and 'Exclusive A=
-ccess'.  Nowhere can I find a definition of what these terms mean.  If =
-you would, please point me in the right direction.
+> On 04/07/2010 04:36 PM, Alan Stern wrote:
+> > This is not what I expected.  What version of the kernel are you using?
+> > Those 'Z' entries should not be possible in 2.6.33 or later.
+> 
+> I'm not using a 2.6.33 kernel. I'm using 2.6.32 (which is going to be 
+> the mainline version for Ubuntu 10.04 LTS, which is being released at 
+> the end of April).
 
-Thanks!
-tl
+In that case, can you repeat the test using an EHCI controller instead 
+of xHCI?
 
-Terry Lemons
-Backup Recovery Systems Division
-EMC=B2
-where information lives
-4400 Computer Drive, MS D239
-Westboro MA 01580
-Phone: 508 898 7312
-Email: Lemons_Terry@emc.com=20
+Alan Stern
 
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
