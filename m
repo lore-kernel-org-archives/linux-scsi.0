@@ -1,93 +1,110 @@
-From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
-Date: Wed, 07 Apr 2010 10:26:45 -0700
-Message-ID: <20100407172645.0434d49b@mailhost.serverengines.com>
+Date: Wed, 07 Apr 2010 12:41:32 -0500
+Message-ID: <4BBCC3CC.9000001@cs.wisc.edu>
+References: <20100130062822.GC10274@linux-qf4p> <4B671A34.9080300@cs.wisc.edu> <7312FDA8-2587-4DA7-9762-978EA46A8B9C@qlogic.com> <4BBBFF62.9090900@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail96.messagelabs.com ([216.82.254.19]:50361 "EHLO
-	mail96.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758115Ab0DGR0s convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 13:26:48 -0400
-In-Reply-To: 4BBBFF62.9090900@cs.wisc.edu
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38324 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751908Ab0DGRhX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Apr 2010 13:37:23 -0400
+In-Reply-To: <4BBBFF62.9090900@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, "ravi.anand" <ravi.anand@qlogic.com>
-Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Karen Xie <kxie@chelsio.com>
+To: "ravi.anand" <ravi.anand@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Karen Xie <kxie@chelsio.com>, Jayamohan Kalickal <jayamohank@serverengines.com>
 
-Mike,
-
-   Yes, IPV6 works for be2iscsi. One of our guys had set it up and we were able to do login etc.
-
-You mentioned that be2iscsi handling is incorrect, can you let me know the details
-
--Jay
-
-  _____  
-From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-To: ravi.anand [mailto:ravi.anand@qlogic.com]
-Cc: James Bottomley [mailto:james.bottomley@suse.de], Linux-SCSI Mailing List [mailto:linux-scsi@vger.kernel.org], Vikas Chaudhary [mailto:vikas.chaudhary@qlogic.com], open-iscsi [mailto:open-iscsi@googlegroups.com], Karen Xie [mailto:kxie@chelsio.com], Jayamohan Kalickal [mailto:jayamohank@serverengines.com]
-Sent: Tue, 06 Apr 2010 20:43:30 -0700
-Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
-
-On 04/06/2010 05:21 AM, ravi.anand wrote:
->
-> On Feb 1, 2010, at 10:15 AM, Mike Christie wrote:
->
->> On 01/30/2010 12:28 AM, Ravi Anand wrote:
+On 04/06/2010 10:43 PM, Mike Christie wrote:
+> On 04/06/2010 05:21 AM, ravi.anand wrote:
+>>
+>> On Feb 1, 2010, at 10:15 AM, Mike Christie wrote:
+>>
+>>> On 01/30/2010 12:28 AM, Ravi Anand wrote:
+>>>>
+>>>
+>>>> + DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
+>>>> + "State %04x ConnErr %08x "
+>>>> + NIPQUAD_FMT ":%04d \"%s\"\n",
+>>>
+>>>
+>>> Do you go down this path for ipv6 (looked like it did and did in other
+>>> places)? NIPQUAD_FMT will not work, and we are trying to not use it
+>>> NIPQUAD_FMT/NIPQUAD. See %pI4 use in qla4xxx_conn_get_param. There is
+>>> also a %pI6 for ipv6.
+>>>
+>>> Also you need to update qla4xxx_conn_get_param and
+>>> qla4xxx_host_get_param ip handling.
+>>>>
 >>>
 >>
->>> + DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
->>> + "State %04x ConnErr %08x "
->>> + NIPQUAD_FMT ":%04d \"%s\"\n",
+>> While trying to address the IPV6 part for conn_get_param() and
+>> host_get_param(), we ran into
+>> the dilemma how to populate IPV4 and IPV6 address at the same time.
+>> Currently on our adapter IPV4 and IPV6 can be enabled at the same time
+>> and can be active.
 >>
+>> So we wanted to find out if for following param mask :
 >>
->> Do you go down this path for ipv6 (looked like it did and did in other
->> places)? NIPQUAD_FMT will not work, and we are trying to not use it
->> NIPQUAD_FMT/NIPQUAD. See %pI4 use in qla4xxx_conn_get_param. There is
->> also a %pI6 for ipv6.
+>> ISCSI_HOST_PARAM_IPADDRESS
 >>
->> Also you need to update qla4xxx_conn_get_param and
->> qla4xxx_host_get_param ip handling.
->>>
+>> should we just fill the buffer for IPV4 and IPV6 address or should
+>> we need define new param mask sepeartely for IPV6 ?
+>>
+>> Basically we will like to follow up with another patch to address this
+>> part
+>> on to of the patches which we have just pushed.
 >>
 >
-> While trying to address the IPV6 part for conn_get_param() and
-> host_get_param(), we ran into
-> the dilemma how to populate IPV4 and IPV6 address at the same time.
-> Currently on our adapter IPV4 and IPV6 can be enabled at the same time
-> and can be active.
+> Right now iscsi_tcp supports ipv4 and ipv6 for that param. I think
+> people have been saying it might be easier to break it up into a ipv4
+> and ipv6 param.
 >
-> So we wanted to find out if for following param mask :
+> Karen, it seems like you are only supporting ipv4 right now. Any thoughts?
 >
-> ISCSI_HOST_PARAM_IPADDRESS
->
-> should we just fill the buffer for IPV4 and IPV6 address or should
-> we need define new param mask sepeartely for IPV6 ?
->
-> Basically we will like to follow up with another patch to address this part
-> on to of the patches which we have just pushed.
->
+> Jay, it seems be2iscsi handling is incorrect. Is your driver supporting
+> ipv6 right now?
 
-Right now iscsi_tcp supports ipv4 and ipv6 for that param. I think 
-people have been saying it might be easier to break it up into a ipv4 
-and ipv6 param.
 
-Karen, it seems like you are only supporting ipv4 right now. Any thoughts?
+After looking at the code, I think I misunderstood what you needed. You 
+want to have multiple ip addresses at the same time, right?
 
-Jay, it seems be2iscsi handling is incorrect. Is your driver supporting 
-ipv6 right now?
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+be2iscsi needs the ability to support multiple ipv4 and/or ipv6 
+addresses at the same time. I would think other cards are going to need 
+this feature one day too, so maybe we could make this a little more generic.
 
-___________________________________________________________________________________
-This message, together with any attachment(s), contains confidential and proprietary information of
-ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
-review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
-intended recipient of this message, please immediately advise the sender by reply email message and
-delete all copies of this message and any attachment(s). Thank you.
+Would having a ISCSI_HOST_PARAM_IPADDRESSES param where you can get N 
+addresses work for all cases? For the netlink side we could just define 
+the netlink msg to have a counter and some separator. And for bsg we 
+could do something similar.
 
+To display this in sysfs I think it gets more complicated, I think we 
+need to add a sysfs file for each address. And then actually I think we 
+want a sysfs dir for each address, because do want to config other 
+params for each address like a port or subnet mask or dns info, etc 
+(each item would be a sysfs file in some dir)? Or what about vlans too? 
+Some cards support multiple vlans, so would you want
+
+/sys/class/iscsi_host/host1
+And then the tree under the host would be
+
+tree host1
+
+# this one would be a vlan
+|-net_interface0
+	|-ip
+	|-subnet
+	|-vlan_idA
+|-net_interface1
+	|-ip
+	|-subnet
+	|-vlan_idB
+# no vlans but each interface has different ips
+|-net_interface2
+	|-ip
+	|-subnet_mask
+|-net_interface3
+	|-ip
+	|-subnet_mask
