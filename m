@@ -1,79 +1,89 @@
-From: Peter Korsgaard <jacmet@sunsite.dk>
-Subject: [PATCH,RESENDv2] scsi: use __uX types for headers exported to user space
-Date: Wed,  7 Apr 2010 09:33:10 +0200
-Message-ID: <1270625590-21164-1-git-send-email-jacmet@sunsite.dk>
+From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+Subject: [PATCH] mptsas: fixed hot-removal processing
+Date: Wed, 07 Apr 2010 19:17:24 +0900
+Message-ID: <4BBC5BB4.2050805@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:51545 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228Ab0DGHd2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 03:33:28 -0400
+Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:49380 "EHLO
+	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757388Ab0DGKSH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 06:18:07 -0400
+Received: from m6.gw.fujitsu.co.jp ([10.0.50.76])
+	by fgwmail5.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id o37AI4JR029993
+	for <linux-scsi@vger.kernel.org> (envelope-from tokunaga.keiich@jp.fujitsu.com);
+	Wed, 7 Apr 2010 19:18:04 +0900
+Received: from smail (m6 [127.0.0.1])
+	by outgoing.m6.gw.fujitsu.co.jp (Postfix) with ESMTP id EDF1645DE50
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
+Received: from s6.gw.fujitsu.co.jp (s6.gw.fujitsu.co.jp [10.0.50.96])
+	by m6.gw.fujitsu.co.jp (Postfix) with ESMTP id D01D945DE4F
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
+Received: from s6.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id B7AB71DB8014
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
+Received: from m024.s.css.fujitsu.com (m024.s.css.fujitsu.com [10.0.81.64])
+	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id 754941DB8013
+	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, james.smart@emulex.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
-Cc: Peter Korsgaard <jacmet@sunsite.dk>
+To: Desai Kashyap <kashyap.desai@lsi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-Commit 9e4f5e29 (FC Pass Thru support) exported a number of header file=
-s
-in include/scsi to user space, but didn't change the uX types to the
-userspace-compatible __uX types. Without that you'll get compile errors
-when including them - E.G.:
+Hi Kashyap,
 
-/tmp/include/scsi/scsi.h:145: error: expected specifier-qualifier-list
-before =E2=80=98u8=E2=80=99
+This patch fixes mptsas disk hot-removal processing.  The
+hot-removal processing doesn't complete because of this condition.
 
-Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
+  drivers/message/fusion/mptsas.c:
+  mptsas_taskmgmt_complete()
+
+  if ((mptsas_find_vtarget(ioc, channel, id)) && !ioc->fw_events_off)
+    mptsas_queue_device_delete(...);
+
+mptsas_queue_device_delete(), which must be called for
+hot-removal, never gets called because mptsas_find_vtarget()
+always returns 0 here.  At that time, the vtarget has already
+been freed in mptsas_target_destroy(), and also the scsi_device
+has been marked as SDEV_DEL.
+
+As a result of the issue, port deletion functions won't get
+called and the device ends up being in an incomplete state.
+(Some data structures and sysfs entries, which should be
+removed in hot-removal, remain.)  One side effect of this is
+that a hot-addition of the device (bringing the device back
+on) fails.
+
+This patch just removes mptsas_find_vtarget() from the if-state
+condition.
+
+This applies to 2.6.34-rc3.
+
+Thanks,
+Kei
+
+
+Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 ---
-- It seems like this didn't get committed after the last discussion, so
-  resending: http://lkml.org/lkml/2010/1/7/154
 
-- Dropped unneeded 2nd hunk of scsi_netlink.h as noted by Boaz Harrosh.
+ linux-2.6.34-rc3-kei/drivers/message/fusion/mptsas.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- include/scsi/scsi.h         |    8 ++++----
- include/scsi/scsi_netlink.h |    4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+diff -puN drivers/message/fusion/mptsas.c~fix-mptsas_hot_removal drivers/message/fusion/mptsas.c
+--- linux-2.6.34-rc3/drivers/message/fusion/mptsas.c~fix-mptsas_hot_removal	2010-04-07 16:47:36.000000000 +0900
++++ linux-2.6.34-rc3-kei/drivers/message/fusion/mptsas.c	2010-04-07 16:48:17.000000000 +0900
+@@ -1221,7 +1221,7 @@ mptsas_taskmgmt_complete(MPT_ADAPTER *io
+ 	 * enable work queue to remove device from upper layers
+ 	 */
+ 	list_del(&target_reset_list->list);
+-	if ((mptsas_find_vtarget(ioc, channel, id)) && !ioc->fw_events_off)
++	if (!ioc->fw_events_off)
+ 		mptsas_queue_device_delete(ioc,
+ 			&target_reset_list->sas_event_data);
+ 
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 8b4deca..ec3053e 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -149,10 +149,10 @@ struct scsi_cmnd;
-=20
- /* defined in T10 SCSI Primary Commands-2 (SPC2) */
- struct scsi_varlen_cdb_hdr {
--	u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
--	u8 control;
--	u8 misc[5];
--	u8 additional_cdb_length;         /* total cdb length - 8 */
-+	__u8 opcode;        /* opcode always =3D=3D VARIABLE_LENGTH_CMD */
-+	__u8 control;
-+	__u8 misc[5];
-+	__u8 additional_cdb_length;         /* total cdb length - 8 */
- 	__be16 service_action;
- 	/* service specific data follows */
- };
-diff --git a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
-index 536752c..58ce8fe 100644
---- a/include/scsi/scsi_netlink.h
-+++ b/include/scsi/scsi_netlink.h
-@@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
-  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
-  */
- #define SCSI_NL_VID_TYPE_SHIFT		56
--#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
--#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
- #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
-=20
-=20
---=20
-1.7.0
+_
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
