@@ -1,89 +1,62 @@
-From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-Subject: [PATCH] mptsas: fixed hot-removal processing
-Date: Wed, 07 Apr 2010 19:17:24 +0900
-Message-ID: <4BBC5BB4.2050805@jp.fujitsu.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Wed, 7 Apr 2010 10:36:01 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1004071032500.1779-100000@iolanthe.rowland.org>
+References: <4BBC25C9.5030201@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:49380 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757388Ab0DGKSH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 06:18:07 -0400
-Received: from m6.gw.fujitsu.co.jp ([10.0.50.76])
-	by fgwmail5.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id o37AI4JR029993
-	for <linux-scsi@vger.kernel.org> (envelope-from tokunaga.keiich@jp.fujitsu.com);
-	Wed, 7 Apr 2010 19:18:04 +0900
-Received: from smail (m6 [127.0.0.1])
-	by outgoing.m6.gw.fujitsu.co.jp (Postfix) with ESMTP id EDF1645DE50
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
-Received: from s6.gw.fujitsu.co.jp (s6.gw.fujitsu.co.jp [10.0.50.96])
-	by m6.gw.fujitsu.co.jp (Postfix) with ESMTP id D01D945DE4F
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
-Received: from s6.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id B7AB71DB8014
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
-Received: from m024.s.css.fujitsu.com (m024.s.css.fujitsu.com [10.0.81.64])
-	by s6.gw.fujitsu.co.jp (Postfix) with ESMTP id 754941DB8013
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Apr 2010 19:18:03 +0900 (JST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <4BBC25C9.5030201-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Desai Kashyap <kashyap.desai@lsi.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
 
-Hi Kashyap,
+On Wed, 7 Apr 2010, Jonas Schwertfeger wrote:
 
-This patch fixes mptsas disk hot-removal processing.  The
-hot-removal processing doesn't complete because of this condition.
+> Here is the trace with Mark's fix:
+> 
+> ffff88003772c0c0 1008628966 S Bo:10:002:2 -115 31 = 55534243 95000000 
+> 00020000 80001085 082e0000 00010000 00000000 40ec00
+> ffff88003772c0c0 1008629074 C Bo:10:002:2 0 31 >
+> ffff880035b1d600 1008629094 S Bi:10:002:1 -115 512 <
+> ffff880035b1d600 1008634784 C Bi:10:002:1 0 512 Z
+> ffff88003772c0c0 1008634827 S Bi:10:002:1 -115 13 <
+> ffff88003772c0c0 1008634861 C Bi:10:002:1 0 13 = 55534253 95000000 
+> 00000000 00
+> ffff88003772c0c0 1008635021 S Bo:10:002:2 -115 31 = 55534243 96000000 
+> 00020000 80001085 082e0000 00010000 00000000 40a100
+> ffff88003772c0c0 1008635050 C Bo:10:002:2 0 31 >
+> ffff880035b1d600 1008635058 S Bi:10:002:1 -115 512 <
+> ffff880035b1d600 1008635305 C Bi:10:002:1 -32 0
+> ffff88003772c0c0 1008635375 S Co:10:002:0 s 02 01 0000 0081 0000 0
+> ffff88003772c0c0 1008635645 C Co:10:002:0 0 0
+> ffff88003772c0c0 1008635665 S Bi:10:002:1 -115 13 <
+> ffff88003772c0c0 1008635910 C Bi:10:002:1 0 13 = 55534253 96000000 
+> 00020000 01
+> ffff88003772c0c0 1008635925 S Bo:10:002:2 -115 31 = 55534243 97000000 
+> 60000000 80000603 00000060 00000000 00000000 000000
+> ffff88003772c0c0 1008636017 C Bo:10:002:2 0 31 >
+> ffff880035b1d600 1008636032 S Bi:10:002:1 -115 96 <
+> ffff880035b1d600 1008636123 C Bi:10:002:1 0 96 Z
+> ffff88003772c0c0 1008636137 S Bi:10:002:1 -115 13 <
+> ffff88003772c0c0 1008636207 C Bi:10:002:1 0 13 = 55534253 97000000 
+> 00000000 00
+> ffff88003772c0c0 1008638008 S Bo:10:002:2 -115 31 = 55534243 98000000 
+> 00100000 80000a28 00000000 00000008 00000000 000000
+> ffff88003772c0c0 1008638101 C Bo:10:002:2 0 31 >
+> ffff880008c53b40 1008638179 S Bi:10:002:1 -115 4096 <
+> ffff880008c53b40 1008648547 C Bi:10:002:1 0 4096 Z
+> ffff88003772c0c0 1008648627 S Bi:10:002:1 -115 13 <
+> ffff88003772c0c0 1008648715 C Bi:10:002:1 0 13 = 55534253 98000000 
+> 00000000 00
 
-  drivers/message/fusion/mptsas.c:
-  mptsas_taskmgmt_complete()
+This is not what I expected.  What version of the kernel are you using?  
+Those 'Z' entries should not be possible in 2.6.33 or later.
 
-  if ((mptsas_find_vtarget(ioc, channel, id)) && !ioc->fw_events_off)
-    mptsas_queue_device_delete(...);
+Alan Stern
 
-mptsas_queue_device_delete(), which must be called for
-hot-removal, never gets called because mptsas_find_vtarget()
-always returns 0 here.  At that time, the vtarget has already
-been freed in mptsas_target_destroy(), and also the scsi_device
-has been marked as SDEV_DEL.
-
-As a result of the issue, port deletion functions won't get
-called and the device ends up being in an incomplete state.
-(Some data structures and sysfs entries, which should be
-removed in hot-removal, remain.)  One side effect of this is
-that a hot-addition of the device (bringing the device back
-on) fails.
-
-This patch just removes mptsas_find_vtarget() from the if-state
-condition.
-
-This applies to 2.6.34-rc3.
-
-Thanks,
-Kei
-
-
-Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
----
-
- linux-2.6.34-rc3-kei/drivers/message/fusion/mptsas.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/message/fusion/mptsas.c~fix-mptsas_hot_removal drivers/message/fusion/mptsas.c
---- linux-2.6.34-rc3/drivers/message/fusion/mptsas.c~fix-mptsas_hot_removal	2010-04-07 16:47:36.000000000 +0900
-+++ linux-2.6.34-rc3-kei/drivers/message/fusion/mptsas.c	2010-04-07 16:48:17.000000000 +0900
-@@ -1221,7 +1221,7 @@ mptsas_taskmgmt_complete(MPT_ADAPTER *io
- 	 * enable work queue to remove device from upper layers
- 	 */
- 	list_del(&target_reset_list->list);
--	if ((mptsas_find_vtarget(ioc, channel, id)) && !ioc->fw_events_off)
-+	if (!ioc->fw_events_off)
- 		mptsas_queue_device_delete(ioc,
- 			&target_reset_list->sas_event_data);
- 
-
-_
-
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
