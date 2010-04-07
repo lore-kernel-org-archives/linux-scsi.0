@@ -1,84 +1,66 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 01/12] qla4xxx: wait for device to come online in reset_lun
-Date: Tue, 06 Apr 2010 22:35:41 -0500
-Message-ID: <4BBBFD8D.2000003@cs.wisc.edu>
-References: <20100406101333.GH22922@linux-qf4p>
+Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
+Date: Tue, 06 Apr 2010 22:43:30 -0500
+Message-ID: <4BBBFF62.9090900@cs.wisc.edu>
+References: <20100130062822.GC10274@linux-qf4p> <4B671A34.9080300@cs.wisc.edu> <7312FDA8-2587-4DA7-9762-978EA46A8B9C@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43064 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37504 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752199Ab0DGDb1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Apr 2010 23:31:27 -0400
-In-Reply-To: <20100406101333.GH22922@linux-qf4p>
+	id S1753472Ab0DGDjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Apr 2010 23:39:55 -0400
+In-Reply-To: <7312FDA8-2587-4DA7-9762-978EA46A8B9C@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+To: "ravi.anand" <ravi.anand@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Karen Xie <kxie@chelsio.com>, Jayamohan Kalickal <jayamohank@serverengines.com>
 
-On 04/06/2010 05:13 AM, Ravi Anand wrote:
+On 04/06/2010 05:21 AM, ravi.anand wrote:
 >
-> From: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+> On Feb 1, 2010, at 10:15 AM, Mike Christie wrote:
 >
-> wait upto 10s for device to come online otherwise indicating
-> an error condition.
+>> On 01/30/2010 12:28 AM, Ravi Anand wrote:
+>>>
+>>
+>>> + DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
+>>> + "State %04x ConnErr %08x "
+>>> + NIPQUAD_FMT ":%04d \"%s\"\n",
+>>
+>>
+>> Do you go down this path for ipv6 (looked like it did and did in other
+>> places)? NIPQUAD_FMT will not work, and we are trying to not use it
+>> NIPQUAD_FMT/NIPQUAD. See %pI4 use in qla4xxx_conn_get_param. There is
+>> also a %pI6 for ipv6.
+>>
+>> Also you need to update qla4xxx_conn_get_param and
+>> qla4xxx_host_get_param ip handling.
+>>>
+>>
 >
-> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
-> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
-> ---
->   drivers/scsi/qla4xxx/ql4_def.h |    1 +
->   drivers/scsi/qla4xxx/ql4_mbx.c |   22 ++++++++++++++++++++++
->   2 files changed, 23 insertions(+), 0 deletions(-)
+> While trying to address the IPV6 part for conn_get_param() and
+> host_get_param(), we ran into
+> the dilemma how to populate IPV4 and IPV6 address at the same time.
+> Currently on our adapter IPV4 and IPV6 can be enabled at the same time
+> and can be active.
 >
-> diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-> index 81b5f29..38e261d 100644
-> --- a/drivers/scsi/qla4xxx/ql4_def.h
-> +++ b/drivers/scsi/qla4xxx/ql4_def.h
-> @@ -146,6 +146,7 @@
->   #define ISNS_DEREG_TOV			5
+> So we wanted to find out if for following param mask :
 >
->   #define MAX_RESET_HA_RETRIES		2
-> +#define DEVICE_ONLINE_TOV		10
+> ISCSI_HOST_PARAM_IPADDRESS
 >
->   /*
->    * SCSI Request Block structure	 (srb)	that is placed
-> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-> index 09d6d4b..4d8b3cb 100644
-> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-> @@ -679,11 +679,33 @@ int qla4xxx_reset_lun(struct scsi_qla_host * ha, struct ddb_entry * ddb_entry,
->   	uint32_t mbox_cmd[MBOX_REG_COUNT];
->   	uint32_t mbox_sts[MBOX_REG_COUNT];
->   	int status = QLA_SUCCESS;
-> +	unsigned long wait_online;
+> should we just fill the buffer for IPV4 and IPV6 address or should
+> we need define new param mask sepeartely for IPV6 ?
 >
->   	DEBUG2(printk("scsi%ld:%d:%d: lun reset issued\n", ha->host_no,
->   		      ddb_entry->os_target_id, lun));
+> Basically we will like to follow up with another patch to address this part
+> on to of the patches which we have just pushed.
 >
->   	/*
-> +	 * If device is not online wait for 10 sec for device to come online.
-> +	 * else return error
-> +	 */
-> +	if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
-> +		wait_online = jiffies + (DEVICE_ONLINE_TOV * HZ);
-> +		while (time_before(jiffies, wait_online)) {
-> +			set_current_state(TASK_INTERRUPTIBLE);
-> +			schedule_timeout(HZ);
-> +			if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
-> +				break;
-> +		}
-> +
-> +		if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
-> +			DEBUG2(printk(KERN_WARNING "scsi%ld: %s: Unable to "
-> +					"reset lun. Device is not online.\n",
-> +					ha->host_no, __func__));
-> +			return QLA_ERROR;
-> +		}
-> +	}
-> +
 
+Right now iscsi_tcp supports ipv4 and ipv6 for that param. I think 
+people have been saying it might be easier to break it up into a ipv4 
+and ipv6 param.
 
-This looks similar to what you sent back in Feb. I said to wait in the 
-target reset handler for the session to come back or for 
-qla4xxx_recovery_timedout to be called
+Karen, it seems like you are only supporting ipv4 right now. Any thoughts?
+
+Jay, it seems be2iscsi handling is incorrect. Is your driver supporting 
+ipv6 right now?
