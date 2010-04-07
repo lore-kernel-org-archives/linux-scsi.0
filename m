@@ -1,86 +1,71 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [PATCH 02/11] qla4xxx: added IPv6 support.
-Date: Tue, 6 Apr 2010 22:46:02 -0700
-Message-ID: <8A71B368A89016469F72CD08050AD334079E7E94@maui.asicdesigners.com>
-References: <20100130062822.GC10274@linux-qf4p> <4B671A34.9080300@cs.wisc.edu> <7312FDA8-2587-4DA7-9762-978EA46A8B9C@qlogic.com> <4BBBFF62.9090900@cs.wisc.edu>
+From: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Wed, 07 Apr 2010 08:27:21 +0200
+Message-ID: <4BBC25C9.5030201@gmail.com>
+References: <Pine.LNX.4.44L0.1004061048590.1722-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:4457 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752549Ab0DGFps convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 01:45:48 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1004061048590.1722-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, "ravi.anand" <ravi.anand@qlogic.com>
-Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Jayamohan Kalickal <jayamohank@serverengines.com>, Rakesh Ranjan <rakesh@chelsio.com>
 
-Hi, Mike,
+Here is the trace with Mark's fix:
 
-Yeah, the cxgb3i does have the limitation of offloading ipv4 only. Would
-it be possible to have separate param for ipv4 and ipv6?
+ffff88003772c0c0 1008628966 S Bo:10:002:2 -115 31 = 55534243 95000000 
+00020000 80001085 082e0000 00010000 00000000 40ec00
+ffff88003772c0c0 1008629074 C Bo:10:002:2 0 31 >
+ffff880035b1d600 1008629094 S Bi:10:002:1 -115 512 <
+ffff880035b1d600 1008634784 C Bi:10:002:1 0 512 Z
+ffff88003772c0c0 1008634827 S Bi:10:002:1 -115 13 <
+ffff88003772c0c0 1008634861 C Bi:10:002:1 0 13 = 55534253 95000000 
+00000000 00
+ffff88003772c0c0 1008635021 S Bo:10:002:2 -115 31 = 55534243 96000000 
+00020000 80001085 082e0000 00010000 00000000 40a100
+ffff88003772c0c0 1008635050 C Bo:10:002:2 0 31 >
+ffff880035b1d600 1008635058 S Bi:10:002:1 -115 512 <
+ffff880035b1d600 1008635305 C Bi:10:002:1 -32 0
+ffff88003772c0c0 1008635375 S Co:10:002:0 s 02 01 0000 0081 0000 0
+ffff88003772c0c0 1008635645 C Co:10:002:0 0 0
+ffff88003772c0c0 1008635665 S Bi:10:002:1 -115 13 <
+ffff88003772c0c0 1008635910 C Bi:10:002:1 0 13 = 55534253 96000000 
+00020000 01
+ffff88003772c0c0 1008635925 S Bo:10:002:2 -115 31 = 55534243 97000000 
+60000000 80000603 00000060 00000000 00000000 000000
+ffff88003772c0c0 1008636017 C Bo:10:002:2 0 31 >
+ffff880035b1d600 1008636032 S Bi:10:002:1 -115 96 <
+ffff880035b1d600 1008636123 C Bi:10:002:1 0 96 Z
+ffff88003772c0c0 1008636137 S Bi:10:002:1 -115 13 <
+ffff88003772c0c0 1008636207 C Bi:10:002:1 0 13 = 55534253 97000000 
+00000000 00
+ffff88003772c0c0 1008638008 S Bo:10:002:2 -115 31 = 55534243 98000000 
+00100000 80000a28 00000000 00000008 00000000 000000
+ffff88003772c0c0 1008638101 C Bo:10:002:2 0 31 >
+ffff880008c53b40 1008638179 S Bi:10:002:1 -115 4096 <
+ffff880008c53b40 1008648547 C Bi:10:002:1 0 4096 Z
+ffff88003772c0c0 1008648627 S Bi:10:002:1 -115 13 <
+ffff88003772c0c0 1008648715 C Bi:10:002:1 0 13 = 55534253 98000000 
+00000000 00
 
-Thanks,
-Karen
+-Jonas
 
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Tuesday, April 06, 2010 8:44 PM
-To: ravi.anand
-Cc: James Bottomley; Linux-SCSI Mailing List; Vikas Chaudhary;
-open-iscsi; Karen Xie; Jayamohan Kalickal
-Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
-
-On 04/06/2010 05:21 AM, ravi.anand wrote:
+On 04/06/2010 04:49 PM, Alan Stern wrote:
+> On Tue, 6 Apr 2010, Jonas Schwertfeger wrote:
 >
-> On Feb 1, 2010, at 10:15 AM, Mike Christie wrote:
->
->> On 01/30/2010 12:28 AM, Ravi Anand wrote:
->>>
+>> Here is the trace after limiting memory to 900M:
 >>
->>> + DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
->>> + "State %04x ConnErr %08x "
->>> + NIPQUAD_FMT ":%04d \"%s\"\n",
->>
->>
->> Do you go down this path for ipv6 (looked like it did and did in
-other
->> places)? NIPQUAD_FMT will not work, and we are trying to not use it
->> NIPQUAD_FMT/NIPQUAD. See %pI4 use in qla4xxx_conn_get_param. There is
->> also a %pI6 for ipv6.
->>
->> Also you need to update qla4xxx_conn_get_param and
->> qla4xxx_host_get_param ip handling.
->>>
->>
+>> ffff88001fc82780 3529669229 S Bo:10:002:2 -115 31 = 55534243 ca000000
+>> 00020000 80001085 082e0000 00000000 00000000 40ec00
 >
-> While trying to address the IPV6 part for conn_get_param() and
-> host_get_param(), we ran into
-> the dilemma how to populate IPV4 and IPV6 address at the same time.
-> Currently on our adapter IPV4 and IPV6 can be enabled at the same time
-> and can be active.
+> This trace was made using the original version of hdparm, not the
+> updated version.
 >
-> So we wanted to find out if for following param mask :
+> Alan Stern
 >
-> ISCSI_HOST_PARAM_IPADDRESS
->
-> should we just fill the buffer for IPV4 and IPV6 address or should
-> we need define new param mask sepeartely for IPV6 ?
->
-> Basically we will like to follow up with another patch to address this
-part
-> on to of the patches which we have just pushed.
->
-
-Right now iscsi_tcp supports ipv4 and ipv6 for that param. I think 
-people have been saying it might be easier to break it up into a ipv4 
-and ipv6 param.
-
-Karen, it seems like you are only supporting ipv4 right now. Any
-thoughts?
-
-Jay, it seems be2iscsi handling is incorrect. Is your driver supporting 
-ipv6 right now?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
