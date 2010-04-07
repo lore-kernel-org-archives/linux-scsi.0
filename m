@@ -1,49 +1,36 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: SCSI persistent reservation terms
-Date: Wed, 07 Apr 2010 11:47:57 -0700
-Message-ID: <1270666077.3332.10.camel@haakon2.linux-iscsi.org>
-References: <3BEB5F9B6605A140847DEEEDF7439C5D040A06C8@CORPUSMX50A.corp.emc.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Wed, 7 Apr 2010 15:18:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1004071516260.5760-100000@iolanthe.rowland.org>
+References: <4BBCCA0D.3000708@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp104.sbc.mail.gq1.yahoo.com ([67.195.15.63]:40472 "HELO
-	smtp104.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752109Ab0DGSsE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 14:48:04 -0400
-In-Reply-To: <3BEB5F9B6605A140847DEEEDF7439C5D040A06C8@CORPUSMX50A.corp.emc.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:33320 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751289Ab0DGTSa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 15:18:30 -0400
+In-Reply-To: <4BBCCA0D.3000708@teksavvy.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lemons_terry@emc.com
-Cc: linux-scsi@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Sergei Shtylyov <sshtylyov@mvista.com>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Kay Sievers <kay.sievers@vrfy.org>, Douglas Gilbert <dgilbert@interlog.com>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Mark Lord <liml@rtr.ca>
 
-On Wed, 2010-04-07 at 10:55 -0400, lemons_terry@emc.com wrote:
-> Hi
+On Wed, 7 Apr 2010, Mark Lord wrote:
+
+> Errr.. yes and no.
 > 
-> I'm trying to understand one aspect of the SCSI persistent reservation functionality.
-> SPC-4 mentions the terms 'All Registrants' and 'Registrants Only', and applies these
-> to both 'Write Exclusive' and 'Exclusive Access'.  Nowhere can I find a definition
-> of what these terms mean.  If you would, please point me in the right direction.
+> Yes, because nobody else is likely to do anything about it,
+> so I will work around the hardware bug by updating hdparm.
 > 
+> But no, there's no funky missing data length issue there.
+> Just a bridge chip that doesn't understand ATA_16 commands.
 
-Greetings Terry,
+Did you look at this comment and the following one:
 
-'All Registrants' means that the persistent reservation holder is any
-registstered I_T Nexus (eg: multiple reservation holders)
+https://bugs.launchpad.net/ubuntu/+source/linux-fsl-imx51/+bug/431963#25
 
-'Registrants Only' means that the persistent reservation holder is the
-single registered I_T Nexus that has obtained the reservation via
-RESERVE, PREEMPT, PREEMPT_AND_ABORT, or via another I_T Nexus with
-REGISTER_AND_MOVE. (eg: single reservation holder)
+Is the engineer from Genesys Logic totally off-base?
 
-You can find how this logic works for multi-fabric target mode by
-grepping '_ALLREG' and '_REGONLY' in TCM code at:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/target_core_pr.c
-
-Best,
-
---nab
-
-
+Alan Stern
 
