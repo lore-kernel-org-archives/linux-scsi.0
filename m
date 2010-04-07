@@ -1,64 +1,86 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 09/12] qla4xxx: added srb reference counter
-Date: Tue, 06 Apr 2010 23:47:28 -0500
-Message-ID: <4BBC0E60.3020209@cs.wisc.edu>
-References: <20100406101432.GP22922@linux-qf4p>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH 02/11] qla4xxx: added IPv6 support.
+Date: Tue, 6 Apr 2010 22:46:02 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD334079E7E94@maui.asicdesigners.com>
+References: <20100130062822.GC10274@linux-qf4p> <4B671A34.9080300@cs.wisc.edu> <7312FDA8-2587-4DA7-9762-978EA46A8B9C@qlogic.com> <4BBBFF62.9090900@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53007 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751432Ab0DGEnP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Apr 2010 00:43:15 -0400
-In-Reply-To: <20100406101432.GP22922@linux-qf4p>
+Received: from stargate.chelsio.com ([67.207.112.58]:4457 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752549Ab0DGFps convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Apr 2010 01:45:48 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ravi Anand <ravi.anand@qlogic.com>
-Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>
+To: Mike Christie <michaelc@cs.wisc.edu>, "ravi.anand" <ravi.anand@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Jayamohan Kalickal <jayamohank@serverengines.com>, Rakesh Ranjan <rakesh@chelsio.com>
 
-On 04/06/2010 05:14 AM, Ravi Anand wrote:
-> @@ -888,7 +890,7 @@ static void qla4xxx_flush_active_srbs(struct scsi_qla_host *ha)
->   		srb = qla4xxx_del_from_active_array(ha, i);
->   		if (srb != NULL) {
->   			srb->cmd->result = DID_RESET<<  16;
-> -			qla4xxx_srb_compl(ha, srb);
-> +			kref_put(&srb->srb_ref, qla4xxx_srb_compl);
->   		}
+Hi, Mike,
 
+Yeah, the cxgb3i does have the limitation of offloading ipv4 only. Would
+it be possible to have separate param for ipv4 and ipv6?
 
->    *
->    * This routine waits for the command to be returned by the Firmware
-> @@ -1507,17 +1509,14 @@ static int qla4xxx_eh_wait_on_command(struct scsi_qla_host *ha,
->   				      struct scsi_cmnd *cmd)
->   {
->   	int done = 0;
-> -	struct srb *rp;
->   	uint32_t max_wait_time = EH_WAIT_CMD_TOV;
+Thanks,
+Karen
+
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Tuesday, April 06, 2010 8:44 PM
+To: ravi.anand
+Cc: James Bottomley; Linux-SCSI Mailing List; Vikas Chaudhary;
+open-iscsi; Karen Xie; Jayamohan Kalickal
+Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
+
+On 04/06/2010 05:21 AM, ravi.anand wrote:
 >
->   	do {
->   		/* Checking to see if its returned to OS */
-> -		rp = (struct srb *) cmd->SCp.ptr;
-> -		if (rp == NULL) {
-> +		if (cmd->host_scribble == NULL) {
->   			done++;
->   			break;
->   		}
+> On Feb 1, 2010, at 10:15 AM, Mike Christie wrote:
+>
+>> On 01/30/2010 12:28 AM, Ravi Anand wrote:
+>>>
+>>
+>>> + DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
+>>> + "State %04x ConnErr %08x "
+>>> + NIPQUAD_FMT ":%04d \"%s\"\n",
+>>
+>>
+>> Do you go down this path for ipv6 (looked like it did and did in
+other
+>> places)? NIPQUAD_FMT will not work, and we are trying to not use it
+>> NIPQUAD_FMT/NIPQUAD. See %pI4 use in qla4xxx_conn_get_param. There is
+>> also a %pI6 for ipv6.
+>>
+>> Also you need to update qla4xxx_conn_get_param and
+>> qla4xxx_host_get_param ip handling.
+>>>
+>>
+>
+> While trying to address the IPV6 part for conn_get_param() and
+> host_get_param(), we ran into
+> the dilemma how to populate IPV4 and IPV6 address at the same time.
+> Currently on our adapter IPV4 and IPV6 can be enabled at the same time
+> and can be active.
+>
+> So we wanted to find out if for following param mask :
+>
+> ISCSI_HOST_PARAM_IPADDRESS
+>
+> should we just fill the buffer for IPV4 and IPV6 address or should
+> we need define new param mask sepeartely for IPV6 ?
+>
+> Basically we will like to follow up with another patch to address this
+part
+> on to of the patches which we have just pushed.
+>
 
-Is this racey? It seems like qla4xxx_flush_active_srbs will call 
-qla4xxx_del_from_active_array and that will clear host_scribble, and 
-here we will see it is NULL and proceed to complete the eh abort 
-process. When we get back to qla4xxx_eh_abort we could call 
-kref_put(&srb->srb_ref, qla4xxx_srb_compl) and then return SUCCESS to 
-the scsi eh. The scsi eh will then begin to reuse the scsi cmd to send a 
-TUR. But I think the problem could be that if happens before 
-qla4xxx_flush_active_srbs has called its kref_put, then when 
-qla4xxx_flush_active_srbs now calls it it is going to call 
-qla4xxx_srb_compl and the driver will be completing a completely 
-different command (it would now be the TUR).
+Right now iscsi_tcp supports ipv4 and ipv6 for that param. I think 
+people have been saying it might be easier to break it up into a ipv4 
+and ipv6 param.
 
-I thought I had said this before, but it looks like I did not get a 
-reply. I think you want to drop the kref coming into 
-qla4xxx_eh_wait_on_command because nothing is touching the srb now. And 
-then you want to add some locking in around the host_scribble checking 
-maybe.
+Karen, it seems like you are only supporting ipv4 right now. Any
+thoughts?
+
+Jay, it seems be2iscsi handling is incorrect. Is your driver supporting 
+ipv6 right now?
