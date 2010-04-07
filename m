@@ -1,110 +1,34 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH 02/11] qla4xxx: added IPv6 support.
-Date: Wed, 07 Apr 2010 12:41:32 -0500
-Message-ID: <4BBCC3CC.9000001@cs.wisc.edu>
-References: <20100130062822.GC10274@linux-qf4p> <4B671A34.9080300@cs.wisc.edu> <7312FDA8-2587-4DA7-9762-978EA46A8B9C@qlogic.com> <4BBBFF62.9090900@cs.wisc.edu>
+Date: Wed, 07 Apr 2010 13:00:02 -0500
+Message-ID: <4BBCC822.3050209@cs.wisc.edu>
+References: <20100407172645.0434d49b@mailhost.serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38324 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39817 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751908Ab0DGRhX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Apr 2010 13:37:23 -0400
-In-Reply-To: <4BBBFF62.9090900@cs.wisc.edu>
+	id S1753599Ab0DGRzt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Apr 2010 13:55:49 -0400
+In-Reply-To: <20100407172645.0434d49b@mailhost.serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "ravi.anand" <ravi.anand@qlogic.com>
-Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Karen Xie <kxie@chelsio.com>, Jayamohan Kalickal <jayamohank@serverengines.com>
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: "ravi.anand" <ravi.anand@qlogic.com>, James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, open-iscsi <open-iscsi@googlegroups.com>, Karen Xie <kxie@chelsio.com>
 
-On 04/06/2010 10:43 PM, Mike Christie wrote:
-> On 04/06/2010 05:21 AM, ravi.anand wrote:
->>
->> On Feb 1, 2010, at 10:15 AM, Mike Christie wrote:
->>
->>> On 01/30/2010 12:28 AM, Ravi Anand wrote:
->>>>
->>>
->>>> + DEBUG2(dev_info(&ha->pdev->dev, "%s: DDB[%d] osIdx = %d "
->>>> + "State %04x ConnErr %08x "
->>>> + NIPQUAD_FMT ":%04d \"%s\"\n",
->>>
->>>
->>> Do you go down this path for ipv6 (looked like it did and did in other
->>> places)? NIPQUAD_FMT will not work, and we are trying to not use it
->>> NIPQUAD_FMT/NIPQUAD. See %pI4 use in qla4xxx_conn_get_param. There is
->>> also a %pI6 for ipv6.
->>>
->>> Also you need to update qla4xxx_conn_get_param and
->>> qla4xxx_host_get_param ip handling.
->>>>
->>>
->>
->> While trying to address the IPV6 part for conn_get_param() and
->> host_get_param(), we ran into
->> the dilemma how to populate IPV4 and IPV6 address at the same time.
->> Currently on our adapter IPV4 and IPV6 can be enabled at the same time
->> and can be active.
->>
->> So we wanted to find out if for following param mask :
->>
->> ISCSI_HOST_PARAM_IPADDRESS
->>
->> should we just fill the buffer for IPV4 and IPV6 address or should
->> we need define new param mask sepeartely for IPV6 ?
->>
->> Basically we will like to follow up with another patch to address this
->> part
->> on to of the patches which we have just pushed.
->>
+On 04/07/2010 12:26 PM, Jayamohan Kalickal wrote:
+> Mike,
 >
-> Right now iscsi_tcp supports ipv4 and ipv6 for that param. I think
-> people have been saying it might be easier to break it up into a ipv4
-> and ipv6 param.
+>     Yes, IPV6 works for be2iscsi. One of our guys had set it up and we were able to do login etc.
 >
-> Karen, it seems like you are only supporting ipv4 right now. Any thoughts?
+> You mentioned that be2iscsi handling is incorrect, can you let me know the details
 >
-> Jay, it seems be2iscsi handling is incorrect. Is your driver supporting
-> ipv6 right now?
 
+Do
 
-After looking at the code, I think I misunderstood what you needed. You 
-want to have multiple ip addresses at the same time, right?
+cat /sys/class/iscsi_host/hostX/ipaddress
 
-be2iscsi needs the ability to support multiple ipv4 and/or ipv6 
-addresses at the same time. I would think other cards are going to need 
-this feature one day too, so maybe we could make this a little more generic.
-
-Would having a ISCSI_HOST_PARAM_IPADDRESSES param where you can get N 
-addresses work for all cases? For the netlink side we could just define 
-the netlink msg to have a counter and some separator. And for bsg we 
-could do something similar.
-
-To display this in sysfs I think it gets more complicated, I think we 
-need to add a sysfs file for each address. And then actually I think we 
-want a sysfs dir for each address, because do want to config other 
-params for each address like a port or subnet mask or dns info, etc 
-(each item would be a sysfs file in some dir)? Or what about vlans too? 
-Some cards support multiple vlans, so would you want
-
-/sys/class/iscsi_host/host1
-And then the tree under the host would be
-
-tree host1
-
-# this one would be a vlan
-|-net_interface0
-	|-ip
-	|-subnet
-	|-vlan_idA
-|-net_interface1
-	|-ip
-	|-subnet
-	|-vlan_idB
-# no vlans but each interface has different ips
-|-net_interface2
-	|-ip
-	|-subnet_mask
-|-net_interface3
-	|-ip
-	|-subnet_mask
+You will not get anything, because you set the iscsi_transport template 
+bit to export this setting, but you did not handle it in the get host 
+param callout.
