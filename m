@@ -1,113 +1,138 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: Re: 2.6.34-rc3-git6: Reported regressions from 2.6.33
-Date: Thu, 8 Apr 2010 22:24:42 +0200
-Message-ID: <201004082224.42633.rjw@sisk.pl>
-References: <6Pphclm24fK.A.lSF.qsPvLB@chimera> <alpine.LFD.2.00.1004071444440.3586@i5.linux-foundation.org>
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: PATCH] BNX2I : Bug fixes related to MTU change issue when there
+ are active iscsi sessions
+Date: Thu, 8 Apr 2010 14:16:12 -0700
+Message-ID: <1270761372.28522.109699.camel@anilgv-desktop>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LFD.2.00.1004071444440.3586-GpypE611fyS63QaFMGN2QEqCLAeBNdoH@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:3743 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933701Ab0DHVP4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Apr 2010 17:15:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, "Mike C." <michaelc@cs.wisc.edu>
+Cc: linux scsi <linux-scsi@vger.kernel.org>, open-iscsi-ml <open-iscsi@googlegroups.com>
 
-On Thursday 08 April 2010, Linus Torvalds wrote:
-> 
-> On Wed, 7 Apr 2010, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15718
-> > Subject		: File corruption regression on NFS related to commit 1f36f774
-> > Submitter	: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-> > Date		: 2010-03-24 15:49 (15 days old)
-> > First-Bad-Commit: http://git.kernel.org/git/linus/1f36f774b22a0ceb7dd33eca626746c81a97b6a5
-> > Message-ID	: <4BAA3493.1030802-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-> > References	: http://marc.info/?l=linux-kernel&m=126944579810350&w=4
-> > Handled-By	: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-> 
-> I think this one is fixed by commit 3e297b61349.
-
-Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15716
-> > Subject		: ata2: lost interrupt with kernel 2.6.34-rc1
-> > Submitter	: Andrew Benton <b3nton-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > Date		: 2010-03-11 16:57 (28 days old)
-> > Message-ID	: <4B992110.2090300-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > References	: http://marc.info/?l=linux-kernel&m=126832670609705&w=4
-> > Handled-By	: Jeff Garzik <jeff-o2qLIJkoznsdnm+yROfE0A@public.gmane.org>
-> 
-> And isn't this the already long-fixed commit 332ac7ff77cd?
-> 
-> That bugzilla entry is a duplicate of 
-> 
-> 	https://bugzilla.kernel.org/show_bug.cgi?id=15537
-> 
-> as far as I can see.
-
-Yes, my bad, sorry.  Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15715
-> > Subject		: vmscan: underflow for get_scan_ratio
-> > Submitter	: Shaohua Li <shaohua.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> > Date		: 2010-03-30 5:53 (9 days old)
-> > First-Bad-Commit: http://git.kernel.org/git/linus/84b18490d1f1bc7ed5095c929f78bc002eb70f26
-> > Message-ID	: <20100330055304.GA2983-U5EdaLXB8smDugQYiPIPGdh3ngVCH38I@public.gmane.org>
-> > References	: http://marc.info/?l=linux-kernel&m=126992842105754&w=4
-> > Handled-By	: KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
-> > 		  Wu Fengguang <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> 
-> That commit got reverted. See commit d6da1a5abc.
-
-Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15674
-> > Subject		: [2.6.34-rc2 NFS4 oops] open error path failure...
-> > Submitter	: Daniel J Blueman <daniel.blueman-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > Date		: 2010-03-29 18:36 (10 days old)
-> > Message-ID	: <6278d2221003291136p6481fe8emfb039403343c082-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-> > References	: http://marc.info/?l=linux-kernel&m=126988782722711&w=2
-> 
-> This smells like the same LOOKUP_DIRECTORY thing as the first entry, but.. 
-> 
-> Al?
-
-This one has been fixed too, I see, so closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15600
-> > Subject		: CONFIG_NO_BOOTMEM woes, 2.6.34-rc1
-> > Submitter	: Avi Kivity <avi-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > Date		: 2010-03-15 15:28 (24 days old)
-> > Message-ID	: <4B9E5211.9000204-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > References	: http://marc.info/?l=linux-kernel&m=126866691701926&w=2
-> 
-> These should hopefully be all fixed. There was some confusion over this, 
-> but the report that said it wasn't fixed in -rc3 was apparently not true 
-> after all. Several commits, but mainly commit eed63519e, iirc.
-
-Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15518
-> > Subject		: CONFIG_NO_BOOTMEM=y breaks boot on 32bit
-> > Submitter	: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-> > Date		: 2010-03-11 15:37 (28 days old)
-> 
-> Duplicate entry. See above.
-
-Closed.
-
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15480
-> > Subject		: [regression] Fails to boot properly unless given pci=nocrs
-> > Submitter	: Yanko Kaneti <yaneti-jUE9FD3ILm5BDgjK7y7TUQ@public.gmane.org>
-> > Date		: 2010-03-09 01:24 (30 days old)
-> > Handled-By	: Bjorn Helgaas <bjorn.helgaas-VXdhtT5mjnY@public.gmane.org>
-> > Patch		: http://lkml.org/lkml/2010/3/11/512
-> 
-> These are merged already. Commits d558b483d5, eb9fc8ef7cb etc.
-
-Closed.
+James,
+   This patch is made against scsi-misc from this morning. Please apply.
 
 Thanks,
-Rafael
+Anil
+
+
+
+ 	* bnx2i driver has to wait and cleanup all iscsi endpoints before
+ 	  returning from bnx2i_stop(). This is to make sure all chip
+ 	  resources are freed before chip is reset.
+ 	* As the requirements for 1G and 10G chipsets are different, added
+ 	  per-device 'hba_shutdown_tmo' parameter to the adapter structure
+ 	* If the connections are not torn down by the daemon within this
+ 	  timeout period, 'cid's will be leaked in 10G device. 1G devices
+ 	  are more flexible and do not leak any resources because the whole
+ 	  chip ports gets reset when MTU is changed or ethtool selftest is
+ 	  run
+ 	* fixed a minor issue in bnx2i_ep_poll() which unnecessarily forced
+ 	  error return code when driver timed out waiting for TCP connect
+ 	  request to complete. This was also discovered while debugging
+	  MTU change issue
+
+Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+---
+ drivers/scsi/bnx2i/bnx2i.h       |    2 ++
+ drivers/scsi/bnx2i/bnx2i_init.c  |   13 ++++++++++++-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   11 ++++++++---
+ 3 files changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index 6cf9dc3..6b624e7 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -362,6 +362,7 @@ struct bnx2i_hba {
+ 	u32 num_ccell;
+ 
+ 	int ofld_conns_active;
++	wait_queue_head_t eh_wait;
+ 
+ 	int max_active_conns;
+ 	struct iscsi_cid_queue cid_que;
+@@ -381,6 +382,7 @@ struct bnx2i_hba {
+ 	spinlock_t lock;	/* protects hba structure access */
+ 	struct mutex net_dev_lock;/* sync net device access */
+ 
++	int hba_shutdown_tmo;
+ 	/*
+ 	 * PCI related info.
+ 	 */
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index 6d8172e..5d9296c 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -177,11 +177,22 @@ void bnx2i_stop(void *handle)
+ 	struct bnx2i_hba *hba = handle;
+ 
+ 	/* check if cleanup happened in GOING_DOWN context */
+-	clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
+ 	if (!test_and_clear_bit(ADAPTER_STATE_GOING_DOWN,
+ 				&hba->adapter_state))
+ 		iscsi_host_for_each_session(hba->shost,
+ 					    bnx2i_drop_session);
++
++	/* Wait for all endpoints to be torn down, Chip will be reset once
++	 *  control returns to network driver. So it is required to cleanup and
++	 * release all connection resources before returning from this routine.
++	 */
++	wait_event_interruptible_timeout(hba->eh_wait,
++					 (hba->ofld_conns_active == 0),
++					 hba->hba_shutdown_tmo);
++	/* This flag should be cleared last so that ep_disconnect() gracefully
++	 * cleans up connection context
++	 */
++	clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index cb71dc9..974dfb6 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -819,6 +819,11 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 
+ 	spin_lock_init(&hba->lock);
+ 	mutex_init(&hba->net_dev_lock);
++	init_waitqueue_head(&hba->eh_wait);
++	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type))
++		hba->hba_shutdown_tmo = 240 * HZ;
++	else	/* 5706/5708/5709 */
++		hba->hba_shutdown_tmo = 30 * HZ;
+ 
+ 	if (iscsi_host_add(shost, &hba->pcidev->dev))
+ 		goto free_dump_mem;
+@@ -1657,8 +1662,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 		 */
+ 		hba = bnx2i_check_route(dst_addr);
+ 
+-	if (!hba) {
+-		rc = -ENOMEM;
++	if (!hba || test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state)) {
++		rc = -EINVAL;
+ 		goto check_busy;
+ 	}
+ 
+@@ -1803,7 +1808,7 @@ static int bnx2i_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
+ 					       (bnx2i_ep->state ==
+ 						EP_STATE_CONNECT_COMPL)),
+ 					      msecs_to_jiffies(timeout_ms));
+-	if (!rc || (bnx2i_ep->state == EP_STATE_OFLD_FAILED))
++	if (bnx2i_ep->state == EP_STATE_OFLD_FAILED)
+ 		rc = -1;
+ 
+ 	if (rc > 0)
+-- 
+1.6.5.1
+
+
+
+
