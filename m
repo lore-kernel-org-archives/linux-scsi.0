@@ -1,21 +1,22 @@
 From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
-Subject: FW: [RFC PATCH] qla2xxx: Add char device to incease driver use count
-Date: Thu, 8 Apr 2010 05:59:40 -0700
-Message-ID: <6FC9A11471FF8C4CBCD15DEEF96752AB4059172F83@AVEXMB2.qlogic.org>
-References: <98C07924B96E784CA9FF0C461C73BAFE24ED170E@AVEXMB2.qlogic.org>
+Subject: [RFC PATCH] qla2xxx: Add char device to incease driver use count
+Date: Thu, 8 Apr 2010 06:03:27 -0700
+Message-ID: <6FC9A11471FF8C4CBCD15DEEF96752AB4059172F84@AVEXMB2.qlogic.org>
+References: <98C07924B96E784CA9FF0C461C73BAFE24ED170E@AVEXMB2.qlogic.org>,<6FC9A11471FF8C4CBCD15DEEF96752AB4059172F83@AVEXMB2.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:20134 "EHLO
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:20160 "EHLO
 	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758636Ab0DHNFT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2010 09:05:19 -0400
-In-Reply-To: <98C07924B96E784CA9FF0C461C73BAFE24ED170E@AVEXMB2.qlogic.org>
+	with ESMTP id S1758636Ab0DHNFs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2010 09:05:48 -0400
+In-Reply-To: <6FC9A11471FF8C4CBCD15DEEF96752AB4059172F83@AVEXMB2.qlogic.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
 Hi,
 
