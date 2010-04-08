@@ -1,59 +1,146 @@
-From: "Anil Veerabhadrappa" <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: Re: PATCH] BNX2I : Bug fixes related to MTU change issue when
- there are active iscsi sessions
-Date: Thu, 8 Apr 2010 15:45:20 -0700
-Message-ID: <1270766720.28522.109797.camel@anilgv-desktop>
-References: <1270761372.28522.109699.camel@anilgv-desktop>
- <4BBE592A.2070202@cs.wisc.edu>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: [RESEND PATCH] BNX2I - Bug fixes related to MTU change issue
+ when there are active iscsi sessions
+Date: Thu, 8 Apr 2010 15:59:15 -0700
+Message-ID: <1270767555.28522.109818.camel@anilgv-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCOOx4c-cFBD0uPndBBoEM9hn8A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <4BBE592A.2070202-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
-	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Cc: "open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org" <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, "James.Bottomley-l3A5Bk7waGM@public.gmane.org" <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, linux scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:2598 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933784Ab0DHW7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Apr 2010 18:59:07 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James B <James.Bottomley@suse.de>, "Mike C." <michaelc@cs.wisc.edu>
+Cc: linux scsi <linux-scsi@vger.kernel.org>, open-iscsi-ml <open-iscsi@googlegroups.com>
 
-On Thu, 2010-04-08 at 15:31 -0700, Mike Christie wrote:
-> On 04/08/2010 04:16 PM, Anil Veerabhadrappa wrote:
-> > +	/* Wait for all endpoints to be torn down, Chip will be reset once
-> > +	 *  control returns to network driver. So it is required to cleanup and
-> > +	 * release all connection resources before returning from this routine.
-> > +	 */
-> > +	wait_event_interruptible_timeout(hba->eh_wait,
-> > +					 (hba->ofld_conns_active == 0),
-> > +					 hba->hba_shutdown_tmo);
-> 
-> 
-> Hey, I just noticed this (sorry I should have seen this earlier), but 
-> there is no wake_up(hba->eh_wait). Do you want one in bnx2i_free_ep when 
-> ofld_conns_active goes to 0?
+James,
+   Please apply this patch to fix resources leak issue when device MTU
+is changed or ethtool selftest is executed while there are active iscsi
+sessions.
 
-Thanks Mike. Missed this bit while merging. It is better to call
-wake_up() at the end of bnx2i_ep_disconnect() after bnx2i driver
-unregisters the device. I will resend the patch.
-
-Thanks again.
+Thanks,
+Anil
 
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+    * bnx2i driver has to wait and cleanup all iscsi endpoints before
+      returning from bnx2i_stop(). This is to make sure all chip
+      resources are freed before chip is reset.
+    * As the requirements for 1G and 10G chipsets is different, added
+      per-device 'hba_shutdown_tmo' parameter to adapter structure
+    * If the connections are not torn down by the daemon within this
+      timeout period, 'cid's will be leaked in 10G device. 1G devices
+      are more flexible and do not leak any resources because the whole
+      chip ports gets reset when MTU is changed or ethtool selftest is run
+    * fixed a minor issue in bnx2i_ep_poll() which unnecessarily forced
+      error return code when driver timed out waiting for TCP connect
+      request to complete
 
+Signed-off-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+---
+ drivers/scsi/bnx2i/bnx2i.h       |    2 ++
+ drivers/scsi/bnx2i/bnx2i_init.c  |   13 ++++++++++++-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   13 ++++++++++---
+ 3 files changed, 24 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index 6cf9dc3..6b624e7 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -362,6 +362,7 @@ struct bnx2i_hba {
+ 	u32 num_ccell;
+ 
+ 	int ofld_conns_active;
++	wait_queue_head_t eh_wait;
+ 
+ 	int max_active_conns;
+ 	struct iscsi_cid_queue cid_que;
+@@ -381,6 +382,7 @@ struct bnx2i_hba {
+ 	spinlock_t lock;	/* protects hba structure access */
+ 	struct mutex net_dev_lock;/* sync net device access */
+ 
++	int hba_shutdown_tmo;
+ 	/*
+ 	 * PCI related info.
+ 	 */
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index 6d8172e..5d9296c 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -177,11 +177,22 @@ void bnx2i_stop(void *handle)
+ 	struct bnx2i_hba *hba = handle;
+ 
+ 	/* check if cleanup happened in GOING_DOWN context */
+-	clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
+ 	if (!test_and_clear_bit(ADAPTER_STATE_GOING_DOWN,
+ 				&hba->adapter_state))
+ 		iscsi_host_for_each_session(hba->shost,
+ 					    bnx2i_drop_session);
++
++	/* Wait for all endpoints to be torn down, Chip will be reset once
++	 *  control returns to network driver. So it is required to cleanup and
++	 * release all connection resources before returning from this routine.
++	 */
++	wait_event_interruptible_timeout(hba->eh_wait,
++					 (hba->ofld_conns_active == 0),
++					 hba->hba_shutdown_tmo);
++	/* This flag should be cleared last so that ep_disconnect() gracefully
++	 * cleans up connection context
++	 */
++	clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
+ }
+ 
+ /**
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index cb71dc9..639e7d8 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -819,6 +819,11 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 
+ 	spin_lock_init(&hba->lock);
+ 	mutex_init(&hba->net_dev_lock);
++	init_waitqueue_head(&hba->eh_wait);
++	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type))
++		hba->hba_shutdown_tmo = 240 * HZ;
++	else	/* 5706/5708/5709 */
++		hba->hba_shutdown_tmo = 30 * HZ;
+ 
+ 	if (iscsi_host_add(shost, &hba->pcidev->dev))
+ 		goto free_dump_mem;
+@@ -1657,8 +1662,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 		 */
+ 		hba = bnx2i_check_route(dst_addr);
+ 
+-	if (!hba) {
+-		rc = -ENOMEM;
++	if (!hba || test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state)) {
++		rc = -EINVAL;
+ 		goto check_busy;
+ 	}
+ 
+@@ -1803,7 +1808,7 @@ static int bnx2i_ep_poll(struct iscsi_endpoint *ep, int timeout_ms)
+ 					       (bnx2i_ep->state ==
+ 						EP_STATE_CONNECT_COMPL)),
+ 					      msecs_to_jiffies(timeout_ms));
+-	if (!rc || (bnx2i_ep->state == EP_STATE_OFLD_FAILED))
++	if (bnx2i_ep->state == EP_STATE_OFLD_FAILED)
+ 		rc = -1;
+ 
+ 	if (rc > 0)
+@@ -1956,6 +1961,8 @@ return_bnx2i_ep:
+ 
+ 	if (!hba->ofld_conns_active)
+ 		bnx2i_unreg_dev_all();
++
++	wake_up_interruptible(&hba->eh_wait);
+ }
+ 
+ 
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+1.6.5.1
+
+
+
+
