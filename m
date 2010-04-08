@@ -1,145 +1,109 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
-Date: Thu, 08 Apr 2010 15:44:03 +0200
-Message-ID: <4BBDDDA3.7000006@suse.de>
-References: <4BB45632.5020700@suse.de> <1270186392.28897.76.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] sd: retry read_capacity on UNIT_ATTENTION
+Date: Thu, 08 Apr 2010 08:48:26 -0500
+Message-ID: <1270734506.2837.2.camel@mulgrave.site>
+References: <20100401134428.7E4D1337C5@ochil.suse.de>
+	 <1270132201.4439.14.camel@mulgrave.site>  <4BBD878F.3090205@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:56993 "EHLO mx1.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:47720 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758608Ab0DHNoF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Apr 2010 09:44:05 -0400
-In-Reply-To: <1270186392.28897.76.camel@haakon2.linux-iscsi.org>
+	id S1753936Ab0DHNsa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Apr 2010 09:48:30 -0400
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	by mx2.suse.de (Postfix) with ESMTP id 4278986EE4
+	for <linux-scsi@vger.kernel.org>; Thu,  8 Apr 2010 15:48:29 +0200 (CEST)
+In-Reply-To: <4BBD878F.3090205@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-iscsi-target-dev@googlegroups.com
-Cc: lsf10-pc@lists.linuxfoundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-Nicholas A. Bellinger wrote:
-> On Thu, 2010-04-01 at 10:15 +0200, Hannes Reinecke wrote:
->> Hi all,
->>
+On Thu, 2010-04-08 at 09:36 +0200, Hannes Reinecke wrote:
+> James Bottomley wrote:
+> > On Thu, 2010-04-01 at 15:44 +0200, Hannes Reinecke wrote:
+> >> Hazard testing uncovered yet another bug in sd. Under heavy
+> >> reset activity the retry counter might be exhausted and
+> >> the command will be returned with sense UNIT_ATTENTION/0x29/00
+> >> (POWER ON, RESET, OR BUS DEVICE RESET OCCURRED). In those
+> >> cases we should just increase the retry counter again,
+> >> retrying one more to clear up this Unit Attention state.
+> >>
+> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> >>
+> >> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> >> index 1962bea..7d75a21 100644
+> >> --- a/drivers/scsi/sd.c
+> >> +++ b/drivers/scsi/sd.c
+> >> @@ -1454,8 +1454,15 @@ static int read_capacity_10(struct scsi_dis=
+k *sdkp, struct scsi_device *sdp,
+> >>  		if (media_not_present(sdkp, &sshdr))
+> >>  			return -ENODEV;
+> >> =20
+> >> -		if (the_result)
+> >> +		if (the_result) {
+> >>  			sense_valid =3D scsi_sense_valid(&sshdr);
+> >> +			if (sense_valid &&
+> >> +			    sshdr.sense_key =3D=3D UNIT_ATTENTION &&
+> >> +			    sshdr.asc =3D 0x29 && sshdr.asq =3D=3D 0x00)
+> >                                       ^^^^
+> > should be =3D=3D
+> >=20
+> >> +			    /* Device reset might occur several times,
+> >> +			     * give it one more chance */
+> >> +			    retries++;
+> >> +		}
+> >=20
+> > Firstly, not even compile checked:
+> >=20
+> > drivers/scsi/sd.c: In function =E2=80=98read_capacity_10=E2=80=99:
+> > drivers/scsi/sd.c:1558: error: =E2=80=98struct scsi_sense_hdr=E2=80=
+=99 has no member named =E2=80=98asq=E2=80=99
+> >=20
+> D'oh.
 >=20
-> Greetings Hannes,
+> > Secondly, we can't quite do this.  Some devices (only broken ones i=
+n my
+> > experience) will reply UNIT_ATTENTION I was RESET forever, leading =
+to a
+> > loop here.  Additionally, a massive reset storm on a shared bus wou=
+ld
+> > DoS the code here, so there must be a give up point after a reasona=
+ble
+> > number of retries.
+> >=20
+> Hmm. yes.
 >=20
-> Just a few comments on your proposal..
+> > The third problem is that if this is happening to a large device, w=
+e
+> > only catch it in RC10 ... so we'll report undersize if the device i=
+s >
+> > SPC2
+> >=20
+> Okay. In the best of all worlds we would have a module parameter whic=
+h
+> would us to adjust this parameter, as I fear the actual number of ret=
+ries
+> will depend on the number of devices connected.
 >=20
->> [Topic]
->> Handling of invalid requests in virtual HBAs
->>
->> [Abstract]
->> This discussion will focus on the problem of correct request handlin=
-g with virtual HBAs.
->> For KVM I have implemented a 'megasas' HBA emulation which serves as=
- a backend for the
->> megaraid_sas linux driver.
->> It is now possible to connect several disks from different (physical=
-) HBAs to that
->> HBA emulation, each having different logical capabilities wrt transf=
-ersize,
->> sgl size, sgl length etc.
->>
->> The goal of this discussion is how to determine the 'best' capabilit=
-y setting for the
->> virtual HBA and how to handle hotplug scenarios, where a disk might =
-be plugged in
->> which has incompatible settings from the one the virtual HBA is usin=
-g currently.
->>
->=20
-> Most of what you are describing here in terms of having a kernel targ=
-et
-> enforce underlying LLD limitiations for LUNs is already available in =
-TCM
-> v3.x.  Current TCM code will automatically handle the processing of a
-> single DATA_SG_IO CDB generated by KVM Guest + megasas emulation that
-> exceeds the underlying LLD max_sectors, and generate the multiple
-> internal se_task_t's in order to complete the original I/O generated =
-by
-> KVM Guest + megasas.
->=20
+> But if you fell that's overkill it's fine by me, too.
 
-Hmm, yes.
+A module parameter probably is overkill.  Once we get beyond 5, that's
+the usual retry limit for ordinary commands, so even if we survive
+beyond READ_CAPACITY, we'll begin failing in the actual operational
+commands like reads and writes (beginning with partition size).
 
-> This is one example but the main underlying question wrt to TCM and
-> interaction with Linux subsystems has historically been:
->=20
-> What values should be enforced by TCM based on metadata presented by =
-TCM
-> subsystem plugins (pSCSI, IBLOCK, FILEIO) for struct block_device, an=
-d
-> what is expected to be enforced by underlying Linux subsystems
-> presenting struct block_device..?
->=20
-> For the virtual TCM subsystem plugin cases (IBLOCK, FILEIO, RAMDISK) =
-the
-> can_queue is a competely arbitary value and is enforced by the
-> underyling Linux subsystem.  There are a couple of special cases:
->=20
-> *) For TCM/pSCSI, can_queue is enforced from struct scsi_device->queu=
-e_depth
->    and max_sectors from the smaller of the two values from struct Scs=
-i_Host->max_sectors
->    and struct scsi_device->request_queue->limits.max_sectors.
->=20
-> *) For TCM/IBLOCK, max_sectors is enforced based on struct request_qu=
-eue->limits.max_sectors.
->=20
-> *) For TCM/FILEIO and TCM/RAMDISK, both can_queue and max_sectors are
->    set to arbitrarly high values.
->=20
-> Also I should mention that TCM_Loop code currently uses a hardcoded
-> struct scsi_host_template->can_queue=3D1 and ->max_sectors=3D128, but=
- will
-> work fine with larger values.   Being able to change the Linux/SCSI
-> queue depth on the fly for TCM_Loop virtual SAS ports being used in K=
-VM
-> guest could be quite useful for managing KVM Guest megasas emulation =
-I/O
-> traffic on a larger scale..
->=20
-And my question / topic here is how to handle a hotplug capability in t=
-hese
-cases: What happens if a device / HBA is plugged in with different / lo=
-wer
-capabilities than those announced?
-Can we change the announced settings for the HBA on the fly?
+> > How about this instead?
+> >=20
+> Yes, that's better. Thanks.
 
-> The other big advantage of using TCM_Loop with your megasas guest
-> emulation means that existing TCM logic for >=3D SPC-3 T10 NAA naming=
-, PR,
-> and ALUA emulation is immediately available to KVM guest, and does no=
-t
-> have to be reproduced in QEMU code.
->=20
-I'm not doubting that using TCM_loop here would be advantageous.
-But I have to find a solution for folks just wanting to run on plain /d=
-ev/sdX.
+OK, will put it in with your ack then.
 
-And I need to find a common ground here to argue with the KVM folks,
-whose main objection against the megasas emulation is this issue.
+James
 
-Either way would be fine by me, I just think we should come to a common
-understanding.
 
-My initial idea here was to just pass the request back as partially com=
-pleted;
-that would solve the issue nicely.
-
-Sadly the SCSI midlayer interprets partial completion always as an erro=
-r :-(
-Would've been really neat.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
