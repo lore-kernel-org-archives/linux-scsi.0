@@ -1,106 +1,103 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sd: retry read_capacity on UNIT_ATTENTION
-Date: Thu, 08 Apr 2010 09:36:47 +0200
-Message-ID: <4BBD878F.3090205@suse.de>
-References: <20100401134428.7E4D1337C5@ochil.suse.de> <1270132201.4439.14.camel@mulgrave.site>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [Bugme-new] [Bug 15688] New: mptsas & poor performance
+Date: Thu, 8 Apr 2010 14:55:15 +0530
+Message-ID: <1C9608B8A4CD534FB19C7C7543CBB249020E3FDC6E@inbmail02.lsi.com>
+References: <bug-15688-10286@https.bugzilla.kernel.org/>
+ <20100405133451.fb20d65d.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42848 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751969Ab0DHHgt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Apr 2010 03:36:49 -0400
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 45CBE93717
-	for <linux-scsi@vger.kernel.org>; Thu,  8 Apr 2010 09:36:48 +0200 (CEST)
-In-Reply-To: <1270132201.4439.14.camel@mulgrave.site>
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:50420 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751410Ab0DHJ0F convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Apr 2010 05:26:05 -0400
+In-Reply-To: <20100405133451.fb20d65d.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "bugme-daemon@bugzilla.kernel.org" <bugme-daemon@bugzilla.kernel.org>, "bexamous@gmail.com" <bexamous@gmail.com>
 
-James Bottomley wrote:
-> On Thu, 2010-04-01 at 15:44 +0200, Hannes Reinecke wrote:
->> Hazard testing uncovered yet another bug in sd. Under heavy
->> reset activity the retry counter might be exhausted and
->> the command will be returned with sense UNIT_ATTENTION/0x29/00
->> (POWER ON, RESET, OR BUS DEVICE RESET OCCURRED). In those
->> cases we should just increase the retry counter again,
->> retrying one more to clear up this Unit Attention state.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>
->> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
->> index 1962bea..7d75a21 100644
->> --- a/drivers/scsi/sd.c
->> +++ b/drivers/scsi/sd.c
->> @@ -1454,8 +1454,15 @@ static int read_capacity_10(struct scsi_disk =
-*sdkp, struct scsi_device *sdp,
->>  		if (media_not_present(sdkp, &sshdr))
->>  			return -ENODEV;
->> =20
->> -		if (the_result)
->> +		if (the_result) {
->>  			sense_valid =3D scsi_sense_valid(&sshdr);
->> +			if (sense_valid &&
->> +			    sshdr.sense_key =3D=3D UNIT_ATTENTION &&
->> +			    sshdr.asc =3D 0x29 && sshdr.asq =3D=3D 0x00)
->                                       ^^^^
-> should be =3D=3D
->=20
->> +			    /* Device reset might occur several times,
->> +			     * give it one more chance */
->> +			    retries++;
->> +		}
->=20
-> Firstly, not even compile checked:
->=20
-> drivers/scsi/sd.c: In function =E2=80=98read_capacity_10=E2=80=99:
-> drivers/scsi/sd.c:1558: error: =E2=80=98struct scsi_sense_hdr=E2=80=99=
- has no member named =E2=80=98asq=E2=80=99
->=20
-D'oh.
+Andrew,
 
-> Secondly, we can't quite do this.  Some devices (only broken ones in =
-my
-> experience) will reply UNIT_ATTENTION I was RESET forever, leading to=
- a
-> loop here.  Additionally, a massive reset storm on a shared bus would
-> DoS the code here, so there must be a give up point after a reasonabl=
-e
-> number of retries.
->=20
-Hmm. yes.
+Today I tried same steps as mentioned by you. In my case I am able to see both the drivers 
+Performance is similar.
 
-> The third problem is that if this is happening to a large device, we
-> only catch it in RC10 ... so we'll report undersize if the device is =
->
-> SPC2
->=20
-Okay. In the best of all worlds we would have a module parameter which
-would us to adjust this parameter, as I fear the actual number of retri=
-es
-will depend on the number of devices connected.
+3.4.14 is driver version available at kernel.org
+4.22.00.00 is driver LSI internally uses. [4.18.00.00 does not have support for 2.6.34 kernel]
+I guess you must have done some changes to make sure 4.18.00.00 works with 2.6.34-020634rc1.
 
-But if you fell that's overkill it's fine by me, too.
+Both the case I am getting 190~210MB/sec.
 
-> How about this instead?
->=20
-Yes, that's better. Thanks.
+Can you help me to reproduce ~395MB/sec using 4.18.00.00 ? 
 
-Cheers,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+~Kashyap 
+
+
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Andrew Morton
+> Sent: Tuesday, April 06, 2010 2:05 AM
+> To: linux-scsi@vger.kernel.org; Moore, Eric
+> Cc: bugzilla-daemon@bugzilla.kernel.org; bugme-
+> daemon@bugzilla.kernel.org; bexamous@gmail.com
+> Subject: Re: [Bugme-new] [Bug 15688] New: mptsas & poor performance
+> 
+> 
+> (switched to email.  Please respond via emailed reply-to-all, not via
+> the
+> bugzilla web interface).
+> 
+> scsi_drivers-other reports don't appear to be coming out on the
+> linux-scsi list.
+> 
+> On Sat, 3 Apr 2010 21:16:31 GMT
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+> 
+> > https://bugzilla.kernel.org/show_bug.cgi?id=15688
+> >
+> >            Summary: mptsas & poor performance
+> >            Product: SCSI Drivers
+> >            Version: 2.5
+> >     Kernel Version: 2.6.34-020634rc1
+> >           Platform: All
+> >         OS/Version: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: Other
+> >         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+> >         ReportedBy: bexamous@gmail.com
+> >         Regression: No
+> >
+> >
+> > The mptsas module from LSI's website, v4.18.00.00, performs much
+> better than
+> > the mptsas module included in the kernel, v3.something.
+> >
+> > I'm only comparing sequential writes (dd if=/dev/zero of=zeros
+> bs=1M), but...
+> >
+> > 6 drive MD RAID5 with fresh btrfs, writing 10GB of zeros with dd,
+> > kernel version:  <200MB/sec
+> > LSI's v4.18.00.00: 395MB/sec
+> >
+> > Pretty big difference.  I've gone back and forth a few times,
+> > enabling/disabling write cache on the drives, enabling/disabling ioc,
+> > enabling/disabling filesystem barriers...  I can make small changes
+> in
+> > performance but nothing compares to simply updating to v4.18.00.00.
+> >
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
