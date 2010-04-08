@@ -1,30 +1,55 @@
-From: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Thu, 08 Apr 2010 07:06:45 +0200
-Message-ID: <4BBD6465.2070006@gmail.com>
-References: <Pine.LNX.4.44L0.1004071516260.5760-100000@iolanthe.rowland.org> <4BBD0C0D.5060606@teksavvy.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15722] New: unreliable IO for ata disks under heavy io load
+Date: Thu, 8 Apr 2010 05:27:47 GMT
+Message-ID: <bug-15722-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4BBD0C0D.5060606@teksavvy.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@suse.de>, Sergei Shtylyov <sshtylyov@mvista.com>, Kay Sievers <kay.sievers@vrfy.org>, Douglas Gilbert <dgilbert@interlog.com>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Mark Lord <liml@rtr.ca>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:44406 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746Ab0DHF1t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2010 01:27:49 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o385RmJK032727
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Apr 2010 05:27:48 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 04/08/2010 12:49 AM, Mark Lord wrote:
-> I do have a pre-release HDPARM that uses ATA_12 for IDENTIFY,
-> as this is reported to work on this hardware, even though it is
-> otherwise _identical_ to the command issue via ATA_16.
-> That's another indication of a buggy/inconsistent bridge chip.
->
-> And I've also added a sector count of "1" to hdparm's IDENTIFY
-> commands. Properly implemented hardware/software will just ignore it
-> as usual, but this bridge might benefit from it.
->
-> Anyone want to give this second update a try?
+https://bugzilla.kernel.org/show_bug.cgi?id=15722
 
-Sure.
+           Summary: unreliable IO for ata disks under heavy io load
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.32-2.6.33
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: dujun@perabytes.com
+        Regression: No
 
--Jonas
+
+with 2.6.32 valilla mptsas driver and 4.22.00 lsi driver, and SATA disks
+connected through lsi 24x expander,  SATA passthrough command sometimes
+gets resetted during heavy IO.  I found this problem is very similar
+with the bug 14831 in bugzilla.kernel.org
+https://bugzilla.kernel.org/show_bug.cgi?id=14831 . 
+lots of task abort, task reset, bus reset logs in dmesg. the IO is then
+stalled for somewhile until the resets success. 
+
+However, the problem only occures when we connect more than 12 SATA
+disks through expander and during heavy disk io.  If we use SAS disks or
+we connect 16 SATA disks directly to 1068e card or we use less than 12
+disks, the problem seems just disappear. 
+2.6.21 kernel mptsas driver seems worse.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
