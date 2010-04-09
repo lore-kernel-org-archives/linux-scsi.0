@@ -1,42 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15341] Load goes up very high when we traverse the large tree
-Date: Fri, 9 Apr 2010 19:31:12 GMT
-Message-ID: <201004091931.o39JVCBp008822@demeter.kernel.org>
-References: <bug-15341-11613@https.bugzilla.kernel.org/>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.34-rc3-git8: Reported regressions 2.6.32 -> 2.6.33
+Date: Fri, 9 Apr 2010 21:56:05 +0200
+Message-ID: <201004092156.05674.rjw@sisk.pl>
+References: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera> <4BBE92AE.6090301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37464 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab0DITbO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2010 15:31:14 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o39JVDq7008830
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Apr 2010 19:31:13 GMT
-In-Reply-To: <bug-15341-11613@https.bugzilla.kernel.org/>
+Received: from ogre.sisk.pl ([217.79.144.158]:44748 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755376Ab0DITww (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Apr 2010 15:52:52 -0400
+In-Reply-To: <4BBE92AE.6090301@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15341
+On Friday 09 April 2010, Gertjan van Wingerde wrote:
+> On 04/09/10 00:54, Rafael J. Wysocki wrote:
+> > 
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15699
+> > Subject		: rt2500usb driver cannot remain connected
+> > Submitter	:  <abcd@gentoo.org>
+> > Date		: 2010-04-05 19:30 (4 days old)
+> > Handled-By	: Ivo van Doorn <IvDoorn@gmail.com>
+> > 
+> 
+> This one ought to be fixed by commit 9e76ad2a27f592c1390248867391880c7efe78b3
+> in Linus' tree.
 
+Thanks, closing.
 
-
-
-
---- Comment #17 from Frederic MASSOT <frederic@juliana-multimedia.com>  2010-04-09 19:30:59 ---
-Hi,
-
-The kernel 2.6.33 seemed to be better than the 2.6.32 until I reboot with a
-fsck.
-
-The verification of 80GB took over 2 hours, unbelievable. With kernel 2.6.31
-and earlier it did not take more than 10 or 15 minutes.
-
-Regards.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Rafael
