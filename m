@@ -1,351 +1,1281 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: 2.6.34-rc3-git8: Reported regressions 2.6.32 -> 2.6.33
-Date: Fri,  9 Apr 2010 00:54:23 +0200 (CEST)
-Message-ID: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera>
+From: "Nick Cheng" <nick.cheng@areca.com.tw>
+Subject: [PATCH 1/3 ] SCSI: Support several features in arcmsr driver
+Date: Fri, 9 Apr 2010 10:24:19 +0800
+Message-ID: <9887B6161072481EB07AF9A0A8B7D5A8@areca4e4f859d4>
+Reply-To: <nick.cheng@areca.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41557 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757131Ab0DHXaO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Apr 2010 19:30:14 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_000E_01CAD7CE.D2A82470"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+References: 
+In-Reply-To: 
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 
-This message contains a list of some post-2.6.32 regressions introduced=
- before
-2.6.33, for which there are no fixes in the mainline known to the track=
-ing team.
-If any of them have been fixed already, please let us know.
-
-If you know of any other unresolved post-2.6.32 regressions, please let=
- us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic repl=
-y to
-this message with CCs to the people involved in reporting and handling =
-the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-04-09      140       34          33
-  2010-03-21      133       38          34
-  2010-02-21      115       34          27
-  2010-02-15      112       34          31
-  2010-02-07       97       27          20
-  2010-02-01       85       26          21
-  2010-01-24       75       29          23
-  2010-01-10       55       33          21
-  2009-12-29       36       34          27
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15733
-Subject		: Crash when accessing nonexistent GTT entries in i915
-Submitter	: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date		: 2010-03-10 22:09 (30 days old)
-Message-ID	: <1268258994.2183.14.camel@carter>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126825901326111&w=3D=
-4
-Handled-By	: Zhenyu Wang <zhenyuw@linux.intel.com>
-		  Andrew Morton <akpm@linux-foundation.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15714
-Subject		: PROBLEM: intelfb driver causes trace
-Submitter	: Troilo, Domenic <Domenic.Troilo@gwl.ca>
-Date		: 2010-04-01 14:52 (8 days old)
-Message-ID	: <CBF11783AA883E41A86C009F3AE5D47F0CAE08C1@GWCORPMAIL4.gwl.=
-bz>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D127013359722664&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15710
-Subject		: NumLock LED stays on after PC poweroff.
-Submitter	: aceman <acelists@atlas.sk>
-Date		: 2010-04-07 15:13 (2 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15699
-Subject		: rt2500usb driver cannot remain connected
-Submitter	:  <abcd@gentoo.org>
-Date		: 2010-04-05 19:30 (4 days old)
-Handled-By	: Ivo van Doorn <IvDoorn@gmail.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15695
-Subject		: calling pm-suspend freezes system
-Submitter	: Werner Lemberg <wl@gnu.org>
-Date		: 2010-04-05 05:13 (4 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15693
-Subject		: Plugging or unplugging notebook charger renders Atheros card=
- unusable
-Submitter	:  <registosites1@hotmail.com>
-Date		: 2010-04-04 21:03 (5 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15604
-Subject		: r8169: Reports incorrect link information
-Submitter	: Michael B. Trausch <mike@trausch.us>
-Date		: 2010-03-22 04:19 (18 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15585
-Subject		: [Bisected Regression in 2.6.32.8] i915 with KMS enabled caus=
-es memorycorruption when resuming from suspend-to-disk
-Submitter	: M. Vefa Bicakci <bicave@superonline.com>
-Date		: 2010-03-13 5:11 (27 days old)
-=46irst-Bad-Commit: http://git.kernel.org/git/linus/d8e0902806c0bd2ccc4=
-f6a267ff52565a3ec933b
-Message-ID	: <4B9B1E8F.5090806@superonline.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126845754409543&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15544
-Subject		: black screen upon S3 resume, syslog has "render error" and "=
-page table error"
-Submitter	: Sanjoy Mahajan <sanjoy@mit.edu>
-Date		: 2010-03-16 00:45 (24 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15534
-Subject		: 07ca:b808 crashing and breaking usb's
-Submitter	: Alex Fiestas <alex@eyeos.org>
-Date		: 2010-03-14 15:56 (26 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15525
-Subject		: Blank screen after some time, after hibernation/suspend
-Submitter	:  <capsel@matrix.inten.pl>
-Date		: 2010-03-12 17:24 (28 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15502
-Subject		: render error detected, EIR: 0x00000010
-Submitter	: Artem Anisimov <aanisimov@inbox.ru>
-Date		: 2010-03-10 05:45 (30 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15466
-Subject		: 2.6.33 dies on modprobe
-Submitter	: M G Berberich <berberic@fmi.uni-passau.de>
-Date		: 2010-02-28 22:12 (40 days old)
-Message-ID	: <20100228221257.GA8858@invalid>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126739570819208&w=3D=
-2
-Handled-By	: Am=C3=A9rico Wang <xiyou.wangcong@gmail.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15465
-Subject		: 2.6.33 problems
-Submitter	: werner@guyane.dyn-o-saur.com
-Date		: 2010-02-27 17:09 (41 days old)
-Message-ID	: <1267290551.13148@guyane.dyn-o-saur.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126729183719672&w=3D=
-2
-Handled-By	: Tejun Heo <tj@kernel.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15454
-Subject		: r8169 exits with error -22 since 2.6.33
-Submitter	: Conrad Kostecki <ConiKost@gmx.de>
-Date		: 2010-03-05 22:32 (35 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15439
-Subject		: Laptop does consume more power when booted "cold" -- Thinkpa=
-d X200s
-Submitter	:  <johannes.schlatow@googlemail.com>
-Date		: 2010-03-03 23:09 (37 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15418
-Subject		: battery status info broken; missing entry in ec_dmi_table fo=
-r specific MSI hardware (notebook)
-Submitter	: Tom-Steve Watzke <tswatzke@arcor.de>
-Date		: 2010-03-01 07:25 (39 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15392
-Subject		: The kernel does not start up.
-Submitter	: Krist=C3=B3f Ralovich <kristof.ralovich@gmail.com>
-Date		: 2010-02-25 06:52 (43 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15376
-Subject		: regression (oops) with usb in 2.6.33-rc8
-Submitter	: Christophe Fergeau <cfergeau@mandriva.com>
-Date		: 2010-02-23 10:58 (45 days old)
-Handled-By	: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15317
-Subject		: Lockdep report while running aplay with pulse as the default
-Submitter	: Ed Tomlinson <edt@aei.ca>
-Date		: 2010-02-13 17:17 (55 days old)
-Message-ID	: <201002131217.10579.edt@aei.ca>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126608146427546&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15311
-Subject		: Starting pulseaudio causes a NULL pointer hit
-Submitter	: Ed Tomlinson <edt@aei.ca>
-Date		: 2010-02-14 23:41 (54 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15305
-Subject		: Dell video dies when booting
-Submitter	: David Ronis <ronis@ronispc.chem.mcgill.ca>
-Date		: 2010-02-14 1:07 (54 days old)
-Message-ID	: <1266109622.11290.10.camel@montroll.chem.mcgill.ca>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126611098225127&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15278
-Subject		: lockdep warning for iscsi in 2.6.33-rc6
-Submitter	: Tao Ma <tao.ma@oracle.com>
-Date		: 2010-02-09 6:59 (59 days old)
-Message-ID	: <4B7107CF.3060703@oracle.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126569884330200&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15277
-Subject		: 2.6.33-rc6 crashes on resume
-Submitter	: Bill Davidsen <davidsen@roadwarrior3.tmr.com>
-Date		: 2010-02-08 23:03 (60 days old)
-Message-ID	: <4B70982F.8090208@roadwarrior3.tmr.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126567021801935&w=3D=
-2
-Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15276
-Subject		: latest git kernel: general protection fault: 0000 [#1]
-Submitter	: Markus Trippelsdorf <markus@trippelsdorf.de>
-Date		: 2010-02-09 8:36 (59 days old)
-Message-ID	: <20100209083605.GA1766@arch.tripp.de>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126570498804223&w=3D=
-2
-Handled-By	: J=C3=A9r=C3=B4me Glisse <glisse@freedesktop.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15259
-Subject		: Corruption with OpenGL since Intel's big DRM push on i945
-Submitter	: Alexandre Demers <papouta@hotmail.com>
-Date		: 2010-02-08 13:19 (60 days old)
-=46irst-Bad-Commit: http://git.kernel.org/git/linus/76446cac68568fc7f51=
-68a27deaf803ed22a4360
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15246
-Subject		: BUG: Bad page state in process portageq
-Submitter	: Johannes Hirte <johannes.hirte@fem.tu-ilmenau.de>
-Date		: 2010-02-07 0:45 (61 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126550356515887&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15244
-Subject		: PROBLEM: hda-intel divide by zero kernel crash in azx_positi=
-on_ok()
-Submitter	: Jody Bruchon <jody@nctritech.com>
-Date		: 2010-02-06 0:32 (62 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126541276028173&w=3D=
-2
-Handled-By	: Takashi Iwai <tiwai@suse.de>
-		  Jody Bruchon <jody@nctritech.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15076
-Subject		: System panic under load with clockevents_program_event
-Submitter	: okias <d.okias@gmail.com>
-Date		: 2010-01-17 13:03 (82 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15036
-Subject		: soft lockup in dmesg after suspend/resume
-Submitter	: ykzhao <yakui.zhao@intel.com>
-Date		: 2010-01-04 5:36 (95 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126258356202722&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14950
-Subject		: tbench regression with 2.6.33-rc1
-Submitter	: Lin Ming <ming.m.lin@intel.com>
-Date		: 2009-12-25 11:11 (105 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126174044213172&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14937
-Subject		: WARNING: at kernel/lockdep.c:2830
-Submitter	: Grant Wilson <grant.wilson@zen.co.uk>
-Date		: 2009-12-27 13:35 (103 days old)
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D126192220404829&w=3D=
-4
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D14792
-Subject		: Misdetection of the TV output
-Submitter	: Santi <santi@agolina.net>
-Date		: 2009-12-12 13:28 (118 days old)
-=46irst-Bad-Commit: http://git.kernel.org/git/linus/27dfaf4f5825a119305=
-db1bc63bef30ed400e376
-Handled-By	: Zhao Yakui <yakui.zhao@intel.com>
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D15328
-Subject		: high load avg, extreme sluggishness on T41 w/ Radeon Mobilit=
-y M7
-Submitter	: John W. Linville <linville@tuxdriver.com>
-Date		: 2010-02-16 20:25 (52 days old)
-Handled-By	: Francisco Jerez <currojerez@riseup.net>
-Patch		: http://bugzilla.kernel.org/attachment.cgi?id=3D25118
-
-
-=46or details, please visit the bug entries and follow the links given =
-in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regres=
-sions.
-There also is a Bugzilla entry used for tracking the regressions introd=
-uced
-between 2.6.32 and 2.6.33, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D14885
-
-Please let the tracking teak know if there are any Bugzilla entries tha=
-t
-should be added to the list in there.
-
-Thanks!
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_000E_01CAD7CE.D2A82470
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+1. To support instantaneous report for SCSI device existing by periodic
+polling
+2. In arcmsr_iop_xfer(), inform AP of F/W's deadlock state to prevent
+endless waiting
+3. To block the coming SCSI command while the driver is handling bus reset
+4. To support HW reset in bus reset error handler
+Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
+
+------=_NextPart_000_000E_01CAD7CE.D2A82470
+Content-Type: application/octet-stream;
+	name="patch1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="patch1"
+
+diff -Naurp --ignore-blank-lines --ignore-all-space =
+--ignore-space-change arcmsr/arcmsr_attr.c =
+arcmsr.1.20.00.15-81103/arcmsr_attr.c
+--- arcmsr/arcmsr_attr.c	2010-02-25 02:52:17.000000000 +0800
++++ arcmsr.1.20.00.15-81103/arcmsr_attr.c	2008-06-13 11:02:58.000000000 =
++0800
+@@ -189,6 +189,7 @@ static struct bin_attribute arcmsr_sysfs
+ 	.attr =3D {
+ 		.name =3D "mu_read",
+ 		.mode =3D S_IRUSR ,
++		.owner =3D THIS_MODULE,
+ 	},
+ 	.size =3D 1032,
+ 	.read =3D arcmsr_sysfs_iop_message_read,
+@@ -198,6 +199,7 @@ static struct bin_attribute arcmsr_sysfs
+ 	.attr =3D {
+ 		.name =3D "mu_write",
+ 		.mode =3D S_IWUSR,
++		.owner =3D THIS_MODULE,
+ 	},
+ 	.size =3D 1032,
+ 	.write =3D arcmsr_sysfs_iop_message_write,
+@@ -207,6 +209,7 @@ static struct bin_attribute arcmsr_sysfs
+ 	.attr =3D {
+ 		.name =3D "mu_clear",
+ 		.mode =3D S_IWUSR,
++		.owner =3D THIS_MODULE,
+ 	},
+ 	.size =3D 1,
+ 	.write =3D arcmsr_sysfs_iop_message_clear,
+diff -Naurp --ignore-blank-lines --ignore-all-space =
+--ignore-space-change arcmsr/arcmsr.h arcmsr.1.20.00.15-81103/arcmsr.h
+--- arcmsr/arcmsr.h	2010-02-25 02:52:17.000000000 +0800
++++ arcmsr.1.20.00.15-81103/arcmsr.h	2008-11-05 17:12:40.000000000 +0800
+@@ -48,7 +48,7 @@ struct device_attribute;
+ /*The limit of outstanding scsi command that firmware can handle*/
+ #define ARCMSR_MAX_OUTSTANDING_CMD						256
+ #define ARCMSR_MAX_FREECCB_NUM							320
+-#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 =
+2008/02/27"
++#define ARCMSR_DRIVER_VERSION		     "Driver Version 1.20.00.15 =
+2008/11/03"
+ #define ARCMSR_SCSI_INITIATOR_ID						255
+ #define ARCMSR_MAX_XFER_SECTORS							512
+ #define ARCMSR_MAX_XFER_SECTORS_B						4096
+@@ -66,6 +66,17 @@ struct device_attribute;
+ #define ARC_SUCCESS                                                     =
+  0
+ #define ARC_FAILURE                                                     =
+  1
+ /*
++************************************************************************=
+**********
++**
++************************************************************************=
+**********
++*/
++#ifndef TRUE
++#define TRUE 1
++#endif
++#ifndef FALSE
++#define FALSE 0
++#endif
++/*
+ =
+*************************************************************************=
+******
+ **        split 64bits dma addressing
+ =
+*************************************************************************=
+******
+@@ -110,6 +121,8 @@ struct CMD_MESSAGE_FIELD
+ #define FUNCTION_SAY_HELLO			0x0807
+ #define FUNCTION_SAY_GOODBYE			0x0808
+ #define FUNCTION_FLUSH_ADAPTER_CACHE		0x0809
++#define FUNCTION_GET_FIRMWARE_STATUS			0x080A
++#define FUNCTION_HARDWARE_RESET			0x080B
+ /* ARECA IO CONTROL CODE*/
+ #define ARCMSR_MESSAGE_READ_RQBUFFER       \
+ 	ARECA_SATA_RAID | FUNCTION_READ_RQBUFFER
+@@ -133,6 +146,7 @@ struct CMD_MESSAGE_FIELD
+ #define ARCMSR_MESSAGE_RETURNCODE_OK              0x00000001
+ #define ARCMSR_MESSAGE_RETURNCODE_ERROR           0x00000006
+ #define ARCMSR_MESSAGE_RETURNCODE_3F              0x0000003F
++#define ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON	0x00000088
+ /*
+ *************************************************************
+ **   structure for holding DMA address data
+@@ -341,13 +355,13 @@ struct MessageUnit_B
+ 	uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];
+ 	uint32_t	postq_index;
+ 	uint32_t	doneq_index;
+-	void		__iomem *drv2iop_doorbell_reg;
+-	void		__iomem *drv2iop_doorbell_mask_reg;
+-	void		__iomem *iop2drv_doorbell_reg;
+-	void		__iomem *iop2drv_doorbell_mask_reg;
+-	void		__iomem *msgcode_rwbuffer_reg;
+-	void		__iomem *ioctl_wbuffer_reg;
+-	void		__iomem *ioctl_rbuffer_reg;
++	uint32_t		__iomem *drv2iop_doorbell_reg;
++	uint32_t		__iomem *drv2iop_doorbell_mask_reg;
++	uint32_t		__iomem *iop2drv_doorbell_reg;
++	uint32_t		__iomem *iop2drv_doorbell_mask_reg;
++	uint32_t		__iomem *msgcode_rwbuffer_reg;
++	uint32_t		__iomem *ioctl_wbuffer_reg;
++	uint32_t		__iomem *ioctl_rbuffer_reg;
+ };
+=20
+ /*
+@@ -375,6 +389,7 @@ struct AdapterControlBlock
+ 	/* message unit ATU inbound base address0 */
+=20
+ 	uint32_t			acb_flags;
++	uint8_t                   		adapter_index;
+ 	#define ACB_F_SCSISTOPADAPTER         	0x0001
+ 	#define ACB_F_MSG_STOP_BGRB     	0x0002
+ 	/* stop RAID background rebuild */
+@@ -390,7 +405,7 @@ struct AdapterControlBlock
+ 	#define ACB_F_BUS_RESET               	0x0080
+ 	#define ACB_F_IOP_INITED              	0x0100
+ 	/* iop init */
+-
++	#define ACB_F_FIRMWARE_TRAP           		0x0400
+ 	struct CommandControlBlock *			pccb_pool[ARCMSR_MAX_FREECCB_NUM];
+ 	/* used for memory free */
+ 	struct list_head		ccb_free_list;
+@@ -423,12 +438,19 @@ struct AdapterControlBlock
+ #define ARECA_RAID_GOOD               0xaa
+ 	uint32_t			num_resets;
+ 	uint32_t			num_aborts;
++	uint32_t			signature;
+ 	uint32_t			firm_request_len;
+ 	uint32_t			firm_numbers_queue;
+ 	uint32_t			firm_sdram_size;
+ 	uint32_t			firm_hd_channels;
+ 	char				firm_model[12];
+ 	char				firm_version[20];
++	char			device_map[20];			/*21,84-99*/
++	struct work_struct 		arcmsr_do_message_isr_bh;
++	struct timer_list		eternal_timer;
++	unsigned short		fw_state;
++	atomic_t 			rq_map_token;
++	int			ante_token_value;
+ };/* HW_DEVICE_EXTENSION */
+ /*
+ =
+*************************************************************************=
+******
+diff -Naurp --ignore-blank-lines --ignore-all-space =
+--ignore-space-change arcmsr/arcmsr_hba.c =
+arcmsr.1.20.00.15-81103/arcmsr_hba.c
+--- arcmsr/arcmsr_hba.c	2010-02-25 02:52:17.000000000 +0800
++++ arcmsr.1.20.00.15-81103/arcmsr_hba.c	2008-11-11 12:03:04.000000000 =
++0800
+@@ -71,8 +71,16 @@
+ #include <scsi/scsicam.h>
+ #include "arcmsr.h"
+=20
++#ifdef CONFIG_SCSI_ARCMSR_RESET
++	static int sleeptime =3D 20;
++	static int retrycount =3D 12;
++	module_param(sleeptime, int, S_IRUGO|S_IWUSR);
++	MODULE_PARM_DESC(sleeptime,"The waiting period for FW ready while bus =
+reset");
++	module_param(retrycount, int, S_IRUGO|S_IWUSR);
++	MODULE_PARM_DESC(retrycount,"The retry count for FW ready while bus =
+reset");
++#endif
+ MODULE_AUTHOR("Erich Chen <support@areca.com.tw>");
+-MODULE_DESCRIPTION("ARECA (ARC11xx/12xx/13xx/16xx) SATA/SAS RAID HOST =
+Adapter");
++MODULE_DESCRIPTION("ARECA (ARC11xx/12xx/13xx/16xx) SATA/SAS RAID Host =
+Bus Adapter");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION(ARCMSR_DRIVER_VERSION);
+=20
+@@ -95,14 +103,18 @@ static u32 arcmsr_disable_outbound_ints(
+ static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);
+ static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);
+ static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
++static void arcmsr_request_device_map(unsigned long pacb);
++static void arcmsr_request_hba_device_map(struct AdapterControlBlock =
+*acb);
++static void arcmsr_request_hbb_device_map(struct AdapterControlBlock =
+*acb);
++static void arcmsr_message_isr_bh_fn(struct work_struct *work);
++static void *arcmsr_get_firmware_spec(struct AdapterControlBlock *acb, =
+int mode);
++static void arcmsr_start_adapter_bgrb(struct AdapterControlBlock *acb);
++
+ static const char *arcmsr_info(struct Scsi_Host *);
+ static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb);
+ static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev,
+-					  int queue_depth, int reason)
++								int queue_depth)
+ {
+-	if (reason !=3D SCSI_QDEPTH_DEFAULT)
+-		return -EOPNOTSUPP;
+-
+ 	if (queue_depth > ARCMSR_MAX_CMD_PERLUN)
+ 		queue_depth =3D ARCMSR_MAX_CMD_PERLUN;
+ 	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);
+@@ -111,7 +123,7 @@ static int arcmsr_adjust_disk_queue_dept
+=20
+ static struct scsi_host_template arcmsr_scsi_host_template =3D {
+ 	.module			=3D THIS_MODULE,
+-	.name			=3D "ARCMSR ARECA SATA/SAS RAID HOST Adapter"
++	.name			=3D "ARCMSR ARECA SATA/SAS RAID Host Bus Adapter"
+ 							ARCMSR_DRIVER_VERSION,
+ 	.info			=3D arcmsr_info,
+ 	.queuecommand		=3D arcmsr_queue_command,
+@@ -235,10 +247,9 @@ static int arcmsr_alloc_ccb_pool(struct=20
+ 		void *dma_coherent;
+ 		dma_addr_t dma_coherent_handle, dma_addr;
+ 		struct CommandControlBlock *ccb_tmp;
+-		uint32_t intmask_org;
+ 		int i, j;
+=20
+-		acb->pmuA =3D pci_ioremap_bar(pdev, 0);
++		acb->pmuA =3D ioremap(pci_resource_start(pdev, 0), =
+pci_resource_len(pdev, 0));
+ 		if (!acb->pmuA) {
+ 			printk(KERN_NOTICE "arcmsr%d: memory mapping region fail \n",
+ 							acb->host->host_no);
+@@ -280,12 +291,6 @@ static int arcmsr_alloc_ccb_pool(struct=20
+ 		for (i =3D 0; i < ARCMSR_MAX_TARGETID; i++)
+ 			for (j =3D 0; j < ARCMSR_MAX_TARGETLUN; j++)
+ 				acb->devstate[i][j] =3D ARECA_RAID_GONE;
+-
+-		/*
+-		** here we need to tell iop 331 our ccb_tmp.HighPart
+-		** if ccb_tmp.HighPart is not zero
+-		*/
+-		intmask_org =3D arcmsr_disable_outbound_ints(acb);
+ 		}
+ 		break;
+=20
+@@ -296,7 +301,6 @@ static int arcmsr_alloc_ccb_pool(struct=20
+ 		void __iomem *mem_base0, *mem_base1;
+ 		void *dma_coherent;
+ 		dma_addr_t dma_coherent_handle, dma_addr;
+-		uint32_t intmask_org;
+ 		struct CommandControlBlock *ccb_tmp;
+ 		int i, j;
+=20
+@@ -332,11 +336,13 @@ static int arcmsr_alloc_ccb_pool(struct=20
+ 		reg =3D (struct MessageUnit_B *)(dma_coherent +
+ 		ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock));
+ 		acb->pmuB =3D reg;
+-		mem_base0 =3D pci_ioremap_bar(pdev, 0);
++		mem_base0 =3D ioremap(pci_resource_start(pdev, 0),
++					pci_resource_len(pdev, 0));
+ 		if (!mem_base0)
+ 			goto out;
+=20
+-		mem_base1 =3D pci_ioremap_bar(pdev, 2);
++		mem_base1 =3D ioremap(pci_resource_start(pdev, 2),
++					pci_resource_len(pdev, 2));
+ 		if (!mem_base1) {
+ 			iounmap(mem_base0);
+ 			goto out;
+@@ -356,12 +362,6 @@ static int arcmsr_alloc_ccb_pool(struct=20
+ 		for (i =3D 0; i < ARCMSR_MAX_TARGETID; i++)
+ 			for (j =3D 0; j < ARCMSR_MAX_TARGETLUN; j++)
+ 				acb->devstate[i][j] =3D ARECA_RAID_GOOD;
+-
+-		/*
+-		** here we need to tell iop 331 our ccb_tmp.HighPart
+-		** if ccb_tmp.HighPart is not zero
+-		*/
+-		intmask_org =3D arcmsr_disable_outbound_ints(acb);
+ 		}
+ 		break;
+ 	}
+@@ -373,6 +373,88 @@ out:
+ 		sizeof(struct MessageUnit_B)), acb->dma_coherent, =
+acb->dma_coherent_handle);
+ 	return -ENOMEM;
+ }
++static void arcmsr_message_isr_bh_fn(struct work_struct *work)=20
++{
++	struct AdapterControlBlock *acb =3D container_of(work,struct =
+AdapterControlBlock, arcmsr_do_message_isr_bh);
++
++	switch (acb->adapter_type) {
++		case ACB_ADAPTER_TYPE_A: {
++
++			struct MessageUnit_A __iomem *reg  =3D acb->pmuA;
++			char *acb_dev_map =3D (char *)acb->device_map;
++			uint32_t __iomem *signature =3D (uint32_t __iomem*) =
+(&reg->message_rwbuffer[0]);
++			char __iomem *devicemap =3D (char __iomem*) =
+(&reg->message_rwbuffer[21]);
++			int target, lun;
++			struct scsi_device *psdev;
++			char diff;
++
++			atomic_inc(&acb->rq_map_token);
++			if (readl(signature) =3D=3D ARCMSR_SIGNATURE_GET_CONFIG) {
++				for(target =3D 0; target < ARCMSR_MAX_TARGETID -1; target++) {
++					diff =3D (*acb_dev_map)^readb(devicemap);
++					if (diff !=3D 0) {
++						char temp;
++						*acb_dev_map =3D readb(devicemap);
++						temp =3D*acb_dev_map;
++						for(lun =3D 0; lun < ARCMSR_MAX_TARGETLUN; lun++) {
++							if((temp & 0x01)=3D=3D1 && (diff & 0x01) =3D=3D 1) {=09
++								scsi_add_device(acb->host, 0, target, lun);
++							}else if((temp & 0x01) =3D=3D 0 && (diff & 0x01) =3D=3D 1) {
++								psdev =3D scsi_device_lookup(acb->host, 0, target, lun);
++								if (psdev !=3D NULL ) {
++									scsi_remove_device(psdev);
++									scsi_device_put(psdev);
++								}
++							}
++							temp >>=3D 1;
++							diff >>=3D 1;
++						}
++					}
++					devicemap++;
++					acb_dev_map++;
++				}
++			}
++			break;
++		}
++
++		case ACB_ADAPTER_TYPE_B: {
++			struct MessageUnit_B *reg  =3D acb->pmuB;
++			char *acb_dev_map =3D (char *)acb->device_map;
++			uint32_t __iomem *signature =3D (uint32_t =
+__iomem*)(&reg->msgcode_rwbuffer_reg[0]);
++			char __iomem *devicemap =3D (char =
+__iomem*)(&reg->msgcode_rwbuffer_reg[21]);
++			int target, lun;
++			struct scsi_device *psdev;
++			char diff;
++
++			atomic_inc(&acb->rq_map_token);
++			if (readl(signature) =3D=3D ARCMSR_SIGNATURE_GET_CONFIG) {
++				for(target =3D 0; target < ARCMSR_MAX_TARGETID -1; target++) {
++					diff =3D (*acb_dev_map)^readb(devicemap);
++					if (diff !=3D 0) {
++						char temp;
++						*acb_dev_map =3D readb(devicemap);
++						temp =3D*acb_dev_map;
++						for(lun =3D 0; lun < ARCMSR_MAX_TARGETLUN; lun++) {
++							if((temp & 0x01)=3D=3D1 && (diff & 0x01) =3D=3D 1) {=09
++								scsi_add_device(acb->host, 0, target, lun);
++							}else if((temp & 0x01) =3D=3D 0 && (diff & 0x01) =3D=3D 1) {
++								psdev =3D scsi_device_lookup(acb->host, 0, target, lun);
++								if (psdev !=3D NULL ) {
++									scsi_remove_device(psdev);
++									scsi_device_put(psdev);
++								}
++							}
++							temp >>=3D 1;
++							diff >>=3D 1;
++						}
++					}
++					devicemap++;
++					acb_dev_map++;
++				}
++			}
++		}
++	}
++}
+=20
+ static int arcmsr_probe(struct pci_dev *pdev,
+ 	const struct pci_device_id *id)
+@@ -396,9 +478,9 @@ static int arcmsr_probe(struct pci_dev *
+ 	acb =3D (struct AdapterControlBlock *)host->hostdata;
+ 	memset(acb, 0, sizeof (struct AdapterControlBlock));
+=20
+-	error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
++	error =3D pci_set_dma_mask(pdev, DMA_64BIT_MASK);
+ 	if (error) {
+-		error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		error =3D pci_set_dma_mask(pdev, DMA_32BIT_MASK);
+ 		if (error) {
+ 			printk(KERN_WARNING
+ 			       "scsi%d: No suitable DMA mask available\n",
+@@ -431,17 +513,17 @@ static int arcmsr_probe(struct pci_dev *
+ 			   ACB_F_MESSAGE_WQBUFFER_READED);
+ 	acb->acb_flags &=3D ~ACB_F_SCSISTOPADAPTER;
+ 	INIT_LIST_HEAD(&acb->ccb_free_list);
+-
++	INIT_WORK (&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);
+ 	error =3D arcmsr_alloc_ccb_pool(acb);
+ 	if (error)
+ 		goto out_release_regions;
+=20
++	arcmsr_iop_init(acb);
+ 	error =3D request_irq(pdev->irq, arcmsr_do_interrupt,
+ 			    IRQF_SHARED, "arcmsr", acb);
+ 	if (error)
+ 		goto out_free_ccb_pool;
+=20
+-	arcmsr_iop_init(acb);
+ 	pci_set_drvdata(pdev, host);
+ 	if (strncmp(acb->firm_version, "V1.42", 5) >=3D 0)
+ 		host->max_sectors=3D ARCMSR_MAX_XFER_SECTORS_B;
+@@ -458,6 +540,14 @@ static int arcmsr_probe(struct pci_dev *
+ 	#ifdef CONFIG_SCSI_ARCMSR_AER
+ 	pci_enable_pcie_error_reporting(pdev);
+ 	#endif
++	atomic_set(&acb->rq_map_token, 16);
++	acb->fw_state =3D TRUE;
++	init_timer(&acb->eternal_timer);
++	acb->eternal_timer.expires =3D jiffies + msecs_to_jiffies(10*HZ);
++	acb->eternal_timer.data =3D (unsigned long) acb;
++	acb->eternal_timer.function =3D &arcmsr_request_device_map;
++	add_timer(&acb->eternal_timer);
++
+ 	return 0;
+  out_free_sysfs:
+  out_free_irq:
+@@ -517,40 +607,48 @@ static uint8_t arcmsr_hbb_wait_msgint_re
+ 	return 0xff;
+ }
+=20
+-static void arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
++static uint8_t arcmsr_abort_hba_allcmd(struct AdapterControlBlock *acb)
+ {
+ 	struct MessageUnit_A __iomem *reg =3D acb->pmuA;
+=20
+ 	writel(ARCMSR_INBOUND_MESG0_ABORT_CMD, &reg->inbound_msgaddr0);
+-	if (arcmsr_hba_wait_msgint_ready(acb))
++	if (arcmsr_hba_wait_msgint_ready(acb)){
+ 		printk(KERN_NOTICE
+ 			"arcmsr%d: wait 'abort all outstanding command' timeout \n"
+ 			, acb->host->host_no);
++		return 0xff;
++	}
++	return 0x00;
+ }
+=20
+-static void arcmsr_abort_hbb_allcmd(struct AdapterControlBlock *acb)
++static uint8_t arcmsr_abort_hbb_allcmd(struct AdapterControlBlock *acb)
+ {
+ 	struct MessageUnit_B *reg =3D acb->pmuB;
+=20
+ 	writel(ARCMSR_MESSAGE_ABORT_CMD, reg->drv2iop_doorbell_reg);
+-	if (arcmsr_hbb_wait_msgint_ready(acb))
++	if (arcmsr_hbb_wait_msgint_ready(acb)) {
+ 		printk(KERN_NOTICE
+ 			"arcmsr%d: wait 'abort all outstanding command' timeout \n"
+ 			, acb->host->host_no);
++		return 0xff;
++	}
++	return 0x00;
+ }
+=20
+-static void arcmsr_abort_allcmd(struct AdapterControlBlock *acb)
++static uint8_t arcmsr_abort_allcmd(struct AdapterControlBlock *acb)
+ {
++	uint8_t rtnval =3D 0;
+ 	switch (acb->adapter_type) {
+ 	case ACB_ADAPTER_TYPE_A: {
+-		arcmsr_abort_hba_allcmd(acb);
++		rtnval =3D arcmsr_abort_hba_allcmd(acb);
+ 		}
+ 		break;
+=20
+ 	case ACB_ADAPTER_TYPE_B: {
+-		arcmsr_abort_hbb_allcmd(acb);
++		rtnval =3D arcmsr_abort_hbb_allcmd(acb);
+ 		}
+ 	}
++	return rtnval;
+ }
+=20
+ static void arcmsr_pci_unmap_dma(struct CommandControlBlock *ccb)
+@@ -648,8 +746,7 @@ static u32 arcmsr_disable_outbound_ints(
+=20
+ 	case ACB_ADAPTER_TYPE_A : {
+ 		struct MessageUnit_A __iomem *reg =3D acb->pmuA;
+-		orig_mask =3D readl(&reg->outbound_intmask)|\
+-				ARCMSR_MU_OUTBOUND_MESSAGE0_INTMASKENABLE;
++		orig_mask =3D readl(&reg->outbound_intmask);
+ 		writel(orig_mask|ARCMSR_MU_OUTBOUND_ALL_INTMASKENABLE, \
+ 						&reg->outbound_intmask);
+ 		}
+@@ -657,8 +754,7 @@ static u32 arcmsr_disable_outbound_ints(
+=20
+ 	case ACB_ADAPTER_TYPE_B : {
+ 		struct MessageUnit_B *reg =3D acb->pmuB;
+-		orig_mask =3D readl(reg->iop2drv_doorbell_mask_reg) & \
+-					(~ARCMSR_IOP2DRV_MESSAGE_CMD_DONE);
++		orig_mask =3D readl(reg->iop2drv_doorbell_mask_reg);
+ 		writel(0, reg->iop2drv_doorbell_mask_reg);
+ 		}
+ 		break;
+@@ -794,12 +890,13 @@ static void arcmsr_remove(struct pci_dev
+ 	struct AdapterControlBlock *acb =3D
+ 		(struct AdapterControlBlock *) host->hostdata;
+ 	int poll_count =3D 0;
+-
+ 	arcmsr_free_sysfs_attr(acb);
+ 	scsi_remove_host(host);
++	flush_scheduled_work();
++	del_timer_sync(&acb->eternal_timer);
++	arcmsr_disable_outbound_ints(acb);
+ 	arcmsr_stop_adapter_bgrb(acb);
+ 	arcmsr_flush_adapter_cache(acb);
+-	arcmsr_disable_outbound_ints(acb);
+ 	acb->acb_flags |=3D ACB_F_SCSISTOPADAPTER;
+ 	acb->acb_flags &=3D ~ACB_F_IOP_INITED;
+=20
+@@ -840,7 +937,9 @@ static void arcmsr_shutdown(struct pci_d
+ 	struct Scsi_Host *host =3D pci_get_drvdata(pdev);
+ 	struct AdapterControlBlock *acb =3D
+ 		(struct AdapterControlBlock *)host->hostdata;
+-
++	del_timer_sync(&acb->eternal_timer);
++	arcmsr_disable_outbound_ints(acb);
++	flush_scheduled_work();
+ 	arcmsr_stop_adapter_bgrb(acb);
+ 	arcmsr_flush_adapter_cache(acb);
+ }
+@@ -860,7 +959,7 @@ static void arcmsr_module_exit(void)
+ module_init(arcmsr_module_init);
+ module_exit(arcmsr_module_exit);
+=20
+-static void arcmsr_enable_outbound_ints(struct AdapterControlBlock =
+*acb, \
++static void arcmsr_enable_outbound_ints(struct AdapterControlBlock =
+*acb,
+ 						u32 intmask_org)
+ {
+ 	u32 mask;
+@@ -870,7 +969,8 @@ static void arcmsr_enable_outbound_ints(
+ 	case ACB_ADAPTER_TYPE_A : {
+ 		struct MessageUnit_A __iomem *reg =3D acb->pmuA;
+ 		mask =3D intmask_org & ~(ARCMSR_MU_OUTBOUND_POSTQUEUE_INTMASKENABLE |
+-			     ARCMSR_MU_OUTBOUND_DOORBELL_INTMASKENABLE);
++			     ARCMSR_MU_OUTBOUND_DOORBELL_INTMASKENABLE|
++			     ARCMSR_MU_OUTBOUND_MESSAGE0_INTMASKENABLE);
+ 		writel(mask, &reg->outbound_intmask);
+ 		acb->outbound_int_enable =3D ~(intmask_org & mask) & 0x000000ff;
+ 		}
+@@ -878,8 +978,10 @@ static void arcmsr_enable_outbound_ints(
+=20
+ 	case ACB_ADAPTER_TYPE_B : {
+ 		struct MessageUnit_B *reg =3D acb->pmuB;
+-		mask =3D intmask_org | (ARCMSR_IOP2DRV_DATA_WRITE_OK | \
+-			ARCMSR_IOP2DRV_DATA_READ_OK | ARCMSR_IOP2DRV_CDB_DONE);
++		mask =3D intmask_org | (ARCMSR_IOP2DRV_DATA_WRITE_OK |
++			ARCMSR_IOP2DRV_DATA_READ_OK |
++			ARCMSR_IOP2DRV_CDB_DONE |
++			ARCMSR_IOP2DRV_MESSAGE_CMD_DONE);
+ 		writel(mask, reg->iop2drv_doorbell_mask_reg);
+ 		acb->outbound_int_enable =3D (intmask_org | mask) & 0x0000000f;
+ 		}
+@@ -1047,8 +1149,8 @@ static void arcmsr_free_ccb_pool(struct=20
+ 	}
+ 	case ACB_ADAPTER_TYPE_B: {
+ 		struct MessageUnit_B *reg =3D acb->pmuB;
+-		iounmap(reg->drv2iop_doorbell_reg - ARCMSR_DRV2IOP_DOORBELL);
+-		iounmap(reg->ioctl_wbuffer_reg - ARCMSR_IOCTL_WBUFFER);
++		iounmap((u8 *)reg->drv2iop_doorbell_reg - ARCMSR_DRV2IOP_DOORBELL);
++		iounmap((u8 *)reg->ioctl_wbuffer_reg - ARCMSR_IOCTL_WBUFFER);
+ 		dma_free_coherent(&acb->pdev->dev,
+ 		(ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock) + 0x20 +
+ 		sizeof(struct MessageUnit_B)), acb->dma_coherent, =
+acb->dma_coherent_handle);
+@@ -1248,13 +1350,36 @@ static void arcmsr_hbb_postqueue_isr(str
+ 		reg->doneq_index =3D index;
+ 	}
+ }
++/*
++************************************************************************=
+**********
++** Handle a message interrupt
++**
++** The only message interrupt we expect is in response to a query for =
+the current adapter config. =20
++** We want this in order to compare the drivemap so that we can detect =
+newly-attached drives.
++************************************************************************=
+**********
++*/
++static void arcmsr_hba_message_isr(struct AdapterControlBlock *acb)
++{
++	struct MessageUnit_A *reg  =3D acb->pmuA;
++
++	/*clear interrupt and message state*/
++	writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT, &reg->outbound_intstatus);
++	schedule_work(&acb->arcmsr_do_message_isr_bh);
++}
++static void arcmsr_hbb_message_isr(struct AdapterControlBlock *acb)
++{
++	struct MessageUnit_B *reg  =3D acb->pmuB;
+=20
++	/*clear interrupt and message state*/
++	writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN, reg->iop2drv_doorbell_reg);
++	schedule_work(&acb->arcmsr_do_message_isr_bh);
++}
+ static int arcmsr_handle_hba_isr(struct AdapterControlBlock *acb)
+ {
+ 	uint32_t outbound_intstatus;
+ 	struct MessageUnit_A __iomem *reg =3D acb->pmuA;
+=20
+-	outbound_intstatus =3D readl(&reg->outbound_intstatus) & \
++	outbound_intstatus =3D readl(&reg->outbound_intstatus) &
+ 							acb->outbound_int_enable;
+ 	if (!(outbound_intstatus & ARCMSR_MU_OUTBOUND_HANDLE_INT))	{
+ 		return 1;
+@@ -1266,6 +1391,10 @@ static int arcmsr_handle_hba_isr(struct=20
+ 	if (outbound_intstatus & ARCMSR_MU_OUTBOUND_POSTQUEUE_INT) {
+ 		arcmsr_hba_postqueue_isr(acb);
+ 	}
++	if(outbound_intstatus & ARCMSR_MU_OUTBOUND_MESSAGE0_INT) 	{
++		/* messenger of "driver to iop commands" */
++		arcmsr_hba_message_isr(acb);
++	}
+ 	return 0;
+ }
+=20
+@@ -1274,13 +1403,14 @@ static int arcmsr_handle_hbb_isr(struct=20
+ 	uint32_t outbound_doorbell;
+ 	struct MessageUnit_B *reg =3D acb->pmuB;
+=20
+-	outbound_doorbell =3D readl(reg->iop2drv_doorbell_reg) & \
++	outbound_doorbell =3D readl(reg->iop2drv_doorbell_reg) &
+ 							acb->outbound_int_enable;
+ 	if (!outbound_doorbell)
+ 		return 1;
+=20
+ 	writel(~outbound_doorbell, reg->iop2drv_doorbell_reg);
+-	/*in case the last action of doorbell interrupt clearance is cached, =
+this action can push HW to write down the clear bit*/
++	/*in case the last action of doorbell interrupt clearance is cached,
++	this action can push HW to write down the clear bit*/
+ 	readl(reg->iop2drv_doorbell_reg);
+ 	writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell_reg);
+ 	if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_WRITE_OK) 	{
+@@ -1292,6 +1422,10 @@ static int arcmsr_handle_hbb_isr(struct=20
+ 	if (outbound_doorbell & ARCMSR_IOP2DRV_CDB_DONE) {
+ 		arcmsr_hbb_postqueue_isr(acb);
+ 	}
++	if(outbound_doorbell & ARCMSR_IOP2DRV_MESSAGE_CMD_DONE) {
++		/* messenger of "driver to iop commands" */
++		arcmsr_hbb_message_isr(acb);
++	}
+=20
+ 	return 0;
+ }
+@@ -1359,7 +1492,7 @@ void arcmsr_post_ioctldata2iop(struct Ad
+ 	}
+ }
+=20
+-static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb, \
++static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
+ 					struct scsi_cmnd *cmd)
+ {
+ 	struct CMD_MESSAGE_FIELD *pcmdmessagefld;
+@@ -1397,6 +1530,13 @@ static int arcmsr_iop_message_xfer(struc
+ 			retvalue =3D ARCMSR_MESSAGE_FAIL;
+ 			goto message_out;
+ 		}
++			=09
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
++
+ 		ptmpQbuffer =3D ver_addr;
+ 		while ((acb->rqbuf_firstindex !=3D acb->rqbuf_lastindex)
+ 			&& (allxfer_len < 1031)) {
+@@ -1443,6 +1583,12 @@ static int arcmsr_iop_message_xfer(struc
+ 			retvalue =3D ARCMSR_MESSAGE_FAIL;
+ 			goto message_out;
+ 		}
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
++
+ 		ptmpuserbuffer =3D ver_addr;
+ 		user_len =3D pcmdmessagefld->cmdmessage.Length;
+ 		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer, user_len);
+@@ -1495,6 +1641,11 @@ static int arcmsr_iop_message_xfer(struc
+=20
+ 	case ARCMSR_MESSAGE_CLEAR_RQBUFFER: {
+ 		uint8_t *pQbuffer =3D acb->rqbuffer;
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
+=20
+ 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
+ 			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;
+@@ -1510,6 +1661,11 @@ static int arcmsr_iop_message_xfer(struc
+=20
+ 	case ARCMSR_MESSAGE_CLEAR_WQBUFFER: {
+ 		uint8_t *pQbuffer =3D acb->wqbuffer;
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
+=20
+ 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
+ 			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;
+@@ -1528,6 +1684,11 @@ static int arcmsr_iop_message_xfer(struc
+=20
+ 	case ARCMSR_MESSAGE_CLEAR_ALLQBUFFER: {
+ 		uint8_t *pQbuffer;
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
+=20
+ 		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {
+ 			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;
+@@ -1550,13 +1711,22 @@ static int arcmsr_iop_message_xfer(struc
+ 		break;
+=20
+ 	case ARCMSR_MESSAGE_RETURN_CODE_3F: {
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
+ 		pcmdmessagefld->cmdmessage.ReturnCode =3D =
+ARCMSR_MESSAGE_RETURNCODE_3F;
+ 		}
+ 		break;
+=20
+ 	case ARCMSR_MESSAGE_SAY_HELLO: {
+ 		int8_t *hello_string =3D "Hello! I am ARCMSR";
+-
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
+ 		memcpy(pcmdmessagefld->messagedatabuffer, hello_string
+ 			, (int16_t)strlen(hello_string));
+ 		pcmdmessagefld->cmdmessage.ReturnCode =3D =
+ARCMSR_MESSAGE_RETURNCODE_OK;
+@@ -1564,10 +1734,20 @@ static int arcmsr_iop_message_xfer(struc
+ 		break;
+=20
+ 	case ARCMSR_MESSAGE_SAY_GOODBYE:
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
+ 		arcmsr_iop_parking(acb);
+ 		break;
+=20
+ 	case ARCMSR_MESSAGE_FLUSH_ADAPTER_CACHE:
++		if(acb->fw_state =3D=3D FALSE) {
++			pcmdmessagefld->cmdmessage.ReturnCode =3D
++			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;
++			goto message_out;
++		}
+ 		arcmsr_flush_adapter_cache(acb);
+ 		break;
+=20
+@@ -1650,16 +1830,57 @@ static int arcmsr_queue_command(struct s
+ 	struct CommandControlBlock *ccb;
+ 	int target =3D cmd->device->id;
+ 	int lun =3D cmd->device->lun;
+-
++	uint8_t scsicmd =3D cmd->cmnd[0];
+ 	cmd->scsi_done =3D done;
+ 	cmd->host_scribble =3D NULL;
+ 	cmd->result =3D 0;
++
++	if((scsicmd =3D=3D SYNCHRONIZE_CACHE) ||(scsicmd =3D=3D =
+SEND_DIAGNOSTIC)) {
++		if(acb->devstate[target][lun] =3D=3D ARECA_RAID_GONE) {
++    			cmd->result =3D (DID_NO_CONNECT << 16);
++		}
++		cmd->scsi_done(cmd);
++		return 0;
++	}
++
+ 	if (acb->acb_flags & ACB_F_BUS_RESET) {
+-		printk(KERN_NOTICE "arcmsr%d: bus reset"
+-			" and return busy \n"
+-			, acb->host->host_no);
++		switch (acb->adapter_type) {
++			case ACB_ADAPTER_TYPE_A: {
++				struct MessageUnit_A __iomem *reg =3D acb->pmuA;
++				uint32_t intmask_org,outbound_doorbell;
++
++				if((readl(&reg->outbound_msgaddr1) &
++					ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) =3D=3D 0 ) {
++					printk(KERN_NOTICE "arcmsr%d: bus reset and return busy \n",
++						acb->host->host_no);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
++
++				acb->acb_flags &=3D ~ACB_F_FIRMWARE_TRAP;
++				printk(KERN_NOTICE "arcmsr%d: hardware bus reset and reset ok \n",
++					acb->host->host_no);
++				/* disable all outbound interrupt */
++				intmask_org =3D arcmsr_disable_outbound_ints(acb);
++ 				arcmsr_get_firmware_spec(acb,1);
++				/*start background rebuild*/
++				arcmsr_start_adapter_bgrb(acb);
++				/* clear Qbuffer if door bell ringed */
++				outbound_doorbell =3D readl(&reg->outbound_doorbell);
++				/*clear interrupt */
++				writel(outbound_doorbell, &reg->outbound_doorbell);
++   				writel(ARCMSR_INBOUND_DRIVER_DATA_READ_OK,
++					&reg->inbound_doorbell);
++				/* enable outbound Post Queue,outbound doorbell Interrupt */
++				arcmsr_enable_outbound_ints(acb, intmask_org);
++				acb->acb_flags |=3D ACB_F_IOP_INITED;
++				acb->acb_flags &=3D ~ACB_F_BUS_RESET;
++			}
++			break;
++			case ACB_ADAPTER_TYPE_B: {
++			}
++		}
++	}
++
+ 	if (target =3D=3D 16) {
+ 		/* virtual device for iop message transfer */
+ 		arcmsr_handle_virtual_command(acb, cmd);
+@@ -1698,21 +1919,24 @@ static int arcmsr_queue_command(struct s
+ 	return 0;
+ }
+=20
+-static void arcmsr_get_hba_config(struct AdapterControlBlock *acb)
+-{
++static void *arcmsr_get_hba_config(struct AdapterControlBlock *acb, int =
+mode){
+ 	struct MessageUnit_A __iomem *reg =3D acb->pmuA;
+ 	char *acb_firm_model =3D acb->firm_model;
+ 	char *acb_firm_version =3D acb->firm_version;
++	char *acb_device_map =3D acb->device_map;
+ 	char __iomem *iop_firm_model =3D (char __iomem =
+*)(&reg->message_rwbuffer[15]);
+ 	char __iomem *iop_firm_version =3D (char __iomem =
+*)(&reg->message_rwbuffer[17]);
++	char __iomem *iop_device_map =3D (char __iomem *) =
+(&reg->message_rwbuffer[21]);
+ 	int count;
+=20
+ 	writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
+ 	if (arcmsr_hba_wait_msgint_ready(acb)) {
+ 		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
+ 			miscellaneous data' timeout \n", acb->host->host_no);
++		return NULL;
+ 	}
+=20
++	if(mode =3D=3D 1) {
+ 	count =3D 8;
+ 	while (count) {
+ 		*acb_firm_model =3D readb(iop_firm_model);
+@@ -1729,34 +1953,48 @@ static void arcmsr_get_hba_config(struct
+ 		count--;
+ 	}
+=20
++		count=3D16;
++		while(count) {
++        			*acb_device_map=3Dreadb(iop_device_map);
++        			acb_device_map++;
++			iop_device_map++;
++			count--;
++ 		}
++	=09
+ 	printk(KERN_INFO 	"ARECA RAID ADAPTER%d: FIRMWARE VERSION %s \n"
+ 		, acb->host->host_no
+ 		, acb->firm_version);
+-
++		acb->signature =3D readl(&reg->message_rwbuffer[0]);
+ 	acb->firm_request_len =3D readl(&reg->message_rwbuffer[1]);
+ 	acb->firm_numbers_queue =3D readl(&reg->message_rwbuffer[2]);
+ 	acb->firm_sdram_size =3D readl(&reg->message_rwbuffer[3]);
+ 	acb->firm_hd_channels =3D readl(&reg->message_rwbuffer[4]);
+ }
+-
+-static void arcmsr_get_hbb_config(struct AdapterControlBlock *acb)
++	return (reg->message_rwbuffer);
++}
++static void __iomem *arcmsr_get_hbb_config(struct AdapterControlBlock =
+*acb, int mode)
+ {
+ 	struct MessageUnit_B *reg =3D acb->pmuB;
+ 	uint32_t __iomem *lrwbuffer =3D reg->msgcode_rwbuffer_reg;
+ 	char *acb_firm_model =3D acb->firm_model;
+ 	char *acb_firm_version =3D acb->firm_version;
++	char *acb_device_map =3D acb->device_map;
+ 	char __iomem *iop_firm_model =3D (char __iomem *)(&lrwbuffer[15]);
+ 	/*firm_model,15,60-67*/
+ 	char __iomem *iop_firm_version =3D (char __iomem *)(&lrwbuffer[17]);
+ 	/*firm_version,17,68-83*/
++	char __iomem *iop_device_map =3D (char __iomem *) (&lrwbuffer[21]);
++	/*firm_version,21,84-99*/
+ 	int count;
+=20
+ 	writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell_reg);
+ 	if (arcmsr_hbb_wait_msgint_ready(acb)) {
+ 		printk(KERN_NOTICE "arcmsr%d: wait 'get adapter firmware \
+ 			miscellaneous data' timeout \n", acb->host->host_no);
++		return NULL;
+ 	}
+=20
++	if(mode =3D=3D 1) {
+ 	count =3D 8;
+ 	while (count)
+ 	{
+@@ -1775,11 +2013,20 @@ static void arcmsr_get_hbb_config(struct
+ 		count--;
+ 	}
+=20
++		count=3D16;
++		while(count) {
++        			*acb_device_map=3Dreadb(iop_device_map);
++        			acb_device_map++;
++			iop_device_map++;
++			count--;
++ 		}
++	=09
+ 	printk(KERN_INFO "ARECA RAID ADAPTER%d: FIRMWARE VERSION %s \n",
+ 			acb->host->host_no,
+ 			acb->firm_version);
+=20
+-	lrwbuffer++;
++		acb->signature =3D readl(lrwbuffer++);
++		/*firm_signature,1,00-03*/
+ 	acb->firm_request_len =3D readl(lrwbuffer++);
+ 	/*firm_request_len,1,04-07*/
+ 	acb->firm_numbers_queue =3D readl(lrwbuffer++);
+@@ -1789,20 +2036,23 @@ static void arcmsr_get_hbb_config(struct
+ 	acb->firm_hd_channels =3D readl(lrwbuffer);
+ 	/*firm_ide_channels,4,16-19*/
+ }
+-
+-static void arcmsr_get_firmware_spec(struct AdapterControlBlock *acb)
++	return (reg->msgcode_rwbuffer_reg);
++}
++static void *arcmsr_get_firmware_spec(struct AdapterControlBlock *acb, =
+int mode)
+ {
++	void *rtnval =3D 0;
+ 	switch (acb->adapter_type) {
+ 	case ACB_ADAPTER_TYPE_A: {
+-		arcmsr_get_hba_config(acb);
++		rtnval =3D arcmsr_get_hba_config(acb, mode);
+ 		}
+ 		break;
+=20
+ 	case ACB_ADAPTER_TYPE_B: {
+-		arcmsr_get_hbb_config(acb);
++		rtnval =3D arcmsr_get_hbb_config(acb, mode);
+ 		}
+ 		break;
+ 	}
++	return rtnval;
+ }
+=20
+ static void arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,
+@@ -2042,6 +2292,67 @@ static void arcmsr_wait_firmware_ready(s
+ 	}
+ }
+=20
++static void arcmsr_request_hba_device_map(struct AdapterControlBlock =
+*acb)
++{
++	struct MessageUnit_A __iomem *reg =3D acb->pmuA;
++
++	if(unlikely(atomic_read(&acb->rq_map_token) =3D=3D 0)) {
++		acb->fw_state =3D FALSE;
++	} else {
++	/*to prevent rq_map_token from changing by other interrupt, then
++	avoid the dead-lock*/
++		acb->fw_state =3D TRUE;
++		atomic_dec(&acb->rq_map_token);
++		if((acb->fw_state =3D=3D FALSE)||
++			(acb->ante_token_value=3D=3Datomic_read(&acb->rq_map_token))){
++
++			atomic_set(&acb->rq_map_token,16);
++		}
++		acb->ante_token_value=3Datomic_read(&acb->rq_map_token);
++		writel(ARCMSR_INBOUND_MESG0_GET_CONFIG, &reg->inbound_msgaddr0);
++	}
++	mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6000));
++	return;
++}
++
++static void arcmsr_request_hbb_device_map(struct AdapterControlBlock =
+*acb)
++{
++	struct MessageUnit_B __iomem *reg =3D acb->pmuB;
++
++	if(unlikely(atomic_read(&acb->rq_map_token) =3D=3D 0)) {
++		acb->fw_state =3D FALSE;
++	} else {
++	/*to prevent rq_map_token from changing by other interrupt, then
++	avoid the dead-lock*/
++		acb->fw_state =3D TRUE;
++		atomic_dec(&acb->rq_map_token);
++		if((acb->fw_state =3D=3D FALSE)||
++			(acb->ante_token_value=3D=3Datomic_read(&acb->rq_map_token))){
++			atomic_set(&acb->rq_map_token,16);
++		}
++		acb->ante_token_value=3Datomic_read(&acb->rq_map_token);
++		writel(ARCMSR_MESSAGE_GET_CONFIG, reg->drv2iop_doorbell_reg);
++	}
++	mod_timer(&acb->eternal_timer, jiffies + msecs_to_jiffies(6000));
++	return;
++}
++
++static void arcmsr_request_device_map(unsigned long pacb)
++{
++	struct AdapterControlBlock *acb =3D (struct AdapterControlBlock =
+*)pacb;
++
++	switch (acb->adapter_type) {
++		case ACB_ADAPTER_TYPE_A: {
++			arcmsr_request_hba_device_map(acb);
++		}
++		break;
++		case ACB_ADAPTER_TYPE_B: {
++			arcmsr_request_hbb_device_map(acb);
++		}
++		break;
++	}
++}
++
+ static void arcmsr_start_hba_bgrb(struct AdapterControlBlock *acb)
+ {
+ 	struct MessageUnit_A __iomem *reg =3D acb->pmuA;
+@@ -2120,6 +2431,60 @@ static void arcmsr_enable_eoi_mode(struc
+ 	return;
+ }
+=20
++static void arcmsr_hardware_reset(struct AdapterControlBlock *acb)
++{
++	uint8_t value[64];
++	int i;
++
++	/* backup pci config data */
++	for (i=3D0; i<64; i++) {
++		pci_read_config_byte(acb->pdev, i, &value[i]);
++	}
++	/* hardware reset signal */
++	pci_write_config_byte(acb->pdev, 0x84, 0x20);
++	msleep(1000);
++	/* write back pci config data */
++	for (i=3D0;i<64;i++) {
++		pci_write_config_byte(acb->pdev, i, value[i]);
++	}
++	msleep(1000);
++	return;
++}
++/*
++************************************************************************=
+****
++************************************************************************=
+****
++*/
++#ifdef CONFIG_SCSI_ARCMSR_RESET
++	int arcmsr_sleep_for_bus_reset(struct scsi_cmnd *cmd)
++	{
++			struct Scsi_Host *shost =3D NULL;
++			spinlock_t *host_lock =3D NULL;
++			int i, isleep;
++
++			shost =3D cmd->device->host;
++			host_lock =3D shost->host_lock;
++
++			printk("Host %d bus reset over, sleep %d seconds (busy %d, can queue =
+%d) ...........\n",=20
++					shost->host_no, sleeptime, shost->host_busy, shost->can_queue);
++			isleep =3D sleeptime / 10;
++			spin_unlock_irq(host_lock);
++			if (isleep > 0) {
++				for (i =3D 0; i < isleep; i ++) {
++					msleep(10000);
++					printk("^%d^\n", i);
++				}
++			}
++
++			isleep =3D sleeptime % 10;
++			if (isleep > 0) {
++				msleep(isleep*1000);
++				printk("^v^\n");
++			}
++			spin_lock_irq(host_lock);	       =20
++			printk("***** wake up *****\n");
++			return 0;
++	}
++#endif
+ static void arcmsr_iop_init(struct AdapterControlBlock *acb)
+ {
+ 	uint32_t intmask_org;
+@@ -2128,7 +2493,7 @@ static void arcmsr_iop_init(struct Adapt
+        intmask_org =3D arcmsr_disable_outbound_ints(acb);
+ 	arcmsr_wait_firmware_ready(acb);
+ 	arcmsr_iop_confirm(acb);
+-	arcmsr_get_firmware_spec(acb);
++	arcmsr_get_firmware_spec(acb, 1);
+ 	/*start background rebuild*/
+ 	arcmsr_start_adapter_bgrb(acb);
+ 	/* empty doorbell Qbuffer if door bell ringed */
+@@ -2139,51 +2504,114 @@ static void arcmsr_iop_init(struct Adapt
+ 	acb->acb_flags |=3D ACB_F_IOP_INITED;
+ }
+=20
+-static void arcmsr_iop_reset(struct AdapterControlBlock *acb)
++static uint8_t arcmsr_iop_reset(struct AdapterControlBlock *acb)
+ {
+ 	struct CommandControlBlock *ccb;
+ 	uint32_t intmask_org;
++	uint8_t rtnval =3D 0x00;
+ 	int i =3D 0;
+=20
+ 	if (atomic_read(&acb->ccboutstandingcount) !=3D 0) {
++		/* disable all outbound interrupt */
++		intmask_org =3D arcmsr_disable_outbound_ints(acb);
+ 		/* talk to iop 331 outstanding command aborted */
+-		arcmsr_abort_allcmd(acb);
+-
++		rtnval =3D arcmsr_abort_allcmd(acb);
+ 		/* wait for 3 sec for all command aborted*/
+ 		ssleep(3);
+-
+-		/* disable all outbound interrupt */
+-		intmask_org =3D arcmsr_disable_outbound_ints(acb);
+ 		/* clear all outbound posted Q */
+ 		arcmsr_done4abort_postqueue(acb);
+ 		for (i =3D 0; i < ARCMSR_MAX_FREECCB_NUM; i++) {
+ 			ccb =3D acb->pccb_pool[i];
+ 			if (ccb->startdone =3D=3D ARCMSR_CCB_START) {
+-				ccb->startdone =3D ARCMSR_CCB_ABORTED;
+ 				arcmsr_ccb_complete(ccb, 1);
+ 			}
+ 		}
++		atomic_set(&acb->ccboutstandingcount, 0);
+ 		/* enable all outbound interrupt */
+ 		arcmsr_enable_outbound_ints(acb, intmask_org);
++		return rtnval;
+ 	}
++	return rtnval;
+ }
+=20
+ static int arcmsr_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	struct AdapterControlBlock *acb =3D
+ 		(struct AdapterControlBlock *)cmd->device->host->hostdata;
+-	int i;
++	int retry =3D 0;
+=20
+-	acb->num_resets++;
++	if(acb->acb_flags & ACB_F_BUS_RESET)
++		return SUCCESS;
++
++	printk("arcmsr%d: bus reset ..... \n", acb->adapter_index);
+ 	acb->acb_flags |=3D ACB_F_BUS_RESET;
+-	for (i =3D 0; i < 400; i++) {
+-		if (!atomic_read(&acb->ccboutstandingcount))
++	acb->num_resets++;
++	while(atomic_read(&acb->ccboutstandingcount) !=3D 0 && retry < 4) {
++		arcmsr_interrupt(acb);
++		retry++;
++	}
++
++	if(arcmsr_iop_reset(acb)) {
++		switch (acb->adapter_type) {
++		case ACB_ADAPTER_TYPE_A: {
++			printk("arcmsr%d: do hardware bus reset, num_resets =3D %d =
+num_aborts =3D %d \n",
++				acb->adapter_index, acb->num_resets, acb->num_aborts);
++			arcmsr_hardware_reset(acb);
++			acb->acb_flags |=3D ACB_F_FIRMWARE_TRAP;
++			acb->acb_flags &=3D ~ACB_F_IOP_INITED;
++			#ifdef CONFIG_SCSI_ARCMSR_RESET
++			struct MessageUnit_A __iomem *reg =3D acb->pmuA;
++			uint32_t intmask_org, outbound_doorbell;
++			int retry_count =3D 0;
++			sleep_again:
++			arcmsr_sleep_for_bus_reset(cmd);
++			if(( readl(&reg->outbound_msgaddr1) &
++			ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) =3D=3D 0 ) {
++			printk(KERN_NOTICE "arcmsr%d: hardware bus reset and return busy, =
+retry=3D%d \n",
++			acb->host->host_no, retry_count);
++			if(retry_count > retrycount) {
++				printk(KERN_NOTICE "arcmsr%d: hardware bus reset and return busy, =
+retry aborted \n",
++				acb->host->host_no);
++			return SUCCESS;
++			}
++			retry_count++;
++			goto sleep_again;
++			}
++			acb->acb_flags &=3D ~ACB_F_FIRMWARE_TRAP;
++			acb->acb_flags |=3D ACB_F_IOP_INITED;
++			acb->acb_flags &=3D ~ACB_F_BUS_RESET;
++			printk(KERN_NOTICE "arcmsr%d: hardware bus reset and reset ok \n",
++				acb->host->host_no);
++			/* disable all outbound interrupt */
++			intmask_org=3Darcmsr_disable_outbound_ints(acb);
++				arcmsr_get_firmware_spec(acb,1);
++			/*start	background rebuild*/
++			arcmsr_start_adapter_bgrb(acb);
++			/* clear Qbuffer if door bell ringed */
++			outbound_doorbell=3Dreadl(&reg->outbound_doorbell);
++			writel(outbound_doorbell, &reg->outbound_doorbell); /*clear =
+interrupt */
++			writel(ARCMSR_INBOUND_DRIVER_DATA_READ_OK, &reg->inbound_doorbell);
++			/* enable outbound Post Queue,outbound doorbell Interrupt */
++			arcmsr_enable_outbound_ints(acb, intmask_org);
++			atomic_set(&acb->rq_map_token, 16);
++			init_timer(&acb->eternal_timer);
++			acb->eternal_timer.expires =3D jiffies + msecs_to_jiffies(20*HZ);
++			acb->eternal_timer.data =3D (unsigned long) acb;
++			acb->eternal_timer.function =3D &arcmsr_request_device_map;
++			add_timer(&acb->eternal_timer);
++			#endif
++		}
+ 			break;
+-		arcmsr_interrupt(acb);/* FIXME: need spinlock */
+-		msleep(25);
++		case ACB_ADAPTER_TYPE_B: {
++		}
++		}
+ 	}
+-	arcmsr_iop_reset(acb);
++	else {
+ 	acb->acb_flags &=3D ~ACB_F_BUS_RESET;
++	}=09
++
++//	arcmsr_iop_reset(acb);
++//	acb->acb_flags &=3D ~ACB_F_BUS_RESET;
+ 	return SUCCESS;
+ }
+=20
+
+------=_NextPart_000_000E_01CAD7CE.D2A82470--
