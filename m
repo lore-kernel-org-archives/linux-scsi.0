@@ -1,36 +1,43 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.34-rc3-git8: Reported regressions 2.6.32 -> 2.6.33
-Date: Fri, 9 Apr 2010 21:56:05 +0200
-Message-ID: <201004092156.05674.rjw@sisk.pl>
-References: <cjwJ7Pf9h0L.A.9pB.1DmvLB@chimera> <4BBE92AE.6090301@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15721] mptsas cannot dectect hotplugged harddisks occasionally
+Date: Fri, 9 Apr 2010 20:54:43 GMT
+Message-ID: <201004092054.o39Kshqq031960@demeter.kernel.org>
+References: <bug-15721-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:44748 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755376Ab0DITww (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Apr 2010 15:52:52 -0400
-In-Reply-To: <4BBE92AE.6090301@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:51968 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757199Ab0DIUyo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2010 16:54:44 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o39KshDg031961
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Apr 2010 20:54:43 GMT
+In-Reply-To: <bug-15721-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
+To: linux-scsi@vger.kernel.org
 
-On Friday 09 April 2010, Gertjan van Wingerde wrote:
-> On 04/09/10 00:54, Rafael J. Wysocki wrote:
-> > 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=15699
-> > Subject		: rt2500usb driver cannot remain connected
-> > Submitter	:  <abcd@gentoo.org>
-> > Date		: 2010-04-05 19:30 (4 days old)
-> > Handled-By	: Ivo van Doorn <IvDoorn@gmail.com>
-> > 
-> 
-> This one ought to be fixed by commit 9e76ad2a27f592c1390248867391880c7efe78b3
-> in Linus' tree.
+https://bugzilla.kernel.org/show_bug.cgi?id=15721
 
-Thanks, closing.
 
-Rafael
+Andrew Morton <akpm@linux-foundation.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org
+          Component|Other                       |SCSI
+         AssignedTo|io_other@kernel-bugs.osdl.o |linux-scsi@vger.kernel.org
+                   |rg                          |
+
+
+
+
+--- Comment #4 from Andrew Morton <akpm@linux-foundation.org>  2010-04-09 20:54:38 ---
+Recategorised to scsi, assigned to Eric.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
