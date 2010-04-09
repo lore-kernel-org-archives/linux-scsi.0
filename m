@@ -1,131 +1,49 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 12/12] libfc,
-	fcoe: normalize format specifies for world wide names
-Date: Fri, 09 Apr 2010 14:23:16 -0700
-Message-ID: <20100409212315.1968.95457.stgit@localhost.localdomain>
-References: <20100409212212.1968.59251.stgit@localhost.localdomain>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Fri, 9 Apr 2010 14:54:39 -0700
+Message-ID: <20100409215439.GA4779@xanatos>
+References: <4BBF6B2F.9060902@gmail.com>
+ <Pine.LNX.4.44L0.1004091504500.1852-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:65217 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757331Ab0DIVXQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Apr 2010 17:23:16 -0400
-In-Reply-To: <20100409212212.1968.59251.stgit@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1004091504500.1852-100000@iolanthe.rowland.org>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jonas Schwertfeger <jschwertfeger@gmail.com>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Chris Leech <christopher.leech@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Chris Leech <christopher.leech@intel.com>
+On Fri, Apr 09, 2010 at 03:25:31PM -0400, Alan Stern wrote:
+> On Fri, 9 Apr 2010, Jonas Schwertfeger wrote:
+> 
+> > On 04/09/2010 07:14 PM, Sarah Sharp wrote:
+> > > Someone should probably tell Neil Perng at Genesys Logic.  Maybe Dinh
+> > > Nguyen (from the launchpad entry) can provide an email address or
+> > > forward this thread on?
+> > 
+> > Why are we sure that my drive has a chip by Genesys Logic in it at all? 
+> >   I know that there are disks out there with that chip and that there 
+> > are issues with it, but how did we conclude that the Buffalo drive has 
+> > the same chip in it?  Is there a way for me to verify what chip is used 
+> > without opening the case?
+> 
+> Now that you mention it, we don't know what sort of chip you have.  
+> Only that the vendor ID is 0x0411 (MelCo., Inc.) and the product ID is 
+> 0x0184.
+> 
+> I don't know of any way to find out what sort of chip it is without 
+> opening the case (except perhaps by asking the manufacturer).
 
-Print all world wide node names (node, port and fabric) with the same
-format specifier of "%16.16llx".  That makes sure they all print as a
-16 character hex string, with lower case letters, no 0x prefix, and
-without stripping off any leading 0s.
+I've just opened the case on my Buffalo hard drive, and the circuit just
+says Buffalo.  There's an ARM chip and a winbond chip, but not much else
+to identify it.  I'll ask around the USB-IF PIL lab to try and get a
+company contact.
 
-Signed-off-by: Chris Leech <christopher.leech@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
+Sarah Sharp
 
- drivers/scsi/fcoe/fcoe.c      |    3 ++-
- drivers/scsi/fcoe/libfcoe.c   |   21 ++++++++++++---------
- drivers/scsi/libfc/fc_disc.c  |    2 +-
- drivers/scsi/libfc/fc_lport.c |    4 ++--
- 4 files changed, 17 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 25a7ce5..aba839e 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -934,7 +934,8 @@ static struct fc_lport *fcoe_if_create(struct fcoe_interface *fcoe,
- 	}
- 
- 	if (npiv) {
--		FCOE_NETDEV_DBG(netdev, "Setting vport names, 0x%llX 0x%llX\n",
-+		FCOE_NETDEV_DBG(netdev, "Setting vport names, "
-+				"%16.16llx %16.16llx\n",
- 				vport->node_name, vport->port_name);
- 		fc_set_wwnn(lport, vport->node_name);
- 		fc_set_wwpn(lport, vport->port_name);
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index de5c329..aadd249 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -583,7 +583,7 @@ static void fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
- 					    smp_processor_id());
- 			stats->MissDiscAdvCount++;
- 			printk(KERN_INFO "libfcoe: host%d: Missing Discovery "
--			       "Advertisement for fab %llx count %lld\n",
-+			       "Advertisement for fab %16.16llx count %lld\n",
- 			       fip->lp->host->host_no, fcf->fabric_name,
- 			       stats->MissDiscAdvCount);
- 		}
-@@ -780,7 +780,8 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 	mtu_valid = fcoe_ctlr_mtu_valid(fcf);
- 	fcf->time = jiffies;
- 	if (!found) {
--		LIBFCOE_FIP_DBG(fip, "New FCF for fab %llx map %x val %d\n",
-+		LIBFCOE_FIP_DBG(fip, "New FCF for fab %16.16llx "
-+				"map %x val %d\n",
- 				fcf->fabric_name, fcf->fc_map, mtu_valid);
- 	}
- 
-@@ -1108,15 +1109,17 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
- 	struct fcoe_fcf *best = NULL;
- 
- 	list_for_each_entry(fcf, &fip->fcfs, list) {
--		LIBFCOE_FIP_DBG(fip, "consider FCF for fab %llx VFID %d map %x "
--				"val %d\n", fcf->fabric_name, fcf->vfid,
-+		LIBFCOE_FIP_DBG(fip, "consider FCF for fab %16.16llx "
-+				"VFID %d map %x val %d\n",
-+				fcf->fabric_name, fcf->vfid,
- 				fcf->fc_map, fcoe_ctlr_mtu_valid(fcf));
- 		if (!fcoe_ctlr_fcf_usable(fcf)) {
--			LIBFCOE_FIP_DBG(fip, "FCF for fab %llx map %x %svalid "
--					"%savailable\n", fcf->fabric_name,
--					fcf->fc_map, (fcf->flags & FIP_FL_SOL)
--					? "" : "in", (fcf->flags & FIP_FL_AVAIL)
--					? "" : "un");
-+			LIBFCOE_FIP_DBG(fip, "FCF for fab %16.16llx "
-+					"map %x %svalid %savailable\n",
-+					fcf->fabric_name, fcf->fc_map,
-+					(fcf->flags & FIP_FL_SOL) ? "" : "in",
-+					(fcf->flags & FIP_FL_AVAIL) ?
-+					"" : "un");
- 			continue;
- 		}
- 		if (!best) {
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 83314a1..b292272 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -607,7 +607,7 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			rdata->ids.port_name = port_name;
- 		else if (rdata->ids.port_name != port_name) {
- 			FC_DISC_DBG(disc, "GPN_ID accepted.  WWPN changed. "
--				    "Port-id %6.6x wwpn %llx\n",
-+				    "Port-id %6.6x wwpn %16.16llx\n",
- 				    rdata->ids.port_id, port_name);
- 			lport->tt.rport_logoff(rdata);
- 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e89bdd5..ef25e11 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -800,11 +800,11 @@ static void fc_lport_recv_flogi_req(struct fc_seq *sp_in,
- 	remote_wwpn = get_unaligned_be64(&flp->fl_wwpn);
- 	if (remote_wwpn == lport->wwpn) {
- 		printk(KERN_WARNING "host%d: libfc: Received FLOGI from port "
--		       "with same WWPN %llx\n",
-+		       "with same WWPN %16.16llx\n",
- 		       lport->host->host_no, remote_wwpn);
- 		goto out;
- 	}
--	FC_LPORT_DBG(lport, "FLOGI from port WWPN %llx\n", remote_wwpn);
-+	FC_LPORT_DBG(lport, "FLOGI from port WWPN %16.16llx\n", remote_wwpn);
- 
- 	/*
- 	 * XXX what is the right thing to do for FIDs?
-
+p.s. The Buffalo USB3 drive was much easier to open than the Dane-Elec
+drive (and the hard drive and board was actually secured, unlike the
+other drive).  There's a screw on the top, and if you pry off the
+stickers on the bottom, there's some plastic clips holding the case
+together.
