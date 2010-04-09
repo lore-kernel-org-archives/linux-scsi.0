@@ -1,186 +1,324 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [Bug 15688] mptsas & poor performance
-Date: Fri, 9 Apr 2010 17:19:36 +0530
-Message-ID: <1C9608B8A4CD534FB19C7C7543CBB249020E3FDEA1@inbmail02.lsi.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15688] mptsas & poor performance
+Date: Fri, 9 Apr 2010 11:50:39 GMT
+Message-ID: <201004091150.o39BodsR020237@demeter.kernel.org>
 References: <bug-15688-11613@https.bugzilla.kernel.org/>
- <201004081536.o38FatS7009762@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:37294 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750856Ab0DILuX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2010 07:50:23 -0400
-In-Reply-To: <201004081536.o38FatS7009762@demeter.kernel.org>
-Content-Language: en-US
+Received: from demeter.kernel.org ([140.211.167.39]:40119 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176Ab0DILuk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2010 07:50:40 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o39Bod3Z020238
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Apr 2010 11:50:39 GMT
+In-Reply-To: <bug-15688-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtc2NzaS1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBidWd6aWxsYS1kYWVtb25AYnVnemlsbGEua2VybmVsLm9yZw0K
-PiBTZW50OiBUaHVyc2RheSwgQXByaWwgMDgsIDIwMTAgOTowNyBQTQ0KPiBUbzogbGludXgtc2Nz
-aUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW0J1ZyAxNTY4OF0gbXB0c2FzICYgcG9vciBw
-ZXJmb3JtYW5jZQ0KPiANCj4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNn
-aT9pZD0xNTY4OA0KPiANCj4gDQo+IA0KPiANCj4gDQo+IC0tLSBDb21tZW50ICMzIGZyb20gQnJp
-YW4gU3VsbGl2YW4gPGJleGFtb3VzQGdtYWlsLmNvbT4gIDIwMTAtMDQtMDgNCj4gMTU6MzY6NDkg
-LS0tDQo+IEkgdGhpbmsgdGhlIG9ubHkgY2hhbmdlcyBJIG1hZGUgdG8gNC4xOC4wMC4wMCB3YXMg
-dG8ganVzdCBub3QgdXNlDQo+IG1wdGxhbg0KPiAoc2luY2UgSSBoYXZlIG5vIG5lZWQgYW5kIGl0
-IHdvdWxkbid0IGNvbXBpbGUgb24gMi42LjM0KSBhbmQgbWFrZSBhIGZldw0KPiBjaGFuZ2VzIHRv
-IG1wdHNhcy5jIChvbmx5IHRvIGdldCBpdCB0byBjb21waWxlIG9uIDIuNi4zNCkuDQo+IA0KPiBk
-aWZmIC4vbXB0bGludXgtNC4xOC4wMC4wMC9ka21zLmNvbmYgL3Vzci9zcmMvbXB0bGludXgtDQo+
-IDQuMTguMDAuMDAvZGttcy5jb25mDQo+IDEzZDEyDQo+IDwgTUFLRVs2XT0ibWFrZSAtQyAke2tl
-cm5lbF9zb3VyY2VfZGlyfQ0KPiBTVUJESVJTPSR7ZGttc190cmVlfS8ke1BBQ0tBR0VfTkFNRX0v
-JHtQQUNLQUdFX1ZFUlNJT059L2J1aWxkIG1vZHVsZXMiDQo+IDI4LDI5YzI3LDI4DQo+IDwgQlVJ
-TFRfTU9EVUxFX05BTUVbM109Im1wdGxhbiINCj4gPCBERVNUX01PRFVMRV9OQU1FWzNdPSJtcHRs
-YW4iDQo+IC0tLQ0KPiA+IEJVSUxUX01PRFVMRV9OQU1FWzNdPSJtcHRzcGkiDQo+ID4gREVTVF9N
-T0RVTEVfTkFNRVszXT0ibXB0c3BpIg0KPiAzMGEzMCwzMQ0KPiA+ICNNT0RVTEVTX0NPTkZfT0JT
-T0xFVEVTWzNdPSJtcHRiYXNlLG1wdHNjc2loLG1wdGN0bCxtcHRsYW4iDQo+ID4gTU9EVUxFU19D
-T05GX0FMSUFTX1RZUEVbM109InNjc2lfaG9zdGFkYXB0ZXIiDQo+IDMyLDMzYzMzLDM0DQo+IDwg
-QlVJTFRfTU9EVUxFX05BTUVbNF09Im1wdHNwaSINCj4gPCBERVNUX01PRFVMRV9OQU1FWzRdPSJt
-cHRzcGkiDQo+IC0tLQ0KPiA+IEJVSUxUX01PRFVMRV9OQU1FWzRdPSJtcHRzYXMiDQo+ID4gREVT
-VF9NT0RVTEVfTkFNRVs0XT0ibXB0c2FzIg0KPiAzNWQzNQ0KPiA8ICNNT0RVTEVTX0NPTkZfT0JT
-T0xFVEVTWzRdPSJtcHRiYXNlLG1wdHNjc2loLG1wdGN0bCxtcHRsYW4iDQo+IDM4LDM5YzM4LDM5
-DQo+IDwgQlVJTFRfTU9EVUxFX05BTUVbNV09Im1wdHNhcyINCj4gPCBERVNUX01PRFVMRV9OQU1F
-WzVdPSJtcHRzYXMiDQo+IC0tLQ0KPiA+IEJVSUxUX01PRFVMRV9OQU1FWzVdPSJtcHRmYyINCj4g
-PiBERVNUX01PRFVMRV9OQU1FWzVdPSJtcHRmYyINCj4gNDEsNDVkNDANCj4gPCBNT0RVTEVTX0NP
-TkZfQUxJQVNfVFlQRVs1XT0ic2NzaV9ob3N0YWRhcHRlciINCj4gPA0KPiA8IEJVSUxUX01PRFVM
-RV9OQU1FWzZdPSJtcHRmYyINCj4gPCBERVNUX01PRFVMRV9OQU1FWzZdPSJtcHRmYyINCj4gPCBE
-RVNUX01PRFVMRV9MT0NBVElPTls2XT0iL2tlcm5lbC9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uIg0K
-PiA0N2E0Mw0KPiA+DQo+IGRpZmYgLi9tcHRsaW51eC00LjE4LjAwLjAwL01ha2VmaWxlIC91c3Iv
-c3JjL21wdGxpbnV4LQ0KPiA0LjE4LjAwLjAwL01ha2VmaWxlDQo+IDJjMg0KPiA8ICMgTFNJIExv
-Z2ljICBtcHQgZnVzaW9uDQo+IC0tLQ0KPiA+ICMgTFNJIG1wdCBmdXNpb24NCj4gMTljMTkNCj4g
-PCBvYmotJChDT05GSUdfRlVTSU9OX0xBTikgICAgKz0gbXB0bGFuLm8NCj4gLS0tDQo+ID4gI29i
-ai0kKENPTkZJR19GVVNJT05fTEFOKSAgICArPSBtcHRsYW4ubw0KPiBkaWZmIC4vbXB0bGludXgt
-NC4xOC4wMC4wMC9tcHRzYXMuYyAvdXNyL3NyYy9tcHRsaW51eC0NCj4gNC4xOC4wMC4wMC9tcHRz
-YXMuYw0KPiAyNDM3LDI0MzhjMjQzNywyNDM4DQo+IDwgICAgICAgICAgICAgaW9jLT5uYW1lLCBf
-X2Z1bmNfXywgcmVxLT5iaW8tPmJpX3ZjbnQsIHJlcS0+ZGF0YV9sZW4sDQo+IDwgICAgICAgICAg
-ICAgcnNwLT5iaW8tPmJpX3ZjbnQsIHJzcC0+ZGF0YV9sZW4pOw0KPiAtLS0NCj4gPiAgICAgICAg
-ICAgICBpb2MtPm5hbWUsIF9fZnVuY19fLCByZXEtPmJpby0+YmlfdmNudCwNCj4gYmxrX3JxX2J5
-dGVzKHJlcSksDQo+ID4gICAgICAgICAgICAgcnNwLT5iaW8tPmJpX3ZjbnQsIGJsa19ycV9ieXRl
-cyhyc3ApKTsNCj4gMjQ1NWMyNDU1DQo+IDwgICAgIHNtcHJlcS0+UmVxdWVzdERhdGFMZW5ndGgg
-PSBjcHVfdG9fbGUxNihyZXEtPmRhdGFfbGVuIC0gNCk7DQo+IC0tLQ0KPiA+ICAgICBzbXByZXEt
-PlJlcXVlc3REYXRhTGVuZ3RoID0gY3B1X3RvX2xlMTYoYmxrX3JxX2J5dGVzKHJlcSkgLSA0KTsN
-Cj4gMjQ4NWMyNDg1DQo+IDwgICAgIGZsYWdzTGVuZ3RoIHw9IChyZXEtPmRhdGFfbGVuIC0gNCk7
-DQo+IC0tLQ0KPiA+ICAgICBmbGFnc0xlbmd0aCB8PSAoYmxrX3JxX2J5dGVzKHJlcSkgLSA0KTsN
-Cj4gMjQ4OGMyNDg4DQo+IDwgICAgICAgICAgICAgICAgICAgICAgIHJlcS0+ZGF0YV9sZW4sIFBD
-SV9ETUFfQklESVJFQ1RJT05BTCk7DQo+IC0tLQ0KPiA+ICAgICAgICAgICAgICAgICAgICAgICBi
-bGtfcnFfYnl0ZXMocmVxKSwgUENJX0RNQV9CSURJUkVDVElPTkFMKTsNCj4gMjUwMWMyNTAxDQo+
-IDwgICAgIGZsYWdzTGVuZ3RoIHw9IHJzcC0+ZGF0YV9sZW4gKyA0Ow0KPiAtLS0NCj4gPiAgICAg
-ZmxhZ3NMZW5ndGggfD0gYmxrX3JxX2J5dGVzKHJzcCkgKyA0Ow0KPiAyNTAzYzI1MDMNCj4gPCAg
-ICAgICAgICAgICAgICAgICAgICAgcnNwLT5kYXRhX2xlbiwgUENJX0RNQV9CSURJUkVDVElPTkFM
-KTsNCj4gLS0tDQo+ID4gICAgICAgICAgICAgICAgICAgICAgIGJsa19ycV9ieXRlcyhyc3ApLCBQ
-Q0lfRE1BX0JJRElSRUNUSU9OQUwpOw0KPiAyNTM0LDI1MzVjMjUzNCwyNTM1DQo+IDwgICAgICAg
-ICByZXEtPmRhdGFfbGVuID0gMDsNCj4gPCAgICAgICAgIHJzcC0+ZGF0YV9sZW4gLT0gc21wcmVw
-LT5SZXNwb25zZURhdGFMZW5ndGg7DQo+IC0tLQ0KPiA+ICAgICAgICAgcmVxLT5yZXNpZF9sZW4g
-PSAwOw0KPiA+ICAgICAgICAgcnNwLT5yZXNpZF9sZW4gLT0gc21wcmVwLT5SZXNwb25zZURhdGFM
-ZW5ndGg7DQo+IDI1NDRjMjU0NA0KPiA8ICAgICAgICAgcGNpX3VubWFwX3NpbmdsZShpb2MtPnBj
-aWRldiwgZG1hX2FkZHJfb3V0LCByZXEtPmRhdGFfbGVuLA0KPiAtLS0NCj4gPiAgICAgICAgIHBj
-aV91bm1hcF9zaW5nbGUoaW9jLT5wY2lkZXYsIGRtYV9hZGRyX291dCwNCj4gYmxrX3JxX2J5dGVz
-KHJlcSksDQo+IDI1NDdjMjU0Nw0KPiA8ICAgICAgICAgcGNpX3VubWFwX3NpbmdsZShpb2MtPnBj
-aWRldiwgZG1hX2FkZHJfaW4sIHJzcC0+ZGF0YV9sZW4sDQo+IC0tLQ0KPiA+ICAgICAgICAgcGNp
-X3VubWFwX3NpbmdsZShpb2MtPnBjaWRldiwgZG1hX2FkZHJfaW4sIGJsa19ycV9ieXRlcyhyc3Ap
-LA0KPiANCg0KT0suIFRoaXMgaXMgZmluZS4gQWxsIHlvdSBkaWQgaXMganVzdCB0byBtYWtlIHN1
-cmUgY29tcGlsYXRpb24gaXMgZmluZS4NCg0KPiANCj4gQlRXIFRoaXMgd2FzIEJvbm5pZSsrIG91
-dHB1dCB3aGVuIGJ0cmZzIHdhcyBzdGlsbCBlbXB0eSwgMzg4TUIvc2VjDQo+IHdyaXRlDQo+IDUy
-Nk1CL3NlYyByZWFkOg0KPiBWZXJzaW9uICAxLjk2ICAgICAgIC0tLS0tLVNlcXVlbnRpYWwgT3V0
-cHV0LS0tLS0tIC0tU2VxdWVudGlhbCBJbnB1dC0NCj4gLS1SYW5kb20tDQo+IENvbmN1cnJlbmN5
-ICAgMSAgICAgLVBlciBDaHItIC0tQmxvY2stLSAtUmV3cml0ZS0gLVBlciBDaHItIC0tQmxvY2st
-LQ0KPiAtLVNlZWtzLS0NCj4gTWFjaGluZSAgICAgICAgU2l6ZSBLL3NlYyAlQ1AgSy9zZWMgJUNQ
-IEsvc2VjICVDUCBLL3NlYyAlQ1AgSy9zZWMgJUNQDQo+IC9zZWMNCj4gJUNQDQo+IG5pbmUgICAg
-ICAgICAgICAyNEcgICAyNTkgIDk1IDM4ODgwMiAgNTcgMTI3MTUzICA1MSAgIDIyMSAgOTQgNTI2
-NTUzDQo+IDY2DQo+IDE2Ny45IDMzMQ0KPiBMYXRlbmN5ICAgICAgICAgICAgIDMwMDA0dXMgICAg
-MTQ1MW1zICAgICAzNzhtcyAgIDIzNjI3dXMgICAgIDExOG1zDQo+IDEwNG1zDQo+IFZlcnNpb24g
-IDEuOTYgICAgICAgLS0tLS0tU2VxdWVudGlhbCBDcmVhdGUtLS0tLS0gLS0tLS0tLS1SYW5kb20N
-Cj4gQ3JlYXRlLS0tLS0tLS0NCj4gbmluZSAgICAgICAgICAgICAgICAtQ3JlYXRlLS0gLS1SZWFk
-LS0tIC1EZWxldGUtLSAtQ3JlYXRlLS0gLS1SZWFkLS0tDQo+IC1EZWxldGUtLQ0KPiAgICAgICAg
-ICAgICAgIGZpbGVzICAvc2VjICVDUCAgL3NlYyAlQ1AgIC9zZWMgJUNQICAvc2VjICVDUCAgL3Nl
-YyAlQ1ANCj4gL3NlYw0KPiAlQ1ANCj4gICAgICAgICAgICAgICAgICAxNiAgODQwNiAgMjQgKysr
-KysgKysrIDExMTc2ICA0OSAxNDI0OSAgNDAgKysrKysgKysrDQo+IDExMzcwDQo+IDQ5DQo+IExh
-dGVuY3kgICAgICAgICAgICAgICA0OTh1cyAgICAgNDQxdXMgICAgIDkyNnVzICAgICA2MDF1cyAg
-ICAgIDQzdXMNCj4gMTYyOHVzDQo+IDEuOTYsMS45NixuaW5lLDEsMTI3MDM2MTU5MSwyNEcsLDI1
-OSw5NSwzODg4MDIsNTcsMTI3MTUzLDUxLDIyMSw5NCw1MjY1DQo+IDUzLDY2LDE2Ny45LDMzMSwx
-NiwsLCwsODQwNiwyNCwrKysrKywrKyssMTExNzYsNDksMTQyNDksNDAsKysrKyssKysrLDExDQo+
-IDM3MCw0OSwzMDAwNHVzLDE0NTFtcywzNzhtcywyMzYyN3VzLDExOG1zLDEwNG1zLDQ5OHVzLDQ0
-MXVzLDkyNnVzLDYwMXVzDQo+ICw0M3VzLDE2Mjh1cw0KPiANCj4gVGhlIDwyMDBNQi9zZWMgYW5k
-IDM5NU1CL3NlYyBpIHdhcyByZWZlcnJpbmcgdG8gd2FzIGp1c3QgdXNpbmcgZGQgdG8NCj4gd3Jp
-dGUNCj4gemVyb3MuICBMYXRlciBvbiBJIHJhbiBib25uaWUgYW5kIHNhdmVkIHRoaXMuDQo+IA0K
-PiBBbHNvIHN5c3RlbToNCj4gVHlhbiBtb2JvIHdpaHQgdHdvIEU1NDEwIENQVXMsIDEyR0IgUkFN
-LCB1c2luZyBvbmJvYXJkIExTSSAxMDY4RS4gIFRoZQ0KDQpDUFUgaXMgYm90dGxlbmVjayBpbiBt
-eSBzeXN0ZW0uIEkgaGF2ZSB0byBnbyBmb3IgVHdvIHF1YWRjb3JlIENQVXMgdG8gYWNoaWV2ZSAz
-OTUgTUIvc2VjIHRocm91Z2hwdXQuDQpJIHdpbGwgY29sbGVjdCBzaW1pbGFyIGgvdyBhbmQgcmVk
-byB0aGUgc2FtZSB0ZXN0IGFnYWluLiBJIHdpbGwgcG9zdCBteSBmaW5kaW5ncyBvbmNlIEkgYW0g
-ZG9uZSB3aXRoIHJlcHJvLg0KDQp+S2FzaHlhcA0KDQo+IExTSQ0KPiBjb25uZWN0cyB0byBhIEhQ
-IFNBUyBFeHBhbmRlci4gIEFsbCBkcml2ZXMgYXJlIGNvbm5lY3RlZCB0byB0aGUgSFAgU0FTDQo+
-IEV4cGFuZGVyLiAgVGhlIGRyaXZlcyBhcmUgYWxsIDJUQiBXRCBHUCBkcml2ZXMgV0QyMEVBRFMs
-IG5vdCB0aGUgbmV3ZXINCj4gRUFSUw0KPiB2ZXJzaW9uLg0KPiANCj4gDQo+IE9uIFRodSwgQXBy
-IDgsIDIwMTAgYXQgMzozMSBBTSwgPGJ1Z3ppbGxhLWRhZW1vbkBidWd6aWxsYS5rZXJuZWwub3Jn
-Pg0KPiB3cm90ZToNCj4gDQo+ID4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVn
-LmNnaT9pZD0xNTY4OA0KPiA+DQo+ID4NCj4gPg0KPiA+DQo+ID4NCj4gPiAtLS0gQ29tbWVudCAj
-MiBmcm9tIGtkZXNhaSA8a2FzaHlhcC5kZXNhaUBsc2kuY29tPiAgMjAxMC0wNC0wOA0KPiAxMDoz
-MToxNw0KPiA+IC0tLQ0KPiA+IEFuZHJldywNCj4gPg0KPiA+IFRvZGF5IEkgdHJpZWQgc2FtZSBz
-dGVwcyBhcyBtZW50aW9uZWQgYnkgeW91LiBJbiBteSBjYXNlIEkgYW0gYWJsZSB0bw0KPiBzZWUN
-Cj4gPiBib3RoDQo+ID4gdGhlIGRyaXZlcnMNCj4gPiBQZXJmb3JtYW5jZSBpcyBzaW1pbGFyLg0K
-PiA+DQo+ID4gMy40LjE0IGlzIGRyaXZlciB2ZXJzaW9uIGF2YWlsYWJsZSBhdCBrZXJuZWwub3Jn
-DQo+ID4gNC4yMi4wMC4wMCBpcyBkcml2ZXIgTFNJIGludGVybmFsbHkgdXNlcy4gWzQuMTguMDAu
-MDAgZG9lcyBub3QgaGF2ZQ0KPiBzdXBwb3J0DQo+ID4gZm9yDQo+ID4gMi42LjM0IGtlcm5lbF0N
-Cj4gPiBJIGd1ZXNzIHlvdSBtdXN0IGhhdmUgZG9uZSBzb21lIGNoYW5nZXMgdG8gbWFrZSBzdXJl
-IDQuMTguMDAuMDAgd29ya3MNCj4gd2l0aA0KPiA+IDIuNi4zNC0wMjA2MzRyYzEuDQo+ID4NCj4g
-PiBCb3RoIHRoZSBjYXNlIEkgYW0gZ2V0dGluZyAxOTB+MjEwTUIvc2VjLg0KPiA+DQo+ID4gQ2Fu
-IHlvdSBoZWxwIG1lIHRvIHJlcHJvZHVjZSB+Mzk1TUIvc2VjIHVzaW5nIDQuMTguMDAuMDAgPw0K
-PiA+DQo+ID4NCj4gPiB+S2FzaHlhcA0KPiA+DQo+ID4NCj4gPg0KPiA+DQo+ID4gPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogbGludXgtc2NzaS1vd25lckB2Z2VyLmtl
-cm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPiA+ID4gb3duZXJAdmdlci5rZXJuZWwub3Jn
-XSBPbiBCZWhhbGYgT2YgQW5kcmV3IE1vcnRvbg0KPiA+ID4gU2VudDogVHVlc2RheSwgQXByaWwg
-MDYsIDIwMTAgMjowNSBBTQ0KPiA+ID4gVG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBN
-b29yZSwgRXJpYw0KPiA+ID4gQ2M6IGJ1Z3ppbGxhLWRhZW1vbkBidWd6aWxsYS5rZXJuZWwub3Jn
-OyBidWdtZS0NCj4gPiA+IGRhZW1vbkBidWd6aWxsYS5rZXJuZWwub3JnOyBiZXhhbW91c0BnbWFp
-bC5jb20NCj4gPiA+IFN1YmplY3Q6IFJlOiBbQnVnbWUtbmV3XSBbQnVnIDE1Njg4XSBOZXc6IG1w
-dHNhcyAmIHBvb3IgcGVyZm9ybWFuY2UNCj4gPiA+DQo+ID4gPg0KPiA+ID4gKHN3aXRjaGVkIHRv
-IGVtYWlsLiAgUGxlYXNlIHJlc3BvbmQgdmlhIGVtYWlsZWQgcmVwbHktdG8tYWxsLCBub3QNCj4g
-dmlhDQo+ID4gPiB0aGUNCj4gPiA+IGJ1Z3ppbGxhIHdlYiBpbnRlcmZhY2UpLg0KPiA+ID4NCj4g
-PiA+IHNjc2lfZHJpdmVycy1vdGhlciByZXBvcnRzIGRvbid0IGFwcGVhciB0byBiZSBjb21pbmcg
-b3V0IG9uIHRoZQ0KPiA+ID4gbGludXgtc2NzaSBsaXN0Lg0KPiA+ID4NCj4gPiA+IE9uIFNhdCwg
-MyBBcHIgMjAxMCAyMToxNjozMSBHTVQNCj4gPiA+IGJ1Z3ppbGxhLWRhZW1vbkBidWd6aWxsYS5r
-ZXJuZWwub3JnIHdyb3RlOg0KPiA+ID4NCj4gPiA+ID4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwu
-b3JnL3Nob3dfYnVnLmNnaT9pZD0xNTY4OA0KPiA+ID4gPg0KPiA+ID4gPiAgICAgICAgICAgIFN1
-bW1hcnk6IG1wdHNhcyAmIHBvb3IgcGVyZm9ybWFuY2UNCj4gPiA+ID4gICAgICAgICAgICBQcm9k
-dWN0OiBTQ1NJIERyaXZlcnMNCj4gPiA+ID4gICAgICAgICAgICBWZXJzaW9uOiAyLjUNCj4gPiA+
-ID4gICAgIEtlcm5lbCBWZXJzaW9uOiAyLjYuMzQtMDIwNjM0cmMxDQo+ID4gPiA+ICAgICAgICAg
-ICBQbGF0Zm9ybTogQWxsDQo+ID4gPiA+ICAgICAgICAgT1MvVmVyc2lvbjogTGludXgNCj4gPiA+
-ID4gICAgICAgICAgICAgICBUcmVlOiBNYWlubGluZQ0KPiA+ID4gPiAgICAgICAgICAgICBTdGF0
-dXM6IE5FVw0KPiA+ID4gPiAgICAgICAgICAgU2V2ZXJpdHk6IG5vcm1hbA0KPiA+ID4gPiAgICAg
-ICAgICAgUHJpb3JpdHk6IFAxDQo+ID4gPiA+ICAgICAgICAgIENvbXBvbmVudDogT3RoZXINCj4g
-PiA+ID4gICAgICAgICBBc3NpZ25lZFRvOiBzY3NpX2RyaXZlcnMtb3RoZXJAa2VybmVsLWJ1Z3Mu
-b3NkbC5vcmcNCj4gPiA+ID4gICAgICAgICBSZXBvcnRlZEJ5OiBiZXhhbW91c0BnbWFpbC5jb20N
-Cj4gPiA+ID4gICAgICAgICBSZWdyZXNzaW9uOiBObw0KPiA+ID4gPg0KPiA+ID4gPg0KPiA+ID4g
-PiBUaGUgbXB0c2FzIG1vZHVsZSBmcm9tIExTSSdzIHdlYnNpdGUsIHY0LjE4LjAwLjAwLCBwZXJm
-b3JtcyBtdWNoDQo+ID4gPiBiZXR0ZXIgdGhhbg0KPiA+ID4gPiB0aGUgbXB0c2FzIG1vZHVsZSBp
-bmNsdWRlZCBpbiB0aGUga2VybmVsLCB2My5zb21ldGhpbmcuDQo+ID4gPiA+DQo+ID4gPiA+IEkn
-bSBvbmx5IGNvbXBhcmluZyBzZXF1ZW50aWFsIHdyaXRlcyAoZGQgaWY9L2Rldi96ZXJvIG9mPXpl
-cm9zDQo+ID4gPiBicz0xTSksIGJ1dC4uLg0KPiA+ID4gPg0KPiA+ID4gPiA2IGRyaXZlIE1EIFJB
-SUQ1IHdpdGggZnJlc2ggYnRyZnMsIHdyaXRpbmcgMTBHQiBvZiB6ZXJvcyB3aXRoIGRkLA0KPiA+
-ID4gPiBrZXJuZWwgdmVyc2lvbjogIDwyMDBNQi9zZWMNCj4gPiA+ID4gTFNJJ3MgdjQuMTguMDAu
-MDA6IDM5NU1CL3NlYw0KPiA+ID4gPg0KPiA+ID4gPiBQcmV0dHkgYmlnIGRpZmZlcmVuY2UuICBJ
-J3ZlIGdvbmUgYmFjayBhbmQgZm9ydGggYSBmZXcgdGltZXMsDQo+ID4gPiA+IGVuYWJsaW5nL2Rp
-c2FibGluZyB3cml0ZSBjYWNoZSBvbiB0aGUgZHJpdmVzLCBlbmFibGluZy9kaXNhYmxpbmcNCj4g
-aW9jLA0KPiA+ID4gPiBlbmFibGluZy9kaXNhYmxpbmcgZmlsZXN5c3RlbSBiYXJyaWVycy4uLiAg
-SSBjYW4gbWFrZSBzbWFsbA0KPiBjaGFuZ2VzDQo+ID4gPiBpbg0KPiA+ID4gPiBwZXJmb3JtYW5j
-ZSBidXQgbm90aGluZyBjb21wYXJlcyB0byBzaW1wbHkgdXBkYXRpbmcgdG8NCj4gdjQuMTguMDAu
-MDAuDQo+ID4gPiA+DQo+ID4gPg0KPiA+ID4NCj4gPiA+IC0tDQo+ID4gPiBUbyB1bnN1YnNjcmli
-ZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtDQo+IHNj
-c2kiDQo+ID4gPiBpbg0KPiA+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2
-Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2Vy
-Lmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPiA+DQo+ID4gLS0NCj4gPiBDb25maWd1
-cmUgYnVnbWFpbDoNCj4gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3VzZXJwcmVmcy5jZ2k/
-dGFiPWVtYWlsDQo+ID4gLS0tLS0tLSBZb3UgYXJlIHJlY2VpdmluZyB0aGlzIG1haWwgYmVjYXVz
-ZTogLS0tLS0tLQ0KPiA+IFlvdSByZXBvcnRlZCB0aGUgYnVnLg0KPiA+DQo+IA0KPiAtLQ0KPiBD
-b25maWd1cmUgYnVnbWFpbDogaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3VzZXJwcmVmcy5j
-Z2k/dGFiPWVtYWlsDQo+IC0tLS0tLS0gWW91IGFyZSByZWNlaXZpbmcgdGhpcyBtYWlsIGJlY2F1
-c2U6IC0tLS0tLS0NCj4gWW91IGFyZSB3YXRjaGluZyB0aGUgYXNzaWduZWUgb2YgdGhlIGJ1Zy4N
-Cj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVu
-c3Vic2NyaWJlIGxpbnV4LXNjc2kiDQo+IGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBt
-YWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6
-Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+https://bugzilla.kernel.org/show_bug.cgi?id=15688
+
+
+
+
+
+--- Comment #4 from kdesai <kashyap.desai@lsi.com>  2010-04-09 11:50:27 ---
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of bugzilla-daemon@bugzilla.kernel.org
+> Sent: Thursday, April 08, 2010 9:07 PM
+> To: linux-scsi@vger.kernel.org
+> Subject: [Bug 15688] mptsas & poor performance
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=15688
+> 
+> 
+> 
+> 
+> 
+> --- Comment #3 from Brian Sullivan <bexamous@gmail.com>  2010-04-08
+> 15:36:49 ---
+> I think the only changes I made to 4.18.00.00 was to just not use
+> mptlan
+> (since I have no need and it wouldn't compile on 2.6.34) and make a few
+> changes to mptsas.c (only to get it to compile on 2.6.34).
+> 
+> diff ./mptlinux-4.18.00.00/dkms.conf /usr/src/mptlinux-
+> 4.18.00.00/dkms.conf
+> 13d12
+> < MAKE[6]="make -C ${kernel_source_dir}
+> SUBDIRS=${dkms_tree}/${PACKAGE_NAME}/${PACKAGE_VERSION}/build modules"
+> 28,29c27,28
+> < BUILT_MODULE_NAME[3]="mptlan"
+> < DEST_MODULE_NAME[3]="mptlan"
+> ---
+> > BUILT_MODULE_NAME[3]="mptspi"
+> > DEST_MODULE_NAME[3]="mptspi"
+> 30a30,31
+> > #MODULES_CONF_OBSOLETES[3]="mptbase,mptscsih,mptctl,mptlan"
+> > MODULES_CONF_ALIAS_TYPE[3]="scsi_hostadapter"
+> 32,33c33,34
+> < BUILT_MODULE_NAME[4]="mptspi"
+> < DEST_MODULE_NAME[4]="mptspi"
+> ---
+> > BUILT_MODULE_NAME[4]="mptsas"
+> > DEST_MODULE_NAME[4]="mptsas"
+> 35d35
+> < #MODULES_CONF_OBSOLETES[4]="mptbase,mptscsih,mptctl,mptlan"
+> 38,39c38,39
+> < BUILT_MODULE_NAME[5]="mptsas"
+> < DEST_MODULE_NAME[5]="mptsas"
+> ---
+> > BUILT_MODULE_NAME[5]="mptfc"
+> > DEST_MODULE_NAME[5]="mptfc"
+> 41,45d40
+> < MODULES_CONF_ALIAS_TYPE[5]="scsi_hostadapter"
+> <
+> < BUILT_MODULE_NAME[6]="mptfc"
+> < DEST_MODULE_NAME[6]="mptfc"
+> < DEST_MODULE_LOCATION[6]="/kernel/drivers/message/fusion"
+> 47a43
+> >
+> diff ./mptlinux-4.18.00.00/Makefile /usr/src/mptlinux-
+> 4.18.00.00/Makefile
+> 2c2
+> < # LSI Logic  mpt fusion
+> ---
+> > # LSI mpt fusion
+> 19c19
+> < obj-$(CONFIG_FUSION_LAN)    += mptlan.o
+> ---
+> > #obj-$(CONFIG_FUSION_LAN)    += mptlan.o
+> diff ./mptlinux-4.18.00.00/mptsas.c /usr/src/mptlinux-
+> 4.18.00.00/mptsas.c
+> 2437,2438c2437,2438
+> <             ioc->name, __func__, req->bio->bi_vcnt, req->data_len,
+> <             rsp->bio->bi_vcnt, rsp->data_len);
+> ---
+> >             ioc->name, __func__, req->bio->bi_vcnt,
+> blk_rq_bytes(req),
+> >             rsp->bio->bi_vcnt, blk_rq_bytes(rsp));
+> 2455c2455
+> <     smpreq->RequestDataLength = cpu_to_le16(req->data_len - 4);
+> ---
+> >     smpreq->RequestDataLength = cpu_to_le16(blk_rq_bytes(req) - 4);
+> 2485c2485
+> <     flagsLength |= (req->data_len - 4);
+> ---
+> >     flagsLength |= (blk_rq_bytes(req) - 4);
+> 2488c2488
+> <                       req->data_len, PCI_DMA_BIDIRECTIONAL);
+> ---
+> >                       blk_rq_bytes(req), PCI_DMA_BIDIRECTIONAL);
+> 2501c2501
+> <     flagsLength |= rsp->data_len + 4;
+> ---
+> >     flagsLength |= blk_rq_bytes(rsp) + 4;
+> 2503c2503
+> <                       rsp->data_len, PCI_DMA_BIDIRECTIONAL);
+> ---
+> >                       blk_rq_bytes(rsp), PCI_DMA_BIDIRECTIONAL);
+> 2534,2535c2534,2535
+> <         req->data_len = 0;
+> <         rsp->data_len -= smprep->ResponseDataLength;
+> ---
+> >         req->resid_len = 0;
+> >         rsp->resid_len -= smprep->ResponseDataLength;
+> 2544c2544
+> <         pci_unmap_single(ioc->pcidev, dma_addr_out, req->data_len,
+> ---
+> >         pci_unmap_single(ioc->pcidev, dma_addr_out,
+> blk_rq_bytes(req),
+> 2547c2547
+> <         pci_unmap_single(ioc->pcidev, dma_addr_in, rsp->data_len,
+> ---
+> >         pci_unmap_single(ioc->pcidev, dma_addr_in, blk_rq_bytes(rsp),
+> 
+
+OK. This is fine. All you did is just to make sure compilation is fine.
+
+> 
+> BTW This was Bonnie++ output when btrfs was still empty, 388MB/sec
+> write
+> 526MB/sec read:
+> Version  1.96       ------Sequential Output------ --Sequential Input-
+> --Random-
+> Concurrency   1     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block--
+> --Seeks--
+> Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP
+> /sec
+> %CP
+> nine            24G   259  95 388802  57 127153  51   221  94 526553
+> 66
+> 167.9 331
+> Latency             30004us    1451ms     378ms   23627us     118ms
+> 104ms
+> Version  1.96       ------Sequential Create------ --------Random
+> Create--------
+> nine                -Create-- --Read--- -Delete-- -Create-- --Read---
+> -Delete--
+>               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+> /sec
+> %CP
+>                  16  8406  24 +++++ +++ 11176  49 14249  40 +++++ +++
+> 11370
+> 49
+> Latency               498us     441us     926us     601us      43us
+> 1628us
+> 1.96,1.96,nine,1,1270361591,24G,,259,95,388802,57,127153,51,221,94,5265
+> 53,66,167.9,331,16,,,,,8406,24,+++++,+++,11176,49,14249,40,+++++,+++,11
+> 370,49,30004us,1451ms,378ms,23627us,118ms,104ms,498us,441us,926us,601us
+> ,43us,1628us
+> 
+> The <200MB/sec and 395MB/sec i was referring to was just using dd to
+> write
+> zeros.  Later on I ran bonnie and saved this.
+> 
+> Also system:
+> Tyan mobo wiht two E5410 CPUs, 12GB RAM, using onboard LSI 1068E.  The
+
+CPU is bottleneck in my system. I have to go for Two quadcore CPUs to achieve
+395 MB/sec throughput.
+I will collect similar h/w and redo the same test again. I will post my
+findings once I am done with repro.
+
+~Kashyap
+
+> LSI
+> connects to a HP SAS Expander.  All drives are connected to the HP SAS
+> Expander.  The drives are all 2TB WD GP drives WD20EADS, not the newer
+> EARS
+> version.
+> 
+> 
+> On Thu, Apr 8, 2010 at 3:31 AM, <bugzilla-daemon@bugzilla.kernel.org>
+> wrote:
+> 
+> > https://bugzilla.kernel.org/show_bug.cgi?id=15688
+> >
+> >
+> >
+> >
+> >
+> > --- Comment #2 from kdesai <kashyap.desai@lsi.com>  2010-04-08
+> 10:31:17
+> > ---
+> > Andrew,
+> >
+> > Today I tried same steps as mentioned by you. In my case I am able to
+> see
+> > both
+> > the drivers
+> > Performance is similar.
+> >
+> > 3.4.14 is driver version available at kernel.org
+> > 4.22.00.00 is driver LSI internally uses. [4.18.00.00 does not have
+> support
+> > for
+> > 2.6.34 kernel]
+> > I guess you must have done some changes to make sure 4.18.00.00 works
+> with
+> > 2.6.34-020634rc1.
+> >
+> > Both the case I am getting 190~210MB/sec.
+> >
+> > Can you help me to reproduce ~395MB/sec using 4.18.00.00 ?
+> >
+> >
+> > ~Kashyap
+> >
+> >
+> >
+> >
+> > > -----Original Message-----
+> > > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> > > owner@vger.kernel.org] On Behalf Of Andrew Morton
+> > > Sent: Tuesday, April 06, 2010 2:05 AM
+> > > To: linux-scsi@vger.kernel.org; Moore, Eric
+> > > Cc: bugzilla-daemon@bugzilla.kernel.org; bugme-
+> > > daemon@bugzilla.kernel.org; bexamous@gmail.com
+> > > Subject: Re: [Bugme-new] [Bug 15688] New: mptsas & poor performance
+> > >
+> > >
+> > > (switched to email.  Please respond via emailed reply-to-all, not
+> via
+> > > the
+> > > bugzilla web interface).
+> > >
+> > > scsi_drivers-other reports don't appear to be coming out on the
+> > > linux-scsi list.
+> > >
+> > > On Sat, 3 Apr 2010 21:16:31 GMT
+> > > bugzilla-daemon@bugzilla.kernel.org wrote:
+> > >
+> > > > https://bugzilla.kernel.org/show_bug.cgi?id=15688
+> > > >
+> > > >            Summary: mptsas & poor performance
+> > > >            Product: SCSI Drivers
+> > > >            Version: 2.5
+> > > >     Kernel Version: 2.6.34-020634rc1
+> > > >           Platform: All
+> > > >         OS/Version: Linux
+> > > >               Tree: Mainline
+> > > >             Status: NEW
+> > > >           Severity: normal
+> > > >           Priority: P1
+> > > >          Component: Other
+> > > >         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+> > > >         ReportedBy: bexamous@gmail.com
+> > > >         Regression: No
+> > > >
+> > > >
+> > > > The mptsas module from LSI's website, v4.18.00.00, performs much
+> > > better than
+> > > > the mptsas module included in the kernel, v3.something.
+> > > >
+> > > > I'm only comparing sequential writes (dd if=/dev/zero of=zeros
+> > > bs=1M), but...
+> > > >
+> > > > 6 drive MD RAID5 with fresh btrfs, writing 10GB of zeros with dd,
+> > > > kernel version:  <200MB/sec
+> > > > LSI's v4.18.00.00: 395MB/sec
+> > > >
+> > > > Pretty big difference.  I've gone back and forth a few times,
+> > > > enabling/disabling write cache on the drives, enabling/disabling
+> ioc,
+> > > > enabling/disabling filesystem barriers...  I can make small
+> changes
+> > > in
+> > > > performance but nothing compares to simply updating to
+> v4.18.00.00.
+> > > >
+> > >
+> > >
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-
+> scsi"
+> > > in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> > --
+> > Configure bugmail:
+> https://bugzilla.kernel.org/userprefs.cgi?tab=email
+> > ------- You are receiving this mail because: -------
+> > You reported the bug.
+> >
+> 
+> --
+> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+> ------- You are receiving this mail because: -------
+> You are watching the assignee of the bug.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
