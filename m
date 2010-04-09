@@ -1,42 +1,99 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Fri, 9 Apr 2010 11:38:37 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1004091118260.1852-100000@iolanthe.rowland.org>
-References: <4BBCA061.80906@gmail.com>
+From: "Caspar Smit" <c.smit@truebit.nl>
+Subject: Still havind major MVSAS issues.
+Date: Fri, 9 Apr 2010 17:52:07 +0200 (CEST)
+Message-ID: <1228.77.248.79.78.1270828327.squirrel@ketsers.dhs.org>
+References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>   
+    <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>   
+    <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>   
+    <CDBC7B5488B245E689B39330542DC434@usish.com.cn>   
+    <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>   
+    <4BB50A92.3030205@gmx.net> <4BB53983.5050309@cisco.com>   
+    <43193.87.210.74.220.1270217681.squirrel@ketsers.dhs.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4BBCA061.80906@gmail.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Cc: Mark Lord <mlord@pobox.com>, dgilbert@interlog.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 80-69-81-65.colo.transip.net ([80.69.81.65]:48625 "EHLO
+	ns1.emsolutions.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751812Ab0DIPwp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2010 11:52:45 -0400
+In-Reply-To: <43193.87.210.74.220.1270217681.squirrel@ketsers.dhs.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech" <satyasrinivasp@hcl.in>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 7 Apr 2010, Jonas Schwertfeger wrote:
+Hi Srinivas (and others),
 
-> On 04/07/2010 05:03 PM, Alan Stern wrote:
-> > In that case, can you repeat the test using an EHCI controller instead
-> > of xHCI?
+I'm still having troubles with SATA disks using the mvsas driver. Maybe
+you read my previous posts about the WD disks.
 
-> ffff8800345dbb40 2336460054 S Bo:1:004:2 -115 31 = 55534243 96000000 
-> 00020000 80001085 082e0000 00010000 00000000 40a100
-> ffff8800345dbb40 2336460204 C Bo:1:004:2 0 31 >
-> ffff880035f30f00 2336460222 S Bi:1:004:1 -115 512 <
-> ffff880035f30f00 2336460472 C Bi:1:004:1 -32 0
-> ffff8800345dbb40 2336460492 S Co:1:004:0 s 02 01 0000 0081 0000 0
-> ffff8800345dbb40 2336460579 C Co:1:004:0 0 0
-> ffff8800345dbb40 2336460596 S Bi:1:004:1 -115 13 <
-> ffff8800345dbb40 2336460711 C Bi:1:004:1 0 13 = 55534253 96000000 
-> 00020000 01
-> ffff8800345dbb40 2336460729 S Bo:1:004:2 -115 31 = 55534243 97000000 
-> 60000000 80000603 00000060 00000000 00000000 000000
-> ffff8800345dbb40 2336460823 C Bo:1:004:2 0 31 >
-> ffff880035f30f00 2336460841 S Bi:1:004:1 -115 96 <
-> ffff880035f30f00 2336460952 C Bi:1:004:1 0 96 = 720b0000 0000000e 
-> 090c0004 00010000 00000000 40510000 00000000 00000000
+The problem is easyly recreated:
 
-Here's the sense information for the failed ATA-16 passthrough command.  
-I can't interpret it; maybe someone else can.
+1) Create a software raidset (i used a 5 disk raid6 as a test)
 
-Alan Stern
+2) Create an XFS filesystem on it. (mkfs.xfs -f /dev/md0)
 
+I used the 2.6.32 kernel source using your patch.
+I get these messages:
+
+[ 5855.816019] drivers/scsi/mvsas/mv_sas.c 1631:mvs_query_task:rc= 5 [
+5857.820002] mvsas 0000:04:00.0: Phy7 : No sig fis
+[ 5858.024006] drivers/scsi/mvsas/mv_sas.c 1585:mvs_I_T_nexus_reset for
+device[4]:rc= 0
+[ 5858.024014] ata12: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ
+0xb/00/00
+[ 5858.028001] ata12.00: device reported invalid CHS sector 0
+[ 5858.028001] ata12: status=0x01 { Error }
+[ 5858.028001] ata12: error=0x04 { DriveStatusError }
+[ 7201.988017] ata18: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ
+0xb/00/00
+[ 7201.988114] ata18: status=0x01 { Error }
+[ 7201.988276] ata18: error=0x04 { DriveStatusError }
+
+Especially the latest 3 messages I got loads more of those on another set
+of disks. The creation of an XFS filesystem can take up to 15 minutes in
+stead of the normal 15 seconds!
+
+When I use the stock 2.6.32 kernel driver without your patch i get these
+errors:
+
+[ 6384.816015]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1669:mvs_abort_task:rc= 5
+[ 6384.816020]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1608:mvs_query_task:rc= 5
+[ 6415.804016]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1669:mvs_abort_task:rc= 5
+[ 6415.804021]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1608:mvs_query_task:rc= 5
+[ 6445.816017]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1669:mvs_abort_task:rc= 5
+[ 6445.816022]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1608:mvs_query_task:rc= 5
+[ 6476.804015]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1669:mvs_abort_task:rc= 5
+[ 6476.804020]
+/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
+1608:mvs_query_task:rc= 5
+
+So there has definatly changed something with the patch.
+
+Further more during the detection of disks during boot I get these
+messages for almost any SATA disk:
+
+Mar 31 14:34:17 test ata_id[3752]: main: HDIO_GET_IDENTITY failed for
+'/dev/.tmp-8-112'
+Mar 31 14:34:17 test ata_id[3765]: main: HDIO_GET_IDENTITY failed for
+'/dev/.tmp-8-128'
+
+If you need more info let me know.
+
+Kind regards,
+Caspar Smit
