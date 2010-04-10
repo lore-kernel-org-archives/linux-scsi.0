@@ -1,86 +1,75 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
-Date: Sat, 10 Apr 2010 19:31:17 +0400
-Message-ID: <4BC099C5.9090704@vlnb.net>
-References: <4BB45632.5020700@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15688] mptsas & poor performance
+Date: Sat, 10 Apr 2010 16:58:43 GMT
+Message-ID: <201004101658.o3AGwhrZ015188@demeter.kernel.org>
+References: <bug-15688-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:61963 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094Ab0DJPbG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Apr 2010 11:31:06 -0400
-In-Reply-To: <4BB45632.5020700@suse.de>
+Received: from demeter.kernel.org ([140.211.167.39]:56994 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498Ab0DJQ66 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Apr 2010 12:58:58 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3AGwkep015211
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2010 16:58:46 GMT
+In-Reply-To: <bug-15688-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: lsf10-pc@lists.linuxfoundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hello Hannes,
+https://bugzilla.kernel.org/show_bug.cgi?id=15688
 
-Hannes Reinecke, on 04/01/2010 12:15 PM wrote:
-> Hi all,
-> 
-> [Topic]
-> Handling of invalid requests in virtual HBAs
-> 
-> [Abstract]
-> This discussion will focus on the problem of correct request handling with virtual HBAs.
-> For KVM I have implemented a 'megasas' HBA emulation which serves as a backend for the
-> megaraid_sas linux driver.
-> It is now possible to connect several disks from different (physical) HBAs to that
-> HBA emulation, each having different logical capabilities wrt transfersize,
-> sgl size, sgl length etc.
-> 
-> The goal of this discussion is how to determine the 'best' capability setting for the
-> virtual HBA and how to handle hotplug scenarios, where a disk might be plugged in
-> which has incompatible settings from the one the virtual HBA is using currently.
 
-If I understand correctly, you need to allow several KVM guests to share 
-the same physical disks?
 
-If so, then it's a bit more complicated, than just to match capabilities 
-between physical and virtual disks, because to safely share disks some 
-advanced SCSI functionality should be emulated by the mid-level, like 
-reservations and Unit Attentions. Otherwise, the sharing is very much 
-against SCSI specs, so unsafe and can lead to data corruptions. More 
-info you can find here: http://thread.gmane.org/gmane.linux.scsi/31288.
 
-In my opinion, the simplest way would be:
 
-1. Use in the host OS a SCSI target mid-layer, capable to support 
-multi-initiators SCSI pass-through, like SCST (http://scst.sourceforge.net)
+--- Comment #6 from Brian Sullivan <bexamous@gmail.com>  2010-04-10 16:57:26 ---
+BTW, I did not look into this as much, but using 3.xx there also seemed to
+be a limit of ~600MB/sec between controller & expander.  If I put two arrays
+on the expander, each array by itself would do almost 500MB/sec in reads,
+but together they couldn't break 600MB/sec.  I didn't really look into this
+further, maybe I was doing something wrong.  ~600MB/sec, however, seems like
+exactly 1/2 the bandwidth of the minisas cable between controlller &
+expander.
 
-2. Write a simple 2 parts guest/host driver, one part of which would be 
-a simple virtual HBA driver for guests, which would pass all requests 
-from the guest OS to the host OS, and the second part would be a simple 
-target driver for SCST, which would get requests from the virtual HBA in 
-the guest and pass them to SCST on the host OS. Most likely, you already 
-implemented most of the guest part of the driver in your 'megasas' HBA 
-emulator. On the host side, for SCST most of the functionality already 
-implemented by scst_local driver. All is necessary is to couple them 
-together using some KVM transport for data between guests and host.
 
-Thus, in this approach you need to connect the guest OS'es to already 
-existing SCST (we hope someday SCST will be accepted in the mainline 
-kernel, I'm currently preparing patches for the second review 
-iteration), which you need to do anyway to implement correct devices 
-sharing. Then SCST would do the rest.
+On Sat, Apr 10, 2010 at 5:00 AM, <bugzilla-daemon@bugzilla.kernel.org>wrote:
 
-This approach won't make any tight connection between physical and 
-virtual HBAs, so can work with any SCSI-speaking HBAs (and not only-SCSI 
-speaking, if a small layer to convert their requests in SCSI commands is 
-implemented). The exact SCSI transport (SAS, SCSI, FC, etc.) the guest 
-driver would report to the OS wouldn't matter much, because changing it 
-is a matter of changing few constants. The hot plug would be handled 
-automatically.
+> https://bugzilla.kernel.org/show_bug.cgi?id=15688
+>
+>
+>
+>
+>
+> --- Comment #5 from dujun@perabytes.com  2010-04-10 12:00:53 ---
+> Hi Andrew & Kashyap,
+>
+> It seems to me that the 4.22.00.00 driver from lsi is much faster than
+> kernel
+> 3.xx version driver.  We have 16 WD SATA disks connected through lsi sas
+> expander to 1068e hba and linux md raid5 using these disks. The system has
+> only
+> one quad-core E5405 CPU.  With the new lsi driver, we get sequential dd
+> read
+> performance up to 795MB/s and write performance up to 395MB/s which is
+> almost
+> twice as the kernel 3.xx driver.
+>
+> We will investigate different hardware setup further and let u know as soon
+> as
+> possible.
+>
+> Johnson
+>
+> --
+> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+> ------- You are receiving this mail because: -------
+> You reported the bug.
+>
 
-As a bonus, KVM guests would be able to use SCST emulated virtual 
-devices (files as devices, virtual CDROMs, VTLs, etc.), including 
-implemented in user space.
-
-Obviously, this approach can be implemented with a minimal overhead 
-(SCST internally is zero-copy).
-
-Vlad
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
