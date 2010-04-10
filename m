@@ -1,32 +1,30 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Proposal for BSG Interface -V2
-Date: Sat, 10 Apr 2010 05:27:39 -0500
-Message-ID: <4BC0529B.5040206@cs.wisc.edu>
-References: <20100330234759.GA5874@serverengines.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: RFC: add bsg lib and convert fc and iscsi class
+Date: Sat, 10 Apr 2010 05:17:37 -0500
+Message-ID: <1270894661-28402-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:52668 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([209.132.183.28]:17101 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751284Ab0DJK1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Apr 2010 06:27:50 -0400
-In-Reply-To: <20100330234759.GA5874@serverengines.com>
+	id S1751708Ab0DJKyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Apr 2010 06:54:15 -0400
+Received: from int-mx08.intmail.prod.int.phx2.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.21])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o3AAsFg6030224
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2010 06:54:15 -0400
+Received: from localhost.localdomain (vpn-9-246.rdu.redhat.com [10.11.9.246])
+	by int-mx08.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o3AAHfwq030375
+	for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2010 06:17:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org
 
-On 03/30/2010 06:48 PM, Jayamohan Kallickal wrote:
-> 	Have modified the code as per code review provided to
-> remove Generic VENDOR opcode in the driver
->
+There was not much difference between the fc class and
+iscsi class bsg code, so this patchset moves the fc
+class code to a scsi lib. The patches were made
+over scsi-misc. This is only a RFC. The patchset is only
+compile tested. I wanted to make sure it was ok with
+the FC people, before I convert all the drivers which
+requires a lot of work compared to just converting
+the classes.
 
-You forgot to remove that code from the class code, and you forgot to 
-use kmap like we talked about.
 
-I just sent a patch to try and make the fc bsg code a lib, so try that 
-out. For the iscsi code I think it just needs a fix up to sg_virt code 
-(should be using kmap) and it needs a kfree on the completion path 
-(looks like your patch was leaking what is in the va pointer and I did 
-not fix that yet).
