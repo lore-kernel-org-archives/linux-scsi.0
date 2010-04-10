@@ -1,86 +1,173 @@
-From: Jelle de Jong <jelledejong@powercraft.nl>
-Subject: Re: Still having major MVSAS issues.
-Date: Sat, 10 Apr 2010 21:02:32 +0200
-Message-ID: <4BC0CB48.6000207@powercraft.nl>
-References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>       <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>       <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>       <CDBC7B5488B245E689B39330542DC434@usish.com.cn>       <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>       <4BB50A92.3030205@gmx.net> <4BB53983.5050309@cisco.com>       <43193.87.210.74.220.1270217681.squirrel@ketsers.dhs.org> <1228.77.248.79.78.1270828327.squirrel@ketsers.dhs.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
+Date: Sat, 10 Apr 2010 16:50:02 -0700
+Message-ID: <1270943402.6412.150.camel@haakon2.linux-iscsi.org>
+References: <4BB45632.5020700@suse.de>
+	 <1270186392.28897.76.camel@haakon2.linux-iscsi.org>
+	 <4BBDDDA3.7000006@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay02.cambriumhosting.nl ([217.19.16.174]:53367 "EHLO
-	relay02.cambriumhosting.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752038Ab0DJTMm (ORCPT
+Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:29406 "HELO
+	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752480Ab0DJXuH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Apr 2010 15:12:42 -0400
-In-Reply-To: <1228.77.248.79.78.1270828327.squirrel@ketsers.dhs.org>
+	Sat, 10 Apr 2010 19:50:07 -0400
+In-Reply-To: <4BBDDDA3.7000006@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech" <satyasrinivasp@hcl.in>, linux-scsi@vger.kernel.org
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: lsf10-pc@lists.linuxfoundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello everybody,
+On Thu, 2010-04-08 at 15:44 +0200, Hannes Reinecke wrote:
+> Nicholas A. Bellinger wrote:
+> > On Thu, 2010-04-01 at 10:15 +0200, Hannes Reinecke wrote:
+> >> Hi all,
+> >>
+> > 
+> > Greetings Hannes,
+> > 
+> > Just a few comments on your proposal..
+> > 
+> >> [Topic]
+> >> Handling of invalid requests in virtual HBAs
+> >>
+> >> [Abstract]
+> >> This discussion will focus on the problem of correct request handling with virtual HBAs.
+> >> For KVM I have implemented a 'megasas' HBA emulation which serves as a backend for the
+> >> megaraid_sas linux driver.
+> >> It is now possible to connect several disks from different (physical) HBAs to that
+> >> HBA emulation, each having different logical capabilities wrt transfersize,
+> >> sgl size, sgl length etc.
+> >>
+> >> The goal of this discussion is how to determine the 'best' capability setting for the
+> >> virtual HBA and how to handle hotplug scenarios, where a disk might be plugged in
+> >> which has incompatible settings from the one the virtual HBA is using currently.
+> >>
 
-Caspar Smit wrote, on 09-04-10 17:52:
-> I'm still having troubles with SATA disks using the mvsas driver. 
-> Maybe you read my previous posts about the WD disks.
+<SNIP>
 
-I would like to confirm a lot of the issues. I saw the emails from
-Caspar Smits passing by the last few days. I got a bunch of the below
-storage controllers for testing, and I am not yet able to actually use
-them stable.
+> > What values should be enforced by TCM based on metadata presented by TCM
+> > subsystem plugins (pSCSI, IBLOCK, FILEIO) for struct block_device, and
+> > what is expected to be enforced by underlying Linux subsystems
+> > presenting struct block_device..?
+> > 
+> > For the virtual TCM subsystem plugin cases (IBLOCK, FILEIO, RAMDISK) the
+> > can_queue is a competely arbitary value and is enforced by the
+> > underyling Linux subsystem.  There are a couple of special cases:
+> > 
+> > *) For TCM/pSCSI, can_queue is enforced from struct scsi_device->queue_depth
+> >    and max_sectors from the smaller of the two values from struct Scsi_Host->max_sectors
+> >    and struct scsi_device->request_queue->limits.max_sectors.
+> > 
+> > *) For TCM/IBLOCK, max_sectors is enforced based on struct request_queue->limits.max_sectors.
+> > 
+> > *) For TCM/FILEIO and TCM/RAMDISK, both can_queue and max_sectors are
+> >    set to arbitrarly high values.
+> > 
+> > Also I should mention that TCM_Loop code currently uses a hardcoded
+> > struct scsi_host_template->can_queue=1 and ->max_sectors=128, but will
+> > work fine with larger values.   Being able to change the Linux/SCSI
+> > queue depth on the fly for TCM_Loop virtual SAS ports being used in KVM
+> > guest could be quite useful for managing KVM Guest megasas emulation I/O
+> > traffic on a larger scale..
+> > 
+> And my question / topic here is how to handle a hotplug capability in these
+> cases: What happens if a device / HBA is plugged in with different / lower
+> capabilities than those announced?
 
-My major killer issue is that the I am unable to load my Linux kernel
-and root file system from the SATA disks attached to the controller.
-Grub works fine and starts the initrd, but then mdadm fails because
-the hard disk are not found fast enough by the Linux kernel and I see
-"HDIO_GET_IDENTITY failed for" messages for all the connected hard drives.
+I think this question depends a great deal upon the coupling of the
+virtual HBA queue depth and per physical Linux/SCSI reported device
+queue depth.  Using the TCM/pSCSI subsystem plugin as an example here to
+reference plain /dev/sdX backstores, there are two possible modes of
+operation using referenced struct scsi_device's and their parent struct
+Scsi_Host's:
 
-Some system and hardware information.
+Virtual HBA Mode: Present a arbitrarily high virtual HBA queue depth and
+allow individual struct scsi_device's from different underlying struct
+Scsi_Host's to hang from a single TCM HBA.  TCM will enforce the per
+device queue depth presented by struct scsi_device->queue_depth.   
 
-# cat /proc/version
-Linux version 2.6.32-4-amd64 (Debian 2.6.32-11) (maks@debian.org) (gcc
-version 4.3.4 (Debian 4.3.4-8) ) #1 SMP Tue Apr 6 08:21:34 UTC 2010
+Physical HBA Mode: Enforce an physical LLD queue_depth from each
+underlying struct Scsi_Host and all struct scsi_device attached to it.
+This is required for SCSI LLDs that report a higher struct
+scsi_device->queue_depth than what the underlying hardware for struct
+Scsi_Host is capable.  TCM will enforce the per HBA and per device queue
+depths presented by the SCSI LLD.
 
-# lspci -nn | grep SCSI
-02:00.0 SCSI storage controller [0100]: Marvell Technology Group Ltd.
-MV64460/64461/64462 System Controller, Revision B [11ab:6485] (rev 01)
+The main requirement for SCSI LLDs with the first mode to function
+properly is that the underlying Linux/SCSI LLD must present the proper
+struct scsi_device->queue_depth, and the sum total of queue slots
+exposed by struct scsi_device's cannot exceed what the parent struct
+Scsi_Host is capable of (also can change based on the number of LUNs
+presented by the SCSI LLD)
 
-# modinfo mvsas
-filename: /lib/modules/2.6.32-4-amd64/../../scsi/mvsas/mvsas.ko
-version: 0.8.2
-description: Marvell 88SE6440 SAS/SATA controller driver
-srcversion: EE82F304DFF3A7F06086B62
+I had ran into some buggy SCSI LLDs in v2.4 kernel days that reported
+their queue depths improperly, but do not recall coming across this
+issue personally recently on modern v2.6 drivers/scsi/ (not sure if they
+are completely gone now).  So with this in mind, I added support for
+virtual HBA mode (called PHV_VIRUTAL_HOST_ID and default) while leaving
+the legacy phyiscal HBA mode available (called PHV_LLD_SCSI_HOST_NO) for
+broken SCSI LLDs.  The commit for doing this with TCM/pSCSI is here:
 
-Messages I also got:
+[Target_Core_Mod/pSCSI]: Decouple subsystem plugin from struct Scsi_Host
 
-[15926.816036]
-/build/buildd-linux-2.6_2.6.32-11-i386-4fW2zP/linux-2.6-2.6.32/debian/build/source_i386_none/drivers/scsi/mvsas/mv_sas.c
-1608:mvs_query_task:rc= 5
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=da5ed2625e7690c33f776dd1a907a2739fe7f779
 
-And the HDIO_GET_IDENTITY failed for .. stuff during boot.
+> Can we change the announced settings for the HBA on the fly?
 
-I also noticed that some of the attached drives worked fine with:
-smartctl -d sat -H /dev/sda but some of the identical drives did not
-worked and needed the -T permissive options...
+In existing TCM v3.x code, the HBA queue depth is not exposed as a
+configfs attribute, so unfortuately this cannot be changed just yet..
+However the per TCM device virtual and physical queue_depth is available
+at:
 
-BTW I also have some 04:06.0 SCSI storage controller [0100]: Marvell
-Technology Group Ltd. MV88SX6081 8-port SATA II PCI-X Controller
-[11ab:6081] (rev 09) hardware and those use the sata_mv module. This
-system works stable and no errors during boot. However the SATA
-interfaces are very slow here because of the PCI bus limitation of the
-hardware.
+/sys/kernel/config/target/core/$HBA/$DEV/attrib/[hw_]queue_depth
 
-The MV88SX6081 card also boots very vast to grub compared with the
-MV64460/64461/64462 card. Is there something that can be done about
-this? I would really like the usability of the MV88SX6081 card but
-with the full speed of the SATA links of the PCI-E enabled mvsas cards.
+The 'queue_depth' attribute here what is being actively enforced by TCM
+for the backstore device, and the 'hw_queue_depth' attribute is what had
+been reported by TCM/pSCSI via struct scsi_device->queue_depth.
 
-For those intressted I use them with mdadm raid1 with two device
-pairs, with lvm2 with striping and ext4 file systems. The root file
-system is also on this raid,lvm,ext4 layout.
+Changing 'queue_depth' for the backstore currently requires that no
+fabric module port symlinks exist, but this is something that will be
+changing for TCM 4.0.
 
-Thanks in advance,
+Also, changing 'hw_queue_depth' from underlying struct scsi_device for
+the plain /dev/sdX currently requires that the device be re-registered
+from TCM.  However, it would be easy enough to do this on the fly if
+there was a target mode callback present in
+drivers/scsi/scsi.c:scsi_adjust_queue_depth() to tell me when the change
+is happening within the LLD.  :-)
 
-Kind regards,
+> 
+> > The other big advantage of using TCM_Loop with your megasas guest
+> > emulation means that existing TCM logic for >= SPC-3 T10 NAA naming, PR,
+> > and ALUA emulation is immediately available to KVM guest, and does not
+> > have to be reproduced in QEMU code.
+> > 
+> I'm not doubting that using TCM_loop here would be advantageous.
+> But I have to find a solution for folks just wanting to run on plain /dev/sdX.
+> 
 
-Jelle de Jong
+Well, I think that using a scsi-debug-esque model like TCM_Loop + SG_IO
+on top of a target infrastructure enforcing underlying HBA and device
+requirements would give KVM Guests alot of flexibility with existing
+code, even for the plain /dev/sdX case.
+
+> And I need to find a common ground here to argue with the KVM folks,
+> whose main objection against the megasas emulation is this issue.
+>
+> Either way would be fine by me, I just think we should come to a common
+> understanding.
+> 
+
+Completely understood.  I will give SG_IO + TCM_Loop a shot with megasas
+emulation into KVM Guest and see how things look with using backstores
+configured with the two HBA Modes for TCM/pSCSI (plain /dev/sdX)
+discussed above.
+
+Best,
+
+--nab
+
+
