@@ -1,40 +1,29 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15722] unreliable IO for ata disks under heavy io load
-Date: Sat, 10 Apr 2010 00:50:35 GMT
-Message-ID: <201004100050.o3A0oZZV006694@demeter.kernel.org>
-References: <bug-15722-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: michaelc@cs.wisc.edu
+Subject: iscsi changes for scsi-misc
+Date: Fri,  9 Apr 2010 22:07:35 -0500
+Message-ID: <1270868859-5147-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:59498 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135Ab0DJAug (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Apr 2010 20:50:36 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3A0oZH2006695
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sat, 10 Apr 2010 00:50:35 GMT
-In-Reply-To: <bug-15722-11613@https.bugzilla.kernel.org/>
+Received: from mx1.redhat.com ([209.132.183.28]:57313 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753355Ab0DJDHm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Apr 2010 23:07:42 -0400
+Received: from int-mx04.intmail.prod.int.phx2.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o3A37fvJ002041
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Apr 2010 23:07:41 -0400
+Received: from localhost.localdomain (vpn-11-118.rdu.redhat.com [10.11.11.118])
+	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o3A37eIf029619
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Apr 2010 23:07:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15722
+Here are some cleanups and a small fix. Nothing in here is critical so
+they can go into scsi-misc.
+
+The patchset was made over scsi-misc and this patch which
+is not yet merged:
+http://marc.info/?l=linux-scsi&m=127006425722598&w=2
+(this patch is a bug fix that should go into scsi-rc-fixes if possible).
 
 
-Andrew Morton <akpm@linux-foundation.org> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-          Component|Serial ATA                  |Other
-         AssignedTo|jgarzik@pobox.com           |scsi_drivers-other@kernel-b
-                   |                            |ugs.osdl.org
-            Product|IO/Storage                  |SCSI Drivers
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
