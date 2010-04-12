@@ -1,128 +1,35 @@
-From: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech"
-	<satyasrinivasp@hcl.in>
-Subject: RE: Still havind major MVSAS issues.
-Date: Mon, 12 Apr 2010 09:51:39 +0530
-Message-ID: <6B62480106F2B34D8404CF2FDAA4D9EF77723BCA3F@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-References: <53271.87.210.74.220.1270040583.squirrel@ketsers.dhs.org>
-       <7BF8FE1BFB7440B29ECD3D15FB0A4E8C@usish.com.cn>
-       <1068.77.248.79.78.1270102668.squirrel@ketsers.dhs.org>
-       <CDBC7B5488B245E689B39330542DC434@usish.com.cn>
-       <1543.77.248.79.78.1270108509.squirrel@ketsers.dhs.org>
-       <4BB50A92.3030205@gmx.net> <4BB53983.5050309@cisco.com>
-       <43193.87.210.74.220.1270217681.squirrel@ketsers.dhs.org>
- <1228.77.248.79.78.1270828327.squirrel@ketsers.dhs.org>
+From: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Mon, 12 Apr 2010 09:48:25 +0200
+Message-ID: <4BC2D049.1090606@gmail.com>
+References: <4BBF6B2F.9060902@gmail.com> <Pine.LNX.4.44L0.1004091504500.1852-100000@iolanthe.rowland.org> <20100409215439.GA4779@xanatos>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gws07.mail.hcl.in ([203.105.186.27]:59282 "EHLO gws07.hcl.in"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751325Ab0DLEve convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Apr 2010 00:51:34 -0400
-In-Reply-To: <1228.77.248.79.78.1270828327.squirrel@ketsers.dhs.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <20100409215439.GA4779@xanatos>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Caspar,
-I will check it once and let you know. But it will take some time to analyze this.  
+On 04/09/2010 11:54 PM, Sarah Sharp wrote:
+>> Now that you mention it, we don't know what sort of chip you have.
+>> Only that the vendor ID is 0x0411 (MelCo., Inc.) and the product ID is
+>> 0x0184.
 
---Srini.
+Buffalo is part of the MelCo Inc. holding.
 
------Original Message-----
-From: Caspar Smit [mailto:c.smit@truebit.nl] 
-Sent: Friday, April 09, 2010 9:22 PM
-To: Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech
-Cc: linux-scsi@vger.kernel.org
-Subject: Still havind major MVSAS issues.
+> I've just opened the case on my Buffalo hard drive, and the circuit just
+> says Buffalo.  There's an ARM chip and a winbond chip, but not much else
+> to identify it.  I'll ask around the USB-IF PIL lab to try and get a
+> company contact.
 
-Hi Srinivas (and others),
+The ARM chip in the Buffalo USB3 drive is the USB3-SATA bridge MB86C30A 
+by Fujitsu: 
+http://www.fujitsu.com/downloads/EDG/binary/pdf/catalogs/a04000431e.pdf
 
-I'm still having troubles with SATA disks using the mvsas driver. Maybe
-you read my previous posts about the WD disks.
+My guess would be that any drive using this chip will choke on the 
+identify command. Sarah, any chance you could get a contact at Fujitsu?
 
-The problem is easyly recreated:
-
-1) Create a software raidset (i used a 5 disk raid6 as a test)
-
-2) Create an XFS filesystem on it. (mkfs.xfs -f /dev/md0)
-
-I used the 2.6.32 kernel source using your patch.
-I get these messages:
-
-[ 5855.816019] drivers/scsi/mvsas/mv_sas.c 1631:mvs_query_task:rc= 5 [
-5857.820002] mvsas 0000:04:00.0: Phy7 : No sig fis
-[ 5858.024006] drivers/scsi/mvsas/mv_sas.c 1585:mvs_I_T_nexus_reset for
-device[4]:rc= 0
-[ 5858.024014] ata12: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ
-0xb/00/00
-[ 5858.028001] ata12.00: device reported invalid CHS sector 0
-[ 5858.028001] ata12: status=0x01 { Error }
-[ 5858.028001] ata12: error=0x04 { DriveStatusError }
-[ 7201.988017] ata18: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ
-0xb/00/00
-[ 7201.988114] ata18: status=0x01 { Error }
-[ 7201.988276] ata18: error=0x04 { DriveStatusError }
-
-Especially the latest 3 messages I got loads more of those on another set
-of disks. The creation of an XFS filesystem can take up to 15 minutes in
-stead of the normal 15 seconds!
-
-When I use the stock 2.6.32 kernel driver without your patch i get these
-errors:
-
-[ 6384.816015]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1669:mvs_abort_task:rc= 5
-[ 6384.816020]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1608:mvs_query_task:rc= 5
-[ 6415.804016]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1669:mvs_abort_task:rc= 5
-[ 6415.804021]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1608:mvs_query_task:rc= 5
-[ 6445.816017]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1669:mvs_abort_task:rc= 5
-[ 6445.816022]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1608:mvs_query_task:rc= 5
-[ 6476.804015]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1669:mvs_abort_task:rc= 5
-[ 6476.804020]
-/tmp/buildd/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/scsi/mvsas/mv_sas.c
-1608:mvs_query_task:rc= 5
-
-So there has definatly changed something with the patch.
-
-Further more during the detection of disks during boot I get these
-messages for almost any SATA disk:
-
-Mar 31 14:34:17 test ata_id[3752]: main: HDIO_GET_IDENTITY failed for
-'/dev/.tmp-8-112'
-Mar 31 14:34:17 test ata_id[3765]: main: HDIO_GET_IDENTITY failed for
-'/dev/.tmp-8-128'
-
-If you need more info let me know.
-
-Kind regards,
-Caspar Smit
-
-DISCLAIMER:
------------------------------------------------------------------------------------------------------------------------
-
-The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only. 
-It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in 
-this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates. 
-Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of 
-this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have 
-received this email in error please delete it and notify the sender immediately. Before opening any mail and 
-attachments please check them for viruses and defect.
-
------------------------------------------------------------------------------------------------------------------------
+-Jonas
