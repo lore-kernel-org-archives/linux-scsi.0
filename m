@@ -1,171 +1,44 @@
-From: <lemons_terry@emc.com>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: RE: SCSI persistent reservation terms
-Date: Mon, 12 Apr 2010 10:53:40 -0400
-Message-ID: <3BEB5F9B6605A140847DEEEDF7439C5D04125F6D@CORPUSMX50A.corp.emc.com>
-References: <3BEB5F9B6605A140847DEEEDF7439C5D040A06C8@CORPUSMX50A.corp.emc.com> <1270666077.3332.10.camel@haakon2.linux-iscsi.org> <3BEB5F9B6605A140847DEEEDF7439C5D04125E92@CORPUSMX50A.corp.emc.com> <4BC32621.8080706@interlog.com>
+Date: Mon, 12 Apr 2010 10:09:35 -0500
+Message-ID: <1271084975.4428.12.camel@mulgrave.site>
+References: <3BEB5F9B6605A140847DEEEDF7439C5D040A06C8@CORPUSMX50A.corp.emc.com>
+	 <1270666077.3332.10.camel@haakon2.linux-iscsi.org>
+	 <3BEB5F9B6605A140847DEEEDF7439C5D04125E92@CORPUSMX50A.corp.emc.com>
+	 <4BC32621.8080706@interlog.com>
+	 <3BEB5F9B6605A140847DEEEDF7439C5D04125F6D@CORPUSMX50A.corp.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([128.222.32.20]:50644 "EHLO
-	mexforward.lss.emc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827Ab0DLPCW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Apr 2010 11:02:22 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4BC32621.8080706@interlog.com>
+Received: from cantor2.suse.de ([195.135.220.15]:47596 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750776Ab0DLPJm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Apr 2010 11:09:42 -0400
+In-Reply-To: <3BEB5F9B6605A140847DEEEDF7439C5D04125F6D@CORPUSMX50A.corp.emc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org
+To: lemons_terry@emc.com
+Cc: dgilbert@interlog.com, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-Hi Doug
+On Mon, 2010-04-12 at 10:53 -0400, lemons_terry@emc.com wrote:
+> Hi Doug
+> 
+> Thanks for the reply.  I did stare at Table 51 before writing my email.
+> The 'Processing' language for the first and third rows is exactly the
+> same; that's why I'm still confused!
+> 
+> I've printed and read (several times) both section 5.7 'Reservations'
+> and sections 6.13 'PERSISTENT RESERVE IN' / 6.14 'PERSISTENT RESERVE
+> OUT'.  But I don't see any language that explains the difference between
+> 'write_exclusive' and 'write_exclusive_registrants_only'.  If this is in
+> there, I apologize for not seeing it.
 
-Thanks for the reply.  I did stare at Table 51 before writing my email.
-The 'Processing' language for the first and third rows is exactly the
-same; that's why I'm still confused!
+The change is in the definition of the "reservation holder" for the
+reservation (5.7.10).  For exclusive all registrants reservations, the
+holder is all registered initiators; otherwise it's the initiator port
+the reservation was issued on.
 
-I've printed and read (several times) both section 5.7 'Reservations'
-and sections 6.13 'PERSISTENT RESERVE IN' / 6.14 'PERSISTENT RESERVE
-OUT'.  But I don't see any language that explains the difference between
-'write_exclusive' and 'write_exclusive_registrants_only'.  If this is in
-there, I apologize for not seeing it.
-
-Thanks
-tl
-
------Original Message-----
-From: Douglas Gilbert [mailto:dgilbert@interlog.com] 
-Sent: Monday, April 12, 2010 9:55 AM
-To: Lemons, Terry
-Cc: nab@linux-iscsi.org; linux-scsi@vger.kernel.org
-Subject: Re: SCSI persistent reservation terms
-
-Are you looking at section 5.7 on Reservations in
-SPC-4 (spc4r23.pdf)? Table 51 seems to address your
-question.
-
-Complex commands like Persistent Reservation In and Out
-often have a brief explanation under the command entry.
-However in earlier chapters (in this case "Model common
-to all device types" (section 5)) important mechanisms
-such as reservations are explained in more detail.
-Also Annex B discusses the mapping between the newer
-Persistent Reservation commands and the now obsolete
-Reserve/Release commands.
-
-Doug Gilbert
-
-
-lemons_terry@emc.com wrote:
-> Hi
-> 
-> Thanks very much for the reply!  The difference between those terms
-make
-> sense now.
-> 
-> I took a look at these comments in the code:
-> 
-> 303         switch (pr_reg_type) { 
-> 304         case PR_TYPE_WRITE_EXCLUSIVE: 
-> 305                 we = 1; 
-> 306         case PR_TYPE_EXCLUSIVE_ACCESS: 
-> 307                 /* 
-> 308                  * Some commands are only allowed for the
-persistent
-> reservation 
-> 309                  * holder. 
-> 310                  */ 
-> 311                 if (se_deve->deve_flags & DEF_PR_REGISTERED) 
-> 312                         registered_nexus = 1; 
-> 313                 break; 
-> 314         case PR_TYPE_WRITE_EXCLUSIVE_REGONLY: 
-> 315                 we = 1; 
-> 316         case PR_TYPE_EXCLUSIVE_ACCESS_REGONLY: 
-> 317                 /* 
-> 318                  * Some commands are only allowed for registered
-I_T
-> Nexuses. 
-> 319                  */ 
-> 320                 reg_only = 1; 
-> 321                 if (se_deve->deve_flags & DEF_PR_REGISTERED) 
-> 322                         registered_nexus = 1; 
-> 323                 break; 
-> 324         case PR_TYPE_WRITE_EXCLUSIVE_ALLREG: 
-> 325                 we = 1; 
-> 326         case PR_TYPE_EXCLUSIVE_ACCESS_ALLREG: 
-> 327                 /* 
-> 328                  * Each registered I_T Nexus is a reservation
-> holder. 
-> 329                  */ 
-> 330                 all_reg = 1; 
-> 331                 if (se_deve->deve_flags & DEF_PR_REGISTERED) 
-> 332                         registered_nexus = 1; 
-> 333                 break; 
-> 334         default: 
-> 335                 return -1; 
-> 336         }
-> 
-> But I'm not able to devine the difference between 'write_exclusive'
-and
-> 'write_exclusive_registrants_only'.  Given that a registration must
-> exist before a reservation can be done, what is the difference between
-> these two?  I just, again, looked for information describing these in
-> SPC-4, and didn't find any.
-> 
-> Thanks!
-> tl
-> 
-> -----Original Message-----
-> From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org] 
-> Sent: Wednesday, April 07, 2010 2:48 PM
-> To: Lemons, Terry
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: SCSI persistent reservation terms
-> 
-> On Wed, 2010-04-07 at 10:55 -0400, lemons_terry@emc.com wrote:
->> Hi
->>
->> I'm trying to understand one aspect of the SCSI persistent
-reservation
-> functionality.
->> SPC-4 mentions the terms 'All Registrants' and 'Registrants Only',
-and
-> applies these
->> to both 'Write Exclusive' and 'Exclusive Access'.  Nowhere can I find
-> a definition
->> of what these terms mean.  If you would, please point me in the right
-> direction.
-> 
-> Greetings Terry,
-> 
-> 'All Registrants' means that the persistent reservation holder is any
-> registstered I_T Nexus (eg: multiple reservation holders)
-> 
-> 'Registrants Only' means that the persistent reservation holder is the
-> single registered I_T Nexus that has obtained the reservation via
-> RESERVE, PREEMPT, PREEMPT_AND_ABORT, or via another I_T Nexus with
-> REGISTER_AND_MOVE. (eg: single reservation holder)
-> 
-> You can find how this logic works for multi-fabric target mode by
-> grepping '_ALLREG' and '_REGONLY' in TCM code at:
-> 
->
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=
-> drivers/target/target_core_pr.c
-> 
-> Best,
-> 
-> --nab
-> 
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+James
 
 
