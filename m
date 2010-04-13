@@ -1,114 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
-Date: Tue, 13 Apr 2010 10:56:40 +0200
-Message-ID: <4BC431C8.9020800@suse.de>
-References: <4BB45632.5020700@suse.de> <4BC099C5.9090704@vlnb.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15721] mptsas cannot dectect hotplugged harddisks occasionally
+Date: Tue, 13 Apr 2010 09:16:02 GMT
+Message-ID: <201004130916.o3D9G2XI017317@demeter.kernel.org>
+References: <bug-15721-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:55703 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752069Ab0DMI4o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Apr 2010 04:56:44 -0400
-In-Reply-To: <4BC099C5.9090704@vlnb.net>
+Received: from demeter.kernel.org ([140.211.167.39]:59425 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab0DMJQF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2010 05:16:05 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3D9G3Hu017318
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Apr 2010 09:16:03 GMT
+In-Reply-To: <bug-15721-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: lsf10-pc@lists.linuxfoundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Vladislav Bolkhovitin wrote:
-> Hello Hannes,
->=20
-> Hannes Reinecke, on 04/01/2010 12:15 PM wrote:
->> Hi all,
->>
->> [Topic]
->> Handling of invalid requests in virtual HBAs
->>
->> [Abstract]
->> This discussion will focus on the problem of correct request handlin=
-g
->> with virtual HBAs.
->> For KVM I have implemented a 'megasas' HBA emulation which serves as=
- a
->> backend for the
->> megaraid_sas linux driver.
->> It is now possible to connect several disks from different (physical=
-)
->> HBAs to that
->> HBA emulation, each having different logical capabilities wrt
->> transfersize,
->> sgl size, sgl length etc.
->>
->> The goal of this discussion is how to determine the 'best' capabilit=
-y
->> setting for the
->> virtual HBA and how to handle hotplug scenarios, where a disk might =
-be
->> plugged in
->> which has incompatible settings from the one the virtual HBA is usin=
-g
->> currently.
->=20
-> If I understand correctly, you need to allow several KVM guests to sh=
-are
-> the same physical disks?
->=20
-No, the other way round: A KVM guest is using several physical disks,
-each of which coming via a different HBA (eg sda from libata, sdb from =
-lpfc
-and the like).
-So each request queue for the physical disks could be having different
-capabilities, while being routed through the same virtual HBA in the
-KVM guest.
+https://bugzilla.kernel.org/show_bug.cgi?id=15721
 
-The general idea for the virtual HBA is that scatter-gather lists
-could be passed directly from the guest to the host (as opposed to
-abstract single I/O blocks only like virtio).
-But the size and shape of the sg lists is different for devices
-coming from different HBAs, so we have two options here (this is
-all done on the host side; the guest will only see one HBA):
 
-a) Adjust the sg list to match the underlying capabilities of
-   the device. Has the drawback that we defeat the elevator
-   mechanism in the guest side as the announced capabilities
-   there do _not_ match the capabilities on the host :-(
-b) Adjust the HBA capabilities to the lowest common denominator
-   of all physical devices presented to the guest.
-   While this would save us from adjusting the sg lists,
-   it still has the drawback the disk hotplugging won't
-   work, as we can't readjust the HBA parameters in the
-   guest after it's been created.
 
-Neither of which is really appealing.
 
-My idea here would be to move all required capabilities
-to the device/request queue.
-That would neatly solve this issue once and for all.
-And even TGT, LIO-target, and SCST would benefit from this
-methinks.
 
-But this is exactly the discussion I'd like to have at LSF,
-to see which approach is best or favoured.
+--- Comment #6 from dujun@perabytes.com  2010-04-13 09:15:51 ---
+Created an attachment (id=25987)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=25987)
+fix sata hotplug problem from lsi
 
-And yes, I am perfectly aware that for a 'production'
-system one would be using a proper target emulator
-like LIO-target or SCST for this kind of setup.
-But first I have to convince the KVM/Qemu folks to
-actually include the megasas emulation.
-Which they won't until the above problem is solved.
+This patch is from lsi. It seems that it makes situation much better. If we
+plug only one disk, it is always found now. (50 times testing passed
+successfully). However, if we plug several disks together, there are still one
+to three disks missing.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
