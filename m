@@ -1,53 +1,58 @@
-From: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Subject: Re: [PATCH 2/2] RFC: iscsi ibft: convert iscsi_ibft module to iscsi boot lib
-Date: Mon, 12 Apr 2010 22:36:13 -0400
-Message-ID: <201004122236.13843.konrad@darnok.org>
-References: <1271095578-4212-1-git-send-email-michaelc@cs.wisc.edu> <201004122221.05326.konrad@darnok.org> <4BC3D7C1.90307@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4BC3D7C1.90307@cs.wisc.edu>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, pjones@redhat.com, open-iscsi@googlegroups.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/4] [TCM/PR]: Add support for strict iSCSI TransportID ISID processing
+Date: Mon, 12 Apr 2010 22:48:59 -0700
+Message-ID: <1271137739-23307-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:29382 "HELO
+	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750882Ab0DMFHu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Apr 2010 01:07:50 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, LIO-Target devel <linux-iscsi-target-dev@googlegroups.com>, Douglas Gilbert <dgilbert@interlog.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Monday 12 April 2010 22:32:33 Mike Christie wrote:
-> On 04/12/2010 09:21 PM, Konrad Rzeszutek Wilk wrote:
-> >> + * Helper routiners to check to determine if the entry is valid
-> >> + * in the proper iBFT structure.
-> >> + */
-> >> +static mode_t ibft_check_nic_for(void *data, int type)
-> >> +{
-> >> +	struct ibft_kobject *entry = data;
-> >> +	struct ibft_nic *nic = entry->nic;
-> >> +	mode_t rc = 0;
-> >> +
-> >> +	switch (type) {
-> >> +	case ISCSI_BOOT_ETH_INDEX:
-> >> +	case ISCSI_BOOT_ETH_FLAGS:
-> >> +		rc = 1;
-> >
-> > Did you mean for that value?
-> >
-> >> +		break;
-> >> +	case ISCSI_BOOT_ETH_IP_ADDR:
-> >> +		if (memcmp(nic->ip_addr, nulls, sizeof(nic->ip_addr)))
-> >> +			rc = S_IRUGO;
-> >> +		break;
-> >> +	case ISCSI_BOOT_ETH_SUBNET_MASK:
-> >> +		if (nic->subnet_mask_prefix)
-> >> +			rc = S_IRUGO;
-> >> +		break;
-> >> +	case ISCSI_BOOT_ETH_ORIGIN:
-> >> +		rc = 1;
-> >
-> > and this one as well?
->
-> I did not. They should be S_IRUGO. Do you want me to resubmit the
-> patches or are you just going to edit those two lines if you merge them?
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-No need to resend them (unless Peter eyes found something I missed).
+Greetings SCSI folks,
+
+This is a set of patches to lio-core-2.6.git/master to add proper support for strict
+iSCSI TransportID ISID processing within core TCM/PR fabric independent logic.
+
+This allows TCM to properly handle the scenario for SPC-3 PR and legacy SPC-2 reservations 
+where there is a single iSCSI InitiatorName with multiple ISIDs (TransportIDs with the same
+InitiatorName) connecting to a single TCM/LIO target endpoint (TargetName+TargetPortalGroupTag)
+Beyond this one case, this patch also does change the default operation of TCM/PR for all
+scenarios to require the use of InitiatorName+ISID TransportIDs for PR opreation for fabrics
+(like iSCSI) having 'multi-value' TransportIDs containing an ISID.
+
+There is also a patch to add a device attribute 'enforce_pr_isids' to allow matching for
+PR registration created via TransportID with SPEC_I_PT=1 or REGISTER_AND_MOVE not containing
+a ISID, but for fabric destination employing them (iSCSI again).  Note that the changes have
+been tested using iSCSI and Virtual SAS ports with REGISTER + SPEC_I_PT=1, APTPL=1 and
+REGISTER_AND_MOVE between LIO-Target and TCM_Loop fabric modules.
+
+It would be great if any folks fimilar discussion would mind to have a look at the code!
+
+Best,
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (4):
+  [TCM/PR]: Add proper support for ISIDs in TransportID processing
+  [TCM/PR]: Replace usage of DEF_PR_REGISTERED with
+    *core_scsi3_locate_pr_reg()
+  [TCM/PR]: Update APTPL metadata logic for ISIDs in TransportID
+    processing
+  [TCM/ConfigFS]: Add per-device attribute 'enforce_pr_isids'
+
+ drivers/target/target_core_configfs.c  |   44 +++-
+ drivers/target/target_core_device.c    |   12 +
+ drivers/target/target_core_pr.c        |  393 ++++++++++++++++++++++++--------
+ include/target/target_core_base.h      |    4 +
+ include/target/target_core_device.h    |    1 +
+ include/target/target_core_pr.h        |    6 +-
+ include/target/target_core_transport.h |    3 +
+ 7 files changed, 356 insertions(+), 107 deletions(-)
+
