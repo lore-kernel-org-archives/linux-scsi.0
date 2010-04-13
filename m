@@ -1,44 +1,1661 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH][RFC 1/3/2/5] SCST dev handlers' Makefile
-Date: Tue, 13 Apr 2010 17:07:45 +0400
-Message-ID: <4BC46CA1.1080306@vlnb.net>
-References: <4BC45A32.2010904@vlnb.net> <4BC46173.7000102@vlnb.net>
+Subject: Re: [PATCH][RFC 11/12/1/5] SCST core's README
+Date: Tue, 13 Apr 2010 17:07:05 +0400
+Message-ID: <4BC46C79.3030004@vlnb.net>
+References: <4BC44A49.7070307@vlnb.net> <4BC45841.2090707@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:60658 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752838Ab0DMNIE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2010 09:08:04 -0400
-In-Reply-To: <4BC46173.7000102@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4BC45841.2090707@vlnb.net>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, Bart Van Assche <bart.vanassche@gmail.com>
+Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, linux-driver@qlogic.com
+List-Id: linux-scsi@vger.kernel.org
 
-This patch contains SCST dev handlers' Makefile.
+This patch contains SCST core's README.
 
 Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
- Makefile |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ README.scst | 1379 +++++++++++++++++++++++++++++++++++++++++++++++++++=
++++++++++
+ 1 file changed, 1379 insertions(+)
 
-diff -uprN orig/linux-2.6.33/drivers/scst/dev_handlers/Makefile linux-2.6.33/drivers/scst/dev_handlers/Makefile
---- orig/linux-2.6.33/drivers/scst/dev_handlers/Makefile
-+++ linux-2.6.33/drivers/scst/dev_handlers/Makefile
-@@ -0,0 +1,13 @@
-+ccflags-y += -Iinclude/scst -Wno-unused-parameter
+diff -uprN orig/linux-2.6.33/Documentation/scst/README.scst linux-2.6.3=
+3/Documentation/scst/README.scst
+--- orig/linux-2.6.33/Documentation/scst/README.scst
++++ linux-2.6.33/Documentation/scst/README.scst
+@@ -0,0 +1,1379 @@
++Generic SCSI target mid-level for Linux (SCST)
++=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 +
-+obj-m := scst_cdrom.o scst_changer.o scst_disk.o scst_modisk.o scst_tape.o \
-+	scst_vdisk.o scst_raid.o scst_processor.o
++SCST is designed to provide unified, consistent interface between SCSI
++target drivers and Linux kernel and simplify target drivers developmen=
+t
++as much as possible. Detail description of SCST's features and interna=
+ls
++could be found in "Generic SCSI Target Middle Level for Linux" documen=
+t
++SCST's Internet page http://scst.sourceforge.net.
 +
-+obj-$(CONFIG_SCST_DISK)		+= scst_disk.o
-+obj-$(CONFIG_SCST_TAPE)		+= scst_tape.o
-+obj-$(CONFIG_SCST_CDROM)	+= scst_cdrom.o
-+obj-$(CONFIG_SCST_MODISK)	+= scst_modisk.o
-+obj-$(CONFIG_SCST_CHANGER)	+= scst_changer.o
-+obj-$(CONFIG_SCST_RAID)		+= scst_raid.o
-+obj-$(CONFIG_SCST_PROCESSOR)	+= scst_processor.o
-+obj-$(CONFIG_SCST_VDISK)	+= scst_vdisk.o
-
++SCST supports the following I/O modes:
++
++ * Pass-through mode with one to many relationship, i.e. when multiple
++   initiators can connect to the exported pass-through devices, for
++   the following SCSI devices types: disks (type 0), tapes (type 1),
++   processors (type 3), CDROMs (type 5), MO disks (type 7), medium
++   changers (type 8) and RAID controllers (type 0xC)
++
++ * FILEIO mode, which allows to use files on file systems or block
++   devices as virtual remotely available SCSI disks or CDROMs with
++   benefits of the Linux page cache
++
++ * BLOCKIO mode, which performs direct block IO with a block device,
++   bypassing page-cache for all operations. This mode works ideally wi=
+th
++   high-end storage HBAs and for applications that either do not need
++   caching between application and disk or need the large block
++   throughput
++
++ * User space mode using scst_user device handler, which allows to
++   implement in the user space virtual SCSI devices in the SCST
++   environment
++
++ * "Performance" device handlers, which provide in pseudo pass-through
++   mode a way for direct performance measurements without overhead of
++   actual data transferring from/to underlying SCSI device
++
++In addition, SCST supports advanced per-initiator access and devices
++visibility management, so different initiators could see different set
++of devices with different access permissions. See below for details.
++
++Installation
++------------
++
++To see your devices remotely, you need to add them to at least "Defaul=
+t"
++security group (see below how). By default, no local devices are seen
++remotely. There must be LUN 0 in each security group, i.e. LUs
++numeration must not start from, e.g., 1. Otherwise you will see no
++devices on remote initiators and SCST core will write into the kernel
++log message: "tgt_dev for LUN 0 not found, command to unexisting LU?"
++
++It is highly recommended to use scstadmin utility for configuring
++devices and security groups.
++
++If you experience problems during modules load or running, check your
++kernel logs (or run dmesg command for the few most recent messages).
++
++IMPORTANT: Without loading appropriate device handler, corresponding d=
+evices
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  will be invisible for remote initiators, =
+which could lead to holes
++           in the LUN addressing, so automatic device scanning by remo=
+te SCSI
++           mid-level could not notice the devices. Therefore you will =
+have
++	   to add them manually via
++	   'echo "- - -" >/sys/class/scsi_host/hostX/scan',
++	   where X - is the host number.
++
++IMPORTANT: Working of target and initiator on the same host is
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  supported, except the following 2 cases: =
+swap over target exported
++           device and using a writable mmap over a file from target
++	   exported device. The latter means you can't mount a file
++	   system over target exported device. In other words, you can
++	   freely use any sg, sd, st, etc. devices imported from target
++	   on the same host, but you can't mount file systems or put
++	   swap on them. This is a limitation of Linux memory/cache
++	   manager, because in this case an OOM deadlock like: system
++	   needs some memory -> it decides to clear some cache -> cache
++	   needs to write on target exported device -> initiator sends
++	   request to the target -> target needs memory -> system needs
++	   even more memory -> deadlock.
++
++IMPORTANT: In the current version simultaneous access to local SCSI de=
+vices
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  via standard high-level SCSI drivers (sd,=
+ st, sg, etc.) and
++           SCST's target drivers is unsupported. Especially it is
++	   important for execution via sg and st commands that change
++	   the state of devices and their parameters, because that could
++	   lead to data corruption. If any such command is done, at
++	   least related device handler(s) must be restarted. For block
++	   devices READ/WRITE commands using direct disk handler look to
++	   be safe.
++
++IMPORTANT: Some versions of Windows have a bug, which makes them consi=
+der
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  response of READ CAPACITY(16) longer than=
+ 12 bytes as a faulty one.
++	   As the result, such Windows'es refuse to see SCST exported
++           devices >2TB in size. This is fixed by MS in latter Windows
++	   versions, probably, by some hotfix. But if you're using such
++	   buggy Windows and experience this problem, change in
++	   scst_vdisk.c::vdisk_exec_read_capacity16() "#if 1" to "#if 0".
++
++Usage in failover mode
++----------------------
++
++It is recommended to use TEST UNIT READY ("tur") command to check if
++SCST target is alive in MPIO configurations.
++
++Device handlers
++---------------
++
++Device specific drivers (device handlers) are plugins for SCST, which
++help SCST to analyze incoming requests and determine parameters,
++specific to various types of devices. If an appropriate device handler
++for a SCSI device type isn't loaded, SCST doesn't know how to handle
++devices of this type, so they will be invisible for remote initiators
++(more precisely, "LUN not supported" sense code will be returned).
++
++In addition to device handlers for real devices, there are VDISK, user
++space and "performance" device handlers.
++
++VDISK device handler works over files on file systems and makes from
++them virtual remotely available SCSI disks or CDROM's. In addition, it
++allows to work directly over a block device, e.g. local IDE or SCSI di=
+sk
++or ever disk partition, where there is no file systems overhead. Using
++block devices comparing to sending SCSI commands directly to SCSI
++mid-level via scsi_do_req()/scsi_execute_async() has advantage that da=
+ta
++are transferred via system cache, so it is possible to fully benefit f=
+rom
++caching and read ahead performed by Linux's VM subsystem. The only
++disadvantage here that in the FILEIO mode there is superfluous data
++copying between the cache and SCST's buffers. This issue is going to b=
+e
++addressed in the next release. Virtual CDROM's are useful for remote
++installation. See below for details how to setup and use VDISK device
++handler.
++
++SCST user space device handler provides an interface between SCST and
++the user space, which allows to create pure user space devices. The
++simplest example, where one would want it is if he/she wants to write =
+a
++VTL. With scst_user he/she can write it purely in the user space. Or o=
+ne
++would want it if he/she needs some sophisticated for kernel space
++processing of the passed data, like encrypting them or making snapshot=
+s.
++
++"Performance" device handlers for disks, MO disks and tapes in their
++exec() method skip (pretend to execute) all READ and WRITE operations
++and thus provide a way for direct link performance measurements withou=
+t
++overhead of actual data transferring from/to underlying SCSI device.
++
++NOTE: Since "perf" device handlers on READ operations don't touch the
++=3D=3D=3D=3D  commands' data buffer, it is returned to remote initiato=
+rs as it
++      was allocated, without even being zeroed. Thus, "perf" device
++      handlers impose some security risk, so use them with caution.
++
++Compilation options
++-------------------
++
++There are the following compilation options, that could be change usin=
+g
++your favorite kernel configuration Makefile target, e.g. "make xconfig=
+":
++
++ - CONFIG_SCST_DEBUG - if defined, turns on some debugging code,
++   including some logging. Makes the driver considerably bigger and sl=
+ower,
++   producing large amount of log data.
++
++ - CONFIG_SCST_TRACING - if defined, turns on ability to log events. M=
+akes the
++   driver considerably bigger and leads to some performance loss.
++
++ - CONFIG_SCST_EXTRACHECKS - if defined, adds extra validity checks in
++   the various places.
++
++ - CONFIG_SCST_USE_EXPECTED_VALUES - if not defined (default), initiat=
+or
++   supplied expected data transfer length and direction will be used o=
+nly for
++   verification purposes to return error or warn in case if one of the=
+m
++   is invalid. Instead, locally decoded from SCSI command values will =
+be
++   used. This is necessary for security reasons, because otherwise a
++   faulty initiator can crash target by supplying invalid value in one
++   of those parameters. This is especially important in case of
++   pass-through mode. If CONFIG_SCST_USE_EXPECTED_VALUES is defined, i=
+nitiator
++   supplied expected data transfer length and direction will override
++   the locally decoded values. This might be necessary if internal SCS=
+T
++   commands translation table doesn't contain SCSI command, which is
++   used in your environment. You can know that if you have messages li=
+ke
++   "Unknown opcode XX for YY. Should you update scst_scsi_op_table?" i=
+n
++   your kernel log and your initiator returns an error. Also report
++   those messages in the SCST mailing list
++   scst-devel@lists.sourceforge.net. Note, that not all SCSI transport=
+s
++   support supplying expected values.
++
++ - CONFIG_SCST_DEBUG_TM - if defined, turns on task management functio=
+ns
++   debugging, when on LUN 6 some of the commands will be delayed for
++   about 60 sec., so making the remote initiator send TM functions, eg
++   ABORT TASK and TARGET RESET. Also define
++   CONFIG_SCST_TM_DBG_GO_OFFLINE symbol in the Makefile if you want th=
+at
++   the device eventually become completely unresponsive, or otherwise =
+to
++   circle around ABORTs and RESETs code. Needs CONFIG_SCST_DEBUG turne=
+d
++   on.
++
++ - CONFIG_SCST_STRICT_SERIALIZING - if defined, makes SCST send all co=
+mmands to
++   underlying SCSI device synchronously, one after one. This makes tas=
+k
++   management more reliable, with cost of some performance penalty. Th=
+is
++   is mostly actual for stateful SCSI devices like tapes, where the
++   result of command's execution depends from device's settings define=
+d
++   by previous commands. Disk and RAID devices are stateless in the mo=
+st
++   cases. The current SCSI core in Linux doesn't allow to abort all
++   commands reliably if they sent asynchronously to a stateful device.
++   Turned off by default, turn it on if you use stateful device(s) and
++   need as much error recovery reliability as possible. As a side effe=
+ct
++   of CONFIG_SCST_STRICT_SERIALIZING, on kernels below 2.6.30 no kerne=
+l
++   patching is necessary for pass-through device handlers (scst_disk,
++   etc.).
++
++ - CONFIG_SCST_ALLOW_PASSTHROUGH_IO_SUBMIT_IN_SIRQ - if defined, it wi=
+ll be
++   allowed to submit pass-through commands to real SCSI devices via th=
+e SCSI
++   middle layer using scsi_execute_async() function from soft IRQ
++   context (tasklets). This used to be the default, but currently it
++   seems the SCSI middle layer starts expecting only thread context on
++   the IO submit path, so it is disabled now by default. Enabling it
++   will decrease amount of context switches and improve performance. I=
+t
++   is more or less safe, in the worst case, if in your configuration t=
+he
++   SCSI middle layer really doesn't expect SIRQ context in
++   scsi_execute_async() function, you will get a warning message in th=
+e
++   kernel log.
++
++ - CONFIG_SCST_STRICT_SECURITY - if defined, makes SCST zero allocated=
+ data
++   buffers. Undefining it (default) considerably improves performance
++   and eases CPU load, but could create a security hole (information
++   leakage), so enable it, if you have strict security requirements.
++
++ - CONFIG_SCST_ABORT_CONSIDER_FINISHED_TASKS_AS_NOT_EXISTING - if defi=
+ned,
++   in case when TASK MANAGEMENT function ABORT TASK is trying to abort=
+ a
++   command, which has already finished, remote initiator, which sent t=
+he
++   ABORT TASK request, will receive TASK NOT EXIST (or ABORT FAILED)
++   response for the ABORT TASK request. This is more logical response,
++   since, because the command finished, attempt to abort it failed, bu=
+t
++   some initiators, particularly VMware iSCSI initiator, consider TASK
++   NOT EXIST response as if the target got crazy and try to RESET it.
++   Then sometimes get crazy itself. So, this option is disabled by
++   default.
++
++ - CONFIG_SCST_MEASURE_LATENCY - if defined, provides in /sys/kernel/s=
+cst_tgt
++   and below statisctics about average commands processing latency. Yo=
+u
++   can clear already measured results by writing 0 in the correspondin=
+g
++   file. Note, you need a non-preemptible kernel to have correct
++   results.
++
++HIGHMEM kernel configurations are fully supported, but not recommended
++for performance reasons, except for scst_user, where they are not
++supported, because this module deals with user supplied memory on a
++zero-copy manner. If you need to use it, consider change VMSPLIT optio=
+n
++or use 64-bit system configuration instead.
++
++For changing VMSPLIT option (CONFIG_VMSPLIT to be precise) you should =
+in
++"make menuconfig" command set the following variables:
++
++ - General setup->Configure standard kernel features (for small system=
+s): ON
++
++ - General setup->Prompt for development and/or incomplete code/driver=
+s: ON
++
++ - Processor type and features->High Memory Support: OFF
++
++ - Processor type and features->Memory split: according to amount of
++   memory you have. If it is less than 800MB, you may not touch this
++   option at all.
++
++Module parameters
++-----------------
++
++Module scst supports the following parameters:
++
++ - scst_threads - allows to set count of SCST's threads. By default it
++   is CPU count.
++
++ - scst_max_cmd_mem - sets maximum amount of memory in Mb allowed to b=
+e
++   consumed by the SCST commands for data buffers at any given time. B=
+y
++   default it is approximately TotalMem/4.
++
++SCST sysfs interface
++--------------------
++
++Root of SCST sysfs interface is /sys/kernel/scst_tgt. It has the
++following entries:
++
++ - devices - this is a root subdirectory for all SCST devices
++
++ - handlers - this is a root subdirectory for all SCST dev handlers
++
++ - sgv - this is a root subdirectory for all SCST SGV caches
++
++ - targets - this is a root subdirectory for all SCST targets
++
++ - setup_id - allows to read and write SCST setup ID. This ID can be
++   used in cases, when the same SCST configuration should be installed
++   on several targets, but exported from those targets devices should
++   have different IDs and SNs. For instance, VDISK dev handler uses th=
+is
++   ID to generate T10 vendor specific identifier and SN of the devices=
+=2E
++
++ - threads - allows to read and set number of global SCST I/O threads.
++   Those threads used with async. dev handlers, for instance, vdisk
++   BLOCKIO or NULLIO.
++
++ - trace_level - allows to enable and disable various tracing
++   facilities. See content of this file for help how to use it.
++
++ - version - read-only attribute, which allows to see version of
++   SCST and enabled optional features.
++
++Each SCST sysfs file (attribute) can contain in the last line mark
++"[key]". It is automatically added mark used to allow scstadmin to see
++which attributes it should save in the config file. You can ignore it.
++
++"Devices" subdirectory contains subdirectories for each SCST devices.
++
++Content of each device's subdirectory is dev handler specific. See
++documentation for your dev handlers for more info about it as well as
++SysfsRules file for more info about common to all dev handlers rules.
++Standard SCST dev handlers have at least the following common entries:
++
++ - exported - subdirectory containing links to all LUNs where this
++   device was exported.
++
++ - handler - if dev handler determined for this device, this link poin=
+ts
++   to it. The handler can be not set for pass-through devices.
++
++ - threads_num - shows and allows to set number of threads in this dev=
+ice's
++   threads pool. If 0 - no threads will be created, and global SCST
++   threads pool will be used. If <0 - creation of the threads pool is
++   prohibited.
++
++ - threads_pool_type - shows and allows to sets threads pool type.
++   Possible values: "per_initiator" and "shared". When the value is
++   "per_initiator" (default), each session from each initiator will us=
+e
++   separate dedicated pool of threads. When the value is "shared", all
++   sessions from all initiators will share the same per-device pool of
++   threads. Valid only if threads_num attribute >0.
++
++ - type - SCSI type of this device
++
++See below for more information about other entries of this subdirector=
+y
++of the standard SCST dev handlers.
++
++"Handlers" subdirectory contains subdirectories for each SCST dev
++handler.
++
++Content of each handler's subdirectory is dev handler specific. See
++documentation for your dev handlers for more info about it as well as
++SysfsRules file for more info about common to all dev handlers rules.
++Standard SCST dev handlers have at least the following common entries:
++
++ - mgmt - this entry allows to create virtual devices and their
++   attributes (for virtual devices dev handlers) or assign/unassign re=
+al
++   SCSI devices to/from this dev handler (for pass-through dev
++   handlers).
++
++ - pass_through - if exists, it contains 1 and this dev handler is a
++   pass-through dev handler.
++
++ - trace_level - allows to enable and disable various tracing
++   facilities. See content of this file for help how to use it.
++
++ - type - SCSI type of devices served by this dev handler.
++
++See below for more information about other entries of this subdirector=
+y
++of the standard SCST dev handlers.
++
++"Sgv" subdirectory contains statistic information of SCST SGV caches. =
+It
++has the following entries:
++
++ - None, one or more subdirectories for each existing SGV cache.
++
++ - global_stats - file containing global SGV caches statistics.
++
++Each SGV cache's subdirectory has the following item:
++
++ - stats - file containing statistics for this SGV caches.
++
++"Targets" subdirectory contains subdirectories for each SCST target.
++
++Content of each target's subdirectory is target specific. See
++documentation for your target for more info about it as well as
++SysfsRules file for more info about common to all targets rules.
++Every target should have at least the following entries:
++
++ - ini_groups - subdirectory, which contains and allows to define
++   initiator-oriented access control information, see below.
++
++ - luns - subdirectory, which contains list of available LUNs in the
++   target-oriented access control and allows to define it, see below.
++
++ - sessions - subdirectory containing connected to this target session=
+s.
++
++ - enabled - using this attribute you can enable or disable this targe=
+t/
++   It allows to finish configuring it before it starts accepting new
++   connections. 0 by default.
++
++ - addr_method - used LUNs addressing method. Possible values:
++   "Peripheral" and "Flat". Most initiators work well with Peripheral
++   addressing method (default), but some (HP-UX, for instance) may
++   require Flat method. This attribute is also available in the
++   initiators security groups, so you can assign the addressing method
++   on per-initiator basis.
++
++ - io_grouping_type - defines how I/O from sessions to this target are
++   grouped together. This I/O grouping is very important for
++   performance. By setting this attribute in a right value, you can
++   considerably increase performance of your setup. This grouping is
++   performed only if you use CFQ I/O scheduler on the target and for
++   devices with threads_num >=3D 0 and, if threads_num > 0, with
++   threads_pool_type "per_initiator". Possible values:
++   "this_group_only", "never", "auto", or I/O group number >0. When th=
+e
++   value is "this_group_only" all I/O from all sessions in this target
++   will be grouped together. When the value is "never", I/O from
++   different sessions will not be grouped together, i.e. all sessions =
+in
++   this target will have separate dedicated I/O groups. When the value
++   is "auto" (default), all I/O from initiators with the same name
++   (iSCSI initiator name, for instance) in all targets will be grouped
++   together with a separate dedicated I/O group for each initiator nam=
+e.
++   For iSCSI this mode works well, but other transports usually use
++   different initiator names for different sessions, so using such
++   transports in MPIO configurations you should either use value
++   "this_group_only", or an explicit I/O group number. This attribute =
+is
++   also available in the initiators security groups, so you can assign
++   the I/O grouping on per-initiator basis. See below for more info ho=
+w
++   to use this attribute.
++
++ - rel_tgt_id - allows to read or write SCSI Relative Target Port
++   Identifier attribute. This identifier is used to identify SCSI Targ=
+et
++   Ports by some SCSI commands, mainly by Persistent Reservations
++   commands. This identifier must be unique among all SCST targets, bu=
+t
++   for convenience SCST allows disabled targets to have not unique
++   rel_tgt_id. In this case SCST will not allow to enable this target
++   until rel_tgt_id becomes unique. This attribute initialized unique =
+by
++   SCST by default.
++
++A target driver may have also the following entries:
++
++ - "hw_target" - if the target driver supports both hardware and virtu=
+al
++    targets (for instance, an FC adapter supporting NPIV, which has
++    hardware targets for its physical ports as well as virtual NPIV
++    targets), this read only attribute for all hardware targets will
++    exist and contain value 1.
++
++Subdirectory "sessions" contains one subdirectory for each connected
++session with name equal to name of the connected initiator.
++
++Each session subdirectory contains the following entries:
++
++ - initiator_name - contains initiator name
++
++ - force_close - optional write-only attribute, which allows to force
++   close this session.
++
++ - active_commands - contains number of active, i.e. not yet or being
++   executed, SCSI commands in this session.
++
++ - commands - contains overall number of SCSI commands in this session=
+=2E
++
++ - other target driver specific attributes and subdirectories.
++
++See below description of the VDISK's sysfs interface for samples.
++
++Access and devices visibility management (LUN masking) - sysfs interfa=
+ce
++----------------------------------------------------------------------=
+--
++
++Access and devices visibility management allows for an initiator or
++group of initiators to see different devices with different LUNs
++with necessary access permissions.
++
++SCST supports two modes of access control:
++
++1. Target-oriented. In this mode you define for each target a default
++set of LUNs, which are accessible to all initiators, connected to that
++target. This is a regular access control mode, which people usually me=
+an
++thinking about access control in general. For instance, in IET this is
++the only supported mode.
++
++2. Initiator-oriented. In this mode you define which LUNs are accessib=
+le
++for each initiator. In this mode you should create for each set of one
++or more initiators, which should access to the same set of devices wit=
+h
++the same LUNs, a separate security group, then add to it devices and
++names of allowed initiator(s).
++
++Both modes can be used simultaneously. In this case the
++initiator-oriented mode has higher priority, than the target-oriented,
++i.e. initiators are at first searched in all defined security groups f=
+or
++this target and, if none matches, the default target's set of LUNs is
++used. This set of LUNs might be empty, then the initiator will not see
++any LUNs from the target.
++
++You can at any time find out which set of LUNs each session is assigne=
+d
++to by looking where link
++/sys/kernel/scst_tgt/targets/target_driver/target_name/sessions/initia=
+tor_name/luns
++points to.
++
++To configure the target-oriented access control SCST provides the
++following interface. Each target's sysfs subdirectory
++(/sys/kernel/scst_tgt/targets/target_driver/target_name) has "luns"
++subdirectory. This subdirectory contains the list of already defined
++target-oriented access control LUNs for this target as well as file
++"mgmt". This file has the following commands, which you can send to it=
+,
++for instance, using "echo" shell command. You can always get a small
++help about supported commands by looking inside this file. "Parameters=
+"
++are one or more param_name=3Dvalue pairs separated by ';'.
++
++ - "add H:C:I:L lun [parameters]" - adds a pass-through device with
++   host:channel:id:lun with LUN "lun". Optionally, the device could be
++   marked as read only by using parameter "read_only". The recommended
++   way to find out H:C:I:L numbers is use of lsscsi utility.
++
++ - "replace H:C:I:L lun [parameters]" - replaces by pass-through devic=
+e
++   with host:channel:id:lun existing with LUN "lun" device with
++   generation of INQUIRY DATA HAS CHANGED Unit Attention. If the old
++   device doesn't exist, this command acts as the "add" command.
++   Optionally, the device could be marked as read only by using
++   parameter "read_only". The recommended way to find out H:C:I:L
++   numbers is use of lsscsi utility.
++
++ - "del H:C:I:L" - deletes a pass-through device with host:channel:id:=
+lun
++   The recommended way to find out H:C:I:L numbers is use of lsscsi
++   utility.
++
++ - "add VNAME lun [parameters]" - adds a virtual device with name VNAM=
+E
++   with LUN "lun". Optionally, the device could be marked as read only
++   by using parameter "read_only".
++
++ - "replace VNAME lun [parameters]" - replaces by virtual device
++   with name VNAME existing with LUN "lun" device with generation of
++   INQUIRY DATA HAS CHANGED Unit Attention. If the old device doesn't
++   exist, this command acts as the "add" command. Optionally, the devi=
+ce
++   could be marked as read only by using parameter "read_only".
++
++ - "del VNAME" - deletes a virtual device with name VNAME.
++
++ - "clear" - clears the list of devices
++
++To configure the initiator-oriented access control SCST provides the
++following interface. Each target's sysfs subdirectory
++(/sys/kernel/scst_tgt/targets/target_driver/target_name) has "ini_grou=
+ps"
++subdirectory. This subdirectory contains the list of already defined
++security groups for this target as well as file "mgmt". This file has
++the following commands, which you can send to it, for instance, using
++"echo" shell command. You can always get a small help about supported
++commands by looking inside this file.
++
++ - "create GROUP_NAME" - creates a new security group.
++
++ - "del GROUP_NAME" - deletes a new security group.
++
++Each security group's subdirectory contains 2 subdirectories: initiato=
+rs
++and luns.
++
++Each "initiators" subdirectory contains list of added to this groups
++initiator as well as as well as file "mgmt". This file has the followi=
+ng
++commands, which you can send to it, for instance, using "echo" shell
++command. You can always get a small help about supported commands by
++looking inside this file.
++
++ - "add INITIATOR_NAME" - adds initiator with name INITIATOR_NAME to t=
+he
++   group.
++
++ - "del INITIATOR_NAME" - deletes initiator with name INITIATOR_NAME
++   from the group.
++
++ - "move INITIATOR_NAME DEST_GROUP_NAME" moves initiator with name
++   INITIATOR_NAME from the current group to group with name
++   DEST_GROUP_NAME.
++
++ - "clear" - deletes all initiators from this group.
++
++For "add" and "del" commands INITIATOR_NAME can be a simple DOS-type
++patterns, containing '*' and '?' symbols. '*' means match all any
++symbols, '?' means match only any single symbol. For instance,
++"blah.xxx" will match "bl?h.*".
++
++Each "luns" subdirectory contains the list of already defined LUNs for
++this group as well as file "mgmt". Content of this file as well as lis=
+t
++of available in it commands is fully identical to the "luns"
++subdirectory of the target-oriented access control.
++
++Examples:
++
++ - echo "create INI" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.n=
+et.vlnb:tgt1/ini_groups/mgmt -
++   creates security group INI for target iqn.2006-10.net.vlnb:tgt1.
++
++ - echo "add 2:0:1:0 11" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-=
+10.net.vlnb:tgt1/ini_groups/INI/luns/mgmt -
++   adds a pass-through device sitting on host 2, channel 0, ID 1, LUN =
+0
++   to group with name INI as LUN 11.
++
++ - echo "add disk1 0" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.=
+net.vlnb:tgt1/ini_groups/INI/luns/mgmt -
++   adds a virtual disk with name disk1 to group with name INI as LUN 0=
+=2E
++
++ - echo "add 21:*:e0:?b:83:*" >/sys/kernel/scst_tgt/targets/21:00:00:a=
+0:8c:54:52:12/ini_groups/INI/initiators/mgmt -
++   adds a pattern to group with name INI to Fibre Channel target with
++   WWN 21:00:00:a0:8c:54:52:12, which matches WWNs of Fibre Channel
++   initiator ports.
++
++Consider you need to have an iSCSI target with name
++"iqn.2007-05.com.example:storage.disk1.sys1.xyz", which should export
++virtual device "dev1" with LUN 0 and virtual device "dev2" with LUN 1,
++but initiator with name
++"iqn.2007-05.com.example:storage.disk1.spec_ini.xyz" should see only
++virtual device "dev2" read only with LUN 0. To achieve that you should
++do the following commands:
++
++# echo "iqn.2007-05.com.example:storage.disk1.sys1.xyz" >/sys/kernel/s=
+cst_tgt/targets/iscsi/mgmt
++# echo "add dev1 0" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2007-05.co=
+m.example:storage.disk1.sys1.xyz/luns/mgmt
++# echo "add dev2 1" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2007-05.co=
+m.example:storage.disk1.sys1.xyz/luns/mgmt
++# echo "create SPEC_INI" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2007-=
+05.com.example:storage.disk1.sys1.xyz/ini_groups/mgmt
++# echo "add dev2 0 read_only=3D1" \
++	>/sys/kernel/scst_tgt/targets/iscsi/iqn.2007-05.com.example:storage.d=
+isk1.sys1.xyz/ini_groups/SPEC_INI/luns/mgmt
++# echo "iqn.2007-05.com.example:storage.disk1.spec_ini.xyz" \
++	>/sys/kernel/scst_tgt/targets/iscsi/iqn.2007-05.com.example:storage.d=
+isk1.sys1.xyz/ini_groups/SPEC_INI/initiators/mgmt
++
++For Fibre Channel or SAS in the above example you should use target's
++and initiator ports WWNs instead of iSCSI names.
++
++It is highly recommended to use scstadmin utility instead of described
++in this section low level interface.
++
++IMPORTANT
++=3D=3D=3D=3D=3D=3D=3D=3D=3D
++
++There must be LUN 0 in each set of LUNs, i.e. LUs numeration must not
++start from, e.g., 1. Otherwise you will see no devices on remote
++initiators and SCST core will write into the kernel log message: "tgt_=
+dev
++for LUN 0 not found, command to unexisting LU?"
++
++IMPORTANT
++=3D=3D=3D=3D=3D=3D=3D=3D=3D
++
++All the access control must be fully configured BEFORE the correspondi=
+ng
++target is enabled! When you enable a target, it will immediately start
++accepting new connections, hence creating new sessions, and those new
++sessions will be assigned to security groups according to the
++*currently* configured access control settings. For instance, to
++the default target's set of LUNs, instead of "HOST004" group as you ma=
+y
++need, because "HOST004" doesn't exist yet. So, one must configure all
++the security groups before new connections from the initiators are
++created, i.e. before the target enabled.
++
++VDISK device handler
++--------------------
++
++VDISK has 4 built-in dev handlers: vdisk_fileio, vdisk_blockio,
++vdisk_nullio and vcdrom. Roots of their sysfs interface are
++/sys/kernel/scst_tgt/handlers/handler_name, e.g. for vdisk_fileio:
++/sys/kernel/scst_tgt/handlers/vdisk_fileio. Each root has the followin=
+g
++entries:
++
++ - None, one or more links to devices with name equal to names
++   of the corresponding devices.
++
++ - trace_level - allows to enable and disable various tracing
++   facilities. See content of this file for help how to use it.
++
++ - mgmt - main management entry, which allows to add/delete VDISK
++   devices with the corresponding type.
++
++The "mgmt" file has the following commands, which you can send to it,
++for instance, using "echo" shell command. You can always get a small
++help about supported commands by looking inside this file. "Parameters=
+"
++are one or more param_name=3Dvalue pairs separated by ';'.
++
++ - echo "add_device device_name [parameters]" - adds a virtual device
++   with name device_name and specified parameters (see below)
++
++ - echo "del_device device_name" - deletes a virtual device with name
++   device_name.
++
++Handler vdisk_fileio provides FILEIO mode to create virtual devices.
++This mode uses as backend files and accesses to them using regular
++read()/write() file calls. This allows to use full power of Linux page
++cache. The following parameters possible for vdisk_fileio:
++
++ - filename - specifies path and file name of the backend file. The pa=
+th
++   must be absolute.
++
++ - blocksize - specifies block size used by this virtual device. The
++   block size must be power of 2 and >=3D 512 bytes. Default is 512.
++
++ - write_through - disables write back caching. Note, this option
++   has sense only if you also *manually* disable write-back cache in
++   *all* your backstorage devices and make sure it's actually disabled=
+,
++   since many devices are known to lie about this mode to get better
++   benchmark results. Default is 0.
++
++ - read_only - read only. Default is 0.
++
++ - o_direct - disables both read and write caching. This mode isn't
++   currently fully implemented, you should use user space fileio_tgt
++   program in O_DIRECT mode instead (see below).
++
++ - nv_cache - enables "non-volatile cache" mode. In this mode it is
++   assumed that the target has a GOOD UPS with ability to cleanly
++   shutdown target in case of power failure and it is software/hardwar=
+e
++   bugs free, i.e. all data from the target's cache are guaranteed
++   sooner or later to go to the media. Hence all data synchronization
++   with media operations, like SYNCHRONIZE_CACHE, are ignored in order
++   to bring more performance. Also in this mode target reports to
++   initiators that the corresponding device has write-through cache to
++   disable all write-back cache workarounds used by initiators. Use wi=
+th
++   extreme caution, since in this mode after a crash of the target
++   journaled file systems don't guarantee the consistency after journa=
+l
++   recovery, therefore manual fsck MUST be ran. Note, that since usual=
+ly
++   the journal barrier protection (see "IMPORTANT" note below) turned
++   off, enabling NV_CACHE could change nothing from data protection
++   point of view, since no data synchronization with media operations
++   will go from the initiator. This option overrides "write_through"
++   option. Disabled by default.
++
++ - removable - with this flag set the device is reported to remote
++   initiators as removable.
++
++Handler vdisk_blockio provides BLOCKIO mode to create virtual devices.
++This mode performs direct block I/O with a block device, bypassing the
++page cache for all operations. This mode works ideally with high-end
++storage HBAs and for applications that either do not need caching
++between application and disk or need the large block throughput. See
++below for more info.
++
++The following parameters possible for vdisk_blockio: filename,
++blocksize, read_only, removable. See vdisk_fileio above for descriptio=
+n
++of those parameters.
++
++Handler vdisk_nullio provides NULLIO mode to create virtual devices. I=
+n
++this mode no real I/O is done, but success returned to initiators.
++Intended to be used for performance measurements at the same way as
++"*_perf" handlers. The following parameters possible for vdisk_nullio:
++blocksize, read_only, removable. See vdisk_fileio above for descriptio=
+n
++of those parameters.
++
++Handler vcdrom allows emulation of a virtual CDROM device using an ISO
++file as backend. It doesn't have any parameters.
++
++For example:
++
++echo "add_device disk1 filename=3D/disk1; blocksize=3D4096; nv_cache=3D=
+1" >/sys/kernel/scst_tgt/handlers/vdisk_fileio/mgmt
++
++will create a FILEIO virtual device disk1 with backend file /disk1
++with block size 4K and NV_CACHE enabled.
++
++Each vdisk_fileio's device has the following attributes in
++/sys/kernel/scst_tgt/devices/device_name:
++
++ - filename - contains path and file name of the backend file.
++
++ - blocksize - contains block size used by this virtual device.
++
++ - write_through - contains status of write back caching of this virtu=
+al
++   device.
++
++ - read_only - contains read only status of this virtual device.
++
++ - o_direct - contains O_DIRECT status of this virtual device.
++
++ - nv_cache - contains NV_CACHE status of this virtual device.
++
++ - removable - contains removable status of this virtual device.
++
++ - size_mb - contains size of this virtual device in MB.
++
++ - t10_dev_id - contains and allows to set T10 vendor specific
++   identifier for Device Identification VPD page (0x83) of INQUIRY dat=
+a.
++   By default VDISK handler always generates t10_dev_id for every new
++   created device at creation time based on the device name and
++   scst_vdisk_ID scst_vdisk.ko module parameter (see below).
++
++ - usn - contains the virtual device's serial number of INQUIRY data. =
+It
++   is created at the device creation time based on the device name and
++   scst_vdisk_ID scst_vdisk.ko module parameter (see below).
++
++ - type - contains SCSI type of this virtual device.
++
++ - resync_size - write only attribute, which makes vdisk_fileio to
++   rescan size of the backend file. It is useful if you changed it, fo=
+r
++   instance, if you resized it.
++
++For example:
++
++/sys/kernel/scst_tgt/devices/disk1
++|-- blocksize
++|-- exported
++|   |-- export0 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt/lun=
+s/0
++|   |-- export1 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt/ini=
+_groups/INI/luns/0
++|   |-- export2 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt1/lu=
+ns/0
++|   |-- export3 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt1/in=
+i_groups/INI1/luns/0
++|   |-- export4 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt1/in=
+i_groups/INI2/luns/0
++|-- filename
++|-- handler -> ../../handlers/vdisk_fileio
++|-- nv_cache
++|-- o_direct
++|-- read_only
++|-- removable
++|-- resync_size
++|-- size_mb
++|-- t10_dev_id
++|-- threads_num
++|-- threads_pool_type
++|-- type
++|-- usn
++`-- write_through
++
++Each vdisk_blockio's device has the following attributes in
++/sys/kernel/scst_tgt/devices/device_name: blocksize, filename,
++read_only, removable, resync_size, size_mb, t10_dev_id, threads_num,
++threads_pool_type, type, usn. See above description of those parameter=
+s.
++
++Each vdisk_nullio's device has the following attributes in
++/sys/kernel/scst_tgt/devices/device_name: blocksize, read_only,
++removable, size_mb, t10_dev_id, threads_num, threads_pool_type, type,
++usn. See above description of those parameters.
++
++Each vcdrom's device has the following attributes in
++/sys/kernel/scst_tgt/devices/device_name: filename,  size_mb,
++t10_dev_id, threads_num, threads_pool_type, type, usn. See above
++description of those parameters. Exception is filename attribute. For
++vcdrom it is writable. Writing to it allows to virtually insert or
++change virtual CD media in the virtual CDROM device. For example:
++
++ - echo "/image.iso" >/sys/kernel/scst_tgt/devices/cdrom/filename - wi=
+ll
++   insert file /image.iso as virtual media to the virtual CDROM cdrom.
++
++ - echo "" >/sys/kernel/scst_tgt/devices/cdrom/filename - will remove
++   "media" from the virtual CDROM cdrom.
++
++Additionally to the sysfs interface VDISK handler has module parameter
++"num_threads", which specifies count of I/O threads for each VDISK's
++device. If you have a workload, which tends to produce rather random
++accesses (e.g. DB-like), you should increase this count to a bigger
++value, like 32. If you have a rather sequential workload, you should
++decrease it to a lower value, like number of CPUs on the target or eve=
+n
++1. Due to some limitations of Linux I/O subsystem, increasing number o=
+f
++I/O threads too much leads to sequential performance drop, especially
++with deadline scheduler, so decreasing it can improve sequential
++performance. The default provides a good compromise between random and
++sequential accesses.
++
++You shouldn't be afraid to have too many VDISK I/O threads if you have
++many VDISK devices. Kernel threads consume very little amount of
++resources (several KBs) and only necessary threads will be used by SCS=
+T,
++so the threads will not trash your system.
++
++CAUTION: If you partitioned/formatted your device with block size X, *=
+NEVER*
++=3D=3D=3D=3D=3D=3D=3D=3D ever try to export and then mount it (even ac=
+cidentally) with another
++         block size. Otherwise you can *instantly* damage it pretty
++	 badly as well as all your data on it. Messages on initiator
++	 like: "attempt to access beyond end of device" is the sign of
++	 such damage.
++
++	 Moreover, if you want to compare how well different block sizes
++	 work for you, you **MUST** EVERY TIME AFTER CHANGING BLOCK SIZE
++	 **COMPLETELY** **WIPE OFF** ALL THE DATA FROM THE DEVICE. In
++	 other words, THE **WHOLE** DEVICE **MUST** HAVE ONLY **ZEROS**
++	 AS THE DATA AFTER YOU SWITCH TO NEW BLOCK SIZE. Switching block
++	 sizes isn't like switching between FILEIO and BLOCKIO, after
++	 changing block size all previously written with another block
++	 size data MUST BE ERASED. Otherwise you will have a full set of
++	 very weird behaviors, because blocks addressing will be
++	 changed, but initiators in most cases will not have a
++	 possibility to detect that old addresses written on the device
++	 in, e.g., partition table, don't refer anymore to what they are
++	 intended to refer.
++
++IMPORTANT: Some disk and partition table management utilities don't su=
+pport
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  block sizes >512 bytes, therefore make su=
+re that your favorite one
++           supports it. Currently only cfdisk is known to work only wi=
+th
++	   512 bytes blocks, other utilities like fdisk on Linux or
++	   standard disk manager on Windows are proved to work well with
++	   non-512 bytes blocks. Note, if you export a disk file or
++	   device with some block size, different from one, with which
++	   it was already partitioned, you could get various weird
++	   things like utilities hang up or other unexpected behavior.
++	   Hence, to be sure, zero the exported file or device before
++	   the first access to it from the remote initiator with another
++	   block size. On Window initiator make sure you "Set Signature"
++	   in the disk manager on the imported from the target drive
++	   before doing any other partitioning on it. After you
++	   successfully mounted a file system over non-512 bytes block
++	   size device, the block size stops matter, any program will
++	   work with files on such file system.
++
++Caching
++-------
++
++By default for performance reasons VDISK FILEIO devices use write back
++caching policy. This is generally safe for modern applications who
++prepared to work in the write back caching environments, so know when =
+to
++flush cache to keep their data consistent and minimize damage caused i=
+n
++case of power/hardware/software failures by lost in the cache data.
++
++For instance, journaled file systems flush cache on each meta data
++update, so they survive power/hardware/software failures pretty well.
++Note, Linux IO subsystem guarantees it work reliably only using data
++protection barriers, which, for instance, for Ext3 turned off by defau=
+lt
++(see http://lwn.net/Articles/283161). Some info about barriers from th=
+e
++XFS point of view could be found at
++http://oss.sgi.com/projects/xfs/faq.html#wcache. On Linux initiators f=
+or
++Ext3 and ReiserFS file systems the barrier protection could be turned =
+on
++using "barrier=3D1" and "barrier=3Dflush" mount options correspondingl=
+y. You
++can check if the barriers turn on or off by looking in /proc/mounts.
++Windows and, AFAIK, other UNIX'es don't need any special explicit
++options and do necessary barrier actions on write-back caching devices
++by default.
++
++But even in case of journaled file systems your unsaved cached data wi=
+ll
++still be lost in case of power/hardware/software failures, so you may
++need to supply your target server with a good UPS with possibility to
++gracefully shutdown your target on power shortage or disable write bac=
+k
++caching using WRITE_THROUGH flag. Note, on some real-life workloads
++write through caching might perform better, than write back one with t=
+he
++barrier protection turned on. Also note that without barriers enabled
++(i.e. by default) Linux doesn't provide a guarantee that after
++sync()/fsync() all written data really hit permanent storage. They can
++be stored in the cache of your backstorage devices and, hence, lost on=
+ a
++power failure event. Thus, ever with write-through cache mode, you sti=
+ll
++either need to enable barriers on your backend file system on the targ=
+et
++(for devices this is, indeed, impossible), or need a good UPS to prote=
+ct
++yourself from not committed data loss.
++
++To limit this data loss you can use files in /proc/sys/vm to limit
++amount of unflushed data in the system cache.
++
++BLOCKIO VDISK mode
++------------------
++
++This module works best for these types of scenarios:
++
++1) Data that are not aligned to 4K sector boundaries and <4K block siz=
+es
++are used, which is normally found in virtualization environments where
++operating systems start partitions on odd sectors (Windows and it's
++sector 63).
++
++2) Large block data transfers normally found in database loads/dumps a=
+nd
++streaming media.
++
++3) Advanced relational database systems that perform their own caching
++which prefer or demand direct IO access and, because of the nature of
++their data access, can actually see worse performance with
++non-discriminate caching.
++
++4) Multiple layers of targets were the secondary and above layers need
++to have a consistent view of the primary targets in order to preserve
++data integrity which a page cache backed IO type might not provide
++reliably.
++
++Also it has an advantage over FILEIO that it doesn't copy data between
++the system cache and the commands data buffers, so it saves a
++considerable amount of CPU power and memory bandwidth.
++
++IMPORTANT: Since data in BLOCKIO and FILEIO modes are not consistent b=
+etween
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  them, if you try to use a device in both =
+those modes simultaneously,
++           you will almost instantly corrupt your data on that device.
++
++Pass-through mode
++-----------------
++
++In the pass-through mode (i.e. using the pass-through device handlers
++scst_disk, scst_tape, etc) SCSI commands, coming from remote initiator=
+s,
++are passed to local SCSI devices on target as is, without any
++modifications.
++
++In the SYSFS interface all real SCSI devices are listed in
++/sys/kernel/scst_tgt/devices in form host:channel:id:lun numbers, for
++instance 1:0:0:0. The recommended way to match those numbers to your
++devices is use of lsscsi utility.
++
++When a pass-through dev handler is loaded it assigns itself to all
++existing SCSI devices of its SCSI type. If you later want to unassign =
+some
++SCSI device from it or assign it to another dev handler you can use th=
+e
++following interface.
++
++Each pass-through dev handler has in its root subdirectory
++/sys/kernel/scst_tgt/handlers/handler_name, e.g.
++/sys/kernel/scst_tgt/handlers/dev_disk, "mgmt" file. It allows the
++following commands. They can be sent to it using, e.g., echo command.
++
++ - "assign" - this command assigns SCSI device with
++host:channel:id:lun numbers to this dev handler.
++
++echo "assign 1:0:0:0" >mgmt
++
++will assign SCSI device 1:0:0:0 to this dev handler.
++
++ - "unassign" - this command unassigns SCSI device with
++host:channel:id:lun numbers from this dev handler.
++
++As usually, on read the "mgmt" file returns small help about available
++commands.
++
++As any other hardware, the local SCSI hardware can not handle commands
++with amount of data and/or segments count in scatter-gather array bigg=
+er
++some values. Therefore, when using the pass-through mode you should no=
+te
++that values for maximum number of segments and maximum amount of
++transferred data for each SCSI command on devices on initiators can no=
+t
++be bigger, than corresponding values of the corresponding SCSI devices
++on the target. Otherwise you will see symptoms like small transfers wo=
+rk
++well, but large ones stall and messages like: "Unable to complete
++command due to SG IO count limitation" are printed in the kernel logs.
++
++You can't control from the user space limit of the scatter-gather
++segments, but for block devices usually it is sufficient if you set on
++the initiators /sys/block/DEVICE_NAME/queue/max_sectors_kb in the same
++or lower value as in /sys/block/DEVICE_NAME/queue/max_hw_sectors_kb fo=
+r
++the corresponding devices on the target.
++
++For not-block devices SCSI commands are usually generated directly by
++applications, so, if you experience large transfers stalls, you should
++check documentation for your application how to limit the transfer
++sizes.
++
++Another way to solve this issue is to build SG entries with more than =
+1
++page each. See the following patch as an example:
++http://scst.sourceforge.net/sgv_big_order_alloc.diff
++
++User space mode using scst_user dev handler
++-------------------------------------------
++
++User space program fileio_tgt uses interface of scst_user dev handler
++and allows to see how it works in various modes. Fileio_tgt provides
++mostly the same functionality as scst_vdisk handler with the most
++noticeable difference that it supports O_DIRECT mode. O_DIRECT mode is
++basically the same as BLOCKIO, but also supports files, so for some
++loads it could be significantly faster, than the regular FILEIO access=
+=2E
++All the words about BLOCKIO from above apply to O_DIRECT as well. See
++fileio_tgt's README file for more details.
++
++Performance
++-----------
++
++SCST from the very beginning has been designed and implemented to
++provide the best possible performance. Since there is no "one fit all"
++the best performance configuration for different setups and loads, SCS=
+T
++provides extensive set of settings to allow to tune it for the best
++performance in each particular case. You don't have to necessary use
++those settings. If you don't, SCST will do very good job to autotune f=
+or
++you, so the resulting performance will, in average, be better
++(sometimes, much better) than with other SCSI targets. But in some cas=
+es
++you can by manual tuning improve it even more.
++
++Before doing any performance measurements note that performance result=
+s
++are very much dependent from your type of load, so it is crucial that
++you choose access mode (FILEIO, BLOCKIO, O_DIRECT, pass-through), whic=
+h
++suits your needs the best.
++
++In order to get the maximum performance you should:
++
++1. For SCST:
++
++ - Disable in Makefile CONFIG_SCST_STRICT_SERIALIZING, CONFIG_SCST_EXT=
+RACHECKS,
++   CONFIG_SCST_TRACING, CONFIG_SCST_DEBUG*, CONFIG_SCST_STRICT_SECURIT=
+Y
++
++ - For pass-through devices enable
++   CONFIG_SCST_ALLOW_PASSTHROUGH_IO_SUBMIT_IN_SIRQ.
++
++2. For target drivers:
++
++ - Disable in Makefiles CONFIG_SCST_EXTRACHECKS, CONFIG_SCST_TRACING,
++   CONFIG_SCST_DEBUG*
++
++3. For device handlers, including VDISK:
++
++ - Disable in Makefile CONFIG_SCST_TRACING and CONFIG_SCST_DEBUG.
++
++IMPORTANT: Some of the above compilation options in the SCST SVN enabl=
+ed
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  by default, i.e. the development version =
+of SCST is optimized
++	   for development and bug hunting, not for performance. For it
++	   you can set the above options, except
++	   CONFIG_SCST_ALLOW_PASSTHROUGH_IO_SUBMIT_IN_SIRQ, in the
++	   needed values by command "make debug2perf" performed in
++	   trunk/.
++
++4. Make sure you have io_grouping_type option set correctly, especiall=
+y
++in the following cases:
++
++ - Several initiators share your target's backstorage. It can be a
++   shared LU using some cluster FS, like VMFS, as well as can be
++   different LUs located on the same backstorage (RAID array). For
++   instance, if you have 3 initiators and each of them using its own
++   dedicated FILEIO device file from the same RAID-6 array on the
++   target.
++
++   In this case for the best performance you should have
++   io_grouping_type option set in value "never" in all the LUNs' targe=
+ts
++   and security groups.
++
++ - Your initiator connected to your target in MPIO mode. In this case =
+for
++   the best performance you should:
++
++    * Either connect all the sessions from the initiator to a single
++      target or security group and have io_grouping_type option set in
++      value "this_group_only" in the target or security group,
++
++    * Or, if it isn't possible to connect all the sessions from the
++      initiator to a single target or security group, assign the same
++      numeric io_grouping_type value for each target/security group th=
+is
++      initiator connected to. The exact value itself doesn't matter,
++      important only that all the targets/security groups use the same
++      value.
++
++Don't forget, io_grouping_type makes sense only if you use CFQ I/O
++scheduler on the target and for devices with threads_num >=3D 0 and, i=
+f
++threads_num > 0, with threads_pool_type "per_initiator".
++
++You can check if in your setup io_grouping_type set correctly as well =
+as
++if the "auto" io_grouping_type value works for you by tests like the
++following:
++
++ - For not MPIO case you can run single thread sequential reading, e.g=
+=2E
++   using buffered dd, from one initiator, then run the same single
++   thread sequential reading from the second initiator in parallel. If
++   io_grouping_type is set correctly the aggregate throughput measured
++   on the target should only slightly decrease as well as all initiato=
+rs
++   should have nearly equal share of it. If io_grouping_type is not se=
+t
++   correctly, the aggregate throughput and/or throughput on any
++   initiator will decrease significantly, in 2 times or even more. For
++   instance, you have 80MB/s single thread sequential reading from the
++   target on any initiator. When then both initiators are reading in
++   parallel you should see on the target aggregate throughput somethin=
+g
++   like 70-75MB/s with correct io_grouping_type and something like
++   35-40MB/s or 8-10MB/s on any initiator with incorrect.
++
++ - For the MPIO case it's quite easier. With incorrect io_grouping_typ=
+e
++   you simply won't see performance increase from adding the second
++   session (assuming your hardware is capable to transfer data through
++   both sessions in parallel), or can even see a performance decrease.
++
++5. If you are going to use your target in an VM environment, for
++instance as a shared storage with VMware, make sure all your VMs
++connected to the target via *separate* sessions. For instance, for iSC=
+SI
++it means that each VM has own connection to the target, not all VMs
++connected using a single connection. You can check it using SCST sysfs
++interface. For other transports you should use available facilities,
++like NPIV for Fibre Channel, to make separate sessions for each VM. If
++you miss it, you can greatly loose performance of parallel access to
++your target from different VMs. This isn't related to the case if your
++VMs are using the same shared storage, like with VMFS, for instance. I=
+n
++this case all your VM hosts will be connected to the target via separa=
+te
++sessions, which is enough.
++
++6. For other target and initiator software parts:
++
++ - Make sure you applied on your kernel all available SCST patches.
++   If for your kernel version this patch doesn't exist, it is strongly
++   recommended to upgrade your kernel to version, for which this patch
++   exists.
++
++ - Don't enable debug/hacking features in the kernel, i.e. use them as
++   they are by default.
++
++ - The default kernel read-ahead and queuing settings are optimized
++   for locally attached disks, therefore they are not optimal if they
++   attached remotely (SCSI target case), which sometimes could lead to
++   unexpectedly low throughput. You should increase read-ahead size to=
+ at
++   least 512KB or even more on all initiators and the target.
++
++   You should also limit on all initiators maximum amount of sectors p=
+er
++   SCSI command. This tuning is also recommended on targets with large
++   read-ahead values. To do it on Linux, run:
++
++   echo =9364=94 > /sys/block/sdX/queue/max_sectors_kb
++
++   where specify instead of X your imported from target device letter,
++   like 'b', i.e. sdb.
++
++   To increase read-ahead size on Linux, run:
++
++   blockdev --setra N /dev/sdX
++
++   where N is a read-ahead number in 512-byte sectors and X is a devic=
+e
++   letter like above.
++
++   Note: you need to set read-ahead setting for device sdX again after
++   you changed the maximum amount of sectors per SCSI command for that
++   device.
++
++   Note2: you need to restart SCST after you changed read-ahead settin=
+gs
++   on the target.
++
++ - You may need to increase amount of requests that OS on initiator
++   sends to the target device. To do it on Linux initiators, run
++
++   echo =9364=94 > /sys/block/sdX/queue/nr_requests
++
++   where X is a device letter like above.
++
++   You may also experiment with other parameters in /sys/block/sdX
++   directory, they also affect performance. If you find the best value=
+s,
++   please share them with us.
++
++ - On the target use CFQ IO scheduler. In most cases it has performanc=
+e
++   advantage over other IO schedulers, sometimes huge (2+ times
++   aggregate throughput increase).
++
++ - It is recommended to turn the kernel preemption off, i.e. set
++   the kernel preemption model to "No Forced Preemption (Server)".
++
++ - Looks like XFS is the best filesystem on the target to store device
++   files, because it allows considerably better linear write throughpu=
+t,
++   than ext3.
++
++7. For hardware on target.
++
++ - Make sure that your target hardware (e.g. target FC or network card=
+)
++   and underlaying IO hardware (e.g. IO card, like SATA, SCSI or RAID =
+to
++   which your disks connected) don't share the same PCI bus. You can
++   check it using lspci utility. They have to work in parallel, so it
++   will be better if they don't compete for the bus. The problem is no=
+t
++   only in the bandwidth, which they have to share, but also in the
++   interaction between cards during that competition. This is very
++   important, because in some cases if target and backend storage
++   controllers share the same PCI bus, it could lead up to 5-10 times
++   less performance, than expected. Moreover, some motherboard (by
++   Supermicro, particularly) have serious stability issues if there ar=
+e
++   several high speed devices on the same bus working in parallel. If
++   you have no choice, but PCI bus sharing, set in the BIOS PCI latenc=
+y
++   as low as possible.
++
++8. If you use VDISK IO module in FILEIO mode, NV_CACHE option will
++provide you the best performance. But using it make sure you use a goo=
+d
++UPS with ability to shutdown the target on the power failure.
++
++Baseline performance numbers you can find in those measurements:
++http://lkml.org/lkml/2009/3/30/283.
++
++IMPORTANT: If you use on initiator some versions of Windows (at least =
+W2K)
++=3D=3D=3D=3D=3D=3D=3D=3D=3D  you can't get good write performance for =
+VDISK FILEIO devices with
++           default 512 bytes block sizes. You could get about 10% of t=
+he
++	   expected one. This is because of the partition alignment, which
++	   is (simplifying) incompatible with how Linux page cache
++	   works, so for each write the corresponding block must be read
++	   first. Use 4096 bytes block sizes for VDISK devices and you
++	   will have the expected write performance. Actually, any OS on
++	   initiators, not only Windows, will benefit from block size
++	   max(PAGE_SIZE, BLOCK_SIZE_ON_UNDERLYING_FS), where PAGE_SIZE
++	   is the page size, BLOCK_SIZE_ON_UNDERLYING_FS is block size
++	   on the underlying FS, on which the device file located, or 0,
++	   if a device node is used. Both values are from the target.
++	   See also important notes about setting block sizes >512 bytes
++	   for VDISK FILEIO devices above.
++
++9. In some cases, for instance working with SSD devices, which consume=
+ 100%
++of a single CPU load for data transfers in their internal threads, to
++maximize IOPS it can be needed to assign for those threads dedicated
++CPUs using Linux CPU affinity facilities. No IRQ processing should be
++done on those CPUs. Check that using /proc/interrupts. See taskset
++command and Documentation/IRQ-affinity.txt in your kernel's source tre=
+e
++for how to assign IRQ affinity to tasks and IRQs.
++
++The reason for that is that processing of coming commands in SIRQ
++context might be done on the same CPUs as SSD devices' threads doing d=
+ata
++transfers. As the result, those threads won't receive all the processi=
+ng
++power of those CPUs and perform worse.
++
++Work if target's backstorage or link is too slow
++------------------------------------------------
++
++Under high I/O load, when your target's backstorage gets overloaded, o=
+r
++working over a slow link between initiator and target, when the link
++can't serve all the queued commands on time, you can experience I/O
++stalls or see in the kernel log abort or reset messages.
++
++At first, consider the case of too slow target's backstorage. On some
++seek intensive workloads even fast disks or RAIDs, which able to serve
++continuous data stream on 500+ MB/s speed, can be as slow as 0.3 MB/s.
++Another possible cause for that can be MD/LVM/RAID on your target as i=
+n
++http://lkml.org/lkml/2008/2/27/96 (check the whole thread as well).
++
++Thus, in such situations simply processing of one or more commands tak=
+es
++too long time, hence initiator decides that they are stuck on the targ=
+et
++and tries to recover. Particularly, it is known that the default amoun=
+t
++of simultaneously queued commands (48) is sometimes too high if you do
++intensive writes from VMware on a target disk, which uses LVM in the
++snapshot mode. In this case value like 16 or even 8-10 depending of yo=
+ur
++backstorage speed could be more appropriate.
++
++Unfortunately, currently SCST lacks dynamic I/O flow control, when the
++queue depth on the target is dynamically decreased/increased based on
++how slow/fast the backstorage speed comparing to the target link. So,
++there are 6 possible actions, which you can do to workaround or fix th=
+is
++issue in this case:
++
++1. Ignore incoming task management (TM) commands. It's fine if there a=
+re
++not too many of them, so average performance isn't hurt and the
++corresponding device isn't getting put offline, i.e. if the backstorag=
+e
++isn't too slow.
++
++2. Decrease /sys/block/sdX/device/queue_depth on the initiator in case
++if it's Linux (see below how) or/and SCST_MAX_TGT_DEV_COMMANDS constan=
+t
++in scst_priv.h file until you stop seeing incoming TM commands.
++ISCSI-SCST driver also has its own iSCSI specific parameter for that,
++see its README file.
++
++To decrease device queue depth on Linux initiators you can run command=
+:
++
++# echo Y >/sys/block/sdX/device/queue_depth
++
++where Y is the new number of simultaneously queued commands, X - your
++imported device letter, like 'a' for sda device. There are no special
++limitations for Y value, it can be any value from 1 to possible maximu=
+m
++(usually, 32), so start from dividing the current value on 2, i.e. set
++16, if /sys/block/sdX/device/queue_depth contains 32.
++
++3. Increase the corresponding timeout on the initiator. For Linux it i=
+s
++located in
++/sys/devices/platform/host*/session*/target*:0:0/*:0:0:1/timeout. It c=
+an
++be done automatically by an udev rule. For instance, the following
++rule will increase it to 300 seconds:
++
++SUBSYSTEM=3D=3D"scsi", KERNEL=3D=3D"[0-9]*:[0-9]*", ACTION=3D=3D"add",=
+ ATTR{type}=3D=3D"0|7|14", ATTR{timeout}=3D"300"
++
++By default, this timeout is 30 or 60 seconds, depending on your distri=
+bution.
++
++4. Try to avoid such seek intensive workloads.
++
++5. Increase speed of the target's backstorage.
++
++6. Implement in SCST dynamic I/O flow control. This will be an ultimat=
+e
++solution. See "Dynamic I/O flow control" section on
++http://scst.sourceforge.net/contributing.html page for possible
++implementation idea.
++
++Next, consider the case of too slow link between initiator and target,
++when the initiator tries to simultaneously push N commands to the targ=
+et
++over it. In this case time to serve those commands, i.e. send or recei=
+ve
++data for them over the link, can be more, than timeout for any single
++command, hence one or more commands in the tail of the queue can not b=
+e
++served on time less than the timeout, so the initiator will decide tha=
+t
++they are stuck on the target and will try to recover.
++
++To workaround/fix this issue in this case you can use ways 1, 2, 3, 6
++above or (7): increase speed of the link between target and initiator.
++But for some initiators implementations for WRITE commands there might
++be cases when target has no way to detect the issue, so dynamic I/O fl=
+ow
++control will not be able to help. In those cases you could also need o=
+n
++the initiator(s) to either decrease the queue depth (way 2), or increa=
+se
++the corresponding timeout (way 3).
++
++Note, that logged messages about QUEUE_FULL status are quite different
++by nature. This is a normal work, just SCSI flow control in action.
++Simply don't enable "mgmt_minor" logging level, or, alternatively, if
++you are confident in the worst case performance of your back-end stora=
+ge
++or initiator-target link, you can increase SCST_MAX_TGT_DEV_COMMANDS i=
+n
++scst_priv.h to 64. Usually initiators don't try to push more commands =
+on
++the target.
++
++Credits
++-------
++
++Thanks to:
++
++ * Mark Buechler <mark.buechler@gmail.com> for a lot of useful
++   suggestions, bug reports and help in debugging.
++
++ * Ming Zhang <mingz@ele.uri.edu> for fixes and comments.
++
++ * Nathaniel Clark <nate@misrule.us> for fixes and comments.
++
++ * Calvin Morrow <calvin.morrow@comcast.net> for testing and useful
++   suggestions.
++
++ * Hu Gang <hugang@soulinfo.com> for the original version of the
++   LSI target driver.
++
++ * Erik Habbinga <erikhabbinga@inphase-tech.com> for fixes and support
++   of the LSI target driver.
++
++ * Ross S. W. Walker <rswwalker@hotmail.com> for the original block IO
++   code and Vu Pham <huongvp@yahoo.com> who updated it for the VDISK d=
+ev
++   handler.
++
++ * Michael G. Byrnes <michael.byrnes@hp.com> for fixes.
++
++ * Alessandro Premoli <a.premoli@andxor.it> for fixes
++
++ * Nathan Bullock <nbullock@yottayotta.com> for fixes.
++
++ * Terry Greeniaus <tgreeniaus@yottayotta.com> for fixes.
++
++ * Krzysztof Blaszkowski <kb@sysmikro.com.pl> for many fixes and bug r=
+eports.
++
++ * Jianxi Chen <pacers@users.sourceforge.net> for fixing problem with
++   devices >2TB in size
++
++ * Bart Van Assche <bart.vanassche@gmail.com> for a lot of help
++
++ * Daniel Debonzi <debonzi@linux.vnet.ibm.com> for a big part of SCST =
+sysfs tree
++   implementation
++
++Vladislav Bolkhovitin <vst@vlnb.net>, http://scst.sourceforge.net
