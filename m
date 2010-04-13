@@ -1,616 +1,574 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH][RFC 4/4/4/5] iSCSI-SCST's README file
-Date: Tue, 13 Apr 2010 17:10:50 +0400
-Message-ID: <4BC46D5A.9030003@vlnb.net>
-References: <4BC44A49.7070307@vlnb.net> <4BC45EF7.7010304@vlnb.net>
+Subject: Re: [PATCH][RFC 2/2/3/5] Implementation of blk_rq_map_kern_sg()
+Date: Tue, 13 Apr 2010 17:09:41 +0400
+Message-ID: <4BC46D15.6070006@vlnb.net>
+References: <4BC4613B.6030109@vlnb.net> <4BC4638F.5070908@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:50721 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280Ab0DMNKu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2010 09:10:50 -0400
-In-Reply-To: <4BC45EF7.7010304@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4BC4638F.5070908@vlnb.net>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, Bart Van Assche <bart.vanassche@gmail.com>
+Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, Bart Van Assche <bart.vanassche@gmail.com>, Joe Eykholt <jeykholt@cisco.com>, Jens Axboe <jens.axboe@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>
+List-Id: linux-scsi@vger.kernel.org
 
-This patch contains iSCSI-SCST's README file.
+This patch implements function blk_rq_map_kern_sg(), which allows to
+map a kernel-originated SG vector to a block request. It is necessary
+to execute SCSI commands with from the kernel going SG buffer. SCST needs
+this functionality, because its target drivers, which are, basically,
+SCSI drivers, can deal only with SGs, not with BIOs.
+
+Highlight of this implementations:
+
+ - It uses BIOs chaining instead of kmalloc()'ing the whole bio.
+
+ - It uses SGs chaining instead of kmalloc()'ing one big SG in case if
+direct mapping failed (e.g. because of DMA alignment or padding).
+
+ - When needed, copy_page() is used instead of memcpy() to copy the
+whole pages faster.
+
+Also this patch adds and exports function sg_copy(), which copies
+one SG vector to another.
+
+This patch has already been reviewed in LKML/linux-scsi in
+http://lkml.org/lkml/2009/8/12/304. Since then it was only been updated for
+2.6.33.
 
 Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
- README.iscsi |  585 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 585 insertions(+)
+  block/blk-map.c             |  331 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h      |    5 
+ include/linux/scatterlist.h |    5 
+ lib/scatterlist.c           |  129 +++++++++++++++++
+ 4 files changed, 470 insertions(+)
 
-diff -uprN orig/linux-2.6.33/Documentation/scst/README.iscsi linux-2.6.33/Documentation/scst/README.iscsi
---- orig/linux-2.6.33/Documentation/scst/README.iscsi
-+++ linux-2.6.33/Documentation/scst/README.iscsi
-@@ -0,0 +1,585 @@
-+iSCSI SCST target driver
-+========================
-+
-+ISCSI-SCST is a deeply reworked fork of iSCSI Enterprise Target (IET)
-+(http://iscsitarget.sourceforge.net). Reasons of the fork were:
-+
-+ - To be able to use full power of SCST core.
-+
-+ - To fix all the problems, corner cases issues and iSCSI standard
-+   violations which IET has.
-+
-+See more info at http://iscsi-scst.sourceforge.net.
-+
-+Usage
-+-----
-+
-+See in http://iscsi-scst.sourceforge.net/iscsi-scst-howto.txt how to
-+configure iSCSI-SCST.
-+
-+In 2.0.0 usage of iscsi-scstd.conf as well as iscsi-scst-adm utility is
-+obsolete. Use the sysfs interface facilities instead.
-+
-+It is recommended to use TEST UNIT READY ("tur") command to check if
-+iSCSI-SCST target is alive in MPIO configurations.
-+
-+Also see SCST README file how to tune for the best performance.
-+
-+CAUTION: Working of target and initiator on the same host isn't fully
-+=======  supported. See SCST README file for details.
-+
-+Sysfs interface
-+---------------
-+
-+Root of SCST sysfs interface is /sys/kernel/scst_tgt. Root of iSCSI-SCST
-+is /sys/kernel/scst_tgt/targets/iscsi. It has the following entries:
-+
-+ - None, one or more subdirectories for targets with name equal to names
-+   of the corresponding targets.
-+
-+ - IncomingUser[num] - optional one or more attributes containing user
-+   name and password for incoming discovery user name. Not exist by
-+   default and can be added through "mgmt" entry, see below.
-+
-+ - OutgoingUser - optional attribute containing user name and password
-+   for outgoing discovery user name. Not exist by default and can be
-+   added through "mgmt" entry, see below.
-+
-+ - iSNSServer - contains name or IP address of iSNS server with optional
-+   "AccessControl" attribute, which allows to enable iSNS access
-+   control. Empty by default.
-+
-+ - enabled - using this attribute you can enable or disable iSCSI-SCST
-+   accept new connections. It allows to finish configuring global
-+   iSCSI-SCST attributes before it starts accepting new connections. 0
-+   by default.
-+
-+ - open_state - read-only attribute, which allows to see if the user
-+   space part of iSCSI-SCST connected to the kernel part.
-+
-+ - trace_level - allows to enable and disable various tracing
-+   facilities. See content of this file for help how to use it.
-+
-+ - version - read-only attribute, which allows to see version of
-+   iSCSI-SCST and enabled optional features.
-+
-+ - mgmt - main management entry, which allows to configure iSCSI-SCST.
-+   Namely, add/delete targets as well as add/delete optional global and
-+   per-target attributes. See content of this file for help how to use
-+   it.
-+
-+Each iSCSI-SCST sysfs file (attribute) can contain in the last line mark
-+"[key]". It is automatically added mark used to allow scstadmin to see
-+which attributes it should save in the config file. You can ignore it.
-+
-+Each target subdirectory contains the following entries:
-+
-+ - ini_groups - subdirectory defining initiator groups for this target,
-+   used to define per-initiator access control. See SCST core README for
-+   more details.
-+
-+ - luns - subdirectory defining LUNs of this target. See SCST core
-+   README for more details.
-+
-+ - sessions - subdirectory containing connected to this target sessions.
-+
-+ - IncomingUser[num] - optional one or more attributes containing user
-+   name and password for incoming user name. Not exist by default and can
-+   be added through the "mgmt" entry, see above.
-+
-+ - OutgoingUser - optional attribute containing user name and password
-+   for outgoing user name. Not exist by default and can be added through
-+   the "mgmt" entry, see above.
-+
-+ - Entries defining default iSCSI parameters values used during iSCSI
-+   parameters negotiation. Only entries which can be changed or make
-+   sense are listed there.
-+
-+ - QueuedCommands - defines maximum number of commands queued to any
-+   session of this target. Default is 32 commands.
-+
-+ - RspTimeout - defines the maximum time in seconds a command can wait for
-+   response from initiator, otherwise the corresponding connection will
-+   be closed. For performance reasons it is implemented as a timer,
-+   which once in RspTimeout time checks the oldest command waiting for
-+   response and, if it's older than RspTimeout, then it closes the
-+   connection. Hence, a stalled connection will be closed in time
-+   between RspTimeout and 2*RspTimeout. Default is 30 seconds.
-+
-+ - NopInInterval - defines interval between NOP-In requests, which the
-+   target will send on idle connections to check if the initiator is
-+   still alive. If there is no NOP-Out reply from the initiator in
-+   RspTimeout time, the corresponding connection will be closed. Default
-+   is 30 seconds. If it's set to 0, then NOP-In requests are disabled.
-+
-+ - enabled - using this attribute you can enable or disable iSCSI-SCST
-+   accept new connections to this target. It allows to finish
-+   configuring it before it starts accepting new connections. 0 by
-+   default.
-+
-+ - rel_tgt_id - allows to read or write SCSI Relative Target Port
-+   Identifier attribute. This identifier is used to identify SCSI Target
-+   Ports by some SCSI commands, mainly by Persistent Reservations
-+   commands. This identifier must be unique among all SCST targets, but
-+   for convenience SCST allows disabled targets to have not unique
-+   rel_tgt_id. In this case SCST will not allow to enable this target
-+   until rel_tgt_id becomes unique. This attribute initialized unique by
-+   SCST by default.
-+
-+ - tid - TID of this target.
-+
-+Subdirectory "sessions" contains one subdirectory for each connected
-+session with name equal to name of the connected initiator.
-+
-+Each session subdirectory contains the following entries:
-+
-+ - One subdirectory for each TCP connection in this session. ISCSI-SCST
-+   supports 1 connection per session, but the session subdirectory can
-+   contain several connections: one active and other being closed.
-+
-+ - Entries defining negotiated iSCSI parameters. Only parameters which
-+   can be changed or make sense are listed there.
-+
-+ - initiator_name - contains initiator name
-+
-+ - sid - contains SID of this session
-+
-+ - reinstating - contains reinstatement state of this session
-+
-+ - force_close - write-only attribute, which allows to force close this
-+   session. This is the only writable session attribute.
-+
-+ - active_commands - contains number of active, i.e. not yet or being
-+   executed, SCSI commands in this session.
-+
-+ - commands - contains overall number of SCSI commands in this session.
-+
-+Each connection subdirectory contains the following entries:
-+
-+ - cid - contains CID of this connection.
-+
-+ - ip - contains IP address of the connected initiator.
-+
-+ - state - contains processing state of this connection.
-+
-+Below is a sample script, which configures 1 virtual disk "disk1" using
-+/disk1 image and one target iqn.2006-10.net.vlnb:tgt with all default
-+parameters:
-+
-+#!/bin/bash
-+
-+modprobe scst
-+modprobe scst_vdisk
-+
-+echo "add_device disk1 filename=/disk1; nv_cache=1" >/sys/kernel/scst_tgt/handlers/vdisk_fileio/mgmt
-+
-+service iscsi-scst start
-+
-+echo "add_target iqn.2006-10.net.vlnb:tgt" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+echo "add disk1 0" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt/luns/mgmt
-+
-+echo 1 >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt/enabled
-+echo 1 >/sys/kernel/scst_tgt/targets/iscsi/enabled
-+
-+Below is more advanced sample script, which configures more virtual
-+devices of various types, including virtual CDROM and 2 targets, one
-+with all default parameters, another one with some not default
-+parameters, incoming and outgoing user names for CHAP authentification,
-+and special permissions for initiator iqn.2005-03.org.open-iscsi:cacdcd2520,
-+which will see another set of devices. Also this sample configures CHAP
-+authentication for discovery sessions and iSNS server with access control.
-+
-+#!/bin/bash
-+
-+modprobe scst
-+modprobe scst_vdisk
-+
-+echo "add_device disk1 filename=/disk1; nv_cache=1" >/sys/kernel/scst_tgt/handlers/vdisk_fileio/mgmt
-+echo "add_device disk2 filename=/disk2; blocksize=4096; nv_cache=1" >/sys/kernel/scst_tgt/handlers/vdisk_fileio/mgmt
-+echo "add_device blockio filename=/dev/sda5" >/sys/kernel/scst_tgt/handlers/vdisk_blockio/mgmt
-+echo "add_device nullio" >/sys/kernel/scst_tgt/handlers/vdisk_nullio/mgmt
-+echo "add_device cdrom" >/sys/kernel/scst_tgt/handlers/vcdrom/mgmt
-+
-+service iscsi-scst start
-+
-+echo "192.168.1.16 AccessControl" >/sys/kernel/scst_tgt/targets/iscsi/iSNSServer
-+echo "add_attribute IncomingUser joeD 12charsecret" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+echo "add_attribute OutgoingUser jackD 12charsecret1" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+
-+echo "add_target iqn.2006-10.net.vlnb:tgt" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+
-+echo "add disk1 0" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt/luns/mgmt
-+echo "add cdrom 1" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt/luns/mgmt
-+
-+echo "add_target iqn.2006-10.net.vlnb:tgt1" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+echo "add_target_attribute iqn.2006-10.net.vlnb:tgt1 IncomingUser1 joe2 12charsecret2" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+echo "add_target_attribute iqn.2006-10.net.vlnb:tgt1 IncomingUser joe 12charsecret" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+echo "add_target_attribute iqn.2006-10.net.vlnb:tgt1 OutgoingUser jim1 12charpasswd" >/sys/kernel/scst_tgt/targets/iscsi/mgmt
-+echo "No" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/InitialR2T
-+echo "Yes" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/ImmediateData
-+echo "8192" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/MaxRecvDataSegmentLength
-+echo "8192" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/MaxXmitDataSegmentLength
-+echo "131072" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/MaxBurstLength
-+echo "32768" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/FirstBurstLength
-+echo "1" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/MaxOutstandingR2T
-+echo "CRC32C,None" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/HeaderDigest
-+echo "CRC32C,None" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/DataDigest
-+echo "32" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/QueuedCommands
-+
-+echo "add disk2 0" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/luns/mgmt
-+echo "add nullio 26" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/luns/mgmt
-+
-+echo "create special_ini" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/ini_groups/mgmt
-+echo "add blockio 0 read_only=1" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/ini_groups/special_ini/luns/mgmt
-+echo "add iqn.2005-03.org.open-iscsi:cacdcd2520" >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/ini_groups/special_ini/initiators/mgmt
-+
-+echo 1 >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt/enabled
-+echo 1 >/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt1/enabled
-+
-+echo 1 >/sys/kernel/scst_tgt/targets/iscsi/enabled
-+
-+The resulting overall SCST sysfs hierarchy with an initiator connected to
-+both iSCSI-SCST targets will look like:
-+
-+/sys/kernel/scst_tgt
-+|-- devices
-+|   |-- blockio
-+|   |   |-- blocksize
-+|   |   |-- exported
-+|   |   |   `-- export0 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt1/ini_groups/special_ini/luns/0
-+|   |   |-- filename
-+|   |   |-- handler -> ../../handlers/vdisk_blockio
-+|   |   |-- read_only
-+|   |   |-- removable
-+|   |   |-- resync_size
-+|   |   |-- size_mb
-+|   |   |-- t10_dev_id
-+|   |   |-- threads_num
-+|   |   |-- threads_pool_type
-+|   |   |-- type
-+|   |   `-- usn
-+|   |-- cdrom
-+|   |   |-- exported
-+|   |   |   `-- export0 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt/luns/1
-+|   |   |-- filename
-+|   |   |-- handler -> ../../handlers/vcdrom
-+|   |   |-- size_mb
-+|   |   |-- t10_dev_id
-+|   |   |-- threads_num
-+|   |   |-- threads_pool_type
-+|   |   |-- type
-+|   |   `-- usn
-+|   |-- disk1
-+|   |   |-- blocksize
-+|   |   |-- exported
-+|   |   |   `-- export0 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt/luns/0
-+|   |   |-- filename
-+|   |   |-- handler -> ../../handlers/vdisk_fileio
-+|   |   |-- nv_cache
-+|   |   |-- o_direct
-+|   |   |-- read_only
-+|   |   |-- removable
-+|   |   |-- resync_size
-+|   |   |-- size_mb
-+|   |   |-- t10_dev_id
-+|   |   |-- type
-+|   |   |-- usn
-+|   |   `-- write_through
-+|   |-- disk2
-+|   |   |-- blocksize
-+|   |   |-- exported
-+|   |   |   `-- export0 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt1/luns/0
-+|   |   |-- filename
-+|   |   |-- handler -> ../../handlers/vdisk_fileio
-+|   |   |-- nv_cache
-+|   |   |-- o_direct
-+|   |   |-- read_only
-+|   |   |-- removable
-+|   |   |-- resync_size
-+|   |   |-- size_mb
-+|   |   |-- t10_dev_id
-+|   |   |-- threads_num
-+|   |   |-- threads_pool_type
-+|   |   |-- threads_num
-+|   |   |-- threads_pool_type
-+|   |   |-- type
-+|   |   |-- usn
-+|   |   `-- write_through
-+|   `-- nullio
-+|       |-- blocksize
-+|       |-- exported
-+|       |   `-- export0 -> ../../../targets/iscsi/iqn.2006-10.net.vlnb:tgt1/luns/26
-+|       |-- handler -> ../../handlers/vdisk_nullio
-+|       |-- read_only
-+|       |-- removable
-+|       |-- size_mb
-+|       |-- t10_dev_id
-+|       |-- threads_num
-+|       |-- threads_pool_type
-+|       |-- type
-+|       `-- usn
-+|-- handlers
-+|   |-- vcdrom
-+|   |   |-- cdrom -> ../../devices/cdrom
-+|   |   |-- mgmt
-+|   |   |-- trace_level
-+|   |   `-- type
-+|   |-- vdisk_blockio
-+|   |   |-- blockio -> ../../devices/blockio
-+|   |   |-- mgmt
-+|   |   |-- trace_level
-+|   |   `-- type
-+|   |-- vdisk_fileio
-+|   |   |-- disk1 -> ../../devices/disk1
-+|   |   |-- disk2 -> ../../devices/disk2
-+|   |   |-- mgmt
-+|   |   |-- trace_level
-+|   |   `-- type
-+|   `-- vdisk_nullio
-+|       |-- mgmt
-+|       |-- nullio -> ../../devices/nullio
-+|       |-- trace_level
-+|       `-- type
-+|-- sgv
-+|   |-- global_stats
-+|   |-- sgv
-+|   |   `-- stats
-+|   |-- sgv-clust
-+|   |   `-- stats
-+|   `-- sgv-dma
-+|       `-- stats
-+|-- targets
-+|   `-- iscsi
-+|       |-- IncomingUser
-+|       |-- OutgoingUser
-+|       |-- enabled
-+|       |-- iSNSServer
-+|       |-- iqn.2006-10.net.vlnb:tgt
-+|       |   |-- DataDigest
-+|       |   |-- FirstBurstLength
-+|       |   |-- HeaderDigest
-+|       |   |-- ImmediateData
-+|       |   |-- InitialR2T
-+|       |   |-- MaxBurstLength
-+|       |   |-- MaxOutstandingR2T
-+|       |   |-- MaxRecvDataSegmentLength
-+|       |   |-- MaxXmitDataSegmentLength
-+|       |   |-- NopInInterval
-+|       |   |-- QueuedCommands
-+|       |   |-- RspTimeout
-+|       |   |-- enabled
-+|       |   |-- ini_groups
-+|       |   |   `-- mgmt
-+|       |   |-- luns
-+|       |   |   |-- 0
-+|       |   |   |   |-- device -> ../../../../../devices/disk1
-+|       |   |   |   `-- read_only
-+|       |   |   |-- 1
-+|       |   |   |   |-- device -> ../../../../../devices/cdrom
-+|       |   |   |   `-- read_only
-+|       |   |   `-- mgmt
-+|       |   |-- rel_tgt_id
-+|       |   |-- sessions
-+|       |   |   `-- iqn.2005-03.org.open-iscsi:cacdcd2520
-+|       |   |       |-- 10.170.75.2
-+|       |   |       |   |-- cid
-+|       |   |       |   |-- ip
-+|       |   |       |   `-- state
-+|       |   |       |-- DataDigest
-+|       |   |       |-- FirstBurstLength
-+|       |   |       |-- HeaderDigest
-+|       |   |       |-- ImmediateData
-+|       |   |       |-- InitialR2T
-+|       |   |       |-- MaxBurstLength
-+|       |   |       |-- MaxOutstandingR2T
-+|       |   |       |-- MaxRecvDataSegmentLength
-+|       |   |       |-- MaxXmitDataSegmentLength
-+|       |   |       |-- active_commands
-+|       |   |       |-- commands
-+|       |   |       |-- force_close
-+|       |   |       |-- initiator_name
-+|       |   |       |-- luns -> ../../luns
-+|       |   |       |-- reinstating
-+|       |   |       `-- sid
-+|       |   `-- tid
-+|       |-- iqn.2006-10.net.vlnb:tgt1
-+|       |   |-- DataDigest
-+|       |   |-- FirstBurstLength
-+|       |   |-- HeaderDigest
-+|       |   |-- ImmediateData
-+|       |   |-- IncomingUser
-+|       |   |-- IncomingUser1
-+|       |   |-- InitialR2T
-+|       |   |-- MaxBurstLength
-+|       |   |-- MaxOutstandingR2T
-+|       |   |-- MaxRecvDataSegmentLength
-+|       |   |-- MaxXmitDataSegmentLength
-+|       |   |-- OutgoingUser
-+|       |   |-- NopInInterval
-+|       |   |-- QueuedCommands
-+|       |   |-- RspTimeout
-+|       |   |-- enabled
-+|       |   |-- ini_groups
-+|       |   |   |-- mgmt
-+|       |   |   `-- special_ini
-+|       |   |       |-- initiators
-+|       |   |       |   |-- iqn.2005-03.org.open-iscsi:cacdcd2520
-+|       |   |       |   `-- mgmt
-+|       |   |       `-- luns
-+|       |   |           |-- 0
-+|       |   |           |   |-- device -> ../../../../../../../devices/blockio
-+|       |   |           |   `-- read_only
-+|       |   |           `-- mgmt
-+|       |   |-- luns
-+|       |   |   |-- 0
-+|       |   |   |   |-- device -> ../../../../../devices/disk2
-+|       |   |   |   `-- read_only
-+|       |   |   |-- 26
-+|       |   |   |   |-- device -> ../../../../../devices/nullio
-+|       |   |   |   `-- read_only
-+|       |   |   `-- mgmt
-+|       |   |-- rel_tgt_id
-+|       |   |-- sessions
-+|       |   |   `-- iqn.2005-03.org.open-iscsi:cacdcd2520
-+|       |   |       |-- 10.170.75.2
-+|       |   |       |   |-- cid
-+|       |   |       |   |-- ip
-+|       |   |       |   `-- state
-+|       |   |       |-- DataDigest
-+|       |   |       |-- FirstBurstLength
-+|       |   |       |-- HeaderDigest
-+|       |   |       |-- ImmediateData
-+|       |   |       |-- InitialR2T
-+|       |   |       |-- MaxBurstLength
-+|       |   |       |-- MaxOutstandingR2T
-+|       |   |       |-- MaxRecvDataSegmentLength
-+|       |   |       |-- MaxXmitDataSegmentLength
-+|       |   |       |-- active_commands
-+|       |   |       |-- commands
-+|       |   |       |-- force_close
-+|       |   |       |-- initiator_name
-+|       |   |       |-- luns -> ../../ini_groups/special_ini/luns
-+|       |   |       |-- reinstating
-+|       |   |       `-- sid
-+|       |   `-- tid
-+|       |-- mgmt
-+|       |-- open_state
-+|       |-- trace_level
-+|       `-- version
-+|-- threads
-+|-- trace_level
-+`-- version
-+
-+Troubleshooting
-+---------------
-+
-+If you have any problems, start troubleshooting from looking at the
-+kernel and system logs. In the kernel log iSCSI-SCST and SCST core send
-+their messages, in the system log iscsi-scstd sends its messages. In
-+most Linux distributions both those logs are put to /var/log/messages
-+file.
-+
-+Then, it might be helpful to increase level of logging. For kernel
-+modules you should make the debug build by enabling CONFIG_SCST_DEBUG.
-+
-+If after looking on the logs the reason of your problem is still unclear
-+for you, report to SCST mailing list scst-devel@lists.sourceforge.net.
-+
-+Work if target's backstorage or link is too slow
-+------------------------------------------------
-+
-+In some cases you can experience I/O stalls or see in the kernel log
-+abort or reset messages. It can happen under high I/O load, when your
-+target's backstorage gets overloaded, or working over a slow link, when
-+the link can't serve all the queued commands on time,
-+
-+To workaround it you can reduce QueuedCommands parameter for the
-+corresponding target to some lower value, like 8 (default is 32).
-+
-+Also see SCST README file for more details about that issue and ways to
-+prevent it.
-+
-+Performance advices
-+-------------------
-+
-+1. If you use Windows XP or Windows 2003+ as initiators, you should
-+consider to decrease TcpAckFrequency parameter to 1. See
-+http://support.microsoft.com/kb/328890/ or google for "TcpAckFrequency"
-+for more details.
-+
-+2. See how to get the maximum throughput from iSCSI, for instance, at
-+http://virtualgeek.typepad.com/virtual_geek/2009/01/a-multivendor-post-to-help-our-mutual-iscsi-customers-using-vmware.html.
-+It's about VMware, but its recommendations apply to other environments
-+as well.
-+
-+3. ISCSI initiators built in pre-CentOS/RHEL 5 reported to have some
-+performance problems. If you use it, it is strongly advised to upgrade.
-+
-+4. If you are going to use your target in an VM environment, for
-+instance as a shared storage with VMware, make sure all your VMs
-+connected to the target via *separate* sessions, i.e. each VM has own
-+connection to the target, not all VMs connected using a single
-+connection. You can check it using SCST sysfs interface. If you
-+miss it, you can greatly loose performance of parallel access to your
-+target from different VMs. This isn't related to the case if your VMs
-+are using the same shared storage, like with VMFS, for instance. In this
-+case all your VM hosts will be connected to the target via separate
-+sessions, which is enough.
-+
-+5. Many dual port network adapters are not able to transfer data
-+simultaneously on both ports, i.e. they transfer data via both ports on
-+the same speed as via any single port. Thus, using such adapters in MPIO
-+configuration can't improve performance. To allow MPIO to have double
-+performance you should either use separate network adapters, or find a
-+dual-port adapter capable to to transfer data simultaneously on both
-+ports. You can check it by running 2 iperf's through both ports in
-+parallel.
-+
-+6. Since network offload works much better in the write direction, than
-+for reading (simplifying, in the read direction often there's additional
-+data copy) in many cases with 10GbE in a single initiator-target pair
-+the initiator's CPU is a bottleneck, so you can see the initiator can
-+read data on much slower rate, than write. You can check it by watching
-+*each particular* CPU load to find out if any of them is close to 100%
-+load, including IRQ processing load. Note, many tools like vmstat give
-+aggregate load on all CPUs, so with 4 cores 25% corresponds to 100% load
-+of any single CPU.
-+
-+7. See SCST core's README for more advices. Especially pay attention to
-+have io_grouping_type option set correctly.
-+
-+Compilation options
-+-------------------
-+
-+There are the following compilation options, that could be commented
-+in/out in the kernel's module Makefile:
-+
-+ - CONFIG_SCST_DEBUG - turns on some debugging code, including some logging.
-+   Makes the driver considerably bigger and slower, producing large amount of
-+   log data.
-+
-+ - CONFIG_SCST_TRACING - turns on ability to log events. Makes the driver
-+   considerably bigger and leads to some performance loss.
-+
-+ - CONFIG_SCST_EXTRACHECKS - adds extra validity checks in the various places.
-+
-+ - CONFIG_SCST_ISCSI_DEBUG_DIGEST_FAILURES - simulates digest failures in
-+   random places.
-+
-+Credits
-+-------
-+
-+Thanks to:
-+
-+ * Ming Zhang <blackmagic02881@gmail.com> for fixes
-+
-+ * Krzysztof Blaszkowski <kb@sysmikro.com.pl> for many fixes
-+
-+ * Alexey Kuznetsov <kuznet@ms2.inr.ac.ru> for comments and help in
-+   debugging
-+
-+ * Tomasz Chmielewski <mangoo@wpkg.org> for testing and suggestions
-+
-+ * Bart Van Assche <bart.vanassche@gmail.com> for a lot of help
-+
-+Vladislav Bolkhovitin <vst@vlnb.net>, http://scst.sourceforge.net
-
+diff -upkr linux-2.6.33/block/blk-map.c linux-2.6.33/block/blk-map.c
+--- linux-2.6.33/block/blk-map.c	2010-02-24 21:52:17.000000000 +0300
++++ linux-2.6.33/block/blk-map.c	2010-03-01 15:41:59.000000000 +0300
+@@ -5,6 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/bio.h>
+ #include <linux/blkdev.h>
++#include <linux/scatterlist.h>
+ #include <scsi/sg.h>		/* for struct sg_iovec */
+ 
+ #include "blk.h"
+@@ -271,6 +272,336 @@ int blk_rq_unmap_user(struct bio *bio)
+ }
+ EXPORT_SYMBOL(blk_rq_unmap_user);
+ 
++struct blk_kern_sg_work {
++	atomic_t bios_inflight;
++	struct sg_table sg_table;
++	struct scatterlist *src_sgl;
++};
++
++static void blk_free_kern_sg_work(struct blk_kern_sg_work *bw)
++{
++	sg_free_table(&bw->sg_table);
++	kfree(bw);
++	return;
++}
++
++static void blk_bio_map_kern_endio(struct bio *bio, int err)
++{
++	struct blk_kern_sg_work *bw = bio->bi_private;
++
++	if (bw != NULL) {
++		/* Decrement the bios in processing and, if zero, free */
++		BUG_ON(atomic_read(&bw->bios_inflight) <= 0);
++		if (atomic_dec_and_test(&bw->bios_inflight)) {
++			if ((bio_data_dir(bio) == READ) && (err == 0)) {
++				unsigned long flags;
++
++				local_irq_save(flags);	/* to protect KMs */
++				sg_copy(bw->src_sgl, bw->sg_table.sgl, 0, 0,
++					KM_BIO_DST_IRQ, KM_BIO_SRC_IRQ);
++				local_irq_restore(flags);
++			}
++			blk_free_kern_sg_work(bw);
++		}
++	}
++
++	bio_put(bio);
++	return;
++}
++
++static int blk_rq_copy_kern_sg(struct request *rq, struct scatterlist *sgl,
++			       int nents, struct blk_kern_sg_work **pbw,
++			       gfp_t gfp, gfp_t page_gfp)
++{
++	int res = 0, i;
++	struct scatterlist *sg;
++	struct scatterlist *new_sgl;
++	int new_sgl_nents;
++	size_t len = 0, to_copy;
++	struct blk_kern_sg_work *bw;
++
++	bw = kzalloc(sizeof(*bw), gfp);
++	if (bw == NULL)
++		goto out;
++
++	bw->src_sgl = sgl;
++
++	for_each_sg(sgl, sg, nents, i)
++		len += sg->length;
++	to_copy = len;
++
++	new_sgl_nents = PFN_UP(len);
++
++	res = sg_alloc_table(&bw->sg_table, new_sgl_nents, gfp);
++	if (res != 0)
++		goto out_free_bw;
++
++	new_sgl = bw->sg_table.sgl;
++
++	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
++		struct page *pg;
++
++		pg = alloc_page(page_gfp);
++		if (pg == NULL)
++			goto err_free_new_sgl;
++
++		sg_assign_page(sg, pg);
++		sg->length = min_t(size_t, PAGE_SIZE, len);
++
++		len -= PAGE_SIZE;
++	}
++
++	if (rq_data_dir(rq) == WRITE) {
++		/*
++		 * We need to limit amount of copied data to to_copy, because
++		 * sgl might have the last element in sgl not marked as last in
++		 * SG chaining.
++		 */
++		sg_copy(new_sgl, sgl, 0, to_copy,
++			KM_USER0, KM_USER1);
++	}
++
++	*pbw = bw;
++	/*
++	 * REQ_COPY_USER name is misleading. It should be something like
++	 * REQ_HAS_TAIL_SPACE_FOR_PADDING.
++	 */
++	rq->cmd_flags |= REQ_COPY_USER;
++
++out:
++	return res;
++
++err_free_new_sgl:
++	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
++		struct page *pg = sg_page(sg);
++		if (pg == NULL)
++			break;
++		__free_page(pg);
++	}
++	sg_free_table(&bw->sg_table);
++
++out_free_bw:
++	kfree(bw);
++	res = -ENOMEM;
++	goto out;
++}
++
++static int __blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++	int nents, struct blk_kern_sg_work *bw, gfp_t gfp)
++{
++	int res;
++	struct request_queue *q = rq->q;
++	int rw = rq_data_dir(rq);
++	int max_nr_vecs, i;
++	size_t tot_len;
++	bool need_new_bio;
++	struct scatterlist *sg, *prev_sg = NULL;
++	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
++	int bios;
++
++	if (unlikely((sgl == NULL) || (sgl->length == 0) || (nents <= 0))) {
++		WARN_ON(1);
++		res = -EINVAL;
++		goto out;
++	}
++
++	/*
++	 * Let's keep each bio allocation inside a single page to decrease
++	 * probability of failure.
++	 */
++	max_nr_vecs =  min_t(size_t,
++		((PAGE_SIZE - sizeof(struct bio)) / sizeof(struct bio_vec)),
++		BIO_MAX_PAGES);
++
++	need_new_bio = true;
++	tot_len = 0;
++	bios = 0;
++	for_each_sg(sgl, sg, nents, i) {
++		struct page *page = sg_page(sg);
++		void *page_addr = page_address(page);
++		size_t len = sg->length, l;
++		size_t offset = sg->offset;
++
++		tot_len += len;
++		prev_sg = sg;
++
++		/*
++		 * Each segment must be aligned on DMA boundary and
++		 * not on stack. The last one may have unaligned
++		 * length as long as the total length is aligned to
++		 * DMA padding alignment.
++		 */
++		if (i == nents - 1)
++			l = 0;
++		else
++			l = len;
++		if (((sg->offset | l) & queue_dma_alignment(q)) ||
++		    (page_addr && object_is_on_stack(page_addr + sg->offset))) {
++			res = -EINVAL;
++			goto out_free_bios;
++		}
++
++		while (len > 0) {
++			size_t bytes;
++			int rc;
++
++			if (need_new_bio) {
++				bio = bio_kmalloc(gfp, max_nr_vecs);
++				if (bio == NULL) {
++					res = -ENOMEM;
++					goto out_free_bios;
++				}
++
++				if (rw == WRITE)
++					bio->bi_rw |= 1 << BIO_RW;
++
++				bios++;
++				bio->bi_private = bw;
++				bio->bi_end_io = blk_bio_map_kern_endio;
++
++				if (hbio == NULL)
++					hbio = tbio = bio;
++				else
++					tbio = tbio->bi_next = bio;
++			}
++
++			bytes = min_t(size_t, len, PAGE_SIZE - offset);
++
++			rc = bio_add_pc_page(q, bio, page, bytes, offset);
++			if (rc < bytes) {
++				if (unlikely(need_new_bio || (rc < 0))) {
++					if (rc < 0)
++						res = rc;
++					else
++						res = -EIO;
++					goto out_free_bios;
++				} else {
++					need_new_bio = true;
++					len -= rc;
++					offset += rc;
++					continue;
++				}
++			}
++
++			need_new_bio = false;
++			offset = 0;
++			len -= bytes;
++			page = nth_page(page, 1);
++		}
++	}
++
++	if (hbio == NULL) {
++		res = -EINVAL;
++		goto out_free_bios;
++	}
++
++	/* Total length must be aligned on DMA padding alignment */
++	if ((tot_len & q->dma_pad_mask) &&
++	    !(rq->cmd_flags & REQ_COPY_USER)) {
++		res = -EINVAL;
++		goto out_free_bios;
++	}
++
++	if (bw != NULL)
++		atomic_set(&bw->bios_inflight, bios);
++
++	while (hbio != NULL) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio->bi_next = NULL;
++
++		blk_queue_bounce(q, &bio);
++
++		res = blk_rq_append_bio(q, rq, bio);
++		if (unlikely(res != 0)) {
++			bio->bi_next = hbio;
++			hbio = bio;
++			/* We can have one or more bios bounced */
++			goto out_unmap_bios;
++		}
++	}
++
++	rq->buffer = NULL;
++out:
++	return res;
++
++out_free_bios:
++	while (hbio != NULL) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio_put(bio);
++	}
++	goto out;
++
++out_unmap_bios:
++	blk_rq_unmap_kern_sg(rq, res);
++	goto out;
++}
++
++/**
++ * blk_rq_map_kern_sg - map kernel data to a request, for REQ_TYPE_BLOCK_PC
++ * @rq:		request to fill
++ * @sgl:	area to map
++ * @nents:	number of elements in @sgl
++ * @gfp:	memory allocation flags
++ *
++ * Description:
++ *    Data will be mapped directly if possible. Otherwise a bounce
++ *    buffer will be used.
++ */
++int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++		       int nents, gfp_t gfp)
++{
++	int res;
++
++	res = __blk_rq_map_kern_sg(rq, sgl, nents, NULL, gfp);
++	if (unlikely(res != 0)) {
++		struct blk_kern_sg_work *bw = NULL;
++
++		res = blk_rq_copy_kern_sg(rq, sgl, nents, &bw,
++				gfp, rq->q->bounce_gfp | gfp);
++		if (unlikely(res != 0))
++			goto out;
++
++		res = __blk_rq_map_kern_sg(rq, bw->sg_table.sgl,
++				bw->sg_table.nents, bw, gfp);
++		if (res != 0) {
++			blk_free_kern_sg_work(bw);
++			goto out;
++		}
++	}
++
++	rq->buffer = NULL;
++
++out:
++	return res;
++}
++EXPORT_SYMBOL(blk_rq_map_kern_sg);
++
++/**
++ * blk_rq_unmap_kern_sg - unmap a request with kernel sg
++ * @rq:		request to unmap
++ * @err:	non-zero error code
++ *
++ * Description:
++ *    Unmap a rq previously mapped by blk_rq_map_kern_sg(). Must be called
++ *    only in case of an error!
++ */
++void blk_rq_unmap_kern_sg(struct request *rq, int err)
++{
++	struct bio *bio = rq->bio;
++
++	while (bio) {
++		struct bio *b = bio;
++		bio = bio->bi_next;
++		b->bi_end_io(b, err);
++	}
++	rq->bio = NULL;
++
++	return;
++}
++EXPORT_SYMBOL(blk_rq_unmap_kern_sg);
++
+ /**
+  * blk_rq_map_kern - map kernel data to a request, for REQ_TYPE_BLOCK_PC usage
+  * @q:		request queue where request should be inserted
+diff -upkr linux-2.6.33/include/linux/blkdev.h linux-2.6.33/include/linux/blkdev.h
+--- linux-2.6.33/include/linux/blkdev.h	2010-02-24 21:52:17.000000000 +0300
++++ linux-2.6.33/include/linux/blkdev.h	2010-03-01 15:41:59.000000000 +0300
+@@ -710,6 +710,8 @@ extern unsigned long blk_max_low_pfn, bl
+ #define BLK_DEFAULT_SG_TIMEOUT	(60 * HZ)
+ #define BLK_MIN_SG_TIMEOUT	(7 * HZ)
+ 
++#define SCSI_EXEC_REQ_FIFO_DEFINED
++
+ #ifdef CONFIG_BOUNCE
+ extern int init_emergency_isa_pool(void);
+ extern void blk_queue_bounce(struct request_queue *q, struct bio **bio);
+@@ -825,6 +827,9 @@ extern int blk_rq_map_kern(struct reques
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+ 			       struct rq_map_data *, struct sg_iovec *, int,
+ 			       unsigned int, gfp_t);
++extern int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++			      int nents, gfp_t gfp);
++extern void blk_rq_unmap_kern_sg(struct request *rq, int err);
+ extern int blk_execute_rq(struct request_queue *, struct gendisk *,
+ 			  struct request *, int);
+ extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
+diff -upkr linux-2.6.33/include/linux/scatterlist.h linux-2.6.33/include/linux/scatterlist.h
+--- linux-2.6.33/include/linux/scatterlist.h	2010-02-24 21:52:17.000000000 +0300
++++ linux-2.6.33/include/linux/scatterlist.h	2010-03-01 15:41:59.000000000 +0300
+@@ -3,6 +3,7 @@
+ 
+ #include <asm/types.h>
+ #include <asm/scatterlist.h>
++#include <asm/kmap_types.h>
+ #include <linux/mm.h>
+ #include <linux/string.h>
+ #include <asm/io.h>
+@@ -218,6 +219,10 @@ size_t sg_copy_from_buffer(struct scatte
+ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			 void *buf, size_t buflen);
+ 
++int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
++	    int nents_to_copy, size_t copy_len,
++	    enum km_type d_km_type, enum km_type s_km_type);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
+diff -upkr linux-2.6.33/lib/scatterlist.c linux-2.6.33/lib/scatterlist.c
+--- linux-2.6.33/lib/scatterlist.c	2010-02-24 21:52:17.000000000 +0300
++++ linux-2.6.33/lib/scatterlist.c	2010-03-01 15:41:59.000000000 +0300
+@@ -493,3 +493,132 @@ size_t sg_copy_to_buffer(struct scatterl
+ 	return sg_copy_buffer(sgl, nents, buf, buflen, 1);
+ }
+ EXPORT_SYMBOL(sg_copy_to_buffer);
++
++/*
++ * Can switch to the next dst_sg element, so, to copy to strictly only
++ * one dst_sg element, it must be either last in the chain, or
++ * copy_len == dst_sg->length.
++ */
++static int sg_copy_elem(struct scatterlist **pdst_sg, size_t *pdst_len,
++			size_t *pdst_offs, struct scatterlist *src_sg,
++			size_t copy_len,
++			enum km_type d_km_type, enum km_type s_km_type)
++{
++	int res = 0;
++	struct scatterlist *dst_sg;
++	size_t src_len, dst_len, src_offs, dst_offs;
++	struct page *src_page, *dst_page;
++
++	dst_sg = *pdst_sg;
++	dst_len = *pdst_len;
++	dst_offs = *pdst_offs;
++	dst_page = sg_page(dst_sg);
++
++	src_page = sg_page(src_sg);
++	src_len = src_sg->length;
++	src_offs = src_sg->offset;
++
++	do {
++		void *saddr, *daddr;
++		size_t n;
++
++		saddr = kmap_atomic(src_page +
++					 (src_offs >> PAGE_SHIFT), s_km_type) +
++				    (src_offs & ~PAGE_MASK);
++		daddr = kmap_atomic(dst_page +
++					(dst_offs >> PAGE_SHIFT), d_km_type) +
++				    (dst_offs & ~PAGE_MASK);
++
++		if (((src_offs & ~PAGE_MASK) == 0) &&
++		    ((dst_offs & ~PAGE_MASK) == 0) &&
++		    (src_len >= PAGE_SIZE) && (dst_len >= PAGE_SIZE) &&
++		    (copy_len >= PAGE_SIZE)) {
++			copy_page(daddr, saddr);
++			n = PAGE_SIZE;
++		} else {
++			n = min_t(size_t, PAGE_SIZE - (dst_offs & ~PAGE_MASK),
++					  PAGE_SIZE - (src_offs & ~PAGE_MASK));
++			n = min(n, src_len);
++			n = min(n, dst_len);
++			n = min_t(size_t, n, copy_len);
++			memcpy(daddr, saddr, n);
++		}
++		dst_offs += n;
++		src_offs += n;
++
++		kunmap_atomic(saddr, s_km_type);
++		kunmap_atomic(daddr, d_km_type);
++
++		res += n;
++		copy_len -= n;
++		if (copy_len == 0)
++			goto out;
++
++		src_len -= n;
++		dst_len -= n;
++		if (dst_len == 0) {
++			dst_sg = sg_next(dst_sg);
++			if (dst_sg == NULL)
++				goto out;
++			dst_page = sg_page(dst_sg);
++			dst_len = dst_sg->length;
++			dst_offs = dst_sg->offset;
++		}
++	} while (src_len > 0);
++
++out:
++	*pdst_sg = dst_sg;
++	*pdst_len = dst_len;
++	*pdst_offs = dst_offs;
++	return res;
++}
++
++/**
++ * sg_copy - copy one SG vector to another
++ * @dst_sg:	destination SG
++ * @src_sg:	source SG
++ * @nents_to_copy: maximum number of entries to copy
++ * @copy_len:	maximum amount of data to copy. If 0, then copy all.
++ * @d_km_type:	kmap_atomic type for the destination SG
++ * @s_km_type:	kmap_atomic type for the source SG
++ *
++ * Description:
++ *    Data from the source SG vector will be copied to the destination SG
++ *    vector. End of the vectors will be determined by sg_next() returning
++ *    NULL. Returns number of bytes copied.
++ */
++int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
++	    int nents_to_copy, size_t copy_len,
++	    enum km_type d_km_type, enum km_type s_km_type)
++{
++	int res = 0;
++	size_t dst_len, dst_offs;
++
++	if (copy_len == 0)
++		copy_len = 0x7FFFFFFF; /* copy all */
++
++	if (nents_to_copy == 0)
++		nents_to_copy = 0x7FFFFFFF; /* copy all */
++
++	dst_len = dst_sg->length;
++	dst_offs = dst_sg->offset;
++
++	do {
++		int copied = sg_copy_elem(&dst_sg, &dst_len, &dst_offs,
++				src_sg, copy_len, d_km_type, s_km_type);
++		copy_len -= copied;
++		res += copied;
++		if ((copy_len == 0) || (dst_sg == NULL))
++			goto out;
++
++		nents_to_copy--;
++		if (nents_to_copy == 0)
++			goto out;
++
++		src_sg = sg_next(src_sg);
++	} while (src_sg != NULL);
++
++out:
++	return res;
++}
++EXPORT_SYMBOL(sg_copy);
