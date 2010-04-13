@@ -1,52 +1,62 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
-Date: Tue, 13 Apr 2010 23:23:53 +0400
-Message-ID: <4BC4C4C9.70103@vlnb.net>
-References: <4BB45632.5020700@suse.de> <4BC099C5.9090704@vlnb.net>	 <4BC431C8.9020800@suse.de>  <4BC4A559.4090806@vlnb.net> <1271183865.32337.39.camel@haakon2.linux-iscsi.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/3 ] SCSI: Support several features in arcmsr driver
+Date: Tue, 13 Apr 2010 13:10:37 -0700
+Message-ID: <20100413131037.96a0bb77.akpm@linux-foundation.org>
+References: <9887B6161072481EB07AF9A0A8B7D5A8@areca4e4f859d4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:49807 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750906Ab0DMTX4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Apr 2010 15:23:56 -0400
-In-Reply-To: <1271183865.32337.39.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <9887B6161072481EB07AF9A0A8B7D5A8@areca4e4f859d4>
+Sender: linux-kernel-owner@vger.kernel.org
+To: nick.cheng@areca.com.tw
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Hannes Reinecke <hare@suse.de>, lsf10-pc@lists.linuxfoundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Nicholas A. Bellinger, on 04/13/2010 10:37 PM wrote:
-> On Tue, 2010-04-13 at 21:09 +0400, Vladislav Bolkhovitin wrote:
->> LIO doesn't support 1 to many pass-through devices sharing, so SCST in 
->> the only option.
+On Fri, 9 Apr 2010 10:24:19 +0800
+"Nick Cheng" <nick.cheng@areca.com.tw> wrote:
+
+> 1. To support instantaneous report for SCSI device existing by periodic
+> polling
+> 2. In arcmsr_iop_xfer(), inform AP of F/W's deadlock state to prevent
+> endless waiting
+> 3. To block the coming SCSI command while the driver is handling bus reset
+> 4. To support HW reset in bus reset error handler
+> Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
 > 
-> Sorry, but this statement about your perceived limitiations wrt TCM/LIO
-> is completely incorrect.
 > 
-> Using a single passthrough backstore device (eg: plain /dev/sdX) with
-> TCM/pSCSI (or any TCM subsystem plugin) has been supported since the
-> dawn of time to allow for any number of TCM_Loop Virtual SAS Ports with
-> SG_IO going into KVM Guest.  The same is also true for LIO-Target
-> (iSCSI) and TCM_FC (FCoE) ports as well regardless of TCM subsystem
-> backstore.
-> 
-> Perhaps you would be so kind to provide a TCM/LIO source code reference
-> from where you came up with this make-believe notion..?
+> [patch1  application/octet-stream (39.7KB)]
 
-I've just rechecked with the latest 
-git://git.kernel.org/pub/scm/linux/kernel/git/nab/lio-core-2.6.git and 
-still wasn't able to find in LIO required pieces of functionality to 
-support 1 to many pass-through. I see only code for non-enforced 1 to 1 
-pass-through (single initiator only). You can use with it more 
-initiators only as the SCSI violation, from pointing on which I started 
-my participation in this discussion.
+Lots of problems here.
 
-Particularly, I can't see the code, which in pass-through mode upon 
-receive of RESERVE command sends it also to the backend device, if 
-necessary (i.e. only the first time), and then sends RELEASE command to 
-the device upon the reservation holder removal. Could you point me on 
-the *exact* code which implements that?
+- Two of the patches had the same title ("SCSI: Support several
+  features in arcmsr driver").  Please ensure that each patch has a
+  unique and well-chosen title.
 
-Vlad
+- application/octet-stream attachments are hard for people to read
+  in-line in mail clients.  Please at least use text/plain MIME type if
+  possible.
+
+- The patches aren't in `patch -p1' form.  You had
+
+	--- arcmsr/arcmsr_attr.c
+	+++ arcmsr.1.20.00.15-81103/arcmsr_attr.c
+
+  which cannot be applied from the top-level of the kernel tree.  It
+  should have been
+
+	--- a/drivers/scsi/arcmsr/arcmsr_attr.c
+	+++ a/drivers/scsi/arcmsr/arcmsr_attr.c
+
+  or similar.
+
+I got all that fixed up, but when applying the second patch (using
+2.6.34-rc4) I encountered a large number of patch rejects and gave up.
+
+So please fix all that up and resend.  Perhaps you could use
+http://savannah.nongnu.org/projects/quilt which automates all this.
+
+Also, please run scripts/checkpatch.pl across the patches - it reports
+rather a lot of minor issues which you might choose to address.
+
+Thanks.
