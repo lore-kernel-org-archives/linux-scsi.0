@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/4] [TCM/PR]: Replace usage of DEF_PR_REGISTERED with *core_scsi3_locate_pr_reg()
-Date: Mon, 12 Apr 2010 22:49:12 -0700
-Message-ID: <1271137752-23353-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/4] [TCM/PR]: Update APTPL metadata logic for ISIDs in TransportID processing
+Date: Mon, 12 Apr 2010 22:49:19 -0700
+Message-ID: <1271137759-23376-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp125.sbc.mail.sp1.yahoo.com ([69.147.65.184]:27582 "HELO
-	smtp125.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750882Ab0DMFIE (ORCPT
+Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:22600 "HELO
+	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750882Ab0DMFIJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Apr 2010 01:08:04 -0400
+	Tue, 13 Apr 2010 01:08:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, LIO-Target devel <linux-iscsi-target-dev@googlegroups.com>, Douglas Gilbert <dgilbert@interlog.com>
@@ -15,117 +15,211 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch replaces the usage of (se_dev_entry_t->dev_flags & DEF_PR_REGISTERED)
-with *core_scsi3_locate_pr_reg() in TCM/PR in order to determine registration status
-of a given SCSI Initiator Port.  This was done to allow multiple I_T Nexues to hang
-off a single se_node_acl_t in order to properly support ISID handling for SCSI
-Initiator Port TransportIDs.
+This patch updates Activate Persistence across Target Power-Loss logic in
+TCM/PR to handle fabrics presenting an ISID in TransportID processing.  This
+includes per TCM backstore metadata written to out struct file in
+ __core_scsi3_update_aptpl_buf(), and __core_scsi3_check_aptpl_registration()
+while doing re-initialization for PR data structures from existing APTPL metadata.
 
-This patch changes the following areas to use *core_scsi3_locate_pr_reg()
-
-*) SPEC_I_PT=1 TransportID processing logic in core_scsi3_decode_spec_i_port()
-*) PRO_REGISTER for local I_T Nexus in core_scsi3_emulate_pro_register()
-*) PRO_REGISTER_AND_MOVE for local and remote I_T Nexus in
-   core_scsi3_emulate_pro_register_and_move()
+This patch also changes the parser in target_core_dev_pr_store_attr_res_aptpl_metadata()
+to scan for the new 'initiator_sid=' parameter from incoming configfs attribute data.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_pr.c |   44 ++++++++++++--------------------------
- 1 files changed, 14 insertions(+), 30 deletions(-)
+ drivers/target/target_core_configfs.c |   16 ++++++++++-
+ drivers/target/target_core_pr.c       |   50 ++++++++++++++++++++++++++------
+ include/target/target_core_pr.h       |    4 +-
+ 3 files changed, 57 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index acd7fcd..3d0e263 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1212,6 +1212,7 @@ static ssize_t target_core_dev_pr_store_attr_res_aptpl_metadata(
+ {
+ 	se_device_t *dev;
+ 	unsigned char *i_fabric, *t_fabric, *i_port = NULL, *t_port = NULL;
++	unsigned char *isid = NULL;
+ 	char *ptr, *ptr2, *cur, *buf;
+ 	unsigned long long tmp_ll;
+ 	unsigned long tmp_l;
+@@ -1270,6 +1271,19 @@ static ssize_t target_core_dev_pr_store_attr_res_aptpl_metadata(
+ 			i_port = ptr;
+ 			continue;
+ 		}
++		ptr2 = strstr(cur, "initiator_sid");
++		if (ptr2) {
++			transport_check_dev_params_delim(ptr, &cur);
++			if (strlen(ptr) > PR_REG_ISID_LEN) {
++				printk(KERN_ERR "APTPL metadata initiator_isid"
++					"= exceeds PR_REG_ISID_LEN: %d\n",
++					PR_REG_ISID_LEN);
++				ret = -1;
++				break;
++			}
++			isid = ptr;
++			continue;
++		}
+ 		ptr2 = strstr(cur, "sa_res_key");
+ 		if (ptr2) {
+ 			transport_check_dev_params_delim(ptr, &cur);
+@@ -1420,7 +1434,7 @@ static ssize_t target_core_dev_pr_store_attr_res_aptpl_metadata(
+ 	}
+ 
+ 	ret = core_scsi3_alloc_aptpl_registration(T10_RES(su_dev), sa_res_key,
+-			i_port, mapped_lun, t_port, tpgt, target_lun,
++			i_port, isid, mapped_lun, t_port, tpgt, target_lun,
+ 			res_holder, all_tg_pt, type);
+ out:
+ 	kfree(buf);
 diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 7056530..f775db6 100644
+index f775db6..c700daf 100644
 --- a/drivers/target/target_core_pr.c
 +++ b/drivers/target/target_core_pr.c
-@@ -1679,7 +1679,10 @@ static int core_scsi3_decode_spec_i_port(
- 		 * Skip any TransportIDs that already have a registration for
- 		 * this target port.
- 		 */
--		if (dest_se_deve->deve_flags & DEF_PR_REGISTERED) {
-+		pr_reg_e = __core_scsi3_locate_pr_reg(dev, dest_node_acl,
-+					iport_ptr);
-+		if (pr_reg_e) { 
-+			core_scsi3_put_pr_reg(pr_reg_e);	
- 			core_scsi3_lunacl_undepend_item(dest_se_deve);
- 			core_scsi3_nodeacl_undepend_item(dest_node_acl);
- 			core_scsi3_tpg_undepend_item(dest_tpg);
-@@ -2073,7 +2076,8 @@ static int core_scsi3_emulate_pro_register(
+@@ -814,6 +814,7 @@ int core_scsi3_alloc_aptpl_registration(
+ 	t10_reservation_template_t *pr_tmpl,
+ 	u64 sa_res_key,
+ 	unsigned char *i_port,
++	unsigned char *isid,
+ 	u32 mapped_lun,
+ 	unsigned char *t_port,
+ 	u16 tpgt,
+@@ -853,6 +854,15 @@ int core_scsi3_alloc_aptpl_registration(
+ 	pr_reg->pr_res_scope = 0; /* Always LUN_SCOPE */
+ 	pr_reg->pr_res_type = type;
  	/*
- 	 * Follow logic from spc4r17 Section 5.7.7, Register Behaviors Table 47
++	 * If an ISID value had been saved in APTPL metadata for this
++	 * SCSI Initiator Port, restore it now.
++	 */
++	if (isid != NULL) {
++		pr_reg->pr_reg_bin_isid = get_unaligned_be64(isid);
++		snprintf(pr_reg->pr_reg_isid, PR_REG_ISID_LEN, "%s", isid);
++		pr_reg->pr_reg_flags |= PRF_ISID_PRESENT_AT_REG;
++        }
++	/*
+ 	 * Copy the i_port and t_port information from caller.
  	 */
--	if (!(se_deve->deve_flags & DEF_PR_REGISTERED)) {
-+	pr_reg_e = core_scsi3_locate_pr_reg(dev, se_sess->se_node_acl, se_sess);
-+	if (!(pr_reg_e)) {
- 		if (res_key) {
- 			printk(KERN_WARNING "SPC-3 PR: Reservation Key non-zero"
- 				" for SA REGISTER, returning CONFLICT\n");
-@@ -2146,13 +2150,7 @@ static int core_scsi3_emulate_pro_register(
- 		/*
- 		 * Locate the existing *pr_reg via se_node_acl_t pointers
- 		 */
--		pr_reg = core_scsi3_locate_pr_reg(SE_DEV(cmd),
--				se_sess->se_node_acl);
--		if (!(pr_reg)) {
--			printk(KERN_ERR "SPC-3 PR: Unable to locate"
--				" PR_REGISTERED *pr_reg for REGISTER\n");
--			return PYX_TRANSPORT_LU_COMM_FAILURE;
--		}
-+		pr_reg = pr_reg_e;
- 		type = pr_reg->pr_res_type;
+ 	snprintf(pr_reg->pr_iport, PR_APTPL_MAX_IPORT_LEN, "%s", i_port);
+@@ -878,6 +888,13 @@ static void core_scsi3_aptpl_reserve(
+ 	se_node_acl_t *node_acl,
+ 	t10_pr_registration_t *pr_reg)
+ {
++	char i_buf[PR_REG_ISID_ID_LEN];
++	int prf_isid;
++
++	memset(i_buf, 0, PR_REG_ISID_ID_LEN);
++	prf_isid = core_pr_dump_initiator_port(pr_reg, &i_buf[0],
++				PR_REG_ISID_ID_LEN);
++
+ 	spin_lock(&dev->dev_reservation_lock);
+ 	dev->dev_pr_res_holder = pr_reg;
+ 	spin_unlock(&dev->dev_reservation_lock);
+@@ -887,8 +904,9 @@ static void core_scsi3_aptpl_reserve(
+ 		TPG_TFO(tpg)->get_fabric_name(),
+ 		core_scsi3_pr_dump_type(pr_reg->pr_res_type),
+ 		(pr_reg->pr_reg_all_tg_pt) ? 1 : 0);
+-	printk(KERN_INFO "SPC-3 PR [%s] RESERVE Node: %s\n",
+-		TPG_TFO(tpg)->get_fabric_name(), node_acl->initiatorname);
++	printk(KERN_INFO "SPC-3 PR [%s] RESERVE Node: %s%s\n",
++		TPG_TFO(tpg)->get_fabric_name(), node_acl->initiatorname,
++		(prf_isid) ? &i_buf[0] : "");
+ }
  
- 		if (!(ignore_key)) {
-@@ -3306,13 +3304,7 @@ static int core_scsi3_emulate_pro_register_and_move(
- 	/*
- 	 * Follow logic from spc4r17 Section 5.7.8, Table 50 --
- 	 *	Register behaviors for a REGISTER AND MOVE service action
--	 */
--	if (!(se_deve->deve_flags & DEF_PR_REGISTERED)) {
--		printk(KERN_WARNING "SPC-3 PR: Received REGISTER_AND_MOVE SA"
--				" from unregistered nexus\n");
--		return PYX_TRANSPORT_RESERVATION_CONFLICT;
--	}
--	/*
-+	 *
- 	 * Locate the existing *pr_reg via se_node_acl_t pointers
- 	 */
- 	pr_reg = core_scsi3_locate_pr_reg(SE_DEV(cmd), se_sess->se_node_acl,
-@@ -3594,30 +3586,22 @@ after_iport_check:
- 	 * register an I_T nexus that is already registered with the same
- 	 * reservation key or a different reservation key.
- 	 */
--	if (!(dest_se_deve->deve_flags & DEF_PR_REGISTERED)) {
-+	dest_pr_reg = __core_scsi3_locate_pr_reg(dev, dest_node_acl,
-+					iport_ptr);
-+	if (!(dest_pr_reg)) {
- 		ret = core_scsi3_alloc_registration(SE_DEV(cmd),
--				dest_node_acl, dest_se_deve,
-+				dest_node_acl, dest_se_deve, iport_ptr,
- 				sa_res_key, 0, aptpl, 2, 1);
- 		if (ret != 0) {
- 			spin_unlock(&dev->dev_reservation_lock);
- 			ret = PYX_TRANSPORT_INVALID_PARAMETER_LIST;
- 			goto out;
+ static void __core_scsi3_add_registration(se_device_t *, se_node_acl_t *,
+@@ -917,7 +935,12 @@ static int __core_scsi3_check_aptpl_registration(
+ 	snprintf(t_port, PR_APTPL_MAX_TPORT_LEN, "%s",
+ 			TPG_TFO(tpg)->tpg_get_wwn(tpg));
+ 	tpgt = TPG_TFO(tpg)->tpg_get_tag(tpg);
+-
++	/*
++	 * Look for the matching registrations+reservation from those
++	 * created from APTPL metadata.  Note that multiple registrations
++	 * may exist for fabrics that use ISIDs in their SCSI Initiator Port
++	 * TransportIDs.
++	 */
+ 	spin_lock(&pr_tmpl->aptpl_reg_lock);
+ 	list_for_each_entry_safe(pr_reg, pr_reg_tmp, &pr_tmpl->aptpl_reg_list,
+ 				pr_reg_aptpl_list) {
+@@ -950,9 +973,8 @@ static int __core_scsi3_check_aptpl_registration(
+ 			 * Reenable pr_aptpl_active to accept new metadata
+ 			 * updates once the SCSI device is active again..
+ 			 */
++			spin_lock(&pr_tmpl->aptpl_reg_lock);
+ 			pr_tmpl->pr_aptpl_active = 1;
+-
+-			return 1;
  		}
-+		dest_pr_reg = __core_scsi3_locate_pr_reg(dev, dest_node_acl,
-+						iport_ptr);
- 		new_reg = 1;
  	}
- 	/*
--	 * Locate the Destination registration where the reservation
--	 * is being moved.
--	 */
--	dest_pr_reg = core_scsi3_locate_pr_reg(dev, dest_node_acl);
--	if (!(dest_pr_reg)) {
--		printk(KERN_ERR "Unable to locate dest_pr_reg for"
--			" REGISTERED I_T Nexus for %s\n", initiator_str);
--		spin_unlock(&dev->dev_reservation_lock);
--		ret = PYX_TRANSPORT_INVALID_PARAMETER_LIST;
--		goto out;
--	}
--	/*
- 	 * f) Release the persistent reservation for the persistent reservation
- 	 *    holder (i.e., the I_T nexus on which the
- 	 */
+ 	spin_unlock(&pr_tmpl->aptpl_reg_lock);
+@@ -1843,7 +1865,7 @@ static int __core_scsi3_update_aptpl_buf(
+ 	se_portal_group_t *tpg;
+ 	se_subsystem_dev_t *su_dev = SU_DEV(dev);
+ 	t10_pr_registration_t *pr_reg;
+-	unsigned char tmp[1024];
++	unsigned char tmp[1024], isid_buf[32];
+ 	ssize_t len = 0;
+ 	int reg_count = 0;
+ 
+@@ -1864,32 +1886,40 @@ static int __core_scsi3_update_aptpl_buf(
+ 			pr_reg_list) {
+ 
+ 		memset(tmp, 0, 1024);
++		memset(isid_buf, 0, 32);
+ 		tpg = pr_reg->pr_reg_nacl->se_tpg;
+ 		lun = pr_reg->pr_reg_tg_pt_lun;
+ 		/*
++		 * Write out any ISID value to APTPL metadata that was included
++		 * in the original registration.
++		 */	
++		if (pr_reg->pr_reg_flags & PRF_ISID_PRESENT_AT_REG)
++			snprintf(isid_buf, 32, "initiator_sid=%s\n",
++					pr_reg->pr_reg_isid);
++		/*
+ 		 * Include special metadata if the pr_reg matches the
+ 		 * reservation holder.
+ 		 */
+ 		if (dev->dev_pr_res_holder == pr_reg) {
+ 			snprintf(tmp, 1024, "PR_REG_START: %d"
+ 				"\ninitiator_fabric=%s\n"
+-				"initiator_node=%s\n"
++				"initiator_node=%s\n%s"
+ 				"sa_res_key=%llu\n"
+ 				"res_holder=1\nres_type=%02x\n"
+ 				"res_scope=%02x\nres_all_tg_pt=%d\n"
+ 				"mapped_lun=%u\n", reg_count,
+ 				TPG_TFO(tpg)->get_fabric_name(),
+-				pr_reg->pr_reg_nacl->initiatorname,
++				pr_reg->pr_reg_nacl->initiatorname, isid_buf,
+ 				pr_reg->pr_res_key, pr_reg->pr_res_type,
+ 				pr_reg->pr_res_scope, pr_reg->pr_reg_all_tg_pt,
+ 				pr_reg->pr_res_mapped_lun);
+ 		} else {
+ 			snprintf(tmp, 1024, "PR_REG_START: %d\n"
+-				"initiator_fabric=%s\ninitiator_node=%s\n"
++				"initiator_fabric=%s\ninitiator_node=%s\n%s"
+ 				"sa_res_key=%llu\nres_holder=0\n"
+ 				"res_all_tg_pt=%d\nmapped_lun=%u\n",
+ 				reg_count, TPG_TFO(tpg)->get_fabric_name(),
+-				pr_reg->pr_reg_nacl->initiatorname,
++				pr_reg->pr_reg_nacl->initiatorname, isid_buf,
+ 				pr_reg->pr_res_key, pr_reg->pr_reg_all_tg_pt,
+ 				pr_reg->pr_res_mapped_lun);
+ 		}
+diff --git a/include/target/target_core_pr.h b/include/target/target_core_pr.h
+index 4281ede..3708891 100644
+--- a/include/target/target_core_pr.h
++++ b/include/target/target_core_pr.h
+@@ -50,8 +50,8 @@ extern int core_pr_dump_initiator_port(struct t10_pr_registration_s *,
+ extern int core_scsi2_emulate_crh(struct se_cmd_s *);
+ extern int core_scsi3_alloc_aptpl_registration(
+ 			struct t10_reservation_template_s *, u64,
+-			unsigned char *, u32, unsigned char *, u16, u32,
+-			int, int, u8);
++			unsigned char *, unsigned char *, u32,
++			unsigned char *, u16, u32, int, int, u8);
+ extern int core_scsi3_check_aptpl_registration(struct se_device_s *,
+ 			struct se_portal_group_s *, struct se_lun_s *,
+ 			struct se_lun_acl_s *);
 -- 
 1.5.6.5
 
