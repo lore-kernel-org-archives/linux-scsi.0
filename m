@@ -1,139 +1,528 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
-Date: Wed, 14 Apr 2010 06:49:04 -0700
-Message-ID: <1271252944.27110.28.camel@haakon2.linux-iscsi.org>
-References: <4BB45632.5020700@suse.de> <4BC099C5.9090704@vlnb.net>
-	 <4BC431C8.9020800@suse.de>  <4BC4A559.4090806@vlnb.net>
-	 <1271183865.32337.39.camel@haakon2.linux-iscsi.org>
-	 <4BC4C4C9.70103@vlnb.net>
-	 <1271191520.32337.77.camel@haakon2.linux-iscsi.org>
-	 <4BC5BC22.7080003@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:22884 "HELO
-	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755666Ab0DNNuo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Apr 2010 09:50:44 -0400
-In-Reply-To: <4BC5BC22.7080003@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 1/2] [RFC] block: replace BKL with global mutex
+Date: Wed, 14 Apr 2010 22:36:23 +0200
+Message-ID: <1271277384-7627-1-git-send-email-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@kernel.dk>, Vivek Goyal <vgoyal@redhat.com>, Tejun Heo <tj@kernel.org>, Frederic Weisbecker <fweisbec@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Martin K. Petersen" <martin.petersen@oracle.com>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, John Kacur <jkacur@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Hannes Reinecke <hare@suse.de>, lsf10-pc@lists.linuxfoundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2010-04-14 at 16:59 +0400, Vladislav Bolkhovitin wrote:
-> Nicholas A. Bellinger, on 04/14/2010 12:45 AM wrote:
-> > On Tue, 2010-04-13 at 23:23 +0400, Vladislav Bolkhovitin wrote:
-> >> Nicholas A. Bellinger, on 04/13/2010 10:37 PM wrote:
-> >>> On Tue, 2010-04-13 at 21:09 +0400, Vladislav Bolkhovitin wrote:
-> >>>> LIO doesn't support 1 to many pass-through devices sharing, so SCST in 
-> >>>> the only option.
-> >>> Sorry, but this statement about your perceived limitiations wrt TCM/LIO
-> >>> is completely incorrect.
-> >>>
-> >>> Using a single passthrough backstore device (eg: plain /dev/sdX) with
-> >>> TCM/pSCSI (or any TCM subsystem plugin) has been supported since the
-> >>> dawn of time to allow for any number of TCM_Loop Virtual SAS Ports with
-> >>> SG_IO going into KVM Guest.  The same is also true for LIO-Target
-> >>> (iSCSI) and TCM_FC (FCoE) ports as well regardless of TCM subsystem
-> >>> backstore.
-> >>>
-> >>> Perhaps you would be so kind to provide a TCM/LIO source code reference
-> >>> from where you came up with this make-believe notion..?
-> >> I've just rechecked with the latest 
-> >> git://git.kernel.org/pub/scm/linux/kernel/git/nab/lio-core-2.6.git and 
-> >> still wasn't able to find in LIO required pieces of functionality to 
-> >> support 1 to many pass-through. I see only code for non-enforced 1 to 1 
-> >> pass-through (single initiator only). You can use with it more 
-> >> initiators only as the SCSI violation, from pointing on which I started 
-> >> my participation in this discussion.
-> >>
-> > 
-> > Sorry, but listing the path to my git tree on k.o is not the same as
-> > citing a actual TCM/LIO source+line reference.
-> 
-> That's interesting. How can I point to the code which doesn't exist?
-> 
-> >> Particularly, I can't see the code, which in pass-through mode upon 
-> >> receive of RESERVE command sends it also to the backend device, if 
-> >> necessary (i.e. only the first time), and then sends RELEASE command to 
-> >> the device upon the reservation holder removal. Could you point me on 
-> >> the *exact* code which implements that?
-> >>
-> > 
-> > Again, since *you* are the one making a claim, *you* are the one
-> > expected to back it up with a concrete code reference and example
-> > scenario.   Please, do the leg-work yourself wrt TCM SPC-3 persisetent
-> > reservations and legacy SPC-2 reservations instead of expecting me to do
-> > the actual work for you to verify your own fanciful claims about target
-> > mode, seriously..
-> > 
-> > So, short of you being able to produce a response that is concrete and
-> > human-readable, your claim will once again be dismissed as generic
-> > hand-waving.
-> 
-> Well, this is an Open Source and in Open Source code auditing is the 
-> most important way to verify an implementation. I reviewed TCM/LIO and 
-> my conclusion is pretty clear:
+The block layer is one of the remaining users
+of the Big Kernel Lock. In there, it is used
+mainly for serializing the blkdev_get and
+blkdev_put functions and some ioctl implementations
+as well as some less common open functions of
+related character devices following a previous
+pushdown and parts of the blktrace code.
 
-Actually no, you have not reviewed or commented on a *single* one of the
-'one patch per feature' commit series implementing >= SPC-3 Persistent
-Reservations and implict/explict ALUA that I have posted to linux-scsi
-in the last 18 months.  Instead you pick out this LSF thread about
-Virtual HBAs + megasas + KVm Guest to start airing your persistent
-reservations concerns with me, why on earth would that possibily be..?
+The only one that seems to be a bit nasty is the
+blkdev_get function which is actually recursive
+and may try to get the BKL twice.
 
-See, the way that us here in the real world review patches is by posting
-digestable individual feature bits so that they can be understood and
-reviewed by actual humans instead of randomly posting 10,000s lines of
-code with *zero* context for anyone to care about or understand.
+All users except the one in blkdev_get seem to
+be outermost locks, meaning we don't rely on
+the release-on-sleep semantics to avoid deadlocks.
 
->  it misses too many important bits to be a 
-> 1 to many pass-through implementation, so it implements only 
-> not-enforced 1 to 1 pass-through. You implemented reservations 
-> emulation, but that's _NOT_ enough. I gave an example of the one among 
-> many missed functionality.
+The ctl_mutex (pktcdvd.ko), raw_mutex (raw.ko),
+state_mutex (dasd.ko), reconfig_mutex (md.ko),
+and jfs_log_mutex (jfs.ko) may be held when
+blkdev_get is called, but as far as I can tell,
+these mutexes are never acquired from any of the
+functions that get converted in this patch.
 
-Sorry, but again you are completely incorrect.  Why don't you have a
-look at what TCM supports for iSCSI, SAS and FC target ports from the
-link below and get specific about the 'many missed functionality'..?
+In order to get rid of the BKL, this introduces
+a new global mutex called blkdev_mutex, which
+replaces the BKL in all drivers that directly
+interact with the block layer. In case of blkdev_get,
+the mutex is moved outside of the function itself
+in order to avoid the recursive taking of blkdev_mutex.
 
-http://linux-iscsi.org/index.php/Persistent_Reservations
+Testing so far has shown no problems whatsoever
+from this patch, but the usage in blkdev_get
+may introduce extra latencies, and I may have
+missed corner cases where an block device ioctl
+function sleeps for a significant amount of time,
+which may be harmful to the performance of other
+threads.
 
-> 
-> I'm not going to go any deeper than I've already gone doing your home 
-> work for you and explaining you the SCSI basics (although for me it's 
-> really hard to believe that a person implemented something as big as 
-> TCM/LIO can't see such obvious things), because when I did it before, 
-> when you asserted that if a pass-trough device supports Persistent 
-> Reservations, LIO in pass-through mode with this device automatically 
-> supports them too, which is obviously wrong (see the end of 
-> http://lkml.org/lkml/2008/7/14/273), I didn't have even a bit of 
-> appreciation for my effort. Instead I received privately from you 
-> insulting and threatening e-mails.
-> 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: John Kacur <jkacur@redhat.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ block/bsg.c               |    2 --
+ block/compat_ioctl.c      |    8 ++++----
+ block/ioctl.c             |   24 ++++++++++++------------
+ drivers/block/DAC960.c    |    4 ++--
+ drivers/block/cciss.c     |    4 ++--
+ drivers/block/paride/pg.c |    4 ++--
+ drivers/block/paride/pt.c |   16 ++++++++--------
+ drivers/scsi/sg.c         |   22 ++++++++++++++++------
+ fs/block_dev.c            |   20 +++++++++++++-------
+ include/linux/blkdev.h    |    6 ++++++
+ kernel/trace/blktrace.c   |   14 ++++++++------
+ 11 files changed, 73 insertions(+), 51 deletions(-)
 
-Wow, this is where you are getting your ideas from..?  An email from
-2008 talking about LIO 2.x code..?  Seriously, you attempting to ignore
-all of the work that has gone into TCM/ConfigFS v3.x -> v4.0 means that
-you are living in a world of fantasy.
-
-> If you are not agree with my conclusion about pass-through 
-> implementation in TCM/LIO, you can either point us on the code 
-> implementing the necessary functionality, which I missed, or argue why 
-> it isn't needed. But if you continue attacking me personally trying to 
-> discredit me, everybody will see that my conclusions are definitely 
-> correct as well as which is your preferred way of cooperation.
-> 
-
-Sorry, but I cannot make it any more clear for you.  Either you provide
-a code reference and scenario for your claim against TCM/LIO code from
-this decade for lio-core-2.6.git, or I will once again ignore your
-hand-waving until you can learn how to have an on-topic discussion of
-meaning and substance.
-
---nab
-
-
+diff --git a/block/bsg.c b/block/bsg.c
+index 82d5882..7c50a26 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -843,9 +843,7 @@ static int bsg_open(struct inode *inode, struct file *file)
+ {
+ 	struct bsg_device *bd;
+ 
+-	lock_kernel();
+ 	bd = bsg_get_device(inode, file);
+-	unlock_kernel();
+ 
+ 	if (IS_ERR(bd))
+ 		return PTR_ERR(bd);
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+index f26051f..11cfd3c 100644
+--- a/block/compat_ioctl.c
++++ b/block/compat_ioctl.c
+@@ -802,16 +802,16 @@ long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+ 		return compat_put_u64(arg, bdev->bd_inode->i_size);
+ 
+ 	case BLKTRACESETUP32:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = compat_blk_trace_setup(bdev, compat_ptr(arg));
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return ret;
+ 	case BLKTRACESTART: /* compatible */
+ 	case BLKTRACESTOP:  /* compatible */
+ 	case BLKTRACETEARDOWN: /* compatible */
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blk_trace_ioctl(bdev, cmd, compat_ptr(arg));
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return ret;
+ 	default:
+ 		if (disk->fops->compat_ioctl)
+diff --git a/block/ioctl.c b/block/ioctl.c
+index 8905d2a..272cdce 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -169,9 +169,9 @@ int __blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
+ 		return disk->fops->ioctl(bdev, mode, cmd, arg);
+ 
+ 	if (disk->fops->locked_ioctl) {
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = disk->fops->locked_ioctl(bdev, mode, cmd, arg);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return ret;
+ 	}
+ 
+@@ -206,10 +206,10 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 		if (ret != -EINVAL && ret != -ENOTTY)
+ 			return ret;
+ 
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		fsync_bdev(bdev);
+ 		invalidate_bdev(bdev);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return 0;
+ 
+ 	case BLKROSET:
+@@ -221,9 +221,9 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 			return -EACCES;
+ 		if (get_user(n, (int __user *)(arg)))
+ 			return -EFAULT;
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		set_device_ro(bdev, n);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return 0;
+ 
+ 	case BLKDISCARD: {
+@@ -309,14 +309,14 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 			bd_release(bdev);
+ 		return ret;
+ 	case BLKPG:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blkpg_ioctl(bdev, (struct blkpg_ioctl_arg __user *) arg);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		break;
+ 	case BLKRRPART:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blkdev_reread_part(bdev);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		break;
+ 	case BLKGETSIZE:
+ 		size = bdev->bd_inode->i_size;
+@@ -329,9 +329,9 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	case BLKTRACESTOP:
+ 	case BLKTRACESETUP:
+ 	case BLKTRACETEARDOWN:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blk_trace_ioctl(bdev, cmd, (char __user *) arg);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		break;
+ 	default:
+ 		ret = __blkdev_driver_ioctl(bdev, mode, cmd, arg);
+diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
+index c5f22bb..8faaa12 100644
+--- a/drivers/block/DAC960.c
++++ b/drivers/block/DAC960.c
+@@ -6620,7 +6620,7 @@ static long DAC960_gam_ioctl(struct file *file, unsigned int Request,
+   long ErrorCode = 0;
+   if (!capable(CAP_SYS_ADMIN)) return -EACCES;
+ 
+-  lock_kernel();
++  mutex_lock(&blkdev_mutex);
+   switch (Request)
+     {
+     case DAC960_IOCTL_GET_CONTROLLER_COUNT:
+@@ -7051,7 +7051,7 @@ static long DAC960_gam_ioctl(struct file *file, unsigned int Request,
+       default:
+ 	ErrorCode = -ENOTTY;
+     }
+-  unlock_kernel();
++  mutex_unlock(&blkdev_mutex);
+   return ErrorCode;
+ }
+ 
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index eb5ff05..0e21a9d 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1027,9 +1027,9 @@ static int do_ioctl(struct block_device *bdev, fmode_t mode,
+ 		    unsigned cmd, unsigned long arg)
+ {
+ 	int ret;
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	ret = cciss_ioctl(bdev, mode, cmd, arg);
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/block/paride/pg.c b/drivers/block/paride/pg.c
+index c397b3d..81660d0 100644
+--- a/drivers/block/paride/pg.c
++++ b/drivers/block/paride/pg.c
+@@ -518,7 +518,7 @@ static int pg_open(struct inode *inode, struct file *file)
+ 	struct pg *dev = &devices[unit];
+ 	int ret = 0;
+ 
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	if ((unit >= PG_UNITS) || (!dev->present)) {
+ 		ret = -ENODEV;
+ 		goto out;
+@@ -547,7 +547,7 @@ static int pg_open(struct inode *inode, struct file *file)
+ 	file->private_data = dev;
+ 
+ out:
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/block/paride/pt.c b/drivers/block/paride/pt.c
+index bc5825f..05e272e 100644
+--- a/drivers/block/paride/pt.c
++++ b/drivers/block/paride/pt.c
+@@ -650,9 +650,9 @@ static int pt_open(struct inode *inode, struct file *file)
+ 	struct pt_unit *tape = pt + unit;
+ 	int err;
+ 
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	if (unit >= PT_UNITS || (!tape->present)) {
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -681,12 +681,12 @@ static int pt_open(struct inode *inode, struct file *file)
+ 	}
+ 
+ 	file->private_data = tape;
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return 0;
+ 
+ out:
+ 	atomic_inc(&tape->available);
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return err;
+ }
+ 
+@@ -704,15 +704,15 @@ static long pt_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+ 		switch (mtop.mt_op) {
+ 
+ 		case MTREW:
+-			lock_kernel();
++			mutex_lock(&blkdev_mutex);
+ 			pt_rewind(tape);
+-			unlock_kernel();
++			mutex_unlock(&blkdev_mutex);
+ 			return 0;
+ 
+ 		case MTWEOF:
+-			lock_kernel();
++			mutex_lock(&blkdev_mutex);
+ 			pt_write_fm(tape);
+-			unlock_kernel();
++			mutex_unlock(&blkdev_mutex);
+ 			return 0;
+ 
+ 		default:
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index dee1c96..ec5b43e 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -229,7 +229,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 	int res;
+ 	int retval;
+ 
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	nonseekable_open(inode, filp);
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+ 	sdp = sg_get_dev(dev);
+@@ -307,7 +307,7 @@ error_out:
+ sg_put:
+ 	if (sdp)
+ 		sg_put_dev(sdp);
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return retval;
+ }
+ 
+@@ -757,9 +757,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 	return 0;
+ }
+ 
+-static int
+-sg_ioctl(struct inode *inode, struct file *filp,
+-	 unsigned int cmd_in, unsigned long arg)
++static long sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ {
+ 	void __user *p = (void __user *)arg;
+ 	int __user *ip = p;
+@@ -1078,6 +1076,17 @@ sg_ioctl(struct inode *inode, struct file *filp,
+ 	}
+ }
+ 
++static long sg_unlocked_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
++{
++	int ret;
++
++	mutex_lock(&blkdev_mutex);
++	ret = sg_ioctl(filp, cmd_in, arg);
++	mutex_unlock(&blkdev_mutex);
++
++	return ret;
++}
++
+ #ifdef CONFIG_COMPAT
+ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ {
+@@ -1322,7 +1331,8 @@ static const struct file_operations sg_fops = {
+ 	.read = sg_read,
+ 	.write = sg_write,
+ 	.poll = sg_poll,
+-	.ioctl = sg_ioctl,
++	.llseek = generic_file_llseek,
++	.unlocked_ioctl = sg_unlocked_ioctl,
+ #ifdef CONFIG_COMPAT
+ 	.compat_ioctl = sg_compat_ioctl,
+ #endif
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 2a6d019..f43d24f 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -29,6 +29,9 @@
+ #include <asm/uaccess.h>
+ #include "internal.h"
+ 
++DEFINE_MUTEX(blkdev_mutex);
++EXPORT_SYMBOL_GPL(blkdev_mutex);
++
+ struct bdev_inode {
+ 	struct block_device bdev;
+ 	struct inode vfs_inode;
+@@ -1191,7 +1194,6 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 		return ret;
+ 	}
+ 
+-	lock_kernel();
+  restart:
+ 
+ 	ret = -ENXIO;
+@@ -1277,7 +1279,6 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 	if (for_part)
+ 		bdev->bd_part_count++;
+ 	mutex_unlock(&bdev->bd_mutex);
+-	unlock_kernel();
+ 	return 0;
+ 
+  out_clear:
+@@ -1291,7 +1292,6 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+  out_unlock_bdev:
+ 	mutex_unlock(&bdev->bd_mutex);
+  out_unlock_kernel:
+-	unlock_kernel();
+ 
+ 	if (disk)
+ 		module_put(disk->fops->owner);
+@@ -1303,7 +1303,11 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 
+ int blkdev_get(struct block_device *bdev, fmode_t mode)
+ {
+-	return __blkdev_get(bdev, mode, 0);
++	int ret;
++	mutex_lock(&blkdev_mutex);
++	ret = __blkdev_get(bdev, mode, 0);
++	mutex_unlock(&blkdev_mutex);
++	return ret;
+ }
+ EXPORT_SYMBOL(blkdev_get);
+ 
+@@ -1357,7 +1361,6 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
+ 	struct block_device *victim = NULL;
+ 
+ 	mutex_lock_nested(&bdev->bd_mutex, for_part);
+-	lock_kernel();
+ 	if (for_part)
+ 		bdev->bd_part_count--;
+ 
+@@ -1382,7 +1385,6 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
+ 			victim = bdev->bd_contains;
+ 		bdev->bd_contains = NULL;
+ 	}
+-	unlock_kernel();
+ 	mutex_unlock(&bdev->bd_mutex);
+ 	bdput(bdev);
+ 	if (victim)
+@@ -1392,7 +1394,11 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
+ 
+ int blkdev_put(struct block_device *bdev, fmode_t mode)
+ {
+-	return __blkdev_put(bdev, mode, 0);
++	int ret;
++	mutex_lock(&blkdev_mutex);
++	ret = __blkdev_put(bdev, mode, 0);
++	mutex_unlock(&blkdev_mutex);
++	return ret;
+ }
+ EXPORT_SYMBOL(blkdev_put);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 6690e8b..7810a2d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1292,6 +1292,12 @@ struct block_device_operations {
+ 
+ extern int __blkdev_driver_ioctl(struct block_device *, fmode_t, unsigned int,
+ 				 unsigned long);
++
++/*
++ * replaces the big kernel lock in the block subsystem
++ */
++extern struct mutex blkdev_mutex;
++
+ #else /* CONFIG_BLOCK */
+ /*
+  * stubs for when the block layer is configured out
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index b3bc91a..5012fe1 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -305,7 +305,7 @@ static int blk_dropped_open(struct inode *inode, struct file *filp)
+ {
+ 	filp->private_data = inode->i_private;
+ 
+-	return 0;
++	return nonseekable_open(inode, filp);
+ }
+ 
+ static ssize_t blk_dropped_read(struct file *filp, char __user *buffer,
+@@ -323,13 +323,14 @@ static const struct file_operations blk_dropped_fops = {
+ 	.owner =	THIS_MODULE,
+ 	.open =		blk_dropped_open,
+ 	.read =		blk_dropped_read,
++	.llseek =	no_llseek,
+ };
+ 
+ static int blk_msg_open(struct inode *inode, struct file *filp)
+ {
+ 	filp->private_data = inode->i_private;
+ 
+-	return 0;
++	return nonseekable_open(inode, filp);
+ }
+ 
+ static ssize_t blk_msg_write(struct file *filp, const char __user *buffer,
+@@ -362,6 +363,7 @@ static const struct file_operations blk_msg_fops = {
+ 	.owner =	THIS_MODULE,
+ 	.open =		blk_msg_open,
+ 	.write =	blk_msg_write,
++	.llseek =	no_llseek,
+ };
+ 
+ /*
+@@ -1581,7 +1583,7 @@ static ssize_t sysfs_blk_trace_attr_show(struct device *dev,
+ 	struct block_device *bdev;
+ 	ssize_t ret = -ENXIO;
+ 
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	bdev = bdget(part_devt(p));
+ 	if (bdev == NULL)
+ 		goto out_unlock_kernel;
+@@ -1613,7 +1615,7 @@ out_unlock_bdev:
+ out_bdput:
+ 	bdput(bdev);
+ out_unlock_kernel:
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return ret;
+ }
+ 
+@@ -1643,7 +1645,7 @@ static ssize_t sysfs_blk_trace_attr_store(struct device *dev,
+ 
+ 	ret = -ENXIO;
+ 
+-	lock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	p = dev_to_part(dev);
+ 	bdev = bdget(part_devt(p));
+ 	if (bdev == NULL)
+@@ -1683,7 +1685,7 @@ out_unlock_bdev:
+ out_bdput:
+ 	bdput(bdev);
+ out_unlock_kernel:
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ out:
+ 	return ret ? ret : count;
+ }
+-- 
+1.7.0.4
