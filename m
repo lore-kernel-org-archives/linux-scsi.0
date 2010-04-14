@@ -1,46 +1,52 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [PATCH 2/3] cxgb4i: main driver files
-Date: Tue, 13 Apr 2010 14:41:59 -0700
-Message-ID: <8A71B368A89016469F72CD08050AD33407AC6530@maui.asicdesigners.com>
-References: <1270728855-20951-1-git-send-email-rakesh@chelsio.com> <1270728855-20951-2-git-send-email-rakesh@chelsio.com> <1270728855-20951-3-git-send-email-rakesh@chelsio.com> <4BC4D711.5030802@cs.wisc.edu>
+From: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+Subject: [PATCH] fix sdev_rw_attr macro for scsi device sysfs entries
+Date: Wed, 14 Apr 2010 15:15:14 +0900
+Message-ID: <4BC55D72.7080301@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com
-Cc: Rakesh Ranjan <rakesh@chelsio.com>, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, davem@davemloft.net, James.Bottomley@hansenpartnership.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi, Mike,
+Hi
 
-Yes, will do that for the next submission.
+This patch fixes sdev_rw_attr() macro for scsi device sysfs entries.
+It seems there is no such function snscanf in the current linux kernel,
+so it fails to compile scsi driver when someone try to add a new rw entry.
+This has been unfixed for a long time probably because current scsi device
+has no rw entries.
+
+# grep snscanf . -rn
+./drivers/scsi/scsi_sysfs.c:489:        snscanf (buf, 20, format_string, &sdev->field);                 \
 
 Thanks,
-Karen
+Tomohiro Kusumi
 
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Tuesday, April 13, 2010 1:42 PM
-To: open-iscsi@googlegroups.com
-Cc: Rakesh Ranjan; netdev@vger.kernel.org; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; Karen Xie; davem@davemloft.net;
-James.Bottomley@hansenpartnership.com
-Subject: Re: [PATCH 2/3] cxgb4i: main driver files
 
-On 04/08/2010 07:14 AM, Rakesh Ranjan wrote:
-> +static inline int cxgb4i_ddp_gl_map(struct pci_dev *pdev,
-> +				struct cxgb4i_gather_list *gl)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i<  gl->nelem; i++) {
-> +		gl->phys_addr[i] = pci_map_page(pdev, gl->pages[i], 0,
-> +						PAGE_SIZE,
 
-Hey Rakesh,
+Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+---
 
-I guess we are trying to move away from the pci mapping functions move 
-to the dma ones. On your next submission, could you fix those up too?
+diff -aNur linux-2.6.34-rc4.org/drivers/scsi/scsi_sysfs.c linux-2.6.34-rc4/drivers/scsi/scsi_sysfs.c
+--- linux-2.6.34-rc4.org/drivers/scsi/scsi_sysfs.c	2010-04-13 10:41:35.000000000 +0900
++++ linux-2.6.34-rc4/drivers/scsi/scsi_sysfs.c	2010-04-14 15:05:50.000000000 +0900
+@@ -474,7 +474,7 @@
+ 
+ 
+ /*
+- * sdev_rd_attr: create a function and attribute variable for a
++ * sdev_rw_attr: create a function and attribute variable for a
+  * read/write field.
+  */
+ #define sdev_rw_attr(field, format_string)				\
+@@ -486,7 +486,7 @@
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
+-	snscanf (buf, 20, format_string, &sdev->field);			\
++	sscanf (buf, format_string, &sdev->field);			\
+ 	return count;							\
+ }									\
+ static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
