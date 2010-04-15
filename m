@@ -1,61 +1,73 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] sdparm 1.05 available
-Date: Wed, 14 Apr 2010 18:59:40 -0400
-Message-ID: <4BC648DC.4060007@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH SCSI] scsi: fix locking around blk_abort_request()
+Date: Thu, 15 Apr 2010 09:00:08 +0900
+Message-ID: <4BC65708.80602@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Tomas Fasth <tomfa@debian.org>, Martin Pitt <mpitt@debian.org>, kumba@gentoo.org, =?ISO-8859-1?Q?Dan_H?= =?ISO-8859-1?Q?or=E1k?= <dhorak@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:33668 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752274Ab0DNX4n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Apr 2010 19:56:43 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). The
-parameters are held in mode pages. Apart from SCSI devices
-(e.g. disks, tapes and enclosures) sdparm can be used on
-any device that uses a SCSI command set. Almost all CD/DVD/BD
-drives use the SCSI MMC set irrespective of the transport.
-sdparm also can decode VPD pages including the device
-identification page. Commands to start and stop the media;
-load and unload removable media and some other housekeeping
-functions are supported. sdparm supports both the linux
-kernel 2.4 and 2.6 series with ports to FreeBSD, Solaris,
-Tru64 and Windows.
+blk_abort_request() expects queue lock to be held by the caller.
+Grab it before calling the function.
 
-The version tracks changes in draft standards from
-www.t10.org since October 2009. Starting with this version
-if libsgutils2 from the sg3_utils package (version 1.29)
-is available during the sdparm build then the executable
-will depend on that shared object.
+Lack of this synchronization led to infinite loop on corrupt
+q->timeout_list.
 
-ChangeLog for sdparm-1.05 [20100413] [svn: r149]
-   - add '--readonly' option especially for '-C start' and
-     '-C stop' on ATA disks.
-   - Control mode page updates (spc4r23)
-   - add Control data protection mode page (ssc4r01)
-   - block device characteristics VPD page: decode form factor
-   - extended inquiry VPD page: activate_microcode+r_sup (spc4r23)
-   - Automation device serial number and Data transfer device
-     element address VPD pages (ssc4r01)
-   - add SBC Referrals VPD page (sbc3r22)
-   - expand SBC Thin provisioning VPD page (sbc3r22)
-   - expand SBC Block limits VPD page (sbc3r22)
-   - SAS-2.1 specification split, upper layers placed in SPL
-     - add enable_slumber and enable_partial fields to
-       Enhanced phy control mode page
-   - add AM_MAINTAINER_MODE to configure.ac to lessen build issues
-   - build infrastructure change to use libsgutils2 if available
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: stable@kernel.org
+---
+ drivers/scsi/libsas/sas_ata.c       |    4 ++++
+ drivers/scsi/libsas/sas_scsi_host.c |    4 ++++
+ 2 files changed, 8 insertions(+)
 
-ChangeLog for sdparm-1.04 [20090920] [svn: r129]
-....
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index b00efd1..88f7446 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -395,11 +395,15 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev,
+ void sas_ata_task_abort(struct sas_task *task)
+ {
+ 	struct ata_queued_cmd *qc = task->uldd_task;
++	struct request_queue *q = qc->scsicmd->device->request_queue;
+ 	struct completion *waiting;
++	unsigned long flags;
 
+ 	/* Bounce SCSI-initiated commands to the SCSI EH */
+ 	if (qc->scsicmd) {
++		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_abort_request(qc->scsicmd->request);
++		spin_unlock_irqrestore(q->queue_lock, flags);
+ 		scsi_schedule_eh(qc->scsicmd->device->host);
+ 		return;
+ 	}
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 2660e1b..8228350 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1030,6 +1030,8 @@ int __sas_task_abort(struct sas_task *task)
+ void sas_task_abort(struct sas_task *task)
+ {
+ 	struct scsi_cmnd *sc = task->uldd_task;
++	struct request_queue *q = sc->device->request_queue;
++	unsigned long flags;
 
-For more information and downloads see:
-     http://sg.danny.cz/sg/sdparm.html
+ 	/* Escape for libsas internal commands */
+ 	if (!sc) {
+@@ -1044,7 +1046,9 @@ void sas_task_abort(struct sas_task *task)
+ 		return;
+ 	}
 
-A release announcement will be sent to freshmeat.net .
++	spin_lock_irqsave(q->queue_lock, flags);
+ 	blk_abort_request(sc->request);
++	spin_unlock_irqrestore(q->queue_lock, flags);
+ 	scsi_schedule_eh(sc->device->host);
+ }
 
-Doug Gilbert
