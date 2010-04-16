@@ -1,73 +1,100 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [patch 1/1] hpsa: remove unneeded defines
-Date: Fri, 16 Apr 2010 13:28:41 -0500
-Message-ID: <20100416182841.GA19756@beardog.cce.hp.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Fri, 16 Apr 2010 15:25:42 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1004161517260.1923-100000@iolanthe.rowland.org>
+References: <20100416182026.GA10023@xanatos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:48994 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756654Ab0DPSYq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Apr 2010 14:24:46 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <20100416182026.GA10023@xanatos>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Jonas Schwertfeger <jschwertfeger@gmail.com>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Steve Cameron <steve.cameron@hp.com>
 
-Patch 1/1
+On Fri, 16 Apr 2010, Sarah Sharp wrote:
 
-From: Mike Miller <mike.miller@hp.com>
+> In the meantime, can everyone confirm my summary of the behavior of the
+> Buffalo device (not the Genesys chip)?
+> 
+> 
+> 
+> 
+> There seems to be an issue with how the Buffalo USB3 hard drive handles
+> the SCSI ATA pass through commands.  We found this issue when the Linux
+> userspace program hdparm, using the Ubuntu Linux distribution.  The
+> device responds correctly to an IDENTIFY DEVICE via the ATA_12 tunnel,
+> but it stalls when it's sent an IDENTIFY DEVICE via the ATA_16 tunnel.
 
-This patch removes unnecessary #define's from hpsa. The SCSI midlayer
-handles all this for us.
+"Stalls" isn't the right word.  It responds with "Phase Error" in
+bCSWStatus.  Less precisely but more succinctly, it returns a Phase
+Error.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-Cc: scameron@beardog.cce.hp.com
+> The command before the ATA_16 IDENTIFY DEVICE was a SET FEATURES via the
+> ATA_16 tunnel, and it was responded to properly, so we think it should
+> support the ATA_16 commands.
+> 
+> This problem makes the device unusable under the Linux 2.6.31 and 2.6.32
 
+Only when running USB 3.  The devices work okay with USB 2.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 183d3a4..c016426 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2708,14 +2708,6 @@ static void fill_cmd(struct CommandList *c, u8 cmd, struct ctlr_info *h,
- 			c->Request.CDB[8] = (size >> 8) & 0xFF;
- 			c->Request.CDB[9] = size & 0xFF;
- 			break;
--
--		case HPSA_READ_CAPACITY:
--			c->Request.CDBLen = 10;
--			c->Request.Type.Attribute = ATTR_SIMPLE;
--			c->Request.Type.Direction = XFER_READ;
--			c->Request.Timeout = 0;
--			c->Request.CDB[0] = cmd;
--			break;
- 		case HPSA_CACHE_FLUSH:
- 			c->Request.CDBLen = 12;
- 			c->Request.Type.Attribute = ATTR_SIMPLE;
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 56fb982..78de9b6 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -152,21 +152,6 @@ struct SenseSubsystem_info {
- 	u8 reserved1[1108];
- };
- 
--#define HPSA_READ_CAPACITY 0x25 /* Read Capacity */
--struct ReadCapdata {
--	u8 total_size[4];	/* Total size in blocks */
--	u8 block_size[4];	/* Size of blocks in bytes */
--};
--
--#if 0
--/* 12 byte commands not implemented in firmware yet. */
--#define HPSA_READ 	0xa8
--#define HPSA_WRITE	0xaa
--#endif
--
--#define HPSA_READ   0x28    /* Read(10) */
--#define HPSA_WRITE  0x2a    /* Write(10) */
--
- /* BMIC commands */
- #define BMIC_READ 0x26
- #define BMIC_WRITE 0x27
+> kernels, as they don't support configured device reset after an endpoint
+> stall.  The device works on later kernels (2.6.33 and 2.6.34) with that
+> support.
+> 
+> 
+> Details
+> -------
+> 
+> The hdparm program issues the following commands, and gets the following
+> responses:
+> 
+> command contents: a1 08 2e 00 01 00 00 00 00 ec 00 00
+> Bulk Command S 0x43425355 T 0x2d L 512 F 128 Trg 0 LUN 0 CL 12
+> Bulk Status S 0x53425355 T 0x2d R 0 Stat 0x0
+> scsi cmd done, result=0x0
+>    (This is an IDENTIFY DEVICE via the ATA_12 tunnel)
+> 
+> command contents: 85 06 20 00 05 00 fe 00 00 00 00 00 00 40 ef 00
+> Bulk Command S 0x43425355 T 0x2e L 0 F 0 Trg 0 LUN 0 CL 16
+> Bulk Command S 0x43425355 T 0x2f L 512 F 128 Trg 0 LUN 0 CL 16
+
+This "T 0x2f" line doesn't belong here (it appears below).  Copy & 
+Paste error?
+
+> Bulk Status S 0x53425355 T 0x2e R 0 Stat 0x0
+> scsi cmd done, result=0x0
+>    (This is a SET FEATURES via the ATA_16 tunnel)
+> 
+> command contents: 85 08 2e 00 00 00 00 00 00 00 00 00 00 40 ec 00
+> Bulk Command S 0x43425355 T 0x2f L 512 F 128 Trg 0 LUN 0 CL 16
+> Bulk Status S 0x53425355 T 0x2f R 512 Stat 0x2
+
+And this "Bulk Status" line doesn't belong here.  Again, it appears 
+below.
+
+> Status code -32; transferred 0/512
+> clearing endpoint halt for pipe 0xc0008280
+> Bulk status result = 0
+> Bulk Status S 0x53425355 T 0x2f R 512 Stat 0x2
+> -- transport indicates error, resetting
+>   (This is an IDENTIFY DEVICE via the ATA_16 tunnel)
+> 
+> The full log is here:
+> http://minilop.net/~sarah/buffalo-hd-ata-16-issue.log
+> 
+> The drive stalls on the last command, which is a valid ATA command.  Can
+
+It returns an error on the last command.  (It also stalls, but that's
+okay -- stalling an endpoint during a command is normal and it should
+work fine with USB 3.)
+
+> you confirm if your device supports the SCSI ATA pass through
+> specification?
+> 
+> http://www.t10.org/cgi-bin/ac.pl?t=f&f=sat2r09.pdf
+
+That link doesn't work.  The standard is not freely available.
+
+Alan Stern
+
