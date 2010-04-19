@@ -1,69 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Mon, 19 Apr 2010 12:02:16 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1004191200440.1669-100000@iolanthe.rowland.org>
-References: <4BCC70F7.9000001@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: SYNCHRONIZE_CACHE from sd_preppare_flush does not have retries.!
+Date: Mon, 19 Apr 2010 11:20:43 -0500
+Message-ID: <4BCC82DB.1070402@cs.wisc.edu>
+References: <1C9608B8A4CD534FB19C7C7543CBB249021C7718FA@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44392 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753836Ab0DSQCR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2010 12:02:17 -0400
-In-Reply-To: <4BCC70F7.9000001@gmail.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:40693 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755143Ab0DSQUb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Apr 2010 12:20:31 -0400
+In-Reply-To: <1C9608B8A4CD534FB19C7C7543CBB249021C7718FA@inbmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
 
-On Mon, 19 Apr 2010, Jonas Schwertfeger wrote:
+On 04/19/2010 06:32 AM, Desai, Kashyap wrote:
+> I am facing one issue with scsi stack.
+> Here is a background of my test.
+>
+> Mount ext3 file system with journaling support with barrier=1, commit=5
+> Now, with this setup file system will do submit_bh with  WRITE_BARRIER flag set for interval of 5 seconds. (This is a part of journaling.)
+> Eventually it will call queue_flush() which will generate SCSI command of CDB: SYNCHRONIZE_CAHCE and insert it into the request queue.
+> I observed that creation of SYNCHRONIZE_CACHE is a part of sd_prepare_flush(). Here we have timeout set to SD_TIMEOUT but retries are not set.
+> Because of retries of the request is not set, there is no retries allowed for SYNCHRONIZE_CACHE at mid layer.
+>
+> Because of zero retries for SYNCHRONIZE_CACHE command at mid-layer, it is creating trouble for file system.
+> In current situation, Even though LLD send back commands with DID_RESET, SYNCHRONIZE_CACHE will fail immediately without going for any retries, when HBA is in recovery state. Eventually this information goes to File system and it sees SYNCHRONIZE_CAHCE is failed and file system goes to Read only mode.
+>
+> My question is "Can we add in sd_prepare_flush(), rq->retries = X" some reasonable retries value ?
+>
 
-> On 04/16/2010 08:20 PM, Sarah Sharp wrote:
-> > I'll see if I can find a contact for this.  I need a couple more details
-> > so they can reproduce this.  Jonas, did you ever test the Buffalo drive with
-> > Mark Lord's fix to set the sector count to "1"?  Which version of hdparm
-> > were you using?  Is that version just in Lucid, or is it in Karmic too?
-> 
-> Yes, I did try it with Mark's latest version (9.29b) which uses a sector 
-> count of "1" (version 9.29) and, in addition, uses ATA_12 (instead of 
-> ATA_16) for IDENTIFY (9.29b).  The issue exists in Karmic and Lucid.
-> 
-> It seems the report I sent back to Mark, once I tested 9.29b, didn't go 
-> to all of you but just Mark.  Here it is:
-> 
-> --------------------------------------------------------
-> The good news: It doesn't crash the chip anymore. The drive is still 
-> mounted fine after executing hdparm.
-> 
-> The bad news: From the hdparm output it seems like the chip still 
-> doesn't play nice.
-> 
-> /dev/sdb:
-> outgoing cdb:  a1 08 2e 00 01 00 00 00 40 ec 00 00 00 00 00 00
-> data:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> SG_IO: ATA_12 status=0x0, host_status=0x0, driver_status=0x0
-> SG_IO: bad response (not CHECK_CONDITION)
-> Trying legacy HDIO_DRIVE_CMD
-> outgoing cdb:  a1 08 2e 00 01 00 00 00 40 a1 00 00 00 00 00 00
-> data:  40 00 ff 3f 37 c8 10 00 00 00 00 00 3f 00 00 00
-> SG_IO: ATA_12 status=0x2, host_status=0x0, driver_status=0x8
-> SG_IO: sb[]:  72 0b 00 00 00 00 00 0e 09 0c 00 04 00 01 00 00 00 00 00 
-> 00 40 51 00 00 00 00 00 00 00 00 00 00
-> SG_IO: desc[]:  09 0c 00 04 00 01 00 00 00 00 00 00
->        ATA_12 stat=51 err=04 nsect=01 lbal=00 lbam=00 lbah=00 dev=40
-> I/O error, ata_op=0xa1 ata_status=0x51 ata_error=0x04
->   HDIO_DRIVE_CMD(identify) failed: Input/output error
->   readonly      =  0 (off)
->   readahead     = 256 (on)
->   geometry      = 121601/255/63, sectors = 1953525168, start = 0
-> --------------------------------------------------------
-> 
-> I didn't get a reply from Mark on this yet.  Alan, does this output mean 
-> something to you?
+I am not sure where we want it, but I think we want to be able to set 
+both the retries and timeout. I have seen where a sync cache can take 
+longer than the default 30 secs.
 
-Not a lot, just that there are no more USB-level problems.  Any 
-remaining problems are higher up, at the SCSI level or hdparm 
-application level.
-
-Alan Stern
-
+Do you think we want to the block layer to manage retries/timeouts for 
+all block device flushes or is this more device specific? I was thinking 
+that we may want to create a sysfs interface under the block dirs and 
+have blk-sysfs.c and blk-barrier.c handle this. queue_flush could set 
+the timeout and retries that is set by some new files under 
+/sys/block/sdX/queue/ ?
