@@ -1,105 +1,165 @@
 From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
 Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Mon, 19 Apr 2010 13:45:37 -0700
-Message-ID: <20100419204537.GA4245@xanatos>
-References: <4BBF6B2F.9060902@gmail.com>
- <Pine.LNX.4.44L0.1004091504500.1852-100000@iolanthe.rowland.org>
- <20100409215439.GA4779@xanatos>
- <4BC2D049.1090606@gmail.com>
- <20100416182026.GA10023@xanatos>
- <4BCC70F7.9000001@gmail.com>
+Date: Mon, 19 Apr 2010 14:15:39 -0700
+Message-ID: <20100419211539.GB4245@xanatos>
+References: <20100416182026.GA10023@xanatos>
+ <Pine.LNX.4.44L0.1004161517260.1923-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-hotplug-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.21]:65063 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751896Ab0DSVQL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Apr 2010 17:16:11 -0400
 Content-Disposition: inline
-In-Reply-To: <4BCC70F7.9000001@gmail.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
+In-Reply-To: <Pine.LNX.4.44L0.1004161517260.1923-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jonas Schwertfeger <jschwertfeger@gmail.com>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Mon, Apr 19, 2010 at 05:04:23PM +0200, Jonas Schwertfeger wrote:
-> On 04/16/2010 08:20 PM, Sarah Sharp wrote:
-> >I'll see if I can find a contact for this.  I need a couple more details
-> >so they can reproduce this.  Jonas, did you ever test the Buffalo drive with
-> >Mark Lord's fix to set the sector count to "1"?  Which version of hdparm
-> >were you using?  Is that version just in Lucid, or is it in Karmic too?
+Updated bug description below.
+
+On Fri, Apr 16, 2010 at 03:25:42PM -0400, Alan Stern wrote:
+> On Fri, 16 Apr 2010, Sarah Sharp wrote:
 > 
-> Yes, I did try it with Mark's latest version (9.29b) which uses a
-> sector count of "1" (version 9.29) and, in addition, uses ATA_12
-> (instead of ATA_16) for IDENTIFY (9.29b).  The issue exists in
-> Karmic and Lucid.
+> > In the meantime, can everyone confirm my summary of the behavior of the
+> > Buffalo device (not the Genesys chip)?
+> > 
+> > 
+> > 
+> > 
+> > There seems to be an issue with how the Buffalo USB3 hard drive handles
+> > the SCSI ATA pass through commands.  We found this issue when the Linux
+> > userspace program hdparm, using the Ubuntu Linux distribution.  The
+> > device responds correctly to an IDENTIFY DEVICE via the ATA_12 tunnel,
+> > but it stalls when it's sent an IDENTIFY DEVICE via the ATA_16 tunnel.
+> 
+> "Stalls" isn't the right word.  It responds with "Phase Error" in
+> bCSWStatus.  Less precisely but more succinctly, it returns a Phase
+> Error.
+> 
+> > The command before the ATA_16 IDENTIFY DEVICE was a SET FEATURES via the
+> > ATA_16 tunnel, and it was responded to properly, so we think it should
+> > support the ATA_16 commands.
+> > 
+> > This problem makes the device unusable under the Linux 2.6.31 and 2.6.32
+> 
+> Only when running USB 3.  The devices work okay with USB 2.
+> 
+> > kernels, as they don't support configured device reset after an endpoint
+> > stall.  The device works on later kernels (2.6.33 and 2.6.34) with that
+> > support.
+> > 
+> > 
+> > Details
+> > -------
+> > 
+> > The hdparm program issues the following commands, and gets the following
+> > responses:
+> > 
+> > command contents: a1 08 2e 00 01 00 00 00 00 ec 00 00
+> > Bulk Command S 0x43425355 T 0x2d L 512 F 128 Trg 0 LUN 0 CL 12
+> > Bulk Status S 0x53425355 T 0x2d R 0 Stat 0x0
+> > scsi cmd done, result=0x0
+> >    (This is an IDENTIFY DEVICE via the ATA_12 tunnel)
+> > 
+> > command contents: 85 06 20 00 05 00 fe 00 00 00 00 00 00 40 ef 00
+> > Bulk Command S 0x43425355 T 0x2e L 0 F 0 Trg 0 LUN 0 CL 16
+> > Bulk Command S 0x43425355 T 0x2f L 512 F 128 Trg 0 LUN 0 CL 16
+> 
+> This "T 0x2f" line doesn't belong here (it appears below).  Copy & 
+> Paste error?
+> 
+> > Bulk Status S 0x53425355 T 0x2e R 0 Stat 0x0
+> > scsi cmd done, result=0x0
+> >    (This is a SET FEATURES via the ATA_16 tunnel)
+> > 
+> > command contents: 85 08 2e 00 00 00 00 00 00 00 00 00 00 40 ec 00
+> > Bulk Command S 0x43425355 T 0x2f L 512 F 128 Trg 0 LUN 0 CL 16
+> > Bulk Status S 0x53425355 T 0x2f R 512 Stat 0x2
+> 
+> And this "Bulk Status" line doesn't belong here.  Again, it appears 
+> below.
+> 
+> > Status code -32; transferred 0/512
+> > clearing endpoint halt for pipe 0xc0008280
+> > Bulk status result = 0
+> > Bulk Status S 0x53425355 T 0x2f R 512 Stat 0x2
+> > -- transport indicates error, resetting
+> >   (This is an IDENTIFY DEVICE via the ATA_16 tunnel)
+> > 
+> > The full log is here:
+> > http://minilop.net/~sarah/buffalo-hd-ata-16-issue.log
+> > 
+> > The drive stalls on the last command, which is a valid ATA command.  Can
+> 
+> It returns an error on the last command.  (It also stalls, but that's
+> okay -- stalling an endpoint during a command is normal and it should
+> work fine with USB 3.)
+> 
+> > you confirm if your device supports the SCSI ATA pass through
+> > specification?
+> > 
+> > http://www.t10.org/cgi-bin/ac.pl?t=f&f=sat2r09.pdf
+> 
+> That link doesn't work.  The standard is not freely available.
+> 
+> Alan Stern
+> 
 
-But there were two separate issues for two separate USB3 hard drives.
-Didn't your Buffalo drive need the ATA_12 IDENTIFY with the sector count
-set to zero?  And hard drives with the Genesys drive needed the sector
-count set to 1?
+Updated description
+-------------------
 
-Your original log showed something issuing an ATA_12 IDENTIFY command:
+Summary:
 
-Mar 24 18:51:29 js-workstation kernel: [  126.720576] usb-storage: Command BLANK (12 bytes)
-Mar 24 18:51:29 js-workstation kernel: [  126.720577] usb-storage:  a1 08 2e 00 01 00 00 00 00 ec 00 00
-Mar 24 18:51:29 js-workstation kernel: [  126.720584] usb-storage: Bulk Command S 0x43425355 T 0x2d L 512 F 128 Trg 0 LUN 0 CL 12
+The Buffalo USB3 hard drive fails to mount after being sent an ATA_16
+IDENTIFY command.  It does not fail when the device is connected via a
+USB 2.0 cable and the same command is sent.
 
-(It says command BLANK but Douglas Gilbert said it was actually an ATA_12 command).
+Details:
 
-But the original output you posted from hdparm doesn't list that ATA_12
-command:
+There seems to be an issue with how the Buffalo USB3 hard drive handles
+the SCSI ATA pass through commands.  We found this issue with the Linux
+userspace program hdparm, using the Ubuntu Linux Karmic distribution.
+The device responds correctly to an IDENTIFY DEVICE via the ATA_12
+tunnel, but it responds with a Phase Error when it's sent an IDENTIFY
+DEVICE via the ATA_16 tunnel, and then stalls.
 
-sudo hdparm --verbose /dev/sdb 
+The hdparm program thinks the Phase Error is an invalid response:
+
+sudo hdparm --verbose /dev/sdb
 
 /dev/sdb:
-outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 ec 00 
+outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 ec 00
 SG_IO: ATA_16 status=0x0, host_status=0x7, driver_status=0x0
-SG_IO: bad response (not CHECK_CONDITION) 
-outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 a1 00 
+SG_IO: bad response (not CHECK_CONDITION)
+outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 a1 00
 SG_IO: ATA_16 status=0x0, host_status=0x7, driver_status=0x0
-SG_IO: bad response (not CHECK_CONDITION) 
+SG_IO: bad response (not CHECK_CONDITION)
  HDIO_DRIVE_CMD(identify) failed: Invalid exchange
  readonly      =  0 (off)
  readahead     = 256 (on)
  geometry      = 36365/64/32, sectors = 0, start = 0
 
+Stalling on the ATA_16 IDENTIFY device is fine, but the invalid response
+is not.
 
-Maybe it was issued by another userspace program?  The kernel log
-doesn't show what the device response was, but it could be that the
-device actually checks the sector count of the command.  Can you change
-the hdparam code to issue the ATA_12 command, but leave the sector count
-as zero?
+The hard drive does not seem to work after this command is sent, and
+cannot be mounted.  If we inhibit udev from running hdparm (by stopping
+the udev daemon) then the drive can be mounted successfully.
+
+If the drive is plugged in via a USB 2.0 cable, then the drive works
+correctly, even though it gets issued the same commands.
+
+The command before the ATA_16 IDENTIFY DEVICE was a SET FEATURES via the
+ATA_16 tunnel, and it was responded to properly, so we think it should
+support the ATA_16 commands.
+
+The full kernel log is here:
+http://minilop.net/~sarah/buffalo-hd-ata-16-issue.log
+
+The ATA_12 IDENTIFY command starts at line 8816.  (It says the command
+is a BLANK command, but it's incorrectly identified that command.)
 
 Sarah Sharp
-
-> It seems the report I sent back to Mark, once I tested 9.29b, didn't
-> go to all of you but just Mark.  Here it is:
-> 
-> --------------------------------------------------------
-> The good news: It doesn't crash the chip anymore. The drive is still
-> mounted fine after executing hdparm.
-> 
-> The bad news: From the hdparm output it seems like the chip still
-> doesn't play nice.
-> 
-> /dev/sdb:
-> outgoing cdb:  a1 08 2e 00 01 00 00 00 40 ec 00 00 00 00 00 00
-> data:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-> SG_IO: ATA_12 status=0x0, host_status=0x0, driver_status=0x0
-> SG_IO: bad response (not CHECK_CONDITION)
-> Trying legacy HDIO_DRIVE_CMD
-> outgoing cdb:  a1 08 2e 00 01 00 00 00 40 a1 00 00 00 00 00 00
-> data:  40 00 ff 3f 37 c8 10 00 00 00 00 00 3f 00 00 00
-> SG_IO: ATA_12 status=0x2, host_status=0x0, driver_status=0x8
-> SG_IO: sb[]:  72 0b 00 00 00 00 00 0e 09 0c 00 04 00 01 00 00 00 00
-> 00 00 40 51 00 00 00 00 00 00 00 00 00 00
-> SG_IO: desc[]:  09 0c 00 04 00 01 00 00 00 00 00 00
->       ATA_12 stat=51 err=04 nsect=01 lbal=00 lbam=00 lbah=00 dev=40
-> I/O error, ata_op=0xa1 ata_status=0x51 ata_error=0x04
->  HDIO_DRIVE_CMD(identify) failed: Input/output error
->  readonly      =  0 (off)
->  readahead     = 256 (on)
->  geometry      = 121601/255/63, sectors = 1953525168, start = 0
-> --------------------------------------------------------
-> 
-> I didn't get a reply from Mark on this yet.  Alan, does this output
-> mean something to you?
-> 
-> -Jonas
