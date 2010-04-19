@@ -1,98 +1,105 @@
-From: Bernd Schubert <bs_lists@aakef.fastmail.fm>
-Subject: Re: SYNCHRONIZE_CACHE from sd_preppare_flush does not have retries.!
-Date: Mon, 19 Apr 2010 21:17:15 +0200
-Message-ID: <201004192117.15625.bs_lists@aakef.fastmail.fm>
-References: <1C9608B8A4CD534FB19C7C7543CBB249021C7718FA@inbmail02.lsi.com> <201004192014.51019.bernd.schubert@fastmail.fm> <1271702740.2849.67.camel@mulgrave.site>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Mon, 19 Apr 2010 13:45:37 -0700
+Message-ID: <20100419204537.GA4245@xanatos>
+References: <4BBF6B2F.9060902@gmail.com>
+ <Pine.LNX.4.44L0.1004091504500.1852-100000@iolanthe.rowland.org>
+ <20100409215439.GA4779@xanatos>
+ <4BC2D049.1090606@gmail.com>
+ <20100416182026.GA10023@xanatos>
+ <4BCC70F7.9000001@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out2.smtp.messagingengine.com ([66.111.4.26]:42358 "EHLO
-	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752344Ab0DSTRS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Apr 2010 15:17:18 -0400
-In-Reply-To: <1271702740.2849.67.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4BCC70F7.9000001@gmail.com>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bernd Schubert <bschubert@ddn.com>
 
-On Monday 19 April 2010, James Bottomley wrote:
-> On Mon, 2010-04-19 at 20:14 +0200, Bernd Schubert wrote:
-> > On Monday 19 April 2010, Mike Christie wrote:
-> > > On 04/19/2010 06:32 AM, Desai, Kashyap wrote:
-> > > > I am facing one issue with scsi stack.
-> > > > Here is a background of my test.
-> > > >
-> > > > Mount ext3 file system with journaling support with barrier=1,
-> > > > commit=5 Now, with this setup file system will do submit_bh with 
-> > > > WRITE_BARRIER flag set for interval of 5 seconds. (This is a part of
-> > > > journaling.) Eventually it will call queue_flush() which will
-> > > > generate SCSI command of CDB: SYNCHRONIZE_CAHCE and insert it into
-> > > > the request queue. I observed that creation of SYNCHRONIZE_CACHE is a
-> > > > part of sd_prepare_flush(). Here we have timeout set to SD_TIMEOUT
-> > > > but retries are not set. Because of retries of the request is not
-> > > > set, there is no retries allowed for SYNCHRONIZE_CACHE at mid layer.
-> > > >
-> > > > Because of zero retries for SYNCHRONIZE_CACHE command at mid-layer,
-> > > > it is creating trouble for file system. In current situation, Even
-> > > > though LLD send back commands with DID_RESET, SYNCHRONIZE_CACHE will
-> > > > fail immediately without going for any retries, when HBA is in
-> > > > recovery state. Eventually this information goes to File system and
-> > > > it sees
-> > > > SYNCHRONIZE_CAHCE is failed and file system goes to Read only mode.
-> > > >
-> > > > My question is "Can we add in sd_prepare_flush(), rq->retries = X"
-> > > > some reasonable retries value ?
-> > >
-> > > I am not sure where we want it, but I think we want to be able to set
-> > > both the retries and timeout. I have seen where a sync cache can take
-> > > longer than the default 30 secs.
-> > >
-> > > Do you think we want to the block layer to manage retries/timeouts for
-> > > all block device flushes or is this more device specific? I was
-> > > thinking that we may want to create a sysfs interface under the block
-> > > dirs and have blk-sysfs.c and blk-barrier.c handle this. queue_flush
-> > > could set the timeout and retries that is set by some new files under
-> > > /sys/block/sdX/queue/ ?
-> >
-> > Good that now also other people run into it. 30s is far too small for any
-> > hardware raid unit with SATA disks.
+On Mon, Apr 19, 2010 at 05:04:23PM +0200, Jonas Schwertfeger wrote:
+> On 04/16/2010 08:20 PM, Sarah Sharp wrote:
+> >I'll see if I can find a contact for this.  I need a couple more details
+> >so they can reproduce this.  Jonas, did you ever test the Buffalo drive with
+> >Mark Lord's fix to set the sector count to "1"?  Which version of hdparm
+> >were you using?  Is that version just in Lucid, or is it in Karmic too?
 > 
-> It's far too short for just about any HW RAID since they all tend to
-> have multi-megabytes to gigabytes of cache (some of the high end have
-> terrabytes).  It has to be said that most arrays with battery backed
+> Yes, I did try it with Mark's latest version (9.29b) which uses a
+> sector count of "1" (version 9.29) and, in addition, uses ATA_12
+> (instead of ATA_16) for IDENTIFY (9.29b).  The issue exists in
+> Karmic and Lucid.
 
-For DDN storage 30s are actually sufficient, unless disk delays come up. But 
-then we presently also only have a rather small cache only (2GB) with lots of 
-disks. 
-Nowadays one can get an UPS protected DDN-9900 controller, but the firmware 
-still properly handles the SYNC_CACHE command.
+But there were two separate issues for two separate USB3 hard drives.
+Didn't your Buffalo drive need the ATA_12 IDENTIFY with the sector count
+set to zero?  And hard drives with the Genesys drive needed the sector
+count set to 1?
 
-> caches lie when asked to flush the cache, but we probably need to get
-> users into the habit of not using flush barriers with external Arrays.
+Your original log showed something issuing an ATA_12 IDENTIFY command:
+
+Mar 24 18:51:29 js-workstation kernel: [  126.720576] usb-storage: Command BLANK (12 bytes)
+Mar 24 18:51:29 js-workstation kernel: [  126.720577] usb-storage:  a1 08 2e 00 01 00 00 00 00 ec 00 00
+Mar 24 18:51:29 js-workstation kernel: [  126.720584] usb-storage: Bulk Command S 0x43425355 T 0x2d L 512 F 128 Trg 0 LUN 0 CL 12
+
+(It says command BLANK but Douglas Gilbert said it was actually an ATA_12 command).
+
+But the original output you posted from hdparm doesn't list that ATA_12
+command:
+
+sudo hdparm --verbose /dev/sdb 
+
+/dev/sdb:
+outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 ec 00 
+SG_IO: ATA_16 status=0x0, host_status=0x7, driver_status=0x0
+SG_IO: bad response (not CHECK_CONDITION) 
+outgoing cdb:  85 08 2e 00 00 00 00 00 00 00 00 00 00 40 a1 00 
+SG_IO: ATA_16 status=0x0, host_status=0x7, driver_status=0x0
+SG_IO: bad response (not CHECK_CONDITION) 
+ HDIO_DRIVE_CMD(identify) failed: Invalid exchange
+ readonly      =  0 (off)
+ readahead     = 256 (on)
+ geometry      = 36365/64/32, sectors = 0, start = 0
+
+
+Maybe it was issued by another userspace program?  The kernel log
+doesn't show what the device response was, but it could be that the
+device actually checks the sector count of the command.  Can you change
+the hdparam code to issue the ATA_12 command, but leave the sector count
+as zero?
+
+Sarah Sharp
+
+> It seems the report I sent back to Mark, once I tested 9.29b, didn't
+> go to all of you but just Mark.  Here it is:
 > 
-> > http://markmail.org/message/ewicheafcvgwm4p7
-> >
-> > I wrote this patch while having trouble with Infortrend Raids, but it
-> > also comes up with DDN storage if the write back cache is enabled.
-> > Shall I update the patch, add retries and then resend the entire series?
+> --------------------------------------------------------
+> The good news: It doesn't crash the chip anymore. The drive is still
+> mounted fine after executing hdparm.
 > 
-> rq->timeout is the timeout of the request triggering the flush ... it's
-> likely the wrong value since it's for a fast completing r/w operation,
-> whereas this is a slow drain operation.
-
-Hmm, in the past we had scsi_device->timeout, but I thought this was given up 
-in favour of scsi_device->request_queue->rq_timeout? (somehwere around 
-2.6.27?)
-
-
-Thanks,
-Bernd
-
-
--- 
-Bernd Schubert
-DataDirect Networks
+> The bad news: From the hdparm output it seems like the chip still
+> doesn't play nice.
+> 
+> /dev/sdb:
+> outgoing cdb:  a1 08 2e 00 01 00 00 00 40 ec 00 00 00 00 00 00
+> data:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> SG_IO: ATA_12 status=0x0, host_status=0x0, driver_status=0x0
+> SG_IO: bad response (not CHECK_CONDITION)
+> Trying legacy HDIO_DRIVE_CMD
+> outgoing cdb:  a1 08 2e 00 01 00 00 00 40 a1 00 00 00 00 00 00
+> data:  40 00 ff 3f 37 c8 10 00 00 00 00 00 3f 00 00 00
+> SG_IO: ATA_12 status=0x2, host_status=0x0, driver_status=0x8
+> SG_IO: sb[]:  72 0b 00 00 00 00 00 0e 09 0c 00 04 00 01 00 00 00 00
+> 00 00 40 51 00 00 00 00 00 00 00 00 00 00
+> SG_IO: desc[]:  09 0c 00 04 00 01 00 00 00 00 00 00
+>       ATA_12 stat=51 err=04 nsect=01 lbal=00 lbam=00 lbah=00 dev=40
+> I/O error, ata_op=0xa1 ata_status=0x51 ata_error=0x04
+>  HDIO_DRIVE_CMD(identify) failed: Input/output error
+>  readonly      =  0 (off)
+>  readahead     = 256 (on)
+>  geometry      = 121601/255/63, sectors = 1953525168, start = 0
+> --------------------------------------------------------
+> 
+> I didn't get a reply from Mark on this yet.  Alan, does this output
+> mean something to you?
+> 
+> -Jonas
