@@ -1,64 +1,107 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Tue, 20 Apr 2010 00:31:09 -0400
-Message-ID: <4BCD2E0D.80305@pobox.com>
-References: <20100416182026.GA10023@xanatos>
- <Pine.LNX.4.44L0.1004161517260.1923-100000@iolanthe.rowland.org>
- <20100419211539.GB4245@xanatos> <4BCCF497.70504@pobox.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: SYNCHRONIZE_CACHE from sd_preppare_flush does not have retries.!
+Date: Tue, 20 Apr 2010 10:35:41 +0530
+Message-ID: <1C9608B8A4CD534FB19C7C7543CBB249021C7719CF@inbmail02.lsi.com>
+References: <1C9608B8A4CD534FB19C7C7543CBB249021C7718FA@inbmail02.lsi.com>
+ <201004192014.51019.bernd.schubert@fastmail.fm>
+ <1271702740.2849.67.camel@mulgrave.site>
+ <201004192117.15625.bs_lists@aakef.fastmail.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4BCCF497.70504@pobox.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:32868 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751701Ab0DTFGS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Apr 2010 01:06:18 -0400
+In-Reply-To: <201004192117.15625.bs_lists@aakef.fastmail.fm>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bernd Schubert <bs_lists@aakef.fastmail.fm>, James Bottomley <James.Bottomley@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bernd Schubert <bschubert@ddn.com>
 
-On 19/04/10 08:25 PM, Mark Lord wrote:
-> On 19/04/10 05:15 PM, Sarah Sharp wrote:
->> Updated description
->> -------------------
->>
->> Summary:
->>
->> The Buffalo USB3 hard drive fails to mount after being sent an ATA_16
->> IDENTIFY command. It does not fail when the device is connected via a
->> USB 2.0 cable and the same command is sent.
->>
->> Details:
->>
->> There seems to be an issue with how the Buffalo USB3 hard drive handles
->> the SCSI ATA pass through commands. We found this issue with the Linux
->> userspace program hdparm, using the Ubuntu Linux Karmic distribution.
->> The device responds correctly to an IDENTIFY DEVICE via the ATA_12
->> tunnel, but it responds with a Phase Error when it's sent an IDENTIFY
->> DEVICE via the ATA_16 tunnel, and then stalls.
-> ..
->
-> I hsven't gone away or anything -- still reading mostly every word of
-> this thread.
-> I haven't done anything further here because I really don't understand
-> the whole story. Sarah's latest summary (above) helps a lot, though.
->
-> But I'm not sure what, if anything I (hdparm) can do differently to help
-> here.
->
-> Can anyone out there send me one of these gadgets?
->
-> Oh wait.. that wouldn't be terribly useful, I suppose,
-> since I also don't have any newfangled USB3 host gear.
-..
-
-Okay, apparently the shop around the corner has some $25 USB3 interface boards
-for PCIe, and also some for ExpressCard on my notebooks.
-
-Now I just need one of the buggy USB3/SATA bridges to test/debug with.
-I'm not willing to spend much of my own money on something known to be buggy though.
-Anyone out there got one they could loan?
-
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmVybmQgU2NodWJlcnQg
+W21haWx0bzpic19saXN0c0BhYWtlZi5mYXN0bWFpbC5mbV0NCj4gU2VudDogVHVlc2RheSwgQXBy
+aWwgMjAsIDIwMTAgMTI6NDcgQU0NCj4gVG86IEphbWVzIEJvdHRvbWxleQ0KPiBDYzogTWlrZSBD
+aHJpc3RpZTsgRGVzYWksIEthc2h5YXA7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBCZXJu
+ZA0KPiBTY2h1YmVydA0KPiBTdWJqZWN0OiBSZTogU1lOQ0hST05JWkVfQ0FDSEUgZnJvbSBzZF9w
+cmVwcGFyZV9mbHVzaCBkb2VzIG5vdCBoYXZlDQo+IHJldHJpZXMuIQ0KPiANCj4gT24gTW9uZGF5
+IDE5IEFwcmlsIDIwMTAsIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4gPiBPbiBNb24sIDIwMTAt
+MDQtMTkgYXQgMjA6MTQgKzAyMDAsIEJlcm5kIFNjaHViZXJ0IHdyb3RlOg0KPiA+ID4gT24gTW9u
+ZGF5IDE5IEFwcmlsIDIwMTAsIE1pa2UgQ2hyaXN0aWUgd3JvdGU6DQo+ID4gPiA+IE9uIDA0LzE5
+LzIwMTAgMDY6MzIgQU0sIERlc2FpLCBLYXNoeWFwIHdyb3RlOg0KPiA+ID4gPiA+IEkgYW0gZmFj
+aW5nIG9uZSBpc3N1ZSB3aXRoIHNjc2kgc3RhY2suDQo+ID4gPiA+ID4gSGVyZSBpcyBhIGJhY2tn
+cm91bmQgb2YgbXkgdGVzdC4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IE1vdW50IGV4dDMgZmlsZSBz
+eXN0ZW0gd2l0aCBqb3VybmFsaW5nIHN1cHBvcnQgd2l0aCBiYXJyaWVyPTEsDQo+ID4gPiA+ID4g
+Y29tbWl0PTUgTm93LCB3aXRoIHRoaXMgc2V0dXAgZmlsZSBzeXN0ZW0gd2lsbCBkbyBzdWJtaXRf
+YmgNCj4gd2l0aA0KPiA+ID4gPiA+IFdSSVRFX0JBUlJJRVIgZmxhZyBzZXQgZm9yIGludGVydmFs
+IG9mIDUgc2Vjb25kcy4gKFRoaXMgaXMgYQ0KPiBwYXJ0IG9mDQo+ID4gPiA+ID4gam91cm5hbGlu
+Zy4pIEV2ZW50dWFsbHkgaXQgd2lsbCBjYWxsIHF1ZXVlX2ZsdXNoKCkgd2hpY2ggd2lsbA0KPiA+
+ID4gPiA+IGdlbmVyYXRlIFNDU0kgY29tbWFuZCBvZiBDREI6IFNZTkNIUk9OSVpFX0NBSENFIGFu
+ZCBpbnNlcnQgaXQNCj4gaW50bw0KPiA+ID4gPiA+IHRoZSByZXF1ZXN0IHF1ZXVlLiBJIG9ic2Vy
+dmVkIHRoYXQgY3JlYXRpb24gb2YNCj4gU1lOQ0hST05JWkVfQ0FDSEUgaXMgYQ0KPiA+ID4gPiA+
+IHBhcnQgb2Ygc2RfcHJlcGFyZV9mbHVzaCgpLiBIZXJlIHdlIGhhdmUgdGltZW91dCBzZXQgdG8N
+Cj4gU0RfVElNRU9VVA0KPiA+ID4gPiA+IGJ1dCByZXRyaWVzIGFyZSBub3Qgc2V0LiBCZWNhdXNl
+IG9mIHJldHJpZXMgb2YgdGhlIHJlcXVlc3QgaXMNCj4gbm90DQo+ID4gPiA+ID4gc2V0LCB0aGVy
+ZSBpcyBubyByZXRyaWVzIGFsbG93ZWQgZm9yIFNZTkNIUk9OSVpFX0NBQ0hFIGF0IG1pZA0KPiBs
+YXllci4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IEJlY2F1c2Ugb2YgemVybyByZXRyaWVzIGZvciBT
+WU5DSFJPTklaRV9DQUNIRSBjb21tYW5kIGF0IG1pZC0NCj4gbGF5ZXIsDQo+ID4gPiA+ID4gaXQg
+aXMgY3JlYXRpbmcgdHJvdWJsZSBmb3IgZmlsZSBzeXN0ZW0uIEluIGN1cnJlbnQgc2l0dWF0aW9u
+LA0KPiBFdmVuDQo+ID4gPiA+ID4gdGhvdWdoIExMRCBzZW5kIGJhY2sgY29tbWFuZHMgd2l0aCBE
+SURfUkVTRVQsIFNZTkNIUk9OSVpFX0NBQ0hFDQo+IHdpbGwNCj4gPiA+ID4gPiBmYWlsIGltbWVk
+aWF0ZWx5IHdpdGhvdXQgZ29pbmcgZm9yIGFueSByZXRyaWVzLCB3aGVuIEhCQSBpcyBpbg0KPiA+
+ID4gPiA+IHJlY292ZXJ5IHN0YXRlLiBFdmVudHVhbGx5IHRoaXMgaW5mb3JtYXRpb24gZ29lcyB0
+byBGaWxlIHN5c3RlbQ0KPiBhbmQNCj4gPiA+ID4gPiBpdCBzZWVzDQo+ID4gPiA+ID4gU1lOQ0hS
+T05JWkVfQ0FIQ0UgaXMgZmFpbGVkIGFuZCBmaWxlIHN5c3RlbSBnb2VzIHRvIFJlYWQgb25seQ0K
+PiBtb2RlLg0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gTXkgcXVlc3Rpb24gaXMgIkNhbiB3ZSBhZGQg
+aW4gc2RfcHJlcGFyZV9mbHVzaCgpLCBycS0+cmV0cmllcyA9DQo+IFgiDQo+ID4gPiA+ID4gc29t
+ZSByZWFzb25hYmxlIHJldHJpZXMgdmFsdWUgPw0KPiA+ID4gPg0KPiA+ID4gPiBJIGFtIG5vdCBz
+dXJlIHdoZXJlIHdlIHdhbnQgaXQsIGJ1dCBJIHRoaW5rIHdlIHdhbnQgdG8gYmUgYWJsZSB0bw0K
+PiBzZXQNCj4gPiA+ID4gYm90aCB0aGUgcmV0cmllcyBhbmQgdGltZW91dC4gSSBoYXZlIHNlZW4g
+d2hlcmUgYSBzeW5jIGNhY2hlIGNhbg0KPiB0YWtlDQo+ID4gPiA+IGxvbmdlciB0aGFuIHRoZSBk
+ZWZhdWx0IDMwIHNlY3MuDQo+ID4gPiA+DQo+ID4gPiA+IERvIHlvdSB0aGluayB3ZSB3YW50IHRv
+IHRoZSBibG9jayBsYXllciB0byBtYW5hZ2UNCj4gcmV0cmllcy90aW1lb3V0cyBmb3INCj4gPiA+
+ID4gYWxsIGJsb2NrIGRldmljZSBmbHVzaGVzIG9yIGlzIHRoaXMgbW9yZSBkZXZpY2Ugc3BlY2lm
+aWM/IEkgd2FzDQo+ID4gPiA+IHRoaW5raW5nIHRoYXQgd2UgbWF5IHdhbnQgdG8gY3JlYXRlIGEg
+c3lzZnMgaW50ZXJmYWNlIHVuZGVyIHRoZQ0KPiBibG9jaw0KPiA+ID4gPiBkaXJzIGFuZCBoYXZl
+IGJsay1zeXNmcy5jIGFuZCBibGstYmFycmllci5jIGhhbmRsZSB0aGlzLg0KPiBxdWV1ZV9mbHVz
+aA0KPiA+ID4gPiBjb3VsZCBzZXQgdGhlIHRpbWVvdXQgYW5kIHJldHJpZXMgdGhhdCBpcyBzZXQg
+Ynkgc29tZSBuZXcgZmlsZXMNCj4gdW5kZXINCj4gPiA+ID4gL3N5cy9ibG9jay9zZFgvcXVldWUv
+ID8NClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cy4NCg0KVGhpcyBpcyB2ZXJ5IGNsb3Nl
+IHRvIG15IHVuZGVyc3RhbmRpbmcuIEkgZmVlbCB0aGlzIGlzIG1vcmUgY2xvc2UgdG8gYmxvY2sg
+bGF5ZXIgYW5kIEkgYW0gYWxtb3N0IGFncmVlaW5nIHdpdGggeW91ciB0aG91Z2h0Lg0KSSB0cmll
+ZCB0byB1bmRlcnN0YW5kIHdoeSB1cHN0cmVhbSBkb2VzIG5vdCBoYXZlIHJldHJpZXMgYXQgcXVl
+dWVfZmx1c2goKS9zZF9wcmVwYXJlX2ZsdXNoKCkgPz8/IEl0IGxvb2tzIGxpa2UgdGhlcmUgaXMg
+bm90IHNwZWNpZmljIHJlYXNvbi4NCklmIEkgYW0gd3JvbmcgY2FuIHNvbWVvbmUgZXhwbGFpbiBp
+cyB0aGVyZSBhbnkgc3BlY2lmaWMgcmVhc29uIG5vdCB0byBzZXQgcnEtPnJldHJpZXMgaW4gc2Rf
+cHJlcGFyZV9mbHVzaD8gDQoNClRoYW5rcywNCkthc2h5YXANCj4gPiA+DQo+ID4gPiBHb29kIHRo
+YXQgbm93IGFsc28gb3RoZXIgcGVvcGxlIHJ1biBpbnRvIGl0LiAzMHMgaXMgZmFyIHRvbyBzbWFs
+bA0KPiBmb3IgYW55DQo+ID4gPiBoYXJkd2FyZSByYWlkIHVuaXQgd2l0aCBTQVRBIGRpc2tzLg0K
+PiA+DQo+ID4gSXQncyBmYXIgdG9vIHNob3J0IGZvciBqdXN0IGFib3V0IGFueSBIVyBSQUlEIHNp
+bmNlIHRoZXkgYWxsIHRlbmQgdG8NCj4gPiBoYXZlIG11bHRpLW1lZ2FieXRlcyB0byBnaWdhYnl0
+ZXMgb2YgY2FjaGUgKHNvbWUgb2YgdGhlIGhpZ2ggZW5kIGhhdmUNCj4gPiB0ZXJyYWJ5dGVzKS4g
+IEl0IGhhcyB0byBiZSBzYWlkIHRoYXQgbW9zdCBhcnJheXMgd2l0aCBiYXR0ZXJ5IGJhY2tlZA0K
+PiANCj4gRm9yIERETiBzdG9yYWdlIDMwcyBhcmUgYWN0dWFsbHkgc3VmZmljaWVudCwgdW5sZXNz
+IGRpc2sgZGVsYXlzIGNvbWUNCj4gdXAuIEJ1dA0KPiB0aGVuIHdlIHByZXNlbnRseSBhbHNvIG9u
+bHkgaGF2ZSBhIHJhdGhlciBzbWFsbCBjYWNoZSBvbmx5ICgyR0IpIHdpdGgNCj4gbG90cyBvZg0K
+PiBkaXNrcy4NCj4gTm93YWRheXMgb25lIGNhbiBnZXQgYW4gVVBTIHByb3RlY3RlZCBERE4tOTkw
+MCBjb250cm9sbGVyLCBidXQgdGhlDQo+IGZpcm13YXJlDQo+IHN0aWxsIHByb3Blcmx5IGhhbmRs
+ZXMgdGhlIFNZTkNfQ0FDSEUgY29tbWFuZC4NCj4gDQo+ID4gY2FjaGVzIGxpZSB3aGVuIGFza2Vk
+IHRvIGZsdXNoIHRoZSBjYWNoZSwgYnV0IHdlIHByb2JhYmx5IG5lZWQgdG8gZ2V0DQo+ID4gdXNl
+cnMgaW50byB0aGUgaGFiaXQgb2Ygbm90IHVzaW5nIGZsdXNoIGJhcnJpZXJzIHdpdGggZXh0ZXJu
+YWwNCj4gQXJyYXlzLg0KPiA+DQo+ID4gPiBodHRwOi8vbWFya21haWwub3JnL21lc3NhZ2UvZXdp
+Y2hlYWZjdmd3bTRwNw0KPiA+ID4NCj4gPiA+IEkgd3JvdGUgdGhpcyBwYXRjaCB3aGlsZSBoYXZp
+bmcgdHJvdWJsZSB3aXRoIEluZm9ydHJlbmQgUmFpZHMsIGJ1dA0KPiBpdA0KPiA+ID4gYWxzbyBj
+b21lcyB1cCB3aXRoIERETiBzdG9yYWdlIGlmIHRoZSB3cml0ZSBiYWNrIGNhY2hlIGlzIGVuYWJs
+ZWQuDQo+ID4gPiBTaGFsbCBJIHVwZGF0ZSB0aGUgcGF0Y2gsIGFkZCByZXRyaWVzIGFuZCB0aGVu
+IHJlc2VuZCB0aGUgZW50aXJlDQo+IHNlcmllcz8NCj4gPg0KPiA+IHJxLT50aW1lb3V0IGlzIHRo
+ZSB0aW1lb3V0IG9mIHRoZSByZXF1ZXN0IHRyaWdnZXJpbmcgdGhlIGZsdXNoIC4uLg0KPiBpdCdz
+DQo+ID4gbGlrZWx5IHRoZSB3cm9uZyB2YWx1ZSBzaW5jZSBpdCdzIGZvciBhIGZhc3QgY29tcGxl
+dGluZyByL3cNCj4gb3BlcmF0aW9uLA0KPiA+IHdoZXJlYXMgdGhpcyBpcyBhIHNsb3cgZHJhaW4g
+b3BlcmF0aW9uLg0KPiANCj4gSG1tLCBpbiB0aGUgcGFzdCB3ZSBoYWQgc2NzaV9kZXZpY2UtPnRp
+bWVvdXQsIGJ1dCBJIHRob3VnaHQgdGhpcyB3YXMNCj4gZ2l2ZW4gdXANCj4gaW4gZmF2b3VyIG9m
+IHNjc2lfZGV2aWNlLT5yZXF1ZXN0X3F1ZXVlLT5ycV90aW1lb3V0PyAoc29tZWh3ZXJlIGFyb3Vu
+ZA0KPiAyLjYuMjc/KQ0KPiANCj4gDQo+IFRoYW5rcywNCj4gQmVybmQNCj4gDQo+IA0KPiAtLQ0K
+PiBCZXJuZCBTY2h1YmVydA0KPiBEYXRhRGlyZWN0IE5ldHdvcmtzDQo=
