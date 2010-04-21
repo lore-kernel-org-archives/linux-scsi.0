@@ -1,29 +1,37 @@
-From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 21 Apr 2010 05:31:46 -0700 (PDT)
-Message-ID: <19701.42333.qm@web31803.mail.mud.yahoo.com>
+Date: Wed, 21 Apr 2010 05:47:16 -0700 (PDT)
+Message-ID: <593030.61801.qm@web31804.mail.mud.yahoo.com>
 References: <20100420173734.GB5518@xanatos>
-Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web31804.mail.mud.yahoo.com ([68.142.207.67]:42309 "HELO
+	web31804.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754419Ab0DUMrS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Apr 2010 08:47:18 -0400
 In-Reply-To: <20100420173734.GB5518@xanatos>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dinh.Nguyen-KZfg59tc24xl57MIdRCFDg@public.gmane.org, Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Jonas Schwertfeger <jschwertfeger@gmail.com>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-> > The real problem with the Buffalo drive is that it
-> responds with a
-> > phase error when it receives an ATA_16 IDENTIFY DEVICE
-> command with the
-> > Sector Count field set to 0.
+> > >=A0 starts at line 8816.=A0 (It says the
+> command
+> > > is a BLANK command, but it's incorrectly
+> identified that command.)
 
-The Sector Count field in the ATA PASS-THROUGH (12) or (16) CDB should be set appropriately by the Application Client as the neither the SAT bridge nor the SATA transport will interpret the ATA Command byte. Thus, for IDENTIFY (PACKET) DEVICE the Application Client should set it to 1.
+Application clients should send ATA PASS-THROUGH (16) and never the 12 =
+byte version to ATAPI devices behind a SAT bridge, whose opcode is inte=
+rpreted as BLANK (as pointed out by Doug), and BLANK executed.
 
-    Luben
+     Luben
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
