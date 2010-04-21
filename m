@@ -1,61 +1,36 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 21 Apr 2010 10:22:08 -0400
-Message-ID: <1271859728.2893.72.camel@mulgrave.site>
-References: <593030.61801.qm@web31804.mail.mud.yahoo.com>
-	 <4BCF0310.4000906@pobox.com> <1271858694.2893.47.camel@mulgrave.site>
-	 <4BCF0819.7090405@pobox.com>
+Date: Wed, 21 Apr 2010 10:31:51 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1004211024290.1728-100000@iolanthe.rowland.org>
+References: <19701.42333.qm@web31803.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:34555 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754440Ab0DUOWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Apr 2010 10:22:14 -0400
-In-Reply-To: <4BCF0819.7090405@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <19701.42333.qm@web31803.mail.mud.yahoo.com>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Dinh.Nguyen@freescale.com, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: ltuikov@yahoo.com, Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Wed, 2010-04-21 at 10:13 -0400, Mark Lord wrote:
-> On 21/04/10 10:04 AM, James Bottomley wrote:
-> ..
-> > But this isn't a userspace problem.  By the time we present the device
-> > to userspace, we already know what it is ... so you can go by device
-> > type and only use ATA_12 for disk devices.
-> ..
+On Wed, 21 Apr 2010, Luben Tuikov wrote:
+
+> > > The real problem with the Buffalo drive is that it
+> > responds with a
+> > > phase error when it receives an ATA_16 IDENTIFY DEVICE
+> > command with the
+> > > Sector Count field set to 0.
 > 
-> And most tools / programs can indeed do that.
-> 
-> But hdparm's mission is to ignore what the kernel thinks,
-> and speak directly to the drive whenever possible.
+> The Sector Count field in the ATA PASS-THROUGH (12) or (16) CDB
+> should be set appropriately by the Application Client as the neither
+> the SAT bridge nor the SATA transport will interpret the ATA Command
+> byte. Thus, for IDENTIFY (PACKET) DEVICE the Application Client
+> should set it to 1.
 
-This is a bit dangerous where USB is concerned.  We certainly don't have
-all the heuristics necessary in the kernel, but whenever anything goes
-wrong, we do tend to hear about it pretty quickly.
+Why do you say that 1 is the appropriate value?  In the ATA-5 spec
+(which is the most recent version I have) Sector Count is listed as
+"na" for IDENTIFY DEVICE, which means that the content of that field is
+not applicable to this particular command.  Hence the value shouldn't 
+matter.
 
-> Because hdparm is an important part of how we verify
-> that the kernel is correct (or not).  So I very much
-> prefer that it continue to work out the details as much
-> as it can without asking a possibly buggy kernel for help.
-> 
-> :)
-> 
-> That said.. what would you recommend as a way for a userspace
-> program to figure out whether to use ATA_12 or ATA_16 to talk
-> to a given arbitrary device name ?
-
-To be honest, no.  For USB, All USB is SCSI or RBC command based. You
-don't have any idea whether it's a real SCSI device or an ATA device
-behind a SAT  ... the only reason you assume it's ATA is because USB
-gadget builders tend to be cheapskates.
-
-> I guess the info is in sysfs somewhere.
-
-Only for direct interconnects.  For USB most bets are off.
-
-James
-
+Alan Stern
 
