@@ -1,49 +1,37 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 21 Apr 2010 10:53:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1004211032460.1728-100000@iolanthe.rowland.org>
-References: <1271859728.2893.72.camel@mulgrave.site>
+Date: Wed, 21 Apr 2010 07:58:16 -0700 (PDT)
+Message-ID: <25045.92964.qm@web31810.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1271859728.2893.72.camel-0iu6Cu4xQGLYCGPCin2YbQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
-Cc: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dinh.Nguyen-KZfg59tc24xl57MIdRCFDg@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>, Jonas Schwertfeger <jschwertfeger@gmail.com>, "Dinh.Nguyen@freescale.com" <Dinh.Nguyen@freescale.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, "linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 21 Apr 2010, James Bottomley wrote:
+On Apr 21, 2010, at 6:52, Mark Lord <mlord@pobox.com> wrote:
 
-> > That said.. what would you recommend as a way for a userspace
-> > program to figure out whether to use ATA_12 or ATA_16 to talk
-> > to a given arbitrary device name ?
-> 
-> To be honest, no.  For USB, All USB is SCSI or RBC command based. You
-> don't have any idea whether it's a real SCSI device or an ATA device
-> behind a SAT  ... the only reason you assume it's ATA is because USB
-> gadget builders tend to be cheapskates.
-> 
-> > I guess the info is in sysfs somewhere.
-> 
-> Only for direct interconnects.  For USB most bets are off.
+On 21/04/10 08:47 AM, Luben Tuikov wrote:
+  starts at line 8816.  (It says the
+command
+is a BLANK command, but it's incorrectly
+identified that command.)
 
-You can find out whether the device might be MMC by sending an ordinary
-SCSI INQUIRY command.  (Or you can get the device type from the
-"modalias" attribute file in the device's sysfs directory, which just
-shows the information the kernel got when _it_ sent an INQUIRY
-command.)  If it might be MMC, _don't_ try to use ATA_12!
+Application clients should send ATA PASS-THROUGH (16) and never the 12 byte version to ATAPI devices behind a SAT bridge, whose opcode is interpreted as BLANK (as pointed out by Doug), and BLANK executed.
+..
 
-The interpretation of the commands sent from hdparm is done by the
-device's bridge chip.  In theory these chips can apply different
-translations depending on whether the attached drive is ATA or ATAPI.  
-I don't know if any existing bridge chips behave this way, though --
-and either way, I don't know how a program can figure out what type the
-drive is.  Especially since the bridge chip isn't obliged to understand 
-SAT in the first place.
+That's a nice self-proclamation.
+Got a pointer to a SAT or ATA/SATA standard that says it for real?
 
-Alan Stern
+If you think this is a "self-proclamation" and want a spec to spell it out, then go ahead and send ATA PT 12 to ATAPI devices behind a SAT bridge. Just make sure there is no RW media in the device. :-) 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The problem with that statement (above), becomes.. what to use
+for the initial IDENTIFY request, before the type of device is known?
+
+The statement above tells you: use ATA PT 16.
+
+     Luben
+
+
+
