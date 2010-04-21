@@ -1,48 +1,47 @@
-From: Nick Bowler <nbowler@elliptictech.com>
-Subject: Re: 2.6.34-rc5: Reported regressions from 2.6.33
-Date: Wed, 21 Apr 2010 12:57:58 -0400
-Message-ID: <20100421165758.GA23565@elliptictech.com>
-References: <deuQKFRcc0B.A.3EG.BRSzLB@tosh>
- <20100420135636.GA10674@elliptictech.com>
- <201004210715.38621.rjw@sisk.pl>
- <20100421085739.GA2576@barney.localdomain>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Wed, 21 Apr 2010 10:41:01 -0700
+Message-ID: <20100421174101.GA6288@xanatos>
+References: <Pine.LNX.4.44L0.1004211205560.1728-100000@iolanthe.rowland.org>
+ <yq1fx2owzh0.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-hotplug-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100421085739.GA2576@barney.localdomain>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Jerome Glisse <glisse@freedesktop.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, DRI <dri-devel@lists.sourceforge.net>, Linux SCSI List <linux-scsi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
+In-Reply-To: <yq1fx2owzh0.fsf@sermon.lab.mkp.net>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Luben Tuikov <ltuikov@yahoo.com>, Jonas Schwertfeger <jschwertfeger@gmail.com>, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, "<linux-scsi@vger.kernel.org>" <linux-scsi@vger.kernel.org>, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>, "<Dinh.Nguyen@freescale.com>" <Dinh.Nguyen@freescale.com>, Mark Lord <mlord@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, "<linux-hotplug@vger.kernel.org>" <linux-hotplug@vger.kernel.org>, "<linux-usb@vger.kernel.org>" <linux-usb@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Apr 21, 2010 at 07:15:38AM +0200, Rafael J. Wysocki wrote:
-> On Tuesday 20 April 2010, Nick Bowler wrote:
-> > Please list these two similar regressions from 2.6.33 in the r600 DRM:
-> > 
-> >  * r600 CS checker rejects GL_DEPTH_TEST w/o depth buffer:
-> >            https://bugs.freedesktop.org/show_bug.cgi?id=27571
-> > 
-> >  * r600 CS checker rejects narrow FBO renderbuffers:
-> >            https://bugs.freedesktop.org/show_bug.cgi?id=27609
+On Wed, Apr 21, 2010 at 12:18:51PM -0400, Martin K. Petersen wrote:
+> >>>>> "Alan" == Alan Stern <stern@rowland.harvard.edu> writes:
 > 
-> Do you want to me to add them as one entry or as two separate bugs?
+> I'm guessing Doug is out today because he didn't forward the note
+> below.  Just passing the info along...
+> 
+> 
+> >> It is needed by the transport protocol(s).
+> 
+> Alan> I don't understand; can you explain more fully?  Which transport
+> Alan> protocol(s) need to use the Sector Count?  The USB transport
+> Alan> protocol doesn't; it encodes the transfer length in a wrapper.
+> Alan> The bridge chip should interpret the wrapper instead of looking
+> Alan> inside the SAT command.
+> 
+> Doug posted to the T10 list and here's what Jim Hatfield from Seagate
+> responded:
+> 
+>      For ATA (SATA or PATA), the Count field should NEVER be zero,
+>      because neither interface supports zero-length data transfer for
+>      any protocol (dma, pio, etc).
+> 
+>      In ATA, 'N/A' is defined the way it is because there are some
+>      ancient implementations for which there are vendor specific
+>      differences.
 
-As upstream doesn't consider the first to be a kernel issue, I guess you
-should just list the second.
+So, if Jim is correct, then this may not be a bug in the Buffalo device?
+Or is the phase error in the status of the CSW still an incorrect
+response after a stall on what the device thinks is an invalid command?
 
-On 10:57 Wed 21 Apr     , Jerome Glisse wrote:
-> First one is userspace bug, i need to look into the second one.
-> ie we were lucky the hw didn't lockup without depth buffer and
-> depth test enabled.
-
-OK, if the failure is due to userspace is doing Very Bad Things(tm),
-catching that seems reasonable.
-
-Nevertheless, even if it happened by luck, the result was (ostensibly)
-working programs that suddenly break once one "upgrades" to the latest
-kernel.  If userspace can't be fixed before 2.6.34 is released, perhaps
-a less cryptic log message would be appropriate?
-
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+Sarah Sharp
