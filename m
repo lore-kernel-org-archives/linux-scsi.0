@@ -1,81 +1,112 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] Re: SYNCHRONIZE_CACHE from sd_preppare_flush does not
- have retries.!
-Date: Thu, 22 Apr 2010 12:23:47 -0400
-Message-ID: <1271953427.2889.195.camel@mulgrave.site>
-References: <1C9608B8A4CD534FB19C7C7543CBB249021C7718FA@inbmail02.lsi.com>
-	 <201004201654.04934.bs_lists@aakef.fastmail.fm>
-	 <4BCE015C.7060307@cs.wisc.edu>
-	 <201004202238.10551.bs_lists@aakef.fastmail.fm>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: [PATCH] mpt2sas: DIF Type 2 Protection Support
+Date: Thu, 22 Apr 2010 10:47:40 -0600
+Message-ID: <20100422164739.GA15813@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52254 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754762Ab0DVQXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2010 12:23:52 -0400
-In-Reply-To: <201004202238.10551.bs_lists@aakef.fastmail.fm>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:48135 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754180Ab0DVQcN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Apr 2010 12:32:13 -0400
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id o3MGAouZ028643
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Apr 2010 09:10:50 -0700 (PDT)
+Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id o3MGAr2x000751
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Apr 2010 09:10:53 -0700
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bs_lists@aakef.fastmail.fm>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2010-04-20 at 22:38 +0200, Bernd Schubert wrote:
-> On Tuesday 20 April 2010, Mike Christie wrote:
-> > On 04/20/2010 09:54 AM, Bernd Schubert wrote:
-> > > On Tuesday 20 April 2010, Desai, Kashyap wrote:
-> > >>>>>> all block device flushes or is this more device specific? I was
-> > >>>>>> thinking that we may want to create a sysfs interface under the
-> > >>>
-> > >>> block
-> > >>>
-> > >>>>>> dirs and have blk-sysfs.c and blk-barrier.c handle this.
-> > >>>
-> > >>> queue_flush
-> > >>>
-> > >>>>>> could set the timeout and retries that is set by some new files
-> > >>>
-> > >>> under
-> > >>>
-> > >>>>>> /sys/block/sdX/queue/ ?
-> > >>
-> > >> Thanks a lot for your comments.
-> > >>
-> > >> This is very close to my understanding. I feel this is more close to
-> > >> block layer and I am almost agreeing with your thought. I tried to
-> > >> understand why upstream does not have retries at
-> > >> queue_flush()/sd_prepare_flush() ??? It looks like there is not specific
-> > >> reason. If I am wrong can someone explain is there any specific reason
-> > >> not to set rq->retries in sd_prepare_flush?
-> > >
-> > > I don't understand why we should need another queue timeout, when we
-> > > already have a device timeout that is used as queue timeout?
-> > 
-> > I think a possible problem is that the one timeout setting is now being
-> > used for two different operations. Currently, for disks that timeout is
-> > used for READ/WRITEs. For the sync cache, if we are hitting a problem
-> > with it taking longer than the current value of 30 secs, then could we
-> > want to set the READ/WRITE timeout to a lower value like 60 secs, but
-> > then the sync cache timeout might have to be multiple minutes.
-> 
-> Hmm, I don't know storage systems where it might take several minutes, but 
-> sure, if a system has hundreds of gigabyte of cache with only a few disks, a 
-> very long timeout might required. Though, I'm not sure if such device 
-> shouldn't ignore the SYNC_CACHE command at all.
-> DDN storage recommends to set the host timeout one seconds less than the 
-> command timeout on the controller (70 to 90 seconds).
-> 
-> I hope I will find some time on Thursday or Friday to improve the patch.
+Adding DIF Type 2 protection support, as well as turning on 32 byte cdb's,
+and setting the cdb length for > 16 byte in the SCSI_IO->control parameter.
 
-Just to bring closure to this, although I personally don't think
-increasing the timeout for flush to be a good idea, most other people
-do, so an additional flush timeout somewhere in block controllable via
-sysfs, that we can take the timeout from would likely be the best way to
-go.
+Signed-off-by: Martin Petersen <martin.petersen@oracle.com>
+Signed-off-by: Eric Moore <eric.moore@lsi.com>
 
-Thanks,
-
-James
-
-
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index b4afe43..0f41fcd 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -69,11 +69,11 @@
+ #define MPT2SAS_DRIVER_NAME		"mpt2sas"
+ #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
+ #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
+-#define MPT2SAS_DRIVER_VERSION		"05.100.00.02"
++#define MPT2SAS_DRIVER_VERSION		"05.100.00.03"
+ #define MPT2SAS_MAJOR_VERSION		05
+ #define MPT2SAS_MINOR_VERSION		100
+ #define MPT2SAS_BUILD_VERSION		00
+-#define MPT2SAS_RELEASE_VERSION		02
++#define MPT2SAS_RELEASE_VERSION		03
+ 
+ /*
+  * Set MPT2SAS_SG_DEPTH value based on user input.
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index c5ff26a..456ea7c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2858,9 +2858,7 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
+ 	unsigned char prot_op = scsi_get_prot_op(scmd);
+ 	unsigned char prot_type = scsi_get_prot_type(scmd);
+ 
+-	if (prot_type == SCSI_PROT_DIF_TYPE0 ||
+-	   prot_type == SCSI_PROT_DIF_TYPE2 ||
+-	   prot_op == SCSI_PROT_NORMAL)
++	if (prot_type == SCSI_PROT_DIF_TYPE0 || prot_op == SCSI_PROT_NORMAL)
+ 		return;
+ 
+ 	if (prot_op ==  SCSI_PROT_READ_STRIP)
+@@ -2882,7 +2880,13 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
+ 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
+ 		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
+ 		    cpu_to_be32(scsi_get_lba(scmd));
++		break;
++
++	case SCSI_PROT_DIF_TYPE2:
+ 
++		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
++		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
+ 		break;
+ 
+ 	case SCSI_PROT_DIF_TYPE3:
+@@ -3013,7 +3017,7 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 		mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
+ 	/* Make sure Device is not raid volume */
+ 	if (!_scsih_is_raid(&scmd->device->sdev_gendev) &&
+-	    sas_is_tlr_enabled(scmd->device))
++	    sas_is_tlr_enabled(scmd->device) && scmd->cmd_len != 32)
+ 		mpi_control |= MPI2_SCSIIO_CONTROL_TLR_ON;
+ 
+ 	smid = mpt2sas_base_get_smid_scsiio(ioc, ioc->scsi_io_cb_idx, scmd);
+@@ -3025,6 +3029,8 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
+ 	memset(mpi_request, 0, sizeof(Mpi2SCSIIORequest_t));
+ 	_scsih_setup_eedp(scmd, mpi_request);
++	if (scmd->cmd_len == 32)
++		mpi_control |= 4 << MPI2_SCSIIO_CONTROL_ADDCDBLEN_SHIFT;
+ 	mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
+ 	if (sas_device_priv_data->sas_target->flags &
+ 	    MPT_TARGET_FLAGS_RAID_COMPONENT)
+@@ -6567,7 +6573,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_LIST_HEAD(&ioc->delayed_tr_list);
+ 
+ 	/* init shost parameters */
+-	shost->max_cmd_len = 16;
++	shost->max_cmd_len = 32;
+ 	shost->max_lun = max_lun;
+ 	shost->transportt = mpt2sas_transport_template;
+ 	shost->unique_id = ioc->id;
+@@ -6580,7 +6586,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
+-	    | SHOST_DIF_TYPE3_PROTECTION);
++	    | SHOST_DIF_TYPE2_PROTECTION | SHOST_DIF_TYPE3_PROTECTION);
+ 	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
+ 
+ 	/* event thread */
