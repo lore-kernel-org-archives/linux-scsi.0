@@ -1,112 +1,75 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH] mpt2sas: DIF Type 2 Protection Support
-Date: Thu, 22 Apr 2010 10:47:40 -0600
-Message-ID: <20100422164739.GA15813@lsil.com>
+From: brem belguebli <brem.belguebli@gmail.com>
+Subject: lpfc SAN/SCSI issue
+Date: Thu, 22 Apr 2010 21:24:35 +0200
+Message-ID: <1271964275.2480.1.camel@localhost>
+References: <20100422164739.GA15813@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:48135 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754180Ab0DVQcN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Apr 2010 12:32:13 -0400
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id o3MGAouZ028643
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Apr 2010 09:10:50 -0700 (PDT)
-Received: from localhost (emoore-test1.co.lsil.com [172.21.46.33])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id o3MGAr2x000751
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Apr 2010 09:10:53 -0700
-Content-Disposition: inline
+Received: from fg-out-1718.google.com ([72.14.220.152]:6611 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754865Ab0DVRcB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Apr 2010 13:32:01 -0400
+Received: by fg-out-1718.google.com with SMTP id 19so440781fgg.1
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Apr 2010 10:31:59 -0700 (PDT)
+In-Reply-To: <20100422164739.GA15813@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Adding DIF Type 2 protection support, as well as turning on 32 byte cdb's,
-and setting the cdb length for > 16 byte in the SCSI_IO->control parameter.
+I have a server (RHEL 5.3) connected to 2 SAN extended fabrics (across 2
+sites, distance 1 ms, links are ISL with 100 km long distance buffer
+credits) via 2 lpfc HBA's (LPe1105-HP FC with the RHEL 5.3 shipped LPFC
+driver 8.2.0.33.3p.)
+ 
+A SAN FABRIC reconfiguration (DWDM Ring failover from worker to
+protection)  occured yesterday  after some intersite telco link switch
+that lasted less than 0,3 ms. 
+ 
+Only one FABRIC was impacted, named FABRIC2 
+ 
+Our server is connected to the FABRICs thru 2 edge switches, so not
+directly connected to the core switches on which the link failure
+occured. 
+ 
+>From then, our server (which accesses thru the 2 fabrics the LUNS from
+our 2 sites) started to climb in terms of load average (up to 250 for a
+dual proc quadcore machine!) with a high percentage of iowait (up to
+50%). 
+ 
+We did some testing, bypassing DM-MP by issuing dd commands to the
+physical /dev/sdX devices (more than 30 LUNS are presented to the
+server, seen each thru 4 paths making more than 120 /dev/sd devices)
+and half of our dd processes went to D state, as well as some unitary
+scsi_id that we manually run on the same physical devices. 
+ 
+Multipathd itself was also in D state. 
+ 
+The only way to restore the whole thing was to reset the server HBA
+connected to FABRIC2, after 2 hours of investigation 
+ 
+No kind of scsi log, or whatever did appear during the outage duration
+(~2 hours) despite the fact that the scsi timeouts set on the physical
+devices is 60s, that the HBA's timeout is 14s. 
+ 
+The /sys/block/sdX/device/state were showing running state despite the
+fact that the devices (well half of them) were actually inaccessible. 
+ 
+What leads me to : 
+ 
+1) assumption: it looks the lpfc driver following this SAN event goes in
+a black hole mode not returning any io error or whatever to the scsi
+upper layer 
+ 
+2) question: how come the scsi timers don't trigger and declare the
+device faulty (the answer may be in the above assumption). 
+ 
+Any idea or tip on what could cause this, some FC SCN message not well
+handled or whatever ?
 
-Signed-off-by: Martin Petersen <martin.petersen@oracle.com>
-Signed-off-by: Eric Moore <eric.moore@lsi.com>
+Regards
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index b4afe43..0f41fcd 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -69,11 +69,11 @@
- #define MPT2SAS_DRIVER_NAME		"mpt2sas"
- #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
--#define MPT2SAS_DRIVER_VERSION		"05.100.00.02"
-+#define MPT2SAS_DRIVER_VERSION		"05.100.00.03"
- #define MPT2SAS_MAJOR_VERSION		05
- #define MPT2SAS_MINOR_VERSION		100
- #define MPT2SAS_BUILD_VERSION		00
--#define MPT2SAS_RELEASE_VERSION		02
-+#define MPT2SAS_RELEASE_VERSION		03
- 
- /*
-  * Set MPT2SAS_SG_DEPTH value based on user input.
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index c5ff26a..456ea7c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2858,9 +2858,7 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 	unsigned char prot_op = scsi_get_prot_op(scmd);
- 	unsigned char prot_type = scsi_get_prot_type(scmd);
- 
--	if (prot_type == SCSI_PROT_DIF_TYPE0 ||
--	   prot_type == SCSI_PROT_DIF_TYPE2 ||
--	   prot_op == SCSI_PROT_NORMAL)
-+	if (prot_type == SCSI_PROT_DIF_TYPE0 || prot_op == SCSI_PROT_NORMAL)
- 		return;
- 
- 	if (prot_op ==  SCSI_PROT_READ_STRIP)
-@@ -2882,7 +2880,13 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
- 		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
- 		    cpu_to_be32(scsi_get_lba(scmd));
-+		break;
-+
-+	case SCSI_PROT_DIF_TYPE2:
- 
-+		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
-+		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
- 		break;
- 
- 	case SCSI_PROT_DIF_TYPE3:
-@@ -3013,7 +3017,7 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 		mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
- 	/* Make sure Device is not raid volume */
- 	if (!_scsih_is_raid(&scmd->device->sdev_gendev) &&
--	    sas_is_tlr_enabled(scmd->device))
-+	    sas_is_tlr_enabled(scmd->device) && scmd->cmd_len != 32)
- 		mpi_control |= MPI2_SCSIIO_CONTROL_TLR_ON;
- 
- 	smid = mpt2sas_base_get_smid_scsiio(ioc, ioc->scsi_io_cb_idx, scmd);
-@@ -3025,6 +3029,8 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
- 	memset(mpi_request, 0, sizeof(Mpi2SCSIIORequest_t));
- 	_scsih_setup_eedp(scmd, mpi_request);
-+	if (scmd->cmd_len == 32)
-+		mpi_control |= 4 << MPI2_SCSIIO_CONTROL_ADDCDBLEN_SHIFT;
- 	mpi_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
- 	if (sas_device_priv_data->sas_target->flags &
- 	    MPT_TARGET_FLAGS_RAID_COMPONENT)
-@@ -6567,7 +6573,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	INIT_LIST_HEAD(&ioc->delayed_tr_list);
- 
- 	/* init shost parameters */
--	shost->max_cmd_len = 16;
-+	shost->max_cmd_len = 32;
- 	shost->max_lun = max_lun;
- 	shost->transportt = mpt2sas_transport_template;
- 	shost->unique_id = ioc->id;
-@@ -6580,7 +6586,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 
- 	scsi_host_set_prot(shost, SHOST_DIF_TYPE1_PROTECTION
--	    | SHOST_DIF_TYPE3_PROTECTION);
-+	    | SHOST_DIF_TYPE2_PROTECTION | SHOST_DIF_TYPE3_PROTECTION);
- 	scsi_host_set_guard(shost, SHOST_DIX_GUARD_CRC);
- 
- 	/* event thread */
+Brem
+
+
