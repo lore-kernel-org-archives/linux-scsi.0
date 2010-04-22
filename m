@@ -1,75 +1,43 @@
-From: brem belguebli <brem.belguebli@gmail.com>
-Subject: lpfc SAN/SCSI issue
-Date: Thu, 22 Apr 2010 21:24:35 +0200
-Message-ID: <1271964275.2480.1.camel@localhost>
-References: <20100422164739.GA15813@lsil.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH 3rd_time] scsi: fix operator precedence warning
+Date: Thu, 22 Apr 2010 11:02:14 -0700
+Message-ID: <20100422110214.e7c62688.randy.dunlap@oracle.com>
+References: <1271945825.2889.138.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.152]:6611 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754865Ab0DVRcB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Apr 2010 13:32:01 -0400
-Received: by fg-out-1718.google.com with SMTP id 19so440781fgg.1
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Apr 2010 10:31:59 -0700 (PDT)
-In-Reply-To: <20100422164739.GA15813@lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1271945825.2889.138.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>, Ravi Anand <ravi.anand@qlogic.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org, David C Somayajulu <david.somayajulu@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
-I have a server (RHEL 5.3) connected to 2 SAN extended fabrics (across 2
-sites, distance 1 ms, links are ISL with 100 km long distance buffer
-credits) via 2 lpfc HBA's (LPe1105-HP FC with the RHEL 5.3 shipped LPFC
-driver 8.2.0.33.3p.)
- 
-A SAN FABRIC reconfiguration (DWDM Ring failover from worker to
-protection)  occured yesterday  after some intersite telco link switch
-that lasted less than 0,3 ms. 
- 
-Only one FABRIC was impacted, named FABRIC2 
- 
-Our server is connected to the FABRICs thru 2 edge switches, so not
-directly connected to the core switches on which the link failure
-occured. 
- 
->From then, our server (which accesses thru the 2 fabrics the LUNS from
-our 2 sites) started to climb in terms of load average (up to 250 for a
-dual proc quadcore machine!) with a high percentage of iowait (up to
-50%). 
- 
-We did some testing, bypassing DM-MP by issuing dd commands to the
-physical /dev/sdX devices (more than 30 LUNS are presented to the
-server, seen each thru 4 paths making more than 120 /dev/sd devices)
-and half of our dd processes went to D state, as well as some unitary
-scsi_id that we manually run on the same physical devices. 
- 
-Multipathd itself was also in D state. 
- 
-The only way to restore the whole thing was to reset the server HBA
-connected to FABRIC2, after 2 hours of investigation 
- 
-No kind of scsi log, or whatever did appear during the outage duration
-(~2 hours) despite the fact that the scsi timeouts set on the physical
-devices is 60s, that the HBA's timeout is 14s. 
- 
-The /sys/block/sdX/device/state were showing running state despite the
-fact that the devices (well half of them) were actually inaccessible. 
- 
-What leads me to : 
- 
-1) assumption: it looks the lpfc driver following this SAN event goes in
-a black hole mode not returning any io error or whatever to the scsi
-upper layer 
- 
-2) question: how come the scsi timers don't trigger and declare the
-device faulty (the answer may be in the above assumption). 
- 
-Any idea or tip on what could cause this, some FC SCN message not well
-handled or whatever ?
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Regards
+Fix operator precedence warning (from sparse), which results in the
+data value always being 0:
 
-Brem
+drivers/scsi/qla4xxx/ql4_mbx.c:470:66: warning: right shift by bigger than source value
 
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Acked-by: Ravi Anand <ravi.anand@qlogic.com>
+Cc: David C Somayajulu <david.somayajulu@qlogic.com>
+Cc: Karen Higgins <karen.higgins@qlogic.com>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
 
+ drivers/scsi/qla4xxx/ql4_mbx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- linux-2.6.34-rc3-git5.orig/drivers/scsi/qla4xxx/ql4_mbx.c
++++ linux-2.6.34-rc3-git5/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -467,7 +467,7 @@ int qla4xxx_get_fwddb_entry(struct scsi_
+ 	if (conn_err_detail)
+ 		*conn_err_detail = mbox_sts[5];
+ 	if (tcp_source_port_num)
+-		*tcp_source_port_num = (uint16_t) mbox_sts[6] >> 16;
++		*tcp_source_port_num = (uint16_t) (mbox_sts[6] >> 16);
+ 	if (connection_id)
+ 		*connection_id = (uint16_t) mbox_sts[6] & 0x00FF;
+ 	status = QLA_SUCCESS;
