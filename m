@@ -1,52 +1,66 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH] libiscsi: regression: fix header digest errors
-Date: Sat, 24 Apr 2010 16:21:19 -0500
-Message-ID: <1272144079-10494-1-git-send-email-michaelc@cs.wisc.edu>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] scsi_debug: virtual_gb ignores sector_size
+Date: Sun, 25 Apr 2010 12:30:23 +0200
+Message-ID: <4BD419BF.4040109@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------050107060102000801070100"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16434 "EHLO mx1.redhat.com"
+Received: from smtp.infotech.no ([82.134.31.41]:55658 "EHLO elrond.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751046Ab0DXVU6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Apr 2010 17:20:58 -0400
+	id S1752186Ab0DYKa2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 25 Apr 2010 06:30:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+This is a multi-part message in MIME format.
+--------------050107060102000801070100
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This fixes a regression introduced with this commit:
-d3305f3407fa3e9452079ec6cc8379067456e4aa
-in 2.6.32.
+In the scsi_debug driver, the virtual_gb option
+ignores the sector_size, implicitly assuming
+that is 512 bytes.
+So if 'virtual_gb=1 sector_size=4096' the result is
+an 8 GB (virtual) disk.
 
-When I moved the hdr->cmdsn after init_task, I added
-a bug when header digests are used. The problem is
-that the LLD may calculate the header digest in init_task,
-so if we then set the cmdsn after the init_task call we
-change what the digest will be calculated by the target.
+ChangeLog:
+   - correct get_sdebug_capacity() calculation of
+     sectors when virtual_gb option is used. Needs
+     to take into account sector_size.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/libiscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 6d5ae44..633e090 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -471,12 +471,12 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+--------------050107060102000801070100
+Content-Type: text/x-patch;
+ name="sdebug_vgig_ss1.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sdebug_vgig_ss1.patch"
+
+--- linux/drivers/scsi/scsi_debug.c	2010-03-24 20:13:03.000000000 +0100
++++ linux/drivers/scsi/scsi_debug.c2633mqnu2ss	2010-04-25 12:03:50.000000000 +0200
+@@ -58,7 +58,7 @@
+ #include "scsi_logging.h"
  
- 	WARN_ON(hdrlength >= 256);
- 	hdr->hlength = hdrlength & 0xFF;
-+	hdr->cmdsn = task->cmdsn = cpu_to_be32(session->cmdsn);
+ #define SCSI_DEBUG_VERSION "1.82"
+-static const char * scsi_debug_version_date = "20100324";
++static const char * scsi_debug_version_date = "20100425";
  
- 	if (session->tt->init_task && session->tt->init_task(task))
- 		return -EIO;
- 
- 	task->state = ISCSI_TASK_RUNNING;
--	hdr->cmdsn = task->cmdsn = cpu_to_be32(session->cmdsn);
- 	session->cmdsn++;
- 
- 	conn->scsicmd_pdus_cnt++;
--- 
-1.6.6.1
+ /* Additional Sense Code (ASC) */
+ #define NO_ADDITIONAL_SENSE 0x0
+@@ -961,7 +961,8 @@ static int resp_start_stop(struct scsi_c
+ static sector_t get_sdebug_capacity(void)
+ {
+ 	if (scsi_debug_virtual_gb > 0)
+-		return 2048 * 1024 * (sector_t)scsi_debug_virtual_gb;
++		return (sector_t)scsi_debug_virtual_gb *
++			(1073741824 / scsi_debug_sector_size);
+ 	else
+ 		return sdebug_store_sectors;
+ }
 
+--------------050107060102000801070100--
