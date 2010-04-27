@@ -1,173 +1,108 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: Possible explanation for mptsas ATA pass-through hangs
-Date: Tue, 27 Apr 2010 18:28:18 +0530
-Message-ID: <1C9608B8A4CD534FB19C7C7543CBB249028AB0AD12@inbmail02.lsi.com>
-References: <20100410093539.GB21178@kspace.net>
+From: brem belguebli <brem.belguebli@gmail.com>
+Subject: Re: lpfc SAN/SCSI issue
+Date: Tue, 27 Apr 2010 19:37:54 +0200
+Message-ID: <1272389874.4245.2.camel@localhost>
+References: <20100422164739.GA15813@lsil.com>
+	 <1271964275.2480.1.camel@localhost> <4BD1A071.2010202@emulex.com>
+	 <j2o29ae894c1004230922le8baf635y563e50e3edc53bc3@mail.gmail.com>
+	 <4BD226F4.6070908@emulex.com> <1272109999.2983.30.camel@localhost>
+	 <4BD5D258.8030309@emulex.com>  <1272318721.16254.7.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:50077 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753923Ab0D0M60 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 08:58:26 -0400
-In-Reply-To: <20100410093539.GB21178@kspace.net>
-Content-Language: en-US
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35253 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754811Ab0D0Phl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Apr 2010 11:37:41 -0400
+Received: by wyb42 with SMTP id 42so852550wyb.19
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Apr 2010 08:37:40 -0700 (PDT)
+In-Reply-To: <1272318721.16254.7.camel@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ryan Kuester <rkuester@metis.kspace.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
 
-Ryan,
+Hi James,
 
-Sorry for delay in response.  I am able to see the behavior you have mentioned using your sample program.
-I am also learning your proposed patch too. I will update my thoughts on your findings ASAP.
+I could set lpfc_log_verbose on both HBA's to 4115, I hope it'll be high
+enough to get interesting traces.
 
-Thanks,
-Kashyap
+On Mon, 2010-04-26 at 23:52 +0200, brem belguebli wrote:
+> Hi James,
+> 
+> On Mon, 2010-04-26 at 13:50 -0400, James Smart wrote:
+> > Brem,
+> > 
+> > I'm not understanding you.
+> > 
+> > 
+> > brem belguebli wrote: 
+> > > We have sg3_utils installed , and I think we ran sg_verify on one or
+> > > 2
+> > > unresponsive /dev/sd and it didn't give the hand back.
+> > >   
+> > what do you mean "give the hand back" ?    was the operation
+> > successful or not ?
+> > 
+> When I say it didn't give the hand back, I mean the one or 2 processes
+> got stuck in D state, thus not returning success .
+> > > It was exactly
+> > > cd /sys/block
+> > > for DEV in `ls -1d dev*`; do
+> > > echo ${DEV}
+> > >         dd if =/dev/${DEV} of=/dev/null bs=1024 count=1 &
+> > >         echo
+> > > done
+> > > 
+> > > And yes it really works, never seen any kind of preemption of DM-MP over
+> > > direct sd access. I've cc'ed dm-devel may be some DM guru could give his
+> > > opinion on this.
+> > > 
+> > > Next time, I'll use a sg_dd instead of dd, to bypass any cache effect
+> > > (by the way, does VFS cache anything when addressing /dev/X devices ?)
+> > >   
+> > ok - by "works" means "dd successfully read 1 block from the device" -
+> > right ?
+> > 
+> Yes, the devices on which dd was successful were the ones from FABRIC1,
+> dd completed successfully by reading the first 1024 bytes to copy them
+> to /dev/null
+>   
+> > > > The most interesting for the lpfc driver would be the lpfc module
+> > > > parameter "lpfc_log_verbose=4115"
+> > > > which turns on discovery log messages, els messages, link events, and
+> > > > FCP i/o error messages.
+> > > >     
+> > > 
+> > > As our DWDM ring switch is on the less optimal path, there will be a
+> > > switch back to nominal soon.
+> > > 
+> > > I'll activate this log level on the HBA's and check the firmware
+> > > versions you gave me .
+> > >   
+> > ok. I believe that the shost for the adapters in question, have a
+> > sysfs variable for lpfc_log_verbose, that sets the log level on the
+> > individual adapter. This would not require you to unload/reload the
+> > driver to set the option.
+> > 
+> I'll tell you tomorrow (was off today) if the parameter exists for these
+> HBA's.
 
-> -----Original Message-----
-> From: Ryan Kuester [mailto:rkuester@metis.kspace.net]
-> Sent: Saturday, April 10, 2010 3:06 PM
-> To: Desai, Kashyap; linux-scsi@vger.kernel.org
-> Subject: Possible explanation for mptsas ATA pass-through hangs
-> 
-> I may have an explanation for the LSI 1068 HBA hangs provoked by ATA
-> pass-through commands, in particular by smartctl.
-> 
-> First, my version of the symptoms.  On an LSI SAS1068E HBA with SATA
-> disks and with smartd running, I'm seeing occasional task, bus, and
-> host
-> resets, some of which lead to hard faults of the HBA requiring a
-> reboot.
-> Abusively looping the smartctl command,
-> 
->     # while true; do smartctl -a /dev/sdb > /dev/null; done
-> 
-> dramatically increases the frequency of these failures to nearly one
-> per
-> minute.  A high IO load through the HBA while looping smartctl seems to
-> improve the chance of a full scsi host reset or a non-recoverable hang.
-> 
-> I reduced what smartctl was doing down to a simple test case which
-> causes
-> the hang with a single IO when pointed at the sd interface.  See the
-> code at the bottom of this e-mail.  It uses an SG_IO ioctl to issue a
-> single pass-through ATA identify device command.  If the buffer
-> userspace
-> gives for the read data has certain alignments straddling a page
-> boundary,
-> the task is issued to the HBA but the HBA fails to respond.  If run
-> against
-> the sg interface, neither the test code nor smartctl causes a hang.
-> 
-> sd and sg handle the SG_IO ioctl slightly differently.  Unless you
-> specifically set a flag to do direct IO, sg passes a buffer of its own,
-> which is page-aligned, to the block layer and later copies the result
-> into the userspace buffer regardless of its alignment.  sd, on the
-> other
-> hand, always does direct IO unless the userspace buffer fails an
-> alignment test at block/blk-map.c line 57, in which case a page-aligned
-> buffer is created for the transfer.
-> 
-> The alignment test currently checks for word-alignment, the default
-> setup by scsi_lib.c; therefore, userspace buffers of almost any
-> alignment are given directly to the HBA as DMA targets.  The hardware
-> doesn't seem to like at least a couple of the alignments which cross a
-> page boundary (see the test code below).  Curiously, many
-> page-boundary-crossing alignments do work just fine.
-> 
-> So, either the hardware has an bug handling certain alignments or the
-> hardware has a stricter alignment requirement than the driver is
-> advertising.  If stricter alignment is required, then in no case should
-> misaligned buffers from userspace be allowed through without being
-> bounced or at least causing an error to be returned.
-> 
-> It seems the mptsas driver or its friends could use
-> blk_queue_dma_alignment() to advertise a stricter alignment
-> requirement.
-> If so, sd does the right thing and bounces misaligned buffers (see
-> block/blk-map.c line 57).  I gave the following patch to Linus's tree
-> from last night a quick try and it seemed to work.  I'm sure this is
-> the
-> wrong place for this call, but it gets the idea across.
-> 
-> diff --git a/drivers/message/fusion/mptscsih.c
-> b/drivers/message/fusion/mptscsih.c
-> index 6796597..1e034ad 100644
-> --- a/drivers/message/fusion/mptscsih.c
-> +++ b/drivers/message/fusion/mptscsih.c
-> @@ -2450,6 +2450,8 @@ mptscsih_slave_configure(struct scsi_device
-> *sdev)
->  		ioc->name,sdev->tagged_supported, sdev->simple_tags,
->  		sdev->ordered_tags));
-> 
-> +	blk_queue_dma_alignment (sdev->request_queue, 512 - 1);
-> +
->  	return 0;
->  }
-> 
-> I look forward to hearing from you guys who know this hardware and code
-> better.  Is the hardware at fault, or should the driver be shielding
-> the
-> hardware better?
-> 
-> Does this `fix' the problem for anyone besides me?
-> 
-> Regards,
-> -- Ryan
+
+> > > Hopefully, we will be able to provide you something deeper to
+> > > investigate.
+> > > 
+> > > Brem
+> > >   
+> > 
+> > ok.
+> > 
+> > -- james
+> > 
+> > 
+> Thanks
 > 
 > 
-> Here is a minimal bit of test code which causes the error.  BEWARE:
-> this
-> will hose the HBA at which you point it, of course.  If that's
-> controlling your root disk...
-> 
-> /*
->  * sg_bomb -- send SG_IO ioctl which causes HBA to hang
->  *
->  *   usage: sg_bomb <device>
->  *    e.g.: sg_bomb /dev/sdb
->  *    e.g.: sg_bomb /dev/sg1
->  *
->  *   Modify offset_into_page to adjust the degree of buffer
-> misalignment.
->  */
-> 
-> #include <unistd.h>
-> #include <scsi/sg.h>
-> #include <sys/ioctl.h>
-> #include <fcntl.h>
-> #include <stdlib.h>
-> 
-> int main(int argc, char* argv[])
-> {
->     char* filename = argv[1];
->     unsigned int offset_into_page = 0xe40;
->     // works: unsigned int offset_into_page = 0x0;
->     // hangs: unsigned int offset_into_page = 0xf00;
->     // works: unsigned int offset_into_page = 0xf04;
-> 
->     unsigned char ata_identify_cmd[] = {0x85, 0x08, 0x0e, 0, 0, 0,
-> 0x01,
->         0, 0, 0, 0, 0, 0, 0, 0xec, 0};
->     unsigned char sense[32];
->     unsigned char* data = valloc(0x2000) + offset_into_page;
->     struct sg_io_hdr hdr = {
->         .interface_id = 'S',
->         .dxfer_direction = SG_DXFER_FROM_DEV,
->         .cmdp = ata_identify_cmd,
->         .cmd_len = 16,
->         .dxferp = data,
->         .dxfer_len = 512,
->         .sbp = sense,
->         .mx_sb_len = sizeof(sense),
->         .timeout = 5000,
->     };
-> 
->     int fd;
->     if ((fd = open(filename, O_RDWR|O_NONBLOCK)) < 0)
->         perror();
-> 
->     return ioctl(fd, SG_IO, &hdr);
-> }
+
+
