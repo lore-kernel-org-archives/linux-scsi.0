@@ -1,61 +1,71 @@
 From: akpm@linux-foundation.org
-Subject: [patch 27/28] drivers/scsi/scsi_sysfs.c: fix sdev_rw_attr macro for scsi device sysfs entries
-Date: Tue, 27 Apr 2010 14:23:09 -0700
-Message-ID: <201004272123.o3RLN9UB020864@imap1.linux-foundation.org>
+Subject: [patch 25/28] scsi: use __uX types for headers exported to user space
+Date: Tue, 27 Apr 2010 14:23:07 -0700
+Message-ID: <201004272123.o3RLN7sN020853@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52245 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38987 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757022Ab0D0VXf (ORCPT
+	by vger.kernel.org with ESMTP id S1757033Ab0D0VXm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 17:23:35 -0400
+	Tue, 27 Apr 2010 17:23:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, kusumi.tomohiro@jp.fujitsu.com, xiyou.wangcong@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jacmet@sunsite.dk, bharrosh@panasas.com, james.smart@emulex.com
 
-From: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+From: Peter Korsgaard <jacmet@sunsite.dk>
 
-Fix the sdev_rw_attr() macro for scsi device sysfs entries.  It seems
-there is no such function snscanf in the current linux kernel, so it fails
-to compile scsi driver when someone try to add a new rw entry.  This has
-been unfixed for a long time probably because current scsi device has no
-rw entries.
+Commit 9e4f5e29 ("FC Pass Thru support") exported a number of header files
+in include/scsi to user space, but didn't change the uX types to the
+userspace-compatible __uX types.  Without that you'll get compile errors
+when including them - E.G.:
 
-# grep snscanf . -rn
-./drivers/scsi/scsi_sysfs.c:489:        snscanf (buf, 20, format_string, &sdev->field);                 \
+include/scsi/scsi.h:145: error: expected specifier-qualifier-list before `u8'
 
-[akpm@linux-foundation.org: coding-style fixes]
-Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
-Acked-by: WANG Cong <xiyou.wangcong@gmail.com>
+Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Smart <james.smart@emulex.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_sysfs.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/scsi/scsi.h         |    8 ++++----
+ include/scsi/scsi_netlink.h |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-scsi_sysfsc-fix-sdev_rw_attr-macro-for-scsi-device-sysfs-entries drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-scsi_sysfsc-fix-sdev_rw_attr-macro-for-scsi-device-sysfs-entries
-+++ a/drivers/scsi/scsi_sysfs.c
-@@ -474,7 +474,7 @@ static DEVICE_ATTR(field, S_IRUGO, sdev_
+diff -puN include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi.h
+--- a/include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space
++++ a/include/scsi/scsi.h
+@@ -149,10 +149,10 @@ struct scsi_cmnd;
  
- 
- /*
-- * sdev_rd_attr: create a function and attribute variable for a
-+ * sdev_rw_attr: create a function and attribute variable for a
-  * read/write field.
+ /* defined in T10 SCSI Primary Commands-2 (SPC2) */
+ struct scsi_varlen_cdb_hdr {
+-	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
+-	u8 control;
+-	u8 misc[5];
+-	u8 additional_cdb_length;         /* total cdb length - 8 */
++	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
++	__u8 control;
++	__u8 misc[5];
++	__u8 additional_cdb_length;         /* total cdb length - 8 */
+ 	__be16 service_action;
+ 	/* service specific data follows */
+ };
+diff -puN include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi_netlink.h
+--- a/include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space
++++ a/include/scsi/scsi_netlink.h
+@@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
+  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
   */
- #define sdev_rw_attr(field, format_string)				\
-@@ -486,7 +486,7 @@ sdev_store_##field (struct device *dev, 
- {									\
- 	struct scsi_device *sdev;					\
- 	sdev = to_scsi_device(dev);					\
--	snscanf (buf, 20, format_string, &sdev->field);			\
-+	sscanf(buf, format_string, &sdev->field);			\
- 	return count;							\
- }									\
- static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
+ #define SCSI_NL_VID_TYPE_SHIFT		56
+-#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
+-#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
+ #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
+ 
+ 
 _
