@@ -1,44 +1,61 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/28] gdth: unmap ccb_phys when scsi_add_host() fails in gdth_eisa_probe_one()
-Date: Tue, 27 Apr 2010 14:22:51 -0700
-Message-ID: <201004272122.o3RLMpAR020786@imap1.linux-foundation.org>
+Subject: [patch 27/28] drivers/scsi/scsi_sysfs.c: fix sdev_rw_attr macro for scsi device sysfs entries
+Date: Tue, 27 Apr 2010 14:23:09 -0700
+Message-ID: <201004272123.o3RLN9UB020864@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47782 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52245 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757018Ab0D0VXe (ORCPT
+	by vger.kernel.org with ESMTP id S1757022Ab0D0VXf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 17:23:34 -0400
+	Tue, 27 Apr 2010 17:23:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, achim_leubner@adaptec.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, kusumi.tomohiro@jp.fujitsu.com, xiyou.wangcong@gmail.com
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
 
-unmap ccb_phys as well when scsi_add_host() fails
+Fix the sdev_rw_attr() macro for scsi device sysfs entries.  It seems
+there is no such function snscanf in the current linux kernel, so it fails
+to compile scsi driver when someone try to add a new rw entry.  This has
+been unfixed for a long time probably because current scsi device has no
+rw entries.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Achim Leubner <achim_leubner@adaptec.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+# grep snscanf . -rn
+./drivers/scsi/scsi_sysfs.c:489:        snscanf (buf, 20, format_string, &sdev->field);                 \
+
+[akpm@linux-foundation.org: coding-style fixes]
+Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+Acked-by: WANG Cong <xiyou.wangcong@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_sysfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one
-+++ a/drivers/scsi/gdth.c
-@@ -4904,7 +4904,7 @@ static int __init gdth_eisa_probe_one(u1
+diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-scsi_sysfsc-fix-sdev_rw_attr-macro-for-scsi-device-sysfs-entries drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-scsi_sysfsc-fix-sdev_rw_attr-macro-for-scsi-device-sysfs-entries
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -474,7 +474,7 @@ static DEVICE_ATTR(field, S_IRUGO, sdev_
  
- 	error = scsi_add_host(shp, NULL);
- 	if (error)
--		goto out_free_coal_stat;
-+		goto out_free_ccb_phys;
- 	list_add_tail(&ha->list, &gdth_instances);
- 	gdth_timer_init();
  
+ /*
+- * sdev_rd_attr: create a function and attribute variable for a
++ * sdev_rw_attr: create a function and attribute variable for a
+  * read/write field.
+  */
+ #define sdev_rw_attr(field, format_string)				\
+@@ -486,7 +486,7 @@ sdev_store_##field (struct device *dev, 
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
+-	snscanf (buf, 20, format_string, &sdev->field);			\
++	sscanf(buf, format_string, &sdev->field);			\
+ 	return count;							\
+ }									\
+ static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
 _
