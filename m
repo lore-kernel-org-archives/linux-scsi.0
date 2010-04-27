@@ -1,101 +1,55 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/28] drivers/scsi/fnic/fnic_scsi.c: clean up
-Date: Tue, 27 Apr 2010 14:22:49 -0700
-Message-ID: <201004272122.o3RLMnOk020775@imap1.linux-foundation.org>
+Subject: [patch 01/28] scsi: add __init/__exit macros to ibmvstgt.c
+Date: Tue, 27 Apr 2010 14:22:47 -0700
+Message-ID: <201004272122.o3RLMmfS020772@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57408 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46211 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756963Ab0D0VXK (ORCPT
+	by vger.kernel.org with ESMTP id S1756977Ab0D0VXQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 17:23:10 -0400
+	Tue, 27 Apr 2010 17:23:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, abjoglek@cisco.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Peter Huewe <peterhuewe@gmx.de>
 
-In fnic_abort_cmd() and fnic_device_reset() assign `rport' earlier to make
-FNIC_SCSI_DBG() calls cleaner.
+Add the __init and __exit macros to the module_init / module_exit
+functions from drivers/scsi/ibmvscsi/ibmvstgt.c
 
-In fnic_clean_pending_aborts() `rport' is not used.
-
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Acked-by: Abhijeet Joglekar <abjoglek@cisco.com>
+Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/fnic/fnic_scsi.c |   22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up drivers/scsi/fnic/fnic_scsi.c
---- a/drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up
-+++ a/drivers/scsi/fnic/fnic_scsi.c
-@@ -1246,11 +1246,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	lp = shost_priv(sc->device->host);
+diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
+--- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
++++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -956,7 +956,7 @@ static struct srp_function_template ibmv
+ 	.it_nexus_response = ibmvstgt_it_nexus_response,
+ };
  
- 	fnic = lport_priv(lp);
--	FNIC_SCSI_DBG(KERN_DEBUG,
--		      fnic->lport->host,
--		      "Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
--		      (starget_to_rport(scsi_target(sc->device)))->port_id,
--		      sc->device->lun, sc->request->tag);
-+	rport = starget_to_rport(scsi_target(sc->device));
-+	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			"Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
-+			rport->port_id, sc->device->lun, sc->request->tag);
+-static int ibmvstgt_init(void)
++static int __init ibmvstgt_init(void)
+ {
+ 	int err = -ENOMEM;
  
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
- 		ret = FAILED;
-@@ -1299,7 +1298,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
- 	 * port is up, then send abts to the remote port to terminate
- 	 * the IO. Else, just locally terminate the IO in the firmware
- 	 */
--	rport = starget_to_rport(scsi_target(sc->device));
- 	if (fc_remote_port_chkready(rport) == 0)
- 		task_req = FCPIO_ITMF_ABT_TASK;
- 	else
-@@ -1418,7 +1416,6 @@ static int fnic_clean_pending_aborts(str
- 	unsigned long flags;
- 	int ret = 0;
- 	struct scsi_cmnd *sc;
--	struct fc_rport *rport;
- 	struct scsi_lun fc_lun;
- 	struct scsi_device *lun_dev = lr_sc->device;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
-@@ -1458,7 +1455,6 @@ static int fnic_clean_pending_aborts(str
+@@ -987,7 +987,7 @@ release_transport:
+ 	return err;
+ }
  
- 		/* Now queue the abort command to firmware */
- 		int_to_scsilun(sc->device->lun, &fc_lun);
--		rport = starget_to_rport(scsi_target(sc->device));
- 
- 		if (fnic_queue_abort_io_req(fnic, tag,
- 					    FCPIO_ITMF_ABT_TASK_TERM,
-@@ -1528,18 +1524,16 @@ int fnic_device_reset(struct scsi_cmnd *
- 	lp = shost_priv(sc->device->host);
- 
- 	fnic = lport_priv(lp);
--	FNIC_SCSI_DBG(KERN_DEBUG,
--		      fnic->lport->host,
--		      "Device reset called FCID 0x%x, LUN 0x%x\n",
--		      (starget_to_rport(scsi_target(sc->device)))->port_id,
--		      sc->device->lun);
- 
-+	rport = starget_to_rport(scsi_target(sc->device));
-+	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			"Device reset called FCID 0x%x, LUN 0x%x\n",
-+			rport->port_id, sc->device->lun);
- 
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
- 		goto fnic_device_reset_end;
- 
- 	/* Check if remote port up */
--	rport = starget_to_rport(scsi_target(sc->device));
- 	if (fc_remote_port_chkready(rport))
- 		goto fnic_device_reset_end;
+-static void ibmvstgt_exit(void)
++static void __exit ibmvstgt_exit(void)
+ {
+ 	printk("Unregister IBM virtual SCSI driver\n");
  
 _
