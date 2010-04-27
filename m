@@ -1,140 +1,102 @@
-From: Ryan Kuester <rkuester@kspace.net>
-Subject: mptsas hangs caused by ATA pass-through explained
-Date: Mon, 26 Apr 2010 18:11:54 -0500
-Message-ID: <20100426231154.GB577@kspace.net>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Regression: hang while burning DVD in scsi_init_sgtable
+Date: Mon, 26 Apr 2010 19:24:37 -0600
+Message-ID: <4BD63CD5.3020307@gmail.com>
+References: <20100425175639.GA31060@neutronstar.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from metis.kspace.net ([65.99.219.207]:52974 "EHLO metis.kspace.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751393Ab0DZXLz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Apr 2010 19:11:55 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100425175639.GA31060@neutronstar.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: textshell-dOFHIR@neutronstar.dyndns.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>, Kashyap Desai <kashyap.desai@lsi.com>, DL-MPTFusionLinux@lsi.com
-Cc: support@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I may have an explanation for the LSI 1068 HBA hangs provoked by ATA
-pass-through commands, in particular by smartctl.
+On 04/25/2010 11:56 AM, textshell-dOFHIR@neutronstar.dyndns.org wrote:
+> After upgradeing from 2.6.31 to 2.6.33.2 buring a DVD with growisofs
+> occasionally looks up in the kernel.
+> The DVD drive is connected via IDE to an ICH7 IDE controller(using ATA_PIIX
+> driver).
+>
+> i usually burn DVDs with
+> growisofs -speed 4 -Z /dev/sr0 -dvd-video -udf .
+> and sometimes it does work with just outputting:
+>
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] Sense Key : Illegal Request [current]
+> 2010-04-11T15:22:14+02:00 eclipse alert Info fld=0x0
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] Add. Sense: Logical block address out of range
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] CDB: Read(10): 28 00 00 00 00 00 00 00 01 00
+> 2010-04-11T15:22:14+02:00 eclipse err end_request: I/O error, dev sr0, sector 0
+> 2010-04-11T15:22:14+02:00 eclipse err Buffer I/O error on device sr0, logical block 0
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] Sense Key : Illegal Request [current]
+> 2010-04-11T15:22:14+02:00 eclipse alert Info fld=0x0
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] Add. Sense: Logical block address out of range
+> 2010-04-11T15:22:14+02:00 eclipse info sr 0:0:1:0: [sr0] CDB: Read(10): 28 00 00 00 00 00 00 00 01 00
+> 2010-04-11T15:22:14+02:00 eclipse err end_request: I/O error, dev sr0, sector 0
+> 2010-04-11T15:22:14+02:00 eclipse err Buffer I/O error on device sr0, logical block 0
+>
+> But the DVD gets written properly, so i don't really care, although it
+> looks like something might be working here already.
+> Anyway now for the second time it didn't output these messages, but instead
+> just hangs in the kernel.
+> The other processes keep running but the growisofs process is hung in the
+> kernel. ctrl-C or even killing with SIGKILL doesn't work.
+> according to /proc the task is in state "D (disk sleep)" (at the time of
+> writing this email).
+>
+> a bit later the kernel logs this:
+>
+> 2010-04-22T23:50:00+02:00 eclipse err INFO: task growisofs:23916 blocked for more than 120 seconds.
+> 2010-04-22T23:50:00+02:00 eclipse err "echo 0>  /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> 2010-04-22T23:50:00+02:00 eclipse info growisofs     D ffff8800a96ee3c0     0 23916  23913 0x00000000
+> 2010-04-22T23:50:00+02:00 eclipse alert ffff8800b7845858 0000000000000086 0000007fcf195000 ffff8800aa14f058
+> 2010-04-22T23:50:00+02:00 eclipse alert 000000000000ddc8 ffff8800b7845fd8 0000000000012400 0000000000012400
+> 2010-04-22T23:50:00+02:00 eclipse alert ffff8800b78457c8 ffffffff811ea32c ffff88000181a1c0 ffff88009e829b00
+> 2010-04-22T23:50:00+02:00 eclipse alert Call Trace:
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff811ea32c>] ? scsi_init_sgtable+0x83/0x8a
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff811ea72c>] ? scsi_setup_blk_pc_cmnd+0x99/0x115
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d1dfe>] schedule_timeout+0x26/0x1c9
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8115d60e>] ? kobject_put+0x47/0x4b
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d38c4>] ? _raw_spin_lock_irq+0x17/0x2f
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d0f3c>] wait_for_common+0xc2/0x138
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8102f944>] ? default_wake_function+0x0/0xf
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8114d751>] ? __generic_unplug_device+0x2d/0x31
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d103c>] wait_for_completion+0x18/0x1a
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8115105a>] blk_execute_rq+0x92/0xb0
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81150bbb>] ? blk_rq_append_bio+0x19/0x46
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81150e60>] ? blk_rq_map_user+0x160/0x204
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8113a233>] ? security_capable+0x27/0x29
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff811542ac>] sg_io+0x273/0x385
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81154896>] scsi_cmd_ioctl+0x1e2/0x448
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8104bfeb>] ? sched_clock_cpu+0xc6/0xd4
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8102574e>] ? cpuacct_charge+0x57/0x5f
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8121412a>] cdrom_ioctl+0x30/0xe01
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81027e0d>] ? enqueue_entity+0x125/0x12d
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81024c00>] ? wakeup_preempt_entity+0x9d/0xab
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81026c61>] ? check_preempt_wakeup+0x1ae/0x23d
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff811f398f>] sr_block_ioctl+0x4b/0x82
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff8115229d>] __blkdev_driver_ioctl+0x75/0x9d
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81152b31>] blkdev_ioctl+0x86c/0x8a7
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d364a>] ? _raw_spin_unlock+0x10/0x29
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81055dcd>] ? do_futex+0xc2/0x92a
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d38f4>] ? _raw_spin_lock_irqsave+0x18/0x34
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d3621>] ? _raw_spin_unlock_irqrestore+0x12/0x2b
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810474c7>] ? remove_wait_queue+0x48/0x4d
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff812d3621>] ? _raw_spin_unlock_irqrestore+0x12/0x2b
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810c8ef7>] block_ioctl+0x38/0x3c
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810b09f4>] vfs_ioctl+0x2a/0x9e
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810b0f2c>] do_vfs_ioctl+0x449/0x486
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810a4ac9>] ? fget_light+0xa8/0xc0
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff81056743>] ? sys_futex+0x10e/0x12c
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810b0fbe>] sys_ioctl+0x55/0x77
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810a434b>] ? sys_write+0x60/0x6e
+> 2010-04-22T23:50:00+02:00 eclipse alert [<ffffffff810029ab>] system_call_fastpath+0x16/0x1b
 
-First, my version of the symptoms.  On an LSI SAS1068E B3 HBA running
-01.29.00.00 firmware, with SATA disks, and with smartd running, I'm seeing
-occasional task, bus, and host resets, some of which lead to hard faults of
-the HBA requiring a reboot.  Abusively looping the smartctl command,
-
-    # while true; do smartctl -a /dev/sdb > /dev/null; done
-
-dramatically increases the frequency of these failures to nearly one per
-minute.  A high IO load through the HBA while looping smartctl seems to
-improve the chance of a full scsi host reset or a non-recoverable hang.
-
-I reduced what smartctl was doing down to a simple test case which
-causes the hang with a single IO when pointed at the sd interface.  See
-the code at the bottom of this e-mail.  It uses an SG_IO ioctl to issue
-a single pass-through ATA identify device command.  If the buffer
-userspace gives for the read data has certain alignments, the task is
-issued to the HBA but the HBA fails to respond.  If run against the sg
-interface, neither the test code nor smartctl causes a hang.
-
-sd and sg handle the SG_IO ioctl slightly differently.  Unless you
-specifically set a flag to do direct IO, sg passes a buffer of its own,
-which is page-aligned, to the block layer and later copies the result
-into the userspace buffer regardless of its alignment.  sd, on the other
-hand, always does direct IO unless the userspace buffer fails an
-alignment test at block/blk-map.c line 57, in which case a page-aligned
-buffer is created and used for the transfer.
-
-The alignment test currently checks for word-alignment, the default
-setup by scsi_lib.c; therefore, userspace buffers of almost any
-alignment are given directly to the HBA as DMA targets.  The LSI 1068
-hardware doesn't seem to like at least a couple of the alignments which
-cross a page boundary (see the test code below).  Curiously, many
-page-boundary-crossing alignments do work just fine.
-
-So, either the hardware has an bug handling certain alignments or the
-hardware has a stricter alignment requirement than the driver is
-advertising.  If stricter alignment is required, then in no case should
-misaligned buffers from userspace be allowed through without being
-bounced or at least causing an error to be returned.
-
-It seems the mptsas driver could use blk_queue_dma_alignment() to advertise
-a stricter alignment requirement.  If it does, sd does the right thing and
-bounces misaligned buffers (see block/blk-map.c line 57).  The following
-patch to 2.6.34-rc5 makes my symptoms go away.  I'm sure this is the wrong
-place for this code, but it gets my idea across.
-
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index 6796597..1e034ad 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -2450,6 +2450,8 @@ mptscsih_slave_configure(struct scsi_device *sdev)
- 		ioc->name,sdev->tagged_supported, sdev->simple_tags,
- 		sdev->ordered_tags));
- 
-+	blk_queue_dma_alignment (sdev->request_queue, 512 - 1);
-+
- 	return 0;
- }
-
-I look forward to hearing from you guys who know this hardware and code
-better than I do.  Is the hardware at fault, or should the driver be
-shielding the hardware better?  Where's the right place to add this code, if
-it's the right fix?
-
-Does this `fix' the problem for anyone besides me?
-
-Regards,
--- Ryan Kuester
-
-
-Here is a minimal bit of test code which causes the error.  BEWARE: this
-will hose the HBA at which you point it.  If that's controlling your
-root disk, you may hang your machine.
-
-/*
- * sg_bomb -- send SG_IO ioctl which causes LSI 1068 HBA to hang
- *
- *   usage: sg_bomb <device>
- *    e.g.: sg_bomb /dev/sdb
- *    e.g.: sg_bomb /dev/sg1
- *
- *   Modify offset_into_page to adjust the degree of buffer misalignment.
- */
-
-#include <unistd.h>
-#include <scsi/sg.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <stdlib.h>
-
-int main(int argc, char* argv[])
-{
-    char* filename = argv[1];
-    unsigned int offset_into_page = 0xe40;
-    // works: unsigned int offset_into_page = 0x0;
-    // hangs: unsigned int offset_into_page = 0xf00;
-    // works: unsigned int offset_into_page = 0xf04;
-
-    unsigned char ata_identify_cmd[] = {0x85, 0x08, 0x0e, 0, 0, 0, 0x01,
-        0, 0, 0, 0, 0, 0, 0, 0xec, 0};
-    unsigned char sense[32];
-    unsigned char* data = valloc(0x2000) + offset_into_page;
-    struct sg_io_hdr hdr = {
-        .interface_id = 'S',
-        .dxfer_direction = SG_DXFER_FROM_DEV,
-        .cmdp = ata_identify_cmd,
-        .cmd_len = 16,
-        .dxferp = data,
-        .dxfer_len = 512,
-        .sbp = sense,
-        .mx_sb_len = sizeof(sense),
-        .timeout = 5000,
-    };
-
-    int fd;
-    if ((fd = open(filename, O_RDWR|O_NONBLOCK)) < 0) 
-        perror();
-
-    return ioctl(fd, SG_IO, &hdr);
-}
+It won't actually be blocked in scsi_init_sgtable, that's likely a 
+spurious IP value on the stack. It looks like we're waiting for a 
+completion of a command - could be we lost a completion somehow and it 
+never timed out, or the application specified some huge timeout value (I 
+think the app can do that for SG_IO commands..)
