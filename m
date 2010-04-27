@@ -1,54 +1,77 @@
 From: akpm@linux-foundation.org
-Subject: [patch 20/28] mptscsih: fix first line of kernel-doc for a few functions
-Date: Tue, 27 Apr 2010 14:23:03 -0700
-Message-ID: <201004272123.o3RLN3R9020838@imap1.linux-foundation.org>
+Subject: [patch 28/28] bfa: fix compilation warning and endianness issues in powerpc
+Date: Tue, 27 Apr 2010 14:23:10 -0700
+Message-ID: <201004272123.o3RLNASR020867@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52381 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35045 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757128Ab0D0V14 (ORCPT
+	by vger.kernel.org with ESMTP id S1757150Ab0D0V2G (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 17:27:56 -0400
+	Tue, 27 Apr 2010 17:28:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, ben@decadent.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, huangj@Brocade.COMhuangj@Brocade.COM, kgudipat@Brocade.COM
 
-From: Ben Hutchings <ben@decadent.org.uk>
+From: Jing Huang <huangj@Brocade.com>
 
-The function name must be followed by a space, hypen, space, and a short
-description.
+Fix the compilation warning in powerpc:
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+drivers/scsi/bfa/bfa_ioc.c: In function 'bfa_ioc_msgget':
+drivers/scsi/bfa/bfa_ioc.c:1331: warning: value computed is not used
+drivers/scsi/bfa/bfa_ioc_ct.c: In function 'bfa_ioc_ct_notify_hbfail':
+drivers/scsi/bfa/bfa_ioc_ct.c:177: warning: value computed is not used
+drivers/scsi/bfa/bfa_ioc_ct.c:180: warning: value computed is not used
+drivers/scsi/bfa/bfa_ioc_ct.c: In function 'bfa_ioc_ct_pll_init':
+drivers/scsi/bfa/bfa_ioc_ct.c:381: warning: value computed is not used
+drivers/scsi/bfa/bfa_ioc_ct.c: In function 'bfa_ioc_ct_ownership_reset':
+drivers/scsi/bfa/bfa_ioc_ct.c:421: warning: value computed is not used
+drivers/scsi/bfa/bfa_ioc_cb.c: In function 'bfa_ioc_cb_notify_hbfail':
+drivers/scsi/bfa/bfa_ioc_cb.c:99: warning: value computed is not used
+drivers/scsi/bfa/bfa_ioc_cb.c: In function 'bfa_ioc_cb_ownership_reset':
+drivers/scsi/bfa/bfa_ioc_cb.c:272: warning: value computed is not used
+
+The same change also fixes endian issues we found in powerpc test.  I
+remove an unnecessary word swap in bfa_os_reg_read() and
+bfa_os_reg_write() because the kernel provided readl and writel are
+already doing so.  The compilation warning also goes away after this
+change.  For bfa_os_mem_read() and bfa_os_mem_write() macros, I add a swap
+since these two macros are designed to read/write from/to a memory region
+that is in BE format per ASIC spec.
+
+This patch has been tested in x86 and powerpc platform.
+
+Signed-off-by: Jing Huang <huangj@brocade.com>
+Cc: Jing Huang <huangj@brocade.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Krishna Gudipati <kgudipat@brocade.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptscsih.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/bfa/bfa_os_inc.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff -puN drivers/message/fusion/mptscsih.c~mptscsih-fix-first-line-of-kernel-doc-for-a-few-functions drivers/message/fusion/mptscsih.c
---- a/drivers/message/fusion/mptscsih.c~mptscsih-fix-first-line-of-kernel-doc-for-a-few-functions
-+++ a/drivers/message/fusion/mptscsih.c
-@@ -2570,9 +2570,7 @@ mptscsih_getclear_scsi_lookup(MPT_ADAPTE
- }
+diff -puN drivers/scsi/bfa/bfa_os_inc.h~bfa-fix-compilation-warning-and-endianness-bugs-in-powerpc drivers/scsi/bfa/bfa_os_inc.h
+--- a/drivers/scsi/bfa/bfa_os_inc.h~bfa-fix-compilation-warning-and-endianness-bugs-in-powerpc
++++ a/drivers/scsi/bfa/bfa_os_inc.h
+@@ -176,12 +176,12 @@ int bfa_os_MWB(void *);
+ #define bfa_os_addr_t char __iomem *
+ #define bfa_os_panic()
  
- /**
-- * mptscsih_set_scsi_lookup
-- *
-- * writes a scmd entry into the ScsiLookup[] array list
-+ * mptscsih_set_scsi_lookup - write a scmd entry into the ScsiLookup[] array list
-  *
-  * @ioc: Pointer to MPT_ADAPTER structure
-  * @i: index into the array
-@@ -2735,7 +2733,7 @@ mptscsih_scandv_complete(MPT_ADAPTER *io
+-#define bfa_os_reg_read(_raddr) bfa_os_wtole(readl(_raddr))
+-#define bfa_os_reg_write(_raddr, _val) writel(bfa_os_wtole((_val)), (_raddr))
++#define bfa_os_reg_read(_raddr) readl(_raddr)
++#define bfa_os_reg_write(_raddr, _val) writel((_val), (_raddr))
+ #define bfa_os_mem_read(_raddr, _off)                                   \
+-	bfa_os_ntohl(readl(((_raddr) + (_off))))
++	bfa_os_swap32(readl(((_raddr) + (_off))))
+ #define bfa_os_mem_write(_raddr, _off, _val)                            \
+-	writel(bfa_os_htonl((_val)), ((_raddr) + (_off)))
++	writel(bfa_os_swap32((_val)), ((_raddr) + (_off)))
  
- 
- /**
-- *	mptscsih_get_completion_code -
-+ *	mptscsih_get_completion_code - get completion code from MPT request
-  *	@ioc: Pointer to MPT_ADAPTER structure
-  *	@req: Pointer to original MPT request frame
-  *	@reply: Pointer to MPT reply frame (NULL if TurboReply)
+ #define BFA_TRC_TS(_trcm)						\
+ 			({						\
 _
