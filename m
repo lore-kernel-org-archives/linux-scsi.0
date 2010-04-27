@@ -1,47 +1,46 @@
 From: akpm@linux-foundation.org
-Subject: [patch 11/28] g_NCR5380: remove misleading pnp error message
-Date: Tue, 27 Apr 2010 14:22:56 -0700
-Message-ID: <201004272122.o3RLMulF020804@imap1.linux-foundation.org>
+Subject: [patch 17/28] lpfc: positive error return into negative
+Date: Tue, 27 Apr 2010 14:23:01 -0700
+Message-ID: <201004272123.o3RLN1lx020829@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46188 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57958 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755107Ab0D0V1o (ORCPT
+	by vger.kernel.org with ESMTP id S1757121Ab0D0V1q (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 17:27:44 -0400
+	Tue, 27 Apr 2010 17:27:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux@rainbow-software.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, james.smart@emulex.com
 
-From: Ondrej Zary <linux@rainbow-software.org>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Remove misleading error message that appears after pnp card has been
-detected correctly.
+In the comment on top of lpfc_sli_hbq_setup() and of its caller which
+transmits this error, lpfc_sli_hba_setup(), it is stated that the function
+should return a negative error code.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Acked-by: James Smart <james.smart@emulex.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/g_NCR5380.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message drivers/scsi/g_NCR5380.c
---- a/drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message
-+++ a/drivers/scsi/g_NCR5380.c
-@@ -322,10 +322,8 @@ int __init generic_NCR5380_detect(struct
- 		while ((dev = pnp_find_dev(NULL, ISAPNP_VENDOR('D', 'T', 'C'), ISAPNP_FUNCTION(0x436e), dev))) {
- 			if (count >= NO_OVERRIDES)
- 				break;
--			if (pnp_device_attach(dev) < 0) {
--				printk(KERN_ERR "dtc436e probe: attach failed\n");
-+			if (pnp_device_attach(dev) < 0)
- 				continue;
--			}
- 			if (pnp_activate_dev(dev) < 0) {
- 				printk(KERN_ERR "dtc436e probe: activate failed\n");
- 				pnp_device_detach(dev);
+diff -puN drivers/scsi/lpfc/lpfc_sli.c~lpfc-positive-error-return-into-negative drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c~lpfc-positive-error-return-into-negative
++++ a/drivers/scsi/lpfc/lpfc_sli.c
+@@ -3794,7 +3794,7 @@ lpfc_sli_hbq_setup(struct lpfc_hba *phba
+ 
+ 			phba->link_state = LPFC_HBA_ERROR;
+ 			mempool_free(pmb, phba->mbox_mem_pool);
+-			return ENXIO;
++			return -ENXIO;
+ 		}
+ 	}
+ 	phba->hbq_count = hbq_count;
 _
