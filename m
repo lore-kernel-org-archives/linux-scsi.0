@@ -1,48 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 18/28] drivers/scsi/qla2xxx/qla_os.c: fix continuation line formats
+Subject: [patch 19/28] scsi: bfa: correct onstack wait_queue_head declaration
 Date: Tue, 27 Apr 2010 14:23:02 -0700
-Message-ID: <201004272123.o3RLN2qZ020832@imap1.linux-foundation.org>
+Message-ID: <201004272123.o3RLN231020835@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:38469 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:38788 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757082Ab0D0VaE (ORCPT
+	by vger.kernel.org with ESMTP id S1757159Ab0D0VaS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 17:30:04 -0400
+	Tue, 27 Apr 2010 17:30:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, joe@perches.com, James.Bottomley@suse.de, anirban.chakraborty@qlogic.com, giridhar.malavali@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, yong.zhang0@gmail.com, James.Bottomley@suse.de, huangj@Brocade.COM, roel.kluin@gmail.com
 
-From: Joe Perches <joe@perches.com>
+From: Yong Zhang <yong.zhang0@gmail.com>
 
-String constants that are continued on subsequent lines with \ will cause
-spurious whitespace in the resulting output.
+Use DECLARE_WAIT_QUEUE_HEAD_ONSTACK to make lockdep happy
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Yong Zhang <yong.zhang0@gmail.com>
+Cc: Jing Huang <huangj@brocade.com>
 Cc: James E.J. Bottomley <James.Bottomley@suse.de>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Cc: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
+Cc: Roel Kluin <roel.kluin@gmail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ drivers/scsi/bfa/bfad_im.c |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-fix-continuation-line-formats drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-fix-continuation-line-formats
-+++ a/drivers/scsi/qla2xxx/qla_os.c
-@@ -89,8 +89,8 @@ int ql2xmaxqueues = 1;
- module_param(ql2xmaxqueues, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ql2xmaxqueues,
- 		"Enables MQ settings "
--		"Default is 1 for single queue. Set it to number \
--			of queues in MQ mode.");
-+		"Default is 1 for single queue. Set it to number "
-+		"of queues in MQ mode.");
+diff -puN drivers/scsi/bfa/bfad_im.c~scsi-bfa-correct-onstack-wait_queue_head-declaration drivers/scsi/bfa/bfad_im.c
+--- a/drivers/scsi/bfa/bfad_im.c~scsi-bfa-correct-onstack-wait_queue_head-declaration
++++ a/drivers/scsi/bfa/bfad_im.c
+@@ -291,7 +291,7 @@ bfad_im_reset_lun_handler(struct scsi_cm
+ 	struct bfa_tskim_s *tskim;
+ 	struct bfad_itnim_s   *itnim;
+ 	struct bfa_itnim_s *bfa_itnim;
+-	DECLARE_WAIT_QUEUE_HEAD(wq);
++	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+ 	int             rc = SUCCESS;
+ 	unsigned long   flags;
+ 	enum bfi_tskim_status task_status;
+@@ -353,7 +353,7 @@ bfad_im_reset_bus_handler(struct scsi_cm
+ 	struct bfad_itnim_s   *itnim;
+ 	unsigned long   flags;
+ 	u32        i, rc, err_cnt = 0;
+-	DECLARE_WAIT_QUEUE_HEAD(wq);
++	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(wq);
+ 	enum bfi_tskim_status task_status;
  
- int ql2xmultique_tag;
- module_param(ql2xmultique_tag, int, S_IRUGO|S_IRUSR);
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
 _
