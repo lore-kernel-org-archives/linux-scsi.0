@@ -1,47 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/28] NCR5380: bit MR_DMA_MODE set twice in NCR5380_transfer_dma()
-Date: Tue, 27 Apr 2010 14:22:52 -0700
-Message-ID: <201004272122.o3RLMq8Z020792@imap1.linux-foundation.org>
+Subject: [patch 05/28] gdth: unmap ccb_phys when scsi_add_host() fails in gdth_eisa_probe_one()
+Date: Tue, 27 Apr 2010 14:22:51 -0700
+Message-ID: <201004272122.o3RLMpAR020786@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47248 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47782 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757001Ab0D0VXa (ORCPT
+	by vger.kernel.org with ESMTP id S1757018Ab0D0VXe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Apr 2010 17:23:30 -0400
+	Tue, 27 Apr 2010 17:23:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, achim_leubner@adaptec.com
 
 From: Roel Kluin <roel.kluin@gmail.com>
 
-Besides keeping the line short, the second setting of the MR_DMA_MODE bit
-was removed.
+unmap ccb_phys as well when scsi_add_host() fails
 
 Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Achim Leubner <achim_leubner@adaptec.com>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/NCR5380.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/gdth.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma drivers/scsi/NCR5380.c
---- a/drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma
-+++ a/drivers/scsi/NCR5380.c
-@@ -1857,7 +1857,9 @@ static int NCR5380_transfer_dma(struct S
- #endif
- 	/* KLL May need eop and parity in 53c400 */
- 	if (hostdata->flags & FLAG_NCR53C400)
--		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR | MR_ENABLE_EOP_INTR | MR_DMA_MODE | MR_MONITOR_BSY);
-+		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
-+				MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR |
-+				MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
- 	else
- 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
- #endif				/* def REAL_DMA */
+diff -puN drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one
++++ a/drivers/scsi/gdth.c
+@@ -4904,7 +4904,7 @@ static int __init gdth_eisa_probe_one(u1
+ 
+ 	error = scsi_add_host(shp, NULL);
+ 	if (error)
+-		goto out_free_coal_stat;
++		goto out_free_ccb_phys;
+ 	list_add_tail(&ha->list, &gdth_instances);
+ 	gdth_timer_init();
+ 
 _
