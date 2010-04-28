@@ -1,80 +1,56 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 04/11] qla4xxx: Updated firmware ready timeout algorithm
-Date: Wed, 28 Apr 2010 11:40:37 +0530
-Message-ID: <20100428061037.GA11125@sles11sp1b1.qlogic.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 09/11] qla4xxx: Added support for ISP82XX
+Date: Wed, 28 Apr 2010 01:37:21 -0500
+Message-ID: <4BD7D7A1.3040507@cs.wisc.edu>
+References: <20100428061431.GA11197@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:18792
-	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1754080Ab0D1GZB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Apr 2010 02:25:01 -0400
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41107 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750924Ab0D1Ggx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Apr 2010 02:36:53 -0400
+In-Reply-To: <20100428061431.GA11197@sles11sp1b1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: James Bottomley <james.bottomley@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
-Updated firmware ready timeout algorithm to prevent
-long delays and use jiffies to time out instead of
-counter. Also use msleep_interruptible instead of msleep.
+On 04/28/2010 01:14 AM, Vikas Chaudhary wrote:
+> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
+> Signed-off-by: Karen Higgins<karen.higgins@qlogic.com>
+> ---
+>   drivers/scsi/qla4xxx/Kconfig      |    4 +-
+>   drivers/scsi/qla4xxx/Makefile     |    2 +-
+>   drivers/scsi/qla4xxx/ql4_def.h    |  145 ++-
+>   drivers/scsi/qla4xxx/ql4_fw.h     |  144 +++-
+>   drivers/scsi/qla4xxx/ql4_glbl.h   |  115 ++-
+>   drivers/scsi/qla4xxx/ql4_init.c   |  190 ++-
+>   drivers/scsi/qla4xxx/ql4_inline.h |    2 +-
+>   drivers/scsi/qla4xxx/ql4_iocb.c   |   73 +-
+>   drivers/scsi/qla4xxx/ql4_isr.c    |  400 +++++-
+>   drivers/scsi/qla4xxx/ql4_mbx.c    |  185 ++-
+>   drivers/scsi/qla4xxx/ql4_nvram.c  |    2 +-
+>   drivers/scsi/qla4xxx/ql4_nvram.h  |    6 +-
+>   drivers/scsi/qla4xxx/ql4_nx.c     | 2556 +++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/qla4xxx/ql4_nx.h     |  703 ++++++++++
+>   drivers/scsi/qla4xxx/ql4_os.c     |  693 ++++++++---
+>   15 files changed, 4831 insertions(+), 389 deletions(-)
+>   create mode 100644 drivers/scsi/qla4xxx/ql4_nx.c
 
-Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_init.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 7f6cc2e..beaeb18 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -1046,7 +1046,7 @@ static void qla4x00_pci_config(struct scsi_qla_host *ha)
- static int qla4xxx_start_firmware_from_flash(struct scsi_qla_host *ha)
- {
- 	int status = QLA_ERROR;
--	uint32_t max_wait_time;
-+	unsigned long max_wait_time;
- 	unsigned long flags;
- 	uint32_t mbox_status;
- 
-@@ -1078,7 +1078,10 @@ static int qla4xxx_start_firmware_from_flash(struct scsi_qla_host *ha)
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	/* Wait for firmware to come UP. */
--	max_wait_time = FIRMWARE_UP_TOV * 4;
-+	DEBUG2(printk(KERN_INFO "scsi%ld: %s: Wait up to %d seconds for "
-+		      "boot firmware to complete...\n",
-+		      ha->host_no, __func__, FIRMWARE_UP_TOV));
-+	max_wait_time = jiffies + (FIRMWARE_UP_TOV * HZ);
- 	do {
- 		uint32_t ctrl_status;
- 
-@@ -1092,16 +1095,15 @@ static int qla4xxx_start_firmware_from_flash(struct scsi_qla_host *ha)
- 		if (mbox_status == MBOX_STS_COMMAND_COMPLETE)
- 			break;
- 
--		DEBUG2(printk("scsi%ld: %s: Waiting for boot firmware to "
--			      "complete... ctrl_sts=0x%x, remaining=%d\n",
--			      ha->host_no, __func__, ctrl_status,
--			      max_wait_time));
-+		DEBUG2(printk(KERN_INFO "scsi%ld: %s: Waiting for boot "
-+			      "firmware to complete... ctrl_sts=0x%x\n",
-+			      ha->host_no, __func__, ctrl_status));
- 
--		msleep(250);
--	} while ((max_wait_time--));
-+		msleep_interruptible(250);
-+	} while (!time_after_eq(jiffies, max_wait_time));
- 
- 	if (mbox_status == MBOX_STS_COMMAND_COMPLETE) {
--		DEBUG(printk("scsi%ld: %s: Firmware has started\n",
-+		DEBUG(printk(KERN_INFO "scsi%ld: %s: Firmware has started\n",
- 			     ha->host_no, __func__));
- 
- 		spin_lock_irqsave(&ha->hardware_lock, flags);
--- 
-1.7.0.5
+I did not review this patch adding new hw support due to waiting on 
+comments about the other patches.
 
+
+The other patches look ok now. They just have comment about adding a 
+KERN_ in the printks but I think that is ignorable. Add a:
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
+
+This patch:
+[PATCH 08/11] qla4xxx: fix ql4_mbx tcp_source_port_num
+is already in Linus's tree I think, so it can be dropped by James if he 
+likes the patches.
