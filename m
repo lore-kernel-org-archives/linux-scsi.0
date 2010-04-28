@@ -1,64 +1,51 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 00/11] qla4xxx: Driver Fixes & Enablement of ISP82XX!!
-Date: Wed, 28 Apr 2010 11:35:40 +0530
-Message-ID: <20100428060540.GA11059@sles11sp1b1.qlogic.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH][SCSI] cxgb3i: Fix error path for module init
+Date: Wed, 28 Apr 2010 01:21:39 -0500
+Message-ID: <4BD7D3F3.2070002@cs.wisc.edu>
+References: <adazl0ojfud.fsf@roland-alpha.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:40612
-	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1753939Ab0D1GUC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Apr 2010 02:20:02 -0400
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36181 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750744Ab0D1GVP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Apr 2010 02:21:15 -0400
+In-Reply-To: <adazl0ojfud.fsf@roland-alpha.cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
+To: Roland Dreier <rdreier@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Karen Xie <kxie@chelsio.com>, Rakesh Ranjan <rakesh@chelsio.com>, James Bottomley <James.Bottomley@suse.de>
 
-James,
+On 04/28/2010 12:39 AM, Roland Dreier wrote:
+> If cxgb3i_pdu_init() fails, then it appears that cxgb3i_iscsi_init()
+> will not be cleaned up, leading to the iscsi transport being left
+> registered.  Fix this by adding a call to cxgb3i_iscsi_cleanup() on the
+> error path.
+>
+> Signed-off-by: Roland Dreier<rolandd@cisco.com>
+> ---
+>   drivers/scsi/cxgb3i/cxgb3i_init.c |    4 +++-
+>   1 files changed, 3 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/cxgb3i/cxgb3i_init.c b/drivers/scsi/cxgb3i/cxgb3i_init.c
+> index d0ab23a..685af36 100644
+> --- a/drivers/scsi/cxgb3i/cxgb3i_init.c
+> +++ b/drivers/scsi/cxgb3i/cxgb3i_init.c
+> @@ -104,8 +104,10 @@ static int __init cxgb3i_init_module(void)
+>   		return err;
+>
+>   	err = cxgb3i_pdu_init();
+> -	if (err<  0)
+> +	if (err<  0) {
+> +		cxgb3i_iscsi_cleanup();
+>   		return err;
+> +	}
+>
+>   	cxgb3_register_client(&t3c_client);
+>
+>
 
-Here is the set of updated patches to address the comments from Mike C.
-Additionally it enables the support for 10Gb iSCSI ISP82XX adapter.
-It was generated against the scsi-misc tree. Please apply.
+Looks good to me.
 
-Here is the list of changes
-
-Ravi Anand (1):
-	Adding MAINTAINERS for qla4xxx iSCSI driver.
-
-Randy Dunlap (1):
-	qla4xxx: fix ql4_mbx tcp_source_port_num
-
-Vikas Chaudhary (9)
-	qla4xxx: Update driver version to 5.02.00-k1
-	qla4xxx: Added support for ISP82XX
-	qla4xxx: added support for abort task management command
-	qla4xxx: correct use of cmd->host_scribble
-	qla4xxx: do not retry login to CHAP auth failed targets
-	qla4xxx: Updated firmware ready timeout algorithm
-	qla4xxx: Code Clean up - remove "marker_needed"
-	qla4xxx: set device state as per Link UP and LINK DOWN
-	qla4xxx: added IPv6 support.
-
-MAINTAINERS                        |    8 +
-drivers/scsi/qla4xxx/Kconfig       |    4 +-
-drivers/scsi/qla4xxx/Makefile      |    2 +-
-drivers/scsi/qla4xxx/ql4_def.h     |  191 +++-
-drivers/scsi/qla4xxx/ql4_fw.h      |  190 +++-
-drivers/scsi/qla4xxx/ql4_glbl.h    |  123 ++-
-drivers/scsi/qla4xxx/ql4_init.c    |  549 ++++++--
-drivers/scsi/qla4xxx/ql4_inline.h  |    2 +-
-drivers/scsi/qla4xxx/ql4_iocb.c    |   75 +-
-drivers/scsi/qla4xxx/ql4_isr.c     |  409 +++++-
-drivers/scsi/qla4xxx/ql4_mbx.c     |  518 ++++++--
-drivers/scsi/qla4xxx/ql4_nvram.c   |    2 +-
-drivers/scsi/qla4xxx/ql4_nvram.h   |    6 +-
-drivers/scsi/qla4xxx/ql4_nx.c      | 2556 ++++++++++++++++++++++++++++++++++++
-drivers/scsi/qla4xxx/ql4_nx.h      |  703 ++++++++++
-drivers/scsi/qla4xxx/ql4_os.c      |  814 +++++++++---
-drivers/scsi/qla4xxx/ql4_version.h |    3 +-
-
-Thanks,
-Vikas.
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
