@@ -1,49 +1,27 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 5/5] zfcp: Zero memory for gpn_ft and adisc requests
-Date: Fri, 30 Apr 2010 18:09:37 +0200
-Message-ID: <20100430161020.583247000@de.ibm.com>
-References: <20100430160932.658896000@de.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Thu, 29 Apr 2010 11:45:22 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1004291144480.1697-100000@iolanthe.rowland.org>
+References: <4BD946E3.9030303@gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.17.163]:56754 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932633Ab0D3Tfj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Apr 2010 15:35:39 -0400
-Content-Disposition: inline; filename=zalloc.diff
+Received: from iolanthe.rowland.org ([192.131.102.54]:33472 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758312Ab0D3UW5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Apr 2010 16:22:57 -0400
+In-Reply-To: <4BD946E3.9030303@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Mark Lord <mlord@pobox.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+On Thu, 29 Apr 2010, Jonas Schwertfeger wrote:
 
-With debug kernels, the memory allocated with kmem_cache_alloc might
-be initialized with the poison values 6b and a5. Use kmem_cache_zalloc
-instead of kmem_cache_alloc to get zeroed memory and not send invalid
-requests.
+> Sorry for the delay.  Attached are both a USB3 and a USB2 dmesg log of 
+> running the latest version of hpdarm.
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
- drivers/s390/scsi/zfcp_fc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I would still like to see a usbmon trace of hdparm under USB-2.
 
---- a/drivers/s390/scsi/zfcp_fc.c	2010-04-30 16:00:37.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fc.c	2010-04-30 16:00:54.000000000 +0200
-@@ -400,7 +400,7 @@ static int zfcp_fc_adisc(struct zfcp_por
- 	struct zfcp_adapter *adapter = port->adapter;
- 	int ret;
- 
--	adisc = kmem_cache_alloc(zfcp_data.adisc_cache, GFP_ATOMIC);
-+	adisc = kmem_cache_zalloc(zfcp_data.adisc_cache, GFP_ATOMIC);
- 	if (!adisc)
- 		return -ENOMEM;
- 
-@@ -493,7 +493,7 @@ static struct zfcp_fc_gpn_ft *zfcp_alloc
- 	if (!gpn_ft)
- 		return NULL;
- 
--	req = kmem_cache_alloc(zfcp_data.gpn_ft_cache, GFP_KERNEL);
-+	req = kmem_cache_zalloc(zfcp_data.gpn_ft_cache, GFP_KERNEL);
- 	if (!req) {
- 		kfree(gpn_ft);
- 		gpn_ft = NULL;
+Alan Stern
 
