@@ -1,168 +1,37 @@
-From: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
-Subject: [PATCH] megaraid_sas: fix NULL pointer dereference in case of command
- via ioctl timeout
-Date: Fri, 30 Apr 2010 19:34:23 +0900
-Message-ID: <4BDAB22F.7090103@jp.fujitsu.com>
+From: Frederic Weisbecker <fweisbec@gmail.com>
+Subject: Re: [PATCH] scsi/st: remove BKL from open
+Date: Fri, 30 Apr 2010 04:18:58 +0200
+Message-ID: <20100430021855.GA21078@nowhere>
+References: <1271277384-7627-1-git-send-email-arnd@arndb.de> <201004151629.45029.arnd@arndb.de> <alpine.LNX.2.00.1004152244160.5127@kai.makisara.local> <201004152251.39636.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail8.fujitsu.co.jp ([192.51.44.38]:41194 "EHLO
-	fgwmail8.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932714Ab0D3RNB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Apr 2010 13:13:01 -0400
-Received: from fgwmail7.fujitsu.co.jp (fgwmail7.fujitsu.co.jp [192.51.44.37])
-	by fgwmail8.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id o3UAbLeg011246
-	for <linux-scsi@vger.kernel.org> (envelope-from tokunaga.keiich@jp.fujitsu.com);
-	Fri, 30 Apr 2010 19:37:21 +0900
-Received: from m4.gw.fujitsu.co.jp ([10.0.50.74])
-	by fgwmail7.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id o3UAZ6Lx009464
-	for <linux-scsi@vger.kernel.org> (envelope-from tokunaga.keiich@jp.fujitsu.com);
-	Fri, 30 Apr 2010 19:35:07 +0900
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 4A36F45DE6E
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Apr 2010 19:35:06 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 21ADE45DE4D
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Apr 2010 19:35:06 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 0C3AB1DB803A
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Apr 2010 19:35:06 +0900 (JST)
-Received: from m024.s.css.fujitsu.com (m024.s.css.fujitsu.com [10.0.81.64])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id C006D1DB8037
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Apr 2010 19:35:05 +0900 (JST)
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:60956 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758780Ab0D3SuP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Apr 2010 14:50:15 -0400
+Received: by wwb34 with SMTP id 34so414717wwb.19
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Apr 2010 11:50:14 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <201004152251.39636.arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, Bo Yang <bo.yang@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
+To: Arnd Bergmann <arnd@arndb.de>, Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: dgilbert@interlog.com, Jens Axboe <axboe@kernel.dk>, Vivek Goyal <vgoyal@redhat.com>, Tejun Heo <tj@kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Martin K. Petersen" <martin.petersen@oracle.com>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, John Kacur <jkacur@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>
 
-Hi,
-
-A NULL pointer dereference occurs if a command via ioctl times
-out.
-
-When a command is submitted via ioctl to megaraid_sas firmware,
-the processing goes through like this:
-
-  megasas_mgmt_ioctl()
-    megasas_mgmt_ioctl_fw()
-      megasas_mgmt_fw_ioctl()
-        cmd->sync_cmd = 1
-        megasas_issue_blocked_cmd()
-          instance->instancet->fire_cmd() // command submitted
-          wait_event_timeout(instance->int_cmd_wait_q,
-                             cmd->cmd_status != ENODATA, ...)<--+
-                                                                |
-Normally, the firmware sends back a reply to the driver and it  |
-wakes up the waiting processing (above) like this:              |
-                                                                |
-  interrupt                                                     |
-    |                                                           |
-    V                                                           |
-  megasas_isr()                                                 |
-    megasas_deplete_reply_queue()                               |
-      tasklet_schedule(&instance->isr_tasklet)                  |
-        |                                                       |
-        V                                                       |
-      megasas_complete_cmd_dpc()                                |
-        megasas_complete_cmd()                                  |
-          case MFI_CMD_PD_SCSI_IO:                              |
-            if (cmd->sync_cmd)                                  |
-              megasas_complete_int_cmd()                        |
-                cmd->cmd_status = cmd->frame->io.cmd_status     |
-                wake_up(&instance->int_cmd_wait_q) -------------+
-
-If the command times out for some reason, however, it wakes up
-and restarts the processing forward like this:
-
-  wakes up and returns from megasas_issue_blocked_cmd()
-  cmd->sync_cmd = 0
-  ...
-  megasas_return_cmd()
-
-After that, if the command is executed and the firmware sends a
-reply to the driver, since cmd->sync_cmd has been set to 0, the
-processing goes like below (READ/WRITE command handling) and the
-NULL pointer deference occurs, causing an Oops.
-
-  interrupt
-    |
-    V
-  megasas_isr()
-    megasas_deplete_reply_queue()
-      tasklet_schedule(&instance->isr_tasklet)
-        |
-        V
-      megasas_complete_cmd_dpc()
-        megasas_complete_cmd()
-          case MFI_CMD_PD_SCSI_IO:
-            // does nothing and falls through
-          case MFI_CMD_LD_READ/WRITE:
-            dereference to cmd->scmd that is NULL
-
-I think something like the following patch should fix the issue.
-
-Thanks,
-Kei
+On Thu, Apr 15, 2010 at 10:51:38PM +0200, Arnd Bergmann wrote:
+> The st_open function is serialized through the st_dev_arr_lock
+> and the STp->in_use flag, so there is no race that the BKL
+> can protect against in the driver itself, and the function
+> does not access any global state outside of the driver that
+> might be protected with the BKL.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
 
-Signed-off-by: Kei Tokunaga <tokunaga.keiich@jp.fujitsu.com>
----
- drivers/scsi/megaraid/megaraid_sas.c |   22 ++++++++++++++++++++--
- 1 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
-index 99e4478..4127790 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -594,13 +594,21 @@ static int
- megasas_issue_blocked_cmd(struct megasas_instance *instance,
- 			  struct megasas_cmd *cmd)
- {
-+	long timeleft;
-+
- 	cmd->cmd_status = ENODATA;
- 
- 	instance->instancet->fire_cmd(instance,
- 			cmd->frame_phys_addr, 0, instance->reg_set);
- 
--	wait_event_timeout(instance->int_cmd_wait_q, (cmd->cmd_status != ENODATA),
--		MEGASAS_INTERNAL_CMD_WAIT_TIME*HZ);
-+	timeleft = wait_event_timeout(instance->int_cmd_wait_q,
-+				      (cmd->cmd_status != ENODATA),
-+				      MEGASAS_INTERNAL_CMD_WAIT_TIME*HZ);
-+
-+	if (!timeleft) {
-+		printk(KERN_ERR "megasas: command timed out\n");
-+		cmd->cmd_status = ETIME;
-+	}
- 
- 	return 0;
- }
-@@ -1671,6 +1679,10 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 	case MFI_CMD_PD_SCSI_IO:
- 	case MFI_CMD_LD_SCSI_IO:
- 
-+		/* command timed out and there is nothing to do. */
-+		if (unlikely(cmd->cmd_status == ETIME))
-+			break;
-+
- 		/*
- 		 * MFI_CMD_PD_SCSI_IO and MFI_CMD_LD_SCSI_IO could have been
- 		 * issued either through an IO path or an IOCTL path. If it
-@@ -3718,6 +3730,12 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
- 	megasas_issue_blocked_cmd(instance, cmd);
- 	cmd->sync_cmd = 0;
- 
-+	/* command timed out */
-+	if (cmd->cmd_status == ETIME) {
-+		error = -ETIME;
-+		goto out;
-+	}
-+
- 	/*
- 	 * copy out the kernel buffers to user buffers
- 	 */
+Kai, can we get your ack on this?
 
-
+Thanks.
 
