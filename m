@@ -1,27 +1,67 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Thu, 29 Apr 2010 11:45:22 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1004291144480.1697-100000@iolanthe.rowland.org>
-References: <4BD946E3.9030303@gmail.com>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: bfa driver on xen
+Date: Fri, 30 Apr 2010 14:13:28 -0700
+Message-ID: <04391A4E90BB2149B010D22452FA1687B9AD2A5B@HQ-EXCH-6.corp.brocade.com>
+References: <20100430093350.GA27777@joejin-pc.cn.oracle.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:33472 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758312Ab0D3UW5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Apr 2010 16:22:57 -0400
-In-Reply-To: <4BD946E3.9030303@gmail.com>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:40715 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756216Ab0D3VNf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Apr 2010 17:13:35 -0400
+In-Reply-To: <20100430093350.GA27777@joejin-pc.cn.oracle.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jonas Schwertfeger <jschwertfeger@gmail.com>
-Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Mark Lord <mlord@pobox.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
+To: Joe Jin <joe.jin@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "soeren.binner@oracle.com" <soeren.binner@oracle.com>, "haobo.zhou@oracle.com" <haobo.zhou@oracle.com>
 
-On Thu, 29 Apr 2010, Jonas Schwertfeger wrote:
+Hi Joe,
 
-> Sorry for the delay.  Attached are both a USB3 and a USB2 dmesg log of 
-> running the latest version of hpdarm.
+Thanks for reporting the issue. We have noticed this during the netapp/oracal ovm test to include bfa driver as part of ovm distro. As a workaround, we suggested to set num_sgpg=512 and num_ios=512. 
 
-I would still like to see a usbmon trace of hdparm under USB-2.
+We are working on a fix and it will be available in our 2.3 driver.
 
-Alan Stern
+Regards,
+
+Jing
+
+>-----Original Message-----
+>From: Joe Jin [mailto:joe.jin@oracle.com]
+>Sent: Friday, April 30, 2010 2:34 AM
+>To: Jing Huang; linux-scsi@vger.kernel.org
+>Cc: soeren.binner@oracle.com; haobo.zhou@oracle.com; joe.jin@oracle.com
+>Subject: bfa driver on xen
+>
+>Hi Jing Huang,
+>
+>I'm Joe Jin from Oracle Linux team, recently we tried brocade device
+>on HP DL385 with OracleVM and  found the device could not worked for
+>driver could not applied enough memory with below error message:
+>
+>bfad[0]: memory allocation failed with num_sgpgs: 2048
+>bfad[0]: trying to allocate memory with num_sgpgs: 1024
+>bfad[0]: memory allocation failed with num_sgpgs: 1024
+>bfad[0]: trying to allocate memory with num_sgpgs: 512
+>bfad0 bfad_hal_mem_alloc failure
+>Not enough memory to attach all Brocade HBA ports, System may need more
+>
+>I have did some investigated, here are some information:
+>OracleVM xen it 64bit and Dom0 is 32bit, the root cause is when 32bit Dom0
+>running on 64bit hypervisor(xen), it on compat mode and xen just allowed
+>to allocate 1M(order = 8) contiguous memory, if not of compat mode,
+>Dom0 would successed applied 2M(order=9) contiguous memory.
+>
+>To let it the device works, we have to decrease driver config params
+>like num_sgpgs, reqq_size, rspq_size and so on, I'm not sure if
+>there are some releations among them, also did not known what values
+>is good enough for performance, woule you like give me some advices
+>for those? we have to reduce bfa driver DMA memory no more than 1M.
+>
+>Thanks,
+>Joe
+>
 
