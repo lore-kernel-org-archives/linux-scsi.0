@@ -1,154 +1,276 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] QEMU-KVM scsi-bus: Add LBA+Transfer Length to outgoing SBC
-	CDBs in scsi_req_setup() for SG_IO
-Date: Sat, 01 May 2010 07:10:05 -0700
-Message-ID: <1272723005.6280.101.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: AACRAID driver update patch version - 26400
+Date: Sat, 01 May 2010 14:03:01 -0500
+Message-ID: <1272740581.4570.92.camel@mulgrave.site>
+References: <C42A9BA25D0AB74D81491EF544ED520973D0D9DFC5@ADPE2K704.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:46098 "HELO
-	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751026Ab0EAOKN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 May 2010 10:10:13 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:34012 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753779Ab0EATDP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 May 2010 15:03:15 -0400
+In-Reply-To: <C42A9BA25D0AB74D81491EF544ED520973D0D9DFC5@ADPE2K704.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kvm-devel <kvm@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, Gerd Hoffmann <kraxel@redhat.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Douglas Gilbert <dgilbert@interlog.com>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>
+To: "Rajashekhara, Mahesh" <Mahesh_Rajashekhara@adaptec.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, AACRAID <AACRAID@adaptec.com>
 
-Greetings Hannes, Gerd and co,
+On Wed, 2010-04-07 at 20:55 -0700, Rajashekhara, Mahesh wrote:
+> (Resending in plain text as the earlier email got bounced)
+> 
+> Hi All,
+> 
+> We have prepared driver patch from latest driver source.
+> 
+> We worked on a issue related to SMARTCTL([Bugme-new] [Bug 15623] New: doesn't allow SMART-passthrough on Adaptec Series 5 controller) 
+> and found the  root cause of this problem. We have responded to this bug, stating that we will be releasing the driver patch for addressing this problem.
+> Also, in our recent program releases we have addressed some more issues.
+> 
+> Please look into the release notes.
 
-So after doing more digging into the work for a SGL capable QEMU SCSI
-HBA emulation interface with the megasas driver on Linux/KVM Hosts, I
-realized that the SG_IO breakage we originally encountered is due to the
-fact that CDBs containing SBC LBA+block_count where not getting built in
-the new HBA I/O helper in hw/scsi-bus.c:scsi_req_setup().
+Please, no.  What I actually need is a set of patches (one per change or
+feature) with a properly added description and signoff as described in
+Documentation/SubmittingPatches.
 
-This is AFAICT because hw/scsi-disk.c logic is doing it's underlying
-userspace AIO to struct file without any knowledge of SBC CDBs to begin
-with. (Please correct me if I am wrong)  With the following patch on top
-of my working qemu-kvm.git tree containing Gerd's SCSI bus interface, I
-am now able to run bulk SG_IO with megasas emulation in a v2.6.26-2
-x86_64 KVM Guest on a 2.6.34-rc4 x86_64 Host with TCM_Loop virtual SAS
-ports!
+> Please find the attachments.
+> 1. aacraid-version-26400-040510-patch - Driver patch
+> 2. aacraid-scsi-misc-2.6-warnings.txt - Warning message text 
+> 3. Release notes
 
-Also the original lack of a valid req->cmd.len assignment in
-scsi_req_setup() is what was causing the original 'Message too long'
-SG_IO failures I encountered..  Here is the combined patch to make go:
+So if I look at the Changelog it seems that there should be four
+separate changes:
 
-diff --git a/hw/scsi-bus.c b/hw/scsi-bus.c
-index 48e8d40..b8e4b71 100644
---- a/hw/scsi-bus.c
-+++ b/hw/scsi-bus.c
-@@ -453,7 +453,39 @@ int scsi_req_parse(SCSIRequest *req, uint8_t *buf)
 
- int scsi_req_setup(SCSIRequest *req, int is_write, uint64_t lba, uint64_t count)
- {
--    req->cmd.buf[0] = is_write ? WRITE_12 : READ_12;
-+    /*
-+     * Set the req->cmd.len and fill in the CDB's Logical Block Address and
-+     * Transfer length (block count) that is required by SG_IO passthrough
-+     * in hw/scsi-generic.c:execute_command_run()
-+     */
-+    if (lba > 0x00000000ffffffff) {
-+       req->cmd.len = 16;
-+       req->cmd.buf[0] = is_write ? WRITE_16 : READ_16;
-+       req->cmd.buf[2] = (lba >> 56) & 0xff;
-+       req->cmd.buf[3] = (lba >> 48) & 0xff;
-+       req->cmd.buf[4] = (lba >> 40) & 0xff;
-+       req->cmd.buf[5] = (lba >> 32) & 0xff;
-+       req->cmd.buf[6] = (lba >> 24) & 0xff;
-+       req->cmd.buf[7] = (lba >> 16) & 0xff;
-+       req->cmd.buf[8] = (lba >> 8) & 0xff;
-+       req->cmd.buf[9] = lba & 0xff;
-+       req->cmd.buf[10] = (count >> 24) & 0xff;
-+       req->cmd.buf[11] = (count >> 16) & 0xff;
-+       req->cmd.buf[12] = (count >> 8) & 0xff;
-+       req->cmd.buf[13] = count & 0xff;
-+    } else {
-+       req->cmd.len = 12;
-+       req->cmd.buf[0] = is_write ? WRITE_12 : READ_12;
-+       req->cmd.buf[2] = (lba >> 24) & 0xff;
-+       req->cmd.buf[3] = (lba >> 16) & 0xff;
-+       req->cmd.buf[4] = (lba >> 8) & 0xff;
-+       req->cmd.buf[5] = lba & 0xff;
-+       req->cmd.buf[6] = (count >> 24) & 0xff;
-+       req->cmd.buf[7] = (count >> 16) & 0xff;
-+       req->cmd.buf[8] = (count >> 8) & 0xff;
-+       req->cmd.buf[9] = count & 0xff;
-+    }
-+
-     req->cmd.mode = is_write ? SCSI_XFER_TO_DEV : SCSI_XFER_FROM_DEV;
-     req->cmd.lba = lba;
-     req->cmd.xfer = count * req->dev->blocksize;
+> AACRAID Driver for Linux - version 26400
+> ----------------------------------------
+> 
+> Addressed issues:
+> ----------------
+> 1. The default driver setting is "expose_physicals=0", which means raw
+> physical drives not exposed to OS. 
+>    If the user wants to expose connected physical drives, enable
+> "expose_physicals" module parameter.
+>    With the new JBOD firmware, physical drives are not available for
+> "expose_physicals>0".
+>    In function "aac_expose_phy_device", added to reset the appropriate
+> bit in the first byte of inquiry data.
+>    This fix exposes the connected physical drives.
 
-and the the link containing the commit proper:
+OK
 
-http://git.kernel.org/?p=virt/kvm/nab/qemu-kvm.git;a=commitdiff;h=6a1a11bfbcde49bb864fe40cf3b254b1ed607c72
+> 2. Added support for handling ATA pass-through commands.
+>    When the "CC" bit is set by the host in ATA pass-through CDB,
+> driver is supposed to return DID_OK
+>    When the "CC" bit is reset by the host, driver should return
+> DID_ERROR
 
-So far using the LTP-Disktest O_DIRECT benchmark with 8 threads and 64k
-blocksize in a guest with 4 VCPUs and 2048MB memory to a SG_IO <->
-TCM/RAMDISK_DR backstore running on a KVM 5500 series Nehalem host, I am
-seeing ~8.9 Gb/sec (~1050 MB/sec) of bandwith to megasas with the large
-blocksizes.  Seperately I am able to mkfs and mount filesystems from
-within KVM guest, shutdown and then mount locally with TCM_Loop on the
-host, etc.
+No, that's not correct.  You should return a result code of
+SAM_STAT_CHECK_CONDITION, with a driver byte of DID_OK.  If you return
+DID_ERROR, it will unconditionally trigger error handling and a retry.
 
-Here is how it looks in action so far:
+> 3. Firmware exposes lesser container capacity than the actual one.
+>    It exposes [actaul size - hidden reserved space(10MB)] to the OS,
+> IO's to the 10MB should be prohibhited from the Linux
+> driver.              
+>    When the IO's falls into hidden reserved space, driver internally
+> sets sensekey to HARDWARE_ERROR and sends notification to the SCSI mid
+> layer.
+>    Added "expose_hidden_space" flag, by default the fix will be
+> executed. 
+>    Only if the user sets "expose_hidden_space=1", user can access
+> beyond the array reported size(hidden reserved space 10MB).
 
-http://linux-iscsi.org/images/Megasas-SGIO-TCM_Loop-05012010.png
+This doesn't exactly look like the right interface. Won't the user want
+the hidden space exposed on a per array basis?  In which case a sysfs
+flag in the host attributes would be far more appropriate than a module
+flag?
 
-In order to achieve these results I am running with the recommended
-MEGASAS_MAX_FRAMES=1000, and two extra kernel patches for seting
-include/scsi/sg.h:SG_MAX_QUEUE=128 and increasing TCM_Loop's SCSI LLD
-settings for struct scsi_host_template to can_queue=1024,
-cmd_per_lun=1024, and max_sectors=256.
+> 4. Based on the notification from firmware, the driver sets up
+> SDV_OFFLINE flag for a deleted array and 
+>    the SCSI mid layer comes to know the attached  SCSI device has gone
+> offline. But with 
+>    this notification, scsi device entries are not being removed. 
+>    Enabled "AAC_DEBUG_INSTRUMENT_AIF_DELETE" flag  in the header file,
+> with this flag the driver uses "scsi_remove_device".     
+>    On the notification from firmware, the driver calls
+> "scsi_remove_device" for the deleted array.
+>    This call not only informs the scsi device status to the SCSI mid
+> layer but also
+>    removes corresponding scsi device entry from the linux
+> sysfs.        
 
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index a9f3c6f..5decefd 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -240,7 +240,7 @@ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
- #define SG_DEF_RESERVED_SIZE SG_SCATTER_SZ /* load time option */
- 
- /* maximum outstanding requests, write() yields EDOM if exceeded */
--#define SG_MAX_QUEUE 16
-+#define SG_MAX_QUEUE 128
- 
- #define SG_BIG_BUFF SG_DEF_RESERVED_SIZE    /* for backward compatibility */
-diff --git a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-index 5417579..4d4c573 100644
---- a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-+++ b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-@@ -391,11 +391,11 @@ static struct scsi_host_template tcm_loop_driver_template = {
-        .eh_device_reset_handler = NULL,
-        .eh_host_reset_handler  = NULL,
-        .bios_param             = NULL,
--       .can_queue              = 1,
-+       .can_queue              = 1024,
-        .this_id                = -1,
-        .sg_tablesize           = 256,
--       .cmd_per_lun            = 1,
--       .max_sectors            = 128,
-+       .cmd_per_lun            = 1024,
-+       .max_sectors            = 256,
-        .use_clustering         = DISABLE_CLUSTERING,
-        .module                 = THIS_MODULE,
- };
+OK, don't understand this.  As noted below, the define
+AAC_DEBUG_INSTRUMENT_AIF_DELETE is set by your patch, but never appears
+at all in the driver ... is there missing code?
 
-With the v2.6.26-2 Linux guests everything feels quite solid running for
-extended periods at 1000 MB/sec to TCM_Loop virtual SAS ports and
-TCM/RAMDISK_DR and TCM/FILEIO backstores running on the Linux Host.
+> Thanks & Regards,
+> Mahesh
+> Linux Driver Development Engineer,
+> Adaptec ODC, Bangalore
 
-One big item that I did notice was that using a v2.6.34-rc kernel in KVM
-guest caused number of problems with SG_IO that eventually required a
-reboot on the host machine.  I assume this must have something to do
-with upstream linux megaraid_sas driver changes..?  Hannes, any comments
-here before taking a look with git bisect..?
 
-Best,
 
---nab
+> diff -ru a/drivers/scsi/aacraid/aachba.c
+> b/drivers/scsi/aacraid/aachba.c
+> --- a/drivers/scsi/aacraid/aachba.c     2010-04-03 05:49:52.000000000
+> -0700
+> +++ b/drivers/scsi/aacraid/aachba.c     2010-04-07 12:35:36.468017040
+> -0700
+> @@ -109,6 +109,16 @@
+>  #define BYTE2(x) (unsigned char)((x) >> 16)
+>  #define BYTE3(x) (unsigned char)((x) >> 24)
+>  
+> +
+> +/* ATA pass thru commands */
+> +#ifndef ATA_12
+> +#define ATA_12                0xa1      /* 12-byte pass-thru */
+> +#endif
+> +
+> +#ifndef ATA_16
+> +#define ATA_16                0x85      /* 16-byte pass-thru */
+> +#endif
+> +
 
+This chunk is clearly wrong ... those defines are in include/scsi/scsi.h
+
+> @@ -1647,6 +1671,27 @@
+>                 count = (scsicmd->cmnd[7] << 8) | scsicmd->cmnd[8];
+>                 break;
+>         }
+> +
+> +       if (expose_hidden_space <= 0) {
+> +               if ((lba + count) > (dev->fsa_dev[scmd_id(scsicmd)].size)) {
+> +                       int cid = scmd_id(scsicmd);
+> +                       dprintk((KERN_DEBUG "aacraid: Illegal lba\n"));
+> +                       scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
+> +                               SAM_STAT_CHECK_CONDITION;
+> +                       set_sense(&dev->fsa_dev[cid].sense_data,
+> +                               HARDWARE_ERROR,
+> +                               SENCODE_INTERNAL_TARGET_FAILURE,
+> +                               ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
+> +                       memcpy(scsicmd->sense_buffer,
+> +                               &dev->fsa_dev[cid].sense_data,
+> +                               min_t(size_t,
+> +                               sizeof(dev->fsa_dev[cid].sense_data),
+> +                               SCSI_SENSE_BUFFERSIZE));
+> +                       scsicmd->scsi_done(scsicmd);
+> +                       return 1;
+> +               }
+> +       }
+> +
+
+This chunk is correctly indented, that's great.
+
+>         dprintk((KERN_DEBUG "aac_read[cpu %d]: lba = %llu, t = %ld.\n",
+>           smp_processor_id(), (unsigned long long)lba, jiffies));
+>         if (aac_adapter_bounds(dev,scsicmd,lba))
+> @@ -1727,6 +1772,26 @@
+>                 count = (scsicmd->cmnd[7] << 8) | scsicmd->cmnd[8];
+>                 fua = scsicmd->cmnd[1] & 0x8;
+>         }
+> +
+> +       if (expose_hidden_space <= 0) {
+> +               if ((lba + count) > (dev->fsa_dev[scmd_id(scsicmd)].size)) {
+> +                       int cid = scmd_id(scsicmd);
+> +                       dprintk((KERN_DEBUG "aacraid: Illegal lba\n"));
+> +                       scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
+> +                       SAM_STAT_CHECK_CONDITION;
+> +                       set_sense(&dev->fsa_dev[cid].sense_data,
+> +                       HARDWARE_ERROR, SENCODE_INTERNAL_TARGET_FAILURE,
+> +                       ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0);
+> +                       memcpy(scsicmd->sense_buffer,
+> +                       &dev->fsa_dev[cid].sense_data,
+> +                       min_t(size_t,
+> +                       sizeof(dev->fsa_dev[cid].sense_data),
+> +                       SCSI_SENSE_BUFFERSIZE));
+> +
+> +                       scsicmd->scsi_done(scsicmd);
+> +                       return 1;
+> +               }
+> +       }
+
+This one, and numerous others are wrongly indented ... the continuation
+lines should have an extra tab or be aligned under the opening bracket
+for a function/macro.  Indentation like this makes the file very hard to
+read.
+
+> diff -ru a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+> --- a/drivers/scsi/aacraid/aacraid.h    2010-04-03 05:49:52.000000000 -0700
+> +++ b/drivers/scsi/aacraid/aacraid.h    2010-04-07 14:17:18.409380952 -0700
+> @@ -1,6 +1,7 @@
+>  #ifndef dprintk
+>  # define dprintk(x)
+>  #endif
+> +#define AAC_DEBUG_INSTRUMENT_AIF_DELETE
+
+What is this?  It's not used anywhere else in the file (a leftover from
+some removed debugging code?)
+
+
+> @@ -1065,6 +1065,10 @@
+>  #define aac_adapter_ioremap(dev, size) \
+>         (dev)->a_ops.adapter_ioremap(dev, size)
+>  
+> +#define aac_adapter_intr(dev) \
+> +       ((dev)->a_ops.adapter_intr((dev)->pdev->irq, \
+> +       (void *)dev))
+> +
+
+This is another very weird macro, but as far as I can tell, it's never
+used either.
+
+
+> --- a/drivers/scsi/aacraid/commctrl.c   2010-04-03 05:49:52.000000000
+> -0700
+> +++ b/drivers/scsi/aacraid/commctrl.c   2010-04-07 12:52:53.803318104
+> -0700
+> @@ -128,13 +128,13 @@
+>                 retval =
+> aac_fib_send(le16_to_cpu(kfib->header.Command), fibptr,
+>                                 le16_to_cpu(kfib->header.Size) ,
+> FsaNormal,
+>                                 1, 1, NULL, NULL);
+> -               if (retval) {
+> -                       goto cleanup;
+> -               }
+>                 if (aac_fib_complete(fibptr) != 0) {
+> +                       if (!retval)
+>                         retval = -EINVAL;
+> -                       goto cleanup;
+> +               goto cleanup;
+
+This looks wrong ... it's wrongly indented, but I'm assuming you meant
+to remove the goto altogether so it gets swept up in the code below?
+
+>                 }
+> +               if (retval)
+> +                       goto cleanup;
+
+
+> @@ -534,6 +532,13 @@
+>                                                   "update mother board
+> BIOS or consider utilizing one of\n"
+>                                                   "the SAFE mode
+> kernel options (acpi, apic etc)\n");
+>                                         }
+> +                                       spin_lock_irqsave(&fibptr->event_lock,
+> +                                       flags);
+> +                                       fibptr->done = 2;
+> +                                       spin_unlock_irqrestore(
+> +                                       &fibptr->event_lock,
+> +                                       flags);
+
+So these locks ... even badly indented ... don't look necessary:
+fibptr->done is a u32.  On all architectures that's updated atomically.
+This means that the check on fibptr->done always reads either the old
+value or the new value ... there's no need to add extra locking unless
+there are other values or states that need updating atomically.
+
+> +                                       dprintk((KERN_ERR "aacraid:
+> sync. command timed out after 180 seconds\n"));
+
+James
 
 
