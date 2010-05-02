@@ -1,42 +1,63 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] scsi_debug: virtual_gb ignores sector_size
-Date: Sun, 02 May 2010 11:44:34 -0400
-Message-ID: <1272815074.23834.40.camel@mulgrave.site>
-References: <4BD419BF.4040109@interlog.com>
+Subject: Re: [PATCH 10/21] m68k/scsi: a2091 - Kill ugly DMA() macro
+Date: Sun, 02 May 2010 16:05:49 -0400
+Message-ID: <1272830750.23834.43.camel@mulgrave.site>
+References: <1270371651-2584-2-git-send-email-geert@linux-m68k.org>
+	 <1270371651-2584-5-git-send-email-geert@linux-m68k.org>
+	 <1270371651-2584-6-git-send-email-geert@linux-m68k.org>
+	 <1270371651-2584-7-git-send-email-geert@linux-m68k.org>
+	 <1270371651-2584-8-git-send-email-geert@linux-m68k.org>
+	 <1270371651-2584-9-git-send-email-geert@linux-m68k.org>
+	 <1270371651-2584-10-git-send-email-geert@linux-m68k.org>
+	 <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
+	 <20100405062529.GA28950@infradead.org>
+	 <s2o10f740e81004051242r27951fcftefe2ca3d1425ff66@mail.gmail.com>
+	 <i2h10f740e81004230137oc7c5f464w164786cd7f13f589@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:53555 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755370Ab0EBPoj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 May 2010 11:44:39 -0400
-In-Reply-To: <4BD419BF.4040109@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <i2h10f740e81004230137oc7c5f464w164786cd7f13f589@mail.gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Sun, 2010-04-25 at 12:30 +0200, Douglas Gilbert wrote:
-> --- linux/drivers/scsi/scsi_debug.c     2010-03-24 20:13:03.000000000
-> +0100
-> +++ linux/drivers/scsi/scsi_debug.c2633mqnu2ss  2010-04-25
-> 12:03:50.000000000 +0200
-> @@ -58,7 +58,7 @@
->  #include "scsi_logging.h"
->  
->  #define SCSI_DEBUG_VERSION "1.82"
-> -static const char * scsi_debug_version_date = "20100324";
-> +static const char * scsi_debug_version_date = "20100425";
+On Fri, 2010-04-23 at 10:37 +0200, Geert Uytterhoeven wrote:
+> On Mon, Apr 5, 2010 at 21:42, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> > On Mon, Apr 5, 2010 at 08:25, Christoph Hellwig <hch@infradead.org> wrote:
+> >> Instead of abusing the ScsiHost base field I'd prefer if you stick
+> >
+> > I wouldn't call it abuse: it's a (MM)IO base address anyway.
+> > But I see that field was indeed marked `legacy crap' in an otherwise
+> > innocent looking
+> > commit to split the SCSI include files... by you ;-)
+> >
+> >> a properly typed pointer into the device specific host data.
+> >
+> > You mean shost_priv()? That field already contains a pointer to the
+> > struct WD33C93_hostdata.
+> >
+> > But I'll create a new a2091_hostdata struct that contains both the
+> > WD33C93_hostdata and the a2091_scsiregs pointer (and do the same
+> > for gvp11.c and a3000.c). It's a bit similar to what sgiwd93.c does, albeit that
+> > one also uses the legacy base field.
+> 
+> As I want to avoid introducing bugs by respinning the complicated
+> parts (the zorro
+> driver and platform driver conversion patches), I made this change on
+> top of the 2
+> whole patch series.
+> 
+> A2091 part:
 
-I got a rejection here ... presumably because there's a missing patch
-somewhere along the way.
+I've applied up to 10/21 which should make it easier, but this patch
+refuses to apply:
 
-I've got to say, I don't think bumping the date with every patch is a
-good idea ... apart from the patch ordering problems, it will give
-rejections every time I try to send a patch to stable (which I'm doing
-with this).
+patch: **** malformed patch at line 230: struct scsi_cmnd *SCpnt,
+
+could you respin the remaining patches so they'll actually apply?
+
+Thanks,
 
 James
-
-
