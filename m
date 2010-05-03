@@ -1,26 +1,22 @@
 From: "Nick Cheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH 1/3 ] SCSI: Support HW reset for EH and polling scheme for scsi device
-Date: Mon, 3 May 2010 15:41:27 +0800
-Message-ID: <E2F58C573F144B6C97C30FCA5F354606@areca4e4f859d4>
+Subject: [PATCH 1/3 ] SCSI: Support HW reset for EH and polling scheme for scsi device(This is correct revision, please ignore last one)
+Date: Mon, 3 May 2010 15:45:38 +0800
+Message-ID: <5B75F1A9B45A486E8A44B035EDCC381E@areca4e4f859d4>
 Reply-To: <nick.cheng@areca.com.tw>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0068_01CAEAD7.1A0EDB90"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f198.google.com ([209.85.211.198]:35557 "EHLO
-	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753641Ab0ECHlp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 May 2010 03:41:45 -0400
+	boundary="----=_NextPart_000_006B_01CAEAD7.B015B000"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 References: 
 In-Reply-To: 
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0068_01CAEAD7.1A0EDB90
+------=_NextPart_000_006B_01CAEAD7.B015B000
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -33,20 +29,20 @@ endless waiting
 4. To support HW reset in bus reset error handler
 Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
 
-------=_NextPart_000_0068_01CAEAD7.1A0EDB90
+------=_NextPart_000_006B_01CAEAD7.B015B000
 Content-Type: application/octet-stream;
-	name="patch1"
+	name="patch1-3"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="patch1"
+	filename="patch1-3"
 
 diff -Naurp --ignore-blank-lines --ignore-all-space =
 --ignore-space-change linux-2.6/drivers/scsi/arcmsr/arcmsr_attr.c =
 linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr_attr.c=0A=
---- linux-2.6/drivers/scsi/arcmsr/arcmsr_attr.c	2010-04-14 =
-19:15:11.000000000 +0800=0A=
+--- linux-2.6/drivers/scsi/arcmsr/arcmsr_attr.c	2010-05-04 =
+12:13:49.000000000 +0800=0A=
 +++ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr_attr.c	=
-2010-04-14 19:24:50.000000000 +0800=0A=
+2008-06-13 11:02:58.000000000 +0800=0A=
 @@ -189,6 +189,7 @@ static struct bin_attribute arcmsr_sysfs=0A=
  	.attr =3D {=0A=
  		.name =3D "mu_read",=0A=
@@ -74,10 +70,10 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr_attr.c=0A=
 diff -Naurp --ignore-blank-lines --ignore-all-space =
 --ignore-space-change linux-2.6/drivers/scsi/arcmsr/arcmsr.h =
 linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
---- linux-2.6/drivers/scsi/arcmsr/arcmsr.h	2010-04-14 19:15:11.000000000 =
+--- linux-2.6/drivers/scsi/arcmsr/arcmsr.h	2010-05-04 12:13:46.000000000 =
 +0800=0A=
-+++ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h	2010-04-14 =
-19:24:54.000000000 +0800=0A=
++++ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h	2010-05-03 =
+11:35:24.000000000 +0800=0A=
 @@ -48,7 +48,7 @@ struct device_attribute;=0A=
  /*The limit of outstanding scsi command that firmware can handle*/=0A=
  #define ARCMSR_MAX_OUTSTANDING_CMD						256=0A=
@@ -89,33 +85,7 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
  #define ARCMSR_SCSI_INITIATOR_ID						255=0A=
  #define ARCMSR_MAX_XFER_SECTORS							512=0A=
  #define ARCMSR_MAX_XFER_SECTORS_B						4096=0A=
-@@ -66,6 +66,17 @@ struct device_attribute;=0A=
- #define ARC_SUCCESS                                                     =
-  0=0A=
- #define ARC_FAILURE                                                     =
-  1=0A=
- /*=0A=
-+************************************************************************=
-**********=0A=
-+**=0A=
-+************************************************************************=
-**********=0A=
-+*/=0A=
-+#ifndef TRUE=0A=
-+#define TRUE 1=0A=
-+#endif=0A=
-+#ifndef FALSE=0A=
-+#define FALSE 0=0A=
-+#endif=0A=
-+/*=0A=
- =
-*************************************************************************=
-******=0A=
- **        split 64bits dma addressing=0A=
- =
-*************************************************************************=
-******=0A=
-@@ -110,6 +121,8 @@ struct CMD_MESSAGE_FIELD=0A=
+@@ -110,6 +110,8 @@ struct CMD_MESSAGE_FIELD=0A=
  #define FUNCTION_SAY_HELLO			0x0807=0A=
  #define FUNCTION_SAY_GOODBYE			0x0808=0A=
  #define FUNCTION_FLUSH_ADAPTER_CACHE		0x0809=0A=
@@ -124,7 +94,7 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
  /* ARECA IO CONTROL CODE*/=0A=
  #define ARCMSR_MESSAGE_READ_RQBUFFER       \=0A=
  	ARECA_SATA_RAID | FUNCTION_READ_RQBUFFER=0A=
-@@ -133,6 +146,7 @@ struct CMD_MESSAGE_FIELD=0A=
+@@ -133,6 +135,7 @@ struct CMD_MESSAGE_FIELD=0A=
  #define ARCMSR_MESSAGE_RETURNCODE_OK              0x00000001=0A=
  #define ARCMSR_MESSAGE_RETURNCODE_ERROR           0x00000006=0A=
  #define ARCMSR_MESSAGE_RETURNCODE_3F              0x0000003F=0A=
@@ -132,7 +102,7 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
  /*=0A=
  *************************************************************=0A=
  **   structure for holding DMA address data=0A=
-@@ -341,13 +355,13 @@ struct MessageUnit_B=0A=
+@@ -341,13 +344,13 @@ struct MessageUnit_B=0A=
  	uint32_t	done_qbuffer[ARCMSR_MAX_HBB_POSTQUEUE];=0A=
  	uint32_t	postq_index;=0A=
  	uint32_t	doneq_index;=0A=
@@ -153,7 +123,7 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
  };=0A=
  =0A=
  /*=0A=
-@@ -375,6 +389,7 @@ struct AdapterControlBlock=0A=
+@@ -375,6 +378,7 @@ struct AdapterControlBlock=0A=
  	/* message unit ATU inbound base address0 */=0A=
  =0A=
  	uint32_t			acb_flags;=0A=
@@ -161,7 +131,7 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
  	#define ACB_F_SCSISTOPADAPTER         	0x0001=0A=
  	#define ACB_F_MSG_STOP_BGRB     	0x0002=0A=
  	/* stop RAID background rebuild */=0A=
-@@ -390,7 +405,7 @@ struct AdapterControlBlock=0A=
+@@ -390,7 +394,7 @@ struct AdapterControlBlock=0A=
  	#define ACB_F_BUS_RESET               	0x0080=0A=
  	#define ACB_F_IOP_INITED              	0x0100=0A=
  	/* iop init */=0A=
@@ -170,7 +140,7 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
  	struct CommandControlBlock *			pccb_pool[ARCMSR_MAX_FREECCB_NUM];=0A=
  	/* used for memory free */=0A=
  	struct list_head		ccb_free_list;=0A=
-@@ -423,12 +438,19 @@ struct AdapterControlBlock=0A=
+@@ -423,12 +427,19 @@ struct AdapterControlBlock=0A=
  #define ARECA_RAID_GOOD               0xaa=0A=
  	uint32_t			num_resets;=0A=
  	uint32_t			num_aborts;=0A=
@@ -195,19 +165,11 @@ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h=0A=
 diff -Naurp --ignore-blank-lines --ignore-all-space =
 --ignore-space-change linux-2.6/drivers/scsi/arcmsr/arcmsr_hba.c =
 linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr_hba.c=0A=
---- linux-2.6/drivers/scsi/arcmsr/arcmsr_hba.c	2010-04-14 =
-19:15:11.000000000 +0800=0A=
+--- linux-2.6/drivers/scsi/arcmsr/arcmsr_hba.c	2010-05-04 =
+12:13:54.000000000 +0800=0A=
 +++ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr_hba.c	=
-2010-04-14 19:24:47.000000000 +0800=0A=
-@@ -58,7 +58,6 @@=0A=
- #include <linux/timer.h>=0A=
- #include <linux/pci.h>=0A=
- #include <linux/aer.h>=0A=
--#include <linux/slab.h>=0A=
- #include <asm/dma.h>=0A=
- #include <asm/io.h>=0A=
- #include <asm/system.h>=0A=
-@@ -72,8 +71,16 @@=0A=
+2010-05-03 14:50:28.000000000 +0800=0A=
+@@ -71,8 +71,16 @@=0A=
  #include <scsi/scsicam.h>=0A=
  #include "arcmsr.h"=0A=
  =0A=
@@ -229,7 +191,7 @@ Bus Adapter");=0A=
  MODULE_LICENSE("Dual BSD/GPL");=0A=
  MODULE_VERSION(ARCMSR_DRIVER_VERSION);=0A=
  =0A=
-@@ -96,14 +103,18 @@ static u32 arcmsr_disable_outbound_ints(=0A=
+@@ -95,6 +103,13 @@ static u32 arcmsr_disable_outbound_ints(=0A=
  static void arcmsr_stop_adapter_bgrb(struct AdapterControlBlock *acb);=0A=
  static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);=0A=
  static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);=0A=
@@ -246,16 +208,7 @@ int mode);=0A=
  static const char *arcmsr_info(struct Scsi_Host *);=0A=
  static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb);=0A=
  static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev,=0A=
--					  int queue_depth, int reason)=0A=
-+								int queue_depth)=0A=
- {=0A=
--	if (reason !=3D SCSI_QDEPTH_DEFAULT)=0A=
--		return -EOPNOTSUPP;=0A=
--=0A=
- 	if (queue_depth > ARCMSR_MAX_CMD_PERLUN)=0A=
- 		queue_depth =3D ARCMSR_MAX_CMD_PERLUN;=0A=
- 	scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, queue_depth);=0A=
-@@ -112,7 +123,7 @@ static int arcmsr_adjust_disk_queue_dept=0A=
+@@ -111,7 +126,7 @@ static int arcmsr_adjust_disk_queue_dept=0A=
  =0A=
  static struct scsi_host_template arcmsr_scsi_host_template =3D {=0A=
  	.module			=3D THIS_MODULE,=0A=
@@ -264,7 +217,7 @@ int mode);=0A=
  							ARCMSR_DRIVER_VERSION,=0A=
  	.info			=3D arcmsr_info,=0A=
  	.queuecommand		=3D arcmsr_queue_command,=0A=
-@@ -236,10 +247,9 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
+@@ -235,10 +250,9 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
  		void *dma_coherent;=0A=
  		dma_addr_t dma_coherent_handle, dma_addr;=0A=
  		struct CommandControlBlock *ccb_tmp;=0A=
@@ -277,7 +230,7 @@ pci_resource_len(pdev, 0));=0A=
  		if (!acb->pmuA) {=0A=
  			printk(KERN_NOTICE "arcmsr%d: memory mapping region fail \n",=0A=
  							acb->host->host_no);=0A=
-@@ -281,12 +291,6 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
+@@ -280,12 +294,6 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
  		for (i =3D 0; i < ARCMSR_MAX_TARGETID; i++)=0A=
  			for (j =3D 0; j < ARCMSR_MAX_TARGETLUN; j++)=0A=
  				acb->devstate[i][j] =3D ARECA_RAID_GONE;=0A=
@@ -290,7 +243,7 @@ pci_resource_len(pdev, 0));=0A=
  		}=0A=
  		break;=0A=
  =0A=
-@@ -297,7 +301,6 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
+@@ -296,7 +304,6 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
  		void __iomem *mem_base0, *mem_base1;=0A=
  		void *dma_coherent;=0A=
  		dma_addr_t dma_coherent_handle, dma_addr;=0A=
@@ -298,7 +251,7 @@ pci_resource_len(pdev, 0));=0A=
  		struct CommandControlBlock *ccb_tmp;=0A=
  		int i, j;=0A=
  =0A=
-@@ -333,11 +336,13 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
+@@ -332,11 +339,13 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
  		reg =3D (struct MessageUnit_B *)(dma_coherent +=0A=
  		ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock));=0A=
  		acb->pmuB =3D reg;=0A=
@@ -314,7 +267,7 @@ pci_resource_len(pdev, 0));=0A=
  		if (!mem_base1) {=0A=
  			iounmap(mem_base0);=0A=
  			goto out;=0A=
-@@ -357,12 +362,6 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
+@@ -356,12 +365,6 @@ static int arcmsr_alloc_ccb_pool(struct =0A=
  		for (i =3D 0; i < ARCMSR_MAX_TARGETID; i++)=0A=
  			for (j =3D 0; j < ARCMSR_MAX_TARGETLUN; j++)=0A=
  				acb->devstate[i][j] =3D ARECA_RAID_GOOD;=0A=
@@ -327,7 +280,7 @@ pci_resource_len(pdev, 0));=0A=
  		}=0A=
  		break;=0A=
  	}=0A=
-@@ -374,6 +373,88 @@ out:=0A=
+@@ -373,6 +376,88 @@ out:=0A=
  		sizeof(struct MessageUnit_B)), acb->dma_coherent, =
 acb->dma_coherent_handle);=0A=
  	return -ENOMEM;=0A=
@@ -422,24 +375,12 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  =0A=
  static int arcmsr_probe(struct pci_dev *pdev,=0A=
  	const struct pci_device_id *id)=0A=
-@@ -397,9 +478,9 @@ static int arcmsr_probe(struct pci_dev *=0A=
- 	acb =3D (struct AdapterControlBlock *)host->hostdata;=0A=
- 	memset(acb, 0, sizeof (struct AdapterControlBlock));=0A=
- =0A=
--	error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(64));=0A=
-+	error =3D pci_set_dma_mask(pdev, DMA_64BIT_MASK);=0A=
- 	if (error) {=0A=
--		error =3D pci_set_dma_mask(pdev, DMA_BIT_MASK(32));=0A=
-+		error =3D pci_set_dma_mask(pdev, DMA_32BIT_MASK);=0A=
- 		if (error) {=0A=
- 			printk(KERN_WARNING=0A=
- 			       "scsi%d: No suitable DMA mask available\n",=0A=
-@@ -432,17 +513,17 @@ static int arcmsr_probe(struct pci_dev *=0A=
+@@ -431,17 +516,17 @@ static int arcmsr_probe(struct pci_dev *=0A=
  			   ACB_F_MESSAGE_WQBUFFER_READED);=0A=
  	acb->acb_flags &=3D ~ACB_F_SCSISTOPADAPTER;=0A=
  	INIT_LIST_HEAD(&acb->ccb_free_list);=0A=
 -=0A=
-+	INIT_WORK (&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);=0A=
++	INIT_WORK(&acb->arcmsr_do_message_isr_bh, arcmsr_message_isr_bh_fn);=0A=
  	error =3D arcmsr_alloc_ccb_pool(acb);=0A=
  	if (error)=0A=
  		goto out_release_regions;=0A=
@@ -454,12 +395,12 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  	pci_set_drvdata(pdev, host);=0A=
  	if (strncmp(acb->firm_version, "V1.42", 5) >=3D 0)=0A=
  		host->max_sectors=3D ARCMSR_MAX_XFER_SECTORS_B;=0A=
-@@ -459,6 +540,14 @@ static int arcmsr_probe(struct pci_dev *=0A=
+@@ -458,6 +543,14 @@ static int arcmsr_probe(struct pci_dev *=0A=
  	#ifdef CONFIG_SCSI_ARCMSR_AER=0A=
  	pci_enable_pcie_error_reporting(pdev);=0A=
  	#endif=0A=
 +	atomic_set(&acb->rq_map_token, 16);=0A=
-+	acb->fw_state =3D TRUE;=0A=
++	acb->fw_state =3D true;=0A=
 +	init_timer(&acb->eternal_timer);=0A=
 +	acb->eternal_timer.expires =3D jiffies + msecs_to_jiffies(10*HZ);=0A=
 +	acb->eternal_timer.data =3D (unsigned long) acb;=0A=
@@ -469,7 +410,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  	return 0;=0A=
   out_free_sysfs:=0A=
   out_free_irq:=0A=
-@@ -518,40 +607,48 @@ static uint8_t arcmsr_hbb_wait_msgint_re=0A=
+@@ -517,40 +610,48 @@ static uint8_t arcmsr_hbb_wait_msgint_re=0A=
  	return 0xff;=0A=
  }=0A=
  =0A=
@@ -525,7 +466,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  }=0A=
  =0A=
  static void arcmsr_pci_unmap_dma(struct CommandControlBlock *ccb)=0A=
-@@ -649,8 +746,7 @@ static u32 arcmsr_disable_outbound_ints(=0A=
+@@ -648,8 +749,7 @@ static u32 arcmsr_disable_outbound_ints(=0A=
  =0A=
  	case ACB_ADAPTER_TYPE_A : {=0A=
  		struct MessageUnit_A __iomem *reg =3D acb->pmuA;=0A=
@@ -535,7 +476,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  		writel(orig_mask|ARCMSR_MU_OUTBOUND_ALL_INTMASKENABLE, \=0A=
  						&reg->outbound_intmask);=0A=
  		}=0A=
-@@ -658,8 +754,7 @@ static u32 arcmsr_disable_outbound_ints(=0A=
+@@ -657,8 +757,7 @@ static u32 arcmsr_disable_outbound_ints(=0A=
  =0A=
  	case ACB_ADAPTER_TYPE_B : {=0A=
  		struct MessageUnit_B *reg =3D acb->pmuB;=0A=
@@ -545,7 +486,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  		writel(0, reg->iop2drv_doorbell_mask_reg);=0A=
  		}=0A=
  		break;=0A=
-@@ -795,12 +890,13 @@ static void arcmsr_remove(struct pci_dev=0A=
+@@ -794,12 +893,13 @@ static void arcmsr_remove(struct pci_dev=0A=
  	struct AdapterControlBlock *acb =3D=0A=
  		(struct AdapterControlBlock *) host->hostdata;=0A=
  	int poll_count =3D 0;=0A=
@@ -561,7 +502,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  	acb->acb_flags |=3D ACB_F_SCSISTOPADAPTER;=0A=
  	acb->acb_flags &=3D ~ACB_F_IOP_INITED;=0A=
  =0A=
-@@ -841,7 +937,9 @@ static void arcmsr_shutdown(struct pci_d=0A=
+@@ -840,7 +940,9 @@ static void arcmsr_shutdown(struct pci_d=0A=
  	struct Scsi_Host *host =3D pci_get_drvdata(pdev);=0A=
  	struct AdapterControlBlock *acb =3D=0A=
  		(struct AdapterControlBlock *)host->hostdata;=0A=
@@ -572,7 +513,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  	arcmsr_stop_adapter_bgrb(acb);=0A=
  	arcmsr_flush_adapter_cache(acb);=0A=
  }=0A=
-@@ -861,7 +959,7 @@ static void arcmsr_module_exit(void)=0A=
+@@ -860,7 +962,7 @@ static void arcmsr_module_exit(void)=0A=
  module_init(arcmsr_module_init);=0A=
  module_exit(arcmsr_module_exit);=0A=
  =0A=
@@ -582,7 +523,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  						u32 intmask_org)=0A=
  {=0A=
  	u32 mask;=0A=
-@@ -871,7 +969,8 @@ static void arcmsr_enable_outbound_ints(=0A=
+@@ -870,7 +972,8 @@ static void arcmsr_enable_outbound_ints(=0A=
  	case ACB_ADAPTER_TYPE_A : {=0A=
  		struct MessageUnit_A __iomem *reg =3D acb->pmuA;=0A=
  		mask =3D intmask_org & ~(ARCMSR_MU_OUTBOUND_POSTQUEUE_INTMASKENABLE |=0A=
@@ -592,7 +533,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  		writel(mask, &reg->outbound_intmask);=0A=
  		acb->outbound_int_enable =3D ~(intmask_org & mask) & 0x000000ff;=0A=
  		}=0A=
-@@ -879,8 +978,10 @@ static void arcmsr_enable_outbound_ints(=0A=
+@@ -878,8 +981,10 @@ static void arcmsr_enable_outbound_ints(=0A=
  =0A=
  	case ACB_ADAPTER_TYPE_B : {=0A=
  		struct MessageUnit_B *reg =3D acb->pmuB;=0A=
@@ -605,7 +546,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  		writel(mask, reg->iop2drv_doorbell_mask_reg);=0A=
  		acb->outbound_int_enable =3D (intmask_org | mask) & 0x0000000f;=0A=
  		}=0A=
-@@ -1048,8 +1149,8 @@ static void arcmsr_free_ccb_pool(struct =0A=
+@@ -1047,8 +1152,8 @@ static void arcmsr_free_ccb_pool(struct =0A=
  	}=0A=
  	case ACB_ADAPTER_TYPE_B: {=0A=
  		struct MessageUnit_B *reg =3D acb->pmuB;=0A=
@@ -617,7 +558,7 @@ AdapterControlBlock, arcmsr_do_message_isr_bh);=0A=
  		(ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock) + 0x20 +=0A=
  		sizeof(struct MessageUnit_B)), acb->dma_coherent, =
 acb->dma_coherent_handle);=0A=
-@@ -1249,13 +1350,36 @@ static void arcmsr_hbb_postqueue_isr(str=0A=
+@@ -1248,13 +1353,36 @@ static void arcmsr_hbb_postqueue_isr(str=0A=
  		reg->doneq_index =3D index;=0A=
  	}=0A=
  }=0A=
@@ -636,7 +577,7 @@ newly-attached drives.=0A=
 +static void arcmsr_hba_message_isr(struct AdapterControlBlock *acb)=0A=
 +{=0A=
 +	struct MessageUnit_A *reg  =3D acb->pmuA;=0A=
-+=0A=
+ =0A=
 +	/*clear interrupt and message state*/=0A=
 +	writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT, &reg->outbound_intstatus);=0A=
 +	schedule_work(&acb->arcmsr_do_message_isr_bh);=0A=
@@ -644,7 +585,7 @@ newly-attached drives.=0A=
 +static void arcmsr_hbb_message_isr(struct AdapterControlBlock *acb)=0A=
 +{=0A=
 +	struct MessageUnit_B *reg  =3D acb->pmuB;=0A=
- =0A=
++=0A=
 +	/*clear interrupt and message state*/=0A=
 +	writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN, reg->iop2drv_doorbell_reg);=0A=
 +	schedule_work(&acb->arcmsr_do_message_isr_bh);=0A=
@@ -659,7 +600,7 @@ newly-attached drives.=0A=
  							acb->outbound_int_enable;=0A=
  	if (!(outbound_intstatus & ARCMSR_MU_OUTBOUND_HANDLE_INT))	{=0A=
  		return 1;=0A=
-@@ -1267,6 +1391,10 @@ static int arcmsr_handle_hba_isr(struct =0A=
+@@ -1266,6 +1394,10 @@ static int arcmsr_handle_hba_isr(struct =0A=
  	if (outbound_intstatus & ARCMSR_MU_OUTBOUND_POSTQUEUE_INT) {=0A=
  		arcmsr_hba_postqueue_isr(acb);=0A=
  	}=0A=
@@ -670,7 +611,7 @@ newly-attached drives.=0A=
  	return 0;=0A=
  }=0A=
  =0A=
-@@ -1275,13 +1403,14 @@ static int arcmsr_handle_hbb_isr(struct =0A=
+@@ -1274,13 +1406,14 @@ static int arcmsr_handle_hbb_isr(struct =0A=
  	uint32_t outbound_doorbell;=0A=
  	struct MessageUnit_B *reg =3D acb->pmuB;=0A=
  =0A=
@@ -688,7 +629,7 @@ this action can push HW to write down the clear bit*/=0A=
  	readl(reg->iop2drv_doorbell_reg);=0A=
  	writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell_reg);=0A=
  	if (outbound_doorbell & ARCMSR_IOP2DRV_DATA_WRITE_OK) 	{=0A=
-@@ -1293,6 +1422,10 @@ static int arcmsr_handle_hbb_isr(struct =0A=
+@@ -1292,6 +1425,10 @@ static int arcmsr_handle_hbb_isr(struct =0A=
  	if (outbound_doorbell & ARCMSR_IOP2DRV_CDB_DONE) {=0A=
  		arcmsr_hbb_postqueue_isr(acb);=0A=
  	}=0A=
@@ -699,7 +640,7 @@ this action can push HW to write down the clear bit*/=0A=
  =0A=
  	return 0;=0A=
  }=0A=
-@@ -1360,7 +1492,7 @@ void arcmsr_post_ioctldata2iop(struct Ad=0A=
+@@ -1359,7 +1495,7 @@ void arcmsr_post_ioctldata2iop(struct Ad=0A=
  	}=0A=
  }=0A=
  =0A=
@@ -708,12 +649,12 @@ this action can push HW to write down the clear bit*/=0A=
  					struct scsi_cmnd *cmd)=0A=
  {=0A=
  	struct CMD_MESSAGE_FIELD *pcmdmessagefld;=0A=
-@@ -1398,6 +1530,13 @@ static int arcmsr_iop_message_xfer(struc=0A=
+@@ -1397,6 +1533,13 @@ static int arcmsr_iop_message_xfer(struc=0A=
  			retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
  			goto message_out;=0A=
  		}=0A=
 +=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -722,11 +663,11 @@ this action can push HW to write down the clear bit*/=0A=
  		ptmpQbuffer =3D ver_addr;=0A=
  		while ((acb->rqbuf_firstindex !=3D acb->rqbuf_lastindex)=0A=
  			&& (allxfer_len < 1031)) {=0A=
-@@ -1444,6 +1583,12 @@ static int arcmsr_iop_message_xfer(struc=0A=
+@@ -1443,6 +1586,12 @@ static int arcmsr_iop_message_xfer(struc=0A=
  			retvalue =3D ARCMSR_MESSAGE_FAIL;=0A=
  			goto message_out;=0A=
  		}=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -735,11 +676,11 @@ this action can push HW to write down the clear bit*/=0A=
  		ptmpuserbuffer =3D ver_addr;=0A=
  		user_len =3D pcmdmessagefld->cmdmessage.Length;=0A=
  		memcpy(ptmpuserbuffer, pcmdmessagefld->messagedatabuffer, user_len);=0A=
-@@ -1496,6 +1641,11 @@ static int arcmsr_iop_message_xfer(struc=0A=
+@@ -1495,6 +1644,11 @@ static int arcmsr_iop_message_xfer(struc=0A=
  =0A=
  	case ARCMSR_MESSAGE_CLEAR_RQBUFFER: {=0A=
  		uint8_t *pQbuffer =3D acb->rqbuffer;=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -747,11 +688,11 @@ this action can push HW to write down the clear bit*/=0A=
  =0A=
  		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
  			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-@@ -1511,6 +1661,11 @@ static int arcmsr_iop_message_xfer(struc=0A=
+@@ -1510,6 +1664,11 @@ static int arcmsr_iop_message_xfer(struc=0A=
  =0A=
  	case ARCMSR_MESSAGE_CLEAR_WQBUFFER: {=0A=
  		uint8_t *pQbuffer =3D acb->wqbuffer;=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -759,11 +700,11 @@ this action can push HW to write down the clear bit*/=0A=
  =0A=
  		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
  			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-@@ -1529,6 +1684,11 @@ static int arcmsr_iop_message_xfer(struc=0A=
+@@ -1528,6 +1687,11 @@ static int arcmsr_iop_message_xfer(struc=0A=
  =0A=
  	case ARCMSR_MESSAGE_CLEAR_ALLQBUFFER: {=0A=
  		uint8_t *pQbuffer;=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -771,11 +712,11 @@ this action can push HW to write down the clear bit*/=0A=
  =0A=
  		if (acb->acb_flags & ACB_F_IOPDATA_OVERFLOW) {=0A=
  			acb->acb_flags &=3D ~ACB_F_IOPDATA_OVERFLOW;=0A=
-@@ -1551,13 +1711,22 @@ static int arcmsr_iop_message_xfer(struc=0A=
+@@ -1550,13 +1714,22 @@ static int arcmsr_iop_message_xfer(struc=0A=
  		break;=0A=
  =0A=
  	case ARCMSR_MESSAGE_RETURN_CODE_3F: {=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -788,7 +729,7 @@ ARCMSR_MESSAGE_RETURNCODE_3F;=0A=
  	case ARCMSR_MESSAGE_SAY_HELLO: {=0A=
  		int8_t *hello_string =3D "Hello! I am ARCMSR";=0A=
 -=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -797,11 +738,11 @@ ARCMSR_MESSAGE_RETURNCODE_3F;=0A=
  			, (int16_t)strlen(hello_string));=0A=
  		pcmdmessagefld->cmdmessage.ReturnCode =3D =
 ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
-@@ -1565,10 +1734,20 @@ static int arcmsr_iop_message_xfer(struc=0A=
+@@ -1564,10 +1737,20 @@ static int arcmsr_iop_message_xfer(struc=0A=
  		break;=0A=
  =0A=
  	case ARCMSR_MESSAGE_SAY_GOODBYE:=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -810,7 +751,7 @@ ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
  		break;=0A=
  =0A=
  	case ARCMSR_MESSAGE_FLUSH_ADAPTER_CACHE:=0A=
-+		if (acb->fw_state =3D=3D FALSE) {=0A=
++		if (!acb->fw_state) {=0A=
 +			pcmdmessagefld->cmdmessage.ReturnCode =3D=0A=
 +			ARCMSR_MESSAGE_RETURNCODE_BUS_HANG_ON;=0A=
 +			goto message_out;=0A=
@@ -818,7 +759,7 @@ ARCMSR_MESSAGE_RETURNCODE_OK;=0A=
  		arcmsr_flush_adapter_cache(acb);=0A=
  		break;=0A=
  =0A=
-@@ -1651,16 +1830,57 @@ static int arcmsr_queue_command(struct s=0A=
+@@ -1650,16 +1833,57 @@ static int arcmsr_queue_command(struct s=0A=
  	struct CommandControlBlock *ccb;=0A=
  	int target =3D cmd->device->id;=0A=
  	int lun =3D cmd->device->lun;=0A=
@@ -881,7 +822,7 @@ SEND_DIAGNOSTIC)) {=0A=
  	if (target =3D=3D 16) {=0A=
  		/* virtual device for iop message transfer */=0A=
  		arcmsr_handle_virtual_command(acb, cmd);=0A=
-@@ -1699,21 +1919,25 @@ static int arcmsr_queue_command(struct s=0A=
+@@ -1698,21 +1922,25 @@ static int arcmsr_queue_command(struct s=0A=
  	return 0;=0A=
  }=0A=
  =0A=
@@ -912,7 +853,7 @@ mode)=0A=
  	count =3D 8;=0A=
  	while (count) {=0A=
  		*acb_firm_model =3D readb(iop_firm_model);=0A=
-@@ -1730,34 +1954,48 @@ static void arcmsr_get_hba_config(struct=0A=
+@@ -1729,34 +1957,48 @@ static void arcmsr_get_hba_config(struct=0A=
  		count--;=0A=
  	}=0A=
  =0A=
@@ -965,7 +906,7 @@ mode)=0A=
  	count =3D 8;=0A=
  	while (count)=0A=
  	{=0A=
-@@ -1776,11 +2014,20 @@ static void arcmsr_get_hbb_config(struct=0A=
+@@ -1775,11 +2017,20 @@ static void arcmsr_get_hbb_config(struct=0A=
  		count--;=0A=
  	}=0A=
  =0A=
@@ -987,7 +928,7 @@ mode)=0A=
  	acb->firm_request_len =3D readl(lrwbuffer++);=0A=
  	/*firm_request_len,1,04-07*/=0A=
  	acb->firm_numbers_queue =3D readl(lrwbuffer++);=0A=
-@@ -1790,20 +2037,23 @@ static void arcmsr_get_hbb_config(struct=0A=
+@@ -1789,20 +2040,23 @@ static void arcmsr_get_hbb_config(struct=0A=
  	acb->firm_hd_channels =3D readl(lrwbuffer);=0A=
  	/*firm_ide_channels,4,16-19*/=0A=
  }=0A=
@@ -1016,7 +957,7 @@ int mode)=0A=
  }=0A=
  =0A=
  static void arcmsr_polling_hba_ccbdone(struct AdapterControlBlock *acb,=0A=
-@@ -2043,6 +2293,66 @@ static void arcmsr_wait_firmware_ready(s=0A=
+@@ -2042,6 +2296,66 @@ static void arcmsr_wait_firmware_ready(s=0A=
  	}=0A=
  }=0A=
  =0A=
@@ -1026,13 +967,13 @@ int mode)=0A=
 +	struct MessageUnit_A __iomem *reg =3D acb->pmuA;=0A=
 +=0A=
 +	if (unlikely(atomic_read(&acb->rq_map_token) =3D=3D 0)) {=0A=
-+		acb->fw_state =3D FALSE;=0A=
++		acb->fw_state =3D false;=0A=
 +	} else {=0A=
 +	/*to prevent rq_map_token from changing by other interrupt, then=0A=
 +	avoid the dead-lock*/=0A=
-+		acb->fw_state =3D TRUE;=0A=
++		acb->fw_state =3D true;=0A=
 +		atomic_dec(&acb->rq_map_token);=0A=
-+		if ((acb->fw_state =3D=3D FALSE) ||=0A=
++		if (!(acb->fw_state) ||=0A=
 +			(acb->ante_token_value =3D=3D atomic_read(&acb->rq_map_token))) {=0A=
 +			atomic_set(&acb->rq_map_token, 16);=0A=
 +		}=0A=
@@ -1049,13 +990,13 @@ int mode)=0A=
 +	struct MessageUnit_B __iomem *reg =3D acb->pmuB;=0A=
 +=0A=
 +	if (unlikely(atomic_read(&acb->rq_map_token) =3D=3D 0)) {=0A=
-+		acb->fw_state =3D FALSE;=0A=
++		acb->fw_state =3D false;=0A=
 +	} else {=0A=
 +	/*to prevent rq_map_token from changing by other interrupt, then=0A=
 +	avoid the dead-lock*/=0A=
-+		acb->fw_state =3D TRUE;=0A=
++		acb->fw_state =3D true;=0A=
 +		atomic_dec(&acb->rq_map_token);=0A=
-+		if ((acb->fw_state =3D=3D FALSE) ||=0A=
++		if (!(acb->fw_state) ||=0A=
 +			(acb->ante_token_value =3D=3D atomic_read(&acb->rq_map_token))) {=0A=
 +			atomic_set(&acb->rq_map_token, 16);=0A=
 +		}=0A=
@@ -1085,7 +1026,7 @@ int mode)=0A=
  static void arcmsr_start_hba_bgrb(struct AdapterControlBlock *acb)=0A=
  {=0A=
  	struct MessageUnit_A __iomem *reg =3D acb->pmuA;=0A=
-@@ -2121,6 +2431,60 @@ static void arcmsr_enable_eoi_mode(struc=0A=
+@@ -2120,6 +2434,60 @@ static void arcmsr_enable_eoi_mode(struc=0A=
  	return;=0A=
  }=0A=
  =0A=
@@ -1124,32 +1065,32 @@ int mode)=0A=
 +			shost =3D cmd->device->host;=0A=
 +			host_lock =3D shost->host_lock;=0A=
 +=0A=
-+			printk("Host %d bus reset over, sleep %d seconds (busy %d, can queue =
-%d) ...........\n",=0A=
++			printk(KERN_NOTICE "Host %d bus reset over, sleep %d seconds (busy =
+%d, can queue %d) ...........\n",=0A=
 +					shost->host_no, sleeptime, shost->host_busy, shost->can_queue);=0A=
 +			isleep =3D sleeptime / 10;=0A=
 +			spin_unlock_irq(host_lock);=0A=
 +			if (isleep > 0) {=0A=
 +				for (i =3D 0; i < isleep; i++) {=0A=
 +					msleep(10000);=0A=
-+					printk("^%d^\n", i);=0A=
++					printk(KERN_NOTICE "^%d^\n", i);=0A=
 +				}=0A=
 +			}=0A=
 +=0A=
 +			isleep =3D sleeptime % 10;=0A=
 +			if (isleep > 0) {=0A=
 +				msleep(isleep * 1000);=0A=
-+				printk("^v^\n");=0A=
++				printk(KERN_NOTICE "^v^\n");=0A=
 +			}=0A=
 +			spin_lock_irq(host_lock);=0A=
-+			printk("***** wake up *****\n");=0A=
++			printk(KERN_NOTICE "***** wake up *****\n");=0A=
 +			return 0;=0A=
 +	}=0A=
 +#endif=0A=
  static void arcmsr_iop_init(struct AdapterControlBlock *acb)=0A=
  {=0A=
  	uint32_t intmask_org;=0A=
-@@ -2129,7 +2493,7 @@ static void arcmsr_iop_init(struct Adapt=0A=
+@@ -2128,7 +2496,7 @@ static void arcmsr_iop_init(struct Adapt=0A=
         intmask_org =3D arcmsr_disable_outbound_ints(acb);=0A=
  	arcmsr_wait_firmware_ready(acb);=0A=
  	arcmsr_iop_confirm(acb);=0A=
@@ -1158,7 +1099,7 @@ int mode)=0A=
  	/*start background rebuild*/=0A=
  	arcmsr_start_adapter_bgrb(acb);=0A=
  	/* empty doorbell Qbuffer if door bell ringed */=0A=
-@@ -2140,51 +2504,110 @@ static void arcmsr_iop_init(struct Adapt=0A=
+@@ -2139,51 +2507,110 @@ static void arcmsr_iop_init(struct Adapt=0A=
  	acb->acb_flags |=3D ACB_F_IOP_INITED;=0A=
  }=0A=
  =0A=
@@ -1210,7 +1151,7 @@ int mode)=0A=
 +	if (acb->acb_flags & ACB_F_BUS_RESET)=0A=
 +		return SUCCESS;=0A=
 +=0A=
-+	printk("arcmsr%d: bus reset ..... \n", acb->adapter_index);=0A=
++	printk(KERN_NOTICE "arcmsr%d: bus reset ..... \n", acb->adapter_index);=0A=
  	acb->acb_flags |=3D ACB_F_BUS_RESET;=0A=
 -	for (i =3D 0; i < 400; i++) {=0A=
 -		if (!atomic_read(&acb->ccboutstandingcount))=0A=
@@ -1223,8 +1164,8 @@ int mode)=0A=
 +	if (arcmsr_iop_reset(acb)) {=0A=
 +		switch (acb->adapter_type) {=0A=
 +		case ACB_ADAPTER_TYPE_A: {=0A=
-+			printk("arcmsr%d: do hardware bus reset, num_resets =3D %d =
-num_aborts =3D %d \n",=0A=
++			printk(KERN_NOTICE "arcmsr%d: do hardware bus reset, num_resets =3D =
+%d num_aborts =3D %d \n",=0A=
 +				acb->adapter_index, acb->num_resets, acb->num_aborts);=0A=
 +			arcmsr_hardware_reset(acb);=0A=
 +			acb->acb_flags |=3D ACB_F_FIRMWARE_TRAP;=0A=
@@ -1233,7 +1174,7 @@ num_aborts =3D %d \n",=0A=
 +			struct MessageUnit_A __iomem *reg =3D acb->pmuA;=0A=
 +			uint32_t intmask_org, outbound_doorbell;=0A=
 +			int retry_count =3D 0;=0A=
-+			sleep_again:=0A=
++sleep_again:=0A=
 +			arcmsr_sleep_for_bus_reset(cmd);=0A=
 +			if ((readl(&reg->outbound_msgaddr1) &=0A=
 +			ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) =3D=3D 0) {=0A=
@@ -1287,21 +1228,5 @@ interrupt */=0A=
  	return SUCCESS;=0A=
  }=0A=
  =0A=
-diff -Naurp --ignore-blank-lines --ignore-all-space =
---ignore-space-change linux-2.6/drivers/scsi/arcmsr/Makefile =
-linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/Makefile=0A=
---- linux-2.6/drivers/scsi/arcmsr/Makefile	2010-04-14 19:15:11.000000000 =
-+0800=0A=
-+++ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/Makefile	1970-01-01 =
-08:00:00.000000000 +0800=0A=
-@@ -1,6 +0,0 @@=0A=
--# File: drivers/arcmsr/Makefile=0A=
--# Makefile for the ARECA PCI-X PCI-EXPRESS SATA RAID controllers SCSI =
-driver.=0A=
--=0A=
--arcmsr-objs :=3D arcmsr_attr.o arcmsr_hba.o=0A=
--=0A=
--obj-$(CONFIG_SCSI_ARCMSR) :=3D arcmsr.o=0A=
 
-------=_NextPart_000_0068_01CAEAD7.1A0EDB90--
-
+------=_NextPart_000_006B_01CAEAD7.B015B000--
