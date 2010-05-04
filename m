@@ -1,70 +1,54 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] scsi: fix cxgb3i build errors
-Date: Tue, 04 May 2010 14:52:25 -0700
-Message-ID: <4BE09719.8060907@oracle.com>
-References: <20100504102833.db09b0df.randy.dunlap@oracle.com> <1272994590.5255.32.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 03/16] qla2xxx: Clear error status after uncorrectable non-fatal errors.
+Date: Tue,  4 May 2010 15:01:23 -0700
+Message-ID: <1273010496-43045-4-git-send-email-giridhar.malavali@qlogic.com>
+References: <1273010496-43045-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:48771 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754380Ab0EDVyF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 May 2010 17:54:05 -0400
-In-Reply-To: <1272994590.5255.32.camel@mulgrave.site>
+Received: from vpn.pathscale.com ([198.186.3.75]:47140 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754380Ab0EDWBi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 May 2010 18:01:38 -0400
+In-Reply-To: <1273010496-43045-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: scsi <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, akpm <akpm@linux-foundation.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-On 05/04/10 10:36, James Bottomley wrote:
-> On Tue, 2010-05-04 at 10:28 -0700, Randy Dunlap wrote:
->> From: Randy Dunlap <randy.dunlap@oracle.com>
->>
->> cxgb3i should depend on NET since it selects SCSI_ISCSI_ATTRS,
->> which depends on NET.
->> This change fixes multiple build (link) errors:
->>
->> ERROR: "skb_trim" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "netlink_kernel_create" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "netlink_kernel_release" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "skb_pull" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "init_net" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "__alloc_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "netlink_broadcast" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "kfree_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->> ERROR: "skb_put" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>
->> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
->> Cc: Karen Xie <kxie@chelsio.com>
->> ---
->>  drivers/scsi/cxgb3i/Kconfig |    2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> --- lnx-2634-rc6.orig/drivers/scsi/cxgb3i/Kconfig
->> +++ lnx-2634-rc6/drivers/scsi/cxgb3i/Kconfig
->> @@ -1,6 +1,6 @@
->>  config SCSI_CXGB3_ISCSI
->>  	tristate "Chelsio S3xx iSCSI support"
->> -	depends on CHELSIO_T3_DEPENDS
->> +	depends on CHELSIO_T3_DEPENDS && NET
-> 
-> Something's seriously wrong here.
-> 
-> CHELSIO_T3_DEPENDS is supposed to be the rollup for all the
-> dependencies.  It's actually defined as this:
-> 
-> config CHELSIO_T3_DEPENDS
-> 	tristate
-> 	depends on PCI && INET
-> 	default y
-> 
-> INET is the tcp/ip stack ... so how did you build a kernel that has
-> NET=n and INET=y (it's guarded by an #if NET in the Kconfig file)?
+From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-Hm, I managed to do that somehow, but I didn't save the Kconfig file
-and I can't make it happen again, so just drop this patch.  Thanks.
+Currently error status is cleared only after the uncorrectable fatal errors
+in the qla2xxx_pci_slot_reset. This fix is added to clear the error status in
+qla2xxx_pci_resume. This way for both fatal and non-fatal errors the error
+status gets cleared properly.
 
+Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=572258
+
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index b1adeb7..f2102db 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3697,7 +3697,6 @@ qla2xxx_pci_slot_reset(struct pci_dev *pdev)
+ 		ret =  PCI_ERS_RESULT_RECOVERED;
+ 	clear_bit(ABORT_ISP_ACTIVE, &base_vha->dpc_flags);
+ 
+-	pci_cleanup_aer_uncorrect_error_status(pdev);
+ 
+ 	DEBUG17(qla_printk(KERN_WARNING, ha,
+ 	    "slot_reset-return:ret=%x\n", ret));
+@@ -3721,6 +3720,8 @@ qla2xxx_pci_resume(struct pci_dev *pdev)
+ 		    "from slot/link_reset");
+ 	}
+ 
++	pci_cleanup_aer_uncorrect_error_status(pdev);
++
+ 	ha->flags.eeh_busy = 0;
+ }
+ 
 -- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+1.6.2.rc1.30.gd43c
+
