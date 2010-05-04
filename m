@@ -1,55 +1,48 @@
 From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] scsi: fix be2iscsi build
-Date: Tue, 4 May 2010 10:29:52 -0700
-Message-ID: <20100504102952.1c7611d4.randy.dunlap@oracle.com>
+Subject: [PATCH] scsi: fix pmcraid build errors
+Date: Tue, 4 May 2010 10:29:14 -0700
+Message-ID: <20100504102914.9be2cee4.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:51463 "EHLO
+Received: from rcsinet10.oracle.com ([148.87.113.121]:51455 "EHLO
 	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757383Ab0EDRam (ORCPT
+	with ESMTP id S1755724Ab0EDRam (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 May 2010 13:30:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejbscsi <james.bottomley@suse.de>, Jayamohan Kallickal <jayamohank@serverengines.com>, akpm <akpm@linux-foundation.org>
+Cc: jejbscsi <james.bottomley@suse.de>, akpm <akpm@linux-foundation.org>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 
 From: Randy Dunlap <randy.dunlap@oracle.com>
 
-be2iscsi driver should #include linux/if_ether.h since it uses
-sysfs_format_mac().
+pmcraid should depend on NET since it uses netlink interfaces.
+This fixes multiple build errors when CONFIG_NET is not enabled:
 
-It should also depend on NET since it selects SCSI_ISCSI_ATTRS,
-which depends on NET.
-
-These changes fix a build error when CONFIG_NET is not enabled:
-ERROR: "sysfs_format_mac" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "genl_register_family" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "genl_unregister_family" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "nla_put" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "init_net" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "__alloc_skb" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "netlink_broadcast" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "kfree_skb" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "skb_put" [drivers/scsi/pmcraid.ko] undefined!
 
 Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc:	Jayamohan Kallickal <jayamohank@serverengines.com>
+Cc:	Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 ---
- drivers/scsi/be2iscsi/Kconfig   |    2 +-
- drivers/scsi/be2iscsi/be_main.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- lnx-2634-rc6.orig/drivers/scsi/be2iscsi/be_main.h
-+++ lnx-2634-rc6/drivers/scsi/be2iscsi/be_main.h
-@@ -23,6 +23,7 @@
+--- lnx-2634-rc6.orig/drivers/scsi/Kconfig
++++ lnx-2634-rc6/drivers/scsi/Kconfig
+@@ -1849,7 +1849,7 @@ config ZFCP
  
- #include <linux/kernel.h>
- #include <linux/pci.h>
-+#include <linux/if_ether.h>
- #include <linux/in.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
---- lnx-2634-rc6.orig/drivers/scsi/be2iscsi/Kconfig
-+++ lnx-2634-rc6/drivers/scsi/be2iscsi/Kconfig
-@@ -1,6 +1,6 @@
- config BE2ISCSI
- 	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
+ config SCSI_PMCRAID
+ 	tristate "PMC SIERRA Linux MaxRAID adapter support"
 -	depends on PCI && SCSI
 +	depends on PCI && SCSI && NET
- 	select SCSI_ISCSI_ATTRS
+ 	---help---
+ 	  This driver supports the PMC SIERRA MaxRAID adapters.
  
- 	help
