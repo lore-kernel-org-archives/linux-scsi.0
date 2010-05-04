@@ -1,66 +1,55 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] scsi: fix cxgb3i build errors
-Date: Tue, 04 May 2010 13:36:30 -0400
-Message-ID: <1272994590.5255.32.camel@mulgrave.site>
-References: <20100504102833.db09b0df.randy.dunlap@oracle.com>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/9] blk: In elv_abort_queue skip requests with
+ REQ_DONTPREP set
+Date: Tue, 4 May 2010 10:58:55 -0700
+Message-ID: <20100504175855.GB16156@linux.vnet.ibm.com>
+References: <1272944228-30511-1-git-send-email-andmike@linux.vnet.ibm.com>
+ <1272944228-30511-3-git-send-email-andmike@linux.vnet.ibm.com>
+ <20100504104709.GO27497@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50100 "EHLO mx2.suse.de"
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:56037 "EHLO e8.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932152Ab0EDRgg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 May 2010 13:36:36 -0400
-In-Reply-To: <20100504102833.db09b0df.randy.dunlap@oracle.com>
+	id S1757243Ab0EDR67 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 May 2010 13:58:59 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e8.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o44Hmlq5032654
+	for <linux-scsi@vger.kernel.org>; Tue, 4 May 2010 13:48:47 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o44Hwvwv158396
+	for <linux-scsi@vger.kernel.org>; Tue, 4 May 2010 13:58:57 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o44Hwugu012248
+	for <linux-scsi@vger.kernel.org>; Tue, 4 May 2010 13:58:57 -0400
+Content-Disposition: inline
+In-Reply-To: <20100504104709.GO27497@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, akpm <akpm@linux-foundation.org>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, dm-devel@redhat.com
 
-On Tue, 2010-05-04 at 10:28 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+Jens Axboe <jens.axboe@oracle.com> wrote:
+> On Mon, May 03 2010, Mike Anderson wrote:
+> > Having REQ_DONTPREP set on a request can indicated that resources have been
+> > allocated for this request. In elv_abort_queue skip requests with
+> > REQ_DONTPREP set to avoid leaking resources.
 > 
-> cxgb3i should depend on NET since it selects SCSI_ISCSI_ATTRS,
-> which depends on NET.
-> This change fixes multiple build (link) errors:
+> This also seems weird, are you coding the API backwards from what SCSI
+> currently has implemented?
 > 
-> ERROR: "skb_trim" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "netlink_kernel_create" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "netlink_kernel_release" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "skb_pull" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "init_net" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "__alloc_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "netlink_broadcast" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "kfree_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-> ERROR: "skb_put" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+
+Yes I was coding to current SCSI implementation.
+
+> Would seem a lot cleaner to separate dont-prep from already-prepped.
 > 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Cc: Karen Xie <kxie@chelsio.com>
-> ---
->  drivers/scsi/cxgb3i/Kconfig |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- lnx-2634-rc6.orig/drivers/scsi/cxgb3i/Kconfig
-> +++ lnx-2634-rc6/drivers/scsi/cxgb3i/Kconfig
-> @@ -1,6 +1,6 @@
->  config SCSI_CXGB3_ISCSI
->  	tristate "Chelsio S3xx iSCSI support"
-> -	depends on CHELSIO_T3_DEPENDS
-> +	depends on CHELSIO_T3_DEPENDS && NET
 
-Something's seriously wrong here.
+I assumed to do this we would need another request flag indicating
+??REQ_PREPPED?? that would need to be set in the prep function. Then
+this flag would be checked vs REQ_DONTPREP to call the unprep_fn or did you
+mean something else?
 
-CHELSIO_T3_DEPENDS is supposed to be the rollup for all the
-dependencies.  It's actually defined as this:
-
-config CHELSIO_T3_DEPENDS
-	tristate
-	depends on PCI && INET
-	default y
-
-INET is the tcp/ip stack ... so how did you build a kernel that has
-NET=n and INET=y (it's guarded by an #if NET in the Kconfig file)?
-
-James
-
-
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
