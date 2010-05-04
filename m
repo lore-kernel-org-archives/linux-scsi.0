@@ -1,67 +1,62 @@
-From: Ramya Desai <ramya.desai@gmail.com>
-Subject: Re: sysfs: cannot create duplicate filename '/class/uas_host'
-Date: Tue, 4 May 2010 20:17:27 +0530
-Message-ID: <i2g3e7aae31005040747k79c61206r72743aa5dd09eccc@mail.gmail.com>
-References: <h2m3e7aae31005030642t1014c3e5ke7edbab2a95775c1@mail.gmail.com>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] Retry commands with UNIT_ATTENTION sense codes
+Date: Tue, 04 May 2010 16:48:53 +0200
+Message-ID: <20100504144853.D94C72A205@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f189.google.com ([209.85.221.189]:50705 "EHLO
-	mail-qy0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932187Ab0EDOrf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 May 2010 10:47:35 -0400
-Received: by qyk27 with SMTP id 27so8247714qyk.23
-        for <linux-scsi@vger.kernel.org>; Tue, 04 May 2010 07:47:34 -0700 (PDT)
-In-Reply-To: <h2m3e7aae31005030642t1014c3e5ke7edbab2a95775c1@mail.gmail.com>
+Received: from cantor.suse.de ([195.135.220.2]:41749 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753022Ab0EDOsz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 May 2010 10:48:55 -0400
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 4E034457F0
+	for <linux-scsi@vger.kernel.org>; Tue,  4 May 2010 16:48:54 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, May 3, 2010 at 7:12 PM, Ramya Desai <ramya.desai@gmail.com> wro=
-te:
-> Dear Experts,
->
-> When I attach two UAS devices to linux box, I got the following syste=
-m
-> trace when I use my driver. I used the following snippet for
-> registering my device to the transport layer.
->
-> static DECLARE_TRANSPORT_CLASS(uas_host_class,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"uas_host", NULL, NULL, NULL);
->
-> error =3D transport_class_register(&uas_host_class);
->
-> The transport_class_register() API fails and shows the following trac=
-e
-> when I connect the second device
->
-> Here, I can declare the transport class with different names by
-> changing the second parameter in the DECLARE_TRANSPORT_CLASS. However=
-,
-> is there any other way to handle this? Is there any way to declare
-> unique name for each device?
->
-> Any ideas greatly helpful.
->
-> Thanks and Regards,
-> Ramya.
 
-Dear Experts,
+We have to enable retries for UNIT_ATTENTION sense codes, as a
+command might've been injected from the block layer (eg barrier
+requests). And for those no error recovers takes place, so we
+need to make sure that the SCSI midlayer corrects any transient
+errors.
 
-I resolved the issue, after some research. The
-transport_class_register() API is moved from PROBE method to INIT
-module as it is NOT per device registration, but, it is per driver
-registration. That is, for each driver, we need to register one time,
-but not for each device insertion.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_error.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
-After moving the registration API call to INIT module, I am able to
-work with TWO devices simultaneously.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d45c69c..663a1ad 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -290,19 +290,13 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 			return NEEDS_RETRY;
+ 		}
+ 		/*
+-		 * if the device is in the process of becoming ready, we 
+-		 * should retry.
+-		 */
+-		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
+-			return NEEDS_RETRY;
+-		/*
+ 		 * if the device is not started, we need to wake
+ 		 * the error handler to start the motor
+ 		 */
+ 		if (scmd->device->allow_restart &&
+ 		    (sshdr.asc == 0x04) && (sshdr.ascq == 0x02))
+ 			return FAILED;
+-		return SUCCESS;
++		return NEEDS_RETRY;
+ 
+ 		/* these three are not supported */
+ 	case COPY_ABORTED:
+-- 
+1.6.0.2
 
-Thanks and Regards,
-Ramya.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
