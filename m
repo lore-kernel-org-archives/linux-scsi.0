@@ -1,54 +1,73 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 03/16] qla2xxx: Clear error status after uncorrectable non-fatal errors.
-Date: Tue,  4 May 2010 15:01:23 -0700
-Message-ID: <1273010496-43045-4-git-send-email-giridhar.malavali@qlogic.com>
-References: <1273010496-43045-1-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 00/16] qla2xxx: Updates for scsi-misc-2.6.
+Date: Tue,  4 May 2010 15:01:20 -0700
+Message-ID: <1273010496-43045-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:47140 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:47137 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754380Ab0EDWBi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755150Ab0EDWBi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 4 May 2010 18:01:38 -0400
-In-Reply-To: <1273010496-43045-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Lalit Chandivade <lalit.chandivade@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Lalit Chandivade <lalit.chandivade@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Currently error status is cleared only after the uncorrectable fatal errors
-in the qla2xxx_pci_slot_reset. This fix is added to clear the error status in
-qla2xxx_pci_resume. This way for both fatal and non-fatal errors the error
-status gets cleared properly.
+James, 
 
-Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=572258
+Please apply these patches.
 
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_os.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Andrew Vasquez (5):
+  qla2xxx: Check for ISP84xx before processing to get 84xx firmware
+    version.
+  qla2xxx: Display proper link state for disconnected ports.
+  qla2xxx: Further generalization of SRB CTX infrastructure.
+  qla2xxx: Limit mailbox command contention for ADISC requests.
+  qla2xxx: Cleanup FCP-command-status processing debug statements.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index b1adeb7..f2102db 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3697,7 +3697,6 @@ qla2xxx_pci_slot_reset(struct pci_dev *pdev)
- 		ret =  PCI_ERS_RESULT_RECOVERED;
- 	clear_bit(ABORT_ISP_ACTIVE, &base_vha->dpc_flags);
- 
--	pci_cleanup_aer_uncorrect_error_status(pdev);
- 
- 	DEBUG17(qla_printk(KERN_WARNING, ha,
- 	    "slot_reset-return:ret=%x\n", ret));
-@@ -3721,6 +3720,8 @@ qla2xxx_pci_resume(struct pci_dev *pdev)
- 		    "from slot/link_reset");
- 	}
- 
-+	pci_cleanup_aer_uncorrect_error_status(pdev);
-+
- 	ha->flags.eeh_busy = 0;
- }
- 
--- 
-1.6.2.rc1.30.gd43c
+Arun Easi (1):
+  qla2xxx: T10 DIF support added.
+
+Giridhar Malavali (3):
+  qla2xxx: Optionally disable target reset.
+  qla2xxx: Updates to ISP82xx support.
+  qla2xxx: Update version number to 8.03.03-k0.
+
+Harish Zunjarrao (1):
+  qla2xxx: Add char device to increase driver use count
+
+Lalit Chandivade (2):
+  qla2xxx: Clear error status after uncorrectable non-fatal errors.
+  qla2xxx: ensure flash operation and host reset via sg_reset are
+    mutually exclusive
+
+Madhuranath Iyengar (2):
+  qla2xxx: Provide common framework for BSG and IOCB commands.
+  qla2xxx: Support for asynchronous TM and Marker IOCBs.
+
+Mike Waychison (1):
+  qla2xxx: Silence bogus warning by gcc for wrap and did.
+
+Sarang Radke (1):
+  qla2xxx: Add internal loopback support for 81XX
+
+ drivers/scsi/qla2xxx/qla_attr.c    |   33 ++-
+ drivers/scsi/qla2xxx/qla_bsg.c     |  206 ++++++++--
+ drivers/scsi/qla2xxx/qla_bsg.h     |    7 +
+ drivers/scsi/qla2xxx/qla_dbg.c     |   58 +++
+ drivers/scsi/qla2xxx/qla_dbg.h     |   10 +
+ drivers/scsi/qla2xxx/qla_def.h     |  167 +++++++--
+ drivers/scsi/qla2xxx/qla_fw.h      |   47 ++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   29 ++-
+ drivers/scsi/qla2xxx/qla_init.c    |  387 ++++++++++++++----
+ drivers/scsi/qla2xxx/qla_inline.h  |   16 +
+ drivers/scsi/qla2xxx/qla_iocb.c    |  805 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_isr.c     |  505 +++++++++++++----------
+ drivers/scsi/qla2xxx/qla_mbx.c     |   76 ++++
+ drivers/scsi/qla2xxx/qla_nx.c      |  205 +++++-----
+ drivers/scsi/qla2xxx/qla_nx.h      |   15 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  196 ++++++++-
+ drivers/scsi/qla2xxx/qla_version.h |    6 +-
+ 17 files changed, 2277 insertions(+), 491 deletions(-)
 
