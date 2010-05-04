@@ -1,68 +1,100 @@
 From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: [PATCH 5/9] scsi: Add a scsi_unprep_fn
-Date: Mon,  3 May 2010 20:37:04 -0700
-Message-ID: <1272944228-30511-6-git-send-email-andmike@linux.vnet.ibm.com>
+Subject: [PATCH 6/9] blk: Add request atomic flag for abort
+Date: Mon,  3 May 2010 20:37:05 -0700
+Message-ID: <1272944228-30511-7-git-send-email-andmike@linux.vnet.ibm.com>
 References: <1272944228-30511-1-git-send-email-andmike@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:47343 "EHLO e1.ny.us.ibm.com"
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:39581 "EHLO e9.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752695Ab0EDDhq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 May 2010 23:37:46 -0400
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e1.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o443WU3a004768
-	for <linux-scsi@vger.kernel.org>; Mon, 3 May 2010 23:32:30 -0400
+	id S1756290Ab0EDDhs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 May 2010 23:37:48 -0400
+Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
+	by e9.ny.us.ibm.com (8.14.3/8.13.1) with ESMTP id o443Ov0b002344
+	for <linux-scsi@vger.kernel.org>; Mon, 3 May 2010 23:24:57 -0400
 Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o443bj8N2019500
-	for <linux-scsi@vger.kernel.org>; Mon, 3 May 2010 23:37:45 -0400
+	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o443blNi175340
+	for <linux-scsi@vger.kernel.org>; Mon, 3 May 2010 23:37:47 -0400
 Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o443bimX019005
-	for <linux-scsi@vger.kernel.org>; Mon, 3 May 2010 23:37:45 -0400
+	by d01av04.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o443bkIv019046
+	for <linux-scsi@vger.kernel.org>; Mon, 3 May 2010 23:37:46 -0400
 In-Reply-To: <1272944228-30511-1-git-send-email-andmike@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Jens Axobe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@suse.de>, dm-devel@redhat.com
 
-Add scsi_unprep_fn and set this function as the unprep_rq_fn for the scsi
-queue. This will allow SCSI resources to be released if the block layer
-unpreps a request.
+Add atomic flag for a request to indicate that it has marked as aborted.
+Provide functions to mark and test the aborted flag.
 
 Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@suse.de>
+Cc: Jens Axobe <jens.axboe@oracle.com>
 ---
- drivers/scsi/scsi_lib.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ block/blk-timeout.c    |    6 ++++++
+ block/blk.h            |   14 ++++++++++++++
+ include/linux/blkdev.h |    1 +
+ 3 files changed, 21 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1646fe7..1685d35 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -91,6 +91,17 @@ static void scsi_unprep_request(struct request *req)
- 	scsi_put_command(cmd);
+diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+index 89fbe0a..ad45b44 100644
+--- a/block/blk-timeout.c
++++ b/block/blk-timeout.c
+@@ -155,6 +155,12 @@ void blk_abort_request(struct request *req)
  }
+ EXPORT_SYMBOL_GPL(blk_abort_request);
  
-+static void scsi_unprep_fn(struct request_queue *q, struct request *req)
++int blk_request_aborted(struct request *req)
 +{
-+	struct scsi_cmnd *cmd = req->special;
-+
-+	if (cmd) {
-+		scsi_release_buffers(cmd);
-+		scsi_unprep_request(req);
-+	}
++	return blk_test_rq_aborted(req);
 +}
-+
++EXPORT_SYMBOL_GPL(blk_request_aborted);
 +
  /**
-  * __scsi_queue_insert - private queue insertion
-  * @cmd: The SCSI command being requeued
-@@ -1664,6 +1675,7 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
- 		return NULL;
+  * blk_add_timer - Start timeout timer for a single request
+  * @req:	request that is about to start running.
+diff --git a/block/blk.h b/block/blk.h
+index 5ee3d7e..165262a 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -30,6 +30,7 @@ void __generic_unplug_device(struct request_queue *);
+  */
+ enum rq_atomic_flags {
+ 	REQ_ATOM_COMPLETE = 0,
++	REQ_ATOM_ABORT = 1,
+ };
  
- 	blk_queue_prep_rq(q, scsi_prep_fn);
-+	blk_queue_unprep_rq(q, scsi_unprep_fn);
- 	blk_queue_softirq_done(q, scsi_softirq_done);
- 	blk_queue_rq_timed_out(q, scsi_times_out);
- 	blk_queue_lld_busy(q, scsi_lld_busy);
+ /*
+@@ -47,6 +48,19 @@ static inline void blk_clear_rq_complete(struct request *rq)
+ }
+ 
+ /*
++ * Mark and test a request for aborted.
++ */
++static inline int blk_mark_rq_aborted(struct request *rq)
++{
++	return test_and_set_bit(REQ_ATOM_ABORT, &rq->atomic_flags);
++}
++
++static inline int blk_test_rq_aborted(struct request *rq)
++{
++	return test_bit(REQ_ATOM_ABORT, &rq->atomic_flags);
++}
++
++/*
+  * Internal elevator interface
+  */
+ #define ELV_ON_HASH(rq)		(!hlist_unhashed(&(rq)->hash))
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2818e80..7636e58 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -912,6 +912,7 @@ extern void blk_complete_request(struct request *);
+ extern void __blk_complete_request(struct request *);
+ extern void blk_abort_request(struct request *);
+ extern void blk_abort_queue(struct request_queue *);
++extern int blk_request_aborted(struct request *);
+ 
+ /*
+  * Access functions for manipulating queue properties
 -- 
 1.6.6.1
 
