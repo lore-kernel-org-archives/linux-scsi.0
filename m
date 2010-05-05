@@ -1,77 +1,98 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/9] blk: Do not abort requests if queue is stopped
-Date: Tue, 4 May 2010 21:52:31 -0700
-Message-ID: <20100505045231.GA25395@linux.vnet.ibm.com>
-References: <1272944228-30511-1-git-send-email-andmike@linux.vnet.ibm.com>
- <1272944228-30511-2-git-send-email-andmike@linux.vnet.ibm.com>
- <20100504104537.GN27497@kernel.dk>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] Retry commands with UNIT_ATTENTION sense codes
+Date: Wed, 05 May 2010 08:26:17 +0200
+Message-ID: <4BE10F89.4020101@suse.de>
+References: <20100504144853.D94C72A205@ochil.suse.de>	 <1272990403.5255.27.camel@mulgrave.site> <4BE0804D.1030406@cs.wisc.edu>	 <4BE08320.40206@cs.wisc.edu> <1273005003.16631.43.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:47186 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769Ab0EEEwd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2010 00:52:33 -0400
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by e35.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o454kfNp004646
-	for <linux-scsi@vger.kernel.org>; Tue, 4 May 2010 22:46:41 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o454qWR1129656
-	for <linux-scsi@vger.kernel.org>; Tue, 4 May 2010 22:52:32 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o44LqVUG028729
-	for <linux-scsi@vger.kernel.org>; Tue, 4 May 2010 15:52:32 -0600
-Content-Disposition: inline
-In-Reply-To: <20100504104537.GN27497@kernel.dk>
+Received: from cantor2.suse.de ([195.135.220.15]:37993 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755218Ab0EEG0T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 May 2010 02:26:19 -0400
+In-Reply-To: <1273005003.16631.43.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, dm-devel@redhat.com
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
-Jens Axboe <jens.axboe@oracle.com> wrote:
-> On Mon, May 03 2010, Mike Anderson wrote:
-> > If the queue is stopped it could be an indication that other recovery is
-> > happening in this case skip the blk_abort_request.
-> > 
-> > Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
-> > Cc: Jens Axobe <jens.axboe@oracle.com>
-> > ---
-> >  block/blk-timeout.c |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/block/blk-timeout.c b/block/blk-timeout.c
-> > index 1ba7e0a..89fbe0a 100644
-> > --- a/block/blk-timeout.c
-> > +++ b/block/blk-timeout.c
-> > @@ -224,7 +224,8 @@ void blk_abort_queue(struct request_queue *q)
-> >  	list_splice_init(&q->timeout_list, &list);
-> >  
-> >  	list_for_each_entry_safe(rq, tmp, &list, timeout_list)
-> > -		blk_abort_request(rq);
-> > +		if (!blk_queue_stopped(q))
-> > +			blk_abort_request(rq);
-> >  
-> >  	/*
-> >  	 * Occasionally, blk_abort_request() will return without
-> 
-> That seems like a bit of a mixup, what ties a stopped queue to recovery?
+James Bottomley wrote:
+> On Tue, 2010-05-04 at 15:27 -0500, Mike Christie wrote:
+>> On 05/04/2010 03:15 PM, Mike Christie wrote:
+>>> On 05/04/2010 11:26 AM, James Bottomley wrote:
+>>>> The other patch is fine, but I don't think this is necessary. The
+>>>> reason is that even returning SUCCESS here, we go straight into
+>>>> scsi_finish_command() (which passes it up to the driver handler) a=
+nd
+>>>> then scsi_io_completion(). There's a catch for UNIT_ATTENTION in
+>>>> scsi_io_completion
+>>> The request is sent as a REQ_TYPE_BLOCK_PC (this flag is set for th=
+e
+>>> request in sd_prepare_flush), and scsi_io_completion's blk_pc_reque=
+st
+>>> check() that returns the request upwards is before the UNIT_ATTENTI=
+ON
+>> I was looking at the wrong source.
+>>
+>> scsi_finish_command checks for REQ_TYPE_BLOCK_PC and sets good_bytes=
+ to=20
+>> scsi_bufflen, so when scsi_io_completion calls scsi_end_request, it=20
+>> fails the request before we can get to the UNIT_ATTENTION.
+>=20
+> Ah, yes, missed that.
+>=20
+> However there are other problems then.  We can't just eat all unit
+> attentions on the BLOCK_PC path because some of the user programs wan=
+t
+> to see them (CD burners for one).  I know the patch allows some to
+> proceed upwards, but it's risky making all except device not started =
+do
+> a retry.
+>=20
+> I'm a bit stumped on this one ... the intention of BLOCK_PC is that t=
+he
+> caller simply retries if they get a unit attention (which is what all
+> SCSI code does).  The block code doesn't want to look at the sense da=
+ta
+> but at the error return.  I suppose we could make UNIT_ATTENTION
+> translate to -EAGAIN and have block do the right thing?
+>=20
+The intention of BLOCK_PC is ok, but the point here is the barrier
+request isn't really a BLOCK_PC request. The caller precisely
+does _not_ want to look the sense code but rather have the SCSI
+layer do all the necessary things.
 
-This was coding to SCSI behavior again. I tried to reduce the case of
-waking the eh if the transport moved the target into a blocked state. It
-might be redundant as FC has eh blocking and timer_reset. iSCSI has
-blocking but not eh blocking.
+Why can't we just mark the barrier request as something else than
+BLOCK_PC, eg REQ_TYPE_SPECIAL?
+Then we'd avoid these pitfalls and everything should work as expected, =
+right?
 
-> To take one example, the cciss driver stops the queue when it can't
-> queue more at the hw level and starts it on completion to queue more. If
-> recovery triggers when the hw queue has been filled, then timeouts will
-> fail?
-> 
-> It would be better to mark the queue as already doing abort. That state
-> could be in the queue, or it could be at the driver level.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index de6c603..b63f84e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1038,7 +1038,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+=20
+ static void sd_prepare_flush(struct request_queue *q, struct request *=
+rq)
+ {
+-       rq->cmd_type =3D REQ_TYPE_BLOCK_PC;
++       rq->cmd_type =3D REQ_TYPE_SPECIAL;
+        rq->timeout =3D SD_TIMEOUT;
+        rq->retries =3D SD_MAX_RETRIES;
+        rq->cmd[0] =3D SYNCHRONIZE_CACHE;
 
-ok. I will look into this.
+Cheers,
 
--andmike
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
 --
-Michael Anderson
-andmike@linux.vnet.ibm.com
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
