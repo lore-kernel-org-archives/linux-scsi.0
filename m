@@ -1,58 +1,39 @@
-From: Bernd Schubert <bernd.schubert@fastmail.fm>
-Subject: Re: [PATCH] Enable retries for SYNCRONIZE_CACHE commands
-Date: Wed, 5 May 2010 16:15:54 +0200
-Message-ID: <201005051615.55195.bernd.schubert@fastmail.fm>
-References: <20100504144921.71BA62A207@ochil.suse.de>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: libsas: is there a current maintainer?
+Date: Wed, 05 May 2010 10:16:52 -0400
+Message-ID: <1273069012.5227.64.camel@mulgrave.site>
+References: <SNT126-W15ED7713879FB6E952A2DECEF40@phx.gbl>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59989 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759165Ab0EEOQd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2010 10:16:33 -0400
-In-Reply-To: <20100504144921.71BA62A207@ochil.suse.de>
+Received: from cantor2.suse.de ([195.135.220.15]:52884 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759255Ab0EEOQ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 May 2010 10:16:57 -0400
+In-Reply-To: <SNT126-W15ED7713879FB6E952A2DECEF40@phx.gbl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+To: Sean Thomson <psthomso@hotmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tuesday 04 May 2010, Hannes Reinecke wrote:
-> sd is using SYNCHRONIZE_CACHE to simulate barrier requests;
-> however no error recovery is taking place as it's being injected
-> from the block layer. So we should be enable retries here
-> to clear any transient error.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/sd.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 8b827f3..de6c603 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1040,6 +1040,7 @@ static void sd_prepare_flush(struct request_queue *q,
->  struct request *rq) {
->  	rq->cmd_type = REQ_TYPE_BLOCK_PC;
->  	rq->timeout = SD_TIMEOUT;
-> +	rq->retries = SD_MAX_RETRIES;
->  	rq->cmd[0] = SYNCHRONIZE_CACHE;
->  	rq->cmd_len = 10;
->  }
-> 
+On Wed, 2010-05-05 at 07:07 -0700, Sean Thomson wrote:
+> This is mostly a curiosity question, but who is maintaining libsas?
 
-My patch already does that and also does it in sd_sync_cache(). 
+There's no overall maintainer, it's jointly maintained by its users.
 
-http://kerneltrap.org/mailarchive/linux-scsi/2010/4/20/6884656
+>  I'm just starting work on a new sas driver and wondering if it is
+> necessary for anything to be done to make it (or if it is already) 2.1
+> compliant
 
-Please wait till Friday. I will try to find some time to update it to include 
-another sysfs-device timeout value.
-Sorry that I didn't manage to that so far, but I'm trying very hard to finish 
-my thesis and the remaining two days per week for DDN, Lustre and Linux are 
-then quickly taken by emergency tasks...
+I don't quite understand the question.  libsas is a software library and
+2.1 is a physical layer document ... there's not much overlap.
+
+To answer what I think the question is about, libsas is only coded to
+1.1 ... the expander checking has been relaxed a bit, so it shouldn't
+barf on a 2.0 configuration, but I'm not aware that anyone's actually
+tested it with a self configuring expander.
+
+James
 
 
-Thanks,
-Bernd
