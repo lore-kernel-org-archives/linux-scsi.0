@@ -1,48 +1,81 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Retry commands with UNIT_ATTENTION sense codes
-Date: Wed, 5 May 2010 09:28:16 -0400
-Message-ID: <20100505132816.GA21362@infradead.org>
-References: <20100504144853.D94C72A205@ochil.suse.de> <1272990403.5255.27.camel@mulgrave.site> <4BE0804D.1030406@cs.wisc.edu> <4BE08320.40206@cs.wisc.edu> <1273005003.16631.43.camel@mulgrave.site> <4BE10F89.4020101@suse.de> <1273065593.5227.42.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] scsi: fix bnx2i build errors
+Date: Wed, 05 May 2010 09:54:59 -0400
+Message-ID: <1273067699.5227.56.camel@mulgrave.site>
+References: <20100504103001.33fcbe88.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:48807 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759007Ab0EEN2T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2010 09:28:19 -0400
-Content-Disposition: inline
-In-Reply-To: <1273065593.5227.42.camel@mulgrave.site>
+Received: from cantor2.suse.de ([195.135.220.15]:52274 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752519Ab0EENzF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 May 2010 09:55:05 -0400
+In-Reply-To: <20100504103001.33fcbe88.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Jens Axboe <Jens.Axboe@oracle.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, Anil Veerabhadrappa <anilgv@broadcom.com>, akpm <akpm@linux-foundation.org>
 
-On Wed, May 05, 2010 at 09:19:53AM -0400, James Bottomley wrote:
-> Unfortunately, not.  A long time ago we used to use SPECIAL for prepared
-> commands, but we stripped that path out.  If you look at the prep
-> functions today, they only accept either REQ_TYPE_FS or
-> REQ_TYPE_BLOCK_PC ... they kill everything else, so we'd have to do
-> surgery on all the input paths to get this to work.
+On Tue, 2010-05-04 at 10:30 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> Looking at all of this, I'm really unhappy with the way barriers are
-> working in SCSI ... using BLOCK_PC for them was a big mistake, since
-> block can't handle the errors and BLOCK_PC by its very nature requests
-> that all errors, however trivially fixable, be returned.
+> bnx2i should depend on NET since it selects SCSI_ISCSI_ATTRS,
+> which depends on NET.
 > 
-> It looks like we have precisely the same problems with discard too,
-> except there at least we'll ignore the error.
+> Also move the dependencies together.
 > 
-> Someone needs to take a good look at fixing this ... or at least just
-> making discard and barrier use the same submit paths, so we can fix it
-> up in the lower layers.
+> The "depends" change fixes multiple build errors when CONFIG_NET is
+> not enabled:
+> ERROR: "skb_trim" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "netlink_kernel_create" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "netlink_kernel_release" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "skb_pull" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "init_net" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "__alloc_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "netlink_broadcast" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "kfree_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> ERROR: "skb_put" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
+> ---
+>  drivers/scsi/bnx2i/Kconfig |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> --- lnx-2634-rc6.orig/drivers/scsi/bnx2i/Kconfig
+> +++ lnx-2634-rc6/drivers/scsi/bnx2i/Kconfig
+> @@ -1,10 +1,11 @@
+>  config SCSI_BNX2_ISCSI
+>  	tristate "Broadcom NetXtreme II iSCSI support"
+> +	depends on NET
+> +	depends on PCI
 
-Both barriers and dicards are FS requests as far as the block layer is
-concerned.  We turn them into BLOCK_PC requests very late in the game,
-either in the prepare_flush function for barriers, or directly inside
-prep_fn for discard.  I tried to handle discard requests as FS all
-the way through, but the various different ways in which we account for
-a request length didn't play nicely with that.
+Actually, let's not fix it this way.  While we still have this annoying
+bug in the Kconfig system where it doesn't respect the dependencies of a
+select, let's not build traps like this ... the rule has to be selected
+attributes must select their dependencies, that way the selection just
+works(tm).
 
-Handling cache flushes as FS requests all the way through should be
-easier than that.
+Of course, fixing Kconfig would be the better option ...
+
+James
+
+---
+
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 75f2336..804ba3d 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -308,7 +308,8 @@ config SCSI_FC_TGT_ATTRS
+ 
+ config SCSI_ISCSI_ATTRS
+ 	tristate "iSCSI Transport Attributes"
+-	depends on SCSI && NET
++	depends on SCSI
++	select NET
+ 	help
+ 	  If you wish to export transport-specific information about
+ 	  each attached iSCSI device to sysfs, say Y.
+
 
