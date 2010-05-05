@@ -1,48 +1,63 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/9] blk: Do not abort requests if queue is stopped
-Date: Wed, 5 May 2010 11:18:29 -0700
-Message-ID: <20100505181829.GA4053@linux.vnet.ibm.com>
-References: <1272944228-30511-1-git-send-email-andmike@linux.vnet.ibm.com>
- <1272944228-30511-2-git-send-email-andmike@linux.vnet.ibm.com>
- <20100504104537.GN27497@kernel.dk>
- <20100505045231.GA25395@linux.vnet.ibm.com>
- <4BE1B55B.9090007@cs.wisc.edu>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/2] dm: Add feature flags to dm-mpath
+Date: Wed, 5 May 2010 16:01:28 -0400
+Message-ID: <20100505200128.GA19763@redhat.com>
+References: <1272945691-31649-1-git-send-email-andmike@linux.vnet.ibm.com>
+ <1272945691-31649-2-git-send-email-andmike@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:45189 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757352Ab0EESS6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2010 14:18:58 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o45IBaRF025008
-	for <linux-scsi@vger.kernel.org>; Wed, 5 May 2010 12:11:36 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o45IIifM068824
-	for <linux-scsi@vger.kernel.org>; Wed, 5 May 2010 12:18:45 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o45BIZFG013948
-	for <linux-scsi@vger.kernel.org>; Wed, 5 May 2010 05:18:36 -0600
+Received: from mx1.redhat.com ([209.132.183.28]:50907 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753214Ab0EEUBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 May 2010 16:01:35 -0400
 Content-Disposition: inline
-In-Reply-To: <4BE1B55B.9090007@cs.wisc.edu>
+In-Reply-To: <1272945691-31649-2-git-send-email-andmike@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, dm-devel@redhat.com
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
-Mike Christie <michaelc@cs.wisc.edu> wrote:
-> All iscsi drivers should have blocking and timer reset now, so if a
-> transport problem casues a IO error to be sent to dm, then when
-> blk_abort_request is called that should prevent the scsi layer from
-> sending the whole host into recovery.
+On Tue, May 04 2010 at 12:01am -0400,
+Mike Anderson <andmike@linux.vnet.ibm.com> wrote:
+
+> Add a feature flag attribute to the multipath structure.
 > 
+> Signed-off-by: Mike Anderson <andmike@linux.vnet.ibm.com>
+> ---
+>  drivers/md/dm-mpath.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
 > 
-> I do not remember the problem with the lack of eh blocking though.
-> Did we need that too?
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index 826bce7..4200d03 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -82,6 +82,7 @@ struct multipath {
+>  	unsigned saved_queue_if_no_path;/* Saved state during suspension */
+>  	unsigned pg_init_retries;	/* Number of times to retry pg_init */
+>  	unsigned pg_init_count;		/* Number of times pg_init called */
+> +	unsigned long features;
 
-My comment was not on need I was just comparing the transports.
+Why not use uint64_t?
 
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
+>  	struct work_struct process_queued_ios;
+>  	struct list_head queued_ios;
+> @@ -118,6 +119,15 @@ static void trigger_event(struct work_struct *work);
+>  static void activate_path(struct work_struct *work);
+>  static void deactivate_path(struct work_struct *work);
+>  
+> +static int multipath_test_feature(struct multipath *m, unsigned feature)
+> +{
+> +	return test_bit(feature, &m->features);
+> +}
+> +
+> +static void multipath_set_feature(struct multipath *m, unsigned feature)
+> +{
+> +	set_bit(feature, &m->features);
+> +}
+
+You're using 'unsigned long' for features yet these wrapper functions
+take 'unsigned'.  unsigned allows you to use {test,set}_bit but in the
+end we have fewer flags to work with...
+
+Granted you're introducing the very first flag but... ;)
