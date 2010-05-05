@@ -1,44 +1,65 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Wed, 5 May 2010 10:35:38 GMT
-Message-ID: <201005051035.o45AZcka018568@demeter.kernel.org>
-References: <bug-14831-11613@https.bugzilla.kernel.org/>
+From: "Anil Ravindranath" <Anil_Ravindranath@pmc-sierra.com>
+Subject: RE: [PATCH] scsi: fix pmcraid build errors
+Date: Wed, 5 May 2010 05:14:12 -0700
+Message-ID: <340C71CD25A7EB49BFA81AE8C839266702742625@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <20100504102914.9be2cee4.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:40650 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549Ab0EEKfj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2010 06:35:39 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o45AZdXD018569
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 5 May 2010 10:35:39 GMT
-In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53076 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934433Ab0EEMnm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 May 2010 08:43:42 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>
+Cc: jejbscsi <james.bottomley@suse.de>, akpm <akpm@linux-foundation.org>, Anil Ravindranath <Anil_Ravindranath@pmc-sierra.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14831
+Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
+
+________________________________
+
+From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
+Sent: Tue 5/4/2010 10:29 AM
+To: scsi
+Cc: jejbscsi; akpm; Anil Ravindranath
+Subject: [PATCH] scsi: fix pmcraid build errors
 
 
-Andrew Dunn <andrew.g.dunn.dod@gmail.com> changed:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |andrew.g.dunn.dod@gmail.com
+From: Randy Dunlap <randy.dunlap@oracle.com>
+
+pmcraid should depend on NET since it uses netlink interfaces.
+This fixes multiple build errors when CONFIG_NET is not enabled:
+
+ERROR: "genl_register_family" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "genl_unregister_family" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "nla_put" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "init_net" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "__alloc_skb" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "netlink_broadcast" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "kfree_skb" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "skb_put" [drivers/scsi/pmcraid.ko] undefined!
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc:     Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+---
+ drivers/scsi/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- lnx-2634-rc6.orig/drivers/scsi/Kconfig
++++ lnx-2634-rc6/drivers/scsi/Kconfig
+@@ -1849,7 +1849,7 @@ config ZFCP
+
+ config SCSI_PMCRAID
+        tristate "PMC SIERRA Linux MaxRAID adapter support"
+-       depends on PCI && SCSI
++       depends on PCI && SCSI && NET
+        ---help---
+          This driver supports the PMC SIERRA MaxRAID adapters.
 
 
 
-
---- Comment #18 from Andrew Dunn <andrew.g.dunn.dod@gmail.com>  2010-05-05 10:35:17 ---
-I anxiously await confirmation of this patch. This issue has been plaguing me
-for quite a while. Just for verification the mpt2sas controllers don't have
-problems with this? I was thinking of trying to get an AOC-USAS2-L8i
-(http://www.supermicro.com/products/accessories/addon/AOC-USAS2-L8i.cfm?TYP=I)
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
