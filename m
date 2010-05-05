@@ -1,30 +1,58 @@
-From: Sean Thomson <psthomso@hotmail.com>
-Subject: libsas: is there a current maintainer?
-Date: Wed, 5 May 2010 07:07:15 -0700
-Message-ID: <SNT126-W15ED7713879FB6E952A2DECEF40@phx.gbl>
+From: Bernd Schubert <bernd.schubert@fastmail.fm>
+Subject: Re: [PATCH] Enable retries for SYNCRONIZE_CACHE commands
+Date: Wed, 5 May 2010 16:15:54 +0200
+Message-ID: <201005051615.55195.bernd.schubert@fastmail.fm>
+References: <20100504144921.71BA62A207@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from snt0-omc4-s35.snt0.hotmail.com ([65.55.90.238]:16913 "EHLO
-	snt0-omc4-s35.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760131Ab0EEOHQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 May 2010 10:07:16 -0400
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:59989 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759165Ab0EEOQd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2010 10:16:33 -0400
+In-Reply-To: <20100504144921.71BA62A207@ochil.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+
+On Tuesday 04 May 2010, Hannes Reinecke wrote:
+> sd is using SYNCHRONIZE_CACHE to simulate barrier requests;
+> however no error recovery is taking place as it's being injected
+> from the block layer. So we should be enable retries here
+> to clear any transient error.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/sd.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 8b827f3..de6c603 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -1040,6 +1040,7 @@ static void sd_prepare_flush(struct request_queue *q,
+>  struct request *rq) {
+>  	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+>  	rq->timeout = SD_TIMEOUT;
+> +	rq->retries = SD_MAX_RETRIES;
+>  	rq->cmd[0] = SYNCHRONIZE_CACHE;
+>  	rq->cmd_len = 10;
+>  }
+> 
+
+My patch already does that and also does it in sd_sync_cache(). 
+
+http://kerneltrap.org/mailarchive/linux-scsi/2010/4/20/6884656
+
+Please wait till Friday. I will try to find some time to update it to include 
+another sysfs-device timeout value.
+Sorry that I didn't manage to that so far, but I'm trying very hard to finish 
+my thesis and the remaining two days per week for DDN, Lustre and Linux are 
+then quickly taken by emergency tasks...
 
 
-Howdy folks,
- 
-This is mostly a curiosity question, but who is maintaining libsas? I'm just starting work on a new sas driver and wondering if it is necessary for anything to be done to make it (or if it is already) 2.1 compliant
- 
-thanks!
-Pat Thomson
- 
-p.s.
-I apologize, I sent this earlier and I thought I had my mail client set up for plain text, but it wasn't. If this caused someone grief, I'm sorry 		 	   		  
-_________________________________________________________________
-The New Busy think 9 to 5 is a cute idea. Combine multiple calendars with Hotmail. 
-http://www.windowslive.com/campaign/thenewbusy?tile=multicalendar&ocid=PID28326::T:WLMTAGL:ON:WL:en-US:WM_HMP:042010_5
+Thanks,
+Bernd
