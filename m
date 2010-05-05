@@ -1,107 +1,61 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] scsi: fix bnx2i build errors
-Date: Wed, 05 May 2010 09:11:20 -0700
-Message-ID: <4BE198A8.6070906@oracle.com>
-References: <20100504103001.33fcbe88.randy.dunlap@oracle.com>	 <1273067699.5227.56.camel@mulgrave.site>  <4BE19342.7010507@oracle.com> <1273075337.14287.81.camel@mulgrave.site>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/9] blk: Do not abort requests if queue is stopped
+Date: Wed, 05 May 2010 13:13:47 -0500
+Message-ID: <4BE1B55B.9090007@cs.wisc.edu>
+References: <1272944228-30511-1-git-send-email-andmike@linux.vnet.ibm.com> <1272944228-30511-2-git-send-email-andmike@linux.vnet.ibm.com> <20100504104537.GN27497@kernel.dk> <20100505045231.GA25395@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:16895 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932818Ab0EEQMr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 May 2010 12:12:47 -0400
-In-Reply-To: <1273075337.14287.81.camel@mulgrave.site>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35717 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756136Ab0EESNR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 May 2010 14:13:17 -0400
+In-Reply-To: <20100505045231.GA25395@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: scsi <linux-scsi@vger.kernel.org>, Anil Veerabhadrappa <anilgv@broadcom.com>, akpm <akpm@linux-foundation.org>
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, dm-devel@redhat.com
 
-On 05/05/10 09:02, James Bottomley wrote:
-> On Wed, 2010-05-05 at 08:48 -0700, Randy Dunlap wrote:
->> On 05/05/10 06:54, James Bottomley wrote:
->>> On Tue, 2010-05-04 at 10:30 -0700, Randy Dunlap wrote:
->>>> From: Randy Dunlap <randy.dunlap@oracle.com>
->>>>
->>>> bnx2i should depend on NET since it selects SCSI_ISCSI_ATTRS,
->>>> which depends on NET.
->>>>
->>>> Also move the dependencies together.
->>>>
->>>> The "depends" change fixes multiple build errors when CONFIG_NET is
->>>> not enabled:
->>>> ERROR: "skb_trim" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "netlink_kernel_create" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "netlink_kernel_release" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "skb_pull" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "init_net" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "__alloc_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "netlink_broadcast" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "kfree_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>> ERROR: "skb_put" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->>>>
->>>> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
->>>> Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
->>>> ---
->>>>  drivers/scsi/bnx2i/Kconfig |    3 ++-
->>>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>>
->>>> --- lnx-2634-rc6.orig/drivers/scsi/bnx2i/Kconfig
->>>> +++ lnx-2634-rc6/drivers/scsi/bnx2i/Kconfig
->>>> @@ -1,10 +1,11 @@
->>>>  config SCSI_BNX2_ISCSI
->>>>  	tristate "Broadcom NetXtreme II iSCSI support"
->>>> +	depends on NET
->>>> +	depends on PCI
+On 05/04/2010 11:52 PM, Mike Anderson wrote:
+> Jens Axboe<jens.axboe@oracle.com>  wrote:
+>> On Mon, May 03 2010, Mike Anderson wrote:
+>>> If the queue is stopped it could be an indication that other recovery is
+>>> happening in this case skip the blk_abort_request.
 >>>
->>> Actually, let's not fix it this way.  While we still have this annoying
->>> bug in the Kconfig system where it doesn't respect the dependencies of a
->>> select, let's not build traps like this ... the rule has to be selected
->>> attributes must select their dependencies, that way the selection just
->>> works(tm).
->>>
->>> Of course, fixing Kconfig would be the better option ...
->>>
->>> James
->>>
+>>> Signed-off-by: Mike Anderson<andmike@linux.vnet.ibm.com>
+>>> Cc: Jens Axobe<jens.axboe@oracle.com>
 >>> ---
+>>>   block/blk-timeout.c |    3 ++-
+>>>   1 files changed, 2 insertions(+), 1 deletions(-)
 >>>
->>> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
->>> index 75f2336..804ba3d 100644
->>> --- a/drivers/scsi/Kconfig
->>> +++ b/drivers/scsi/Kconfig
->>> @@ -308,7 +308,8 @@ config SCSI_FC_TGT_ATTRS
->>>  
->>>  config SCSI_ISCSI_ATTRS
->>>  	tristate "iSCSI Transport Attributes"
->>> -	depends on SCSI && NET
->>> +	depends on SCSI
->>> +	select NET
->>>  	help
->>>  	  If you wish to export transport-specific information about
->>>  	  each attached iSCSI device to sysfs, say Y.
+>>> diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+>>> index 1ba7e0a..89fbe0a 100644
+>>> --- a/block/blk-timeout.c
+>>> +++ b/block/blk-timeout.c
+>>> @@ -224,7 +224,8 @@ void blk_abort_queue(struct request_queue *q)
+>>>   	list_splice_init(&q->timeout_list,&list);
 >>>
+>>>   	list_for_each_entry_safe(rq, tmp,&list, timeout_list)
+>>> -		blk_abort_request(rq);
+>>> +		if (!blk_queue_stopped(q))
+>>> +			blk_abort_request(rq);
 >>>
+>>>   	/*
+>>>   	 * Occasionally, blk_abort_request() will return without
 >>
->> I would Nak that but it would probably do no good.
->> Selecting NET just adds way too much code to be hidden like this.
-> 
-> I think it's a complete hack too.  But it's better than forcing people
-> who use select on hidden options (like the transport classes) to be
-> aware of the nebulous dependency diagram it's going to pull in.  It's
-> also what we've done to prevent hidden dependencies in other select
-> items.
+>> That seems like a bit of a mixup, what ties a stopped queue to recovery?
+>
+> This was coding to SCSI behavior again. I tried to reduce the case of
+> waking the eh if the transport moved the target into a blocked state. It
+> might be redundant as FC has eh blocking and timer_reset. iSCSI has
+> blocking but not eh blocking.
 
-The only other config symbol that selects NET is SCSI_NETLINK.  :(
-
->> Yes, of course, kconfig should be fixed...
-> 
-> In the absence of volunteers, I suppose I could take a look at it on the
-> 'plane home.  It seems to be a fairly simplistic parser.
-
-That would be great.  I've had a look at it and I was left dazed & confuzed.
+All iscsi drivers should have blocking and timer reset now, so if a 
+transport problem casues a IO error to be sent to dm, then when 
+blk_abort_request is called that should prevent the scsi layer from 
+sending the whole host into recovery.
 
 
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+I do not remember the problem with the lack of eh blocking though. Did 
+we need that too?
