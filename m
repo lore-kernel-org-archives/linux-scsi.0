@@ -1,38 +1,54 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: relax PAGE LENGTH check for thin provisioning UNMAP support
-Date: Thu, 06 May 2010 00:28:10 -0400
-Message-ID: <yq1sk65ejs5.fsf@sermon.lab.mkp.net>
-References: <1273096203-3164-1-git-send-email-snitzer@redhat.com>
+From: "jack wang" <jack_wang@usish.com>
+Subject: RE: libsas: is there a current maintainer?
+Date: Thu, 6 May 2010 12:37:43 +0800
+Message-ID: <7964E35BEEE14ED4B261A4EE77D5C7F1@usish.com.cn>
+References: <SNT126-W15ED7713879FB6E952A2DECEF40@phx.gbl> <1273069012.5227.64.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:65417 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710Ab0EFE3d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2010 00:29:33 -0400
-In-Reply-To: <1273096203-3164-1-git-send-email-snitzer@redhat.com> (Mike
-	Snitzer's message of "Wed, 5 May 2010 17:50:03 -0400")
+Received: from sr-smtp.usish.com ([210.5.144.203]:36176 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916Ab0EFEhv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2010 00:37:51 -0400
+In-Reply-To: <1273069012.5227.64.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>
+To: 'James Bottomley' <James.Bottomley@suse.de>, 'Sean Thomson' <psthomso@hotmail.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 
-Mike> Thin Provisioning fields are assumed available in the BLOCK LIMITS
-Mike> VPD page if PAGE LENGTH is 0x3c.  The BLOCK LIMITS VPD page may be
-Mike> extended over time.  Allow for the possibility that the PAGE
-Mike> LENGTH exceeds 0x3c.
 
-SBC3 states that: 
+On Wed, 2010-05-05 at 07:07 -0700, Sean Thomson wrote:
+> This is mostly a curiosity question, but who is maintaining libsas?
 
-"If the device server supports thin provisioning, then the device server
-shall set the PAGE LENGTH field to 3Ch."
+There's no overall maintainer, it's jointly maintained by its users.
 
-That's a "shall".  That's a non-negotiable requirement in standards
-speak.  And besides, only half of that mandated page length is currently
-spoken for.  So I wonder what motivated your change?  Do you have any
-examples of devices with a bigger page length?
+>  I'm just starting work on a new sas driver and wondering if it is
+> necessary for anything to be done to make it (or if it is already) 2.1
+> compliant
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I don't quite understand the question.  libsas is a software library and
+2.1 is a physical layer document ... there's not much overlap.
+
+To answer what I think the question is about, libsas is only coded to
+1.1 ... the expander checking has been relaxed a bit, so it shouldn't
+barf on a 2.0 configuration, but I'm not aware that anyone's actually
+tested it with a self configuring expander.
+
+James
+
+[Jack]We had test it on PMC-Sierra's SAS2 expanders, the main issue is
+expander checking as you mentioned, and we can remove the the T-T limitation
+in function sas_check_parent_topology. The other problem is zone support,
+when we change zone setting, the libsas can not find the change. I'm not
+have
+much time to dig in. 
+Thanks
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
