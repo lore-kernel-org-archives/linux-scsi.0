@@ -1,49 +1,69 @@
-From: Paolo Ornati <ornati@gmail.com>
-Subject: Re: Testers needed - Maxtor performance degradation
-Date: Thu, 6 May 2010 20:32:50 +0200
-Message-ID: <20100506203250.76f559cd@gmail.com>
-References: <Pine.LNX.4.64.1005051433080.30185@hs20-bc2-1.build.redhat.com>
+From: Sean Thomson <psthomso@hotmail.com>
+Subject: RE: libsas: is there a current maintainer?
+Date: Thu, 6 May 2010 16:49:35 -0700
+Message-ID: <SNT126-W303C2E96A4B7219BD10B2ACEF50@phx.gbl>
+References: <SNT126-W15ED7713879FB6E952A2DECEF40@phx.gbl>
+ <1273069012.5227.64.camel@mulgrave.site>,<7964E35BEEE14ED4B261A4EE77D5C7F1@usish.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:61197 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752584Ab0EFSc5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2010 14:32:57 -0400
-In-Reply-To: <Pine.LNX.4.64.1005051433080.30185@hs20-bc2-1.build.redhat.com>
+Received: from snt0-omc4-s12.snt0.hotmail.com ([65.55.90.215]:39105 "EHLO
+	snt0-omc4-s12.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752933Ab0EFXtg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 May 2010 19:49:36 -0400
+In-Reply-To: <7964E35BEEE14ED4B261A4EE77D5C7F1@usish.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: jack_wang@usish.com, james.bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 6 May 2010 12:15:58 -0400 (EDT)
-Mikulas Patocka <mpatocka@redhat.com> wrote:
 
-> I'd like to ask other people with Maxtor disks to run this script (with 
-> "sda", "sdb", etc. as an argument ... without "/dev/" prefix). The script 
-> measures read rate as a function of request size. Report the results, so 
-> that it can be determined which disks are buggy and which not and the 
-> default transfer size could be reduced to 256kB for the buggy ones.
+As I understand things, there were two new BCN's that were
+added in 2.x, and I'm thinking that to support them might require some
+additons to libsas. If I need to support them, I can do that work when
+the time comes.
+ 
+Thanks guys, I appreciate your time and answers!
 
-ATA MAXTOR STM316021 3.AA
-64 kB: 78.9 MB/s
-128 kB: 79.1 MB/s
-192 kB: 79.1 MB/s
-256 kB: 78.6 MB/s
-320 kB: 79.1 MB/s
-384 kB: 78.9 MB/s
-448 kB: 79.0 MB/s
-512 kB: 79.1 MB/s
-576 kB: 79.0 MB/s
-640 kB: 79.1 MB/s
-704 kB: 79.0 MB/s
-768 kB: 79.1 MB/s
-832 kB: 79.0 MB/s
-896 kB: 79.0 MB/s
-960 kB: 79.1 MB/s
-1024 kB: 78.8 MB/s
 
--- 
-	Paolo Ornati
-	Linux 2.6.34-rc6-00063-gbe1066b on x86_64
+----------------------------------------
+> From: jack_wang@usish.com
+> To: James.Bottomley@suse.de; psthomso@hotmail.com
+> CC: linux-scsi@vger.kernel.org
+> Subject: RE: libsas: is there a current maintainer?
+> Date: Thu, 6 May 2010 12:37:43 +0800
+>
+>
+>
+> On Wed, 2010-05-05 at 07:07 -0700, Sean Thomson wrote:
+>> This is mostly a curiosity question, but who is maintaining libsas?
+>
+> There's no overall maintainer, it's jointly maintained by its users.
+>
+>> I'm just starting work on a new sas driver and wondering if it is
+>> necessary for anything to be done to make it (or if it is already) 2.1
+>> compliant
+>
+> I don't quite understand the question. libsas is a software library and
+> 2.1 is a physical layer document ... there's not much overlap.
+>
+> To answer what I think the question is about, libsas is only coded to
+> 1.1 ... the expander checking has been relaxed a bit, so it shouldn't
+> barf on a 2.0 configuration, but I'm not aware that anyone's actually
+> tested it with a self configuring expander.
+>
+> James
+>
+> [Jack]We had test it on PMC-Sierra's SAS2 expanders, the main issue is
+> expander checking as you mentioned, and we can remove the the T-T limitation
+> in function sas_check_parent_topology. The other problem is zone support,
+> when we change zone setting, the libsas can not find the change. I'm not
+> have
+> much time to dig in.
+> Thanks
+> 		 	   		  
+_________________________________________________________________
+The New Busy think 9 to 5 is a cute idea. Combine multiple calendars with Hotmail. 
+http://www.windowslive.com/campaign/thenewbusy?tile=multicalendar&ocid=PID28326::T:WLMTAGL:ON:WL:en-US:WM_HMP:042010_5
