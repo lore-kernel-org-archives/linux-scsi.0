@@ -1,93 +1,49 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 7/7] scsi: megaraid_sas - Version and documentation update
-Date: Thu, 6 May 2010 10:37:56 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3CDB80C39@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
- <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>
+From: Paolo Ornati <ornati@gmail.com>
+Subject: Re: Testers needed - Maxtor performance degradation
+Date: Thu, 6 May 2010 20:32:50 +0200
+Message-ID: <20100506203250.76f559cd@gmail.com>
+References: <Pine.LNX.4.64.1005051433080.30185@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:61197 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752584Ab0EFSc5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2010 14:32:57 -0400
+In-Reply-To: <Pine.LNX.4.64.1005051433080.30185@hs20-bc2-1.build.redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: linux-kernel@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-Update the version and documentation.
+On Thu, 6 May 2010 12:15:58 -0400 (EDT)
+Mikulas Patocka <mpatocka@redhat.com> wrote:
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+> I'd like to ask other people with Maxtor disks to run this script (with 
+> "sda", "sdb", etc. as an argument ... without "/dev/" prefix). The script 
+> measures read rate as a function of request size. Report the results, so 
+> that it can be determined which disks are buggy and which not and the 
+> default transfer size could be reduced to 256kB for the buggy ones.
 
----
-Documentation/scsi/ChangeLog.megaraid_sas |   42 ++++++++++++++++++++++++++++++
-drivers/scsi/megaraid/megaraid_sas.h      |    6 ++--
- 2 files changed, 45 insertions(+), 3 deletions(-)
+ATA MAXTOR STM316021 3.AA
+64 kB: 78.9 MB/s
+128 kB: 79.1 MB/s
+192 kB: 79.1 MB/s
+256 kB: 78.6 MB/s
+320 kB: 79.1 MB/s
+384 kB: 78.9 MB/s
+448 kB: 79.0 MB/s
+512 kB: 79.1 MB/s
+576 kB: 79.0 MB/s
+640 kB: 79.1 MB/s
+704 kB: 79.0 MB/s
+768 kB: 79.1 MB/s
+832 kB: 79.0 MB/s
+896 kB: 79.0 MB/s
+960 kB: 79.1 MB/s
+1024 kB: 78.8 MB/s
 
-diff -rupN old/Documentation/scsi/ChangeLog.megaraid_sas new/Documentation/scsi/ChangeLog.megaraid_sas
---- old/Documentation/scsi/ChangeLog.megaraid_sas	2010-05-05 02:08:10.000000000 -0400
-+++ new/Documentation/scsi/ChangeLog.megaraid_sas	2010-05-05 04:54:38.000000000 -0400
-@@ -1,3 +1,45 @@
-+1 Release Date    : Thur.  May 03, 2010 09:12:45 PST 2009 -
-+			(emaild-id:megaraidlinux@lsi.com)
-+			Bo Yang
-+
-+2 Current Version : 00.00.04.30-rc1
-+3 Older Version   : 00.00.04.17.1-rc1
-+
-+1.	Add the Online Controller Reset (OCR) to the Driver.
-+	OCR is the new feature for megaraid_sas driver which
-+	will allow the fw to do the chip reset which will not
-+	affact the OS hbhavious.
-+
-+	To add the OCR support, driver need to do: 
-+		a). reset the controller chip -- Xscale and Gen2.
-+		
-+		b). during the reset, driver will store the pending
-+		cmds to pending queue.
-+		
-+		c). Also in driver's timeout routine, driver will
-+		report to OS as reset.
-+		
-+		d). in Driver's ISR routine, if driver get the FW
-+		state as state change and FW in Failure status,
-+		driver will start to do the controller reset.
-+		
-+		e). If driver goes to timeout, but driver is in
-+		operational status, driver will check if fw in failed
-+		status, if yes, driver will do OCR to FW upto three times.
-+		
-+		f). Before driver kill adapter, driver will do last chance of
-+		OCR to see if driver can bring back the FW.      
-+
-+2.	Add the CTIO support to the driver.
-+3.	Add the support update flag to the driver to tell LSI megaraid_sas
-+	application which driver will support the device update.  So application
-+	will not need to do the device update after application add/del the device
-+	from the system.
-+
-+4.	Add the input parameter max_sectors to 1MB support to our GEN2 controller.
-+	customer can use the input paramenter max_sectors to add 1MB support to GEN2
-+	controller.
-+
- 1 Release Date    : Thur.  Oct 29, 2009 09:12:45 PST 2009 -
- 			(emaild-id:megaraidlinux@lsi.com)
- 			Bo Yang
-diff -rupN old/drivers/scsi/megaraid/megaraid_sas.h new/drivers/scsi/megaraid/megaraid_sas.h
---- old/drivers/scsi/megaraid/megaraid_sas.h	2010-05-05 01:55:42.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.h	2010-05-05 02:35:16.000000000 -0400
-@@ -18,9 +18,9 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION			"00.00.04.17.1-rc1"
--#define MEGASAS_RELDATE			"Oct. 29, 2009"
--#define MEGASAS_EXT_VERSION		"Thu. Oct. 29, 11:41:51 PST 2009"
-+#define MEGASAS_VERSION			"00.00.04.30-rc1"
-+#define MEGASAS_RELDATE			"May 3, 2010"
-+#define MEGASAS_EXT_VERSION		"Mon. May 3, 11:41:51 PST 2010"
- 
- /*
-  * Device IDs
+-- 
+	Paolo Ornati
+	Linux 2.6.34-rc6-00063-gbe1066b on x86_64
