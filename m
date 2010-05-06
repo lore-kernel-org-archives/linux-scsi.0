@@ -1,8 +1,7 @@
 From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 6/7] scsi: megaraid_sas - Add three times Online controller
- reset
-Date: Thu, 6 May 2010 10:34:05 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3CDB80C32@cosmail02.lsi.com>
+Subject: [PATCH 7/7] scsi: megaraid_sas - Version and documentation update
+Date: Thu, 6 May 2010 10:37:56 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3CDB80C39@cosmail02.lsi.com>
 References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
  <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
  <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com>
@@ -18,101 +17,77 @@ To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <Jam
 Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-If fw didn't raise the interrupt with the fw state change to driver and fw goes to failure state, driver
-Will check the FW state in driver's timeout routine and issue the reset if need.  Driver will do the OCR upto three
-Times until kill adapter.  Also driver will issue OCR before driver kill adapter even if fw in operational state.   
+Update the version and documentation.
 
 Signed-off-by Bo Yang<bo.yang@lsi.com>
 
 ---
-megaraid_sas.c |   64 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 63 insertions(+), 1 deletion(-)
+Documentation/scsi/ChangeLog.megaraid_sas |   42 ++++++++++++++++++++++++++++++
+drivers/scsi/megaraid/megaraid_sas.h      |    6 ++--
+ 2 files changed, 45 insertions(+), 3 deletions(-)
 
-diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c new/drivers/scsi/megaraid/megaraid_sas.c
---- old/drivers/scsi/megaraid/megaraid_sas.c	2010-05-04 14:32:49.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-05-04 15:07:26.000000000 -0400
-@@ -1569,6 +1569,28 @@ static void megasas_complete_cmd_dpc(uns
- 	}
- }
+diff -rupN old/Documentation/scsi/ChangeLog.megaraid_sas new/Documentation/scsi/ChangeLog.megaraid_sas
+--- old/Documentation/scsi/ChangeLog.megaraid_sas	2010-05-05 02:08:10.000000000 -0400
++++ new/Documentation/scsi/ChangeLog.megaraid_sas	2010-05-05 04:54:38.000000000 -0400
+@@ -1,3 +1,45 @@
++1 Release Date    : Thur.  May 03, 2010 09:12:45 PST 2009 -
++			(emaild-id:megaraidlinux@lsi.com)
++			Bo Yang
++
++2 Current Version : 00.00.04.30-rc1
++3 Older Version   : 00.00.04.17.1-rc1
++
++1.	Add the Online Controller Reset (OCR) to the Driver.
++	OCR is the new feature for megaraid_sas driver which
++	will allow the fw to do the chip reset which will not
++	affact the OS hbhavious.
++
++	To add the OCR support, driver need to do: 
++		a). reset the controller chip -- Xscale and Gen2.
++		
++		b). during the reset, driver will store the pending
++		cmds to pending queue.
++		
++		c). Also in driver's timeout routine, driver will
++		report to OS as reset.
++		
++		d). in Driver's ISR routine, if driver get the FW
++		state as state change and FW in Failure status,
++		driver will start to do the controller reset.
++		
++		e). If driver goes to timeout, but driver is in
++		operational status, driver will check if fw in failed
++		status, if yes, driver will do OCR to FW upto three times.
++		
++		f). Before driver kill adapter, driver will do last chance of
++		OCR to see if driver can bring back the FW.      
++
++2.	Add the CTIO support to the driver.
++3.	Add the support update flag to the driver to tell LSI megaraid_sas
++	application which driver will support the device update.  So application
++	will not need to do the device update after application add/del the device
++	from the system.
++
++4.	Add the input parameter max_sectors to 1MB support to our GEN2 controller.
++	customer can use the input paramenter max_sectors to add 1MB support to GEN2
++	controller.
++
+ 1 Release Date    : Thur.  Oct 29, 2009 09:12:45 PST 2009 -
+ 			(emaild-id:megaraidlinux@lsi.com)
+ 			Bo Yang
+diff -rupN old/drivers/scsi/megaraid/megaraid_sas.h new/drivers/scsi/megaraid/megaraid_sas.h
+--- old/drivers/scsi/megaraid/megaraid_sas.h	2010-05-05 01:55:42.000000000 -0400
++++ new/drivers/scsi/megaraid/megaraid_sas.h	2010-05-05 02:35:16.000000000 -0400
+@@ -18,9 +18,9 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION			"00.00.04.17.1-rc1"
+-#define MEGASAS_RELDATE			"Oct. 29, 2009"
+-#define MEGASAS_EXT_VERSION		"Thu. Oct. 29, 11:41:51 PST 2009"
++#define MEGASAS_VERSION			"00.00.04.30-rc1"
++#define MEGASAS_RELDATE			"May 3, 2010"
++#define MEGASAS_EXT_VERSION		"Mon. May 3, 11:41:51 PST 2010"
  
-+static void
-+megasas_internal_reset_defer_cmds(struct megasas_instance *instance);
-+
-+static void
-+process_fw_state_change_wq(struct work_struct *work);
-+
-+void megasas_do_ocr(struct megasas_instance *instance)
-+{
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
-+	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
-+	(instance->pdev->device == PCI_DEVICE_ID_LSI_VERDE_ZCR)) {
-+		*instance->consumer     = MEGASAS_ADPRESET_INPROG_SIGN;
-+	}
-+	instance->instancet->disable_intr(instance->reg_set);
-+	instance->adprecovery   = MEGASAS_ADPRESET_SM_INFAULT;
-+	instance->issuepend_done = 0;
-+
-+	atomic_set(&instance->fw_outstanding, 0);
-+	megasas_internal_reset_defer_cmds(instance);
-+	process_fw_state_change_wq(&instance->work_init);
-+}
-+
- /**
-  * megasas_wait_for_outstanding -	Wait for all outstanding cmds
-  * @instance:				Adapter soft state
-@@ -1586,6 +1608,8 @@ static int megasas_wait_for_outstanding(
- 	unsigned long flags;
- 	struct list_head clist_local;
- 	struct megasas_cmd *reset_cmd;
-+	u32 fw_state;
-+	u8 kill_adapter_flag;
- 
- 	spin_lock_irqsave(&instance->hba_lock, flags);
- 	adprecovery = instance->adprecovery;
-@@ -1671,7 +1695,45 @@ static int megasas_wait_for_outstanding(
- 		msleep(1000);
- 	}
- 
--	if (atomic_read(&instance->fw_outstanding)) {
-+	i = 0;
-+	kill_adapter_flag = 0;
-+	do {
-+		fw_state = instance->instancet->read_fw_status_reg(
-+					instance->reg_set) & MFI_STATE_MASK;
-+		if ((fw_state == MFI_STATE_FAULT) &&
-+			(instance->disableOnlineCtrlReset == 0)) {
-+			if (i == 3) {
-+				kill_adapter_flag = 2;
-+				break;
-+			}
-+			megasas_do_ocr(instance);
-+			kill_adapter_flag = 1;
-+
-+			/* wait for 1 secs to let FW finish the pending cmds */
-+			msleep(1000);
-+		}
-+		i++;
-+	} while (i <= 3);
-+
-+	if (atomic_read(&instance->fw_outstanding) &&
-+					!kill_adapter_flag) {
-+		if (instance->disableOnlineCtrlReset == 0) {
-+
-+			megasas_do_ocr(instance);
-+
-+			/* wait for 5 secs to let FW finish the pending cmds */
-+			for (i = 0; i < wait_time; i++) {
-+				int outstanding =
-+					atomic_read(&instance->fw_outstanding);
-+				if (!outstanding)
-+					return SUCCESS;
-+				msleep(1000);
-+			}
-+		}
-+	}
-+
-+	if (atomic_read(&instance->fw_outstanding) ||
-+					(kill_adapter_flag == 2)) {
- 		printk(KERN_NOTICE "megaraid_sas: pending cmds after reset\n");
- 		/*
- 		* Send signal to FW to stop processing any pending cmds. 
+ /*
+  * Device IDs
