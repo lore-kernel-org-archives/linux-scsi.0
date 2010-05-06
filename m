@@ -1,92 +1,71 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 4/7] scsi: megaraid_sas - support devices update flag
-Date: Thu, 6 May 2010 10:04:02 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3CDB80BFF@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
- <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Testers needed - Maxtor performance degradation
+Date: Thu, 6 May 2010 12:15:58 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.1005051433080.30185@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:40656 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932175Ab0EFQQH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 May 2010 12:16:07 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-Driver added the Device update flag to tell LSI application driver will do the device
-Update.  LSI MegaRAID SAS application will check this flag to decide if it is need to
-update the Device or not. 
+Hi
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+When I was examining a reported performance degradation, I found out that 
+the reason was buggy firmware in Maxtor Atlas 15K2 SCSI disks. If the 
+requests are larger than 256kB, read rate drops excessively, even to one 
+half of the normal read rate.
 
---- 
-megaraid_sas.c |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+Performance on these disks improves if the request size is limited with
+echo 256 >/sys/block/sdc/queue/max_sectors_kb
 
-diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c new/drivers/scsi/megaraid/megaraid_sas.c
---- old/drivers/scsi/megaraid/megaraid_sas.c	2010-05-03 03:50:44.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-05-03 05:46:37.000000000 -0400
-@@ -99,6 +99,7 @@ static int megasas_poll_wait_aen;
- static DECLARE_WAIT_QUEUE_HEAD(megasas_poll_wait);
- static u32 support_poll_for_event;
- static u32 megasas_dbg_lvl;
-+static u32 support_device_change;
- 
- /* define lock for aen poll */
- spinlock_t poll_aen_lock;
-@@ -4660,6 +4661,15 @@ megasas_sysfs_show_support_poll_for_even
- static DRIVER_ATTR(support_poll_for_event, S_IRUGO,
- 			megasas_sysfs_show_support_poll_for_event, NULL);
- 
-+ static ssize_t
-+megasas_sysfs_show_support_device_change(struct device_driver *dd, char *buf)
-+{
-+	return sprintf(buf, "%u\n", support_device_change);
-+}
-+
-+static DRIVER_ATTR(support_device_change, S_IRUGO,
-+			megasas_sysfs_show_support_device_change, NULL);
-+
- static ssize_t
- megasas_sysfs_show_dbg_lvl(struct device_driver *dd, char *buf)
- {
-@@ -4980,6 +4990,7 @@ static int __init megasas_init(void)
- 	       MEGASAS_EXT_VERSION);
- 
- 	support_poll_for_event = 2;
-+	support_device_change = 1;
- 
- 	memset(&megasas_mgmt_info, 0, sizeof(megasas_mgmt_info));
- 
-@@ -5028,8 +5039,17 @@ static int __init megasas_init(void)
- 	if (rval)
- 		goto err_dcf_poll_mode_io;
- 
-+	rval = driver_create_file(&megasas_pci_driver.driver,
-+				&driver_attr_support_device_change);
-+	if (rval)
-+		goto err_dcf_support_device_change;
-+
- 	return rval;
- 
-+err_dcf_support_device_change:
-+	driver_remove_file(&megasas_pci_driver.driver,
-+		  &driver_attr_poll_mode_io);
-+
- err_dcf_poll_mode_io:
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_dbg_lvl);
-@@ -5060,6 +5080,10 @@ static void __exit megasas_exit(void)
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_dbg_lvl);
- 	driver_remove_file(&megasas_pci_driver.driver,
-+			&driver_attr_support_poll_for_event);
-+	driver_remove_file(&megasas_pci_driver.driver,
-+			&driver_attr_support_device_change);
-+	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_release_date);
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
+I remember seeing similar problem (increased transfer size => decreased 
+performance) with IDE and SATA Maxtor disks some times ago, but I don't 
+have any such disk to test currently.
+
+I'd like to ask other people with Maxtor disks to run this script (with 
+"sda", "sdb", etc. as an argument ... without "/dev/" prefix). The script 
+measures read rate as a function of request size. Report the results, so 
+that it can be determined which disks are buggy and which not and the 
+default transfer size could be reduced to 256kB for the buggy ones.
+
+My results are:
+MAXTOR ATLAS15K2_146WLS HPM5
+64 kB: 96,1 MB/s	448 kB: 54,3 MB/s	832 kB: 69,3 MB/s
+128 kB: 95,9 MB/s	512 kB: 61,6 MB/s	896 kB: 72,8 MB/s
+192 kB: 96,2 MB/s	576 kB: 63,4 MB/s	960 kB: 73,6 MB/s
+256 kB: 96,4 MB/s	640 kB: 43,0 MB/s	1024 kB: 73,2 MB/s
+320 kB: 47,3 MB/s	704 kB: 59,0 MB/s
+384 kB: 47,5 MB/s	768 kB: 55,3 MB/s
+
+MAXTOR ATLAS15K2_146WLS HPM7
+64 kB: 95,8 MB/s	448 kB: 54,3 MB/s	832 kB: 67,7 MB/s
+128 kB: 95,5 MB/s	512 kB: 60,2 MB/s	896 kB: 73,1 MB/s
+192 kB: 95,8 MB/s	576 kB: 62,8 MB/s	960 kB: 72,8 MB/s
+256 kB: 96,3 MB/s	640 kB: 44,3 MB/s	1024 kB: 73,2 MB/s
+320 kB: 47,2 MB/s	704 kB: 58,3 MB/s
+384 kB: 48,3 MB/s	768 kB: 54,2 MB/s
+
+Note: fiddling with caching mode page (chaning DPTL, MAPF and MAPFC to -1) 
+improved performance for large requests somehow (to 70-80MB/s), but I 
+couldn't find a combination of settings that would restore 95MB/s rate, as 
+for <= 256kB request. Thus, the correct workaround for these disks is to 
+never send > 256kB requests.
+
+Mikulas
+
+
+#!/bin/sh
+DISK="$1"
+echo 1024 >/sys/block/$DISK/queue/max_sectors_kb
+echo `cat /sys/block/$DISK/device/vendor /sys/block/$DISK/device/model /sys/block/$DISK/device/rev /sys/block/$DISK/device/firmware 2>/dev/null`
+for i in `seq 64 64 1024`; do
+	blocks=`expr 200000 / $i`
+	echo -n "$i kB: "
+	dd if=/dev/$DISK of=/dev/null iflag=direct bs=$i"k" count=$blocks 2>&1 | sed -n 's/.*s, //p'
+done
