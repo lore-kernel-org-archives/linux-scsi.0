@@ -1,101 +1,88 @@
-From: "Knight, Frederick" <Frederick.Knight@netapp.com>
-Subject: RE: [PATCH] scsi: relax PAGE LENGTH check for thin provisioning UNMAP support
-Date: Thu, 6 May 2010 10:27:43 -0400
-Message-ID: <AC32D7C72530234288643DD5F1435D5309994F2A@RTPMVEXC1-PRD.hq.netapp.com>
-References: <1273096203-3164-1-git-send-email-snitzer@redhat.com> <yq1sk65ejs5.fsf@sermon.lab.mkp.net> <w2o170fa0d21005060424j912e21bev8dba13536d49ba41@mail.gmail.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH 0/2] dm: Add no_abort_q feature flag to dm-mpath
+Date: Thu, 6 May 2010 08:38:32 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF498E061F6@cosmail01.lsi.com>
+References: <1272945691-31649-1-git-send-email-andmike@linux.vnet.ibm.com>
+ <E463DF2B2E584B4A82673F53D62C2EF498E060CB@cosmail01.lsi.com>
+ <20100506013917.GA9298@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:10112 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750978Ab0EFO1t convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 May 2010 10:27:49 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <w2o170fa0d21005060424j912e21bev8dba13536d49ba41@mail.gmail.com>
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:45251 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752837Ab0EFOiv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 May 2010 10:38:51 -0400
+In-Reply-To: <20100506013917.GA9298@linux.vnet.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-In the early 90s, when the SCSI INQUIRY - ANSI Version field had only 2=
- values, I worked on a host that, because SCSI-1 and SCSI-2 were incomp=
-atible, did the following:
+> -----Original Message-----
+> From: Mike Anderson [mailto:andmike@linux.vnet.ibm.com]
+> Sent: Wednesday, May 05, 2010 8:39 PM
+> To: Moger, Babu
+> Cc: dm-devel@redhat.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 0/2] dm: Add no_abort_q feature flag to dm-mpath
+> 
+> Moger, Babu <Babu.Moger@lsi.com> wrote:
+> > > -----Original Message-----
+> > > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> > > owner@vger.kernel.org] On Behalf Of Mike Anderson
+> > > Sent: Monday, May 03, 2010 11:01 PM
+> > > To: dm-devel@redhat.com
+> > > Cc: linux-scsi@vger.kernel.org
+> > > Subject: [PATCH 0/2] dm: Add no_abort_q feature flag to dm-mpath
+> > >
+> > > This patch series contains two patches.
+> > >
+> > > 1.) The first patch adds a feature flags bit field to the multipath
+> > > structure for selected features.
+> > >
+> > > 2.) The second patch allows a user to set a feature flag for a dm-
+> mpath
+> > > device of "no_abort_q" to indicate that deactivate_path should not
+> call
+> > > blk_abort_queue. I tried to select a short feature name to feature
+> > > output
+> > > listed with multipath -l would not be too long "features='2
+> > > queue_if_no_path
+> > > no_abort_q'
+> >
+> > Mike,
+> >  In what special circumstances you recommend to use this feature? It
+> would be great if you could add that explanation in your patch
+> descriptions.
+> 
+> Yes I will update the descriptions.
+> 
+> To answer your question in general it would be circumstance where the
+> block_abort_queue during failover is leading to longer recovery instead
+> of
+> shorter. This could be because of aborting / transport / device
+> interactions (the work by others in the iSCSI and FC transports have
+> made
+> things better here).
+> 
+> While there are case where abort makes a big difference (being able to
+> failover in less than max_retries * IO timeout value). The latency
+> numbers
+> for simple RDAC initiator failover show only small improvements on my
+> configurations (others may have better data). A assumption would be
+> that
+> there could be combinations of transports and devices out there where
+> this
+> might not give the fastest failover so the user may want control.
+> 
+> On a historically note the call to block_abort_queue came in somewhat
+> sideways by me linked to the timeout movement from SCSI to blk so it
+> could
+> have integrated better. I should have had a way to disable / enable it
+> then and I am trying to provide that now so that the user has some
+> control.
 
-If ( ANSI_VERSION =3D=3D 2 ) {use SCSI-2 protocol} else {use SCSI-1 pro=
-tocol}
+Thanks for the details.
 
-When the first SCSI-3 device came along, this host fell over dead becau=
-se the SCSI-1 protocol did not work on that SCSI-3 device.  They had to=
- delay support for that device until they fixed their code (change =3D=3D=
- to >=3D), and they could NOT support that device in older versions, ev=
-en thought it would have worked if not for the above "bug".
-
-There are no guarantees about what the T10 committee will do to that pa=
-ge in the draft, or in any future versions of SBC.
-
-In reality, any value > 32 (20h) will mean that you probably have all t=
-he data you want to look at today.  YES, any device that puts such a sm=
-all value into the page length field is non-compliant (and therefore, t=
-he contents of those fields may be non-compliant as well).  So, allowin=
-g a value less than 3Ch would be risky.
-
-But, a compliant SBC-4/5/... device might put 200 (or other > 3Ch value=
-) into that field, while the existing values all still remain valid.  I=
-t would be a shame to disable feature "A" just because a device added t=
-he implementation of feature "X".
-
-=46uture proofing is never guaranteed, but it is good to at least try.
-
-	Fred
-
------Original Message-----
-=46rom: Mike Snitzer [mailto:snitzer@redhat.com]=20
-Sent: Thursday, May 06, 2010 7:24 AM
-To: Martin K. Petersen
-Cc: linux-scsi@vger.kernel.org; Christoph Hellwig; Knight, Frederick
-Subject: Re: [PATCH] scsi: relax PAGE LENGTH check for thin provisionin=
-g UNMAP support
-
-On Thu, May 6, 2010 at 12:28 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Mike" =3D=3D Mike Snitzer <snitzer@redhat.com> writes:
->
-> Mike> Thin Provisioning fields are assumed available in the BLOCK LIM=
-ITS
-> Mike> VPD page if PAGE LENGTH is 0x3c. =A0The BLOCK LIMITS VPD page m=
-ay be
-> Mike> extended over time. =A0Allow for the possibility that the PAGE
-> Mike> LENGTH exceeds 0x3c.
->
-> SBC3 states that:
->
-> "If the device server supports thin provisioning, then the device ser=
-ver
-> shall set the PAGE LENGTH field to 3Ch."
->
-> That's a "shall". =A0That's a non-negotiable requirement in standards
-> speak. =A0And besides, only half of that mandated page length is curr=
-ently
-> spoken for. =A0So I wonder what motivated your change? =A0Do you have=
- any
-> examples of devices with a bigger page length?
-
-I forgot to cc Fred Knight on my patch, but Fred was/is attending the
-most recent T10.  Based on the discussions there, and me having shared
-with him the PAGE LENGTH =3D=3D 0x3c constraint before, he sent me priv=
-ate
-mail sharing that SBC3 is not yet final nor approved.  And that at
-this recent T10 meeting they were talking of extending the BLOCK
-LIMITS VPD.  If not for SBC3 then for SBC4.
-
-So coming full circle: why impose a precise PAGE LENGTH of 0x3c?
-It'll only cause compatibility problems for us down the road when new
-devices do come to market.
-
-Mike
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
