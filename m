@@ -1,65 +1,49 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 01/10] libfc: set seq_id for incoming sequence
-Date: Fri, 07 May 2010 15:18:13 -0700
-Message-ID: <20100507221813.14971.63789.stgit@localhost.localdomain>
+Subject: [PATCH 02/10] fcoe: fixes wrong error exit in fcoe_create
+Date: Fri, 07 May 2010 15:18:19 -0700
+Message-ID: <20100507221819.14971.81679.stgit@localhost.localdomain>
 References: <20100507221804.14971.11739.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30941 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:44774 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751054Ab0EGWSO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 May 2010 18:18:14 -0400
+	id S1751170Ab0EGWSV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 May 2010 18:18:21 -0400
 In-Reply-To: <20100507221804.14971.11739.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
-From: Joe Eykholt <jeykholt@cisco.com>
+From: Vasu Dev <vasu.dev@intel.com>
 
-After the recent patch "fixes unnecessary seq id jump"
-the SCST module fcst stopped working because multi-sequence
-write data wasn't finding the sequence after the first frame.
+fcoe_create exits using out_nodev label when module is not
+yet LIVE but this exit path unlocks the rtnl_lock though
+rtnl lock was not held in this case.
 
-Add back the setting of the seq_id when the first frame arrives.
-Also fix indentation on two lines.
+So this patch replaces out_nodev with out_nomod to exit
+w/o unlocking rtnl_lock.
 
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/libfc/fc_exch.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index daff880..6addbd6 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -918,6 +918,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
- 	if (fc_sof_is_init(fr_sof(fp))) {
- 		sp = &ep->seq;
- 		sp->ssb_stat |= SSB_ST_RESP;
-+		sp->id = fh->fh_seq_id;
- 	} else {
- 		sp = &ep->seq;
- 		if (sp->id != fh->fh_seq_id) {
-@@ -1322,11 +1323,12 @@ static void fc_exch_recv_seq_resp(struct fc_exch_mgr *mp, struct fc_frame *fp)
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index aba839e..7022a16 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2056,7 +2056,7 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 	 */
+ 	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
+ 		rc = -ENODEV;
+-		goto out_nodev;
++		goto out_nomod;
  	}
- 	sof = fr_sof(fp);
- 	sp = &ep->seq;
--	if (fc_sof_is_init(sof))
-+	if (fc_sof_is_init(sof)) {
- 		sp->ssb_stat |= SSB_ST_RESP;
--	else if (sp->id != fh->fh_seq_id) {
--			atomic_inc(&mp->stats.seq_not_found);
--			goto rel;
-+		sp->id = fh->fh_seq_id;
-+	} else if (sp->id != fh->fh_seq_id) {
-+		atomic_inc(&mp->stats.seq_not_found);
-+		goto rel;
- 	}
+ #endif
  
- 	f_ctl = ntoh24(fh->fh_f_ctl);
 
