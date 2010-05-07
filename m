@@ -1,54 +1,65 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 00/10] libfc, libfcoe and fcoe fixes for scsi-misc
-Date: Fri, 07 May 2010 15:18:04 -0700
-Message-ID: <20100507221804.14971.11739.stgit@localhost.localdomain>
+Subject: [PATCH 01/10] libfc: set seq_id for incoming sequence
+Date: Fri, 07 May 2010 15:18:13 -0700
+Message-ID: <20100507221813.14971.63789.stgit@localhost.localdomain>
+References: <20100507221804.14971.11739.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga09.intel.com ([134.134.136.24]:30941 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751170Ab0EGWSP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 May 2010 18:18:15 -0400
+	id S1751054Ab0EGWSO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 May 2010 18:18:14 -0400
+In-Reply-To: <20100507221804.14971.11739.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>
 
-Here are a variety of fixes and improvements to libfc, libfcoe and fcoe.
+From: Joe Eykholt <jeykholt@cisco.com>
 
+After the recent patch "fixes unnecessary seq id jump"
+the SCST module fcst stopped working because multi-sequence
+write data wasn't finding the sequence after the first frame.
+
+Add back the setting of the seq_id when the first frame arrives.
+Also fix indentation on two lines.
+
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
-Joe Eykholt (1):
-      libfc: set seq_id for incoming sequence
+ drivers/scsi/libfc/fc_exch.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Kaladhar Musunuru (2):
-      libfcoe: FIP Keep-Alive messages for VPorts are sent with incorrect port_id and wwn
-      libfcoe: Fix incorrect MAC address clearing
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index daff880..6addbd6 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -918,6 +918,7 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
+ 	if (fc_sof_is_init(fr_sof(fp))) {
+ 		sp = &ep->seq;
+ 		sp->ssb_stat |= SSB_ST_RESP;
++		sp->id = fh->fh_seq_id;
+ 	} else {
+ 		sp = &ep->seq;
+ 		if (sp->id != fh->fh_seq_id) {
+@@ -1322,11 +1323,12 @@ static void fc_exch_recv_seq_resp(struct fc_exch_mgr *mp, struct fc_frame *fp)
+ 	}
+ 	sof = fr_sof(fp);
+ 	sp = &ep->seq;
+-	if (fc_sof_is_init(sof))
++	if (fc_sof_is_init(sof)) {
+ 		sp->ssb_stat |= SSB_ST_RESP;
+-	else if (sp->id != fh->fh_seq_id) {
+-			atomic_inc(&mp->stats.seq_not_found);
+-			goto rel;
++		sp->id = fh->fh_seq_id;
++	} else if (sp->id != fh->fh_seq_id) {
++		atomic_inc(&mp->stats.seq_not_found);
++		goto rel;
+ 	}
+ 
+ 	f_ctl = ntoh24(fh->fh_f_ctl);
 
-Robert Love (4):
-      libfc: Move the port_id into lport
-      fcoe: move link speed checking into its own routine
-      libfc: Remove extra pointer check
-      libfc: Remove unused fc_get_host_port_type
-
-Vasu Dev (3):
-      fcoe: fix fcoe module ref counting
-      fcoe: fix a circular locking issue with rtnl and sysfs mutex
-      fcoe: fixes wrong error exit in fcoe_create
-
-
- drivers/scsi/fcoe/fcoe.c      |   87 +++++++++++++++++++++++++++++++----------
- drivers/scsi/fcoe/libfcoe.c   |   16 +++-----
- drivers/scsi/libfc/fc_disc.c  |    2 -
- drivers/scsi/libfc/fc_elsct.c |    2 -
- drivers/scsi/libfc/fc_exch.c  |   12 +++---
- drivers/scsi/libfc/fc_fcp.c   |   14 +++----
- drivers/scsi/libfc/fc_libfc.h |    2 -
- drivers/scsi/libfc/fc_lport.c |   27 +++++--------
- drivers/scsi/libfc/fc_npiv.c  |    4 +-
- include/scsi/fc_encode.h      |   18 +++-----
- include/scsi/libfc.h          |    3 +
- 11 files changed, 110 insertions(+), 77 deletions(-)
-
--- 
-//Rob
