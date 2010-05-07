@@ -1,383 +1,270 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 06/10] libfc: Move the port_id into lport
-Date: Fri, 07 May 2010 15:18:41 -0700
-Message-ID: <20100507221841.14971.47162.stgit@localhost.localdomain>
+Subject: [PATCH 07/10] fcoe: fix a circular locking issue with rtnl and sysfs
+	mutex
+Date: Fri, 07 May 2010 15:18:46 -0700
+Message-ID: <20100507221846.14971.26889.stgit@localhost.localdomain>
 References: <20100507221804.14971.11739.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27877 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:20509 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751636Ab0EGWSm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 May 2010 18:18:42 -0400
+	id S1751720Ab0EGWSs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 May 2010 18:18:48 -0400
 In-Reply-To: <20100507221804.14971.11739.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, Robert Love <robert.w.love@intel.com>
 
-This patch creates a port_id member in struct fc_lport.
-This allows libfc to just deal with fc_lport instances
-instead of calling into the fc_host to get the port_id.
+From: Vasu Dev <vasu.dev@intel.com>
 
-This change helps in only using symbols necessary for
-operation from the libfc structures. libfc still needs
-to change the fc_host_port_id() if the port_id changes
-so the presentation layer (scsi_transport_fc) can provide
-the user with the correct value, but libfc shouldn't
-rely on the presentation layer for operational values.
+Currently rtnl mutex is grabbed during fcoe create, destroy, enable
+and disable operations while sysfs s_active read mutex is already
+held, but simultaneously other networking events could try grabbing
+write s_active mutex while rtnl is already held and that is causing
+circular lock warning, its detailed log pasted at end.
 
+In this log, the rtnl was held before write s_active during device
+renaming but there are more such cases as Joe reported another
+instance with tg3 open at:-
+http://www.open-fcoe.org/pipermail/devel/2010-February/008263.html
+
+This patch fixes this issue by not waiting for rtnl mutex during
+fcoe ops, that means if rtnl mutex is not immediately available
+then restart_syscall() to allow others waiting in line to
+grab s_active along with rtnl mutex to finish their work first
+under these mutex.
+
+Currently rtnl mutex was grabbed twice during fcoe_destroy call flow,
+second grab was from fcoe_if_destroy called from fcoe_destroy after
+dropping rtnl mutex before calling fcoe_if_destroy, so instead made
+fcoe_if_destroy always called with rtnl mutex held to have this mutex
+grabbed only once in this code path.
+
+However left matching rtnl_unlock as-is in its original place as it was
+dropped there for good reason since very next call causes synchronous
+fip worker flush and if rtnl mutex is still held before flush
+then that would cause new circular warning between fip->recv_work and
+rtnl mutex, I've added detailed comment for this on fcoe_if_destroy
+calling and rtnl muxtes unlocking.
+
+=======================================================
+[ INFO: possible circular locking dependency detected ]
+2.6.33.1linux-stable-2.6.33 #1
+-------------------------------------------------------
+fcoemon/18823 is trying to acquire lock:
+(fcoe_config_mutex){+.+.+.}, at: [<ffffffffa02ba5fc>] fcoe_create+0x27/0x4f7
+[fcoe]
+
+but task is already holding lock:
+(s_active){++++.+}, at: [<ffffffff8115ef93>] sysfs_get_active_two+0x31/0x48
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (s_active){++++.+}:
+   [<ffffffff81077bdb>] __lock_acquire+0xb73/0xd2b
+   [<ffffffff81077e60>] lock_acquire+0xcd/0xf1
+   [<ffffffff8115e5df>] sysfs_deactivate+0x8b/0xe0
+   [<ffffffff8115edfb>] sysfs_addrm_finish+0x36/0x55
+   [<ffffffff8115d0cc>] sysfs_hash_and_remove+0x53/0x6a
+   [<ffffffff8115f353>] sysfs_remove_link+0x21/0x23
+   [<ffffffff812b6c93>] device_rename+0x99/0xcb
+   [<ffffffff8138dbf0>] dev_change_name+0xd5/0x1d2
+   [<ffffffff8138deee>] dev_ifsioc+0x201/0x2ac
+   [<ffffffff8138e4ba>] dev_ioctl+0x521/0x632
+   [<ffffffff81379e43>] sock_do_ioctl+0x3d/0x47
+   [<ffffffff8137a254>] sock_ioctl+0x213/0x222
+   [<ffffffff81114614>] vfs_ioctl+0x32/0xa6
+   [<ffffffff81114b94>] do_vfs_ioctl+0x490/0x4d6
+   [<ffffffff81114c30>] sys_ioctl+0x56/0x79
+   [<ffffffff81009b42>] system_call_fastpath+0x16/0x1b
+
+-> #1 (rtnl_mutex){+.+.+.}:
+   [<ffffffff81077bdb>] __lock_acquire+0xb73/0xd2b
+   [<ffffffff81077e60>] lock_acquire+0xcd/0xf1
+   [<ffffffff8142f343>] __mutex_lock_common+0x4b/0x383
+   [<ffffffff8142f73f>] mutex_lock_nested+0x3e/0x43
+   [<ffffffff813959f9>] rtnl_lock+0x17/0x19
+   [<ffffffff8138ccae>] register_netdevice_notifier+0x1e/0x19b
+   [<ffffffffa02580c1>] 0xffffffffa02580c1
+   [<ffffffff81002069>] do_one_initcall+0x5e/0x15e
+   [<ffffffff81084094>] sys_init_module+0xd8/0x23a
+   [<ffffffff81009b42>] system_call_fastpath+0x16/0x1b
+
+-> #0 (fcoe_config_mutex){+.+.+.}:
+   [<ffffffff81077a85>] __lock_acquire+0xa1d/0xd2b
+   [<ffffffff81077e60>] lock_acquire+0xcd/0xf1
+   [<ffffffff8142f343>] __mutex_lock_common+0x4b/0x383
+   [<ffffffff8142f73f>] mutex_lock_nested+0x3e/0x43
+   [<ffffffffa02ba5fc>] fcoe_create+0x27/0x4f7 [fcoe]
+   [<ffffffff810635b1>] param_attr_store+0x27/0x35
+   [<ffffffff81063619>] module_attr_store+0x26/0x2a
+   [<ffffffff8115dae3>] sysfs_write_file+0x108/0x144
+   [<ffffffff81107bd1>] vfs_write+0xae/0x10b
+   [<ffffffff81107cee>] sys_write+0x4a/0x6e
+   [<ffffffff81009b42>] system_call_fastpath+0x16/0x1b
+
+other info that might help us debug this:
+
+3 locks held by fcoemon/18823:
+#0:  (&buffer->mutex){+.+.+.}, at: [<ffffffff8115da17>]
+sysfs_write_file+0x3c/0x144
+#1:  (s_active){++++.+}, at: [<ffffffff8115ef86>]
+sysfs_get_active_two+0x24/0x48
+#2:  (s_active){++++.+}, at: [<ffffffff8115ef93>]
+sysfs_get_active_two+0x31/0x48
+
+stack backtrace:
+Pid: 18823, comm: fcoemon Tainted: G        W  2.6.33.1linux-stable-2.6.33 #1
+Call Trace:
+[<ffffffff81076c38>] print_circular_bug+0xa8/0xb6
+[<ffffffff81077a85>] __lock_acquire+0xa1d/0xd2b
+[<ffffffffa02ba5fc>] ? fcoe_create+0x27/0x4f7 [fcoe]
+[<ffffffff81077e60>] lock_acquire+0xcd/0xf1
+[<ffffffffa02ba5fc>] ? fcoe_create+0x27/0x4f7 [fcoe]
+[<ffffffffa02ba5fc>] ? fcoe_create+0x27/0x4f7 [fcoe]
+[<ffffffff8142f343>] __mutex_lock_common+0x4b/0x383
+[<ffffffffa02ba5fc>] ? fcoe_create+0x27/0x4f7 [fcoe]
+[<ffffffff8106ac70>] ? cpu_clock+0x43/0x5e
+[<ffffffff81074e12>] ? lockstat_clock+0x11/0x13
+[<ffffffff81074e40>] ? lock_release_holdtime+0x2c/0x127
+[<ffffffff8115ef93>] ? sysfs_get_active_two+0x31/0x48
+[<ffffffff8142f73f>] mutex_lock_nested+0x3e/0x43
+[<ffffffffa02ba5fc>] fcoe_create+0x27/0x4f7 [fcoe]
+[<ffffffff810635b1>] param_attr_store+0x27/0x35
+[<ffffffff81063619>] module_attr_store+0x26/0x2a
+[<ffffffff8115dae3>] sysfs_write_file+0x108/0x144
+[<ffffffff81107bd1>] vfs_write+0xae/0x10b
+[<ffffffff81076596>] ? trace_hardirqs_on_caller+0x125/0x150
+[<ffffffff81107cee>] sys_write+0x4a/0x6e
+[<ffffffff81009b42>] system_call_fastpath+0x16/0x1b
+
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/fcoe/libfcoe.c   |    9 ++++-----
- drivers/scsi/libfc/fc_disc.c  |    2 +-
- drivers/scsi/libfc/fc_elsct.c |    2 +-
- drivers/scsi/libfc/fc_exch.c  |    2 +-
- drivers/scsi/libfc/fc_fcp.c   |   14 +++++++-------
- drivers/scsi/libfc/fc_libfc.h |    2 +-
- drivers/scsi/libfc/fc_lport.c |   16 ++++++++++------
- drivers/scsi/libfc/fc_npiv.c  |    4 ++--
- include/scsi/fc_encode.h      |   18 +++++++-----------
- include/scsi/libfc.h          |    2 ++
- 10 files changed, 36 insertions(+), 35 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   41 ++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 34 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index ec4c88c..948364a 100644
---- a/drivers/scsi/fcoe/libfcoe.c
-+++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -343,7 +343,7 @@ static void fcoe_ctlr_send_keep_alive(struct fcoe_ctlr *fip,
- 
- 	fcf = fip->sel_fcf;
- 	lp = fip->lp;
--	if (!fcf || !fc_host_port_id(lp->host))
-+	if (!fcf || !lp->port_id)
- 		return;
- 
- 	len = sizeof(*kal) + ports * sizeof(*vn);
-@@ -374,7 +374,7 @@ static void fcoe_ctlr_send_keep_alive(struct fcoe_ctlr *fip,
- 		vn->fd_desc.fip_dtype = FIP_DT_VN_ID;
- 		vn->fd_desc.fip_dlen = sizeof(*vn) / FIP_BPW;
- 		memcpy(vn->fd_mac, fip->get_src_addr(lport), ETH_ALEN);
--		hton24(vn->fd_fc_id, fc_host_port_id(lp->host));
-+		hton24(vn->fd_fc_id, lp->port_id);
- 		put_unaligned_be64(lp->wwpn, &vn->fd_wwpn);
- 	}
- 	skb_put(skb, len);
-@@ -949,7 +949,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
- 
- 	LIBFCOE_FIP_DBG(fip, "Clear Virtual Link received\n");
- 
--	if (!fcf || !fc_host_port_id(lport->host))
-+	if (!fcf || !lport->port_id)
- 		return;
- 
- 	/*
-@@ -987,8 +987,7 @@ static void fcoe_ctlr_recv_clr_vlink(struct fcoe_ctlr *fip,
- 			if (compare_ether_addr(vp->fd_mac,
- 					       fip->get_src_addr(lport)) == 0 &&
- 			    get_unaligned_be64(&vp->fd_wwpn) == lport->wwpn &&
--			    ntoh24(vp->fd_fc_id) ==
--			    fc_host_port_id(lport->host))
-+			    ntoh24(vp->fd_fc_id) == lport->port_id)
- 				desc_mask &= ~BIT(FIP_DT_VN_ID);
- 			break;
- 		default:
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index b292272..c7985da 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -440,7 +440,7 @@ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t len)
- 		ids.port_id = ntoh24(np->fp_fid);
- 		ids.port_name = ntohll(np->fp_wwpn);
- 
--		if (ids.port_id != fc_host_port_id(lport->host) &&
-+		if (ids.port_id != lport->port_id &&
- 		    ids.port_name != lport->wwpn) {
- 			rdata = lport->tt.rport_create(lport, ids.port_id);
- 			if (rdata) {
-diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
-index 5374872..e9412b7 100644
---- a/drivers/scsi/libfc/fc_elsct.c
-+++ b/drivers/scsi/libfc/fc_elsct.c
-@@ -63,7 +63,7 @@ struct fc_seq *fc_elsct_send(struct fc_lport *lport, u32 did,
- 		return NULL;
- 	}
- 
--	fc_fill_fc_hdr(fp, r_ctl, did, fc_host_port_id(lport->host), fh_type,
-+	fc_fill_fc_hdr(fp, r_ctl, did, lport->port_id, fh_type,
- 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
- 
- 	return lport->tt.exch_seq_send(lport, fp, resp, NULL, arg, timer_msec);
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 6addbd6..104e0fb 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1927,7 +1927,7 @@ static void fc_exch_rrq(struct fc_exch *ep)
- 		did = ep->sid;
- 
- 	fc_fill_fc_hdr(fp, FC_RCTL_ELS_REQ, did,
--		       fc_host_port_id(lport->host), FC_TYPE_ELS,
-+		       lport->port_id, FC_TYPE_ELS,
- 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
- 
- 	if (fc_exch_seq_send(lport, fp, fc_exch_rrq_resp, NULL, ep,
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 81a7c97..ec1f66c 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -490,7 +490,7 @@ crc_err:
- 			if (stats->InvalidCRCCount++ < 5)
- 				printk(KERN_WARNING "libfc: CRC error on data "
- 				       "frame for port (%6.6x)\n",
--				       fc_host_port_id(lport->host));
-+				       lport->port_id);
- 			put_cpu();
- 			/*
- 			 * Assume the frame is total garbage.
-@@ -1109,7 +1109,7 @@ static int fc_fcp_cmd_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp,
- 	rpriv = rport->dd_data;
- 
- 	fc_fill_fc_hdr(fp, FC_RCTL_DD_UNSOL_CMD, rport->port_id,
--		       fc_host_port_id(rpriv->local_port->host), FC_TYPE_FCP,
-+		       rpriv->local_port->port_id, FC_TYPE_FCP,
- 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
- 
- 	seq = lport->tt.exch_seq_send(lport, fp, resp, fc_fcp_pkt_destroy,
-@@ -1382,7 +1382,7 @@ static void fc_fcp_rec(struct fc_fcp_pkt *fsp)
- 
- 	fr_seq(fp) = fsp->seq_ptr;
- 	fc_fill_fc_hdr(fp, FC_RCTL_ELS_REQ, rport->port_id,
--		       fc_host_port_id(rpriv->local_port->host), FC_TYPE_ELS,
-+		       rpriv->local_port->port_id, FC_TYPE_ELS,
- 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
- 	if (lport->tt.elsct_send(lport, rport->port_id, fp, ELS_REC,
- 				 fc_fcp_rec_resp, fsp,
-@@ -1640,7 +1640,7 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
- 	srr->srr_rel_off = htonl(offset);
- 
- 	fc_fill_fc_hdr(fp, FC_RCTL_ELS4_REQ, rport->port_id,
--		       fc_host_port_id(rpriv->local_port->host), FC_TYPE_FCP,
-+		       rpriv->local_port->port_id, FC_TYPE_FCP,
- 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
- 
- 	seq = lport->tt.exch_seq_send(lport, fp, fc_fcp_srr_resp, NULL,
-@@ -2101,12 +2101,12 @@ int fc_eh_host_reset(struct scsi_cmnd *sc_cmd)
- 
- 	if (fc_fcp_lport_queue_ready(lport)) {
- 		shost_printk(KERN_INFO, shost, "libfc: Host reset succeeded "
--			     "on port (%6.6x)\n", fc_host_port_id(lport->host));
-+			     "on port (%6.6x)\n", lport->port_id);
- 		return SUCCESS;
- 	} else {
- 		shost_printk(KERN_INFO, shost, "libfc: Host reset failed, "
- 			     "port (%6.6x) is not ready.\n",
--			     fc_host_port_id(lport->host));
-+			     lport->port_id);
- 		return FAILED;
- 	}
- }
-@@ -2191,7 +2191,7 @@ void fc_fcp_destroy(struct fc_lport *lport)
- 
- 	if (!list_empty(&si->scsi_pkt_queue))
- 		printk(KERN_ERR "libfc: Leaked SCSI packets when destroying "
--		       "port (%6.6x)\n", fc_host_port_id(lport->host));
-+		       "port (%6.6x)\n", lport->port_id);
- 
- 	mempool_destroy(si->scsi_pkt_pool);
- 	kfree(si);
-diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
-index efc6b3f..f5c0ca4 100644
---- a/drivers/scsi/libfc/fc_libfc.h
-+++ b/drivers/scsi/libfc/fc_libfc.h
-@@ -47,7 +47,7 @@ extern unsigned int fc_debug_logging;
- 	FC_CHECK_LOGGING(FC_LPORT_LOGGING,				\
- 			 printk(KERN_INFO "host%u: lport %6.6x: " fmt,	\
- 				(lport)->host->host_no,			\
--				fc_host_port_id((lport)->host), ##args))
-+				(lport)->port_id, ##args))
- 
- #define FC_DISC_DBG(disc, fmt, args...)				\
- 	FC_CHECK_LOGGING(FC_DISC_LOGGING,			\
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 7159bcf..79c9e3c 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -565,7 +565,7 @@ void __fc_linkup(struct fc_lport *lport)
- void fc_linkup(struct fc_lport *lport)
- {
- 	printk(KERN_INFO "host%d: libfc: Link up on port (%6.6x)\n",
--	       lport->host->host_no, fc_host_port_id(lport->host));
-+	       lport->host->host_no, lport->port_id);
- 
- 	mutex_lock(&lport->lp_mutex);
- 	__fc_linkup(lport);
-@@ -595,7 +595,7 @@ void __fc_linkdown(struct fc_lport *lport)
- void fc_linkdown(struct fc_lport *lport)
- {
- 	printk(KERN_INFO "host%d: libfc: Link down on port (%6.6x)\n",
--	       lport->host->host_no, fc_host_port_id(lport->host));
-+	       lport->host->host_no, lport->port_id);
- 
- 	mutex_lock(&lport->lp_mutex);
- 	__fc_linkdown(lport);
-@@ -697,7 +697,7 @@ void fc_lport_disc_callback(struct fc_lport *lport, enum fc_disc_event event)
- 	case DISC_EV_FAILED:
- 		printk(KERN_ERR "host%d: libfc: "
- 		       "Discovery failed for port (%6.6x)\n",
--		       lport->host->host_no, fc_host_port_id(lport->host));
-+		       lport->host->host_no, lport->port_id);
- 		mutex_lock(&lport->lp_mutex);
- 		fc_lport_enter_reset(lport);
- 		mutex_unlock(&lport->lp_mutex);
-@@ -745,7 +745,11 @@ static void fc_lport_set_port_id(struct fc_lport *lport, u32 port_id,
- 		printk(KERN_INFO "host%d: Assigned Port ID %6.6x\n",
- 		       lport->host->host_no, port_id);
- 
-+	lport->port_id = port_id;
-+
-+	/* Update the fc_host */
- 	fc_host_port_id(lport->host) = port_id;
-+
- 	if (lport->tt.lport_set_port_id)
- 		lport->tt.lport_set_port_id(lport, port_id, fp);
- }
-@@ -950,7 +954,7 @@ static void fc_lport_reset_locked(struct fc_lport *lport)
- 	lport->tt.exch_mgr_reset(lport, 0, 0);
- 	fc_host_fabric_name(lport->host) = 0;
- 
--	if (fc_host_port_id(lport->host))
-+	if (lport->port_id)
- 		fc_lport_set_port_id(lport, 0, NULL);
- }
- 
-@@ -1695,7 +1699,7 @@ static int fc_lport_els_request(struct fc_bsg_job *job,
- 	fh = fc_frame_header_get(fp);
- 	fh->fh_r_ctl = FC_RCTL_ELS_REQ;
- 	hton24(fh->fh_d_id, did);
--	hton24(fh->fh_s_id, fc_host_port_id(lport->host));
-+	hton24(fh->fh_s_id, lport->port_id);
- 	fh->fh_type = FC_TYPE_ELS;
- 	hton24(fh->fh_f_ctl, FC_FC_FIRST_SEQ |
- 	       FC_FC_END_SEQ | FC_FC_SEQ_INIT);
-@@ -1755,7 +1759,7 @@ static int fc_lport_ct_request(struct fc_bsg_job *job,
- 	fh = fc_frame_header_get(fp);
- 	fh->fh_r_ctl = FC_RCTL_DD_UNSOL_CTL;
- 	hton24(fh->fh_d_id, did);
--	hton24(fh->fh_s_id, fc_host_port_id(lport->host));
-+	hton24(fh->fh_s_id, lport->port_id);
- 	fh->fh_type = FC_TYPE_CT;
- 	hton24(fh->fh_f_ctl, FC_FC_FIRST_SEQ |
- 	       FC_FC_END_SEQ | FC_FC_SEQ_INIT);
-diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
-index 45b6f1e..dd2b43b 100644
---- a/drivers/scsi/libfc/fc_npiv.c
-+++ b/drivers/scsi/libfc/fc_npiv.c
-@@ -69,7 +69,7 @@ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
- 	struct fc_lport *lport = NULL;
- 	struct fc_lport *vn_port;
- 
--	if (fc_host_port_id(n_port->host) == port_id)
-+	if (n_port->port_id == port_id)
- 		return n_port;
- 
- 	if (port_id == FC_FID_FLOGI)
-@@ -77,7 +77,7 @@ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
- 
- 	mutex_lock(&n_port->lp_mutex);
- 	list_for_each_entry(vn_port, &n_port->vports, list) {
--		if (fc_host_port_id(vn_port->host) == port_id) {
-+		if (vn_port->port_id == port_id) {
- 			lport = vn_port;
- 			break;
- 		}
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index 8eb0a0f..9b4867c 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -74,7 +74,7 @@ static inline void fc_adisc_fill(struct fc_lport *lport, struct fc_frame *fp)
- 	adisc->adisc_cmd = ELS_ADISC;
- 	put_unaligned_be64(lport->wwpn, &adisc->adisc_wwpn);
- 	put_unaligned_be64(lport->wwnn, &adisc->adisc_wwnn);
--	hton24(adisc->adisc_port_id, fc_host_port_id(lport->host));
-+	hton24(adisc->adisc_port_id, lport->port_id);
- }
- 
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 4834d3c..0c825c0 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -801,6 +801,12 @@ skip_oem:
  /**
-@@ -127,15 +127,13 @@ static inline int fc_ct_fill(struct fc_lport *lport,
+  * fcoe_if_destroy() - Tear down a SW FCoE instance
+  * @lport: The local port to be destroyed
++ *
++ * Locking: must be called with the RTNL mutex held and RTNL mutex
++ * needed to be dropped by this function since not dropping RTNL
++ * would cause circular locking warning on synchronous fip worker
++ * cancelling thru fcoe_interface_put invoked by this function.
++ *
+  */
+ static void fcoe_if_destroy(struct fc_lport *lport)
+ {
+@@ -823,7 +829,6 @@ static void fcoe_if_destroy(struct fc_lport *lport)
+ 	/* Free existing transmit skbs */
+ 	fcoe_clean_pending_queue(lport);
  
- 	case FC_NS_RFT_ID:
- 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rft));
--		hton24(ct->payload.rft.fid.fp_fid,
--		       fc_host_port_id(lport->host));
-+		hton24(ct->payload.rft.fid.fp_fid, lport->port_id);
- 		ct->payload.rft.fts = lport->fcts;
- 		break;
+-	rtnl_lock();
+ 	if (!is_zero_ether_addr(port->data_src_addr))
+ 		dev_unicast_delete(netdev, port->data_src_addr);
+ 	rtnl_unlock();
+@@ -1902,7 +1907,12 @@ static int fcoe_disable(const char *buffer, struct kernel_param *kp)
+ 		goto out_nodev;
+ 	}
  
- 	case FC_NS_RFF_ID:
- 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rff_id));
--		hton24(ct->payload.rff.fr_fid.fp_fid,
--		       fc_host_port_id(lport->host));
-+		hton24(ct->payload.rff.fr_fid.fp_fid, lport->port_id);
- 		ct->payload.rff.fr_type = FC_TYPE_FCP;
- 		if (lport->service_params & FCP_SPPF_INIT_FCN)
- 			ct->payload.rff.fr_feat = FCP_FEAT_INIT;
-@@ -145,16 +143,14 @@ static inline int fc_ct_fill(struct fc_lport *lport,
+-	rtnl_lock();
++	if (!rtnl_trylock()) {
++		dev_put(netdev);
++		mutex_unlock(&fcoe_config_mutex);
++		return restart_syscall();
++	}
++
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+ 	rtnl_unlock();
  
- 	case FC_NS_RNN_ID:
- 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rn_id));
--		hton24(ct->payload.rn.fr_fid.fp_fid,
--		       fc_host_port_id(lport->host));
-+		hton24(ct->payload.rn.fr_fid.fp_fid, lport->port_id);
- 		put_unaligned_be64(lport->wwnn, &ct->payload.rn.fr_wwn);
- 		break;
+@@ -1952,7 +1962,12 @@ static int fcoe_enable(const char *buffer, struct kernel_param *kp)
+ 		goto out_nodev;
+ 	}
  
- 	case FC_NS_RSPN_ID:
- 		len = strnlen(fc_host_symbolic_name(lport->host), 255);
- 		ct = fc_ct_hdr_fill(fp, op, sizeof(struct fc_ns_rspn) + len);
--		hton24(ct->payload.spn.fr_fid.fp_fid,
--		       fc_host_port_id(lport->host));
-+		hton24(ct->payload.spn.fr_fid.fp_fid, lport->port_id);
- 		strncpy(ct->payload.spn.fr_name,
- 			fc_host_symbolic_name(lport->host), len);
- 		ct->payload.spn.fr_name_len = len;
-@@ -268,7 +264,7 @@ static inline void fc_logo_fill(struct fc_lport *lport, struct fc_frame *fp)
- 	logo = fc_frame_payload_get(fp, sizeof(*logo));
- 	memset(logo, 0, sizeof(*logo));
- 	logo->fl_cmd = ELS_LOGO;
--	hton24(logo->fl_n_port_id, fc_host_port_id(lport->host));
-+	hton24(logo->fl_n_port_id, lport->port_id);
- 	logo->fl_n_port_wwn = htonll(lport->wwpn);
+-	rtnl_lock();
++	if (!rtnl_trylock()) {
++		dev_put(netdev);
++		mutex_unlock(&fcoe_config_mutex);
++		return restart_syscall();
++	}
++
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+ 	rtnl_unlock();
+ 
+@@ -2003,7 +2018,12 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ 		goto out_nodev;
+ 	}
+ 
+-	rtnl_lock();
++	if (!rtnl_trylock()) {
++		dev_put(netdev);
++		mutex_unlock(&fcoe_config_mutex);
++		return restart_syscall();
++	}
++
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+ 	if (!fcoe) {
+ 		rtnl_unlock();
+@@ -2012,7 +2032,7 @@ static int fcoe_destroy(const char *buffer, struct kernel_param *kp)
+ 	}
+ 	list_del(&fcoe->list);
+ 	fcoe_interface_cleanup(fcoe);
+-	rtnl_unlock();
++	/* RTNL mutex is dropped by fcoe_if_destroy */
+ 	fcoe_if_destroy(fcoe->ctlr.lp);
+ 	module_put(THIS_MODULE);
+ 
+@@ -2033,6 +2053,8 @@ static void fcoe_destroy_work(struct work_struct *work)
+ 
+ 	port = container_of(work, struct fcoe_port, destroy_work);
+ 	mutex_lock(&fcoe_config_mutex);
++	rtnl_lock();
++	/* RTNL mutex is dropped by fcoe_if_destroy */
+ 	fcoe_if_destroy(port->lport);
+ 	mutex_unlock(&fcoe_config_mutex);
  }
+@@ -2054,6 +2076,12 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 	struct net_device *netdev;
  
-@@ -295,7 +291,7 @@ static inline void fc_rec_fill(struct fc_lport *lport, struct fc_frame *fp)
- 	rec = fc_frame_payload_get(fp, sizeof(*rec));
- 	memset(rec, 0, sizeof(*rec));
- 	rec->rec_cmd = ELS_REC;
--	hton24(rec->rec_s_id, fc_host_port_id(lport->host));
-+	hton24(rec->rec_s_id, lport->port_id);
- 	rec->rec_ox_id = htons(ep->oxid);
- 	rec->rec_rx_id = htons(ep->rxid);
+ 	mutex_lock(&fcoe_config_mutex);
++
++	if (!rtnl_trylock()) {
++		mutex_unlock(&fcoe_config_mutex);
++		return restart_syscall();
++	}
++
+ #ifdef CONFIG_FCOE_MODULE
+ 	/*
+ 	 * Make sure the module has been initialized, and is not about to be
+@@ -2071,7 +2099,6 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+ 		goto out_nomod;
+ 	}
+ 
+-	rtnl_lock();
+ 	netdev = fcoe_if_to_netdev(buffer);
+ 	if (!netdev) {
+ 		rc = -ENODEV;
+@@ -2126,9 +2153,9 @@ out_free:
+ out_putdev:
+ 	dev_put(netdev);
+ out_nodev:
+-	rtnl_unlock();
+ 	module_put(THIS_MODULE);
+ out_nomod:
++	rtnl_unlock();
+ 	mutex_unlock(&fcoe_config_mutex);
+ 	return rc;
  }
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 1755fa7..7495c0b 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -780,6 +780,7 @@ struct fc_disc {
-  * @dev_stats:             FCoE device stats (TODO: libfc should not be
-  *                         FCoE aware)
-  * @retry_count:           Number of retries in the current state
-+ * @port_id:               FC Port ID
-  * @wwpn:                  World Wide Port Name
-  * @wwnn:                  World Wide Node Name
-  * @service_params:        Common service parameters
-@@ -826,6 +827,7 @@ struct fc_lport {
- 	u8			       retry_count;
- 
- 	/* Fabric information */
-+	u32                            port_id;
- 	u64			       wwpn;
- 	u64			       wwnn;
- 	unsigned int		       service_params;
 
