@@ -1,69 +1,60 @@
-From: Sean Thomson <psthomso@hotmail.com>
-Subject: RE: libsas: is there a current maintainer?
-Date: Thu, 6 May 2010 16:49:35 -0700
-Message-ID: <SNT126-W303C2E96A4B7219BD10B2ACEF50@phx.gbl>
-References: <SNT126-W15ED7713879FB6E952A2DECEF40@phx.gbl>
- <1273069012.5227.64.camel@mulgrave.site>,<7964E35BEEE14ED4B261A4EE77D5C7F1@usish.com.cn>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: relax PAGE LENGTH check for thin provisioning UNMAP support
+Date: Fri, 07 May 2010 00:52:50 -0400
+Message-ID: <yq1r5lo71p9.fsf@sermon.lab.mkp.net>
+References: <1273096203-3164-1-git-send-email-snitzer@redhat.com>
+	<yq1sk65ejs5.fsf@sermon.lab.mkp.net>
+	<w2o170fa0d21005060424j912e21bev8dba13536d49ba41@mail.gmail.com>
+	<AC32D7C72530234288643DD5F1435D5309994F2A@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from snt0-omc4-s12.snt0.hotmail.com ([65.55.90.215]:39105 "EHLO
-	snt0-omc4-s12.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752933Ab0EFXtg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 May 2010 19:49:36 -0400
-In-Reply-To: <7964E35BEEE14ED4B261A4EE77D5C7F1@usish.com.cn>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:62125 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab0EGEzp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 May 2010 00:55:45 -0400
+In-Reply-To: <AC32D7C72530234288643DD5F1435D5309994F2A@RTPMVEXC1-PRD.hq.netapp.com>
+	(Frederick Knight's message of "Thu, 6 May 2010 10:27:43 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jack_wang@usish.com, james.bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org
+To: "Knight, Frederick" <Frederick.Knight@netapp.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+
+>>>>> "Fred" == Knight, Frederick <Frederick.Knight@netapp.com> writes:
+
+Fred,
+
+Fred> There are no guarantees about what the T10 committee will do to
+Fred> that page in the draft, or in any future versions of SBC.
+
+Obviously.  However, we're usually pretty good at tracking the drafts
+and have a pretty quick turnaround for changes.
 
 
-As I understand things, there were two new BCN's that were
-added in 2.x, and I'm thinking that to support them might require some
-additons to libsas. If I need to support them, I can do that work when
-the time comes.
- 
-Thanks guys, I appreciate your time and answers!
+Fred> In reality, any value > 32 (20h) will mean that you probably have
+Fred> all the data you want to look at today.  YES, any device that puts
+Fred> such a small value into the page length field is non-compliant
+Fred> (and therefore, the contents of those fields may be non-compliant
+Fred> as well).  So, allowing a value less than 3Ch would be risky.
 
+Our main concern is that we're dealing with a ton of low-end devices
+that violate the SCSI protocols in the weirdest ways.  Some return the
+same blob of data regardless of which VPD page you ask for.  So when we
+have a mandated value we can key off of as an extra safeguard we tend to
+use it.
 
-----------------------------------------
-> From: jack_wang@usish.com
-> To: James.Bottomley@suse.de; psthomso@hotmail.com
-> CC: linux-scsi@vger.kernel.org
-> Subject: RE: libsas: is there a current maintainer?
-> Date: Thu, 6 May 2010 12:37:43 +0800
->
->
->
-> On Wed, 2010-05-05 at 07:07 -0700, Sean Thomson wrote:
->> This is mostly a curiosity question, but who is maintaining libsas?
->
-> There's no overall maintainer, it's jointly maintained by its users.
->
->> I'm just starting work on a new sas driver and wondering if it is
->> necessary for anything to be done to make it (or if it is already) 2.1
->> compliant
->
-> I don't quite understand the question. libsas is a software library and
-> 2.1 is a physical layer document ... there's not much overlap.
->
-> To answer what I think the question is about, libsas is only coded to
-> 1.1 ... the expander checking has been relaxed a bit, so it shouldn't
-> barf on a 2.0 configuration, but I'm not aware that anyone's actually
-> tested it with a self configuring expander.
->
-> James
->
-> [Jack]We had test it on PMC-Sierra's SAS2 expanders, the main issue is
-> expander checking as you mentioned, and we can remove the the T-T limitation
-> in function sas_check_parent_topology. The other problem is zone support,
-> when we change zone setting, the libsas can not find the change. I'm not
-> have
-> much time to dig in.
-> Thanks
-> 		 	   		  
-_________________________________________________________________
-The New Busy think 9 to 5 is a cute idea. Combine multiple calendars with Hotmail. 
-http://www.windowslive.com/campaign/thenewbusy?tile=multicalendar&ocid=PID28326::T:WLMTAGL:ON:WL:en-US:WM_HMP:042010_5
+In this particular case it might not be such a big deal since we're
+already gated by TPE being enabled in READ CAPACITY(16).  The latter is
+currently restricted by the device server claiming compliance with SPC3
+or better.  However, we may have to relax that criteria soon since we'll
+have USB drives coming out where READ CAPACITY(10) won't cut it.  And
+that opens the flood gates for random debris lingering at byte 12 and
+beyond in READ CAPACITY(16).
+
+My main concern with Mike's patch is that I think it's a bit premature
+given that there's already room to grow in the current block limits VPD
+and that relaxing the page length test could cause us to accept random
+garbage as valid thin provisioning information.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
