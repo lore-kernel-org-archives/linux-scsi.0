@@ -1,39 +1,43 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [LSF/VM TOPIC] Handling of invalid requests in virtual HBAs
-Date: Mon, 10 May 2010 12:16:19 +0900
-Message-ID: <20100510121550W.fujita.tomonori@lab.ntt.co.jp>
-References: <4BB45632.5020700@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15950] Hang in dc395x driver
+Date: Mon, 10 May 2010 04:16:05 GMT
+Message-ID: <201005100416.o4A4G52s018081@demeter.kernel.org>
+References: <bug-15950-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:44593 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755104Ab0EJDQb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 May 2010 23:16:31 -0400
-In-Reply-To: <4BB45632.5020700@suse.de>
+Received: from demeter.kernel.org ([140.211.167.39]:55591 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab0EJEQI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2010 00:16:08 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4A4G5uA018082
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 10 May 2010 04:16:05 GMT
+In-Reply-To: <bug-15950-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hare@suse.de
-Cc: lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 01 Apr 2010 10:15:46 +0200
-Hannes Reinecke <hare@suse.de> wrote:
-
-> [Abstract]
-> This discussion will focus on the problem of correct request handling with virtual HBAs.
-> For KVM I have implemented a 'megasas' HBA emulation which serves as a backend for the
-> megaraid_sas linux driver.
-> It is now possible to connect several disks from different (physical) HBAs to that
-> HBA emulation, each having different logical capabilities wrt transfersize,
-> sgl size, sgl length etc.
-
-The 'megaraid_sas' emulation HBA tells the guests about such
-capabilities via the register, right?
-
-If so, the problem is that how to do it with hotplug on the host?
+https://bugzilla.kernel.org/show_bug.cgi?id=15950
 
 
-> The goal of this discussion is how to determine the 'best' capability setting for the
-> virtual HBA and how to handle hotplug scenarios, where a disk might be plugged in
-> which has incompatible settings from the one the virtual HBA is using currently.
+
+
+
+--- Comment #2 from ltskinol@gmail.com  2010-05-10 04:16:03 ---
+I downloaded the .1 versions of kernel's 2.6.22 through 2.6.26, and
+found that 2.6.25 and above had no changes in the dc395x.c file, but
+that a variety of changes were introduced in 2.6.24 and below.  Since
+the older dc395x.c doesn't drop into my current 2.6.31 kernel, I tried
+recompiling and running 2.6.24 without success.  On Gentoo, the
+current udev doesn't work with that older kernel, so things like
+networking and X fail to run properly and I was unable to test the
+scanner.  Suggestions?
+
+Tom
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
