@@ -1,119 +1,464 @@
 From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: [PATCH 1/3] ipr: implement fixes for 64 bit adapter support
-Date: Mon, 10 May 2010 09:13:00 -0700
-Message-ID: <4BE8308C.7070904@linux.vnet.ibm.com>
+Subject: [PATCH 2/3] ipr: include the resource path in the IOA status area
+ structure
+Date: Mon, 10 May 2010 09:13:27 -0700
+Message-ID: <4BE830A7.9050401@linux.vnet.ibm.com>
 References: <20100510160631.899608040@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:57336 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640Ab0EJQNG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2010 12:13:06 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e38.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o4AG6jVI031916
-	for <linux-scsi@vger.kernel.org>; Mon, 10 May 2010 10:06:45 -0600
+Received: from e37.co.us.ibm.com ([32.97.110.158]:57579 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594Ab0EJQNd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 May 2010 12:13:33 -0400
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by e37.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o4AGBq9b000706
+	for <linux-scsi@vger.kernel.org>; Mon, 10 May 2010 10:11:52 -0600
 Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id o4AGD2O6177158
-	for <linux-scsi@vger.kernel.org>; Mon, 10 May 2010 10:13:03 -0600
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o4AGDTNb053346
+	for <linux-scsi@vger.kernel.org>; Mon, 10 May 2010 10:13:29 -0600
 Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o4AGFqxx006559
-	for <linux-scsi@vger.kernel.org>; Mon, 10 May 2010 10:15:52 -0600
+	by d03av06.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o4AGGI8u007383
+	for <linux-scsi@vger.kernel.org>; Mon, 10 May 2010 10:16:19 -0600
 In-Reply-To: <20100510160631.899608040@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
 
-Implement some small fixes for 64 bit support that were preventing
-the adapter from becoming operational.
+The IOA status area now includes the new resource path field for 64 bit
+adapters.  This patch changes the driver to fix the ioasa structure and to use
+the correct structure definition based on the type of adatper.
 
 Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ipr.c |   13 +++++++++----
- drivers/scsi/ipr.h |    3 ++-
- 2 files changed, 11 insertions(+), 5 deletions(-)
+ drivers/scsi/ipr.c |  131 +++++++++++++++++++++++++++++------------------------
+ drivers/scsi/ipr.h |   26 +++++++++-
+ 2 files changed, 98 insertions(+), 59 deletions(-)
 
 Index: b/drivers/scsi/ipr.c
 ===================================================================
---- a/drivers/scsi/ipr.c	2010-05-03 14:18:27.000000000 -0700
-+++ b/drivers/scsi/ipr.c	2010-05-07 09:36:44.000000000 -0700
-@@ -1040,7 +1040,7 @@ static void ipr_init_res_entry(struct ip
- 		proto = cfgtew->u.cfgte64->proto;
- 		res->res_flags = cfgtew->u.cfgte64->res_flags;
- 		res->qmodel = IPR_QUEUEING_MODEL64(res);
--		res->type = cfgtew->u.cfgte64->res_type & 0x0f;
-+		res->type = cfgtew->u.cfgte64->res_type;
+--- a/drivers/scsi/ipr.c	2010-05-07 09:03:49.000000000 -0700
++++ b/drivers/scsi/ipr.c	2010-05-07 09:36:21.000000000 -0700
+@@ -567,7 +567,8 @@ static void ipr_trc_hook(struct ipr_cmnd
+ static void ipr_reinit_ipr_cmnd(struct ipr_cmnd *ipr_cmd)
+ {
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+-	struct ipr_ioasa *ioasa = &ipr_cmd->ioasa;
++	struct ipr_ioasa *ioasa = &ipr_cmd->s.ioasa;
++	struct ipr_ioasa64 *ioasa64 = &ipr_cmd->s.ioasa64;
+ 	dma_addr_t dma_addr = ipr_cmd->dma_addr;
 
- 		memcpy(res->res_path, &cfgtew->u.cfgte64->res_path,
- 			sizeof(res->res_path));
-@@ -5011,6 +5011,8 @@ static int ipr_build_ioadl64(struct ipr_
+ 	memset(&ioarcb->cmd_pkt, 0, sizeof(struct ipr_cmd_pkt));
+@@ -576,19 +577,19 @@ static void ipr_reinit_ipr_cmnd(struct i
+ 	ioarcb->ioadl_len = 0;
+ 	ioarcb->read_ioadl_len = 0;
 
- 	ipr_cmd->dma_use_sg = nseg;
-
-+	ioarcb->data_transfer_length = cpu_to_be32(length);
-+
- 	if (scsi_cmd->sc_data_direction == DMA_TO_DEVICE) {
- 		ioadl_flags = IPR_IOADL_FLAGS_WRITE;
- 		ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_WRITE_NOT_READ;
-@@ -6703,7 +6705,7 @@ static int ipr_init_res_table(struct ipr
- 		list_move_tail(&res->queue, &old_res);
-
- 	if (ioa_cfg->sis64)
--		entries = ioa_cfg->u.cfg_table64->hdr64.num_entries;
-+		entries = be16_to_cpu(ioa_cfg->u.cfg_table64->hdr64.num_entries);
- 	else
- 		entries = ioa_cfg->u.cfg_table->hdr.num_entries;
-
-@@ -6789,6 +6791,7 @@ static int ipr_ioafp_query_ioa_cfg(struc
- 	ioarcb->res_handle = cpu_to_be32(IPR_IOA_RES_HANDLE);
-
- 	ioarcb->cmd_pkt.cdb[0] = IPR_QUERY_IOA_CONFIG;
-+	ioarcb->cmd_pkt.cdb[6] = (ioa_cfg->cfg_table_size >> 16) & 0xff;
- 	ioarcb->cmd_pkt.cdb[7] = (ioa_cfg->cfg_table_size >> 8) & 0xff;
- 	ioarcb->cmd_pkt.cdb[8] = ioa_cfg->cfg_table_size & 0xff;
-
-@@ -7119,7 +7122,9 @@ static int ipr_reset_next_stage(struct i
- 	ipr_dbg("IPL stage = 0x%lx, IPL stage time = %ld\n", stage, stage_time);
-
- 	/* sanity check the stage_time value */
--	if (stage_time < IPR_IPL_INIT_MIN_STAGE_TIME)
-+	if (stage_time == 0)
-+		stage_time = IPR_IPL_INIT_DEFAULT_STAGE_TIME;
-+	else if (stage_time < IPR_IPL_INIT_MIN_STAGE_TIME)
- 		stage_time = IPR_IPL_INIT_MIN_STAGE_TIME;
- 	else if (stage_time > IPR_LONG_OPERATIONAL_TIMEOUT)
- 		stage_time = IPR_LONG_OPERATIONAL_TIMEOUT;
-@@ -7361,7 +7366,7 @@ static int ipr_reset_restore_cfg_space(s
- 		}
+-	if (ipr_cmd->ioa_cfg->sis64)
++	if (ipr_cmd->ioa_cfg->sis64) {
+ 		ioarcb->u.sis64_addr_data.data_ioadl_addr =
+ 			cpu_to_be64(dma_addr + offsetof(struct ipr_cmnd, i.ioadl64));
+-	else {
++		ioasa64->u.gata.status = 0;
++	} else {
+ 		ioarcb->write_ioadl_addr =
+ 			cpu_to_be32(dma_addr + offsetof(struct ipr_cmnd, i.ioadl));
+ 		ioarcb->read_ioadl_addr = ioarcb->write_ioadl_addr;
++		ioasa->u.gata.status = 0;
  	}
 
--	ENTER;
-+	LEAVE;
- 	return IPR_RC_JOB_CONTINUE;
+-	ioasa->ioasc = 0;
+-	ioasa->residual_data_len = 0;
+-	ioasa->u.gata.status = 0;
+-
++	ioasa->hdr.ioasc = 0;
++	ioasa->hdr.residual_data_len = 0;
+ 	ipr_cmd->scsi_cmd = NULL;
+ 	ipr_cmd->qc = NULL;
+ 	ipr_cmd->sense_buffer[0] = 0;
+@@ -768,8 +769,8 @@ static void ipr_fail_all_ops(struct ipr_
+ 	list_for_each_entry_safe(ipr_cmd, temp, &ioa_cfg->pending_q, queue) {
+ 		list_del(&ipr_cmd->queue);
+
+-		ipr_cmd->ioasa.ioasc = cpu_to_be32(IPR_IOASC_IOA_WAS_RESET);
+-		ipr_cmd->ioasa.ilid = cpu_to_be32(IPR_DRIVER_ILID);
++		ipr_cmd->s.ioasa.hdr.ioasc = cpu_to_be32(IPR_IOASC_IOA_WAS_RESET);
++		ipr_cmd->s.ioasa.hdr.ilid = cpu_to_be32(IPR_DRIVER_ILID);
+
+ 		if (ipr_cmd->scsi_cmd)
+ 			ipr_cmd->done = ipr_scsi_eh_done;
+@@ -1319,7 +1320,7 @@ static void ipr_process_ccn(struct ipr_c
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct ipr_hostrcb *hostrcb = ipr_cmd->u.hostrcb;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 	list_del(&hostrcb->queue);
+ 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
+@@ -2354,7 +2355,7 @@ static void ipr_process_error(struct ipr
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct ipr_hostrcb *hostrcb = ipr_cmd->u.hostrcb;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+ 	u32 fd_ioasc;
+
+ 	if (ioa_cfg->sis64)
+@@ -4506,11 +4507,16 @@ static int ipr_device_reset(struct ipr_i
+ 	}
+
+ 	ipr_send_blocking_cmd(ipr_cmd, ipr_timeout, IPR_DEVICE_RESET_TIMEOUT);
+-	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+ 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
+-	if (ipr_is_gata(res) && res->sata_port && ioasc != IPR_IOASC_IOA_WAS_RESET)
+-		memcpy(&res->sata_port->ioasa, &ipr_cmd->ioasa.u.gata,
+-		       sizeof(struct ipr_ioasa_gata));
++	if (ipr_is_gata(res) && res->sata_port && ioasc != IPR_IOASC_IOA_WAS_RESET) {
++		if (ipr_cmd->ioa_cfg->sis64)
++			memcpy(&res->sata_port->ioasa, &ipr_cmd->s.ioasa64.u.gata,
++			       sizeof(struct ipr_ioasa_gata));
++		else
++			memcpy(&res->sata_port->ioasa, &ipr_cmd->s.ioasa.u.gata,
++			       sizeof(struct ipr_ioasa_gata));
++	}
+
+ 	LEAVE;
+ 	return (IPR_IOASC_SENSE_KEY(ioasc) ? -EIO : 0);
+@@ -4765,7 +4771,7 @@ static int ipr_cancel_op(struct scsi_cmn
+ 	scmd_printk(KERN_ERR, scsi_cmd, "Aborting command: %02X\n",
+ 		    scsi_cmd->cmnd[0]);
+ 	ipr_send_blocking_cmd(ipr_cmd, ipr_abort_timeout, IPR_CANCEL_ALL_TIMEOUT);
+-	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 	/*
+ 	 * If the abort task timed out and we sent a bus reset, we will get
+@@ -4937,7 +4943,7 @@ static irqreturn_t ipr_isr(int irq, void
+
+ 			ipr_cmd = ioa_cfg->ipr_cmnd_list[cmd_index];
+
+-			ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++			ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 			ipr_trc_hook(ipr_cmd, IPR_TRACE_FINISH, ioasc);
+
+@@ -5134,7 +5140,7 @@ static void ipr_erp_done(struct ipr_cmnd
+ 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+ 	struct ipr_resource_entry *res = scsi_cmd->device->hostdata;
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 	if (IPR_IOASC_SENSE_KEY(ioasc) > 0) {
+ 		scsi_cmd->result |= (DID_ERROR << 16);
+@@ -5165,7 +5171,7 @@ static void ipr_erp_done(struct ipr_cmnd
+ static void ipr_reinit_ipr_cmnd_for_erp(struct ipr_cmnd *ipr_cmd)
+ {
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+-	struct ipr_ioasa *ioasa = &ipr_cmd->ioasa;
++	struct ipr_ioasa *ioasa = &ipr_cmd->s.ioasa;
+ 	dma_addr_t dma_addr = ipr_cmd->dma_addr;
+
+ 	memset(&ioarcb->cmd_pkt, 0, sizeof(struct ipr_cmd_pkt));
+@@ -5173,8 +5179,8 @@ static void ipr_reinit_ipr_cmnd_for_erp(
+ 	ioarcb->read_data_transfer_length = 0;
+ 	ioarcb->ioadl_len = 0;
+ 	ioarcb->read_ioadl_len = 0;
+-	ioasa->ioasc = 0;
+-	ioasa->residual_data_len = 0;
++	ioasa->hdr.ioasc = 0;
++	ioasa->hdr.residual_data_len = 0;
+
+ 	if (ipr_cmd->ioa_cfg->sis64)
+ 		ioarcb->u.sis64_addr_data.data_ioadl_addr =
+@@ -5199,7 +5205,7 @@ static void ipr_reinit_ipr_cmnd_for_erp(
+ static void ipr_erp_request_sense(struct ipr_cmnd *ipr_cmd)
+ {
+ 	struct ipr_cmd_pkt *cmd_pkt = &ipr_cmd->ioarcb.cmd_pkt;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 	if (IPR_IOASC_SENSE_KEY(ioasc) > 0) {
+ 		ipr_erp_done(ipr_cmd);
+@@ -5276,12 +5282,12 @@ static void ipr_dump_ioasa(struct ipr_io
+ 	int i;
+ 	u16 data_len;
+ 	u32 ioasc, fd_ioasc;
+-	struct ipr_ioasa *ioasa = &ipr_cmd->ioasa;
++	struct ipr_ioasa *ioasa = &ipr_cmd->s.ioasa;
+ 	__be32 *ioasa_data = (__be32 *)ioasa;
+ 	int error_index;
+
+-	ioasc = be32_to_cpu(ioasa->ioasc) & IPR_IOASC_IOASC_MASK;
+-	fd_ioasc = be32_to_cpu(ioasa->fd_ioasc) & IPR_IOASC_IOASC_MASK;
++	ioasc = be32_to_cpu(ioasa->hdr.ioasc) & IPR_IOASC_IOASC_MASK;
++	fd_ioasc = be32_to_cpu(ioasa->hdr.fd_ioasc) & IPR_IOASC_IOASC_MASK;
+
+ 	if (0 == ioasc)
+ 		return;
+@@ -5296,7 +5302,7 @@ static void ipr_dump_ioasa(struct ipr_io
+
+ 	if (ioa_cfg->log_level < IPR_MAX_LOG_LEVEL) {
+ 		/* Don't log an error if the IOA already logged one */
+-		if (ioasa->ilid != 0)
++		if (ioasa->hdr.ilid != 0)
+ 			return;
+
+ 		if (!ipr_is_gscsi(res))
+@@ -5308,10 +5314,11 @@ static void ipr_dump_ioasa(struct ipr_io
+
+ 	ipr_res_err(ioa_cfg, res, "%s\n", ipr_error_table[error_index].error);
+
+-	if (sizeof(struct ipr_ioasa) < be16_to_cpu(ioasa->ret_stat_len))
++	data_len = be16_to_cpu(ioasa->hdr.ret_stat_len);
++	if (ioa_cfg->sis64 && sizeof(struct ipr_ioasa64) < data_len)
++		data_len = sizeof(struct ipr_ioasa64);
++	else if (!ioa_cfg->sis64 && sizeof(struct ipr_ioasa) < data_len)
+ 		data_len = sizeof(struct ipr_ioasa);
+-	else
+-		data_len = be16_to_cpu(ioasa->ret_stat_len);
+
+ 	ipr_err("IOASA Dump:\n");
+
+@@ -5337,8 +5344,8 @@ static void ipr_gen_sense(struct ipr_cmn
+ 	u32 failing_lba;
+ 	u8 *sense_buf = ipr_cmd->scsi_cmd->sense_buffer;
+ 	struct ipr_resource_entry *res = ipr_cmd->scsi_cmd->device->hostdata;
+-	struct ipr_ioasa *ioasa = &ipr_cmd->ioasa;
+-	u32 ioasc = be32_to_cpu(ioasa->ioasc);
++	struct ipr_ioasa *ioasa = &ipr_cmd->s.ioasa;
++	u32 ioasc = be32_to_cpu(ioasa->hdr.ioasc);
+
+ 	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
+
+@@ -5381,7 +5388,7 @@ static void ipr_gen_sense(struct ipr_cmn
+
+ 		/* Illegal request */
+ 		if ((IPR_IOASC_SENSE_KEY(ioasc) == 0x05) &&
+-		    (be32_to_cpu(ioasa->ioasc_specific) & IPR_FIELD_POINTER_VALID)) {
++		    (be32_to_cpu(ioasa->hdr.ioasc_specific) & IPR_FIELD_POINTER_VALID)) {
+ 			sense_buf[7] = 10;	/* additional length */
+
+ 			/* IOARCB was in error */
+@@ -5392,10 +5399,10 @@ static void ipr_gen_sense(struct ipr_cmn
+
+ 			sense_buf[16] =
+ 			    ((IPR_FIELD_POINTER_MASK &
+-			      be32_to_cpu(ioasa->ioasc_specific)) >> 8) & 0xff;
++			      be32_to_cpu(ioasa->hdr.ioasc_specific)) >> 8) & 0xff;
+ 			sense_buf[17] =
+ 			    (IPR_FIELD_POINTER_MASK &
+-			     be32_to_cpu(ioasa->ioasc_specific)) & 0xff;
++			     be32_to_cpu(ioasa->hdr.ioasc_specific)) & 0xff;
+ 		} else {
+ 			if (ioasc == IPR_IOASC_MED_DO_NOT_REALLOC) {
+ 				if (ipr_is_vset_device(res))
+@@ -5427,14 +5434,20 @@ static void ipr_gen_sense(struct ipr_cmn
+  **/
+ static int ipr_get_autosense(struct ipr_cmnd *ipr_cmd)
+ {
+-	struct ipr_ioasa *ioasa = &ipr_cmd->ioasa;
++	struct ipr_ioasa *ioasa = &ipr_cmd->s.ioasa;
++	struct ipr_ioasa64 *ioasa64 = &ipr_cmd->s.ioasa64;
+
+-	if ((be32_to_cpu(ioasa->ioasc_specific) & IPR_AUTOSENSE_VALID) == 0)
++	if ((be32_to_cpu(ioasa->hdr.ioasc_specific) & IPR_AUTOSENSE_VALID) == 0)
+ 		return 0;
+
+-	memcpy(ipr_cmd->scsi_cmd->sense_buffer, ioasa->auto_sense.data,
+-	       min_t(u16, be16_to_cpu(ioasa->auto_sense.auto_sense_len),
+-		   SCSI_SENSE_BUFFERSIZE));
++	if (ipr_cmd->ioa_cfg->sis64)
++		memcpy(ipr_cmd->scsi_cmd->sense_buffer, ioasa64->auto_sense.data,
++		       min_t(u16, be16_to_cpu(ioasa64->auto_sense.auto_sense_len),
++			   SCSI_SENSE_BUFFERSIZE));
++	else
++		memcpy(ipr_cmd->scsi_cmd->sense_buffer, ioasa->auto_sense.data,
++		       min_t(u16, be16_to_cpu(ioasa->auto_sense.auto_sense_len),
++			   SCSI_SENSE_BUFFERSIZE));
+ 	return 1;
  }
 
+@@ -5454,7 +5467,7 @@ static void ipr_erp_start(struct ipr_ioa
+ {
+ 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+ 	struct ipr_resource_entry *res = scsi_cmd->device->hostdata;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+ 	u32 masked_ioasc = ioasc & IPR_IOASC_IOASC_MASK;
+
+ 	if (!res) {
+@@ -5546,9 +5559,9 @@ static void ipr_scsi_done(struct ipr_cmn
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+-	scsi_set_resid(scsi_cmd, be32_to_cpu(ipr_cmd->ioasa.residual_data_len));
++	scsi_set_resid(scsi_cmd, be32_to_cpu(ipr_cmd->s.ioasa.hdr.residual_data_len));
+
+ 	if (likely(IPR_IOASC_SENSE_KEY(ioasc) == 0)) {
+ 		scsi_dma_unmap(ipr_cmd->scsi_cmd);
+@@ -5838,19 +5851,23 @@ static void ipr_sata_done(struct ipr_cmn
+ 	struct ata_queued_cmd *qc = ipr_cmd->qc;
+ 	struct ipr_sata_port *sata_port = qc->ap->private_data;
+ 	struct ipr_resource_entry *res = sata_port->res;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+-	memcpy(&sata_port->ioasa, &ipr_cmd->ioasa.u.gata,
+-	       sizeof(struct ipr_ioasa_gata));
++	if (ipr_cmd->ioa_cfg->sis64)
++		memcpy(&sata_port->ioasa, &ipr_cmd->s.ioasa64.u.gata,
++		       sizeof(struct ipr_ioasa_gata));
++	else
++		memcpy(&sata_port->ioasa, &ipr_cmd->s.ioasa.u.gata,
++		       sizeof(struct ipr_ioasa_gata));
+ 	ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
+
+-	if (be32_to_cpu(ipr_cmd->ioasa.ioasc_specific) & IPR_ATA_DEVICE_WAS_RESET)
++	if (be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc_specific) & IPR_ATA_DEVICE_WAS_RESET)
+ 		scsi_report_device_reset(ioa_cfg->host, res->bus, res->target);
+
+ 	if (IPR_IOASC_SENSE_KEY(ioasc) > RECOVERED_ERROR)
+-		qc->err_mask |= __ac_err_mask(ipr_cmd->ioasa.u.gata.status);
++		qc->err_mask |= __ac_err_mask(sata_port->ioasa.status);
+ 	else
+-		qc->err_mask |= ac_err_mask(ipr_cmd->ioasa.u.gata.status);
++		qc->err_mask |= ac_err_mask(sata_port->ioasa.status);
+ 	list_add_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
+ 	ata_qc_complete(qc);
+ }
+@@ -6519,7 +6536,7 @@ static void ipr_build_mode_sense(struct 
+ static int ipr_reset_cmd_failed(struct ipr_cmnd *ipr_cmd)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 	dev_err(&ioa_cfg->pdev->dev,
+ 		"0x%02X failed with IOASC: 0x%08X\n",
+@@ -6543,7 +6560,7 @@ static int ipr_reset_cmd_failed(struct i
+ static int ipr_reset_mode_sense_failed(struct ipr_cmnd *ipr_cmd)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 	if (ioasc == IPR_IOASC_IR_INVALID_REQ_TYPE_OR_PKT) {
+ 		ipr_cmd->job_step = ipr_set_supported_devs;
+@@ -6633,7 +6650,7 @@ static int ipr_ioafp_mode_select_page24(
+  **/
+ static int ipr_reset_mode_sense_page24_failed(struct ipr_cmnd *ipr_cmd)
+ {
+-	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 	if (ioasc == IPR_IOASC_IR_INVALID_REQ_TYPE_OR_PKT) {
+ 		ipr_cmd->job_step = ipr_ioafp_mode_sense_page28;
+@@ -7334,12 +7351,12 @@ static int ipr_reset_restore_cfg_space(s
+ 	rc = pci_restore_state(ioa_cfg->pdev);
+
+ 	if (rc != PCIBIOS_SUCCESSFUL) {
+-		ipr_cmd->ioasa.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
++		ipr_cmd->s.ioasa.hdr.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
+ 		return IPR_RC_JOB_CONTINUE;
+ 	}
+
+ 	if (ipr_set_pcix_cmd_reg(ioa_cfg)) {
+-		ipr_cmd->ioasa.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
++		ipr_cmd->s.ioasa.hdr.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
+ 		return IPR_RC_JOB_CONTINUE;
+ 	}
+
+@@ -7408,7 +7425,7 @@ static int ipr_reset_start_bist(struct i
+
+ 	if (rc != PCIBIOS_SUCCESSFUL) {
+ 		pci_unblock_user_cfg_access(ipr_cmd->ioa_cfg->pdev);
+-		ipr_cmd->ioasa.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
++		ipr_cmd->s.ioasa.hdr.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
+ 		rc = IPR_RC_JOB_CONTINUE;
+ 	} else {
+ 		ipr_cmd->job_step = ipr_reset_bist_done;
+@@ -7667,7 +7684,7 @@ static void ipr_reset_ioa_job(struct ipr
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+
+ 	do {
+-		ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++		ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
+
+ 		if (ioa_cfg->reset_cmd != ipr_cmd) {
+ 			/*
+@@ -8050,13 +8067,13 @@ static int __devinit ipr_alloc_cmd_blks(
+ 			ioarcb->u.sis64_addr_data.data_ioadl_addr =
+ 				cpu_to_be64(dma_addr + offsetof(struct ipr_cmnd, i.ioadl64));
+ 			ioarcb->u.sis64_addr_data.ioasa_host_pci_addr =
+-				cpu_to_be64(dma_addr + offsetof(struct ipr_cmnd, ioasa));
++				cpu_to_be64(dma_addr + offsetof(struct ipr_cmnd, s.ioasa64));
+ 		} else {
+ 			ioarcb->write_ioadl_addr =
+ 				cpu_to_be32(dma_addr + offsetof(struct ipr_cmnd, i.ioadl));
+ 			ioarcb->read_ioadl_addr = ioarcb->write_ioadl_addr;
+ 			ioarcb->ioasa_host_pci_addr =
+-				cpu_to_be32(dma_addr + offsetof(struct ipr_cmnd, ioasa));
++				cpu_to_be32(dma_addr + offsetof(struct ipr_cmnd, s.ioasa));
+ 		}
+ 		ioarcb->ioasa_len = cpu_to_be16(sizeof(struct ipr_ioasa));
+ 		ipr_cmd->cmd_index = i;
 Index: b/drivers/scsi/ipr.h
 ===================================================================
---- a/drivers/scsi/ipr.h	2010-05-03 14:18:27.000000000 -0700
-+++ b/drivers/scsi/ipr.h	2010-05-07 09:36:44.000000000 -0700
-@@ -244,6 +244,7 @@
- #define IPR_RUNTIME_RESET				0x40000000
+--- a/drivers/scsi/ipr.h	2010-05-07 09:03:49.000000000 -0700
++++ b/drivers/scsi/ipr.h	2010-05-07 09:36:21.000000000 -0700
+@@ -614,7 +614,7 @@ struct ipr_auto_sense {
+ 	__be32 data[SCSI_SENSE_BUFFERSIZE/sizeof(__be32)];
+ };
 
- #define IPR_IPL_INIT_MIN_STAGE_TIME			5
-+#define IPR_IPL_INIT_DEFAULT_STAGE_TIME                 15
- #define IPR_IPL_INIT_STAGE_UNKNOWN			0x0
- #define IPR_IPL_INIT_STAGE_TRANSOP			0xB0000000
- #define IPR_IPL_INIT_STAGE_MASK				0xff000000
-@@ -804,7 +805,7 @@ struct ipr_hostrcb_array_data_entry_enha
- }__attribute__((packed, aligned (4)));
+-struct ipr_ioasa {
++struct ipr_ioasa_hdr {
+ 	__be32 ioasc;
+ #define IPR_IOASC_SENSE_KEY(ioasc) ((ioasc) >> 24)
+ #define IPR_IOASC_SENSE_CODE(ioasc) (((ioasc) & 0x00ff0000) >> 16)
+@@ -646,6 +646,25 @@ struct ipr_ioasa {
+ #define IPR_FIELD_POINTER_VALID		(0x80000000 >> 8)
+ #define IPR_FIELD_POINTER_MASK		0x0000ffff
 
- struct ipr_hostrcb_type_ff_error {
--	__be32 ioa_data[502];
-+	__be32 ioa_data[758];
- }__attribute__((packed, aligned (4)));
-
- struct ipr_hostrcb_type_01_error {
++}__attribute__((packed, aligned (4)));
++
++struct ipr_ioasa {
++	struct ipr_ioasa_hdr hdr;
++
++	union {
++		struct ipr_ioasa_vset vset;
++		struct ipr_ioasa_af_dasd dasd;
++		struct ipr_ioasa_gpdd gpdd;
++		struct ipr_ioasa_gata gata;
++	} u;
++
++	struct ipr_auto_sense auto_sense;
++}__attribute__((packed, aligned (4)));
++
++struct ipr_ioasa64 {
++	struct ipr_ioasa_hdr hdr;
++	u8 fd_res_path[8];
++
+ 	union {
+ 		struct ipr_ioasa_vset vset;
+ 		struct ipr_ioasa_af_dasd dasd;
+@@ -1465,7 +1484,10 @@ struct ipr_cmnd {
+ 		struct ipr_ioadl64_desc ioadl64[IPR_NUM_IOADL_ENTRIES];
+ 		struct ipr_ata64_ioadl ata_ioadl;
+ 	} i;
+-	struct ipr_ioasa ioasa;
++	union {
++		struct ipr_ioasa ioasa;
++		struct ipr_ioasa64 ioasa64;
++	} s;
+ 	struct list_head queue;
+ 	struct scsi_cmnd *scsi_cmd;
+ 	struct ata_queued_cmd *qc;
 
