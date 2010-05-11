@@ -1,63 +1,81 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: RE: [PATCH 0/7] qla4xxx: add application support
-Date: Tue, 11 May 2010 01:07:56 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA870D35B7B71@AVEXMB1.qlogic.org>
-References: <20100511075338.GA30442@sles11sp1b1.qlogic.org>
+From: MAGARETH WILLIAMS <amadeus1@base.be>
+Subject: I WILL SEND YOU FURTHER DETAILS
+Date: Tue, 11 May 2010 13:11:00 +0200
+Message-ID: <96318d2a361a605be0d176d3364c4dab__32912.6934441321$1273579332$gmane$org@base.be>
+Reply-To: <bc101707bc@yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:10920 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752732Ab0EKIH6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 04:07:58 -0400
-In-Reply-To: <20100511075338.GA30442@sles11sp1b1.qlogic.org>
-Content-Language: en-US
+Received: from postbode01.c.iops.be ([212.53.5.91]:42348 "EHLO
+	postbode01.versateladsl.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751849Ab0EKMCF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 May 2010 08:02:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "james.bottomley@suse.de" <james.bottomley@suse.de>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-s>
-Cc: Ravi Anand <ravi.anand@qlogic.com>
 
-Correction in subject line
 
->-----Original Message-----
->From: Vikas Chaudhary [mailto:vikas.chaudhary@qlogic.com]
->Sent: Tuesday, May 11, 2010 12:54 AM
->To: james.bottomley@suse.de; michaelc@cs.wisc.edu; linux-
->scsi@vger.kernel.org
->Cc: Ravi Anand; Vikas Chaudhary
->Subject: [PATCH 0/7] qla4xxx: add application support
->
->James/Mike,
->
->Here's the list of RFC patches to enable application support for qla4xxx
->driver :
->
->Vikas Chaudhary (7)
->	iscsi_transport: add new up event for AEN.
->	iscsi_transport: Added new iscsi_host_param for iSCSI transport
->	iscsi_transport: added new iscsi_param to display target alias is
->sysfs
->	qla4xxx: added Add host attributes to export host information to
->sysfs.
->	qla4xxx: ping support via BSG interface
->	iscsi_transport: ping support via BSG
->	qla4xxx: added BSG support
->
->drivers/scsi/qla4xxx/Makefile       |    2 +-
->drivers/scsi/qla4xxx/ql4_attr.c     |  168 +++++++++++++++
->drivers/scsi/qla4xxx/ql4_def.h      |   48 +++++-
->drivers/scsi/qla4xxx/ql4_glbl.h     |   27 +++-
->drivers/scsi/qla4xxx/ql4_init.c     |    8 +-
->drivers/scsi/qla4xxx/ql4_isr.c      |    4 +
->drivers/scsi/qla4xxx/ql4_mbx.c      |  381
->++++++++++++++++++++++++++++++++++-
->drivers/scsi/qla4xxx/ql4_os.c       |  276 ++++++++++++++++++++++++-
->drivers/scsi/scsi_transport_iscsi.c |   14 +-
->include/scsi/iscsi_if.h             |   11 +
->include/scsi/scsi_bsg_iscsi.h       |   11 +
->
->Looking forward for your feedback and comments.
->
->Thanks,
->Vikas.
+
+Dearest,
+
+I am Ms Magareth Williams,now undergoing medical treatment for cancer i=
+n
+Malaysia. Before I took ill, I was the, Principal Assurance manager of =
+BNP
+Paribas Private Bank.I am getting in touch with you regarding the estat=
+e of
+one Mr. Goudie  and an investment placed under my management 7 years ag=
+o.=20
+He instructed that we liquidate the principal sum (18,350,000.00 Millio=
+n
+United State Dollars) because he needed to make an urgent investment th=
+at
+requires cash payment in Europe. We got in touch with his nominated
+financial institution  in Europe, who agreed to receive this money for =
+a
+fee and make cash available to Mr. Goudie  for his business operations.
+
+To my surprise, the corresponding bank in Europe got in touch with us l=
+ast
+year that nobody has come forward to claim the money and it has reached=
+ the
+threshold for the bank to declare it to the government as unclaimed
+deposit. On further enquiry, I found that, Mr. Goudie  was involved in =
+an
+accident in Mainland China and that he died intestate. Because he has n=
+o
+next of kin all his assets in Europe are about to go to the government.=
+ I
+write you to makes you  to stand as his next of kin and surviving heir =
+to
+his assets and the beneficiary of the deposit valued 18,350,000.00 Mill=
+ion
+United State Dollars
+
+My condition has become hopeless, my Doctor recently told me that my
+cancer has spread and that I have a few months to live. Having known th=
+e
+hopelessness of my health condition, and the urgency to act, I am
+compelled to seek your assistance to get this money out by standing as =
+the
+beneficiary and using part of these funds to help the poor and sick peo=
+ple
+in society. I have exclusive access to Mr. Goudie=E2=80=99s file and al=
+l his
+investment record.  I hope you are somebody that can be trusted.
+
+If we can be of one accord, we should act swiftly on this. If you are
+interested in this deal, kindly get back to me quickly with your full
+details and I will proceed to give you full modalities on how this can =
+be
+acheived.
+
+I await your response
+
+Ms Magareth Williams
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
