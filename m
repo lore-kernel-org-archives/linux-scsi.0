@@ -1,177 +1,68 @@
-From: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
-Subject: Re: burning small isos repeatedly failing with hangcheck error
-Date: Mon, 10 May 2010 18:52:42 -0600
-Message-ID: <201005101852.43114.tfjellstrom@strangesoft.net>
-References: <201004261855.29335.tfjellstrom@strangesoft.net> <201005101750.55775.tfjellstrom@strangesoft.net> <4BE8A61F.3090805@gmail.com>
+From: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Tue, 11 May 2010 08:54:52 +0200
+Message-ID: <4BE8FF3C.2030406@gmail.com>
+References: <Pine.LNX.4.44L0.1005071055200.1804-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4BE8A61F.3090805@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Robert Hancock <hancockrwd@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:48932 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933045Ab0EKGy5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 02:54:57 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1005071055200.1804-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Mark Lord <mlord@pobox.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-On May 10, 2010, Robert Hancock wrote:
-> On 05/10/2010 05:50 PM, Thomas Fjellstrom wrote:
-> > On May 10, 2010, Andrew Morton wrote:
-> >> (lotsa cc's added)
-> >> 
-> >> On Mon, 26 Apr 2010 18:55:28 -0600
-> >> 
-> >> Thomas Fjellstrom<tfjellstrom@strangesoft.net>  wrote:
-> >>> I'm having problems burning a small iso image to a DVDR,
-> >>> every single attempt leads to the following type of errors:
-> >>> 
-> >>> [  192.190114] cdrom: This disc doesn't have any tracks I recognize!
-> >>> [  192.220213] sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK
-> >>> driverbyte=DRIVER_SENSE [  192.220217] sr 1:0:0:0: [sr0] Sense Key :
-> >>> Illegal Request [current] [  192.220220] Info fld=0x0
-> >>> [  192.220221] sr 1:0:0:0: [sr0] Add. Sense: Logical block address
-> >>> out of range [  192.220231] sr 1:0:0:0: [sr0] CDB: Read(10): 28 00
-> >>> 00 00 00 00 00 00 01 00 [  192.220242] end_request: I/O error, dev
-> >>> sr0, sector 0
-> >>> [  192.220246] Buffer I/O error on device sr0, logical block 0
-> >>> [  192.222931] sr 1:0:0:0: [sr0] Result: hostbyte=DID_OK
-> >>> driverbyte=DRIVER_SENSE [  192.222934] sr 1:0:0:0: [sr0] Sense Key :
-> >>> Illegal Request [current] [  192.222936] Info fld=0x0
-> >>> [  192.222938] sr 1:0:0:0: [sr0] Add. Sense: Logical block address
-> >>> out of range [  192.222940] sr 1:0:0:0: [sr0] CDB: Read(10): 28 00
-> >>> 00 00 00 00 00 00 01 00 [  192.222946] end_request: I/O error, dev
-> >>> sr0, sector 0
-> >>> [  192.222948] Buffer I/O error on device sr0, logical block 0
-> >>> [  600.489102] INFO: task wodim:3587 blocked for more than 120
-> >>> seconds. [  600.489106] "echo 0> 
-> >>> /proc/sys/kernel/hung_task_timeout_secs" disables this message. [ 
-> >>> 600.489107] wodim         D ffff880005515680
-> >>> 
-> >>>      0  3587   2994 0x00000000 [  600.489111]  ffff88011ad80700
-> >>> 
-> >>> 0000000000000082 0000000000000000 ffff88013b7700d0 [  600.489115]
-> >>> ffff88013b771e50 000000000000f8e0 ffff880078d6dfd8 0000000000015680 [
-> >>> 600.489118]  0000000000015680 ffff8800a891e200 ffff8800a891e4f0
-> >>> 000000013b771e50 [  600.489121] Call Trace:
-> >>> [  600.489147]  [<ffffffffa00e10d7>] ? atapi_xlat+0x0/0x125 [libata]
-> >>> [  600.489153]  [<ffffffffa00998cc>] ? scsi_done+0x0/0xc [scsi_mod]
-> >>> [  600.489160]  [<ffffffffa00e18d8>] ?
-> >>> __ata_scsi_queuecmd+0x185/0x1dc [libata] [  600.489170] 
-> >>> [<ffffffff812ed4cb>] ?
-> >>> schedule_timeout+0x2e/0xdd [  600.489174]  [<ffffffff81171918>] ?
-> >>> blk_peek_request+0x18b/0x19f [  600.489179]  [<ffffffffa0099bb0>] ?
-> >>> scsi_dispatch_cmd+0x1d2/0x23f [scsi_mod] [  600.489185]
-> >>> [<ffffffffa009f4ab>] ? scsi_request_fn+0x429/0x506 [scsi_mod] [
-> >>> 600.489187]  [<ffffffff812ed366>] ? wait_for_common+0xde/0x15b [
-> >>> 600.489191]  [<ffffffff81042cc2>] ? default_wake_function+0x0/0x9 [
-> >>> 600.489194]  [<ffffffff8117556c>] ? blk_execute_rq+0x9c/0xcc [
-> >>> 600.489197]  [<ffffffff81171418>] ? __freed_request+0x26/0x83 [
-> >>> 600.489199]  [<ffffffff81171498>] ? freed_request+0x23/0x43 [
-> >>> 600.489202]  [<ffffffff8104f5ce>] ? capable+0x22/0x41
-> >>> [  600.489204]  [<ffffffff81178824>] ? sg_io+0x26e/0x396
-> >>> [  600.489207]  [<ffffffff81178e59>] ? scsi_cmd_ioctl+0x217/0x3fe
-> >>> [  600.489210]  [<ffffffff811806a6>] ? cpumask_next_and+0x2a/0x3a
-> >>> [  600.489213]  [<ffffffff81038ba4>] ? update_curr+0xa6/0x147
-> >>> [  600.489218]  [<ffffffffa014dfd2>] ? cdrom_ioctl+0x42/0xef7 [cdrom]
-> >>> [  600.489222]  [<ffffffff8100f76f>] ? sched_clock+0x5/0x8
-> >>> [  600.489224]  [<ffffffff81063b8f>] ? sched_clock_local+0x13/0x74
-> >>> [  600.489227]  [<ffffffff81042cb5>] ? try_to_wake_up+0x248/0x255
-> >>> [  600.489230]  [<ffffffff810f7bc4>] ? pollwake+0x53/0x5b
-> >>> [  600.489233]  [<ffffffff8104b129>] ? current_fs_time+0x1e/0x24
-> >>> [  600.489235]  [<ffffffff81042cc2>] ? default_wake_function+0x0/0x9
-> >>> [  600.489239]  [<ffffffffa016f33c>] ? sr_block_ioctl+0x49/0x85
-> >>> [sr_mod] [  600.489242]  [<ffffffff81176738>] ?
-> >>> __blkdev_driver_ioctl+0x7c/0xa4 [  600.489245]  [<ffffffff81177005>]
-> >>> ? blkdev_ioctl+0x880/0x8d3 [  600.489247]  [<ffffffff812ed0d9>] ?
-> >>> schedule+0x7f6/0x875
-> >>> [  600.489250]  [<ffffffff810e9b69>] ? do_sync_write+0xab/0xed
-> >>> [  600.489254]  [<ffffffff8110c8d5>] ? block_ioctl+0x38/0x3c
-> >>> [  600.489257]  [<ffffffff810f5923>] ? vfs_ioctl+0x21/0x92
-> >>> [  600.489259]  [<ffffffff810f5e9f>] ? do_vfs_ioctl+0x495/0x4d3
-> >>> [  600.489262]  [<ffffffff810ea4b5>] ? vfs_write+0xcd/0x102
-> >>> [  600.489264]  [<ffffffff810f5f2e>] ? sys_ioctl+0x51/0x70
-> >>> [  600.489267]  [<ffffffff81008ac2>] ? system_call_fastpath+0x16/0x1b
-> >>> [  640.816056] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action
-> >>> 0x6 frozen [  640.816061] sr 1:0:0:0: [sr0] CDB: Synchronize
-> >>> Cache(10): 35 00 00 00 00 00 00 00 00 00 [  640.816070] ata2.00: cmd
-> >>> a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0 [  640.816071]          res
-> >>> 40/00:03:00:00:f8/00:00:00:00:00/a0 Emask 0x4 (timeout) [ 
-> >>> 640.816073] ata2.00: status: { DRDY }
-> >>> [  640.816078] ata2: hard resetting link
-> >>> [  641.137050] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> >>> [  641.141821] ata2.00: ACPI cmd ef/10:06:00:00:00:a0 (SET FEATURES)
-> >>> succeeded [  641.141824] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET
-> >>> FEATURES) filtered out [  641.151672] ata2.00: ACPI cmd
-> >>> ef/10:06:00:00:00:a0 (SET FEATURES) succeeded [  641.151675] ata2.00:
-> >>> ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out [
-> >>> 641.155383] ata2.00: configured for UDMA/133
-> >>> [  641.160639] ata2: EH complete
-> >>> 
-> >>> What can I do to fix this problem?
-> >>> 
-> >>> The machine is a Lenovo SL500 laptop, w 2.53ghz core2duo, 4G ram,
-> >>> kernel 2.6.33-2-amd64 from debian sid (also happens with 2.6.32-5
-> >>> from sid)
-> >> 
-> >> You appear to have hit several problems here.  The initial IO error is
-> >> one.  The 440-second sulk is another.
-> >> 
-> >> Does wodim _ever_ terminate, or is a reboot required after this has
-> >> happened?
-> > 
-> > It eventually errors out, and claims it failed to "fixate" the disk.
-> > takes a couple minutes at least to do so.
-> > 
-> >> Are you able to determine whether the hardware is OK?  Does it burn OK
-> >> with other versions of Linux, or other OS'es?
-> > 
-> > It works fine normally. It seems it was some /strange/ iso files that I
-> > was burning. They apparently have invalid RockRidge extensions, which
-> > seems to confuse the heck out of wodim or the drive some how.
-> 
-> The drive shouldn't care about the image contents, and neither should
-> wodim if it's just burning an ISO file. What's the image size? I think
-> that DVD-R has some restrictions on minimum burned radius on the disc,
-> and if you burn a very small image then the drive has to burn a bunch
-> more at the end to comply with that. It could be that this is why it's
-> taking so long, and maybe the timeout wodim is using on that command
-> doesn't account for that. DVD+R doesn't have that problem, I believe.
-> 
-> In that case I don't think there's a kernel problem here, except for the
-> task blocked warning. Not sure what the best solution to that is, seeing
-> as the command is genuinely taking more than 2 minutes to complete..
+On 05/07/2010 05:03 PM, Alan Stern wrote:
+> Hmm.  I'm not sure I believe this data.  For a while (starting with
+> 2.6.33) the usbmon implementation didn't work right with EHCI -- it
+> looked in the transfer buffer before the DMA-unmapping was done, so on
+> a system with>= 4 GB of memory it wouldn't always see the data.  The
+> fix for this was merged only within the last week or so.
+>
+> Can you repeat the USB-2.0 test but this time doing "rmmod ehci-hcd"
+> beforehand?
 
-I've burned small images before without this happening.
-I've tested on two different machines, and the same thing happens
-with these specific ISOs on both.
+I could not remove that module (I assume it is compiled into the kernel) 
+so I limited the memory the kernel can see to 1GB.  You were right, now 
+there is actually useful data in the trace.  Here it is:
 
-Just tried a different small iso, and I get the following errors:
+ffff88001bb82840 685088867 S Bo:1:003:2 -115 31 = 55534243 c9000000 
+00020000 80001085 082e0000 00010000 00000000 40ec00
+ffff88001bb82840 685088982 C Bo:1:003:2 0 31 >
+ffff88001bbc3d80 685089045 S Bi:1:003:1 -115 512 <
+ffff88001bbc3d80 685094708 C Bi:1:003:1 0 512 = 4000ff3f 37c81000 
+00000000 3f000000 00000000 32534d35 394a5a30 30313237
+ffff88001bb82840 685094763 S Bi:1:003:1 -115 13 <
+ffff88001bb82840 685094814 C Bi:1:003:1 0 13 = 55534253 c9000000 00000000 00
+ffff88001bb82840 685095024 S Bo:1:003:2 -115 31 = 55534243 ca000000 
+00020000 80001085 082e0000 00010000 00000000 40a100
+ffff88001bb82840 685095207 C Bo:1:003:2 0 31 >
+ffff88001bbc3d80 685095260 S Bi:1:003:1 -115 512 <
+ffff88001bbc3d80 685095457 C Bi:1:003:1 -32 0
+ffff88001bb82840 685095509 S Co:1:003:0 s 02 01 0000 0081 0000 0
+ffff88001bb82840 685095561 C Co:1:003:0 0 0
+ffff88001bb82840 685095614 S Bi:1:003:1 -115 13 <
+ffff88001bb82840 685095699 C Bi:1:003:1 0 13 = 55534253 ca000000 00020000 01
+ffff88001bb82840 685095768 S Bo:1:003:2 -115 31 = 55534243 cb000000 
+60000000 80000603 00000060 00000000 00000000 000000
+ffff88001bb82840 685095817 C Bo:1:003:2 0 31 >
+ffff88001bbc3d80 685095885 S Bi:1:003:1 -115 96 <
+ffff88001bbc3d80 685096082 C Bi:1:003:1 0 96 = 720b0000 0000000e 
+090c0004 00010000 00000000 40510000 00000000 00000000
+ffff88001bb82840 685096136 S Bi:1:003:1 -115 13 <
+ffff88001bb82840 685096207 C Bi:1:003:1 0 13 = 55534253 cb000000 00000000 00
+ffff88001bb82840 685097822 S Bo:1:003:2 -115 31 = 55534243 cc000000 
+00100000 80000a28 00000000 00000008 00000000 000000
+ffff88001bb82840 685097947 C Bo:1:003:2 0 31 >
+ffff880010e52a80 685098002 S Bi:1:003:1 -115 4096 <
+ffff880010e52a80 685106944 C Bi:1:003:1 0 4096 = fab80010 8ed0bc00 
+b0b80000 8ed88ec0 fbbe007c bf0006b9 0002f3a4 ea210600
+ffff88001bb82840 685106999 S Bi:1:003:1 -115 13 <
+ffff88001bb82840 685107075 C Bi:1:003:1 0 13 = 55534253 cc000000 00000000 00
 
-[313812.805048] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-[313812.805053] sr 1:0:0:0: [sr0] CDB: Synchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
-[313812.805063] ata2.00: cmd a0/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-[313812.805064]          res 40/00:03:00:00:f8/00:00:00:00:00/a0 Emask 0x4 (timeout)
-[313812.805067] ata2.00: status: { DRDY }
-[313812.805072] ata2: hard resetting link
-[313813.125050] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[313813.129685] ata2.00: ACPI cmd ef/10:06:00:00:00:a0 (SET FEATURES) succeeded
-[313813.129689] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-[313813.139531] ata2.00: ACPI cmd ef/10:06:00:00:00:a0 (SET FEATURES) succeeded
-[313813.139534] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-[313813.143436] ata2.00: configured for UDMA/133
-[313813.148831] ata2: EH complete
-
-wodim times out as well.
-
-I do not recall having these issues with older kernels.
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
-
--- 
-Thomas Fjellstrom
-tfjellstrom@strangesoft.net
+-Jonas
