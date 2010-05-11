@@ -1,51 +1,146 @@
-From: Phil Turmel <pturmel-kernel@turmel.org>
-Subject: Re: Marvell eSATA - 88SE6121 on Asus M3A79-T Deluxe - not in AHCI
-Date: Tue, 11 May 2010 10:08:02 -0400
-Message-ID: <4BE964C2.1010702@turmel.org>
-References: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Tue, 11 May 2010 10:44:29 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1005111022130.1834-100000@iolanthe.rowland.org>
+References: <4BE8FF3C.2030406@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmailhost01.isp.att.net ([207.115.11.51]:33450 "EHLO
-	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885Ab0EKOVq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 10:21:46 -0400
-In-Reply-To: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:36993 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754615Ab0EKOoa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 10:44:30 -0400
+In-Reply-To: <4BE8FF3C.2030406@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Phil Reynolds <phil-linux@tinsleyviaduct.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jonas Schwertfeger <jschwertfeger@gmail.com>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Mark Lord <mlord@pobox.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-Hi Phil,
+On Tue, 11 May 2010, Jonas Schwertfeger wrote:
 
-It seems no one noticed your question.  I've CC'd linux-scsi, in case the
-experts have additional/better advice.
-
-On 05/09/2010 10:13 AM, Phil Reynolds wrote:
-> I have recently had cause to start using the eSATA port on my
-> motherboard, an Asus M3A79-T Deluxe, but have found that it is not in
-> AHCI mode and therefore not hotplug capable. There are no settings for
-> the Marvell 88SE6121 controller available, other than simply whether it
-> is enabled or not.
+> On 05/07/2010 05:03 PM, Alan Stern wrote:
+> > Hmm.  I'm not sure I believe this data.  For a while (starting with
+> > 2.6.33) the usbmon implementation didn't work right with EHCI -- it
+> > looked in the transfer buffer before the DMA-unmapping was done, so on
+> > a system with>= 4 GB of memory it wouldn't always see the data.  The
+> > fix for this was merged only within the last week or so.
+> >
+> > Can you repeat the USB-2.0 test but this time doing "rmmod ehci-hcd"
+> > beforehand?
 > 
-> I gather from reading elsewhere that the kernel can put this controller
-> into AHCI - I found a patch but found it was already present in the
-> kernel in Debian lenny's backports. It is their version 2.6.32-bpo.3 -
-> not entirely sure which exact source version this is built from.
-> However, this patch does not work on this motherboard - either that or I
-> have to make it active somehow, and the method of doing so is not obvious.
-[snip /]
+> I could not remove that module (I assume it is compiled into the kernel) 
+> so I limited the memory the kernel can see to 1GB.  You were right, now 
+> there is actually useful data in the trace.  Here it is:
 
-I have a similar chipset in my office server: 88SE6145.  If yours can run
-in AHCI mode, you just need "ahci.marvell_enable=1" on your kernel command
-line, or "options ahci marvell_enable=1" in your modprobe.conf.  (I have
-ahci built-in, and no initramfs, so I put the option in my grub.conf.)
+Great!  This is just what we need.
 
-My Marvell chipset has both SATA and PATA ports... the PATA ports are
-non-functional when the ahci driver runs the chipset.  Your mileage may
-vary.
+> ffff88001bb82840 685088867 S Bo:1:003:2 -115 31 = 55534243 c9000000 
+> 00020000 80001085 082e0000 00010000 00000000 40ec00
 
-HTH,
+That's an IDENTIFY DEVICE command being sent to the device,
+corresponding to the start of the hdparm debugging log:
 
-Phil Turmel
+	outgoing cdb:  85 08 2e 00 00 00 01 00 00 00 00 00 00 40 ec 00
+
+> ffff88001bb82840 685088982 C Bo:1:003:2 0 31 >
+> ffff88001bbc3d80 685089045 S Bi:1:003:1 -115 512 <
+> ffff88001bbc3d80 685094708 C Bi:1:003:1 0 512 = 4000ff3f 37c81000 
+> 00000000 3f000000 00000000 32534d35 394a5a30 30313237
+
+These are the first 32 bytes of the reply.  (If necessary we could get 
+all 512 bytes.)  But at this point the hdparm debugging log says:
+
+	data:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+That certainly seems strange.  The reply data should be there.
+
+> ffff88001bb82840 685094763 S Bi:1:003:1 -115 13 <
+> ffff88001bb82840 685094814 C Bi:1:003:1 0 13 = 55534253 c9000000 00000000 00
+
+And the status value is 0, indicating no problems.  Nevertheless, 
+hdparm reported:
+
+	SG_IO: ATA_16 status=0x0, host_status=0x0, driver_status=0x0
+	SG_IO: bad response (not CHECK_CONDITION)
+
+Presumably this is because it saw all 0's instead of the actual data.  
+Apart from that, it is what one would expect.
+
+> ffff88001bb82840 685095024 S Bo:1:003:2 -115 31 = 55534243 ca000000 
+> 00020000 80001085 082e0000 00010000 00000000 40a100
+
+This is an IDENTIFY PACKET DEVICE command, corresponding to the next 
+two lines in the hdparm log:
+
+	Trying legacy HDIO_DRIVE_CMD
+	outgoing cdb:  85 08 2e 00 00 00 01 00 00 00 00 00 00 40 a1 00
+
+> ffff88001bb82840 685095207 C Bo:1:003:2 0 31 >
+> ffff88001bbc3d80 685095260 S Bi:1:003:1 -115 512 <
+> ffff88001bbc3d80 685095457 C Bi:1:003:1 -32 0
+> ffff88001bb82840 685095509 S Co:1:003:0 s 02 01 0000 0081 0000 0
+> ffff88001bb82840 685095561 C Co:1:003:0 0 0
+> ffff88001bb82840 685095614 S Bi:1:003:1 -115 13 <
+> ffff88001bb82840 685095699 C Bi:1:003:1 0 13 = 55534253 ca000000 00020000 01
+
+The device sends back no data, a Residue value of 512, and Check 
+Condition status.
+
+> ffff88001bb82840 685095768 S Bo:1:003:2 -115 31 = 55534243 cb000000 
+> 60000000 80000603 00000060 00000000 00000000 000000
+
+This is the REQUEST SENSE command automatically generated by the 
+usb-storage driver.
+
+> ffff88001bb82840 685095817 C Bo:1:003:2 0 31 >
+> ffff88001bbc3d80 685095885 S Bi:1:003:1 -115 96 <
+> ffff88001bbc3d80 685096082 C Bi:1:003:1 0 96 = 720b0000 0000000e 
+> 090c0004 00010000 00000000 40510000 00000000 00000000
+
+And these are the first 32 sense data bytes.  Here's what hdparm had to
+say:
+
+	data:  40 00 ff 3f 37 c8 10 00 00 00 00 00 3f 00 00 00
+	SG_IO: ATA_16 status=0x2, host_status=0x0, driver_status=0x8
+	SG_IO: sb[]:  72 0b 00 00 00 00 00 0e 09 0c 00 04 00 01 00 00 00 00 00 
+	00 40 51 00 00 00 00 00 00 00 00 00 00
+	SG_IO: desc[]:  09 0c 00 04 00 01 00 00 00 00 00 00
+	       ATA_16 stat=51 err=04 nsect=01 lbal=00 lbam=00 lbah=00 dev=40
+	I/O error, ata_op=0xa1 ata_status=0x51 ata_error=0x04
+
+Notice that the "data" line contains the data from the previous
+command!  The status and sense buffer ("sb") values appear correct.
+
+> ffff88001bb82840 685096136 S Bi:1:003:1 -115 13 <
+> ffff88001bb82840 685096207 C Bi:1:003:1 0 13 = 55534253 cb000000 00000000 00
+
+That's the status from the REQUEST SENSE.
+
+> ffff88001bb82840 685097822 S Bo:1:003:2 -115 31 = 55534243 cc000000 
+> 00100000 80000a28 00000000 00000008 00000000 000000
+
+This is a READ(10) command, asking for 8 blocks of data starting at 
+block 0.
+
+> ffff88001bb82840 685097947 C Bo:1:003:2 0 31 >
+> ffff880010e52a80 685098002 S Bi:1:003:1 -115 4096 <
+> ffff880010e52a80 685106944 C Bi:1:003:1 0 4096 = fab80010 8ed0bc00 
+> b0b80000 8ed88ec0 fbbe007c bf0006b9 0002f3a4 ea210600
+
+And that's the start of the first block of data.  It looks normal 
+enough.
+
+> ffff88001bb82840 685106999 S Bi:1:003:1 -115 13 <
+> ffff88001bb82840 685107075 C Bi:1:003:1 0 13 = 55534253 cc000000 00000000 00
+
+
+So overall, something is messing up with regard to the data coming back
+from the device.  hdparm sees the data for the first command as being
+the response to the second command.  It could be a problem in the
+kernel or a problem in hdparm.
+
+No doubt hdparm is easier to check up on.  Mark, could this be some 
+sort of simple programming error?
+
+Alan Stern
+
