@@ -1,72 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Marvell eSATA - 88SE6121 on Asus M3A79-T Deluxe - not in AHCI
-Date: Tue, 11 May 2010 17:09:42 -0400
-Message-ID: <4BE9C796.7080605@garzik.org>
-References: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com> <4BE964C2.1010702@turmel.org> <20100511182128.216144e4uzjtufbs@topdeck.tinsleyviaduct.com> <4BE9A1B3.3020208@turmel.org>
+From: Michael Stroucken <mxs@cmu.edu>
+Subject: RE: Possible explanation for mptsas ATA pass-through hangs
+Date: Tue, 11 May 2010 17:15:08 -0400
+Message-ID: <4BE9C8DC.7060907@cmu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:59223 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770Ab0EKVJr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 17:09:47 -0400
-In-Reply-To: <4BE9A1B3.3020208@turmel.org>
+Received: from tamade.ascient.net ([65.99.219.195]:33656 "EHLO
+	tamade.ascient.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630Ab0EKVXb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 17:23:31 -0400
+Received: from stroop.wv.cc.cmu.edu (STROOP.WV.CC.CMU.EDU [128.237.236.97])
+	by tamade.ascient.net (Postfix) with ESMTPSA id 00E39400F9
+	for <linux-scsi@vger.kernel.org>; Tue, 11 May 2010 17:16:58 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Phil Turmel <pturmel-kernel@turmel.org>
-Cc: Phil Reynolds <phil-linux@tinsleyviaduct.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 05/11/2010 02:28 PM, Phil Turmel wrote:
-> On 05/11/2010 01:21 PM, Phil Reynolds wrote:
->> Quoting "Phil Turmel"<pturmel-kernel@turmel.org>:
->>
->>> I have a similar chipset in my office server: 88SE6145.  If yours can run
->>> in AHCI mode, you just need "ahci.marvell_enable=1" on your kernel
->>> command
->>> line, or "options ahci marvell_enable=1" in your modprobe.conf.  (I have
->>> ahci built-in, and no initramfs, so I put the option in my grub.conf.)
->>
->> Neither works for me unfortunately.
->>
->
-> Hmmm.  If you post your dmesg, lspci, and config, I'll be happy to compare
-> to my setup.  It might be something as simple as the Marvell driver loading
-> first and claiming the device.
->
-> The relevant part of my dmesg looks like this:
->
-> [    4.802703] ahci 0000:06:00.0: PCI INT A ->  GSI 17 (level, low) ->  IRQ 17
-> [    4.806351] ahci 0000:06:00.0: controller can't do NCQ, turning off CAP_NCQ
-> [    4.809921] ahci 0000:06:00.0: controller can't do PMP, turning off CAP_PMP
-> [    4.813334] ahci 0000:06:00.0: MV_AHCI HACK: port_map 1f ->  f
-> [    4.816656] ahci 0000:06:00.0: Disabling your PATA port. Use the boot option 'ahci.marvell_enable=0' to avoid this.
-> [    4.823333] ahci: SSS flag set, parallel bus scan disabled
-> [    4.826765] ahci 0000:06:00.0: AHCI 0001.0000 32 slots 5 ports 3 Gbps 0xf impl RAID mode
-> [    4.830240] ahci 0000:06:00.0: flags: 64bit stag slum part
-> [    4.833810] ahci 0000:06:00.0: setting latency timer to 64
-> [    4.834021] scsi4 : ahci
-> [    4.837755] scsi5 : ahci
-> [    4.841426] scsi6 : ahci
-> [    4.844997] scsi7 : ahci
-> [    4.848509] scsi8 : ahci
-> [    4.851956] ata5: SATA max UDMA/133 irq_stat 0x02400000, PHY RDY changed irq 17
-> [    4.855423] ata6: SATA max UDMA/133 irq_stat 0x02400000, PHY RDY changed irq 17
-> [    4.858814] ata7: SATA max UDMA/133 abar m1024@0xfbfffc00 port 0xfbfffe00 irq 17
-> [    4.862177] ata8: SATA max UDMA/133 abar m1024@0xfbfffc00 port 0xfbfffe80 irq 17
-> [    4.865472] ata9: DUMMY
->
-> The Marvell driver never gets a chance to claim my device, as it is disabled in
-> my kernel config.  If you are using modules, you might want to blacklist "sata_mv".
+I have a research cluster of around 140 nodes, and have been affected by 
+this problem since we put them online. The machines are Tyan boards with 
+dual E54x0 CPUs and onboard SAS, with four SATA drives attached.
 
-sata_mv is not related to this hardware.
+The half of the cluster with very high disk usage displayed this issue 
+on perhaps one machine every two days, while the other half only had 
+problems when SMART requests were issued. The bus would reset, and a 
+drive would be logically ejected and reinserted (but at a different 
+place, like /dev/sde).
 
-pata_marvell works with 6101/6121/6141/6145 PATA ports.
+Regardless of mptscsih.c being the correct place to enforce alignment, 
+applying the patch Ryan Kuester provided to the kernel (2.6.32) running 
+on the cluster has 1) stopped future occurrences of this problem, 2) 
+made it immune against problems from running Ryan's bomb program and 3) 
+remaining drive problems only occurred on unpatched nodes.
 
-ahci works with 6101/6121/6141/6145 SATA ports, with marvell_enable=1.
+These messages still appear regularly though:-
+[702162.202899] sd 4:0:3:0: [sdd] Sense Key : Recovered Error [current] 
+[descriptor]
+[702162.293329] Descriptor sense data with sense descriptors (in hex):
+[702162.368629]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
+[702162.447985]         00 4f 00 c2 40 50
+[702162.494805] sd 4:0:3:0: [sdd] Add. Sense: ATA pass through 
+information available
 
-	Jeff
+I haven't seen other messages yet from mptsas users that Ryan's patch 
+works, so I provide my experience.
 
-
-
-
+Greetings,
+Michael.
