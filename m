@@ -1,62 +1,50 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/7] qla4xxx: added BSG support
-Date: Tue, 11 May 2010 10:51:10 -0500
-Message-ID: <4BE97CEE.8060404@cs.wisc.edu>
-References: <20100511075526.GA30474@sles11sp1b1.qlogic.org>
+Subject: Re: [PATCH 4/7][RFC] qla4xxx: added Add host attributes to export
+ host	information to sysfs.
+Date: Tue, 11 May 2010 10:58:46 -0500
+Message-ID: <4BE97EB6.6060802@cs.wisc.edu>
+References: <20100511075756.GA30505@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43663 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:40420 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751894Ab0EKPuO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2010 11:50:14 -0400
-In-Reply-To: <20100511075526.GA30474@sles11sp1b1.qlogic.org>
+	id S1751438Ab0EKP5n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 May 2010 11:57:43 -0400
+In-Reply-To: <20100511075756.GA30505@sles11sp1b1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Cc: james.bottomley@suse.de, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com
 
-I think we need James's comments on this one. I am not sure what is right.
+On 05/11/2010 02:57 AM, Vikas Chaudhary wrote:
+> +struct device_attribute *qla4xxx_host_attrs[] = {
+> +	&dev_attr_driver_version,
 
-On 05/11/2010 02:55 AM, Vikas Chaudhary wrote:
-> This BSG interface is on top of patch :
-> http://marc.info/?l=linux-scsi&m=126884917217355&w=2
->
-
-
-All I want to be able to do is allow any app to be able to config any 
-iscsi cards. I want to support Qlogic apps, but then I also want to 
-support iscsiadm, virt tools, installers, boot tools, etc.
+Are we still supposed to be using the MODULE_VERSION() and 
+/sys/module/qla4xxx/version for this? It seems like that was given as a 
+review comment for a while, but some drivers have added it and some have 
+not.
 
 
-> +	case ISCSI_BSG_HST_VENDOR:
-> +		rval = qla4xxx_process_vendor_specific(job);
-> +		break;
+
+> +	&dev_attr_fw_version,
+> +	&dev_attr_serial_num,
+> +	&dev_attr_isp_name,
+> +	&dev_attr_fw_state,
+> +	&dev_attr_board_id,
+> +	&dev_attr_hba_reset,
 
 
-I like the idea of allowing you to use the ISCSI_BSG_HST_VENDOR for all 
-your commands, because it makes the kernel code so very very simple. If 
-you guys can provide a userspace gpl friendly lib or plugin to a lib 
-like IMA that allows distros tools to manage your card, then I am happy 
-with this approach.
-
-My concern with this is that, it takes you guys so long to get things 
-out. We have no idea when or if it will ever be done.
+I think resetting the host should be a common scsi_host sysfs attr in 
+scsi_sysfs.c. It seems other drivers have added their own reset host 
+files, so I am fine with this if other people are.
 
 
-> +	case ISCSI_BSG_HST_NET_CONFIG:
-> +		printk(KERN_ERR "ISCSI_BSG_HST_NET_CONFIG Commands "
-> +		    "NOT Supported\n");
-> +		rval = -ENOSYS;
-> +		break;
 
-OTOH, I like the idea of ethtool like interface where for common 
-operations there is a command command. Then the driver takes that 
-info/cmd and does its vendor specifics.
+> +	&dev_attr_ip_state,
 
-
-James, someone mentioned that in the past you might have said it is ok 
-to pass blobs around if it gets passed down directly to hardware. This 
-is the case for qla4xxx here. Is it ok to let them just use the 
-HST_VENDOR command?
+I think this should be a common iscsi sysfs file. If we are going to do 
+the userspace lib over that translates driver specifics to a common api 
+though, then I am fine with this.
