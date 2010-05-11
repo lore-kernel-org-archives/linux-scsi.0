@@ -1,81 +1,51 @@
-From: MAGARETH WILLIAMS <amadeus1@base.be>
-Subject: I WILL SEND YOU FURTHER DETAILS
-Date: Tue, 11 May 2010 13:11:00 +0200
-Message-ID: <96318d2a361a605be0d176d3364c4dab__32912.6934441321$1273579332$gmane$org@base.be>
-Reply-To: <bc101707bc@yahoo.co.jp>
+From: Phil Turmel <pturmel-kernel@turmel.org>
+Subject: Re: Marvell eSATA - 88SE6121 on Asus M3A79-T Deluxe - not in AHCI
+Date: Tue, 11 May 2010 10:08:02 -0400
+Message-ID: <4BE964C2.1010702@turmel.org>
+References: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from postbode01.c.iops.be ([212.53.5.91]:42348 "EHLO
-	postbode01.versateladsl.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751849Ab0EKMCF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 May 2010 08:02:05 -0400
+Received: from fmailhost01.isp.att.net ([207.115.11.51]:33450 "EHLO
+	fmailhost01.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751885Ab0EKOVq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 10:21:46 -0400
+In-Reply-To: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Phil Reynolds <phil-linux@tinsleyviaduct.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+Hi Phil,
 
+It seems no one noticed your question.  I've CC'd linux-scsi, in case the
+experts have additional/better advice.
 
-Dearest,
+On 05/09/2010 10:13 AM, Phil Reynolds wrote:
+> I have recently had cause to start using the eSATA port on my
+> motherboard, an Asus M3A79-T Deluxe, but have found that it is not in
+> AHCI mode and therefore not hotplug capable. There are no settings for
+> the Marvell 88SE6121 controller available, other than simply whether it
+> is enabled or not.
+> 
+> I gather from reading elsewhere that the kernel can put this controller
+> into AHCI - I found a patch but found it was already present in the
+> kernel in Debian lenny's backports. It is their version 2.6.32-bpo.3 -
+> not entirely sure which exact source version this is built from.
+> However, this patch does not work on this motherboard - either that or I
+> have to make it active somehow, and the method of doing so is not obvious.
+[snip /]
 
-I am Ms Magareth Williams,now undergoing medical treatment for cancer i=
-n
-Malaysia. Before I took ill, I was the, Principal Assurance manager of =
-BNP
-Paribas Private Bank.I am getting in touch with you regarding the estat=
-e of
-one Mr. Goudie  and an investment placed under my management 7 years ag=
-o.=20
-He instructed that we liquidate the principal sum (18,350,000.00 Millio=
-n
-United State Dollars) because he needed to make an urgent investment th=
-at
-requires cash payment in Europe. We got in touch with his nominated
-financial institution  in Europe, who agreed to receive this money for =
-a
-fee and make cash available to Mr. Goudie  for his business operations.
+I have a similar chipset in my office server: 88SE6145.  If yours can run
+in AHCI mode, you just need "ahci.marvell_enable=1" on your kernel command
+line, or "options ahci marvell_enable=1" in your modprobe.conf.  (I have
+ahci built-in, and no initramfs, so I put the option in my grub.conf.)
 
-To my surprise, the corresponding bank in Europe got in touch with us l=
-ast
-year that nobody has come forward to claim the money and it has reached=
- the
-threshold for the bank to declare it to the government as unclaimed
-deposit. On further enquiry, I found that, Mr. Goudie  was involved in =
-an
-accident in Mainland China and that he died intestate. Because he has n=
-o
-next of kin all his assets in Europe are about to go to the government.=
- I
-write you to makes you  to stand as his next of kin and surviving heir =
-to
-his assets and the beneficiary of the deposit valued 18,350,000.00 Mill=
-ion
-United State Dollars
+My Marvell chipset has both SATA and PATA ports... the PATA ports are
+non-functional when the ahci driver runs the chipset.  Your mileage may
+vary.
 
-My condition has become hopeless, my Doctor recently told me that my
-cancer has spread and that I have a few months to live. Having known th=
-e
-hopelessness of my health condition, and the urgency to act, I am
-compelled to seek your assistance to get this money out by standing as =
-the
-beneficiary and using part of these funds to help the poor and sick peo=
-ple
-in society. I have exclusive access to Mr. Goudie=E2=80=99s file and al=
-l his
-investment record.  I hope you are somebody that can be trusted.
+HTH,
 
-If we can be of one accord, we should act swiftly on this. If you are
-interested in this deal, kindly get back to me quickly with your full
-details and I will proceed to give you full modalities on how this can =
-be
-acheived.
-
-I await your response
-
-Ms Magareth Williams
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Phil Turmel
