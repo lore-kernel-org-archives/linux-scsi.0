@@ -1,7 +1,7 @@
 From: "Phil Reynolds" <phil-linux@tinsleyviaduct.com>
 Subject: Re: Marvell eSATA - 88SE6121 on Asus M3A79-T Deluxe - not in AHCI
-Date: Tue, 11 May 2010 17:53:23 +0100
-Message-ID: <20100511175323.12391pgvoja7f62r@topdeck.tinsleyviaduct.com>
+Date: Tue, 11 May 2010 18:21:28 +0100
+Message-ID: <20100511182128.216144e4uzjtufbs@topdeck.tinsleyviaduct.com>
 References: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com>
 	<4BE964C2.1010702@turmel.org>
 Mime-Version: 1.0
@@ -25,15 +25,7 @@ Quoting "Phil Turmel" <pturmel-kernel@turmel.org>:
 > line, or "options ahci marvell_enable=1" in your modprobe.conf.  (I have
 > ahci built-in, and no initramfs, so I put the option in my grub.conf.)
 
-Tried in grub.conf already, no success... will try the modprobe.conf  
-way in case of differing mileage.
-
-> My Marvell chipset has both SATA and PATA ports... the PATA ports are
-> non-functional when the ahci driver runs the chipset.  Your mileage may
-> vary.
-
-I gather the PATA port on my board is on the Southbridge instead - but  
-I don't use it anyway.
+Neither works for me unfortunately.
 
 -- 
 Phil Reynolds
