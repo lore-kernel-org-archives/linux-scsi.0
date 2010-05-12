@@ -1,49 +1,53 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Wed, 12 May 2010 17:42:18 GMT
-Message-ID: <201005121742.o4CHgIO4013031@demeter.kernel.org>
-References: <bug-13594-11613@https.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Wed, 12 May 2010 14:48:03 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1005121444450.1353-100000@iolanthe.rowland.org>
+References: <1273678767.2808.17.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:34186 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756911Ab0ELRmU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 13:42:20 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4CHgIZr013032
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 12 May 2010 17:42:18 GMT
-In-Reply-To: <bug-13594-11613@https.bugzilla.kernel.org/>
+Received: from iolanthe.rowland.org ([192.131.102.54]:52461 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755671Ab0ELSsH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 14:48:07 -0400
+In-Reply-To: <1273678767.2808.17.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Mark Lord <mlord@pobox.com>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13594
+On Wed, 12 May 2010, James Bottomley wrote:
 
-
-
-
-
---- Comment #14 from Steinar H. Gunderson <sgunderson@bigfoot.com>  2010-05-12 17:42:13 ---
-On Wed, May 12, 2010 at 03:20:14PM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> The originally reported problem has been fixed. See:
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=91b25002bd58f55207e4662a611a6cded4ef9834
+> > This sounds like it is a bug in the SCSI midlayer, not in usb-storage.  
 > 
-> I was told that was scheduled to go in lk 2.6.33
+> I don't think so ... we'll return sense if sense is present (i.e. the
+> device returned CHECK CONDITION).
+
+> Sense data is never returned in the absence of CHECK CONDITION.  This is
+> what SAT says has to happen if you set CK_COND in ATA(12/16):
 > 
-> Reading the bugzilla entry some of the latter posts
-> could be reporting some other LSI related problems.
-> Anyway, the bug report should be closed.
+>         The CK_COND (Check Condition) bit may be used to request the
+>         SATL to
+>         return a copy of ATA register information in the sense data upon
+>         command completion. If the CK_COND bit is set to one the SATL
+>         shall
+>         return a status of CHECK CONDITION when the ATA command
+>         completes,
+>         even if the command completes successfully, and return the ATA
+>         Normal Output fields (see ATA8-ACS) in the sense data using the
+>         ATA Return descriptor (see 12.2.6). If the CK_COND bit is set to
+>         zero, then the SATL shall terminate the command with CHECK
+>         CONDITION status only if an error occurs in processing the
+>         command. See clause 11 for a description of ATA error
+>         conditions.
 
-It actually seems like that in 2.6.34-rc6, I can use SMART pretty much with
-impunity. Don't know if I'm just luckier now or what happened...
+That's right.  Since the command in question did have CK_COND set, the 
+device should have returned CHECK CONDITION status instead of GOOD 
+status.
 
-/* Steinar */
+Therefore this indicates a bug in the device, not in the kernel.  
+hdparm could work around it here by issuing an explicit REQUEST SENSE
+command, but in general it will cause trouble.
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Alan Stern
+
