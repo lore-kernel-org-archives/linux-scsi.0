@@ -1,192 +1,287 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/7] lpfc 8.3.13: FC Discovery Fixes and enhancements.
-Date: Wed, 12 May 2010 09:30:43 -0400
-Message-ID: <1273671063.24670.17.camel@wookie>
+Subject: [PATCH 2/7] lpfc 8.3.13: Initialization code clean up and fixes.
+Date: Wed, 12 May 2010 09:31:14 -0400
+Message-ID: <1273671094.24670.18.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:16371 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:16377 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751923Ab0ELNbZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 09:31:25 -0400
+	with ESMTP id S1751923Ab0ELNbv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 09:31:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-- Retry PLOGI up to 48 times when LS_RJT reason is
-  "Unable to supply requested data."
-- When dev loss timeout occurs do not change state if there
-  is an outstanding REG_LOGIN.
-- Add logic to ignore REG_LOGIN completion if discovery is
-  restarted while waiting for REG_LOGIN.
-- Only change state on REG_LOGIN completion if still in
-  state waiting for REG_LOGIN completion.
-- Only send ADISCs to FCP-2 Targets (not Initiators).
+- Add poll or wait flag parameter to hba_init_link and hba_down_link.
+- (From Linux Community) Make return with ENXIO negative.
+- Remove unused INB code from driver.
+- Prevent block_mgmt_io from returning until mailbox is inactive.
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_crtn.h      |    1 +
- lpfc_disc.h      |    2 ++
- lpfc_els.c       |    9 +++++++++
- lpfc_hbadisc.c   |   35 ++++++++++++++++++++++++++++++++---
- lpfc_nportdisc.c |    7 ++++++-
- 5 files changed, 50 insertions(+), 4 deletions(-)
+ lpfc.h      |    8 ++------
+ lpfc_attr.c |    4 ++--
+ lpfc_hw.h   |    8 --------
+ lpfc_init.c |   40 +++++++++++++++++++++++++++++++++++-----
+ lpfc_mbox.c |    1 -
+ lpfc_sli.c  |   22 ++++------------------
+ 6 files changed, 43 insertions(+), 40 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2010-05-05 08:52:38.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2010-05-12 09:00:35.000000000 -0400
-@@ -41,6 +41,7 @@ void lpfc_read_config(struct lpfc_hba *,
- void lpfc_read_lnk_stat(struct lpfc_hba *, LPFC_MBOXQ_t *);
- int lpfc_reg_rpi(struct lpfc_hba *, uint16_t, uint32_t, uint8_t *,
- 		 LPFC_MBOXQ_t *, uint32_t);
-+void lpfc_set_var(struct lpfc_hba *, LPFC_MBOXQ_t *, uint32_t, uint32_t);
- void lpfc_unreg_login(struct lpfc_hba *, uint16_t, uint32_t, LPFC_MBOXQ_t *);
- void lpfc_unreg_did(struct lpfc_hba *, uint16_t, uint32_t, LPFC_MBOXQ_t *);
- void lpfc_reg_vpi(struct lpfc_vport *, LPFC_MBOXQ_t *);
-diff -upNr a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
---- a/drivers/scsi/lpfc/lpfc_disc.h	2010-05-05 08:52:38.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_disc.h	2010-05-12 09:00:35.000000000 -0400
-@@ -114,6 +114,8 @@ struct lpfc_nodelist {
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2010-05-12 09:02:39.000000000 -0400
+@@ -506,10 +506,10 @@ lpfc_link_state_store(struct device *dev
+ 
+ 	if ((strncmp(buf, "up", sizeof("up") - 1) == 0) &&
+ 			(phba->link_state == LPFC_LINK_DOWN))
+-		status = phba->lpfc_hba_init_link(phba);
++		status = phba->lpfc_hba_init_link(phba, MBX_NOWAIT);
+ 	else if ((strncmp(buf, "down", sizeof("down") - 1) == 0) &&
+ 			(phba->link_state >= LPFC_LINK_UP))
+-		status = phba->lpfc_hba_down_link(phba);
++		status = phba->lpfc_hba_down_link(phba, MBX_NOWAIT);
+ 
+ 	if (status == 0)
+ 		return strlen(buf);
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2010-05-12 09:02:39.000000000 -0400
+@@ -510,9 +510,9 @@ struct lpfc_hba {
+ 	void (*lpfc_stop_port)
+ 		(struct lpfc_hba *);
+ 	int (*lpfc_hba_init_link)
+-		(struct lpfc_hba *);
++		(struct lpfc_hba *, uint32_t);
+ 	int (*lpfc_hba_down_link)
+-		(struct lpfc_hba *);
++		(struct lpfc_hba *, uint32_t);
+ 
+ 	/* SLI4 specific HBA data structure */
+ 	struct lpfc_sli4_hba sli4_hba;
+@@ -525,7 +525,6 @@ struct lpfc_hba {
+ #define LPFC_SLI3_NPIV_ENABLED		0x02
+ #define LPFC_SLI3_VPORT_TEARDOWN	0x04
+ #define LPFC_SLI3_CRP_ENABLED		0x08
+-#define LPFC_SLI3_INB_ENABLED		0x10
+ #define LPFC_SLI3_BG_ENABLED		0x20
+ #define LPFC_SLI3_DSS_ENABLED		0x40
+ 	uint32_t iocb_cmd_size;
+@@ -557,9 +556,6 @@ struct lpfc_hba {
+ 
+ 	MAILBOX_t *mbox;
+ 	uint32_t *mbox_ext;
+-	uint32_t *inb_ha_copy;
+-	uint32_t *inb_counter;
+-	uint32_t inb_last_counter;
+ 	uint32_t ha_copy;
+ 	struct _PCB *pcb;
+ 	struct _IOCB *IOCBs;
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2010-05-12 09:02:39.000000000 -0400
+@@ -3014,18 +3014,10 @@ struct sli3_pgp {
+ 	uint32_t hbq_get[16];
  };
  
- /* Defines for nlp_flag (uint32) */
-+#define NLP_IGNR_REG_CMPL  0x00000001 /* Rcvd rscn before we cmpl reg login */
-+#define NLP_REG_LOGIN_SEND 0x00000002   /* sent reglogin to adapter */
- #define NLP_PLOGI_SND      0x00000020	/* sent PLOGI request for this entry */
- #define NLP_PRLI_SND       0x00000040	/* sent PRLI request for this entry */
- #define NLP_ADISC_SND      0x00000080	/* sent ADISC request for this entry */
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2010-05-05 08:52:38.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2010-05-12 09:00:35.000000000 -0400
-@@ -2740,6 +2740,15 @@ lpfc_els_retry(struct lpfc_hba *phba, st
- 				retry = 1;
- 				break;
- 			}
-+			if (stat.un.b.lsRjtRsnCodeExp ==
-+			    LSEXP_CANT_GIVE_DATA) {
-+				if (cmd == ELS_CMD_PLOGI) {
-+					delay = 1000;
-+					maxretry = 48;
-+				}
-+				retry = 1;
-+				break;
-+			}
- 			if (cmd == ELS_CMD_PLOGI) {
- 				delay = 1000;
- 				maxretry = lpfc_max_els_tries + 1;
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-05-05 08:52:38.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-05-12 09:00:35.000000000 -0400
-@@ -275,7 +275,8 @@ lpfc_dev_loss_tmo_handler(struct lpfc_no
- 	if (!(vport->load_flag & FC_UNLOADING) &&
- 	    !(ndlp->nlp_flag & NLP_DELAY_TMO) &&
- 	    !(ndlp->nlp_flag & NLP_NPR_2B_DISC) &&
--	    (ndlp->nlp_state != NLP_STE_UNMAPPED_NODE))
-+	    (ndlp->nlp_state != NLP_STE_UNMAPPED_NODE) &&
-+	    (ndlp->nlp_state != NLP_STE_REG_LOGIN_ISSUE))
- 		lpfc_disc_state_machine(vport, ndlp, NULL, NLP_EVT_DEVICE_RM);
+-struct sli3_inb_pgp {
+-	uint32_t ha_copy;
+-	uint32_t counter;
+-	struct lpfc_pgp port[MAX_RINGS];
+-	uint32_t hbq_get[16];
+-};
+-
+ union sli_var {
+ 	struct sli2_desc	s2;
+ 	struct sli3_desc	s3;
+ 	struct sli3_pgp		s3_pgp;
+-	struct sli3_inb_pgp	s3_inb_pgp;
+ };
  
- 	lpfc_unregister_unused_fcf(phba);
-@@ -2715,11 +2716,35 @@ lpfc_mbx_cmpl_reg_login(struct lpfc_hba 
- 	struct lpfc_vport  *vport = pmb->vport;
- 	struct lpfc_dmabuf *mp = (struct lpfc_dmabuf *) (pmb->context1);
- 	struct lpfc_nodelist *ndlp = (struct lpfc_nodelist *) pmb->context2;
-+	struct Scsi_Host  *shost = lpfc_shost_from_vport(vport);
+ typedef struct {
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2010-05-12 09:02:39.000000000 -0400
+@@ -621,6 +621,7 @@ lpfc_config_port_post(struct lpfc_hba *p
+ /**
+  * lpfc_hba_init_link - Initialize the FC link
+  * @phba: pointer to lpfc hba data structure.
++ * @flag: mailbox command issue mode - either MBX_POLL or MBX_NOWAIT
+  *
+  * This routine will issue the INIT_LINK mailbox command call.
+  * It is available to other drivers through the lpfc_hba data
+@@ -632,7 +633,7 @@ lpfc_config_port_post(struct lpfc_hba *p
+  *		Any other value - error
+  **/
+ int
+-lpfc_hba_init_link(struct lpfc_hba *phba)
++lpfc_hba_init_link(struct lpfc_hba *phba, uint32_t flag)
+ {
+ 	struct lpfc_vport *vport = phba->pport;
+ 	LPFC_MBOXQ_t *pmb;
+@@ -651,7 +652,7 @@ lpfc_hba_init_link(struct lpfc_hba *phba
+ 		phba->cfg_link_speed);
+ 	pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+ 	lpfc_set_loopback_flag(phba);
+-	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
++	rc = lpfc_sli_issue_mbox(phba, pmb, flag);
+ 	if (rc != MBX_SUCCESS) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 			"0498 Adapter failed to init, mbxCmd x%x "
+@@ -664,17 +665,21 @@ lpfc_hba_init_link(struct lpfc_hba *phba
+ 		writel(0xffffffff, phba->HAregaddr);
+ 		readl(phba->HAregaddr); /* flush */
+ 		phba->link_state = LPFC_HBA_ERROR;
+-		if (rc != MBX_BUSY)
++		if (rc != MBX_BUSY || flag == MBX_POLL)
+ 			mempool_free(pmb, phba->mbox_mem_pool);
+ 		return -EIO;
+ 	}
+ 	phba->cfg_suppress_link_up = LPFC_INITIALIZE_LINK;
++	if (flag == MBX_POLL)
++		mempool_free(pmb, phba->mbox_mem_pool);
  
- 	pmb->context1 = NULL;
+ 	return 0;
+ }
  
--	/* Good status, call state machine */
--	lpfc_disc_state_machine(vport, ndlp, pmb, NLP_EVT_CMPL_REG_LOGIN);
-+	if (ndlp->nlp_flag & NLP_REG_LOGIN_SEND)
-+		ndlp->nlp_flag &= ~NLP_REG_LOGIN_SEND;
+ /**
+  * lpfc_hba_down_link - this routine downs the FC link
++ * @phba: pointer to lpfc hba data structure.
++ * @flag: mailbox command issue mode - either MBX_POLL or MBX_NOWAIT
+  *
+  * This routine will issue the DOWN_LINK mailbox command call.
+  * It is available to other drivers through the lpfc_hba data
+@@ -685,7 +690,7 @@ lpfc_hba_init_link(struct lpfc_hba *phba
+  *		Any other value - error
+  **/
+ int
+-lpfc_hba_down_link(struct lpfc_hba *phba)
++lpfc_hba_down_link(struct lpfc_hba *phba, uint32_t flag)
+ {
+ 	LPFC_MBOXQ_t *pmb;
+ 	int rc;
+@@ -701,7 +706,7 @@ lpfc_hba_down_link(struct lpfc_hba *phba
+ 		"0491 Adapter Link is disabled.\n");
+ 	lpfc_down_link(phba, pmb);
+ 	pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+-	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
++	rc = lpfc_sli_issue_mbox(phba, pmb, flag);
+ 	if ((rc != MBX_SUCCESS) && (rc != MBX_BUSY)) {
+ 		lpfc_printf_log(phba,
+ 		KERN_ERR, LOG_INIT,
+@@ -711,6 +716,9 @@ lpfc_hba_down_link(struct lpfc_hba *phba
+ 		mempool_free(pmb, phba->mbox_mem_pool);
+ 		return -EIO;
+ 	}
++	if (flag == MBX_POLL)
++		mempool_free(pmb, phba->mbox_mem_pool);
 +
-+	if (ndlp->nlp_flag &  NLP_IGNR_REG_CMPL ||
-+		ndlp->nlp_state != NLP_STE_REG_LOGIN_ISSUE) {
-+		/* We rcvd a rscn after issuing this
-+		 * mbox reg login, we may have cycled
-+		 * back through the state and be
-+		 * back at reg login state so this
-+		 * mbox needs to be ignored becase
-+		 * there is another reg login in
-+		 * proccess.
-+		 */
-+		spin_lock_irq(shost->host_lock);
-+		ndlp->nlp_flag &= ~NLP_IGNR_REG_CMPL;
-+		spin_unlock_irq(shost->host_lock);
-+		if (phba->sli_rev == LPFC_SLI_REV4)
-+			lpfc_sli4_free_rpi(phba,
-+				pmb->u.mb.un.varRegLogin.rpi);
-+
-+	} else
-+		/* Good status, call state machine */
-+		lpfc_disc_state_machine(vport, ndlp, pmb,
-+				NLP_EVT_CMPL_REG_LOGIN);
-+
- 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
- 	kfree(mp);
- 	mempool_free(pmb, phba->mbox_mem_pool);
-@@ -3842,6 +3867,9 @@ lpfc_cleanup_node(struct lpfc_vport *vpo
- 				kfree(mp);
- 			}
- 			list_del(&mb->list);
-+			if (phba->sli_rev == LPFC_SLI_REV4)
-+				lpfc_sli4_free_rpi(phba,
-+					 mb->u.mb.un.varRegLogin.rpi);
- 			mempool_free(mb, phba->mbox_mem_pool);
- 			/* We shall not invoke the lpfc_nlp_put to decrement
- 			 * the ndlp reference count as we are in the process
-@@ -3883,6 +3911,7 @@ lpfc_nlp_remove(struct lpfc_vport *vport
+ 	return 0;
+ }
  
- 	lpfc_cancel_retry_delay_tmo(vport, ndlp);
- 	if ((ndlp->nlp_flag & NLP_DEFER_RM) &&
-+		!(ndlp->nlp_flag & NLP_REG_LOGIN_SEND) &&
- 	    !(ndlp->nlp_flag & NLP_RPI_VALID)) {
- 		/* For this case we need to cleanup the default rpi
- 		 * allocated by the firmware.
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2010-05-05 08:52:38.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2010-05-12 09:00:35.000000000 -0400
-@@ -626,7 +626,8 @@ lpfc_disc_set_adisc(struct lpfc_vport *v
- 	if (!(vport->fc_flag & FC_PT2PT)) {
- 		/* Check config parameter use-adisc or FCP-2 */
- 		if ((vport->cfg_use_adisc && (vport->fc_flag & FC_RSCN_MODE)) ||
--		    ndlp->nlp_fcp_info & NLP_FCP_2_DEVICE) {
-+		    ((ndlp->nlp_fcp_info & NLP_FCP_2_DEVICE) &&
-+		     (ndlp->nlp_type & NLP_FCP_TARGET))) {
- 			spin_lock_irq(shost->host_lock);
- 			ndlp->nlp_flag |= NLP_NPR_ADISC;
- 			spin_unlock_irq(shost->host_lock);
-@@ -962,6 +963,7 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_
- 			mbox->mbox_cmpl = lpfc_mbx_cmpl_fdmi_reg_login;
- 			break;
- 		default:
-+			ndlp->nlp_flag |= NLP_REG_LOGIN_SEND;
- 			mbox->mbox_cmpl = lpfc_mbx_cmpl_reg_login;
+@@ -2279,10 +2287,32 @@ static void
+ lpfc_block_mgmt_io(struct lpfc_hba * phba)
+ {
+ 	unsigned long iflag;
++	uint8_t actcmd = MBX_HEARTBEAT;
++	unsigned long timeout;
++
+ 
+ 	spin_lock_irqsave(&phba->hbalock, iflag);
+ 	phba->sli.sli_flag |= LPFC_BLOCK_MGMT_IO;
++	if (phba->sli.mbox_active)
++		actcmd = phba->sli.mbox_active->u.mb.mbxCommand;
+ 	spin_unlock_irqrestore(&phba->hbalock, iflag);
++	/* Determine how long we might wait for the active mailbox
++	 * command to be gracefully completed by firmware.
++	 */
++	timeout = msecs_to_jiffies(lpfc_mbox_tmo_val(phba, actcmd) * 1000) +
++			jiffies;
++	/* Wait for the outstnading mailbox command to complete */
++	while (phba->sli.mbox_active) {
++		/* Check active mailbox complete status every 2ms */
++		msleep(2);
++		if (time_after(jiffies, timeout)) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++				"2813 Mgmt IO is Blocked %x "
++				"- mbox cmd %x still active\n",
++				phba->sli.sli_flag, actcmd);
++			break;
++		}
++	}
+ }
+ 
+ /**
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2010-05-12 09:02:39.000000000 -0400
+@@ -1199,7 +1199,6 @@ lpfc_config_port(struct lpfc_hba *phba, 
+ 		mb->un.varCfgPort.cdss = 1; /* Configure Security */
+ 		mb->un.varCfgPort.cerbm = 1; /* Request HBQs */
+ 		mb->un.varCfgPort.ccrp = 1; /* Command Ring Polling */
+-		mb->un.varCfgPort.cinb = 1; /* Interrupt Notification Block */
+ 		mb->un.varCfgPort.max_hbq = lpfc_sli_hbq_count();
+ 		if (phba->max_vpi && phba->cfg_enable_npiv &&
+ 		    phba->vpd.sli3Feat.cmv) {
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-05-12 09:02:39.000000000 -0400
+@@ -3794,7 +3794,7 @@ lpfc_sli_hbq_setup(struct lpfc_hba *phba
+ 
+ 			phba->link_state = LPFC_HBA_ERROR;
+ 			mempool_free(pmb, phba->mbox_mem_pool);
+-			return ENXIO;
++			return -ENXIO;
  		}
- 		mbox->context2 = lpfc_nlp_get(ndlp);
-@@ -972,6 +974,8 @@ lpfc_cmpl_plogi_plogi_issue(struct lpfc_
- 					   NLP_STE_REG_LOGIN_ISSUE);
- 			return ndlp->nlp_state;
- 		}
-+		if (ndlp->nlp_flag & NLP_REG_LOGIN_SEND)
-+			ndlp->nlp_flag &= ~NLP_REG_LOGIN_SEND;
- 		/* decrement node reference count to the failed mbox
- 		 * command
- 		 */
-@@ -1458,6 +1462,7 @@ lpfc_device_recov_reglogin_issue(struct 
- 	ndlp->nlp_prev_state = NLP_STE_REG_LOGIN_ISSUE;
- 	lpfc_nlp_set_state(vport, ndlp, NLP_STE_NPR_NODE);
- 	spin_lock_irq(shost->host_lock);
-+	ndlp->nlp_flag |= NLP_IGNR_REG_CMPL;
- 	ndlp->nlp_flag &= ~(NLP_NODEV_REMOVE | NLP_NPR_2B_DISC);
- 	spin_unlock_irq(shost->host_lock);
- 	lpfc_disc_set_adisc(vport, ndlp);
+ 	}
+ 	phba->hbq_count = hbq_count;
+@@ -3885,7 +3885,6 @@ lpfc_sli_config_port(struct lpfc_hba *ph
+ 		phba->sli3_options &= ~(LPFC_SLI3_NPIV_ENABLED |
+ 					LPFC_SLI3_HBQ_ENABLED |
+ 					LPFC_SLI3_CRP_ENABLED |
+-					LPFC_SLI3_INB_ENABLED |
+ 					LPFC_SLI3_BG_ENABLED);
+ 		if (rc != MBX_SUCCESS) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+@@ -3927,20 +3926,9 @@ lpfc_sli_config_port(struct lpfc_hba *ph
+ 			phba->sli3_options |= LPFC_SLI3_HBQ_ENABLED;
+ 		if (pmb->u.mb.un.varCfgPort.gcrp)
+ 			phba->sli3_options |= LPFC_SLI3_CRP_ENABLED;
+-		if (pmb->u.mb.un.varCfgPort.ginb) {
+-			phba->sli3_options |= LPFC_SLI3_INB_ENABLED;
+-			phba->hbq_get = phba->mbox->us.s3_inb_pgp.hbq_get;
+-			phba->port_gp = phba->mbox->us.s3_inb_pgp.port;
+-			phba->inb_ha_copy = &phba->mbox->us.s3_inb_pgp.ha_copy;
+-			phba->inb_counter = &phba->mbox->us.s3_inb_pgp.counter;
+-			phba->inb_last_counter =
+-					phba->mbox->us.s3_inb_pgp.counter;
+-		} else {
+-			phba->hbq_get = phba->mbox->us.s3_pgp.hbq_get;
+-			phba->port_gp = phba->mbox->us.s3_pgp.port;
+-			phba->inb_ha_copy = NULL;
+-			phba->inb_counter = NULL;
+-		}
++
++		phba->hbq_get = phba->mbox->us.s3_pgp.hbq_get;
++		phba->port_gp = phba->mbox->us.s3_pgp.port;
+ 
+ 		if (phba->cfg_enable_bg) {
+ 			if (pmb->u.mb.un.varCfgPort.gbg)
+@@ -3953,8 +3941,6 @@ lpfc_sli_config_port(struct lpfc_hba *ph
+ 	} else {
+ 		phba->hbq_get = NULL;
+ 		phba->port_gp = phba->mbox->us.s2.port;
+-		phba->inb_ha_copy = NULL;
+-		phba->inb_counter = NULL;
+ 		phba->max_vpi = 0;
+ 	}
+ do_prep_failed:
 
 
