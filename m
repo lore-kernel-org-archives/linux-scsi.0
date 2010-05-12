@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/7] lpfc 8.3.13: SCSI specific changes
-Date: Wed, 12 May 2010 09:31:44 -0400
-Message-ID: <1273671124.24670.19.camel@wookie>
+Subject: [PATCH 4/7] lpfc 8.3.13: Misc fixes
+Date: Wed, 12 May 2010 09:31:59 -0400
+Message-ID: <1273671144.24670.20.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,85 +9,109 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:16386 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753978Ab0ELNcq (ORCPT
+	with ESMTP id S1753982Ab0ELNcq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 09:32:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-- Fix hba_queue_depth to reflect actual available XRIs
-- Add support for new SLER specific firmware status codes.
-- Free SCSI buffer when iotag allocation fails.
+- Change the Max receive size on CIN FCFs to 0x800
+- (From linux community) Check boundary before checking for NULL.
+- Update last completion time for completed I/O to prevent heartbeat.
+- Add Balius PCI Device IDs
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_hw.h   |    8 ++++++++
- lpfc_init.c |    7 +++++--
- lpfc_scsi.c |    5 ++++-
- 3 files changed, 17 insertions(+), 3 deletions(-)
+ lpfc_hw.h    |    1 +
+ lpfc_init.c  |    6 ++++++
+ lpfc_sli.c   |    4 ++++
+ lpfc_sli4.h  |    2 +-
+ lpfc_vport.c |    2 +-
+ 5 files changed, 13 insertions(+), 2 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2010-05-12 09:02:39.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2010-05-12 09:03:12.000000000 -0400
-@@ -3124,6 +3124,14 @@ typedef struct {
- #define IOERR_BUFFER_SHORTAGE         0x28
- #define IOERR_DEFAULT                 0x29
- #define IOERR_CNT                     0x2A
-+#define IOERR_SLER_FAILURE            0x46
-+#define IOERR_SLER_CMD_RCV_FAILURE    0x47
-+#define IOERR_SLER_REC_RJT_ERR        0x48
-+#define IOERR_SLER_REC_SRR_RETRY_ERR  0x49
-+#define IOERR_SLER_SRR_RJT_ERR        0x4A
-+#define IOERR_SLER_RRQ_RJT_ERR        0x4C
-+#define IOERR_SLER_RRQ_RETRY_ERR      0x4D
-+#define IOERR_SLER_ABTS_ERR           0x4E
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2010-05-12 09:03:12.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2010-05-12 09:03:52.000000000 -0400
+@@ -1170,6 +1170,7 @@ typedef struct {
+ #define PCI_DEVICE_ID_TIGERSHARK    0x0704
+ #define PCI_DEVICE_ID_TOMCAT        0x0714
+ #define PCI_DEVICE_ID_FALCON        0xf180
++#define PCI_DEVICE_ID_BALIUS        0xe131
  
- #define IOERR_DRVR_MASK               0x100
- #define IOERR_SLI_DOWN                0x101  /* ulpStatus  - Driver defined */
+ #define JEDEC_ID_ADDRESS            0x0080001c
+ #define FIREFLY_JEDEC_ID            0x1ACC
 diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2010-05-12 09:02:39.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2010-05-12 09:03:12.000000000 -0400
-@@ -5563,9 +5563,12 @@ lpfc_sli4_read_config(struct lpfc_hba *p
- 	mempool_free(pmb, phba->mbox_mem_pool);
+--- a/drivers/scsi/lpfc/lpfc_init.c	2010-05-12 09:03:12.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2010-05-12 09:03:52.000000000 -0400
+@@ -1826,6 +1826,10 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 		m = (typeof(m)){"LPSe12002-ML1-E", "PCIe",
+ 				"EmulexSecure Fibre"};
+ 		break;
++	case PCI_DEVICE_ID_BALIUS:
++		m = (typeof(m)){"LPVe12002", "PCIe Shared I/O",
++				"Fibre Channel Adapter"};
++		break;
+ 	default:
+ 		m = (typeof(m)){"Unknown", "", ""};
+ 		break;
+@@ -8835,6 +8839,8 @@ static struct pci_device_id lpfc_id_tabl
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+ 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_FALCON,
+ 		PCI_ANY_ID, PCI_ANY_ID, },
++	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_BALIUS,
++		PCI_ANY_ID, PCI_ANY_ID, },
+ 	{ 0 }
+ };
  
- 	/* Reset the DFT_HBA_Q_DEPTH to the max xri  */
--	if (phba->cfg_hba_queue_depth > (phba->sli4_hba.max_cfg_param.max_xri))
-+	if (phba->cfg_hba_queue_depth >
-+		(phba->sli4_hba.max_cfg_param.max_xri -
-+			lpfc_sli4_get_els_iocb_cnt(phba)))
- 		phba->cfg_hba_queue_depth =
--				phba->sli4_hba.max_cfg_param.max_xri;
-+			phba->sli4_hba.max_cfg_param.max_xri -
-+				lpfc_sli4_get_els_iocb_cnt(phba);
- 	return rc;
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2010-05-12 09:03:41.000000000 -0400
+@@ -58,7 +58,7 @@
+ #define LPFC_FCOE_FCF_MAP0	0x0E
+ #define LPFC_FCOE_FCF_MAP1	0xFC
+ #define LPFC_FCOE_FCF_MAP2	0x00
+-#define LPFC_FCOE_MAX_RCV_SIZE	0x5AC
++#define LPFC_FCOE_MAX_RCV_SIZE	0x800
+ #define LPFC_FCOE_FKA_ADV_PER	0
+ #define LPFC_FCOE_FIP_PRIORITY	0x80
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2010-05-12 09:02:39.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-05-12 09:03:41.000000000 -0400
+@@ -9194,6 +9194,7 @@ lpfc_sli4_fp_handle_wcqe(struct lpfc_hba
+ {
+ 	struct lpfc_wcqe_release wcqe;
+ 	bool workposted = false;
++	unsigned long iflag;
+ 
+ 	/* Copy the work queue CQE and convert endian order if needed */
+ 	lpfc_sli_pcimem_bcopy(cqe, &wcqe, sizeof(struct lpfc_cqe));
+@@ -9202,6 +9203,9 @@ lpfc_sli4_fp_handle_wcqe(struct lpfc_hba
+ 	switch (bf_get(lpfc_wcqe_c_code, &wcqe)) {
+ 	case CQE_CODE_COMPL_WQE:
+ 		/* Process the WQ complete event */
++		spin_lock_irqsave(&phba->hbalock, iflag);
++		phba->last_completion_time = jiffies;
++		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 		lpfc_sli4_fp_handle_fcp_wcqe(phba,
+ 				(struct lpfc_wcqe_complete *)&wcqe);
+ 		break;
+diff -upNr a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+--- a/drivers/scsi/lpfc/lpfc_vport.c	2010-05-05 08:52:38.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_vport.c	2010-05-12 09:03:41.000000000 -0400
+@@ -782,7 +782,7 @@ lpfc_destroy_vport_work_array(struct lpf
+ 	int i;
+ 	if (vports == NULL)
+ 		return;
+-	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
++	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+ 		scsi_host_put(lpfc_shost_from_vport(vports[i]));
+ 	kfree(vports);
  }
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-05-05 08:52:38.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-05-12 09:03:12.000000000 -0400
-@@ -774,6 +774,8 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *
- 		/* Allocate iotag for psb->cur_iocbq. */
- 		iotag = lpfc_sli_next_iotag(phba, &psb->cur_iocbq);
- 		if (iotag == 0) {
-+			pci_pool_free(phba->lpfc_scsi_dma_buf_pool,
-+				psb->data, psb->dma_handle);
- 			kfree(psb);
- 			break;
- 		}
-@@ -2363,7 +2365,8 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
- 		case IOSTAT_LOCAL_REJECT:
- 			if (lpfc_cmd->result == IOERR_INVALID_RPI ||
- 			    lpfc_cmd->result == IOERR_NO_RESOURCES ||
--			    lpfc_cmd->result == IOERR_ABORT_REQUESTED) {
-+			    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
-+			    lpfc_cmd->result == IOERR_SLER_CMD_RCV_FAILURE) {
- 				cmd->result = ScsiResult(DID_REQUEUE, 0);
- 				break;
- 			}
 
 
