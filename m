@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 3/5] [TCM]: Add TPG parameter to struct target_core_fabric_ops->tpg_parse_pr_out_transport_id()
-Date: Wed, 12 May 2010 00:35:42 -0700
-Message-ID: <1273649742-21769-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 4/5] [TCM]: Add generic ProtoID and TransportID fabric handlers for SAS, FC, and iSCSI
+Date: Wed, 12 May 2010 00:35:49 -0700
+Message-ID: <1273649750-21792-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.gq1.yahoo.com ([67.195.15.62]:24037 "HELO
+Received: from smtp103.sbc.mail.gq1.yahoo.com ([67.195.15.62]:24058 "HELO
 	smtp103.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751584Ab0ELFSz (ORCPT
+	by vger.kernel.org with SMTP id S1751584Ab0ELFTB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 May 2010 01:18:55 -0400
+	Wed, 12 May 2010 01:19:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LIO-Target devel <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.e>
@@ -15,130 +15,545 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds the missing se_portal_group_t * parameter to
-struct target_core_fabric_ops->tpg_parse_pr_out_transport_id() so TCM fabric modules
-can locate internal TPG state to determine which Target Endpoint SCSI protocol logic
-should be followed when the TCM fabric module is supporting for more than a single
-SCSI protocol.
+This patch adds a set of generic SAS, FC and iSCSI handlers into target_core_fabric_lib.c
+that contain fabric dependent logic for ProtocolID (PIV) and TransportID processing
+releated to >= SPC-3 persistent reservation SCSI Initiator and Target Port WWNs.  These
+generic handlers follow SPC-4 and are based on protocol dependent code in TCM_Loop, TCM_FC
+and LIO-Target modules.
 
-The patch updates TCM -> tpg_parse_pr_out_transport_id() usage in target_core_pr.c
-for SPEC_I_PT=1 + REGISTER_AND_MOVE ops.
+This means that that CDB level fabric emulation for INQUIRY EVPD 0x83, multi-fabric >= SPC-3
+persistent reservations and ALUA multipath can now be performed by fabric modules using these
+generic handlers with the following callers in
+include/target/target_core_fabric_ops.h:struct target_core_fabric_ops
 
-It also updates the individual fabric module usages for TCM_Loop, TCM_FC and LIO-Target.
+	*) ->get_fabric_proto_ident()
+
+	*) ->tpg_get_pr_transport_id()
+
+	*) ->tpg_get_pr_transport_id_len()
+
+	*) ->tpg_parse_pr_out_transport_id()
+
+This a tch lso allows TCM fabric modules to optionally support more than a single SCSI protcol
+on a per fabric target endpoint (WWN+TPGT) context basis.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/lio-target/iscsi_target_tpg.c |    1 +
- drivers/target/lio-target/iscsi_target_tpg.h |    3 ++-
- drivers/target/target_core_pr.c              |    4 ++--
- drivers/target/tcm_fc/tfc_conf.c             |    3 ++-
- drivers/target/tcm_loop/tcm_loop_fabric.c    |    1 +
- drivers/target/tcm_loop/tcm_loop_fabric.h    |    3 ++-
- include/target/target_core_fabric_ops.h      |    3 ++-
- 7 files changed, 12 insertions(+), 6 deletions(-)
+ drivers/target/Kbuild                   |    1 +
+ drivers/target/target_core_fabric_lib.c |  456 +++++++++++++++++++++++++++++++
+ include/target/target_core_fabric_lib.h |   28 ++
+ 3 files changed, 485 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/target_core_fabric_lib.c
+ create mode 100644 include/target/target_core_fabric_lib.h
 
-diff --git a/drivers/target/lio-target/iscsi_target_tpg.c b/drivers/target/lio-target/iscsi_target_tpg.c
-index 670d6b7..c729043 100644
---- a/drivers/target/lio-target/iscsi_target_tpg.c
-+++ b/drivers/target/lio-target/iscsi_target_tpg.c
-@@ -234,6 +234,7 @@ u32 lio_tpg_get_pr_transport_id_len(
- }
- 
- char *lio_tpg_parse_pr_out_transport_id(
+diff --git a/drivers/target/Kbuild b/drivers/target/Kbuild
+index 78229f9..5298d6a 100644
+--- a/drivers/target/Kbuild
++++ b/drivers/target/Kbuild
+@@ -3,6 +3,7 @@ EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/
+ target_core_mod-y		:= target_core_configfs.o \
+ 				   target_core_device.o \
+ 				   target_core_fabric_configfs.o \
++				   target_core_fabric_lib.o \
+ 				   target_core_hba.o \
+ 				   target_core_plugin.o \
+ 				   target_core_pr.o \
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+new file mode 100644
+index 0000000..791a50f
+--- /dev/null
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -0,0 +1,456 @@
++/*******************************************************************************
++ * Filename:  target_core_fabric_lib.c
++ *
++ * This file contains generic high level protocol identifier and PR
++ * handlers for TCM fabric modules
++ *
++ * Copyright (c) 2010 Rising Tide Systems, Inc.
++ * Copyright (c) 2010 Linux-iSCSI.org
++ *
++ * Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ ******************************************************************************/
++
++#define TARGET_CORE_FABRIC_LIB_C
++
++#include <linux/string.h>
++#include <linux/ctype.h>
++#include <linux/spinlock.h>
++#include <linux/smp_lock.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
++
++#include <target/target_core_base.h>
++#include <target/target_core_device.h>
++#include <target/target_core_hba.h>
++#include <target/target_core_pr.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_transport_plugin.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_configfs.h>
++
++#undef TARGET_CORE_FABRIC_LIB_C
++
++/*
++ * Handlers for Serial Attached SCSI (SAS)
++ */
++u8 sas_get_fabric_proto_ident(se_portal_group_t *se_tpg)
++{
++	/*
++	 * Return a SAS Serial SCSI Protocol identifier for loopback operations
++	 * This is defined in  section 7.5.1 Table 362 in spc4r17
++	 */
++	return 0x6;
++}
++EXPORT_SYMBOL(sas_get_fabric_proto_ident);
++
++u32 sas_get_pr_transport_id(
 +	se_portal_group_t *se_tpg,
- 	const char *buf,
- 	u32 *out_tid_len,
- 	char **port_nexus_ptr)
-diff --git a/drivers/target/lio-target/iscsi_target_tpg.h b/drivers/target/lio-target/iscsi_target_tpg.h
-index e3bdb78..46b8518 100644
---- a/drivers/target/lio-target/iscsi_target_tpg.h
-+++ b/drivers/target/lio-target/iscsi_target_tpg.h
-@@ -10,7 +10,8 @@ extern u32 lio_tpg_get_pr_transport_id(struct se_portal_group_s *,
- extern u32 lio_tpg_get_pr_transport_id_len(struct se_portal_group_s *,
- 			struct se_node_acl_s *, struct t10_pr_registration_s *,
- 			int *);
--extern char *lio_tpg_parse_pr_out_transport_id(const char *, u32 *, char **);
-+extern char *lio_tpg_parse_pr_out_transport_id(struct se_portal_group_s *,
++	se_node_acl_t *se_nacl,
++	t10_pr_registration_t *pr_reg,
++	int *format_code,
++	unsigned char *buf)
++{
++	unsigned char binary, *ptr;
++	int i;
++	u32 off = 4;
++	/*
++	 * Set PROTOCOL IDENTIFIER to 6h for SAS
++	 */
++	buf[0] = 0x06;
++	/*
++	 * From spc4r17, 7.5.4.7 TransportID for initiator ports using SCSI
++	 * over SAS Serial SCSI Protocol
++	 */
++	ptr = &se_nacl->initiatorname[4]; /* Skip over 'naa. prefix */
++
++	for (i = 0; i < 16; i += 2) {
++		binary = transport_asciihex_to_binaryhex(&ptr[i]);
++		buf[off++] = binary;
++	}
++	/*
++	 * The SAS Transport ID is a hardcoded 24-byte length
++	 */
++	return 24;
++}
++EXPORT_SYMBOL(sas_get_pr_transport_id);
++
++u32 sas_get_pr_transport_id_len(
++	se_portal_group_t *se_tpg,
++	se_node_acl_t *se_nacl,
++	t10_pr_registration_t *pr_reg,
++	int *format_code)
++{
++	*format_code = 0;
++	/*
++	 * From spc4r17, 7.5.4.7 TransportID for initiator ports using SCSI
++	 * over SAS Serial SCSI Protocol
++	 *
++	 * The SAS Transport ID is a hardcoded 24-byte length
++	 */
++	return 24;
++}
++EXPORT_SYMBOL(sas_get_pr_transport_id_len);
++
++/*
++ * Used for handling SCSI fabric dependent TransportIDs in SPC-3 and above
++ * Persistent Reservation SPEC_I_PT=1 and PROUT REGISTER_AND_MOVE operations.
++ */
++char *sas_parse_pr_out_transport_id(
++	se_portal_group_t *se_tpg,
++	const char *buf,
++	u32 *out_tid_len,
++	char **port_nexus_ptr)
++{
++	/*
++	 * Assume the FORMAT CODE 00b from spc4r17, 7.5.4.7 TransportID
++	 * for initiator ports using SCSI over SAS Serial SCSI Protocol
++	 *
++	 * The TransportID for a SAS Initiator Port is of fixed size of
++	 * 24 bytes, and SAS does not contain a I_T nexus identifier,
++	 * so we return the **port_nexus_ptr set to NULL.
++	 */
++	*port_nexus_ptr = NULL;
++	*out_tid_len = 24;
++
++	return (char *)&buf[4];
++}
++EXPORT_SYMBOL(sas_parse_pr_out_transport_id);
++
++/*
++ * Handlers for Fibre Channel Protocol (FCP)
++ */
++u8 fc_get_fabric_proto_ident(se_portal_group_t *se_tpg)
++{
++	return 0x0;	/* 0 = fcp-2 per SPC4 section 7.5.1 */
++}
++EXPORT_SYMBOL(fc_get_fabric_proto_ident);
++
++u32 fc_get_pr_transport_id_len(
++	se_portal_group_t *se_tpg,
++	se_node_acl_t *se_nacl,
++	t10_pr_registration_t *pr_reg,
++	int *format_code)
++{
++        *format_code = 0;
++	/*
++	 * The FC Transport ID is a hardcoded 24-byte length
++	 */
++	return 24;
++}
++EXPORT_SYMBOL(fc_get_pr_transport_id_len);
++
++u32 fc_get_pr_transport_id(
++	se_portal_group_t *se_tpg,
++	se_node_acl_t *se_nacl,
++	t10_pr_registration_t *pr_reg,
++	int *format_code,
++	unsigned char *buf)
++{
++	unsigned char binary, *ptr;
++	int i;
++	u32 off = 8;
++	/*
++	 * PROTOCOL IDENTIFIER is 0h for FCP-2
++	 * 
++	 * From spc4r17, 7.5.4.2 TransportID for initiator ports using
++	 * SCSI over Fibre Channel
++	 *
++	 * We convert the ASCII formatted N Port name into a binary
++	 * encoded TransportID.
++	 */
++	ptr = &se_nacl->initiatorname[0];
++
++	for (i = 0; i < 24; ) {
++		if (!(strncmp(&ptr[i], ":", 1))) {
++			i++;
++			continue;
++		}
++		binary = transport_asciihex_to_binaryhex(&ptr[i]);
++		buf[off++] = binary;	
++		i += 2;
++	}
++	/*
++	 * The FC Transport ID is a hardcoded 24-byte length
++	 */
++	return 24;
++}
++EXPORT_SYMBOL(fc_get_pr_transport_id);
++
++char *fc_parse_pr_out_transport_id(
++	se_portal_group_t *se_tpg,
++	const char *buf,
++	u32 *out_tid_len,
++	char **port_nexus_ptr)
++{
++	/*
++	 * The TransportID for a FC N Port is of fixed size of
++	 * 24 bytes, and FC does not contain a I_T nexus identifier,
++	 * so we return the **port_nexus_ptr set to NULL.
++	 */
++	*port_nexus_ptr = NULL;
++	*out_tid_len = 24;
++
++	 return (char *)&buf[8];
++}
++EXPORT_SYMBOL(fc_parse_pr_out_transport_id);
++
++/*
++ * Handlers for Internet Small Computer Systems Interface (iSCSI)
++ */
++
++u8 iscsi_get_fabric_proto_ident(se_portal_group_t *se_tpg)
++{
++	/*
++	 * This value is defined for "Internet SCSI (iSCSI)"
++	 * in spc4r17 section 7.5.1 Table 362
++	 */
++	return 0x5;
++}
++EXPORT_SYMBOL(iscsi_get_fabric_proto_ident);
++
++u32 iscsi_get_pr_transport_id(
++	se_portal_group_t *se_tpg,
++	se_node_acl_t *se_nacl,
++	t10_pr_registration_t *pr_reg,
++	int *format_code,
++	unsigned char *buf)
++{
++	u32 off = 4, padding = 0;
++	u16 len = 0;
++
++	spin_lock(&se_nacl->nacl_sess_lock);
++	/*
++	 * Set PROTOCOL IDENTIFIER to 5h for iSCSI
++	*/
++	buf[0] = 0x05;
++	/*
++	 * From spc4r17 Section 7.5.4.6: TransportID for initiator
++	 * ports using SCSI over iSCSI.
++	 *
++	 * The null-terminated, null-padded (see 4.4.2) ISCSI NAME field
++	 * shall contain the iSCSI name of an iSCSI initiator node (see
++	 * RFC 3720). The first ISCSI NAME field byte containing an ASCII
++	 * null character terminates the ISCSI NAME field without regard for
++	 * the specified length of the iSCSI TransportID or the contents of
++	 * the ADDITIONAL LENGTH field.
++	 */
++	len = sprintf(&buf[off], "%s", se_nacl->initiatorname);
++	/*
++	 * Add Extra byte for NULL terminator
++	 */
++	len++;
++	/*
++	 * If there is ISID present with the registration and *format code == 1
++	 * 1, use iSCSI Initiator port TransportID format.
++	 *
++	 * Otherwise use iSCSI Initiator device TransportID format that
++	 * does not contain the ASCII encoded iSCSI Initiator iSID value
++	 * provied by the iSCSi Initiator during the iSCSI login process.
++	 */
++	if ((*format_code == 1) &&
++	    (pr_reg->pr_reg_flags & PRF_ISID_PRESENT_AT_REG)) {
++		/*
++		 * Set FORMAT CODE 01b for iSCSI Initiator port TransportID
++		 * format.
++		 */
++		buf[0] |= 0x40;
++		/*
++		 * From spc4r17 Section 7.5.4.6: TransportID for initiator
++		 * ports using SCSI over iSCSI.  Table 390
++		 *
++		 * The SEPARATOR field shall contain the five ASCII
++		 * characters ",i,0x".
++		 *
++		 * The null-terminated, null-padded ISCSI INITIATOR SESSION ID
++		 * field shall contain the iSCSI initiator session identifier
++		 * (see RFC 3720) in the form of ASCII characters that are the
++		 * hexadecimal digits converted from the binary iSCSI initiator
++		 * session identifier value. The first ISCSI INITIATOR SESSION
++		 * ID field byte containing an ASCII null character
++		 */
++		buf[off+len] = 0x2c; off++; /* ASCII Character: "," */
++		buf[off+len] = 0x69; off++; /* ASCII Character: "i" */
++		buf[off+len] = 0x2c; off++; /* ASCII Character: "," */
++		buf[off+len] = 0x30; off++; /* ASCII Character: "0" */
++		buf[off+len] = 0x78; off++; /* ASCII Character: "x" */
++		len += 5;
++		buf[off+len] = pr_reg->pr_reg_isid[0]; off++;
++		buf[off+len] = pr_reg->pr_reg_isid[1]; off++;
++		buf[off+len] = pr_reg->pr_reg_isid[2]; off++;
++		buf[off+len] = pr_reg->pr_reg_isid[3]; off++;
++		buf[off+len] = pr_reg->pr_reg_isid[4]; off++;
++		buf[off+len] = pr_reg->pr_reg_isid[5]; off++;
++		buf[off+len] = '\0'; off++;
++		len += 7;
++	}
++	spin_unlock(&se_nacl->nacl_sess_lock);
++	/*
++	 * The ADDITIONAL LENGTH field specifies the number of bytes that follow
++	 * in the TransportID. The additional length shall be at least 20 and
++	 * shall be a multiple of four.
++	*/
++	padding = ((-len) & 3);
++	if (padding != 0)
++		len += padding;
++
++	buf[2] = ((len >> 8) & 0xff);
++	buf[3] = (len & 0xff);
++	/*
++	 * Increment value for total payload + header length for
++	 * full status descriptor
++	 */
++	len += 4;
++
++	return len;
++}
++EXPORT_SYMBOL(iscsi_get_pr_transport_id);
++
++u32 iscsi_get_pr_transport_id_len(
++	se_portal_group_t *se_tpg,
++	se_node_acl_t *se_nacl,
++	t10_pr_registration_t *pr_reg,
++	int *format_code)
++{
++	u32 len = 0, padding = 0;
++
++	spin_lock(&se_nacl->nacl_sess_lock);
++	len = strlen(se_nacl->initiatorname);
++	/*
++	 * Add extra byte for NULL terminator
++	 */
++	len++;
++	/*
++	 * If there is ISID present with the registration, use format code:
++	 * 01b: iSCSI Initiator port TransportID format
++	 *
++	 * If there is not an active iSCSI session, use format code:
++	 * 00b: iSCSI Initiator device TransportID format
++	 */
++	if (pr_reg->pr_reg_flags & PRF_ISID_PRESENT_AT_REG) {
++		len += 5; /* For ",i,0x" ASCII seperator */
++		len += 7; /* For iSCSI Initiator Session ID + Null terminator */
++		*format_code = 1;
++	} else
++		*format_code = 0;
++	spin_unlock(&se_nacl->nacl_sess_lock);
++	/*
++	 * The ADDITIONAL LENGTH field specifies the number of bytes that follow
++	 * in the TransportID. The additional length shall be at least 20 and
++	 * shall be a multiple of four.
++	 */
++	padding = ((-len) & 3);
++	if (padding != 0)
++		len += padding;
++	/*
++	 * Increment value for total payload + header length for
++	 * full status descriptor
++	 */
++	len += 4;
++
++	return len;
++}
++EXPORT_SYMBOL(iscsi_get_pr_transport_id_len);
++
++char *iscsi_parse_pr_out_transport_id(
++	se_portal_group_t *se_tpg,
++	const char *buf,
++	u32 *out_tid_len,
++	char **port_nexus_ptr)
++{
++	char *p;
++	u32 tid_len, padding;
++	int i;
++	u16 add_len;
++	u8 format_code = (buf[0] & 0xc0);
++	/*
++	 * Check for FORMAT CODE 00b or 01b from spc4r17, section 7.5.4.6:
++	 *
++	 *       TransportID for initiator ports using SCSI over iSCSI,
++	 *       from Table 388 -- iSCSI TransportID formats.
++	 *
++	 *    00b     Initiator port is identified using the world wide unique
++	 *            SCSI device name of the iSCSI initiator
++	 *            device containing the initiator port (see table 389).
++	 *    01b     Initiator port is identified using the world wide unique
++	 *            initiator port identifier (see table 390).10b to 11b
++	 *            Reserved
++	 */
++	if ((format_code != 0x00) && (format_code != 0x40)) {
++		printk(KERN_ERR "Illegal format code: 0x%02x for iSCSI"
++			" Initiator Transport ID\n", format_code);
++		return NULL;
++	}
++	/*
++	 * If the caller wants the TransportID Length, we set that value for the
++	 * entire iSCSI Tarnsport ID now.
++	 */
++	 if (out_tid_len != NULL) {
++		add_len = ((buf[2] >> 8) & 0xff);
++		add_len |= (buf[3] & 0xff);
++
++		tid_len = strlen((char *)&buf[4]);
++		tid_len += 4; /* Add four bytes for iSCSI Transport ID header */
++		tid_len += 1; /* Add one byte for NULL terminator */
++		padding = ((-tid_len) & 3);
++		if (padding != 0)
++			tid_len += padding;
++
++		if ((add_len + 4) != tid_len) {
++			printk(KERN_INFO "LIO-Target Extracted add_len: %hu "
++				"does not match calculated tid_len: %u,"
++				" using tid_len instead\n", add_len+4, tid_len);
++			*out_tid_len = tid_len;
++		} else
++			*out_tid_len = (add_len + 4);
++	}
++	/*
++	 * Check for ',i,0x' seperator between iSCSI Name and iSCSI Initiator
++	 * Session ID as defined in Table 390 - iSCSI initiator port TransportID
++	 * format.
++	 */
++	if (format_code == 0x40) {
++		p = strstr((char *)&buf[4], ",i,0x");
++		if (!(p)) {
++			printk(KERN_ERR "Unable to locate \",i,0x\" seperator"
++				" for Initiator port identifier: %s\n",
++				(char *)&buf[4]);
++			return NULL;
++		}
++		*p = '\0'; /* Terminate iSCSI Name */
++		p += 5; /* Skip over ",i,0x" seperator */
++
++		*port_nexus_ptr = p;
++		/*
++		 * Go ahead and do the lower case conversion of the received
++		 * 12 ASCII characters representing the ISID in the TransportID
++		 * for comparision against the running iSCSI session's ISID from
++		 * iscsi_target.c:lio_sess_get_initiator_sid()
++		 */
++		for (i = 0; i < 12; i++) {
++			if (isdigit(*p)) {
++				p++;
++				continue;
++			}
++			*p = tolower(*p);
++			p++;
++		}
++	}
++
++	return (char *)&buf[4];
++}
++EXPORT_SYMBOL(iscsi_parse_pr_out_transport_id);
+diff --git a/include/target/target_core_fabric_lib.h b/include/target/target_core_fabric_lib.h
+new file mode 100644
+index 0000000..53ffc9f
+--- /dev/null
++++ b/include/target/target_core_fabric_lib.h
+@@ -0,0 +1,28 @@
++#ifndef TARGET_CORE_FABRIC_LIB_H
++#define TARGET_CORE_FABRIC_LIB_H
++
++extern u8 sas_get_fabric_proto_ident(se_portal_group_t *);
++extern u32 sas_get_pr_transport_id(se_portal_group_t *, se_node_acl_t *,
++			t10_pr_registration_t *, int *, unsigned char *);
++extern u32 sas_get_pr_transport_id_len(se_portal_group_t *, se_node_acl_t *,
++			t10_pr_registration_t *, int *);
++extern char *sas_parse_pr_out_transport_id(se_portal_group_t *,
 +			const char *, u32 *, char **);
- extern int lio_tpg_check_demo_mode(struct se_portal_group_s *);
- extern int lio_tpg_check_demo_mode_cache(struct se_portal_group_s *);
- extern int lio_tpg_check_demo_mode_write_protect(struct se_portal_group_s *);
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index f78d279..2136e89 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1581,7 +1581,7 @@ static int core_scsi3_decode_spec_i_port(
- 			dest_rtpi = tmp_port->sep_rtpi;
- 
- 			i_str = tmp_tf_ops->tpg_parse_pr_out_transport_id(
--					(const char *)ptr, &tid_len,
-+					tmp_tpg, (const char *)ptr, &tid_len,
- 					&iport_ptr);
- 			if (!(i_str))
- 				continue;
-@@ -3442,7 +3442,7 @@ static int core_scsi3_emulate_pro_register_and_move(
- 		ret = PYX_TRANSPORT_LU_COMM_FAILURE;
- 		goto out;
- 	}
--	initiator_str = dest_tf_ops->tpg_parse_pr_out_transport_id(
-+	initiator_str = dest_tf_ops->tpg_parse_pr_out_transport_id(dest_se_tpg,
- 			(const char *)&buf[24], &tmp_tid_len, &iport_ptr);
- 	if (!(initiator_str)) {
- 		printk(KERN_ERR "SPC-3 PR REGISTER_AND_MOVE: Unable to locate"
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 69b0092..1315df6 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -536,7 +536,8 @@ static u32 ft_get_pr_transport_id(se_portal_group_t *se_tpg,
- 	return ft_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg, format_code);
- }
- 
--static char *ft_parse_pr_out_transport_id(const char *buf, u32 *out_tid_len,
-+static char *ft_parse_pr_out_transport_id(se_portal_group_t *se_tpg,
-+				          const char *buf, u32 *out_tid_len,
- 					  char **port_nexus_ptr)
- {
- 	struct ft_transport_id *id = (struct ft_transport_id *)buf;
-diff --git a/drivers/target/tcm_loop/tcm_loop_fabric.c b/drivers/target/tcm_loop/tcm_loop_fabric.c
-index 11cf196..30a90ec 100644
---- a/drivers/target/tcm_loop/tcm_loop_fabric.c
-+++ b/drivers/target/tcm_loop/tcm_loop_fabric.c
-@@ -144,6 +144,7 @@ u32 tcm_loop_get_pr_transport_id_len(
-  * Persistent Reservation SPEC_I_PT=1 and PROUT REGISTER_AND_MOVE operations.
-  */
- char *tcm_loop_parse_pr_out_transport_id(
-+	se_portal_group_t *se_tpg,
- 	const char *buf,
- 	u32 *out_tid_len,
- 	char **port_nexus_ptr)
-diff --git a/drivers/target/tcm_loop/tcm_loop_fabric.h b/drivers/target/tcm_loop/tcm_loop_fabric.h
-index 676c33a..d412b4a 100644
---- a/drivers/target/tcm_loop/tcm_loop_fabric.h
-+++ b/drivers/target/tcm_loop/tcm_loop_fabric.h
-@@ -9,7 +9,8 @@ extern u32 tcm_loop_get_pr_transport_id(se_portal_group_t *, se_node_acl_t *,
- extern u32 tcm_loop_get_pr_transport_id_len(se_portal_group_t *,
- 				se_node_acl_t *, t10_pr_registration_t *,
- 				int *);
--extern char *tcm_loop_parse_pr_out_transport_id(const char *, u32 *, char **);
-+extern char *tcm_loop_parse_pr_out_transport_id(se_portal_group_t *,
-+				const char *, u32 *, char **);
- extern int tcm_loop_check_demo_mode(se_portal_group_t *);
- extern int tcm_loop_check_demo_mode_cache(se_portal_group_t *);
- extern int tcm_loop_check_demo_mode_write_protect(se_portal_group_t *);
-diff --git a/include/target/target_core_fabric_ops.h b/include/target/target_core_fabric_ops.h
-index 4b4d5c6..ebc5a03 100644
---- a/include/target/target_core_fabric_ops.h
-+++ b/include/target/target_core_fabric_ops.h
-@@ -15,7 +15,8 @@ struct target_core_fabric_ops {
- 	u32 (*tpg_get_pr_transport_id_len)(struct se_portal_group_s *,
- 				struct se_node_acl_s *,
- 				struct t10_pr_registration_s *, int *);
--	char *(*tpg_parse_pr_out_transport_id)(const char *, u32 *, char **);
-+	char *(*tpg_parse_pr_out_transport_id)(struct se_portal_group_s *,
-+				const char *, u32 *, char **);
- 	int (*tpg_check_demo_mode)(struct se_portal_group_s *);
- 	int (*tpg_check_demo_mode_cache)(struct se_portal_group_s *);
- 	int (*tpg_check_demo_mode_write_protect)(struct se_portal_group_s *);
++
++extern u8 fc_get_fabric_proto_ident(se_portal_group_t *);
++extern u32 fc_get_pr_transport_id(se_portal_group_t *, se_node_acl_t *,
++			t10_pr_registration_t *, int *, unsigned char *);
++extern u32 fc_get_pr_transport_id_len(se_portal_group_t *, se_node_acl_t *,
++			t10_pr_registration_t *, int *);
++extern char *fc_parse_pr_out_transport_id(se_portal_group_t *,
++			const char *, u32 *, char **);
++
++extern u8 iscsi_get_fabric_proto_ident(se_portal_group_t *);
++extern u32 iscsi_get_pr_transport_id(se_portal_group_t *, se_node_acl_t *,
++			t10_pr_registration_t *, int *, unsigned char *);
++extern u32 iscsi_get_pr_transport_id_len(se_portal_group_t *, se_node_acl_t *,
++			t10_pr_registration_t *, int *);
++extern char *iscsi_parse_pr_out_transport_id(se_portal_group_t *,
++			const char *, u32 *, char **);
++
++#endif /* TARGET_CORE_FABRIC_LIB_H */
 -- 
 1.5.6.5
 
