@@ -1,49 +1,64 @@
-From: Michael Stroucken <mxs@cmu.edu>
-Subject: RE: Possible explanation for mptsas ATA pass-through hangs
-Date: Tue, 11 May 2010 17:15:08 -0400
-Message-ID: <4BE9C8DC.7060907@cmu.edu>
+From: Phil Turmel <pturmel-kernel@turmel.org>
+Subject: Re: Marvell eSATA - 88SE6121 on Asus M3A79-T Deluxe - not in AHCI
+Date: Tue, 11 May 2010 22:11:32 -0400
+Message-ID: <4BEA0E54.4080208@turmel.org>
+References: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com> <4BE964C2.1010702@turmel.org> <20100511182128.216144e4uzjtufbs@topdeck.tinsleyviaduct.com> <4BE9A1B3.3020208@turmel.org> <4BE9C796.7080605@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tamade.ascient.net ([65.99.219.195]:33656 "EHLO
-	tamade.ascient.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751630Ab0EKVXb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 17:23:31 -0400
-Received: from stroop.wv.cc.cmu.edu (STROOP.WV.CC.CMU.EDU [128.237.236.97])
-	by tamade.ascient.net (Postfix) with ESMTPSA id 00E39400F9
-	for <linux-scsi@vger.kernel.org>; Tue, 11 May 2010 17:16:58 -0400 (EDT)
+Received: from fmailhost06.isp.att.net ([204.127.217.106]:47840 "EHLO
+	fmailhost06.isp.att.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751183Ab0ELCLf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 May 2010 22:11:35 -0400
+In-Reply-To: <4BE9C796.7080605@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Phil Reynolds <phil-linux@tinsleyviaduct.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I have a research cluster of around 140 nodes, and have been affected by 
-this problem since we put them online. The machines are Tyan boards with 
-dual E54x0 CPUs and onboard SAS, with four SATA drives attached.
+Hi Jeff,
 
-The half of the cluster with very high disk usage displayed this issue 
-on perhaps one machine every two days, while the other half only had 
-problems when SMART requests were issued. The bus would reset, and a 
-drive would be logically ejected and reinserted (but at a different 
-place, like /dev/sde).
+On 05/11/2010 05:09 PM, Jeff Garzik wrote:
+> On 05/11/2010 02:28 PM, Phil Turmel wrote:
+>> On 05/11/2010 01:21 PM, Phil Reynolds wrote:
+>>> Quoting "Phil Turmel"<pturmel-kernel@turmel.org>:
+>>>
+>>>> I have a similar chipset in my office server: 88SE6145.  If yours
+>>>> can run
+>>>> in AHCI mode, you just need "ahci.marvell_enable=1" on your kernel
+>>>> command
+>>>> line, or "options ahci marvell_enable=1" in your modprobe.conf.  (I
+>>>> have
+>>>> ahci built-in, and no initramfs, so I put the option in my grub.conf.)
+>>>
+>>> Neither works for me unfortunately.
+>>>
 
-Regardless of mptscsih.c being the correct place to enforce alignment, 
-applying the patch Ryan Kuester provided to the kernel (2.6.32) running 
-on the cluster has 1) stopped future occurrences of this problem, 2) 
-made it immune against problems from running Ryan's bomb program and 3) 
-remaining drive problems only occurred on unpatched nodes.
+[snip /]
 
-These messages still appear regularly though:-
-[702162.202899] sd 4:0:3:0: [sdd] Sense Key : Recovered Error [current] 
-[descriptor]
-[702162.293329] Descriptor sense data with sense descriptors (in hex):
-[702162.368629]         72 01 00 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
-[702162.447985]         00 4f 00 c2 40 50
-[702162.494805] sd 4:0:3:0: [sdd] Add. Sense: ATA pass through 
-information available
+> sata_mv is not related to this hardware.
+> 
+> pata_marvell works with 6101/6121/6141/6145 PATA ports.
+> 
+> ahci works with 6101/6121/6141/6145 SATA ports, with marvell_enable=1.
+> 
+>     Jeff
 
-I haven't seen other messages yet from mptsas users that Ryan's patch 
-works, so I provide my experience.
+I think you might have me (Phil T) confused with the original poster, Phil
+Reynolds [1].
 
-Greetings,
-Michael.
+I have working SATA hotplug on my 88SE6145 w/ the ahci driver and
+marvell_enable=1.  The OP, Phil R., has an 88SE6121 that has been running
+with the Marvell driver, without hotplug.  Neither of us cares about the
+PATA ports.  Phil R. wants hotplug, but has not successfully enabled
+marvell support in the ahci driver.
+
+I've suggested Phil R. post his dmesg, lspci, and config, so we can figure out
+what's going on.
+
+Did I miss something else?
+
+Phil
+
+[1] http://marc.info/?l=linux-kernel&m=127341691613147&w=2
