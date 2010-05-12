@@ -1,43 +1,42 @@
-From: Mark Lord <mlord@pobox.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 12 May 2010 10:45:51 -0400
-Message-ID: <4BEABF1F.6080800@pobox.com>
-References: <Pine.LNX.4.44L0.1005111022130.1834-100000@iolanthe.rowland.org>
- <4BEAA583.1090805@pobox.com> <4BEAB9F6.60601@interlog.com>
- <4BEABD19.6020005@pobox.com>
+Date: Wed, 12 May 2010 11:09:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1005121056520.1962-100000@iolanthe.rowland.org>
+References: <4BEAA583.1090805@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4BEABD19.6020005@pobox.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:47936 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751113Ab0ELPJq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 11:09:46 -0400
+In-Reply-To: <4BEAA583.1090805@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Jonas Schwertfeger <jschwertfeger@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 
-On 12/05/10 10:37 AM, Mark Lord wrote:
-> On 12/05/10 10:23 AM, Douglas Gilbert wrote:
->> Mark,
->> Not sure if this bug got out into the wild but it
->> sounds close to what you are describing:
->> https://bugzilla.kernel.org/show_bug.cgi?id=15185
-> ..
->
-> I don't think that is the exact issue here.
-> But can you send me the patch that is referred to in that bugzilla entry?
->
-> I've been noticing issues with the DSM TRIM command in newer kernels,
-> and I wonder if this might have something to do with that.
-..
+On Wed, 12 May 2010, Mark Lord wrote:
 
-Okay, I found the patch/commit, and my 2.6.32.5 kernel was missing it.
-Pulling down the latest 2.6.32.* tree now to see if it ever made it there.
+> The sticky part is that hdparm explicitly asked for sense data.
+> 
+> But the results were marked as "no sense data".  Many of the commands
+> sent by hdparm _require_ "sense data" (ATA register values) in order
+> to see the results.  The USB driver appears to ignore that request
+> when it sees good device status from the original command.  Bug.
 
-But that patch is for libata, which is not on the pathway
-for this USB3 issue.
+This sounds like it is a bug in the SCSI midlayer, not in usb-storage.  
 
-Cheers
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+There is no mechanism for the midlayer to tell low-level drivers like
+usb-storage that sense data must be returned.  The documentation in
+include/scsi/scsi_cmnd.h merely states that the sense buffer should be
+filled when CHECK CONDITION is received for the original command.  
+Ditto for Documentation/scsi/scsi_mid_low_api.txt.  Hence if sense data
+is needed even in the absence of CHECK CONDITION, the midlayer must
+explicitly send a command to retrieve it.
+
+What mechanism does hdparm use to submit its I/O requests, and how does 
+it indicate that it requires sense data?
+
+Alan Stern
+
