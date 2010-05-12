@@ -1,43 +1,78 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 7/7] lpfc 8.3.13: Update Driver Version to 8.3.13
-Date: Wed, 12 May 2010 09:32:42 -0400
-Message-ID: <1273671204.24670.23.camel@wookie>
-Reply-To: james.smart@emulex.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
+ errors
+Date: Wed, 12 May 2010 14:09:35 GMT
+Message-ID: <201005121409.o4CE9ZOc002346@demeter.kernel.org>
+References: <bug-13594-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:16392 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751846Ab0ELNdr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 09:33:47 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:50487 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755842Ab0ELOJg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 10:09:36 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4CE9Z0J002347
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 12 May 2010 14:09:35 GMT
+In-Reply-To: <bug-13594-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-
-Update Driver Version to 8.3.13
-
- Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
- Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=13594
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2010-05-05 08:52:38.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2010-05-12 09:05:36.000000000 -0400
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.12"
-+#define LPFC_DRIVER_VERSION "8.3.13"
- #define LPFC_DRIVER_NAME		"lpfc"
- #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
- #define LPFC_FP_DRIVER_HANDLER_NAME	"lpfc:fp"
+Ken Stailey <kstailey@yahoo.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |kstailey@yahoo.com
 
 
+
+
+--- Comment #12 from Ken Stailey <kstailey@yahoo.com>  2010-05-12 14:09:28 ---
+A utility from LSI is available here:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/lsiutil/ 
+
+Some information from my use of lsutil:
+
+Board name: LSISAS3442E-R
+Board assembly: L3-00120-05E
+
+Current active firmware version is 01172b00 (1.23.43)
+Firmware image's version is MPTFW-01.23.43.00-IE
+  LSI Logic
+x86 BIOS image's version is MPTBIOS-6.18.05.00 (2008.05.14)
+EFI BIOS image's version is 3.05.01.01
+
+Diagnostics -> Display phy counters:
+Adapter Phy 1: Link Up
+  Invalid DWord Count 2,734
+  Running Disparity Error Count 2,757
+  Loss of DWord Synch Count 0
+  Phy Reset Problem Count 0 
+
+Other information:
+
+$ lspci | grep LSI
+03:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068E PCI-Express
+Fusion-MPT SAS (rev 08)
+
+$ uname -srvm
+Linux 2.6.31-21-generic #59-Ubuntu SMP Wed Mar 24 07:28:27 UTC 2010 x86_64
+
+$ strings
+/lib/modules/2.6.31-21-generic/kernel/drivers/message/fusion/mptsas.ko | grep
+version=
+version=3.04.10
+srcversion=4023EA52994688E9AE61982
+
+$ lsb_release -d
+Description:    Ubuntu 9.10
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
