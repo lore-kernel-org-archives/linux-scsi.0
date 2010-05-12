@@ -1,148 +1,38 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Mark Lord <mlord@pobox.com>
 Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 12 May 2010 10:23:50 -0400
-Message-ID: <4BEAB9F6.60601@interlog.com>
-References: <Pine.LNX.4.44L0.1005111022130.1834-100000@iolanthe.rowland.org> <4BEAA583.1090805@pobox.com>
-Reply-To: dgilbert@interlog.com
+Date: Wed, 12 May 2010 10:37:13 -0400
+Message-ID: <4BEABD19.6020005@pobox.com>
+References: <Pine.LNX.4.44L0.1005111022130.1834-100000@iolanthe.rowland.org>
+ <4BEAA583.1090805@pobox.com> <4BEAB9F6.60601@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4BEAA583.1090805@pobox.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from a-pb-sasl-quonix.pobox.com ([208.72.237.25]:59649 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754764Ab0ELOht (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 May 2010 10:37:49 -0400
+In-Reply-To: <4BEAB9F6.60601@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: Alan Stern <stern@rowland.harvard.edu>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@suse.de>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
 
-Mark Lord wrote:
-> On 11/05/10 10:44 AM, Alan Stern wrote:
->> On Tue, 11 May 2010, Jonas Schwertfeger wrote:
->>
->>> On 05/07/2010 05:03 PM, Alan Stern wrote:
->>>> Hmm.  I'm not sure I believe this data.  For a while (starting with
->>>> 2.6.33) the usbmon implementation didn't work right with EHCI -- it
->>>> looked in the transfer buffer before the DMA-unmapping was done, so on
->>>> a system with>= 4 GB of memory it wouldn't always see the data.  The
->>>> fix for this was merged only within the last week or so.
->>>>
->>>> Can you repeat the USB-2.0 test but this time doing "rmmod ehci-hcd"
->>>> beforehand?
->>>
->>> I could not remove that module (I assume it is compiled into the kernel)
->>> so I limited the memory the kernel can see to 1GB.  You were right, now
->>> there is actually useful data in the trace.  Here it is:
->>
->> Great!  This is just what we need.
->>
->>> ffff88001bb82840 685088867 S Bo:1:003:2 -115 31 = 55534243 c9000000
->>> 00020000 80001085 082e0000 00010000 00000000 40ec00
->>
->> That's an IDENTIFY DEVICE command being sent to the device,
->> corresponding to the start of the hdparm debugging log:
->>
->>     outgoing cdb:  85 08 2e 00 00 00 01 00 00 00 00 00 00 40 ec 00
->>
->>> ffff88001bb82840 685088982 C Bo:1:003:2 0 31>
->>> ffff88001bbc3d80 685089045 S Bi:1:003:1 -115 512<
->>> ffff88001bbc3d80 685094708 C Bi:1:003:1 0 512 = 4000ff3f 37c81000
->>> 00000000 3f000000 00000000 32534d35 394a5a30 30313237
->>
->> These are the first 32 bytes of the reply.  (If necessary we could get
->> all 512 bytes.)  But at this point the hdparm debugging log says:
->>
->>     data:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>
->> That certainly seems strange.  The reply data should be there.
->>
->>> ffff88001bb82840 685094763 S Bi:1:003:1 -115 13<
->>> ffff88001bb82840 685094814 C Bi:1:003:1 0 13 = 55534253 c9000000 
->>> 00000000 00
->>
->> And the status value is 0, indicating no problems.  Nevertheless,
->> hdparm reported:
->>
->>     SG_IO: ATA_16 status=0x0, host_status=0x0, driver_status=0x0
->>     SG_IO: bad response (not CHECK_CONDITION)
->>
->> Presumably this is because it saw all 0's instead of the actual data.
->> Apart from that, it is what one would expect.
->>
->>> ffff88001bb82840 685095024 S Bo:1:003:2 -115 31 = 55534243 ca000000
->>> 00020000 80001085 082e0000 00010000 00000000 40a100
->>
->> This is an IDENTIFY PACKET DEVICE command, corresponding to the next
->> two lines in the hdparm log:
->>
->>     Trying legacy HDIO_DRIVE_CMD
->>     outgoing cdb:  85 08 2e 00 00 00 01 00 00 00 00 00 00 40 a1 00
->>
->>> ffff88001bb82840 685095207 C Bo:1:003:2 0 31>
->>> ffff88001bbc3d80 685095260 S Bi:1:003:1 -115 512<
->>> ffff88001bbc3d80 685095457 C Bi:1:003:1 -32 0
->>> ffff88001bb82840 685095509 S Co:1:003:0 s 02 01 0000 0081 0000 0
->>> ffff88001bb82840 685095561 C Co:1:003:0 0 0
->>> ffff88001bb82840 685095614 S Bi:1:003:1 -115 13<
->>> ffff88001bb82840 685095699 C Bi:1:003:1 0 13 = 55534253 ca000000 
->>> 00020000 01
->>
->> The device sends back no data, a Residue value of 512, and Check
->> Condition status.
->>
->>> ffff88001bb82840 685095768 S Bo:1:003:2 -115 31 = 55534243 cb000000
->>> 60000000 80000603 00000060 00000000 00000000 000000
->>
->> This is the REQUEST SENSE command automatically generated by the
->> usb-storage driver.
->>
->>> ffff88001bb82840 685095817 C Bo:1:003:2 0 31>
->>> ffff88001bbc3d80 685095885 S Bi:1:003:1 -115 96<
->>> ffff88001bbc3d80 685096082 C Bi:1:003:1 0 96 = 720b0000 0000000e
->>> 090c0004 00010000 00000000 40510000 00000000 00000000
->>
->> And these are the first 32 sense data bytes.  Here's what hdparm had to
->> say:
->>
->>     data:  40 00 ff 3f 37 c8 10 00 00 00 00 00 3f 00 00 00
->>     SG_IO: ATA_16 status=0x2, host_status=0x0, driver_status=0x8
->>     SG_IO: sb[]:  72 0b 00 00 00 00 00 0e 09 0c 00 04 00 01 00 00 00 
->> 00 00
->>     00 40 51 00 00 00 00 00 00 00 00 00 00
->>     SG_IO: desc[]:  09 0c 00 04 00 01 00 00 00 00 00 00
->>            ATA_16 stat=51 err=04 nsect=01 lbal=00 lbam=00 lbah=00 dev=40
->>     I/O error, ata_op=0xa1 ata_status=0x51 ata_error=0x04
->>
->> Notice that the "data" line contains the data from the previous
->> command!  The status and sense buffer ("sb") values appear correct.
-> ..
-> 
-> The "data:" dump from "hdparm --verbose" shows the _outgoing_data buffer
-> from just prior to command issue.  In this case, that buffer is on the 
-> stack.
-> So yes, it will often show data from the previous command,
-> and never from the current command.
-> 
-> I really ought to beef up --verbose to show the data in both 
-> directions.  :)
-> 
-> But it is a good clue, as it shows that the data probably did make it
-> all the way back to hdparm.
-> 
-> The sticky part is that hdparm explicitly asked for sense data.
-> 
-> But the results were marked as "no sense data".  Many of the commands
-> sent by hdparm _require_ "sense data" (ATA register values) in order
-> to see the results.  The USB driver appears to ignore that request
-> when it sees good device status from the original command.  Bug.
+On 12/05/10 10:23 AM, Douglas Gilbert wrote:
+> Mark,
+> Not sure if this bug got out into the wild but it
+> sounds close to what you are describing:
+> https://bugzilla.kernel.org/show_bug.cgi?id=15185
+..
 
-Mark,
-Not sure if this bug got out into the wild but it
-sounds close to what you are describing:
-     https://bugzilla.kernel.org/show_bug.cgi?id=15185
+I don't think that is the exact issue here.
+But can you send me the patch that is referred to in that bugzilla entry?
 
-Doug Gilbert
+I've been noticing issues with the DSM TRIM command in newer kernels,
+and I wonder if this might have something to do with that.
 
-> For "identify", we could work around that in hdparm,
-> but other commands would still be broken by the lack of sense data.
-> 
-> Cheers
-
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
