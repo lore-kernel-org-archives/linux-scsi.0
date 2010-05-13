@@ -1,74 +1,57 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 2/2] usb-storage: Add new no_read_capacity_16 quirk
-Date: Thu, 13 May 2010 17:27:56 +0200
-Message-ID: <1273764476-4204-2-git-send-email-hdegoede@redhat.com>
-References: <1273764476-4204-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4.versatel.nl ([62.58.50.91]:36444 "EHLO smtp3.versatel.nl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756181Ab0EMP0i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 May 2010 11:26:38 -0400
-In-Reply-To: <1273764476-4204-1-git-send-email-hdegoede@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/4] block: restart partition scan after resizing a device
+Date: Thu, 13 May 2010 17:56:43 +0200
+Message-ID: <1273766206-17402-2-git-send-email-tj@kernel.org>
+References: <1273766206-17402-1-git-send-email-tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1273766206-17402-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org
+Cc: ben@decadent.org.uk, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: jelledejong@powercraft.nl, Hans de Goede <hdegoede@redhat.com>
 
-Some Rockbox based mp4 players will crash when ever they see a
-read_capacity_16 scsi command. So add a new US_FL which tells the
-scsi sd driver to not issue any read_capacity_16 scsi commands.
+Device resize via ->set_capacity() can reveal new partitions (e.g. in
+chained partition table formats such as dos extended parts).  Restart
+partition scan from the beginning after resizing a device.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/usb/storage/scsiglue.c     |    4 ++++
- drivers/usb/storage/unusual_devs.h |    3 ++-
- include/linux/usb_usual.h          |    4 +++-
- 3 files changed, 9 insertions(+), 2 deletions(-)
+ fs/partitions/check.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 65d31f4..ee70c4b 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -210,6 +210,10 @@ static int slave_configure(struct scsi_device *sdev)
- 		if (us->fflags & US_FL_CAPACITY_HEURISTICS)
- 			sdev->guess_capacity = 1;
- 
-+		/* Some devices cannot handle READ_CAPACITY_16 */
-+		if (us->fflags & US_FL_NO_READ_CAPACITY_16)
-+			sdev->no_read_capacity_16 = 1;
+diff --git a/fs/partitions/check.c b/fs/partitions/check.c
+index e238ab2..f80a58d 100644
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -550,7 +550,7 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 	res = invalidate_partition(disk, 0);
+ 	if (res)
+ 		return res;
+-
++rescan:
+ 	disk_part_iter_init(&piter, disk, DISK_PITER_INCL_EMPTY);
+ 	while ((part = disk_part_iter_next(&piter)))
+ 		delete_partition(disk, part->partno);
+@@ -581,7 +581,7 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 	/* add partitions */
+ 	for (p = 1; p < state->limit; p++) {
+ 		sector_t size, from;
+-try_scan:
 +
- 		/* assume SPC3 or latter devices support sense size > 18 */
- 		if (sdev->scsi_level > SCSI_SPC_2)
- 			us->fflags |= US_FL_SANE_SENSE;
-diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-index 56b3c08..e8f10fa 100644
---- a/drivers/usb/storage/unusual_devs.h
-+++ b/drivers/usb/storage/unusual_devs.h
-@@ -877,7 +877,8 @@ UNUSUAL_DEV(  0x071b, 0x3203, 0x0000, 0x0000,
- 		"RockChip",
- 		"MP3",
- 		US_SC_DEVICE, US_PR_DEVICE, NULL,
--		US_FL_NO_WP_DETECT | US_FL_MAX_SECTORS_64),
-+		US_FL_NO_WP_DETECT | US_FL_MAX_SECTORS_64 |
-+		US_FL_NO_READ_CAPACITY_16),
- 
- /* Reported by Jean-Baptiste Onofre <jb@nanthrax.net>
-  * Support the following product :
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index bff51d0..d4ee5b8 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -60,7 +60,9 @@
- 	US_FLAG(BAD_SENSE,	0x00020000)			\
- 		/* Bad Sense (never more than 18 bytes) */	\
- 	US_FLAG(NO_READ_DISC_INFO,	0x00040000)		\
--		/* cannot handle READ_DISC_INFO */
-+		/* cannot handle READ_DISC_INFO */		\
-+	US_FLAG(NO_READ_CAPACITY_16,	0x00080000)		\
-+		/* cannot handle READ_CAPACITY_16 */
- 
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
+ 		size = state->parts[p].size;
+ 		if (!size)
+ 			continue;
+@@ -612,7 +612,8 @@ try_scan:
+ 					check_disk_size_change(disk, bdev);
+ 					bdev->bd_invalidated = 0;
+ 				}
+-				goto try_scan;
++				kfree(state);
++				goto rescan;
+ 			} else {
+ 				/*
+ 				 * we can not ignore partitions of broken tables
 -- 
-1.7.0.1
+1.6.4.2
 
