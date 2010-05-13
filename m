@@ -1,88 +1,74 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/2] scsi/sd: Add a no_read_capacity_16 scsi_device flag
-Date: Thu, 13 May 2010 17:27:55 +0200
-Message-ID: <1273764476-4204-1-git-send-email-hdegoede@redhat.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: jelledejong-OIcJOM8/mISwoUgIn9SVlA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 2/2] usb-storage: Add new no_read_capacity_16 quirk
+Date: Thu, 13 May 2010 17:27:56 +0200
+Message-ID: <1273764476-4204-2-git-send-email-hdegoede@redhat.com>
+References: <1273764476-4204-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp4.versatel.nl ([62.58.50.91]:36444 "EHLO smtp3.versatel.nl"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756181Ab0EMP0i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2010 11:26:38 -0400
+In-Reply-To: <1273764476-4204-1-git-send-email-hdegoede@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: jelledejong@powercraft.nl, Hans de Goede <hdegoede@redhat.com>
 
-I know I know, I seem to have a nack for digging up buggy usb devices
-which don't work with Linux, and I'm crazy enough to try to make them
-work. So this time a friend of mine asked me to get an mp4 player (an
-mp3 player which can play videos on a small screen) to work with Linux.
+Some Rockbox based mp4 players will crash when ever they see a
+read_capacity_16 scsi command. So add a new US_FL which tells the
+scsi sd driver to not issue any read_capacity_16 scsi commands.
 
-It is based on the well known rockbox chipset for which we already have
-an unusual devs entries to work around some of its bugs. But this model
-comes with an additional twist.
-
-This model chokes on read_capacity_16 calls. Now normally we don't make
-those calls, but this model comes with an sdcard slot and when there
-is no card in there (and shipped from the factory there is none), it
-reports a size of 0. However this time the programmers actually
-got the read_capacity_10 response right! So they substract one from
-the size as stored internally in the mp3 player before reporting it back,
-resulting in an answer of ... 0xffffffff sectors, causing sd.c to
-try a read_capacity_16, on which the device crashes.
-
-This patch adds a flag to scsi_device to indicate that a a device cannot
-handle read_capacity_16, and when this flag is set if a device reports
-an lba of 0xffffffff as answer to a read_capacity_10, assumes it tries
-to report a size of 0.
-
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/scsi/sd.c          |   12 ++++++++++++
- include/scsi/scsi_device.h |    1 +
- 2 files changed, 13 insertions(+), 0 deletions(-)
+ drivers/usb/storage/scsiglue.c     |    4 ++++
+ drivers/usb/storage/unusual_devs.h |    3 ++-
+ include/linux/usb_usual.h          |    4 +++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1dd4d84..8702bd1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1444,6 +1444,9 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	unsigned long long lba;
- 	unsigned sector_size;
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 65d31f4..ee70c4b 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -210,6 +210,10 @@ static int slave_configure(struct scsi_device *sdev)
+ 		if (us->fflags & US_FL_CAPACITY_HEURISTICS)
+ 			sdev->guess_capacity = 1;
  
-+	if (sdp->no_read_capacity_16)
-+		return -EINVAL;
++		/* Some devices cannot handle READ_CAPACITY_16 */
++		if (us->fflags & US_FL_NO_READ_CAPACITY_16)
++			sdev->no_read_capacity_16 = 1;
 +
- 	do {
- 		memset(cmd, 0, 16);
- 		cmd[0] = SERVICE_ACTION_IN;
-@@ -1557,6 +1560,15 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 	sector_size = get_unaligned_be32(&buffer[4]);
- 	lba = get_unaligned_be32(&buffer[0]);
+ 		/* assume SPC3 or latter devices support sense size > 18 */
+ 		if (sdev->scsi_level > SCSI_SPC_2)
+ 			us->fflags |= US_FL_SANE_SENSE;
+diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+index 56b3c08..e8f10fa 100644
+--- a/drivers/usb/storage/unusual_devs.h
++++ b/drivers/usb/storage/unusual_devs.h
+@@ -877,7 +877,8 @@ UNUSUAL_DEV(  0x071b, 0x3203, 0x0000, 0x0000,
+ 		"RockChip",
+ 		"MP3",
+ 		US_SC_DEVICE, US_PR_DEVICE, NULL,
+-		US_FL_NO_WP_DETECT | US_FL_MAX_SECTORS_64),
++		US_FL_NO_WP_DETECT | US_FL_MAX_SECTORS_64 |
++		US_FL_NO_READ_CAPACITY_16),
  
-+	if (sdp->no_read_capacity_16 && (lba == 0xffffffff)) {
-+		/* Some buggy (usb cardreader) devices return an lba of
-+		   0xffffffff when the want to report a size of 0 (with
-+		   which they really mean no media is present) */
-+		sdkp->capacity = 0;
-+		sdkp->hw_sector_size = sector_size;
-+		return sector_size;
-+	}
-+
- 	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
- 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
- 			"kernel compiled with support for large block "
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e1b2db8..02bbbe5 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -149,6 +149,7 @@ struct scsi_device {
- 	unsigned last_sector_bug:1;	/* do not use multisector accesses on
- 					   SD_LAST_BUGGY_SECTORS */
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
-+	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ /* Reported by Jean-Baptiste Onofre <jb@nanthrax.net>
+  * Support the following product :
+diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
+index bff51d0..d4ee5b8 100644
+--- a/include/linux/usb_usual.h
++++ b/include/linux/usb_usual.h
+@@ -60,7 +60,9 @@
+ 	US_FLAG(BAD_SENSE,	0x00020000)			\
+ 		/* Bad Sense (never more than 18 bytes) */	\
+ 	US_FLAG(NO_READ_DISC_INFO,	0x00040000)		\
+-		/* cannot handle READ_DISC_INFO */
++		/* cannot handle READ_DISC_INFO */		\
++	US_FLAG(NO_READ_CAPACITY_16,	0x00080000)		\
++		/* cannot handle READ_CAPACITY_16 */
  
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
 -- 
 1.7.0.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
