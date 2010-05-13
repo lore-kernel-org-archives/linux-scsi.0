@@ -1,41 +1,105 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/4] libata: use the enlarged capacity after late HPA unlock
-Date: Thu, 13 May 2010 17:56:45 +0200
-Message-ID: <1273766206-17402-4-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/4] SCSI: implement sd_set_capacity()
+Date: Thu, 13 May 2010 17:56:44 +0200
+Message-ID: <1273766206-17402-3-git-send-email-tj@kernel.org>
 References: <1273766206-17402-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:33059 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932240Ab0EMP5W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2010 11:57:22 -0400
 In-Reply-To: <1273766206-17402-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org
 Cc: ben@decadent.org.uk, Tejun Heo <tj@kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
-After late HPA unlock, libata kept using the original capacity
-ignoring the new larger native capacity.  Enlarging device on the fly
-doesn't cause any harm.  Use the larger native capacity instead.  This
-will enable on-demand HPA unlocking.
+Implement sd_set_capacity() method which calls into
+hostt->set_capacity() if implemented.  This will be invoked by block
+layer if partitions extend beyond the end of the device and can be
+used to implement, for example, on-demand ATA host protected area
+unlocking.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/ata/libata-core.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/sd.c        |   26 ++++++++++++++++++++++++++
+ include/scsi/scsi_host.h |   11 +++++++++++
+ 2 files changed, 37 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 86f405b..9d6e92d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4212,9 +4212,8 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 	    dev->n_sectors > n_sectors && dev->n_sectors == n_native_sectors) {
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "new n_sectors matches native, probably "
--			       "late HPA unlock, continuing\n");
--		/* keep using the old n_sectors */
--		dev->n_sectors = n_sectors;
-+			       "late HPA unlock, n_sectors updated\n");
-+		/* use the larger n_sectors */
- 		return 0;
- 	}
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8b827f3..59d5e8f 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -97,6 +97,8 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ #endif
  
+ static int  sd_revalidate_disk(struct gendisk *);
++static unsigned long long sd_set_capacity(struct gendisk *disk,
++					  unsigned long long new_capacity);
+ static int  sd_probe(struct device *);
+ static int  sd_remove(struct device *);
+ static void sd_shutdown(struct device *);
+@@ -1100,6 +1102,7 @@ static const struct block_device_operations sd_fops = {
+ #endif
+ 	.media_changed		= sd_media_changed,
+ 	.revalidate_disk	= sd_revalidate_disk,
++	.set_capacity		= sd_set_capacity,
+ };
+ 
+ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+@@ -2101,6 +2104,29 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ }
+ 
+ /**
++ *	sd_set_capacity - set disk capacity
++ *	@disk: struct gendisk to set capacity for
++ *	@new_capacity: new target capacity
++ *
++ *	Block layer calls this function if it detects that partitions
++ *	on @disk reach beyond the end of the device.  If the SCSI host
++ *	implements set_capacity method, it's invoked to give it a
++ *	chance to adjust the device capacity.
++ *
++ *	CONTEXT:
++ *	Defined by block layer.  Might sleep.
++ */
++static unsigned long long sd_set_capacity(struct gendisk *disk,
++					  unsigned long long new_capacity)
++{
++	struct scsi_device *sdev = scsi_disk(disk)->device;
++
++	if (sdev->host->hostt->set_capacity)
++		return sdev->host->hostt->set_capacity(sdev, new_capacity);
++	return 0;
++}
++
++/**
+  *	sd_format_disk_name - format disk name
+  *	@prefix: name prefix - ie. "sd" for SCSI disks
+  *	@index: index of the disk to format name for
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index c50a97f..31dba89 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -327,6 +327,17 @@ struct scsi_host_template {
+ 			sector_t, int []);
+ 
+ 	/*
++	 * This function is called when one or more partitions on the
++	 * device reach beyond the end of the device.  This function
++	 * should return the new capacity if disk was successfully
++	 * enlarged.  Return values smaller than the current capacity
++	 * are ignored.
++	 *
++	 * Status: OPTIONAL
++	 */
++	sector_t (*set_capacity)(struct scsi_device *, sector_t);
++
++	/*
+ 	 * Can be used to export driver statistics and other infos to the
+ 	 * world outside the kernel ie. userspace and it also provides an
+ 	 * interface to feed the driver with information.
 -- 
 1.6.4.2
+
