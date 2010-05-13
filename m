@@ -1,35 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCHSET] libata: implement ->set_capacity()
-Date: Thu, 13 May 2010 20:25:39 +0200
-Message-ID: <4BEC4423.3030507@kernel.org>
-References: <1273766206-17402-1-git-send-email-tj@kernel.org> <1273766778.4353.200.camel@mulgrave.site> <4BEC272E.10508@kernel.org> <20100513174047.GX25951@kernel.dk>
+Date: Thu, 13 May 2010 20:40:02 +0200
+Message-ID: <4BEC4782.7010109@kernel.org>
+References: <1273766206-17402-1-git-send-email-tj@kernel.org>	 <1273766778.4353.200.camel@mulgrave.site>  <4BEC272E.10508@kernel.org>	 <1273768687.4353.235.camel@mulgrave.site>  <4BEC2ED7.9080001@kernel.org> <1273771131.4353.300.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100513174047.GX25951@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ben@decadent.org.uk
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1273771131.4353.300.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ben@decadent.org.uk
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Hello, James.
 
-On 05/13/2010 07:40 PM, Jens Axboe wrote:
-> Is there a valid case for setting the capacity less than the unlocked
-> capacity? I would think the unlock/lock bool api is saner.
+On 05/13/2010 07:18 PM, James Bottomley wrote:
+> So I think the bit I missed was you're trying to do this programatically
+> from boot time partition read to detect if the user previously disabled
+> the HPA and partitioned the device?  In which case you still have user
+> context, you can call BLKRRPART here too.
 
-IDE currently is the only user (and probably has been that way the
-whole time), so it is a binary thing.  I have no idea why the original
-interface was designed that way.  Looks like it tried to be too
-generic.  Anyways, for the task at hand, the following should be
-enough.
+Yeah, that's what I'm trying to do but the functionality is already in
+the block layer and has been used by IDE layer for a long time.  We
+just forgot to implement it for libata.  The only thing I did was
+fixing up corner case handling in block layer a bit and adding a
+callback to sd so that the block layer call can be passed down to
+libata.  So, it doesn't have anything to do with sysfs attributes,
+block or libata.
 
-	void (*unlock_native_capacity)(void);
+We sure can trigger the rescan by invoking BLKRRPART from inside the
+partition scan code but I'm afraid that would be more convoluted than
+the currently existing implementation of restarting the scan inside
+the scan function.
 
-This simple signalling is how the current interface is being used
-anyway.  If nobody objects, I'll replace ->set_capacity() with the
-above.
+The only thing is that the existing block method is somewhat overly
+generic without any good reason, so simplifying that would be a good
+idea.
 
 Thanks.
 
