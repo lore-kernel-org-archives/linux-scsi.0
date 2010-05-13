@@ -1,40 +1,41 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Thu, 13 May 2010 14:42:16 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1005131440110.1731-100000@iolanthe.rowland.org>
-References: <4BEB6E2B.7060408@pobox.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [patch] libsas: dereferencing variable before check
+Date: Thu, 13 May 2010 20:42:32 +0200
+Message-ID: <20100513184232.GC5695@bicker>
+References: <20100512225629.GB5695@bicker> <23e0bf65-8758-45b3-b0a8-1df97db07d9a@email.android.com> <1273761114.4353.122.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4BEB6E2B.7060408@pobox.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1273761114.4353.122.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 12 May 2010, Mark Lord wrote:
-
-> On 12/05/10 02:48 PM, Alan Stern wrote:
-> ..
-> > That's right.  Since the command in question did have CK_COND set, the
-> > device should have returned CHECK CONDITION status instead of GOOD
-> > status.
-> >
-> > Therefore this indicates a bug in the device, not in the kernel.
-> > hdparm could work around it here by issuing an explicit REQUEST SENSE
-> > command, but in general it will cause trouble.
-> ..
+On Thu, May 13, 2010 at 09:31:54AM -0500, James Bottomley wrote:
+> On Thu, 2010-05-13 at 01:08 +0200, Tejun Heo wrote:
+> > 
+> > "Dan Carpenter" <error27@gmail.com> wrote:
+> > 
+> > >The "qc->scsicmd" could be null so I moved the dereference inside the
+> > >check.  This was introduced by 70b25f890: "[SCSI] fix locking around
+> > >blk_abort_request()" 
+> > >
+> > >Signed-off-by: Dan Carpenter <error27@gmail.com>
+> > 
+> > Ooh.. right.
+> > 
+> > Asked-by: Tejun Heo <tj@kernel.org>
 > 
-> I wonder if perhaps usb-storage could honour the flag
-> when the device doesn't ?
+> Well, oops, yes.  Two patches to fix one bug is a bit overboard, I
+> think, plus some code rearrangement to fix the locality of the problem
+> and ensure it doesn't happen again might be useful.  What about this.
+> 
 
-It could, but I'm not sure it would end up working right.  That is, 
-usb-storage could go ahead and ask for the sense data, but the data 
-values returned by the device might not all be set correctly.
+Looks good.
 
-The easiest way to find out is to make a version of hdparm which does 
-an explicit REQUEST SENSE, and then see if the end result is 
-acceptable.
+Acked-by: Dan Carpenter <error27@gmail.com>
 
-Alan Stern
-
+regards,
+dan carpenter
