@@ -1,80 +1,99 @@
-From: Changli Gao <xiaosuo@gmail.com>
-Subject: Re: [PATCH 1/9] mm: add generic adaptive large memory allocation APIs
-Date: Thu, 13 May 2010 22:08:26 +0800
-Message-ID: <AANLkTinLT5g5SKjqmQlS2kxvvMq1gsi1jPDgOKTnrT-q@mail.gmail.com>
-References: <1273744285-8128-1-git-send-email-xiaosuo@gmail.com>
-	<1273756816.5605.3547.camel@twins>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [patch] libsas: dereferencing variable before check
+Date: Thu, 13 May 2010 09:31:54 -0500
+Message-ID: <1273761114.4353.122.camel@mulgrave.site>
+References: <20100512225629.GB5695@bicker>
+	 <23e0bf65-8758-45b3-b0a8-1df97db07d9a@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1273756816.5605.3547.camel@twins>
-Sender: owner-linux-mm@kvack.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: akpm@linux-foundation.org, Hoang-Nam Nguyen <hnguyen@de.ibm.com>, Christoph Raisch <raisch@de.ibm.com>, Roland Dreier <rolandd@cisco.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Divy Le Ray <divy@chelsio.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@sun.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Paul Menage <menage@google.com>, Li Zefan <lizf@cn.fujitsu.com>, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org, Eric Dumazet <eric.dumazet@gmail.com>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:49157 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751575Ab0EMOcB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2010 10:32:01 -0400
+In-Reply-To: <23e0bf65-8758-45b3-b0a8-1df97db07d9a@email.android.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Dan Carpenter <error27@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-T24gVGh1LCBNYXkgMTMsIDIwMTAgYXQgOToyMCBQTSwgUGV0ZXIgWmlqbHN0cmEgPHBldGVyekBp
-bmZyYWRlYWQub3JnPiB3cm90ZToKPiBPbiBUaHUsIDIwMTAtMDUtMTMgYXQgMTc6NTEgKzA4MDAs
-IENoYW5nbGkgR2FvIHdyb3RlOgo+PiArdm9pZCAqX19rdm1hbGxvYyhzaXplX3Qgc2l6ZSwgZ2Zw
-X3QgZmxhZ3MpCj4+ICt7Cj4+ICsgwqAgwqAgwqAgdm9pZCAqcHRyOwo+PiArCj4+ICsgwqAgwqAg
-wqAgaWYgKHNpemUgPCBQQUdFX1NJWkUpCj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmV0dXJu
-IGttYWxsb2Moc2l6ZSwgR0ZQX0tFUk5FTCB8IGZsYWdzKTsKPj4gKyDCoCDCoCDCoCBzaXplID0g
-UEFHRV9BTElHTihzaXplKTsKPj4gKyDCoCDCoCDCoCBpZiAoaXNfcG93ZXJfb2ZfMihzaXplKSkK
-Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwdHIgPSAodm9pZCAqKV9fZ2V0X2ZyZWVfcGFnZXMo
-R0ZQX0tFUk5FTCB8IGZsYWdzIHwKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoF9fR0ZQX05PV0FSTiwgZ2V0X29y
-ZGVyKHNpemUpKTsKPj4gKyDCoCDCoCDCoCBlbHNlCj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-cHRyID0gYWxsb2NfcGFnZXNfZXhhY3Qoc2l6ZSwgR0ZQX0tFUk5FTCB8IGZsYWdzIHwKPj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCBfX0dGUF9OT1dBUk4pOwo+PiArIMKgIMKgIMKgIGlmIChwdHIgIT0gTlVMTCkgewo+
-PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHZpcnRfdG9faGVhZF9wYWdlKHB0ciktPnByaXZhdGUg
-PSBzaXplOwo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHJldHVybiBwdHI7Cj4+ICsgwqAgwqAg
-wqAgfQo+PiArCj4+ICsgwqAgwqAgwqAgcHRyID0gdm1hbGxvYyhzaXplKTsKPj4gKyDCoCDCoCDC
-oCBpZiAocHRyICE9IE5VTEwgJiYgKGZsYWdzICYgX19HRlBfWkVSTykpCj4+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgbWVtc2V0KHB0ciwgMCwgc2l6ZSk7Cj4+ICsKPj4gKyDCoCDCoCDCoCByZXR1
-cm4gcHRyOwo+PiArfQo+PiArRVhQT1JUX1NZTUJPTChfX2t2bWFsbG9jKTsKPgo+IFNvIGlmIEkg
-ZG8ga3ZtYWxsb2Moc2l6ZSwgR0ZQX0FUT01JQykgSSBnZXQgR0ZQX0tFUk5FTHxHRlBfQVRPTUlD
-LCB3aGljaAo+IGlzIG5vdCBhIHJlY29tbWVuZGVkIHZhcmlhdGlvbiBiZWNhdXNlIG9uZSBzaG91
-bGQgbm90IG1peCBfX0dGUF9XQUlUIGFuZAo+IF9fR0ZQX0hJR0guCgpfX2t2bWFsbG9jKCkgaXMg
-b25seSBmb3IgaW50ZXJuYWwgdXNlKGt2bWFsbG9jLCBrdmNhbGxvYywgYW5kCmt2emFsbG9jKSwg
-YW5kIHRoZSBvbmx5IHZhbHVlIG9mIGZsYWdzIGlzIF9fR0ZQX1pFUk8uIEhvdyBhYm91dApyZXBs
-YWNpbmcgZmxhZ3Mgd2l0aCBhIGJvb2wgdmFyaWFibGUgemVybz8KCnZvaWQgKl9fa3ZtYWxsb2Mo
-c2l6ZV90IHNpemUsIGJvb2wgemVybyk7CgogT3IgY2hlY2sgdGhlIHZhbHVlIG9mIGZsYWdzIGlu
-IHRoZSBmcm9udCBvZiBfX2t2bWFsbG9jKCkuCgpCVUdfT04oKGZsYWdzICYgKH5fX0dGUF9aRVJP
-KSkgIT0gMCk7Cgo+Cj4gU28gSSB3b3VsZCBzaW1wbHkgZHJvcCB0aGUgZ2ZwIGFyZ3VtZW50IHRv
-IGF2b2lkIGNvbmZ1c2lvbi4KPgo+PiArdm9pZCBfX2t2ZnJlZSh2b2lkICpwdHIsIGJvb2wgaW5h
-dG9taWMpCj4+ICt7Cj4+ICsgwqAgwqAgwqAgaWYgKHVubGlrZWx5KFpFUk9fT1JfTlVMTF9QVFIo
-cHRyKSkpCj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcmV0dXJuOwo+PiArIMKgIMKgIMKgIGlm
-IChpc192bWFsbG9jX2FkZHIocHRyKSkgewo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChp
-bmF0b21pYykgewo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHN0cnVjdCB3
-b3JrX3N0cnVjdCAqd29yazsKPj4gKwo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIHdvcmsgPSBwdHI7Cj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgQlVJ
-TERfQlVHX09OKHNpemVvZihzdHJ1Y3Qgd29ya19zdHJ1Y3QpID4gUEFHRV9TSVpFKTsKPj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBJTklUX1dPUksod29yaywga3ZmcmVlX3dv
-cmspOwo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNjaGVkdWxlX3dvcmso
-d29yayk7Cj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfSBlbHNlIHsKPj4gKyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB2ZnJlZShwdHIpOwo+PiArIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIH0KPj4gKyDCoCDCoCDCoCB9IGVsc2Ugewo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHN0
-cnVjdCBwYWdlICpwYWdlOwo+PiArCj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcGFnZSA9IHZp
-cnRfdG9faGVhZF9wYWdlKHB0cik7Cj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKFBhZ2VT
-bGFiKHBhZ2UpIHx8IFBhZ2VDb21wb3VuZChwYWdlKSkKPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBrZnJlZShwdHIpOwo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGVsc2Ug
-aWYgKGlzX3Bvd2VyX29mXzIocGFnZS0+cHJpdmF0ZSkpCj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgZnJlZV9wYWdlcygodW5zaWduZWQgbG9uZylwdHIsCj4+ICsgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBnZXRfb3JkZXIocGFn
-ZS0+cHJpdmF0ZSkpOwo+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGVsc2UKPj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBmcmVlX3BhZ2VzX2V4YWN0KHB0ciwgcGFnZS0+cHJp
-dmF0ZSk7Cj4+ICsgwqAgwqAgwqAgfQo+PiArfQo+PiArRVhQT1JUX1NZTUJPTChfX2t2ZnJlZSk7
-Cj4KPiBOQUssIEkgcmVhbGx5IHV0dGVybHkgZGlzbGlrZSB0aGF0IGluYXRvbWljIGFyZ3VtZW50
-LiBUaGUgYWxsb2Mgc2lkZQo+IGRvZXNuJ3QgZnVuY3Rpb24gaW4gYXRvbWljIGNvbnRleHQgZWl0
-aGVyLiBQbGVhc2Uga2VlcCB0aGUgdGhpbmcKPiBzeW1tZXRyaWMgaW4gdGhhdCByZWdhcmRzLgo+
-CgpUaGVyZSBhcmUgc29tZSB1c2Vycywgd2hvIHJlbGVhc2UgbWVtb3J5IGluIGF0b21pYyBjb250
-ZXh0LiBmb3IKZXhhbXBsZTogZnMvZmlsZS5jOiBmZG1lbS4KCi0tIApSZWdhcmRz77yMCkNoYW5n
-bGkgR2FvKHhpYW9zdW9AZ21haWwuY29tKQo=
+On Thu, 2010-05-13 at 01:08 +0200, Tejun Heo wrote:
+> 
+> "Dan Carpenter" <error27@gmail.com> wrote:
+> 
+> >The "qc->scsicmd" could be null so I moved the dereference inside the
+> >check.  This was introduced by 70b25f890: "[SCSI] fix locking around
+> >blk_abort_request()" 
+> >
+> >Signed-off-by: Dan Carpenter <error27@gmail.com>
+> 
+> Ooh.. right.
+> 
+> Asked-by: Tejun Heo <tj@kernel.org>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Well, oops, yes.  Two patches to fix one bug is a bit overboard, I
+think, plus some code rearrangement to fix the locality of the problem
+and ensure it doesn't happen again might be useful.  What about this.
+
+James
+
+---
+
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 88f7446..8c496b5 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -395,12 +395,13 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev,
+ void sas_ata_task_abort(struct sas_task *task)
+ {
+ 	struct ata_queued_cmd *qc = task->uldd_task;
+-	struct request_queue *q = qc->scsicmd->device->request_queue;
+ 	struct completion *waiting;
+-	unsigned long flags;
+ 
+ 	/* Bounce SCSI-initiated commands to the SCSI EH */
+ 	if (qc->scsicmd) {
++		struct request_queue *q = qc->scsicmd->device->request_queue;
++		unsigned long flags;
++
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_abort_request(qc->scsicmd->request);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 8228350..53849f2 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1030,8 +1030,6 @@ int __sas_task_abort(struct sas_task *task)
+ void sas_task_abort(struct sas_task *task)
+ {
+ 	struct scsi_cmnd *sc = task->uldd_task;
+-	struct request_queue *q = sc->device->request_queue;
+-	unsigned long flags;
+ 
+ 	/* Escape for libsas internal commands */
+ 	if (!sc) {
+@@ -1043,13 +1041,15 @@ void sas_task_abort(struct sas_task *task)
+ 
+ 	if (dev_is_sata(task->dev)) {
+ 		sas_ata_task_abort(task);
+-		return;
+-	}
++	} else {
++		struct request_queue *q = sc->device->request_queue;
++		unsigned long flags;
+ 
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	blk_abort_request(sc->request);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
+-	scsi_schedule_eh(sc->device->host);
++		spin_lock_irqsave(q->queue_lock, flags);
++		blk_abort_request(sc->request);
++		spin_unlock_irqrestore(q->queue_lock, flags);
++		scsi_schedule_eh(sc->device->host);
++	}
+ }
+ 
+ int sas_slave_alloc(struct scsi_device *scsi_dev)
+
+
