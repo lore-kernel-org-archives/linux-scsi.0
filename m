@@ -1,37 +1,49 @@
-From: Mark Lord <mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>
-Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
-Date: Wed, 12 May 2010 23:12:43 -0400
-Message-ID: <4BEB6E2B.7060408@pobox.com>
-References: <Pine.LNX.4.44L0.1005121444450.1353-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1005121444450.1353-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Jonas Schwertfeger <jschwertfeger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Dinh.Nguyen-KZfg59tc24xl57MIdRCFDg@public.gmane.org, Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>, Kay Sievers <kay.sievers-tD+1rO4QERM@public.gmane.org>, David Zeuthen <david-o55+BOBDEFg@public.gmane.org>, linux-hotplug-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lennart Poettering <lennart-mdGvqq1h2p+GdvJs77BJ7Q@public.gmane.org>, Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+From: Changli Gao <xiaosuo@gmail.com>
+Subject: [PATCH 0/9] mm: generic adaptive large memory allocation APIs
+Date: Thu, 13 May 2010 17:49:07 +0800
+Message-ID: <1273744147-7594-1-git-send-email-xiaosuo@gmail.com>
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: akpm@linux-foundation.org
+Cc: Hoang-Nam Nguyen <hnguyen@de.ibm.com>, Christoph Raisch <raisch@de.ibm.com>, Roland Dreier <rolandd@cisco.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Divy Le Ray <divy@chelsio.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@sun.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Paul Menage <menage@google.com>, Li Zefan <lizf@cn.fujitsu.com>, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org, Changli Gao <xiaosuo@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/05/10 02:48 PM, Alan Stern wrote:
-..
-> That's right.  Since the command in question did have CK_COND set, the
-> device should have returned CHECK CONDITION status instead of GOOD
-> status.
->
-> Therefore this indicates a bug in the device, not in the kernel.
-> hdparm could work around it here by issuing an explicit REQUEST SENSE
-> command, but in general it will cause trouble.
-..
+generic adaptive large memory allocation APIs
 
-I wonder if perhaps usb-storage could honour the flag
-when the device doesn't ?
+kv*alloc are used to allocate large contiguous memory and the users don't mind
+whether the memory is physically or virtually contiguous. The allocator always
+try its best to allocate physically contiguous memory first.
 
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org
+In this patch set, some APIs are introduced: kvmalloc(), kvzalloc(), kvcalloc(),
+kvrealloc(), kvfree() and kvfree_inatomic().
+
+Some code are converted to use the new generic APIs instead.
+
+Signed-off-by: Changli Gao <xiaosuo@gmail.com>
+----
+ drivers/infiniband/hw/ehca/ipz_pt_fn.c |   22 +-----
+ drivers/net/cxgb3/cxgb3_defs.h         |    2 
+ drivers/net/cxgb3/cxgb3_offload.c      |   31 ---------
+ drivers/net/cxgb3/l2t.c                |    4 -
+ drivers/net/cxgb4/cxgb4.h              |    3 
+ drivers/net/cxgb4/cxgb4_main.c         |   37 +----------
+ drivers/net/cxgb4/l2t.c                |    2 
+ drivers/scsi/cxgb3i/cxgb3i_ddp.c       |   12 +--
+ drivers/scsi/cxgb3i/cxgb3i_ddp.h       |   26 -------
+ drivers/scsi/cxgb3i/cxgb3i_offload.c   |    6 -
+ fs/ext4/super.c                        |   21 +-----
+ fs/file.c                              |  109 ++++-----------------------------
+ include/linux/mm.h                     |   31 +++++++++
+ include/linux/vmalloc.h                |    1 
+ kernel/cgroup.c                        |   47 +-------------
+ kernel/relay.c                         |   35 ----------
+ mm/nommu.c                             |    6 +
+ mm/util.c                              |  104 +++++++++++++++++++++++++++++++
+ mm/vmalloc.c                           |   14 ++++
+ 19 files changed, 207 insertions(+), 306 deletions(-)
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
