@@ -1,136 +1,90 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 10/21] m68k/scsi: a2091 - Kill ugly DMA() macro
-Date: Thu, 13 May 2010 21:41:43 +0200
-Message-ID: <AANLkTilFlDzuL4i2YYSf2Uau1K526ZXGBV0xk8GS-pNE@mail.gmail.com>
-References: <1270371651-2584-2-git-send-email-geert@linux-m68k.org>
-	 <1270371651-2584-8-git-send-email-geert@linux-m68k.org>
-	 <1270371651-2584-9-git-send-email-geert@linux-m68k.org>
-	 <1270371651-2584-10-git-send-email-geert@linux-m68k.org>
-	 <1270371651-2584-11-git-send-email-geert@linux-m68k.org>
-	 <20100405062529.GA28950@infradead.org>
-	 <s2o10f740e81004051242r27951fcftefe2ca3d1425ff66@mail.gmail.com>
-	 <i2h10f740e81004230137oc7c5f464w164786cd7f13f589@mail.gmail.com>
-	 <1272830750.23834.43.camel@mulgrave.site>
-	 <z2r10f740e81005031225p85c977bau1ac1b7af867fd68f@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [QEMU-KVM]: Megasas + TCM_Loop + SG_IO into Windows XP guests
+Date: Thu, 13 May 2010 14:38:51 -0700
+Message-ID: <1273786731.13658.49.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <z2r10f740e81005031225p85c977bau1ac1b7af867fd68f@mail.gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp106.sbc.mail.gq1.yahoo.com ([67.195.14.109]:27884 "HELO
+	smtp106.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752879Ab0EMVjA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 May 2010 17:39:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Gerd Hoffmann <kraxel@redhat.com>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.w>
+Cc: kvm-devel <kvm@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, May 3, 2010 at 21:25, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> On Sun, May 2, 2010 at 22:05, James Bottomley <James.Bottomley@suse.de> wrote:
->> On Fri, 2010-04-23 at 10:37 +0200, Geert Uytterhoeven wrote:
->>> On Mon, Apr 5, 2010 at 21:42, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
->>> > On Mon, Apr 5, 2010 at 08:25, Christoph Hellwig <hch@infradead.org> wrote:
->>> >> Instead of abusing the ScsiHost base field I'd prefer if you stick
->>> >
->>> > I wouldn't call it abuse: it's a (MM)IO base address anyway.
->>> > But I see that field was indeed marked `legacy crap' in an otherwise
->>> > innocent looking
->>> > commit to split the SCSI include files... by you ;-)
->>> >
->>> >> a properly typed pointer into the device specific host data.
->>> >
->>> > You mean shost_priv()? That field already contains a pointer to the
->>> > struct WD33C93_hostdata.
->>> >
->>> > But I'll create a new a2091_hostdata struct that contains both the
->>> > WD33C93_hostdata and the a2091_scsiregs pointer (and do the same
->>> > for gvp11.c and a3000.c). It's a bit similar to what sgiwd93.c does, albeit that
->>> > one also uses the legacy base field.
->>>
->>> As I want to avoid introducing bugs by respinning the complicated
->>> parts (the zorro
->>> driver and platform driver conversion patches), I made this change on
->>> top of the 2
->>> whole patch series.
->>>
->>> A2091 part:
->>
->> I've applied up to 10/21 which should make it easier, but this patch
->
-> Thanks a lot! (I saw they showed up in linux-next, which is good!)
->
->> refuses to apply:
->>
->> patch: **** malformed patch at line 230: struct scsi_cmnd *SCpnt,
->
-> Bummer. I sent those manually from gmail using copy-'n-paste from
-> gedit, which _used_
-> to work fine w.r.t. whitespace and line breaks. Oh well, they broke it :-(
->
->> could you respin the remaining patches so they'll actually apply?
->
-> The remaining 11-21/21 from the original series had been sent using
-> git-send-email, so they should apply fine.
->
-> I'll resend the other 3 using git-send-email, too. The first 2 should
-> apply fine on top
-> of the series of 21.
-> The third won't apply as it depends on the Amiga platform rework, but we can
-> sort that out later. Or I can just take care of it myself, if you approve?
+Greetings Hannes and co,
 
-For your convenience, I also put all of them (except for the third
-one) in a for-scsi branch
-(you already applied the first 10 commits on that branch):
+I have been spending a bit of time trying Megasas HBA emulation +
+TCM_Loop + SG_IO with a Windows XP SP2 KVM guests..  So far, I noticed
+that hw/scsi-generic.c:execute_command_run() using bdev_aio_ioctl()
+appears to be broken for XP guests, which causes the first 36-byte
+INQUIRY sent via SG_IO to never make it back to QEMU and results in the
+win32 LSI drive taking the LUN offline, et al.  Note that everything
+does appear to be functioning as expected in kernel space for the first
+INQUIRY with the TCM_Loop LLD and Linux/SCSI code (AFAICT) and Linux KVM
+guests using megasas emulation are still working.
 
-The following changes since commit cea0d767c29669bf89f86e4aee46ef462d2ebae8:
-  Linus Torvalds (1):
-        Merge branch 'hwmon-for-linus' of
-git://git.kernel.org/.../jdelvare/staging
+So, I ended up needing requiring the following quick hack for
+hw/scsi-generic.c:execute_command_run() to make SG_IO function
+synchronously using bdrv_ioctl(), which at least gets LUN registration
+and basic control path CDBs working for the XP guest.
 
-are available in the git repository at:
+Here is how it looks in action on a v2.6.34-rc7 host so far:
 
-  master.kernel.org:/pub/scm/linux/kernel/git/geert/linux-m68k.git for-scsi
+http://www.linux-iscsi.org/images/TCM-KVM-megasas-XP-05132010.png
 
-Geert Uytterhoeven (23):
-      scsi: wd33c93 - Kill empty wd33c93_release()
-      m68k/scsi: a2091 - Reindentation
-      m68k/scsi: gvp11 - Reindentation
-      m68k/scsi: mvme147 - Reindentation
-      m68k/scsi: a3000 - Reindentation
-      m68k/scsi: a2091 - Use shost_priv() and kill ugly HDATA() macro
-      m68k/scsi: gvp11 - Use shost_priv() and kill ugly HDATA() macro
-      m68k/scsi: mvme147 - Use shost_priv() and kill ugly HDATA() macro
-      m68k/scsi: a3000 - Use shost_priv() and kill ugly HDATA() macro
-      m68k/scsi: a2091 - Kill ugly DMA() macro
-      m68k/scsi: gvp11 - Kill ugly DMA() macro
-      m68k/scsi: a3000 - Kill ugly DMA() macro
-      m68k/scsi: mvme147 - Kill static global mvme147_host
-      m68k/scsi: a3000 - Kill static global a3000_host
-      m68k/scsi: gvp11 - Extract check_wd33c93()
-      m68k/scsi: a2091 - Kill a2091_scsiregs typedef
-      m68k/scsi: gvp11 - Kill gvp11_scsiregs typedef
-      m68k/scsi: a3000 - Kill a3000_scsiregs typedef
-      m68k/scsi: mvme147 - Kill obsolete HOSTS_C logic
-      m68k: amiga - A2091/A590 SCSI zorro_driver conversion
-      m68k: amiga - GVP Series II SCSI zorro_driver conversion
-      m68k/scsi: a2091 - Do not use legacy Scsi_Host.base
-      m68k/scsi: gvp11 - Do not use legacy Scsi_Host.base
 
- drivers/scsi/a2091.c   |  398 ++++++++++++++++++---------------
- drivers/scsi/a2091.h   |   46 ++--
- drivers/scsi/a3000.c   |  301 +++++++++++++------------
- drivers/scsi/a3000.h   |   50 ++--
- drivers/scsi/gvp11.c   |  582 +++++++++++++++++++++++++-----------------------
- drivers/scsi/gvp11.h   |   49 ++---
- drivers/scsi/mvme147.c |  178 ++++++++--------
- drivers/scsi/mvme147.h |    4 +-
- drivers/scsi/wd33c93.c |    6 -
- drivers/scsi/wd33c93.h |    1 -
- 10 files changed, 836 insertions(+), 779 deletions(-)
+diff --git a/hw/scsi-generic.c b/hw/scsi-generic.c
+index 6c58742..aa1eb83 100644
+--- a/hw/scsi-generic.c
++++ b/hw/scsi-generic.c
+@@ -140,6 +140,7 @@ static int execute_command_run(SCSIGenericReq *r,
+ {
+     BlockDriverState *bdrv = r->req.dev->conf.dinfo->bdrv;
+     SCSIGenericState *s = DO_UPCAST(SCSIGenericState, qdev, r->req.dev);
++    int ret;
+ 
+     r->io_header.interface_id = 'S';
+     r->io_header.dxfer_direction = sgdir[r->req.cmd.mode];
+@@ -161,11 +162,16 @@ static int execute_command_run(SCSIGenericReq *r,
+     printf("\n");
+     }
+ #endif
++#if 0
+     r->req.aiocb = bdrv_aio_ioctl(bdrv, SG_IO, &r->io_header, complete, r);
+     if (r->req.aiocb == NULL) {
+         BADF("execute_command: read failed !\n");
+         return -1;
+     }
++#else
++    ret = bdrv_ioctl(bdrv, SG_IO, &r->io_header);
++    complete((void *)r, ret);
++#endif
+ 
+      *      return 0;
+ }
 
-Gr{oetje,eeting}s,
 
-						Geert
+Beyond the initial LUN registration and control CDB parts, doing bulk
+DATA_SG_IO traffic is completing successfully (and everything looks sane
+with TCM_Loop and Linux/SCSI) but it appears that the correct blocks are
+not actually getting written/read by megasas.  This appears to be the
+case with both hw/scsi-generic.c and hw/scsi-disk.c modes of operation
+for megasas with the win32 XP guest.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+So I was wondering if anyone aware of known issues with QEMU
+asynchronous SG_IO into MSFT KVM guests with virtio or hw/lsi53c895a.c,
+or would this be something specific to megasas HBA emulation and XP
+guests..?
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Hannes, which MSFT guest + driver did you get work stable with bulk
+DATA_SG_IO and hw/scsi-disk.c..?
+
+Best,
+
+--nab
+
