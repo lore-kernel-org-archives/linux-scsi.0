@@ -1,71 +1,88 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/9] mm: generic adaptive large memory allocation APIs
-Date: Thu, 13 May 2010 10:04:15 -0500
-Message-ID: <1273763055.4353.136.camel@mulgrave.site>
-References: <1273744147-7594-1-git-send-email-xiaosuo@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1273744147-7594-1-git-send-email-xiaosuo@gmail.com>
-Sender: owner-linux-mm@kvack.org
-To: Changli Gao <xiaosuo@gmail.com>
-Cc: akpm@linux-foundation.org, Hoang-Nam Nguyen <hnguyen@de.ibm.com>, Christoph Raisch <raisch@de.ibm.com>, Roland Dreier <rolandd@cisco.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Divy Le Ray <divy@chelsio.com>, Theodore Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@sun.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Paul Menage <menage@google.com>, Li Zefan <lizf@cn.fujitsu.com>, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, containers@lists.linux-foundation.org
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] scsi/sd: Add a no_read_capacity_16 scsi_device flag
+Date: Thu, 13 May 2010 17:27:55 +0200
+Message-ID: <1273764476-4204-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: jelledejong-OIcJOM8/mISwoUgIn9SVlA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2010-05-13 at 17:49 +0800, Changli Gao wrote:
-> generic adaptive large memory allocation APIs
-> 
-> kv*alloc are used to allocate large contiguous memory and the users don't mind
-> whether the memory is physically or virtually contiguous. The allocator always
-> try its best to allocate physically contiguous memory first.
+I know I know, I seem to have a nack for digging up buggy usb devices
+which don't work with Linux, and I'm crazy enough to try to make them
+work. So this time a friend of mine asked me to get an mp4 player (an
+mp3 player which can play videos on a small screen) to work with Linux.
 
-This isn't necessarily true ... most drivers and filesystems have to
-know what type they're getting.  Often they have to do extra tricks to
-process vmalloc areas.  Conversely, large kmalloc areas are a very
-precious commodity: if a driver or filesystem can handle vmalloc for
-large allocations, it should: it's easier for us to expand the vmalloc
-area than to try to make page reclaim keep large contiguous areas ... I
-notice your proposed API does the exact opposite of this ... tries
-kmalloc first and then does vmalloc.
+It is based on the well known rockbox chipset for which we already have
+an unusual devs entries to work around some of its bugs. But this model
+comes with an additional twist.
 
-Given this policy problem, isn't it easier simply to hand craft the
-vmalloc fall back to kmalloc (or vice versa) in the driver than add this
-whole massive raft of APIs for it?
+This model chokes on read_capacity_16 calls. Now normally we don't make
+those calls, but this model comes with an sdcard slot and when there
+is no card in there (and shipped from the factory there is none), it
+reports a size of 0. However this time the programmers actually
+got the read_capacity_10 response right! So they substract one from
+the size as stored internally in the mp3 player before reporting it back,
+resulting in an answer of ... 0xffffffff sectors, causing sd.c to
+try a read_capacity_16, on which the device crashes.
 
-> In this patch set, some APIs are introduced: kvmalloc(), kvzalloc(), kvcalloc(),
-> kvrealloc(), kvfree() and kvfree_inatomic().
-> 
-> Some code are converted to use the new generic APIs instead.
-> 
-> Signed-off-by: Changli Gao <xiaosuo@gmail.com>
-> ----
->  drivers/infiniband/hw/ehca/ipz_pt_fn.c |   22 +-----
->  drivers/net/cxgb3/cxgb3_defs.h         |    2 
->  drivers/net/cxgb3/cxgb3_offload.c      |   31 ---------
->  drivers/net/cxgb3/l2t.c                |    4 -
->  drivers/net/cxgb4/cxgb4.h              |    3 
->  drivers/net/cxgb4/cxgb4_main.c         |   37 +----------
->  drivers/net/cxgb4/l2t.c                |    2 
->  drivers/scsi/cxgb3i/cxgb3i_ddp.c       |   12 +--
->  drivers/scsi/cxgb3i/cxgb3i_ddp.h       |   26 -------
->  drivers/scsi/cxgb3i/cxgb3i_offload.c   |    6 -
->  fs/ext4/super.c                        |   21 +-----
->  fs/file.c                              |  109 ++++-----------------------------
->  include/linux/mm.h                     |   31 +++++++++
->  include/linux/vmalloc.h                |    1 
->  kernel/cgroup.c                        |   47 +-------------
->  kernel/relay.c                         |   35 ----------
->  mm/nommu.c                             |    6 +
->  mm/util.c                              |  104 +++++++++++++++++++++++++++++++
->  mm/vmalloc.c                           |   14 ++++
->  19 files changed, 207 insertions(+), 306 deletions(-)
+This patch adds a flag to scsi_device to indicate that a a device cannot
+handle read_capacity_16, and when this flag is set if a device reports
+an lba of 0xffffffff as answer to a read_capacity_10, assumes it tries
+to report a size of 0.
 
-James
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/scsi/sd.c          |   12 ++++++++++++
+ include/scsi/scsi_device.h |    1 +
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1dd4d84..8702bd1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1444,6 +1444,9 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	unsigned long long lba;
+ 	unsigned sector_size;
+ 
++	if (sdp->no_read_capacity_16)
++		return -EINVAL;
++
+ 	do {
+ 		memset(cmd, 0, 16);
+ 		cmd[0] = SERVICE_ACTION_IN;
+@@ -1557,6 +1560,15 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	sector_size = get_unaligned_be32(&buffer[4]);
+ 	lba = get_unaligned_be32(&buffer[0]);
+ 
++	if (sdp->no_read_capacity_16 && (lba == 0xffffffff)) {
++		/* Some buggy (usb cardreader) devices return an lba of
++		   0xffffffff when the want to report a size of 0 (with
++		   which they really mean no media is present) */
++		sdkp->capacity = 0;
++		sdkp->hw_sector_size = sector_size;
++		return sector_size;
++	}
++
+ 	if ((sizeof(sdkp->capacity) == 4) && (lba == 0xffffffff)) {
+ 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
+ 			"kernel compiled with support for large block "
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index e1b2db8..02bbbe5 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -149,6 +149,7 @@ struct scsi_device {
+ 	unsigned last_sector_bug:1;	/* do not use multisector accesses on
+ 					   SD_LAST_BUGGY_SECTORS */
+ 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
++	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+-- 
+1.7.0.1
 
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
