@@ -1,44 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] libata: implement ->set_capacity()
-Date: Thu, 13 May 2010 20:40:02 +0200
-Message-ID: <4BEC4782.7010109@kernel.org>
-References: <1273766206-17402-1-git-send-email-tj@kernel.org>	 <1273766778.4353.200.camel@mulgrave.site>  <4BEC272E.10508@kernel.org>	 <1273768687.4353.235.camel@mulgrave.site>  <4BEC2ED7.9080001@kernel.org> <1273771131.4353.300.camel@mulgrave.site>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: System hangs when using USB 3.0 HD with on Ubuntu
+Date: Thu, 13 May 2010 14:42:16 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1005131440110.1731-100000@iolanthe.rowland.org>
+References: <4BEB6E2B.7060408@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1273771131.4353.300.camel@mulgrave.site>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ben@decadent.org.uk
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <4BEB6E2B.7060408@pobox.com>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Jonas Schwertfeger <jschwertfeger@gmail.com>, Sarah Sharp <sarah.a.sharp@linux.intel.com>, Dinh.Nguyen@freescale.com, Sergei Shtylyov <sshtylyov@mvista.com>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, linux-usb@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-scsi@vger.kernel.org, Lennart Poettering <lennart@poettering.net>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, James.
+On Wed, 12 May 2010, Mark Lord wrote:
 
-On 05/13/2010 07:18 PM, James Bottomley wrote:
-> So I think the bit I missed was you're trying to do this programatically
-> from boot time partition read to detect if the user previously disabled
-> the HPA and partitioned the device?  In which case you still have user
-> context, you can call BLKRRPART here too.
+> On 12/05/10 02:48 PM, Alan Stern wrote:
+> ..
+> > That's right.  Since the command in question did have CK_COND set, the
+> > device should have returned CHECK CONDITION status instead of GOOD
+> > status.
+> >
+> > Therefore this indicates a bug in the device, not in the kernel.
+> > hdparm could work around it here by issuing an explicit REQUEST SENSE
+> > command, but in general it will cause trouble.
+> ..
+> 
+> I wonder if perhaps usb-storage could honour the flag
+> when the device doesn't ?
 
-Yeah, that's what I'm trying to do but the functionality is already in
-the block layer and has been used by IDE layer for a long time.  We
-just forgot to implement it for libata.  The only thing I did was
-fixing up corner case handling in block layer a bit and adding a
-callback to sd so that the block layer call can be passed down to
-libata.  So, it doesn't have anything to do with sysfs attributes,
-block or libata.
+It could, but I'm not sure it would end up working right.  That is, 
+usb-storage could go ahead and ask for the sense data, but the data 
+values returned by the device might not all be set correctly.
 
-We sure can trigger the rescan by invoking BLKRRPART from inside the
-partition scan code but I'm afraid that would be more convoluted than
-the currently existing implementation of restarting the scan inside
-the scan function.
+The easiest way to find out is to make a version of hdparm which does 
+an explicit REQUEST SENSE, and then see if the end result is 
+acceptable.
 
-The only thing is that the existing block method is somewhat overly
-generic without any good reason, so simplifying that would be a good
-idea.
+Alan Stern
 
-Thanks.
-
--- 
-tejun
