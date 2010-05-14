@@ -1,60 +1,54 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 5/7] lpfc 8.3.13: BSG management fixes
-Date: Fri, 14 May 2010 10:30:47 -0400
-Message-ID: <4BED5E97.1060909@emulex.com>
-References: <1273671164.24670.21.camel@wookie> <20100514183051S.fujita.tomonori@lab.ntt.co.jp> <4BED5428.8090703@emulex.com>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: set the data list length in the request control
+ block
+Date: Fri, 14 May 2010 08:55:13 -0700
+Message-ID: <4BED7261.6020108@linux.vnet.ibm.com>
+References: <20100513224944.397556901@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:25370 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756120Ab0ENObM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2010 10:31:12 -0400
-In-Reply-To: <4BED5428.8090703@emulex.com>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:54477 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab0ENPzc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 May 2010 11:55:32 -0400
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by e36.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o4EFqMms005006
+	for <linux-scsi@vger.kernel.org>; Fri, 14 May 2010 09:52:22 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o4EFtIg1020108
+	for <linux-scsi@vger.kernel.org>; Fri, 14 May 2010 09:55:19 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o4EFtEQQ005690
+	for <linux-scsi@vger.kernel.org>; Fri, 14 May 2010 09:55:15 -0600
+In-Reply-To: <20100513224944.397556901@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
 
-Actually, it may be just checking the file->private_data pointer for NULL at 
-the file entry points.  Although, the minor should not be deallocated from bsg 
-until all releases are called.
+In bring up testing for the new 64 bit adapters, the first read command failed
+after loading the driver.  The cause was that the command requires more than 
+one scatter gather element and the corresponding code to set the data list
+length in the request control block was missing.  This patch adds the correct 
+assignment.
 
--- james s
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
+ drivers/scsi/ipr.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2010-05-13 12:38:47.000000000 -0700
++++ b/drivers/scsi/ipr.c	2010-05-13 12:45:11.000000000 -0700
+@@ -5018,6 +5018,8 @@ static int ipr_build_ioadl64(struct ipr_
+ 	ipr_cmd->dma_use_sg = nseg;
 
-James Smart wrote:
-> Slightly different. I believe it's ok relative to when there's a BSG request 
-> in flight. But in this case there isn't, but there is a program w/ the bsg 
-> node open, and the driver/transport/etc can all be unloaded as bsg_open 
-> doesn't take a reference anywhere.
-> 
-> I look at it the other day, and it appears to be an issue with bsg itself. It 
-> should just take a reference to the bsg class dev in open, and release it in 
-> release. But the bsg_unregister_queue() path doesn't track whether the node 
-> was open or not and the teardown needs to be split up so that it really is 
-> reference based.
-> 
-> -- james s
-> 
-> 
-> FUJITA Tomonori wrote:
->> On Wed, 12 May 2010 09:32:14 -0400
->> James Smart <james.smart@emulex.com> wrote:
->>
->>> - Add reference counting to prevent module removal when
->>>   there are outstanding BSG requests.
->> Didn't I worked on it about scsi_transport_sas?
->>
->> bsg holds the ref count on the device that passed in
->> bsg_register_queue() while there are outstanding bsg requests. It is
->> supposed to prevent the module of the hold device from be removed.
->>
->> Do you get the oops message?
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+ 	ioarcb->data_transfer_length = cpu_to_be32(length);
++	ioarcb->ioadl_len =
++		cpu_to_be32(sizeof(struct ipr_ioadl64_desc) * ipr_cmd->dma_use_sg);
+
+ 	if (scsi_cmd->sc_data_direction == DMA_TO_DEVICE) {
+ 		ioadl_flags = IPR_IOADL_FLAGS_WRITE;
+
