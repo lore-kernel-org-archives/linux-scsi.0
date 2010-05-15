@@ -1,53 +1,79 @@
-From: "Phil Reynolds" <phil-linux@tinsleyviaduct.com>
-Subject: Re: Marvell eSATA - 88SE6121 on Asus M3A79-T Deluxe - not in AHCI
-Date: Sat, 15 May 2010 12:18:57 +0100
-Message-ID: <20100515121857.90932i9udmzcpp29@topdeck.tinsleyviaduct.com>
-References: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com>
-	<4BE964C2.1010702@turmel.org>
-	<20100511182128.216144e4uzjtufbs@topdeck.tinsleyviaduct.com>
-	<19433.44163.776781.931987@stoffel.org>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCHSET] libata: implement ->set_capacity()
+Date: Sat, 15 May 2010 14:22:07 +0100
+Message-ID: <1273929727.2564.7.camel@localhost>
+References: <1273766206-17402-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <19433.44163.776781.931987@stoffel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Phil Turmel <pturmel-kernel@turmel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NodSar6M8FT6VD6xUf5J"
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1273766206-17402-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Quoting "John Stoffel" <john@stoffel.org>:
 
->>>>>> "Phil" == Phil Reynolds <phil-linux@tinsleyviaduct.com> writes:
->
-> Phil> Quoting "Phil Turmel" <pturmel-kernel@turmel.org>:
->>> I have a similar chipset in my office server: 88SE6145.  If yours can run
->>> in AHCI mode, you just need "ahci.marvell_enable=1" on your kernel command
->>> line, or "options ahci marvell_enable=1" in your modprobe.conf.  (I have
->>> ahci built-in, and no initramfs, so I put the option in my grub.conf.)
->
-> Phil> Neither works for me unfortunately.
->
-> Can you post your dmesg output from both bootups?  Are there any
-> differences?  Also submit the lspci -vvv output as well, just so
-> people can help you better.
+--=-NodSar6M8FT6VD6xUf5J
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-After following advice from various people, I am about there - though  
-it doesn't seem to last many changes, the eSATA port is now hotplug  
-capable.
+On Thu, 2010-05-13 at 17:56 +0200, Tejun Heo wrote:
+> Hello, Jens, James, Jeff,
+>=20
+> This patchset implements ->set_capacity() in libata so that HPA can be
+> unlocked on demand.
 
-I still have issues to solve to make it perform more like USB does,  
-but they are not related to anything in the kernel or SCSI layer.  
-Thanks to all involved.
+Thanks Tejun.
 
--- 
-Phil Reynolds
-email: phil-linux@tinsleyviaduct.com
-Not subscribed to lkml - please CC replies to me
+>  0001-block-restart-partition-scan-after-resizing-a-device.patch
+>  0002-SCSI-implement-sd_set_capacity.patch
+>  0003-libata-use-the-enlarged-capacity-after-late-HPA-unlo.patch
+>  0004-libata-implement-on-demand-HPA-unlocking.patch
+>=20
+> 0001 makes partition scan code to restart after ->set_capacity().
+> This makes sure that partitions which start beyond the HPA limit are
+> discovered.
+>=20
+> 0002 implements ->set_capacity() in sd.
+>=20
+> 0003 makes libata accept device capacity larger than the initial one.
+>=20
+> 0004 implements ->set_capacity() in libata which asks libata EH to
+> unlock HPA, waits and returns the new capacity.
+>=20
+> Ben Hutchings suggeseted implementing ->set_capacity() in libata and
+> also reported the bug in the current partition scan code where it
+> fails to discover partitions which start beyond the HPA limit.
+[...]
 
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
+And I've already successfully tested the combination of patches 2-4.
+
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-NodSar6M8FT6VD6xUf5J
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUAS+6f/ue/yOyVhhEJAQJ+2A//R/QGoxDps1lDtY3MI9MDOOKAbNN3h43k
+k5hpZYXYxQQ9eZpqv/it5nH4a9XqZl079i7xvBD2/h5V0AA6QootwHOATNY7xI8p
+lEQGtdqmYT2ufaszwgWpfBF8Ehs28EgqIZ2lPXClh9u8UM3L/2bob3cJ0d0NAtZF
+vdnpq4WcsYk9RDKtlT9gnAS7e0jlKpU29h2X2K5rARv91NHAE/8VYK1ClvKH9Yhf
+jqxaUZ1eV7GwcVSLSuMEkKltlTanEkk7Jk9ZikcFQIJqUIVz6hvoZGUTxEL2c4ub
+OKoq9bfKdE3Zsw1bgm5FikUO4k8yR+L2wKjCe56s2pB6ZpBYXzg/NAhsCZ3iczBG
+TyAMCqhicReJwqRBdE24KOn347cVsdOG0CQhYNANrV9ACBjIOpJK0Pjm6Xkdvds5
++dn336jobvpRa1UjQssoQb0SV1xhQOwAXq2GW7aVkK2vmzCq8pWHvoq1XV1PJwNl
+JgMyyGKZ+BgEMjxrOEgduS2gI6YyqraA/DjUGg4RbIyW6LyKLa4MfTPyAXp0/vUf
++oF7ocbIp1ETci0RwnfxQV1/JAoZ1tkeEIwUFPMg9CdxiDDCoerSKCZy8S0WxlMT
+ABYCRBGvoNPQ/VLRlUs/HA670nOJxBnrfdfb7lAHZ7JZ+pmpxphGpPKoHsxB7T0G
+UxZdrROpthU=
+=cjj8
+-----END PGP SIGNATURE-----
+
+--=-NodSar6M8FT6VD6xUf5J--
