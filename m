@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 8/8] libata: implement on-demand HPA unlocking
-Date: Sat, 15 May 2010 20:09:34 +0200
-Message-ID: <1273946974-29131-9-git-send-email-tj@kernel.org>
+Subject: [PATCH 5/8] block: improve automatic native capacity unlocking
+Date: Sat, 15 May 2010 20:09:31 +0200
+Message-ID: <1273946974-29131-6-git-send-email-tj@kernel.org>
 References: <1273946974-29131-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1273946974-29131-1-git-send-email-tj@kernel.org>
@@ -10,95 +10,181 @@ To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scs
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Implement ata_scsi_unlock_native_capacity() which will be called
-through SCSI layer when block layer notices that partitions on a
-device extend beyond the end of the device.  It requests EH to unlock
-HPA, waits for completion and returns the current device capacity.
+Currently, native capacity unlocking is initiated only when a
+recognized partition extends beyond the end of the disk.  However,
+there are several other unhandled cases where truncated capacity can
+lead to misdetection of partitions.
 
-This allows libata to unlock HPA on demand instead of having to decide
-whether to unlock upfront.  Unlocking on demand is safer than
-unlocking by upfront because some BIOSes write private data to the
-area beyond HPA limit.  This was suggested by Ben Hutchings.
+* Partition table is fully beyond EOD.
+
+* Partition table is partially beyond EOD (daisy chained ones).
+
+* Recognized partition starts beyond EOD.
+
+This patch updates generic partition check code such that all the
+above three cases are handled too.  For the first two, @state tracks
+whether low level partition check code tried to read beyond EOD during
+partition scan and triggers native capacity unlocking accordingly.
+The third is now handled similarly to the original unlocking case.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Suggested-by: Ben Hutchings <ben@decadent.org.uk>
+Cc: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/ata/libata-core.c |    1 +
- drivers/ata/libata-scsi.c |   29 +++++++++++++++++++++++++++++
- include/linux/libata.h    |    2 ++
- 3 files changed, 32 insertions(+), 0 deletions(-)
+ fs/partitions/check.c |   69 +++++++++++++++++++++++++++++++++++++++----------
+ fs/partitions/check.h |    5 +++
+ 2 files changed, 60 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9d6e92d..b0e379d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6797,6 +6797,7 @@ EXPORT_SYMBOL_GPL(ata_dummy_port_info);
- EXPORT_SYMBOL_GPL(ata_link_next);
- EXPORT_SYMBOL_GPL(ata_dev_next);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
-+EXPORT_SYMBOL_GPL(ata_scsi_unlock_native_capacity);
- EXPORT_SYMBOL_GPL(ata_host_init);
- EXPORT_SYMBOL_GPL(ata_host_alloc);
- EXPORT_SYMBOL_GPL(ata_host_alloc_pinfo);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0088cde..fc51531 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -415,6 +415,35 @@ int ata_std_bios_param(struct scsi_device *sdev, struct block_device *bdev,
+diff --git a/fs/partitions/check.c b/fs/partitions/check.c
+index a19995c..5dcd4b0 100644
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -161,7 +161,7 @@ check_partition(struct gendisk *hd, struct block_device *bdev)
+ 	struct parsed_partitions *state;
+ 	int i, res, err;
+ 
+-	state = kmalloc(sizeof(struct parsed_partitions), GFP_KERNEL);
++	state = kzalloc(sizeof(struct parsed_partitions), GFP_KERNEL);
+ 	if (!state)
+ 		return NULL;
+ 
+@@ -187,6 +187,8 @@ check_partition(struct gendisk *hd, struct block_device *bdev)
+ 	}
+ 	if (res > 0)
+ 		return state;
++	if (state->access_beyond_eod)
++		err = -ENOSPC;
+ 	if (err)
+ 	/* The partition is unrecognized. So report I/O errors if there were any */
+ 		res = err;
+@@ -539,13 +541,34 @@ exit:
+ 	disk_part_iter_exit(&piter);
  }
  
- /**
-+ *	ata_scsi_unlock_native_capacity - unlock native capacity
-+ *	@sdev: SCSI device to adjust device capacity for
-+ *
-+ *	This function is called if a partition on @sdev extends beyond
-+ *	the end of the device.  It requests EH to unlock HPA.
-+ *
-+ *	LOCKING:
-+ *	Defined by the SCSI layer.  Might sleep.
-+ */
-+void ata_scsi_unlock_native_capacity(struct scsi_device *sdev)
++static bool disk_unlock_native_capacity(struct gendisk *disk)
 +{
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
-+	struct ata_device *dev;
-+	unsigned long flags;
++	const struct block_device_operations *bdops = disk->fops;
 +
-+	spin_lock_irqsave(ap->lock, flags);
-+
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (dev && dev->n_sectors < dev->n_native_sectors) {
-+		dev->flags |= ATA_DFLAG_UNLOCK_HPA;
-+		dev->link->eh_info.action |= ATA_EH_RESET;
-+		ata_port_schedule_eh(ap);
++	if (bdops->unlock_native_capacity &&
++	    !(disk->flags & GENHD_FL_NATIVE_CAPACITY)) {
++		printk(KERN_CONT "enabling native capacity\n");
++		bdops->unlock_native_capacity(disk);
++		disk->flags |= GENHD_FL_NATIVE_CAPACITY;
++		return true;
++	} else {
++		printk(KERN_CONT "truncated\n");
++		return false;
 +	}
-+
-+	spin_unlock_irqrestore(ap->lock, flags);
-+	ata_port_wait_eh(ap);
 +}
 +
-+/**
-  *	ata_get_identity - Handler for HDIO_GET_IDENTITY ioctl
-  *	@ap: target port
-  *	@sdev: SCSI device to get identify data for
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 242eb26..ab7d6de 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1027,6 +1027,7 @@ extern void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- extern int ata_std_bios_param(struct scsi_device *sdev,
- 			      struct block_device *bdev,
- 			      sector_t capacity, int geom[]);
-+extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
- extern int ata_scsi_slave_config(struct scsi_device *sdev);
- extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
-@@ -1181,6 +1182,7 @@ extern struct device_attribute *ata_common_sdev_attrs[];
- 	.slave_configure	= ata_scsi_slave_config,	\
- 	.slave_destroy		= ata_scsi_slave_destroy,	\
- 	.bios_param		= ata_std_bios_param,		\
-+	.unlock_native_capacity	= ata_scsi_unlock_native_capacity, \
- 	.sdev_attrs		= ata_common_sdev_attrs
+ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ {
++	struct parsed_partitions *state = NULL;
+ 	struct disk_part_iter piter;
+ 	struct hd_struct *part;
+-	struct parsed_partitions *state;
+ 	int p, highest, res;
+ rescan:
++	if (state && !IS_ERR(state)) {
++		kfree(state);
++		state = NULL;
++	}
++
+ 	if (bdev->bd_part_count)
+ 		return -EBUSY;
+ 	res = invalidate_partition(disk, 0);
+@@ -563,8 +586,32 @@ rescan:
+ 	bdev->bd_invalidated = 0;
+ 	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
+ 		return 0;
+-	if (IS_ERR(state))	/* I/O error reading the partition table */
++	if (IS_ERR(state)) {
++		/*
++		 * I/O error reading the partition table.  If any
++		 * partition code tried to read beyond EOD, retry
++		 * after unlocking native capacity.
++		 */
++		if (PTR_ERR(state) == -ENOSPC) {
++			printk(KERN_WARNING "%s: partition table beyond EOD, ",
++			       disk->disk_name);
++			if (disk_unlock_native_capacity(disk))
++				goto rescan;
++		}
+ 		return -EIO;
++	}
++	/*
++	 * If any partition code tried to read beyond EOD, try
++	 * unlocking native capacity even if partition table is
++	 * sucessfully read as we could be missing some partitions.
++	 */
++	if (state->access_beyond_eod) {
++		printk(KERN_WARNING
++		       "%s: partition table partially beyond EOD, ",
++		       disk->disk_name);
++		if (disk_unlock_native_capacity(disk))
++			goto rescan;
++	}
  
- #define ATA_NCQ_SHT(drv_name)					\
+ 	/* tell userspace that the media / partition table may have changed */
+ 	kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
+@@ -590,25 +637,20 @@ rescan:
+ 		from = state->parts[p].from;
+ 		if (from >= get_capacity(disk)) {
+ 			printk(KERN_WARNING
+-			       "%s: p%d ignored, start %llu is behind the end of the disk\n",
++			       "%s: p%d start %llu is beyond EOD, ",
+ 			       disk->disk_name, p, (unsigned long long) from);
++			if (disk_unlock_native_capacity(disk))
++				goto rescan;
+ 			continue;
+ 		}
+ 
+ 		if (from + size > get_capacity(disk)) {
+-			const struct block_device_operations *bdops = disk->fops;
+-
+ 			printk(KERN_WARNING
+-			       "%s: p%d size %llu exceeds device capacity, ",
++			       "%s: p%d size %llu extends beyond EOD, ",
+ 			       disk->disk_name, p, (unsigned long long) size);
+ 
+-			if (bdops->unlock_native_capacity &&
+-			    (disk->flags & GENHD_FL_NATIVE_CAPACITY) == 0) {
+-				printk(KERN_CONT "enabling native capacity\n");
+-				bdops->unlock_native_capacity(disk);
+-				disk->flags |= GENHD_FL_NATIVE_CAPACITY;
++			if (disk_unlock_native_capacity(disk)) {
+ 				/* free state and restart */
+-				kfree(state);
+ 				goto rescan;
+ 			} else {
+ 				/*
+@@ -617,7 +659,6 @@ rescan:
+ 				 * we limit them to the end of the disk to avoid
+ 				 * creating invalid block devices
+ 				 */
+-				printk(KERN_CONT "limited to end of disk\n");
+ 				size = get_capacity(disk) - from;
+ 			}
+ 		}
+diff --git a/fs/partitions/check.h b/fs/partitions/check.h
+index 4b31a97..52f8bd3 100644
+--- a/fs/partitions/check.h
++++ b/fs/partitions/check.h
+@@ -15,11 +15,16 @@ struct parsed_partitions {
+ 	} parts[DISK_MAX_PARTS];
+ 	int next;
+ 	int limit;
++	bool access_beyond_eod;
+ };
+ 
+ static inline void *read_part_sector(struct parsed_partitions *state,
+ 				     sector_t n, Sector *p)
+ {
++	if (n >= get_capacity(state->bdev->bd_disk)) {
++		state->access_beyond_eod = true;
++		return NULL;
++	}
+ 	return read_dev_sector(state->bdev, n, p);
+ }
+ 
 -- 
 1.6.4.2
