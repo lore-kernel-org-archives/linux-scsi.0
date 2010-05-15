@@ -1,65 +1,53 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 2/4] drivers/scsi/aacraid: Eliminate use after free
-Date: Sat, 15 May 2010 11:46:12 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1005151145540.15566@ask.diku.dk>
+From: "Phil Reynolds" <phil-linux@tinsleyviaduct.com>
+Subject: Re: Marvell eSATA - 88SE6121 on Asus M3A79-T Deluxe - not in AHCI
+Date: Sat, 15 May 2010 12:18:57 +0100
+Message-ID: <20100515121857.90932i9udmzcpp29@topdeck.tinsleyviaduct.com>
+References: <20100509151358.84896yzx8vt059gm@topdeck.tinsleyviaduct.com>
+	<4BE964C2.1010702@turmel.org>
+	<20100511182128.216144e4uzjtufbs@topdeck.tinsleyviaduct.com>
+	<19433.44163.776781.931987@stoffel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:44201 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753807Ab0EOJqR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 May 2010 05:46:17 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <19433.44163.776781.931987@stoffel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Stoffel <john@stoffel.org>
+Cc: Phil Turmel <pturmel-kernel@turmel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+Quoting "John Stoffel" <john@stoffel.org>:
 
-The debugging code using the freed structure is moved before the kfree.
+>>>>>> "Phil" == Phil Reynolds <phil-linux@tinsleyviaduct.com> writes:
+>
+> Phil> Quoting "Phil Turmel" <pturmel-kernel@turmel.org>:
+>>> I have a similar chipset in my office server: 88SE6145.  If yours can run
+>>> in AHCI mode, you just need "ahci.marvell_enable=1" on your kernel command
+>>> line, or "options ahci marvell_enable=1" in your modprobe.conf.  (I have
+>>> ahci built-in, and no initramfs, so I put the option in my grub.conf.)
+>
+> Phil> Neither works for me unfortunately.
+>
+> Can you post your dmesg output from both bootups?  Are there any
+> differences?  Also submit the lspci -vvv output as well, just so
+> people can help you better.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+After following advice from various people, I am about there - though  
+it doesn't seem to last many changes, the eSATA port is now hotplug  
+capable.
 
-// <smpl>
-@free@
-expression E;
-position p;
-@@
-kfree@p(E)
+I still have issues to solve to make it perform more like USB does,  
+but they are not related to anything in the kernel or SCSI layer.  
+Thanks to all involved.
 
-@@
-expression free.E, subE<=free.E, E1;
-position free.p;
-@@
+-- 
+Phil Reynolds
+email: phil-linux@tinsleyviaduct.com
+Not subscribed to lkml - please CC replies to me
 
-  kfree@p(E)
-  ...
-(
-  subE = E1
-|
-* E
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/aacraid/commctrl.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 9c0c911..1b761d5 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -655,9 +655,9 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 				/* Does this really need to be GFP_DMA? */
- 				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
- 				if(!p) {
--					kfree (usg);
--					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
-+					dprintk((KERN_DEBUG "aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
- 					  usg->sg[i].count,i,usg->count));
-+					kfree(usg);
- 					rcode = -ENOMEM;
- 					goto cleanup;
- 				}
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
