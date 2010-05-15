@@ -1,47 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/8] block,ide: simplify bdops->set_capacity() to ->unlock_native_capacity()
-Date: Sat, 15 May 2010 20:58:02 +0200
-Message-ID: <4BEEEEBA.9050506@kernel.org>
-References: <1273946974-29131-1-git-send-email-tj@kernel.org> <1273946974-29131-4-git-send-email-tj@kernel.org> <201005152048.00259.bzolnier@gmail.com>
+From: Leif Sawyer <ak.hepcat+scsi@gmail.com>
+Subject: Re: Fwd: high volume of disk-writes causes disk to 'disappear'
+Date: Sat, 15 May 2010 11:09:14 -0800
+Message-ID: <AANLkTik8917n0yNfc9Y6V9rbG7OOltt_SLcxEu8bzu20@mail.gmail.com>
+References: <y2wd4bc8f581004191138ldab84bect8670755200e2c413@mail.gmail.com>
+	 <w2od4bc8f581004271446md75f0dcbt537956a2e3f9abb7@mail.gmail.com>
+	 <4BD99BFD.9090202@suse.de>
+	 <q2md4bc8f581004291011k43d5c03cpb7361473f6de4350@mail.gmail.com>
+	 <4BDAE41D.6030707@suse.de>
+	 <m2gd4bc8f581004301627jea793d0ax1e63bc3796458662@mail.gmail.com>
+	 <i2yd4bc8f581005031143r638b8037ra3778f97e6d2e25d@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <201005152048.00259.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@davemloft.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yx0-f191.google.com ([209.85.210.191]:48424 "EHLO
+	mail-yx0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538Ab0EOTJP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 May 2010 15:09:15 -0400
+Received: by yxe29 with SMTP id 29so1548493yxe.4
+        for <linux-scsi@vger.kernel.org>; Sat, 15 May 2010 12:09:14 -0700 (PDT)
+In-Reply-To: <i2yd4bc8f581005031143r638b8037ra3778f97e6d2e25d@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, Hannes Reinecke <hare@suse.de>
 
-Hello, Bartlomiej.
+On a whim, I applied the following patches:
+   master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-On 05/15/2010 08:48 PM, Bartlomiej Zolnierkiewicz wrote:
-> This seems to rely on an optimistic assumption that command execution
-> will always be successful and that no errors on disk or host level can
-> ever happen..
->
-> [ The assumption in question was introduced in the previous patch:
-...
-> originally if the command execution failed the 'capacity' would be 0 ]
+to my linux 2.6.34-rc5 kernel for testing.
 
-Hmm... nothing really changes by this tho.  Whether unlocking succeeds
-or not, the block layer will revalidate the disk and the state at that
-point will be taken as the configuration to use.  There really is
-nothing much else to do.  You try unlocking, if it unlocks, use new
-capacity.  If unlocking fails, revalidation will report the limited
-size and block layer will have to use that.  If the device dies due to
-the unlocking attempt, well, the device is dead all the same.
+Without the patches, my system would stay running for no more than 2
+or three days
+before erroring out and requiring a reboot before visibility of the
+disk returned.
 
-> It also seems that the original code could be improved a lot to handle
-> (very unlikely but not impossible) error situations better..
+After applying the SCSI rc fixes from James' git repo, my system is
+now at 5+ days
+of streaming to the scsi disk.
 
-If retry is deemed necessary, it's best handled inside the per-driver
-unlock handler.  I don't think pushing EH logic upto block layer in
-this case would be a good idea.  Block layer is basically telling the
-driver "do whatever you can do to unlock the native capacity, when
-you're done, I'll restart from the beginning".
+I'll keep watching this and post another status update in a few days.
 
-Thanks.
+Thanks for all the hard work.
+
 
 -- 
-tejun
+"It's pronounced Layf...you know, like Leif Garrett? Don't you watch
+ 'I Love the 70's'? What kind of retro lover are you, anyway?"
