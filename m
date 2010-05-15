@@ -1,184 +1,102 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/8] block,ide: simplify bdops->set_capacity() to ->unlock_native_capacity()
-Date: Sat, 15 May 2010 20:09:29 +0200
-Message-ID: <1273946974-29131-4-git-send-email-tj@kernel.org>
-References: <1273946974-29131-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET] block,libata: implement ->unlock_native_capacity()
+Date: Sat, 15 May 2010 20:09:26 +0200
+Message-ID: <1273946974-29131-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1273946974-29131-1-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@daveml
-Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-bdops->set_capacity() is unnecessarily generic.  All that's required
-is a simple one way notification to lower level driver telling it to
-try to unlock native capacity.  There's no reason to pass in target
-capacity or return the new capacity.  The former is always the
-inherent native capacity and the latter can be handled via the usual
-device resize / revalidation path.  In fact, the current API is always
-used that way.
+Hello, all.
 
-Replace ->set_capacity() with ->unlock_native_capacity() which take
-only @disk and doesn't return anything.  IDE which is the only current
-user of the API is converted accordingly.
+This is the evolved version of the implement-set_capacity patchset[L]
+and contains the following patches.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Cc: David Miller <davem@davemloft.net>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-disk.c |   40 ++++++++++++++++------------------------
- drivers/ide/ide-gd.c   |   11 ++++-------
- fs/partitions/check.c  |    4 ++--
- include/linux/blkdev.h |    3 +--
- include/linux/ide.h    |    2 +-
- 5 files changed, 24 insertions(+), 36 deletions(-)
+ 0001-buffer-make-invalidate_bdev-drain-all-percpu-LRU-add.patch
+ 0002-block-restart-partition-scan-after-resizing-a-device.patch
+ 0003-block-ide-simplify-bdops-set_capacity-to-unlock_nati.patch
+ 0004-block-use-struct-parsed_partitions-state-universally.patch
+ 0005-block-improve-automatic-native-capacity-unlocking.patch
+ 0006-SCSI-implement-sd_unlock_native_capacity.patch
+ 0007-libata-use-the-enlarged-capacity-after-late-HPA-unlo.patch
+ 0008-libata-implement-on-demand-HPA-unlocking.patch
 
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 3b128dc..33d6503 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -407,32 +407,24 @@ static int ide_disk_get_capacity(ide_drive_t *drive)
- 	return 0;
- }
- 
--static u64 ide_disk_set_capacity(ide_drive_t *drive, u64 capacity)
-+static void ide_disk_unlock_native_capacity(ide_drive_t *drive)
- {
--	u64 set = min(capacity, drive->probed_capacity);
- 	u16 *id = drive->id;
- 	int lba48 = ata_id_lba48_enabled(id);
- 
- 	if ((drive->dev_flags & IDE_DFLAG_LBA) == 0 ||
- 	    ata_id_hpa_enabled(id) == 0)
--		goto out;
-+		return;
- 
- 	/*
- 	 * according to the spec the SET MAX ADDRESS command shall be
- 	 * immediately preceded by a READ NATIVE MAX ADDRESS command
- 	 */
--	capacity = ide_disk_hpa_get_native_capacity(drive, lba48);
--	if (capacity == 0)
--		goto out;
--
--	set = ide_disk_hpa_set_capacity(drive, set, lba48);
--	if (set) {
--		/* needed for ->resume to disable HPA */
--		drive->dev_flags |= IDE_DFLAG_NOHPA;
--		return set;
--	}
--out:
--	return drive->capacity64;
-+	if (!ide_disk_hpa_get_native_capacity(drive, lba48))
-+		return;
-+
-+	if (ide_disk_hpa_set_capacity(drive, drive->probed_capacity, lba48))
-+		drive->dev_flags |= IDE_DFLAG_NOHPA; /* disable HPA on resume */
- }
- 
- static void idedisk_prepare_flush(struct request_queue *q, struct request *rq)
-@@ -783,13 +775,13 @@ static int ide_disk_set_doorlock(ide_drive_t *drive, struct gendisk *disk,
- }
- 
- const struct ide_disk_ops ide_ata_disk_ops = {
--	.check		= ide_disk_check,
--	.set_capacity	= ide_disk_set_capacity,
--	.get_capacity	= ide_disk_get_capacity,
--	.setup		= ide_disk_setup,
--	.flush		= ide_disk_flush,
--	.init_media	= ide_disk_init_media,
--	.set_doorlock	= ide_disk_set_doorlock,
--	.do_request	= ide_do_rw_disk,
--	.ioctl		= ide_disk_ioctl,
-+	.check			= ide_disk_check,
-+	.unlock_native_capacity	= ide_disk_unlock_native_capacity,
-+	.get_capacity		= ide_disk_get_capacity,
-+	.setup			= ide_disk_setup,
-+	.flush			= ide_disk_flush,
-+	.init_media		= ide_disk_init_media,
-+	.set_doorlock		= ide_disk_set_doorlock,
-+	.do_request		= ide_do_rw_disk,
-+	.ioctl			= ide_disk_ioctl,
- };
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index c32d839..c102d23 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -288,17 +288,14 @@ static int ide_gd_media_changed(struct gendisk *disk)
- 	return ret;
- }
- 
--static unsigned long long ide_gd_set_capacity(struct gendisk *disk,
--					      unsigned long long capacity)
-+static void ide_gd_unlock_native_capacity(struct gendisk *disk)
- {
- 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
- 	ide_drive_t *drive = idkp->drive;
- 	const struct ide_disk_ops *disk_ops = drive->disk_ops;
- 
--	if (disk_ops->set_capacity)
--		return disk_ops->set_capacity(drive, capacity);
--
--	return drive->capacity64;
-+	if (disk_ops->unlock_native_capacity)
-+		disk_ops->unlock_native_capacity(drive);
- }
- 
- static int ide_gd_revalidate_disk(struct gendisk *disk)
-@@ -329,7 +326,7 @@ static const struct block_device_operations ide_gd_ops = {
- 	.locked_ioctl		= ide_gd_ioctl,
- 	.getgeo			= ide_gd_getgeo,
- 	.media_changed		= ide_gd_media_changed,
--	.set_capacity		= ide_gd_set_capacity,
-+	.unlock_native_capacity	= ide_gd_unlock_native_capacity,
- 	.revalidate_disk	= ide_gd_revalidate_disk
- };
- 
-diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index 8f01df3..4f1fee0 100644
---- a/fs/partitions/check.c
-+++ b/fs/partitions/check.c
-@@ -601,10 +601,10 @@ rescan:
- 			       "%s: p%d size %llu exceeds device capacity, ",
- 			       disk->disk_name, p, (unsigned long long) size);
- 
--			if (bdops->set_capacity &&
-+			if (bdops->unlock_native_capacity &&
- 			    (disk->flags & GENHD_FL_NATIVE_CAPACITY) == 0) {
- 				printk(KERN_CONT "enabling native capacity\n");
--				bdops->set_capacity(disk, ~0ULL);
-+				bdops->unlock_native_capacity(disk);
- 				disk->flags |= GENHD_FL_NATIVE_CAPACITY;
- 				/* free state and restart */
- 				kfree(state);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6690e8b..f2a0c33 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1283,8 +1283,7 @@ struct block_device_operations {
- 	int (*direct_access) (struct block_device *, sector_t,
- 						void **, unsigned long *);
- 	int (*media_changed) (struct gendisk *);
--	unsigned long long (*set_capacity) (struct gendisk *,
--						unsigned long long);
-+	void (*unlock_native_capacity) (struct gendisk *);
- 	int (*revalidate_disk) (struct gendisk *);
- 	int (*getgeo)(struct block_device *, struct hd_geometry *);
- 	struct module *owner;
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 3239d1c..b6d4480 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -362,7 +362,7 @@ struct ide_drive_s;
- struct ide_disk_ops {
- 	int		(*check)(struct ide_drive_s *, const char *);
- 	int		(*get_capacity)(struct ide_drive_s *);
--	u64		(*set_capacity)(struct ide_drive_s *, u64);
-+	void		(*unlock_native_capacity)(struct ide_drive_s *);
- 	void		(*setup)(struct ide_drive_s *);
- 	void		(*flush)(struct ide_drive_s *);
- 	int		(*init_media)(struct ide_drive_s *, struct gendisk *);
--- 
-1.6.4.2
+0001-0005 fix and update partition check related code and make the
+existing automatic native capacity unlocking mechanism simpler and
+more robust.
+
+0001 fixes invalidate_bdev() which seems to have been somewhat broken
+for quite some time since percpu LRU add cache was introduced.
+
+0002 makes partition code to restart from beginning after native
+capacity is locked so that resize and all other stuff can be dealt
+with in the usual revalidation path.
+
+0003 renames ->set_capacity() to ->unlock_native_capacity() and drops
+the spurious new capacity parameter and return value.
+
+0004 updates partition check API for the next patch.
+
+0005 improves automatic native capacity unlocking code so that it
+covers all partition misdetection cases which can be caused by limited
+disk capacity.
+
+0006-0008 add ->unlock_native_capacity() support to libata.  0001-0005
+are probably best routed through block tree if David is okay with it
+(0003 modifies ide), and 0006-0008 through libata if James is okay
+with the SCSI part.  What do you guys think?
+
+This patchset is available in the following git branch.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git unlock-native-capa
+
+diffstat follows.
+
+ drivers/ata/libata-core.c |    6 +--
+ drivers/ata/libata-scsi.c |   29 ++++++++++++++
+ drivers/ide/ide-disk.c    |   40 ++++++++------------
+ drivers/ide/ide-gd.c      |   11 ++---
+ drivers/scsi/sd.c         |   22 +++++++++++
+ fs/buffer.c               |    1 
+ fs/partitions/acorn.c     |   68 ++++++++++++++++------------------
+ fs/partitions/acorn.h     |   10 ++---
+ fs/partitions/amiga.c     |   13 +++---
+ fs/partitions/amiga.h     |    2 -
+ fs/partitions/atari.c     |    8 ++--
+ fs/partitions/atari.h     |    2 -
+ fs/partitions/check.c     |   84 ++++++++++++++++++++++++++++++------------
+ fs/partitions/check.h     |   12 ++++++
+ fs/partitions/efi.c       |   91 +++++++++++++++++++++-------------------------
+ fs/partitions/efi.h       |    2 -
+ fs/partitions/ibm.c       |   21 +++++-----
+ fs/partitions/ibm.h       |    2 -
+ fs/partitions/karma.c     |    4 +-
+ fs/partitions/karma.h     |    2 -
+ fs/partitions/ldm.c       |   89 ++++++++++++++++++++++----------------------
+ fs/partitions/ldm.h       |    2 -
+ fs/partitions/mac.c       |   11 +++--
+ fs/partitions/mac.h       |    2 -
+ fs/partitions/msdos.c     |   85 ++++++++++++++++++------------------------
+ fs/partitions/msdos.h     |    2 -
+ fs/partitions/osf.c       |    4 +-
+ fs/partitions/osf.h       |    2 -
+ fs/partitions/sgi.c       |    6 +--
+ fs/partitions/sgi.h       |    2 -
+ fs/partitions/sun.c       |    6 +--
+ fs/partitions/sun.h       |    2 -
+ fs/partitions/sysv68.c    |    6 +--
+ fs/partitions/sysv68.h    |    2 -
+ fs/partitions/ultrix.c    |    4 +-
+ fs/partitions/ultrix.h    |    2 -
+ include/linux/blkdev.h    |    3 -
+ include/linux/ide.h       |    2 -
+ include/linux/libata.h    |    2 +
+ include/scsi/scsi_host.h  |    8 ++++
+ 40 files changed, 375 insertions(+), 297 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[L] http://thread.gmane.org/gmane.linux.scsi/58925
