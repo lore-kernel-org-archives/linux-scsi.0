@@ -1,79 +1,38 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCHSET] libata: implement ->set_capacity()
-Date: Sat, 15 May 2010 14:22:07 +0100
-Message-ID: <1273929727.2564.7.camel@localhost>
-References: <1273766206-17402-1-git-send-email-tj@kernel.org>
+From: Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: cxgb4i_v3 submission
+Date: Sat, 15 May 2010 22:45:49 +0530
+Message-ID: <1273943752-32486-1-git-send-email-rakesh@chelsio.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-NodSar6M8FT6VD6xUf5J"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1273766206-17402-1-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCKnrzee6GxD-rbvfBBoEJOHb7w-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
+	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: NETDEVML <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSIDEVML <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, OISCSIML <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Anish Bhatt <anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+Changes since cxgb4i_v2
+1. Abastract libcxgbi library common part more properly.
+2. Fixed few packet sequence calculation bugs.
+3. compile-time initialization of cplhandlers
 
---=-NodSar6M8FT6VD6xUf5J
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+[PATCH 1/3] cxgb4i_v3: add build support
+[PATCH 2/3] cxgb4i_v3: main driver files
+[PATCH 3/3] cxgb4i_v3: iscsi and libcxgbi library for handling common part
 
-On Thu, 2010-05-13 at 17:56 +0200, Tejun Heo wrote:
-> Hello, Jens, James, Jeff,
->=20
-> This patchset implements ->set_capacity() in libata so that HPA can be
-> unlocked on demand.
+Regards
+Rakesh Ranjan
 
-Thanks Tejun.
-
->  0001-block-restart-partition-scan-after-resizing-a-device.patch
->  0002-SCSI-implement-sd_set_capacity.patch
->  0003-libata-use-the-enlarged-capacity-after-late-HPA-unlo.patch
->  0004-libata-implement-on-demand-HPA-unlocking.patch
->=20
-> 0001 makes partition scan code to restart after ->set_capacity().
-> This makes sure that partitions which start beyond the HPA limit are
-> discovered.
->=20
-> 0002 implements ->set_capacity() in sd.
->=20
-> 0003 makes libata accept device capacity larger than the initial one.
->=20
-> 0004 implements ->set_capacity() in libata which asks libata EH to
-> unlock HPA, waits and returns the new capacity.
->=20
-> Ben Hutchings suggeseted implementing ->set_capacity() in libata and
-> also reported the bug in the current partition scan code where it
-> fails to discover partitions which start beyond the HPA limit.
-[...]
-
-And I've already successfully tested the combination of patches 2-4.
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-NodSar6M8FT6VD6xUf5J
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUAS+6f/ue/yOyVhhEJAQJ+2A//R/QGoxDps1lDtY3MI9MDOOKAbNN3h43k
-k5hpZYXYxQQ9eZpqv/it5nH4a9XqZl079i7xvBD2/h5V0AA6QootwHOATNY7xI8p
-lEQGtdqmYT2ufaszwgWpfBF8Ehs28EgqIZ2lPXClh9u8UM3L/2bob3cJ0d0NAtZF
-vdnpq4WcsYk9RDKtlT9gnAS7e0jlKpU29h2X2K5rARv91NHAE/8VYK1ClvKH9Yhf
-jqxaUZ1eV7GwcVSLSuMEkKltlTanEkk7Jk9ZikcFQIJqUIVz6hvoZGUTxEL2c4ub
-OKoq9bfKdE3Zsw1bgm5FikUO4k8yR+L2wKjCe56s2pB6ZpBYXzg/NAhsCZ3iczBG
-TyAMCqhicReJwqRBdE24KOn347cVsdOG0CQhYNANrV9ACBjIOpJK0Pjm6Xkdvds5
-+dn336jobvpRa1UjQssoQb0SV1xhQOwAXq2GW7aVkK2vmzCq8pWHvoq1XV1PJwNl
-JgMyyGKZ+BgEMjxrOEgduS2gI6YyqraA/DjUGg4RbIyW6LyKLa4MfTPyAXp0/vUf
-+oF7ocbIp1ETci0RwnfxQV1/JAoZ1tkeEIwUFPMg9CdxiDDCoerSKCZy8S0WxlMT
-ABYCRBGvoNPQ/VLRlUs/HA670nOJxBnrfdfb7lAHZ7JZ+pmpxphGpPKoHsxB7T0G
-UxZdrROpthU=
-=cjj8
------END PGP SIGNATURE-----
-
---=-NodSar6M8FT6VD6xUf5J--
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
