@@ -1,98 +1,104 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 6/8] SCSI: implement sd_unlock_native_capacity()
-Date: Sat, 15 May 2010 20:09:32 +0200
-Message-ID: <1273946974-29131-7-git-send-email-tj@kernel.org>
+Subject: [PATCH 8/8] libata: implement on-demand HPA unlocking
+Date: Sat, 15 May 2010 20:09:34 +0200
+Message-ID: <1273946974-29131-9-git-send-email-tj@kernel.org>
 References: <1273946974-29131-1-git-send-email-tj@kernel.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40271 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755195Ab0EOSK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 May 2010 14:10:27 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1273946974-29131-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@daveml
 Cc: Tejun Heo <tj@kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Implement sd_unlock_native_capacity() method which calls into
-hostt->unlock_native_capacity() if implemented.  This will be invoked
-by block layer if partitions extend beyond the end of the device and
-can be used to implement, for example, on-demand ATA host protected
-area unlocking.
+Implement ata_scsi_unlock_native_capacity() which will be called
+through SCSI layer when block layer notices that partitions on a
+device extend beyond the end of the device.  It requests EH to unlock
+HPA, waits for completion and returns the current device capacity.
+
+This allows libata to unlock HPA on demand instead of having to decide
+whether to unlock upfront.  Unlocking on demand is safer than
+unlocking by upfront because some BIOSes write private data to the
+area beyond HPA limit.  This was suggested by Ben Hutchings.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>
+Suggested-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/scsi/sd.c        |   22 ++++++++++++++++++++++
- include/scsi/scsi_host.h |    8 ++++++++
- 2 files changed, 30 insertions(+), 0 deletions(-)
+ drivers/ata/libata-core.c |    1 +
+ drivers/ata/libata-scsi.c |   29 +++++++++++++++++++++++++++++
+ include/linux/libata.h    |    2 ++
+ 3 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8b827f3..b85906e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -97,6 +97,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
- #endif
- 
- static int  sd_revalidate_disk(struct gendisk *);
-+static void sd_unlock_native_capacity(struct gendisk *disk);
- static int  sd_probe(struct device *);
- static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
-@@ -1100,6 +1101,7 @@ static const struct block_device_operations sd_fops = {
- #endif
- 	.media_changed		= sd_media_changed,
- 	.revalidate_disk	= sd_revalidate_disk,
-+	.unlock_native_capacity	= sd_unlock_native_capacity,
- };
- 
- static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
-@@ -2101,6 +2103,26 @@ static int sd_revalidate_disk(struct gendisk *disk)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9d6e92d..b0e379d 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6797,6 +6797,7 @@ EXPORT_SYMBOL_GPL(ata_dummy_port_info);
+ EXPORT_SYMBOL_GPL(ata_link_next);
+ EXPORT_SYMBOL_GPL(ata_dev_next);
+ EXPORT_SYMBOL_GPL(ata_std_bios_param);
++EXPORT_SYMBOL_GPL(ata_scsi_unlock_native_capacity);
+ EXPORT_SYMBOL_GPL(ata_host_init);
+ EXPORT_SYMBOL_GPL(ata_host_alloc);
+ EXPORT_SYMBOL_GPL(ata_host_alloc_pinfo);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0088cde..fc51531 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -415,6 +415,35 @@ int ata_std_bios_param(struct scsi_device *sdev, struct block_device *bdev,
  }
  
  /**
-+ *	sd_unlock_native_capacity - unlock native capacity
-+ *	@disk: struct gendisk to set capacity for
++ *	ata_scsi_unlock_native_capacity - unlock native capacity
++ *	@sdev: SCSI device to adjust device capacity for
 + *
-+ *	Block layer calls this function if it detects that partitions
-+ *	on @disk reach beyond the end of the device.  If the SCSI host
-+ *	implements ->unlock_native_capacity() method, it's invoked to
-+ *	give it a chance to adjust the device capacity.
++ *	This function is called if a partition on @sdev extends beyond
++ *	the end of the device.  It requests EH to unlock HPA.
 + *
-+ *	CONTEXT:
-+ *	Defined by block layer.  Might sleep.
++ *	LOCKING:
++ *	Defined by the SCSI layer.  Might sleep.
 + */
-+static void sd_unlock_native_capacity(struct gendisk *disk)
++void ata_scsi_unlock_native_capacity(struct scsi_device *sdev)
 +{
-+	struct scsi_device *sdev = scsi_disk(disk)->device;
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct ata_device *dev;
++	unsigned long flags;
 +
-+	if (sdev->host->hostt->unlock_native_capacity)
-+		sdev->host->hostt->unlock_native_capacity(sdev);
++	spin_lock_irqsave(ap->lock, flags);
++
++	dev = ata_scsi_find_dev(ap, sdev);
++	if (dev && dev->n_sectors < dev->n_native_sectors) {
++		dev->flags |= ATA_DFLAG_UNLOCK_HPA;
++		dev->link->eh_info.action |= ATA_EH_RESET;
++		ata_port_schedule_eh(ap);
++	}
++
++	spin_unlock_irqrestore(ap->lock, flags);
++	ata_port_wait_eh(ap);
 +}
 +
 +/**
-  *	sd_format_disk_name - format disk name
-  *	@prefix: name prefix - ie. "sd" for SCSI disks
-  *	@index: index of the disk to format name for
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index c50a97f..b7bdecb 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -327,6 +327,14 @@ struct scsi_host_template {
- 			sector_t, int []);
+  *	ata_get_identity - Handler for HDIO_GET_IDENTITY ioctl
+  *	@ap: target port
+  *	@sdev: SCSI device to get identify data for
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 242eb26..ab7d6de 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1027,6 +1027,7 @@ extern void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ extern int ata_std_bios_param(struct scsi_device *sdev,
+ 			      struct block_device *bdev,
+ 			      sector_t capacity, int geom[]);
++extern void ata_scsi_unlock_native_capacity(struct scsi_device *sdev);
+ extern int ata_scsi_slave_config(struct scsi_device *sdev);
+ extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+ extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+@@ -1181,6 +1182,7 @@ extern struct device_attribute *ata_common_sdev_attrs[];
+ 	.slave_configure	= ata_scsi_slave_config,	\
+ 	.slave_destroy		= ata_scsi_slave_destroy,	\
+ 	.bios_param		= ata_std_bios_param,		\
++	.unlock_native_capacity	= ata_scsi_unlock_native_capacity, \
+ 	.sdev_attrs		= ata_common_sdev_attrs
  
- 	/*
-+	 * This function is called when one or more partitions on the
-+	 * device reach beyond the end of the device.
-+	 *
-+	 * Status: OPTIONAL
-+	 */
-+	void (*unlock_native_capacity)(struct scsi_device *);
-+
-+	/*
- 	 * Can be used to export driver statistics and other infos to the
- 	 * world outside the kernel ie. userspace and it also provides an
- 	 * interface to feed the driver with information.
+ #define ATA_NCQ_SHT(drv_name)					\
 -- 
 1.6.4.2
-
