@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 7/8] libata: use the enlarged capacity after late HPA unlock
-Date: Sat, 15 May 2010 20:09:33 +0200
-Message-ID: <1273946974-29131-8-git-send-email-tj@kernel.org>
+Subject: [PATCH 2/8] block: restart partition scan after resizing a device
+Date: Sat, 15 May 2010 20:09:28 +0200
+Message-ID: <1273946974-29131-3-git-send-email-tj@kernel.org>
 References: <1273946974-29131-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1273946974-29131-1-git-send-email-tj@kernel.org>
@@ -10,33 +10,68 @@ To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scs
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-After late HPA unlock, libata kept using the original capacity
-ignoring the new larger native capacity.  Enlarging device on the fly
-doesn't cause any harm.  Use the larger native capacity instead.  This
-will enable on-demand HPA unlocking.
+Device resize via ->set_capacity() can reveal new partitions (e.g. in
+chained partition table formats such as dos extended parts).  Restart
+partition scan from the beginning after resizing a device.  This
+change also makes libata always revalidate the disk after resize which
+makes lower layer native capacity unlocking implementation simpler and
+more robust as resize can be handled in the usual path.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>
+Reported-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/ata/libata-core.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ fs/partitions/check.c |   16 ++++++----------
+ 1 files changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 86f405b..9d6e92d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4212,9 +4212,8 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 	    dev->n_sectors > n_sectors && dev->n_sectors == n_native_sectors) {
- 		ata_dev_printk(dev, KERN_WARNING,
- 			       "new n_sectors matches native, probably "
--			       "late HPA unlock, continuing\n");
--		/* keep using the old n_sectors */
--		dev->n_sectors = n_sectors;
-+			       "late HPA unlock, n_sectors updated\n");
-+		/* use the larger n_sectors */
- 		return 0;
- 	}
+diff --git a/fs/partitions/check.c b/fs/partitions/check.c
+index e238ab2..8f01df3 100644
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -544,7 +544,7 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 	struct hd_struct *part;
+ 	struct parsed_partitions *state;
+ 	int p, highest, res;
+-
++rescan:
+ 	if (bdev->bd_part_count)
+ 		return -EBUSY;
+ 	res = invalidate_partition(disk, 0);
+@@ -581,7 +581,7 @@ int rescan_partitions(struct gendisk *disk, struct block_device *bdev)
+ 	/* add partitions */
+ 	for (p = 1; p < state->limit; p++) {
+ 		sector_t size, from;
+-try_scan:
++
+ 		size = state->parts[p].size;
+ 		if (!size)
+ 			continue;
+@@ -596,7 +596,6 @@ try_scan:
  
+ 		if (from + size > get_capacity(disk)) {
+ 			const struct block_device_operations *bdops = disk->fops;
+-			unsigned long long capacity;
+ 
+ 			printk(KERN_WARNING
+ 			       "%s: p%d size %llu exceeds device capacity, ",
+@@ -605,14 +604,11 @@ try_scan:
+ 			if (bdops->set_capacity &&
+ 			    (disk->flags & GENHD_FL_NATIVE_CAPACITY) == 0) {
+ 				printk(KERN_CONT "enabling native capacity\n");
+-				capacity = bdops->set_capacity(disk, ~0ULL);
++				bdops->set_capacity(disk, ~0ULL);
+ 				disk->flags |= GENHD_FL_NATIVE_CAPACITY;
+-				if (capacity > get_capacity(disk)) {
+-					set_capacity(disk, capacity);
+-					check_disk_size_change(disk, bdev);
+-					bdev->bd_invalidated = 0;
+-				}
+-				goto try_scan;
++				/* free state and restart */
++				kfree(state);
++				goto rescan;
+ 			} else {
+ 				/*
+ 				 * we can not ignore partitions of broken tables
 -- 
 1.6.4.2
 
