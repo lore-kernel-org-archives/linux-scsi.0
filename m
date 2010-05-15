@@ -1,17 +1,13 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 5/37] drivers/message/fusion: Use kmemdup
-Date: Sat, 15 May 2010 23:14:36 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1005152314130.21345@ask.diku.dk>
+Subject: [PATCH 22/37] drivers/scsi/mpt2sas: Use kmemdup
+Date: Sat, 15 May 2010 23:19:48 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1005152319310.21345@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:59033 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753053Ab0EOVOm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 May 2010 17:14:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 From: Julia Lawall <julia@diku.dk>
 
@@ -36,22 +32,27 @@ statement S;
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- drivers/message/fusion/mptbase.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff -u -p a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -5945,11 +5945,10 @@ mpt_findImVolumes(MPT_ADAPTER *ioc)
- 	if (mpt_config(ioc, &cfg) != 0)
- 		goto out;
+diff -u -p a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -6056,7 +6056,7 @@ mpt2sas_scsih_event_callback(struct MPT2
+ 		return 1;
+ 	}
+ 	sz = le16_to_cpu(mpi_reply->EventDataLength) * 4;
+-	fw_event->event_data = kzalloc(sz, GFP_ATOMIC);
++	fw_event->event_data = kmemdup(mpi_reply->EventData, sz, GFP_ATOMIC);
+ 	if (!fw_event->event_data) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+ 		    ioc->name, __FILE__, __LINE__, __func__);
+@@ -6064,8 +6064,6 @@ mpt2sas_scsih_event_callback(struct MPT2
+ 		return 1;
+ 	}
  
--	mem = kmalloc(iocpage2sz, GFP_KERNEL);
-+	mem = kmemdup((u8 *)pIoc2, iocpage2sz, GFP_KERNEL);
- 	if (!mem)
- 		goto out;
- 
--	memcpy(mem, (u8 *)pIoc2, iocpage2sz);
- 	ioc->raid_data.pIocPg2 = (IOCPage2_t *) mem;
- 
- 	mpt_read_ioc_pg_3(ioc);
+-	memcpy(fw_event->event_data, mpi_reply->EventData,
+-	    sz);
+ 	fw_event->ioc = ioc;
+ 	fw_event->VF_ID = mpi_reply->VF_ID;
+ 	fw_event->VP_ID = mpi_reply->VP_ID;
