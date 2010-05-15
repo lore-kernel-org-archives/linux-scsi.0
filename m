@@ -1,102 +1,98 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET] block,libata: implement ->unlock_native_capacity()
-Date: Sat, 15 May 2010 20:09:26 +0200
-Message-ID: <1273946974-29131-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@daveml
+Subject: [PATCH 6/8] SCSI: implement sd_unlock_native_capacity()
+Date: Sat, 15 May 2010 20:09:32 +0200
+Message-ID: <1273946974-29131-7-git-send-email-tj@kernel.org>
+References: <1273946974-29131-1-git-send-email-tj@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:40271 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755195Ab0EOSK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 May 2010 14:10:27 -0400
+In-Reply-To: <1273946974-29131-1-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@daveml
+Cc: Tejun Heo <tj@kernel.org>
 
-Hello, all.
+Implement sd_unlock_native_capacity() method which calls into
+hostt->unlock_native_capacity() if implemented.  This will be invoked
+by block layer if partitions extend beyond the end of the device and
+can be used to implement, for example, on-demand ATA host protected
+area unlocking.
 
-This is the evolved version of the implement-set_capacity patchset[L]
-and contains the following patches.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/scsi/sd.c        |   22 ++++++++++++++++++++++
+ include/scsi/scsi_host.h |    8 ++++++++
+ 2 files changed, 30 insertions(+), 0 deletions(-)
 
- 0001-buffer-make-invalidate_bdev-drain-all-percpu-LRU-add.patch
- 0002-block-restart-partition-scan-after-resizing-a-device.patch
- 0003-block-ide-simplify-bdops-set_capacity-to-unlock_nati.patch
- 0004-block-use-struct-parsed_partitions-state-universally.patch
- 0005-block-improve-automatic-native-capacity-unlocking.patch
- 0006-SCSI-implement-sd_unlock_native_capacity.patch
- 0007-libata-use-the-enlarged-capacity-after-late-HPA-unlo.patch
- 0008-libata-implement-on-demand-HPA-unlocking.patch
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8b827f3..b85906e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -97,6 +97,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ #endif
+ 
+ static int  sd_revalidate_disk(struct gendisk *);
++static void sd_unlock_native_capacity(struct gendisk *disk);
+ static int  sd_probe(struct device *);
+ static int  sd_remove(struct device *);
+ static void sd_shutdown(struct device *);
+@@ -1100,6 +1101,7 @@ static const struct block_device_operations sd_fops = {
+ #endif
+ 	.media_changed		= sd_media_changed,
+ 	.revalidate_disk	= sd_revalidate_disk,
++	.unlock_native_capacity	= sd_unlock_native_capacity,
+ };
+ 
+ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+@@ -2101,6 +2103,26 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ }
+ 
+ /**
++ *	sd_unlock_native_capacity - unlock native capacity
++ *	@disk: struct gendisk to set capacity for
++ *
++ *	Block layer calls this function if it detects that partitions
++ *	on @disk reach beyond the end of the device.  If the SCSI host
++ *	implements ->unlock_native_capacity() method, it's invoked to
++ *	give it a chance to adjust the device capacity.
++ *
++ *	CONTEXT:
++ *	Defined by block layer.  Might sleep.
++ */
++static void sd_unlock_native_capacity(struct gendisk *disk)
++{
++	struct scsi_device *sdev = scsi_disk(disk)->device;
++
++	if (sdev->host->hostt->unlock_native_capacity)
++		sdev->host->hostt->unlock_native_capacity(sdev);
++}
++
++/**
+  *	sd_format_disk_name - format disk name
+  *	@prefix: name prefix - ie. "sd" for SCSI disks
+  *	@index: index of the disk to format name for
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index c50a97f..b7bdecb 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -327,6 +327,14 @@ struct scsi_host_template {
+ 			sector_t, int []);
+ 
+ 	/*
++	 * This function is called when one or more partitions on the
++	 * device reach beyond the end of the device.
++	 *
++	 * Status: OPTIONAL
++	 */
++	void (*unlock_native_capacity)(struct scsi_device *);
++
++	/*
+ 	 * Can be used to export driver statistics and other infos to the
+ 	 * world outside the kernel ie. userspace and it also provides an
+ 	 * interface to feed the driver with information.
+-- 
+1.6.4.2
 
-0001-0005 fix and update partition check related code and make the
-existing automatic native capacity unlocking mechanism simpler and
-more robust.
-
-0001 fixes invalidate_bdev() which seems to have been somewhat broken
-for quite some time since percpu LRU add cache was introduced.
-
-0002 makes partition code to restart from beginning after native
-capacity is locked so that resize and all other stuff can be dealt
-with in the usual revalidation path.
-
-0003 renames ->set_capacity() to ->unlock_native_capacity() and drops
-the spurious new capacity parameter and return value.
-
-0004 updates partition check API for the next patch.
-
-0005 improves automatic native capacity unlocking code so that it
-covers all partition misdetection cases which can be caused by limited
-disk capacity.
-
-0006-0008 add ->unlock_native_capacity() support to libata.  0001-0005
-are probably best routed through block tree if David is okay with it
-(0003 modifies ide), and 0006-0008 through libata if James is okay
-with the SCSI part.  What do you guys think?
-
-This patchset is available in the following git branch.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git unlock-native-capa
-
-diffstat follows.
-
- drivers/ata/libata-core.c |    6 +--
- drivers/ata/libata-scsi.c |   29 ++++++++++++++
- drivers/ide/ide-disk.c    |   40 ++++++++------------
- drivers/ide/ide-gd.c      |   11 ++---
- drivers/scsi/sd.c         |   22 +++++++++++
- fs/buffer.c               |    1 
- fs/partitions/acorn.c     |   68 ++++++++++++++++------------------
- fs/partitions/acorn.h     |   10 ++---
- fs/partitions/amiga.c     |   13 +++---
- fs/partitions/amiga.h     |    2 -
- fs/partitions/atari.c     |    8 ++--
- fs/partitions/atari.h     |    2 -
- fs/partitions/check.c     |   84 ++++++++++++++++++++++++++++++------------
- fs/partitions/check.h     |   12 ++++++
- fs/partitions/efi.c       |   91 +++++++++++++++++++++-------------------------
- fs/partitions/efi.h       |    2 -
- fs/partitions/ibm.c       |   21 +++++-----
- fs/partitions/ibm.h       |    2 -
- fs/partitions/karma.c     |    4 +-
- fs/partitions/karma.h     |    2 -
- fs/partitions/ldm.c       |   89 ++++++++++++++++++++++----------------------
- fs/partitions/ldm.h       |    2 -
- fs/partitions/mac.c       |   11 +++--
- fs/partitions/mac.h       |    2 -
- fs/partitions/msdos.c     |   85 ++++++++++++++++++------------------------
- fs/partitions/msdos.h     |    2 -
- fs/partitions/osf.c       |    4 +-
- fs/partitions/osf.h       |    2 -
- fs/partitions/sgi.c       |    6 +--
- fs/partitions/sgi.h       |    2 -
- fs/partitions/sun.c       |    6 +--
- fs/partitions/sun.h       |    2 -
- fs/partitions/sysv68.c    |    6 +--
- fs/partitions/sysv68.h    |    2 -
- fs/partitions/ultrix.c    |    4 +-
- fs/partitions/ultrix.h    |    2 -
- include/linux/blkdev.h    |    3 -
- include/linux/ide.h       |    2 -
- include/linux/libata.h    |    2 +
- include/scsi/scsi_host.h  |    8 ++++
- 40 files changed, 375 insertions(+), 297 deletions(-)
-
-Thanks.
-
---
-tejun
-
-[L] http://thread.gmane.org/gmane.linux.scsi/58925
