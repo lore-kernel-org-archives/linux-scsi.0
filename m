@@ -1,83 +1,50 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCH] advansys: ISA support depends on ISA_DMA_API
-Date: Sun, 16 May 2010 04:05:31 +0100
-Message-ID: <1273979131.2564.98.camel@localhost>
-References: <1266543527.10567.713.camel@localhost>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15950] Hang in dc395x driver
+Date: Sun, 16 May 2010 03:49:19 GMT
+Message-ID: <201005160349.o4G3nJ4u010196@demeter.kernel.org>
+References: <bug-15950-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-QobOJBhPnyGSF+T+4XXy"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:38572 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752467Ab0EPDFh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 May 2010 23:05:37 -0400
-In-Reply-To: <1266543527.10567.713.camel@localhost>
+Received: from demeter.kernel.org ([140.211.167.39]:38744 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752467Ab0EPDtU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 May 2010 23:49:20 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4G3nJkL010225
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 16 May 2010 03:49:19 GMT
+In-Reply-To: <bug-15950-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=15950
 
 
---=-QobOJBhPnyGSF+T+4XXy
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+ltskinol@gmail.com changed:
 
-On Fri, 2010-02-19 at 01:38 +0000, Ben Hutchings wrote:
-> The advansys driver supports ISA cards using DMA but not PIO-only.
-> Fix the dependency and preprocessor conditions.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         Regression|Yes                         |No
 
-If I recall correctly, we subsequently discussed this on IRC and you
-said this issue had been raised before and that ISA should imply
-ISA_DMA_API.
 
-So, where is it documented that ISA implies ISA_DMA_API?  There are many
-dependencies in drivers/scsi/Kconfig on ISA && ISA_DMA_API which are be
-redundant if this is true.
 
-You previously wrote (archived as
-<http://thread.gmane.org/gmane.linux.scsi/44923>):
-> On Thu, Oct 02, 2008 at 09:49:15AM +0200, Martin Michlmayr wrote:
-> > * Matthew Wilcox <matthew@wil.cx> [2008-09-30 10:13]:
-> > > Huh?  I've looked into it.  ARM and MIPS provide half of an API but n=
-ot
-> > > the other half.  These architectures are broken.
-> >=20
-> > Maybe, but the point is that advansys was marked as BROKEN on !X86_32
-> > before and now it's not, so the ARM/MIPS compilation errors show up
-> > and that's a regression.  What you say is a good argument for my patch
-> > to disable advansys for ARM/MIPS in Kconfig.
->=20
-> No, ARM and MIPS need to just add stub functions that do nothing.
 
-You mean that request_dma() should always fail?  Won't that just allow
-us to build a bunch of drivers for ARM and MIPS that will never work?
+--- Comment #5 from ltskinol@gmail.com  2010-05-16 03:49:14 ---
+Guennadi - good call.
 
-Ben.
+I was able to go back to kernel 2.6.22.1 (through 2.6.25/24/23) and all
+versions exhibit the same behavior.  With the command-line scanimage software,
+I eventually see an error returned and the driver resets after a two minute
+delay.
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
+I've removed the regression flag from this bug, but still think there's a
+problem.
 
---=-QobOJBhPnyGSF+T+4XXy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Tom
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUAS+9g9+e/yOyVhhEJAQKT/xAAjCliSjof8zYF2YdVJbNjosUlOmKLbJvw
-OAcOmvizbnYEUhBKwKZQHi9ievR2OTVbaHWf8PvPzaetaIbnL9FO1mFI1Hrgz/J8
-yNd4sZk1gOXcLnxm5TshsCGE5NM8e+4fvcB7LuS53k4mK40h78GYqgcvFgu2l7La
-SSxCb0IbKqE/DNIobfUiPzQutwBYFTdt2Z+CN+LE/eZJeFLaMsPLPRSbIOpNbtP1
-4Tcw+hVeMiUqljHrLjYiUTai7eC4XYBpBYX7WqWbmKaHo7ShKh5qTg8cI6LbsAkB
-wJ0Sts41ToXb1TPu+y8z+KqHAsMN22SgfSjssgEBHsmkBwlAgRi3pTXihsD+kcwP
-epDwU+iyMwtDt6Kf6PXtU9eg5/ehBtcCHp6jKXp8i9pWyGh7KaO6lzQN6a2wFPrd
-TVVivH6qGKmhYJ5uCzdb23PpiGZ71yNuH4fQpbtIHb9TAvn+In9vAeyve431MLsw
-Uecyd1swMATxzSJk9Sew1pKBOIqXzLNuzhgH8W1++haAUblVScB7cqDKKBMqkqdt
-5rzn87RmzX+e58F2HD1Exd+++C2sakbm46efGy98HpLBqIm6UBImjxEwaiwS2Bxt
-oJrgyNzg4ejHeH/6B9T2FlfEHrLQCP6QM2VtRRyXVjKtOZpQPn7MjFGQAUDaQkLP
-eF6/tD/IT7k=
-=itbm
------END PGP SIGNATURE-----
-
---=-QobOJBhPnyGSF+T+4XXy--
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
