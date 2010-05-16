@@ -1,128 +1,68 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Ben Hutchings <ben@decadent.org.uk>
 Subject: Re: [PATCH 6/8] SCSI: implement sd_unlock_native_capacity()
-Date: Sun, 16 May 2010 08:39:35 -0500
-Message-ID: <1274017175.14187.9.camel@mulgrave.site>
+Date: Sun, 16 May 2010 16:07:37 +0100
+Message-ID: <1274022457.2564.105.camel@localhost>
 References: <1273946974-29131-1-git-send-email-tj@kernel.org>
 	 <1273946974-29131-7-git-send-email-tj@kernel.org>
+	 <1274017175.14187.9.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1273946974-29131-7-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@davemloft.net, bzolnier@gmail.com
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-t1ng38qRGNOnuystNqeW"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:58282 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752418Ab0EPPH4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 May 2010 11:07:56 -0400
+In-Reply-To: <1274017175.14187.9.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Sat, 2010-05-15 at 20:09 +0200, Tejun Heo wrote:
-> Implement sd_unlock_native_capacity() method which calls into
-> hostt->unlock_native_capacity() if implemented.  This will be invoked
-> by block layer if partitions extend beyond the end of the device and
-> can be used to implement, for example, on-demand ATA host protected
-> area unlocking.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Ben Hutchings <ben@decadent.org.uk>
-> ---
->  drivers/scsi/sd.c        |   22 ++++++++++++++++++++++
->  include/scsi/scsi_host.h |    8 ++++++++
->  2 files changed, 30 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 8b827f3..b85906e 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -97,6 +97,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
->  #endif
->  
->  static int  sd_revalidate_disk(struct gendisk *);
-> +static void sd_unlock_native_capacity(struct gendisk *disk);
->  static int  sd_probe(struct device *);
->  static int  sd_remove(struct device *);
->  static void sd_shutdown(struct device *);
-> @@ -1100,6 +1101,7 @@ static const struct block_device_operations sd_fops = {
->  #endif
->  	.media_changed		= sd_media_changed,
->  	.revalidate_disk	= sd_revalidate_disk,
-> +	.unlock_native_capacity	= sd_unlock_native_capacity,
->  };
->  
->  static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
-> @@ -2101,6 +2103,26 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  }
->  
->  /**
-> + *	sd_unlock_native_capacity - unlock native capacity
-> + *	@disk: struct gendisk to set capacity for
-> + *
-> + *	Block layer calls this function if it detects that partitions
-> + *	on @disk reach beyond the end of the device.  If the SCSI host
-> + *	implements ->unlock_native_capacity() method, it's invoked to
-> + *	give it a chance to adjust the device capacity.
-> + *
-> + *	CONTEXT:
-> + *	Defined by block layer.  Might sleep.
-> + */
-> +static void sd_unlock_native_capacity(struct gendisk *disk)
-> +{
-> +	struct scsi_device *sdev = scsi_disk(disk)->device;
-> +
-> +	if (sdev->host->hostt->unlock_native_capacity)
-> +		sdev->host->hostt->unlock_native_capacity(sdev);
-> +}
-> +
-> +/**
->   *	sd_format_disk_name - format disk name
->   *	@prefix: name prefix - ie. "sd" for SCSI disks
->   *	@index: index of the disk to format name for
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index c50a97f..b7bdecb 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -327,6 +327,14 @@ struct scsi_host_template {
->  			sector_t, int []);
->  
->  	/*
-> +	 * This function is called when one or more partitions on the
-> +	 * device reach beyond the end of the device.
-> +	 *
-> +	 * Status: OPTIONAL
-> +	 */
-> +	void (*unlock_native_capacity)(struct scsi_device *);
-> +
-> +	/*
-
-I still principally dislike this threading of the operation up and down
-the stack.  Although we've done it before, we're trying to get away from
-the paradigm of driver conditions to scsi and scsi conditions to block
-for all stuff where driver could condition straight to block (alignment
-is a classic example of the new way of doing things).
-
-The reason you need the threading is because the block ops gets hidden
-at the top of the stack in the upper layers (this was a design choice to
-try to prevent the lower layers mucking with it).  The way we get around
-this is to use a queue operation instead.  As far as I can tell, there's
-no logical reason for the unlock to be a block op, so lets make it a
-queue op instead.  The consumer in 
-
-static bool disk_unlock_native_capacity(struct gendisk *disk)
-
-then becomes
-
-	blk_unlock_native_capacity(disk->queue)
-
-Block's implementation of this would probably call directly through the
-queue.
-
-You place the usual function in the queue template so the ata slave
-configure can say
-
-	blk_queue_unlock_native_function(rq, <unlock_function>)
-
-Then there's no need for anything at all in SCSI ... and it becomes a
-whole lot more obvious how to do legacy ide (if we ever get problems
-there).
-
-James
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, davem@davemloft.net, bzolnier@gmail.com
 
 
+--=-t1ng38qRGNOnuystNqeW
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 2010-05-16 at 08:39 -0500, James Bottomley wrote:
+[...]
+> Then there's no need for anything at all in SCSI ... and it becomes a
+> whole lot more obvious how to do legacy ide (if we ever get problems
+> there).
+
+The block device set_capacity() interface is already defined and was
+implemented for the IDE disk driver some time ago.  The purpose of
+Tejun's work on sd and libata is to implement this existing interface
+and so avoid a regression when users switch from IDE to libata-based
+drivers.  I don't see why he should have to replace the interface as
+well.
+
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-t1ng38qRGNOnuystNqeW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUAS/AKNOe/yOyVhhEJAQLIbQ/9FCrqDdYX2G8Y7uca0o4Ce+C4JdmKQh0I
+fHQjFK7qX8mHZO9yFcp7N0AqS4xnbkfsuOuRVRwH8R28tjKTcILT37MOshwdmpo2
+IKGO7aboEGniaSPDhxNFHTaGpkzWOVBZRkv/QI4rgI+w7KIkRRbW9XqWKXGmFA0V
+6hoYuAMHrw0kqVvWIHS/ebNo16YlMo6b6qeLNo6nJjsyNY0Z6FUKxX38Sych+Lz7
+ON6iV6wxeRpBVrod7wt/eIl/pBxqO8zVYcae/Y/Z5GgLPrZsscJKXshlshxx38FZ
+rY3Q9fIbPs40Yg8DiqP3uUfMlUIlnssav9kLE6K8FFq3NTeMK4BgVkU1zUr/gWFO
+L32wiVlLHv6KjkdJNq2gpprxWTyLmCwI12Q2MK8Ss2UWovwHq016LiFigee3wqtp
+qmiRkWiUBi3RBZHNax9mCOjJQbRBuwX4auciz/c5AMhabnKa1H0thT76W2PLK7sf
+chiv5qoaTiiqh5XvuH0kgBxq1SSuRXKSRczfn4fwN8OYMK9lPSZvngcWlfOPRn4J
+fJUNd//eWL+s6ojstC8wWgqiZUtx86knWiSDsKyuzgmC0Jj1PyXl7jPI191nbfoQ
+/p5eqhM75phXf4GL7UZZL5k0JBOfqgA9q+7+MpLHjOSTgt6xRjy6v8luCipfumWy
+7CdkLYgseXk=
+=XBfe
+-----END PGP SIGNATURE-----
+
+--=-t1ng38qRGNOnuystNqeW--
