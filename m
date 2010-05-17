@@ -1,78 +1,59 @@
-From: "Nick Cheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH 4/4 ] SCSI: Remove the AER section in kconfig file
-Date: Mon, 17 May 2010 11:25:14 +0800
-Message-ID: <73CF625FE7264E698A105A7914FC0396@areca4e4f859d4>
-Reply-To: <nick.cheng@areca.com.tw>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 6/8] SCSI: implement sd_unlock_native_capacity()
+Date: Mon, 17 May 2010 07:30:57 +0200
+Message-ID: <4BF0D491.7090802@kernel.org>
+References: <1273946974-29131-1-git-send-email-tj@kernel.org>	 <1273946974-29131-7-git-send-email-tj@kernel.org>	 <1274017175.14187.9.camel@mulgrave.site>	 <1274022457.2564.105.camel@localhost>	 <1274025636.14187.24.camel@mulgrave.site>  <4BF024A2.4090804@kernel.org> <1274037797.14187.50.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_001E_01CAF5B3.A2B9FF10"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-References: 
-In-Reply-To: 
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1274037797.14187.50.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Ben Hutchings <ben@decadent.org.uk>, jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, davem@davemloft.net, bzolnier@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Hello,
 
-------=_NextPart_000_001E_01CAF5B3.A2B9FF10
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+On 05/16/2010 09:23 PM, James Bottomley wrote:
+>> request_queue is (or at least supposed to be) oblivious about genhd
+>> and its attributes including capacity.  After all, request_queue can
+>> exist w/o genhd associated, so it would be quite odd to have capacity
+>> related method living in request_queue.
+> 
+> Yes, I'll sort of buy this ... although it's not quite that clean:
+> barrier methods, which are only used for filesystem above block devices
+> also live in the queue.
 
-1. Remove the AER section of Areca driver in kconfig file of scsi folder
-Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
----
+You mean prepare_flush_fn()?  Hmmm...
 
-------=_NextPart_000_001E_01CAF5B3.A2B9FF10
-Content-Type: application/octet-stream;
-	name="patch_kconfig"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="patch_kconfig"
+>> Another thing is that there is no generic way to reach the associated
+>> genhd from request_queue and I can't think of a clean way to map
+>> request_queue to the associated ata device w/o in-flight requests (can
+>> you even do that from SCSI?).
+> 
+> No ... that's by design ... but you don't need it if all you're doing is
+> unlocking the native capacity (whether on behalf of block dev ops or
+> queue ops).
 
---- linux-2.6/drivers/scsi/Kconfig	2010-02-25 02:52:17.000000000 +0800=0A=
-+++ linux-2.6/drivers/scsi/Kconfig.new	2010-05-05 10:55:26.000000000 =
-+0800=0A=
-@@ -579,32 +579,18 @@ config SCSI_IN2000=0A=
- 	  module will be called in2000.=0A=
- =0A=
- config SCSI_ARCMSR=0A=
--	tristate "ARECA (ARC11xx/12xx/13xx/16xx) SATA/SAS RAID Host Adapter"=0A=
-+	tristate "ARECA (ARC11xx/12xx/13xx/16xx/18XX) SATA/SAS RAID Host =
-Adapter"=0A=
- 	depends on PCI && SCSI=0A=
- 	help=0A=
- 	  This driver supports all of ARECA's SATA/SAS RAID controller cards.=0A=
--	  This is an ARECA-maintained driver by Erich Chen.=0A=
--	  If you have any problems, please mail to: <erich@areca.com.tw>.=0A=
-+	  This is an ARECA-maintained driver by Nick Cheng.=0A=
-+	  If you have any problems, please mail to: <nick.cheng@areca.com.tw>.=0A=
- 	  Areca supports Linux RAID config tools.=0A=
- 	  Please link <http://www.areca.com.tw>=0A=
- =0A=
- 	  To compile this driver as a module, choose M here: the=0A=
- 	  module will be called arcmsr (modprobe arcmsr).=0A=
- =0A=
--config SCSI_ARCMSR_AER=0A=
--	bool "Enable PCI Error Recovery Capability in Areca Driver(ARCMSR)"=0A=
--	depends on SCSI_ARCMSR && PCIEAER=0A=
--	default n=0A=
--	help=0A=
--	  The advanced error reporting(AER) capability is "NOT" provided by=0A=
--	  ARC1200/1201/1202 SATA RAID controllers cards.=0A=
--	  If your card is one of ARC1200/1201/1202, please use the default =
-setting, n.=0A=
--	  If your card is other models, you could pick it=0A=
--	  on condition that the kernel version is greater than 2.6.19.=0A=
--	  This function is maintained driver by Nick Cheng. If you have any=0A=
--	  problems or suggestion, you are welcome to contact with =
-<nick.cheng@areca.com.tw>.=0A=
--	  To enable this function, choose Y here.=0A=
--=0A=
- source "drivers/scsi/megaraid/Kconfig.megaraid"=0A=
- source "drivers/scsi/mpt2sas/Kconfig"=0A=
- =0A=
+libata defers all those managements stuff to EH and the ata device
+needs to be accessible to invoke EH.  It can be worked around by
+issuing a pseudo command which is trapped and deferred to EH during
+command processing but it's much better to be able to access the
+device directly.
 
-------=_NextPart_000_001E_01CAF5B3.A2B9FF10--
+>> Unfortunately, libata is still properly layered below SCSI, so I'm
+>> afraid threading through sd is clumsy yet the cleanest way to do it.
+> 
+> s/properly/im\&/
+
+Heh, yeah.  :-)
+
+> but yes,
+> 
+> Reluctantly-Acked-by: James Bottomley <James.Bottomley@suse.de>
+
+Thanks.  Much appreciated.
+
+-- 
+tejun
