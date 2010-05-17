@@ -1,98 +1,82 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: [PATCH 8/10] scsi_scan.c: fix/convert functions to use kernel-doc
-Date: Mon, 17 May 2010 16:21:11 -0700
-Message-ID: <12741384712698@xenotime.net>
-References: <12741384711166@xenotime.net>
+From: Leif Sawyer <ak.hepcat+scsi@gmail.com>
+Subject: Re: Fwd: high volume of disk-writes causes disk to 'disappear'
+Date: Mon, 17 May 2010 15:40:04 -0800
+Message-ID: <AANLkTimjTiA9wIY_8ES_6hzowXKMVkNQOhg5VBxVu-ty@mail.gmail.com>
+References: <y2wd4bc8f581004191138ldab84bect8670755200e2c413@mail.gmail.com>
+	 <w2od4bc8f581004271446md75f0dcbt537956a2e3f9abb7@mail.gmail.com>
+	 <4BD99BFD.9090202@suse.de>
+	 <q2md4bc8f581004291011k43d5c03cpb7361473f6de4350@mail.gmail.com>
+	 <4BDAE41D.6030707@suse.de>
+	 <m2gd4bc8f581004301627jea793d0ax1e63bc3796458662@mail.gmail.com>
+	 <i2yd4bc8f581005031143r638b8037ra3778f97e6d2e25d@mail.gmail.com>
+	 <AANLkTik8917n0yNfc9Y6V9rbG7OOltt_SLcxEu8bzu20@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.115.56]:40056 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756278Ab0EQX3K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 May 2010 19:29:10 -0400
-Received: from localhost ([71.245.98.113]) by xenotime.net for <linux-scsi@vger.kernel.org>; Mon, 17 May 2010 16:29:03 -0700
-In-Reply-To: <12741384711166@xenotime.net>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:59752 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996Ab0ERAHn convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2010 20:07:43 -0400
+Received: by gwaa20 with SMTP id a20so840821gwa.19
+        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2010 17:07:42 -0700 (PDT)
+In-Reply-To: <AANLkTik8917n0yNfc9Y6V9rbG7OOltt_SLcxEu8bzu20@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, Hannes Reinecke <hare@suse.de>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+AH, of course, I spoke too soon.
 
-scsi_scan.c: fix incorrectly formatted kernel-doc notation
-& convert documentation of 2 functions into kernel-doc.
+Also, I discovered something interesting about this problem:
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/scsi/scsi_scan.c |   26 +++++++++-----------------
- 1 file changed, 9 insertions(+), 17 deletions(-)
+   As long as I keep my disk 'fullness' below 75%, I don't see the
+problem as often.
 
---- lnx-2634-docs.orig/drivers/scsi/scsi_scan.c
-+++ lnx-2634-docs/drivers/scsi/scsi_scan.c
-@@ -1221,7 +1221,7 @@ static void scsi_sequential_lun_scan(str
- }
- 
- /**
-- * scsilun_to_int: convert a scsi_lun to an int
-+ * scsilun_to_int - convert a scsi_lun to an int
-  * @scsilun:	struct scsi_lun to be converted.
-  *
-  * Description:
-@@ -1253,7 +1253,7 @@ int scsilun_to_int(struct scsi_lun *scsi
- EXPORT_SYMBOL(scsilun_to_int);
- 
- /**
-- * int_to_scsilun: reverts an int into a scsi_lun
-+ * int_to_scsilun - reverts an int into a scsi_lun
-  * @lun:        integer to be reverted
-  * @scsilun:	struct scsi_lun to be set.
-  *
-@@ -1877,12 +1877,9 @@ void scsi_forget_host(struct Scsi_Host *
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
--/*
-- * Function:    scsi_get_host_dev()
-- *
-- * Purpose:     Create a scsi_device that points to the host adapter itself.
-- *
-- * Arguments:   SHpnt   - Host that needs a scsi_device
-+/**
-+ * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
-+ * @shost: Host that needs a scsi_device
-  *
-  * Lock status: None assumed.
-  *
-@@ -1895,7 +1892,7 @@ void scsi_forget_host(struct Scsi_Host *
-  *
-  *	Note - this device is not accessible from any high-level
-  *	drivers (including generics), which is probably not
-- *	optimal.  We can add hooks later to attach 
-+ *	optimal.  We can add hooks later to attach.
-  */
- struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
- {
-@@ -1921,18 +1918,13 @@ struct scsi_device *scsi_get_host_dev(st
- }
- EXPORT_SYMBOL(scsi_get_host_dev);
- 
--/*
-- * Function:    scsi_free_host_dev()
-- *
-- * Purpose:     Free a scsi_device that points to the host adapter itself.
-- *
-- * Arguments:   SHpnt   - Host that needs a scsi_device
-+/**
-+ * scsi_free_host_dev - Free a scsi_device that points to the host adapter itself
-+ * @sdev: Host device to be freed
-  *
-  * Lock status: None assumed.
-  *
-  * Returns:     Nothing
-- *
-- * Notes:
-  */
- void scsi_free_host_dev(struct scsi_device *sdev)
- {
+  Once my web-captures try to fill the disk past about 75/80%, then
+the churn rate of new
+data ( about 1GiB every 4min )  combined with the purge rate of the
+old data  will
+cause the scsi device to become lost very quickly.
 
 
--- 
 
+
+
+On Sat, May 15, 2010 at 11:09 AM, Leif Sawyer <ak.hepcat+scsi@gmail.com=
+> wrote:
+> On a whim, I applied the following patches:
+> =A0 master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.=
+6.git
+>
+> to my linux 2.6.34-rc5 kernel for testing.
+>
+> Without the patches, my system would stay running for no more than 2
+> or three days
+> before erroring out and requiring a reboot before visibility of the
+> disk returned.
+>
+> After applying the SCSI rc fixes from James' git repo, my system is
+> now at 5+ days
+> of streaming to the scsi disk.
+>
+> I'll keep watching this and post another status update in a few days.
+>
+> Thanks for all the hard work.
+>
+>
+> --
+> "It's pronounced Layf...you know, like Leif Garrett? Don't you watch
+> =A0'I Love the 70's'? What kind of retro lover are you, anyway?"
+>
+
+
+
+--=20
+"It's pronounced Layf...you know, like Leif Garrett? Don't you watch
+ 'I Love the 70's'? What kind of retro lover are you, anyway?"
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
