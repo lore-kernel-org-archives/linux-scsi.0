@@ -1,37 +1,84 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Tue, 18 May 2010 15:04:29 GMT
-Message-ID: <201005181504.o4IF4Tea017115@demeter.kernel.org>
-References: <bug-13594-11613@https.bugzilla.kernel.org/>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: qla2xxx - blocked FC remote port time out: removing target and
+ saving 	binding
+Date: Tue, 18 May 2010 09:56:36 -0700
+Message-ID: <alpine.OSX.2.00.1005180950070.38012@gmmac.local>
+References: <AANLkTinG6IYyKvYtNMBUpJcYslBmm2_h8iEwp-JYwIdR@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed;
+	boundary="140733193388032-1167210001-1274201797=:38012"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:60294 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756686Ab0ERPEa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2010 11:04:30 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4IF4TCG017117
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 18 May 2010 15:04:29 GMT
-In-Reply-To: <bug-13594-11613@https.bugzilla.kernel.org/>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:28286 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753569Ab0ERQ4i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2010 12:56:38 -0400
+In-Reply-To: <AANLkTinG6IYyKvYtNMBUpJcYslBmm2_h8iEwp-JYwIdR@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Eddie Williams <eddie.williams@steeleye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13594
+--140733193388032-1167210001-1274201797=:38012
+Content-Type: text/plain; charset="iso-8859-1"; format=flowed
+Content-Transfer-Encoding: 8BIT
 
 
 
+On Tue, 18 May 2010, Eddie Williams wrote:
+
+> I upgraded an older EM64T server with 2 Qlogic controllers (QLA2340
+> FW:v3.03.27 DVR:v8.03.01-k10) to SLES 11 and when a SCSI Bus Reset
+> (Loop Reset) is issued I get this time out where the driver ends up
+> removing all devices (causing IO failures for mounted file systems and
+> the like) and then rescaning to add the devices back.  I verified that
+> with the latest stable kernel (2.6.33.4) I see similar behavior
+> (though the new kernel recovery much quicker).  If I go back to an
+> older boot disk with Red Hat EL 4 that kernel/driver will issue a
+> reset without any issues, aka no port time out or loss of connection
+> to the storage.
+>
+> I have tried similar tests on different servers connected to the same
+> FC switch/storage as well as servers connected to different storage
+> without seeing this behavior.
+>
+
+Thanks for bringing this to attention. Is it possible to re-run the test
+with extended logging (ql2xextended_error_logging=1). This will help to
+debug further.
+
+-- Giri
 
 
---- Comment #16 from Ken Stailey <kstailey@yahoo.com>  2010-05-18 15:04:15 ---
-If this bug report is to be closed on the grounds that it only encompasses
-suppressing some log messages can anyone post the ID of any bug reports that
-are for the "real" LSI MPT driver issues?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+> output to /var/log/messages:
+>
+> May 14 11:18:14 goofy kernel: qla2xxx 0000:06:01.0: scsi(2:2:15): LOOP
+> RESET ISSUED.
+> May 14 11:18:34 goofy kernel:  rport-2:0-4: blocked FC remote port
+> time out: removing target and saving binding
+> May 14 11:18:34 goofy kernel: sd 2:0:2:1: [sdv] Synchronizing SCSI cache
+> May 14 11:18:34 goofy multipathd: sdv: remove path (uevent)
+> May 14 11:19:04 goofy kernel:  rport-2:0-2: blocked FC remote port
+> time out: removing target and saving binding
+> May 14 11:19:04 goofy kernel:  rport-2:0-3: blocked FC remote port
+> time out: removing target and saving binding
+> May 14 11:19:14 goofy kernel:  rport-2:0-6: blocked FC remote port
+> time out: removing rport
+> May 14 11:20:22 goofy LifeKeeper[8115]: RECOVERY class=disk
+> event=inqfail name=3600508b300902930a83a23d1a2850036 STARTING AT: Fri
+> May 14 11:20:22 EDT 2010
+> May 14 11:20:23 goofy LifeKeeper[8115]: RECOVERY class=disk
+> event=inqfail name=3600508b300902930a83a23d1a2850036 ENDING AT: Fri
+> May 14 11:20:23 EDT 2010
+> May 14 11:23:14 goofy kernel: qla2xxx 0000:06:01.0:
+> qla2xxx_eh_bus_reset: reset succeded
+>
+>
+> What is causing this time out and how can I avoid it?
+>
+> Eddie Williams
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+--140733193388032-1167210001-1274201797=:38012--
