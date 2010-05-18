@@ -1,149 +1,72 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/2] [tgt]: Add proper CDB passthrough for SG_IO backstores
-Date: Mon, 17 May 2010 22:13:02 -0700
-Message-ID: <1274159582-6074-1-git-send-email-nab@linux-iscsi.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/2] [tgt]: Add proper SG_IO struct cmd CDB passthrough
+Date: Tue, 18 May 2010 13:39:16 +0900
+Message-ID: <20100518134113M.fujita.tomonori@lab.ntt.co.jp>
+References: <1274159574-6053-1-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.gq1.yahoo.com ([67.195.15.62]:20960 "HELO
-	smtp103.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754109Ab0ERC1s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 May 2010 22:27:48 -0400
+Received: from sh.osrg.net ([192.16.179.4]:42415 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752068Ab0EREjp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 May 2010 00:39:45 -0400
+In-Reply-To: <1274159574-6053-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: nab@linux-iscsi.org
+Cc: stgt@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, James.Bottomley@suse.de, dgilbert@interlog.com
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Mon, 17 May 2010 22:12:54 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-This patch updates usr/bs_sg.c:bs_sg_cmd_submit() to process incoming scsi-generic IO
-of type SG_DXFER_TO_DEV and SG_DXFER_FROM_DEV using a single new struct scsi_cmnd->sg_iovec
-set using existing scsi_cmd.h scsi_get_[out,in]_[buffer,length]() macros.
+> These are two patches to allow the STGT SG_IO backstore to function using a
+> new struct scsi_cmd->sg_iovec member with sg_io_hdr->iovec_count=1, and to update
+> usr/scsi.c:scsi_cmd_perform() to allow for a hand off incoming descriptors into the
+> struct device_type_template->cmd_passthrough() function pointer.
+> 
+> I initially updated usr/sbc.c to set sbc_rw() as it's CDB passthrough function for
+> TYPE_DISK, but the logic should apply to any device types *_rw() functions.  Please let
+> me know if this makes sense, and I will look at updating the other stgt device types.
+> 
+> So far with this patch, I am able to successfully mkfs new iSCSI TYPE_DISK LUNS with
+> Open-iSCSI to the userspace STGT iSCSI fabric module + SG_IO into kernel level TCM_Loop
+> virtual iSCSI target ports on a x86 HVM, and bulk 512KB DATA_SG_IO payloads between STGT
+> and TCM_Loop are now functioning as expected.
+> 
+> There is one unresolved issue that I ran into while running initially with TCM_Loop
+> and struct scsi_device->max_sectors=256.  SG_IO writes larger than the
+> struct scsi_device->max_sectors are being returned with -EINVAL, but it appears that
+> the CHECK_CONDITION is not actually being propigated back into STGT/iSCSI.
+> 
+> After increasing the TCM_Loop ports to struct scsi_device->max_sectors=1024 following
+> the Open-iSCSI Initiator default, the 512KB paylods begin work as expected.  I will need
+> to have a look at the case for CDB length > max_sectors, which means that bs_sg.c getting
+> the correct scsi_status and sense data out of the kernel might still need more work.
+> 
+> In the mean time, please have a look at applying these patches.
+> 
+> Best,
+> 
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> 
+> Nicholas Bellinger (2):
+>   [tgt]: Add proper CDB passthrough for SG_IO backstores
+>   [tgt]: Add support for SG_IO CDB passthrough in scsi_cmd_perform()
+> 
+>  usr/bs_sg.c     |   31 ++++++++++++++++++++++++-------
+>  usr/sbc.c       |    1 +
+>  usr/scsi.c      |   11 +++++++++++
+>  usr/scsi_cmnd.h |    4 ++++
+>  usr/tgtd.h      |    2 ++
+>  5 files changed, 42 insertions(+), 7 deletions(-)
 
-It also makes set_cmd_failed() properly return SAM_STAT_CHECK_CONDITION, which is expected
-by the bs_sg_cmd_submit() caller in usr/scsi.c:scsi_cmd_perform()
+Thanks! Surely, the first patch looks fine.
 
-Finally, this patch adds struct backingstore_template->bs_passthrough=1 that is used by
-bs_sg.c here and the next patch to hand off struct scsi_cmd for CDB passthrough.
+I thought that you want to send all SCSI commands to your in-kernel
+target code via SG_IO. That's, you want the proper 'pass-through' code
+since tgt's pass-through code is broken.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- usr/bs_sg.c     |   31 ++++++++++++++++++++++++-------
- usr/scsi_cmnd.h |    4 ++++
- usr/tgtd.h      |    1 +
- 3 files changed, 29 insertions(+), 7 deletions(-)
-
-diff --git a/usr/bs_sg.c b/usr/bs_sg.c
-index 8baa480..9696392 100644
---- a/usr/bs_sg.c
-+++ b/usr/bs_sg.c
-@@ -82,7 +82,7 @@ static int graceful_write(int fd, void *p_write, int to_write)
- 	return 0;
- }
- 
--static void set_cmd_failed(struct scsi_cmd *cmd)
-+static int set_cmd_failed(struct scsi_cmd *cmd)
- {
- 	int result = SAM_STAT_CHECK_CONDITION;
- 	uint16_t asc = ASC_READ_ERROR;
-@@ -90,11 +90,14 @@ static void set_cmd_failed(struct scsi_cmd *cmd)
- 
- 	scsi_set_result(cmd, result);
- 	sense_data_build(cmd, key, asc);
-+
-+	return result;
- }
- 
- static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
- {
- 	struct scsi_lu *dev = cmd->dev;
-+	struct sg_iovec *iov = &cmd->sg_iovec;
- 	int fd = dev->fd;
- 	struct sg_io_hdr io_hdr;
- 	int err = 0;
-@@ -104,14 +107,27 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
- 	io_hdr.cmd_len = cmd->scb_len;
- 	io_hdr.cmdp = cmd->scb;
- 
-+	if (scsi_get_data_dir(cmd) == DATA_BIDIRECTIONAL) {
-+		eprintf("Unable to process DATA_BIDIRECTIONAL to"
-+			" SG_IO backstore\n");
-+		return set_cmd_failed(cmd);
-+	}
-+
- 	if (scsi_get_data_dir(cmd) == DATA_WRITE) {
- 		io_hdr.dxfer_direction = SG_DXFER_TO_DEV;
--		io_hdr.dxfer_len = scsi_get_out_length(cmd);
--		io_hdr.dxferp = (void *)scsi_get_out_buffer(cmd);
--	} else {
-+		io_hdr.dxfer_len = iov->iov_len = scsi_get_out_length(cmd);
-+		iov->iov_base = (void *)scsi_get_out_buffer(cmd);
-+		io_hdr.dxferp = &cmd->sg_iovec;
-+		io_hdr.iovec_count = 1;
-+	} else if (scsi_get_data_dir(cmd) == DATA_READ) {
- 		io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
--		io_hdr.dxfer_len = scsi_get_in_length(cmd);
--		io_hdr.dxferp = (void *)scsi_get_in_buffer(cmd);
-+		io_hdr.dxfer_len = iov->iov_len = scsi_get_in_length(cmd);
-+		iov->iov_base = (void *)scsi_get_in_buffer(cmd);
-+		io_hdr.dxferp = &cmd->sg_iovec;
-+		io_hdr.iovec_count = 1;
-+	} else {
-+		io_hdr.dxfer_direction = SG_DXFER_NONE;
-+		io_hdr.dxfer_len = 0;
- 	}
- 	io_hdr.mx_sb_len = sizeof(cmd->sense_buffer);
- 	io_hdr.sbp = cmd->sense_buffer;
-@@ -125,7 +141,7 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
- 		set_cmd_async(cmd);
- 	else {
- 		eprintf("failed to start cmd 0x%p\n", cmd);
--		set_cmd_failed(cmd);
-+		return set_cmd_failed(cmd);
- 	}
- 	return 0;
- }
-@@ -238,6 +254,7 @@ static int bs_sg_cmd_done(struct scsi_cmd *cmd)
- static struct backingstore_template sg_bst = {
- 	.bs_name		= "sg",
- 	.bs_datasize		= 0,
-+	.bs_passthrough		= 1,
- 	.bs_open		= bs_sg_open,
- 	.bs_close		= bs_sg_close,
- 	.bs_cmd_submit		= bs_sg_cmd_submit,
-diff --git a/usr/scsi_cmnd.h b/usr/scsi_cmnd.h
-index 011f3e6..776ffb3 100644
---- a/usr/scsi_cmnd.h
-+++ b/usr/scsi_cmnd.h
-@@ -17,6 +17,8 @@ struct scsi_data_buffer {
- 	uint64_t buffer;
- };
- 
-+#include <scsi/sg.h>
-+
- struct scsi_cmd {
- 	struct target *c_target;
- 	/* linked it_nexus->cmd_hash_list */
-@@ -31,6 +33,8 @@ struct scsi_cmd {
- 	enum data_direction data_dir;
- 	struct scsi_data_buffer in_sdb;
- 	struct scsi_data_buffer out_sdb;
-+	/* used for bs_sg.c:bs_sg_cmd_submit() */
-+	struct sg_iovec sg_iovec;
- 
- 	uint64_t cmd_itn_id;
- 	uint64_t offset;
-diff --git a/usr/tgtd.h b/usr/tgtd.h
-index 3323a9b..4f26a29 100644
---- a/usr/tgtd.h
-+++ b/usr/tgtd.h
-@@ -117,6 +117,7 @@ struct device_type_template {
- struct backingstore_template {
- 	const char *bs_name;
- 	int bs_datasize;
-+	int bs_passthrough;
- 	int (*bs_open)(struct scsi_lu *dev, char *path, int *fd, uint64_t *size);
- 	void (*bs_close)(struct scsi_lu *dev);
- 	int (*bs_init)(struct scsi_lu *dev);
--- 
-1.5.6.5
-
+However, looks like non I/O commands are still performed in user-space
+tgt code and only I/O commands goes to kernel via SG_IO. Hmm, that's
+what you want to do?
