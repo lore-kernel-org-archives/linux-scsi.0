@@ -1,102 +1,171 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] [tgt]: Add proper SG_IO struct cmd CDB passthrough
-Date: Tue, 18 May 2010 01:01:45 -0700
-Message-ID: <1274169705.7348.150.camel@haakon2.linux-iscsi.org>
-References: <1274159574-6053-1-git-send-email-nab@linux-iscsi.org>
-	 <20100518134113M.fujita.tomonori@lab.ntt.co.jp>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [QEMU-KVM]: Megasas + TCM_Loop + SG_IO into Windows XP guests
+Date: Tue, 18 May 2010 11:43:04 +0200
+Message-ID: <4BF26128.2030400@suse.de>
+References: <1273786731.13658.49.camel@haakon2.linux-iscsi.org>	 <4BECFA39.7040809@suse.de>	 <1273830134.27867.44.camel@haakon2.linux-iscsi.org> <1274130584.7348.83.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp107.sbc.mail.gq1.yahoo.com ([67.195.14.110]:20573 "HELO
-	smtp107.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756483Ab0ERIBv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 May 2010 04:01:51 -0400
-In-Reply-To: <20100518134113M.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kvm-owner@vger.kernel.org>
+In-Reply-To: <1274130584.7348.83.camel@haakon2.linux-iscsi.org>
+Sender: kvm-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: kvm-devel <kvm@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, linux-scsi <linux-scsi@vger.kernel.org>, Gerd Hoffmann <kraxel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: stgt@vger.kernel.org, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, James.Bottomley@suse.de, dgilbert@interlog.com
 
-On Tue, 2010-05-18 at 13:39 +0900, FUJITA Tomonori wrote:
-> On Mon, 17 May 2010 22:12:54 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > These are two patches to allow the STGT SG_IO backstore to function using a
-> > new struct scsi_cmd->sg_iovec member with sg_io_hdr->iovec_count=1, and to update
-> > usr/scsi.c:scsi_cmd_perform() to allow for a hand off incoming descriptors into the
-> > struct device_type_template->cmd_passthrough() function pointer.
-> > 
-> > I initially updated usr/sbc.c to set sbc_rw() as it's CDB passthrough function for
-> > TYPE_DISK, but the logic should apply to any device types *_rw() functions.  Please let
-> > me know if this makes sense, and I will look at updating the other stgt device types.
-> > 
-> > So far with this patch, I am able to successfully mkfs new iSCSI TYPE_DISK LUNS with
-> > Open-iSCSI to the userspace STGT iSCSI fabric module + SG_IO into kernel level TCM_Loop
-> > virtual iSCSI target ports on a x86 HVM, and bulk 512KB DATA_SG_IO payloads between STGT
-> > and TCM_Loop are now functioning as expected.
-> > 
-> > There is one unresolved issue that I ran into while running initially with TCM_Loop
-> > and struct scsi_device->max_sectors=256.  SG_IO writes larger than the
-> > struct scsi_device->max_sectors are being returned with -EINVAL, but it appears that
-> > the CHECK_CONDITION is not actually being propigated back into STGT/iSCSI.
-> > 
-> > After increasing the TCM_Loop ports to struct scsi_device->max_sectors=1024 following
-> > the Open-iSCSI Initiator default, the 512KB paylods begin work as expected.  I will need
-> > to have a look at the case for CDB length > max_sectors, which means that bs_sg.c getting
-> > the correct scsi_status and sense data out of the kernel might still need more work.
-> > 
-> > In the mean time, please have a look at applying these patches.
-> > 
-> > Best,
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > 
-> > Nicholas Bellinger (2):
-> >   [tgt]: Add proper CDB passthrough for SG_IO backstores
-> >   [tgt]: Add support for SG_IO CDB passthrough in scsi_cmd_perform()
-> > 
-> >  usr/bs_sg.c     |   31 ++++++++++++++++++++++++-------
-> >  usr/sbc.c       |    1 +
-> >  usr/scsi.c      |   11 +++++++++++
-> >  usr/scsi_cmnd.h |    4 ++++
-> >  usr/tgtd.h      |    2 ++
-> >  5 files changed, 42 insertions(+), 7 deletions(-)
-> 
-> Thanks! Surely, the first patch looks fine.
-> 
+Nicholas A. Bellinger wrote:
+> On Fri, 2010-05-14 at 02:42 -0700, Nicholas A. Bellinger wrote:
+>> On Fri, 2010-05-14 at 09:22 +0200, Hannes Reinecke wrote:
+>>> Nicholas A. Bellinger wrote:
+>>>> Greetings Hannes and co,
+>>>>
+>> <SNIP>
+>>> Let's see if I can find some time working on the megasas emulation.
+>>> Maybe I find something.
+>>> Last time I checked it was with a Windows7 build, but I didn't do
+>>> any real tests there. Basically just checking if the system boots u=
+p :-)
+>>>
+>> Nothing fancy just yet.  This is involving a normal NTFS filesystem
+>> format on a small TCM/FILEIO LUN using scsi-generic and a userspace
+>> FILEIO with scsi-disk.
+>>
+>> This involves the XP guest waiting until the very last READ_10 once =
+the
+>> format has completed (eg: all WRITE and VERIFY CDBs complete with GO=
+OD
+>> status AFAICT) before announcing that mkfs.ntfs failed without any
+>> helpful exception message (due to missing metadata of some sort I wo=
+uld
+>> assume..?)
+>>
+>> So perhaps dumping QEMU and TCM_Loop SCSI payloads to determine if a=
+ny
+>> correct blocks from megasas_handle_io() are actually making it out t=
+o
+>> KVM host is going to be my next option.  ;)
+>>
+>=20
+> Greetings Hannes,
+>=20
+> So I spent some more time with XP guests this weekend, and I noticed =
+two
+> things immediately when using hw/lsi53c895a.c instead of hw/megasas.c
+> with the same two TCM_Loop SAS LUNs via SG_IO from last week:
+>=20
+> 1) With lsi53c895a, XP guests are able to boot successfully w/ out th=
+e
+> synchronous SG_IO hack that is currently required to get past the fir=
+st
+> 36-byte INQUIRY for megasas + XP SP2
+>=20
+> 2) With lsi53c895a, XP is able to successfully create and mount a NTF=
+S
+> filesystem, reboot, and read blocks appear to be functioning properly=
+=2E
+> FYI I have not run any 'write known pattern then read-back and compar=
+e
+> blocks' data integrity tests from with in the XP guests just yet, but=
+ I
+> am confident that TCM scatterlist -> se_mem_t mapping is working as
+> expected on the KVM Host.
+>=20
+> Futhermore, after formatting a 5 GB TCM/FILEIO LUN with lsi53c895a, a=
+nd
+> then rebooting with megasas with the same two configured TCM_Loop SG_=
+IO
+> devices, it appears to be able to mount and read blocks successfully.
+> Attempting to write new blocks on the mounted filesystem also appears=
+ to
+> work to some degree, but throughput slows down to a crawl during XP
+> guest buffer cache flush, which is likely attributed to the use of my
+> quick SYNC SG_IO hack.
+>=20
+> So it appears that there are two seperate issues here, and AFAICT the=
+y
+> both look to be XP and megasas specific.  For #2, it may be something
+> about the format of the incoming scatterlists generated during XP's
+> mkfs.ntfs that is causing some issues.  While watching output during =
+fs
+> creation, I noticed the following WRITE_10s with a starting 4088 byte
+> scatterlist and a trailing 8 byte scatterlist:
+>=20
+> megasas: writel mmio 40: 2b0b003
+> megasas: Found mapped frame 2 context 82b0b000 pa 2b0b000
+> megasas: Enqueue frame context 82b0b000 tail 493 busy 1
+> megasas: LD SCSI dev 2 lun 0 sdev 0xdc0230 xfer 16384
+> scsi-generic: Using cur_addr: 0x000000000ff6c008 cur_len: 0x000000000=
+0000ff8
+> scsi-generic: Adding iovec for mem: 0x7f1783b96008 len: 0x00000000000=
+00ff8
+> scsi-generic: Using cur_addr: 0x000000000fd6e000 cur_len: 0x000000000=
+0001000
+> scsi-generic: Adding iovec for mem: 0x7f1783998000 len: 0x00000000000=
+01000
+> scsi-generic: Using cur_addr: 0x000000000fe2f000 cur_len: 0x000000000=
+0001000
+> scsi-generic: Adding iovec for mem: 0x7f1783a59000 len: 0x00000000000=
+01000
+> scsi-generic: Using cur_addr: 0x000000000fdf0000 cur_len: 0x000000000=
+0001000
+> scsi-generic: Adding iovec for mem: 0x7f1783a1a000 len: 0x00000000000=
+01000
+> scsi-generic: Using cur_addr: 0x000000000fded000 cur_len: 0x000000000=
+0000008
+> scsi-generic: Adding iovec for mem: 0x7f1783a17000 len: 0x00000000000=
+00008
+> scsi-generic: execute IOV: iovec_count: 5, dxferp: 0xd92420, dxfer_le=
+n: 16384
+> scsi-generic: -----------------------> Issuing SG_IO CDB len 10: 0x2a=
+ 00 00 00 fa be 00 00 20 00=20
+> scsi-generic: scsi_write_complete() ret =3D 0
+> scsi-generic: Command complete 0x0xd922c0 tag=3D0x82b0b000 status=3D0
+> megasas: LD SCSI req 0xd922c0 cmd 0xda92c0 lun 0xdc0230 finished with=
+ status 0 len 16384
+> megasas: Complete frame context 82b0b000 tail 493 busy 0 doorbell 0
+>=20
+> Also, the final READ_10 that produces the 'could not create filesyste=
+m'
+> exception is for LBA 63 and XP looking for the first FS blocks after
+> GPT.
+>=20
+> Could there be some breakage in megasas with a length < PAGE_SIZE for
+> the scatterlist..?    As lsi53c895a seems to work OK for this case, i=
+s
+> there something about the logic of parsing the incoming struct
+> scatterlists that is different between the two HBA drivers..?  AFAICT
+> both are using Gerd's common code in hw/scsi-bus.c, unless there is
+> something about megasas_map_sgl() that is causing issues with the
+> above..?
+>=20
 
-Great!   Please let me know if I should also generate patches for
-conversion of remaining STGT struct device_type_templates for proper
-SG_IO passthrough support.
+The usual disclaimer here: I'm less than happy with the current SCSI di=
+sk handling.
+Currently we have the two options:
+- Using 'scsi-disk', which will _emulate_ a SCSI disk internally, but a=
+llow to use
+  asynchronous I/O using normal read/write syscalls
+- Using 'scsi-generic', which will allow you to pass-through any SCSI d=
+evice, but
+  disallow asynchronous I/O and requires you to use the SG_IO interface=
+=2E
+The latter also implies that the host will mark _all_ I/O commands as '=
+block_pc',
+so the code path within the kernel is quite different from those taken =
+by I/Os
+coming in via the 'scsi-disk' emulation.
+Guess it's time to have a 'scsi-passthrough' device ...
 
-> I thought that you want to send all SCSI commands to your in-kernel
-> target code via SG_IO. That's, you want the proper 'pass-through' code
-> since tgt's pass-through code is broken.
-> 
-> However, looks like non I/O commands are still performed in user-space
-> tgt code and only I/O commands goes to kernel via SG_IO. Hmm, that's
-> what you want to do?
+Other than that: Think we have to investigate.
+If you could send me a quite setup guide on how to configure TCM_Loop f=
+or an
+existing device I'd give it a go ...
 
-Hmmm, not sure what you mean here..
+Thanks,
 
-AFAICT using the newly provided struct
-device_type_template->cmd_passthrough() instead CDB emulation specific
-callers in usr/scsi.c:scsi_cmd_perform() with device type template
-   
-	cmd->dev->dev_type_template.ops[op].cmd_perform(()
-
-will always capture incoming struct scsi_cmnd for SG_IO passthrough
-before the device type CDB userspace STGT emulation execution and hand
-off into .cmd_perform()..?
-
-This is why the patches to use sbc_rw() as device type passthrough works
-for TYPE_DISK into SG_IO backstores with [READ,WRITE]_[6,10,12,16])
-CDBs, yes?
-
-Best,
-
---nab
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
