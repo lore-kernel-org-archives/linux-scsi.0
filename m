@@ -1,82 +1,60 @@
-From: Leif Sawyer <ak.hepcat+scsi@gmail.com>
-Subject: Re: Fwd: high volume of disk-writes causes disk to 'disappear'
-Date: Mon, 17 May 2010 15:40:04 -0800
-Message-ID: <AANLkTimjTiA9wIY_8ES_6hzowXKMVkNQOhg5VBxVu-ty@mail.gmail.com>
-References: <y2wd4bc8f581004191138ldab84bect8670755200e2c413@mail.gmail.com>
-	 <w2od4bc8f581004271446md75f0dcbt537956a2e3f9abb7@mail.gmail.com>
-	 <4BD99BFD.9090202@suse.de>
-	 <q2md4bc8f581004291011k43d5c03cpb7361473f6de4350@mail.gmail.com>
-	 <4BDAE41D.6030707@suse.de>
-	 <m2gd4bc8f581004301627jea793d0ax1e63bc3796458662@mail.gmail.com>
-	 <i2yd4bc8f581005031143r638b8037ra3778f97e6d2e25d@mail.gmail.com>
-	 <AANLkTik8917n0yNfc9Y6V9rbG7OOltt_SLcxEu8bzu20@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/2] [tgt]: Add proper SG_IO struct cmd CDB passthrough
+Date: Mon, 17 May 2010 22:12:54 -0700
+Message-ID: <1274159574-6053-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:59752 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996Ab0ERAHn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2010 20:07:43 -0400
-Received: by gwaa20 with SMTP id a20so840821gwa.19
-        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2010 17:07:42 -0700 (PDT)
-In-Reply-To: <AANLkTik8917n0yNfc9Y6V9rbG7OOltt_SLcxEu8bzu20@mail.gmail.com>
+Received: from smtp107.sbc.mail.gq1.yahoo.com ([67.195.14.110]:25495 "HELO
+	smtp107.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753786Ab0ERC1m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 May 2010 22:27:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, Hannes Reinecke <hare@suse.de>
+To: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-AH, of course, I spoke too soon.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Also, I discovered something interesting about this problem:
+Greetings Tomo and Mike,
 
-   As long as I keep my disk 'fullness' below 75%, I don't see the
-problem as often.
+These are two patches to allow the STGT SG_IO backstore to function using a
+new struct scsi_cmd->sg_iovec member with sg_io_hdr->iovec_count=1, and to update
+usr/scsi.c:scsi_cmd_perform() to allow for a hand off incoming descriptors into the
+struct device_type_template->cmd_passthrough() function pointer.
 
-  Once my web-captures try to fill the disk past about 75/80%, then
-the churn rate of new
-data ( about 1GiB every 4min )  combined with the purge rate of the
-old data  will
-cause the scsi device to become lost very quickly.
+I initially updated usr/sbc.c to set sbc_rw() as it's CDB passthrough function for
+TYPE_DISK, but the logic should apply to any device types *_rw() functions.  Please let
+me know if this makes sense, and I will look at updating the other stgt device types.
 
+So far with this patch, I am able to successfully mkfs new iSCSI TYPE_DISK LUNS with
+Open-iSCSI to the userspace STGT iSCSI fabric module + SG_IO into kernel level TCM_Loop
+virtual iSCSI target ports on a x86 HVM, and bulk 512KB DATA_SG_IO payloads between STGT
+and TCM_Loop are now functioning as expected.
 
+There is one unresolved issue that I ran into while running initially with TCM_Loop
+and struct scsi_device->max_sectors=256.  SG_IO writes larger than the
+struct scsi_device->max_sectors are being returned with -EINVAL, but it appears that
+the CHECK_CONDITION is not actually being propigated back into STGT/iSCSI.
 
+After increasing the TCM_Loop ports to struct scsi_device->max_sectors=1024 following
+the Open-iSCSI Initiator default, the 512KB paylods begin work as expected.  I will need
+to have a look at the case for CDB length > max_sectors, which means that bs_sg.c getting
+the correct scsi_status and sense data out of the kernel might still need more work.
 
+In the mean time, please have a look at applying these patches.
 
-On Sat, May 15, 2010 at 11:09 AM, Leif Sawyer <ak.hepcat+scsi@gmail.com=
-> wrote:
-> On a whim, I applied the following patches:
-> =A0 master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.=
-6.git
->
-> to my linux 2.6.34-rc5 kernel for testing.
->
-> Without the patches, my system would stay running for no more than 2
-> or three days
-> before erroring out and requiring a reboot before visibility of the
-> disk returned.
->
-> After applying the SCSI rc fixes from James' git repo, my system is
-> now at 5+ days
-> of streaming to the scsi disk.
->
-> I'll keep watching this and post another status update in a few days.
->
-> Thanks for all the hard work.
->
->
-> --
-> "It's pronounced Layf...you know, like Leif Garrett? Don't you watch
-> =A0'I Love the 70's'? What kind of retro lover are you, anyway?"
->
+Best,
 
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
+Nicholas Bellinger (2):
+  [tgt]: Add proper CDB passthrough for SG_IO backstores
+  [tgt]: Add support for SG_IO CDB passthrough in scsi_cmd_perform()
 
---=20
-"It's pronounced Layf...you know, like Leif Garrett? Don't you watch
- 'I Love the 70's'? What kind of retro lover are you, anyway?"
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ usr/bs_sg.c     |   31 ++++++++++++++++++++++++-------
+ usr/sbc.c       |    1 +
+ usr/scsi.c      |   11 +++++++++++
+ usr/scsi_cmnd.h |    4 ++++
+ usr/tgtd.h      |    2 ++
+ 5 files changed, 42 insertions(+), 7 deletions(-)
+
