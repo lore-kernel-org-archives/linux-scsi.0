@@ -1,45 +1,64 @@
-From: <Yanqing_Liu@Dell.com>
-Subject: [PATCH v4] dm: Add Dell MD36xxi controller into RDAC
-	device list
-Date: Wed, 19 May 2010 12:31:36 -0500
-Message-ID: <F757EE5C3631ED4DBDFD7709119219FE03BBD8CF4C@AUSX7MCPS302.AMER.DELL.COM>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 5/7] lpfc 8.3.13: BSG management fixes
+Date: Wed, 19 May 2010 14:35:29 -0400
+Message-ID: <4BF42F71.2020106@emulex.com>
+References: <20100514183051S.fujita.tomonori@lab.ntt.co.jp>	<4BED5428.8090703@emulex.com>	<4BED5E97.1060909@emulex.com> <20100517152627C.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: Charles_Rose@Dell.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exht1.emulex.com ([138.239.113.183]:56783 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752294Ab0ESSfv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2010 14:35:51 -0400
+In-Reply-To: <20100517152627C.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
 
-Hi all,
 
-This patch is to add next generation of Dell iSCSI PowerVault controller MD36xxi into RDAC device list.
 
-Thanks,
-Yanqing
+FUJITA Tomonori wrote:
+> The tricky part is, when a sas LLD frees a remote port, there might be
+> some user-space applications that still open a bsg device. So you
+> can't call blk_cleanup_queue() at that time.
+> 
+> You might hit the similar problem to the commit
+> 93c20a59af4624aedf53f8320606b355aa951bc1. The following fix works?
 
-Signed off by: Yanqing Liu <Yanqing_Liu@Dell.com>
----
-Index: linux-2.6.34/drivers/scsi/device_handler/scsi_dh_rdac.c
-========================================================================
---- linux-2.6.34.orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2010-05-19 09:03:34.000000000 -0400
-+++ linux-2.6.34/drivers/scsi/device_handler/scsi_dh_rdac.c	2010-05-19 09:01:06.000000000 -0400
-@@ -768,6 +768,7 @@
- 	{"DELL", "MD3000i"},
- 	{"DELL", "MD32xx"},
- 	{"DELL", "MD32xxi"},
-+	{"DELL", "MD36xxi"},
- 	{"LSI", "INF-01-00"},
- 	{"ENGENIO", "INF-01-00"},
- 	{"STK", "FLEXLINE 380"},
+It is similar to this problem....   There is an application with the bsg 
+device open, but no request outstanding, when a request is made to the driver 
+to unload.  The driver detaches, with the transport calling 
+bsg_unregister_queue() (which succeeds happily) and the driver fully unloads.
+
+But, at some point the app does do a bsg request.
+
+However - things are all messed up at this point...   the bd->queue is no 
+longer valid as the owner of the queue (the transport) has returned the memory 
+to the kernel. Depending on what else is allocating, it may be used by 
+something else.  Thus you get extremely weird/bad behavior when the queue is 
+referenced later in the bsg request processing.
+
+I don't know how the patch, which changes when blk_cleanup_queue() is done, 
+would fix things, as the larger issue of the queue structure possibly being 
+realloc'd by someone else is the killer.  I did test it in our scenario, and 
+it failed too.
+
+If I have identified this issue properly (agree ?) I see a couple of options:
+a) Set bd->queue pointer to NULL on bsg_unregister_queue(). Then add checks in 
+the file op calls.
+
+b) Track opens against the queue, and fail the deregister if open count > 0. 
+Rather ugly as the interface is a void right now, and the callers need to deal 
+with it too. I know in the fc_transport, we're ill equipped to deal with the 
+deregister failing and trying to remove it sometime later.
+
+c) Is all we need to do is take another parent reference in bsg_open, and 
+remove it in bsg_release ?  Given the multiple pieces that must play well on 
+this, I'm not sure it really works.
+
+Insight appreciated...
+
+-- james s
+
