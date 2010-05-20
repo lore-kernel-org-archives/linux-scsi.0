@@ -1,115 +1,80 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: [ANNOUNCE] - TCM/LIO v3.4.0
-Date: Wed, 19 May 2010 16:16:01 -0700
-Message-ID: <1274310961.25793.29.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [RFC]: Mainline of TCM Core and TCM_Loop for v2.6.35
+Date: Wed, 19 May 2010 18:09:52 -0700
+Message-ID: <1274317792.30733.59.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: openfcoe-devel <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp103.sbc.mail.gq1.yahoo.com ([67.195.15.62]:26525 "HELO
+	smtp103.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752967Ab0ETBKL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 May 2010 21:10:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Douglas
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Greetings all,
+Greetings James and Co,
 
-I am happy to announce that the v3.4.0 stable release of TCM/LIO has
-been tagged and branched into lio-core-2.6.git/lio-3.4.  This release is
-now tracking upstream linux-2.6.34.y.git for future stable kernel
-releases.
+I would like to formally request the inclusion of TCM Core v4 codebase
+containing the fabric independent configfs infrastructure design and
+TCM_Loop SCSI LLD fabric module supporting multi-fabric I_T Nexus and
+Port emulation for SAS, FC and iSCSI into mainline for v2.6.35
 
-There where a number changes during the 3.4 development cycle to
-TCM-Core to handle multi-fabric persistent reservations with SPEC_I_PT=1
-and REGISTER_AND_MOVE ops correctly, as well as proper ALL_TG_PT=1
-support and processing of SPC-3 TransportIDs containing a iSCSI
-InitiatorName+ISID tuple.
+The plan is to push TCM Core and the TCM_Loop LLD module for use with
+existing userspace applications into mainline first, and then focus on
+extending the upstream fabric libraries (libiscsi, libfc, libsas) for
+new and future TCM modules to support a common set of kernel-level
+target mode infrastructure for HW and SW fabric engines once the main
+target pieces are in place.
 
-This also included a handful of bugfixes and improvements including
-minor changes to follow new TCM struct target_core_fabric_ops usage for
-the LIO-Target (iSCSI), TCM_FC (OpenFCoE+libfc) and TCM_Loop (Virtual
-SAS + SG_IO)
+On the userspace fabric <-> kernel backstore side, the TCM_Loop fabric
+module is currently running with full SPC-3 PR and ALUA support using
+fabric-independent virtual SCSI target port emulation with the STGT
+iSCSI userspace fabric code and SG_IO backstores.  TCM_Loop is also
+being used with SG_IO for QEMU-KVM megasas HBA emulation into Linux and
+MSFT x86 guests and is able to run at sustained 10 Gb/sec throughput
+into KVM guest.
 
-Thanks to everyone who contributed their patches, bug reports, testing
-and time.  Below is the complete changelog.
+For the kernelspace fabric <-> userspace backstore side for v2.6.35, the
+plan is to extend the existing drivers/scsi/scsi_tgt_[lib,if].c direct
+mapped ring interface to the WIP kernel level TCM/STGT subsystem
+backstore plugin mentioned in previously on linux-scsi.  This will allow
+projects presenting a userspace block device to access existing TCM
+kernel level target module fabric drivers.
+
+For the LIO-Target iSCSI fabric module, I would like to move in the
+direction of extending libiscsi to support kernel-level software iSCSI
+target logic.  We will be supporting an out of tree build package for
+LIO-Target on top of mainline v2.6.35, until such time libiscsi can be
+extended and the LIO-Target fabric module merged into mainline.  For the
+TCM_FC + Open-FCoE.org module, extending the libfc module to support
+explict FC lport configuration for both HW and SW FCoE target mode is
+what I would like to see implemented.
+
+Note that we do intended to support existing target mode HBAs as
+seperate TCM fabric modules that use self-contained and vendir/driver
+specific target infrastructure, and convert these over to use yet-to-be
+determined target mode capaible libsas, libfc and libiscsi as interest
+dictates.  Supporting these HBAs will also include a set patches to
+support target port config-time allocation of scatterlist memory for use
+with existing TCM v4.0 struct scatterlist -> se_mem_t zero-copy memory
+mapping logic.  I will also be including existing standalone vendor
+target mode driver code into branches on lio-core-2.6.git, and
+maintaining these drivers and intending to get these merged as well in
+the post v2.6.35 timeframe.
+
+In the mean time, I will prepare a mainline branch containg TCM Core and
+TCM_Loop and would be happy to re-post the v4 code in it's entirety for
+review, but AFAIK all of the important v4 patches have already been
+posted (with minimal feedback) to linux-scsi and the configfs related to
+linux-fsdevel.
+
+As always, I am open to constructive suggestions,
 
 Best,
 
 --nab
 
-Joe Eykholt (7):
-  tcm: add tcm_fc
-  tcm_fc: handle residual count
-  tcm_fc: add task management support
-  tcm_fc: allocate se_cmd in thread, not in softirq.
-  tcm_fc: fix session lookup and get lport events
-  tcm_fc: clean up tport/tpg pointers
-  tcm_fc: distinguish task management debug from other debug messages
-
-Nicholas Bellinger (42):
-  [TCM/ConfigFS]: Fix leak of se_hba_t in
-    target_core_call_addhbatotarget()
-  [TCM]: Force SPC-3 passthrough emulation logic for
-    HBA_FLAGS_INTERNAL_USE case
-  [TCM]: Add HBA and Device setup for RAMDISK_DR virtual LUN=0
-  [TCM]: Add TPG setup for RAMDISK_DR virtual LUN=0
-  [TCM]: Modify __transport_get_lun_for_cmd() to support virtual LUN=0
-  [TCM_Loop]: Add ALUA target port configfs attributes
-  [tcm_fc]: Add ALUA target port configfs attributes
-  [tcm_fc]: Add missing core_tpg_deregister() in ft_del_tpg()
-  [tcm_fc]: Convert ft_get_pr_transport_id() to use local initiator
-    WWPN
-  [tcm_fc]: Convert TCM_FC/ConfigFS NodeACL and MappedLUN logic to use
-    TCM v3.x struct config_groups
-  [TCM/PR]: Add proper comment for implict RELEASE with All Registrants
-  [TCM]: Declare core_tpg_get_initiator_node_acl() as extern
-  [TCM]: Add base logic for struct se_portal_group_t->tpg_pr_ref_count
-  [TCM]: Add base logic for struct se_node_acl_s->acl_pr_ref_count
-  [TCM]: Add base logic for struct se_dev_entry_s->pr_ref_count
-  [TCM/PR]: Add TPG, NodeACL and MappedLUN wrappers for
-    configfs_[un]depend_item()
-  [TCM/PR]: Convert REGISTER_AND_MOVE use new configfs dependency
-    wrappers
-  [TCM/PR]: Add support for intra-fabric SPEC_I_PT=1 TransportID
-    processing
-  Bump version to v3.4.0-rc1
-  [TCM/PR]: Fix SPEC_I_PT=1 exception path for illegal TransportID
-    payload length
-  [TCM/PR]: Add proper ALL_TG_PT=1 allocation support
-  [TCM/PR]: Add proper dest_node_acl failure case for SPEC_I_PT=1
-  [TCM/PR]: Add proper ALL_TG_PT=1 UNREGISTER support
-  [TCM/PR]: Add missing APTPL=1 metadata update for changing
-    reservation key
-  [TCM]: Convert utsrelease.h includes to include/generated/
-  [TCM]: Add proper support for multiple se_session_t per se_node_acl_t
-  [TCM]: Add t10_pr_registration_t *parameter to
-    tpg_get_pr_transport_id*()
-  [LIO-Target]: Convert lio_sess_get_initiator_wwn() and
-    lio_tpg_get_pr_transport_id*()
-  [TCM-FC]: Clear ft_fabric_ops->sess_get_initiator_sid() and update
-    ft_get_pr_transport_id*()
-  [TCM-Loop]: Clear fabric->tf_ops->sess_get_initiator_sid() and update
-    tcm_loop_get_pr_transport_id*()
-  [TCM/PR]: Add proper support for ISIDs in TransportID processing
-  [TCM/PR]: Replace usage of DEF_PR_REGISTERED with
-    *core_scsi3_locate_pr_reg()
-  [TCM/PR]: Update APTPL metadata logic for ISIDs in TransportID
-    processing
-  [TCM/ConfigFS]: Add per-device attribute 'enforce_pr_isids'
-  [TCM/ALUA]: Fix se_cmd_t->se_cmd_flags assignment bug in
-    core_alua_state_nonoptimized()
-  lio-core v3.4.0-rc2
-  [LIO-Target]: Fix compile breakage with LIO_TARGET_DEBUG
-  [LIO-Target]: Add iscsi_na_get_initiatorname() for TRACE_NODEATTRIB
-  [TCM]: Fix core_dev_setup_virtual_lun0() failure path in
-    target_core_init_configfs()
-  [TCM]: Fix EVPD SCSI Name length calculation bug
-  [TCM_Loop]: Fix debug option typo in Kbuild
-  [TCM_Loop]: Add proper HBA defaults to struct Scsi_Host
