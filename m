@@ -1,97 +1,96 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16010] New: Mptlinux update problem but need
-Date: Thu, 20 May 2010 07:24:10 GMT
-Message-ID: <bug-16010-11613@https.bugzilla.kernel.org/>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 5/7] lpfc 8.3.13: BSG management fixes
+Date: Thu, 20 May 2010 20:41:43 +0900
+Message-ID: <20100520204408L.fujita.tomonori@lab.ntt.co.jp>
+References: <4BED5E97.1060909@emulex.com>
+	<20100517152627C.fujita.tomonori@lab.ntt.co.jp>
+	<4BF42F71.2020106@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:33859 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146Ab0ETHYL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2010 03:24:11 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4K7OA3p005102
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 20 May 2010 07:24:10 GMT
+Received: from sh.osrg.net ([192.16.179.4]:60261 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996Ab0ETLl4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 May 2010 07:41:56 -0400
+In-Reply-To: <4BF42F71.2020106@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: james.smart@emulex.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D16010
+On Wed, 19 May 2010 14:35:29 -0400
+James Smart <james.smart@emulex.com> wrote:
 
-           Summary: Mptlinux update problem but need
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.32
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: fantonifabio@tiscali.it
-        Regression: No
+> 
+> 
+> FUJITA Tomonori wrote:
+> > The tricky part is, when a sas LLD frees a remote port, there might be
+> > some user-space applications that still open a bsg device. So you
+> > can't call blk_cleanup_queue() at that time.
+> > 
+> > You might hit the similar problem to the commit
+> > 93c20a59af4624aedf53f8320606b355aa951bc1. The following fix works?
+> 
+> It is similar to this problem....   There is an application with the bsg 
+> device open, but no request outstanding, when a request is made to the driver 
+> to unload.  The driver detaches, with the transport calling 
+> bsg_unregister_queue() (which succeeds happily) and the driver fully unloads.
+> 
+> But, at some point the app does do a bsg request.
+> 
+> However - things are all messed up at this point...   the bd->queue is no 
+> longer valid as the owner of the queue (the transport) has returned the memory 
+> to the kernel.
+
+That's the root problem that the patch fixes?
+
+blk_put_queue() frees a queue. So the owner can't call blk_put_queue()
+as long as there are still applications that open the bsg device of
+the queue.
 
 
-=46or Omsa 6.0.1 is need mptlinux version more than 3.04 present in ker=
-nel
-I have download 4.22 from lsi site and try build update driver with dkm=
-s, i
-have already do same on 2.6.26 past without problem but with 2.6.32 giv=
-e this
-compilation error:
+> Depending on what else is allocating, it may be used by 
+> something else.  Thus you get extremely weird/bad behavior when the queue is 
+> referenced later in the bsg request processing.
+> 
+> I don't know how the patch, which changes when blk_cleanup_queue() is done, 
 
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c: In function
-=E2=80=98mptsas_smp_handler=E2=80=99:
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2757: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2758: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2775: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2805: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2808: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2821: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2823: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2854: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2855: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2864: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2867: error: =E2=80=98=
-struct request=E2=80=99
-has no member named =E2=80=98data_len=E2=80=99
-make[3]: *** [/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.o] Error 1
-make[2]: *** [_module_/var/lib/dkms/mptlinux/4.22.00.00/build] Error 2
-make[1]: *** [sub-make] Error 2
-make: *** [all] Error 2=20
+The patch is supposed to call blk_put_queue() when the last
+application closes the bsg device (that guarantees that no more
+requests come via the queue).
 
-Is possible update mptlinux on new kernel version please?
+The release function pointer in bsg_register_queue() is supposed to be
+called when the the last application closes the bsg device.
 
---=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> would fix things, as the larger issue of the queue structure possibly being 
+> realloc'd by someone else is the killer.  I did test it in our scenario, and 
+> it failed too.
+
+Oh, sorry. Seems that I miss something...
+
+Can you tell me how I can reproduce your scenario?
+
+
+> If I have identified this issue properly (agree ?) I see a couple of options:
+> a) Set bd->queue pointer to NULL on bsg_unregister_queue(). Then add checks in 
+> the file op calls.
+> 
+> b) Track opens against the queue, and fail the deregister if open count > 0. 
+> Rather ugly as the interface is a void right now, and the callers need to deal 
+> with it too. I know in the fc_transport, we're ill equipped to deal with the 
+> deregister failing and trying to remove it sometime later.
+> 
+> c) Is all we need to do is take another parent reference in bsg_open, and 
+> remove it in bsg_release ?  Given the multiple pieces that must play well on 
+> this, I'm not sure it really works.
+> 
+> Insight appreciated...
+> 
+> -- james s
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
