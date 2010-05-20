@@ -1,96 +1,163 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 5/7] lpfc 8.3.13: BSG management fixes
-Date: Thu, 20 May 2010 20:41:43 +0900
-Message-ID: <20100520204408L.fujita.tomonori@lab.ntt.co.jp>
-References: <4BED5E97.1060909@emulex.com>
-	<20100517152627C.fujita.tomonori@lab.ntt.co.jp>
-	<4BF42F71.2020106@emulex.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: improve interrupt service routine performance
+Date: Thu, 20 May 2010 08:56:12 -0500
+Message-ID: <4BF53F7C.2010706@linux.vnet.ibm.com>
+References: <20100519184827.824039221@linux.vnet.ibm.com> <4BF4344D.6070109@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:60261 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996Ab0ETLl4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 May 2010 07:41:56 -0400
-In-Reply-To: <4BF42F71.2020106@emulex.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:53164 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab0ETN4S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2010 09:56:18 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.14.3/8.13.1) with ESMTP id o4KDmigL005450
+	for <linux-scsi@vger.kernel.org>; Thu, 20 May 2010 07:48:44 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id o4KDuEBq195386
+	for <linux-scsi@vger.kernel.org>; Thu, 20 May 2010 07:56:14 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o4KDuEb6001238
+	for <linux-scsi@vger.kernel.org>; Thu, 20 May 2010 07:56:14 -0600
+In-Reply-To: <4BF4344D.6070109@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 19 May 2010 14:35:29 -0400
-James Smart <james.smart@emulex.com> wrote:
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
+On 05/19/2010 01:56 PM, Wayne Boyer wrote:
+> During performance testing on P7 machines it was observed that the interrupt
+> service routine was doing unnecessary MMIO operations.
 > 
+> This patch rearranges the logic of the routine and moves some of the code out
+> of the main routine.  The result is that there are now fewer MMIO operations in
+> the performance path of the code.
 > 
-> FUJITA Tomonori wrote:
-> > The tricky part is, when a sas LLD frees a remote port, there might be
-> > some user-space applications that still open a bsg device. So you
-> > can't call blk_cleanup_queue() at that time.
-> > 
-> > You might hit the similar problem to the commit
-> > 93c20a59af4624aedf53f8320606b355aa951bc1. The following fix works?
+> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+> ---
 > 
-> It is similar to this problem....   There is an application with the bsg 
-> device open, but no request outstanding, when a request is made to the driver 
-> to unload.  The driver detaches, with the transport calling 
-> bsg_unregister_queue() (which succeeds happily) and the driver fully unloads.
+>  drivers/scsi/ipr.c |   63 +++++++++++++++++++++++++----------------------------
+>  1 file changed, 30 insertions(+), 33 deletions(-)
 > 
-> But, at some point the app does do a bsg request.
+> Index: b/drivers/scsi/ipr.c
+> ===================================================================
+> --- a/drivers/scsi/ipr.c	2010-05-18 09:17:00.000000000 -0700
+> +++ b/drivers/scsi/ipr.c	2010-05-19 11:44:18.000000000 -0700
+> @@ -4815,15 +4815,39 @@ static int ipr_eh_abort(struct scsi_cmnd
+>  /**
+>   * ipr_handle_other_interrupt - Handle "other" interrupts
+>   * @ioa_cfg:	ioa config struct
+> - * @int_reg:	interrupt register
+>   *
+>   * Return value:
+>   * 	IRQ_NONE / IRQ_HANDLED
+>   **/
+> -static irqreturn_t ipr_handle_other_interrupt(struct ipr_ioa_cfg *ioa_cfg,
+> -					      volatile u32 int_reg)
+> +static irqreturn_t ipr_handle_other_interrupt(struct ipr_ioa_cfg *ioa_cfg)
+>  {
+>  	irqreturn_t rc = IRQ_HANDLED;
+> +	volatile u32 int_reg, int_mask_reg;
+> +
+> +	int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg32);
+> +	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32) & ~int_mask_reg;
+> +
+> +	/* If an interrupt on the adapter did not occur, ignore it.
+> +	 * Or in the case of SIS 64, check for a stage change interrupt.
+> +	 */
+> +	if ((int_reg & IPR_PCII_OPER_INTERRUPTS) == 0) {
+> +		if (ioa_cfg->sis64) {
+> +			int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+> +			int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
+> +			if (int_reg & IPR_PCII_IPL_STAGE_CHANGE) {
+> +
+> +				/* clear stage change */
+> +				writel(IPR_PCII_IPL_STAGE_CHANGE, ioa_cfg->regs.clr_interrupt_reg);
+> +				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
+> +				list_del(&ioa_cfg->reset_cmd->queue);
+> +				del_timer(&ioa_cfg->reset_cmd->timer);
+> +				ipr_reset_ioa_job(ioa_cfg->reset_cmd);
+> +				return IRQ_HANDLED;
+> +			}
+> +		}
+> +
+> +		return IRQ_NONE;
+> +	}
 > 
-> However - things are all messed up at this point...   the bd->queue is no 
-> longer valid as the owner of the queue (the transport) has returned the memory 
-> to the kernel.
-
-That's the root problem that the patch fixes?
-
-blk_put_queue() frees a queue. So the owner can't call blk_put_queue()
-as long as there are still applications that open the bsg device of
-the queue.
-
-
-> Depending on what else is allocating, it may be used by 
-> something else.  Thus you get extremely weird/bad behavior when the queue is 
-> referenced later in the bsg request processing.
+>  	if (int_reg & IPR_PCII_IOA_TRANS_TO_OPER) {
+>  		/* Mask the interrupt */
+> @@ -4884,7 +4908,7 @@ static irqreturn_t ipr_isr(int irq, void
+>  {
+>  	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)devp;
+>  	unsigned long lock_flags = 0;
+> -	volatile u32 int_reg, int_mask_reg;
+> +	volatile u32 int_reg;
+>  	u32 ioasc;
+>  	u16 cmd_index;
+>  	int num_hrrq = 0;
+> @@ -4899,33 +4923,6 @@ static irqreturn_t ipr_isr(int irq, void
+>  		return IRQ_NONE;
+>  	}
 > 
-> I don't know how the patch, which changes when blk_cleanup_queue() is done, 
-
-The patch is supposed to call blk_put_queue() when the last
-application closes the bsg device (that guarantees that no more
-requests come via the queue).
-
-The release function pointer in bsg_register_queue() is supposed to be
-called when the the last application closes the bsg device.
-
-
-> would fix things, as the larger issue of the queue structure possibly being 
-> realloc'd by someone else is the killer.  I did test it in our scenario, and 
-> it failed too.
-
-Oh, sorry. Seems that I miss something...
-
-Can you tell me how I can reproduce your scenario?
-
-
-> If I have identified this issue properly (agree ?) I see a couple of options:
-> a) Set bd->queue pointer to NULL on bsg_unregister_queue(). Then add checks in 
-> the file op calls.
+> -	int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg32);
+> -	int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32) & ~int_mask_reg;
+> -
+> -	/* If an interrupt on the adapter did not occur, ignore it.
+> -	 * Or in the case of SIS 64, check for a stage change interrupt.
+> -	 */
+> -	if (unlikely((int_reg & IPR_PCII_OPER_INTERRUPTS) == 0)) {
+> -		if (ioa_cfg->sis64) {
+> -			int_mask_reg = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
+> -			int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
+> -			if (int_reg & IPR_PCII_IPL_STAGE_CHANGE) {
+> -
+> -				/* clear stage change */
+> -				writel(IPR_PCII_IPL_STAGE_CHANGE, ioa_cfg->regs.clr_interrupt_reg);
+> -				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg) & ~int_mask_reg;
+> -				list_del(&ioa_cfg->reset_cmd->queue);
+> -				del_timer(&ioa_cfg->reset_cmd->timer);
+> -				ipr_reset_ioa_job(ioa_cfg->reset_cmd);
+> -				spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+> -				return IRQ_HANDLED;
+> -			}
+> -		}
+> -
+> -		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+> -		return IRQ_NONE;
+> -	}
+> -
+>  	while (1) {
+>  		ipr_cmd = NULL;
 > 
-> b) Track opens against the queue, and fail the deregister if open count > 0. 
-> Rather ugly as the interface is a void right now, and the callers need to deal 
-> with it too. I know in the fc_transport, we're ill equipped to deal with the 
-> deregister failing and trying to remove it sometime later.
+> @@ -4965,7 +4962,7 @@ static irqreturn_t ipr_isr(int irq, void
+>  			/* Clear the PCI interrupt */
+>  			do {
+>  				writel(IPR_PCII_HRRQ_UPDATED, ioa_cfg->regs.clr_interrupt_reg32);
+> -				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32) & ~int_mask_reg;
+> +				int_reg = readl(ioa_cfg->regs.sense_interrupt_reg32);
+>  			} while (int_reg & IPR_PCII_HRRQ_UPDATED &&
+>  					num_hrrq++ < IPR_MAX_HRRQ_RETRIES);
 > 
-> c) Is all we need to do is take another parent reference in bsg_open, and 
-> remove it in bsg_release ?  Given the multiple pieces that must play well on 
-> this, I'm not sure it really works.
+> @@ -4980,7 +4977,7 @@ static irqreturn_t ipr_isr(int irq, void
+>  	}
 > 
-> Insight appreciated...
+>  	if (unlikely(rc == IRQ_NONE))
+> -		rc = ipr_handle_other_interrupt(ioa_cfg, int_reg);
+> +		rc = ipr_handle_other_interrupt(ioa_cfg);
 > 
-> -- james s
+>  	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+>  	return rc;
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
