@@ -1,66 +1,87 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16021] New: mptsas target reset under heavy duty
-Date: Fri, 21 May 2010 09:41:16 GMT
-Message-ID: <bug-16021-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Bug 16010] New: Mptlinux update problem but need
+Date: Fri, 21 May 2010 09:04:58 -0500
+Message-ID: <1274450698.2764.5.camel@mulgrave.site>
+References: <bug-16010-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41851 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755162Ab0EUJlR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 May 2010 05:41:17 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4L9fGlP013256
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 21 May 2010 09:41:16 GMT
+Received: from cantor2.suse.de ([195.135.220.15]:43327 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754168Ab0EUOFD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 May 2010 10:05:03 -0400
+In-Reply-To: <bug-16010-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16021
+On Thu, 2010-05-20 at 07:24 +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> For Omsa 6.0.1 is need mptlinux version more than 3.04 present in ker=
+nel
+> I have download 4.22 from lsi site and try build update driver with d=
+kms, i
+> have already do same on 2.6.26 past without problem but with 2.6.32 g=
+ive this
+> compilation error:
+>=20
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c: In function
+> =E2=80=98mptsas_smp_handler=E2=80=99:
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2757: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2758: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2775: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2805: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2808: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2821: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2823: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2854: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2855: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2864: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> /var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.c:2867: error: =E2=80=98=
+struct request=E2=80=99
+> has no member named =E2=80=98data_len=E2=80=99
+> make[3]: *** [/var/lib/dkms/mptlinux/4.22.00.00/build/mptsas.o] Error=
+ 1
+> make[2]: *** [_module_/var/lib/dkms/mptlinux/4.22.00.00/build] Error =
+2
+> make[1]: *** [sub-make] Error 2
+> make: *** [all] Error 2=20
+>=20
+> Is possible update mptlinux on new kernel version please?
 
-           Summary: mptsas target reset under heavy duty
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 2.6.32
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-        AssignedTo: linux-scsi@vger.kernel.org
-        ReportedBy: dujun@perabytes.com
-        Regression: No
+bugzilla.kernel.org is for actual bugs within the linux kernel, not for
+problems with out of tree drivers.  The issue you're trying to report
+needs to be fixed by LSI.  While it's not impossible they would notice
+this request on the scsi mailing list, you're much more likely to get
+their attention by requesting support directly from them.
+
+James
 
 
-We have mptsas driver 4.22.00.00 from lsi official web site driving 1068e chip
-which is connected to two lsi 12x expander chips. Each of the chips connects 8
-sata disks. Under heavy duty, i.e., when we connect 16 hdd and build the linux
-software raid5, there are lots of error reports in dmesg:
-[20826.611906] mptscsih: ioc0: task abort: FAILED (sc=ffff88007b348c00)
-[20826.611919] mptscsih: ioc0: attempting target reset! (sc=ffff88007dc78700)
-[20826.611921] sd 4:0:16:0: [sdq] CDB: Read(10): 28 00 54 94 55 00 00 00 90 00
-[20827.361823] mptscsih: ioc0: target reset: SUCCESS (sc=ffff88007dc78700)
-[20837.361008] mptscsih: ioc0: attempting task abort! (sc=ffff88007dc78700)
-[20837.361011] sd 4:0:16:0: [sdq] CDB: Test Unit Ready: 00 00 00 00 00 00
-[20837.385655] mptbase: ioc0: LogInfo(0x31112000): Originator={PL},
-Code={Reset}, SubCode(0x2000)
-[20838.111238] mptbase: ioc0: LogInfo(0x31130000): Originator={PL}, Code={IO
-Not Yet Executed}, SubCode(0x0000)
-
-This would halt the io for about two minutes and then after successful target
-reset, the io is continuing. 
-
-If we reduce the hdd to less than 12, or we set the scsi command depth of each
-of the disks to 1, the build process could complete without any error. 
-We also tested the same scenario with lsi 36x expander chip without any
-problem.
-
-Is this a mptsas driver bug or just the 12x expander chip bug?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
