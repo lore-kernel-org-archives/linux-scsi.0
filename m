@@ -1,40 +1,46 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: bug fix patch lost: git problem or just incorrect merge?
-Date: Fri, 21 May 2010 15:07:17 -0700 (PDT)
-Message-ID: <20100521.150717.157502983.davem@davemloft.net>
-References: <1274456515.9022.14.camel@mulgrave.site>
-	<alpine.LFD.2.00.1005210931010.4243@i5.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.1005210931010.4243@i5.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: James.Bottomley@suse.de, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] iscsi_tcp: remove sk_sleep check
+Date: Fri, 21 May 2010 18:24:16 -0500
+Message-ID: <1274484256-2794-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:2323 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754616Ab0EUXWv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 May 2010 19:22:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 21 May 2010 09:45:49 -0700 (PDT)
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-> One of the reasons I ask people to let me merge is that it results in 
-> cleaner history to not have criss-cross merges. And another is that I'm 
-> pretty good at it, and letting me make merges also means that I am more 
-> aware of problem spots.
+There is no need to call sk_sleep before calling wake_up_interruptible,
+because the wait_queue_head is now with the socket.
 
-That wasn't possible in this case.
+This patch is made over Linus's tree.
 
-This happened more than a week ago, as I needed to merge your tree into
-net-2.6 to resolve a conflict there.  That's what took in the iscsi
-bug fix, and this is way before the merge window.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/iscsi_tcp.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-Then I needed to pull net-2.6 into net-next-2.6 to resolve conflicts
-existing between those two trees.
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index bf55d30..fec47de 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -601,10 +601,8 @@ static void iscsi_sw_tcp_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
+ 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
+ 	write_unlock_bh(&tcp_sw_conn->sock->sk->sk_callback_lock);
+ 
+-	if (sk_sleep(sock->sk)) {
+-		sock->sk->sk_err = EIO;
+-		wake_up_interruptible(sk_sleep(sock->sk));
+-	}
++	sock->sk->sk_err = EIO;
++	wake_up_interruptible(sk_sleep(sock->sk));
+ 
+ 	iscsi_conn_stop(cls_conn, flag);
+ 	iscsi_sw_tcp_release_conn(conn);
+-- 
+1.6.6.1
 
-And this is why I ended up having to do the merge :-)
-
->> Either way, of course, we need the patch back ...
-> 
-> I'll fix it up.
-
-Thanks Linus.
