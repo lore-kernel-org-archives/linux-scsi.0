@@ -1,72 +1,76 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: bug fix patch lost: git problem or just incorrect merge?
-Date: Fri, 21 May 2010 12:23:23 -0500
-Message-ID: <1274462603.9022.30.camel@mulgrave.site>
-References: <1274456515.9022.14.camel@mulgrave.site>
-	 <alpine.LFD.2.00.1005210931010.4243@i5.linux-foundation.org>
-	 <alpine.LFD.2.00.1005210947440.4243@i5.linux-foundation.org>
+From: Krishna Gudipati <kgudipat@brocade.com>
+Subject: [PATCH 1/2] bfa: fix system crash when reading sysfs fc_host statistics
+Date: Fri, 21 May 2010 14:39:45 -0700
+Message-ID: <1274477985-14124-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.1005210947440.4243@i5.linux-foundation.org>
-Sender: netdev-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Miller <davem@davemloft.net>, linux-kernel <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:45008 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752881Ab0EUVjv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 May 2010 17:39:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, rvadivel@brocade.com, vravindr@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-On Fri, 2010-05-21 at 10:04 -0700, Linus Torvalds wrote:
-> 
-> On Fri, 21 May 2010, Linus Torvalds wrote:
-> > 
-> > > Either way, of course, we need the patch back ...
-> > 
-> > I'll fix it up.
-> 
-> Hmm. Pushed that out as appended, since that is the correct resolve.
+Change details:
 
-Thanks!
+	- The port data structure related to fc_host statistics collection
+	  is not initialized. This causes system crash when reading the fc_host
+	  statistics. The fix is to initialize port structure during driver attach.
 
-> HOWEVER - the code still doesn't actually make any sense. It does
-> 
-> 	if (sk_sleep(sock->sk)) {
-> 
-> and that sk_sleep() today is an inline function that just does
-> 
-> 	return &sk->sk_wq->wait;
-> 
-> and testing the result of an address-of operation for NULL is almost 
-> certainly totally non-sensical. Sure, it _might_ work (maybe 'wait' is the 
-> first element in the 'sk_wq' data structure, and sk_wq is NULL), but that 
-> kind of code is always total and utterl crap regardless.
-> 
-> So I pushed it out because I had done the resolve already, and it's no 
-> worse than it was before, but it's still a steaming buggy pile of shit.
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_core.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
-Yes, the problem was caused by this patch
-
-commit 43815482370c510c569fd18edb57afcb0fa8cab6
-Author: Eric Dumazet <eric.dumazet@gmail.com>
-Date:   Thu Apr 29 11:01:49 2010 +0000
-
-    net: sock_def_readable() and friends RCU conversion
-
-Which moved sk_sleep() from returning the pointer to the waitqueue,
-which may or may not be assigned to returning a pointer to an internal
-waitqueue in the socket, which, obviously, can never be null.
-
-I suspect what iscsi should be doing is always sending the wakeup ... in
-which case with your resolution, the code is operating correctly even if
-the form is suboptimal.
-
-> It being iscsi, I can't bring myself to care. But somebody who does, 
-> should really look at it. The most likely resolution is to remove the test 
-> entirely, since I don't think it's ever valid to have a socket that 
-> doesn't have a sk_wq (there's a _lot_ of unconditional use of sk_sleep()).
-
-I'll have Mike look at it, but I think just removing the if() will be
-the correct resolution.
-
-James
-
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 0c08e18..3a7b3f8 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -84,11 +84,32 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo)
+ 	for (i = 0; hal_mods[i]; i++)
+ 		hal_mods[i]->meminfo(cfg, &km_len, &dm_len);
+ 
++	dm_len += bfa_port_meminfo();
+ 
+ 	meminfo->meminfo[BFA_MEM_TYPE_KVA - 1].mem_len = km_len;
+ 	meminfo->meminfo[BFA_MEM_TYPE_DMA - 1].mem_len = dm_len;
+ }
+ 
++static void
++bfa_com_port_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi)
++{
++	struct bfa_port_s       *port = &bfa->modules.port;
++	uint32_t                dm_len;
++	uint8_t                 *dm_kva;
++	uint64_t                dm_pa;
++
++	dm_len = bfa_port_meminfo();
++	dm_kva = bfa_meminfo_dma_virt(mi);
++	dm_pa  = bfa_meminfo_dma_phys(mi);
++
++	memset(port, 0, sizeof(struct bfa_port_s));
++	bfa_port_attach(port, &bfa->ioc, bfa, bfa->trcmod, bfa->logm);
++	bfa_port_mem_claim(port, dm_kva, dm_pa);
++
++	bfa_meminfo_dma_virt(mi) = dm_kva + dm_len;
++	bfa_meminfo_dma_phys(mi) = dm_pa + dm_len;
++}
++
+ /**
+  * Use this function to do attach the driver instance with the BFA
+  * library. This function will not trigger any HW initialization
+@@ -140,6 +161,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	for (i = 0; hal_mods[i]; i++)
+ 		hal_mods[i]->attach(bfa, bfad, cfg, meminfo, pcidev);
+ 
++	bfa_com_port_attach(bfa, meminfo);
+ }
+ 
+ /**
+-- 
+1.7.1.96.gc06ee
 
