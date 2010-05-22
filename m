@@ -1,46 +1,72 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] iscsi_tcp: remove sk_sleep check
-Date: Fri, 21 May 2010 18:24:16 -0500
-Message-ID: <1274484256-2794-1-git-send-email-michaelc@cs.wisc.edu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2323 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754616Ab0EUXWv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 May 2010 19:22:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 14/27] drivers/scsi: Use memdup_user
+Date: Sat, 22 May 2010 10:22:34 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1005221022180.13021@ask.diku.dk>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Julia Lawall <julia@diku.dk>
 
-There is no need to call sk_sleep before calling wake_up_interruptible,
-because the wait_queue_head is now with the socket.
+Use memdup_user when user data is immediately copied into the
+allocated region.
 
-This patch is made over Linus's tree.
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+// <smpl>
+@@
+expression from,to,size,flag;
+position p;
+identifier l1,l2;
+@@
+
+-  to = \(kmalloc@p\|kzalloc@p\)(size,flag);
++  to = memdup_user(from,size);
+   if (
+-      to==NULL
++      IS_ERR(to)
+                 || ...) {
+   <+... when != goto l1;
+-  -ENOMEM
++  PTR_ERR(to)
+   ...+>
+   }
+-  if (copy_from_user(to, from, size) != 0) {
+-    <+... when != goto l2;
+-    -EFAULT
+-    ...+>
+-  }
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
 ---
- drivers/scsi/iscsi_tcp.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/sg.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index bf55d30..fec47de 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -601,10 +601,8 @@ static void iscsi_sw_tcp_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
- 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
- 	write_unlock_bh(&tcp_sw_conn->sock->sk->sk_callback_lock);
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index ef752b2..277ace6 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1676,14 +1676,9 @@ static int sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 		int len, size = sizeof(struct sg_iovec) * iov_count;
+ 		struct iovec *iov;
  
--	if (sk_sleep(sock->sk)) {
--		sock->sk->sk_err = EIO;
--		wake_up_interruptible(sk_sleep(sock->sk));
--	}
-+	sock->sk->sk_err = EIO;
-+	wake_up_interruptible(sk_sleep(sock->sk));
+-		iov = kmalloc(size, GFP_ATOMIC);
+-		if (!iov)
+-			return -ENOMEM;
+-
+-		if (copy_from_user(iov, hp->dxferp, size)) {
+-			kfree(iov);
+-			return -EFAULT;
+-		}
++		iov = memdup_user(hp->dxferp, size);
++		if (IS_ERR(iov))
++			return PTR_ERR(iov);
  
- 	iscsi_conn_stop(cls_conn, flag);
- 	iscsi_sw_tcp_release_conn(conn);
--- 
-1.6.6.1
-
+ 		len = iov_length(iov, iov_count);
+ 		if (hp->dxfer_len < len) {
