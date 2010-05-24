@@ -1,55 +1,45 @@
-From: Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH]: Fix userspace warning in /usr/include/scsi/scsi.h
-Date: Mon, 24 May 2010 15:20:11 -0400
-Message-ID: <20100524191505.8082.33425.sendpatchset@prarit.bos.redhat.com>
+From: akpm@linux-foundation.org
+Subject: [patch 04/26] osst: fix read buffer overflow
+Date: Mon, 24 May 2010 12:22:22 -0700
+Message-ID: <201005241922.o4OJMMjt011290@imap1.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23271 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752526Ab0EXTUM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:20:12 -0400
-Received: from int-mx08.intmail.prod.int.phx2.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.21])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o4OJKCjO028554
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Mon, 24 May 2010 15:20:12 -0400
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56167 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755733Ab0EXTW0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 May 2010 15:22:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, bharrosh@panasas.com
-Cc: Prarit Bhargava <prarit@redhat.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, osst@riede.org
 
-Fixes warning:
+From: Roel Kluin <roel.kluin@gmail.com>
 
-/usr/include/scsi/scsi.h:168: userspace cannot call function or variable defined in the kernel
+Check whether index is within bounds before testing the element.
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: Willem Riede <osst@riede.org>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 9ae5c61..a2b013b 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -165,6 +165,7 @@ scsi_varlen_cdb_length(const void *hdr)
- 	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
- }
+ drivers/scsi/osst.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/osst.c~osst-fix-read-buffer-overflow drivers/scsi/osst.c
+--- a/drivers/scsi/osst.c~osst-fix-read-buffer-overflow
++++ a/drivers/scsi/osst.c
+@@ -5867,7 +5867,8 @@ static int osst_probe(struct device *dev
+ 	}
  
-+#ifdef __KERNEL__
- extern const unsigned char scsi_command_size_tbl[8];
- #define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
+ 	/* find a free minor number */
+-	for (i=0; os_scsi_tapes[i] && i<osst_max_dev; i++);
++	for (i = 0; i < osst_max_dev && os_scsi_tapes[i]; i++)
++		;
+ 	if(i >= osst_max_dev) panic ("Scsi_devices corrupt (osst)");
+ 	dev_num = i;
  
-@@ -174,6 +175,7 @@ scsi_command_size(const unsigned char *cmnd)
- 	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
- 		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
- }
-+#endif /* __KERNEL__ */
- 
- /*
-  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
-@@ -290,8 +292,10 @@ enum scsi_protocol {
- 	SCSI_PROTOCOL_UNSPEC = 0xf, /* No specific protocol */
- };
- 
-+#ifdef __KERNEL__
- /* Returns a human-readable name for the device */
- extern const char * scsi_device_type(unsigned type);
-+#endif /* __KERNEL__ */
- 
- /*
-  * standard mode-select header prepended to all mode-select commands
+_
