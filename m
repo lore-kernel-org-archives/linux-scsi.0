@@ -1,47 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 11/26] g_NCR5380: remove misleading pnp error message
-Date: Mon, 24 May 2010 12:22:27 -0700
-Message-ID: <201005241922.o4OJMRob011311@imap1.linux-foundation.org>
+Subject: [patch 03/26] drivers/scsi/lpfc/lpfc_vport.c: fix read buffer overflow
+Date: Mon, 24 May 2010 12:22:21 -0700
+Message-ID: <201005241922.o4OJMLJO011287@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41997 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:49033 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756854Ab0EXTWd (ORCPT
+	by vger.kernel.org with ESMTP id S1756375Ab0EXTWa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:33 -0400
+	Mon, 24 May 2010 15:22:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux@rainbow-software.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, James.Smart@Emulex.Com, jeykholt@cisco.com
 
-From: Ondrej Zary <linux@rainbow-software.org>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Remove misleading error message that appears after pnp card has been
-detected correctly.
+Check whether index is within bounds before testing the element.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: James Smart <James.Smart@Emulex.Com>
+Cc: Joe Eykholt <jeykholt@cisco.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/g_NCR5380.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_vport.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message drivers/scsi/g_NCR5380.c
---- a/drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message
-+++ a/drivers/scsi/g_NCR5380.c
-@@ -322,10 +322,8 @@ int __init generic_NCR5380_detect(struct
- 		while ((dev = pnp_find_dev(NULL, ISAPNP_VENDOR('D', 'T', 'C'), ISAPNP_FUNCTION(0x436e), dev))) {
- 			if (count >= NO_OVERRIDES)
- 				break;
--			if (pnp_device_attach(dev) < 0) {
--				printk(KERN_ERR "dtc436e probe: attach failed\n");
-+			if (pnp_device_attach(dev) < 0)
- 				continue;
--			}
- 			if (pnp_activate_dev(dev) < 0) {
- 				printk(KERN_ERR "dtc436e probe: activate failed\n");
- 				pnp_device_detach(dev);
+diff -puN drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow drivers/scsi/lpfc/lpfc_vport.c
+--- a/drivers/scsi/lpfc/lpfc_vport.c~drivers-scsi-lpfc-lpfc_vportc-fix-read-buffer-overflow
++++ a/drivers/scsi/lpfc/lpfc_vport.c
+@@ -782,7 +782,7 @@ lpfc_destroy_vport_work_array(struct lpf
+ 	int i;
+ 	if (vports == NULL)
+ 		return;
+-	for (i = 0; vports[i] != NULL && i <= phba->max_vports; i++)
++	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++)
+ 		scsi_host_put(lpfc_shost_from_vport(vports[i]));
+ 	kfree(vports);
+ }
 _
