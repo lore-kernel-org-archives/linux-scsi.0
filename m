@@ -1,46 +1,88 @@
 From: akpm@linux-foundation.org
-Subject: [patch 13/26] dc395x: decrease iteration for tag_number of max_command in start_scsi()
-Date: Mon, 24 May 2010 12:22:29 -0700
-Message-ID: <201005241922.o4OJMTFc011320@imap1.linux-foundation.org>
+Subject: [patch 09/26] drivers/message: move dereference after NULL test
+Date: Mon, 24 May 2010 12:22:26 -0700
+Message-ID: <201005241922.o4OJMQfR011305@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:46606 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50441 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756854Ab0EXTWf (ORCPT
+	by vger.kernel.org with ESMTP id S1756850Ab0EXTWe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:35 -0400
+	Mon, 24 May 2010 15:22:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, oliver@neukum.name
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, James.Bottomley@suse.de, kashyap.desai@lsi.com
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Julia Lawall <julia@diku.dk>
 
-The tag_number reaches dcb->max_command + 1 after the loop, but when
-the tag_number equals dcb->max_command an error message is already
-issued. The last iteration therefore appears obsolete.
+If the NULL test on dev->i2o_dev or i2o_dev is needed, then the dereference
+should be after the NULL test.
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Oliver Neukum <oliver@neukum.name>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+A simplified version of the semantic match that detects this problem is as
+follows (http://coccinelle.lip6.fr/):
+
+// <smpl>
+@match exists@
+expression x, E;
+identifier fld;
+@@
+
+* x->fld
+  ... when != \(x = E\|&x\)
+* x == NULL
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: James Bottomley <James.Bottomley@suse.de>
+Cc: Kashyap Desai <kashyap.desai@lsi.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/dc395x.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/message/i2o/i2o_block.c |    3 ++-
+ drivers/message/i2o/i2o_scsi.c  |    3 +--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/dc395x.c~dc395x-decrease-iteration-for-tag_number-of-max_command-in-start_scsi drivers/scsi/dc395x.c
---- a/drivers/scsi/dc395x.c~dc395x-decrease-iteration-for-tag_number-of-max_command-in-start_scsi
-+++ a/drivers/scsi/dc395x.c
-@@ -1597,7 +1597,7 @@ static u8 start_scsi(struct AdapterCtlBl
- 		u32 tag_mask = 1;
- 		u8 tag_number = 0;
- 		while (tag_mask & dcb->tag_mask
--		       && tag_number <= dcb->max_command) {
-+		       && tag_number < dcb->max_command) {
- 			tag_mask = tag_mask << 1;
- 			tag_number++;
- 		}
+diff -puN drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_block.c
+--- a/drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test
++++ a/drivers/message/i2o/i2o_block.c
+@@ -712,7 +712,7 @@ static int i2o_block_transfer(struct req
+ {
+ 	struct i2o_block_device *dev = req->rq_disk->private_data;
+ 	struct i2o_controller *c;
+-	u32 tid = dev->i2o_dev->lct_data.tid;
++	u32 tid;
+ 	struct i2o_message *msg;
+ 	u32 *mptr;
+ 	struct i2o_block_request *ireq = req->special;
+@@ -728,6 +728,7 @@ static int i2o_block_transfer(struct req
+ 		goto exit;
+ 	}
+ 
++	tid = dev->i2o_dev->lct_data.tid;
+ 	c = dev->i2o_dev->iop;
+ 
+ 	msg = i2o_msg_get(c);
+diff -puN drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_scsi.c
+--- a/drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test
++++ a/drivers/message/i2o/i2o_scsi.c
+@@ -528,7 +528,6 @@ static int i2o_scsi_queuecommand(struct 
+ 	 *      Do the incoming paperwork
+ 	 */
+ 	i2o_dev = SCpnt->device->hostdata;
+-	c = i2o_dev->iop;
+ 
+ 	SCpnt->scsi_done = done;
+ 
+@@ -538,7 +537,7 @@ static int i2o_scsi_queuecommand(struct 
+ 		done(SCpnt);
+ 		goto exit;
+ 	}
+-
++	c = i2o_dev->iop;
+ 	tid = i2o_dev->lct_data.tid;
+ 
+ 	osm_debug("qcmd: Tid = %03x\n", tid);
 _
