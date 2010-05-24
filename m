@@ -1,55 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 01/26] scsi: add __init/__exit macros to ibmvstgt.c
-Date: Mon, 24 May 2010 12:22:20 -0700
-Message-ID: <201005241922.o4OJMKHl011281@imap1.linux-foundation.org>
+Subject: [patch 11/26] g_NCR5380: remove misleading pnp error message
+Date: Mon, 24 May 2010 12:22:27 -0700
+Message-ID: <201005241922.o4OJMRob011311@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35586 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41997 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756375Ab0EXTWc (ORCPT
+	by vger.kernel.org with ESMTP id S1756854Ab0EXTWd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:32 -0400
+	Mon, 24 May 2010 15:22:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux@rainbow-software.org
 
-From: Peter Huewe <peterhuewe@gmx.de>
+From: Ondrej Zary <linux@rainbow-software.org>
 
-Add the __init and __exit macros to the module_init / module_exit
-functions from drivers/scsi/ibmvscsi/ibmvstgt.c
+Remove misleading error message that appears after pnp card has been
+detected correctly.
 
-Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/g_NCR5380.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
-+++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -956,7 +956,7 @@ static struct srp_function_template ibmv
- 	.it_nexus_response = ibmvstgt_it_nexus_response,
- };
- 
--static int ibmvstgt_init(void)
-+static int __init ibmvstgt_init(void)
- {
- 	int err = -ENOMEM;
- 
-@@ -987,7 +987,7 @@ release_transport:
- 	return err;
- }
- 
--static void ibmvstgt_exit(void)
-+static void __exit ibmvstgt_exit(void)
- {
- 	printk("Unregister IBM virtual SCSI driver\n");
- 
+diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message drivers/scsi/g_NCR5380.c
+--- a/drivers/scsi/g_NCR5380.c~g_ncr5380-remove-misleading-pnp-error-message
++++ a/drivers/scsi/g_NCR5380.c
+@@ -322,10 +322,8 @@ int __init generic_NCR5380_detect(struct
+ 		while ((dev = pnp_find_dev(NULL, ISAPNP_VENDOR('D', 'T', 'C'), ISAPNP_FUNCTION(0x436e), dev))) {
+ 			if (count >= NO_OVERRIDES)
+ 				break;
+-			if (pnp_device_attach(dev) < 0) {
+-				printk(KERN_ERR "dtc436e probe: attach failed\n");
++			if (pnp_device_attach(dev) < 0)
+ 				continue;
+-			}
+ 			if (pnp_activate_dev(dev) < 0) {
+ 				printk(KERN_ERR "dtc436e probe: activate failed\n");
+ 				pnp_device_detach(dev);
 _
