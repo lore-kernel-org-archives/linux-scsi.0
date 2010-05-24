@@ -1,71 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 22/26] scsi: use __uX types for headers exported to user space
-Date: Mon, 24 May 2010 12:22:37 -0700
-Message-ID: <201005241922.o4OJMbGK011348@imap1.linux-foundation.org>
+Subject: [patch 05/26] gdth: unmap ccb_phys when scsi_add_host() fails in gdth_eisa_probe_one()
+Date: Mon, 24 May 2010 12:22:23 -0700
+Message-ID: <201005241922.o4OJMN5J011293@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:34812 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52356 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757200Ab0EXTXE (ORCPT
+	by vger.kernel.org with ESMTP id S1757200Ab0EXTXN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:23:04 -0400
+	Mon, 24 May 2010 15:23:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jacmet@sunsite.dk, bharrosh@panasas.com, james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, achim_leubner@adaptec.com
 
-From: Peter Korsgaard <jacmet@sunsite.dk>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-Commit 9e4f5e29 ("FC Pass Thru support") exported a number of header files
-in include/scsi to user space, but didn't change the uX types to the
-userspace-compatible __uX types.  Without that you'll get compile errors
-when including them - E.G.:
+unmap ccb_phys as well when scsi_add_host() fails
 
-include/scsi/scsi.h:145: error: expected specifier-qualifier-list before `u8'
-
-Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Smart <james.smart@emulex.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: Achim Leubner <achim_leubner@adaptec.com>
+Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- include/scsi/scsi.h         |    8 ++++----
- include/scsi/scsi_netlink.h |    4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/gdth.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi.h
---- a/include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space
-+++ a/include/scsi/scsi.h
-@@ -151,10 +151,10 @@ struct scsi_cmnd;
+diff -puN drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~gdth-unmap-ccb_phys-when-scsi_add_host-fails-in-gdth_eisa_probe_one
++++ a/drivers/scsi/gdth.c
+@@ -4914,7 +4914,7 @@ static int __init gdth_eisa_probe_one(u1
  
- /* defined in T10 SCSI Primary Commands-2 (SPC2) */
- struct scsi_varlen_cdb_hdr {
--	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
--	u8 control;
--	u8 misc[5];
--	u8 additional_cdb_length;         /* total cdb length - 8 */
-+	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
-+	__u8 control;
-+	__u8 misc[5];
-+	__u8 additional_cdb_length;         /* total cdb length - 8 */
- 	__be16 service_action;
- 	/* service specific data follows */
- };
-diff -puN include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi_netlink.h
---- a/include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space
-+++ a/include/scsi/scsi_netlink.h
-@@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
-  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
-  */
- #define SCSI_NL_VID_TYPE_SHIFT		56
--#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
--#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
- #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
- 
+ 	error = scsi_add_host(shp, NULL);
+ 	if (error)
+-		goto out_free_coal_stat;
++		goto out_free_ccb_phys;
+ 	list_add_tail(&ha->list, &gdth_instances);
+ 	gdth_timer_init();
  
 _
