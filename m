@@ -1,66 +1,71 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Mon, 24 May 2010 09:05:14 GMT
-Message-ID: <201005240905.o4O95EfA017205@demeter.kernel.org>
-References: <bug-14831-11613@https.bugzilla.kernel.org/>
+From: akpm@linux-foundation.org
+Subject: [patch for 2.6.35? 1/1] drivers/scsi/aacraid: eliminate use after free
+Date: Mon, 24 May 2010 12:12:09 -0700
+Message-ID: <201005241912.o4OJCADM010752@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36797 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909Ab0EXJFP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 May 2010 05:05:15 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4O95Ea2017206
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 24 May 2010 09:05:14 GMT
-In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:39186 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756043Ab0EXTMp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 May 2010 15:12:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, stable@kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D14831
+From: Julia Lawall <julia@diku.dk>
 
+The debugging code using the freed structure is moved before the kfree.
 
-dujun@perabytes.com changed:
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-           What    |Removed                     |Added
------------------------------------------------------------------------=
------
-                 CC|                            |dujun@perabytes.com
+// <smpl>
+@free@
+expression E;
+position p;
+@@
+kfree@p(E)
 
+@@
+expression free.E, subE<=free.E, E1;
+position free.p;
+@@
 
+  kfree@p(E)
+  ...
+(
+  subE = E1
+|
+* E
+)
+// </smpl>
 
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: <stable@kernel.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
---- Comment #25 from dujun@perabytes.com  2010-05-24 09:05:10 ---
-https://bugzilla.kernel.org/show_bug.cgi?id=3D16021=20
-we have a similar problem which I described in above bug report. Ryan t=
-old me
-about this patch work and I have it tested in our system. It seems that=
- it
-works, and the md raid rebuild speed is around 60MB/s for 16 hdd.=20
+ drivers/scsi/aacraid/commctrl.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-However, the dd speed for when raid 5 is rebuiding is much less than or=
-iginal
-result. Around 150MB/s for write compared with almost 400MB/s without t=
-he
-patch. 600MB/s for read compared with 800MB/s.=20
-
-Is this caused by the bounce buffer for the alignment?=E3=80=80Is there=
- any way to
-solve this problem in lsi formware so that we don't need a forced align=
-ment?=20
-
-We will test the software raid grow problem reported by Brian later.
-
---=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff -puN drivers/scsi/aacraid/commctrl.c~drivers-scsi-aacraid-eliminate-use-after-free drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c~drivers-scsi-aacraid-eliminate-use-after-free
++++ a/drivers/scsi/aacraid/commctrl.c
+@@ -655,9 +655,9 @@ static int aac_send_raw_srb(struct aac_d
+ 				/* Does this really need to be GFP_DMA? */
+ 				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
+ 				if(!p) {
+-					kfree (usg);
+-					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
++					dprintk((KERN_DEBUG "aacraid: Could not allocate SG buffer - size = %d buffer number %d of %d\n",
+ 					  usg->sg[i].count,i,usg->count));
++					kfree(usg);
+ 					rcode = -ENOMEM;
+ 					goto cleanup;
+ 				}
+_
