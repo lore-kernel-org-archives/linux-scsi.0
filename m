@@ -1,59 +1,62 @@
 From: akpm@linux-foundation.org
-Subject: [patch 15/26] scsi: remove superfluous NULL pointer check from scsi_kill_request()
-Date: Mon, 24 May 2010 12:22:32 -0700
-Message-ID: <201005241922.o4OJMWCA011326@imap1.linux-foundation.org>
+Subject: [patch 24/26] scsi: fix be2iscsi build
+Date: Mon, 24 May 2010 12:22:39 -0700
+Message-ID: <201005241922.o4OJMdxZ011356@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50484 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51195 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757084Ab0EXTWq (ORCPT
+	by vger.kernel.org with ESMTP id S1756991Ab0EXTWv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:46 -0400
+	Mon, 24 May 2010 15:22:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bzolnier@gmail.com, corbet@lwn.net, error27@gmail.com, eteo@redhat.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, jayamohank@serverengines.com
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Dan's list included:
+be2iscsi driver should #include linux/if_ether.h since it uses
+sysfs_format_mac().
 
-drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced in initializer 'cmd'
-drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced before check 'cmd'
+It should also depend on NET since it selects SCSI_ISCSI_ATTRS,
+which depends on NET.
 
-We dereference cmd (and possible OOPS if cmd == NULL) before starting the
-request so just remove the superfluous debugging code altogether.
+These changes fix a build error when CONFIG_NET is not enabled:
+ERROR: "sysfs_format_mac" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
 
-[ bart: the potential NULL pointer dereference was finally fixed in
-  (much later than mine) commit 03b1470 but my patch is still valid ]
-
-Reported-by: Dan Carpenter <error27@gmail.com>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Eugene Teo <eteo@redhat.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Jayamohan Kallickal <jayamohank@serverengines.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_lib.c |    6 ------
- 1 file changed, 6 deletions(-)
+ drivers/scsi/be2iscsi/Kconfig   |    2 +-
+ drivers/scsi/be2iscsi/be_main.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request
-+++ a/drivers/scsi/scsi_lib.c
-@@ -1372,12 +1372,6 @@ static void scsi_kill_request(struct req
+diff -puN drivers/scsi/be2iscsi/Kconfig~scsi-fix-be2iscsi-build drivers/scsi/be2iscsi/Kconfig
+--- a/drivers/scsi/be2iscsi/Kconfig~scsi-fix-be2iscsi-build
++++ a/drivers/scsi/be2iscsi/Kconfig
+@@ -1,6 +1,6 @@
+ config BE2ISCSI
+ 	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
+-	depends on PCI && SCSI
++	depends on PCI && SCSI && NET
+ 	select SCSI_ISCSI_ATTRS
  
- 	blk_start_request(req);
+ 	help
+diff -puN drivers/scsi/be2iscsi/be_main.h~scsi-fix-be2iscsi-build drivers/scsi/be2iscsi/be_main.h
+--- a/drivers/scsi/be2iscsi/be_main.h~scsi-fix-be2iscsi-build
++++ a/drivers/scsi/be2iscsi/be_main.h
+@@ -23,6 +23,7 @@
  
--	if (unlikely(cmd == NULL)) {
--		printk(KERN_CRIT "impossible request in %s.\n",
--				 __func__);
--		BUG();
--	}
--
- 	sdev = cmd->device;
- 	starget = scsi_target(sdev);
- 	shost = sdev->host;
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
++#include <linux/if_ether.h>
+ #include <linux/in.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
 _
