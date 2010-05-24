@@ -1,88 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 09/26] drivers/message: move dereference after NULL test
-Date: Mon, 24 May 2010 12:22:26 -0700
-Message-ID: <201005241922.o4OJMQfR011305@imap1.linux-foundation.org>
+Subject: [patch 07/26] NCR5380: bit MR_DMA_MODE set twice in NCR5380_transfer_dma()
+Date: Mon, 24 May 2010 12:22:24 -0700
+Message-ID: <201005241922.o4OJMO8A011299@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50441 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53569 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756850Ab0EXTWe (ORCPT
+	by vger.kernel.org with ESMTP id S1756832Ab0EXTWg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:34 -0400
+	Mon, 24 May 2010 15:22:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, James.Bottomley@suse.de, kashyap.desai@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, alan@lxorguk.ukuu.org.uk
 
-From: Julia Lawall <julia@diku.dk>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-If the NULL test on dev->i2o_dev or i2o_dev is needed, then the dereference
-should be after the NULL test.
+Besides keeping the line short, the second setting of the MR_DMA_MODE bit
+was removed.
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
-
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
-
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/i2o/i2o_block.c |    3 ++-
- drivers/message/i2o/i2o_scsi.c  |    3 +--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/NCR5380.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_block.c
---- a/drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_block.c
-@@ -712,7 +712,7 @@ static int i2o_block_transfer(struct req
- {
- 	struct i2o_block_device *dev = req->rq_disk->private_data;
- 	struct i2o_controller *c;
--	u32 tid = dev->i2o_dev->lct_data.tid;
-+	u32 tid;
- 	struct i2o_message *msg;
- 	u32 *mptr;
- 	struct i2o_block_request *ireq = req->special;
-@@ -728,6 +728,7 @@ static int i2o_block_transfer(struct req
- 		goto exit;
- 	}
- 
-+	tid = dev->i2o_dev->lct_data.tid;
- 	c = dev->i2o_dev->iop;
- 
- 	msg = i2o_msg_get(c);
-diff -puN drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_scsi.c
---- a/drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_scsi.c
-@@ -528,7 +528,6 @@ static int i2o_scsi_queuecommand(struct 
- 	 *      Do the incoming paperwork
- 	 */
- 	i2o_dev = SCpnt->device->hostdata;
--	c = i2o_dev->iop;
- 
- 	SCpnt->scsi_done = done;
- 
-@@ -538,7 +537,7 @@ static int i2o_scsi_queuecommand(struct 
- 		done(SCpnt);
- 		goto exit;
- 	}
--
-+	c = i2o_dev->iop;
- 	tid = i2o_dev->lct_data.tid;
- 
- 	osm_debug("qcmd: Tid = %03x\n", tid);
+diff -puN drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma
++++ a/drivers/scsi/NCR5380.c
+@@ -1857,7 +1857,9 @@ static int NCR5380_transfer_dma(struct S
+ #endif
+ 	/* KLL May need eop and parity in 53c400 */
+ 	if (hostdata->flags & FLAG_NCR53C400)
+-		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR | MR_ENABLE_EOP_INTR | MR_DMA_MODE | MR_MONITOR_BSY);
++		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
++				MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR |
++				MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
+ 	else
+ 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
+ #endif				/* def REAL_DMA */
 _
