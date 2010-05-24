@@ -1,63 +1,74 @@
 From: akpm@linux-foundation.org
-Subject: [patch 25/26] scsi: fix bnx2i build errors
-Date: Mon, 24 May 2010 12:22:39 -0700
-Message-ID: <201005241922.o4OJMdc9011359@imap1.linux-foundation.org>
+Subject: [patch 26/26] scsi: remove private BIT macros
+Date: Mon, 24 May 2010 12:22:40 -0700
+Message-ID: <201005241922.o4OJMefi011362@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59313 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53336 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757093Ab0EXTWt (ORCPT
+	by vger.kernel.org with ESMTP id S1757093Ab0EXTWq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:49 -0400
+	Mon, 24 May 2010 15:22:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, anilgv@broadcom.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, huangj@brocade.com, robert.w.love@intel.com
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 
-bnx2i should depend on NET since it selects SCSI_ISCSI_ATTRS, which
-depends on NET.
+A couple of scsi drivers define a BIT() macro, duplicating the one in
+bitops.h.  
 
-Also move the dependencies together.
-
-The "depends" change fixes multiple build errors when CONFIG_NET is
-not enabled:
-ERROR: "skb_trim" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "netlink_kernel_create" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "netlink_kernel_release" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "skb_pull" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "init_net" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "__alloc_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "netlink_broadcast" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "kfree_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-ERROR: "skb_put" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Anil Veerabhadrappa <anilgv@broadcom.com>
+Cc: Jing Huang <huangj@brocade.com>
+Cc: Robert Love <robert.w.love@intel.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/bnx2i/Kconfig |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ ./drivers/scsi/bfa/include/protocol/fcp.h |    4 +---
+ ./drivers/scsi/fnic/fnic.h                |    2 +-
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/bnx2i/Kconfig~scsi-fix-bnx2i-build-errors drivers/scsi/bnx2i/Kconfig
---- a/drivers/scsi/bnx2i/Kconfig~scsi-fix-bnx2i-build-errors
-+++ a/drivers/scsi/bnx2i/Kconfig
-@@ -1,10 +1,11 @@
- config SCSI_BNX2_ISCSI
- 	tristate "Broadcom NetXtreme II iSCSI support"
-+	depends on NET
-+	depends on PCI
- 	select SCSI_ISCSI_ATTRS
- 	select NETDEVICES
- 	select NETDEV_1000
- 	select CNIC
--	depends on PCI
- 	---help---
- 	This driver supports iSCSI offload for the Broadcom NetXtreme II
- 	devices.
+diff -puN ./drivers/scsi/bfa/include/protocol/fcp.h~scsi-remove-private-bit-macros ./drivers/scsi/bfa/include/protocol/fcp.h
+--- a/./drivers/scsi/bfa/include/protocol/fcp.h~scsi-remove-private-bit-macros
++++ a/./drivers/scsi/bfa/include/protocol/fcp.h
+@@ -18,6 +18,7 @@
+ #ifndef __FCPPROTO_H__
+ #define __FCPPROTO_H__
+ 
++#include <linux/bitops.h>
+ #include <protocol/scsi.h>
+ 
+ #pragma pack(1)
+@@ -102,9 +103,6 @@ enum {
+ /*
+  * Task management flags field - only one bit shall be set
+  */
+-#ifndef BIT
+-#define BIT(_x)	(1 << (_x))
+-#endif
+ enum fcp_tm_cmnd{
+ 	FCP_TM_ABORT_TASK_SET	= BIT(1),
+ 	FCP_TM_CLEAR_TASK_SET	= BIT(2),
+diff -puN ./drivers/scsi/fnic/fnic.h~scsi-remove-private-bit-macros ./drivers/scsi/fnic/fnic.h
+--- a/./drivers/scsi/fnic/fnic.h~scsi-remove-private-bit-macros
++++ a/./drivers/scsi/fnic/fnic.h
+@@ -21,6 +21,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/netdevice.h>
+ #include <linux/workqueue.h>
++#include <linux/bitops.h>
+ #include <scsi/libfc.h>
+ #include <scsi/libfcoe.h>
+ #include "fnic_io.h"
+@@ -49,7 +50,6 @@
+ /*
+  * Tag bits used for special requests.
+  */
+-#define BIT(nr)			(1UL << (nr))
+ #define FNIC_TAG_ABORT		BIT(30)		/* tag bit indicating abort */
+ #define FNIC_TAG_DEV_RST	BIT(29)		/* indicates device reset */
+ #define FNIC_TAG_MASK		(BIT(24) - 1)	/* mask for lookup */
 _
