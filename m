@@ -1,78 +1,59 @@
 From: akpm@linux-foundation.org
-Subject: [patch 14/26] drivers/scsi/aic94xx/aic94xx_init.c: correct the size argument to kmalloc
-Date: Mon, 24 May 2010 12:22:30 -0700
-Message-ID: <201005241922.o4OJMUmi011323@imap1.linux-foundation.org>
+Subject: [patch 15/26] scsi: remove superfluous NULL pointer check from scsi_kill_request()
+Date: Mon, 24 May 2010 12:22:32 -0700
+Message-ID: <201005241922.o4OJMWCA011326@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:35927 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50484 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756991Ab0EXTWq (ORCPT
+	by vger.kernel.org with ESMTP id S1757084Ab0EXTWq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 24 May 2010 15:22:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, eike-kernel@sf-tec.de, joe@perches.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bzolnier@gmail.com, corbet@lwn.net, error27@gmail.com, eteo@redhat.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-In each case, the destination of the allocation has type struct **, so the
-elements of the array should have pointer type, not structure type.
+Dan's list included:
 
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
+drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced in initializer 'cmd'
+drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced before check 'cmd'
 
-// <smpl>
-@disable sizeof_type_expr@
-type T;
-T **x;
-@@
+We dereference cmd (and possible OOPS if cmd == NULL) before starting the
+request so just remove the superfluous debugging code altogether.
 
-  x =
-  <+...sizeof(
-- T
-+ *x
-  )...+>
-// </smpl>
+[ bart: the potential NULL pointer dereference was finally fixed in
+  (much later than mine) commit 03b1470 but my patch is still valid ]
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Joe Perches <joe@perches.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Eugene Teo <eteo@redhat.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic94xx/aic94xx_init.c |    4 ++--
- drivers/scsi/ch.c                   |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_lib.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
-diff -puN drivers/scsi/aic94xx/aic94xx_init.c~drivers-scsi-correct-the-size-argument-to-kmalloc drivers/scsi/aic94xx/aic94xx_init.c
---- a/drivers/scsi/aic94xx/aic94xx_init.c~drivers-scsi-correct-the-size-argument-to-kmalloc
-+++ a/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -688,9 +688,9 @@ static int asd_register_sas_ha(struct as
- {
- 	int i;
- 	struct asd_sas_phy   **sas_phys =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_phy), GFP_KERNEL);
-+		kcalloc(ASD_MAX_PHYS, sizeof(*sas_phys), GFP_KERNEL);
- 	struct asd_sas_port  **sas_ports =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_port), GFP_KERNEL);
-+		kcalloc(ASD_MAX_PHYS, sizeof(*sas_ports), GFP_KERNEL);
+diff -puN drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request
++++ a/drivers/scsi/scsi_lib.c
+@@ -1372,12 +1372,6 @@ static void scsi_kill_request(struct req
  
- 	if (!sas_phys || !sas_ports) {
- 		kfree(sas_phys);
-diff -puN drivers/scsi/ch.c~drivers-scsi-correct-the-size-argument-to-kmalloc drivers/scsi/ch.c
---- a/drivers/scsi/ch.c~drivers-scsi-correct-the-size-argument-to-kmalloc
-+++ a/drivers/scsi/ch.c
-@@ -352,7 +352,7 @@ ch_readconfig(scsi_changer *ch)
- 	}
+ 	blk_start_request(req);
  
- 	/* look up the devices of the data transfer elements */
--	ch->dt = kmalloc(ch->counts[CHET_DT]*sizeof(struct scsi_device),
-+	ch->dt = kcalloc(ch->counts[CHET_DT], sizeof(*ch->dt),
- 			 GFP_KERNEL);
- 
- 	if (!ch->dt) {
+-	if (unlikely(cmd == NULL)) {
+-		printk(KERN_CRIT "impossible request in %s.\n",
+-				 __func__);
+-		BUG();
+-	}
+-
+ 	sdev = cmd->device;
+ 	starget = scsi_target(sdev);
+ 	shost = sdev->host;
 _
