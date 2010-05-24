@@ -1,57 +1,55 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/26] drivers/scsi: remove unnecessary NULL test
-Date: Mon, 24 May 2010 12:22:25 -0700
-Message-ID: <201005241922.o4OJMPL0011302@imap1.linux-foundation.org>
+Subject: [patch 01/26] scsi: add __init/__exit macros to ibmvstgt.c
+Date: Mon, 24 May 2010 12:22:20 -0700
+Message-ID: <201005241922.o4OJMKHl011281@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40737 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:35586 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755733Ab0EXTWa (ORCPT
+	by vger.kernel.org with ESMTP id S1756375Ab0EXTWc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:30 -0400
+	Mon, 24 May 2010 15:22:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, peterhuewe@gmx.de, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, sfr@canb.auug.org.au
 
-From: Julia Lawall <julia@diku.dk>
+From: Peter Huewe <peterhuewe@gmx.de>
 
-At the point where cmnd is initialized, it is tested for NULL, so it
-doesn't have to be tested again here.
+Add the __init and __exit macros to the module_init / module_exit
+functions from drivers/scsi/ibmvscsi/ibmvstgt.c
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
-
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
-
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/initio.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvstgt.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test drivers/scsi/initio.c
---- a/drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test
-+++ a/drivers/scsi/initio.c
-@@ -2817,7 +2817,6 @@ static void i91uSCBPost(u8 * host_mem, u
- 	}
+diff -puN drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc drivers/scsi/ibmvscsi/ibmvstgt.c
+--- a/drivers/scsi/ibmvscsi/ibmvstgt.c~scsi-add-__init-__exit-macros-to-ibmvstgtc
++++ a/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -956,7 +956,7 @@ static struct srp_function_template ibmv
+ 	.it_nexus_response = ibmvstgt_it_nexus_response,
+ };
  
- 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
--	WARN_ON(cmnd == NULL);
- 	i91u_unmap_scb(host->pci_dev, cmnd);
- 	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
- 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
+-static int ibmvstgt_init(void)
++static int __init ibmvstgt_init(void)
+ {
+ 	int err = -ENOMEM;
+ 
+@@ -987,7 +987,7 @@ release_transport:
+ 	return err;
+ }
+ 
+-static void ibmvstgt_exit(void)
++static void __exit ibmvstgt_exit(void)
+ {
+ 	printk("Unregister IBM virtual SCSI driver\n");
+ 
 _
