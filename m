@@ -1,74 +1,101 @@
 From: akpm@linux-foundation.org
-Subject: [patch 26/26] scsi: remove private BIT macros
-Date: Mon, 24 May 2010 12:22:40 -0700
-Message-ID: <201005241922.o4OJMefi011362@imap1.linux-foundation.org>
+Subject: [patch 02/26] drivers/scsi/fnic/fnic_scsi.c: clean up
+Date: Mon, 24 May 2010 12:22:20 -0700
+Message-ID: <201005241922.o4OJMKFc011284@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:53336 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:42734 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757093Ab0EXTWq (ORCPT
+	by vger.kernel.org with ESMTP id S1757176Ab0EXTXB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 15:22:46 -0400
+	Mon, 24 May 2010 15:23:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, huangj@brocade.com, robert.w.love@intel.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, abjoglek@cisco.com
 
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-A couple of scsi drivers define a BIT() macro, duplicating the one in
-bitops.h.  
+In fnic_abort_cmd() and fnic_device_reset() assign `rport' earlier to make
+FNIC_SCSI_DBG() calls cleaner.
 
-Cc: Jing Huang <huangj@brocade.com>
-Cc: Robert Love <robert.w.love@intel.com>
+In fnic_clean_pending_aborts() `rport' is not used.
+
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Acked-by: Abhijeet Joglekar <abjoglek@cisco.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- ./drivers/scsi/bfa/include/protocol/fcp.h |    4 +---
- ./drivers/scsi/fnic/fnic.h                |    2 +-
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c |   22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
 
-diff -puN ./drivers/scsi/bfa/include/protocol/fcp.h~scsi-remove-private-bit-macros ./drivers/scsi/bfa/include/protocol/fcp.h
---- a/./drivers/scsi/bfa/include/protocol/fcp.h~scsi-remove-private-bit-macros
-+++ a/./drivers/scsi/bfa/include/protocol/fcp.h
-@@ -18,6 +18,7 @@
- #ifndef __FCPPROTO_H__
- #define __FCPPROTO_H__
+diff -puN drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up drivers/scsi/fnic/fnic_scsi.c
+--- a/drivers/scsi/fnic/fnic_scsi.c~drivers-scsi-fnic-fnic_scsic-clean-up
++++ a/drivers/scsi/fnic/fnic_scsi.c
+@@ -1246,11 +1246,10 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	lp = shost_priv(sc->device->host);
  
-+#include <linux/bitops.h>
- #include <protocol/scsi.h>
+ 	fnic = lport_priv(lp);
+-	FNIC_SCSI_DBG(KERN_DEBUG,
+-		      fnic->lport->host,
+-		      "Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
+-		      (starget_to_rport(scsi_target(sc->device)))->port_id,
+-		      sc->device->lun, sc->request->tag);
++	rport = starget_to_rport(scsi_target(sc->device));
++	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"Abort Cmd called FCID 0x%x, LUN 0x%x TAG %d\n",
++			rport->port_id, sc->device->lun, sc->request->tag);
  
- #pragma pack(1)
-@@ -102,9 +103,6 @@ enum {
- /*
-  * Task management flags field - only one bit shall be set
-  */
--#ifndef BIT
--#define BIT(_x)	(1 << (_x))
--#endif
- enum fcp_tm_cmnd{
- 	FCP_TM_ABORT_TASK_SET	= BIT(1),
- 	FCP_TM_CLEAR_TASK_SET	= BIT(2),
-diff -puN ./drivers/scsi/fnic/fnic.h~scsi-remove-private-bit-macros ./drivers/scsi/fnic/fnic.h
---- a/./drivers/scsi/fnic/fnic.h~scsi-remove-private-bit-macros
-+++ a/./drivers/scsi/fnic/fnic.h
-@@ -21,6 +21,7 @@
- #include <linux/interrupt.h>
- #include <linux/netdevice.h>
- #include <linux/workqueue.h>
-+#include <linux/bitops.h>
- #include <scsi/libfc.h>
- #include <scsi/libfcoe.h>
- #include "fnic_io.h"
-@@ -49,7 +50,6 @@
- /*
-  * Tag bits used for special requests.
-  */
--#define BIT(nr)			(1UL << (nr))
- #define FNIC_TAG_ABORT		BIT(30)		/* tag bit indicating abort */
- #define FNIC_TAG_DEV_RST	BIT(29)		/* indicates device reset */
- #define FNIC_TAG_MASK		(BIT(24) - 1)	/* mask for lookup */
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
+ 		ret = FAILED;
+@@ -1299,7 +1298,6 @@ int fnic_abort_cmd(struct scsi_cmnd *sc)
+ 	 * port is up, then send abts to the remote port to terminate
+ 	 * the IO. Else, just locally terminate the IO in the firmware
+ 	 */
+-	rport = starget_to_rport(scsi_target(sc->device));
+ 	if (fc_remote_port_chkready(rport) == 0)
+ 		task_req = FCPIO_ITMF_ABT_TASK;
+ 	else
+@@ -1418,7 +1416,6 @@ static int fnic_clean_pending_aborts(str
+ 	unsigned long flags;
+ 	int ret = 0;
+ 	struct scsi_cmnd *sc;
+-	struct fc_rport *rport;
+ 	struct scsi_lun fc_lun;
+ 	struct scsi_device *lun_dev = lr_sc->device;
+ 	DECLARE_COMPLETION_ONSTACK(tm_done);
+@@ -1458,7 +1455,6 @@ static int fnic_clean_pending_aborts(str
+ 
+ 		/* Now queue the abort command to firmware */
+ 		int_to_scsilun(sc->device->lun, &fc_lun);
+-		rport = starget_to_rport(scsi_target(sc->device));
+ 
+ 		if (fnic_queue_abort_io_req(fnic, tag,
+ 					    FCPIO_ITMF_ABT_TASK_TERM,
+@@ -1528,18 +1524,16 @@ int fnic_device_reset(struct scsi_cmnd *
+ 	lp = shost_priv(sc->device->host);
+ 
+ 	fnic = lport_priv(lp);
+-	FNIC_SCSI_DBG(KERN_DEBUG,
+-		      fnic->lport->host,
+-		      "Device reset called FCID 0x%x, LUN 0x%x\n",
+-		      (starget_to_rport(scsi_target(sc->device)))->port_id,
+-		      sc->device->lun);
+ 
++	rport = starget_to_rport(scsi_target(sc->device));
++	FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"Device reset called FCID 0x%x, LUN 0x%x\n",
++			rport->port_id, sc->device->lun);
+ 
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
+ 		goto fnic_device_reset_end;
+ 
+ 	/* Check if remote port up */
+-	rport = starget_to_rport(scsi_target(sc->device));
+ 	if (fc_remote_port_chkready(rport))
+ 		goto fnic_device_reset_end;
+ 
 _
