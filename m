@@ -1,277 +1,136 @@
-From: Andy Walls <awalls@md.metrocast.net>
-Subject: Re: [patch 12/26] g_NCR5380: fix broken MMIO compilation
-Date: Mon, 24 May 2010 20:16:55 -0400
-Message-ID: <1274746615.4491.68.camel@localhost>
-References: <201005241922.o4OJMSxG011317@imap1.linux-foundation.org>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: RE: [PATCH 1/7] qla4xxx: added BSG support
+Date: Mon, 24 May 2010 21:08:19 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA870D36FB637@AVEXMB1.qlogic.org>
+References: <20100511075526.GA30474@sles11sp1b1.qlogic.org>
+ <4BE97CEE.8060404@cs.wisc.edu>
+ <39177E34-293B-47ED-864A-1304477375EC@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from proofpoint-cluster.metrocast.net ([65.175.128.136]:51141 "EHLO
-	proofpoint-cluster.metrocast.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756195Ab0EYAjM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 May 2010 20:39:12 -0400
-In-Reply-To: <201005241922.o4OJMSxG011317@imap1.linux-foundation.org>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:48729 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750725Ab0EYEIW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2010 00:08:22 -0400
+In-Reply-To: <39177E34-293B-47ED-864A-1304477375EC@qlogic.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux@rainbow-software.org
+To: "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+Cc: Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-On Mon, 2010-05-24 at 12:22 -0700, akpm@linux-foundation.org wrote:
-> From: Ondrej Zary <linux@rainbow-software.org>
-> 
-> The ifdefs are broken so the MMIO code is never compiled and so it's
-> broken too.  Fix them all.  Untested as I don't have the hardware.
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> Cc: Andy Walls <awalls@radix.net>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+James,
 
-I remeber inspecting this before and thinking they were fine.
+Looks like Ravi's posting never made to the reflector.
+Resending Ravi's original posting again.
 
-Reviewed-by: Andy Walls <awalls@md.metrocast.net>
-(my awalls@radix.net account is obsolete)
+We wanted to conform from you whether passing data blob through bsg interface is agreeable to with you?
+If we go through this approach we will provide user-space library which will allow iscsiadm
+to configure HBA. We will work with Mike Christie to integrate user-space library with iscsiadm.
 
-If anyone in the US is interested in ancient ISA bus SCSI hardware for
-NCR5380 driver development, I can send them:
+Looking forward for your feedback.
 
-1. a DTC3181E
-	NCR5380
-	ISA I/O ports
-	no IRQ
-	no Pseudo-DMA
-	DB-25 external connector
-	...definitely a piece of junk.
+Thanks,
+Vikas.
 
-2. a SUMO SCSI AT
-	NCR5380
-	ISA I/O ports
-	IRQ is is enabled by a bit in a board specific reg at reg_base+8
-	Pseudo DMA is enabled by a a board specific reg at reg_base+8
-	No watchdog timer on the pseudo DMA, so a failed pseudo-DMA
-		can hang your whole machine :D
-	SCSI-1 external connector (Centronics-type with bail locks)
-	Internal SCSI connector
-	Removeable terminating resistors for the card.
-	Two BIOS firmware images on board, each having a divide by
-		0 bug in their fake C/H/S drive geometry computations :D
-	...in general, also a piece of junk.
-
-Neither of them will help with testing the MMIO mode of the driver.
-
-Regards,
-Andy
-
-> ---
-> 
->  drivers/scsi/g_NCR5380.c |   43 +++++++++++++++++++------------------
->  drivers/scsi/g_NCR5380.h |    6 ++---
->  2 files changed, 26 insertions(+), 23 deletions(-)
-> 
-> diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-fix-broken-mmio-compilation drivers/scsi/g_NCR5380.c
-> --- a/drivers/scsi/g_NCR5380.c~g_ncr5380-fix-broken-mmio-compilation
-> +++ a/drivers/scsi/g_NCR5380.c
-> @@ -285,9 +285,12 @@ static int __init do_DTC3181E_setup(char
->  int __init generic_NCR5380_detect(struct scsi_host_template * tpnt)
->  {
->  	static int current_override = 0;
-> -	int count, i;
-> +	int count;
->  	unsigned int *ports;
-> +#ifndef SCSI_G_NCR5380_MEM
-> +	int i;
->  	unsigned long region_size = 16;
-> +#endif
->  	static unsigned int __initdata ncr_53c400a_ports[] = {
->  		0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
->  	};
-> @@ -296,7 +299,7 @@ int __init generic_NCR5380_detect(struct
->  	};
->  	int flags = 0;
->  	struct Scsi_Host *instance;
-> -#ifdef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifdef SCSI_G_NCR5380_MEM
->  	unsigned long base;
->  	void __iomem *iomem;
->  #endif
-> @@ -315,7 +318,7 @@ int __init generic_NCR5380_detect(struct
->  		overrides[0].board = BOARD_NCR53C400A;
->  	else if (dtc_3181e != NCR_NOT_SET)
->  		overrides[0].board = BOARD_DTC3181E;
-> -
-> +#ifndef SCSI_G_NCR5380_MEM
->  	if (!current_override && isapnp_present()) {
->  		struct pnp_dev *dev = NULL;
->  		count = 0;
-> @@ -347,7 +350,7 @@ int __init generic_NCR5380_detect(struct
->  			count++;
->  		}
->  	}
-> -
-> +#endif
->  	tpnt->proc_name = "g_NCR5380";
->  
->  	for (count = 0; current_override < NO_OVERRIDES; ++current_override) {
-> @@ -372,7 +375,7 @@ int __init generic_NCR5380_detect(struct
->  			break;
->  		}
->  
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  		if (ports) {
->  			/* wakeup sequence for the NCR53C400A and DTC3181E */
->  
-> @@ -434,7 +437,7 @@ int __init generic_NCR5380_detect(struct
->  #endif
->  		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
->  		if (instance == NULL) {
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  			release_region(overrides[current_override].NCR5380_map_name, region_size);
->  #else
->  			iounmap(iomem);
-> @@ -444,10 +447,10 @@ int __init generic_NCR5380_detect(struct
->  		}
->  
->  		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  		instance->n_io_port = region_size;
->  #else
-> -		((struct NCR5380_hostdata *)instance->hostdata).iomem = iomem;
-> +		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
->  #endif
->  
->  		NCR5380_init(instance, flags);
-> @@ -515,10 +518,10 @@ int generic_NCR5380_release_resources(st
->  		free_irq(instance->irq, instance);
->  	NCR5380_exit(instance);
->  
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  	release_region(instance->NCR5380_instance_name, instance->n_io_port);
->  #else
-> -	iounmap(((struct NCR5380_hostdata *)instance->hostdata).iomem);
-> +	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
->  	release_mem_region(instance->NCR5380_instance_name, NCR5380_region_size);
->  #endif
->  
-> @@ -588,14 +591,14 @@ static inline int NCR5380_pread(struct S
->  		}
->  		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY);
->  
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  		{
->  			int i;
->  			for (i = 0; i < 128; i++)
->  				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
->  		}
->  #else
-> -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> +		/* implies SCSI_G_NCR5380_MEM */
->  		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
->  #endif
->  		start += 128;
-> @@ -608,14 +611,14 @@ static inline int NCR5380_pread(struct S
->  			// FIXME - no timeout
->  		}
->  
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  		{
->  			int i;	
->  			for (i = 0; i < 128; i++)
->  				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
->  		}
->  #else
-> -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> +		/* implies SCSI_G_NCR5380_MEM */
->  		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
->  #endif
->  		start += 128;
-> @@ -674,13 +677,13 @@ static inline int NCR5380_pwrite(struct 
->  		}
->  		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
->  			; // FIXME - timeout
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  		{
->  			for (i = 0; i < 128; i++)
->  				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
->  		}
->  #else
-> -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> +		/* implies SCSI_G_NCR5380_MEM */
->  		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
->  #endif
->  		start += 128;
-> @@ -690,13 +693,13 @@ static inline int NCR5380_pwrite(struct 
->  		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
->  			; // FIXME - no timeout
->  
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  		{
->  			for (i = 0; i < 128; i++)
->  				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
->  		}
->  #else
-> -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> +		/* implies SCSI_G_NCR5380_MEM */
->  		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
->  #endif
->  		start += 128;
-> @@ -936,7 +939,7 @@ module_param(ncr_53c400a, int, 0);
->  module_param(dtc_3181e, int, 0);
->  MODULE_LICENSE("GPL");
->  
-> -
-> +#ifndef SCSI_G_NCR5380_MEM
->  static struct isapnp_device_id id_table[] __devinitdata = {
->  	{
->  	 ISAPNP_ANY_ID, ISAPNP_ANY_ID,
-> @@ -946,7 +949,7 @@ static struct isapnp_device_id id_table[
->  };
->  
->  MODULE_DEVICE_TABLE(isapnp, id_table);
-> -
-> +#endif
->  
->  __setup("ncr5380=", do_NCR5380_setup);
->  __setup("ncr53c400=", do_NCR53C400_setup);
-> diff -puN drivers/scsi/g_NCR5380.h~g_ncr5380-fix-broken-mmio-compilation drivers/scsi/g_NCR5380.h
-> --- a/drivers/scsi/g_NCR5380.h~g_ncr5380-fix-broken-mmio-compilation
-> +++ a/drivers/scsi/g_NCR5380.h
-> @@ -63,7 +63,7 @@ static const char* generic_NCR5380_info(
->  #define __STRVAL(x) #x
->  #define STRVAL(x) __STRVAL(x)
->  
-> -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> +#ifndef SCSI_G_NCR5380_MEM
->  
->  #define NCR5380_map_config port
->  #define NCR5380_map_type int
-> @@ -91,7 +91,7 @@ static const char* generic_NCR5380_info(
->      NCR5380_map_name = (NCR5380_map_type)((instance)->NCR5380_instance_name)
->  
->  #else 
-> -/* therefore CONFIG_SCSI_G_NCR5380_MEM */
-> +/* therefore SCSI_G_NCR5380_MEM */
->  
->  #define NCR5380_map_config memory
->  #define NCR5380_map_type unsigned long
-> @@ -114,7 +114,7 @@ static const char* generic_NCR5380_info(
->      register void __iomem *iomem
->  
->  #define NCR5380_setup(instance) \
-> -    iomem = (((struct NCR5380_hostdata *)(instance)->hostdata).iomem)
-> +    iomem = (((struct NCR5380_hostdata *)(instance)->hostdata)->iomem)
->  
->  #endif
->  
-> _
-
+>-----Original Message-----
+>From: Ravi Anand
+>Sent: Tuesday, May 11, 2010 7:15 PM
+>To: Mike Christie
+>Cc: Vikas Chaudhary; james.bottomley@suse.de; linux-scsi@vger.kernel.org
+>Subject: Re: [PATCH 1/7] qla4xxx: added BSG support
+>
+>
+>On May 11, 2010, at 8:51 AM, Mike Christie wrote:
+>
+>
+>> I think we need James's comments on this one. I am not sure what is
+>> right.
+>>
+>> On 05/11/2010 02:55 AM, Vikas Chaudhary wrote:
+>>
+>>> This BSG interface is on top of patch :
+>>> http://marc.info/?l=linux-scsi&m=126884917217355&w=2
+>>>
+>>>
+>>
+>>
+>> All I want to be able to do is allow any app to be able to config any
+>> iscsi cards. I want to support Qlogic apps, but then I also want to
+>> support iscsiadm, virt tools, installers, boot tools, etc.
+>>
+>>
+>
+>Completely agree. Supporting our  Qlogic app's is one part of the
+>puzzle.
+>But our goal is to allow end user's to manage our cards using *iscsiadm*
+>and seamlessly integrate it with other tools which you have listed.
+>
+>
+>>
+>>
+>>> +	case ISCSI_BSG_HST_VENDOR:
+>>> +		rval = qla4xxx_process_vendor_specific(job);
+>>> +		break;
+>>>
+>>
+>>
+>> I like the idea of allowing you to use the ISCSI_BSG_HST_VENDOR for
+>> all
+>> your commands, because it makes the kernel code so very very
+>> simple. If
+>> you guys can provide a userspace gpl friendly lib or plugin to a lib
+>> like IMA that allows distros tools to manage your card, then I am
+>> happy
+>> with this approach.
+>>
+>
+>Definitely. We will work internally to figure out on how to move forward
+>interms of providing a plugin for userspace which can be integrated with
+>iscsiadm - most probably it will be an IMA plugin.
+>
+>But  I would say we need few weeks to figure this out.
+>Let me get back to you on this one  as we need to work with another
+>group who handles the API part internally.
+>
+>
+>> My concern with this is that, it takes you guys so long to get things
+>> out. We have no idea when or if it will ever be done.
+>>
+>>
+>
+>Let me just say that, we will get this effort going ASAP once we get
+>the basic pieces done which will allow our API/Application to
+>configure the card using
+>bsg interface.
+>
+>And btw we need to do this bsg piece anyway - it does not matter whether
+>its Qlogic App's or iscsiadm as it will require change in our API.
+>
+>
+>>
+>>
+>>> +	case ISCSI_BSG_HST_NET_CONFIG:
+>>> +		printk(KERN_ERR "ISCSI_BSG_HST_NET_CONFIG Commands "
+>>> +		    "NOT Supported\n");
+>>> +		rval = -ENOSYS;
+>>> +		break;
+>>>
+>>
+>> OTOH, I like the idea of ethtool like interface where for common
+>> operations there is a command command. Then the driver takes that
+>> info/cmd and does its vendor specifics.
+>>
+>>
+>> James, someone mentioned that in the past you might have said it is ok
+>> to pass blobs around if it gets passed down directly to hardware. This
+>> is the case for qla4xxx here. Is it ok to let them just use the
+>> HST_VENDOR command?
+>>
+>
+>Looking forward to James comment.
+>
+>Thanks
+>Ravi
 
