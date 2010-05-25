@@ -1,132 +1,129 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: PATCH 2/4 ] SCSI: Support 1024 scatter-gather list entries and
- improve AP while FW trapped and behaviors of EHs
-Date: Tue, 25 May 2010 10:35:29 -0500
-Message-ID: <1274801729.5300.44.camel@mulgrave.site>
-References: <5763B1DC6C74425FAFED2732C136C5DB@areca4e4f859d4>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH 6/7] scsi: megaraid_sas - Add three times Online controller
+ reset - V2
+Date: Tue, 25 May 2010 18:17:24 +0200
+Message-ID: <4BFBF814.5040202@redhat.com>
+References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com> <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C3CDB80C32@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:34987 "EHLO mx1.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:13408 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756283Ab0EYPfi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 May 2010 11:35:38 -0400
-In-Reply-To: <5763B1DC6C74425FAFED2732C136C5DB@areca4e4f859d4>
+	id S1758849Ab0EYQSI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 May 2010 12:18:08 -0400
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3CDB80C32@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nick.cheng@areca.com.tw
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-On Mon, 2010-05-17 at 11:24 +0800, Nick Cheng wrote:
-> 1. To support 4M/1024 scatter-gather list entry, reorganize struct
-> ARCMSR_CDB and struct CommandControlBlock
-> 2. To modify arcmsr_probe
-> 3. In order to help fix F/W issue, add the driver mode for type B card
-> 4. To improve AP's behavior while F/W resets
-> 5. To unify struct MessageUnit_B's members' naming in all OS drivers'
-> 6. To improve error handlers, arcmsr_bus_reset(), arcmsr_abort()
-> 7. To fix the arcmsr_queue_command() in bus reset stage, just let the
-> commands pass down to FW, don't block
-> Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
+V2: I've cleaned up some coding style issues and removed a variable, the functionality shouldn't be changed
 
-OK, got patch 1.  This one now doesn't apply:
+Tomas
 
-jejb@mulgrave:~/git/scsi-misc-2.6/drivers/scsi/arcmsr> patch -p4  <
-~/tmp.diff
-patching file arcmsr.h
-Hunk #12 FAILED at 441.
-1 out of 13 hunks FAILED -- saving rejects to file arcmsr.h.rej
-patching file arcmsr_hba.c
-Hunk #1 succeeded at 71 (offset 1 line).
-Hunk #2 succeeded at 101 (offset 1 line).
-Hunk #3 FAILED at 127.
-Hunk #4 succeeded at 155 (offset 1 line).
-Hunk #5 succeeded at 167 (offset 1 line).
-Hunk #6 succeeded at 269 (offset 1 line).
-Hunk #7 succeeded at 280 (offset 1 line).
-Hunk #8 succeeded at 532 (offset 1 line).
-Hunk #9 succeeded at 568 (offset 1 line).
-Hunk #10 succeeded at 576 (offset 1 line).
-Hunk #11 succeeded at 590 (offset 1 line).
-Hunk #12 succeeded at 697 (offset 1 line).
-Hunk #13 succeeded at 723 (offset 1 line).
-Hunk #14 succeeded at 791 (offset 1 line).
-Hunk #15 succeeded at 810 (offset 1 line).
-Hunk #16 succeeded at 825 (offset 1 line).
-Hunk #17 succeeded at 847 (offset 1 line).
-Hunk #18 succeeded at 857 (offset 1 line).
-Hunk #19 succeeded at 934 (offset 1 line).
-Hunk #20 succeeded at 960 (offset 1 line).
-Hunk #21 succeeded at 964 (offset 1 line).
-Hunk #22 succeeded at 1022 (offset 1 line).
-Hunk #23 succeeded at 1035 (offset 1 line).
-Hunk #24 succeeded at 1047 (offset 1 line).
-Hunk #25 succeeded at 1079 (offset 1 line).
-Hunk #26 succeeded at 1091 (offset 1 line).
-Hunk #27 succeeded at 1101 (offset 1 line).
-Hunk #28 succeeded at 1116 (offset 1 line).
-Hunk #29 succeeded at 1148 (offset 1 line).
-Hunk #30 succeeded at 1176 (offset 1 line).
-Hunk #31 succeeded at 1197 (offset 1 line).
-Hunk #32 succeeded at 1222 (offset 1 line).
-Hunk #33 succeeded at 1242 (offset 1 line).
-Hunk #34 succeeded at 1263 (offset 1 line).
-Hunk #35 succeeded at 1398 (offset 1 line).
-Hunk #36 FAILED at 1429.
-Hunk #37 succeeded at 1559 (offset 2 lines).
-Hunk #38 succeeded at 1590 (offset 2 lines).
-Hunk #39 succeeded at 1609 (offset 2 lines).
-Hunk #40 succeeded at 1668 (offset 2 lines).
-Hunk #41 succeeded at 1676 (offset 2 lines).
-Hunk #42 succeeded at 1706 (offset 2 lines).
-Hunk #43 succeeded at 1728 (offset 2 lines).
-Hunk #44 succeeded at 1791 (offset 2 lines).
-Hunk #45 FAILED at 1873.
-Hunk #46 succeeded at 1951 (offset 2 lines).
-Hunk #47 FAILED at 1964.
-Hunk #48 FAILED at 1991.
-Hunk #49 FAILED at 2034.
-Hunk #50 FAILED at 2052.
-Hunk #51 succeeded at 2101 (offset 2 lines).
-Hunk #52 succeeded at 2124 (offset 2 lines).
-Hunk #53 succeeded at 2134 (offset 2 lines).
-Hunk #54 succeeded at 2175 (offset 2 lines).
-Hunk #55 succeeded at 2197 (offset 2 lines).
-Hunk #56 succeeded at 2234 (offset 2 lines).
-Hunk #57 succeeded at 2243 (offset 2 lines).
-Hunk #58 succeeded at 2272 (offset 2 lines).
-Hunk #59 succeeded at 2291 (offset 2 lines).
-Hunk #60 succeeded at 2322 (offset 2 lines).
-Hunk #61 succeeded at 2333 (offset 2 lines).
-Hunk #62 succeeded at 2353 (offset 2 lines).
-Hunk #63 succeeded at 2400 (offset 2 lines).
-Hunk #64 succeeded at 2436 (offset 2 lines).
-Hunk #65 succeeded at 2452 (offset 2 lines).
-Hunk #66 succeeded at 2467 (offset 2 lines).
-Hunk #67 succeeded at 2492 (offset 2 lines).
-Hunk #68 succeeded at 2519 (offset 2 lines).
-Hunk #69 succeeded at 2541 (offset 2 lines).
-Hunk #70 succeeded at 2561 (offset 2 lines).
-Hunk #71 FAILED at 2610.
-Hunk #72 succeeded at 2651 (offset 2 lines).
-Hunk #73 succeeded at 2665 (offset 2 lines).
-8 out of 73 hunks FAILED -- saving rejects to file arcmsr_hba.c.rej
+If fw didn't raise the interrupt with the fw state change to driver and fw goes to failure state, driver
+Will check the FW state in driver's timeout routine and issue the reset if need.  Driver will do the OCR upto three
+Times until kill adapter.  Also driver will issue OCR before driver kill adapter even if fw in operational state.   
 
+Signed-off-by Bo Yang<bo.yang@lsi.com>
+Signed-off-by Tomas Henzl<thenzl@redhat.com>
 
-Incidentally, I have to move into the directory and do a -p4 because
-your path prefix isn't what's in the kernel:
-
-> diff -Naurp --ignore-blank-lines --ignore-all-space --ignore-space-change linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h linux-2.6/drivers/scsi/arcmsr.1.20.00.15-91209/arcmsr.h
-> --- linux-2.6/drivers/scsi/arcmsr.1.20.00.15-81103/arcmsr.h     2010-05-03 11:35:24.000000000 +0800
-> +++ linux-2.6/drivers/scsi/arcmsr.1.20.00.15-91209/arcmsr.h     2010-05-03 14:32:42.000000000 +0800
-
-The arcmsr.h problem looks to be tab related:  There's an extra tab
-between char and firm_version[20] in the version of arcmsr.h you took as
-a base.
-
-Even with a white space fuzzing apply, I still get two rejections.
-
-James
+---
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+index 92e381b..0b84b3a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -1551,6 +1551,28 @@ static void megasas_complete_cmd_dpc(unsigned long instance_addr)
+ 	}
+ }
+ 
++static void
++megasas_internal_reset_defer_cmds(struct megasas_instance *instance);
++
++static void
++process_fw_state_change_wq(struct work_struct *work);
++
++void megasas_do_ocr(struct megasas_instance *instance)
++{
++	if (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R ||
++	    instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5 ||
++	    instance->pdev->device == PCI_DEVICE_ID_LSI_VERDE_ZCR)
++		*instance->consumer = MEGASAS_ADPRESET_INPROG_SIGN;
++
++	instance->instancet->disable_intr(instance->reg_set);
++	instance->adprecovery = MEGASAS_ADPRESET_SM_INFAULT;
++	instance->issuepend_done = 0;
++
++	atomic_set(&instance->fw_outstanding, 0);
++	megasas_internal_reset_defer_cmds(instance);
++	process_fw_state_change_wq(&instance->work_init);
++}
++
+ /**
+  * megasas_wait_for_outstanding -	Wait for all outstanding cmds
+  * @instance:				Adapter soft state
+@@ -1568,6 +1590,9 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 	unsigned long flags;
+ 	struct list_head clist_local;
+ 	struct megasas_cmd *reset_cmd;
++	u32 fw_state;
++	u8 kill_adapter_flag;
++	int outstanding;
+ 
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+ 	adprecovery = instance->adprecovery;
+@@ -1628,7 +1653,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 	printk(KERN_NOTICE "megaraid_sas: HBA reset handler invoked without an internal reset condition.\n");
+ 	for (i = 0; i < wait_time; i++) {
+ 
+-		int outstanding = atomic_read(&instance->fw_outstanding);
++		outstanding = atomic_read(&instance->fw_outstanding);
+ 
+ 		if (!outstanding)
+ 			break;
+@@ -1646,7 +1671,41 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 		msleep(1000);
+ 	}
+ 
+-	if (atomic_read(&instance->fw_outstanding)) {
++	i = 0;
++	kill_adapter_flag = 0;
++	do {
++		fw_state = instance->instancet->read_fw_status_reg(
++					instance->reg_set) & MFI_STATE_MASK;
++		if (fw_state == MFI_STATE_FAULT &&
++		    instance->disableOnlineCtrlReset == 0) {
++			if (i == 3) {
++				kill_adapter_flag = 2;
++				break;
++			}
++			megasas_do_ocr(instance);
++			kill_adapter_flag = 1;
++
++			/* wait for 1 secs to let FW finish the pending cmds */
++			msleep(1000);
++		}
++		i++;
++	} while (i <= 3);
++
++	if (atomic_read(&instance->fw_outstanding) && !kill_adapter_flag &&
++	    instance->disableOnlineCtrlReset == 0) {
++
++		megasas_do_ocr(instance);
++
++		/* wait for 5 secs to let FW finish the pending cmds */
++		for (i = 0; i < wait_time; i++) {
++			outstanding = atomic_read(&instance->fw_outstanding);
++			if (!outstanding)
++				return SUCCESS;
++			msleep(1000);
++		}
++	}
++
++	if (atomic_read(&instance->fw_outstanding) || kill_adapter_flag == 2) {
+ 		printk(KERN_NOTICE "megaraid_sas: pending cmds after reset\n");
+ 		/*
+ 		* Send signal to FW to stop processing any pending cmds.
 
 
