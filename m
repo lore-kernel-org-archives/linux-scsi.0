@@ -1,48 +1,49 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] fusion: fix kernel-doc warnings
-Date: Mon, 24 May 2010 22:22:14 -0700
-Message-ID: <20100524222214.202b743a.randy.dunlap@oracle.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools 0.4.9
+Date: Tue, 25 May 2010 10:36:28 +0200
+Message-ID: <20100525083627.GA4784@schmichrtp.mainz.de.ibm.com>
+References: <1274535248.6881.10.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:17447 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab0EYFWx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2010 01:22:53 -0400
+Received: from mtagate6.de.ibm.com ([195.212.17.166]:40714 "EHLO
+	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754758Ab0EYIga (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2010 04:36:30 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate6.de.ibm.com (8.13.1/8.13.1) with ESMTP id o4P8aTOi002231
+	for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 08:36:29 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o4P8aSMO872596
+	for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 10:36:28 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o4P8aSvI031902
+	for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 10:36:28 +0200
+Content-Disposition: inline
+In-Reply-To: <1274535248.6881.10.camel@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>, akpm <akpm@linux-foundation.org>
-Cc: Eric Moore <Eric.Moore@lsi.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+To: christophe.varoqui@opensvc.com, device-mapper development <dm-devel@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Sat, May 22, 2010 at 03:34:08PM +0200, Christophe Varoqui wrote:
+> Here is a long due multipath-tools release.
+> 
+> Most patches in there are already available in enterprise distributions
+> package.
+> 
+> The tarball is available on http://christophe.varoqui.free.fr/
+> My maintainer work on this project is now sponsored by
+> http://www.opensvc.com and the Nexenta multipath support has been
+> sponsored by http://www.alyseo.com/
+> 
+> multipath-tools-0.4.9 shortlog :
+[...]
 
-Fix (delete) empty kernel-doc lines/warnings:
-Warning(drivers/message/fusion/mptbase.c:6916): bad line: 
-Warning(drivers/message/fusion/mptbase.c:7060): bad line: 
+I noticed that the git tree does not have the 0.4.9 tag (yet). Could
+you add it as well?
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Eric Moore <Eric.Moore@lsi.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
----
- drivers/message/fusion/mptbase.c |    2 --
- 1 file changed, 2 deletions(-)
+Thanks for all the work.
 
---- lnx-2634-g8-kerndoc.orig/drivers/message/fusion/mptbase.c
-+++ lnx-2634-g8-kerndoc/drivers/message/fusion/mptbase.c
-@@ -6913,7 +6913,6 @@ EXPORT_SYMBOL(mpt_halt_firmware);
-  *	mpt_SoftResetHandler - Issues a less expensive reset
-  *	@ioc: Pointer to MPT_ADAPTER structure
-  *	@sleepFlag: Indicates if sleep or schedule must be called.
--
-  *
-  *	Returns 0 for SUCCESS or -1 if FAILED.
-  *
-@@ -7057,7 +7056,6 @@ mpt_SoftResetHandler(MPT_ADAPTER *ioc, i
-  *	mpt_Soft_Hard_ResetHandler - Try less expensive reset
-  *	@ioc: Pointer to MPT_ADAPTER structure
-  *	@sleepFlag: Indicates if sleep or schedule must be called.
--
-  *
-  *	Returns 0 for SUCCESS or -1 if FAILED.
-  *	Try for softreset first, only if it fails go for expensive
+--
+Christof
