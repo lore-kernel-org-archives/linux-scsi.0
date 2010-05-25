@@ -1,100 +1,115 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 14/27] drivers/scsi: Use memdup_user
-Date: Tue, 25 May 2010 15:23:23 -0700
-Message-ID: <20100525152323.26652def.akpm@linux-foundation.org>
-References: <Pine.LNX.4.64.1005221022180.13021@ask.diku.dk>
-	<1274538263.4410.38.camel@mulgrave.site>
-	<4BF94B89.2050101@panasas.com>
-	<1274631752.5894.24.camel@mulgrave.site>
-	<4BFBDB83.2090807@panasas.com>
-	<1274799513.5300.37.camel@mulgrave.site>
+From: Leif Sawyer <ak.hepcat+scsi@gmail.com>
+Subject: Re: Fwd: high volume of disk-writes causes disk to 'disappear'
+Date: Tue, 25 May 2010 14:58:34 -0800
+Message-ID: <AANLkTikvjQyo60XJThK_IZkbcKmF2wNcBFZ1FUUx87pZ@mail.gmail.com>
+References: <y2wd4bc8f581004191138ldab84bect8670755200e2c413@mail.gmail.com>
+	 <w2od4bc8f581004271446md75f0dcbt537956a2e3f9abb7@mail.gmail.com>
+	 <4BD99BFD.9090202@suse.de>
+	 <q2md4bc8f581004291011k43d5c03cpb7361473f6de4350@mail.gmail.com>
+	 <4BDAE41D.6030707@suse.de>
+	 <m2gd4bc8f581004301627jea793d0ax1e63bc3796458662@mail.gmail.com>
+	 <i2yd4bc8f581005031143r638b8037ra3778f97e6d2e25d@mail.gmail.com>
+	 <AANLkTik8917n0yNfc9Y6V9rbG7OOltt_SLcxEu8bzu20@mail.gmail.com>
+	 <AANLkTimjTiA9wIY_8ES_6hzowXKMVkNQOhg5VBxVu-ty@mail.gmail.com>
+	 <AANLkTin0XcxnGmyOXdpwW0ow-I61fJkOhWiYNIZ2soX2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1274799513.5300.37.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Julia Lawall <julia@diku.dk>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:62722 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272Ab0EYW6f convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2010 18:58:35 -0400
+Received: by gyg13 with SMTP id 13so2303526gyg.19
+        for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 15:58:34 -0700 (PDT)
+In-Reply-To: <AANLkTin0XcxnGmyOXdpwW0ow-I61fJkOhWiYNIZ2soX2@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, Hannes Reinecke <hare@suse.de>
 
-On Tue, 25 May 2010 09:58:33 -0500
-James Bottomley <James.Bottomley@suse.de> wrote:
+On Wed, May 19, 2010 at 5:23 AM, Leif Sawyer <ak.hepcat+scsi@gmail.com>=
+ wrote:
+> looks like the 75% mark might have been too high of an estimate.
+> Whipped up a quick logger to show me when i was failing:
+>
+> <user.info<14>>May 18 17:08:01 websniff-6036a5 logger: disk: /data at
+> 59% utilization
+> <user.info<14>>May 18 17:09:01 websniff-6036a5 logger: disk: /data at
+> 59% utilization
+> <user.info<14>>May 18 17:10:01 websniff-6036a5 logger: disk: /data at
+> 60% utilization
+> <user.info<14>>May 18 17:11:01 websniff-6036a5 logger: disk: /data at
+> 60% utilization
+> [22563.204037] INFO: task flush-8:16:2430 blocked for more than 120 s=
+econds.
+> [22563.224392] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [22563.248117] INFO: task dumpcap:4004 blocked for more than 120 seco=
+nds.
+> [22563.267662] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [22563.291359] INFO: task df:14714 blocked for more than 120 seconds.
+> [22563.309874] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [22563.333593] INFO: task websniff.cgi:14717 blocked for more than 12=
+0 seconds.
+> [22563.354690] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [22682.229526] end_request: I/O error, dev sdb, sector 169922743
+> [22682.247345] Buffer I/O error on device sdb1, logical block 2124033=
+5
+> [22682.266781] end_request: I/O error, dev sdb, sector 170131519
+> [22682.284445] Buffer I/O error on device sdb1, logical block 2126643=
+2
+> [....... repeats until......]
+> [22682.782577] sd 3:0:1:0: rejecting I/O to offline device
+> [22682.798907] sd 3:0:1:0: rejecting I/O to offline device
+>
+> And from here on out, the device is no longer recognized by the syste=
+m
+> until a reboot.
+>
+> I need some help with scsi debugging in order to provide more useful
+> information.
+>
+> I do have a 512mb logfile (text) =A0with lots of scsi dump card state
+> logs and such, though.
+>
 
-> On Tue, 2010-05-25 at 17:15 +0300, Boaz Harrosh wrote:
-> > On 05/23/2010 07:22 PM, James Bottomley wrote:
-> > > On Sun, 2010-05-23 at 18:36 +0300, Boaz Harrosh wrote:
-> > >>> This type of transformation has really no value at all.
 
-kerrrrapp!!  There's always value in replacing open-coded straggles
-with calls to well-understood, well-documented, well-tested library
-code.
+Okay, so on a whim, I applied some patches that were recently posted
+here that I thought
+might have an impact on my particular system (anything generic scsi,
+or adaptec-related)
 
->  The code you're
-> > >>> proposing to replace is already correct.  I'm fairly ambivalent on
-> > >>> patterned APIs anyway but I accept they're useful way to prevent new
-> > >>> code getting it wrong. However, it's completely bogus to force
-> > >>> replacement of correctly functioning code throughout the kernel
+My system has been up since yesterday with those patches applied, and m=
+y disk
+has been churning at the 100% utilized (with between 600Mb and 75Mb
+free at any given time)
+with tshark continuously rolling over new capture files  for over 6h.
+(which it never did before)
 
-Hello?  This is Linux.  We're continuously filtering through old code,
-improving and updating it.  There's nothing which exempts
-./drivers/scsi/ from our reasons for doing this.
+the following patches were applied which were not cosmetic or debug rel=
+ated:
 
-> (unless
-> > >>> you're going to argue that everyone who tries to copy from user into a
-> > >>> kmalloc space does a cut and paste from sg?)
-> > >>>
-> > >>> Of infinitely greater service would be finding any places where the
-> > >>> pattern is being incorrectly used.
-> > >>>
-> > >>
-> > >> It looks like it is not done 100% kosher and calling memdup_user should
-> > >> be better.
-> > >>
-> > >> - For 1 memdup_user does a GFP_KERNEL with a comment on how copy_from_user
-> > >>   would eventually sleep, so what's the point of GFP_ATOMIC?
-> > > 
-> > > Well, since you've written a storage driver, I really hope that question
-> > > is rhetorical ...
-> > > 
-> > 
-> > Not really I do mean it in this case. It is not a storage-driver code
-> > path. Is sg a storage-driver. I was not aware anyone used it for one.
-> 
-> by storage driver, I mean anything in the writeout path ... this
-> includes ULDs, of which sg is one.
-> 
-> > > The reason for using GFP_ATOMIC from user context in storage drivers is
-> > > to avoid writeout deadlock:  you don't want to trigger a swap write
-> > > while you potentially occupy the writeout path.  In all older drivers
-> > > this had to be GFP_ATOMIC because GFP_NOIO wasn't around.
-> > > 
-> > 
-> > I confess my total swap ignorance. I was under the impression that
-> > swap needs a block device. OK you could do a user-mode filesystem
-> > over sg, under loop device. Does swap work over loop device=>ext2
-> > for example? Or is there a way to directly swap over a filesystem
-> > (Not block based)?
-> 
-> Well, swap can function above block devices or files.
-> 
-> However, it's not just swap, it's also triggerable via mmap (you do file
-> backed mmap of a large area then have a process that joyfully dirties
-> lots of it) ... and that's what can make it such a difficult problem.
-> Basically you end up with a system with mostly dirty memory that it has
-> to clean via writeout (either to swap or by flushing dirty pages).  The
-> writeout path that these pages go down cannot ever wait on dirty pages
-> being flushed (which is what a sleeping kmalloc does), because that can
-> end up as a deadlock.
+     lct_data->tid assignment
+     io_dev->iop assignment
+     usg use after kfree
+     gdth  goto out_free_ccb_phys  instead of  out_free_coal_stat
 
-copy_from_user() can take a fault, take a zillion locks, perform
-GFP_HIGHUSER allocations, enter page reclaim, enter filesystems, etc. 
-View a pagefault as a syscall with a different calling convention -
-it's that high level.
 
-If this driver if correct in potentially taking a pagefault at this
-place then the patch is correct and desirable.  Otherwise, well, the
-driver already has problem and the patch did nothing to increase them.
+If there's interest, i'll back out the patches one at a time and see
+which one(s)
+cause/bring-back the most instability.
 
-And, of course, Julia's "no value" work caused us to identify those
-problems.
+
+
+--=20
+"It's pronounced Layf...you know, like Leif Garrett? Don't you watch
+ 'I Love the 70's'? What kind of retro lover are you, anyway?"
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
