@@ -1,299 +1,38 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [patch 12/26] g_NCR5380: fix broken MMIO compilation
-Date: Tue, 25 May 2010 20:58:36 +0200
-Message-ID: <201005252058.38589.linux@rainbow-software.org>
-References: <201005241922.o4OJMSxG011317@imap1.linux-foundation.org> <1274746615.4491.68.camel@localhost>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16021] mptsas target reset under heavy duty
+Date: Tue, 25 May 2010 20:40:11 GMT
+Message-ID: <201005252040.o4PKeBVV016008@demeter.kernel.org>
+References: <bug-16021-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1-out1.atlantis.sk ([80.94.52.55]:43733 "EHLO
-	mail.atlantis.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932977Ab0EYS6q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2010 14:58:46 -0400
-In-Reply-To: <1274746615.4491.68.camel@localhost>
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:36531 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934140Ab0EYUkM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2010 16:40:12 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4PKeBV1016009
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 20:40:11 GMT
+In-Reply-To: <bug-16021-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Walls <awalls@md.metrocast.net>
-Cc: akpm@linux-foundation.org, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tuesday 25 May 2010 02:16:55 Andy Walls wrote:
-> On Mon, 2010-05-24 at 12:22 -0700, akpm@linux-foundation.org wrote:
-> > From: Ondrej Zary <linux@rainbow-software.org>
-> >
-> > The ifdefs are broken so the MMIO code is never compiled and so it's
-> > broken too.  Fix them all.  Untested as I don't have the hardware.
-> >
-> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> > Cc: Andy Walls <awalls@radix.net>
-> > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
->
-> I remeber inspecting this before and thinking they were fine.
->
-> Reviewed-by: Andy Walls <awalls@md.metrocast.net>
-> (my awalls@radix.net account is obsolete)
->
-> If anyone in the US is interested in ancient ISA bus SCSI hardware for
-> NCR5380 driver development, I can send them:
->
-> 1. a DTC3181E
-> 	NCR5380
-> 	ISA I/O ports
-> 	no IRQ
-> 	no Pseudo-DMA
-> 	DB-25 external connector
-> 	...definitely a piece of junk.
->
-> 2. a SUMO SCSI AT
-> 	NCR5380
-> 	ISA I/O ports
-> 	IRQ is is enabled by a bit in a board specific reg at reg_base+8
-> 	Pseudo DMA is enabled by a a board specific reg at reg_base+8
-> 	No watchdog timer on the pseudo DMA, so a failed pseudo-DMA
-> 		can hang your whole machine :D
-> 	SCSI-1 external connector (Centronics-type with bail locks)
-> 	Internal SCSI connector
-> 	Removeable terminating resistors for the card.
-> 	Two BIOS firmware images on board, each having a divide by
-> 		0 bug in their fake C/H/S drive geometry computations :D
-> 	...in general, also a piece of junk.
->
-> Neither of them will help with testing the MMIO mode of the driver.
+https://bugzilla.kernel.org/show_bug.cgi?id=16021
 
-I actually have a memory-mapped card - Canon FG2-5202 (hardwired to IRQ7). It 
-did not work for me. But the other (I/O) mapped cards do neither. They seem 
-to work if there's no SCSI device connected but I was not able to get neither 
-IBM DORS-32160 hard disk nor SONY CDU415 CD-ROM working.
 
-The driver hangs the machine completely because it waits for timeout using 
-time_before with interrupts disabled - e.g. in NCR5380_poll_politely() in 
-drivers/scsi/NCR5380.c.
+Andrew Morton <akpm@linux-foundation.org> changed:
 
-Tried older kernels to find when did it work last time - and found none! 2.4 
-kernels were able to at least display device name and firmware version. Maybe 
-I should try some older CPU & motherboard (this was on a P3, IIRC).
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org
+         AssignedTo|linux-scsi@vger.kernel.org  |kashyap.desai@lsi.com
 
-> Regards,
-> Andy
->
-> > ---
-> >
-> >  drivers/scsi/g_NCR5380.c |   43 +++++++++++++++++++------------------
-> >  drivers/scsi/g_NCR5380.h |    6 ++---
-> >  2 files changed, 26 insertions(+), 23 deletions(-)
-> >
-> > diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-fix-broken-mmio-compilation
-> > drivers/scsi/g_NCR5380.c ---
-> > a/drivers/scsi/g_NCR5380.c~g_ncr5380-fix-broken-mmio-compilation +++
-> > a/drivers/scsi/g_NCR5380.c
-> > @@ -285,9 +285,12 @@ static int __init do_DTC3181E_setup(char
-> >  int __init generic_NCR5380_detect(struct scsi_host_template * tpnt)
-> >  {
-> >  	static int current_override = 0;
-> > -	int count, i;
-> > +	int count;
-> >  	unsigned int *ports;
-> > +#ifndef SCSI_G_NCR5380_MEM
-> > +	int i;
-> >  	unsigned long region_size = 16;
-> > +#endif
-> >  	static unsigned int __initdata ncr_53c400a_ports[] = {
-> >  		0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
-> >  	};
-> > @@ -296,7 +299,7 @@ int __init generic_NCR5380_detect(struct
-> >  	};
-> >  	int flags = 0;
-> >  	struct Scsi_Host *instance;
-> > -#ifdef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifdef SCSI_G_NCR5380_MEM
-> >  	unsigned long base;
-> >  	void __iomem *iomem;
-> >  #endif
-> > @@ -315,7 +318,7 @@ int __init generic_NCR5380_detect(struct
-> >  		overrides[0].board = BOARD_NCR53C400A;
-> >  	else if (dtc_3181e != NCR_NOT_SET)
-> >  		overrides[0].board = BOARD_DTC3181E;
-> > -
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  	if (!current_override && isapnp_present()) {
-> >  		struct pnp_dev *dev = NULL;
-> >  		count = 0;
-> > @@ -347,7 +350,7 @@ int __init generic_NCR5380_detect(struct
-> >  			count++;
-> >  		}
-> >  	}
-> > -
-> > +#endif
-> >  	tpnt->proc_name = "g_NCR5380";
-> >
-> >  	for (count = 0; current_override < NO_OVERRIDES; ++current_override) {
-> > @@ -372,7 +375,7 @@ int __init generic_NCR5380_detect(struct
-> >  			break;
-> >  		}
-> >
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  		if (ports) {
-> >  			/* wakeup sequence for the NCR53C400A and DTC3181E */
-> >
-> > @@ -434,7 +437,7 @@ int __init generic_NCR5380_detect(struct
-> >  #endif
-> >  		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
-> >  		if (instance == NULL) {
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  			release_region(overrides[current_override].NCR5380_map_name,
-> > region_size); #else
-> >  			iounmap(iomem);
-> > @@ -444,10 +447,10 @@ int __init generic_NCR5380_detect(struct
-> >  		}
-> >
-> >  		instance->NCR5380_instance_name =
-> > overrides[current_override].NCR5380_map_name; -#ifndef
-> > CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  		instance->n_io_port = region_size;
-> >  #else
-> > -		((struct NCR5380_hostdata *)instance->hostdata).iomem = iomem;
-> > +		((struct NCR5380_hostdata *)instance->hostdata)->iomem = iomem;
-> >  #endif
-> >
-> >  		NCR5380_init(instance, flags);
-> > @@ -515,10 +518,10 @@ int generic_NCR5380_release_resources(st
-> >  		free_irq(instance->irq, instance);
-> >  	NCR5380_exit(instance);
-> >
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  	release_region(instance->NCR5380_instance_name, instance->n_io_port);
-> >  #else
-> > -	iounmap(((struct NCR5380_hostdata *)instance->hostdata).iomem);
-> > +	iounmap(((struct NCR5380_hostdata *)instance->hostdata)->iomem);
-> >  	release_mem_region(instance->NCR5380_instance_name,
-> > NCR5380_region_size); #endif
-> >
-> > @@ -588,14 +591,14 @@ static inline int NCR5380_pread(struct S
-> >  		}
-> >  		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY);
-> >
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  		{
-> >  			int i;
-> >  			for (i = 0; i < 128; i++)
-> >  				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
-> >  		}
-> >  #else
-> > -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> > +		/* implies SCSI_G_NCR5380_MEM */
-> >  		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
-> >  #endif
-> >  		start += 128;
-> > @@ -608,14 +611,14 @@ static inline int NCR5380_pread(struct S
-> >  			// FIXME - no timeout
-> >  		}
-> >
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  		{
-> >  			int i;
-> >  			for (i = 0; i < 128; i++)
-> >  				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
-> >  		}
-> >  #else
-> > -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> > +		/* implies SCSI_G_NCR5380_MEM */
-> >  		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
-> >  #endif
-> >  		start += 128;
-> > @@ -674,13 +677,13 @@ static inline int NCR5380_pwrite(struct
-> >  		}
-> >  		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
-> >  			; // FIXME - timeout
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  		{
-> >  			for (i = 0; i < 128; i++)
-> >  				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
-> >  		}
-> >  #else
-> > -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> > +		/* implies SCSI_G_NCR5380_MEM */
-> >  		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
-> >  #endif
-> >  		start += 128;
-> > @@ -690,13 +693,13 @@ static inline int NCR5380_pwrite(struct
-> >  		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
-> >  			; // FIXME - no timeout
-> >
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  		{
-> >  			for (i = 0; i < 128; i++)
-> >  				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
-> >  		}
-> >  #else
-> > -		/* implies CONFIG_SCSI_G_NCR5380_MEM */
-> > +		/* implies SCSI_G_NCR5380_MEM */
-> >  		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
-> >  #endif
-> >  		start += 128;
-> > @@ -936,7 +939,7 @@ module_param(ncr_53c400a, int, 0);
-> >  module_param(dtc_3181e, int, 0);
-> >  MODULE_LICENSE("GPL");
-> >
-> > -
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >  static struct isapnp_device_id id_table[] __devinitdata = {
-> >  	{
-> >  	 ISAPNP_ANY_ID, ISAPNP_ANY_ID,
-> > @@ -946,7 +949,7 @@ static struct isapnp_device_id id_table[
-> >  };
-> >
-> >  MODULE_DEVICE_TABLE(isapnp, id_table);
-> > -
-> > +#endif
-> >
-> >  __setup("ncr5380=", do_NCR5380_setup);
-> >  __setup("ncr53c400=", do_NCR53C400_setup);
-> > diff -puN drivers/scsi/g_NCR5380.h~g_ncr5380-fix-broken-mmio-compilation
-> > drivers/scsi/g_NCR5380.h ---
-> > a/drivers/scsi/g_NCR5380.h~g_ncr5380-fix-broken-mmio-compilation +++
-> > a/drivers/scsi/g_NCR5380.h
-> > @@ -63,7 +63,7 @@ static const char* generic_NCR5380_info(
-> >  #define __STRVAL(x) #x
-> >  #define STRVAL(x) __STRVAL(x)
-> >
-> > -#ifndef CONFIG_SCSI_G_NCR5380_MEM
-> > +#ifndef SCSI_G_NCR5380_MEM
-> >
-> >  #define NCR5380_map_config port
-> >  #define NCR5380_map_type int
-> > @@ -91,7 +91,7 @@ static const char* generic_NCR5380_info(
-> >      NCR5380_map_name =
-> > (NCR5380_map_type)((instance)->NCR5380_instance_name)
-> >
-> >  #else
-> > -/* therefore CONFIG_SCSI_G_NCR5380_MEM */
-> > +/* therefore SCSI_G_NCR5380_MEM */
-> >
-> >  #define NCR5380_map_config memory
-> >  #define NCR5380_map_type unsigned long
-> > @@ -114,7 +114,7 @@ static const char* generic_NCR5380_info(
-> >      register void __iomem *iomem
-> >
-> >  #define NCR5380_setup(instance) \
-> > -    iomem = (((struct NCR5380_hostdata *)(instance)->hostdata).iomem)
-> > +    iomem = (((struct NCR5380_hostdata *)(instance)->hostdata)->iomem)
-> >
-> >  #endif
-> >
-> > _
 
 
 
 -- 
-Ondrej Zary
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
