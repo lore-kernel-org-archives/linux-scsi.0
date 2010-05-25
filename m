@@ -1,49 +1,56 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [dm-devel] [ANNOUNCE] multipath-tools 0.4.9
-Date: Tue, 25 May 2010 10:36:28 +0200
-Message-ID: <20100525083627.GA4784@schmichrtp.mainz.de.ibm.com>
-References: <1274535248.6881.10.camel@localhost>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LFS/VM TOPIC] Barriers and SYNCHRONZIE_CACHE
+Date: Tue, 25 May 2010 13:00:57 +0200
+Message-ID: <4BFBADE9.4060904@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.17.166]:40714 "EHLO
-	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754758Ab0EYIga (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2010 04:36:30 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate6.de.ibm.com (8.13.1/8.13.1) with ESMTP id o4P8aTOi002231
-	for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 08:36:29 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o4P8aSMO872596
-	for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 10:36:28 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o4P8aSvI031902
-	for <linux-scsi@vger.kernel.org>; Tue, 25 May 2010 10:36:28 +0200
-Content-Disposition: inline
-In-Reply-To: <1274535248.6881.10.camel@localhost>
+Received: from cantor.suse.de ([195.135.220.2]:52296 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756485Ab0EYLA7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 May 2010 07:00:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: christophe.varoqui@opensvc.com, device-mapper development <dm-devel@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: lsf10-pc@lists.linuxfoundation.org
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, May 22, 2010 at 03:34:08PM +0200, Christophe Varoqui wrote:
-> Here is a long due multipath-tools release.
-> 
-> Most patches in there are already available in enterprise distributions
-> package.
-> 
-> The tarball is available on http://christophe.varoqui.free.fr/
-> My maintainer work on this project is now sponsored by
-> http://www.opensvc.com and the Nexenta multipath support has been
-> sponsored by http://www.alyseo.com/
-> 
-> multipath-tools-0.4.9 shortlog :
-[...]
+Hi all,
 
-I noticed that the git tree does not have the 0.4.9 tag (yet). Could
-you add it as well?
+[Topic]
+Barriers and SYNCHRONIZE CACHE
 
-Thanks for all the work.
+[Abstract]
+In recent years some design flaws in the barriers implementation
+became apparent:
+- No indication about _which_ blocks to flush, so all outstanding
+  blocks are flushed
+- No error handling for SYNCHRONIZE CACHE
+- SYNCHRONIZE CACHE affects all I/Os, so if a LUN is used by
+  several virtual guests _all_ guests are affected
+- SYNCHRONIZE CACHE has a rather severe performance impact
+  on RAID controllers (if executed directly)
 
+To overcome these issues I would propose to modify the
+barrier interface so that individual blocks can be
+marked as 'flushing'/'immediate'. This would allow
+the lower layers (eg. SCSI midlayer) to restrict
+the barriers operation on the affected blocks only.
+EG the SYNCHRONIZE_CACHE operation could be updated
+with a block list. Or more advanced methods (like FUA
+or tagging) could be used, avoiding the need to issue
+a SYNCHRONIZE CACHE altogether.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
 --
-Christof
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
