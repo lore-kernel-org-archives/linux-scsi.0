@@ -1,36 +1,66 @@
-From: Erwan Velu <erwanaliasr1@gmail.com>
-Subject: Question about the maximum value for unload_head
-Date: Wed, 26 May 2010 22:32:33 +0200
-Message-ID: <4BFD8561.2060706@gmail.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 6/7] scsi: megaraid_sas - Add three times Online
+ controller reset - V2
+Date: Wed, 26 May 2010 15:08:48 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3D06ADE3F@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
+	 <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C3CDB80C32@cosmail02.lsi.com>
+	 <4BFBF814.5040202@redhat.com> <1274808736.5300.133.camel@mulgrave.site>
+ <4BFD42B4.90207@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:56250 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083Ab0EZUch (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 May 2010 16:32:37 -0400
-Received: by wwb13 with SMTP id 13so709467wwb.19
-        for <linux-scsi@vger.kernel.org>; Wed, 26 May 2010 13:32:35 -0700 (PDT)
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:58662 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755413Ab0EZVJB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 May 2010 17:09:01 -0400
+In-Reply-To: <4BFD42B4.90207@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, James Bottomley <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-Hey folks,
-
-I'm in an industrial situation where my Linux system could be strongly
-shacked for some minutes.
-I'm able to detect this situation and so, to protect my hard drive, I
-park its heads by using the unload_heads feature.
-I have nothing to say more than it works sooooo good ! But I saw there
-is a limitation to 30sec as #define MAX_PARK_TIMEOUT 30000
-
-That mean in my case that I have to manage a stupid script that have to
-retrigger the unload_heads every 30sec. That's stupid script and I
-wonder if it could be possible to get rid of it. Why is there such
-limitation. Why 30sec ?
-
-Could it be possible to increase this value ?
-
-Thanks for your inputs,
-Erwan Velu
+VG9tYXMvSmFtZXMsDQoNCj4gQWxzbyBkZXNjcmlwdGl2ZSBzdWJqZWN0cyB3b3VsZCBiZSBuaWNl
+IChwYXJ0cyBJLUlJSSBtYXkgZG8gd2VsbCBmb3INCj4gTG9yZCBvZiB0aGUgUmluZ3MgLi4uIGl0
+J3MgbGVzcyB1c2VmdWwgZm9yIFNDU0kgcGF0Y2hlcykuDQo+ICAgDQo+VGhpcyBpcyBhZ2FpbiBh
+IHF1ZXN0aW9uIGZvciB0aGUgb3JpZ2luYWwgYXV0aG9yLiBCbz8NCg0KSSBjaGFuZ2VkIHRoZSBk
+ZXNjcmlwdGlvbiBhbmQgcmVzdWJtaXQgdGhlbSBhbHJlYWR5Lg0KDQpCbyBZYW5nDQoNCg0KDQot
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogVG9tYXMgSGVuemwgW21haWx0bzp0aGVu
+emxAcmVkaGF0LmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE1heSAyNiwgMjAxMCAxMTo0OCBBTQ0K
+VG86IEphbWVzIEJvdHRvbWxleQ0KQ2M6IFlhbmcsIEJvOyAnbGludXgtc2NzaUB2Z2VyLmtlcm5l
+bC5vcmcnOyAnYWtwbUBvc2RsLm9yZyc7ICdsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnJzsg
+RGFmdGFyZGFyLCBKYXlhbnQNClN1YmplY3Q6IFJlOiBbUEFUQ0ggNi83XSBzY3NpOiBtZWdhcmFp
+ZF9zYXMgLSBBZGQgdGhyZWUgdGltZXMgT25saW5lIGNvbnRyb2xsZXIgcmVzZXQgLSBWMg0KDQpP
+biAwNS8yNS8yMDEwIDA3OjMyIFBNLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6DQo+IE9uIFR1ZSwg
+MjAxMC0wNS0yNSBhdCAxODoxNyArMDIwMCwgVG9tYXMgSGVuemwgd3JvdGU6DQo+ICAgDQo+PiBW
+MjogSSd2ZSBjbGVhbmVkIHVwIHNvbWUgY29kaW5nIHN0eWxlIGlzc3VlcyBhbmQgcmVtb3ZlZCBh
+IHZhcmlhYmxlLCB0aGUgZnVuY3Rpb25hbGl0eSBzaG91bGRuJ3QgYmUgY2hhbmdlZA0KPj4NCj4+
+IFRvbWFzDQo+Pg0KPj4gSWYgZncgZGlkbid0IHJhaXNlIHRoZSBpbnRlcnJ1cHQgd2l0aCB0aGUg
+Zncgc3RhdGUgY2hhbmdlIHRvIGRyaXZlciBhbmQgZncgZ29lcyB0byBmYWlsdXJlIHN0YXRlLCBk
+cml2ZXINCj4+IFdpbGwgY2hlY2sgdGhlIEZXIHN0YXRlIGluIGRyaXZlcidzIHRpbWVvdXQgcm91
+dGluZSBhbmQgaXNzdWUgdGhlIHJlc2V0IGlmIG5lZWQuICBEcml2ZXIgd2lsbCBkbyB0aGUgT0NS
+IHVwdG8gdGhyZWUNCj4+IFRpbWVzIHVudGlsIGtpbGwgYWRhcHRlci4gIEFsc28gZHJpdmVyIHdp
+bGwgaXNzdWUgT0NSIGJlZm9yZSBkcml2ZXIga2lsbCBhZGFwdGVyIGV2ZW4gaWYgZncgaW4gb3Bl
+cmF0aW9uYWwgc3RhdGUuICAgDQo+PiAgICAgDQo+IFNvIHRoZXJlJ3Mgc3VwcG9zZWQgdG8gYmUg
+YSByZXBsYWNlbWVudCBmb3IgMy83IChtZWdhcmFpZF9zYXMgLSBPbmxpbmUNCj4gQ09udHJvbGxl
+ciBSZXNldCAoT0NSKSBQQVJULUlJSSkgYXMgd2VsbCwgaXNuJ3QgdGhlcmU/DQo+ICAgDQpZZXMs
+IEkgdGhpbmsgdGhlcmUgYXJlIHNvbWUgaXNzdWVzIHRoYXQgY291bGQgYmUgcmVtb3ZlZCwgb24g
+dGhlIG90aGVyIHNpZGUNCml0IGlzIG1vc3RseSBjb2Rpbmcgc3R5bGUgcmVsYXRlZCwgc28gSSB0
+aGluayBpdCBjb3VsZCBiZSBhY2NlcHRlZCBhcyBpdCBpcy4NCkkgaG9wZSBJIGNvdWxkIGFmdGVy
+d2FyZHMgY2xlYW4gc29tZXRoaW5nIHVwLiAoVGhlIHBhdGNoZXMgYXMgdGhleSBhcmUgbm93IGRv
+bid0DQphcHBseSBjb3JyZWN0bHkgb24gbXkgc3lzdGVtLCBpdCdzIG1heWJlIGFuIGlzc3VlIHdp
+dGggbXkgbWFpbCByZWFkZXIuKQ0KIA0KDQo+IEFsc28gZGVzY3JpcHRpdmUgc3ViamVjdHMgd291
+bGQgYmUgbmljZSAocGFydHMgSS1JSUkgbWF5IGRvIHdlbGwgZm9yDQo+IExvcmQgb2YgdGhlIFJp
+bmdzIC4uLiBpdCdzIGxlc3MgdXNlZnVsIGZvciBTQ1NJIHBhdGNoZXMpLg0KPiAgIA0KVGhpcyBp
+cyBhZ2FpbiBhIHF1ZXN0aW9uIGZvciB0aGUgb3JpZ2luYWwgYXV0aG9yLiBCbz8NCg0KVG9tYXMN
+Cg0KDQo+IEphbWVzDQo+DQo+DQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0
+OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbg0KPiB0aGUgYm9keSBv
+ZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9t
+byBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4g
+ICANCg0K
