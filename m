@@ -1,51 +1,36 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: PATCH 1/3 ] SCSI: Support 1024 scatter-gather list entries and
- improve AP while FW trapped and behaviors of EHs
-Date: Tue, 25 May 2010 22:11:29 -0700
-Message-ID: <1274850689.1845.11.camel@Joe-Laptop.home>
-References: <2D7BE052D37A48D59461AB6B775FE070@areca4e4f859d4>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Wed, 26 May 2010 08:08:09 GMT
+Message-ID: <201005260808.o4Q889eO022622@demeter.kernel.org>
+References: <bug-14831-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2D7BE052D37A48D59461AB6B775FE070@areca4e4f859d4>
-Sender: linux-kernel-owner@vger.kernel.org
-To: nick.cheng@areca.com.tw
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:52244 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751618Ab0EZIIJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 May 2010 04:08:09 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4Q889Ir022623
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 26 May 2010 08:08:09 GMT
+In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2010-05-26 at 12:55 +0800, Nick Cheng wrote:
-> 1. To support 4M/1024 scatter-gather list entry, reorganize struct
-> ARCMSR_CDB and struct CommandControlBlock
-> 2. To modify arcmsr_probe
-> 3. In order to help fix F/W issue, add the driver mode for type B card
-> 4. To improve AP's behavior while F/W resets
-> 5. To unify struct MessageUnit_B's members' naming in all OS drivers'
-> 6. To improve error handlers, arcmsr_bus_reset(), arcmsr_abort()
-> 7. To fix the arcmsr_queue_command() in bus reset stage, just let the
-> commands pass down to FW, don't block
-> Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
-> ---
+https://bugzilla.kernel.org/show_bug.cgi?id=14831
 
-Hi Nick.
 
-These patches don't use normal kernel coding style.
-Can you run scripts/checkpatch.pl against them please.
 
-You've also got continuation lines like this:
 
-+                       printk(KERN_NOTICE "arcmsr%d: wait 'flush adapter cache' \
-+                       timeout, retry count down = %d \n", acb->host->host_no, 
 
-which are defective because of the additional white space introduced
-into the format string after the line continuations.
+--- Comment #26 from dujun@perabytes.com  2010-05-26 08:08:01 ---
+It seems to us that the software raid growing has no problem at all with the
+forced alignment patch.
 
-These should written as:
-
-			printk(KERN_NOTICE "arcmsr%d: wait 'flush adapter cache' "
-			       "timeout, retry count down = %d\n",
-
-I did submit patches to Erich Chen <support@areca.com.tw> to fix the
-some of the existing problems.
-
-http://patchwork.kernel.org/patch/75997/
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
