@@ -1,22 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Bugme-new] [Bug 16058] New: [BUG] Cannot boot any kernel from
- 2.6.27 on if a 256 byte sector SCSI disk is attached
-Date: Thu, 27 May 2010 16:30:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1005271626320.3239-100000@iolanthe.rowland.org>
-References: <20100527100752.c12d8e2e.akpm@linux-foundation.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Thu, 27 May 2010 20:31:19 GMT
+Message-ID: <201005272031.o4RKVJNt028451@demeter.kernel.org>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:41469 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751905Ab0E0Uaj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2010 16:30:39 -0400
-In-Reply-To: <20100527100752.c12d8e2e.akpm@linux-foundation.org>
+Received: from demeter.kernel.org ([140.211.167.39]:59196 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759109Ab0E0UbU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2010 16:31:20 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4RKVJpZ028452
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 27 May 2010 20:31:19 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: markh@compro.net
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, bugzilla-daemon@bugzilla.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
+
+
+
+
+
+--- Comment #1 from Alan Stern <stern@rowland.harvard.edu>  2010-05-27 20:31:16 ---
 On Thu, 27 May 2010, Andrew Morton wrote:
 
 > https://bugzilla.kernel.org/show_bug.cgi?id=16058
@@ -67,3 +77,7 @@ what's going wrong?
 
 Alan Stern
 
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
