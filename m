@@ -1,54 +1,50 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: Re: [PATCH 7/11] drivers/scsi: Eliminate a NULL pointer dereference
-Date: Thu, 27 May 2010 19:13:43 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1005271911590.5422@ask.diku.dk>
-References: <Pine.LNX.4.64.1005271433330.5422@ask.diku.dk> <20100527165301.GU22515@bicker>
- <4BFEA700.20603@bfs.de>
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH]: aic94xx: fix uninitialized variable warning
+Date: Thu, 27 May 2010 14:24:59 -0400
+Message-ID: <20100527182056.24051.65113.sendpatchset@prarit.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:38579 "EHLO mgw2.diku.dk"
+Received: from mx1.redhat.com ([209.132.183.28]:53004 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759250Ab0E0RNt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 May 2010 13:13:49 -0400
-In-Reply-To: <4BFEA700.20603@bfs.de>
+	id S1754644Ab0E0SZA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2010 14:25:00 -0400
+Received: from int-mx03.intmail.prod.int.phx2.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o4RIP0gu028793
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 27 May 2010 14:25:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: walter harms <wharms@bfs.de>
-Cc: Dan Carpenter <error27@gmail.com>, HighPoint Linux Team <linux@highpoint-tech.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+Cc: Prarit Bhargava <prarit@redhat.com>
 
-On Thu, 27 May 2010, walter harms wrote:
+=46ixes warning:
 
-> 
-> 
-> Dan Carpenter schrieb:
-> > On Thu, May 27, 2010 at 02:33:47PM +0200, Julia Lawall wrote:
-> >> If it is a problem to use 0 when host is NULL, then the code could be fixed
-> >> in another way.
-> >>
-> > 
-> > Yeah.  It seems like it would be better to give a clearly bogus number.
-> > I would have said -1 but "scsi-1" looks normal so maybe something like 
-> > 9999999?
-> > 
-> 
-> lets spend some bytes:
-> 
-> 	
-> 	if (host)
-> 		dprintk("scsi%d: hptiop_probe failed\n",host->host_no);
-> 	else
-> 		dprintk("scsi: no host, hptiop_probe failed\n");
+drivers/scsi/aic94xx/aic94xx_sds.c: In function =E2=80=98asd_process_ct=
+rl_a_user=E2=80=99:
+drivers/scsi/aic94xx/aic94xx_sds.c:985: error: =E2=80=98offs=E2=80=99 m=
+ay be used uninitialized in this function
 
-dprintk is defined in hptiop.h as:
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-#if 0
-#define dprintk(fmt, args...) do { printk(fmt, ##args); } while(0)
-#else
-#define dprintk(fmt, args...)
-#endif
-
-So unless someone adjusts the #if 0, there is no code.  I guess there is a 
-danger that adding such an if would actually generate some code?
-
-julia
+diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/=
+aic94xx_sds.c
+index edb43fd..2f1751a 100644
+--- a/drivers/scsi/aic94xx/aic94xx_sds.c
++++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+@@ -982,7 +982,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_st=
+ruct *asd_ha,
+ 				   struct asd_flash_dir *flash_dir)
+ {
+ 	int err, i;
+-	u32 offs, size;
++	u32 uninitialized_var(offs), size;
+ 	struct asd_ll_el *el;
+ 	struct asd_ctrla_phy_settings *ps;
+ 	struct asd_ctrla_phy_settings dflt_ps;
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
