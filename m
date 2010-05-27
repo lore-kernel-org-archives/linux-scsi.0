@@ -1,55 +1,128 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: megaraid sparse warnings
-Date: Wed, 26 May 2010 15:00:51 -0700
-Message-ID: <20100526150051.1006e724.rdunlap@xenotime.net>
-References: <4B7788B8.8090005@xenotime.net>
-	<20100526142802.1c06d5c1.rdunlap@xenotime.net>
-	<20100526213947.GW31073@ZenIV.linux.org.uk>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 3/3] cxgb4i_v3: iscsi and libcxgbi library for handling
+ common part
+Date: Thu, 27 May 2010 00:59:26 -0500
+Message-ID: <4BFE0A3E.9020804@cs.wisc.edu>
+References: <1273944249-311-1-git-send-email-rakesh@chelsio.com> <1273944249-311-2-git-send-email-rakesh@chelsio.com> <1273944249-311-3-git-send-email-rakesh@chelsio.com> <1273944249-311-4-git-send-email-rakesh@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.115.56]:47044 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753119Ab0EZWAy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 May 2010 18:00:54 -0400
-Received: from chimera.site ([71.245.98.113]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 26 May 2010 15:00:52 -0700
-In-Reply-To: <20100526213947.GW31073@ZenIV.linux.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1273944249-311-4-git-send-email-rakesh@chelsio.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: open-iscsi@googlegroups.com
+Cc: Rakesh Ranjan <rakesh@chelsio.com>, NETDEVML <netdev@vger.kernel.org>, SCSIDEVML <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, David Miller <davem@davemloft.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Anish Bhatt <anish@chelsio.com>, Rakesh Ranjan <rranjan@chelsio.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>, scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 26 May 2010 22:39:47 +0100 Al Viro wrote:
+On 05/15/2010 12:24 PM, Rakesh Ranjan wrote:
+> From: Rakesh Ranjan<rranjan@chelsio.com>
+>
+>
+> Signed-off-by: Rakesh Ranjan<rakesh@chelsio.com>
+> ---
+>   drivers/scsi/cxgb4i/cxgb4i_iscsi.c |  617 ++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/cxgb4i/libcxgbi.c     |  589 ++++++++++++++++++++++++++++++++++
+>   drivers/scsi/cxgb4i/libcxgbi.h     |  430 +++++++++++++++++++++++++
 
-> On Wed, May 26, 2010 at 02:28:02PM -0700, Randy Dunlap wrote:
-> > ping??
-> > > 		sprintf (adapter->fw_version, "%c%d%d.%d%d",
-> > > 			 adapter->product_info.fw_version[2],
-> > > 			 adapter->product_info.fw_version[1] >> 8,
-> > > 			 adapter->product_info.fw_version[1] & 0x0f,
-> > > 			 adapter->product_info.fw_version[0] >> 8,
-> > > 			 adapter->product_info.fw_version[0] & 0x0f);
-> > > 		sprintf (adapter->bios_version, "%c%d%d.%d%d",
-> > > 			 adapter->product_info.bios_version[2],
-> > > 			 adapter->product_info.bios_version[1] >> 8,
-> > > 			 adapter->product_info.bios_version[1] & 0x0f,
-> > > 			 adapter->product_info.bios_version[0] >> 8,
-> > > 			 adapter->product_info.bios_version[0] & 0x0f);
-> > > 	} else {
-> 
-> > > Are the fw_version and bios_version fields more than 8 bits each for HP subsys VID
-> > > products?  Do HP VID products need a different struct so that they print this info
-> > > correctly?
-> 
-> Since both are claimed to be strings, I really suspect that this >> 8 is
-> misspelled >> 4 and they have a character followed by pair of two-digit
-> packed decimals in there...
+I think the patch had some whitespace/newline issues. When I did git-am 
+I got:
 
-Duh.  Makes perfect sense.
+warning: squelched 1 whitespace error
+warning: 6 lines add whitespace errors.
 
-Thanks, Al.
+I think James can just fix up when he merges with git, but in the future 
+you might want to try a git-am on your patch before you send (git-am 
+--whitespace=fix will fix it up for you).
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+
+
+> +
+> +int cxgbi_pdu_init(struct cxgbi_device *cdev)
+> +{
+> +	if (cdev->skb_tx_headroom>  (512 * MAX_SKB_FRAGS))
+> +		cdev->skb_extra_headroom = cdev->skb_tx_headroom;
+> +	cdev->pad_page = alloc_page(GFP_KERNEL);
+> +	if (cdev->pad_page)
+> +		return -ENOMEM;
+> +	memset(page_address(cdev->pad_page), 0, PAGE_SIZE);
+> +	return 0;
+> +
+> +	/*
+> +	if (SKB_TX_HEADROOM>  (512 * MAX_SKB_FRAGS))
+> +		skb_extra_headroom = SKB_TX_HEADROOM;
+> +	pad_page = alloc_page(GFP_KERNEL);
+> +	if (!pad_page)
+> +		return -ENOMEM;
+> +	memset(page_address(pad_page), 0, PAGE_SIZE);
+> +	return 0;*/
+
+Clean this up.
+
+> +
+> +void cxgbi_release_itt(struct iscsi_task *task, itt_t hdr_itt)
+> +{
+> +	struct scsi_cmnd *sc = task->sc;
+> +	struct iscsi_tcp_conn *tcp_conn = task->conn->dd_data;
+> +	struct cxgbi_conn *cconn = tcp_conn->dd_data;
+> +	struct cxgbi_device *cdev = cconn->chba->cdev;
+> +	struct cxgbi_tag_format *tformat =&cdev->tag_format;
+> +	u32 tag = ntohl((__force u32)hdr_itt);
+> +
+> +	cxgbi_tag_debug("release tag 0x%x.\n", tag);
+> +
+> +	if (sc&&
+> +		(scsi_bidi_cmnd(sc) ||
+> +		 sc->sc_data_direction == DMA_FROM_DEVICE)&&
+> +			cxgbi_is_ddp_tag(tformat, tag))
+
+The formatting is a little weird. I think you want each line to start in 
+the same column instead of each getting tabbed over.
+
+
+> +
+> +
+> +int cxgbi_reserve_itt(struct iscsi_task *task, itt_t *hdr_itt)
+> +{
+> +	struct scsi_cmnd *sc = task->sc;
+> +	struct iscsi_conn *conn = task->conn;
+> +	struct iscsi_session *sess = conn->session;
+> +	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
+> +	struct cxgbi_conn *cconn = tcp_conn->dd_data;
+> +	struct cxgbi_device *cdev = cconn->chba->cdev;
+> +	struct cxgbi_tag_format *tformat =&cdev->tag_format;
+> +	u32 sw_tag = (sess->age<<  cconn->task_idx_bits) | task->itt;
+> +	u32 tag;
+> +	int err = -EINVAL;
+> +
+> +	if (sc&&
+> +		(scsi_bidi_cmnd(sc) ||
+> +		 sc->sc_data_direction == DMA_FROM_DEVICE)&&
+> +			cxgbi_sw_tag_usable(tformat, sw_tag)) {
+
+
+Same tabbing.
+
+
+> +	volatile unsigned int state;
+
+I did not get why this needed to be volatile (I see it is like this in 
+cxgb3i and I did not see why in there too).
+
+
+
+> +
+> +static inline void cxgbi_sock_hold(struct cxgbi_sock *csk)
+> +{
+> +	atomic_inc(&csk->refcnt);
+
+
+We want people to use krefs instead of their own refcounting now.
+
+> +
+> +static inline void *cplhdr(struct sk_buff *skb)
+> +{
+> +	return skb->data;
+> +}
+
+
+Seems kinda useless.
