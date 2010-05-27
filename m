@@ -1,48 +1,62 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/3] cxgb4i_v3: main driver files
-Date: Thu, 27 May 2010 02:40:52 -0500
-Message-ID: <4BFE2204.3020502@cs.wisc.edu>
-References: <1273944249-311-1-git-send-email-rakesh@chelsio.com> <1273944249-311-2-git-send-email-rakesh@chelsio.com> <1273944249-311-3-git-send-email-rakesh@chelsio.com> <4BFE2173.4050306@cs.wisc.edu>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 7/11] drivers/scsi: Eliminate a NULL pointer dereference
+Date: Thu, 27 May 2010 14:33:47 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1005271433330.5422@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <4BFE2173.4050306@cs.wisc.edu>
-Sender: netdev-owner@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Rakesh Ranjan <rakesh@chelsio.com>, NETDEVML <netdev@vger.kernel.org>, SCSIDEVML <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Karen Xie <kxie@chelsio.com>, David Miller <davem@davemloft.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Anish Bhatt <anish@chelsio.com>, Rakesh Ranjan <rranjan@chelsio.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mgw2.diku.dk ([130.225.96.92]:48521 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756099Ab0E0Mdx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2010 08:33:53 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: HighPoint Linux Team <linux@highpoint-tech.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 05/27/2010 02:38 AM, Mike Christie wrote:
-> On 05/15/2010 12:24 PM, Rakesh Ranjan wrote:
->> From: Rakesh Ranjan<rranjan@chelsio.com>
->>
->>
->> Signed-off-by: Rakesh Ranjan<rakesh@chelsio.com>
->> ---
->> drivers/scsi/cxgb4i/cxgb4i.h | 101 ++
->> drivers/scsi/cxgb4i/cxgb4i_ddp.c | 678 +++++++++++++
->> drivers/scsi/cxgb4i/cxgb4i_ddp.h | 118 +++
->> drivers/scsi/cxgb4i/cxgb4i_offload.c | 1846
->> ++++++++++++++++++++++++++++++++++
->> drivers/scsi/cxgb4i/cxgb4i_offload.h | 91 ++
->> drivers/scsi/cxgb4i/cxgb4i_snic.c | 260 +++++
->> 6 files changed, 3094 insertions(+), 0 deletions(-)
->> create mode 100644 drivers/scsi/cxgb4i/cxgb4i.h
->> create mode 100644 drivers/scsi/cxgb4i/cxgb4i_ddp.c
->> create mode 100644 drivers/scsi/cxgb4i/cxgb4i_ddp.h
->> create mode 100644 drivers/scsi/cxgb4i/cxgb4i_offload.c
->> create mode 100644 drivers/scsi/cxgb4i/cxgb4i_offload.h
->> create mode 100644 drivers/scsi/cxgb4i/cxgb4i_snic.c
->
->
->
-> Got some whitespace errors when applying.
->
-> warning: squelched 1 whitespace error
-> warning: 6 lines add whitespace errors.
->
->
+From: Julia Lawall <julia@diku.dk>
 
-Oh yeah, run sparse on the driver too. There are some warnings about 
-some functions should be static.
+The end of the function is reachable both when host is and is not NULL.
+
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@r exists@
+expression E,E1;
+identifier f;
+statement S1,S2,S3;
+@@
+
+if ((E == NULL && ...) || ...)
+{
+  ... when != if (...) S1 else S2
+      when != E = E1
+* E->f
+  ... when any
+  return ...;
+}
+else S3
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+If it is a problem to use 0 when host is NULL, then the code could be fixed
+in another way.
+
+ drivers/scsi/hptiop.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 645f7cd..0729f15 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -1157,7 +1157,7 @@ free_pci_regions:
+ disable_pci_device:
+ 	pci_disable_device(pcidev);
+ 
+-	dprintk("scsi%d: hptiop_probe fail\n", host->host_no);
++	dprintk("scsi%d: hptiop_probe fail\n", host ? host->host_no : 0);
+ 	return -ENODEV;
+ }
+ 
