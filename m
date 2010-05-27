@@ -1,86 +1,71 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] New: [BUG] Cannot boot any kernel from 2.6.27 on if a
- 256 byte sector SCSI disk is attached
-Date: Thu, 27 May 2010 15:22:09 GMT
-Message-ID: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: [GIT PULL] final (hopefully) SCSI updates for 2.6.35 merge window
+Date: Thu, 27 May 2010 10:45:37 -0500
+Message-ID: <1274975137.2869.123.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:45326 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757839Ab0E0PWK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2010 11:22:10 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4RFM9hM001073
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 27 May 2010 15:22:09 GMT
+Received: from cantor.suse.de ([195.135.220.2]:59312 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932473Ab0E0Ppn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 May 2010 11:45:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
+This is just the stragglers that were in process when the merge window
+opened.  They got delayed to stabilise the scsi features tree through
+linux-next before the first pull request.  it's mainly a set of
+miscellaneous bug fixes (including the ultimate resolution of the iscsi
+bug fix mismerge) plus an ipr and aacraid update.
 
-           Summary: [BUG] Cannot boot any kernel from 2.6.27 on if a 256
-                    byte sector SCSI disk is attached
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.27
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: markh@compro.net
-        Regression: Yes
+The patch is available here:
+
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+
+The short changelog is:
+
+Alan Stern (1):
+      fix race in scsi_target_reap
+
+Dan Carpenter (1):
+      be2iscsi: correct return value in mgmt_invalidate_icds()
+
+Julia Lawall (1):
+      aacraid: Eliminate use after free
+
+Krishna Gudipati (1):
+      bfa: fix system crash when reading sysfs fc_host statistics
+
+Mike Christie (1):
+      iscsi_tcp: remove sk_sleep check
+
+Nick Cheng (1):
+      arcmsr: Support HW reset for EH and polling scheme for scsi device
+
+Wayne Boyer (5):
+      ipr: improve interrupt service routine performance
+      ipr: set the data list length in the request control block
+      ipr: fix a register read to use the correct address for 64 bit adapters
+      ipr: include the resource path in the IOA status area structure
+      ipr: implement fixes for 64 bit adapter support
+
+and the diffstat:
+
+ drivers/scsi/aacraid/commctrl.c   |    4 
+ drivers/scsi/arcmsr/arcmsr.h      |   29 +
+ drivers/scsi/arcmsr/arcmsr_attr.c |    3 
+ drivers/scsi/arcmsr/arcmsr_hba.c  |  684 +++++++++++++++++++++++++++-----------
+ drivers/scsi/be2iscsi/be_mgmt.c   |    5 
+ drivers/scsi/bfa/bfa_core.c       |   22 +
+ drivers/scsi/ipr.c                |  221 ++++++------
+ drivers/scsi/ipr.h                |   31 +
+ drivers/scsi/iscsi_tcp.c          |    6 
+ drivers/scsi/scsi_scan.c          |    9 
+ 10 files changed, 708 insertions(+), 306 deletions(-)
+
+James
 
 
-Created an attachment (id=26560)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=26560)
-The boot process captured from a serial console
-
-As of 2.6.27 if any SCSI disk is attached that has been formatted with a 256
-byte sector size, the boot process hangs. 512, 768, and 1024 byte sector disks
-do not seem to trigger this. The disks in use do NOT have a partition table.
-They are being used by out applications via the sg_io interface only.
-
-A 2.6.26.8 kernel works fine. 
-
-I have bisected this problem to the following commit:
-
-# git bisect good
-427e59f09fdba387547106de7bab980b7fff77be is first bad commit
-commit 427e59f09fdba387547106de7bab980b7fff77be
-Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date:   Sat Mar 8 18:24:17 2008 -0600
-
-    [SCSI] make use of the residue value
-
-    USB sometimes doesn't return an error but instead returns a residue
-    value indicating part (or all) of the command wasn't completed.  So if
-    the driver _done() error processing indicates the command was fully
-    processed, subtract off the residue so that this USB error gets
-    propagated.
-
-    Cc: Alan Stern <stern@rowland.harvard.edu>
-    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-
-:040000 040000 d3bad84ebe1bc231e8e7d6267907ca62fd4d0dcd
-c85f8cb8bd4910724f0101e41054555980727e16 M      drivers
-
-Now, what USB has to do with my SCSI disks is beyond me. I have a
-feeling that this commit is just uncovering another problem. I've attached
-a bootlog from a serial console that ends where the boot hangs.
-
-The does the same thing on a 2.6.34 kernel. Anything I can do to help, I'm
-available.
-
-Thanks and regards
-Mark
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
