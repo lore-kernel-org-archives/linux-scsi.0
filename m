@@ -1,14 +1,12 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 04/17] qla2xxx: Correct use-after-free oops seen during EH-abort.
-Date: Fri, 28 May 2010 15:08:18 -0700
-Message-ID: <1275084511-95266-5-git-send-email-giridhar.malavali@qlogic.com>
-References: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 00/17] qla2xxx: fixes for 2.6.34-rcX.
+Date: Fri, 28 May 2010 15:08:14 -0700
+Message-ID: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:52666 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:52654 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1750908Ab0E1WIc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751082Ab0E1WIc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 28 May 2010 18:08:32 -0400
-In-Reply-To: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
@@ -16,112 +14,59 @@ Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.ker
 
 From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Hold a reference to the srb (sp) while aborting an I/O -- as the
-I/O can/will complete from within the interrupt-context.
+James,
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_def.h |    1 +
- drivers/scsi/qla2xxx/qla_os.c  |   31 ++++++++++++++++++++++++++++++-
- 2 files changed, 31 insertions(+), 1 deletions(-)
+Checkpatch script flagged an error for patch 11/17, which is because of code style. 
+I have not fixed to be in sync with the existing code. Please let me know whether
+this needs to be fixed. I will re-submit the patch. 
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 8396109..f8239bf 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -202,6 +202,7 @@ struct sd_dif_tuple {
-  * SCSI Request Block
-  */
- typedef struct srb {
-+	atomic_t ref_count;
- 	struct fc_port *fcport;
- 	uint32_t handle;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c345ba7..9e65629 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -517,6 +517,7 @@ qla2x00_get_new_sp(scsi_qla_host_t *vha, fc_port_t *fcport,
- 	if (!sp)
- 		return sp;
- 
-+	atomic_set(&sp->ref_count, 1);
- 	sp->fcport = fcport;
- 	sp->cmd = cmd;
- 	sp->flags = 0;
-@@ -797,6 +798,12 @@ qla2x00_wait_for_loop_ready(scsi_qla_host_t *vha)
- 	return (return_status);
- }
- 
-+static void
-+sp_get(struct srb *sp)
-+{
-+	atomic_inc(&sp->ref_count);
-+}
-+
- /**************************************************************************
- * qla2xxx_eh_abort
- *
-@@ -825,6 +832,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	struct qla_hw_data *ha = vha->hw;
- 	struct req_que *req = vha->req;
- 	srb_t *spt;
-+	int got_ref = 0;
- 
- 	fc_block_scsi_eh(cmd);
- 
-@@ -856,6 +864,10 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 		DEBUG2(printk("%s(%ld): aborting sp %p from RISC."
- 		" pid=%ld.\n", __func__, vha->host_no, sp, serial));
- 
-+		/* Get a reference to the sp and drop the lock.*/
-+		sp_get(sp);
-+		got_ref++;
-+
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		if (ha->isp_ops->abort_command(sp)) {
- 			DEBUG2(printk("%s(%ld): abort_command "
-@@ -881,6 +893,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 		}
- 	}
- 
-+	if (got_ref)
-+		qla2x00_sp_compl(ha, sp);
-+
- 	qla_printk(KERN_INFO, ha,
- 	    "scsi(%ld:%d:%d): Abort command issued -- %d %lx %x.\n",
- 	    vha->host_no, id, lun, wait, serial, ret);
-@@ -3468,7 +3483,7 @@ qla2x00_sp_free_dma(srb_t *sp)
- }
- 
- void
--qla2x00_sp_compl(struct qla_hw_data *ha, srb_t *sp)
-+qla2x00_sp_final_compl(struct qla_hw_data *ha, srb_t *sp)
- {
- 	struct scsi_cmnd *cmd = sp->cmd;
- 
-@@ -3489,6 +3504,20 @@ qla2x00_sp_compl(struct qla_hw_data *ha, srb_t *sp)
- 	cmd->scsi_done(cmd);
- }
- 
-+void
-+qla2x00_sp_compl(struct qla_hw_data *ha, srb_t *sp)
-+{
-+	if (atomic_read(&sp->ref_count) == 0) {
-+		DEBUG2(qla_printk(KERN_WARNING, ha,
-+		    "SP reference-count to ZERO -- sp=%p\n", sp));
-+		DEBUG2(BUG());
-+		return;
-+	}
-+	if (!atomic_dec_and_test(&sp->ref_count))
-+		return;
-+	qla2x00_sp_final_compl(ha, sp);
-+}
-+
- /**************************************************************************
- *   qla2x00_timer
- *
--- 
-1.6.2.rc1.30.gd43c
+Andrew Vasquez (4):
+  qla2xxx: Add portid to async-request messages.
+  qla2xxx: Correct async-srb issues.
+  qla2xxx: Make the FC port capability mutual exclusive.
+  qla2xxx: For ISP 23xx, select user specified login timeout value if
+    greater than minuimum value(4 secs).
+
+Arun Easi (1):
+  qla2xxx: T10 DIF enablement for 81XX
+
+Giridhar Malavali (7):
+  qla2xxx: Clear drive active CRB register when not in use.
+  qla2xxx: Fix cpu-affinity usage for non-capable ISPs.
+  qla2xxx: Correct use-after-free oops seen during EH-abort.
+  qla2xxx: Limit rport-flaps during link-disruptions.
+  qla2xxx: Enable CRB based doorbell posting for request queue as
+    default for ISP 82xx.
+  qla2xxx: Removed redundant check for ISP 84xx.
+  qla2xxx: Updated version number to 8.03.03-k0.
+
+Harish Zunjarrao (1):
+  qla2xxx: Support for loading Unified ROM Image (URI) format firmware
+    file.
+
+Lalit Chandivade (2):
+  qla2xxx: Do not enable VP in non fabric topology.
+  qla2xxx: Fix flash write failure on ISP82xx.
+
+Santosh Vernekar (1):
+  qla2xxx: Handle outstanding mbx cmds on hung f/w scenarios.
+
+Sarang Radke (1):
+  qla2xxx: Add internal loopback support for ISP81xx.
+
+ drivers/scsi/qla2xxx/qla_attr.c    |    4 +-
+ drivers/scsi/qla2xxx/qla_bsg.c     |  196 ++++++++++++++++++++++++++++---
+ drivers/scsi/qla2xxx/qla_bsg.h     |    7 +
+ drivers/scsi/qla2xxx/qla_def.h     |    9 ++
+ drivers/scsi/qla2xxx/qla_gbl.h     |    6 +-
+ drivers/scsi/qla2xxx/qla_init.c    |   71 ++++++++----
+ drivers/scsi/qla2xxx/qla_iocb.c    |    4 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |   54 ++++++---
+ drivers/scsi/qla2xxx/qla_mbx.c     |  152 ++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_mid.c     |    3 +-
+ drivers/scsi/qla2xxx/qla_nx.c      |  228 +++++++++++++++++++++++++++++++++---
+ drivers/scsi/qla2xxx/qla_nx.h      |   38 ++++++-
+ drivers/scsi/qla2xxx/qla_os.c      |   42 ++++++-
+ drivers/scsi/qla2xxx/qla_version.h |    6 +-
+ 14 files changed, 708 insertions(+), 112 deletions(-)
 
