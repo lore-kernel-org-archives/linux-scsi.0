@@ -1,13 +1,13 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 15/17] qla2xxx: Removed redundant check for ISP 84xx.
-Date: Fri, 28 May 2010 15:08:29 -0700
-Message-ID: <1275084511-95266-16-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 04/17] qla2xxx: Correct use-after-free oops seen during EH-abort.
+Date: Fri, 28 May 2010 15:08:18 -0700
+Message-ID: <1275084511-95266-5-git-send-email-giridhar.malavali@qlogic.com>
 References: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:52689 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:52666 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753592Ab0E1WIg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 18:08:36 -0400
+	id S1750908Ab0E1WIc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2010 18:08:32 -0400
 In-Reply-To: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,24 +16,112 @@ Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.ker
 
 From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
+Hold a reference to the srb (sp) while aborting an I/O -- as the
+I/O can/will complete from within the interrupt-context.
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    1 +
+ drivers/scsi/qla2xxx/qla_os.c  |   31 ++++++++++++++++++++++++++++++-
+ 2 files changed, 31 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 085c246..b5adc12 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1208,7 +1208,7 @@ qla24xx_84xx_fw_version_show(struct device *dev,
- 	if (!IS_QLA84XX(ha))
- 		return snprintf(buf, PAGE_SIZE, "\n");
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 8396109..f8239bf 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -202,6 +202,7 @@ struct sd_dif_tuple {
+  * SCSI Request Block
+  */
+ typedef struct srb {
++	atomic_t ref_count;
+ 	struct fc_port *fcport;
+ 	uint32_t handle;
  
--	if (ha->cs84xx && ha->cs84xx->op_fw_version == 0)
-+	if (ha->cs84xx->op_fw_version == 0)
- 		rval = qla84xx_verify_chip(vha, status);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index c345ba7..9e65629 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -517,6 +517,7 @@ qla2x00_get_new_sp(scsi_qla_host_t *vha, fc_port_t *fcport,
+ 	if (!sp)
+ 		return sp;
  
- 	if ((rval == QLA_SUCCESS) && (status[0] == 0))
++	atomic_set(&sp->ref_count, 1);
+ 	sp->fcport = fcport;
+ 	sp->cmd = cmd;
+ 	sp->flags = 0;
+@@ -797,6 +798,12 @@ qla2x00_wait_for_loop_ready(scsi_qla_host_t *vha)
+ 	return (return_status);
+ }
+ 
++static void
++sp_get(struct srb *sp)
++{
++	atomic_inc(&sp->ref_count);
++}
++
+ /**************************************************************************
+ * qla2xxx_eh_abort
+ *
+@@ -825,6 +832,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = vha->req;
+ 	srb_t *spt;
++	int got_ref = 0;
+ 
+ 	fc_block_scsi_eh(cmd);
+ 
+@@ -856,6 +864,10 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 		DEBUG2(printk("%s(%ld): aborting sp %p from RISC."
+ 		" pid=%ld.\n", __func__, vha->host_no, sp, serial));
+ 
++		/* Get a reference to the sp and drop the lock.*/
++		sp_get(sp);
++		got_ref++;
++
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 		if (ha->isp_ops->abort_command(sp)) {
+ 			DEBUG2(printk("%s(%ld): abort_command "
+@@ -881,6 +893,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 		}
+ 	}
+ 
++	if (got_ref)
++		qla2x00_sp_compl(ha, sp);
++
+ 	qla_printk(KERN_INFO, ha,
+ 	    "scsi(%ld:%d:%d): Abort command issued -- %d %lx %x.\n",
+ 	    vha->host_no, id, lun, wait, serial, ret);
+@@ -3468,7 +3483,7 @@ qla2x00_sp_free_dma(srb_t *sp)
+ }
+ 
+ void
+-qla2x00_sp_compl(struct qla_hw_data *ha, srb_t *sp)
++qla2x00_sp_final_compl(struct qla_hw_data *ha, srb_t *sp)
+ {
+ 	struct scsi_cmnd *cmd = sp->cmd;
+ 
+@@ -3489,6 +3504,20 @@ qla2x00_sp_compl(struct qla_hw_data *ha, srb_t *sp)
+ 	cmd->scsi_done(cmd);
+ }
+ 
++void
++qla2x00_sp_compl(struct qla_hw_data *ha, srb_t *sp)
++{
++	if (atomic_read(&sp->ref_count) == 0) {
++		DEBUG2(qla_printk(KERN_WARNING, ha,
++		    "SP reference-count to ZERO -- sp=%p\n", sp));
++		DEBUG2(BUG());
++		return;
++	}
++	if (!atomic_dec_and_test(&sp->ref_count))
++		return;
++	qla2x00_sp_final_compl(ha, sp);
++}
++
+ /**************************************************************************
+ *   qla2x00_timer
+ *
 -- 
 1.6.2.rc1.30.gd43c
 
