@@ -1,24 +1,33 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a
- 256 byte sector SCSI disk is attached
-Date: Fri, 28 May 2010 15:25:34 -0500
-Message-ID: <1275078334.4479.31.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Fri, 28 May 2010 20:26:37 GMT
+Message-ID: <201005282026.o4SKQb9K006528@demeter.kernel.org>
 References: <bug-16058-11613@https.bugzilla.kernel.org/>
-	 <201005281634.o4SGYU6M015956@demeter.kernel.org>
-	 <4C001999.1010703@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46045 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752631Ab0E1UZk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 16:25:40 -0400
-In-Reply-To: <4C001999.1010703@cfl.rr.com>
+Received: from demeter.kernel.org ([140.211.167.39]:59004 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755774Ab0E1U0i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 16:26:38 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4SKQb29006529
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 20:26:37 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dmarkh@cfl.rr.com
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
+
+
+
+
+
+--- Comment #8 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 20:26:28 ---
+Reply-To: James.Bottomley@suse.de
 
 On Fri, 2010-05-28 at 15:29 -0400, Mark Hounschell wrote:
 > On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
@@ -111,4 +120,7 @@ all I know is that whatever it was, I don't have one.
 
 James
 
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
