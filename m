@@ -1,74 +1,93 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH]: aic94xx: fix uninitialized variable warning
-Date: Fri, 28 May 2010 21:18:07 +0200
-Message-ID: <201005282118.08243.eike-kernel@sf-tec.de>
-References: <20100527182056.24051.65113.sendpatchset@prarit.bos.redhat.com>
+From: Mark Hounschell <dmarkh@cfl.rr.com>
+Subject: Re: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a
+ 256 byte sector SCSI disk is attached
+Date: Fri, 28 May 2010 15:29:29 -0400
+Message-ID: <4C001999.1010703@cfl.rr.com>
+References: <bug-16058-11613@https.bugzilla.kernel.org/> <201005281634.o4SGYU6M015956@demeter.kernel.org>
+Reply-To: dmarkh@cfl.rr.com
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1580910.HhON1X79BE";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:39639 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754783Ab0E1TSN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 15:18:13 -0400
-In-Reply-To: <20100527182056.24051.65113.sendpatchset@prarit.bos.redhat.com>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:46252 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627Ab0E1T3b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 15:29:31 -0400
+In-Reply-To: <201005281634.o4SGYU6M015956@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
---nextPart1580910.HhON1X79BE
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=16058
+>
+>
+>
+>
+>
+> --- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
+> Reply-To: James.Bottomley@suse.de
+>
+> On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
+>   
+>> On Fri, 28 May 2010, Mark Hounschell wrote:
+>>
+>>     
+>>> First READ(10):
+>>>
+>>>  sde:
+>>> ahc_calc_residual: Entered
+>>> ahc_calc_residual: return Case 5-1 resid = 0x800
+>>> ahc_calc_residual: return Case 5-2 resid = 0x800
+>>>
+>>> scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
+>>> 0x00 0x00 0x08 0x00
+>>> cmd->result = 0x00000000
+>>> good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
+>>> New good_bytes = 0x0
+>>> scsi_finish_command: Complete
+>>>
+>>> From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
+>>> it looks like the machine is hung.
+>>>       
+>> Probably not hung, just doing a lot of retries.  It should time out 
+>> eventually, but it might take a long time (perhaps as long as 15 
+>> minutes).  The combination of the block layer and the SCSI layer isn't 
+>> very good at knowing when to give up.
+>>     
+> Actually, I think this is a partition read.  Each partition manager
+> tends to read a page through the page cache.  If we get an error, we
+> seem to re-read to fill the cache.
+>
+>   
+>>> Now, I know for a fact that _if_ this read CDB is actually being sent to
+>>> the drive, it's actual residual count will be zero. These are working
+>>> disks and that read CDB is valid.
+>>>
+>>> Why is ahc_calc_residual saying that the residual count is as though the
+>>> read never took place? I noticed that the first read on all the SATA
+>>> drives was for 4096 bytes, why is this one only 2048? Should it have
+>>> been 4096 and ahc_calc_residual assume that?
+>>>       
+>> I don't know the answer to any of these questions.  They could well be
+>> due to bugs in the driver, and I know nothing about how the aic7xxx
+>> driver works.  You should talk to someone who does.
+>>     
+> I'll take this one ... although we're a bit lacking in documentation for
+> this driver.
+>
+> I think the 2048 is because something is hardcoded to think 8 sectors is
+> a page.
+>
+> James
+>
+>   
+Your probably right. But is a 256 byte sector really a supported sector
+size for a linux fs on a SCSI disk? When it sees a 768 byte sector disk,
+it says it's an unsupported size and goes on with the boot process
+without even doing a read for a partition table. Should maybe it be
+doing the same for a 256 byte sector disk???
 
-Prarit Bhargava wrote:
-> Fixes warning:
->=20
-> drivers/scsi/aic94xx/aic94xx_sds.c: In function
-> =E2=80=98asd_process_ctrl_a_user=E2=80=99: drivers/scsi/aic94xx/aic94xx_s=
-ds.c:985:
-> error: =E2=80=98offs=E2=80=99 may be used uninitialized in this function
-
-Your mailer has messed this up as it did not declare any character set. Thi=
-s=20
-was probably UTF8 or something like that.
-
-> diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c
-> b/drivers/scsi/aic94xx/aic94xx_sds.c index edb43fd..2f1751a 100644
-> --- a/drivers/scsi/aic94xx/aic94xx_sds.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-> @@ -982,7 +982,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_stru=
-ct
-> *asd_ha, struct asd_flash_dir *flash_dir)
->  {
->  	int err, i;
-> -	u32 offs, size;
-> +	u32 uninitialized_var(offs), size;
->  	struct asd_ll_el *el;
->  	struct asd_ctrla_phy_settings *ps;
->  	struct asd_ctrla_phy_settings dflt_ps;
-
-I would vote for putting the declarations if different lines if one of them=
-=20
-gets initialized or otherwise treated specially as it is otherwise hardly=20
-readable.
-
-Eike
-
---nextPart1580910.HhON1X79BE
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (GNU/Linux)
-
-iEYEABECAAYFAkwAFvAACgkQXKSJPmm5/E5GWgCdEHI1kC9KEtlrPOAxPny3HTW3
-7KsAoKTI7eK/IUCzk0ZcSOmnYdjjAhtj
-=SGv6
------END PGP SIGNATURE-----
-
---nextPart1580910.HhON1X79BE--
+Regards
+Mark
