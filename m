@@ -1,132 +1,62 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 16/17] qla2xxx: For ISP 23xx, select user specified login timeout value if greater than minuimum value(4 secs).
-Date: Fri, 28 May 2010 15:08:30 -0700
-Message-ID: <1275084511-95266-17-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 13/17] qla2xxx: T10 DIF enablement for 81XX
+Date: Fri, 28 May 2010 15:08:27 -0700
+Message-ID: <1275084511-95266-14-git-send-email-giridhar.malavali@qlogic.com>
 References: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:52698 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:52696 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751082Ab0E1WIh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 18:08:37 -0400
+	id S1753555Ab0E1WIg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2010 18:08:36 -0400
 In-Reply-To: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
 
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |   32 ++++++++++++++++++++++----------
- 1 files changed, 22 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 4c6cacc..d0b993c 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -121,7 +121,23 @@ done:
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 3b70860..085c246 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1732,7 +1732,7 @@ qla24xx_vport_create(struct fc_vport *fc_vport, bool disable)
+ 			fc_vport_set_state(fc_vport, FC_VPORT_LINKDOWN);
+ 	}
  
- /* Asynchronous Login/Logout Routines -------------------------------------- */
+-	if (IS_QLA25XX(ha) && ql2xenabledif) {
++	if ((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && ql2xenabledif) {
+ 		if (ha->fw_attributes & BIT_4) {
+ 			vha->flags.difdix_supported = 1;
+ 			DEBUG18(qla_printk(KERN_INFO, ha,
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index fa59181..bc35ecf 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1677,7 +1677,7 @@ static struct isp_operations qla81xx_isp_ops = {
+ 	.read_optrom		= qla25xx_read_optrom_data,
+ 	.write_optrom		= qla24xx_write_optrom_data,
+ 	.get_flash_version	= qla24xx_get_flash_version,
+-	.start_scsi		= qla24xx_start_scsi,
++	.start_scsi		= qla24xx_dif_start_scsi,
+ 	.abort_isp		= qla2x00_abort_isp,
+ };
  
--#define ELS_TMO_2_RATOV(ha) ((ha)->r_a_tov / 10 * 2)
-+static inline unsigned long
-+qla2x00_get_async_timeout(struct scsi_qla_host *vha)
-+{
-+	unsigned long tmo;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	/* Firmware should use switch negotiated r_a_tov for timeout. */
-+	tmo = ha->r_a_tov / 10 * 2;
-+	if (!IS_FWI2_CAPABLE(ha)) {
-+		/*
-+		 * Except for earlier ISPs where the timeout is seeded from the
-+		 * initialization control block.
-+		 */
-+		tmo = ha->login_timeout;
-+	}
-+	return tmo;
-+}
+@@ -2274,7 +2274,7 @@ skip_dpc:
+ 	DEBUG2(printk("DEBUG: detect hba %ld at address = %p\n",
+ 	    base_vha->host_no, ha));
  
- static void
- qla2x00_async_iocb_timeout(srb_t *sp)
-@@ -163,7 +179,6 @@ int
- qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
-     uint16_t *data)
- {
--	struct qla_hw_data *ha = vha->hw;
- 	srb_t *sp;
- 	struct srb_ctx *ctx;
- 	struct srb_iocb *lio;
-@@ -171,7 +186,7 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
- 
- 	rval = QLA_FUNCTION_FAILED;
- 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
--	    ELS_TMO_2_RATOV(ha) + 2);
-+	    qla2x00_get_async_timeout(vha) + 2);
- 	if (!sp)
- 		goto done;
- 
-@@ -215,7 +230,6 @@ qla2x00_async_logout_ctx_done(srb_t *sp)
- int
- qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
- {
--	struct qla_hw_data *ha = vha->hw;
- 	srb_t *sp;
- 	struct srb_ctx *ctx;
- 	struct srb_iocb *lio;
-@@ -223,7 +237,7 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
- 
- 	rval = QLA_FUNCTION_FAILED;
- 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
--	    ELS_TMO_2_RATOV(ha) + 2);
-+	    qla2x00_get_async_timeout(vha) + 2);
- 	if (!sp)
- 		goto done;
- 
-@@ -264,7 +278,6 @@ int
- qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
-     uint16_t *data)
- {
--	struct qla_hw_data *ha = vha->hw;
- 	srb_t *sp;
- 	struct srb_ctx *ctx;
- 	struct srb_iocb *lio;
-@@ -272,7 +285,7 @@ qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
- 
- 	rval = QLA_FUNCTION_FAILED;
- 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
--	    ELS_TMO_2_RATOV(ha) + 2);
-+	    qla2x00_get_async_timeout(vha) + 2);
- 	if (!sp)
- 		goto done;
- 
-@@ -316,7 +329,6 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
- 	uint32_t tag)
- {
- 	struct scsi_qla_host *vha = fcport->vha;
--	struct qla_hw_data *ha = vha->hw;
- 	srb_t *sp;
- 	struct srb_ctx *ctx;
- 	struct srb_iocb *tcf;
-@@ -324,7 +336,7 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
- 
- 	rval = QLA_FUNCTION_FAILED;
- 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
--	    ELS_TMO_2_RATOV(ha) + 2);
-+	    qla2x00_get_async_timeout(vha) + 2);
- 	if (!sp)
- 		goto done;
- 
-@@ -2409,7 +2421,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 	ha->retry_count = nv->retry_count;
- 
- 	/* Set minimum login_timeout to 4 seconds. */
--	if (nv->login_timeout < ql2xlogintimeout)
-+	if (nv->login_timeout != ql2xlogintimeout)
- 		nv->login_timeout = ql2xlogintimeout;
- 	if (nv->login_timeout < 4)
- 		nv->login_timeout = 4;
+-	if (IS_QLA25XX(ha) && ql2xenabledif) {
++	if ((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && ql2xenabledif) {
+ 		if (ha->fw_attributes & BIT_4) {
+ 			base_vha->flags.difdix_supported = 1;
+ 			DEBUG18(qla_printk(KERN_INFO, ha,
 -- 
 1.6.2.rc1.30.gd43c
 
