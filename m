@@ -1,30 +1,32 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [Bug 16070] New: Fail to issue Start/Stop Unit
-Date: Fri, 28 May 2010 10:35:22 -0500
-Message-ID: <4BFFE2BA.6030307@linux.vnet.ibm.com>
-References: <bug-16070-11613@https.bugzilla.kernel.org/> <4BFFDF2A.1060404@interlog.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16070] Fail to issue Start/Stop Unit
+Date: Fri, 28 May 2010 15:36:14 GMT
+Message-ID: <201005281536.o4SFaERX002951@demeter.kernel.org>
+References: <bug-16070-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:46972 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929Ab0E1Pfb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 11:35:31 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by e5.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o4SFIx6O027769
-	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 11:18:59 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o4SFZNit067446
-	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 11:35:23 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.3/8.13.1/NCO v10.0 AVout) with ESMTP id o4SFZNpE019222
-	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 11:35:23 -0400
-In-Reply-To: <4BFFDF2A.1060404@interlog.com>
+Received: from demeter.kernel.org ([140.211.167.39]:37946 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756270Ab0E1PgP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 11:36:15 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4SFaEK1002952
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 15:36:14 GMT
+In-Reply-To: <bug-16070-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16070
+
+
+
+
+
+--- Comment #2 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 15:36:13 ---
+Reply-To: brking@linux.vnet.ibm.com
 
 On 05/28/2010 10:20 AM, Douglas Gilbert wrote:
 > On 10-05-28 10:55 AM, bugzilla-daemon@bugzilla.kernel.org wrote:
@@ -86,7 +88,8 @@ On 05/28/2010 10:20 AM, Douglas Gilbert wrote:
 > What you report as a bug is the long standing behaviour of
 > SCSI disks which Linux has not tried to modify.
 
-If you set the allow_restart sysfs parameter on the disk, it should automatically
+If you set the allow_restart sysfs parameter on the disk, it should
+automatically
 spin up the disk when scsi eh sees that sense data.
 
 Thanks,
@@ -94,6 +97,6 @@ Thanks,
 Brian
 
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
