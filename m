@@ -1,22 +1,32 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Bugme-new] [Bug 16058] New: [BUG] Cannot boot any kernel from
- 2.6.27 on if a 256 byte sector SCSI disk is attached
-Date: Fri, 28 May 2010 10:58:16 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1005281050030.1939-100000@iolanthe.rowland.org>
-References: <4BFFAE25.4010007@cfl.rr.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Fri, 28 May 2010 14:58:57 GMT
+Message-ID: <201005281458.o4SEwv44023397@demeter.kernel.org>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:33855 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750929Ab0E1O6R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 10:58:17 -0400
-In-Reply-To: <4BFFAE25.4010007@cfl.rr.com>
+Received: from demeter.kernel.org ([140.211.167.39]:35663 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929Ab0E1O66 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 10:58:58 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4SEwvZp023398
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 14:58:57 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Hounschell <dmarkh@cfl.rr.com>
-Cc: markh@compro.net, SCSI development list <linux-scsi@vger.kernel.org>, bugzilla-daemon@bugzilla.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
+
+
+
+
+
+--- Comment #4 from Alan Stern <stern@rowland.harvard.edu>  2010-05-28 14:58:55 ---
 On Fri, 28 May 2010, Mark Hounschell wrote:
 
 > First READ(10):
@@ -60,4 +70,7 @@ sd_prep_fn() to see why there's 2048 bytes instead of 4096.
 
 Alan Stern
 
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
