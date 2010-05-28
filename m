@@ -1,71 +1,74 @@
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 08/24] hpsa: fix leak of ioremapped memory
-Date: Fri, 28 May 2010 21:12:17 +0200
-Message-ID: <201005282112.24802.eike-kernel@sf-tec.de>
-References: <20100527200301.3116.78973.stgit@beardog.cce.hp.com> <20100527201322.3116.86053.stgit@beardog.cce.hp.com>
+Subject: Re: [PATCH]: aic94xx: fix uninitialized variable warning
+Date: Fri, 28 May 2010 21:18:07 +0200
+Message-ID: <201005282118.08243.eike-kernel@sf-tec.de>
+References: <20100527182056.24051.65113.sendpatchset@prarit.bos.redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed;
-  boundary="nextPart2914297.itjYZsoPnK";
+  boundary="nextPart1580910.HhON1X79BE";
   protocol="application/pgp-signature";
   micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:44539 "EHLO mail.sf-mail.de"
+Received: from mail.sf-mail.de ([62.27.20.61]:39639 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755128Ab0E1TMc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 15:12:32 -0400
-In-Reply-To: <20100527201322.3116.86053.stgit@beardog.cce.hp.com>
+	id S1754783Ab0E1TSN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2010 15:18:13 -0400
+In-Reply-To: <20100527182056.24051.65113.sendpatchset@prarit.bos.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dab@hp.com, mikem@beardog.cce.hp.com
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
---nextPart2914297.itjYZsoPnK
+--nextPart1580910.HhON1X79BE
 Content-Type: Text/Plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 
-Stephen M. Cameron wrote:
-> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Prarit Bhargava wrote:
+> Fixes warning:
 >=20
-> hpsa: fix leak of ioremapped memory
-> in hpsa_pci_init error path.
+> drivers/scsi/aic94xx/aic94xx_sds.c: In function
+> =E2=80=98asd_process_ctrl_a_user=E2=80=99: drivers/scsi/aic94xx/aic94xx_s=
+ds.c:985:
+> error: =E2=80=98offs=E2=80=99 may be used uninitialized in this function
 
-If you had used devres to track your resources you got this for free.
-
-> @@ -3474,6 +3477,12 @@ static int __devinit hpsa_pci_init(struct ctlr_info
-> *h) return 0;
->=20
->  err_out_free_res:
-> +	if (h->transtable)
-> +		iounmap(h->transtable);
-> +	if (h->cfgtable)
-> +		iounmap(h->cfgtable);
-> +	if (h->vaddr)
-> +		iounmap(h->vaddr);
-
-I wonder if that shouldn't use pci_iomap() instead. Also the page aligning=
-=20
-tricks in remap_pci_mem() look a bit dubious to me. If your pci BAR is >=3D=
-=20
-PAGE_SIZE this isn't needed at all anyway since those mappings are aligned =
-to=20
-at least their size in physical address space anyway and the logical addres=
+Your mailer has messed this up as it did not declare any character set. Thi=
 s=20
-shouldn't matter for the driver.
+was probably UTF8 or something like that.
+
+> diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c
+> b/drivers/scsi/aic94xx/aic94xx_sds.c index edb43fd..2f1751a 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_sds.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_sds.c
+> @@ -982,7 +982,7 @@ static int asd_process_ctrl_a_user(struct asd_ha_stru=
+ct
+> *asd_ha, struct asd_flash_dir *flash_dir)
+>  {
+>  	int err, i;
+> -	u32 offs, size;
+> +	u32 uninitialized_var(offs), size;
+>  	struct asd_ll_el *el;
+>  	struct asd_ctrla_phy_settings *ps;
+>  	struct asd_ctrla_phy_settings dflt_ps;
+
+I would vote for putting the declarations if different lines if one of them=
+=20
+gets initialized or otherwise treated specially as it is otherwise hardly=20
+readable.
 
 Eike
 
---nextPart2914297.itjYZsoPnK
+--nextPart1580910.HhON1X79BE
 Content-Type: application/pgp-signature; name=signature.asc 
 Content-Description: This is a digitally signed message part.
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.12 (GNU/Linux)
 
-iEYEABECAAYFAkwAFZgACgkQXKSJPmm5/E5WrQCfcoktmSJxUWggVEhnwdiCpxbW
-iksAn3OMS0FYRN3OW31Nk1dLciIUbWZI
-=N9BY
+iEYEABECAAYFAkwAFvAACgkQXKSJPmm5/E5GWgCdEHI1kC9KEtlrPOAxPny3HTW3
+7KsAoKTI7eK/IUCzk0ZcSOmnYdjjAhtj
+=SGv6
 -----END PGP SIGNATURE-----
 
---nextPart2914297.itjYZsoPnK--
+--nextPart1580910.HhON1X79BE--
