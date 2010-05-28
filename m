@@ -1,12 +1,12 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 05/17] qla2xxx: Correct async-srb issues.
-Date: Fri, 28 May 2010 15:08:19 -0700
-Message-ID: <1275084511-95266-6-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 06/17] qla2xxx: Limit rport-flaps during link-disruptions.
+Date: Fri, 28 May 2010 15:08:20 -0700
+Message-ID: <1275084511-95266-7-git-send-email-giridhar.malavali@qlogic.com>
 References: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:52688 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:52689 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752395Ab0E1WId (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752212Ab0E1WId (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 28 May 2010 18:08:33 -0400
 In-Reply-To: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,101 +14,40 @@ List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-* hold the hardware_lock throughout the duration of ctx-sp
-  timeout handling -- could result in use-after-free oops.
-
-* retry a timed-out login-request.
-
-* done() routines are called with the hardware-lock held, issue
-qla2x00_mark_device_lost() with proper 'defer' flag.
-
-* FCP2 capabilities are only relevant to target devices.
-
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |   20 ++++++++++++++------
- drivers/scsi/qla2xxx/qla_isr.c  |    2 +-
- 2 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 4bf9734..cc73525 100644
+index cc73525..9d969b5 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -60,9 +60,8 @@ qla2x00_ctx_sp_timeout(unsigned long __data)
- 	ctx = sp->ctx;
- 	iocb = ctx->u.iocb_cmd;
- 	iocb->timeout(sp);
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--
- 	iocb->free(sp);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- }
- 
- void
-@@ -137,8 +136,16 @@ qla2x00_async_iocb_timeout(srb_t *sp)
- 		fcport->d_id.b.area, fcport->d_id.b.al_pa));
- 
- 	fcport->flags &= ~FCF_ASYNC_SENT;
--	if (ctx->type == SRB_LOGIN_CMD)
-+	if (ctx->type == SRB_LOGIN_CMD) {
-+		struct srb_iocb *lio = ctx->u.iocb_cmd;
- 		qla2x00_post_async_logout_work(fcport->vha, fcport, NULL);
-+		/* Retry as needed. */
-+		lio->u.logio.data[0] = MBS_COMMAND_ERROR;
-+		lio->u.logio.data[1] = lio->u.logio.flags & SRB_LOGIN_RETRIED ?
-+			QLA_LOGIO_LOGIN_RETRIED : 0;
-+		qla2x00_post_async_login_done_work(fcport->vha, fcport,
-+			lio->u.logio.data);
-+	}
- }
- 
- static void
-@@ -420,10 +427,11 @@ qla2x00_async_login_done(struct scsi_qla_host *vha, fc_port_t *fcport,
- 		if (data[1] & QLA_LOGIO_LOGIN_RETRIED)
- 			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
- 		else
--			qla2x00_mark_device_lost(vha, fcport, 1, 0);
-+			qla2x00_mark_device_lost(vha, fcport, 1, 1);
- 		break;
- 	case MBS_PORT_ID_USED:
- 		fcport->loop_id = data[1];
-+		qla2x00_post_async_logout_work(vha, fcport, NULL);
- 		qla2x00_post_async_login_work(vha, fcport, NULL);
- 		break;
- 	case MBS_LOOP_ID_USED:
-@@ -431,7 +439,7 @@ qla2x00_async_login_done(struct scsi_qla_host *vha, fc_port_t *fcport,
- 		rval = qla2x00_find_new_loop_id(vha, fcport);
- 		if (rval != QLA_SUCCESS) {
- 			fcport->flags &= ~FCF_ASYNC_SENT;
--			qla2x00_mark_device_lost(vha, fcport, 1, 0);
-+			qla2x00_mark_device_lost(vha, fcport, 1, 1);
- 			break;
+@@ -2651,7 +2651,8 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
+ 			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+ 		if (test_bit(RSCN_UPDATE, &save_flags)) {
+ 			set_bit(RSCN_UPDATE, &vha->dpc_flags);
+-			vha->flags.rscn_queue_overflow = 1;
++			if (!IS_ALOGIO_CAPABLE(ha))
++				vha->flags.rscn_queue_overflow = 1;
  		}
- 		qla2x00_post_async_login_work(vha, fcport, NULL);
-@@ -463,7 +471,7 @@ qla2x00_async_adisc_done(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	if (data[1] & QLA_LOGIO_LOGIN_RETRIED)
- 		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
- 	else
--		qla2x00_mark_device_lost(vha, fcport, 1, 0);
-+		qla2x00_mark_device_lost(vha, fcport, 1, 1);
+ 	}
  
- 	return;
- }
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index bc82ba9..912befd 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -949,7 +949,7 @@ qla2x00_mbx_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
- 			fcport->port_type = FCT_TARGET;
- 			if (le16_to_cpu(mbx->mb1) & BIT_0)
- 				fcport->port_type = FCT_INITIATOR;
--			if (le16_to_cpu(mbx->mb1) & BIT_1)
-+			else if (le16_to_cpu(mbx->mb1) & BIT_1)
- 				fcport->flags |= FCF_FCP2_DEVICE;
- 		}
- 		goto logio_done;
+@@ -3209,8 +3210,9 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+ 		if (qla2x00_is_reserved_id(vha, loop_id))
+ 			continue;
+ 
+-		if (atomic_read(&vha->loop_down_timer) ||
+-		    LOOP_TRANSITION(vha)) {
++		if (ha->current_topology == ISP_CFG_FL &&
++		    (atomic_read(&vha->loop_down_timer) ||
++		     LOOP_TRANSITION(vha))) {
+ 			atomic_set(&vha->loop_down_timer, 0);
+ 			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+ 			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
 -- 
 1.6.2.rc1.30.gd43c
 
