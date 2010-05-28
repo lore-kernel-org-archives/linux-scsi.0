@@ -1,106 +1,121 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Fri, 28 May 2010 19:30:14 GMT
-Message-ID: <201005281930.o4SJUEkl025358@demeter.kernel.org>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/6] cciss: enqueue and submit io
+Date: Fri, 28 May 2010 14:54:44 -0500
+Message-ID: <20100528195444.GA6855@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:38267 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab0E1TaP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 15:30:15 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4SJUEjJ025359
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 19:30:14 GMT
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Steve Cameron <scameron@beardog.cce.hp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
+Patch 1/6
+This patch cleans up some code where we subit our io. The same 5 lines
+appeared several times. Also helps for a following patch.
 
+From: Mike Miller <mike.miller@hp.com>
+Cc: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+---
+ drivers/block/cciss.c |   38 +++++++++++++++-----------------------
+ 1 files changed, 15 insertions(+), 23 deletions(-)
 
-
-
---- Comment #7 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-05-28 19:30:11 ---
-On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=16058
->
->
->
->
->
-> --- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
-> Reply-To: James.Bottomley@suse.de
->
-> On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
->   
->> On Fri, 28 May 2010, Mark Hounschell wrote:
->>
->>     
->>> First READ(10):
->>>
->>>  sde:
->>> ahc_calc_residual: Entered
->>> ahc_calc_residual: return Case 5-1 resid = 0x800
->>> ahc_calc_residual: return Case 5-2 resid = 0x800
->>>
->>> scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
->>> 0x00 0x00 0x08 0x00
->>> cmd->result = 0x00000000
->>> good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
->>> New good_bytes = 0x0
->>> scsi_finish_command: Complete
->>>
->>> From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
->>> it looks like the machine is hung.
->>>       
->> Probably not hung, just doing a lot of retries.  It should time out 
->> eventually, but it might take a long time (perhaps as long as 15 
->> minutes).  The combination of the block layer and the SCSI layer isn't 
->> very good at knowing when to give up.
->>     
-> Actually, I think this is a partition read.  Each partition manager
-> tends to read a page through the page cache.  If we get an error, we
-> seem to re-read to fill the cache.
->
->   
->>> Now, I know for a fact that _if_ this read CDB is actually being sent to
->>> the drive, it's actual residual count will be zero. These are working
->>> disks and that read CDB is valid.
->>>
->>> Why is ahc_calc_residual saying that the residual count is as though the
->>> read never took place? I noticed that the first read on all the SATA
->>> drives was for 4096 bytes, why is this one only 2048? Should it have
->>> been 4096 and ahc_calc_residual assume that?
->>>       
->> I don't know the answer to any of these questions.  They could well be
->> due to bugs in the driver, and I know nothing about how the aic7xxx
->> driver works.  You should talk to someone who does.
->>     
-> I'll take this one ... although we're a bit lacking in documentation for
-> this driver.
->
-> I think the 2048 is because something is hardcoded to think 8 sectors is
-> a page.
->
-> James
->
->   
-Your probably right. But is a 256 byte sector really a supported sector
-size for a linux fs on a SCSI disk? When it sees a 768 byte sector disk,
-it says it's an unsupported size and goes on with the boot process
-without even doing a read for a partition table. Should maybe it be
-doing the same for a 256 byte sector disk???
-
-Regards
-Mark
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 51ceaee..6db790c 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -257,6 +257,17 @@ static inline void removeQ(CommandList_struct *c)
+ 	hlist_del_init(&c->list);
+ }
+ 
++static void enqueue_cmd_and_start_io(ctlr_info_t *h,
++	CommandList_struct *c)
++{
++	unsigned long flags;
++	spin_lock_irqsave(&h->lock, flags);
++	addQ(&h->reqQ, c);
++	h->Qdepth++;
++	start_io(h);
++	spin_unlock_irqrestore(&h->lock, flags);
++}
++
+ static void cciss_free_sg_chain_blocks(SGDescriptor_struct **cmd_sg_list,
+ 	int nr_cmds)
+ {
+@@ -1377,7 +1388,6 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 			CommandList_struct *c;
+ 			char *buff = NULL;
+ 			u64bit temp64;
+-			unsigned long flags;
+ 			DECLARE_COMPLETION_ONSTACK(wait);
+ 
+ 			if (!arg)
+@@ -1449,13 +1459,7 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 			}
+ 			c->waiting = &wait;
+ 
+-			/* Put the request on the tail of the request queue */
+-			spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
+-			addQ(&host->reqQ, c);
+-			host->Qdepth++;
+-			start_io(host);
+-			spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
+-
++			enqueue_cmd_and_start_io(host, c);
+ 			wait_for_completion(&wait);
+ 
+ 			/* unlock the buffers from DMA */
+@@ -1495,7 +1499,6 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 			unsigned char **buff = NULL;
+ 			int *buff_size = NULL;
+ 			u64bit temp64;
+-			unsigned long flags;
+ 			BYTE sg_used = 0;
+ 			int status = 0;
+ 			int i;
+@@ -1602,12 +1605,7 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 				}
+ 			}
+ 			c->waiting = &wait;
+-			/* Put the request on the tail of the request queue */
+-			spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
+-			addQ(&host->reqQ, c);
+-			host->Qdepth++;
+-			start_io(host);
+-			spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
++			enqueue_cmd_and_start_io(host, c);
+ 			wait_for_completion(&wait);
+ 			/* unlock the buffers from DMA */
+ 			for (i = 0; i < sg_used; i++) {
+@@ -1729,8 +1727,8 @@ static void cciss_softirq_done(struct request *rq)
+ 	CommandList_struct *cmd = rq->completion_data;
+ 	ctlr_info_t *h = hba[cmd->ctlr];
+ 	SGDescriptor_struct *curr_sg = cmd->SG;
+-	unsigned long flags;
+ 	u64bit temp64;
++	unsigned long flags;
+ 	int i, ddir;
+ 	int sg_index = 0;
+ 
+@@ -2679,17 +2677,11 @@ static int sendcmd_withirq_core(ctlr_info_t *h, CommandList_struct *c,
+ {
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	u64bit buff_dma_handle;
+-	unsigned long flags;
+ 	int return_status = IO_OK;
+ 
+ resend_cmd2:
+ 	c->waiting = &wait;
+-	/* Put the request on the tail of the queue and send it */
+-	spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
+-	addQ(&h->reqQ, c);
+-	h->Qdepth++;
+-	start_io(h);
+-	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
++	enqueue_cmd_and_start_io(h, c);
+ 
+ 	wait_for_completion(&wait);
+ 
