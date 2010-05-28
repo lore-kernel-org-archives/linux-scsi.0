@@ -1,72 +1,132 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 00/17] qla2xxx: fixes for 2.6.34-rcX.
-Date: Fri, 28 May 2010 15:08:14 -0700
-Message-ID: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 16/17] qla2xxx: For ISP 23xx, select user specified login timeout value if greater than minuimum value(4 secs).
+Date: Fri, 28 May 2010 15:08:30 -0700
+Message-ID: <1275084511-95266-17-git-send-email-giridhar.malavali@qlogic.com>
+References: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:52654 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:52698 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751082Ab0E1WIc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 18:08:32 -0400
+	id S1751082Ab0E1WIh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2010 18:08:37 -0400
+In-Reply-To: <1275084511-95266-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-James,
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c |   32 ++++++++++++++++++++++----------
+ 1 files changed, 22 insertions(+), 10 deletions(-)
 
-Checkpatch script flagged an error for patch 11/17, which is because of code style. 
-I have not fixed to be in sync with the existing code. Please let me know whether
-this needs to be fixed. I will re-submit the patch. 
-
-Andrew Vasquez (4):
-  qla2xxx: Add portid to async-request messages.
-  qla2xxx: Correct async-srb issues.
-  qla2xxx: Make the FC port capability mutual exclusive.
-  qla2xxx: For ISP 23xx, select user specified login timeout value if
-    greater than minuimum value(4 secs).
-
-Arun Easi (1):
-  qla2xxx: T10 DIF enablement for 81XX
-
-Giridhar Malavali (7):
-  qla2xxx: Clear drive active CRB register when not in use.
-  qla2xxx: Fix cpu-affinity usage for non-capable ISPs.
-  qla2xxx: Correct use-after-free oops seen during EH-abort.
-  qla2xxx: Limit rport-flaps during link-disruptions.
-  qla2xxx: Enable CRB based doorbell posting for request queue as
-    default for ISP 82xx.
-  qla2xxx: Removed redundant check for ISP 84xx.
-  qla2xxx: Updated version number to 8.03.03-k0.
-
-Harish Zunjarrao (1):
-  qla2xxx: Support for loading Unified ROM Image (URI) format firmware
-    file.
-
-Lalit Chandivade (2):
-  qla2xxx: Do not enable VP in non fabric topology.
-  qla2xxx: Fix flash write failure on ISP82xx.
-
-Santosh Vernekar (1):
-  qla2xxx: Handle outstanding mbx cmds on hung f/w scenarios.
-
-Sarang Radke (1):
-  qla2xxx: Add internal loopback support for ISP81xx.
-
- drivers/scsi/qla2xxx/qla_attr.c    |    4 +-
- drivers/scsi/qla2xxx/qla_bsg.c     |  196 ++++++++++++++++++++++++++++---
- drivers/scsi/qla2xxx/qla_bsg.h     |    7 +
- drivers/scsi/qla2xxx/qla_def.h     |    9 ++
- drivers/scsi/qla2xxx/qla_gbl.h     |    6 +-
- drivers/scsi/qla2xxx/qla_init.c    |   71 ++++++++----
- drivers/scsi/qla2xxx/qla_iocb.c    |    4 +-
- drivers/scsi/qla2xxx/qla_isr.c     |   54 ++++++---
- drivers/scsi/qla2xxx/qla_mbx.c     |  152 ++++++++++++++++++++----
- drivers/scsi/qla2xxx/qla_mid.c     |    3 +-
- drivers/scsi/qla2xxx/qla_nx.c      |  228 +++++++++++++++++++++++++++++++++---
- drivers/scsi/qla2xxx/qla_nx.h      |   38 ++++++-
- drivers/scsi/qla2xxx/qla_os.c      |   42 ++++++-
- drivers/scsi/qla2xxx/qla_version.h |    6 +-
- 14 files changed, 708 insertions(+), 112 deletions(-)
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 4c6cacc..d0b993c 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -121,7 +121,23 @@ done:
+ 
+ /* Asynchronous Login/Logout Routines -------------------------------------- */
+ 
+-#define ELS_TMO_2_RATOV(ha) ((ha)->r_a_tov / 10 * 2)
++static inline unsigned long
++qla2x00_get_async_timeout(struct scsi_qla_host *vha)
++{
++	unsigned long tmo;
++	struct qla_hw_data *ha = vha->hw;
++
++	/* Firmware should use switch negotiated r_a_tov for timeout. */
++	tmo = ha->r_a_tov / 10 * 2;
++	if (!IS_FWI2_CAPABLE(ha)) {
++		/*
++		 * Except for earlier ISPs where the timeout is seeded from the
++		 * initialization control block.
++		 */
++		tmo = ha->login_timeout;
++	}
++	return tmo;
++}
+ 
+ static void
+ qla2x00_async_iocb_timeout(srb_t *sp)
+@@ -163,7 +179,6 @@ int
+ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
+     uint16_t *data)
+ {
+-	struct qla_hw_data *ha = vha->hw;
+ 	srb_t *sp;
+ 	struct srb_ctx *ctx;
+ 	struct srb_iocb *lio;
+@@ -171,7 +186,7 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 
+ 	rval = QLA_FUNCTION_FAILED;
+ 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
+-	    ELS_TMO_2_RATOV(ha) + 2);
++	    qla2x00_get_async_timeout(vha) + 2);
+ 	if (!sp)
+ 		goto done;
+ 
+@@ -215,7 +230,6 @@ qla2x00_async_logout_ctx_done(srb_t *sp)
+ int
+ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
+ {
+-	struct qla_hw_data *ha = vha->hw;
+ 	srb_t *sp;
+ 	struct srb_ctx *ctx;
+ 	struct srb_iocb *lio;
+@@ -223,7 +237,7 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 
+ 	rval = QLA_FUNCTION_FAILED;
+ 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
+-	    ELS_TMO_2_RATOV(ha) + 2);
++	    qla2x00_get_async_timeout(vha) + 2);
+ 	if (!sp)
+ 		goto done;
+ 
+@@ -264,7 +278,6 @@ int
+ qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
+     uint16_t *data)
+ {
+-	struct qla_hw_data *ha = vha->hw;
+ 	srb_t *sp;
+ 	struct srb_ctx *ctx;
+ 	struct srb_iocb *lio;
+@@ -272,7 +285,7 @@ qla2x00_async_adisc(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 
+ 	rval = QLA_FUNCTION_FAILED;
+ 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
+-	    ELS_TMO_2_RATOV(ha) + 2);
++	    qla2x00_get_async_timeout(vha) + 2);
+ 	if (!sp)
+ 		goto done;
+ 
+@@ -316,7 +329,6 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
+ 	uint32_t tag)
+ {
+ 	struct scsi_qla_host *vha = fcport->vha;
+-	struct qla_hw_data *ha = vha->hw;
+ 	srb_t *sp;
+ 	struct srb_ctx *ctx;
+ 	struct srb_iocb *tcf;
+@@ -324,7 +336,7 @@ qla2x00_async_tm_cmd(fc_port_t *fcport, uint32_t flags, uint32_t lun,
+ 
+ 	rval = QLA_FUNCTION_FAILED;
+ 	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx),
+-	    ELS_TMO_2_RATOV(ha) + 2);
++	    qla2x00_get_async_timeout(vha) + 2);
+ 	if (!sp)
+ 		goto done;
+ 
+@@ -2409,7 +2421,7 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
+ 	ha->retry_count = nv->retry_count;
+ 
+ 	/* Set minimum login_timeout to 4 seconds. */
+-	if (nv->login_timeout < ql2xlogintimeout)
++	if (nv->login_timeout != ql2xlogintimeout)
+ 		nv->login_timeout = ql2xlogintimeout;
+ 	if (nv->login_timeout < 4)
+ 		nv->login_timeout = 4;
+-- 
+1.6.2.rc1.30.gd43c
 
