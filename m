@@ -1,289 +1,122 @@
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Subject: Re: [Bugme-new] [Bug 16058] New: [BUG] Cannot boot any kernel from
- 2.6.27 on if a 256 byte sector SCSI disk is attached
-Date: Fri, 28 May 2010 07:51:01 -0400
-Message-ID: <4BFFAE25.4010007@cfl.rr.com>
-References: <Pine.LNX.4.44L0.1005271626320.3239-100000@iolanthe.rowland.org>
-Reply-To: dmarkh@cfl.rr.com
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 6/7] scsi: megaraid_sas - Add three times Online controller
+ reset - V2
+Date: Fri, 28 May 2010 15:31:12 +0200
+Message-ID: <4BFFC5A0.5030302@redhat.com>
+References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>	 <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C3CDB80C32@cosmail02.lsi.com>	 <4BFBF814.5040202@redhat.com> <1274808736.5300.133.camel@mulgrave.site> <4BFD42B4.90207@redhat.com> <4B6A08C587958942AA3002690DD4F8C3D06ADE3F@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.121]:40374 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755334Ab0E1LvE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 07:51:04 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1005271626320.3239-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D06ADE3F@cosmail02.lsi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: markh@compro.net, SCSI development list <linux-scsi@vger.kernel.org>, bugzilla-daemon@bugzilla.kernel.org
 
-On 05/27/2010 04:30 PM, Alan Stern wrote:
-> On Thu, 27 May 2010, Andrew Morton wrote:
+On 05/26/2010 11:08 PM, Yang, Bo wrote:
+> Tomas/James,
 >
->   
->> https://bugzilla.kernel.org/show_bug.cgi?id=16058
->>
->>            Summary: [BUG] Cannot boot any kernel from 2.6.27 on if a 256
->>                     byte sector SCSI disk is attached
->>     
->   
->> As of 2.6.27 if any SCSI disk is attached that has been formatted with a 256
->> byte sector size, the boot process hangs. 512, 768, and 1024 byte sector disks
->> do not seem to trigger this. The disks in use do NOT have a partition table.
->> They are being used by out applications via the sg_io interface only.
->>
->> A 2.6.26.8 kernel works fine. 
->>
->> I have bisected this problem to the following commit:
->>
->> # git bisect good
->> 427e59f09fdba387547106de7bab980b7fff77be is first bad commit
->> commit 427e59f09fdba387547106de7bab980b7fff77be
->> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
->> Date:   Sat Mar 8 18:24:17 2008 -0600
->>
->>     [SCSI] make use of the residue value
->>
->>     USB sometimes doesn't return an error but instead returns a residue
->>     value indicating part (or all) of the command wasn't completed.  So if
->>     the driver _done() error processing indicates the command was fully
->>     processed, subtract off the residue so that this USB error gets
->>     propagated.
->>
->>     Cc: Alan Stern <stern@rowland.harvard.edu>
->>     Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
->>
->> :040000 040000 d3bad84ebe1bc231e8e7d6267907ca62fd4d0dcd
->> c85f8cb8bd4910724f0101e41054555980727e16 M      drivers
->>
->> Now, what USB has to do with my SCSI disks is beyond me. I have a
->> feeling that this commit is just uncovering another problem. I've attached
->> a bootlog from a serial console that ends where the boot hangs.
->>
->> The does the same thing on a 2.6.34 kernel. Anything I can do to help, I'm
->> available.
->>     
-> I'd guess that this has nothing to do with the sector size.  Instead
-> the drive probably reports a non-zero residue when it shouldn't.  Can
-> you add some debugging printk's to the patch to find out in more detail
-> what's going wrong?
+>  =20
+>> Also descriptive subjects would be nice (parts I-III may do well for
+>> Lord of the Rings ... it's less useful for SCSI patches).
+>>  =20
+>> This is again a question for the original author. Bo?
+>>    =20
+> I changed the description and resubmit them already.
+>  =20
+Thanks Bo. I've noticed=20
+[PATCH 1/7] scsi: megaraid_sas - Online Controller Reset - I: Change th=
+e Chips related functions and Add the Chip reset functions
+[PATCH 2/7] scsi: megaraid_sas - Online controller Reset Support (OCR)-=
+II : Driver return RESET in timeout routine
+
+do you want for the part III to stay with the subject 'Online controlle=
+r Reset'?
+
+
+What is more important for me is that in Patch 1/7 you still have space=
+s instead=20
+of tabs and the patch can't be applied. The same for patch 3/7.=20
+You can see the spaces for example here http://www.spinics.net/lists/li=
+nux-scsi/msg43842.html
+
+Tomas
+
+
+> Bo Yang
 >
-> Alan Stern
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
->   
-Alan,
-
-I've added some printks in scsi.c and aic7xxx_core.c.
-
-A TUR:
-
-ahc_calc_residual: Entered
-ahc_calc_residual: return Case 2 sgptr = 0x00000001
-
-ahc_calc_residual: Entered
-ahc_calc_residual: return Case 5-1 resid = 0xe
-ahc_calc_residual: return Case 5-2 resid = 0xe
-
-scsi_finish_command: Entered for cmd(6):0x00 0x00 0x00 0x00 0x00 0x00
-cmd->result = 0x08000002
-good_bytes = 0x0
-scsi_finish_command: Complete
-
-
-Another TUR:
-
-scsi_finish_command: Entered for cmd(6):0x00 0x00 0x00 0x00 0x00 0x00
-cmd->result = 0x00000000
-good_bytes = 0x0
-scsi_finish_command: Complete
-
-
-A Read Capicity:
-
-scsi_finish_command: Entered for cmd(10):0x25 0x00 0x00 0x00 0x00 0x00
-0x00 0x00 0x00 0x00
-cmd->result = 0x00000000
-good_bytes = 0x8
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] 7260582 256-byte hardware sectors (1859 MB)
-
-
-A Mode Sense:
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x3f 0x00 0x04 0x00
-cmd->result = 0x00000000
-good_bytes = 0x4
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] Write Protect is off
-
-
-Another Mode Sense:
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x08 0x00 0x04 0x00
-cmd->result = 0x00000000
-good_bytes = 0x4
-scsi_finish_command: Complete
-
-
-Another Mode Sense:
-
-ahc_calc_residual: Entered
-ahc_calc_residual: return Case 5-1 resid = 0x8
-ahc_calc_residual: return Case 5-2 resid = 0x8
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x08 0x00 0x20 0x00
-cmd->result = 0x00000000
-good_bytes = 0x20
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] Write cache: disabled, read cache: enabled, supports
-DPO and FUA
-
-
-Another TUR:
-
-scsi_finish_command: Entered for cmd(6):0x00 0x00 0x00 0x00 0x00 0x00
-cmd->result = 0x00000000
-good_bytes = 0x0
-scsi_finish_command: Complete
-
-
-Another Read Capacity:
-
-scsi_finish_command: Entered for cmd(10):0x25 0x00 0x00 0x00 0x00 0x00
-0x00 0x00 0x00 0x00
-cmd->result = 0x00000000
-good_bytes = 0x8
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] 7260582 256-byte hardware sectors (1859 MB)
-
-
-Another Mode Sense:
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x3f 0x00 0x04 0x00
-cmd->result = 0x00000000
-good_bytes = 0x4
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] Write Protect is off
-
-
-Another Mode Sense:
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x08 0x00 0x04 0x00
-cmd->result = 0x00000000
-good_bytes = 0x4
-scsi_finish_command: Complete
-
-
-Another Mode Sense:
-
-ahc_calc_residual: Entered
-ahc_calc_residual: return Case 5-1 resid = 0x8
-ahc_calc_residual: return Case 5-2 resid = 0x8
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x08 0x00 0x20 0x00
-cmd->result = 0x00000000
-good_bytes = 0x20
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] Write cache: disabled, read cache: enabled, supports
-DPO and FUA
-
-
-Another TUR:
-
-scsi_finish_command: Entered for cmd(6):0x00 0x00 0x00 0x00 0x00 0x00
-cmd->result = 0x00000000
-good_bytes = 0x0
-scsi_finish_command: Complete
-
-
-Another Read Capacity:
-
-scsi_finish_command: Entered for cmd(10):0x25 0x00 0x00 0x00 0x00 0x00
-0x00 0x00 0x00 0x00
-cmd->result = 0x00000000
-good_bytes = 0x8
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] 7260582 256-byte hardware sectors (1859 MB)
-
-
-Another Mode Sense:
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x3f 0x00 0x04 0x00
-cmd->result = 0x00000000
-good_bytes = 0x4
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] Write Protect is off
-
-
-Another Mode Sense:
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x08 0x00 0x04 0x00
-cmd->result = 0x00000000
-good_bytes = 0x4
-scsi_finish_command: Complete
-
-
-Another Mode Sense:
-
-ahc_calc_residual: Entered
-ahc_calc_residual: return Case 5-1 resid = 0x8
-ahc_calc_residual: return Case 5-2 resid = 0x8
-
-scsi_finish_command: Entered for cmd(6):0x1a 0x00 0x08 0x00 0x20 0x00
-cmd->result = 0x00000000
-good_bytes = 0x20
-scsi_finish_command: Complete
-
-sd 8:0:0:0: [sde] Write cache: disabled, read cache: enabled, supports
-DPO and FUA
-
-
-First READ(10):
-
- sde:
-ahc_calc_residual: Entered
-ahc_calc_residual: return Case 5-1 resid = 0x800
-ahc_calc_residual: return Case 5-2 resid = 0x800
-
-scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
-0x00 0x00 0x08 0x00
-cmd->result = 0x00000000
-good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
-New good_bytes = 0x0
-scsi_finish_command: Complete
-
->From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
-it looks like the machine is hung.
-
-Now, I know for a fact that _if_ this read CDB is actually being sent to
-the drive, it's actual residual count will be zero. These are working
-disks and that read CDB is valid.
-
-Why is ahc_calc_residual saying that the residual count is as though the
-read never took place? I noticed that the first read on all the SATA
-drives was for 4096 bytes, why is this one only 2048? Should it have
-been 4096 and ahc_calc_residual assume that?
-
-BTW, I'll be in and out all day today so I may not be able to respond
-quickly.
-
-One thing all these machines I have doing this, have in common, is the
-scsi controller (Aic7xxx).
-
-Regards
-Mark
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]=20
+> Sent: Wednesday, May 26, 2010 11:48 AM
+> To: James Bottomley
+> Cc: Yang, Bo; 'linux-scsi@vger.kernel.org'; 'akpm@osdl.org'; 'linux-k=
+ernel@vger.kernel.org'; Daftardar, Jayant
+> Subject: Re: [PATCH 6/7] scsi: megaraid_sas - Add three times Online =
+controller reset - V2
+>
+> On 05/25/2010 07:32 PM, James Bottomley wrote:
+>  =20
+>> On Tue, 2010-05-25 at 18:17 +0200, Tomas Henzl wrote:
+>>  =20
+>>    =20
+>>> V2: I've cleaned up some coding style issues and removed a variable=
+, the functionality shouldn't be changed
+>>>
+>>> Tomas
+>>>
+>>> If fw didn't raise the interrupt with the fw state change to driver=
+ and fw goes to failure state, driver
+>>> Will check the FW state in driver's timeout routine and issue the r=
+eset if need.  Driver will do the OCR upto three
+>>> Times until kill adapter.  Also driver will issue OCR before driver=
+ kill adapter even if fw in operational state.  =20
+>>>    =20
+>>>      =20
+>> So there's supposed to be a replacement for 3/7 (megaraid_sas - Onli=
+ne
+>> COntroller Reset (OCR) PART-III) as well, isn't there?
+>>  =20
+>>    =20
+> Yes, I think there are some issues that could be removed, on the othe=
+r side
+> it is mostly coding style related, so I think it could be accepted as=
+ it is.
+> I hope I could afterwards clean something up. (The patches as they ar=
+e now don't
+> apply correctly on my system, it's maybe an issue with my mail reader=
+=2E)
+> =20
+>
+>  =20
+>> Also descriptive subjects would be nice (parts I-III may do well for
+>> Lord of the Rings ... it's less useful for SCSI patches).
+>>  =20
+>>    =20
+> This is again a question for the original author. Bo?
+>
+> Tomas
+>
+>
+>  =20
+>> James
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>  =20
+>>    =20
+> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
+=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
+=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
+=EF=BF=BD=EF=BF=BD"=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD,j=07=EF=
+=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=
+z=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=BD=EF=
+=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ+=EF=BF=
+=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
