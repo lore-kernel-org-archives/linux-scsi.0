@@ -1,24 +1,32 @@
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Subject: Re: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a
- 256 byte sector SCSI disk is attached
-Date: Fri, 28 May 2010 15:29:29 -0400
-Message-ID: <4C001999.1010703@cfl.rr.com>
-References: <bug-16058-11613@https.bugzilla.kernel.org/> <201005281634.o4SGYU6M015956@demeter.kernel.org>
-Reply-To: dmarkh@cfl.rr.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Fri, 28 May 2010 19:30:14 GMT
+Message-ID: <201005281930.o4SJUEkl025358@demeter.kernel.org>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:46252 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627Ab0E1T3b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 15:29:31 -0400
-In-Reply-To: <201005281634.o4SGYU6M015956@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:38267 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751678Ab0E1TaP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 15:30:15 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4SJUEjJ025359
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 19:30:14 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
+
+
+
+
+
+--- Comment #7 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-05-28 19:30:11 ---
 On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=16058
 >
@@ -91,3 +99,8 @@ doing the same for a 256 byte sector disk???
 
 Regards
 Mark
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
