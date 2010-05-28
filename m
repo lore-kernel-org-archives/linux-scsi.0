@@ -1,126 +1,82 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Fri, 28 May 2010 20:26:37 GMT
-Message-ID: <201005282026.o4SKQb9K006528@demeter.kernel.org>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 6/6] cciss: new controller support and bump driver version
+Date: Fri, 28 May 2010 15:42:16 -0500
+Message-ID: <20100528204216.GE6989@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:59004 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755774Ab0E1U0i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 16:26:38 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4SKQb29006529
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 20:26:37 GMT
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Received: from g5t0007.atlanta.hp.com ([15.192.0.44]:4545 "EHLO
+	g5t0007.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650Ab0E1Uhh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 16:37:37 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Steve Cameron <scameron@beardog.cce.hp.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
+Patch 6 of 6
+cciss: add new controller support
+This patch adds support for new controllers due out next year. HP must
+continue to support new controllers in older distros. All vendors require
+support be upstream. These controllers support only 16 commands in simple
+mode but can support up to 1024 in performant mode. See patch 5/6/
+We have no marketing names yet.
 
+From: Mike Miller <mike.miller@hp.com>
+Cc: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+---
+ drivers/block/cciss.c |   20 ++++++++++++++------
+ 1 files changed, 14 insertions(+), 6 deletions(-)
 
-
-
---- Comment #8 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 20:26:28 ---
-Reply-To: James.Bottomley@suse.de
-
-On Fri, 2010-05-28 at 15:29 -0400, Mark Hounschell wrote:
-> On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=16058
-> >
-> >
-> >
-> >
-> >
-> > --- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
-> > Reply-To: James.Bottomley@suse.de
-> >
-> > On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
-> >   
-> >> On Fri, 28 May 2010, Mark Hounschell wrote:
-> >>
-> >>     
-> >>> First READ(10):
-> >>>
-> >>>  sde:
-> >>> ahc_calc_residual: Entered
-> >>> ahc_calc_residual: return Case 5-1 resid = 0x800
-> >>> ahc_calc_residual: return Case 5-2 resid = 0x800
-> >>>
-> >>> scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
-> >>> 0x00 0x00 0x08 0x00
-> >>> cmd->result = 0x00000000
-> >>> good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
-> >>> New good_bytes = 0x0
-> >>> scsi_finish_command: Complete
-> >>>
-> >>> From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
-> >>> it looks like the machine is hung.
-> >>>       
-> >> Probably not hung, just doing a lot of retries.  It should time out 
-> >> eventually, but it might take a long time (perhaps as long as 15 
-> >> minutes).  The combination of the block layer and the SCSI layer isn't 
-> >> very good at knowing when to give up.
-> >>     
-> > Actually, I think this is a partition read.  Each partition manager
-> > tends to read a page through the page cache.  If we get an error, we
-> > seem to re-read to fill the cache.
-> >
-> >   
-> >>> Now, I know for a fact that _if_ this read CDB is actually being sent to
-> >>> the drive, it's actual residual count will be zero. These are working
-> >>> disks and that read CDB is valid.
-> >>>
-> >>> Why is ahc_calc_residual saying that the residual count is as though the
-> >>> read never took place? I noticed that the first read on all the SATA
-> >>> drives was for 4096 bytes, why is this one only 2048? Should it have
-> >>> been 4096 and ahc_calc_residual assume that?
-> >>>       
-> >> I don't know the answer to any of these questions.  They could well be
-> >> due to bugs in the driver, and I know nothing about how the aic7xxx
-> >> driver works.  You should talk to someone who does.
-> >>     
-> > I'll take this one ... although we're a bit lacking in documentation for
-> > this driver.
-> >
-> > I think the 2048 is because something is hardcoded to think 8 sectors is
-> > a page.
-> >
-> > James
-> >
-> >   
-> Your probably right. But is a 256 byte sector really a supported sector
-> size for a linux fs on a SCSI disk?
-
-In theory the block layer can support any power of two sector size (or
-really any sector size which is a divisor of the page size).  We had a
-use for 256 byte sectors once, so they're in SCSI.  In practice, since
-they're so rare, the code paths are never tested (as you found out) and
-there's a more annoying problem which is since the linux base sector
-size is 512, you have to multiply to get from 256 to 512 ... for all
-other sector sizes you have to divide, so any conversion routine that
-only right shifts would get this wrong.
-
->  When it sees a 768 byte sector disk,
-> it says it's an unsupported size and goes on with the boot process
-> without even doing a read for a partition table.
-
-that's because 768 isn't a power of 2, so it's completely unsupportable.
-
->  Should maybe it be
-> doing the same for a 256 byte sector disk???
-
-Possibly ... I don't know what the 256 byte sector support was for ...
-all I know is that whatever it was, I don't have one.
-
-James
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 08a2e61..5e215ff 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -56,16 +56,14 @@
+ #include <linux/kthread.h>
+ 
+ #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
+-#define DRIVER_NAME "HP CISS Driver (v 3.6.20)"
+-#define DRIVER_VERSION CCISS_DRIVER_VERSION(3, 6, 20)
++#define DRIVER_NAME "HP CISS Driver (v 3.6.26)"
++#define DRIVER_VERSION CCISS_DRIVER_VERSION(3, 6, 26)
+ 
+ /* Embedded module documentation macros - see modules.h */
+ MODULE_AUTHOR("Hewlett-Packard Company");
+ MODULE_DESCRIPTION("Driver for HP Smart Array Controllers");
+-MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
+-			" SA6i P600 P800 P400 P400i E200 E200i E500 P700m"
+-			" Smart Array G2 Series SAS/SATA Controllers");
+-MODULE_VERSION("3.6.20");
++MODULE_SUPPORTED_DEVICE("HP Smart Array Controllers");
++MODULE_VERSION("3.6.26");
+ MODULE_LICENSE("GPL");
+ 
+ static int cciss_allow_hpsa;
+@@ -107,6 +105,11 @@ static const struct pci_device_id cciss_pci_device_id[] = {
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3249},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324A},
+ 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324B},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3250},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3251},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3252},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3253},
++	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3254},
+ 	{0,}
+ };
+ 
+@@ -146,6 +149,11 @@ static struct board_type products[] = {
+ 	{0x3249103C, "Smart Array P812", &SA5_access},
+ 	{0x324A103C, "Smart Array P712m", &SA5_access},
+ 	{0x324B103C, "Smart Array P711m", &SA5_access},
++	{0x3250103C, "Smart Array", &SA5_access},
++	{0x3251103C, "Smart Array", &SA5_access},
++	{0x3252103C, "Smart Array", &SA5_access},
++	{0x3253103C, "Smart Array", &SA5_access},
++	{0x3254103C, "Smart Array", &SA5_access},
+ };
+ 
+ /* How long to wait (in milliseconds) for board to go into simple mode */
