@@ -1,85 +1,71 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Fri, 28 May 2010 16:34:30 GMT
-Message-ID: <201005281634.o4SGYU6M015956@demeter.kernel.org>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 08/24] hpsa: fix leak of ioremapped memory
+Date: Fri, 28 May 2010 21:12:17 +0200
+Message-ID: <201005282112.24802.eike-kernel@sf-tec.de>
+References: <20100527200301.3116.78973.stgit@beardog.cce.hp.com> <20100527201322.3116.86053.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed;
+  boundary="nextPart2914297.itjYZsoPnK";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:52071 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753229Ab0E1Qeb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 12:34:31 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4SGYUmD015957
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 28 May 2010 16:34:30 GMT
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Received: from mail.sf-mail.de ([62.27.20.61]:44539 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755128Ab0E1TMc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 May 2010 15:12:32 -0400
+In-Reply-To: <20100527201322.3116.86053.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dab@hp.com, mikem@beardog.cce.hp.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
+--nextPart2914297.itjYZsoPnK
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
+Stephen M. Cameron wrote:
+> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>=20
+> hpsa: fix leak of ioremapped memory
+> in hpsa_pci_init error path.
 
+If you had used devres to track your resources you got this for free.
 
+> @@ -3474,6 +3477,12 @@ static int __devinit hpsa_pci_init(struct ctlr_info
+> *h) return 0;
+>=20
+>  err_out_free_res:
+> +	if (h->transtable)
+> +		iounmap(h->transtable);
+> +	if (h->cfgtable)
+> +		iounmap(h->cfgtable);
+> +	if (h->vaddr)
+> +		iounmap(h->vaddr);
 
+I wonder if that shouldn't use pci_iomap() instead. Also the page aligning=
+=20
+tricks in remap_pci_mem() look a bit dubious to me. If your pci BAR is >=3D=
+=20
+PAGE_SIZE this isn't needed at all anyway since those mappings are aligned =
+to=20
+at least their size in physical address space anyway and the logical addres=
+s=20
+shouldn't matter for the driver.
 
---- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
-Reply-To: James.Bottomley@suse.de
+Eike
 
-On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
-> On Fri, 28 May 2010, Mark Hounschell wrote:
-> 
-> > First READ(10):
-> > 
-> >  sde:
-> > ahc_calc_residual: Entered
-> > ahc_calc_residual: return Case 5-1 resid = 0x800
-> > ahc_calc_residual: return Case 5-2 resid = 0x800
-> > 
-> > scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
-> > 0x00 0x00 0x08 0x00
-> > cmd->result = 0x00000000
-> > good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
-> > New good_bytes = 0x0
-> > scsi_finish_command: Complete
-> > 
-> > From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
-> > it looks like the machine is hung.
-> 
-> Probably not hung, just doing a lot of retries.  It should time out 
-> eventually, but it might take a long time (perhaps as long as 15 
-> minutes).  The combination of the block layer and the SCSI layer isn't 
-> very good at knowing when to give up.
+--nextPart2914297.itjYZsoPnK
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Actually, I think this is a partition read.  Each partition manager
-tends to read a page through the page cache.  If we get an error, we
-seem to re-read to fill the cache.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.12 (GNU/Linux)
 
-> > Now, I know for a fact that _if_ this read CDB is actually being sent to
-> > the drive, it's actual residual count will be zero. These are working
-> > disks and that read CDB is valid.
-> > 
-> > Why is ahc_calc_residual saying that the residual count is as though the
-> > read never took place? I noticed that the first read on all the SATA
-> > drives was for 4096 bytes, why is this one only 2048? Should it have
-> > been 4096 and ahc_calc_residual assume that?
-> 
-> I don't know the answer to any of these questions.  They could well be
-> due to bugs in the driver, and I know nothing about how the aic7xxx
-> driver works.  You should talk to someone who does.
+iEYEABECAAYFAkwAFZgACgkQXKSJPmm5/E5WrQCfcoktmSJxUWggVEhnwdiCpxbW
+iksAn3OMS0FYRN3OW31Nk1dLciIUbWZI
+=N9BY
+-----END PGP SIGNATURE-----
 
-I'll take this one ... although we're a bit lacking in documentation for
-this driver.
-
-I think the 2048 is because something is hardcoded to think 8 sectors is
-a page.
-
-James
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--nextPart2914297.itjYZsoPnK--
