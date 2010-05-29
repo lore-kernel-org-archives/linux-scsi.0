@@ -1,252 +1,137 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [RFC]: Mainline of TCM Core and TCM_Loop for v2.6.35
-Date: Sat, 29 May 2010 21:26:39 +0400
-Message-ID: <4C014E4F.90206@vlnb.net>
-References: <1274317792.30733.59.camel@haakon2.linux-iscsi.org>	 <4BFEBCEF.8010201@vlnb.net> <1275012084.9661.66.camel@haakon2.linux-iscsi.org>
+From: Andy Walls <awalls@md.metrocast.net>
+Subject: Re: [patch 12/26] g_NCR5380: fix broken MMIO compilation
+Date: Sat, 29 May 2010 18:57:54 -0400
+Message-ID: <1275173874.2253.22.camel@localhost>
+References: <201005241922.o4OJMSxG011317@imap1.linux-foundation.org>
+	 <1274746615.4491.68.camel@localhost>
+	 <201005252058.38589.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:61266 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754585Ab0E2R0g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 May 2010 13:26:36 -0400
-In-Reply-To: <1275012084.9661.66.camel@haakon2.linux-iscsi.org>
+Received: from proofpoint-cluster.metrocast.net ([65.175.128.136]:56588 "EHLO
+	proofpoint-cluster.metrocast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756668Ab0E2W5z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 May 2010 18:57:55 -0400
+In-Reply-To: <201005252058.38589.linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>, Richard Sharpe <realrichardsharpe@gmail.com>, James Smart <James.Smart@Emulex.Com>, Jeff Garzik <jeff@garzik.org>, Joel Becker <joel.becker@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: akpm@linux-foundation.org, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-Nicholas A. Bellinger, on 05/28/2010 06:01 AM wrote:
-> On Thu, 2010-05-27 at 22:41 +0400, Vladislav Bolkhovitin wrote:
->> Nicholas A. Bellinger, on 05/20/2010 05:09 AM wrote:
->>> Greetings James and Co,
->>>
->>> I would like to formally request the inclusion of TCM Core v4 codebase
->>> containing the fabric independent configfs infrastructure design and
->>> TCM_Loop SCSI LLD fabric module supporting multi-fabric I_T Nexus and
->>> Port emulation for SAS, FC and iSCSI into mainline for v2.6.35
->>>
->>> The plan is to push TCM Core and the TCM_Loop LLD module for use with
->>> existing userspace applications into mainline first, and then focus on
->>> extending the upstream fabric libraries (libiscsi, libfc, libsas) for
->>> new and future TCM modules to support a common set of kernel-level
->>> target mode infrastructure for HW and SW fabric engines once the main
->>> target pieces are in place.
->>>
->>> On the userspace fabric <-> kernel backstore side, the TCM_Loop fabric
->>> module is currently running with full SPC-3 PR and ALUA support using
->>> fabric-independent virtual SCSI target port emulation with the STGT
->>> iSCSI userspace fabric code and SG_IO backstores.  TCM_Loop is also
->>> being used with SG_IO for QEMU-KVM megasas HBA emulation into Linux and
->>> MSFT x86 guests and is able to run at sustained 10 Gb/sec throughput
->>> into KVM guest.
->>>
->>> For the kernelspace fabric <-> userspace backstore side for v2.6.35, the
->>> plan is to extend the existing drivers/scsi/scsi_tgt_[lib,if].c direct
->>> mapped ring interface to the WIP kernel level TCM/STGT subsystem
->>> backstore plugin mentioned in previously on linux-scsi.  This will allow
->>> projects presenting a userspace block device to access existing TCM
->>> kernel level target module fabric drivers.
->> I've got 2 question and 1 note.
->>
->> 1. Are there any evidences that TCM has any value over STGT?
+On Tue, 2010-05-25 at 20:58 +0200, Ondrej Zary wrote:
+> On Tuesday 25 May 2010 02:16:55 Andy Walls wrote:
+> > On Mon, 2010-05-24 at 12:22 -0700, akpm@linux-foundation.org wrote:
+> > > From: Ondrej Zary <linux@rainbow-software.org>
+> > >
+> > > The ifdefs are broken so the MMIO code is never compiled and so it's
+> > > broken too.  Fix them all.  Untested as I don't have the hardware.
+> > >
+> > > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+> > > Cc: Andy Walls <awalls@radix.net>
+> > > Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> >
+> > I remeber inspecting this before and thinking they were fine.
+> >
+> > Reviewed-by: Andy Walls <awalls@md.metrocast.net>
+> > (my awalls@radix.net account is obsolete)
+> >
+> > If anyone in the US is interested in ancient ISA bus SCSI hardware for
+> > NCR5380 driver development, I can send them:
+> >
+> > 1. a DTC3181E
+> > 	NCR5380
+> > 	ISA I/O ports
+> > 	no IRQ
+> > 	no Pseudo-DMA
+> > 	DB-25 external connector
+> > 	...definitely a piece of junk.
+> >
+> > 2. a SUMO SCSI AT
+> > 	NCR5380
+> > 	ISA I/O ports
+> > 	IRQ is is enabled by a bit in a board specific reg at reg_base+8
+> > 	Pseudo DMA is enabled by a a board specific reg at reg_base+8
+> > 	No watchdog timer on the pseudo DMA, so a failed pseudo-DMA
+> > 		can hang your whole machine :D
+> > 	SCSI-1 external connector (Centronics-type with bail locks)
+> > 	Internal SCSI connector
+> > 	Removeable terminating resistors for the card.
+> > 	Two BIOS firmware images on board, each having a divide by
+> > 		0 bug in their fake C/H/S drive geometry computations :D
+> > 	...in general, also a piece of junk.
+> >
+> > Neither of them will help with testing the MMIO mode of the driver.
 > 
-> TCM provides a HBA / device model for kernel level backstores with SPC-4
-> PR and ALUA logic on top of mainline Linux storage subsystems.  The TCM
-> v4 design also provides a fabric independent control plane using a set
-> of generic struct config_groups and fabric context dependent
-> CONFIGFS_EATTR() based macros that allow for rapid development of new,
-> conversion of existing, and extention of existing TCM fabric modules.
+> I actually have a memory-mapped card - Canon FG2-5202 (hardwired to IRQ7). It 
+> did not work for me. But the other (I/O) mapped cards do neither. They seem 
+> to work if there's no SCSI device connected but I was not able to get neither 
+> IBM DORS-32160 hard disk nor SONY CDU415 CD-ROM working.
 > 
-> When used in combination with STGT userspace fabric modules and SG_IO
-> backstore (tgt.git:usr/iscsi/ for example) and TCM_Loop Port and Nexus
-> emulation, it allows any kernel level TCM backstore and associated SPC-4
-> PR and ALUA logic to be made accessable to STGT fabric module code
-> running in userspace.
+> The driver hangs the machine completely because it waits for timeout using 
+> time_before with interrupts disabled - e.g. in NCR5380_poll_politely() in 
+> drivers/scsi/NCR5380.c.
 > 
-> Also, STGT currently does not contain the ability to run in SCSI LLD
-> mode so it is not possible to access kernel level target functionality
-> inside of a QEMU-KVM guest using virtio or the new megasas HBA
-> emulation.  Using the TCM_Loop fabric module it is now possible to
-> access TCM fabric independent SPC-4 logic into the virtualized guest
-> with any hypervisor (kvm, xen, vmw) that properly supports scsi-generic
-> and some manner of HBA emulation.
+> Tried older kernels to find when did it work last time - and found none! 2.4 
+> kernels were able to at least display device name and firmware version. Maybe 
+> I should try some older CPU & motherboard (this was on a P3, IIRC).
 
-All the above can be implemented in STGT. Considering that they were 
-only recently added in TCM, why they were not added in STGT instead?
 
->> So far, 
->> I've only read not supported words with once a reference to my effort on 
->> completely unrelated project.
+I pulled out my Pentium 100 machine from the closet today.  I did some
+tests with the DTC3181e and a Mustek scanner and found some old notes.
+
+1.  The g_NCR5380 driver loads, under kernel 2.6.9 as delivered with
+Fedora Core 3, but after performing some Inquiry commands (and maybe
+some Test Unit Ready commands) to non-existant Targets it Oops-es the
+kernel.  It appears to be problems with abort handling.
+
+2. I know for sure that the driver worked with this machine on Redhat
+5.0 or 5.2, Kernel 2.0.32  (that was RedHat 5.x before RedHat 9.0 which
+was the last RedHat distro before the split into RHEL and Fedora Core)
+both with my DTC card and Mustek scanner and my SUMO card with an
+external Exabyte 8500 tape drive.
+
+3. I have some half completed source code for a dedicated driver module
+for the SUMO SCSI AT card.  I was working on with kernel version 2.2.5
+at the time.  I'm very sure the g_NCR530 driver worked then too.
+
+4. Alan Cox left some comments in the driver talking about waiting for
+kernel 2.3 to add SMP support to the g_NCR5380 driver.  It may be
+prudent to assume the driver is not SMP safe.  It may also lets me knwo
+the driver had to be working still sometime in kernel v2.2
+
+
+5. I recall noting at one point in the NCR5380.[ch] files' evolution
+that some really platform specific code (Motorola VME cards?) started
+getting hacked into the driver.  Maybe that has been split out by now. 
+
+On a somewhat related note, I also found my old Pro Audio Spectrum 16
+card, that had a NCR5380 SCSI host embedded into a Zilog chip on the
+board (From the days when sound cards provided a SCSI drive interface
+for playing CD-ROMs).  It used to work with the pas16 SCSI driver (which
+is based on the NCR5380.[ch] files).  I don't know if the pas16 driver
+still works.
+
+
+My only working machine with ISA slots is a Pentium 100.  It is too slow
+for me to do any serious development on, so I likely won't be making any
+patches to the g_NCR5380 driver.
+
+Good luck.
+
+Regards,
+Andy
+
+> > > ---
+> > >
+> > >  drivers/scsi/g_NCR5380.c |   43 +++++++++++++++++++------------------
+> > >  drivers/scsi/g_NCR5380.h |    6 ++---
+> > >  2 files changed, 26 insertions(+), 23 deletions(-)
+> > >
+> > > diff -puN drivers/scsi/g_NCR5380.c~g_ncr5380-fix-broken-mmio-compilation
+
 > 
-> I have no idea what you are talking about here.  As mentioned in my
-> original email, my efforts for mainling TCM have been to extend and
-> complement STGT.  In open source you have to build upon what already
-> exists upstream and move forward.
 
-This sounds very attractive, but not practical. Because of fundamental 
-architectural differences, you'd end up with 2 separate somehow coupled 
-subsystems doing the same things by 2 different interfaces. Definitely, 
-this ugly end result would not be something which everybody liked and 
-expected.
 
->> 2. Are there any users of this code using it in production to prove its 
->> usability and stability? I mean, used not by RisingTide and its 
->> customers, because on the RisingTide's web page it's clearly written 
->> that their target software "partially available as the open-source LIO 
->> Core target".
-> libs
-> Wrong.  We (RisingTide) validate and maintain a backport tree of TCM and
-> LIO kernel code for our customers who do not necessarly run on bleeding
-> edge kernels.
-
-Year, you are making from the "partially available" the "fully 
-available" code.
-
-> Also just FYI, here in North America you can go into almost any major
-> electronics store and purchase a storage server from multiple different
-> vendors containing TCM/LIO code directly from lio-core-2.6.git/master.
-
-Names, please.
-
-Do you mean Netgear 
-(http://old.nabble.com/Re%3A-Invalid-module-format---no-symbol-version-formodule_layout-p27116634.html)?
-
-Anyway, it is apparent that open source LIO/TCM you are pushing has none 
-or very few production users and there are no signs it is changing. 
-Users prefer alternative solutions.
-
-Moreover, I have not seen any positive reference about production usage 
-of LIO/TCM anywhere, the only reference I've seen so far was the above 
-negative feedback about the Netgear experience.
-
-> But you should really understand that the 'who is using what' has never
-> been a strong agruement for mainline acceptance of any project.
-
-Size of the users base has always been one of the main arguments.
-
->>  As we can see Linux-iSCSI.org development mailing list 
->> (http://groups.google.com/group/linux-iscsi-target-dev?hl=en) has near 
->> zero activity.
-> 
-> Wrong again.  The LIO-devel list contains series after series of
-> bisectable commits that are posted in a human readable and reviewable
-> manner.  All of the interesting commits related to the v4 configfs
-> design and port of LIO-Target, TCM_FC, and TCM_Loop fabric modules have
-> been posted to linux-scsi over the last months as well.
-
-Year, you are the one making traffic there.
-
->> The note is that the idea to use the STGT's scsi_tgt_[lib,if].c direct 
->> mapped ring interface to extend TCM in the user space and allow present 
->> STGT's user space devices to work with TCM is unpractical, because the 
->> STGT's interface and devices are built around SCSI target state machine 
->> and memory management in the user space, while TCM has them both in the 
->> kernel.
-> 
-> I think you are misunderstanding what the TCM STGT backstore subsystem
-> plugin at lio-core-2.6.git/drivers/target/target_core_stgt.c is supposed
-> to do, and what I have proposed with the second area of TCM and STGT
-> compatibility.
-
-Nicholas,
-
-I have been working in area of SCSI targets since 2003, I have created 
-the best OSS SCSI target subsystem which is widely used and getting 
-better and better every day. I am one of few people among recipients of 
-this thread who has sufficient knowledge and experience to be able see 
-the whole picture and be able to evaluate quality and consequences of 
-the code and architectural decisions in this area. (Even deep experience 
-in SCSI initiator side development is not quite sufficient for that, 
-because SCSI initiator and target sides solve completely different tasks 
-[1].) If something isn't clear for me, I can simply look in the source 
-code and quickly find out the answers.
-
-<MOANING ON>
-
-Actually, I'd prefer to stay away from all those TCM discussions and let 
-somebody similarly skillful to judge. But, since there is no such person 
-appearing, I have to participate myself to explain the real state of 
-things and let people judge based on _facts_, not the marketing stuff 
-you are too often presenting. So far too much of what you have written 
-after closer examinations turned out to be a misleading half-truth as in 
-this particular case, where the end result isn't going to be what 
-everybody would expect hearing about "TCM and STGT compatibility" or as 
-it was before with "1 to many" pass-through which only sometimes "1 to 
-many", otherwise not enforced "1 to 1", welcoming data corruption, or 
-even before with Persistent Reservations which worked as expected only 
-with a single connected initiator, etc.. I have to explain everybody for 
-who it isn't obvious what is true and what is NOT true in your 
-"half-truth". Competition is a good thing, but without all those 
-undercover dirty marketing games which I'm really tired. They are 
-disgusting.
-
-<MOANING OFF>
-
-> We will be extending the scsi_tgt_[lib,if].c mapped ring interface to
-> allow TCM to access userspace backstores transparently with existing
-> kernel level TCM fabric modules, and using the generic configfs fabric
-> module infrastructure in target_core_fabric_configfs.c for the port and
-> I_T nexus control plane just as you would with any TCM backstore
-> subsystem today.
-> 
-> Again, in open source you have to build upon what already exists and
-> move forward.  The original STGT kernel <-> userspace ring abstraction
-> and logic in drivers/scsi/scsi_tgt_lib.c:scsi_tgt_queue_command() ->
-> scsi_tgt_uspace_send_cmd() is already going to do the vast majority of
-> what is required for handling fabric I/O processing and I_T Nexus and
-> Port management in kernel space with a userspace backstore.  It is
-> really just a matter of allowing the STGT ring request to optionally be
-> sent out to userspace as a standalone LUN instead of as a target port.
-
-You'd end up in one of 2 options:
-
-1. You'd make TCM to pass-through requests from its target drivers 
-("fabric modules" in your terminology) directly to the STGT core in the 
-user space bypassing TCM's internal memory management and target state 
-machine, i.e. effectively make them behave as STGT target drivers. As 
-the result, we would have 2 separate interfaces (TCM and STGT) doing the 
-same thing as well as 2 sets of target drivers and 2 sets of backend 
-handlers from each interface. That apparently wouldn't be a Linux's way 
-of doing things. It wouldn't be moving forward, it would be moving in 
-the maintenance hell.
-
-2. You'd just throw away existing STGT messages and add new ones. Then 
-add in STGT a big "TCM compatibility" level to make STGT and it's 
-backend be able to use the new messages and work with new model with 
-memory management and target state machine in the kernel. Obviously, it 
-would be even uglier than (1).
-
-But it's an Open Source, so you can do whatever you want. Show us the 
-code and we will see. My intention is only to _warn_ people that they 
-shouldn't count on your (marketing) plans, because there are fundamental 
-reasons preventing them be implemented in an acceptable way.
-
-Also I should note that the decision to extend the fabric libraries by 
-additional target mode specific routines is a very bad move. I already 
-covered this topic in http://lkml.org/lkml/2008/12/10/245. In short, 
-SCSI initiator and target sides share nearly nothing in the processing 
-code [2], so they should be separated to keep different things 
-separately, as a good design practice required, not to heap them 
-altogether as it's currently done and you are going to continue. Good 
-example of how it is already done is NFS client (fs/nfs/) and server 
-(fs/nfsd/), which share only few ACL processing routines in fs/nfs_common/.
-
-Vlad
-
-[1] SCSI initiator and target are a client and a server correspondingly, 
-where one is generating requests and parsing responses, another one 
-parsing requests and generating responses, so they have very few in 
-common. Like apache (server) and links/firefox (client), or sendmail 
-(server) and mutt/thunderbird (client).
-
-[2] Initiator and target modes share only (1) constants, (2) low level 
-memory processing and mapping routines. Both of them already separated 
-out in the headers and the block subsystem. In case if a hardware 
-supports both initiator and target modes at the same time, the target 
-mode support should be done as an add-on through a set of hooks exported 
-by the corresponding initiator module for the hardware to allow the 
-target add-on to process target mode commands from the hardware. This 
-way code for both modes would be clearly separated and it would allow to 
-load the target mode add-on only when it is needed.
