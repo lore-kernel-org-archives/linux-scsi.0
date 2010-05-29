@@ -1,34 +1,42 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: scsi error handler thread seems to run continuously
-Date: Fri, 28 May 2010 19:30:21 -0400
-Message-ID: <x49hblrbo4y.fsf@segfault.boston.devel.redhat.com>
-References: <x49wrunvioi.fsf@segfault.boston.devel.redhat.com>
-	<AANLkTim-dZFhUm8IOLwQhNLovBmUxb5AnGYmbYci1YYK@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16070] Fail to issue Start/Stop Unit
+Date: Sat, 29 May 2010 00:57:59 GMT
+Message-ID: <201005290057.o4T0vxUM027688@demeter.kernel.org>
+References: <bug-16070-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52727 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753253Ab0E1Xa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 May 2010 19:30:29 -0400
-In-Reply-To: <AANLkTim-dZFhUm8IOLwQhNLovBmUxb5AnGYmbYci1YYK@mail.gmail.com>
-	(Mike Snitzer's message of "Fri, 28 May 2010 17:55:32 -0400")
+Received: from demeter.kernel.org ([140.211.167.39]:47554 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555Ab0E2A6A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2010 20:58:00 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4T0vxi8027689
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 29 May 2010 00:57:59 GMT
+In-Reply-To: <bug-16070-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, David Zeuthen <david@fubar.dk>
+To: linux-scsi@vger.kernel.org
 
-Mike Snitzer <snitzer@redhat.com> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=16070
 
-> Chatting with James on #storage we arrived at the fact that in my case
-> the error handler was being triggered by: hald-addon-storage: polling
-> /dev/sr0 (every 16 sec)
->
-> Killing hald-addon-storage stops the 16s periodic scsi error handler messages.
 
-Ahh, silence.  On my system, hald-addon-storage was polling /dev/sr0
-every 2 seconds.  Killing this process, there's now nothing going on.
 
-Thanks a ton!
 
--Jeff
+
+--- Comment #3 from Ian Dall <ian@beware.dropbear.id.au>  2010-05-29 00:57:56 ---
+Ah, thanks. That works perfectly!
+
+I knew that traditionally this wasn't supported in linux (as per comment #1)
+but I also understood that the functionality had been added in recent kernels.
+
+In my defence, I can't find any reference to this in "man sd' nor with "grep
+allow_restart Documentation/scsi/*".
+
+Can this be treated as a documentation bug?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
