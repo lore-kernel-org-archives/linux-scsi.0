@@ -1,32 +1,24 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Sun, 30 May 2010 11:51:58 GMT
-Message-ID: <201005301151.o4UBpw96008758@demeter.kernel.org>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: Mark Hounschell <dmarkh@cfl.rr.com>
+Subject: Re: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a
+ 256 byte sector SCSI disk is attached
+Date: Sun, 30 May 2010 07:51:14 -0400
+Message-ID: <4C025132.3000502@cfl.rr.com>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>	 <201005281634.o4SGYU6M015956@demeter.kernel.org>	 <4C001999.1010703@cfl.rr.com> <1275078334.4479.31.camel@mulgrave.site>
+Reply-To: dmarkh@cfl.rr.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:42884 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751524Ab0E3Lv6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 May 2010 07:51:58 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4UBpwfv008759
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 30 May 2010 11:51:58 GMT
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:56643 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524Ab0E3LwR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 May 2010 07:52:17 -0400
+In-Reply-To: <1275078334.4479.31.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
-
-
-
-
-
---- Comment #9 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-05-30 11:51:53 ---
 On 05/28/2010 04:25 PM, James Bottomley wrote:
 > On Fri, 2010-05-28 at 15:29 -0400, Mark Hounschell wrote:
 >   
@@ -149,8 +141,3 @@ linux, why would the kernel still claim it supports that format?
 
 Regards
 Mark
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
