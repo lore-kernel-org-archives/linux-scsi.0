@@ -1,181 +1,156 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/2] [tgt]: Add proper CDB passthrough for SG_IO backstores
-Date: Sun, 30 May 2010 12:36:18 +0300
-Message-ID: <4C023192.9080503@panasas.com>
-References: <1274159582-6074-1-git-send-email-nab@linux-iscsi.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Sun, 30 May 2010 11:51:58 GMT
+Message-ID: <201005301151.o4UBpw96008758@demeter.kernel.org>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:55351 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752791Ab0E3JgW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 May 2010 05:36:22 -0400
-In-Reply-To: <1274159582-6074-1-git-send-email-nab@linux-iscsi.org>
+Received: from demeter.kernel.org ([140.211.167.39]:42884 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524Ab0E3Lv6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 May 2010 07:51:58 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4UBpwfv008759
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 30 May 2010 11:51:58 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>
+To: linux-scsi@vger.kernel.org
 
-On 05/18/2010 08:13 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch updates usr/bs_sg.c:bs_sg_cmd_submit() to process incoming scsi-generic IO
-> of type SG_DXFER_TO_DEV and SG_DXFER_FROM_DEV using a single new struct scsi_cmnd->sg_iovec
-> set using existing scsi_cmd.h scsi_get_[out,in]_[buffer,length]() macros.
-> 
-> It also makes set_cmd_failed() properly return SAM_STAT_CHECK_CONDITION, which is expected
-> by the bs_sg_cmd_submit() caller in usr/scsi.c:scsi_cmd_perform()
-> 
-> Finally, this patch adds struct backingstore_template->bs_passthrough=1 that is used by
-> bs_sg.c here and the next patch to hand off struct scsi_cmd for CDB passthrough.
-> 
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> ---
->  usr/bs_sg.c     |   31 ++++++++++++++++++++++++-------
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
 
-Why not add a new bs_bsg.c backing store that goes through BSG and not SG
-and do it properly for all type of targets and commands?
 
-Just a thought.
 
->  usr/scsi_cmnd.h |    4 ++++
->  usr/tgtd.h      |    1 +
->  3 files changed, 29 insertions(+), 7 deletions(-)
-> 
-> diff --git a/usr/bs_sg.c b/usr/bs_sg.c
-> index 8baa480..9696392 100644
-> --- a/usr/bs_sg.c
-> +++ b/usr/bs_sg.c
-> @@ -82,7 +82,7 @@ static int graceful_write(int fd, void *p_write, int to_write)
->  	return 0;
->  }
->  
-> -static void set_cmd_failed(struct scsi_cmd *cmd)
-> +static int set_cmd_failed(struct scsi_cmd *cmd)
->  {
->  	int result = SAM_STAT_CHECK_CONDITION;
->  	uint16_t asc = ASC_READ_ERROR;
-> @@ -90,11 +90,14 @@ static void set_cmd_failed(struct scsi_cmd *cmd)
->  
->  	scsi_set_result(cmd, result);
->  	sense_data_build(cmd, key, asc);
-> +
-> +	return result;
->  }
->  
->  static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
->  {
->  	struct scsi_lu *dev = cmd->dev;
-> +	struct sg_iovec *iov = &cmd->sg_iovec;
->  	int fd = dev->fd;
->  	struct sg_io_hdr io_hdr;
->  	int err = 0;
-> @@ -104,14 +107,27 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
->  	io_hdr.cmd_len = cmd->scb_len;
->  	io_hdr.cmdp = cmd->scb;
->  
-> +	if (scsi_get_data_dir(cmd) == DATA_BIDIRECTIONAL) {
 
-Using bsg just really cleans this all function up.
-IN_CMD => IN_HDR
-OUT_CMD => OUT_HDR
 
-no ifs and buts. The tgt's cmd looks like struct sg_io_v4 as if they
-are twins ;-)
+--- Comment #9 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-05-30 11:51:53 ---
+On 05/28/2010 04:25 PM, James Bottomley wrote:
+> On Fri, 2010-05-28 at 15:29 -0400, Mark Hounschell wrote:
+>   
+>> On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+>>     
+>>> https://bugzilla.kernel.org/show_bug.cgi?id=16058
+>>>
+>>>
+>>>
+>>>
+>>>
+>>> --- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
+>>> Reply-To: James.Bottomley@suse.de
+>>>
+>>> On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
+>>>   
+>>>       
+>>>> On Fri, 28 May 2010, Mark Hounschell wrote:
+>>>>
+>>>>     
+>>>>         
+>>>>> First READ(10):
+>>>>>
+>>>>>  sde:
+>>>>> ahc_calc_residual: Entered
+>>>>> ahc_calc_residual: return Case 5-1 resid = 0x800
+>>>>> ahc_calc_residual: return Case 5-2 resid = 0x800
+>>>>>
+>>>>> scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
+>>>>> 0x00 0x00 0x08 0x00
+>>>>> cmd->result = 0x00000000
+>>>>> good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
+>>>>> New good_bytes = 0x0
+>>>>> scsi_finish_command: Complete
+>>>>>
+>>>>> From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
+>>>>> it looks like the machine is hung.
+>>>>>       
+>>>>>           
+>>>> Probably not hung, just doing a lot of retries.  It should time out 
+>>>> eventually, but it might take a long time (perhaps as long as 15 
+>>>> minutes).  The combination of the block layer and the SCSI layer isn't 
+>>>> very good at knowing when to give up.
+>>>>     
+>>>>         
+>>> Actually, I think this is a partition read.  Each partition manager
+>>> tends to read a page through the page cache.  If we get an error, we
+>>> seem to re-read to fill the cache.
+>>>
+>>>   
+>>>       
+>>>>> Now, I know for a fact that _if_ this read CDB is actually being sent to
+>>>>> the drive, it's actual residual count will be zero. These are working
+>>>>> disks and that read CDB is valid.
+>>>>>
+>>>>> Why is ahc_calc_residual saying that the residual count is as though the
+>>>>> read never took place? I noticed that the first read on all the SATA
+>>>>> drives was for 4096 bytes, why is this one only 2048? Should it have
+>>>>> been 4096 and ahc_calc_residual assume that?
+>>>>>       
+>>>>>           
+>>>> I don't know the answer to any of these questions.  They could well be
+>>>> due to bugs in the driver, and I know nothing about how the aic7xxx
+>>>> driver works.  You should talk to someone who does.
+>>>>     
+>>>>         
+>>> I'll take this one ... although we're a bit lacking in documentation for
+>>> this driver.
+>>>
+>>> I think the 2048 is because something is hardcoded to think 8 sectors is
+>>> a page.
+>>>
+>>> James
+>>>
+>>>   
+>>>       
+>> Your probably right. But is a 256 byte sector really a supported sector
+>> size for a linux fs on a SCSI disk?
+>>     
+> In theory the block layer can support any power of two sector size (or
+> really any sector size which is a divisor of the page size).  We had a
+> use for 256 byte sectors once, so they're in SCSI.  In practice, since
+> they're so rare, the code paths are never tested (as you found out) and
+> there's a more annoying problem which is since the linux base sector
+> size is 512, you have to multiply to get from 256 to 512 ... for all
+> other sector sizes you have to divide, so any conversion routine that
+> only right shifts would get this wrong.
+>
+>   
 
-> +		eprintf("Unable to process DATA_BIDIRECTIONAL to"
-> +			" SG_IO backstore\n");
-> +		return set_cmd_failed(cmd);
-> +	}
-> +
->  	if (scsi_get_data_dir(cmd) == DATA_WRITE) {
->  		io_hdr.dxfer_direction = SG_DXFER_TO_DEV;
-> -		io_hdr.dxfer_len = scsi_get_out_length(cmd);
-> -		io_hdr.dxferp = (void *)scsi_get_out_buffer(cmd);
+from the fdisk man page:
 
-dxferp is already void* why do you need the cast?
+       -b sectorsize   Specify  the  sector  size  of the disk. Valid
+values are 512, 1024, 2048 or 4096.  (Recent kernels know the sector
+size. Use this only on old kernels or to override the kernel's ideas.)
 
-> -	} else {
-> +		io_hdr.dxfer_len = iov->iov_len = scsi_get_out_length(cmd);
-> +		iov->iov_base = (void *)scsi_get_out_buffer(cmd);
-> +		io_hdr.dxferp = &cmd->sg_iovec;
-> +		io_hdr.iovec_count = 1;
-> +	} else if (scsi_get_data_dir(cmd) == DATA_READ) {
->  		io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
-> -		io_hdr.dxfer_len = scsi_get_in_length(cmd);
-> -		io_hdr.dxferp = (void *)scsi_get_in_buffer(cmd);
-> +		io_hdr.dxfer_len = iov->iov_len = scsi_get_in_length(cmd);
-> +		iov->iov_base = (void *)scsi_get_in_buffer(cmd);
-> +		io_hdr.dxferp = &cmd->sg_iovec;
-> +		io_hdr.iovec_count = 1;
-> +	} else {
-> +		io_hdr.dxfer_direction = SG_DXFER_NONE;
-> +		io_hdr.dxfer_len = 0;
->  	}
->  	io_hdr.mx_sb_len = sizeof(cmd->sense_buffer);
->  	io_hdr.sbp = cmd->sense_buffer;
+So how does one create a linux fs on a 256 byte sectored disk?
 
-You might want to look into the new SG_FLAG_Q_AT_TAIL but this is available
-only in new Kernels so it'll be a little hack
+>>  When it sees a 768 byte sector disk,
+>> it says it's an unsupported size and goes on with the boot process
+>> without even doing a read for a partition table.
+>>     
+> that's because 768 isn't a power of 2, so it's completely unsupportable.
+>
+>   
+>>  Should maybe it be
+>> doing the same for a 256 byte sector disk???
+>>     
+> Possibly ... I don't know what the 256 byte sector support was for ...
+> all I know is that whatever it was, I don't have one.
+>
+>   
 
-> @@ -125,7 +141,7 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
->  		set_cmd_async(cmd);
->  	else {
->  		eprintf("failed to start cmd 0x%p\n", cmd);
-> -		set_cmd_failed(cmd);
-> +		return set_cmd_failed(cmd);
->  	}
->  	return 0;
->  }
-> @@ -238,6 +254,7 @@ static int bs_sg_cmd_done(struct scsi_cmd *cmd)
->  static struct backingstore_template sg_bst = {
->  	.bs_name		= "sg",
->  	.bs_datasize		= 0,
-> +	.bs_passthrough		= 1,
->  	.bs_open		= bs_sg_open,
->  	.bs_close		= bs_sg_close,
->  	.bs_cmd_submit		= bs_sg_cmd_submit,
+Back in the old days, almost any scsi disk could be formatted with a 256
+byte sector. At one time it probably made since to support it. But try
+to find one that supports that sector size today.
 
-And again the Second patch should just fold into this one. And the final disposition will
-just set the .bs_cmd_submit to the proper one.
+In any case, if you can't even partition a 256 byte sector scsi disk in
+linux, why would the kernel still claim it supports that format?
 
-[BTW if you want to keep struct backingstore_template sg_bst const (Which it is not, but
- should be) then just have two of them and switch between them]
+Regards
+Mark
 
-Boaz
-> diff --git a/usr/scsi_cmnd.h b/usr/scsi_cmnd.h
-> index 011f3e6..776ffb3 100644
-> --- a/usr/scsi_cmnd.h
-> +++ b/usr/scsi_cmnd.h
-> @@ -17,6 +17,8 @@ struct scsi_data_buffer {
->  	uint64_t buffer;
->  };
->  
-> +#include <scsi/sg.h>
-> +
->  struct scsi_cmd {
->  	struct target *c_target;
->  	/* linked it_nexus->cmd_hash_list */
-> @@ -31,6 +33,8 @@ struct scsi_cmd {
->  	enum data_direction data_dir;
->  	struct scsi_data_buffer in_sdb;
->  	struct scsi_data_buffer out_sdb;
-> +	/* used for bs_sg.c:bs_sg_cmd_submit() */
-> +	struct sg_iovec sg_iovec;
->  
->  	uint64_t cmd_itn_id;
->  	uint64_t offset;
-> diff --git a/usr/tgtd.h b/usr/tgtd.h
-> index 3323a9b..4f26a29 100644
-> --- a/usr/tgtd.h
-> +++ b/usr/tgtd.h
-> @@ -117,6 +117,7 @@ struct device_type_template {
->  struct backingstore_template {
->  	const char *bs_name;
->  	int bs_datasize;
-> +	int bs_passthrough;
->  	int (*bs_open)(struct scsi_lu *dev, char *path, int *fd, uint64_t *size);
->  	void (*bs_close)(struct scsi_lu *dev);
->  	int (*bs_init)(struct scsi_lu *dev);
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
