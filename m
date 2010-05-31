@@ -1,29 +1,32 @@
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Subject: Re: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a
- 256 byte sector SCSI disk is attached
-Date: Mon, 31 May 2010 07:25:52 -0400
-Message-ID: <4C039CC0.2050502@cfl.rr.com>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>	 <201005281634.o4SGYU6M015956@demeter.kernel.org>	 <4C001999.1010703@cfl.rr.com> <1275078334.4479.31.camel@mulgrave.site> <4C025132.3000502@cfl.rr.com>
-Reply-To: dmarkh@cfl.rr.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Mon, 31 May 2010 11:28:14 GMT
+Message-ID: <201005311128.o4VBSEOM015130@demeter.kernel.org>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020809040703010809030602"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:34656 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379Ab0EaLZz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2010 07:25:55 -0400
-In-Reply-To: <4C025132.3000502@cfl.rr.com>
+Received: from demeter.kernel.org ([140.211.167.39]:33938 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751858Ab0EaL2P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2010 07:28:15 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4VBSEhi015132
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 31 May 2010 11:28:15 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: dmarkh@cfl.rr.com, bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020809040703010809030602
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
 
+
+
+
+
+--- Comment #10 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-05-31 11:28:08 ---
 On 05/30/2010 07:51 AM, Mark Hounschell wrote:
 > On 05/28/2010 04:25 PM, James Bottomley wrote:
 >   
@@ -171,62 +174,7 @@ do without fdisk support though. Even so, I'm all ears???
 Regards
 Mark
 
---------------020809040703010809030602
-Content-Type: text/x-patch;
- name="make_scsi_disk_256_byte_sector_unsupported-2.6.34.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="make_scsi_disk_256_byte_sector_unsupported-2.6.34.patch"
-
-diff -urN linux-2.6.34.0-orig/drivers/scsi/sd.c linux-2.6.34.0/drivers/scsi/sd.c
---- linux-2.6.34.0-orig/drivers/scsi/sd.c	2010-05-31 07:04:26.000000000 -0400
-+++ linux-2.6.34.0/drivers/scsi/sd.c	2010-05-31 07:07:07.000000000 -0400
-@@ -1107,6 +1107,7 @@
- {
- 	u64 start_lba = blk_rq_pos(scmd->request);
- 	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
-+	u64 factor = scmd->device->sector_size / 512;
- 	u64 bad_lba;
- 	int info_valid;
- 
-@@ -1122,16 +1123,9 @@
- 	if (scsi_bufflen(scmd) <= scmd->device->sector_size)
- 		return 0;
- 
--	if (scmd->device->sector_size < 512) {
--		/* only legitimate sector_size here is 256 */
--		start_lba <<= 1;
--		end_lba <<= 1;
--	} else {
--		/* be careful ... don't want any overflows */
--		u64 factor = scmd->device->sector_size / 512;
--		do_div(start_lba, factor);
--		do_div(end_lba, factor);
--	}
-+	/* be careful ... don't want any overflows */
-+	do_div(start_lba, factor);
-+	do_div(end_lba, factor);
- 
- 	/* The bad lba was reported incorrectly, we have no idea where
- 	 * the error is.
-@@ -1651,8 +1645,7 @@
- 	if (sector_size != 512 &&
- 	    sector_size != 1024 &&
- 	    sector_size != 2048 &&
--	    sector_size != 4096 &&
--	    sector_size != 256) {
-+	    sector_size != 4096) { 
- 		sd_printk(KERN_NOTICE, sdkp, "Unsupported sector size %d.\n",
- 			  sector_size);
- 		/*
-@@ -1701,8 +1694,6 @@
- 		sdkp->capacity <<= 2;
- 	else if (sector_size == 1024)
- 		sdkp->capacity <<= 1;
--	else if (sector_size == 256)
--		sdkp->capacity >>= 1;
- 
- 	blk_queue_physical_block_size(sdp->request_queue, sdkp->hw_sector_size);
- 	sdkp->device->sector_size = sector_size;
-
---------------020809040703010809030602--
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
