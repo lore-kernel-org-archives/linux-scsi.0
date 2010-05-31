@@ -1,115 +1,64 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 2/2] [tgt]: Add support for SG_IO CDB passthrough in
-	scsi_cmd_perform()
-Date: Sun, 30 May 2010 19:20:04 -0700
-Message-ID: <1275272404.32585.7.camel@haakon2.linux-iscsi.org>
-References: <1274159589-6095-1-git-send-email-nab@linux-iscsi.org>
-	 <4C0229AB.1090506@panasas.com>
+Subject: Re: [PATCH 1/2] [tgt]: Add proper CDB passthrough for SG_IO
+	backstores
+Date: Sun, 30 May 2010 19:45:45 -0700
+Message-ID: <1275273945.32585.34.camel@haakon2.linux-iscsi.org>
+References: <1274159582-6074-1-git-send-email-nab@linux-iscsi.org>
+	 <4C023192.9080503@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:38635 "HELO
+Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:45999 "HELO
 	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755314Ab0EaCWk (ORCPT
+	by vger.kernel.org with SMTP id S1755395Ab0EaCsS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 May 2010 22:22:40 -0400
-In-Reply-To: <4C0229AB.1090506@panasas.com>
+	Sun, 30 May 2010 22:48:18 -0400
+In-Reply-To: <4C023192.9080503@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>
+Cc: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, Gerd Hoffmann <kraxel@redhat.com>, Kevin Wolf <kwolf@redhat.com>
 
-On Sun, 2010-05-30 at 12:02 +0300, Boaz Harrosh wrote:
+On Sun, 2010-05-30 at 12:36 +0300, Boaz Harrosh wrote:
 > On 05/18/2010 08:13 AM, Nicholas A. Bellinger wrote:
 > > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > > 
-> > This patch changes usr/scsi.c:scsi_cmd_perform() to first check to see if
-> > the struct backingstore_template->bs_passthrough=1 for SG_IO, then
-> > check for a valid struct device_type_template->cmd_passthrough()
-> > function pointer to determine if the device supports SG_IO.
+> > This patch updates usr/bs_sg.c:bs_sg_cmd_submit() to process incoming scsi-generic IO
+> > of type SG_DXFER_TO_DEV and SG_DXFER_FROM_DEV using a single new struct scsi_cmnd->sg_iovec
+> > set using existing scsi_cmd.h scsi_get_[out,in]_[buffer,length]() macros.
 > > 
-> > This patch then updates the device_type in usr/sb.c to enable the functionality
-> > for TYPE_DISK.
+> > It also makes set_cmd_failed() properly return SAM_STAT_CHECK_CONDITION, which is expected
+> > by the bs_sg_cmd_submit() caller in usr/scsi.c:scsi_cmd_perform()
+> > 
+> > Finally, this patch adds struct backingstore_template->bs_passthrough=1 that is used by
+> > bs_sg.c here and the next patch to hand off struct scsi_cmd for CDB passthrough.
 > > 
 > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 > > ---
-> >  usr/sbc.c  |    1 +
-> >  usr/scsi.c |   11 +++++++++++
-> >  usr/tgtd.h |    1 +
-> >  3 files changed, 13 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/usr/sbc.c b/usr/sbc.c
-> > index a048d53..d53f7f9 100644
-> > --- a/usr/sbc.c
-> > +++ b/usr/sbc.c
-> > @@ -269,6 +269,7 @@ static struct device_type_template sbc_template = {
-> >  	.lu_online	= spc_lu_online,
-> >  	.lu_offline	= spc_lu_offline,
-> >  	.lu_exit	= spc_lu_exit,
-> > +	.cmd_passthrough = sbc_rw,
-> >  	.ops		= {
-> >  		{spc_test_unit,},
-> >  		{spc_illegal_op,},
-> > diff --git a/usr/scsi.c b/usr/scsi.c
-> > index cef231b..1db786e 100644
-> > --- a/usr/scsi.c
-> > +++ b/usr/scsi.c
-> > @@ -242,6 +242,17 @@ int scsi_cmd_perform(int host_no, struct scsi_cmd *cmd)
-> >  
-> >  	if (spc_access_check(cmd))
-> >  		return SAM_STAT_RESERVATION_CONFLICT;
-> > +	/* 
-> > +	 * Use dev_type_template->cmd_passthrough() for usr/bs_sg.c devices
-> > +	 */
-> > +	if (cmd->dev->bst->bs_passthrough) {
-> > +		if (!(cmd->dev->dev_type_template.cmd_passthrough)) {
-> > +			eprintf("cmd->dev->dev_type_template.cmd_passthrough()"
-> > +				" is NULL!\n");
-> > +			return SAM_STAT_CHECK_CONDITION;
-> > +		}
-> > +		return cmd->dev->dev_type_template.cmd_passthrough(host_no, cmd);
-> > +	}
-> >  
+> >  usr/bs_sg.c     |   31 ++++++++++++++++++++++++-------
 > 
-> Can't you just perform this check once somewhere and set cmd_perform to the
-> new cmd_passthrough? why check for every command?
+> Why not add a new bs_bsg.c backing store that goes through BSG and not SG
+> and do it properly for all type of targets and commands?
 > 
-> This is not accepted it is the hot path.
+> Just a thought.
 
-Good point..
+Greetings Boaz,
 
-> 
-> >  	return cmd->dev->dev_type_template.ops[op].cmd_perform(host_no, cmd);
-> >  }
-> > diff --git a/usr/tgtd.h b/usr/tgtd.h
-> > index 4f26a29..f8ee47f 100644
-> > --- a/usr/tgtd.h
-> > +++ b/usr/tgtd.h
-> > @@ -108,6 +108,7 @@ struct device_type_template {
-> >  	int (*lu_config)(struct scsi_lu *lu, char *args);
-> >  	int (*lu_online)(struct scsi_lu *lu);
-> >  	int (*lu_offline)(struct scsi_lu *lu);
-> > +	int (*cmd_passthrough)(int, struct scsi_cmd *);
-> >  
-> 
-> Actually you can do more:
-> If you leave the checking and decisions to the target driver
-> then you don't need to touch this file. Just let the device_type
-> decide which vector to set once it knows what target is used.
-> 
-> (Like start with a vector that check and sets the vector to
->  the passthrough or the regular path, on first IO)
-> 
+I completely agree with you here and think that BSG is the next logical
+direction for expanding our target capabilities and for adding some
+manner of I_T nexus auto-configuration between STGT userspace fabric
+modules <-> TCM_Loop multi-fabric target port LUNs.  That said, I will
+start groking BSG and look at adding a new bs_bsg backstore for STGT
+soon for extended user -> kernel passthrough ops soon.
 
-Ok, this makes alot more sense for a STGT backstore passthrough.  I will
-respin the patch to let device_type decide to setup which flavour of
-->cmd_perform() it would like to use and drop the scsi_cmd_perform()
-passthrough check, et al. for the fast path.
+Also, the BSG direction is going to make alot of sense with the QEMU-KVM
+HBA Emulation <-> TCM_Loop efforts too.   However I believe at least for
+megraid_sas that TMRs are handled in the driver for LDs and not
+processed directly by the 8708EM2 PowerPC Core firmware. ;)
 
-Thanks for your comments Boaz!
+Best,
 
 --nab
-
 
 
