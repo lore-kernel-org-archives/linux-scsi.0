@@ -1,100 +1,43 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: aha1542 oops caused by new request_irq routines
-Date: Mon, 31 May 2010 12:30:48 -0500
-Message-ID: <1275327048.2823.115.camel@mulgrave.site>
-References: <AANLkTilB661W9H9IPxn9TGBvv-omVnAh43r3XR5uM58m@mail.gmail.com>
-	 <1275316364.2823.22.camel@mulgrave.site>
-	 <alpine.LFD.2.00.1005311829360.2933@localhost.localdomain>
-	 <1275325170.2823.79.camel@mulgrave.site>
-	 <alpine.LFD.2.00.1005311914560.2933@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Alexander Graf <agraf@suse.de>
+Subject: Re: [QEMU-KVM]: Megasas + TCM_Loop + SG_IO into Windows XP guests
+Date: Mon, 31 May 2010 21:18:56 +0200
+Message-ID: <2022FC1C-DD55-4AC3-B0D7-FAC2043780CA@suse.de>
+References: <1273786731.13658.49.camel@haakon2.linux-iscsi.org>	 <4BECFA39.7040809@suse.de>	 <1273830134.27867.44.camel@haakon2.linux-iscsi.org>	 <1274130584.7348.83.camel@haakon2.linux-iscsi.org>	 <4BF26128.2030400@suse.de>	 <1274181508.7348.181.camel@haakon2.linux-iscsi.org> <1275193534.15413.44.camel@haakon2.linux-iscsi.org> <4C0386D8.4050804@redhat.com>
+Mime-Version: 1.0 (iPhone Mail 7E18)
+Content-Type: text/plain;
+	charset=us-ascii;
+	format=flowed;
+	delsp=yes
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.1005311914560.2933@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Tedheadster <tedheadster@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:56553 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756183Ab0EaTSd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 May 2010 15:18:33 -0400
+In-Reply-To: <4C0386D8.4050804@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gerd Hoffmann <kraxel@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Hannes Reinecke <hare@suse.de>, kvm-devel <kvm@vger.kernel.org>, qemu-devel <qemu-devel@nongnu.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "H. Peter Anvin" <hpa@zytor.com>, James Bottomley <James.Bottomley@suse.de>, Avi Kivity <avi@redhat.com>
 
-On Mon, 2010-05-31 at 19:19 +0200, Thomas Gleixner wrote:
-> On Mon, 31 May 2010, James Bottomley wrote:
-> > On Mon, 2010-05-31 at 18:43 +0200, Thomas Gleixner wrote:
-> > > On Mon, 31 May 2010, James Bottomley wrote:
-> > > 
-> > > > On Mon, 2010-05-31 at 10:03 -0400, Tedheadster wrote:
-> > > > > I'm reliably getting this oops:
-> > > > > 
-> > > > > Configuring Adaptec (SCSI-ID 6) at IO:334, IRQ 10, DMA priority 6
-> > > > > BUG: sleeping function called from invalid context at mm/slub.c:1598
-> > > > > in_atomic(): 0, irqs_disabled(): 1, pid: 4782, name: modprobe
-> > > > > Pid: 4782, comm: modprobe Not tainted 2.6.30.10-105.2.23.RODATA.fc11.i586 #1
-> > > > > Call Trace:
-> > > > >  [<c0469e58>] ? request_threaded_irq+0x85/0x145
-> > > > >  [<c0422ab7>] __might_sleep+0xc4/0xc9
-> > > > >  [<c04a4322>] kmem_cache_alloc_notrace+0x29/0xb0
-> > > > >  [<c0469e58>] request_threaded_irq+0x85/0x145
-> > > > >  [<d086439c>] ? do_aha1542_intr_handle+0x0/0x2be [aha1542]
-> > > > >  [<d08696aa>] aha1542_detect+0x631/0x76f [aha1542]
-> > > > >  [<d0869841>] init_this_scsi_driver+0x59/0xc7 [aha1542]
-> > > > >  [<d08697e8>] ? init_this_scsi_driver+0x0/0xc7 [aha1542]
-> > > > >  [<c040114b>] do_one_initcall+0x51/0x13f
-> > > > >  [<c0451111>] sys_init_module+0x8b/0x192
-> > > > >  [<c0403535>] syscall_call+0x7/0xb
-> > > > > scsi5 : Adaptec 1542
-> > > > 
-> > > > So this one's a bit tricky.  aha1542 uses a global spinlock to give it
-> > > > thread safety and various other things.  In this case it's trying to use
-> > > > the lock to hold off the interrupt until everything is set up.
-> > > > 
-> > > > Now that we're doing a GFP_KERNEL allocation in the interrupt handler
-> > > > code you can't disable interrupts while calling request_irq since this
-> > > > is an old card liable to spurious interrupts as it gets poked in setup.
-> > > >
-> > > > I think a possible solution is this, since the mere act of installing an
-> > > > interrupt handler shouldn't trigger the problem.
-> > > > 
-> > > > However, I thought the pattern of disabling interrupts and setting up
-> > > > the handler and registers was a common one ... is there some way this is
-> > > > supposed to work now that doesn't involve altering the drivers?
-> > > 
-> > > Most drivers do the sane thing:
-> > > 
-> > >      Disable interrupts at the device level
-> > >      Install handler via request_irq()
-> > >      Setup stuff
-> > >      Enable interrupts at the device level
-> > 
-> > That only works for some hardware ... a lot of older hardware can't
-> > disable interrupts; the best you can do is to have the box physically
-> > not listening to the line.
-> > 
-> > > So no, there is no way this is supposed to work with drivers which
-> > > don't follow that simple scheme.
-> > > 
-> > > commit 0e43785c5 (irq: use GFP_KERNEL for action allocation in
-> > > request_irq()) changed that particular instance to GFP_KERNEL because
-> > > the request_irq code calls (and always did) code which cannot be
-> > > called in atomic contexts, e.g. the proc entry handling.
-> > 
-> > So, like I said, I think we can install the handler without tickling the
-> > hardware.  Ideally we'd like to install it IRQ_DISABLED and then call
-> > enable_irq after we're done with the setup, but that doesn't seem to be
-> > possible.
-> 
-> We have a mechanism in place to do that, but it's not available for
-> drivers yet. If that's really a requirement, then we can make it
-> available with very little effort, but that does not resolve the
-> problem when the interrupt is shared and the interrupt line is already
-> enabled.
 
-Heh, well having this problem is usually a reason the driver disallows
-interrupt sharing.
+Am 31.05.2010 um 11:52 schrieb Gerd Hoffmann <kraxel@redhat.com>:
 
-Like I said, I don't see a reason why installing the handler would
-trigger the interrupt, so lets try just moving the lock first.  I'd only
-need the install disabled if I weren't disabling interrupts during
-setup, which would be nice, but not necessary since this driver is coded
-to do that already.
+>  Hi,
+>
+>> Also it's worth mentioning that I am still running C: on QEMU IDE
+>> emulation, as I could not quite figure out how to boot for a  
+>> megasas LD
+>> with option-rom.  What QEMU CLI ops where requried to make this work
+>> again..?
+>
+> -option-rom $file
+>
+> or
+>
+> -device megasas,romfile=$file
 
-James
+Or -drive ...,boot=on if you're using qemu-kvm.
+
+Alex
+
