@@ -1,64 +1,50 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH 1/2] [tgt]: Add proper CDB passthrough for SG_IO
-	backstores
-Date: Sun, 30 May 2010 19:45:45 -0700
-Message-ID: <1275273945.32585.34.camel@haakon2.linux-iscsi.org>
+ backstores
+Date: Mon, 31 May 2010 12:32:56 +0900
+Message-ID: <20100531123241H.fujita.tomonori@lab.ntt.co.jp>
 References: <1274159582-6074-1-git-send-email-nab@linux-iscsi.org>
-	 <4C023192.9080503@panasas.com>
+	<4C023192.9080503@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:45999 "HELO
-	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755395Ab0EaCsS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 May 2010 22:48:18 -0400
+Received: from sh.osrg.net ([192.16.179.4]:32970 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755715Ab0EaDdZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 May 2010 23:33:25 -0400
 In-Reply-To: <4C023192.9080503@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Hannes Reinecke <hare@suse.de>, Gerd Hoffmann <kraxel@redhat.com>, Kevin Wolf <kwolf@redhat.com>
+To: bharrosh@panasas.com
+Cc: nab@linux-iscsi.org, stgt@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, James.Bottomley@suse.de, dgilbert@interlog.com
 
-On Sun, 2010-05-30 at 12:36 +0300, Boaz Harrosh wrote:
-> On 05/18/2010 08:13 AM, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > This patch updates usr/bs_sg.c:bs_sg_cmd_submit() to process incoming scsi-generic IO
-> > of type SG_DXFER_TO_DEV and SG_DXFER_FROM_DEV using a single new struct scsi_cmnd->sg_iovec
-> > set using existing scsi_cmd.h scsi_get_[out,in]_[buffer,length]() macros.
-> > 
-> > It also makes set_cmd_failed() properly return SAM_STAT_CHECK_CONDITION, which is expected
-> > by the bs_sg_cmd_submit() caller in usr/scsi.c:scsi_cmd_perform()
-> > 
-> > Finally, this patch adds struct backingstore_template->bs_passthrough=1 that is used by
-> > bs_sg.c here and the next patch to hand off struct scsi_cmd for CDB passthrough.
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  usr/bs_sg.c     |   31 ++++++++++++++++++++++++-------
+On Sun, 30 May 2010 12:36:18 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> > @@ -125,7 +141,7 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
+> >  		set_cmd_async(cmd);
+> >  	else {
+> >  		eprintf("failed to start cmd 0x%p\n", cmd);
+> > -		set_cmd_failed(cmd);
+> > +		return set_cmd_failed(cmd);
+> >  	}
+> >  	return 0;
+> >  }
+> > @@ -238,6 +254,7 @@ static int bs_sg_cmd_done(struct scsi_cmd *cmd)
+> >  static struct backingstore_template sg_bst = {
+> >  	.bs_name		= "sg",
+> >  	.bs_datasize		= 0,
+> > +	.bs_passthrough		= 1,
+> >  	.bs_open		= bs_sg_open,
+> >  	.bs_close		= bs_sg_close,
+> >  	.bs_cmd_submit		= bs_sg_cmd_submit,
 > 
-> Why not add a new bs_bsg.c backing store that goes through BSG and not SG
-> and do it properly for all type of targets and commands?
-> 
-> Just a thought.
+> And again the Second patch should just fold into this one. And the final disposition will
+> just set the .bs_cmd_submit to the proper one.
 
-Greetings Boaz,
+Hmm, that means this patchset adds new I/O code with sg (or
+bsg). That's not passthrough..
 
-I completely agree with you here and think that BSG is the next logical
-direction for expanding our target capabilities and for adding some
-manner of I_T nexus auto-configuration between STGT userspace fabric
-modules <-> TCM_Loop multi-fabric target port LUNs.  That said, I will
-start groking BSG and look at adding a new bs_bsg backstore for STGT
-soon for extended user -> kernel passthrough ops soon.
-
-Also, the BSG direction is going to make alot of sense with the QEMU-KVM
-HBA Emulation <-> TCM_Loop efforts too.   However I believe at least for
-megraid_sas that TMRs are handled in the driver for LDs and not
-processed directly by the 8708EM2 PowerPC Core firmware. ;)
-
-Best,
-
---nab
-
-
+I think that passthrough needs to overwrite some of struct
+device_type_template and modify target_cmd_queue().
