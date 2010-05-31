@@ -1,111 +1,115 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 1/2] drivers/scsi: Use GFP_ATOMIC when a lock is held
-Date: Sun, 30 May 2010 15:49:22 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1005301549030.15938@ask.diku.dk>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 2/2] [tgt]: Add support for SG_IO CDB passthrough in
+	scsi_cmd_perform()
+Date: Sun, 30 May 2010 19:20:04 -0700
+Message-ID: <1275272404.32585.7.camel@haakon2.linux-iscsi.org>
+References: <1274159589-6095-1-git-send-email-nab@linux-iscsi.org>
+	 <4C0229AB.1090506@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:38635 "HELO
+	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755314Ab0EaCWk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 May 2010 22:22:40 -0400
+In-Reply-To: <4C0229AB.1090506@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>
 
-From: Julia Lawall <julia@diku.dk>
+On Sun, 2010-05-30 at 12:02 +0300, Boaz Harrosh wrote:
+> On 05/18/2010 08:13 AM, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch changes usr/scsi.c:scsi_cmd_perform() to first check to see if
+> > the struct backingstore_template->bs_passthrough=1 for SG_IO, then
+> > check for a valid struct device_type_template->cmd_passthrough()
+> > function pointer to determine if the device supports SG_IO.
+> > 
+> > This patch then updates the device_type in usr/sb.c to enable the functionality
+> > for TYPE_DISK.
+> > 
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  usr/sbc.c  |    1 +
+> >  usr/scsi.c |   11 +++++++++++
+> >  usr/tgtd.h |    1 +
+> >  3 files changed, 13 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/usr/sbc.c b/usr/sbc.c
+> > index a048d53..d53f7f9 100644
+> > --- a/usr/sbc.c
+> > +++ b/usr/sbc.c
+> > @@ -269,6 +269,7 @@ static struct device_type_template sbc_template = {
+> >  	.lu_online	= spc_lu_online,
+> >  	.lu_offline	= spc_lu_offline,
+> >  	.lu_exit	= spc_lu_exit,
+> > +	.cmd_passthrough = sbc_rw,
+> >  	.ops		= {
+> >  		{spc_test_unit,},
+> >  		{spc_illegal_op,},
+> > diff --git a/usr/scsi.c b/usr/scsi.c
+> > index cef231b..1db786e 100644
+> > --- a/usr/scsi.c
+> > +++ b/usr/scsi.c
+> > @@ -242,6 +242,17 @@ int scsi_cmd_perform(int host_no, struct scsi_cmd *cmd)
+> >  
+> >  	if (spc_access_check(cmd))
+> >  		return SAM_STAT_RESERVATION_CONFLICT;
+> > +	/* 
+> > +	 * Use dev_type_template->cmd_passthrough() for usr/bs_sg.c devices
+> > +	 */
+> > +	if (cmd->dev->bst->bs_passthrough) {
+> > +		if (!(cmd->dev->dev_type_template.cmd_passthrough)) {
+> > +			eprintf("cmd->dev->dev_type_template.cmd_passthrough()"
+> > +				" is NULL!\n");
+> > +			return SAM_STAT_CHECK_CONDITION;
+> > +		}
+> > +		return cmd->dev->dev_type_template.cmd_passthrough(host_no, cmd);
+> > +	}
+> >  
+> 
+> Can't you just perform this check once somewhere and set cmd_perform to the
+> new cmd_passthrough? why check for every command?
+> 
+> This is not accepted it is the hot path.
 
-The function adpt_i2o_post_wait is called from several places, in some of
-which, such as adpt_abort, a lock may be held.
+Good point..
 
-The functions adpt_i2o_reparse_lct and adpt_i2o_lct_get are called from
-several places, including adpt_rescan where a lock may be held.
+> 
+> >  	return cmd->dev->dev_type_template.ops[op].cmd_perform(host_no, cmd);
+> >  }
+> > diff --git a/usr/tgtd.h b/usr/tgtd.h
+> > index 4f26a29..f8ee47f 100644
+> > --- a/usr/tgtd.h
+> > +++ b/usr/tgtd.h
+> > @@ -108,6 +108,7 @@ struct device_type_template {
+> >  	int (*lu_config)(struct scsi_lu *lu, char *args);
+> >  	int (*lu_online)(struct scsi_lu *lu);
+> >  	int (*lu_offline)(struct scsi_lu *lu);
+> > +	int (*cmd_passthrough)(int, struct scsi_cmd *);
+> >  
+> 
+> Actually you can do more:
+> If you leave the checking and decisions to the target driver
+> then you don't need to touch this file. Just let the device_type
+> decide which vector to set once it knows what target is used.
+> 
+> (Like start with a vector that check and sets the vector to
+>  the passthrough or the regular path, on first IO)
+> 
 
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
+Ok, this makes alot more sense for a STGT backstore passthrough.  I will
+respin the patch to let device_type decide to setup which flavour of
+->cmd_perform() it would like to use and drop the scsi_cmd_perform()
+passthrough check, et al. for the fast path.
 
-// <smpl>
-@gfp exists@
-identifier fn;
-position p;
-@@
+Thanks for your comments Boaz!
 
-fn(...) {
- ... when != spin_unlock_irqrestore
-     when any
- GFP_KERNEL@p
- ... when any
-}
+--nab
 
-@locked@
-identifier gfp.fn;
-@@
 
-spin_lock_irqsave(...)
-...  when != spin_unlock_irqrestore
-fn(...)
 
-@depends on locked@
-position gfp.p;
-@@
-
-- GFP_KERNEL@p
-+ GFP_ATOMIC
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/dpt_i2o.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index b0c576f..4df589a 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -1290,7 +1290,7 @@ static int adpt_i2o_post_wait(adpt_hba* pHba, u32* msg, int len, int timeout)
- 	ulong flags = 0;
- 	struct adpt_i2o_post_wait_data *p1, *p2;
- 	struct adpt_i2o_post_wait_data *wait_data =
--		kmalloc(sizeof(struct adpt_i2o_post_wait_data),GFP_KERNEL);
-+		kmalloc(sizeof(struct adpt_i2o_post_wait_data), GFP_ATOMIC);
- 	DECLARE_WAITQUEUE(wait, current);
- 
- 	if (!wait_data)
-@@ -2651,7 +2651,8 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
- 				pDev = pDev->next_lun;
- 			}
- 			if(!pDev ) { // Something new add it
--				d = kmalloc(sizeof(struct i2o_device), GFP_KERNEL);
-+				d = kmalloc(sizeof(struct i2o_device),
-+					    GFP_ATOMIC);
- 				if(d==NULL)
- 				{
- 					printk(KERN_CRIT "Out of memory for I2O device data.\n");
-@@ -2673,7 +2674,9 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
- 				}
- 				pDev = pHba->channel[bus_no].device[scsi_id];	
- 				if( pDev == NULL){
--					pDev =  kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
-+					pDev =
-+					  kzalloc(sizeof(struct adpt_device),
-+						  GFP_ATOMIC);
- 					if(pDev == NULL) {
- 						return -ENOMEM;
- 					}
-@@ -2682,7 +2685,9 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
- 					while (pDev->next_lun) {
- 						pDev = pDev->next_lun;
- 					}
--					pDev = pDev->next_lun = kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
-+					pDev = pDev->next_lun =
-+					  kzalloc(sizeof(struct adpt_device),
-+						  GFP_ATOMIC);
- 					if(pDev == NULL) {
- 						return -ENOMEM;
- 					}
-@@ -3127,7 +3132,7 @@ static int adpt_i2o_lct_get(adpt_hba* pHba)
- 		if (pHba->lct == NULL) {
- 			pHba->lct = dma_alloc_coherent(&pHba->pDev->dev,
- 					pHba->lct_size, &pHba->lct_pa,
--					GFP_KERNEL);
-+					GFP_ATOMIC);
- 			if(pHba->lct == NULL) {
- 				printk(KERN_CRIT "%s: Lct Get failed. Out of memory.\n",
- 					pHba->name);
