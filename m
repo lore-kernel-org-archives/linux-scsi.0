@@ -1,50 +1,65 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/2] [tgt]: Add proper CDB passthrough for SG_IO
- backstores
-Date: Mon, 31 May 2010 12:32:56 +0900
-Message-ID: <20100531123241H.fujita.tomonori@lab.ntt.co.jp>
-References: <1274159582-6074-1-git-send-email-nab@linux-iscsi.org>
-	<4C023192.9080503@panasas.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC]: Mainline of TCM Core and TCM_Loop for v2.6.35
+Date: Sun, 30 May 2010 20:47:04 -0700
+Message-ID: <1275277624.32585.88.camel@haakon2.linux-iscsi.org>
+References: <1274317792.30733.59.camel@haakon2.linux-iscsi.org>
+	 <87vda5zqm9.fsf@basil.nowhere.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:32970 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755715Ab0EaDdZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 May 2010 23:33:25 -0400
-In-Reply-To: <4C023192.9080503@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87vda5zqm9.fsf@basil.nowhere.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Douglas@firstfloor.org, Gilbe@firstfloor.org, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: nab@linux-iscsi.org, stgt@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, James.Bottomley@suse.de, dgilbert@interlog.com
 
-On Sun, 30 May 2010 12:36:18 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
-
-> > @@ -125,7 +141,7 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
-> >  		set_cmd_async(cmd);
-> >  	else {
-> >  		eprintf("failed to start cmd 0x%p\n", cmd);
-> > -		set_cmd_failed(cmd);
-> > +		return set_cmd_failed(cmd);
-> >  	}
-> >  	return 0;
-> >  }
-> > @@ -238,6 +254,7 @@ static int bs_sg_cmd_done(struct scsi_cmd *cmd)
-> >  static struct backingstore_template sg_bst = {
-> >  	.bs_name		= "sg",
-> >  	.bs_datasize		= 0,
-> > +	.bs_passthrough		= 1,
-> >  	.bs_open		= bs_sg_open,
-> >  	.bs_close		= bs_sg_close,
-> >  	.bs_cmd_submit		= bs_sg_cmd_submit,
+On Sun, 2010-05-30 at 11:27 +0200, Andi Kleen wrote:
+> "Nicholas A. Bellinger" <nab@linux-iscsi.org> writes:
+> >
+> > As always, I am open to constructive suggestions,
 > 
-> And again the Second patch should just fold into this one. And the final disposition will
-> just set the .bs_cmd_submit to the proper one.
 
-Hmm, that means this patchset adds new I/O code with sg (or
-bsg). That's not passthrough..
+Greetings Andi,
 
-I think that passthrough needs to overwrite some of struct
-device_type_template and modify target_cmd_queue().
+> Your description contains quite a lot of acronyms (I count 8 in the first
+> paragraph alone). For the benefit of the linux-kernel audience which are
+> not storage experts and are struggling to find out what this is all good
+> for, how about including a glossary that explains what it all means?  I
+> suspect having that in the git commit log later will be also useful.
+> 
+
+Point taken on a glossary + storage decoder ring..  Being able to open
+up the discussion to a wider kernel audience is a really good thing I
+think. ;)
+
+Also, one major item on my TODO list is to publish a fabric plugin
+'cookbook' for creating your very own TCM target mode fabric module with
+a fully functioning configfs control plane.  This will initially involve
+a walkthough of the required logic to get up and running for new fabric
+module developers.
+
+However, what I would like to eventually do with the mainline TCM code
+is to provide a single example fabric module + script for generating N
+new base TCM fabric modules with a fully functioning v4 configfs fabric
+shell.  This script would generate code with sed-fu based on a supplied
+fabric plugin name and supported SCSI ProtocolIDs (eg: SAS, FC, iSCSI,
+etc) using existing TCM v4 world wide port name (WWPN) emulation logic
+located in drivers/target/target_core_fabric_lib.c.
+
+The latter WWPN emulation bit is what allows SPC-4 features like
+persistent reservation (PR), asymmetric logical unit access (ALUA) to
+work right out of the box for a newly generated TCM v4 fabric plugin
+today.  This is what has been included in new base code for tcm_lpfc,
+tcm_qla2xxx and tcm_mvsas modules and recently posted to linux-scsi.
+
+Anyways, the ability generate a base kernel fabric module you can
+actually build, load and configure it's new TCM configfs fabric shell
+would be pretty cool and would certainly be a big help for new
+developers too.
+
+Thanks for your comments Andi!
+
+Best,
+
+--nab
