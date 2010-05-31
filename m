@@ -1,230 +1,68 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Mon, 31 May 2010 15:18:44 GMT
-Message-ID: <201005311518.o4VFIiBB011332@demeter.kernel.org>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: Tedheadster <tedheadster@gmail.com>
+Subject: Re: aha1542 oops caused by new request_irq routines
+Date: Mon, 31 May 2010 11:22:15 -0400
+Message-ID: <AANLkTimA-JSwDpFvaq3qLTQNFpEbHCJm_L0zxXwFdX2f@mail.gmail.com>
+References: <AANLkTilB661W9H9IPxn9TGBvv-omVnAh43r3XR5uM58m@mail.gmail.com>
+	<1275316364.2823.22.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:46100 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753840Ab0EaPSp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2010 11:18:45 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4VFIiPJ011333
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 31 May 2010 15:18:44 GMT
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:48538 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755827Ab0EaPWQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2010 11:22:16 -0400
+Received: by vws9 with SMTP id 9so868448vws.19
+        for <linux-scsi@vger.kernel.org>; Mon, 31 May 2010 08:22:15 -0700 (PDT)
+In-Reply-To: <1275316364.2823.22.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
+James,
+  I didn't mention that I've been fiddling with the aha1542 driver on
+my own. I also get an oops message when kmalloc is called with
+GFP_KERNEL, so I changed it to GFP_ATOMIC and the oops went away.
 
+May 31 09:22:54 K6 kernel: BUG: sleeping function called from invalid
+context at mm/slub.c:1598
+May 31 09:22:54 K6 kernel: in_atomic(): 0, irqs_disabled(): 1, pid:
+4787, name: scsi_scan_5
+May 31 09:22:54 K6 kernel: Pid: 4787, comm: scsi_scan_5 Not tainted
+2.6.30.10-105.2.23.RODATA.fc11.i586 #1
+May 31 09:22:54 K6 kernel: Call Trace:
+May 31 09:22:54 K6 kernel: [<c0422ab7>] __might_sleep+0xc4/0xc9
+May 31 09:22:54 K6 kernel: [<c04a4aef>] __kmalloc+0x7e/0x121
+May 31 09:22:54 K6 kernel: [<d08649fd>]
+aha1542_queuecommand+0x1ba/0x3d9 [aha1542]
+May 31 09:22:54 K6 kernel: [<c0437042>] ? internal_add_timer+0x93/0x97
+May 31 09:22:54 K6 kernel: [<c0600eb8>] ? scsi_done+0x0/0x12
+May 31 09:22:54 K6 kernel: [<c060110e>] scsi_dispatch_cmd+0x173/0x1e2
+May 31 09:22:54 K6 kernel: [<c0605e67>] scsi_request_fn+0x327/0x459
+May 31 09:22:54 K6 kernel: [<c055c588>] __generic_unplug_device+0x2b/0x2e
+May 31 09:22:54 K6 kernel: [<c055ebc7>] blk_execute_rq_nowait+0x66/0x89
+May 31 09:22:54 K6 kernel: [<c055ec5b>] blk_execute_rq+0x71/0x92
+May 31 09:22:54 K6 kernel: [<c055eb34>] ? blk_end_sync_rq+0x0/0x2d
+May 31 09:22:54 K6 kernel: [<c0606e04>] scsi_execute+0xcd/0x123
+May 31 09:22:54 K6 kernel: [<c0606ecf>] scsi_execute_req+0x75/0xa2
+May 31 09:22:54 K6 kernel: [<c0607ca0>] scsi_probe_and_add_lun+0x1fb/0x947
+May 31 09:22:54 K6 kernel: [<c056fc06>] ? kvasprintf+0x3a/0x45
+May 31 09:22:54 K6 kernel: [<c05f5322>] ? get_device+0x18/0x1d
+May 31 09:22:54 K6 kernel: [<c0607798>] ? scsi_alloc_target+0x1bf/0x1ef
+May 31 09:22:54 K6 kernel: [<c06085ba>] __scsi_scan_target+0x76/0x4d2
+May 31 09:22:54 K6 kernel: [<c0421821>] ? wakeup_preempt_entity+0x119/0x13d
+May 31 09:22:54 K6 kernel: [<c0423537>] ? __dequeue_entity+0x28/0x2c
+May 31 09:22:54 K6 kernel: [<c04235db>] ? set_next_entity+0xa0/0x10c
+May 31 09:22:54 K6 kernel: [<c0402286>] ? __switch_to+0x78/0xfbe
+May 31 09:22:54 K6 kernel: [<c0424063>] ? pick_next_task_fair+0x87/0x8e
+May 31 09:22:54 K6 kernel: [<c0608a5b>] scsi_scan_channel+0x45/0x6b
+May 31 09:22:54 K6 kernel: [<c0608b44>] scsi_scan_host_selected+0xc3/0xfe
+May 31 09:22:54 K6 kernel: [<c0608bd8>] do_scsi_scan_host+0x59/0x62
+May 31 09:22:54 K6 kernel: [<c0608be1>] ? do_scan_async+0x0/0x100
+May 31 09:22:54 K6 kernel: [<c0608bf9>] do_scan_async+0x18/0x100
+May 31 09:22:54 K6 kernel: [<c0608be1>] ? do_scan_async+0x0/0x100
+May 31 09:22:54 K6 kernel: [<c0440165>] kthread+0x4b/0x6f
+May 31 09:22:54 K6 kernel: [<c044011a>] ? kthread+0x0/0x6f
+May 31 09:22:54 K6 kernel: [<c0403f87>] kernel_thread_helper+0x7/0x10
 
-
-
-
---- Comment #12 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-05-31 15:18:37 ---
-On 05/31/2010 10:02 AM, James Bottomley wrote:
-> On Mon, 2010-05-31 at 07:25 -0400, Mark Hounschell wrote:
->   
->> On 05/30/2010 07:51 AM, Mark Hounschell wrote:
->>     
->>> On 05/28/2010 04:25 PM, James Bottomley wrote:
->>>   
->>>       
->>>> On Fri, 2010-05-28 at 15:29 -0400, Mark Hounschell wrote:
->>>>   
->>>>     
->>>>         
->>>>> On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
->>>>>     
->>>>>       
->>>>>           
->>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=16058
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> --- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
->>>>>> Reply-To: James.Bottomley@suse.de
->>>>>>
->>>>>> On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
->>>>>>   
->>>>>>       
->>>>>>         
->>>>>>             
->>>>>>> On Fri, 28 May 2010, Mark Hounschell wrote:
->>>>>>>
->>>>>>>     
->>>>>>>         
->>>>>>>           
->>>>>>>               
->>>>>>>> First READ(10):
->>>>>>>>
->>>>>>>>  sde:
->>>>>>>> ahc_calc_residual: Entered
->>>>>>>> ahc_calc_residual: return Case 5-1 resid = 0x800
->>>>>>>> ahc_calc_residual: return Case 5-2 resid = 0x800
->>>>>>>>
->>>>>>>> scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
->>>>>>>> 0x00 0x00 0x08 0x00
->>>>>>>> cmd->result = 0x00000000
->>>>>>>> good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
->>>>>>>> New good_bytes = 0x0
->>>>>>>> scsi_finish_command: Complete
->>>>>>>>
->>>>>>>> From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
->>>>>>>> it looks like the machine is hung.
->>>>>>>>       
->>>>>>>>           
->>>>>>>>             
->>>>>>>>                 
->>>>>>> Probably not hung, just doing a lot of retries.  It should time out 
->>>>>>> eventually, but it might take a long time (perhaps as long as 15 
->>>>>>> minutes).  The combination of the block layer and the SCSI layer isn't 
->>>>>>> very good at knowing when to give up.
->>>>>>>     
->>>>>>>         
->>>>>>>           
->>>>>>>               
->>>>>> Actually, I think this is a partition read.  Each partition manager
->>>>>> tends to read a page through the page cache.  If we get an error, we
->>>>>> seem to re-read to fill the cache.
->>>>>>
->>>>>>   
->>>>>>       
->>>>>>         
->>>>>>             
->>>>>>>> Now, I know for a fact that _if_ this read CDB is actually being sent to
->>>>>>>> the drive, it's actual residual count will be zero. These are working
->>>>>>>> disks and that read CDB is valid.
->>>>>>>>
->>>>>>>> Why is ahc_calc_residual saying that the residual count is as though the
->>>>>>>> read never took place? I noticed that the first read on all the SATA
->>>>>>>> drives was for 4096 bytes, why is this one only 2048? Should it have
->>>>>>>> been 4096 and ahc_calc_residual assume that?
->>>>>>>>       
->>>>>>>>           
->>>>>>>>             
->>>>>>>>                 
->>>>>>> I don't know the answer to any of these questions.  They could well be
->>>>>>> due to bugs in the driver, and I know nothing about how the aic7xxx
->>>>>>> driver works.  You should talk to someone who does.
->>>>>>>     
->>>>>>>         
->>>>>>>           
->>>>>>>               
->>>>>> I'll take this one ... although we're a bit lacking in documentation for
->>>>>> this driver.
->>>>>>
->>>>>> I think the 2048 is because something is hardcoded to think 8 sectors is
->>>>>> a page.
->>>>>>
->>>>>> James
->>>>>>
->>>>>>   
->>>>>>       
->>>>>>         
->>>>>>             
->>>>> Your probably right. But is a 256 byte sector really a supported sector
->>>>> size for a linux fs on a SCSI disk?
->>>>>     
->>>>>       
->>>>>           
->>>> In theory the block layer can support any power of two sector size (or
->>>> really any sector size which is a divisor of the page size).  We had a
->>>> use for 256 byte sectors once, so they're in SCSI.  In practice, since
->>>> they're so rare, the code paths are never tested (as you found out) and
->>>> there's a more annoying problem which is since the linux base sector
->>>> size is 512, you have to multiply to get from 256 to 512 ... for all
->>>> other sector sizes you have to divide, so any conversion routine that
->>>> only right shifts would get this wrong.
->>>>
->>>>   
->>>>     
->>>>         
->>> from the fdisk man page:
->>>
->>>        -b sectorsize   Specify  the  sector  size  of the disk. Valid
->>> values are 512, 1024, 2048 or 4096.  (Recent kernels know the sector
->>> size. Use this only on old kernels or to override the kernel's ideas.)
->>>
->>> So how does one create a linux fs on a 256 byte sectored disk?
->>>
->>>   
->>>       
->>>>>  When it sees a 768 byte sector disk,
->>>>> it says it's an unsupported size and goes on with the boot process
->>>>> without even doing a read for a partition table.
->>>>>     
->>>>>       
->>>>>           
->>>> that's because 768 isn't a power of 2, so it's completely unsupportable.
->>>>
->>>>   
->>>>     
->>>>         
->>>>>  Should maybe it be
->>>>> doing the same for a 256 byte sector disk???
->>>>>     
->>>>>       
->>>>>           
->>>> Possibly ... I don't know what the 256 byte sector support was for ...
->>>> all I know is that whatever it was, I don't have one.
->>>>
->>>>   
->>>>     
->>>>         
->>> Back in the old days, almost any scsi disk could be formatted with a 256
->>> byte sector. At one time it probably made since to support it. But try
->>> to find one that supports that sector size today.
->>>
->>> In any case, if you can't even partition a 256 byte sector scsi disk in
->>> linux, why would the kernel still claim it supports that format?
->>>
->>>   
->>>       
->> In fact, the attached patch works for me. However, if you wish to pursue
->> functional 256 byte sector support, I have plenty of these disks and
->> will be happy to test what ever you come up with.
->>     
-> Um, well, since you've got a lot of them that does rather argue against
-> their being obsolete ...
->
->   
-
-Except I would  _never_  attempt to use any of them for an actual Linux
-fs. If I did, and again I wouldn't, it would be after formatting them
-with a 512 byte sector.  Way too slow and small. We only provide support
-for them in an emulation of an old RTOS called MPX-32 using the sg_io
-interface.
-
->>  Not a lot I can really
->> do without fdisk support though. Even so, I'm all ears???
->>     
-> fdisk is only the dos label ... there's a lot you can't do with a dos
-> label.  I think parted will allow you to write a label that will work.
->
-> I've got scsi_debug patched to work with 256 byte sectors.  It actually
-> looks like this has nothing to do with the residue.  What I see is a
-> hang because block is trying to do a zero sized read.  I suspect
-> something is trying to do a single sector read, which is impossible
-> since the linux native sector size is 512 and it's getting rounded down.
->
-> This might, of course, argue that block cannot now support 256 sector
-> devices and so they need to be deprecated ... I'll see.
->
-> James
->
->
->
->
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+- Matthew
