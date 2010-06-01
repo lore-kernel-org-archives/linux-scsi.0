@@ -1,57 +1,47 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Tue, 1 Jun 2010 11:40:15 +0900
-Message-ID: <20100601113947X.fujita.tomonori@lab.ntt.co.jp>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
-	<yq1iq64kv9f.fsf@sermon.lab.mkp.net>
-	<1275318102.2823.47.camel@mulgrave.site>
+From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Subject: Usage of scsi_get_lba.
+Date: Tue, 1 Jun 2010 13:25:24 +0530
+Message-ID: <94500BE52867E04AB51827CFE16FC752028F714B9E@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:55595 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753785Ab0FACkb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 May 2010 22:40:31 -0400
-In-Reply-To: <1275318102.2823.47.camel@mulgrave.site>
+Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:41178 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754096Ab0FAIT2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Jun 2010 04:19:28 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: martin.petersen@oracle.com, christof.schmitt@de.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "Moore, Eric" <Eric.Moore@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
 
-On Mon, 31 May 2010 10:01:42 -0500
-James Bottomley <James.Bottomley@suse.de> wrote:
+I was trying to use scsi_get_lba to get the lba associated with a particular scsi_cmnd. I am able to get proper values when I send I/O through dd or FS. But when I use the sg interface either sg_dd or sg_raw the value I am getting through scsi_get_lba is not matching with the one in the CDB.
 
-> On Mon, 2010-05-31 at 10:20 -0400, Martin K. Petersen wrote:
-> > >>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
-> > 
-> > Christof> Since the guard tags are created in Linux, it seems that the
-> > Christof> data attached to the write request changes between the
-> > Christof> generation in bio_integrity_generate and the call to
-> > Christof> sd_prep_fn.
-> > 
-> > Yep, known bug.  Page writeback locking is messed up for buffer_head
-> > users.  The extNfs folks volunteered to look into this a while back but
-> > I don't think they have found the time yet.
-> > 
-> > 
-> > Christof> Using ext3 or ext4 instead of ext2 does not show the problem.
-> > 
-> > Last I looked there were still code paths in ext3 and ext4 that
-> > permitted pages to be changed during flight.  I guess you've just been
-> > lucky.
-> 
-> Pages have always been modifiable in flight.  The OS guarantees they'll
-> be rewritten, so the drivers can drop them if it detects the problem.
-> This is identical to the iscsi checksum issue (iscsi adds a checksum
-> because it doesn't trust TCP/IP and if the checksum is generated in
-> software, there's time between generation and page transmission for the
-> alteration to occur).  The solution in the iscsi case was not to
-> complain if the page is still marked dirty.
+Do we need to have some change in sg module for handling this, or is there anything wrong in the way I access the scsi_get_lba or sending command through sg?
 
-In the iSCSI case, what we do is decreasing chance that pages in
-flight could be modified (use sendmsg instead of sendpage) and praying.
+Any suggestion or help is highly appreciated.
 
-If the initiator sends the wrong checksum, the target complains (and
-starts the recovery process). The target can't know if the page is
-marked dirty or not.
+For I/O through DD
+Jun  1 20:19:14 linux-eph1 kernel: sd 16:0:1:0: [sdc] CDB: Write(10): 2a 00 00 00 00 00 00 00 08 00
+Jun  1 20:19:14 linux-eph1 kernel: LBA 0x0000000000000000
+
+For a Non Zero LBA
+Jun  1 20:19:35 linux-eph1 kernel: sd 16:0:1:0: [sdc] CDB: Write(10): 2a 00 00 00 0f f8 00 00 08 00
+Jun  1 20:19:35 linux-eph1 kernel: LBA 0x0000000000000ff8
+
+For I/O through sg_dd
+Jun  1 20:19:45 linux-eph1 kernel: sd 16:0:1:0: [sg2] CDB: Write(10): 2a 00 00 00 0f ff 00 00 01 00
+Jun  1 20:19:45 linux-eph1 kernel: LBA 0xffffffffffffffff
+
+Jun  1 20:20:26 linux-eph1 kernel: sd 16:0:1:0: [sg2] CDB: Write(10): 2a 00 00 00 0f f8 00 00 08 00
+Jun  1 20:20:26 linux-eph1 kernel: LBA 0xffffffffffffffff
+
+Kernel Version
+Linux linux-eph1 2.6.34-rc3-00626-gcee693e-dirty #3 SMP Mon May 24 16:41:33 IST 2010 x86_64 x86_64 x86_64 GNU/Linux
+
+Thanks
+Sathya
+
+
