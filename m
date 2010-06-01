@@ -1,102 +1,424 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi/st: remove BKL from open
-Date: Tue,  1 Jun 2010 23:16:54 +0200
-Message-ID: <1275427014-9801-1-git-send-email-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [PATCH] block: replace BKL with global mutex
+Date: Tue,  1 Jun 2010 23:33:48 +0200
+Message-ID: <1275428028-10901-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:55494 "EHLO
+Received: from moutng.kundenserver.de ([212.227.126.171]:60832 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756839Ab0FAVRJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2010 17:17:09 -0400
+	with ESMTP id S1754634Ab0FAVeE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2010 17:34:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Willem Riede <osst@riede.org>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <James.Bottomley@suse.de>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Jens Axboe <jaxboe@fusionio.com>, Vivek Goyal <vgoyal@redhat.com>, Tejun Heo <tj@kernel.org>, Frederic Weisbecker <fweisbec@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Martin K. Petersen" <martin.petersen@oracle.com>, Steven Rostedt <rostedt@goodmis.org>, Douglas Gilbert <dgilbert@interlog.com>, Ingo Molnar <mingo@redhat.com>, John Kacur <jkacur@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The st_open function is serialized through the st_dev_arr_lock
-and the STp->in_use flag, so there is no race that the BKL
-can protect against in the driver itself, and the function
-does not access any global state outside of the driver that
-might be protected with the BKL.
+The block layer is one of the remaining users
+of the Big Kernel Lock. In there, it is used
+mainly for serializing the blkdev_get and
+blkdev_put functions and some ioctl implementations
+as well as some less common open functions of
+related character devices following a previous
+pushdown and parts of the blktrace code.
+
+The only one that seems to be a bit nasty is the
+blkdev_get function which is actually recursive
+and may try to get the BKL twice.
+
+All users except the one in blkdev_get seem to
+be outermost locks, meaning we don't rely on
+the release-on-sleep semantics to avoid deadlocks.
+
+The ctl_mutex (pktcdvd.ko), raw_mutex (raw.ko),
+state_mutex (dasd.ko), reconfig_mutex (md.ko),
+and jfs_log_mutex (jfs.ko) may be held when
+blkdev_get is called, but as far as I can tell,
+these mutexes are never acquired from any of the
+functions that get converted in this patch.
+
+In order to get rid of the BKL, this introduces
+a new global mutex called blkdev_mutex, which
+replaces the BKL in all drivers that directly
+interact with the block layer. In case of blkdev_get,
+the mutex is moved outside of the function itself
+in order to avoid the recursive taking of blkdev_mutex.
+
+Testing so far has shown no problems whatsoever
+from this patch, but the usage in blkdev_get
+may introduce extra latencies, and I may have
+missed corner cases where an block device ioctl
+function sleeps for a significant amount of time,
+which may be harmful to the performance of other
+threads.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Willem Riede <osst@riede.org>
-Cc: "Kai M=C3=A4kisara" <Kai.Makisara@kolumbus.fi>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: osst-users@lists.sourceforge.net
+Cc: Jens Axboe <jaxboe@fusionio.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: John Kacur <jkacur@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-
 ---
- drivers/scsi/st.c |    9 +--------
- 1 files changed, 1 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 24211d0..8d4c4bb 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -39,7 +39,6 @@ static const char *verstr =3D "20081215";
- #include <linux/cdev.h>
- #include <linux/delay.h>
- #include <linux/mutex.h>
--#include <linux/smp_lock.h>
-=20
- #include <asm/uaccess.h>
- #include <asm/dma.h>
-@@ -1180,7 +1179,6 @@ static int st_open(struct inode *inode, struct fi=
-le *filp)
- 	int dev =3D TAPE_NR(inode);
- 	char *name;
-=20
+Jens, would you consider this patch for 2.6.36 and take it into
+your -next tree?
+
+ block/bsg.c             |    2 --
+ block/compat_ioctl.c    |    8 ++++----
+ block/ioctl.c           |   24 ++++++++++++------------
+ drivers/block/DAC960.c  |    4 ++--
+ drivers/block/cciss.c   |    4 ++--
+ drivers/scsi/sg.c       |    4 ++--
+ fs/block_dev.c          |   20 +++++++++++++-------
+ include/linux/blkdev.h  |    6 ++++++
+ kernel/trace/blktrace.c |   14 ++++++++------
+ 9 files changed, 49 insertions(+), 37 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 82d5882..7c50a26 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -843,9 +843,7 @@ static int bsg_open(struct inode *inode, struct file *file)
+ {
+ 	struct bsg_device *bd;
+ 
 -	lock_kernel();
- 	/*
- 	 * We really want to do nonseekable_open(inode, filp); here, but some
- 	 * versions of tar incorrectly call lseek on tapes and bail out if th=
-at
-@@ -1188,10 +1186,8 @@ static int st_open(struct inode *inode, struct f=
-ile *filp)
- 	 */
- 	filp->f_mode &=3D ~(FMODE_PREAD | FMODE_PWRITE);
-=20
--	if (!(STp =3D scsi_tape_get(dev))) {
+ 	bd = bsg_get_device(inode, file);
+-	unlock_kernel();
+ 
+ 	if (IS_ERR(bd))
+ 		return PTR_ERR(bd);
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+index f26051f..11cfd3c 100644
+--- a/block/compat_ioctl.c
++++ b/block/compat_ioctl.c
+@@ -802,16 +802,16 @@ long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
+ 		return compat_put_u64(arg, bdev->bd_inode->i_size);
+ 
+ 	case BLKTRACESETUP32:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = compat_blk_trace_setup(bdev, compat_ptr(arg));
 -		unlock_kernel();
-+	if (!(STp =3D scsi_tape_get(dev)))
- 		return -ENXIO;
--	}
-=20
- 	write_lock(&st_dev_arr_lock);
- 	filp->private_data =3D STp;
-@@ -1200,7 +1196,6 @@ static int st_open(struct inode *inode, struct fi=
-le *filp)
- 	if (STp->in_use) {
- 		write_unlock(&st_dev_arr_lock);
- 		scsi_tape_put(STp);
++		mutex_unlock(&blkdev_mutex);
+ 		return ret;
+ 	case BLKTRACESTART: /* compatible */
+ 	case BLKTRACESTOP:  /* compatible */
+ 	case BLKTRACETEARDOWN: /* compatible */
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blk_trace_ioctl(bdev, cmd, compat_ptr(arg));
 -		unlock_kernel();
- 		DEB( printk(ST_DEB_MSG "%s: Device already in use.\n", name); )
- 		return (-EBUSY);
++		mutex_unlock(&blkdev_mutex);
+ 		return ret;
+ 	default:
+ 		if (disk->fops->compat_ioctl)
+diff --git a/block/ioctl.c b/block/ioctl.c
+index e8eb679..6b8fde1 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -169,9 +169,9 @@ int __blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
+ 		return disk->fops->ioctl(bdev, mode, cmd, arg);
+ 
+ 	if (disk->fops->locked_ioctl) {
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = disk->fops->locked_ioctl(bdev, mode, cmd, arg);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return ret;
  	}
-@@ -1249,14 +1244,12 @@ static int st_open(struct inode *inode, struct =
-file *filp)
- 			retval =3D (-EIO);
- 		goto err_out;
+ 
+@@ -206,10 +206,10 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 		if (ret != -EINVAL && ret != -ENOTTY)
+ 			return ret;
+ 
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		fsync_bdev(bdev);
+ 		invalidate_bdev(bdev);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return 0;
+ 
+ 	case BLKROSET:
+@@ -221,9 +221,9 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 			return -EACCES;
+ 		if (get_user(n, (int __user *)(arg)))
+ 			return -EFAULT;
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		set_device_ro(bdev, n);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		return 0;
+ 
+ 	case BLKDISCARD: {
+@@ -309,14 +309,14 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 			bd_release(bdev);
+ 		return ret;
+ 	case BLKPG:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blkpg_ioctl(bdev, (struct blkpg_ioctl_arg __user *) arg);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		break;
+ 	case BLKRRPART:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blkdev_reread_part(bdev);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		break;
+ 	case BLKGETSIZE:
+ 		size = bdev->bd_inode->i_size;
+@@ -329,9 +329,9 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	case BLKTRACESTOP:
+ 	case BLKTRACESETUP:
+ 	case BLKTRACETEARDOWN:
+-		lock_kernel();
++		mutex_lock(&blkdev_mutex);
+ 		ret = blk_trace_ioctl(bdev, cmd, (char __user *) arg);
+-		unlock_kernel();
++		mutex_unlock(&blkdev_mutex);
+ 		break;
+ 	default:
+ 		ret = __blkdev_driver_ioctl(bdev, mode, cmd, arg);
+diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
+index c5f22bb..8faaa12 100644
+--- a/drivers/block/DAC960.c
++++ b/drivers/block/DAC960.c
+@@ -6620,7 +6620,7 @@ static long DAC960_gam_ioctl(struct file *file, unsigned int Request,
+   long ErrorCode = 0;
+   if (!capable(CAP_SYS_ADMIN)) return -EACCES;
+ 
+-  lock_kernel();
++  mutex_lock(&blkdev_mutex);
+   switch (Request)
+     {
+     case DAC960_IOCTL_GET_CONTROLLER_COUNT:
+@@ -7051,7 +7051,7 @@ static long DAC960_gam_ioctl(struct file *file, unsigned int Request,
+       default:
+ 	ErrorCode = -ENOTTY;
+     }
+-  unlock_kernel();
++  mutex_unlock(&blkdev_mutex);
+   return ErrorCode;
+ }
+ 
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 51ceaee..6bb6c4d 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1027,9 +1027,9 @@ static int do_ioctl(struct block_device *bdev, fmode_t mode,
+ 		    unsigned cmd, unsigned long arg)
+ {
+ 	int ret;
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	ret = cciss_ioctl(bdev, mode, cmd, arg);
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index ef752b2..927aea6 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -229,7 +229,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 	int res;
+ 	int retval;
+ 
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	nonseekable_open(inode, filp);
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+ 	sdp = sg_get_dev(dev);
+@@ -307,7 +307,7 @@ error_out:
+ sg_put:
+ 	if (sdp)
+ 		sg_put_dev(sdp);
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return retval;
+ }
+ 
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 7346c96..06882f9 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -29,6 +29,9 @@
+ #include <asm/uaccess.h>
+ #include "internal.h"
+ 
++DEFINE_MUTEX(blkdev_mutex);
++EXPORT_SYMBOL_GPL(blkdev_mutex);
++
+ struct bdev_inode {
+ 	struct block_device bdev;
+ 	struct inode vfs_inode;
+@@ -1321,7 +1324,6 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 		return ret;
  	}
+ 
+-	lock_kernel();
+  restart:
+ 
+ 	ret = -ENXIO;
+@@ -1407,7 +1409,6 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 	if (for_part)
+ 		bdev->bd_part_count++;
+ 	mutex_unlock(&bdev->bd_mutex);
 -	unlock_kernel();
  	return 0;
-=20
-  err_out:
- 	normalize_buffer(STp->buffer);
- 	STp->in_use =3D 0;
- 	scsi_tape_put(STp);
+ 
+  out_clear:
+@@ -1421,7 +1422,6 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+  out_unlock_bdev:
+ 	mutex_unlock(&bdev->bd_mutex);
+  out_unlock_kernel:
 -	unlock_kernel();
- 	return retval;
-=20
+ 
+ 	if (disk)
+ 		module_put(disk->fops->owner);
+@@ -1433,7 +1433,11 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
+ 
+ int blkdev_get(struct block_device *bdev, fmode_t mode)
+ {
+-	return __blkdev_get(bdev, mode, 0);
++	int ret;
++	mutex_lock(&blkdev_mutex);
++	ret = __blkdev_get(bdev, mode, 0);
++	mutex_unlock(&blkdev_mutex);
++	return ret;
  }
---=20
+ EXPORT_SYMBOL(blkdev_get);
+ 
+@@ -1491,7 +1495,6 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
+ 	struct block_device *victim = NULL;
+ 
+ 	mutex_lock_nested(&bdev->bd_mutex, for_part);
+-	lock_kernel();
+ 	if (for_part)
+ 		bdev->bd_part_count--;
+ 
+@@ -1516,7 +1519,6 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
+ 			victim = bdev->bd_contains;
+ 		bdev->bd_contains = NULL;
+ 	}
+-	unlock_kernel();
+ 	mutex_unlock(&bdev->bd_mutex);
+ 	bdput(bdev);
+ 	if (victim)
+@@ -1526,7 +1528,11 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
+ 
+ int blkdev_put(struct block_device *bdev, fmode_t mode)
+ {
+-	return __blkdev_put(bdev, mode, 0);
++	int ret;
++	mutex_lock(&blkdev_mutex);
++	ret = __blkdev_put(bdev, mode, 0);
++	mutex_unlock(&blkdev_mutex);
++	return ret;
+ }
+ EXPORT_SYMBOL(blkdev_put);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8b7f5e0..69aa7f1 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1340,6 +1340,12 @@ struct block_device_operations {
+ 
+ extern int __blkdev_driver_ioctl(struct block_device *, fmode_t, unsigned int,
+ 				 unsigned long);
++
++/*
++ * replaces the big kernel lock in the block subsystem
++ */
++extern struct mutex blkdev_mutex;
++
+ #else /* CONFIG_BLOCK */
+ /*
+  * stubs for when the block layer is configured out
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 36ea2b6..fcf17e7 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -305,7 +305,7 @@ static int blk_dropped_open(struct inode *inode, struct file *filp)
+ {
+ 	filp->private_data = inode->i_private;
+ 
+-	return 0;
++	return nonseekable_open(inode, filp);
+ }
+ 
+ static ssize_t blk_dropped_read(struct file *filp, char __user *buffer,
+@@ -323,13 +323,14 @@ static const struct file_operations blk_dropped_fops = {
+ 	.owner =	THIS_MODULE,
+ 	.open =		blk_dropped_open,
+ 	.read =		blk_dropped_read,
++	.llseek =	no_llseek,
+ };
+ 
+ static int blk_msg_open(struct inode *inode, struct file *filp)
+ {
+ 	filp->private_data = inode->i_private;
+ 
+-	return 0;
++	return nonseekable_open(inode, filp);
+ }
+ 
+ static ssize_t blk_msg_write(struct file *filp, const char __user *buffer,
+@@ -362,6 +363,7 @@ static const struct file_operations blk_msg_fops = {
+ 	.owner =	THIS_MODULE,
+ 	.open =		blk_msg_open,
+ 	.write =	blk_msg_write,
++	.llseek =	no_llseek,
+ };
+ 
+ /*
+@@ -1601,7 +1603,7 @@ static ssize_t sysfs_blk_trace_attr_show(struct device *dev,
+ 	struct block_device *bdev;
+ 	ssize_t ret = -ENXIO;
+ 
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	bdev = bdget(part_devt(p));
+ 	if (bdev == NULL)
+ 		goto out_unlock_kernel;
+@@ -1633,7 +1635,7 @@ out_unlock_bdev:
+ out_bdput:
+ 	bdput(bdev);
+ out_unlock_kernel:
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ 	return ret;
+ }
+ 
+@@ -1663,7 +1665,7 @@ static ssize_t sysfs_blk_trace_attr_store(struct device *dev,
+ 
+ 	ret = -ENXIO;
+ 
+-	lock_kernel();
++	mutex_lock(&blkdev_mutex);
+ 	p = dev_to_part(dev);
+ 	bdev = bdget(part_devt(p));
+ 	if (bdev == NULL)
+@@ -1703,7 +1705,7 @@ out_unlock_bdev:
+ out_bdput:
+ 	bdput(bdev);
+ out_unlock_kernel:
+-	unlock_kernel();
++	mutex_unlock(&blkdev_mutex);
+ out:
+ 	return ret ? ret : count;
+ }
+-- 
 1.7.0.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
