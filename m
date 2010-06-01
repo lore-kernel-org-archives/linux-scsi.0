@@ -1,47 +1,96 @@
-From: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Subject: Usage of scsi_get_lba.
-Date: Tue, 1 Jun 2010 13:25:24 +0530
-Message-ID: <94500BE52867E04AB51827CFE16FC752028F714B9E@inbmail02.lsi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/2] [tgt]: Add proper STGT <-> bs_sg passthrough v2
+Date: Tue,  1 Jun 2010 01:50:36 -0700
+Message-ID: <1275382236-17647-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:41178 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754096Ab0FAIT2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jun 2010 04:19:28 -0400
-Content-Language: en-US
+Received: from smtp109.sbc.mail.gq1.yahoo.com ([67.195.14.39]:41721 "HELO
+	smtp109.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753411Ab0FAItd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2010 04:49:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "Moore, Eric" <Eric.Moore@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+To: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharr>
+Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-I was trying to use scsi_get_lba to get the lba associated with a particular scsi_cmnd. I am able to get proper values when I send I/O through dd or FS. But when I use the sg interface either sg_dd or sg_raw the value I am getting through scsi_get_lba is not matching with the one in the CDB.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Do we need to have some change in sg module for handling this, or is there anything wrong in the way I access the scsi_get_lba or sending command through sg?
+Greetings STGT folks,
 
-Any suggestion or help is highly appreciated.
+Here is another go at a proper STGT bs_sg passthrough following input from Tomo and Boaz.
+After taking another look, it ended up making alot more sense to split up the queue and
+completion paths into struct scsi_lu->cmd_perform() and struct scsi_lu->cmd_done() callers
+to support existing 'internal STGT port emulation' and proper struct scsi_cmd -> LUN passthrough
+for bs_sg with TCM_Loop ports.
 
-For I/O through DD
-Jun  1 20:19:14 linux-eph1 kernel: sd 16:0:1:0: [sdc] CDB: Write(10): 2a 00 00 00 00 00 00 00 08 00
-Jun  1 20:19:14 linux-eph1 kernel: LBA 0x0000000000000000
+Following Boaz's recommendation, I will next have a look at extending bs_sg to support BSG so we
+can actually pass things like SCSI Task Attrs and TMRs into TCM_Loop ports.  Until then, please have
+a look and let me know if anything is missing.  These patches have been tested using STGT/iSCSI <->
+TCM_Loop iSCSI Target Ports on v2.6.34 via Open-iSCSI with SPC-4 ALUA.  Here is the brief status:
 
-For a Non Zero LBA
-Jun  1 20:19:35 linux-eph1 kernel: sd 16:0:1:0: [sdc] CDB: Write(10): 2a 00 00 00 0f f8 00 00 08 00
-Jun  1 20:19:35 linux-eph1 kernel: LBA 0x0000000000000ff8
+tgtadm --lld iscsi --mode target --op show 
+Target 1: iqn.2003-01.org.linux-iscsi.target.i686:sn.2aa7bad648f
+    System information:
+        Driver: iscsi
+        State: ready
+    I_T nexus information:
+        I_T nexus: 1
+            Initiator: iqn.1993-08.org.debian:01:2dadf92d0ef
+            Connection: 0
+                IP Address: 172.16.201.129
+    LUN information:
+        LUN: 0
+            Type: controller
+            SCSI ID: IET     00010000
+            SCSI SN: beaf10
+            Size: 0 MB
+            Online: Yes
+            Removable media: No
+            Backing store type: rdwr
+            Backing store path: None
+        LUN: 1
+            Type: disk
+            SCSI ID: IET     00010001
+            SCSI SN: beaf11
+            Size: 0 MB
+            Online: Yes
+            Removable media: No
+            Backing store type: sg
+            Backing store path: /dev/sg7
+    Account information:
+    ACL information:
+        ALL
 
-For I/O through sg_dd
-Jun  1 20:19:45 linux-eph1 kernel: sd 16:0:1:0: [sg2] CDB: Write(10): 2a 00 00 00 0f ff 00 00 01 00
-Jun  1 20:19:45 linux-eph1 kernel: LBA 0xffffffffffffffff
+and on the Open-iSCSI side:
 
-Jun  1 20:20:26 linux-eph1 kernel: sd 16:0:1:0: [sg2] CDB: Write(10): 2a 00 00 00 0f f8 00 00 08 00
-Jun  1 20:20:26 linux-eph1 kernel: LBA 0xffffffffffffffff
+[ 3282.692718] scsi6 : iSCSI Initiator over TCP/IP
+[ 3282.979474] scsi 6:0:0:0: RAID              IET      Controller       0001 PQ: 0 ANSI: 5
+[ 3282.982814] scsi 6:0:0:0: Attached scsi generic sg4 type 12
+[ 3282.986803] scsi 6:0:0:1: Direct-Access     LIO-ORG  IBLOCK           3.1  PQ: 0 ANSI: 5
+[ 3282.990601] sd 6:0:0:1: [sdf] 3072000 512-byte hardware sectors (1573 MB)
+[ 3282.995035] sd 6:0:0:1: [sdf] Write Protect is off
+[ 3282.995050] sd 6:0:0:1: [sdf] Mode Sense: 2f 00 00 00
+[ 3282.999349] sd 6:0:0:1: [sdf] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 3283.003189] sd 6:0:0:1: [sdf] 3072000 512-byte hardware sectors (1573 MB)
+[ 3283.005275] sd 6:0:0:1: [sdf] Write Protect is off
+[ 3283.005287] sd 6:0:0:1: [sdf] Mode Sense: 2f 00 00 00
+[ 3283.008722] sd 6:0:0:1: [sdf] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[ 3283.009550]  sdf: unknown partition table
+[ 3283.091273] sd 6:0:0:1: [sdf] Attached SCSI disk
+[ 3283.092361] sd 6:0:0:1: Attached scsi generic sg5 type 0
+[ 3283.419050] sd 6:0:0:1: alua: supports implicit and explicit TPGS
+[ 3283.426177] sd 6:0:0:1: alua: port group 00 rel port 01
+[ 3283.428413] sd 6:0:0:1: alua: port group 00 state A supports TOUSNA
+[ 3283.454882] sd 6:0:0:1: alua: port group 00 state A supports TOUSNA
 
-Kernel Version
-Linux linux-eph1 2.6.34-rc3-00626-gcee693e-dirty #3 SMP Mon May 24 16:41:33 IST 2010 x86_64 x86_64 x86_64 GNU/Linux
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-Thanks
-Sathya
+Nicholas Bellinger (2):
+  [tgt]: Add proper STGT LUN backstore passthrough support
+  [bs_sg]: Add bs_sg_init() for STGT LUN passthrough
 
+ usr/bs_sg.c  |   20 ++++++++++++
+ usr/sbc.c    |    1 +
+ usr/target.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ usr/tgtd.h   |   15 +++++++++
+ 4 files changed, 120 insertions(+), 8 deletions(-)
 
