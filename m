@@ -1,67 +1,102 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Tue, 01 Jun 2010 16:07:43 -0500
-Message-ID: <1275426463.21962.977.camel@mulgrave.site>
-References: <1275318102.2823.47.camel@mulgrave.site>
-	 <4C03D5FD.3000202@panasas.com>
-	 <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
-	 <1275398876.21962.6.camel@mulgrave.site> <20100601133341.GK8980@think>
-	 <1275399637.21962.11.camel@mulgrave.site> <20100601134951.GM8980@think>
-	 <20100601162929.GC32708@parisc-linux.org> <20100601164750.GQ8980@think>
-	 <1275411293.21962.387.camel@mulgrave.site>  <20100601180905.GR8980@think>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi/st: remove BKL from open
+Date: Tue,  1 Jun 2010 23:16:54 +0200
+Message-ID: <1275427014-9801-1-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100601180905.GR8980@think>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:55494 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756839Ab0FAVRJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2010 17:17:09 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Willem Riede <osst@riede.org>, =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, "James E.J. Bottomley" <James.Bottomley@suse.de>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2010-06-01 at 14:09 -0400, Chris Mason wrote:
-> On Tue, Jun 01, 2010 at 04:54:53PM +0000, James Bottomley wrote:
-> > On Tue, 2010-06-01 at 12:47 -0400, Chris Mason wrote:
-> > > On Tue, Jun 01, 2010 at 10:29:30AM -0600, Matthew Wilcox wrote:
-> > > > On Tue, Jun 01, 2010 at 09:49:51AM -0400, Chris Mason wrote:
-> > > > > > I agree that a block based retry would close all the holes ... it just
-> > > > > > doesn't look elegant to me that the fs will already be repeating the I/O
-> > > > > > if it changed the page and so will block.
-> > > > > 
-> > > > > We might not ever repeat the IO.  We might change the page, write it,
-> > > > > change it again, truncate the file and toss the page completely.
-> > > > 
-> > > > Why does it matter that it was never written in that case?
-> > > 
-> > > It matters is the storage layer is going to wait around for the block to
-> > > be written again with a correct crc.
-> > 
-> > Actually, I wasn't advocating that.  I think block should return a guard
-> > mismatch error.  I think somewhere in filesystem writeout is the place
-> > to decide whether the error was self induced or systematic.
-> 
-> In that case the io error goes to the async page writeback bio-endio
-> handlers.  We don't have a reference on the inode and no ability to
-> reliably restart the IO, but we can set a bit on the address space
-> indicating that somewhere, sometime in the past we had an IO error.
-> 
-> > For self
-> > induced errors (as long as we can detect them) I think we can just
-> > forget about it ... if the changed page is important, the I/O request
-> > gets repeated (modulo the problem of too great a frequency of changes
-> > leading to us never successfully writing it) or it gets dropped because
-> > the file was truncated or the data deleted for some other reason.
-> 
-> Sorry, how can we tell the errors that are self induced from the evil
-> bit flipping cable induced errors?
+The st_open function is serialized through the st_dev_arr_lock
+and the STp->in_use flag, so there is no race that the BKL
+can protect against in the driver itself, and the function
+does not access any global state outside of the driver that
+might be protected with the BKL.
 
-We have all the information ... the fs will eventually mark the page
-dirty when it finishes the alterations, we just have to find a way to
-express that.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Willem Riede <osst@riede.org>
+Cc: "Kai M=C3=A4kisara" <Kai.Makisara@kolumbus.fi>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: osst-users@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-If you're thinking of the double fault scenario where the page
-spontaneously corrupts *and* the filesystem alters it, then the only way
-of detecting that is to freeze the page as it undergoes I/O ... which
-involves quite a bit of filesystem surgery, doesn't it?
+---
+ drivers/scsi/st.c |    9 +--------
+ 1 files changed, 1 insertions(+), 8 deletions(-)
 
-James
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 24211d0..8d4c4bb 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -39,7 +39,6 @@ static const char *verstr =3D "20081215";
+ #include <linux/cdev.h>
+ #include <linux/delay.h>
+ #include <linux/mutex.h>
+-#include <linux/smp_lock.h>
+=20
+ #include <asm/uaccess.h>
+ #include <asm/dma.h>
+@@ -1180,7 +1179,6 @@ static int st_open(struct inode *inode, struct fi=
+le *filp)
+ 	int dev =3D TAPE_NR(inode);
+ 	char *name;
+=20
+-	lock_kernel();
+ 	/*
+ 	 * We really want to do nonseekable_open(inode, filp); here, but some
+ 	 * versions of tar incorrectly call lseek on tapes and bail out if th=
+at
+@@ -1188,10 +1186,8 @@ static int st_open(struct inode *inode, struct f=
+ile *filp)
+ 	 */
+ 	filp->f_mode &=3D ~(FMODE_PREAD | FMODE_PWRITE);
+=20
+-	if (!(STp =3D scsi_tape_get(dev))) {
+-		unlock_kernel();
++	if (!(STp =3D scsi_tape_get(dev)))
+ 		return -ENXIO;
+-	}
+=20
+ 	write_lock(&st_dev_arr_lock);
+ 	filp->private_data =3D STp;
+@@ -1200,7 +1196,6 @@ static int st_open(struct inode *inode, struct fi=
+le *filp)
+ 	if (STp->in_use) {
+ 		write_unlock(&st_dev_arr_lock);
+ 		scsi_tape_put(STp);
+-		unlock_kernel();
+ 		DEB( printk(ST_DEB_MSG "%s: Device already in use.\n", name); )
+ 		return (-EBUSY);
+ 	}
+@@ -1249,14 +1244,12 @@ static int st_open(struct inode *inode, struct =
+file *filp)
+ 			retval =3D (-EIO);
+ 		goto err_out;
+ 	}
+-	unlock_kernel();
+ 	return 0;
+=20
+  err_out:
+ 	normalize_buffer(STp->buffer);
+ 	STp->in_use =3D 0;
+ 	scsi_tape_put(STp);
+-	unlock_kernel();
+ 	return retval;
+=20
+ }
+--=20
+1.7.0.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
