@@ -1,128 +1,72 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Usage of scsi_get_lba.
-Date: Tue, 1 Jun 2010 18:42:46 +0900
-Message-ID: <20100601184214X.fujita.tomonori@lab.ntt.co.jp>
-References: <94500BE52867E04AB51827CFE16FC752028F714B9E@inbmail02.lsi.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: Wrong DIF guard tag on ext2 write
+Date: Tue, 1 Jun 2010 12:30:42 +0200
+Message-ID: <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
+References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
+ <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
+ <1275318102.2823.47.camel@mulgrave.site>
+ <4C03D5FD.3000202@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:35279 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755757Ab0FAJnA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jun 2010 05:43:00 -0400
-In-Reply-To: <94500BE52867E04AB51827CFE16FC752028F714B9E@inbmail02.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C03D5FD.3000202@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya.Prakash@lsi.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, Eric.Moore@lsi.com, Kashyap.Desai@lsi.com
 
-On Tue, 1 Jun 2010 13:25:24 +0530
-"Prakash, Sathya" <Sathya.Prakash@lsi.com> wrote:
-
-> I was trying to use scsi_get_lba to get the lba associated with a particular scsi_cmnd. I am able to get proper values when I send I/O through dd or FS. But when I use the sg interface either sg_dd or sg_raw the value I am getting through scsi_get_lba is not matching with the one in the CDB.
+On Mon, May 31, 2010 at 06:30:05PM +0300, Boaz Harrosh wrote:
+> On 05/31/2010 06:01 PM, James Bottomley wrote:
+> > On Mon, 2010-05-31 at 10:20 -0400, Martin K. Petersen wrote:
+> >>>>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
+> >>
+> >> Christof> Since the guard tags are created in Linux, it seems that the
+> >> Christof> data attached to the write request changes between the
+> >> Christof> generation in bio_integrity_generate and the call to
+> >> Christof> sd_prep_fn.
+> >>
+> >> Yep, known bug.  Page writeback locking is messed up for buffer_head
+> >> users.  The extNfs folks volunteered to look into this a while back but
+> >> I don't think they have found the time yet.
+> >>
+> >>
+> >> Christof> Using ext3 or ext4 instead of ext2 does not show the problem.
+> >>
+> >> Last I looked there were still code paths in ext3 and ext4 that
+> >> permitted pages to be changed during flight.  I guess you've just been
+> >> lucky.
+> > 
+> > Pages have always been modifiable in flight.  The OS guarantees they'll
+> > be rewritten, so the drivers can drop them if it detects the problem.
+> > This is identical to the iscsi checksum issue (iscsi adds a checksum
+> > because it doesn't trust TCP/IP and if the checksum is generated in
+> > software, there's time between generation and page transmission for the
+> > alteration to occur).  The solution in the iscsi case was not to
+> > complain if the page is still marked dirty.
+> > 
 > 
-> Do we need to have some change in sg module for handling this, or is there anything wrong in the way I access the scsi_get_lba or sending command through sg?
+> And also why RAID1 and RAID4/5/6 need the data bounced. I wish VFS
+> would prevent data writing given a device queue flag that requests
+> it. So all these devices and modes could just flag the VFS/filesystems
+> that: "please don't allow concurrent writes, otherwise I need to copy data"
 > 
-> Any suggestion or help is highly appreciated.
+> From what Chris Mason has said before, all the mechanics are there, and it's
+> what btrfs is doing. Though I don't know how myself?
 
-Seems that scsi_get_lba() can't use REQ_TYPE_BLOCK_PC commands (via
-sg, bsg, etc) because request->__sector is not set.
+I also tested with btrfs and invalid guard tags in writes have been
+encountered as well (again in 2.6.34). The only difference is that no
+error was reported to userspace, although this might be a
+configuration issue.
 
-We need to parse sc->cmnd like this.
+What is the best strategy to continue with the invalid guard tags on
+write requests? Should this be fixed in the filesystems?
 
-The following scsi_get_transfer_info() is taken from scsi_debug. Some
-(like libata) have similar code so it would make sense to convert it
-to a library function.
+Another idea would be to pass invalid guard tags on write requests
+down to the hardware, expect an "invalid guard tag" error and report
+it to the block layer where a new checksum is generated and the
+request is issued again. Basically implement a retry through the whole
+I/O stack. But this also sounds complicated.
 
-
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index a5e885a..5bd697e 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -7,6 +7,7 @@
- #include <linux/types.h>
- #include <linux/timer.h>
- #include <linux/scatterlist.h>
-+#include <scsi/scsi.h>
- 
- struct Scsi_Host;
- struct scsi_device;
-@@ -264,9 +265,75 @@ static inline unsigned char scsi_get_prot_type(struct scsi_cmnd *scmd)
- 	return scmd->prot_type;
- }
- 
-+static inline void scsi_get_transfer_info(unsigned char *cmd,
-+					  unsigned long long *lba, unsigned int *num,
-+					  unsigned int *ei_lba)
-+{
-+	*ei_lba = 0;
-+
-+	switch (*cmd) {
-+	case VARIABLE_LENGTH_CMD:
-+		*lba = (u64)cmd[19] | (u64)cmd[18] << 8 |
-+			(u64)cmd[17] << 16 | (u64)cmd[16] << 24 |
-+			(u64)cmd[15] << 32 | (u64)cmd[14] << 40 |
-+			(u64)cmd[13] << 48 | (u64)cmd[12] << 56;
-+
-+		*ei_lba = (u32)cmd[23] | (u32)cmd[22] << 8 |
-+			(u32)cmd[21] << 16 | (u32)cmd[20] << 24;
-+
-+		*num = (u32)cmd[31] | (u32)cmd[30] << 8 | (u32)cmd[29] << 16 |
-+			(u32)cmd[28] << 24;
-+		break;
-+
-+	case WRITE_SAME_16:
-+	case WRITE_16:
-+	case READ_16:
-+		*lba = (u64)cmd[9] | (u64)cmd[8] << 8 |
-+			(u64)cmd[7] << 16 | (u64)cmd[6] << 24 |
-+			(u64)cmd[5] << 32 | (u64)cmd[4] << 40 |
-+			(u64)cmd[3] << 48 | (u64)cmd[2] << 56;
-+
-+		*num = (u32)cmd[13] | (u32)cmd[12] << 8 | (u32)cmd[11] << 16 |
-+			(u32)cmd[10] << 24;
-+		break;
-+	case WRITE_12:
-+	case READ_12:
-+		*lba = (u32)cmd[5] | (u32)cmd[4] << 8 | (u32)cmd[3] << 16 |
-+			(u32)cmd[2] << 24;
-+
-+		*num = (u32)cmd[9] | (u32)cmd[8] << 8 | (u32)cmd[7] << 16 |
-+			(u32)cmd[6] << 24;
-+		break;
-+	case WRITE_SAME:
-+	case WRITE_10:
-+	case READ_10:
-+	case XDWRITEREAD_10:
-+		*lba = (u32)cmd[5] | (u32)cmd[4] << 8 |	(u32)cmd[3] << 16 |
-+			(u32)cmd[2] << 24;
-+
-+		*num = (u32)cmd[8] | (u32)cmd[7] << 8;
-+		break;
-+	case WRITE_6:
-+	case READ_6:
-+		*lba = (u32)cmd[3] | (u32)cmd[2] << 8 |
-+			(u32)(cmd[1] & 0x1f) << 16;
-+		*num = (0 == cmd[4]) ? 256 : cmd[4];
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
- static inline sector_t scsi_get_lba(struct scsi_cmnd *scmd)
- {
--	return blk_rq_pos(scmd->request);
-+	if (scmd->request->cmd_type == REQ_TYPE_BLOCK_PC) {
-+		unsigned long long lba;
-+		unsigned int num;
-+		unsigned int ei_lba;
-+		scsi_get_transfer_info(scmd->cmnd, &lba, &num, &ei_lba);
-+		return lba;
-+	} else
-+		return blk_rq_pos(scmd->request);
- }
- 
- static inline unsigned scsi_prot_sg_count(struct scsi_cmnd *cmd)
-
+--
+Christof Schmitt
