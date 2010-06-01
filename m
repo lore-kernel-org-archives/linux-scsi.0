@@ -1,54 +1,76 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH 08/24] hpsa: fix leak of ioremapped memory
-Date: Tue, 1 Jun 2010 07:55:39 -0500
-Message-ID: <20100601125539.GQ10831@beardog.cce.hp.com>
-References: <20100527200301.3116.78973.stgit@beardog.cce.hp.com> <20100527201322.3116.86053.stgit@beardog.cce.hp.com> <201005282112.24802.eike-kernel@sf-tec.de>
+From: Chris Mason <chris.mason@oracle.com>
+Subject: Re: Wrong DIF guard tag on ext2 write
+Date: Tue, 1 Jun 2010 09:03:25 -0400
+Message-ID: <20100601130325.GG8980@think>
+References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
+ <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
+ <1275318102.2823.47.camel@mulgrave.site>
+ <4C03D5FD.3000202@panasas.com>
+ <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:20646 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756008Ab0FAMu5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2010 08:50:57 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <201005282112.24802.eike-kernel@sf-tec.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, dab@hp.com, mikem@beardog.cce.hp.com
 
-On Fri, May 28, 2010 at 09:12:17PM +0200, Rolf Eike Beer wrote:
-> Stephen M. Cameron wrote:
-> > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On Tue, Jun 01, 2010 at 12:30:42PM +0200, Christof Schmitt wrote:
+> On Mon, May 31, 2010 at 06:30:05PM +0300, Boaz Harrosh wrote:
+> > On 05/31/2010 06:01 PM, James Bottomley wrote:
+> > > On Mon, 2010-05-31 at 10:20 -0400, Martin K. Petersen wrote:
+> > >>>>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
+> > >>
+> > >> Christof> Since the guard tags are created in Linux, it seems that the
+> > >> Christof> data attached to the write request changes between the
+> > >> Christof> generation in bio_integrity_generate and the call to
+> > >> Christof> sd_prep_fn.
+> > >>
+> > >> Yep, known bug.  Page writeback locking is messed up for buffer_head
+> > >> users.  The extNfs folks volunteered to look into this a while back but
+> > >> I don't think they have found the time yet.
+> > >>
+> > >>
+> > >> Christof> Using ext3 or ext4 instead of ext2 does not show the problem.
+> > >>
+> > >> Last I looked there were still code paths in ext3 and ext4 that
+> > >> permitted pages to be changed during flight.  I guess you've just been
+> > >> lucky.
+> > > 
+> > > Pages have always been modifiable in flight.  The OS guarantees they'll
+> > > be rewritten, so the drivers can drop them if it detects the problem.
+> > > This is identical to the iscsi checksum issue (iscsi adds a checksum
+> > > because it doesn't trust TCP/IP and if the checksum is generated in
+> > > software, there's time between generation and page transmission for the
+> > > alteration to occur).  The solution in the iscsi case was not to
+> > > complain if the page is still marked dirty.
+> > > 
 > > 
-> > hpsa: fix leak of ioremapped memory
-> > in hpsa_pci_init error path.
-> 
-> If you had used devres to track your resources you got this for free.
-> 
-
-Thanks, I was unaware of devres.  I'll look into it.
-
-> > @@ -3474,6 +3477,12 @@ static int __devinit hpsa_pci_init(struct ctlr_info
-> > *h) return 0;
+> > And also why RAID1 and RAID4/5/6 need the data bounced. I wish VFS
+> > would prevent data writing given a device queue flag that requests
+> > it. So all these devices and modes could just flag the VFS/filesystems
+> > that: "please don't allow concurrent writes, otherwise I need to copy data"
 > > 
-> >  err_out_free_res:
-> > +	if (h->transtable)
-> > +		iounmap(h->transtable);
-> > +	if (h->cfgtable)
-> > +		iounmap(h->cfgtable);
-> > +	if (h->vaddr)
-> > +		iounmap(h->vaddr);
+> > From what Chris Mason has said before, all the mechanics are there, and it's
+> > what btrfs is doing. Though I don't know how myself?
 > 
-> I wonder if that shouldn't use pci_iomap() instead. Also the page aligning 
-> tricks in remap_pci_mem() look a bit dubious to me. If your pci BAR is >= 
-> PAGE_SIZE this isn't needed at all anyway since those mappings are aligned to 
-> at least their size in physical address space anyway and the logical address 
-> shouldn't matter for the driver.
+> I also tested with btrfs and invalid guard tags in writes have been
+> encountered as well (again in 2.6.34). The only difference is that no
+> error was reported to userspace, although this might be a
+> configuration issue.
 
-Ok, I'll look into these as well.
+This would be a btrfs bug.  We have strict checks in place that are
+supposed to prevent buffers changing while in flight.  What was the
+workload that triggered this problem?
 
 > 
-> Eike
+> What is the best strategy to continue with the invalid guard tags on
+> write requests? Should this be fixed in the filesystems?
+> 
 
+Long term, I think the filesystems shouldn't be changing pages in
+flight.  Bouncing just hurts way too much.
 
+-chris
