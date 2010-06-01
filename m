@@ -1,31 +1,29 @@
-From: Nick Piggin <npiggin@suse.de>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Wed, 2 Jun 2010 00:28:22 +1000
-Message-ID: <20100601142822.GW9453@laptop>
+Date: Tue, 01 Jun 2010 14:32:08 +0000
+Message-ID: <1275402728.21962.35.camel@mulgrave.site>
 References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
- <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
- <1275318102.2823.47.camel@mulgrave.site>
- <4C03D5FD.3000202@panasas.com>
- <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
- <1275398876.21962.6.camel@mulgrave.site>
- <20100601133341.GK8980@think>
- <1275399637.21962.11.camel@mulgrave.site>
- <yq1hblmkgka.fsf@sermon.lab.mkp.net>
+	 <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
+	 <1275318102.2823.47.camel@mulgrave.site> <4C03D5FD.3000202@panasas.com>
+	 <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
+	 <1275398876.21962.6.camel@mulgrave.site> <20100601133341.GK8980@think>
+	 <1275399637.21962.11.camel@mulgrave.site>
+	 <yq1hblmkgka.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:57334 "EHLO mx1.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:52470 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756421Ab0FAO2Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jun 2010 10:28:25 -0400
-Content-Disposition: inline
+	id S932116Ab0FAOcO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Jun 2010 10:32:14 -0400
 In-Reply-To: <yq1hblmkgka.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Chris Mason <chris.mason@oracle.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Chris Mason <chris.mason@oracle.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Jun 01, 2010 at 09:50:29AM -0400, Martin K. Petersen wrote:
+On Tue, 2010-06-01 at 09:50 -0400, Martin K. Petersen wrote:
 > >>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
 > 
 > James> Would it be too much work in the fs to mark the page dirty before
@@ -45,5 +43,12 @@ On Tue, Jun 01, 2010 at 09:50:29AM -0400, Martin K. Petersen wrote:
 > because the page was constantly being updated.  And all writes failed
 > with a guard tag error.
 
-What if you bounce in the case of a first guard error?
+But that's unfixable with a retry based system as well if the page is
+changing so fast that the guard is always wrong by the time we get to
+the array.  The only way to fix this is either to copy or freeze the
+page.
+
+James
+
+
 
