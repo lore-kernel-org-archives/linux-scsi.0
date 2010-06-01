@@ -1,7 +1,7 @@
-From: Chris Mason <chris.mason@oracle.com>
+From: Nick Piggin <npiggin@suse.de>
 Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Tue, 1 Jun 2010 09:58:18 -0400
-Message-ID: <20100601135818.GN8980@think>
+Date: Wed, 2 Jun 2010 00:26:55 +1000
+Message-ID: <20100601142655.GV9453@laptop>
 References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
  <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
  <1275318102.2823.47.camel@mulgrave.site>
@@ -11,12 +11,12 @@ References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
  <20100601135059.GA21008@schmichrtp.mainz.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20100601135059.GA21008@schmichrtp.mainz.de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Chris Mason <chris.mason@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On Tue, Jun 01, 2010 at 03:50:59PM +0200, Christof Schmitt wrote:
@@ -73,9 +73,14 @@ On Tue, Jun 01, 2010 at 03:50:59PM +0200, Christof Schmitt wrote:
 > pattern until the disk is full, reads the data to verify if the
 > pattern is still intact, removes the files and starts over.
 
-Ok, is the lba in the output the sector offset?  We can map that to a
-btrfs block and figure out what it was.
+How are the checks done? The lock_page and wait_on_page_writeback from
+prepare_pages?
 
-Btrfs never complains about the IO error?  We really should explode.
+Looks OK but AFAIKS you would need to unmap_mapping_range() the range
+after taking the locks. You are also screwed if the page is in the
+process of being modified by a get_user_pages() caller. You'd have to
+add VM_IO to vm_flags to prevent get_user_pages.
 
--chris
+Direct-IO is always going to have the same problems, so it's not like
+block based solutions can just pretend it will easily go away.
+
