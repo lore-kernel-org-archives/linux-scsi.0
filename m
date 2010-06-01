@@ -1,88 +1,347 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Tue, 01 Jun 2010 13:49:55 +0300
-Message-ID: <4C04E5D3.8000709@panasas.com>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com> <yq1iq64kv9f.fsf@sermon.lab.mkp.net> <1275318102.2823.47.camel@mulgrave.site> <4C03D5FD.3000202@panasas.com> <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] [tgt]: Add BSG v4 backstore support to usr/bs_sg.c
+Date: Tue,  1 Jun 2010 05:34:09 -0700
+Message-ID: <1275395649-25160-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:6700 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755604Ab0FAKt7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2010 06:49:59 -0400
-In-Reply-To: <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
+Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:25688 "HELO
+	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755995Ab0FAMcl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2010 08:32:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
+To: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike
+Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, James Smart <james.smart@emulex.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On 06/01/2010 01:30 PM, Christof Schmitt wrote:
-> On Mon, May 31, 2010 at 06:30:05PM +0300, Boaz Harrosh wrote:
->> On 05/31/2010 06:01 PM, James Bottomley wrote:
->>> On Mon, 2010-05-31 at 10:20 -0400, Martin K. Petersen wrote:
->>>>>>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
->>>>
->>>> Christof> Since the guard tags are created in Linux, it seems that the
->>>> Christof> data attached to the write request changes between the
->>>> Christof> generation in bio_integrity_generate and the call to
->>>> Christof> sd_prep_fn.
->>>>
->>>> Yep, known bug.  Page writeback locking is messed up for buffer_head
->>>> users.  The extNfs folks volunteered to look into this a while back but
->>>> I don't think they have found the time yet.
->>>>
->>>>
->>>> Christof> Using ext3 or ext4 instead of ext2 does not show the problem.
->>>>
->>>> Last I looked there were still code paths in ext3 and ext4 that
->>>> permitted pages to be changed during flight.  I guess you've just been
->>>> lucky.
->>>
->>> Pages have always been modifiable in flight.  The OS guarantees they'll
->>> be rewritten, so the drivers can drop them if it detects the problem.
->>> This is identical to the iscsi checksum issue (iscsi adds a checksum
->>> because it doesn't trust TCP/IP and if the checksum is generated in
->>> software, there's time between generation and page transmission for the
->>> alteration to occur).  The solution in the iscsi case was not to
->>> complain if the page is still marked dirty.
->>>
->>
->> And also why RAID1 and RAID4/5/6 need the data bounced. I wish VFS
->> would prevent data writing given a device queue flag that requests
->> it. So all these devices and modes could just flag the VFS/filesystems
->> that: "please don't allow concurrent writes, otherwise I need to copy data"
->>
->> From what Chris Mason has said before, all the mechanics are there, and it's
->> what btrfs is doing. Though I don't know how myself?
-> 
-> I also tested with btrfs and invalid guard tags in writes have been
-> encountered as well (again in 2.6.34). The only difference is that no
-> error was reported to userspace, although this might be a
-> configuration issue.
-> 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-I think in btrfs you need a raid1/5 multi-device configuration for this
-to work. If you use a single device then it is just like ext4.
+Greetings Tomo and Boaz,
 
-BTW: you could use DM or MD and it will guard your DIF by coping the
-data before IO. 
+This patch adds initial support for the block layer implementation of the sg v4 interface
+(BSG) -> STGT with a new struct backingstore_template bsg_bst sharing code with the
+original sg_bst.  It adds for new function bs_bsg_cmd_submit() for incoming write I/O
+and bs_bsg_cmd_complete() for polling read I/O using include/linux/bsg.h:struct sg_io_v4.
 
-> What is the best strategy to continue with the invalid guard tags on
-> write requests? Should this be fixed in the filesystems?
-> 
-> Another idea would be to pass invalid guard tags on write requests
-> down to the hardware, expect an "invalid guard tag" error and report
-> it to the block layer where a new checksum is generated and the
-> request is issued again. Basically implement a retry through the whole
-> I/O stack. But this also sounds complicated.
-> 
+This patch also splits up bs_sg_open() to support both BSG and SG looking for the
+path "/dev/bsg" in bs_sg_open(), and getting max_queue using SG_GET_COMMAND_Q and
+calling SG_SET_RESERVED_SIZE (following the original bs_sg code in init_sg_device)
 
-I suggest we should talk about this issue in upcoming LSF, because it does
-not only affects DIF but any checksum subsystem. And it could enhance Linux
-raid performance.
+Also chk_bsg_device() currently using a hardcoded 254 major as def for BSG does not
+appear in include/linux/major.h just yet..
 
-> --
-> Christof Schmitt
+So far this has been tested with STGT/iSCSI <-> BSG <-> TCM_Loop SPC-4 iSCSI Target
+Port emulation and is able to mkfs, fsck and mount a filesystem from a TCM/IBLOCK
+Linux LVM kernel level backstore
 
-Boaz
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ usr/bs_sg.c     |  177 +++++++++++++++++++++++++++++++++++++++++++++++++++---
+ usr/scsi_cmnd.h |    7 ++
+ 2 files changed, 174 insertions(+), 10 deletions(-)
+
+diff --git a/usr/bs_sg.c b/usr/bs_sg.c
+index 2fcb0d2..69dab53 100644
+--- a/usr/bs_sg.c
++++ b/usr/bs_sg.c
+@@ -3,6 +3,9 @@
+  *
+  * Copyright (C) 2008 Alexander Nezhinsky <nezhinsky@gmail.com>
+  *
++ * Added linux/block/bsg.c support using struct sg_io_v4.
++ * Copyright (C) 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+  * published by the Free Software Foundation, version 2 of the
+@@ -33,6 +36,7 @@
+ #include <sys/stat.h>
+ #include <sys/epoll.h>
+ #include <scsi/sg.h>
++#include <linux/bsg.h>
+ 
+ #include "list.h"
+ #include "util.h"
+@@ -42,6 +46,14 @@
+ #define BS_SG_RESVD_SZ  (512 * 1024)
+ #define BS_SG_TIMEOUT	2000
+ 
++//#define BSG_DEBUG_IO
++
++#ifdef BSG_DEBUG_IO
++#define BSG_IO(x...) eprintf(x)
++#else
++#define BSG_IO(x...)
++#endif
++
+ static int graceful_read(int fd, void *p_read, int to_read)
+ {
+ 	int err;
+@@ -82,7 +94,7 @@ static int graceful_write(int fd, void *p_write, int to_write)
+ 	return 0;
+ }
+ 
+-static void set_cmd_failed(struct scsi_cmd *cmd)
++static int set_cmd_failed(struct scsi_cmd *cmd)
+ {
+ 	int result = SAM_STAT_CHECK_CONDITION;
+ 	uint16_t asc = ASC_READ_ERROR;
+@@ -90,6 +102,54 @@ static void set_cmd_failed(struct scsi_cmd *cmd)
+ 
+ 	scsi_set_result(cmd, result);
+ 	sense_data_build(cmd, key, asc);
++
++	return result;
++}
++
++static int bs_bsg_cmd_submit(struct scsi_cmd *cmd)
++{
++	struct scsi_lu *dev = cmd->dev;
++	int fd = dev->fd;
++	struct sg_io_v4 *io_hdr = &cmd->cmd_bsg_hdr;
++	int err = 0;
++	/*
++	 * Following linux/include/linux/bsg.h
++	 */
++	/* [i] 'Q' to differentiate from v3 */
++	io_hdr->guard = 'Q';
++	io_hdr->protocol = BSG_PROTOCOL_SCSI;
++	io_hdr->subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD;
++	io_hdr->request_len = cmd->scb_len;
++	io_hdr->request = (unsigned long )cmd->scb;
++
++	if (scsi_get_data_dir(cmd) == DATA_WRITE) {
++		io_hdr->dout_xfer_len = scsi_get_out_length(cmd);
++		io_hdr->dout_xferp = (unsigned long)scsi_get_out_buffer(cmd);	
++	} else {
++		io_hdr->din_xfer_len = scsi_get_in_length(cmd);
++		io_hdr->din_xferp = (unsigned long)scsi_get_in_buffer(cmd);
++	}
++	io_hdr->max_response_len = sizeof(cmd->sense_buffer);
++	/* SCSI: (auto)sense data */
++	io_hdr->response = (unsigned long)cmd->sense_buffer;
++	/* Using the same 2000 millisecond timeout.. */
++	io_hdr->timeout = BS_SG_TIMEOUT;
++	/* [i->o] unused internally */
++	io_hdr->usr_ptr = (unsigned long)cmd;
++	BSG_IO("[%d] Set io_hdr->usr_ptr from cmd: %p\n", getpid(), cmd);
++	/* Bsg does Q_AT_HEAD by default */
++	io_hdr->flags |= BSG_FLAG_Q_AT_TAIL;
++	
++	BSG_IO("[%d] Calling graceful_write for CDB: 0x%02x\n", getpid(), cmd->scb[0]);
++	err = graceful_write(fd, &cmd->cmd_bsg_hdr, sizeof(struct sg_io_v4));
++	if (!err)
++		set_cmd_async(cmd);
++	else {
++		eprintf("failed to start cmd 0x%p\n", cmd);
++		return set_cmd_failed(cmd);
++	}
++
++	return 0;
+ }
+ 
+ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
+@@ -107,11 +167,13 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
+ 	if (scsi_get_data_dir(cmd) == DATA_WRITE) {
+ 		io_hdr.dxfer_direction = SG_DXFER_TO_DEV;
+ 		io_hdr.dxfer_len = scsi_get_out_length(cmd);
+-		io_hdr.dxferp = (void *)scsi_get_out_buffer(cmd);
++		cmd->cmd_sg_iovec.iov_base = scsi_get_out_buffer(cmd);
++		io_hdr.iovec_count = 1;
+ 	} else {
+ 		io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
+ 		io_hdr.dxfer_len = scsi_get_in_length(cmd);
+-		io_hdr.dxferp = (void *)scsi_get_in_buffer(cmd);
++		cmd->cmd_sg_iovec.iov_base = scsi_get_in_buffer(cmd);
++		io_hdr.iovec_count = 1;
+ 	}
+ 	io_hdr.mx_sb_len = sizeof(cmd->sense_buffer);
+ 	io_hdr.sbp = cmd->sense_buffer;
+@@ -125,11 +187,47 @@ static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
+ 		set_cmd_async(cmd);
+ 	else {
+ 		eprintf("failed to start cmd 0x%p\n", cmd);
+-		set_cmd_failed(cmd);
++		return set_cmd_failed(cmd);
+ 	}
+ 	return 0;
+ }
+ 
++static void bs_bsg_cmd_complete(int fd, int events, void *data)
++{
++	struct sg_io_v4 io_hdr;
++	struct scsi_cmd *cmd;
++	int err;
++
++	BSG_IO("[%d] bs_bsg_cmd_complete() called!\n", getpid());
++	memset(&io_hdr, 0, sizeof(io_hdr));
++	/* [i] 'Q' to differentiate from v3 */
++	io_hdr.guard = 'Q';
++
++	err = graceful_read(fd, &io_hdr, sizeof(io_hdr));
++	if (err)
++		return;
++
++	cmd = (struct scsi_cmd *)(unsigned long)io_hdr.usr_ptr;
++	BSG_IO("BSG Using cmd: %p for io_hdr.usr_ptr\n", cmd);
++	/*
++	 * Check SCSI: command completion status
++	 * */
++	if (!io_hdr.device_status) {
++		scsi_set_out_resid(cmd, io_hdr.dout_resid);
++		scsi_set_in_resid(cmd, io_hdr.din_resid);
++	} else {
++		/*
++		 * NAB: Used by linux/block/bsg.c:bsg_ioctl(), is this
++		 * right..?
++		 */
++		cmd->sense_len = SCSI_SENSE_BUFFERSIZE;
++		scsi_set_out_resid_by_actual(cmd, 0);
++		scsi_set_in_resid_by_actual(cmd, 0);
++	}
++	BSG_IO("[%d] BSG() Calling cmd->scsi_cmd_done()\n", getpid());
++	cmd->scsi_cmd_done(cmd, io_hdr.device_status);
++}
++
+ static void bs_sg_cmd_complete(int fd, int events, void *data)
+ {
+ 	struct sg_io_hdr io_hdr;
+@@ -157,6 +255,22 @@ static void bs_sg_cmd_complete(int fd, int events, void *data)
+ 	cmd->scsi_cmd_done(cmd, io_hdr.status);
+ }
+ 
++static int chk_bsg_device(char *path)
++{
++	struct stat st;
++
++	if (stat(path, &st) < 0) {
++		eprintf("stat() failed errno: %d\n", errno);
++		return -1;
++	}
++
++	/* This is not yet defined in include/linux/major.h.. */
++	if (S_ISCHR(st.st_mode) && major(st.st_rdev) == 254)	
++		return 0;
++
++	return -1;
++}
++
+ static int chk_sg_device(char *path)
+ {
+ 	struct stat st;
+@@ -168,8 +282,29 @@ static int chk_sg_device(char *path)
+ 
+ 	if (S_ISCHR(st.st_mode) && major(st.st_rdev) == SCSI_GENERIC_MAJOR)
+ 		return 0;
+-	else
++
++	return -1;
++}
++
++static int init_bsg_device(int fd)
++{
++	int t, err;
++
++	err = ioctl(fd, SG_GET_COMMAND_Q, &t);
++	if (err < 0) {	
++		eprintf("SG_GET_COMMAND_Q for bsd failed: %d\n", err);
+ 		return -1;
++	}
++	eprintf("bsg: Using max_queue: %d\n", t);
++
++	t = BS_SG_RESVD_SZ;
++	err = ioctl(fd, SG_SET_RESERVED_SIZE, &t);
++	if (err < 0) {
++		eprintf("SG_SET_RESERVED_SIZE errno: %d\n", errno);
++		return -1;
++	}
++
++	return 0;
+ }
+ 
+ static int init_sg_device(int fd)
+@@ -213,9 +348,14 @@ static int bs_sg_init(struct scsi_lu *lu)
+ 
+ static int bs_sg_open(struct scsi_lu *lu, char *path, int *fd, uint64_t *size)
+ {
+-	int sg_fd, err;
+-
+-	err = chk_sg_device(path);
++	void (*cmd_complete)(int, int, void *) = NULL;
++	int sg_fd, err, bsg = 0;
++
++	if ((strstr(path, "/dev/bsg/") != NULL)) {
++		bsg = 1;
++		err = chk_bsg_device(path);
++	} else
++		err = chk_sg_device(path);
+ 	if (err) {
+ 		eprintf("Not recognized %s as an SG device\n", path);
+ 		return -EINVAL;
+@@ -227,13 +367,19 @@ static int bs_sg_open(struct scsi_lu *lu, char *path, int *fd, uint64_t *size)
+ 		return sg_fd;
+ 	}
+ 
+-	err = init_sg_device(sg_fd);
++	if (bsg) {
++		cmd_complete = &bs_bsg_cmd_complete;
++		err = init_bsg_device(sg_fd);
++	} else {
++		cmd_complete = bs_sg_cmd_complete;
++		err = init_sg_device(sg_fd);
++	}
+ 	if (err) {
+ 		eprintf("Failed to initialize sg device %s\n", path);
+ 		return err;
+ 	}
+ 
+-	err = tgt_event_add(sg_fd, EPOLLIN, bs_sg_cmd_complete, NULL);
++	err = tgt_event_add(sg_fd, EPOLLIN, cmd_complete, NULL);
+ 	if (err) {
+ 		eprintf("Failed to add sg device event %s\n", path);
+ 		return err;
+@@ -264,7 +410,18 @@ static struct backingstore_template sg_bst = {
+ 	.bs_cmd_done		= bs_sg_cmd_done,
+ };
+ 
++static struct backingstore_template bsg_bst = {
++	.bs_name		= "bsg",
++	.bs_datasize		= 0,
++	.bs_init		= bs_sg_init,
++	.bs_open		= bs_sg_open,
++	.bs_close		= bs_sg_close,
++	.bs_cmd_submit		= bs_bsg_cmd_submit,
++	.bs_cmd_done		= bs_sg_cmd_done,
++};
++
+ __attribute__((constructor)) static void bs_sg_constructor(void)
+ {
+ 	register_backingstore_template(&sg_bst);
++	register_backingstore_template(&bsg_bst);
+ }
+diff --git a/usr/scsi_cmnd.h b/usr/scsi_cmnd.h
+index 011f3e6..67a46c3 100644
+--- a/usr/scsi_cmnd.h
++++ b/usr/scsi_cmnd.h
+@@ -17,6 +17,9 @@ struct scsi_data_buffer {
+ 	uint64_t buffer;
+ };
+ 
++#include <scsi/sg.h>
++#include <linux/bsg.h>
++
+ struct scsi_cmd {
+ 	struct target *c_target;
+ 	/* linked it_nexus->cmd_hash_list */
+@@ -31,6 +34,10 @@ struct scsi_cmd {
+ 	enum data_direction data_dir;
+ 	struct scsi_data_buffer in_sdb;
+ 	struct scsi_data_buffer out_sdb;
++	/* Used for bs_sg.c:bs_bs_cmd_submit() */
++	struct sg_iovec cmd_sg_iovec;
++	/* used for bs_sg.c:bs_bsg_cmd_submit() */
++	struct sg_io_v4 cmd_bsg_hdr;
+ 
+ 	uint64_t cmd_itn_id;
+ 	uint64_t offset;
+-- 
+1.5.6.5
+
