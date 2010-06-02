@@ -1,50 +1,48 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: fix scsi_get_lba helper function for pc command
-Date: Wed, 02 Jun 2010 09:13:51 -0400
-Message-ID: <yq1bpbtbmr4.fsf@sermon.lab.mkp.net>
-References: <4C0612CC.6050602@panasas.com>
-	<20100602173925H.fujita.tomonori@lab.ntt.co.jp>
-	<4C061C41.2010104@panasas.com>
-	<20100602180515J.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Wrong DIF guard tag on ext2 write
+Date: Wed, 02 Jun 2010 09:17:56 -0400
+Message-ID: <yq17hmhbmkb.fsf@sermon.lab.mkp.net>
+References: <1275398876.21962.6.camel@mulgrave.site>
+	<20100601133341.GK8980@think>
+	<1275399637.21962.11.camel@mulgrave.site>
+	<20100601134951.GM8980@think>
+	<20100601162929.GC32708@parisc-linux.org>
+	<20100601164750.GQ8980@think>
+	<1275411293.21962.387.camel@mulgrave.site>
+	<20100601180905.GR8980@think> <20100601184649.GE9453@laptop>
+	<20100601193528.GV8980@think> <20100602032030.GF9453@laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:22230 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754087Ab0FBNOr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2010 09:14:47 -0400
-In-Reply-To: <20100602180515J.fujita.tomonori@lab.ntt.co.jp> (FUJITA
-	Tomonori's message of "Wed, 2 Jun 2010 18:05:35 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20100602032030.GF9453@laptop> (Nick Piggin's message of "Wed, 2
+	Jun 2010 13:20:30 +1000")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Nick Piggin <npiggin@suse.de>
+Cc: Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Matthew Wilcox <matthew@wil.cx>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bharrosh@panasas.com, James.Bottomley@suse.de, jaxboe@fusionio.com, linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com
 
->>>>> "Tomo" == FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> writes:
+>>>>> "Nick" == Nick Piggin <npiggin@suse.de> writes:
 
->> scsi LLDs can be pass-through for disks, as well as lots of other
->> type of devices. They should not assume the role of a disk. The use
->> of blk_rq_pos() at LLDs is probably wrong in the first place. Unless
->> it is some kind of scsi emulation driver like scsi_debug.
+>> 1) filesystem changed it
+>> 2) corruption on the wire or in the raid controller
+>> 3) the page was corrupted while the IO layer was doing the IO.
+>> 
+>> 1 and 2 are easy, we bounce, retry and everyone continues on with
+>> their lives.  With #3, we'll recrc and send the IO down again
+>> thinking the data is correct when really we're writing garbage.
+>> 
+>> How can we tell these three cases apart?
 
-Tomo> Not only scsi_debug. Have you seen how scsi_get_lba() is used?
-Tomo> LLDs sometime needs to know lba in scsi commands.
+Nick> Do we really need to handle #3? It could have happened before the
+Nick> checksum was calculated.
 
-scsi_get_lba() is used by DIX/DIF-aware HBA drivers to get the first LBA
-for use in reference tag verification/preparation.
+Reason #3 is one of the main reasons for having the checksum in the
+first place.  The whole premise of the data integrity extensions is that
+the checksum is calculated in close temporal proximity to the data
+creation.  I.e. eventually in userland.
 
-This code path is only executed by the drivers if the command protection
-mode is > SCSI_PROT_NORMAL which can only be true for a READ/WRITE
-command.  I don't see any drivers using it for other purposes.
-
-I have some changes in the pipeline to better support protection
-interleaving in DIF Type 2.  I was contemplating renaming scsi_get_lba()
-to scsi_get_reference_tag() or something to that effect.
-
-As as for the reason scsi_get_lba() looks at the start sector directly:
-I was simply trying to avoid growing struct scsi_cmnd.  The "correct"
-thing would have been to add an initial reference tag field to scsi_cmnd
-and have that be filled out by sd_prot_op().
+Filesystems will inevitably have to be integrity-aware for that to work.
+And it will be their job to keep the data pages stable during DMA.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
