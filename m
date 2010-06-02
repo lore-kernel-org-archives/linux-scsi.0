@@ -1,59 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 7/7] SCSI: change the meaning of starget->reap_ref
-Date: Wed, 2 Jun 2010 16:37:33 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1006021157540.1992-100000@iolanthe.rowland.org>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Wrong DIF guard tag on ext2 write
+Date: Thu, 3 Jun 2010 09:20:39 +1000
+Message-ID: <20100602232039.GA8287@dastard>
+References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
+ <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
+ <20100531144648.GA19068@schmichrtp.mainz.de.ibm.com>
+ <yq11vcqlwp8.fsf@sermon.lab.mkp.net>
+ <20100602133748.GA11196@schmichrtp.mainz.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58697 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753654Ab0FBUhe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2010 16:37:34 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100602133748.GA11196@schmichrtp.mainz.de.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch (as1248e) changes the meaning of starget->reap_ref.  Now it
-serves to count the number of underlying devices beneath the target
-(i.e., the length of the starget->devices list), plus one when we want
-to prevent a possibly-empty target from being removed from visibility.
+On Wed, Jun 02, 2010 at 03:37:48PM +0200, Christof Schmitt wrote:
+> On Tue, Jun 01, 2010 at 09:16:35AM -0400, Martin K. Petersen wrote:
+> > >>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
+> > 
+> > >> Yep, known bug.  Page writeback locking is messed up for buffer_head
+> > >> users.  The extNfs folks volunteered to look into this a while back
+> > >> but I don't think they have found the time yet.
+> > 
+> > Christof> Thanks for the info. This means that this bug appears with all
+> > Christof> filesystems?
+> > 
+> > XFS and btrfs should be fine.
+> 
+> XFS looks good in my test, thanks for the hint. I am going to use XFS
+> for anything related to DIF for now. It would be nice to have a
+> solution that works for all filesystems, but it looks like this will
+> take some time and work.
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+If you are running DIF hardware, then XFS is only OK for direct IO.
+XFS will still get torn writes if you are overwriting buffered data
+(either by write() or mmap()) because there are no interlocks to
+prevent cached pages under writeback from being modified while DMA
+is being performed.....
 
----
+Cheers,
 
-Index: usb-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_scan.c
-+++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -305,6 +305,7 @@ static struct scsi_device *scsi_alloc_sd
- 	transport_setup_device(&sdev->sdev_gendev);
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-+	starget->reap_ref++;
- 	list_add_tail(&sdev->same_target_siblings, &starget->devices);
- 	list_add_tail(&sdev->siblings, &shost->__devices);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-@@ -503,7 +504,7 @@ void scsi_target_reap(struct scsi_target
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	state = starget->state;
--	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
-+	if (--starget->reap_ref == 0) {
- 		empty = 1;
- 		starget->state = STARGET_DEL;
- 	}
-Index: usb-2.6/drivers/scsi/scsi_sysfs.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
-+++ usb-2.6/drivers/scsi/scsi_sysfs.c
-@@ -305,7 +305,6 @@ static void scsi_device_dev_release_user
- 	transport_destroy_device(&sdev->sdev_gendev);
- 
- 	spin_lock_irqsave(sdev->host->host_lock, flags);
--	starget->reap_ref++;
- 	list_del(&sdev->siblings);
- 	list_del(&sdev->same_target_siblings);
- 	list_del(&sdev->starved_entry);
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
