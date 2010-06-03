@@ -1,56 +1,50 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Question / Request about timeouts of SATA harddisks
-Date: Thu, 03 Jun 2010 08:32:45 +0200
-Message-ID: <4C074C8D.509@stud.tu-ilmenau.de>
-Reply-To: st0ff@npl.de
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] scsi: fix scsi_get_lba helper function for pc command
+Date: Thu, 3 Jun 2010 19:59:06 +0900
+Message-ID: <20100603195838F.fujita.tomonori@lab.ntt.co.jp>
+References: <4C061C41.2010104@panasas.com>
+	<20100602180515J.fujita.tomonori@lab.ntt.co.jp>
+	<yq1bpbtbmr4.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wega.rz.tu-ilmenau.de ([141.24.4.159]:33257 "EHLO
-	wega.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751Ab0FCGlo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2010 02:41:44 -0400
-Received: from [192.168.178.35] (erft-4db7cd7b.pool.mediaWays.net [77.183.205.123])
-	(authenticated bits=0)
-	by wega.rz.tu-ilmenau.de (8.12.11/8.12.11/Debian-3) with ESMTP id o536YSJT006108
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 3 Jun 2010 08:34:29 +0200
+Received: from sh.osrg.net ([192.16.179.4]:37061 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751337Ab0FCK7b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jun 2010 06:59:31 -0400
+In-Reply-To: <yq1bpbtbmr4.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, James.Bottomley@suse.de, jaxboe@fusionio.com, linux-scsi@vger.kernel.org, Sathya.Prakash@lsi.com
 
-Dear list,
+On Wed, 02 Jun 2010 09:13:51 -0400
+"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
 
-concerning RAIDs with Desktop class drives it'd be good to know if there
-is any kernel-timeout-value which states, how long a diskdrive may take
-to process a command.  If it doesn't respond in-time I've seen in my
-logs and with many disks that the sg-eh becomes active resetting the
-bus.  So somewhere there needs to be such a timeout.
+> >>>>> "Tomo" == FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> writes:
+> 
+> >> scsi LLDs can be pass-through for disks, as well as lots of other
+> >> type of devices. They should not assume the role of a disk. The use
+> >> of blk_rq_pos() at LLDs is probably wrong in the first place. Unless
+> >> it is some kind of scsi emulation driver like scsi_debug.
+> 
+> Tomo> Not only scsi_debug. Have you seen how scsi_get_lba() is used?
+> Tomo> LLDs sometime needs to know lba in scsi commands.
+> 
+> scsi_get_lba() is used by DIX/DIF-aware HBA drivers to get the first LBA
+> for use in reference tag verification/preparation.
+> 
+> This code path is only executed by the drivers if the command protection
+> mode is > SCSI_PROT_NORMAL which can only be true for a READ/WRITE
+> command.  I don't see any drivers using it for other purposes.
 
-The question is: can this timeout-value be found somewhere in the sysfs?
- If "yes" where?  If "no", can it be exported?
+Yeah, however, seems that there are several drivers that get lba and
+sector info from cdb.
 
-Suggestions for the maximum of this timeout-value:
-I've read in multiple places that the internal error correction of
-desktop-class drives can even take more than 2 minutes to complete.  But
-another much bigger value can be taken directly out of the
-IDENTIFY_DEVICE_STRUCTURE, word 89, which states how long a
-SECURITY_ERASE_UNIT command takes approximately (in minutes-see
-ATA8-ACS, table 32 for the exact meaning of the value).  A in some cases
-even longer time can be found in word 90 (time estimate for enhanced
-security erase unit, table 33).
+Some does it for something like statistics, debug printk, etc.
 
-I know for sure that this command should not be issued from linux - at
-least not at this state of libata.  I've done it twice on two different
-Samsung HD103UJ drives to "securely erase customer data".  While
-executing the command libata made the PassThru command fail within a
-minute and according to syslog it unsuccessfully tried to reset the
-drive.  The results were (after letting the drives run for about the
-indicated 3 hours): one drive broke completely, it was never again
-recognized on any computer, the other drive was recognized though, but
-did not operate properly anymore.
+Some does it to build hardware descriptor (e.g. 3w, megaraid, several
+drivers in usb/storage/, etc).
 
-Any comments and hints are very welcome.  All the best,
-Stefan
+So it would be useful to have scsi_get_lba() that always works, I think.
