@@ -1,25 +1,19 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
+From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Thu, 03 Jun 2010 16:46:58 +0400
-Message-ID: <4C07A442.1030502@vlnb.net>
+Date: Thu, 03 Jun 2010 16:06:49 +0300
+Message-ID: <4C07A8E9.30608@panasas.com>
 References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>	 <yq1iq64kv9f.fsf@sermon.lab.mkp.net>	 <1275318102.2823.47.camel@mulgrave.site> <4C03D5FD.3000202@panasas.com>	 <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com> <1275398876.21962.6.camel@mulgrave.site> <4C078FE2.9000804@vlnb.net> <4C079B07.5020303@panasas.com> <4C07A2EB.4080006@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:62633 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753038Ab0FCMqg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2010 08:46:36 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <4C07A2EB.4080006@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
 Cc: James Bottomley <James.Bottomley@suse.de>, Christof Schmitt <christof.schmitt@de.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>, Gennadiy Nerubayev <parakie@gmail.com>
+List-Id: linux-scsi@vger.kernel.org
 
-
-
-Vladislav Bolkhovitin, on 06/03/2010 04:41 PM wrote:
+On 06/03/2010 03:41 PM, Vladislav Bolkhovitin wrote:
 > Boaz Harrosh, on 06/03/2010 04:07 PM wrote:
 >> On 06/03/2010 02:20 PM, Vladislav Bolkhovitin wrote:
 >>> There's one interesting problem here, at least theoretically, with SCSI 
@@ -36,6 +30,7 @@ Vladislav Bolkhovitin, on 06/03/2010 04:41 PM wrote:
 >>> permanent storage *AFTER* the retry request, hence the data changes it's 
 >>> carrying would be lost, hence welcome data corruption.
 >>>
+>>
 >> I might be totally wrong here but I think NCQ can reorder sectors but
 >> not writes. That is if the sector is cached in device memory and a later
 >> write comes to modify the same sector then the original should be
@@ -55,6 +50,13 @@ Vladislav Bolkhovitin, on 06/03/2010 04:41 PM wrote:
 > QUEUE ALGORITHM MODIFIER bits, nor takes care to send commands with 
 > order dependencies (overlapping writes in our case) over a single MPIO path.
 > 
+
+OK I take your word for it. But that sounds stupid to me. I would think
+that sectors can be ordered. not commands per se. What happen with reads
+then? do they get to be ordered? I mean a read in between the two writes which
+value is read? It gets so complicated that only a sector model makes sense
+to me.
+
 >> Please note that page-to-sector is not necessary constant. And the same page
 >> might get written at a different sector, next time. But FSs will have to
 >> barrier in this case.
@@ -81,6 +83,7 @@ Vladislav Bolkhovitin, on 06/03/2010 04:41 PM wrote:
 >>> overlapping writes on the same block(s) and DRBD can't figure out which 
 >>> one to store. This is possible only if the initiator sent the second 
 >>> write request before the first one completed.
+>>
 >> It is totally possible in today's code.
 >>
 >> DRBD should store the original command_sn of the write and discard
@@ -91,13 +94,30 @@ Vladislav Bolkhovitin, on 06/03/2010 04:41 PM wrote:
 > paths to the device, so at the moment of the sending all the order 
 > information was lost.
 > 
+
+I'm not hard on the specifics here. But I think the initiator has set
+the same SN on the two paths, or has incremented them between paths.
+You said:
+
+> The initiator uses them as a single multipath device in an active-active
+> round-robin load-balancing configuration, i.e. sends requests to both nodes
+> in paralle.
+
+So what was the SN sent to each side. Is there a relationship between them
+or they each advance independently?
+
+If there is a relationship then the targets on two sides should store
+the SN for later comparison. (Life is hard)
+
 > Until SCSI generally allowed to preserve ordering information between 
 > MPIO paths in such configurations the only way to maintain commands 
 > order would be queue draining. Hence, for safety all initiators working 
 > with such devices must do it.
 > 
 > But looks like Linux doesn't do it, so unsafe with MPIO clusters?
+> 
+> Vlad
+> 
 
-I meant load balancing MPIO clusters.
-
-Vlad
+Thanks
+Boaz
