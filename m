@@ -1,39 +1,41 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 5/5] cciss: change pad value from 32 to 0
-Date: Fri, 4 Jun 2010 15:16:58 -0500
-Message-ID: <20100604201658.GE30870@beardog.cce.hp.com>
+From: Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: cxgb4i_v4 submission
+Date: Sat,  5 Jun 2010 04:28:44 +0530
+Message-ID: <1275692327-21502-1-git-send-email-rakesh@chelsio.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@kernel.dk>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, dab@hp.com, scameron@beardog.cce.hp.com, gerry.morong@hp.com, mike.miller@hp.com, scott.benesh@hp.com, scott.stacy.teel@hp.com, tom.lawler@hp.com, mikem@beardog.cce.hp.com
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCKnrzee6GxD2iqbgBBoEDjjmJQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
+	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: LK-NetDev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LK-SCSIDev <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LK-iSCSIDev <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Anish Bhatt <anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Patch 5 of 5
-cciss: change padding from 32 to 0 since it has the same effect
-Change the command padding on 32-bit systems to 0 since setting it to 32 has
-the identical effect.
+The following 3 patches add a new iscsi LLD driver cxgb4i to enable iscsi offload
+support on Chelsio's new 1G and 10G cards. This is updated version of previous cxgb4i
+patch. Please share you commnets after review.
 
-From: Mike Miller <mike.miller@hp.com>
+Changes since cxgb4i_v3.1
+1. Fixed issues reported by mike.
+2. Made libcxgbi more generic.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-Cc: Stephen M. Cameron <scameron@beardog.cce.hp.com>, iss_storagedev@hp.com
----
- drivers/block/cciss_cmd.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+[PATCH 1/3] cxgb4i_v4: add build support
+[PATCH 2/3] cxgb4i_v4: libcxgbi library for handling common part in cxgb4i/cxgb3i
+[PATCH 3/3] cxgb4i_v4: main driver files
 
-diff --git a/drivers/block/cciss_cmd.h b/drivers/block/cciss_cmd.h
-index eda6a8e..936b966 100644
---- a/drivers/block/cciss_cmd.h
-+++ b/drivers/block/cciss_cmd.h
-@@ -177,7 +177,7 @@ typedef struct _SGDescriptor_struct {
- #define COMMANDLIST_ALIGNMENT (32)
- #define IS_64_BIT ((sizeof(long) - 4)/4)
- #define IS_32_BIT (!IS_64_BIT)
--#define PAD_32 (32)
-+#define PAD_32 (0)
- #define PAD_64 (4)
- #define PADSIZE (IS_32_BIT * PAD_32 + IS_64_BIT * PAD_64)
- #define DIRECT_LOOKUP_BIT 0x10
+Regards
+Rakesh Ranjan
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
