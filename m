@@ -1,36 +1,48 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Thu, 03 Jun 2010 21:34:18 -0400
-Message-ID: <yq139x3y411.fsf@sermon.lab.mkp.net>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
-	<yq1iq64kv9f.fsf@sermon.lab.mkp.net>
-	<20100531144648.GA19068@schmichrtp.mainz.de.ibm.com>
-	<yq11vcqlwp8.fsf@sermon.lab.mkp.net>
-	<20100602133748.GA11196@schmichrtp.mainz.de.ibm.com>
-	<20100602232039.GA8287@dastard>
+Date: Thu, 03 Jun 2010 21:46:02 -0400
+Message-ID: <yq1y6evwox1.fsf@sermon.lab.mkp.net>
+References: <20100601162929.GC32708@parisc-linux.org>
+	<20100601164750.GQ8980@think>
+	<1275411293.21962.387.camel@mulgrave.site>
+	<20100601180905.GR8980@think> <20100601184649.GE9453@laptop>
+	<20100601193528.GV8980@think> <20100602032030.GF9453@laptop>
+	<yq17hmhbmkb.fsf@sermon.lab.mkp.net> <20100602134121.GD6152@laptop>
+	<20100603154634.GC8980@think> <20100603162718.GR6822@laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:22408 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757024Ab0FDBfa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2010 21:35:30 -0400
-In-Reply-To: <20100602232039.GA8287@dastard> (Dave Chinner's message of "Thu,
-	3 Jun 2010 09:20:39 +1000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100603162718.GR6822@laptop> (Nick Piggin's message of "Fri, 4
+	Jun 2010 02:27:18 +1000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nick Piggin <npiggin@suse.de>
+Cc: Chris Mason <chris.mason@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Matthew Wilcox <matthew@wil.cx>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
->>>>> "Dave" == Dave Chinner <david@fromorbit.com> writes:
+>>>>> "Nick" == Nick Piggin <npiggin@suse.de> writes:
 
-Dave> If you are running DIF hardware, then XFS is only OK for direct
-Dave> IO.  XFS will still get torn writes if you are overwriting
-Dave> buffered data (either by write() or mmap()) because there are no
-Dave> interlocks to prevent cached pages under writeback from being
-Dave> modified while DMA is being performed.....
+Nick> Also I don't think we can deal with memory errors and scribbles
+Nick> just by crcing dirty data. The calculations generating the data
+Nick> could get corrupted.
 
-Didn't you use to wait_on_page_writeback() in page_mkwrite()?
+Yep, the goal is to make the window as small as possible.
+
+
+Nick> Data can be corrupted on its way back from the device to
+Nick> userspace.
+
+We also get a CRC back from the storage.  So the (integrity-aware)
+application is also able to check on read.
+
+
+Nick> Obviously this feature is being pushed by databases and such that
+Nick> really want to pass checksums all the way from userspace. Block
+Nick> retrying is _not_ needed or wanted here of course.
+
+Nope.  The integrity error is bubbled all the way up to the database and
+we can decide to retry, recreate or error out depending on what we find
+when we do validation checks on the data buffer and the integrity
+metadata.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
