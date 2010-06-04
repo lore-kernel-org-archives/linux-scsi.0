@@ -1,54 +1,58 @@
-From: Dave Chinner <david@fromorbit.com>
+From: Nick Piggin <npiggin@suse.de>
 Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Fri, 4 Jun 2010 12:32:53 +1000
-Message-ID: <20100604023253.GF19651@dastard>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
- <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
- <20100531144648.GA19068@schmichrtp.mainz.de.ibm.com>
- <yq11vcqlwp8.fsf@sermon.lab.mkp.net>
- <20100602133748.GA11196@schmichrtp.mainz.de.ibm.com>
- <20100602232039.GA8287@dastard>
- <yq139x3y411.fsf@sermon.lab.mkp.net>
+Date: Fri, 4 Jun 2010 13:09:43 +1000
+Message-ID: <20100604030943.GA26335@laptop>
+References: <1275411293.21962.387.camel@mulgrave.site>
+ <20100601180905.GR8980@think>
+ <20100601184649.GE9453@laptop>
+ <20100601193528.GV8980@think>
+ <20100602032030.GF9453@laptop>
+ <yq17hmhbmkb.fsf@sermon.lab.mkp.net>
+ <20100602134121.GD6152@laptop>
+ <20100603154634.GC8980@think>
+ <20100603162718.GR6822@laptop>
+ <yq1y6evwox1.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bld-mail18.adl2.internode.on.net ([150.101.137.103]:47706 "EHLO
-	mail.internode.on.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757007Ab0FDCdM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2010 22:33:12 -0400
+Received: from cantor.suse.de ([195.135.220.2]:38152 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932161Ab0FDDJs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jun 2010 23:09:48 -0400
 Content-Disposition: inline
-In-Reply-To: <yq139x3y411.fsf@sermon.lab.mkp.net>
+In-Reply-To: <yq1y6evwox1.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Matthew Wilcox <matthew@wil.cx>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, Jun 03, 2010 at 09:34:18PM -0400, Martin K. Petersen wrote:
-> >>>>> "Dave" == Dave Chinner <david@fromorbit.com> writes:
+On Thu, Jun 03, 2010 at 09:46:02PM -0400, Martin K. Petersen wrote:
+> >>>>> "Nick" == Nick Piggin <npiggin@suse.de> writes:
 > 
-> Dave> If you are running DIF hardware, then XFS is only OK for direct
-> Dave> IO.  XFS will still get torn writes if you are overwriting
-> Dave> buffered data (either by write() or mmap()) because there are no
-> Dave> interlocks to prevent cached pages under writeback from being
-> Dave> modified while DMA is being performed.....
+> Nick> Also I don't think we can deal with memory errors and scribbles
+> Nick> just by crcing dirty data. The calculations generating the data
+> Nick> could get corrupted.
 > 
-> Didn't you use to wait_on_page_writeback() in page_mkwrite()?
+> Yep, the goal is to make the window as small as possible.
+> 
+> 
+> Nick> Data can be corrupted on its way back from the device to
+> Nick> userspace.
+> 
+> We also get a CRC back from the storage.  So the (integrity-aware)
+> application is also able to check on read.
 
-The generic implementation of ->page_mkwrite  (block_page_mkwrite())
-which XFS uses has never had a wait_on_page_writeback() call in it.
-There's no call in the generic write paths, either, hence my comment
-that only direct IO on XFS will work.
-
-It should be noted that metadata updates in XFS are already
-protected against torn writes - buffers are held locked during IO,
-and can only be modified while holding the lock. Hence the only
-problem that needs solving for XFS to make full use of DIF/DIX is
-getting the page cache paths to not modify pages under IO...
+Well that's nice :)
 
 
-Cheers,
+> Nick> Obviously this feature is being pushed by databases and such that
+> Nick> really want to pass checksums all the way from userspace. Block
+> Nick> retrying is _not_ needed or wanted here of course.
+> 
+> Nope.  The integrity error is bubbled all the way up to the database and
+> we can decide to retry, recreate or error out depending on what we find
+> when we do validation checks on the data buffer and the integrity
+> metadata.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+By block retrying, I just meant the bounce / re-checksum approach.
+
