@@ -1,58 +1,41 @@
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Fri, 4 Jun 2010 13:09:43 +1000
-Message-ID: <20100604030943.GA26335@laptop>
-References: <1275411293.21962.387.camel@mulgrave.site>
- <20100601180905.GR8980@think>
- <20100601184649.GE9453@laptop>
- <20100601193528.GV8980@think>
- <20100602032030.GF9453@laptop>
- <yq17hmhbmkb.fsf@sermon.lab.mkp.net>
- <20100602134121.GD6152@laptop>
- <20100603154634.GC8980@think>
- <20100603162718.GR6822@laptop>
- <yq1y6evwox1.fsf@sermon.lab.mkp.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/2] [tgt]: Add proper STGT LUN backstore passthrough
+ support
+Date: Fri, 4 Jun 2010 17:39:19 +0900
+Message-ID: <20100604173848Q.fujita.tomonori@lab.ntt.co.jp>
+References: <1275382245-17668-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:38152 "EHLO mx1.suse.de"
+Received: from sh.osrg.net ([192.16.179.4]:38871 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932161Ab0FDDJs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jun 2010 23:09:48 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1y6evwox1.fsf@sermon.lab.mkp.net>
+	id S1754431Ab0FDIjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jun 2010 04:39:47 -0400
+In-Reply-To: <1275382245-17668-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Matthew Wilcox <matthew@wil.cx>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: stgt@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, bharrosh@panasas.com, James.Bottomley@suse.de, dgilbert@interlog.com
 
-On Thu, Jun 03, 2010 at 09:46:02PM -0400, Martin K. Petersen wrote:
-> >>>>> "Nick" == Nick Piggin <npiggin@suse.de> writes:
-> 
-> Nick> Also I don't think we can deal with memory errors and scribbles
-> Nick> just by crcing dirty data. The calculations generating the data
-> Nick> could get corrupted.
-> 
-> Yep, the goal is to make the window as small as possible.
-> 
-> 
-> Nick> Data can be corrupted on its way back from the device to
-> Nick> userspace.
-> 
-> We also get a CRC back from the storage.  So the (integrity-aware)
-> application is also able to check on read.
+On Tue,  1 Jun 2010 01:50:45 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-Well that's nice :)
+> This patch adds two new queueing and completion function pointers to
+> struct scsi_lu called ->cmd_perform() and ->cmd_done() for handling
+> existing internal STGT port emulation and the struct scsi_cmd
+
+Using new function pointers look fine. However, have you tried the
+existing non passthrough code? This patch seems to break it. I've not
+looked at the details though.
+
+I don't think you need to touch to sbc.c. we should not need to know
+the type of underlying devices with passthough. Can you add a new
+device type such as struct device_type_template sg_template?
+
+__cmd_done_passthrough() doesn't need to call post_cmd_done(), I
+think because post_cmd_done() checks the pending commands. With
+passthrough, there is no pending commands.
 
 
-> Nick> Obviously this feature is being pushed by databases and such that
-> Nick> really want to pass checksums all the way from userspace. Block
-> Nick> retrying is _not_ needed or wanted here of course.
-> 
-> Nope.  The integrity error is bubbled all the way up to the database and
-> we can decide to retry, recreate or error out depending on what we find
-> when we do validation checks on the data buffer and the integrity
-> metadata.
-
-By block retrying, I just meant the bounce / re-checksum approach.
-
+Thanks,
