@@ -1,58 +1,62 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Fri, 4 Jun 2010 17:32:10 +0200
-Message-ID: <20100604153210.GE3414@quack.suse.cz>
-References: <20100601164750.GQ8980@think>
- <1275411293.21962.387.camel@mulgrave.site>
- <20100601180905.GR8980@think>
- <20100601184649.GE9453@laptop>
- <20100601193528.GV8980@think>
- <20100602032030.GF9453@laptop>
- <yq17hmhbmkb.fsf@sermon.lab.mkp.net>
- <20100602134121.GD6152@laptop>
- <20100603154634.GC8980@think>
- <20100604020243.GE19651@dastard>
+From: Dan Christensen <jdc@uwo.ca>
+Subject: Re: Question / Request about timeouts of SATA harddisks
+Date: Fri, 04 Jun 2010 12:06:36 -0400
+Message-ID: <87vd9ylr3n.fsf@uwo.ca>
+References: <4C074C8D.509@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100604020243.GE19651@dastard>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Mason <chris.mason@oracle.com>, Nick Piggin <npiggin@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Matthew Wilcox <matthew@wil.cx>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from lo.gmane.org ([80.91.229.12]:54739 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751897Ab0FDQKG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Jun 2010 12:10:06 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1OKZT9-0007B8-UB
+	for linux-scsi@vger.kernel.org; Fri, 04 Jun 2010 18:10:03 +0200
+Received: from bas3-london14-1096780455.dsl.bell.ca ([65.95.138.167])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Jun 2010 18:10:03 +0200
+Received: from jdc by bas3-london14-1096780455.dsl.bell.ca with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Jun 2010 18:10:03 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri 04-06-10 12:02:43, Dave Chinner wrote:
-> On Thu, Jun 03, 2010 at 11:46:34AM -0400, Chris Mason wrote:
-> > On Wed, Jun 02, 2010 at 11:41:21PM +1000, Nick Piggin wrote:
-> > > Closing the while it is dirty, while it is being written back window
-> > > still leaves a pretty big window. Also, how do you handle mmap writes?
-> > > Write protect and checksum the destination page after every store? Or
-> > > leave some window between when the pagecache is dirtied and when it is
-> > > written back? So I don't know whether it's worth putting a lot of effort
-> > > into this case.
-> > 
-> > So, changing gears to how do we protect filesystem page cache pages
-> > instead of the generic idea of dif/dix, btrfs crcs just before writing,
-> > which does leave a pretty big window for the page to get corrupted.
-> > The storage layer shouldn't care or know about that though, we hand it a
-> > crc and it makes sure data matching that crc goes to the media.
-> 
-> I think the only way to get accurate CRCs is to stop modifications
-> from occurring while the page is under writeback. i.e. when a page
-> transitions from dirty to writeback we need to unmap any writable
-> mappings on the page, and then any new modifications (either by the
-> write() path or through ->fault) need to block waiting for
-> page writeback to complete before they can proceed...
-  Actually, we already write-protect the page in clear_page_dirty_for_io
-so the first part already happens. Any filesystem can do
-wait_on_page_writeback() in its ->page_mkwrite function so even the second
-part shouldn't be hard. I'm just a bit worried about the performance
-implications / hidden deadlocks...
-  Also we'd have to wait_on_page_writeback() in ->write_begin function to
-protect against ordinary writes  but that's the easy part...
+"Stefan /*St0fF*/ H=C3=BCbner" <stefan.huebner@stud.tu-ilmenau.de> writ=
+es:
 
-									Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+> concerning RAIDs with Desktop class drives it'd be good to know if th=
+ere
+> is any kernel-timeout-value which states, how long a diskdrive may ta=
+ke
+> to process a command.  If it doesn't respond in-time I've seen in my
+> logs and with many disks that the sg-eh becomes active resetting the
+> bus.  So somewhere there needs to be such a timeout.
+>
+> The question is: can this timeout-value be found somewhere in the sys=
+fs?
+>  If "yes" where?  If "no", can it be exported?
+
+I'd like to second this request, as I have two drives in a raid 5 array
+that occasionally (once every month or two) suffer from a timeout, whic=
+h
+causes them to be kicked from the raid array.  SMART tests show no
+problems, so it would be convenient if I could increase the timeouts.
+
+(More details about my set-up are in this thread on the linux-raid list=
+:
+
+  http://marc.info/?l=3Dlinux-raid&m=3D127548808104494&w=3D2
+)
+
+Dan
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
