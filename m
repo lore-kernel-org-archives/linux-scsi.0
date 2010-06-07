@@ -1,383 +1,140 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] [tgt]: Convert bs_sg to use BSG v4 interface
-Date: Mon,  7 Jun 2010 03:52:06 -0700
-Message-ID: <1275907926-9494-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike
-Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Subject: Re: [PATCH 3/3] [tgt]: Add BSG v4 backstore support to usr/bs_sg.c
+Date: Mon, 07 Jun 2010 04:07:08 -0700
+Message-ID: <1275908828.26888.90.camel@haakon2.linux-iscsi.org>
+References: <1275882640-5418-1-git-send-email-nab@linux-iscsi.org>
+	 <4C0CB071.8040805@panasas.com>
+	 <1275901324.26888.56.camel@haakon2.linux-iscsi.org>
+	 <4C0CBB89.9000209@panasas.com>
+	 <1275903449.26888.69.camel@haakon2.linux-iscsi.org>
+	 <4C0CCB69.6020506@panasas.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:34260 "HELO
+	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752506Ab0FGLHL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2010 07:07:11 -0400
+In-Reply-To: <4C0CCB69.6020506@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Mon, 2010-06-07 at 13:35 +0300, Boaz Harrosh wrote:
+> On 06/07/2010 12:37 PM, Nicholas A. Bellinger wrote:
+> > On Mon, 2010-06-07 at 12:27 +0300, Boaz Harrosh wrote:
+> >> On 06/07/2010 12:02 PM, Nicholas A. Bellinger wrote:
+> >>> On Mon, 2010-06-07 at 11:40 +0300, Boaz Harrosh wrote:
+> >>>> On 06/07/2010 06:50 AM, Nicholas A. Bellinger wrote:
+> >>>>> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> >>>>>
+> >>>>> This patch adds initial support for the block layer implementation of the sg v4 interface
+> >>>>> (BSG) -> STGT with a new struct backingstore_template bsg_bst sharing code with the
+> >>>>> original sg_bst.  It adds for new function bs_bsg_cmd_submit() for incoming write I/O
+> >>>>> and bs_bsg_cmd_complete() for polling read I/O using include/linux/bsg.h:struct sg_io_v4.
+> >>>>>
+> >>>>> This patch also splits up bs_sg_open() to support both BSG and SG looking for the
+> >>>>> path "/dev/bsg" in bs_sg_open(), and getting max_queue using SG_GET_COMMAND_Q and
+> >>>>> calling SG_SET_RESERVED_SIZE (following the original bs_sg code in init_sg_device)
+> >>>>>
+> >>>>> Also chk_bsg_device() currently using a hardcoded 254 major as def for BSG does not
+> >>>>> appear in include/linux/major.h just yet..
+> >>>>>
+> >>>>> So far this has been tested with STGT/iSCSI <-> BSG <-> TCM_Loop SPC-4 iSCSI Target
+> >>>>> Port emulation and is able to mkfs, fsck and mount a filesystem from a TCM/IBLOCK
+> >>>>> Linux LVM kernel level backstore
+> >>>>>
+> >>>>> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> >>>>> ---
+> >>>>>  usr/bs_sg.c     |  178 +++++++++++++++++++++++++++++++++++++++++++++++++++---
+> >>>>>  usr/scsi_cmnd.h |    7 ++
+> >>>>>  2 files changed, 175 insertions(+), 10 deletions(-)
+> >>>>>
+> >>>>> diff --git a/usr/bs_sg.c b/usr/bs_sg.c
+> >>>>> index 23676ef..d071714 100644
+> >>>>> --- a/usr/bs_sg.c
+> >>>>> +++ b/usr/bs_sg.c
+> >>>
+> >>> <SNIP>
+> >>>
+> >>>>> +
+> >>>>> +static int bs_bsg_cmd_submit(struct scsi_cmd *cmd)
+> >>>>> +{
+> >>>>> +	struct scsi_lu *dev = cmd->dev;
+> >>>>> +	int fd = dev->fd;
+> >>>>> +	struct sg_io_v4 *io_hdr = &cmd->cmd_bsg_hdr;
+> >>>>> +	int err = 0;
+> >>>>> +	/*
+> >>>>> +	 * Following linux/include/linux/bsg.h
+> >>>>> +	 */
+> >>>>> +	/* [i] 'Q' to differentiate from v3 */
+> >>>>> +	io_hdr->guard = 'Q';
+> >>>>> +	io_hdr->protocol = BSG_PROTOCOL_SCSI;
+> >>>>> +	io_hdr->subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD;
+> >>>>> +	io_hdr->request_len = cmd->scb_len;
+> >>>>> +	io_hdr->request = (unsigned long )cmd->scb;
+> >>>>> +
+> >>>>> +	if (scsi_get_data_dir(cmd) == DATA_WRITE) {
+> >>>>
+> >>>> Why the if? both sides are fully bidi just remove the ifs
+> >>>> and: OUT <= OUT, IN <= IN
+> >>>>
+> >>>
+> >>> Whoops, thanks for pointing this one out (again).  Tested with
+> >>> unidirection commands and included into my local tgt.git/pass that I
+> >>> will send along to Tomo-san..
+> >>>
+> >>> Btw, I still need to sort out BIDI support for TCM_Loop at some point in
+> >>> the not too distant future.  What would be a good way to generate BIDI
+> >>> traffic into STGT or a local SCSI LLD..?
+> >>
+> >> scsi_debug has some emulation for XOR commands, does that help?
+> >>
+> > 
+> > Great, thanks for the pointer on the LLD side.  Is there any userspace
+> > code around that will generate XDWRITEREAD_* CDBs for bulk I/O or do I
+> > need to code this part myself..?
+> > 
+> > Best,
+> > 
+> > --nab
+> > 
+> 
+> You could use iscsi as LLD and generate OSD heavy traffic. (With a real osd_tgtd
+> on the end side). But that will need more work, right?
 
-This patch adds initial support for the block layer implementation of the sg v4 interface
-(BSG) -> STGT with a new struct backingstore_template bsg_bst sharing code with the
-original sg_bst.  It adds for new function bs_bsg_cmd_submit() for incoming write I/O
-and bs_bsg_cmd_complete() for polling read I/O using include/linux/bsg.h:struct sg_io_v4.
+Hmmm, suppose I need to read up a bit on how to generate osd_tgtd
+traffic..
 
-This patch also removes the legacy SG_IO functions and struct backingstore_template sg_bst
-at Tomo-san's request.  Also chk_bsg_device() is still using a hardcoded 254 major value
-for BSG as does not appear in include/linux/major.h.
+>  what does the TCM_Loop
+> do exactly. Please forgive my laziness, I never took the time to find out.
+> 
 
-So far this has been tested with STGT/iSCSI <-> BSG <-> TCM_Loop SPC-4 iSCSI Target
-Port emulation and is able to mkfs, fsck and mount a filesystem from a TCM/IBLOCK
-Linux LVM kernel level backstore
+TCM_Loop is a TCM fabric module that appears under /sys/kernel/config/target/loopback/
+that emulates SAS, FC and iSCSI WWPN Ports and their assocated I_T Nexus
+for SPC-4 PR and ALUA operations.  TCM_Loop registers as a Linux/SCSI
+LLD (a la scsi_debug) that presents TCM backstores (IBLOCK, FILEIO,
+RAMDISK) as a local struct scsi_device with a complete set of WWN port
+naming identifiers (sg_inq -i) and TransportIDs (for PR).
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- usr/bs_sg.c     |  174 +++++++++++++++++++++++++++++++++---------------------
- usr/scsi_cmnd.h |    7 ++
- 2 files changed, 113 insertions(+), 68 deletions(-)
+With TCM v4 code in lio-core-2.6.git/lio-4.0, TCM_Loop has been
+converted along with the rest of the v4.x fabric modules to use a
+generic set of struct config_group logic from
+drivers/target/target_core_fabric_configfs.c.  There is a bit of
+information on the wiki at:
 
-diff --git a/usr/bs_sg.c b/usr/bs_sg.c
-index f01a3ef..5e6580c 100644
---- a/usr/bs_sg.c
-+++ b/usr/bs_sg.c
-@@ -3,6 +3,9 @@
-  *
-  * Copyright (C) 2008 Alexander Nezhinsky <nezhinsky@gmail.com>
-  *
-+ * Converted to linux/block/bsg.c support using struct sg_io_v4.
-+ * Copyright (C) 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
-+ *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License as
-  * published by the Free Software Foundation, version 2 of the
-@@ -33,6 +36,7 @@
- #include <sys/stat.h>
- #include <sys/epoll.h>
- #include <scsi/sg.h>
-+#include <linux/bsg.h>
- 
- #include "list.h"
- #include "util.h"
-@@ -45,6 +49,14 @@
- #define BS_SG_TIMEOUT	2000
- #define BS_SG_SHIFT	9
- 
-+//#define BSG_DEBUG_IO
-+
-+#ifdef BSG_DEBUG_IO
-+#define BSG_IO(x...) eprintf(x)
-+#else
-+#define BSG_IO(x...)
-+#endif
-+
- static int graceful_read(int fd, void *p_read, int to_read)
- {
- 	int err;
-@@ -85,7 +97,7 @@ static int graceful_write(int fd, void *p_write, int to_write)
- 	return 0;
- }
- 
--static int bs_sg_rw(int host_no, struct scsi_cmd *cmd)
-+static int bs_bsg_rw(int host_no, struct scsi_cmd *cmd)
- {
- 	int ret;
- 	unsigned char key = ILLEGAL_REQUEST;
-@@ -107,7 +119,7 @@ static int bs_sg_rw(int host_no, struct scsi_cmd *cmd)
- 	return SAM_STAT_CHECK_CONDITION;
- }
- 
--static void set_cmd_failed(struct scsi_cmd *cmd)
-+static int set_cmd_failed(struct scsi_cmd *cmd)
- {
- 	int result = SAM_STAT_CHECK_CONDITION;
- 	uint16_t asc = ASC_READ_ERROR;
-@@ -115,74 +127,91 @@ static void set_cmd_failed(struct scsi_cmd *cmd)
- 
- 	scsi_set_result(cmd, result);
- 	sense_data_build(cmd, key, asc);
-+
-+	return result;
- }
- 
--static int bs_sg_cmd_submit(struct scsi_cmd *cmd)
-+static int bs_bsg_cmd_submit(struct scsi_cmd *cmd)
- {
- 	struct scsi_lu *dev = cmd->dev;
- 	int fd = dev->fd;
--	struct sg_io_hdr io_hdr;
-+	struct sg_io_v4 *io_hdr = &cmd->cmd_bsg_hdr;
- 	int err = 0;
--
--	memset(&io_hdr, 0, sizeof(io_hdr));
--	io_hdr.interface_id = 'S';
--	io_hdr.cmd_len = cmd->scb_len;
--	io_hdr.cmdp = cmd->scb;
--
--	if (scsi_get_data_dir(cmd) == DATA_WRITE) {
--		io_hdr.dxfer_direction = SG_DXFER_TO_DEV;
--		io_hdr.dxfer_len = scsi_get_out_length(cmd);
--		io_hdr.dxferp = (void *)scsi_get_out_buffer(cmd);
--	} else {
--		io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
--		io_hdr.dxfer_len = scsi_get_in_length(cmd);
--		io_hdr.dxferp = (void *)scsi_get_in_buffer(cmd);
--	}
--	io_hdr.mx_sb_len = sizeof(cmd->sense_buffer);
--	io_hdr.sbp = cmd->sense_buffer;
--	io_hdr.timeout = BS_SG_TIMEOUT;
--	io_hdr.pack_id = -1;
--	io_hdr.usr_ptr = cmd;
--	io_hdr.flags |= SG_FLAG_DIRECT_IO;
--
--	err = graceful_write(fd, &io_hdr, sizeof(io_hdr));
-+	/*
-+	 * Following linux/include/linux/bsg.h
-+	 */
-+	/* [i] 'Q' to differentiate from v3 */
-+	io_hdr->guard = 'Q';
-+	io_hdr->protocol = BSG_PROTOCOL_SCSI;
-+	io_hdr->subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD;
-+	io_hdr->request_len = cmd->scb_len;
-+	io_hdr->request = (unsigned long )cmd->scb;
-+
-+	io_hdr->dout_xfer_len = scsi_get_out_length(cmd);
-+	io_hdr->dout_xferp = (unsigned long)scsi_get_out_buffer(cmd);
-+	io_hdr->din_xfer_len = scsi_get_in_length(cmd);
-+	io_hdr->din_xferp = (unsigned long)scsi_get_in_buffer(cmd);
-+
-+	io_hdr->max_response_len = sizeof(cmd->sense_buffer);
-+	/* SCSI: (auto)sense data */
-+	io_hdr->response = (unsigned long)cmd->sense_buffer;
-+	/* Using the same 2000 millisecond timeout.. */
-+	io_hdr->timeout = BS_SG_TIMEOUT;
-+	/* [i->o] unused internally */
-+	io_hdr->usr_ptr = (unsigned long)cmd;
-+	BSG_IO("[%d] Set io_hdr->usr_ptr from cmd: %p\n", getpid(), cmd);
-+	/* Bsg does Q_AT_HEAD by default */
-+	io_hdr->flags |= BSG_FLAG_Q_AT_TAIL;
-+
-+	BSG_IO("[%d] Calling graceful_write for CDB: 0x%02x\n", getpid(), cmd->scb[0]);
-+	err = graceful_write(fd, &cmd->cmd_bsg_hdr, sizeof(struct sg_io_v4));
- 	if (!err)
- 		set_cmd_async(cmd);
- 	else {
- 		eprintf("failed to start cmd 0x%p\n", cmd);
--		set_cmd_failed(cmd);
-+		return set_cmd_failed(cmd);
- 	}
-+
- 	return 0;
- }
- 
--static void bs_sg_cmd_complete(int fd, int events, void *data)
-+static void bs_bsg_cmd_complete(int fd, int events, void *data)
- {
--	struct sg_io_hdr io_hdr;
-+	struct sg_io_v4 io_hdr;
- 	struct scsi_cmd *cmd;
- 	int err;
- 
-+	BSG_IO("[%d] bs_bsg_cmd_complete() called!\n", getpid());
- 	memset(&io_hdr, 0, sizeof(io_hdr));
--	io_hdr.interface_id = 'S';
--	io_hdr.pack_id = -1;
-+	/* [i] 'Q' to differentiate from v3 */
-+	io_hdr.guard = 'Q';
- 
- 	err = graceful_read(fd, &io_hdr, sizeof(io_hdr));
- 	if (err)
- 		return;
- 
--	cmd = (struct scsi_cmd *)io_hdr.usr_ptr;
--	if (!io_hdr.status) {
--		scsi_set_out_resid(cmd, io_hdr.resid);
--		scsi_set_in_resid(cmd, io_hdr.resid);
-+	cmd = (struct scsi_cmd *)(unsigned long)io_hdr.usr_ptr;
-+	BSG_IO("BSG Using cmd: %p for io_hdr.usr_ptr\n", cmd);
-+	/*
-+	 * Check SCSI: command completion status
-+	 * */
-+	if (!io_hdr.device_status) {
-+		scsi_set_out_resid(cmd, io_hdr.dout_resid);
-+		scsi_set_in_resid(cmd, io_hdr.din_resid);
- 	} else {
--		cmd->sense_len = io_hdr.sb_len_wr;
-+		/*
-+		 * NAB: Used by linux/block/bsg.c:bsg_ioctl(), is this
-+		 * right..?
-+		 */
-+		cmd->sense_len = SCSI_SENSE_BUFFERSIZE;
- 		scsi_set_out_resid_by_actual(cmd, 0);
- 		scsi_set_in_resid_by_actual(cmd, 0);
- 	}
--
--	cmd->scsi_cmd_done(cmd, io_hdr.status);
-+	BSG_IO("[%d] BSG() Calling cmd->scsi_cmd_done()\n", getpid());
-+	cmd->scsi_cmd_done(cmd, io_hdr.device_status);
- }
- 
--static int chk_sg_device(char *path)
-+static int chk_bsg_device(char *path)
- {
- 	struct stat st;
- 
-@@ -191,21 +220,23 @@ static int chk_sg_device(char *path)
- 		return -1;
- 	}
- 
--	if (S_ISCHR(st.st_mode) && major(st.st_rdev) == SCSI_GENERIC_MAJOR)
-+	/* This is not yet defined in include/linux/major.h.. */
-+	if (S_ISCHR(st.st_mode) && major(st.st_rdev) == 254)
- 		return 0;
--	else
--		return -1;
-+
-+	return -1;
- }
- 
--static int init_sg_device(int fd)
-+static int init_bsg_device(int fd)
- {
- 	int t, err;
- 
--	err = ioctl(fd, SG_GET_VERSION_NUM, &t);
--	if ((err < 0) || (t < 30000)) {
--		eprintf("sg driver prior to 3.x\n");
-+	err = ioctl(fd, SG_GET_COMMAND_Q, &t);
-+	if (err < 0) {
-+		eprintf("SG_GET_COMMAND_Q for bsd failed: %d\n", err);
- 		return -1;
- 	}
-+	eprintf("bsg: Using max_queue: %d\n", t);
- 
- 	t = BS_SG_RESVD_SZ;
- 	err = ioctl(fd, SG_SET_RESERVED_SIZE, &t);
-@@ -217,7 +248,7 @@ static int init_sg_device(int fd)
- 	return 0;
- }
- 
--static int bs_sg_init(struct scsi_lu *lu)
-+static int bs_bsg_init(struct scsi_lu *lu)
- {
- 	/*
- 	 * Setup struct scsi_lu->cmd_perform() passthrough pointer
-@@ -233,11 +264,17 @@ static int bs_sg_init(struct scsi_lu *lu)
- 	return 0;
- }
- 
--static int bs_sg_open(struct scsi_lu *lu, char *path, int *fd, uint64_t *size)
-+static int bs_bsg_open(struct scsi_lu *lu, char *path, int *fd, uint64_t *size)
- {
-+	void (*cmd_complete)(int, int, void *) = NULL;
- 	int sg_fd, err;
- 
--	err = chk_sg_device(path);
-+	if (!(strstr(path, "/dev/bsg/"))) {
-+		eprintf("%s Not a valid BSG character device\n", path);
-+		return -EINVAL;
-+	}
-+
-+	err = chk_bsg_device(path);
- 	if (err) {
- 		eprintf("Not recognized %s as an SG device\n", path);
- 		return -EINVAL;
-@@ -249,13 +286,14 @@ static int bs_sg_open(struct scsi_lu *lu, char *path, int *fd, uint64_t *size)
- 		return sg_fd;
- 	}
- 
--	err = init_sg_device(sg_fd);
-+	cmd_complete = &bs_bsg_cmd_complete;
-+	err = init_bsg_device(sg_fd);
- 	if (err) {
- 		eprintf("Failed to initialize sg device %s\n", path);
- 		return err;
- 	}
- 
--	err = tgt_event_add(sg_fd, EPOLLIN, bs_sg_cmd_complete, NULL);
-+	err = tgt_event_add(sg_fd, EPOLLIN, cmd_complete, NULL);
- 	if (err) {
- 		eprintf("Failed to add sg device event %s\n", path);
- 		return err;
-@@ -266,17 +304,17 @@ static int bs_sg_open(struct scsi_lu *lu, char *path, int *fd, uint64_t *size)
- 	return 0;
- }
- 
--static void bs_sg_close(struct scsi_lu *lu)
-+static void bs_bsg_close(struct scsi_lu *lu)
- {
- 	close(lu->fd);
- }
- 
--static int bs_sg_cmd_done(struct scsi_cmd *cmd)
-+static int bs_bsg_cmd_done(struct scsi_cmd *cmd)
- {
- 	return 0;
- }
- 
--static int bs_sg_lu_init(struct scsi_lu *lu)
-+static int bs_bsg_lu_init(struct scsi_lu *lu)
- {
- 	if (spc_lu_init(lu))
- 		return TGTADM_NOMEM;
-@@ -284,28 +322,28 @@ static int bs_sg_lu_init(struct scsi_lu *lu)
- 	return 0;
- }
- 
--static struct backingstore_template sg_bst = {
--	.bs_name		= "sg",
-+static struct backingstore_template bsg_bst = {
-+	.bs_name		= "bsg",
- 	.bs_datasize		= 0,
--	.bs_init		= bs_sg_init,
--	.bs_open		= bs_sg_open,
--	.bs_close		= bs_sg_close,
--	.bs_cmd_submit		= bs_sg_cmd_submit,
--	.bs_cmd_done		= bs_sg_cmd_done,
-+	.bs_init		= bs_bsg_init,
-+	.bs_open		= bs_bsg_open,
-+	.bs_close		= bs_bsg_close,
-+	.bs_cmd_submit		= bs_bsg_cmd_submit,
-+	.bs_cmd_done		= bs_bsg_cmd_done,
- };
- 
--static struct device_type_template sg_template = {
-+static struct device_type_template bsg_template = {
- 	.type			= TYPE_PT,
--	.lu_init		= bs_sg_lu_init,
-+	.lu_init		= bs_bsg_lu_init,
- 	.lu_config		= spc_lu_config,
- 	.lu_online		= spc_lu_online,
- 	.lu_offline		= spc_lu_offline,
- 	.lu_exit		= spc_lu_exit,
--	.cmd_passthrough	= bs_sg_rw,
-+	.cmd_passthrough	= bs_bsg_rw,
- };
- 
--__attribute__((constructor)) static void bs_sg_constructor(void)
-+__attribute__((constructor)) static void bs_bsg_constructor(void)
- {
--	register_backingstore_template(&sg_bst);
--	device_type_register(&sg_template);
-+	register_backingstore_template(&bsg_bst);
-+	device_type_register(&bsg_template);
- }
-diff --git a/usr/scsi_cmnd.h b/usr/scsi_cmnd.h
-index 011f3e6..67a46c3 100644
---- a/usr/scsi_cmnd.h
-+++ b/usr/scsi_cmnd.h
-@@ -17,6 +17,9 @@ struct scsi_data_buffer {
- 	uint64_t buffer;
- };
- 
-+#include <scsi/sg.h>
-+#include <linux/bsg.h>
-+
- struct scsi_cmd {
- 	struct target *c_target;
- 	/* linked it_nexus->cmd_hash_list */
-@@ -31,6 +34,10 @@ struct scsi_cmd {
- 	enum data_direction data_dir;
- 	struct scsi_data_buffer in_sdb;
- 	struct scsi_data_buffer out_sdb;
-+	/* Used for bs_sg.c:bs_bs_cmd_submit() */
-+	struct sg_iovec cmd_sg_iovec;
-+	/* used for bs_sg.c:bs_bsg_cmd_submit() */
-+	struct sg_io_v4 cmd_bsg_hdr;
- 
- 	uint64_t cmd_itn_id;
- 	uint64_t offset;
--- 
-1.5.6.5
+http://linux-iscsi.org/index.php/TCM_loop
+
+but as you will notice the screenshots are still referencing the
+original tests from last year with VMware Workstation.  Things have
+changed quite a bit since then as TCM_Loop has gone from using internal
+SAS WWPN+Nexus emulation to providing multi-protocol support based on
+configfs provided WWPNs using the new generic naming handers from
+drivers/target/target_core_fabric_lib.c
+
+Best,
+
+--nab
+
