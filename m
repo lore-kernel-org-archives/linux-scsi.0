@@ -1,64 +1,58 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [LFS/VM TOPIC] Stable pages while IO (was Wrong DIF guard tag
- on ext2 write)
-Date: Mon, 7 Jun 2010 01:37:53 +0200
-Message-ID: <20100606233753.GC3302@quack.suse.cz>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
- <4C07D3D0.8010500@panasas.com>
- <20100604162332.GF3414@quack.suse.cz>
- <4C0B6BC7.8070803@panasas.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: ipr driver fails to build for 32-bit powerpc
+Date: Mon, 07 Jun 2010 01:51:21 +0100
+Message-ID: <1275871881.10677.81.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C0B6BC7.8070803@panasas.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Jan Kara <jack@suse.cz>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org, Nick Piggin <npiggin@suse.de>, Al Viro <viro@ZenIV.linux.org.uk>, Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ric Wheeler <rwheeler@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Christoph Hellwig <hch@lst.de>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-K5rl9O2mo4F+ICttGpOp"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52425 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753445Ab0FGAv0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jun 2010 20:51:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun 06-06-10 12:35:03, Boaz Harrosh wrote:
-> On 06/04/2010 07:23 PM, Jan Kara wrote:
-> > On Thu 03-06-10 19:09:52, Boaz Harrosh wrote:
-> >> [Topic]
-> >> How to not let pages change while in IO
-> >>
-> >> [Abstract]
-> >> As seen in a long thread on the fsdvel scsi mailing lists. Lots of
-> >> people have headaches and sleep less nights because individual pages
-> >> can change while in IO and/or DMA. Though each one as slightly different
-> >> needs, the mechanics look to be the same.
-> 
-> >   Hmm, I don't think it's really about "how to not let pages change" - that
-> > is doable by using wait_on_page_writeback() in ->page_mkwrite and
-> > ->write_begin. I think the discussion is more about whether we should do it
-> > or whether we should rechecksum and resubmit IO in case of checksum failure
-> > as Nick proposed...
-> > 
-> > 								Honza
-> 
-> I have hijacked the DIF threads but, No, my proposal is for a general
-> toolset that could be used for all the above as well as DIF if needed.
-> 
-> Surly even with DIF the keep-constant vs retransmit is a matter of
-> machine+link speed multiply by faulting work loads. So there might be
-> situations where an admin wants to choose.
-> 
-> With other none checksum fixtures, like RAID5/MIRROR this is not always
-> an option and it becomes keep-constant vs copy. (That is complete
-> workload copy). So for these setups the option is clear. No?
-  Is it? You can have enough CPU / memory bandwidth to do the copying while
-you need not be comfortable with a thread blocking until IO is finished
-when it tries to do a rewrite...
 
-> I'm glad that you think it is easy/doable to implement. And I'll surly
-> test your above receipt. Do you think it would be acceptable as a generic
-> per-sb tunable.  So for instance an ext3 over RAID5 could turn this on
-> and eliminate the data copy?
-  Yes, that would be useful. At least so that one can get real performance
-numbers...
+--=-K5rl9O2mo4F+ICttGpOp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-									Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+SCSI_IPR depends only on PCI && SCSI && ATA, but ipr.c now uses writeq()
+which is not defined for all architectures.  This is a regression from
+Linux 2.6.33.
+
+If the sis64 hardware can be driven using 32-bit MMIO then please define
+writeq() in terms of writel() where the writeq macro is not defined.
+Otherwise, please make the sis64 support conditional.
+
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-K5rl9O2mo4F+ICttGpOp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUATAxChOe/yOyVhhEJAQJnjg/+NiBAqlJVRE00GJLGf9FYefV65L5rNPxa
+yFz8K2BEBRPqdF2+7jZkgD1o6dAoz8uxG18JU6urWnHadBh1C48M+7V9BlG/Tw5l
+d0ipUPGC7/14fMvAhYDrBkznTjG0QtvP5Q+yPNmkfXqi0r0vs8xrq2y0SoOZzsBX
+HVKLnbt8i+gJuHS4ozUicI8ehWWN//tAFhPnT+wRKrWtM7dLLMc8z6D+I2+46DqZ
+peURkG+SVWkwmX35IuDZja+FdKwPcSpqRJ1Y4AqrUwf/jec7e8FvIZDVP+2r1lfd
+N9n5gVnXQdN+fMW8Ig6UI9LJpqztIbL0PgJgcy/eLZwpLuN9FElOK3ecdTFxDyNi
+iX977CRMtNOlXqHLbisEeamQ/Nkmy1AJNNHsClcH4r/H+g/hKQiPGeNHn0ihyIao
+fDPc04NboT+5RN7U+/loKD3XOVnoNPWXei0wzy9zWyRDPJz++ijCc36g2FzjEX3x
+zCHHQNgvxrBOU0OfTPHPp5XUCxUB75YAMjrp9FFfnfe2k2IAhn2qDhpQnHbhJClm
++bM/NH1VnIEC/A4774seQOYrtb5bDBjhS4jtDvHg8o0tztrO3FZ3YWhzDarf7Txv
+OWWhBLymIabztRlSqFDghozwmFxhYNxxrH7Lr9YQs97G06rZYzELoE4++59oC1l9
+AfwIXHSMXkQ=
+=u53O
+-----END PGP SIGNATURE-----
+
+--=-K5rl9O2mo4F+ICttGpOp--
