@@ -1,95 +1,52 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/3] Add proper STGT <-> bs_sg passthrough v3
-Date: Mon, 07 Jun 2010 01:27:16 -0700
-Message-ID: <1275899236.26888.40.camel@haakon2.linux-iscsi.org>
-References: <1275882615-5354-1-git-send-email-nab@linux-iscsi.org>
-	 <20100607154432Y.fujita.tomonori@lab.ntt.co.jp>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [LFS/VM TOPIC] Stable pages while IO (was Wrong DIF guard tag
+ on ext2 write)
+Date: Mon, 07 Jun 2010 11:30:12 +0300
+Message-ID: <4C0CAE14.1020205@panasas.com>
+References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com> <4C07D3D0.8010500@panasas.com> <20100604162332.GF3414@quack.suse.cz> <4C0B6BC7.8070803@panasas.com> <20100606233753.GC3302@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:26321 "HELO
-	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756430Ab0FGI1Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2010 04:27:24 -0400
-In-Reply-To: <20100607154432Y.fujita.tomonori@lab.ntt.co.jp>
+Received: from daytona.panasas.com ([67.152.220.89]:28377 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751666Ab0FGIaW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2010 04:30:22 -0400
+In-Reply-To: <20100606233753.GC3302@quack.suse.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: stgt@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, bharrosh@panasas.com, James.Bottomley@suse.de, dgilbert@interlog.com
+To: Jan Kara <jack@suse.cz>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org, Nick Piggin <npiggin@suse.de>, Al Viro <viro@ZenIV.linux.org.uk>, Chris Mason <chris.mason@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ric Wheeler <rwheeler@redhat.com>, Matthew Wilcox <willy@linux.intel.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Christoph Hellwig <hch@lst.de>
 
-On Mon, 2010-06-07 at 15:45 +0900, FUJITA Tomonori wrote:
-> On Sun,  6 Jun 2010 20:50:15 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+On 06/07/2010 02:37 AM, Jan Kara wrote:
+>> With other none checksum fixtures, like RAID5/MIRROR this is not always
+>> > an option and it becomes keep-constant vs copy. (That is complete
+>> > workload copy). So for these setups the option is clear. No?
+>
+>   Is it? You can have enough CPU / memory bandwidth to do the copying while
+> you need not be comfortable with a thread blocking until IO is finished
+> when it tries to do a rewrite...
 > 
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Greeting STGT folks,
-> > 
-> > This is the third round of patches for adding proper LUN passthrough support into STGT
-> > using struct scsi_lu->cmd_perform() and struct scsi_lu->cmd_done() callers with existing
-> > SG_IO and the new BSG v4 backstores.
-> > 
-> > Following Tomo-san's input, the changelog between v2 -> v3 is as follows:
-> > 
-> > 1) Add struct device_type_template sg_template for SG_IO and BSG in usr/bs_sg.c instead
-> >    of making changes to usr/sbc.c
-> > 
-> > 2) Add struct backingstore_template->bs_passthrough member of type int for SG_IO and BSG.
-> > 
-> > 3) In usr/target.c:tgt_device_create() pass bst->bs_passthrough into device_type_lookup()
-> >    and for passthrough case use the new device_type_passthrough() to locate
-> >    struct device_type_template sg_template.
-> > 
-> > 4) Remove unnecessary post_cmd_done() from usr/target.c:__cmd_done_passthrough()
-> > 
-> > This patch series has been tested with STGT/iSCSI using 'sg'+'bsg' and 'rdwr' for non
-> > passthrough mode backstores into TCM_Loop LLD emulated iSCSI target ports.
-> > 
-> > Best,
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org
-> > 
-> > Nicholas Bellinger (3):
-> >   [tgt]: Add proper STGT LUN backstore passthrough support (rev 3)
-> >   [tgt]: Add bs_sg struct device_type_template sg_template and struct
-> >     backingstore_template->bs_init()
-> >   [tgt]: Add BSG v4 backstore support to usr/bs_sg.c
-> > 
-> >  usr/bs_sg.c     |  247 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> >  usr/scsi_cmnd.h |    7 ++
-> >  usr/target.c    |  113 +++++++++++++++++++++++---
-> >  usr/tgtd.h      |   16 ++++
-> >  4 files changed, 362 insertions(+), 21 deletions(-)
+>> I'm glad that you think it is easy/doable to implement. And I'll surly
+>> test your above receipt. Do you think it would be acceptable as a generic
+>> per-sb tunable.  So for instance an ext3 over RAID5 could turn this on
+>> and eliminate the data copy?
+>
+>   Yes, that would be useful. At least so that one can get real performance
+> numbers...
 > 
-> The first and second patches Look fine overall. I have some comments
-> and wrote some cleanup patches.
-> 
-> I've put the first two patches with my cleanups:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/tgt.git pass
-> 
-> Can you confirm that it works for you? Then I can merge them into
-> master.
+> 									Honza
 
-The pass branch works fine using '-E sg -Y pt' for SG_IO backstore <->
-fabric LUN assocation with TCM_Loop LLD Target Ports.  Thanks for
-cleaning things up to use TYPE_PT btw, I should have asked about that
-earlier. ;)
+Thanks Jan.
+You have helped me tremendously. I think I can begin to understand now what I
+need to do.
 
-> 
-> Let's leave bsg support alone and focus on the sg support for now.
-> --
+With the workloads I need (HPC), every cycle/memory counts and that the app
+waits for a rewrite is a good thing, which reminds me that I would want to trace
+that case so applications could be fixed, tuned.
 
-Ok, I just fixed some minor breakage and applied patch 3 on top of
-tgt.git/pass in my local tree and everything appears to work with
-'-E bsg -Y pt'.
+I do understand that for a desktop, that might be just the opposite, so testing
+is important. Perhaps I'll need help in instrumenting all this.
 
-Please let me know if you have any other comments on the BSG bits or if
-you would like me to send along a updated patch 3 seperately.
-
-Thanks Tomo!
-
---nab
-
-
+Thanks
+Boaz
