@@ -1,58 +1,49 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: ipr driver fails to build for 32-bit powerpc
-Date: Mon, 07 Jun 2010 01:51:21 +0100
-Message-ID: <1275871881.10677.81.camel@localhost>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-K5rl9O2mo4F+ICttGpOp"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52425 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753445Ab0FGAv0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jun 2010 20:51:26 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/3] Add proper STGT <-> bs_sg passthrough v3
+Date: Sun,  6 Jun 2010 20:50:15 -0700
+Message-ID: <1275882615-5354-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike
+Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
---=-K5rl9O2mo4F+ICttGpOp
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Greeting STGT folks,
 
-SCSI_IPR depends only on PCI && SCSI && ATA, but ipr.c now uses writeq()
-which is not defined for all architectures.  This is a regression from
-Linux 2.6.33.
+This is the third round of patches for adding proper LUN passthrough support into STGT
+using struct scsi_lu->cmd_perform() and struct scsi_lu->cmd_done() callers with existing
+SG_IO and the new BSG v4 backstores.
 
-If the sis64 hardware can be driven using 32-bit MMIO then please define
-writeq() in terms of writel() where the writeq macro is not defined.
-Otherwise, please make the sis64 support conditional.
+Following Tomo-san's input, the changelog between v2 -> v3 is as follows:
 
-Ben.
+1) Add struct device_type_template sg_template for SG_IO and BSG in usr/bs_sg.c instead
+   of making changes to usr/sbc.c
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
+2) Add struct backingstore_template->bs_passthrough member of type int for SG_IO and BSG.
 
---=-K5rl9O2mo4F+ICttGpOp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+3) In usr/target.c:tgt_device_create() pass bst->bs_passthrough into device_type_lookup()
+   and for passthrough case use the new device_type_passthrough() to locate
+   struct device_type_template sg_template.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+4) Remove unnecessary post_cmd_done() from usr/target.c:__cmd_done_passthrough()
 
-iQIVAwUATAxChOe/yOyVhhEJAQJnjg/+NiBAqlJVRE00GJLGf9FYefV65L5rNPxa
-yFz8K2BEBRPqdF2+7jZkgD1o6dAoz8uxG18JU6urWnHadBh1C48M+7V9BlG/Tw5l
-d0ipUPGC7/14fMvAhYDrBkznTjG0QtvP5Q+yPNmkfXqi0r0vs8xrq2y0SoOZzsBX
-HVKLnbt8i+gJuHS4ozUicI8ehWWN//tAFhPnT+wRKrWtM7dLLMc8z6D+I2+46DqZ
-peURkG+SVWkwmX35IuDZja+FdKwPcSpqRJ1Y4AqrUwf/jec7e8FvIZDVP+2r1lfd
-N9n5gVnXQdN+fMW8Ig6UI9LJpqztIbL0PgJgcy/eLZwpLuN9FElOK3ecdTFxDyNi
-iX977CRMtNOlXqHLbisEeamQ/Nkmy1AJNNHsClcH4r/H+g/hKQiPGeNHn0ihyIao
-fDPc04NboT+5RN7U+/loKD3XOVnoNPWXei0wzy9zWyRDPJz++ijCc36g2FzjEX3x
-zCHHQNgvxrBOU0OfTPHPp5XUCxUB75YAMjrp9FFfnfe2k2IAhn2qDhpQnHbhJClm
-+bM/NH1VnIEC/A4774seQOYrtb5bDBjhS4jtDvHg8o0tztrO3FZ3YWhzDarf7Txv
-OWWhBLymIabztRlSqFDghozwmFxhYNxxrH7Lr9YQs97G06rZYzELoE4++59oC1l9
-AfwIXHSMXkQ=
-=u53O
------END PGP SIGNATURE-----
+This patch series has been tested with STGT/iSCSI using 'sg'+'bsg' and 'rdwr' for non
+passthrough mode backstores into TCM_Loop LLD emulated iSCSI target ports.
 
---=-K5rl9O2mo4F+ICttGpOp--
+Best,
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org
+
+Nicholas Bellinger (3):
+  [tgt]: Add proper STGT LUN backstore passthrough support (rev 3)
+  [tgt]: Add bs_sg struct device_type_template sg_template and struct
+    backingstore_template->bs_init()
+  [tgt]: Add BSG v4 backstore support to usr/bs_sg.c
+
+ usr/bs_sg.c     |  247 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ usr/scsi_cmnd.h |    7 ++
+ usr/target.c    |  113 +++++++++++++++++++++++---
+ usr/tgtd.h      |   16 ++++
+ 4 files changed, 362 insertions(+), 21 deletions(-)
