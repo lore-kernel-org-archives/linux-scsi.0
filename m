@@ -1,105 +1,90 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH] megaraid_sas: enable message-signaled interrupts
-Date: Mon, 7 Jun 2010 15:37:32 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3D0803AAB@cosmail02.lsi.com>
-References: <4C0CA170.70003@ladisch.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/3] Add proper STGT <-> bs_sg passthrough v3
+Date: Tue, 8 Jun 2010 08:45:39 +0900
+Message-ID: <20100608084443C.fujita.tomonori@lab.ntt.co.jp>
+References: <1275882615-5354-1-git-send-email-nab@linux-iscsi.org>
+	<20100607154432Y.fujita.tomonori@lab.ntt.co.jp>
+	<1275899236.26888.40.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C0CA170.70003@ladisch.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Clemens Ladisch <clemens@ladisch.de>, DL-MegaRAID Linux <megaraidlinux@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:54544 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832Ab0FGXqC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jun 2010 19:46:02 -0400
+In-Reply-To: <1275899236.26888.40.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: fujita.tomonori@lab.ntt.co.jp, stgt@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, bharrosh@panasas.com, James.Bottomley@suse.de, dgilbert@interlog.com
 
-NACK.  The MSI will be turn on until driver fully support it.
+On Mon, 07 Jun 2010 01:27:16 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+
+> On Mon, 2010-06-07 at 15:45 +0900, FUJITA Tomonori wrote:
+> > On Sun,  6 Jun 2010 20:50:15 -0700
+> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+> > 
+> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > 
+> > > Greeting STGT folks,
+> > > 
+> > > This is the third round of patches for adding proper LUN passthrough support into STGT
+> > > using struct scsi_lu->cmd_perform() and struct scsi_lu->cmd_done() callers with existing
+> > > SG_IO and the new BSG v4 backstores.
+> > > 
+> > > Following Tomo-san's input, the changelog between v2 -> v3 is as follows:
+> > > 
+> > > 1) Add struct device_type_template sg_template for SG_IO and BSG in usr/bs_sg.c instead
+> > >    of making changes to usr/sbc.c
+> > > 
+> > > 2) Add struct backingstore_template->bs_passthrough member of type int for SG_IO and BSG.
+> > > 
+> > > 3) In usr/target.c:tgt_device_create() pass bst->bs_passthrough into device_type_lookup()
+> > >    and for passthrough case use the new device_type_passthrough() to locate
+> > >    struct device_type_template sg_template.
+> > > 
+> > > 4) Remove unnecessary post_cmd_done() from usr/target.c:__cmd_done_passthrough()
+> > > 
+> > > This patch series has been tested with STGT/iSCSI using 'sg'+'bsg' and 'rdwr' for non
+> > > passthrough mode backstores into TCM_Loop LLD emulated iSCSI target ports.
+> > > 
+> > > Best,
+> > > 
+> > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org
+> > > 
+> > > Nicholas Bellinger (3):
+> > >   [tgt]: Add proper STGT LUN backstore passthrough support (rev 3)
+> > >   [tgt]: Add bs_sg struct device_type_template sg_template and struct
+> > >     backingstore_template->bs_init()
+> > >   [tgt]: Add BSG v4 backstore support to usr/bs_sg.c
+> > > 
+> > >  usr/bs_sg.c     |  247 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
+> > >  usr/scsi_cmnd.h |    7 ++
+> > >  usr/target.c    |  113 +++++++++++++++++++++++---
+> > >  usr/tgtd.h      |   16 ++++
+> > >  4 files changed, 362 insertions(+), 21 deletions(-)
+> > 
+> > The first and second patches Look fine overall. I have some comments
+> > and wrote some cleanup patches.
+> > 
+> > I've put the first two patches with my cleanups:
+> > 
+> > git://git.kernel.org/pub/scm/linux/kernel/git/tomo/tgt.git pass
+> > 
+> > Can you confirm that it works for you? Then I can merge them into
+> > master.
+> 
+> The pass branch works fine using '-E sg -Y pt' for SG_IO backstore <->
+> fabric LUN assocation with TCM_Loop LLD Target Ports.  Thanks for
+> cleaning things up to use TYPE_PT btw, I should have asked about that
+> earlier. ;)
+
+Thanks for the confirmation. I've merged these patches into master.
+
+I'll merge your bsg patch if nobody complains about dropping sg
+support in a few days.
 
 
------Original Message-----
-From: Clemens Ladisch [mailto:clemens@ladisch.de] 
-Sent: Monday, June 07, 2010 3:36 AM
-To: DL-MegaRAID Linux
-Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCH] megaraid_sas: enable message-signaled interrupts
-
-To avoid sharing interrupts, enable message-signaled interrupts, if
-possible.
-
-Tested with LSI 9260-8i/8e, where sharing the interrupt with the nvidia
-driver would reduce the RAID performance.
-
-Signed-off-by: Clemens Ladisch <clemens@ladisch.de>
-Tested-by: Bert dd <bert.ddecker@gmail.com>
----
- drivers/scsi/megaraid/megaraid_sas.c |   17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
-
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -3169,10 +3169,14 @@ megasas_probe_one(struct pci_dev *pdev,
- 	if (megasas_init_mfi(instance))
- 		goto fail_init_mfi;
- 
-+	pci_enable_msi(pdev);
-+
- 	/*
- 	 * Register IRQ
- 	 */
--	if (request_irq(pdev->irq, megasas_isr, IRQF_SHARED, "megasas", instance)) {
-+	if (request_irq(pdev->irq, megasas_isr,
-+		pci_dev_msi_enabled(pdev) ? 0 : IRQF_SHARED,
-+		"megasas", instance)) {
- 		printk(KERN_DEBUG "megasas: Failed to register IRQ\n");
- 		goto fail_irq;
- 	}
-@@ -3222,6 +3226,8 @@ megasas_probe_one(struct pci_dev *pdev,
- 	megasas_release_mfi(instance);
- 
-       fail_irq:
-+	pci_disable_msi(pdev);
-+
-       fail_init_mfi:
-       fail_alloc_dma_buf:
- 	if (instance->evt_detail)
-@@ -3354,6 +3360,7 @@ megasas_suspend(struct pci_dev *pdev, pm
- 	pci_set_drvdata(instance->pdev, instance);
- 	instance->instancet->disable_intr(instance->reg_set);
- 	free_irq(instance->pdev->irq, instance);
-+	pci_disable_msi(pdev);
- 
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
-@@ -3416,10 +3423,13 @@ megasas_resume(struct pci_dev *pdev)
- 	tasklet_init(&instance->isr_tasklet, megasas_complete_cmd_dpc,
- 			(unsigned long)instance);
- 
-+	pci_enable_msi(pdev);
-+
- 	/*
- 	 * Register IRQ
- 	 */
--	if (request_irq(pdev->irq, megasas_isr, IRQF_SHARED,
-+	if (request_irq(pdev->irq, megasas_isr,
-+		pci_dev_msi_enabled(pdev) ? 0 : IRQF_SHARED,
- 		"megasas", instance)) {
- 		printk(KERN_ERR "megasas: Failed to register IRQ\n");
- 		goto fail_irq;
-@@ -3443,6 +3453,8 @@ megasas_resume(struct pci_dev *pdev)
- 	return 0;
- 
- fail_irq:
-+	pci_disable_msi(pdev);
-+
- fail_init_mfi:
- 	if (instance->evt_detail)
- 		pci_free_consistent(pdev, sizeof(struct megasas_evt_detail),
-@@ -3519,6 +3531,7 @@ static void __devexit megasas_detach_one
- 	instance->instancet->disable_intr(instance->reg_set);
- 
- 	free_irq(instance->pdev->irq, instance);
-+	pci_disable_msi(pdev);
- 
- 	megasas_release_mfi(instance);
- 
+Thanks,
