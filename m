@@ -1,149 +1,36 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 3/3] [tgt]: Add BSG v4 backstore support to usr/bs_sg.c
-Date: Mon, 07 Jun 2010 14:24:48 +0300
-Message-ID: <4C0CD700.10906@panasas.com>
-References: <1275882640-5418-1-git-send-email-nab@linux-iscsi.org>	 <4C0CB071.8040805@panasas.com>	 <1275901324.26888.56.camel@haakon2.linux-iscsi.org>	 <4C0CBB89.9000209@panasas.com>	 <1275903449.26888.69.camel@haakon2.linux-iscsi.org>	 <4C0CCB69.6020506@panasas.com> <1275908828.26888.90.camel@haakon2.linux-iscsi.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Wrong DIF guard tag on ext2 write
+Date: Mon, 07 Jun 2010 12:20:13 -0400
+Message-ID: <yq1zkz6vmpu.fsf@sermon.lab.mkp.net>
+References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
+	<yq1iq64kv9f.fsf@sermon.lab.mkp.net>
+	<20100531144648.GA19068@schmichrtp.mainz.de.ibm.com>
+	<yq11vcqlwp8.fsf@sermon.lab.mkp.net>
+	<20100602133748.GA11196@schmichrtp.mainz.de.ibm.com>
+	<20100602232039.GA8287@dastard> <yq139x3y411.fsf@sermon.lab.mkp.net>
+	<20100604023253.GF19651@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1275908828.26888.90.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: stgt-devel <stgt@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20100604023253.GF19651@dastard> (Dave Chinner's message of "Fri,
+	4 Jun 2010 12:32:53 +1000")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 06/07/2010 02:07 PM, Nicholas A. Bellinger wrote:
-> On Mon, 2010-06-07 at 13:35 +0300, Boaz Harrosh wrote:
->> On 06/07/2010 12:37 PM, Nicholas A. Bellinger wrote:
->>> On Mon, 2010-06-07 at 12:27 +0300, Boaz Harrosh wrote:
->>>> On 06/07/2010 12:02 PM, Nicholas A. Bellinger wrote:
->>>>> On Mon, 2010-06-07 at 11:40 +0300, Boaz Harrosh wrote:
->>>>>> On 06/07/2010 06:50 AM, Nicholas A. Bellinger wrote:
->>>>>>> From: Nicholas Bellinger <nab@linux-iscsi.org>
->>>>>>>
->>>>>>> This patch adds initial support for the block layer implementation of the sg v4 interface
->>>>>>> (BSG) -> STGT with a new struct backingstore_template bsg_bst sharing code with the
->>>>>>> original sg_bst.  It adds for new function bs_bsg_cmd_submit() for incoming write I/O
->>>>>>> and bs_bsg_cmd_complete() for polling read I/O using include/linux/bsg.h:struct sg_io_v4.
->>>>>>>
->>>>>>> This patch also splits up bs_sg_open() to support both BSG and SG looking for the
->>>>>>> path "/dev/bsg" in bs_sg_open(), and getting max_queue using SG_GET_COMMAND_Q and
->>>>>>> calling SG_SET_RESERVED_SIZE (following the original bs_sg code in init_sg_device)
->>>>>>>
->>>>>>> Also chk_bsg_device() currently using a hardcoded 254 major as def for BSG does not
->>>>>>> appear in include/linux/major.h just yet..
->>>>>>>
->>>>>>> So far this has been tested with STGT/iSCSI <-> BSG <-> TCM_Loop SPC-4 iSCSI Target
->>>>>>> Port emulation and is able to mkfs, fsck and mount a filesystem from a TCM/IBLOCK
->>>>>>> Linux LVM kernel level backstore
->>>>>>>
->>>>>>> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
->>>>>>> ---
->>>>>>>  usr/bs_sg.c     |  178 +++++++++++++++++++++++++++++++++++++++++++++++++++---
->>>>>>>  usr/scsi_cmnd.h |    7 ++
->>>>>>>  2 files changed, 175 insertions(+), 10 deletions(-)
->>>>>>>
->>>>>>> diff --git a/usr/bs_sg.c b/usr/bs_sg.c
->>>>>>> index 23676ef..d071714 100644
->>>>>>> --- a/usr/bs_sg.c
->>>>>>> +++ b/usr/bs_sg.c
->>>>>
->>>>> <SNIP>
->>>>>
->>>>>>> +
->>>>>>> +static int bs_bsg_cmd_submit(struct scsi_cmd *cmd)
->>>>>>> +{
->>>>>>> +	struct scsi_lu *dev = cmd->dev;
->>>>>>> +	int fd = dev->fd;
->>>>>>> +	struct sg_io_v4 *io_hdr = &cmd->cmd_bsg_hdr;
->>>>>>> +	int err = 0;
->>>>>>> +	/*
->>>>>>> +	 * Following linux/include/linux/bsg.h
->>>>>>> +	 */
->>>>>>> +	/* [i] 'Q' to differentiate from v3 */
->>>>>>> +	io_hdr->guard = 'Q';
->>>>>>> +	io_hdr->protocol = BSG_PROTOCOL_SCSI;
->>>>>>> +	io_hdr->subprotocol = BSG_SUB_PROTOCOL_SCSI_CMD;
->>>>>>> +	io_hdr->request_len = cmd->scb_len;
->>>>>>> +	io_hdr->request = (unsigned long )cmd->scb;
->>>>>>> +
->>>>>>> +	if (scsi_get_data_dir(cmd) == DATA_WRITE) {
->>>>>>
->>>>>> Why the if? both sides are fully bidi just remove the ifs
->>>>>> and: OUT <= OUT, IN <= IN
->>>>>>
->>>>>
->>>>> Whoops, thanks for pointing this one out (again).  Tested with
->>>>> unidirection commands and included into my local tgt.git/pass that I
->>>>> will send along to Tomo-san..
->>>>>
->>>>> Btw, I still need to sort out BIDI support for TCM_Loop at some point in
->>>>> the not too distant future.  What would be a good way to generate BIDI
->>>>> traffic into STGT or a local SCSI LLD..?
->>>>
->>>> scsi_debug has some emulation for XOR commands, does that help?
->>>>
->>>
->>> Great, thanks for the pointer on the LLD side.  Is there any userspace
->>> code around that will generate XDWRITEREAD_* CDBs for bulk I/O or do I
->>> need to code this part myself..?
->>>
->>> Best,
->>>
->>> --nab
->>>
->>
->> You could use iscsi as LLD and generate OSD heavy traffic. (With a real osd_tgtd
->> on the end side). But that will need more work, right?
-> 
-> Hmmm, suppose I need to read up a bit on how to generate osd_tgtd
-> traffic..
-> 
+>>>>> "Dave" == Dave Chinner <david@fromorbit.com> writes:
 
-Generating is easy, there is the exofs filke system that given an osd
-will export a VFS filesystem over it. but...
+>> Didn't you use to wait_on_page_writeback() in page_mkwrite()?
 
->>  what does the TCM_Loop
->> do exactly. Please forgive my laziness, I never took the time to find out.
->>
-> 
-> TCM_Loop is a TCM fabric module that appears under /sys/kernel/config/target/loopback/
-> that emulates SAS, FC and iSCSI WWPN Ports and their assocated I_T Nexus
-> for SPC-4 PR and ALUA operations.  TCM_Loop registers as a Linux/SCSI
-> LLD (a la scsi_debug) that presents TCM backstores (IBLOCK, FILEIO,
-> RAMDISK) as a local struct scsi_device with a complete set of WWN port
-> naming identifiers (sg_inq -i) and TransportIDs (for PR).
-> 
-> With TCM v4 code in lio-core-2.6.git/lio-4.0, TCM_Loop has been
-> converted along with the rest of the v4.x fabric modules to use a
-> generic set of struct config_group logic from
-> drivers/target/target_core_fabric_configfs.c.  There is a bit of
-> information on the wiki at:
-> 
-> http://linux-iscsi.org/index.php/TCM_loop
-> 
-> but as you will notice the screenshots are still referencing the
-> original tests from last year with VMware Workstation.  Things have
-> changed quite a bit since then as TCM_Loop has gone from using internal
-> SAS WWPN+Nexus emulation to providing multi-protocol support based on
-> configfs provided WWPNs using the new generic naming handers from
-> drivers/target/target_core_fabric_lib.c
-> 
+Dave> The generic implementation of ->page_mkwrite
+Dave> (block_page_mkwrite()) which XFS uses has never had a
+Dave> wait_on_page_writeback() call in it.  There's no call in the
+Dave> generic write paths, either, hence my comment that only direct IO
+Dave> on XFS will work.
 
-OK, so from what I understand, from a SCSI stack perspective it is the lowest
-end target, using the local machine's backing store.
+I guess that wait_on_page_writeback() was something I added when I used
+XFS for DIF testing.
 
-That will not help at all with OSD. With osd_tgtd (In user mode) we use the iscsi
-protocol driver, but define a new disk-type, "osd" and a new backing-store "osdemu"
-which does a complete OSD-CDB decoding and implementation. Current code is not good
-for you because it's heavily user-mode dependent including an sqlite3 DB for storing
-attributes.
-
-Cheers
-Boaz
-
-> Best,
-> 
-> --nab
-> 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
