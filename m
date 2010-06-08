@@ -1,90 +1,63 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 0/3] Add proper STGT <-> bs_sg passthrough v3
-Date: Tue, 8 Jun 2010 08:45:39 +0900
-Message-ID: <20100608084443C.fujita.tomonori@lab.ntt.co.jp>
-References: <1275882615-5354-1-git-send-email-nab@linux-iscsi.org>
-	<20100607154432Y.fujita.tomonori@lab.ntt.co.jp>
-	<1275899236.26888.40.camel@haakon2.linux-iscsi.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] megaraid: fix fw/bios version output (sparse shift
+ warnings)
+Date: Mon, 7 Jun 2010 17:08:55 -0700
+Message-ID: <20100607170855.b38191ab.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:54544 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832Ab0FGXqC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jun 2010 19:46:02 -0400
-In-Reply-To: <1275899236.26888.40.camel@haakon2.linux-iscsi.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:64479 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146Ab0FHAJU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2010 20:09:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: fujita.tomonori@lab.ntt.co.jp, stgt@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, bharrosh@panasas.com, James.Bottomley@suse.de, dgilbert@interlog.com
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejbscsi <james.bottomley@suse.de>, Neela Syam Kolli <megaraidlinux@lsi.com>
 
-On Mon, 07 Jun 2010 01:27:16 -0700
-"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-> On Mon, 2010-06-07 at 15:45 +0900, FUJITA Tomonori wrote:
-> > On Sun,  6 Jun 2010 20:50:15 -0700
-> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> > 
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > 
-> > > Greeting STGT folks,
-> > > 
-> > > This is the third round of patches for adding proper LUN passthrough support into STGT
-> > > using struct scsi_lu->cmd_perform() and struct scsi_lu->cmd_done() callers with existing
-> > > SG_IO and the new BSG v4 backstores.
-> > > 
-> > > Following Tomo-san's input, the changelog between v2 -> v3 is as follows:
-> > > 
-> > > 1) Add struct device_type_template sg_template for SG_IO and BSG in usr/bs_sg.c instead
-> > >    of making changes to usr/sbc.c
-> > > 
-> > > 2) Add struct backingstore_template->bs_passthrough member of type int for SG_IO and BSG.
-> > > 
-> > > 3) In usr/target.c:tgt_device_create() pass bst->bs_passthrough into device_type_lookup()
-> > >    and for passthrough case use the new device_type_passthrough() to locate
-> > >    struct device_type_template sg_template.
-> > > 
-> > > 4) Remove unnecessary post_cmd_done() from usr/target.c:__cmd_done_passthrough()
-> > > 
-> > > This patch series has been tested with STGT/iSCSI using 'sg'+'bsg' and 'rdwr' for non
-> > > passthrough mode backstores into TCM_Loop LLD emulated iSCSI target ports.
-> > > 
-> > > Best,
-> > > 
-> > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org
-> > > 
-> > > Nicholas Bellinger (3):
-> > >   [tgt]: Add proper STGT LUN backstore passthrough support (rev 3)
-> > >   [tgt]: Add bs_sg struct device_type_template sg_template and struct
-> > >     backingstore_template->bs_init()
-> > >   [tgt]: Add BSG v4 backstore support to usr/bs_sg.c
-> > > 
-> > >  usr/bs_sg.c     |  247 ++++++++++++++++++++++++++++++++++++++++++++++++++++--
-> > >  usr/scsi_cmnd.h |    7 ++
-> > >  usr/target.c    |  113 +++++++++++++++++++++++---
-> > >  usr/tgtd.h      |   16 ++++
-> > >  4 files changed, 362 insertions(+), 21 deletions(-)
-> > 
-> > The first and second patches Look fine overall. I have some comments
-> > and wrote some cleanup patches.
-> > 
-> > I've put the first two patches with my cleanups:
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/tomo/tgt.git pass
-> > 
-> > Can you confirm that it works for you? Then I can merge them into
-> > master.
-> 
-> The pass branch works fine using '-E sg -Y pt' for SG_IO backstore <->
-> fabric LUN assocation with TCM_Loop LLD Target Ports.  Thanks for
-> cleaning things up to use TYPE_PT btw, I should have asked about that
-> earlier. ;)
+Fix fw_version and bios_version output strings.
+Fix sparse warnings of right shift bigger than source value size:
 
-Thanks for the confirmation. I've merged these patches into master.
+drivers/scsi/megaraid.c:311:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:313:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:317:67: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:319:67: warning: right shift by bigger than source value
 
-I'll merge your bsg patch if nobody complains about dropping sg
-support in a few days.
+Patch suggestion from email by Al Viro:
 
+"Since both are claimed to be strings, I really suspect that this >> 8 is
+misspelled >> 4 and they have a character followed by pair of two-digit
+packed decimals in there..."
 
-Thanks,
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+---
+ drivers/scsi/megaraid.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- linux-2.6.35-rc2.orig/drivers/scsi/megaraid.c
++++ linux-2.6.35-rc2/drivers/scsi/megaraid.c
+@@ -308,15 +308,15 @@ mega_query_adapter(adapter_t *adapter)
+ 	if (adapter->product_info.subsysvid == HP_SUBSYS_VID) {
+ 		sprintf (adapter->fw_version, "%c%d%d.%d%d",
+ 			 adapter->product_info.fw_version[2],
+-			 adapter->product_info.fw_version[1] >> 8,
++			 adapter->product_info.fw_version[1] >> 4,
+ 			 adapter->product_info.fw_version[1] & 0x0f,
+-			 adapter->product_info.fw_version[0] >> 8,
++			 adapter->product_info.fw_version[0] >> 4,
+ 			 adapter->product_info.fw_version[0] & 0x0f);
+ 		sprintf (adapter->bios_version, "%c%d%d.%d%d",
+ 			 adapter->product_info.bios_version[2],
+-			 adapter->product_info.bios_version[1] >> 8,
++			 adapter->product_info.bios_version[1] >> 4,
+ 			 adapter->product_info.bios_version[1] & 0x0f,
+-			 adapter->product_info.bios_version[0] >> 8,
++			 adapter->product_info.bios_version[0] >> 4,
+ 			 adapter->product_info.bios_version[0] & 0x0f);
+ 	} else {
+ 		memcpy(adapter->fw_version,
