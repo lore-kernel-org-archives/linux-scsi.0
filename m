@@ -1,88 +1,55 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Tue, 8 Jun 2010 09:18:37 +0200
-Message-ID: <20100608071836.GB3263__17858.2999659286$1275981533$gmane$org@schmichrtp.mainz.de.ibm.com>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
- <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
- <1275318102.2823.47.camel@mulgrave.site>
- <4C03D5FD.3000202@panasas.com>
- <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
- <20100601130325.GG8980@think>
- <20100601135059.GA21008@schmichrtp.mainz.de.ibm.com>
- <20100601135818.GN8980@think>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Tue, 8 Jun 2010 08:43:00 GMT
+Message-ID: <201006080843.o588h0hW022617@demeter.kernel.org>
+References: <bug-14831-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.uk.ibm.com ([194.196.100.163]:36474 "EHLO
-	mtagate3.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004Ab0FHHSj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2010 03:18:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20100601135818.GN8980@think>
+Received: from demeter.kernel.org ([140.211.167.39]:57430 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385Ab0FHInB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2010 04:43:01 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o588h0KY022618
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Jun 2010 08:43:00 GMT
+In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vg
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jun 01, 2010 at 09:58:18AM -0400, Chris Mason wrote:
-> On Tue, Jun 01, 2010 at 03:50:59PM +0200, Christof Schmitt wrote:
-> > On Tue, Jun 01, 2010 at 09:03:25AM -0400, Chris Mason wrote:
-> > > On Tue, Jun 01, 2010 at 12:30:42PM +0200, Christof Schmitt wrote:
-> > > > On Mon, May 31, 2010 at 06:30:05PM +0300, Boaz Harrosh wrote:
-> > > > > On 05/31/2010 06:01 PM, James Bottomley wrote:
-> > > > > > On Mon, 2010-05-31 at 10:20 -0400, Martin K. Petersen wrote:
-> > > > > >>>>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
-> > > > > >>
-> > > > > >> Christof> Since the guard tags are created in Linux, it seems that the
-> > > > > >> Christof> data attached to the write request changes between the
-> > > > > >> Christof> generation in bio_integrity_generate and the call to
-> > > > > >> Christof> sd_prep_fn.
-> > > > > >>
-> > > > > >> Yep, known bug.  Page writeback locking is messed up for buffer_head
-> > > > > >> users.  The extNfs folks volunteered to look into this a while back but
-> > > > > >> I don't think they have found the time yet.
-> > > > > >>
-> > > > > >>
-> > > > > >> Christof> Using ext3 or ext4 instead of ext2 does not show the problem.
-> > > > > >>
-> > > > > >> Last I looked there were still code paths in ext3 and ext4 that
-> > > > > >> permitted pages to be changed during flight.  I guess you've just been
-> > > > > >> lucky.
-> > > > > > 
-> > > > > > Pages have always been modifiable in flight.  The OS guarantees they'll
-> > > > > > be rewritten, so the drivers can drop them if it detects the problem.
-> > > > > > This is identical to the iscsi checksum issue (iscsi adds a checksum
-> > > > > > because it doesn't trust TCP/IP and if the checksum is generated in
-> > > > > > software, there's time between generation and page transmission for the
-> > > > > > alteration to occur).  The solution in the iscsi case was not to
-> > > > > > complain if the page is still marked dirty.
-> > > > > > 
-> > > > > 
-> > > > > And also why RAID1 and RAID4/5/6 need the data bounced. I wish VFS
-> > > > > would prevent data writing given a device queue flag that requests
-> > > > > it. So all these devices and modes could just flag the VFS/filesystems
-> > > > > that: "please don't allow concurrent writes, otherwise I need to copy data"
-> > > > > 
-> > > > > From what Chris Mason has said before, all the mechanics are there, and it's
-> > > > > what btrfs is doing. Though I don't know how myself?
-> > > > 
-> > > > I also tested with btrfs and invalid guard tags in writes have been
-> > > > encountered as well (again in 2.6.34). The only difference is that no
-> > > > error was reported to userspace, although this might be a
-> > > > configuration issue.
-> > > 
-> > > This would be a btrfs bug.  We have strict checks in place that are
-> > > supposed to prevent buffers changing while in flight.  What was the
-> > > workload that triggered this problem?
-> > 
-> > I am running an internal test tool that creates files with a known
-> > pattern until the disk is full, reads the data to verify if the
-> > pattern is still intact, removes the files and starts over.
-> 
-> Ok, is the lba in the output the sector offset?  We can map that to a
-> btrfs block and figure out what it was.
-> 
-> Btrfs never complains about the IO error?  We really should explode.
+https://bugzilla.kernel.org/show_bug.cgi?id=14831
 
-Right now, i don't have a system available to continue with this. When
-i have a change to run it again, i can try the latest rc kernel to see
-if there is any difference.
+
+
+
+
+--- Comment #30 from kdesai <kashyap.desai@lsi.com>  2010-06-08 08:42:48 ---
+(In reply to comment #29)
+> (In reply to comment #28)
+> 
+> > linux 2.6.32 and the LSI official driver 4.22.00.00:
+> 
+> The official Linux driver seems to be 3.04.15 -
+> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/message/fusion/mptbase.h;hb=HEAD#l69
+> 
+> so my understanding is that you should probably be testing with this driver,
+Yes. I would recommend use of 3.4.15 driver since it is a bug raised from
+kernel.org. 
+
+> rather than the 4.x LSI driver which hasn't made it into the Linux tree (yet). 
+> The 4.x driver might be useful for providing additional data points.
+> 
+> Some official word from LSI on this would be useful.
+> 
+> Thanks,
+> 
+> Tim.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
