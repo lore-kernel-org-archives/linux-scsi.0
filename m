@@ -1,51 +1,55 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Tue, 8 Jun 2010 06:44:53 GMT
-Message-ID: <201006080644.o586irFD023836@demeter.kernel.org>
-References: <bug-14831-11613@https.bugzilla.kernel.org/>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: Wrong DIF guard tag on ext2 write
+Date: Tue, 8 Jun 2010 09:15:35 +0200
+Message-ID: <20100608071534.GA3263@schmichrtp.mainz.de.ibm.com>
+References: <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
+ <20100531144648.GA19068@schmichrtp.mainz.de.ibm.com>
+ <yq11vcqlwp8.fsf@sermon.lab.mkp.net>
+ <20100602133748.GA11196@schmichrtp.mainz.de.ibm.com>
+ <20100602232039.GA8287@dastard>
+ <yq139x3y411.fsf@sermon.lab.mkp.net>
+ <20100604023253.GF19651@dastard>
+ <yq1zkz6vmpu.fsf@sermon.lab.mkp.net>
+ <4C0D2AD4.2020303@panasas.com>
+ <yq1sk4yvj0a.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:45830 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918Ab0FHGoy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2010 02:44:54 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o586irhb023837
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jun 2010 06:44:53 GMT
-In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1sk4yvj0a.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Dave Chinner <david@fromorbit.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14831
+On Mon, Jun 07, 2010 at 01:40:21PM -0400, Martin K. Petersen wrote:
+> >>>>> "Boaz" == Boaz Harrosh <bharrosh@panasas.com> writes:
+> 
+> Boaz> Do you remember some performance numbers that show degradation /
+> Boaz> sameness?
+> 
+> Boaz> What type of work loads?
+> 
+> I haven't been using XFS much for over a year.  I'm using an internal
+> async I/O tool and btrfs for most of my DIX/DIF testing these days.
+> 
+> But my original changes were along the lines of what Jan mentioned
+> earlier (hooking into page_mkwrite and waiting for writeback.  I could
+> have sworn that I only did it for ext[23] and that XFS waited out of the
+> box but git proves me wrong).  Anyway, I'll try to get some benchmarking
+> happening later this week.
 
+Is there a patch with this change available somewhere? It might be
+useful to patch a kernel with this XFS change for reliable DIF/DIX
+testing.
 
-
-
-
---- Comment #29 from Tim Small <tim@seoss.co.uk>  2010-06-08 06:44:45 ---
-(In reply to comment #28)
-
-> linux 2.6.32 and the LSI official driver 4.22.00.00:
-
-The official Linux driver seems to be 3.04.15 -
-
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/message/fusion/mptbase.h;hb=HEAD#l69
-
-so my understanding is that you should probably be testing with this driver,
-rather than the 4.x LSI driver which hasn't made it into the Linux tree (yet). 
-The 4.x driver might be useful for providing additional data points.
-
-Some official word from LSI on this would be useful.
-
-Thanks,
-
-Tim.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+> This won't fix things completely, though.  ext2fs, for instance,
+> frequently changes metadata buffers in flight so it trips the guard
+> check in no time.
+> 
+> -- 
+> Martin K. Petersen	Oracle Linux Engineering
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
