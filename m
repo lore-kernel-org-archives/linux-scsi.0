@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/4] lpfc 8.3.14: PCI fixes and enhancements
-Date: Tue, 8 Jun 2010 18:31:21 -0400
-Message-ID: <1276036312.3169.1.camel@wookie>
+Subject: [PATCH 2/4] lpfc 8.3.14: FCoE Discovery Fixes
+Date: Tue, 8 Jun 2010 18:31:37 -0400
+Message-ID: <1276036332.3169.2.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,559 +9,402 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:14393 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752140Ab0FHWcz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2010 18:32:55 -0400
+	with ESMTP id S1752365Ab0FHWc4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2010 18:32:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-- Allow enabling MSI-X intterupts with fewer vectors than requested
-  by looking at the return value from pci_enable_msix.
-- Implemented driver PCI AER error handling routines for supporting
-  AER error recovering on SLI4 devices.
-- Remove redundant SLI_ACTIVE checks
+- Prevent unregistring of unused FCF when FLOGI is pending.
+- Prevent point to point discovery on a FCoE HBA.
+- Fixed FCF discovery failure after swapping FCoE port by
+  switching over to fast failover method when no FCF matches in-use FCF.
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_attr.c |   22 ------
- lpfc_init.c |  195 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
- lpfc_scsi.c |   10 ++-
- lpfc_sli.c  |   41 ++++++++++--
- lpfc_sli4.h |    1 
- 5 files changed, 228 insertions(+), 41 deletions(-)
+ lpfc_els.c     |   38 +++++++++++++-
+ lpfc_hbadisc.c |  151 ++++++++++++++++++++++++++++++++++++++++++++++++++-------
+ lpfc_sli.c     |    3 -
+ lpfc_sli4.h    |    3 +
+ 4 files changed, 175 insertions(+), 20 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2010-06-07 19:15:18.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2010-06-08 12:01:16.000000000 -0400
-@@ -864,7 +864,6 @@ lpfc_get_hba_info(struct lpfc_hba *phba,
- 		  uint32_t *mrpi, uint32_t *arpi,
- 		  uint32_t *mvpi, uint32_t *avpi)
- {
--	struct lpfc_sli *psli = &phba->sli;
- 	struct lpfc_mbx_read_config *rd_config;
- 	LPFC_MBOXQ_t *pmboxq;
- 	MAILBOX_t *pmb;
-@@ -893,8 +892,7 @@ lpfc_get_hba_info(struct lpfc_hba *phba,
- 	pmb->mbxOwner = OWN_HOST;
- 	pmboxq->context1 = NULL;
- 
--	if ((phba->pport->fc_flag & FC_OFFLINE_MODE) ||
--		(!(psli->sli_flag & LPFC_SLI_ACTIVE)))
-+	if (phba->pport->fc_flag & FC_OFFLINE_MODE)
- 		rc = MBX_NOT_FINISHED;
- 	else
- 		rc = lpfc_sli_issue_mbox_wait(phba, pmboxq, phba->fc_ratov * 2);
-@@ -2943,9 +2941,6 @@ lpfc_aer_support_store(struct device *de
- 	struct lpfc_hba *phba = vport->phba;
- 	int val = 0, rc = -EINVAL;
- 
--	/* AER not supported on OC devices yet */
--	if (phba->pci_dev_grp == LPFC_PCI_DEV_OC)
--		return -EPERM;
- 	if (!isdigit(buf[0]))
- 		return -EINVAL;
- 	if (sscanf(buf, "%i", &val) != 1)
-@@ -3018,12 +3013,6 @@ lpfc_param_show(aer_support)
- static int
- lpfc_aer_support_init(struct lpfc_hba *phba, int val)
- {
--	/* AER not supported on OC devices yet */
--	if (phba->pci_dev_grp == LPFC_PCI_DEV_OC) {
--		phba->cfg_aer_support = 0;
--		return -EPERM;
--	}
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2010-06-07 19:15:18.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_els.c	2010-06-08 12:01:54.000000000 -0400
+@@ -796,7 +796,9 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phb
+ 		 * due to new FCF discovery
+ 		 */
+ 		if ((phba->hba_flag & HBA_FIP_SUPPORT) &&
+-		    (phba->fcf.fcf_flag & FCF_DISCOVERY)) {
++		    (phba->fcf.fcf_flag & FCF_DISCOVERY) &&
++		    (irsp->ulpStatus != IOSTAT_LOCAL_REJECT) &&
++		    (irsp->un.ulpWord[4] != IOERR_SLI_ABORTED)) {
+ 			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP | LOG_ELS,
+ 					"2611 FLOGI failed on registered "
+ 					"FCF record fcf_index:%d, trying "
+@@ -890,9 +892,39 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phb
+ 		 */
+ 		if (sp->cmn.fPort)
+ 			rc = lpfc_cmpl_els_flogi_fabric(vport, ndlp, sp, irsp);
+-		else
++		else if (!(phba->hba_flag & HBA_FCOE_SUPPORT))
+ 			rc = lpfc_cmpl_els_flogi_nport(vport, ndlp, sp);
 -
- 	if (val == 0 || val == 1) {
- 		phba->cfg_aer_support = val;
- 		return 0;
-@@ -3068,9 +3057,6 @@ lpfc_aer_cleanup_state(struct device *de
- 	struct lpfc_hba   *phba = vport->phba;
- 	int val, rc = -1;
- 
--	/* AER not supported on OC devices yet */
--	if (phba->pci_dev_grp == LPFC_PCI_DEV_OC)
--		return -EPERM;
- 	if (!isdigit(buf[0]))
- 		return -EINVAL;
- 	if (sscanf(buf, "%i", &val) != 1)
-@@ -4099,8 +4085,7 @@ lpfc_get_stats(struct Scsi_Host *shost)
- 	pmboxq->context1 = NULL;
- 	pmboxq->vport = vport;
- 
--	if ((vport->fc_flag & FC_OFFLINE_MODE) ||
--		(!(psli->sli_flag & LPFC_SLI_ACTIVE)))
-+	if (vport->fc_flag & FC_OFFLINE_MODE)
- 		rc = lpfc_sli_issue_mbox(phba, pmboxq, MBX_POLL);
- 	else
- 		rc = lpfc_sli_issue_mbox_wait(phba, pmboxq, phba->fc_ratov * 2);
-@@ -4124,8 +4109,7 @@ lpfc_get_stats(struct Scsi_Host *shost)
- 	pmboxq->context1 = NULL;
- 	pmboxq->vport = vport;
- 
--	if ((vport->fc_flag & FC_OFFLINE_MODE) ||
--	    (!(psli->sli_flag & LPFC_SLI_ACTIVE)))
-+	if (vport->fc_flag & FC_OFFLINE_MODE)
- 		rc = lpfc_sli_issue_mbox(phba, pmboxq, MBX_POLL);
- 	else
- 		rc = lpfc_sli_issue_mbox_wait(phba, pmboxq, phba->fc_ratov * 2);
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2010-06-07 19:15:18.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2010-06-08 12:01:16.000000000 -0400
-@@ -7030,22 +7030,28 @@ lpfc_sli_disable_intr(struct lpfc_hba *p
- static int
- lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- {
--	int rc, index;
-+	int vectors, rc, index;
- 
- 	/* Set up MSI-X multi-message vectors */
- 	for (index = 0; index < phba->sli4_hba.cfg_eqn; index++)
- 		phba->sli4_hba.msix_entries[index].entry = index;
- 
- 	/* Configure MSI-X capability structure */
-+	vectors = phba->sli4_hba.cfg_eqn;
-+enable_msix_vectors:
- 	rc = pci_enable_msix(phba->pcidev, phba->sli4_hba.msix_entries,
--			     phba->sli4_hba.cfg_eqn);
--	if (rc) {
-+			     vectors);
-+	if (rc > 1) {
-+		vectors = rc;
-+		goto enable_msix_vectors;
-+	} else if (rc) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
- 		goto msi_fail_out;
- 	}
-+
- 	/* Log MSI-X vector assignment */
--	for (index = 0; index < phba->sli4_hba.cfg_eqn; index++)
-+	for (index = 0; index < vectors; index++)
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0489 MSI-X entry[%d]: vector=x%x "
- 				"message=%d\n", index,
-@@ -7067,7 +7073,7 @@ lpfc_sli4_enable_msix(struct lpfc_hba *p
- 	}
- 
- 	/* The rest of the vector(s) are associated to fast-path handler(s) */
--	for (index = 1; index < phba->sli4_hba.cfg_eqn; index++) {
-+	for (index = 1; index < vectors; index++) {
- 		phba->sli4_hba.fcp_eq_hdl[index - 1].idx = index - 1;
- 		phba->sli4_hba.fcp_eq_hdl[index - 1].phba = phba;
- 		rc = request_irq(phba->sli4_hba.msix_entries[index].vector,
-@@ -7081,6 +7087,7 @@ lpfc_sli4_enable_msix(struct lpfc_hba *p
- 			goto cfg_fail_out;
- 		}
- 	}
-+	phba->sli4_hba.msix_vec_nr = vectors;
- 
- 	return rc;
- 
-@@ -7114,9 +7121,10 @@ lpfc_sli4_disable_msix(struct lpfc_hba *
- 	/* Free up MSI-X multi-message vectors */
- 	free_irq(phba->sli4_hba.msix_entries[0].vector, phba);
- 
--	for (index = 1; index < phba->sli4_hba.cfg_eqn; index++)
-+	for (index = 1; index < phba->sli4_hba.msix_vec_nr; index++)
- 		free_irq(phba->sli4_hba.msix_entries[index].vector,
- 			 &phba->sli4_hba.fcp_eq_hdl[index - 1]);
-+
- 	/* Disable MSI-X */
- 	pci_disable_msix(phba->pcidev);
- 
-@@ -7158,6 +7166,7 @@ lpfc_sli4_enable_msi(struct lpfc_hba *ph
- 		pci_disable_msi(phba->pcidev);
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
- 				"0490 MSI request_irq failed (%d)\n", rc);
-+		return rc;
- 	}
- 
- 	for (index = 0; index < phba->cfg_fcp_eq_count; index++) {
-@@ -7165,7 +7174,7 @@ lpfc_sli4_enable_msi(struct lpfc_hba *ph
- 		phba->sli4_hba.fcp_eq_hdl[index].phba = phba;
- 	}
- 
--	return rc;
-+	return 0;
- }
- 
- /**
-@@ -7876,6 +7885,9 @@ lpfc_sli_prep_dev_for_reset(struct lpfc_
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"2710 PCI channel disable preparing for reset\n");
- 
-+	/* Block any management I/Os to the device */
-+	lpfc_block_mgmt_io(phba);
-+
- 	/* Block all SCSI devices' I/Os on the host */
- 	lpfc_scsi_dev_block(phba);
- 
-@@ -7885,6 +7897,7 @@ lpfc_sli_prep_dev_for_reset(struct lpfc_
- 	/* Disable interrupt and pci device */
- 	lpfc_sli_disable_intr(phba);
- 	pci_disable_device(phba->pcidev);
-+
- 	/* Flush all driver's outstanding SCSI I/Os as we are to reset */
- 	lpfc_sli_flush_fcp_rings(phba);
- }
-@@ -7898,7 +7911,7 @@ lpfc_sli_prep_dev_for_reset(struct lpfc_
-  * pending I/Os.
-  **/
- static void
--lpfc_prep_dev_for_perm_failure(struct lpfc_hba *phba)
-+lpfc_sli_prep_dev_for_perm_failure(struct lpfc_hba *phba)
- {
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 			"2711 PCI channel permanent disable for failure\n");
-@@ -7947,7 +7960,7 @@ lpfc_io_error_detected_s3(struct pci_dev
- 		return PCI_ERS_RESULT_NEED_RESET;
- 	case pci_channel_io_perm_failure:
- 		/* Permanent failure, prepare for device down */
--		lpfc_prep_dev_for_perm_failure(phba);
-+		lpfc_sli_prep_dev_for_perm_failure(phba);
- 		return PCI_ERS_RESULT_DISCONNECT;
- 	default:
- 		/* Unknown state, prepare and request slot reset */
-@@ -8016,7 +8029,8 @@ lpfc_io_slot_reset_s3(struct pci_dev *pd
- 	} else
- 		phba->intr_mode = intr_mode;
- 
--	/* Take device offline; this will perform cleanup */
-+	/* Take device offline, it will perform cleanup */
-+	lpfc_offline_prep(phba);
- 	lpfc_offline(phba);
- 	lpfc_sli_brdrestart(phba);
- 
-@@ -8201,6 +8215,8 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
- 		/* Default to single FCP EQ for non-MSI-X */
- 		if (phba->intr_type != MSIX)
- 			phba->cfg_fcp_eq_count = 1;
-+		else if (phba->sli4_hba.msix_vec_nr < phba->cfg_fcp_eq_count)
-+			phba->cfg_fcp_eq_count = phba->sli4_hba.msix_vec_nr - 1;
- 		/* Set up SLI-4 HBA */
- 		if (lpfc_sli4_hba_setup(phba)) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -8362,7 +8378,7 @@ lpfc_pci_suspend_one_s4(struct pci_dev *
- 	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
- 
- 	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--			"0298 PCI device Power Management suspend.\n");
-+			"2843 PCI device Power Management suspend.\n");
- 
- 	/* Bring down the device */
- 	lpfc_offline_prep(phba);
-@@ -8453,6 +8469,84 @@ lpfc_pci_resume_one_s4(struct pci_dev *p
- }
- 
- /**
-+ * lpfc_sli4_prep_dev_for_recover - Prepare SLI4 device for pci slot recover
-+ * @phba: pointer to lpfc hba data structure.
-+ *
-+ * This routine is called to prepare the SLI4 device for PCI slot recover. It
-+ * aborts all the outstanding SCSI I/Os to the pci device.
-+ **/
-+static void
-+lpfc_sli4_prep_dev_for_recover(struct lpfc_hba *phba)
-+{
-+	struct lpfc_sli *psli = &phba->sli;
-+	struct lpfc_sli_ring  *pring;
-+
-+	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"2828 PCI channel I/O abort preparing for recovery\n");
-+	/*
-+	 * There may be errored I/Os through HBA, abort all I/Os on txcmplq
-+	 * and let the SCSI mid-layer to retry them to recover.
-+	 */
-+	pring = &psli->ring[psli->fcp_ring];
-+	lpfc_sli_abort_iocb_ring(phba, pring);
-+}
-+
-+/**
-+ * lpfc_sli4_prep_dev_for_reset - Prepare SLI4 device for pci slot reset
-+ * @phba: pointer to lpfc hba data structure.
-+ *
-+ * This routine is called to prepare the SLI4 device for PCI slot reset. It
-+ * disables the device interrupt and pci device, and aborts the internal FCP
-+ * pending I/Os.
-+ **/
-+static void
-+lpfc_sli4_prep_dev_for_reset(struct lpfc_hba *phba)
-+{
-+	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"2826 PCI channel disable preparing for reset\n");
-+
-+	/* Block any management I/Os to the device */
-+	lpfc_block_mgmt_io(phba);
-+
-+	/* Block all SCSI devices' I/Os on the host */
-+	lpfc_scsi_dev_block(phba);
-+
-+	/* stop all timers */
-+	lpfc_stop_hba_timers(phba);
-+
-+	/* Disable interrupt and pci device */
-+	lpfc_sli4_disable_intr(phba);
-+	pci_disable_device(phba->pcidev);
-+
-+	/* Flush all driver's outstanding SCSI I/Os as we are to reset */
-+	lpfc_sli_flush_fcp_rings(phba);
-+}
-+
-+/**
-+ * lpfc_sli4_prep_dev_for_perm_failure - Prepare SLI4 dev for pci slot disable
-+ * @phba: pointer to lpfc hba data structure.
-+ *
-+ * This routine is called to prepare the SLI4 device for PCI slot permanently
-+ * disabling. It blocks the SCSI transport layer traffic and flushes the FCP
-+ * pending I/Os.
-+ **/
-+static void
-+lpfc_sli4_prep_dev_for_perm_failure(struct lpfc_hba *phba)
-+{
-+	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"2827 PCI channel permanent disable for failure\n");
-+
-+	/* Block all SCSI devices' I/Os on the host */
-+	lpfc_scsi_dev_block(phba);
-+
-+	/* stop all timers */
-+	lpfc_stop_hba_timers(phba);
-+
-+	/* Clean up all driver's outstanding SCSI I/Os */
-+	lpfc_sli_flush_fcp_rings(phba);
-+}
-+
-+/**
-  * lpfc_io_error_detected_s4 - Method for handling PCI I/O error to SLI-4 device
-  * @pdev: pointer to PCI device.
-  * @state: the current PCI connection state.
-@@ -8471,7 +8565,29 @@ lpfc_pci_resume_one_s4(struct pci_dev *p
- static pci_ers_result_t
- lpfc_io_error_detected_s4(struct pci_dev *pdev, pci_channel_state_t state)
- {
--	return PCI_ERS_RESULT_NEED_RESET;
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-+
-+	switch (state) {
-+	case pci_channel_io_normal:
-+		/* Non-fatal error, prepare for recovery */
-+		lpfc_sli4_prep_dev_for_recover(phba);
-+		return PCI_ERS_RESULT_CAN_RECOVER;
-+	case pci_channel_io_frozen:
-+		/* Fatal error, prepare for slot reset */
-+		lpfc_sli4_prep_dev_for_reset(phba);
-+		return PCI_ERS_RESULT_NEED_RESET;
-+	case pci_channel_io_perm_failure:
-+		/* Permanent failure, prepare for device down */
-+		lpfc_sli4_prep_dev_for_perm_failure(phba);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	default:
-+		/* Unknown state, prepare and request slot reset */
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"2825 Unknown PCI error state: x%x\n", state);
-+		lpfc_sli4_prep_dev_for_reset(phba);
-+		return PCI_ERS_RESULT_NEED_RESET;
-+	}
- }
- 
- /**
-@@ -8495,6 +8611,39 @@ lpfc_io_error_detected_s4(struct pci_dev
- static pci_ers_result_t
- lpfc_io_slot_reset_s4(struct pci_dev *pdev)
- {
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-+	struct lpfc_sli *psli = &phba->sli;
-+	uint32_t intr_mode;
-+
-+	dev_printk(KERN_INFO, &pdev->dev, "recovering from a slot reset.\n");
-+	if (pci_enable_device_mem(pdev)) {
-+		printk(KERN_ERR "lpfc: Cannot re-enable "
-+			"PCI device after reset.\n");
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	pci_restore_state(pdev);
-+	if (pdev->is_busmaster)
-+		pci_set_master(pdev);
-+
-+	spin_lock_irq(&phba->hbalock);
-+	psli->sli_flag &= ~LPFC_SLI_ACTIVE;
-+	spin_unlock_irq(&phba->hbalock);
-+
-+	/* Configure and enable interrupt */
-+	intr_mode = lpfc_sli4_enable_intr(phba, phba->intr_mode);
-+	if (intr_mode == LPFC_INTR_ERROR) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"2824 Cannot re-enable interrupt after "
-+				"slot reset.\n");
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	} else
-+		phba->intr_mode = intr_mode;
-+
-+	/* Log the current active interrupt mode */
-+	lpfc_log_intr_mode(phba, phba->intr_mode);
-+
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
-@@ -8511,7 +8660,27 @@ lpfc_io_slot_reset_s4(struct pci_dev *pd
- static void
- lpfc_io_resume_s4(struct pci_dev *pdev)
- {
--	return;
-+	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-+	struct lpfc_hba *phba = ((struct lpfc_vport *)shost->hostdata)->phba;
-+
-+	/*
-+	 * In case of slot reset, as function reset is performed through
-+	 * mailbox command which needs DMA to be enabled, this operation
-+	 * has to be moved to the io resume phase. Taking device offline
-+	 * will perform the necessary cleanup.
-+	 */
-+	if (!(phba->sli.sli_flag & LPFC_SLI_ACTIVE)) {
-+		/* Perform device reset */
-+		lpfc_offline_prep(phba);
-+		lpfc_offline(phba);
-+		lpfc_sli_brdrestart(phba);
-+		/* Bring the device back online */
-+		lpfc_online(phba);
-+	}
-+
-+	/* Clean up Advanced Error Reporting (AER) if needed */
-+	if (phba->hba_flag & HBA_AER_ENABLED)
-+		pci_cleanup_aer_uncorrect_error_status(pdev);
- }
- 
- /**
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-06-07 19:15:18.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-06-08 12:01:16.000000000 -0400
-@@ -2295,15 +2295,21 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
- 	struct lpfc_vport      *vport = pIocbIn->vport;
- 	struct lpfc_rport_data *rdata = lpfc_cmd->rdata;
- 	struct lpfc_nodelist *pnode = rdata->pnode;
--	struct scsi_cmnd *cmd = lpfc_cmd->pCmd;
-+	struct scsi_cmnd *cmd;
- 	int result;
- 	struct scsi_device *tmp_sdev;
- 	int depth;
- 	unsigned long flags;
- 	struct lpfc_fast_path_event *fast_path_evt;
--	struct Scsi_Host *shost = cmd->device->host;
-+	struct Scsi_Host *shost;
- 	uint32_t queue_depth, scsi_id;
- 
-+	/* Sanity check on return of outstanding command */
-+	if (!(lpfc_cmd->pCmd))
-+		return;
-+	cmd = lpfc_cmd->pCmd;
-+	shost = cmd->device->host;
-+
- 	lpfc_cmd->result = pIocbOut->iocb.un.ulpWord[4];
- 	lpfc_cmd->status = pIocbOut->iocb.ulpStatus;
- 	/* pick up SLI4 exhange busy status from HBA */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2010-06-07 19:15:18.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2010-06-08 12:01:16.000000000 -0400
-@@ -382,6 +382,7 @@ struct lpfc_sli4_hba {
- 	struct lpfc_pc_sli4_params pc_sli4_params;
- 	struct msix_entry *msix_entries;
- 	uint32_t cfg_eqn;
-+	uint32_t msix_vec_nr;
- 	struct lpfc_fcp_eq_hdl *fcp_eq_hdl; /* FCP per-WQ handle */
- 	/* Pointers to the constructed SLI4 queues */
- 	struct lpfc_queue **fp_eq; /* Fast-path event queue */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2010-06-07 19:15:18.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-06-08 12:01:16.000000000 -0400
-@@ -3593,13 +3593,16 @@ static int
- lpfc_sli_brdrestart_s4(struct lpfc_hba *phba)
- {
- 	struct lpfc_sli *psli = &phba->sli;
--
-+	uint32_t hba_aer_enabled;
- 
- 	/* Restart HBA */
- 	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
- 			"0296 Restart HBA Data: x%x x%x\n",
- 			phba->pport->port_state, psli->sli_flag);
- 
-+	/* Take PCIe device Advanced Error Reporting (AER) state */
-+	hba_aer_enabled = phba->hba_flag & HBA_AER_ENABLED;
-+
- 	lpfc_sli4_brdreset(phba);
- 
- 	spin_lock_irq(&phba->hbalock);
-@@ -3611,6 +3614,10 @@ lpfc_sli_brdrestart_s4(struct lpfc_hba *
- 	memset(&psli->lnk_stat_offsets, 0, sizeof(psli->lnk_stat_offsets));
- 	psli->stats_start = get_seconds();
- 
-+	/* Reset HBA AER if it was enabled, note hba_flag was reset above */
-+	if (hba_aer_enabled)
-+		pci_disable_pcie_error_reporting(phba->pcidev);
-+
- 	lpfc_hba_down_post(phba);
- 
- 	return 0;
-@@ -4554,6 +4561,24 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
- 	/* Start error attention (ERATT) polling timer */
- 	mod_timer(&phba->eratt_poll, jiffies + HZ * LPFC_ERATT_POLL_INTERVAL);
- 
-+	/* Enable PCIe device Advanced Error Reporting (AER) if configured */
-+	if (phba->cfg_aer_support == 1 && !(phba->hba_flag & HBA_AER_ENABLED)) {
-+		rc = pci_enable_pcie_error_reporting(phba->pcidev);
-+		if (!rc) {
-+			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+					"2829 This device supports "
-+					"Advanced Error Reporting (AER)\n");
++		else {
++			lpfc_printf_vlog(vport, KERN_ERR,
++				LOG_FIP | LOG_ELS,
++				"2831 FLOGI response with cleared Fabric "
++				"bit fcf_index 0x%x "
++				"Switch Name %02x%02x%02x%02x%02x%02x%02x%02x "
++				"Fabric Name "
++				"%02x%02x%02x%02x%02x%02x%02x%02x\n",
++				phba->fcf.current_rec.fcf_indx,
++				phba->fcf.current_rec.switch_name[0],
++				phba->fcf.current_rec.switch_name[1],
++				phba->fcf.current_rec.switch_name[2],
++				phba->fcf.current_rec.switch_name[3],
++				phba->fcf.current_rec.switch_name[4],
++				phba->fcf.current_rec.switch_name[5],
++				phba->fcf.current_rec.switch_name[6],
++				phba->fcf.current_rec.switch_name[7],
++				phba->fcf.current_rec.fabric_name[0],
++				phba->fcf.current_rec.fabric_name[1],
++				phba->fcf.current_rec.fabric_name[2],
++				phba->fcf.current_rec.fabric_name[3],
++				phba->fcf.current_rec.fabric_name[4],
++				phba->fcf.current_rec.fabric_name[5],
++				phba->fcf.current_rec.fabric_name[6],
++				phba->fcf.current_rec.fabric_name[7]);
++			lpfc_nlp_put(ndlp);
 +			spin_lock_irq(&phba->hbalock);
-+			phba->hba_flag |= HBA_AER_ENABLED;
++			phba->fcf.fcf_flag &= ~FCF_DISCOVERY;
 +			spin_unlock_irq(&phba->hbalock);
-+		} else {
-+			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
-+					"2830 This device does not support "
-+					"Advanced Error Reporting (AER)\n");
-+			phba->cfg_aer_support = 0;
++			goto out;
 +		}
-+	}
+ 		if (!rc) {
+ 			/* Mark the FCF discovery process done */
+ 			if (phba->hba_flag & HBA_FIP_SUPPORT)
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-06-07 19:15:18.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-06-08 12:01:54.000000000 -0400
+@@ -1300,7 +1300,7 @@ lpfc_register_fcf(struct lpfc_hba *phba)
+  * used for this FCF when the function returns.
+  * If the FCF record need to be used with a particular vlan id, the vlan is
+  * set in the vlan_id on return of the function. If not VLAN tagging need to
+- * be used with the FCF vlan_id will be set to 0xFFFF;
++ * be used with the FCF vlan_id will be set to LPFC_FCOE_NULL_VID;
+  **/
+ static int
+ lpfc_match_fcf_conn_list(struct lpfc_hba *phba,
+@@ -1336,7 +1336,7 @@ lpfc_match_fcf_conn_list(struct lpfc_hba
+ 		if (phba->valid_vlan)
+ 			*vlan_id = phba->vlan_id;
+ 		else
+-			*vlan_id = 0xFFFF;
++			*vlan_id = LPFC_FCOE_NULL_VID;
+ 		return 1;
+ 	}
+ 
+@@ -1360,7 +1360,7 @@ lpfc_match_fcf_conn_list(struct lpfc_hba
+ 		if (fcf_vlan_id)
+ 			*vlan_id = fcf_vlan_id;
+ 		else
+-			*vlan_id = 0xFFFF;
++			*vlan_id = LPFC_FCOE_NULL_VID;
+ 		return 1;
+ 	}
+ 
+@@ -1469,7 +1469,7 @@ lpfc_match_fcf_conn_list(struct lpfc_hba
+ 		else if (fcf_vlan_id)
+ 			*vlan_id = fcf_vlan_id;
+ 		else
+-			*vlan_id = 0xFFFF;
++			*vlan_id = LPFC_FCOE_NULL_VID;
+ 
+ 		return 1;
+ 	}
+@@ -1521,6 +1521,9 @@ lpfc_check_pending_fcoe_event(struct lpf
+ 		 * Do not continue FCF discovery and clear FCF_DISC_INPROGRESS
+ 		 * flag
+ 		 */
++		lpfc_printf_log(phba, KERN_INFO, LOG_FIP | LOG_DISCOVERY,
++				"2833 Stop FCF discovery process due to link "
++				"state change (x%x)\n", phba->link_state);
+ 		spin_lock_irq(&phba->hbalock);
+ 		phba->hba_flag &= ~FCF_DISC_INPROGRESS;
+ 		phba->fcf.fcf_flag &= ~(FCF_REDISC_FOV | FCF_DISCOVERY);
+@@ -1696,6 +1699,37 @@ lpfc_sli4_log_fcf_record_info(struct lpf
+ }
+ 
+ /**
++ lpfc_sli4_fcf_record_match - testing new FCF record for matching existing FCF
++ * @phba: pointer to lpfc hba data structure.
++ * @fcf_rec: pointer to an existing FCF record.
++ * @new_fcf_record: pointer to a new FCF record.
++ * @new_vlan_id: vlan id from the new FCF record.
++ *
++ * This function performs matching test of a new FCF record against an existing
++ * FCF record. If the new_vlan_id passed in is LPFC_FCOE_IGNORE_VID, vlan id
++ * will not be used as part of the FCF record matching criteria.
++ *
++ * Returns true if all the fields matching, otherwise returns false.
++ */
++static bool
++lpfc_sli4_fcf_record_match(struct lpfc_hba *phba,
++			   struct lpfc_fcf_rec *fcf_rec,
++			   struct fcf_record *new_fcf_record,
++			   uint16_t new_vlan_id)
++{
++	if (new_vlan_id != LPFC_FCOE_IGNORE_VID)
++		if (!lpfc_vlan_id_match(fcf_rec->vlan_id, new_vlan_id))
++			return false;
++	if (!lpfc_mac_addr_match(fcf_rec->mac_addr, new_fcf_record))
++		return false;
++	if (!lpfc_sw_name_match(fcf_rec->switch_name, new_fcf_record))
++		return false;
++	if (!lpfc_fab_name_match(fcf_rec->fabric_name, new_fcf_record))
++		return false;
++	return true;
++}
 +
- 	/*
- 	 * The port is ready, set the host's link state to LINK_DOWN
- 	 * in preparation for link interrupts.
-@@ -9089,9 +9114,10 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba 
++/**
+  * lpfc_mbx_cmpl_fcf_scan_read_fcf_rec - fcf scan read_fcf mbox cmpl handler.
+  * @phba: pointer to lpfc hba data structure.
+  * @mboxq: pointer to mailbox object.
+@@ -1758,7 +1792,7 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 	 */
+ 	if (!rc) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
+-				"2781 FCF record fcf_index:x%x failed FCF "
++				"2781 FCF record (x%x) failed FCF "
+ 				"connection list check, fcf_avail:x%x, "
+ 				"fcf_valid:x%x\n",
+ 				bf_get(lpfc_fcf_record_fcf_index,
+@@ -1767,6 +1801,32 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 				       new_fcf_record),
+ 				bf_get(lpfc_fcf_record_fcf_valid,
+ 				       new_fcf_record));
++		if ((phba->fcf.fcf_flag & FCF_IN_USE) &&
++		    lpfc_sli4_fcf_record_match(phba, &phba->fcf.current_rec,
++		    new_fcf_record, LPFC_FCOE_IGNORE_VID)) {
++			/*
++			 * In case the current in-use FCF record becomes
++			 * invalid/unavailable during FCF discovery that
++			 * was not triggered by fast FCF failover process,
++			 * treat it as fast FCF failover.
++			 */
++			if (!(phba->fcf.fcf_flag & FCF_REDISC_PEND) &&
++			    !(phba->fcf.fcf_flag & FCF_REDISC_FOV)) {
++				lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
++						"2835 Invalid in-use FCF "
++						"record (x%x) reported, "
++						"entering fast FCF failover "
++						"mode scanning.\n",
++						phba->fcf.current_rec.fcf_indx);
++				spin_lock_irq(&phba->hbalock);
++				phba->fcf.fcf_flag |= FCF_REDISC_FOV;
++				spin_unlock_irq(&phba->hbalock);
++				lpfc_sli4_mbox_cmd_free(phba, mboxq);
++				lpfc_sli4_fcf_scan_read_fcf_rec(phba,
++						LPFC_FCOE_FCF_GET_FIRST);
++				return;
++			}
++		}
+ 		goto read_next_fcf;
+ 	} else {
+ 		fcf_index = bf_get(lpfc_fcf_record_fcf_index, new_fcf_record);
+@@ -1783,14 +1843,8 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 	 */
+ 	spin_lock_irq(&phba->hbalock);
+ 	if (phba->fcf.fcf_flag & FCF_IN_USE) {
+-		if (lpfc_fab_name_match(phba->fcf.current_rec.fabric_name,
+-					new_fcf_record) &&
+-		    lpfc_sw_name_match(phba->fcf.current_rec.switch_name,
+-					new_fcf_record) &&
+-		    lpfc_mac_addr_match(phba->fcf.current_rec.mac_addr,
+-					new_fcf_record) &&
+-		    lpfc_vlan_id_match(phba->fcf.current_rec.vlan_id,
+-					vlan_id)) {
++		if (lpfc_sli4_fcf_record_match(phba, &phba->fcf.current_rec,
++		    new_fcf_record, vlan_id)) {
+ 			phba->fcf.fcf_flag |= FCF_AVAILABLE;
+ 			if (phba->fcf.fcf_flag & FCF_REDISC_PEND)
+ 				/* Stop FCF redisc wait timer if pending */
+@@ -1800,6 +1854,13 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 				phba->fcf.fcf_flag &= ~(FCF_REDISC_FOV |
+ 							FCF_DISCOVERY);
+ 			spin_unlock_irq(&phba->hbalock);
++			lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++					"2836 The new FCF record (x%x) "
++					"matches the in-use FCF record "
++					"(x%x)\n",
++					phba->fcf.current_rec.fcf_indx,
++					bf_get(lpfc_fcf_record_fcf_index,
++					       new_fcf_record));
+ 			goto out;
  		}
- 	}
- 	if (unlikely(!cq)) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
--				"0365 Slow-path CQ identifier (%d) does "
--				"not exist\n", cqid);
-+		if (phba->sli.sli_flag & LPFC_SLI_ACTIVE)
-+			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+					"0365 Slow-path CQ identifier "
-+					"(%d) does not exist\n", cqid);
+ 		/*
+@@ -1831,6 +1892,12 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 		 */
+ 		if (boot_flag && !(fcf_rec->flag & BOOT_ENABLE)) {
+ 			/* Choose this FCF record */
++			lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++					"2837 Update current FCF record "
++					"(x%x) with new FCF record (x%x)\n",
++					fcf_rec->fcf_indx,
++					bf_get(lpfc_fcf_record_fcf_index,
++					new_fcf_record));
+ 			__lpfc_update_fcf_record(phba, fcf_rec, new_fcf_record,
+ 					addr_mode, vlan_id, BOOT_ENABLE);
+ 			spin_unlock_irq(&phba->hbalock);
+@@ -1851,6 +1918,12 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 		 */
+ 		if (new_fcf_record->fip_priority < fcf_rec->priority) {
+ 			/* Choose the new FCF record with lower priority */
++			lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++					"2838 Update current FCF record "
++					"(x%x) with new FCF record (x%x)\n",
++					fcf_rec->fcf_indx,
++					bf_get(lpfc_fcf_record_fcf_index,
++					       new_fcf_record));
+ 			__lpfc_update_fcf_record(phba, fcf_rec, new_fcf_record,
+ 					addr_mode, vlan_id, 0);
+ 			/* Reset running random FCF selection count */
+@@ -1860,11 +1933,18 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 			phba->fcf.eligible_fcf_cnt++;
+ 			select_new_fcf = lpfc_sli4_new_fcf_random_select(phba,
+ 						phba->fcf.eligible_fcf_cnt);
+-			if (select_new_fcf)
++			if (select_new_fcf) {
++				lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++					"2839 Update current FCF record "
++					"(x%x) with new FCF record (x%x)\n",
++					fcf_rec->fcf_indx,
++					bf_get(lpfc_fcf_record_fcf_index,
++					       new_fcf_record));
+ 				/* Choose the new FCF by random selection */
+ 				__lpfc_update_fcf_record(phba, fcf_rec,
+ 							 new_fcf_record,
+ 							 addr_mode, vlan_id, 0);
++			}
+ 		}
+ 		spin_unlock_irq(&phba->hbalock);
+ 		goto read_next_fcf;
+@@ -1874,6 +1954,11 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(stru
+ 	 * initial best-fit FCF.
+ 	 */
+ 	if (fcf_rec) {
++		lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++				"2840 Update current FCF record "
++				"with initial FCF record (x%x)\n",
++				bf_get(lpfc_fcf_record_fcf_index,
++				       new_fcf_record));
+ 		__lpfc_update_fcf_record(phba, fcf_rec, new_fcf_record,
+ 					 addr_mode, vlan_id, (boot_flag ?
+ 					 BOOT_ENABLE : 0));
+@@ -1931,6 +2016,12 @@ read_next_fcf:
+ 			lpfc_unregister_fcf(phba);
+ 
+ 			/* Replace in-use record with the new record */
++			lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++					"2842 Replace the current in-use "
++					"FCF record (x%x) with failover FCF "
++					"record (x%x)\n",
++					phba->fcf.current_rec.fcf_indx,
++					phba->fcf.failover_rec.fcf_indx);
+ 			memcpy(&phba->fcf.current_rec,
+ 			       &phba->fcf.failover_rec,
+ 			       sizeof(struct lpfc_fcf_rec));
+@@ -1954,6 +2045,28 @@ read_next_fcf:
+ 			if ((phba->fcf.fcf_flag & FCF_REDISC_EVT) ||
+ 			    (phba->fcf.fcf_flag & FCF_REDISC_PEND))
+ 				return;
++
++			if (phba->fcf.fcf_flag & FCF_IN_USE) {
++				/*
++				 * In case the current in-use FCF record no
++				 * longer existed during FCF discovery that
++				 * was not triggered by fast FCF failover
++				 * process, treat it as fast FCF failover.
++				 */
++				lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++						"2841 In-use FCF record (x%x) "
++						"not reported, entering fast "
++						"FCF failover mode scanning.\n",
++						phba->fcf.current_rec.fcf_indx);
++				spin_lock_irq(&phba->hbalock);
++				phba->fcf.fcf_flag |= FCF_REDISC_FOV;
++				spin_unlock_irq(&phba->hbalock);
++				lpfc_sli4_mbox_cmd_free(phba, mboxq);
++				lpfc_sli4_fcf_scan_read_fcf_rec(phba,
++						LPFC_FCOE_FCF_GET_FIRST);
++				return;
++			}
++
+ 			/*
+ 			 * Otherwise, initial scan or post linkdown rescan,
+ 			 * register with the best FCF record found so far
+@@ -2036,6 +2149,11 @@ lpfc_mbx_cmpl_fcf_rr_read_fcf_rec(struct
+ 				      next_fcf_index);
+ 
+ 	/* Upload new FCF record to the failover FCF record */
++	lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
++			"2834 Update the current FCF record (x%x) "
++			"with the next FCF record (x%x)\n",
++			phba->fcf.failover_rec.fcf_indx,
++			bf_get(lpfc_fcf_record_fcf_index, new_fcf_record));
+ 	spin_lock_irq(&phba->hbalock);
+ 	__lpfc_update_fcf_record(phba, &phba->fcf.failover_rec,
+ 				 new_fcf_record, addr_mode, vlan_id,
+@@ -2053,7 +2171,7 @@ lpfc_mbx_cmpl_fcf_rr_read_fcf_rec(struct
+ 
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
+ 			"2783 FLOGI round robin FCF failover from FCF "
+-			"(index:x%x) to FCF (index:x%x).\n",
++			"(x%x) to FCF (x%x).\n",
+ 			current_fcf_index,
+ 			bf_get(lpfc_fcf_record_fcf_index, new_fcf_record));
+ 
+@@ -5217,7 +5335,8 @@ lpfc_unregister_unused_fcf(struct lpfc_h
+ 	spin_lock_irq(&phba->hbalock);
+ 	if (!(phba->hba_flag & HBA_FCOE_SUPPORT) ||
+ 	    !(phba->fcf.fcf_flag & FCF_REGISTERED) ||
+-	    !(phba->hba_flag & HBA_FIP_SUPPORT)) {
++	    !(phba->hba_flag & HBA_FIP_SUPPORT) ||
++	    (phba->pport->port_state == LPFC_FLOGI)) {
+ 		spin_unlock_irq(&phba->hbalock);
  		return;
  	}
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2010-06-08 12:01:16.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2010-06-08 12:01:54.000000000 -0400
+@@ -51,6 +51,9 @@
+ #define LPFC_FCOE_FCF_GET_FIRST	0xFFFF
+ #define LPFC_FCOE_FCF_NEXT_NONE	0xFFFF
  
-@@ -9321,9 +9347,10 @@ lpfc_sli4_fp_handle_eqe(struct lpfc_hba 
++#define LPFC_FCOE_NULL_VID	0xFFF
++#define LPFC_FCOE_IGNORE_VID	0xFFFF
++
+ /* First 3 bytes of default FCF MAC is specified by FC_MAP */
+ #define LPFC_FCOE_FCF_MAC3	0xFF
+ #define LPFC_FCOE_FCF_MAC4	0xFF
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2010-06-08 12:01:16.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-06-08 12:01:54.000000000 -0400
+@@ -12404,7 +12404,8 @@ lpfc_sli4_fcf_rr_next_index_get(struct l
+ 		next_fcf_index = find_next_bit(phba->fcf.fcf_rr_bmask,
+ 					       LPFC_SLI4_FCF_TBL_INDX_MAX, 0);
+ 	/* Round robin failover stop condition */
+-	if (next_fcf_index == phba->fcf.fcf_rr_init_indx)
++	if ((next_fcf_index == phba->fcf.fcf_rr_init_indx) ||
++		(next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX))
+ 		return LPFC_FCOE_FCF_NEXT_NONE;
  
- 	cq = phba->sli4_hba.fcp_cq[fcp_cqidx];
- 	if (unlikely(!cq)) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
--				"0367 Fast-path completion queue does not "
--				"exist\n");
-+		if (phba->sli.sli_flag & LPFC_SLI_ACTIVE)
-+			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+					"0367 Fast-path completion queue "
-+					"does not exist\n");
- 		return;
- 	}
- 
+ 	return next_fcf_index;
 
 
