@@ -1,82 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Tue, 8 Jun 2010 00:29:58 GMT
-Message-ID: <201006080029.o580TwWD005773@demeter.kernel.org>
-References: <bug-14831-11613@https.bugzilla.kernel.org/>
+From: Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: cxgb4i_v4.3 submission
+Date: Tue,  8 Jun 2010 10:29:24 +0530
+Message-ID: <1275973167-8640-1-git-send-email-rakesh@chelsio.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:52742 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab0FHA37 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2010 20:29:59 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o580TwgE005774
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jun 2010 00:29:58 GMT
-In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCKnrzee6GxDbnLfgBBoE1gNheQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
+	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: LK-NetDev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LK-SCSIDev <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LK-iSCSIDev <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Anish Bhatt <anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14831
+The following 3 patches add a new iscsi LLD driver cxgb4i to enable iscsi offload
+support on Chelsio's new 1G and 10G cards. This is updated version of previous cxgb4i
+patch. Please share you commnets after review.
 
+Changes since cxgb4i_v4.2
+1. Removed early returns from some functions, which got added for debugging.
 
+[PATCH 1/3] cxgb4i_v4.3 : add build support
+[PATCH 2/3] cxgb4i_v4.3 : libcxgbi common library part
+[PATCH 3/3] cxgb4i_v4.3 : main driver files
 
-
-
---- Comment #28 from dujun@perabytes.com  2010-06-08 00:29:49 ---
-Hi, Richard, 
-Sorry I didn't follow the linux scsi mailing list. Pls note following.
-
-There are 3 testing environments, all works under linux 2.6.32 and the LSI
-official driver 4.22.00.00:
-
-1. LSI 1068e HBA chip on mainboard connected to two LSI x12A expander chips,
-then 16 1T WD SATA-II disks.
-2. LSI 1068e HBA chip on mainboard connected to one LSI x36 expander chip, then
-16 1T WD SATA-II disks. 
-3. LSI 1068e HBA chip on mainboard and LSI 1068e HBA on pci-e slot, then both
-connected to 8 1T WD SATA-II disks, totally 16 disks. 
-
-Without the 512 byte alignment patch, only testing 1 has reset problem. 2&3
-works perfectly without any problem. 
-
-With the patch, all the testing passed stability testing. However, the dd
-testing showed that the testing 1 performance degraded.
-mdadm -C /dev/md10 -l 5 -n 16 /dev/sd[b-q] to setup the md raid5.
-then 
-dd if=/dev/zero of=/dev/md10 bs=1M count=10960 to test the write speed of the
-md. 
-
-2&3 has no performance penalty. 
-
-After several days' investigating further, changed hardware part by part, we
-found that some of the x12A expanders may caused the problem. Most of them
-works ok just like in testing 2&3, only two or three caused the performance
-issue. 
-
-So we may draw a conclusion that the patch should be included in the next
-release. The performance may be caused by the x12A expander. We are going to
-ask our chip solution provider to investigate further why some of the chips
-work just with lower performance. 
-
-(In reply to comment #27)
-> Hi Dujun,
-> 
-> Can you add any more information to this performance drop, here and on
-> linux-scsi?
-> 
-> See discussion thread here: 
-> 
-> http://marc.info/?l=linux-scsi&m=127567915722288&w=2
-> 
-> Thanks,
-> 
-> Richard
+Regards
+Rakesh Ranjan
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
