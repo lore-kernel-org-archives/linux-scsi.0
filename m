@@ -1,33 +1,56 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-Date: Wed, 9 Jun 2010 07:24:12 -0700 (PDT)
-Message-ID: <alpine.LFD.2.00.1006090719440.4506@i5.linux-foundation.org>
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org> <201006091106.11232.rjw@sisk.pl>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: add writeq definition if needed
+Date: Wed, 09 Jun 2010 08:24:55 -0700
+Message-ID: <4C0FB247.7000007@linux.vnet.ibm.com>
+References: <20100608224308.499532262@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <201006091106.11232.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Carl Worth <cworth@cworth.org>, Eric Anholt <eric@anholt.net>, Venkatesh Pallipadi <venki@google.com>, Jens Axboe <jaxboe@fusionio.com>, Dave Airlie <airlied@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Ingo Molnar <mingo@elte.hu>, =?ISO-8859-15?Q?David__H=E4rdeman?= <david@hardeman.nu>, Mauro Carvalho Chehab <mchehab@redhat.com>, Eric Dumazet <eric.dumazet@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:48765 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932101Ab0FIPZS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2010 11:25:18 -0400
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by e36.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o59FLwiS007664
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2010 09:21:58 -0600
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o59FP2r2095566
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2010 09:25:03 -0600
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o59FS0nj023220
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2010 09:28:01 -0600
+In-Reply-To: <20100608224308.499532262@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ben@decadent.org.uk, James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
 
+Compiling the driver will fail on 32 bit powerpc and other
+architectures where writeq is not defined.  This patch adds a
+definition for writeq.
 
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
 
-On Wed, 9 Jun 2010, Rafael J. Wysocki wrote:
-> > 
-> > That has a "reverting the commit fixes it", and a confirmation from Nick 
-> > Bowler.
-> > 
-> > Eric, Carl: should I just revert that commit? Or do you have a fix?
-> 
-> This one is reported to have been fixed already.  Closed now.
+ drivers/scsi/ipr.h |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Heh. That "fixed already" is actually the revert. Carl acked it.
+Index: b/drivers/scsi/ipr.h
+===================================================================
+--- a/drivers/scsi/ipr.h	2010-06-08 10:06:48.000000000 -0700
++++ b/drivers/scsi/ipr.h	2010-06-08 15:14:42.000000000 -0700
+@@ -1860,4 +1860,12 @@ static inline int ipr_sdt_is_fmt2(u32 sd
+ 	return 0;
+ }
 
-> This should be fixed by commit f8ed8b4c5d30b5214f185997131b06e35f6f7113, so
-> closing now.
++#ifndef writeq
++static inline void writeq(u64 val, void __iomem *addr)
++{
++        writel(((u32) (val >> 32)), addr);
++        writel(((u32) (val)), (addr + 4));
++}
+ #endif
++
++#endif /* _IPR_H */
 
-Good, that was in yesterday's drm pull.
-
-		Linus
