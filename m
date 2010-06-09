@@ -1,34 +1,81 @@
-From: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Jens Axboe <jaxboe@fusionio.com>
 Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-Date: Wed, 09 Jun 2010 08:36:12 +0200
-Message-ID: <1276065372.2439.700.camel@edumazet-laptop>
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera>
-	 <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
+Date: Wed, 09 Jun 2010 09:53:22 +0200
+Message-ID: <4C0F4872.7090909@fusionio.com>
+References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LFD.2.00.1006081814240.4506-GpypE611fyS63QaFMGN2QEqCLAeBNdoH@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Carl Worth <cworth-4HiWtcSh4w0dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, Venkatesh Pallipadi <venki-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jens Axboe <jaxboe-5c4llco8/ftWk0Htik3J/w@public.gmane.org>, Dave Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, David =?ISO-8859-1?Q?H=E4rdeman?= <david-0WFrdVpeebksCylrc8G9yg@public.gmane.org>, Mauro Carvalho Chehab <mchehab-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Carl Worth <cworth@cworth.org>, Eric Anholt <eric@anholt.net>, Venkatesh Pallipadi <venki@google.com>, Dave Airlie <airlied@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Ingo Molnar <mingo@elte.hu>, =?ISO-8859-15?Q?David_H=E4rdeman?= <david@hardeman.nu>, Mauro Carvalho Chehab <mchehab@redhat.com>, Eric Dumazet <eric.dumazet@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
 
-Le mardi 08 juin 2010 =C3=A0 18:53 -0700, Linus Torvalds a =C3=A9crit :
+On 2010-06-09 03:53, Linus Torvalds wrote:
+>> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16129
+>> Subject	: BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2
+>> Submitter	: Jan Kreuzer <kontrollator@gmx.de>
+>> Date		: 2010-06-05 06:15 (4 days old)
+> 
+> This seems to have been introduced by
+> 
+> 	commit 7cbaef9c83e58bbd4bdd534b09052b6c5ec457d5
+> 	Author: Ingo Molnar <mingo@elte.hu>
+> 	Date:   Sat Nov 8 17:05:38 2008 +0100
+> 
+> 	    sched: optimize sched_clock() a bit
+>     
+> 	    sched_clock() uses cycles_2_ns() needlessly - which is an irq-disabling
+> 	    variant of __cycles_2_ns().
+>     
+> 	    Most of the time sched_clock() is called with irqs disabled already.
+> 	    The few places that call it with irqs enabled need to be updated.
+>     
+> 	    Signed-off-by: Ingo Molnar <mingo@elte.hu>
+> 
+> and this seems to be one of those calling cases that need to be updated.
+> 
+> Ingo? The call trace is:
+> 
+> 	BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2-8/337
+> 	caller is native_sched_clock+0x3c/0x68
+> 	Pid: 337, comm: jbd2/sda2-8 Not tainted 2.6.35-rc1jan+ #4
+> 	Call Trace:
+> 	[<ffffffff812362c5>] debug_smp_processor_id+0xc9/0xe4
+> 	[<ffffffff8101059d>] native_sched_clock+0x3c/0x68
+> 	[<ffffffff8101043d>] sched_clock+0x9/0xd
+> 	[<ffffffff81212d7a>] blk_rq_init+0x97/0xa3
+> 	[<ffffffff81214d71>] get_request+0x1c4/0x2d0
+> 	[<ffffffff81214ea6>] get_request_wait+0x29/0x1a6
+> 	[<ffffffff81215537>] __make_request+0x338/0x45b
+> 	[<ffffffff812147c2>] generic_make_request+0x2bb/0x330
+> 	[<ffffffff81214909>] submit_bio+0xd2/0xef
+> 	[<ffffffff811413cb>] submit_bh+0xf4/0x116
+> 	[<ffffffff81144853>] block_write_full_page_endio+0x89/0x96
+> 	[<ffffffff81144875>] block_write_full_page+0x15/0x17
+> 	[<ffffffff8119b00a>] ext4_writepage+0x356/0x36b
+> 	[<ffffffff810e1f91>] __writepage+0x1a/0x39
+> 	[<ffffffff810e32a6>] write_cache_pages+0x20d/0x346
+> 	[<ffffffff810e3406>] generic_writepages+0x27/0x29
+> 	[<ffffffff811ca279>] journal_submit_data_buffers+0x110/0x17d
+> 	[<ffffffff811ca986>] jbd2_journal_commit_transaction+0x4cb/0x156d
+> 	[<ffffffff811d0cba>] kjournald2+0x147/0x37a
+> 
+> (from the bugzilla thing)
 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16120
-> > Subject	: Oops: 0000 [#1] SMP, unable to handle kernel NULL pointer=
- dereference at (null)
-> > Submitter	: Alex Zhavnerchik <alex.vizor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > Date		: 2010-06-04 09:25 (5 days old)
-> > Handled-By	: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->=20
-> This one seems to have a patch in bugzilla.
+This should be fixed by commit 28f4197e which was merged on friday.
 
-Yep, commit 035320d54758e21227987e3aae0d46e7a04f4ddc in David net-2.6
-tree, i'll be included in its next pull request.
+>> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16122
+>> Subject	: 2.6.35-rc1: WARNING at fs/fs-writeback.c:1142 __mark_inode_dirty+0x103/0x170
+>> Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
+>> Date		: 2010-06-04 13:18 (5 days old)
+> 
+> Jens?
 
-http://git.kernel.org/?p=3Dlinux/kernel/git/davem/net-2.6.git;a=3Dcommi=
-t;h=3D035320d54758e21227987e3aae0d46e7a04f4ddc
+Looking into this one.
 
-Thanks
+-- 
+Jens Axboe
+
