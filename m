@@ -1,119 +1,67 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Wed, 09 Jun 2010 19:58:00 +0400
-Message-ID: <4C0FBA08.2090502@vlnb.net>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>	 <yq1iq64kv9f.fsf@sermon.lab.mkp.net>	 <1275318102.2823.47.camel@mulgrave.site> <4C03D5FD.3000202@panasas.com>	 <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com> <1275398876.21962.6.camel@mulgrave.site> <4C078FE2.9000804@vlnb.net> <4C079B07.5020303@panasas.com> <4C07A2EB.4080006@vlnb.net> <4C07A442.1030502@vlnb.net>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: add writeq definition if needed
+Date: Wed, 09 Jun 2010 11:04:17 -0500
+Message-ID: <4C0FBB81.1040803@linux.vnet.ibm.com>
+References: <20100608224308.499532262@linux.vnet.ibm.com> <4C0FB247.7000007@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4C07A442.1030502@vlnb.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Christof Schmitt <christof.schmitt@de.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:56197 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756899Ab0FIQSB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jun 2010 12:18:01 -0400
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by e6.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o59GGQPe015747
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2010 12:16:26 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o59GG51b125716
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2010 12:17:58 -0400
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o59G4EXZ030156
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Jun 2010 10:04:15 -0600
+In-Reply-To: <4C0FB247.7000007@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: ben@decadent.org.uk, James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Vladislav Bolkhovitin, on 06/03/2010 04:46 PM wrote:
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
+
+On 06/09/2010 10:24 AM, Wayne Boyer wrote:
+> Compiling the driver will fail on 32 bit powerpc and other
+> architectures where writeq is not defined.  This patch adds a
+> definition for writeq.
 > 
-> Vladislav Bolkhovitin, on 06/03/2010 04:41 PM wrote:
->> Boaz Harrosh, on 06/03/2010 04:07 PM wrote:
->>> On 06/03/2010 02:20 PM, Vladislav Bolkhovitin wrote:
->>>> There's one interesting problem here, at least theoretically, with SCSI 
->>>> or similar transports which allow to have commands queue depth >1 and 
->>>> allowed to internally reorder queued requests. I don't know the FS/block 
->>>> layers sufficiently well to tell if sending several requests for the 
->>>> same page really possible or not, but we can see a real life problem, 
->>>> which can be well explained if it's possible.
->>>>
->>>> The problem could be if the second (rewrite) request (SCSI command) for 
->>>> the same page queued to the corresponding device before the original 
->>>> request finished. Since the device allowed to freely reorder requests, 
->>>> there's a probability that the original write request would hit the 
->>>> permanent storage *AFTER* the retry request, hence the data changes it's 
->>>> carrying would be lost, hence welcome data corruption.
->>>>
->>> I might be totally wrong here but I think NCQ can reorder sectors but
->>> not writes. That is if the sector is cached in device memory and a later
->>> write comes to modify the same sector then the original should be
->>> replaced not two values of the same sector be kept in device cache at the
->>> same time.
->>>
->>> Failing to do so is a scsi device problem.
->> SCSI devices supporting Full task management model (almost all) and 
->> having QUEUE ALGORITHM MODIFIER bits in Control mode page set to 1 
->> allowed to freely reorder any commands with SIMPLE task attribute. If an 
->> application wants to maintain order of some commands for such devices, 
->> it must issue them with ORDERED task attribute and over a _single_ MPIO 
->> path to the device.
->>
->> Linux neither uses ORDERED attribute, nor honors or enforces anyhow 
->> QUEUE ALGORITHM MODIFIER bits, nor takes care to send commands with 
->> order dependencies (overlapping writes in our case) over a single MPIO path.
->>
->>> Please note that page-to-sector is not necessary constant. And the same page
->>> might get written at a different sector, next time. But FSs will have to
->>> barrier in this case.
->>>
->>>> For single parallel SCSI or SAS devices such race may look practically 
->>>> impossible, but for sophisticated clusters when many nodes pretending to 
->>>> be a single SCSI device in a load balancing configuration, it becomes 
->>>> very real.
->>>>
->>>> The real life problem we can see in an active-active DRBD-setup. In this 
->>>> configuration 2 nodes act as a single SCST-powered SCSI device and they 
->>>> both run DRBD to keep their backstorage in-sync. The initiator uses them 
->>>> as a single multipath device in an active-active round-robin 
->>>> load-balancing configuration, i.e. sends requests to both nodes in 
->>>> parallel, then DRBD takes care to replicate the requests to the other node.
->>>>
->>>> The problem is that sometimes DRBD complies about concurrent local 
->>>> writes, like:
->>>>
->>>> kernel: drbd0: scsi_tgt0[12503] Concurrent local write detected! 
->>>> [DISCARD L] new: 144072784s +8192; pending: 144072784s +8192
->>>>
->>>> This message means that DRBD detected that both nodes received 
->>>> overlapping writes on the same block(s) and DRBD can't figure out which 
->>>> one to store. This is possible only if the initiator sent the second 
->>>> write request before the first one completed.
->>> It is totally possible in today's code.
->>>
->>> DRBD should store the original command_sn of the write and discard
->>> the sector with the lower SN. It should appear as a single device
->>> to the initiator.
->> How can it find the SN? The commands were sent over _different_ MPIO 
->> paths to the device, so at the moment of the sending all the order 
->> information was lost.
->>
->> Until SCSI generally allowed to preserve ordering information between 
->> MPIO paths in such configurations the only way to maintain commands 
->> order would be queue draining. Hence, for safety all initiators working 
->> with such devices must do it.
->>
->> But looks like Linux doesn't do it, so unsafe with MPIO clusters?
+> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+> ---
 > 
-> I meant load balancing MPIO clusters.
+>  drivers/scsi/ipr.h |    8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> Index: b/drivers/scsi/ipr.h
+> ===================================================================
+> --- a/drivers/scsi/ipr.h	2010-06-08 10:06:48.000000000 -0700
+> +++ b/drivers/scsi/ipr.h	2010-06-08 15:14:42.000000000 -0700
+> @@ -1860,4 +1860,12 @@ static inline int ipr_sdt_is_fmt2(u32 sd
+>  	return 0;
+>  }
+> 
+> +#ifndef writeq
+> +static inline void writeq(u64 val, void __iomem *addr)
+> +{
+> +        writel(((u32) (val >> 32)), addr);
+> +        writel(((u32) (val)), (addr + 4));
+> +}
+>  #endif
+> +
+> +#endif /* _IPR_H */
+> 
 
-Actually, if consider processing of exception conditions like Task Set 
-Full status or Unit Attentions, queuing of several write commands for 
-the same page(s) is not safe also for all other MPIO clusters as well as 
-for single path SCSI-transport devices, like regular HDDs or other 
-SAS/FC/iSCSI/... storage.
 
-This is because in case of exception conditions the first write command 
-could be preliminary finished to deliver the exception condition status 
-to the initiator, but all the queued after it commands would be neither 
-aborted, nor suspended. So, after retrying the command can be queued 
-_after_ the second write command, hence they would be executed in the 
-reverse order with related data corruption.
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-To prevent such things, SCSI standard provides ACA and UA interlock 
-facilities, but Linux doesn't use them.
 
-Thus, to be safe Linux should:
-
-1. Either don't write on pages under IO, hence don't queue retries,
-
-2. Or queue retries only after the original write finished.
-
-Vlad
