@@ -1,70 +1,140 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 1/1] ipr: add writeq definition if needed
-Date: Wed, 09 Jun 2010 14:43:57 -0400
-Message-ID: <1276109037.4343.386.camel@mulgrave.site>
-References: <20100608224308.499532262@linux.vnet.ibm.com>
-	 <4C0FB247.7000007@linux.vnet.ibm.com>
-	 <1276100428.4343.272.camel@mulgrave.site>
-	 <4C0FD333.1080500@linux.vnet.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: libfc fc_rport_recv_prli_req() changes for v2.6.35-rc2
+Date: Wed, 09 Jun 2010 14:59:46 -0700
+Message-ID: <1276120786.18353.89.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48240 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753530Ab0FISoL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Jun 2010 14:44:11 -0400
-In-Reply-To: <4C0FD333.1080500@linux.vnet.ibm.com>
+Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:47388 "HELO
+	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751849Ab0FIV7s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2010 17:59:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: ben@decadent.org.uk, linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
+To: Joe Eykholt <jeykholt@cisco.com>
+Cc: openfcoe-devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Love, Robert W" <robert.w.love@intel.com>
 
-On Wed, 2010-06-09 at 10:45 -0700, Wayne Boyer wrote:
-> On 06/09/2010 09:20 AM, James Bottomley wrote:
-> > On Wed, 2010-06-09 at 08:24 -0700, Wayne Boyer wrote:
-> >> Compiling the driver will fail on 32 bit powerpc and other
-> >> architectures where writeq is not defined.  This patch adds a
-> >> definition for writeq.
-> >>
-> >> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-> >> ---
-> >>
-> >>  drivers/scsi/ipr.h |    8 ++++++++
-> >>  1 file changed, 8 insertions(+)
-> >>
-> >> Index: b/drivers/scsi/ipr.h
-> >> ===================================================================
-> >> --- a/drivers/scsi/ipr.h	2010-06-08 10:06:48.000000000 -0700
-> >> +++ b/drivers/scsi/ipr.h	2010-06-08 15:14:42.000000000 -0700
-> >> @@ -1860,4 +1860,12 @@ static inline int ipr_sdt_is_fmt2(u32 sd
-> >>  	return 0;
-> >>  }
-> >>
-> >> +#ifndef writeq
-> >> +static inline void writeq(u64 val, void __iomem *addr)
-> >> +{
-> >> +        writel(((u32) (val >> 32)), addr);
-> >> +        writel(((u32) (val)), (addr + 4));
-> > 
-> > Are you sure this is what you want?  The point about writeq is to do an
-> > atomic write of a 64 bit quantity.  Doing two writel's loses the
-> > atomicity (and can confuse some hardware if not done in the right
-> > order).  If this code above works correctly, why bother with the writeq?
-> > 
-> 
-> We do want to issue 8 byte MMIO writes where we can for the new adapters
-> for better performance.  We want to use writeq on platforms that support
-> it.  I did test the driver using this define with the new hardware and it
-> does work as expected.
+Greetings Joe,
 
-OK, that's fine, just checking.
+While doing a pull recently for v2.6.35-rc2, I ran into a merge conflict
+below in drivers/scsi/libfc/fc_rport.c:fc_rport_recv_pril_req()
+with the original PLOGI driven target provider hooks changes that I have
+been including into the lio-core-2.6.git tree for tcm_fc.
 
-I suppose we should have some type of writeq_nonatomic() so I don't have
-to check, but this is the first I've seen of these, so it's likely not
-very common.
+>From taking a quick look, I assume that active and passing prov->prli()
+calls need to appear under the new roles assignment, namely under:
 
-James
+      if (fcp_parm & FCP_SPPF_TARG_FCN)
+              roles |= FC_RPORT_ROLE_FCP_TARGET;
 
+for the upstream e44a21b726 commit.  Is there anything else that should
+be taken into consideration to get this running again..?  
 
+Best,
+
+--nab
+
+<<<<<<< HEAD
+
+        /*
+         * Go through all the service parameter pages and build
+         * response.  If plen indicates longer SPP than standard,
+         * use that.  The entire response has been pre-cleared above.
+         */
+        spp = &pp->spp;
+        mutex_lock(&fc_prov_mutex);
+        while (len >= plen) {
+                spp->spp_type = rspp->spp_type;
+                spp->spp_type_ext = rspp->spp_type_ext;
+                resp = 0;
+
+                if (rspp->spp_type < FC_FC4_PROV_SIZE) {
+                        prov = fc_active_prov[rspp->spp_type];
+                        if (prov)
+                                resp = prov->prli(rdata, plen, rspp, spp);
+                        prov = fc_passive_prov[rspp->spp_type];
+                        if (prov) {
+                                passive = prov->prli(rdata, plen, rspp, spp);
+                                if (!resp || passive == FC_SPP_RESP_ACK)
+                                        resp = passive;
+                        }
+                }
+                if (!resp) {
+                        if (spp->spp_flags & FC_SPP_EST_IMG_PAIR)
+                                resp |= FC_SPP_RESP_CONF;
+                        else
+                                resp |= FC_SPP_RESP_INVL;
+                }
+                spp->spp_flags |= resp;
+                len -= plen;
+                rspp = (struct fc_els_spp *)((char *)rspp + plen);
+                spp = (struct fc_els_spp *)((char *)spp + plen);
+        }
+        mutex_unlock(&fc_prov_mutex);
+
+        /*
+         * Send LS_ACC.  If this fails, the originator should retry.
+         */
+        f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ;
+        f_ctl |= FC_FC_END_SEQ | FC_FC_SEQ_INIT;
+        ep = fc_seq_exch(sp);
+        fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
+                       FC_TYPE_ELS, f_ctl, 0);
+        lport->tt.seq_send(lport, sp, fp);
+
+=======
+
+        /* reinitialize remote port roles */
+        rdata->ids.roles = FC_RPORT_ROLE_UNKNOWN;
+
+        /*
+         * Go through all the service parameter pages and build
+         * response.  If plen indicates longer SPP than standard,
+         * use that.  The entire response has been pre-cleared above.
+         */
+        spp = &pp->spp;
+        while (len >= plen) {
+                spp->spp_type = rspp->spp_type;
+                spp->spp_type_ext = rspp->spp_type_ext;
+                spp->spp_flags = rspp->spp_flags & FC_SPP_EST_IMG_PAIR;
+                resp = FC_SPP_RESP_ACK;
+
+                switch (rspp->spp_type) {
+                case 0: /* common to all FC-4 types */
+                        break;
+                case FC_TYPE_FCP:
+                        fcp_parm = ntohl(rspp->spp_params);
+                        if (fcp_parm & FCP_SPPF_RETRY)
+                                rdata->flags |= FC_RP_FLAGS_RETRY;
+                        rdata->supported_classes = FC_COS_CLASS3;
+                        if (fcp_parm & FCP_SPPF_INIT_FCN)
+                                roles |= FC_RPORT_ROLE_FCP_INITIATOR;
+                        if (fcp_parm & FCP_SPPF_TARG_FCN)
+                                roles |= FC_RPORT_ROLE_FCP_TARGET;
+                        rdata->ids.roles = roles;
+
+                        spp->spp_params = htonl(lport->service_params);
+                        break;
+                default:
+                        resp = FC_SPP_RESP_INVL;
+                        break;
+                }
+                spp->spp_flags |= resp;
+                len -= plen;
+                rspp = (struct fc_els_spp *)((char *)rspp + plen);
+                spp = (struct fc_els_spp *)((char *)spp + plen);
+        }
+
+        /*
+         * Send LS_ACC.  If this fails, the originator should retry.
+         */
+        f_ctl = FC_FC_EX_CTX | FC_FC_LAST_SEQ;
+        f_ctl |= FC_FC_END_SEQ | FC_FC_SEQ_INIT;
+        ep = fc_seq_exch(sp);
+        fc_fill_fc_hdr(fp, FC_RCTL_ELS_REP, ep->did, ep->sid,
+                       FC_TYPE_ELS, f_ctl, 0);
+        lport->tt.seq_send(lport, sp, fp);
+
+>>>>>>> e44a21b7268a022c7749f521c06214145bd161e4
 
