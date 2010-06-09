@@ -1,81 +1,264 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-Date: Wed, 09 Jun 2010 09:53:22 +0200
-Message-ID: <4C0F4872.7090909@fusionio.com>
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Carl Worth <cworth@cworth.org>, Eric Anholt <eric@anholt.net>, Venkatesh Pallipadi <venki@google.com>, Dave Airlie <airlied@gmail.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Ingo Molnar <mingo@elte.hu>, =?ISO-8859-15?Q?David_H=E4rdeman?= <david@hardeman.nu>, Mauro Carvalho Chehab <mchehab@redhat.com>, Eric Dumazet <eric.dumazet@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
+From: michaelc@cs.wisc.edu
+Subject: [PATCH] be2iscsi: fix disconnection cleanup
+Date: Wed,  9 Jun 2010 03:30:08 -0500
+Message-ID: <1276072208-6863-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41933 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755585Ab0FII2C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Jun 2010 04:28:02 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-On 2010-06-09 03:53, Linus Torvalds wrote:
->> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16129
->> Subject	: BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2
->> Submitter	: Jan Kreuzer <kontrollator@gmx.de>
->> Date		: 2010-06-05 06:15 (4 days old)
-> 
-> This seems to have been introduced by
-> 
-> 	commit 7cbaef9c83e58bbd4bdd534b09052b6c5ec457d5
-> 	Author: Ingo Molnar <mingo@elte.hu>
-> 	Date:   Sat Nov 8 17:05:38 2008 +0100
-> 
-> 	    sched: optimize sched_clock() a bit
->     
-> 	    sched_clock() uses cycles_2_ns() needlessly - which is an irq-disabling
-> 	    variant of __cycles_2_ns().
->     
-> 	    Most of the time sched_clock() is called with irqs disabled already.
-> 	    The few places that call it with irqs enabled need to be updated.
->     
-> 	    Signed-off-by: Ingo Molnar <mingo@elte.hu>
-> 
-> and this seems to be one of those calling cases that need to be updated.
-> 
-> Ingo? The call trace is:
-> 
-> 	BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2-8/337
-> 	caller is native_sched_clock+0x3c/0x68
-> 	Pid: 337, comm: jbd2/sda2-8 Not tainted 2.6.35-rc1jan+ #4
-> 	Call Trace:
-> 	[<ffffffff812362c5>] debug_smp_processor_id+0xc9/0xe4
-> 	[<ffffffff8101059d>] native_sched_clock+0x3c/0x68
-> 	[<ffffffff8101043d>] sched_clock+0x9/0xd
-> 	[<ffffffff81212d7a>] blk_rq_init+0x97/0xa3
-> 	[<ffffffff81214d71>] get_request+0x1c4/0x2d0
-> 	[<ffffffff81214ea6>] get_request_wait+0x29/0x1a6
-> 	[<ffffffff81215537>] __make_request+0x338/0x45b
-> 	[<ffffffff812147c2>] generic_make_request+0x2bb/0x330
-> 	[<ffffffff81214909>] submit_bio+0xd2/0xef
-> 	[<ffffffff811413cb>] submit_bh+0xf4/0x116
-> 	[<ffffffff81144853>] block_write_full_page_endio+0x89/0x96
-> 	[<ffffffff81144875>] block_write_full_page+0x15/0x17
-> 	[<ffffffff8119b00a>] ext4_writepage+0x356/0x36b
-> 	[<ffffffff810e1f91>] __writepage+0x1a/0x39
-> 	[<ffffffff810e32a6>] write_cache_pages+0x20d/0x346
-> 	[<ffffffff810e3406>] generic_writepages+0x27/0x29
-> 	[<ffffffff811ca279>] journal_submit_data_buffers+0x110/0x17d
-> 	[<ffffffff811ca986>] jbd2_journal_commit_transaction+0x4cb/0x156d
-> 	[<ffffffff811d0cba>] kjournald2+0x147/0x37a
-> 
-> (from the bugzilla thing)
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-This should be fixed by commit 28f4197e which was merged on friday.
+This patch fixes 4 bugs in the connection connect/disconnect
+cleanup path.
 
->> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16122
->> Subject	: 2.6.35-rc1: WARNING at fs/fs-writeback.c:1142 __mark_inode_dirty+0x103/0x170
->> Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
->> Date		: 2010-06-04 13:18 (5 days old)
-> 
-> Jens?
+1. If beiscsi_open_conn fails beiscsi_free_ep was always being
+called, and if beiscsi_open_conn failed because beiscsi_get_cid
+failed then we would free an unallocated cid.
 
-Looking into this one.
+2. If beiscsi_ep_connect failed due to a beiscsi_open_conn failure
+it was leaking iscsi_endpoints.
 
+3. beiscsi_ep_disconnect was leaking iscsi_endpoints.
+beiscsi_ep_disconnect should free the iscsi_endpoint. We cannot
+do it in beiscsi_conn_stop because that is only called for
+iscsi connection cleanup. If beiscsi_ep_connect returns
+success, but then the poll function fails or the connect
+times out then beiscsi_ep_disconnect will be called to clean
+up the ep. The conn_stop callout will not be called in that path.
+
+4. beiscsi_conn_stop was freeing the iscsi_endpoint then accessing
+it a couple lines later.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/be2iscsi/be_iscsi.c |  121 +++++++++++++++++---------------------
+ drivers/scsi/be2iscsi/be_iscsi.h |    2 -
+ drivers/scsi/be2iscsi/be_main.c  |    2 +-
+ 3 files changed, 55 insertions(+), 70 deletions(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index c3928cb..8727555 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -442,6 +442,31 @@ static int beiscsi_get_cid(struct beiscsi_hba *phba)
+ }
+ 
+ /**
++ * beiscsi_put_cid - Free the cid
++ * @phba: The phba for which the cid is being freed
++ * @cid: The cid to free
++ */
++static void beiscsi_put_cid(struct beiscsi_hba *phba, unsigned short cid)
++{
++	phba->avlbl_cids++;
++	phba->cid_array[phba->cid_free++] = cid;
++	if (phba->cid_free == phba->params.cxns_per_ctrl)
++		phba->cid_free = 0;
++}
++
++/**
++ * beiscsi_free_ep - free endpoint
++ * @ep:	pointer to iscsi endpoint structure
++ */
++static void beiscsi_free_ep(struct beiscsi_endpoint *beiscsi_ep)
++{
++	struct beiscsi_hba *phba = beiscsi_ep->phba;
++
++	beiscsi_put_cid(phba, beiscsi_ep->ep_cid);
++	beiscsi_ep->phba = NULL;
++}
++
++/**
+  * beiscsi_open_conn - Ask FW to open a TCP connection
+  * @ep:	endpoint to be used
+  * @src_addr: The source IP address
+@@ -475,7 +500,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 	if (beiscsi_ep->ep_cid > (phba->fw_config.iscsi_cid_start +
+ 				  phba->params.cxns_per_ctrl * 2)) {
+ 		SE_DEBUG(DBG_LVL_1, "Failed in allocate iscsi cid\n");
+-		return ret;
++		goto free_ep;
+ 	}
+ 
+ 	beiscsi_ep->cid_vld = 0;
+@@ -496,7 +521,7 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 				    " status = %d extd_status = %d \n",
+ 				    status, extd_status);
+ 		free_mcc_tag(&phba->ctrl, tag);
+-		return -1;
++		goto free_ep;
+ 	} else {
+ 		wrb = queue_get_wrb(mccq, wrb_num);
+ 		free_mcc_tag(&phba->ctrl, tag);
+@@ -508,31 +533,10 @@ static int beiscsi_open_conn(struct iscsi_endpoint *ep,
+ 		SE_DEBUG(DBG_LVL_8, "mgmt_open_connection Success\n");
+ 	}
+ 	return 0;
+-}
+-
+-/**
+- * beiscsi_put_cid - Free the cid
+- * @phba: The phba for which the cid is being freed
+- * @cid: The cid to free
+- */
+-static void beiscsi_put_cid(struct beiscsi_hba *phba, unsigned short cid)
+-{
+-	phba->avlbl_cids++;
+-	phba->cid_array[phba->cid_free++] = cid;
+-	if (phba->cid_free == phba->params.cxns_per_ctrl)
+-		phba->cid_free = 0;
+-}
+-
+-/**
+- * beiscsi_free_ep - free endpoint
+- * @ep:	pointer to iscsi endpoint structure
+- */
+-static void beiscsi_free_ep(struct beiscsi_endpoint *beiscsi_ep)
+-{
+-	struct beiscsi_hba *phba = beiscsi_ep->phba;
+ 
+-	beiscsi_put_cid(phba, beiscsi_ep->ep_cid);
+-	beiscsi_ep->phba = NULL;
++free_ep:
++	beiscsi_free_ep(beiscsi_ep);
++	return -1;
+ }
+ 
+ /**
+@@ -585,7 +589,7 @@ beiscsi_ep_connect(struct Scsi_Host *shost, struct sockaddr *dst_addr,
+ 	return ep;
+ 
+ free_ep:
+-	beiscsi_free_ep(beiscsi_ep);
++	iscsi_destroy_endpoint(ep);
+ 	return ERR_PTR(ret);
+ }
+ 
+@@ -632,30 +636,6 @@ static int beiscsi_close_conn(struct  beiscsi_endpoint *beiscsi_ep, int flag)
+ }
+ 
+ /**
+- * beiscsi_ep_disconnect - Tears down the TCP connection
+- * @ep:	endpoint to be used
+- *
+- * Tears down the TCP connection
+- */
+-void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
+-{
+-	struct beiscsi_conn *beiscsi_conn;
+-	struct beiscsi_endpoint *beiscsi_ep;
+-	struct beiscsi_hba *phba;
+-
+-	beiscsi_ep = ep->dd_data;
+-	phba = beiscsi_ep->phba;
+-	SE_DEBUG(DBG_LVL_8, "In beiscsi_ep_disconnect for ep_cid = %d\n",
+-			     beiscsi_ep->ep_cid);
+-
+-	if (beiscsi_ep->conn) {
+-		beiscsi_conn = beiscsi_ep->conn;
+-		iscsi_suspend_queue(beiscsi_conn->conn);
+-	}
+-
+-}
+-
+-/**
+  * beiscsi_unbind_conn_to_cid - Unbind the beiscsi_conn from phba conn table
+  * @phba: The phba instance
+  * @cid: The cid to free
+@@ -673,28 +653,35 @@ static int beiscsi_unbind_conn_to_cid(struct beiscsi_hba *phba,
+ }
+ 
+ /**
+- * beiscsi_conn_stop - Invalidate and stop the connection
+- * @cls_conn: pointer to get iscsi_conn
+- * @flag: The type of connection closure
++ * beiscsi_ep_disconnect - Tears down the TCP connection
++ * @ep:	endpoint to be used
++ *
++ * Tears down the TCP connection
+  */
+-void beiscsi_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
++void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
+ {
+-	struct iscsi_conn *conn = cls_conn->dd_data;
+-	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
++	struct beiscsi_conn *beiscsi_conn;
+ 	struct beiscsi_endpoint *beiscsi_ep;
+-	struct iscsi_session *session = conn->session;
+-	struct Scsi_Host *shost = iscsi_session_to_shost(session->cls_session);
+-	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	struct beiscsi_hba *phba;
+ 	unsigned int tag;
+ 	unsigned short savecfg_flag = CMD_ISCSI_SESSION_SAVE_CFG_ON_FLASH;
+ 
+-	beiscsi_ep = beiscsi_conn->ep;
+-	if (!beiscsi_ep) {
+-		SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_stop , no beiscsi_ep\n");
++	beiscsi_ep = ep->dd_data;
++	phba = beiscsi_ep->phba;
++	SE_DEBUG(DBG_LVL_8, "In beiscsi_ep_disconnect for ep_cid = %d\n",
++			     beiscsi_ep->ep_cid);
++
++	if (!beiscsi_ep->conn) {
++		SE_DEBUG(DBG_LVL_8, "In beiscsi_ep_disconnect, no "
++			 "beiscsi_ep\n");
+ 		return;
+ 	}
+-	SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_stop  ep_cid = %d\n",
+-			     beiscsi_ep->ep_cid);
++	beiscsi_conn = beiscsi_ep->conn;
++	iscsi_suspend_queue(beiscsi_conn->conn);
++	
++	SE_DEBUG(DBG_LVL_8, "In beiscsi_ep_disconnect ep_cid = %d\n",
++		 beiscsi_ep->ep_cid);
++
+ 	tag = mgmt_invalidate_connection(phba, beiscsi_ep,
+ 					    beiscsi_ep->ep_cid, 1,
+ 					    savecfg_flag);
+@@ -707,9 +694,9 @@ void beiscsi_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
+ 					 phba->ctrl.mcc_numtag[tag]);
+ 		free_mcc_tag(&phba->ctrl, tag);
+ 	}
++
+ 	beiscsi_close_conn(beiscsi_ep, CONNECTION_UPLOAD_GRACEFUL);
+ 	beiscsi_free_ep(beiscsi_ep);
+-	iscsi_destroy_endpoint(beiscsi_ep->openiscsi_ep);
+ 	beiscsi_unbind_conn_to_cid(phba, beiscsi_ep->ep_cid);
+-	iscsi_conn_stop(cls_conn, flag);
++	iscsi_destroy_endpoint(beiscsi_ep->openiscsi_ep);
+ }
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
+index 1f512c2..870cdb2 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.h
++++ b/drivers/scsi/be2iscsi/be_iscsi.h
+@@ -59,8 +59,6 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ 
+ int beiscsi_conn_start(struct iscsi_cls_conn *cls_conn);
+ 
+-void beiscsi_conn_stop(struct iscsi_cls_conn *cls_conn, int flag);
+-
+ struct iscsi_endpoint *beiscsi_ep_connect(struct Scsi_Host *shost,
+ 					  struct sockaddr *dst_addr,
+ 					  int non_blocking);
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index dd5b105..8544145 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3955,7 +3955,7 @@ struct iscsi_transport beiscsi_iscsi_transport = {
+ 	.get_session_param = iscsi_session_get_param,
+ 	.get_host_param = beiscsi_get_host_param,
+ 	.start_conn = beiscsi_conn_start,
+-	.stop_conn = beiscsi_conn_stop,
++	.stop_conn = iscsi_conn_stop,
+ 	.send_pdu = iscsi_conn_send_pdu,
+ 	.xmit_task = beiscsi_task_xmit,
+ 	.cleanup_task = beiscsi_cleanup_task,
 -- 
-Jens Axboe
+1.6.6.1
 
