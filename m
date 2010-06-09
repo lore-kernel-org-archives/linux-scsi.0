@@ -1,517 +1,192 @@
-From: <kgudipat@brocade.com>
-Subject: [PATCH] [RESUBMIT] bfa: Add sysfs support to obtain debug info.
-Date: Tue, 8 Jun 2010 17:26:35 -0700
-Message-ID: <1276043195-29131-1-git-send-email-kgudipat@brocade.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
+Date: Tue, 8 Jun 2010 18:53:55 -0700 (PDT)
+Message-ID: <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
+References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:52188 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755886Ab0FIA1m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2010 20:27:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Carl Worth <cworth@cworth.org>, Eric Anholt <eric@anholt.net>, Venkatesh Pallipadi <venki@google.com>, Jens Axboe <jaxboe@fusionio.com>
+Cc: DRI <dri-devel@lists.sourceforge.net>, Linux SCSI List <linux-scsi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: huangj@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, Krishna Gudipati <kgudipat@brocade.com>
 
-From: Krishna Gudipati <kgudipat@brocade.com>
 
-	Resubmitting the patch after fixing a compilation warning due to the recent
-	changes in the sysfs bin API; as new attribute struct file *filp
-	is added to read/write.
 
-Change details:
+[ Added lots of cc's to direct specific people to look at the regressions =
 
-	- Add sysfs support to obtain firmware trace, driver trace
-	  and read/write to registers.
+  that may or may not be theirs... ]
 
-	- Following are the new sysfs attributes added:
-		fwtrc: To collect current firmware trace.
-		drvtrc: To collect current driver trace
-		fwsave: To collect last saved fw trace as a result of firmware crash.
-		regwr:  To write one word to chip register
-		regrd: To read one or more words from chip register.
+On Wed, 9 Jun 2010, Rafael J. Wysocki wrote:
+>
+>  * Quite a few of the already reported regressions may be related to the =
+bug
+>    fixed by 386f40c86d6c8d5b717ef20620af1a750d0dacb4 (Revert "tty: fix a =
+little
+>    bug in scrup, vt.c"), so reporters please retest with this commit appl=
+ied.]
 
-Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
----
- drivers/scsi/bfa/bfad.c      |   10 +
- drivers/scsi/bfa/bfad_attr.c |  395 +++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/bfa/bfad_drv.h  |    8 +-
- 3 files changed, 409 insertions(+), 4 deletions(-)
+>From a quick look, most of them look unrelated to that unfortunate bug. =
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index d4fc428..cc835e9 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -845,6 +845,13 @@ bfad_cfg_pport(struct bfad_s *bfad, enum bfa_port_role role)
- 		if (rc != BFA_STATUS_OK)
- 			goto out;
- 
-+		rc = bfad_sysfs_alloc_attr(bfad);
-+
-+		if (rc) {
-+			printk(KERN_WARNING "bfad_sysfs_alloc_attr failed\n");
-+			goto out;
-+		}
-+
- 		bfad->pport.roles |= BFA_PORT_ROLE_FCP_IM;
- 	}
- 
-@@ -864,6 +871,7 @@ bfad_uncfg_pport(struct bfad_s *bfad)
- 
- 	if ((bfad_supported_fc4s & BFA_PORT_ROLE_FCP_IM)
- 	    && (bfad->pport.roles & BFA_PORT_ROLE_FCP_IM)) {
-+		bfad_sysfs_remove_attr(bfad);
- 		bfad_im_scsi_host_free(bfad, bfad->pport.im_port);
- 		bfad_im_port_clean(bfad->pport.im_port);
- 		kfree(bfad->pport.im_port);
-@@ -1146,6 +1154,8 @@ remove_sysfs:
- 	mutex_unlock(&bfad_mutex);
- 	bfad_pci_uninit(pdev, bfad);
- 
-+	if (bfad->fwtrc)
-+		vfree(bfad->fwtrc);
- 	kfree(bfad->trcmod);
- 	kfree(bfad);
- }
-diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
-index e477bfb..8e9b5c4 100644
---- a/drivers/scsi/bfa/bfad_attr.c
-+++ b/drivers/scsi/bfa/bfad_attr.c
-@@ -25,9 +25,398 @@
- #include "bfad_trcmod.h"
- #include "bfad_attr.h"
- 
--/**
-- *  FC_transport_template FC transport template
-- */
-+static ssize_t
-+bfad_sysfs_read_fwtrc(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+
-+	if (!bfad->fwtrc)
-+		return 0;
-+
-+	return memory_read_from_buffer(buf, count, &off, bfad->fwtrc,
-+			bfad->fwtrc_len);
-+}
-+
-+static ssize_t
-+bfad_sysfs_write_fwtrc(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					 shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+	unsigned long flags;
-+	int rc;
-+
-+	bfad->fwtrc_len = sizeof(struct bfa_trc_mod_s);
-+	if (!bfad->fwtrc)
-+		bfad->fwtrc = vmalloc(bfad->fwtrc_len);
-+
-+	if (!bfad->fwtrc) {
-+		printk(KERN_INFO "bfad]%d]: Failed to allocate fwtrc buffer\n",
-+					bfad->inst_no);
-+		return count;
-+	}
-+
-+	memset(bfad->fwtrc, 0, bfad->fwtrc_len);
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rc = bfa_debug_fwtrc(&bfad->bfa, bfad->fwtrc, &bfad->fwtrc_len);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (rc != BFA_STATUS_OK) {
-+		vfree(bfad->fwtrc);
-+		bfad->fwtrc = NULL;
-+		printk(KERN_INFO "bfad[%d]: Failed to collect fwtrc\n",
-+					bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	return count;
-+}
-+
-+static ssize_t
-+bfad_sysfs_read_fwsave(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+
-+	if (!bfad->fwtrc)
-+		return 0;
-+
-+	return memory_read_from_buffer(buf, count, &off, bfad->fwtrc,
-+			bfad->fwtrc_len);
-+}
-+
-+static ssize_t
-+bfad_sysfs_write_fwsave(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+	unsigned long flags;
-+	int rc;
-+
-+	bfad->fwtrc_len = sizeof(struct bfa_trc_mod_s);
-+	if (!bfad->fwtrc)
-+		bfad->fwtrc = vmalloc(bfad->fwtrc_len);
-+
-+	if (!bfad->fwtrc) {
-+		printk(KERN_INFO "bfad[%d]: Failed to allocate fwtrc buffer\n",
-+				bfad->inst_no);
-+		return count;
-+	}
-+
-+	memset(bfad->fwtrc, 0, bfad->fwtrc_len);
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rc = bfa_debug_fwsave(&bfad->bfa, bfad->fwtrc, &bfad->fwtrc_len);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (rc != BFA_STATUS_OK) {
-+		vfree(bfad->fwtrc);
-+		bfad->fwtrc = NULL;
-+		printk(KERN_INFO "bfad[%d]: Failed to collect fwsave\n",
-+				bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	return count;
-+}
-+
-+
-+static ssize_t
-+bfad_sysfs_read_drvtrc(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+
-+	return memory_read_from_buffer(buf, count, &off, bfad->trcmod,
-+					sizeof(struct bfa_trc_mod_s));
-+}
-+
-+static ssize_t
-+bfad_sysfs_read_regrd(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+	ssize_t rc;
-+
-+	if (!bfad->regdata)
-+		return 0;
-+
-+	rc = memory_read_from_buffer(buf, count, &off, bfad->regdata,
-+			bfad->reglen);
-+
-+	if (off + count >= bfad->reglen) {
-+		kfree(bfad->regdata);
-+		bfad->regdata = NULL;
-+		bfad->reglen = 0;
-+	}
-+
-+	return rc;
-+}
-+
-+#define BFA_REG_CT_ADDRSZ       (0x40000)
-+#define BFA_REG_CB_ADDRSZ       (0x20000)
-+#define BFA_REG_ADDRSZ(__bfa)   \
-+	((bfa_ioc_devid(&(__bfa)->ioc) == BFA_PCI_DEVICE_ID_CT) ?       \
-+		BFA_REG_CT_ADDRSZ : BFA_REG_CB_ADDRSZ)
-+#define BFA_REG_ADDRMSK(__bfa)  ((uint32_t)(BFA_REG_ADDRSZ(__bfa) - 1))
-+
-+static bfa_status_t
-+bfad_reg_offset_check(struct bfa_s *bfa, u32 offset, u32 len)
-+{
-+	u8         area;
-+
-+	/* check [16:15] */
-+	area = (offset >> 15) & 0x7;
-+	if (area == 0) {
-+		/* PCIe core register */
-+		if ((offset + (len<<2)) > 0x8000)    /* 8k dwords or 32KB */
-+			return BFA_STATUS_EINVAL;
-+	} else if (area == 0x1) {
-+		/* CB 32 KB memory page */
-+		if ((offset + (len<<2)) > 0x10000)    /* 8k dwords or 32KB */
-+			return BFA_STATUS_EINVAL;
-+	} else {
-+		/* CB register space 64KB */
-+		if ((offset + (len<<2)) > BFA_REG_ADDRMSK(bfa))
-+			return BFA_STATUS_EINVAL;
-+	}
-+	return BFA_STATUS_OK;
-+}
-+
-+static ssize_t
-+bfad_sysfs_write_regrd(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					 shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+	unsigned long flags;
-+	int rc, i;
-+	int addr, len;
-+	u32 *regbuf;
-+	void __iomem *rb, *reg_addr;
-+	struct bfa_s *bfa = &bfad->bfa;
-+	struct bfa_ioc_s  *ioc = &bfa->ioc;
-+
-+	rc = sscanf(buf, "%x:%x", &addr, &len);
-+	if (rc < 2) {
-+		printk(KERN_INFO
-+			"bfad[%d]: sysfs_write_regrd failed to read buf\n",
-+			bfad->inst_no);
-+		return -EINVAL;
-+	}
-+
-+	if (bfad->regdata) {
-+		kfree(bfad->regdata);
-+		bfad->regdata = NULL;
-+		bfad->reglen = 0;
-+	}
-+
-+	bfad->regdata = kzalloc(len << 2, GFP_KERNEL);
-+	if (!bfad->regdata) {
-+		printk(KERN_INFO
-+			"bfad[%d]: Failed to allocate memory for regdata\n",
-+			bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	bfad->reglen = len << 2;
-+	rb = bfa_ioc_bar0(ioc);
-+	addr &= BFA_REG_ADDRMSK(bfa);
-+
-+	/* offset and len sanity check */
-+	rc = bfad_reg_offset_check(bfa, addr, len);
-+	if (rc) {
-+		printk(KERN_INFO "bfad[%d]: Failed reg offset check\n",
-+				bfad->inst_no);
-+		kfree(bfad->regdata);
-+		bfad->regdata = NULL;
-+		bfad->reglen = 0;
-+		return -EINVAL;
-+	}
-+
-+	reg_addr = rb + addr;
-+	regbuf =  (u32 *)bfad->regdata;
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	for (i = 0; i < len; i++) {
-+		*regbuf = bfa_reg_read(reg_addr);
-+		regbuf++;
-+		reg_addr += sizeof(u32);
-+	}
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return count;
-+}
-+
-+static ssize_t
-+bfad_sysfs_write_regwr(struct file *filp, struct kobject *kobj,
-+		struct bin_attribute *bin_attr,
-+		char *buf, loff_t off, size_t count)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(container_of(kobj,
-+					struct device, kobj));
-+	struct bfad_im_port_s *im_port = (struct bfad_im_port_s *)
-+					 shost->hostdata[0];
-+	struct bfad_s *bfad = im_port->bfad;
-+	unsigned long flags;
-+	int rc;
-+	int addr, val;
-+	void __iomem *reg_addr;
-+	struct bfa_s *bfa = &bfad->bfa;
-+	struct bfa_ioc_s  *ioc = &bfa->ioc;
-+
-+	rc = sscanf(buf, "%x:%x", &addr, &val);
-+	if (rc < 2) {
-+		printk(KERN_INFO
-+			"bfad[%d]: sysfs_write_regwr failed to read buf\n",
-+			bfad->inst_no);
-+		return -EINVAL;
-+	}
-+
-+	addr &= BFA_REG_ADDRMSK(bfa); /* offset only 17 bit and word align */
-+
-+	/* offset and len sanity check */
-+	rc = bfad_reg_offset_check(bfa, addr, 1);
-+	if (rc) {
-+		printk(KERN_INFO
-+			"bfad[%d]: Failed reg offset check\n",
-+			bfad->inst_no);
-+		return -EINVAL;
-+	}
-+
-+	reg_addr = (uint32_t *) ((uint8_t *) bfa_ioc_bar0(ioc) + addr);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_reg_write(reg_addr, val);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return count;
-+}
-+
-+static struct bin_attribute sysfs_fwtrc_attr = {
-+	.attr = {
-+		.name = "fwtrc",
-+		.mode = S_IRUSR | S_IWUSR,
-+	},
-+	.size = 0,
-+	.read = bfad_sysfs_read_fwtrc,
-+	.write = bfad_sysfs_write_fwtrc,
-+};
-+
-+static struct bin_attribute sysfs_fwsave_attr = {
-+	.attr = {
-+		.name = "fwsave",
-+		.mode = S_IRUSR | S_IWUSR,
-+	},
-+	.size = 0,
-+	.read = bfad_sysfs_read_fwsave,
-+	.write = bfad_sysfs_write_fwsave,
-+};
-+
-+static struct bin_attribute sysfs_drvtrc_attr = {
-+	.attr = {
-+		.name = "drvtrc",
-+		.mode = S_IRUSR,
-+	},
-+	.size = 0,
-+	.read = bfad_sysfs_read_drvtrc,
-+};
-+
-+static struct bin_attribute sysfs_regrd_attr = {
-+	.attr = {
-+		.name = "regrd",
-+		.mode = S_IRUSR | S_IWUSR,
-+	},
-+	.size = 0,
-+	.read = bfad_sysfs_read_regrd,
-+	.write = bfad_sysfs_write_regrd,
-+};
-+
-+static struct bin_attribute sysfs_regwr_attr = {
-+	.attr = {
-+		.name = "regwr",
-+		.mode = S_IWUSR,
-+	},
-+	.size = 0,
-+	.write = bfad_sysfs_write_regwr,
-+};
-+
-+static struct bin_attribute *bfad_bin_attr[] = {
-+	&sysfs_fwtrc_attr,
-+	&sysfs_fwsave_attr,
-+	&sysfs_drvtrc_attr,
-+	&sysfs_regrd_attr,
-+	&sysfs_regwr_attr,
-+	NULL,
-+};
-+
-+int
-+bfad_sysfs_alloc_attr(struct bfad_s *bfad)
-+{
-+	struct Scsi_Host *shost = bfad->pport.im_port->shost;
-+	int i, j, rc = 0;
-+
-+	for (i = 0; bfad_bin_attr[i]; i++)
-+		rc = sysfs_create_bin_file(&shost->shost_gendev.kobj,
-+			bfad_bin_attr[i]);
-+
-+		if (rc) {
-+			printk(KERN_INFO
-+				"bfad[%d]: Unable to create %s bin attribute\n",
-+				bfad->inst_no, bfad_bin_attr[i]->attr.name);
-+			goto out;
-+	}
-+
-+	return 0;
-+
-+out:
-+	for (j = 0; j < i; j++)
-+		sysfs_remove_bin_file(&shost->shost_gendev.kobj,
-+			bfad_bin_attr[j]);
-+	return rc;
-+}
-+
-+void
-+bfad_sysfs_remove_attr(struct bfad_s *bfad)
-+{
-+	struct Scsi_Host *shost = bfad->pport.im_port->shost;
-+	int i;
-+
-+	for (i = 0; bfad_bin_attr[i]; i++)
-+		sysfs_remove_bin_file(&shost->shost_gendev.kobj,
-+			bfad_bin_attr[i]);
-+}
- 
- /**
-  * FC transport template entry, get SCSI target port ID.
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 6c920c1..2797723 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -195,6 +195,10 @@ struct bfad_s {
- 	bfa_boolean_t	ipfc_enabled;
- 	union bfad_tmp_buf tmp_buf;
- 	struct fc_host_statistics link_stats;
-+	u32 fwtrc_len;
-+	char *fwtrc;
-+	u32 reglen;
-+	char *regdata;
- };
- 
- /*
-@@ -280,13 +284,15 @@ void		bfad_drv_uninit(struct bfad_s *bfad);
- void		bfad_drv_log_level_set(struct bfad_s *bfad);
- bfa_status_t	bfad_fc4_module_init(void);
- void		bfad_fc4_module_exit(void);
--int		bfad_worker (void *ptr);
-+int		bfad_worker(void *ptr);
- 
- void bfad_pci_remove(struct pci_dev *pdev);
- int bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid);
- void bfad_os_rport_online_wait(struct bfad_s *bfad);
- int bfad_os_get_linkup_delay(struct bfad_s *bfad);
- int bfad_install_msix_handler(struct bfad_s *bfad);
-+int bfad_sysfs_alloc_attr(struct bfad_s *bfad);
-+void bfad_sysfs_remove_attr(struct bfad_s *bfad);
- 
- extern struct idr bfad_im_port_index;
- extern struct list_head bfad_list;
--- 
-1.7.1.96.gc06ee
+It's hard to tell for sure, of course (memory corruption can do pretty =
 
+much anything), but I'm not seeing the 07200720.. pattern at least.
+
+And some of them do seem to be bisected to likely culprits and/or have =
+
+patches that are claimed to have fixed them.
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16163
+> Subject	: [2.6.35-rc1 Regression] i915: Commit cfecde causes VGA to stay =
+off
+> Submitter	: David John <davidjon@xenontk.org>
+> Date		: 2010-06-02 12:52 (7 days old)
+> Message-ID	: <4C065423.3000202@xenontk.org>
+> References	: http://marc.info/?l=3Dlinux-kernel&m=3D127548313828613&w=3D2
+
+That has a "reverting the commit fixes it", and a confirmation from Nick =
+
+Bowler.
+
+Eric, Carl: should I just revert that commit? Or do you have a fix?
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16145
+> Subject	: Unable to boot after "ACPI: Don't let acpi_pad needlessly mark =
+TSC unstable"
+> Submitter	: Tom Gundersen <teg@jklm.no>
+> Date		: 2010-06-07 13:11 (2 days old)
+> Handled-By	: Venkatesh Pallipadi <venki@google.com>
+
+Hmm. This does seem to be a properly bisected commit, but at the same time =
+
+it looks from the bugzilla like it's just pure luck on that machine that =
+
+the acpi_pad driver happened to mark TSC unstable - so while the commit =
+
+bisected is the real one, it's not the "deeper reason" for the problem.
+
+Venki, any updates?
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16129
+> Subject	: BUG: using smp_processor_id() in preemptible [00000000] code: j=
+bd2/sda2
+> Submitter	: Jan Kreuzer <kontrollator@gmx.de>
+> Date		: 2010-06-05 06:15 (4 days old)
+
+This seems to have been introduced by
+
+	commit 7cbaef9c83e58bbd4bdd534b09052b6c5ec457d5
+	Author: Ingo Molnar <mingo@elte.hu>
+	Date:   Sat Nov 8 17:05:38 2008 +0100
+
+	    sched: optimize sched_clock() a bit
+    =
+
+	    sched_clock() uses cycles_2_ns() needlessly - which is an irq-disabling
+	    variant of __cycles_2_ns().
+    =
+
+	    Most of the time sched_clock() is called with irqs disabled already.
+	    The few places that call it with irqs enabled need to be updated.
+    =
+
+	    Signed-off-by: Ingo Molnar <mingo@elte.hu>
+
+and this seems to be one of those calling cases that need to be updated.
+
+Ingo? The call trace is:
+
+	BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2-8/=
+337
+	caller is native_sched_clock+0x3c/0x68
+	Pid: 337, comm: jbd2/sda2-8 Not tainted 2.6.35-rc1jan+ #4
+	Call Trace:
+	[<ffffffff812362c5>] debug_smp_processor_id+0xc9/0xe4
+	[<ffffffff8101059d>] native_sched_clock+0x3c/0x68
+	[<ffffffff8101043d>] sched_clock+0x9/0xd
+	[<ffffffff81212d7a>] blk_rq_init+0x97/0xa3
+	[<ffffffff81214d71>] get_request+0x1c4/0x2d0
+	[<ffffffff81214ea6>] get_request_wait+0x29/0x1a6
+	[<ffffffff81215537>] __make_request+0x338/0x45b
+	[<ffffffff812147c2>] generic_make_request+0x2bb/0x330
+	[<ffffffff81214909>] submit_bio+0xd2/0xef
+	[<ffffffff811413cb>] submit_bh+0xf4/0x116
+	[<ffffffff81144853>] block_write_full_page_endio+0x89/0x96
+	[<ffffffff81144875>] block_write_full_page+0x15/0x17
+	[<ffffffff8119b00a>] ext4_writepage+0x356/0x36b
+	[<ffffffff810e1f91>] __writepage+0x1a/0x39
+	[<ffffffff810e32a6>] write_cache_pages+0x20d/0x346
+	[<ffffffff810e3406>] generic_writepages+0x27/0x29
+	[<ffffffff811ca279>] journal_submit_data_buffers+0x110/0x17d
+	[<ffffffff811ca986>] jbd2_journal_commit_transaction+0x4cb/0x156d
+	[<ffffffff811d0cba>] kjournald2+0x147/0x37a
+
+(from the bugzilla thing)
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16122
+> Subject	: 2.6.35-rc1: WARNING at fs/fs-writeback.c:1142 __mark_inode_dirt=
+y+0x103/0x170
+> Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
+> Date		: 2010-06-04 13:18 (5 days old)
+
+Jens?
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16120
+> Subject	: Oops: 0000 [#1] SMP, unable to handle kernel NULL pointer deref=
+erence at (null)
+> Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
+> Date		: 2010-06-04 09:25 (5 days old)
+> Handled-By	: Eric Dumazet <eric.dumazet@gmail.com>
+
+This one seems to have a patch in bugzilla.
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16104
+> Subject	: Radeon KMS does not start after merge of the new PM-Code
+> Submitter	: Jan Kreuzer <kontrollator@gmx.de>
+> Date		: 2010-06-02 07:47 (7 days old)
+
+This one also has a patch in Bugzilla, I think Airlie is just waiting to =
+
+calm down his queue and already removed the dependency on the temperature =
+
+code. DaveA?
+
+> Bug-Entry     : http://bugzilla.kernel.org/show_bug.cgi?id=3D16161
+> Subject       : [2.6.35-rc1 regression] sysfs: cannot create duplicate fi=
+lename ... XVR-600 related?
+> Submitter     : Mikael Pettersson <mikpe@it.uu.se>
+> Date          : 2010-06-01 19:57 (8 days old)
+> Message-ID    : <19461.26166.427857.612983@pilspetsen.it.uu.se>
+> References    : http://marc.info/?l=3Dlinux-kernel&m=3D127542227511925&w=
+=3D2
+>
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16090
+> Subject	: sysfs: cannot create duplicate filename
+> Submitter	: Tobias <devnull@plzk.org>
+> Date		: 2010-06-01 15:59 (8 days old)
+> Handled-By	: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+These two look related. Both are related to that "slot" thing in sysfs =
+
+PCI, but only one of them is marked as Jesse's. Jesse?
+
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16037
+> Subject	: NULL Pointer dereference in __ir_input_register/budget_ci_attach
+> Submitter	: Sean Finney <seanius@debian.org>
+> Date		: 2010-05-23 19:52 (17 days old)
+
+Perhaps related to commit 13c24497086418010bf4f76378bcae241d7f59cd?
+
+David H=E4rdeman, Mauro Carvalho Chehab added to cc.
+
+				Linus
