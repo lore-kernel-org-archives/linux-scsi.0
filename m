@@ -1,58 +1,43 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Best approach for using sg_ses to control locate/fault leds?
-Date: Thu, 10 Jun 2010 12:42:55 -0400
-Message-ID: <4C11160F.3090700@interlog.com>
-References: <4C101732.9010304@aeoncomputing.com> <4C110A2B.4060009@mpstor.com>
-Reply-To: dgilbert@interlog.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [patch 2/2] be2iscsi: null dereference on error path
+Date: Thu, 10 Jun 2010 15:43:17 -0500
+Message-ID: <4C114E65.90305@cs.wisc.edu>
+References: <20100610075305.GJ5483@bicker>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:59797 "EHLO smtp.infotech.no"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58948 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752327Ab0FJQnG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jun 2010 12:43:06 -0400
-In-Reply-To: <4C110A2B.4060009@mpstor.com>
+	id S1756903Ab0FJUlL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jun 2010 16:41:11 -0400
+In-Reply-To: <20100610075305.GJ5483@bicker>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin ESTRABAUD <be@mpstor.com>
-Cc: Jeff Johnson <jeff.johnson@aeoncomputing.com>, linux-scsi@vger.kernel.org
+To: Dan Carpenter <error27@gmail.com>
+Cc: Jayamohan Kallickal <jayamohank@serverengines.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 10-06-10 11:52 AM, Benjamin ESTRABAUD wrote:
-> Hi,
+On 06/10/2010 02:53 AM, Dan Carpenter wrote:
+> "phba" is always null here so we can't dereference it.
 >
-> As far as I know, you unfortunately have to send back the entire page
-> when it comes to SES.
+> Signed-off-by: Dan Carpenter<error27@gmail.com>
 >
-> Ben.
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index 779e1d1..efadde9 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -3774,8 +3774,8 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
 >
-> Jeff Johnson wrote:
->> Greetings,
->>
->> I am using sg_ses to poll a SAS JBOD for locate and fault led status
->> and light leds if needed. So far the only method I can figure out how
->> to accomplish this is by reading page 2 of the SES management device
->> in the jbod chassis, dumping the raw hex output to a file, setting the
->> select and RQST IDENT or RQST FAULT bits and sending back the entire
->> 480 bytes with modified bits.
->>
->> Turn locate led on:
->> sg_ses --page=0x2 /dev/sg18 -f --raw > /tmp/out
->> ...twittle bits in /tmp/out with editor of choice...
->> sg_ses --control --page=2 -d - /dev/sg18 < /tmp/out
->>
->> Is there a utility, a '--element=' arg or another method by which only
->> the four bytes of the element control diag page can be sent instead of
->> all 480 bytes?
+>   	ret = beiscsi_enable_pci(pcidev);
+>   	if (ret<  0) {
+> -		shost_printk(KERN_ERR, phba->shost, "beiscsi_dev_probe-"
+> -			     "Failed to enable pci device \n");
+> +		dev_err(&pcidev->dev, "beiscsi_dev_probe-"
+> +			" Failed to enable pci device\n");
+>   		return ret;
+>   	}
+>
 
-Jeff,
-No, that is the only way. Ugly but relatively simple
-to code. I'm open to suggestions and especially code.
-Short of writing something as complicated as sdparm
-(for example) I don't see an easy way.
+Looks good. Thanks.
 
-I did notice that the '--data <H,H...>' option was
-limited to 512 bytes and you were at 480. So I
-increased that to 2048.
-
-Doug Gilbert
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
