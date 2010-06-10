@@ -1,41 +1,73 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [patch 1/2] be2iscsi: memory leak on error path
-Date: Thu, 10 Jun 2010 15:44:05 -0500
-Message-ID: <4C114E95.7080401@cs.wisc.edu>
-References: <20100610075221.GI5483@bicker>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: move setting of the allow_restart flag for vsets
+ and disks
+Date: Thu, 10 Jun 2010 14:46:34 -0700
+Message-ID: <4C115D3A.1020604@linux.vnet.ibm.com>
+References: <20100610214133.343780338@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:58952 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759261Ab0FJUl6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jun 2010 16:41:58 -0400
-In-Reply-To: <20100610075221.GI5483@bicker>
+Received: from e38.co.us.ibm.com ([32.97.110.159]:51046 "EHLO
+	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752302Ab0FJVqt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2010 17:46:49 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e38.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o5ALe9SR030530
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2010 15:40:09 -0600
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o5ALkdS3082308
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2010 15:46:39 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o5ALkcXl023892
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2010 15:46:38 -0600
+In-Reply-To: <20100610214133.343780338@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>
-Cc: Jayamohan Kallickal <jayamohank@serverengines.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
 
-On 06/10/2010 02:52 AM, Dan Carpenter wrote:
-> I added a kfree(pwrb_arr) in front of the return.
->
-> Signed-off-by: Dan Carpenter<error27@gmail.com>
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index dd5b105..779e1d1 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -2750,6 +2750,7 @@ beiscsi_create_wrb_rings(struct beiscsi_hba *phba,
->   		if (status != 0) {
->   			shost_printk(KERN_ERR, phba->shost,
->   				     "wrbq create failed.");
-> +			kfree(pwrb_arr);
->   			return status;
->   		}
->   		phwi_ctrlr->wrb_context[i * 2].cid = phwi_context->be_wrbq[i].
+A problem was found where the call to scsi_add_device() fails intermittently
+for an adapter.  This is caused when __scsi_add_device() returns -ENODEV as
+a result of not calling scsi_probe_and_add_lun() since the call to
+scsi_host_scan_allowed() fails.  scsi_host_scan_allowed() fails because the
+adapter state is set to SHOST_RECOVERY instead of SHOST_RUNNING. The state of
+the adapter is being set to SHOST_RECOVERY by scsi_eh_scmd_add() during
+error handling.
 
+This problem is avoided by moving the setting of the allow_restart flag to
+later in the device initialization sequence.  This prevents further error
+handling if we get a NOT_READY response from a TUR command by causing
+scsi_check_sense() to return SUCCESS.  Therefore, scsi_eh_scmd_add() will
+not run and the adapter state will remain as SHOST_RUNNING.
 
-Looks good. Thanks.
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+ drivers/scsi/ipr.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2010-06-03 15:48:52.000000000 -0700
++++ b/drivers/scsi/ipr.c	2010-06-08 17:22:14.000000000 -0700
+@@ -4350,8 +4350,6 @@ static int ipr_slave_configure(struct sc
+ 					     IPR_VSET_RW_TIMEOUT);
+ 			blk_queue_max_hw_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
+ 		}
+-		if (ipr_is_vset_device(res) || ipr_is_scsi_disk(res))
+-			sdev->allow_restart = 1;
+ 		if (ipr_is_gata(res) && res->sata_port)
+ 			ap = res->sata_port->ap;
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+@@ -6768,7 +6766,8 @@ static int ipr_init_res_table(struct ipr
+ 			list_move_tail(&res->queue, &ioa_cfg->used_res_q);
+ 			ipr_init_res_entry(res, &cfgtew);
+ 			res->add_to_ml = 1;
+-		}
++		} else if (res->sdev && (ipr_is_vset_device(res) || ipr_is_scsi_disk(res)))
++			res->sdev->allow_restart = 1;
+
+ 		if (found)
+ 			ipr_update_res_entry(res, &cfgtew);
+
