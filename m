@@ -1,73 +1,77 @@
-From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ipr: move setting of the allow_restart flag for vsets
- and disks
-Date: Thu, 10 Jun 2010 14:46:34 -0700
-Message-ID: <4C115D3A.1020604@linux.vnet.ibm.com>
-References: <20100610214133.343780338@linux.vnet.ibm.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: [PATCH 0/15] qla4xxx: bug_fix, ISP82xx support, BSG support
+Date: Fri, 11 Jun 2010 13:12:36 +0530
+Message-ID: <20100611074236.GA27658@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:51046 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752302Ab0FJVqt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2010 17:46:49 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e38.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o5ALe9SR030530
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2010 15:40:09 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o5ALkdS3082308
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2010 15:46:39 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o5ALkcXl023892
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2010 15:46:38 -0600
-In-Reply-To: <20100610214133.343780338@linux.vnet.ibm.com>
+Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:33403
+	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1752868Ab0FKHop (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jun 2010 03:44:45 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+To: james.bottomley@suse.de, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com
 
-A problem was found where the call to scsi_add_device() fails intermittently
-for an adapter.  This is caused when __scsi_add_device() returns -ENODEV as
-a result of not calling scsi_probe_and_add_lun() since the call to
-scsi_host_scan_allowed() fails.  scsi_host_scan_allowed() fails because the
-adapter state is set to SHOST_RECOVERY instead of SHOST_RUNNING. The state of
-the adapter is being set to SHOST_RECOVERY by scsi_eh_scmd_add() during
-error handling.
+James,
 
-This problem is avoided by moving the setting of the allow_restart flag to
-later in the device initialization sequence.  This prevents further error
-handling if we get a NOT_READY response from a TUR command by causing
-scsi_check_sense() to return SUCCESS.  Therefore, scsi_eh_scmd_add() will
-not run and the adapter state will remain as SHOST_RUNNING.
+Please apply following list of patches which has been generated
+against latest scsi-misc-2.6 tree
+	- qla4xx bug fix
+	- Support for ISP82XX hardware and
+	- BSG support.
 
-Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
----
+This patch set addresses comments outlined in following thread from Mike.C:
 
- drivers/scsi/ipr.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+http://marc.info/?l=linux-scsi&m=127502766602947&w=2
 
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2010-06-03 15:48:52.000000000 -0700
-+++ b/drivers/scsi/ipr.c	2010-06-08 17:22:14.000000000 -0700
-@@ -4350,8 +4350,6 @@ static int ipr_slave_configure(struct sc
- 					     IPR_VSET_RW_TIMEOUT);
- 			blk_queue_max_hw_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
- 		}
--		if (ipr_is_vset_device(res) || ipr_is_scsi_disk(res))
--			sdev->allow_restart = 1;
- 		if (ipr_is_gata(res) && res->sata_port)
- 			ap = res->sata_port->ap;
- 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-@@ -6768,7 +6766,8 @@ static int ipr_init_res_table(struct ipr
- 			list_move_tail(&res->queue, &ioa_cfg->used_res_q);
- 			ipr_init_res_entry(res, &cfgtew);
- 			res->add_to_ml = 1;
--		}
-+		} else if (res->sdev && (ipr_is_vset_device(res) || ipr_is_scsi_disk(res)))
-+			res->sdev->allow_restart = 1;
+Vikas Chaudhary (13)
+0001-qla4xxx-set-driver-ddb-state-correctly-in-process_dd.patch
+0002-qla4xxx-unblock-iscsi-session-after-setting-ddb-stat.patch
+0003-qla4xxx-correct-return-status-in-function-qla4xxx_fw.patch
+0004-qla4xxx-set-correct-value-in-sess-recovery_tmo.patch
+0007-qla4xxx-Added-support-for-ISP82XX.patch
+0008-qla4xxx-replace-all-dev_info-dev_warn-dev_err-with-q.patch
+0009-qla4xxx-wait-for-device_ready-before-device-discover.patch
+0010-iscsi_transport-added-new-iscsi_param-to-display-tar.patch
+0011-iscsi_transport-Added-new-iscsi_host_param-for-iSCSI.patch
+0012-qla4xxx-added-host-attributes-to-export-host-informa.patch
+0013-qla4xxx-Added-bsg-support.patch
+0014-iscsi_transport-ping-support-via-BSG.patch
+0015-qla4xxx-ping-support-via-BSG-interface.patch
 
- 		if (found)
- 			ipr_update_res_entry(res, &cfgtew);
+Ravi Anand (1)
+0006-qla4xxx-Handle-one-H-W-Interrupt-at-a-time.patch
 
+Prasanna Mumbai (1)
+0005-qla4xxx-Fix-the-freeing-of-the-buffer-allocated-for-.patch
+
+
+drivers/scsi/qla4xxx/Kconfig        |    8 +-
+drivers/scsi/qla4xxx/Makefile       |    2 +-
+drivers/scsi/qla4xxx/ql4_attr.c     |  166 +++
+drivers/scsi/qla4xxx/ql4_def.h      |  192 +++-
+drivers/scsi/qla4xxx/ql4_fw.h       |  139 +++-
+drivers/scsi/qla4xxx/ql4_glbl.h     |  129 ++-
+drivers/scsi/qla4xxx/ql4_init.c     |  250 +++--
+drivers/scsi/qla4xxx/ql4_inline.h   |    2 +-
+drivers/scsi/qla4xxx/ql4_iocb.c     |   73 +-
+drivers/scsi/qla4xxx/ql4_isr.c      |  396 +++++-
+drivers/scsi/qla4xxx/ql4_mbx.c      |  570 ++++++++-
+drivers/scsi/qla4xxx/ql4_nvram.c    |    2 +-
+drivers/scsi/qla4xxx/ql4_nvram.h    |   10 +-
+drivers/scsi/qla4xxx/ql4_nx.c       | 2322 +++++++++++++++++++++++++++++++++++
+drivers/scsi/qla4xxx/ql4_nx.h       |  779 ++++++++++++
+drivers/scsi/qla4xxx/ql4_os.c       |  998 ++++++++++++---
+drivers/scsi/scsi_transport_iscsi.c |  471 +++++++-
+include/scsi/Kbuild                 |    1 +
+include/scsi/iscsi_if.h             |   10 +
+include/scsi/scsi_bsg_iscsi.h       |  259 ++++
+include/scsi/scsi_transport_iscsi.h |   47 +
+
+
+Thanks,
+Vikas.
