@@ -1,32 +1,86 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 11/15] iscsi_transport: Added new iscsi_host_param for
- iSCSI transport
-Date: Sun, 13 Jun 2010 14:40:08 -0500
-Message-ID: <4C153418.5000705@cs.wisc.edu>
-References: <20100611074819.GA27808@sles11sp1b1.qlogic.org>
+Subject: Re: [PATCH 13/15] qla4xxx: Added bsg support
+Date: Sun, 13 Jun 2010 15:10:39 -0500
+Message-ID: <4C153B3F.2030608@cs.wisc.edu>
+References: <20100611074900.GA27827@sles11sp1b1.qlogic.org>	 <4C12D398.8020200@cs.wisc.edu> <1276382259.10508.25.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:44999 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39211 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754223Ab0FMThx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Jun 2010 15:37:53 -0400
-In-Reply-To: <20100611074819.GA27808@sles11sp1b1.qlogic.org>
+	id S1754016Ab0FMUI0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Jun 2010 16:08:26 -0400
+In-Reply-To: <1276382259.10508.25.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: james.bottomley@suse.de, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com
 
-On 06/11/2010 02:48 AM, Vikas Chaudhary wrote:
-> +	case ISCSI_HOST_PARAM_IF_TYPE:
-> +		len = sprintf(buf, "%s\n", ((ha->addl_fw_state&
-> +		    FW_ADDSTATE_OPTICAL_MEDIA) != 0) ?
-> +		    "Optical" : "Copper");
+On 06/12/2010 05:37 PM, James Bottomley wrote:
+> On Fri, 2010-06-11 at 19:23 -0500, Mike Christie wrote:
+>> On 06/11/2010 02:49 AM, Vikas Chaudhary wrote:
+>>> Added BSG support to enable application support to configure
+>>> ISP40XX/ISP82XX adapter.
+>>>
+>>> This patch is on top of: http://marc.info/?l=linux-scsi&m=126999297630764&w=2
+>>>
+>>
+>> Did James say that using vendor specific commands was ok? I did not see
+>> anything on the list.
+>
+> In principle, the point about vendor specific host commands has already
+> been conceded ... lpfc and qla2xxx already use them.
+>
+> I think the real rule is that for host specific BSG commands, it's only
+> for stuff that's specific to the host ... so not stuff which should be
+> done generically.
+>
+> There are no hard and fast rules for applying the test above.  In
+> theory, the management interfaces exposed by FC_BSG_HST_VENDOR could be
+> used to send commands ... but it tends to get tolerated as long as the
+> drivers support the standardised rport commands.
+>
+> If I look at what the qla4xxx interface would do
+>
+>       1. it only supports vendor specific commands ... this is a bit of a
+>          red flag since it's proposing to do nothing in a vendor neutral
+>          way.  This one, I punt back to you: what should an iscsi device
+>          implementing BSG support of the standard commands
 
-I think it is best to add a table that maps some enum ISCSI_IF_TYPE to a 
-string in scsi_transport_iscsi.c, then have the driver set the type on 
-the iscsi_cls_host struct. scsi_tranpoort_iscsi.c would then just do the 
-work of concerting and printing. This way we can make sure all the 
-drivers print out their values in the same format. It would be like 
-scsi_transport_fc.c's fc_port_speed_names or cos.
+I am not 100% sure what we need yet, because qlogic has been pushing the 
+vendor specific route and I cannot see exactly what it needs with some 
+of its commands.
+
+Based on other drivers and from looking at the qlogic tools and their 
+qlogic.com driver which seems to convert some management operations to 
+flash commands, I have the list below:
+
+- Operation to set net settings like ip/dhcp, gateway, dns, subnet, 
+vlan, tcp/ip settings, speed/auto-negotiate, etc.
+
+Besides supporting a IPv4 and IPv6 address, some cards can support lots 
+of IPs and/or vlans per same physical port, so this operation cannot be 
+tied to just the host.
+
+- Operation to get port state.
+
+- Operation to set iscsi initiator port settings like initiator 
+name/alias/isid, iscsi IO settings like FirstBurstLength or Digests, 
+auth settings like chap or radius, etc.
+
+This should not be tied to the physical port either since we can have 
+multiple initiator ports per physical port.
+
+- Operation to set iscsi settings for specific sessions like iSCSI IO 
+settings and auth settings mentioned above (some drivers want global 
+defaults settable at the host/initiator-port level then be able to 
+specify specific values for each session).
+
+- Operation to discover targets and export targets that were found and:
+	- Operation to control if we want to log into specific targets that 
+were found.
+
+- Operation to notify userpsace of network link state changes.
+
+- Operation to notify userpsace of iscsi session/connection state changes.
