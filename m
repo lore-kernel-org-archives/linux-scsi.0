@@ -1,74 +1,228 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] [BSG]: Add support for struct
-	sg_io_v4->d[out,in]_iovec_count
-Date: Sun, 13 Jun 2010 23:42:33 -0700
-Message-ID: <1276497753.32681.37.camel@haakon2.linux-iscsi.org>
-References: <1276495889-1714-1-git-send-email-nab@linux-iscsi.org>
-	 <20100614152138W.fujita.tomonori@lab.ntt.co.jp>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.6.34 PDC20268 PATA IO error loop makes system unusable
+Date: Mon, 14 Jun 2010 09:43:28 +0200
+Message-ID: <4C15DDA0.3020409@kernel.org>
+References: <20100613154808.GA10408@basil.fritz.box>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100614152138W.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jaxboe@fusionio.com, James.Bottomley@suse.de, hch@lst.de, michaelc@cs.wisc.edu, hare@suse.de, kvm-devel <kvm@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100613154808.GA10408@basil.fritz.box>
+Sender: linux-ide-owner@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2010-06-14 at 15:22 +0900, FUJITA Tomonori wrote:
-> On Sun, 13 Jun 2010 23:11:29 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+Hello, Andi.
+
+(cc'ing linux-scsi and quoting whole message)
+
+On 06/13/2010 05:48 PM, Andi Kleen wrote:
 > 
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Greetings Jens and co,
-> > 
-> > This patch adds the missing support to block/bsg.c:bsg_map_hdr() to accept
-> > struct sg_io_v4->d[out,in]_iovec_count and process struct sg_io_v4->d[out,in]_xferp memory
-> > containing userspace iovecs for kernel level BSG.  It adds a new wrapper bsg_rq_map_user_iov()
-> > that will call copy_from_user() and blk_rq_map_user_iov() following the original SG_IO logic in
-> > drivers/scsi/sg.c:sg_start_req().
-> > 
-> > So far this has been tested on a x86_64 v2.6.34 KVM Host with TCM_Loop Virtual SAS Port/LUNs
-> > into a x86_64 v2.6.26 KVM Guest with Megasas 8707EM2 HBA Emulation + my new scsi-bsg backstore code.
-> > 
-> > Please consider this for v2.6.36 as it will be required in order for QEMU-KVM MegaSAS and VirtIO HBA
-> > emulation using QEMU scatterlist memory and BSG backstores.
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  block/bsg.c |   55 +++++++++++++++++++++++++++++++++++++++++++++++--------
-> >  1 files changed, 47 insertions(+), 8 deletions(-)
+> Hi,
 > 
-> This have been rejected several times.
+> On 2.6.34:
 > 
-
-I guess that would explain why the iovec_count structure members are
-part of struct sg_io_v4 and block/bsg.c:bsg_map_hdr() silently accepts
-and overwrites them..  :(
-
-> This doesn't work on 32bit user/64bit kernel.
-
-Hmmm, being able to use QEMU-KVM HBA emulation with userspace
-scatterlist memory for the various HBA emulation with a matched
-user/kernel is still useful though, yes..?  Being able to handle TMR
-emulation from QEMU-KVM HBA emulation would also be useful I think.
-
-Having QEMU-KVM fall back to SG_IO for the 32bit/64bit kernel would be
-accpetable for me if we can still make BSG + iovecs work for the typical
-case.
-
+> While writing some data to an old PATA Maxtor disk connected to a
+> PDC20268 Promise controller using the libata driver there were some
+> IO errors.
 > 
-> The compat code doesn't work for the read/write interface (does for
-> the ioctl interface though). So we can't support this feature cleanly.
+> After some time those resulted in a endless error message loop that
+> made the system essentially unusable: (console was flooded and
+> unusable, ssh was extremly slow etc.):
+> 
+> This does not exactly look like graceful error handling.
+> 
+> Excerpts from the log (full version available on request)
+> 
+> ata12.00: configured for UDMA/100
+> ata12: EH complete
+> ata12.00: configured for UDMA/100
+> ata12: EH complete
+> ata12.00: configured for UDMA/100
+> ata12: EH complete
+> ata12.00: configured for UDMA/100
+> ata12: EH complete
+> ata12.00: configured for UDMA/100
+> ata12: EH complete
+> ata12.00: configured for UDMA/100
+> sd 11:0:0:0: [sdd] Unhandled sense code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> sd 11:0:0:0: [sdd] Sense Key : Medium Error [current] [descriptor]
+> Descriptor sense data with sense descriptors (in hex):
+>        72 03 13 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+>        00 5b 23 bb 
+> sd 11:0:0:0: [sdd] Add. Sense: Address mark not found for data field
+> sd 11:0:0:0: [sdd] CDB: Read(10): 28 00 00 5b 23 4f 00 00 80 00
+> ata12: EH complete
+> ata12.00: limiting speed to UDMA/66:PIO4
+> ata12: soft resetting link
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> sd 11:0:0:0: [sdd] Unhandled sense code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> sd 11:0:0:0: [sdd] Sense Key : Medium Error [current] [descriptor]
+> Descriptor sense data with sense descriptors (in hex):
+>        72 03 13 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+>        00 5b 23 bb 
+> sd 11:0:0:0: [sdd] Add. Sense: Address mark not found for data field
+> sd 11:0:0:0: [sdd] CDB: Read(10): 28 00 00 5b 23 bb 00 00 04 00
+> quiet_error: 10 callbacks suppressed
+> ata12: EH complete
+> EXT4-fs (dm-0): mounted filesystem with ordered data mode
+> kjournald starting.  Commit interval 5 seconds
+> EXT3-fs (dm-1): using internal journal
+> EXT3-fs (dm-1): mounted filesystem with writeback data mode
+> EXT4-fs (dm-2): mounted filesystem with ordered data mode
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> ata12: EH complete
+> ata12.00: configured for UDMA/66
+> 
+> ...
+> 
+> sd 11:0:0:0: [sdd] Unhandled sense code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> sd 11:0:0:0: [sdd] Sense Key : Medium Error [current] [descriptor]
+> Descriptor sense data with sense descriptors (in hex):
+>        72 03 13 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+>        00 5b 23 bb 
+> sd 11:0:0:0: [sdd] Add. Sense: Address mark not found for data field
+> sd 11:0:0:0: [sdd] CDB: Read(10): 28 00 00 5b 23 bb 00 00 04 00
+> quiet_error: 10 callbacks suppressed
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> sd 11:0:0:0: [sdd] Unhandled sense code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> sd 11:0:0:0: [sdd] Sense Key : Medium Error [current] [descriptor]
+> Descriptor sense data with sense descriptors (in hex):
+>        72 03 13 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+>        00 5b 23 bb 
+> sd 11:0:0:0: [sdd] Add. Sense: Address mark not found for data field
+> sd 11:0:0:0: [sdd] CDB: Read(10): 28 00 00 5b 23 bb 00 00 04 00
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> ata12: EH complete
+> ata12.00: configured for UDMA/33
+> 
+> 
+> ... lots of similar messages until it goes down to PIO0 then some more errors ....
+> 
+> 
+> ata12: soft resetting link
+> ata12: soft resetting link
+> ata12: link is slow to respond, please be patient (ready=0)
+> ata12.00: qc timeout (cmd 0xec)
+> ata12.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata12: link is slow to respond, please be patient (ready=0)
+> ata12: soft resetting link
+> ata12.00: disabled
+> ata12: soft resetting link
+> ata12: EH complete
 
-So I am curious to see if there will be a performance improvement
-between QEMU-KVM + scsi-bsg w/ AIO IOVECs compared to the legacy SG_IO
-ioctl().  Anyways, I will post my QEMU-KVM scsi-bsg patches and run some
-benchmarks this week with this patch on 5500 series Nehalem so see aside
-from the userspace TMR case how useful having a BSG backstore for
-QEMU-KVM may be.
+At this point, the drive stopped responding and libata removed the
+drive from the system.
 
-Best,
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 e7 08 00 01 00 00
 
---nab
+As the device is gone, any command is immediately failed with
+DID_BAD_TARGET.
+
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> lost page write due to I/O error on sdd
+> sd 11:0:0:0: [sdd] Unhandled error code
+> 
+> and finally and endless flood of 
+> 
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 e8 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 e9 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 ea 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 eb 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 ec 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 ed 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 ee 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 ef 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f0 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f1 08 00 01 00 00
+> sd 11:0:0:0: [sdd] Unhandled error code
+> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f2 08 00 01 00 00
+> 
+> same messages repeating forever, just with CDB changing occasionally.
+> 
+> ....
+> 
+> not stopping until I reset the box.
+
+Did you have a lot of dirty pages?  It looks like upper layer is
+trying to flush all the dirty buffers and SCSI is a tad bit too
+verbose about failing each IO w/ DID_BAD_TARGET thus taking a very
+long time if there are many to fail.
+
+Thanks.
+
+-- 
+tejun
