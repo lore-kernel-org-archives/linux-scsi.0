@@ -1,37 +1,48 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: smatch stuff: fnic:  VNIC_FNIC_EDTOV_MAX is too high.
-Date: Mon, 14 Jun 2010 14:52:25 +0200
-Message-ID: <20100614125225.GW5483@bicker>
+From: Hannes Reinecke <hare@suse.de>
+Subject: megaraid_sas locks down frame count to 8
+Date: Mon, 14 Jun 2010 16:30:49 +0200
+Message-ID: <4C163D19.2030905@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:39565 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602Ab0FNMwu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2010 08:52:50 -0400
-Received: by wwb18 with SMTP id 18so3788859wwb.19
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Jun 2010 05:52:46 -0700 (PDT)
-Content-Disposition: inline
+Received: from cantor2.suse.de ([195.135.220.15]:60547 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754364Ab0FNOau (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jun 2010 10:30:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Abhijeet Joglekar <abjoglek@cisco.com>
-Cc: Joe Eykholt <jeykholt@cisco.com>, linux-scsi@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is a smatch thing.  Neither VNIC_FNIC_EDTOV_MAX nor
-VNIC_FNIC_RATOV_MAX do anything.  They are both set to 255000 but ed_tov
-and ra_tov are u16 so they can't go higher than 65535.
+Hi all,
 
-drivers/scsi/fnic/fnic_res.c
-    95          c->ed_tov =
-    96                  min_t(u32, VNIC_FNIC_EDTOV_MAX,
-    97                        max_t(u32, VNIC_FNIC_EDTOV_MIN,
-    98                              c->ed_tov));
-    99
-   100          c->ra_tov =
-   101                  min_t(u32, VNIC_FNIC_RATOV_MAX,
-   102                        max_t(u32, VNIC_FNIC_RATOV_MIN,
-   103                              c->ra_tov));
+we have this bit in drivers/scsi/megaraid/megaraid_sas.c:799
 
-regards,
-dan carpenter
+	if (frame_count > 7)
+		frame_count =3D 8;
 
+which is supposed to report the number of frames required
+to handle the passed in sg list.
+This results in a nice memory scribble if we pass in a
+large enough sg list, as the sg list contents will then
+written in the memory area for the next frame.
+
+Any comments here?
+
+If it were me I would just remove that check, but
+then LSI might have a valid reason for doing so.
+
+Cheers,
+
+Hannes
+--
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
