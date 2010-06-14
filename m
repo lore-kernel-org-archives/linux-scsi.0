@@ -1,54 +1,37 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: 2.6.34 PDC20268 PATA IO error loop makes system unusable
-Date: Mon, 14 Jun 2010 13:29:52 +0200
-Message-ID: <20100614112952.GF17092@basil.fritz.box>
-References: <20100613154808.GA10408@basil.fritz.box> <4C15DDA0.3020409@kernel.org> <20100614121753.5723eaa2@lxorguk.ukuu.org.uk>
+From: Dan Carpenter <error27@gmail.com>
+Subject: smatch stuff: fnic:  VNIC_FNIC_EDTOV_MAX is too high.
+Date: Mon, 14 Jun 2010 14:52:25 +0200
+Message-ID: <20100614125225.GW5483@bicker>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:57252 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710Ab0FNL35 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2010 07:29:57 -0400
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:39565 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602Ab0FNMwu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2010 08:52:50 -0400
+Received: by wwb18 with SMTP id 18so3788859wwb.19
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Jun 2010 05:52:46 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20100614121753.5723eaa2@lxorguk.ukuu.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, Andi Kleen <andi@firstfloor.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Abhijeet Joglekar <abjoglek@cisco.com>
+Cc: Joe Eykholt <jeykholt@cisco.com>, linux-scsi@vger.kernel.org
 
-On Mon, Jun 14, 2010 at 12:17:53PM +0100, Alan Cox wrote:
-> > > sd 11:0:0:0: [sdd] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> > > sd 11:0:0:0: [sdd] Sense Key : Medium Error [current] [descriptor]
-> 
-> That is the drive complaining about a bad block.
-> 
-> > > Descriptor sense data with sense descriptors (in hex):
-> > >        72 03 13 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
-> > >        00 5b 23 bb 
-> > > sd 11:0:0:0: [sdd] Add. Sense: Address mark not found for data field
-> > > sd 11:0:0:0: [sdd] CDB: Read(10): 28 00 00 5b 23 4f 00 00 80 00
-> 
-> Which in my experience usually comes from
-> 
-> - The disc being unable to find the data block
-> 
-> - A corrupt indirect block in the file system leading to a requst for an
->   out of range data block
-> 
-> In theory it could be an on the wire bitflip but thats a bit too
-> consistent to believe.
+This is a smatch thing.  Neither VNIC_FNIC_EDTOV_MAX nor
+VNIC_FNIC_RATOV_MAX do anything.  They are both set to 255000 but ed_tov
+and ra_tov are u16 so they can't go higher than 65535.
 
-Thank, Alan. I really don't care about the drive (nothing valuable on it).
-It was an old IDE disk and I am not surprised it has some bad sectors.
-In fact I was clearing it for junking it (although I may keep it now
-just in case I need to test IDE error handling again :)
+drivers/scsi/fnic/fnic_res.c
+    95          c->ed_tov =
+    96                  min_t(u32, VNIC_FNIC_EDTOV_MAX,
+    97                        max_t(u32, VNIC_FNIC_EDTOV_MIN,
+    98                              c->ed_tov));
+    99
+   100          c->ra_tov =
+   101                  min_t(u32, VNIC_FNIC_RATOV_MAX,
+   102                        max_t(u32, VNIC_FNIC_RATOV_MIN,
+   103                              c->ra_tov));
 
-But I cared about the system becoming unusable due to error handling running
-amok.
+regards,
+dan carpenter
 
-That was the point of this bug report.
-
--Andi
--- 
-ak@linux.intel.com -- Speaking for myself only.
