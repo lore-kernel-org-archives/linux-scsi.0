@@ -1,117 +1,124 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 13/15] qla4xxx: Added bsg support
-Date: Mon, 14 Jun 2010 15:48:43 -0500
-Message-ID: <4C1695AB.4020002@cs.wisc.edu>
-References: <4C12D398.8020200@cs.wisc.edu>	<1276382259.10508.25.camel@mulgrave.site>	<4C153B3F.2030608@cs.wisc.edu> <20100614095426E.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH] drivers: scsi: use newly introduced hex_to_bin() method
+Date: Tue, 15 Jun 2010 17:26:07 +0300
+Message-ID: <1276611967-28576-1-git-send-email-andy.shevchenko@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36412 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754350Ab0FNUqc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jun 2010 16:46:32 -0400
-In-Reply-To: <20100614095426E.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42129 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757860Ab0FOO0R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2010 10:26:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@suse.de, vikas.chaudhary@qlogic.com, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com
+To: linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <ext-andriy.shevchenko@nokia.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org
 
-On 06/13/2010 07:55 PM, FUJITA Tomonori wrote:
-> On Sun, 13 Jun 2010 15:10:39 -0500
-> Mike Christie<michaelc@cs.wisc.edu>  wrote:
->
->> On 06/12/2010 05:37 PM, James Bottomley wrote:
->>> On Fri, 2010-06-11 at 19:23 -0500, Mike Christie wrote:
->>>> On 06/11/2010 02:49 AM, Vikas Chaudhary wrote:
->>>>> Added BSG support to enable application support to configure
->>>>> ISP40XX/ISP82XX adapter.
->>>>>
->>>>> This patch is on top of: http://marc.info/?l=linux-scsi&m=126999297630764&w=2
->>>>>
->>>>
->>>> Did James say that using vendor specific commands was ok? I did not see
->>>> anything on the list.
->>>
->>> In principle, the point about vendor specific host commands has already
->>> been conceded ... lpfc and qla2xxx already use them.
->>>
->>> I think the real rule is that for host specific BSG commands, it's only
->>> for stuff that's specific to the host ... so not stuff which should be
->>> done generically.
->>>
->>> There are no hard and fast rules for applying the test above.  In
->>> theory, the management interfaces exposed by FC_BSG_HST_VENDOR could be
->>> used to send commands ... but it tends to get tolerated as long as the
->>> drivers support the standardised rport commands.
->>>
->>> If I look at what the qla4xxx interface would do
->>>
->>>        1. it only supports vendor specific commands ... this is a bit of a
->>>           red flag since it's proposing to do nothing in a vendor neutral
->>>           way.  This one, I punt back to you: what should an iscsi device
->>>           implementing BSG support of the standard commands
->>
->> I am not 100% sure what we need yet, because qlogic has been pushing the
->> vendor specific route and I cannot see exactly what it needs with some
->> of its commands.
->>
->> Based on other drivers and from looking at the qlogic tools and their
->> qlogic.com driver which seems to convert some management operations to
->> flash commands, I have the list below:
->>
->> - Operation to set net settings like ip/dhcp, gateway, dns, subnet,
->> vlan, tcp/ip settings, speed/auto-negotiate, etc.
->>
->> Besides supporting a IPv4 and IPv6 address, some cards can support lots
->> of IPs and/or vlans per same physical port, so this operation cannot be
->> tied to just the host.
->>
->> - Operation to get port state.
->>
->> - Operation to set iscsi initiator port settings like initiator
->> name/alias/isid, iscsi IO settings like FirstBurstLength or Digests,
->> auth settings like chap or radius, etc.
->>
->> This should not be tied to the physical port either since we can have
->> multiple initiator ports per physical port.
->>
->> - Operation to set iscsi settings for specific sessions like iSCSI IO
->> settings and auth settings mentioned above (some drivers want global
->> defaults settable at the host/initiator-port level then be able to
->> specify specific values for each session).
->
-> /sys/class/iscsi_* might work better for the above?
+From: Andy Shevchenko <ext-andriy.shevchenko@nokia.com>
 
-Yes and no. It works well when we just have to set 1 value, but if we 
-have to set multiple ones then we need to batch them up because it can 
-be disruptive to all sessions. When we set a setting in qla4xxx and 
-be2iscsi, then I think the card is basically not accessible while the 
-value is being set. So if we did use sysfs then we would need some other 
-files like maybe one to indicate that we are done setting params and the 
-card can write them to the flash now.
+Signed-off-by: Andy Shevchenko <ext-andriy.shevchenko@nokia.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: James Smart <james.smart@emulex.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/aacraid/rx.c        |    5 ++---
+ drivers/scsi/lpfc/lpfc_attr.c    |   23 +++++++++++------------
+ drivers/scsi/scsi_transport_fc.c |   12 ++++++------
+ 3 files changed, 19 insertions(+), 21 deletions(-)
 
->
->
->> - Operation to discover targets and export targets that were found and:
->> 	- Operation to control if we want to log into specific targets that
->> were found.
->>
->> - Operation to notify userpsace of network link state changes.
->>
->> - Operation to notify userpsace of iscsi session/connection state changes.
->
-> bsg supports only the request/response interface. The event
-> notification from kernel space isn't fit for bsg.
+diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
+index 04057ab..84d77fd 100644
+--- a/drivers/scsi/aacraid/rx.c
++++ b/drivers/scsi/aacraid/rx.c
+@@ -352,9 +352,8 @@ static int aac_rx_check_health(struct aac_dev *dev)
+ 		pci_free_consistent(dev->pdev, sizeof(struct POSTSTATUS),
+ 		  post, paddr);
+ 		if (likely((buffer[0] == '0') && ((buffer[1] == 'x') || (buffer[1] == 'X')))) {
+-			ret = (buffer[2] <= '9') ? (buffer[2] - '0') : (buffer[2] - 'A' + 10);
+-			ret <<= 4;
+-			ret += (buffer[3] <= '9') ? (buffer[3] - '0') : (buffer[3] - 'A' + 10);
++			ret = (hex_to_bin(buffer[2]) << 4) +
++				hex_to_bin(buffer[3]);
+ 		}
+ 		pci_free_consistent(dev->pdev, 512, buffer, baddr);
+ 		return ret;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index bf33b31..9f82cf9 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -25,6 +25,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/aer.h>
+ #include <linux/gfp.h>
++#include <linux/kernel.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -1797,12 +1798,11 @@ lpfc_soft_wwpn_store(struct device *dev, struct device_attribute *attr,
+ 
+ 	/* Validate and store the new name */
+ 	for (i=0, j=0; i < 16; i++) {
+-		if ((*buf >= 'a') && (*buf <= 'f'))
+-			j = ((j << 4) | ((*buf++ -'a') + 10));
+-		else if ((*buf >= 'A') && (*buf <= 'F'))
+-			j = ((j << 4) | ((*buf++ -'A') + 10));
+-		else if ((*buf >= '0') && (*buf <= '9'))
+-			j = ((j << 4) | (*buf++ -'0'));
++		int value;
++
++		value = hex_to_bin(*buf++);
++		if (value >= 0)
++			j = (j << 4) | value;
+ 		else
+ 			return -EINVAL;
+ 		if (i % 2) {
+@@ -1890,12 +1890,11 @@ lpfc_soft_wwnn_store(struct device *dev, struct device_attribute *attr,
+ 
+ 	/* Validate and store the new name */
+ 	for (i=0, j=0; i < 16; i++) {
+-		if ((*buf >= 'a') && (*buf <= 'f'))
+-			j = ((j << 4) | ((*buf++ -'a') + 10));
+-		else if ((*buf >= 'A') && (*buf <= 'F'))
+-			j = ((j << 4) | ((*buf++ -'A') + 10));
+-		else if ((*buf >= '0') && (*buf <= '9'))
+-			j = ((j << 4) | (*buf++ -'0'));
++		int value;
++
++		value = hex_to_bin(*buf++);
++		if (value >= 0)
++			j = (j << 4) | value;
+ 		else
+ 			return -EINVAL;
+ 		if (i % 2) {
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 0681378..73ae8ec 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -29,6 +29,7 @@
+ #include <linux/init.h>
+ #include <linux/slab.h>
+ #include <linux/delay.h>
++#include <linux/kernel.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+@@ -1730,12 +1731,11 @@ fc_parse_wwn(const char *ns, u64 *nm)
+ 
+ 	/* Validate and store the new name */
+ 	for (i=0, j=0; i < 16; i++) {
+-		if ((*ns >= 'a') && (*ns <= 'f'))
+-			j = ((j << 4) | ((*ns++ -'a') + 10));
+-		else if ((*ns >= 'A') && (*ns <= 'F'))
+-			j = ((j << 4) | ((*ns++ -'A') + 10));
+-		else if ((*ns >= '0') && (*ns <= '9'))
+-			j = ((j << 4) | (*ns++ -'0'));
++		int value;
++
++		value = hex_to_bin(*ns++);
++		if (value >= 0)
++			j = (j << 4) | value;
+ 		else
+ 			return -EINVAL;
+ 		if (i % 2) {
+-- 
+1.6.6.1
 
-Ah yeah, I just included it for completeness because in their previous 
-patchset they were using the scsi netlink code to add vendor specific 
-events for them.
-
->
-> Sounds like all the features are useful to any iSCSI HBAs?
-
-
-Yeah, the iscsi ones are useful to any iscsi HBA that does 
-session/connection management in the card. The net ones are useful to 
-cards that do net management in the card.
