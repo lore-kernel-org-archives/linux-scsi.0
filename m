@@ -1,138 +1,112 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 09/23] bfa: fix rport speed setting
-Date: Tue, 15 Jun 2010 11:38:26 -0700
-Message-ID: <1276627106-10804-1-git-send-email-huangj@brocade.com>
+Subject: [PATCH 10/23] bfa: fix prli retry issues
+Date: Tue, 15 Jun 2010 11:39:47 -0700
+Message-ID: <1276627187-14372-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:41983 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:42041 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757391Ab0FOSic (ORCPT
+	by vger.kernel.org with ESMTP id S1757548Ab0FOSjw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2010 14:38:32 -0400
+	Tue, 15 Jun 2010 14:39:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: vravindr@brocade.com, rvadivel@brocade.com, kgudipat@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-When a rport goes offline, its speed setting was not reset. Subsequently, if
-the rport was not deleted due to it coming back online within rport del
-timeout, previously discovered speed would continue to show up. The fix is to
-reset the speed when processing rport offline transition.
-
-In rport attributes, rport's with unknown speed were indicated as TRL
-enforced.  The right thing do to would be to use TRL default speed to
-determine if TRL is enforced, when TRL is enabled.
+Add a max retry limit for PRLI retries. Max retry limit (5) is same as used
+in rport PLOGI. Once the retries are exhausted, invoke rport offline so that
+existing logic of rport re-discovery can kick-in. Also fixed a bug in rport.c
+where one less retry was happening.
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/bfa/lport_api.c  |   30 +++++++++++++++++++++---------
- drivers/scsi/bfa/rport_api.c  |   11 ++++++++---
- drivers/scsi/bfa/rport_ftrs.c |    1 +
- 3 files changed, 30 insertions(+), 12 deletions(-)
+ drivers/scsi/bfa/fcpim.c                     |   13 +++++++++++--
+ drivers/scsi/bfa/fcs_rport.h                 |    2 ++
+ drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h |    1 +
+ drivers/scsi/bfa/rport.c                     |    4 +---
+ 4 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/bfa/lport_api.c b/drivers/scsi/bfa/lport_api.c
-index d3907d1..72b3f50 100644
---- a/drivers/scsi/bfa/lport_api.c
-+++ b/drivers/scsi/bfa/lport_api.c
-@@ -137,6 +137,8 @@ bfa_fcs_port_get_rports(struct bfa_fcs_port_s *port, wwn_t rport_wwns[],
- /*
-  * Iterate's through all the rport's in the given port to
-  * determine the maximum operating speed.
-+ *
-+ * To be used in TRL Functionality only
-  */
- enum bfa_pport_speed
- bfa_fcs_port_get_rport_max_speed(struct bfa_fcs_port_s *port)
-@@ -146,7 +148,8 @@ bfa_fcs_port_get_rport_max_speed(struct bfa_fcs_port_s *port)
- 	struct bfa_fcs_s *fcs;
- 	enum bfa_pport_speed max_speed = 0;
- 	struct bfa_pport_attr_s pport_attr;
--	enum bfa_pport_speed pport_speed;
-+	enum bfa_pport_speed pport_speed, rport_speed;
-+	bfa_boolean_t     trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
+diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
+index 7a0207e..d090f7a 100644
+--- a/drivers/scsi/bfa/fcpim.c
++++ b/drivers/scsi/bfa/fcpim.c
+@@ -110,6 +110,7 @@ bfa_fcs_itnim_sm_offline(struct bfa_fcs_itnim_s *itnim,
+ 	switch (event) {
+ 	case BFA_FCS_ITNIM_SM_ONLINE:
+ 		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
++		itnim->prli_retries = 0;
+ 		bfa_fcs_itnim_send_prli(itnim, NULL);
+ 		break;
  
- 	if (port == NULL)
- 		return 0;
-@@ -164,19 +167,28 @@ bfa_fcs_port_get_rport_max_speed(struct bfa_fcs_port_s *port)
- 	qe = bfa_q_first(qh);
+@@ -218,8 +219,16 @@ bfa_fcs_itnim_sm_prli_retry(struct bfa_fcs_itnim_s *itnim,
  
- 	while (qe != qh) {
--		rport = (struct bfa_fcs_rport_s *)qe;
--		if ((bfa_os_ntoh3b(rport->pid) > 0xFFF000)
--		    || (bfa_fcs_rport_get_state(rport) == BFA_RPORT_OFFLINE)) {
-+		rport = (struct bfa_fcs_rport_s *) qe;
-+		if ((bfa_os_ntoh3b(rport->pid) > 0xFFF000) ||
-+			(bfa_fcs_rport_get_state(rport) ==
-+						BFA_RPORT_OFFLINE)) {
- 			qe = bfa_q_next(qe);
- 			continue;
- 		}
- 
--		if ((rport->rpf.rpsc_speed == BFA_PPORT_SPEED_8GBPS)
--		    || (rport->rpf.rpsc_speed > pport_speed)) {
--			max_speed = rport->rpf.rpsc_speed;
-+		rport_speed = rport->rpf.rpsc_speed;
-+		if ((trl_enabled) &&  (rport_speed ==
-+						BFA_PPORT_SPEED_UNKNOWN)) {
-+			/* Use default ratelim speed setting */
-+			rport_speed =
-+				bfa_fcport_get_ratelim_speed(port->fcs->bfa);
+ 	switch (event) {
+ 	case BFA_FCS_ITNIM_SM_TIMEOUT:
+-		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
+-		bfa_fcs_itnim_send_prli(itnim, NULL);
++		if (itnim->prli_retries < BFA_FCS_RPORT_MAX_RETRIES) {
++			itnim->prli_retries++;
++			bfa_trc(itnim->fcs, itnim->prli_retries);
++			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
++			bfa_fcs_itnim_send_prli(itnim, NULL);
++		} else {
++			/* invoke target offline */
++			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
++			bfa_fcs_rport_logo_imp(itnim->rport);
 +		}
+ 		break;
+ 
+ 	case BFA_FCS_ITNIM_SM_OFFLINE:
+diff --git a/drivers/scsi/bfa/fcs_rport.h b/drivers/scsi/bfa/fcs_rport.h
+index 9c8d1d2..5242ee0 100644
+--- a/drivers/scsi/bfa/fcs_rport.h
++++ b/drivers/scsi/bfa/fcs_rport.h
+@@ -24,6 +24,8 @@
+ 
+ #include <fcs/bfa_fcs_rport.h>
+ 
++#define BFA_FCS_RPORT_MAX_RETRIES               (5)
 +
-+		if ((rport_speed  == BFA_PPORT_SPEED_8GBPS) ||
-+			(rport_speed > pport_speed)) {
-+			max_speed = rport_speed;
- 			break;
--		} else if (rport->rpf.rpsc_speed > max_speed) {
--			max_speed = rport->rpf.rpsc_speed;
-+		} else if (rport_speed > max_speed) {
-+			max_speed = rport_speed;
- 		}
+ void bfa_fcs_rport_uf_recv(struct bfa_fcs_rport_s *rport, struct fchs_s *fchs,
+ 			u16 len);
+ void bfa_fcs_rport_scn(struct bfa_fcs_rport_s *rport);
+diff --git a/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h b/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h
+index e719f2c..9a35ecf 100644
+--- a/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h
++++ b/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h
+@@ -41,6 +41,7 @@ struct bfa_fcs_itnim_s {
+ 	struct bfa_fcs_s      	*fcs;		/*  fcs instance         */
+ 	struct bfa_timer_s 	timer;		/*  timer functions      */
+ 	struct bfa_itnim_s 	*bfa_itnim;	/*  BFA itnim struct     */
++	u32                	prli_retries;   /*  max prli retry attempts */
+ 	bfa_boolean_t	 	seq_rec;	/*  seq recovery support */
+ 	bfa_boolean_t	 	rec_support;	/*  REC supported        */
+ 	bfa_boolean_t	 	conf_comp;	/*  FCP_CONF     support */
+diff --git a/drivers/scsi/bfa/rport.c b/drivers/scsi/bfa/rport.c
+index 2796403..4e1fff2 100644
+--- a/drivers/scsi/bfa/rport.c
++++ b/drivers/scsi/bfa/rport.c
+@@ -36,8 +36,6 @@
  
- 		qe = bfa_q_next(qe);
-diff --git a/drivers/scsi/bfa/rport_api.c b/drivers/scsi/bfa/rport_api.c
-index a441f41..15e0c47 100644
---- a/drivers/scsi/bfa/rport_api.c
-+++ b/drivers/scsi/bfa/rport_api.c
-@@ -83,6 +83,7 @@ bfa_fcs_rport_get_attr(struct bfa_fcs_rport_s *rport,
- {
- 	struct bfa_rport_qos_attr_s qos_attr;
- 	struct bfa_fcs_port_s *port = rport->port;
-+	enum bfa_pport_speed rport_speed = rport->rpf.rpsc_speed;
+ BFA_TRC_FILE(FCS, RPORT);
  
- 	bfa_os_memset(rport_attr, 0, sizeof(struct bfa_rport_attr_s));
+-#define BFA_FCS_RPORT_MAX_RETRIES		(5)
+-
+ /* In millisecs */
+ static u32 bfa_fcs_rport_del_timeout =
+ 			BFA_FCS_RPORT_DEF_DEL_TIMEOUT * 1000;
+@@ -356,8 +354,8 @@ bfa_fcs_rport_sm_plogi_retry(struct bfa_fcs_rport_s *rport,
+ 		 */
  
-@@ -102,10 +103,14 @@ bfa_fcs_rport_get_attr(struct bfa_fcs_rport_s *rport,
- 	rport_attr->qos_attr = qos_attr;
- 
- 	rport_attr->trl_enforced = BFA_FALSE;
-+
- 	if (bfa_fcport_is_ratelim(port->fcs->bfa)) {
--		if ((rport->rpf.rpsc_speed == BFA_PPORT_SPEED_UNKNOWN) ||
--			(rport->rpf.rpsc_speed <
--			bfa_fcs_port_get_rport_max_speed(port)))
-+		if (rport_speed == BFA_PPORT_SPEED_UNKNOWN) {
-+			/* Use default ratelim speed setting */
-+			rport_speed =
-+				bfa_fcport_get_ratelim_speed(rport->fcs->bfa);
-+		}
-+		if (rport_speed < bfa_fcs_port_get_rport_max_speed(port))
- 			rport_attr->trl_enforced = BFA_TRUE;
- 	}
- 
-diff --git a/drivers/scsi/bfa/rport_ftrs.c b/drivers/scsi/bfa/rport_ftrs.c
-index acecab8..f2a9361 100644
---- a/drivers/scsi/bfa/rport_ftrs.c
-+++ b/drivers/scsi/bfa/rport_ftrs.c
-@@ -274,6 +274,7 @@ void  bfa_fcs_rpf_rport_offline(struct bfa_fcs_rport_s *rport)
- 	if (__fcs_min_cfg(rport->port->fcs))
- 		return;
- 
-+	rport->rpf.rpsc_speed = 0;
- 	bfa_sm_send_event(&rport->rpf, RPFSM_EVENT_RPORT_OFFLINE);
- }
- 
+ 	case RPSM_EVENT_TIMEOUT:
+-		rport->plogi_retries++;
+ 		if (rport->plogi_retries < BFA_FCS_RPORT_MAX_RETRIES) {
++			rport->plogi_retries++;
+ 			bfa_sm_set_state(rport, bfa_fcs_rport_sm_plogi_sending);
+ 			bfa_fcs_rport_send_plogi(rport, NULL);
+ 		} else {
 -- 
 1.6.5.2
 
