@@ -1,615 +1,666 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 01/23] bfa: enable new hardware
-Date: Tue, 15 Jun 2010 11:20:25 -0700
-Message-ID: <1276626025-31783-1-git-send-email-huangj@brocade.com>
+Subject: [PATCH 02/23] bfa: enable basic PBC support
+Date: Tue, 15 Jun 2010 11:20:59 -0700
+Message-ID: <1276626059-816-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:41296 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:41323 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756830Ab0FOSUa (ORCPT
+	by vger.kernel.org with ESMTP id S1752535Ab0FOSVH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jun 2010 14:20:30 -0400
+	Tue, 15 Jun 2010 14:21:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: vravindr@brocade.com, rvadivel@brocade.com, kgudipat@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-This patch enables support of new mezzanine cards for HP and IBM blade server.
-
-- Add new pciids for HP and IBM mezzanine card.
-- Add a new firmware image for HP mezzanine card, which is running in
-  FC only mode. Rename firmware image to reflect the difference. Change the
-  firmware download code accordingly for the above changes.
+The patch includes the driver side changes to enable basic PBC (PreBoot
+Configuration) feature.
+- Data structure changes and new definitions for PBC.
+- APIs to access PBC info.
+- Remove unused code.
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c                  |    1 +
- drivers/scsi/bfa/bfa_fwimg_priv.h            |   25 +++++++--
- drivers/scsi/bfa/bfa_ioc.c                   |   33 ++++++------
- drivers/scsi/bfa/bfa_ioc.h                   |    7 ++-
- drivers/scsi/bfa/bfa_ioc_cb.c                |   36 ++++---------
- drivers/scsi/bfa/bfa_ioc_ct.c                |   46 ++++++----------
- drivers/scsi/bfa/bfa_iocfc.c                 |    6 +-
- drivers/scsi/bfa/bfad.c                      |    8 +++
- drivers/scsi/bfa/bfad_fwimg.c                |   76 +++++++++++++++++++-------
- drivers/scsi/bfa/bfad_im_compat.h            |   13 ++---
- drivers/scsi/bfa/bfad_intr.c                 |    4 +-
- drivers/scsi/bfa/include/bfi/bfi_ioc.h       |    1 +
- drivers/scsi/bfa/include/defs/bfa_defs_mfg.h |    3 +
- drivers/scsi/bfa/include/defs/bfa_defs_pci.h |   11 +++-
- 14 files changed, 155 insertions(+), 115 deletions(-)
+ drivers/scsi/bfa/bfa_fcpim.c                     |    5 --
+ drivers/scsi/bfa/bfa_fcport.c                    |   42 ++++++++-------
+ drivers/scsi/bfa/bfa_fcxp.c                      |   14 +----
+ drivers/scsi/bfa/bfa_ioc.c                       |   41 ++++-----------
+ drivers/scsi/bfa/bfa_ioc.h                       |    1 -
+ drivers/scsi/bfa/bfa_iocfc.c                     |   27 +++++-----
+ drivers/scsi/bfa/bfa_iocfc.h                     |    5 ++-
+ drivers/scsi/bfa/bfa_lps.c                       |    6 --
+ drivers/scsi/bfa/bfa_port_priv.h                 |    4 +-
+ drivers/scsi/bfa/bfa_priv.h                      |    3 -
+ drivers/scsi/bfa/bfa_rport.c                     |    5 --
+ drivers/scsi/bfa/bfa_sgpg.c                      |    5 --
+ drivers/scsi/bfa/bfa_uf.c                        |    5 --
+ drivers/scsi/bfa/include/bfi/bfi_iocfc.h         |    2 +
+ drivers/scsi/bfa/include/bfi/bfi_pbc.h           |   62 ++++++++++++++++++++++
+ drivers/scsi/bfa/include/defs/bfa_defs_adapter.h |    3 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_boot.h    |   10 ++++
+ drivers/scsi/bfa/include/defs/bfa_defs_mfg.h     |   38 ++++++-------
+ drivers/scsi/bfa/include/defs/bfa_defs_pport.h   |    3 +
+ 19 files changed, 154 insertions(+), 127 deletions(-)
+ create mode 100644 drivers/scsi/bfa/include/bfi/bfi_pbc.h
 
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 3a7b3f8..bef7092 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -333,6 +333,7 @@ bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids)
- 		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_FC_8G2P},
- 		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_FC_8G1P},
- 		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT},
-+		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT_FC},
- 	};
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 790c945..12849e9 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -80,11 +80,6 @@ bfa_fcpim_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
  
- 	*npciids = sizeof(__pciids) / sizeof(__pciids[0]);
-diff --git a/drivers/scsi/bfa/bfa_fwimg_priv.h b/drivers/scsi/bfa/bfa_fwimg_priv.h
-index 1ec1355..d33e19e 100644
---- a/drivers/scsi/bfa/bfa_fwimg_priv.h
-+++ b/drivers/scsi/bfa/bfa_fwimg_priv.h
-@@ -21,11 +21,24 @@
- #define	BFI_FLASH_CHUNK_SZ		256	/*  Flash chunk size */
- #define	BFI_FLASH_CHUNK_SZ_WORDS	(BFI_FLASH_CHUNK_SZ/sizeof(u32))
+ static void
+-bfa_fcpim_initdone(struct bfa_s *bfa)
+-{
+-}
+-
+-static void
+ bfa_fcpim_detach(struct bfa_s *bfa)
+ {
+ 	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
+diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
+index c589488..4961b8d 100644
+--- a/drivers/scsi/bfa/bfa_fcport.c
++++ b/drivers/scsi/bfa/bfa_fcport.c
+@@ -912,25 +912,6 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
  
--extern u32 *bfi_image_ct_get_chunk(u32 off);
--extern u32 bfi_image_ct_size;
--extern u32 *bfi_image_cb_get_chunk(u32 off);
--extern u32 bfi_image_cb_size;
--extern u32 *bfi_image_cb;
--extern u32 *bfi_image_ct;
-+/**
-+ * BFI FW image type
+ static void
+-bfa_fcport_initdone(struct bfa_s *bfa)
+-{
+-	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+-
+-	/**
+-	 * Initialize port attributes from IOC hardware data.
+-	 */
+-	bfa_fcport_set_wwns(fcport);
+-	if (fcport->cfg.maxfrsize == 0)
+-		fcport->cfg.maxfrsize = bfa_ioc_maxfrsize(&bfa->ioc);
+-	fcport->cfg.rx_bbcredit = bfa_ioc_rx_bbcredit(&bfa->ioc);
+-	fcport->speed_sup = bfa_ioc_speed_sup(&bfa->ioc);
+-
+-	bfa_assert(fcport->cfg.maxfrsize);
+-	bfa_assert(fcport->cfg.rx_bbcredit);
+-	bfa_assert(fcport->speed_sup);
+-}
+-
+-static void
+ bfa_fcport_detach(struct bfa_s *bfa)
+ {
+ }
+@@ -1263,6 +1244,29 @@ bfa_fcport_send_stats_clear(void *cbarg)
+  */
+ 
+ /**
++ * Called to initialize port attributes
 + */
-+enum {
-+	BFI_IMAGE_CB_FC,
-+	BFI_IMAGE_CT_FC,
-+	BFI_IMAGE_CT_CNA,
-+	BFI_IMAGE_MAX,
-+};
++void
++bfa_fcport_init(struct bfa_s *bfa)
++{
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
 +
-+extern u32 *bfi_image_get_chunk(int type, uint32_t off);
-+extern u32 bfi_image_get_size(int type);
-+extern u32 bfi_image_ct_fc_size;
-+extern u32 bfi_image_ct_cna_size;
-+extern u32 bfi_image_cb_fc_size;
-+extern u32 *bfi_image_ct_fc;
-+extern u32 *bfi_image_ct_cna;
-+extern u32 *bfi_image_cb_fc;
++	/**
++	 * Initialize port attributes from IOC hardware data.
++	 */
++	bfa_fcport_set_wwns(fcport);
++	if (fcport->cfg.maxfrsize == 0)
++		fcport->cfg.maxfrsize = bfa_ioc_maxfrsize(&bfa->ioc);
++	fcport->cfg.rx_bbcredit = bfa_ioc_rx_bbcredit(&bfa->ioc);
++	fcport->speed_sup = bfa_ioc_speed_sup(&bfa->ioc);
 +
++	bfa_assert(fcport->cfg.maxfrsize);
++	bfa_assert(fcport->cfg.rx_bbcredit);
++	bfa_assert(fcport->speed_sup);
++}
++
++
++/**
+  * Firmware message handler.
+  */
+ void
+diff --git a/drivers/scsi/bfa/bfa_fcxp.c b/drivers/scsi/bfa/bfa_fcxp.c
+index cf0ad67..8258f88 100644
+--- a/drivers/scsi/bfa/bfa_fcxp.c
++++ b/drivers/scsi/bfa/bfa_fcxp.c
+@@ -149,11 +149,6 @@ bfa_fcxp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
  
- #endif /* __BFA_FWIMG_PRIV_H__ */
+ static void
+-bfa_fcxp_initdone(struct bfa_s *bfa)
+-{
+-}
+-
+-static void
+ bfa_fcxp_detach(struct bfa_s *bfa)
+ {
+ }
+@@ -225,7 +220,7 @@ bfa_fcxp_null_comp(void *bfad_fcxp, struct bfa_fcxp_s *fcxp, void *cbarg,
+ 		       bfa_status_t req_status, u32 rsp_len,
+ 		       u32 resid_len, struct fchs_s *rsp_fchs)
+ {
+-	/**discarded fcxp completion */
++	/* discarded fcxp completion */
+ }
+ 
+ static void
+@@ -527,11 +522,8 @@ bfa_fcxp_alloc(void *caller, struct bfa_s *bfa, int nreq_sgles,
+ 		if (nreq_sgles > BFI_SGE_INLINE) {
+ 			nreq_sgpg = BFA_SGPG_NPAGE(nreq_sgles);
+ 
+-			if (bfa_sgpg_malloc
+-			    (bfa, &fcxp->req_sgpg_q, nreq_sgpg)
++			if (bfa_sgpg_malloc(bfa, &fcxp->req_sgpg_q, nreq_sgpg)
+ 			    != BFA_STATUS_OK) {
+-				/* bfa_sgpg_wait(bfa, &fcxp->req_sgpg_wqe,
+-				nreq_sgpg); */
+ 				/*
+ 				 * TODO
+ 				 */
+@@ -685,7 +677,7 @@ bfa_fcxp_send(struct bfa_fcxp_s *fcxp, struct bfa_rport_s *rport,
+ 	fcxp->send_cbarg = cbarg;
+ 
+ 	/**
+-	 * If no room in CPE queue, wait for
++	 * If no room in CPE queue, wait for space in request queue
+ 	 */
+ 	send_req = bfa_reqq_next(bfa, BFA_REQQ_FCXP);
+ 	if (!send_req) {
 diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index e038bc9..ef3b3fe 100644
+index ef3b3fe..268c071 100644
 --- a/drivers/scsi/bfa/bfa_ioc.c
 +++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -59,14 +59,12 @@ BFA_TRC_FILE(CNA, IOC);
- 			((__ioc)->ioc_hwif->ioc_firmware_lock(__ioc))
- #define bfa_ioc_firmware_unlock(__ioc)                  \
- 			((__ioc)->ioc_hwif->ioc_firmware_unlock(__ioc))
--#define bfa_ioc_fwimg_get_chunk(__ioc, __off)           \
--			((__ioc)->ioc_hwif->ioc_fwimg_get_chunk(__ioc, __off))
--#define bfa_ioc_fwimg_get_size(__ioc)                   \
--			((__ioc)->ioc_hwif->ioc_fwimg_get_size(__ioc))
- #define bfa_ioc_reg_init(__ioc) ((__ioc)->ioc_hwif->ioc_reg_init(__ioc))
- #define bfa_ioc_map_port(__ioc) ((__ioc)->ioc_hwif->ioc_map_port(__ioc))
- #define bfa_ioc_notify_hbfail(__ioc)                    \
- 			((__ioc)->ioc_hwif->ioc_notify_hbfail(__ioc))
-+#define bfa_ioc_is_optrom(__ioc)        \
-+	(bfi_image_get_size(BFA_IOC_FWIMG_TYPE(__ioc)) < BFA_IOC_FWIMG_MINSZ)
+@@ -1608,6 +1608,13 @@ bfa_ioc_error_isr(struct bfa_ioc_s *ioc)
+ 	bfa_fsm_send_event(ioc, IOC_E_HWERROR);
+ }
  
- bfa_boolean_t   bfa_auto_recover = BFA_TRUE;
- 
-@@ -879,8 +877,8 @@ bfa_ioc_fwver_cmp(struct bfa_ioc_s *ioc, struct bfi_ioc_image_hdr_s *fwhdr)
- 	struct bfi_ioc_image_hdr_s *drv_fwhdr;
- 	int             i;
- 
--	drv_fwhdr =
--		(struct bfi_ioc_image_hdr_s *)bfa_ioc_fwimg_get_chunk(ioc, 0);
-+	drv_fwhdr = (struct bfi_ioc_image_hdr_s *)
-+			bfi_image_get_chunk(BFA_IOC_FWIMG_TYPE(ioc), 0);
- 
- 	for (i = 0; i < BFI_IOC_MD5SUM_SZ; i++) {
- 		if (fwhdr->md5sum[i] != drv_fwhdr->md5sum[i]) {
-@@ -907,12 +905,13 @@ bfa_ioc_fwver_valid(struct bfa_ioc_s *ioc)
- 	/**
- 	 * If bios/efi boot (flash based) -- return true
- 	 */
--	if (bfa_ioc_fwimg_get_size(ioc) < BFA_IOC_FWIMG_MINSZ)
-+	if (bfa_ioc_is_optrom(ioc))
- 		return BFA_TRUE;
- 
- 	bfa_ioc_fwver_get(ioc, &fwhdr);
--	drv_fwhdr =
--		(struct bfi_ioc_image_hdr_s *)bfa_ioc_fwimg_get_chunk(ioc, 0);
-+	drv_fwhdr = (struct bfi_ioc_image_hdr_s *)
-+			bfi_image_get_chunk(BFA_IOC_FWIMG_TYPE(ioc), 0);
++void
++bfa_ioc_set_fcmode(struct bfa_ioc_s *ioc)
++{
++	ioc->fcmode  = BFA_TRUE;
++	ioc->port_id = bfa_ioc_pcifn(ioc);
++}
 +
+ #ifndef BFA_BIOS_BUILD
  
- 	if (fwhdr.signature != drv_fwhdr->signature) {
- 		bfa_trc(ioc, fwhdr.signature);
-@@ -1125,21 +1124,22 @@ bfa_ioc_download_fw(struct bfa_ioc_s *ioc, u32 boot_type,
- 	/**
- 	 * Flash based firmware boot
- 	 */
--	bfa_trc(ioc, bfa_ioc_fwimg_get_size(ioc));
--	if (bfa_ioc_fwimg_get_size(ioc) < BFA_IOC_FWIMG_MINSZ)
-+	bfa_trc(ioc, bfi_image_get_size(BFA_IOC_FWIMG_TYPE(ioc)));
-+	if (bfa_ioc_is_optrom(ioc))
- 		boot_type = BFI_BOOT_TYPE_FLASH;
--	fwimg = bfa_ioc_fwimg_get_chunk(ioc, chunkno);
-+	fwimg = bfi_image_get_chunk(BFA_IOC_FWIMG_TYPE(ioc), chunkno);
+ /**
+@@ -1697,6 +1704,9 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
+ 	/* For now, model descr uses same model string */
+ 	bfa_ioc_get_adapter_model(ioc, ad_attr->model_descr);
+ 
++	ad_attr->card_type = ioc_attr->card_type;
++	ad_attr->is_mezz = bfa_mfg_is_mezz(ioc_attr->card_type);
 +
+ 	if (BFI_ADAPTER_IS_SPECIAL(ioc_attr->adapter_prop))
+ 		ad_attr->prototype = 1;
+ 	else
+@@ -1866,30 +1876,6 @@ bfa_ioc_get_nwwn(struct bfa_ioc_s *ioc)
+ 	return w.wwn;
+ }
  
- 	pgnum = bfa_ioc_smem_pgnum(ioc, loff);
- 	pgoff = bfa_ioc_smem_pgoff(ioc, loff);
- 
- 	bfa_reg_write(ioc->ioc_regs.host_page_num_fn, pgnum);
- 
--	for (i = 0; i < bfa_ioc_fwimg_get_size(ioc); i++) {
-+	for (i = 0; i < bfi_image_get_size(BFA_IOC_FWIMG_TYPE(ioc)); i++) {
- 
- 		if (BFA_IOC_FLASH_CHUNK_NO(i) != chunkno) {
- 			chunkno = BFA_IOC_FLASH_CHUNK_NO(i);
--			fwimg = bfa_ioc_fwimg_get_chunk(ioc,
-+			fwimg = bfi_image_get_chunk(BFA_IOC_FWIMG_TYPE(ioc),
- 					BFA_IOC_FLASH_CHUNK_ADDR(chunkno));
- 		}
- 
-@@ -1188,6 +1188,7 @@ bfa_ioc_getattr_reply(struct bfa_ioc_s *ioc)
- 	struct bfi_ioc_attr_s *attr = ioc->attr;
- 
- 	attr->adapter_prop = bfa_os_ntohl(attr->adapter_prop);
-+	attr->card_type     = bfa_os_ntohl(attr->card_type);
- 	attr->maxfrsize = bfa_os_ntohs(attr->maxfrsize);
- 
- 	bfa_fsm_send_event(ioc, IOC_E_FWRSP_GETATTR);
-@@ -1416,7 +1417,7 @@ bfa_ioc_pci_init(struct bfa_ioc_s *ioc, struct bfa_pcidev_s *pcidev,
+-wwn_t
+-bfa_ioc_get_wwn_naa5(struct bfa_ioc_s *ioc, u16 inst)
+-{
+-	union {
+-		wwn_t           wwn;
+-		u8         byte[sizeof(wwn_t)];
+-	}
+-	w              , w5;
+-
+-	bfa_trc(ioc, inst);
+-
+-	w.wwn = ioc->attr->mfg_wwn;
+-	w5.byte[0] = 0x50 | w.byte[2] >> 4;
+-	w5.byte[1] = w.byte[2] << 4 | w.byte[3] >> 4;
+-	w5.byte[2] = w.byte[3] << 4 | w.byte[4] >> 4;
+-	w5.byte[3] = w.byte[4] << 4 | w.byte[5] >> 4;
+-	w5.byte[4] = w.byte[5] << 4 | w.byte[6] >> 4;
+-	w5.byte[5] = w.byte[6] << 4 | w.byte[7] >> 4;
+-	w5.byte[6] = w.byte[7] << 4 | (inst & 0x0f00) >> 8;
+-	w5.byte[7] = (inst & 0xff);
+-
+-	return w5.wwn;
+-}
+-
+ u64
+ bfa_ioc_get_adid(struct bfa_ioc_s *ioc)
  {
- 	ioc->ioc_mc = mc;
- 	ioc->pcidev = *pcidev;
--	ioc->ctdev = (ioc->pcidev.device_id == BFA_PCI_DEVICE_ID_CT);
-+	ioc->ctdev  = bfa_asic_id_ct(ioc->pcidev.device_id);
- 	ioc->cna = ioc->ctdev && !ioc->fcmode;
+@@ -1907,13 +1893,6 @@ bfa_ioc_get_mac(struct bfa_ioc_s *ioc)
+ 	return mac;
+ }
  
- 	/**
-@@ -1916,7 +1917,7 @@ bfa_ioc_set_fcmode(struct bfa_ioc_s *ioc)
+-void
+-bfa_ioc_set_fcmode(struct bfa_ioc_s *ioc)
+-{
+-	ioc->fcmode = BFA_TRUE;
+-	ioc->port_id = bfa_ioc_pcifn(ioc);
+-}
+-
  bfa_boolean_t
  bfa_ioc_get_fcmode(struct bfa_ioc_s *ioc)
  {
--	return ioc->fcmode || (ioc->pcidev.device_id != BFA_PCI_DEVICE_ID_CT);
-+	return ioc->fcmode || !bfa_asic_id_ct(ioc->pcidev.device_id);
- }
- 
- /**
 diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index d080440..2fbb6b2 100644
+index 2fbb6b2..df15ecc 100644
 --- a/drivers/scsi/bfa/bfa_ioc.h
 +++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -186,9 +186,6 @@ struct bfa_ioc_hwif_s {
- 	bfa_status_t    (*ioc_pll_init) (struct bfa_ioc_s *ioc);
- 	bfa_boolean_t   (*ioc_firmware_lock)    (struct bfa_ioc_s *ioc);
- 	void            (*ioc_firmware_unlock)  (struct bfa_ioc_s *ioc);
--	u32 *   	(*ioc_fwimg_get_chunk)  (struct bfa_ioc_s *ioc,
--						u32 off);
--	u32		(*ioc_fwimg_get_size)   (struct bfa_ioc_s *ioc);
- 	void		(*ioc_reg_init) (struct bfa_ioc_s *ioc);
- 	void		(*ioc_map_port) (struct bfa_ioc_s *ioc);
- 	void		(*ioc_isr_mode_set)     (struct bfa_ioc_s *ioc,
-@@ -214,6 +211,10 @@ struct bfa_ioc_hwif_s {
+@@ -303,7 +303,6 @@ bfa_boolean_t bfa_ioc_fwver_cmp(struct bfa_ioc_s *ioc,
+  */
+ wwn_t bfa_ioc_get_pwwn(struct bfa_ioc_s *ioc);
+ wwn_t bfa_ioc_get_nwwn(struct bfa_ioc_s *ioc);
+-wwn_t bfa_ioc_get_wwn_naa5(struct bfa_ioc_s *ioc, u16 inst);
+ mac_t bfa_ioc_get_mac(struct bfa_ioc_s *ioc);
+ u64 bfa_ioc_get_adid(struct bfa_ioc_s *ioc);
  
- #define bfa_ioc_stats(_ioc, _stats)     ((_ioc)->stats._stats++)
- #define BFA_IOC_FWIMG_MINSZ     (16 * 1024)
-+#define BFA_IOC_FWIMG_TYPE(__ioc)                                       \
-+	(((__ioc)->ctdev) ?                                             \
-+	 (((__ioc)->fcmode) ? BFI_IMAGE_CT_FC : BFI_IMAGE_CT_CNA) :     \
-+	 BFI_IMAGE_CB_FC)
- 
- #define BFA_IOC_FLASH_CHUNK_NO(off)             (off / BFI_FLASH_CHUNK_SZ_WORDS)
- #define BFA_IOC_FLASH_OFFSET_IN_CHUNK(off)      (off % BFI_FLASH_CHUNK_SZ_WORDS)
-diff --git a/drivers/scsi/bfa/bfa_ioc_cb.c b/drivers/scsi/bfa/bfa_ioc_cb.c
-index 3ce8531..324bdde 100644
---- a/drivers/scsi/bfa/bfa_ioc_cb.c
-+++ b/drivers/scsi/bfa/bfa_ioc_cb.c
-@@ -33,26 +33,13 @@ BFA_TRC_FILE(CNA, IOC_CB);
- static bfa_status_t bfa_ioc_cb_pll_init(struct bfa_ioc_s *ioc);
- static bfa_boolean_t bfa_ioc_cb_firmware_lock(struct bfa_ioc_s *ioc);
- static void bfa_ioc_cb_firmware_unlock(struct bfa_ioc_s *ioc);
--static u32  *bfa_ioc_cb_fwimg_get_chunk(struct bfa_ioc_s *ioc, u32 off);
--static u32 bfa_ioc_cb_fwimg_get_size(struct bfa_ioc_s *ioc);
- static void bfa_ioc_cb_reg_init(struct bfa_ioc_s *ioc);
- static void bfa_ioc_cb_map_port(struct bfa_ioc_s *ioc);
- static void bfa_ioc_cb_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix);
- static void bfa_ioc_cb_notify_hbfail(struct bfa_ioc_s *ioc);
- static void bfa_ioc_cb_ownership_reset(struct bfa_ioc_s *ioc);
- 
--struct bfa_ioc_hwif_s hwif_cb = {
--	bfa_ioc_cb_pll_init,
--	bfa_ioc_cb_firmware_lock,
--	bfa_ioc_cb_firmware_unlock,
--	bfa_ioc_cb_fwimg_get_chunk,
--	bfa_ioc_cb_fwimg_get_size,
--	bfa_ioc_cb_reg_init,
--	bfa_ioc_cb_map_port,
--	bfa_ioc_cb_isr_mode_set,
--	bfa_ioc_cb_notify_hbfail,
--	bfa_ioc_cb_ownership_reset,
--};
-+struct bfa_ioc_hwif_s hwif_cb;
- 
- /**
-  * Called from bfa_ioc_attach() to map asic specific calls.
-@@ -60,19 +47,16 @@ struct bfa_ioc_hwif_s hwif_cb = {
- void
- bfa_ioc_set_cb_hwif(struct bfa_ioc_s *ioc)
- {
--	ioc->ioc_hwif = &hwif_cb;
--}
--
--static u32 *
--bfa_ioc_cb_fwimg_get_chunk(struct bfa_ioc_s *ioc, u32 off)
--{
--	return bfi_image_cb_get_chunk(off);
--}
-+	hwif_cb.ioc_pll_init = bfa_ioc_cb_pll_init;
-+	hwif_cb.ioc_firmware_lock = bfa_ioc_cb_firmware_lock;
-+	hwif_cb.ioc_firmware_unlock = bfa_ioc_cb_firmware_unlock;
-+	hwif_cb.ioc_reg_init = bfa_ioc_cb_reg_init;
-+	hwif_cb.ioc_map_port = bfa_ioc_cb_map_port;
-+	hwif_cb.ioc_isr_mode_set = bfa_ioc_cb_isr_mode_set;
-+	hwif_cb.ioc_notify_hbfail = bfa_ioc_cb_notify_hbfail;
-+	hwif_cb.ioc_ownership_reset = bfa_ioc_cb_ownership_reset;
- 
--static u32
--bfa_ioc_cb_fwimg_get_size(struct bfa_ioc_s *ioc)
--{
--	return bfi_image_cb_size;
-+	ioc->ioc_hwif = &hwif_cb;
- }
- 
- /**
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index 20b58ad..17bd151 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -33,27 +33,13 @@ BFA_TRC_FILE(CNA, IOC_CT);
- static bfa_status_t bfa_ioc_ct_pll_init(struct bfa_ioc_s *ioc);
- static bfa_boolean_t bfa_ioc_ct_firmware_lock(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_firmware_unlock(struct bfa_ioc_s *ioc);
--static u32* bfa_ioc_ct_fwimg_get_chunk(struct bfa_ioc_s *ioc,
--					u32 off);
--static u32 bfa_ioc_ct_fwimg_get_size(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_reg_init(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_map_port(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix);
- static void bfa_ioc_ct_notify_hbfail(struct bfa_ioc_s *ioc);
- static void bfa_ioc_ct_ownership_reset(struct bfa_ioc_s *ioc);
- 
--struct bfa_ioc_hwif_s hwif_ct = {
--	bfa_ioc_ct_pll_init,
--	bfa_ioc_ct_firmware_lock,
--	bfa_ioc_ct_firmware_unlock,
--	bfa_ioc_ct_fwimg_get_chunk,
--	bfa_ioc_ct_fwimg_get_size,
--	bfa_ioc_ct_reg_init,
--	bfa_ioc_ct_map_port,
--	bfa_ioc_ct_isr_mode_set,
--	bfa_ioc_ct_notify_hbfail,
--	bfa_ioc_ct_ownership_reset,
--};
-+struct bfa_ioc_hwif_s hwif_ct;
- 
- /**
-  * Called from bfa_ioc_attach() to map asic specific calls.
-@@ -61,19 +47,16 @@ struct bfa_ioc_hwif_s hwif_ct = {
- void
- bfa_ioc_set_ct_hwif(struct bfa_ioc_s *ioc)
- {
--	ioc->ioc_hwif = &hwif_ct;
--}
-+	hwif_ct.ioc_pll_init = bfa_ioc_ct_pll_init;
-+	hwif_ct.ioc_firmware_lock = bfa_ioc_ct_firmware_lock;
-+	hwif_ct.ioc_firmware_unlock = bfa_ioc_ct_firmware_unlock;
-+	hwif_ct.ioc_reg_init = bfa_ioc_ct_reg_init;
-+	hwif_ct.ioc_map_port = bfa_ioc_ct_map_port;
-+	hwif_ct.ioc_isr_mode_set = bfa_ioc_ct_isr_mode_set;
-+	hwif_ct.ioc_notify_hbfail = bfa_ioc_ct_notify_hbfail;
-+	hwif_ct.ioc_ownership_reset = bfa_ioc_ct_ownership_reset;
- 
--static u32*
--bfa_ioc_ct_fwimg_get_chunk(struct bfa_ioc_s *ioc, u32 off)
--{
--	return bfi_image_ct_get_chunk(off);
--}
--
--static u32
--bfa_ioc_ct_fwimg_get_size(struct bfa_ioc_s *ioc)
--{
--	return bfi_image_ct_size;
-+	ioc->ioc_hwif = &hwif_ct;
- }
- 
- /**
-@@ -95,7 +78,7 @@ bfa_ioc_ct_firmware_lock(struct bfa_ioc_s *ioc)
- 	/**
- 	 * If bios boot (flash based) -- do not increment usage count
- 	 */
--	if (bfa_ioc_ct_fwimg_get_size(ioc) < BFA_IOC_FWIMG_MINSZ)
-+	if (bfi_image_get_size(BFA_IOC_FWIMG_TYPE(ioc)) < BFA_IOC_FWIMG_MINSZ)
- 		return BFA_TRUE;
- 
- 	bfa_ioc_sem_get(ioc->ioc_regs.ioc_usage_sem_reg);
-@@ -146,9 +129,14 @@ bfa_ioc_ct_firmware_unlock(struct bfa_ioc_s *ioc)
- 
- 	/**
- 	 * Firmware lock is relevant only for CNA.
-+	 */
-+	if (!ioc->cna)
-+		return;
-+
-+	/**
- 	 * If bios boot (flash based) -- do not decrement usage count
- 	 */
--	if (!ioc->cna || bfa_ioc_ct_fwimg_get_size(ioc) < BFA_IOC_FWIMG_MINSZ)
-+	if (bfi_image_get_size(BFA_IOC_FWIMG_TYPE(ioc)) < BFA_IOC_FWIMG_MINSZ)
- 		return;
- 
- 	/**
 diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
-index a76de26..273ecec 100644
+index 273ecec..afa3da0 100644
 --- a/drivers/scsi/bfa/bfa_iocfc.c
 +++ b/drivers/scsi/bfa/bfa_iocfc.c
-@@ -170,7 +170,7 @@ bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	/**
- 	 * Initialize chip specific handlers.
- 	 */
--	if (bfa_ioc_devid(&bfa->ioc) == BFA_PCI_DEVICE_ID_CT) {
-+	if (bfa_asic_id_ct(bfa_ioc_devid(&bfa->ioc))) {
- 		iocfc->hwif.hw_reginit = bfa_hwct_reginit;
- 		iocfc->hwif.hw_reqq_ack = bfa_hwct_reqq_ack;
- 		iocfc->hwif.hw_rspq_ack = bfa_hwct_rspq_ack;
-@@ -625,9 +625,9 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 		bfa->trcmod, bfa->aen, bfa->logm);
- 
- 	/**
--	 * Choose FC (ssid: 0x1C) v/s FCoE (ssid: 0x14) mode.
-+	 * Set FC mode for BFA_PCI_DEVICE_ID_CT_FC.
- 	 */
--	if (0)
-+	if (pcidev->device_id == BFA_PCI_DEVICE_ID_CT_FC)
- 		bfa_ioc_set_fcmode(&bfa->ioc);
- 
- 	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_MC_IOCFC);
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index cc835e9..d4a1dde 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1182,6 +1182,14 @@ static struct pci_device_id bfad_id_table[] = {
- 	 .class = (PCI_CLASS_SERIAL_FIBER << 8),
- 	 .class_mask = ~0,
- 	 },
-+	{
-+	 .vendor = BFA_PCI_VENDOR_ID_BROCADE,
-+	 .device = BFA_PCI_DEVICE_ID_CT_FC,
-+	 .subvendor = PCI_ANY_ID,
-+	 .subdevice = PCI_ANY_ID,
-+	 .class = (PCI_CLASS_SERIAL_FIBER << 8),
-+	 .class_mask = ~0,
-+	},
- 
- 	{0, 0},
- };
-diff --git a/drivers/scsi/bfa/bfad_fwimg.c b/drivers/scsi/bfa/bfad_fwimg.c
-index 2ad65f2..1baca1a 100644
---- a/drivers/scsi/bfa/bfad_fwimg.c
-+++ b/drivers/scsi/bfa/bfad_fwimg.c
-@@ -33,16 +33,20 @@
- #include <bfa_fwimg_priv.h>
- #include <bfa.h>
- 
--u32 bfi_image_ct_size;
--u32 bfi_image_cb_size;
--u32 *bfi_image_ct;
--u32 *bfi_image_cb;
-+u32 bfi_image_ct_fc_size;
-+u32 bfi_image_ct_cna_size;
-+u32 bfi_image_cb_fc_size;
-+u32 *bfi_image_ct_fc;
-+u32 *bfi_image_ct_cna;
-+u32 *bfi_image_cb_fc;
- 
- 
--#define	BFAD_FW_FILE_CT	"ctfw.bin"
--#define	BFAD_FW_FILE_CB	"cbfw.bin"
--MODULE_FIRMWARE(BFAD_FW_FILE_CT);
--MODULE_FIRMWARE(BFAD_FW_FILE_CB);
-+#define	BFAD_FW_FILE_CT_FC	"ctfw_fc.bin"
-+#define	BFAD_FW_FILE_CT_CNA	"ctfw_cna.bin"
-+#define	BFAD_FW_FILE_CB_FC	"cbfw_fc.bin"
-+MODULE_FIRMWARE(BFAD_FW_FILE_CT_FC);
-+MODULE_FIRMWARE(BFAD_FW_FILE_CT_CNA);
-+MODULE_FIRMWARE(BFAD_FW_FILE_CB_FC);
- 
- u32 *
- bfad_read_firmware(struct pci_dev *pdev, u32 **bfi_image,
-@@ -74,24 +78,54 @@ error:
- u32 *
- bfad_get_firmware_buf(struct pci_dev *pdev)
- {
--	if (pdev->device == BFA_PCI_DEVICE_ID_CT) {
--		if (bfi_image_ct_size == 0)
--			bfad_read_firmware(pdev, &bfi_image_ct,
--				&bfi_image_ct_size, BFAD_FW_FILE_CT);
--		return bfi_image_ct;
-+	if (pdev->device == BFA_PCI_DEVICE_ID_CT_FC) {
-+		if (bfi_image_ct_fc_size == 0)
-+			bfad_read_firmware(pdev, &bfi_image_ct_fc,
-+				&bfi_image_ct_fc_size, BFAD_FW_FILE_CT_FC);
-+		return bfi_image_ct_fc;
-+	} else if (pdev->device == BFA_PCI_DEVICE_ID_CT) {
-+		if (bfi_image_ct_cna_size == 0)
-+			bfad_read_firmware(pdev, &bfi_image_ct_cna,
-+				&bfi_image_ct_cna_size, BFAD_FW_FILE_CT_CNA);
-+		return bfi_image_ct_cna;
- 	} else {
--		if (bfi_image_cb_size == 0)
--			bfad_read_firmware(pdev, &bfi_image_cb,
--				&bfi_image_cb_size, BFAD_FW_FILE_CB);
--		return bfi_image_cb;
-+		if (bfi_image_cb_fc_size == 0)
-+			bfad_read_firmware(pdev, &bfi_image_cb_fc,
-+				&bfi_image_cb_fc_size, BFAD_FW_FILE_CB_FC);
-+		return bfi_image_cb_fc;
- 	}
+@@ -291,18 +291,6 @@ bfa_iocfc_mem_claim(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg,
  }
  
- u32 *
--bfi_image_ct_get_chunk(u32 off)
--{ return (u32 *)(bfi_image_ct + off); }
-+bfi_image_ct_fc_get_chunk(u32 off)
-+{ return (u32 *)(bfi_image_ct_fc + off); }
- 
- u32 *
--bfi_image_cb_get_chunk(u32 off)
--{ return (u32 *)(bfi_image_cb + off); }
-+bfi_image_ct_cna_get_chunk(u32 off)
-+{ return (u32 *)(bfi_image_ct_cna + off); }
- 
-+u32 *
-+bfi_image_cb_fc_get_chunk(u32 off)
-+{ return (u32 *)(bfi_image_cb_fc + off); }
-+
-+uint32_t *
-+bfi_image_get_chunk(int type, uint32_t off)
-+{
-+	switch (type) {
-+	case BFI_IMAGE_CT_FC: return bfi_image_ct_fc_get_chunk(off); break;
-+	case BFI_IMAGE_CT_CNA: return bfi_image_ct_cna_get_chunk(off); break;
-+	case BFI_IMAGE_CB_FC: return bfi_image_cb_fc_get_chunk(off); break;
-+	default: return 0; break;
-+	}
-+}
-+
-+uint32_t
-+bfi_image_get_size(int type)
-+{
-+	switch (type) {
-+	case BFI_IMAGE_CT_FC: return bfi_image_ct_fc_size; break;
-+	case BFI_IMAGE_CT_CNA: return bfi_image_ct_cna_size; break;
-+	case BFI_IMAGE_CB_FC: return bfi_image_cb_fc_size; break;
-+	default: return 0; break;
-+	}
-+}
-diff --git a/drivers/scsi/bfa/bfad_im_compat.h b/drivers/scsi/bfa/bfad_im_compat.h
-index b36be15..0a122ab 100644
---- a/drivers/scsi/bfa/bfad_im_compat.h
-+++ b/drivers/scsi/bfa/bfad_im_compat.h
-@@ -18,9 +18,6 @@
- #ifndef __BFAD_IM_COMPAT_H__
- #define __BFAD_IM_COMPAT_H__
- 
--extern u32 *bfi_image_buf;
--extern u32 bfi_image_size;
+ /**
+- * BFA submodules initialization completion notification.
+- */
+-static void
+-bfa_iocfc_initdone_submod(struct bfa_s *bfa)
+-{
+-	int             i;
 -
- extern struct device_attribute *bfad_im_host_attrs[];
- extern struct device_attribute *bfad_im_vport_attrs[];
+-	for (i = 0; hal_mods[i]; i++)
+-		hal_mods[i]->initdone(bfa);
+-}
+-
+-/**
+  * Start BFA submodules.
+  */
+ static void
+@@ -394,6 +382,8 @@ bfa_iocfc_cfgrsp(struct bfa_s *bfa)
+ 	/**
+ 	 * Configuration is complete - initialize/start submodules
+ 	 */
++	bfa_fcport_init(bfa);
++
+ 	if (iocfc->action == BFA_IOCFC_ACT_INIT)
+ 		bfa_cb_queue(bfa, &iocfc->init_hcb_qe, bfa_iocfc_init_cb, bfa);
+ 	else
+@@ -531,7 +521,6 @@ bfa_iocfc_enable_cbfn(void *bfa_arg, enum bfa_status status)
+ 		return;
+ 	}
  
-@@ -37,10 +34,12 @@ bfad_load_fwimg(struct pci_dev *pdev)
- static inline void
- bfad_free_fwimg(void)
- {
--	if (bfi_image_ct_size && bfi_image_ct)
--		vfree(bfi_image_ct);
--	if (bfi_image_cb_size && bfi_image_cb)
--		vfree(bfi_image_cb);
-+	if (bfi_image_ct_fc_size && bfi_image_ct_fc)
-+		vfree(bfi_image_ct_fc);
-+	if (bfi_image_ct_cna_size && bfi_image_ct_cna)
-+		vfree(bfi_image_ct_cna);
-+	if (bfi_image_cb_fc_size && bfi_image_cb_fc)
-+		vfree(bfi_image_cb_fc);
+-	bfa_iocfc_initdone_submod(bfa);
+ 	bfa_iocfc_send_cfg(bfa);
  }
  
+@@ -881,6 +870,18 @@ bfa_iocfc_get_bootwwns(struct bfa_s *bfa, u8 *nwwns, wwn_t **wwns)
+ 	*wwns = cfgrsp->bootwwns.wwn;
+ }
+ 
++void
++bfa_iocfc_get_pbc_boot_cfg(struct bfa_s *bfa, struct bfa_boot_pbc_s *pbcfg)
++{
++	struct bfa_iocfc_s *iocfc = &bfa->iocfc;
++	struct bfi_iocfc_cfgrsp_s *cfgrsp = iocfc->cfgrsp;
++
++	pbcfg->enable = cfgrsp->pbc_cfg.boot_enabled;
++	pbcfg->nbluns = cfgrsp->pbc_cfg.nbluns;
++	pbcfg->speed = cfgrsp->pbc_cfg.port_speed;
++	memcpy(pbcfg->pblun, cfgrsp->pbc_cfg.blun, sizeof(pbcfg->pblun));
++}
++
  #endif
-diff --git a/drivers/scsi/bfa/bfad_intr.c b/drivers/scsi/bfa/bfad_intr.c
-index 2b7dbec..fed27d1 100644
---- a/drivers/scsi/bfa/bfad_intr.c
-+++ b/drivers/scsi/bfa/bfad_intr.c
-@@ -151,8 +151,8 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	/* Set up the msix entry table */
- 	bfad_init_msix_entry(bfad, msix_entries, mask, max_bit);
  
--	if ((pdev->device == BFA_PCI_DEVICE_ID_CT && !msix_disable_ct) ||
--	    (pdev->device != BFA_PCI_DEVICE_ID_CT && !msix_disable_cb)) {
-+	if ((bfa_asic_id_ct(pdev->device) && !msix_disable_ct) ||
-+		(!bfa_asic_id_ct(pdev->device) && !msix_disable_cb)) {
  
- 		error = pci_enable_msix(bfad->pcidev, msix_entries, bfad->nvec);
- 		if (error) {
-diff --git a/drivers/scsi/bfa/include/bfi/bfi_ioc.h b/drivers/scsi/bfa/include/bfi/bfi_ioc.h
-index a0158aa..03a9c94 100644
---- a/drivers/scsi/bfa/include/bfi/bfi_ioc.h
-+++ b/drivers/scsi/bfa/include/bfi/bfi_ioc.h
-@@ -63,6 +63,7 @@ struct bfi_ioc_attr_s {
- 	char            fw_version[BFA_VERSION_LEN];
- 	char            optrom_version[BFA_VERSION_LEN];
- 	struct bfa_mfg_vpd_s	vpd;
-+	uint32_t        card_type;	/* card type */
+diff --git a/drivers/scsi/bfa/bfa_iocfc.h b/drivers/scsi/bfa/bfa_iocfc.h
+index fbb4bdc..3ee9fe7 100644
+--- a/drivers/scsi/bfa/bfa_iocfc.h
++++ b/drivers/scsi/bfa/bfa_iocfc.h
+@@ -116,7 +116,8 @@ struct bfa_iocfc_s {
+ #define bfa_isr_mode_set(__bfa, __msix)	\
+ 	((__bfa)->iocfc.hwif.hw_isr_mode_set(__bfa, __msix))
+ #define bfa_msix_getvecs(__bfa, __vecmap, __nvecs, __maxvec)	\
+-	(__bfa)->iocfc.hwif.hw_msix_getvecs(__bfa, __vecmap, __nvecs, __maxvec)
++	((__bfa)->iocfc.hwif.hw_msix_getvecs(__bfa, __vecmap,	\
++		 __nvecs, __maxvec))
+ 
+ /*
+  * FC specific IOC functions.
+@@ -166,6 +167,8 @@ void bfa_com_meminfo(bfa_boolean_t mincfg, u32 *dm_len);
+ void bfa_com_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi,
+ 		bfa_boolean_t mincfg);
+ void bfa_iocfc_get_bootwwns(struct bfa_s *bfa, u8 *nwwns, wwn_t **wwns);
++void bfa_iocfc_get_pbc_boot_cfg(struct bfa_s *bfa,
++		struct bfa_boot_pbc_s *pbcfg);
+ 
+ #endif /* __BFA_IOCFC_H__ */
+ 
+diff --git a/drivers/scsi/bfa/bfa_lps.c b/drivers/scsi/bfa/bfa_lps.c
+index ad06f61..acabb44 100644
+--- a/drivers/scsi/bfa/bfa_lps.c
++++ b/drivers/scsi/bfa/bfa_lps.c
+@@ -41,7 +41,6 @@ static void bfa_lps_attach(struct bfa_s *bfa, void *bfad,
+ 			   struct bfa_iocfc_cfg_s *cfg,
+ 			   struct bfa_meminfo_s *meminfo,
+ 			   struct bfa_pcidev_s *pcidev);
+-static void bfa_lps_initdone(struct bfa_s *bfa);
+ static void bfa_lps_detach(struct bfa_s *bfa);
+ static void bfa_lps_start(struct bfa_s *bfa);
+ static void bfa_lps_stop(struct bfa_s *bfa);
+@@ -347,11 +346,6 @@ bfa_lps_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
+ 
+ static void
+-bfa_lps_initdone(struct bfa_s *bfa)
+-{
+-}
+-
+-static void
+ bfa_lps_detach(struct bfa_s *bfa)
+ {
+ }
+diff --git a/drivers/scsi/bfa/bfa_port_priv.h b/drivers/scsi/bfa/bfa_port_priv.h
+index 40e256e..c52fe56 100644
+--- a/drivers/scsi/bfa/bfa_port_priv.h
++++ b/drivers/scsi/bfa/bfa_port_priv.h
+@@ -87,5 +87,7 @@ struct bfa_fcport_s {
+ /*
+  * public functions
+  */
+-void	bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++void bfa_fcport_init(struct bfa_s *bfa);
++void bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++
+ #endif /* __BFA_PORT_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_priv.h b/drivers/scsi/bfa/bfa_priv.h
+index be80fc7..bf4939b 100644
+--- a/drivers/scsi/bfa/bfa_priv.h
++++ b/drivers/scsi/bfa/bfa_priv.h
+@@ -37,7 +37,6 @@
+ 			void *bfad, struct bfa_iocfc_cfg_s *cfg, 	\
+ 			struct bfa_meminfo_s *meminfo,			\
+ 			struct bfa_pcidev_s *pcidev);      \
+-	static void bfa_ ## __mod ## _initdone(struct bfa_s *bfa);      \
+ 	static void bfa_ ## __mod ## _detach(struct bfa_s *bfa);      \
+ 	static void bfa_ ## __mod ## _start(struct bfa_s *bfa);      \
+ 	static void bfa_ ## __mod ## _stop(struct bfa_s *bfa);      \
+@@ -47,7 +46,6 @@
+ 	struct bfa_module_s hal_mod_ ## __mod = {			\
+ 		bfa_ ## __mod ## _meminfo,				\
+ 		bfa_ ## __mod ## _attach,				\
+-		bfa_ ## __mod ## _initdone,				\
+ 		bfa_ ## __mod ## _detach,				\
+ 		bfa_ ## __mod ## _start,				\
+ 		bfa_ ## __mod ## _stop,					\
+@@ -69,7 +67,6 @@ struct bfa_module_s {
+ 			struct bfa_iocfc_cfg_s *cfg,
+ 			struct bfa_meminfo_s *meminfo,
+ 			struct bfa_pcidev_s *pcidev);
+-	void (*initdone) (struct bfa_s *bfa);
+ 	void (*detach) (struct bfa_s *bfa);
+ 	void (*start) (struct bfa_s *bfa);
+ 	void (*stop) (struct bfa_s *bfa);
+diff --git a/drivers/scsi/bfa/bfa_rport.c b/drivers/scsi/bfa/bfa_rport.c
+index 7c509fa..ccd0680 100644
+--- a/drivers/scsi/bfa/bfa_rport.c
++++ b/drivers/scsi/bfa/bfa_rport.c
+@@ -636,11 +636,6 @@ bfa_rport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
+ 
+ static void
+-bfa_rport_initdone(struct bfa_s *bfa)
+-{
+-}
+-
+-static void
+ bfa_rport_detach(struct bfa_s *bfa)
+ {
+ }
+diff --git a/drivers/scsi/bfa/bfa_sgpg.c b/drivers/scsi/bfa/bfa_sgpg.c
+index 279d8f9..ae452c4 100644
+--- a/drivers/scsi/bfa/bfa_sgpg.c
++++ b/drivers/scsi/bfa/bfa_sgpg.c
+@@ -94,11 +94,6 @@ bfa_sgpg_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
+ 
+ static void
+-bfa_sgpg_initdone(struct bfa_s *bfa)
+-{
+-}
+-
+-static void
+ bfa_sgpg_detach(struct bfa_s *bfa)
+ {
+ }
+diff --git a/drivers/scsi/bfa/bfa_uf.c b/drivers/scsi/bfa/bfa_uf.c
+index 4b3c241..b2a37fc 100644
+--- a/drivers/scsi/bfa/bfa_uf.c
++++ b/drivers/scsi/bfa/bfa_uf.c
+@@ -170,11 +170,6 @@ bfa_uf_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
+ 
+ static void
+-bfa_uf_initdone(struct bfa_s *bfa)
+-{
+-}
+-
+-static void
+ bfa_uf_detach(struct bfa_s *bfa)
+ {
+ }
+diff --git a/drivers/scsi/bfa/include/bfi/bfi_iocfc.h b/drivers/scsi/bfa/include/bfi/bfi_iocfc.h
+index c3760df..ccdfcc5 100644
+--- a/drivers/scsi/bfa/include/bfi/bfi_iocfc.h
++++ b/drivers/scsi/bfa/include/bfi/bfi_iocfc.h
+@@ -19,6 +19,7 @@
+ #define __BFI_IOCFC_H__
+ 
+ #include "bfi.h"
++#include <bfi/bfi_pbc.h>
+ #include <defs/bfa_defs_ioc.h>
+ #include <defs/bfa_defs_iocfc.h>
+ #include <defs/bfa_defs_boot.h>
+@@ -78,6 +79,7 @@ struct bfi_iocfc_cfgrsp_s {
+ 	struct bfa_iocfc_fwcfg_s	fwcfg;
+ 	struct bfa_iocfc_intr_attr_s	intr_attr;
+ 	struct bfi_iocfc_bootwwns	bootwwns;
++	struct bfi_pbc_s                pbc_cfg;
  };
  
  /**
+diff --git a/drivers/scsi/bfa/include/bfi/bfi_pbc.h b/drivers/scsi/bfa/include/bfi/bfi_pbc.h
+new file mode 100644
+index 0000000..88a4154
+--- /dev/null
++++ b/drivers/scsi/bfa/include/bfi/bfi_pbc.h
+@@ -0,0 +1,62 @@
++/*
++ * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
++ * All rights reserved
++ * www.brocade.com
++ *
++ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License (GPL) Version 2 as
++ * published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ */
++
++#ifndef __BFI_PBC_H__
++#define __BFI_PBC_H__
++
++#pragma pack(1)
++
++#define BFI_PBC_MAX_BLUNS	8
++#define BFI_PBC_MAX_VPORTS	16
++
++#define BFI_PBC_PORT_DISABLED	 2
++/**
++ * PBC boot lun configuration
++ */
++struct bfi_pbc_blun_s {
++	wwn_t		tgt_pwwn;
++	lun_t		tgt_lun;
++};
++
++/**
++ * PBC virtual port configuration
++ */
++struct bfi_pbc_vport_s {
++	wwn_t		vp_pwwn;
++	wwn_t		vp_nwwn;
++};
++
++/**
++ * BFI pre-boot configuration information
++ */
++struct bfi_pbc_s {
++	u8		port_enabled;
++	u8		boot_enabled;
++	u8		nbluns;
++	u8		nvports;
++	u8		port_speed;
++	u8		rsvd_a;
++	u16		hss;
++	wwn_t		pbc_pwwn;
++	wwn_t		pbc_nwwn;
++	struct bfi_pbc_blun_s blun[BFI_PBC_MAX_BLUNS];
++	struct bfi_pbc_vport_s vport[BFI_PBC_MAX_VPORTS];
++};
++
++#pragma pack()
++
++#endif /* __BFI_PBC_H__ */
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h b/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h
+index 8c208fc..aea0360 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h
+@@ -39,7 +39,7 @@ enum {
+ struct bfa_adapter_attr_s {
+ 	char            manufacturer[BFA_ADAPTER_MFG_NAME_LEN];
+ 	char            serial_num[BFA_ADAPTER_SERIAL_NUM_LEN];
+-	u32	rsvd1;
++	u32		card_type;
+ 	char            model[BFA_ADAPTER_MODEL_NAME_LEN];
+ 	char            model_descr[BFA_ADAPTER_MODEL_DESCR_LEN];
+ 	wwn_t           pwwn;
+@@ -60,6 +60,7 @@ struct bfa_adapter_attr_s {
+ 	u8         pcie_lanes_orig;
+ 	u8         pcie_lanes;
+ 	u8	        cna_capable;
++	u8         is_mezz;
+ };
+ 
+ /**
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_boot.h b/drivers/scsi/bfa/include/defs/bfa_defs_boot.h
+index 6f4aa52..0fca10b 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_boot.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_boot.h
+@@ -24,6 +24,8 @@
+ 
+ enum {
+ 	BFA_BOOT_BOOTLUN_MAX = 4,	/*  maximum boot lun per IOC */
++	BFA_PREBOOT_BOOTLUN_MAX = 8,    /*  maximum preboot lun per IOC */
++
+ };
+ 
+ #define BOOT_CFG_REV1	1
+@@ -67,5 +69,13 @@ struct bfa_boot_cfg_s {
+ 	struct bfa_boot_bootlun_s blun_disc[BFA_BOOT_BOOTLUN_MAX];
+ };
+ 
++struct bfa_boot_pbc_s {
++	u8         enable;         /* enable/disable SAN boot */
++	u8         speed;          /* boot speed settings */
++	u8         topology;       /* boot topology setting */
++	u8         rsvd1;
++	u32        nbluns;         /* number of boot luns */
++	struct bfa_boot_bootlun_s pblun[BFA_PREBOOT_BOOTLUN_MAX];
++};
+ 
+ #endif /* __BFA_DEFS_BOOT_H__ */
 diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-index c5bd9c3..bfb50eb 100644
+index bfb50eb..d22fb79 100644
 --- a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
 +++ b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-@@ -86,6 +86,9 @@ enum {
- 	BFA_MFG_TYPE_FC4P1   = 415,      /*  4G 1port FC card		*/
- 	BFA_MFG_TYPE_CNA10P2 = 1020,     /*  10G 2port CNA card	*/
- 	BFA_MFG_TYPE_CNA10P1 = 1010,     /*  10G 1port CNA card	*/
-+	BFA_MFG_TYPE_JAYHAWK = 804,      /*  Jayhawk mezz card */
-+	BFA_MFG_TYPE_WANCHESE = 1007,    /*  Wanchese mezz card */
-+	BFA_MFG_TYPE_INVALID = 0,        /*  Invalid card type */
- };
+@@ -45,26 +45,6 @@
+ #define BFA_MFG_CHKSUM_SIZE			16
  
- #pragma pack(1)
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pci.h b/drivers/scsi/bfa/include/defs/bfa_defs_pci.h
-index c9b8332..ea7d89b 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_pci.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_pci.h
-@@ -26,8 +26,13 @@ enum {
- 	BFA_PCI_DEVICE_ID_FC_8G2P	= 0x13,
- 	BFA_PCI_DEVICE_ID_FC_8G1P	= 0x17,
- 	BFA_PCI_DEVICE_ID_CT		= 0x14,
-+	BFA_PCI_DEVICE_ID_CT_FC         = 0x21,
- };
- 
-+#define bfa_asic_id_ct(devid)                   \
-+	((devid) == BFA_PCI_DEVICE_ID_CT ||     \
-+	 (devid) == BFA_PCI_DEVICE_ID_CT_FC)
-+
  /**
-  * PCI sub-system device and vendor ID information
+- * Manufacturing block encrypted version
+- */
+-#define BFA_MFG_ENC_VER				2
+-
+-/**
+- * Manufacturing block version 1 length
+- */
+-#define BFA_MFG_VER1_LEN			128
+-
+-/**
+- * Manufacturing block header length
+- */
+-#define BFA_MFG_HDR_LEN				4
+-
+-/**
+- * Checksum size
+- */
+-#define BFA_MFG_CHKSUM_SIZE			16
+-
+-/**
+  * Manufacturing block format
   */
-@@ -35,7 +40,9 @@ enum {
- 	BFA_PCI_FCOE_SSDEVICE_ID	= 0x14,
+ #define BFA_MFG_SERIALNUM_SIZE			11
+@@ -98,6 +78,24 @@ enum {
+  */
+ #define bfa_mfg_type2port_num(card_type) (((card_type) / 10) % 10)
+ 
++/**
++ * Check if Mezz card
++ */
++#define bfa_mfg_is_mezz(type) (( \
++	(type) == BFA_MFG_TYPE_JAYHAWK || \
++	(type) == BFA_MFG_TYPE_WANCHESE))
++
++/**
++ * Check if card type valid
++ */
++#define bfa_mfg_is_card_type_valid(type) (( \
++	(type) == BFA_MFG_TYPE_FC8P2 || \
++	(type) == BFA_MFG_TYPE_FC8P1 || \
++	(type) == BFA_MFG_TYPE_FC4P2 || \
++	(type) == BFA_MFG_TYPE_FC4P1 || \
++	(type) == BFA_MFG_TYPE_CNA10P2 || \
++	(type) == BFA_MFG_TYPE_CNA10P1 || \
++	bfa_mfg_is_mezz(type)))
+ 
+ /**
+  * All numerical fields are in big-endian format.
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+index 26e5cc7..de6181c 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
+@@ -38,6 +38,7 @@ enum bfa_pport_states {
+ 	BFA_PPORT_ST_IOCDOWN 		= 10,
+ 	BFA_PPORT_ST_IOCDIS 		= 11,
+ 	BFA_PPORT_ST_FWMISMATCH		= 12,
++	BFA_PPORT_ST_PREBOOT_DISABLED   = 13,
+ 	BFA_PPORT_ST_MAX_STATE,
  };
  
--#define BFA_PCI_ACCESS_RANGES 1	/* Maximum number of device address ranges
--				 * mapped through different BAR(s). */
-+/**
-+ * Maximum number of device address ranges mapped through different BAR(s)
-+ */
-+#define BFA_PCI_ACCESS_RANGES 1
- 
- #endif /* __BFA_DEFS_PCI_H__ */
+@@ -203,6 +204,8 @@ struct bfa_pport_attr_s {
+ 	 */
+ 	wwn_t           nwwn;		/*  node wwn */
+ 	wwn_t           pwwn;		/*  port wwn */
++	wwn_t           factorynwwn;    /*  factory node wwn */
++	wwn_t           factorypwwn;    /*  factory port wwn */
+ 	enum fc_cos     cos_supported;	/*  supported class of services */
+ 	u32        rsvd;
+ 	struct fc_symname_s    port_symname;	/*  port symbolic name */
 -- 
 1.6.5.2
 
