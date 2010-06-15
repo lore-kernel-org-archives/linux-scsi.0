@@ -1,124 +1,139 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH] drivers: scsi: use newly introduced hex_to_bin() method
-Date: Tue, 15 Jun 2010 17:26:07 +0300
-Message-ID: <1276611967-28576-1-git-send-email-andy.shevchenko@gmail.com>
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 00/23] bfa: Update driver to 2.2.2.1
+Date: Tue, 15 Jun 2010 11:18:52 -0700
+Message-ID: <1276625932-28138-1-git-send-email-huangj@brocade.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42129 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757860Ab0FOO0R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2010 10:26:17 -0400
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:41239 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754682Ab0FOSTG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Jun 2010 14:19:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <ext-andriy.shevchenko@nokia.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: vravindr@brocade.com, rvadivel@brocade.com, kgudipat@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-From: Andy Shevchenko <ext-andriy.shevchenko@nokia.com>
+Hi James,
 
-Signed-off-by: Andy Shevchenko <ext-andriy.shevchenko@nokia.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: James Smart <james.smart@emulex.com>
-Cc: linux-scsi@vger.kernel.org
----
- drivers/scsi/aacraid/rx.c        |    5 ++---
- drivers/scsi/lpfc/lpfc_attr.c    |   23 +++++++++++------------
- drivers/scsi/scsi_transport_fc.c |   12 ++++++------
- 3 files changed, 19 insertions(+), 21 deletions(-)
+This patch set updates bfa driver to 2.2.2.1. It enalbes support of two new
+mezzanine cards for HP (Brocade 804 FCHBA) and IBM (Brocade 1007 CNA) blade
+server. New features such PBC configuration, PBC vport create, and BOFM support
+etc. are added along with the hardware enablement. It also includes all the bug
+fixes we implemented in our internal 2.2 driver development cycle.
 
-diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
-index 04057ab..84d77fd 100644
---- a/drivers/scsi/aacraid/rx.c
-+++ b/drivers/scsi/aacraid/rx.c
-@@ -352,9 +352,8 @@ static int aac_rx_check_health(struct aac_dev *dev)
- 		pci_free_consistent(dev->pdev, sizeof(struct POSTSTATUS),
- 		  post, paddr);
- 		if (likely((buffer[0] == '0') && ((buffer[1] == 'x') || (buffer[1] == 'X')))) {
--			ret = (buffer[2] <= '9') ? (buffer[2] - '0') : (buffer[2] - 'A' + 10);
--			ret <<= 4;
--			ret += (buffer[3] <= '9') ? (buffer[3] - '0') : (buffer[3] - 'A' + 10);
-+			ret = (hex_to_bin(buffer[2]) << 4) +
-+				hex_to_bin(buffer[3]);
- 		}
- 		pci_free_consistent(dev->pdev, 512, buffer, baddr);
- 		return ret;
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index bf33b31..9f82cf9 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -25,6 +25,7 @@
- #include <linux/interrupt.h>
- #include <linux/aer.h>
- #include <linux/gfp.h>
-+#include <linux/kernel.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -1797,12 +1798,11 @@ lpfc_soft_wwpn_store(struct device *dev, struct device_attribute *attr,
- 
- 	/* Validate and store the new name */
- 	for (i=0, j=0; i < 16; i++) {
--		if ((*buf >= 'a') && (*buf <= 'f'))
--			j = ((j << 4) | ((*buf++ -'a') + 10));
--		else if ((*buf >= 'A') && (*buf <= 'F'))
--			j = ((j << 4) | ((*buf++ -'A') + 10));
--		else if ((*buf >= '0') && (*buf <= '9'))
--			j = ((j << 4) | (*buf++ -'0'));
-+		int value;
-+
-+		value = hex_to_bin(*buf++);
-+		if (value >= 0)
-+			j = (j << 4) | value;
- 		else
- 			return -EINVAL;
- 		if (i % 2) {
-@@ -1890,12 +1890,11 @@ lpfc_soft_wwnn_store(struct device *dev, struct device_attribute *attr,
- 
- 	/* Validate and store the new name */
- 	for (i=0, j=0; i < 16; i++) {
--		if ((*buf >= 'a') && (*buf <= 'f'))
--			j = ((j << 4) | ((*buf++ -'a') + 10));
--		else if ((*buf >= 'A') && (*buf <= 'F'))
--			j = ((j << 4) | ((*buf++ -'A') + 10));
--		else if ((*buf >= '0') && (*buf <= '9'))
--			j = ((j << 4) | (*buf++ -'0'));
-+		int value;
-+
-+		value = hex_to_bin(*buf++);
-+		if (value >= 0)
-+			j = (j << 4) | value;
- 		else
- 			return -EINVAL;
- 		if (i % 2) {
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 0681378..73ae8ec 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -29,6 +29,7 @@
- #include <linux/init.h>
- #include <linux/slab.h>
- #include <linux/delay.h>
-+#include <linux/kernel.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-@@ -1730,12 +1731,11 @@ fc_parse_wwn(const char *ns, u64 *nm)
- 
- 	/* Validate and store the new name */
- 	for (i=0, j=0; i < 16; i++) {
--		if ((*ns >= 'a') && (*ns <= 'f'))
--			j = ((j << 4) | ((*ns++ -'a') + 10));
--		else if ((*ns >= 'A') && (*ns <= 'F'))
--			j = ((j << 4) | ((*ns++ -'A') + 10));
--		else if ((*ns >= '0') && (*ns <= '9'))
--			j = ((j << 4) | (*ns++ -'0'));
-+		int value;
-+
-+		value = hex_to_bin(*ns++);
-+		if (value >= 0)
-+			j = (j << 4) | value;
- 		else
- 			return -EINVAL;
- 		if (i % 2) {
--- 
-1.6.6.1
+This patch set is created againist scsi-misc, and it depends on the last
+patch submitted by Krishna Guipat to add sysfs support to obtain debug info:
+http://marc.info/?l=linux-scsi&m=127604326602491&w=2
+
+Thanks
+
+Jing
+
+Jing Huang (23):
+  bfa: enable new hardware
+  bfa: enable basic PBC support
+  bfa: PBC vport create
+  bfa: vport state machine fix
+  bfa: ioc attributes fix
+  bfa: statistics and typo fix
+  bfa: use standards defined timeout for ELS/CT
+  bfa: fix interrupt coalescing setting
+  bfa: fix rport speed setting
+  bfa: fix prli retry issues
+  bfa: add PBC port disable handling
+  bfa: update to support firmware configuation
+  bfa: fix chip and memory initialization
+  bfa: fix uf post and rport fcpim state machine
+  bfa: add dynamic queue selection
+  bfa: fix link state structure
+  bfa: fix possible IO doule completion
+  bfa: update to support BOFM
+  bfa: add description for module parameters
+  bfa: add ioc state checking
+  bfa: fix wrong arg to callback
+  bfa: vport fixes
+  bfa: update driver version string
+
+ drivers/scsi/bfa/bfa_cb_ioim_macros.h            |    7 +-
+ drivers/scsi/bfa/bfa_core.c                      |    1 +
+ drivers/scsi/bfa/bfa_fcpim.c                     |   29 +++-
+ drivers/scsi/bfa/bfa_fcpim_priv.h                |    6 +-
+ drivers/scsi/bfa/bfa_fcport.c                    |  139 +++++++++++++----
+ drivers/scsi/bfa/bfa_fcs.c                       |   10 +-
+ drivers/scsi/bfa/bfa_fcs_lport.c                 |    3 +
+ drivers/scsi/bfa/bfa_fcxp.c                      |   14 +--
+ drivers/scsi/bfa/bfa_fwimg_priv.h                |   25 +++-
+ drivers/scsi/bfa/bfa_hw_cb.c                     |    7 +-
+ drivers/scsi/bfa/bfa_hw_ct.c                     |    7 +-
+ drivers/scsi/bfa/bfa_intr.c                      |    1 +
+ drivers/scsi/bfa/bfa_ioc.c                       |  172 +++++++++-------------
+ drivers/scsi/bfa/bfa_ioc.h                       |   12 +-
+ drivers/scsi/bfa/bfa_ioc_cb.c                    |   36 ++----
+ drivers/scsi/bfa/bfa_ioc_ct.c                    |   71 ++++++----
+ drivers/scsi/bfa/bfa_iocfc.c                     |  107 +++++++++----
+ drivers/scsi/bfa/bfa_iocfc.h                     |   19 ++-
+ drivers/scsi/bfa/bfa_ioim.c                      |   63 +++++++--
+ drivers/scsi/bfa/bfa_log_module.c                |   86 +++++++++++
+ drivers/scsi/bfa/bfa_lps.c                       |    6 -
+ drivers/scsi/bfa/bfa_port.c                      |   31 ++++-
+ drivers/scsi/bfa/bfa_port_priv.h                 |    7 +-
+ drivers/scsi/bfa/bfa_priv.h                      |    3 -
+ drivers/scsi/bfa/bfa_rport.c                     |    5 -
+ drivers/scsi/bfa/bfa_sgpg.c                      |    5 -
+ drivers/scsi/bfa/bfa_uf.c                        |   10 +-
+ drivers/scsi/bfa/bfad.c                          |  102 ++++++++++++-
+ drivers/scsi/bfa/bfad_attr.c                     |   46 ++++--
+ drivers/scsi/bfa/bfad_drv.h                      |   24 ++--
+ drivers/scsi/bfa/bfad_fwimg.c                    |   76 +++++++---
+ drivers/scsi/bfa/bfad_im.c                       |   33 ++++-
+ drivers/scsi/bfa/bfad_im_compat.h                |   13 +-
+ drivers/scsi/bfa/bfad_intr.c                     |    8 +-
+ drivers/scsi/bfa/fabric.c                        |   44 ++++++-
+ drivers/scsi/bfa/fcpim.c                         |   32 +++--
+ drivers/scsi/bfa/fcs_fabric.h                    |    5 +
+ drivers/scsi/bfa/fcs_rport.h                     |    3 +
+ drivers/scsi/bfa/fcs_vport.h                     |    1 +
+ drivers/scsi/bfa/fdmi.c                          |    6 +-
+ drivers/scsi/bfa/include/aen/bfa_aen_ioc.h       |    8 +
+ drivers/scsi/bfa/include/bfa.h                   |    4 +
+ drivers/scsi/bfa/include/bfa_fcpim.h             |   20 +++-
+ drivers/scsi/bfa/include/bfa_svc.h               |    1 +
+ drivers/scsi/bfa/include/bfi/bfi_ctreg.h         |    3 +
+ drivers/scsi/bfa/include/bfi/bfi_ioc.h           |   20 ++-
+ drivers/scsi/bfa/include/bfi/bfi_iocfc.h         |    2 +
+ drivers/scsi/bfa/include/bfi/bfi_pbc.h           |   62 ++++++++
+ drivers/scsi/bfa/include/cna/port/bfa_port.h     |    1 +
+ drivers/scsi/bfa/include/cs/bfa_debug.h          |    3 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_adapter.h |    3 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_auth.h    |    6 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_boot.h    |   10 ++
+ drivers/scsi/bfa/include/defs/bfa_defs_driver.h  |    2 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_fcport.h  |   26 ++--
+ drivers/scsi/bfa/include/defs/bfa_defs_ioc.h     |    7 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_iocfc.h   |   12 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_itnim.h   |   10 ++
+ drivers/scsi/bfa/include/defs/bfa_defs_mfg.h     |   41 +++---
+ drivers/scsi/bfa/include/defs/bfa_defs_pci.h     |   11 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_port.h    |   14 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_pport.h   |   29 +---
+ drivers/scsi/bfa/include/defs/bfa_defs_status.h  |   46 ++++--
+ drivers/scsi/bfa/include/fcb/bfa_fcb_vport.h     |    3 +-
+ drivers/scsi/bfa/include/fcs/bfa_fcs.h           |    4 +-
+ drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h     |    1 +
+ drivers/scsi/bfa/include/fcs/bfa_fcs_rport.h     |    1 +
+ drivers/scsi/bfa/include/fcs/bfa_fcs_vport.h     |    4 +
+ drivers/scsi/bfa/include/log/bfa_log_linux.h     |    6 +-
+ drivers/scsi/bfa/include/protocol/fc.h           |    1 +
+ drivers/scsi/bfa/lport_api.c                     |   30 +++-
+ drivers/scsi/bfa/ms.c                            |    9 +-
+ drivers/scsi/bfa/ns.c                            |   14 +-
+ drivers/scsi/bfa/rport.c                         |   88 ++++++++++-
+ drivers/scsi/bfa/rport_api.c                     |   11 +-
+ drivers/scsi/bfa/rport_ftrs.c                    |   14 ++-
+ drivers/scsi/bfa/scn.c                           |    2 +-
+ drivers/scsi/bfa/vport.c                         |   54 +++++++-
+ 78 files changed, 1329 insertions(+), 529 deletions(-)
+ create mode 100644 drivers/scsi/bfa/include/bfi/bfi_pbc.h
 
