@@ -1,16 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 7/9] hpsa: forbid hard reset of 640x boards
-Date: Wed, 16 Jun 2010 13:51:45 -0500
-Message-ID: <20100616185145.22798.34553.stgit@beardog.cce.hp.com>
+Subject: [PATCH 8/9] hpsa: separate intx and msi/msix interrupt handlers
+Date: Wed, 16 Jun 2010 13:51:50 -0500
+Message-ID: <20100616185150.22798.94816.stgit@beardog.cce.hp.com>
 References: <20100616184510.22798.26206.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:23668 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932119Ab0FPSqr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 14:46:47 -0400
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:24961 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932587Ab0FPSqw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 14:46:52 -0400
 In-Reply-To: <20100616184510.22798.26206.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,68 +19,97 @@ Cc: andriusb@redhat.com, James.Bottomley@HansenPartnership.com, dab@hp.com, then
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: forbid hard reset of 640x boards
-The 6402/6404 are two PCI devices -- two Smart Array controllers
--- that fit into one slot.  It is possible to reset them independently,
-however, they share a battery backed cache module.  One of the pair
-controls the cache and the 2nd one access the cache through the first
-one.  If you reset the one controlling the cache, the other one will
-not be a happy camper.  So we just forbid resetting this conjoined
-mess.
+hpsa: separate intx and msi/msix interrupt handlers
+There are things which need to be done in the intx
+interrupt handler which do not need to be done in
+the msi/msix interrupt handler, like checking that
+the interrupt is actually for us, and checking that the
+interrupt pending bit on the hardware is set (which we
+weren't previously doing at all, which means old controllers
+wouldn't work), so it makes sense to separate these into
+two functions.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   18 ++++++++++++++++--
- 1 files changed, 16 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c |   39 ++++++++++++++++++++++++++++++++-------
+ 1 files changed, 32 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 58690dc..0600c8d 100644
+index 0600c8d..8f11325 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -179,6 +179,7 @@ static int __devinit hpsa_find_cfg_addrs(struct pci_dev *pdev,
- 	u64 *cfg_offset);
- static int __devinit hpsa_pci_find_memory_BAR(struct pci_dev *pdev,
- 	unsigned long *memory_bar);
-+static int __devinit hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id);
+@@ -126,7 +126,8 @@ static struct board_type products[] = {
  
- static DEVICE_ATTR(raid_level, S_IRUGO, raid_level_show, NULL);
- static DEVICE_ATTR(lunid, S_IRUGO, lunid_show, NULL);
-@@ -3148,7 +3149,7 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	int rc, i;
- 	struct CfgTable __iomem *cfgtable;
- 	bool use_doorbell;
--
-+	u32 board_id;
+ static int number_of_controllers;
  
- 	/* For controllers as old as the P600, this is very nearly
- 	 * the same thing as
-@@ -3170,6 +3171,18 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	 * method of resetting doesn't work so we have another way
- 	 * using the doorbell register.
- 	 */
+-static irqreturn_t do_hpsa_intr(int irq, void *dev_id);
++static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
++static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
+ static int hpsa_ioctl(struct scsi_device *dev, int cmd, void *arg);
+ static void start_io(struct ctlr_info *h);
+ 
+@@ -2858,9 +2859,8 @@ static inline bool interrupt_pending(struct ctlr_info *h)
+ 
+ static inline long interrupt_not_for_us(struct ctlr_info *h)
+ {
+-	return !(h->msi_vector || h->msix_vector) &&
+-		((h->access.intr_pending(h) == 0) ||
+-		(h->interrupts_enabled == 0));
++	return (h->access.intr_pending(h) == 0) ||
++		(h->interrupts_enabled == 0);
+ }
+ 
+ static inline int bad_tag(struct ctlr_info *h, u32 tag_index,
+@@ -2934,7 +2934,7 @@ static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
+ 	return next_command(h);
+ }
+ 
+-static irqreturn_t do_hpsa_intr(int irq, void *dev_id)
++static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id)
+ {
+ 	struct ctlr_info *h = dev_id;
+ 	unsigned long flags;
+@@ -2943,6 +2943,26 @@ static irqreturn_t do_hpsa_intr(int irq, void *dev_id)
+ 	if (interrupt_not_for_us(h))
+ 		return IRQ_NONE;
+ 	spin_lock_irqsave(&h->lock, flags);
++	while (interrupt_pending(h)) {
++		raw_tag = get_next_completion(h);
++		while (raw_tag != FIFO_EMPTY) {
++			if (hpsa_tag_contains_index(raw_tag))
++				raw_tag = process_indexed_cmd(h, raw_tag);
++			else
++				raw_tag = process_nonindexed_cmd(h, raw_tag);
++		}
++	}
++	spin_unlock_irqrestore(&h->lock, flags);
++	return IRQ_HANDLED;
++}
 +
-+	/* Exclude 640x boards.  These are two pci devices in one slot
-+	 * which share a battery backed cache module.  One controls the
-+	 * cache, the other accesses the cache through the one that controls
-+	 * it.  If we reset the one controlling the cache, the other will
-+	 * likely not be happy.  Just forbid resetting this conjoined mess.
-+	 * The 640x isn't really supported by hpsa anyway.
-+	 */
-+	hpsa_lookup_board_id(pdev, &board_id);
-+	if (board_id == 0x409C0E11 || board_id == 0x409D0E11)
-+		return -ENOTSUPP;
++static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id)
++{
++	struct ctlr_info *h = dev_id;
++	unsigned long flags;
++	u32 raw_tag;
 +
- 	for (i = 0; i < 32; i++)
- 		pci_read_config_word(pdev, 2*i, &saved_config_space[i]);
++	spin_lock_irqsave(&h->lock, flags);
+ 	raw_tag = get_next_completion(h);
+ 	while (raw_tag != FIFO_EMPTY) {
+ 		if (hpsa_tag_contains_index(raw_tag))
+@@ -3754,8 +3774,13 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
  
-@@ -3669,7 +3682,8 @@ static __devinit int hpsa_init_reset_devices(struct pci_dev *pdev)
- 
- 	/* -ENOTSUPP here means we cannot reset the controller
- 	 * but it's already (and still) up and running in
--	 * "performant mode".
-+	 * "performant mode".  Or, it might be 640x, which can't reset
-+	 * due to concerns about shared bbwc between 6402/6404 pair.
- 	 */
- 	if (rc == -ENOTSUPP)
- 		return 0; /* just try to do the kdump anyhow. */
+ 	/* make sure the board interrupts are off */
+ 	h->access.set_intr_mask(h, HPSA_INTR_OFF);
+-	rc = request_irq(h->intr[PERF_MODE_INT], do_hpsa_intr,
+-			IRQF_DISABLED, h->devname, h);
++
++	if (h->msix_vector || h->msi_vector)
++		rc = request_irq(h->intr[PERF_MODE_INT], do_hpsa_intr_msi,
++				IRQF_DISABLED, h->devname, h);
++	else
++		rc = request_irq(h->intr[PERF_MODE_INT], do_hpsa_intr_intx,
++				IRQF_DISABLED, h->devname, h);
+ 	if (rc) {
+ 		dev_err(&pdev->dev, "unable to get irq %d for %s\n",
+ 		       h->intr[PERF_MODE_INT], h->devname);
 
