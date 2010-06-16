@@ -1,45 +1,47 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set but not used
-Date: Tue, 15 Jun 2010 22:33:53 -0700
-Message-ID: <1276666434-11227-5-git-send-email-justinmattock@gmail.com>
+From: "Justin P. Mattock" <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 3/5]pci:bus.c Fix variable 'retval' set but not used
+Date: Tue, 15 Jun 2010 22:33:52 -0700
+Message-ID: <1276666434-11227-4-git-send-email-justinmattock@gmail.com>
 References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, "Justin P. Mattock" <justinmattock@gmail.com>
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Justin P. Mattock" <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The below patch fixes a warning message when using gcc 4.6.0
-  CC      drivers/pci/setup-bus.o
-drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
-drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
- 
- Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+The patch below fixes the warning message I am seeing with gcc 4.6.0
+  CC      drivers/pci/bus.o
+drivers/pci/bus.c: In function 'pci_enable_bridges':
+drivers/pci/bus.c:237:6: warning: variable 'retval' set but not used
+
+ Signed-off-by: Justin P. Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 ---
- drivers/pci/setup-bus.c |    2 --
+ drivers/pci/bus.c |    2 --
  1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 19b1113..215590b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 	struct pci_bus *parent = bridge->subordinate;
- 	int tried_times = 0;
- 	struct resource_list_x head, *list;
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 628ea20..84bdb48 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -234,12 +234,10 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ void pci_enable_bridges(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
 -	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
  
-@@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	pci_bus_size_bridges(parent);
- 	__pci_bridge_assign_resources(bridge, &head);
--	retval = pci_reenable_device(bridge);
- 	pci_set_master(bridge);
- 	pci_enable_bridges(parent);
- 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (dev->subordinate) {
+ 			if (!pci_is_enabled(dev)) {
+-				retval = pci_enable_device(dev);
+ 				pci_set_master(dev);
+ 			}
+ 			pci_enable_bridges(dev->subordinate);
 -- 
 1.7.1.rc1.21.gf3bd6
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
