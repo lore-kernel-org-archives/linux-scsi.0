@@ -1,60 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-Date: Wed, 16 Jun 2010 14:34:27 -0700
-Message-ID: <20100616143427.a0323701.akpm@linux-foundation.org>
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera>
-	<AANLkTiksbL1qHg7Q0A-6TbX0uUrxra4jctUoIGVk5vnE@mail.gmail.com>
-	<201006091122.35304.rjw@sisk.pl>
-	<20100616134231.23ff30da.akpm@linux-foundation.org>
-	<AANLkTil-X5IMZMer7fHVPOMalsTJNliv-gMimzKmJ3Od@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 07/11] qla4xxx: Added support for ISP82XX
+Date: Wed, 16 Jun 2010 17:02:41 -0500
+Message-ID: <4C194A01.1080809@cs.wisc.edu>
+References: <20100616205403.GA8178@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <AANLkTil-X5IMZMer7fHVPOMalsTJNliv-gMimzKmJ3Od@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: sedat.dilek@gmail.com
-Cc: Sedat Dilek <sedat.dilek@googlemail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>, dmonakhov@openvz.org
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:55121 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754541Ab0FPWAW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2010 18:00:22 -0400
+In-Reply-To: <20100616205403.GA8178@sles11sp1b1.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: james.bottomley@suse.de, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, karen.higgins@qlogic.com
 
-On Wed, 16 Jun 2010 23:00:37 +0200
-Sedat Dilek <sedat.dilek@googlemail.com> wrote:
-
-> On Wed, Jun 16, 2010 at 10:42 PM, Andrew Morton
-> <akpm@linux-foundation.org> wrote:
-> > On Wed, 9 Jun 2010 11:22:35 +0200
-> > "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> >
-> >> On Wednesday 09 June 2010, Sedat Dilek wrote:
-> >> > The patch from [1] is still missing.
-> >> >
-> >> > __ __"cpufreq-call-nr_iowait_cpu-with-disabled-preemption.patch" from
-> >> > Dmitry Monakhoc
-> >> >
-> >> > Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
-> >> > Tested-by Maciej Rutecki <maciej.rutecki@gmail.com>
-> >> >
-> >> > I have already reported this issue on LKML [2] and cpufreq ML [3].
-> >> >
-> >> > - Sedat -
-> >> >
-> >> > [1] http://www.spinics.net/lists/cpufreq/msg01631.html
-> >> > [2] http://lkml.org/lkml/2010/5/31/77
-> >> > [3] http://www.spinics.net/lists/cpufreq/msg01637.html
-> >>
-> >> Thanks, added.
-> >
-> > I just merged a different patch whcih should address this:
+On 06/16/2010 03:54 PM, Vikas Chaudhary wrote:
+>   	} else {
+>   		DEBUG2(printk("scsi%ld: Unknown mailbox status %08X\n",
+>   			      ha->host_no, mbox_status));
 >
-> How do cpu-freq related stuff find its way into mainline?
-> Is there a GIT repository/branch on <git.kernel.org> where you can pull from?
-> 
+> -		ha->mbox_status[0] =3D mbox_status;
+> +		ha->mbox_status[0] =3D mbox_sts[0];
+>   	}
+>   }
 
-(top-posting repaired.  Please don't)
+Is this right? mbox_sts[0] is not set at this point, and you get:
 
-Usually via the cpufreq git tree, mailing list and maintainer, as
-described in ./MAINTAINERS.
+drivers/scsi/qla4xxx/ql4_isr.c: In function =91qla4xxx_isr_decode_mailb=
+ox=92:
+drivers/scsi/qla4xxx/ql4_isr.c:634: warning: =91mbox_sts=92 may be used=
+=20
+uninitialized in this function
 
-But for a patch like this one, I'll just scoot it into mainline unless
-Dave happens to grab it before I do that.
-
+We should not hit the case though, right. Maybe in a follow up patch yo=
+u=20
+can fix this since the rest of the patches look ok, and I do not want t=
+o=20
+look a them ever again :)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
