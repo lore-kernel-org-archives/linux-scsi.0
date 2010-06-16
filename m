@@ -1,70 +1,47 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 0/11] qla4xxx: bug_fix and ISP82xx support
-Date: Thu, 17 Jun 2010 02:19:02 +0530
-Message-ID: <20100616204902.GA8100@sles11sp1b1.qlogic.org>
+Subject: [PATCH 01/11] qla4xxx: set driver ddb state correctly in
+	process_ddb_changed
+Date: Thu, 17 Jun 2010 02:19:44 +0530
+Message-ID: <20100616204944.GA8117@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:17797
+Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:19180
 	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1756256Ab0FPUuf (ORCPT
+	by vger.kernel.org with SMTP id S932369Ab0FPUvP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2010 16:50:35 -0400
+	Wed, 16 Jun 2010 16:51:15 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@suse.de, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
-Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com, karen.higgins@qlogic.com, prasanna.mumbai@qlogic.com
+Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com
 
-James,
+If fw ddb state is ACTIVE mark driver ddb stat as ONLINE and
+unblock iscsi sesssion.
 
-Please apply following list of patches which are generated against
-latest scsi-misc-2.6 tree. These patches are blessed by Mike.C and
-patches addresses comments in following threads:-
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_init.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-http://article.gmane.org/gmane.linux.scsi/59571
-http://article.gmane.org/gmane.linux.scsi/59572
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 5510df8..8947743 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -1487,7 +1487,10 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 		      ddb_entry->fw_ddb_device_state, state, fw_ddb_index));
+ 	if (old_fw_ddb_device_state == state &&
+ 	    state == DDB_DS_SESSION_ACTIVE) {
+-		/* Do nothing, state not changed. */
++		if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
++			atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
++			iscsi_unblock_session(ddb_entry->sess);
++		}
+ 		return QLA_SUCCESS;
+ 	}
+ 
+-- 
+1.7.0.5
 
-We will hold on BSG patches for now to get everyone on common agreement.
-I will resubmit BSG patches after every one come to common agreement.  
-
-Vikas Chaudhary (8)
-0001-qla4xxx-set-driver-ddb-state-correctly-in-process_dd.patch
-0002-qla4xxx-unblock-iscsi-session-after-setting-ddb-stat.patch
-0003-qla4xxx-correct-return-status-in-function-qla4xxx_fw.patch
-0004-qla4xxx-set-correct-value-in-sess-recovery_tmo.patch
-0007-qla4xxx-Added-support-for-ISP82XX.patch
-0008-qla4xxx-replace-all-dev_info-dev_warn-dev_err-with-q.patch
-0010-iscsi_transport-added-new-iscsi_param-to-display-tar.patch
-0011-qla4xxx-Update-driver-version-to-5.02.00-k2.patch
-
-Ravi Anand (1)
-0006-qla4xxx-Handle-one-H-W-Interrupt-at-a-time.patch
-
-Prasanna Mumbai (1)
-0005-qla4xxx-Fix-the-freeing-of-the-buffer-allocated-for-.patch
-
-Karen Higgins(1)
-0009-qla4xxx-wait-for-device_ready-before-device-discover.patch
-
-drivers/scsi/qla4xxx/Kconfig        |    8 +-
-drivers/scsi/qla4xxx/Makefile       |    2 +-
-drivers/scsi/qla4xxx/ql4_def.h      |  146 ++-
-drivers/scsi/qla4xxx/ql4_fw.h       |  139 +++-
-drivers/scsi/qla4xxx/ql4_glbl.h     |  106 ++-
-drivers/scsi/qla4xxx/ql4_init.c     |  245 +++--
-drivers/scsi/qla4xxx/ql4_inline.h   |    2 +-
-drivers/scsi/qla4xxx/ql4_iocb.c     |   73 +-
-drivers/scsi/qla4xxx/ql4_isr.c      |  396 +++++-
-drivers/scsi/qla4xxx/ql4_mbx.c      |  191 ++-
-drivers/scsi/qla4xxx/ql4_nvram.c    |    2 +-
-drivers/scsi/qla4xxx/ql4_nvram.h    |   10 +-
-drivers/scsi/qla4xxx/ql4_nx.c       | 2317 +++++++++++++++++++++++++++++++++++
-drivers/scsi/qla4xxx/ql4_nx.h       |  779 ++++++++++++
-drivers/scsi/qla4xxx/ql4_os.c       |  751 +++++++++---
-drivers/scsi/qla4xxx/ql4_version.h  |    2 +-
-drivers/scsi/scsi_transport_iscsi.c |    6 +-
-include/scsi/iscsi_if.h             |    2 +
-
-Thanks,
-Vikas.
