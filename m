@@ -1,17 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 5/9] hpsa: factor out the code to reset controllers on driver
-	load
-Date: Wed, 16 Jun 2010 13:51:35 -0500
-Message-ID: <20100616185135.22798.82149.stgit@beardog.cce.hp.com>
+Subject: [PATCH 7/9] hpsa: forbid hard reset of 640x boards
+Date: Wed, 16 Jun 2010 13:51:45 -0500
+Message-ID: <20100616185145.22798.34553.stgit@beardog.cce.hp.com>
 References: <20100616184510.22798.26206.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0186.atlanta.hp.com ([15.193.32.63]:3404 "EHLO
-	g6t0186.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932119Ab0FPSqh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 14:46:37 -0400
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:23668 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932119Ab0FPSqr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 14:46:47 -0400
 In-Reply-To: <20100616184510.22798.26206.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,80 +19,68 @@ Cc: andriusb@redhat.com, James.Bottomley@HansenPartnership.com, dab@hp.com, then
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: factor out the code to reset controllers on driver load
-for kdump support
+hpsa: forbid hard reset of 640x boards
+The 6402/6404 are two PCI devices -- two Smart Array controllers
+-- that fit into one slot.  It is possible to reset them independently,
+however, they share a battery backed cache module.  One of the pair
+controls the cache and the 2nd one access the cache through the first
+one.  If you reset the one controlling the cache, the other one will
+not be a happy camper.  So we just forbid resetting this conjoined
+mess.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   49 ++++++++++++++++++++++++++++++-------------------
- 1 files changed, 30 insertions(+), 19 deletions(-)
+ drivers/scsi/hpsa.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 67439c1..54b7fda 100644
+index 58690dc..0600c8d 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3571,33 +3571,44 @@ static void __devinit hpsa_hba_inquiry(struct ctlr_info *h)
- 	}
- }
+@@ -179,6 +179,7 @@ static int __devinit hpsa_find_cfg_addrs(struct pci_dev *pdev,
+ 	u64 *cfg_offset);
+ static int __devinit hpsa_pci_find_memory_BAR(struct pci_dev *pdev,
+ 	unsigned long *memory_bar);
++static int __devinit hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id);
  
-+static __devinit int hpsa_init_reset_devices(struct pci_dev *pdev)
-+{
-+	int i;
-+
-+	if (!reset_devices)
-+		return 0;
-+
-+	/* Reset the controller with a PCI power-cycle */
-+	if (hpsa_hard_reset_controller(pdev) || hpsa_reset_msi(pdev))
-+		return -ENODEV;
-+
-+	/* Some devices (notably the HP Smart Array 5i Controller)
-+	   need a little pause here */
-+	msleep(HPSA_POST_RESET_PAUSE_MSECS);
-+
-+	/* Now try to get the controller to respond to a no-op */
-+	for (i = 0; i < HPSA_POST_RESET_NOOP_RETRIES; i++) {
-+		if (hpsa_noop(pdev) == 0)
-+			break;
-+		else
-+			dev_warn(&pdev->dev, "no-op failed%s\n",
-+					(i < 11 ? "; re-trying" : ""));
-+	}
-+	return 0;
-+}
-+
- static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 				    const struct pci_device_id *ent)
- {
--	int i, rc;
--	int dac;
-+	int dac, rc;
- 	struct ctlr_info *h;
- 
- 	if (number_of_controllers == 0)
- 		printk(KERN_INFO DRIVER_NAME "\n");
--	if (reset_devices) {
--		/* Reset the controller with a PCI power-cycle */
--		if (hpsa_hard_reset_controller(pdev) || hpsa_reset_msi(pdev))
--			return -ENODEV;
+ static DEVICE_ATTR(raid_level, S_IRUGO, raid_level_show, NULL);
+ static DEVICE_ATTR(lunid, S_IRUGO, lunid_show, NULL);
+@@ -3148,7 +3149,7 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	int rc, i;
+ 	struct CfgTable __iomem *cfgtable;
+ 	bool use_doorbell;
 -
--		/* Some devices (notably the HP Smart Array 5i Controller)
--		   need a little pause here */
--		msleep(HPSA_POST_RESET_PAUSE_MSECS);
++	u32 board_id;
  
--		/* Now try to get the controller to respond to a no-op */
--		for (i = 0; i < HPSA_POST_RESET_NOOP_RETRIES; i++) {
--			if (hpsa_noop(pdev) == 0)
--				break;
--			else
--				dev_warn(&pdev->dev, "no-op failed%s\n",
--						(i < 11 ? "; re-trying" : ""));
--		}
--	}
-+	rc = hpsa_init_reset_devices(pdev);
-+	if (rc)
-+		return rc;
+ 	/* For controllers as old as the P600, this is very nearly
+ 	 * the same thing as
+@@ -3170,6 +3171,18 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	 * method of resetting doesn't work so we have another way
+ 	 * using the doorbell register.
+ 	 */
++
++	/* Exclude 640x boards.  These are two pci devices in one slot
++	 * which share a battery backed cache module.  One controls the
++	 * cache, the other accesses the cache through the one that controls
++	 * it.  If we reset the one controlling the cache, the other will
++	 * likely not be happy.  Just forbid resetting this conjoined mess.
++	 * The 640x isn't really supported by hpsa anyway.
++	 */
++	hpsa_lookup_board_id(pdev, &board_id);
++	if (board_id == 0x409C0E11 || board_id == 0x409D0E11)
++		return -ENOTSUPP;
++
+ 	for (i = 0; i < 32; i++)
+ 		pci_read_config_word(pdev, 2*i, &saved_config_space[i]);
  
- 	/* Command structures must be aligned on a 32-byte boundary because
- 	 * the 5 lower bits of the address are used by the hardware. and by
+@@ -3669,7 +3682,8 @@ static __devinit int hpsa_init_reset_devices(struct pci_dev *pdev)
+ 
+ 	/* -ENOTSUPP here means we cannot reset the controller
+ 	 * but it's already (and still) up and running in
+-	 * "performant mode".
++	 * "performant mode".  Or, it might be 640x, which can't reset
++	 * due to concerns about shared bbwc between 6402/6404 pair.
+ 	 */
+ 	if (rc == -ENOTSUPP)
+ 		return 0; /* just try to do the kdump anyhow. */
 
