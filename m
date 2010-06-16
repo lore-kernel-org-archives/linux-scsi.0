@@ -1,121 +1,254 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 04/11] qla4xxx: set correct value in sess->recovery_tmo
-Date: Thu, 17 Jun 2010 02:21:11 +0530
-Message-ID: <20100616205111.GA8149@sles11sp1b1.qlogic.org>
+Subject: [PATCH 05/11] qla4xxx: Fix the freeing of the buffer allocated for
+	DMA
+Date: Thu, 17 Jun 2010 02:22:02 +0530
+Message-ID: <20100616205202.GA8159@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:22134
+Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:23911
 	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1753571Ab0FPUwm (ORCPT
+	by vger.kernel.org with SMTP id S1759632Ab0FPUxe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2010 16:52:42 -0400
+	Wed, 16 Jun 2010 16:53:34 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@suse.de, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
-Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com
+Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com, prasanna.mumbai@qlogic.com
 
+From: Prasanna Mumbai <prasanna.mumbai@qlogic.com>
+
+Fixed the DMA alloacted memory freeing which wasn't taken care
+in many cases.
+
+Signed-off-by: Prasanna Mumbai <prasanna.mumbai@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_def.h  |    3 +--
- drivers/scsi/qla4xxx/ql4_init.c |    6 +++---
- drivers/scsi/qla4xxx/ql4_mbx.c  |    1 -
- drivers/scsi/qla4xxx/ql4_os.c   |    4 ++--
- 4 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/scsi/qla4xxx/ql4_init.c |   38 ++++++++++++++++++++++++--------------
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   15 ++++++++-------
+ 2 files changed, 32 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 4288026..2b53c79 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -239,12 +239,12 @@ struct ddb_entry {
- 	uint32_t default_time2wait; /* Default Min time between
- 				     * relogins (+aens) */
- 
--	atomic_t port_down_timer; /* Device connection timer */
- 	atomic_t retry_relogin_timer; /* Min Time between relogins
- 				       * (4000 only) */
- 	atomic_t relogin_timer;	/* Max Time to wait for relogin to complete */
- 	atomic_t relogin_retry_count; /* Num of times relogin has been
- 				       * retried */
-+	uint16_t ka_timeout;
- 
- 	uint16_t port;
- 	uint32_t tpgt;
-@@ -394,7 +394,6 @@ struct scsi_qla_host {
- 	uint32_t timer_active;
- 
- 	/* Recovery Timers */
--	uint32_t port_down_retry_count;
- 	uint32_t discovery_wait;
- 	atomic_t check_relogin_timeouts;
- 	uint32_t retry_reset_ha_cnt;
 diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index d525405..6cdfe9f 100644
+index 6cdfe9f..8cca167 100644
 --- a/drivers/scsi/qla4xxx/ql4_init.c
 +++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -548,6 +548,9 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
- 	ddb_entry->default_relogin_timeout =
- 		le16_to_cpu(fw_ddb_entry->def_timeout);
- 	ddb_entry->default_time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
-+	ddb_entry->ka_timeout = le16_to_cpu(fw_ddb_entry->ka_timeout);
-+	if (ddb_entry->sess)
-+		ddb_entry->sess->recovery_tmo = ddb_entry->ka_timeout;
- 
- 	/* Update index in case it changed */
- 	ddb_entry->fw_ddb_index = fw_ddb_index;
-@@ -633,7 +636,6 @@ static struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
+@@ -444,17 +444,17 @@ static struct ddb_entry* qla4xxx_get_ddb_entry(struct scsi_qla_host *ha,
+ 	if (fw_ddb_entry == NULL) {
+ 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+ 			      ha->host_no, __func__));
+-		return NULL;
++		goto exit_get_ddb_entry_no_free;
  	}
  
- 	ddb_entry->fw_ddb_index = fw_ddb_index;
--	atomic_set(&ddb_entry->port_down_timer, ha->port_down_retry_count);
- 	atomic_set(&ddb_entry->retry_relogin_timer, INVALID_ENTRY);
- 	atomic_set(&ddb_entry->relogin_timer, 0);
- 	atomic_set(&ddb_entry->relogin_retry_count, 0);
-@@ -1500,8 +1502,6 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
- 	/* Device is back online. */
- 	if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) {
- 		atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
--		atomic_set(&ddb_entry->port_down_timer,
--			   ha->port_down_retry_count);
- 		atomic_set(&ddb_entry->relogin_retry_count, 0);
- 		atomic_set(&ddb_entry->relogin_timer, 0);
- 		clear_bit(DF_RELOGIN, &ddb_entry->flags);
+ 	if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, fw_ddb_entry,
+ 				    fw_ddb_entry_dma, NULL, NULL,
+ 				    &device_state, NULL, NULL, NULL) ==
+-	    QLA_ERROR) {
++				    QLA_ERROR) {
+ 		DEBUG2(printk("scsi%ld: %s: failed get_ddb_entry for "
+ 			      "fw_ddb_index %d\n", ha->host_no, __func__,
+ 			      fw_ddb_index));
+-		return NULL;
++		goto exit_get_ddb_entry;
+ 	}
+ 
+ 	/* Allocate DDB if not already allocated. */
+@@ -472,6 +472,7 @@ static struct ddb_entry* qla4xxx_get_ddb_entry(struct scsi_qla_host *ha,
+ 		}
+ 	}
+ 
++	/* if not found allocate new ddb */
+ 	if (!found) {
+ 		DEBUG2(printk("scsi%ld: %s: ddb[%d] not found - allocating "
+ 			      "new ddb\n", ha->host_no, __func__,
+@@ -480,10 +481,11 @@ static struct ddb_entry* qla4xxx_get_ddb_entry(struct scsi_qla_host *ha,
+ 		ddb_entry = qla4xxx_alloc_ddb(ha, fw_ddb_index);
+ 	}
+ 
+-	/* if not found allocate new ddb */
++exit_get_ddb_entry:
+ 	dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry), fw_ddb_entry,
+ 			  fw_ddb_entry_dma);
+ 
++exit_get_ddb_entry_no_free:
+ 	return ddb_entry;
+ }
+ 
+@@ -511,7 +513,8 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
+ 	if (ddb_entry == NULL) {
+ 		DEBUG2(printk("scsi%ld: %s: ddb_entry is NULL\n", ha->host_no,
+ 			      __func__));
+-		goto exit_update_ddb;
++
++		goto exit_update_ddb_no_free;
+ 	}
+ 
+ 	/* Make sure the dma buffer is valid */
+@@ -522,7 +525,7 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
+ 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+ 			      ha->host_no, __func__));
+ 
+-		goto exit_update_ddb;
++		goto exit_update_ddb_no_free;
+ 	}
+ 
+ 	if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, fw_ddb_entry,
+@@ -530,7 +533,7 @@ static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
+ 				    &ddb_entry->fw_ddb_device_state, &conn_err,
+ 				    &ddb_entry->tcp_source_port_num,
+ 				    &ddb_entry->connection_id) ==
+-	    QLA_ERROR) {
++				    QLA_ERROR) {
+ 		DEBUG2(printk("scsi%ld: %s: failed get_ddb_entry for "
+ 			      "fw_ddb_index %d\n", ha->host_no, __func__,
+ 			      fw_ddb_index));
+@@ -608,6 +611,7 @@ exit_update_ddb:
+ 		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+ 				  fw_ddb_entry, fw_ddb_entry_dma);
+ 
++exit_update_ddb_no_free:
+ 	return status;
+ }
+ 
+@@ -691,7 +695,7 @@ int qla4_is_relogin_allowed(struct scsi_qla_host *ha, uint32_t conn_err)
+  **/
+ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
+ {
+-	int status = QLA_SUCCESS;
++	int status = QLA_ERROR;
+ 	uint32_t fw_ddb_index = 0;
+ 	uint32_t next_fw_ddb_index = 0;
+ 	uint32_t ddb_state;
+@@ -707,7 +711,8 @@ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
+ 	if (fw_ddb_entry == NULL) {
+ 		DEBUG2(dev_info(&ha->pdev->dev, "%s: DMA alloc failed\n",
+ 				__func__));
+-		return QLA_ERROR;
++
++		goto exit_build_ddb_list_no_free;
+ 	}
+ 
+ 	dev_info(&ha->pdev->dev, "Initializing DDBs ...\n");
+@@ -722,7 +727,7 @@ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
+ 			DEBUG2(printk("scsi%ld: %s: get_ddb_entry, "
+ 				      "fw_ddb_index %d failed", ha->host_no,
+ 				      __func__, fw_ddb_index));
+-			return QLA_ERROR;
++			goto exit_build_ddb_list;
+ 		}
+ 
+ 		DEBUG2(printk("scsi%ld: %s: Getting DDB[%d] ddbstate=0x%x, "
+@@ -752,7 +757,7 @@ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
+ 						"get_ddb_entry %d failed\n",
+ 						ha->host_no,
+ 						__func__, fw_ddb_index));
+-					return QLA_ERROR;
++					goto exit_build_ddb_list;
+ 				}
+ 			}
+ 		}
+@@ -772,7 +777,7 @@ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
+ 			DEBUG2(printk("scsi%ld: %s: Unable to allocate memory "
+ 				      "for device at fw_ddb_index %d\n",
+ 				      ha->host_no, __func__, fw_ddb_index));
+-			return QLA_ERROR;
++			goto exit_build_ddb_list;
+ 		}
+ 		/* Fill in the device structure */
+ 		if (qla4xxx_update_ddb_entry(ha, ddb_entry, fw_ddb_index) ==
+@@ -780,11 +785,10 @@ static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
+ 			ha->fw_ddb_index_map[fw_ddb_index] =
+ 				(struct ddb_entry *)INVALID_ENTRY;
+ 
+-
+ 			DEBUG2(printk("scsi%ld: %s: update_ddb_entry failed "
+ 				      "for fw_ddb_index %d.\n",
+ 				      ha->host_no, __func__, fw_ddb_index));
+-			return QLA_ERROR;
++			goto exit_build_ddb_list;
+ 		}
+ 
+ next_one:
+@@ -794,8 +798,14 @@ next_one:
+ 			break;
+ 	}
+ 
++	status = QLA_SUCCESS;
+ 	dev_info(&ha->pdev->dev, "DDB list done..\n");
+ 
++exit_build_ddb_list:
++	dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry), fw_ddb_entry,
++		fw_ddb_entry_dma);
++
++exit_build_ddb_list_no_free:
+ 	return status;
+ }
+ 
 diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 75496fb..aa12ffd 100644
+index aa12ffd..c4311c6 100644
 --- a/drivers/scsi/qla4xxx/ql4_mbx.c
 +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -287,7 +287,6 @@ qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
- 	       min(sizeof(ha->alias), sizeof(init_fw_cb->Alias)));*/
+@@ -316,7 +316,7 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
+ 	if (init_fw_cb == NULL) {
+ 		DEBUG2(printk("scsi%ld: %s: Unable to alloc init_cb\n",
+ 			      ha->host_no, __func__));
+-		return 10;
++		goto exit_init_fw_cb_no_free;
+ 	}
+ 	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
  
- 	/* Save Command Line Paramater info */
--	ha->port_down_retry_count = le16_to_cpu(init_fw_cb->conn_ka_timeout);
- 	ha->discovery_wait = ql4xdiscoverywait;
+@@ -372,7 +372,7 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
+ exit_init_fw_cb:
+ 	dma_free_coherent(&ha->pdev->dev, sizeof(struct addr_ctrl_blk),
+ 				init_fw_cb, init_fw_cb_dma);
+-
++exit_init_fw_cb_no_free:
+ 	return status;
+ }
  
- 	if (ha->acb_version == ACB_SUPPORTED) {
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 38b1d38..11a4bd1 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -155,7 +155,7 @@ static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session)
- 		DEBUG2(printk("scsi%ld: %s: index [%d] port down retry count "
- 			      "of (%d) secs exhausted, marking device DEAD.\n",
- 			      ha->host_no, __func__, ddb_entry->fw_ddb_index,
--			      ha->port_down_retry_count));
-+			      ddb_entry->ka_timeout));
+@@ -393,7 +393,7 @@ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host * ha)
+ 	if (init_fw_cb == NULL) {
+ 		printk("scsi%ld: %s: Unable to alloc init_cb\n", ha->host_no,
+ 		       __func__);
+-		return 10;
++		return QLA_ERROR;
+ 	}
  
- 		DEBUG2(printk("scsi%ld: %s: scheduling dpc routine - dpc "
- 			      "flags = 0x%lx\n",
-@@ -286,7 +286,7 @@ int qla4xxx_add_sess(struct ddb_entry *ddb_entry)
- {
- 	int err;
+ 	/* Get Initialize Firmware Control Block. */
+@@ -1018,16 +1018,16 @@ int qla4xxx_send_tgts(struct scsi_qla_host *ha, char *ip, uint16_t port)
+ 		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+ 			      ha->host_no, __func__));
+ 		ret_val = QLA_ERROR;
+-		goto qla4xxx_send_tgts_exit;
++		goto exit_send_tgts_no_free;
+ 	}
  
--	ddb_entry->sess->recovery_tmo = ddb_entry->ha->port_down_retry_count;
-+	ddb_entry->sess->recovery_tmo = ddb_entry->ka_timeout;
- 	err = iscsi_add_session(ddb_entry->sess, ddb_entry->fw_ddb_index);
- 	if (err) {
- 		DEBUG2(printk(KERN_ERR "Could not add session.\n"));
+ 	ret_val = qla4xxx_get_default_ddb(ha, fw_ddb_entry_dma);
+ 	if (ret_val != QLA_SUCCESS)
+-		goto qla4xxx_send_tgts_exit;
++		goto exit_send_tgts;
+ 
+ 	ret_val = qla4xxx_req_ddb_entry(ha, &ddb_index);
+ 	if (ret_val != QLA_SUCCESS)
+-		goto qla4xxx_send_tgts_exit;
++		goto exit_send_tgts;
+ 
+ 	memset(fw_ddb_entry->iscsi_alias, 0,
+ 	       sizeof(fw_ddb_entry->iscsi_alias));
+@@ -1049,9 +1049,10 @@ int qla4xxx_send_tgts(struct scsi_qla_host *ha, char *ip, uint16_t port)
+ 
+ 	ret_val = qla4xxx_set_ddb_entry(ha, ddb_index, fw_ddb_entry_dma);
+ 
+-qla4xxx_send_tgts_exit:
++exit_send_tgts:
+ 	dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+ 			  fw_ddb_entry, fw_ddb_entry_dma);
++exit_send_tgts_no_free:
+ 	return ret_val;
+ }
+ 
 -- 
 1.7.0.5
 
