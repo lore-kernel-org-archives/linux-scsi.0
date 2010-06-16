@@ -1,48 +1,59 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 07/11] qla4xxx: Added support for ISP82XX
-Date: Wed, 16 Jun 2010 17:02:41 -0500
-Message-ID: <4C194A01.1080809@cs.wisc.edu>
-References: <20100616205403.GA8178@sles11sp1b1.qlogic.org>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH 3/3] cxgb4i_v4.3 : main driver files
+Date: Wed, 16 Jun 2010 17:19:02 -0500
+Message-ID: <4C194DD6.7090706@cs.wisc.edu>
+References: <1275973167-8640-1-git-send-email-rakesh@chelsio.com> <1275973167-8640-2-git-send-email-rakesh@chelsio.com> <1275973167-8640-3-git-send-email-rakesh@chelsio.com> <1275973167-8640-4-git-send-email-rakesh@chelsio.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:55121 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754541Ab0FPWAW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Jun 2010 18:00:22 -0400
-In-Reply-To: <20100616205403.GA8178@sles11sp1b1.qlogic.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Return-path: <open-iscsi+bncCLPJla3WGRDQmuXgBBoEwSSDEg-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1275973167-8640-4-git-send-email-rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
+	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, LK-NetDev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LK-SCSIDev <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Anish Bhatt <anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: james.bottomley@suse.de, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, karen.higgins@qlogic.com
 
-On 06/16/2010 03:54 PM, Vikas Chaudhary wrote:
->   	} else {
->   		DEBUG2(printk("scsi%ld: Unknown mailbox status %08X\n",
->   			      ha->host_no, mbox_status));
+On 06/07/2010 11:59 PM, Rakesh Ranjan wrote:
+> From: Rakesh Ranjan<rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
 >
-> -		ha->mbox_status[0] =3D mbox_status;
-> +		ha->mbox_status[0] =3D mbox_sts[0];
->   	}
->   }
+>
+> Signed-off-by: Rakesh Ranjan<rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+> ---
+>   drivers/scsi/cxgbi/cxgb4i.h         |  175 +++++
+>   drivers/scsi/cxgbi/cxgb4i_ddp.c     |  653 ++++++++++++++++
+>   drivers/scsi/cxgbi/cxgb4i_init.c    |  317 ++++++++
+>   drivers/scsi/cxgbi/cxgb4i_offload.c | 1409 +++++++++++++++++++++++++++++++++++
+>   4 files changed, 2554 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/scsi/cxgbi/cxgb4i.h
+>   create mode 100644 drivers/scsi/cxgbi/cxgb4i_ddp.c
+>   create mode 100644 drivers/scsi/cxgbi/cxgb4i_init.c
+>   create mode 100644 drivers/scsi/cxgbi/cxgb4i_offload.c
+>
 
-Is this right? mbox_sts[0] is not set at this point, and you get:
+Do you think you can look through this patch and identify the places 
+where you basically just copied a cxgb3i function or copied it but 
+renamed some stuff and then move these type of things to the lib patch?
 
-drivers/scsi/qla4xxx/ql4_isr.c: In function =91qla4xxx_isr_decode_mailb=
-ox=92:
-drivers/scsi/qla4xxx/ql4_isr.c:634: warning: =91mbox_sts=92 may be used=
-=20
-uninitialized in this function
+A lot of the scatter list stuff for example looks the same in each driver.
 
-We should not hit the case though, right. Maybe in a follow up patch yo=
-u=20
-can fix this since the rest of the patches look ok, and I do not want t=
-o=20
-look a them ever again :)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ddp_find_unused_entries - cxgb4i_ddp_find_unused_entries
+ddp_unmark_entries - cxgb4i_ddp_unmark_entries
+cxgb3i_ddp_find_page_index - cxgb4i_ddp_find_page_index
+cxgb3i_ddp_adjust_page_table - cxgb4i_ddp_adjust_page_table
+..... (lots of the ddp code looks duplicated).
+
+The *_offload.c code looks the same.
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
