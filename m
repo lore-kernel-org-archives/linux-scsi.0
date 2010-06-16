@@ -1,40 +1,80 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 0/5] Fix set but unused variable warnings
-Date: Wed, 16 Jun 2010 05:09:15 -0600
-Message-ID: <20100616110914.GF9298@parisc-linux.org>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com> <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 13/15] qla4xxx: Added bsg support
+Date: Wed, 16 Jun 2010 06:16:14 -0500
+Message-ID: <4C18B27E.3000205@cs.wisc.edu>
+References: <20100611074900.GA27827@sles11sp1b1.qlogic.org>	 <4C12D398.8020200@cs.wisc.edu> <1276382259.10508.25.camel@mulgrave.site> <4C153B3F.2030608@cs.wisc.edu> <5E4F49720D0BAD499EE1F01232234BA871286CE741@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:35595 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755620Ab0FPLJQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 07:09:16 -0400
-Content-Disposition: inline
-In-Reply-To: <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:44145 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754111Ab0FPLN4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2010 07:13:56 -0400
+In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA871286CE741@AVEXMB1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>
 
-On Wed, Jun 16, 2010 at 03:52:58PM +1000, Julian Calaby wrote:
-> Given that patches 3, 4 and 5 seem to be a cases of missing error
-> handling, (3 and 4 in particular seem to be breaking things rather
-> than fixing them) in my humble opinion, I think this set needs some
-> work and discussion.
-> 
-> Justin, maybe you'd be better off posting the actual error messages
-> (split up by subsystem) and letting the lists discuss them, rather
-> than posting patches which are obviously wrong. (like the ones I've
-> pointed out)
+On 06/15/2010 09:43 PM, Vikas Chaudhary wrote:
+>> -----Original Message-----
+>> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+>> Sent: Sunday, June 13, 2010 1:11 PM
+>> To: James Bottomley
+>> Cc: Vikas Chaudhary; linux-scsi@vger.kernel.org; Ravi Anand
+>> Subject: Re: [PATCH 13/15] qla4xxx: Added bsg support
+>>
+>> On 06/12/2010 05:37 PM, James Bottomley wrote:
+>>> On Fri, 2010-06-11 at 19:23 -0500, Mike Christie wrote:
+>>>> On 06/11/2010 02:49 AM, Vikas Chaudhary wrote:
+>>>>> Added BSG support to enable application support to configure
+>>>>> ISP40XX/ISP82XX adapter.
+>>>>>
+>>>>> This patch is on top of: http://marc.info/?l=linux-
+>> scsi&m=126999297630764&w=2
+>>>>>
+>>>>
+>>>> Did James say that using vendor specific commands was ok? I did not see
+>>>> anything on the list.
+>>>
+>>> In principle, the point about vendor specific host commands has already
+>>> been conceded ... lpfc and qla2xxx already use them.
+>>>
+>>> I think the real rule is that for host specific BSG commands, it's only
+>>> for stuff that's specific to the host ... so not stuff which should be
+>>> done generically.
+>>>
+>>> There are no hard and fast rules for applying the test above.  In
+>>> theory, the management interfaces exposed by FC_BSG_HST_VENDOR could be
+>>> used to send commands ... but it tends to get tolerated as long as the
+>>> drivers support the standardised rport commands.
+>>>
+>>> If I look at what the qla4xxx interface would do
+>>>
+>>>        1. it only supports vendor specific commands ... this is a bit of a
+>>>           red flag since it's proposing to do nothing in a vendor neutral
+>>>           way.  This one, I punt back to you: what should an iscsi device
+>>>           implementing BSG support of the standard commands
+>>
+>> I am not 100% sure what we need yet, because qlogic has been pushing the
+>> vendor specific route and I cannot see exactly what it needs with some
+>> of its commands.
+>>
+>> Based on other drivers and from looking at the qlogic tools and their
+>> qlogic.com driver which seems to convert some management operations to
+>> flash commands, I have the list below:
+>>
+>> - Operation to set net settings like ip/dhcp, gateway, dns, subnet,
+>> vlan, tcp/ip settings, speed/auto-negotiate, etc.
+>>
+>> Besides supporting a IPv4 and IPv6 address, some cards can support lots
+>> of IPs and/or vlans per same physical port, so this operation cannot be
+>> tied to just the host.
+>
+> These operations are tied to per pci function in qla4xxx driver.
 
-My first impression of patch 5 was "that can't be right", but upon review,
-I concluded that was the best solution.  If we return the PTR_ERR, this
-is going to confuse every user of scsi_host_alloc who are currently only
-checking for NULL.
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+ServerEgnines supports multiple ips per pci function, so you need 
+something that works for everyone like I was talking about in that other 
+mail you guys sent about how to export the ipv4 and ipv6 addr.
