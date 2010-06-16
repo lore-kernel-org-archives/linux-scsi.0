@@ -1,17 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2/9] hpsa: Make "hpsa_allow_any=1" boot param enable Compaq
-	Smart Arrays.
-Date: Wed, 16 Jun 2010 13:51:20 -0500
-Message-ID: <20100616185120.22798.84581.stgit@beardog.cce.hp.com>
+Subject: [PATCH 3/9] hpsa: make hpsa_find_memory_BAR not require the per HBA
+	structure.
+Date: Wed, 16 Jun 2010 13:51:25 -0500
+Message-ID: <20100616185125.22798.6345.stgit@beardog.cce.hp.com>
 References: <20100616184510.22798.26206.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:22726 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932119Ab0FPSqV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 14:46:21 -0400
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:6805 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932119Ab0FPSq1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 14:46:27 -0400
 In-Reply-To: <20100616184510.22798.26206.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,36 +20,52 @@ Cc: andriusb@redhat.com, James.Bottomley@HansenPartnership.com, dab@hp.com, then
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-hpsa: Make "hpsa_allow_any=1" boot param enable Compaq Smart Arrays.
-We were previously only accepting HP boards.
+Rationale for this is that in order to fix the hard reset code used
+by kdump, we need to use this function before we even have the per
+HBA structure.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 00b5397..661a320 100644
+index 661a320..1decf16 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -95,6 +95,8 @@ static const struct pci_device_id hpsa_pci_device_id[] = {
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x333F},
- 	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,             PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
-+	{PCI_VENDOR_ID_COMPAQ,     PCI_ANY_ID,             PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
- 	{0,}
- };
+@@ -3313,20 +3313,20 @@ static inline bool hpsa_board_disabled(struct pci_dev *pdev)
+ 	return ((command & PCI_COMMAND_MEMORY) == 0);
+ }
  
-@@ -3293,7 +3295,9 @@ static int __devinit hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
- 		if (*board_id == products[i].board_id)
- 			return i;
+-static int __devinit hpsa_pci_find_memory_BAR(struct ctlr_info *h,
++static int __devinit hpsa_pci_find_memory_BAR(struct pci_dev *pdev,
+ 	unsigned long *memory_bar)
+ {
+ 	int i;
  
--	if (subsystem_vendor_id != PCI_VENDOR_ID_HP || !hpsa_allow_any) {
-+	if ((subsystem_vendor_id != PCI_VENDOR_ID_HP &&
-+		subsystem_vendor_id != PCI_VENDOR_ID_COMPAQ) ||
-+		!hpsa_allow_any) {
- 		dev_warn(&pdev->dev, "unrecognized board ID: "
- 			"0x%08x, ignoring.\n", *board_id);
- 			return -ENODEV;
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++)
+-		if (pci_resource_flags(h->pdev, i) & IORESOURCE_MEM) {
++		if (pci_resource_flags(pdev, i) & IORESOURCE_MEM) {
+ 			/* addressing mode bits already removed */
+-			*memory_bar = pci_resource_start(h->pdev, i);
+-			dev_dbg(&h->pdev->dev, "memory BAR = %lx\n",
++			*memory_bar = pci_resource_start(pdev, i);
++			dev_dbg(&pdev->dev, "memory BAR = %lx\n",
+ 				*memory_bar);
+ 			return 0;
+ 		}
+-	dev_warn(&h->pdev->dev, "no memory BAR found\n");
++	dev_warn(&pdev->dev, "no memory BAR found\n");
+ 	return -ENODEV;
+ }
+ 
+@@ -3503,7 +3503,7 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
+ 		return err;
+ 	}
+ 	hpsa_interrupt_mode(h);
+-	err = hpsa_pci_find_memory_BAR(h, &h->paddr);
++	err = hpsa_pci_find_memory_BAR(h->pdev, &h->paddr);
+ 	if (err)
+ 		goto err_out_free_res;
+ 	h->vaddr = remap_pci_mem(h->paddr, 0x250);
 
