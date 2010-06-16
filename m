@@ -1,28 +1,49 @@
-From: Nick Bowler <nbowler@elliptictech.com>
-Subject: Re: 2.6.35-rc3: Reported regressions 2.6.33 -> 2.6.34
-Date: Wed, 16 Jun 2010 14:30:51 -0400
-Message-ID: <20100616183051.GA19635@elliptictech.com>
-References: <g77CuMUl7QI.A.5wF.V5OFMB@chimera>
+From: Bandan Das <bandan.das@Stratus.com>
+Subject: [PATCH] mpt fusion: Cleanup some duplicate calls in mptbase.c
+Date: Wed, 16 Jun 2010 13:39:42 -0400
+Message-ID: <20100616173942.GE336@stratus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailhub.stratus.com ([134.111.1.17]:42155 "EHLO
+	mailhub4.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756125Ab0FPSf4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 14:35:56 -0400
 Content-Disposition: inline
-In-Reply-To: <g77CuMUl7QI.A.5wF.V5OFMB@chimera>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, linux-scsi@vger.kernel.org
 
-On 16:45 Sun 13 Jun     , Rafael J. Wysocki wrote:
->  * This report has been delayed, because I had to go through all of the
->    entries and filter out the fixed ones, invalid ones etc.  Of course, I might
->    have missed some, but hopefully not too many.
+In mpt_detach, call to pci_set_drvdata is redundant because it 
+has already been called in mpt_adapter_disable. In mpt_attach,
+ioc->pcidev is set to pdev two times.
 
-This regression from 2.6.33 still seems to be missing from the list, and
-is still present in 2.6.35-rc3.
+Signed-off-by: Bandan Das <bandan.das@stratus.com>
+---
+ drivers/message/fusion/mptbase.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-  r600 CS checker rejects narrow FBO renderbuffers.
-  https://bugs.freedesktop.org/show_bug.cgi?id=27609
-
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index a6a5701..2ec2fa7 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1770,7 +1770,6 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ioc->req_sz = MPT_DEFAULT_FRAME_SIZE;		/* avoid div by zero! */
+ 	ioc->reply_sz = MPT_REPLY_FRAME_SIZE;
+ 
+-	ioc->pcidev = pdev;
+ 
+ 	spin_lock_init(&ioc->taskmgmt_lock);
+ 	mutex_init(&ioc->internal_cmds.mutex);
+@@ -2051,7 +2050,6 @@ mpt_detach(struct pci_dev *pdev)
+ 
+ 	mpt_adapter_dispose(ioc);
+ 
+-	pci_set_drvdata(pdev, NULL);
+ }
+ 
+ /**************************************************************************
 -- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+1.6.6.1
+
