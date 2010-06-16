@@ -1,87 +1,124 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Subject: RE: [PATCH 13/15] qla4xxx: Added bsg support
-Date: Tue, 15 Jun 2010 19:43:42 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA871286CE741@AVEXMB1.qlogic.org>
-References: <20100611074900.GA27827@sles11sp1b1.qlogic.org>
-	 <4C12D398.8020200@cs.wisc.edu> <1276382259.10508.25.camel@mulgrave.site>
- <4C153B3F.2030608@cs.wisc.edu>
+Date: Tue, 15 Jun 2010 19:45:05 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA871286CE742@AVEXMB1.qlogic.org>
+References: <4C12D398.8020200@cs.wisc.edu>
+	<1276382259.10508.25.camel@mulgrave.site>	<4C153B3F.2030608@cs.wisc.edu>
+ <20100614095426E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:27420 "EHLO
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:27463 "EHLO
 	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753838Ab0FPCno (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2010 22:43:44 -0400
-In-Reply-To: <4C153B3F.2030608@cs.wisc.edu>
+	with ESMTP id S1755151Ab0FPCpH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2010 22:45:07 -0400
+In-Reply-To: <20100614095426E.fujita.tomonori@lab.ntt.co.jp>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>
+To: "fujita.tomonori@lab.ntt.co.jp" <fujita.tomonori@lab.ntt.co.jp>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "james.bottomley@suse.de" <james.bottomley@suse.de>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>
 
-Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogTWlrZSBDaHJpc3RpZSBbbWFpbHRv
-Om1pY2hhZWxjQGNzLndpc2MuZWR1XQ0KPlNlbnQ6IFN1bmRheSwgSnVuZSAxMywgMjAxMCAxOjEx
-IFBNDQo+VG86IEphbWVzIEJvdHRvbWxleQ0KPkNjOiBWaWthcyBDaGF1ZGhhcnk7IGxpbnV4LXNj
-c2lAdmdlci5rZXJuZWwub3JnOyBSYXZpIEFuYW5kDQo+U3ViamVjdDogUmU6IFtQQVRDSCAxMy8x
-NV0gcWxhNHh4eDogQWRkZWQgYnNnIHN1cHBvcnQNCj4NCj5PbiAwNi8xMi8yMDEwIDA1OjM3IFBN
-LCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6DQo+PiBPbiBGcmksIDIwMTAtMDYtMTEgYXQgMTk6MjMg
-LTA1MDAsIE1pa2UgQ2hyaXN0aWUgd3JvdGU6DQo+Pj4gT24gMDYvMTEvMjAxMCAwMjo0OSBBTSwg
-VmlrYXMgQ2hhdWRoYXJ5IHdyb3RlOg0KPj4+PiBBZGRlZCBCU0cgc3VwcG9ydCB0byBlbmFibGUg
-YXBwbGljYXRpb24gc3VwcG9ydCB0byBjb25maWd1cmUNCj4+Pj4gSVNQNDBYWC9JU1A4MlhYIGFk
-YXB0ZXIuDQo+Pj4+DQo+Pj4+IFRoaXMgcGF0Y2ggaXMgb24gdG9wIG9mOiBodHRwOi8vbWFyYy5p
-bmZvLz9sPWxpbnV4LQ0KPnNjc2kmbT0xMjY5OTkyOTc2MzA3NjQmdz0yDQo+Pj4+DQo+Pj4NCj4+
-PiBEaWQgSmFtZXMgc2F5IHRoYXQgdXNpbmcgdmVuZG9yIHNwZWNpZmljIGNvbW1hbmRzIHdhcyBv
-az8gSSBkaWQgbm90IHNlZQ0KPj4+IGFueXRoaW5nIG9uIHRoZSBsaXN0Lg0KPj4NCj4+IEluIHBy
-aW5jaXBsZSwgdGhlIHBvaW50IGFib3V0IHZlbmRvciBzcGVjaWZpYyBob3N0IGNvbW1hbmRzIGhh
-cyBhbHJlYWR5DQo+PiBiZWVuIGNvbmNlZGVkIC4uLiBscGZjIGFuZCBxbGEyeHh4IGFscmVhZHkg
-dXNlIHRoZW0uDQo+Pg0KPj4gSSB0aGluayB0aGUgcmVhbCBydWxlIGlzIHRoYXQgZm9yIGhvc3Qg
-c3BlY2lmaWMgQlNHIGNvbW1hbmRzLCBpdCdzIG9ubHkNCj4+IGZvciBzdHVmZiB0aGF0J3Mgc3Bl
-Y2lmaWMgdG8gdGhlIGhvc3QgLi4uIHNvIG5vdCBzdHVmZiB3aGljaCBzaG91bGQgYmUNCj4+IGRv
-bmUgZ2VuZXJpY2FsbHkuDQo+Pg0KPj4gVGhlcmUgYXJlIG5vIGhhcmQgYW5kIGZhc3QgcnVsZXMg
-Zm9yIGFwcGx5aW5nIHRoZSB0ZXN0IGFib3ZlLiAgSW4NCj4+IHRoZW9yeSwgdGhlIG1hbmFnZW1l
-bnQgaW50ZXJmYWNlcyBleHBvc2VkIGJ5IEZDX0JTR19IU1RfVkVORE9SIGNvdWxkIGJlDQo+PiB1
-c2VkIHRvIHNlbmQgY29tbWFuZHMgLi4uIGJ1dCBpdCB0ZW5kcyB0byBnZXQgdG9sZXJhdGVkIGFz
-IGxvbmcgYXMgdGhlDQo+PiBkcml2ZXJzIHN1cHBvcnQgdGhlIHN0YW5kYXJkaXNlZCBycG9ydCBj
-b21tYW5kcy4NCj4+DQo+PiBJZiBJIGxvb2sgYXQgd2hhdCB0aGUgcWxhNHh4eCBpbnRlcmZhY2Ug
-d291bGQgZG8NCj4+DQo+PiAgICAgICAxLiBpdCBvbmx5IHN1cHBvcnRzIHZlbmRvciBzcGVjaWZp
-YyBjb21tYW5kcyAuLi4gdGhpcyBpcyBhIGJpdCBvZiBhDQo+PiAgICAgICAgICByZWQgZmxhZyBz
-aW5jZSBpdCdzIHByb3Bvc2luZyB0byBkbyBub3RoaW5nIGluIGEgdmVuZG9yIG5ldXRyYWwNCj4+
-ICAgICAgICAgIHdheS4gIFRoaXMgb25lLCBJIHB1bnQgYmFjayB0byB5b3U6IHdoYXQgc2hvdWxk
-IGFuIGlzY3NpIGRldmljZQ0KPj4gICAgICAgICAgaW1wbGVtZW50aW5nIEJTRyBzdXBwb3J0IG9m
-IHRoZSBzdGFuZGFyZCBjb21tYW5kcw0KPg0KPkkgYW0gbm90IDEwMCUgc3VyZSB3aGF0IHdlIG5l
-ZWQgeWV0LCBiZWNhdXNlIHFsb2dpYyBoYXMgYmVlbiBwdXNoaW5nIHRoZQ0KPnZlbmRvciBzcGVj
-aWZpYyByb3V0ZSBhbmQgSSBjYW5ub3Qgc2VlIGV4YWN0bHkgd2hhdCBpdCBuZWVkcyB3aXRoIHNv
-bWUNCj5vZiBpdHMgY29tbWFuZHMuDQo+DQo+QmFzZWQgb24gb3RoZXIgZHJpdmVycyBhbmQgZnJv
-bSBsb29raW5nIGF0IHRoZSBxbG9naWMgdG9vbHMgYW5kIHRoZWlyDQo+cWxvZ2ljLmNvbSBkcml2
-ZXIgd2hpY2ggc2VlbXMgdG8gY29udmVydCBzb21lIG1hbmFnZW1lbnQgb3BlcmF0aW9ucyB0bw0K
-PmZsYXNoIGNvbW1hbmRzLCBJIGhhdmUgdGhlIGxpc3QgYmVsb3c6DQo+DQo+LSBPcGVyYXRpb24g
-dG8gc2V0IG5ldCBzZXR0aW5ncyBsaWtlIGlwL2RoY3AsIGdhdGV3YXksIGRucywgc3VibmV0LA0K
-PnZsYW4sIHRjcC9pcCBzZXR0aW5ncywgc3BlZWQvYXV0by1uZWdvdGlhdGUsIGV0Yy4NCj4NCj5C
-ZXNpZGVzIHN1cHBvcnRpbmcgYSBJUHY0IGFuZCBJUHY2IGFkZHJlc3MsIHNvbWUgY2FyZHMgY2Fu
-IHN1cHBvcnQgbG90cw0KPm9mIElQcyBhbmQvb3IgdmxhbnMgcGVyIHNhbWUgcGh5c2ljYWwgcG9y
-dCwgc28gdGhpcyBvcGVyYXRpb24gY2Fubm90IGJlDQo+dGllZCB0byBqdXN0IHRoZSBob3N0Lg0K
-DQpUaGVzZSBvcGVyYXRpb25zIGFyZSB0aWVkIHRvIHBlciBwY2kgZnVuY3Rpb24gaW4gcWxhNHh4
-eCBkcml2ZXIuDQoNCj4NCj4tIE9wZXJhdGlvbiB0byBnZXQgcG9ydCBzdGF0ZS4NCj4NCj4tIE9w
-ZXJhdGlvbiB0byBzZXQgaXNjc2kgaW5pdGlhdG9yIHBvcnQgc2V0dGluZ3MgbGlrZSBpbml0aWF0
-b3INCj5uYW1lL2FsaWFzL2lzaWQsIGlzY3NpIElPIHNldHRpbmdzIGxpa2UgRmlyc3RCdXJzdExl
-bmd0aCBvciBEaWdlc3RzLA0KPmF1dGggc2V0dGluZ3MgbGlrZSBjaGFwIG9yIHJhZGl1cywgZXRj
-Lg0KPg0KPlRoaXMgc2hvdWxkIG5vdCBiZSB0aWVkIHRvIHRoZSBwaHlzaWNhbCBwb3J0IGVpdGhl
-ciBzaW5jZSB3ZSBjYW4gaGF2ZQ0KPm11bHRpcGxlIGluaXRpYXRvciBwb3J0cyBwZXIgcGh5c2lj
-YWwgcG9ydC4NCj4NCj4tIE9wZXJhdGlvbiB0byBzZXQgaXNjc2kgc2V0dGluZ3MgZm9yIHNwZWNp
-ZmljIHNlc3Npb25zIGxpa2UgaVNDU0kgSU8NCj5zZXR0aW5ncyBhbmQgYXV0aCBzZXR0aW5ncyBt
-ZW50aW9uZWQgYWJvdmUgKHNvbWUgZHJpdmVycyB3YW50IGdsb2JhbA0KPmRlZmF1bHRzIHNldHRh
-YmxlIGF0IHRoZSBob3N0L2luaXRpYXRvci1wb3J0IGxldmVsIHRoZW4gYmUgYWJsZSB0bw0KPnNw
-ZWNpZnkgc3BlY2lmaWMgdmFsdWVzIGZvciBlYWNoIHNlc3Npb24pLg0KPg0KPi0gT3BlcmF0aW9u
-IHRvIGRpc2NvdmVyIHRhcmdldHMgYW5kIGV4cG9ydCB0YXJnZXRzIHRoYXQgd2VyZSBmb3VuZCBh
-bmQ6DQo+CS0gT3BlcmF0aW9uIHRvIGNvbnRyb2wgaWYgd2Ugd2FudCB0byBsb2cgaW50byBzcGVj
-aWZpYyB0YXJnZXRzIHRoYXQNCj53ZXJlIGZvdW5kLg0KPg0KPi0gT3BlcmF0aW9uIHRvIG5vdGlm
-eSB1c2VycHNhY2Ugb2YgbmV0d29yayBsaW5rIHN0YXRlIGNoYW5nZXMuDQo+DQo+LSBPcGVyYXRp
-b24gdG8gbm90aWZ5IHVzZXJwc2FjZSBvZiBpc2NzaSBzZXNzaW9uL2Nvbm5lY3Rpb24gc3RhdGUg
-Y2hhbmdlcy4NCg0KSGVyZSdzIHRoZSBlbWFpbCB0aHJlYWQgaW5mbyB3aGljaCBvdXRsaW5lcyB0
-aGUgaW5pdGlhbCBwYXRjaCB3ZSBzdWJtaXR0ZWQNCmZvciBsaW5rIHN0YXRlcyBjaGFuZ2VzIDog
-aHR0cDovL2FydGljbGUuZ21hbmUub3JnL2dtYW5lLmxpbnV4LnNjc2kvNTg4NDQNCg0KYW5kIGJh
-c2VkIG9uIE1pa2UuQyBjb21tZW50IHdlIGFyZSB3b3JraW5nIG9uIHRvIG1ha2UgaXQgbW9yZSBs
-aWtlIEZDIHdoZXJlDQppdCdzIGJhc2VkIG9uIExJTksgRE9XTi9VUCBldGMgcmF0aGVyIHRoYW4g
-b25lIGdlbmVyaWMgQUVOLg0KDQpXZSBhcmUgcGxhbm5pbmcgdG8gcmVzdWJtaXQgdGhlIHVwZGF0
-ZWQgcGF0Y2ggYXMgcGFydCBvZiBvdXIgbmV4dCBwYXRjaCBzZXQuDQo=
+>-----Original Message-----
+>From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp]
+>Sent: Sunday, June 13, 2010 5:56 PM
+>To: michaelc@cs.wisc.edu
+>Cc: James.Bottomley@suse.de; Vikas Chaudhary; linux-scsi@vger.kernel.org;
+>Ravi Anand
+>Subject: Re: [PATCH 13/15] qla4xxx: Added bsg support
+>
+>On Sun, 13 Jun 2010 15:10:39 -0500
+>Mike Christie <michaelc@cs.wisc.edu> wrote:
+>
+>> On 06/12/2010 05:37 PM, James Bottomley wrote:
+>> > On Fri, 2010-06-11 at 19:23 -0500, Mike Christie wrote:
+>> >> On 06/11/2010 02:49 AM, Vikas Chaudhary wrote:
+>> >>> Added BSG support to enable application support to configure
+>> >>> ISP40XX/ISP82XX adapter.
+>> >>>
+>> >>> This patch is on top of: http://marc.info/?l=linux-
+>scsi&m=126999297630764&w=2
+>> >>>
+>> >>
+>> >> Did James say that using vendor specific commands was ok? I did not
+>see
+>> >> anything on the list.
+>> >
+>> > In principle, the point about vendor specific host commands has already
+>> > been conceded ... lpfc and qla2xxx already use them.
+>> >
+>> > I think the real rule is that for host specific BSG commands, it's only
+>> > for stuff that's specific to the host ... so not stuff which should be
+>> > done generically.
+>> >
+>> > There are no hard and fast rules for applying the test above.  In
+>> > theory, the management interfaces exposed by FC_BSG_HST_VENDOR could be
+>> > used to send commands ... but it tends to get tolerated as long as the
+>> > drivers support the standardised rport commands.
+>> >
+>> > If I look at what the qla4xxx interface would do
+>> >
+>> >       1. it only supports vendor specific commands ... this is a bit of
+>a
+>> >          red flag since it's proposing to do nothing in a vendor
+>neutral
+>> >          way.  This one, I punt back to you: what should an iscsi
+>device
+>> >          implementing BSG support of the standard commands
+>>
+>> I am not 100% sure what we need yet, because qlogic has been pushing the
+>> vendor specific route and I cannot see exactly what it needs with some
+>> of its commands.
+>>
+>> Based on other drivers and from looking at the qlogic tools and their
+>> qlogic.com driver which seems to convert some management operations to
+>> flash commands, I have the list below:
+>>
+>> - Operation to set net settings like ip/dhcp, gateway, dns, subnet,
+>> vlan, tcp/ip settings, speed/auto-negotiate, etc.
+>>
+>> Besides supporting a IPv4 and IPv6 address, some cards can support lots
+>> of IPs and/or vlans per same physical port, so this operation cannot be
+>> tied to just the host.
+>>
+>> - Operation to get port state.
+>>
+>> - Operation to set iscsi initiator port settings like initiator
+>> name/alias/isid, iscsi IO settings like FirstBurstLength or Digests,
+>> auth settings like chap or radius, etc.
+>>
+>> This should not be tied to the physical port either since we can have
+>> multiple initiator ports per physical port.
+>>
+>> - Operation to set iscsi settings for specific sessions like iSCSI IO
+>> settings and auth settings mentioned above (some drivers want global
+>> defaults settable at the host/initiator-port level then be able to
+>> specify specific values for each session).
+>
+>/sys/class/iscsi_* might work better for the above?
+
+For above setting qla4xxx firmware need data in blob format so that's
+why we are trying to do it using BSG.
+
+>
+>
+>> - Operation to discover targets and export targets that were found and:
+>> 	- Operation to control if we want to log into specific targets that
+>> were found.
+>>
+>> - Operation to notify userpsace of network link state changes.
+>>
+>> - Operation to notify userpsace of iscsi session/connection state
+>changes.
+>
+>bsg supports only the request/response interface. The event
+>notification from kernel space isn't fit for bsg.
+
+We are working to add netlink support for same in iscsi transport.
+We submitted the initial one as RFC patches and working to incorporate 
+Mike.C comment to make it like FC as alluded in the other email thread
+and resubmit as part of next patch set.
+
+>
+>Sounds like all the features are useful to any iSCSI HBAs?
