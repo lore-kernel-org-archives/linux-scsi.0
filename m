@@ -1,59 +1,51 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH 3/3] cxgb4i_v4.3 : main driver files
-Date: Wed, 16 Jun 2010 17:19:02 -0500
-Message-ID: <4C194DD6.7090706@cs.wisc.edu>
-References: <1275973167-8640-1-git-send-email-rakesh@chelsio.com> <1275973167-8640-2-git-send-email-rakesh@chelsio.com> <1275973167-8640-3-git-send-email-rakesh@chelsio.com> <1275973167-8640-4-git-send-email-rakesh@chelsio.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: RE: [PATCH 07/11] qla4xxx: Added support for ISP82XX
+Date: Wed, 16 Jun 2010 15:57:37 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA871286CE90F@AVEXMB1.qlogic.org>
+References: <20100616205403.GA8178@sles11sp1b1.qlogic.org>
+ <4C194A01.1080809@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <open-iscsi+bncCLPJla3WGRDQmuXgBBoEwSSDEg-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1275973167-8640-4-git-send-email-rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
-	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: Rakesh Ranjan <rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, LK-NetDev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LK-SCSIDev <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Anish Bhatt <anish-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:54707 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759243Ab0FPW5k convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 18:57:40 -0400
+In-Reply-To: <4C194A01.1080809@cs.wisc.edu>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>
 
-On 06/07/2010 11:59 PM, Rakesh Ranjan wrote:
-> From: Rakesh Ranjan<rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+>-----Original Message-----
+>From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+>Sent: Wednesday, June 16, 2010 3:03 PM
+>To: Vikas Chaudhary
+>Cc: james.bottomley@suse.de; linux-scsi@vger.kernel.org; Ravi Anand; Karen
+>Higgins
+>Subject: Re: [PATCH 07/11] qla4xxx: Added support for ISP82XX
 >
+>On 06/16/2010 03:54 PM, Vikas Chaudhary wrote:
+>>   	} else {
+>>   		DEBUG2(printk("scsi%ld: Unknown mailbox status %08X\n",
+>>   			      ha->host_no, mbox_status));
+>>
+>> -		ha->mbox_status[0] = mbox_status;
+>> +		ha->mbox_status[0] = mbox_sts[0];
+>>   	}
+>>   }
 >
-> Signed-off-by: Rakesh Ranjan<rakesh-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-> ---
->   drivers/scsi/cxgbi/cxgb4i.h         |  175 +++++
->   drivers/scsi/cxgbi/cxgb4i_ddp.c     |  653 ++++++++++++++++
->   drivers/scsi/cxgbi/cxgb4i_init.c    |  317 ++++++++
->   drivers/scsi/cxgbi/cxgb4i_offload.c | 1409 +++++++++++++++++++++++++++++++++++
->   4 files changed, 2554 insertions(+), 0 deletions(-)
->   create mode 100644 drivers/scsi/cxgbi/cxgb4i.h
->   create mode 100644 drivers/scsi/cxgbi/cxgb4i_ddp.c
->   create mode 100644 drivers/scsi/cxgbi/cxgb4i_init.c
->   create mode 100644 drivers/scsi/cxgbi/cxgb4i_offload.c
+>Is this right? mbox_sts[0] is not set at this point, and you get:
 >
+>drivers/scsi/qla4xxx/ql4_isr.c: In function 'qla4xxx_isr_decode_mailbox':
+>drivers/scsi/qla4xxx/ql4_isr.c:634: warning: 'mbox_sts' may be used
+>uninitialized in this function
+>
+>We should not hit the case though, right. Maybe in a follow up patch you
+>can fix this since the rest of the patches look ok, and I do not want to
+>look a them ever again :)
 
-Do you think you can look through this patch and identify the places 
-where you basically just copied a cxgb3i function or copied it but 
-renamed some stuff and then move these type of things to the lib patch?
-
-A lot of the scatter list stuff for example looks the same in each driver.
-
-ddp_find_unused_entries - cxgb4i_ddp_find_unused_entries
-ddp_unmark_entries - cxgb4i_ddp_unmark_entries
-cxgb3i_ddp_find_page_index - cxgb4i_ddp_find_page_index
-cxgb3i_ddp_adjust_page_table - cxgb4i_ddp_adjust_page_table
-..... (lots of the ddp code looks duplicated).
-
-The *_offload.c code looks the same.
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Thanks for pointing this out. You are right we will not hit this case.
+I will send follow up patch to fix this.
