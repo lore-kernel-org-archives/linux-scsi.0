@@ -1,76 +1,33 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/3] SCSI: convert to the new PM framework
-Date: Wed, 16 Jun 2010 16:56:09 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1006161652230.1327-100000@iolanthe.rowland.org>
-References: <1276717458.2847.321.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 0/11] qla4xxx: bug_fix and ISP82xx support
+Date: Wed, 16 Jun 2010 15:57:04 -0500
+Message-ID: <1276721824.2847.409.camel@mulgrave.site>
+References: <20100616204902.GA8100@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:58310 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1759670Ab0FPU4M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 16:56:12 -0400
-In-Reply-To: <1276717458.2847.321.camel@mulgrave.site>
+Received: from cantor.suse.de ([195.135.220.2]:40070 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759679Ab0FPU5L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jun 2010 16:57:11 -0400
+In-Reply-To: <20100616204902.GA8100@sles11sp1b1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, karen.higgins@qlogic.com, prasanna.mumbai@qlogic.com
 
-On Wed, 16 Jun 2010, James Bottomley wrote:
+On Thu, 2010-06-17 at 02:19 +0530, Vikas Chaudhary wrote:
+> We will hold on BSG patches for now to get everyone on common
+> agreement.
+> I will resubmit BSG patches after every one come to common
+> agreement.  
 
-> On Wed, 2010-06-16 at 14:51 -0400, Alan Stern wrote:
-> > This patch (as1397) converts the SCSI midlayer to use the new PM
-> > callbacks (struct dev_pm_ops).  A new source file, scsi_pm.c, is
-> > created to hold the new callback routines, and the existing
-> > suspend/resume code is moved there.
-> > 
-> > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> > 
-> > ---
-> > 
-> > Index: usb-2.6/drivers/scsi/Makefile
-> > ===================================================================
-> > --- usb-2.6.orig/drivers/scsi/Makefile
-> > +++ usb-2.6/drivers/scsi/Makefile
-> > @@ -158,7 +158,8 @@ obj-$(CONFIG_SCSI_WAIT_SCAN)	+= scsi_wai
-> >  scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
-> >  				   scsicam.o scsi_error.o scsi_lib.o
-> >  scsi_mod-$(CONFIG_SCSI_DMA)	+= scsi_lib_dma.o
-> > -scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o
-> > +scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o \
-> > +				   scsi_pm.o
-> 
-> shouldn't this be
-> 
-> scsi_mod-$(CONFIG_PM_OPS) += scsi_pm.o
-> 
-> ?  especially since you guard the whole of the file with the ifdef
-> otherwise.
+Just a note, since I've been posting the LSF10 topic list, wouldn't this
+make a reasonably good topic?  We got the general layout of the FC BSG
+stuff sorted out at LSF09 ... and I think most of the usual suspects in
+that debate will be present.
 
-That's right; I never noticed that the guard covered the entire source 
-file.  Okay, I will revise and resubmit.
+James
 
-> > --- usb-2.6.orig/drivers/scsi/scsi_priv.h
-> > +++ usb-2.6/drivers/scsi/scsi_priv.h
-> > @@ -144,6 +144,13 @@ static inline void scsi_netlink_init(voi
-> >  static inline void scsi_netlink_exit(void) {}
-> >  #endif
-> >  
-> > +/* scsi_pm.c */
-> > +#ifdef CONFIG_PM_OPS
-> > +extern struct dev_pm_ops scsi_bus_pm_ops;
-> > +#else
-> > +#define scsi_bus_pm_ops		(*(struct dev_pm_ops *) NULL)
-> 
-> No need to cast a NULL ... the compiler seems to correctly not warn
-> about &*NULL
-
-I never tried it, just assumed the type mismatch would cause a warning.  
-Good, that makes the code a little easier to understand.
-
-> Otherwise seems OK.
-
-Thanks for the review.
-
-Alan Stern
 
