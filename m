@@ -1,27 +1,33 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a
- 256 byte sector SCSI disk is attached
-Date: Thu, 17 Jun 2010 08:36:00 -0500
-Message-ID: <1276781760.7285.2.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Thu, 17 Jun 2010 13:36:51 GMT
+Message-ID: <201006171336.o5HDap7U025597@demeter.kernel.org>
 References: <bug-16058-11613@https.bugzilla.kernel.org/>
-	 <201005281634.o4SGYU6M015956@demeter.kernel.org>
-	 <4C001999.1010703@cfl.rr.com> <1275078334.4479.31.camel@mulgrave.site>
-	 <4C025132.3000502@cfl.rr.com>  <4C039CC0.2050502@cfl.rr.com>
-	 <1275314561.2823.6.camel@mulgrave.site> <4C03D325.5060909@cfl.rr.com>
-	 <4C1A0124.4060809@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55910 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759993Ab0FQNgG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 09:36:06 -0400
-In-Reply-To: <4C1A0124.4060809@cfl.rr.com>
+Received: from demeter.kernel.org ([140.211.167.39]:36201 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754070Ab0FQNgw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2010 09:36:52 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5HDapS6025598
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2010 13:36:52 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dmarkh@cfl.rr.com
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
+
+
+
+
+
+--- Comment #14 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-06-17 13:36:44 ---
+Reply-To: James.Bottomley@suse.de
 
 On Thu, 2010-06-17 at 07:04 -0400, Mark Hounschell wrote: 
 > On 05/31/2010 11:17 AM, Mark Hounschell wrote:
@@ -253,4 +259,7 @@ devices, it seems that something once used it.
 
 James
 
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
