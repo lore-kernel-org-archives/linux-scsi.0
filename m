@@ -1,96 +1,85 @@
-From: kxie@chelsio.com
-Subject: [PATCH] cxgb3i: zero out reserved or un-used cpl message fields
-Date: Wed, 16 Jun 2010 17:10:37 -0700
-Message-ID: <201006170010.o5H0AbuU023969@localhost.localdomain>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: Current topics for LSF10/MM Summit 8-9 August in Boston
+Date: Wed, 16 Jun 2010 23:35:16 -0700
+Message-ID: <1276756516.12514.272.camel@haakon2.linux-iscsi.org>
+References: <1276721459.2847.399.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:21063 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753576Ab0FQALL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2010 20:11:11 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1276721459.2847.399.camel@mulgrave.site>
+Sender: owner-linux-mm@kvack.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf10-pc@lists.linuxfoundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
-Cc: rranjan@chelsio.com, kxie@chelsio.com, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-[PATCH] cxgb3i: zero out reserved or un-used fields.
+On Wed, 2010-06-16 at 15:50 -0500, James Bottomley wrote:
+> Given that we're under two months out, I thought it would be time to
+> post a summary of the topics we've collected so far (Nick will post the
+> MM summit ones later).  Look this over, and if there's anything missing,
+> propose it ... or if you have cross Storage/FS/MM topics, post them too.
+> 
+> Oh, and since we're not the most organised bunch, if you posted a topic
+> and don't see it in the list, please resend ... we probably lost it in
+> an email shuffle.
+> 
+> Current Filesystem Topics:
+> 
+> Alex Elder	Upstream maintainer for XFS, general discussion on FS/IO
+> Aneesh Kumar	Rich-acl patches which work better with NFSv4 acl and CIFS acl
+> Anshul Madan	reflink for NFS
+> Chuck Lever	NFS/IPV6 and NFS O_DIRECT, Wu's read-ahead work, vitro perf tools
+> Eric Sandeen	Advances in testing, TRIM/DISCARD/Alignment, writeback sanity
+> James Lentini	reflink for NFS
+> Jan Kara	Discuss/drive sanity review of writeback and general ext*/jbd 
+> Michael Rubin	Writeback scaling
+> Sage Weil	Statlite, generic interface for describing file striping for distributed FS, VFS scalability
+> Al Viro	Sorting out d_revalidate and other dcache issues
+> Coly Li		directory/large file scalability
+> Sorin Faibish	Cache writeback discussion
+> 
+> Current Storage Topics:
+> 
+> Eric Seppanen	Next generation SSDs, performance implications on Linux I/O
+> Boaz Harrosh	PNFS performance considerations, bio_list based/async raidN for generic use; stable pages for I/O
+> FUJITA Tomonori	SCSI target mode, iSCSI, block layer SG (bsg), sg, IOMMU, DMA issues
+> Hannes Reinecke	libfc/multipath/error handing
+> James Smart	FCOE proposal for rework of the FC sysfs tree, work with Hannes on other transport/SCSI subsystem topics
+> Jeff Moyer	IO scheduler
+> Joel Becker	SAN management plugin
+> Martin Petersen	Updates on DIF/DIX, TRIM/DISCARD/UNMAP, generic support for WRITE_SAME
+> 
+> Plus some MM summit ones which Nick will summarise.
+> 
 
-From: Karen Xie <kxie@chelsio.com>
+Greeting James and co,
 
-Zero out the reserved or un-used CPL message fields to prevent any garbage
-value.
+I noticed that the bit wrt to the kernel level target mode fabric
+independent configfs infrastructure is not mentioned in the above..
 
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
+http://marc.info/?l=linux-scsi&m=127010303618447&w=2
 
- drivers/scsi/cxgb3i/cxgb3i_ddp.c     |    2 ++
- drivers/scsi/cxgb3i/cxgb3i_offload.c |    5 +++++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+Where would this best fit in..?
+
+"A virtual filesystem driven by userspace syscalls to represent a target
+HBA/DEV model on top upstream Linux storage subsystems for fabric
+modules using a generic set of configfs struct config_groups to
+represent target mode fabric endpoints (WWN+TPG+LUN) designed to allow
+each their own set of fabric dependent attributes on top of a generic
+kernel infrastructure.
+
+The model is to allow the Linux VFS to handle the TCM core HBA/DEV logic
+and both fabric independent and dependent data structure dependencies
+between LKMs in order to simplify the conversion of existing and
+creation of new target mode fabric code."
+
+Best,
+
+--nab
 
 
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_ddp.c b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-index b58d913..be0e230 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_ddp.c
-@@ -499,6 +499,7 @@ static int setup_conn_pgidx(struct t3cdev *tdev, unsigned int tid, int pg_idx,
- 	/* set up ulp submode and page size */
- 	req = (struct cpl_set_tcb_field *)skb_put(skb, sizeof(*req));
- 	req->wr.wr_hi = htonl(V_WR_OP(FW_WROPCODE_FORWARD));
-+	req->wr.wr_lo = 0;
- 	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_SET_TCB_FIELD, tid));
- 	req->reply = V_NO_REPLY(reply ? 0 : 1);
- 	req->cpu_idx = 0;
-@@ -564,6 +565,7 @@ int cxgb3i_setup_conn_digest(struct t3cdev *tdev, unsigned int tid,
- 	/* set up ulp submode and page size */
- 	req = (struct cpl_set_tcb_field *)skb_put(skb, sizeof(*req));
- 	req->wr.wr_hi = htonl(V_WR_OP(FW_WROPCODE_FORWARD));
-+	req->wr.wr_lo = 0;
- 	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_SET_TCB_FIELD, tid));
- 	req->reply = V_NO_REPLY(reply ? 0 : 1);
- 	req->cpu_idx = 0;
-diff --git a/drivers/scsi/cxgb3i/cxgb3i_offload.c b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-index a175be9..246a6c2 100644
---- a/drivers/scsi/cxgb3i/cxgb3i_offload.c
-+++ b/drivers/scsi/cxgb3i/cxgb3i_offload.c
-@@ -264,6 +264,7 @@ static void make_act_open_req(struct s3_conn *c3cn, struct sk_buff *skb,
- 	skb->priority = CPL_PRIORITY_SETUP;
- 	req = (struct cpl_act_open_req *)__skb_put(skb, sizeof(*req));
- 	req->wr.wr_hi = htonl(V_WR_OP(FW_WROPCODE_FORWARD));
-+	req->wr.wr_lo = 0;
- 	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_ACT_OPEN_REQ, atid));
- 	req->local_port = c3cn->saddr.sin_port;
- 	req->peer_port = c3cn->daddr.sin_port;
-@@ -273,6 +274,7 @@ static void make_act_open_req(struct s3_conn *c3cn, struct sk_buff *skb,
- 			   V_TX_CHANNEL(e->smt_idx));
- 	req->opt0l = htonl(calc_opt0l(c3cn));
- 	req->params = 0;
-+	req->opt2 = 0;
- }
- 
- static void fail_act_open(struct s3_conn *c3cn, int errno)
-@@ -379,6 +381,7 @@ static void send_abort_req(struct s3_conn *c3cn)
- 
- 	c3cn->cpl_abort_req = NULL;
- 	req = (struct cpl_abort_req *)skb->head;
-+	memset(req, 0, sizeof(*req));
- 
- 	skb->priority = CPL_PRIORITY_DATA;
- 	set_arp_failure_handler(skb, abort_arp_failure);
-@@ -406,6 +409,7 @@ static void send_abort_rpl(struct s3_conn *c3cn, int rst_status)
- 	c3cn->cpl_abort_rpl = NULL;
- 
- 	skb->priority = CPL_PRIORITY_DATA;
-+	memset(rpl, 0, sizeof(*rpl));
- 	rpl->wr.wr_hi = htonl(V_WR_OP(FW_WROPCODE_OFLD_HOST_ABORT_CON_RPL));
- 	rpl->wr.wr_lo = htonl(V_WR_TID(c3cn->tid));
- 	OPCODE_TID(rpl) = htonl(MK_OPCODE_TID(CPL_ABORT_RPL, c3cn->tid));
-@@ -430,6 +434,7 @@ static u32 send_rx_credits(struct s3_conn *c3cn, u32 credits, u32 dack)
- 
- 	req = (struct cpl_rx_data_ack *)__skb_put(skb, sizeof(*req));
- 	req->wr.wr_hi = htonl(V_WR_OP(FW_WROPCODE_FORWARD));
-+	req->wr.wr_lo = 0;
- 	OPCODE_TID(req) = htonl(MK_OPCODE_TID(CPL_RX_DATA_ACK, c3cn->tid));
- 	req->credit_dack = htonl(dack | V_RX_CREDITS(credits));
- 	skb->priority = CPL_PRIORITY_ACK;
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
