@@ -1,678 +1,285 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 07/17] mpt2sas: MPI header version N is updated.
-Date: Thu, 17 Jun 2010 13:37:59 +0530
-Message-ID: <20100617080750.GH28921@lsi.com>
+Subject: [PATCH 08/17] mpt2sas: Added sysfs support for trace buffer
+Date: Thu, 17 Jun 2010 13:43:17 +0530
+Message-ID: <20100617081317.GI28921@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:37511 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755806Ab0FQIng (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:48787 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759464Ab0FQIsz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 04:43:36 -0400
+	Thu, 17 Jun 2010 04:48:55 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Eric.Moore@lsi.com, James.Bottomley@HansenPartnership.com, Sathya.Prakash@lsi.com
 
-
-Updating MPI header version N.
-Removed mpi_history.txt.
+Added support so the diag ring buffer can be pulled via sysfs
+Added three new shost attributes: host_trace_buffer,
+host_trace_buffer_enable, and host_trace_buffer_size.  The
+host_trace_buffer_enable attribute is used to either post or release
+the trace buffers.   The host_trace_buffer_size attribute contains
+the size of the trace buffer. The host_trace_buffer atttribute contains
+a maximum 4KB window of the buffer. In order to read the entire host buffer,
+you will need to write the offset to  host_trace_buffer prior to reading
+it. release the host buffer, then write the entire host buffer contents to
+a file.
+In addition to this enhancement, we moved the automatic posting of host buffers
+at driver load time to be called prior to port_enable, instead of after.
+That way discovery is available in the host buffer.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index dada0a1..4b1c2f0 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
-  *
-- *  mpi2.h Version:  02.00.14
-+ *  mpi2.h Version:  02.00.15
-  *
-  *  Version History
-  *  ---------------
-@@ -57,6 +57,10 @@
-  *                      Added MSI-x index mask and shift for Reply Post Host
-  *                      Index register.
-  *                      Added function code for Host Based Discovery Action.
-+ *  02-10-10  02.00.15  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *                      Added define for MPI2_FUNCTION_PWR_MGMT_CONTROL.
-+ *                      Added defines for product-specific range of message
-+ *                      function codes, 0xF0 to 0xFF.
-  *  --------------------------------------------------------------------------
-  */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 88befc7..93c0623 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3529,8 +3529,12 @@ _base_make_ioc_operational(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	if (sleep_flag == CAN_SLEEP)
+ 		_base_static_config_pages(ioc);
  
-@@ -82,7 +86,7 @@
- #define MPI2_VERSION_02_00                  (0x0200)
+-	if (ioc->wait_for_port_enable_to_complete && disable_discovery > 0)
+-		return r;
++	if (ioc->wait_for_port_enable_to_complete) {
++		if (diag_buffer_enable != 0)
++			mpt2sas_enable_diag_buffer(ioc, diag_buffer_enable);
++		if (disable_discovery > 0)
++			return r;
++	}
  
- /* versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x0E)
-+#define MPI2_HEADER_VERSION_UNIT            (0x0F)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-@@ -473,8 +477,6 @@ typedef union _MPI2_REPLY_DESCRIPTORS_UNION
- /*****************************************************************************
- *
- *        Message Functions
--*              0x80 -> 0x8F reserved for private message use per product
--*
- *
- *****************************************************************************/
+ 	r = _base_send_port_enable(ioc, sleep_flag);
+ 	if (r)
+@@ -3679,8 +3683,6 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 		goto out_free_resources;
  
-@@ -506,6 +508,13 @@ typedef union _MPI2_REPLY_DESCRIPTORS_UNION
- #define MPI2_FUNCTION_RAID_ACCELERATOR              (0x2C) /* RAID Accelerator*/
- /* Host Based Discovery Action */
- #define MPI2_FUNCTION_HOST_BASED_DISCOVERY_ACTION   (0x2F)
-+/* Power Management Control */
-+#define MPI2_FUNCTION_PWR_MGMT_CONTROL              (0x30)
-+/* beginning of product-specific range */
-+#define MPI2_FUNCTION_MIN_PRODUCT_SPECIFIC          (0xF0)
-+/* end of product-specific range */
-+#define MPI2_FUNCTION_MAX_PRODUCT_SPECIFIC          (0xFF)
-+
+ 	mpt2sas_base_start_watchdog(ioc);
+-	if (diag_buffer_enable != 0)
+-		mpt2sas_enable_diag_buffer(ioc, diag_buffer_enable);
+ 	return 0;
  
- 
- 
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-index d4e9d6f..e3728d7 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI Configuration messages and pages
-  *  Creation Date:  November 10, 2006
-  *
-- *    mpi2_cnfg.h Version:  02.00.13
-+ *    mpi2_cnfg.h Version:  02.00.14
-  *
-  *  Version History
-  *  ---------------
-@@ -109,6 +109,18 @@
-  *                      Added Ethernet configuration pages.
-  *  10-28-09  02.00.13  Added MPI2_IOUNITPAGE1_ENABLE_HOST_BASED_DISCOVERY.
-  *                      Added SAS PHY Page 4 structure and defines.
-+ *  02-10-10  02.00.14  Modified the comments for the configuration page
-+ *                      structures that contain an array of data. The host
-+ *                      should use the "count" field in the page data (e.g. the
-+ *                      NumPhys field) to determine the number of valid elements
-+ *                      in the array.
-+ *                      Added/modified some MPI2_MFGPAGE_DEVID_SAS defines.
-+ *                      Added PowerManagementCapabilities to IO Unit Page 7.
-+ *                      Added PortWidthModGroup field to
-+ *                      MPI2_SAS_IO_UNIT5_PHY_PM_SETTINGS.
-+ *                      Added MPI2_CONFIG_PAGE_SASIOUNIT_6 and related defines.
-+ *                      Added MPI2_CONFIG_PAGE_SASIOUNIT_7 and related defines.
-+ *                      Added MPI2_CONFIG_PAGE_SASIOUNIT_8 and related defines.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -373,8 +385,9 @@ typedef struct _MPI2_CONFIG_REPLY
- #define MPI2_MFGPAGE_DEVID_SAS2208_4                (0x0083)
- #define MPI2_MFGPAGE_DEVID_SAS2208_5                (0x0084)
- #define MPI2_MFGPAGE_DEVID_SAS2208_6                (0x0085)
--#define MPI2_MFGPAGE_DEVID_SAS2208_7                (0x0086)
--#define MPI2_MFGPAGE_DEVID_SAS2208_8                (0x0087)
-+#define MPI2_MFGPAGE_DEVID_SAS2308_1                (0x0086)
-+#define MPI2_MFGPAGE_DEVID_SAS2308_2                (0x0087)
-+#define MPI2_MFGPAGE_DEVID_SAS2308_3                (0x006E)
- 
- 
- /* Manufacturing Page 0 */
-@@ -540,7 +553,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_4
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.PageLength or NumPhys at runtime.
-+ * one and check the value returned for NumPhys at runtime.
-  */
- #ifndef MPI2_MAN_PAGE_5_PHY_ENTRIES
- #define MPI2_MAN_PAGE_5_PHY_ENTRIES         (1)
-@@ -618,7 +631,7 @@ typedef struct _MPI2_MANPAGE7_CONNECTOR_INFO
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check NumPhys at runtime.
-+ * one and check the value returned for NumPhys at runtime.
-  */
- #ifndef MPI2_MANPAGE7_CONNECTOR_INFO_MAX
- #define MPI2_MANPAGE7_CONNECTOR_INFO_MAX  (1)
-@@ -731,7 +744,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_1
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.PageLength at runtime.
-+ * one and check the value returned for GPIOCount at runtime.
-  */
- #ifndef MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX
- #define MPI2_IO_UNIT_PAGE_3_GPIO_VAL_MAX    (1)
-@@ -760,7 +773,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_3
- 
- /*
-  * Upper layer code (drivers, utilities, etc.) should leave this define set to
-- * one and check Header.PageLength or NumDmaEngines at runtime.
-+ * one and check the value returned for NumDmaEngines at runtime.
-  */
- #ifndef MPI2_IOUNITPAGE5_DMAENGINE_ENTRIES
- #define MPI2_IOUNITPAGE5_DMAENGINE_ENTRIES      (1)
-@@ -823,7 +836,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
-     U8                      PCIeWidth;                              /* 0x06 */
-     U8                      PCIeSpeed;                              /* 0x07 */
-     U32                     ProcessorState;                         /* 0x08 */
--    U32                     Reserved2;                              /* 0x0C */
-+    U32                     PowerManagementCapabilities;            /* 0x0C */
-     U16                     IOCTemperature;                         /* 0x10 */
-     U8                      IOCTemperatureUnits;                    /* 0x12 */
-     U8                      IOCSpeed;                               /* 0x13 */
-@@ -831,7 +844,7 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
- } MPI2_CONFIG_PAGE_IO_UNIT_7, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IO_UNIT_7,
-   Mpi2IOUnitPage7_t, MPI2_POINTER pMpi2IOUnitPage7_t;
- 
--#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x00)
-+#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x01)
- 
- /* defines for IO Unit Page 7 PCIeWidth field */
- #define MPI2_IOUNITPAGE7_PCIE_WIDTH_X1              (0x01)
-@@ -852,6 +865,14 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
- #define MPI2_IOUNITPAGE7_PSTATE_DISABLED            (0x01)
- #define MPI2_IOUNITPAGE7_PSTATE_ENABLED             (0x02)
- 
-+/* defines for IO Unit Page 7 PowerManagementCapabilities field */
-+#define MPI2_IOUNITPAGE7_PMCAP_12_5_PCT_IOCSPEED    (0x00000400)
-+#define MPI2_IOUNITPAGE7_PMCAP_25_0_PCT_IOCSPEED    (0x00000200)
-+#define MPI2_IOUNITPAGE7_PMCAP_50_0_PCT_IOCSPEED    (0x00000100)
-+#define MPI2_IOUNITPAGE7_PMCAP_PCIE_WIDTH_CHANGE    (0x00000008)
-+#define MPI2_IOUNITPAGE7_PMCAP_PCIE_SPEED_CHANGE    (0x00000004)
-+
-+
- /* defines for IO Unit Page 7 IOCTemperatureUnits field */
- #define MPI2_IOUNITPAGE7_IOC_TEMP_NOT_PRESENT       (0x00)
- #define MPI2_IOUNITPAGE7_IOC_TEMP_FAHRENHEIT        (0x01)
-@@ -1195,7 +1216,7 @@ typedef struct _MPI2_CONFIG_PAGE_BIOS_3
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.PageLength or NumPhys at runtime.
-+ * one and check the value returned for NumPhys at runtime.
-  */
- #ifndef MPI2_BIOS_PAGE_4_PHY_ENTRIES
- #define MPI2_BIOS_PAGE_4_PHY_ENTRIES        (1)
-@@ -1269,7 +1290,7 @@ typedef struct _MPI2_RAIDVOL0_SETTINGS
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.PageLength at runtime.
-+ * one and check the value returned for NumPhysDisks at runtime.
-  */
- #ifndef MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX
- #define MPI2_RAID_VOL_PAGE_0_PHYSDISK_MAX       (1)
-@@ -1471,7 +1492,7 @@ typedef struct _MPI2_CONFIG_PAGE_RD_PDISK_0
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.PageLength or NumPhysDiskPaths at runtime.
-+ * one and check the value returned for NumPhysDiskPaths at runtime.
-  */
- #ifndef MPI2_RAID_PHYS_DISK1_PATH_MAX
- #define MPI2_RAID_PHYS_DISK1_PATH_MAX   (1)
-@@ -1633,7 +1654,7 @@ typedef struct _MPI2_SAS_IO_UNIT0_PHY_DATA
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.ExtPageLength or NumPhys at runtime.
-+ * one and check the value returned for NumPhys at runtime.
-  */
- #ifndef MPI2_SAS_IOUNIT0_PHY_MAX
- #define MPI2_SAS_IOUNIT0_PHY_MAX        (1)
-@@ -1704,7 +1725,7 @@ typedef struct _MPI2_SAS_IO_UNIT1_PHY_DATA
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.ExtPageLength or NumPhys at runtime.
-+ * one and check the value returned for NumPhys at runtime.
-  */
- #ifndef MPI2_SAS_IOUNIT1_PHY_MAX
- #define MPI2_SAS_IOUNIT1_PHY_MAX        (1)
-@@ -1795,7 +1816,7 @@ typedef struct _MPI2_SAS_IOUNIT4_SPINUP_GROUP
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * four and check Header.ExtPageLength or NumPhys at runtime.
-+ * one and check the value returned for NumPhys at runtime.
-  */
- #ifndef MPI2_SAS_IOUNIT4_PHY_MAX
- #define MPI2_SAS_IOUNIT4_PHY_MAX        (4)
-@@ -1833,7 +1854,7 @@ typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_4
- 
- typedef struct _MPI2_SAS_IO_UNIT5_PHY_PM_SETTINGS {
-     U8          ControlFlags;               /* 0x00 */
--    U8          Reserved1;                  /* 0x01 */
-+    U8          PortWidthModGroup;          /* 0x01 */
-     U16         InactivityTimerExponent;    /* 0x02 */
-     U8          SATAPartialTimeout;         /* 0x04 */
-     U8          Reserved2;                  /* 0x05 */
-@@ -1853,6 +1874,9 @@ typedef struct _MPI2_SAS_IO_UNIT5_PHY_PM_SETTINGS {
- #define MPI2_SASIOUNIT5_CONTROL_SATA_SLUMBER_ENABLE     (0x02)
- #define MPI2_SASIOUNIT5_CONTROL_SATA_PARTIAL_ENABLE     (0x01)
- 
-+/* defines for PortWidthModeGroup field */
-+#define MPI2_SASIOUNIT5_PWMG_DISABLE                    (0xFF)
-+
- /* defines for InactivityTimerExponent field */
- #define MPI2_SASIOUNIT5_ITE_MASK_SAS_SLUMBER            (0x7000)
- #define MPI2_SASIOUNIT5_ITE_SHIFT_SAS_SLUMBER           (12)
-@@ -1874,7 +1898,7 @@ typedef struct _MPI2_SAS_IO_UNIT5_PHY_PM_SETTINGS {
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.ExtPageLength or NumPhys at runtime.
-+ * one and check the value returned for NumPhys at runtime.
-  */
- #ifndef MPI2_SAS_IOUNIT5_PHY_MAX
- #define MPI2_SAS_IOUNIT5_PHY_MAX        (1)
-@@ -1892,7 +1916,132 @@ typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_5 {
-   MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SASIOUNIT_5,
-   Mpi2SasIOUnitPage5_t, MPI2_POINTER pMpi2SasIOUnitPage5_t;
- 
--#define MPI2_SASIOUNITPAGE5_PAGEVERSION     (0x00)
-+#define MPI2_SASIOUNITPAGE5_PAGEVERSION     (0x01)
-+
-+
-+/* SAS IO Unit Page 6 */
-+
-+typedef struct _MPI2_SAS_IO_UNIT6_PORT_WIDTH_MOD_GROUP_STATUS {
-+    U8          CurrentStatus;              /* 0x00 */
-+    U8          CurrentModulation;          /* 0x01 */
-+    U8          CurrentUtilization;         /* 0x02 */
-+    U8          Reserved1;                  /* 0x03 */
-+    U32         Reserved2;                  /* 0x04 */
-+} MPI2_SAS_IO_UNIT6_PORT_WIDTH_MOD_GROUP_STATUS,
-+  MPI2_POINTER PTR_MPI2_SAS_IO_UNIT6_PORT_WIDTH_MOD_GROUP_STATUS,
-+  Mpi2SasIOUnit6PortWidthModGroupStatus_t,
-+  MPI2_POINTER pMpi2SasIOUnit6PortWidthModGroupStatus_t;
-+
-+/* defines for CurrentStatus field */
-+#define MPI2_SASIOUNIT6_STATUS_UNAVAILABLE                      (0x00)
-+#define MPI2_SASIOUNIT6_STATUS_UNCONFIGURED                     (0x01)
-+#define MPI2_SASIOUNIT6_STATUS_INVALID_CONFIG                   (0x02)
-+#define MPI2_SASIOUNIT6_STATUS_LINK_DOWN                        (0x03)
-+#define MPI2_SASIOUNIT6_STATUS_OBSERVATION_ONLY                 (0x04)
-+#define MPI2_SASIOUNIT6_STATUS_INACTIVE                         (0x05)
-+#define MPI2_SASIOUNIT6_STATUS_ACTIVE_IOUNIT                    (0x06)
-+#define MPI2_SASIOUNIT6_STATUS_ACTIVE_HOST                      (0x07)
-+
-+/* defines for CurrentModulation field */
-+#define MPI2_SASIOUNIT6_MODULATION_25_PERCENT                   (0x00)
-+#define MPI2_SASIOUNIT6_MODULATION_50_PERCENT                   (0x01)
-+#define MPI2_SASIOUNIT6_MODULATION_75_PERCENT                   (0x02)
-+#define MPI2_SASIOUNIT6_MODULATION_100_PERCENT                  (0x03)
-+
-+/*
-+ * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ * one and check the value returned for NumGroups at runtime.
-+ */
-+#ifndef MPI2_SAS_IOUNIT6_GROUP_MAX
-+#define MPI2_SAS_IOUNIT6_GROUP_MAX      (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_6 {
-+    MPI2_CONFIG_EXTENDED_PAGE_HEADER    Header;                     /* 0x00 */
-+    U32                                 Reserved1;                  /* 0x08 */
-+    U32                                 Reserved2;                  /* 0x0C */
-+    U8                                  NumGroups;                  /* 0x10 */
-+    U8                                  Reserved3;                  /* 0x11 */
-+    U16                                 Reserved4;                  /* 0x12 */
-+    MPI2_SAS_IO_UNIT6_PORT_WIDTH_MOD_GROUP_STATUS
-+	PortWidthModulationGroupStatus[MPI2_SAS_IOUNIT6_GROUP_MAX]; /* 0x14 */
-+} MPI2_CONFIG_PAGE_SASIOUNIT_6,
-+  MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SASIOUNIT_6,
-+  Mpi2SasIOUnitPage6_t, MPI2_POINTER pMpi2SasIOUnitPage6_t;
-+
-+#define MPI2_SASIOUNITPAGE6_PAGEVERSION     (0x00)
-+
-+
-+/* SAS IO Unit Page 7 */
-+
-+typedef struct _MPI2_SAS_IO_UNIT7_PORT_WIDTH_MOD_GROUP_SETTINGS {
-+    U8          Flags;                      /* 0x00 */
-+    U8          Reserved1;                  /* 0x01 */
-+    U16         Reserved2;                  /* 0x02 */
-+    U8          Threshold75Pct;             /* 0x04 */
-+    U8          Threshold50Pct;             /* 0x05 */
-+    U8          Threshold25Pct;             /* 0x06 */
-+    U8          Reserved3;                  /* 0x07 */
-+} MPI2_SAS_IO_UNIT7_PORT_WIDTH_MOD_GROUP_SETTINGS,
-+  MPI2_POINTER PTR_MPI2_SAS_IO_UNIT7_PORT_WIDTH_MOD_GROUP_SETTINGS,
-+  Mpi2SasIOUnit7PortWidthModGroupSettings_t,
-+  MPI2_POINTER pMpi2SasIOUnit7PortWidthModGroupSettings_t;
-+
-+/* defines for Flags field */
-+#define MPI2_SASIOUNIT7_FLAGS_ENABLE_PORT_WIDTH_MODULATION  (0x01)
-+
-+
-+/*
-+ * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-+ * one and check the value returned for NumGroups at runtime.
-+ */
-+#ifndef MPI2_SAS_IOUNIT7_GROUP_MAX
-+#define MPI2_SAS_IOUNIT7_GROUP_MAX      (1)
-+#endif
-+
-+typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_7 {
-+    MPI2_CONFIG_EXTENDED_PAGE_HEADER            Header;             /* 0x00 */
-+    U8                                          SamplingInterval;   /* 0x08 */
-+    U8                                          WindowLength;       /* 0x09 */
-+    U16                                         Reserved1;          /* 0x0A */
-+    U32                                         Reserved2;          /* 0x0C */
-+    U32                                         Reserved3;          /* 0x10 */
-+    U8                                          NumGroups;          /* 0x14 */
-+    U8                                          Reserved4;          /* 0x15 */
-+    U16                                         Reserved5;          /* 0x16 */
-+    MPI2_SAS_IO_UNIT7_PORT_WIDTH_MOD_GROUP_SETTINGS
-+	PortWidthModulationGroupSettings[MPI2_SAS_IOUNIT7_GROUP_MAX]; /* 0x18 */
-+} MPI2_CONFIG_PAGE_SASIOUNIT_7,
-+  MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SASIOUNIT_7,
-+  Mpi2SasIOUnitPage7_t, MPI2_POINTER pMpi2SasIOUnitPage7_t;
-+
-+#define MPI2_SASIOUNITPAGE7_PAGEVERSION     (0x00)
-+
-+
-+/* SAS IO Unit Page 8 */
-+
-+typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_8 {
-+    MPI2_CONFIG_EXTENDED_PAGE_HEADER    Header;			/* 0x00 */
-+    U32                                 Reserved1;		/* 0x08 */
-+    U32                                 PowerManagementCapabilities;/* 0x0C */
-+    U32                                 Reserved2;		/* 0x10 */
-+} MPI2_CONFIG_PAGE_SASIOUNIT_8,
-+  MPI2_POINTER PTR_MPI2_CONFIG_PAGE_SASIOUNIT_8,
-+  Mpi2SasIOUnitPage8_t, MPI2_POINTER pMpi2SasIOUnitPage8_t;
-+
-+#define MPI2_SASIOUNITPAGE8_PAGEVERSION     (0x00)
-+
-+/* defines for PowerManagementCapabilities field */
-+#define MPI2_SASIOUNIT8_PM_HOST_PORT_WIDTH_MOD          (0x000001000)
-+#define MPI2_SASIOUNIT8_PM_HOST_SAS_SLUMBER_MODE        (0x000000800)
-+#define MPI2_SASIOUNIT8_PM_HOST_SAS_PARTIAL_MODE        (0x000000400)
-+#define MPI2_SASIOUNIT8_PM_HOST_SATA_SLUMBER_MODE       (0x000000200)
-+#define MPI2_SASIOUNIT8_PM_HOST_SATA_PARTIAL_MODE       (0x000000100)
-+#define MPI2_SASIOUNIT8_PM_IOUNIT_PORT_WIDTH_MOD        (0x000000010)
-+#define MPI2_SASIOUNIT8_PM_IOUNIT_SAS_SLUMBER_MODE      (0x000000008)
-+#define MPI2_SASIOUNIT8_PM_IOUNIT_SAS_PARTIAL_MODE      (0x000000004)
-+#define MPI2_SASIOUNIT8_PM_IOUNIT_SATA_SLUMBER_MODE     (0x000000002)
-+#define MPI2_SASIOUNIT8_PM_IOUNIT_SATA_PARTIAL_MODE     (0x000000001)
- 
- 
- 
-@@ -2182,7 +2331,7 @@ typedef struct _MPI2_SASPHY2_PHY_EVENT {
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.ExtPageLength or NumPhyEvents at runtime.
-+ * one and check the value returned for NumPhyEvents at runtime.
-  */
- #ifndef MPI2_SASPHY2_PHY_EVENT_MAX
- #define MPI2_SASPHY2_PHY_EVENT_MAX      (1)
-@@ -2274,7 +2423,7 @@ typedef struct _MPI2_SASPHY3_PHY_EVENT_CONFIG {
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.ExtPageLength or NumPhyEvents at runtime.
-+ * one and check the value returned for NumPhyEvents at runtime.
-  */
- #ifndef MPI2_SASPHY3_PHY_EVENT_MAX
- #define MPI2_SASPHY3_PHY_EVENT_MAX      (1)
-@@ -2385,7 +2534,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_ENCLOSURE_0
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.ExtPageLength or NumPhys at runtime.
-+ * one and check the value returned for NumLogEntries at runtime.
-  */
- #ifndef MPI2_LOG_0_NUM_LOG_ENTRIES
- #define MPI2_LOG_0_NUM_LOG_ENTRIES          (1)
-@@ -2435,7 +2584,7 @@ typedef struct _MPI2_CONFIG_PAGE_LOG_0
- 
- /*
-  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
-- * one and check Header.ExtPageLength or NumPhys at runtime.
-+ * one and check the value returned for NumElements at runtime.
-  */
- #ifndef MPI2_RAIDCONFIG0_MAX_ELEMENTS
- #define MPI2_RAIDCONFIG0_MAX_ELEMENTS       (1)
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-index 220bf65..c4c99df 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI SCSI initiator mode messages and structures
-  *  Creation Date:  June 23, 2006
-  *
-- *    mpi2_init.h Version:  02.00.08
-+ *    mpi2_init.h Version:  02.00.09
-  *
-  *  Version History
-  *  ---------------
-@@ -31,6 +31,7 @@
-  *                      both SCSI IO Error Reply and SCSI Task Management Reply.
-  *                      Added ResponseInfo field to MPI2_SCSI_TASK_MANAGE_REPLY.
-  *                      Added MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG define.
-+ *  02-10-10  02.00.09  Removed unused structure that had "#if 0" around it.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -57,20 +58,6 @@ typedef struct
- } MPI2_SCSI_IO_CDB_EEDP32, MPI2_POINTER PTR_MPI2_SCSI_IO_CDB_EEDP32,
-   Mpi2ScsiIoCdbEedp32_t, MPI2_POINTER pMpi2ScsiIoCdbEedp32_t;
- 
--/* TBD: I don't think this is needed for MPI2/Gen2 */
--#if 0
--typedef struct
--{
--    U8                      CDB[16];                    /* 0x00 */
--    U32                     DataLength;                 /* 0x10 */
--    U32                     PrimaryReferenceTag;        /* 0x14 */
--    U16                     PrimaryApplicationTag;      /* 0x18 */
--    U16                     PrimaryApplicationTagMask;  /* 0x1A */
--    U32                     TransferLength;             /* 0x1C */
--} MPI2_SCSI_IO32_CDB_EEDP16, MPI2_POINTER PTR_MPI2_SCSI_IO32_CDB_EEDP16,
--  Mpi2ScsiIo32CdbEedp16_t, MPI2_POINTER pMpi2ScsiIo32CdbEedp16_t;
--#endif
--
- typedef union
- {
-     U8                      CDB32[32];
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index f18f114..495bedc 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  *  Creation Date:  October 11, 2006
-  *
-- *  mpi2_ioc.h Version:  02.00.13
-+ *  mpi2_ioc.h Version:  02.00.14
-  *
-  *  Version History
-  *  ---------------
-@@ -98,6 +98,9 @@
-  *                      (MPI2_FW_HEADER_PID_).
-  *                      Modified values for SAS ProductID Family
-  *                      (MPI2_FW_HEADER_PID_FAMILY_).
-+ *  02-10-10  02.00.14  Added SAS Quiesce Event structure and defines.
-+ *                      Added PowerManagementControl Request structures and
-+ *                      defines.
-  *  --------------------------------------------------------------------------
-  */
- 
-@@ -469,6 +472,7 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REPLY
- #define MPI2_EVENT_SAS_PHY_COUNTER                  (0x0022)
- #define MPI2_EVENT_GPIO_INTERRUPT                   (0x0023)
- #define MPI2_EVENT_HOST_BASED_DISCOVERY_PHY         (0x0024)
-+#define MPI2_EVENT_SAS_QUIESCE                      (0x0025)
- 
- 
- /* Log Entry Added Event data */
-@@ -895,6 +899,22 @@ typedef struct _MPI2_EVENT_DATA_SAS_PHY_COUNTER {
-  * */
- 
- 
-+/* SAS Quiesce Event data */
-+
-+typedef struct _MPI2_EVENT_DATA_SAS_QUIESCE {
-+    U8                      ReasonCode;                 /* 0x00 */
-+    U8                      Reserved1;                  /* 0x01 */
-+    U16                     Reserved2;                  /* 0x02 */
-+    U32                     Reserved3;                  /* 0x04 */
-+} MPI2_EVENT_DATA_SAS_QUIESCE,
-+  MPI2_POINTER PTR_MPI2_EVENT_DATA_SAS_QUIESCE,
-+  Mpi2EventDataSasQuiesce_t, MPI2_POINTER pMpi2EventDataSasQuiesce_t;
-+
-+/* SAS Quiesce Event data ReasonCode values */
-+#define MPI2_EVENT_SAS_QUIESCE_RC_STARTED                   (0x01)
-+#define MPI2_EVENT_SAS_QUIESCE_RC_COMPLETED                 (0x02)
-+
-+
- /* Host Based Discovery Phy Event data */
- 
- typedef struct _MPI2_EVENT_HBD_PHY_SAS {
-@@ -1006,6 +1026,7 @@ typedef struct _MPI2_FW_DOWNLOAD_REQUEST
- #define MPI2_FW_DOWNLOAD_ITYPE_CONFIG_1             (0x07)
- #define MPI2_FW_DOWNLOAD_ITYPE_CONFIG_2             (0x08)
- #define MPI2_FW_DOWNLOAD_ITYPE_MEGARAID             (0x09)
-+#define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
- #define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
- 
- /* FWDownload TransactionContext Element */
-@@ -1183,7 +1204,6 @@ typedef struct _MPI2_FW_IMAGE_HEADER
- 
- #define MPI2_FW_HEADER_PID_PROD_MASK                    (0x0F00)
- #define MPI2_FW_HEADER_PID_PROD_A                       (0x0000)
--#define MPI2_FW_HEADER_PID_PROD_MASK                    (0x0F00)
- #define MPI2_FW_HEADER_PID_PROD_TARGET_INITIATOR_SCSI   (0x0200)
- #define MPI2_FW_HEADER_PID_PROD_IR_SCSI                 (0x0700)
- 
-@@ -1407,5 +1427,100 @@ typedef struct _MPI2_INIT_IMAGE_FOOTER
- #define MPI2_INIT_IMAGE_RESETVECTOR_OFFSET      (0x14)
- 
- 
-+/****************************************************************************
-+*  PowerManagementControl message
-+****************************************************************************/
-+
-+/* PowerManagementControl Request message */
-+typedef struct _MPI2_PWR_MGMT_CONTROL_REQUEST {
-+    U8                      Feature;                    /* 0x00 */
-+    U8                      Reserved1;                  /* 0x01 */
-+    U8                      ChainOffset;                /* 0x02 */
-+    U8                      Function;                   /* 0x03 */
-+    U16                     Reserved2;                  /* 0x04 */
-+    U8                      Reserved3;                  /* 0x06 */
-+    U8                      MsgFlags;                   /* 0x07 */
-+    U8                      VP_ID;                      /* 0x08 */
-+    U8                      VF_ID;                      /* 0x09 */
-+    U16                     Reserved4;                  /* 0x0A */
-+    U8                      Parameter1;                 /* 0x0C */
-+    U8                      Parameter2;                 /* 0x0D */
-+    U8                      Parameter3;                 /* 0x0E */
-+    U8                      Parameter4;                 /* 0x0F */
-+    U32                     Reserved5;                  /* 0x10 */
-+    U32                     Reserved6;                  /* 0x14 */
-+} MPI2_PWR_MGMT_CONTROL_REQUEST, MPI2_POINTER PTR_MPI2_PWR_MGMT_CONTROL_REQUEST,
-+  Mpi2PwrMgmtControlRequest_t, MPI2_POINTER pMpi2PwrMgmtControlRequest_t;
-+
-+/* defines for the Feature field */
-+#define MPI2_PM_CONTROL_FEATURE_DA_PHY_POWER_COND       (0x01)
-+#define MPI2_PM_CONTROL_FEATURE_PORT_WIDTH_MODULATION   (0x02)
-+#define MPI2_PM_CONTROL_FEATURE_PCIE_LINK               (0x03)
-+#define MPI2_PM_CONTROL_FEATURE_IOC_SPEED               (0x04)
-+#define MPI2_PM_CONTROL_FEATURE_MIN_PRODUCT_SPECIFIC    (0x80)
-+#define MPI2_PM_CONTROL_FEATURE_MAX_PRODUCT_SPECIFIC    (0xFF)
-+
-+/* parameter usage for the MPI2_PM_CONTROL_FEATURE_DA_PHY_POWER_COND Feature */
-+/* Parameter1 contains a PHY number */
-+/* Parameter2 indicates power condition action using these defines */
-+#define MPI2_PM_CONTROL_PARAM2_PARTIAL                  (0x01)
-+#define MPI2_PM_CONTROL_PARAM2_SLUMBER                  (0x02)
-+#define MPI2_PM_CONTROL_PARAM2_EXIT_PWR_MGMT            (0x03)
-+/* Parameter3 and Parameter4 are reserved */
-+
-+/* parameter usage for the MPI2_PM_CONTROL_FEATURE_PORT_WIDTH_MODULATION
-+ *  Feature */
-+/* Parameter1 contains SAS port width modulation group number */
-+/* Parameter2 indicates IOC action using these defines */
-+#define MPI2_PM_CONTROL_PARAM2_REQUEST_OWNERSHIP        (0x01)
-+#define MPI2_PM_CONTROL_PARAM2_CHANGE_MODULATION        (0x02)
-+#define MPI2_PM_CONTROL_PARAM2_RELINQUISH_OWNERSHIP     (0x03)
-+/* Parameter3 indicates desired modulation level using these defines */
-+#define MPI2_PM_CONTROL_PARAM3_25_PERCENT               (0x00)
-+#define MPI2_PM_CONTROL_PARAM3_50_PERCENT               (0x01)
-+#define MPI2_PM_CONTROL_PARAM3_75_PERCENT               (0x02)
-+#define MPI2_PM_CONTROL_PARAM3_100_PERCENT              (0x03)
-+/* Parameter4 is reserved */
-+
-+/* parameter usage for the MPI2_PM_CONTROL_FEATURE_PCIE_LINK Feature */
-+/* Parameter1 indicates desired PCIe link speed using these defines */
-+#define MPI2_PM_CONTROL_PARAM1_PCIE_2_5_GBPS            (0x00)
-+#define MPI2_PM_CONTROL_PARAM1_PCIE_5_0_GBPS            (0x01)
-+#define MPI2_PM_CONTROL_PARAM1_PCIE_8_0_GBPS            (0x02)
-+/* Parameter2 indicates desired PCIe link width using these defines */
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X1                 (0x01)
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X2                 (0x02)
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X4                 (0x04)
-+#define MPI2_PM_CONTROL_PARAM2_WIDTH_X8                 (0x08)
-+/* Parameter3 and Parameter4 are reserved */
-+
-+/* parameter usage for the MPI2_PM_CONTROL_FEATURE_IOC_SPEED Feature */
-+/* Parameter1 indicates desired IOC hardware clock speed using these defines */
-+#define MPI2_PM_CONTROL_PARAM1_FULL_IOC_SPEED           (0x01)
-+#define MPI2_PM_CONTROL_PARAM1_HALF_IOC_SPEED           (0x02)
-+#define MPI2_PM_CONTROL_PARAM1_QUARTER_IOC_SPEED        (0x04)
-+#define MPI2_PM_CONTROL_PARAM1_EIGHTH_IOC_SPEED         (0x08)
-+/* Parameter2, Parameter3, and Parameter4 are reserved */
-+
-+
-+/* PowerManagementControl Reply message */
-+typedef struct _MPI2_PWR_MGMT_CONTROL_REPLY {
-+    U8                      Feature;                    /* 0x00 */
-+    U8                      Reserved1;                  /* 0x01 */
-+    U8                      MsgLength;                  /* 0x02 */
-+    U8                      Function;                   /* 0x03 */
-+    U16                     Reserved2;                  /* 0x04 */
-+    U8                      Reserved3;                  /* 0x06 */
-+    U8                      MsgFlags;                   /* 0x07 */
-+    U8                      VP_ID;                      /* 0x08 */
-+    U8                      VF_ID;                      /* 0x09 */
-+    U16                     Reserved4;                  /* 0x0A */
-+    U16                     Reserved5;                  /* 0x0C */
-+    U16                     IOCStatus;                  /* 0x0E */
-+    U32                     IOCLogInfo;                 /* 0x10 */
-+} MPI2_PWR_MGMT_CONTROL_REPLY, MPI2_POINTER PTR_MPI2_PWR_MGMT_CONTROL_REPLY,
-+  Mpi2PwrMgmtControlReply_t, MPI2_POINTER pMpi2PwrMgmtControlReply_t;
-+
-+
- #endif
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 20cb896..51de339 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -223,9 +223,12 @@ static struct pci_device_id scsih_pci_table[] = {
- 		PCI_ANY_ID, PCI_ANY_ID },
- 	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_6,
- 		PCI_ANY_ID, PCI_ANY_ID },
--	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_7,
-+	/* Mustang ~ 2308 */
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2308_1,
- 		PCI_ANY_ID, PCI_ANY_ID },
--	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2208_8,
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2308_2,
-+		PCI_ANY_ID, PCI_ANY_ID },
-+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2308_3,
- 		PCI_ANY_ID, PCI_ANY_ID },
- 	{0}	/* Terminating entry */
+  out_free_resources:
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index ad277f3..d201c20 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -750,6 +750,8 @@ struct MPT2SAS_ADAPTER {
+ 	Mpi2ManufacturingPage10_t manu_pg10;
+ 	u32		product_specific[MPI2_DIAG_BUF_TYPE_COUNT][23];
+ 	u32		diagnostic_flags[MPI2_DIAG_BUF_TYPE_COUNT];
++	u32		ring_buffer_offset;
++	u32		ring_buffer_sz;
  };
+ 
+ typedef u8 (*MPT_CALLBACK)(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 25c866e..371f063 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -2603,6 +2603,195 @@ _ctl_ioc_reset_count_show(struct device *cdev, struct device_attribute *attr,
+ static DEVICE_ATTR(ioc_reset_count, S_IRUGO,
+     _ctl_ioc_reset_count_show, NULL);
+ 
++struct DIAG_BUFFER_START {
++	u32 Size;
++	u32 DiagVersion;
++	u8 BufferType;
++	u8 Reserved[3];
++	u32 Reserved1;
++	u32 Reserved2;
++	u32 Reserved3;
++};
++/**
++ * _ctl_host_trace_buffer_size_show - host buffer size (trace only)
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read-only' shost attribute.
++ */
++static ssize_t
++_ctl_host_trace_buffer_size_show(struct device *cdev,
++    struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++	u32 size = 0;
++	struct DIAG_BUFFER_START *request_data;
++
++	if (!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) {
++		printk(MPT2SAS_ERR_FMT "%s: host_trace_buffer is not "
++		    "registered\n", ioc->name, __func__);
++		return 0;
++	}
++
++	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++	    MPT2_DIAG_BUFFER_IS_REGISTERED) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: host_trace_buffer is not "
++		    "registered\n", ioc->name, __func__);
++		return 0;
++	}
++
++	request_data = (struct DIAG_BUFFER_START *)
++	    ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE];
++	if ((le32_to_cpu(request_data->DiagVersion) == 0x00000000 ||
++	    le32_to_cpu(request_data->DiagVersion) == 0x01000000) &&
++	    le32_to_cpu(request_data->Reserved3) == 0x4742444c)
++		size = le32_to_cpu(request_data->Size);
++
++	ioc->ring_buffer_sz = size;
++	return snprintf(buf, PAGE_SIZE, "%d\n", size);
++}
++static DEVICE_ATTR(host_trace_buffer_size, S_IRUGO,
++	 _ctl_host_trace_buffer_size_show, NULL);
++
++/**
++ * _ctl_host_trace_buffer_show - firmware ring buffer (trace only)
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read/write' shost attribute.
++ *
++ * You will only be able to read 4k bytes of ring buffer at a time.
++ * In order to read beyond 4k bytes, you will have to write out the
++ * offset to the same attribute, it will move the pointer.
++ */
++static ssize_t
++_ctl_host_trace_buffer_show(struct device *cdev, struct device_attribute *attr,
++     char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++	void *request_data;
++	u32 size;
++
++	if (!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) {
++		printk(MPT2SAS_ERR_FMT "%s: host_trace_buffer is not "
++		    "registered\n", ioc->name, __func__);
++		return 0;
++	}
++
++	if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++	    MPT2_DIAG_BUFFER_IS_REGISTERED) == 0) {
++		printk(MPT2SAS_ERR_FMT "%s: host_trace_buffer is not "
++		    "registered\n", ioc->name, __func__);
++		return 0;
++	}
++
++	if (ioc->ring_buffer_offset > ioc->ring_buffer_sz)
++		return 0;
++
++	size = ioc->ring_buffer_sz - ioc->ring_buffer_offset;
++	size = (size > PAGE_SIZE) ? PAGE_SIZE : size;
++	request_data = ioc->diag_buffer[0] + ioc->ring_buffer_offset;
++	memcpy(buf, request_data, size);
++	return size;
++}
++
++static ssize_t
++_ctl_host_trace_buffer_store(struct device *cdev, struct device_attribute *attr,
++    const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++	int val = 0;
++
++	if (sscanf(buf, "%d", &val) != 1)
++		return -EINVAL;
++
++	ioc->ring_buffer_offset = val;
++	return strlen(buf);
++}
++static DEVICE_ATTR(host_trace_buffer, S_IRUGO | S_IWUSR,
++    _ctl_host_trace_buffer_show, _ctl_host_trace_buffer_store);
++
++/*****************************************/
++
++/**
++ * _ctl_host_trace_buffer_enable_show - firmware ring buffer (trace only)
++ * @cdev - pointer to embedded class device
++ * @buf - the buffer returned
++ *
++ * A sysfs 'read/write' shost attribute.
++ *
++ * This is a mechnism to post/release host_trace_buffers
++ */
++static ssize_t
++_ctl_host_trace_buffer_enable_show(struct device *cdev,
++    struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++
++	if ((!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) ||
++	   ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++	    MPT2_DIAG_BUFFER_IS_REGISTERED) == 0))
++		return snprintf(buf, PAGE_SIZE, "off\n");
++	else if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++	    MPT2_DIAG_BUFFER_IS_RELEASED))
++		return snprintf(buf, PAGE_SIZE, "release\n");
++	else
++		return snprintf(buf, PAGE_SIZE, "post\n");
++}
++
++static ssize_t
++_ctl_host_trace_buffer_enable_store(struct device *cdev,
++    struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(cdev);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
++	char str[10] = "";
++	struct mpt2_diag_register diag_register;
++	u8 issue_reset = 0;
++
++	if (sscanf(buf, "%s", str) != 1)
++		return -EINVAL;
++
++	if (!strcmp(str, "post")) {
++		/* exit out if host buffers are already posted */
++		if ((ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) &&
++		    (ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++		    MPT2_DIAG_BUFFER_IS_REGISTERED) &&
++		    ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++		    MPT2_DIAG_BUFFER_IS_RELEASED) == 0))
++			goto out;
++		memset(&diag_register, 0, sizeof(struct mpt2_diag_register));
++		printk(MPT2SAS_INFO_FMT "posting host trace buffers\n",
++		    ioc->name);
++		diag_register.buffer_type = MPI2_DIAG_BUF_TYPE_TRACE;
++		diag_register.requested_buffer_size = (1024 * 1024);
++		diag_register.unique_id = 0x7075900;
++		ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] = 0;
++		_ctl_diag_register_2(ioc,  &diag_register);
++	} else if (!strcmp(str, "release")) {
++		/* exit out if host buffers are already released */
++		if (!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE])
++			goto out;
++		if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++		    MPT2_DIAG_BUFFER_IS_REGISTERED) == 0)
++			goto out;
++		if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
++		    MPT2_DIAG_BUFFER_IS_RELEASED))
++			goto out;
++		printk(MPT2SAS_INFO_FMT "releasing host trace buffer\n",
++		    ioc->name);
++		_ctl_send_release(ioc, MPI2_DIAG_BUF_TYPE_TRACE, &issue_reset);
++	}
++
++ out:
++	return strlen(buf);
++}
++static DEVICE_ATTR(host_trace_buffer_enable, S_IRUGO | S_IWUSR,
++    _ctl_host_trace_buffer_enable_show, _ctl_host_trace_buffer_enable_store);
+ 
+ struct device_attribute *mpt2sas_host_attrs[] = {
+ 	&dev_attr_version_fw,
+@@ -2621,6 +2810,9 @@ struct device_attribute *mpt2sas_host_attrs[] = {
+ 	&dev_attr_fw_queue_depth,
+ 	&dev_attr_host_sas_address,
+ 	&dev_attr_ioc_reset_count,
++	&dev_attr_host_trace_buffer_size,
++	&dev_attr_host_trace_buffer,
++	&dev_attr_host_trace_buffer_enable,
+ 	NULL,
+ };
+ 
