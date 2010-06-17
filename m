@@ -1,32 +1,28 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Thu, 17 Jun 2010 11:06:28 GMT
-Message-ID: <201006171106.o5HB6SCl017782@demeter.kernel.org>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: Mark Hounschell <dmarkh@cfl.rr.com>
+Subject: Re: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a
+ 256 byte sector SCSI disk is attached
+Date: Thu, 17 Jun 2010 07:04:04 -0400
+Message-ID: <4C1A0124.4060809@cfl.rr.com>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>	 <201005281634.o4SGYU6M015956@demeter.kernel.org>	 <4C001999.1010703@cfl.rr.com> <1275078334.4479.31.camel@mulgrave.site>	 <4C025132.3000502@cfl.rr.com>  <4C039CC0.2050502@cfl.rr.com> <1275314561.2823.6.camel@mulgrave.site> <4C03D325.5060909@cfl.rr.com>
+Reply-To: dmarkh@cfl.rr.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41141 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750872Ab0FQLG2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2010 07:06:28 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5HB6SMH017783
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2010 11:06:28 GMT
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:50564 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753538Ab0FQNOJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2010 09:14:09 -0400
+Received: from cdptpa-omtalb.mail.rr.com ([10.127.143.53])
+          by cdptpa-qmta04.mail.rr.com with ESMTP
+          id <20100617110509167.YATW6102@cdptpa-qmta04.mail.rr.com>
+          for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2010 11:05:09 +0000
+In-Reply-To: <4C03D325.5060909@cfl.rr.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dmarkh@cfl.rr.com
+Cc: James Bottomley <James.Bottomley@suse.de>, bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
-
-
-
-
-
---- Comment #13 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-06-17 11:06:21 ---
 On 05/31/2010 11:17 AM, Mark Hounschell wrote:
 > On 05/31/2010 10:02 AM, James Bottomley wrote:
 >   
@@ -252,8 +248,3 @@ given consideration?
 
 Thanks
 Mark
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
