@@ -1,264 +1,149 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 14/17] mpt2sas: Adding additional message to error escalation callback
-Date: Thu, 17 Jun 2010 13:48:46 +0530
-Message-ID: <20100617081846.GO28921@lsi.com>
+Subject: [PATCH 15/17] mpt2sas: Copy sense buffer instead of working on direct memory location
+Date: Thu, 17 Jun 2010 13:49:28 +0530
+Message-ID: <20100617081928.GP28921@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:38144 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932663Ab0FQIyX (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:38354 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932663Ab0FQIzE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 04:54:23 -0400
+	Thu, 17 Jun 2010 04:55:04 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Eric.Moore@lsi.com, James.Bottomley@HansenPartnership.com, Sathya.Prakash@lsi.com
 
-Adding additional messages to the error escallation callbacks which
-displays the wwid, sas address, handle, phy number, enclosure logical id,
-and slot. In the same eh callbacks, routines, the printks were converted
-to sdev_printks, which displays the bus target mapping.  These additional
-modifications help better identify the device which is in recovery.
+
+(1) driver was not setting the sense data size prior to sending SCSI_IO,
+resulting in the 0x31190000 loginfo
+(2) The driver needs to copy the sense data to local buffer prior
+to releasing the request message frame.  If not, the sense buffer gets
+overwritten by the next SCSI_IO request.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 228961b..854cc91 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2123,8 +2123,59 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint channel,
- }
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index d848744..1f22a76 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3668,12 +3668,14 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
  
- /**
-+ * _scsih_tm_display_info - displays info about the device
-+ * @ioc: per adapter struct
-+ * @scmd: pointer to scsi command object
-+ *
-+ * Called by task management callback handlers.
-+ */
-+static void
-+_scsih_tm_display_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd)
-+{
-+	struct scsi_target *starget = scmd->device->sdev_target;
-+	struct MPT2SAS_TARGET *priv_target = starget->hostdata;
-+	struct _sas_device *sas_device = NULL;
-+	unsigned long flags;
-+
-+	if (!priv_target)
-+		return;
-+
-+	scsi_print_command(scmd);
-+	if (priv_target->flags & MPT_TARGET_FLAGS_VOLUME) {
-+		starget_printk(KERN_INFO, starget, "volume handle(0x%04x), "
-+		    "volume wwid(0x%016llx)\n",
-+		    priv_target->handle,
-+		    (unsigned long long)priv_target->sas_address);
-+	} else {
-+		spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+		sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
-+		    priv_target->sas_address);
-+		if (sas_device) {
-+			if (priv_target->flags &
-+			    MPT_TARGET_FLAGS_RAID_COMPONENT) {
-+				starget_printk(KERN_INFO, starget,
-+				    "volume handle(0x%04x), "
-+				    "volume wwid(0x%016llx)\n",
-+				    sas_device->volume_handle,
-+				   (unsigned long long)sas_device->volume_wwid);
-+			}
-+			starget_printk(KERN_INFO, starget,
-+			    "handle(0x%04x), sas_address(0x%016llx), phy(%d)\n",
-+			    sas_device->handle,
-+			    (unsigned long long)sas_device->sas_address,
-+			    sas_device->phy);
-+			starget_printk(KERN_INFO, starget,
-+			    "enclosure_logical_id(0x%016llx), slot(%d)\n",
-+			   (unsigned long long)sas_device->enclosure_logical_id,
-+			    sas_device->slot);
-+		}
-+		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
-+	}
-+}
-+
-+/**
-  * _scsih_abort - eh threads main abort routine
-- * @sdev: scsi device struct
-+ * @scmd: pointer to scsi command object
-  *
-  * Returns SUCCESS if command aborted else FAILED
-  */
-@@ -2137,14 +2188,14 @@ _scsih_abort(struct scsi_cmnd *scmd)
- 	u16 handle;
- 	int r;
+ 	/* ctl module internal command bits */
+ 	ioc->ctl_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
++	ioc->ctl_cmds.sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
+ 	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
+ 	mutex_init(&ioc->ctl_cmds.mutex);
  
--	printk(MPT2SAS_INFO_FMT "attempting task abort! scmd(%p)\n",
--	    ioc->name, scmd);
--	scsi_print_command(scmd);
-+	sdev_printk(KERN_INFO, scmd->device, "attempting task abort! "
-+	    "scmd(%p)\n", scmd);
-+	_scsih_tm_display_info(ioc, scmd);
- 
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
--		printk(MPT2SAS_INFO_FMT "device been deleted! scmd(%p)\n",
--		    ioc->name, scmd);
-+		sdev_printk(KERN_INFO, scmd->device, "device been deleted! "
-+		    "scmd(%p)\n", scmd);
- 		scmd->result = DID_NO_CONNECT << 16;
- 		scmd->scsi_done(scmd);
- 		r = SUCCESS;
-@@ -2176,14 +2227,14 @@ _scsih_abort(struct scsi_cmnd *scmd)
- 	    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid, 30, scmd);
- 
-  out:
--	printk(MPT2SAS_INFO_FMT "task abort: %s scmd(%p)\n",
--	    ioc->name, ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-+	sdev_printk(KERN_INFO, scmd->device, "task abort: %s scmd(%p)\n",
-+	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
- 	return r;
- }
- 
- /**
-  * _scsih_dev_reset - eh threads main device reset routine
-- * @sdev: scsi device struct
-+ * @scmd: pointer to scsi command object
-  *
-  * Returns SUCCESS if command aborted else FAILED
-  */
-@@ -2197,14 +2248,16 @@ _scsih_dev_reset(struct scsi_cmnd *scmd)
- 	u16	handle;
- 	int r;
- 
--	printk(MPT2SAS_INFO_FMT "attempting device reset! scmd(%p)\n",
--	    ioc->name, scmd);
--	scsi_print_command(scmd);
-+	struct scsi_target *starget = scmd->device->sdev_target;
-+
-+	starget_printk(KERN_INFO, starget, "attempting target reset! "
-+	    "scmd(%p)\n", scmd);
-+	_scsih_tm_display_info(ioc, scmd);
- 
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
--		printk(MPT2SAS_INFO_FMT "device been deleted! scmd(%p)\n",
--		    ioc->name, scmd);
-+		starget_printk(KERN_INFO, starget, "target been deleted! "
-+		    "scmd(%p)\n", scmd);
- 		scmd->result = DID_NO_CONNECT << 16;
- 		scmd->scsi_done(scmd);
- 		r = SUCCESS;
-@@ -2235,14 +2288,14 @@ _scsih_dev_reset(struct scsi_cmnd *scmd)
- 	    MPI2_SCSITASKMGMT_TASKTYPE_LOGICAL_UNIT_RESET, 0, 30, scmd);
- 
-  out:
--	printk(MPT2SAS_INFO_FMT "device reset: %s scmd(%p)\n",
--	    ioc->name, ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-+	sdev_printk(KERN_INFO, scmd->device, "device reset: %s scmd(%p)\n",
-+	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
- 	return r;
- }
- 
- /**
-  * _scsih_target_reset - eh threads main target reset routine
-- * @sdev: scsi device struct
-+ * @scmd: pointer to scsi command object
-  *
-  * Returns SUCCESS if command aborted else FAILED
-  */
-@@ -2255,15 +2308,16 @@ _scsih_target_reset(struct scsi_cmnd *scmd)
- 	unsigned long flags;
- 	u16	handle;
- 	int r;
-+	struct scsi_target *starget = scmd->device->sdev_target;
- 
--	printk(MPT2SAS_INFO_FMT "attempting target reset! scmd(%p)\n",
--	    ioc->name, scmd);
--	scsi_print_command(scmd);
-+	starget_printk(KERN_INFO, starget, "attempting target reset! "
-+	    "scmd(%p)\n", scmd);
-+	_scsih_tm_display_info(ioc, scmd);
- 
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
--		printk(MPT2SAS_INFO_FMT "target been deleted! scmd(%p)\n",
--		    ioc->name, scmd);
-+		starget_printk(KERN_INFO, starget, "target been deleted! "
-+		    "scmd(%p)\n", scmd);
- 		scmd->result = DID_NO_CONNECT << 16;
- 		scmd->scsi_done(scmd);
- 		r = SUCCESS;
-@@ -2294,14 +2348,14 @@ _scsih_target_reset(struct scsi_cmnd *scmd)
- 	    30, scmd);
- 
-  out:
--	printk(MPT2SAS_INFO_FMT "target reset: %s scmd(%p)\n",
--	    ioc->name, ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
-+	starget_printk(KERN_INFO, starget, "target reset: %s scmd(%p)\n",
-+	    ((r == SUCCESS) ? "SUCCESS" : "FAILED"), scmd);
- 	return r;
- }
- 
- /**
-  * _scsih_host_reset - eh threads main host reset routine
-- * @sdev: scsi device struct
-+ * @scmd: pointer to scsi command object
-  *
-  * Returns SUCCESS if command aborted else FAILED
-  */
-@@ -3425,6 +3479,11 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 	u32 log_info = le32_to_cpu(mpi_reply->IOCLogInfo);
- 	struct _sas_device *sas_device = NULL;
- 	unsigned long flags;
-+	struct scsi_target *starget = scmd->device->sdev_target;
-+	struct MPT2SAS_TARGET *priv_target = starget->hostdata;
-+
-+	if (!priv_target)
-+		return;
- 
- 	if (log_info == 0x31170000)
- 		return;
-@@ -3541,22 +3600,28 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 
- 	scsi_print_command(scmd);
- 
--	spin_lock_irqsave(&ioc->sas_device_lock, flags);
--	sas_device = _scsih_sas_device_find_by_handle(ioc,
--	    le16_to_cpu(mpi_reply->DevHandle));
--	if (sas_device) {
--		printk(MPT2SAS_WARN_FMT "\tsas_address(0x%016llx), phy(%d)\n",
--		    ioc->name, sas_device->sas_address, sas_device->phy);
--		printk(MPT2SAS_WARN_FMT "\tenclosure_logical_id(0x%016llx), "
--		   "slot(%d)\n", ioc->name, sas_device->enclosure_logical_id,
--		    sas_device->slot);
-+	if (priv_target->flags & MPT_TARGET_FLAGS_VOLUME) {
-+		printk(MPT2SAS_WARN_FMT "\tvolume wwid(0x%016llx)\n", ioc->name,
-+		    (unsigned long long)priv_target->sas_address);
-+	} else {
-+		spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+		sas_device = mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
-+		    priv_target->sas_address);
-+		if (sas_device) {
-+			printk(MPT2SAS_WARN_FMT "\tsas_address(0x%016llx), "
-+			    "phy(%d)\n", ioc->name, sas_device->sas_address,
-+			    sas_device->phy);
-+			printk(MPT2SAS_WARN_FMT
-+			    "\tenclosure_logical_id(0x%016llx), slot(%d)\n",
-+			    ioc->name, sas_device->enclosure_logical_id,
-+			    sas_device->slot);
-+		}
-+		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+ 	if (!ioc->base_cmds.reply || !ioc->transport_cmds.reply ||
+ 	    !ioc->scsih_cmds.reply || !ioc->tm_cmds.reply ||
+-	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply) {
++	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply ||
++	    !ioc->ctl_cmds.sense) {
+ 		r = -ENOMEM;
+ 		goto out_free_resources;
  	}
--	spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+@@ -3722,6 +3724,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 	kfree(ioc->config_cmds.reply);
+ 	kfree(ioc->base_cmds.reply);
+ 	kfree(ioc->ctl_cmds.reply);
++	kfree(ioc->ctl_cmds.sense);
+ 	kfree(ioc->pfacts);
+ 	ioc->ctl_cmds.reply = NULL;
+ 	ioc->base_cmds.reply = NULL;
+@@ -3754,6 +3757,7 @@ mpt2sas_base_detach(struct MPT2SAS_ADAPTER *ioc)
+ 	kfree(ioc->pd_handles);
+ 	kfree(ioc->pfacts);
+ 	kfree(ioc->ctl_cmds.reply);
++	kfree(ioc->ctl_cmds.sense);
+ 	kfree(ioc->base_cmds.reply);
+ 	kfree(ioc->tm_cmds.reply);
+ 	kfree(ioc->transport_cmds.reply);
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 9599558..749fd3b 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -247,6 +247,7 @@ struct MPT2SAS_DEVICE {
+  * @mutex: mutex
+  * @done: completion
+  * @reply: reply message pointer
++ * @sense: sense data
+  * @status: MPT2_CMD_XXX status
+  * @smid: system message id
+  */
+@@ -254,6 +255,7 @@ struct _internal_cmd {
+ 	struct mutex mutex;
+ 	struct completion done;
+ 	void 	*reply;
++	void	*sense;
+ 	u16	status;
+ 	u16	smid;
+ };
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 03a9c5d..45d20a2 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -275,6 +275,9 @@ mpt2sas_ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 	u32 reply)
+ {
+ 	MPI2DefaultReply_t *mpi_reply;
++	Mpi2SCSIIOReply_t *scsiio_reply;
++	const void *sense_data;
++	u32 sz;
  
--	printk(MPT2SAS_WARN_FMT "\tdev handle(0x%04x), "
--	    "ioc_status(%s)(0x%04x), smid(%d)\n", ioc->name,
--	    le16_to_cpu(mpi_reply->DevHandle), desc_ioc_state,
--		ioc_status, smid);
-+	printk(MPT2SAS_WARN_FMT "\thandle(0x%04x), ioc_status(%s)(0x%04x), "
-+	    "smid(%d)\n", ioc->name, le16_to_cpu(mpi_reply->DevHandle),
-+	    desc_ioc_state, ioc_status, smid);
- 	printk(MPT2SAS_WARN_FMT "\trequest_len(%d), underflow(%d), "
- 	    "resid(%d)\n", ioc->name, scsi_bufflen(scmd), scmd->underflow,
- 	    scsi_get_resid(scmd));
+ 	if (ioc->ctl_cmds.status == MPT2_CMD_NOT_USED)
+ 		return 1;
+@@ -285,6 +288,20 @@ mpt2sas_ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 	if (mpi_reply) {
+ 		memcpy(ioc->ctl_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
+ 		ioc->ctl_cmds.status |= MPT2_CMD_REPLY_VALID;
++		/* get sense data */
++		if (mpi_reply->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
++		    mpi_reply->Function ==
++		    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH) {
++			scsiio_reply = (Mpi2SCSIIOReply_t *)mpi_reply;
++			if (scsiio_reply->SCSIState &
++			    MPI2_SCSI_STATE_AUTOSENSE_VALID) {
++				sz = min_t(u32, SCSI_SENSE_BUFFERSIZE,
++				    le32_to_cpu(scsiio_reply->SenseCount));
++				sense_data = mpt2sas_base_get_sense_buffer(ioc,
++				    smid);
++				memcpy(ioc->ctl_cmds.sense, sense_data, sz);
++			}
++		}
+ 	}
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	_ctl_display_some_debug(ioc, smid, "ctl_done", mpi_reply);
+@@ -618,7 +635,6 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 	u8 issue_reset;
+ 	u32 sz;
+ 	void *psge;
+-	void *priv_sense = NULL;
+ 	void *data_out = NULL;
+ 	dma_addr_t data_out_dma;
+ 	size_t data_out_sz = 0;
+@@ -782,10 +798,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 	{
+ 		Mpi2SCSIIORequest_t *scsiio_request =
+ 		    (Mpi2SCSIIORequest_t *)mpi_request;
++		scsiio_request->SenseBufferLength = SCSI_SENSE_BUFFERSIZE;
+ 		scsiio_request->SenseBufferLowAddress =
+ 		    mpt2sas_base_get_sense_buffer_dma(ioc, smid);
+-		priv_sense = mpt2sas_base_get_sense_buffer(ioc, smid);
+-		memset(priv_sense, 0, SCSI_SENSE_BUFFERSIZE);
++		memset(ioc->ctl_cmds.sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 		if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST)
+ 			mpt2sas_base_put_smid_scsi_io(ioc, smid,
+ 			    le16_to_cpu(mpi_request->FunctionDependent1));
+@@ -929,7 +945,8 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 	    MPI2_FUNCTION_SCSI_IO_REQUEST || mpi_request->Function ==
+ 	    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)) {
+ 		sz = min_t(u32, karg.max_sense_bytes, SCSI_SENSE_BUFFERSIZE);
+-		if (copy_to_user(karg.sense_data_ptr, priv_sense, sz)) {
++		if (copy_to_user(karg.sense_data_ptr,
++			ioc->ctl_cmds.sense, sz)) {
+ 			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
+ 			    __LINE__, __func__);
+ 			ret = -ENODATA;
