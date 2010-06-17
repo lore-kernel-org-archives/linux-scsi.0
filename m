@@ -1,149 +1,144 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 15/17] mpt2sas: Copy sense buffer instead of working on direct memory location
-Date: Thu, 17 Jun 2010 13:49:28 +0530
-Message-ID: <20100617081928.GP28921@lsi.com>
+Subject: [PATCH 16/17] mpt2sas: Copy message frame before releasing to free pool to have a local reference.
+Date: Thu, 17 Jun 2010 13:50:11 +0530
+Message-ID: <20100617082011.GQ28921@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:38354 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932663Ab0FQIzE (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:42762 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932663Ab0FQIzr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 04:55:04 -0400
+	Thu, 17 Jun 2010 04:55:47 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Eric.Moore@lsi.com, James.Bottomley@HansenPartnership.com, Sathya.Prakash@lsi.com
 
-
-(1) driver was not setting the sense data size prior to sending SCSI_IO,
-resulting in the 0x31190000 loginfo
-(2) The driver needs to copy the sense data to local buffer prior
-to releasing the request message frame.  If not, the sense buffer gets
-overwritten by the next SCSI_IO request.
+Current driver is  not clearing the per device tm_busy flag
+following the Task Mangement request completion from the IOCTL path.
+When this flag is set, the IO queues are frozen.   The reason the flag
+didn't get cleared is becuase the driver is referencing
+memory associated to the mpi request following the completion, when
+the memory had been reallocated for a new request.  When the memory
+was reallocated, the driver didn't clear the flag becuase it was
+expecting a task managment reqeust, and the reallocated request was
+for SCSI_IO.  To fix the problem the driver needs to have a cached
+backup copy of the original reqeust.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index d848744..1f22a76 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -3668,12 +3668,14 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 
- 	/* ctl module internal command bits */
- 	ioc->ctl_cmds.reply = kzalloc(ioc->reply_sz, GFP_KERNEL);
-+	ioc->ctl_cmds.sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
- 	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
- 	mutex_init(&ioc->ctl_cmds.mutex);
- 
- 	if (!ioc->base_cmds.reply || !ioc->transport_cmds.reply ||
- 	    !ioc->scsih_cmds.reply || !ioc->tm_cmds.reply ||
--	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply) {
-+	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply ||
-+	    !ioc->ctl_cmds.sense) {
- 		r = -ENOMEM;
- 		goto out_free_resources;
- 	}
-@@ -3722,6 +3724,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
- 	kfree(ioc->config_cmds.reply);
- 	kfree(ioc->base_cmds.reply);
- 	kfree(ioc->ctl_cmds.reply);
-+	kfree(ioc->ctl_cmds.sense);
- 	kfree(ioc->pfacts);
- 	ioc->ctl_cmds.reply = NULL;
- 	ioc->base_cmds.reply = NULL;
-@@ -3754,6 +3757,7 @@ mpt2sas_base_detach(struct MPT2SAS_ADAPTER *ioc)
- 	kfree(ioc->pd_handles);
- 	kfree(ioc->pfacts);
- 	kfree(ioc->ctl_cmds.reply);
-+	kfree(ioc->ctl_cmds.sense);
- 	kfree(ioc->base_cmds.reply);
- 	kfree(ioc->tm_cmds.reply);
- 	kfree(ioc->transport_cmds.reply);
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 9599558..749fd3b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -247,6 +247,7 @@ struct MPT2SAS_DEVICE {
-  * @mutex: mutex
-  * @done: completion
-  * @reply: reply message pointer
-+ * @sense: sense data
-  * @status: MPT2_CMD_XXX status
-  * @smid: system message id
-  */
-@@ -254,6 +255,7 @@ struct _internal_cmd {
- 	struct mutex mutex;
- 	struct completion done;
- 	void 	*reply;
-+	void	*sense;
- 	u16	status;
- 	u16	smid;
- };
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 03a9c5d..45d20a2 100644
+index 45d20a2..069b8b0 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -275,6 +275,9 @@ mpt2sas_ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	u32 reply)
+@@ -626,7 +626,7 @@ static long
+ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+     struct mpt2_ioctl_command karg, void __user *mf, enum block_state state)
  {
+-	MPI2RequestHeader_t *mpi_request;
++	MPI2RequestHeader_t *mpi_request = NULL, *request;
  	MPI2DefaultReply_t *mpi_reply;
-+	Mpi2SCSIIOReply_t *scsiio_reply;
-+	const void *sense_data;
-+	u32 sz;
+ 	u32 ioc_state;
+ 	u16 ioc_status;
+@@ -679,31 +679,50 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 		printk(MPT2SAS_INFO_FMT "%s: ioc is operational\n",
+ 		    ioc->name, __func__);
  
- 	if (ioc->ctl_cmds.status == MPT2_CMD_NOT_USED)
- 		return 1;
-@@ -285,6 +288,20 @@ mpt2sas_ctl_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
- 	if (mpi_reply) {
- 		memcpy(ioc->ctl_cmds.reply, mpi_reply, mpi_reply->MsgLength*4);
- 		ioc->ctl_cmds.status |= MPT2_CMD_REPLY_VALID;
-+		/* get sense data */
-+		if (mpi_reply->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
-+		    mpi_reply->Function ==
-+		    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH) {
-+			scsiio_reply = (Mpi2SCSIIOReply_t *)mpi_reply;
-+			if (scsiio_reply->SCSIState &
-+			    MPI2_SCSI_STATE_AUTOSENSE_VALID) {
-+				sz = min_t(u32, SCSI_SENSE_BUFFERSIZE,
-+				    le32_to_cpu(scsiio_reply->SenseCount));
-+				sense_data = mpt2sas_base_get_sense_buffer(ioc,
-+				    smid);
-+				memcpy(ioc->ctl_cmds.sense, sense_data, sz);
-+			}
-+		}
+-	smid = mpt2sas_base_get_smid_scsiio(ioc, ioc->ctl_cb_idx, NULL);
+-	if (!smid) {
+-		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
+-		    ioc->name, __func__);
+-		ret = -EAGAIN;
++	mpi_request = kzalloc(ioc->request_sz, GFP_KERNEL);
++	if (!mpi_request) {
++		printk(MPT2SAS_ERR_FMT "%s: failed obtaining a memory for "
++		    "mpi_request\n", ioc->name, __func__);
++		ret = -ENOMEM;
+ 		goto out;
  	}
- #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
- 	_ctl_display_some_debug(ioc, smid, "ctl_done", mpi_reply);
-@@ -618,7 +635,6 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 	u8 issue_reset;
- 	u32 sz;
- 	void *psge;
--	void *priv_sense = NULL;
- 	void *data_out = NULL;
- 	dma_addr_t data_out_dma;
- 	size_t data_out_sz = 0;
-@@ -782,10 +798,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 
+-	ret = 0;
+-	ioc->ctl_cmds.status = MPT2_CMD_PENDING;
+-	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
+-	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
+-	ioc->ctl_cmds.smid = smid;
+-	data_out_sz = karg.data_out_size;
+-	data_in_sz = karg.data_in_size;
+-
+ 	/* copy in request message frame from user */
+ 	if (copy_from_user(mpi_request, mf, karg.data_sge_offset*4)) {
+ 		printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__, __LINE__,
+ 		    __func__);
+ 		ret = -EFAULT;
+-		mpt2sas_base_free_smid(ioc, smid);
+ 		goto out;
+ 	}
+ 
++	if (mpi_request->Function == MPI2_FUNCTION_SCSI_TASK_MGMT) {
++		smid = mpt2sas_base_get_smid_hpr(ioc, ioc->ctl_cb_idx);
++		if (!smid) {
++			printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
++			    ioc->name, __func__);
++			ret = -EAGAIN;
++			goto out;
++		}
++	} else {
++
++		smid = mpt2sas_base_get_smid_scsiio(ioc, ioc->ctl_cb_idx, NULL);
++		if (!smid) {
++			printk(MPT2SAS_ERR_FMT "%s: failed obtaining a smid\n",
++			    ioc->name, __func__);
++			ret = -EAGAIN;
++			goto out;
++		}
++	}
++
++	ret = 0;
++	ioc->ctl_cmds.status = MPT2_CMD_PENDING;
++	memset(ioc->ctl_cmds.reply, 0, ioc->reply_sz);
++	request = mpt2sas_base_get_msg_frame(ioc, smid);
++	memcpy(request, mpi_request, karg.data_sge_offset*4);
++	ioc->ctl_cmds.smid = smid;
++	data_out_sz = karg.data_out_size;
++	data_in_sz = karg.data_in_size;
++
+ 	if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST ||
+ 	    mpi_request->Function == MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH) {
+ 		if (!le16_to_cpu(mpi_request->FunctionDependent1) ||
+@@ -749,7 +768,7 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 	}
+ 
+ 	/* add scatter gather elements */
+-	psge = (void *)mpi_request + (karg.data_sge_offset*4);
++	psge = (void *)request + (karg.data_sge_offset*4);
+ 
+ 	if (!data_out_sz && !data_in_sz) {
+ 		mpt2sas_base_build_zero_len_sge(ioc, psge);
+@@ -797,7 +816,7 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 	case MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH:
  	{
  		Mpi2SCSIIORequest_t *scsiio_request =
- 		    (Mpi2SCSIIORequest_t *)mpi_request;
-+		scsiio_request->SenseBufferLength = SCSI_SENSE_BUFFERSIZE;
+-		    (Mpi2SCSIIORequest_t *)mpi_request;
++		    (Mpi2SCSIIORequest_t *)request;
+ 		scsiio_request->SenseBufferLength = SCSI_SENSE_BUFFERSIZE;
  		scsiio_request->SenseBufferLowAddress =
  		    mpt2sas_base_get_sense_buffer_dma(ioc, smid);
--		priv_sense = mpt2sas_base_get_sense_buffer(ioc, smid);
--		memset(priv_sense, 0, SCSI_SENSE_BUFFERSIZE);
-+		memset(ioc->ctl_cmds.sense, 0, SCSI_SENSE_BUFFERSIZE);
- 		if (mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST)
- 			mpt2sas_base_put_smid_scsi_io(ioc, smid,
- 			    le16_to_cpu(mpi_request->FunctionDependent1));
-@@ -929,7 +945,8 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 	    MPI2_FUNCTION_SCSI_IO_REQUEST || mpi_request->Function ==
- 	    MPI2_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)) {
- 		sz = min_t(u32, karg.max_sense_bytes, SCSI_SENSE_BUFFERSIZE);
--		if (copy_to_user(karg.sense_data_ptr, priv_sense, sz)) {
-+		if (copy_to_user(karg.sense_data_ptr,
-+			ioc->ctl_cmds.sense, sz)) {
- 			printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
- 			    __LINE__, __func__);
- 			ret = -ENODATA;
+@@ -812,7 +831,7 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 	case MPI2_FUNCTION_SCSI_TASK_MGMT:
+ 	{
+ 		Mpi2SCSITaskManagementRequest_t *tm_request =
+-		    (Mpi2SCSITaskManagementRequest_t *)mpi_request;
++		    (Mpi2SCSITaskManagementRequest_t *)request;
+ 
+ 		dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "TASK_MGMT: "
+ 		    "handle(0x%04x), task_type(0x%02x)\n", ioc->name,
+@@ -985,6 +1004,7 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 		pci_free_consistent(ioc->pdev, data_out_sz, data_out,
+ 		    data_out_dma);
+ 
++	kfree(mpi_request);
+ 	ioc->ctl_cmds.status = MPT2_CMD_NOT_USED;
+ 	mutex_unlock(&ioc->ctl_cmds.mutex);
+ 	return ret;
