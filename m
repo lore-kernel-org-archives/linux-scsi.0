@@ -1,265 +1,232 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
- byte sector SCSI disk is attached
-Date: Thu, 17 Jun 2010 13:36:51 GMT
-Message-ID: <201006171336.o5HDap7U025597@demeter.kernel.org>
-References: <bug-16058-11613@https.bugzilla.kernel.org/>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH 1/3 ver 2] SCSI: convert to the new PM framework
+Date: Thu, 17 Jun 2010 10:36:49 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1006171033020.1915-100000@iolanthe.rowland.org>
+References: <1276717458.2847.321.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36201 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754070Ab0FQNgw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2010 09:36:52 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5HDapS6025598
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2010 13:36:52 GMT
-In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35620 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1760149Ab0FQOgu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2010 10:36:50 -0400
+In-Reply-To: <1276717458.2847.321.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16058
+This patch (as1397b) converts the SCSI midlayer to use the new PM
+callbacks (struct dev_pm_ops).  A new source file, scsi_pm.c, is
+created to hold the new callback routines, and the existing
+suspend/resume code is moved there.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+---
+
+Version 2 changes:
+
+	Don't build the scsi_pm.o object unless CONFIG_PM_OPS is set.
+	This removes the need for a #ifdef guard.
+
+	No need to typecast a dummy &(*NULL) pointer.
+
+	Make struct dev_pm_ops const, as recommended by checkpatch.
 
 
+Index: usb-2.6/drivers/scsi/Makefile
+===================================================================
+--- usb-2.6.orig/drivers/scsi/Makefile
++++ usb-2.6/drivers/scsi/Makefile
+@@ -163,6 +163,7 @@ scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_
+ scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
+ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
+ scsi_mod-y			+= scsi_trace.o
++scsi_mod-$(CONFIG_PM_OPS)	+= scsi_pm.o
+ 
+ scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_if.o
+ 
+Index: usb-2.6/drivers/scsi/scsi_priv.h
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_priv.h
++++ usb-2.6/drivers/scsi/scsi_priv.h
+@@ -144,6 +144,13 @@ static inline void scsi_netlink_init(voi
+ static inline void scsi_netlink_exit(void) {}
+ #endif
+ 
++/* scsi_pm.c */
++#ifdef CONFIG_PM_OPS
++extern const struct dev_pm_ops scsi_bus_pm_ops;
++#else
++#define scsi_bus_pm_ops		(*NULL)
++#endif
++
+ /* 
+  * internal scsi timeout functions: for use by mid-layer and transport
+  * classes.
+Index: usb-2.6/drivers/scsi/scsi_pm.c
+===================================================================
+--- /dev/null
++++ usb-2.6/drivers/scsi/scsi_pm.c
+@@ -0,0 +1,96 @@
++/*
++ *	scsi_pm.c	Copyright (C) 2010 Alan Stern
++ *
++ *	SCSI dynamic Power Management
++ *		Initial version: Alan Stern <stern@rowland.harvard.edu>
++ */
++
++#include <linux/pm_runtime.h>
++
++#include <scsi/scsi.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_driver.h>
++#include <scsi/scsi_host.h>
++
++#include "scsi_priv.h"
++
++static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
++{
++	struct device_driver *drv;
++	int err;
++
++	err = scsi_device_quiesce(to_scsi_device(dev));
++	if (err == 0) {
++		drv = dev->driver;
++		if (drv && drv->suspend)
++			err = drv->suspend(dev, msg);
++	}
++	dev_dbg(dev, "scsi suspend: %d\n", err);
++	return err;
++}
++
++static int scsi_dev_type_resume(struct device *dev)
++{
++	struct device_driver *drv;
++	int err = 0;
++
++	drv = dev->driver;
++	if (drv && drv->resume)
++		err = drv->resume(dev);
++	scsi_device_resume(to_scsi_device(dev));
++	dev_dbg(dev, "scsi resume: %d\n", err);
++	return err;
++}
++
++#ifdef CONFIG_PM_SLEEP
++
++static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
++{
++	int err = 0;
++
++	if (scsi_is_sdev_device(dev))
++		err = scsi_dev_type_suspend(dev, msg);
++	return err;
++}
++
++static int scsi_bus_resume_common(struct device *dev)
++{
++	int err = 0;
++
++	if (scsi_is_sdev_device(dev))
++		err = scsi_dev_type_resume(dev);
++	return err;
++}
++
++static int scsi_bus_suspend(struct device *dev)
++{
++	return scsi_bus_suspend_common(dev, PMSG_SUSPEND);
++}
++
++static int scsi_bus_freeze(struct device *dev)
++{
++	return scsi_bus_suspend_common(dev, PMSG_FREEZE);
++}
++
++static int scsi_bus_poweroff(struct device *dev)
++{
++	return scsi_bus_suspend_common(dev, PMSG_HIBERNATE);
++}
++
++#else /* CONFIG_PM_SLEEP */
++
++#define scsi_bus_resume_common		NULL
++#define scsi_bus_suspend		NULL
++#define scsi_bus_freeze			NULL
++#define scsi_bus_poweroff		NULL
++
++#endif /* CONFIG_PM_SLEEP */
++
++const struct dev_pm_ops scsi_bus_pm_ops = {
++	.suspend =		scsi_bus_suspend,
++	.resume =		scsi_bus_resume_common,
++	.freeze =		scsi_bus_freeze,
++	.thaw =			scsi_bus_resume_common,
++	.poweroff =		scsi_bus_poweroff,
++	.restore =		scsi_bus_resume_common,
++};
+Index: usb-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
++++ usb-2.6/drivers/scsi/scsi_sysfs.c
+@@ -377,57 +377,11 @@ static int scsi_bus_uevent(struct device
+ 	return 0;
+ }
+ 
+-static int scsi_bus_suspend(struct device * dev, pm_message_t state)
+-{
+-	struct device_driver *drv;
+-	struct scsi_device *sdev;
+-	int err;
+-
+-	if (dev->type != &scsi_dev_type)
+-		return 0;
+-
+-	drv = dev->driver;
+-	sdev = to_scsi_device(dev);
+-
+-	err = scsi_device_quiesce(sdev);
+-	if (err)
+-		return err;
+-
+-	if (drv && drv->suspend) {
+-		err = drv->suspend(dev, state);
+-		if (err)
+-			return err;
+-	}
+-
+-	return 0;
+-}
+-
+-static int scsi_bus_resume(struct device * dev)
+-{
+-	struct device_driver *drv;
+-	struct scsi_device *sdev;
+-	int err = 0;
+-
+-	if (dev->type != &scsi_dev_type)
+-		return 0;
+-
+-	drv = dev->driver;
+-	sdev = to_scsi_device(dev);
+-
+-	if (drv && drv->resume)
+-		err = drv->resume(dev);
+-
+-	scsi_device_resume(sdev);
+-
+-	return err;
+-}
+-
+ struct bus_type scsi_bus_type = {
+         .name		= "scsi",
+         .match		= scsi_bus_match,
+ 	.uevent		= scsi_bus_uevent,
+-	.suspend	= scsi_bus_suspend,
+-	.resume		= scsi_bus_resume,
++	.pm		= &scsi_bus_pm_ops,
+ };
+ EXPORT_SYMBOL_GPL(scsi_bus_type);
+ 
 
-
-
---- Comment #14 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-06-17 13:36:44 ---
-Reply-To: James.Bottomley@suse.de
-
-On Thu, 2010-06-17 at 07:04 -0400, Mark Hounschell wrote: 
-> On 05/31/2010 11:17 AM, Mark Hounschell wrote:
-> > On 05/31/2010 10:02 AM, James Bottomley wrote:
-> >   
-> >> On Mon, 2010-05-31 at 07:25 -0400, Mark Hounschell wrote:
-> >>   
-> >>     
-> >>> On 05/30/2010 07:51 AM, Mark Hounschell wrote:
-> >>>     
-> >>>       
-> >>>> On 05/28/2010 04:25 PM, James Bottomley wrote:
-> >>>>   
-> >>>>       
-> >>>>         
-> >>>>> On Fri, 2010-05-28 at 15:29 -0400, Mark Hounschell wrote:
-> >>>>>   
-> >>>>>     
-> >>>>>         
-> >>>>>           
-> >>>>>> On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> >>>>>>     
-> >>>>>>       
-> >>>>>>           
-> >>>>>>             
-> >>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=16058
-> >>>>>>>
-> >>>>>>>
-> >>>>>>>
-> >>>>>>>
-> >>>>>>>
-> >>>>>>> --- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
-> >>>>>>> Reply-To: James.Bottomley@suse.de
-> >>>>>>>
-> >>>>>>> On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
-> >>>>>>>   
-> >>>>>>>       
-> >>>>>>>         
-> >>>>>>>             
-> >>>>>>>               
-> >>>>>>>> On Fri, 28 May 2010, Mark Hounschell wrote:
-> >>>>>>>>
-> >>>>>>>>     
-> >>>>>>>>         
-> >>>>>>>>           
-> >>>>>>>>               
-> >>>>>>>>                 
-> >>>>>>>>> First READ(10):
-> >>>>>>>>>
-> >>>>>>>>>  sde:
-> >>>>>>>>> ahc_calc_residual: Entered
-> >>>>>>>>> ahc_calc_residual: return Case 5-1 resid = 0x800
-> >>>>>>>>> ahc_calc_residual: return Case 5-2 resid = 0x800
-> >>>>>>>>>
-> >>>>>>>>> scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
-> >>>>>>>>> 0x00 0x00 0x08 0x00
-> >>>>>>>>> cmd->result = 0x00000000
-> >>>>>>>>> good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
-> >>>>>>>>> New good_bytes = 0x0
-> >>>>>>>>> scsi_finish_command: Complete
-> >>>>>>>>>
-> >>>>>>>>> From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
-> >>>>>>>>> it looks like the machine is hung.
-> >>>>>>>>>       
-> >>>>>>>>>           
-> >>>>>>>>>             
-> >>>>>>>>>                 
-> >>>>>>>>>                   
-> >>>>>>>> Probably not hung, just doing a lot of retries.  It should time out 
-> >>>>>>>> eventually, but it might take a long time (perhaps as long as 15 
-> >>>>>>>> minutes).  The combination of the block layer and the SCSI layer isn't 
-> >>>>>>>> very good at knowing when to give up.
-> >>>>>>>>     
-> >>>>>>>>         
-> >>>>>>>>           
-> >>>>>>>>               
-> >>>>>>>>                 
-> >>>>>>> Actually, I think this is a partition read.  Each partition manager
-> >>>>>>> tends to read a page through the page cache.  If we get an error, we
-> >>>>>>> seem to re-read to fill the cache.
-> >>>>>>>
-> >>>>>>>   
-> >>>>>>>       
-> >>>>>>>         
-> >>>>>>>             
-> >>>>>>>               
-> >>>>>>>>> Now, I know for a fact that _if_ this read CDB is actually being sent to
-> >>>>>>>>> the drive, it's actual residual count will be zero. These are working
-> >>>>>>>>> disks and that read CDB is valid.
-> >>>>>>>>>
-> >>>>>>>>> Why is ahc_calc_residual saying that the residual count is as though the
-> >>>>>>>>> read never took place? I noticed that the first read on all the SATA
-> >>>>>>>>> drives was for 4096 bytes, why is this one only 2048? Should it have
-> >>>>>>>>> been 4096 and ahc_calc_residual assume that?
-> >>>>>>>>>       
-> >>>>>>>>>           
-> >>>>>>>>>             
-> >>>>>>>>>                 
-> >>>>>>>>>                   
-> >>>>>>>> I don't know the answer to any of these questions.  They could well be
-> >>>>>>>> due to bugs in the driver, and I know nothing about how the aic7xxx
-> >>>>>>>> driver works.  You should talk to someone who does.
-> >>>>>>>>     
-> >>>>>>>>         
-> >>>>>>>>           
-> >>>>>>>>               
-> >>>>>>>>                 
-> >>>>>>> I'll take this one ... although we're a bit lacking in documentation for
-> >>>>>>> this driver.
-> >>>>>>>
-> >>>>>>> I think the 2048 is because something is hardcoded to think 8 sectors is
-> >>>>>>> a page.
-> >>>>>>>
-> >>>>>>> James
-> >>>>>>>
-> >>>>>>>   
-> >>>>>>>       
-> >>>>>>>         
-> >>>>>>>             
-> >>>>>>>               
-> >>>>>> Your probably right. But is a 256 byte sector really a supported sector
-> >>>>>> size for a linux fs on a SCSI disk?
-> >>>>>>     
-> >>>>>>       
-> >>>>>>           
-> >>>>>>             
-> >>>>> In theory the block layer can support any power of two sector size (or
-> >>>>> really any sector size which is a divisor of the page size).  We had a
-> >>>>> use for 256 byte sectors once, so they're in SCSI.  In practice, since
-> >>>>> they're so rare, the code paths are never tested (as you found out) and
-> >>>>> there's a more annoying problem which is since the linux base sector
-> >>>>> size is 512, you have to multiply to get from 256 to 512 ... for all
-> >>>>> other sector sizes you have to divide, so any conversion routine that
-> >>>>> only right shifts would get this wrong.
-> >>>>>
-> >>>>>   
-> >>>>>     
-> >>>>>         
-> >>>>>           
-> >>>> from the fdisk man page:
-> >>>>
-> >>>>        -b sectorsize   Specify  the  sector  size  of the disk. Valid
-> >>>> values are 512, 1024, 2048 or 4096.  (Recent kernels know the sector
-> >>>> size. Use this only on old kernels or to override the kernel's ideas.)
-> >>>>
-> >>>> So how does one create a linux fs on a 256 byte sectored disk?
-> >>>>
-> >>>>   
-> >>>>       
-> >>>>         
-> >>>>>>  When it sees a 768 byte sector disk,
-> >>>>>> it says it's an unsupported size and goes on with the boot process
-> >>>>>> without even doing a read for a partition table.
-> >>>>>>     
-> >>>>>>       
-> >>>>>>           
-> >>>>>>             
-> >>>>> that's because 768 isn't a power of 2, so it's completely unsupportable.
-> >>>>>
-> >>>>>   
-> >>>>>     
-> >>>>>         
-> >>>>>           
-> >>>>>>  Should maybe it be
-> >>>>>> doing the same for a 256 byte sector disk???
-> >>>>>>     
-> >>>>>>       
-> >>>>>>           
-> >>>>>>             
-> >>>>> Possibly ... I don't know what the 256 byte sector support was for ...
-> >>>>> all I know is that whatever it was, I don't have one.
-> >>>>>
-> >>>>>   
-> >>>>>     
-> >>>>>         
-> >>>>>           
-> >>>> Back in the old days, almost any scsi disk could be formatted with a 256
-> >>>> byte sector. At one time it probably made since to support it. But try
-> >>>> to find one that supports that sector size today.
-> >>>>
-> >>>> In any case, if you can't even partition a 256 byte sector scsi disk in
-> >>>> linux, why would the kernel still claim it supports that format?
-> >>>>
-> >>>>   
-> >>>>       
-> >>>>         
-> >>> In fact, the attached patch works for me. However, if you wish to pursue
-> >>> functional 256 byte sector support, I have plenty of these disks and
-> >>> will be happy to test what ever you come up with.
-> >>>     
-> >>>       
-> >> Um, well, since you've got a lot of them that does rather argue against
-> >> their being obsolete ...
-> >>
-> >>   
-> >>     
-> > Except I would  _never_  attempt to use any of them for an actual Linux
-> > fs. If I did, and again I wouldn't, it would be after formatting them
-> > with a 512 byte sector.  Way too slow and small. We only provide support
-> > for them in an emulation of an old RTOS called MPX-32 using the sg_io
-> > interface.
-> >
-> >   
-> >>>  Not a lot I can really
-> >>> do without fdisk support though. Even so, I'm all ears???
-> >>>     
-> >>>       
-> >> fdisk is only the dos label ... there's a lot you can't do with a dos
-> >> label.  I think parted will allow you to write a label that will work.
-> >>
-> >> I've got scsi_debug patched to work with 256 byte sectors.  It actually
-> >> looks like this has nothing to do with the residue.  What I see is a
-> >> hang because block is trying to do a zero sized read.  I suspect
-> >> something is trying to do a single sector read, which is impossible
-> >> since the linux native sector size is 512 and it's getting rounded down.
-> >>
-> >> This might, of course, argue that block cannot now support 256 sector
-> >> devices and so they need to be deprecated ... I'll see.
-> >>
-> >> James
-> >>     
-> 
-> I know your a busy guy,  I was just wondering if this BUG is still being
-> given consideration? 
-
-Yes, but it got lost in the merge window.  I was investigating where the
-break is ... since the whole of block has allowances for 256 byte sector
-devices, it seems that something once used it.
-
-James
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
