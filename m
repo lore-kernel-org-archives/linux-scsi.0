@@ -1,71 +1,259 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] mpt fusion: Cleanup some duplicate calls in mptbase.c
-Date: Thu, 17 Jun 2010 16:18:52 +0530
-Message-ID: <1C9608B8A4CD534FB19C7C7543CBB2490290109758@inbmail02.lsi.com>
-References: <20100616173942.GE336@stratus.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16058] [BUG] Cannot boot any kernel from 2.6.27 on if a 256
+ byte sector SCSI disk is attached
+Date: Thu, 17 Jun 2010 11:06:28 GMT
+Message-ID: <201006171106.o5HB6SCl017782@demeter.kernel.org>
+References: <bug-16058-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:40876 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759595Ab0FQKtM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 06:49:12 -0400
-In-Reply-To: <20100616173942.GE336@stratus.com>
-Content-Language: en-US
+Received: from demeter.kernel.org ([140.211.167.39]:41141 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750872Ab0FQLG2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2010 07:06:28 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5HB6SMH017783
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2010 11:06:28 GMT
+In-Reply-To: <bug-16058-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bandan Das <bandan.das@stratus.com>, James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Barand, I reviewed your below patch and it is valid.
+https://bugzilla.kernel.org/show_bug.cgi?id=16058
 
-James, Can you please consider this patch as ACKed and consider it for next merge window.
 
-Thanks, Kashyap
 
-> -----Original Message-----
-> From: Bandan Das [mailto:bandan.das@stratus.com]
-> Sent: Wednesday, June 16, 2010 11:10 PM
-> To: James Bottomley
-> Cc: Desai, Kashyap; linux-scsi@vger.kernel.org
-> Subject: [PATCH] mpt fusion: Cleanup some duplicate calls in mptbase.c
-> 
-> In mpt_detach, call to pci_set_drvdata is redundant because it
-> has already been called in mpt_adapter_disable. In mpt_attach,
-> ioc->pcidev is set to pdev two times.
-> 
-> Signed-off-by: Bandan Das <bandan.das@stratus.com>
-> ---
->  drivers/message/fusion/mptbase.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/message/fusion/mptbase.c
-> b/drivers/message/fusion/mptbase.c
-> index a6a5701..2ec2fa7 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -1770,7 +1770,6 @@ mpt_attach(struct pci_dev *pdev, const struct
-> pci_device_id *id)
->  	ioc->req_sz = MPT_DEFAULT_FRAME_SIZE;		/* avoid div by
-> zero! */
->  	ioc->reply_sz = MPT_REPLY_FRAME_SIZE;
-> 
-> -	ioc->pcidev = pdev;
-> 
->  	spin_lock_init(&ioc->taskmgmt_lock);
->  	mutex_init(&ioc->internal_cmds.mutex);
-> @@ -2051,7 +2050,6 @@ mpt_detach(struct pci_dev *pdev)
-> 
->  	mpt_adapter_dispose(ioc);
-> 
-> -	pci_set_drvdata(pdev, NULL);
->  }
-> 
-> 
-> /**********************************************************************
-> ****
-> --
-> 1.6.6.1
 
+
+--- Comment #13 from Mark Hounschell <dmarkh@cfl.rr.com>  2010-06-17 11:06:21 ---
+On 05/31/2010 11:17 AM, Mark Hounschell wrote:
+> On 05/31/2010 10:02 AM, James Bottomley wrote:
+>   
+>> On Mon, 2010-05-31 at 07:25 -0400, Mark Hounschell wrote:
+>>   
+>>     
+>>> On 05/30/2010 07:51 AM, Mark Hounschell wrote:
+>>>     
+>>>       
+>>>> On 05/28/2010 04:25 PM, James Bottomley wrote:
+>>>>   
+>>>>       
+>>>>         
+>>>>> On Fri, 2010-05-28 at 15:29 -0400, Mark Hounschell wrote:
+>>>>>   
+>>>>>     
+>>>>>         
+>>>>>           
+>>>>>> On 05/28/2010 12:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+>>>>>>     
+>>>>>>       
+>>>>>>           
+>>>>>>             
+>>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=16058
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> --- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-05-28 16:34:28 ---
+>>>>>>> Reply-To: James.Bottomley@suse.de
+>>>>>>>
+>>>>>>> On Fri, 2010-05-28 at 10:58 -0400, Alan Stern wrote:
+>>>>>>>   
+>>>>>>>       
+>>>>>>>         
+>>>>>>>             
+>>>>>>>               
+>>>>>>>> On Fri, 28 May 2010, Mark Hounschell wrote:
+>>>>>>>>
+>>>>>>>>     
+>>>>>>>>         
+>>>>>>>>           
+>>>>>>>>               
+>>>>>>>>                 
+>>>>>>>>> First READ(10):
+>>>>>>>>>
+>>>>>>>>>  sde:
+>>>>>>>>> ahc_calc_residual: Entered
+>>>>>>>>> ahc_calc_residual: return Case 5-1 resid = 0x800
+>>>>>>>>> ahc_calc_residual: return Case 5-2 resid = 0x800
+>>>>>>>>>
+>>>>>>>>> scsi_finish_command: Entered for cmd(10):0x28 0x00 0x00 0x00 0x00 0x00
+>>>>>>>>> 0x00 0x00 0x08 0x00
+>>>>>>>>> cmd->result = 0x00000000
+>>>>>>>>> good_bytes == old_good_bytes = 0x800  scsi_get_resid(cmd) = 0x800
+>>>>>>>>> New good_bytes = 0x0
+>>>>>>>>> scsi_finish_command: Complete
+>>>>>>>>>
+>>>>>>>>> From here it just keeps repeating this read of 8 blocks. (2048 bytes) so
+>>>>>>>>> it looks like the machine is hung.
+>>>>>>>>>       
+>>>>>>>>>           
+>>>>>>>>>             
+>>>>>>>>>                 
+>>>>>>>>>                   
+>>>>>>>> Probably not hung, just doing a lot of retries.  It should time out 
+>>>>>>>> eventually, but it might take a long time (perhaps as long as 15 
+>>>>>>>> minutes).  The combination of the block layer and the SCSI layer isn't 
+>>>>>>>> very good at knowing when to give up.
+>>>>>>>>     
+>>>>>>>>         
+>>>>>>>>           
+>>>>>>>>               
+>>>>>>>>                 
+>>>>>>> Actually, I think this is a partition read.  Each partition manager
+>>>>>>> tends to read a page through the page cache.  If we get an error, we
+>>>>>>> seem to re-read to fill the cache.
+>>>>>>>
+>>>>>>>   
+>>>>>>>       
+>>>>>>>         
+>>>>>>>             
+>>>>>>>               
+>>>>>>>>> Now, I know for a fact that _if_ this read CDB is actually being sent to
+>>>>>>>>> the drive, it's actual residual count will be zero. These are working
+>>>>>>>>> disks and that read CDB is valid.
+>>>>>>>>>
+>>>>>>>>> Why is ahc_calc_residual saying that the residual count is as though the
+>>>>>>>>> read never took place? I noticed that the first read on all the SATA
+>>>>>>>>> drives was for 4096 bytes, why is this one only 2048? Should it have
+>>>>>>>>> been 4096 and ahc_calc_residual assume that?
+>>>>>>>>>       
+>>>>>>>>>           
+>>>>>>>>>             
+>>>>>>>>>                 
+>>>>>>>>>                   
+>>>>>>>> I don't know the answer to any of these questions.  They could well be
+>>>>>>>> due to bugs in the driver, and I know nothing about how the aic7xxx
+>>>>>>>> driver works.  You should talk to someone who does.
+>>>>>>>>     
+>>>>>>>>         
+>>>>>>>>           
+>>>>>>>>               
+>>>>>>>>                 
+>>>>>>> I'll take this one ... although we're a bit lacking in documentation for
+>>>>>>> this driver.
+>>>>>>>
+>>>>>>> I think the 2048 is because something is hardcoded to think 8 sectors is
+>>>>>>> a page.
+>>>>>>>
+>>>>>>> James
+>>>>>>>
+>>>>>>>   
+>>>>>>>       
+>>>>>>>         
+>>>>>>>             
+>>>>>>>               
+>>>>>> Your probably right. But is a 256 byte sector really a supported sector
+>>>>>> size for a linux fs on a SCSI disk?
+>>>>>>     
+>>>>>>       
+>>>>>>           
+>>>>>>             
+>>>>> In theory the block layer can support any power of two sector size (or
+>>>>> really any sector size which is a divisor of the page size).  We had a
+>>>>> use for 256 byte sectors once, so they're in SCSI.  In practice, since
+>>>>> they're so rare, the code paths are never tested (as you found out) and
+>>>>> there's a more annoying problem which is since the linux base sector
+>>>>> size is 512, you have to multiply to get from 256 to 512 ... for all
+>>>>> other sector sizes you have to divide, so any conversion routine that
+>>>>> only right shifts would get this wrong.
+>>>>>
+>>>>>   
+>>>>>     
+>>>>>         
+>>>>>           
+>>>> from the fdisk man page:
+>>>>
+>>>>        -b sectorsize   Specify  the  sector  size  of the disk. Valid
+>>>> values are 512, 1024, 2048 or 4096.  (Recent kernels know the sector
+>>>> size. Use this only on old kernels or to override the kernel's ideas.)
+>>>>
+>>>> So how does one create a linux fs on a 256 byte sectored disk?
+>>>>
+>>>>   
+>>>>       
+>>>>         
+>>>>>>  When it sees a 768 byte sector disk,
+>>>>>> it says it's an unsupported size and goes on with the boot process
+>>>>>> without even doing a read for a partition table.
+>>>>>>     
+>>>>>>       
+>>>>>>           
+>>>>>>             
+>>>>> that's because 768 isn't a power of 2, so it's completely unsupportable.
+>>>>>
+>>>>>   
+>>>>>     
+>>>>>         
+>>>>>           
+>>>>>>  Should maybe it be
+>>>>>> doing the same for a 256 byte sector disk???
+>>>>>>     
+>>>>>>       
+>>>>>>           
+>>>>>>             
+>>>>> Possibly ... I don't know what the 256 byte sector support was for ...
+>>>>> all I know is that whatever it was, I don't have one.
+>>>>>
+>>>>>   
+>>>>>     
+>>>>>         
+>>>>>           
+>>>> Back in the old days, almost any scsi disk could be formatted with a 256
+>>>> byte sector. At one time it probably made since to support it. But try
+>>>> to find one that supports that sector size today.
+>>>>
+>>>> In any case, if you can't even partition a 256 byte sector scsi disk in
+>>>> linux, why would the kernel still claim it supports that format?
+>>>>
+>>>>   
+>>>>       
+>>>>         
+>>> In fact, the attached patch works for me. However, if you wish to pursue
+>>> functional 256 byte sector support, I have plenty of these disks and
+>>> will be happy to test what ever you come up with.
+>>>     
+>>>       
+>> Um, well, since you've got a lot of them that does rather argue against
+>> their being obsolete ...
+>>
+>>   
+>>     
+> Except I would  _never_  attempt to use any of them for an actual Linux
+> fs. If I did, and again I wouldn't, it would be after formatting them
+> with a 512 byte sector.  Way too slow and small. We only provide support
+> for them in an emulation of an old RTOS called MPX-32 using the sg_io
+> interface.
+>
+>   
+>>>  Not a lot I can really
+>>> do without fdisk support though. Even so, I'm all ears???
+>>>     
+>>>       
+>> fdisk is only the dos label ... there's a lot you can't do with a dos
+>> label.  I think parted will allow you to write a label that will work.
+>>
+>> I've got scsi_debug patched to work with 256 byte sectors.  It actually
+>> looks like this has nothing to do with the residue.  What I see is a
+>> hang because block is trying to do a zero sized read.  I suspect
+>> something is trying to do a single sector read, which is impossible
+>> since the linux native sector size is 512 and it's getting rounded down.
+>>
+>> This might, of course, argue that block cannot now support 256 sector
+>> devices and so they need to be deprecated ... I'll see.
+>>
+>> James
+>>     
+
+I know your a busy guy,  I was just wondering if this BUG is still being
+given consideration? 
+
+Thanks
+Mark
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
