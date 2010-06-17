@@ -1,62 +1,79 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 5/12] scsi: megaraid_sas - Online Controller Reset
- (OCR): Add and initialize the OCR relaed variable
-Date: Thu, 17 Jun 2010 11:19:30 -0500
-Message-ID: <1276791570.7398.12.camel@mulgrave.site>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804554@cosmail02.lsi.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Current topics for LSF10/MM Summit 8-9 August in Boston
+Date: Thu, 17 Jun 2010 20:34:49 +0400
+Message-ID: <4C1A4EA9.40504@vlnb.net>
+References: <1276721459.2847.399.camel@mulgrave.site>	 <20100617160048.GA11689@schmichrtp.mainz.de.ibm.com> <1276790850.7398.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:40665 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933008Ab0FQQTi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 12:19:38 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D0804554@cosmail02.lsi.com>
+Received: from moutng.kundenserver.de ([212.227.17.10]:59741 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933043Ab0FQQeX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2010 12:34:23 -0400
+In-Reply-To: <1276790850.7398.8.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf10-pc@lists.linuxfoundation.org
 
-On Wed, 2010-06-09 at 21:54 -0600, Yang, Bo wrote:
-> To support online controller reset, driver need to define some
-> instance based variable and initialize them.
+James Bottomley, on 06/17/2010 08:07 PM wrote:
+> On Thu, 2010-06-17 at 18:00 +0200, Christof Schmitt wrote:
+>> On Wed, Jun 16, 2010 at 03:50:59PM -0500, James Bottomley wrote:
+>>> Given that we're under two months out, I thought it would be time to
+>>> post a summary of the topics we've collected so far (Nick will post the
+>>> MM summit ones later).  Look this over, and if there's anything missing,
+>>> propose it ... or if you have cross Storage/FS/MM topics, post them too.
+>>>
+>>> Oh, and since we're not the most organised bunch, if you posted a topic
+>>> and don't see it in the list, please resend ... we probably lost it in
+>>> an email shuffle.
+>>>
+>>> Current Filesystem Topics:
+>>>
+>>> Alex Elder	Upstream maintainer for XFS, general discussion on FS/IO
+>>> Aneesh Kumar	Rich-acl patches which work better with NFSv4 acl and CIFS acl
+>>> Anshul Madan	reflink for NFS
+>>> Chuck Lever	NFS/IPV6 and NFS O_DIRECT, Wu's read-ahead work, vitro perf tools
+>>> Eric Sandeen	Advances in testing, TRIM/DISCARD/Alignment, writeback sanity
+>>> James Lentini	reflink for NFS
+>>> Jan Kara	Discuss/drive sanity review of writeback and general ext*/jbd 
+>>> Michael Rubin	Writeback scaling
+>>> Sage Weil	Statlite, generic interface for describing file striping for distributed FS, VFS scalability
+>>> Al Viro	Sorting out d_revalidate and other dcache issues
+>>> Coly Li		directory/large file scalability
+>>> Sorin Faibish	Cache writeback discussion
+>>>
+>>> Current Storage Topics:
+>>>
+>>> Eric Seppanen	Next generation SSDs, performance implications on Linux I/O
+>>> Boaz Harrosh	PNFS performance considerations, bio_list based/async raidN for generic use; stable pages for I/O
+>>> FUJITA Tomonori	SCSI target mode, iSCSI, block layer SG (bsg), sg, IOMMU, DMA issues
+>>> Hannes Reinecke	libfc/multipath/error handing
+>>> James Smart	FCOE proposal for rework of the FC sysfs tree, work with Hannes on other transport/SCSI subsystem topics
+>>> Jeff Moyer	IO scheduler
+>>> Joel Becker	SAN management plugin
+>>> Martin Petersen	Updates on DIF/DIX, TRIM/DISCARD/UNMAP, generic support for WRITE_SAME
+>>>
+>>> Plus some MM summit ones which Nick will summarise.
+>> [...]
+>>
+>> What about the topic "Stable pages while IO"?
+>> http://www.spinics.net/lists/linux-scsi/msg44074.html
+>>
+>> Was it lost during the e-mail shuffle or will it be part of the MM topics?
+> 
+> It's actually listed under 'dma issues' ... but there's really been no
+> satisfactory resolution or discussion of how one might be achieved.
+> Most filesystems rely on modifications to in-flight pages for efficiency
+> and copying every fs I/O page would be horrendous both for performance
+> and memory consumption.  Nor has there really been an indication that
+> it's a serious issue.  The two sufferers are DIF and iSCSI checksum.
 
-This doesn't compile:
+You forgot the third: advanced storage, including MPIO clusters, where 
+retry of the write of the modified in-flight pages while the original 
+write for them not yet completed might cause out of the expected order 
+execution of the writes and data corruption (old data written instead of 
+new).
 
-  CC [M]  drivers/scsi/megaraid/megaraid_sas.o
-drivers/scsi/megaraid/megaraid_sas.c: In function
-=E2=80=98megasas_deplete_reply_queue=E2=80=99:
-drivers/scsi/megaraid/megaraid_sas.c:2090: warning: unused variable
-=E2=80=98fw_state=E2=80=99
-drivers/scsi/megaraid/megaraid_sas.c: In function =E2=80=98megasas_init=
-_mfi=E2=80=99:
-drivers/scsi/megaraid/megaraid_sas.c:3023: error: =E2=80=98struct
-megasas_ctrl_prop=E2=80=99 has no member named =E2=80=98OnOffProperties=
-=E2=80=99
-drivers/scsi/megaraid/megaraid_sas.c: In function =E2=80=98megasas_prob=
-e_one=E2=80=99:
-drivers/scsi/megaraid/megaraid_sas.c:3486: error:
-=E2=80=98process_fw_state_change_wq=E2=80=99 undeclared (first use in t=
-his function)
-drivers/scsi/megaraid/megaraid_sas.c:3486: error: (Each undeclared
-identifier is reported only once
-drivers/scsi/megaraid/megaraid_sas.c:3486: error: for each function it
-appears in.)
-
-Because OnOffProperties structure is defined in patch 6/12 as is the
-process_fw_state_change_wq function.
-
-I've got 1-4 ... please resubmit 5-12 so they actually build in the
-order submitted.
-
-Thanks,
-
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vlad
