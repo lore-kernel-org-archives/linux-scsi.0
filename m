@@ -1,77 +1,71 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH resend 2/2] usb-storage: Add new no_read_disc_info quirk
-Date: Thu, 17 Jun 2010 12:20:46 +0200
-Message-ID: <1276770046-18868-3-git-send-email-hdegoede@redhat.com>
-References: <1276770046-18868-1-git-send-email-hdegoede@redhat.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] mpt fusion: Cleanup some duplicate calls in mptbase.c
+Date: Thu, 17 Jun 2010 16:18:52 +0530
+Message-ID: <1C9608B8A4CD534FB19C7C7543CBB2490290109758@inbmail02.lsi.com>
+References: <20100616173942.GE336@stratus.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp5.versatel.nl ([62.58.50.96]:46434 "EHLO smtp5.versatel.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755160Ab0FQKS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 06:18:28 -0400
-In-Reply-To: <1276770046-18868-1-git-send-email-hdegoede@redhat.com>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:40876 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759595Ab0FQKtM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Jun 2010 06:49:12 -0400
+In-Reply-To: <20100616173942.GE336@stratus.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org, Jens Axboe <axboe@kernel.dk>, Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: Bandan Das <bandan.das@stratus.com>, James Bottomley <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Appotech ax3003 (the larger brother of the ax203) based devices are even
-more buggy then the ax203. They will go of into lala land when ever they
-see a READ_DISC_INFO scsi command. So add a new US_FL which tells the
-scsi sr driver to not issue any READ_DISC_INFO scsi commands.
+Barand, I reviewed your below patch and it is valid.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/usb/storage/scsiglue.c     |    4 ++++
- drivers/usb/storage/unusual_devs.h |    5 +++++
- include/linux/usb_usual.h          |    4 +++-
- 3 files changed, 12 insertions(+), 1 deletions(-)
+James, Can you please consider this patch as ACKed and consider it for next merge window.
 
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index d8d98cf..4a30fbf 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -253,6 +253,10 @@ static int slave_configure(struct scsi_device *sdev)
- 		 * or to force 192-byte transfer lengths for MODE SENSE.
- 		 * But they do need to use MODE SENSE(10). */
- 		sdev->use_10_for_ms = 1;
-+
-+		/* Some (fake) usb cdrom devices don't like READ_DISC_INFO */
-+		if (us->fflags & US_FLAG_NO_READ_DISC_INFO)
-+			sdev->no_read_disc_info = 1;
- 	}
- 
- 	/* The CB and CBI transports have no way to pass LUN values
-diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-index 2c897ee..42a83c4 100644
---- a/drivers/usb/storage/unusual_devs.h
-+++ b/drivers/usb/storage/unusual_devs.h
-@@ -1858,6 +1858,11 @@ UNUSUAL_DEV( 0x1908, 0x1320, 0x0000, 0x0000,
- 		"Photo Frame",
- 		US_SC_DEVICE, US_PR_DEVICE, NULL,
- 		US_FL_BAD_SENSE ),
-+UNUSUAL_DEV( 0x1908, 0x3335, 0x0200, 0x0200,
-+		"BUILDWIN",
-+		"Photo Frame",
-+		US_SC_DEVICE, US_PR_DEVICE, NULL,
-+		US_FL_NO_READ_DISC_INFO ),
- 
- UNUSUAL_DEV( 0x2116, 0x0320, 0x0001, 0x0001,
- 		"ST",
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index a4b947e..bff51d0 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -58,7 +58,9 @@
- 	US_FLAG(CAPACITY_OK,	0x00010000)			\
- 		/* READ CAPACITY response is correct */		\
- 	US_FLAG(BAD_SENSE,	0x00020000)			\
--		/* Bad Sense (never more than 18 bytes) */
-+		/* Bad Sense (never more than 18 bytes) */	\
-+	US_FLAG(NO_READ_DISC_INFO,	0x00040000)		\
-+		/* cannot handle READ_DISC_INFO */
- 
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
--- 
-1.7.0.1
+Thanks, Kashyap
+
+> -----Original Message-----
+> From: Bandan Das [mailto:bandan.das@stratus.com]
+> Sent: Wednesday, June 16, 2010 11:10 PM
+> To: James Bottomley
+> Cc: Desai, Kashyap; linux-scsi@vger.kernel.org
+> Subject: [PATCH] mpt fusion: Cleanup some duplicate calls in mptbase.c
+> 
+> In mpt_detach, call to pci_set_drvdata is redundant because it
+> has already been called in mpt_adapter_disable. In mpt_attach,
+> ioc->pcidev is set to pdev two times.
+> 
+> Signed-off-by: Bandan Das <bandan.das@stratus.com>
+> ---
+>  drivers/message/fusion/mptbase.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptbase.c
+> b/drivers/message/fusion/mptbase.c
+> index a6a5701..2ec2fa7 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -1770,7 +1770,6 @@ mpt_attach(struct pci_dev *pdev, const struct
+> pci_device_id *id)
+>  	ioc->req_sz = MPT_DEFAULT_FRAME_SIZE;		/* avoid div by
+> zero! */
+>  	ioc->reply_sz = MPT_REPLY_FRAME_SIZE;
+> 
+> -	ioc->pcidev = pdev;
+> 
+>  	spin_lock_init(&ioc->taskmgmt_lock);
+>  	mutex_init(&ioc->internal_cmds.mutex);
+> @@ -2051,7 +2050,6 @@ mpt_detach(struct pci_dev *pdev)
+> 
+>  	mpt_adapter_dispose(ioc);
+> 
+> -	pci_set_drvdata(pdev, NULL);
+>  }
+> 
+> 
+> /**********************************************************************
+> ****
+> --
+> 1.6.6.1
 
