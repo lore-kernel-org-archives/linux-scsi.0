@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 00/08] mptfusion : Description patch
-Date: Thu, 17 Jun 2010 14:35:00 +0530
-Message-ID: <20100617090452.GA29165@lsi.com>
+Subject: [PATCH 01/08] mptfusion: Set fw_events_off to 1 at driver load time.
+Date: Thu, 17 Jun 2010 14:35:46 +0530
+Message-ID: <20100617090538.GB29165@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:58631 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932233Ab0FQJkh (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:55725 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756568Ab0FQJlW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 05:40:37 -0400
+	Thu, 17 Jun 2010 05:41:22 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,20 +17,26 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
 
-MPT Fusion driver updates. Please consider it for next rc update.
-I have taken patches against 2.6.35-rc2
+fw_events_off is flag checking for driver to do Event handling or not.
+Normally it should be OFF at the time of initialization. Only enable it at
+the time of INTR enable of device first time. This will always occur only
+after resource allocation.
 
-[PATCH 01/08] mptfusion: Set fw_events_off to 1 at driver load time.
-[PATCH 02/08] mptfusion: Use DID_TRANSPORT_DISRUPTED instead of
-DID_BUS_BUSY.
-[PATCH 03/08] mptfusion: Corrected declaration of device_missing_delay
-[PATCH 04/08] mptfusion: Added sanity to check B_T mapping for device before
-adding to OS
-[PATCH 05/08] mptfusion: schedule_target_reset from all Reset context
-[PATCH 06/08] mptfusion: Added code for occationally SATA hotplug failure.
-[PATCH 07/08] mptfusion: Added missing reset for ioc_reset_in_progress in
-SoftReset
-[PATCH 08/08] mptfusion: Bump version 03.04.16
+ioc->fw_events_off = 1 is set in mpt_attach()
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index a6a5701..49005e1 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1913,6 +1913,9 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ioc->msi_enable = 0;
+ 		break;
+ 	}
++
++	ioc->fw_events_off = 1;
++
+ 	if (ioc->errata_flag_1064)
+ 		pci_disable_io_access(pdev);
+ 
