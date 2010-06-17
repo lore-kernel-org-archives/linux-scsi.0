@@ -1,68 +1,85 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 04/17] mpt2sas: Added expander phy counter support
-Date: Thu, 17 Jun 2010 13:32:54 +0530
-Message-ID: <20100617080246.GE28921@lsi.com>
+Subject: [PATCH 05/17] mpt2sas: Added expander phy control support
+Date: Thu, 17 Jun 2010 13:34:31 +0530
+Message-ID: <20100617080422.GF28921@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:57782 "EHLO
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:58242 "EHLO
 	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757147Ab0FQIia (ORCPT
+	by vger.kernel.org with ESMTP id S1756003Ab0FQIkI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jun 2010 04:38:30 -0400
+	Thu, 17 Jun 2010 04:40:08 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Eric.Moore@lsi.com, James.Bottomley@HansenPartnership.com, Sathya.Prakash@lsi.com
 
-Added support to retrieve the invalid_dword_count,
-running_disparity_error_count, loss_of_dword_sync_count, and
-phy_reset_problem_count for expanders.  This will be exported to
+Added support to send link resets, hard resets, enable/disable phys, and
+changing link rates for for expanders.  This will be exported to
 attributes within the sas transport layer.  A new wrapper function was
-added for sending SMP passthru to retrieve the expander phy error log.
+added for sending SMP passthru to expanders for phy control.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index 778e149..4e337df 100644
+index 4e337df..e768423 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -951,11 +951,229 @@ _transport_find_local_phy(struct MPT2SAS_ADAPTER *ioc, struct sas_phy *phy)
- 	return NULL;
+@@ -940,16 +940,6 @@ rphy_to_ioc(struct sas_rphy *rphy)
+ 	return shost_priv(shost);
  }
  
-+/* report phy error log structure */
-+struct phy_error_log_request{
+-static struct _sas_phy *
+-_transport_find_local_phy(struct MPT2SAS_ADAPTER *ioc, struct sas_phy *phy)
+-{
+-	int i;
+-
+-	for (i = 0; i < ioc->sas_hba.num_phys; i++)
+-		if (ioc->sas_hba.phy[i].phy == phy)
+-			return(&ioc->sas_hba.phy[i]);
+-	return NULL;
+-}
+ 
+ /* report phy error log structure */
+ struct phy_error_log_request{
+@@ -1270,32 +1260,260 @@ _transport_get_bay_identifier(struct sas_rphy *rphy)
+ 	return sas_device->slot;
+ }
+ 
++/* phy control request structure */
++struct phy_control_request{
 +	u8 smp_frame_type; /* 0x40 */
-+	u8 function; /* 0x11 */
++	u8 function; /* 0x91 */
 +	u8 allocated_response_length;
-+	u8 request_length; /* 02 */
-+	u8 reserved_1[5];
++	u8 request_length; /* 0x09 */
++	u16 expander_change_count;
++	u8 reserved_1[3];
 +	u8 phy_identifier;
-+	u8 reserved_2[2];
++	u8 phy_operation;
++	u8 reserved_2[13];
++	u64 attached_device_name;
++	u8 programmed_min_physical_link_rate;
++	u8 programmed_max_physical_link_rate;
++	u8 reserved_3[6];
 +};
 +
-+/* report phy error log reply structure */
-+struct phy_error_log_reply{
++/* phy control reply structure */
++struct phy_control_reply{
 +	u8 smp_frame_type; /* 0x41 */
 +	u8 function; /* 0x11 */
 +	u8 function_result;
 +	u8 response_length;
-+	u16 expander_change_count;
-+	u8 reserved_1[3];
-+	u8 phy_identifier;
-+	u8 reserved_2[2];
-+	u32 invalid_dword;
-+	u32 running_disparity_error;
-+	u32 loss_of_dword_sync;
-+	u32 phy_reset_problem;
 +};
 +
- /**
-- * _transport_get_linkerrors -
-+ * _transport_get_expander_phy_error_log - return expander counters
++#define SMP_PHY_CONTROL_LINK_RESET	(0x01)
++#define SMP_PHY_CONTROL_HARD_RESET	(0x02)
++#define SMP_PHY_CONTROL_DISABLE		(0x03)
++
++/**
++ * _transport_expander_phy_control - expander phy control
 + * @ioc: per adapter object
 + * @phy: The sas phy object
 + *
@@ -70,13 +87,13 @@ index 778e149..4e337df 100644
 + *
 + */
 +static int
-+_transport_get_expander_phy_error_log(struct MPT2SAS_ADAPTER *ioc,
-+    struct sas_phy *phy)
++_transport_expander_phy_control(struct MPT2SAS_ADAPTER *ioc,
++    struct sas_phy *phy, u8 phy_operation)
 +{
 +	Mpi2SmpPassthroughRequest_t *mpi_request;
 +	Mpi2SmpPassthroughReply_t *mpi_reply;
-+	struct phy_error_log_request *phy_error_log_request;
-+	struct phy_error_log_reply *phy_error_log_reply;
++	struct phy_control_request *phy_control_request;
++	struct phy_control_reply *phy_control_reply;
 +	int rc;
 +	u16 smid;
 +	u32 ioc_state;
@@ -137,8 +154,8 @@ index 778e149..4e337df 100644
 +	mpi_request = mpt2sas_base_get_msg_frame(ioc, smid);
 +	ioc->transport_cmds.smid = smid;
 +
-+	sz = sizeof(struct phy_error_log_request) +
-+	    sizeof(struct phy_error_log_reply);
++	sz = sizeof(struct phy_control_request) +
++	    sizeof(struct phy_control_reply);
 +	data_out = pci_alloc_consistent(ioc->pdev, sz, &data_out_dma);
 +	if (!data_out) {
 +		printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__,
@@ -150,12 +167,17 @@ index 778e149..4e337df 100644
 +
 +	rc = -EINVAL;
 +	memset(data_out, 0, sz);
-+	phy_error_log_request = data_out;
-+	phy_error_log_request->smp_frame_type = 0x40;
-+	phy_error_log_request->function = 0x11;
-+	phy_error_log_request->request_length = 2;
-+	phy_error_log_request->allocated_response_length = 0;
-+	phy_error_log_request->phy_identifier = phy->number;
++	phy_control_request = data_out;
++	phy_control_request->smp_frame_type = 0x40;
++	phy_control_request->function = 0x91;
++	phy_control_request->request_length = 9;
++	phy_control_request->allocated_response_length = 0;
++	phy_control_request->phy_identifier = phy->number;
++	phy_control_request->phy_operation = phy_operation;
++	phy_control_request->programmed_min_physical_link_rate =
++	    phy->minimum_linkrate << 4;
++	phy_control_request->programmed_max_physical_link_rate =
++	    phy->maximum_linkrate << 4;
 +
 +	memset(mpi_request, 0, sizeof(Mpi2SmpPassthroughRequest_t));
 +	mpi_request->Function = MPI2_FUNCTION_SMP_PASSTHROUGH;
@@ -173,7 +195,7 @@ index 778e149..4e337df 100644
 +	    MPI2_SGE_FLAGS_END_OF_BUFFER | MPI2_SGE_FLAGS_HOST_TO_IOC);
 +	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
 +	ioc->base_add_sg_single(psge, sgl_flags |
-+	    sizeof(struct phy_error_log_request), data_out_dma);
++	    sizeof(struct phy_control_request), data_out_dma);
 +
 +	/* incr sgel */
 +	psge += ioc->sge_size;
@@ -184,12 +206,13 @@ index 778e149..4e337df 100644
 +	    MPI2_SGE_FLAGS_END_OF_LIST);
 +	sgl_flags = sgl_flags << MPI2_SGE_FLAGS_SHIFT;
 +	ioc->base_add_sg_single(psge, sgl_flags |
-+	    sizeof(struct phy_error_log_reply), data_out_dma +
-+	    sizeof(struct phy_error_log_request));
++	    sizeof(struct phy_control_reply), data_out_dma +
++	    sizeof(struct phy_control_request));
 +
-+	dtransportprintk(ioc, printk(MPT2SAS_INFO_FMT "phy_error_log - "
-+	    "send to sas_addr(0x%016llx), phy(%d)\n", ioc->name,
-+	    (unsigned long long)phy->identify.sas_address, phy->number));
++	dtransportprintk(ioc, printk(MPT2SAS_INFO_FMT "phy_control - "
++	    "send to sas_addr(0x%016llx), phy(%d), opcode(%d)\n", ioc->name,
++	    (unsigned long long)phy->identify.sas_address, phy->number,
++	    phy_operation));
 +	mpt2sas_base_put_smid_default(ioc, smid);
 +	init_completion(&ioc->transport_cmds.done);
 +	timeleft = wait_for_completion_timeout(&ioc->transport_cmds.done,
@@ -205,7 +228,7 @@ index 778e149..4e337df 100644
 +		goto issue_host_reset;
 +	}
 +
-+	dtransportprintk(ioc, printk(MPT2SAS_INFO_FMT "phy_error_log - "
++	dtransportprintk(ioc, printk(MPT2SAS_INFO_FMT "phy_control - "
 +	    "complete\n", ioc->name));
 +
 +	if (ioc->transport_cmds.status & MPT2_CMD_REPLY_VALID) {
@@ -213,32 +236,24 @@ index 778e149..4e337df 100644
 +		mpi_reply = ioc->transport_cmds.reply;
 +
 +		dtransportprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "phy_error_log - reply data transfer size(%d)\n",
++		    "phy_control - reply data transfer size(%d)\n",
 +		    ioc->name, le16_to_cpu(mpi_reply->ResponseDataLength)));
 +
 +		if (le16_to_cpu(mpi_reply->ResponseDataLength) !=
-+		    sizeof(struct phy_error_log_reply))
++		    sizeof(struct phy_control_reply))
 +			goto out;
 +
-+		phy_error_log_reply = data_out +
-+		    sizeof(struct phy_error_log_request);
++		phy_control_reply = data_out +
++		    sizeof(struct phy_control_request);
 +
 +		dtransportprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "phy_error_log - function_result(%d)\n",
-+		    ioc->name, phy_error_log_reply->function_result));
++		    "phy_control - function_result(%d)\n",
++		    ioc->name, phy_control_reply->function_result));
 +
-+		phy->invalid_dword_count =
-+		    be32_to_cpu(phy_error_log_reply->invalid_dword);
-+		phy->running_disparity_error_count =
-+		    be32_to_cpu(phy_error_log_reply->running_disparity_error);
-+		phy->loss_of_dword_sync_count =
-+		    be32_to_cpu(phy_error_log_reply->loss_of_dword_sync);
-+		phy->phy_reset_problem_count =
-+		    be32_to_cpu(phy_error_log_reply->phy_reset_problem);
 +		rc = 0;
 +	} else
 +		dtransportprintk(ioc, printk(MPT2SAS_INFO_FMT
-+		    "phy_error_log - no reply\n", ioc->name));
++		    "phy_control - no reply\n", ioc->name));
 +
 + issue_host_reset:
 +	if (issue_reset)
@@ -253,22 +268,71 @@ index 778e149..4e337df 100644
 +	return rc;
 +}
 +
-+/**
-+ * _transport_get_linkerrors - return phy counters for both hba and expanders
+ /**
+  * _transport_phy_reset -
   * @phy: The sas phy object
+  * @hard_reset:
   *
 - * Only support sas_host direct attached phys.
   * Returns 0 for success, non-zero for failure.
-  *
   */
-@@ -963,17 +1181,24 @@ static int
- _transport_get_linkerrors(struct sas_phy *phy)
+ static int
+ _transport_phy_reset(struct sas_phy *phy, int hard_reset)
  {
  	struct MPT2SAS_ADAPTER *ioc = phy_to_ioc(phy);
 -	struct _sas_phy *mpt2sas_phy;
+ 	Mpi2SasIoUnitControlReply_t mpi_reply;
+ 	Mpi2SasIoUnitControlRequest_t mpi_request;
 +	unsigned long flags;
+ 
+-	mpt2sas_phy = _transport_find_local_phy(ioc, phy);
+-
+-	if (!mpt2sas_phy) /* this phy not on sas_host */
++	spin_lock_irqsave(&ioc->sas_node_lock, flags);
++	if (_transport_sas_node_find_by_sas_address(ioc,
++	    phy->identify.sas_address) == NULL) {
++		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		return -EINVAL;
++	}
++	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 
++	/* handle expander phys */
++	if (phy->identify.sas_address != ioc->sas_hba.sas_address)
++		return _transport_expander_phy_control(ioc, phy,
++		    (hard_reset == 1) ? SMP_PHY_CONTROL_HARD_RESET :
++		    SMP_PHY_CONTROL_LINK_RESET);
++
++	/* handle hba phys */
+ 	memset(&mpi_request, 0, sizeof(Mpi2SasIoUnitControlReply_t));
+ 	mpi_request.Function = MPI2_FUNCTION_SAS_IO_UNIT_CONTROL;
+ 	mpi_request.Operation = hard_reset ?
+ 	    MPI2_SAS_OP_PHY_HARD_RESET : MPI2_SAS_OP_PHY_LINK_RESET;
+-	mpi_request.PhyNum = mpt2sas_phy->phy_id;
++	mpi_request.PhyNum = phy->number;
+ 
+ 	if ((mpt2sas_base_sas_iounit_control(ioc, &mpi_reply, &mpi_request))) {
+ 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+@@ -1306,8 +1524,7 @@ _transport_phy_reset(struct sas_phy *phy, int hard_reset)
+ 	if (mpi_reply.IOCStatus || mpi_reply.IOCLogInfo)
+ 		printk(MPT2SAS_INFO_FMT "phy(%d), ioc_status"
+ 		    "(0x%04x), loginfo(0x%08x)\n", ioc->name,
+-		    mpt2sas_phy->phy_id,
+-		    le16_to_cpu(mpi_reply.IOCStatus),
++		    phy->number, le16_to_cpu(mpi_reply.IOCStatus),
+ 		    le32_to_cpu(mpi_reply.IOCLogInfo));
+ 
+ 	return 0;
+@@ -1325,18 +1542,29 @@ static int
+ _transport_phy_enable(struct sas_phy *phy, int enable)
+ {
+ 	struct MPT2SAS_ADAPTER *ioc = phy_to_ioc(phy);
+-	struct _sas_phy *mpt2sas_phy;
+ 	Mpi2SasIOUnitPage1_t *sas_iounit_pg1 = NULL;
  	Mpi2ConfigReply_t mpi_reply;
- 	Mpi2SasPhyPage1_t phy_pg1;
+ 	u16 ioc_status;
+ 	u16 sz;
+ 	int rc = 0;
++	unsigned long flags;
  
 -	mpt2sas_phy = _transport_find_local_phy(ioc, phy);
 -
@@ -281,23 +345,97 @@ index 778e149..4e337df 100644
 +	}
 +	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
 +
++	/* handle expander phys */
 +	if (phy->identify.sas_address != ioc->sas_hba.sas_address)
-+		return _transport_get_expander_phy_error_log(ioc, phy);
++		return _transport_expander_phy_control(ioc, phy,
++		    (enable == 1) ? SMP_PHY_CONTROL_LINK_RESET :
++		    SMP_PHY_CONTROL_DISABLE);
  
-+	/* get hba phy error logs */
- 	if ((mpt2sas_config_get_phy_pg1(ioc, &mpi_reply, &phy_pg1,
--		    mpt2sas_phy->phy_id))) {
-+		    phy->number))) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
- 		return -ENXIO;
-@@ -982,8 +1207,7 @@ _transport_get_linkerrors(struct sas_phy *phy)
- 	if (mpi_reply.IOCStatus || mpi_reply.IOCLogInfo)
- 		printk(MPT2SAS_INFO_FMT "phy(%d), ioc_status"
- 		    "(0x%04x), loginfo(0x%08x)\n", ioc->name,
--		    mpt2sas_phy->phy_id,
--		    le16_to_cpu(mpi_reply.IOCStatus),
-+		    phy->number, le16_to_cpu(mpi_reply.IOCStatus),
- 		    le32_to_cpu(mpi_reply.IOCLogInfo));
++	/* handle hba phys */
++
+ 	/* sas_iounit page 1 */
+ 	sz = offsetof(Mpi2SasIOUnitPage1_t, PhyData) + (ioc->sas_hba.num_phys *
+ 	    sizeof(Mpi2SasIOUnit1PhyData_t));
+@@ -1364,14 +1592,18 @@ _transport_phy_enable(struct sas_phy *phy, int enable)
+ 	}
  
- 	phy->invalid_dword_count = le32_to_cpu(phy_pg1.InvalidDwordCount);
+ 	if (enable)
+-		sas_iounit_pg1->PhyData[mpt2sas_phy->phy_id].PhyFlags
++		sas_iounit_pg1->PhyData[phy->number].PhyFlags
+ 		    &= ~MPI2_SASIOUNIT1_PHYFLAGS_PHY_DISABLE;
+ 	else
+-		sas_iounit_pg1->PhyData[mpt2sas_phy->phy_id].PhyFlags
++		sas_iounit_pg1->PhyData[phy->number].PhyFlags
+ 		    |= MPI2_SASIOUNIT1_PHYFLAGS_PHY_DISABLE;
+ 
+ 	mpt2sas_config_set_sas_iounit_pg1(ioc, &mpi_reply, sas_iounit_pg1, sz);
+ 
++	/* link reset */
++	if (enable)
++		_transport_phy_reset(phy, 0);
++
+  out:
+ 	kfree(sas_iounit_pg1);
+ 	return rc;
+@@ -1389,7 +1621,6 @@ static int
+ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
+ {
+ 	struct MPT2SAS_ADAPTER *ioc = phy_to_ioc(phy);
+-	struct _sas_phy *mpt2sas_phy;
+ 	Mpi2SasIOUnitPage1_t *sas_iounit_pg1 = NULL;
+ 	Mpi2SasPhyPage0_t phy_pg0;
+ 	Mpi2ConfigReply_t mpi_reply;
+@@ -1397,11 +1628,15 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
+ 	u16 sz;
+ 	int i;
+ 	int rc = 0;
++	unsigned long flags;
+ 
+-	mpt2sas_phy = _transport_find_local_phy(ioc, phy);
+-
+-	if (!mpt2sas_phy) /* this phy not on sas_host */
++	spin_lock_irqsave(&ioc->sas_node_lock, flags);
++	if (_transport_sas_node_find_by_sas_address(ioc,
++	    phy->identify.sas_address) == NULL) {
++		spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 		return -EINVAL;
++	}
++	spin_unlock_irqrestore(&ioc->sas_node_lock, flags);
+ 
+ 	if (!rates->minimum_linkrate)
+ 		rates->minimum_linkrate = phy->minimum_linkrate;
+@@ -1413,6 +1648,16 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
+ 	else if (rates->maximum_linkrate > phy->maximum_linkrate_hw)
+ 		rates->maximum_linkrate = phy->maximum_linkrate_hw;
+ 
++	/* handle expander phys */
++	if (phy->identify.sas_address != ioc->sas_hba.sas_address) {
++		phy->minimum_linkrate = rates->minimum_linkrate;
++		phy->maximum_linkrate = rates->maximum_linkrate;
++		return _transport_expander_phy_control(ioc, phy,
++		    SMP_PHY_CONTROL_LINK_RESET);
++	}
++
++	/* handle hba phys */
++
+ 	/* sas_iounit page 1 */
+ 	sz = offsetof(Mpi2SasIOUnitPage1_t, PhyData) + (ioc->sas_hba.num_phys *
+ 	    sizeof(Mpi2SasIOUnit1PhyData_t));
+@@ -1440,7 +1685,7 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
+ 	}
+ 
+ 	for (i = 0; i < ioc->sas_hba.num_phys; i++) {
+-		if (mpt2sas_phy->phy_id != i) {
++		if (phy->number != i) {
+ 			sas_iounit_pg1->PhyData[i].MaxMinLinkRate =
+ 			    (ioc->sas_hba.phy[i].phy->minimum_linkrate +
+ 			    (ioc->sas_hba.phy[i].phy->maximum_linkrate << 4));
+@@ -1464,7 +1709,7 @@ _transport_phy_speed(struct sas_phy *phy, struct sas_phy_linkrates *rates)
+ 
+ 	/* read phy page 0, then update the rates in the sas transport phy */
+ 	if (!mpt2sas_config_get_phy_pg0(ioc, &mpi_reply, &phy_pg0,
+-	    mpt2sas_phy->phy_id)) {
++	    phy->number)) {
+ 		phy->minimum_linkrate = _transport_convert_phy_link_rate(
+ 		    phy_pg0.ProgrammedLinkRate & MPI2_SAS_PRATE_MIN_RATE_MASK);
+ 		phy->maximum_linkrate = _transport_convert_phy_link_rate(
