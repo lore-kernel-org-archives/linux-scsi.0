@@ -1,19 +1,35 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
-	Enable Online Controller Reset Bit in register related functions
-Date: Fri, 18 Jun 2010 14:37:18 -0700
-Message-ID: <AANLkTilNX7_IDjw5lFYpkzlGGPHeRsswWZCXslw5GsjQ@mail.gmail.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
+ 	Enable Online Controller Reset Bit in register related functions
+Date: Fri, 18 Jun 2010 15:56:24 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3D09274EA@cosmail02.lsi.com>
 References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
 	<AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
 	<4B6A08C587958942AA3002690DD4F8C3D09274C4@cosmail02.lsi.com>
+ <AANLkTilNX7_IDjw5lFYpkzlGGPHeRsswWZCXslw5GsjQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D09274C4@cosmail02.lsi.com>
+In-Reply-To: <AANLkTilNX7_IDjw5lFYpkzlGGPHeRsswWZCXslw5GsjQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
+
+Thanks, Yinghai.  It is possible James didn't push (patches 5-12) yet.
+
+Regards,
+
+Bo Yang
+
+-----Original Message-----
+From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of Yinghai Lu
+Sent: Friday, June 18, 2010 5:37 PM
+To: Yang, Bo
+Cc: James.Bottomley@HansenPartnership.com; James.Bottomley@suse.de; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I: Enable Online Controller Reset Bit in register related functions
 
 On Fri, Jun 18, 2010 at 2:21 PM, Yang, Bo <Bo.Yang@lsi.com> wrote:
 > Yinghai,
