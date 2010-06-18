@@ -1,42 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Lsf10-pc] Suggested topic for August LSF summit event
+From: <Mark_Ruder@Dell.com>
+Subject: RE: [Lsf10-pc] Suggested topic for August LSF summit event
  (SCSI/FS/MM)
-Date: Fri, 18 Jun 2010 10:11:41 -0500
-Message-ID: <1276873901.2850.40.camel@mulgrave.site>
+Date: Fri, 18 Jun 2010 10:21:13 -0500
+Message-ID: <F8ACFB06B9FB33429F1F0A8D62A89BAA085F53A2AF@AUSX7MCPS303.AMER.DELL.COM>
 References: <F8ACFB06B9FB33429F1F0A8D62A89BAA085F53A240@AUSX7MCPS303.AMER.DELL.COM>
+ <1276873901.2850.40.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <F8ACFB06B9FB33429F1F0A8D62A89BAA085F53A240@AUSX7MCPS303.AMER.DELL.COM>
+In-Reply-To: <1276873901.2850.40.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: Mark_Ruder@Dell.com
+To: James.Bottomley@HansenPartnership.com
 Cc: lsf10-pc@lists.linuxfoundation.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2010-06-18 at 09:55 -0500, Mark_Ruder@Dell.com wrote:
-> I was asked to share suggested topics that we would be interested in
-> being discussed in the upcoming LSF Summit even in early August.
-> Rather that re-typing all of them into this email, I=E2=80=99ve attac=
-hed a
-> slide deck developed by Matt Domsch in Dell=E2=80=99s CTO office as a=
- starting
-> point. It is a bit dated, but we feel that topics are still relevant
-> to us.
-
-We got this on the PC lists, but all of the other mailing lists will
-have discarded it sight unseen (enforcing plain text only and nothing
-other than text/plain attachments is a standard list spam mitigation
-technique).  Could you summarise as text (you can just go to the outlin=
-e
-view and paste everything into a text window).
-
-James
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+VGhhbmtzIEphbWVzLiBXaWxsIGRvLg0KDQpNYXJrDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0t
+LS0tDQpGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21haWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2Vu
+UGFydG5lcnNoaXAuY29tXSANClNlbnQ6IEZyaWRheSwgSnVuZSAxOCwgMjAxMCAxMDoxMiBBTQ0K
+VG86IFJ1ZGVyLCBNYXJrDQpDYzogbHNmMTAtcGNAbGlzdHMubGludXhmb3VuZGF0aW9uLm9yZzsg
+bGludXgtZnNkZXZlbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LW1tQGt2YWNrLm9yZzsgbGludXgt
+c2NzaUB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbTHNmMTAtcGNdIFN1Z2dlc3RlZCB0
+b3BpYyBmb3IgQXVndXN0IExTRiBzdW1taXQgZXZlbnQgKFNDU0kvRlMvTU0pDQoNCk9uIEZyaSwg
+MjAxMC0wNi0xOCBhdCAwOTo1NSAtMDUwMCwgTWFya19SdWRlckBEZWxsLmNvbSB3cm90ZToNCj4g
+SSB3YXMgYXNrZWQgdG8gc2hhcmUgc3VnZ2VzdGVkIHRvcGljcyB0aGF0IHdlIHdvdWxkIGJlIGlu
+dGVyZXN0ZWQgaW4NCj4gYmVpbmcgZGlzY3Vzc2VkIGluIHRoZSB1cGNvbWluZyBMU0YgU3VtbWl0
+IGV2ZW4gaW4gZWFybHkgQXVndXN0Lg0KPiBSYXRoZXIgdGhhdCByZS10eXBpbmcgYWxsIG9mIHRo
+ZW0gaW50byB0aGlzIGVtYWlsLCBJ4oCZdmUgYXR0YWNoZWQgYQ0KPiBzbGlkZSBkZWNrIGRldmVs
+b3BlZCBieSBNYXR0IERvbXNjaCBpbiBEZWxs4oCZcyBDVE8gb2ZmaWNlIGFzIGEgc3RhcnRpbmcN
+Cj4gcG9pbnQuIEl0IGlzIGEgYml0IGRhdGVkLCBidXQgd2UgZmVlbCB0aGF0IHRvcGljcyBhcmUg
+c3RpbGwgcmVsZXZhbnQNCj4gdG8gdXMuDQoNCldlIGdvdCB0aGlzIG9uIHRoZSBQQyBsaXN0cywg
+YnV0IGFsbCBvZiB0aGUgb3RoZXIgbWFpbGluZyBsaXN0cyB3aWxsDQpoYXZlIGRpc2NhcmRlZCBp
+dCBzaWdodCB1bnNlZW4gKGVuZm9yY2luZyBwbGFpbiB0ZXh0IG9ubHkgYW5kIG5vdGhpbmcNCm90
+aGVyIHRoYW4gdGV4dC9wbGFpbiBhdHRhY2htZW50cyBpcyBhIHN0YW5kYXJkIGxpc3Qgc3BhbSBt
+aXRpZ2F0aW9uDQp0ZWNobmlxdWUpLiAgQ291bGQgeW91IHN1bW1hcmlzZSBhcyB0ZXh0ICh5b3Ug
+Y2FuIGp1c3QgZ28gdG8gdGhlIG91dGxpbmUNCnZpZXcgYW5kIHBhc3RlIGV2ZXJ5dGhpbmcgaW50
+byBhIHRleHQgd2luZG93KS4NCg0KSmFtZXMNCg0KDQoNCg==
