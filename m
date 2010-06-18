@@ -1,50 +1,82 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 5/5 v2]scsi:hosts.c Fix warning: variable 'rval' set
-	but not used
-Date: Fri, 18 Jun 2010 14:47:30 -0600
-Message-ID: <20100618204730.GL9298@parisc-linux.org>
-References: <1276892167-24161-1-git-send-email-justinmattock@gmail.com>
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
+ but not used
+Date: Fri, 18 Jun 2010 13:46:22 -0700
+Message-ID: <20100618134622.7db9f913@virtuousgeek.org>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>
+	<20100618102330.29eccb5b@virtuousgeek.org>
+	<4C1BBF7D.8090904@kernel.org>
+	<20100618124956.40c869a0@virtuousgeek.org>
+	<4C1BD024.1030707@gmail.com>
+	<20100618130538.0fc562ee@virtuousgeek.org>
+	<4C1BD678.1020405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:38752 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063Ab0FRUrb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2010 16:47:31 -0400
-Content-Disposition: inline
-In-Reply-To: <1276892167-24161-1-git-send-email-justinmattock@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <4C1BD678.1020405@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+Cc: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 18, 2010 at 01:16:07PM -0700, Justin P. Mattock wrote:
-> @@ -420,7 +419,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->  	shost->ehandler = kthread_run(scsi_error_handler, shost,
->  			"scsi_eh_%d", shost->host_no);
->  	if (IS_ERR(shost->ehandler)) {
-> -		rval = PTR_ERR(shost->ehandler);
-> +		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error = %ld\n", 
-> +			shost->host_no, PTR_ERR(shost->ehandler));
+On Fri, 18 Jun 2010 13:26:32 -0700
+"Justin P. Mattock" <justinmattock@gmail.com> wrote:
 
-Surely this should simply be:
-
-		shost_printk(KERN_WARNING, shost, "error handler thread failed"
-				"to spawn (%ld)\n", PTR_ERR(shost->ehandler));
-
->  		goto fail_kfree;
->  	}
->  
-> -- 
-> 1.7.1.rc1.21.gf3bd6
+> On 06/18/2010 01:05 PM, Jesse Barnes wrote:
+> > On Fri, 18 Jun 2010 12:59:32 -0700
+> > "Justin P. Mattock"<justinmattock@gmail.com>  wrote:
+> >> just added this in(as a test), and the retval warning still shows up.
+> >> with the last post I just added a printk was that legit, and if so what
+> >> else might be added to it to make it complete and proper?
+> >
+> > What's the full warning?  Seems like printing the value should have
+> > been enough to shut up gcc...
+> >
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> this is the warning messg after applying yinghai's patch:
+> 
+>    CC      drivers/pci/setup-bus.o
+> drivers/pci/setup-bus.c: In function 
+> 'pci_assign_unassigned_bridge_resources':
+> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+
+Right because Yinghai's patch just sets retval but doesn't actually use
+it anywhere.
+
+> if I add a printk then gcc is content.. patch below, but not the best at 
+> creating printk's(the whole % thing messes me up) but here goes:
+> 
+>  From 48e15b87072c6b4286d943c55bfe2ae26d358795 Mon Sep 17 00:00:00 2001
+> From: Justin P. Mattock <justinmattock@gmail.com>
+> Date: Fri, 18 Jun 2010 13:23:27 -0700
+> Subject: [PATCH 4/4] bus.c_add_print
+>   Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>   drivers/pci/setup-bus.c |    1 +
+>   1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 66cb8f4..806b766 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -919,6 +919,7 @@ again:
+> 
+>   enable_all:
+>   	retval = pci_reenable_device(bridge);
+> +	printk(KERN_DEBUG "PCI%d: re-enabling device\n", retval);
+>   	pci_set_master(bridge);
+>   	pci_enable_bridges(parent);
+>   }
+
+Again, this doesn't have the if (retval) condition around the printk; I
+don't want to see this message everytime regardless.  Also the message
+is misleading, it should be something like:
+  dev_err(&bridge->dev, "failed to re-enable device: %d\n", retval)
+instead.  PCI%d makes it look like we're talking about a specific bus
+or something and not an error code.
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Jesse Barnes, Intel Open Source Technology Center
