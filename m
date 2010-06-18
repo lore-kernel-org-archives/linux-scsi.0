@@ -1,53 +1,63 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [PATCH 5/5 v2]scsi:hosts.c Fix warning: variable 'rval' set	but
- not used
-Date: Fri, 18 Jun 2010 14:24:54 -0700
-Message-ID: <4C1BE426.30606@gmail.com>
-References: <1276892167-24161-1-git-send-email-justinmattock@gmail.com> <20100618204730.GL9298@parisc-linux.org>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
+	Enable Online Controller Reset Bit in register related functions
+Date: Fri, 18 Jun 2010 14:37:18 -0700
+Message-ID: <AANLkTilNX7_IDjw5lFYpkzlGGPHeRsswWZCXslw5GsjQ@mail.gmail.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+	<AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
+	<4B6A08C587958942AA3002690DD4F8C3D09274C4@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:39711 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753037Ab0FRVYy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2010 17:24:54 -0400
-Received: by pxi12 with SMTP id 12so598756pxi.19
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Jun 2010 14:24:54 -0700 (PDT)
-In-Reply-To: <20100618204730.GL9298@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D09274C4@cosmail02.lsi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On 06/18/2010 01:47 PM, Matthew Wilcox wrote:
-> On Fri, Jun 18, 2010 at 01:16:07PM -0700, Justin P. Mattock wrote:
->> @@ -420,7 +419,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->>   	shost->ehandler = kthread_run(scsi_error_handler, shost,
->>   			"scsi_eh_%d", shost->host_no);
->>   	if (IS_ERR(shost->ehandler)) {
->> -		rval = PTR_ERR(shost->ehandler);
->> +		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error = %ld\n",
->> +			shost->host_no, PTR_ERR(shost->ehandler));
+On Fri, Jun 18, 2010 at 2:21 PM, Yang, Bo <Bo.Yang@lsi.com> wrote:
+> Yinghai,
 >
-> Surely this should simply be:
->
-> 		shost_printk(KERN_WARNING, shost, "error handler thread failed"
-> 				"to spawn (%ld)\n", PTR_ERR(shost->ehandler));
->
->>   		goto fail_kfree;
->>   	}
->>
->> --
->> 1.7.1.rc1.21.gf3bd6
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> You need to apply patches 1/12 to 8/12 for this online controller reset (OCR) support.
+
+current scsi-next only have
+
+commit 6faad24ad989798475e9ab4a2a809008fff6e872
+Author: Yang, Bo <Bo.Yang@lsi.com>
+Date:   Wed Jun 9 20:34:43 2010 -0600
+
+    [SCSI] megaraid_sas: Enable Online Controller Reset Bit in
+register related functions
 
 
-the above change goes through without a warning message.. should I resend?
+commit 4f3a268eca4e7073d315e7f9b0a4dc94a38da560
+Author: Yang, Bo <Bo.Yang@lsi.com>
+Date:   Wed Jun 9 20:51:48 2010 -0600
 
-Justin P. Mattock
+    [SCSI] megaraid_sas: Add the Chip reset functions to the driver
+
+commit baf13c9440869a55d2493190dbc68c2bb165dad5
+Author: Yang, Bo <Bo.Yang@lsi.com>
+Date:   Wed Jun 9 20:59:43 2010 -0600
+
+    [SCSI] megaraid_sas: add the reset function for Gen2 related chip
+
+commit 449ee85225f9f41f2475f16b41d035000c8ee395
+Author: Yang, Bo <Bo.Yang@lsi.com>
+Date:   Wed Jun 9 21:25:17 2010 -0600
+
+    [SCSI] megaraid_sas: return RESET in timeout routine
+
+
+
+so looks like James didn't put
+[PATCH 8/12] scsi: megaraid_sas - Online Controller Reset (OCR):
+Driver re-issue the pending cmds to FW
+
+in the tree yet.
+
+or your patchset will break the bisecting?
+
+Thanks
+
+Yinghai
