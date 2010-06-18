@@ -1,49 +1,42 @@
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: HighPoint Technologies, Inc. Device [1103:2680]
-Date: Fri, 18 Jun 2010 15:18:47 +0200
-Message-ID: <20100618151847.68abad65@harpe.intellique.com>
-References: <4C1B612C.8070503@powercraft.nl>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Lsf10-pc] Suggested topic for August LSF summit event
+ (SCSI/FS/MM)
+Date: Fri, 18 Jun 2010 10:11:41 -0500
+Message-ID: <1276873901.2850.40.camel@mulgrave.site>
+References: <F8ACFB06B9FB33429F1F0A8D62A89BAA085F53A240@AUSX7MCPS303.AMER.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:34930 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758377Ab0FRNSt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2010 09:18:49 -0400
-In-Reply-To: <4C1B612C.8070503@powercraft.nl>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <F8ACFB06B9FB33429F1F0A8D62A89BAA085F53A240@AUSX7MCPS303.AMER.DELL.COM>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Mark_Ruder@Dell.com
+Cc: lsf10-pc@lists.linuxfoundation.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jelle de Jong <jelledejong@powercraft.nl>
-Cc: linux-scsi@vger.kernel.org, linux@highpoint-tech.com
 
-Le Fri, 18 Jun 2010 14:06:04 +0200
-Jelle de Jong <jelledejong@powercraft.nl> =E9crivait:
+On Fri, 2010-06-18 at 09:55 -0500, Mark_Ruder@Dell.com wrote:
+> I was asked to share suggested topics that we would be interested in
+> being discussed in the upcoming LSF Summit even in early August.
+> Rather that re-typing all of them into this email, I=E2=80=99ve attac=
+hed a
+> slide deck developed by Matt Domsch in Dell=E2=80=99s CTO office as a=
+ starting
+> point. It is a bit dated, but we feel that topics are still relevant
+> to us.
 
-> It seems there is no kernel module for the 2600 series or the 2700
-> series. The HighPoint website [1][2] keeps claiming there are open
-> soure drivers available. I know open source is not the same as free
-> software, but it is very very misleading, because it does not work.
+We got this on the PC lists, but all of the other mailing lists will
+have discarded it sight unseen (enforcing plain text only and nothing
+other than text/plain attachments is a standard list spam mitigation
+technique).  Could you summarise as text (you can just go to the outlin=
+e
+view and paste everything into a text window).
 
-Usually Highpoint labels "open source" a code source wrapper around a
-proprietary piece of driver. HighPoint are really horrible from a free
-software POV and really stink under linux; and as they aren't true
-hardware RAID but use a substantial part of the driver to do their job
-there isn't much hope that it will ever get any better. My advice :
-stay away from these, use any of 3Ware, Areca or Adaptec SAS/SATA
-controllers which all work fine and without hassle under Linux.
+James
 
---=20
------------------------------------------------------------------------=
--
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
------------------------------------------------------------------------=
--
+
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
+" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
