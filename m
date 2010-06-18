@@ -1,102 +1,109 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 12/12] scsi: megaraid_sas - Version and documentation update
-Date: Fri, 18 Jun 2010 15:13:06 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3D09274B7@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
- <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3CDB80C39@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3D0804562@cosmail02.lsi.com>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
+	Enable Online Controller Reset Bit in register related functions
+Date: Fri, 18 Jun 2010 14:18:57 -0700
+Message-ID: <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:34725 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752427Ab0FRVNP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jun 2010 17:13:15 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D0804562@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-RESUBMIT:
+On Wed, Jun 9, 2010 at 7:34 PM, Yang, Bo <Bo.Yang@lsi.com> wrote:
+> Enable the Online Controller reset bit in the register related functi=
+ons. =A0This is first part of the Online Controller Reset.
+> The driver supports XScle and Gen2 chips. =A0Driver need to read the =
+=46W state register to see if there is FW state change
+> Happen.
+>
+> Signed-off-by Bo Yang<bo.yang@lsi.com>
 
-Update the version and documentation.
+This patch cause kernel hang just after
+[  136.996297] megasas: FW now in Ready state
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+# lspci -vvxxx -s 01:00.0
+01:00.0 RAID bus controller: LSI Logic / Symbios Logic LSI MegaSAS 9260=
+ (rev 03)
+	Subsystem: LSI Logic / Symbios Logic MegaRAID SAS 9262-8i
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+
+Stepping- SERR+ FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 256 bytes
+	Interrupt: pin A routed to IRQ 28
+	Region 0: I/O ports at 1c00 [size=3D256]
+	Region 1: Memory at aaefc000 (64-bit, non-prefetchable) [size=3D16K]
+	Region 3: Memory at aae80000 (64-bit, non-prefetchable) [size=3D256K]
+	Expansion ROM at aae40000 [disabled] [size=3D256K]
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=3D0mA PME(D0-,D1-,D2-,D3hot-,D=
+3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=3D0 DScale=3D0 PME-
+	Capabilities: [68] Express (v2) Endpoint, MSI 00
+		DevCap:	MaxPayload 4096 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1u=
+s
+			ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+		DevCtl:	Report errors: Correctable+ Non-Fatal+ Fatal+ Unsupported-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 5GT/s, Width x8, ASPM L0s, Latency L0 <64ns, L=
+1 <1us
+			ClockPM- Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive-
+BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Range BC, TimeoutDis+
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-,
+Selectable De-emphasis: -6dB
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance-
+ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB
+	Capabilities: [d0] Vital Product Data
+pcilib: sysfs_read_vpd: read failed: Connection timed out
+		Not readable
+	Capabilities: [a8] MSI: Enable- Count=3D1/1 Maskable- 64bit+
+		Address: 0000000000000000  Data: 0000
+	Capabilities: [c0] MSI-X: Enable- Count=3D15 Masked-
+		Vector table: BAR=3D1 offset=3D00002000
+		PBA: BAR=3D1 offset=3D00003800
+	Capabilities: [100] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
+MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [138] Power Budgeting <?>
+	Kernel driver in use: megaraid_sas
+00: 00 10 79 00 47 01 10 00 03 00 04 01 40 00 00 00
+10: 01 1c 00 00 04 c0 ef aa 00 00 00 00 04 00 e8 aa
+20: 00 00 00 00 00 00 00 00 00 00 00 00 00 10 62 92
+30: 00 00 e4 aa 50 00 00 00 00 00 00 00 0a 01 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 01 68 03 06 08 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 01 00 00 10 d0 02 00 25 80 00 10
+70: 17 28 00 00 82 04 00 00 40 00 42 10 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 16 00 00 00
+90: 00 00 00 00 00 00 00 00 02 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 05 c0 80 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 11 00 0e 00 01 20 00 00 01 38 00 00 00 00 00 00
+d0: 03 a8 ff 1f 82 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
----
-Documentation/scsi/ChangeLog.megaraid_sas |   42 ++++++++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.h      |    6 ++--
- 2 files changed, 45 insertions(+), 3 deletions(-)
 
-diff -rupN old/Documentation/scsi/ChangeLog.megaraid_sas new/Documentation/scsi/ChangeLog.megaraid_sas
---- old/Documentation/scsi/ChangeLog.megaraid_sas	2010-06-17 07:51:22.000000000 -0400
-+++ new/Documentation/scsi/ChangeLog.megaraid_sas	2010-06-17 07:51:22.000000000 -0400
-@@ -1,3 +1,45 @@
-+1 Release Date    : Thur.  May 03, 2010 09:12:45 PST 2009 -
-+			(emaild-id:megaraidlinux@lsi.com)
-+			Bo Yang
-+
-+2 Current Version : 00.00.04.30-rc1
-+3 Older Version   : 00.00.04.17.1-rc1
-+
-+1.	Add the Online Controller Reset (OCR) to the Driver.
-+	OCR is the new feature for megaraid_sas driver which
-+	will allow the fw to do the chip reset which will not
-+	affact the OS hbhavious.
-+
-+	To add the OCR support, driver need to do: 
-+		a). reset the controller chip -- Xscale and Gen2.
-+		
-+		b). during the reset, driver will store the pending
-+		cmds to pending queue.
-+		
-+		c). Also in driver's timeout routine, driver will
-+		report to OS as reset.
-+		
-+		d). in Driver's ISR routine, if driver get the FW
-+		state as state change and FW in Failure status,
-+		driver will start to do the controller reset.
-+		
-+		e). If driver goes to timeout, but driver is in
-+		operational status, driver will check if fw in failed
-+		status, if yes, driver will do OCR to FW upto three times.
-+		
-+		f). Before driver kill adapter, driver will do last chance of
-+		OCR to see if driver can bring back the FW.      
-+
-+2.	Add the CTIO support to the driver.
-+3.	Add the support update flag to the driver to tell LSI megaraid_sas
-+	application which driver will support the device update.  So application
-+	will not need to do the device update after application add/del the device
-+	from the system.
-+
-+4.	Add the input parameter max_sectors to 1MB support to our GEN2 controller.
-+	customer can use the input paramenter max_sectors to add 1MB support to GEN2
-+	controller.
-+
- 1 Release Date    : Thur.  Oct 29, 2009 09:12:45 PST 2009 -
- 			(emaild-id:megaraidlinux@lsi.com)
- 			Bo Yang
-diff -rupN old/drivers/scsi/megaraid/megaraid_sas.h new/drivers/scsi/megaraid/megaraid_sas.h
---- old/drivers/scsi/megaraid/megaraid_sas.h	2010-06-17 09:10:24.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.h	2010-06-17 09:06:18.000000000 -0400
-@@ -18,9 +18,9 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION			"00.00.04.17.1-rc1"
--#define MEGASAS_RELDATE			"Oct. 29, 2009"
--#define MEGASAS_EXT_VERSION		"Thu. Oct. 29, 11:41:51 PST 2009"
-+#define MEGASAS_VERSION			"00.00.04.31-rc1"
-+#define MEGASAS_RELDATE			"May 3, 2010"
-+#define MEGASAS_EXT_VERSION		"Mon. May 3, 11:41:51 PST 2010"
- 
- /*
-  * Device IDs
+
+YH
