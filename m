@@ -1,79 +1,83 @@
-From: "Nick Cheng" <nick.cheng@areca.com.tw>
-Subject: [PATCH 3/3 ] SCSI: Remove the AER section in kconfig file
-Date: Fri, 18 Jun 2010 15:39:48 +0800
-Message-ID: <6F6F4FA10B6F48AD96B4CC8CAABB4963@areca4e4f859d4>
-Reply-To: <nick.cheng@areca.com.tw>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: Current topics for LSF10/MM Summit 8-9 August in Boston
+Date: Fri, 18 Jun 2010 13:41:14 +0200
+Message-ID: <20100618114113.GA11580@schmichrtp.mainz.de.ibm.com>
+References: <1276721459.2847.399.camel@mulgrave.site>
+ <20100617160048.GA11689@schmichrtp.mainz.de.ibm.com>
+ <1276790850.7398.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0006_01CB0EFC.7EEED580"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-References: 
-In-Reply-To: 
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate7.uk.ibm.com ([194.196.100.167]:49366 "EHLO
+	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758222Ab0FRLlU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2010 07:41:20 -0400
+Content-Disposition: inline
+In-Reply-To: <1276790850.7398.8.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf10-pc@lists.linuxfoundation.org
 
-This is a multi-part message in MIME format.
+On Thu, Jun 17, 2010 at 11:07:30AM -0500, James Bottomley wrote:
+> On Thu, 2010-06-17 at 18:00 +0200, Christof Schmitt wrote:
+> > On Wed, Jun 16, 2010 at 03:50:59PM -0500, James Bottomley wrote:
+> > > Given that we're under two months out, I thought it would be time to
+> > > post a summary of the topics we've collected so far (Nick will post the
+> > > MM summit ones later).  Look this over, and if there's anything missing,
+> > > propose it ... or if you have cross Storage/FS/MM topics, post them too.
+> > > 
+> > > Oh, and since we're not the most organised bunch, if you posted a topic
+> > > and don't see it in the list, please resend ... we probably lost it in
+> > > an email shuffle.
+> > > 
+> > > Current Filesystem Topics:
+> > > 
+> > > Alex Elder	Upstream maintainer for XFS, general discussion on FS/IO
+> > > Aneesh Kumar	Rich-acl patches which work better with NFSv4 acl and CIFS acl
+> > > Anshul Madan	reflink for NFS
+> > > Chuck Lever	NFS/IPV6 and NFS O_DIRECT, Wu's read-ahead work, vitro perf tools
+> > > Eric Sandeen	Advances in testing, TRIM/DISCARD/Alignment, writeback sanity
+> > > James Lentini	reflink for NFS
+> > > Jan Kara	Discuss/drive sanity review of writeback and general ext*/jbd 
+> > > Michael Rubin	Writeback scaling
+> > > Sage Weil	Statlite, generic interface for describing file striping for distributed FS, VFS scalability
+> > > Al Viro	Sorting out d_revalidate and other dcache issues
+> > > Coly Li		directory/large file scalability
+> > > Sorin Faibish	Cache writeback discussion
+> > > 
+> > > Current Storage Topics:
+> > > 
+> > > Eric Seppanen	Next generation SSDs, performance implications on Linux I/O
+> > > Boaz Harrosh	PNFS performance considerations, bio_list based/async raidN for generic use; stable pages for I/O
+> > > FUJITA Tomonori	SCSI target mode, iSCSI, block layer SG (bsg), sg, IOMMU, DMA issues
+> > > Hannes Reinecke	libfc/multipath/error handing
+> > > James Smart	FCOE proposal for rework of the FC sysfs tree, work with Hannes on other transport/SCSI subsystem topics
+> > > Jeff Moyer	IO scheduler
+> > > Joel Becker	SAN management plugin
+> > > Martin Petersen	Updates on DIF/DIX, TRIM/DISCARD/UNMAP, generic support for WRITE_SAME
+> > > 
+> > > Plus some MM summit ones which Nick will summarise.
+> > [...]
+> > 
+> > What about the topic "Stable pages while IO"?
+> > http://www.spinics.net/lists/linux-scsi/msg44074.html
+> > 
+> > Was it lost during the e-mail shuffle or will it be part of the MM topics?
+> 
+> It's actually listed under 'dma issues' ... but there's really been no
+> satisfactory resolution or discussion of how one might be achieved.
+> Most filesystems rely on modifications to in-flight pages for efficiency
+> and copying every fs I/O page would be horrendous both for performance
+> and memory consumption.  Nor has there really been an indication that
+> it's a serious issue.  The two sufferers are DIF and iSCSI checksum.
+> The latter generates the checksum late enough that it can just discard
+> incorrect pages ... the former might need simply to turn off DIF for
+> everything other than DIRECT IO.
 
-------=_NextPart_000_0006_01CB0EFC.7EEED580
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+It is a serious problem when using DIF, so turning off this feature or
+only using XFS and direct i/o does not sound very satisfying. But then
+i also see the points that have been discussed and that there is no
+simple solution.
 
-1. Remove the AER section of Areca driver in kconfig file of scsi folder
-Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
----
-
-------=_NextPart_000_0006_01CB0EFC.7EEED580
-Content-Type: application/octet-stream;
-	name="patch_kconfig"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="patch_kconfig"
-
-diff -Naurp --ignore-blank-lines --ignore-all-space =
---ignore-space-change a/linux/drivers/scsi/Kconfig =
-b/linux/drivers/scsi/Kconfig=0A=
---- a/linux/drivers/scsi/Kconfig	2010-06-18 22:33:19.000000000 +0800=0A=
-+++ b/linux/drivers/scsi/Kconfig	2010-06-18 23:24:54.000000000 +0800=0A=
-@@ -585,32 +585,18 @@ config SCSI_IN2000=0A=
- 	  module will be called in2000.=0A=
- =0A=
- config SCSI_ARCMSR=0A=
--	tristate "ARECA (ARC11xx/12xx/13xx/16xx) SATA/SAS RAID Host Adapter"=0A=
-+	tristate "ARECA (ARC11xx/12xx/16xx/18xx) SATA/SAS RAID Host Adapter"=0A=
- 	depends on PCI && SCSI=0A=
- 	help=0A=
- 	  This driver supports all of ARECA's SATA/SAS RAID controller cards.=0A=
--	  This is an ARECA-maintained driver by Erich Chen.=0A=
--	  If you have any problems, please mail to: <erich@areca.com.tw>.=0A=
-+	  This is an ARECA-maintained driver by Nick Cheng.=0A=
-+	  If you have any problems, please mail to: <support@areca.com.tw>.=0A=
- 	  Areca supports Linux RAID config tools.=0A=
- 	  Please link <http://www.areca.com.tw>=0A=
- =0A=
- 	  To compile this driver as a module, choose M here: the=0A=
- 	  module will be called arcmsr (modprobe arcmsr).=0A=
- =0A=
--config SCSI_ARCMSR_AER=0A=
--	bool "Enable PCI Error Recovery Capability in Areca Driver(ARCMSR)"=0A=
--	depends on SCSI_ARCMSR && PCIEAER=0A=
--	default n=0A=
--	help=0A=
--	  The advanced error reporting(AER) capability is "NOT" provided by=0A=
--	  ARC1200/1201/1202 SATA RAID controllers cards.=0A=
--	  If your card is one of ARC1200/1201/1202, please use the default =
-setting, n.=0A=
--	  If your card is other models, you could pick it=0A=
--	  on condition that the kernel version is greater than 2.6.19.=0A=
--	  This function is maintained driver by Nick Cheng. If you have any=0A=
--	  problems or suggestion, you are welcome to contact with =
-<nick.cheng@areca.com.tw>.=0A=
--	  To enable this function, choose Y here.=0A=
--=0A=
- source "drivers/scsi/megaraid/Kconfig.megaraid"=0A=
- source "drivers/scsi/mpt2sas/Kconfig"=0A=
- =0A=
-
-------=_NextPart_000_0006_01CB0EFC.7EEED580--
+Christof
