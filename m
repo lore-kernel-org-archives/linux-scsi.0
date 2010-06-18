@@ -1,68 +1,62 @@
-From: <Mark_Ruder@Dell.com>
-Subject: RE: [Lsf10-pc] Suggested topic for August LSF summit event
- (SCSI/FS/MM)
-Date: Fri, 18 Jun 2010 10:29:16 -0500
-Message-ID: <F8ACFB06B9FB33429F1F0A8D62A89BAA085F53A2D5@AUSX7MCPS303.AMER.DELL.COM>
-References: <F8ACFB06B9FB33429F1F0A8D62A89BAA085F53A240@AUSX7MCPS303.AMER.DELL.COM>
- <1276873901.2850.40.camel@mulgrave.site>
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
+ but not used
+Date: Fri, 18 Jun 2010 10:23:30 -0700
+Message-ID: <20100618102330.29eccb5b@virtuousgeek.org>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausxippc101.us.dell.com ([143.166.85.207]:26645 "EHLO
-	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932475Ab0FRP3Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2010 11:29:25 -0400
-In-Reply-To: <1276873901.2850.40.camel@mulgrave.site>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1276666434-11227-5-git-send-email-justinmattock@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: lsf10-pc@lists.linuxfoundation.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-scsi@vger.kernel.org
 
-UmVzZW5kaW5nIGFzIHRleHQuDQoNClNBTiBTdG9yYWdlIEZlYXR1cmVzICAgYWZmZWN0aW5nIHRo
-ZSBLZXJuZWwNCg0K4pePIElTQ1NJIEFycmF5IE11bHRpcGF0aGluZw0K4pePIExVTiBzcGxpdCBv
-dmVyIHNldmVyYWwgYXJyYXlzLiBTZXBhcmF0ZSBkYXRhIGNvbm5lY3Rpb24gdG8NCmVhY2ggYXJy
-YXkgZm9yIHBhcnRzIG9mIHRoZSBMVU4NCuKXjyBSZXF1aXJlcyBrZXJuZWwgaVNDU0kgcGF0aCBz
-ZWxlY3RvciBtb2R1bGUgcGVyLXZlbmRvcg0K4pePIFRoaW4gUHJvdmlzaW9uaW5nDQril48gQWN0
-dWFsIGFsbG9jYXRlZCBzdG9yYWdlIGlzIGxlc3MgdGhhbiByZXF1ZXN0ZWQgc2l6ZSAoYWtpbiB0
-bw0Kc3BhcnNlIGZpbGVzKQ0K4pePIE11c3QgaGFuZGxlIGFsZXJ0cyB3aGVuIFRQIHRocmVzaGhv
-bGRzIHJlYWNoZWQNCuKAkyBDSEVDSyBDT05ESVRJT04gcmFpc2VkIG9uIHdyaXRlcw0K4oCTIExV
-TiBnb2VzIHJlYWQtb25seSBpZiBzcGFjZSBleGhhdXN0ZWQNCuKXjyBUMTAgd29yayBvbmdvaW5n
-IHRvIHN0YW5kYXJkaXplIGludGVyZmFjZXMgYW5kIGJlaGF2aW9yDQoNCuKXjyBUUklNIC8gVU5N
-QVAgLyBXUklURV9TQU1FDQril48gSW5mb3JtIHN0b3JhZ2UgdGhhdCB0aGVzZSBibG9ja3MgYXJl
-IG5vIGxvbmdlciBuZWVkZWQNCuKXjyBVc2VmdWwgb24gU0FOcywgbm90IGp1c3QgU1NEcw0K4peP
-IFQxMCAmIFQxMyBzdGFuZGFyZHMgcHJvcG9zYWxzIGluIGZsdXgNCuKXjyBYQ09QWSDigJMgQXJy
-YXktbGV2ZWwgYmxvY2sgY29weSwgcGVyaGFwcyBjb3B5LW9uLXdyaXRlDQril48gQ29weSBibG9j
-a3Mgdy9vIGluY3VyaW5nIG5ldHdvcmsgYW5kIENQVSBvdmVyaGVhZA0K4pePIFZGUyBmdW5jdGlv
-bj8NCuKXjyBUMTAgc3RhbmRhcmQgYWxyZWFkeSAoU0NTSSBFeHRlbmRlZCBDb3B5KQ0KIA0KU0FO
-IFN0b3JhZ2UgRmVhdHVyZXMgbmVlZGluZyBiYXNpYyBDTEkgd29yaw0KIA0K4pePIE11bHRpLUlR
-TiDigJMgaVNDU0kgSVFOcyBhcmUgYXNzaWduZWQgdG8gR3Vlc3QgVk1zDQril48gSW1wbGVtZW50
-ZWQgaW4gaXNjc2ktaW5pdGlhdG9yLXV0aWxzIHRvZGF5LCB0aGFuayB5b3UhDQril48gVk0gR3Vl
-c3QgYm9vdCBmcm9tIGlTQ1NJDQril48gUmVxdWlyZXMgaVNDU0kgSW5pdGlhdG9yIGluIFZNIEJJ
-T1MNCuKXjyBGZWRvcmEgMTEgS1ZNIHdpbGwgbG9hZCBnUFhFIGlTQ1NJIE9wdGlvbiBST01zLCB0
-aGFuaw0KeW91IQ0K4pePIEFycmF5LWJhc2VkIExVTiBzbmFwc2hvdHMNCuKXjyBpb2N0bChGSUZS
-RUVaRSkgYWRkZWQgSmFuIDA5IGJ5IFRha2FzaGkgU2F0byBvZiBORUMsDQp0aGFuayB5b3UhDQri
-l48gTmVlZCBDTEkgdG8gZnJlZXplIGZpbGUgc3lzdGVtLCBpc3N1ZSBhcnJheS1iYXNlZCBzbmFw
-c2hvdA0KY29tbWFuZCwgYW5kIHRoYXcgZmlsZSBzeXN0ZW0NCg0KDQoNClRoYW5rcywNCk1hcmsN
-Cg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1lcyBCb3R0b21sZXkg
-W21haWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tXSANClNlbnQ6IEZy
-aWRheSwgSnVuZSAxOCwgMjAxMCAxMDoxMiBBTQ0KVG86IFJ1ZGVyLCBNYXJrDQpDYzogbHNmMTAt
-cGNAbGlzdHMubGludXhmb3VuZGF0aW9uLm9yZzsgbGludXgtZnNkZXZlbEB2Z2VyLmtlcm5lbC5v
-cmc7IGxpbnV4LW1tQGt2YWNrLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNClN1Ympl
-Y3Q6IFJlOiBbTHNmMTAtcGNdIFN1Z2dlc3RlZCB0b3BpYyBmb3IgQXVndXN0IExTRiBzdW1taXQg
-ZXZlbnQgKFNDU0kvRlMvTU0pDQoNCk9uIEZyaSwgMjAxMC0wNi0xOCBhdCAwOTo1NSAtMDUwMCwg
-TWFya19SdWRlckBEZWxsLmNvbSB3cm90ZToNCj4gSSB3YXMgYXNrZWQgdG8gc2hhcmUgc3VnZ2Vz
-dGVkIHRvcGljcyB0aGF0IHdlIHdvdWxkIGJlIGludGVyZXN0ZWQgaW4NCj4gYmVpbmcgZGlzY3Vz
-c2VkIGluIHRoZSB1cGNvbWluZyBMU0YgU3VtbWl0IGV2ZW4gaW4gZWFybHkgQXVndXN0Lg0KPiBS
-YXRoZXIgdGhhdCByZS10eXBpbmcgYWxsIG9mIHRoZW0gaW50byB0aGlzIGVtYWlsLCBJ4oCZdmUg
-YXR0YWNoZWQgYQ0KPiBzbGlkZSBkZWNrIGRldmVsb3BlZCBieSBNYXR0IERvbXNjaCBpbiBEZWxs
-4oCZcyBDVE8gb2ZmaWNlIGFzIGEgc3RhcnRpbmcNCj4gcG9pbnQuIEl0IGlzIGEgYml0IGRhdGVk
-LCBidXQgd2UgZmVlbCB0aGF0IHRvcGljcyBhcmUgc3RpbGwgcmVsZXZhbnQNCj4gdG8gdXMuDQoN
-CldlIGdvdCB0aGlzIG9uIHRoZSBQQyBsaXN0cywgYnV0IGFsbCBvZiB0aGUgb3RoZXIgbWFpbGlu
-ZyBsaXN0cyB3aWxsDQpoYXZlIGRpc2NhcmRlZCBpdCBzaWdodCB1bnNlZW4gKGVuZm9yY2luZyBw
-bGFpbiB0ZXh0IG9ubHkgYW5kIG5vdGhpbmcNCm90aGVyIHRoYW4gdGV4dC9wbGFpbiBhdHRhY2ht
-ZW50cyBpcyBhIHN0YW5kYXJkIGxpc3Qgc3BhbSBtaXRpZ2F0aW9uDQp0ZWNobmlxdWUpLiAgQ291
-bGQgeW91IHN1bW1hcmlzZSBhcyB0ZXh0ICh5b3UgY2FuIGp1c3QgZ28gdG8gdGhlIG91dGxpbmUN
-CnZpZXcgYW5kIHBhc3RlIGV2ZXJ5dGhpbmcgaW50byBhIHRleHQgd2luZG93KS4NCg0KSmFtZXMN
-Cg0KDQoNCg==
+On Tue, 15 Jun 2010 22:33:53 -0700
+"Justin P. Mattock" <justinmattock@gmail.com> wrote:
+
+> The below patch fixes a warning message when using gcc 4.6.0
+>   CC      drivers/pci/setup-bus.o
+> drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
+> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+>  
+>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>  drivers/pci/setup-bus.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 19b1113..215590b 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  	struct pci_bus *parent = bridge->subordinate;
+>  	int tried_times = 0;
+>  	struct resource_list_x head, *list;
+> -	int retval;
+>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>  				  IORESOURCE_PREFETCH;
+>  
+> @@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  again:
+>  	pci_bus_size_bridges(parent);
+>  	__pci_bridge_assign_resources(bridge, &head);
+> -	retval = pci_reenable_device(bridge);
+>  	pci_set_master(bridge);
+>  	pci_enable_bridges(parent);
+>  
+
+This has the same problem as your earlier bridge_enable patch; you need
+to keep the call to pci_reenable_device.  I should have caught this
+issue when Yinghai's patch went in: the right way to silence a warning
+about not checking a return value isn't to simply assign it to
+something, you really should *do* something as well, at least some
+debug output would be nice, but ideally handling the error in a sane
+way. 
+
+-- 
+Jesse Barnes, Intel Open Source Technology Center
