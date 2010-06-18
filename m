@@ -1,29 +1,74 @@
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: [Lsf10-pc] Current topics for LSF10/MM Summit 8-9 August in
-	Boston
-Date: Fri, 18 Jun 2010 08:18:34 -0400
-Message-ID: <20100618121833.GB10887@fieldses.org>
-References: <1276721459.2847.399.camel@mulgrave.site> <20100617160048.GA11689@schmichrtp.mainz.de.ibm.com> <1276790850.7398.8.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1276790850.7398.8.camel@mulgrave.site>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH resend 2/2] usb-storage: Add new no_read_capacity_16 quirk
+Date: Fri, 18 Jun 2010 14:38:30 +0200
+Message-ID: <1276864710-2370-2-git-send-email-hdegoede@redhat.com>
+References: <1276864710-2370-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1276864710-2370-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James.Bottomley-l3A5Bk7waGM@public.gmane.org, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jun 17, 2010 at 11:07:30AM -0500, James Bottomley wrote:
-> It's actually listed under 'dma issues' ... but there's really been no
-> satisfactory resolution or discussion of how one might be achieved.
-> Most filesystems rely on modifications to in-flight pages for efficiency
-> and copying every fs I/O page would be horrendous both for performance
-> and memory consumption.  Nor has there really been an indication that
-> it's a serious issue.  The two sufferers are DIF and iSCSI checksum.
+Some Rockbox based mp4 players will crash when ever they see a
+read_capacity_16 scsi command. So add a new US_FL which tells the
+scsi sd driver to not issue any read_capacity_16 scsi commands.
 
-And, again, NFS (both client (on writes) and server (on reads)), when
-using sec=krb5i.  Haven't tried to reproduce the problem, but I believe
-it would result in spurious IO errors.
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/usb/storage/scsiglue.c     |    4 ++++
+ drivers/usb/storage/unusual_devs.h |    3 ++-
+ include/linux/usb_usual.h          |    4 +++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
---b.
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 4a30fbf..4d0c437 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -209,6 +209,10 @@ static int slave_configure(struct scsi_device *sdev)
+ 		if (us->fflags & US_FL_CAPACITY_HEURISTICS)
+ 			sdev->guess_capacity = 1;
+ 
++		/* Some devices cannot handle READ_CAPACITY_16 */
++		if (us->fflags & US_FL_NO_READ_CAPACITY_16)
++			sdev->no_read_capacity_16 = 1;
++
+ 		/* assume SPC3 or latter devices support sense size > 18 */
+ 		if (sdev->scsi_level > SCSI_SPC_2)
+ 			us->fflags |= US_FL_SANE_SENSE;
+diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+index 42a83c4..262ba6d 100644
+--- a/drivers/usb/storage/unusual_devs.h
++++ b/drivers/usb/storage/unusual_devs.h
+@@ -877,7 +877,8 @@ UNUSUAL_DEV(  0x071b, 0x3203, 0x0000, 0x0000,
+ 		"RockChip",
+ 		"MP3",
+ 		US_SC_DEVICE, US_PR_DEVICE, NULL,
+-		US_FL_NO_WP_DETECT | US_FL_MAX_SECTORS_64),
++		US_FL_NO_WP_DETECT | US_FL_MAX_SECTORS_64 |
++		US_FL_NO_READ_CAPACITY_16),
+ 
+ /* Reported by Jean-Baptiste Onofre <jb-0Op4vImcjdnk1uMJSBkQmQ@public.gmane.org>
+  * Support the following product :
+diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
+index bff51d0..d4ee5b8 100644
+--- a/include/linux/usb_usual.h
++++ b/include/linux/usb_usual.h
+@@ -60,7 +60,9 @@
+ 	US_FLAG(BAD_SENSE,	0x00020000)			\
+ 		/* Bad Sense (never more than 18 bytes) */	\
+ 	US_FLAG(NO_READ_DISC_INFO,	0x00040000)		\
+-		/* cannot handle READ_DISC_INFO */
++		/* cannot handle READ_DISC_INFO */		\
++	US_FLAG(NO_READ_CAPACITY_16,	0x00080000)		\
++		/* cannot handle READ_CAPACITY_16 */
+ 
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
+-- 
+1.7.0.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
