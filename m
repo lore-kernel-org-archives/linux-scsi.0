@@ -1,138 +1,126 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 11/12] scsi: megaraid_sas - Add three times Online
- controller reset
-Date: Fri, 18 Jun 2010 15:11:03 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3D09274B2@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C35C5123FA@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C35C6861A5@cosmail02.lsi.com>
- <3A916D859199814BBB666188F96EB165013979165E@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3CDB80B82@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3CDB80C32@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3D0804561@cosmail02.lsi.com>
+From: "Justin P. Mattock" <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
+ but not used
+Date: Fri, 18 Jun 2010 14:12:41 -0700
+Message-ID: <4C1BE149.9040001@gmail.com>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>	<20100618102330.29eccb5b@virtuousgeek.org>	<4C1BBF7D.8090904@kernel.org>	<20100618124956.40c869a0@virtuousgeek.org>	<4C1BD024.1030707@gmail.com>	<20100618130538.0fc562ee@virtuousgeek.org>	<4C1BD678.1020405@gmail.com> <20100618134622.7db9f913@virtuousgeek.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D0804561@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20100618134622.7db9f913-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
+Cc: Yinghai Lu <yinghai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-RESUBMIT:
+On 06/18/2010 01:46 PM, Jesse Barnes wrote:
+> On Fri, 18 Jun 2010 13:26:32 -0700
+> "Justin P. Mattock"<justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>  wrote:
+>
+>> On 06/18/2010 01:05 PM, Jesse Barnes wrote:
+>>> On Fri, 18 Jun 2010 12:59:32 -0700
+>>> "Justin P. Mattock"<justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>   wrote:
+>>>> just added this in(as a test), and the retval warning still shows up.
+>>>> with the last post I just added a printk was that legit, and if so what
+>>>> else might be added to it to make it complete and proper?
+>>>
+>>> What's the full warning?  Seems like printing the value should have
+>>> been enough to shut up gcc...
+>>>
+>>
+>> this is the warning messg after applying yinghai's patch:
+>>
+>>     CC      drivers/pci/setup-bus.o
+>> drivers/pci/setup-bus.c: In function
+>> 'pci_assign_unassigned_bridge_resources':
+>> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+>
+> Right because Yinghai's patch just sets retval but doesn't actually use
+> it anywhere.
+>
 
-If fw didn't raise the interrupt with the fw state change to driver and fw goes to failure state, driver
-Will check the FW state in driver's timeout routine and issue the reset if need.  Driver will do the OCR upto three
-Times until kill adapter.  Also driver will issue OCR before driver kill adapter even if fw in operational state.   
+that's what is confusing..(not being used, but is being used, but gcc 
+says it's not used..)  :-)
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+>> if I add a printk then gcc is content.. patch below, but not the best at
+>> creating printk's(the whole % thing messes me up) but here goes:
+>>
+>>   From 48e15b87072c6b4286d943c55bfe2ae26d358795 Mon Sep 17 00:00:00 2001
+>> From: Justin P. Mattock<justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Date: Fri, 18 Jun 2010 13:23:27 -0700
+>> Subject: [PATCH 4/4] bus.c_add_print
+>>    Signed-off-by: Justin P. Mattock<justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>
+>> ---
+>>    drivers/pci/setup-bus.c |    1 +
+>>    1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 66cb8f4..806b766 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -919,6 +919,7 @@ again:
+>>
+>>    enable_all:
+>>    	retval = pci_reenable_device(bridge);
+>> +	printk(KERN_DEBUG "PCI%d: re-enabling device\n", retval);
+>>    	pci_set_master(bridge);
+>>    	pci_enable_bridges(parent);
+>>    }
+>
+> Again, this doesn't have the if (retval) condition around the printk; I
+> don't want to see this message everytime regardless.  Also the message
+> is misleading, it should be something like:
+>    dev_err(&bridge->dev, "failed to re-enable device: %d\n", retval)
+> instead.  PCI%d makes it look like we're talking about a specific bus
+> or something and not an error code.
+>
+
+o.k. I admit I looked at other printk's in this file to get an idea of 
+what I might do.. saw PCI%d and figured it would print
+"PCI: re-enabling device"
+but didnt think it was an error... reason for putting KERN_DEBUG.
+
+here is what the new patch looks like:
+
+
+ From f910375438be06497d0524bff146c26cafca272b Mon Sep 17 00:00:00 2001
+From: Justin P. Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Date: Fri, 18 Jun 2010 14:08:37 -0700
+Subject: [PATCH 4/4] setup-pci_test
+  Signed-off-by: Justin P. Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 ---
-drivers/scsi/megaraid/megaraid_sas.c |   66 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 65 insertions(+), 1 deletion(-)
+  drivers/pci/setup-bus.c |    3 +++
+  1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c new/drivers/scsi/megaraid/megaraid_sas.c
---- old/drivers/scsi/megaraid/megaraid_sas.c	2010-06-17 07:51:23.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-06-17 09:09:07.000000000 -0400
-@@ -942,6 +942,7 @@ megasas_make_sgl_skinny(struct megasas_i
- 			mfi_sgl->sge_skinny[i].length = sg_dma_len(os_sgl);
- 			mfi_sgl->sge_skinny[i].phys_addr =
- 						sg_dma_address(os_sgl);
-+			mfi_sgl->sge_skinny[i].flag = 0;
- 		}
- 	}
- 	return sge_count;
-@@ -1569,6 +1570,28 @@ static void megasas_complete_cmd_dpc(uns
- 	}
- }
- 
-+static void
-+megasas_internal_reset_defer_cmds(struct megasas_instance *instance);
-+
-+static void
-+process_fw_state_change_wq(struct work_struct *work);
-+
-+void megasas_do_ocr(struct megasas_instance *instance)
-+{
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
-+	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
-+	(instance->pdev->device == PCI_DEVICE_ID_LSI_VERDE_ZCR)) {
-+		*instance->consumer     = MEGASAS_ADPRESET_INPROG_SIGN;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 66cb8f4..2ab5f1e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -919,6 +919,9 @@ again:
+
+  enable_all:
+  	retval = pci_reenable_device(bridge);
++	if (retval) {
++		dev_err(&bridge->dev, "failed to re-enable device: %d\n", retval);
 +	}
-+	instance->instancet->disable_intr(instance->reg_set);
-+	instance->adprecovery   = MEGASAS_ADPRESET_SM_INFAULT;
-+	instance->issuepend_done = 0;
-+
-+	atomic_set(&instance->fw_outstanding, 0);
-+	megasas_internal_reset_defer_cmds(instance);
-+	process_fw_state_change_wq(&instance->work_init);
-+}
-+
- /**
-  * megasas_wait_for_outstanding -	Wait for all outstanding cmds
-  * @instance:				Adapter soft state
-@@ -1586,6 +1609,8 @@ static int megasas_wait_for_outstanding(
- 	unsigned long flags;
- 	struct list_head clist_local;
- 	struct megasas_cmd *reset_cmd;
-+	u32 fw_state;
-+	u8 kill_adapter_flag;
- 
- 	spin_lock_irqsave(&instance->hba_lock, flags);
- 	adprecovery = instance->adprecovery;
-@@ -1671,7 +1696,45 @@ static int megasas_wait_for_outstanding(
- 		msleep(1000);
- 	}
- 
--	if (atomic_read(&instance->fw_outstanding)) {
-+	i = 0;
-+	kill_adapter_flag = 0;
-+	do {
-+		fw_state = instance->instancet->read_fw_status_reg(
-+					instance->reg_set) & MFI_STATE_MASK;
-+		if ((fw_state == MFI_STATE_FAULT) &&
-+			(instance->disableOnlineCtrlReset == 0)) {
-+			if (i == 3) {
-+				kill_adapter_flag = 2;
-+				break;
-+			}
-+			megasas_do_ocr(instance);
-+			kill_adapter_flag = 1;
-+
-+			/* wait for 1 secs to let FW finish the pending cmds */
-+			msleep(1000);
-+		}
-+		i++;
-+	} while (i <= 3);
-+
-+	if (atomic_read(&instance->fw_outstanding) &&
-+					!kill_adapter_flag) {
-+		if (instance->disableOnlineCtrlReset == 0) {
-+
-+			megasas_do_ocr(instance);
-+
-+			/* wait for 5 secs to let FW finish the pending cmds */
-+			for (i = 0; i < wait_time; i++) {
-+				int outstanding =
-+					atomic_read(&instance->fw_outstanding);
-+				if (!outstanding)
-+					return SUCCESS;
-+				msleep(1000);
-+			}
-+		}
-+	}
-+
-+	if (atomic_read(&instance->fw_outstanding) ||
-+					(kill_adapter_flag == 2)) {
- 		printk(KERN_NOTICE "megaraid_sas: pending cmds after reset\n");
- 		/*
- 		* Send signal to FW to stop processing any pending cmds.
-@@ -2681,6 +2744,7 @@ static int megasas_create_frame_pool(str
- 			return -ENOMEM;
- 		}
- 
-+		memset(cmd->frame, 0, total_sz);
- 		cmd->frame->io.context = cmd->index;
- 		cmd->frame->io.pad_0 = 0;
- 	}
+  	pci_set_master(bridge);
+  	pci_enable_bridges(parent);
+  }
+-- 
+1.7.1.rc1.21.gf3bd6
+
+
+should I have put if (!retval) instead
+should I put "failed to re-enable bridge device"
+is there an exit code needed?
+
+if not and all is good then I can resend this out..
+
+Justin P. Mattock
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
