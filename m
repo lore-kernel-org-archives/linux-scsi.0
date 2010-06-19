@@ -1,72 +1,45 @@
-From: Jelle de Jong <jelledejong@powercraft.nl>
-Subject: Re: HighPoint Technologies, Inc. Device [1103:2680]
-Date: Sat, 19 Jun 2010 10:04:56 +0200
-Message-ID: <4C1C7A28.3060307@powercraft.nl>
-References: <4C1B612C.8070503@powercraft.nl> <20100618151847.68abad65@harpe.intellique.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 5/5 v2]scsi:hosts.c Fix warning: variable 'rval' set
+ but not used
+Date: Sat, 19 Jun 2010 14:32:51 -0500
+Message-ID: <1276975971.4416.19.camel@mulgrave.site>
+References: <1276892167-24161-1-git-send-email-justinmattock@gmail.com>
+	 <20100618204730.GL9298@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01.cambriumhosting.nl ([217.19.16.173]:47987 "EHLO
-	relay01.cambriumhosting.nl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753986Ab0FSIE7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Jun 2010 04:04:59 -0400
-In-Reply-To: <20100618151847.68abad65@harpe.intellique.com>
+Received: from cantor.suse.de ([195.135.220.2]:38716 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751607Ab0FSTc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Jun 2010 15:32:57 -0400
+In-Reply-To: <20100618204730.GL9298@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Erno Kovacs <erno.kovacs@freemail.hu>
-Cc: linux-scsi@vger.kernel.org, linux@highpoint-tech.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>, linux-scsi@vger.kernel.org
 
-Erno Kovacs wrote, on 19-06-10 09:25:
->> Le Fri, 18 Jun 2010 14:06:04 +0200 Jelle de Jong
->> <jelledejong@powercraft.nl> =E9crivait:
->=20
->>> It seems there is no kernel module for the 2600 series or the
->>> 2700 series. The HighPoint website [1][2] keeps claiming there
->>> are open soure drivers available. I know open source is not the
->>> same as free software, but it is very very misleading, because
->>> it does not work.
->=20
->> Usually Highpoint labels "open source" a code source wrapper
->> around a proprietary piece of driver. HighPoint are really
->> horrible from a free software POV and really stink under linux;
->> and as they aren't true hardware RAID but use a substantial part
->> of the driver to do their job there isn't much hope that it will
->> ever get any better. My advice : stay away from these, use any of
->> 3Ware, Areca or Adaptec SAS/SATA controllers which all work fine
->> and without hassle under Linux.
->=20
-> Its true, although newer HPT series have real IO processors.=20
-> Anyway, 2600 and 2700 serie seem to have Marvell chipset, which
-> should work with the mvsas driver, but unfortunately it still has
-> some stability issues according to mailing-list posts here, even
-> after patchset of Srinivas applied.
+On Fri, 2010-06-18 at 14:47 -0600, Matthew Wilcox wrote:
+> On Fri, Jun 18, 2010 at 01:16:07PM -0700, Justin P. Mattock wrote:
+> > @@ -420,7 +419,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+> >  	shost->ehandler = kthread_run(scsi_error_handler, shost,
+> >  			"scsi_eh_%d", shost->host_no);
+> >  	if (IS_ERR(shost->ehandler)) {
+> > -		rval = PTR_ERR(shost->ehandler);
+> > +		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error = %ld\n", 
+> > +			shost->host_no, PTR_ERR(shost->ehandler));
+> 
+> Surely this should simply be:
+> 
+> 		shost_printk(KERN_WARNING, shost, "error handler thread failed"
+> 				"to spawn (%ld)\n", PTR_ERR(shost->ehandler));
 
-I hope the HighPoint Linux team will spent some of there resources in
-making there 2600 and 2700 series work with the mvsas driver, maybe
-they still have to make there own driver that depends on the mvsas
-driver because it seems they put a little bit of there own special
-sauce around the Marvell chip.
+Actually, I'm wary of doing this: the device isn't fully initialised
+(it's unparented and not added to the system) so that could cause
+problems down the road for intelligent error gathering.  It's why we
+tend to do the printk scsi%d (or dev_printk on the parent) thing up
+until scsi_host_add().
 
-Would somebody from HighPoint willing to response and share there
-plans for the 2600 and 2700 series regarding gnu/linux kernel support?
-It is never to late to do change the general advice to stay far away
-from HighPoint controllers.
+James
 
-I have no interested in raid support, I need a very stable and fast
-interface with the attached SATA/SAS hard drives. I let mdraid, lvm2
-and ext4 do the rest.
 
-I bought the HPT RR2680 because my Marvel 88SE63xx/64xx mvsas
-controllers are unstable and not usable for production. I switched
-back to my sata_mv controllers, they are slow but stable.
-
-With kind regards,
-
-Jelle de Jong
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
