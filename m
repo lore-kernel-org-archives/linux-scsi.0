@@ -1,32 +1,49 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
-  Enable Online Controller Reset Bit in register related functions
-Date: Sun, 20 Jun 2010 10:01:00 -0500
-Message-ID: <1277046060.5242.18.camel@mulgrave.site>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
-	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH 03/23] bfa: PBC vport create
+Date: Sun, 20 Jun 2010 10:58:51 -0700
+Message-ID: <04391A4E90BB2149B010D22452FA168702283154A5@HQ-EXCH-6.corp.brocade.com>
+References: <1276626113-3102-1-git-send-email-huangj@brocade.com>
+ <1277045513.5242.15.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Yang, Bo" <Bo.Yang@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:38042 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755948Ab0FTR7D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Jun 2010 13:59:03 -0400
+In-Reply-To: <1277045513.5242.15.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vinodh Ravindran <vravindr@Brocade.COM>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Krishna Gudipati <kgudipat@Brocade.com>, Akshay Mathur <amathur@brocade.com>
 
-On Fri, 2010-06-18 at 14:18 -0700, Yinghai Lu wrote:
-> On Wed, Jun 9, 2010 at 7:34 PM, Yang, Bo <Bo.Yang@lsi.com> wrote:
-> > Enable the Online Controller reset bit in the register related functions.  This is first part of the Online Controller Reset.
-> > The driver supports XScle and Gen2 chips.  Driver need to read the FW state register to see if there is FW state change
-> > Happen.
-> >
-> > Signed-off-by Bo Yang<bo.yang@lsi.com>
-> 
-> This patch cause kernel hang just after
-> [  136.996297] megasas: FW now in Ready state
-
-OK, I dropped all the megaraid_sas patches for now ... I'll reapply once
-we get the bisection intervals sorted out.
-
-James
+PlRoaXMgb25lJ3MgZ2l2aW5nIGEgc2luZ2xlIHJlamVjdGlvbjoNCj4NCj5wYXRjaGluZyBmaWxl
+IGRyaXZlcnMvc2NzaS9iZmEvYmZhZF9kcnYuaA0KPkh1bmsgIzIgRkFJTEVEIGF0IDE5Ny4NCj4x
+IG91dCBvZiAyIGh1bmtzIEZBSUxFRCAtLSBzYXZpbmcgcmVqZWN0cyB0byBmaWxlDQo+ZHJpdmVy
+cy9zY3NpL2JmYS9iZmFkX2Rydi5oLnJlag0KPg0KPkJ1dCBpdCBsb29rcyB0byBiZSBzZXJpb3Vz
+OiAgdGhlbiBodW5rIGlzOg0KPg0KPisrKyBkcml2ZXJzL3Njc2kvYmZhL2JmYWRfZHJ2LmgNCj5A
+QCAtMTk3LDEyICsxOTksMTggQEANCj4gCWJmYV9ib29sZWFuX3QJaXBmY19lbmFibGVkOw0KPiAJ
+dW5pb24gYmZhZF90bXBfYnVmIHRtcF9idWY7DQo+IAlzdHJ1Y3QgZmNfaG9zdF9zdGF0aXN0aWNz
+IGxpbmtfc3RhdHM7DQo+KwlzdHJ1Y3QgbGlzdF9oZWFkIHBiY19wY2ZnX2xpc3Q7DQo+IAl1MzIg
+Znd0cmNfbGVuOw0KPiAJY2hhciAqZnd0cmM7DQo+IAl1MzIgcmVnbGVuOw0KPiAJY2hhciAqcmVn
+ZGF0YTsNCj4gfTsNCj4NCj5CdXQgdGhlIGRlZmluZWQgc3RydWN0dXJlIGluIHRoZSBmaWxlIGlz
+Og0KPg0KPgliZmFfYm9vbGVhbl90CWlwZmNfZW5hYmxlZDsNCj4JdW5pb24gYmZhZF90bXBfYnVm
+IHRtcF9idWY7DQo+CXN0cnVjdCBmY19ob3N0X3N0YXRpc3RpY3MgbGlua19zdGF0czsNCj59Ow0K
+Pg0KPlNvIHRoZXJlJ3MgcXVpdGUgYSBiaXQgbWlzc2luZyBzb21ld2hlcmUuDQo+DQo+SmFtZXMN
+Cj4NCg0KSGkgSmFtZXMsDQoNClRoaXMgcGF0Y2ggc2V0IGRlcGVuZHMgb24gdGhlIHBhdGNoIHNl
+bnQgb3V0IGVhcmxpZXIgYnkgS3Jpc2huYSBHdWlkYXB0IHRvIGNvbGxlY3QgZGVidWcgaW5mbw0K
+dXNpbmcgc3lzZnMgYmluYXJ5IGF0dHJpYnV0ZXMsIGhlcmUgaXMgdGhlIGxpbmsgdG8gdGhlIHBh
+dGNoOg0KDQpodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXNjc2kmbT0xMjc2MDQzMjY2MDI0OTEm
+dz0yDQoNCkl0IGVuYWJsZXMgdGhlIGJhc2ljcyBkZWJ1Z2dhYmlsaXR5IHRoZSBjdXJyZW50IHVw
+c3RyZWFtIGRyaXZlciBsYWNrcyBhcyBhIHJlc3VsdCBvZiBJT0NUTA0KcmVtb3ZhbCwgc28gdGhh
+dCB3aGVuIHRoZXJlIGlzIHNvbWUgaXNzdWUgaGFwcGVuIGluIHRoZSBmaXJtd2FyZS9oYXJkd2Fy
+ZSwgd2hlbiBjYW4gDQp1c2UgdGhlbSB0byBkdW1wIG91dCBmaXJtd2FyZSB0cmFjZSBhbmQgcmVh
+ZC93cml0ZSB0byB0aGUgY2hpcCByZWdpc3RlcnMuIA0KDQpJZiB5b3UgbmVlZCBtb3JlIHRpbWUg
+dG8gcmV2aWV3IG9yIGhhdmUgYW55IGNvbmNlcm4gb24gdGhhdCBwYXJ0aWN1bGFyIHBhdGNoLCBw
+bGVhc2UgbGV0IG1lIGtub3csDQpJIGNhbiByZWNyZWF0ZSB0aGUgMi4yLjIuMSBwYXRjaCBzZXQg
+d2l0aG91dCB0aGF0IGNoYW5nZSBzbyB0aGF0IHRoZXkgY2FuIGJlIGFwcGxpZWQgY2xlYW5seSB0
+byB0aGUNCmN1cnJlbnQgc2NzaS1taXNjIHRyZWUuDQoNClRoYW5rcw0KDQpKaW5nDQoNCg0KDQoN
+Cg0KDQo=
