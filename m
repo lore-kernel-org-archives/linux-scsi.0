@@ -1,131 +1,53 @@
-From: Nick Piggin <npiggin@suse.de>
-Subject: Current MM topics for LSF10/MM Summit 8-9 August in Boston
-Date: Mon, 21 Jun 2010 22:05:26 +1000
-Message-ID: <20100621120526.GA31679@laptop>
+From: Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: [Lsf10-pc] Current MM topics for LSF10/MM Summit 8-9 August in
+ Boston
+Date: Mon, 21 Jun 2010 15:16:08 +0200
+Message-ID: <20100621131608.GW5787@random.random>
 References: <1276721459.2847.399.camel@mulgrave.site>
+ <20100621120526.GA31679@laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <1276721459.2847.399.camel@mulgrave.site>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: linux-mm@kvack.org
-Cc: linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org
+In-Reply-To: <20100621120526.GA31679@laptop>
+Sender: owner-linux-mm@kvack.org
+To: Nick Piggin <npiggin@suse.de>
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Apologies for the delay, there haven't been a lot of explicit proposals
-for topics, but I think there is a lot to talk about, so I would like to
-hear more ideas but I have suggested a few of my own.
+On Mon, Jun 21, 2010 at 10:05:26PM +1000, Nick Piggin wrote:
+> Andrea Arcangeli	Transparent hugepages
 
-Rik van Riel		Memory management under virtualization (with KVM)
-Andrea Arcangeli	Transparent hugepages
-KOSAKI Motohiro		get_user_pages vs COW problem
-Boaz Harrosh		Stable page contents under writeback
-Michael Rubin, Sorin Faibish, Jan Kara	Writeback issues (several subtopics)
+Sure fine on my side. I got a proposal accepted for presentation at
+KVM Forum 2010 about it too the days after the VM summit too.
 
-I propose some other possible topics for agenda
-- Zone aware slab reclaim (eg. dentry, inode)
-- mmap_sem scalability, again
-- Page allocator scalability
-- OOM killer work
-- Direct reclaim, direct writeback problems
+> KOSAKI Motohiro		get_user_pages vs COW problem
+
+Just a side note, not sure exactly what is meant to be discussed about
+this bug, considering the fact this is still unsolved isn't technical
+problem as there were plenty of fixes available, and the one that seem
+to had better chance to get included was the worst one in my view, as
+it tried to fix it in a couple of gup caller (but failed, also because
+finding all put_page pin release is kind of a pain as they're spread
+all over the place and not identified as gup_put_page, and in addition
+to the instability and lack of completeness of the fix, it was also
+the most inefficient as it added unnecessary and coarse locking) plus
+all gup callers are affected, not just a few. I normally call it gup
+vs fork race. Luckily not all threaded apps uses O_DIRECT and fork and
+pretend to do the direct-io in different sub-page chunks of the same
+page from different threads (KVM would probably be affected if it
+didn't use MADV_DONTFORK on the O_DIRECT memory, as it might run fork
+to execute some network script when adding an hotplug pci net device
+for example). But surely we can discuss the fix we prefer for this
+bug, or at least we can agree it needs fixing.
+
+Other topics looks very interesting too!
 
 Thanks,
-Nick
+Andrea
 
-On Wed, Jun 16, 2010 at 03:50:59PM -0500, James Bottomley wrote:
-> Given that we're under two months out, I thought it would be time to
-> post a summary of the topics we've collected so far (Nick will post the
-> MM summit ones later).  Look this over, and if there's anything missing,
-> propose it ... or if you have cross Storage/FS/MM topics, post them too.
-> 
-> Oh, and since we're not the most organised bunch, if you posted a topic
-> and don't see it in the list, please resend ... we probably lost it in
-> an email shuffle.
-> 
-> Current Filesystem Topics:
-> 
-> Alex Elder	Upstream maintainer for XFS, general discussion on FS/IO
-> Aneesh Kumar	Rich-acl patches which work better with NFSv4 acl and CIFS acl
-> Anshul Madan	reflink for NFS
-> Chuck Lever	NFS/IPV6 and NFS O_DIRECT, Wu's read-ahead work, vitro perf tools
-> Eric Sandeen	Advances in testing, TRIM/DISCARD/Alignment, writeback sanity
-> James Lentini	reflink for NFS
-> Jan Kara	Discuss/drive sanity review of writeback and general ext*/jbd 
-> Michael Rubin	Writeback scaling
-> Sage Weil	Statlite, generic interface for describing file striping for distributed FS, VFS scalability
-> Al Viro	Sorting out d_revalidate and other dcache issues
-> Coly Li		directory/large file scalability
-> Sorin Faibish	Cache writeback discussion
-> 
-> Current Storage Topics:
-> 
-> Eric Seppanen	Next generation SSDs, performance implications on Linux I/O
-> Boaz Harrosh	PNFS performance considerations, bio_list based/async raidN for generic use; stable pages for I/O
-> FUJITA Tomonori	SCSI target mode, iSCSI, block layer SG (bsg), sg, IOMMU, DMA issues
-> Hannes Reinecke	libfc/multipath/error handing
-> James Smart	FCOE proposal for rework of the FC sysfs tree, work with Hannes on other transport/SCSI subsystem topics
-> Jeff Moyer	IO scheduler
-> Joel Becker	SAN management plugin
-> Martin Petersen	Updates on DIF/DIX, TRIM/DISCARD/UNMAP, generic support for WRITE_SAME
-> 
-> Plus some MM summit ones which Nick will summarise.
-> 
-> For the benefit of those who've forgotten here's the original Call for
-> topics and attendees:
-> 
-> This year we'll hold the Linux Storage and Filesystems summit jointly
-> with the VM summit on the two days before LinuxCon in Boston (that's
-> Sunday and Monday) at the Renaissance Hotel:
-> 
-> http://events.linuxfoundation.org/events/linuxcon
-> 
-> We're planning to hold some sessions jointly and split into three tracks
-> (Filesystems, Storage and VM) for others, so we're encouraging proposals
-> for discussion that cover areas relevant to all three groups as well as
-> more specific technical topics.
-> 
-> Suggestions for agenda topics should be sent to
-> 
-> lsf10-pc@lists.linuxfoundation.org
-> 
-> and optionally cc the Linux list which would be most interested in it:
-> 
-> SCSI: linux-scsi@vger.kernel.org
-> FS: linux-fsdevel@vger.kernel.org (plus relevant fs specific list)
-> MM: linux-mm@kvack.org
-> 
-> Please tag your subject with [LSF/VM TOPIC] so those of us who're not
-> very organised can find them easily in our inboxes.  The agenda topics
-> and attendees will be selected by the programme committee, but the final
-> agenda will be by formed by consensus of the attendees on the day.
-> 
-> We'll try to cap attendance at around 20 per track to facilitate
-> discussions although the final numbers will depend on the room sizes
-> at the venue.
-> 
-> Requests to attend should be sent to:
-> 
-> lsf10-pc@lists.linuxfoundation.org
-> 
-> please summarise what you'll bring to the meeting, and what you'd like
-> to discuss.  please also tag your email with [ATTEND] so there's less
-> chance of it getting lost in the large mail pile.
-> 
-> Presentations are allowed to guide discussion, but are strongly
-> discouraged.  There will be no recording or audio bridge, however
-> written minutes will be published as in previous years:
-> 
-> 2009:
-> http://lwn.net/Articles/327601/
-> http://lwn.net/Articles/327740/
-> http://lwn.net/Articles/328347/
-> 
-> Prior years:
-> http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-> http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
-> 
-> If you have feedback on last year's meeting that we can use to improve
-> this year's, please also send that to:
-> 
-> lsf10-pc@lists.linuxfoundation.org
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
