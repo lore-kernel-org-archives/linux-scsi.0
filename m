@@ -1,50 +1,67 @@
-From: Andrea Arcangeli <aarcange@redhat.com>
-Subject: Re: [Lsf10-pc] Current MM topics for LSF10/MM Summit 8-9 August in
- Boston
-Date: Mon, 21 Jun 2010 16:45:20 +0200
-Message-ID: <20100621144520.GB5787@random.random>
-References: <1276721459.2847.399.camel@mulgrave.site>
- <20100621120526.GA31679@laptop>
- <20100621131608.GW5787@random.random>
- <20100621132238.GK4689@redhat.com>
- <20100621140939.GY5787@random.random>
- <20100621141855.GN4689@redhat.com>
- <20100621142952.GZ5787@random.random>
- <4C1F77CD.40509@redhat.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
+ Enable Online Controller Reset Bit in register related functions
+Date: Mon, 21 Jun 2010 09:35:31 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3D09276BD@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
+	 <1277046060.5242.18.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
+	 <1277063250.5242.25.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
+ <1277066924.5242.41.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <4C1F77CD.40509@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Avi Kivity <avi@redhat.com>
-Cc: Gleb Natapov <gleb@redhat.com>, Nick Piggin <npiggin@suse.de>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1277066924.5242.41.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 21, 2010 at 05:31:41PM +0300, Avi Kivity wrote:
-> On 06/21/2010 05:29 PM, Andrea Arcangeli wrote:
-> > On Mon, Jun 21, 2010 at 05:18:56PM +0300, Gleb Natapov wrote:
-> >    
-> >> Avi did the fix. We discussed using MADV_DONTFORK for that, but calling
-> >> madvise() from kernel deemed to be messy.
-> >>      
-> > Agree that calling madvise looks messy. It's possible to set
-> > VM_DONTCOPY under mmap_sem write mode and it'll work as well.
-> >    
-> 
-> But we aren't guaranteed to get our own vma, yes?
-
-Correct, one would need to call split_vma like madvise_behavior does
-before setting the flag. For sure current fix is simpler ;).
-
-> Note kvm shouldn't be calling do_mmap() in any case.  I let that in 
-> because it was simple and because we had a userspace interface relying 
-> on that, but that's no longer the case, so I'll make that page kernel owned.
-
-Agree ;).
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+SmFtZXMsDQoNCkF0dGFjaGVkIGlzIHRoZSBjaGFuZ2Vsb2cgZm9yIE9DUi4gDQoNClNpZ25lZC1v
+ZmYtYnkgQm8gWWFuZzxiby55YW5nQGxzaS5jb20+DQoNCi0tLQ0KRG9jdW1lbnRhdGlvbi9zY3Np
+L0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMgfCAgIDMzICsrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKw0KIDEgZmlsZSBjaGFuZ2VkLCAzMyBpbnNlcnRpb25zKCspDQoNCmRpZmYgLXJ1cE4gb2xk
+L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzIG5ldy9Eb2N1bWVudGF0
+aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcw0KLS0tIG9sZC9Eb2N1bWVudGF0aW9uL3Nj
+c2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3NhcwkyMDEwLTA2LTIwIDAzOjQxOjMxLjAwMDAwMDAwMCAt
+MDQwMA0KKysrIG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcwky
+MDEwLTA2LTIwIDAzOjU1OjQyLjAwMDAwMDAwMCAtMDQwMA0KQEAgLTEsMyArMSwzNiBAQA0KKzEg
+UmVsZWFzZSBEYXRlICAgIDogVGh1ci4gIE1heSAwMywgMjAxMCAwOToxMjo0NSBQU1QgMjAwOSAt
+DQorCQkJKGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxzaS5jb20pDQorCQkJQm8gWWFuZw0KKw0K
+KzIgQ3VycmVudCBWZXJzaW9uIDogMDAuMDAuMDQuMTcuMS1yYzENCiszIE9sZGVyIFZlcnNpb24g
+ICA6IDAwLjAwLjA0LjE3LjEtcmMxDQorDQorMS4JQWRkIHRoZSBPbmxpbmUgQ29udHJvbGxlciBS
+ZXNldCAoT0NSKSB0byB0aGUgRHJpdmVyLg0KKwlPQ1IgaXMgdGhlIG5ldyBmZWF0dXJlIGZvciBt
+ZWdhcmFpZF9zYXMgZHJpdmVyIHdoaWNoDQorCXdpbGwgYWxsb3cgdGhlIGZ3IHRvIGRvIHRoZSBj
+aGlwIHJlc2V0IHdoaWNoIHdpbGwgbm90DQorCWFmZmFjdCB0aGUgT1MgYmVoYXZpb3VzLg0KKw0K
+KwlUbyBhZGQgdGhlIE9DUiBzdXBwb3J0LCBkcml2ZXIgbmVlZCB0byBkbzogDQorCQlhKS4gcmVz
+ZXQgdGhlIGNvbnRyb2xsZXIgY2hpcHMgLS0gWHNjYWxlIGFuZCBHZW4yIHdoaWNoDQorCQl3aWxs
+IGNoYW5nZSB0aGUgZnVuY3Rpb24gY2FsbHMgYW5kIGFkZCB0aGUgcmVzZXQgZnVuY3Rpb24NCisJ
+CXJlbGF0ZWQgdG8gdGhpcyB0d28gY2hpcHMuDQorCQkNCisJCWIpLiBkdXJpbmcgdGhlIHJlc2V0
+LCBkcml2ZXIgd2lsbCBzdG9yZSB0aGUgcGVuZGluZyBjbWRzDQorCQl3aGljaCBub3QgcmV0dXJu
+ZWQgYnkgRlcgdG8gZHJpdmVyJ3MgcGVuZGluZyBxdWV1ZS4gIERyaXZlcg0KKwkJd2lsbCByZS1p
+c3N1ZSB0aG9zZSBwZW5kaW5nIGNtZHMgYWdhaW4gdG8gRlcgYWZ0ZXIgdGhlIE9DUg0KKwkJZmlu
+aXNoZWQuDQorCQkNCisJCWMpLiBJbiBkcml2ZXIncyB0aW1lb3V0IHJvdXRpbmUsIGRyaXZlciB3
+aWxsIHJlcG9ydCB0bw0KKwkJT1MgYXMgcmVzZXQuIEFsc28gZHJpdmVyJ3MgcXVldWUgcm91dGlu
+ZSB3aWxsIGJsb2NrIHRoZQ0KKwkJY21kcyB1bnRpbCB0aGUgT0NSIGZpbmlzaGVkLg0KKwkJDQor
+CQlkKS4gaW4gRHJpdmVyJ3MgSVNSIHJvdXRpbmUsIGlmIGRyaXZlciBnZXQgdGhlIEZXIHN0YXRl
+IGFzDQorCQlzdGF0ZSBjaGFuZ2UsIEZXIGluIEZhaWx1cmUgc3RhdHVzIGFuZCBGVyBzdXBwb3J0
+IG9ubGluZSBjb250cm9sbGVyDQorCQlyZXNldCAoT0NSKSwgZHJpdmVyIHdpbGwgc3RhcnQgdG8g
+ZG8gdGhlIGNvbnRyb2xsZXIgcmVzZXQuDQorCQkNCisJCWUpLiBJbiBkcml2ZXIncyBJT0NUTCBy
+b3V0aW5lLCB0aGUgYXBwbGljYXRpb24gY21kcyB3aWxsIHdhaXQgZm9yIHRoZQ0KKwkJT0NSIHRv
+IGZpbmlzaCwgdGhlbiBpc3N1ZSB0aGUgY21kcyB0byBGVy4NCisJCSANCiAxIFJlbGVhc2UgRGF0
+ZSAgICA6IFRodXIuICBPY3QgMjksIDIwMDkgMDk6MTI6NDUgUFNUIDIwMDkgLQ0KIAkJCShlbWFp
+bGQtaWQ6bWVnYXJhaWRsaW51eEBsc2kuY29tKQ0KIAkJCUJvIFlhbmcNCg0KDQotLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFtZXMuQm90
+dG9tbGV5QHN1c2UuZGVdIA0KU2VudDogU3VuZGF5LCBKdW5lIDIwLCAyMDEwIDQ6NDkgUE0NClRv
+OiBZYW5nLCBCbw0KQ2M6IFlpbmdoYWkgTHU7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBh
+a3BtQG9zZGwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSRTog
+W1BBVENIIDEvMTJdIHNjc2k6IG1lZ2FyYWlkX3NhcyAtIE9ubGluZSBDb250cm9sbGVyIFJlc2V0
+IC0gSTogRW5hYmxlIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IEJpdCBpbiByZWdpc3RlciByZWxh
+dGVkIGZ1bmN0aW9ucw0KDQpPbiBTdW4sIDIwMTAtMDYtMjAgYXQgMTQ6MTkgLTA2MDAsIFlhbmcs
+IEJvIHdyb3RlOg0KPiBZZXMuICANCg0KT0ssIGNhbiB5b3UgZ2l2ZSBtZSB0aGUgc2luZ2xlIGNo
+YW5nZWxvZyBmb3IgdGhpcyBvbmUgY29tbWl0LCB0aGVuLA0KcGxlYXNlPw0KDQpUaGFua3MsDQoN
+CkphbWVzDQoNCg0K
