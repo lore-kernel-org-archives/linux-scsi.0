@@ -1,66 +1,41 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: MSIX and multiple reply queues
-Date: Mon, 21 Jun 2010 18:38:25 -0500
-Message-ID: <1277163505.10998.143.camel@mulgrave.site>
-References: <4565AEA676113A449269C2F3A549520F3FF6C887@cosmail03.lsi.com>
+From: Ravi Anand <ravi.anand@qlogic.com>
+Subject: Re: [PATCH 0/11] qla4xxx: bug_fix and ISP82xx support
+Date: Mon, 21 Jun 2010 16:46:11 -0700
+Message-ID: <0350E336-36E4-4B00-BF59-02F4898BBF7E@qlogic.com>
+References: <20100616204902.GA8100@sles11sp1b1.qlogic.org>
+ <1276721824.2847.409.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <4565AEA676113A449269C2F3A549520F3FF6C887@cosmail03.lsi.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: "willy@linux.intel.com" <willy@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:5045 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758379Ab0FUXqM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2010 19:46:12 -0400
+In-Reply-To: <1276721824.2847.409.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Prasanna Mumbai <prasanna.mumbai@qlogic.com>
 
-Corrected CC: list.  DON'T send email to linux-scsi-owner without good
-reason because that's DaveM and he's been known to be wrathful when
-poked incorrectly ...
 
-On Mon, 2010-06-21 at 15:56 -0600, Moore, Eric wrote:
-> Where does a SCSI lower layer driver obtain the MSIX Vector Index on a
-> per IO basis?  This is the index into the MSIX Vector Table. 
+On Jun 16, 2010, at 1:57 PM, James Bottomley wrote:
 
-It doesn't; that's a pci/msix issue, so you use the regular pci msix
-APIs.  If you look at how the other HBAs do it, they store the table in
-a host structure and pass a pointer to the particular table entry into
-the request_irq() routine.
-
-> Our controller is going to have a separate reply queue for each MSIX Vector.  
+> On Thu, 2010-06-17 at 02:19 +0530, Vikas Chaudhary wrote:
+>> We will hold on BSG patches for now to get everyone on common
+>> agreement.
+>> I will resubmit BSG patches after every one come to common
+>> agreement.  
 > 
-> At driver load time, I will pass an array of msix_entry when calling
-> pci_enable_msix.  Each entry represents a different reply queue.  Then
-> I will call request_irq() for each vector/entry.  I will have a single
-> ISR callback with each vector/entry having a different data pointer
-> for bus_id.  Each data area will contain a unique reply queue, msix
-> vector index, among other info.
+> Just a note, since I've been posting the LSF10 topic list, wouldn't this
+> make a reasonably good topic?  We got the general layout of the FC BSG
+> stuff sorted out at LSF09 ... and I think most of the usual suspects in
+> that debate will be present.
 > 
-> From shost->queuecommand, I will need to setup the proper MSI Vector
-> Index for each IO.  That way when the interrupt is called, it will
-> have the proper data pointer passed in bus_id, which contains the
-> matching reply queue.  According to my co-worker working windows
-> drivers, I suppose to get the MSI Vector Index from the OS on a per IO
-> basis.  He said he is  obtaining the MSI Vector Index from
-> StorPortGetStartIoPerfParams.  The index is returned inside
-> PerfParms.MessageNumber.
 
-If I parse this correctly, you're asking how to route the I/O in the
-HBA?  That's a hba decision based on queueing parameters (and possibly
-incoming CPU number or VM originator) because which queue the msix
-interrupt comes back on is a HBA programming specific thing, the routing
-is done in the issue.
+Yes.  Let us know what's the expectation and we will work towards that.
 
-> I'm not sure if the MSIX vector table is aligned with CPU IDs, meaning
-> does smp_processor_id() aligns with the entries in the MSIX vector
-> table?  Meaning does CPU ID 0 is the 1st entry in the MSIX vector
-> table, CPU ID 2 is the 2nd entry in the table, CPU ID 3 is the 3rd
-> entry, and so on.  Or is there another API in Linux to get the MSIX
-> Vector Index per IO basis?
 
-So I think what you're saying is that you plan to have one MSI-X vector
-per CPU (which is possbile)?  If so, you just bind the vector affinity
-of the interrupt to the CPU you want.  If it's something more complex
-than this, I'd suggest asking the PCI list ... I cc'd them in case they
-have any insight.
-
-James
+Thanks
+Ravi
