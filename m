@@ -1,50 +1,27 @@
-From: Gleb Natapov <gleb@redhat.com>
-Subject: Re: [Lsf10-pc] Current MM topics for LSF10/MM Summit 8-9 August in
- Boston
-Date: Mon, 21 Jun 2010 16:22:38 +0300
-Message-ID: <20100621132238.GK4689@redhat.com>
-References: <1276721459.2847.399.camel@mulgrave.site>
- <20100621120526.GA31679@laptop>
- <20100621131608.GW5787@random.random>
+From: Nick Bowler <nbowler@elliptictech.com>
+Subject: Re: 2.6.35-rc3: Reported regressions from 2.6.34
+Date: Mon, 21 Jun 2010 09:58:57 -0400
+Message-ID: <20100621135857.GA21159@elliptictech.com>
+References: <lc60d4toGTL.A.QzD._LpHMB@chimera>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100621131608.GW5787@random.random>
-Sender: owner-linux-mm@kvack.org
-To: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Nick Piggin <npiggin@suse.de>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
+In-Reply-To: <lc60d4toGTL.A.QzD._LpHMB@chimera>
+Sender: netdev-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jun 21, 2010 at 03:16:08PM +0200, Andrea Arcangeli wrote:
-> > KOSAKI Motohiro		get_user_pages vs COW problem
-> 
-> Just a side note, not sure exactly what is meant to be discussed about
-> this bug, considering the fact this is still unsolved isn't technical
-> problem as there were plenty of fixes available, and the one that seem
-> to had better chance to get included was the worst one in my view, as
-> it tried to fix it in a couple of gup caller (but failed, also because
-> finding all put_page pin release is kind of a pain as they're spread
-> all over the place and not identified as gup_put_page, and in addition
-> to the instability and lack of completeness of the fix, it was also
-> the most inefficient as it added unnecessary and coarse locking) plus
-> all gup callers are affected, not just a few. I normally call it gup
-> vs fork race. Luckily not all threaded apps uses O_DIRECT and fork and
-> pretend to do the direct-io in different sub-page chunks of the same
-> page from different threads (KVM would probably be affected if it
-> didn't use MADV_DONTFORK on the O_DIRECT memory, as it might run fork
-> to execute some network script when adding an hotplug pci net device
-> for example). But surely we can discuss the fix we prefer for this
-> bug, or at least we can agree it needs fixing.
-> 
-KVM is actually affected by the bug. The fix was posted today:
-http://www.mail-archive.com/kvm@vger.kernel.org/msg36759.html
+On 00:11 Mon 21 Jun     , Rafael J. Wysocki wrote:
+> If you know of any other unresolved regressions from 2.6.34, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
 
---
-			Gleb.
+Didn't see this one in the list:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+  Why is kslowd accumulating so much CPU time?
+  http://thread.gmane.org/gmane.linux.kernel/996907
+
+-- 
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
