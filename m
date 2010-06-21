@@ -1,59 +1,44 @@
-From: Andrea Arcangeli <aarcange@redhat.com>
-Subject: Re: [Lsf10-pc] Current MM topics for LSF10/MM Summit 8-9 August in
- Boston
-Date: Mon, 21 Jun 2010 16:09:39 +0200
-Message-ID: <20100621140939.GY5787@random.random>
-References: <1276721459.2847.399.camel@mulgrave.site>
- <20100621120526.GA31679@laptop>
- <20100621131608.GW5787@random.random>
- <20100621132238.GK4689@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 2/3] SCSI: Support Type C RAID controller
+Date: Mon, 21 Jun 2010 09:16:29 -0500
+Message-ID: <1277129789.10998.17.camel@mulgrave.site>
+References: <76AB9A4FE9D94F96B7F79FC2896CC46E@areca4e4f859d4>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20100621132238.GK4689@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Gleb Natapov <gleb@redhat.com>
-Cc: Nick Piggin <npiggin@suse.de>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40424 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932544Ab0FUOQd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Jun 2010 10:16:33 -0400
+In-Reply-To: <76AB9A4FE9D94F96B7F79FC2896CC46E@areca4e4f859d4>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nick.cheng@areca.com.tw
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 21, 2010 at 04:22:38PM +0300, Gleb Natapov wrote:
-> On Mon, Jun 21, 2010 at 03:16:08PM +0200, Andrea Arcangeli wrote:
-> > > KOSAKI Motohiro		get_user_pages vs COW problem
-> > 
-> > Just a side note, not sure exactly what is meant to be discussed about
-> > this bug, considering the fact this is still unsolved isn't technical
-> > problem as there were plenty of fixes available, and the one that seem
-> > to had better chance to get included was the worst one in my view, as
-> > it tried to fix it in a couple of gup caller (but failed, also because
-> > finding all put_page pin release is kind of a pain as they're spread
-> > all over the place and not identified as gup_put_page, and in addition
-> > to the instability and lack of completeness of the fix, it was also
-> > the most inefficient as it added unnecessary and coarse locking) plus
-> > all gup callers are affected, not just a few. I normally call it gup
-> > vs fork race. Luckily not all threaded apps uses O_DIRECT and fork and
-> > pretend to do the direct-io in different sub-page chunks of the same
-> > page from different threads (KVM would probably be affected if it
-> > didn't use MADV_DONTFORK on the O_DIRECT memory, as it might run fork
-> > to execute some network script when adding an hotplug pci net device
-> > for example). But surely we can discuss the fix we prefer for this
-> > bug, or at least we can agree it needs fixing.
-> > 
-> KVM is actually affected by the bug. The fix was posted today:
-> http://www.mail-archive.com/kvm@vger.kernel.org/msg36759.html
+On Mon, 2010-06-21 at 11:02 +0800, Nick Cheng wrote:
+> 1. To support Type C RAID controller, ACB_ADAPTER_TYPE_C, i.e. PCI device
+> ID: 0x1880.
+> Signed-off-by: Nick Cheng< nick.cheng@areca.com.tw >
 
-Interesting... so this is the page returned by gup that doesn't match
-anymore the page after an user write into qemu context after
-fork. Clearly any of the fixes proposed would have prevented this bug
-in the first place as they would assign a copy to the child, so yes
-it's likely this same bug. It's quite sad to have this workload that
-is superfluous if gup would behave as supposed by the caller. Also I'd
-prefer if you would use MADV_DONTFORK for the fix, as that will at
-least optimize fork and it would still be ok to keep even after we fix
-the VM while this workaround of using tmpfs should be backed out.
+It's still giving the same rejections ... including the one I drew your
+attention to in the header.  Either there's a patch missing somewhere,
+or we're not working from the same base.  What I have is 2.6.35-rc3 plus
+your patch 1/3 here
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Message-id: <6D8C005181EA4A93BF2C281E4E1F72FC@areca4e4f859d4>
+
+Let's try to come at this a different way since you don't seem to be
+able to use git.  The current files I'm patching against are available
+here (this includes your patch 1/3):
+
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=tree;f=drivers/scsi/arcmsr
+
+You can download them directly from the web using the "raw" link.  Can
+you make sure the patches you send apply cleanly to these files?
+
+James
+
+
