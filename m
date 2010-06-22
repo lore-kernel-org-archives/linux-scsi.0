@@ -1,81 +1,57 @@
-From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: Re: [PATCH 0/11] qla4xxx: bug_fix and ISP82xx support
-Date: Mon, 21 Jun 2010 16:48:26 -0700
-Message-ID: <5EEDAE5D-1BE7-43B1-900B-27C7715EAF1B@qlogic.com>
-References: <20100616204902.GA8100@sles11sp1b1.qlogic.org>
+From: KOSAKI Motohiro <kosaki.motohiro@jp.fujitsu.com>
+Subject: Re: [Lsf10-pc] Current MM topics for LSF10/MM Summit 8-9 August in Boston
+Date: Tue, 22 Jun 2010 12:30:27 +0900 (JST)
+Message-ID: <20100622122813.B566.A69D9226@jp.fujitsu.com>
+References: <20100621120526.GA31679@laptop> <20100621131608.GW5787@random.random>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:5128 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757914Ab0FUXs2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2010 19:48:28 -0400
-In-Reply-To: <20100616204902.GA8100@sles11sp1b1.qlogic.org>
-Content-Language: en-US
+Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:50220 "EHLO
+	fgwmail7.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758690Ab0FVDab (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2010 23:30:31 -0400
+In-Reply-To: <20100621131608.GW5787@random.random>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Prasanna Mumbai <prasanna.mumbai@qlogic.com>
+To: Andrea Arcangeli <aarcange@redhat.com>
+Cc: kosaki.motohiro@jp.fujitsu.com, Nick Piggin <npiggin@suse.de>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
 
-James,
+> On Mon, Jun 21, 2010 at 10:05:26PM +1000, Nick Piggin wrote:
+> > Andrea Arcangeli	Transparent hugepages
+> 
+> Sure fine on my side. I got a proposal accepted for presentation at
+> KVM Forum 2010 about it too the days after the VM summit too.
+> 
+> > KOSAKI Motohiro		get_user_pages vs COW problem
+> 
+> Just a side note, not sure exactly what is meant to be discussed about
+> this bug, considering the fact this is still unsolved isn't technical
+> problem as there were plenty of fixes available, and the one that seem
+> to had better chance to get included was the worst one in my view, as
+> it tried to fix it in a couple of gup caller (but failed, also because
+> finding all put_page pin release is kind of a pain as they're spread
+> all over the place and not identified as gup_put_page, and in addition
+> to the instability and lack of completeness of the fix, it was also
+> the most inefficient as it added unnecessary and coarse locking) plus
+> all gup callers are affected, not just a few. I normally call it gup
+> vs fork race. Luckily not all threaded apps uses O_DIRECT and fork and
+> pretend to do the direct-io in different sub-page chunks of the same
+> page from different threads (KVM would probably be affected if it
+> didn't use MADV_DONTFORK on the O_DIRECT memory, as it might run fork
+> to execute some network script when adding an hotplug pci net device
+> for example). But surely we can discuss the fix we prefer for this
+> bug, or at least we can agree it needs fixing.
 
-Are you planning to pull in all these patches once Mike ACK's patch 4 ?
+If people don't want this. I'm ok to drop this. In my personal concern
+most important topics are following four topics. (again it's only _my_
+concern)
 
-Thanks
-Ravi
-On Jun 16, 2010, at 1:49 PM, Vikas Chaudhary wrote:
 
-> James,
-> 
-> Please apply following list of patches which are generated against
-> latest scsi-misc-2.6 tree. These patches are blessed by Mike.C and
-> patches addresses comments in following threads:-
-> 
-> http://article.gmane.org/gmane.linux.scsi/59571
-> http://article.gmane.org/gmane.linux.scsi/59572
-> 
-> We will hold on BSG patches for now to get everyone on common agreement.
-> I will resubmit BSG patches after every one come to common agreement.  
-> 
-> Vikas Chaudhary (8)
-> 0001-qla4xxx-set-driver-ddb-state-correctly-in-process_dd.patch
-> 0002-qla4xxx-unblock-iscsi-session-after-setting-ddb-stat.patch
-> 0003-qla4xxx-correct-return-status-in-function-qla4xxx_fw.patch
-> 0004-qla4xxx-set-correct-value-in-sess-recovery_tmo.patch
-> 0007-qla4xxx-Added-support-for-ISP82XX.patch
-> 0008-qla4xxx-replace-all-dev_info-dev_warn-dev_err-with-q.patch
-> 0010-iscsi_transport-added-new-iscsi_param-to-display-tar.patch
-> 0011-qla4xxx-Update-driver-version-to-5.02.00-k2.patch
-> 
-> Ravi Anand (1)
-> 0006-qla4xxx-Handle-one-H-W-Interrupt-at-a-time.patch
-> 
-> Prasanna Mumbai (1)
-> 0005-qla4xxx-Fix-the-freeing-of-the-buffer-allocated-for-.patch
-> 
-> Karen Higgins(1)
-> 0009-qla4xxx-wait-for-device_ready-before-device-discover.patch
-> 
-> drivers/scsi/qla4xxx/Kconfig        |    8 +-
-> drivers/scsi/qla4xxx/Makefile       |    2 +-
-> drivers/scsi/qla4xxx/ql4_def.h      |  146 ++-
-> drivers/scsi/qla4xxx/ql4_fw.h       |  139 +++-
-> drivers/scsi/qla4xxx/ql4_glbl.h     |  106 ++-
-> drivers/scsi/qla4xxx/ql4_init.c     |  245 +++--
-> drivers/scsi/qla4xxx/ql4_inline.h   |    2 +-
-> drivers/scsi/qla4xxx/ql4_iocb.c     |   73 +-
-> drivers/scsi/qla4xxx/ql4_isr.c      |  396 +++++-
-> drivers/scsi/qla4xxx/ql4_mbx.c      |  191 ++-
-> drivers/scsi/qla4xxx/ql4_nvram.c    |    2 +-
-> drivers/scsi/qla4xxx/ql4_nvram.h    |   10 +-
-> drivers/scsi/qla4xxx/ql4_nx.c       | 2317 +++++++++++++++++++++++++++++++++++
-> drivers/scsi/qla4xxx/ql4_nx.h       |  779 ++++++++++++
-> drivers/scsi/qla4xxx/ql4_os.c       |  751 +++++++++---
-> drivers/scsi/qla4xxx/ql4_version.h  |    2 +-
-> drivers/scsi/scsi_transport_iscsi.c |    6 +-
-> include/scsi/iscsi_if.h             |    2 +
-> 
-> Thanks,
-> Vikas.
+Rik van Riel		Memory management under virtualization (with KVM)
+Andrea Arcangeli	Transparent hugepages
+- mmap_sem scalability, again
+- Direct reclaim, direct writeback problems
+
+
 
