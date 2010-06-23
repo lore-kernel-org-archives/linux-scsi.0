@@ -1,98 +1,44 @@
-From: Ravi Anand <ravi.anand@qlogic.com>
-Subject: Re: [PATCH 04/11] qla4xxx: set correct value in sess->recovery_tmo
-Date: Tue, 22 Jun 2010 13:55:06 -0700
-Message-ID: <39631C5E-052F-40D9-BA5B-442A939BE238@qlogic.com>
-References: <20100616205111.GA8149@sles11sp1b1.qlogic.org>
- <4C1BFA2D.6050607@cs.wisc.edu>
- <AC192039-EAE9-4625-8AF0-C4B9E1C8D47D@qlogic.com>
- <4C20FD17.5040809@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Wed, 23 Jun 2010 07:20:22 GMT
+Message-ID: <201006230720.o5N7KMFs000973@demeter.kernel.org>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:52281 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751901Ab0FVUzI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jun 2010 16:55:08 -0400
-In-Reply-To: <4C20FD17.5040809@cs.wisc.edu>
-Content-Language: en-US
+Received: from demeter.kernel.org ([140.211.167.39]:42775 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab0FWHUY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2010 03:20:24 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o5N7KNUW000974
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2010 07:20:23 GMT
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
 
 
-On Jun 22, 2010, at 11:12 AM, Mike Christie wrote:
+Neil Brown <neilb@suse.de> changed:
 
-> On 06/21/2010 06:35 PM, Ravi Anand wrote:
->> Mike,
->> 
->> Actually, that's not true.
->> 
-> 
-> I think you are misunderstanding me.
-> 
-> 
->> When we call iscsi_block_session(), session is already down and we are not
->> sending any NOP.
->> 
-> 
-> I never said you were going to send a nop. I was saying that you guys 
-> said the ka_timeout is used to detemine when to send a nop.
-> 
-> You guys said:
-> <start>
-> It's time interval between connection keep-alive ping. When a connection
-> is idle for the connection keep-alive timeout interval, the ISP4xxx
-> sends an iSCSI NOP PDU to the other device that is part of the connection.
-> When the device responses to the NOP PDU, the connection remains open.
-> When the device fails to respond, the ISP4010 closes the connection
-> and informs the driver that the connection has gone down.
-> <end>
-> 
-> so I was saying if the session is down, nops cannot be sent so 
-> ka_timeout does not come into play at that time (it has already expired).
-> 
->> FW closes connection after ka_timeout expire at FW level.  Then FW
->> sends notification to driver for DDB state change which basically indicates
->> that session is in failed state . After that driver mark device *missing* and call iscsi_block_sesstion().
->> At this point iSCSI connection is already closed,  so FW is not sending
->> any iSCSI NOP to target.
-> 
-> Yeah, that is what I was saying.
-> 
->> 
->> We are just using value of ka_timeout in sess->recovery_tmo because
->> we want to wait for some time for connection to comeback else
->> mark device dead.
-> 
-> I agree 100% that you should have a timer to wait for the session to 
-> come back. libiscsi has the noop settings which is equivalent to your 
-> ka_timeout and then for the recovery_tmo we have the 
-> replacement/recovery_tmo setting. My point is that there is no 
-> requirement and no good reason to set sess->recovery_tmo based on the 
-> same setting.
-> 
-> I am saying ka_timeout is not used for the same operations as 
-> session->recovery_tmo. They handle two separate events, and should be 
-> two separate settings. Once ka_timeout has expired we have marked the 
-> session as down, and now we are on the recovery stage, so a new timer 
-> comes into play.
-> 
-> So ka_timeout is used to determine when we want to mark a session as bad.
-> 
-> session->recovery_tmo is used to determine when we want give up on the 
-> session.
-> 
-> They should be 2 different settings since testing a SAN/port can take 
-> different times than doing recovery of a session.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|MD                          |SCSI
+         AssignedTo|neilb@suse.de               |linux-scsi@vger.kernel.org
 
-Thanks for the clarification. What about if we provide a cmd line option
-for user's to fine tune if needed, with default value set.
-Sound's OK ? 
 
-Anyway we will look into libiscsi code as well.
 
-Thanks
-ravi
 
+--- Comment #2 from Neil Brown <neilb@suse.de>  2010-06-23 07:20:21 ---
+The traceback in the attachments looks like this might be a SCSI problem.
+
+Anyone able to look??
+Thanks.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
