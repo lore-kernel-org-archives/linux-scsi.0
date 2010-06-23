@@ -1,37 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16275] Kernel panic when mounting filesystem
-Date: Wed, 23 Jun 2010 07:35:57 GMT
-Message-ID: <201006230735.o5N7ZvNp004155@demeter.kernel.org>
-References: <bug-16275-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:53307 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751638Ab0FWHf6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2010 03:35:58 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o5N7Zv5s004156
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2010 07:35:57 GMT
-In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 0/3] convert flush request to REQ_TYPE_FS instead of BLOCK_PC
+Date: Thu, 24 Jun 2010 00:07:29 +0900
+Message-ID: <1277305652-2306-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: axboe@kernel.dk, James.Bottomley@HansenPartnership.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16275
+We use REQ_TYPE_BLOCK_PC for flush requests from file
+systems. scsi-ml's definition of REQ_TYPE_BLOCK_PC is that we don't
+retry PC requests even when we can (e.g. UNIT ATTENTION) and we send
+the response to the callers, and expect the callers to decide what
+they want.
 
+File systems (and the block layer) don't have the mechnism to retry
+requests so file systems hit avoidable I/O errors. We need a
+workaround such as the commit 77a4229719e511a0d38d9c355317ae1469adeb54
+to retry BLOCK_PC flush requests. We will need the similar workaround
+for discard requests too since SCSI-ml handle them as BLOCK_PC
+internally.
 
+This uses REQ_TYPE_FS for flush requests from file systems instead of
+REQ_TYPE_BLOCK_PC. flush requests are retried when appropriate.
 
+This patchset can be applied to the block tree's for-2.6.36. It
+contains of some changes to scsi so this patchset can't be applied to
+scsi-misc.
 
-
---- Comment #4 from Neil Brown <neilb@suse.de>  2010-06-23 07:35:54 ---
-Yep... SATA uses the same infrastructure as SCSI so a number of the
-function names still contain "SCSI" even though it is't really working with
-a SCSI disk.
-Still - the SCSI people have a better chance and understanding the stack trace.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+=
+ block/blk-barrier.c       |    4 ++--
+ drivers/scsi/scsi_error.c |   19 ++++---------------
+ drivers/scsi/sd.c         |   19 +++++++++++++------
+ include/linux/bio.h       |    2 ++
+ 4 files changed, 21 insertions(+), 23 deletions(-)
