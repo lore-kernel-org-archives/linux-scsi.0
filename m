@@ -1,16 +1,16 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 2/7] BNX2I: Created an active linklist which holds bnx2i
- endpoints
-Date: Fri, 25 Jun 2010 18:39:27 -0700
-Message-ID: <1277516372-469-3-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH 3/7] BNX2I: Optimized the bnx2i_stop connection clean up
+ procedure
+Date: Fri, 25 Jun 2010 18:39:28 -0700
+Message-ID: <1277516372-469-4-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4281 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4289 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317Ab0FZBip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753336Ab0FZBip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 25 Jun 2010 21:38:45 -0400
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,158 +18,154 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-This introduces a new active linklist which would link up all active
-bnx2i_endpoints.  This will be used by subsequent patches that
-follows.
+For cases where the iSCSI disconnection procedure times out due to
+the iSCSI daemon being slow or unresponsive, the bnx2i_stop routine
+will now perform hardware cleanup via bnx2i_hw_ep_disconnect on all
+active endpoints so that subsequent operations will perform properly.
+Also moved the mutex locks inside ep_connect and ep_disconnect so
+that proper exclusivity can resolve simultaneous calls to the
+ep_disconnect routine.
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
 Reviewed-by: Michael Chan <mchan@broadcom.com>
 Reviewed-by: Benjamin Li <benli@broadcom.com>
 Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i.h       |    4 +++
- drivers/scsi/bnx2i/bnx2i_iscsi.c |   43 +++++++++++++++++++++++++++++++++++++-
- 2 files changed, 46 insertions(+), 1 deletions(-)
+ drivers/scsi/bnx2i/bnx2i.h       |    4 ++++
+ drivers/scsi/bnx2i/bnx2i_init.c  |   35 ++++++++++++++++++++++++++++++++---
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   11 ++++++-----
+ 3 files changed, 42 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index 6b624e7..c17c3a3 100644
+index c17c3a3..fed1a68 100644
 --- a/drivers/scsi/bnx2i/bnx2i.h
 +++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -299,6 +299,7 @@ struct iscsi_cid_queue {
+@@ -295,6 +295,7 @@ struct iscsi_cid_queue {
+  * @max_cqes:              CQ size
+  * @num_ccell:             number of command cells per connection
+  * @ofld_conns_active:     active connection list
++ * @eh_wait:               wait queue for the endpoint to shutdown
+  * @max_active_conns:      max offload connections supported by this device
   * @cid_que:               iscsi cid queue
   * @ep_rdwr_lock:          read / write lock to synchronize various ep lists
-  * @ep_ofld_list:          connection list for pending offload completion
-+ * @ep_active_list:        connection list for active offload endpoints
-  * @ep_destroy_list:       connection list for pending offload completion
-  * @mp_bd_tbl:             BD table to be used with middle path requests
-  * @mp_bd_dma:             DMA address of 'mp_bd_tbl' memory buffer
-@@ -369,6 +370,7 @@ struct bnx2i_hba {
+@@ -306,6 +307,7 @@ struct iscsi_cid_queue {
+  * @dummy_buffer:          Dummy buffer to be used with zero length scsicmd reqs
+  * @dummy_buf_dma:         DMA address of 'dummy_buffer' memory buffer
+  * @lock:              	   lock to synchonize access to hba structure
++ * @hba_shutdown_tmo:      Timeout value to shutdown each connection
+  * @pci_did:               PCI device ID
+  * @pci_vid:               PCI vendor ID
+  * @pci_sdid:              PCI subsystem device ID
+@@ -770,6 +772,8 @@ extern struct bnx2i_endpoint *bnx2i_find_ep_in_destroy_list(
+ extern int bnx2i_map_ep_dbell_regs(struct bnx2i_endpoint *ep);
+ extern void bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action);
  
- 	rwlock_t ep_rdwr_lock;
- 	struct list_head ep_ofld_list;
-+	struct list_head ep_active_list;
- 	struct list_head ep_destroy_list;
++extern int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep);
++
+ /* Debug related function prototypes */
+ extern void bnx2i_print_pend_cmd_queue(struct bnx2i_conn *conn);
+ extern void bnx2i_print_active_cmd_queue(struct bnx2i_conn *conn);
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index af6a00a..fa4fb75 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -176,6 +176,9 @@ void bnx2i_start(void *handle)
+ void bnx2i_stop(void *handle)
+ {
+ 	struct bnx2i_hba *hba = handle;
++	struct list_head *pos, *tmp;
++	struct bnx2i_endpoint *bnx2i_ep;
++	int conns_active;
  
- 	/*
-@@ -645,6 +647,7 @@ enum {
-  * @link:               list head to link elements
-  * @hba:                adapter to which this connection belongs
-  * @conn:               iscsi connection this EP is linked to
-+ * @cls_ep:             associated iSCSI endpoint pointer
-  * @sess:               iscsi session this EP is linked to
-  * @cm_sk:              cnic sock struct
-  * @hba_age:            age to detect if 'iscsid' issues ep_disconnect()
-@@ -664,6 +667,7 @@ struct bnx2i_endpoint {
- 	struct list_head link;
- 	struct bnx2i_hba *hba;
- 	struct bnx2i_conn *conn;
-+	struct iscsi_endpoint *cls_ep;
- 	struct cnic_sock *cm_sk;
- 	u32 hba_age;
- 	u32 state;
+ 	/* check if cleanup happened in GOING_DOWN context */
+ 	if (!test_and_clear_bit(ADAPTER_STATE_GOING_DOWN,
+@@ -187,9 +190,35 @@ void bnx2i_stop(void *handle)
+ 	 *  control returns to network driver. So it is required to cleanup and
+ 	 * release all connection resources before returning from this routine.
+ 	 */
+-	wait_event_interruptible_timeout(hba->eh_wait,
+-					 (hba->ofld_conns_active == 0),
+-					 hba->hba_shutdown_tmo);
++	while (hba->ofld_conns_active) {
++		conns_active = hba->ofld_conns_active;
++		wait_event_interruptible_timeout(hba->eh_wait,
++				(hba->ofld_conns_active != conns_active),
++				hba->hba_shutdown_tmo);
++		if (hba->ofld_conns_active == conns_active)
++			break;
++	}
++	if (hba->ofld_conns_active) {
++		/* Stage to force the disconnection
++		 * This is the case where the daemon is either slow or
++		 * not present
++		 */
++		printk(KERN_ALERT "bnx2i: Wait timeout, force all eps "
++			"to disconnect (%d)\n", hba->ofld_conns_active);
++		mutex_lock(&hba->net_dev_lock);
++		read_lock_bh(&hba->ep_rdwr_lock);
++		list_for_each_safe(pos, tmp, &hba->ep_active_list) {
++			bnx2i_ep = list_entry(pos, struct bnx2i_endpoint, link);
++			/* Clean up the chip only */
++			bnx2i_hw_ep_disconnect(bnx2i_ep);
++		}
++		read_unlock_bh(&hba->ep_rdwr_lock);
++		mutex_unlock(&hba->net_dev_lock);
++		if (hba->ofld_conns_active)
++			printk(KERN_ERR "bnx2i: EP disconnect timeout (%d)!\n",
++				hba->ofld_conns_active);
++	}
++
+ 	/* This flag should be cleared last so that ep_disconnect() gracefully
+ 	 * cleans up connection context
+ 	 */
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 3276555..2179296 100644
+index 2179296..a6ee72e 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -386,6 +386,7 @@ static struct iscsi_endpoint *bnx2i_alloc_ep(struct bnx2i_hba *hba)
+@@ -858,9 +858,9 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 	mutex_init(&hba->net_dev_lock);
+ 	init_waitqueue_head(&hba->eh_wait);
+ 	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type))
+-		hba->hba_shutdown_tmo = 240 * HZ;
++		hba->hba_shutdown_tmo = 20 * HZ;
+ 	else	/* 5706/5708/5709 */
+-		hba->hba_shutdown_tmo = 30 * HZ;
++		hba->hba_shutdown_tmo = 20 * HZ;
+ 
+ 	if (iscsi_host_add(shost, &hba->pcidev->dev))
+ 		goto free_dump_mem;
+@@ -1702,10 +1702,11 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 
+ 	if (!hba || test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state)) {
+ 		rc = -EINVAL;
+-		goto check_busy;
++		goto nohba;
  	}
  
+ 	cnic = hba->cnic;
++	mutex_lock(&hba->net_dev_lock);
+ 	ep = bnx2i_alloc_ep(hba);
+ 	if (!ep) {
+ 		rc = -ENOMEM;
+@@ -1713,7 +1714,6 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 	}
  	bnx2i_ep = ep->dd_data;
-+	bnx2i_ep->cls_ep = ep;
- 	INIT_LIST_HEAD(&bnx2i_ep->link);
- 	bnx2i_ep->state = EP_STATE_IDLE;
- 	bnx2i_ep->ep_iscsi_cid = (u16) -1;
-@@ -678,7 +679,6 @@ bnx2i_find_ep_in_ofld_list(struct bnx2i_hba *hba, u32 iscsi_cid)
- 	return ep;
+ 
+-	mutex_lock(&hba->net_dev_lock);
+ 	if (bnx2i_adapter_ready(hba)) {
+ 		rc = -EPERM;
+ 		goto net_if_down;
+@@ -1814,8 +1814,9 @@ iscsi_cid_err:
+ 	bnx2i_free_qp_resc(hba, bnx2i_ep);
+ qp_resc_err:
+ 	bnx2i_free_ep(ep);
+-	mutex_unlock(&hba->net_dev_lock);
+ check_busy:
++	mutex_unlock(&hba->net_dev_lock);
++nohba:
+ 	bnx2i_unreg_dev_all();
+ 	return ERR_PTR(rc);
  }
- 
--
- /**
-  * bnx2i_find_ep_in_destroy_list - find iscsi_cid in destroy list
-  * @hba: 		pointer to adapter instance
-@@ -708,6 +708,41 @@ bnx2i_find_ep_in_destroy_list(struct bnx2i_hba *hba, u32 iscsi_cid)
- 	return ep;
- }
- 
-+
-+/**
-+ * bnx2i_ep_active_list_add - add an entry to ep active list
-+ * @hba:	pointer to adapter instance
-+ * @ep:		pointer to endpoint (transport indentifier) structure
-+ *
-+ * current active conn queue manager
-+ */
-+static int bnx2i_ep_active_list_add(struct bnx2i_hba *hba,
-+				    struct bnx2i_endpoint *ep)
-+{
-+	write_lock_bh(&hba->ep_rdwr_lock);
-+	list_add_tail(&ep->link, &hba->ep_active_list);
-+	write_unlock_bh(&hba->ep_rdwr_lock);
-+	return 0;
-+}
-+
-+
-+/**
-+ * bnx2i_ep_active_list_del - deletes an entry to ep active list
-+ * @hba:	pointer to adapter instance
-+ * @ep:		pointer to endpoint (transport indentifier) structure
-+ *
-+ * current active conn queue manager
-+ */
-+static int bnx2i_ep_active_list_del(struct bnx2i_hba *hba,
-+				    struct bnx2i_endpoint *ep)
-+{
-+	write_lock_bh(&hba->ep_rdwr_lock);
-+	list_del_init(&ep->link);
-+	write_unlock_bh(&hba->ep_rdwr_lock);
-+	return 0;
-+}
-+
-+
- /**
-  * bnx2i_setup_host_queue_size - assigns shost->can_queue param
-  * @hba:	pointer to adapter instance
-@@ -784,6 +819,7 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
- 		goto mp_bdt_mem_err;
- 
- 	INIT_LIST_HEAD(&hba->ep_ofld_list);
-+	INIT_LIST_HEAD(&hba->ep_active_list);
- 	INIT_LIST_HEAD(&hba->ep_destroy_list);
- 	rwlock_init(&hba->ep_rdwr_lock);
- 
-@@ -857,6 +893,7 @@ void bnx2i_free_hba(struct bnx2i_hba *hba)
- 
- 	iscsi_host_remove(shost);
- 	INIT_LIST_HEAD(&hba->ep_ofld_list);
-+	INIT_LIST_HEAD(&hba->ep_active_list);
- 	INIT_LIST_HEAD(&hba->ep_destroy_list);
- 	pci_dev_put(hba->pcidev);
- 
-@@ -1755,6 +1792,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	} else
- 		rc = cnic->cm_connect(bnx2i_ep->cm_sk, &saddr);
- 
-+	bnx2i_ep_active_list_add(hba, bnx2i_ep);
-+
- 	if (rc)
- 		goto release_ep;
- 
-@@ -1764,6 +1803,7 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	return ep;
- 
- release_ep:
-+	bnx2i_ep_active_list_del(hba, bnx2i_ep);
- 	if (bnx2i_tear_down_conn(hba, bnx2i_ep)) {
- 		mutex_unlock(&hba->net_dev_lock);
- 		return ERR_PTR(rc);
-@@ -1931,6 +1971,7 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
- 	del_timer_sync(&bnx2i_ep->ofld_timer);
- 
- destroy_conn:
-+	bnx2i_ep_active_list_del(hba, bnx2i_ep);
- 	if (bnx2i_tear_down_conn(hba, bnx2i_ep))
- 		ret = -EINVAL;
- out:
 -- 
 1.7.0.5
 
