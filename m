@@ -1,16 +1,16 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 3/7] BNX2I: Optimized the bnx2i_stop connection clean up
- procedure
-Date: Fri, 25 Jun 2010 18:39:28 -0700
-Message-ID: <1277516372-469-4-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH 4/7] BNX2I: Fine tuned conn destroy and context destroy
+ timeout values
+Date: Fri, 25 Jun 2010 18:39:29 -0700
+Message-ID: <1277516372-469-5-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4289 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:4314 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753336Ab0FZBip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753395Ab0FZBip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 25 Jun 2010 21:38:45 -0400
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,13 +18,8 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-For cases where the iSCSI disconnection procedure times out due to
-the iSCSI daemon being slow or unresponsive, the bnx2i_stop routine
-will now perform hardware cleanup via bnx2i_hw_ep_disconnect on all
-active endpoints so that subsequent operations will perform properly.
-Also moved the mutex locks inside ep_connect and ep_disconnect so
-that proper exclusivity can resolve simultaneous calls to the
-ep_disconnect routine.
+Added variables to separate the fine tuned timeout values for
+connection destroy and context destroy for both 1g and 10g devices.
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
 Reviewed-by: Michael Chan <mchan@broadcom.com>
@@ -32,140 +27,71 @@ Reviewed-by: Benjamin Li <benli@broadcom.com>
 Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 ---
  drivers/scsi/bnx2i/bnx2i.h       |    4 ++++
- drivers/scsi/bnx2i/bnx2i_init.c  |   35 ++++++++++++++++++++++++++++++++---
- drivers/scsi/bnx2i/bnx2i_iscsi.c |   11 ++++++-----
- 3 files changed, 42 insertions(+), 8 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   13 +++++++++----
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index c17c3a3..fed1a68 100644
+index fed1a68..69febb6 100644
 --- a/drivers/scsi/bnx2i/bnx2i.h
 +++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -295,6 +295,7 @@ struct iscsi_cid_queue {
-  * @max_cqes:              CQ size
-  * @num_ccell:             number of command cells per connection
-  * @ofld_conns_active:     active connection list
-+ * @eh_wait:               wait queue for the endpoint to shutdown
-  * @max_active_conns:      max offload connections supported by this device
-  * @cid_que:               iscsi cid queue
-  * @ep_rdwr_lock:          read / write lock to synchronize various ep lists
-@@ -306,6 +307,7 @@ struct iscsi_cid_queue {
-  * @dummy_buffer:          Dummy buffer to be used with zero length scsicmd reqs
+@@ -308,6 +308,8 @@ struct iscsi_cid_queue {
   * @dummy_buf_dma:         DMA address of 'dummy_buffer' memory buffer
   * @lock:              	   lock to synchonize access to hba structure
-+ * @hba_shutdown_tmo:      Timeout value to shutdown each connection
+  * @hba_shutdown_tmo:      Timeout value to shutdown each connection
++ * @conn_teardown_tmo:     Timeout value to tear down each connection
++ * @conn_ctx_destroy_tmo:  Timeout value to destroy context of each connection
   * @pci_did:               PCI device ID
   * @pci_vid:               PCI vendor ID
   * @pci_sdid:              PCI subsystem device ID
-@@ -770,6 +772,8 @@ extern struct bnx2i_endpoint *bnx2i_find_ep_in_destroy_list(
- extern int bnx2i_map_ep_dbell_regs(struct bnx2i_endpoint *ep);
- extern void bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action);
+@@ -387,6 +389,8 @@ struct bnx2i_hba {
+ 	struct mutex net_dev_lock;/* sync net device access */
  
-+extern int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep);
-+
- /* Debug related function prototypes */
- extern void bnx2i_print_pend_cmd_queue(struct bnx2i_conn *conn);
- extern void bnx2i_print_active_cmd_queue(struct bnx2i_conn *conn);
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index af6a00a..fa4fb75 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -176,6 +176,9 @@ void bnx2i_start(void *handle)
- void bnx2i_stop(void *handle)
- {
- 	struct bnx2i_hba *hba = handle;
-+	struct list_head *pos, *tmp;
-+	struct bnx2i_endpoint *bnx2i_ep;
-+	int conns_active;
- 
- 	/* check if cleanup happened in GOING_DOWN context */
- 	if (!test_and_clear_bit(ADAPTER_STATE_GOING_DOWN,
-@@ -187,9 +190,35 @@ void bnx2i_stop(void *handle)
- 	 *  control returns to network driver. So it is required to cleanup and
- 	 * release all connection resources before returning from this routine.
- 	 */
--	wait_event_interruptible_timeout(hba->eh_wait,
--					 (hba->ofld_conns_active == 0),
--					 hba->hba_shutdown_tmo);
-+	while (hba->ofld_conns_active) {
-+		conns_active = hba->ofld_conns_active;
-+		wait_event_interruptible_timeout(hba->eh_wait,
-+				(hba->ofld_conns_active != conns_active),
-+				hba->hba_shutdown_tmo);
-+		if (hba->ofld_conns_active == conns_active)
-+			break;
-+	}
-+	if (hba->ofld_conns_active) {
-+		/* Stage to force the disconnection
-+		 * This is the case where the daemon is either slow or
-+		 * not present
-+		 */
-+		printk(KERN_ALERT "bnx2i: Wait timeout, force all eps "
-+			"to disconnect (%d)\n", hba->ofld_conns_active);
-+		mutex_lock(&hba->net_dev_lock);
-+		read_lock_bh(&hba->ep_rdwr_lock);
-+		list_for_each_safe(pos, tmp, &hba->ep_active_list) {
-+			bnx2i_ep = list_entry(pos, struct bnx2i_endpoint, link);
-+			/* Clean up the chip only */
-+			bnx2i_hw_ep_disconnect(bnx2i_ep);
-+		}
-+		read_unlock_bh(&hba->ep_rdwr_lock);
-+		mutex_unlock(&hba->net_dev_lock);
-+		if (hba->ofld_conns_active)
-+			printk(KERN_ERR "bnx2i: EP disconnect timeout (%d)!\n",
-+				hba->ofld_conns_active);
-+	}
-+
- 	/* This flag should be cleared last so that ep_disconnect() gracefully
- 	 * cleans up connection context
+ 	int hba_shutdown_tmo;
++	int conn_teardown_tmo;
++	int conn_ctx_destroy_tmo;
+ 	/*
+ 	 * PCI related info.
  	 */
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 2179296..a6ee72e 100644
+index a6ee72e..f8394d4 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -858,9 +858,9 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+@@ -857,10 +857,15 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 	spin_lock_init(&hba->lock);
  	mutex_init(&hba->net_dev_lock);
  	init_waitqueue_head(&hba->eh_wait);
- 	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type))
--		hba->hba_shutdown_tmo = 240 * HZ;
-+		hba->hba_shutdown_tmo = 20 * HZ;
- 	else	/* 5706/5708/5709 */
--		hba->hba_shutdown_tmo = 30 * HZ;
-+		hba->hba_shutdown_tmo = 20 * HZ;
+-	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type))
++	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type)) {
+ 		hba->hba_shutdown_tmo = 20 * HZ;
+-	else	/* 5706/5708/5709 */
++		hba->conn_teardown_tmo = 10 * HZ;
++		hba->conn_ctx_destroy_tmo = 6 * HZ;
++	} else {	/* 5706/5708/5709 */
+ 		hba->hba_shutdown_tmo = 20 * HZ;
++		hba->conn_teardown_tmo = 10 * HZ;
++		hba->conn_ctx_destroy_tmo = 2 * HZ;
++	}
  
  	if (iscsi_host_add(shost, &hba->pcidev->dev))
  		goto free_dump_mem;
-@@ -1702,10 +1702,11 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+@@ -1636,7 +1641,7 @@ static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
  
- 	if (!hba || test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state)) {
- 		rc = -EINVAL;
--		goto check_busy;
-+		goto nohba;
- 	}
+ 	ep->state = EP_STATE_CLEANUP_START;
+ 	init_timer(&ep->ofld_timer);
+-	ep->ofld_timer.expires = 10*HZ + jiffies;
++	ep->ofld_timer.expires = hba->conn_ctx_destroy_tmo + jiffies;
+ 	ep->ofld_timer.function = bnx2i_ep_ofld_timer;
+ 	ep->ofld_timer.data = (unsigned long) ep;
+ 	add_timer(&ep->ofld_timer);
+@@ -1939,7 +1944,7 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ 	bnx2i_ep->state = EP_STATE_DISCONN_START;
  
- 	cnic = hba->cnic;
-+	mutex_lock(&hba->net_dev_lock);
- 	ep = bnx2i_alloc_ep(hba);
- 	if (!ep) {
- 		rc = -ENOMEM;
-@@ -1713,7 +1714,6 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	}
- 	bnx2i_ep = ep->dd_data;
- 
--	mutex_lock(&hba->net_dev_lock);
- 	if (bnx2i_adapter_ready(hba)) {
- 		rc = -EPERM;
- 		goto net_if_down;
-@@ -1814,8 +1814,9 @@ iscsi_cid_err:
- 	bnx2i_free_qp_resc(hba, bnx2i_ep);
- qp_resc_err:
- 	bnx2i_free_ep(ep);
--	mutex_unlock(&hba->net_dev_lock);
- check_busy:
-+	mutex_unlock(&hba->net_dev_lock);
-+nohba:
- 	bnx2i_unreg_dev_all();
- 	return ERR_PTR(rc);
- }
+ 	init_timer(&bnx2i_ep->ofld_timer);
+-	bnx2i_ep->ofld_timer.expires = 10*HZ + jiffies;
++	bnx2i_ep->ofld_timer.expires = hba->conn_teardown_tmo + jiffies;
+ 	bnx2i_ep->ofld_timer.function = bnx2i_ep_ofld_timer;
+ 	bnx2i_ep->ofld_timer.data = (unsigned long) bnx2i_ep;
+ 	add_timer(&bnx2i_ep->ofld_timer);
 -- 
 1.7.0.5
 
