@@ -1,22 +1,32 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 16275] Kernel panic when mounting filesystem
-Date: Sun, 27 Jun 2010 16:06:10 -0500
-Message-ID: <1277672770.10879.5.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Sun, 27 Jun 2010 21:07:01 GMT
+Message-ID: <201006272107.o5RL71Vr022017@demeter.kernel.org>
 References: <bug-16275-11613@https.bugzilla.kernel.org/>
-	 <201006250813.o5P8Dd7w030091@demeter.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51022 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755921Ab0F0VGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Jun 2010 17:06:15 -0400
-In-Reply-To: <201006250813.o5P8Dd7w030091@demeter.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:37146 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755926Ab0F0VHD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Jun 2010 17:07:03 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o5RL71I4022022
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Jun 2010 21:07:01 GMT
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
+
+
+
+
+
+--- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-06-27 21:06:55 ---
+Reply-To: James.Bottomley@suse.de
 
 On Fri, 2010-06-25 at 08:13 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -33,10 +43,10 @@ screen, but the presentation is some type of crash in
 scsi_setup_fs_cmnd().  Without the missing information, it's hard to
 say, but I'd would be a reasonable guess that it's this BUG_ON:
 
-	/*
-	 * Filesystem requests must transfer data.
-	 */
-	BUG_ON(!req->nr_phys_segments);
+    /*
+     * Filesystem requests must transfer data.
+     */
+    BUG_ON(!req->nr_phys_segments);
 
 Which would point to the filesystem.  First order of business would be
 to validate the guess by getting the missing part of the trace, and then
@@ -44,4 +54,7 @@ start looking into the relevant filesystem.
 
 James
 
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
