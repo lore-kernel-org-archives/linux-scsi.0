@@ -1,48 +1,47 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/2] block: fix leaks associated with discard request
- payload
-Date: Mon, 28 Jun 2010 01:23:02 +0900
-Message-ID: <20100628012055Y.fujita.tomonori@lab.ntt.co.jp>
-References: <20100627212952D.fujita.tomonori@lab.ntt.co.jp>
-	<20100627141638.GD3970@redhat.com>
-	<20100627153545.GC25667@lst.de>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Bug 16275] Kernel panic when mounting filesystem
+Date: Sun, 27 Jun 2010 16:06:10 -0500
+Message-ID: <1277672770.10879.5.camel@mulgrave.site>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
+	 <201006250813.o5P8Dd7w030091@demeter.kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:44740 "EHLO sh.osrg.net"
+Received: from cantor2.suse.de ([195.135.220.15]:51022 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755552Ab0F0QXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Jun 2010 12:23:36 -0400
-In-Reply-To: <20100627153545.GC25667@lst.de>
+	id S1755921Ab0F0VGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Jun 2010 17:06:15 -0400
+In-Reply-To: <201006250813.o5P8Dd7w030091@demeter.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@lst.de
-Cc: snitzer@redhat.com, fujita.tomonori@lab.ntt.co.jp, axboe@kernel.dk, dm-devel@redhat.com, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 27 Jun 2010 17:35:45 +0200
-Christoph Hellwig <hch@lst.de> wrote:
+On Fri, 2010-06-25 at 08:13 +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> any news ?
+> I can test if someone give - patch that fix this issue.
 
-> On Sun, Jun 27, 2010 at 10:16:40AM -0400, Mike Snitzer wrote:
-> > My leak fixes have been tested extensively against all permuations of
-> > devices with discards (ATA trim, SCSI UNMAP, SCSI WRTIE SAME w/ unmap=1).
-> > 
-> > I think we need to get Christoph's discard payload transformation
-> > complete by fixing the leaks _without_ trying to rework how discard
-> > commands are tagged, etc.  E.g. fix what Jens already has staged in
-> > linux-2.6-block's 'for-next' and 'for-2.6.36'.
-> > 
-> > With that sorted out we can then look at longer term changes to cleanup
-> > discard request processing.
-> 
-> I tend to agree.  I'll look into getting rid of treating discards as
-> BLOCK_PC commands ontop of you patchset.
+For those who don't have access to bugzilla, there's a gif image of the
+crash:
 
-Let's start from jens' 2.6.36 tree (or it would be better if Jens can
-drop Christoph's patch).
+https://bugzilla.kernel.org/attachment.cgi?id=26910
 
-We don't need to start on the top of new discard hacks (specially, the
-hack in scsi_finish_command looks terrible). We should not merge them
-into mainline. We are still in rc3.
+Unfortunately, the crucial information has scrolled off the top of the
+screen, but the presentation is some type of crash in
+scsi_setup_fs_cmnd().  Without the missing information, it's hard to
+say, but I'd would be a reasonable guess that it's this BUG_ON:
 
-I'll see how things work with other configurations.
+	/*
+	 * Filesystem requests must transfer data.
+	 */
+	BUG_ON(!req->nr_phys_segments);
+
+Which would point to the filesystem.  First order of business would be
+to validate the guess by getting the missing part of the trace, and then
+start looking into the relevant filesystem.
+
+James
+
+
