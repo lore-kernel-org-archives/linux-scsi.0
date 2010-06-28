@@ -1,62 +1,32 @@
 From: Kulikov Vasiliy <segooon@gmail.com>
-Subject: [PATCH 07/16] trivial: use ARRAY_SIZE
-Date: Mon, 28 Jun 2010 15:55:08 +0400
-Message-ID: <1277726109-24633-1-git-send-email-segooon@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48266 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091Ab0F1LzM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jun 2010 07:55:12 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 06/16] trivial: use ARRAY_SIZE
+Date: Mon, 28 Jun 2010 15:55:04 +0400
+Message-ID: <1277726105-24600-1-git-send-email-segooon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: trivial@kernel.org
 Cc: Kernel Janitors <kernel-janitors@vger.kernel.org>, Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Krishna Gudipati <kgudipat@brocade.com>, Kulikov Vasiliy <segooon@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 Change sizeof(x) / sizeof(*x) to ARRAY_SIZE(x).
 
 Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
 ---
- drivers/scsi/bfa/bfa_fcs.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/bfa/bfa_core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
-index 3516172..153cb2a 100644
---- a/drivers/scsi/bfa/bfa_fcs.c
-+++ b/drivers/scsi/bfa/bfa_fcs.c
-@@ -86,7 +86,7 @@ bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
- 	bfa_attach_fcs(bfa);
- 	fcbuild_init();
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 3a7b3f8..d845506 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -335,7 +335,7 @@ bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids)
+ 		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT},
+ 	};
  
--	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(fcs_modules); i++) {
- 		mod = &fcs_modules[i];
- 		if (mod->attach)
- 			mod->attach(fcs);
-@@ -102,7 +102,7 @@ bfa_fcs_init(struct bfa_fcs_s *fcs)
- 	int             i;
- 	struct bfa_fcs_mod_s  *mod;
+-	*npciids = sizeof(__pciids) / sizeof(__pciids[0]);
++	*npciids = ARRAY_SIZE(__pciids);
+ 	*pciids = __pciids;
+ }
  
--	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
-+	for (i = 0; i < ARRAY_SIZE(fcs_modules); i++) {
- 		mod = &fcs_modules[i];
- 		if (mod->modinit)
- 			mod->modinit(fcs);
-@@ -163,13 +163,11 @@ void
- bfa_fcs_exit(struct bfa_fcs_s *fcs)
- {
- 	struct bfa_fcs_mod_s  *mod;
--	int             nmods, i;
-+	int i;
- 
- 	bfa_wc_init(&fcs->wc, bfa_fcs_exit_comp, fcs);
- 
--	nmods = sizeof(fcs_modules) / sizeof(fcs_modules[0]);
--
--	for (i = 0; i < nmods; i++) {
-+	for (i = 0; i < ARRAY_SIZE(fcs_modules); i++) {
- 
- 		mod = &fcs_modules[i];
- 		if (mod->modexit) {
 -- 
 1.7.0.4
-
