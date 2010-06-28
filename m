@@ -1,66 +1,40 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] scsi_debug: fix map_region and unmap_region oops
-Date: Tue, 29 Jun 2010 02:27:27 +0900
-Message-ID: <20100629022513E.fujita.tomonori@lab.ntt.co.jp>
-References: <20100628010219G.fujita.tomonori@lab.ntt.co.jp>
-	<yq1ocevdqjn.fsf@sermon.lab.mkp.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Alternate ways to do Scatter-Gather from BOT Class driver
+Date: Mon, 28 Jun 2010 14:55:27 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1006281452480.1977-100000@iolanthe.rowland.org>
+References: <AANLkTiljLLGh8zbx1EY53-6LezDZ-utWW8FFbpFQwPIr@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:48827 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752799Ab0F1R1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Jun 2010 13:27:50 -0400
-In-Reply-To: <yq1ocevdqjn.fsf@sermon.lab.mkp.net>
+Received: from iolanthe.rowland.org ([192.131.102.54]:38089 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751896Ab0F1Szb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jun 2010 14:55:31 -0400
+In-Reply-To: <AANLkTiljLLGh8zbx1EY53-6LezDZ-utWW8FFbpFQwPIr@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, dgilbert@interlog.com, hch@lst.de, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: Subs <sar.subs@gmail.com>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 28 Jun 2010 13:18:20 -0400
-"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+On Mon, 28 Jun 2010, Subs wrote:
 
-> >>>>> "Tomo" == FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> writes:
+> Hi All,
 > 
-> Tomo> = From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> Subject:
-> Tomo> [PATCH] scsi_debug: fix map_region and unmap_region oops
+> In my class driver I am receiving data transfer buffer as number of
+> Scatter-Gather lists from SCSI layer to perform data transfers.
 > 
-> Tomo> map_region and unmap_region could access to invalid memory area
-> Tomo> since they don't check the size boundary.
-> 
-> Tomo> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> ---
-> Tomo>  drivers/scsi/scsi_debug.c | 6 ++++-- 1 files changed, 4
-> Tomo>  insertions(+), 2 deletions(-)
-> 
-> Tomo> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> Tomo> index 136329b..b02bdc6 100644
-> Tomo> --- a/drivers/scsi/scsi_debug.c
-> Tomo> +++ b/drivers/scsi/scsi_debug.c
-> Tomo> @@ -1991,7 +1991,8 @@ static void map_region(sector_t lba,
-> Tomo> unsigned int len)
-> Tomo>  		block = lba + alignment; rem = do_div(block,
-> Tomo>  		granularity);
->  
-> Tomo> - set_bit(block, map_storep);
-> Tomo> + if (block < map_size)
-> Tomo> + set_bit(block, map_storep);
->  
-> Tomo>  		lba += granularity - rem;
-> Tomo>  	}
-> Tomo> @@ -2011,7 +2012,8 @@ static void unmap_region(sector_t lba,
-> Tomo> unsigned int len)
-> Tomo>  		block = lba + alignment; rem = do_div(block,
-> Tomo>  		granularity);
->  
-> Tomo> - if (rem == 0 && lba + granularity <= end)
-> Tomo> + if (rem == 0 && lba + granularity <= end &&
-> Tomo> + block < map_size)
-> Tomo>  			clear_bit(block, map_storep);
->  
-> Tomo>  		lba += granularity - rem;
-> 
-> I'm ok with the patch but I'm interested in what you were doing causing
-> it to access out of bounds?
+> Is there any alternate way to get the transfer buffer from SCSI other
+> than SG. I wanted to receive the complete data transfer buffer as a
+> single pointer.
 
-I set unmap_granularity to 1 and then run mkfs.xfs.
+As far as I know, there is no alternate way to get the transfer buffer 
+from the SCSI layer.
+
+However you can get the effect you want by setting the sg_tablesize 
+field in your scsi_host_template to 1.
+
+Just out of curiosity, why are you writing a class driver for the BOT 
+class?  Aren't the two existing drivers in the kernel good enough?
+
+Alan Stern
+
