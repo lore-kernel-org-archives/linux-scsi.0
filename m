@@ -1,77 +1,53 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Alternate ways to do Scatter-Gather from BOT Class driver
-Date: Tue, 29 Jun 2010 14:06:06 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1006291352470.1314-100000@iolanthe.rowland.org>
-References: <AANLkTilIM-9svLKrqaPfsjESn_9VnqsffBDwtiau8B_3@mail.gmail.com>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH 03/23] bfa: PBC vport create
+Date: Tue, 29 Jun 2010 12:34:02 -0700
+Message-ID: <04391A4E90BB2149B010D22452FA16870228315BCE@HQ-EXCH-6.corp.brocade.com>
+References: <1276626113-3102-1-git-send-email-huangj@brocade.com>
+ <1277045513.5242.15.camel@mulgrave.site>
+ <04391A4E90BB2149B010D22452FA168702283154A5@HQ-EXCH-6.corp.brocade.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <AANLkTilIM-9svLKrqaPfsjESn_9VnqsffBDwtiau8B_3-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Subs <sar.subs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:40888 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752815Ab0F2TeN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jun 2010 15:34:13 -0400
+In-Reply-To: <04391A4E90BB2149B010D22452FA168702283154A5@HQ-EXCH-6.corp.brocade.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jing Huang <huangj@Brocade.COM>, James Bottomley <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vinodh Ravindran <vravindr@Brocade.COM>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Krishna Gudipati <kgudipat@Brocade.com>, Akshay Mathur <amathur@brocade.com>
 
-On Tue, 29 Jun 2010, Subs wrote:
-
-> On Tue, Jun 29, 2010 at 12:25 AM, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLrNAH6kLmebB@public.gmane.org=
-du> wrote:
-> > On Mon, 28 Jun 2010, Subs wrote:
-> >
-> >> Hi All,
-> >>
-> >> In my class driver I am receiving data transfer buffer as number o=
-f
-> >> Scatter-Gather lists from SCSI layer to perform data transfers.
-> >>
-> >> Is there any alternate way to get the transfer buffer from SCSI ot=
-her
-> >> than SG. I wanted to receive the complete data transfer buffer as =
-a
-> >> single pointer.
-> >
-> > As far as I know, there is no alternate way to get the transfer buf=
-fer
-> > from the SCSI layer.
-> >
-> > However you can get the effect you want by setting the sg_tablesize
-> > field in your scsi_host_template to 1.
-> >
-> > Just out of curiosity, why are you writing a class driver for the B=
-OT
-> > class? =A0Aren't the two existing drivers in the kernel good enough=
-?
-> >
-> > Alan Stern
-> >
-> >
->=20
-> By changing sg_tablesize to 1, there is no change in number of buffer=
-s
-> that I am receiving in SG list.
-
-Then you must be doing something wrong.  I just tried changing
-sg_tablesize in the usb-storage driver, and as a result the
-scatterlists it received contained only one element.  (Of course, in
-usb-storage what matters is not the value in the scsi_host_template but
-rather the value returned by usb_stor_sg_tablesize.)
-
-> > Just out of curiosity, why are you writing a class driver for the B=
-OT
-> > class?  Aren't the two existing drivers in the kernel good enough?
->=20
-> I am writing my custom class driver, which can do Control and Bulk
-> transfers only. This is nowhere related to Mass Storage BOT transfers=
-=2E
-
-Then why did you mention BOT in the email Subject: line?  Does it refer=
-=20
-to something other than Bulk-Only-Transport?
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Pj5UaGlzIG9uZSdzIGdpdmluZyBhIHNpbmdsZSByZWplY3Rpb246DQo+Pg0KPj5wYXRjaGluZyBm
+aWxlIGRyaXZlcnMvc2NzaS9iZmEvYmZhZF9kcnYuaA0KPj5IdW5rICMyIEZBSUxFRCBhdCAxOTcu
+DQo+PjEgb3V0IG9mIDIgaHVua3MgRkFJTEVEIC0tIHNhdmluZyByZWplY3RzIHRvIGZpbGUNCj4+
+ZHJpdmVycy9zY3NpL2JmYS9iZmFkX2Rydi5oLnJlag0KPj4NCj4+QnV0IGl0IGxvb2tzIHRvIGJl
+IHNlcmlvdXM6ICB0aGVuIGh1bmsgaXM6DQo+Pg0KPj4rKysgZHJpdmVycy9zY3NpL2JmYS9iZmFk
+X2Rydi5oDQo+PkBAIC0xOTcsMTIgKzE5OSwxOCBAQA0KPj4gCWJmYV9ib29sZWFuX3QJaXBmY19l
+bmFibGVkOw0KPj4gCXVuaW9uIGJmYWRfdG1wX2J1ZiB0bXBfYnVmOw0KPj4gCXN0cnVjdCBmY19o
+b3N0X3N0YXRpc3RpY3MgbGlua19zdGF0czsNCj4+KwlzdHJ1Y3QgbGlzdF9oZWFkIHBiY19wY2Zn
+X2xpc3Q7DQo+PiAJdTMyIGZ3dHJjX2xlbjsNCj4+IAljaGFyICpmd3RyYzsNCj4+IAl1MzIgcmVn
+bGVuOw0KPj4gCWNoYXIgKnJlZ2RhdGE7DQo+PiB9Ow0KPj4NCj4+QnV0IHRoZSBkZWZpbmVkIHN0
+cnVjdHVyZSBpbiB0aGUgZmlsZSBpczoNCj4+DQo+PgliZmFfYm9vbGVhbl90CWlwZmNfZW5hYmxl
+ZDsNCj4+CXVuaW9uIGJmYWRfdG1wX2J1ZiB0bXBfYnVmOw0KPj4Jc3RydWN0IGZjX2hvc3Rfc3Rh
+dGlzdGljcyBsaW5rX3N0YXRzOw0KPj59Ow0KPj4NCj4+U28gdGhlcmUncyBxdWl0ZSBhIGJpdCBt
+aXNzaW5nIHNvbWV3aGVyZS4NCj4+DQo+PkphbWVzDQo+Pg0KPg0KPkhpIEphbWVzLA0KPg0KPlRo
+aXMgcGF0Y2ggc2V0IGRlcGVuZHMgb24gdGhlIHBhdGNoIHNlbnQgb3V0IGVhcmxpZXIgYnkgS3Jp
+c2huYSBHdWlkYXB0IHRvIGNvbGxlY3QNCj5kZWJ1ZyBpbmZvDQo+dXNpbmcgc3lzZnMgYmluYXJ5
+IGF0dHJpYnV0ZXMsIGhlcmUgaXMgdGhlIGxpbmsgdG8gdGhlIHBhdGNoOg0KPg0KPmh0dHA6Ly9t
+YXJjLmluZm8vP2w9bGludXgtc2NzaSZtPTEyNzYwNDMyNjYwMjQ5MSZ3PTINCj4NCj5JdCBlbmFi
+bGVzIHRoZSBiYXNpY3MgZGVidWdnYWJpbGl0eSB0aGUgY3VycmVudCB1cHN0cmVhbSBkcml2ZXIg
+bGFja3MgYXMgYSByZXN1bHQgb2YNCj5JT0NUTA0KPnJlbW92YWwsIHNvIHRoYXQgd2hlbiB0aGVy
+ZSBpcyBzb21lIGlzc3VlIGhhcHBlbiBpbiB0aGUgZmlybXdhcmUvaGFyZHdhcmUsIHdoZW4NCj5j
+YW4NCj51c2UgdGhlbSB0byBkdW1wIG91dCBmaXJtd2FyZSB0cmFjZSBhbmQgcmVhZC93cml0ZSB0
+byB0aGUgY2hpcCByZWdpc3RlcnMuDQo+DQo+SWYgeW91IG5lZWQgbW9yZSB0aW1lIHRvIHJldmll
+dyBvciBoYXZlIGFueSBjb25jZXJuIG9uIHRoYXQgcGFydGljdWxhciBwYXRjaCwNCj5wbGVhc2Ug
+bGV0IG1lIGtub3csDQo+SSBjYW4gcmVjcmVhdGUgdGhlIDIuMi4yLjEgcGF0Y2ggc2V0IHdpdGhv
+dXQgdGhhdCBjaGFuZ2Ugc28gdGhhdCB0aGV5IGNhbiBiZSBhcHBsaWVkDQo+Y2xlYW5seSB0byB0
+aGUNCj5jdXJyZW50IHNjc2ktbWlzYyB0cmVlLg0KPg0KPlRoYW5rcw0KPg0KPkppbmcNCj4NCj4N
+Cg0KSGkgSmFtZXMsDQoNCkFueSBjb21tZW50cyBvbiBteSByZXNwb25zZSBhYm92ZT8gRG8geW91
+IHdhbnQgbWUgdG8gcmVtb3ZlIHRoZSBkZXBlbmRlbmN5IG9uDQpLcmlzaG5hJ3MgcGF0Y2ggYW5k
+IHJlc3VibWl0Pw0KDQpSZWdhcmRzLA0KDQpKaW5nDQoNCg0K
