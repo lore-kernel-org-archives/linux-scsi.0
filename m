@@ -1,53 +1,87 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH 03/23] bfa: PBC vport create
-Date: Tue, 29 Jun 2010 12:34:02 -0700
-Message-ID: <04391A4E90BB2149B010D22452FA16870228315BCE@HQ-EXCH-6.corp.brocade.com>
-References: <1276626113-3102-1-git-send-email-huangj@brocade.com>
- <1277045513.5242.15.camel@mulgrave.site>
- <04391A4E90BB2149B010D22452FA168702283154A5@HQ-EXCH-6.corp.brocade.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Tue, 29 Jun 2010 20:26:49 GMT
+Message-ID: <201006292026.o5TKQnf8011351@demeter.kernel.org>
+References: <bug-14831-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:40888 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752815Ab0F2TeN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:34:13 -0400
-In-Reply-To: <04391A4E90BB2149B010D22452FA168702283154A5@HQ-EXCH-6.corp.brocade.com>
-Content-Language: en-US
+Received: from demeter.kernel.org ([140.211.167.39]:34530 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753473Ab0F2U0u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jun 2010 16:26:50 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o5TKQnd3011352
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2010 20:26:49 GMT
+In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@Brocade.COM>, James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vinodh Ravindran <vravindr@Brocade.COM>, Ramkumar Vadivelu <rvadivel@Brocade.COM>, Krishna Gudipati <kgudipat@Brocade.com>, Akshay Mathur <amathur@brocade.com>
+To: linux-scsi@vger.kernel.org
 
-Pj5UaGlzIG9uZSdzIGdpdmluZyBhIHNpbmdsZSByZWplY3Rpb246DQo+Pg0KPj5wYXRjaGluZyBm
-aWxlIGRyaXZlcnMvc2NzaS9iZmEvYmZhZF9kcnYuaA0KPj5IdW5rICMyIEZBSUxFRCBhdCAxOTcu
-DQo+PjEgb3V0IG9mIDIgaHVua3MgRkFJTEVEIC0tIHNhdmluZyByZWplY3RzIHRvIGZpbGUNCj4+
-ZHJpdmVycy9zY3NpL2JmYS9iZmFkX2Rydi5oLnJlag0KPj4NCj4+QnV0IGl0IGxvb2tzIHRvIGJl
-IHNlcmlvdXM6ICB0aGVuIGh1bmsgaXM6DQo+Pg0KPj4rKysgZHJpdmVycy9zY3NpL2JmYS9iZmFk
-X2Rydi5oDQo+PkBAIC0xOTcsMTIgKzE5OSwxOCBAQA0KPj4gCWJmYV9ib29sZWFuX3QJaXBmY19l
-bmFibGVkOw0KPj4gCXVuaW9uIGJmYWRfdG1wX2J1ZiB0bXBfYnVmOw0KPj4gCXN0cnVjdCBmY19o
-b3N0X3N0YXRpc3RpY3MgbGlua19zdGF0czsNCj4+KwlzdHJ1Y3QgbGlzdF9oZWFkIHBiY19wY2Zn
-X2xpc3Q7DQo+PiAJdTMyIGZ3dHJjX2xlbjsNCj4+IAljaGFyICpmd3RyYzsNCj4+IAl1MzIgcmVn
-bGVuOw0KPj4gCWNoYXIgKnJlZ2RhdGE7DQo+PiB9Ow0KPj4NCj4+QnV0IHRoZSBkZWZpbmVkIHN0
-cnVjdHVyZSBpbiB0aGUgZmlsZSBpczoNCj4+DQo+PgliZmFfYm9vbGVhbl90CWlwZmNfZW5hYmxl
-ZDsNCj4+CXVuaW9uIGJmYWRfdG1wX2J1ZiB0bXBfYnVmOw0KPj4Jc3RydWN0IGZjX2hvc3Rfc3Rh
-dGlzdGljcyBsaW5rX3N0YXRzOw0KPj59Ow0KPj4NCj4+U28gdGhlcmUncyBxdWl0ZSBhIGJpdCBt
-aXNzaW5nIHNvbWV3aGVyZS4NCj4+DQo+PkphbWVzDQo+Pg0KPg0KPkhpIEphbWVzLA0KPg0KPlRo
-aXMgcGF0Y2ggc2V0IGRlcGVuZHMgb24gdGhlIHBhdGNoIHNlbnQgb3V0IGVhcmxpZXIgYnkgS3Jp
-c2huYSBHdWlkYXB0IHRvIGNvbGxlY3QNCj5kZWJ1ZyBpbmZvDQo+dXNpbmcgc3lzZnMgYmluYXJ5
-IGF0dHJpYnV0ZXMsIGhlcmUgaXMgdGhlIGxpbmsgdG8gdGhlIHBhdGNoOg0KPg0KPmh0dHA6Ly9t
-YXJjLmluZm8vP2w9bGludXgtc2NzaSZtPTEyNzYwNDMyNjYwMjQ5MSZ3PTINCj4NCj5JdCBlbmFi
-bGVzIHRoZSBiYXNpY3MgZGVidWdnYWJpbGl0eSB0aGUgY3VycmVudCB1cHN0cmVhbSBkcml2ZXIg
-bGFja3MgYXMgYSByZXN1bHQgb2YNCj5JT0NUTA0KPnJlbW92YWwsIHNvIHRoYXQgd2hlbiB0aGVy
-ZSBpcyBzb21lIGlzc3VlIGhhcHBlbiBpbiB0aGUgZmlybXdhcmUvaGFyZHdhcmUsIHdoZW4NCj5j
-YW4NCj51c2UgdGhlbSB0byBkdW1wIG91dCBmaXJtd2FyZSB0cmFjZSBhbmQgcmVhZC93cml0ZSB0
-byB0aGUgY2hpcCByZWdpc3RlcnMuDQo+DQo+SWYgeW91IG5lZWQgbW9yZSB0aW1lIHRvIHJldmll
-dyBvciBoYXZlIGFueSBjb25jZXJuIG9uIHRoYXQgcGFydGljdWxhciBwYXRjaCwNCj5wbGVhc2Ug
-bGV0IG1lIGtub3csDQo+SSBjYW4gcmVjcmVhdGUgdGhlIDIuMi4yLjEgcGF0Y2ggc2V0IHdpdGhv
-dXQgdGhhdCBjaGFuZ2Ugc28gdGhhdCB0aGV5IGNhbiBiZSBhcHBsaWVkDQo+Y2xlYW5seSB0byB0
-aGUNCj5jdXJyZW50IHNjc2ktbWlzYyB0cmVlLg0KPg0KPlRoYW5rcw0KPg0KPkppbmcNCj4NCj4N
-Cg0KSGkgSmFtZXMsDQoNCkFueSBjb21tZW50cyBvbiBteSByZXNwb25zZSBhYm92ZT8gRG8geW91
-IHdhbnQgbWUgdG8gcmVtb3ZlIHRoZSBkZXBlbmRlbmN5IG9uDQpLcmlzaG5hJ3MgcGF0Y2ggYW5k
-IHJlc3VibWl0Pw0KDQpSZWdhcmRzLA0KDQpKaW5nDQoNCg0K
+https://bugzilla.kernel.org/show_bug.cgi?id=14831
+
+
+starlight@binnacle.cx changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |starlight@binnacle.cx
+
+
+
+
+--- Comment #31 from starlight@binnacle.cx  2010-06-29 20:26:33 ---
+FYI
+
+Experiencing same problem on CentOS kernel with latest LSI
+driver and and firmware:
+
+LSI 2008
+eight Seagate Momentus ST9500420AS SATA drives
+LVM2 8x striped LV
+
+CentOS 5.5 kernel 2.6.18-194.3.1.el5
+MPT2BIOS 7.05.01.00 (2010.09.09)
+SAS2008-IT 5.00.00.00
+LSI mpt2sas 05.00.00.00
+
+also
+
+CentOS 5.4 kernel 2.6.18-164.10.1.el5
+MPT2BIOS 7.03.00.00 (2009-10-12)
+SAS2008-IR 4.00.00.00
+distro mpt2sas version 01.101.00.00
+
+-----
+
+With 'smartd' running controller resets and drops last drive 
+after about one or two days.  Fails during very light write 
+activity rather than heavy write activity.  LV is used for a 
+writing a very large log file to an 'ext4' file system.
+
+With 'smartd' disabled ran for longer under mpt2sas v01.101,
+but a somewhat different error corrupted the 'ext4' filesystem
+after about three weeks.
+
+EXT4-fs error (device dm-19): ext4_mb_generate_buddy: EXT4-fs: group 1168:
+32768 blocks in bitmap, 32720 in gd
+EXT4-fs error (device dm-19): ext4_mb_mark_diskspace_used: Allocating block
+38273024 in system zone of 1168 group
+.
+.
+.
+mpt2sas0: attempting task abort! scmd(ffff810130449540)
+sd 0:0:2:0: command: Read(10): 28 00 11 35 5b 07 00 00 08 00
+mpt2sas0: task abort: SUCCESS scmd(ffff810130449540)
+.
+.
+.
+
+Too soon to tell if mpt2sas-05.00.00.00 is better.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
