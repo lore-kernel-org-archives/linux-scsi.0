@@ -1,47 +1,56 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH 1/2] block: fix leaks associated with discard request
  payload
-Date: Wed, 30 Jun 2010 13:57:28 +0300
-Message-ID: <4C2B2318.1030107@panasas.com>
-References: <20100622180029.GA15950@redhat.com> <1277582211-10725-1-git-send-email-snitzer@redhat.com> <1277652576.4366.19.camel@mulgrave.site> <4C2B012B.2000407@panasas.com> <20100630084204.GA27609@lst.de> <4C2B1B7D.2090607@panasas.com> <20100630104155.GA1370@lst.de>
+Date: Wed, 30 Jun 2010 20:55:09 +0900
+Message-ID: <20100630205458C.fujita.tomonori@lab.ntt.co.jp>
+References: <20100628075738.GA26606@lst.de>
+	<20100628171218Q.fujita.tomonori@lab.ntt.co.jp>
+	<20100628152536.GA16013@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:1054 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752345Ab0F3K5d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jun 2010 06:57:33 -0400
-In-Reply-To: <20100630104155.GA1370@lst.de>
+Received: from sh.osrg.net ([192.16.179.4]:50578 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751695Ab0F3L4U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jun 2010 07:56:20 -0400
+In-Reply-To: <20100628152536.GA16013@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, Mike Snitzer <snitzer@redhat.com>, axboe@kernel.dk, dm-devel@redhat.com, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: hch@lst.de
+Cc: fujita.tomonori@lab.ntt.co.jp, snitzer@redhat.com, axboe@kernel.dk, dm-devel@redhat.com, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
 
-On 06/30/2010 01:41 PM, Christoph Hellwig wrote:
-> On Wed, Jun 30, 2010 at 01:25:01PM +0300, Boaz Harrosh wrote:
->> OK, Thanks, I see. Is it one of these operations, (like we have in OSD) where
->> the CDB information spills into the payload? like the scatter-gather and extent
->> lists and such.
+On Mon, 28 Jun 2010 17:25:36 +0200
+Christoph Hellwig <hch@lst.de> wrote:
+
+> On Mon, Jun 28, 2010 at 05:14:28PM +0900, FUJITA Tomonori wrote:
+> > > While I see the problems with leaking ressources in that case I still
+> > > can't quite explain the hang I see.
+> > 
+> > Any way to reproduce the hang without ssd drives?
 > 
-> For UNMAP the payload is a list of block number / length pairs, while
-> the CDB itself doesn't contain any information like that.  It's a rather
-> awkward command.
-> 
+> Actually the SSDs don't fully hang, they just causes lots of I/O errors
+> and hit the error handler hard.  The hard hang is when running under
+> qemu.  Apply the patch below, then create an if=scsi drive that resides
+> on an XFS filesystem, and you'll have scsi TP support in the guest:
 
-How big can that be? could we, maybe, use the sense_buffer, properly allocated
-already?
+Ok, I figured out what's wrong.
 
->> Do we actually use a WRITE_SAME which is not zero? for what use?
-> 
-> The kernel doesn't issue any WRITE SAME without the unmap bit set.
+As I suspected, it's due to the partial completion.
 
-So if the unmap bit is set then the page can just be zero, right?
+qemu scsi driver tells that the WRITE_SAME command was successful but
+somehow the command has resid. So we retry it again and again (and
+leak some memory).
 
-I still think a static zero-page is a worth while optimization. And
-block-drivers can take care with special needs with a private mem_pool
-or something. For the discard-type user and generic block layer the
-page is just an implementation specific residue, No?
+I don't know yet why qemu scsi driver is broken. Maybe there is a bug
+in it or converting discard to FS sends broken commands to the driver.
 
-But don't mind me, I'm just babbling. Not that I'll do anything about it.
-Boaz
+I'll try to figure out it tomorrow.
+
+I've put a patch to complete discard command in the all-or-nothing
+manner:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git discard
+
+
+At least, the guest kernel doesn't hang for me.
