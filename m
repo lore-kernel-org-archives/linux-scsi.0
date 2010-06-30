@@ -1,62 +1,62 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: Re: [PATCH 3/7] BNX2I: Optimized the bnx2i_stop connection
- clean up procedure
-Date: Tue, 29 Jun 2010 23:56:12 -0700
-Message-ID: <1277880974.6535.333.camel@ltirv-waie-lx1>
-References: <Eddie Wai <eddie.wai@broadcom.com>
- <1277516372-469-4-git-send-email-eddie.wai@broadcom.com>
- <4C2ADFFE.2090507@cs.wisc.edu>
+From: shailesh parulekar <shailesh.parulekar@gmail.com>
+Subject: Re: struct scsi_cmnd --> underflow
+Date: Wed, 30 Jun 2010 12:38:50 +0530
+Message-ID: <AANLkTimyBMpIswls4gIRYalnBVasFQgpRcOQ4-pwFnaT@mail.gmail.com>
+References: <AANLkTilsQ_VMArZPCOnWge2gjxRrJbcwq0FxTsaRamxx@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3319 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752240Ab0F3GzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jun 2010 02:55:08 -0400
-In-Reply-To: <4C2ADFFE.2090507@cs.wisc.edu>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:39472 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805Ab0F3HIv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jun 2010 03:08:51 -0400
+Received: by pwj8 with SMTP id 8so137298pwj.19
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jun 2010 00:08:50 -0700 (PDT)
+In-Reply-To: <AANLkTilsQ_VMArZPCOnWge2gjxRrJbcwq0FxTsaRamxx@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Eddie Wai <waie@broadcom.com>, James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+To: linux-scsi@vger.kernel.org
 
-Our test group has generated a case where a MTU change or an ifdown was
-performed while having active sessions outstanding.  While the
-disconnection effort works normally, but for the case where iscsid is
-forced to stop, our driver was previously designed to dead wait for 240s
-before resuming operation.  Once the wait is over, any leftover chip
-resources allocated + previously active iscsi_endpoints would be
-forfeited.  For this kind of destructive testing, we decided that it is
-best to clean up our chip so that other operations such as L2 or FCoE
-would not get affected.  
+Sorry for resending (fixed a typo on prev mail) - Can someone please
+reply to this?
 
-The 'slow' case mentioned is just a hypothetical case which we have not
-encountered first hand.  But the code has been worked so that if iscsid
-were to come back up and continue to call ep_disconnect again, only the
-endpoints would get cleanup and will no longer attempt to clean up the
-hardware.  We're not trying to work around a bug here...
-
-For the case presented, bnx2i_stop was actually called from cnic's
-ulp_stop due to the different test case described.  The hard 240s
-timeout was there to wait for iscsid to cleanup all the active
-connections.  If it were to be exceeded somehow, the same lost resource
-+ endpoint condition would happen.
-
-Eddie
-
-On Tue, 2010-06-29 at 23:11 -0700, Mike Christie wrote:
-> On 06/25/2010 08:39 PM, Eddie Wai wrote:
-> > For cases where the iSCSI disconnection procedure times out due to
-> > the iSCSI daemon being slow or unresponsive, the bnx2i_stop routine
-> 
-> Could you describe when iscsid is slow a little more? The unresponsive 
-> case sounds like if iscsid is not running, right? For the slow case, it 
-> sounds like you are trying to work around a bug in there.
-> 
-> I am also not sure how it helps exactly. iscsid still has to cleanup the 
-> iscsi resources like the scsi commands running on the connection (conn 
-> stop is called after ep disconnect), so I am not sure how this helps. 
-> Does doing it this way skip some steps?
-> 
-
-
+On Tue, Jun 29, 2010 at 6:27 PM, shailesh parulekar
+<shailesh.parulekar@gmail.com> wrote:
+> Hi,
+>
+> I am writing a SCSI LLD and have a query regarding handling of underf=
+low errors.
+>
+> In function sd_prep_fn (sd.c) the code populates scsi command pointer
+> (SCpnt) and it's cmnd.
+> Going ahead it also sets the total length to be transferred in the
+> scsi data buffer (SCpnt->sdb.length =3D this_count * sdp->sector_size=
+).
+> Here 'this_count' looks to be the nr_sectors. This assignment looks
+> fine too.
+> But later when assigning the 'underflow' field of SCpnt, the
+> assignment uses a hard-coded bit shift (SCpnt->underflow =3D this_cou=
+nt
+> << 9). Is this valid? OR
+> should it be: SCpnt->underflow =3D this_count *=A0sdp->sector_size?
+>
+> So, if the sector size exported by the target device is greater than
+> 512 (4K in our case), the SCpnt->underflow is not same as
+> SCpnt->sdb.length. The later is 8 times bigger. So if I get a read of
+> say 8K the 'underflow' is set only to 1K. Now, if the target say
+> returns only 2K of data for this read, the amount of data transferred
+> is not less than residual (1K in this case). So is the LLD not
+> supposed to return (DID_ERROR << 16) in 'result' for this case
+> (assuming target returns result =3D=3D GOOD)?
+>
+> Please let me know.
+>
+> thanks,
+> --shailesh
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
