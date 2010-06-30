@@ -1,100 +1,54 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [dm-devel] [PATCH 1/2] block: fix leaks associated with
- discard request payload
-Date: Wed, 30 Jun 2010 09:22:18 -0500
-Message-ID: <1277907738.2839.9.camel@mulgrave.site>
-References: <20100622180029.GA15950@redhat.com>
-	 <1277582211-10725-1-git-send-email-snitzer@redhat.com>
-	 <1277652576.4366.19.camel@mulgrave.site>
-	 <Pine.LNX.4.64.1006291811300.27462@hs20-bc2-1.build.redhat.com>
-	 <1277852600.4379.211.camel@mulgrave.site>
-	 <Pine.LNX.4.64.1006291925480.11847@hs20-bc2-1.build.redhat.com>
+From: Alex <mysqlstudent@gmail.com>
+Subject: aacraid problems on 2.6.35-rc3
+Date: Wed, 30 Jun 2010 10:28:09 -0400
+Message-ID: <AANLkTimvQtYPh_6ZeKiGz2-eZf_pVy6N7TwEeXCoq0Iv@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:35518 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754016Ab0F3OWZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jun 2010 10:22:25 -0400
-In-Reply-To: <Pine.LNX.4.64.1006291925480.11847@hs20-bc2-1.build.redhat.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:35548 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756287Ab0F3O2L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jun 2010 10:28:11 -0400
+Received: by gwb15 with SMTP id 15so398086gwb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jun 2010 07:28:10 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, axboe@kernel.dk, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Christoph Hellwig <hch@lst.de>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2010-06-29 at 20:11 -0400, Mikulas Patocka wrote:
-> > > If the layering violation spans only scsi code, it can be eventually 
-> > > fixed, but this, much worse "layering violation" that will be spanning all 
-> > > block device midlayers, won't ever be fixed.
-> > > 
-> > > Imagine for example --- a discard request arrivers at a dm-snapshot 
-> > > device. The driver splits it into chunks, remaps each chunk to the 
-> > > physical chunk, submits the requests, the elevator merges adjacent 
-> > > requests and submits fewer bigger requests to the device. Now, if you had 
-> > > to allocate a zeroed page each time you are splitting the request, that 
-> > > would exhaust memory and burn cpu needlessly. You delete a 100MB file? --- 
-> > > fine, allocate a 100MB of zeroed pages.
-> > 
-> > This is a straw man:  You've tried to portray a position I've never
-> > taken as mine then attack it ... with what is effectively another bogus
-> > argument.
-> >
-> > It's not an either/or choice.
-> 
-> It is either/or choice. If the interface isn't fixed NOW, the existing 
-> flawed zeroed-page-allocation interface gets into RHEL
+Hi,
 
-That's a false dichotomy.  You might see an either apply this hack now
-or support the interface choice with RHEL, but upstream has the option
-to fix stuff correctly.  RHEL has never needed my blessing to apply
-random crap to their kernel before ... why is this patch any different?
+I'm trying to compile a kernel with aacraid support on a dual Opteron
+246 box with two 36GB disks on a Tyan S2891, using an initrd and lilo.
 
-> and I and others will have to support it for 7 years.
+There is an older kernel on there that works just fine, so I suspect
+it's something I'm missing in the kernel config. No matter what I try,
+the kernel fails to find the disks on the controller. I've even tried
+building it without an initrd and compiling everything into the
+kernel, but it still panics.
 
-It's called a business model ... I believe it's what they pay you for.
+I've included the aacraid support, SCSI disk, SCSI generic, and even
+RAID1/5 support. The controller and motherboard also have the latest
+BIOS updates.
 
-> > I've asked the relevant parties to
-> > combine the approaches and see if a REQ_TYPE_FS path that does the
-> > allocations in the appropriate place, likely the ULD, produces a good
-> > design.
-> 
-> OK, but before you do this research, fix the interface.
+What else is necessary to support aacraid?
 
-So even in the RHEL world, I think you'd find that analysing the problem
-*before* comping up with a fix is a good way of doing things.
+It only prints the following when booting:
 
-> > > So I say --- let there be a layering violation in the scsi code, but don't 
-> > > put this problem with a page allocation to all the other bio midlayer 
-> > > developers.
-> > 
-> > Thanks for explaining that you have nothing to contribute, I'll make
-> > sure you're not on my list of relevant parties.
-> 
-> You misunderstand what I meant. You admit that there are design problems 
-> in SCSI.
+Adaptec aacraid driver 1.1-5[2456]-ms
 
-No I didn't.
+Is I2O or ACPI support necessary?
 
-And the rest of this rubbish is based on that false premise.  It might
-help you to take off your SCSI antipathy and see this as a system
-problem: it actually originates in block and spills out from there.
-Thus it requires a system solution.
+Are there any boot-time options to increase debugging output to
+troubleshoot this?
 
-James
+The dmesg output from a working system is here:
 
-> So don't burden other developers with these problems. Don't force 
-> the others to allocate dummy pages just because you want a cleaner scsi 
-> code.
-> 
-> You intend to fix the design of SCSI and then remove the dummy pages. But 
-> by the time you finish it, it will be already late and there will be 
-> midlayer drivers allocating these dummy pages.
-> 
-> What I mean is that "layering violation" inside one driver is smaller 
-> problem than misdesigned interface between drivers. So accept the patch 
-> that creates "layering violation" but cleans up the interface.
-> 
-> Mikulas
+http://pastebin.com/0AnVBV7s
 
+The kernel config for the attempt is here:
 
+http://pastebin.com/gi9ybDwS
+
+Thanks for any ideas.
+Best regards,
+Alex
