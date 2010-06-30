@@ -1,38 +1,60 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC 1/2] block: implement an unprep function corresponding  directly to prep
-Date: Wed, 30 Jun 2010 13:54:46 -0400
-Message-ID: <yq1k4pg2yop.fsf@sermon.lab.mkp.net>
-References: <1277917264.2839.153.camel@mulgrave.site>
-	<4C2B8412.6040807@kernel.dk>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: aacraid problems on 2.6.35-rc3
+Date: Wed, 30 Jun 2010 15:02:28 -0500
+Message-ID: <1277928148.2839.364.camel@mulgrave.site>
+References: <AANLkTimvQtYPh_6ZeKiGz2-eZf_pVy6N7TwEeXCoq0Iv@mail.gmail.com>
+	 <1277909662.2839.17.camel@mulgrave.site>
+	 <AANLkTinRg1WIRWIBE1odKkvbECBPLPUoY2mVKmAjqpKZ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:53153 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755100Ab0F3R4t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jun 2010 13:56:49 -0400
-In-Reply-To: <4C2B8412.6040807@kernel.dk> (Jens Axboe's message of "Wed, 30
-	Jun 2010 19:51:14 +0200")
+Received: from cantor2.suse.de ([195.135.220.15]:55117 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756245Ab0F3UCd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jun 2010 16:02:33 -0400
+In-Reply-To: <AANLkTinRg1WIRWIBE1odKkvbECBPLPUoY2mVKmAjqpKZ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: James Bottomley <James.Bottomley@suse.de>, Mike Snitzer <snitzer@redhat.com>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, dm-devel@redhat.com
+To: Alex <mysqlstudent@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
+On Wed, 2010-06-30 at 10:57 -0400, Alex wrote:
+> Hi,
+> 
+> >> It only prints the following when booting:
+> >>
+> >> Adaptec aacraid driver 1.1-5[2456]-ms
+> >
+> > That driver comes from a rather old kernel (2.6.29 or before).  Could
+> > you try with a modern version (which should print 1.1-5[26400]-ms just
+> > in case the problem got fixed in the interim.
+> 
+> Yes, my apologies. This was from the working kernel, which is 2.6.27.
+> I am working with 2.6.35-rc3.
+> 
+> >> The dmesg output from a working system is here:
+> >>
+> >> http://pastebin.com/0AnVBV7s
+> >
+> > This trace shows your system won't configure interrupts correctly
+> > without ACPI ... if ACPI isn't working, more than just the aacraid will
+> > be non functional.  A dmesg of the failing system would be definitive in
+> > diagnosing this.
+> 
+> How can I do this? The kernel panics without mounting a filesystem.
 
-Jens> On 30/06/10 19.01, James Bottomley wrote:
->> So this is more directly what I'm thinking.  It gives us an exactly
->> correct place to hang the discard allocation in SCSI.  The next patch
->> shows a potential implementation in sd.
->> 
->> I think it should avoid all the leaks people have been seeing trying
->> to move the discard allocation/free into scsi.  I also think it
->> should facilitate sending discard through SCSI as a REQ_TYPE_FS.
+You need a serial or net console to capture the output.  At a guess, the
+latest ACPI cockup is this one:
 
-Jens> This is so much better than the other hacks, thanks for doing
-Jens> this.
+commit b430acbd7c4b919886fa7fd92eeb7a695f1940d3
+Author: Len Brown <len.brown@intel.com>
+Date:   Thu May 6 17:41:08 2010 -0400
 
-Agreed!
+    ACPICA: simplify SCI_EN workaround
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Try reverting that and seeing if it boots.
+
+James
+
+
