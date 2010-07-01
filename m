@@ -1,212 +1,188 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 1/7 v2] BNX2I: Separated the hardware's cleanup
- procedure from ep_disconnect
-Date: Thu, 1 Jul 2010 15:34:50 -0700
-Message-ID: <1278023696-17817-2-git-send-email-eddie.wai@broadcom.com>
+From: "Eddie Wai" <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH 2/7 v2] BNX2I: Created an active linklist which holds
+ bnx2i endpoints
+Date: Thu, 1 Jul 2010 15:34:51 -0700
+Message-ID: <1278023696-17817-3-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4366 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758982Ab0GAWd4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jul 2010 18:33:56 -0400
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCKiEw6yjEhDUr7ThBBoE0TZoYQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
+	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: James Bottomley <JBottomley-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>
+Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ben Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@novell.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-This patch introduces a new bnx2i_hw_ep_disconnect routine which
-contains all chip related disconnect and clean up procedure of
-iSCSI offload connections.  This separation is intended as a
-preparation for the subsequent bnx2i_stop patch.
+This introduces a new active linklist which would link up all active
+bnx2i_endpoints.  This will be used by subsequent patches that
+follows.
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Reviewed-by: Michael Chan <mchan@broadcom.com>
-Reviewed-by: Benjamin Li <benli@broadcom.com>
-Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+Signed-off-by: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Benjamin Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Acked-by: Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/bnx2i/bnx2i_iscsi.c |  119 ++++++++++++++++++++++++--------------
- 1 files changed, 76 insertions(+), 43 deletions(-)
+ drivers/scsi/bnx2i/bnx2i.h       |    4 +++
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   46 +++++++++++++++++++++++++++++++++++--
+ 2 files changed, 47 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index 6b624e7..c17c3a3 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -299,6 +299,7 @@ struct iscsi_cid_queue {
+  * @cid_que:               iscsi cid queue
+  * @ep_rdwr_lock:          read / write lock to synchronize various ep lists
+  * @ep_ofld_list:          connection list for pending offload completion
++ * @ep_active_list:        connection list for active offload endpoints
+  * @ep_destroy_list:       connection list for pending offload completion
+  * @mp_bd_tbl:             BD table to be used with middle path requests
+  * @mp_bd_dma:             DMA address of 'mp_bd_tbl' memory buffer
+@@ -369,6 +370,7 @@ struct bnx2i_hba {
+ 
+ 	rwlock_t ep_rdwr_lock;
+ 	struct list_head ep_ofld_list;
++	struct list_head ep_active_list;
+ 	struct list_head ep_destroy_list;
+ 
+ 	/*
+@@ -645,6 +647,7 @@ enum {
+  * @link:               list head to link elements
+  * @hba:                adapter to which this connection belongs
+  * @conn:               iscsi connection this EP is linked to
++ * @cls_ep:             associated iSCSI endpoint pointer
+  * @sess:               iscsi session this EP is linked to
+  * @cm_sk:              cnic sock struct
+  * @hba_age:            age to detect if 'iscsid' issues ep_disconnect()
+@@ -664,6 +667,7 @@ struct bnx2i_endpoint {
+ 	struct list_head link;
+ 	struct bnx2i_hba *hba;
+ 	struct bnx2i_conn *conn;
++	struct iscsi_endpoint *cls_ep;
+ 	struct cnic_sock *cm_sk;
+ 	u32 hba_age;
+ 	u32 state;
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index fa68ab3..6edfde5 100644
+index 6edfde5..fb5fe88 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1866,54 +1866,35 @@ static int bnx2i_ep_tcp_conn_active(struct bnx2i_endpoint *bnx2i_ep)
- }
- 
- 
--/**
-- * bnx2i_ep_disconnect - executes TCP connection teardown process
-- * @ep:		TCP connection (endpoint) handle
-+/*
-+ * bnx2i_hw_ep_disconnect - executes TCP connection teardown process in the hw
-+ * @ep:		TCP connection (bnx2i endpoint) handle
-  *
-  * executes  TCP connection teardown process
-  */
--static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
-+int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
- {
--	struct bnx2i_endpoint *bnx2i_ep;
--	struct bnx2i_conn *bnx2i_conn = NULL;
--	struct iscsi_session *session = NULL;
--	struct iscsi_conn *conn;
-+	struct bnx2i_hba *hba = bnx2i_ep->hba;
- 	struct cnic_dev *cnic;
--	struct bnx2i_hba *hba;
-+	struct iscsi_session *session = NULL;
-+	struct iscsi_conn *conn = NULL;
-+	int ret = 0;
- 
--	bnx2i_ep = ep->dd_data;
-+	if (!hba)
-+		return 0;
- 
--	/* driver should not attempt connection cleanup until TCP_CONNECT
--	 * completes either successfully or fails. Timeout is 9-secs, so
--	 * wait for it to complete
--	 */
--	while ((bnx2i_ep->state == EP_STATE_CONNECT_START) &&
--		!time_after(jiffies, bnx2i_ep->timestamp + (12 * HZ)))
--		msleep(250);
-+	cnic = hba->cnic;
-+	if (!cnic)
-+		return 0;
-+
-+	if (!bnx2i_ep_tcp_conn_active(bnx2i_ep))
-+		goto destroy_conn;
- 
- 	if (bnx2i_ep->conn) {
--		bnx2i_conn = bnx2i_ep->conn;
--		conn = bnx2i_conn->cls_conn->dd_data;
-+		conn = bnx2i_ep->conn->cls_conn->dd_data;
- 		session = conn->session;
--
--		iscsi_suspend_queue(conn);
+@@ -386,6 +386,7 @@ static struct iscsi_endpoint *bnx2i_alloc_ep(struct bnx2i_hba *hba)
  	}
  
--	hba = bnx2i_ep->hba;
--	if (bnx2i_ep->state == EP_STATE_IDLE)
--		goto return_bnx2i_ep;
--	cnic = hba->cnic;
+ 	bnx2i_ep = ep->dd_data;
++	bnx2i_ep->cls_ep = ep;
+ 	INIT_LIST_HEAD(&bnx2i_ep->link);
+ 	bnx2i_ep->state = EP_STATE_IDLE;
+ 	bnx2i_ep->ep_iscsi_cid = (u16) -1;
+@@ -678,7 +679,6 @@ bnx2i_find_ep_in_ofld_list(struct bnx2i_hba *hba, u32 iscsi_cid)
+ 	return ep;
+ }
+ 
 -
--	mutex_lock(&hba->net_dev_lock);
--
--	if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state))
--		goto free_resc;
--	if (bnx2i_ep->hba_age != hba->age)
--		goto free_resc;
--
--	if (!bnx2i_ep_tcp_conn_active(bnx2i_ep))
--		goto destory_conn;
--
- 	bnx2i_ep->state = EP_STATE_DISCONN_START;
+ /**
+  * bnx2i_find_ep_in_destroy_list - find iscsi_cid in destroy list
+  * @hba: 		pointer to adapter instance
+@@ -708,6 +708,39 @@ bnx2i_find_ep_in_destroy_list(struct bnx2i_hba *hba, u32 iscsi_cid)
+ 	return ep;
+ }
  
- 	init_timer(&bnx2i_ep->ofld_timer);
-@@ -1924,6 +1905,7 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
- 
- 	if (test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic)) {
- 		int close = 0;
-+		int close_ret = 0;
- 
- 		if (session) {
- 			spin_lock_bh(&session->lock);
-@@ -1932,11 +1914,13 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
- 			spin_unlock_bh(&session->lock);
- 		}
- 		if (close)
--			cnic->cm_close(bnx2i_ep->cm_sk);
-+			close_ret = cnic->cm_close(bnx2i_ep->cm_sk);
- 		else
--			cnic->cm_abort(bnx2i_ep->cm_sk);
-+			close_ret = cnic->cm_abort(bnx2i_ep->cm_sk);
-+		if (close_ret)
-+			bnx2i_ep->state = EP_STATE_DISCONN_COMPL;
- 	} else
--		goto free_resc;
-+		goto out;
- 
- 	/* wait for option-2 conn teardown */
- 	wait_event_interruptible(bnx2i_ep->ofld_wait,
-@@ -1946,20 +1930,69 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
- 		flush_signals(current);
- 	del_timer_sync(&bnx2i_ep->ofld_timer);
- 
--destory_conn:
--	if (bnx2i_tear_down_conn(hba, bnx2i_ep)) {
-+destroy_conn:
-+	if (bnx2i_tear_down_conn(hba, bnx2i_ep))
-+		ret = -EINVAL;
-+out:
-+	bnx2i_ep->state = EP_STATE_IDLE;
-+	return ret;
++
++/**
++ * bnx2i_ep_active_list_add - add an entry to ep active list
++ * @hba:	pointer to adapter instance
++ * @ep:		pointer to endpoint (transport indentifier) structure
++ *
++ * current active conn queue manager
++ */
++static void bnx2i_ep_active_list_add(struct bnx2i_hba *hba,
++				     struct bnx2i_endpoint *ep)
++{
++	write_lock_bh(&hba->ep_rdwr_lock);
++	list_add_tail(&ep->link, &hba->ep_active_list);
++	write_unlock_bh(&hba->ep_rdwr_lock);
 +}
 +
 +
 +/**
-+ * bnx2i_ep_disconnect - executes TCP connection teardown process
-+ * @ep:		TCP connection (iscsi endpoint) handle
++ * bnx2i_ep_active_list_del - deletes an entry to ep active list
++ * @hba:	pointer to adapter instance
++ * @ep:		pointer to endpoint (transport indentifier) structure
 + *
-+ * executes  TCP connection teardown process
++ * current active conn queue manager
 + */
-+static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
++static void bnx2i_ep_active_list_del(struct bnx2i_hba *hba,
++				     struct bnx2i_endpoint *ep)
 +{
-+	struct bnx2i_endpoint *bnx2i_ep;
-+	struct bnx2i_conn *bnx2i_conn = NULL;
-+	struct iscsi_conn *conn = NULL;
-+	struct bnx2i_hba *hba;
++	write_lock_bh(&hba->ep_rdwr_lock);
++	list_del_init(&ep->link);
++	write_unlock_bh(&hba->ep_rdwr_lock);
++}
 +
-+	bnx2i_ep = ep->dd_data;
 +
-+	/* driver should not attempt connection cleanup until TCP_CONNECT
-+	 * completes either successfully or fails. Timeout is 9-secs, so
-+	 * wait for it to complete
-+	 */
-+	while ((bnx2i_ep->state == EP_STATE_CONNECT_START) &&
-+		!time_after(jiffies, bnx2i_ep->timestamp + (12 * HZ)))
-+		msleep(250);
-+
-+	if (bnx2i_ep->conn) {
-+		bnx2i_conn = bnx2i_ep->conn;
-+		conn = bnx2i_conn->cls_conn->dd_data;
-+		iscsi_suspend_queue(conn);
-+	}
-+	hba = bnx2i_ep->hba;
-+
-+	mutex_lock(&hba->net_dev_lock);
-+
-+	if (bnx2i_ep->state == EP_STATE_IDLE)
-+		goto return_bnx2i_ep;
-+
-+	if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state))
-+		goto free_resc;
-+
-+	if (bnx2i_ep->hba_age != hba->age)
-+		goto free_resc;
-+
-+	/* Do all chip cleanup here */
-+	if (bnx2i_hw_ep_disconnect(bnx2i_ep)) {
- 		mutex_unlock(&hba->net_dev_lock);
- 		return;
- 	}
- free_resc:
--	mutex_unlock(&hba->net_dev_lock);
- 	bnx2i_free_qp_resc(hba, bnx2i_ep);
- return_bnx2i_ep:
- 	if (bnx2i_conn)
- 		bnx2i_conn->ep = NULL;
+ /**
+  * bnx2i_setup_host_queue_size - assigns shost->can_queue param
+  * @hba:	pointer to adapter instance
+@@ -784,6 +817,7 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 		goto mp_bdt_mem_err;
  
- 	bnx2i_free_ep(ep);
+ 	INIT_LIST_HEAD(&hba->ep_ofld_list);
++	INIT_LIST_HEAD(&hba->ep_active_list);
+ 	INIT_LIST_HEAD(&hba->ep_destroy_list);
+ 	rwlock_init(&hba->ep_rdwr_lock);
+ 
+@@ -857,6 +891,7 @@ void bnx2i_free_hba(struct bnx2i_hba *hba)
+ 
+ 	iscsi_host_remove(shost);
+ 	INIT_LIST_HEAD(&hba->ep_ofld_list);
++	INIT_LIST_HEAD(&hba->ep_active_list);
+ 	INIT_LIST_HEAD(&hba->ep_destroy_list);
+ 	pci_dev_put(hba->pcidev);
+ 
+@@ -1754,15 +1789,19 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 		goto conn_failed;
+ 	} else
+ 		rc = cnic->cm_connect(bnx2i_ep->cm_sk, &saddr);
 -
-+	mutex_unlock(&hba->net_dev_lock);
- 	if (!hba->ofld_conns_active)
- 		bnx2i_unreg_dev_all();
+ 	if (rc)
+ 		goto release_ep;
  
++	bnx2i_ep_active_list_add(hba, bnx2i_ep);
++
+ 	if (bnx2i_map_ep_dbell_regs(bnx2i_ep))
+-		goto release_ep;
++		goto del_active_ep;
++
+ 	mutex_unlock(&hba->net_dev_lock);
+ 	return ep;
+ 
++del_active_ep:
++	bnx2i_ep_active_list_del(hba, bnx2i_ep);
+ release_ep:
+ 	if (bnx2i_tear_down_conn(hba, bnx2i_ep)) {
+ 		mutex_unlock(&hba->net_dev_lock);
+@@ -1931,6 +1970,7 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ 	del_timer_sync(&bnx2i_ep->ofld_timer);
+ 
+ destroy_conn:
++	bnx2i_ep_active_list_del(hba, bnx2i_ep);
+ 	if (bnx2i_tear_down_conn(hba, bnx2i_ep))
+ 		ret = -EINVAL;
+ out:
 -- 
 1.7.0.5
 
 
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
