@@ -1,80 +1,51 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: cciss: WARNING/BUG in do_cciss_intr (it's back)
-Date: Thu, 1 Jul 2010 09:28:24 -0500
-Message-ID: <20100701142824.GT17187@beardog.cce.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: zhanglinbao@gmail.com
-Cc: randy.dunlap@oracle.com, bob_zhang2004@163.com, axboe@kernel.dk, mike.miller@hp.com, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, james.bottomley@hansenpartnership.com, scameron@beardog.cce.hp.com, mikem@beardog.cce.hp.com
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH] mpt2sas: Fix section mismatch in mpt2sas
+Date: Thu, 1 Jul 2010 13:21:00 -0400
+Message-ID: <20100701171224.24232.44159.sendpatchset@prarit.bos.redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:10382 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751629Ab0GARVB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Jul 2010 13:21:01 -0400
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o61HL010004504
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Jul 2010 13:21:00 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>
 
-Bob Zhang wrote:
+Fix section mismatch:
 
-> Hi all,
-> 
-> I want to know the final result.
-> have you fixed this bug ?  if yes, how to fix ?
-> Now , I am using 2.6.32.12-7 from sles11SP1(ia64) , I still happened
-> this problem.
-> 
-> 
-> Any comments are welcome .
-> 
-> another point ,
-> >> Randy,
-> >> I think this is a different bug than the one you reported previously.
-> >> Please open a new bugzilla.
-> >
-> > I think it's the same one. The first warning that now triggers is:
-> >
-> Could you give me the previous one link ?
-> 
-> attachment is the booting information and eror.
+WARNING: drivers/scsi/mpt2sas/mpt2sas.o(.text+0xe3d4): Section mismatch in reference from the function _scsih_pci_error_detected() to the function .devexit.text:_scsih_remove()
+The function _scsih_pci_error_detected() references a function in an exit section.
+Often the function _scsih_remove() has valid usage outside the exit section
+and the fix is to remove the __devexit annotation of _scsih_remove.
 
-( See: http://lkml.org/lkml/2009/2/4/342 for a bit more context )
+by removing __devexit from _scsih_remove()
 
-and Jens Axboe wrote, back in Feb of 2009:
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-> I think it's the same one. The first warning that now triggers is:
-> 
-> WARNING: at drivers/block/cciss.c:225 
-> 
-> which is
-> 
->         if (WARN_ON(hlist_unhashed(&c->list)))
-> removeQ(), this is where we would have crashed before due to trying to
-> remove a command from a list it didn't belong to. And then we crash
-> right after in the interrupt handler. So I'm pretty sure this is 100%
-> the same bug.
-> 
-
-I did not see a similar error in the log file you provided.
-
-The above problem appeared to be triggered by the reset_devices path (e.g. kdump) picking
-up completions from the previous kernel, due to the device not actually being reset.
-All the Smart arrays since the p600 can't be reset by the PCI power management
-method.  Some of them can be reset by using the "doorbell" register, and a patch
-for hpsa to do this has been implemented, this one:
-
-http://marc.info/?l=linux-scsi&m=127671403229420&w=2
-
-which is one patch in a series of other patches to hpsa.
-
-I am currently working on a similar series of patches for cciss.
-
-However, this won't help the P400, P400i, E500, P800, and P700m, which cannot
-be reset by either method.  Also, the 6402 and 6404, while they can
-be reset, it's inadvisable since they share a battery backed cache 
-module, hence this patch to hpsa:
-
-http://marc.info/?l=linux-scsi&m=127671403029407&w=2
-
-See also: https://bugzilla.redhat.com/show_bug.cgi?id=609522
-and https://bugzilla.redhat.com/show_bug.cgi?id=598681
-(you need an account to see those, I think.)
-
--- steve
- 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index c5ff26a..c630aa7 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -6290,7 +6290,7 @@ _scsih_shutdown(struct pci_dev *pdev)
+  * Routine called when unloading the driver.
+  * Return nothing.
+  */
+-static void __devexit
++static void
+ _scsih_remove(struct pci_dev *pdev)
+ {
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+@@ -6798,7 +6798,7 @@ static struct pci_driver scsih_driver = {
+ 	.name		= MPT2SAS_DRIVER_NAME,
+ 	.id_table	= scsih_pci_table,
+ 	.probe		= _scsih_probe,
+-	.remove		= __devexit_p(_scsih_remove),
++	.remove		= _scsih_remove,
+ 	.shutdown	= _scsih_shutdown,
+ 	.err_handler	= &_scsih_err_handler,
+ #ifdef CONFIG_PM
