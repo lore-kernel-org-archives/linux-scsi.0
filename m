@@ -1,51 +1,55 @@
-From: Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH] mpt2sas: Fix section mismatch in mpt2sas
-Date: Thu, 1 Jul 2010 13:21:00 -0400
-Message-ID: <20100701171224.24232.44159.sendpatchset@prarit.bos.redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10382 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751629Ab0GARVB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Jul 2010 13:21:01 -0400
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o61HL010004504
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Thu, 1 Jul 2010 13:21:00 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [PATCH 10/25] scsi/sg: remove casts from void*
+Date: Thu, 1 Jul 2010 19:38:05 +0200
+Message-ID: <20100701173805.GW19184@bicker>
+References: <1277990204-22157-1-git-send-email-segooon@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1277990204-22157-1-git-send-email-segooon@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kulikov Vasiliy <segooon@gmail.com>
+Cc: Kernel Janitors <kernel-janitors@vger.kernel.org>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Alexey Dobriyan <adobriyan@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>
 
-Fix section mismatch:
+On Thu, Jul 01, 2010 at 05:16:43PM +0400, Kulikov Vasiliy wrote:
+> -	Sg_fd *sfp;
+> +	Sg_fd *sfp = filp->private_data;
+                     ^^^^^^^^^^^^^^^^^^
+	Dereferenced here.
 
-WARNING: drivers/scsi/mpt2sas/mpt2sas.o(.text+0xe3d4): Section mismatch in reference from the function _scsih_pci_error_detected() to the function .devexit.text:_scsih_remove()
-The function _scsih_pci_error_detected() references a function in an exit section.
-Often the function _scsih_remove() has valid usage outside the exit section
-and the fix is to remove the __devexit annotation of _scsih_remove.
+>  	unsigned long req_sz, len, sa;
+>  	Sg_scatter_hold *rsv_schp;
+>  	int k, length;
+>  
+> -	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
+> +	if ((!filp) || (!vma) || !(sfp))
+             ^^^^^
 
-by removing __devexit from _scsih_remove()
+	Checked here.
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+I obviously just spotted that during the review but another way would be
+to use smatch to catch these.  (http://smatch.sf.net)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index c5ff26a..c630aa7 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -6290,7 +6290,7 @@ _scsih_shutdown(struct pci_dev *pdev)
-  * Routine called when unloading the driver.
-  * Return nothing.
-  */
--static void __devexit
-+static void
- _scsih_remove(struct pci_dev *pdev)
- {
- 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
-@@ -6798,7 +6798,7 @@ static struct pci_driver scsih_driver = {
- 	.name		= MPT2SAS_DRIVER_NAME,
- 	.id_table	= scsih_pci_table,
- 	.probe		= _scsih_probe,
--	.remove		= __devexit_p(_scsih_remove),
-+	.remove		= _scsih_remove,
- 	.shutdown	= _scsih_shutdown,
- 	.err_handler	= &_scsih_err_handler,
- #ifdef CONFIG_PM
+$ /path/to/smatch_scripts/kchecker drivers/scsi/sg.c
+  CHK     include/linux/version.h
+  CHK     include/generated/utsrelease.h
+  CALL    scripts/checksyscalls.sh
+  CHECK   drivers/scsi/sg.c
+drivers/scsi/sg.c +1236 sg_mmap(7) warn: variable dereferenced before check 'filp'
+  CC [M]  drivers/scsi/sg.o
+$
+
+You could also get rid of the extra parenthesis.
++	if (!filp || !vma || !sfp)
+
+>  		return -ENXIO;
+>  	req_sz = vma->vm_end - vma->vm_start;
+>  	SCSI_LOG_TIMEOUT(3, printk("sg_mmap starting, vm_start=%p, len=%d\n",
+
+Btw.  These are _way_ better than when you sent them the first time.
+Thanks for doing resending them.
+
+regards,
+dan carpenter
