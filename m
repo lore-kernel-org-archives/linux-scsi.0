@@ -1,64 +1,69 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC 1/2] block: implement an unprep function corresponding
- directly to prep
-Date: Wed, 30 Jun 2010 23:47:31 -0400
-Message-ID: <20100701034731.GA9499@redhat.com>
-References: <1277917264.2839.153.camel@mulgrave.site>
- <20100701104653O.fujita.tomonori@lab.ntt.co.jp>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 1/2] block: fix leaks associated with discard request
+ payload
+Date: Thu, 1 Jul 2010 13:21:42 +0900
+Message-ID: <20100701132130F.fujita.tomonori@lab.ntt.co.jp>
+References: <20100628171218Q.fujita.tomonori@lab.ntt.co.jp>
+	<20100628152536.GA16013@lst.de>
+	<20100630205458C.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28784 "EHLO mx1.redhat.com"
+Received: from sh.osrg.net ([192.16.179.4]:40259 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752755Ab0GADrv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jun 2010 23:47:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20100701104653O.fujita.tomonori@lab.ntt.co.jp>
+	id S1750718Ab0GAEWt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Jul 2010 00:22:49 -0400
+In-Reply-To: <20100630205458C.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@suse.de, hch@lst.de, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+To: hch@lst.de
+Cc: snitzer@redhat.com, axboe@kernel.dk, dm-devel@redhat.com, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
 
-Hi,
-
-On Wed, Jun 30 2010 at  9:47pm -0400,
+On Wed, 30 Jun 2010 20:55:09 +0900
 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 
-> On Wed, 30 Jun 2010 12:01:04 -0500
-> James Bottomley <James.Bottomley@suse.de> wrote:
+> On Mon, 28 Jun 2010 17:25:36 +0200
+> Christoph Hellwig <hch@lst.de> wrote:
 > 
-> > So this is more directly what I'm thinking.  It gives us an exactly
-> > correct place to hang the discard allocation in SCSI.  The next patch
-> > shows a potential implementation in sd.
+> > On Mon, Jun 28, 2010 at 05:14:28PM +0900, FUJITA Tomonori wrote:
+> > > > While I see the problems with leaking ressources in that case I still
+> > > > can't quite explain the hang I see.
+> > > 
+> > > Any way to reproduce the hang without ssd drives?
+> > 
+> > Actually the SSDs don't fully hang, they just causes lots of I/O errors
+> > and hit the error handler hard.  The hard hang is when running under
+> > qemu.  Apply the patch below, then create an if=scsi drive that resides
+> > on an XFS filesystem, and you'll have scsi TP support in the guest:
 > 
-> Yeah, making the prep_rq_fn API symmetrical makes sense lots.
+> Ok, I figured out what's wrong.
 > 
->  
-> > I think it should avoid all the leaks people have been seeing trying to
-> > move the discard allocation/free into scsi.  I also think it should
-> > facilitate sending discard through SCSI as a REQ_TYPE_FS.
+> As I suspected, it's due to the partial completion.
 > 
-> I think so. If I can figure out why qemu scsi driver is broken, the
-> job is done.
+> qemu scsi driver tells that the WRITE_SAME command was successful but
+> somehow the command has resid. So we retry it again and again (and
+> leak some memory).
+> 
+> I don't know yet why qemu scsi driver is broken. Maybe there is a bug
+> in it or converting discard to FS sends broken commands to the driver.
 
-When I combine this patch 1/2 and patch 2/2 with Christoph's discard
-payload rework (a1d949f5f448) already staged in for-2.6.36 I'm finding
-that: sd_unprep_fn's __free_page causes the system to hard hang/crash.
-I need to get serial connected and/or kdump configured to see if I can
-catch what is happening.
+looks like your qemu WRITE_SAME patch isn't completed :)
 
-But if I comment out sd_unprep_fn's __free_page() from James' patch 2/2
-I don't see a crash.  Seems some other code is altering the request
-before James' new sd_unprep_fn hhook?
+You implement WRITE_SAME as if it doesn't do any data transfer. So
+qemu scsi driver gets resid.
 
-Are James' patches meant to be dependent on your REQ_TYPE_FS conversion
-work?  I wouldn't think so.. but I haven't traced the call chains close
-enough to know.
- 
-> I'll see how this patchset works and update my FS discard patchset on
-> the top of this.
+The reason why WRITE_SAME works now is that scsi-ml doesn't care about
+resid with PC commands but it cares with FS commands.
 
-I look forward to your results!
+I confirmed that qemu scsi driver gets the identical command with both
+PC and FS commands and qemu calls xfsctl.
 
-Thanks,
-Mike
+
+> I've put a patch to complete discard command in the all-or-nothing
+> manner:
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git discard
+
+Seems that I finished discard FS conversion. I'll update it on the top
+of James' uprep patchset soon.
