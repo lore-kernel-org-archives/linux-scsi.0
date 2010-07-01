@@ -1,76 +1,190 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: add sd_unprep_fn to free discard page
-Date: Thu, 01 Jul 2010 16:40:52 +0300
-Message-ID: <4C2C9AE4.1050803@panasas.com>
-References: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Kulikov Vasiliy <segooon@gmail.com>
+Subject: [PATCH 10/25] scsi/sg: remove casts from void*
+Date: Thu,  1 Jul 2010 17:16:43 +0400
+Message-ID: <1277990204-22157-1-git-send-email-segooon@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: axboe@kernel.dk, snitzer@redhat.com, hch@lst.de, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+To: Kernel Janitors <kernel-janitors@vger.kernel.org>
+Cc: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Alexey Dobriyan <adobriyan@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/01/2010 01:49 PM, FUJITA Tomonori wrote:
-> This patchset fixes page leak issue in discard commands with unprep
-> facility that James posted:
-> 
-> http://marc.info/?l=linux-scsi&m=127791727508214&w=2
-> 
-> The 1/3 patch adds unprep facility to the block layer (identical to
-> what James posted).
-> 
+Remove unnesessary casts from void*.
+Style fixes with assignments in if (...).
 
-Alternatively to this patch you could also call scsi_driver->done()
-on all commands. There are only two users (sd sr) it's not that bad to add
-an if (blk_pc_req()) inside these ->done() function.
+Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+---
+ drivers/scsi/sg.c |   63 +++++++++++++++++++++++++++++++++++++----------------
+ 1 files changed, 44 insertions(+), 19 deletions(-)
 
-> The 2/3 patch frees a page for discard commands by using the unprep
-> facility. James' original patch doesn't work since it accesses to
-> rq->bio in q->unprep_rq_fn. We hit oops since q->unprep_rq_fn is
-> called when all the data buffer (req->bio and scsi_data_buffer) in the
-> request is freed.
-> 
-> I use rq->buffer to keep track of an allocated page as the block layer
-> sets rq->buffer to the address of bio's page. scsi-ml (and llds) don't
-> use rq->buffer (rq->buffer is set to NULL). So I can't say that I like
-> it lots. Any other way to do that?
-> 
-
-rq->buffer is intended for block-driver use as well as req->special.
-sd+scsi-ml is the block-driver here. req->special is used by scsi-ml
-and rq->buffer is set to NULL inside the call to
-scsi_setup_blk_pc_cmnd/scsi_setup_fs_cmnd. Since you set the ->buffer
-after the call to scsi_setup_blk_pc_cmnd you should be in the clear.
-
-I think scsi-ml should stop setting rq->buffer to NULL and leave it
-be for ULD use. It is left from the time that LLDs where converted
-to use BIOs, just to make sure out-of-tree drivers crash.
-
-Boaz
-> The 3/3 path just removes the dead code.
-> 
-> This is against Jens' for-2.6.36.
-> 
-> The git tree is also available:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git unprep
-> 
-> I'll update the discard FS request conversion on the top of this soon. But this can be applied independently (and fixes the memory leak).
-> 
-> =
->  block/blk-core.c        |   25 +++++++++++++++++++++++++
->  block/blk-settings.c    |   17 +++++++++++++++++
->  drivers/scsi/scsi_lib.c |    2 +-
->  drivers/scsi/sd.c       |   25 +++++++++++++++----------
->  include/linux/blkdev.h  |    4 ++++
->  5 files changed, 62 insertions(+), 11 deletions(-)
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index ef752b2..58215af 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -210,7 +210,7 @@ static void sg_put_dev(Sg_device *sdp);
+ 
+ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ {
+-	struct sg_fd *sfp = (struct sg_fd *)filp->private_data;
++	struct sg_fd *sfp = filp->private_data;
+ 
+ 	if (sfp->parentdp->device->type == TYPE_SCANNER)
+ 		return 0;
+@@ -315,11 +315,15 @@ sg_put:
+ static int
+ sg_release(struct inode *inode, struct file *filp)
+ {
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+ 
+ 	sfp->closed = 1;
+@@ -334,16 +338,20 @@ sg_release(struct inode *inode, struct file *filp)
+ static ssize_t
+ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ {
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	int req_pack_id = -1;
+ 	sg_io_hdr_t *hp;
+ 	struct sg_header *old_hdr = NULL;
+ 	int retval = 0;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_read: %s, count=%d\n",
+ 				   sdp->disk->disk_name, (int) count));
+ 
+@@ -526,15 +534,19 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	int mxsize, cmd_size, k;
+ 	int input_size, blocking;
+ 	unsigned char opcode;
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	struct sg_header old_hdr;
+ 	sg_io_hdr_t *hp;
+ 	unsigned char cmnd[MAX_COMMAND_SIZE];
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_write: %s, count=%d\n",
+ 				   sdp->disk->disk_name, (int) count));
+ 	if (sdp->detached)
+@@ -763,12 +775,15 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	void __user *p = (void __user *)arg;
+ 	int __user *ip = p;
+ 	int result, val, read_only;
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	unsigned long iflags;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
+ 
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_ioctl: %s, cmd=0x%x\n",
+@@ -1093,14 +1108,17 @@ sg_unlocked_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ {
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
++	Sg_fd *sfp = filp->private_data;
+ 	struct scsi_device *sdev;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
+ 
+ 	sdev = sdp->device;
+-	if (sdev->host->hostt->compat_ioctl) { 
++	if (sdev->host->hostt->compat_ioctl) {
+ 		int ret;
+ 
+ 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd_in, (void __user *)arg);
+@@ -1116,15 +1134,18 @@ static unsigned int
+ sg_poll(struct file *filp, poll_table * wait)
+ {
+ 	unsigned int res = 0;
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	int count = 0;
+ 	unsigned long iflags;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp))
+-	    || sfp->closed)
++	if (!sfp)
+ 		return POLLERR;
++	sdp = sfp->parentdp;
++	if ((!sdp) || sfp->closed)
++		return POLLERR;
++
+ 	poll_wait(filp, &sfp->read_wait, wait);
+ 	read_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	for (srp = sfp->headrp; srp; srp = srp->nextrp) {
+@@ -1150,11 +1171,15 @@ sg_poll(struct file *filp, poll_table * wait)
+ static int
+ sg_fasync(int fd, struct file *filp, int mode)
+ {
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
+ 		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
++		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_fasync: %s, mode=%d\n",
+ 				   sdp->disk->disk_name, mode));
+ 
+@@ -1203,12 +1228,12 @@ static const struct vm_operations_struct sg_mmap_vm_ops = {
+ static int
+ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ {
+-	Sg_fd *sfp;
++	Sg_fd *sfp = filp->private_data;
+ 	unsigned long req_sz, len, sa;
+ 	Sg_scatter_hold *rsv_schp;
+ 	int k, length;
+ 
+-	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
++	if ((!filp) || (!vma) || !(sfp))
+ 		return -ENXIO;
+ 	req_sz = vma->vm_end - vma->vm_start;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_mmap starting, vm_start=%p, len=%d\n",
+-- 
+1.7.0.4
