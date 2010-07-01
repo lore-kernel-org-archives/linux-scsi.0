@@ -1,61 +1,187 @@
-From: Chris Mason <chris.mason@oracle.com>
-Subject: Re: [Lsf10-pc] [ATTEND] Want to attend LSF 2010
-Date: Thu, 1 Jul 2010 14:40:43 -0400
-Message-ID: <20100701184043.GK3039@think>
-References: <20100701180430.GD2705@redhat.com>
- <4C2CD9FE.8060707@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:20074 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757884Ab0GASmE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2010 14:42:04 -0400
-Content-Disposition: inline
-In-Reply-To: <4C2CD9FE.8060707@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Kulikov Vasiliy <segooon@gmail.com>
+Subject: [PATCH v2 10/25] scsi/sg: remove casts from void*
+Date: Thu,  1 Jul 2010 22:49:00 +0400
+Message-ID: <1278010141-25638-1-git-send-email-segooon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kernel Janitors <kernel-janitors@vger.kernel.org>
+Cc: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Alexey Dobriyan <adobriyan@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>, James Bottomley <James.Bottomley@suse.de>, lsf10-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
 
-On Thu, Jul 01, 2010 at 02:10:06PM -0400, Ric Wheeler wrote:
-> On 07/01/2010 02:04 PM, Vivek Goyal wrote:
-> > Resending this mail. This time also CCing linux-scsi mailing list. Sorry
-> > for the duplicate copy.
-> >
-> > Hi,
-> >
-> > I wanted to attend LSF 2010. Sepcifically I was interested in discussing
-> > couple of things.
-> >
-> > - CFQ performance issues on higher end storage
-> >          - Deadline outperforms CFQ on higher end storage (storage arrays
-> >            and also on host based hardware RAID). I was wondering if there
-> >            is a way to fix it or it is just design limitation. In the past
-> >            Jens had mentioned that he wants to get rid of deadline also and
-> >            be replaced with CFQ. Are we still targeting that and if yes,
-> >            how to achieve that (some kind of auto tuning).
-> >
-> > - Max bandwidth IO controller
-> >          - A basic proportional weight controller (blkio) based off CFQ is
-> >            now in. Now there is also a need to implement throttling/max
-> >            bandwidth controller. Wanted to get some ideas on how to go
-> >            go about it and what is the best place to impement it. Implement
-> >            it in CFQ or a new device mapper target or something else.
-> >
-> > Thanks
-> > Vivek
-> >
-> 
-> Thanks Vivek,
-> 
-> I know that this IO scheduling issue has been a hot issue for us in our 
-> performance testing. We would love to figure out how to get CFQ to displace 
-> deadline totally and definitely it would be very interesting to have a 
-> conversation around what needs done/what can be done.
-> 
+Remove unnesessary casts from void*.
+Style fixes with assignments in if (...).
 
-I'll second that...one scheduler to rule them all.
+Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+---
+ drivers/scsi/sg.c |   64 ++++++++++++++++++++++++++++++++++++++---------------
+ 1 files changed, 46 insertions(+), 18 deletions(-)
 
--chris
-
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index ef752b2..5289796 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -210,7 +210,7 @@ static void sg_put_dev(Sg_device *sdp);
+ 
+ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ {
+-	struct sg_fd *sfp = (struct sg_fd *)filp->private_data;
++	struct sg_fd *sfp = filp->private_data;
+ 
+ 	if (sfp->parentdp->device->type == TYPE_SCANNER)
+ 		return 0;
+@@ -315,11 +315,15 @@ sg_put:
+ static int
+ sg_release(struct inode *inode, struct file *filp)
+ {
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+ 
+ 	sfp->closed = 1;
+@@ -334,16 +338,20 @@ sg_release(struct inode *inode, struct file *filp)
+ static ssize_t
+ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ {
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	int req_pack_id = -1;
+ 	sg_io_hdr_t *hp;
+ 	struct sg_header *old_hdr = NULL;
+ 	int retval = 0;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_read: %s, count=%d\n",
+ 				   sdp->disk->disk_name, (int) count));
+ 
+@@ -526,15 +534,19 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	int mxsize, cmd_size, k;
+ 	int input_size, blocking;
+ 	unsigned char opcode;
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	struct sg_header old_hdr;
+ 	sg_io_hdr_t *hp;
+ 	unsigned char cmnd[MAX_COMMAND_SIZE];
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_write: %s, count=%d\n",
+ 				   sdp->disk->disk_name, (int) count));
+ 	if (sdp->detached)
+@@ -763,12 +775,15 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	void __user *p = (void __user *)arg;
+ 	int __user *ip = p;
+ 	int result, val, read_only;
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	unsigned long iflags;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
+ 
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_ioctl: %s, cmd=0x%x\n",
+@@ -1093,14 +1108,17 @@ sg_unlocked_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ {
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
++	Sg_fd *sfp = filp->private_data;
+ 	struct scsi_device *sdev;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
++		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
+ 		return -ENXIO;
+ 
+ 	sdev = sdp->device;
+-	if (sdev->host->hostt->compat_ioctl) { 
++	if (sdev->host->hostt->compat_ioctl) {
+ 		int ret;
+ 
+ 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd_in, (void __user *)arg);
+@@ -1116,15 +1134,18 @@ static unsigned int
+ sg_poll(struct file *filp, poll_table * wait)
+ {
+ 	unsigned int res = 0;
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 	Sg_request *srp;
+ 	int count = 0;
+ 	unsigned long iflags;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp))
+-	    || sfp->closed)
++	if (!sfp)
+ 		return POLLERR;
++	sdp = sfp->parentdp;
++	if ((!sdp) || sfp->closed)
++		return POLLERR;
++
+ 	poll_wait(filp, &sfp->read_wait, wait);
+ 	read_lock_irqsave(&sfp->rq_list_lock, iflags);
+ 	for (srp = sfp->headrp; srp; srp = srp->nextrp) {
+@@ -1150,11 +1171,15 @@ sg_poll(struct file *filp, poll_table * wait)
+ static int
+ sg_fasync(int fd, struct file *filp, int mode)
+ {
++	Sg_fd *sfp = filp->private_data;
+ 	Sg_device *sdp;
+-	Sg_fd *sfp;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if (!sfp)
+ 		return -ENXIO;
++	sdp = sfp->parentdp;
++	if (!sdp)
++		return -ENXIO;
++
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_fasync: %s, mode=%d\n",
+ 				   sdp->disk->disk_name, mode));
+ 
+@@ -1208,7 +1233,10 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	Sg_scatter_hold *rsv_schp;
+ 	int k, length;
+ 
+-	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
++	if (!filp)
++		return -ENXIO;
++	sfp = filp->private_data;
++	if (!vma || !sfp)
+ 		return -ENXIO;
+ 	req_sz = vma->vm_end - vma->vm_start;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_mmap starting, vm_start=%p, len=%d\n",
+-- 
+1.7.0.4
