@@ -1,55 +1,43 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: Re: [PATCH 10/25] scsi/sg: remove casts from void*
-Date: Thu, 1 Jul 2010 19:38:05 +0200
-Message-ID: <20100701173805.GW19184@bicker>
-References: <1277990204-22157-1-git-send-email-segooon@gmail.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: [ATTEND] Want to attend LSF 2010
+Date: Thu, 1 Jul 2010 14:04:30 -0400
+Message-ID: <20100701180430.GD2705@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:25337 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752326Ab0GASEg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Jul 2010 14:04:36 -0400
 Content-Disposition: inline
-In-Reply-To: <1277990204-22157-1-git-send-email-segooon@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kulikov Vasiliy <segooon@gmail.com>
-Cc: Kernel Janitors <kernel-janitors@vger.kernel.org>, Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Alexey Dobriyan <adobriyan@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: lsf10-pc@lists.linuxfoundation.org
+Cc: linux-scsi@vger.kernel.org, Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@suse.de>
 
-On Thu, Jul 01, 2010 at 05:16:43PM +0400, Kulikov Vasiliy wrote:
-> -	Sg_fd *sfp;
-> +	Sg_fd *sfp = filp->private_data;
-                     ^^^^^^^^^^^^^^^^^^
-	Dereferenced here.
+Resending this mail. This time also CCing linux-scsi mailing list. Sorry
+for the duplicate copy.
 
->  	unsigned long req_sz, len, sa;
->  	Sg_scatter_hold *rsv_schp;
->  	int k, length;
->  
-> -	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
-> +	if ((!filp) || (!vma) || !(sfp))
-             ^^^^^
+Hi,
 
-	Checked here.
+I wanted to attend LSF 2010. Sepcifically I was interested in discussing
+couple of things.
 
-I obviously just spotted that during the review but another way would be
-to use smatch to catch these.  (http://smatch.sf.net)
+- CFQ performance issues on higher end storage
+        - Deadline outperforms CFQ on higher end storage (storage arrays
+          and also on host based hardware RAID). I was wondering if there
+          is a way to fix it or it is just design limitation. In the past
+          Jens had mentioned that he wants to get rid of deadline also and
+          be replaced with CFQ. Are we still targeting that and if yes,
+          how to achieve that (some kind of auto tuning).
 
-$ /path/to/smatch_scripts/kchecker drivers/scsi/sg.c
-  CHK     include/linux/version.h
-  CHK     include/generated/utsrelease.h
-  CALL    scripts/checksyscalls.sh
-  CHECK   drivers/scsi/sg.c
-drivers/scsi/sg.c +1236 sg_mmap(7) warn: variable dereferenced before check 'filp'
-  CC [M]  drivers/scsi/sg.o
-$
+- Max bandwidth IO controller
+        - A basic proportional weight controller (blkio) based off CFQ is
+          now in. Now there is also a need to implement throttling/max
+          bandwidth controller. Wanted to get some ideas on how to go
+          go about it and what is the best place to impement it. Implement
+          it in CFQ or a new device mapper target or something else.
 
-You could also get rid of the extra parenthesis.
-+	if (!filp || !vma || !sfp)
+Thanks
+Vivek
 
->  		return -ENXIO;
->  	req_sz = vma->vm_end - vma->vm_start;
->  	SCSI_LOG_TIMEOUT(3, printk("sg_mmap starting, vm_start=%p, len=%d\n",
-
-Btw.  These are _way_ better than when you sent them the first time.
-Thanks for doing resending them.
-
-regards,
-dan carpenter
