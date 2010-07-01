@@ -1,156 +1,53 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 1/3] block: implement an unprep function corresponding directly to prep
-Date: Thu,  1 Jul 2010 19:49:17 +0900
-Message-ID: <1277981359-10717-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-References: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: (unknown)
+Date: Thu,  1 Jul 2010 19:49:16 +0900
+Message-ID: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:33211 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:33212 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755277Ab0GAKu6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755217Ab0GAKu6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 1 Jul 2010 06:50:58 -0400
-In-Reply-To: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: axboe@kernel.dk
 Cc: snitzer@redhat.com, hch@lst.de, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, dm-devel@redhat.com, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org
 
-From: James Bottomley <James.Bottomley@suse.de>
+This patchset fixes page leak issue in discard commands with unprep
+facility that James posted:
 
-Reviewed-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
+http://marc.info/?l=linux-scsi&m=127791727508214&w=2
+
+The 1/3 patch adds unprep facility to the block layer (identical to
+what James posted).
+
+The 2/3 patch frees a page for discard commands by using the unprep
+facility. James' original patch doesn't work since it accesses to
+rq->bio in q->unprep_rq_fn. We hit oops since q->unprep_rq_fn is
+called when all the data buffer (req->bio and scsi_data_buffer) in the
+request is freed.
+
+I use rq->buffer to keep track of an allocated page as the block layer
+sets rq->buffer to the address of bio's page. scsi-ml (and llds) don't
+use rq->buffer (rq->buffer is set to NULL). So I can't say that I like
+it lots. Any other way to do that?
+
+The 3/3 path just removes the dead code.
+
+This is against Jens' for-2.6.36.
+
+The git tree is also available:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git unprep
+
+I'll update the discard FS request conversion on the top of this soon. But this can be applied independently (and fixes the memory leak).
+
+=
  block/blk-core.c        |   25 +++++++++++++++++++++++++
  block/blk-settings.c    |   17 +++++++++++++++++
  drivers/scsi/scsi_lib.c |    2 +-
+ drivers/scsi/sd.c       |   25 +++++++++++++++----------
  include/linux/blkdev.h  |    4 ++++
- 4 files changed, 47 insertions(+), 1 deletions(-)
+ 5 files changed, 62 insertions(+), 11 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3c37894..5ab3ac2 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -608,6 +608,7 @@ blk_init_allocated_queue_node(struct request_queue *q, request_fn_proc *rfn,
- 
- 	q->request_fn		= rfn;
- 	q->prep_rq_fn		= NULL;
-+	q->unprep_rq_fn		= NULL;
- 	q->unplug_fn		= generic_unplug_device;
- 	q->queue_flags		= QUEUE_FLAG_DEFAULT;
- 	q->queue_lock		= lock;
-@@ -2133,6 +2134,26 @@ static bool blk_update_bidi_request(struct request *rq, int error,
- 	return false;
- }
- 
-+/**
-+ * blk_unprep_request - unprepare a request
-+ * @req:	the request
-+ *
-+ * This function makes a request ready for complete resubmission (or
-+ * completion).  It happens only after all error handling is complete,
-+ * so represents the appropriate moment to deallocate any resources
-+ * that were allocated to the request in the prep_rq_fn.  The queue
-+ * lock is held when calling this.
-+ */
-+void blk_unprep_request(struct request *req)
-+{
-+	struct request_queue *q = req->q;
-+
-+	req->cmd_flags &= ~REQ_DONTPREP;
-+	if (q->unprep_rq_fn)
-+		q->unprep_rq_fn(q, req);
-+}
-+EXPORT_SYMBOL_GPL(blk_unprep_request);
-+
- /*
-  * queue lock must be held
-  */
-@@ -2148,6 +2169,10 @@ static void blk_finish_request(struct request *req, int error)
- 
- 	blk_delete_timer(req);
- 
-+	if (req->cmd_flags & REQ_DONTPREP)
-+		blk_unprep_request(req);
-+
-+
- 	blk_account_io_done(req);
- 
- 	if (req->end_io)
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index f5ed5a1..a234f4b 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -37,6 +37,23 @@ void blk_queue_prep_rq(struct request_queue *q, prep_rq_fn *pfn)
- EXPORT_SYMBOL(blk_queue_prep_rq);
- 
- /**
-+ * blk_queue_unprep_rq - set an unprepare_request function for queue
-+ * @q:		queue
-+ * @ufn:	unprepare_request function
-+ *
-+ * It's possible for a queue to register an unprepare_request callback
-+ * which is invoked before the request is finally completed. The goal
-+ * of the function is to deallocate any data that was allocated in the
-+ * prepare_request callback.
-+ *
-+ */
-+void blk_queue_unprep_rq(struct request_queue *q, unprep_rq_fn *ufn)
-+{
-+	q->unprep_rq_fn = ufn;
-+}
-+EXPORT_SYMBOL(blk_queue_unprep_rq);
-+
-+/**
-  * blk_queue_merge_bvec - set a merge_bvec function for queue
-  * @q:		queue
-  * @mbfn:	merge_bvec_fn
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5f11608..ee83619 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -85,7 +85,7 @@ static void scsi_unprep_request(struct request *req)
- {
- 	struct scsi_cmnd *cmd = req->special;
- 
--	req->cmd_flags &= ~REQ_DONTPREP;
-+	blk_unprep_request(req);
- 	req->special = NULL;
- 
- 	scsi_put_command(cmd);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 204fbe2..6bba04c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -200,6 +200,7 @@ struct request_pm_state
- typedef void (request_fn_proc) (struct request_queue *q);
- typedef int (make_request_fn) (struct request_queue *q, struct bio *bio);
- typedef int (prep_rq_fn) (struct request_queue *, struct request *);
-+typedef void (unprep_rq_fn) (struct request_queue *, struct request *);
- typedef void (unplug_fn) (struct request_queue *);
- 
- struct bio_vec;
-@@ -282,6 +283,7 @@ struct request_queue
- 	request_fn_proc		*request_fn;
- 	make_request_fn		*make_request_fn;
- 	prep_rq_fn		*prep_rq_fn;
-+	unprep_rq_fn		*unprep_rq_fn;
- 	unplug_fn		*unplug_fn;
- 	merge_bvec_fn		*merge_bvec_fn;
- 	prepare_flush_fn	*prepare_flush_fn;
-@@ -841,6 +843,7 @@ extern void blk_complete_request(struct request *);
- extern void __blk_complete_request(struct request *);
- extern void blk_abort_request(struct request *);
- extern void blk_abort_queue(struct request_queue *);
-+extern void blk_unprep_request(struct request *);
- 
- /*
-  * Access functions for manipulating queue properties
-@@ -885,6 +888,7 @@ extern int blk_queue_dma_drain(struct request_queue *q,
- extern void blk_queue_lld_busy(struct request_queue *q, lld_busy_fn *fn);
- extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
-+extern void blk_queue_unprep_rq(struct request_queue *, unprep_rq_fn *ufn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
- extern void blk_queue_dma_alignment(struct request_queue *, int);
- extern void blk_queue_update_dma_alignment(struct request_queue *, int);
--- 
-1.6.5
+
 
