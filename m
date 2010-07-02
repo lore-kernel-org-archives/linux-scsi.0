@@ -1,114 +1,70 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 2/2] scsi: build flush requests via q->prep_rq_fn
-Date: Fri,  2 Jul 2010 16:33:25 +0900
-Message-ID: <1278056005-25438-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 1/2] block: introduce REQ_FLUSH flag
+Date: Fri,  2 Jul 2010 16:33:24 +0900
+Message-ID: <1278056005-25438-2-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 References: <1278056005-25438-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:41488 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754677Ab0GBHeQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Jul 2010 03:34:16 -0400
 In-Reply-To: <1278056005-25438-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, axboe@kernel.dk
 Cc: hch@lst.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
-List-Id: linux-scsi@vger.kernel.org
 
-scsi-ml builds flush requests via q->prepare_flush_fn(), however,
-builds discard requests via q->prep_rq_fn.
+SCSI-ml needs a way to mark a request as flush request in
+q->prepare_flush_fn because it needs to identify them later (e.g. in
+q->request_fn or prep_rq_fn).
 
-Using two different mechnisms for the similar requests (building
-commands in SCSI ULD) doesn't make sense.
+queue_flush sets REQ_HARDBARRIER in rq->cmd_flags however the block
+layer also sends normal REQ_TYPE_FS requests with REQ_HARDBARRIER. So
+SCSI-ml can't use REQ_HARDBARRIER to identify flush requests.
 
-Handing both via q->prep_rq_fn makes the code design simpler.
+We could change the block layer to clear REQ_HARDBARRIER bit before
+sending non flush requests to the lower layers. However, intorudcing
+the new flag looks cleaner (surely easier).
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- block/blk-barrier.c |   10 +++-------
- drivers/scsi/sd.c   |   26 ++++++++++++++++----------
- 2 files changed, 19 insertions(+), 17 deletions(-)
+ block/blk-barrier.c |    2 +-
+ include/linux/bio.h |    2 ++
+ 2 files changed, 3 insertions(+), 1 deletions(-)
 
 diff --git a/block/blk-barrier.c b/block/blk-barrier.c
-index a348242..41e1740 100644
+index 7c6f4a7..a348242 100644
 --- a/block/blk-barrier.c
 +++ b/block/blk-barrier.c
-@@ -25,12 +25,6 @@
- int blk_queue_ordered(struct request_queue *q, unsigned ordered,
- 		      prepare_flush_fn *prepare_flush_fn)
- {
--	if (!prepare_flush_fn && (ordered & (QUEUE_ORDERED_DO_PREFLUSH |
--					     QUEUE_ORDERED_DO_POSTFLUSH))) {
--		printk(KERN_ERR "%s: prepare_flush_fn required\n", __func__);
--		return -EINVAL;
--	}
--
- 	if (ordered != QUEUE_ORDERED_NONE &&
- 	    ordered != QUEUE_ORDERED_DRAIN &&
- 	    ordered != QUEUE_ORDERED_DRAIN_FLUSH &&
-@@ -146,7 +140,9 @@ static void queue_flush(struct request_queue *q, unsigned which)
- 	rq->cmd_flags = REQ_HARDBARRIER | REQ_FLUSH;
+@@ -143,7 +143,7 @@ static void queue_flush(struct request_queue *q, unsigned which)
+ 	}
+ 
+ 	blk_rq_init(q, rq);
+-	rq->cmd_flags = REQ_HARDBARRIER;
++	rq->cmd_flags = REQ_HARDBARRIER | REQ_FLUSH;
  	rq->rq_disk = q->bar_rq.rq_disk;
  	rq->end_io = end_io;
--	q->prepare_flush_fn(q, rq);
-+
-+	if (q->prepare_flush_fn)
-+		q->prepare_flush_fn(q, rq);
+ 	q->prepare_flush_fn(q, rq);
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 4d379c8..f655b54 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -174,6 +174,7 @@ enum rq_flag_bits {
+ 	__REQ_ALLOCED,		/* request came from our alloc pool */
+ 	__REQ_COPY_USER,	/* contains copies of user pages */
+ 	__REQ_INTEGRITY,	/* integrity metadata has been remapped */
++	__REQ_FLUSH,		/* request for cache flush */
+ 	__REQ_IO_STAT,		/* account I/O stat */
+ 	__REQ_MIXED_MERGE,	/* merge of different types, fail separately */
+ 	__REQ_NR_BITS,		/* stops here */
+@@ -213,6 +214,7 @@ enum rq_flag_bits {
+ #define REQ_ALLOCED		(1 << __REQ_ALLOCED)
+ #define REQ_COPY_USER		(1 << __REQ_COPY_USER)
+ #define REQ_INTEGRITY		(1 << __REQ_INTEGRITY)
++#define REQ_FLUSH		(1 << __REQ_FLUSH)
+ #define REQ_IO_STAT		(1 << __REQ_IO_STAT)
+ #define REQ_MIXED_MERGE		(1 << __REQ_MIXED_MERGE)
  
- 	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
- }
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index aa6b48b..e8c295e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -471,6 +471,18 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
- 	return ret;
- }
- 
-+static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
-+{
-+	/* for now, we use REQ_TYPE_BLOCK_PC. */
-+	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->timeout = SD_TIMEOUT;
-+	rq->retries = SD_MAX_RETRIES;
-+	rq->cmd[0] = SYNCHRONIZE_CACHE;
-+	rq->cmd_len = 10;
-+
-+	return scsi_setup_blk_pc_cmnd(sdp, rq);
-+}
-+
- static void sd_unprep_fn(struct request_queue *q, struct request *rq)
- {
- 	if (rq->cmd_flags & REQ_DISCARD)
-@@ -504,6 +516,9 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	if (rq->cmd_flags & REQ_DISCARD) {
- 		ret = scsi_setup_discard_cmnd(sdp, rq);
- 		goto out;
-+	} else if (rq->cmd_flags & REQ_FLUSH) {
-+		ret = scsi_setup_flush_cmnd(sdp, rq);
-+		goto out;
- 	} else if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		ret = scsi_setup_blk_pc_cmnd(sdp, rq);
- 		goto out;
-@@ -1053,15 +1068,6 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 	return 0;
- }
- 
--static void sd_prepare_flush(struct request_queue *q, struct request *rq)
--{
--	rq->cmd_type = REQ_TYPE_BLOCK_PC;
--	rq->timeout = SD_TIMEOUT;
--	rq->retries = SD_MAX_RETRIES;
--	rq->cmd[0] = SYNCHRONIZE_CACHE;
--	rq->cmd_len = 10;
--}
--
- static void sd_rescan(struct device *dev)
- {
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-@@ -2129,7 +2135,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	else
- 		ordered = QUEUE_ORDERED_DRAIN;
- 
--	blk_queue_ordered(sdkp->disk->queue, ordered, sd_prepare_flush);
-+	blk_queue_ordered(sdkp->disk->queue, ordered, NULL);
- 
- 	set_capacity(disk, sdkp->capacity);
- 	kfree(buffer);
 -- 
 1.6.5
+
