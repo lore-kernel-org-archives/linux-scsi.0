@@ -1,38 +1,31 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 0/2] use q->prep_rq_fn for flush requests instead of
- q->prepare_flush_fn()
-Date: Fri, 2 Jul 2010 16:56:29 +0900
-Message-ID: <20100702165617B.fujita.tomonori@lab.ntt.co.jp>
-References: <1278056005-25438-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<20100702075248.GB21266@infradead.org>
-	<4C2D9AFF.7010401@kernel.dk>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/3] scsi: add sd_unprep_fn to free discard page
+Date: Fri, 2 Jul 2010 12:48:01 +0200
+Message-ID: <20100702104801.GA26318@lst.de>
+References: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1277981359-10717-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:39633 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751564Ab0GBH4u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jul 2010 03:56:50 -0400
-In-Reply-To: <4C2D9AFF.7010401@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1277981359-10717-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: axboe@kernel.dk, snitzer@redhat.com, hch@lst.de, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk
-Cc: hch@infradead.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@suse.de, hch@lst.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 02 Jul 2010 09:53:35 +0200
-Jens Axboe <axboe@kernel.dk> wrote:
+> sd_unprep() uses rq->buffer to free discard page allocated in
+> sd_prepare_discard().
 
-> On 2010-07-02 09:52, Christoph Hellwig wrote:
-> > On Fri, Jul 02, 2010 at 04:33:23PM +0900, FUJITA Tomonori wrote:
-> >> We could kill q->prepare_flush_fn(). Except for ide, all the users
-> >> just mark flush requests. They can use REQ_FLUSH flag instead. Ide can
-> >> do like SCSI.
-> > 
-> > Yes, and I think you should go all the way to kill it instead of
-> > keeping both APIs around.  Otherwise the patchset looks good to me.
-> 
-> Fully agree, lets get rid of ->prepare_flush_fn().
+Eeek.  Accessing it using the bio in both haves seems a lot cleaner than
+abusing this.  Especially as we don't really need a mapped page anyway
+at least for WRITE SAME implementation.
 
-Ok, I'll send patches to clean up all the users of prepare_flush_fn()
-soon.
+> -	return scsi_setup_blk_pc_cmnd(sdp, rq);
+> +	ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+> +	rq->buffer = page_address(page);
+> +	return ret;
+
+In addition I don't think this is quite correct.  You still need to undo
+the payload addition manually if scsi_setup_blk_pc_cmnd fails, as we
+haven't marked the request as REQ_DONTPREP at that point - it's only
+done by scsi_prep_return for the BLKPREP_OK case.
