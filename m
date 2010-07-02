@@ -1,31 +1,40 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] scsi: add sd_unprep_fn to free discard page
-Date: Fri, 2 Jul 2010 12:48:01 +0200
-Message-ID: <20100702104801.GA26318@lst.de>
-References: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1277981359-10717-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] scsi: address leak in the error path of discard page allocation
+Date: Fri, 2 Jul 2010 12:48:24 +0200
+Message-ID: <20100702104824.GB26318@lst.de>
+References: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1277981359-10717-3-git-send-email-fujita.tomonori@lab.ntt.co.jp> <20100701130328.GB19605@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1277981359-10717-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <20100701130328.GB19605@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: axboe@kernel.dk, snitzer@redhat.com, hch@lst.de, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, axboe@kernel.dk, hch@lst.de, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-> sd_unprep() uses rq->buffer to free discard page allocated in
-> sd_prepare_discard().
+On Thu, Jul 01, 2010 at 09:03:28AM -0400, Mike Snitzer wrote:
+> On Thu, Jul 01 2010 at  6:49am -0400,
+> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> 
+> > This fixes discard page leak by using q->unprep_rq_fn facility.
+> > 
+> > q->unprep_rq_fn is called when all the data buffer (req->bio and
+> > scsi_data_buffer) in the request is freed.
+> > 
+> > sd_unprep() uses rq->buffer to free discard page allocated in
+> > sd_prepare_discard().
+> > 
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> 
+> Thanks for sorting this out Tomo, all 3 patches work great!
+> 
+> BTW, there is one remaining (rare) leak in the allocation path.
+> 
+> The following patch serves to fix it but I'm not sure if there is a more
+> elegant way to address this.
+> 
+> An alternative would be to check if the page is already allocated
+> (before allocating the page in scsi_setup_discard_cmnd)?
 
-Eeek.  Accessing it using the bio in both haves seems a lot cleaner than
-abusing this.  Especially as we don't really need a mapped page anyway
-at least for WRITE SAME implementation.
-
-> -	return scsi_setup_blk_pc_cmnd(sdp, rq);
-> +	ret = scsi_setup_blk_pc_cmnd(sdp, rq);
-> +	rq->buffer = page_address(page);
-> +	return ret;
-
-In addition I don't think this is quite correct.  You still need to undo
-the payload addition manually if scsi_setup_blk_pc_cmnd fails, as we
-haven't marked the request as REQ_DONTPREP at that point - it's only
-done by scsi_prep_return for the BLKPREP_OK case.
+Ah, should have read your mail first, sorry..
