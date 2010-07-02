@@ -1,60 +1,39 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi: address leak in the error path of discard page allocation
-Date: Fri, 2 Jul 2010 09:08:56 -0400
-Message-ID: <20100702130855.GA6058@redhat.com>
-References: <20100701130328.GB19605@redhat.com>
- <20100701201508.GA28546@redhat.com>
- <1278015548.2813.147.camel@mulgrave.site>
- <20100702135300U.fujita.tomonori@lab.ntt.co.jp>
- <20100702105241.GD26318@lst.de>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: 520 BPS data integrity vendors
+Date: Fri, 02 Jul 2010 13:06:08 -0500
+Message-ID: <1278093968.2856.169.camel@mulgrave.site>
+References: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55789 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756320Ab0GBNJL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Jul 2010 09:09:11 -0400
-Content-Disposition: inline
-In-Reply-To: <20100702105241.GD26318@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Porat <dan.porat@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 
-On Fri, Jul 02 2010 at  6:52am -0400,
-Christoph Hellwig <hch@lst.de> wrote:
-
-> On Fri, Jul 02, 2010 at 01:53:14PM +0900, FUJITA Tomonori wrote:
-> > Seems that scsi-ml calls scsi_unprep_request() for not-prepped
-> > requests in scsi_init_io error path. So we could move that
-> > scsi_unprep_request() to the error path in scsi_prep_return(). Then we
-> > can free discard page in the single place.
-> > 
-> > Applying the rule strictly is fine by me too; we remove
-> > scsi_unprep_request() in scsi_init_io error path and clean up things
-> > in each prep function's error path.
+On Thu, 2010-07-01 at 17:11 -0400, Dan Porat wrote:
+> Hi ,
 > 
-> That would be my preference.  Making sure a function cleans up all
-> allocations / state changes on errors means code is a lot fragile and
-> easier to understand.
-> 
-> > Btw, blk_clear_request_payload() is necessary?
-> > 
-> > Making sure that a request is clean is not a bad idea but if we hit
-> > BLKPREP_KILL or BLKPREP_DEFER, we call
-> > blk_end_request(). blk_end_request() can free a request properly even
-> > if we don't do something like blk_clear_request_payload?
-> 
-> For BLKPREP_KILL we do call __blk_end_request_all, but for
-> BLKPREP_DEFER we don't.  In that case we just leave it on the queue for
-> a later retry.  So we either have to clean it up, or leave the detect
-> the case of a partially constructed command in ->prep_fn.  I think
-> cleaning up properly and having defined state when entering ->prep_fn is
-> the better variant.
+> In the documentation of 2.6.34 it says "We have been working with
+> several FC/SAS HBA vendors to enable the protection information to be
+> transferred to and from their controllers"
+> I would like to test SAS 520.
 
-Right, I shared the same opinion earlier in this thread, so please let
-your ACKs fly now that we seem to all be in agreement.
+So I'm having a little difficulty parsing this: SAS 520 is actually a
+financial audit standard (which I really wish I didn't know about) ... I
+assume you're actually talking about DIF/DIX?  The integrity standard
+for SCSI?
 
-I'd like Jens to pick this patch up now-ish ;)
+> Which Vendor and what specific SAS HBA model will support it ?
+> Thanks
 
-Mike
+I've added linux-scsi, since this is a SCSI question not an IDE one. 
+
+The only SAS HBA supporting DIF I know of with a working Linux driver is
+the mpt2sas.  It supports DIF types 1 and 3.
+
+James
+
+
