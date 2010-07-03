@@ -1,27 +1,47 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: 520 BPS data integrity vendors
-Date: Sat, 03 Jul 2010 03:33:59 -0400
-Message-ID: <yq1mxu981eg.fsf@sermon.lab.mkp.net>
-References: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
-	<1278093968.2856.169.camel@mulgrave.site>
-	<AANLkTilWKeOAXMukh_zvXzdXkdOTk6soAEnpzFNwvBA3@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi: need to reset unprep_rq_fn in sd_remove
+Date: Sat, 3 Jul 2010 23:07:04 +0900
+Message-ID: <20100703230650Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <AANLkTilWKeOAXMukh_zvXzdXkdOTk6soAEnpzFNwvBA3@mail.gmail.com>
-	(Dan Porat's message of "Fri, 2 Jul 2010 21:03:26 -0400")
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Porat <dan.porat@gmail.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:58815 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751307Ab0GCOHg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 Jul 2010 10:07:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: James.Bottomley@suse.de, hch@lst.de, snitzer@redhat.com, linux-scsi@vger.kernel.org
 
->>>>> "Dan" == Dan Porat <dan.porat@gmail.com> writes:
+This is for block's for-2.6.36.
 
->>> Would you know of any specific LSI SAS/HBAmodel which will support
->>> SCSI DIF/DIX ?
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi: need to reset unprep_rq_fn in sd_remove
 
-LSI's 92xx series HBAs have the LSISAS2008 chip that's required for DIF
-operation. These boards do not support DIX.
+We need to reset q->unprep_rq_fn in sd_remove. Otherwise we hit kernel
+oops if we access to a scsi disk device via sg after removing scsi
+disk module.
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/sd.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index aa6b48b..b13dffb 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2378,6 +2378,7 @@ static int sd_remove(struct device *dev)
+ 	async_synchronize_full();
+ 	sdkp = dev_get_drvdata(dev);
+ 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
++	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
+ 	device_del(&sdkp->dev);
+ 	del_gendisk(sdkp->disk);
+ 	sd_shutdown(dev);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.6.5
+
