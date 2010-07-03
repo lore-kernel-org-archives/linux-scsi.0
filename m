@@ -1,100 +1,87 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 6/6] scsi/sd: remove big kernel lock
-Date: Sat,  3 Jul 2010 23:47:20 +0200
-Message-ID: <1278193640-24223-7-git-send-email-arnd@arndb.de>
-References: <1278193640-24223-1-git-send-email-arnd@arndb.de>
+Subject: [PATCH 0/6] block: BKL removal, version 3
+Date: Sat,  3 Jul 2010 23:47:14 +0200
+Message-ID: <1278193640-24223-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1278193640-24223-1-git-send-email-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Every user of the BKL in the sd driver is the
-result of the pushdown from the block layer
-into the open/close/ioctl functions.
+This series removes the big kernel lock from the common
+block layer code by pushing it into the individual
+device drivers.
 
-None of them seem to rely on the BKL, since they
-do not touch global data without holding
-another lock, and the open/close functions are
-still protected from concurrent execution using
-the bdev->bd_mutex.
+Following a suggestion from Christoph Hellwig,
+It replaces the earlier attempt that converted the
+usage of the BKL into a subsystem-wide mutex.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
----
- drivers/scsi/sd.c |   19 +------------------
- 1 files changed, 1 insertions(+), 18 deletions(-)
+I'd like to get this into 2.6.36 in order to remove
+the BKL from all the core kernel code.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 92702b3..2733068 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -758,7 +758,6 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_open\n"));
- 
--	lock_kernel();
- 	sdev = sdkp->device;
- 
- 	/*
-@@ -802,12 +801,10 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
- 	}
- 
--	unlock_kernel();
- 	return 0;
- 
- error_out:
- 	scsi_disk_put(sdkp);
--	unlock_kernel();
- 	return retval;	
- }
- 
-@@ -829,7 +826,6 @@ static int sd_release(struct gendisk *disk, fmode_t mode)
- 
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp, "sd_release\n"));
- 
--	lock_kernel();
- 	if (!--sdkp->openers && sdev->removable) {
- 		if (scsi_block_when_processing_errors(sdev))
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
-@@ -840,7 +836,6 @@ static int sd_release(struct gendisk *disk, fmode_t mode)
- 	 * XXX is followed by a "rmmod sd_mod"?
- 	 */
- 	scsi_disk_put(sdkp);
--	unlock_kernel();
- 	return 0;
- }
- 
-@@ -921,18 +916,6 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 	return scsi_ioctl(sdp, cmd, p);
- }
- 
--static int sd_unlocked_ioctl(struct block_device *bdev, fmode_t mode,
--			     unsigned int cmd, unsigned long arg)
--{
--	int ret;
--
--	lock_kernel();
--	ret = sd_ioctl(bdev, mode, cmd, arg);
--	unlock_kernel();
--
--	return ret;
--}
--
- static void set_media_not_present(struct scsi_disk *sdkp)
- {
- 	sdkp->media_present = 0;
-@@ -1113,7 +1096,7 @@ static const struct block_device_operations sd_fops = {
- 	.owner			= THIS_MODULE,
- 	.open			= sd_open,
- 	.release		= sd_release,
--	.ioctl			= sd_unlocked_ioctl,
-+	.ioctl			= sd_ioctl,
- 	.getgeo			= sd_getgeo,
- #ifdef CONFIG_COMPAT
- 	.compat_ioctl		= sd_compat_ioctl,
--- 
-1.7.1
+The first larger patches should be fairly uncontroversial,
+while patch 5/6 is the most critical one. I could not
+see any reason why it should not work, but I'm also not
+convinced that I found all the possible problems in it,
+so I'd really like to get a second opinion on that one.
+
+Arnd Bergmann (6):
+  block: push down BKL into .locked_ioctl
+  block: push down BKL into .open and .release
+  block: push BKL into blktrace ioctls
+  block: remove BKL from BLKROSET and BLKFLSBUF
+  block: remove BKL from partition code
+  scsi/sd: remove big kernel lock
+
+ arch/um/drivers/ubd_kern.c          |    7 ++++-
+ block/compat_ioctl.c                |   56 -----------------------------------
+ block/ioctl.c                       |   21 +------------
+ drivers/block/DAC960.c              |   13 +++++--
+ drivers/block/amiflop.c             |   27 +++++++++++++++--
+ drivers/block/aoe/aoeblk.c          |    4 ++
+ drivers/block/ataflop.c             |   28 ++++++++++++++++-
+ drivers/block/brd.c                 |    5 ++-
+ drivers/block/cciss.c               |   31 +++++++++++++++----
+ drivers/block/cpqarray.c            |   40 ++++++++++++++++++++++---
+ drivers/block/drbd/drbd_main.c      |    4 ++
+ drivers/block/floppy.c              |   20 ++++++++++++-
+ drivers/block/loop.c                |    5 +++
+ drivers/block/nbd.c                 |    5 ++-
+ drivers/block/paride/pcd.c          |   21 +++++++++++--
+ drivers/block/paride/pd.c           |    9 +++++-
+ drivers/block/paride/pf.c           |   26 ++++++++++++----
+ drivers/block/pktcdvd.c             |   16 ++++++++--
+ drivers/block/swim.c                |   20 +++++++++++-
+ drivers/block/swim3.c               |   30 +++++++++++++++++-
+ drivers/block/ub.c                  |   27 +++++++++++++++--
+ drivers/block/viodasd.c             |   19 +++++++++++-
+ drivers/block/virtio_blk.c          |   15 +++++++++-
+ drivers/block/xd.c                  |   15 +++++++++-
+ drivers/block/xd.h                  |    2 +-
+ drivers/block/xen-blkfront.c        |    9 +++++-
+ drivers/block/xsysace.c             |    6 ++++
+ drivers/block/z2ram.c               |   13 ++++++--
+ drivers/cdrom/gdrom.c               |   19 ++++++++++--
+ drivers/cdrom/viocd.c               |   21 +++++++++++--
+ drivers/ide/ide-cd.c                |   30 +++++++++++++++----
+ drivers/ide/ide-disk_ioctl.c        |    9 ++++-
+ drivers/ide/ide-floppy_ioctl.c      |   12 +++++--
+ drivers/ide/ide-gd.c                |   19 ++++++++++-
+ drivers/ide/ide-tape.c              |   19 ++++++++++--
+ drivers/md/dm.c                     |    7 ++++
+ drivers/md/md.c                     |    6 ++++
+ drivers/memstick/core/mspro_block.c |    9 +++++-
+ drivers/message/i2o/i2o_block.c     |   19 +++++++++++-
+ drivers/mmc/card/block.c            |    5 +++
+ drivers/mtd/mtd_blkdevs.c           |   11 +++++-
+ drivers/s390/block/dasd.c           |    6 ++++
+ drivers/s390/block/dcssblk.c        |    5 +++
+ drivers/s390/char/tape_block.c      |    8 ++++-
+ drivers/scsi/sd.c                   |    3 +-
+ drivers/scsi/sr.c                   |   22 ++++++++++++-
+ drivers/staging/hv/blkvsc_drv.c     |    5 +++
+ fs/block_dev.c                      |   10 +-----
+ include/linux/blkdev.h              |    1 -
+ include/linux/blktrace_api.h        |   12 +++++++
+ kernel/trace/blktrace.c             |   43 ++++++++++++++++++++++++++
+ 51 files changed, 628 insertions(+), 167 deletions(-)
