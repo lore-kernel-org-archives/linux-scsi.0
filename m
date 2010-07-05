@@ -1,62 +1,120 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: sg: remove disk while doing IO -> WARNING: at
- block/blk-core.c:1080 __blk_put_request
-Date: Mon, 5 Jul 2010 17:43:07 +0900
-Message-ID: <20100705174252X.fujita.tomonori@lab.ntt.co.jp>
-References: <AC1B83CE65082B4DBDDB681ED2F6B2EF866C90@EXHQ.corp.stratus.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 2/3] scsi: add sd_unprep_fn to free discard page
+Date: Mon, 05 Jul 2010 13:07:26 +0300
+Message-ID: <4C31AEDE.7050008@panasas.com>
+References: <1277981359-10717-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1277981359-10717-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:51758 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757855Ab0GEInY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jul 2010 04:43:24 -0400
-In-Reply-To: <AC1B83CE65082B4DBDDB681ED2F6B2EF866C90@EXHQ.corp.stratus.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1277981359-10717-3-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, snitzer@redhat.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nate.Dailey@stratus.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, dgilbert@interlog.com
 
-On Wed, 30 Jun 2010 08:31:56 -0400
-"Dailey, Nate" <Nate.Dailey@stratus.com> wrote:
+On 07/01/2010 01:49 PM, FUJITA Tomonori wrote:
+> This fixes discard page leak by using q->unprep_rq_fn facility.
+> 
+> q->unprep_rq_fn is called when all the data buffer (req->bio and
+> scsi_data_buffer) in the request is freed.
+> 
+> sd_unprep() uses rq->buffer to free discard page allocated in
+> sd_prepare_discard().
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Thanks for the report.
+Sorry for thinking about this just now. It was on the tip of my
+mind, but I was too busy with other things to notice.
 
-> I'm not sure what needs to be done to fix this (does sg_finish_rem_req
-> just need to null out req->bio, or is some cleanup actually missing?),
-> but I'm happy to test out a fix if anyone has any suggestions.
+There is a simple more STD way to solve all this without the need
+for any new API.
 
-Surely, we leak bio. I reproduced this.
+*Use the bio destructor to also deallocate it's pages*
 
-Can you try the following patch?
+Now that is not such a novel idea, it's used all over the place.
+Well it's the proper way to submit a bio and be notified on done.
+Since there are no bio leaks, we know all error paths are just
+as covered.
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] sg: fix bio leak with a detached device
+For this to work all these patches could be removed and the
+blk_add_request_payload need to change to recieve a bio destructor
+pointer.
 
-After blk_rq_map_user is successful, if we find that a device is
-unavailable (was detached), we must call blk_end_request_all to free
-bio(s) before blk_rq_unmap_user and blk_put_request.
+If you ask me I hate what was done with discard at the block layer
+since it's only in Jens tree for-next I think it is good time to change
+it. What is this alloc the bio in one place and add it's pages in another
+place. Rrrrr
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/sg.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+to quote from the author himself:
+<block-core.c>
+/**
+ * blk_add_request_payload - add a payload to a request
+ <snip>
+ *
+ * Note that this is a quite horrible hack and nothing but handling of
+ * discard requests should ever use it.
+ */
+void blk_add_request_payload(struct request *rq, struct page *page,
+		unsigned int len)
+</block-core.c>
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ef752b2..d454909 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -729,6 +729,8 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
- 		return k;	/* probably out of space --> ENOMEM */
- 	}
- 	if (sdp->detached) {
-+		if (srp->bio)
-+			blk_end_request_all(srp->rq, -EIO);
- 		sg_finish_rem_req(srp);
- 		return -ENODEV;
- 	}
--- 
-1.6.5
+The block-layer users think of a discard as zero-load, so should the
+block-layer. The block driver like sd that needs to add a payload can
+set in a bio just like any other place. when allocating the bio, set
+it's destructor and be done with it. All allocations and cleanups are
+done at one place, at same level.
 
+As it stands now blk_add_request_payload will have to either chain the
+bio destructors and/or if it knows where it's allocated then chain to
+the proper bio_free, after calling the block-driver supplied callback.
+
+BTW where is that zero-pages discard bio allocated. Why is it not allocated
+inside blk_add_request_payload? What is the meaning of zero length bio?
+I though everywhere we check for "if (req->bio)" not "if (bio_size(req_bio))"
+isn't all this asking for trouble?
+
+my $0.017
+Boaz
+
+> ---
+>  drivers/scsi/sd.c |   12 +++++++++++-
+>  1 files changed, 11 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 86da819..2d4e3a8 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -425,6 +425,7 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
+>  	sector_t sector = bio->bi_sector;
+>  	unsigned int nr_sectors = bio_sectors(bio);
+>  	unsigned int len;
+> +	int ret;
+>  	struct page *page;
+>  
+>  	if (sdkp->device->sector_size == 4096) {
+> @@ -465,7 +466,15 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
+>  	}
+>  
+>  	blk_add_request_payload(rq, page, len);
+> -	return scsi_setup_blk_pc_cmnd(sdp, rq);
+> +	ret = scsi_setup_blk_pc_cmnd(sdp, rq);
+> +	rq->buffer = page_address(page);
+> +	return ret;
+> +}
+> +
+> +static void sd_unprep_fn(struct request_queue *q, struct request *rq)
+> +{
+> +	if (rq->cmd_flags & REQ_DISCARD)
+> +		__free_page(virt_to_page(rq->buffer));
+>  }
+>  
+>  /**
+> @@ -2242,6 +2251,7 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+>  	sd_revalidate_disk(gd);
+>  
+>  	blk_queue_prep_rq(sdp->request_queue, sd_prep_fn);
+> +	blk_queue_unprep_rq(sdp->request_queue, sd_unprep_fn);
+>  
+>  	gd->driverfs_dev = &sdp->sdev_gendev;
+>  	gd->flags = GENHD_FL_EXT_DEVT;
