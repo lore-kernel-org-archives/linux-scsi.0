@@ -1,112 +1,82 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi: unify the error handling of the prep functions
-Date: Mon, 5 Jul 2010 13:00:19 +0900
-Message-ID: <20100705125651R.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: scsi: address leak in the error path of discard page allocation
+Date: Mon, 5 Jul 2010 13:00:21 +0900
+Message-ID: <20100705130000S.fujita.tomonori@lab.ntt.co.jp>
+References: <20100702135300U.fujita.tomonori@lab.ntt.co.jp>
+	<20100702105241.GD26318@lst.de>
+	<20100702130855.GA6058@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:37023 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750701Ab0GEEAv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jul 2010 00:00:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100702130855.GA6058@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: snitzer@redhat.com
+Cc: hch@lst.de, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@suse.de, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk, James.Bottomley@suse.de
-Cc: snitzer@redhat.com, linux-scsi@vger.kernel.org, hch@lst.de, dm-devel@redhat.com
 
-This can be applied to the block's for-2.6.36.
+On Fri, 2 Jul 2010 09:08:56 -0400
+Mike Snitzer <snitzer@redhat.com> wrote:
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi: unify the error handling of the prep functions
+> On Fri, Jul 02 2010 at  6:52am -0400,
+> Christoph Hellwig <hch@lst.de> wrote:
+> 
+> > On Fri, Jul 02, 2010 at 01:53:14PM +0900, FUJITA Tomonori wrote:
+> > > Seems that scsi-ml calls scsi_unprep_request() for not-prepped
+> > > requests in scsi_init_io error path. So we could move that
+> > > scsi_unprep_request() to the error path in scsi_prep_return(). Then we
+> > > can free discard page in the single place.
+> > > 
+> > > Applying the rule strictly is fine by me too; we remove
+> > > scsi_unprep_request() in scsi_init_io error path and clean up things
+> > > in each prep function's error path.
+> > 
+> > That would be my preference.  Making sure a function cleans up all
+> > allocations / state changes on errors means code is a lot fragile and
+> > easier to understand.
+> > 
+> > > Btw, blk_clear_request_payload() is necessary?
+> > > 
+> > > Making sure that a request is clean is not a bad idea but if we hit
+> > > BLKPREP_KILL or BLKPREP_DEFER, we call
+> > > blk_end_request(). blk_end_request() can free a request properly even
+> > > if we don't do something like blk_clear_request_payload?
+> > 
+> > For BLKPREP_KILL we do call __blk_end_request_all, but for
+> > BLKPREP_DEFER we don't.  In that case we just leave it on the queue for
+> > a later retry.  So we either have to clean it up, or leave the detect
+> > the case of a partially constructed command in ->prep_fn.  I think
+> > cleaning up properly and having defined state when entering ->prep_fn is
+> > the better variant.
 
-This unifies the error handling of the prep functions (and fix the
-leak of a page allocated for discard in the case of BLKPREP_KILL or
-BLK_PREP_DEFER).
+I think that as long as we free an allocated page for discard,
+scsi_setup_discard_cmnd or the block layer don't need to detect the
+case of a partially constructed command.
 
-The error handling of the prep path is very messy. Some errors are
-handled in the prep functions while some are in scsi_prep_return().
 
-Let's handle all the errors in scsi_prep_return().
+> Right, I shared the same opinion earlier in this thread, so please let
+> your ACKs fly now that we seem to all be in agreement.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/scsi_lib.c |   26 +++++++++++++-------------
- drivers/scsi/sd.c       |    6 ++++--
- 2 files changed, 17 insertions(+), 15 deletions(-)
+As I wrote earlier, I think that we need to clean up (and fix) the
+error handling of the prep path. Currently, it's just messy. Some
+errors are handled in the prep functions while some are in
+scsi_prep_return().
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ee83619..f9b3f7b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1008,14 +1008,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 	}
- 
- 	return BLKPREP_OK ;
--
- err_exit:
--	scsi_release_buffers(cmd);
--	if (error == BLKPREP_KILL)
--		scsi_put_command(cmd);
--	else /* BLKPREP_DEFER */
--		scsi_unprep_request(cmd->request);
--
- 	return error;
- }
- EXPORT_SYMBOL(scsi_init_io);
-@@ -1177,6 +1170,17 @@ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- }
- EXPORT_SYMBOL(scsi_prep_state_check);
- 
-+static void scsi_prep_error(struct request *req)
-+{
-+	struct scsi_cmnd *cmd = req->special;
-+
-+	if (!cmd)
-+		return;
-+
-+	scsi_release_buffers(cmd);
-+	scsi_unprep_request(req);
-+}
-+
- int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
- {
- 	struct scsi_device *sdev = q->queuedata;
-@@ -1185,14 +1189,10 @@ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
- 	case BLKPREP_KILL:
- 		req->errors = DID_NO_CONNECT << 16;
- 		/* release the command and kill it */
--		if (req->special) {
--			struct scsi_cmnd *cmd = req->special;
--			scsi_release_buffers(cmd);
--			scsi_put_command(cmd);
--			req->special = NULL;
--		}
-+		scsi_prep_error(req);
- 		break;
- 	case BLKPREP_DEFER:
-+		scsi_prep_error(req);
- 		/*
- 		 * If we defer, the blk_peek_request() returns NULL, but the
- 		 * queue must be restarted, so we plug here if no returning
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index aa6b48b..88ba0c5 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -473,8 +473,10 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
- 
- static void sd_unprep_fn(struct request_queue *q, struct request *rq)
- {
--	if (rq->cmd_flags & REQ_DISCARD)
--		__free_page(virt_to_page(rq->buffer));
-+	if (rq->cmd_flags & REQ_DISCARD) {
-+		free_page((unsigned long)rq->buffer);
-+		rq->buffer = NULL;
-+	}
- }
- 
- /**
--- 
-1.6.5
+- we call scsi_put_command in two places (scsi_init_io and scsi_prep_return).
 
+- scsi_init_io calls scsi_put_command directly for BLKPREP_KILL but
+  calls it indirectly via scsi_unprep_request for BLKPREP_DEFER.
+
+- If scsi_init_io() hits BLKPREP_KILL internally, we hit kernel oops
+  in scsi_prep_return since we call scsi_put_command twice. (luckily,
+  scsi_init_sgtable and scsi_alloc_sgtable in scsi_init_io return only
+  DEFER).
+
+you could add more if you like.
+
+I think that handling all the errors in scsi_prep_return() is
+cleaner. I'll send a patch.
+
+If we prefer to make sure that a request is completely reset (as
+blk_clear_request_payload does), then we can add it on the top of the
+patch.
