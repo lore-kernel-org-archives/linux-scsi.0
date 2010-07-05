@@ -1,43 +1,39 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi: unify the error handling of the prep functions
-Date: Mon, 5 Jul 2010 09:45:29 -0400
-Message-ID: <20100705134529.GA18645@redhat.com>
-References: <20100705125651R.fujita.tomonori@lab.ntt.co.jp>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Mon, 5 Jul 2010 16:02:49 GMT
+Message-ID: <201007051602.o65G2n1X002270@demeter.kernel.org>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59913 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752496Ab0GENpv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Jul 2010 09:45:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20100705125651R.fujita.tomonori@lab.ntt.co.jp>
+Received: from demeter.kernel.org ([140.211.167.39]:44265 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756800Ab0GEQCu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2010 12:02:50 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o65G2noF002273
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 5 Jul 2010 16:02:49 GMT
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: axboe@kernel.dk, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, hch@lst.de, dm-devel@redhat.com
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jul 05 2010 at 12:00am -0400,
-FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
 
-> This can be applied to the block's for-2.6.36.
-> 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] scsi: unify the error handling of the prep functions
-> 
-> This unifies the error handling of the prep functions (and fix the
-> leak of a page allocated for discard in the case of BLKPREP_KILL or
-> BLK_PREP_DEFER).
-> 
-> The error handling of the prep path is very messy. Some errors are
-> handled in the prep functions while some are in scsi_prep_return().
-> 
-> Let's handle all the errors in scsi_prep_return().
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-This patch addresses the discard page leak too (scsi_prep_error calls
-scsi_unprep_request which calls blk_unprep_request).
 
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+
+
+--- Comment #7 from Pawel Staszewski <pstaszewski@artcom.pl>  2010-07-05 16:01:26 ---
+The same problem is with 2.6.35-rc4.
+
+Sorry i can't provide now full panic log from output console because server is
+1000km from me.... - and there is limited access to monitor and console..
+
+last good working kernel was 2.6.35-rc1
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
