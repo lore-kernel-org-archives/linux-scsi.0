@@ -1,39 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16275] Kernel panic when mounting filesystem
-Date: Mon, 5 Jul 2010 16:02:49 GMT
-Message-ID: <201007051602.o65G2n1X002270@demeter.kernel.org>
-References: <bug-16275-11613@https.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 07/12] be2iscsi: Fix for premature buffer free
+Date: Mon, 05 Jul 2010 13:58:41 -0500
+Message-ID: <4C322B61.3030802@cs.wisc.edu>
+References: <20100630000021.GA20279@serverengines.com> <4C30E874.2090200@cs.wisc.edu> <201007042222.36951.eike-kernel@sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44265 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756800Ab0GEQCu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2010 12:02:50 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o65G2noF002273
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 5 Jul 2010 16:02:49 GMT
-In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43576 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751557Ab0GESzt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jul 2010 14:55:49 -0400
+In-Reply-To: <201007042222.36951.eike-kernel@sf-tec.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16275
+On 07/04/2010 03:22 PM, Rolf Eike Beer wrote:
+> Mike Christie wrote:
+>> On 06/29/2010 07:00 PM, Jayamohan Kallickal wrote:
+>
+>>> @@ -160,18 +179,34 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd
+>>> *sc)
+>>>
+>>>    	spin_unlock_bh(&session->lock);
+>>>    	inv_tbl = phba->inv_tbl;
+>>>
+>>> -	tag = mgmt_invalidate_icds(phba, inv_tbl, num_invalidate, cid);
+>>> +	nonemb_cmd.va = pci_alloc_consistent(phba->ctrl.pdev,
+>>> +				sizeof(struct invalidate_commands_params_in),
+>>> +				&nonemb_cmd.dma);
+>>> +	if (nonemb_cmd.va == NULL) {
+>>> +		SE_DEBUG(DBG_LVL_1,
+>>> +			 "Failed to allocate memory for"
+>>> +			 "mgmt_invalidate_icds\n");
+>>> +		return -1;
+>>
+>> return FAILED.
+>
+> Why not ENOMEM? That would come into my mind when an allocations fails.
+>
 
-
-
-
-
---- Comment #7 from Pawel Staszewski <pstaszewski@artcom.pl>  2010-07-05 16:01:26 ---
-The same problem is with 2.6.35-rc4.
-
-Sorry i can't provide now full panic log from output console because server is
-1000km from me.... - and there is limited access to monitor and console..
-
-last good working kernel was 2.6.35-rc1
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Because that function is called by the scsi layer's error handling code 
+and it uses SUCCESS and FAILED for return values.
