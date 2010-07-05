@@ -1,83 +1,112 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 2/6] block: push down BKL into .open and .release
-Date: Sun, 4 Jul 2010 23:09:09 +0200
-Message-ID: <201007042309.09727.arnd@arndb.de>
-References: <1278193640-24223-1-git-send-email-arnd@arndb.de> <1278193640-24223-3-git-send-email-arnd@arndb.de> <20100704080146.GA31828@merkur.ravnborg.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi: unify the error handling of the prep functions
+Date: Mon, 5 Jul 2010 13:00:19 +0900
+Message-ID: <20100705125651R.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:53474 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758017Ab0GDVJ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jul 2010 17:09:29 -0400
-In-Reply-To: <20100704080146.GA31828@merkur.ravnborg.org>
+Received: from sh.osrg.net ([192.16.179.4]:37023 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750701Ab0GEEAv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Jul 2010 00:00:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org
+To: axboe@kernel.dk, James.Bottomley@suse.de
+Cc: snitzer@redhat.com, linux-scsi@vger.kernel.org, hch@lst.de, dm-devel@redhat.com
 
-On Sunday 04 July 2010 10:01:46 Sam Ravnborg wrote:
-> > --- a/drivers/block/amiflop.c
-> > +++ b/drivers/block/amiflop.c
-> > @@ -1555,10 +1555,13 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
-> >  	int old_dev;
-> >  	unsigned long flags;
-> >  
-> > +	lock_kernel();
-> >  	old_dev = fd_device[drive];
-> >  
-> > -	if (fd_ref[drive] && old_dev != system)
-> > +	if (fd_ref[drive] && old_dev != system) {
-> > +		unlock_kernel();
-> >  		return -EBUSY;
-> > +	}
-> >  
-> >  	if (mode & (FMODE_READ|FMODE_WRITE)) {
-> >  		check_disk_change(bdev);
-> > @@ -1571,8 +1574,10 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
-> >  			fd_deselect (drive);
-> >  			rel_fdc();
-> >  
-> > -			if (wrprot)
-> > +			if (wrprot) {
-> > +				unlock_kernel();
-> >  				return -EROFS;
-> > +			}
-> >  		}
-> >  	}
-> >  
-> > @@ -1589,6 +1594,7 @@ static int floppy_open(struct block_device *bdev, fmode_t mode)
-> >  	printk(KERN_INFO "fd%d: accessing %s-disk with %s-layout\n",drive,
-> >  	       unit[drive].type->name, data_types[system].name);
-> >  
-> > +	unlock_kernel();
-> >  	return 0;
-> >  }
-> 
-> Using goto for errorhandling here would have been nicer.
+This can be applied to the block's for-2.6.36.
 
-I tried to minimize the chance for breaking stuff in code I cannot easily
-test build. As shown by the bug you found in my pktcdvd patch, changing the
-control flow of a function has a higher potential of introducing bugs,
-so I didn't do it for drivers that people don't care much about any more.
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] scsi: unify the error handling of the prep functions
 
-> Also did you forget to include smp_locks.h?
+This unifies the error handling of the prep functions (and fix the
+leak of a page allocated for discard in the case of BLKPREP_KILL or
+BLK_PREP_DEFER).
 
-No, that was already there from the first patch.
+The error handling of the prep path is very messy. Some errors are
+handled in the prep functions while some are in scsi_prep_return().
 
-> Lot's of other places could benefit from improved goto error handling.
-> The driver maintainers should do this (if there is a maintainer).
+Let's handle all the errors in scsi_prep_return().
 
-If that makes Jens accept my patches, I'd gladly change them this way.
-I agree that it's cleaner and I always write my own code like that,
-but when modifying (mostly) unmaintained code, my preference is on
-trying to ensure the patch is correct.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_lib.c |   26 +++++++++++++-------------
+ drivers/scsi/sd.c       |    6 ++++--
+ 2 files changed, 17 insertions(+), 15 deletions(-)
 
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ee83619..f9b3f7b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1008,14 +1008,7 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ 	}
+ 
+ 	return BLKPREP_OK ;
+-
+ err_exit:
+-	scsi_release_buffers(cmd);
+-	if (error == BLKPREP_KILL)
+-		scsi_put_command(cmd);
+-	else /* BLKPREP_DEFER */
+-		scsi_unprep_request(cmd->request);
+-
+ 	return error;
+ }
+ EXPORT_SYMBOL(scsi_init_io);
+@@ -1177,6 +1170,17 @@ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
+ }
+ EXPORT_SYMBOL(scsi_prep_state_check);
+ 
++static void scsi_prep_error(struct request *req)
++{
++	struct scsi_cmnd *cmd = req->special;
++
++	if (!cmd)
++		return;
++
++	scsi_release_buffers(cmd);
++	scsi_unprep_request(req);
++}
++
+ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
+ {
+ 	struct scsi_device *sdev = q->queuedata;
+@@ -1185,14 +1189,10 @@ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
+ 	case BLKPREP_KILL:
+ 		req->errors = DID_NO_CONNECT << 16;
+ 		/* release the command and kill it */
+-		if (req->special) {
+-			struct scsi_cmnd *cmd = req->special;
+-			scsi_release_buffers(cmd);
+-			scsi_put_command(cmd);
+-			req->special = NULL;
+-		}
++		scsi_prep_error(req);
+ 		break;
+ 	case BLKPREP_DEFER:
++		scsi_prep_error(req);
+ 		/*
+ 		 * If we defer, the blk_peek_request() returns NULL, but the
+ 		 * queue must be restarted, so we plug here if no returning
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index aa6b48b..88ba0c5 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -473,8 +473,10 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
+ 
+ static void sd_unprep_fn(struct request_queue *q, struct request *rq)
+ {
+-	if (rq->cmd_flags & REQ_DISCARD)
+-		__free_page(virt_to_page(rq->buffer));
++	if (rq->cmd_flags & REQ_DISCARD) {
++		free_page((unsigned long)rq->buffer);
++		rq->buffer = NULL;
++	}
+ }
+ 
+ /**
+-- 
+1.6.5
 
-> I did not find anything else going through this patch.
-
-Ok, thanks a lot for looking through this!
-
-	Arnd
