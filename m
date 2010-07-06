@@ -1,58 +1,53 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] enclosure: fix lost return
-Date: Tue, 06 Jul 2010 10:39:19 -0500
-Message-ID: <1278430759.2854.80.camel@mulgrave.site>
-References: <1278430088-9761-1-git-send-email-segooon@gmail.com>
+From: Dan Porat <dan.porat@gmail.com>
+Subject: Re: 520 BPS data integrity vendors
+Date: Tue, 6 Jul 2010 14:01:07 -0400
+Message-ID: <AANLkTimI7Ke4qXw7zv8WDsWSQtBRSwSi5IZbvByjGRih@mail.gmail.com>
+References: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
+	<1278093968.2856.169.camel@mulgrave.site>
+	<AANLkTilWKeOAXMukh_zvXzdXkdOTk6soAEnpzFNwvBA3@mail.gmail.com>
+	<yq1mxu981eg.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:58828 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835Ab0GFPjZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jul 2010 11:39:25 -0400
-In-Reply-To: <1278430088-9761-1-git-send-email-segooon@gmail.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56212 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753758Ab0GFS0U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2010 14:26:20 -0400
+In-Reply-To: <yq1mxu981eg.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kulikov Vasiliy <segooon@gmail.com>
-Cc: Kernel Janitors <kernel-janitors@vger.kernel.org>, Tejun Heo <tj@kernel.org>, David Brownell <dbrownell@users.sourceforge.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2010-07-06 at 19:28 +0400, Kulikov Vasiliy wrote:
-> Useless statement must be return with argument.
->=20
-> This patch silences a compiler warning:
-> drivers/misc/enclosure.c: In function =E2=80=98enclosure_component_re=
-gister=E2=80=99:
-> drivers/misc/enclosure.c:289: warning: ignoring return value of =E2=80=
-=98ERR_PTR=E2=80=99, declared with attribute warn_unused_result
->=20
-> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
-> ---
->  drivers/misc/enclosure.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
-> index 48c84a5..9ae7bef 100644
-> --- a/drivers/misc/enclosure.c
-> +++ b/drivers/misc/enclosure.c
-> @@ -286,7 +286,7 @@ enclosure_component_register(struct enclosure_dev=
-ice *edev,
-> =20
->  	err =3D device_register(cdev);
->  	if (err)
-> -		ERR_PTR(err);
-> +		return ERR_PTR(err);
+We checked with kernel 2.6.34 , Seagate Cheetah 15K and the following H=
+BA:
 
-Well, the patch isn't quite correct, but I think I win a prize for
-working out what the correct patch was and then forgetting to apply it:
+LSI 9212-4i4e
 
-http://marc.info/?l=3Dlinux-scsi&m=3D126843630320666
+Still , no success.
 
-I've actually put it in my tree this time ...
+Any Ideas?
 
-James
+Thanks
 
 
+
+On Sat, Jul 3, 2010 at 3:33 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> >>>>> "Dan" =3D=3D Dan Porat <dan.porat@gmail.com> writes:
+>
+> >>> Would you know of any specific LSI SAS/HBAmodel which will suppor=
+t
+> >>> SCSI DIF/DIX ?
+>
+> LSI's 92xx series HBAs have the LSISAS2008 chip that's required for D=
+IF
+> operation. These boards do not support DIX.
+>
+> --
+> Martin K. Petersen =A0 =A0 =A0Oracle Linux Engineering
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
