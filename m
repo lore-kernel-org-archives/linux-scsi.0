@@ -1,79 +1,39 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi: convert discard to REQ_TYPE_FS instead of
- REQ_TYPE_BLOCK_PC
-Date: Tue, 6 Jul 2010 16:01:46 +0900
-Message-ID: <20100706160106C.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC 1/2] block: implement an unprep function corresponding
+ directly to prep
+Date: Tue, 6 Jul 2010 16:04:06 +0900
+Message-ID: <20100706160349L.fujita.tomonori@lab.ntt.co.jp>
+References: <20100702110343.GA27159@lst.de>
+	<20100705160023S.fujita.tomonori@lab.ntt.co.jp>
+	<20100705192413.GA24189@lst.de>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:34628 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:34642 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835Ab0GFHCU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jul 2010 03:02:20 -0400
+	id S1753911Ab0GFHEc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jul 2010 03:04:32 -0400
+In-Reply-To: <20100705192413.GA24189@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, hch@lst.de, snitzer@redhat.com, axboe@kernel.dk
+To: hch@lst.de
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@suse.de, snitzer@redhat.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-ide@vger.kernel.org
 
-I confirmed that mkfs.xfs worked with Intel X25-M (trim) and
-scsi_debug (write same and unmap).
+On Mon, 5 Jul 2010 21:24:13 +0200
+Christoph Hellwig <hch@lst.de> wrote:
 
-REQ_TYPE_FS should give the same scsi_cmnd struct as REQ_TYPE_BLOCK_PC.
+> > Wired, I've just got Intel SSD X25-M drives and mkfs.xfs worked well.
+> 
+> What codebase were you testing on?  Sorry, but curently I'm a bit lost
+> in the maze of patches.  I've got both and intel and an OCZ SSD (right
+> now I'm travelling with only access to the OCZ actually) and I'd like
+> to test the latest variant again.
 
-This can be applied to block's for-2.6.36.
+I tested:
 
-The git tree is also available:
+git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git discard
 
-git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git fs-discard
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] scsi: convert discard to REQ_TYPE_FS instead of REQ_TYPE_BLOCK_PC
-
-The block layer (file systems) sends discard requests as REQ_TYPE_FS
-(the role of REQ_TYPE_FS is that setting up commands and interpreting
-the results). But SCSI-ml treats discard requests as
-REQ_TYPE_BLOCK_PC.
-
-scsi-ml can handle discard requests as REQ_TYPE_FS
-easily. scsi_setup_discard_cmnd() sets up struct request and the bio
-nicely. Only remaining issue is that discard requests can't be
-completed partially so we need to modify sd_done.
-
-This conversion also fixes the problem that discard requests aren't
-retried when possible (e.g. UNIT ATTENTION).
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/sd.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 0994ab6..5f59601 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -433,7 +433,6 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
- 		nr_sectors >>= 3;
- 	}
- 
--	rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 	rq->timeout = SD_TIMEOUT;
- 
- 	memset(rq->cmd, 0, rq->cmd_len);
-@@ -1185,6 +1184,12 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	int sense_valid = 0;
- 	int sense_deferred = 0;
- 
-+	if (SCpnt->request->cmd_flags & REQ_DISCARD) {
-+		if (!result)
-+			scsi_set_resid(SCpnt, 0);
-+		return good_bytes;
-+	}
-+
- 	if (result) {
- 		sense_valid = scsi_command_normalize_sense(SCpnt, &sshdr);
- 		if (sense_valid)
--- 
-1.6.5
-
+I rebased the changes against Jens' for-2.6.36 and I've just sent the
+latest patch.
