@@ -1,117 +1,60 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v2] scsi: address leak in scsi_setup_discard_cmnd error path
- (was: Re: scsi: unify the error handling of the prep functions)
-Date: Tue, 6 Jul 2010 09:59:58 -0400
-Message-ID: <20100706135958.GA10772@redhat.com>
-References: <20100705125651R.fujita.tomonori@lab.ntt.co.jp>
- <20100705134529.GA18645@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] enclosure: fix lost return
+Date: Tue, 06 Jul 2010 10:39:19 -0500
+Message-ID: <1278430759.2854.80.camel@mulgrave.site>
+References: <1278430088-9761-1-git-send-email-segooon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53666 "EHLO mx1.redhat.com"
+Received: from cantor.suse.de ([195.135.220.2]:58828 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751088Ab0GFOAQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Jul 2010 10:00:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20100705134529.GA18645@redhat.com>
+	id S1751835Ab0GFPjZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Jul 2010 11:39:25 -0400
+In-Reply-To: <1278430088-9761-1-git-send-email-segooon@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jaxboe@fusionio.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, hch@lst.de, dm-devel@redhat.com
+To: Kulikov Vasiliy <segooon@gmail.com>
+Cc: Kernel Janitors <kernel-janitors@vger.kernel.org>, Tejun Heo <tj@kernel.org>, David Brownell <dbrownell@users.sourceforge.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 05 2010 at  9:45am -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
+On Tue, 2010-07-06 at 19:28 +0400, Kulikov Vasiliy wrote:
+> Useless statement must be return with argument.
+>=20
+> This patch silences a compiler warning:
+> drivers/misc/enclosure.c: In function =E2=80=98enclosure_component_re=
+gister=E2=80=99:
+> drivers/misc/enclosure.c:289: warning: ignoring return value of =E2=80=
+=98ERR_PTR=E2=80=99, declared with attribute warn_unused_result
+>=20
+> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+> ---
+>  drivers/misc/enclosure.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>=20
+> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+> index 48c84a5..9ae7bef 100644
+> --- a/drivers/misc/enclosure.c
+> +++ b/drivers/misc/enclosure.c
+> @@ -286,7 +286,7 @@ enclosure_component_register(struct enclosure_dev=
+ice *edev,
+> =20
+>  	err =3D device_register(cdev);
+>  	if (err)
+> -		ERR_PTR(err);
+> +		return ERR_PTR(err);
 
-> On Mon, Jul 05 2010 at 12:00am -0400,
-> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> 
-> > This can be applied to the block's for-2.6.36.
-> > 
-> > =
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Subject: [PATCH] scsi: unify the error handling of the prep functions
-> > 
-> > This unifies the error handling of the prep functions (and fix the
-> > leak of a page allocated for discard in the case of BLKPREP_KILL or
-> > BLK_PREP_DEFER).
-> > 
-> > The error handling of the prep path is very messy. Some errors are
-> > handled in the prep functions while some are in scsi_prep_return().
-> > 
-> > Let's handle all the errors in scsi_prep_return().
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> 
-> This patch addresses the discard page leak too (scsi_prep_error calls
-> scsi_unprep_request which calls blk_unprep_request).
-> 
-> Acked-by: Mike Snitzer <snitzer@redhat.com>
+Well, the patch isn't quite correct, but I think I win a prize for
+working out what the correct patch was and then forgetting to apply it:
 
-Hi,
+http://marc.info/?l=3Dlinux-scsi&m=3D126843630320666
 
-Your unified error handling forces a BLKPREP_KILL or BLKPREP_DEFER
-return from scsi_setup_discard_cmnd to depend on prep cleanup even
-though BLKPREP_OK was not returned.  And this works, but it runs counter
-to the rules James previously shared: http://lkml.org/lkml/2010/7/1/512
+I've actually put it in my tree this time ...
 
-"The rules are pretty clear:  Unprep is only called if the request gets
-prepped ... that means you have to return BLKPREP_OK.  Defer or kill
-assume there's no teardown to do, so the allocation (if it took place)
-must be reversed before returning them."
+James
 
-All this being said, I'm OK with your patch (as my ack implies) but I
-can see that it will take the request prep error handling in a direction
-James may prefer to avoid.
 
-Here is a minimalist patch that 1) removes the discard request's page
-leak 2) preserves the prep cleanup rules covered above.  Fixing the leak
-is a priority, introducing additional error path code sharing/cleanup is
-secondary and can come later.
-
-=
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v2] scsi: address leak in scsi_setup_discard_cmnd error path
-
-Currently, a discard request's page will not get cleaned up in the
-scsi_setup_discard_cmnd error path.  A scsi_setup_discard_cmnd return
-other than BLKPREP_OK will not cause a discard request to get completely
-cleaned up (scsi_prep_return will not set REQ_DONTPREP unless BLKPREP_OK
-was returned).
-
-This fix eliminates the leak while preserving the rule that:
-Unprep is only called if the request gets prepped (meaning a return
-BLKPREP_OK).  Defer or kill assume there's no teardown to do, so any
-allocation must be reversed before returning them.
-
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/scsi/sd.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 0994ab6..08e08bd 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -468,6 +468,10 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
- 	blk_add_request_payload(rq, page, len);
- 	ret = scsi_setup_blk_pc_cmnd(sdp, rq);
- 	rq->buffer = page_address(page);
-+	if (ret != BLKPREP_OK) {
-+		__free_page(page);
-+		rq->buffer = NULL;
-+	}
- 	return ret;
- }
- 
-@@ -485,8 +489,10 @@ static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
- 
- static void sd_unprep_fn(struct request_queue *q, struct request *rq)
- {
--	if (rq->cmd_flags & REQ_DISCARD)
-+	if (rq->cmd_flags & REQ_DISCARD) {
- 		__free_page(virt_to_page(rq->buffer));
-+		rq->buffer = NULL;
-+	}
- }
- 
- /**
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
