@@ -1,130 +1,102 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: FW: [RFC PATCH 1/2] qla4xxx: set correct value in sess->recovery_tmo
-Date: Wed, 7 Jul 2010 06:15:56 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA87128B124C5@AVEXMB1.qlogic.org>
+Subject: FW: [RFC PATCH 2/2] iscsi_transport: Modidify recovery_tmo from
+ sysfs
+Date: Wed, 7 Jul 2010 06:16:33 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA87128B124C6@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:59353 "EHLO
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:59398 "EHLO
 	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755698Ab0GGNQA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2010 09:16:00 -0400
+	with ESMTP id S1754850Ab0GGNQg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2010 09:16:36 -0400
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
 Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-
 Look like following patch never made to reflector so resending.
 
 -----Original Message-----
 From: Vikas Chaudhary [mailto:vikas.chaudhary@qlogic.com] 
-Sent: Tuesday, July 06, 2010 10:48 AM
+Sent: Tuesday, July 06, 2010 10:49 AM
 To: michaelc@cs.wisc.edu
 Cc: james.bottomley@suse.de; linux-scsi@vger.kernel.org; Ravi Anand; Vikas Chaudhary
-Subject: [RFC PATCH 1/2] qla4xxx: set correct value in sess->recovery_tmo
+Subject: [RFC PATCH 2/2] iscsi_transport: Modidify recovery_tmo from sysfs
+
+Added support to modify session->recovery_tmo from sysfs
 
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_def.h  |    2 --
- drivers/scsi/qla4xxx/ql4_init.c |    3 ---
- drivers/scsi/qla4xxx/ql4_mbx.c  |    1 -
- drivers/scsi/qla4xxx/ql4_os.c   |   10 ++++++----
- 4 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |   37 ++++++++++++++++++++++++++++++----
+ 1 files changed, 32 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 2bcba45..b5353f9 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -249,7 +249,6 @@ struct ddb_entry {
- 	uint32_t default_time2wait; /* Default Min time between
- 				     * relogins (+aens) */
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index b9aec30..fe8704c 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1786,11 +1786,33 @@ show_priv_session_##field(struct device *dev, 				\
+ 	return sprintf(buf, format"\n", session->field);		\
+ }
  
--	atomic_t port_down_timer; /* Device connection timer */
- 	atomic_t retry_relogin_timer; /* Min Time between relogins
- 				       * (4000 only) */
- 	atomic_t relogin_timer;	/* Max Time to wait for relogin to complete */
-@@ -474,7 +473,6 @@ struct scsi_qla_host {
- 	uint32_t timer_active;
- 
- 	/* Recovery Timers */
--	uint32_t port_down_retry_count;
- 	uint32_t discovery_wait;
- 	atomic_t check_relogin_timeouts;
- 	uint32_t retry_reset_ha_cnt;
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 56f6d75..2bcd1a4 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -668,7 +668,6 @@ static struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
- 	}
- 
- 	ddb_entry->fw_ddb_index = fw_ddb_index;
--	atomic_set(&ddb_entry->port_down_timer, ha->port_down_retry_count);
- 	atomic_set(&ddb_entry->retry_relogin_timer, INVALID_ENTRY);
- 	atomic_set(&ddb_entry->relogin_timer, 0);
- 	atomic_set(&ddb_entry->relogin_retry_count, 0);
-@@ -1555,8 +1554,6 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
- 	/* Device is back online. */
- 	if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) {
- 		atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
--		atomic_set(&ddb_entry->port_down_timer,
--			   ha->port_down_retry_count);
- 		atomic_set(&ddb_entry->relogin_retry_count, 0);
- 		atomic_set(&ddb_entry->relogin_timer, 0);
- 		clear_bit(DF_RELOGIN, &ddb_entry->flags);
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 88db1d4..583b9b3 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -360,7 +360,6 @@ qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
- 	       min(sizeof(ha->alias), sizeof(init_fw_cb->Alias)));*/
- 
- 	/* Save Command Line Paramater info */
--	ha->port_down_retry_count = le16_to_cpu(init_fw_cb->conn_ka_timeout);
- 	ha->discovery_wait = ql4xdiscoverywait;
- 
- 	if (ha->acb_version == ACB_SUPPORTED) {
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 686103d..b8895fc 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -54,7 +54,8 @@ MODULE_PARM_DESC(ql4xenablemsix,
- 		" 1 = enable MSI-X interrupt mechanism (Default).\n"
- 		" 2 = enable MSI interrupt mechanism.");
- 
--#define QL4_DEF_QDEPTH 32
-+#define QL4_DEF_QDEPTH		32
-+#define QL4_RECOVERY_TMO	30
+-#define iscsi_priv_session_attr(field, format)				\
++#define iscsi_priv_session_attr_store(field)				\
++static ssize_t								\
++store_priv_session_##field(struct device *dev,				\
++			   struct device_attribute *attr,		\
++			   const char *buf, size_t count)		\
++{									\
++	int val;							\
++	char *cp;							\
++	struct iscsi_cls_session *session =				\
++		iscsi_dev_to_session(dev->parent);			\
++	if ((session->state == ISCSI_SESSION_FREE) ||			\
++	    (session->state == ISCSI_SESSION_FAILED))			\
++		return -EBUSY;						\
++	val = simple_strtoul(buf, &cp, 0);				\
++	if ((*cp && (*cp != '\n')) || (val < 0))			\
++		return -EINVAL;						\
++	session->field = val;						\
++	return count;							\
++} 
++
++#define iscsi_priv_session_rw_attr(field, format)			\
+ 	iscsi_priv_session_attr_show(field, format)			\
+-static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO, show_priv_session_##field, \
+-			NULL)
+-iscsi_priv_session_attr(recovery_tmo, "%d");
++	iscsi_priv_session_attr_store(field)				\
++static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUGO,		\
++			show_priv_session_##field,			\
++			store_priv_session_##field)
++iscsi_priv_session_rw_attr(recovery_tmo, "%d");
  
  /*
-  * SCSI host template entry points
-@@ -163,10 +164,10 @@ static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session)
- 	if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
- 		atomic_set(&ddb_entry->state, DDB_STATE_DEAD);
+  * iSCSI host attrs
+@@ -1821,6 +1843,11 @@ do {									\
+ 	count++;							\
+ } while (0)
  
--		DEBUG2(printk("scsi%ld: %s: ddb [%d] port down retry count "
-+		DEBUG2(printk("scsi%ld: %s: ddb [%d] session recovery timeout "
- 			      "of (%d) secs exhausted, marking device DEAD.\n",
- 			      ha->host_no, __func__, ddb_entry->fw_ddb_index,
--			      ha->port_down_retry_count));
-+			      QL4_RECOVERY_TMO));
++#define SETUP_PRIV_SESSION_RW_ATTR(field)				\
++do {									\
++	priv->session_attrs[count] = &dev_attr_priv_sess_##field;	\
++	count++;							\
++} while (0)
  
- 		qla4xxx_wake_dpc(ha);
- 	}
-@@ -298,7 +299,8 @@ int qla4xxx_add_sess(struct ddb_entry *ddb_entry)
- {
- 	int err;
+ #define SETUP_SESSION_RD_ATTR(field, param_flag)			\
+ do {									\
+@@ -2008,7 +2035,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
+ 	SETUP_SESSION_RD_ATTR(ifacename, ISCSI_IFACE_NAME);
+ 	SETUP_SESSION_RD_ATTR(initiatorname, ISCSI_INITIATOR_NAME);
+ 	SETUP_SESSION_RD_ATTR(targetalias, ISCSI_TARGET_ALIAS);
+-	SETUP_PRIV_SESSION_RD_ATTR(recovery_tmo);
++	SETUP_PRIV_SESSION_RW_ATTR(recovery_tmo);
+ 	SETUP_PRIV_SESSION_RD_ATTR(state);
  
--	ddb_entry->sess->recovery_tmo = ddb_entry->ha->port_down_retry_count;
-+	ddb_entry->sess->recovery_tmo = QL4_RECOVERY_TMO;
-+
- 	err = iscsi_add_session(ddb_entry->sess, ddb_entry->fw_ddb_index);
- 	if (err) {
- 		DEBUG2(printk(KERN_ERR "Could not add session.\n"));
+ 	BUG_ON(count > ISCSI_SESSION_ATTRS);
 -- 
 1.7.0.5
 
