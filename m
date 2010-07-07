@@ -1,24 +1,20 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi: convert discard to REQ_TYPE_FS instead of REQ_TYPE_BLOCK_PC
-Date: Wed, 7 Jul 2010 18:39:02 +0200
-Message-ID: <20100707163902.GB11837@lst.de>
-References: <20100706160106C.fujita.tomonori@lab.ntt.co.jp>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/7] block: BKL removal, version 4
+Date: Wed, 7 Jul 2010 12:44:28 -0400
+Message-ID: <20100707164428.GA19667@infradead.org>
+References: <1278514289-21054-1-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:55562 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756661Ab0GGQjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Jul 2010 12:39:15 -0400
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100706160106C.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1278514289-21054-1-git-send-email-arnd@arndb.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, hch@lst.de, snitzer@redhat.com, axboe@kernel.dk
 
-Works for me with the OCZ SSD,
+I haven't verified that the work in each ->ioctl method is correct,
+but the concept and core code changes look good to me.
 
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+ACK for the series.
 
