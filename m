@@ -1,56 +1,24 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 5/7] block: remove BKL from BLKROSET and BLKFLSBUF
-Date: Wed,  7 Jul 2010 16:51:27 +0200
-Message-ID: <1278514289-21054-6-git-send-email-arnd@arndb.de>
-References: <1278514289-21054-1-git-send-email-arnd@arndb.de>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1278514289-21054-1-git-send-email-arnd@arndb.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] scsi: convert discard to REQ_TYPE_FS instead of REQ_TYPE_BLOCK_PC
+Date: Wed, 7 Jul 2010 18:39:02 +0200
+Message-ID: <20100707163902.GB11837@lst.de>
+References: <20100706160106C.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:55562 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756661Ab0GGQjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jul 2010 12:39:15 -0400
+Content-Disposition: inline
+In-Reply-To: <20100706160106C.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, hch@lst.de, snitzer@redhat.com, axboe@kernel.dk
 
-We only call the functions set_device_ro(),
-invalidate_bdev(), sync_filesystem() and sync_blockdev()
-while holding the BKL in these commands. All
-of these are also done in other code paths without
-the BKL, which leads me to the conclusion that
-the BKL is not needed here either.
+Works for me with the OCZ SSD,
 
-The reason we hold it here is that it was originally
-pushed down into the ioctl function from vfs_ioctl.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- block/ioctl.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
-
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 9d91e83..60f477c 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -197,10 +197,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 		if (ret != -EINVAL && ret != -ENOTTY)
- 			return ret;
- 
--		lock_kernel();
- 		fsync_bdev(bdev);
- 		invalidate_bdev(bdev);
--		unlock_kernel();
- 		return 0;
- 
- 	case BLKROSET:
-@@ -212,9 +210,7 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 			return -EACCES;
- 		if (get_user(n, (int __user *)(arg)))
- 			return -EFAULT;
--		lock_kernel();
- 		set_device_ro(bdev, n);
--		unlock_kernel();
- 		return 0;
- 
- 	case BLKDISCARD: {
--- 
-1.7.0.4
 
