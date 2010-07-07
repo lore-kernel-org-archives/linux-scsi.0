@@ -1,30 +1,51 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 0/7] block: BKL removal, version 4
-Date: Wed, 7 Jul 2010 22:18:23 +0200
-Message-ID: <201007072218.24013.arnd@arndb.de>
-References: <1278514289-21054-1-git-send-email-arnd@arndb.de> <4C34D74A.4060308@kernel.dk>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH]: Fix section mismatch in mpt2sas
+Date: Wed, 7 Jul 2010 19:09:23 -0400
+Message-ID: <20100707230819.31455.6553.sendpatchset@prarit.bos.redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:64816 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755120Ab0GGUSq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2010 16:18:46 -0400
-In-Reply-To: <4C34D74A.4060308@kernel.dk>
+Received: from mx1.redhat.com ([209.132.183.28]:7131 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756169Ab0GGXJY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Jul 2010 19:09:24 -0400
+Received: from int-mx05.intmail.prod.int.phx2.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.18])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o67N9Ogk028120
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Wed, 7 Jul 2010 19:09:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, revers@redhat.com
+Cc: Prarit Bhargava <prarit@redhat.com>
 
-On Wednesday 07 July 2010 21:36:42 Jens Axboe wrote:
-> I'll go over each one tomorrow and add the series.
+Fix section mismatch:
 
-Ok, thanks!
+WARNING: drivers/scsi/mpt2sas/mpt2sas.o(.text+0xe3d4): Section mismatch in reference from the function _scsih_pci_error_detected() to the function .devexit.text:_scsih_remove()
+The function _scsih_pci_error_detected() references a function in an exit section.
+Often the function _scsih_remove() has valid usage outside the exit section
+and the fix is to remove the __devexit annotation of _scsih_remove.
 
-If it makes your life easier, feel free to get this series from
+by removing __devexit from _scsih_remove()
 
-git pull git://git.kernel.org/pub/scm/linux/kernel/git/arnd/bkl.git block
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
-	Arnd
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index c5ff26a..c630aa7 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -6290,7 +6290,7 @@ _scsih_shutdown(struct pci_dev *pdev)
+  * Routine called when unloading the driver.
+  * Return nothing.
+  */
+-static void __devexit
++static void
+ _scsih_remove(struct pci_dev *pdev)
+ {
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+@@ -6798,7 +6798,7 @@ static struct pci_driver scsih_driver = {
+ 	.name		= MPT2SAS_DRIVER_NAME,
+ 	.id_table	= scsih_pci_table,
+ 	.probe		= _scsih_probe,
+-	.remove		= __devexit_p(_scsih_remove),
++	.remove		= _scsih_remove,
+ 	.shutdown	= _scsih_shutdown,
+ 	.err_handler	= &_scsih_err_handler,
+ #ifdef CONFIG_PM
