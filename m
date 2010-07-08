@@ -1,62 +1,40 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 3/9] zfcp: Update status read mempool
-Date: Thu, 08 Jul 2010 09:53:04 +0200
-Message-ID: <20100708080110.196777000@de.ibm.com>
-References: <20100708075301.347904000@de.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.17.165]:44296 "EHLO
-	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753698Ab0GHIBM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 04:01:12 -0400
-Content-Disposition: inline; filename=703-zfcp-status-mempool.diff
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 2/7] block: push down BKL into .locked_ioctl
+Date: Thu, 08 Jul 2010 10:36:15 +0200
+Message-ID: <4C358DFF.9090401@kernel.dk>
+References: <1278514289-21054-1-git-send-email-arnd@arndb.de> <1278514289-21054-3-git-send-email-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1278514289-21054-3-git-send-email-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+On 2010-07-07 16:51, Arnd Bergmann wrote:
+> As a preparation for the removal of the big kernel
+> lock in the block layer, this removes the BKL
+> from the common ioctl handling code, moving it
+> into every single driver still using it.
+>
+> diff --git a/drivers/message/i2o/i2o_block.c b/drivers/message/i2o/i2o_block.c
+> index ad3ddef..fc593fb 100644
+> --- a/drivers/message/i2o/i2o_block.c
+> +++ b/drivers/message/i2o/i2o_block.c
+> @@ -941,8 +930,7 @@ static const struct block_device_operations i2o_block_fops = {
+>  	.owner = THIS_MODULE,
+>  	.open = i2o_block_open,
+>  	.release = i2o_block_release,
+> -	.ioctl = i2o_block_ioctl,
+> -	.compat_ioctl = i2o_block_ioctl,
+> +	.locked_ioctl = i2o_block_ioctl,
+>  	.getgeo = i2o_block_getgeo,
+>  	.media_changed = i2o_block_media_changed
+>  };
 
-Commit 64deb6efdc5504ce97b5c1c6f281fffbc150bd93 changed the way status
-read buffers are handled but forgot to adjust the mempool to the new
-size. Add the call to resize the mempool after the exchange config
-data. Also use the define instead of the hard coded number in the fsf
-callback for consistency.
+Hmm?
 
-Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
-
- drivers/s390/scsi/zfcp_erp.c |    8 ++++++++
- drivers/s390/scsi/zfcp_fsf.c |    3 ++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
-
---- a/drivers/s390/scsi/zfcp_erp.c	2010-06-21 09:37:39.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_erp.c	2010-06-21 09:37:46.000000000 +0200
-@@ -714,6 +714,14 @@ static int zfcp_erp_adapter_strategy_ope
- 	if (zfcp_erp_adapter_strategy_open_fsf_xport(act) == ZFCP_ERP_FAILED)
- 		return ZFCP_ERP_FAILED;
- 
-+	if (mempool_resize(act->adapter->pool.status_read_data,
-+			   act->adapter->stat_read_buf_num, GFP_KERNEL))
-+		return ZFCP_ERP_FAILED;
-+
-+	if (mempool_resize(act->adapter->pool.status_read_req,
-+			   act->adapter->stat_read_buf_num, GFP_KERNEL))
-+		return ZFCP_ERP_FAILED;
-+
- 	atomic_set(&act->adapter->stat_miss, act->adapter->stat_read_buf_num);
- 	if (zfcp_status_read_refill(act->adapter))
- 		return ZFCP_ERP_FAILED;
---- a/drivers/s390/scsi/zfcp_fsf.c	2010-06-21 09:37:43.000000000 +0200
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2010-06-21 09:37:46.000000000 +0200
-@@ -496,7 +496,8 @@ static int zfcp_fsf_exchange_config_eval
- 
- 	adapter->hydra_version = bottom->adapter_type;
- 	adapter->timer_ticks = bottom->timer_interval;
--	adapter->stat_read_buf_num = max(bottom->status_read_buf_num, (u16)16);
-+	adapter->stat_read_buf_num = max(bottom->status_read_buf_num,
-+					 (u16)FSF_STATUS_READS_RECOM);
- 
- 	if (fc_host_permanent_port_name(shost) == -1)
- 		fc_host_permanent_port_name(shost) = fc_host_port_name(shost);
-
+-- 
+Jens Axboe
