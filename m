@@ -1,32 +1,40 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 0/9] zfcp bug fixes for 2.6.35-rc4
-Date: Thu, 08 Jul 2010 09:53:01 +0200
-Message-ID: <20100708075301.347904000@de.ibm.com>
+Subject: [patch 1/9] zfcp: Fix check whether unchained ct_els is possible
+Date: Thu, 08 Jul 2010 09:53:02 +0200
+Message-ID: <20100708080109.894357000@de.ibm.com>
+References: <20100708075301.347904000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.17.167]:32948 "EHLO
+Received: from mtagate7.de.ibm.com ([195.212.17.167]:32949 "EHLO
 	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753252Ab0GHIBM (ORCPT
+	with ESMTP id S1753663Ab0GHIBM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 04:01:12 -0400
+Content-Disposition: inline; filename=701-zfcp-fallout.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-James,
+From: Swen Schillig <swen@vnet.ibm.com>
 
-here is a series of zfcp bug fixes for the 2.6.35 cycle. I sent the
-first three patches before. Since they have not been picked up
-yet, i included them again:
+A false check was performed whether an unchained ct_els 
+is possible or not.
 
-http://marc.info/?l=linux-scsi&m=127710797409112&w=2
-http://marc.info/?l=linux-scsi&m=127710797409115&w=2
-http://marc.info/?l=linux-scsi&m=127710797609129&w=2
+Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
 
-The other patches address problems with recovering remote port
-problems.
+ drivers/s390/scsi/zfcp_fsf.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The patch series applies cleanly on top of the current linux-2.6 git
-tree (2.6.35-rc4).
+--- a/drivers/s390/scsi/zfcp_fsf.c	2010-06-21 09:37:39.000000000 +0200
++++ b/drivers/s390/scsi/zfcp_fsf.c	2010-06-21 09:37:40.000000000 +0200
+@@ -981,7 +981,7 @@ static int zfcp_fsf_setup_ct_els_sbals(s
+ 	}
+ 
+ 	/* use single, unchained SBAL if it can hold the request */
+-	if (zfcp_qdio_sg_one_sbale(sg_req) || zfcp_qdio_sg_one_sbale(sg_resp)) {
++	if (zfcp_qdio_sg_one_sbale(sg_req) && zfcp_qdio_sg_one_sbale(sg_resp)) {
+ 		zfcp_fsf_setup_ct_els_unchained(adapter->qdio, &req->qdio_req,
+ 						sg_req, sg_resp);
+ 		return 0;
 
---
-Christof
