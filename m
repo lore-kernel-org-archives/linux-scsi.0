@@ -1,32 +1,70 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 3/7] block: push down BKL into .open and .release
-Date: Thu, 8 Jul 2010 13:59:10 +0200
-Message-ID: <201007081359.10760.arnd@arndb.de>
-References: <1278514289-21054-1-git-send-email-arnd@arndb.de> <1278514289-21054-4-git-send-email-arnd@arndb.de> <4C358F29.4020505@kernel.dk>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v2] scsi: address leak in scsi_setup_discard_cmnd error
+ path (was: Re: scsi: unify the error handling of the prep functions)
+Date: Thu, 8 Jul 2010 08:06:03 -0400
+Message-ID: <20100708120602.GA28083@redhat.com>
+References: <20100705125651R.fujita.tomonori@lab.ntt.co.jp>
+ <20100705134529.GA18645@redhat.com>
+ <20100706135958.GA10772@redhat.com>
+ <20100708131726C.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:55459 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645Ab0GHL7P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 07:59:15 -0400
-In-Reply-To: <4C358F29.4020505@kernel.dk>
+Received: from mx1.redhat.com ([209.132.183.28]:50503 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756331Ab0GHMGT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Jul 2010 08:06:19 -0400
+Content-Disposition: inline
+In-Reply-To: <20100708131726C.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, Sam Ravnborg <sam@ravnborg.org>, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, John Kacur <jkacur@redhat.com>, Frederic Weisbecker <fweisbec@gmail.com>, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: jaxboe@fusionio.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, hch@lst.de, dm-devel@redhat.com
 
-On Thursday 08 July 2010, Jens Axboe wrote:
-> This is missing an smp_lock.h include in i2o as well.
-> You seem to only add these sporadically, I think that
-> is a bit unsafe since you are relying on unknown
-> include hierarchies. That tends to break on one arch
-> or config even if it works in another.
+On Thu, Jul 08 2010 at 12:17am -0400,
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
 
-The i2o driver is the only one missing smp_lock.h, same problem
-as the one you mentioned for patch 2/7. In v3 of the series it
-was still correct, I broke it when I rushed out v4.
+> On Tue, 6 Jul 2010 09:59:58 -0400
+> Mike Snitzer <snitzer@redhat.com> wrote:
+> 
+> > Here is a minimalist patch that 1) removes the discard request's page
+> > leak 2) preserves the prep cleanup rules covered above.  Fixing the leak
+> > is a priority, introducing additional error path code sharing/cleanup is
+> > secondary and can come later.
+> 
+> This patch doesn't work. I hit kernel oops since now this patch frees
+> a discard page twice.
 
-	Arnd
+I load tested my v2 patch quite a bit but didn't hit the oops.  Guess
+you're just lucky ;)
+
+> If scsi_init_io hits BLKPREP_DEFER (e.g. due to scsi_init_sgtable),
+> scsi_setup_blk_pc_cmnd calls scsi_unprep_request. So sd_unprep_fn
+> frees a page. Then, scsi_setup_discard_cmnd frees the same page again.
+
+OK, thanks for catching this.
+
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] scsi: fix discard page leak
+> 
+> We leak a page allocated for discard on some error conditions
+> (e.g. scsi_prep_state_check returns BLKPREP_DEFER in
+> scsi_setup_blk_pc_cmnd).
+> 
+> We unprep on requests that weren't prepped in the error path of
+> scsi_init_io. It makes the error path to clean up scsi commands messy.
+> 
+> Let's strictly apply the rule that we can't unprep on a request that
+> wasn't prepped.
+> 
+> Calling just scsi_put_command() in the error path of scsi_init_io() is
+> enough. We don't set REQ_DONTPREP yet.
+> 
+> scsi_setup_discard_cmnd can safely free a page on the error case with
+> the above rule.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+
+Acked-by: Mike Snitzer <snitzer@redhat.com>
+
+Jens, it'd be great if we could get this fix in now.
