@@ -1,49 +1,79 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] scsi: convert discard to REQ_TYPE_FS instead of
- REQ_TYPE_BLOCK_PC
-Date: Thu, 08 Jul 2010 09:35:55 -0500
-Message-ID: <1278599755.4622.28.camel@mulgrave.site>
-References: <20100706160106C.fujita.tomonori@lab.ntt.co.jp>
-	 <20100707163902.GB11837@lst.de>
-	 <20100708093945R.fujita.tomonori@lab.ntt.co.jp>
+From: "Dailey, Nate" <Nate.Dailey@stratus.com>
+Subject: RE: sg: remove disk while doing IO -> WARNING: at block/blk-core.c:1080 __blk_put_request
+Date: Thu, 8 Jul 2010 10:55:10 -0400
+Message-ID: <AC1B83CE65082B4DBDDB681ED2F6B2EF866CA3@EXHQ.corp.stratus.com>
+References: <AC1B83CE65082B4DBDDB681ED2F6B2EF866C90@EXHQ.corp.stratus.com> <20100705174252X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51540 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752094Ab0GHOgF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Jul 2010 10:36:05 -0400
-In-Reply-To: <20100708093945R.fujita.tomonori@lab.ntt.co.jp>
+Received: from mailhub.stratus.com ([134.111.1.18]:45059 "EHLO
+	mailhub5.stratus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753870Ab0GHOzb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 10:55:31 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20100705174252X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hch@lst.de, linux-scsi@vger.kernel.org, snitzer@redhat.com, axboe@kernel.dk
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, dgilbert@interlog.com
 
-On Thu, 2010-07-08 at 09:40 +0900, FUJITA Tomonori wrote:
-> On Wed, 7 Jul 2010 18:39:02 +0200
-> Christoph Hellwig <hch@lst.de> wrote:
-> 
-> > Works for me with the OCZ SSD,
-> > 
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Thanks for testing!
-> 
-> This is purely scsi stuff but depends on block's for-2.6.36. Jens, can
-> you add this to your for-2.6.36?
-> 
-> James, you are going to create a post-merge tree?
+Looks like this fixed the problem. Thanks!
 
-Well, I'm open to the idea, since it seems we need to clean up some of
-the error handling a bit more ... and we could certainly do with
-cleaning up the patch history, since it's rather confusing.
+Nate
 
-However, I don't quite see how to do it cleanly given the intertwining
-of block and SCSI on this ... if you can suggest a good separation
-point, I'd be game.
 
-James
 
+
+-----Original Message-----
+From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp] 
+Sent: Monday, July 05, 2010 4:43 AM
+To: Dailey, Nate
+Cc: linux-scsi@vger.kernel.org; James.Bottomley@suse.de;
+dgilbert@interlog.com
+Subject: Re: sg: remove disk while doing IO -> WARNING: at
+block/blk-core.c:1080 __blk_put_request
+
+On Wed, 30 Jun 2010 08:31:56 -0400
+"Dailey, Nate" <Nate.Dailey@stratus.com> wrote:
+
+Thanks for the report.
+
+> I'm not sure what needs to be done to fix this (does sg_finish_rem_req
+> just need to null out req->bio, or is some cleanup actually missing?),
+> but I'm happy to test out a fix if anyone has any suggestions.
+
+Surely, we leak bio. I reproduced this.
+
+Can you try the following patch?
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] sg: fix bio leak with a detached device
+
+After blk_rq_map_user is successful, if we find that a device is
+unavailable (was detached), we must call blk_end_request_all to free
+bio(s) before blk_rq_unmap_user and blk_put_request.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/sg.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index ef752b2..d454909 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -729,6 +729,8 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 		return k;	/* probably out of space --> ENOMEM */
+ 	}
+ 	if (sdp->detached) {
++		if (srp->bio)
++			blk_end_request_all(srp->rq, -EIO);
+ 		sg_finish_rem_req(srp);
+ 		return -ENODEV;
+ 	}
+-- 
+1.6.5
 
