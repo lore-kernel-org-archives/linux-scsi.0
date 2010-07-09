@@ -1,111 +1,119 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 10/24] bfa: fix prli retry issues
-Date: Thu, 8 Jul 2010 19:52:00 -0700
-Message-ID: <1278643920-31067-1-git-send-email-huangj@brocade.com>
+Subject: [PATCH 11/24] bfa: add PBC port disable handling
+Date: Thu, 8 Jul 2010 19:52:46 -0700
+Message-ID: <1278643966-31501-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:36259 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753876Ab0GICwG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 22:52:06 -0400
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:55671 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753876Ab0GICww (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 22:52:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: kgudipat@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-Add a max retry limit for PRLI retries. Max retry limit (5) is same as used
-in rport PLOGI. Once the retries are exhausted, invoke rport offline so that
-existing logic of rport re-discovery can kick-in. Also fixed a bug in rport.c
-where one less retry was happening.
+Add PBC port disable handling in BFA and return the appropriate status from
+BFA APIs. In bfa_fcs_lport.c, handle OFFLINE event to avoid BFA_ASSERT.
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/bfa/fcpim.c                     |   13 +++++++++++--
- drivers/scsi/bfa/fcs_rport.h                 |    2 ++
- drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h |    1 +
- drivers/scsi/bfa/rport.c                     |    4 +---
- 4 files changed, 15 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa_fcport.c    |   38 +++++++++++++++++++++++++++++++++-----
+ drivers/scsi/bfa/bfa_fcs_lport.c |    3 +++
+ 2 files changed, 36 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
-index 7a0207e..d090f7a 100644
---- a/drivers/scsi/bfa/fcpim.c
-+++ b/drivers/scsi/bfa/fcpim.c
-@@ -110,6 +110,7 @@ bfa_fcs_itnim_sm_offline(struct bfa_fcs_itnim_s *itnim,
- 	switch (event) {
- 	case BFA_FCS_ITNIM_SM_ONLINE:
- 		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
-+		itnim->prli_retries = 0;
- 		bfa_fcs_itnim_send_prli(itnim, NULL);
- 		break;
- 
-@@ -218,8 +219,16 @@ bfa_fcs_itnim_sm_prli_retry(struct bfa_fcs_itnim_s *itnim,
- 
- 	switch (event) {
- 	case BFA_FCS_ITNIM_SM_TIMEOUT:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
--		bfa_fcs_itnim_send_prli(itnim, NULL);
-+		if (itnim->prli_retries < BFA_FCS_RPORT_MAX_RETRIES) {
-+			itnim->prli_retries++;
-+			bfa_trc(itnim->fcs, itnim->prli_retries);
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
-+			bfa_fcs_itnim_send_prli(itnim, NULL);
-+		} else {
-+			/* invoke target offline */
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+			bfa_fcs_rport_logo_imp(itnim->rport);
-+		}
- 		break;
- 
- 	case BFA_FCS_ITNIM_SM_OFFLINE:
-diff --git a/drivers/scsi/bfa/fcs_rport.h b/drivers/scsi/bfa/fcs_rport.h
-index 9c8d1d2..5242ee0 100644
---- a/drivers/scsi/bfa/fcs_rport.h
-+++ b/drivers/scsi/bfa/fcs_rport.h
-@@ -24,6 +24,8 @@
- 
- #include <fcs/bfa_fcs_rport.h>
- 
-+#define BFA_FCS_RPORT_MAX_RETRIES               (5)
+diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
+index 18d3307..d3b5efb 100644
+--- a/drivers/scsi/bfa/bfa_fcport.c
++++ b/drivers/scsi/bfa/bfa_fcport.c
+@@ -18,6 +18,7 @@
+ #include <bfa.h>
+ #include <bfa_svc.h>
+ #include <bfi/bfi_pport.h>
++#include <bfi/bfi_pbc.h>
+ #include <cs/bfa_debug.h>
+ #include <aen/bfa_aen.h>
+ #include <cs/bfa_plog.h>
+@@ -1380,6 +1381,14 @@ bfa_status_t
+ bfa_fcport_enable(struct bfa_s *bfa)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++	struct bfa_iocfc_s *iocfc = &bfa->iocfc;
++	struct bfi_iocfc_cfgrsp_s *cfgrsp = iocfc->cfgrsp;
 +
- void bfa_fcs_rport_uf_recv(struct bfa_fcs_rport_s *rport, struct fchs_s *fchs,
- 			u16 len);
- void bfa_fcs_rport_scn(struct bfa_fcs_rport_s *rport);
-diff --git a/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h b/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h
-index e719f2c..9a35ecf 100644
---- a/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h
-+++ b/drivers/scsi/bfa/include/fcs/bfa_fcs_fcpim.h
-@@ -41,6 +41,7 @@ struct bfa_fcs_itnim_s {
- 	struct bfa_fcs_s      	*fcs;		/*  fcs instance         */
- 	struct bfa_timer_s 	timer;		/*  timer functions      */
- 	struct bfa_itnim_s 	*bfa_itnim;	/*  BFA itnim struct     */
-+	u32                	prli_retries;   /*  max prli retry attempts */
- 	bfa_boolean_t	 	seq_rec;	/*  seq recovery support */
- 	bfa_boolean_t	 	rec_support;	/*  REC supported        */
- 	bfa_boolean_t	 	conf_comp;	/*  FCP_CONF     support */
-diff --git a/drivers/scsi/bfa/rport.c b/drivers/scsi/bfa/rport.c
-index 2796403..4e1fff2 100644
---- a/drivers/scsi/bfa/rport.c
-+++ b/drivers/scsi/bfa/rport.c
-@@ -36,8 +36,6 @@
++	/* if port is PBC disabled, return error */
++	if (cfgrsp->pbc_cfg.port_enabled == BFI_PBC_PORT_DISABLED) {
++		bfa_trc(bfa, fcport->pwwn);
++		return BFA_STATUS_PBC;
++	}
  
- BFA_TRC_FILE(FCS, RPORT);
+ 	if (fcport->diag_busy)
+ 		return BFA_STATUS_DIAG_BUSY;
+@@ -1394,6 +1403,16 @@ bfa_fcport_enable(struct bfa_s *bfa)
+ bfa_status_t
+ bfa_fcport_disable(struct bfa_s *bfa)
+ {
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++	struct bfa_iocfc_s *iocfc = &bfa->iocfc;
++	struct bfi_iocfc_cfgrsp_s *cfgrsp = iocfc->cfgrsp;
++
++	/* if port is PBC disabled, return error */
++	if (cfgrsp->pbc_cfg.port_enabled == BFI_PBC_PORT_DISABLED) {
++		bfa_trc(bfa, fcport->pwwn);
++		return BFA_STATUS_PBC;
++	}
++
+ 	bfa_sm_send_event(BFA_FCPORT_MOD(bfa), BFA_FCPORT_SM_DISABLE);
+ 	return BFA_STATUS_OK;
+ }
+@@ -1584,6 +1603,8 @@ void
+ bfa_fcport_get_attr(struct bfa_s *bfa, struct bfa_pport_attr_s *attr)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++	struct bfa_iocfc_s *iocfc = &bfa->iocfc;
++	struct bfi_iocfc_cfgrsp_s *cfgrsp = iocfc->cfgrsp;
  
--#define BFA_FCS_RPORT_MAX_RETRIES		(5)
--
- /* In millisecs */
- static u32 bfa_fcs_rport_del_timeout =
- 			BFA_FCS_RPORT_DEF_DEL_TIMEOUT * 1000;
-@@ -356,8 +354,8 @@ bfa_fcs_rport_sm_plogi_retry(struct bfa_fcs_rport_s *rport,
- 		 */
+ 	bfa_os_memset(attr, 0, sizeof(struct bfa_pport_attr_s));
  
- 	case RPSM_EVENT_TIMEOUT:
--		rport->plogi_retries++;
- 		if (rport->plogi_retries < BFA_FCS_RPORT_MAX_RETRIES) {
-+			rport->plogi_retries++;
- 			bfa_sm_set_state(rport, bfa_fcs_rport_sm_plogi_sending);
- 			bfa_fcs_rport_send_plogi(rport, NULL);
- 		} else {
+@@ -1618,11 +1639,18 @@ bfa_fcport_get_attr(struct bfa_s *bfa, struct bfa_pport_attr_s *attr)
+ 
+ 	attr->pport_cfg.path_tov = bfa_fcpim_path_tov_get(bfa);
+ 	attr->pport_cfg.q_depth = bfa_fcpim_qdepth_get(bfa);
+-	attr->port_state = bfa_sm_to_state(hal_pport_sm_table, fcport->sm);
+-	if (bfa_ioc_is_disabled(&fcport->bfa->ioc))
+-		attr->port_state = BFA_PPORT_ST_IOCDIS;
+-	else if (bfa_ioc_fw_mismatch(&fcport->bfa->ioc))
+-		attr->port_state = BFA_PPORT_ST_FWMISMATCH;
++
++	/* PBC Disabled State */
++	if (cfgrsp->pbc_cfg.port_enabled == BFI_PBC_PORT_DISABLED)
++		attr->port_state = BFA_PPORT_ST_PREBOOT_DISABLED;
++	else {
++		attr->port_state = bfa_sm_to_state(
++				hal_pport_sm_table, fcport->sm);
++		if (bfa_ioc_is_disabled(&fcport->bfa->ioc))
++			attr->port_state = BFA_PPORT_ST_IOCDIS;
++		else if (bfa_ioc_fw_mismatch(&fcport->bfa->ioc))
++			attr->port_state = BFA_PPORT_ST_FWMISMATCH;
++	}
+ }
+ 
+ #define BFA_FCPORT_STATS_TOV	1000
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 7c1251c..35df20e 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -135,6 +135,9 @@ bfa_fcs_port_sm_init(struct bfa_fcs_port_s *port, enum bfa_fcs_port_event event)
+ 		bfa_fcs_port_deleted(port);
+ 		break;
+ 
++	case BFA_FCS_PORT_SM_OFFLINE:
++		break;
++
+ 	default:
+ 		bfa_sm_fault(port->fcs, event);
+ 	}
 -- 
 1.6.5.2
 
