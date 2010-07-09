@@ -1,369 +1,63 @@
-From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 14/24] bfa: fix uf post and rport fcpim state machine
-Date: Thu, 8 Jul 2010 19:55:41 -0700
-Message-ID: <1278644141-700-1-git-send-email-huangj@brocade.com>
+From: Frederic Weisbecker <fweisbec@gmail.com>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+Date: Fri, 9 Jul 2010 04:56:30 +0200
+Message-ID: <20100709025628.GK6405@nowhere>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera> <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:36362 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754238Ab0GICzq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 22:55:46 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>, Al Viro <viro@zeniv.linux.org.uk>, Shawn Starr <shawn.starr@rogers.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Dave Airlie <airlied@redhat.com>, "David S. Miller" <davem@davemloft.net>, Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: kgudipat@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-BFA UF module did not hold lock when seding uf post buffer message to firmware
-causing CPE-Q corruption. Fix is to check present of FCS and if FCS present
-hold lock while posting UF buffers.
+On Thu, Jul 08, 2010 at 06:34:25PM -0700, Linus Torvalds wrote:
+> On Thu, Jul 8, 2010 at 4:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote=
+:
+> > Bug-Entry =A0 =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D=
+16334
+> > Subject =A0 =A0 =A0 =A0 : reiserfs locking (v2)
+> > Submitter =A0 =A0 =A0 : Sergey Senozhatsky <sergey.senozhatsky@gmai=
+l.com>
+> > Date =A0 =A0 =A0 =A0 =A0 =A0: 2010-07-02 9:34 (7 days old)
+> > Message-ID =A0 =A0 =A0: <20100702093451.GA3973@swordfish.minsk.epam=
+=2Ecom>
+> > References =A0 =A0 =A0: http://marc.info/?l=3Dlinux-kernel&m=3D1278=
+06306303590&w=3D2
+>=20
+> Frederic? Al? I assume this is some late fallout from the BKL removal
+> ages ago.. It's the old filldir-vs-mmap crud, but normally it should
+> be impossible to trigger because the inode for a directory should
+> never be mmap'able, so we should never have the same i_mutex lock use=
+d
+> for both mmap and for filldir protection.
+>=20
+> We saw some of that oddity long ago, I wonder if it's lockdep being
+> confused about some inodes.
 
-Handle PRLO with sending acc to it and relogin with rport. Discard fcxp
-before any state change.
 
-Signed-off-by: Jing Huang <huangj@brocade.com>
----
- drivers/scsi/bfa/bfa_uf.c                    |    5 ++-
- drivers/scsi/bfa/fcpim.c                     |   16 +++---
- drivers/scsi/bfa/fcs_rport.h                 |    1 +
- drivers/scsi/bfa/include/fcs/bfa_fcs_rport.h |    1 +
- drivers/scsi/bfa/rport.c                     |   76 +++++++++++++++++++++++++-
- 5 files changed, 89 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_uf.c b/drivers/scsi/bfa/bfa_uf.c
-index b2a37fc..b9a9a68 100644
---- a/drivers/scsi/bfa/bfa_uf.c
-+++ b/drivers/scsi/bfa/bfa_uf.c
-@@ -251,7 +251,10 @@ uf_recv(struct bfa_s *bfa, struct bfi_uf_frm_rcvd_s *m)
- 				      (struct fchs_s *) buf, pld_w0);
- 	}
- 
--	bfa_cb_queue(bfa, &uf->hcb_qe, __bfa_cb_uf_recv, uf);
-+	if (bfa->fcs)
-+		__bfa_cb_uf_recv(uf, BFA_TRUE);
-+	else
-+		bfa_cb_queue(bfa, &uf->hcb_qe, __bfa_cb_uf_recv, uf);
- }
- 
- static void
-diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
-index d090f7a..6b8976a 100644
---- a/drivers/scsi/bfa/fcpim.c
-+++ b/drivers/scsi/bfa/fcpim.c
-@@ -175,8 +175,12 @@ bfa_fcs_itnim_sm_prli(struct bfa_fcs_itnim_s *itnim,
- 
- 	switch (event) {
- 	case BFA_FCS_ITNIM_SM_RSP_OK:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_hcb_online);
--		bfa_itnim_online(itnim->bfa_itnim, itnim->seq_rec);
-+		if (itnim->rport->scsi_function == BFA_RPORT_INITIATOR) {
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
-+		} else {
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_hcb_online);
-+			bfa_itnim_online(itnim->bfa_itnim, itnim->seq_rec);
-+		}
- 		break;
- 
- 	case BFA_FCS_ITNIM_SM_RSP_ERROR:
-@@ -194,9 +198,7 @@ bfa_fcs_itnim_sm_prli(struct bfa_fcs_itnim_s *itnim,
- 
- 	case BFA_FCS_ITNIM_SM_INITIATOR:
- 		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
--		/*
--		 * dont discard fcxp. accept will reach same state
--		 */
-+		bfa_fcxp_discard(itnim->fcxp);
- 		break;
- 
- 	case BFA_FCS_ITNIM_SM_DELETE:
-@@ -476,7 +478,7 @@ bfa_fcs_itnim_prli_response(void *fcsarg, struct bfa_fcxp_s *fcxp, void *cbarg,
- 					BFA_RPORT_INITIATOR;
- 				itnim->stats.prli_rsp_acc++;
- 				bfa_sm_send_event(itnim,
--						  BFA_FCS_ITNIM_SM_INITIATOR);
-+						  BFA_FCS_ITNIM_SM_RSP_OK);
- 				return;
- 			}
- 
-@@ -803,7 +805,7 @@ bfa_fcs_fcpim_uf_recv(struct bfa_fcs_itnim_s *itnim, struct fchs_s *fchs,
- 
- 	switch (els_cmd->els_code) {
- 	case FC_ELS_PRLO:
--		/* bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_PRLO); */
-+		bfa_fcs_rport_prlo(itnim->rport, fchs->ox_id);
- 		break;
- 
- 	default:
-diff --git a/drivers/scsi/bfa/fcs_rport.h b/drivers/scsi/bfa/fcs_rport.h
-index 5242ee0..e634fb7 100644
---- a/drivers/scsi/bfa/fcs_rport.h
-+++ b/drivers/scsi/bfa/fcs_rport.h
-@@ -43,6 +43,7 @@ void bfa_fcs_rport_plogi_create(struct bfa_fcs_port_s *port,
- void bfa_fcs_rport_plogi(struct bfa_fcs_rport_s *rport, struct fchs_s *fchs,
- 			struct fc_logi_s *plogi);
- void bfa_fcs_rport_logo_imp(struct bfa_fcs_rport_s *rport);
-+void bfa_fcs_rport_prlo(struct bfa_fcs_rport_s *rport, uint16_t ox_id);
- void bfa_fcs_rport_itnim_ack(struct bfa_fcs_rport_s *rport);
- void bfa_fcs_rport_itntm_ack(struct bfa_fcs_rport_s *rport);
- void bfa_fcs_rport_tin_ack(struct bfa_fcs_rport_s *rport);
-diff --git a/drivers/scsi/bfa/include/fcs/bfa_fcs_rport.h b/drivers/scsi/bfa/include/fcs/bfa_fcs_rport.h
-index 702b95b..3027fc6 100644
---- a/drivers/scsi/bfa/include/fcs/bfa_fcs_rport.h
-+++ b/drivers/scsi/bfa/include/fcs/bfa_fcs_rport.h
-@@ -58,6 +58,7 @@ struct bfa_fcs_rport_s {
- 	u16        reply_oxid;	/*  OX_ID of inbound requests */
- 	enum fc_cos        fc_cos;	/*  FC classes of service supp */
- 	bfa_boolean_t   cisc;	/*  CISC capable device */
-+	bfa_boolean_t   prlo;   /*  processing prlo or LOGO */
- 	wwn_t           pwwn;	/*  port wwn of rport */
- 	wwn_t           nwwn;	/*  node wwn of rport */
- 	struct bfa_rport_symname_s psym_name; /*  port symbolic name  */
-diff --git a/drivers/scsi/bfa/rport.c b/drivers/scsi/bfa/rport.c
-index 4e1fff2..9b4c2c9 100644
---- a/drivers/scsi/bfa/rport.c
-+++ b/drivers/scsi/bfa/rport.c
-@@ -93,6 +93,7 @@ static void     bfa_fcs_rport_send_ls_rjt(struct bfa_fcs_rport_s *rport,
- 			u8 reason_code_expl);
- static void     bfa_fcs_rport_process_adisc(struct bfa_fcs_rport_s *rport,
- 			struct fchs_s *rx_fchs, u16 len);
-+static void	bfa_fcs_rport_send_prlo_acc(struct bfa_fcs_rport_s *rport);
- /**
-  *  fcs_rport_sm FCS rport state machine events
-  */
-@@ -113,7 +114,8 @@ enum rport_event {
- 	RPSM_EVENT_HCB_OFFLINE = 13,	/*  BFA rport offline callback */
- 	RPSM_EVENT_FC4_OFFLINE = 14,	/*  FC-4 offline complete */
- 	RPSM_EVENT_ADDRESS_CHANGE = 15,	/*  Rport's PID has changed */
--	RPSM_EVENT_ADDRESS_DISC = 16	/*  Need to Discover rport's PID */
-+	RPSM_EVENT_ADDRESS_DISC = 16,	/*  Need to Discover rport's PID */
-+	RPSM_EVENT_PRLO_RCVD = 17,      /*  PRLO from remote device      */
- };
- 
- static void     bfa_fcs_rport_sm_uninit(struct bfa_fcs_rport_s *rport,
-@@ -373,6 +375,7 @@ bfa_fcs_rport_sm_plogi_retry(struct bfa_fcs_rport_s *rport,
- 		bfa_fcs_rport_free(rport);
- 		break;
- 
-+	case RPSM_EVENT_PRLO_RCVD:
- 	case RPSM_EVENT_LOGO_RCVD:
- 		break;
- 
-@@ -428,6 +431,13 @@ bfa_fcs_rport_sm_plogi(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 
- 	case RPSM_EVENT_LOGO_RCVD:
- 		bfa_fcs_rport_send_logo_acc(rport);
-+		/*
-+		 * !! fall through !!
-+		 */
-+	case RPSM_EVENT_PRLO_RCVD:
-+		if (rport->prlo == BFA_TRUE)
-+			bfa_fcs_rport_send_prlo_acc(rport);
-+
- 		bfa_fcxp_discard(rport->fcxp);
- 		/*
- 		 * !! fall through !!
-@@ -502,6 +512,9 @@ bfa_fcs_rport_sm_hal_online(struct bfa_fcs_rport_s *rport,
- 		bfa_fcs_rport_online_action(rport);
- 		break;
- 
-+	case RPSM_EVENT_PRLO_RCVD:
-+		break;
-+
- 	case RPSM_EVENT_LOGO_RCVD:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_hcb_logorcv);
- 		bfa_rport_offline(rport->bfa_rport);
-@@ -580,6 +593,7 @@ bfa_fcs_rport_sm_online(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_fc4_logorcv);
- 		bfa_fcs_rport_offline_action(rport);
- 		break;
-@@ -622,6 +636,7 @@ bfa_fcs_rport_sm_nsquery_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_fc4_logorcv);
- 		bfa_fcxp_walloc_cancel(rport->fcs->bfa, &rport->fcxp_wqe);
- 		bfa_fcs_rport_offline_action(rport);
-@@ -688,6 +703,7 @@ bfa_fcs_rport_sm_nsquery(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_fc4_logorcv);
- 		bfa_fcxp_discard(rport->fcxp);
- 		bfa_fcs_rport_offline_action(rport);
-@@ -738,6 +754,7 @@ bfa_fcs_rport_sm_adisc_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_fc4_logorcv);
- 		bfa_fcxp_walloc_cancel(rport->fcs->bfa, &rport->fcxp_wqe);
- 		bfa_fcs_rport_offline_action(rport);
-@@ -809,6 +826,7 @@ bfa_fcs_rport_sm_adisc(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_fc4_logorcv);
- 		bfa_fcxp_discard(rport->fcxp);
- 		bfa_fcs_rport_offline_action(rport);
-@@ -841,6 +859,7 @@ bfa_fcs_rport_sm_fc4_logorcv(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 	case RPSM_EVENT_ADDRESS_CHANGE:
- 		break;
- 
-@@ -892,6 +911,7 @@ bfa_fcs_rport_sm_fc4_offline(struct bfa_fcs_rport_s *rport,
- 	case RPSM_EVENT_SCN:
- 	case RPSM_EVENT_LOGO_IMP:
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 	case RPSM_EVENT_ADDRESS_CHANGE:
- 		/**
- 		 * rport is already going offline.
-@@ -951,6 +971,7 @@ bfa_fcs_rport_sm_hcb_offline(struct bfa_fcs_rport_s *rport,
- 
- 	case RPSM_EVENT_SCN:
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		/**
- 		 * Ignore, already offline.
- 		 */
-@@ -976,8 +997,11 @@ bfa_fcs_rport_sm_hcb_logorcv(struct bfa_fcs_rport_s *rport,
- 	switch (event) {
- 	case RPSM_EVENT_HCB_OFFLINE:
- 	case RPSM_EVENT_ADDRESS_CHANGE:
--		if (rport->pid)
-+		if (rport->pid && (rport->prlo == BFA_TRUE))
-+			bfa_fcs_rport_send_prlo_acc(rport);
-+		if (rport->pid && (rport->prlo == BFA_FALSE))
- 			bfa_fcs_rport_send_logo_acc(rport);
-+
- 		/*
- 		 * If the lport is online and if the rport is not a well known
- 		 * address port, we try to re-discover the r-port.
-@@ -1011,6 +1035,7 @@ bfa_fcs_rport_sm_hcb_logorcv(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		/**
- 		 * Ignore - already processing a LOGO.
- 		 */
-@@ -1040,6 +1065,7 @@ bfa_fcs_rport_sm_hcb_logosend(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 	case RPSM_EVENT_ADDRESS_CHANGE:
- 		break;
- 
-@@ -1073,6 +1099,7 @@ bfa_fcs_rport_sm_logo_sending(struct bfa_fcs_rport_s *rport,
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_uninit);
- 		bfa_fcxp_walloc_cancel(rport->fcs->bfa, &rport->fcxp_wqe);
- 		bfa_fcs_rport_free(rport);
-@@ -1121,6 +1148,7 @@ bfa_fcs_rport_sm_offline(struct bfa_fcs_rport_s *rport, enum rport_event event)
- 		break;
- 
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 	case RPSM_EVENT_LOGO_IMP:
- 		break;
- 
-@@ -1172,6 +1200,7 @@ bfa_fcs_rport_sm_nsdisc_sending(struct bfa_fcs_rport_s *rport,
- 
- 	case RPSM_EVENT_SCN:
- 	case RPSM_EVENT_LOGO_RCVD:
-+	case RPSM_EVENT_PRLO_RCVD:
- 	case RPSM_EVENT_PLOGI_SEND:
- 		break;
- 
-@@ -1248,6 +1277,10 @@ bfa_fcs_rport_sm_nsdisc_retry(struct bfa_fcs_rport_s *rport,
- 		bfa_fcs_rport_send_logo_acc(rport);
- 		break;
- 
-+	case RPSM_EVENT_PRLO_RCVD:
-+		bfa_fcs_rport_send_prlo_acc(rport);
-+		break;
-+
- 	case RPSM_EVENT_PLOGI_COMP:
- 		bfa_sm_set_state(rport, bfa_fcs_rport_sm_hal_online);
- 		bfa_timer_stop(&rport->timer);
-@@ -1320,6 +1353,10 @@ bfa_fcs_rport_sm_nsdisc_sent(struct bfa_fcs_rport_s *rport,
- 				bfa_fcs_rport_del_timeout);
- 		break;
- 
-+	case RPSM_EVENT_PRLO_RCVD:
-+		bfa_fcs_rport_send_prlo_acc(rport);
-+		break;
-+
- 	case RPSM_EVENT_SCN:
- 		/**
- 		 * ignore, wait for NS query response
-@@ -2182,6 +2219,7 @@ bfa_fcs_rport_process_logo(struct bfa_fcs_rport_s *rport, struct fchs_s *fchs)
- 	rport->reply_oxid = fchs->ox_id;
- 	bfa_trc(rport->fcs, rport->reply_oxid);
- 
-+	rport->prlo = BFA_FALSE;
- 	rport->stats.logo_rcvd++;
- 	bfa_sm_send_event(rport, RPSM_EVENT_LOGO_RCVD);
- }
-@@ -2551,6 +2589,30 @@ bfa_fcs_rport_uf_recv(struct bfa_fcs_rport_s *rport, struct fchs_s *fchs,
- 	}
- }
- 
-+/* Send best case acc to prlo */
-+static void
-+bfa_fcs_rport_send_prlo_acc(struct bfa_fcs_rport_s *rport)
-+{
-+	struct bfa_fcs_port_s *port = rport->port;
-+	struct fchs_s fchs;
-+	struct bfa_fcxp_s *fcxp;
-+	int len;
-+
-+	bfa_trc(rport->fcs, rport->pid);
-+
-+	fcxp = bfa_fcs_fcxp_alloc(port->fcs);
-+	if (!fcxp)
-+		return;
-+
-+	len = fc_prlo_acc_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
-+			rport->pid, bfa_fcs_port_get_fcid(port),
-+			rport->reply_oxid, 0);
-+
-+	bfa_fcxp_send(fcxp, rport->bfa_rport, port->fabric->vf_id,
-+			port->lp_tag, BFA_FALSE, FC_CLASS_3, len, &fchs,
-+			NULL, NULL, FC_MAX_PDUSZ, 0);
-+}
-+
- /*
-  * Send a LS reject
-  */
-@@ -2602,3 +2664,13 @@ bfa_fcs_rport_set_del_timeout(u8 rport_tmo)
- 	if (rport_tmo > 0)
- 		bfa_fcs_rport_del_timeout = rport_tmo * 1000;
- }
-+
-+void
-+bfa_fcs_rport_prlo(struct bfa_fcs_rport_s *rport, uint16_t ox_id)
-+{
-+	bfa_trc(rport->fcs, rport->pid);
-+
-+	rport->prlo = BFA_TRUE;
-+	rport->reply_oxid = ox_id;
-+	bfa_sm_send_event(rport, RPSM_EVENT_PRLO_RCVD);
-+}
--- 
-1.6.5.2
+I think it has been there from the beginning. At least it was there bef=
+ore
+the reiserfs bkl removal in .32.
 
+
+Indeed the readdir <-> unmap/release inversion problem can not happen.
+But Al said that can happen between write and release. (Although I don'=
+t see
+where write takes the inode mutex).
+
+He also highlighted the fact that reiserfs refcounting based on i_count
+was totally broken.
+
+He has a fix the whole in the vfs tree, in the for-next branch on commi=
+t
+6c2bdaf089a3876226893fab00dd83596c465ad2
+"Fix reiserfs_file_release()"
+
+No more uses of the i_mutex on release after that, nor i_count, but a p=
+rivate
+openers refcount and a tailpack mutex per reiserfs inode.
