@@ -1,101 +1,49 @@
-From: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
-Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
-Date: Fri, 9 Jul 2010 08:12:39 -0700
-Message-ID: <20100709081239.4eb8fddd@virtuousgeek.org>
-References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
-	<AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: scsi: convert discard to REQ_TYPE_FS instead of REQ_TYPE_BLOCK_PC
+Date: Fri, 09 Jul 2010 12:22:51 -0400
+Message-ID: <yq1iq4o1v6s.fsf@sermon.lab.mkp.net>
+References: <20100706160106C.fujita.tomonori@lab.ntt.co.jp>
+	<20100706213136.GA21246@redhat.com> <4C33BEDF.7050602@interlog.com>
+	<20100707004748.GA3068@redhat.com>
+	<yq1ocek6pf4.fsf@sermon.lab.mkp.net> <4C33F619.4010302@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Shawn Starr <shawn.starr-bJEeYj9oJeDQT0dZR+AlfA@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Patrick McHardy <kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Enrico Bandiello <enban-c0jvKHQHzSzx4jp4WZvp5g@public.gmane.org>, Norbert Preining <preining-DX+603jRYB8@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:26253 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752260Ab0GIQXl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2010 12:23:41 -0400
+In-Reply-To: <4C33F619.4010302@interlog.com> (Douglas Gilbert's message of
+	"Tue, 06 Jul 2010 23:35:53 -0400")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, hch@lst.de, axboe@kernel.dk
 
-On Thu, 8 Jul 2010 18:34:25 -0700
-Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+>>>>> "Doug" == Douglas Gilbert <dgilbert@interlog.com> writes:
 
-> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
-g.cgi?id=3D16307
-> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : i915 in kernel 2.6.35-rc3, hi=
-gh number of wakeups
-> > Submitter =C2=A0 =C2=A0 =C2=A0 : Enrico Bandiello <enban-c0jvKHQHzSy7MTZChrCvtQ@public.gmane.org=
-es>
-> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-26 16:57 (1=
-3 days old)
-> > Message-ID =C2=A0 =C2=A0 =C2=A0: <4C26317A.5070309-c0jvKHQHzSzx4jp4WZvp5g@public.gmane.org>
-> > References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel=
-&m=3D127757403404259&w=3D2 =20
->=20
-> I don't think anybody noticed this one. Jesse?
+>> Maximum Unmap LBA Count> 0 (in combination with the descriptor count)
+>> are what indicate that the device server supports UNMAP.
 
-Oh I hadn't seen that...  Enrico, can you bisect this issue?  It could
-be some spurious hotplug events or possibly a stuck vblank interrupt...
+Doug> That has been superseded by the TPU and TPWS bits in the Thin
+Doug> provisioning VPD page (B2h) in sbc3r22.  TPU and TPWS indicate
+Doug> support for the UNMAP and WRITE SAME (16) with UNMAP bit **
+Doug> commands respectively.
 
-> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
-g.cgi?id=3D16265
-> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : Why is kslowd accumulating so=
- much CPU time?
-> > Submitter =C2=A0 =C2=A0 =C2=A0 : Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
-> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-09 18:36 (3=
-0 days old)
-> > First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad=
-057b654d56972acf58c
-> > Message-ID =C2=A0 =C2=A0 =C2=A0: <E1OMQ88-0002a1-Gb-UK71uKi2zitAjzmPenPY9A@public.gmane.org=
-rg>
-> > References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel=
-&m=3D127610857819033&w=3D4 =20
->=20
-> Dave, Jesse?
-
-I haven't looked at the switchable graphics stuff, hopefully Dave has
-an idea here.
-
-> Fixed by commit f4985dc714d7.
->=20
-> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
-g.cgi?id=3D16228
-> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : BUG/boot failure on Dell Prec=
-ision T3500 (pci/ahci_stop_engine)
-> > Submitter =C2=A0 =C2=A0 =C2=A0 : Brian Bloniarz <phunge0-PkbjNfxxIASIwRZHo2/mJg@public.gmane.org=
-m>
-> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-16 17:57 (2=
-3 days old)
-> > Handled-By =C2=A0 =C2=A0 =C2=A0: Bjorn Helgaas <bjorn.helgaas-zDltkPw22Qs@public.gmane.org=
-m> =20
->=20
-> This has a butt-ugly suggested patch that certainly won't be applied.
-> I saw the thread, but lost sight of it. Jesse, did that end up with
-> some resolution?
-
-I'll follow up with Yinghai, we were pretty clear about what we wanted
-from that patch.
-
-> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
-g.cgi?id=3D16179
-> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : 2.6.35-rc2 completely hosed o=
-n intel gfx?
-> > Submitter =C2=A0 =C2=A0 =C2=A0 : Norbert Preining <preining@logic.a=
-t>
-> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-06 11:55 (3=
-3 days old)
-> > Message-ID =C2=A0 =C2=A0 =C2=A0: <20100606115534.GA9399-DqSSrKF0TaxD4ZLkIoI8Yg@public.gmane.org=
-=2Etuwien.ac.at>
-> > References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel=
-&m=3D127582534931581&w=3D2 =20
->=20
-> Hmm. That one is the vt.c bug coupled with another problem, which in
-> turn got opened as a separate bugzilla entry:
->=20
->    http://bugzilla.kernel.org/show_bug.cgi?id=3D16252
->=20
-> which in turn then got closed. I dunno.
-
-Yeah, this is weird.  Norbert, do you still see this?  Have you tried
-to bisect it?
+*sigh* this is getting more and more convoluted.  I really wish T10 had
+been able to agree on a single approach instead of 2.
 
 
---=20
-Jesse Barnes, Intel Open Source Technology Center
+Doug> I think sbc3r22 is just flaky in that area and will be cleaned up
+Doug> soon. As the words stand now, in the Block limits VPD page
+Doug> "maximum unmap lba count" only applies to the UNMAP command while
+Doug> "optimal unmap granularity" applies to both the UNMAP command and
+Doug> the WRITE SAME(16) command. Inconsistent.  And "maximum unmap lba
+Doug> count"==0 implying no UNMAP command is pointless given the TPU
+Doug> bit.
+
+I'll ask around and see what the plans are in T10 when I get back from
+vacation next week.  And I'll try to adjust our heuristics accordingly.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
