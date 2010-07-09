@@ -1,588 +1,602 @@
-From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
-Subject: Re: [PATCH 09/12] be2iscsi: Add support for iscsi boot
-Date: Fri, 09 Jul 2010 11:47:46 -0700
-Message-ID: <20100709184746.8e110bfa@mailhost.serverengines.com>
+From: Greg Kroah-Hartman <gregkh@suse.de>
+Subject: [PATCH] driver core: remove CONFIG_SYSFS_DEPRECATED
+Date: Fri, 9 Jul 2010 11:54:50 -0700
+Message-ID: <20100709185450.GA29473@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail142.messagelabs.com ([216.82.249.99]:7551 "EHLO
-	mail142.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752246Ab0GISrt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2010 14:47:49 -0400
-In-Reply-To: 4C30EC20.9060406@cs.wisc.edu
+Received: from kroah.org ([198.145.64.141]:45197 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753519Ab0GISzl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Jul 2010 14:55:41 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, Konrad Rzeszutek <konrad@darnok.org>
+To: Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org
+Cc: Jens Axboe <axboe@kernel.dk>, Stephen Hemminger <shemminger@vyatta.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Kay Sievers <kay.sievers@vrfy.org>, Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>, David Howells <dhowells@redhat.com>
 
-_____  
-From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-To: Jayamohan Kalickal [mailto:jayamohank@serverengines.com]
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, Konrad Rzeszutek [mailto:konrad@darnok.org]
-Sent: Sun, 04 Jul 2010 13:16:32 -0700
-Subject: Re: [PATCH 09/12] be2iscsi: Add support for iscsi boot
+This is no longer needed by any userspace tools, so it's safe to
+remove.
 
-ccing Konrad to give him some heads up that there is going to be another 
-user of the boot lib.
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Stephen Hemminger <shemminger@vyatta.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jaroslav Kysela <perex@perex.cz>
+Cc: Takashi Iwai <tiwai@suse.de>
+Cc: Ingo Molnar <mingo@elte.hu>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>
+Cc: David Howells <dhowells@redhat.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
+---
+ block/genhd.c            |    5 -
+ drivers/base/bus.c       |   22 ------
+ drivers/base/class.c     |   25 -------
+ drivers/base/core.c      |  164 -----------------------------------------------
+ drivers/scsi/hosts.c     |    2 
+ drivers/scsi/scsi_scan.c |    2 
+ fs/partitions/check.c    |    6 -
+ include/sound/core.h     |    6 -
+ init/Kconfig             |   36 ----------
+ sound/core/init.c        |   11 ---
+ 10 files changed, 7 insertions(+), 272 deletions(-)
 
-On 06/29/2010 07:02 PM, Jayamohan Kallickal wrote:
-> +static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
-> +{
-> +	struct beiscsi_hba *phba = data;
-> +	char *str = buf;
-> +	int rc;
-> +
-> +	printk(KERN_ERR " In beiscsi_show_boot_tgt_info type=%d\n", type);
-> +	switch (type) {
-> +	case ISCSI_BOOT_TGT_NAME:
-> +		rc = sprintf(buf, "%.*s\n",
-> +				(int)strlen(phba->boot_sess.target_name),
-
-Did you get a compile warning if you did not cast this to a int?Yes, I did get a compile warning for this.
-
-Will submit another set of patches with the changes required   
-
-
-> +				(char *)&phba->boot_sess.target_name);
-> +		break;
-> +	case ISCSI_BOOT_TGT_IP_ADDR:
-> +		if (phba->boot_sess.conn_list[0].dest_ipaddr.ip_type == 0x1)
-> +			rc = sprintf(buf, "%pI4\n",
-> +				(char *)&phba->boot_sess.conn_list[0].
-> +				dest_ipaddr.ip_address);
-> +		else
-> +			rc = sprintf(str, "%pI6\n",
-> +				(char *)&phba->boot_sess.conn_list[0].
-> +				dest_ipaddr.ip_address);
-> +		break;
-> +	case ISCSI_BOOT_TGT_PORT:
-> +		rc = sprintf(str, "%d\n", phba->boot_sess.conn_list[0].
-> +				  dest_port);
-> +		break;
-> +
-> +	case ISCSI_BOOT_TGT_CHAP_NAME:
-> +		rc = sprintf(str,  "%.*s\n",
-> +				      phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      target_chap_name_length,
-> +				      (char *)&phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      target_chap_name);
-> +		break;
-> +	case ISCSI_BOOT_TGT_CHAP_SECRET:
-> +		rc = sprintf(str,  "%.*s\n",
-> +				      phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      target_secret_length,
-> +				      (char *)&phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      target_secret);
-> +
-> +		break;
-> +	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
-> +		rc = sprintf(str,  "%.*s\n",
-> +				      phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      intr_chap_name_length,
-> +				      (char *)&phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      intr_chap_name);
-> +
-> +		break;
-> +	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
-> +			rc = sprintf(str,  "%.*s\n",
-> +				      phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      intr_secret_length,
-> +				      (char *)&phba->boot_sess.conn_list[0].
-> +				      negotiated_login_options.auth_data.chap.
-> +				      intr_secret);
-> +		break;
-> +	case ISCSI_BOOT_TGT_FLAGS:
-> +			rc = sprintf(str, "2\n");
-> +		break;
-> +	case ISCSI_BOOT_TGT_NIC_ASSOC:
-> +			rc = sprintf(str, "0\n");
-> +		break;
-> +	default:
-> +		rc = -ENOSYS;
-> +		break;
-> +	}
-> +	return rc;
-> +}
-> +
-> +static ssize_t beiscsi_show_boot_ini_info(void *data, int type, char *buf)
-> +{
-> +	struct beiscsi_hba *phba = data;
-> +	char *str = buf;
-> +	int rc;
-> +
-> +	printk(KERN_ERR " In beiscsi_show_boot_ini_info type=%d\n", type);
-> +	switch (type) {
-> +	case ISCSI_BOOT_INI_INITIATOR_NAME:
-> +		rc = sprintf(str, "%s\n", phba->boot_sess.initiator_iscsiname);
-> +		break;
-> +	default:
-> +		rc = -ENOSYS;
-> +		break;
-> +	}
-> +	return rc;
-> +}
-> +
-> +static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
-> +{
-> +	struct beiscsi_hba *phba = data;
-> +	char *str = buf;
-> +	int rc;
-> +
-> +	printk(KERN_ERR " In beiscsi_show_boot_eth_info type = %d\n", type);
-> +	switch (type) {
-> +	case ISCSI_BOOT_ETH_FLAGS:
-> +			rc = sprintf(str, "2\n");
-> +		break;
-> +	case ISCSI_BOOT_ETH_INDEX:
-> +			rc = sprintf(str, "0\n");
-> +		break;
-> +	case ISCSI_BOOT_ETH_MAC:
-> +	{
-> +	struct be_cmd_resp_get_mac_addr *resp;
-> +	struct be_mcc_wrb *wrb;
-> +	unsigned int tag, wrb_num;
-> +	unsigned short status, extd_status;
-> +	struct be_queue_info *mccq =&phba->ctrl.mcc_obj.q;
-
-
-That chunk above should have some tabs I think.
-
-> +
-> +		tag = be_cmd_get_mac_addr(phba);
-> +		if (!tag) {
-> +			SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed\n");
-> +			return -1;
-> +		} else
-> +			wait_event_interruptible(phba->ctrl.mcc_wait[tag],
-> +						 phba->ctrl.mcc_numtag[tag]);
-> +
-> +		wrb_num = (phba->ctrl.mcc_numtag[tag]&  0x00FF0000)>>  16;
-> +		extd_status = (phba->ctrl.mcc_numtag[tag]&  0x0000FF00)>>  8;
-> +		status = phba->ctrl.mcc_numtag[tag]&  0x000000FF;
-> +		if (status || extd_status) {
-> +			SE_DEBUG(DBG_LVL_1, "Failed to get be_cmd_get_mac_addr"
-> +					    " status = %d extd_status = %d\n",
-> +					    status, extd_status);
-> +			free_mcc_tag(&phba->ctrl, tag);
-> +			return -1;
-> +		} else {
-> +			wrb = queue_get_wrb(mccq, wrb_num);
-> +			free_mcc_tag(&phba->ctrl, tag);
-> +			resp = embedded_payload(wrb);
-> +			memcpy(phba->mac_address, resp->mac_address, ETH_ALEN);
-> +			rc = sysfs_format_mac(buf, phba->mac_address,
-> +					       ETH_ALEN);
-> +		}
-
-Can't you get this info in the host setup functions and then use the 
-cached version? Or if it changes can you update the cached info?
-
-This also looks like the same code in beiscsi_get_host_param so it 
-should at least be a function.
-
-
-
-> +	}
-> +
-> +	break;
-> +	default:
-> +		rc = -ENOSYS;
-> +		break;
-> +	}
-> +	return rc;
-> +}
-> +
-> +
-> +static mode_t beiscsi_tgt_get_attr_visibility(void *data, int type)
-> +{
-> +	int rc;
-> +
-> +	switch (type) {
-> +	case ISCSI_BOOT_TGT_NAME:
-> +	case ISCSI_BOOT_TGT_IP_ADDR:
-> +	case ISCSI_BOOT_TGT_PORT:
-> +	case ISCSI_BOOT_TGT_CHAP_NAME:
-> +	case ISCSI_BOOT_TGT_CHAP_SECRET:
-> +	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
-> +	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
-> +	case ISCSI_BOOT_TGT_NIC_ASSOC:
-> +	case ISCSI_BOOT_TGT_FLAGS:
-> +		rc = S_IRUGO;
-> +		break;
-> +	default:
-> +		rc = 0;
-> +		break;
-> +	}
-> +	return rc;
-> +}
-> +
-> +static mode_t beiscsi_ini_get_attr_visibility(void *data, int type)
-> +{
-> +	int rc;
-> +
-> +	switch (type) {
-> +	case ISCSI_BOOT_INI_INITIATOR_NAME:
-> +		rc = S_IRUGO;
-> +		break;
-> +	default:
-> +		rc = 0;
-> +		break;
-> +	}
-> +	return rc;
-> +}
-> +
-> +
-> +static mode_t beiscsi_eth_get_attr_visibility(void *data, int type)
-> +{
-> +	int rc;
-> +
-> +	switch (type) {
-> +	case ISCSI_BOOT_ETH_FLAGS:
-> +	case ISCSI_BOOT_ETH_MAC:
-> +	case ISCSI_BOOT_ETH_INDEX:
-> +		rc = S_IRUGO;
-> +		break;
-> +	default:
-> +		rc = 0;
-> +		break;
-> +	}
-> +	return rc;
-> +}
-> +
-> +static int beiscsi_setup_boot_info(struct beiscsi_hba *phba)
-> +{
-> +	struct iscsi_boot_kobj *boot_kobj;
-> +	char *set_name;
-> +
-> +	set_name = kasprintf(GFP_KERNEL, "iscsi_boot%u", phba->shost->host_no);
-> +	if (!set_name)
-> +		return -ENOMEM;
-> +
-> +	phba->boot_kset = iscsi_boot_create_kset(set_name);
-> +	if (!phba->boot_kset) {
-> +		kfree(set_name);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	/* get boot info using mgmt cmd */
-> +	boot_kobj = iscsi_boot_create_target(phba->boot_kset, 0, phba,
-> +					     beiscsi_show_boot_tgt_info,
-> +					     beiscsi_tgt_get_attr_visibility);
-> +	if (!boot_kobj)
-> +		goto free_kset;
-> +
-> +	boot_kobj = iscsi_boot_create_initiator(phba->boot_kset, 0, phba,
-> +					     beiscsi_show_boot_ini_info,
-> +					     beiscsi_ini_get_attr_visibility);
-> +	if (!boot_kobj)
-> +		goto free_kset;
-> +
-> +	boot_kobj = iscsi_boot_create_ethernet(phba->boot_kset, 0, phba,
-> +					     beiscsi_show_boot_eth_info,
-> +					     beiscsi_eth_get_attr_visibility);
-> +	if (!boot_kobj)
-> +		goto free_kset;
-> +	return 0;
-> +
-> +free_kset:
-> +	kfree(set_name);
-> +	iscsi_boot_destroy_kset(phba->boot_kset);
-> +	return -ENOMEM;
-> +}
-> +
->   /*------------------- PCI Driver operations and data ----------------- */
->   static DEFINE_PCI_DEVICE_TABLE(beiscsi_pci_id_table) = {
->   	{ PCI_DEVICE(BE_VENDOR_ID, BE_DEVICE_ID1) },
-> @@ -270,6 +523,15 @@ static struct beiscsi_hba *beiscsi_hba_alloc(struct pci_dev *pcidev)
->
->   	if (iscsi_host_add(shost,&phba->pcidev->dev))
->   		goto free_devices;
-> +
-> +	if (beiscsi_setup_boot_info(phba))
-> +		/*
-> +		 * log error but continue, because we may not be using
-> +		 * iscsi boot.
-> +		 */
-> +		shost_printk(KERN_ERR, phba->shost, "Could not set up "
-> +		"iSCSI boot info.");
-> +
->   	return phba;
->
->   free_devices:
-> @@ -3263,6 +3525,89 @@ static void hwi_disable_intr(struct beiscsi_hba *phba)
->   			     "In hwi_disable_intr, Already Disabled\n");
->   }
->
-> +static char beiscsi_get_boot_info(struct beiscsi_hba *phba)
-> +{
-> +	struct be_cmd_resp_get_boot_target *boot_resp;
-> +	struct be_cmd_resp_geta_session *session_resp;
-> +	struct be_mcc_wrb *wrb;
-> +	struct be_dma_mem nonemb_cmd;
-> +	unsigned int tag, wrb_num;
-> +	unsigned short status, extd_status;
-> +	struct be_queue_info *mccq =&phba->ctrl.mcc_obj.q;
-> +
-> +	tag = beiscsi_get_boot_target(phba);
-> +	if (!tag) {
-> +		SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed\n");
-> +		return -1;
-> +	} else
-> +		wait_event_interruptible(phba->ctrl.mcc_wait[tag],
-> +					 phba->ctrl.mcc_numtag[tag]);
-> +
-> +	wrb_num = (phba->ctrl.mcc_numtag[tag]&  0x00FF0000)>>  16;
-> +	extd_status = (phba->ctrl.mcc_numtag[tag]&  0x0000FF00)>>  8;
-> +	status = phba->ctrl.mcc_numtag[tag]&  0x000000FF;
-> +	if (status || extd_status) {
-> +		SE_DEBUG(DBG_LVL_1, "be_cmd_get_mac_addr Failed"
-> +				    " status = %d extd_status = %d\n",
-> +				    status, extd_status);
-> +		free_mcc_tag(&phba->ctrl, tag);
-> +		return -1;
-> +	}
-> +	wrb = queue_get_wrb(mccq, wrb_num);
-> +	free_mcc_tag(&phba->ctrl, tag);
-> +	boot_resp = embedded_payload(wrb);
-> +
-> +	if (boot_resp->boot_session_handle>= 0) {
-> +
-
-extra newline.
-
-You also probably can change this up to be
-
-if (boot_resp->boot_session_handle < 0) {
-	printk(KERN_ERR "No Boot Session for this pci_func,"
-		"session Hndl = %d\n", boot_resp->boot_session_handle);
-	return 0;
-}
-
-
-nonemb_cmd.va = pci_alloc_consistent(phba->ctrl.pdev,
-				sizeof(*session_resp),
-				&nonemb_cmd.dma);
-
-.......
-
-
-tag = beiscsi_geta_session_info(phba,
-		boot_resp->boot_session_handle,&nonemb_cmd);
-if (!tag)
-	goto free_nonemb;
-
-....
-
-if (something else fails)
-	goto free_nonemb;
-
-.....
-
-free_nonemb:
-	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size
-	return 0;
-
-> +		nonemb_cmd.va = pci_alloc_consistent(phba->ctrl.pdev,
-> +					sizeof(*session_resp),
-> +					&nonemb_cmd.dma);
-> +		if (nonemb_cmd.va == NULL) {
-> +			SE_DEBUG(DBG_LVL_1,
-> +				 "Failed to allocate memory for"
-> +				 "beiscsi_geta_session_info\n");
-> +			return -1;
-> +		}
-> +
-> +		memset(nonemb_cmd.va, 0, sizeof(*session_resp));
-> +		tag = beiscsi_geta_session_info(phba,
-> +			boot_resp->boot_session_handle,&nonemb_cmd);
-> +		if (!tag) {
-> +			SE_DEBUG(DBG_LVL_1, "beiscsi_geta_session_info"
-> +				" Failed\n");
-> +			pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
-> +			    nonemb_cmd.va, nonemb_cmd.dma);
-> +			return -1;
-> +		} else
-> +			wait_event_interruptible(phba->ctrl.mcc_wait[tag],
-> +						 phba->ctrl.mcc_numtag[tag]);
-> +
-> +		wrb_num = (phba->ctrl.mcc_numtag[tag]&  0x00FF0000)>>  16;
-> +		extd_status = (phba->ctrl.mcc_numtag[tag]&  0x0000FF00)>>  8;
-> +		status = phba->ctrl.mcc_numtag[tag]&  0x000000FF;
-> +		if (status || extd_status) {
-> +			SE_DEBUG(DBG_LVL_1, "beiscsi_geta_session_info Failed"
-> +					    " status = %d extd_status = %d\n",
-> +					    status, extd_status);
-> +			free_mcc_tag(&phba->ctrl, tag);
-> +			pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
-> +			    nonemb_cmd.va, nonemb_cmd.dma);
-> +			return -1;
-> +		}
-> +		wrb = queue_get_wrb(mccq, wrb_num);
-> +		free_mcc_tag(&phba->ctrl, tag);
-> +		session_resp = nonemb_cmd.va ;
-> +		memcpy(&phba->boot_sess,&session_resp->session_info,
-> +		       sizeof(struct mgmt_session_info));
-> +		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
-> +			    nonemb_cmd.va, nonemb_cmd.dma);
-> +	} else {
-> +		printk(KERN_ERR "No Boot Session for this pci_func,"
-> +			"session Hndl = %d\n", boot_resp->boot_session_handle);
-> +	}
-> +		return 0;
-> +}
-> +
->   static int beiscsi_init_port(struct beiscsi_hba *phba)
->   {
->   	int ret;
-> @@ -3825,6 +4170,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
->   	iscsi_host_remove(phba->shost);
->   	pci_dev_put(phba->pcidev);
->   	iscsi_host_free(phba->shost);
-> +	iscsi_boot_destroy_kset(phba->boot_kset);
->   }
->
->   static void beiscsi_msix_enable(struct beiscsi_hba *phba)
-> @@ -3985,6 +4331,13 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
->   			     "Failed to hwi_enable_intr\n");
->   		goto free_intr;
->   	}
-> +	ret = beiscsi_get_boot_info(phba);
-
-
-Fix return value. Should be returning -Exyx code like the code does/should.
-
-
-> +	if (ret<  0) {
-> +		shost_printk(KERN_ERR, phba->shost, "beiscsi_dev_probe-"
-> +			     "Failed to hwi_enable_intr\n");
-> +		goto free_intr;
-> +	}
-> +
->   	SE_DEBUG(DBG_LVL_8, "\n\n\n SUCCESS - DRIVER LOADED\n\n\n");
->   	return 0;
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-> index 08996d0..978a57d 100644
-> --- a/drivers/scsi/be2iscsi/be_main.h
-> +++ b/drivers/scsi/be2iscsi/be_main.h
-> @@ -311,6 +311,7 @@ struct beiscsi_hba {
->   	struct list_head hba_queue;
->   	unsigned short *cid_array;
->   	struct iscsi_endpoint **ep_array;
-> +	struct iscsi_boot_kset *boot_kset;
->   	struct Scsi_Host *shost;
->   	struct {
->   		/**
-> @@ -341,6 +342,7 @@ struct beiscsi_hba {
->   	struct work_struct work_cqs;	/* The work being queued */
->   	struct be_ctrl_info ctrl;
->   	unsigned int generation;
-> +	struct mgmt_session_info boot_sess;
->   	struct invalidate_command_table inv_tbl[128];
->
->   };
-> diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-> index c33aa3c..ee85898 100644
-> --- a/drivers/scsi/be2iscsi/be_mgmt.c
-> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-> @@ -20,6 +20,77 @@
->
->   #include "be_mgmt.h"
->   #include "be_iscsi.h"
-> +#include<scsi/scsi_transport_iscsi.h>
-> +
-> +unsigned int beiscsi_get_boot_target(struct beiscsi_hba *phba)
-> +{
-> +	struct be_ctrl_info *ctrl =&phba->ctrl;
-> +	struct be_mcc_wrb *wrb;
-> +	struct be_cmd_req_get_mac_addr *req;
-> +	unsigned int tag = 0;
-> +
-> +	SE_DEBUG(DBG_LVL_8, "In bescsi_get_boot_target\n");
-> +	spin_lock(&ctrl->mbox_lock);
-> +	tag = alloc_mcc_tag(phba);
-> +	if (!tag) {
-> +		spin_unlock(&ctrl->mbox_lock);
-> +		return tag;
-> +	}
-> +
-> +	wrb = wrb_from_mccq(phba);
-> +	req = embedded_payload(wrb);
-> +	wrb->tag0 |= tag;
-> +	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
-> +	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI_INI,
-> +			   OPCODE_ISCSI_INI_BOOT_GET_BOOT_TARGET,
-> +			   sizeof(*req));
-> +
-> +	be_mcc_notify(phba);
-> +	spin_unlock(&ctrl->mbox_lock);
-> +	return tag;
-> +}
-> +
-> +unsigned int beiscsi_geta_session_info(struct beiscsi_hba *phba,
-
-Probably just wanted to name this beiscsi_get_session_info
-
-
-
-> +				  u32 boot_session_handle,
-> +				  struct be_dma_mem *nonemb_cmd)
-> +{
-> +	struct be_ctrl_info *ctrl =&phba->ctrl;
-> +	struct be_mcc_wrb *wrb;
-> +	unsigned int tag = 0;
-> +	struct  be_cmd_req_geta_session *req;
-> +	struct be_cmd_resp_geta_session *resp;
-> +	struct be_sge *sge;
-> +
-> +	SE_DEBUG(DBG_LVL_8, "In beiscsi_geta_session_info\n");
-> +	spin_lock(&ctrl->mbox_lock);
-> +	tag = alloc_mcc_tag(phba);
-> +	if (!tag) {
-> +		spin_unlock(&ctrl->mbox_lock);
-> +		return tag;
-> +	}
-> +
-> +	nonemb_cmd->size = sizeof(*resp);
-> +	req = nonemb_cmd->va;
-> +	memset(req, 0, sizeof(*req));
-> +	wrb = wrb_from_mccq(phba);
-> +	sge = nonembedded_sgl(wrb);
-> +	wrb->tag0 |= tag;
-> +
-> +
-> +	wrb->tag0 |= tag;
-> +	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
-> +	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI_INI,
-> +			   OPCODE_ISCSI_INI_SESSION_GET_A_SESSION,
-> +			   sizeof(*resp));
-> +	req->session_handle = boot_session_handle;
-> +	sge->pa_hi = cpu_to_le32(upper_32_bits(nonemb_cmd->dma));
-> +	sge->pa_lo = cpu_to_le32(nonemb_cmd->dma&  0xFFFFFFFF);
-> +	sge->len = cpu_to_le32(nonemb_cmd->size);
-> +
-> +	be_mcc_notify(phba);
-> +	spin_unlock(&ctrl->mbox_lock);
-> +	return tag;
-> +}
->
->   unsigned char mgmt_get_fw_config(struct be_ctrl_info *ctrl,
->   				struct beiscsi_hba *phba)
-
-___________________________________________________________________________________
-This message, together with any attachment(s), contains confidential and proprietary information of
-ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
-review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
-intended recipient of this message, please immediately advise the sender by reply email message and
-delete all copies of this message and any attachment(s). Thank you.
-
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -22,9 +22,7 @@
+ #include "blk.h"
+ 
+ static DEFINE_MUTEX(block_class_lock);
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ struct kobject *block_depr;
+-#endif
+ 
+ /* for extended dynamic devt allocation, currently only one major is used */
+ #define MAX_EXT_DEVT		(1 << MINORBITS)
+@@ -803,10 +801,9 @@ static int __init genhd_device_init(void
+ 
+ 	register_blkdev(BLOCK_EXT_MAJOR, "blkext");
+ 
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	/* create top-level block dir */
+ 	block_depr = kobject_create_and_add("block", NULL);
+-#endif
++
+ 	return 0;
+ }
+ 
+--- a/drivers/base/bus.c
++++ b/drivers/base/bus.c
+@@ -440,22 +440,6 @@ static void device_remove_attrs(struct b
+ 	}
+ }
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-static int make_deprecated_bus_links(struct device *dev)
+-{
+-	return sysfs_create_link(&dev->kobj,
+-				 &dev->bus->p->subsys.kobj, "bus");
+-}
+-
+-static void remove_deprecated_bus_links(struct device *dev)
+-{
+-	sysfs_remove_link(&dev->kobj, "bus");
+-}
+-#else
+-static inline int make_deprecated_bus_links(struct device *dev) { return 0; }
+-static inline void remove_deprecated_bus_links(struct device *dev) { }
+-#endif
+-
+ /**
+  * bus_add_device - add device to bus
+  * @dev: device being added
+@@ -482,15 +466,10 @@ int bus_add_device(struct device *dev)
+ 				&dev->bus->p->subsys.kobj, "subsystem");
+ 		if (error)
+ 			goto out_subsys;
+-		error = make_deprecated_bus_links(dev);
+-		if (error)
+-			goto out_deprecated;
+ 		klist_add_tail(&dev->p->knode_bus, &bus->p->klist_devices);
+ 	}
+ 	return 0;
+ 
+-out_deprecated:
+-	sysfs_remove_link(&dev->kobj, "subsystem");
+ out_subsys:
+ 	sysfs_remove_link(&bus->p->devices_kset->kobj, dev_name(dev));
+ out_id:
+@@ -530,7 +509,6 @@ void bus_remove_device(struct device *de
+ {
+ 	if (dev->bus) {
+ 		sysfs_remove_link(&dev->kobj, "subsystem");
+-		remove_deprecated_bus_links(dev);
+ 		sysfs_remove_link(&dev->bus->p->devices_kset->kobj,
+ 				  dev_name(dev));
+ 		device_remove_attrs(dev->bus, dev);
+--- a/drivers/base/class.c
++++ b/drivers/base/class.c
+@@ -184,13 +184,7 @@ int __class_register(struct class *cls,
+ 	if (!cls->dev_kobj)
+ 		cls->dev_kobj = sysfs_dev_char_kobj;
+ 
+-#if defined(CONFIG_SYSFS_DEPRECATED) && defined(CONFIG_BLOCK)
+-	/* let the block class directory show up in the root of sysfs */
+-	if (cls != &block_class)
+-		cp->class_subsys.kobj.kset = class_kset;
+-#else
+ 	cp->class_subsys.kobj.kset = class_kset;
+-#endif
+ 	cp->class_subsys.kobj.ktype = &class_ktype;
+ 	cp->class = cls;
+ 	cls->p = cp;
+@@ -276,25 +270,6 @@ void class_destroy(struct class *cls)
+ 	class_unregister(cls);
+ }
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-char *make_class_name(const char *name, struct kobject *kobj)
+-{
+-	char *class_name;
+-	int size;
+-
+-	size = strlen(name) + strlen(kobject_name(kobj)) + 2;
+-
+-	class_name = kmalloc(size, GFP_KERNEL);
+-	if (!class_name)
+-		return NULL;
+-
+-	strcpy(class_name, name);
+-	strcat(class_name, ":");
+-	strcat(class_name, kobject_name(kobj));
+-	return class_name;
+-}
+-#endif
+-
+ /**
+  * class_dev_iter_init - initialize class device iterator
+  * @iter: class iterator to initialize
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -203,37 +203,6 @@ static int dev_uevent(struct kset *kset,
+ 	if (dev->driver)
+ 		add_uevent_var(env, "DRIVER=%s", dev->driver->name);
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-	if (dev->class) {
+-		struct device *parent = dev->parent;
+-
+-		/* find first bus device in parent chain */
+-		while (parent && !parent->bus)
+-			parent = parent->parent;
+-		if (parent && parent->bus) {
+-			const char *path;
+-
+-			path = kobject_get_path(&parent->kobj, GFP_KERNEL);
+-			if (path) {
+-				add_uevent_var(env, "PHYSDEVPATH=%s", path);
+-				kfree(path);
+-			}
+-
+-			add_uevent_var(env, "PHYSDEVBUS=%s", parent->bus->name);
+-
+-			if (parent->driver)
+-				add_uevent_var(env, "PHYSDEVDRIVER=%s",
+-					       parent->driver->name);
+-		}
+-	} else if (dev->bus) {
+-		add_uevent_var(env, "PHYSDEVBUS=%s", dev->bus->name);
+-
+-		if (dev->driver)
+-			add_uevent_var(env, "PHYSDEVDRIVER=%s",
+-				       dev->driver->name);
+-	}
+-#endif
+-
+ 	/* have the bus specific function add its stuff */
+ 	if (dev->bus && dev->bus->uevent) {
+ 		retval = dev->bus->uevent(dev, env);
+@@ -578,24 +547,6 @@ void device_initialize(struct device *de
+ 	set_dev_node(dev, -1);
+ }
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-static struct kobject *get_device_parent(struct device *dev,
+-					 struct device *parent)
+-{
+-	/* class devices without a parent live in /sys/class/<classname>/ */
+-	if (dev->class && (!parent || parent->class != dev->class))
+-		return &dev->class->p->class_subsys.kobj;
+-	/* all other devices keep their parent */
+-	else if (parent)
+-		return &parent->kobj;
+-
+-	return NULL;
+-}
+-
+-static inline void cleanup_device_parent(struct device *dev) {}
+-static inline void cleanup_glue_dir(struct device *dev,
+-				    struct kobject *glue_dir) {}
+-#else
+ static struct kobject *virtual_device_parent(struct device *dev)
+ {
+ 	static struct kobject *virtual_dir = NULL;
+@@ -719,7 +670,6 @@ static void cleanup_device_parent(struct
+ {
+ 	cleanup_glue_dir(dev, dev->kobj.parent);
+ }
+-#endif
+ 
+ static void setup_parent(struct device *dev, struct device *parent)
+ {
+@@ -742,53 +692,6 @@ static int device_add_class_symlinks(str
+ 	if (error)
+ 		goto out;
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-	/* stacked class devices need a symlink in the class directory */
+-	if (dev->kobj.parent != &dev->class->p->class_subsys.kobj &&
+-	    device_is_not_partition(dev)) {
+-		error = sysfs_create_link(&dev->class->p->class_subsys.kobj,
+-					  &dev->kobj, dev_name(dev));
+-		if (error)
+-			goto out_subsys;
+-	}
+-
+-	if (dev->parent && device_is_not_partition(dev)) {
+-		struct device *parent = dev->parent;
+-		char *class_name;
+-
+-		/*
+-		 * stacked class devices have the 'device' link
+-		 * pointing to the bus device instead of the parent
+-		 */
+-		while (parent->class && !parent->bus && parent->parent)
+-			parent = parent->parent;
+-
+-		error = sysfs_create_link(&dev->kobj,
+-					  &parent->kobj,
+-					  "device");
+-		if (error)
+-			goto out_busid;
+-
+-		class_name = make_class_name(dev->class->name,
+-						&dev->kobj);
+-		if (class_name)
+-			error = sysfs_create_link(&dev->parent->kobj,
+-						&dev->kobj, class_name);
+-		kfree(class_name);
+-		if (error)
+-			goto out_device;
+-	}
+-	return 0;
+-
+-out_device:
+-	if (dev->parent && device_is_not_partition(dev))
+-		sysfs_remove_link(&dev->kobj, "device");
+-out_busid:
+-	if (dev->kobj.parent != &dev->class->p->class_subsys.kobj &&
+-	    device_is_not_partition(dev))
+-		sysfs_delete_link(&dev->class->p->class_subsys.kobj, &dev->kobj,
+-				  dev_name(dev));
+-#else
+ 	/* link in the class directory pointing to the device */
+ 	error = sysfs_create_link(&dev->class->p->class_subsys.kobj,
+ 				  &dev->kobj, dev_name(dev));
+@@ -805,7 +708,6 @@ out_busid:
+ 
+ out_busid:
+ 	sysfs_delete_link(&dev->class->p->class_subsys.kobj, &dev->kobj, dev_name(dev));
+-#endif
+ 
+ out_subsys:
+ 	sysfs_remove_link(&dev->kobj, "subsystem");
+@@ -818,29 +720,10 @@ static void device_remove_class_symlinks
+ 	if (!dev->class)
+ 		return;
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-	if (dev->parent && device_is_not_partition(dev)) {
+-		char *class_name;
+-
+-		class_name = make_class_name(dev->class->name, &dev->kobj);
+-		if (class_name) {
+-			sysfs_remove_link(&dev->parent->kobj, class_name);
+-			kfree(class_name);
+-		}
+-		sysfs_remove_link(&dev->kobj, "device");
+-	}
+-
+-	if (dev->kobj.parent != &dev->class->p->class_subsys.kobj &&
+-	    device_is_not_partition(dev))
+-		sysfs_delete_link(&dev->class->p->class_subsys.kobj, &dev->kobj,
+-				  dev_name(dev));
+-#else
+ 	if (dev->parent && device_is_not_partition(dev))
+ 		sysfs_remove_link(&dev->kobj, "device");
+ 
+ 	sysfs_delete_link(&dev->class->p->class_subsys.kobj, &dev->kobj, dev_name(dev));
+-#endif
+-
+ 	sysfs_remove_link(&dev->kobj, "subsystem");
+ }
+ 
+@@ -1613,41 +1496,23 @@ int device_rename(struct device *dev, ch
+ 	pr_debug("device: '%s': %s: renaming to '%s'\n", dev_name(dev),
+ 		 __func__, new_name);
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-	if ((dev->class) && (dev->parent))
+-		old_class_name = make_class_name(dev->class->name, &dev->kobj);
+-#endif
+-
+ 	old_device_name = kstrdup(dev_name(dev), GFP_KERNEL);
+ 	if (!old_device_name) {
+ 		error = -ENOMEM;
+ 		goto out;
+ 	}
+ 
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	if (dev->class) {
+ 		error = sysfs_rename_link(&dev->class->p->class_subsys.kobj,
+ 			&dev->kobj, old_device_name, new_name);
+ 		if (error)
+ 			goto out;
+ 	}
+-#endif
++
+ 	error = kobject_rename(&dev->kobj, new_name);
+ 	if (error)
+ 		goto out;
+ 
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-	if (old_class_name) {
+-		new_class_name = make_class_name(dev->class->name, &dev->kobj);
+-		if (new_class_name) {
+-			error = sysfs_rename_link(&dev->parent->kobj,
+-						  &dev->kobj,
+-						  old_class_name,
+-						  new_class_name);
+-		}
+-	}
+-#endif
+-
+ out:
+ 	put_device(dev);
+ 
+@@ -1664,40 +1529,13 @@ static int device_move_class_links(struc
+ 				   struct device *new_parent)
+ {
+ 	int error = 0;
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-	char *class_name;
+ 
+-	class_name = make_class_name(dev->class->name, &dev->kobj);
+-	if (!class_name) {
+-		error = -ENOMEM;
+-		goto out;
+-	}
+-	if (old_parent) {
+-		sysfs_remove_link(&dev->kobj, "device");
+-		sysfs_remove_link(&old_parent->kobj, class_name);
+-	}
+-	if (new_parent) {
+-		error = sysfs_create_link(&dev->kobj, &new_parent->kobj,
+-					  "device");
+-		if (error)
+-			goto out;
+-		error = sysfs_create_link(&new_parent->kobj, &dev->kobj,
+-					  class_name);
+-		if (error)
+-			sysfs_remove_link(&dev->kobj, "device");
+-	} else
+-		error = 0;
+-out:
+-	kfree(class_name);
+-	return error;
+-#else
+ 	if (old_parent)
+ 		sysfs_remove_link(&dev->kobj, "device");
+ 	if (new_parent)
+ 		error = sysfs_create_link(&dev->kobj, &new_parent->kobj,
+ 					  "device");
+ 	return error;
+-#endif
+ }
+ 
+ /**
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -406,9 +406,7 @@ struct Scsi_Host *scsi_host_alloc(struct
+ 
+ 	device_initialize(&shost->shost_gendev);
+ 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	shost->shost_gendev.bus = &scsi_bus_type;
+-#endif
+ 	shost->shost_gendev.type = &scsi_host_type;
+ 
+ 	device_initialize(&shost->shost_dev);
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -417,9 +417,7 @@ static struct scsi_target *scsi_alloc_ta
+ 	starget->reap_ref = 1;
+ 	dev->parent = get_device(parent);
+ 	dev_set_name(dev, "target%d:%d:%d", shost->host_no, channel, id);
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	dev->bus = &scsi_bus_type;
+-#endif
+ 	dev->type = &scsi_target_type;
+ 	starget->id = id;
+ 	starget->channel = channel;
+--- a/fs/partitions/check.c
++++ b/fs/partitions/check.c
+@@ -500,14 +500,14 @@ void register_disk(struct gendisk *disk)
+ 
+ 	if (device_add(ddev))
+ 		return;
+-#ifndef CONFIG_SYSFS_DEPRECATED
++
+ 	err = sysfs_create_link(block_depr, &ddev->kobj,
+ 				kobject_name(&ddev->kobj));
+ 	if (err) {
+ 		device_del(ddev);
+ 		return;
+ 	}
+-#endif
++
+ 	disk->part0.holder_dir = kobject_create_and_add("holders", &ddev->kobj);
+ 	disk->slave_dir = kobject_create_and_add("slaves", &ddev->kobj);
+ 
+@@ -724,8 +724,6 @@ void del_gendisk(struct gendisk *disk)
+ 	kobject_put(disk->part0.holder_dir);
+ 	kobject_put(disk->slave_dir);
+ 	disk->driverfs_dev = NULL;
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	sysfs_remove_link(block_depr, dev_name(disk_to_dev(disk)));
+-#endif
+ 	device_del(disk_to_dev(disk));
+ }
+--- a/include/sound/core.h
++++ b/include/sound/core.h
+@@ -133,9 +133,7 @@ struct snd_card {
+ 	int free_on_last_close;		/* free in context of file_release */
+ 	wait_queue_head_t shutdown_sleep;
+ 	struct device *dev;		/* device assigned to this card */
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	struct device *card_dev;	/* cardX object for sysfs */
+-#endif
+ 
+ #ifdef CONFIG_PM
+ 	unsigned int power_state;	/* power state */
+@@ -196,11 +194,7 @@ struct snd_minor {
+ /* return a device pointer linked to each sound device as a parent */
+ static inline struct device *snd_card_get_device_link(struct snd_card *card)
+ {
+-#ifdef CONFIG_SYSFS_DEPRECATED
+-	return card ? card->dev : NULL;
+-#else
+ 	return card ? card->card_dev : NULL;
+-#endif
+ }
+ 
+ /* sound.c */
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -651,42 +651,6 @@ endif # CGROUPS
+ config MM_OWNER
+ 	bool
+ 
+-config SYSFS_DEPRECATED
+-	bool
+-
+-config SYSFS_DEPRECATED_V2
+-	bool "enable deprecated sysfs features to support old userspace tools"
+-	depends on SYSFS
+-	default n
+-	select SYSFS_DEPRECATED
+-	help
+-	  This option switches the layout of sysfs to the deprecated
+-	  version. Do not use it on recent distributions.
+-
+-	  The current sysfs layout features a unified device tree at
+-	  /sys/devices/, which is able to express a hierarchy between
+-	  class devices. If the deprecated option is set to Y, the
+-	  unified device tree is split into a bus device tree at
+-	  /sys/devices/ and several individual class device trees at
+-	  /sys/class/. The class and bus devices will be connected by
+-	  "<subsystem>:<name>" and the "device" links. The "block"
+-	  class devices, will not show up in /sys/class/block/. Some
+-	  subsystems will suppress the creation of some devices which
+-	  depend on the unified device tree.
+-
+-	  This option is not a pure compatibility option that can
+-	  be safely enabled on newer distributions. It will change the
+-	  layout of sysfs to the non-extensible deprecated version,
+-	  and disable some features, which can not be exported without
+-	  confusing older userspace tools. Since 2007/2008 all major
+-	  distributions do not enable this option, and ship no tools which
+-	  depend on the deprecated layout or this option.
+-
+-	  If you are using a new kernel on an older distribution, or use
+-	  older userspace tools, you might need to say Y here. Do not say Y,
+-	  if the original kernel, that came with your distribution, has
+-	  this option set to N.
+-
+ config RELAY
+ 	bool "Kernel->user space relay support (formerly relayfs)"
+ 	help
+--- a/sound/core/init.c
++++ b/sound/core/init.c
+@@ -395,12 +395,10 @@ int snd_card_disconnect(struct snd_card
+ 		snd_printk(KERN_ERR "not all devices for card %i can be disconnected\n", card->number);
+ 
+ 	snd_info_card_disconnect(card);
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	if (card->card_dev) {
+ 		device_unregister(card->card_dev);
+ 		card->card_dev = NULL;
+ 	}
+-#endif
+ #ifdef CONFIG_PM
+ 	wake_up(&card->power_sleep);
+ #endif
+@@ -573,7 +571,6 @@ void snd_card_set_id(struct snd_card *ca
+ }
+ EXPORT_SYMBOL(snd_card_set_id);
+ 
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ static ssize_t
+ card_id_show_attr(struct device *dev,
+ 		  struct device_attribute *attr, char *buf)
+@@ -630,7 +627,6 @@ card_number_show_attr(struct device *dev
+ 
+ static struct device_attribute card_number_attrs =
+ 	__ATTR(number, S_IRUGO, card_number_show_attr, NULL);
+-#endif /* CONFIG_SYSFS_DEPRECATED */
+ 
+ /**
+  *  snd_card_register - register the soundcard
+@@ -649,7 +645,7 @@ int snd_card_register(struct snd_card *c
+ 
+ 	if (snd_BUG_ON(!card))
+ 		return -EINVAL;
+-#ifndef CONFIG_SYSFS_DEPRECATED
++
+ 	if (!card->card_dev) {
+ 		card->card_dev = device_create(sound_class, card->dev,
+ 					       MKDEV(0, 0), card,
+@@ -657,7 +653,7 @@ int snd_card_register(struct snd_card *c
+ 		if (IS_ERR(card->card_dev))
+ 			card->card_dev = NULL;
+ 	}
+-#endif
++
+ 	if ((err = snd_device_register_all(card)) < 0)
+ 		return err;
+ 	mutex_lock(&snd_card_mutex);
+@@ -674,7 +670,6 @@ int snd_card_register(struct snd_card *c
+ 	if (snd_mixer_oss_notify_callback)
+ 		snd_mixer_oss_notify_callback(card, SND_MIXER_OSS_NOTIFY_REGISTER);
+ #endif
+-#ifndef CONFIG_SYSFS_DEPRECATED
+ 	if (card->card_dev) {
+ 		err = device_create_file(card->card_dev, &card_id_attrs);
+ 		if (err < 0)
+@@ -683,7 +678,7 @@ int snd_card_register(struct snd_card *c
+ 		if (err < 0)
+ 			return err;
+ 	}
+-#endif
++
+ 	return 0;
+ }
+ 
