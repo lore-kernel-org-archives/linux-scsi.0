@@ -1,188 +1,185 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 17/24] bfa: fix possible IO double completion
-Date: Thu, 8 Jul 2010 19:58:45 -0700
-Message-ID: <1278644325-2445-1-git-send-email-huangj@brocade.com>
+Subject: [PATCH 18/24] bfa: update to support BOFM
+Date: Thu, 8 Jul 2010 19:59:24 -0700
+Message-ID: <1278644364-2812-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:55841 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753498Ab0GIC6w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 22:58:52 -0400
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:36462 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754740Ab0GIC7a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 22:59:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: kgudipat@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-While processing the ioim in callback functions, the ioim is still in io_q.
-During this time, if the itnim goes offline, the ioim is requeued from
-itnim->io_q into itnim->delay_comp_q although the request is already completed.
-This results in requeing the ioim into the callback queue if the ioim is not
-freed by the time the ioim is requeued. This results in double completion of
-the ioim. To fix this, whenever a response is received from firmware for an
-ioim, deque it from io_q and enque to fcpim->comp_q. This will eliminate any
-possibility of itnim picking any ioim for which the response is already
-received.
+Update bfa driver API and data structure to support BOFM (IBM BladeCenter
+Open Fabric Manager).
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/bfa/bfa_ioim.c |   34 ++++++++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+ drivers/scsi/bfa/bfa_ioc.c                      |   44 ++++++++++-------------
+ drivers/scsi/bfa/include/bfa.h                  |    2 +
+ drivers/scsi/bfa/include/bfi/bfi_ioc.h          |    2 +-
+ drivers/scsi/bfa/include/defs/bfa_defs_status.h |   16 +++++++-
+ 4 files changed, 36 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_ioim.c b/drivers/scsi/bfa/bfa_ioim.c
-index 680b87d..4148ae0 100644
---- a/drivers/scsi/bfa/bfa_ioim.c
-+++ b/drivers/scsi/bfa/bfa_ioim.c
-@@ -133,6 +133,8 @@ bfa_ioim_sm_uninit(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index c4922fb..8e78f20 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -84,6 +84,7 @@ static void     bfa_ioc_reset(struct bfa_ioc_s *ioc, bfa_boolean_t force);
+ static void     bfa_ioc_mbox_poll(struct bfa_ioc_s *ioc);
+ static void     bfa_ioc_mbox_hbfail(struct bfa_ioc_s *ioc);
+ static void     bfa_ioc_recover(struct bfa_ioc_s *ioc);
++static void	bfa_ioc_check_attr_wwns(struct bfa_ioc_s *ioc);
+ static void     bfa_ioc_disable_comp(struct bfa_ioc_s *ioc);
+ static void     bfa_ioc_lpu_stop(struct bfa_ioc_s *ioc);
  
- 	case BFA_IOIM_SM_IOTOV:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
- 				__bfa_cb_ioim_pathtov, ioim);
- 		break;
-@@ -182,6 +184,8 @@ bfa_ioim_sm_sgalloc(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_ABORT:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		bfa_sgpg_wcancel(ioim->bfa, &ioim->iosp->sgpg_wqe);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
- 			      ioim);
- 		break;
-@@ -189,6 +193,8 @@ bfa_ioim_sm_sgalloc(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_HWFAIL:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		bfa_sgpg_wcancel(ioim->bfa, &ioim->iosp->sgpg_wqe);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
- 			      ioim);
- 		break;
-@@ -210,18 +216,24 @@ bfa_ioim_sm_active(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+@@ -429,6 +430,7 @@ bfa_ioc_sm_getattr(struct bfa_ioc_s *ioc, enum ioc_event event)
  	switch (event) {
- 	case BFA_IOIM_SM_COMP_GOOD:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
- 			      __bfa_cb_ioim_good_comp, ioim);
+ 	case IOC_E_FWRSP_GETATTR:
+ 		bfa_ioc_timer_stop(ioc);
++		bfa_ioc_check_attr_wwns(ioc);
+ 		bfa_fsm_set_state(ioc, bfa_ioc_sm_op);
  		break;
  
- 	case BFA_IOIM_SM_COMP:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_comp,
- 			      ioim);
- 		break;
+@@ -977,8 +979,13 @@ bfa_ioc_hwinit(struct bfa_ioc_s *ioc, bfa_boolean_t force)
+ 	/**
+ 	 * If IOC function is disabled and firmware version is same,
+ 	 * just re-enable IOC.
++	 *
++	 * If option rom, IOC must not be in operational state. With
++	 * convergence, IOC will be in operational state when 2nd driver
++	 * is loaded.
+ 	 */
+-	if (ioc_fwstate == BFI_IOC_DISABLED || ioc_fwstate == BFI_IOC_OP) {
++	if (ioc_fwstate == BFI_IOC_DISABLED ||
++		(!bfa_ioc_is_optrom(ioc) && ioc_fwstate == BFI_IOC_OP)) {
+ 		bfa_trc(ioc, ioc_fwstate);
  
- 	case BFA_IOIM_SM_DONE:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_comp,
- 			      ioim);
- 		break;
-@@ -254,6 +266,8 @@ bfa_ioim_sm_active(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+ 		/**
+@@ -1281,6 +1288,7 @@ bfa_ioc_boot(struct bfa_ioc_s *ioc, u32 boot_type, u32 boot_param)
+ 		bfa_reg_write((rb + BFA_IOC1_STATE_REG), BFI_IOC_INITING);
+ 	}
  
- 	case BFA_IOIM_SM_HWFAIL:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
- 			      ioim);
- 		break;
-@@ -287,12 +301,16 @@ bfa_ioim_sm_abort(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
++	bfa_ioc_msgflush(ioc);
+ 	bfa_ioc_download_fw(ioc, boot_type, boot_param);
  
- 	case BFA_IOIM_SM_ABORT_COMP:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
- 			      ioim);
- 		break;
+ 	/**
+@@ -1788,28 +1796,17 @@ void
+ bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
+ {
+ 	struct bfi_ioc_attr_s   *ioc_attr;
+-	u8              nports;
+-	u8              max_speed;
  
- 	case BFA_IOIM_SM_COMP_UTAG:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
- 			      ioim);
- 		break;
-@@ -312,6 +330,8 @@ bfa_ioim_sm_abort(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+ 	bfa_assert(model);
+ 	bfa_os_memset((void *)model, 0, BFA_ADAPTER_MODEL_NAME_LEN);
  
- 	case BFA_IOIM_SM_HWFAIL:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
- 			      ioim);
- 		break;
-@@ -365,6 +385,8 @@ bfa_ioim_sm_cleanup(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+ 	ioc_attr = ioc->attr;
  
- 	case BFA_IOIM_SM_HWFAIL:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
- 			      ioim);
- 		break;
-@@ -399,6 +421,8 @@ bfa_ioim_sm_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_ABORT:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
- 			      ioim);
- 		break;
-@@ -414,6 +438,8 @@ bfa_ioim_sm_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_HWFAIL:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
- 			      ioim);
- 		break;
-@@ -448,6 +474,8 @@ bfa_ioim_sm_abort_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_COMP:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
- 			      ioim);
- 		break;
-@@ -455,6 +483,8 @@ bfa_ioim_sm_abort_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_DONE:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
- 		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
- 			      ioim);
- 		break;
-@@ -462,6 +492,8 @@ bfa_ioim_sm_abort_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_HWFAIL:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
- 			      ioim);
- 		break;
-@@ -511,6 +543,8 @@ bfa_ioim_sm_cleanup_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 	case BFA_IOIM_SM_HWFAIL:
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
- 			      ioim);
- 		break;
+-	nports = bfa_ioc_get_nports(ioc);
+-	max_speed = bfa_ioc_speed_sup(ioc);
+-
+ 	/**
+ 	 * model name
+ 	 */
+-	if (max_speed == 10) {
+-		strcpy(model, "BR-10?0");
+-		model[5] = '0' + nports;
+-	} else {
+-		strcpy(model, "Brocade-??5");
+-		model[8] = '0' + max_speed;
+-		model[9] = '0' + nports;
+-	}
++	snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u",
++			BFA_MFG_NAME, ioc_attr->card_type);
+ }
+ 
+ enum bfa_ioc_state
+@@ -2048,19 +2045,16 @@ bfa_ioc_recover(struct bfa_ioc_s *ioc)
+ 	bfa_fsm_send_event(ioc, IOC_E_HBFAIL);
+ }
+ 
+-#else
+-
+-void
+-bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
+-{
+-}
+-
+ static void
+-bfa_ioc_recover(struct bfa_ioc_s *ioc)
++bfa_ioc_check_attr_wwns(struct bfa_ioc_s *ioc)
+ {
+-	bfa_assert(0);
++	if (bfa_ioc_get_type(ioc) == BFA_IOC_TYPE_LL)
++		return;
++
++	if (ioc->attr->nwwn == 0)
++		bfa_ioc_aen_post(ioc, BFA_IOC_AEN_INVALID_NWWN);
++	if (ioc->attr->pwwn == 0)
++		bfa_ioc_aen_post(ioc, BFA_IOC_AEN_INVALID_PWWN);
+ }
+ 
+ #endif
+-
+-
+diff --git a/drivers/scsi/bfa/include/bfa.h b/drivers/scsi/bfa/include/bfa.h
+index 9519a6d..d52b32f 100644
+--- a/drivers/scsi/bfa/include/bfa.h
++++ b/drivers/scsi/bfa/include/bfa.h
+@@ -126,6 +126,8 @@ struct bfa_sge_s {
+ 	bfa_ioc_get_type(&(__bfa)->ioc)
+ #define bfa_get_mac(__bfa)  \
+ 	bfa_ioc_get_mac(&(__bfa)->ioc)
++#define bfa_get_mfg_mac(__bfa)  \
++	bfa_ioc_get_mfg_mac(&(__bfa)->ioc)
+ #define bfa_get_fw_clock_res(__bfa)    \
+ 	((__bfa)->iocfc.cfgrsp->fwcfg.fw_tick_res)
+ 
+diff --git a/drivers/scsi/bfa/include/bfi/bfi_ioc.h b/drivers/scsi/bfa/include/bfi/bfi_ioc.h
+index 7c5e6d5..450ded6 100644
+--- a/drivers/scsi/bfa/include/bfi/bfi_ioc.h
++++ b/drivers/scsi/bfa/include/bfi/bfi_ioc.h
+@@ -50,7 +50,7 @@ struct bfi_ioc_getattr_req_s {
+ struct bfi_ioc_attr_s {
+ 	wwn_t           mfg_pwwn;       /* Mfg port wwn */
+ 	wwn_t           mfg_nwwn;       /* Mfg node wwn */
+-	mac_t		mfg_mac;
++	mac_t		mfg_mac;	/* Mfg mac      */
+ 	u16		rsvd_a;
+ 	wwn_t           pwwn;
+ 	wwn_t           nwwn;
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_status.h b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
+index c8bc60a..6eb4e62 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_status.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
+@@ -256,8 +256,20 @@ enum bfa_status {
+ 			       * configuration */
+ 	BFA_STATUS_DEVID_MISSING = 155, /* Boot image is not for the adapter(s)
+ 					 * installed */
+-        BFA_STATUS_BAD_FWCFG = 156, /* Bad firmware configuration */
+-	BFA_STATUS_MAX_VAL		/*  Unknown error code */
++	BFA_STATUS_BAD_FWCFG = 156, /* Bad firmware configuration */
++	BFA_STATUS_CREATE_FILE = 157, /* Failed to create temporary file */
++	BFA_STATUS_INVALID_VENDOR = 158, /* Invalid switch vendor */
++	BFA_STATUS_SFP_NOT_READY = 159, /* SFP info is not ready. Retry */
++	BFA_STATUS_NO_TOPOLOGY_FOR_CNA = 160, /* Topology command not
++					       * applicable to CNA */
++	BFA_STATUS_BOOT_CODE_UPDATED = 161, /* reboot -- -r is needed after
++					     * boot code updated */
++	BFA_STATUS_BOOT_VERSION = 162, /* Boot code version not compatible with
++					* the driver installed */
++	BFA_STATUS_CARDTYPE_MISSING = 163, /* Boot image is not for the
++					    * adapter(s) installed */
++	BFA_STATUS_INVALID_CARDTYPE = 164, /* Invalid card type provided */
++	BFA_STATUS_MAX_VAL              /* Unknown error code */
+ };
+ #define bfa_status_t enum bfa_status
+ 
 -- 
 1.6.5.2
 
