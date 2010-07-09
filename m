@@ -1,665 +1,578 @@
 From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 02/24] bfa: enable basic PBC support
-Date: Thu, 8 Jul 2010 19:45:56 -0700
-Message-ID: <1278643556-27491-1-git-send-email-huangj@brocade.com>
+Subject: [PATCH 03/24] bfa: PBC vport create
+Date: Thu, 8 Jul 2010 19:46:26 -0700
+Message-ID: <1278643586-27803-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:55484 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753563Ab0GICqC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 22:46:02 -0400
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:36125 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753216Ab0GICqh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 22:46:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: kgudipat@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-The patch includes the driver side changes to enable basic PBC (PreBoot
-Configuration) feature.
-- Data structure changes and new definitions for PBC.
-- APIs to access PBC info.
-- Remove unused code.
+This patch enables creating PBC vport.
+During fcs init, fcs will read PBC vport using bfa iocfc API and invoke fcb
+callback to add the pbc vport entries into a list. The pbc vport list will be
+traversed in the subsequent pci probe process and vport will be created using
+fc transport provided vport create function.
 
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fcpim.c                     |    5 --
- drivers/scsi/bfa/bfa_fcport.c                    |   42 ++++++++-------
- drivers/scsi/bfa/bfa_fcxp.c                      |   14 +----
- drivers/scsi/bfa/bfa_ioc.c                       |   41 ++++-----------
- drivers/scsi/bfa/bfa_ioc.h                       |    1 -
- drivers/scsi/bfa/bfa_iocfc.c                     |   27 +++++-----
- drivers/scsi/bfa/bfa_iocfc.h                     |    5 ++-
- drivers/scsi/bfa/bfa_lps.c                       |    6 --
- drivers/scsi/bfa/bfa_port_priv.h                 |    4 +-
- drivers/scsi/bfa/bfa_priv.h                      |    3 -
- drivers/scsi/bfa/bfa_rport.c                     |    5 --
- drivers/scsi/bfa/bfa_sgpg.c                      |    5 --
- drivers/scsi/bfa/bfa_uf.c                        |    5 --
- drivers/scsi/bfa/include/bfi/bfi_iocfc.h         |    2 +
- drivers/scsi/bfa/include/bfi/bfi_pbc.h           |   62 ++++++++++++++++++++++
- drivers/scsi/bfa/include/defs/bfa_defs_adapter.h |    3 +-
- drivers/scsi/bfa/include/defs/bfa_defs_boot.h    |   10 ++++
- drivers/scsi/bfa/include/defs/bfa_defs_mfg.h     |   38 ++++++-------
- drivers/scsi/bfa/include/defs/bfa_defs_pport.h   |    3 +
- 19 files changed, 154 insertions(+), 127 deletions(-)
- create mode 100644 drivers/scsi/bfa/include/bfi/bfi_pbc.h
+ drivers/scsi/bfa/bfa_fcs.c                      |   10 +++-
+ drivers/scsi/bfa/bfa_iocfc.c                    |   11 ++++
+ drivers/scsi/bfa/bfa_iocfc.h                    |    3 +
+ drivers/scsi/bfa/bfad.c                         |   61 +++++++++++++++++++++--
+ drivers/scsi/bfa/bfad_attr.c                    |   43 ++++++++++------
+ drivers/scsi/bfa/bfad_drv.h                     |    8 +++
+ drivers/scsi/bfa/bfad_im.c                      |    1 +
+ drivers/scsi/bfa/fabric.c                       |    2 +-
+ drivers/scsi/bfa/fcs_vport.h                    |    1 +
+ drivers/scsi/bfa/include/defs/bfa_defs_port.h   |   12 ++--
+ drivers/scsi/bfa/include/defs/bfa_defs_status.h |    5 ++-
+ drivers/scsi/bfa/include/fcb/bfa_fcb_vport.h    |    3 +-
+ drivers/scsi/bfa/include/fcs/bfa_fcs.h          |    4 +-
+ drivers/scsi/bfa/include/fcs/bfa_fcs_vport.h    |    4 ++
+ drivers/scsi/bfa/vport.c                        |   45 +++++++++++++++++
+ 15 files changed, 179 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index 790c945..12849e9 100644
---- a/drivers/scsi/bfa/bfa_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -80,11 +80,6 @@ bfa_fcpim_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- }
- 
- static void
--bfa_fcpim_initdone(struct bfa_s *bfa)
--{
--}
--
--static void
- bfa_fcpim_detach(struct bfa_s *bfa)
- {
- 	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-diff --git a/drivers/scsi/bfa/bfa_fcport.c b/drivers/scsi/bfa/bfa_fcport.c
-index c589488..4961b8d 100644
---- a/drivers/scsi/bfa/bfa_fcport.c
-+++ b/drivers/scsi/bfa/bfa_fcport.c
-@@ -912,25 +912,6 @@ bfa_fcport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- }
- 
- static void
--bfa_fcport_initdone(struct bfa_s *bfa)
--{
--	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
--
--	/**
--	 * Initialize port attributes from IOC hardware data.
--	 */
--	bfa_fcport_set_wwns(fcport);
--	if (fcport->cfg.maxfrsize == 0)
--		fcport->cfg.maxfrsize = bfa_ioc_maxfrsize(&bfa->ioc);
--	fcport->cfg.rx_bbcredit = bfa_ioc_rx_bbcredit(&bfa->ioc);
--	fcport->speed_sup = bfa_ioc_speed_sup(&bfa->ioc);
--
--	bfa_assert(fcport->cfg.maxfrsize);
--	bfa_assert(fcport->cfg.rx_bbcredit);
--	bfa_assert(fcport->speed_sup);
--}
--
--static void
- bfa_fcport_detach(struct bfa_s *bfa)
- {
- }
-@@ -1263,6 +1244,29 @@ bfa_fcport_send_stats_clear(void *cbarg)
-  */
- 
- /**
-+ * Called to initialize port attributes
-+ */
-+void
-+bfa_fcport_init(struct bfa_s *bfa)
-+{
-+	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
-+
-+	/**
-+	 * Initialize port attributes from IOC hardware data.
-+	 */
-+	bfa_fcport_set_wwns(fcport);
-+	if (fcport->cfg.maxfrsize == 0)
-+		fcport->cfg.maxfrsize = bfa_ioc_maxfrsize(&bfa->ioc);
-+	fcport->cfg.rx_bbcredit = bfa_ioc_rx_bbcredit(&bfa->ioc);
-+	fcport->speed_sup = bfa_ioc_speed_sup(&bfa->ioc);
-+
-+	bfa_assert(fcport->cfg.maxfrsize);
-+	bfa_assert(fcport->cfg.rx_bbcredit);
-+	bfa_assert(fcport->speed_sup);
-+}
-+
-+
-+/**
-  * Firmware message handler.
-  */
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 3516172..3ec2f49 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -99,14 +99,22 @@ bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
  void
-diff --git a/drivers/scsi/bfa/bfa_fcxp.c b/drivers/scsi/bfa/bfa_fcxp.c
-index cf0ad67..8258f88 100644
---- a/drivers/scsi/bfa/bfa_fcxp.c
-+++ b/drivers/scsi/bfa/bfa_fcxp.c
-@@ -149,11 +149,6 @@ bfa_fcxp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- }
- 
- static void
--bfa_fcxp_initdone(struct bfa_s *bfa)
--{
--}
--
--static void
- bfa_fcxp_detach(struct bfa_s *bfa)
+ bfa_fcs_init(struct bfa_fcs_s *fcs)
  {
+-	int             i;
++	int i, npbc_vports;
+ 	struct bfa_fcs_mod_s  *mod;
++	struct bfi_pbc_vport_s pbc_vports[BFI_PBC_MAX_VPORTS];
+ 
+ 	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
+ 		mod = &fcs_modules[i];
+ 		if (mod->modinit)
+ 			mod->modinit(fcs);
+ 	}
++	/* Initialize pbc vports */
++	if (!fcs->min_cfg) {
++		npbc_vports =
++			bfa_iocfc_get_pbc_vports(fcs->bfa, pbc_vports);
++		for (i = 0; i < npbc_vports; i++)
++			bfa_fcb_pbc_vport_create(fcs->bfa->bfad, pbc_vports[i]);
++	}
  }
-@@ -225,7 +220,7 @@ bfa_fcxp_null_comp(void *bfad_fcxp, struct bfa_fcxp_s *fcxp, void *cbarg,
- 		       bfa_status_t req_status, u32 rsp_len,
- 		       u32 resid_len, struct fchs_s *rsp_fchs)
- {
--	/**discarded fcxp completion */
-+	/* discarded fcxp completion */
- }
- 
- static void
-@@ -527,11 +522,8 @@ bfa_fcxp_alloc(void *caller, struct bfa_s *bfa, int nreq_sgles,
- 		if (nreq_sgles > BFI_SGE_INLINE) {
- 			nreq_sgpg = BFA_SGPG_NPAGE(nreq_sgles);
- 
--			if (bfa_sgpg_malloc
--			    (bfa, &fcxp->req_sgpg_q, nreq_sgpg)
-+			if (bfa_sgpg_malloc(bfa, &fcxp->req_sgpg_q, nreq_sgpg)
- 			    != BFA_STATUS_OK) {
--				/* bfa_sgpg_wait(bfa, &fcxp->req_sgpg_wqe,
--				nreq_sgpg); */
- 				/*
- 				 * TODO
- 				 */
-@@ -685,7 +677,7 @@ bfa_fcxp_send(struct bfa_fcxp_s *fcxp, struct bfa_rport_s *rport,
- 	fcxp->send_cbarg = cbarg;
- 
- 	/**
--	 * If no room in CPE queue, wait for
-+	 * If no room in CPE queue, wait for space in request queue
- 	 */
- 	send_req = bfa_reqq_next(bfa, BFA_REQQ_FCXP);
- 	if (!send_req) {
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index ef3b3fe..268c071 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -1608,6 +1608,13 @@ bfa_ioc_error_isr(struct bfa_ioc_s *ioc)
- 	bfa_fsm_send_event(ioc, IOC_E_HWERROR);
- }
- 
-+void
-+bfa_ioc_set_fcmode(struct bfa_ioc_s *ioc)
-+{
-+	ioc->fcmode  = BFA_TRUE;
-+	ioc->port_id = bfa_ioc_pcifn(ioc);
-+}
-+
- #ifndef BFA_BIOS_BUILD
  
  /**
-@@ -1697,6 +1704,9 @@ bfa_ioc_get_adapter_attr(struct bfa_ioc_s *ioc,
- 	/* For now, model descr uses same model string */
- 	bfa_ioc_get_adapter_model(ioc, ad_attr->model_descr);
- 
-+	ad_attr->card_type = ioc_attr->card_type;
-+	ad_attr->is_mezz = bfa_mfg_is_mezz(ioc_attr->card_type);
-+
- 	if (BFI_ADAPTER_IS_SPECIAL(ioc_attr->adapter_prop))
- 		ad_attr->prototype = 1;
- 	else
-@@ -1866,30 +1876,6 @@ bfa_ioc_get_nwwn(struct bfa_ioc_s *ioc)
- 	return w.wwn;
- }
- 
--wwn_t
--bfa_ioc_get_wwn_naa5(struct bfa_ioc_s *ioc, u16 inst)
--{
--	union {
--		wwn_t           wwn;
--		u8         byte[sizeof(wwn_t)];
--	}
--	w              , w5;
--
--	bfa_trc(ioc, inst);
--
--	w.wwn = ioc->attr->mfg_wwn;
--	w5.byte[0] = 0x50 | w.byte[2] >> 4;
--	w5.byte[1] = w.byte[2] << 4 | w.byte[3] >> 4;
--	w5.byte[2] = w.byte[3] << 4 | w.byte[4] >> 4;
--	w5.byte[3] = w.byte[4] << 4 | w.byte[5] >> 4;
--	w5.byte[4] = w.byte[5] << 4 | w.byte[6] >> 4;
--	w5.byte[5] = w.byte[6] << 4 | w.byte[7] >> 4;
--	w5.byte[6] = w.byte[7] << 4 | (inst & 0x0f00) >> 8;
--	w5.byte[7] = (inst & 0xff);
--
--	return w5.wwn;
--}
--
- u64
- bfa_ioc_get_adid(struct bfa_ioc_s *ioc)
- {
-@@ -1907,13 +1893,6 @@ bfa_ioc_get_mac(struct bfa_ioc_s *ioc)
- 	return mac;
- }
- 
--void
--bfa_ioc_set_fcmode(struct bfa_ioc_s *ioc)
--{
--	ioc->fcmode = BFA_TRUE;
--	ioc->port_id = bfa_ioc_pcifn(ioc);
--}
--
- bfa_boolean_t
- bfa_ioc_get_fcmode(struct bfa_ioc_s *ioc)
- {
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 2fbb6b2..df15ecc 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -303,7 +303,6 @@ bfa_boolean_t bfa_ioc_fwver_cmp(struct bfa_ioc_s *ioc,
-  */
- wwn_t bfa_ioc_get_pwwn(struct bfa_ioc_s *ioc);
- wwn_t bfa_ioc_get_nwwn(struct bfa_ioc_s *ioc);
--wwn_t bfa_ioc_get_wwn_naa5(struct bfa_ioc_s *ioc, u16 inst);
- mac_t bfa_ioc_get_mac(struct bfa_ioc_s *ioc);
- u64 bfa_ioc_get_adid(struct bfa_ioc_s *ioc);
- 
 diff --git a/drivers/scsi/bfa/bfa_iocfc.c b/drivers/scsi/bfa/bfa_iocfc.c
-index 273ecec..afa3da0 100644
+index afa3da0..d3f1052 100644
 --- a/drivers/scsi/bfa/bfa_iocfc.c
 +++ b/drivers/scsi/bfa/bfa_iocfc.c
-@@ -291,18 +291,6 @@ bfa_iocfc_mem_claim(struct bfa_s *bfa, struct bfa_iocfc_cfg_s *cfg,
+@@ -882,6 +882,17 @@ bfa_iocfc_get_pbc_boot_cfg(struct bfa_s *bfa, struct bfa_boot_pbc_s *pbcfg)
+ 	memcpy(pbcfg->pblun, cfgrsp->pbc_cfg.blun, sizeof(pbcfg->pblun));
  }
  
- /**
-- * BFA submodules initialization completion notification.
-- */
--static void
--bfa_iocfc_initdone_submod(struct bfa_s *bfa)
--{
--	int             i;
--
--	for (i = 0; hal_mods[i]; i++)
--		hal_mods[i]->initdone(bfa);
--}
--
--/**
-  * Start BFA submodules.
-  */
- static void
-@@ -394,6 +382,8 @@ bfa_iocfc_cfgrsp(struct bfa_s *bfa)
- 	/**
- 	 * Configuration is complete - initialize/start submodules
- 	 */
-+	bfa_fcport_init(bfa);
-+
- 	if (iocfc->action == BFA_IOCFC_ACT_INIT)
- 		bfa_cb_queue(bfa, &iocfc->init_hcb_qe, bfa_iocfc_init_cb, bfa);
- 	else
-@@ -531,7 +521,6 @@ bfa_iocfc_enable_cbfn(void *bfa_arg, enum bfa_status status)
- 		return;
- 	}
- 
--	bfa_iocfc_initdone_submod(bfa);
- 	bfa_iocfc_send_cfg(bfa);
- }
- 
-@@ -881,6 +870,18 @@ bfa_iocfc_get_bootwwns(struct bfa_s *bfa, u8 *nwwns, wwn_t **wwns)
- 	*wwns = cfgrsp->bootwwns.wwn;
- }
- 
-+void
-+bfa_iocfc_get_pbc_boot_cfg(struct bfa_s *bfa, struct bfa_boot_pbc_s *pbcfg)
++int
++bfa_iocfc_get_pbc_vports(struct bfa_s *bfa, struct bfi_pbc_vport_s *pbc_vport)
 +{
 +	struct bfa_iocfc_s *iocfc = &bfa->iocfc;
 +	struct bfi_iocfc_cfgrsp_s *cfgrsp = iocfc->cfgrsp;
 +
-+	pbcfg->enable = cfgrsp->pbc_cfg.boot_enabled;
-+	pbcfg->nbluns = cfgrsp->pbc_cfg.nbluns;
-+	pbcfg->speed = cfgrsp->pbc_cfg.port_speed;
-+	memcpy(pbcfg->pblun, cfgrsp->pbc_cfg.blun, sizeof(pbcfg->pblun));
++	memcpy(pbc_vport, cfgrsp->pbc_cfg.vport, sizeof(cfgrsp->pbc_cfg.vport));
++	return cfgrsp->pbc_cfg.nvports;
 +}
++
 +
  #endif
  
  
 diff --git a/drivers/scsi/bfa/bfa_iocfc.h b/drivers/scsi/bfa/bfa_iocfc.h
-index fbb4bdc..3ee9fe7 100644
+index 3ee9fe7..a08309f 100644
 --- a/drivers/scsi/bfa/bfa_iocfc.h
 +++ b/drivers/scsi/bfa/bfa_iocfc.h
-@@ -116,7 +116,8 @@ struct bfa_iocfc_s {
- #define bfa_isr_mode_set(__bfa, __msix)	\
- 	((__bfa)->iocfc.hwif.hw_isr_mode_set(__bfa, __msix))
- #define bfa_msix_getvecs(__bfa, __vecmap, __nvecs, __maxvec)	\
--	(__bfa)->iocfc.hwif.hw_msix_getvecs(__bfa, __vecmap, __nvecs, __maxvec)
-+	((__bfa)->iocfc.hwif.hw_msix_getvecs(__bfa, __vecmap,	\
-+		 __nvecs, __maxvec))
+@@ -21,6 +21,7 @@
+ #include <bfa_ioc.h>
+ #include <bfa.h>
+ #include <bfi/bfi_iocfc.h>
++#include <bfi/bfi_pbc.h>
+ #include <bfa_callback_priv.h>
  
- /*
-  * FC specific IOC functions.
-@@ -166,6 +167,8 @@ void bfa_com_meminfo(bfa_boolean_t mincfg, u32 *dm_len);
- void bfa_com_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi,
- 		bfa_boolean_t mincfg);
+ #define BFA_REQQ_NELEMS_MIN	(4)
+@@ -169,6 +170,8 @@ void bfa_com_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi,
  void bfa_iocfc_get_bootwwns(struct bfa_s *bfa, u8 *nwwns, wwn_t **wwns);
-+void bfa_iocfc_get_pbc_boot_cfg(struct bfa_s *bfa,
-+		struct bfa_boot_pbc_s *pbcfg);
+ void bfa_iocfc_get_pbc_boot_cfg(struct bfa_s *bfa,
+ 		struct bfa_boot_pbc_s *pbcfg);
++int bfa_iocfc_get_pbc_vports(struct bfa_s *bfa,
++		struct bfi_pbc_vport_s *pbc_vport);
  
  #endif /* __BFA_IOCFC_H__ */
  
-diff --git a/drivers/scsi/bfa/bfa_lps.c b/drivers/scsi/bfa/bfa_lps.c
-index ad06f61..acabb44 100644
---- a/drivers/scsi/bfa/bfa_lps.c
-+++ b/drivers/scsi/bfa/bfa_lps.c
-@@ -41,7 +41,6 @@ static void bfa_lps_attach(struct bfa_s *bfa, void *bfad,
- 			   struct bfa_iocfc_cfg_s *cfg,
- 			   struct bfa_meminfo_s *meminfo,
- 			   struct bfa_pcidev_s *pcidev);
--static void bfa_lps_initdone(struct bfa_s *bfa);
- static void bfa_lps_detach(struct bfa_s *bfa);
- static void bfa_lps_start(struct bfa_s *bfa);
- static void bfa_lps_stop(struct bfa_s *bfa);
-@@ -347,11 +346,6 @@ bfa_lps_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 1b869ad..37f886d 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -322,7 +322,31 @@ ext:
+ 	return rc;
  }
  
- static void
--bfa_lps_initdone(struct bfa_s *bfa)
--{
--}
--
--static void
- bfa_lps_detach(struct bfa_s *bfa)
++/**
++ * @brief
++ * FCS PBC VPORT Create
++ */
++void
++bfa_fcb_pbc_vport_create(struct bfad_s *bfad, struct bfi_pbc_vport_s pbc_vport)
++{
++
++	struct bfad_pcfg_s *pcfg;
++
++	pcfg = kzalloc(sizeof(struct bfad_pcfg_s), GFP_ATOMIC);
++	if (!pcfg) {
++		bfa_trc(bfad, 0);
++		return;
++	}
+ 
++	pcfg->port_cfg.roles = BFA_PORT_ROLE_FCP_IM;
++	pcfg->port_cfg.pwwn = pbc_vport.vp_pwwn;
++	pcfg->port_cfg.nwwn = pbc_vport.vp_nwwn;
++	pcfg->port_cfg.preboot_vp  = BFA_TRUE;
++
++	list_add_tail(&pcfg->list_entry, &bfad->pbc_pcfg_list);
++
++	return;
++}
+ 
+ void
+ bfad_hal_mem_release(struct bfad_s *bfad)
+@@ -481,10 +505,10 @@ ext:
+  */
+ bfa_status_t
+ bfad_vport_create(struct bfad_s *bfad, u16 vf_id,
+-		  struct bfa_port_cfg_s *port_cfg, struct device *dev)
++			struct bfa_port_cfg_s *port_cfg, struct device *dev)
  {
+ 	struct bfad_vport_s *vport;
+-	int             rc = BFA_STATUS_OK;
++	int rc = BFA_STATUS_OK;
+ 	unsigned long   flags;
+ 	struct completion fcomp;
+ 
+@@ -496,8 +520,12 @@ bfad_vport_create(struct bfad_s *bfad, u16 vf_id,
+ 
+ 	vport->drv_port.bfad = bfad;
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+-	rc = bfa_fcs_vport_create(&vport->fcs_vport, &bfad->bfa_fcs, vf_id,
+-				  port_cfg, vport);
++	if (port_cfg->preboot_vp == BFA_TRUE)
++		rc = bfa_fcs_pbc_vport_create(&vport->fcs_vport,
++				&bfad->bfa_fcs, vf_id, port_cfg, vport);
++	else
++		rc = bfa_fcs_vport_create(&vport->fcs_vport,
++				&bfad->bfa_fcs, vf_id, port_cfg, vport);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+ 	if (rc != BFA_STATUS_OK)
+@@ -884,6 +912,7 @@ bfa_status_t
+ bfad_start_ops(struct bfad_s *bfad)
+ {
+ 	int retval;
++	struct bfad_pcfg_s *pcfg, *pcfg_new;
+ 
+ 	/* PPORT FCS config */
+ 	bfad_fcs_port_cfg(bfad);
+@@ -901,6 +930,27 @@ bfad_start_ops(struct bfad_s *bfad)
+ 
+ 	bfad_drv_start(bfad);
+ 
++	/* pbc vport creation */
++	list_for_each_entry_safe(pcfg, pcfg_new,  &bfad->pbc_pcfg_list,
++					list_entry) {
++		struct fc_vport_identifiers vid;
++		struct fc_vport *fc_vport;
++
++		memset(&vid, 0, sizeof(vid));
++		vid.roles = FC_PORT_ROLE_FCP_INITIATOR;
++		vid.vport_type = FC_PORTTYPE_NPIV;
++		vid.disable = false;
++		vid.node_name = wwn_to_u64((u8 *)&pcfg->port_cfg.nwwn);
++		vid.port_name = wwn_to_u64((u8 *)&pcfg->port_cfg.pwwn);
++		fc_vport = fc_vport_create(bfad->pport.im_port->shost, 0, &vid);
++		if (!fc_vport)
++			printk(KERN_WARNING "bfad%d: failed to create pbc vport"
++				" %llx\n", bfad->inst_no, vid.port_name);
++		list_del(&pcfg->list_entry);
++		kfree(pcfg);
++
++	}
++
+ 	/*
+ 	 * If bfa_linkup_delay is set to -1 default; try to retrive the
+ 	 * value using the bfad_os_get_linkup_delay(); else use the
+@@ -928,7 +978,7 @@ out_cfg_pport_failure:
  }
-diff --git a/drivers/scsi/bfa/bfa_port_priv.h b/drivers/scsi/bfa/bfa_port_priv.h
-index 40e256e..c52fe56 100644
---- a/drivers/scsi/bfa/bfa_port_priv.h
-+++ b/drivers/scsi/bfa/bfa_port_priv.h
-@@ -87,5 +87,7 @@ struct bfa_fcport_s {
+ 
+ int
+-bfad_worker (void *ptr)
++bfad_worker(void *ptr)
+ {
+ 	struct bfad_s *bfad;
+ 	unsigned long   flags;
+@@ -1031,6 +1081,7 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 
+ 	bfad->ref_count = 0;
+ 	bfad->pport.bfad = bfad;
++	INIT_LIST_HEAD(&bfad->pbc_pcfg_list);
+ 
+ 	bfad->bfad_tsk = kthread_create(bfad_worker, (void *) bfad, "%s",
+ 					"bfad_worker");
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index e477bfb..871a303 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -373,47 +373,53 @@ bfad_im_vport_create(struct fc_vport *fc_vport, bool disable)
+ 		(struct bfad_im_port_s *) shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
+ 	struct bfa_port_cfg_s port_cfg;
++	struct bfad_pcfg_s *pcfg;
+ 	int status = 0, rc;
+ 	unsigned long flags;
+ 
+ 	memset(&port_cfg, 0, sizeof(port_cfg));
+-
+-	port_cfg.pwwn = wwn_to_u64((u8 *) &fc_vport->port_name);
+-	port_cfg.nwwn = wwn_to_u64((u8 *) &fc_vport->node_name);
+-
++	u64_to_wwn(fc_vport->node_name, (u8 *)&port_cfg.nwwn);
++	u64_to_wwn(fc_vport->port_name, (u8 *)&port_cfg.pwwn);
+ 	if (strlen(vname) > 0)
+ 		strcpy((char *)&port_cfg.sym_name, vname);
+-
+ 	port_cfg.roles = BFA_PORT_ROLE_FCP_IM;
+-	rc = bfad_vport_create(bfad, 0, &port_cfg, &fc_vport->dev);
+ 
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	list_for_each_entry(pcfg, &bfad->pbc_pcfg_list, list_entry) {
++		if (port_cfg.pwwn == pcfg->port_cfg.pwwn) {
++			port_cfg.preboot_vp = pcfg->port_cfg.preboot_vp;
++			break;
++		}
++	}
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++
++	rc = bfad_vport_create(bfad, 0, &port_cfg, &fc_vport->dev);
+ 	if (rc == BFA_STATUS_OK) {
+-		struct bfad_vport_s   *vport;
++		struct bfad_vport_s *vport;
+ 		struct bfa_fcs_vport_s *fcs_vport;
+ 		struct Scsi_Host *vshost;
+ 
+ 		spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 		fcs_vport = bfa_fcs_vport_lookup(&bfad->bfa_fcs, 0,
+ 					port_cfg.pwwn);
+-		if (fcs_vport == NULL) {
+-			spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++		if (fcs_vport == NULL)
+ 			return VPCERR_BAD_WWN;
+-		}
+ 
+ 		fc_vport_set_state(fc_vport, FC_VPORT_ACTIVE);
+ 		if (disable) {
++			spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 			bfa_fcs_vport_stop(fcs_vport);
++			spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 			fc_vport_set_state(fc_vport, FC_VPORT_DISABLED);
+ 		}
+-		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+ 		vport = fcs_vport->vport_drv;
+ 		vshost = vport->drv_port.im_port->shost;
+-		fc_host_node_name(vshost) = wwn_to_u64((u8 *) &port_cfg.nwwn);
+-		fc_host_port_name(vshost) = wwn_to_u64((u8 *) &port_cfg.pwwn);
++		fc_host_node_name(vshost) = wwn_to_u64((u8 *)&port_cfg.nwwn);
++		fc_host_port_name(vshost) = wwn_to_u64((u8 *)&port_cfg.pwwn);
+ 		fc_vport->dd_data = vport;
+ 		vport->drv_port.im_port->fc_vport = fc_vport;
+-
+ 	} else if (rc == BFA_STATUS_INVALID_WWN)
+ 		return VPCERR_BAD_WWN;
+ 	else if (rc == BFA_STATUS_VPORT_EXISTS)
+@@ -422,7 +428,7 @@ bfad_im_vport_create(struct fc_vport *fc_vport, bool disable)
+ 		return VPCERR_NO_FABRIC_SUPP;
+ 	else if (rc == BFA_STATUS_VPORT_WWN_BP)
+ 		return VPCERR_BAD_WWN;
+-	 else
++	else
+ 		return FC_VPORT_FAILED;
+ 
+ 	return status;
+@@ -449,7 +455,7 @@ bfad_im_vport_delete(struct fc_vport *fc_vport)
+ 	port = im_port->port;
+ 
+ 	vshost = vport->drv_port.im_port->shost;
+-	pwwn = wwn_to_u64((u8 *) &fc_host_port_name(vshost));
++	u64_to_wwn(fc_host_port_name(vshost), (u8 *)&pwwn);
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	fcs_vport = bfa_fcs_vport_lookup(&bfad->bfa_fcs, 0, pwwn);
+@@ -467,6 +473,9 @@ bfad_im_vport_delete(struct fc_vport *fc_vport)
+ 	rc = bfa_fcs_vport_delete(&vport->fcs_vport);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
++	if (rc == BFA_STATUS_PBC)
++		return -1;
++
+ 	wait_for_completion(vport->comp_del);
+ 
+ free_scsi_host:
+@@ -490,7 +499,7 @@ bfad_im_vport_disable(struct fc_vport *fc_vport, bool disable)
+ 	vport = (struct bfad_vport_s *)fc_vport->dd_data;
+ 	bfad = vport->drv_port.bfad;
+ 	vshost = vport->drv_port.im_port->shost;
+-	pwwn = wwn_to_u64((u8 *) &fc_vport->port_name);
++	u64_to_wwn(fc_host_port_name(vshost), (u8 *)&pwwn);
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	fcs_vport = bfa_fcs_vport_lookup(&bfad->bfa_fcs, 0, pwwn);
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index 6c920c1..2b58b29 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -120,6 +120,8 @@ struct bfad_vport_s {
+ 	struct bfad_port_s     drv_port;
+ 	struct bfa_fcs_vport_s fcs_vport;
+ 	struct completion *comp_del;
++	struct list_head list_entry;
++	struct bfa_port_cfg_s port_cfg;
+ };
+ 
  /*
-  * public functions
+@@ -195,6 +197,12 @@ struct bfad_s {
+ 	bfa_boolean_t	ipfc_enabled;
+ 	union bfad_tmp_buf tmp_buf;
+ 	struct fc_host_statistics link_stats;
++	struct list_head pbc_pcfg_list;
++};
++
++struct bfad_pcfg_s {
++	struct list_head list_entry;
++	struct bfa_port_cfg_s port_cfg;
+ };
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 5b7cf53..0dff0d4 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -567,6 +567,7 @@ bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port,
+ 
+ out_fc_rel:
+ 	scsi_host_put(im_port->shost);
++	im_port->shost = NULL;
+ out_free_idr:
+ 	mutex_lock(&bfad_mutex);
+ 	idr_remove(&bfad_im_port_index, im_port->idr_id);
+diff --git a/drivers/scsi/bfa/fabric.c b/drivers/scsi/bfa/fabric.c
+index 8166e97..9315383 100644
+--- a/drivers/scsi/bfa/fabric.c
++++ b/drivers/scsi/bfa/fabric.c
+@@ -789,7 +789,7 @@ bfa_fcs_fabric_delete(struct bfa_fcs_fabric_s *fabric)
+ 
+ 	list_for_each_safe(qe, qen, &fabric->vport_q) {
+ 		vport = (struct bfa_fcs_vport_s *)qe;
+-		bfa_fcs_vport_delete(vport);
++		bfa_fcs_vport_fcs_delete(vport);
+ 	}
+ 
+ 	bfa_fcs_port_delete(&fabric->bport);
+diff --git a/drivers/scsi/bfa/fcs_vport.h b/drivers/scsi/bfa/fcs_vport.h
+index 13c32eb..bb647a4 100644
+--- a/drivers/scsi/bfa/fcs_vport.h
++++ b/drivers/scsi/bfa/fcs_vport.h
+@@ -26,6 +26,7 @@ void bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_online(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_offline(struct bfa_fcs_vport_s *vport);
+ void bfa_fcs_vport_delete_comp(struct bfa_fcs_vport_s *vport);
++void bfa_fcs_vport_fcs_delete(struct bfa_fcs_vport_s *vport);
+ 
+ #endif /* __FCS_VPORT_H__ */
+ 
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_port.h b/drivers/scsi/bfa/include/defs/bfa_defs_port.h
+index 501bc97..752a812 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_port.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_port.h
+@@ -50,12 +50,12 @@ enum bfa_port_role {
+  * FCS port configuration.
   */
--void	bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
-+void bfa_fcport_init(struct bfa_s *bfa);
-+void bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
-+
- #endif /* __BFA_PORT_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/bfa_priv.h b/drivers/scsi/bfa/bfa_priv.h
-index be80fc7..bf4939b 100644
---- a/drivers/scsi/bfa/bfa_priv.h
-+++ b/drivers/scsi/bfa/bfa_priv.h
-@@ -37,7 +37,6 @@
- 			void *bfad, struct bfa_iocfc_cfg_s *cfg, 	\
- 			struct bfa_meminfo_s *meminfo,			\
- 			struct bfa_pcidev_s *pcidev);      \
--	static void bfa_ ## __mod ## _initdone(struct bfa_s *bfa);      \
- 	static void bfa_ ## __mod ## _detach(struct bfa_s *bfa);      \
- 	static void bfa_ ## __mod ## _start(struct bfa_s *bfa);      \
- 	static void bfa_ ## __mod ## _stop(struct bfa_s *bfa);      \
-@@ -47,7 +46,6 @@
- 	struct bfa_module_s hal_mod_ ## __mod = {			\
- 		bfa_ ## __mod ## _meminfo,				\
- 		bfa_ ## __mod ## _attach,				\
--		bfa_ ## __mod ## _initdone,				\
- 		bfa_ ## __mod ## _detach,				\
- 		bfa_ ## __mod ## _start,				\
- 		bfa_ ## __mod ## _stop,					\
-@@ -69,7 +67,6 @@ struct bfa_module_s {
- 			struct bfa_iocfc_cfg_s *cfg,
- 			struct bfa_meminfo_s *meminfo,
- 			struct bfa_pcidev_s *pcidev);
--	void (*initdone) (struct bfa_s *bfa);
- 	void (*detach) (struct bfa_s *bfa);
- 	void (*start) (struct bfa_s *bfa);
- 	void (*stop) (struct bfa_s *bfa);
-diff --git a/drivers/scsi/bfa/bfa_rport.c b/drivers/scsi/bfa/bfa_rport.c
-index 7c509fa..ccd0680 100644
---- a/drivers/scsi/bfa/bfa_rport.c
-+++ b/drivers/scsi/bfa/bfa_rport.c
-@@ -636,11 +636,6 @@ bfa_rport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- }
- 
- static void
--bfa_rport_initdone(struct bfa_s *bfa)
--{
--}
--
--static void
- bfa_rport_detach(struct bfa_s *bfa)
- {
- }
-diff --git a/drivers/scsi/bfa/bfa_sgpg.c b/drivers/scsi/bfa/bfa_sgpg.c
-index 279d8f9..ae452c4 100644
---- a/drivers/scsi/bfa/bfa_sgpg.c
-+++ b/drivers/scsi/bfa/bfa_sgpg.c
-@@ -94,11 +94,6 @@ bfa_sgpg_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- }
- 
- static void
--bfa_sgpg_initdone(struct bfa_s *bfa)
--{
--}
--
--static void
- bfa_sgpg_detach(struct bfa_s *bfa)
- {
- }
-diff --git a/drivers/scsi/bfa/bfa_uf.c b/drivers/scsi/bfa/bfa_uf.c
-index 4b3c241..b2a37fc 100644
---- a/drivers/scsi/bfa/bfa_uf.c
-+++ b/drivers/scsi/bfa/bfa_uf.c
-@@ -170,11 +170,6 @@ bfa_uf_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- }
- 
- static void
--bfa_uf_initdone(struct bfa_s *bfa)
--{
--}
--
--static void
- bfa_uf_detach(struct bfa_s *bfa)
- {
- }
-diff --git a/drivers/scsi/bfa/include/bfi/bfi_iocfc.h b/drivers/scsi/bfa/include/bfi/bfi_iocfc.h
-index c3760df..ccdfcc5 100644
---- a/drivers/scsi/bfa/include/bfi/bfi_iocfc.h
-+++ b/drivers/scsi/bfa/include/bfi/bfi_iocfc.h
-@@ -19,6 +19,7 @@
- #define __BFI_IOCFC_H__
- 
- #include "bfi.h"
-+#include <bfi/bfi_pbc.h>
- #include <defs/bfa_defs_ioc.h>
- #include <defs/bfa_defs_iocfc.h>
- #include <defs/bfa_defs_boot.h>
-@@ -78,6 +79,7 @@ struct bfi_iocfc_cfgrsp_s {
- 	struct bfa_iocfc_fwcfg_s	fwcfg;
- 	struct bfa_iocfc_intr_attr_s	intr_attr;
- 	struct bfi_iocfc_bootwwns	bootwwns;
-+	struct bfi_pbc_s                pbc_cfg;
+ struct bfa_port_cfg_s {
+-    wwn_t               pwwn;       /*  port wwn */
+-    wwn_t               nwwn;       /*  node wwn */
+-    struct bfa_port_symname_s  sym_name;   /*  vm port symbolic name */
+-    enum bfa_port_role     roles;      /*  FCS port roles */
+-	u32			rsvd;
+-    u8             tag[16];	/*  opaque tag from application */
++	wwn_t               pwwn;       /*  port wwn */
++	wwn_t               nwwn;       /*  node wwn */
++	struct bfa_port_symname_s  sym_name;   /*  vm port symbolic name */
++	bfa_boolean_t       preboot_vp;  /* vport created from PBC */
++	enum bfa_port_role     roles;      /*  FCS port roles */
++	u8             tag[16];	/*  opaque tag from application */
  };
  
  /**
-diff --git a/drivers/scsi/bfa/include/bfi/bfi_pbc.h b/drivers/scsi/bfa/include/bfi/bfi_pbc.h
-new file mode 100644
-index 0000000..88a4154
---- /dev/null
-+++ b/drivers/scsi/bfa/include/bfi/bfi_pbc.h
-@@ -0,0 +1,62 @@
-+/*
-+ * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#ifndef __BFI_PBC_H__
-+#define __BFI_PBC_H__
-+
-+#pragma pack(1)
-+
-+#define BFI_PBC_MAX_BLUNS	8
-+#define BFI_PBC_MAX_VPORTS	16
-+
-+#define BFI_PBC_PORT_DISABLED	 2
-+/**
-+ * PBC boot lun configuration
-+ */
-+struct bfi_pbc_blun_s {
-+	wwn_t		tgt_pwwn;
-+	lun_t		tgt_lun;
-+};
-+
-+/**
-+ * PBC virtual port configuration
-+ */
-+struct bfi_pbc_vport_s {
-+	wwn_t		vp_pwwn;
-+	wwn_t		vp_nwwn;
-+};
-+
-+/**
-+ * BFI pre-boot configuration information
-+ */
-+struct bfi_pbc_s {
-+	u8		port_enabled;
-+	u8		boot_enabled;
-+	u8		nbluns;
-+	u8		nvports;
-+	u8		port_speed;
-+	u8		rsvd_a;
-+	u16		hss;
-+	wwn_t		pbc_pwwn;
-+	wwn_t		pbc_nwwn;
-+	struct bfi_pbc_blun_s blun[BFI_PBC_MAX_BLUNS];
-+	struct bfi_pbc_vport_s vport[BFI_PBC_MAX_VPORTS];
-+};
-+
-+#pragma pack()
-+
-+#endif /* __BFI_PBC_H__ */
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h b/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h
-index 8c208fc..aea0360 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_adapter.h
-@@ -39,7 +39,7 @@ enum {
- struct bfa_adapter_attr_s {
- 	char            manufacturer[BFA_ADAPTER_MFG_NAME_LEN];
- 	char            serial_num[BFA_ADAPTER_SERIAL_NUM_LEN];
--	u32	rsvd1;
-+	u32		card_type;
- 	char            model[BFA_ADAPTER_MODEL_NAME_LEN];
- 	char            model_descr[BFA_ADAPTER_MODEL_DESCR_LEN];
- 	wwn_t           pwwn;
-@@ -60,6 +60,7 @@ struct bfa_adapter_attr_s {
- 	u8         pcie_lanes_orig;
- 	u8         pcie_lanes;
- 	u8	        cna_capable;
-+	u8         is_mezz;
+diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_status.h b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
+index ec78b4c..819db5a 100644
+--- a/drivers/scsi/bfa/include/defs/bfa_defs_status.h
++++ b/drivers/scsi/bfa/include/defs/bfa_defs_status.h
+@@ -213,7 +213,8 @@ enum bfa_status {
+ 					     * loaded */
+ 	BFA_STATUS_CARD_TYPE_MISMATCH = 131, /*  Card type mismatch */
+ 	BFA_STATUS_BAD_ASICBLK = 132, /*  Bad ASIC block */
+-	BFA_STATUS_NO_DRIVER = 133, /*  Brocade adapter/driver not installed or loaded */
++	BFA_STATUS_NO_DRIVER = 133, /*  Brocade adapter/driver not installed
++				     *  or loaded */
+ 	BFA_STATUS_INVALID_MAC = 134, /*  Invalid mac address */
+ 	BFA_STATUS_IM_NO_VLAN = 135, /*  No VLANs configured on the adapter */
+ 	BFA_STATUS_IM_ETH_LB_FAILED = 136, /*  Ethernet loopback test failed */
+@@ -249,6 +250,8 @@ enum bfa_status {
+ 	BFA_STATUS_IM_TEAM_CFG_NOT_ALLOWED = 153, /*  Given settings are not
+ 						* allowed for the current
+ 						* Teaming mode */
++	BFA_STATUS_PBC = 154, /* Operation not allowed for pre-boot
++			       * configuration */
+ 	BFA_STATUS_MAX_VAL		/*  Unknown error code */
  };
- 
- /**
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_boot.h b/drivers/scsi/bfa/include/defs/bfa_defs_boot.h
-index 6f4aa52..0fca10b 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_boot.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_boot.h
-@@ -24,6 +24,8 @@
- 
- enum {
- 	BFA_BOOT_BOOTLUN_MAX = 4,	/*  maximum boot lun per IOC */
-+	BFA_PREBOOT_BOOTLUN_MAX = 8,    /*  maximum preboot lun per IOC */
-+
- };
- 
- #define BOOT_CFG_REV1	1
-@@ -67,5 +69,13 @@ struct bfa_boot_cfg_s {
- 	struct bfa_boot_bootlun_s blun_disc[BFA_BOOT_BOOTLUN_MAX];
- };
- 
-+struct bfa_boot_pbc_s {
-+	u8         enable;         /* enable/disable SAN boot */
-+	u8         speed;          /* boot speed settings */
-+	u8         topology;       /* boot topology setting */
-+	u8         rsvd1;
-+	u32        nbluns;         /* number of boot luns */
-+	struct bfa_boot_bootlun_s pblun[BFA_PREBOOT_BOOTLUN_MAX];
-+};
- 
- #endif /* __BFA_DEFS_BOOT_H__ */
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-index bfb50eb..d22fb79 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_mfg.h
-@@ -45,26 +45,6 @@
- #define BFA_MFG_CHKSUM_SIZE			16
- 
- /**
-- * Manufacturing block encrypted version
-- */
--#define BFA_MFG_ENC_VER				2
--
--/**
-- * Manufacturing block version 1 length
-- */
--#define BFA_MFG_VER1_LEN			128
--
--/**
-- * Manufacturing block header length
-- */
--#define BFA_MFG_HDR_LEN				4
--
--/**
-- * Checksum size
-- */
--#define BFA_MFG_CHKSUM_SIZE			16
--
--/**
-  * Manufacturing block format
+ #define bfa_status_t enum bfa_status
+diff --git a/drivers/scsi/bfa/include/fcb/bfa_fcb_vport.h b/drivers/scsi/bfa/include/fcb/bfa_fcb_vport.h
+index a39f474..cfd6ba7 100644
+--- a/drivers/scsi/bfa/include/fcb/bfa_fcb_vport.h
++++ b/drivers/scsi/bfa/include/fcb/bfa_fcb_vport.h
+@@ -40,7 +40,8 @@ struct bfad_vport_s;
+  *
+  * @return None
   */
- #define BFA_MFG_SERIALNUM_SIZE			11
-@@ -98,6 +78,24 @@ enum {
-  */
- #define bfa_mfg_type2port_num(card_type) (((card_type) / 10) % 10)
+-void            bfa_fcb_vport_delete(struct bfad_vport_s *vport_drv);
++void bfa_fcb_vport_delete(struct bfad_vport_s *vport_drv);
++void bfa_fcb_pbc_vport_create(struct bfad_s *bfad, struct bfi_pbc_vport_s);
  
-+/**
-+ * Check if Mezz card
-+ */
-+#define bfa_mfg_is_mezz(type) (( \
-+	(type) == BFA_MFG_TYPE_JAYHAWK || \
-+	(type) == BFA_MFG_TYPE_WANCHESE))
-+
-+/**
-+ * Check if card type valid
-+ */
-+#define bfa_mfg_is_card_type_valid(type) (( \
-+	(type) == BFA_MFG_TYPE_FC8P2 || \
-+	(type) == BFA_MFG_TYPE_FC8P1 || \
-+	(type) == BFA_MFG_TYPE_FC4P2 || \
-+	(type) == BFA_MFG_TYPE_FC4P1 || \
-+	(type) == BFA_MFG_TYPE_CNA10P2 || \
-+	(type) == BFA_MFG_TYPE_CNA10P1 || \
-+	bfa_mfg_is_mezz(type)))
+ 
+ 
+diff --git a/drivers/scsi/bfa/include/fcs/bfa_fcs.h b/drivers/scsi/bfa/include/fcs/bfa_fcs.h
+index f2fd35f..54e5b81 100644
+--- a/drivers/scsi/bfa/include/fcs/bfa_fcs.h
++++ b/drivers/scsi/bfa/include/fcs/bfa_fcs.h
+@@ -61,8 +61,8 @@ struct bfa_fcs_s {
+ /*
+  * bfa fcs API functions
+  */
+-void bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
+-			bfa_boolean_t min_cfg);
++void bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa,
++			struct bfad_s *bfad, bfa_boolean_t min_cfg);
+ void bfa_fcs_init(struct bfa_fcs_s *fcs);
+ void bfa_fcs_driver_info_init(struct bfa_fcs_s *fcs,
+ 			struct bfa_fcs_driver_info_s *driver_info);
+diff --git a/drivers/scsi/bfa/include/fcs/bfa_fcs_vport.h b/drivers/scsi/bfa/include/fcs/bfa_fcs_vport.h
+index cd33f2c..0af2624 100644
+--- a/drivers/scsi/bfa/include/fcs/bfa_fcs_vport.h
++++ b/drivers/scsi/bfa/include/fcs/bfa_fcs_vport.h
+@@ -49,6 +49,10 @@ bfa_status_t bfa_fcs_vport_create(struct bfa_fcs_vport_s *vport,
+ 			struct bfa_fcs_s *fcs, u16 vf_id,
+ 			struct bfa_port_cfg_s *port_cfg,
+ 			struct bfad_vport_s *vport_drv);
++bfa_status_t bfa_fcs_pbc_vport_create(struct bfa_fcs_vport_s *vport,
++			struct bfa_fcs_s *fcs, uint16_t vf_id,
++			struct bfa_port_cfg_s *port_cfg,
++			struct bfad_vport_s *vport_drv);
+ bfa_status_t bfa_fcs_vport_delete(struct bfa_fcs_vport_s *vport);
+ bfa_status_t bfa_fcs_vport_start(struct bfa_fcs_vport_s *vport);
+ bfa_status_t bfa_fcs_vport_stop(struct bfa_fcs_vport_s *vport);
+diff --git a/drivers/scsi/bfa/vport.c b/drivers/scsi/bfa/vport.c
+index 27cd619..f14e9f2 100644
+--- a/drivers/scsi/bfa/vport.c
++++ b/drivers/scsi/bfa/vport.c
+@@ -594,6 +594,15 @@ bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport)
+ }
  
  /**
-  * All numerical fields are in big-endian format.
-diff --git a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-index 26e5cc7..de6181c 100644
---- a/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-+++ b/drivers/scsi/bfa/include/defs/bfa_defs_pport.h
-@@ -38,6 +38,7 @@ enum bfa_pport_states {
- 	BFA_PPORT_ST_IOCDOWN 		= 10,
- 	BFA_PPORT_ST_IOCDIS 		= 11,
- 	BFA_PPORT_ST_FWMISMATCH		= 12,
-+	BFA_PPORT_ST_PREBOOT_DISABLED   = 13,
- 	BFA_PPORT_ST_MAX_STATE,
- };
++ * delete notification from fabric SM. To be invoked from within FCS.
++ */
++void
++bfa_fcs_vport_fcs_delete(struct bfa_fcs_vport_s *vport)
++{
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_DELETE);
++}
++
++/**
+  * Delete completion callback from associated lport
+  */
+ void
+@@ -646,6 +655,7 @@ bfa_fcs_vport_create(struct bfa_fcs_vport_s *vport, struct bfa_fcs_s *fcs,
+ 		return BFA_STATUS_VPORT_MAX;
  
-@@ -203,6 +204,8 @@ struct bfa_pport_attr_s {
- 	 */
- 	wwn_t           nwwn;		/*  node wwn */
- 	wwn_t           pwwn;		/*  port wwn */
-+	wwn_t           factorynwwn;    /*  factory node wwn */
-+	wwn_t           factorypwwn;    /*  factory port wwn */
- 	enum fc_cos     cos_supported;	/*  supported class of services */
- 	u32        rsvd;
- 	struct fc_symname_s    port_symname;	/*  port symbolic name */
+ 	vport->vport_drv = vport_drv;
++	vport_cfg->preboot_vp = BFA_FALSE;
+ 	bfa_sm_set_state(vport, bfa_fcs_vport_sm_uninit);
+ 
+ 	bfa_fcs_lport_attach(&vport->lport, fcs, vf_id, vport);
+@@ -657,6 +667,36 @@ bfa_fcs_vport_create(struct bfa_fcs_vport_s *vport, struct bfa_fcs_s *fcs,
+ }
+ 
+ /**
++ *      Use this function to instantiate a new FCS PBC vport object. This
++ *      function will not trigger any HW initialization process (which will be
++ *      done in vport_start() call)
++ *
++ *      param[in] vport        -       pointer to bfa_fcs_vport_t. This space
++ *                                      needs to be allocated by the driver.
++ *      param[in] fcs          -       FCS instance
++ *      param[in] vport_cfg    -       vport configuration
++ *      param[in] vf_id        -       VF_ID if vport is created within a VF.
++ *                                      FC_VF_ID_NULL to specify base fabric.
++ *      param[in] vport_drv    -       Opaque handle back to the driver's vport
++ *                                      structure
++ *
++ *      retval BFA_STATUS_OK - on success.
++ *      retval BFA_STATUS_FAILED - on failure.
++ */
++bfa_status_t
++bfa_fcs_pbc_vport_create(struct bfa_fcs_vport_s *vport, struct bfa_fcs_s *fcs,
++			uint16_t vf_id, struct bfa_port_cfg_s *vport_cfg,
++			struct bfad_vport_s *vport_drv)
++{
++	bfa_status_t rc;
++
++	rc = bfa_fcs_vport_create(vport, fcs, vf_id, vport_cfg, vport_drv);
++	vport->lport.port_cfg.preboot_vp = BFA_TRUE;
++
++	return rc;
++}
++
++/**
+  *  	Use this function initialize the vport.
+  *
+  *  @param[in] vport - pointer to bfa_fcs_vport_t.
+@@ -692,6 +732,8 @@ bfa_fcs_vport_stop(struct bfa_fcs_vport_s *vport)
+  *  	Use this function to delete a vport object. Fabric object should
+  * 		be stopped before this function call.
+  *
++ *	Donot invoke this from within FCS
++ *
+  * 	param[in] vport - pointer to bfa_fcs_vport_t.
+  *
+  * 	return     None
+@@ -699,6 +741,9 @@ bfa_fcs_vport_stop(struct bfa_fcs_vport_s *vport)
+ bfa_status_t
+ bfa_fcs_vport_delete(struct bfa_fcs_vport_s *vport)
+ {
++	if (vport->lport.port_cfg.preboot_vp)
++		return BFA_STATUS_PBC;
++
+ 	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_DELETE);
+ 
+ 	return BFA_STATUS_OK;
 -- 
 1.6.5.2
 
