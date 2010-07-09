@@ -1,64 +1,101 @@
-From: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
+From: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>
 Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
-Date: Fri, 9 Jul 2010 09:11:31 +0200
-Message-ID: <20100709071131.GB10743@elte.hu>
+Date: Fri, 9 Jul 2010 08:12:39 -0700
+Message-ID: <20100709081239.4eb8fddd@virtuousgeek.org>
 References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
- <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+	<AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
 In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Paul E. McKenney" <paulmck-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Shawn Starr <shawn.starr-bJEeYj9oJeDQT0dZR+AlfA@public.gmane.org>, Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Patrick McHardy <kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Shawn Starr <shawn.starr-bJEeYj9oJeDQT0dZR+AlfA@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Patrick McHardy <kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Enrico Bandiello <enban-c0jvKHQHzSzx4jp4WZvp5g@public.gmane.org>, Norbert Preining <preining-DX+603jRYB8@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 8 Jul 2010 18:34:25 -0700
+Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
 
-* Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
+g.cgi?id=3D16307
+> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : i915 in kernel 2.6.35-rc3, hi=
+gh number of wakeups
+> > Submitter =C2=A0 =C2=A0 =C2=A0 : Enrico Bandiello <enban-c0jvKHQHzSy7MTZChrCvtQ@public.gmane.org=
+es>
+> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-26 16:57 (1=
+3 days old)
+> > Message-ID =C2=A0 =C2=A0 =C2=A0: <4C26317A.5070309-c0jvKHQHzSzx4jp4WZvp5g@public.gmane.org>
+> > References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel=
+&m=3D127757403404259&w=3D2 =20
+>=20
+> I don't think anybody noticed this one. Jesse?
 
-> > Bug-Entry ? ? ? : http://bugzilla.kernel.org/show_bug.cgi?id=16346
-> > Subject ? ? ? ? : 2.6.35-rc3-git8 - include/linux/fdtable.h:88 invoked rcu_dereference_check() without protection!
-> > Submitter ? ? ? : Miles Lane <miles.lane-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > Date ? ? ? ? ? ?: 2010-07-04 22:04 (5 days old)
-> > Message-ID ? ? ?: <AANLkTinof0k28rk4rMr66aubxcRL2rFa5ZEArj1lqD3o-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-> > References ? ? ?: http://marc.info/?l=linux-kernel&m=127828107815930&w=2
-> 
-> I'm not entirely sure if these RCU proving things should count as 
-> regressions.
+Oh I hadn't seen that...  Enrico, can you bisect this issue?  It could
+be some spurious hotplug events or possibly a stuck vblank interrupt...
 
-Generally not - and we've delayed at least one more complex (cgroups) fix to 
-v2.6.36 because the patch itself was riskier than the warning.
+> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
+g.cgi?id=3D16265
+> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : Why is kslowd accumulating so=
+ much CPU time?
+> > Submitter =C2=A0 =C2=A0 =C2=A0 : Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
+> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-09 18:36 (3=
+0 days old)
+> > First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad=
+057b654d56972acf58c
+> > Message-ID =C2=A0 =C2=A0 =C2=A0: <E1OMQ88-0002a1-Gb-UK71uKi2zitAjzmPenPY9A@public.gmane.org=
+rg>
+> > References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel=
+&m=3D127610857819033&w=3D4 =20
+>=20
+> Dave, Jesse?
 
-Still most of the warning fixes turned out to be simple, so we merged the 
-very-low-risk ones and right now we seem to be on top of them.
+I haven't looked at the switchable graphics stuff, hopefully Dave has
+an idea here.
 
-But in general the default rule is that we delay these fixes to v2.6.36.
+> Fixed by commit f4985dc714d7.
+>=20
+> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
+g.cgi?id=3D16228
+> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : BUG/boot failure on Dell Prec=
+ision T3500 (pci/ahci_stop_engine)
+> > Submitter =C2=A0 =C2=A0 =C2=A0 : Brian Bloniarz <phunge0-PkbjNfxxIASIwRZHo2/mJg@public.gmane.org=
+m>
+> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-16 17:57 (2=
+3 days old)
+> > Handled-By =C2=A0 =C2=A0 =C2=A0: Bjorn Helgaas <bjorn.helgaas-zDltkPw22Qs@public.gmane.org=
+m> =20
+>=20
+> This has a butt-ugly suggested patch that certainly won't be applied.
+> I saw the thread, but lost sight of it. Jesse, did that end up with
+> some resolution?
 
-> Sure, the option to enable RCU proving is new, but the things it reports 
-> about generally are not new - and they are usually not even bugs in the 
-> sense that they necessarily cause any real problems.
-> 
-> That particular one is in the single-thread optimizated case for fget_light, ie
-> 
->         if (likely((atomic_read(&files->count) == 1))) {
->                 file = fcheck_files(files, fd);
-> 
-> where I think it should be entirely safe in all ways without any locking. So 
-> I think it's a false positive too.
+I'll follow up with Yinghai, we were pretty clear about what we wanted
+from that patch.
 
-Yeah, it's a bit like with lockdep (and it's a bit like with compiler warning 
-fixes): we had to punch through a large stack of false positives that 
-accumulated in the past 10 years.
+> > Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bu=
+g.cgi?id=3D16179
+> > Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : 2.6.35-rc2 completely hosed o=
+n intel gfx?
+> > Submitter =C2=A0 =C2=A0 =C2=A0 : Norbert Preining <preining@logic.a=
+t>
+> > Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-06-06 11:55 (3=
+3 days old)
+> > Message-ID =C2=A0 =C2=A0 =C2=A0: <20100606115534.GA9399-DqSSrKF0TaxD4ZLkIoI8Yg@public.gmane.org=
+=2Etuwien.ac.at>
+> > References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel=
+&m=3D127582534931581&w=3D2 =20
+>=20
+> Hmm. That one is the vt.c bug coupled with another problem, which in
+> turn got opened as a separate bugzilla entry:
+>=20
+>    http://bugzilla.kernel.org/show_bug.cgi?id=3D16252
+>=20
+> which in turn then got closed. I dunno.
 
-( Because real bugs eventually get fixed, while false positives always just
-  accumulate. So almost by definition we always start with a very assymetric
-  collection of warnings and a large stack of false positives. )
+Yeah, this is weird.  Norbert, do you still see this?  Have you tried
+to bisect it?
 
-Having said that, it appears we got most of the false positives and are 
-beginning to be in a more representative equilibrium now. If v2.6.35 isnt 
-going to be warning-free then v2.6.36 certainly will be and new warnings will 
-have a much higher likelyhood of being real (and new) bugs (not just 
-accumulated false-positives).
 
-	Ingo
+--=20
+Jesse Barnes, Intel Open Source Technology Center
