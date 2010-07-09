@@ -1,696 +1,440 @@
-From: Jing Huang <huangj@brocade.com>
-Subject: [PATCH 24/24] bfa: add debugfs support
-Date: Thu, 8 Jul 2010 20:02:55 -0700
-Message-ID: <1278644575-4928-1-git-send-email-huangj@brocade.com>
+From: Shawn Starr <shawn.starr@rogers.com>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+Date: Thu, 8 Jul 2010 23:36:25 -0400
+Message-ID: <201007082336.25201.shawn.starr@rogers.com>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera> <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:55964 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753763Ab0GIDDB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2010 23:03:01 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.sourceforge.net>, Frederic Weisbecker <fweisbec@gmail.com>, Al Viro <viro@zeniv.linux.org.uk>, Jesse Barnes <jbarnes@virtuousgeek.org>, Dave Airlie <airlied@redhat.com>, "David S. Miller" <davem@davemloft.net>, Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: kgudipat@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@brocade.com, Jing Huang <huangj@brocade.com>
 
-- Add debugfs support to obtain firmware trace, driver trace
-  and read/write to registers.
+On Thursday, July 08, 2010 09:34:25 pm Linus Torvalds wrote:
+> On Thu, Jul 8, 2010 at 4:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote=
+:
+> > Unresolved regressions
+> > ----------------------
+> >=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1635=
+3
+> > Subject         : 2.6.35 regression
+> > Submitter       : Zeev Tarantov <zeev.tarantov@gmail.com>
+> > Date            : 2010-07-05 13:04 (4 days old)
+> > Message-ID      : <loom.20100705T144459-919@post.gmane.org>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1278360027=
+02522&w=3D2
+>=20
+> This is a gcc-4.5 issue. Whether it's also something that we should
+> change in the kernel is unclear, but at least as of now, the rule is
+> that you cannot compile the kernel with gcc-4.5. No idea whether the
+> compiler is just entirely broken, or whether it's just that it
+> triggers something iffy by being overly clever.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1634=
+6
+> > Subject         : 2.6.35-rc3-git8 - include/linux/fdtable.h:88 invo=
+ked
+> > rcu_dereference_check() without protection! Submitter       : Miles=
+ Lane
+> > <miles.lane@gmail.com>
+> > Date            : 2010-07-04 22:04 (5 days old)
+> > Message-ID      :
+> > <AANLkTinof0k28rk4rMr66aubxcRL2rFa5ZEArj1lqD3o@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1278281078=
+15930&w=3D2
+>=20
+> I'm not entirely sure if these RCU proving things should count as
+> regressions.
+>=20
+> Sure, the option to enable RCU proving is new, but the things it
+> reports about generally are not new - and they are usually not even
+> bugs in the sense that they necessarily cause any real problems.
+>=20
+> That particular one is in the single-thread optimizated case for
+> fget_light, ie
+>=20
+>         if (likely((atomic_read(&files->count) =3D=3D 1))) {
+>                 file =3D fcheck_files(files, fd);
+>=20
+> where I think it should be entirely safe in all ways without any
+> locking. So I think it's a false positive too.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1633=
+4
+> > Subject         : reiserfs locking (v2)
+> > Submitter       : Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> > Date            : 2010-07-02 9:34 (7 days old)
+> > Message-ID      : <20100702093451.GA3973@swordfish.minsk.epam.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1278063063=
+03590&w=3D2
+>=20
+> Frederic? Al? I assume this is some late fallout from the BKL removal
+> ages ago.. It's the old filldir-vs-mmap crud, but normally it should
+> be impossible to trigger because the inode for a directory should
+> never be mmap'able, so we should never have the same i_mutex lock use=
+d
+> for both mmap and for filldir protection.
+>=20
+> We saw some of that oddity long ago, I wonder if it's lockdep being
+> confused about some inodes.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1633=
+3
+> > Subject         : iwl3945: HARDWARE GONE??
+> > Submitter       : Priit Laes <plaes@plaes.org>
+> > Date            : 2010-07-02 16:02 (7 days old)
+> > Message-ID      : <1278086575.2889.8.camel@chi>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1278086597=
+05983&w=3D2
+>=20
+> This either got fixed, or will be practically impossible to debug. Th=
+e
+> reporter ends up being unable to reproduce the issue.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1633=
+2
+> > Subject         : Kernel crashes in tty code (tty_open)
+> > Submitter       : werner@guyane.yi.org
+> > Date            : 2010-07-02 3:34 (7 days old)
+> > Message-ID      : <1278041650.12788@guyane.yi.org>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1278041675=
+11930&w=3D2
+>=20
+> This seems to be due to CONFIG_MRST (Moorestown).
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1633=
+0
+> > Subject         : Dynamic Debug broken on 2.6.35-rc3?
+> > Submitter       : Thomas Renninger <trenn@suse.de>
+> > Date            : 2010-07-01 15:44 (8 days old)
+> > Message-ID      : <201007011744.19564.trenn@suse.de>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277999072=
+18877&w=3D2
+>=20
+> There's a suggested patch in
+>=20
+>   http://marc.info/?l=3Dlinux-kernel&m=3D127862524404291&w=3D2
+>=20
+> but no reply to it yet.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1632=
+9
+> > Subject         : 2.6.35-rc3: Load average climbing to 3+ with no
+> > apparent reason: CPU 98% idle, with hardly no I/O Submitter       :
+> > T=F6r=F6k Edwin <edwintorok@gmail.com>
+> > Date            : 2010-07-01 7:40 (8 days old)
+> > Message-ID      : <20100701104022.404410d6@debian>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277970050=
+30536&w=3D2
+>=20
+> This seems to be partly a confusion about what "load average" is. It'=
+s
+> not a CPU load, it's a system load average, and disk-wait processes
+> count towards it. He has some problem with his CD-ROM, and it sounds
+> like it might be hardware on the verge of going bad.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1632=
+4
+> > Subject         : Oops while running fs_racer test on a POWER6 box
+> > against latest git Submitter       : divya <dipraksh@linux.vnet.ibm=
+=2Ecom>
+> > Date            : 2010-06-30 11:34 (9 days old)
+> > Message-ID      : <4C2B28F3.7000006@linux.vnet.ibm.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277896973=
+03061&w=3D2
+>=20
+> I wonder if this is the writeback problem. That POWER crash dump is
+> unreadable, so it's hard to tell, but the load in question makes that
+> at least likely.
+>=20
+> If so, it should hopefully be fixed in today's git (commit
+> 83ba7b071f30f7c01f72518ad72d5cd203c27502 and friends).
+>=20
+> > Bug-entry    : http://bugzilla.kernel.org/show_bug.cgi?id=3D16323
+> > Subject         : 2.6.35-rc3-git4 - kernel/sched.c:616 invoked
+> > rcu_dereference_check() without protection! Submitter       : Miles=
+ Lane
+> > <miles.lane@gmail.com>
+> > Date            : 2010-07-01 12:21 (8 days old)
+> > Message-ID      :
+> > <AANLkTini6hz2LFeZi8CMUmY3xw1MU7NxmyesuxZ4oCdo@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277986931=
+25541&w=3D2
+>=20
+> See earlier about these being marked as regressions, but it should be
+> fixed by commit dc61b1d6 ("sched: Fix PROVE_RCU vs cpu_cgroup").
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1632=
+2
+> > Subject         : WARNING: at /arch/x86/include/asm/processor.h:100=
+5
+> > read_measured_perf_ctrs+0x5a/0x70() Submitter       : boris64
+> > <bugzilla.kernel.org@boris64.net>
+> > Date            : 2010-07-01 13:54 (8 days old)
+> > Handled-By      : H. Peter Anvin <hpa@zytor.com>
+>=20
+> Magic. Strange and dark magic.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1631=
+1
+> > Subject         : [REGRESSION][SUSPEND] 2.6.35-rcX won't suspend Le=
+novo
+> > W500 laptop Submitter       : Shawn Starr <shawn.starr@rogers.com>
+> > Date            : 2010-06-28 0:45 (11 days old)
+> > Message-ID      : <201006272045.17004.shawn.starr@rogers.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277686337=
+05286&w=3D2
+>=20
+> I think this might be usefully bisected. Shawn?
+>=20
+I'll have to try bisecting this weekend. It continues in Linux sh0n.net=
+=20
+2.6.35-rc4+ #1 SMP Wed Jul 7 23:58:41 EDT 2010 x86_64 x86_64 x86_64 GNU=
+/Linux
 
-- debugfs hierarchy:
-  /sys/kernel/debug/bfa/host#
-   where the host number corresponds to the one under /sys/class/scsi_host/host#
 
-- Following are the new debugfs entries added:
-  drvtrc: collect current driver trace
-  fwtrc: collect current firmware trace.
-  fwsave: collect last saved fw trace as a result of firmware crash.
-  regwr: write one word to chip register
-  regrd: read one or more words from chip register.
-
-Signed-off-by: Jing Huang <huangj@brocade.com>
----
- drivers/scsi/bfa/Makefile       |    2 +-
- drivers/scsi/bfa/bfad.c         |   12 +
- drivers/scsi/bfa/bfad_debugfs.c |  547 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfad_drv.h     |   12 +-
- 4 files changed, 571 insertions(+), 2 deletions(-)
- create mode 100644 drivers/scsi/bfa/bfad_debugfs.c
-
-diff --git a/drivers/scsi/bfa/Makefile b/drivers/scsi/bfa/Makefile
-index 17e06ca..ac3fdf0 100644
---- a/drivers/scsi/bfa/Makefile
-+++ b/drivers/scsi/bfa/Makefile
-@@ -1,7 +1,7 @@
- obj-$(CONFIG_SCSI_BFA_FC) := bfa.o
- 
- bfa-y := bfad.o bfad_intr.o bfad_os.o bfad_im.o bfad_attr.o bfad_fwimg.o
--
-+bfa-y += bfad_debugfs.o
- bfa-y += bfa_core.o bfa_ioc.o bfa_ioc_ct.o bfa_ioc_cb.o bfa_iocfc.o bfa_fcxp.o
- bfa-y += bfa_lps.o bfa_hw_cb.o bfa_hw_ct.o bfa_intr.o bfa_timer.o bfa_rport.o
- bfa-y += bfa_fcport.o bfa_port.o bfa_uf.o bfa_sgpg.o bfa_module.o bfa_ioim.o
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index a17800e..915a29d 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -57,6 +57,7 @@ static int      ipfc_enable = BFA_FALSE;
- static int	fdmi_enable = BFA_TRUE;
- int 		bfa_lun_queue_depth = BFAD_LUN_QUEUE_DEPTH;
- int      	bfa_linkup_delay = -1;
-+int		bfa_debugfs_enable = 1;
- 
- module_param(os_name, charp, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(os_name, "OS name of the hba host machine");
-@@ -106,6 +107,9 @@ MODULE_PARM_DESC(bfa_linkup_delay, "Link up delay, default=30 secs for boot"
- module_param(fdmi_enable, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(fdmi_enable, "Enables fdmi registration, default=1,"
- 		" Range[false:0|true:1]");
-+module_param(bfa_debugfs_enable, int, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(bfa_debugfs_enable, "Enables debugfs feature, default=1,"
-+		" Range[false:0|true:1]");
- 
- /*
-  * Stores the module parm num_sgpgs value;
-@@ -903,6 +907,10 @@ bfad_cfg_pport(struct bfad_s *bfad, enum bfa_port_role role)
- 		bfad->pport.roles |= BFA_PORT_ROLE_FCP_IM;
- 	}
- 
-+	/* Setup the debugfs node for this scsi_host */
-+	if (bfa_debugfs_enable)
-+		bfad_debugfs_init(&bfad->pport);
-+
- 	bfad->bfad_flags |= BFAD_CFG_PPORT_DONE;
- 
- out:
-@@ -912,6 +920,10 @@ out:
- void
- bfad_uncfg_pport(struct bfad_s *bfad)
- {
-+	 /* Remove the debugfs node for this scsi_host */
-+	kfree(bfad->regdata);
-+	bfad_debugfs_exit(&bfad->pport);
-+
- 	if ((bfad->pport.roles & BFA_PORT_ROLE_FCP_IPFC) && ipfc_enable) {
- 		bfad_ipfc_port_delete(bfad, &bfad->pport);
- 		bfad->pport.roles &= ~BFA_PORT_ROLE_FCP_IPFC;
-diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
-new file mode 100644
-index 0000000..4b82f12
---- /dev/null
-+++ b/drivers/scsi/bfa/bfad_debugfs.c
-@@ -0,0 +1,547 @@
-+/*
-+ * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#include <linux/debugfs.h>
-+
-+#include <bfad_drv.h>
-+#include <bfad_im.h>
-+
-+/*
-+ * BFA debufs interface
-+ *
-+ * To access the interface, debugfs file system should be mounted
-+ * if not already mounted using:
-+ * mount -t debugfs none /sys/kernel/debug
-+ *
-+ * BFA Hierarchy:
-+ * 	- bfa/host#
-+ * where the host number corresponds to the one under /sys/class/scsi_host/host#
-+ *
-+ * Debugging service available per host:
-+ * fwtrc:  To collect current firmware trace.
-+ * drvtrc: To collect current driver trace
-+ * fwsave: To collect last saved fw trace as a result of firmware crash.
-+ * regwr:  To write one word to chip register
-+ * regrd:  To read one or more words from chip register.
-+ */
-+
-+struct bfad_debug_info {
-+	char *debug_buffer;
-+	void *i_private;
-+	int buffer_len;
-+};
-+
-+static int
-+bfad_debugfs_open_drvtrc(struct inode *inode, struct file *file)
-+{
-+	struct bfad_port_s *port = inode->i_private;
-+	struct bfad_s *bfad = port->bfad;
-+	struct bfad_debug_info *debug;
-+
-+	debug = kzalloc(sizeof(struct bfad_debug_info), GFP_KERNEL);
-+	if (!debug)
-+		return -ENOMEM;
-+
-+	debug->debug_buffer = (void *) bfad->trcmod;
-+	debug->buffer_len = sizeof(struct bfa_trc_mod_s);
-+
-+	file->private_data = debug;
-+
-+	return 0;
-+}
-+
-+static int
-+bfad_debugfs_open_fwtrc(struct inode *inode, struct file *file)
-+{
-+	struct bfad_port_s *port = inode->i_private;
-+	struct bfad_s *bfad = port->bfad;
-+	struct bfad_debug_info *fw_debug;
-+	unsigned long flags;
-+	int rc;
-+
-+	fw_debug = kzalloc(sizeof(struct bfad_debug_info), GFP_KERNEL);
-+	if (!fw_debug)
-+		return -ENOMEM;
-+
-+	fw_debug->buffer_len = sizeof(struct bfa_trc_mod_s);
-+
-+	fw_debug->debug_buffer = vmalloc(fw_debug->buffer_len);
-+	if (!fw_debug->debug_buffer) {
-+		kfree(fw_debug);
-+		printk(KERN_INFO "bfad[%d]: Failed to allocate fwtrc buffer\n",
-+				bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	memset(fw_debug->debug_buffer, 0, fw_debug->buffer_len);
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rc = bfa_debug_fwtrc(&bfad->bfa,
-+			fw_debug->debug_buffer,
-+			&fw_debug->buffer_len);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (rc != BFA_STATUS_OK) {
-+		vfree(fw_debug->debug_buffer);
-+		fw_debug->debug_buffer = NULL;
-+		kfree(fw_debug);
-+		printk(KERN_INFO "bfad[%d]: Failed to collect fwtrc\n",
-+				bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	file->private_data = fw_debug;
-+
-+	return 0;
-+}
-+
-+static int
-+bfad_debugfs_open_fwsave(struct inode *inode, struct file *file)
-+{
-+	struct bfad_port_s *port = inode->i_private;
-+	struct bfad_s *bfad = port->bfad;
-+	struct bfad_debug_info *fw_debug;
-+	unsigned long flags;
-+	int rc;
-+
-+	fw_debug = kzalloc(sizeof(struct bfad_debug_info), GFP_KERNEL);
-+	if (!fw_debug)
-+		return -ENOMEM;
-+
-+	fw_debug->buffer_len = sizeof(struct bfa_trc_mod_s);
-+
-+	fw_debug->debug_buffer = vmalloc(fw_debug->buffer_len);
-+	if (!fw_debug->debug_buffer) {
-+		kfree(fw_debug);
-+		printk(KERN_INFO "bfad[%d]: Failed to allocate fwsave buffer\n",
-+				bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	memset(fw_debug->debug_buffer, 0, fw_debug->buffer_len);
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	rc = bfa_debug_fwsave(&bfad->bfa,
-+			fw_debug->debug_buffer,
-+			&fw_debug->buffer_len);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (rc != BFA_STATUS_OK) {
-+		vfree(fw_debug->debug_buffer);
-+		fw_debug->debug_buffer = NULL;
-+		kfree(fw_debug);
-+		printk(KERN_INFO "bfad[%d]: Failed to collect fwsave\n",
-+				bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	file->private_data = fw_debug;
-+
-+	return 0;
-+}
-+
-+static int
-+bfad_debugfs_open_reg(struct inode *inode, struct file *file)
-+{
-+	struct bfad_debug_info *reg_debug;
-+
-+	reg_debug = kzalloc(sizeof(struct bfad_debug_info), GFP_KERNEL);
-+	if (!reg_debug)
-+		return -ENOMEM;
-+
-+	reg_debug->i_private = inode->i_private;
-+
-+	file->private_data = reg_debug;
-+
-+	return 0;
-+}
-+
-+/* Changes the current file position */
-+static loff_t
-+bfad_debugfs_lseek(struct file *file, loff_t offset, int orig)
-+{
-+	struct bfad_debug_info *debug;
-+	loff_t pos = file->f_pos;
-+
-+	debug = file->private_data;
-+
-+	switch (orig) {
-+	case 0:
-+		file->f_pos = offset;
-+		break;
-+	case 1:
-+		file->f_pos += offset;
-+		break;
-+	case 2:
-+		file->f_pos = debug->buffer_len - offset;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	if (file->f_pos < 0 || file->f_pos > debug->buffer_len) {
-+		file->f_pos = pos;
-+		return -EINVAL;
-+	}
-+
-+	return file->f_pos;
-+}
-+
-+static ssize_t
-+bfad_debugfs_read(struct file *file, char __user *buf,
-+			size_t nbytes, loff_t *pos)
-+{
-+	struct bfad_debug_info *debug = file->private_data;
-+
-+	if (!debug || !debug->debug_buffer)
-+		return 0;
-+
-+	return memory_read_from_buffer(buf, nbytes, pos,
-+				debug->debug_buffer, debug->buffer_len);
-+}
-+
-+#define BFA_REG_CT_ADDRSZ	(0x40000)
-+#define BFA_REG_CB_ADDRSZ	(0x20000)
-+#define BFA_REG_ADDRSZ(__bfa)	\
-+	((bfa_ioc_devid(&(__bfa)->ioc) == BFA_PCI_DEVICE_ID_CT) ?	\
-+		BFA_REG_CT_ADDRSZ : BFA_REG_CB_ADDRSZ)
-+#define BFA_REG_ADDRMSK(__bfa)  ((uint32_t)(BFA_REG_ADDRSZ(__bfa) - 1))
-+
-+static bfa_status_t
-+bfad_reg_offset_check(struct bfa_s *bfa, u32 offset, u32 len)
-+{
-+	u8	area;
-+
-+	/* check [16:15] */
-+	area = (offset >> 15) & 0x7;
-+	if (area == 0) {
-+		/* PCIe core register */
-+		if ((offset + (len<<2)) > 0x8000)    /* 8k dwords or 32KB */
-+			return BFA_STATUS_EINVAL;
-+	} else if (area == 0x1) {
-+		/* CB 32 KB memory page */
-+		if ((offset + (len<<2)) > 0x10000)    /* 8k dwords or 32KB */
-+			return BFA_STATUS_EINVAL;
-+	} else {
-+		/* CB register space 64KB */
-+		if ((offset + (len<<2)) > BFA_REG_ADDRMSK(bfa))
-+			return BFA_STATUS_EINVAL;
-+	}
-+	return BFA_STATUS_OK;
-+}
-+
-+static ssize_t
-+bfad_debugfs_read_regrd(struct file *file, char __user *buf,
-+		size_t nbytes, loff_t *pos)
-+{
-+	struct bfad_debug_info *regrd_debug = file->private_data;
-+	struct bfad_port_s *port = (struct bfad_port_s *)regrd_debug->i_private;
-+	struct bfad_s *bfad = port->bfad;
-+	ssize_t rc;
-+
-+	if (!bfad->regdata)
-+		return 0;
-+
-+	rc = memory_read_from_buffer(buf, nbytes, pos,
-+			bfad->regdata, bfad->reglen);
-+
-+	if ((*pos + nbytes) >= bfad->reglen) {
-+		kfree(bfad->regdata);
-+		bfad->regdata = NULL;
-+		bfad->reglen = 0;
-+	}
-+
-+	return rc;
-+}
-+
-+static ssize_t
-+bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
-+		size_t nbytes, loff_t *ppos)
-+{
-+	struct bfad_debug_info *regrd_debug = file->private_data;
-+	struct bfad_port_s *port = (struct bfad_port_s *)regrd_debug->i_private;
-+	struct bfad_s *bfad = port->bfad;
-+	struct bfa_s *bfa = &bfad->bfa;
-+	struct bfa_ioc_s *ioc = &bfa->ioc;
-+	int addr, len, rc, i;
-+	u32 *regbuf;
-+	void __iomem *rb, *reg_addr;
-+	unsigned long flags;
-+
-+	rc = sscanf(buf, "%x:%x", &addr, &len);
-+	if (rc < 2) {
-+		printk(KERN_INFO
-+			"bfad[%d]: %s failed to read user buf\n",
-+			bfad->inst_no, __func__);
-+		return -EINVAL;
-+	}
-+
-+	kfree(bfad->regdata);
-+	bfad->regdata = NULL;
-+	bfad->reglen = 0;
-+
-+	bfad->regdata = kzalloc(len << 2, GFP_KERNEL);
-+	if (!bfad->regdata) {
-+		printk(KERN_INFO "bfad[%d]: Failed to allocate regrd buffer\n",
-+				bfad->inst_no);
-+		return -ENOMEM;
-+	}
-+
-+	bfad->reglen = len << 2;
-+	rb = bfa_ioc_bar0(ioc);
-+	addr &= BFA_REG_ADDRMSK(bfa);
-+
-+	/* offset and len sanity check */
-+	rc = bfad_reg_offset_check(bfa, addr, len);
-+	if (rc) {
-+		printk(KERN_INFO "bfad[%d]: Failed reg offset check\n",
-+				bfad->inst_no);
-+		kfree(bfad->regdata);
-+		bfad->regdata = NULL;
-+		bfad->reglen = 0;
-+		return -EINVAL;
-+	}
-+
-+	reg_addr = rb + addr;
-+	regbuf =  (u32 *)bfad->regdata;
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	for (i = 0; i < len; i++) {
-+		*regbuf = bfa_reg_read(reg_addr);
-+		regbuf++;
-+		reg_addr += sizeof(u32);
-+	}
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return nbytes;
-+}
-+
-+static ssize_t
-+bfad_debugfs_write_regwr(struct file *file, const char __user *buf,
-+		size_t nbytes, loff_t *ppos)
-+{
-+	struct bfad_debug_info *debug = file->private_data;
-+	struct bfad_port_s *port = (struct bfad_port_s *)debug->i_private;
-+	struct bfad_s *bfad = port->bfad;
-+	struct bfa_s *bfa = &bfad->bfa;
-+	struct bfa_ioc_s *ioc = &bfa->ioc;
-+	int addr, val, rc;
-+	void __iomem *reg_addr;
-+	unsigned long flags;
-+
-+	rc = sscanf(buf, "%x:%x", &addr, &val);
-+	if (rc < 2) {
-+		printk(KERN_INFO
-+			"bfad[%d]: %s failed to read user buf\n",
-+			bfad->inst_no, __func__);
-+		return -EINVAL;
-+	}
-+
-+	addr &= BFA_REG_ADDRMSK(bfa); /* offset only 17 bit and word align */
-+
-+	/* offset and len sanity check */
-+	rc = bfad_reg_offset_check(bfa, addr, 1);
-+	if (rc) {
-+		printk(KERN_INFO
-+			"bfad[%d]: Failed reg offset check\n",
-+			bfad->inst_no);
-+		return -EINVAL;
-+	}
-+
-+	reg_addr = (uint32_t *) ((uint8_t *) bfa_ioc_bar0(ioc) + addr);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	bfa_reg_write(reg_addr, val);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return nbytes;
-+}
-+
-+static int
-+bfad_debugfs_release(struct inode *inode, struct file *file)
-+{
-+	struct bfad_debug_info *debug = file->private_data;
-+
-+	if (!debug)
-+		return 0;
-+
-+	file->private_data = NULL;
-+	kfree(debug);
-+	return 0;
-+}
-+
-+static int
-+bfad_debugfs_release_fwtrc(struct inode *inode, struct file *file)
-+{
-+	struct bfad_debug_info *fw_debug = file->private_data;
-+
-+	if (!fw_debug)
-+		return 0;
-+
-+	if (fw_debug->debug_buffer)
-+		vfree(fw_debug->debug_buffer);
-+
-+	file->private_data = NULL;
-+	kfree(fw_debug);
-+	return 0;
-+}
-+
-+static const struct file_operations bfad_debugfs_op_drvtrc = {
-+	.owner		=	THIS_MODULE,
-+	.open		=	bfad_debugfs_open_drvtrc,
-+	.llseek		=	bfad_debugfs_lseek,
-+	.read		=	bfad_debugfs_read,
-+	.release	=	bfad_debugfs_release,
-+};
-+
-+static const struct file_operations bfad_debugfs_op_fwtrc = {
-+	.owner		=	THIS_MODULE,
-+	.open		=	bfad_debugfs_open_fwtrc,
-+	.llseek		=	bfad_debugfs_lseek,
-+	.read		=	bfad_debugfs_read,
-+	.release	=	bfad_debugfs_release_fwtrc,
-+};
-+
-+static const struct file_operations bfad_debugfs_op_fwsave = {
-+	.owner		=	THIS_MODULE,
-+	.open		=	bfad_debugfs_open_fwsave,
-+	.llseek		=	bfad_debugfs_lseek,
-+	.read		=	bfad_debugfs_read,
-+	.release	=	bfad_debugfs_release_fwtrc,
-+};
-+
-+static const struct file_operations bfad_debugfs_op_regrd = {
-+	.owner		=	THIS_MODULE,
-+	.open		=	bfad_debugfs_open_reg,
-+	.llseek		=	bfad_debugfs_lseek,
-+	.read		=	bfad_debugfs_read_regrd,
-+	.write		=	bfad_debugfs_write_regrd,
-+	.release	=	bfad_debugfs_release,
-+};
-+
-+static const struct file_operations bfad_debugfs_op_regwr = {
-+	.owner		=	THIS_MODULE,
-+	.open		=	bfad_debugfs_open_reg,
-+	.llseek		=	bfad_debugfs_lseek,
-+	.write		=	bfad_debugfs_write_regwr,
-+	.release	=	bfad_debugfs_release,
-+};
-+
-+struct bfad_debugfs_entry {
-+	const char *name;
-+	mode_t	mode;
-+	const struct file_operations *fops;
-+};
-+
-+static const struct bfad_debugfs_entry bfad_debugfs_files[] = {
-+	{ "drvtrc", S_IFREG|S_IRUGO, &bfad_debugfs_op_drvtrc, },
-+	{ "fwtrc",  S_IFREG|S_IRUGO, &bfad_debugfs_op_fwtrc,  },
-+	{ "fwsave", S_IFREG|S_IRUGO, &bfad_debugfs_op_fwsave, },
-+	{ "regrd",  S_IFREG|S_IRUGO|S_IWUSR, &bfad_debugfs_op_regrd,  },
-+	{ "regwr",  S_IFREG|S_IWUSR, &bfad_debugfs_op_regwr,  },
-+};
-+
-+static struct dentry *bfa_debugfs_root;
-+static atomic_t bfa_debugfs_port_count;
-+
-+inline void
-+bfad_debugfs_init(struct bfad_port_s *port)
-+{
-+	struct bfad_im_port_s *im_port = port->im_port;
-+	struct bfad_s *bfad = im_port->bfad;
-+	struct Scsi_Host *shost = im_port->shost;
-+	const struct bfad_debugfs_entry *file;
-+	char name[16];
-+	int i;
-+
-+	if (!bfa_debugfs_enable)
-+		return;
-+
-+	/* Setup the BFA debugfs root directory*/
-+	if (!bfa_debugfs_root) {
-+		bfa_debugfs_root = debugfs_create_dir("bfa", NULL);
-+		atomic_set(&bfa_debugfs_port_count, 0);
-+		if (!bfa_debugfs_root) {
-+			printk(KERN_WARNING
-+				"BFA debugfs root dir creation failed\n");
-+			goto err;
-+		}
-+	}
-+
-+	/*
-+	 * Setup the host# directory for the port,
-+	 * corresponds to the scsi_host num of this port.
-+	 */
-+	snprintf(name, sizeof(name), "host%d", shost->host_no);
-+	if (!port->port_debugfs_root) {
-+		port->port_debugfs_root =
-+			debugfs_create_dir(name, bfa_debugfs_root);
-+		if (!port->port_debugfs_root) {
-+			printk(KERN_WARNING
-+				"BFA host root dir creation failed\n");
-+			goto err;
-+		}
-+
-+		atomic_inc(&bfa_debugfs_port_count);
-+
-+		for (i = 0; i < ARRAY_SIZE(bfad_debugfs_files); i++) {
-+			file = &bfad_debugfs_files[i];
-+			bfad->bfad_dentry_files[i] =
-+					debugfs_create_file(file->name,
-+							file->mode,
-+							port->port_debugfs_root,
-+							port,
-+							file->fops);
-+			if (!bfad->bfad_dentry_files[i]) {
-+				printk(KERN_WARNING
-+					"BFA host%d: create %s entry failed\n",
-+					shost->host_no, file->name);
-+				goto err;
-+			}
-+		}
-+	}
-+
-+err:
-+	return;
-+}
-+
-+inline void
-+bfad_debugfs_exit(struct bfad_port_s *port)
-+{
-+	struct bfad_im_port_s *im_port = port->im_port;
-+	struct bfad_s *bfad = im_port->bfad;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(bfad_debugfs_files); i++) {
-+		if (bfad->bfad_dentry_files[i]) {
-+			debugfs_remove(bfad->bfad_dentry_files[i]);
-+			bfad->bfad_dentry_files[i] = NULL;
-+		}
-+	}
-+
-+	/*
-+	 * Remove the host# directory for the port,
-+	 * corresponds to the scsi_host num of this port.
-+	*/
-+	if (port->port_debugfs_root) {
-+		debugfs_remove(port->port_debugfs_root);
-+		port->port_debugfs_root = NULL;
-+		atomic_dec(&bfa_debugfs_port_count);
-+	}
-+
-+	/* Remove the BFA debugfs root directory */
-+	if (atomic_read(&bfa_debugfs_port_count) == 0) {
-+		debugfs_remove(bfa_debugfs_root);
-+		bfa_debugfs_root = NULL;
-+	}
-+}
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index fb6ac1d..465b8b8 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -111,6 +111,9 @@ struct bfad_port_s {
- 	struct bfad_im_port_s *im_port;	/* IM specific data */
- 	struct bfad_tm_port_s *tm_port;	/* TM specific data */
- 	struct bfad_ipfc_port_s *ipfc_port;	/* IPFC specific data */
-+
-+	/* port debugfs specific data */
-+	struct dentry *port_debugfs_root;
- };
- 
- /*
-@@ -186,6 +189,10 @@ struct bfad_s {
- 	struct fc_host_statistics link_stats;
- 	struct list_head pbc_pcfg_list;
- 	atomic_t wq_reqcnt;
-+	/* debugfs specific data */
-+	char *regdata;
-+	u32 reglen;
-+	struct dentry *bfad_dentry_files[5];
- };
- 
- struct bfad_pcfg_s {
-@@ -276,7 +283,9 @@ void		bfad_drv_uninit(struct bfad_s *bfad);
- void		bfad_drv_log_level_set(struct bfad_s *bfad);
- bfa_status_t	bfad_fc4_module_init(void);
- void		bfad_fc4_module_exit(void);
--int		bfad_worker (void *ptr);
-+int		bfad_worker(void *ptr);
-+void		bfad_debugfs_init(struct bfad_port_s *port);
-+void		bfad_debugfs_exit(struct bfad_port_s *port);
- 
- void bfad_pci_remove(struct pci_dev *pdev);
- int bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid);
-@@ -289,6 +298,7 @@ extern struct list_head bfad_list;
- extern int bfa_lun_queue_depth;
- extern int bfad_supported_fc4s;
- extern int bfa_linkup_delay;
-+extern int bfa_debugfs_enable;
- extern struct mutex bfad_mutex;
- 
- #endif /* __BFAD_DRV_H__ */
--- 
-1.6.5.2
-
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1630=
+9
+> > Subject         : 2.6.35-rc3 oops trying to suspend.
+> > Submitter       : Andrew Hendry <andrew.hendry@gmail.com>
+> > Date            : 2010-06-27 12:40 (12 days old)
+> > Message-ID      :
+> > <AANLkTinUH2p33-AWxOVDrLsNkn9rgEVrlwn5mfK7P8NH@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277642499=
+26781&w=3D2
+>=20
+> I'm pretty sure this was fixed by Nick in commit 57439f878afa ("fs:
+> fix superblock iteration race").
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1630=
+7
+> > Subject         : i915 in kernel 2.6.35-rc3, high number of wakeups
+> > Submitter       : Enrico Bandiello <enban@postal.uv.es>
+> > Date            : 2010-06-26 16:57 (13 days old)
+> > Message-ID      : <4C26317A.5070309@postal.uv.es>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277574034=
+04259&w=3D2
+>=20
+> I don't think anybody noticed this one. Jesse?
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1630=
+4
+> > Subject         : i915 - high number of wakeups
+> > Submitter       : Enrico Bandiello <enban@postal.uv.es>
+> > Date            : 2010-06-27 09:52 (12 days old)
+>=20
+> Duplicate of that 16307 one.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1628=
+4
+> > Subject         : Hitting WARN_ON in hw_breakpoint code
+> > Submitter       : Paul Mackerras <paulus@samba.org>
+> > Date            : 2010-06-23 12:57 (16 days old)
+> > Message-ID      : <20100623125740.GA3368@brick.ozlabs.ibm.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1277297891=
+13432&w=3D2
+>=20
+> This has "I have a fix, will post it very soon." in the thread from
+> Frederic, but I'm not seeing anything else. Frederic?
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1626=
+5
+> > Subject         : Why is kslowd accumulating so much CPU time?
+> > Submitter       : Theodore Ts'o <tytso@mit.edu>
+> > Date            : 2010-06-09 18:36 (30 days old)
+> > First-Bad-Commit:
+> > http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58=
+c
+> > Message-ID      : <E1OMQ88-0002a1-Gb@closure.thunk.org>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1276108578=
+19033&w=3D4
+>=20
+> Dave, Jesse?
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1623=
+4
+> > Subject         : [2.6.35-rc3] reboot mutex 'bug'...
+> > Submitter       : Daniel J Blueman <daniel.blueman@gmail.com>
+> > Date            : 2010-06-14 15:16 (25 days old)
+> > Message-ID      :
+> > <AANLkTimDcTnyEPmt2ZcCM1UWtn4AYKotiqyjobJApkO7@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1276528611=
+18933&w=3D2
+>=20
+> Ok, this is definitely harmless. Whether we should silence the warnin=
+g
+> somehow is a separate question.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1623=
+0
+> > Subject         : inconsistent IN-HARDIRQ-W -> HARDIRQ-ON-W usage:
+> > fasync, 2.6.35-rc3 Submitter       : Dominik Brodowski
+> > <linux@dominikbrodowski.net> Date            : 2010-06-13 9:53 (26 =
+days
+> > old)
+> > Message-ID      : <20100613095305.GA13231@comet.dominikbrodowski.ne=
+t>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1276422822=
+08277&w=3D2
+>=20
+> Fixed by commit f4985dc714d7.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1622=
+8
+> > Subject         : BUG/boot failure on Dell Precision T3500
+> > (pci/ahci_stop_engine) Submitter       : Brian Bloniarz
+> > <phunge0@hotmail.com>
+> > Date            : 2010-06-16 17:57 (23 days old)
+> > Handled-By      : Bjorn Helgaas <bjorn.helgaas@hp.com>
+>=20
+> This has a butt-ugly suggested patch that certainly won't be applied.
+> I saw the thread, but lost sight of it. Jesse, did that end up with
+> some resolution?
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1622=
+1
+> > Subject         : 2.6.35-rc2-git5 -- [drm:drm_mode_getfb] *ERROR* i=
+nvalid
+> > framebuffer id Submitter       : Miles Lane <miles.lane@gmail.com>
+> > Date            : 2010-06-11 20:31 (28 days old)
+> > Message-ID      :
+> > <AANLkTim0jVRyqkwlGOcrg_XTvUQwcBYfWJX-aRzkkrLG@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1276288281=
+19623&w=3D2
+>=20
+> I dunno. Old, and apparently seen by two people. Dave?
+>=20
+> Might be helped by bisection.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1620=
+5
+> > Subject         : acpi: freeing invalid memtype bf799000-bf79a000
+> > Submitter       : Marcin Slusarz <marcin.slusarz@gmail.com>
+> > Date            : 2010-06-09 20:09 (30 days old)
+> > Message-ID      : <20100609200910.GA2876@joi.lan>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1276114270=
+29914&w=3D2
+> >                  http://marc.info/?l=3Dlinux-kernel&m=3D12768839851=
+3862&w=3D2
+>=20
+> This should be fixed by commit b945d6b2554d ("rbtree: Undo augmented
+> trees performance damage and regression").
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1619=
+9
+> > Subject         : 2.6.35-rc2-git1 - include/linux/cgroup.h:534 invo=
+ked
+> > rcu_dereference_check() without protection! Submitter       : Miles=
+ Lane
+> > <miles.lane@gmail.com>
+> > Date            : 2010-06-07 18:14 (32 days old)
+> > Message-ID      :
+> > <AANLkTin2pPqOUx--9fIX3BH3e-cU6oCRufijcx_4ozx5@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1275934478=
+12015&w=3D2
+>=20
+> Another RCU proving thing.  And this one looks the same as the 16323
+> one above, and fixed by the same commit as that one.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1619=
+7
+> > Subject         : [BUG on 2.6.35-rc2] sysfs: cannot create duplicat=
+e
+> > filename '/devices/pci0000:00/0000:00:11.0/0000:02:03.0/slot' Submi=
+tter
+> >       : Ryan Wang <openspace.wang@gmail.com>
+> > Date            : 2010-06-07 0:23 (32 days old)
+> > Message-ID      :
+> > <AANLkTincwMZPnYW3S4uz4k2GOn52RpgBIBRfzyD010Yo@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1275870222=
+19378&w=3D2
+>=20
+> These should all be gone. See commit 3be434f0244ee by Jesse ('Revert
+> "PCI: create function symlinks in /sys/bus/pci/slots/N/"').
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1618=
+7
+> > Subject         : Carrier detection failed in dhcpcd when link is u=
+p
+> > Submitter       : Christian Casteyde <casteyde.christian@free.fr>
+> > Date            : 2010-06-12 15:15 (27 days old)
+> > First-Bad-Commit:
+> > http://git.kernel.org/linus/10708f37ae729baba9b67bd134c3720709d4ae6=
+2
+> > Handled-By      : Andrew Morton <akpm@linux-foundation.org>
+>=20
+> David? This bisects to a networking commit. Doesn't look sensible, bu=
+t
+> what do I know?
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1618=
+4
+> > Subject         : Container, X86-64, i386, iptables rule
+> > Submitter       : Jean-Marc Pigeon <jmp@safe.ca>
+> > Date            : 2010-06-12 04:17 (27 days old)
+> > Handled-By      : Patrick McHardy <kaber@trash.net>
+>=20
+> Patrick, Davem? Ping?
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1617=
+9
+> > Subject         : 2.6.35-rc2 completely hosed on intel gfx?
+> > Submitter       : Norbert Preining <preining@logic.at>
+> > Date            : 2010-06-06 11:55 (33 days old)
+> > Message-ID      : <20100606115534.GA9399@gamma.logic.tuwien.ac.at>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1275825349=
+31581&w=3D2
+>=20
+> Hmm. That one is the vt.c bug coupled with another problem, which in
+> turn got opened as a separate bugzilla entry:
+>=20
+>    http://bugzilla.kernel.org/show_bug.cgi?id=3D16252
+>=20
+> which in turn then got closed. I dunno.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1617=
+5
+> > Subject         : 2.6.35-rc1 system oom, many processes killed but =
+memory
+> > not free Submitter       : andrew hendry <andrew.hendry@gmail.com>
+> > Date            : 2010-06-05 0:46 (34 days old)
+> > Message-ID      :
+> > <AANLkTim7CiW-yfugZUAHZCqLvXKgt9CwolCvbLGdCLAk@mail.gmail.com>
+> > References      : http://marc.info/?l=3Dlinux-kernel&m=3D1275698777=
+14937&w=3D2
+>=20
+> Not a regression or a kernel bug at all. See the thread. Big ramdisk
+> filled up all of memory when it was filled by the builds.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1614=
+5
+> > Subject         : Unable to boot unless "notsc" or "clocksource=3Dh=
+pet", or
+> > acpi_pad disabling the TSC Submitter       : Tom Gundersen <teg@jkl=
+m.no>
+> > Date            : 2010-06-07 13:11 (32 days old)
+> > Handled-By      : Venkatesh Pallipadi <venki@google.com>
+> >                  Len Brown <lenb@kernel.org>
+>=20
+> This is not a regression. See the full bugzilla details. The same
+> problem persists at least back to 2.6.30 with his config. So it's
+> somehow specific to his particular config use that requires "notsc" t=
+o
+> boot.
+>=20
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D1612=
+2
+> > Subject         : 2.6.35-rc1: WARNING at fs/fs-writeback.c:1142
+> > __mark_inode_dirty+0x103/0x170 Submitter       : Larry Finger
+> > <Larry.Finger@lwfinger.net>
+> > Date            : 2010-06-04 13:18 (35 days old)
+> > Handled-By      : Jens Axboe <axboe@kernel.dk>
+>=20
+> This looks like a duplicate of that 16312 bugzilla entry. Jens, has
+> this been resolved?
+>=20
+>                                Linus
