@@ -1,47 +1,46 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 01/10] qla4xxx: set driver ddb state correctly in
-	process_ddb_changed
-Date: Sat, 10 Jul 2010 14:48:36 +0530
-Message-ID: <20100710091836.GA11455@sles11sp1b1.qlogic.org>
+Subject: [PATCH 02/10] qla4xxx: unblock iscsi session after setting ddb
+	state online.
+Date: Sat, 10 Jul 2010 14:49:01 +0530
+Message-ID: <20100710091901.GA11472@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:36112
+Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:38814
 	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751827Ab0GJJWP (ORCPT
+	by vger.kernel.org with SMTP id S1751827Ab0GJJWk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Jul 2010 05:22:15 -0400
+	Sat, 10 Jul 2010 05:22:40 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@suse.de, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com
 
-If fw ddb state is ACTIVE mark driver ddb stat as ONLINE and
-unblock iscsi session.
+Once the device goes *missing*, driver blocks the session
+ie iscsi_block_session() to stall the I/O.  So after device
+comes back *online*, driver needs to unblock the session ie
+iscsi_unblock_session(), else I/Os will fail even if
+ddb_state is ONLINE.
 
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_init.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/scsi/qla4xxx/ql4_init.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 5510df8..8947743 100644
+index 8947743..1656522 100644
 --- a/drivers/scsi/qla4xxx/ql4_init.c
 +++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -1487,7 +1487,10 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
- 		      ddb_entry->fw_ddb_device_state, state, fw_ddb_index));
- 	if (old_fw_ddb_device_state == state &&
- 	    state == DDB_DS_SESSION_ACTIVE) {
--		/* Do nothing, state not changed. */
-+		if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
-+			atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
+@@ -993,6 +993,7 @@ int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host *ha)
+ 			DEBUG2(printk ("scsi%ld: %s: ddb index [%d] marked "
+ 				       "ONLINE\n", ha->host_no, __func__,
+ 				       ddb_entry->fw_ddb_index));
 +			iscsi_unblock_session(ddb_entry->sess);
-+		}
- 		return QLA_SUCCESS;
+ 		} else if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
+ 			qla4xxx_mark_device_missing(ha, ddb_entry);
  	}
- 
 -- 
 1.7.0.5
 
