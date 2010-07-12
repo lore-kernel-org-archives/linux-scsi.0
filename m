@@ -1,50 +1,73 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH net-next] drivers/scsi: Remove warnings after vsprintf
- %pV introduction
-Date: Mon, 12 Jul 2010 04:27:18 -0400
-Message-ID: <1278923239.32614.1.camel@mulgrave.site>
-References: <1278562423.1712.43.camel@Joe-Laptop>
-	 <20100710.195210.200371025.davem@davemloft.net>
-	 <1278824921.1501.37.camel@Joe-Laptop.home>
-	 <20100710.231026.233698429.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [RFC PATCH 2/2] iscsi_transport: Modidify recovery_tmo from sysfs
+Date: Mon, 12 Jul 2010 19:13:56 +0530
+Message-ID: <CA02FE64-B0A9-40BC-B902-70625181529F@qlogic.com>
+References: <20100706051844.GA15263@sles11sp1b1.qlogic.org> <4C399F6E.80501@cs.wisc.edu>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20100710.231026.233698429.davem@davemloft.net>
-Sender: linux-next-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: joe@perches.com, sfr@canb.auug.org.au, netdev@vger.kernel.org, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@suse.de, matthew@wil.cx, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:4257 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754904Ab0GLNoD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2010 09:44:03 -0400
+In-Reply-To: <4C399F6E.80501@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>
 
-On Sat, 2010-07-10 at 23:10 -0700, David Miller wrote:
-> From: Joe Perches <joe@perches.com>
-> Date: Sat, 10 Jul 2010 22:08:41 -0700
-> 
-> > On Sat, 2010-07-10 at 19:52 -0700, David Miller wrote:
-> >> Could you take a stab at this and the other scsi bits that
-> >> trigger this warning?
-> > 
-> > Remove warnings introduced by conversions of dev_<level>
-> > macros to functions.
-> > 
-> > Compile tested only.
-> > 
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> 
-> SCSI folks, the background is that we have moved the dev_*() printk
-> macros to external functions, so that the prefixing printf strings
-> don't get emitting at every call site.
-> 
-> As a consequence, dev_*() calls that try to use an empty string as the
-> printf format emit a warning from gcc since an empty constant string
-> is not a valid printf format.
-> 
-> That's what this change is all about.
 
-Thanks, that explains the "" -> " " conversions.
+On Jul 11, 2010, at 4:09 PM, Mike Christie wrote:
 
-What's the other 60% of the patch about? the strange addition of
-scsi_show_extd_sense_args() and all the KERN_CONT bits?
+> On 07/06/2010 12:18 AM, Vikas Chaudhary wrote:
+>> Added support to modify session->recovery_tmo from sysfs
+>>
+>> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+>> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
+>> ---
+>>  drivers/scsi/scsi_transport_iscsi.c |   37 ++++++++++++++++++++++++ 
+>> ++++++----
+>>  1 files changed, 32 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/ 
+>> scsi_transport_iscsi.c
+>> index b9aec30..fe8704c 100644
+>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>> @@ -1786,11 +1786,33 @@ show_priv_session_##field(struct device  
+>> *dev, 				\
+>>  	return sprintf(buf, format"\n", session->field);		\
+>>  }
+>>
+>> -#define iscsi_priv_session_attr(field, format)				\
+>> +#define iscsi_priv_session_attr_store(field)				\
+>> +static ssize_t								\
+>> +store_priv_session_##field(struct device *dev,				\
+>> +			   struct device_attribute *attr,		\
+>> +			   const char *buf, size_t count)		\
+>> +{									\
+>> +	int val;							\
+>> +	char *cp;							\
+>> +	struct iscsi_cls_session *session =				\
+>> +		iscsi_dev_to_session(dev->parent);			\
+>> +	if ((session->state == ISCSI_SESSION_FREE) ||			\
+>> +	    (session->state == ISCSI_SESSION_FAILED))			\
+>> +		return -EBUSY;						\
+>> +	val = simple_strtoul(buf,&cp, 0);				\
+>> +	if ((*cp&&  (*cp != '\n')) || (val<  0))			\
+>
+>
+> -1 is a ok value. It is like setting fast io fail to -"off".
 
-James
+if we set "session->recovery_tmo" to off (-1) iscsi_transport never  
+make call to
+"session_recovery_timedout" in that case iscsi_transport never set  
+session state to
+"ISCSI_SESSION_FREE" and qla4xxx driver will never set DDB state to
+"DDB_STATE_DEAD" so in this case driver will never do failover to  
+another path.
+Do we need to add some thing more for failover to work in this case?
+Please correct me if I am wrong.
+
+
