@@ -1,116 +1,74 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16010] Mptlinux update problem but need
-Date: Mon, 12 Jul 2010 15:30:34 GMT
-Message-ID: <201007121530.o6CFUYVh017691@demeter.kernel.org>
-References: <bug-16010-11613@https.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH 2/2] iscsi_transport: Modidify recovery_tmo from sysfs
+Date: Mon, 12 Jul 2010 12:39:15 -0500
+Message-ID: <4C3B5343.7010805@cs.wisc.edu>
+References: <20100706051844.GA15263@sles11sp1b1.qlogic.org> <4C399F6E.80501@cs.wisc.edu> <CA02FE64-B0A9-40BC-B902-70625181529F@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:44467 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755959Ab0GLPag (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2010 11:30:36 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6CFUYCu017693
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Jul 2010 15:30:34 GMT
-In-Reply-To: <bug-16010-11613@https.bugzilla.kernel.org/>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:33235 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756446Ab0GLRgE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2010 13:36:04 -0400
+In-Reply-To: <CA02FE64-B0A9-40BC-B902-70625181529F@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16010
+On 07/12/2010 08:43 AM, Vikas Chaudhary wrote:
+>
+> On Jul 11, 2010, at 4:09 PM, Mike Christie wrote:
+>
+>> On 07/06/2010 12:18 AM, Vikas Chaudhary wrote:
+>>> Added support to modify session->recovery_tmo from sysfs
+>>>
+>>> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+>>> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
+>>> ---
+>>> drivers/scsi/scsi_transport_iscsi.c | 37
+>>> ++++++++++++++++++++++++++++++----
+>>> 1 files changed, 32 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_transport_iscsi.c
+>>> b/drivers/scsi/scsi_transport_iscsi.c
+>>> index b9aec30..fe8704c 100644
+>>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>>> @@ -1786,11 +1786,33 @@ show_priv_session_##field(struct device *dev, \
+>>> return sprintf(buf, format"\n", session->field); \
+>>> }
+>>>
+>>> -#define iscsi_priv_session_attr(field, format) \
+>>> +#define iscsi_priv_session_attr_store(field) \
+>>> +static ssize_t \
+>>> +store_priv_session_##field(struct device *dev, \
+>>> + struct device_attribute *attr, \
+>>> + const char *buf, size_t count) \
+>>> +{ \
+>>> + int val; \
+>>> + char *cp; \
+>>> + struct iscsi_cls_session *session = \
+>>> + iscsi_dev_to_session(dev->parent); \
+>>> + if ((session->state == ISCSI_SESSION_FREE) || \
+>>> + (session->state == ISCSI_SESSION_FAILED)) \
+>>> + return -EBUSY; \
+>>> + val = simple_strtoul(buf,&cp, 0); \
+>>> + if ((*cp&& (*cp != '\n')) || (val< 0)) \
+>>
+>>
+>> -1 is a ok value. It is like setting fast io fail to -"off".
+>
+> if we set "session->recovery_tmo" to off (-1) iscsi_transport never make
+> call to
+> "session_recovery_timedout" in that case iscsi_transport never set
+> session state to
+> "ISCSI_SESSION_FREE" and qla4xxx driver will never set DDB state to
+> "DDB_STATE_DEAD" so in this case driver will never do failover to
+> another path.
+> Do we need to add some thing more for failover to work in this case?
 
+You would never set that to off when using multipath.
 
-Ken Stailey <kstailey@yahoo.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |kstailey@yahoo.com
-
-
-
-
---- Comment #3 from Ken Stailey <kstailey@yahoo.com>  2010-07-12 15:30:29 ---
-@dujun - Thanks
-
-It's actually a double underscore: __data_len
-
-diff against 4.22.00.00-2
-
---- mptsas.c.DIST    2009-11-12 05:17:05.000000000 -0500
-+++ mptsas.c    2010-07-12 11:14:41.480493720 -0400
-@@ -2754,8 +2754,8 @@
-     /* do we need to support multiple segments? */
-     if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
-         printk(MYIOC_s_ERR_FMT "%s: multiple segments req %u %u, rsp %u %u\n",
--            ioc->name, __func__, req->bio->bi_vcnt, req->data_len,
--            rsp->bio->bi_vcnt, rsp->data_len);
-+            ioc->name, __func__, req->bio->bi_vcnt, req->__data_len,
-+            rsp->bio->bi_vcnt, rsp->__data_len);
-         return -EINVAL;
-     }
-
-@@ -2772,7 +2772,7 @@
-     smpreq = (SmpPassthroughRequest_t *)mf;
-     memset(smpreq, 0, sizeof(*smpreq));
-
--    smpreq->RequestDataLength = cpu_to_le16(req->data_len - 4);
-+    smpreq->RequestDataLength = cpu_to_le16(req->__data_len - 4);
-     smpreq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
-
-     if (rphy)
-@@ -2802,10 +2802,10 @@
-
-     flagsLength = flagsLength << MPI_SGE_FLAGS_SHIFT;
-
--    flagsLength |= (req->data_len - 4);
-+    flagsLength |= (req->__data_len - 4);
-
-     dma_addr_out = pci_map_single(ioc->pcidev, bio_data(req->bio),
--                      req->data_len, PCI_DMA_BIDIRECTIONAL);
-+                      req->__data_len, PCI_DMA_BIDIRECTIONAL);
-     if (!dma_addr_out)
-         goto put_mf;
-     ioc->add_sge(psge, flagsLength, dma_addr_out);
-@@ -2818,9 +2818,9 @@
-         MPI_SGE_FLAGS_END_OF_BUFFER;
-
-     flagsLength = flagsLength << MPI_SGE_FLAGS_SHIFT;
--    flagsLength |= rsp->data_len + 4;
-+    flagsLength |= rsp->__data_len + 4;
-     dma_addr_in =  pci_map_single(ioc->pcidev, bio_data(rsp->bio),
--                      rsp->data_len, PCI_DMA_BIDIRECTIONAL);
-+                      rsp->__data_len, PCI_DMA_BIDIRECTIONAL);
-     if (!dma_addr_in)
-         goto out_unmap;
-
-@@ -2851,8 +2851,8 @@
-         smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
-         memcpy(req->sense, smprep, sizeof(*smprep));
-         req->sense_len = sizeof(*smprep);
--        req->data_len = 0;
--        rsp->data_len -= smprep->ResponseDataLength;
-+        req->__data_len = 0;
-+        rsp->__data_len -= smprep->ResponseDataLength;
-     } else {
-         printk(MYIOC_s_ERR_FMT
-             "%s: smp passthru reply failed to be returned\n",
-@@ -2861,10 +2861,10 @@
-     }
- out_unmap:
-     if (dma_addr_out)
--        pci_unmap_single(ioc->pcidev, dma_addr_out, req->data_len,
-+        pci_unmap_single(ioc->pcidev, dma_addr_out, req->__data_len,
-                  PCI_DMA_BIDIRECTIONAL);
-     if (dma_addr_in)
--        pci_unmap_single(ioc->pcidev, dma_addr_in, rsp->data_len,
-+        pci_unmap_single(ioc->pcidev, dma_addr_in, rsp->__data_len,
-                  PCI_DMA_BIDIRECTIONAL);
- put_mf:
-     if (mf)
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+It is more for setups like root on iscsi with no multipath.
