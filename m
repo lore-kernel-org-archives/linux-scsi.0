@@ -1,254 +1,135 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 11/20] be2iscsi: Adding crashdump support
-Date: Mon, 12 Jul 2010 23:25:02 +0530
-Message-ID: <20100712175451.GA11631@serverengines.com>
+Subject: [PATCH 12/20] be2iscsi: Maintain same ITT across login
+Date: Mon, 12 Jul 2010 23:25:33 +0530
+Message-ID: <20100712175523.GA11660@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:33233 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:33364 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753326Ab0GLRy6 (ORCPT
+	by vger.kernel.org with ESMTP id S1756288Ab0GLRz3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2010 13:54:58 -0400
+	Mon, 12 Jul 2010 13:55:29 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-        These changes allow the driver to support crashdump. We need to reset the
-chip incase of a crashdump
+  This patch ensures that the same ITT is maintained across
+all login pdu's
 
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c |   80 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/be2iscsi/be_cmds.h |    3 +
- drivers/scsi/be2iscsi/be_main.c |   50 ++++++++++++++++++++++++
- drivers/scsi/be2iscsi/be_main.h |    9 ++++-
- 4 files changed, 141 insertions(+), 1 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   41 ++++++++++++++++++++++++++++++++++----
+ drivers/scsi/be2iscsi/be_main.h |    1 +
+ 2 files changed, 37 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 9cc1f55..7c75373 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -19,6 +19,86 @@
- #include "be_mgmt.h"
- #include "be_main.h"
- 
-+int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
-+{
-+	u32 sreset;
-+	u8 *pci_reset_offset = 0;
-+	u8 *pci_online0_offset = 0;
-+	u8 *pci_online1_offset = 0;
-+	u32 pconline0 = 0;
-+	u32 pconline1 = 0;
-+	u32 i;
-+
-+	pci_reset_offset = (u8 *)phba->pci_va + BE2_SOFT_RESET;
-+	pci_online0_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE0;
-+	pci_online1_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE1;
-+	sreset = readl((void *)pci_reset_offset);
-+	sreset |= BE2_SET_RESET;
-+	writel(sreset, (void *)pci_reset_offset);
-+
-+	i = 0;
-+	while (sreset & BE2_SET_RESET) {
-+		if (i > 64)
-+			break;
-+		msleep(100);
-+		sreset = readl((void *)pci_reset_offset);
-+		i++;
-+	}
-+
-+	if (sreset & BE2_SET_RESET) {
-+		printk(KERN_ERR "Soft Reset  did not deassert\n");
-+		return -EIO;
-+	}
-+	pconline1 = BE2_MPU_IRAM_ONLINE;
-+	writel(pconline0, (void *)pci_online0_offset);
-+	writel(pconline1, (void *)pci_online1_offset);
-+
-+	sreset = BE2_SET_RESET;
-+	writel(sreset, (void *)pci_reset_offset);
-+
-+	i = 0;
-+	while (sreset & BE2_SET_RESET) {
-+		if (i > 64)
-+			break;
-+		msleep(1);
-+		sreset = readl((void *)pci_reset_offset);
-+		i++;
-+	}
-+	if (sreset & BE2_SET_RESET) {
-+		printk(KERN_ERR "MPU Online Soft Reset did not deassert\n");
-+		return -EIO;
-+	}
-+	return 0;
-+}
-+
-+int be_chk_reset_complete(struct beiscsi_hba *phba)
-+{
-+	unsigned int num_loop;
-+	u8 *mpu_sem = 0;
-+	u32 status;
-+
-+	num_loop = 1000;
-+	mpu_sem = (u8 *)phba->csr_va + MPU_EP_SEMAPHORE;
-+	msleep(5000);
-+
-+	while (num_loop) {
-+		status = readl((void *)mpu_sem);
-+
-+		if ((status & 0x80000000) || (status & 0x0000FFFF) == 0xC000)
-+			break;
-+		msleep(60);
-+		num_loop--;
-+	}
-+
-+	if ((status & 0x80000000) || (!num_loop)) {
-+		printk(KERN_ERR "Failed in be_chk_reset_complete"
-+		"status = 0x%x\n", status);
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
- void be_mcc_notify(struct beiscsi_hba *phba)
- {
- 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 30a293f..0df19cb 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -901,6 +901,9 @@ struct be_fw_cfg {
- 						 * the cxn
- 						 */
- 
-+int beiscsi_pci_soft_reset(struct beiscsi_hba *phba);
-+int be_chk_reset_complete(struct beiscsi_hba *phba);
-+
- void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
- 			bool embedded, u8 sge_cnt);
- 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index f4b0ed8..4d7de01 100644
+index 4d7de01..4a2864b 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -41,6 +41,8 @@
- static unsigned int be_iopoll_budget = 10;
- static unsigned int be_max_phys_size = 64;
- static unsigned int enable_msix = 1;
-+static unsigned int gcrashmode = 0;
-+static unsigned int num_hba = 0;
+@@ -3450,14 +3450,12 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 		return -ENOMEM;
+ 	io_task->bhs_pa.u.a64.address = paddr;
+ 	io_task->libiscsi_itt = (itt_t)task->itt;
+-	io_task->pwrb_handle = alloc_wrb_handle(phba,
+-						beiscsi_conn->beiscsi_conn_cid -
+-						phba->fw_config.iscsi_cid_start
+-						);
+ 	io_task->conn = beiscsi_conn;
  
- MODULE_DEVICE_TABLE(pci, beiscsi_pci_id_table);
- MODULE_DESCRIPTION(DRV_DESC " " BUILD_STR);
-@@ -3729,6 +3731,8 @@ static void beiscsi_remove(struct pci_dev *pcidev)
- 	struct hwi_context_memory *phwi_context;
- 	struct be_eq_obj *pbe_eq;
- 	unsigned int i, msix_vec;
-+	u8 *real_offset = 0;
-+	u32 value = 0;
+ 	task->hdr = (struct iscsi_hdr *)&io_task->cmd_bhs->iscsi_hdr;
+ 	task->hdr_max = sizeof(struct be_cmd_bhs);
++	io_task->psgl_handle = NULL;
++	io_task->psgl_handle = NULL;
  
- 	phba = (struct beiscsi_hba *)pci_get_drvdata(pcidev);
- 	if (!phba) {
-@@ -3757,6 +3761,14 @@ static void beiscsi_remove(struct pci_dev *pcidev)
- 
- 	beiscsi_clean_port(phba);
- 	beiscsi_free_mem(phba);
-+	real_offset = (u8 *)phba->csr_va + MPU_EP_SEMAPHORE;
+ 	if (task->sc) {
+ 		spin_lock(&phba->io_sgl_lock);
+@@ -3465,6 +3463,11 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 		spin_unlock(&phba->io_sgl_lock);
+ 		if (!io_task->psgl_handle)
+ 			goto free_hndls;
++		io_task->pwrb_handle = alloc_wrb_handle(phba,
++					beiscsi_conn->beiscsi_conn_cid -
++					phba->fw_config.iscsi_cid_start);
++		if (!io_task->pwrb_handle)
++			goto free_io_hndls;
+ 	} else {
+ 		io_task->scsi_cmnd = NULL;
+ 		if ((opcode & ISCSI_OPCODE_MASK) == ISCSI_OP_LOGIN) {
+@@ -3479,9 +3482,20 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 				beiscsi_conn->login_in_progress = 1;
+ 				beiscsi_conn->plogin_sgl_handle =
+ 							io_task->psgl_handle;
++				io_task->pwrb_handle =
++					alloc_wrb_handle(phba,
++					beiscsi_conn->beiscsi_conn_cid -
++					phba->fw_config.iscsi_cid_start);
++				if (!io_task->pwrb_handle)
++					goto free_io_hndls;
++				beiscsi_conn->plogin_wrb_handle =
++							io_task->pwrb_handle;
 +
-+	value = readl((void *)real_offset);
+ 			} else {
+ 				io_task->psgl_handle =
+ 						beiscsi_conn->plogin_sgl_handle;
++				io_task->pwrb_handle =
++						beiscsi_conn->plogin_wrb_handle;
+ 			}
+ 		} else {
+ 			spin_lock(&phba->mgmt_sgl_lock);
+@@ -3489,6 +3503,13 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 			spin_unlock(&phba->mgmt_sgl_lock);
+ 			if (!io_task->psgl_handle)
+ 				goto free_hndls;
++			io_task->pwrb_handle =
++					alloc_wrb_handle(phba,
++					beiscsi_conn->beiscsi_conn_cid -
++					phba->fw_config.iscsi_cid_start);
++			if (!io_task->pwrb_handle)
++				goto free_mgmt_hndls;
 +
-+	if (value & 0x00010000) {
-+		value &= 0xfffeffff;
-+		writel(value, (void *)real_offset);
-+	}
- 	beiscsi_unmap_pci_function(phba);
- 	pci_free_consistent(phba->pcidev,
- 			    phba->ctrl.mbox_mem_alloced.size,
-@@ -3790,6 +3802,8 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
- 	struct hwi_context_memory *phwi_context;
- 	struct be_eq_obj *pbe_eq;
- 	int ret, num_cpus, i;
-+	u8 *real_offset = 0;
-+	u32 value = 0;
- 
- 	ret = beiscsi_enable_pci(pcidev);
- 	if (ret < 0) {
-@@ -3835,6 +3849,33 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
- 		goto hba_free;
+ 		}
  	}
+ 	itt = (itt_t) cpu_to_be32(((unsigned int)io_task->pwrb_handle->
+@@ -3499,12 +3520,22 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 	io_task->cmd_bhs->iscsi_hdr.itt = itt;
+ 	return 0;
  
-+	if (!num_hba) {
-+		real_offset = (u8 *)phba->csr_va + MPU_EP_SEMAPHORE;
-+		value = readl((void *)real_offset);
-+		if (value & 0x00010000) {
-+			gcrashmode++;
-+			shost_printk(KERN_ERR, phba->shost,
-+				"Loading Driver in crashdump mode\n");
-+			ret = beiscsi_pci_soft_reset(phba);
-+			if (ret) {
-+				shost_printk(KERN_ERR, phba->shost,
-+					"Reset Failed. Aborting Crashdump\n");
-+				goto hba_free;
-+			}
-+			ret = be_chk_reset_complete(phba);
-+			if (ret) {
-+				shost_printk(KERN_ERR, phba->shost,
-+					"Failed to get out of reset."
-+					"Aborting Crashdump\n");
-+				goto hba_free;
-+			}
-+		} else {
-+			value |= 0x00010000;
-+			writel(value, (void *)real_offset);
-+			num_hba++;
-+		}
-+	}
-+
- 	spin_lock_init(&phba->io_sgl_lock);
- 	spin_lock_init(&phba->mgmt_sgl_lock);
- 	spin_lock_init(&phba->isr_lock);
-@@ -3905,6 +3946,15 @@ free_twq:
- 	beiscsi_clean_port(phba);
- 	beiscsi_free_mem(phba);
- free_port:
-+	real_offset = (u8 *)phba->csr_va + MPU_EP_SEMAPHORE;
-+
-+	value = readl((void *)real_offset);
-+
-+	if (value & 0x00010000) {
-+		value &= 0xfffeffff;
-+		writel(value, (void *)real_offset);
-+	}
-+
- 	pci_free_consistent(phba->pcidev,
- 			    phba->ctrl.mbox_mem_alloced.size,
- 			    phba->ctrl.mbox_mem_alloced.va,
++free_io_hndls:
++	spin_lock(&phba->io_sgl_lock);
++	free_io_sgl_handle(phba, io_task->psgl_handle);
++	spin_unlock(&phba->io_sgl_lock);
++	goto free_hndls;
++free_mgmt_hndls:
++	spin_lock(&phba->mgmt_sgl_lock);
++	free_mgmt_sgl_handle(phba, io_task->psgl_handle);
++	spin_unlock(&phba->mgmt_sgl_lock);
+ free_hndls:
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	pwrb_context = &phwi_ctrlr->wrb_context[
+ 			beiscsi_conn->beiscsi_conn_cid -
+ 			phba->fw_config.iscsi_cid_start];
+-	free_wrb_handle(phba, pwrb_context, io_task->pwrb_handle);
++	if (io_task->pwrb_handle)
++		free_wrb_handle(phba, pwrb_context, io_task->pwrb_handle);
+ 	io_task->pwrb_handle = NULL;
+ 	pci_pool_free(beiscsi_sess->bhs_pool, io_task->cmd_bhs,
+ 		      io_task->bhs_pa.u.a64.address);
 diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index e6ddddb..05ad76e 100644
+index 05ad76e..08996d0 100644
 --- a/drivers/scsi/be2iscsi/be_main.h
 +++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -69,7 +69,14 @@
- #define BEISCSI_NUM_DEVICES_SUPPORTED	0x01
- #define BEISCSI_MAX_FRAGS_INIT	192
- #define BE_NUM_MSIX_ENTRIES	1
--#define MPU_EP_SEMAPHORE	0xac
-+
-+#define MPU_EP_CONTROL          0
-+#define MPU_EP_SEMAPHORE        0xac
-+#define BE2_SOFT_RESET          0x5c
-+#define BE2_PCI_ONLINE0         0xb0
-+#define BE2_PCI_ONLINE1         0xb4
-+#define BE2_SET_RESET           0x80
-+#define BE2_MPU_IRAM_ONLINE     0x00000080
- 
- #define BE_SENSE_INFO_SIZE		258
- #define BE_ISCSI_PDU_HEADER_SIZE	64
+@@ -359,6 +359,7 @@ struct beiscsi_conn {
+ 	u32 beiscsi_conn_cid;
+ 	struct beiscsi_endpoint *ep;
+ 	unsigned short login_in_progress;
++	struct wrb_handle *plogin_wrb_handle;
+ 	struct sgl_handle *plogin_sgl_handle;
+ 	struct beiscsi_session *beiscsi_sess;
+ 	struct iscsi_task *task;
 -- 
 1.6.5.2
 
