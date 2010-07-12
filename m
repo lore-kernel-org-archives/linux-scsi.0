@@ -1,96 +1,78 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 07/20] be2iscsi: No return value for hwi_enable_intr
-Date: Mon, 12 Jul 2010 23:22:44 +0530
-Message-ID: <20100712175234.GA11516@serverengines.com>
+Subject: [PATCH 08/20] be2iscsi: Fix to handle request_irq failure
+Date: Mon, 12 Jul 2010 23:23:17 +0530
+Message-ID: <20100712175304.GA11541@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:32168 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:32623 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756460Ab0GLRwk (ORCPT
+	by vger.kernel.org with ESMTP id S1753467Ab0GLRxN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2010 13:52:40 -0400
+	Mon, 12 Jul 2010 13:53:13 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
- hwi_enable_intr need not return any value. This patch fixes the
-that and removes code designed to handle a failure return value
+ This patch handles request_irq failures  by properly cleaning up
 
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |   24 +++++-------------------
- 1 files changed, 5 insertions(+), 19 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |   20 +++++++++++++++++++-
+ 1 files changed, 19 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 3ad3b59..89fe7e4 100644
+index 89fe7e4..d7bfa5e 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3171,7 +3171,7 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 	return 0;
- }
- 
--static unsigned char hwi_enable_intr(struct beiscsi_hba *phba)
-+static void hwi_enable_intr(struct beiscsi_hba *phba)
- {
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
- 	struct hwi_controller *phwi_ctrlr;
-@@ -3206,7 +3206,6 @@ static unsigned char hwi_enable_intr(struct beiscsi_hba *phba)
- 			}
- 		}
- 	}
--	return true;
- }
- 
- static void hwi_disable_intr(struct beiscsi_hba *phba)
-@@ -3772,7 +3771,7 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
+@@ -616,7 +616,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 	struct pci_dev *pcidev = phba->pcidev;
  	struct hwi_controller *phwi_ctrlr;
  	struct hwi_context_memory *phwi_context;
- 	struct be_eq_obj *pbe_eq;
--	int ret, msix_vec, num_cpus, i;
-+	int ret, num_cpus, i;
+-	int ret, msix_vec, i = 0;
++	int ret, msix_vec, i, j;
+ 	char desc[32];
  
- 	ret = beiscsi_enable_pci(pcidev);
- 	if (ret < 0) {
-@@ -3873,25 +3872,10 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
- 			     "Failed to beiscsi_init_irqs\n");
- 		goto free_blkenbld;
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+@@ -628,10 +628,24 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 			msix_vec = phba->msix_entries[i].vector;
+ 			ret = request_irq(msix_vec, be_isr_msix, 0, desc,
+ 					  &phwi_context->be_eq[i]);
++			if (ret) {
++				shost_printk(KERN_ERR, phba->shost,
++					     "beiscsi_init_irqs-Failed to"
++					     "register msix for i = %d\n", i);
++				if (!i)
++					return ret;
++				goto free_msix_irqs;
++			}
+ 		}
+ 		msix_vec = phba->msix_entries[i].vector;
+ 		ret = request_irq(msix_vec, be_isr_mcc, 0, "beiscsi_msix_mcc",
+ 				  &phwi_context->be_eq[i]);
++		if (ret) {
++			shost_printk(KERN_ERR, phba->shost, "beiscsi_init_irqs-"
++				     "Failed to register beiscsi_msix_mcc\n");
++			goto free_msix_irqs;
++		}
++
+ 	} else {
+ 		ret = request_irq(pcidev->irq, be_isr, IRQF_SHARED,
+ 				  "beiscsi", phba);
+@@ -642,6 +656,10 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 		}
  	}
--	ret = hwi_enable_intr(phba);
--	if (ret < 0) {
--		shost_printk(KERN_ERR, phba->shost, "beiscsi_dev_probe-"
--			     "Failed to hwi_enable_intr\n");
--		goto free_ctrlr;
--	}
-+	hwi_enable_intr(phba);
- 	SE_DEBUG(DBG_LVL_8, "\n\n\n SUCCESS - DRIVER LOADED\n\n\n");
  	return 0;
++free_msix_irqs:
++	for (j = i; j == 0; j++)
++		free_irq(msix_vec, &phwi_context->be_eq[j]);
++	return ret;
+ }
  
--free_ctrlr:
--	if (phba->msix_enabled) {
--		for (i = 0; i <= phba->num_cpus; i++) {
--			msix_vec = phba->msix_entries[i].vector;
--			free_irq(msix_vec, &phwi_context->be_eq[i]);
--		}
--	} else
--		if (phba->pcidev->irq)
--			free_irq(phba->pcidev->irq, phba);
--	pci_disable_msix(phba->pcidev);
- free_blkenbld:
- 	destroy_workqueue(phba->wq);
- 	if (blk_iopoll_enabled)
-@@ -3909,6 +3893,8 @@ free_port:
- 			   phba->ctrl.mbox_mem_alloced.dma);
- 	beiscsi_unmap_pci_function(phba);
- hba_free:
-+	if (phba->msix_enabled)
-+		pci_disable_msix(phba->pcidev);
- 	iscsi_host_remove(phba->shost);
- 	pci_dev_put(phba->pcidev);
- 	iscsi_host_free(phba->shost);
+ static void hwi_ring_cq_db(struct beiscsi_hba *phba,
 -- 
 1.6.5.2
 
