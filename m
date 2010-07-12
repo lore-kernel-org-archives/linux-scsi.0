@@ -1,74 +1,56 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC PATCH 2/2] iscsi_transport: Modidify recovery_tmo from sysfs
-Date: Mon, 12 Jul 2010 12:39:15 -0500
-Message-ID: <4C3B5343.7010805@cs.wisc.edu>
-References: <20100706051844.GA15263@sles11sp1b1.qlogic.org> <4C399F6E.80501@cs.wisc.edu> <CA02FE64-B0A9-40BC-B902-70625181529F@qlogic.com>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: be2iscsi: Adding features to be2iscsi -V2
+Date: Mon, 12 Jul 2010 23:17:32 +0530
+Message-ID: <20100712174716.GA11289@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:33235 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756446Ab0GLRgE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2010 13:36:04 -0400
-In-Reply-To: <CA02FE64-B0A9-40BC-B902-70625181529F@qlogic.com>
+Received: from segment-124-30.sify.net ([124.30.166.146]:30276 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752126Ab0GLRra (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2010 13:47:30 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-On 07/12/2010 08:43 AM, Vikas Chaudhary wrote:
->
-> On Jul 11, 2010, at 4:09 PM, Mike Christie wrote:
->
->> On 07/06/2010 12:18 AM, Vikas Chaudhary wrote:
->>> Added support to modify session->recovery_tmo from sysfs
->>>
->>> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
->>> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
->>> ---
->>> drivers/scsi/scsi_transport_iscsi.c | 37
->>> ++++++++++++++++++++++++++++++----
->>> 1 files changed, 32 insertions(+), 5 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_transport_iscsi.c
->>> b/drivers/scsi/scsi_transport_iscsi.c
->>> index b9aec30..fe8704c 100644
->>> --- a/drivers/scsi/scsi_transport_iscsi.c
->>> +++ b/drivers/scsi/scsi_transport_iscsi.c
->>> @@ -1786,11 +1786,33 @@ show_priv_session_##field(struct device *dev, \
->>> return sprintf(buf, format"\n", session->field); \
->>> }
->>>
->>> -#define iscsi_priv_session_attr(field, format) \
->>> +#define iscsi_priv_session_attr_store(field) \
->>> +static ssize_t \
->>> +store_priv_session_##field(struct device *dev, \
->>> + struct device_attribute *attr, \
->>> + const char *buf, size_t count) \
->>> +{ \
->>> + int val; \
->>> + char *cp; \
->>> + struct iscsi_cls_session *session = \
->>> + iscsi_dev_to_session(dev->parent); \
->>> + if ((session->state == ISCSI_SESSION_FREE) || \
->>> + (session->state == ISCSI_SESSION_FAILED)) \
->>> + return -EBUSY; \
->>> + val = simple_strtoul(buf,&cp, 0); \
->>> + if ((*cp&& (*cp != '\n')) || (val< 0)) \
->>
->>
->> -1 is a ok value. It is like setting fast io fail to -"off".
->
-> if we set "session->recovery_tmo" to off (-1) iscsi_transport never make
-> call to
-> "session_recovery_timedout" in that case iscsi_transport never set
-> session state to
-> "ISCSI_SESSION_FREE" and qla4xxx driver will never set DDB state to
-> "DDB_STATE_DEAD" so in this case driver will never do failover to
-> another path.
-> Do we need to add some thing more for failover to work in this case?
+Hi
 
-You would never set that to off when using multipath.
+  	These set of patches have been made on 
+git://git.kernel.org/pub/scm/linux/kernel/git/konrad/ibft-2.6.git 
 
-It is more for setups like root on iscsi with no multipath.
+	I have recreated the patches after changes to handle
+ the comments received from Mike and Konrad.
+
+
+0001     Fix warnings from new checkpatch.pl         
+0002     Fixing return values                        
+0003     Fixing the return type of functions         
+0004     pass the return from beiscsi_open_conn      
+0005     Fix for freeing cid                         
+0006     Fix for return type of mgmt_epfw_cleanup    
+0007     No return value for hwi_enable_intr         
+0008     Fix to handle request_irq failure           
+0009     Free tags allocated                         
+0010     Fix for 64K data                            
+0011     Adding crashdump support                    
+0012     Maintain same ITT across login              
+0013     Limit max_xmit_length                       
+0014     Remove debug print in IO path               
+0015     Fix for premature buffer free               
+0016     The extend shift                            
+0017     Add support for iscsi boot                  
+0018     from Randy Dunlap                     
+0019     Increase max sector                         
+0020     Driver Version change                      
+
+Thanks
+Jayamohan Kallickal
+
+Signed off by:  Jayamohan Kallickal <jayamohank@serverengines.com>
+
+---
+
