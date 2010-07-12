@@ -1,177 +1,156 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: 2.6.34.1: link online but device misclassifed / input/output error
-Date: Mon, 12 Jul 2010 16:36:50 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.1007121633320.5154@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 17/36] drivers/scsi: Remove unnecessary casts of private_data
+Date: Mon, 12 Jul 2010 13:50:09 -0700
+Message-ID: <a39a442a2a98c79079570bd0b2437e73a1ff092d.1278967121.git.joe@perches.com>
+References: <cover.1278967120.git.joe@perches.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:52510 "EHLO lucidpixels.com"
+Received: from mail.perches.com ([173.55.12.10]:1760 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753846Ab0GLUpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2010 16:45:42 -0400
+	id S1754716Ab0GLUuv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Jul 2010 16:50:51 -0400
+In-Reply-To: <cover.1278967120.git.joe@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
 
-Hello,
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/aacraid/linit.c |    2 +-
+ drivers/scsi/pmcraid.c       |    7 +++----
+ drivers/scsi/sg.c            |   18 +++++++++---------
+ 3 files changed, 13 insertions(+), 14 deletions(-)
 
-I have two thermaltake docks with two 150GB velociraptors.
-
-It happens on both drives, each on a separate thermaltake dock.
-
-When I run smartctl -a, it hangs when it tries to read the self-test log:
-
-# smartctl -a /dev/sdd
-smartctl 5.40 2010-03-16 r3077 [x86_64-unknown-linux-gnu] (local build)
-Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforge.net
-
-=== START OF INFORMATION SECTION ===
-Model Family:     Western Digital VelociRaptor family
-Device Model:     WDC WD1500HLFS-01G6U3
-Serial Number:    --------------
-Firmware Version: 04.04V05
-User Capacity:    150,039,945,216 bytes
-Device is:        In smartctl database [for details use: -P show]
-ATA Version is:   8
-ATA Standard is:  Exact ATA specification draft version not indicated
-Local Time is:    Mon Jul 12 16:33:13 2010 EDT
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
-
-Error SMART Thresholds Read failed: Input/output error
-Smartctl: SMART Read Thresholds failed.
-
-=== START OF READ SMART DATA SECTION ===
-SMART overall-health self-assessment test result: PASSED
-
-General SMART Values:
-Offline data collection status:  (0x80) Offline data collection activity
-                                         was never started.
-                                         Auto Offline Data Collection: Enabled.
-Self-test execution status:      (   0) The previous self-test routine completed
-                                         without error or no self-test has ever
-                                         been run.
-Total time to complete Offline 
-data collection:                 (2400) seconds.
-Offline data collection
-capabilities:                    (0x7b) SMART execute Offline immediate.
-                                         Auto Offline data collection on/off support.
-                                         Suspend Offline collection upon new
-                                         command.
-                                         Offline surface scan supported.
-                                         Self-test supported.
-                                         Conveyance Self-test supported.
-                                         Selective Self-test supported.
-SMART capabilities:            (0x0003) Saves SMART data before entering
-                                         power-saving mode.
-                                         Supports SMART auto save timer.
-Error logging capability:        (0x01) Error logging supported.
-                                         General Purpose Logging supported.
-Short self-test routine 
-recommended polling time:        (   2) minutes.
-Extended self-test routine
-recommended polling time:        (  32) minutes.
-Conveyance self-test routine
-recommended polling time:        (   5) minutes.
-SCT capabilities:              (0x303f) SCT Status supported.
-                                         SCT Error Recovery Control supported.
-                                         SCT Feature Control supported.
-                                         SCT Data Table supported.
-
-SMART Attributes Data Structure revision number: 16
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
-   1 Raw_Read_Error_Rate     0x000f   100   253   ---    Pre-fail  Always       -       0
-   3 Spin_Up_Time            0x0003   200   200   ---    Pre-fail  Always       -       2991
-   4 Start_Stop_Count        0x0032   100   100   ---    Old_age   Always       -       10
-   5 Reallocated_Sector_Ct   0x0033   200   200   ---    Pre-fail  Always       -       0
-   7 Seek_Error_Rate         0x000e   100   253   ---    Old_age   Always       -       0
-   9 Power_On_Hours          0x0032   100   100   ---    Old_age   Always       -       0
-  10 Spin_Retry_Count        0x0012   100   253   ---    Old_age   Always       -       0
-  11 Calibration_Retry_Count 0x0012   100   253   ---    Old_age   Always       -       0
-  12 Power_Cycle_Count       0x0032   100   100   ---    Old_age   Always       -       10
-192 Power-Off_Retract_Count 0x0032   200   200   ---    Old_age   Always       -       9
-193 Load_Cycle_Count        0x0032   200   200   ---    Old_age   Always       -       10
-194 Temperature_Celsius     0x0022   122   116   ---    Old_age   Always       -       25
-196 Reallocated_Event_Count 0x0032   200   200   ---    Old_age   Always       -       0
-197 Current_Pending_Sector  0x0012   200   200   ---    Old_age   Always       -       0
-198 Offline_Uncorrectable   0x0010   100   253   ---    Old_age   Offline      -       0
-200 Multi_Zone_Error_Rate   0x0008   100   253   ---    Old_age   Offline      -       0
-
-SMART Error Log Version: 1
-No Errors Logged
-
-SMART Self-test log structure revision number 1
-No self-tests have been logged.  [To run self-tests, use: smartctl -t]
-
-
-Error SMART Read Selective Self-Test Log failed: Input/output error
-Smartctl: SMART Selective Self Test Log Read Failed
-p34:~#
-
---
-
-[  112.535712] ata10: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-[  112.535717] ata10: irq_stat 0x02400000, PHY RDY changed
-[  112.535725] ata10: hard resetting link
-[  116.981140] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  116.990551] ata10.00: ATA-8: WDC WD1500HLFS-01G6U1, 04.04V02, max UDMA/133
-[  116.990557] ata10.00: 293046768 sectors, multi 0: LBA48 
-[  116.994261] ata10.00: configured for UDMA/133
-[  116.994265] ata10: EH complete
-[  116.994389] scsi 11:0:0:0: Direct-Access     ATA      WDC WD1500HLFS-0 04.0 PQ: 0 ANSI: 5
-[  116.994493] sd 11:0:0:0: [sdc] 293046768 512-byte logical blocks: (150 GB/139 GiB)
-[  116.994513] sd 11:0:0:0: [sdc] Write Protect is off
-[  116.994514] sd 11:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-[  116.994523] sd 11:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  116.994579]  sdc: unknown partition table
-[  117.003178] sd 11:0:0:0: [sdc] Attached SCSI disk
-[  154.893776] ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-[  154.893783] ata10.00: failed command: SMART
-[  154.893792] ata10.00: cmd b0/d5:01:06:4f:c2/00:00:00:00:00/00 tag 0 pio 512 in
-[  154.893794]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-[  154.893797] ata10.00: status: { DRDY }
-[  154.893803] ata10: hard resetting link
-[  155.198680] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  155.198691] ata10.00: link online but device misclassifed
-[  155.206089] ata10.00: configured for UDMA/133
-[  155.206108] ata10: EH complete
-[  176.286644] ata9: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-[  176.286649] ata9: irq_stat 0x02400000, PHY RDY changed
-[  176.286657] ata9: hard resetting link
-[  178.889785] ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-[  178.889791] ata10.00: failed command: SMART
-[  178.889800] ata10.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 pio 512 in
-[  178.889802]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-[  178.889806] ata10.00: status: { DRDY }
-[  178.889810] ata10: hard resetting link
-[  179.194749] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  179.194761] ata10.00: link online but device misclassifed
-[  179.202676] ata10.00: configured for UDMA/133
-[  179.202691] ata10: EH complete
-[  181.853312] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  181.864114] ata9.00: ATA-8: WDC WD1500HLFS-01G6U3, 04.04V05, max UDMA/133
-[  181.864119] ata9.00: 293046768 sectors, multi 0: LBA48 
-[  181.867582] ata9.00: configured for UDMA/133
-[  181.867590] ata9: EH complete
-[  181.867747] scsi 10:0:0:0: Direct-Access     ATA      WDC WD1500HLFS-0 04.0 PQ: 0 ANSI: 5
-[  181.867908] sd 10:0:0:0: [sdd] 293046768 512-byte logical blocks: (150 GB/139 GiB)
-[  181.867927] sd 10:0:0:0: [sdd] Write Protect is off
-[  181.867928] sd 10:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-[  181.867936] sd 10:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  181.867990]  sdd: unknown partition table
-[  181.870859] sd 10:0:0:0: [sdd] Attached SCSI disk
-[  203.888696] ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-[  203.888705] ata9.00: failed command: SMART
-[  203.888717] ata9.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 pio 512 in
-[  203.888719]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-[  203.888725] ata9.00: status: { DRDY }
-[  203.888733] ata9: hard resetting link
-[  204.193579] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  204.193590] ata9.00: link online but device misclassifed
-[  204.200938] ata9.00: configured for UDMA/133
-[  204.200956] ata9: EH complete
-
-Justin.
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 33898b6..d0a7c1d 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -770,7 +770,7 @@ static long aac_compat_cfg_ioctl(struct file *file, unsigned cmd, unsigned long
+ {
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	return aac_compat_do_ioctl((struct aac_dev *)file->private_data, cmd, arg);
++	return aac_compat_do_ioctl(file->private_data, cmd, arg);
+ }
+ #endif
+ 
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 9ebcea3..ecc45c8 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3599,8 +3599,7 @@ static int pmcraid_chr_open(struct inode *inode, struct file *filep)
+  */
+ static int pmcraid_chr_release(struct inode *inode, struct file *filep)
+ {
+-	struct pmcraid_instance *pinstance =
+-		((struct pmcraid_instance *)filep->private_data);
++	struct pmcraid_instance *pinstance = filep->private_data;
+ 
+ 	filep->private_data = NULL;
+ 	fasync_helper(-1, filep, 0, &pinstance->aen_queue);
+@@ -3619,7 +3618,7 @@ static int pmcraid_chr_fasync(int fd, struct file *filep, int mode)
+ 	struct pmcraid_instance *pinstance;
+ 	int rc;
+ 
+-	pinstance = (struct pmcraid_instance *)filep->private_data;
++	pinstance = filep->private_data;
+ 	mutex_lock(&pinstance->aen_queue_lock);
+ 	rc = fasync_helper(fd, filep, mode, &pinstance->aen_queue);
+ 	mutex_unlock(&pinstance->aen_queue_lock);
+@@ -4110,7 +4109,7 @@ static long pmcraid_chr_ioctl(
+ 		return retval;
+ 	}
+ 
+-	pinstance = (struct pmcraid_instance *)filep->private_data;
++	pinstance = filep->private_data;
+ 
+ 	if (!pinstance) {
+ 		pmcraid_info("adapter instance is not found\n");
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index ef752b2..c11ab95 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -210,7 +210,7 @@ static void sg_put_dev(Sg_device *sdp);
+ 
+ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+ {
+-	struct sg_fd *sfp = (struct sg_fd *)filp->private_data;
++	struct sg_fd *sfp = filp->private_data;
+ 
+ 	if (sfp->parentdp->device->type == TYPE_SCANNER)
+ 		return 0;
+@@ -318,7 +318,7 @@ sg_release(struct inode *inode, struct file *filp)
+ 	Sg_device *sdp;
+ 	Sg_fd *sfp;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if ((!(sfp = filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+ 
+@@ -342,7 +342,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t * ppos)
+ 	struct sg_header *old_hdr = NULL;
+ 	int retval = 0;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if ((!(sfp = filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_read: %s, count=%d\n",
+ 				   sdp->disk->disk_name, (int) count));
+@@ -533,7 +533,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	sg_io_hdr_t *hp;
+ 	unsigned char cmnd[MAX_COMMAND_SIZE];
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if ((!(sfp = filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_write: %s, count=%d\n",
+ 				   sdp->disk->disk_name, (int) count));
+@@ -768,7 +768,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	Sg_request *srp;
+ 	unsigned long iflags;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if ((!(sfp = filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_ioctl: %s, cmd=0x%x\n",
+@@ -1096,7 +1096,7 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
+ 	Sg_fd *sfp;
+ 	struct scsi_device *sdev;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if ((!(sfp = filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 
+ 	sdev = sdp->device;
+@@ -1122,7 +1122,7 @@ sg_poll(struct file *filp, poll_table * wait)
+ 	int count = 0;
+ 	unsigned long iflags;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp))
++	if ((!(sfp = filp->private_data)) || (!(sdp = sfp->parentdp))
+ 	    || sfp->closed)
+ 		return POLLERR;
+ 	poll_wait(filp, &sfp->read_wait, wait);
+@@ -1153,7 +1153,7 @@ sg_fasync(int fd, struct file *filp, int mode)
+ 	Sg_device *sdp;
+ 	Sg_fd *sfp;
+ 
+-	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
++	if ((!(sfp = filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_fasync: %s, mode=%d\n",
+ 				   sdp->disk->disk_name, mode));
+@@ -1208,7 +1208,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 	Sg_scatter_hold *rsv_schp;
+ 	int k, length;
+ 
+-	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
++	if ((!filp) || (!vma) || (!(sfp = filp->private_data)))
+ 		return -ENXIO;
+ 	req_sz = vma->vm_end - vma->vm_start;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_mmap starting, vm_start=%p, len=%d\n",
+-- 
+1.7.1.337.g6068.dirty
 
