@@ -1,20 +1,20 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [ANNOUCE] lio-core-backports.git tree now available!
-Date: Mon, 12 Jul 2010 13:25:53 -0700
-Message-ID: <1278966353.16667.205.camel@haakon2.linux-iscsi.org>
+Subject: [ANNOUNCE] lio-core-backports.git tree now available!
+Date: Mon, 12 Jul 2010 13:31:45 -0700
+Message-ID: <1278966705.16667.209.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.gq1.yahoo.com ([67.195.15.62]:46265 "HELO
-	smtp103.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751720Ab0GLU3B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Jul 2010 16:29:01 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
 Cc: nab@risingtidesystems.com
+List-Id: linux-scsi@vger.kernel.org
+
+This is a quick resend to fix the subject line so that the ANNOUNCE bots
+on LKML correctly pick up this thread.
+
+-----------------------------------------------------------------------
 
 Greetings all,
 
@@ -55,4 +55,3 @@ http://risingtidesystems.com/git/?p=lio-core-backports.git;a=blob_plain;f=README
 Best,
 
 --nab
-
