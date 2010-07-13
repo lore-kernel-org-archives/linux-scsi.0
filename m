@@ -1,225 +1,379 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.34.1: link online but device misclassifed / input/output
- error
-Date: Mon, 12 Jul 2010 18:03:59 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.1007121803000.18654@p34.internal.lan>
-References: <alpine.DEB.2.00.1007121633320.5154@p34.internal.lan>
+From: su henry <henry.su.ati@gmail.com>
+Subject: [PATCH RFC v2] support SATA ODD zero power
+Date: Tue, 13 Jul 2010 11:19:10 +0800
+Message-ID: <AANLkTinMHgk_4rwWkLoPntMyWYVLUKl_NyVn6Bllg6o3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1007121633320.5154@p34.internal.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:53949 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681Ab0GMDTM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2010 23:19:12 -0400
+Received: by qyk35 with SMTP id 35so1805998qyk.19
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jul 2010 20:19:11 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@kernel.dk
+Cc: linux-scsi@vger.kernel.org, htejun <htejun@gmail.com>
 
-Hi,
+>From 53f3108a156e69da4bae4c2f2b9a189e2456cdbb Mon Sep 17 00:00:00 2001
+From: henry su <henry.su.ati@gmail.com>
+Date: Fri, 9 Jul 2010 19:39:46 +0800
+Subject: [PATCH RFC v2] support sata odd zero power
 
-The marvell controller was set to IDE mode and not RAID, after it was set 
-to AHCI, the smart status returned OK.
+In order to extend the battery life of Mobile PC system, the host
+should remove the power supply to the Optical Disc Drive (logical
+unit) when it detects the logical unit with no media and tray closed,
+and the host starts the power supply to the logical unit when it
+detects user action to the logical unit that the power supply is
+omitted.
 
-Still kind of annoying though the marvell 88SE6145 does not support port 
-multipliers.
+The patch evaluates the _PS3 method to remove the power supply to the
+ODD if the host detects MEDIUM NOT PRESENT - TRAY CLOSED is reported
+by REQUEST SENSE command for a Drawer, Tray or Pop-up type drive, or
+MEDIUM NOT PRESENT - TRAY CLOSED for a slot/caddy type drive; on the
+other hand, the patch evaluates the _PS0 method to restart the power
+supply to the ODD when the user presses the button on a tray type
+drive or inserts a CD to a slot/caddy type drive.
 
-Justin.
+PLDS DS-8A5S, pansonic UJ892 and UJ897 are the ODD samples used to
+test the patch on AMD SB800 platforms.
 
-On Mon, 12 Jul 2010, Justin Piszcz wrote:
+Signed-off-by: Henry Su <henry.su.ati@gmail.com>
+---
+ drivers/scsi/Kconfig   |   17 ++++
+ drivers/scsi/Makefile  |    2 +-
+ drivers/scsi/sr.c      |    4 +
+ drivers/scsi/sr.h      |   12 +++
+ drivers/scsi/sr_acpi.c |  215 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 249 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/scsi/sr_acpi.c
 
-> Hello,
->
-> I have two thermaltake docks with two 150GB velociraptors.
->
-> It happens on both drives, each on a separate thermaltake dock.
->
-> When I run smartctl -a, it hangs when it tries to read the self-test log:
->
-> # smartctl -a /dev/sdd
-> smartctl 5.40 2010-03-16 r3077 [x86_64-unknown-linux-gnu] (local build)
-> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforge.net
->
-> === START OF INFORMATION SECTION ===
-> Model Family:     Western Digital VelociRaptor family
-> Device Model:     WDC WD1500HLFS-01G6U3
-> Serial Number:    --------------
-> Firmware Version: 04.04V05
-> User Capacity:    150,039,945,216 bytes
-> Device is:        In smartctl database [for details use: -P show]
-> ATA Version is:   8
-> ATA Standard is:  Exact ATA specification draft version not indicated
-> Local Time is:    Mon Jul 12 16:33:13 2010 EDT
-> SMART support is: Available - device has SMART capability.
-> SMART support is: Enabled
->
-> Error SMART Thresholds Read failed: Input/output error
-> Smartctl: SMART Read Thresholds failed.
->
-> === START OF READ SMART DATA SECTION ===
-> SMART overall-health self-assessment test result: PASSED
->
-> General SMART Values:
-> Offline data collection status:  (0x80) Offline data collection activity
->                                        was never started.
->                                        Auto Offline Data Collection: 
-> Enabled.
-> Self-test execution status:      (   0) The previous self-test routine 
-> completed
->                                        without error or no self-test has 
-> ever
->                                        been run.
-> Total time to complete Offline data collection:                 (2400) 
-> seconds.
-> Offline data collection
-> capabilities:                    (0x7b) SMART execute Offline immediate.
->                                        Auto Offline data collection on/off 
-> support.
->                                        Suspend Offline collection upon new
->                                        command.
->                                        Offline surface scan supported.
->                                        Self-test supported.
->                                        Conveyance Self-test supported.
->                                        Selective Self-test supported.
-> SMART capabilities:            (0x0003) Saves SMART data before entering
->                                        power-saving mode.
->                                        Supports SMART auto save timer.
-> Error logging capability:        (0x01) Error logging supported.
->                                        General Purpose Logging supported.
-> Short self-test routine recommended polling time:        (   2) minutes.
-> Extended self-test routine
-> recommended polling time:        (  32) minutes.
-> Conveyance self-test routine
-> recommended polling time:        (   5) minutes.
-> SCT capabilities:              (0x303f) SCT Status supported.
->                                        SCT Error Recovery Control supported.
->                                        SCT Feature Control supported.
->                                        SCT Data Table supported.
->
-> SMART Attributes Data Structure revision number: 16
-> Vendor Specific SMART Attributes with Thresholds:
-> ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED 
-> WHEN_FAILED RAW_VALUE
->  1 Raw_Read_Error_Rate     0x000f   100   253   ---    Pre-fail  Always 
-> -       0
->  3 Spin_Up_Time            0x0003   200   200   ---    Pre-fail  Always 
-> -       2991
->  4 Start_Stop_Count        0x0032   100   100   ---    Old_age   Always 
-> -       10
->  5 Reallocated_Sector_Ct   0x0033   200   200   ---    Pre-fail  Always 
-> -       0
->  7 Seek_Error_Rate         0x000e   100   253   ---    Old_age   Always 
-> -       0
->  9 Power_On_Hours          0x0032   100   100   ---    Old_age   Always 
-> -       0
-> 10 Spin_Retry_Count        0x0012   100   253   ---    Old_age   Always 
-> -       0
-> 11 Calibration_Retry_Count 0x0012   100   253   ---    Old_age   Always 
-> -       0
-> 12 Power_Cycle_Count       0x0032   100   100   ---    Old_age   Always 
-> -       10
-> 192 Power-Off_Retract_Count 0x0032   200   200   ---    Old_age   Always 
-> -       9
-> 193 Load_Cycle_Count        0x0032   200   200   ---    Old_age   Always 
-> -       10
-> 194 Temperature_Celsius     0x0022   122   116   ---    Old_age   Always 
-> -       25
-> 196 Reallocated_Event_Count 0x0032   200   200   ---    Old_age   Always 
-> -       0
-> 197 Current_Pending_Sector  0x0012   200   200   ---    Old_age   Always 
-> -       0
-> 198 Offline_Uncorrectable   0x0010   100   253   ---    Old_age   Offline 
-> -       0
-> 200 Multi_Zone_Error_Rate   0x0008   100   253   ---    Old_age   Offline 
-> -       0
->
-> SMART Error Log Version: 1
-> No Errors Logged
->
-> SMART Self-test log structure revision number 1
-> No self-tests have been logged.  [To run self-tests, use: smartctl -t]
->
->
-> Error SMART Read Selective Self-Test Log failed: Input/output error
-> Smartctl: SMART Selective Self Test Log Read Failed
-> p34:~#
->
-> --
->
-> [  112.535712] ata10: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe 
-> frozen
-> [  112.535717] ata10: irq_stat 0x02400000, PHY RDY changed
-> [  112.535725] ata10: hard resetting link
-> [  116.981140] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  116.990551] ata10.00: ATA-8: WDC WD1500HLFS-01G6U1, 04.04V02, max UDMA/133
-> [  116.990557] ata10.00: 293046768 sectors, multi 0: LBA48 [  116.994261] 
-> ata10.00: configured for UDMA/133
-> [  116.994265] ata10: EH complete
-> [  116.994389] scsi 11:0:0:0: Direct-Access     ATA      WDC WD1500HLFS-0 
-> 04.0 PQ: 0 ANSI: 5
-> [  116.994493] sd 11:0:0:0: [sdc] 293046768 512-byte logical blocks: (150 
-> GB/139 GiB)
-> [  116.994513] sd 11:0:0:0: [sdc] Write Protect is off
-> [  116.994514] sd 11:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-> [  116.994523] sd 11:0:0:0: [sdc] Write cache: enabled, read cache: enabled, 
-> doesn't support DPO or FUA
-> [  116.994579]  sdc: unknown partition table
-> [  117.003178] sd 11:0:0:0: [sdc] Attached SCSI disk
-> [  154.893776] ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 
-> frozen
-> [  154.893783] ata10.00: failed command: SMART
-> [  154.893792] ata10.00: cmd b0/d5:01:06:4f:c2/00:00:00:00:00/00 tag 0 pio 
-> 512 in
-> [  154.893794]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
-> (timeout)
-> [  154.893797] ata10.00: status: { DRDY }
-> [  154.893803] ata10: hard resetting link
-> [  155.198680] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  155.198691] ata10.00: link online but device misclassifed
-> [  155.206089] ata10.00: configured for UDMA/133
-> [  155.206108] ata10: EH complete
-> [  176.286644] ata9: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-> [  176.286649] ata9: irq_stat 0x02400000, PHY RDY changed
-> [  176.286657] ata9: hard resetting link
-> [  178.889785] ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 
-> frozen
-> [  178.889791] ata10.00: failed command: SMART
-> [  178.889800] ata10.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 pio 
-> 512 in
-> [  178.889802]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
-> (timeout)
-> [  178.889806] ata10.00: status: { DRDY }
-> [  178.889810] ata10: hard resetting link
-> [  179.194749] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  179.194761] ata10.00: link online but device misclassifed
-> [  179.202676] ata10.00: configured for UDMA/133
-> [  179.202691] ata10: EH complete
-> [  181.853312] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  181.864114] ata9.00: ATA-8: WDC WD1500HLFS-01G6U3, 04.04V05, max UDMA/133
-> [  181.864119] ata9.00: 293046768 sectors, multi 0: LBA48 [  181.867582] 
-> ata9.00: configured for UDMA/133
-> [  181.867590] ata9: EH complete
-> [  181.867747] scsi 10:0:0:0: Direct-Access     ATA      WDC WD1500HLFS-0 
-> 04.0 PQ: 0 ANSI: 5
-> [  181.867908] sd 10:0:0:0: [sdd] 293046768 512-byte logical blocks: (150 
-> GB/139 GiB)
-> [  181.867927] sd 10:0:0:0: [sdd] Write Protect is off
-> [  181.867928] sd 10:0:0:0: [sdd] Mode Sense: 00 3a 00 00
-> [  181.867936] sd 10:0:0:0: [sdd] Write cache: enabled, read cache: enabled, 
-> doesn't support DPO or FUA
-> [  181.867990]  sdd: unknown partition table
-> [  181.870859] sd 10:0:0:0: [sdd] Attached SCSI disk
-> [  203.888696] ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 
-> frozen
-> [  203.888705] ata9.00: failed command: SMART
-> [  203.888717] ata9.00: cmd b0/d5:01:09:4f:c2/00:00:00:00:00/00 tag 0 pio 512 
-> in
-> [  203.888719]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 
-> (timeout)
-> [  203.888725] ata9.00: status: { DRDY }
-> [  203.888733] ata9: hard resetting link
-> [  204.193579] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  204.193590] ata9.00: link online but device misclassifed
-> [  204.200938] ata9.00: configured for UDMA/133
-> [  204.200956] ata9: EH complete
->
-> Justin.
->
->
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 75f2336..5634424 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -146,6 +146,23 @@ config BLK_DEV_SR_VENDOR
+ 	  drives (and HP Writers). If you have such a drive and get the first
+ 	  session only, try saying Y here; everybody else says N.
+
++config BLK_DEV_SR_ZERO_POWER
++	bool "Enable SATA Zero Power ODD support (for SCSI CDROM)"
++	depends on BLK_DEV_SR && ACPI
++	help
++	  When the host detects the SCSI CDROM with no media and tray closed in
++	  case of tray/drawer loading mechanism, the host remove the power
++	  supply to the CDROM. When host detect the user action to the CDROM
++	  that the power supply is ommited, the host will start the power
++	  supply to the CDROM. Host can achive Zero Power consumption on such
++	  empty CDROM.
++
++	  See more information in appendix K in Mt. Fuji commands for
++	  Multimedia devices version7.
++ 	
++	  If you want to support sata odd zero power, and the drive can do zero
++	  power, try saying Y here; else says N.
++
+ config CHR_DEV_SG
+ 	tristate "SCSI generic support"
+ 	depends on SCSI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 1c7ac49..cc9ec84 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -169,7 +169,7 @@ scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_if.o
+ sd_mod-objs	:= sd.o
+ sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
+
+-sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
++sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o sr_acpi.o
+ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
+ 		:= -DCONFIG_NCR53C8XX_PREFETCH -DSCSI_NCR_BIG_ENDIAN \
+ 			-DCONFIG_SCSI_NCR53C8XX_NO_WORD_TRANSFERS
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 0a90abc..7755658 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -631,6 +631,7 @@ static int sr_probe(struct device *dev)
+ 	get_capabilities(cd);
+ 	blk_queue_prep_rq(sdev->request_queue, sr_prep_fn);
+ 	sr_vendor_init(cd);
++	sr_acpi_init(cd);
+
+ 	disk->driverfs_dev = &sdev->sdev_gendev;
+ 	set_capacity(disk, cd->capacity);
+@@ -789,6 +790,7 @@ static void get_capabilities(struct scsi_cd *cd)
+ 	cd->cdi.speed = ((buffer[n + 8] << 8) + buffer[n + 9]) / 176;
+ 	cd->readcd_known = 1;
+ 	cd->readcd_cdda = buffer[n + 5] & 0x01;
++	cd->type = buffer[n + 6] >> 5;
+ 	/* print some capability bits */
+ 	printk("%s: scsi3-mmc drive: %dx/%dx %s%s%s%s%s%s\n", cd->cdi.name,
+ 	       ((buffer[n + 14] << 8) + buffer[n + 15]) / 176,
+@@ -894,6 +896,7 @@ static int sr_remove(struct device *dev)
+ 	mutex_lock(&sr_ref_mutex);
+ 	kref_put(&cd->kref, sr_kref_release);
+ 	mutex_unlock(&sr_ref_mutex);
++	sr_acpi_remove(dev);
+
+ 	return 0;
+ }
+@@ -916,6 +919,7 @@ static void __exit exit_sr(void)
+ {
+ 	scsi_unregister_driver(&sr_template.gendrv);
+ 	unregister_blkdev(SCSI_CDROM_MAJOR, "sr");
++	sr_acpi_unregister();
+ }
+
+ module_init(init_sr);
+diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+index 1e144df..96d85e0 100644
+--- a/drivers/scsi/sr.h
++++ b/drivers/scsi/sr.h
+@@ -46,6 +46,13 @@ typedef struct scsi_cd {
+ 	 * the refs on this kref to decide when to release them */
+ 	struct kref kref;
+ 	struct gendisk *disk;
++
++#ifdef CONFIG_BLK_DEV_SR_ZERO_POWER
++	mechtype_t type;
++	unsigned int no_media_retry;
++	struct timer_list zero_power_timer;
++	struct work_struct sr_set_power;
++#endif
+ } Scsi_CD;
+
+ int sr_do_ioctl(Scsi_CD *, struct packet_command *);
+@@ -68,4 +75,9 @@ void sr_vendor_init(Scsi_CD *);
+ int sr_cd_check(struct cdrom_device_info *);
+ int sr_set_blocklength(Scsi_CD *, int blocklength);
+
++/* sr_acpi.c */
++void sr_acpi_init(Scsi_CD *);
++int sr_acpi_remove(struct device *dev);
++void sr_acpi_unregister(void);
++
+ #endif
+diff --git a/drivers/scsi/sr_acpi.c b/drivers/scsi/sr_acpi.c
+new file mode 100644
+index 0000000..b5a5c66
+--- /dev/null
++++ b/drivers/scsi/sr_acpi.c
+@@ -0,0 +1,215 @@
++
++#include <linux/cdrom.h>
++#include <linux/errno.h>
++#include <linux/string.h>
++#include <linux/bcd.h>
++#include <linux/blkdev.h>
++#include <linux/slab.h>
++
++#include <scsi/scsi.h>
++#include <scsi/scsi_dbg.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_driver.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_eh.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_ioctl.h>	/* For the door lock/unlock commands */
++
++#include <acpi/acpi_bus.h>
++#include "sr.h"
++
++#ifdef CONFIG_BLK_DEV_SR_ZERO_POWER
++#define SR_CHECK_STATE_TIMEOUT	(10*HZ)
++#define SR_NO_MEDIA_RETRY	10	
++#define SR_ZPODD_REGISTERED	0x01
++#define SR_ZPODD_NEED_EJECT	0x02
++
++static struct sr_zero_power {
++	struct workqueue_struct *wq;
++	u32 flags;
++	acpi_handle handle;
++	spinlock_t lock;
++	struct scsi_cd *cd;
++	struct work_struct set_power;
++} sr_zpodd;
++
++/* Remove the power supply to the drive if detecting no media */
++void sr_acpi_remove_power(struct work_struct *work)
++{
++	struct scsi_cd *cd = sr_zpodd.cd;
++	struct scsi_sense_hdr *sshdr;
++	int isvalid;
++
++	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
++	sr_test_unit_ready(sr_zpodd.cd->device, sshdr);
++	isvalid = scsi_sense_valid(sshdr);
++
++	/* 0x3a is media not present */
++	if ((isvalid && (sshdr->asc  == 0x3a &&
++		/* tray opened for caddy/slot type drive*/
++		((cd->type == mechtype_caddy && sshdr->ascq == 0x02) ||
++		/*tray closed for tray/drawer/pop-up for type drive*/
++		sshdr->ascq == 0x01)))) {
++			if (cd->no_media_retry < SR_NO_MEDIA_RETRY) {
++				cd->no_media_retry += 1;
++			} else {
++				del_timer_sync(&cd->zero_power_timer);
++				acpi_bus_set_power(sr_zpodd.handle,
++							ACPI_STATE_D3);
++			}
++	} else
++		cd->no_media_retry = 1;
++
++	kfree(sshdr);
++
++}
++
++void sr_acpi_queue_work(unsigned long data)
++{
++	int isvalid;
++	unsigned long flags;
++	struct scsi_cd *cd = sr_zpodd.cd;
++
++	spin_lock_irqsave(&sr_zpodd.lock, flags);
++	isvalid = queue_work(sr_zpodd.wq, &sr_zpodd.set_power);
++	BUG_ON(!isvalid);
++
++	mod_timer(&cd->zero_power_timer, jiffies+SR_CHECK_STATE_TIMEOUT);
++	spin_unlock_irqrestore(&sr_zpodd.lock, flags);
++}
++
++/*
++ * Handle ACPI event notification when pressing the button on a
++ * tray type drive or inserting a CD to a caddy/slot type drive
++ */
++static void sr_acpi_handle_events(acpi_handle handle, u32 event, void *context)
++{
++	unsigned int state;
++
++	switch (event) {
++	/* FIXME: handle both wake and 0x80 notifications? */
++	case 0x02:
++	case 0x80:
++		acpi_bus_get_power(sr_zpodd.handle, &state);
++		if (state == ACPI_STATE_D3) {
++			acpi_bus_set_power(sr_zpodd.handle,
++						ACPI_STATE_D0);
++			udelay(100);
++
++			/* Eject the tray after starting
++			 * the power supply to tray type ODD
++			 */
++			if (sr_zpodd.cd->type == mechtype_tray)
++				sr_zpodd.flags |= SR_ZPODD_NEED_EJECT;
++		}
++	}
++	return;
++}
++
++/*
++ * find the zero power odd device in ACPI namespace
++ * and install the notification handler for the device
++ */
++static acpi_status __init sr_acpi_find_zpodd(acpi_handle handle,
++		u32 lvl, void *context, void **rv)
++{
++	acpi_status status;
++	char name[ACPI_PATH_SEGMENT_LENGTH];
++	struct acpi_buffer buffer = { sizeof(name), &name };
++	acpi_handle *phandle = (acpi_handle *)context;
++
++	/* FIXME: search the device by object name or _HID? */
++	status = acpi_get_name(handle, ACPI_SINGLE_NAME, &buffer);
++
++	if (ACPI_SUCCESS(status) && !strncmp("ODDZ", name, sizeof(name) - 1)) {
++		*phandle = handle;
++
++		/* returning non-zero causes the search to stop
++		 * and returns this value to the caller of
++		 * acpi_walk_namespace.
++		 */
++		return 1;
++
++	} else
++		return 0;
++}
++#endif
++
++void sr_acpi_init(Scsi_CD *cd)
++{
++#ifdef CONFIG_BLK_DEV_SR_ZERO_POWER
++	acpi_status status;
++
++	/* Walk the namespace only once*/
++	if (!(sr_zpodd.flags & SR_ZPODD_REGISTERED)) {
++		if (acpi_walk_namespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT,
++				ACPI_UINT32_MAX, sr_acpi_find_zpodd, NULL,
++				&sr_zpodd.handle, NULL) != 1) {
++			printk(KERN_WARNING
++				 "The SCSI CD doesn't support zero power\n");
++			goto init_return;
++		}
++
++		status = acpi_install_notify_handler(sr_zpodd.handle,
++				ACPI_DEVICE_NOTIFY, sr_acpi_handle_events,
++				NULL);
++		if (ACPI_FAILURE(status)) {
++			printk(KERN_WARNING
++				 "failed to register notification handler\n");
++			goto init_return;
++		} else
++			sr_zpodd.flags |= SR_ZPODD_REGISTERED;
++
++		sr_zpodd.wq = create_singlethread_workqueue("sr_zpodd.wq");
++		if (!sr_zpodd.wq) {
++			acpi_remove_notify_handler(
++				sr_zpodd.handle,
++				ACPI_DEVICE_NOTIFY,
++				sr_acpi_handle_events);
++			goto init_return;
++		}
++	}
++
++	INIT_WORK(&sr_zpodd.set_power, sr_acpi_remove_power);
++
++	spin_lock_init(&sr_zpodd.lock);
++	init_timer(&cd->zero_power_timer);
++	cd->zero_power_timer.data = (unsigned long) cd;
++	cd->zero_power_timer.function = sr_acpi_queue_work;
++	cd->zero_power_timer.expires = jiffies + SR_CHECK_STATE_TIMEOUT;
++	add_timer(&cd->zero_power_timer);
++
++	cd->no_media_retry = 1;
++	sr_zpodd.cd = cd;
++
++	if (sr_zpodd.flags & SR_ZPODD_NEED_EJECT) {
++		sr_zpodd.flags &= ~SR_ZPODD_NEED_EJECT;
++		sr_tray_move(&cd->cdi, 1);
++	}
++
++init_return:
++#endif
++	return;
++}
++
++void sr_acpi_unregister(void)
++{
++#ifdef CONFIG_BLK_DEV_SR_ZERO_POWER
++	if (sr_zpodd.flags & SR_ZPODD_REGISTERED) {
++		destroy_workqueue(sr_zpodd.wq);
++		acpi_remove_notify_handler(sr_zpodd.handle,
++					ACPI_DEVICE_NOTIFY,
++					sr_acpi_handle_events);
++	}
++#endif
++}
++
++int sr_acpi_remove(struct device *dev)
++{
++#ifdef CONFIG_BLK_DEV_SR_ZERO_POWER
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++	if (sr_zpodd.flags & SR_ZPODD_REGISTERED)
++		del_timer_sync(&cd->zero_power_timer);
++#endif
++	return 0;
++}
+-- 
+1.5.6.3
