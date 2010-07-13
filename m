@@ -1,76 +1,57 @@
-From: Shyam Iyer <shyam_iyer@dell.com>
-Subject: [PATCH] Wait for 15s on doorbell ACK before checking IOC READY state
-Date: Tue, 13 Jul 2010 13:04:07 -0400
-Message-ID: <4C3C9C87.9050904@dell.com>
+From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
+Subject: Re: be2iscsi: Adding features to be2iscsi -V2
+Date: Tue, 13 Jul 2010 11:26:22 -0700
+Message-ID: <20100713182622.88dd703d@mailhost.serverengines.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030202030905090602000109"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausxippc101.us.dell.com ([143.166.85.207]:36763 "EHLO
-	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756807Ab0GMRET (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2010 13:04:19 -0400
+Received: from mail96.messagelabs.com ([216.82.254.19]:35213 "EHLO
+	mail96.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751717Ab0GMS2t convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2010 14:28:49 -0400
+In-Reply-To: 4C3C1516.4000708@cs.wisc.edu
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: DL-MPTFusionLinux@lsi.com
-
-This is a multi-part message in MIME format.
---------------030202030905090602000109
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Wait for 15 seconds for Doorbell ACK.
-
-Not waiting 15s results in a few resets and kernel panics.
-
-https://bugzilla.redhat.com/show_bug.cgi?id=594505
-
-This is also logical since we wait for 15 seconds to compare if the 
-state really changed.
-
-Signed-off-by: Shyam Iyer<shyam_iyer@dell.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
 
---------------030202030905090602000109
-Content-Type: text/plain;
- name="0001-Wait-for-15s-on-doorbell-ACK-before-checking-IOC-REA.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-Wait-for-15s-on-doorbell-ACK-before-checking-IOC-REA.pa";
- filename*1="tch"
 
->From a2cfe7cad6c22849d3561a5466760917c1d3b02a Mon Sep 17 00:00:00 2001
-From: Shyam Iyer <shyam_iyer@dell.com>
-Date: Thu, 8 Jul 2010 15:47:53 -0400
-Subject: [PATCH] Wait for 15s on doorbell ACK before checking IOC READY state
+  _____  
+From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+To: Jayamohan Kalickal [mailto:jayamohank@serverengines.com]
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+Sent: Tue, 13 Jul 2010 00:26:14 -0700
+Subject: Re: be2iscsi: Adding features to be2iscsi -V2
 
-Not waiting 15s results in a few resets and kernel panics.
+On 07/12/2010 12:47 PM, Jayamohan Kallickal wrote:
+> Hi
+>
+>    	These set of patches have been made on
+> git://git.kernel.org/pub/scm/linux/kernel/git/konrad/ibft-2.6.git
+>
 
-https://bugzilla.redhat.com/show_bug.cgi?id=594505
-
-This is also logical since we wait for 15 seconds to compare if the state really changed.
-
-Signed-off-by: Shyam Iyer <shyam_iyer@dell.com>
----
- drivers/message/fusion/mptbase.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index a6a5701..e658a53 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -4208,7 +4208,7 @@ SendIocReset(MPT_ADAPTER *ioc, u8 reset_type, int sleepFlag)
- 	drsprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Sending IOC reset(0x%02x)!\n",
- 			ioc->name, reset_type));
- 	CHIPREG_WRITE32(&ioc->chip->Doorbell, reset_type<<MPI_DOORBELL_FUNCTION_SHIFT);
--	if ((r = WaitForDoorbellAck(ioc, 5, sleepFlag)) < 0)
-+	if ((r = WaitForDoorbellAck(ioc, 15, sleepFlag)) < 0)
- 		return r;
- 
- 	/* FW ACK'd request, wait for READY state
--- 
-1.6.6.1
+You should not make the patches over that tree, because it is missing 
+some be2iscsi patches. You should have just brought the needed boot 
+patches into scsi-misc or linus's tree or scsi-rc-fixes. The first 
+couple of patches do not apply.
 
 
---------------030202030905090602000109--
+ I was following a request to base it on the ibft-2.6 for iscsi_boot
+ purposes.  I need to pull in the iscsi boot changes from ibft tree 
+and merge with my changes and submit like the previous submission.
+
+
+I will rebase on top of the latest scsi-misc.
+
+
+
+___________________________________________________________________________________
+This message, together with any attachment(s), contains confidential and proprietary information of
+ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
+review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
+intended recipient of this message, please immediately advise the sender by reply email message and
+delete all copies of this message and any attachment(s). Thank you.
+
