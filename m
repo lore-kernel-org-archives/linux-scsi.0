@@ -1,45 +1,47 @@
-From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 1/1] be2iscsi: Fix for 64K data
-Date: Wed, 14 Jul 2010 23:58:06 +0530
-Message-ID: <20100714182749.GA25200@serverengines.com>
-Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [PATCH] scsi: dpt_i2o: fix memory leak
+Date: Wed, 14 Jul 2010 20:58:31 +0200
+Message-ID: <20100714185831.GA5164@bicker>
+References: <1279130008-9934-1-git-send-email-segooon@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:59447 "EHLO
-	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756892Ab0GNS2F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jul 2010 14:28:05 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1279130008-9934-1-git-send-email-segooon@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kulikov Vasiliy <segooon@gmail.com>
+Cc: kernel-janitors@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Julia Lawall <julia@diku.dk>, Frederic Weisbecker <fweisbec@gmail.com>, John Kacur <jkacur@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-   This patch fixes a wraparound issue when the length=65536 for an sge.
-Since it was defined as a short, the length becomes zero
+On Wed, Jul 14, 2010 at 09:53:27PM +0400, Kulikov Vasiliy wrote:
+> Free allocated memory if adpt_ioctl_to_context() failed.
+> 
+> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+> ---
+>  drivers/scsi/dpt_i2o.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+> index f2d4df1..dd9a43b 100644
+> --- a/drivers/scsi/dpt_i2o.c
+> +++ b/drivers/scsi/dpt_i2o.c
+> @@ -1839,8 +1839,10 @@ static int adpt_i2o_passthru(adpt_hba* pHba, u32 __user *arg)
+>  	sg_offset = (msg[0]>>4)&0xf;
+>  	msg[2] = 0x40000000; // IOCTL context
+>  	msg[3] = adpt_ioctl_to_context(pHba, reply);
 
-This patch has been made over  scsi-rc-fixes-2.6 tree pulled today
+This patch is wrong I'm afraid.  adpt_ioctl_to_context() frees "reply" if
+there is an error.
 
-Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
----
- drivers/scsi/be2iscsi/be_main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+regards,
+dan carpenter
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index dd5b105..38e6d32 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1764,7 +1764,7 @@ hwi_write_sgl(struct iscsi_wrb *pwrb, struct scatterlist *sg,
- 	      unsigned int num_sg, struct beiscsi_io_task *io_task)
- {
- 	struct iscsi_sge *psgl;
--	unsigned short sg_len, index;
-+	unsigned int sg_len, index;
- 	unsigned int sge_len = 0;
- 	unsigned long long addr;
- 	struct scatterlist *l_sg;
--- 
-1.6.5.2
-
+> -	if (msg[3] == (u32)-1)
+> +	if (msg[3] == (u32)-1) {
+> +		kfree(reply);
+>  		return -EBUSY;
+> +	}
+>  
+>  	memset(sg_list,0, sizeof(sg_list[0])*pHba->sg_tablesize);
+>  	if(sg_offset) {
+> -- 
