@@ -1,35 +1,63 @@
 From: Kulikov Vasiliy <segooon@gmail.com>
-Subject: [PATCH] scsi: dpt_i2o: fix memory leak
-Date: Wed, 14 Jul 2010 21:53:27 +0400
-Message-ID: <1279130008-9934-1-git-send-email-segooon@gmail.com>
+Subject: [PATCH 07/11] scsi: ultrastor: formatting of pointers in printk()
+Date: Wed, 14 Jul 2010 22:03:59 +0400
+Message-ID: <1279130640-11228-1-git-send-email-segooon@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: kernel-janitors@vger.kernel.org
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Julia Lawall <julia@diku.dk>, Frederic Weisbecker <fweisbec@gmail.com>, John Kacur <jkacur@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Free allocated memory if adpt_ioctl_to_context() failed.
+Use %p instead of %08x in printk().
 
 Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
 ---
- drivers/scsi/dpt_i2o.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ drivers/scsi/ultrastor.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index f2d4df1..dd9a43b 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -1839,8 +1839,10 @@ static int adpt_i2o_passthru(adpt_hba* pHba, u32 __user *arg)
- 	sg_offset = (msg[0]>>4)&0xf;
- 	msg[2] = 0x40000000; // IOCTL context
- 	msg[3] = adpt_ioctl_to_context(pHba, reply);
--	if (msg[3] == (u32)-1)
-+	if (msg[3] == (u32)-1) {
-+		kfree(reply);
- 		return -EBUSY;
-+	}
+diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
+index 27aa40f..4715b7c 100644
+--- a/drivers/scsi/ultrastor.c
++++ b/drivers/scsi/ultrastor.c
+@@ -1061,7 +1061,7 @@ static void ultrastor_interrupt(void *dev_id)
+     mscp = (struct mscp *)isa_bus_to_virt(inl(config.icm_address));
+     mscp_index = mscp - config.mscp;
+     if (mscp_index >= ULTRASTOR_MAX_CMDS) {
+-	printk("Ux4F interrupt: bad MSCP address %x\n", (unsigned int) mscp);
++	printk("Ux4F interrupt: bad MSCP address %p\n", mscp);
+ 	/* A command has been lost.  Reset and report an error
+ 	   for all commands.  */
+ 	ultrastor_host_reset(dev_id);
+@@ -1074,8 +1074,8 @@ static void ultrastor_interrupt(void *dev_id)
+ 	unsigned char icm_status = inb(config.icm_address - 1);
+ #if ULTRASTOR_DEBUG & (UD_INTERRUPT|UD_ERROR|UD_ABORT)
+ 	if (icm_status != 1 && icm_status != 2)
+-	    printk("US24F: ICM status %x for MSCP %d (%x)\n", icm_status,
+-		   mscp_index, (unsigned int) mscp);
++		printk("US24F: ICM status %x for MSCP %d (%p)\n", icm_status,
++					mscp_index, mscp);
+ #endif
+ 	/* The manual says clear interrupt then write 0 to ICM status.
+ 	   This seems backwards, but I'll do it anyway.  --jfc */
+@@ -1104,7 +1104,7 @@ static void ultrastor_interrupt(void *dev_id)
+     if (!SCtmp)
+       {
+ #if ULTRASTOR_DEBUG & (UD_ABORT|UD_INTERRUPT)
+-	printk("MSCP %d (%x): no command\n", mscp_index, (unsigned int) mscp);
++	printk("MSCP %d (%p): no command\n", mscp_index, mscp);
+ #endif	
+ #if ULTRASTOR_MAX_CMDS == 1
+ 	config.mscp_busy = FALSE;
+@@ -1154,8 +1154,8 @@ static void ultrastor_interrupt(void *dev_id)
  
- 	memset(sg_list,0, sizeof(sg_list[0])*pHba->sg_tablesize);
- 	if(sg_offset) {
+ #if ULTRASTOR_DEBUG & (UD_ABORT|UD_INTERRUPT)
+     if (config.aborted[mscp_index])
+-	printk("Ux4 interrupt: MSCP %d (%x) aborted = %d\n",
+-	       mscp_index, (unsigned int) mscp, config.aborted[mscp_index]);
++	printk("Ux4 interrupt: MSCP %d (%p) aborted = %d\n",
++	       mscp_index, mscp, config.aborted[mscp_index]);
+ #endif
+     config.aborted[mscp_index] = 0;
+ 
 -- 
 1.7.0.4
