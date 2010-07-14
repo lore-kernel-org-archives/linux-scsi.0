@@ -1,166 +1,110 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/2] ipr: fix resource type update and add sdev and shost
- attributes
-Date: Wed, 14 Jul 2010 15:19:16 -0500
-Message-ID: <4C3E1BC4.4020505@linux.vnet.ibm.com>
-References: <20100714174755.049189590@linux.vnet.ibm.com> <4C3DF8D6.5080906@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsi: Fix oops when an interrupt is pending during
+ probe
+Date: Wed, 14 Jul 2010 15:29:23 -0500
+Message-ID: <4C3E1E23.8090209@linux.vnet.ibm.com>
+References: <20100713045929.GB10155@kryten>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:56000 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757375Ab0GNUTU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Jul 2010 16:19:20 -0400
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by e2.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o6EK5vMK025596
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2010 16:05:57 -0400
-Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o6EKJI36135406
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2010 16:19:18 -0400
-Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o6EKMXie003700
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2010 14:22:33 -0600
-In-Reply-To: <4C3DF8D6.5080906@linux.vnet.ibm.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:55337 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756939Ab0GNU30 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2010 16:29:26 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o6EKL5OE011222
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2010 14:21:05 -0600
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id o6EKTOZ4256536
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2010 14:29:24 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o6EKTNGL021519
+	for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2010 14:29:24 -0600
+In-Reply-To: <20100713045929.GB10155@kryten>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+To: Anton Blanchard <anton@samba.org>
+Cc: James.Bottomley@suse.de, tj@kernel.org, linux-scsi@vger.kernel.org
 
 Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-On 07/14/2010 12:50 PM, Wayne Boyer wrote:
-> Setting the resource type in the ipr_update_res_entry function was incorrect in
-> that the top 4 bits were masked off.  The assignment has been updated to no
-> longer mask those bits.
+On 07/12/2010 11:59 PM, Anton Blanchard wrote:
 > 
-> Then, two new attributes were added to allow the user space utilities to more
-> easily get information.  The resource_type sdev attribute is set for all devices
-> in the adapter's configuration table and indicates the type of device.  The
-> fw_type shost attribute indicates the firmware type supported by the adapter.
+> A driver needs to be ready to take an interrupt as soon as it registers
+> an interrupt handler. I noticed the following oops when testing kdump:
 > 
-> Finally, the resource_path attribute was changed to be mode S_IRUGO.
+> ipr: IBM Power RAID SCSI Device Driver version: 2.5.0 (February 11, 2010)
+> ibmvscsi 30000002: SRP_VERSION: 16.a
+> ibmvscsi 30000002: SRP_VERSION: 16.a
+> Unable to handle kernel paging request for data at address 0x00000000
+> ...
+> pc: c000000004085e34: .tasklet_action+0xf4/0x1dc
+> ...
+> c000000004086fe4 .__do_softirq+0x16c/0x2c0
+> c00000000403138c .call_do_softirq+0x14/0x24
+> c00000000400ee14 .do_softirq+0xa0/0x104
+> c00000000408690c .irq_exit+0x70/0xd0
+> c00000000400f190 .do_IRQ+0x214/0x2a8
+> c000000004004804 hardware_interrupt_entry+0x1c/0x98
+> --- Exception: 501 (Hardware Interrupt) at c00000000400c544 .raw_local_irq_restore+0x48/0x54
+> c00000000465d2a8 ._raw_spin_unlock_irqrestore+0x74/0xa0
+> c0000000040e7f00 .__setup_irq+0x2ec/0x3f0
+> c0000000040e8198 .request_threaded_irq+0x194/0x22c
+> c00000000446d854 .rpavscsi_init_crq_queue+0x284/0x3f0
+> c00000000446c764 .ibmvscsi_probe+0x688/0x710
+> c00000000402903c .vio_bus_probe+0x37c/0x3e4
+> c000000004403f10 .driver_probe_device+0xec/0x1b8
+> c000000004404088 .__driver_attach+0xac/0xf4
+> c000000004403184 .bus_for_each_dev+0x98/0x104
+> c000000004403c98 .driver_attach+0x40/0x60
+> c0000000044026f0 .bus_add_driver+0x154/0x324
+> c0000000044045d0 .driver_register+0xe8/0x1ac
+> c00000000402b2a8 .vio_register_driver+0x54/0x74
+> c000000004933ea4 .ibmvscsi_module_init+0x80/0xc0
+> c000000004009834 .do_one_initcall+0x98/0x1d8
+> c0000000049005b4 .kernel_init+0x27c/0x33c
+> c000000004031550 .kernel_thread+0x54/0x70
 > 
-> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+> srp_task needs to be setup before request_irq. The patch below fixes the oops.
+> 
+> Signed-off-by: Anton Blanchard <anton@samba.org>
 > ---
 > 
->  drivers/scsi/ipr.c |   70 +++++++++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 68 insertions(+), 2 deletions(-)
+> diff --git a/drivers/scsi/ibmvscsi/rpa_vscsi.c b/drivers/scsi/ibmvscsi/rpa_vscsi.c
+> index a864ccc..989b9a8 100644
+> --- a/drivers/scsi/ibmvscsi/rpa_vscsi.c
+> +++ b/drivers/scsi/ibmvscsi/rpa_vscsi.c
+> @@ -277,6 +277,12 @@ static int rpavscsi_init_crq_queue(struct crq_queue *queue,
+>  		goto reg_crq_failed;
+>  	}
 > 
-> Index: b/drivers/scsi/ipr.c
-> ===================================================================
-> --- a/drivers/scsi/ipr.c	2010-07-14 10:21:28.000000000 -0700
-> +++ b/drivers/scsi/ipr.c	2010-07-14 10:47:17.000000000 -0700
-> @@ -1168,7 +1168,7 @@ static void ipr_update_res_entry(struct 
->  	if (res->ioa_cfg->sis64) {
->  		res->flags = cfgtew->u.cfgte64->flags;
->  		res->res_flags = cfgtew->u.cfgte64->res_flags;
-> -		res->type = cfgtew->u.cfgte64->res_type & 0x0f;
-> +		res->type = cfgtew->u.cfgte64->res_type;
+> +	queue->cur = 0;
+> +	spin_lock_init(&queue->lock);
+> +
+> +	tasklet_init(&hostdata->srp_task, (void *)rpavscsi_task,
+> +		     (unsigned long)hostdata);
+> +
+>  	if (request_irq(vdev->irq,
+>  			rpavscsi_handle_event,
+>  			0, "ibmvscsi", (void *)hostdata) != 0) {
+> @@ -291,15 +297,10 @@ static int rpavscsi_init_crq_queue(struct crq_queue *queue,
+>  		goto req_irq_failed;
+>  	}
 > 
->  		memcpy(&res->std_inq_data, &cfgtew->u.cfgte64->std_inq_data,
->  			sizeof(struct ipr_std_inq_data));
-> @@ -3761,6 +3761,36 @@ static struct device_attribute ipr_updat
->  	.store = ipr_store_update_fw
->  };
+> -	queue->cur = 0;
+> -	spin_lock_init(&queue->lock);
+> -
+> -	tasklet_init(&hostdata->srp_task, (void *)rpavscsi_task,
+> -		     (unsigned long)hostdata);
+> -
+>  	return retrc;
 > 
-> +/**
-> + * ipr_show_fw_type - Show the adapter's firmware type.
-> + * @dev:	class device struct
-> + * @buf:	buffer
-> + *
-> + * Return value:
-> + *	number of bytes printed to buffer
-> + **/
-> +static ssize_t ipr_show_fw_type(struct device *dev,
-> +				struct device_attribute *attr, char *buf)
-> +{
-> +	struct Scsi_Host *shost = class_to_shost(dev);
-> +	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
-> +	unsigned long lock_flags = 0;
-> +	int len;
-> +
-> +	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-> +	len = snprintf(buf, PAGE_SIZE, "%d\n", ioa_cfg->sis64);
-> +	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-> +	return len;
-> +}
-> +
-> +static struct device_attribute ipr_ioa_fw_type_attr = {
-> +	.attr = {
-> +		.name =		"fw_type",
-> +		.mode =		S_IRUGO,
-> +	},
-> +	.show = ipr_show_fw_type
-> +};
-> +
->  static struct device_attribute *ipr_ioa_attrs[] = {
->  	&ipr_fw_version_attr,
->  	&ipr_log_level_attr,
-> @@ -3768,6 +3798,7 @@ static struct device_attribute *ipr_ioa_
->  	&ipr_ioa_state_attr,
->  	&ipr_ioa_reset_attr,
->  	&ipr_update_fw_attr,
-> +	&ipr_ioa_fw_type_attr,
->  	NULL,
->  };
-> 
-> @@ -4119,14 +4150,49 @@ static ssize_t ipr_show_resource_path(st
->  static struct device_attribute ipr_resource_path_attr = {
->  	.attr = {
->  		.name = 	"resource_path",
-> -		.mode =		S_IRUSR,
-> +		.mode =		S_IRUGO,
->  	},
->  	.show = ipr_show_resource_path
->  };
-> 
-> +/**
-> + * ipr_show_resource_type - Show the resource type for this device.
-> + * @dev:	device struct
-> + * @buf:	buffer
-> + *
-> + * Return value:
-> + *	number of bytes printed to buffer
-> + **/
-> +static ssize_t ipr_show_resource_type(struct device *dev, struct device_attribute *attr, char *buf)
-> +{
-> +	struct scsi_device *sdev = to_scsi_device(dev);
-> +	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)sdev->host->hostdata;
-> +	struct ipr_resource_entry *res;
-> +	unsigned long lock_flags = 0;
-> +	ssize_t len = -ENXIO;
-> +
-> +	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-> +	res = (struct ipr_resource_entry *)sdev->hostdata;
-> +
-> +	if (res)
-> +		len = snprintf(buf, PAGE_SIZE, "%x\n", res->type);
-> +
-> +	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-> +	return len;
-> +}
-> +
-> +static struct device_attribute ipr_resource_type_attr = {
-> +	.attr = {
-> +		.name =		"resource_type",
-> +		.mode =		S_IRUGO,
-> +	},
-> +	.show = ipr_show_resource_type
-> +};
-> +
->  static struct device_attribute *ipr_dev_attrs[] = {
->  	&ipr_adapter_handle_attr,
->  	&ipr_resource_path_attr,
-> +	&ipr_resource_type_attr,
->  	NULL,
->  };
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>        req_irq_failed:
+> +	tasklet_kill(&hostdata->srp_task);
+>  	do {
+>  		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
+>  	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
 
 
 -- 
