@@ -1,53 +1,70 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] driver core: remove CONFIG_SYSFS_DEPRECATED
-Date: Thu, 15 Jul 2010 07:27:40 -0700
-Message-ID: <20100715142740.GA17005@kroah.com>
-References: <20100709185450.GA29473@kroah.com>
-	<20100714163852.b3c09930.akpm@linux-foundation.org>
-	<m1zkxtinlw.fsf@fess.ebiederm.org>
-	<201007150929.03916.konrad@kernel.org>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: Re: [PATCH v4] dm: Add Dell MD36xxi controller into
+	RDAC	device list
+Date: Thu, 15 Jul 2010 09:17:52 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4D036F9EB@cosmail01.lsi.com>
+References: <F757EE5C3631ED4DBDFD7709119219FE03BBD8CF4C@AUSX7MCPS302.AMER.DELL.COM>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-Content-Disposition: inline
-In-Reply-To: <201007150929.03916.konrad@kernel.org>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
-	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
-	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Sender: alsa-devel-bounces@alsa-project.org
-Errors-To: alsa-devel-bounces@alsa-project.org
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Randy Dunlap <randy.dunlap@oracle.com>, alsa-devel@alsa-project.org, Kay Sievers <kay.sievers@vrfy.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-scsi@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, David Howells <dhowells@redhat.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Alan Stern <stern@rowland.harvard.edu>, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Tejun Heo <tj@kernel.org>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Andrew Morton <akpm@linux-foundation.org>, Dave Airlie <airlied@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <F757EE5C3631ED4DBDFD7709119219FE03BBD8CF4C@AUSX7MCPS302.AMER.DELL.COM>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jul 15, 2010 at 09:29:01AM -0400, Konrad Rzeszutek Wilk wrote:
+James,  Can you please include this patch in next kernel update..  
+
+Thanks
+Babu Moger 
+
+> -----Original Message-----
+> From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
+> On Behalf Of Yanqing_Liu@Dell.com
+> Sent: Wednesday, May 19, 2010 12:32 PM
+> To: dm-devel@redhat.com; linux-scsi@vger.kernel.org
+> Cc: Charles_Rose@Dell.com
+> Subject: [dm-devel] [PATCH v4] dm: Add Dell MD36xxi controller into
+> RDAC device list
 > 
-> > > and the box still won't boot.
-> >
-> > The reason FC6 doesn't boot is there is a userspace tool
-> > I believe in the initrd that cares about symlinks when it should
-> > not.
+> Hi all,
 > 
-> It is not just nash. Also multipathd would fail (as it expects 
-> the /sys/scsi_host/..<something> in certain directories), and 'lsscsi'. There 
-> might be other tools that depend on libsysfs to be affected by this as well.
-
-No tool should use libsysfs, that code broke a _long_ time ago.  Do you
-know of anything using it?
-
-> Oh, and I think 'udev' might have some trouble too - but not 100% certain 
-> about that.
-
-Heh, no udev works just fine :)
-
-So basically, it's just the block links that are being affected, so that
-might let me narrow down the code covered by the depreciated option.
-
-thanks,
-
-greg k-h
+> This patch is to add next generation of Dell iSCSI PowerVault
+> controller MD36xxi into RDAC device list.
+> 
+> Thanks,
+> Yanqing
+> 
+> Signed off by: Yanqing Liu <Yanqing_Liu@Dell.com>
+> ---
+> Index: linux-2.6.34/drivers/scsi/device_handler/scsi_dh_rdac.c
+> =======================================================================
+> =
+> --- linux-2.6.34.orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2010-
+> 05-19 09:03:34.000000000 -0400
+> +++ linux-2.6.34/drivers/scsi/device_handler/scsi_dh_rdac.c	2010-05-19
+> 09:01:06.000000000 -0400
+> @@ -768,6 +768,7 @@
+>  	{"DELL", "MD3000i"},
+>  	{"DELL", "MD32xx"},
+>  	{"DELL", "MD32xxi"},
+> +	{"DELL", "MD36xxi"},
+>  	{"LSI", "INF-01-00"},
+>  	{"ENGENIO", "INF-01-00"},
+>  	{"STK", "FLEXLINE 380"},
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
