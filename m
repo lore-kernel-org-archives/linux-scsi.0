@@ -1,52 +1,47 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] driver core: remove CONFIG_SYSFS_DEPRECATED
-Date: Thu, 15 Jul 2010 12:24:33 -0400
-Message-ID: <4C3F3641.8020802@interlog.com>
-References: <20100709185450.GA29473@kroah.com> <20100714163852.b3c09930.akpm@linux-foundation.org> <m1zkxtinlw.fsf@fess.ebiederm.org> <201007150929.03916.konrad@kernel.org>
-Reply-To: dgilbert@interlog.com
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [patch 0/1] Apply segment size and segment boundary to integrity data
+Date: Thu, 15 Jul 2010 12:35:27 -0400
+Message-ID: <yq1iq4gpusw.fsf@sermon.lab.mkp.net>
+References: <20100715153410.774329000@de.ibm.com>
+	<yq1mxtspwab.fsf@sermon.lab.mkp.net> <4C3F3400.7060005@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:33866 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933694Ab0GOQZo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2010 12:25:44 -0400
-In-Reply-To: <201007150929.03916.konrad@kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:28853 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933695Ab0GOQfw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Jul 2010 12:35:52 -0400
+In-Reply-To: <4C3F3400.7060005@kernel.dk> (Jens Axboe's message of "Thu, 15
+	Jul 2010 10:14:56 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, Jens Axboe <axboe@kernel.dk>, Stephen Hemminger <shemminger@vyatta.com>, Kay Sievers <kay.sievers@vrfy.org>, Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>, David Howells <dhowells@redhat.com>, Dave Airlie <airlied@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10-07-15 09:29 AM, Konrad Rzeszutek Wilk wrote:
->
->>> and the box still won't boot.
->>
->> The reason FC6 doesn't boot is there is a userspace tool
->> I believe in the initrd that cares about symlinks when it should
->> not.
->
-> It is not just nash. Also multipathd would fail (as it expects
-> the /sys/scsi_host/..<something>  in certain directories), and 'lsscsi'. There
-> might be other tools that depend on libsysfs to be affected by this as well.
+>>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
 
-lsscsi has been "CONFIG_SYSFS_DEPRECATED_V2" tolerant
-since version 0.21 released 20080710. The current
-version is 0.23 released 20091201 which will soon
-be displaced by 0.24 to cope with the most recent
-breakages.
+Jens> That sounds like a very batch design decision. Either the limits
+Jens> are explicitly given and different, or if not we have to assume
+Jens> that they are the same as the data limits at least.
 
-Writing a user space tool that relies on sysfs structure
-and contents, stable over the whole lk 2.6 series, is
-impossible. For a history of my pain with lsscsi see
-its ChangeLog.
+Imagine a controller that has a 4KB segment, 1 entry limit.  If we
+capped the DI sgl the same way as the data we'd only be able to issue
+512-byte requests unless the DI entries happened to be contiguous in
+memory.
 
+For several types of I/O the DI sgl is much longer than the data sgl.
+Especially if the submitter is using buffer_heads to map 512-byte
+blocks.
 
-Happily most of my tools are based on an ioctl! SG_IO
-was a suggestion from Joerg Schilling and has now found
-its way into most block devices. Now it has a new lease
-of life in the bsg driver.
+And consequently we require vendors to be able to handle the
+pathological case in which any data scatterlist honoring the
+segmentation constraints given by the driver can be matched with an
+integrity scatterlist in which there is a separate entry for each
+logical block.  No vendor has had any problems with this.  Therefore
+there are no block layer data integrity queue limits.
 
-Doug Gilbert
+If a device appears that does in fact have constraints I have no
+problems intruducing a set of suitable knobs.
 
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
