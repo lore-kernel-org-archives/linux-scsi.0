@@ -1,47 +1,51 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [patch 0/1] Apply segment size and segment boundary to integrity
- data
-Date: Thu, 15 Jul 2010 10:40:44 -0600
-Message-ID: <4C3F3A0C.10909@kernel.dk>
-References: <20100715153410.774329000@de.ibm.com>	<yq1mxtspwab.fsf@sermon.lab.mkp.net> <4C3F3400.7060005@kernel.dk> <yq1iq4gpusw.fsf@sermon.lab.mkp.net>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH] driver core: remove CONFIG_SYSFS_DEPRECATED
+Date: Thu, 15 Jul 2010 10:02:16 -0700
+Message-ID: <20100715170216.GA21592@suse.de>
+References: <20100709185450.GA29473@kroah.com> <20100714163852.b3c09930.akpm@linux-foundation.org> <m1zkxtinlw.fsf@fess.ebiederm.org> <201007150929.03916.konrad@kernel.org> <4C3F3641.8020802@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1iq4gpusw.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:37441 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933839Ab0GORBt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2010 13:01:49 -0400
+Content-Disposition: inline
+In-Reply-To: <4C3F3641.8020802@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, Jens Axboe <axboe@kernel.dk>, Stephen Hemminger <shemminger@vyatta.com>, Kay Sievers <kay.sievers@vrfy.org>, Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>, David Howells <dhowells@redhat.com>, Dave Airlie <airlied@gmail.com>
 
-On 07/15/2010 10:35 AM, Martin K. Petersen wrote:
->>>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
-> 
-> Jens> That sounds like a very batch design decision. Either the limits
-> Jens> are explicitly given and different, or if not we have to assume
-> Jens> that they are the same as the data limits at least.
-> 
-> Imagine a controller that has a 4KB segment, 1 entry limit.  If we
-> capped the DI sgl the same way as the data we'd only be able to issue
-> 512-byte requests unless the DI entries happened to be contiguous in
-> memory.
-> 
-> For several types of I/O the DI sgl is much longer than the data sgl.
-> Especially if the submitter is using buffer_heads to map 512-byte
-> blocks.
-> 
-> And consequently we require vendors to be able to handle the
-> pathological case in which any data scatterlist honoring the
-> segmentation constraints given by the driver can be matched with an
-> integrity scatterlist in which there is a separate entry for each
-> logical block.  No vendor has had any problems with this.  Therefore
-> there are no block layer data integrity queue limits.
-> 
-> If a device appears that does in fact have constraints I have no
-> problems intruducing a set of suitable knobs.
+On Thu, Jul 15, 2010 at 12:24:33PM -0400, Douglas Gilbert wrote:
+> On 10-07-15 09:29 AM, Konrad Rzeszutek Wilk wrote:
+>>
+>>>> and the box still won't boot.
+>>>
+>>> The reason FC6 doesn't boot is there is a userspace tool
+>>> I believe in the initrd that cares about symlinks when it should
+>>> not.
+>>
+>> It is not just nash. Also multipathd would fail (as it expects
+>> the /sys/scsi_host/..<something>  in certain directories), and 'lsscsi'. There
+>> might be other tools that depend on libsysfs to be affected by this as well.
+>
+> lsscsi has been "CONFIG_SYSFS_DEPRECATED_V2" tolerant
+> since version 0.21 released 20080710. The current
+> version is 0.23 released 20091201 which will soon
+> be displaced by 0.24 to cope with the most recent
+> breakages.
+>
+> Writing a user space tool that relies on sysfs structure
+> and contents, stable over the whole lk 2.6 series, is
+> impossible. For a history of my pain with lsscsi see
+> its ChangeLog.
 
-OK, lets wait and hear what problem that Christof ran into here.
-Is it ensuring that a segment doesn't corss eg the 4GB boundary?
+Yeah, I'd recommend using libudev for any new tools if you want to
+interact with sysfs.  It's much easier than mucking around with it
+directly and will be future-proof as udev can handle a lot of changes to
+sysfs that other tools might not realize.
 
--- 
-Jens Axboe
+thanks,
+
+greg k-h
