@@ -1,70 +1,47 @@
-From: Peter Huewe <PeterHuewe@gmx.de>
-Subject: [PATCH 25/25] message/fusion: Convert pci_table entries to PCI_VDEVICE (if PCI_ANY_ID is used)
-Date: Thu, 15 Jul 2010 21:09:24 +0200
-Message-ID: <201007152109.25219.PeterHuewe@gmx.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/1] be2iscsi: Fix for 64K data
+Date: Thu, 15 Jul 2010 15:14:02 -0500
+Message-ID: <4C3F6C0A.5080502@cs.wisc.edu>
+References: <20100714182749.GA25200@serverengines.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:43711 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S934497Ab0GOTJ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2010 15:09:27 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:60943 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934618Ab0GOUKn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2010 16:10:43 -0400
+In-Reply-To: <20100714182749.GA25200@serverengines.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kernel Janitors <kernel-janitors@vger.kernel.org>
-Cc: Eric Moore <Eric.Moore@lsi.com>, support@lsi.com, James Bottomley <James.Bottomley@suse.de>, Kashyap Desai <kashyap.desai@lsi.com>, Tejun Heo <tj@kernel.org>, Michael Reed <mdr@sgi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jayamohan Kalickal <jayamohank@serverengines.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-From: Peter Huewe <peterhuewe@gmx.de>
+On 07/14/2010 01:28 PM, Jayamohan Kallickal wrote:
+>     This patch fixes a wraparound issue when the length=65536 for an sge.
+> Since it was defined as a short, the length becomes zero
+>
+> This patch has been made over  scsi-rc-fixes-2.6 tree pulled today
+>
+> Signed-off-by: Jayamohan Kallickal<jayamohank@serverengines.com>
+> ---
+>   drivers/scsi/be2iscsi/be_main.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index dd5b105..38e6d32 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -1764,7 +1764,7 @@ hwi_write_sgl(struct iscsi_wrb *pwrb, struct scatterlist *sg,
+>   	      unsigned int num_sg, struct beiscsi_io_task *io_task)
+>   {
+>   	struct iscsi_sge *psgl;
+> -	unsigned short sg_len, index;
+> +	unsigned int sg_len, index;
+>   	unsigned int sge_len = 0;
+>   	unsigned long long addr;
+>   	struct scatterlist *l_sg;
 
-This patch converts pci_table entries, where .subvendor=PCI_ANY_ID and
-.subdevice=PCI_ANY_ID, .class=0 and .class_mask=0, to use the
-PCI_VDEVICE macro, and thus improves readability.
+Looks good.
 
-Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
----
- drivers/message/fusion/mptfc.c |   27 +++++++++------------------
- 1 files changed, 9 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index b5f03ad..19dad15 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -139,24 +139,15 @@ static struct scsi_host_template mptfc_driver_template = {
-  */
- 
- static struct pci_device_id mptfc_pci_table[] = {
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC909,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919X,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929X,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC939X,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949X,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949E,
--		PCI_ANY_ID, PCI_ANY_ID },
--	{ PCI_VENDOR_ID_BROCADE, MPI_MANUFACTPAGE_DEVICEID_FC949E,
--		PCI_ANY_ID, PCI_ANY_ID },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC909), },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919), },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929), },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919X), },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929X), },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC939X), },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949X), },
-+	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949E), },
-+	{ PCI_VDEVICE(BROCADE, MPI_MANUFACTPAGE_DEVICEID_FC949E), },
- 	{0}	/* Terminating entry */
- };
- MODULE_DEVICE_TABLE(pci, mptfc_pci_table);
--- 
-1.7.1
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
