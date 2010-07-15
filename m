@@ -1,37 +1,53 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: 520 BPS data integrity vendors
-Date: Thu, 15 Jul 2010 09:47:32 -0400
-Message-ID: <yq17hkwrh57.fsf@sermon.lab.mkp.net>
-References: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
-	<1278093968.2856.169.camel@mulgrave.site>
-	<AANLkTilWKeOAXMukh_zvXzdXkdOTk6soAEnpzFNwvBA3@mail.gmail.com>
-	<yq1mxu981eg.fsf@sermon.lab.mkp.net>
-	<AANLkTimI7Ke4qXw7zv8WDsWSQtBRSwSi5IZbvByjGRih@mail.gmail.com>
-	<yq1630s8msu.fsf@sermon.lab.mkp.net>
-	<AANLkTilqzgIav9noTYLC9cxKtntva6wQwLSUI1i8DgAe@mail.gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] driver core: remove CONFIG_SYSFS_DEPRECATED
+Date: Thu, 15 Jul 2010 07:27:40 -0700
+Message-ID: <20100715142740.GA17005@kroah.com>
+References: <20100709185450.GA29473@kroah.com>
+	<20100714163852.b3c09930.akpm@linux-foundation.org>
+	<m1zkxtinlw.fsf@fess.ebiederm.org>
+	<201007150929.03916.konrad@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <AANLkTilqzgIav9noTYLC9cxKtntva6wQwLSUI1i8DgAe@mail.gmail.com>
-	(Dan Porat's message of "Thu, 15 Jul 2010 06:08:09 -0400")
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Porat <dan.porat@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Content-Disposition: inline
+In-Reply-To: <201007150929.03916.konrad@kernel.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+To: Konrad Rzeszutek Wilk <konrad@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Randy Dunlap <randy.dunlap@oracle.com>, alsa-devel@alsa-project.org, Kay Sievers <kay.sievers@vrfy.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, linux-scsi@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, David Howells <dhowells@redhat.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Alan Stern <stern@rowland.harvard.edu>, "Eric W. Biederman" <ebiederm@xmission.com>, Ingo Molnar <mingo@elte.hu>, Tejun Heo <tj@kernel.org>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Andrew Morton <akpm@linux-foundation.org>, Dave Airlie <airlied@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Dan" == Dan Porat <dan.porat@gmail.com> writes:
+On Thu, Jul 15, 2010 at 09:29:01AM -0400, Konrad Rzeszutek Wilk wrote:
+> 
+> > > and the box still won't boot.
+> >
+> > The reason FC6 doesn't boot is there is a userspace tool
+> > I believe in the initrd that cares about symlinks when it should
+> > not.
+> 
+> It is not just nash. Also multipathd would fail (as it expects 
+> the /sys/scsi_host/..<something> in certain directories), and 'lsscsi'. There 
+> might be other tools that depend on libsysfs to be affected by this as well.
 
-Dan> [root@fedora13 ~]# sg_inq /dev/sdb
-[...]
-Dan> [root@fedora13 ~]# sg_readcap /dev/sdb
-[...]
+No tool should use libsysfs, that code broke a _long_ time ago.  Do you
+know of anything using it?
 
-I asked for EXTENDED INQUIRY and READ CAPACITY(16).
+> Oh, and I think 'udev' might have some trouble too - but not 100% certain 
+> about that.
 
-# sg_inq -x /dev/sdb
-# sg_readcap -l /dev/sdb
+Heh, no udev works just fine :)
 
-It does not look like you have reformatted the drive, though...
+So basically, it's just the block links that are being affected, so that
+might let me narrow down the code covered by the depreciated option.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+thanks,
+
+greg k-h
