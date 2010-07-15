@@ -1,51 +1,70 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH] driver core: remove CONFIG_SYSFS_DEPRECATED
-Date: Thu, 15 Jul 2010 10:02:16 -0700
-Message-ID: <20100715170216.GA21592@suse.de>
-References: <20100709185450.GA29473@kroah.com> <20100714163852.b3c09930.akpm@linux-foundation.org> <m1zkxtinlw.fsf@fess.ebiederm.org> <201007150929.03916.konrad@kernel.org> <4C3F3641.8020802@interlog.com>
+From: Peter Huewe <PeterHuewe@gmx.de>
+Subject: [PATCH 25/25] message/fusion: Convert pci_table entries to PCI_VDEVICE (if PCI_ANY_ID is used)
+Date: Thu, 15 Jul 2010 21:09:24 +0200
+Message-ID: <201007152109.25219.PeterHuewe@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:37441 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933839Ab0GORBt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2010 13:01:49 -0400
-Content-Disposition: inline
-In-Reply-To: <4C3F3641.8020802@interlog.com>
+Received: from mail.gmx.net ([213.165.64.20]:43711 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S934497Ab0GOTJ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2010 15:09:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, Jens Axboe <axboe@kernel.dk>, Stephen Hemminger <shemminger@vyatta.com>, Kay Sievers <kay.sievers@vrfy.org>, Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>, David Howells <dhowells@redhat.com>, Dave Airlie <airlied@gmail.com>
+To: Kernel Janitors <kernel-janitors@vger.kernel.org>
+Cc: Eric Moore <Eric.Moore@lsi.com>, support@lsi.com, James Bottomley <James.Bottomley@suse.de>, Kashyap Desai <kashyap.desai@lsi.com>, Tejun Heo <tj@kernel.org>, Michael Reed <mdr@sgi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Jul 15, 2010 at 12:24:33PM -0400, Douglas Gilbert wrote:
-> On 10-07-15 09:29 AM, Konrad Rzeszutek Wilk wrote:
->>
->>>> and the box still won't boot.
->>>
->>> The reason FC6 doesn't boot is there is a userspace tool
->>> I believe in the initrd that cares about symlinks when it should
->>> not.
->>
->> It is not just nash. Also multipathd would fail (as it expects
->> the /sys/scsi_host/..<something>  in certain directories), and 'lsscsi'. There
->> might be other tools that depend on libsysfs to be affected by this as well.
->
-> lsscsi has been "CONFIG_SYSFS_DEPRECATED_V2" tolerant
-> since version 0.21 released 20080710. The current
-> version is 0.23 released 20091201 which will soon
-> be displaced by 0.24 to cope with the most recent
-> breakages.
->
-> Writing a user space tool that relies on sysfs structure
-> and contents, stable over the whole lk 2.6 series, is
-> impossible. For a history of my pain with lsscsi see
-> its ChangeLog.
+From: Peter Huewe <peterhuewe@gmx.de>
 
-Yeah, I'd recommend using libudev for any new tools if you want to
-interact with sysfs.  It's much easier than mucking around with it
-directly and will be future-proof as udev can handle a lot of changes to
-sysfs that other tools might not realize.
+This patch converts pci_table entries, where .subvendor=PCI_ANY_ID and
+.subdevice=PCI_ANY_ID, .class=0 and .class_mask=0, to use the
+PCI_VDEVICE macro, and thus improves readability.
 
-thanks,
+Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
+---
+ drivers/message/fusion/mptfc.c |   27 +++++++++------------------
+ 1 files changed, 9 insertions(+), 18 deletions(-)
 
-greg k-h
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index b5f03ad..19dad15 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -139,24 +139,15 @@ static struct scsi_host_template mptfc_driver_template = {
+  */
+ 
+ static struct pci_device_id mptfc_pci_table[] = {
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC909,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919X,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929X,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC939X,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949X,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949E,
+-		PCI_ANY_ID, PCI_ANY_ID },
+-	{ PCI_VENDOR_ID_BROCADE, MPI_MANUFACTPAGE_DEVICEID_FC949E,
+-		PCI_ANY_ID, PCI_ANY_ID },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC909), },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919), },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929), },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC919X), },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC929X), },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC939X), },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949X), },
++	{ PCI_VDEVICE(LSI_LOGIC, MPI_MANUFACTPAGE_DEVICEID_FC949E), },
++	{ PCI_VDEVICE(BROCADE, MPI_MANUFACTPAGE_DEVICEID_FC949E), },
+ 	{0}	/* Terminating entry */
+ };
+ MODULE_DEVICE_TABLE(pci, mptfc_pci_table);
+-- 
+1.7.1
+
