@@ -1,61 +1,52 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [patch 0/1] Apply segment size and segment boundary to integrity
- data
-Date: Thu, 15 Jul 2010 10:14:56 -0600
-Message-ID: <4C3F3400.7060005@kernel.dk>
-References: <20100715153410.774329000@de.ibm.com> <yq1mxtspwab.fsf@sermon.lab.mkp.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] driver core: remove CONFIG_SYSFS_DEPRECATED
+Date: Thu, 15 Jul 2010 12:24:33 -0400
+Message-ID: <4C3F3641.8020802@interlog.com>
+References: <20100709185450.GA29473@kroah.com> <20100714163852.b3c09930.akpm@linux-foundation.org> <m1zkxtinlw.fsf@fess.ebiederm.org> <201007150929.03916.konrad@kernel.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:43028 "EHLO kernel.dk"
+Received: from smtp.infotech.no ([82.134.31.41]:33866 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933646Ab0GOQPE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2010 12:15:04 -0400
-In-Reply-To: <yq1mxtspwab.fsf@sermon.lab.mkp.net>
+	id S933694Ab0GOQZo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Jul 2010 12:25:44 -0400
+In-Reply-To: <201007150929.03916.konrad@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad@kernel.org>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@suse.de>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, Jens Axboe <axboe@kernel.dk>, Stephen Hemminger <shemminger@vyatta.com>, Kay Sievers <kay.sievers@vrfy.org>, Alan Stern <stern@rowland.harvard.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <a.p.zijlstra@chello.nl>, David Howells <dhowells@redhat.com>, Dave Airlie <airlied@gmail.com>
 
-On 07/15/2010 10:03 AM, Martin K. Petersen wrote:
->>>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
-> 
-> Christof> While experimenting with the data integrity support in the
-> Christof> Linux kernel, i found that the block layer integrity code can
-> Christof> send integrity data segments for a request that do not adhere
-> Christof> to the queue limits.  The integrity data segment can be larger
-> Christof> than queue_max_segment_size and the segment does not adhere to
-> Christof> the queue_segment_boundary.
-> 
-> Correct.  That was a deliberate design decision.
-> 
-> Modern HBAs allow essentially indefinite chaining and our block layer
-> segmentation controls are to some extent legacy baggage.  I did not want
-> to put in a set of constraints on the DI scatterlist because I was
-> afraid it would encourage vendors to actually them.
+On 10-07-15 09:29 AM, Konrad Rzeszutek Wilk wrote:
+>
+>>> and the box still won't boot.
+>>
+>> The reason FC6 doesn't boot is there is a userspace tool
+>> I believe in the initrd that cares about symlinks when it should
+>> not.
+>
+> It is not just nash. Also multipathd would fail (as it expects
+> the /sys/scsi_host/..<something>  in certain directories), and 'lsscsi'. There
+> might be other tools that depend on libsysfs to be affected by this as well.
 
-That sounds like a very batch design decision. Either the limits are
-explicitly given and different, or if not we have to assume that they
-are the same as the data limits at least.
+lsscsi has been "CONFIG_SYSFS_DEPRECATED_V2" tolerant
+since version 0.21 released 20080710. The current
+version is 0.23 released 20091201 which will soon
+be displaced by 0.24 to cope with the most recent
+breakages.
 
-So do they have limits or not? Essentially indefinite, what does that
-mean? If they are limited, then we must have settings to cope and map
-around those. If these limits are not the same as the regular data
-limits, then those limits could be separate.
+Writing a user space tool that relies on sysfs structure
+and contents, stable over the whole lk 2.6 series, is
+impossible. For a history of my pain with lsscsi see
+its ChangeLog.
 
-> Christof> It appears to me that the right way would be to apply the same
-> Christof> restrictions that are in place for data segments also to
-> Christof> integrity data segments. The patch works for my experiments
-> Christof> and applies on top of the current Linux tree (2.6.35-rc5).
-> 
-> Who says constraints on the integrity scatterlist are the same as on the
-> data ditto?  In my experience they are not.  If you must do this, then
-> the DI constraints should be separate from the data segmentation ones.
-> But I'm interested in what motivated this change to begin with.
 
-Yes me too, what bug triggered this patch?
+Happily most of my tools are based on an ioctl! SG_IO
+was a suggestion from Joerg Schilling and has now found
+its way into most block devices. Now it has a new lease
+of life in the bsg driver.
 
--- 
-Jens Axboe
+Doug Gilbert
+
 
