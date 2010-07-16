@@ -1,47 +1,31 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/1] be2iscsi: Fix for 64K data
-Date: Thu, 15 Jul 2010 15:14:02 -0500
-Message-ID: <4C3F6C0A.5080502@cs.wisc.edu>
-References: <20100714182749.GA25200@serverengines.com>
+From: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
+Subject: mvsas still has problems with 2.6.34
+Date: Fri, 16 Jul 2010 00:10:57 -0600
+Message-ID: <201007160010.58000.tfjellstrom@strangesoft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:60943 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934618Ab0GOUKn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Jul 2010 16:10:43 -0400
-In-Reply-To: <20100714182749.GA25200@serverengines.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, ayan@marvell.com, andy yan <andyysj@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kalickal <jayamohank@serverengines.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On 07/14/2010 01:28 PM, Jayamohan Kallickal wrote:
->     This patch fixes a wraparound issue when the length=65536 for an sge.
-> Since it was defined as a short, the length becomes zero
->
-> This patch has been made over  scsi-rc-fixes-2.6 tree pulled today
->
-> Signed-off-by: Jayamohan Kallickal<jayamohank@serverengines.com>
-> ---
->   drivers/scsi/be2iscsi/be_main.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index dd5b105..38e6d32 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -1764,7 +1764,7 @@ hwi_write_sgl(struct iscsi_wrb *pwrb, struct scatterlist *sg,
->   	      unsigned int num_sg, struct beiscsi_io_task *io_task)
->   {
->   	struct iscsi_sge *psgl;
-> -	unsigned short sg_len, index;
-> +	unsigned int sg_len, index;
->   	unsigned int sge_len = 0;
->   	unsigned long long addr;
->   	struct scatterlist *l_sg;
+I've recently updated my server, and the mvsas driver included in 2.6.34.1 
+still causes my AOC-SASLP-MV8 card to completely lock up after mdraid starts 
+up on the devices. The machine is essentially in "production" so I can't do 
+a heck of a lot of testing on it anymore. The mvsas driver I got from Andy 
+Yan seems to be a little outdated, it fails to compile due to a missing 
+argument to sas_change_queue_depth, which I managed to fix, and I will try 
+testing. I hope it works.
 
-Looks good.
+At some point though I really hope this gets fixed. I'm still willing to help 
+test any new versions, just that I can't keep my box down for an extended 
+period.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Thanks.
+
+-- 
+Thomas Fjellstrom
+tfjellstrom@strangesoft.net
