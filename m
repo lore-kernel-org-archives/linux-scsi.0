@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 10/10] zfcp: Trigger logging in the FCP channel on qdio error conditions
-Date: Fri, 16 Jul 2010 15:37:43 +0200
-Message-ID: <20100716134301.132651000@de.ibm.com>
+Subject: [patch 08/10] zfcp: Enable data division support for FCP devices
+Date: Fri, 16 Jul 2010 15:37:41 +0200
+Message-ID: <20100716134300.845774000@de.ibm.com>
 References: <20100716133733.621672000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.17.166]:44471 "EHLO
-	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965625Ab0GPNnF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jul 2010 09:43:05 -0400
-Content-Disposition: inline; filename=700-zfcp-log-errors.diff
+Received: from mtagate5.de.ibm.com ([195.212.17.165]:42925 "EHLO
+	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965564Ab0GPNnE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jul 2010 09:43:04 -0400
+Content-Disposition: inline; filename=linux-2.6.34-qdio-zfcp-data.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,167 +16,115 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-Exploit the cio siosl function to trigger logging in the FCP channel
-on qdio error conditions. Add a helper function in zfcp_qdio to ensure
-that tracing is only triggered once before calling qdio_shutdown.
-
-Trigger in zfcp for hardware logs are:
- - timeout for FSF requests to the FCP channel
- - "no recommendation" status from FCP channel
- - invalid FSF protocol status
- - stalled outbound queue
- - unknown request id on inbound queue
- - QDIO_ERROR_SLSB_STATE
-
-All of the above triggers run from the Linux qdio softirq context, so
-no additional synchronization is necessary for the handling of the
-ZFCP_STATUS_ADAPTER_SIOSL_ISSUED flag.
+Try to enable data division support for FCP devices and indicate in
+the adapter status flag if it succeeded.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
-
+ arch/s390/include/asm/qdio.h  |    6 ++++++
+ drivers/s390/cio/qdio_setup.c |    2 ++
  drivers/s390/scsi/zfcp_def.h  |    1 +
- drivers/s390/scsi/zfcp_ext.h  |    1 +
- drivers/s390/scsi/zfcp_fsf.c  |    7 ++++++-
- drivers/s390/scsi/zfcp_qdio.c |   35 ++++++++++++++++++++++++++++++++---
- 4 files changed, 40 insertions(+), 4 deletions(-)
+ drivers/s390/scsi/zfcp_qdio.c |   11 ++++++++++-
+ 4 files changed, 19 insertions(+), 1 deletion(-)
 
+--- a/arch/s390/include/asm/qdio.h
++++ b/arch/s390/include/asm/qdio.h
+@@ -84,6 +84,7 @@ struct qdr {
+ 
+ #define QIB_AC_OUTBOUND_PCI_SUPPORTED	0x40
+ #define QIB_RFLAGS_ENABLE_QEBSM		0x80
++#define QIB_RFLAGS_ENABLE_DATA_DIV	0x02
+ 
+ /**
+  * struct qib - queue information block (QIB)
+@@ -284,6 +285,9 @@ struct slsb {
+ 	u8 val[QDIO_MAX_BUFFERS_PER_Q];
+ } __attribute__ ((packed, aligned(256)));
+ 
++#define CHSC_AC2_DATA_DIV_AVAILABLE	0x0010
++#define CHSC_AC2_DATA_DIV_ENABLED	0x0002
++
+ struct qdio_ssqd_desc {
+ 	u8 flags;
+ 	u8:8;
+@@ -332,6 +336,7 @@ typedef void qdio_handler_t(struct ccw_d
+  * @adapter_name: name for the adapter
+  * @qib_param_field_format: format for qib_parm_field
+  * @qib_param_field: pointer to 128 bytes or NULL, if no param field
++ * @qib_rflags: rflags to set
+  * @input_slib_elements: pointer to no_input_qs * 128 words of data or NULL
+  * @output_slib_elements: pointer to no_output_qs * 128 words of data or NULL
+  * @no_input_qs: number of input queues
+@@ -348,6 +353,7 @@ struct qdio_initialize {
+ 	unsigned char adapter_name[8];
+ 	unsigned int qib_param_field_format;
+ 	unsigned char *qib_param_field;
++	unsigned char qib_rflags;
+ 	unsigned long *input_slib_elements;
+ 	unsigned long *output_slib_elements;
+ 	unsigned int no_input_qs;
+--- a/drivers/s390/cio/qdio_setup.c
++++ b/drivers/s390/cio/qdio_setup.c
+@@ -368,6 +368,8 @@ static void setup_qib(struct qdio_irq *i
+ 	if (qebsm_possible())
+ 		irq_ptr->qib.rflags |= QIB_RFLAGS_ENABLE_QEBSM;
+ 
++	irq_ptr->qib.rflags |= init_data->qib_rflags;
++
+ 	irq_ptr->qib.qfmt = init_data->q_format;
+ 	if (init_data->no_input_qs)
+ 		irq_ptr->qib.isliba =
 --- a/drivers/s390/scsi/zfcp_def.h
 +++ b/drivers/s390/scsi/zfcp_def.h
-@@ -73,6 +73,7 @@ struct zfcp_reqlist;
- 
- /* adapter status */
- #define ZFCP_STATUS_ADAPTER_QDIOUP		0x00000002
-+#define ZFCP_STATUS_ADAPTER_SIOSL_ISSUED	0x00000004
- #define ZFCP_STATUS_ADAPTER_XCONFIG_OK		0x00000008
+@@ -77,6 +77,7 @@ struct zfcp_reqlist;
  #define ZFCP_STATUS_ADAPTER_HOST_CON_INIT	0x00000010
  #define ZFCP_STATUS_ADAPTER_ERP_PENDING		0x00000100
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -152,6 +152,7 @@ extern int zfcp_qdio_sbals_from_sg(struc
- 				   struct scatterlist *);
- extern int zfcp_qdio_open(struct zfcp_qdio *);
- extern void zfcp_qdio_close(struct zfcp_qdio *);
-+extern void zfcp_qdio_siosl(struct zfcp_adapter *);
+ #define ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED	0x00000200
++#define ZFCP_STATUS_ADAPTER_DATA_DIV_ENABLED	0x00000400
  
- /* zfcp_scsi.c */
- extern struct zfcp_data zfcp_data;
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -21,6 +21,7 @@
- static void zfcp_fsf_request_timeout_handler(unsigned long data)
- {
- 	struct zfcp_adapter *adapter = (struct zfcp_adapter *) data;
-+	zfcp_qdio_siosl(adapter);
- 	zfcp_erp_adapter_reopen(adapter, ZFCP_STATUS_COMMON_ERP_FAILED,
- 				"fsrth_1", NULL);
- }
-@@ -326,6 +327,7 @@ static void zfcp_fsf_fsfstatus_qual_eval
- 		dev_err(&req->adapter->ccw_device->dev,
- 			"The FCP adapter reported a problem "
- 			"that cannot be recovered\n");
-+		zfcp_qdio_siosl(req->adapter);
- 		zfcp_erp_adapter_shutdown(req->adapter, 0, "fsfsqe1", req);
- 		break;
- 	}
-@@ -416,6 +418,7 @@ static void zfcp_fsf_protstatus_eval(str
- 		dev_err(&adapter->ccw_device->dev,
- 			"0x%x is not a valid transfer protocol status\n",
- 			qtcb->prefix.prot_status);
-+		zfcp_qdio_siosl(adapter);
- 		zfcp_erp_adapter_shutdown(adapter, 0, "fspse_9", req);
- 	}
- 	req->status |= ZFCP_STATUS_FSFREQ_ERROR;
-@@ -2485,13 +2488,15 @@ void zfcp_fsf_reqid_check(struct zfcp_qd
- 		req_id = (unsigned long) sbale->addr;
- 		fsf_req = zfcp_reqlist_find_rm(adapter->req_list, req_id);
- 
--		if (!fsf_req)
-+		if (!fsf_req) {
- 			/*
- 			 * Unknown request means that we have potentially memory
- 			 * corruption and must stop the machine immediately.
- 			 */
-+			zfcp_qdio_siosl(adapter);
- 			panic("error: unknown req_id (%lx) on adapter %s.\n",
- 			      req_id, dev_name(&adapter->ccw_device->dev));
-+		}
- 
- 		fsf_req->qdio_req.sbal_response = sbal_idx;
- 		zfcp_fsf_req_complete(fsf_req);
+ /* remote port status */
+ #define ZFCP_STATUS_PORT_PHYS_OPEN		0x00000001
 --- a/drivers/s390/scsi/zfcp_qdio.c
 +++ b/drivers/s390/scsi/zfcp_qdio.c
-@@ -30,12 +30,15 @@ static int zfcp_qdio_buffers_enqueue(str
- 	return 0;
+@@ -283,6 +283,7 @@ static void zfcp_qdio_setup_init_data(st
+ 	id->q_format = QDIO_ZFCP_QFMT;
+ 	memcpy(id->adapter_name, dev_name(&id->cdev->dev), 8);
+ 	ASCEBC(id->adapter_name, 8);
++	id->qib_rflags = QIB_RFLAGS_ENABLE_DATA_DIV;
+ 	id->qib_param_field_format = 0;
+ 	id->qib_param_field = NULL;
+ 	id->input_slib_elements = NULL;
+@@ -294,8 +295,8 @@ static void zfcp_qdio_setup_init_data(st
+ 	id->int_parm = (unsigned long) qdio;
+ 	id->input_sbal_addr_array = (void **) (qdio->res_q);
+ 	id->output_sbal_addr_array = (void **) (qdio->req_q);
+-
  }
- 
--static void zfcp_qdio_handler_error(struct zfcp_qdio *qdio, char *id)
-+static void zfcp_qdio_handler_error(struct zfcp_qdio *qdio, char *id,
-+				    unsigned int qdio_err)
- {
++
+ /**
+  * zfcp_qdio_allocate - allocate queue memory and initialize QDIO data
+  * @adapter: pointer to struct zfcp_adapter
+@@ -358,6 +359,7 @@ int zfcp_qdio_open(struct zfcp_qdio *qdi
+ 	struct qdio_initialize init_data;
  	struct zfcp_adapter *adapter = qdio->adapter;
+ 	struct ccw_device *cdev = adapter->ccw_device;
++	struct qdio_ssqd_desc ssqd;
+ 	int cc;
  
- 	dev_warn(&adapter->ccw_device->dev, "A QDIO problem occurred\n");
- 
-+	if (qdio_err & QDIO_ERROR_SLSB_STATE)
-+		zfcp_qdio_siosl(adapter);
- 	zfcp_erp_adapter_reopen(adapter,
- 				ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED |
- 				ZFCP_STATUS_COMMON_ERP_FAILED, id, NULL);
-@@ -74,7 +77,7 @@ static void zfcp_qdio_int_req(struct ccw
- 
- 	if (unlikely(qdio_err)) {
- 		zfcp_dbf_hba_qdio(qdio->adapter->dbf, qdio_err, idx, count);
--		zfcp_qdio_handler_error(qdio, "qdireq1");
-+		zfcp_qdio_handler_error(qdio, "qdireq1", qdio_err);
- 		return;
- 	}
- 
-@@ -95,7 +98,7 @@ static void zfcp_qdio_int_resp(struct cc
- 
- 	if (unlikely(qdio_err)) {
- 		zfcp_dbf_hba_qdio(qdio->adapter->dbf, qdio_err, idx, count);
--		zfcp_qdio_handler_error(qdio, "qdires1");
-+		zfcp_qdio_handler_error(qdio, "qdires1", qdio_err);
- 		return;
- 	}
- 
-@@ -361,6 +364,9 @@ int zfcp_qdio_open(struct zfcp_qdio *qdi
  	if (atomic_read(&adapter->status) & ZFCP_STATUS_ADAPTER_QDIOUP)
- 		return -EIO;
- 
-+	atomic_clear_mask(ZFCP_STATUS_ADAPTER_SIOSL_ISSUED,
-+			  &qdio->adapter->status);
-+
- 	zfcp_qdio_setup_init_data(&init_data, qdio);
- 
+@@ -368,6 +370,13 @@ int zfcp_qdio_open(struct zfcp_qdio *qdi
  	if (qdio_establish(&init_data))
-@@ -440,3 +446,26 @@ int zfcp_qdio_setup(struct zfcp_adapter 
- 	return 0;
- }
+ 		goto failed_establish;
  
-+/**
-+ * zfcp_qdio_siosl - Trigger logging in FCP channel
-+ * @adapter: The zfcp_adapter where to trigger logging
-+ *
-+ * Call the cio siosl function to trigger hardware logging.  This
-+ * wrapper function sets a flag to ensure hardware logging is only
-+ * triggered once before going through qdio shutdown.
-+ *
-+ * The triggers are always run from qdio tasklet context, so no
-+ * additional synchronization is necessary.
-+ */
-+void zfcp_qdio_siosl(struct zfcp_adapter *adapter)
-+{
-+	int rc;
++	if (qdio_get_ssqd_desc(init_data.cdev, &ssqd))
++		goto failed_qdio;
 +
-+	if (atomic_read(&adapter->status) & ZFCP_STATUS_ADAPTER_SIOSL_ISSUED)
-+		return;
++	if (ssqd.qdioac2 & CHSC_AC2_DATA_DIV_ENABLED)
++		atomic_set_mask(ZFCP_STATUS_ADAPTER_DATA_DIV_ENABLED,
++				&qdio->adapter->status);
 +
-+	rc = ccw_device_siosl(adapter->ccw_device);
-+	if (!rc)
-+		atomic_set_mask(ZFCP_STATUS_ADAPTER_SIOSL_ISSUED,
-+				&adapter->status);
-+}
+ 	if (qdio_activate(cdev))
+ 		goto failed_qdio;
+ 
 
