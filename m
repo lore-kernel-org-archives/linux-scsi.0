@@ -1,204 +1,171 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 06/10] zfcp: Post events through FC transport class
-Date: Fri, 16 Jul 2010 15:37:39 +0200
-Message-ID: <20100716134300.565288000@de.ibm.com>
-References: <20100716133733.621672000@de.ibm.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 3/4] lpfc 8.3.15: Add target queue depth throttling
+Date: Fri, 16 Jul 2010 19:22:58 -0500
+Message-ID: <4C40F7E2.4020904@cs.wisc.edu>
+References: <1279135950.32010.4.camel@wookie>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.17.162]:43171 "EHLO
-	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965509Ab0GPNnE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jul 2010 09:43:04 -0400
-Content-Disposition: inline; filename=711-zfcp-post-fc-events.diff
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:55065 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755229Ab0GQATf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Jul 2010 20:19:35 -0400
+In-Reply-To: <1279135950.32010.4.camel@wookie>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, Sven Schuetz <sven@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+To: james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org
 
-From: Sven Schuetz <sven@linux.vnet.ibm.com>
+On 07/14/2010 02:32 PM, James Smart wrote:
+>
+> Add target queue depth throttling
+>
+>   Signed-off-by: Alex Iannicelli<alex.iannicelli@emulex.com>
+>   Signed-off-by: James Smart<james.smart@emulex.com>
+>
+>   ---
+>
+>   lpfc.h         |    3 ++-
+>   lpfc_attr.c    |   12 +++++++++++-
+>   lpfc_hbadisc.c |    2 +-
+>   lpfc_scsi.c    |   15 ++++++++-------
+>   4 files changed, 22 insertions(+), 10 deletions(-)
+>
+>
+> diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+> --- a/drivers/scsi/lpfc/lpfc_attr.c	2010-07-09 00:49:14.000000000 -0400
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c	2010-07-14 13:47:38.000000000 -0400
+> @@ -2208,6 +2208,13 @@ LPFC_VPORT_ATTR_R(lun_queue_depth, 30, 1
+>   		  "Max number of FCP commands we can queue to a specific LUN");
+>
+>   /*
+> +# tgt_queue_depth:  This parameter is used to limit the number of outstanding
+> +# commands per target port. Value range is [10,65535]. Default value is 65535.
+> +*/
+> +LPFC_VPORT_ATTR_R(tgt_queue_depth, 65535, 10, 65535,
+> +	"Max number of FCP commands we can queue to a specific target port");
+> +
+> +/*
+>   # hba_queue_depth:  This parameter is used to limit the number of outstanding
+>   # commands per lpfc HBA. Value range is [32,8192]. If this parameter
+>   # value is greater than the maximum number of exchanges supported by the HBA,
+> @@ -3122,7 +3129,7 @@ lpfc_max_scsicmpl_time_set(struct lpfc_v
+>   			continue;
+>   		if (ndlp->nlp_state == NLP_STE_UNUSED_NODE)
+>   			continue;
+> -		ndlp->cmd_qdepth = LPFC_MAX_TGT_QDEPTH;
+> +		ndlp->cmd_qdepth = vport->cfg_tgt_queue_depth;
+>   	}
+>   	spin_unlock_irq(shost->host_lock);
+>   	return 0;
+> @@ -3326,6 +3333,7 @@ struct device_attribute *lpfc_hba_attrs[
+>   	&dev_attr_lpfc_temp_sensor,
+>   	&dev_attr_lpfc_log_verbose,
+>   	&dev_attr_lpfc_lun_queue_depth,
+> +	&dev_attr_lpfc_tgt_queue_depth,
+>   	&dev_attr_lpfc_hba_queue_depth,
+>   	&dev_attr_lpfc_peer_port_login,
+>   	&dev_attr_lpfc_nodev_tmo,
+> @@ -3387,6 +3395,7 @@ struct device_attribute *lpfc_vport_attr
+>   	&dev_attr_lpfc_drvr_version,
+>   	&dev_attr_lpfc_log_verbose,
+>   	&dev_attr_lpfc_lun_queue_depth,
+> +	&dev_attr_lpfc_tgt_queue_depth,
+>   	&dev_attr_lpfc_nodev_tmo,
+>   	&dev_attr_lpfc_devloss_tmo,
+>   	&dev_attr_lpfc_hba_queue_depth,
+> @@ -4575,6 +4584,7 @@ lpfc_get_vport_cfgparam(struct lpfc_vpor
+>   {
+>   	lpfc_log_verbose_init(vport, lpfc_log_verbose);
+>   	lpfc_lun_queue_depth_init(vport, lpfc_lun_queue_depth);
+> +	lpfc_tgt_queue_depth_init(vport, lpfc_tgt_queue_depth);
+>   	lpfc_devloss_tmo_init(vport, lpfc_devloss_tmo);
+>   	lpfc_nodev_tmo_init(vport, lpfc_nodev_tmo);
+>   	lpfc_peer_port_login_init(vport, lpfc_peer_port_login);
+> diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+> --- a/drivers/scsi/lpfc/lpfc.h	2010-07-09 00:49:14.000000000 -0400
+> +++ b/drivers/scsi/lpfc/lpfc.h	2010-07-14 13:47:38.000000000 -0400
+> @@ -48,7 +48,7 @@ struct lpfc_sli2_slim;
+>   #define LPFC_TGTQ_INTERVAL	40000	/* Min amount of time between tgt
+>   					   queue depth change in millisecs */
+>   #define LPFC_TGTQ_RAMPUP_PCENT	5	/* Target queue rampup in percentage */
+> -#define LPFC_MIN_TGT_QDEPTH	100
+> +#define LPFC_MIN_TGT_QDEPTH	10
+>   #define LPFC_MAX_TGT_QDEPTH	0xFFFF
+>
+>   #define  LPFC_MAX_BUCKET_COUNT 20	/* Maximum no. of buckets for stat data
+> @@ -400,6 +400,7 @@ struct lpfc_vport {
+>   	uint32_t cfg_max_luns;
+>   	uint32_t cfg_enable_da_id;
+>   	uint32_t cfg_max_scsicmpl_time;
+> +	uint32_t cfg_tgt_queue_depth;
+>
+>   	uint32_t dev_loss_tmo_changed;
+>
+> diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-07-14 13:47:16.000000000 -0400
+> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-07-14 13:47:38.000000000 -0400
+> @@ -3583,7 +3583,7 @@ lpfc_initialize_node(struct lpfc_vport *
+>   	kref_init(&ndlp->kref);
+>   	NLP_INT_NODE_ACT(ndlp);
+>   	atomic_set(&ndlp->cmd_pending, 0);
+> -	ndlp->cmd_qdepth = LPFC_MAX_TGT_QDEPTH;
+> +	ndlp->cmd_qdepth = vport->cfg_tgt_queue_depth;
+>   }
+>
+>   struct lpfc_nodelist *
+> diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-07-14 13:46:49.000000000 -0400
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-07-14 13:47:38.000000000 -0400
+> @@ -2458,14 +2458,16 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba
+>   		}
+>   		spin_unlock_irqrestore(shost->host_lock, flags);
+>   	} else if (pnode&&  NLP_CHK_NODE_ACT(pnode)) {
+> -		if ((pnode->cmd_qdepth<  LPFC_MAX_TGT_QDEPTH)&&
+> +		if ((pnode->cmd_qdepth<  vport->cfg_tgt_queue_depth)&&
+>   		time_after(jiffies, pnode->last_change_time +
+>   			      msecs_to_jiffies(LPFC_TGTQ_INTERVAL))) {
+>   			spin_lock_irqsave(shost->host_lock, flags);
+> -			pnode->cmd_qdepth += pnode->cmd_qdepth *
+> -				LPFC_TGTQ_RAMPUP_PCENT / 100;
+> -			if (pnode->cmd_qdepth>  LPFC_MAX_TGT_QDEPTH)
+> -				pnode->cmd_qdepth = LPFC_MAX_TGT_QDEPTH;
+> +			depth = pnode->cmd_qdepth * LPFC_TGTQ_RAMPUP_PCENT
+> +				/ 100;
+> +			depth = depth ? depth : 1;
+> +			pnode->cmd_qdepth += depth;
+> +			if (pnode->cmd_qdepth>  vport->cfg_tgt_queue_depth)
+> +				pnode->cmd_qdepth = vport->cfg_tgt_queue_depth;
 
-Post FC transport class netlink events for usage in the userspace,
-e.g. for HBAAPI. Supported events are those required for the
-polled events in HBAAPI.
-- link up
-- link down
-- incoming RSCN
-(events related to FC-AL are not supported, as zfcp has no support for FC-AL)
 
-Signed-off-by: Sven Schuetz <sven@linux.vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
+It seems like this should go into scsi-ml like Vasu did with the device 
+and host stuff.
 
- drivers/s390/scsi/zfcp_aux.c |    4 +++
- drivers/s390/scsi/zfcp_def.h |    2 +
- drivers/s390/scsi/zfcp_ext.h |    3 ++
- drivers/s390/scsi/zfcp_fc.c  |   54 +++++++++++++++++++++++++++++++++++++++++++
- drivers/s390/scsi/zfcp_fc.h  |   24 +++++++++++++++++++
- drivers/s390/scsi/zfcp_fsf.c |    3 ++
- 6 files changed, 90 insertions(+)
+>   			pnode->last_change_time = jiffies;
+>   			spin_unlock_irqrestore(shost->host_lock, flags);
+>   		}
+> @@ -2920,8 +2922,7 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd
+>   		cmnd->result = ScsiResult(DID_TRANSPORT_DISRUPTED, 0);
+>   		goto out_fail_command;
+>   	}
+> -	if (vport->cfg_max_scsicmpl_time&&
+> -		(atomic_read(&ndlp->cmd_pending)>= ndlp->cmd_qdepth))
+> +	if (atomic_read(&ndlp->cmd_pending)>= ndlp->cmd_qdepth)
 
---- a/drivers/s390/scsi/zfcp_aux.c
-+++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -524,6 +524,10 @@ struct zfcp_adapter *zfcp_adapter_enqueu
- 	rwlock_init(&adapter->port_list_lock);
- 	INIT_LIST_HEAD(&adapter->port_list);
- 
-+	INIT_LIST_HEAD(&adapter->events.list);
-+	INIT_WORK(&adapter->events.work, zfcp_fc_post_event);
-+	spin_lock_init(&adapter->events.list_lock);
-+
- 	init_waitqueue_head(&adapter->erp_ready_wq);
- 	init_waitqueue_head(&adapter->erp_done_wqh);
- 
---- a/drivers/s390/scsi/zfcp_def.h
-+++ b/drivers/s390/scsi/zfcp_def.h
-@@ -37,6 +37,7 @@
- #include <asm/ebcdic.h>
- #include <asm/sysinfo.h>
- #include "zfcp_fsf.h"
-+#include "zfcp_fc.h"
- #include "zfcp_qdio.h"
- 
- struct zfcp_reqlist;
-@@ -190,6 +191,7 @@ struct zfcp_adapter {
- 	struct service_level	service_level;
- 	struct workqueue_struct	*work_queue;
- 	struct device_dma_parameters dma_parms;
-+	struct zfcp_fc_events events;
- };
- 
- struct zfcp_port {
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -96,6 +96,9 @@ extern void zfcp_erp_adapter_access_chan
- extern void zfcp_erp_timeout_handler(unsigned long);
- 
- /* zfcp_fc.c */
-+extern void zfcp_fc_enqueue_event(struct zfcp_adapter *,
-+				enum fc_host_event_code event_code, u32);
-+extern void zfcp_fc_post_event(struct work_struct *);
- extern void zfcp_fc_scan_ports(struct work_struct *);
- extern void zfcp_fc_incoming_els(struct zfcp_fsf_req *);
- extern void zfcp_fc_port_did_lookup(struct work_struct *);
---- a/drivers/s390/scsi/zfcp_fc.c
-+++ b/drivers/s390/scsi/zfcp_fc.c
-@@ -23,6 +23,58 @@ static u32 zfcp_fc_rscn_range_mask[] = {
- 	[ELS_ADDR_FMT_FAB]		= 0x000000,
- };
- 
-+/**
-+ * zfcp_fc_post_event - post event to userspace via fc_transport
-+ * @work: work struct with enqueued events
-+ */
-+void zfcp_fc_post_event(struct work_struct *work)
-+{
-+	struct zfcp_fc_event *event = NULL, *tmp = NULL;
-+	LIST_HEAD(tmp_lh);
-+	struct zfcp_fc_events *events = container_of(work,
-+					struct zfcp_fc_events, work);
-+	struct zfcp_adapter *adapter = container_of(events, struct zfcp_adapter,
-+						events);
-+
-+	spin_lock_bh(&events->list_lock);
-+	list_splice_init(&events->list, &tmp_lh);
-+	spin_unlock_bh(&events->list_lock);
-+
-+	list_for_each_entry_safe(event, tmp, &tmp_lh, list) {
-+		fc_host_post_event(adapter->scsi_host, fc_get_event_number(),
-+				event->code, event->data);
-+		list_del(&event->list);
-+		kfree(event);
-+	}
-+
-+}
-+
-+/**
-+ * zfcp_fc_enqueue_event - safely enqueue FC HBA API event from irq context
-+ * @adapter: The adapter where to enqueue the event
-+ * @event_code: The event code (as defined in fc_host_event_code in
-+ *		scsi_transport_fc.h)
-+ * @event_data: The event data (e.g. n_port page in case of els)
-+ */
-+void zfcp_fc_enqueue_event(struct zfcp_adapter *adapter,
-+			enum fc_host_event_code event_code, u32 event_data)
-+{
-+	struct zfcp_fc_event *event;
-+
-+	event = kmalloc(sizeof(struct zfcp_fc_event), GFP_ATOMIC);
-+	if (!event)
-+		return;
-+
-+	event->code = event_code;
-+	event->data = event_data;
-+
-+	spin_lock(&adapter->events.list_lock);
-+	list_add_tail(&event->list, &adapter->events.list);
-+	spin_unlock(&adapter->events.list_lock);
-+
-+	queue_work(adapter->work_queue, &adapter->events.work);
-+}
-+
- static int zfcp_fc_wka_port_get(struct zfcp_fc_wka_port *wka_port)
- {
- 	if (mutex_lock_interruptible(&wka_port->mutex))
-@@ -148,6 +200,8 @@ static void zfcp_fc_incoming_rscn(struct
- 		afmt = page->rscn_page_flags & ELS_RSCN_ADDR_FMT_MASK;
- 		_zfcp_fc_incoming_rscn(fsf_req, zfcp_fc_rscn_range_mask[afmt],
- 				       page);
-+		zfcp_fc_enqueue_event(fsf_req->adapter, FCH_EVT_RSCN,
-+				      *(u32 *)page);
- 	}
- 	queue_work(fsf_req->adapter->work_queue, &fsf_req->adapter->scan_work);
- }
---- a/drivers/s390/scsi/zfcp_fc.h
-+++ b/drivers/s390/scsi/zfcp_fc.h
-@@ -30,6 +30,30 @@
- #define ZFCP_FC_CTELS_TMO	(2 * FC_DEF_R_A_TOV / 1000)
- 
- /**
-+ * struct zfcp_fc_event - FC HBAAPI event for internal queueing from irq context
-+ * @code: Event code
-+ * @data: Event data
-+ * @list: list_head for zfcp_fc_events list
-+ */
-+struct zfcp_fc_event {
-+	enum fc_host_event_code code;
-+	u32 data;
-+	struct list_head list;
-+};
-+
-+/**
-+ * struct zfcp_fc_events - Infrastructure for posting FC events from irq context
-+ * @list: List for queueing of events from irq context to workqueue
-+ * @list_lock: Lock for event list
-+ * @work: work_struct for forwarding events in workqueue
-+*/
-+struct zfcp_fc_events {
-+	struct list_head list;
-+	spinlock_t list_lock;
-+	struct work_struct work;
-+};
-+
-+/**
-  * struct zfcp_fc_gid_pn_req - container for ct header plus gid_pn request
-  * @ct_hdr: FC GS common transport header
-  * @gid_pn: GID_PN request
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -274,6 +274,7 @@ static void zfcp_fsf_status_read_handler
- 		break;
- 	case FSF_STATUS_READ_LINK_DOWN:
- 		zfcp_fsf_status_read_link_down(req);
-+		zfcp_fc_enqueue_event(adapter, FCH_EVT_LINKDOWN, 0);
- 		break;
- 	case FSF_STATUS_READ_LINK_UP:
- 		dev_info(&adapter->ccw_device->dev,
-@@ -286,6 +287,8 @@ static void zfcp_fsf_status_read_handler
- 					ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED |
- 					ZFCP_STATUS_COMMON_ERP_FAILED,
- 					"fssrh_2", req);
-+		zfcp_fc_enqueue_event(adapter, FCH_EVT_LINKUP, 0);
-+
- 		break;
- 	case FSF_STATUS_READ_NOTIFICATION_LOST:
- 		if (sr_buf->status_subtype & FSF_STATUS_READ_SUB_ACT_UPDATED)
+Is this tracking per remote port/node cmds? If do you want to just 
+return SCSI_MLQUEUE_TARGET_BUSY so only the one target is blocked 
+instead of the entire host?
+
+
+
+>   		goto out_host_busy;
+>
+>   	lpfc_cmd = lpfc_get_scsi_buf(phba);
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
