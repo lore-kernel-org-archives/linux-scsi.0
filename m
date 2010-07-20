@@ -1,62 +1,60 @@
 From: akpm@linux-foundation.org
-Subject: [patch 21/27] scsi: fix be2iscsi build
-Date: Tue, 20 Jul 2010 15:29:01 -0700
-Message-ID: <201007202229.o6KMT1hG021785@imap1.linux-foundation.org>
+Subject: [patch 27/27] drivers/scsi/pmcraid.c: remove unwanted cast for void* pointers
+Date: Tue, 20 Jul 2010 15:29:06 -0700
+Message-ID: <201007202229.o6KMT69T021808@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56392 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:41097 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932886Ab0GTW3a (ORCPT
+	by vger.kernel.org with ESMTP id S932886Ab0GTW3c (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:29:30 -0400
+	Tue, 20 Jul 2010 18:29:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, jayamohank@serverengines.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, cyril.jayaprakash@gmail.com
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
 
-be2iscsi driver should #include linux/if_ether.h since it uses
-sysfs_format_mac().
-
-It should also depend on NET since it selects SCSI_ISCSI_ATTRS,
-which depends on NET.
-
-These changes fix a build error when CONFIG_NET is not enabled:
-ERROR: "sysfs_format_mac" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Jayamohan Kallickal <jayamohank@serverengines.com>
+Signed-off-by: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/be2iscsi/Kconfig   |    2 +-
- drivers/scsi/be2iscsi/be_main.h |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/pmcraid.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/be2iscsi/Kconfig~scsi-fix-be2iscsi-build drivers/scsi/be2iscsi/Kconfig
---- a/drivers/scsi/be2iscsi/Kconfig~scsi-fix-be2iscsi-build
-+++ a/drivers/scsi/be2iscsi/Kconfig
-@@ -1,6 +1,6 @@
- config BE2ISCSI
- 	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && NET
- 	select SCSI_ISCSI_ATTRS
+diff -puN drivers/scsi/pmcraid.c~drivers-scsi-pmcraidc-remove-unwanted-cast-for-void-pointers drivers/scsi/pmcraid.c
+--- a/drivers/scsi/pmcraid.c~drivers-scsi-pmcraidc-remove-unwanted-cast-for-void-pointers
++++ a/drivers/scsi/pmcraid.c
+@@ -3599,8 +3599,7 @@ static int pmcraid_chr_open(struct inode
+  */
+ static int pmcraid_chr_release(struct inode *inode, struct file *filep)
+ {
+-	struct pmcraid_instance *pinstance =
+-		((struct pmcraid_instance *)filep->private_data);
++	struct pmcraid_instance *pinstance = filep->private_data;
  
- 	help
-diff -puN drivers/scsi/be2iscsi/be_main.h~scsi-fix-be2iscsi-build drivers/scsi/be2iscsi/be_main.h
---- a/drivers/scsi/be2iscsi/be_main.h~scsi-fix-be2iscsi-build
-+++ a/drivers/scsi/be2iscsi/be_main.h
-@@ -23,6 +23,7 @@
+ 	filep->private_data = NULL;
+ 	fasync_helper(-1, filep, 0, &pinstance->aen_queue);
+@@ -3619,7 +3618,7 @@ static int pmcraid_chr_fasync(int fd, st
+ 	struct pmcraid_instance *pinstance;
+ 	int rc;
  
- #include <linux/kernel.h>
- #include <linux/pci.h>
-+#include <linux/if_ether.h>
- #include <linux/in.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
+-	pinstance = (struct pmcraid_instance *)filep->private_data;
++	pinstance = filep->private_data;
+ 	mutex_lock(&pinstance->aen_queue_lock);
+ 	rc = fasync_helper(fd, filep, mode, &pinstance->aen_queue);
+ 	mutex_unlock(&pinstance->aen_queue_lock);
+@@ -4110,7 +4109,7 @@ static long pmcraid_chr_ioctl(
+ 		return retval;
+ 	}
+ 
+-	pinstance = (struct pmcraid_instance *)filep->private_data;
++	pinstance = filep->private_data;
+ 
+ 	if (!pinstance) {
+ 		pmcraid_info("adapter instance is not found\n");
 _
