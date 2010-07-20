@@ -1,54 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 20/27] scsi: fix pmcraid build errors
-Date: Tue, 20 Jul 2010 15:29:01 -0700
-Message-ID: <201007202229.o6KMT193021782@imap1.linux-foundation.org>
+Subject: [patch 26/27] drivers/scsi/mvsas/mv_sas.c: fix potential NULL dereference
+Date: Tue, 20 Jul 2010 15:29:05 -0700
+Message-ID: <201007202229.o6KMT50l021800@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52791 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:60408 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932884Ab0GTW3u (ORCPT
+	by vger.kernel.org with ESMTP id S932884Ab0GTW3w (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:29:50 -0400
+	Tue, 20 Jul 2010 18:29:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, anil_ravindranath@pmc-sierra.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jslaby@suse.cz, James.Bottomley@suse.de, satyasrinivasp@hcl.in
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: Jiri Slaby <jslaby@suse.cz>
 
-pmcraid should depend on NET since it uses netlink interfaces.
-This fixes multiple build errors when CONFIG_NET is not enabled:
+Stanse found that in mvs_abort_task, mvi_dev is dereferenced earlier than
+tested for being NULL.  Move the assignment below the test.
 
-ERROR: "genl_register_family" [drivers/scsi/pmcraid.ko] undefined!
-ERROR: "genl_unregister_family" [drivers/scsi/pmcraid.ko] undefined!
-ERROR: "nla_put" [drivers/scsi/pmcraid.ko] undefined!
-ERROR: "init_net" [drivers/scsi/pmcraid.ko] undefined!
-ERROR: "__alloc_skb" [drivers/scsi/pmcraid.ko] undefined!
-ERROR: "netlink_broadcast" [drivers/scsi/pmcraid.ko] undefined!
-ERROR: "kfree_skb" [drivers/scsi/pmcraid.ko] undefined!
-ERROR: "skb_put" [drivers/scsi/pmcraid.ko] undefined!
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: Srinivas <satyasrinivasp@hcl.in>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mvsas/mv_sas.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/Kconfig~scsi-fix-pmcraid-build-errors drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig~scsi-fix-pmcraid-build-errors
-+++ a/drivers/scsi/Kconfig
-@@ -1849,7 +1849,7 @@ config ZFCP
+diff -puN drivers/scsi/mvsas/mv_sas.c~scsi-mvsas-fix-potential-null-dereference drivers/scsi/mvsas/mv_sas.c
+--- a/drivers/scsi/mvsas/mv_sas.c~scsi-mvsas-fix-potential-null-dereference
++++ a/drivers/scsi/mvsas/mv_sas.c
+@@ -1640,7 +1640,7 @@ int mvs_abort_task(struct sas_task *task
+ 	struct mvs_tmf_task tmf_task;
+ 	struct domain_device *dev = task->dev;
+ 	struct mvs_device *mvi_dev = (struct mvs_device *)dev->lldd_dev;
+-	struct mvs_info *mvi = mvi_dev->mvi_info;
++	struct mvs_info *mvi;
+ 	int rc = TMF_RESP_FUNC_FAILED;
+ 	unsigned long flags;
+ 	u32 tag;
+@@ -1650,6 +1650,8 @@ int mvs_abort_task(struct sas_task *task
+ 		rc = TMF_RESP_FUNC_FAILED;
+ 	}
  
- config SCSI_PMCRAID
- 	tristate "PMC SIERRA Linux MaxRAID adapter support"
--	depends on PCI && SCSI
-+	depends on PCI && SCSI && NET
- 	---help---
- 	  This driver supports the PMC SIERRA MaxRAID adapters.
- 
++	mvi = mvi_dev->mvi_info;
++
+ 	spin_lock_irqsave(&task->task_state_lock, flags);
+ 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
+ 		spin_unlock_irqrestore(&task->task_state_lock, flags);
 _
