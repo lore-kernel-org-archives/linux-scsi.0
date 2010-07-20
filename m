@@ -1,79 +1,42 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
- Enable Online Controller Reset Bit in register related functions
-Date: Tue, 20 Jul 2010 07:08:19 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3DBB9D7AF@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
-	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
-	 <1277046060.5242.18.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
-	 <1277063250.5242.25.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
- <1277066924.5242.41.camel@mulgrave.site>
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: Re: [PATCH 06/16] trivial: use ARRAY_SIZE
+Date: Tue, 20 Jul 2010 17:10:10 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1007201709500.4741@pobox.suse.cz>
+References: <1277726105-24600-1-git-send-email-segooon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:51333 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756887Ab0GTNIx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 09:08:53 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1277726105-24600-1-git-send-email-segooon@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kulikov Vasiliy <segooon@gmail.com>
+Cc: Kernel Janitors <kernel-janitors@vger.kernel.org>, Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Krishna Gudipati <kgudipat@brocade.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@suse.de>
-Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-SmFtZXMsDQoNCkRvIHlvdSBnZXQgY2hhbmNlcyB0byB2aWV3IHRoaXMgY2hhbmdlcyBhbmQgYXBw
-bHkgdGhlIHBhdGNoZXMgdG8gdGhlIG1haW4gdHJlZT8NCg0KVGhhbmtzLA0KDQpCbyBZYW5nDQoN
-Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBZYW5nLCBCbyANClNlbnQ6IE1vbmRh
-eSwgSnVuZSAyMSwgMjAxMCAxMTozNiBBTQ0KVG86ICdKYW1lcyBCb3R0b21sZXknDQpDYzogWWlu
-Z2hhaSBMdTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGFrcG1Ab3NkbC5vcmc7IGxpbnV4
-LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJFOiBbUEFUQ0ggMS8xMl0gc2NzaTog
-bWVnYXJhaWRfc2FzIC0gT25saW5lIENvbnRyb2xsZXIgUmVzZXQgLSBJOiBFbmFibGUgT25saW5l
-IENvbnRyb2xsZXIgUmVzZXQgQml0IGluIHJlZ2lzdGVyIHJlbGF0ZWQgZnVuY3Rpb25zDQoNCkph
-bWVzLA0KDQpBdHRhY2hlZCBpcyB0aGUgY2hhbmdlbG9nIGZvciBPQ1IuIA0KDQpTaWduZWQtb2Zm
-LWJ5IEJvIFlhbmc8Ym8ueWFuZ0Bsc2kuY29tPg0KDQotLS0NCkRvY3VtZW50YXRpb24vc2NzaS9D
-aGFuZ2VMb2cubWVnYXJhaWRfc2FzIHwgICAzMyArKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysNCiAxIGZpbGUgY2hhbmdlZCwgMzMgaW5zZXJ0aW9ucygrKQ0KDQpkaWZmIC1ydXBOIG9sZC9E
-b2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3NhcyBuZXcvRG9jdW1lbnRhdGlv
-bi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMNCi0tLSBvbGQvRG9jdW1lbnRhdGlvbi9zY3Np
-L0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAxMC0wNi0yMCAwMzo0MTozMS4wMDAwMDAwMDAgLTA0
-MDANCisrKyBuZXcvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAx
-MC0wNi0yMCAwMzo1NTo0Mi4wMDAwMDAwMDAgLTA0MDANCkBAIC0xLDMgKzEsMzYgQEANCisxIFJl
-bGVhc2UgRGF0ZSAgICA6IFRodXIuICBNYXkgMDMsIDIwMTAgMDk6MTI6NDUgUFNUIDIwMDkgLQ0K
-KwkJCShlbWFpbGQtaWQ6bWVnYXJhaWRsaW51eEBsc2kuY29tKQ0KKwkJCUJvIFlhbmcNCisNCisy
-IEN1cnJlbnQgVmVyc2lvbiA6IDAwLjAwLjA0LjE3LjEtcmMxDQorMyBPbGRlciBWZXJzaW9uICAg
-OiAwMC4wMC4wNC4xNy4xLXJjMQ0KKw0KKzEuCUFkZCB0aGUgT25saW5lIENvbnRyb2xsZXIgUmVz
-ZXQgKE9DUikgdG8gdGhlIERyaXZlci4NCisJT0NSIGlzIHRoZSBuZXcgZmVhdHVyZSBmb3IgbWVn
-YXJhaWRfc2FzIGRyaXZlciB3aGljaA0KKwl3aWxsIGFsbG93IHRoZSBmdyB0byBkbyB0aGUgY2hp
-cCByZXNldCB3aGljaCB3aWxsIG5vdA0KKwlhZmZhY3QgdGhlIE9TIGJlaGF2aW91cy4NCisNCisJ
-VG8gYWRkIHRoZSBPQ1Igc3VwcG9ydCwgZHJpdmVyIG5lZWQgdG8gZG86IA0KKwkJYSkuIHJlc2V0
-IHRoZSBjb250cm9sbGVyIGNoaXBzIC0tIFhzY2FsZSBhbmQgR2VuMiB3aGljaA0KKwkJd2lsbCBj
-aGFuZ2UgdGhlIGZ1bmN0aW9uIGNhbGxzIGFuZCBhZGQgdGhlIHJlc2V0IGZ1bmN0aW9uDQorCQly
-ZWxhdGVkIHRvIHRoaXMgdHdvIGNoaXBzLg0KKwkJDQorCQliKS4gZHVyaW5nIHRoZSByZXNldCwg
-ZHJpdmVyIHdpbGwgc3RvcmUgdGhlIHBlbmRpbmcgY21kcw0KKwkJd2hpY2ggbm90IHJldHVybmVk
-IGJ5IEZXIHRvIGRyaXZlcidzIHBlbmRpbmcgcXVldWUuICBEcml2ZXINCisJCXdpbGwgcmUtaXNz
-dWUgdGhvc2UgcGVuZGluZyBjbWRzIGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1INCisJCWZpbmlz
-aGVkLg0KKwkJDQorCQljKS4gSW4gZHJpdmVyJ3MgdGltZW91dCByb3V0aW5lLCBkcml2ZXIgd2ls
-bCByZXBvcnQgdG8NCisJCU9TIGFzIHJlc2V0LiBBbHNvIGRyaXZlcidzIHF1ZXVlIHJvdXRpbmUg
-d2lsbCBibG9jayB0aGUNCisJCWNtZHMgdW50aWwgdGhlIE9DUiBmaW5pc2hlZC4NCisJCQ0KKwkJ
-ZCkuIGluIERyaXZlcidzIElTUiByb3V0aW5lLCBpZiBkcml2ZXIgZ2V0IHRoZSBGVyBzdGF0ZSBh
-cw0KKwkJc3RhdGUgY2hhbmdlLCBGVyBpbiBGYWlsdXJlIHN0YXR1cyBhbmQgRlcgc3VwcG9ydCBv
-bmxpbmUgY29udHJvbGxlcg0KKwkJcmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRvIGRv
-IHRoZSBjb250cm9sbGVyIHJlc2V0Lg0KKwkJDQorCQllKS4gSW4gZHJpdmVyJ3MgSU9DVEwgcm91
-dGluZSwgdGhlIGFwcGxpY2F0aW9uIGNtZHMgd2lsbCB3YWl0IGZvciB0aGUNCisJCU9DUiB0byBm
-aW5pc2gsIHRoZW4gaXNzdWUgdGhlIGNtZHMgdG8gRlcuDQorCQkgDQogMSBSZWxlYXNlIERhdGUg
-ICAgOiBUaHVyLiAgT2N0IDI5LCAyMDA5IDA5OjEyOjQ1IFBTVCAyMDA5IC0NCiAJCQkoZW1haWxk
-LWlkOm1lZ2FyYWlkbGludXhAbHNpLmNvbSkNCiAJCQlCbyBZYW5nDQoNCg0KLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOkphbWVzLkJvdHRv
-bWxleUBzdXNlLmRlXSANClNlbnQ6IFN1bmRheSwgSnVuZSAyMCwgMjAxMCA0OjQ5IFBNDQpUbzog
-WWFuZywgQm8NCkNjOiBZaW5naGFpIEx1OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtw
-bUBvc2RsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IFtQ
-QVRDSCAxLzEyXSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCAt
-IEk6IEVuYWJsZSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCBCaXQgaW4gcmVnaXN0ZXIgcmVsYXRl
-ZCBmdW5jdGlvbnMNCg0KT24gU3VuLCAyMDEwLTA2LTIwIGF0IDE0OjE5IC0wNjAwLCBZYW5nLCBC
-byB3cm90ZToNCj4gWWVzLiAgDQoNCk9LLCBjYW4geW91IGdpdmUgbWUgdGhlIHNpbmdsZSBjaGFu
-Z2Vsb2cgZm9yIHRoaXMgb25lIGNvbW1pdCwgdGhlbiwNCnBsZWFzZT8NCg0KVGhhbmtzLA0KDQpK
-YW1lcw0KDQoNCg==
+On Mon, 28 Jun 2010, Kulikov Vasiliy wrote:
+
+> Change sizeof(x) / sizeof(*x) to ARRAY_SIZE(x).
+> 
+> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+> ---
+>  drivers/scsi/bfa/bfa_core.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+> index 3a7b3f8..d845506 100644
+> --- a/drivers/scsi/bfa/bfa_core.c
+> +++ b/drivers/scsi/bfa/bfa_core.c
+> @@ -335,7 +335,7 @@ bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids)
+>  		{BFA_PCI_VENDOR_ID_BROCADE, BFA_PCI_DEVICE_ID_CT},
+>  	};
+>  
+> -	*npciids = sizeof(__pciids) / sizeof(__pciids[0]);
+> +	*npciids = ARRAY_SIZE(__pciids);
+>  	*pciids = __pciids;
+>  }
+
+Doesn't seem to be in linux-next as of today. I have applied the patch to 
+trivial queue.
+
+-- 
+Jiri Kosina
+SUSE Labs, Novell Inc.
