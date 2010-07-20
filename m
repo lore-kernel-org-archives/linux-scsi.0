@@ -1,57 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/27] drivers/scsi: remove unnecessary NULL test
-Date: Tue, 20 Jul 2010 15:28:46 -0700
-Message-ID: <201007202228.o6KMSkEB021725@imap1.linux-foundation.org>
+Subject: [patch 05/27] NCR5380: bit MR_DMA_MODE set twice in NCR5380_transfer_dma()
+Date: Tue, 20 Jul 2010 15:28:45 -0700
+Message-ID: <201007202228.o6KMSjKo021721@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:45122 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57241 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932831Ab0GTW3M (ORCPT
+	by vger.kernel.org with ESMTP id S932846Ab0GTW3O (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:29:12 -0400
+	Tue, 20 Jul 2010 18:29:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, alan@lxorguk.ukuu.org.uk
 
-From: Julia Lawall <julia@diku.dk>
+From: Roel Kluin <roel.kluin@gmail.com>
 
-At the point where cmnd is initialized, it is tested for NULL, so it
-doesn't have to be tested again here.
+Besides keeping the line short, the second setting of the MR_DMA_MODE bit
+was removed.
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
-
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
-
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/initio.c |    1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/NCR5380.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test drivers/scsi/initio.c
---- a/drivers/scsi/initio.c~drivers-scsi-remove-unnecessary-null-test
-+++ a/drivers/scsi/initio.c
-@@ -2817,7 +2817,6 @@ static void i91uSCBPost(u8 * host_mem, u
- 	}
- 
- 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
--	WARN_ON(cmnd == NULL);
- 	i91u_unmap_scb(host->pci_dev, cmnd);
- 	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
- 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
+diff -puN drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~ncr5380-bit-mr_dma_mode-set-twice-in-ncr5380_transfer_dma
++++ a/drivers/scsi/NCR5380.c
+@@ -1857,7 +1857,9 @@ static int NCR5380_transfer_dma(struct S
+ #endif
+ 	/* KLL May need eop and parity in 53c400 */
+ 	if (hostdata->flags & FLAG_NCR53C400)
+-		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE | MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR | MR_ENABLE_EOP_INTR | MR_DMA_MODE | MR_MONITOR_BSY);
++		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE |
++				MR_ENABLE_PAR_CHECK | MR_ENABLE_PAR_INTR |
++				MR_ENABLE_EOP_INTR | MR_MONITOR_BSY);
+ 	else
+ 		NCR5380_write(MODE_REG, MR_BASE | MR_DMA_MODE);
+ #endif				/* def REAL_DMA */
 _
