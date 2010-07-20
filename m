@@ -1,8 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 01/28] libfc: fix slowpath error from WARN_ON in
-	fc_fcp_send_data
-Date: Tue, 20 Jul 2010 15:19:10 -0700
-Message-ID: <20100720221910.17116.28671.stgit@localhost.localdomain>
+Subject: [PATCH 02/28] fcoe: make it possible to verify fcoe with sparse
+Date: Tue, 20 Jul 2010 15:19:15 -0700
+Message-ID: <20100720221915.17116.93752.stgit@localhost.localdomain>
 References: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,40 +9,56 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:12642 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761864Ab0GTWTL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:19:11 -0400
+	id S1753069Ab0GTWTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2010 18:19:16 -0400
 In-Reply-To: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Yi Zou <yi.zou@intel.com>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, jeykholt@cisco.com
 
-From: Yi Zou <yi.zou@intel.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-This is exposed by a mpio test using EMC CLARiiON targets when LUN
-tresspassing happens, the burst length from the XFER_READY for the
-MODE SELECT(10) is 19 bytes, much smaller than FC_MIN_MAX_PAYLOAD as
-256 bytes. This patch removes the related two WARN_ON()s.
+Analyzing fcoe with sparse currently fails. This is because struct
+fcoe_rcv_info contains two enum members that have been declared with
+__attribute__((packed)). Apparently gcc honors this attribute while sparse
+ignores it. The result is that sizeof(struct fcoe_rcv_info)
+== sizeof(struct sk_buff::cb) == 48 on a 64-bit system according to gcc, but
+not according to sparse. The patch below modifies the definition of
+struct fcoe_rcv_info such that gcc and sparse interpret this structure
+definition in the same way. The current sparse output is as follows:
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
+$ cd linux-2.6.34
+$ make C=2 M=drivers/scsi/fcoe modules
+ CHECK   drivers/scsi/fcoe/fcoe.c
+
+include/scsi/fc_frame.h:81:9: error: invalid bitfield width, -1.
+ CC [M]  drivers/scsi/fcoe/fcoe.o
+ CHECK   drivers/scsi/fcoe/libfcoe.c
+
+include/scsi/fc_frame.h:81:9: error: invalid bitfield width, -1.
+drivers/scsi/fcoe/libfcoe.c:56:37: error: invalid initializer
+
+Signed-off-by: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: jeykholt@cisco.com
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ include/scsi/fc_frame.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 8914f1e..a0a3ae7 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -580,10 +580,8 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
- 			   fsp, seq_blen, lport->lso_max, t_blen);
- 	}
- 
--	WARN_ON(t_blen < FC_MIN_MAX_PAYLOAD);
- 	if (t_blen > 512)
- 		t_blen &= ~(512 - 1);	/* round down to block size */
--	WARN_ON(t_blen < FC_MIN_MAX_PAYLOAD);	/* won't go below 256 */
- 	sc = fsp->cmd;
- 
- 	remaining = seq_blen;
+diff --git a/include/scsi/fc_frame.h b/include/scsi/fc_frame.h
+index 4d3e9c7..15427fa 100644
+--- a/include/scsi/fc_frame.h
++++ b/include/scsi/fc_frame.h
+@@ -66,8 +66,8 @@ struct fcoe_rcv_info {
+ 	struct fc_fcp_pkt *fr_fsp;	/* for the corresponding fcp I/O */
+ 	u32		fr_crc;
+ 	u16		fr_max_payload;	/* max FC payload */
+-	enum fc_sof	fr_sof;		/* start of frame delimiter */
+-	enum fc_eof	fr_eof;		/* end of frame delimiter */
++	u8		fr_sof;		/* start of frame delimiter */
++	u8		fr_eof;		/* end of frame delimiter */
+ 	u8		fr_flags;	/* flags - see below */
+ 	u8		granted_mac[ETH_ALEN]; /* FCoE MAC address */
+ };
 
