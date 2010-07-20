@@ -1,37 +1,92 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13594] SMART responses for SATA disks on SAS get interpreted as
- errors
-Date: Tue, 20 Jul 2010 20:08:34 GMT
-Message-ID: <201007202008.o6KK8Yl5012223@demeter.kernel.org>
-References: <bug-13594-11613@https.bugzilla.kernel.org/>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 00/28] libfc, libfcoe and fcoe updates for scsi-misc
+Date: Tue, 20 Jul 2010 15:19:05 -0700
+Message-ID: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:40800 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934Ab0GTUIf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jul 2010 16:08:35 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6KK8YoJ012224
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 20 Jul 2010 20:08:34 GMT
-In-Reply-To: <bug-13594-11613@https.bugzilla.kernel.org/>
+Received: from mga01.intel.com ([192.55.52.88]:22880 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758626Ab0GTWTF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2010 18:19:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13594
+The following series implements multiple bug fixes, FCoE VN2VN
+mode and a VLAN ID patch revert.
+
+VN2VN is a point-to-multipoint FCoE mode. It allows direct
+connections from the initiator to VN2VN capable FCoE targets.
+
+The VLAN ID revert removes the VLAN ID from the generated WWPN.
+Adding the VLAN ID to the WWPN is not typical and can cause
+zoning issues in a variety of scenarios. Note that this change
+will cause a one time rezone for the new WWPN.
+
+Please apply these patches to scsi-misc.
+
+---
+
+Bart Van Assche (1):
+      fcoe: make it possible to verify fcoe with sparse
+
+Bhanu Prakash Gollapudi (1):
+      libfc: Add retry logic to lport state machine when receiving LS_RJT
+
+Joe Eykholt (19):
+      libfc: convert rport lookup to be RCU safe
+      libfc: provide space for LLD after remote port structure
+      libfcoe: convert FIP to lock with mutex instead of spin lock
+      libfc: add discovery-private pointer for LLD
+      libfcoe: fcoe: fnic: change fcoe_ctlr_init interface to specify mode
+      libfc: Add local port point-to-multipoint flag
+      libfc: add FLOGI state to rport for VN2VN
+      libfc: track FIP exchanges
+      libfcoe: add protocol description of FIP VN2VN mode
+      libfcoe: add state change debugging
+      libfcoe: fcoe: fnic: add FIP VN2VN point-to-multipoint support
+      libfcoe: Fix FIP ELS encapsulation details for FLOGI responses
+      fcoe libfcoe: use correct FC-MAP for VN2VN mode
+      fcoe: config via separate create_vn2vn module parameter
+      libfc: eliminate rport LOGO state
+      libfc: add fc_frame_sid() and fc_frame_did() functions
+      libfc: add fc_fill_reply_hdr() and fc_fill_hdr()
+      libfc: add interface to allocate a sequence for incoming requests
+      libfc: don't require a local exchange for incoming requests
+
+Vasu Dev (5):
+      libfc: IO errors on link down due to cable unplug
+      fcoe: cleans up fcoe_disable and fcoe_enable
+      fcoe: adds src and dest mac address checking for fcoe frames
+      Revert "[SCSI] fcoe: Fix using VLAN ID in creating lport's WWWN/WWPN"
+      fcoe: remove check for zero fabric name
+
+Yi Zou (2):
+      libfc: fix slowpath error from WARN_ON in fc_fcp_send_data
+      fcoe: fix offload feature flag change from netdev
 
 
-
-
-
---- Comment #17 from Ken Stailey <kstailey@yahoo.com>  2010-07-20 20:08:27 ---
-Related bug reports:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/605939
-https://bugzilla.redhat.com/show_bug.cgi?id=616572
+ drivers/scsi/fcoe/fcoe.c      |  147 +++--
+ drivers/scsi/fcoe/libfcoe.c   | 1306 ++++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/fnic/fnic_main.c |   11 
+ drivers/scsi/libfc/fc_disc.c  |   39 +
+ drivers/scsi/libfc/fc_elsct.c |    2 
+ drivers/scsi/libfc/fc_exch.c  |  215 ++++---
+ drivers/scsi/libfc/fc_fcp.c   |   13 
+ drivers/scsi/libfc/fc_libfc.c |   78 ++
+ drivers/scsi/libfc/fc_libfc.h |    2 
+ drivers/scsi/libfc/fc_lport.c |  210 +++----
+ drivers/scsi/libfc/fc_rport.c |  564 +++++++++++-------
+ include/scsi/fc/fc_els.h      |    2 
+ include/scsi/fc/fc_fip.h      |   46 +
+ include/scsi/fc/fc_ns.h       |    7 
+ include/scsi/fc_encode.h      |    7 
+ include/scsi/fc_frame.h       |   52 ++
+ include/scsi/libfc.h          |   68 +-
+ include/scsi/libfcoe.h        |   72 ++
+ 18 files changed, 2157 insertions(+), 684 deletions(-)
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Thanks, //Rob
