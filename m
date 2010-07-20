@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 11/28] libfc: Add local port point-to-multipoint flag
-Date: Tue, 20 Jul 2010 15:20:03 -0700
-Message-ID: <20100720222003.17116.9373.stgit@localhost.localdomain>
+Subject: [PATCH 15/28] libfcoe: add state change debugging
+Date: Tue, 20 Jul 2010 15:20:24 -0700
+Message-ID: <20100720222024.17116.37796.stgit@localhost.localdomain>
 References: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63483 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:32444 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761863Ab0GTWUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:20:04 -0400
+	id S932801Ab0GTWUg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2010 18:20:36 -0400
 In-Reply-To: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,103 +19,120 @@ Cc: Joe Eykholt <jeykholt@cisco.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-For VN_port to VN_port mode, the transport sets the port_id and
-there's no lport FLOGI.  This is similar to FC loop mode.
-
-Add a point_to_multipoint flag that indicates the local port is in
-point-to-multipoint mode.  This skips FLOGI and discovery.
-It also skips resetting the port_id on resets other than link down.
-
-Add function fc_lport_set_local_id() that sets the local port_id.
-This is called by libfcoe on behalf of the low-level driver
-to set the port_id when the link comes up.
+Enhancement: add debug messages at all state transitions.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_lport.c |   36 +++++++++++++++++++++++++++++++++++-
- include/scsi/libfc.h          |    2 ++
- 2 files changed, 37 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |   48 +++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 41 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 79c9e3c..f7bff2c 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -755,6 +755,34 @@ static void fc_lport_set_port_id(struct fc_lport *lport, u32 port_id,
- }
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 76056e4..11f3db5 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -80,6 +80,40 @@ do {							\
+ 			      printk(KERN_INFO "host%d: fip: " fmt, 	\
+ 				     (fip)->lp->host->host_no, ##args);)
  
- /**
-+ * fc_lport_set_port_id() - set the local port Port ID for point-to-multipoint
-+ * @lport: The local port which will have its Port ID set.
-+ * @port_id: The new port ID.
-+ *
-+ * Called by the lower-level driver when transport sets the local port_id.
-+ * This is used in VN_port to VN_port mode for FCoE, and causes FLOGI and
-+ * discovery to be skipped.
-+ */
-+void fc_lport_set_local_id(struct fc_lport *lport, u32 port_id)
++static const char *fcoe_ctlr_states[] = {
++	[FIP_ST_DISABLED] =	"DISABLED",
++	[FIP_ST_LINK_WAIT] =	"LINK_WAIT",
++	[FIP_ST_AUTO] =		"AUTO",
++	[FIP_ST_NON_FIP] =	"NON_FIP",
++	[FIP_ST_ENABLED] =	"ENABLED",
++};
++
++static const char *fcoe_ctlr_state(enum fip_state state)
 +{
-+	mutex_lock(&lport->lp_mutex);
++	const char *cp = "unknown";
 +
-+	fc_lport_set_port_id(lport, port_id, NULL);
-+
-+	switch (lport->state) {
-+	case LPORT_ST_RESET:
-+	case LPORT_ST_FLOGI:
-+		if (port_id)
-+			fc_lport_enter_ready(lport);
-+		break;
-+	default:
-+		break;
-+	}
-+	mutex_unlock(&lport->lp_mutex);
++	if (state < ARRAY_SIZE(fcoe_ctlr_states))
++		cp = fcoe_ctlr_states[state];
++	if (!cp)
++		cp = "unknown";
++	return cp;
 +}
-+EXPORT_SYMBOL(fc_lport_set_local_id);
 +
 +/**
-  * fc_lport_recv_flogi_req() - Receive a FLOGI request
-  * @sp_in: The sequence the FLOGI is on
-  * @rx_fp: The FLOGI frame
-@@ -954,7 +982,7 @@ static void fc_lport_reset_locked(struct fc_lport *lport)
- 	lport->tt.exch_mgr_reset(lport, 0, 0);
- 	fc_host_fabric_name(lport->host) = 0;
- 
--	if (lport->port_id)
-+	if (lport->port_id && (!lport->point_to_multipoint || !lport->link_up))
- 		fc_lport_set_port_id(lport, 0, NULL);
- }
- 
-@@ -1536,6 +1564,12 @@ void fc_lport_enter_flogi(struct fc_lport *lport)
- 
- 	fc_lport_state_enter(lport, LPORT_ST_FLOGI);
- 
-+	if (lport->point_to_multipoint) {
-+		if (lport->port_id)
-+			fc_lport_enter_ready(lport);
++ * fcoe_ctlr_set_state() - Set and do debug printing for the new FIP state.
++ * @fip: The FCoE controller
++ * @state: The new state
++ */
++static void fcoe_ctlr_set_state(struct fcoe_ctlr *fip, enum fip_state state)
++{
++	if (state == fip->state)
 +		return;
-+	}
++	if (fip->lp)
++		LIBFCOE_FIP_DBG(fip, "state %s -> %s\n",
++			fcoe_ctlr_state(fip->state), fcoe_ctlr_state(state));
++	fip->state = state;
++}
 +
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_flogi));
- 	if (!fp)
- 		return fc_lport_error(lport, fp);
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 5f64e59..bd05605 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -846,6 +846,7 @@ struct fc_lport {
- 	u32			       lro_enabled:1;
- 	u32			       does_npiv:1;
- 	u32			       npiv_enabled:1;
-+	u32			       point_to_multipoint:1;
- 	u32			       mfs;
- 	u8			       max_retry_count;
- 	u8			       max_rport_retry_count;
-@@ -991,6 +992,7 @@ int fc_set_mfs(struct fc_lport *, u32 mfs);
- struct fc_lport *libfc_vport_create(struct fc_vport *, int privsize);
- struct fc_lport *fc_vport_id_lookup(struct fc_lport *, u32 port_id);
- int fc_lport_bsg_request(struct fc_bsg_job *);
-+void fc_lport_set_local_id(struct fc_lport *, u32 port_id);
+ /**
+  * fcoe_ctlr_mtu_valid() - Check if a FCF's MTU is valid
+  * @fcf: The FCF to check
+@@ -110,7 +144,7 @@ static inline int fcoe_ctlr_fcf_usable(struct fcoe_fcf *fcf)
+  */
+ void fcoe_ctlr_init(struct fcoe_ctlr *fip, enum fip_state mode)
+ {
+-	fip->state = FIP_ST_LINK_WAIT;
++	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
+ 	fip->mode = mode;
+ 	INIT_LIST_HEAD(&fip->fcfs);
+ 	mutex_init(&fip->ctlr_mutex);
+@@ -160,7 +194,7 @@ void fcoe_ctlr_destroy(struct fcoe_ctlr *fip)
+ 	skb_queue_purge(&fip->fip_recv_list);
  
- /*
-  * REMOTE PORT LAYER
+ 	mutex_lock(&fip->ctlr_mutex);
+-	fip->state = FIP_ST_DISABLED;
++	fcoe_ctlr_set_state(fip, FIP_ST_DISABLED);
+ 	fcoe_ctlr_reset_fcfs(fip);
+ 	mutex_unlock(&fip->ctlr_mutex);
+ 	del_timer_sync(&fip->timer);
+@@ -260,7 +294,7 @@ void fcoe_ctlr_link_up(struct fcoe_ctlr *fip)
+ 		mutex_unlock(&fip->ctlr_mutex);
+ 		fc_linkup(fip->lp);
+ 	} else if (fip->state == FIP_ST_LINK_WAIT) {
+-		fip->state = fip->mode;
++		fcoe_ctlr_set_state(fip, fip->mode);
+ 		mutex_unlock(&fip->ctlr_mutex);
+ 		if (fip->state == FIP_ST_AUTO)
+ 			LIBFCOE_FIP_DBG(fip, "%s", "setting AUTO mode.\n");
+@@ -303,7 +337,7 @@ int fcoe_ctlr_link_down(struct fcoe_ctlr *fip)
+ 	mutex_lock(&fip->ctlr_mutex);
+ 	fcoe_ctlr_reset(fip);
+ 	link_dropped = fip->state != FIP_ST_LINK_WAIT;
+-	fip->state = FIP_ST_LINK_WAIT;
++	fcoe_ctlr_set_state(fip, FIP_ST_LINK_WAIT);
+ 	mutex_unlock(&fip->ctlr_mutex);
+ 
+ 	if (link_dropped)
+@@ -1170,7 +1204,7 @@ static int fcoe_ctlr_recv_handler(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	state = fip->state;
+ 	if (state == FIP_ST_AUTO) {
+ 		fip->map_dest = 0;
+-		fip->state = FIP_ST_ENABLED;
++		fcoe_ctlr_set_state(fip, FIP_ST_ENABLED);
+ 		state = FIP_ST_ENABLED;
+ 		LIBFCOE_FIP_DBG(fip, "Using FIP mode\n");
+ 	}
+@@ -1401,7 +1435,7 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 			mutex_unlock(&fip->ctlr_mutex);
+ 			return -EINVAL;
+ 		}
+-		fip->state = FIP_ST_NON_FIP;
++		fcoe_ctlr_set_state(fip, FIP_ST_NON_FIP);
+ 		LIBFCOE_FIP_DBG(fip,
+ 				"received FLOGI LS_ACC using non-FIP mode\n");
+ 
+@@ -1431,7 +1465,7 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 			if (fip->state == FIP_ST_AUTO)
+ 				LIBFCOE_FIP_DBG(fip, "received non-FIP FLOGI. "
+ 						"Setting non-FIP mode\n");
+-			fip->state = FIP_ST_NON_FIP;
++			fcoe_ctlr_set_state(fip, FIP_ST_NON_FIP);
+ 		}
+ 		mutex_unlock(&fip->ctlr_mutex);
+ 	}
 
