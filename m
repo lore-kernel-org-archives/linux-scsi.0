@@ -1,60 +1,71 @@
 From: akpm@linux-foundation.org
-Subject: [patch 27/27] drivers/scsi/pmcraid.c: remove unwanted cast for void* pointers
-Date: Tue, 20 Jul 2010 15:29:06 -0700
-Message-ID: <201007202229.o6KMT69T021808@imap1.linux-foundation.org>
+Subject: [patch 19/27] scsi: use __uX types for headers exported to user space
+Date: Tue, 20 Jul 2010 15:28:59 -0700
+Message-ID: <201007202228.o6KMSxpx021775@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41097 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:51902 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932886Ab0GTW3c (ORCPT
+	by vger.kernel.org with ESMTP id S932886Ab0GTW3g (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:29:32 -0400
+	Tue, 20 Jul 2010 18:29:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, cyril.jayaprakash@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jacmet@sunsite.dk, bharrosh@panasas.com, james.smart@emulex.com
 
-From: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
+From: Peter Korsgaard <jacmet@sunsite.dk>
 
-Signed-off-by: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
+Commit 9e4f5e29 ("FC Pass Thru support") exported a number of header files
+in include/scsi to user space, but didn't change the uX types to the
+userspace-compatible __uX types.  Without that you'll get compile errors
+when including them - E.G.:
+
+include/scsi/scsi.h:145: error: expected specifier-qualifier-list before `u8'
+
+Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Smart <james.smart@emulex.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/pmcraid.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ include/scsi/scsi.h         |    8 ++++----
+ include/scsi/scsi_netlink.h |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff -puN drivers/scsi/pmcraid.c~drivers-scsi-pmcraidc-remove-unwanted-cast-for-void-pointers drivers/scsi/pmcraid.c
---- a/drivers/scsi/pmcraid.c~drivers-scsi-pmcraidc-remove-unwanted-cast-for-void-pointers
-+++ a/drivers/scsi/pmcraid.c
-@@ -3599,8 +3599,7 @@ static int pmcraid_chr_open(struct inode
+diff -puN include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi.h
+--- a/include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space
++++ a/include/scsi/scsi.h
+@@ -151,10 +151,10 @@ struct scsi_cmnd;
+ 
+ /* defined in T10 SCSI Primary Commands-2 (SPC2) */
+ struct scsi_varlen_cdb_hdr {
+-	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
+-	u8 control;
+-	u8 misc[5];
+-	u8 additional_cdb_length;         /* total cdb length - 8 */
++	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
++	__u8 control;
++	__u8 misc[5];
++	__u8 additional_cdb_length;         /* total cdb length - 8 */
+ 	__be16 service_action;
+ 	/* service specific data follows */
+ };
+diff -puN include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi_netlink.h
+--- a/include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space
++++ a/include/scsi/scsi_netlink.h
+@@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
+  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
   */
- static int pmcraid_chr_release(struct inode *inode, struct file *filep)
- {
--	struct pmcraid_instance *pinstance =
--		((struct pmcraid_instance *)filep->private_data);
-+	struct pmcraid_instance *pinstance = filep->private_data;
+ #define SCSI_NL_VID_TYPE_SHIFT		56
+-#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
+-#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
++#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
+ #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
  
- 	filep->private_data = NULL;
- 	fasync_helper(-1, filep, 0, &pinstance->aen_queue);
-@@ -3619,7 +3618,7 @@ static int pmcraid_chr_fasync(int fd, st
- 	struct pmcraid_instance *pinstance;
- 	int rc;
  
--	pinstance = (struct pmcraid_instance *)filep->private_data;
-+	pinstance = filep->private_data;
- 	mutex_lock(&pinstance->aen_queue_lock);
- 	rc = fasync_helper(fd, filep, mode, &pinstance->aen_queue);
- 	mutex_unlock(&pinstance->aen_queue_lock);
-@@ -4110,7 +4109,7 @@ static long pmcraid_chr_ioctl(
- 		return retval;
- 	}
- 
--	pinstance = (struct pmcraid_instance *)filep->private_data;
-+	pinstance = filep->private_data;
- 
- 	if (!pinstance) {
- 		pmcraid_info("adapter instance is not found\n");
 _
