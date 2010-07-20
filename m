@@ -1,77 +1,44 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 26/28] Revert "[SCSI] fcoe: Fix using VLAN ID in creating
-	lport's WWWN/WWPN"
-Date: Tue, 20 Jul 2010 15:21:22 -0700
-Message-ID: <20100720222122.17116.49253.stgit@localhost.localdomain>
-References: <20100720221904.17116.78553.stgit@localhost.localdomain>
+From: akpm@linux-foundation.org
+Subject: [patch 04/27] drivers/scsi/libsas: use SAM_GOOD
+Date: Tue, 20 Jul 2010 15:28:44 -0700
+Message-ID: <201007202228.o6KMSihC021717@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23765 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932837Ab0GTWVX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:21:23 -0400
-In-Reply-To: <20100720221904.17116.78553.stgit@localhost.localdomain>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:46812 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932070Ab0GTW3K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2010 18:29:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Vasu Dev <vasu.dev@intel.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk
 
-From: Vasu Dev <vasu.dev@intel.com>
+From: Julia Lawall <julia@diku.dk>
 
-This reverts commit cc0136c2e9c10e889cb36e39710c0eb10707b396.
+The field stat->stat should be compared to SAM_GOOD, not SAM_STAT_GOOD, as
+done elsewhere in the same function.  Both constants have the same value.
 
-That commit introduced vlan id info to WWPN but WWPN needs to
-remain static as an unique port identifier in the fabric, therefore
-variable fabric vlan id info doesn't need to be coded inside WWPN.
-
-After this revert, port arg to fcoe_wwn_from_mac is always zero
-but still leaving it as-is okay to later allow users to use NAA 2
-scheme with this additional port arg.
-
-Note with this patch, existing zoning using WWPN would require
-re-zoning this time only and later no more re-zoning due to any
-vlan id changes.
-
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
+Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/scsi/fcoe/fcoe.c |   11 +----------
- 1 files changed, 1 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index cf9d718..ddd2ca2 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -647,7 +647,6 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
- 	u64 wwnn, wwpn;
- 	struct fcoe_interface *fcoe;
- 	struct fcoe_port *port;
--	int vid = 0;
- 
- 	/* Setup lport private data to point to fcoe softc */
- 	port = lport_priv(lport);
-@@ -677,20 +676,12 @@ static int fcoe_netdev_config(struct fc_lport *lport, struct net_device *netdev)
- 	fcoe_link_speed_update(lport);
- 
- 	if (!lport->vport) {
--		/*
--		 * Use NAA 1&2 (FC-FS Rev. 2.0, Sec. 15) to generate WWNN/WWPN:
--		 * For WWNN, we use NAA 1 w/ bit 27-16 of word 0 as 0.
--		 * For WWPN, we use NAA 2 w/ bit 27-16 of word 0 from VLAN ID
--		 */
--		if (netdev->priv_flags & IFF_802_1Q_VLAN)
--			vid = vlan_dev_vlan_id(netdev);
--
- 		if (fcoe_get_wwn(netdev, &wwnn, NETDEV_FCOE_WWNN))
- 			wwnn = fcoe_wwn_from_mac(fcoe->ctlr.ctl_src_addr, 1, 0);
- 		fc_set_wwnn(lport, wwnn);
- 		if (fcoe_get_wwn(netdev, &wwpn, NETDEV_FCOE_WWPN))
- 			wwpn = fcoe_wwn_from_mac(fcoe->ctlr.ctl_src_addr,
--						 2, vid);
-+						 2, 0);
- 		fc_set_wwpn(lport, wwpn);
- 	}
- 
+ drivers/scsi/libsas/sas_ata.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff -puN drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good drivers/scsi/libsas/sas_ata.c
+--- a/drivers/scsi/libsas/sas_ata.c~drivers-scsi-libsas-use-sam_good
++++ a/drivers/scsi/libsas/sas_ata.c
+@@ -113,7 +113,7 @@ static void sas_ata_task_done(struct sas
+ 		dev->sata_dev.sstatus = resp->sstatus;
+ 		dev->sata_dev.serror = resp->serror;
+ 		dev->sata_dev.scontrol = resp->scontrol;
+-	} else if (stat->stat != SAM_STAT_GOOD) {
++	} else if (stat->stat != SAM_GOOD) {
+ 		ac = sas_to_ata_err(stat);
+ 		if (ac) {
+ 			SAS_DPRINTK("%s: SAS error %x\n", __func__,
+_
