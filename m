@@ -1,78 +1,48 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/27] drivers/scsi/aic94xx/aic94xx_init.c: correct the size argument to kmalloc
-Date: Tue, 20 Jul 2010 15:28:51 -0700
-Message-ID: <201007202228.o6KMSp31021747@imap1.linux-foundation.org>
+Subject: [patch 15/27] drivers/scsi/qla2xxx/qla_os.c: fix continuation line formats
+Date: Tue, 20 Jul 2010 15:28:55 -0700
+Message-ID: <201007202228.o6KMSts6021758@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55189 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:34395 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932936Ab0GTWic (ORCPT
+	by vger.kernel.org with ESMTP id S932733Ab0GTWix (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:38:32 -0400
+	Tue, 20 Jul 2010 18:38:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, eike-kernel@sf-tec.de, joe@perches.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, joe@perches.com, James.Bottomley@suse.de, anirban.chakraborty@qlogic.com, giridhar.malavali@qlogic.com
 
-From: Julia Lawall <julia@diku.dk>
+From: Joe Perches <joe@perches.com>
 
-In each case, the destination of the allocation has type struct **, so the
-elements of the array should have pointer type, not structure type.
+String constants that are continued on subsequent lines with \ will cause
+spurious whitespace in the resulting output.
 
-The semantic patch that makes this change is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@disable sizeof_type_expr@
-type T;
-T **x;
-@@
-
-  x =
-  <+...sizeof(
-- T
-+ *x
-  )...+>
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Joe Perches <joe@perches.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: Anirban Chakraborty <anirban.chakraborty@qlogic.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic94xx/aic94xx_init.c |    4 ++--
- drivers/scsi/ch.c                   |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/aic94xx/aic94xx_init.c~drivers-scsi-correct-the-size-argument-to-kmalloc drivers/scsi/aic94xx/aic94xx_init.c
---- a/drivers/scsi/aic94xx/aic94xx_init.c~drivers-scsi-correct-the-size-argument-to-kmalloc
-+++ a/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -688,9 +688,9 @@ static int asd_register_sas_ha(struct as
- {
- 	int i;
- 	struct asd_sas_phy   **sas_phys =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_phy), GFP_KERNEL);
-+		kcalloc(ASD_MAX_PHYS, sizeof(*sas_phys), GFP_KERNEL);
- 	struct asd_sas_port  **sas_ports =
--		kmalloc(ASD_MAX_PHYS * sizeof(struct asd_sas_port), GFP_KERNEL);
-+		kcalloc(ASD_MAX_PHYS, sizeof(*sas_ports), GFP_KERNEL);
+diff -puN drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-fix-continuation-line-formats drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-qla_osc-fix-continuation-line-formats
++++ a/drivers/scsi/qla2xxx/qla_os.c
+@@ -115,8 +115,8 @@ int ql2xmaxqueues = 1;
+ module_param(ql2xmaxqueues, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xmaxqueues,
+ 		"Enables MQ settings "
+-		"Default is 1 for single queue. Set it to number \
+-			of queues in MQ mode.");
++		"Default is 1 for single queue. Set it to number "
++		"of queues in MQ mode.");
  
- 	if (!sas_phys || !sas_ports) {
- 		kfree(sas_phys);
-diff -puN drivers/scsi/ch.c~drivers-scsi-correct-the-size-argument-to-kmalloc drivers/scsi/ch.c
---- a/drivers/scsi/ch.c~drivers-scsi-correct-the-size-argument-to-kmalloc
-+++ a/drivers/scsi/ch.c
-@@ -352,7 +352,7 @@ ch_readconfig(scsi_changer *ch)
- 	}
- 
- 	/* look up the devices of the data transfer elements */
--	ch->dt = kmalloc(ch->counts[CHET_DT]*sizeof(struct scsi_device),
-+	ch->dt = kcalloc(ch->counts[CHET_DT], sizeof(*ch->dt),
- 			 GFP_KERNEL);
- 
- 	if (!ch->dt) {
+ int ql2xmultique_tag;
+ module_param(ql2xmultique_tag, int, S_IRUGO|S_IRUSR);
 _
