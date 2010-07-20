@@ -1,44 +1,62 @@
 From: akpm@linux-foundation.org
-Subject: [patch 18/27] bfa: wrong fcport H2I message tested in bfa_fcport_isr()
-Date: Tue, 20 Jul 2010 15:28:58 -0700
-Message-ID: <201007202228.o6KMSwEx021772@imap1.linux-foundation.org>
+Subject: [patch 21/27] scsi: fix be2iscsi build
+Date: Tue, 20 Jul 2010 15:29:01 -0700
+Message-ID: <201007202229.o6KMT1hG021785@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52203 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56392 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932818Ab0GTW31 (ORCPT
+	by vger.kernel.org with ESMTP id S932886Ab0GTW3a (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:29:27 -0400
+	Tue, 20 Jul 2010 18:29:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, huangj@Brocade.COM
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, jayamohank@serverengines.com
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-It appears that the wrong fcport H2I message was tested
+be2iscsi driver should #include linux/if_ether.h since it uses
+sysfs_format_mac().
 
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Acked-by: Jing Huang <huangj@Brocade.COM>
+It should also depend on NET since it selects SCSI_ISCSI_ATTRS,
+which depends on NET.
+
+These changes fix a build error when CONFIG_NET is not enabled:
+ERROR: "sysfs_format_mac" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Jayamohan Kallickal <jayamohank@serverengines.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/bfa/bfa_fcport.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/Kconfig   |    2 +-
+ drivers/scsi/be2iscsi/be_main.h |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/bfa/bfa_fcport.c~bfa-wrong-fcport-h2i-message-tested-in-bfa_fcport_isr drivers/scsi/bfa/bfa_fcport.c
---- a/drivers/scsi/bfa/bfa_fcport.c~bfa-wrong-fcport-h2i-message-tested-in-bfa_fcport_isr
-+++ a/drivers/scsi/bfa/bfa_fcport.c
-@@ -1281,7 +1281,7 @@ bfa_fcport_isr(struct bfa_s *bfa, struct
- 		break;
+diff -puN drivers/scsi/be2iscsi/Kconfig~scsi-fix-be2iscsi-build drivers/scsi/be2iscsi/Kconfig
+--- a/drivers/scsi/be2iscsi/Kconfig~scsi-fix-be2iscsi-build
++++ a/drivers/scsi/be2iscsi/Kconfig
+@@ -1,6 +1,6 @@
+ config BE2ISCSI
+ 	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
+-	depends on PCI && SCSI
++	depends on PCI && SCSI && NET
+ 	select SCSI_ISCSI_ATTRS
  
- 	case BFI_FCPORT_I2H_DISABLE_RSP:
--		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
-+		if (fcport->msgtag == i2hmsg.pdisable_rsp->msgtag)
- 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
- 		break;
+ 	help
+diff -puN drivers/scsi/be2iscsi/be_main.h~scsi-fix-be2iscsi-build drivers/scsi/be2iscsi/be_main.h
+--- a/drivers/scsi/be2iscsi/be_main.h~scsi-fix-be2iscsi-build
++++ a/drivers/scsi/be2iscsi/be_main.h
+@@ -23,6 +23,7 @@
  
+ #include <linux/kernel.h>
+ #include <linux/pci.h>
++#include <linux/if_ether.h>
+ #include <linux/in.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
 _
