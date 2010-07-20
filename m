@@ -1,17 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 17/28] libfcoe: Fix FIP ELS encapsulation details for FLOGI
-	responses
-Date: Tue, 20 Jul 2010 15:20:35 -0700
-Message-ID: <20100720222035.17116.66903.stgit@localhost.localdomain>
+Subject: [PATCH 18/28] fcoe libfcoe: use correct FC-MAP for VN2VN mode
+Date: Tue, 20 Jul 2010 15:20:40 -0700
+Message-ID: <20100720222040.17116.62416.stgit@localhost.localdomain>
 References: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:46553 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:60657 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932795Ab0GTWUg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:20:36 -0400
+	id S932803Ab0GTWUl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2010 18:20:41 -0400
 In-Reply-To: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,97 +19,106 @@ Cc: Joe Eykholt <jeykholt@cisco.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-When sending a FLOGI LS_ACC, which we only do in point-to-multipoint
-mode, the MAC descriptor should have the granted MAC set to
-0x0efd00 || D_ID.
-
-When sending an LS_RJT, there should be no MAC descriptor.
-
-When sending either an LS_ACC or LS_RJT, the subcode should indicate
-an reply, not a request.
+In VN2VN mode, map_dest means to use the default VN2VN OUI.
+Change code that uses the default FCoE OUI to use the one
+set in the fcoe_ctlr struct.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/libfcoe.c |   42 ++++++++++++++++++++++++++++--------------
- 1 files changed, 28 insertions(+), 14 deletions(-)
+ drivers/scsi/fcoe/fcoe.c    |    6 ++----
+ drivers/scsi/fcoe/libfcoe.c |   24 ++++++++++++++++++++----
+ 2 files changed, 22 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 216aba3..4d3e70a 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1534,11 +1534,9 @@ int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 	/* fill up mac and fcoe headers */
+ 	eh = eth_hdr(skb);
+ 	eh->h_proto = htons(ETH_P_FCOE);
++	memcpy(eh->h_dest, fcoe->ctlr.dest_addr, ETH_ALEN);
+ 	if (fcoe->ctlr.map_dest)
+-		fc_fcoe_set_mac(eh->h_dest, fh->fh_d_id);
+-	else
+-		/* insert GW address */
+-		memcpy(eh->h_dest, fcoe->ctlr.dest_addr, ETH_ALEN);
++		memcpy(eh->h_dest + 3, fh->fh_d_id, 3);
+ 
+ 	if (unlikely(fcoe->ctlr.flogi_oxid != FC_XID_UNKNOWN))
+ 		memcpy(eh->h_source, fcoe->ctlr.ctl_src_addr, ETH_ALEN);
 diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
-index 79df78f..4865e81 100644
+index 4865e81..4de8ced 100644
 --- a/drivers/scsi/fcoe/libfcoe.c
 +++ b/drivers/scsi/fcoe/libfcoe.c
-@@ -469,11 +469,15 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip, struct fc_lport *lport,
- 		struct fip_header fip;
- 		struct fip_encaps encaps;
- 	} __attribute__((packed)) *cap;
-+	struct fc_frame_header *fh;
- 	struct fip_mac_desc *mac;
- 	struct fcoe_fcf *fcf;
- 	size_t dlen;
- 	u16 fip_flags;
-+	u8 op;
+@@ -153,6 +153,20 @@ static inline int fcoe_ctlr_fcf_usable(struct fcoe_fcf *fcf)
+ }
  
-+	fh = (struct fc_frame_header *)skb->data;
-+	op = *(u8 *)(fh + 1);
- 	dlen = sizeof(struct fip_encaps) + skb->len;	/* len before push */
- 	cap = (struct fip_encaps_head *)skb_push(skb, sizeof(*cap));
- 	memset(cap, 0, sizeof(*cap));
-@@ -481,6 +485,7 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip, struct fc_lport *lport,
- 	if (lport->point_to_multipoint) {
- 		if (fcoe_ctlr_vn_lookup(fip, d_id, cap->eth.h_dest))
- 			return -ENODEV;
-+		fip_flags = 0;
- 	} else {
- 		fcf = fip->sel_fcf;
- 		if (!fcf)
-@@ -497,26 +502,35 @@ static int fcoe_ctlr_encaps(struct fcoe_ctlr *fip, struct fc_lport *lport,
- 
- 	cap->fip.fip_ver = FIP_VER_ENCAPS(FIP_VER);
- 	cap->fip.fip_op = htons(FIP_OP_LS);
--	cap->fip.fip_subcode = FIP_SC_REQ;
--	cap->fip.fip_dl_len = htons((dlen + sizeof(*mac)) / FIP_BPW);
-+	if (op == ELS_LS_ACC || op == ELS_LS_RJT)
-+		cap->fip.fip_subcode = FIP_SC_REP;
+ /**
++ * fcoe_ctlr_map_dest() - Set flag and OUI for mapping destination addresses
++ * @fip: The FCoE controller
++ */
++static void fcoe_ctlr_map_dest(struct fcoe_ctlr *fip)
++{
++	if (fip->mode == FIP_MODE_VN2VN)
++		hton24(fip->dest_addr, FIP_VN_FC_MAP);
 +	else
-+		cap->fip.fip_subcode = FIP_SC_REQ;
- 	cap->fip.fip_flags = htons(fip_flags);
++		hton24(fip->dest_addr, FIP_DEF_FC_MAP);
++	hton24(fip->dest_addr + 3, 0);
++	fip->map_dest = 1;
++}
++
++/**
+  * fcoe_ctlr_init() - Initialize the FCoE Controller instance
+  * @fip: The FCoE controller to initialize
+  */
+@@ -345,7 +359,7 @@ static void fcoe_ctlr_reset(struct fcoe_ctlr *fip)
+ 	fip->port_ka_time = 0;
+ 	fip->sol_time = 0;
+ 	fip->flogi_oxid = FC_XID_UNKNOWN;
+-	fip->map_dest = 0;
++	fcoe_ctlr_map_dest(fip);
+ }
  
- 	cap->encaps.fd_desc.fip_dtype = dtype;
- 	cap->encaps.fd_desc.fip_dlen = dlen / FIP_BPW;
- 
--	mac = (struct fip_mac_desc *)skb_put(skb, sizeof(*mac));
--	memset(mac, 0, sizeof(*mac));
--	mac->fd_desc.fip_dtype = FIP_DT_MAC;
--	mac->fd_desc.fip_dlen = sizeof(*mac) / FIP_BPW;
--	if (dtype != FIP_DT_FLOGI && dtype != FIP_DT_FDISC) {
--		memcpy(mac->fd_mac, fip->get_src_addr(lport), ETH_ALEN);
--	} else if (fip_flags & FIP_FL_SPMA) {
--		LIBFCOE_FIP_DBG(fip, "FLOGI/FDISC sent with SPMA\n");
--		memcpy(mac->fd_mac, fip->ctl_src_addr, ETH_ALEN);
--	} else {
--		LIBFCOE_FIP_DBG(fip, "FLOGI/FDISC sent with FPMA\n");
--		/* FPMA only FLOGI must leave the MAC desc set to all 0s */
-+	if (op != ELS_LS_RJT) {
-+		dlen += sizeof(*mac);
-+		mac = (struct fip_mac_desc *)skb_put(skb, sizeof(*mac));
-+		memset(mac, 0, sizeof(*mac));
-+		mac->fd_desc.fip_dtype = FIP_DT_MAC;
-+		mac->fd_desc.fip_dlen = sizeof(*mac) / FIP_BPW;
-+		if (dtype != FIP_DT_FLOGI && dtype != FIP_DT_FDISC) {
-+			memcpy(mac->fd_mac, fip->get_src_addr(lport), ETH_ALEN);
-+		} else if (fip->mode == FIP_MODE_VN2VN) {
-+			hton24(mac->fd_mac, FIP_VN_FC_MAP);
-+			hton24(mac->fd_mac + 3, fip->port_id);
-+		} else if (fip_flags & FIP_FL_SPMA) {
-+			LIBFCOE_FIP_DBG(fip, "FLOGI/FDISC sent with SPMA\n");
-+			memcpy(mac->fd_mac, fip->ctl_src_addr, ETH_ALEN);
-+		} else {
-+			LIBFCOE_FIP_DBG(fip, "FLOGI/FDISC sent with FPMA\n");
-+			/* FPMA only FLOGI.  Must leave the MAC desc zeroed. */
-+		}
+ /**
+@@ -573,11 +587,11 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 			fip->flogi_count++;
+ 			if (fip->flogi_count < 3)
+ 				goto drop;
+-			fip->map_dest = 1;
++			fcoe_ctlr_map_dest(fip);
+ 			return 0;
+ 		}
+ 		if (fip->state == FIP_ST_NON_FIP)
+-			fip->map_dest = 1;
++			fcoe_ctlr_map_dest(fip);
  	}
-+	cap->fip.fip_dl_len = htons(dlen / FIP_BPW);
  
- 	skb->protocol = htons(ETH_P_FIP);
- 	skb_reset_mac_header(skb);
+ 	if (fip->state == FIP_ST_NON_FIP)
+@@ -1411,6 +1425,7 @@ static void fcoe_ctlr_timer_work(struct work_struct *work)
+ 			       "Fibre-Channel Forwarder MAC %pM\n",
+ 			       fip->lp->host->host_no, sel->fcf_mac);
+ 			memcpy(fip->dest_addr, sel->fcf_mac, ETH_ALEN);
++			fip->map_dest = 0;
+ 			fip->port_ka_time = jiffies +
+ 				msecs_to_jiffies(FIP_VN_KA_PERIOD);
+ 			fip->ctlr_ka_time = jiffies + sel->fka_period;
+@@ -1527,7 +1542,7 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 		 * Otherwise we use the FCoE gateway addr
+ 		 */
+ 		if (!compare_ether_addr(sa, (u8[6])FC_FCOE_FLOGI_MAC)) {
+-			fip->map_dest = 1;
++			fcoe_ctlr_map_dest(fip);
+ 		} else {
+ 			memcpy(fip->dest_addr, sa, ETH_ALEN);
+ 			fip->map_dest = 0;
+@@ -2426,6 +2441,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 		new_port_id = fip->port_id;
+ 		hton24(mac, FIP_VN_FC_MAP);
+ 		hton24(mac + 3, new_port_id);
++		fcoe_ctlr_map_dest(fip);
+ 		fip->update_mac(fip->lp, mac);
+ 		fcoe_ctlr_vn_send_claim(fip);
+ 		next_time = jiffies + msecs_to_jiffies(FIP_VN_ANN_WAIT);
 
