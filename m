@@ -1,88 +1,100 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/27] drivers/message: move dereference after NULL test
-Date: Tue, 20 Jul 2010 15:28:47 -0700
-Message-ID: <201007202228.o6KMSloh021729@imap1.linux-foundation.org>
+Subject: [patch 14/27] scsi/sd.c: quiet all sparse noise
+Date: Tue, 20 Jul 2010 15:28:54 -0700
+Message-ID: <201007202228.o6KMSsOw021754@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:48213 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47758 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932846Ab0GTW3W (ORCPT
+	by vger.kernel.org with ESMTP id S932862Ab0GTW3W (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 20 Jul 2010 18:29:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, James.Bottomley@suse.de, kashyap.desai@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hartleys@visionengravers.com, James.Bottomley@suse.de, hsweeten@visionengravers.com
 
-From: Julia Lawall <julia@diku.dk>
+From: H Hartley Sweeten <hartleys@visionengravers.com>
 
-If the NULL test on dev->i2o_dev or i2o_dev is needed, then the dereference
-should be after the NULL test.
+In sd_store_cache_type the symbol 'len' is declared twice.  Remove the
+second declaration to quiet the following sparse warning.
 
-A simplified version of the semantic match that detects this problem is as
-follows (http://coccinelle.lip6.fr/):
+warning: symbol 'len' shadows an earlier one
 
-// <smpl>
-@match exists@
-expression x, E;
-identifier fld;
-@@
+In sd_probe the variable 'index' is declared as a u32.  This variable is
+used in a call to ida_get_new which is expecting an int *.  Make the
+variable an int to quiet the following sparse warning.
 
-* x->fld
-  ... when != \(x = E\|&x\)
-* x == NULL
-// </smpl>
+warning: incorrect type in argument 2 (different signedness)
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
+There are 4 symbols in the file that are not exported and produce
+the following sparse warnings.
+
+warning: symbol 'sd_cdb_cache' was not declared. Should it be static?
+warning: symbol 'sd_cdb_pool' was not declared. Should it be static?
+warning: symbol 'sd_read_protection_type' was not declared. Should it be static?
+warning: symbol 'sd_read_app_tag_own' was not declared. Should it be static?
+
+Make them static to quiet the warnings.
+
+Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
+Cc: James E.J. Bottomley <James.Bottomley@suse.de>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/i2o/i2o_block.c |    3 ++-
- drivers/message/i2o/i2o_scsi.c  |    3 +--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/sd.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff -puN drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_block.c
---- a/drivers/message/i2o/i2o_block.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_block.c
-@@ -727,7 +727,7 @@ static int i2o_block_transfer(struct req
+diff -puN drivers/scsi/sd.c~scsi-sdc-quiet-all-sparse-noise drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c~scsi-sdc-quiet-all-sparse-noise
++++ a/drivers/scsi/sd.c
+@@ -119,8 +119,8 @@ static DEFINE_IDA(sd_index_ida);
+  * object after last put) */
+ static DEFINE_MUTEX(sd_ref_mutex);
+ 
+-struct kmem_cache *sd_cdb_cache;
+-mempool_t *sd_cdb_pool;
++static struct kmem_cache *sd_cdb_cache;
++static mempool_t *sd_cdb_pool;
+ 
+ static const char *sd_cache_types[] = {
+ 	"write through", "none", "write back",
+@@ -147,7 +147,7 @@ sd_store_cache_type(struct device *dev, 
+ 		return -EINVAL;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(sd_cache_types); i++) {
+-		const int len = strlen(sd_cache_types[i]);
++		len = strlen(sd_cache_types[i]);
+ 		if (strncmp(sd_cache_types[i], buf, len) == 0 &&
+ 		    buf[len] == '\n') {
+ 			ct = i;
+@@ -1412,7 +1412,7 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ /*
+  * Determine whether disk supports Data Integrity Field.
+  */
+-void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
++static void sd_read_protection_type(struct scsi_disk *sdkp, unsigned char *buffer)
  {
- 	struct i2o_block_device *dev = req->rq_disk->private_data;
- 	struct i2o_controller *c;
--	u32 tid = dev->i2o_dev->lct_data.tid;
-+	u32 tid;
- 	struct i2o_message *msg;
- 	u32 *mptr;
- 	struct i2o_block_request *ireq = req->special;
-@@ -743,6 +743,7 @@ static int i2o_block_transfer(struct req
- 		goto exit;
- 	}
+ 	struct scsi_device *sdp = sdkp->device;
+ 	u8 type;
+@@ -1958,7 +1958,7 @@ defaults:
+  * The ATO bit indicates whether the DIF application tag is available
+  * for use by the operating system.
+  */
+-void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
++static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
+ {
+ 	int res, offset;
+ 	struct scsi_device *sdp = sdkp->device;
+@@ -2304,7 +2304,7 @@ static int sd_probe(struct device *dev)
+ 	struct scsi_device *sdp = to_scsi_device(dev);
+ 	struct scsi_disk *sdkp;
+ 	struct gendisk *gd;
+-	u32 index;
++	int index;
+ 	int error;
  
-+	tid = dev->i2o_dev->lct_data.tid;
- 	c = dev->i2o_dev->iop;
- 
- 	msg = i2o_msg_get(c);
-diff -puN drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test drivers/message/i2o/i2o_scsi.c
---- a/drivers/message/i2o/i2o_scsi.c~drivers-message-move-dereference-after-null-test
-+++ a/drivers/message/i2o/i2o_scsi.c
-@@ -528,7 +528,6 @@ static int i2o_scsi_queuecommand(struct 
- 	 *      Do the incoming paperwork
- 	 */
- 	i2o_dev = SCpnt->device->hostdata;
--	c = i2o_dev->iop;
- 
- 	SCpnt->scsi_done = done;
- 
-@@ -538,7 +537,7 @@ static int i2o_scsi_queuecommand(struct 
- 		done(SCpnt);
- 		goto exit;
- 	}
--
-+	c = i2o_dev->iop;
- 	tid = i2o_dev->lct_data.tid;
- 
- 	osm_debug("qcmd: Tid = %03x\n", tid);
+ 	error = -ENODEV;
 _
