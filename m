@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 13/28] libfc: track FIP exchanges
-Date: Tue, 20 Jul 2010 15:20:14 -0700
-Message-ID: <20100720222014.17116.46391.stgit@localhost.localdomain>
+Subject: [PATCH 14/28] libfcoe: add protocol description of FIP VN2VN mode
+Date: Tue, 20 Jul 2010 15:20:19 -0700
+Message-ID: <20100720222019.17116.22128.stgit@localhost.localdomain>
 References: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:8888 "EHLO mga03.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:2526 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932734Ab0GTWU1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:20:27 -0400
+	id S932753Ab0GTWUU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Jul 2010 18:20:20 -0400
 In-Reply-To: <20100720221904.17116.78553.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,99 +19,143 @@ Cc: Joe Eykholt <jeykholt@cisco.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-When an exchange is received with a FIP encapsulation, we need
-to know that the response must be sent via FIP and what the original
-ELS opcode was.  This becomes important for VN2VN mode, where we may
-receive FLOGI or LOGO from several peer VN_ports, and the LS_ACC or
-LS_RJT must be sent FIP-encapsulated with the correct sub-type.
+The FC-BB-6 committee is proposing a new FIP usage model called
+VN_port to VN_port mode.  It allows VN_ports to discover each other
+over a loss-free L2 Ethernet without any FCF or Fibre-channel fabric
+services.  This is point-to-multipoint.  There is also a variant
+of this called point-to-point which provides for making sure there
+is just one pair of ports operating over the Ethernet fabric.
 
-Add a field to the struct fc_frame, fr_encaps, to indicate the
-encapsulation values.  That term is chosen to be neutral and
-LLD-agnostic in case non-FCoE/FIP LLDs might find it useful.
+This patch defines the new message type and subtypes as well as
+one new descriptor type used by VN2VN mode.
 
-The frame fr_encaps is transferred from the ingress frame to the
-exchange by fc_exch_recv_req(), and back to the outgoing frame
-by fc_seq_send().
-
-This is taking the last byte in the skb->cb array.  If needed,
-we could combine the info in sof, eof, flags, and encaps
-together into one field, but it'd be better to do that if
-and when its needed.
+These are all still at the proposed stage and subject to change.
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_exch.c |    2 ++
- include/scsi/fc_frame.h      |    3 +++
- include/scsi/libfc.h         |    2 ++
- 3 files changed, 7 insertions(+), 0 deletions(-)
+ include/scsi/fc/fc_fip.h |   46 +++++++++++++++++++++++++++++++++++++++++++---
+ include/scsi/fc/fc_ns.h  |    7 +++++++
+ 2 files changed, 50 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 104e0fb..61eabd3 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -464,6 +464,7 @@ static int fc_seq_send(struct fc_lport *lport, struct fc_seq *sp,
+diff --git a/include/scsi/fc/fc_fip.h b/include/scsi/fc/fc_fip.h
+index 17baa19..ae25d4a 100644
+--- a/include/scsi/fc/fc_fip.h
++++ b/include/scsi/fc/fc_fip.h
+@@ -17,9 +17,12 @@
+ #ifndef _FC_FIP_H_
+ #define _FC_FIP_H_
  
- 	f_ctl = ntoh24(fh->fh_f_ctl);
- 	fc_exch_setup_hdr(ep, fp, f_ctl);
-+	fr_encaps(fp) = ep->encaps;
++#include <scsi/fc/fc_ns.h>
++
+ /*
+  * This version is based on:
+  * http://www.t11.org/ftp/t11/pub/fc/bb-5/08-543v1.pdf
++ * and T11 FC-BB-6 10-019v4.pdf (June 2010 VN2VN proposal)
+  */
  
- 	/*
- 	 * update sequence count if this frame is carrying
-@@ -1259,6 +1260,7 @@ static void fc_exch_recv_req(struct fc_lport *lport, struct fc_exch_mgr *mp,
- 		sp = fr_seq(fp);	/* sequence will be held */
- 		ep = fc_seq_exch(sp);
- 		fc_seq_send_ack(sp, fp);
-+		ep->encaps = fr_encaps(fp);
+ #define FIP_DEF_PRI	128	/* default selection priority */
+@@ -29,11 +32,24 @@
+ #define FIP_FCF_FUZZ	100	/* random time added by FCF (mS) */
  
- 		/*
- 		 * Call the receive function.
-diff --git a/include/scsi/fc_frame.h b/include/scsi/fc_frame.h
-index 15427fa..29dd97d 100644
---- a/include/scsi/fc_frame.h
-+++ b/include/scsi/fc_frame.h
-@@ -51,6 +51,7 @@
- #define fr_sof(fp)	(fr_cb(fp)->fr_sof)
- #define fr_eof(fp)	(fr_cb(fp)->fr_eof)
- #define fr_flags(fp)	(fr_cb(fp)->fr_flags)
-+#define fr_encaps(fp)	(fr_cb(fp)->fr_encaps)
- #define fr_max_payload(fp)	(fr_cb(fp)->fr_max_payload)
- #define fr_fsp(fp)	(fr_cb(fp)->fr_fsp)
- #define fr_crc(fp)	(fr_cb(fp)->fr_crc)
-@@ -69,6 +70,7 @@ struct fcoe_rcv_info {
- 	u8		fr_sof;		/* start of frame delimiter */
- 	u8		fr_eof;		/* end of frame delimiter */
- 	u8		fr_flags;	/* flags - see below */
-+	u8		fr_encaps;	/* LLD encapsulation info (e.g. FIP) */
- 	u8		granted_mac[ETH_ALEN]; /* FCoE MAC address */
+ /*
++ * VN2VN proposed-standard values.
++ */
++#define FIP_VN_FC_MAP	0x0efd00 /* MAC OUI for VN2VN use */
++#define FIP_VN_PROBE_WAIT 100	/* interval between VN2VN probes (ms) */
++#define FIP_VN_ANN_WAIT 400	/* interval between VN2VN announcements (ms) */
++#define FIP_VN_RLIM_INT 10000	/* interval between probes when rate limited */
++#define FIP_VN_RLIM_COUNT 10	/* number of probes before rate limiting */
++#define FIP_VN_BEACON_INT 8000	/* interval between VN2VN beacons */
++#define FIP_VN_BEACON_FUZZ 100	/* random time to add to beacon period (ms) */
++
++/*
+  * Multicast MAC addresses.  T11-adopted.
+  */
+-#define FIP_ALL_FCOE_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 0 })
+-#define FIP_ALL_ENODE_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 1 })
+-#define FIP_ALL_FCF_MACS	((u8[6]) { 1, 0x10, 0x18, 1, 0, 2 })
++#define FIP_ALL_FCOE_MACS	((__u8[6]) { 1, 0x10, 0x18, 1, 0, 0 })
++#define FIP_ALL_ENODE_MACS	((__u8[6]) { 1, 0x10, 0x18, 1, 0, 1 })
++#define FIP_ALL_FCF_MACS	((__u8[6]) { 1, 0x10, 0x18, 1, 0, 2 })
++#define FIP_ALL_VN2VN_MACS	((__u8[6]) { 1, 0x10, 0x18, 1, 0, 4 })
++#define FIP_ALL_P2P_MACS	((__u8[6]) { 1, 0x10, 0x18, 1, 0, 5 })
+ 
+ #define FIP_VER		1		/* version for fip_header */
+ 
+@@ -60,6 +76,7 @@ enum fip_opcode {
+ 	FIP_OP_LS =	2,		/* Link Service request or reply */
+ 	FIP_OP_CTRL =	3,		/* Keep Alive / Link Reset */
+ 	FIP_OP_VLAN =	4,		/* VLAN discovery */
++	FIP_OP_VN2VN =	5,		/* VN2VN operation */
+ 	FIP_OP_VENDOR_MIN = 0xfff8,	/* min vendor-specific opcode */
+ 	FIP_OP_VENDOR_MAX = 0xfffe,	/* max vendor-specific opcode */
+ };
+@@ -97,11 +114,23 @@ enum fip_vlan_subcode {
  };
  
-@@ -97,6 +99,7 @@ static inline void fc_frame_init(struct fc_frame *fp)
- 	fr_dev(fp) = NULL;
- 	fr_seq(fp) = NULL;
- 	fr_flags(fp) = 0;
-+	fr_encaps(fp) = 0;
- }
+ /*
++ * Subcodes for FIP_OP_VN2VN.
++ */
++enum fip_vn2vn_subcode {
++	FIP_SC_VN_PROBE_REQ = 1,	/* probe request */
++	FIP_SC_VN_PROBE_REP = 2,	/* probe reply */
++	FIP_SC_VN_CLAIM_NOTIFY = 3,	/* claim notification */
++	FIP_SC_VN_CLAIM_REP = 4,	/* claim response */
++	FIP_SC_VN_BEACON = 5,		/* beacon */
++};
++
++/*
+  * flags in header fip_flags.
+  */
+ enum fip_flag {
+ 	FIP_FL_FPMA =	0x8000,		/* supports FPMA fabric-provided MACs */
+ 	FIP_FL_SPMA =	0x4000,		/* supports SPMA server-provided MACs */
++	FIP_FL_REC_OR_P2P = 0x0008,	/* configured addr or point-to-point */
+ 	FIP_FL_AVAIL =	0x0004,		/* available for FLOGI/ELP */
+ 	FIP_FL_SOL =	0x0002,		/* this is a solicited message */
+ 	FIP_FL_FPORT =	0x0001,		/* sent from an F port */
+@@ -130,6 +159,7 @@ enum fip_desc_type {
+ 	FIP_DT_FKA =	12,		/* advertisement keep-alive period */
+ 	FIP_DT_VENDOR =	13,		/* vendor ID */
+ 	FIP_DT_VLAN =	14,		/* vlan number */
++	FIP_DT_FC4F =	15,		/* FC-4 features */
+ 	FIP_DT_LIMIT,			/* max defined desc_type + 1 */
+ 	FIP_DT_VENDOR_BASE = 128,	/* first vendor-specific desc_type */
+ };
+@@ -229,6 +259,16 @@ enum fip_fka_flags {
+ /* FIP_DT_FKA flags */
  
- struct fc_frame *fc_frame_alloc_fill(struct fc_lport *, size_t payload_len);
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 24b91c9..8d297f9 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -412,6 +412,7 @@ struct fc_seq {
-  * @esb_stat:     ESB exchange status
-  * @r_a_tov:      Resouce allocation time out value (in msecs)
-  * @seq_id:       The next sequence ID to use
-+ * @encaps:       encapsulation information for lower-level driver
-  * @f_ctl:        F_CTL flags for the sequence
-  * @fh_type:      The frame type
-  * @class:        The class of service
-@@ -443,6 +444,7 @@ struct fc_exch {
- 	u32		    esb_stat;
- 	u32		    r_a_tov;
- 	u8		    seq_id;
-+	u8		    encaps;
- 	u32		    f_ctl;
- 	u8		    fh_type;
- 	enum fc_class	    class;
+ /*
++ * FIP_DT_FC4F - FC-4 features.
++ */
++struct fip_fc4_feat {
++	struct fip_desc fd_desc;
++	__u8		fd_resvd[2];
++	struct fc_ns_fts fd_fts;
++	struct fc_ns_ff	fd_ff;
++} __attribute__((packed));
++
++/*
+  * FIP_DT_VENDOR descriptor.
+  */
+ struct fip_vendor_desc {
+diff --git a/include/scsi/fc/fc_ns.h b/include/scsi/fc/fc_ns.h
+index e7d3ac4..185015d 100644
+--- a/include/scsi/fc/fc_ns.h
++++ b/include/scsi/fc/fc_ns.h
+@@ -100,6 +100,13 @@ struct fc_ns_fts {
+ };
+ 
+ /*
++ * FC4-features object.
++ */
++struct fc_ns_ff	{
++	__be32	fd_feat[FC_NS_TYPES * 4 / FC_NS_BPW]; /* 4-bits per FC-type */
++};
++
++/*
+  * GID_PT request.
+  */
+ struct fc_ns_gid_pt {
 
