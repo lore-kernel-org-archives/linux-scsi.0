@@ -1,71 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 19/27] scsi: use __uX types for headers exported to user space
-Date: Tue, 20 Jul 2010 15:28:59 -0700
-Message-ID: <201007202228.o6KMSxpx021775@imap1.linux-foundation.org>
+Subject: [patch 20/27] scsi: fix pmcraid build errors
+Date: Tue, 20 Jul 2010 15:29:01 -0700
+Message-ID: <201007202229.o6KMT193021782@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:51902 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52791 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932886Ab0GTW3g (ORCPT
+	by vger.kernel.org with ESMTP id S932884Ab0GTW3u (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:29:36 -0400
+	Tue, 20 Jul 2010 18:29:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jacmet@sunsite.dk, bharrosh@panasas.com, james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, anil_ravindranath@pmc-sierra.com
 
-From: Peter Korsgaard <jacmet@sunsite.dk>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Commit 9e4f5e29 ("FC Pass Thru support") exported a number of header files
-in include/scsi to user space, but didn't change the uX types to the
-userspace-compatible __uX types.  Without that you'll get compile errors
-when including them - E.G.:
+pmcraid should depend on NET since it uses netlink interfaces.
+This fixes multiple build errors when CONFIG_NET is not enabled:
 
-include/scsi/scsi.h:145: error: expected specifier-qualifier-list before `u8'
+ERROR: "genl_register_family" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "genl_unregister_family" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "nla_put" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "init_net" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "__alloc_skb" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "netlink_broadcast" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "kfree_skb" [drivers/scsi/pmcraid.ko] undefined!
+ERROR: "skb_put" [drivers/scsi/pmcraid.ko] undefined!
 
-Signed-off-by: Peter Korsgaard <jacmet@sunsite.dk>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Smart <james.smart@emulex.com>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- include/scsi/scsi.h         |    8 ++++----
- include/scsi/scsi_netlink.h |    4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi.h
---- a/include/scsi/scsi.h~scsi-use-__ux-types-for-headers-exported-to-user-space
-+++ a/include/scsi/scsi.h
-@@ -151,10 +151,10 @@ struct scsi_cmnd;
+diff -puN drivers/scsi/Kconfig~scsi-fix-pmcraid-build-errors drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig~scsi-fix-pmcraid-build-errors
++++ a/drivers/scsi/Kconfig
+@@ -1849,7 +1849,7 @@ config ZFCP
  
- /* defined in T10 SCSI Primary Commands-2 (SPC2) */
- struct scsi_varlen_cdb_hdr {
--	u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
--	u8 control;
--	u8 misc[5];
--	u8 additional_cdb_length;         /* total cdb length - 8 */
-+	__u8 opcode;        /* opcode always == VARIABLE_LENGTH_CMD */
-+	__u8 control;
-+	__u8 misc[5];
-+	__u8 additional_cdb_length;         /* total cdb length - 8 */
- 	__be16 service_action;
- 	/* service specific data follows */
- };
-diff -puN include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space include/scsi/scsi_netlink.h
---- a/include/scsi/scsi_netlink.h~scsi-use-__ux-types-for-headers-exported-to-user-space
-+++ a/include/scsi/scsi_netlink.h
-@@ -105,8 +105,8 @@ struct scsi_nl_host_vendor_msg {
-  *    PCI :  ID data is the 16 bit PCI Registered Vendor ID
-  */
- #define SCSI_NL_VID_TYPE_SHIFT		56
--#define SCSI_NL_VID_TYPE_MASK		((u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
--#define SCSI_NL_VID_TYPE_PCI		((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_MASK		((__u64)0xFF << SCSI_NL_VID_TYPE_SHIFT)
-+#define SCSI_NL_VID_TYPE_PCI		((__u64)0x01 << SCSI_NL_VID_TYPE_SHIFT)
- #define SCSI_NL_VID_ID_MASK		(~ SCSI_NL_VID_TYPE_MASK)
- 
+ config SCSI_PMCRAID
+ 	tristate "PMC SIERRA Linux MaxRAID adapter support"
+-	depends on PCI && SCSI
++	depends on PCI && SCSI && NET
+ 	---help---
+ 	  This driver supports the PMC SIERRA MaxRAID adapters.
  
 _
