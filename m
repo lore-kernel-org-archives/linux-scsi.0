@@ -1,45 +1,42 @@
 From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 11/19]  be2iscsi: Limit max_xmit_length
-Date: Thu, 22 Jul 2010 04:26:45 +0530
-Message-ID: <20100721225634.GA9582@serverengines.com>
+Subject: [PATCH 12/19] be2iscsi: Remove debug print in IO path
+Date: Thu, 22 Jul 2010 04:27:16 +0530
+Message-ID: <20100721225706.GA9622@serverengines.com>
 Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:25325 "EHLO
+Received: from segment-124-30.sify.net ([124.30.166.146]:25382 "EHLO
 	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758985Ab0GUW4a (ORCPT
+	by vger.kernel.org with ESMTP id S1755065Ab0GUW5B (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jul 2010 18:56:30 -0400
+	Wed, 21 Jul 2010 18:57:01 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-  This patch limits max_xmit_length to 64K incase older
-utilities are used
+ This patch removes a Debug Print in the IO path
 
 Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index de79b7c..a131a57 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -277,6 +277,10 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
- 		if (session->max_burst > 262144)
- 			session->max_burst = 262144;
- 		break;
-+	case ISCSI_PARAM_MAX_XMIT_DLENGTH:
-+		if ((conn->max_xmit_dlength > 65536) ||
-+		    (conn->max_xmit_dlength == 0))
-+			conn->max_xmit_dlength = 65536;
- 	default:
- 		return 0;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index fdd9161..b70b4ba 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3744,8 +3744,6 @@ static int beiscsi_task_xmit(struct iscsi_task *task)
+ 		SE_DEBUG(DBG_LVL_1, " scsi_dma_map Failed\n")
+ 		return num_sg;
  	}
+-	SE_DEBUG(DBG_LVL_4, "xferlen=0x%08x scmd=%p num_sg=%d sernum=%lu\n",
+-		  (scsi_bufflen(sc)), sc, num_sg, sc->serial_number);
+ 	xferlen = scsi_bufflen(sc);
+ 	sg = scsi_sglist(sc);
+ 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
 -- 
 1.6.5.2
 
