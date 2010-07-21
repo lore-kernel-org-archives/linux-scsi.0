@@ -1,38 +1,54 @@
-From: Andy Walls <awalls@md.metrocast.net>
-Subject: NCR53C80 datasheet is publicly available
-Date: Wed, 21 Jul 2010 17:08:50 -0400
-Message-ID: <1279746530.20291.29.camel@morgan.silverblock.net>
-References: <201007202228.o6KMSnYq021739@imap1.linux-foundation.org>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: be2iscsi: Adding features to be2iscsi
+Date: Thu, 22 Jul 2010 04:10:48 +0530
+Message-ID: <20100721224027.GA9063@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201007202228.o6KMSnYq021739@imap1.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux@rainbow-software.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from segment-124-30.sify.net ([124.30.166.146]:21909 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753020Ab0GUWki (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jul 2010 18:40:38 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-To address James' concern for knowing how to program the NCR 53C80:
+Hi
 
-Halfway down this page, the first datasheet PDF, is a scan of the
-NCR5380 family data sheet with register definitions, etc:
+  	These set of patches have been made on 
+latest scsi-misc tree.
 
-http://www.datasheetarchive.com/53C80-40-datasheet.html
+	I have recreated the patches after changes to handle
+ the comments received from Mike and Konrad.
 
 
-The only cards I've ever seen with this chip were ISA bus cards wired to
-respond to I/O space accesses.  These chips can be wired for MMIO as
-it's just really a difference in the address decode logic.  (In fact
-Appendix B of the datasheet shows the chip wired up to a 65C02 - an
-ancient processor design that has no notion of I/O address space so its
-I/O must be memory mapped.)
+0001     Fix warnings from new checkpatch.pl         
+0002     Fixing return values                        
+0003     Fixing the return type of functions         
+0004     pass the return from beiscsi_open_conn      
+0005     Fix for freeing cid                         
+0006	 No return value for hwi_enable_intr 
+0007	 Fix to handle request_irq failure            
+0008	 Free tags allocated                          
+0009	 Adding crashdump support                 
+0010	 Maintain same ITT across login           
+0011	 Limit max_xmit_length                    
+0012	 Remove debug print in IO path            
+0013	 Fix for premature buffer free            
+0014	 The extend shift                         
+0015	 Add support for iscsi boot               
+0016	 from Randy Dunlap                        
+0017	 Increase max sector                    
+0018	 Driver Version change                    
 
-I can't seem to find a datasheet for the NCR53C400 or NCR53C400A.  The
-NCR53C80 datasheet introduction implies the 5380 is used as a core in
-the 53C400 though.  Since LSI Logic owns all of Symbios Logic's IP (NCR
-sold off Symbios long ago), you may just need to ask LSI Logic if they
-have a 53c400 datasheet available.
+Thanks
+Jayamohan Kallickal
 
-Regards,
-Andy
+Signed off by:  Jayamohan Kallickal <jayamohank@serverengines.com>
+
+---
+
