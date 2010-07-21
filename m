@@ -1,122 +1,59 @@
 From: Christian Dietrich <qy03fugy@stud.informatik.uni-erlangen.de>
-Subject: [PATCH 1/3] drivers/scsi: Remove dead CONFIG_WD33C93_PIO
-Date: Wed, 21 Jul 2010 15:57:41 +0200
-Message-ID: <c79f7e0698d11050302082fc57c7fe98d2290aa2.1279719754.git.qy03fugy@stud.informatik.uni-erlangen.de>
-References: <cover.1279719754.git.qy03fugy@stud.informatik.uni-erlangen.de>
+Subject: [PATCH 0/3] Removing dead code (also drivers/scsi/arm/acornsci.c)
+Date: Wed, 21 Jul 2010 15:57:35 +0200
+Message-ID: <cover.1279719754.git.qy03fugy__40172.1842856661$1279720715$gmane$org@stud.informatik.uni-erlangen.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from faui40.informatik.uni-erlangen.de ([131.188.34.40]:61997 "EHLO
+	faui40.informatik.uni-erlangen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750719Ab0GUN5i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jul 2010 09:57:38 -0400
 Content-Disposition: inline
-In-Reply-To: <cover.1279719754.git.qy03fugy@stud.informatik.uni-erlangen.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: vamos-dev@i4.informatik.uni-erlangen.de
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, Tejun Heo <tj@kernel.org>, Ji
+Cc: vamos-dev@i4.informatik.uni-erlangen.de
 
-CONFIG_WD33C93_PIO doesn't exist in Kconfig, therefore all existing
-references to it from the source can be removed.
+Hi all!
+       
+        As part of the VAMOS[0] research project at the University of
+Erlangen we are looking at multiple integrity errors in linux'
+configuration system.
 
-Signed-off-by: Christian Dietrich <qy03fugy@stud.informatik.uni-erlangen.de>
----
- drivers/scsi/wd33c93.c |   60 ------------------------------------------------
- drivers/scsi/wd33c93.h |    5 ----
- 2 files changed, 0 insertions(+), 65 deletions(-)
+        I've been running a check on the drivers/scsi sourcetree for
+config Items not defined in Kconfig and found  3 such cases. Sourcecode
+blocks depending on these Items are not reachable from a vanilla
+kernel -- dead code. I've seen such dead blocks made on purpose
+e.g. while integrating new features into the kernel but generally
+they're just useless.
 
-diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-index b701bf2..f62efdf 100644
---- a/drivers/scsi/wd33c93.c
-+++ b/drivers/scsi/wd33c93.c
-@@ -171,65 +171,6 @@ module_param(setup_strings, charp, 0);
- 
- static void wd33c93_execute(struct Scsi_Host *instance);
- 
--#ifdef CONFIG_WD33C93_PIO
--static inline uchar
--read_wd33c93(const wd33c93_regs regs, uchar reg_num)
--{
--	uchar data;
--
--	outb(reg_num, regs.SASR);
--	data = inb(regs.SCMD);
--	return data;
--}
--
--static inline unsigned long
--read_wd33c93_count(const wd33c93_regs regs)
--{
--	unsigned long value;
--
--	outb(WD_TRANSFER_COUNT_MSB, regs.SASR);
--	value = inb(regs.SCMD) << 16;
--	value |= inb(regs.SCMD) << 8;
--	value |= inb(regs.SCMD);
--	return value;
--}
--
--static inline uchar
--read_aux_stat(const wd33c93_regs regs)
--{
--	return inb(regs.SASR);
--}
--
--static inline void
--write_wd33c93(const wd33c93_regs regs, uchar reg_num, uchar value)
--{
--      outb(reg_num, regs.SASR);
--      outb(value, regs.SCMD);
--}
--
--static inline void
--write_wd33c93_count(const wd33c93_regs regs, unsigned long value)
--{
--	outb(WD_TRANSFER_COUNT_MSB, regs.SASR);
--	outb((value >> 16) & 0xff, regs.SCMD);
--	outb((value >> 8) & 0xff, regs.SCMD);
--	outb( value & 0xff, regs.SCMD);
--}
--
--#define write_wd33c93_cmd(regs, cmd) \
--	write_wd33c93((regs), WD_COMMAND, (cmd))
--
--static inline void
--write_wd33c93_cdb(const wd33c93_regs regs, uint len, uchar cmnd[])
--{
--	int i;
--
--	outb(WD_CDB_1, regs.SASR);
--	for (i=0; i<len; i++)
--		outb(cmnd[i], regs.SCMD);
--}
--
--#else /* CONFIG_WD33C93_PIO */
- static inline uchar
- read_wd33c93(const wd33c93_regs regs, uchar reg_num)
- {
-@@ -296,7 +237,6 @@ write_wd33c93_cdb(const wd33c93_regs regs, uint len, uchar cmnd[])
- 	for (i = 0; i < len; i++)
- 		*regs.SCMD = cmnd[i];
- }
--#endif /* CONFIG_WD33C93_PIO */
- 
- static inline uchar
- read_1_byte(const wd33c93_regs regs)
-diff --git a/drivers/scsi/wd33c93.h b/drivers/scsi/wd33c93.h
-index 1ed5f3b..3a74fcd 100644
---- a/drivers/scsi/wd33c93.h
-+++ b/drivers/scsi/wd33c93.h
-@@ -190,13 +190,8 @@
- 
-    /* This is what the 3393 chip looks like to us */
- typedef struct {
--#ifdef CONFIG_WD33C93_PIO
--   unsigned int   SASR;
--   unsigned int   SCMD;
--#else
-    volatile unsigned char  *SASR;
-    volatile unsigned char  *SCMD;
--#endif
- } wd33c93_regs;
- 
- 
--- 
-1.7.0.4
+        Each of the patches in this patchset removes on such dead
+config Item, I'd be glad if you consider applying them. I've been
+doing deeper analysis of such issues before and can do so again but
+I'm not so sure they were fastly usefull.
+
+        I build the patches against a vanilla kernel in order to
+try if the kernel compiles with this patches
+
+        Please keep me informed of this patch getting confirmed /
+merged so we can keep track of it.
+
+Regards
+
+        Christian Dietrich
+
+[0] http://vamos1.informatik.uni-erlangen.de/
+
+Christian Dietrich (3):
+  drivers/scsi: Remove dead CONFIG_WD33C93_PIO
+  drivers/scsi/arcmsr: Remove dead CONFIG_SCSI_ARCMSR_RESET
+  drivers/scsi: Removing dead CONFIG_AIC7XXX_PROC_STATS
+
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |   10 ----
+ drivers/scsi/arcmsr/arcmsr_hba.c   |   80 ------------------------------------
+ drivers/scsi/wd33c93.c             |   60 ---------------------------
+ drivers/scsi/wd33c93.h             |    5 --
+ 4 files changed, 0 insertions(+), 155 deletions(-)
+
