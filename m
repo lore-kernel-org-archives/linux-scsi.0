@@ -1,34 +1,76 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16275] Kernel panic when mounting filesystem
-Date: Wed, 21 Jul 2010 09:02:16 GMT
-Message-ID: <201007210902.o6L92Grn012524@demeter.kernel.org>
-References: <bug-16275-11613@https.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [patch 13/27] scsi: remove superfluous NULL pointer check from scsi_kill_request()
+Date: Wed, 21 Jul 2010 13:07:15 +0200
+Message-ID: <201007211307.15762.bzolnier@gmail.com>
+References: <201007202228.o6KMSrU1021751@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:33730 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753627Ab0GUJCS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2010 05:02:18 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6L92H14012525
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2010 09:02:17 GMT
-In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51795 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917Ab0GULKF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2010 07:10:05 -0400
+Received: by fxm14 with SMTP id 14so3417076fxm.19
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2010 04:10:04 -0700 (PDT)
+In-Reply-To: <201007202228.o6KMSrU1021751@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-https://bugzilla.kernel.org/show_bug.cgi?id=16275
-
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, corbet@lwn.net, error27@gmail.com, eteo@redhat.com
 
 
+Hi,
 
+This one may be dropped as after almost a year of trying to get it
+merged [1] it seems that an added complexity of the patch is not worth
+the potential gains (although I can't tell for sure since feedback has
+been always 'minimal').
 
---- Comment #11 from Pawel Staszewski <pstaszewski@artcom.pl>  2010-07-21 09:02:10 ---
-Any news ?
+[1] http://lkml.indiana.edu/hypermail/linux/kernel/0907.3/00416.html
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Thanks.
+
+On Wednesday 21 July 2010 12:28:53 am akpm@linux-foundation.org wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> Dan's list included:
+> 
+> drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced in initializer 'cmd'
+> drivers/scsi/scsi_lib.c +1365 scsi_kill_request(9) warning: variable derefenced before check 'cmd'
+> 
+> We dereference cmd (and possible OOPS if cmd == NULL) before starting the
+> request so just remove the superfluous debugging code altogether.
+> 
+> [ bart: the potential NULL pointer dereference was finally fixed in
+>   (much later than mine) commit 03b1470 but my patch is still valid ]
+> 
+> Reported-by: Dan Carpenter <error27@gmail.com>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> Cc: Eugene Teo <eteo@redhat.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/scsi_lib.c |    6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff -puN drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request drivers/scsi/scsi_lib.c
+> --- a/drivers/scsi/scsi_lib.c~scsi-remove-superfluous-null-pointer-check-from-scsi_kill_request
+> +++ a/drivers/scsi/scsi_lib.c
+> @@ -1370,12 +1370,6 @@ static void scsi_kill_request(struct req
+>  
+>  	blk_start_request(req);
+>  
+> -	if (unlikely(cmd == NULL)) {
+> -		printk(KERN_CRIT "impossible request in %s.\n",
+> -				 __func__);
+> -		BUG();
+> -	}
+> -
+>  	sdev = cmd->device;
+>  	starget = scsi_target(sdev);
+>  	shost = sdev->host;
+> _
