@@ -1,40 +1,34 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH] BISECTED x86: avoid qword access in memcpy_*io
-Date: Wed, 21 Jul 2010 20:59:48 -0700
-Message-ID: <4C47C234.7040400@zytor.com>
-References: <4C464BA0.20609@jp.fujitsu.com> <4C465FF0.1030407@zytor.com> <4C479D7F.2070204@jp.fujitsu.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Thu, 22 Jul 2010 06:41:16 GMT
+Message-ID: <201007220641.o6M6fGlx031885@demeter.kernel.org>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:57783 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750760Ab0GVEAQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jul 2010 00:00:16 -0400
-In-Reply-To: <4C479D7F.2070204@jp.fujitsu.com>
+Received: from demeter.kernel.org ([140.211.167.39]:56989 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752136Ab0GVGlR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2010 02:41:17 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6M6fGrN031886
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2010 06:41:16 GMT
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Smart <james.smart@emulex.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, x86@kernel.org, Brian Gerst <brgerst@gmail.com>
+To: linux-scsi@vger.kernel.org
 
-On 07/21/2010 06:23 PM, Hidetoshi Seto wrote:
-> 
-> It seems that lpfc already implemented lpfc_memcpy_{to,from}_slim()
-> as such memcpy_*io32, but limited use of it to on big endian platforms
-> only.  Now lpfc can move to use it always, right?
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
 
-What it probably should do is instead of open-coding this stuff use
-__iowrite32_copy and we probably should have a version without double
-underscores which byteswaps on bigendian.
 
-Personally I would not object to seeing a patch renaming
-__iowrite32_copy() to memcpy_toio32()... especially since it doesn't
-have the "memory or I/O space" property of iowrite and friends.
 
-	-hpa
+
+
+--- Comment #15 from Pawel Staszewski <pstaszewski@artcom.pl>  2010-07-22 06:40:36 ---
+Yes this is reiserfs.
 
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
