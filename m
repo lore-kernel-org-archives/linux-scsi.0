@@ -1,47 +1,49 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: BUG at drivers/scsi/scsi_lib.c:1113
-Date: Thu, 22 Jul 2010 10:06:02 +0200
-Message-ID: <4C47FBEA.2000704@gmail.com>
-References: <4C47ED7B.1050709@gmail.com> <20100722173716.66264bef@notabene>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Thu, 22 Jul 2010 08:22:24 GMT
+Message-ID: <201007220822.o6M8MOwW015562@demeter.kernel.org>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59034 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751915Ab0GVIGI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2010 04:06:08 -0400
-In-Reply-To: <20100722173716.66264bef@notabene>
+Received: from demeter.kernel.org ([140.211.167.39]:57192 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192Ab0GVIW2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2010 04:22:28 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6M8MOuq015563
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2010 08:22:25 GMT
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 07/22/2010 09:37 AM, Neil Brown wrote:
-> I suspect that problem is that "do_sync" and "do_barriers" in
-> drivers/md/raid1.c are still 'bool' and should now be 'unsigned long'.
-> 
-> I'm not sure how wide '_Bool' is, but I'm guess it isn't wide enough.
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
 
-ANSI says:
-An object declared as type _Bool is large enough to store the values 0
-and 1.
 
-gcc spec doesn't say anything, but:
-$ gcc -S -x c -o - -
-unsigned long x = sizeof(_Bool);
-^D
-...
-x:
-        .quad   1
 
-I.e. sizeof(_Bool) = 1 byte.
 
-> Could you please try changing ever 'bool' in that file to 'unsigned long'
-> and see if that fixes it?
 
-Will do that.
+--- Comment #16 from Neil Brown <neilb@suse.de>  2010-07-22 07:41:04 ---
+It looks like the problem is commit 74450be123b6f3cb480c358a056be398cce6aa6e
 
-thanks,
+This was recently reported on linux-kernel (and other mailing lists).
+
+It is probable that the 'bool' variables (do_sync and do_barrier) in
+drivers/md/raid1.c need to be changed to 'unsigned long'. 
+Can you please test that and report?
+
+Thanks,
+NeilBrown
+
+--- Comment #17 from Pawel Staszewski <pstaszewski@artcom.pl>  2010-07-22 08:22:17 ---
+You mean reverting this commit 74450be123b6f3cb480c358a056be398cce6aa6e
+
+Thanks
+Pawel
+
 -- 
-js
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
