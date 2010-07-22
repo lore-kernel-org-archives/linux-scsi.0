@@ -1,42 +1,52 @@
-From: Jayamohan Kallickal <jayamohank@serverengines.com>
-Subject: [PATCH 19/19] be2iscsi: Driver Version change
-Date: Thu, 22 Jul 2010 04:31:07 +0530
-Message-ID: <20100721230057.GA9866@serverengines.com>
-Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH repost] sg: fix bio leak with a detached device
+Date: Thu, 22 Jul 2010 09:36:51 +0900
+Message-ID: <20100722093552Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segment-124-30.sify.net ([124.30.166.146]:26068 "EHLO
-	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755292Ab0GUXAw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Jul 2010 19:00:52 -0400
-Content-Disposition: inline
+Received: from sh.osrg.net ([192.16.179.4]:59748 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752371Ab0GVAhC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Jul 2010 20:37:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
+To: JBottomley@Novell.com
+Cc: linux-scsi@vger.kernel.org, dgilbert@interlog.com, Nate.Dailey@stratus.com
 
-	Changing the Driver version number
+James, you missed this?
 
-Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
+http://marc.info/?l=linux-scsi&m=127860094028580&w=2
+
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] sg: fix bio leak with a detached device
+
+After blk_rq_map_user is successful, if we find that a device is
+unavailable (was detached), we must call blk_end_request_all to free
+bio(s) before blk_rq_unmap_user and blk_put_request.
+
+Reported-by: "Dailey, Nate" <Nate.Dailey@stratus.com>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Tested-by: "Dailey, Nate" <Nate.Dailey@stratus.com>
 ---
- drivers/scsi/be2iscsi/be_main.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/sg.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 6cfa55d..90eb74f 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -35,7 +35,7 @@
- 
- #include "be.h"
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"2.0.527.0"
-+#define BUILD_STR		"2.0.549.0"
- #define BE_NAME			"ServerEngines BladeEngine2" \
- 				"Linux iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index ef752b2..d454909 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -729,6 +729,8 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 		return k;	/* probably out of space --> ENOMEM */
+ 	}
+ 	if (sdp->detached) {
++		if (srp->bio)
++			blk_end_request_all(srp->rq, -EIO);
+ 		sg_finish_rem_req(srp);
+ 		return -ENODEV;
+ 	}
 -- 
-1.6.5.2
+1.6.5
 
