@@ -1,32 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: BUG at drivers/scsi/scsi_lib.c:1113
-Date: Thu, 22 Jul 2010 10:36:10 +0200
-Message-ID: <20100722083609.GA4435@lst.de>
-References: <4C47ED7B.1050709@gmail.com> <20100722173716.66264bef@notabene>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Thu, 22 Jul 2010 08:37:02 GMT
+Message-ID: <201007220837.o6M8b2mA018040@demeter.kernel.org>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:44208 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753966Ab0GVIgN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Jul 2010 04:36:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20100722173716.66264bef@notabene>
+Received: from demeter.kernel.org ([140.211.167.39]:45765 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754301Ab0GVIhD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2010 04:37:03 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6M8b2UM018041
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2010 08:37:02 GMT
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neil Brown <neilb@suse.de>
-Cc: Jiri Slaby <jirislaby@gmail.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Jul 22, 2010 at 05:37:16PM +1000, Neil Brown wrote:
-> I suspect that problem is that "do_sync" and "do_barriers" in
-> drivers/md/raid1.c are still 'bool' and should now be 'unsigned long'.
-> 
-> I'm not sure how wide '_Bool' is, but I'm guess it isn't wide enough.
-> 
-> Could you please try changing ever 'bool' in that file to 'unsigned long'
-> and see if that fixes it?
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
 
-Yes, that fixes it.  We even had someone sending that fix a while ago,
-but it seems it's not applied to Jens' tree yet and I can't find it
-anymore either right now.
 
+
+
+
+--- Comment #18 from Neil Brown <neilb@suse.de>  2010-07-22 08:36:58 ---
+No, I mean replacing 'bool' with 'unsigned long'.
+
+Reverting the commit almost certainly will work, so won't tell
+us much.
+
+Thanks.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
