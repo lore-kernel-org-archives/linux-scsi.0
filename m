@@ -1,42 +1,77 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH] BNX2I: Fixed bugs in the handling of unsolicited NOP-Ins
-Date: Thu, 22 Jul 2010 23:50:12 -0500
-Message-ID: <4C491F84.2060005@cs.wisc.edu>
-References: <Eddie Wai <eddie.wai@broadcom.com> <1279738270-21911-2-git-send-email-eddie.wai@broadcom.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <open-iscsi+bncCLPJla3WGRCtvaTiBBoEo6_UNA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1279738270-21911-2-git-send-email-eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>,
-	<mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
-	<mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Cc: James Bottomley <JBottomley-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ben Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH resend 2/4] usb-storage: Add new no_read_disc_info quirk
+Date: Fri, 23 Jul 2010 10:52:52 +0200
+Message-ID: <1279875174-2905-2-git-send-email-hdegoede@redhat.com>
+References: <1279875174-2905-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1279875174-2905-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James.Bottomley-l3A5Bk7waGM@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/21/2010 01:51 PM, Eddie Wai wrote:
-> Unsolicited NOP-Ins are placed in the receive queue of the hardware
-> which requires to be read out regardless if the receive pipe is suspended
-> or not.  This patch adds the disposal of this RQ element under this
-> condition.
-> Also fixed the bug in the unsolicited NOP-In handling routine which
-> checks for the RESERVED_ITT.
->
+Appotech ax3003 (the larger brother of the ax203) based devices are even
+more buggy then the ax203. They will go of into lala land when ever they
+see a READ_DISC_INFO scsi command. So add a new US_FL which tells the
+scsi sr driver to not issue any READ_DISC_INFO scsi commands.
 
-Looks ok.
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/usb/storage/scsiglue.c     |    4 ++++
+ drivers/usb/storage/unusual_devs.h |    5 +++++
+ include/linux/usb_usual.h          |    4 +++-
+ 3 files changed, 12 insertions(+), 1 deletions(-)
 
-
-Reviewed-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index d8d98cf..4a30fbf 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -253,6 +253,10 @@ static int slave_configure(struct scsi_device *sdev)
+ 		 * or to force 192-byte transfer lengths for MODE SENSE.
+ 		 * But they do need to use MODE SENSE(10). */
+ 		sdev->use_10_for_ms = 1;
++
++		/* Some (fake) usb cdrom devices don't like READ_DISC_INFO */
++		if (us->fflags & US_FLAG_NO_READ_DISC_INFO)
++			sdev->no_read_disc_info = 1;
+ 	}
+ 
+ 	/* The CB and CBI transports have no way to pass LUN values
+diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+index 2c897ee..42a83c4 100644
+--- a/drivers/usb/storage/unusual_devs.h
++++ b/drivers/usb/storage/unusual_devs.h
+@@ -1858,6 +1858,11 @@ UNUSUAL_DEV( 0x1908, 0x1320, 0x0000, 0x0000,
+ 		"Photo Frame",
+ 		US_SC_DEVICE, US_PR_DEVICE, NULL,
+ 		US_FL_BAD_SENSE ),
++UNUSUAL_DEV( 0x1908, 0x3335, 0x0200, 0x0200,
++		"BUILDWIN",
++		"Photo Frame",
++		US_SC_DEVICE, US_PR_DEVICE, NULL,
++		US_FL_NO_READ_DISC_INFO ),
+ 
+ UNUSUAL_DEV( 0x2116, 0x0320, 0x0001, 0x0001,
+ 		"ST",
+diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
+index a4b947e..bff51d0 100644
+--- a/include/linux/usb_usual.h
++++ b/include/linux/usb_usual.h
+@@ -58,7 +58,9 @@
+ 	US_FLAG(CAPACITY_OK,	0x00010000)			\
+ 		/* READ CAPACITY response is correct */		\
+ 	US_FLAG(BAD_SENSE,	0x00020000)			\
+-		/* Bad Sense (never more than 18 bytes) */
++		/* Bad Sense (never more than 18 bytes) */	\
++	US_FLAG(NO_READ_DISC_INFO,	0x00040000)		\
++		/* cannot handle READ_DISC_INFO */
+ 
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+1.7.0.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
