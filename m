@@ -1,453 +1,174 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 02/17] qla2xxx: Removed dependency for SRB structure for Marker processing
-Date: Fri, 23 Jul 2010 15:28:23 +0500
-Message-ID: <1279880918-62876-3-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 03/17] qla2xxx: Appropriately log FCP priority data messages
+Date: Fri, 23 Jul 2010 15:28:24 +0500
+Message-ID: <1279880918-62876-4-git-send-email-giridhar.malavali@qlogic.com>
 References: <1279880918-62876-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:47929 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:47933 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753435Ab0GWJ7D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jul 2010 05:59:03 -0400
+	id S1754058Ab0GWJ7I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jul 2010 05:59:08 -0400
 In-Reply-To: <1279880918-62876-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, madhu.iyengar@qlogic.com, linux-scsi@vger.kernel.org
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, madhu.iyengar@qlogic.com, linux-scsi@vger.kernel.org, Madhuranath Iyengar <madhuranath.iyengar@qlogic.com>
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Madhuranath Iyengar <madhuranath.iyengar@qlogic.com>
 
 
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |   11 ---
- drivers/scsi/qla2xxx/qla_gbl.h  |    4 +-
- drivers/scsi/qla2xxx/qla_init.c |   73 +---------------------
- drivers/scsi/qla2xxx/qla_iocb.c |  134 +++++----------------------------------
- drivers/scsi/qla2xxx/qla_isr.c  |   37 -----------
- 5 files changed, 19 insertions(+), 240 deletions(-)
+ drivers/scsi/qla2xxx/qla_bsg.c  |   36 +++++++++++++++++++++++++++++++++---
+ drivers/scsi/qla2xxx/qla_init.c |    7 ++-----
+ drivers/scsi/qla2xxx/qla_sup.c  |   25 +++++++++++++------------
+ 3 files changed, 48 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 2bb187e..7f9f86b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -250,16 +250,6 @@ struct srb_iocb {
- 			uint32_t lun;
- 			uint32_t data;
- 		} tmf;
--		struct {
--			/*
--			 * values for modif field below are as
--			 * defined in mrk_entry_24xx struct
--			 * for the modifier field in qla_fw.h.
--			 */
--			uint8_t modif;
--			uint16_t lun;
--			uint32_t data;
--		} marker;
- 	} u;
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 20eaa1c..d551ae1 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -41,13 +41,28 @@ qla24xx_fcp_prio_cfg_valid(struct qla_fcp_prio_cfg *pri_cfg, uint8_t flag)
+ 	int i, ret, num_valid;
+ 	uint8_t *bcode;
+ 	struct qla_fcp_prio_entry *pri_entry;
++	uint32_t *bcode_val_ptr, bcode_val;
  
- 	struct timer_list timer;
-@@ -277,7 +267,6 @@ struct srb_iocb {
- #define SRB_CT_CMD	5
- #define SRB_ADISC_CMD	6
- #define SRB_TM_CMD	7
--#define SRB_MARKER_CMD	8
+ 	ret = 1;
+ 	num_valid = 0;
+ 	bcode = (uint8_t *)pri_cfg;
++	bcode_val_ptr = (uint32_t *)pri_cfg;
++	bcode_val = (uint32_t)(*bcode_val_ptr);
  
- struct srb_ctx {
- 	uint16_t type;
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 7ae2ee4..fd29991 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -59,7 +59,6 @@ extern int qla2x00_async_logout(struct scsi_qla_host *, fc_port_t *);
- extern int qla2x00_async_adisc(struct scsi_qla_host *, fc_port_t *,
-     uint16_t *);
- extern int qla2x00_async_tm_cmd(fc_port_t *, uint32_t, uint32_t, uint32_t);
--extern int qla2x00_async_marker(fc_port_t *, uint16_t, uint8_t);
- extern void qla2x00_async_login_done(struct scsi_qla_host *, fc_port_t *,
-     uint16_t *);
- extern void qla2x00_async_logout_done(struct scsi_qla_host *, fc_port_t *,
-@@ -68,8 +67,7 @@ extern void qla2x00_async_adisc_done(struct scsi_qla_host *, fc_port_t *,
-     uint16_t *);
- extern void qla2x00_async_tm_cmd_done(struct scsi_qla_host *, fc_port_t *,
- 	struct srb_iocb *);
--extern void qla2x00_async_marker_done(struct scsi_qla_host *, fc_port_t *,
--	struct srb_iocb *);
-+extern void *qla2x00_alloc_iocbs(struct scsi_qla_host *, srb_t *);
+-	if (bcode[0x0] != 'H' || bcode[0x1] != 'Q' || bcode[0x2] != 'O' ||
+-			bcode[0x3] != 'S') {
++	if (bcode_val == 0xFFFFFFFF) {
++		/* No FCP Priority config data in flash */
++		DEBUG2(printk(KERN_INFO
++		    "%s: No FCP priority config data.\n",
++		    __func__));
++		return 0;
++	}
++
++	if (bcode[0] != 'H' || bcode[1] != 'Q' || bcode[2] != 'O' ||
++			bcode[3] != 'S') {
++		/* Invalid FCP priority data header*/
++		DEBUG2(printk(KERN_ERR
++		    "%s: Invalid FCP Priority data header. bcode=0x%x\n",
++		    __func__, bcode_val));
+ 		return 0;
+ 	}
+ 	if (flag != 1)
+@@ -60,8 +75,18 @@ qla24xx_fcp_prio_cfg_valid(struct qla_fcp_prio_cfg *pri_cfg, uint8_t flag)
+ 		pri_entry++;
+ 	}
  
- extern fc_port_t *
- qla2x00_alloc_fcport(scsi_qla_host_t *, gfp_t );
+-	if (num_valid == 0)
++	if (num_valid == 0) {
++		/* No valid FCP priority data entries */
++		DEBUG2(printk(KERN_ERR
++		    "%s: No valid FCP Priority data entries.\n",
++		    __func__));
+ 		ret = 0;
++	} else {
++		/* FCP priority data is valid */
++		DEBUG2(printk(KERN_INFO
++		    "%s: Valid FCP priority data. num entries = %d\n",
++		    __func__, num_valid));
++	}
+ 
+ 	return ret;
+ }
+@@ -78,6 +103,11 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
+ 
+ 	bsg_job->reply->reply_payload_rcv_len = 0;
+ 
++	if (!IS_QLA24XX_TYPE(ha) || !IS_QLA25XX(ha)) {
++		ret = -EINVAL;
++		goto exit_fcp_prio_cfg;
++	}
++
+ 	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
+ 		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
+ 		test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index d0b993c..5bc3170 100644
+index 5bc3170..cea491b 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -367,58 +367,6 @@ done:
- 	return rval;
- }
+@@ -566,11 +566,8 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 		}
+ 	}
  
--static void
--qla2x00_async_marker_ctx_done(srb_t *sp)
--{
--	struct srb_ctx *ctx = sp->ctx;
--	struct srb_iocb *iocb = (struct srb_iocb *)ctx->u.iocb_cmd;
--
--	qla2x00_async_marker_done(sp->fcport->vha, sp->fcport, iocb);
--	iocb->free(sp);
--}
--
--int
--qla2x00_async_marker(fc_port_t *fcport, uint16_t lun, uint8_t modif)
--{
--	struct scsi_qla_host *vha = fcport->vha;
--	srb_t *sp;
--	struct srb_ctx *ctx;
--	struct srb_iocb *mrk;
--	int rval;
--
--	rval = QLA_FUNCTION_FAILED;
--	sp = qla2x00_get_ctx_sp(vha, fcport, sizeof(struct srb_ctx), 0);
--	if (!sp)
--		goto done;
--
--	ctx = sp->ctx;
--	ctx->type = SRB_MARKER_CMD;
--	ctx->name = "marker";
--	mrk = ctx->u.iocb_cmd;
--	mrk->u.marker.lun = lun;
--	mrk->u.marker.modif = modif;
--	mrk->timeout = qla2x00_async_iocb_timeout;
--	mrk->done = qla2x00_async_marker_ctx_done;
--
--	rval = qla2x00_start_sp(sp);
--	if (rval != QLA_SUCCESS)
--		goto done_free_sp;
--
--	DEBUG2(printk(KERN_DEBUG
--	    "scsi(%ld:%x): Async-marker - loop-id=%x "
--	    "portid=%02x%02x%02x.\n",
--	    fcport->vha->host_no, sp->handle, fcport->loop_id,
--	    fcport->d_id.b.domain, fcport->d_id.b.area,
--	    fcport->d_id.b.al_pa));
--
--	return rval;
--
--done_free_sp:
--	mrk->free(sp);
--done:
--	return rval;
--}
--
- void
- qla2x00_async_login_done(struct scsi_qla_host *vha, fc_port_t *fcport,
-     uint16_t *data)
-@@ -500,7 +448,8 @@ qla2x00_async_tm_cmd_done(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	lun = (uint16_t)iocb->u.tmf.lun;
- 
- 	/* Issue Marker IOCB */
--	rval = qla2x00_async_marker(fcport, lun,
-+	rval = qla2x00_marker(vha, vha->hw->req_q_map[0],
-+		vha->hw->rsp_q_map[0], fcport->loop_id, lun,
- 		flags == TCF_LUN_RESET ? MK_SYNC_ID_LUN : MK_SYNC_ID);
- 
- 	if ((rval != QLA_SUCCESS) || iocb->u.tmf.data) {
-@@ -512,24 +461,6 @@ qla2x00_async_tm_cmd_done(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	return;
- }
- 
--void
--qla2x00_async_marker_done(struct scsi_qla_host *vha, fc_port_t *fcport,
--    struct srb_iocb *iocb)
--{
--	/*
--	 * Currently we dont have any specific post response processing
--	 * for this IOCB. We'll just return success or failed
--	 * depending on whether the IOCB command succeeded or failed.
--	 */
--	if (iocb->u.tmf.data) {
--		DEBUG2_3_11(printk(KERN_WARNING
--		    "%s(%ld): Marker IOCB failed (%x).\n",
--		    __func__, vha->host_no, iocb->u.tmf.data));
+-	if (IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha)) {
+-		if (qla24xx_read_fcp_prio_cfg(vha))
+-			qla_printk(KERN_ERR, ha,
+-			"Unable to read FCP priority data.\n");
 -	}
--
--	return;
--}
--
- /****************************************************************************/
- /*                QLogic ISP2x00 Hardware Support Functions.                */
- /****************************************************************************/
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 5d0e99c..370646f 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -11,8 +11,6 @@
++	if (IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha))
++		qla24xx_read_fcp_prio_cfg(vha);
  
- #include <scsi/scsi_tcq.h>
- 
--static request_t *qla2x00_req_pkt(struct scsi_qla_host *, struct req_que *,
--							struct rsp_que *rsp);
- static void qla2x00_isp_cmd(struct scsi_qla_host *, struct req_que *);
- 
- static void qla25xx_set_que(srb_t *, struct rsp_que **);
-@@ -474,7 +472,7 @@ __qla2x00_marker(struct scsi_qla_host *vha, struct req_que *req,
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 
- 	mrk24 = NULL;
--	mrk = (mrk_entry_t *)qla2x00_req_pkt(vha, req, rsp);
-+	mrk = (mrk_entry_t *)qla2x00_alloc_iocbs(vha, 0);
- 	if (mrk == NULL) {
- 		DEBUG2_3(printk("%s(%ld): failed to allocate Marker IOCB.\n",
- 		    __func__, base_vha->host_no));
-@@ -521,84 +519,6 @@ qla2x00_marker(struct scsi_qla_host *vha, struct req_que *req,
+ 	return (rval);
  }
- 
- /**
-- * qla2x00_req_pkt() - Retrieve a request packet from the request ring.
-- * @ha: HA context
-- *
-- * Note: The caller must hold the hardware lock before calling this routine.
-- *
-- * Returns NULL if function failed, else, a pointer to the request packet.
-- */
--static request_t *
--qla2x00_req_pkt(struct scsi_qla_host *vha, struct req_que *req,
--		struct rsp_que *rsp)
--{
--	struct qla_hw_data *ha = vha->hw;
--	device_reg_t __iomem *reg = ISP_QUE_REG(ha, req->id);
--	request_t	*pkt = NULL;
--	uint16_t	cnt;
--	uint32_t	*dword_ptr;
--	uint32_t	timer;
--	uint16_t	req_cnt = 1;
--
--	/* Wait 1 second for slot. */
--	for (timer = HZ; timer; timer--) {
--		if ((req_cnt + 2) >= req->cnt) {
--			/* Calculate number of free request entries. */
--			if (ha->mqenable)
--				cnt = (uint16_t)
--					RD_REG_DWORD(&reg->isp25mq.req_q_out);
--			else {
--				if (IS_QLA82XX(ha))
--					cnt = (uint16_t)RD_REG_DWORD(
--					    &reg->isp82.req_q_out);
--				else if (IS_FWI2_CAPABLE(ha))
--					cnt = (uint16_t)RD_REG_DWORD(
--						&reg->isp24.req_q_out);
--				else
--					cnt = qla2x00_debounce_register(
--						ISP_REQ_Q_OUT(ha, &reg->isp));
--			}
--			if  (req->ring_index < cnt)
--				req->cnt = cnt - req->ring_index;
--			else
--				req->cnt = req->length -
--				    (req->ring_index - cnt);
--		}
--		/* If room for request in request ring. */
--		if ((req_cnt + 2) < req->cnt) {
--			req->cnt--;
--			pkt = req->ring_ptr;
--
--			/* Zero out packet. */
--			dword_ptr = (uint32_t *)pkt;
--			for (cnt = 0; cnt < REQUEST_ENTRY_SIZE / 4; cnt++)
--				*dword_ptr++ = 0;
--
--			/* Set entry count. */
--			pkt->entry_count = 1;
--
--			break;
--		}
--
--		/* Release ring specific lock */
--		spin_unlock_irq(&ha->hardware_lock);
--
--		udelay(2);   /* 2 us */
--
--		/* Check for pending interrupts. */
--		/* During init we issue marker directly */
--		if (!vha->marker_needed && !vha->flags.init_done)
--			qla2x00_poll(rsp);
--		spin_lock_irq(&ha->hardware_lock);
--	}
--	if (!pkt) {
--		DEBUG2_3(printk("%s(): **** FAILED ****\n", __func__));
--	}
--
--	return (pkt);
--}
--
--/**
-  * qla2x00_isp_cmd() - Modify the request ring pointer.
-  * @ha: HA context
-  *
-@@ -1559,11 +1479,9 @@ static void qla25xx_set_que(srb_t *sp, struct rsp_que **rsp)
- }
- 
- /* Generic Control-SRB manipulation functions. */
--
--static void *
--qla2x00_alloc_iocbs(srb_t *sp)
-+void *
-+qla2x00_alloc_iocbs(scsi_qla_host_t *vha, srb_t *sp)
- {
--	scsi_qla_host_t	*vha = sp->fcport->vha;
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index de92504..3c5115f 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -664,6 +664,11 @@ qla2xxx_get_flt_info(scsi_qla_host_t *vha, uint32_t flt_addr)
  	struct qla_hw_data *ha = vha->hw;
  	struct req_que *req = ha->req_q_map[0];
- 	device_reg_t __iomem *reg = ISP_QUE_REG(ha, req->id);
-@@ -1573,6 +1491,10 @@ qla2x00_alloc_iocbs(srb_t *sp)
  
- 	pkt = NULL;
- 	req_cnt = 1;
-+	handle = 0;
++	def = 0;
++	if (IS_QLA25XX(ha))
++		def = 1;
++	else if (IS_QLA81XX(ha))
++		def = 2;
+ 	ha->flt_region_flt = flt_addr;
+ 	wptr = (uint16_t *)req->ring;
+ 	flt = (struct qla_flt_header *)req->ring;
+@@ -691,6 +696,10 @@ qla2xxx_get_flt_info(scsi_qla_host_t *vha, uint32_t flt_addr)
+ 		goto no_flash_data;
+ 	}
+ 
++	/* Assign FCP prio region since older FLT's may not have it */
++	ha->flt_region_fcp_prio = ha->flags.port0 ?
++	    fcp_prio_cfg0[def] : fcp_prio_cfg1[def];
 +
-+	if (!sp)
-+		goto skip_cmd_array;
- 
- 	/* Check for room in outstanding command list. */
- 	handle = req->current_outstanding_cmd;
-@@ -1586,10 +1508,18 @@ qla2x00_alloc_iocbs(srb_t *sp)
- 	if (index == MAX_OUTSTANDING_COMMANDS)
- 		goto queuing_error;
- 
-+	/* Prep command array. */
-+	req->current_outstanding_cmd = handle;
-+	req->outstanding_cmds[handle] = sp;
-+	sp->handle = handle;
-+
-+skip_cmd_array:
- 	/* Check for room on request queue. */
- 	if (req->cnt < req_cnt) {
- 		if (ha->mqenable)
- 			cnt = RD_REG_DWORD(&reg->isp25mq.req_q_out);
-+		else if (IS_QLA82XX(ha))
-+			cnt = RD_REG_DWORD(&reg->isp82.req_q_out);
- 		else if (IS_FWI2_CAPABLE(ha))
- 			cnt = RD_REG_DWORD(&reg->isp24.req_q_out);
- 		else
-@@ -1606,15 +1536,11 @@ qla2x00_alloc_iocbs(srb_t *sp)
- 		goto queuing_error;
- 
- 	/* Prep packet */
--	req->current_outstanding_cmd = handle;
--	req->outstanding_cmds[handle] = sp;
- 	req->cnt -= req_cnt;
--
- 	pkt = req->ring_ptr;
- 	memset(pkt, 0, REQUEST_ENTRY_SIZE);
- 	pkt->entry_count = req_cnt;
- 	pkt->handle = handle;
--	sp->handle = handle;
- 
- queuing_error:
- 	return pkt;
-@@ -1795,31 +1721,6 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
+ 	loc = locations[1];
+ 	cnt = le16_to_cpu(flt->length) / sizeof(struct qla_flt_region);
+ 	for ( ; cnt; cnt--, region++) {
+@@ -773,13 +782,6 @@ qla2xxx_get_flt_info(scsi_qla_host_t *vha, uint32_t flt_addr)
+ no_flash_data:
+ 	/* Use hardcoded defaults. */
+ 	loc = locations[0];
+-	def = 0;
+-	if (IS_QLA24XX_TYPE(ha))
+-		def = 0;
+-	else if (IS_QLA25XX(ha))
+-		def = 1;
+-	else if (IS_QLA81XX(ha))
+-		def = 2;
+ 	ha->flt_region_fw = def_fw[def];
+ 	ha->flt_region_boot = def_boot[def];
+ 	ha->flt_region_vpd_nvram = def_vpd_nvram[def];
+@@ -790,14 +792,13 @@ no_flash_data:
+ 	ha->flt_region_fdt = def_fdt[def];
+ 	ha->flt_region_npiv_conf = ha->flags.port0 ?
+ 	    def_npiv_conf0[def] : def_npiv_conf1[def];
+-	ha->flt_region_fcp_prio = ha->flags.port0 ?
+-	    fcp_prio_cfg0[def] : fcp_prio_cfg1[def];
+ done:
+ 	DEBUG2(qla_printk(KERN_DEBUG, ha, "FLT[%s]: boot=0x%x fw=0x%x "
+ 	    "vpd_nvram=0x%x vpd=0x%x nvram=0x%x fdt=0x%x flt=0x%x "
+-	    "npiv=0x%x.\n", loc, ha->flt_region_boot, ha->flt_region_fw,
+-	    ha->flt_region_vpd_nvram, ha->flt_region_vpd, ha->flt_region_nvram,
+-	    ha->flt_region_fdt, ha->flt_region_flt, ha->flt_region_npiv_conf));
++	    "npiv=0x%x. fcp_prio_cfg=0x%x\n", loc, ha->flt_region_boot,
++	    ha->flt_region_fw, ha->flt_region_vpd_nvram, ha->flt_region_vpd,
++	    ha->flt_region_nvram, ha->flt_region_fdt, ha->flt_region_flt,
++	    ha->flt_region_npiv_conf, ha->flt_region_fcp_prio));
  }
  
  static void
--qla24xx_marker_iocb(srb_t *sp, struct mrk_entry_24xx *mrk)
--{
--	uint16_t lun;
--	uint8_t modif;
--	struct fc_port *fcport = sp->fcport;
--	scsi_qla_host_t *vha = fcport->vha;
--	struct srb_ctx *ctx = sp->ctx;
--	struct srb_iocb *iocb = ctx->u.iocb_cmd;
--	struct req_que *req = vha->req;
--
--	lun = iocb->u.marker.lun;
--	modif = iocb->u.marker.modif;
--	mrk->entry_type = MARKER_TYPE;
--	mrk->modifier = modif;
--	if (modif !=  MK_SYNC_ALL) {
--		mrk->nport_handle = cpu_to_le16(fcport->loop_id);
--		mrk->lun[1] = LSB(lun);
--		mrk->lun[2] = MSB(lun);
--		host_to_fcp_swap(mrk->lun, sizeof(mrk->lun));
--		mrk->vp_index = vha->vp_idx;
--		mrk->handle = MAKE_HANDLE(req->id, mrk->handle);
--	}
--}
--
--static void
- qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- {
- 	struct fc_bsg_job *bsg_job = ((struct srb_ctx *)sp->ctx)->u.bsg_job;
-@@ -1945,7 +1846,7 @@ qla2x00_start_sp(srb_t *sp)
- 
- 	rval = QLA_FUNCTION_FAILED;
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
--	pkt = qla2x00_alloc_iocbs(sp);
-+	pkt = qla2x00_alloc_iocbs(sp->fcport->vha, sp);
- 	if (!pkt)
- 		goto done;
- 
-@@ -1976,9 +1877,6 @@ qla2x00_start_sp(srb_t *sp)
- 	case SRB_TM_CMD:
- 		qla24xx_tm_iocb(sp, pkt);
- 		break;
--	case SRB_MARKER_CMD:
--		qla24xx_marker_iocb(sp, pkt);
--		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 8a60872..ba971ac 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1238,39 +1238,6 @@ qla24xx_tm_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	iocb->done(sp);
- }
- 
--static void
--qla24xx_marker_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
--    struct mrk_entry_24xx *mrk)
--{
--	const char func[] = "MRK-IOCB";
--	const char *type;
--	fc_port_t *fcport;
--	srb_t *sp;
--	struct srb_iocb *iocb;
--	struct srb_ctx *ctx;
--	struct sts_entry_24xx *sts = (struct sts_entry_24xx *)mrk;
--
--	sp = qla2x00_get_sp_from_handle(vha, func, req, mrk);
--	if (!sp)
--		return;
--
--	ctx = sp->ctx;
--	iocb = ctx->u.iocb_cmd;
--	type = ctx->name;
--	fcport = sp->fcport;
--
--	if (sts->entry_status) {
--		iocb->u.marker.data = 1;
--		DEBUG2(printk(KERN_WARNING
--		    "scsi(%ld:%x): Async-%s error entry - entry-status=%x.\n",
--		    fcport->vha->host_no, sp->handle, type,
--		    sts->entry_status));
--		DEBUG2(qla2x00_dump_buffer((uint8_t *)mrk, sizeof(*sts)));
--	}
--
--	iocb->done(sp);
--}
--
- /**
-  * qla2x00_process_response_queue() - Process response queue entries.
-  * @ha: SCSI driver HA context
-@@ -1942,10 +1909,6 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
- 			qla24xx_tm_iocb_entry(vha, rsp->req,
- 			    (struct tsk_mgmt_entry *)pkt);
- 			break;
--		case MARKER_TYPE:
--			qla24xx_marker_iocb_entry(vha, rsp->req,
--			    (struct mrk_entry_24xx *)pkt);
--			break;
-                 case CT_IOCB_TYPE:
- 			qla24xx_els_ct_entry(vha, rsp->req, pkt, CT_IOCB_TYPE);
- 			clear_bit(MBX_INTERRUPT, &vha->hw->mbx_cmd_flags);
 -- 
 1.6.0.2
 
