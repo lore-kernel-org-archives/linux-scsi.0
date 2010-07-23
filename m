@@ -1,204 +1,179 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 14/17] qla2xxx: Rearranged and cleaned up the code for processing the pending commands.
-Date: Fri, 23 Jul 2010 15:28:35 +0500
-Message-ID: <1279880918-62876-15-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 16/17] qla2xxx: Cleanup some dead-code and make some functions static.
+Date: Fri, 23 Jul 2010 15:28:37 +0500
+Message-ID: <1279880918-62876-17-git-send-email-giridhar.malavali@qlogic.com>
 References: <1279880918-62876-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:47967 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:47971 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755708Ab0GWJ7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Jul 2010 05:59:51 -0400
+	id S1755708Ab0GWJ77 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Jul 2010 05:59:59 -0400
 In-Reply-To: <1279880918-62876-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
 Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, madhu.iyengar@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
 
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |   10 +++++++-
- drivers/scsi/qla2xxx/qla_gbl.h  |    5 ++-
- drivers/scsi/qla2xxx/qla_init.c |    9 ++++++-
- drivers/scsi/qla2xxx/qla_os.c   |   41 ++++++--------------------------------
- 4 files changed, 25 insertions(+), 40 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h  |    6 ----
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ drivers/scsi/qla2xxx/qla_iocb.c |    2 +-
+ drivers/scsi/qla2xxx/qla_mid.c  |   51 +--------------------------------------
+ drivers/scsi/qla2xxx/qla_os.c   |    4 +-
+ 5 files changed, 5 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 7e11ccf..84e9c6b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2981,9 +2981,15 @@ typedef struct scsi_qla_host {
- 
- #define	QLA_DSDS_PER_IOCB	37
- 
-+#define CMD_SP(Cmnd)		((Cmnd)->SCp.ptr)
-+
-+enum nexus_wait_type {
-+	WAIT_HOST = 0,
-+	WAIT_TARGET,
-+	WAIT_LUN,
-+};
-+
- #include "qla_gbl.h"
- #include "qla_dbg.h"
- #include "qla_inline.h"
--
--#define CMD_SP(Cmnd)		((Cmnd)->SCp.ptr)
- #endif
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 8b0a8ca..4688ad2 100644
+index b7d940f..1a1b281 100644
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -292,7 +292,9 @@ extern int
- qla24xx_abort_target(struct fc_port *, unsigned int, int);
- extern int
- qla24xx_lun_reset(struct fc_port *, unsigned int, int);
--
-+extern int
-+qla2x00_eh_wait_for_pending_commands(scsi_qla_host_t *, unsigned int,
-+	unsigned int, enum nexus_wait_type);
- extern int
- qla2x00_system_error(scsi_qla_host_t *);
- 
-@@ -569,7 +571,6 @@ extern int qla82xx_mbx_intr_enable(scsi_qla_host_t *);
- extern int qla82xx_mbx_intr_disable(scsi_qla_host_t *);
- extern void qla82xx_start_iocbs(srb_t *);
- extern int qla82xx_fcoe_ctx_reset(scsi_qla_host_t *);
--extern void qla82xx_wait_for_pending_commands(scsi_qla_host_t *);
- 
- /* BSG related functions */
- extern int qla24xx_bsg_request(struct fc_bsg_job *);
+@@ -175,10 +175,7 @@ extern int qla2x00_start_scsi(srb_t *sp);
+ extern int qla24xx_start_scsi(srb_t *sp);
+ int qla2x00_marker(struct scsi_qla_host *, struct req_que *, struct rsp_que *,
+ 						uint16_t, uint16_t, uint8_t);
+-int __qla2x00_marker(struct scsi_qla_host *, struct req_que *, struct rsp_que *,
+-						uint16_t, uint16_t, uint8_t);
+ extern int qla2x00_start_sp(srb_t *);
+-extern void qla2x00_ctx_sp_free(srb_t *);
+ extern uint16_t qla24xx_calc_iocbs(uint16_t);
+ extern void qla24xx_build_scsi_iocbs(srb_t *, struct cmd_type_7 *, uint16_t);
+ extern int qla24xx_dif_start_scsi(srb_t *);
+@@ -489,11 +486,8 @@ extern int qla25xx_create_req_que(struct qla_hw_data *, uint16_t, uint8_t,
+ 	uint16_t, int, uint8_t);
+ extern int qla25xx_create_rsp_que(struct qla_hw_data *, uint16_t, uint8_t,
+ 	uint16_t, int);
+-extern int qla25xx_update_req_que(struct scsi_qla_host *, uint8_t, uint8_t);
+ extern void qla2x00_init_response_q_entries(struct rsp_que *);
+ extern int qla25xx_delete_req_que(struct scsi_qla_host *, struct req_que *);
+-extern int qla25xx_delete_rsp_que(struct scsi_qla_host *, struct rsp_que *);
+-extern int qla25xx_create_queues(struct scsi_qla_host *, uint8_t);
+ extern int qla25xx_delete_queues(struct scsi_qla_host *);
+ extern uint16_t qla24xx_rd_req_reg(struct qla_hw_data *, uint16_t);
+ extern uint16_t qla25xx_rd_req_reg(struct qla_hw_data *, uint16_t);
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index f6b1052..9b58a79 100644
+index 1b7d80b..d863ed2 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3833,8 +3833,13 @@ qla2x00_abort_isp_cleanup(scsi_qla_host_t *vha)
- 	}
+@@ -64,7 +64,7 @@ qla2x00_ctx_sp_timeout(unsigned long __data)
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ }
  
- 	/* Make sure for ISP 82XX IO DMA is complete */
--	if (IS_QLA82XX(ha))
--		qla82xx_wait_for_pending_commands(vha);
-+	if (IS_QLA82XX(ha)) {
-+		if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
-+			WAIT_HOST) == QLA_SUCCESS) {
-+			DEBUG2(qla_printk(KERN_INFO, ha,
-+			"Done wait for pending commands\n"));
-+		}
-+	}
- 
- 	/* Requeue all commands in outstanding command list. */
- 	qla2x00_abort_all_cmds(vha, DID_RESET << 16);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index fcdbf7a..86d352a 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -903,24 +903,17 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+-void
++static void
+ qla2x00_ctx_sp_free(srb_t *sp)
+ {
+ 	struct srb_ctx *ctx = sp->ctx;
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index c9c709e..d2b299f 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -461,7 +461,7 @@ queuing_error:
+  *
+  * Returns non-zero if a failure occurred, else zero.
+  */
+-int
++static int
+ __qla2x00_marker(struct scsi_qla_host *vha, struct req_que *req,
+ 			struct rsp_que *rsp, uint16_t loop_id,
+ 			uint16_t lun, uint8_t type)
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 642cd79..9a82c34 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -482,7 +482,7 @@ qla25xx_delete_req_que(struct scsi_qla_host *vha, struct req_que *req)
  	return ret;
  }
  
--enum nexus_wait_type {
--	WAIT_HOST = 0,
--	WAIT_TARGET,
--	WAIT_LUN,
--};
--
--static int
-+int
- qla2x00_eh_wait_for_pending_commands(scsi_qla_host_t *vha, unsigned int t,
--	unsigned int l, srb_t *sp, enum nexus_wait_type type)
-+	unsigned int l, enum nexus_wait_type type)
+-int
++static int
+ qla25xx_delete_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
  {
- 	int cnt, match, status;
- 	unsigned long flags;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct req_que *req;
-+	srb_t *sp;
- 
- 	status = QLA_SUCCESS;
--	if (!sp)
--		return status;
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	req = vha->req;
-@@ -958,24 +951,6 @@ qla2x00_eh_wait_for_pending_commands(scsi_qla_host_t *vha, unsigned int t,
- 	return status;
+ 	int ret = -1;
+@@ -497,23 +497,6 @@ qla25xx_delete_rsp_que(struct scsi_qla_host *vha, struct rsp_que *rsp)
+ 	return ret;
  }
  
--void qla82xx_wait_for_pending_commands(scsi_qla_host_t *vha)
+-int qla25xx_update_req_que(struct scsi_qla_host *vha, uint8_t que, uint8_t qos)
 -{
--	int cnt;
--	srb_t *sp;
--	struct req_que *req = vha->req;
+-	int ret = 0;
+-	struct qla_hw_data *ha = vha->hw;
+-	struct req_que *req = ha->req_q_map[que];
 -
--	DEBUG2(qla_printk(KERN_INFO, vha->hw,
--		"Waiting for pending commands\n"));
--	for (cnt = 1; cnt < MAX_OUTSTANDING_COMMANDS; cnt++) {
--		sp = req->outstanding_cmds[cnt];
--		if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0,
--			sp, WAIT_HOST) == QLA_SUCCESS) {
--			DEBUG2(qla_printk(KERN_INFO, vha->hw,
--				"Done wait for pending commands\n"));
--		}
--	}
+-	req->options |= BIT_3;
+-	req->qos = qos;
+-	ret = qla25xx_init_req_que(vha, req);
+-	if (ret != QLA_SUCCESS)
+-		DEBUG2_17(printk(KERN_WARNING "%s failed\n", __func__));
+-	/* restore options bit */
+-	req->options &= ~BIT_3;
+-	return ret;
 -}
 -
- static char *reset_errors[] = {
- 	"HBA not online",
- 	"HBA not ready",
-@@ -1011,7 +986,7 @@ __qla2xxx_eh_generic_reset(char *name, enum nexus_wait_type type,
- 		goto eh_reset_failed;
- 	err = 3;
- 	if (qla2x00_eh_wait_for_pending_commands(vha, cmd->device->id,
--	    cmd->device->lun, (srb_t *) CMD_SP(cmd), type) != QLA_SUCCESS)
-+	    cmd->device->lun, type) != QLA_SUCCESS)
- 		goto eh_reset_failed;
+-
+ /* Delete all queues for a given vhost */
+ int
+ qla25xx_delete_queues(struct scsi_qla_host *vha)
+@@ -740,35 +723,3 @@ que_failed:
+ failed:
+ 	return 0;
+ }
+-
+-int
+-qla25xx_create_queues(struct scsi_qla_host *vha, uint8_t qos)
+-{
+-	uint16_t options = 0;
+-	uint8_t ret = 0;
+-	struct qla_hw_data *ha = vha->hw;
+-	struct rsp_que *rsp;
+-
+-	options |= BIT_1;
+-	ret = qla25xx_create_rsp_que(ha, options, vha->vp_idx, 0, -1);
+-	if (!ret) {
+-		qla_printk(KERN_WARNING, ha, "Response Que create failed\n");
+-		return ret;
+-	} else
+-		qla_printk(KERN_INFO, ha, "Response Que:%d created.\n", ret);
+-	rsp = ha->rsp_q_map[ret];
+-
+-	options = 0;
+-	if (qos & BIT_7)
+-		options |= BIT_8;
+-	ret = qla25xx_create_req_que(ha, options, vha->vp_idx, 0, ret,
+-					qos & ~BIT_7);
+-	if (ret) {
+-		vha->req = ha->req_q_map[ret];
+-		qla_printk(KERN_INFO, ha, "Request Que:%d created.\n", ret);
+-	} else
+-		qla_printk(KERN_WARNING, ha, "Request Que create failed\n");
+-	rsp->req = ha->req_q_map[ret];
+-
+-	return ret;
+-}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 50f6854..aeb2f1b 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -701,7 +701,7 @@ qla2x00_wait_for_hba_online(scsi_qla_host_t *vha)
+  *    Success (Adapter is online/no flash ops) : 0
+  *    Failed  (Adapter is offline/disabled/flash ops in progress) : 1
+  */
+-int
++static int
+ qla2x00_wait_for_reset_ready(scsi_qla_host_t *vha)
+ {
+ 	int		return_status;
+@@ -3469,7 +3469,7 @@ qla2x00_sp_free_dma(srb_t *sp)
+ 	CMD_SP(cmd) = NULL;
+ }
  
- 	qla_printk(KERN_INFO, vha->hw, "scsi(%ld:%d:%d): %s RESET SUCCEEDED.\n",
-@@ -1019,7 +994,7 @@ __qla2xxx_eh_generic_reset(char *name, enum nexus_wait_type type,
- 
- 	return SUCCESS;
- 
-- eh_reset_failed:
-+eh_reset_failed:
- 	qla_printk(KERN_INFO, vha->hw, "scsi(%ld:%d:%d): %s RESET FAILED: %s.\n"
- 	    , vha->host_no, cmd->device->id, cmd->device->lun, name,
- 	    reset_errors[err]);
-@@ -1069,7 +1044,6 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- 	int ret = FAILED;
- 	unsigned int id, lun;
- 	unsigned long serial;
--	srb_t *sp = (srb_t *) CMD_SP(cmd);
- 
- 	fc_block_scsi_eh(cmd);
- 
-@@ -1096,7 +1070,7 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- 		goto eh_bus_reset_done;
- 
- 	/* Flush outstanding commands. */
--	if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0, sp, WAIT_HOST) !=
-+	if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0, WAIT_HOST) !=
- 	    QLA_SUCCESS)
- 		ret = FAILED;
- 
-@@ -1131,7 +1105,6 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
- 	int ret = FAILED;
- 	unsigned int id, lun;
- 	unsigned long serial;
--	srb_t *sp = (srb_t *) CMD_SP(cmd);
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 
- 	fc_block_scsi_eh(cmd);
-@@ -1186,7 +1159,7 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
- 	}
- 
- 	/* Waiting for command to be returned to OS.*/
--	if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0, sp, WAIT_HOST) ==
-+	if (qla2x00_eh_wait_for_pending_commands(vha, 0, 0, WAIT_HOST) ==
- 		QLA_SUCCESS)
- 		ret = SUCCESS;
- 
+-void
++static void
+ qla2x00_sp_final_compl(struct qla_hw_data *ha, srb_t *sp)
+ {
+ 	struct scsi_cmnd *cmd = sp->cmd;
 -- 
 1.6.0.2
 
