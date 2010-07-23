@@ -1,35 +1,38 @@
-From: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Subject: Re: [PATCH 15/19] be2iscsi: iscsi boot changes for the kernel
-Date: Fri, 23 Jul 2010 09:22:25 -0400
-Message-ID: <201007230922.29022.konrad@darnok.org>
-References: <20100721225844.GA9750@serverengines.com> <4C48C44D.1060208@cs.wisc.edu>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: 2.6.35-rc6: Reported regressions from 2.6.34
+Date: Fri, 23 Jul 2010 09:21:43 -0500
+Message-ID: <4C49A577.3020306@lwfinger.net>
+References: <Lupw7pePXBO.A.fZH.G2XSMB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andromeda.dapyr.net ([206.212.254.10]:54233 "EHLO
-	andromeda.dapyr.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752644Ab0GWNYF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jul 2010 09:24:05 -0400
-In-Reply-To: <4C48C44D.1060208@cs.wisc.edu>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <Lupw7pePXBO.A.fZH.G2XSMB@chimera>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
+On 07/23/2010 06:42 AM, Rafael J. Wysocki wrote:
+> This message contains a list of some regressions from 2.6.34,
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
 
-> The only issue might be this patch. James, this patch is in Konrad's
-> tree for 2.6.36:
-> (it is actually 2 patches)
-> http://git.kernel.org/?p=linux/kernel/git/konrad/ibft-2.6.git;a=commit;h=ba
->4ee30c6c797de148dcc7254cf6d531aba71d9b
-> http://git.kernel.org/?p=linux/kernel/git/konrad/ibft-2.6.git;a=commit;h=b3
->3a84a384776fb2593dac4d77c72050f9e181b0
->
-> So I am not sure who wants to send it upstream. I think as it is now,
-> Konrad needs to send it because it depends on other patches in his tree.
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
+> Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
+> Submitter	: Zdenek Kabelac<zdenek.kabelac@gmail.com>
+> Date		: 2010-06-28 9:40 (26 days old)
+> Message-ID	:<AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz@mail.gmail.com>
+> References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
 
-I am planning on sending them to Linus the moments he announced that 2.6.35 is 
-gold and he opens his merge window.
+I still have this in 2.6.35-rc5.
+
+Larry
