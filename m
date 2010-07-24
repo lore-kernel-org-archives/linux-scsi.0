@@ -1,64 +1,42 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Subject: Re: [PATCH] pmcraid : Remove unwanted cast for void * pointers
-Date: Fri, 23 Jul 2010 17:00:03 -0700 (PDT)
-Message-ID: <alpine.LNX.1.10.1007231658580.24277@rslab235.pmc-sierra.bc.ca>
-References: <1278875520-18592-1-git-send-email-cyril.jayaprakash@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16275] Kernel panic when mounting filesystem
+Date: Sat, 24 Jul 2010 10:20:22 GMT
+Message-ID: <201007241020.o6OAKMDu032048@demeter.kernel.org>
+References: <bug-16275-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1278875520-18592-1-git-send-email-cyril.jayaprakash@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, vasu.dev@intel.com, akpm@linux-foundation.org, James.Bottomley@suse.de, anil_ravindranath@pmc-sierra.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:55072 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679Ab0GXKUX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jul 2010 06:20:23 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6OAKM7v032049
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 24 Jul 2010 10:20:22 GMT
+In-Reply-To: <bug-16275-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16275
 
 
-Signed-off-by: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 
-On Mon, 12 Jul 2010, Cyril Jayaprakash wrote:
 
-> From: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
-> 
-> Patch to remove unwanted cast for void * pointers.
-> 
-> Signed-off-by: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
-> ---
->  drivers/scsi/pmcraid.c |    7 +++----
->  1 files changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-> index c44e4ab..bd0b5a0 100644
-> --- a/drivers/scsi/pmcraid.c
-> +++ b/drivers/scsi/pmcraid.c
-> @@ -3324,8 +3324,7 @@ static int pmcraid_chr_open(struct inode *inode, struct file *filep)
->   */
->  static int pmcraid_chr_release(struct inode *inode, struct file *filep)
->  {
-> -	struct pmcraid_instance *pinstance =
-> -		((struct pmcraid_instance *)filep->private_data);
-> +	struct pmcraid_instance *pinstance = filep->private_data;
->  
->  	filep->private_data = NULL;
->  	fasync_helper(-1, filep, 0, &pinstance->aen_queue);
-> @@ -3344,7 +3343,7 @@ static int pmcraid_chr_fasync(int fd, struct file *filep, int mode)
->  	struct pmcraid_instance *pinstance;
->  	int rc;
->  
-> -	pinstance = (struct pmcraid_instance *)filep->private_data;
-> +	pinstance = filep->private_data;
->  	mutex_lock(&pinstance->aen_queue_lock);
->  	rc = fasync_helper(fd, filep, mode, &pinstance->aen_queue);
->  	mutex_unlock(&pinstance->aen_queue_lock);
-> @@ -3795,7 +3794,7 @@ static long pmcraid_chr_ioctl(
->  		return retval;
->  	}
->  
-> -	pinstance = (struct pmcraid_instance *)filep->private_data;
-> +	pinstance = filep->private_data;
->  
->  	if (!pinstance) {
->  		pmcraid_info("adapter instance is not found\n");
-> -- 
-> 1.7.0.4
-> 
-> 
+
+--- Comment #20 from Pawel Staszewski <pstaszewski@artcom.pl>  2010-07-24 10:20:16 ---
+I think this needs a little more work than replacing 'bool' with 'unsigned
+long'.
+I made this and also have panic.
+
+Sorry for no trace output but i forget to catch console - and also have hard
+access to this machine.
+
+Thanks
+Pawel
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
