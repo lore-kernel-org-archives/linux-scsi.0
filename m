@@ -1,45 +1,64 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Sat, 24 Jul 2010 11:03:59 +1000
-Message-ID: <20100724010358.GO32635@dastard>
-References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
- <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
- <1275318102.2823.47.camel@mulgrave.site>
- <4C03D5FD.3000202@panasas.com>
- <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
- <1275398876.21962.6.camel@mulgrave.site>
- <4C078FE2.9000804@vlnb.net>
- <AANLkTinnrsFZ=nkX4QpG2eKOk05uNe5HpV-pP3kd7OF=@mail.gmail.com>
- <4C49EA91.3060908@vlnb.net>
+From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Subject: Re: [PATCH] pmcraid : Remove unwanted cast for void * pointers
+Date: Fri, 23 Jul 2010 17:00:03 -0700 (PDT)
+Message-ID: <alpine.LNX.1.10.1007231658580.24277@rslab235.pmc-sierra.bc.ca>
+References: <1278875520-18592-1-git-send-email-cyril.jayaprakash@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bld-mail14.adl6.internode.on.net ([150.101.137.99]:54297 "EHLO
-	mail.internode.on.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756489Ab0GXBEK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jul 2010 21:04:10 -0400
-Content-Disposition: inline
-In-Reply-To: <4C49EA91.3060908@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1278875520-18592-1-git-send-email-cyril.jayaprakash@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, vasu.dev@intel.com, akpm@linux-foundation.org, James.Bottomley@suse.de, anil_ravindranath@pmc-sierra.com
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Gennadiy Nerubayev <parakie@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
 
-On Fri, Jul 23, 2010 at 11:16:33PM +0400, Vladislav Bolkhovitin wrote:
-> It would be great if you prove or disprove our suspicions that Linux
-> can produce several write requests for the same blocks
-> simultaneously. To be sure we need:
 
-Just use direct IO. Case in point is the concurrent sub-block
-AIO-DIO data corruption we're chasing on XFS and ext4 at the moment
-where we have two concurrent unaligned write IOs to the same
-filesystem block:
+Signed-off-by: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 
-http://oss.sgi.com/archives/xfs/2010-07/msg00278.html
+On Mon, 12 Jul 2010, Cyril Jayaprakash wrote:
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> From: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
+> 
+> Patch to remove unwanted cast for void * pointers.
+> 
+> Signed-off-by: Cyril Jayaprakash <cyril.jayaprakash@gmail.com>
+> ---
+>  drivers/scsi/pmcraid.c |    7 +++----
+>  1 files changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+> index c44e4ab..bd0b5a0 100644
+> --- a/drivers/scsi/pmcraid.c
+> +++ b/drivers/scsi/pmcraid.c
+> @@ -3324,8 +3324,7 @@ static int pmcraid_chr_open(struct inode *inode, struct file *filep)
+>   */
+>  static int pmcraid_chr_release(struct inode *inode, struct file *filep)
+>  {
+> -	struct pmcraid_instance *pinstance =
+> -		((struct pmcraid_instance *)filep->private_data);
+> +	struct pmcraid_instance *pinstance = filep->private_data;
+>  
+>  	filep->private_data = NULL;
+>  	fasync_helper(-1, filep, 0, &pinstance->aen_queue);
+> @@ -3344,7 +3343,7 @@ static int pmcraid_chr_fasync(int fd, struct file *filep, int mode)
+>  	struct pmcraid_instance *pinstance;
+>  	int rc;
+>  
+> -	pinstance = (struct pmcraid_instance *)filep->private_data;
+> +	pinstance = filep->private_data;
+>  	mutex_lock(&pinstance->aen_queue_lock);
+>  	rc = fasync_helper(fd, filep, mode, &pinstance->aen_queue);
+>  	mutex_unlock(&pinstance->aen_queue_lock);
+> @@ -3795,7 +3794,7 @@ static long pmcraid_chr_ioctl(
+>  		return retval;
+>  	}
+>  
+> -	pinstance = (struct pmcraid_instance *)filep->private_data;
+> +	pinstance = filep->private_data;
+>  
+>  	if (!pinstance) {
+>  		pmcraid_info("adapter instance is not found\n");
+> -- 
+> 1.7.0.4
+> 
+> 
