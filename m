@@ -1,193 +1,45 @@
-From: Gennadiy Nerubayev <parakie@gmail.com>
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Wrong DIF guard tag on ext2 write
-Date: Fri, 23 Jul 2010 16:51:58 -0400
-Message-ID: <AANLkTi=OhopP4qud6EVffrNU3jLrA2KzRca=a4T9GhHx@mail.gmail.com>
+Date: Sat, 24 Jul 2010 11:03:59 +1000
+Message-ID: <20100724010358.GO32635@dastard>
 References: <20100531112817.GA16260@schmichrtp.mainz.de.ibm.com>
-	<yq1iq64kv9f.fsf@sermon.lab.mkp.net>
-	<1275318102.2823.47.camel@mulgrave.site>
-	<4C03D5FD.3000202@panasas.com>
-	<20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
-	<1275398876.21962.6.camel@mulgrave.site>
-	<4C078FE2.9000804@vlnb.net>
-	<AANLkTinnrsFZ=nkX4QpG2eKOk05uNe5HpV-pP3kd7OF=@mail.gmail.com>
-	<4C49EA91.3060908@vlnb.net>
+ <yq1iq64kv9f.fsf@sermon.lab.mkp.net>
+ <1275318102.2823.47.camel@mulgrave.site>
+ <4C03D5FD.3000202@panasas.com>
+ <20100601103041.GA15922@schmichrtp.mainz.de.ibm.com>
+ <1275398876.21962.6.camel@mulgrave.site>
+ <4C078FE2.9000804@vlnb.net>
+ <AANLkTinnrsFZ=nkX4QpG2eKOk05uNe5HpV-pP3kd7OF=@mail.gmail.com>
+ <4C49EA91.3060908@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bld-mail14.adl6.internode.on.net ([150.101.137.99]:54297 "EHLO
+	mail.internode.on.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756489Ab0GXBEK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Jul 2010 21:04:10 -0400
+Content-Disposition: inline
 In-Reply-To: <4C49EA91.3060908@vlnb.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: James Bottomley <James.Bottomley@suse.de>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Gennadiy Nerubayev <parakie@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Christof Schmitt <christof.schmitt@de.ibm.com>, Boaz Harrosh <bharrosh@panasas.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Chris Mason <chris.mason@oracle.com>
 
-On Fri, Jul 23, 2010 at 3:16 PM, Vladislav Bolkhovitin <vst@vlnb.net> w=
-rote:
-> Gennadiy Nerubayev, on 07/23/2010 09:59 PM wrote:
->>
->> On Thu, Jun 3, 2010 at 7:20 AM, Vladislav Bolkhovitin<vst@vlnb.net>
->> =A0wrote:
->>>
->>> James Bottomley, on 06/01/2010 05:27 PM wrote:
->>>>
->>>> On Tue, 2010-06-01 at 12:30 +0200, Christof Schmitt wrote:
->>>>>
->>>>> What is the best strategy to continue with the invalid guard tags=
- on
->>>>> write requests? Should this be fixed in the filesystems?
->>>>
->>>> For write requests, as long as the page dirty bit is still set, it=
-'s
->>>> safe to drop the request, since it's already going to be repeated.=
- =A0What
->>>> we probably want is an error code we can return that the layer tha=
-t sees
->>>> both the request and the page flags can make the call.
->>>>
->>>>> Another idea would be to pass invalid guard tags on write request=
-s
->>>>> down to the hardware, expect an "invalid guard tag" error and rep=
-ort
->>>>> it to the block layer where a new checksum is generated and the
->>>>> request is issued again. Basically implement a retry through the =
-whole
->>>>> I/O stack. But this also sounds complicated.
->>>>
->>>> No, no ... as long as the guard tag is wrong because the fs change=
-d the
->>>> page, the write request for the updated page will already be queue=
-d or
->>>> in-flight, so there's no need to retry.
->>>
->>> There's one interesting problem here, at least theoretically, with =
-SCSI
->>> or similar transports which allow to have commands queue depth>1 an=
-d allowed
->>> to internally reorder queued requests. I don't know the FS/block la=
-yers
->>> sufficiently well to tell if sending several requests for the same =
-page
->>> really possible or not, but we can see a real life problem, which c=
-an be
->>> well explained if it's possible.
->>>
->>> The problem could be if the second (rewrite) request (SCSI command)=
- for
->>> the same page queued to the corresponding device before the origina=
-l request
->>> finished. Since the device allowed to freely reorder requests, ther=
-e's a
->>> probability that the original write request would hit the permanent=
- storage
->>> *AFTER* the retry request, hence the data changes it's carrying wou=
-ld be
->>> lost, hence welcome data corruption.
->>>
->>> For single parallel SCSI or SAS devices such race may look practica=
-lly
->>> impossible, but for sophisticated clusters when many nodes pretendi=
-ng to be
->>> a single SCSI device in a load balancing configuration, it becomes =
-very
->>> real.
->>>
->>> The real life problem we can see in an active-active DRBD-setup. In=
- this
->>> configuration 2 nodes act as a single SCST-powered SCSI device and =
-they both
->>> run DRBD to keep their backstorage in-sync. The initiator uses them=
- as a
->>> single multipath device in an active-active round-robin load-balanc=
-ing
->>> configuration, i.e. sends requests to both nodes in parallel, then =
-DRBD
->>> takes care to replicate the requests to the other node.
->>>
->>> The problem is that sometimes DRBD complies about concurrent local
->>> writes, like:
->>>
->>> kernel: drbd0: scsi_tgt0[12503] Concurrent local write detected! [D=
-ISCARD
->>> L] new: 144072784s +8192; pending: 144072784s +8192
->>>
->>> This message means that DRBD detected that both nodes received
->>> overlapping writes on the same block(s) and DRBD can't figure out w=
-hich one
->>> to store. This is possible only if the initiator sent the second wr=
-ite
->>> request before the first one completed.
->>>
->>> The topic of the discussion could well explain the cause of that. B=
-ut,
->>> unfortunately, people who reported it forgot to note which OS they =
-run on
->>> the initiator, i.e. I can't say for sure it's Linux.
->>
->> Sorry for the late chime in, but here's some more information of
->> potential interest as I've previously inquired about this to the drb=
-d
->> mailing list:
->>
->> 1. It only happens when using blockio mode in IET or SCST. Fileio,
->> nv_cache, and write_through do not generate the warnings.
->
-> Some explanations for those who not familiar with the terminology:
->
-> =A0- "Fileio" means Linux IO stack on the target receives IO via
-> vfs_readv()/vfs_writev()
->
-> =A0- "NV_CACHE" means all the cache synchronization requests
-> (SYNCHRONIZE_CACHE, FUA) from the initiator are ignored
->
-> =A0- "WRITE_THROUGH" means write through, i.e. the corresponding back=
-end file
-> for the device open with O_SYNC flag.
->
->> 2. It happens on active/passive drbd clusters (on the active node
->> obviously), NOT active/active. In fact, I've found that doing round
->> robin on active/active is a Bad Idea (tm) even with a clustered
->> filesystem, until at least the target software is able to synchroniz=
-e
->> the command state of either node.
->> 3. Linux and ESX initiators can generate the warning, but I've so fa=
-r
->> only been able to reliably reproduce it using a Windows initiator an=
-d
->> sqlio or iometer benchmarks. I'll be trying again using iometer when=
- I
->> have the time.
->> 4. It only happens using a random write io workload (any block size)=
-,
->> with initiator threads>1, OR initiator queue depth>1. The higher
->> either of those is, the more spammy the warnings become.
->> 5. The transport does not matter (reproduced with iSCSI and SRP)
->> 6. If DRBD is disconnected (primary/unknown), the warnings are not
->> generated. As soon as it's reconnected (primary/secondary), the
->> warnings will reappear.
->
-> It would be great if you prove or disprove our suspicions that Linux =
-can
-> produce several write requests for the same blocks simultaneously. To=
- be
-> sure we need:
->
-> 1. The initiator is Linux. Windows and ESX are not needed for this
-> particular case.
->
-> 2. If you are able to reproduce it, we will need full description of =
-which
-> application used on the initiator to generate the load and in which m=
-ode.
->
-> Target and DRBD configuration doesn't matter, you can use any.
+On Fri, Jul 23, 2010 at 11:16:33PM +0400, Vladislav Bolkhovitin wrote:
+> It would be great if you prove or disprove our suspicions that Linux
+> can produce several write requests for the same blocks
+> simultaneously. To be sure we need:
 
-I just tried, and this particular DRBD warning is not reproducible
-with io (iometer) coming from a Linux initiator (2.6.30.10) The same
-iometer parameters were used as on windows, and both the base device
-as well as filesystem (ext3) were tested, both negative. I'll try a
-few more tests, but it seems that this is a nonissue with a Linux
-initiator.
+Just use direct IO. Case in point is the concurrent sub-block
+AIO-DIO data corruption we're chasing on XFS and ext4 at the moment
+where we have two concurrent unaligned write IOs to the same
+filesystem block:
 
-Hope that helps,
+http://oss.sgi.com/archives/xfs/2010-07/msg00278.html
 
--Gennadiy
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
