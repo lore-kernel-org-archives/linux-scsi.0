@@ -1,69 +1,106 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: rq-based mpath failed path on SCSI target failure (malformed discard)
-Date: Mon, 26 Jul 2010 09:30:08 -0400
-Message-ID: <20100726133008.GA26771@redhat.com>
+From: "Achim Leubner" <Achim_Leubner@pmc-sierra.com>
+Subject: RE: [PATCH][Resend #2] Do not set DMA mask to 32 bit first if adapter only supports 31
+Date: Mon, 26 Jul 2010 06:25:54 -0700
+Message-ID: <FD2BDBE06AC58549AE9E16C08B45675D03B14F61@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <201007260807.45533.eike-kernel@sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53945 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752118Ab0GZNaX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jul 2010 09:30:23 -0400
-Content-Disposition: inline
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:46896 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752816Ab0GZNyN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jul 2010 09:54:13 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <201007260807.45533.eike-kernel@sf-tec.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>, aacraid@adaptec.com
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-Hi,
+Hi Rolf,
 
-I have been implementing discard support for the various DM targets.  I
-have a LUN that requires a 4K alignment for all discard requests.  I
-forced the issue (by misconfiguring the alignment such that discards
-would be misaligned).  Multipath failed the path once the SCSI layer got
-the following error.
+The patch looks good for me so from my side we can include it. Sorry for
+the delay - I will try to give quick answers for future requests. Please
+pay attention that my personal email address has changed because we are
+now part of PMC-Sierra Inc. But aacraid@adaptec.com remains active.
 
-My question: shouldn't mpath _not_ fail the path for "Illegal
-Request".. "Parameter value invalid"?  The same request would fail on
-any path given that the failure is on the target side (rejecting the
-malformed discard request).  Following setup is ext4 FS ontop of linear
-DM mapping (dm-2) ontop of request-based mpath mapping (dm-1):
+Thanks,
+Achim Leubner
+PMC-Sierra Inc.
 
-EXT4-fs (dm-2): mounted filesystem with ordered data mode
-sd 3:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 3:0:0:0: [sda] Sense Key : Illegal Request [current] 
-Info fld=0x0
-sd 3:0:0:0: [sda] Add. Sense: Parameter value invalid
-sd 3:0:0:0: [sda] CDB: Write same(16): 93 08 00 00 00 00 00 00 45 82 00 00 03 00 00 00
-end_request: I/O error, dev sda, sector 17794
-device-mapper: multipath: Failing path 8:0.
-end_request: I/O error, dev dm-1, sector 17794
-end_request: I/O error, dev dm-1, sector 17794
-end_request: I/O error, dev dm-1, sector 0
-end_request: I/O error, dev dm-1, sector 386
-quiet_error: 1228 callbacks suppressed
-Buffer I/O error on device dm-2, logical block 1
-lost page write due to I/O error on dm-2
-Buffer I/O error on device dm-2, logical block 2
-lost page write due to I/O error on dm-2
-end_request: I/O error, dev dm-1, sector 904
-Buffer I/O error on device dm-2, logical block 260
-lost page write due to I/O error on dm-2
-end_request: I/O error, dev dm-1, sector 926
-Buffer I/O error on device dm-2, logical block 271
-lost page write due to I/O error on dm-2
-end_request: I/O error, dev dm-1, sector 934
-Buffer I/O error on device dm-2, logical block 275
-lost page write due to I/O error on dm-2
-end_request: I/O error, dev dm-1, sector 966
-Buffer I/O error on device dm-2, logical block 291
-lost page write due to I/O error on dm-2
-Buffer I/O error on device dm-2, logical block 292
-lost page write due to I/O error on dm-2
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Rolf Eike Beer
+Sent: Monday, July 26, 2010 8:08 AM
+To: aacraid@adaptec.com
+Cc: linux-scsi@vger.kernel.org; Andrew Morton
+Subject: [PATCH][Resend #2] Do not set DMA mask to 32 bit first if
+adapter only supports 31
 
-Here is the relevant scsi trace:
+>From 1c2f6ce5be5890ea7151ada3602699566afdd060 Mon Sep 17 00:00:00 2001
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Date: Wed, 1 Jul 2009 22:43:39 +0200
 
-        kdmflush-3658  [000] 952692.258948: scsi_dispatch_cmd_start: host_no=3 channel=0 id=0 lun=0 data_sgl=1 prot_sgl=0 cmnd=(WRITE_SAME_16 lba=17794 txlen=768 protect=0 unmap=1 raw=93 08 00 00 00 00 00 00 45 82 00 00 03 00 00 00)
-          <idle>-0     [000] 952692.259650: scsi_dispatch_cmd_done: host_no=3 channel=0 id=0 lun=0 data_sgl=1 prot_sgl=0 cmnd=(WRITE_SAME_16 lba=17794 txlen=768 protect=0 unmap=1 raw=93 08 00 00 00 00 00 00 45 82 00 00 03 00 00 00) result=(driver=DRIVER_OK host=DID_OK message=COMMAND_COMPLETE status=SAM_STAT_CHECK_CONDITION)
-      multipathd-3661  [000] 952692.261484: scsi_dispatch_cmd_start: host_no=3 channel=0 id=0 lun=0 data_sgl=1 prot_sgl=0 cmnd=(READ_10 lba=0 txlen=8 protect=0 raw=28 00 00 00 00 00 00 00 08 00)
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+---
+ drivers/scsi/aacraid/linit.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
+James, it looks like people at Adaptec don't care if you send patches
+in. That 
+also applies to at least one patch from Julia Lawall that is waiting
+since 
+December. What next?
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 33898b6..cad6f9a 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1091,6 +1091,7 @@ static int __devinit aac_probe_one(struct pci_dev
+*pdev,
+ 	struct list_head *insert = &aac_devices;
+ 	int error = -ENODEV;
+ 	int unique_id = 0;
++	u64 dmamask;
+ 
+ 	list_for_each_entry(aac, &aac_devices, entry) {
+ 		if (aac->id > unique_id)
+@@ -1104,17 +1105,18 @@ static int __devinit aac_probe_one(struct
+pci_dev 
+*pdev,
+ 		goto out;
+ 	error = -ENODEV;
+ 
+-	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
+-			pci_set_consistent_dma_mask(pdev,
+DMA_BIT_MASK(32)))
+-		goto out_disable_pdev;
+ 	/*
+ 	 * If the quirk31 bit is set, the adapter needs adapter
+ 	 * to driver communication memory to be allocated below 2gig
+ 	 */
+ 	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
+-		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(31)) ||
+-				pci_set_consistent_dma_mask(pdev,
+DMA_BIT_MASK(31)))
+-			goto out_disable_pdev;
++		dmamask = DMA_BIT_MASK(31);
++	else
++		dmamask = DMA_BIT_MASK(32);
++
++	if (pci_set_dma_mask(pdev, dmamask) ||
++			pci_set_consistent_dma_mask(pdev, dmamask))
++		goto out_disable_pdev;
+ 
+ 	pci_set_master(pdev);
+ 
+-- 
+1.7.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
