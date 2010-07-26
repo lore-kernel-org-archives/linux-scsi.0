@@ -1,72 +1,39 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: [PATCH][Resend #2] Do not set DMA mask to 32 bit first if adapter only supports 31
-Date: Mon, 26 Jul 2010 08:07:44 +0200
-Message-ID: <201007260807.45533.eike-kernel@sf-tec.de>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: improper use of the notifier API in scsi_dh_notifier()
+Date: Mon, 26 Jul 2010 09:05:28 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1007260859380.9816@axis700.grange>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:57326 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752121Ab0GZGHs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2010 02:07:48 -0400
+Received: from mailout-de.gmx.net ([213.165.64.23]:52960 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753503Ab0GZHFV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jul 2010 03:05:21 -0400
+Received: from lyakh (helo=localhost)
+	by axis700.grange with local-esmtp (Exim 4.63)
+	(envelope-from <g.liakhovetski@gmx.de>)
+	id 1OdHke-0004lF-Nv
+	for linux-scsi@vger.kernel.org; Mon, 26 Jul 2010 09:05:28 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@adaptec.com
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
 
->From 1c2f6ce5be5890ea7151ada3602699566afdd060 Mon Sep 17 00:00:00 2001
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Date: Wed, 1 Jul 2009 22:43:39 +0200
+Hi
 
-Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+There seem to be a couple of bogus notifier API uses in the kernel, 
+specifically, wrong return codes from the notifier routine. One of them is 
+in scsi_dh_notifier(), which can return a negative error code, which is 
+not what you're supposed to return from a notifier routine. Apart from 
+being just a wrong use of the API, this also will trigger the
+
+	if ((ret & NOTIFY_STOP_MASK) == NOTIFY_STOP_MASK)
+
+test in notifier_call_chain() and thus prevent further notifiers from 
+being called. Am I missing something?
+
+Thanks
+Guennadi
 ---
- drivers/scsi/aacraid/linit.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
-
-James, it looks like people at Adaptec don't care if you send patches in. That 
-also applies to at least one patch from Julia Lawall that is waiting since 
-December. What next?
-
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 33898b6..cad6f9a 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1091,6 +1091,7 @@ static int __devinit aac_probe_one(struct pci_dev *pdev,
- 	struct list_head *insert = &aac_devices;
- 	int error = -ENODEV;
- 	int unique_id = 0;
-+	u64 dmamask;
- 
- 	list_for_each_entry(aac, &aac_devices, entry) {
- 		if (aac->id > unique_id)
-@@ -1104,17 +1105,18 @@ static int __devinit aac_probe_one(struct pci_dev 
-*pdev,
- 		goto out;
- 	error = -ENODEV;
- 
--	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) ||
--			pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)))
--		goto out_disable_pdev;
- 	/*
- 	 * If the quirk31 bit is set, the adapter needs adapter
- 	 * to driver communication memory to be allocated below 2gig
- 	 */
- 	if (aac_drivers[index].quirks & AAC_QUIRK_31BIT)
--		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(31)) ||
--				pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(31)))
--			goto out_disable_pdev;
-+		dmamask = DMA_BIT_MASK(31);
-+	else
-+		dmamask = DMA_BIT_MASK(32);
-+
-+	if (pci_set_dma_mask(pdev, dmamask) ||
-+			pci_set_consistent_dma_mask(pdev, dmamask))
-+		goto out_disable_pdev;
- 
- 	pci_set_master(pdev);
- 
--- 
-1.7.1
-
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
+http://www.open-technology.de/
