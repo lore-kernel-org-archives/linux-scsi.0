@@ -1,63 +1,60 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: rq-based mpath failed path on SCSI target failure (malformed
- discard)
-Date: Mon, 26 Jul 2010 11:00:00 -0400
-Message-ID: <20100726150000.GA31293@redhat.com>
-References: <20100726133008.GA26771@redhat.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH][Resend #2] Do not set DMA mask to 32 bit first if adapter only supports 31
+Date: Mon, 26 Jul 2010 17:46:22 +0200
+Message-ID: <201007261746.29454.eike-kernel@sf-tec.de>
+References: <201007260807.45533.eike-kernel@sf-tec.de> <FD2BDBE06AC58549AE9E16C08B45675D03B14F61@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart51209041.1ETlfGFXY7";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29660 "EHLO mx1.redhat.com"
+Received: from mail.sf-mail.de ([62.27.20.61]:51160 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247Ab0GZPAO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Jul 2010 11:00:14 -0400
-Content-Disposition: inline
-In-Reply-To: <20100726133008.GA26771@redhat.com>
+	id S1752065Ab0GZPq3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Jul 2010 11:46:29 -0400
+In-Reply-To: <FD2BDBE06AC58549AE9E16C08B45675D03B14F61@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com
+To: Achim Leubner <Achim_Leubner@pmc-sierra.com>
+Cc: aacraid@adaptec.com, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Julia Lawall <julia@diku.dk>
 
-On Mon, Jul 26 2010 at  9:30am -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
+--nextPart51209041.1ETlfGFXY7
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-> Hi,
-> 
-> I have been implementing discard support for the various DM targets.  I
-> have a LUN that requires a 4K alignment for all discard requests.  I
-> forced the issue (by misconfiguring the alignment such that discards
-> would be misaligned).  Multipath failed the path once the SCSI layer got
-> the following error.
-> 
-> My question: shouldn't mpath _not_ fail the path for "Illegal
-> Request".. "Parameter value invalid"?  The same request would fail on
-> any path given that the failure is on the target side (rejecting the
-> malformed discard request).  Following setup is ext4 FS ontop of linear
-> DM mapping (dm-2) ontop of request-based mpath mapping (dm-1):
-> 
-> EXT4-fs (dm-2): mounted filesystem with ordered data mode
-> sd 3:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> sd 3:0:0:0: [sda] Sense Key : Illegal Request [current] 
-> Info fld=0x0
-> sd 3:0:0:0: [sda] Add. Sense: Parameter value invalid
-> sd 3:0:0:0: [sda] CDB: Write same(16): 93 08 00 00 00 00 00 00 45 82 00 00 03 00 00 00
-> end_request: I/O error, dev sda, sector 17794
-> device-mapper: multipath: Failing path 8:0.
+Achim Leubner wrote:
+> Hi Rolf,
+>=20
+> The patch looks good for me so from my side we can include it. Sorry for
+> the delay - I will try to give quick answers for future requests. Please
+> pay attention that my personal email address has changed because we are
+> now part of PMC-Sierra Inc. But aacraid@adaptec.com remains active.
 
-The following patch sorts this out in multipath; special-cases discard
-requests so that they don't enduce path failures:
+Can I get an Acked-by of any of you so James can push this for the next mer=
+ge=20
+window?
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index ec2b43e..125c80f 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -1272,6 +1272,9 @@ static int do_end_io(struct multipath *m, struct request *clone,
- 	if (error == -EOPNOTSUPP)
- 		return error;
- 
-+	if (clone->cmd_flags & REQ_DISCARD)
-+		return error;   /* pass all discard request failures up */
-+
- 	if (mpio->pgpath)
- 		fail_path(mpio->pgpath);
- 
+Also please have a look at the patch at
+
+http://marc.info/?l=3Dlinux-scsi&m=3D127472836901937&w=3D2
+
+and give that an Acked-by, too.
+
+Eike
+
+--nextPart51209041.1ETlfGFXY7
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAkxNrdUACgkQXKSJPmm5/E5xxgCfd6G+SXXkkekjX1jSwaUq8RsP
+ZPYAoKgFf3Z6g0dY+XmZT+xKQOsA67Zt
+=XUUb
+-----END PGP SIGNATURE-----
+
+--nextPart51209041.1ETlfGFXY7--
