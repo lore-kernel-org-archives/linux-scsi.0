@@ -1,132 +1,64 @@
-From: Vasu Dev <vasu.dev@linux.intel.com>
-Subject: Re: [PATCH 03/28] libfc: IO errors on link down due to cable unplug
-Date: Tue, 27 Jul 2010 14:32:00 -0700
-Message-ID: <1280266320.31061.2590.camel@vi2.jf.intel.com>
-References: <20100720221904.17116.78553.stgit@localhost.localdomain>
-	 <20100720221920.17116.59505.stgit@localhost.localdomain>
-	 <4C466986.5040801@cs.wisc.edu>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: scsi-next fail to be compiled
+Date: Tue, 27 Jul 2010 14:45:12 -0700
+Message-ID: <4C4F5368.9000708@kernel.org>
+References: <4C4F2BC0.6030905@kernel.org>	 ,<1280257446.2833.268.camel@mulgrave.site>	 <5E4F49720D0BAD499EE1F01232234BA871287C9628@AVEXMB1.qlogic.org>,<1280263949.2833.441.camel@mulgrave.site> <5E4F49720D0BAD499EE1F01232234BA871287C962A@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:2749 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752674Ab0G0VcD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2010 17:32:03 -0400
-In-Reply-To: <4C466986.5040801@cs.wisc.edu>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:44155 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634Ab0G0VqK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2010 17:46:10 -0400
+In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA871287C962A@AVEXMB1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Robert Love <robert.w.love@intel.com>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, devel@open-fcoe.org
+To: Ravi Anand <ravi.anand@qlogic.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2010-07-20 at 22:29 -0500, Mike Christie wrote:
-> On 07/20/2010 05:19 PM, Robert Love wrote:
-> > From: Vasu Dev<vasu.dev@intel.com>
-> >
-> > In this case, sync IO fails with EIO(5) errors as:-
-> >
-> > "Thread:1 System call error:5 - Input/output error (::pwrite() failed)".
-> >
-> > This is due to IO time out while libfc doing link down processing
-> > to block all rports and if timed out IO was at last retry
-> > attempt then it fails to user with EIO error followed by
-> > these log messages.
-> >
-> > [77848.612169] host2: rport bf0015: Delete port
-> > [77848.612221] host2: rport e10aef: work delete
-> > [77848.612232] host2: rport e10002: work event 3
-> > [77848.612422] sd 2:0:1:1: [sdi] Unhandled error code
-> > [77848.612426] sd 2:0:1:1: [sdi] Result: hostbyte=DID_ERROR
-> > driverbyte=DRIVER_OK
-> > [77848.612431] sd 2:0:1:1: [sdi] CDB: Write(10): 2a 00 00 00 11 20 00 00 20 00
-> > [77848.612445] end_request: I/O error, dev sdi, sector 4384
-> > [77848.612553] sd 2:0:1:2: [sdj] Unhandled error code
-> >
-> > To fix these EIO errors, such timed out incomplete IOs needs
-> > to be re-queued without counting retry attempt and this patch
-> > does that using DID_REQUEUE scsi code.
-> >
-> > Signed-off-by: Vasu Dev<vasu.dev@intel.com>
-> > Signed-off-by: Robert Love<robert.w.love@intel.com>
-> > ---
-> >   drivers/scsi/libfc/fc_fcp.c |    5 +++++
-> >   1 files changed, 5 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-> > index a0a3ae7..61a1297 100644
-> > --- a/drivers/scsi/libfc/fc_fcp.c
-> > +++ b/drivers/scsi/libfc/fc_fcp.c
-> > @@ -1971,6 +1971,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
-> >   		break;
-> >   	}
-> >
-> > +	if (lport->state != LPORT_ST_READY&&  fsp->status_code != FC_COMPLETE) {
-> > +		sc_cmd->result = (DID_REQUEUE<<  16);
-> > +		FC_FCP_DBG(fsp, "Returning DID_REQUEUE to scsi-ml\n");
-> > +	}
-> > +
+On 07/27/2010 01:56 PM, Ravi Anand wrote:
 > 
-> If it is a tape command, you do not want to use DID_REQUEUE do you?
+>>> On Tue, 2010-07-27 James Bottomley wrote:
+>> On Tue, 2010-07-27 at 13:45 -0700, Ravi Anand wrote:
+>>
+>>> On Tue, 2010-07-27 James Bottomley wrote:
+>>> On Tue, 2010-07-27 at 11:56 -0700, Yinghai Lu wrote:
+>>> LD      drivers/scsi/built-in.o
+>>> drivers/scsi/qla4xxx/built-in.o: In function `qla82xx_idc_unlock':
+>>> (.text+0x8814): multiple definition of `qla82xx_idc_unlock'
+>>> drivers/scsi/qla2xxx/built-in.o:(.text+0x2ea14): first defined here
+>>> drivers/scsi/qla2xxx/built-in.o:(.text+0x30c56): first defined here
+>>> make[1]: *** [drivers/scsi/built-in.o] Error 1
+>>> make: *** [drivers/scsi/] Error 2
+>>
+>>> This is because exactly the same functions appear in the qla2xxx/ and
+>>> qla4xxx/ directories
+>>
+>>> Qlogic people, please get this sorted out now, otherwise I'll drop the
+>>> qla4xxx update before sending to Linus
+>>
+>> We will try to resolve this ASAP.
+> 
+>> Thanks
+> 
+>>   When are you planning to send it to Linus ?
+> 
+>> Whenever he opens the merge window ... he's been making noises like it
+>> will be this week.
+> 
+>>> The best option would be to separate out the 82xx functions so that both
+>>> 2xxx and 4xxx can use them.  In the interim, you could add a
+>>> discriminator prefix.
+>>
+>> We will put in discriminator prefix and  repost the patches.
+> 
+>> Just the one patch that adds the 82xx support, if possible ... that way
+>> I can just swap the bad one out.
+> 
+> Most likely yes - it will be a single 82xx patch which you can swap out.
 > 
 
-I wasn't sure of using DID_REQUEUE here and therefore I did RFC first at
-http://www.open-fcoe.org/pipermail/devel/2010-June/010360.html.  As I
-understand DID_REQUEUE would block the sdev and would do unconditional
-retry and now I see that is issue with tapes as you pointed above, so
-I'll remove its use here but help me understand use of DID_REQUEUE, I
-mean are LLLD expected to make additional checks before indicating
-DID_REQUEUE to scsi-ml ? 
+so qa2xxx and qa4xxx could be used with 82xx at same time?
 
-> You are using the fc class API to delete the rport in this scenario, 
-> right? 
-
-Yes.
-
-> If so normally I think you would use DID_TRANSPORT_DISRUPTED. 
-> This is going to give you an error if it is the last retry like 
-> DID_ERROR though.
-> 
-
-Effectively both would do same, so changing DID_TRANSPORT_DISRUPTED
-won't change anything or perhaps I'm missing something here.
-
-> It seems weird to try and work around the IO erorr in this case because 
-> it is the last retry so it should fail. If the port keeps going down and 
-> up, then with your patch you could keep retrying the IO forever.
-> 
-
-I think last try should not fail due to link down if rports comes back
-before dev_loss_tmo or fast_io_fail_tmo, such IOs should get their last
-try attempt again once rport are back instead throwing IO error just
-before port is getting blocked, that is the whole purpose of rport block
-states.
-
-> This isn't one of those races where you are blocking the rport, but the 
-> IO keeps coming around so the retries are used really quickly right (the 
-> driver looks like it has the fc class and internal state checks to 
-> prevent this but I wanted to make sure).
-
-I'm trying to fix IO error due to failed last attempt on a IO just after
-link down and its rport yet to move to block state from pending rport
-event_work. The libfc already has checks once rport or lport no longer
-ready for new IO try and that is not an issue here. It is very rare case
-with very tiny time window as rport block, so I can replace DID_REQUEUE
-here by DID_IMM_RETRY and I verified that works, will that be okay ?
-
-This tiny time windows can be further reduced by use of wmb() on rport
-state change to block and lport getting out of ready since their states
-are checked w/o lock in queuecommand path. I can do that as separate
-patch only if needed and it really helps some corner case.
-
-Sorry for being late on this and I just noticed James just applied this
-patch, so I'll provide separate patch to remove DID_REQUEUE for tape
-devices.
-
-	Thanks
-	Vasu
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Yinghai
