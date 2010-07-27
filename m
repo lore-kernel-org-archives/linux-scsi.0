@@ -1,90 +1,49 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH] BNX2I: Added fix for NOP-Out response panic from
- unsolicited NOP-In
-Date: Tue, 27 Jul 2010 09:12:42 -0700
-Message-ID: <1280247162-12781-1-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] mpt2sas: driver fails to recover from injected PCIe
+ bus errors
+Date: Tue, 27 Jul 2010 11:17:47 -0500
+Message-ID: <1280247467.2833.77.camel@mulgrave.site>
+References: <20100708204431.GA1419@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2959 "EHLO mms1.broadcom.com"
+Received: from cantor.suse.de ([195.135.220.2]:42891 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751716Ab0G0QLS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2010 12:11:18 -0400
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
+	id S1750980Ab0G0QRw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2010 12:17:52 -0400
+In-Reply-To: <20100708204431.GA1419@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@novell.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
+To: Eric Moore <eric.moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-The patch fixes the following situations where NOP-Out pkt is called for:
-- local unsolicited NOP-Out requests (requesting no NOP-In response)
-- local NOP-Out responses to unsolicited NOP-In requests
- 
-kernel panic is observed due to double session spin_lock requests; one in the
-bnx2i_process_nopin_local_cmpl routine in bnx2i_hwi.c and the other in the
-iscsi_put_task routine in libiscsi.c
+On Thu, 2010-07-08 at 14:44 -0600, Eric Moore wrote:
+> fixes surrounding PCIe enhanced error handling:
+> 
+> (1) We need to reject all request generated internaly inside the driver as well
+> as request arriving from the scsi mid layer when PCIe EEH is active. The fix is
+> to add a per adapter flag called pci_error_recovery which is checked thru out
+> the driver when request are generated.
+> 
+> (2) We don't need to call the pci_driver->remove directly from the PCIe
+> callbacks becuase its already called from the PCIe EEH code. In its place we are
+> shutting down the watchdog timer, and flushing back all pending IO.
+> 
+> (3) We need to save and restore the pci state across PCIe EEH handling.
+> 
+> Signed-off-by: Eric Moore <eric.moore@lsi.com>
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> old mode 100644
+> new mode 100755
 
-The proposed fix is to export the currently static __iscsi_put_task() routine
-and have bnx2i call it directly instead of the iscsi_put_task() routine which
-holds the session spin lock.
+Will you watch this type of thing, please?  This changes all the file
+modes to executable.  Linus particularly watches for this and will go
+into a kill frenzy if he sees it.
 
+I've fixed it up this time.
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Reviewed-by: Michael Chan <mchan@broadcom.com>
-Reviewed-by: Anil Veerabhadrappa <anilgv@broadcom.com>
-Acked-by: Benjamin Li <benli@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_hwi.c |    2 +-
- drivers/scsi/libiscsi.c        |    3 ++-
- include/scsi/libiscsi.h        |    1 +
- 3 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index d23fc25..58cd7fc 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1512,7 +1512,7 @@ static void bnx2i_process_nopin_local_cmpl(struct iscsi_session *session,
- 	task = iscsi_itt_to_task(conn,
- 				 nop_in->itt & ISCSI_NOP_IN_MSG_INDEX);
- 	if (task)
--		iscsi_put_task(task);
-+		__iscsi_put_task(task);
- 	spin_unlock(&session->lock);
- }
- 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 633e090..b63e2a4 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -539,11 +539,12 @@ void __iscsi_get_task(struct iscsi_task *task)
- }
- EXPORT_SYMBOL_GPL(__iscsi_get_task);
- 
--static void __iscsi_put_task(struct iscsi_task *task)
-+void __iscsi_put_task(struct iscsi_task *task)
- {
- 	if (atomic_dec_and_test(&task->refcount))
- 		iscsi_free_task(task);
- }
-+EXPORT_SYMBOL_GPL(__iscsi_put_task);
- 
- void iscsi_put_task(struct iscsi_task *task)
- {
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index ae5196a..2ea9aec 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -420,6 +420,7 @@ extern struct iscsi_task *iscsi_itt_to_ctask(struct iscsi_conn *, itt_t);
- extern struct iscsi_task *iscsi_itt_to_task(struct iscsi_conn *, itt_t);
- extern void iscsi_requeue_task(struct iscsi_task *task);
- extern void iscsi_put_task(struct iscsi_task *task);
-+extern void __iscsi_put_task(struct iscsi_task *task);
- extern void __iscsi_get_task(struct iscsi_task *task);
- extern void iscsi_complete_scsi_task(struct iscsi_task *task,
- 				     uint32_t exp_cmdsn, uint32_t max_cmdsn);
--- 
-1.7.0.5
+James
 
 
