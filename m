@@ -1,157 +1,108 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 03/28] libfc: IO errors on link down due to cable unplug
-Date: Tue, 27 Jul 2010 17:08:44 -0500
-Message-ID: <4C4F58EC.8010009@cs.wisc.edu>
-References: <20100720221904.17116.78553.stgit@localhost.localdomain>	 <20100720221920.17116.59505.stgit@localhost.localdomain>	 <4C466986.5040801@cs.wisc.edu> <1280266320.31061.2590.camel@vi2.jf.intel.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 2/3 ver 2] SCSI: implement runtime Power Management
+Date: Tue, 27 Jul 2010 17:21:42 -0500
+Message-ID: <1280269302.2833.516.camel@mulgrave.site>
+References: <Pine.LNX.4.44L0.1006171036540.1915-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51203 "EHLO sabe.cs.wisc.edu"
+Received: from cantor2.suse.de ([195.135.220.15]:39392 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751331Ab0G0WFI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2010 18:05:08 -0400
-In-Reply-To: <1280266320.31061.2590.camel@vi2.jf.intel.com>
+	id S1751031Ab0G0WVt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2010 18:21:49 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1006171036540.1915-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@linux.intel.com>
-Cc: Robert Love <robert.w.love@intel.com>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, devel@open-fcoe.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On 07/27/2010 04:32 PM, Vasu Dev wrote:
-> On Tue, 2010-07-20 at 22:29 -0500, Mike Christie wrote:
->> On 07/20/2010 05:19 PM, Robert Love wrote:
->>> From: Vasu Dev<vasu.dev@intel.com>
->>>
->>> In this case, sync IO fails with EIO(5) errors as:-
->>>
->>> "Thread:1 System call error:5 - Input/output error (::pwrite() failed)".
->>>
->>> This is due to IO time out while libfc doing link down processing
->>> to block all rports and if timed out IO was at last retry
->>> attempt then it fails to user with EIO error followed by
->>> these log messages.
->>>
->>> [77848.612169] host2: rport bf0015: Delete port
->>> [77848.612221] host2: rport e10aef: work delete
->>> [77848.612232] host2: rport e10002: work event 3
->>> [77848.612422] sd 2:0:1:1: [sdi] Unhandled error code
->>> [77848.612426] sd 2:0:1:1: [sdi] Result: hostbyte=DID_ERROR
->>> driverbyte=DRIVER_OK
->>> [77848.612431] sd 2:0:1:1: [sdi] CDB: Write(10): 2a 00 00 00 11 20 00 00 20 00
->>> [77848.612445] end_request: I/O error, dev sdi, sector 4384
->>> [77848.612553] sd 2:0:1:2: [sdj] Unhandled error code
->>>
->>> To fix these EIO errors, such timed out incomplete IOs needs
->>> to be re-queued without counting retry attempt and this patch
->>> does that using DID_REQUEUE scsi code.
->>>
->>> Signed-off-by: Vasu Dev<vasu.dev@intel.com>
->>> Signed-off-by: Robert Love<robert.w.love@intel.com>
->>> ---
->>>    drivers/scsi/libfc/fc_fcp.c |    5 +++++
->>>    1 files changed, 5 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
->>> index a0a3ae7..61a1297 100644
->>> --- a/drivers/scsi/libfc/fc_fcp.c
->>> +++ b/drivers/scsi/libfc/fc_fcp.c
->>> @@ -1971,6 +1971,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
->>>    		break;
->>>    	}
->>>
->>> +	if (lport->state != LPORT_ST_READY&&   fsp->status_code != FC_COMPLETE) {
->>> +		sc_cmd->result = (DID_REQUEUE<<   16);
->>> +		FC_FCP_DBG(fsp, "Returning DID_REQUEUE to scsi-ml\n");
->>> +	}
->>> +
->>
->> If it is a tape command, you do not want to use DID_REQUEUE do you?
->>
->
-> I wasn't sure of using DID_REQUEUE here and therefore I did RFC first at
-> http://www.open-fcoe.org/pipermail/devel/2010-June/010360.html.  As I
-> understand DID_REQUEUE would block the sdev and would do unconditional
-> retry and now I see that is issue with tapes as you pointed above, so
-> I'll remove its use here but help me understand use of DID_REQUEUE, I
-> mean are LLLD expected to make additional checks before indicating
-> DID_REQUEUE to scsi-ml ?
+On Thu, 2010-06-17 at 10:41 -0400, Alan Stern wrote:
+> This patch (as1398b) adds runtime PM support to the SCSI layer.  Only
+> the machanism is provided; use of it is up to the various high-level
+> drivers, and the patch doesn't change any of them.  Except for sg --
+> the patch expicitly prevents a device from being runtime-suspended
+> while its sg device file is open.
+> 
+> The implementation is simplistic.  In general, hosts and targets are
+> automatically suspended when all their children are asleep, but for
+> them the runtime-suspend code doesn't actually do anything.  (A host's
+> runtime PM status is propagated up the device tree, though, so a
+> runtime-PM-aware lower-level driver could power down the host adapter
+> hardware at the appropriate times.)  There are comments indicating
+> where a transport class might be notified or some other hooks added.
+> 
+> LUNs are runtime-suspended by calling the drivers' existing suspend
+> handlers (and likewise for runtime-resume).  Somewhat arbitrarily, the
+> implementation delays for 100 ms before suspending an eligible LUN.
+> This is because there typically are occasions during bootup when the
+> same device file is opened and closed several times in quick
+> succession.
+> 
+> The way this all works is that the SCSI core increments a device's
+> PM-usage count when it is registered.  If a high-level driver does
+> nothing then the device will not be eligible for runtime-suspend
+> because of the elevated usage count.  If a high-level driver wants to
+> use runtime PM then it can call scsi_autopm_put_device() in its probe
+> routine to decrement the usage count and scsi_autopm_get_device() in
+> its remove routine to restore the original count.
+> 
+> Hosts, targets, and LUNs are not suspended while they are being probed
+> or removed, or while the error handler is running.  In fact, a fairly
+> large part of the patch consists of code to make sure that things
+> aren't suspended at such times.
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> 
+> ---
+> 
+> Version 2 changes:
+> 
+> 	Rebase to apply on top of the revised 1/3 patch.
+> 
+> 	Add a KERN_ERR log level to the SCSI_LOG_ERROR_RECOVERY
+> 	call, as recommended by checkpatch.
+> 
+> Incidentally, although I didn't mention it before, this patch assumes 
+> that the 7-part series beginning here:
+> 
+> 	http://marc.info/?l=linux-scsi&m=127551091314515&w=2
+> 
+> has been merged.
+> 
+> 
+> Index: usb-2.6/drivers/scsi/scsi_priv.h
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/scsi_priv.h
+> +++ usb-2.6/drivers/scsi/scsi_priv.h
+> @@ -7,6 +7,7 @@ struct request_queue;
+>  struct request;
+>  struct scsi_cmnd;
+>  struct scsi_device;
+> +struct scsi_target;
+>  struct scsi_host_template;
+>  struct Scsi_Host;
+>  struct scsi_nl_hdr;
+> @@ -147,7 +148,18 @@ static inline void scsi_netlink_exit(voi
+>  /* scsi_pm.c */
+>  #ifdef CONFIG_PM_OPS
+>  extern const struct dev_pm_ops scsi_bus_pm_ops;
+> +#ifdef CONFIG_PM_RUNTIME
+> +extern void scsi_autopm_get_target(struct scsi_target *);
+> +extern void scsi_autopm_put_target(struct scsi_target *);
+> +extern int scsi_autopm_get_host(struct Scsi_Host *);
+> +extern void scsi_autopm_put_host(struct Scsi_Host *);
+>  #else
+> +static inline void scsi_autopm_get_target(struct scsi_target *) {}
+> +static inline void scsi_autopm_put_target(struct scsi_target *) {}
+> +static inline int scsi_autopm_get_host(struct Scsi_Host *) { return 0; }
+> +static inline void scsi_autopm_put_host(struct Scsi_Host *) {}
 
+You didn't compile this, did you?  The compiler gets distinctly annoyed
+to see an inline function with no actual variable for the argument ...
 
-I think you would want to use it in case where you want to block the 
-sdev and you know the IO had not started. So some drivers use it if they 
-get an error the indicated the port/target rejected the IO before it 
-even started and there might be a tmp resource issue.
+I fixed up this and the one in scsi_device.h
 
->
->> You are using the fc class API to delete the rport in this scenario,
->> right?
->
-> Yes.
->
->> If so normally I think you would use DID_TRANSPORT_DISRUPTED.
->> This is going to give you an error if it is the last retry like
->> DID_ERROR though.
->>
->
-> Effectively both would do same, so changing DID_TRANSPORT_DISRUPTED
-> won't change anything or perhaps I'm missing something here.
-
-The behavior is the same, but the error code that gets logged is more 
-clear I think.
-
->
->> It seems weird to try and work around the IO erorr in this case because
->> it is the last retry so it should fail. If the port keeps going down and
->> up, then with your patch you could keep retrying the IO forever.
->>
->
-> I think last try should not fail due to link down if rports comes back
-> before dev_loss_tmo or fast_io_fail_tmo, such IOs should get their last
-> try attempt again once rport are back instead throwing IO error just
-> before port is getting blocked, that is the whole purpose of rport block
-> states.
-
-Just to make sure we are on the same page. Didn't the command get a 
-chance to run on its last retry, but the port came down while it was 
-executing. I am just saying that should count as a try, but with your 
-patch you are giving it another retry. So instead of 5 it gets 6. And 
-actually you are throwing out retries for this case so it runs until it 
-times out (times out in scsi_softirq_done).
+James
 
 
-If you want that behavior and people argee it is the right think to do 
-then I think we should apply it to all drivers, so users can expect the 
-same behavior. Use DID_TRANSPORT_DISRUPTED in the driver, but then in 
-scsi_error.c change that to check for tape devices. In the non tape case 
-then just always retry until the command times out (time out in 
-scsi_softirq_done. I do not mean timeout like when the scsi eh runs).
-
-
-If the command never got a chance to start, then forget all this. I am 
-wrong and DID_REQUEUE is fine.
-
-
->
->> This isn't one of those races where you are blocking the rport, but the
->> IO keeps coming around so the retries are used really quickly right (the
->> driver looks like it has the fc class and internal state checks to
->> prevent this but I wanted to make sure).
->
-> I'm trying to fix IO error due to failed last attempt on a IO just after
-> link down and its rport yet to move to block state from pending rport
-> event_work. The libfc already has checks once rport or lport no longer
-> ready for new IO try and that is not an issue here. It is very rare case
-> with very tiny time window as rport block, so I can replace DID_REQUEUE
-> here by DID_IMM_RETRY and I verified that works, will that be okay ?
-
-DID_IMM_RETRY has the exact same issues.
-
-
->
-> This tiny time windows can be further reduced by use of wmb() on rport
-> state change to block and lport getting out of ready since their states
-> are checked w/o lock in queuecommand path. I can do that as separate
-> patch only if needed and it really helps some corner case.
->
-
-That is not really the issue.
