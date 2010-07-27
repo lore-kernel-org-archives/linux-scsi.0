@@ -1,53 +1,91 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [RFC] relaxed barrier semantics
-Date: Tue, 27 Jul 2010 18:56:27 +0200
-Message-ID: <20100727165627.GA474@lst.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] BNX2I: Added fix for NOP-Out response panic from unsolicited
+ NOP-In
+Date: Tue, 27 Jul 2010 12:27:06 -0500
+Message-ID: <4C4F16EA.9010100@cs.wisc.edu>
+References: <Eddie Wai <eddie.wai@broadcom.com> <1280247162-12781-1-git-send-email-eddie.wai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: jaxboe@fusionio.com, tj@kernel.org, James.Bottomley@suse.de
-Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, jack@suse.cz, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57232 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752449Ab0G0RX1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2010 13:23:27 -0400
+In-Reply-To: <1280247162-12781-1-git-send-email-eddie.wai@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eddie Wai <eddie.wai@broadcom.com>
+Cc: James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
 
-I've been dealin with reports of massive slowdowns due to the barrier
-option if used with storage arrays that use do not actually have a
-volatile write cache.
+On 07/27/2010 11:12 AM, Eddie Wai wrote:
+> The patch fixes the following situations where NOP-Out pkt is called for:
+> - local unsolicited NOP-Out requests (requesting no NOP-In response)
+> - local NOP-Out responses to unsolicited NOP-In requests
+>
+> kernel panic is observed due to double session spin_lock requests; one in the
+> bnx2i_process_nopin_local_cmpl routine in bnx2i_hwi.c and the other in the
+> iscsi_put_task routine in libiscsi.c
+>
+> The proposed fix is to export the currently static __iscsi_put_task() routine
+> and have bnx2i call it directly instead of the iscsi_put_task() routine which
+> holds the session spin lock.
+>
+>
+> Signed-off-by: Eddie Wai<eddie.wai@broadcom.com>
+> Reviewed-by: Michael Chan<mchan@broadcom.com>
+> Reviewed-by: Anil Veerabhadrappa<anilgv@broadcom.com>
+> Acked-by: Benjamin Li<benli@broadcom.com>
+> ---
+>   drivers/scsi/bnx2i/bnx2i_hwi.c |    2 +-
+>   drivers/scsi/libiscsi.c        |    3 ++-
+>   include/scsi/libiscsi.h        |    1 +
+>   3 files changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> index d23fc25..58cd7fc 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> @@ -1512,7 +1512,7 @@ static void bnx2i_process_nopin_local_cmpl(struct iscsi_session *session,
+>   	task = iscsi_itt_to_task(conn,
+>   				 nop_in->itt&  ISCSI_NOP_IN_MSG_INDEX);
+>   	if (task)
+> -		iscsi_put_task(task);
+> +		__iscsi_put_task(task);
+>   	spin_unlock(&session->lock);
+>   }
+>
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 633e090..b63e2a4 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -539,11 +539,12 @@ void __iscsi_get_task(struct iscsi_task *task)
+>   }
+>   EXPORT_SYMBOL_GPL(__iscsi_get_task);
+>
+> -static void __iscsi_put_task(struct iscsi_task *task)
+> +void __iscsi_put_task(struct iscsi_task *task)
+>   {
+>   	if (atomic_dec_and_test(&task->refcount))
+>   		iscsi_free_task(task);
+>   }
+> +EXPORT_SYMBOL_GPL(__iscsi_put_task);
+>
+>   void iscsi_put_task(struct iscsi_task *task)
+>   {
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index ae5196a..2ea9aec 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -420,6 +420,7 @@ extern struct iscsi_task *iscsi_itt_to_ctask(struct iscsi_conn *, itt_t);
+>   extern struct iscsi_task *iscsi_itt_to_task(struct iscsi_conn *, itt_t);
+>   extern void iscsi_requeue_task(struct iscsi_task *task);
+>   extern void iscsi_put_task(struct iscsi_task *task);
+> +extern void __iscsi_put_task(struct iscsi_task *task);
+>   extern void __iscsi_get_task(struct iscsi_task *task);
+>   extern void iscsi_complete_scsi_task(struct iscsi_task *task,
+>   				     uint32_t exp_cmdsn, uint32_t max_cmdsn);
 
-The reason for that is that sd.c by default sets the ordered mode to
-QUEUE_ORDERED_DRAIN when the WCE bit is not set.  This is in accordance
-with Documentation/block/barriers.txt but missed out on an important
-point: most filesystems (at least all mainstream ones) couldn't care
-less about the ordering semantics barrier operations provide.  In fact
-they are actively harmful as they cause us to stall the whole I/O
-queue while otherwise we'd only have to wait for a rather limited
-amount of I/O.
+Patch is correct.
 
-The simplest fix is to not use write barrier for devices that do not
-have a volatile write cache, by specifying the nobarrier option.  This
-has a huge disadvantage that it requires manual user interaction instead
-of simply working out of the box.  There are two better automatic
-options:
-
- (1) if a filesystem detects the QUEUE_ORDERED_DRAIN mode, but doesn't
-     actually need the barrier semantics it simply disables all calls
-     to blockdev_issue_flush and never sets the REQ_HARDBARRIER flag
-     on writes.  This is a relatively safe option, but it requires
-     code in all filesystems, as well as in the raid / device mapper
-     modules so that they can cope with it.
- (2) never set the QUEUE_ORDERED_DRAIN, and remove the code related to
-     it aftet auditing that no filesystem actually relies on this
-     behaviour.  Currently the block layer fails REQ_HARDBARRIER
-     if QUEUE_ORDERED_NONE is set, so we'd have to fix that as well.
- (3) introduce a new QUEUE_ORDERED_REALLY_NONE which is set by
-     drivers that know no barrier handling is needed.  It's equivalent
-     to QUEUE_ORDERED_NONE except for not failing barrier requests.
-
-I'm tempted to go for variant (2) above, and could use some help
-auditing the filesystems for their use of the barrier semantics.
-
-So far I've only found an explicit depency on this behaviour in
-reiserfs, and there's is guarded by the barrier mount option, so
-we could easily disable it when we know we don't have the full
-barrier semantics.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
