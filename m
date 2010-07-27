@@ -1,68 +1,71 @@
-From: Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: Re: [PATCH] aic7xxx: Remove OS utility wrappers
-Date: Tue, 27 Jul 2010 20:55:42 +0300
-Message-ID: <4C4F1D9E.70007@cs.helsinki.fi>
-References: <1279102377-958-1-git-send-email-penberg@cs.helsinki.fi>	 <4C43F3DE.8000405@suse.de> <1280252404.2833.168.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 17/19] be2iscsi: patch from Randy Dunlap
+Date: Tue, 27 Jul 2010 13:21:59 -0500
+Message-ID: <1280254919.2833.212.camel@mulgrave.site>
+References: <20100721225949.GA9808@serverengines.com>
+	 <4C48C703.70907@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:43985 "EHLO
-	mail.cs.helsinki.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195Ab0G0Rz5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2010 13:55:57 -0400
-In-Reply-To: <1280252404.2833.168.camel@mulgrave.site>
+Received: from cantor.suse.de ([195.135.220.2]:47737 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751694Ab0G0SWH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2010 14:22:07 -0400
+In-Reply-To: <4C48C703.70907@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>, =?UTF-8?B?VXdlIEtsZWluZS1Lw7ZuaWc=?= <u.kleine-koenig@pengutronix.de>, =?UTF-8?B?QW5kcsOpIEdvZGRhcmQgUm9zYQ==?= <andre.goddard@gmail.com>, linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jayamohan Kalickal <jayamohank@serverengines.com>, linux-scsi@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-James Bottomley wrote:
-> On Mon, 2010-07-19 at 08:42 +0200, Hannes Reinecke wrote:
->> Pekka Enberg wrote:
->>> This patch removes malloc(), free(), and printf() wrappers from the=
- aic7xxx
->>> SCSI driver. I didn't use pr_debug for printf because of some 'clev=
-er' uses of
->>> printf don't compile with the pr_debug. I didn't fix the overeager =
-uses of
->>> GFP_ATOMIC either because I wanted to keep this patch as simple as =
-possible.
->>>
->>> Cc: Hannes Reinecke <hare@suse.de>
->>> Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
->>> Cc: Jiri Kosina <jkosina@suse.cz>
->>> Cc: "Uwe Kleine-K=C3=B6nig" <u.kleine-koenig@pengutronix.de>
->>> Cc: "Andr=C3=A9 Goddard Rosa" <andre.goddard@gmail.com>
->>> Cc: <linux-scsi@vger.kernel.org>
->>> Signed-off-by: Pekka Enberg <penberg@cs.helsinki.fi>
->> Thanks for the work. Long overdue.
->>
->> Acked-by: Hannes Reinecke <hare@suse.de>
->=20
-> A good rule of thumb is compile before acking:
->=20
-> drivers/scsi/aic7xxx/aic7770.c: In function 'aic7770_config':
-> drivers/scsi/aic7xxx/aic7770.c:224: error: implicit declaration of fu=
-nction 'free'
-> drivers/scsi/aic7xxx/aic7770.c:224: error: 'M_DEVBUF' undeclared (fir=
-st use in this function)
-> drivers/scsi/aic7xxx/aic7770.c:224: error: (Each undeclared identifie=
-r is reported only once
-> drivers/scsi/aic7xxx/aic7770.c:224: error: for each function it appea=
-rs in.)
-> make[3]: *** [drivers/scsi/aic7xxx/aic7770.o] Error 1
->=20
-> It looks like a lone missed conversion, so I fixed it up.
+On Thu, 2010-07-22 at 17:32 -0500, Mike Christie wrote:
+> On 07/21/2010 05:59 PM, Jayamohan Kallickal wrote:
+> >    This patch add NET because be2iscsi is using sysfs_format_mac function
+> >    Found and patch originally submitted by Randy Dunlap
+> >
+> > Signed-off-by: Randy Dunlap<randy.dunlap@oracle.com>
+> > Signed-off-by: Jayamohan Kallickal<jayamohank@serverengines.com>
+> > ---
+> >   drivers/scsi/be2iscsi/Kconfig   |    2 +-
+> >   drivers/scsi/be2iscsi/be_main.h |    1 +
+> >   2 files changed, 2 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/scsi/be2iscsi/Kconfig b/drivers/scsi/be2iscsi/Kconfig
+> > index 2952fcd..9d57142 100644
+> > --- a/drivers/scsi/be2iscsi/Kconfig
+> > +++ b/drivers/scsi/be2iscsi/Kconfig
+> > @@ -1,7 +1,7 @@
+> >   config BE2ISCSI
+> >   	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
+> >   	depends on PCI&&  SCSI
+> > -	select SCSI_ISCSI_ATTRS
+> > +	select SCSI_ISCSI_ATTRS&&  NET
+> >
+> 
+> Bah. Ok the code in the patches looks ok, but with this patch I get:
+> 
+> scripts/kconfig/mconf arch/x86/Kconfig
+> drivers/scsi/be2iscsi/Kconfig:4: invalid option
+> make[1]: *** [menuconfig] Error 1
+> make: *** [menuconfig] Error 2
+> 
+> when I try to do
+> 
+> make menuconfig
+> or
+> make oldconfig
 
-Sorry about that, I thought I tested all the configurations. Thanks for=
-=20
-fixing it up!
+That's because the patch is wrong.  The && NET shouldn't be on the
+select, it should be on the depends.
 
-			Pekka
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So, next time, I want to see a 
+
+From: A.N Author <ana@acme.org>
+
+at the front of the patch, so I pick up the correct authorship, and the
+rest of the change log they sent in, plus comments about any fixes or
+changes you made, then a signoff set.
+
+James
+
+
