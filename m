@@ -1,49 +1,53 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] mpt2sas: driver fails to recover from injected PCIe
- bus errors
-Date: Tue, 27 Jul 2010 11:17:47 -0500
-Message-ID: <1280247467.2833.77.camel@mulgrave.site>
-References: <20100708204431.GA1419@lsil.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [RFC] relaxed barrier semantics
+Date: Tue, 27 Jul 2010 18:56:27 +0200
+Message-ID: <20100727165627.GA474@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42891 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750980Ab0G0QRw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2010 12:17:52 -0400
-In-Reply-To: <20100708204431.GA1419@lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: jaxboe@fusionio.com, tj@kernel.org, James.Bottomley@suse.de
+Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, jack@suse.cz, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <eric.moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2010-07-08 at 14:44 -0600, Eric Moore wrote:
-> fixes surrounding PCIe enhanced error handling:
-> 
-> (1) We need to reject all request generated internaly inside the driver as well
-> as request arriving from the scsi mid layer when PCIe EEH is active. The fix is
-> to add a per adapter flag called pci_error_recovery which is checked thru out
-> the driver when request are generated.
-> 
-> (2) We don't need to call the pci_driver->remove directly from the PCIe
-> callbacks becuase its already called from the PCIe EEH code. In its place we are
-> shutting down the watchdog timer, and flushing back all pending IO.
-> 
-> (3) We need to save and restore the pci state across PCIe EEH handling.
-> 
-> Signed-off-by: Eric Moore <eric.moore@lsi.com>
-> 
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> old mode 100644
-> new mode 100755
+I've been dealin with reports of massive slowdowns due to the barrier
+option if used with storage arrays that use do not actually have a
+volatile write cache.
 
-Will you watch this type of thing, please?  This changes all the file
-modes to executable.  Linus particularly watches for this and will go
-into a kill frenzy if he sees it.
+The reason for that is that sd.c by default sets the ordered mode to
+QUEUE_ORDERED_DRAIN when the WCE bit is not set.  This is in accordance
+with Documentation/block/barriers.txt but missed out on an important
+point: most filesystems (at least all mainstream ones) couldn't care
+less about the ordering semantics barrier operations provide.  In fact
+they are actively harmful as they cause us to stall the whole I/O
+queue while otherwise we'd only have to wait for a rather limited
+amount of I/O.
 
-I've fixed it up this time.
+The simplest fix is to not use write barrier for devices that do not
+have a volatile write cache, by specifying the nobarrier option.  This
+has a huge disadvantage that it requires manual user interaction instead
+of simply working out of the box.  There are two better automatic
+options:
 
-James
+ (1) if a filesystem detects the QUEUE_ORDERED_DRAIN mode, but doesn't
+     actually need the barrier semantics it simply disables all calls
+     to blockdev_issue_flush and never sets the REQ_HARDBARRIER flag
+     on writes.  This is a relatively safe option, but it requires
+     code in all filesystems, as well as in the raid / device mapper
+     modules so that they can cope with it.
+ (2) never set the QUEUE_ORDERED_DRAIN, and remove the code related to
+     it aftet auditing that no filesystem actually relies on this
+     behaviour.  Currently the block layer fails REQ_HARDBARRIER
+     if QUEUE_ORDERED_NONE is set, so we'd have to fix that as well.
+ (3) introduce a new QUEUE_ORDERED_REALLY_NONE which is set by
+     drivers that know no barrier handling is needed.  It's equivalent
+     to QUEUE_ORDERED_NONE except for not failing barrier requests.
 
+I'm tempted to go for variant (2) above, and could use some help
+auditing the filesystems for their use of the barrier semantics.
 
+So far I've only found an explicit depency on this behaviour in
+reiserfs, and there's is guarded by the barrier mount option, so
+we could easily disable it when we know we don't have the full
+barrier semantics.
