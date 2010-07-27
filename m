@@ -1,52 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Tue, 27 Jul 2010 21:43:05 +0200
-Message-ID: <20100727194305.GC8973@lst.de>
-References: <20100727165627.GA474@lst.de> <20100727175418.GF6820@quack.suse.cz> <20100727183546.GG7347@redhat.com> <1280256165.2833.238.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [patch 02/10] zfcp: Remove SCSI device when removing unit
+Date: Tue, 27 Jul 2010 15:37:55 -0500
+Message-ID: <1280263075.2833.404.camel@mulgrave.site>
+References: <20100716133733.621672000@de.ibm.com>
+	 <20100716134300.006377000@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:50044 "EHLO verein.lst.de"
+Received: from cantor.suse.de ([195.135.220.2]:51971 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751195Ab0G0Tne (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2010 15:43:34 -0400
-Content-Disposition: inline
-In-Reply-To: <1280256165.2833.238.camel@mulgrave.site>
+	id S1751031Ab0G0UiB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2010 16:38:01 -0400
+In-Reply-To: <20100716134300.006377000@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, tj@kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
 
-On Tue, Jul 27, 2010 at 01:42:45PM -0500, James Bottomley wrote:
-> I hope not ... I hope that if the drive reports write through or no
-> cache that we don't enable (flush) barriers by default.
+On Fri, 2010-07-16 at 15:37 +0200, Christof Schmitt wrote:
+> plain text document attachment (705-zfcp-unit-removal.diff)
+> From: Christof Schmitt <christof.schmitt@de.ibm.com>
+> 
+> Configuring a LUN in zfcp, also creates a SCSI device. For
+> consistency, it makes sense to remove the SCSI device when the LUN is
+> deconfigured. Replace the flush_work with the call to
+> scsi_remove_device: scsi_remove_device also takes the scan_mutex that
+> synchronizes itself with any long running device discovery.
 
-drivers/scsi/sd.c:sd_revalidate_disk()
+This one's rejecting:
 
-	if (sdkp->WCE)
-		ordered = sdkp->DPOFUA
-			? QUEUE_ORDERED_DRAIN_FUA : QUEUE_ORDERED_DRAIN_FLUSH;
-	else
-		ordered = QUEUE_ORDERED_DRAIN;
+jejb@mulgrave:~/git/scsi-misc-2.6> patch -p1 < ~/tmp/tmp/02
+patching file drivers/s390/scsi/zfcp_def.h
+patching file drivers/s390/scsi/zfcp_scsi.c
+Hunk #1 FAILED at 564.
+1 out of 1 hunk FAILED -- saving rejects to file
+drivers/s390/scsi/zfcp_scsi.c.rej
 
-	blk_queue_ordered(sdkp->disk->queue, ordered);
+It looks like a missing patch somewhere.
 
-Documentation/block/barrier.txt:
+Could you check the current state of scsi-misc-2.6 (it includes
+scsi-rc-fixes-2.6) and see if I've lost something?
 
-QUEUE_ORDERED_DRAIN
-        Requests are ordered by draining the request queue and cache
-        flushing isn't needed.
+Thanks,
 
-        Sequence: drain => barrier
+James
 
-
-> The problem case is NV cache arrays (usually an array with a battery
-> backed cache).  There's no consistency issue since the array will
-> destage the cache on power fail but it reports a write back cache and we
-> try to use barriers.  This is wrong because we don't need barriers for
-> consistency and they really damage throughput.
-
-The arrays I have access to (various Netapp, IBM and LSI) never report
-write cache enabled.  I've only heard about the above issue from
-historic tales.
 
