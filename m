@@ -1,49 +1,48 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [patch 02/10] zfcp: Remove SCSI device when removing unit
-Date: Tue, 27 Jul 2010 15:37:55 -0500
-Message-ID: <1280263075.2833.404.camel@mulgrave.site>
-References: <20100716133733.621672000@de.ibm.com>
-	 <20100716134300.006377000@de.ibm.com>
+From: Ravi Anand <ravi.anand@qlogic.com>
+Subject: RE: scsi-next fail to be compiled
+Date: Tue, 27 Jul 2010 13:45:49 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA871287C9628@AVEXMB1.qlogic.org>
+References: <4C4F2BC0.6030905@kernel.org>,<1280257446.2833.268.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51971 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751031Ab0G0UiB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Jul 2010 16:38:01 -0400
-In-Reply-To: <20100716134300.006377000@de.ibm.com>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:40452 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728Ab0G0UtT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2010 16:49:19 -0400
+In-Reply-To: <1280257446.2833.268.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
-
-On Fri, 2010-07-16 at 15:37 +0200, Christof Schmitt wrote:
-> plain text document attachment (705-zfcp-unit-removal.diff)
-> From: Christof Schmitt <christof.schmitt@de.ibm.com>
-> 
-> Configuring a LUN in zfcp, also creates a SCSI device. For
-> consistency, it makes sense to remove the SCSI device when the LUN is
-> deconfigured. Replace the flush_work with the call to
-> scsi_remove_device: scsi_remove_device also takes the scan_mutex that
-> synchronizes itself with any long running device discovery.
-
-This one's rejecting:
-
-jejb@mulgrave:~/git/scsi-misc-2.6> patch -p1 < ~/tmp/tmp/02
-patching file drivers/s390/scsi/zfcp_def.h
-patching file drivers/s390/scsi/zfcp_scsi.c
-Hunk #1 FAILED at 564.
-1 out of 1 hunk FAILED -- saving rejects to file
-drivers/s390/scsi/zfcp_scsi.c.rej
-
-It looks like a missing patch somewhere.
-
-Could you check the current state of scsi-misc-2.6 (it includes
-scsi-rc-fixes-2.6) and see if I've lost something?
-
-Thanks,
-
-James
+To: James Bottomley <James.Bottomley@suse.de>, Yinghai Lu <yinghai@kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Andrew Vasquez <an>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
 
+
+>On Tue, 2010-07-27 James Bottomley wrote:
+>On Tue, 2010-07-27 at 11:56 -0700, Yinghai Lu wrote:
+> LD      drivers/scsi/built-in.o
+> drivers/scsi/qla4xxx/built-in.o: In function `qla82xx_idc_unlock':
+> (.text+0x8814): multiple definition of `qla82xx_idc_unlock'
+> drivers/scsi/qla2xxx/built-in.o:(.text+0x2ea14): first defined here
+> drivers/scsi/qla2xxx/built-in.o:(.text+0x30c56): first defined here
+> make[1]: *** [drivers/scsi/built-in.o] Error 1
+> make: *** [drivers/scsi/] Error 2
+
+>This is because exactly the same functions appear in the qla2xxx/ and
+>qla4xxx/ directories
+
+>Qlogic people, please get this sorted out now, otherwise I'll drop the
+>qla4xxx update before sending to Linus
+
+We will try to resolve this ASAP.  When are you planning to send it to Linus ?
+
+>The best option would be to separate out the 82xx functions so that both
+>2xxx and 4xxx can use them.  In the interim, you could add a
+>discriminator prefix.
+
+We will put in discriminator prefix and  repost the patches.
+
+Thanks
+Ravi
