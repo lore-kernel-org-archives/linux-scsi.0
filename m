@@ -1,369 +1,163 @@
-From: "jack wang" <jack_wang@usish.com>
-Subject: RE: Unify SAM_ and SAM_STAT_ macros
-Date: Wed, 28 Jul 2010 09:50:10 +0800
-Message-ID: <84C9DD5AB6E74B4C8CED37654F9BBFF7@usish.com.cn>
-References: <1280263873.2833.437.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 2/3 ver 2] SCSI: implement runtime Power Management
+Date: Tue, 27 Jul 2010 22:57:59 -0500
+Message-ID: <1280289480.2833.1418.camel@mulgrave.site>
+References: <Pine.LNX.4.44L0.1006171036540.1915-100000@iolanthe.rowland.org>
+	 <1280269302.2833.516.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:49086 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439Ab0G1Bua (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2010 21:50:30 -0400
-In-Reply-To: <1280263873.2833.437.camel@mulgrave.site>
+Received: from cantor2.suse.de ([195.135.220.15]:46372 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753330Ab0G1D6I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Jul 2010 23:58:08 -0400
+In-Reply-To: <1280269302.2833.516.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
-Cc: 'Andy Yan' <ayan@marvell.com>, 'Ke Wei' <kewei@marvell.com>, 'Ying Chu' <jasonchu@marvell.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-We have two separate definitions for identical constants with nearly the
-same name.  One comes from the generic headers in scsi.h; the other is
-an enum in libsas.h ... it's causing confusion about which one is
-correct (fortunately they both are).
+On Tue, 2010-07-27 at 17:21 -0500, James Bottomley wrote:
+> On Thu, 2010-06-17 at 10:41 -0400, Alan Stern wrote:
+> > This patch (as1398b) adds runtime PM support to the SCSI layer.  Only
+> > the machanism is provided; use of it is up to the various high-level
+> > drivers, and the patch doesn't change any of them.  Except for sg --
+> > the patch expicitly prevents a device from being runtime-suspended
+> > while its sg device file is open.
+> > 
+> > The implementation is simplistic.  In general, hosts and targets are
+> > automatically suspended when all their children are asleep, but for
+> > them the runtime-suspend code doesn't actually do anything.  (A host's
+> > runtime PM status is propagated up the device tree, though, so a
+> > runtime-PM-aware lower-level driver could power down the host adapter
+> > hardware at the appropriate times.)  There are comments indicating
+> > where a transport class might be notified or some other hooks added.
+> > 
+> > LUNs are runtime-suspended by calling the drivers' existing suspend
+> > handlers (and likewise for runtime-resume).  Somewhat arbitrarily, the
+> > implementation delays for 100 ms before suspending an eligible LUN.
+> > This is because there typically are occasions during bootup when the
+> > same device file is opened and closed several times in quick
+> > succession.
+> > 
+> > The way this all works is that the SCSI core increments a device's
+> > PM-usage count when it is registered.  If a high-level driver does
+> > nothing then the device will not be eligible for runtime-suspend
+> > because of the elevated usage count.  If a high-level driver wants to
+> > use runtime PM then it can call scsi_autopm_put_device() in its probe
+> > routine to decrement the usage count and scsi_autopm_get_device() in
+> > its remove routine to restore the original count.
+> > 
+> > Hosts, targets, and LUNs are not suspended while they are being probed
+> > or removed, or while the error handler is running.  In fact, a fairly
+> > large part of the patch consists of code to make sure that things
+> > aren't suspended at such times.
+> > 
+> > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> > 
+> > ---
+> > 
+> > Version 2 changes:
+> > 
+> > 	Rebase to apply on top of the revised 1/3 patch.
+> > 
+> > 	Add a KERN_ERR log level to the SCSI_LOG_ERROR_RECOVERY
+> > 	call, as recommended by checkpatch.
+> > 
+> > Incidentally, although I didn't mention it before, this patch assumes 
+> > that the 7-part series beginning here:
+> > 
+> > 	http://marc.info/?l=linux-scsi&m=127551091314515&w=2
+> > 
+> > has been merged.
+> > 
+> > 
+> > Index: usb-2.6/drivers/scsi/scsi_priv.h
+> > ===================================================================
+> > --- usb-2.6.orig/drivers/scsi/scsi_priv.h
+> > +++ usb-2.6/drivers/scsi/scsi_priv.h
+> > @@ -7,6 +7,7 @@ struct request_queue;
+> >  struct request;
+> >  struct scsi_cmnd;
+> >  struct scsi_device;
+> > +struct scsi_target;
+> >  struct scsi_host_template;
+> >  struct Scsi_Host;
+> >  struct scsi_nl_hdr;
+> > @@ -147,7 +148,18 @@ static inline void scsi_netlink_exit(voi
+> >  /* scsi_pm.c */
+> >  #ifdef CONFIG_PM_OPS
+> >  extern const struct dev_pm_ops scsi_bus_pm_ops;
+> > +#ifdef CONFIG_PM_RUNTIME
+> > +extern void scsi_autopm_get_target(struct scsi_target *);
+> > +extern void scsi_autopm_put_target(struct scsi_target *);
+> > +extern int scsi_autopm_get_host(struct Scsi_Host *);
+> > +extern void scsi_autopm_put_host(struct Scsi_Host *);
+> >  #else
+> > +static inline void scsi_autopm_get_target(struct scsi_target *) {}
+> > +static inline void scsi_autopm_put_target(struct scsi_target *) {}
+> > +static inline int scsi_autopm_get_host(struct Scsi_Host *) { return 0; }
+> > +static inline void scsi_autopm_put_host(struct Scsi_Host *) {}
+> 
+> You didn't compile this, did you?  The compiler gets distinctly annoyed
+> to see an inline function with no actual variable for the argument ...
+> 
+> I fixed up this and the one in scsi_device.h
 
-Fix this by eliminating the libsas.h duplicate
+Since there were actually 3 relevant config variations, this turned out
+to be the final fix.
 
 James
 
-
-[Jack]Looks good to me! Thanks!
-Acked-by: Jack Wang<jack_wang@usish.com>
 ---
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c
-b/drivers/scsi/aic94xx/aic94xx_task.c
-index 75d20f7..532d212 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -223,7 +223,7 @@ Again:
- 	switch (opcode) {
- 	case TC_NO_ERROR:
- 		ts->resp = SAS_TASK_COMPLETE;
--		ts->stat = SAM_GOOD;
-+		ts->stat = SAM_STAT_GOOD;
- 		break;
- 	case TC_UNDERRUN:
- 		ts->resp = SAS_TASK_COMPLETE;
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index b00efd1..336677f 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -71,7 +71,7 @@ static enum ata_completion_errors sas_to_ata_err(struct
-task_status_struct *ts)
- 		case SAS_SG_ERR:
- 			return AC_ERR_INVALID;
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 53010a3..026295e 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -148,20 +148,20 @@ static inline void scsi_netlink_exit(void) {}
+ /* scsi_pm.c */
+ #ifdef CONFIG_PM_OPS
+ extern const struct dev_pm_ops scsi_bus_pm_ops;
++#else /* CONFIG_PM_OPS */
++#define scsi_bus_pm_ops		(*NULL)
++#endif
+ #ifdef CONFIG_PM_RUNTIME
+ extern void scsi_autopm_get_target(struct scsi_target *);
+ extern void scsi_autopm_put_target(struct scsi_target *);
+ extern int scsi_autopm_get_host(struct Scsi_Host *);
+ extern void scsi_autopm_put_host(struct Scsi_Host *);
+ #else
+-static inline void scsi_autopm_get_target(struct scsi_target *) {}
+-static inline void scsi_autopm_put_target(struct scsi_target *) {}
+-static inline int scsi_autopm_get_host(struct Scsi_Host *) { return 0; }
+-static inline void scsi_autopm_put_host(struct Scsi_Host *) {}
++static inline void scsi_autopm_get_target(struct scsi_target *t) {}
++static inline void scsi_autopm_put_target(struct scsi_target *t) {}
++static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
++static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
+ #endif /* CONFIG_PM_RUNTIME */
+-#else /* CONFIG_PM_OPS */
+-#define scsi_bus_pm_ops		(*NULL)
+-#endif
  
--		case SAM_CHECK_COND:
-+		case SAM_STAT_CHECK_CONDITION:
- 		case SAS_OPEN_TO:
- 		case SAS_OPEN_REJECT:
- 			SAS_DPRINTK("%s: Saw error %d.  What to do?\n",
-@@ -107,7 +107,7 @@ static void sas_ata_task_done(struct sas_task *task)
- 	sas_ha = dev->port->ha;
+ /* 
+  * internal scsi timeout functions: for use by mid-layer and transport
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 7df2eff..50cb34f 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -385,8 +385,8 @@ extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
+ extern int scsi_autopm_get_device(struct scsi_device *);
+ extern void scsi_autopm_put_device(struct scsi_device *);
+ #else
+-static inline int scsi_autopm_get_device(struct scsi_device *) { return 0; }
+-static inline void scsi_autopm_put_device(struct scsi_device *) {}
++static inline int scsi_autopm_get_device(struct scsi_device *d) { return 0; }
++static inline void scsi_autopm_put_device(struct scsi_device *d) {}
+ #endif /* CONFIG_PM_RUNTIME */
  
- 	spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
--	if (stat->stat == SAS_PROTO_RESPONSE || stat->stat == SAM_GOOD) {
-+	if (stat->stat == SAS_PROTO_RESPONSE || stat->stat == SAM_STAT_GOOD)
-{
- 		ata_tf_from_fis(resp->ending_fis, &dev->sata_dev.tf);
- 		qc->err_mask |= ac_err_mask(dev->sata_dev.tf.command);
- 		dev->sata_dev.sstatus = resp->sstatus;
-@@ -506,12 +506,12 @@ static int sas_execute_task(struct sas_task *task,
-void *buffer, int size,
- 					goto ex_err;
- 			}
- 		}
--		if (task->task_status.stat == SAM_BUSY ||
--			   task->task_status.stat == SAM_TASK_SET_FULL ||
-+		if (task->task_status.stat == SAM_STAT_BUSY ||
-+			   task->task_status.stat == SAM_STAT_TASK_SET_FULL
-||
- 			   task->task_status.stat == SAS_QUEUE_FULL) {
- 			SAS_DPRINTK("task: q busy, sleeping...\n");
- 			schedule_timeout_interruptible(HZ);
--		} else if (task->task_status.stat == SAM_CHECK_COND) {
-+		} else if (task->task_status.stat ==
-SAM_STAT_CHECK_CONDITION) {
- 			struct scsi_sense_hdr shdr;
- 
- 			if (!scsi_normalize_sense(ts->buf,
-ts->buf_valid_size,
-@@ -544,7 +544,7 @@ static int sas_execute_task(struct sas_task *task, void
-*buffer, int size,
- 					    shdr.asc, shdr.ascq);
- 			}
- 		} else if (task->task_status.resp != SAS_TASK_COMPLETE ||
--			   task->task_status.stat != SAM_GOOD) {
-+			   task->task_status.stat != SAM_STAT_GOOD) {
- 			SAS_DPRINTK("task finished with resp:0x%x, "
- 				    "stat:0x%x\n",
- 				    task->task_status.resp,
-diff --git a/drivers/scsi/libsas/sas_expander.c
-b/drivers/scsi/libsas/sas_expander.c
-index c65af02..83dd507 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -107,7 +107,7 @@ static int smp_execute_task(struct domain_device *dev,
-void *req, int req_size,
- 			}
- 		}
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		    task->task_status.stat == SAM_GOOD) {
-+		    task->task_status.stat == SAM_STAT_GOOD) {
- 			res = 0;
- 			break;
- 		} if (task->task_status.resp == SAS_TASK_COMPLETE &&
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c
-b/drivers/scsi/libsas/sas_scsi_host.c
-index 2660e1b..d621345 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -113,10 +113,10 @@ static void sas_scsi_task_done(struct sas_task *task)
- 		case SAS_ABORTED_TASK:
- 			hs = DID_ABORT;
- 			break;
--		case SAM_CHECK_COND:
-+		case SAM_STAT_CHECK_CONDITION:
- 			memcpy(sc->sense_buffer, ts->buf,
- 			       min(SCSI_SENSE_BUFFERSIZE,
-ts->buf_valid_size));
--			stat = SAM_CHECK_COND;
-+			stat = SAM_STAT_CHECK_CONDITION;
- 			break;
- 		default:
- 			stat = ts->stat;
-diff --git a/drivers/scsi/libsas/sas_task.c b/drivers/scsi/libsas/sas_task.c
-index 594524d..b13a334 100644
---- a/drivers/scsi/libsas/sas_task.c
-+++ b/drivers/scsi/libsas/sas_task.c
-@@ -15,13 +15,13 @@ void sas_ssp_task_response(struct device *dev, struct
-sas_task *task,
- 	else if (iu->datapres == 1)
- 		tstat->stat = iu->resp_data[3];
- 	else if (iu->datapres == 2) {
--		tstat->stat = SAM_CHECK_COND;
-+		tstat->stat = SAM_STAT_CHECK_CONDITION;
- 		tstat->buf_valid_size =
- 			min_t(int, SAS_STATUS_BUF_SIZE,
- 			      be32_to_cpu(iu->sense_data_len));
- 		memcpy(tstat->buf, iu->sense_data, tstat->buf_valid_size);
- 
--		if (iu->status != SAM_CHECK_COND)
-+		if (iu->status != SAM_STAT_CHECK_CONDITION)
- 			dev_printk(KERN_WARNING, dev,
- 				   "dev %llx sent sense data, but "
- 				   "stat(%x) is not CHECK CONDITION\n",
-@@ -30,7 +30,7 @@ void sas_ssp_task_response(struct device *dev, struct
-sas_task *task,
- 	}
- 	else
- 		/* when datapres contains corrupt/unknown value... */
--		tstat->stat = SAM_CHECK_COND;
-+		tstat->stat = SAM_STAT_CHECK_CONDITION;
- }
- EXPORT_SYMBOL_GPL(sas_ssp_task_response);
- 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index f5e3217..47d05a1 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1483,7 +1483,7 @@ static int mvs_exec_internal_tmf_task(struct
-domain_device *dev,
- 		}
- 
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		    task->task_status.stat == SAM_GOOD) {
-+		    task->task_status.stat == SAM_STAT_GOOD) {
- 			res = TMF_RESP_FUNC_COMPLETE;
- 			break;
- 		}
-@@ -1756,7 +1756,7 @@ static int mvs_sata_done(struct mvs_info *mvi, struct
-sas_task *task,
- 	struct mvs_device *mvi_dev = task->dev->lldd_dev;
- 	struct task_status_struct *tstat = &task->task_status;
- 	struct ata_task_resp *resp = (struct ata_task_resp *)tstat->buf;
--	int stat = SAM_GOOD;
-+	int stat = SAM_STAT_GOOD;
- 
- 
- 	resp->frame_len = sizeof(struct dev_to_host_fis);
-@@ -1788,13 +1788,13 @@ static int mvs_slot_err(struct mvs_info *mvi, struct
-sas_task *task,
- 
- 	MVS_CHIP_DISP->command_active(mvi, slot_idx);
- 
--	stat = SAM_CHECK_COND;
-+	stat = SAM_STAT_CHECK_CONDITION;
- 	switch (task->task_proto) {
- 	case SAS_PROTOCOL_SSP:
- 		stat = SAS_ABORTED_TASK;
- 		break;
- 	case SAS_PROTOCOL_SMP:
--		stat = SAM_CHECK_COND;
-+		stat = SAM_STAT_CHECK_CONDITION;
- 		break;
- 
- 	case SAS_PROTOCOL_SATA:
-@@ -1879,7 +1879,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32
-rx_desc, u32 flags)
- 	case SAS_PROTOCOL_SSP:
- 		/* hw says status == 0, datapres == 0 */
- 		if (rx_desc & RXQ_GOOD) {
--			tstat->stat = SAM_GOOD;
-+			tstat->stat = SAM_STAT_GOOD;
- 			tstat->resp = SAS_TASK_COMPLETE;
- 		}
- 		/* response frame present */
-@@ -1888,12 +1888,12 @@ int mvs_slot_complete(struct mvs_info *mvi, u32
-rx_desc, u32 flags)
- 						sizeof(struct mvs_err_info);
- 			sas_ssp_task_response(mvi->dev, task, iu);
- 		} else
--			tstat->stat = SAM_CHECK_COND;
-+			tstat->stat = SAM_STAT_CHECK_CONDITION;
- 		break;
- 
- 	case SAS_PROTOCOL_SMP: {
- 			struct scatterlist *sg_resp =
-&task->smp_task.smp_resp;
--			tstat->stat = SAM_GOOD;
-+			tstat->stat = SAM_STAT_GOOD;
- 			to = kmap_atomic(sg_page(sg_resp), KM_IRQ0);
- 			memcpy(to + sg_resp->offset,
- 				slot->response + sizeof(struct
-mvs_err_info),
-@@ -1910,7 +1910,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32
-rx_desc, u32 flags)
- 		}
- 
- 	default:
--		tstat->stat = SAM_CHECK_COND;
-+		tstat->stat = SAM_STAT_CHECK_CONDITION;
- 		break;
- 	}
- 	if (!slot->port->port_attached) {
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
-b/drivers/scsi/pm8001/pm8001_hwi.c
-index 5ff8261..356ad26 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1480,7 +1480,7 @@ mpi_ssp_completion(struct pm8001_hba_info *pm8001_ha ,
-void *piomb)
- 			",param = %d \n", param));
- 		if (param == 0) {
- 			ts->resp = SAS_TASK_COMPLETE;
--			ts->stat = SAM_GOOD;
-+			ts->stat = SAM_STAT_GOOD;
- 		} else {
- 			ts->resp = SAS_TASK_COMPLETE;
- 			ts->stat = SAS_PROTO_RESPONSE;
-@@ -1909,7 +1909,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
-void *piomb)
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
- 		if (param == 0) {
- 			ts->resp = SAS_TASK_COMPLETE;
--			ts->stat = SAM_GOOD;
-+			ts->stat = SAM_STAT_GOOD;
- 		} else {
- 			u8 len;
- 			ts->resp = SAS_TASK_COMPLETE;
-@@ -2450,7 +2450,7 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha,
-void *piomb)
- 	case IO_SUCCESS:
- 		PM8001_IO_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
--		ts->stat = SAM_GOOD;
-+		ts->stat = SAM_STAT_GOOD;
- 	if (pm8001_dev)
- 			pm8001_dev->running_req--;
- 		break;
-@@ -2479,19 +2479,19 @@ mpi_smp_completion(struct pm8001_hba_info
-*pm8001_ha, void *piomb)
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_ERROR_HW_TIMEOUT\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
--		ts->stat = SAM_BUSY;
-+		ts->stat = SAM_STAT_BUSY;
- 		break;
- 	case IO_XFER_ERROR_BREAK:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_XFER_ERROR_BREAK\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
--		ts->stat = SAM_BUSY;
-+		ts->stat = SAM_STAT_BUSY;
- 		break;
- 	case IO_XFER_ERROR_PHY_NOT_READY:
- 		PM8001_IO_DBG(pm8001_ha,
- 			pm8001_printk("IO_XFER_ERROR_PHY_NOT_READY\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
--		ts->stat = SAM_BUSY;
-+		ts->stat = SAM_STAT_BUSY;
- 		break;
- 	case IO_OPEN_CNX_ERROR_PROTOCOL_NOT_SUPPORTED:
- 		PM8001_IO_DBG(pm8001_ha,
-@@ -3260,7 +3260,7 @@ mpi_task_abort_resp(struct pm8001_hba_info *pm8001_ha,
-void *piomb)
- 	case IO_SUCCESS:
- 		PM8001_EH_DBG(pm8001_ha, pm8001_printk("IO_SUCCESS\n"));
- 		ts->resp = SAS_TASK_COMPLETE;
--		ts->stat = SAM_GOOD;
-+		ts->stat = SAM_STAT_GOOD;
- 		break;
- 	case IO_NOT_VALID:
- 		PM8001_EH_DBG(pm8001_ha, pm8001_printk("IO_NOT_VALID\n"));
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c
-b/drivers/scsi/pm8001/pm8001_sas.c
-index bff4f51..edd7d11 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -763,7 +763,7 @@ static int pm8001_exec_internal_tmf_task(struct
-domain_device *dev,
- 		}
- 
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--			task->task_status.stat == SAM_GOOD) {
-+			task->task_status.stat == SAM_STAT_GOOD) {
- 			res = TMF_RESP_FUNC_COMPLETE;
- 			break;
- 		}
-@@ -853,7 +853,7 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info
-*pm8001_ha,
- 		}
- 
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--			task->task_status.stat == SAM_GOOD) {
-+			task->task_status.stat == SAM_STAT_GOOD) {
- 			res = TMF_RESP_FUNC_COMPLETE;
- 			break;
- 
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 3b58685..d06e13b 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -422,16 +422,7 @@ enum service_response {
- };
- 
- enum exec_status {
--	SAM_GOOD         = 0,
--	SAM_CHECK_COND   = 2,
--	SAM_COND_MET     = 4,
--	SAM_BUSY         = 8,
--	SAM_INTERMEDIATE = 0x10,
--	SAM_IM_COND_MET  = 0x12,
--	SAM_RESV_CONFLICT= 0x14,
--	SAM_TASK_SET_FULL= 0x28,
--	SAM_ACA_ACTIVE   = 0x30,
--	SAM_TASK_ABORTED = 0x40,
-+	/* The SAM_STAT_.. codes fit in the lower 6 bits */
- 
- 	SAS_DEV_NO_RESPONSE = 0x80,
- 	SAS_DATA_UNDERRUN,
+ static inline int __must_check scsi_device_reprobe(struct scsi_device *sdev)
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
