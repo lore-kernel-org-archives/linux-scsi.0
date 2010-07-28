@@ -1,34 +1,72 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Thu, 29 Jul 2010 01:00:10 +0200
-Message-ID: <20100728230010.GA13406@lst.de>
-References: <20100727183546.GG7347@redhat.com> <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de> <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100728124720.GA3613@quack.suse.cz>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] usb-storage: implement autosuspend
+Date: Wed, 28 Jul 2010 16:09:12 -0700
+Message-ID: <20100728230912.GA32658@kroah.com>
+References: <Pine.LNX.4.44L0.1007281702030.1744-100000@iolanthe.rowland.org>
+ <1280351785.30808.603.camel@mulgrave.site>
+ <20100728212551.GA20508@kroah.com>
+ <1280352582.30808.606.camel@mulgrave.site>
+ <20100728213521.GA22064@kroah.com>
+ <1280357812.18534.1.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:50354 "EHLO verein.lst.de"
+Received: from kroah.org ([198.145.64.141]:43120 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755774Ab0G1XAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2010 19:00:44 -0400
+	id S1751991Ab0G1XJQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2010 19:09:16 -0400
 Content-Disposition: inline
-In-Reply-To: <20100728124720.GA3613@quack.suse.cz>
+In-Reply-To: <1280357812.18534.1.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Wed, Jul 28, 2010 at 02:47:20PM +0200, Jan Kara wrote:
->   Well, ocfs2 uses jbd2 for journaling so it supports barriers out of the
-> box and does not need the ordering. ocfs2_sync_file is actually correct
-> (although maybe slightly inefficient) because it does
-> jbd2_journal_force_commit() which creates and immediately commits a
-> transaction and that implies a barrier.
+On Wed, Jul 28, 2010 at 05:56:52PM -0500, James Bottomley wrote:
+> On Wed, 2010-07-28 at 14:35 -0700, Greg KH wrote: 
+> > On Wed, Jul 28, 2010 at 04:29:42PM -0500, James Bottomley wrote:
+> > > On Wed, 2010-07-28 at 14:25 -0700, Greg KH wrote:
+> > > > On Wed, Jul 28, 2010 at 09:16:25PM +0000, James Bottomley wrote:
+> > > > > On Wed, 2010-07-28 at 17:12 -0400, Alan Stern wrote:
+> > > > > > Because this patch depends on those SCSI changes, either it should also 
+> > > > > > go via James's tree or else the SCSI patches should be imported into 
+> > > > > > Greg's tree first.  James and Greg, which route is easier for you?
+> > > > > 
+> > > > > They're USB patches, so they should be in a USB tree.  Just do a
+> > > > > standard postmerge tree based on SCSI.
+> > > > 
+> > > > Yeah, but then for now my tree will not build on its own, right?
+> > > 
+> > > Yes it will: a postmerge tree contains a buildable merge base and the
+> > > additional patches.  You can see how this is done at
+> > > 
+> > > http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-post-merge-2.6.git
+> > > 
+> > > Which contains the ibft tree and scsi-misc as the merge base then has
+> > > be2iscsi patches that depend on both.  The tree is individually
+> > > buildable and linux-next only pulls in from merge-base to the top (have
+> > > to make sure it's included after all the other trees, though).
+> > 
+> > I think you forgot that I use quilt for my trees :)
+> 
+> There is a way of doing this in quilt.  I think you checkout my tree,
+> add the patch and some type of annotation for the top so linux-next
+> knows when to pull it in.
 
-I don't think that's correct.  ocfs2_sync_file first does
-ocfs2_sync_inode, which does a completely superflous filemap_fdatawrite,
-and from what I can see a just as superflous sync_mapping_buffers (given
-that ocfs doesn't use mark_buffer_dirty_inode) and then might return
-early in case we do fdatasync but the inode isn't marked
-I_DIRTY_DATASYNC.  In that case we might need a cache flush given
-that the data might still be dirty.
+Yeah, there is a way, but it's a major pain and a divergant way of
+handling my tree from what I do today :(
 
+> You just want me to put it in my tree, don't you ... ?
+
+I do :)
+
+Please add an:
+	Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
+to it and have fun :)
+
+If you really don't want to, just let me know and I'll handle it and the
+merge issues myself, that's what the subsystem maintainer is for...
+
+thanks,
+
+greg k-h
