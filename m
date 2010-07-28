@@ -1,45 +1,44 @@
-From: Vivek Goyal <vgoyal@redhat.com>
+From: Tejun Heo <teheo@suse.de>
 Subject: Re: [RFC] relaxed barrier semantics
-Date: Wed, 28 Jul 2010 10:42:14 -0400
-Message-ID: <20100728144214.GB16314@redhat.com>
-References: <20100727165627.GA474@lst.de>
- <20100727175418.GF6820@quack.suse.cz>
- <20100727183546.GG7347@redhat.com>
- <4C4FE58C.8080403@kernel.org>
- <20100728082447.GA7668@lst.de>
- <4C4FECFE.9040509@kernel.org>
- <20100728085048.GA8884@lst.de>
- <4C4FF136.5000205@kernel.org>
- <20100728090025.GA9252@lst.de>
+Date: Wed, 28 Jul 2010 16:44:07 +0200
+Message-ID: <4C504237.4070105@suse.de>
+References: <20100727165627.GA474@lst.de>	 <20100727175418.GF6820@quack.suse.cz> <20100727183546.GG7347@redhat.com>	 <4C4FE58C.8080403@kernel.org> <4C4FE860.7000903@suse.de>	 <4C5036BC.30709@vlnb.net>  <4C503D50.4010006@suse.de> <1280327839.30808.188.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4103 "EHLO mx1.redhat.com"
+Received: from cantor.suse.de ([195.135.220.2]:55444 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754783Ab0G1Om1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2010 10:42:27 -0400
-Content-Disposition: inline
-In-Reply-To: <20100728090025.GA9252@lst.de>
+	id S1754802Ab0G1OoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2010 10:44:10 -0400
+In-Reply-To: <1280327839.30808.188.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 
-On Wed, Jul 28, 2010 at 11:00:25AM +0200, Christoph Hellwig wrote:
-> On Wed, Jul 28, 2010 at 10:58:30AM +0200, Tejun Heo wrote:
-> > I see.  It probably would be good to have ordering requirements
-> > carried in the bio / request, so that filesystems can mix and match
-> > barriers of different strengths as necesasry.  As you seem to be
-> > already working on it, are you interested in pursuing that direction?
+Hello,
+
+On 07/28/2010 04:37 PM, James Bottomley wrote:
+>> I don't remember all the details now but IIRC what was necessary was
+>> earlier write failure failing all commands scheduled as ordered.  Does
+>> ACA / UA_INTLCK or whatever allow that?
 > 
-> I've been working on that for a while, but it got a lot more urgent
-> as there's been an application hit particularly hard by the barrier
-> semantics on cache less devices and people started getting angry
-> about it.  That's why fixing this for cache less devices has become
-> a higher priority than solving the big picture.
+> No.  That requires support for QErr ... which is in the same mode page.
 
-And in the process IO controller cgroup stuff will also benefit otherwise
-excessive draining on request queue takes away any service differentiation
-CFQ provides among groups.
+I see.
 
-Vivek
+> The real reason we have difficulty is that BUSY/QUEUE_FULL can cause
+> reordering in the issue queue, which is a driver problem and not in the
+> SCSI standards.
+
+Ah yeah right.  ISTR discussions about this years ago.  But one way or
+the other, given the limited amount of ordering information available
+under the block layer, I doubt the benefit of doing would be anything
+significant.  If it can be done w/o too much complexity, sure, but
+otherwise...
+
+Thanks.
+
+-- 
+tejun
