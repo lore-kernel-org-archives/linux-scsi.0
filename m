@@ -1,44 +1,45 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Vivek Goyal <vgoyal@redhat.com>
 Subject: Re: [RFC] relaxed barrier semantics
-Date: Wed, 28 Jul 2010 09:37:19 -0500
-Message-ID: <1280327839.30808.188.camel@mulgrave.site>
+Date: Wed, 28 Jul 2010 10:42:14 -0400
+Message-ID: <20100728144214.GB16314@redhat.com>
 References: <20100727165627.GA474@lst.de>
-	 <20100727175418.GF6820@quack.suse.cz> <20100727183546.GG7347@redhat.com>
-	 <4C4FE58C.8080403@kernel.org> <4C4FE860.7000903@suse.de>
-	 <4C5036BC.30709@vlnb.net>  <4C503D50.4010006@suse.de>
+ <20100727175418.GF6820@quack.suse.cz>
+ <20100727183546.GG7347@redhat.com>
+ <4C4FE58C.8080403@kernel.org>
+ <20100728082447.GA7668@lst.de>
+ <4C4FECFE.9040509@kernel.org>
+ <20100728085048.GA8884@lst.de>
+ <4C4FF136.5000205@kernel.org>
+ <20100728090025.GA9252@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4C503D50.4010006@suse.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tejun Heo <teheo@suse.de>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:4103 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754783Ab0G1Om1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2010 10:42:27 -0400
+Content-Disposition: inline
+In-Reply-To: <20100728090025.GA9252@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 
-On Wed, 2010-07-28 at 16:23 +0200, Tejun Heo wrote:
-> Hello,
+On Wed, Jul 28, 2010 at 11:00:25AM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 28, 2010 at 10:58:30AM +0200, Tejun Heo wrote:
+> > I see.  It probably would be good to have ordering requirements
+> > carried in the bio / request, so that filesystems can mix and match
+> > barriers of different strengths as necesasry.  As you seem to be
+> > already working on it, are you interested in pursuing that direction?
 > 
-> On 07/28/2010 03:55 PM, Vladislav Bolkhovitin wrote:
-> >> The only benefit of doing it in the block layer, and probably the
-> >> reason why it was done this way at all, is making use of advanced
-> >> ordering features of some devices - ordered tag and linked commands.
-> >> The latter is deprecated and the former is fundamentally broken in
-> >> error handling anyway.
-> > 
-> > Why? SCSI provides ACA and UA_INTLCK which provide all needed
-> > facilities for errors handling in deep ordered queues.
-> 
-> I don't remember all the details now but IIRC what was necessary was
-> earlier write failure failing all commands scheduled as ordered.  Does
-> ACA / UA_INTLCK or whatever allow that?
+> I've been working on that for a while, but it got a lot more urgent
+> as there's been an application hit particularly hard by the barrier
+> semantics on cache less devices and people started getting angry
+> about it.  That's why fixing this for cache less devices has become
+> a higher priority than solving the big picture.
 
-No.  That requires support for QErr ... which is in the same mode page.
+And in the process IO controller cgroup stuff will also benefit otherwise
+excessive draining on request queue takes away any service differentiation
+CFQ provides among groups.
 
-The real reason we have difficulty is that BUSY/QUEUE_FULL can cause
-reordering in the issue queue, which is a driver problem and not in the
-SCSI standards.
-
-James
-
-
+Vivek
