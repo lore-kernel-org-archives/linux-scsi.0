@@ -1,72 +1,50 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Wed, 28 Jul 2010 14:47:20 +0200
-Message-ID: <20100728124720.GA3613@quack.suse.cz>
-References: <20100727175418.GF6820@quack.suse.cz>
- <20100727183546.GG7347@redhat.com>
- <4C4FE58C.8080403@kernel.org>
- <20100728082447.GA7668@lst.de>
- <4C4FECFE.9040509@kernel.org>
- <20100728085048.GA8884@lst.de>
- <4C4FF136.5000205@kernel.org>
- <20100728090025.GA9252@lst.de>
- <4C4FF592.9090800@kernel.org>
- <20100728092859.GA11096@lst.de>
+From: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH resend 1/4] scsi/sr: add no_read_disc_info scsi_device
+ flag
+Date: Wed, 28 Jul 2010 08:19:55 -0500
+Message-ID: <1280323195.30808.58.camel@mulgrave.site>
+References: <1279875174-2905-1-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100728092859.GA11096@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1279875174-2905-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed 28-07-10 11:28:59, Christoph Hellwig wrote:
-> On Wed, Jul 28, 2010 at 11:17:06AM +0200, Tejun Heo wrote:
-> > Well, if disabling barrier works around the problem for them (which is
-> > basically what was suggeseted in the first message), that's not too
-> > bad for short term, I think.
+On Fri, 2010-07-23 at 10:52 +0200, Hans de Goede wrote:
+> Some USB devices emulate a usb-mass-storage attached (scsi) cdrom device,
+> usually this fake cdrom contains the windows software for the device.
+> While working on supporting Appotech ax3003 based photoframes, which do
+> this I discovered that they will go of into lala land when ever they
+> see a READ_DISC_INFO scsi command.
 > 
-> It's a pretty horrible workaround.  Requiring manual mount options to
-> get performance out of a setup which could trivially work out of the
-> box is a bad workaround.
+> Thus this patch adds a scsi_device flag (which can then be set by the
+> usb-storage driver through an unsual-devs entry), to indicate this, and
+> makes the sr driver honor this flag.
 > 
-> > I'll re-read barrier code and see how hard it would be to implement a
-> > proper solution.
+> I know this sucks, but as discussed on linux-scsi list there is no other
+> way to make this device work properly.
 > 
-> If we move all filesystems to non-draining barriers with pre- and post-
-> flushes that might actually be a relatively easy first step.  We don't
-> have the complications to deal with multiple types of barriers to
-> start with, and it'll fix the issue for devices without volatile write
-> caches completely.
-> 
-> I just need some help from the filesystem folks to determine if they
-> are safe with them.
-> 
-> I know for sure that ext3 and xfs are from looking through them.  And
-  Yes, ext3 is safe.
+> Looking at usb traces made under windows, windows never sends a
+> READ_DISC_INFO during normal interactions with a usb cdrom device. So as
+> this cdrom emulation thingie becomes more common we might see more of
+> this problem.
 
-> I know reiserfs is if we make sure it doesn't hit the code path that
-> relies on it that is currently enabled by the barrier option.
-  Yes, just always writing the commit buffer at the place where we
-currently do it in !barrier case should be enough for reiserfs.
+So, I suppose we can do this.  I dislike threading device bugs like this
+up and down the stack.  The usb stor_control_thread already does some
+command filtering; if it just rejected this command and READ
+CAPACITY(16) on the flags, I think it would be far less code and the
+SCSI subsystem would just do the right thing.
 
-> I'll just need more feedback from ext4, gfs2, btrfs and nilfs folks.
-  As I wrote in some other email, ext4/jbd2 is OK, unless you mount the
-filesystem with async_commit mount option. With that option it does the
-same thing as reiserfs in barrier case - i.e., it needs ordering.
+I'd actually like to hear from USB what they'd prefer to do.
 
-> That already ends our small list of barrier supporting filesystems, and
-> possibly ocfs2, too - although the barrier implementation there seems
-> incomplete as it doesn't seem to flush caches in fsync.
-  Well, ocfs2 uses jbd2 for journaling so it supports barriers out of the
-box and does not need the ordering. ocfs2_sync_file is actually correct
-(although maybe slightly inefficient) because it does
-jbd2_journal_force_commit() which creates and immediately commits a
-transaction and that implies a barrier.
+James
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
