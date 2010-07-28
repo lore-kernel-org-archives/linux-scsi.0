@@ -1,40 +1,34 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH] scsi_dh_rdac : Adding  MODULE VERSION for rdac device
- handler
-Date: Wed, 28 Jul 2010 17:00:33 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4D05DC427@cosmail01.lsi.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC] relaxed barrier semantics
+Date: Thu, 29 Jul 2010 01:00:10 +0200
+Message-ID: <20100728230010.GA13406@lst.de>
+References: <20100727183546.GG7347@redhat.com> <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de> <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100728124720.GA3613@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:53020 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755774Ab0G1XAk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2010 19:00:40 -0400
-Content-Language: en-US
+Received: from verein.lst.de ([213.95.11.210]:50354 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755774Ab0G1XAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Jul 2010 19:00:44 -0400
+Content-Disposition: inline
+In-Reply-To: <20100728124720.GA3613@quack.suse.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Qi, Yanling" <Yanling.Qi@lsi.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 
-Adding MODULE_VERSION for scsi_dh_rdac. This will be helpful to differentiate between the previous(non async) versions and the current versions.
+On Wed, Jul 28, 2010 at 02:47:20PM +0200, Jan Kara wrote:
+>   Well, ocfs2 uses jbd2 for journaling so it supports barriers out of the
+> box and does not need the ordering. ocfs2_sync_file is actually correct
+> (although maybe slightly inefficient) because it does
+> jbd2_journal_force_commit() which creates and immediately commits a
+> transaction and that implies a barrier.
 
-Version format aa.bb.ccdd.eeff
-aa   - major version(01 for now)
-bb   - minor version(for minor bugfixes)
-ccdd - can be used to differentiate between distros
-eeff - reserved for future
-
-Signed-off-by: Babu Moger <babu.moger@lsi.com>
----
---- linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2010-07-23 06:06:24.000000000 -0500
-+++ linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh_rdac.c	2010-07-23 06:07:07.000000000 -0500
-@@ -904,3 +904,4 @@ module_exit(rdac_exit);
- MODULE_DESCRIPTION("Multipath LSI/Engenio RDAC driver");
- MODULE_AUTHOR("Mike Christie, Chandra Seetharaman");
- MODULE_LICENSE("GPL");
-+MODULE_VERSION("01.00.0000.0000");
-
-
+I don't think that's correct.  ocfs2_sync_file first does
+ocfs2_sync_inode, which does a completely superflous filemap_fdatawrite,
+and from what I can see a just as superflous sync_mapping_buffers (given
+that ocfs doesn't use mark_buffer_dirty_inode) and then might return
+early in case we do fdatasync but the inode isn't marked
+I_DIRTY_DATASYNC.  In that case we might need a cache flush given
+that the data might still be dirty.
 
