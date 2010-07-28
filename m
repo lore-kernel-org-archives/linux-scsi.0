@@ -1,61 +1,82 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: dev_loss_tmo behavior question
-Date: Wed, 28 Jul 2010 09:57:07 -0700
-Message-ID: <20100728165707.GA9844@plapp.qlogic.org>
-References: <4C4F4B94.1070009@cs.wisc.edu>
- <4C5055AA.7080703@emulex.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] usb-storage: implement autosuspend
+Date: Wed, 28 Jul 2010 17:12:39 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1007281702030.1744-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:51837 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752771Ab0G1Q5I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jul 2010 12:57:08 -0400
-Content-Disposition: inline
-In-Reply-To: <4C5055AA.7080703@emulex.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59202 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752580Ab0G1VMm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jul 2010 17:12:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@Emulex.Com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, "Love, Robert W" <robert.w.love@intel.com>, Jing Huang <huangj@Brocade.COM>
+To: James Bottomley <James.Bottomley@suse.de>, Greg KH <greg@kroah.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Wed, 28 Jul 2010, James Smart wrote:
+This patch (as1400) adds runtime-PM support to usb-storage.  It
+utilizes the SCSI layer's runtime-PM implementation, so its scope is
+limited.  Currently the only effect is that disk-like devices (such as
+card readers or flash drives) will be autosuspended if they aren't
+mounted and their device files aren't open.  This would apply, for
+example, to card readers that don't contain a memory card.
 
-> Mike Christie wrote:
-> > Hi FC driver developers,
-> > 
-> > I am trying to figure out what is the correct behavior when setting 
-> > dev_loss_tmo.
-> > 
-> > With lpfc, qla2xx, and ibmfc if I set dev_loss_tmo using 
-> > /sys/class/fc_remote_port/rport-xx/dev_loss_tmo, and then we add devices 
-> > the slave_configure functions for these drivers reset the dev_loss_tmo 
-> > to a driver value.
-> > 
-> > The addition of devs could be from something like a user rescan, or from 
-> > a scan started by a remote port addition.
-> 
-> Looking at lpfc - this is a totally insane thing to do, and definitely a bug. 
-> Addition or removal of sdevs should not change a rport setting.
+Unfortunately this won't interact very well with the removable-media
+polling normally carried out by hal or DeviceKit.  Maybe those
+programs can be changed to use a longer polling interval, or maybe the
+default autosuspend time for usb-storage should be set to something
+below 1 second.
 
-Completely agree...
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-> > With fcoe, fnic, mptfc, bfa and zfcp the dev_loss_tmo value set from 
-> > sysfs will not be reset by a driver value on rescans.
-> > 
-> > Which drivers should be changed?
-> 
-> lpfc, qla2xx, and ibmfc.
+---
 
-I'm curious though, each driver would still need to seed the rport's
-dev_loss_tmo value (in the case of qla2xxx,
-ha->port_down_retry_count), but, by doing so after rport-addition
-(fc_remote_port_add()), the driver could still overwrite a previous
-sysfs setting.  Internally, upon rport creation, the dev_loss_tmo
-value is seeding with fc_dev_loss_tmo (a module parameter -- 60
-seconds).  Should we extend the transport so the the 'default seeding
-value' can be specified once at fc_host creation-time?
+Now that the SCSI runtime-PM patches have been accepted for the 
+upcoming merge window, it's time to make use of the new mechanism in 
+usb-storage.  That's what this does.
 
-BTW: fnic looks to be doing the same 'bad' behaviour in their
-slave_alloc() call too...
+Because this patch depends on those SCSI changes, either it should also 
+go via James's tree or else the SCSI patches should be imported into 
+Greg's tree first.  James and Greg, which route is easier for you?
 
--- av
+Alan Stern
+
+
+
+Index: usb-2.6/drivers/usb/storage/usb.c
+===================================================================
+--- usb-2.6.orig/drivers/usb/storage/usb.c
++++ usb-2.6/drivers/usb/storage/usb.c
+@@ -336,6 +336,7 @@ static int usb_stor_control_thread(void 
+ 		else {
+ 			US_DEBUG(usb_stor_show_command(us->srb));
+ 			us->proto_handler(us->srb, us);
++			usb_mark_last_busy(us->pusb_dev);
+ 		}
+ 
+ 		/* lock access to the state */
+@@ -845,6 +846,7 @@ static int usb_stor_scan_thread(void * _
+ 		/* Should we unbind if no devices were detected? */
+ 	}
+ 
++	usb_autopm_put_interface(us->pusb_intf);
+ 	complete_and_exit(&us->scanning_done, 0);
+ }
+ 
+@@ -968,6 +970,7 @@ int usb_stor_probe2(struct us_data *us)
+ 		goto BadDevice;
+ 	}
+ 
++	usb_autopm_get_interface_no_resume(us->pusb_intf);
+ 	wake_up_process(th);
+ 
+ 	return 0;
+@@ -1040,6 +1043,7 @@ static struct usb_driver usb_storage_dri
+ 	.pre_reset =	usb_stor_pre_reset,
+ 	.post_reset =	usb_stor_post_reset,
+ 	.id_table =	usb_storage_usb_ids,
++	.supports_autosuspend = 1,
+ 	.soft_unbind =	1,
+ };
+ 
+
