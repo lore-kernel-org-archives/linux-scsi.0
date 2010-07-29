@@ -1,44 +1,53 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [RFC] relaxed barrier semantics
-Date: Thu, 29 Jul 2010 15:07:17 -0500
-Message-ID: <1280434037.4441.414.camel@mulgrave.site>
-References: <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org>
-	 <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org>
-	 <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org>
-	 <4C51DA1F.2040701@redhat.com> <20100729194904.GA17098@lst.de>
-	 <4C51DCF1.3010507@redhat.com> <1280433591.4441.393.camel@mulgrave.site>
-	 <20100729200327.GA17767@lst.de>
+Date: Thu, 29 Jul 2010 22:06:55 +0200
+Message-ID: <20100729200655.GB17767@lst.de>
+References: <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org> <20100729024334.GA21736@redhat.com> <20100729084225.GA30446@lst.de> <20100729200217.GD28704@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20100729200327.GA17767@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:43557 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751090Ab0G2UHX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jul 2010 16:07:23 -0400
+Content-Disposition: inline
+In-Reply-To: <20100729200217.GD28704@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 
-On Thu, 2010-07-29 at 22:03 +0200, Christoph Hellwig wrote:
-> On Thu, Jul 29, 2010 at 02:59:51PM -0500, James Bottomley wrote:
-> > That's basically everything FUA ... you might just as well switch your
-> > cache to write through and have done.
-> > 
-> > This, by the way, is one area I'm hoping to have researched on SCSI
-> > (where most devices do obey the caching directives).  Actually see if
-> > write through without flush barriers is faster than writeback with flush
-> > barriers.  I really suspect it is.
-> 
-> We have done the research and at least for XFS a write through cache
-> actually is faster for many workloads.  Ric always has workloads where
-> the cache is faster, though - mostly doing lots of small file write
-> kind of setups.
+On Thu, Jul 29, 2010 at 04:02:17PM -0400, Vivek Goyal wrote:
+> Looks like you still want to go with option 2 where you will scan the file
+> system code for requirement of DRAIN semantics and everything is fine then for
+> devices no supporting volatile caches, you will mark request queue as NONE.
 
-There's lies, damned lies and benchmarks .. but what I was thinking is
-could we just do the right thing?  SCSI exposes (in sd) the interfaces
-to change the cache setting, so if the customer *doesn't* specify
-barriers on mount, could we just flip the device to write through it
-would be more performant in most use cases.
+The filesystem can't simply change the request queue settings. A request
+queue is often shared by multiple filesystems that can have very
+different requirements.
 
-James
+> This solves the problem on devices with WCE=0 but what about devices with
+> WCE=1. If file systems anyway don't require DRAIN semantics, then we
+> should not require it on devices with WCE=1 also?
 
+Yes.
+
+> If yes, then why not go with another variant of barriers which don't
+> perform DRAIN and just do PREFLUSH + FUA (or post flush for devices not
+> supporting FUA).
+
+I've been trying to prototype it, but it's in fact rather hard to
+get this right.  Tejun has done a really good job at the current
+barrier implementation and coming up with something just half as
+clever for the relaxed barriers has been driving me mad.
+
+> And then file systems can slowly move to using this non
+> draining barrier usage wherever appropriate.
+
+Actually supporting different kind of barriers at the same time
+is even harder.  We'll need two different state machines for them,
+including the actual state in the request_queue.  And then make
+sure when different filesystems on the same queue use different
+types work well together.  If at all possible switching the semantics
+on a flag day would make life a lot simpler.
 
