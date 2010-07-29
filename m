@@ -1,30 +1,21 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Thu, 29 Jul 2010 19:02:11 +0200
-Message-ID: <20100729170211.GA8718@lst.de>
-References: <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100728124720.GA3613@quack.suse.cz> <20100728230010.GA13406@lst.de> <20100729104529.GA3757@quack.suse.cz> <20100729165449.GC25490@mail.oracle.com>
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Subject: Re: [PATCH 4/6] regulator: Remove owner field from attribute
+ initialization in regulator core driver
+Date: Thu, 29 Jul 2010 10:15:54 -0700
+Message-ID: <20100729171553.GA24781@opensource.wolfsonmicro.com>
+References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
+ <1280380166-29196-5-git-send-email-guenter.roeck@ericsson.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:34731 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753883Ab0G2RCt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jul 2010 13:02:49 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100729165449.GC25490@mail.oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1280380166-29196-5-git-send-email-guenter.roeck@ericsson.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Guenter Roeck <guenter.roeck@ericsson.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Greg Kroah-Hartman <gregkh@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, "Eric W. Biederman" <ebiederm@aristanetworks.com>, Benjamin Thery <benjamin.thery@bull.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.k
 
-On Thu, Jul 29, 2010 at 09:54:50AM -0700, Joel Becker wrote:
-> handled-for-us behaviors of sync have changed.  If the VFS is already
-> doing some work for us, maybe we don't need to do it.  But we have to be
-> sure that these calls are always going through those paths.  We sync our
-> files to disk when we drop cluster locks, regardless of whether there is
-> a userspace fsync().
+On Wed, Jul 28, 2010 at 10:09:24PM -0700, Guenter Roeck wrote:
+> Signed-off-by: Guenter Roeck <guenter.roeck@ericsson.com>
 
-ocfs2_sync_file only gets called through the fsync inode operation, so
-that doesn't happen here.  And if it did the filemap_fdatawrite would
-not help at all, given that is only starts writeout, but never waits for
-it to finish.
-
+Acked-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
