@@ -1,142 +1,34 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 0/6] scsi_dh : Couple of fixes for scsi device handlers
-Date: Thu, 29 Jul 2010 14:54:04 -0700
-Message-ID: <1280440444.17620.72.camel@chandra-lucid.beaverton.ibm.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF4D05DC420@cosmail01.lsi.com>
-Reply-To: sekharan@us.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: [RFC] relaxed barrier semantics
+Date: Thu, 29 Jul 2010 16:30:54 -0600
+Message-ID: <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca>
+References: <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de> <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org> <4C51DA1F.2040701@redhat.com> <20100729194904.GA17098@lst.de> <4C51DCF1.3010507@redhat.com>
+Mime-Version: 1.0 (Apple Message framework v1081)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:42235 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049Ab0G2VxB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2010 17:53:01 -0400
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by e33.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o6TLmFbT007399
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2010 15:48:15 -0600
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o6TLqgju110432
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2010 15:52:44 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o6TLqfX3028707
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2010 15:52:42 -0600
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4D05DC420@cosmail01.lsi.com>
+Received: from idcmail-mo2no.shaw.ca ([64.59.134.9]:13798 "EHLO
+	idcmail-mo2no.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792Ab0G2WbJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2010 18:31:09 -0400
+In-Reply-To: <4C51DCF1.3010507@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Qi, Yanling" <Yanling.Qi@lsi.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 
-Babu,
+On 2010-07-29, at 13:56, Ric Wheeler wrote:
+> I assume that for ext3 it would get more complicated depending on the journal mode. In ordered or data journal mode, we would have to write the dependent non-journal data tagged with FUA, then the FUA tagged transaction and finally the FUA tagged commit block.
 
-Your main object is to protect scsi_dh_data across scsi_dh_activate() by
-way of getting kref around scsi_dh_activate(), right ?
+Like James wrote, this is basically everything FUA.  It is OK for ordered mode to allow the device to aggregate the normal filesystem and journal IO, but when the commit block is written it should flush all of the previously written data to disk.  This still allows request re-ordering and merging inside the device, but orders the data vs. the commit block.  Having the proposed "flush ranges" interface to the disk would be ideal, since there would be no wasted time flushing data that does not need it (i.e. other partitions).
 
-Wouldn't doing what Shyam suggested (doing kref_put() and put_device())
-in scsi_activate() make it simpler and code still be readable ? (it
-would make all the patches except 2/6 not needed).
+There is no need to prevent new data from being written during a cache flush, since ext*/jbd will already manage any required data/metadata ordering internally.
 
-Did you hit with any problems doing it that way ?
+There was some proposal (maybe from Eric Sandeen?) about having a device-level IO request counter that numbers every request submitted, and if there are multiple partitions per device, or fsync operations that flush the device cache, it is possible to determine from the request number whether there has already been a cache flush after that request on that device.  This avoids extra cache flushes if it was just done for another file or partition on the same device.
 
-Also the snippet (in 2/6)
----------------
-@@ -228,7 +228,8 @@ store_dh_state(struct device *dev, struc
-                         * Activate a device handler
-                         */
-                        if (scsi_dh->activate)
--                               err = scsi_dh->activate(sdev, NULL, NULL);
-+                               err = scsi_dh_activate(sdev->request_queue,
-+                                                       NULL, NULL);
-                        else
-                                err = 0;
-                }
-------------------
-can be made as a patch in itself.
+Cheers, Andreas
 
-Thanks for fixing the problem.
 
-regards,
 
-chandra
-On Wed, 2010-07-28 at 16:58 -0600, Moger, Babu wrote:
-> These patches fix the following two cases. 
-> 1. Devices going away while scsi device hander's activate is still in progress.
-> 
-> 2. Removal of scsi_dh_data(calling detach handler) when scsi device hander's activate is still in progress.
-> 
-> We have been seeing these problems while running multipath failover tests on LSI storage. These patches fix the problem. We have verified it.
-> 
-> Here is the panic we have been seeing while running failover failback tests.
-> 
-> > 00:40:42:869  COM1 >------------[ cut here ]------------
-> > 00:40:42:869  COM1 >kernel BUG at /usr/src/packages/BUILD/lsi-
-> > scsi_dh_rdac-01.00/obj/default/scsi_dh_rdac.c:232!
-> > 00:40:42:869  COM1 >invalid opcode: 0000 [1] SMP 
-> > 00:40:42:885  COM1 >last sysfs file: /sys/kernel/uevent_seqnum
-> > 00:40:42:885  COM1 >CPU 3 
-> > 00:40:42:885  COM1 >Modules linked in: dm_round_robin dm_multipath 
-> > nls_utf8 cifs(X) microcode af_packet ipv6 fuse loop dm_mod iTCO_wdt 
-> > iTCO_vendor_support dcdbas(X) pcspkr rtc_cmos rtc_core serio_raw 
-> > rtc_lib i5000_edac edac_core bnx2 shpchp sg pci_hotplug button 
-> > mptctl usbhid hid ff_memless uhci_hcd ehci_hcd usbcore sd_mod 
-> > crc_t10dif mpt2sas(N) raid_class edd ext3 mbcache jbd fan 
-> > ide_pci_generic piix ide_core ata_generic ata_piix libata dock 
-> > mptsas mptscsih mptbase scsi_transport_sas thermal processor 
-> > thermal_sys hwmon scsi_dh_rdac(X) scsi_dh scsi_mod
-> > 00:40:42:932  COM1 >Supported: No
-> > 00:40:42:932  COM1 >Pid: 14044, comm: kmpath_handlerd Tainted: G    
-> > 2.6.27.39-0.3-default #1
-> > 00:40:42:932  COM1 >RIP: 0010:  
-> > rdac_activate+0x257/0x387 [scsi_dh_rdac]
-> > 00:40:42:947  COM1 >RSP: 0018:ffff880127109dc0  EFLAGS: 00010246
-> > 00:40:42:947  COM1 >RAX: ffff8800ae02f000 RBX: 0000000000000001 RCX:
-> > 0000000000000018
-> > 00:40:42:963  COM1 >RDX: 0000000000001bbc RSI: 0000000000000282 RDI:
-> > ffff8800c2ccd918
-> > 00:40:42:963  COM1 >RBP: 00000000fffffffb R08: ffffffff806eaf78 R09:
-> > ffff880028087720
-> > 00:40:42:963  COM1 >R10: 0000000000000000 R11: ffffffff80284ebe R12:
-> > ffffffffa0030fbe
-> > 00:40:42:978  COM1 >R13: 0000000000000000 R14: 0000000000000282 R15:
-> > 0000000000000000
-> > 00:40:42:978  COM1 >FS:  0000000000000000(0000) GS:ffff88012fb81ec0
-> > (0000) knlGS:0000000000000000
-> > 00:40:42:978  COM1 >CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> > 00:40:42:994  COM1 >CR2: 00000000f7701630 CR3: 0000000101d5e000 CR4:
-> > 00000000000006e0
-> > 00:40:42:994  COM1 >DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-> > 0000000000000000
-> > 00:40:43:010  COM1 >DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-> > 0000000000000400
-> > 00:40:43:010  COM1 >Process kmpath_handlerd (pid: 14044, threadinfo 
-> > ffff880127108000, task ffff88012710e680)
-> > 00:40:43:010  COM1 >Stack:  ffff880127109ec0 ffffffff8049c431 
-> > 0000000000000000 ffff880127109e50
-> > 00:40:43:025  COM1 > ffff8800ae02f000 ffff8800b5032208 
-> > ffff8800b5032200 ffff8800ae02f250
-> > 00:40:43:025  COM1 > ffff8800b5032216 0000000580a33680 
-> > ffff8800c2ccd6b0 ffff8800ae02f120
-> > 00:40:43:041  COM1 >Call Trace:
-> > 00:40:43:041  COM1 > scsi_dh_activate+0x81/0x9b[scsi_dh]
-> > 00:40:43:041  COM1 > activate_path+0x22/0x46 
-> > [dm_multipath]
-> > 00:40:43:041  COM1 > run_workqueue+0x7a/0x100
-> > 00:40:43:057  COM1 > worker_thread+0xd8/0xe7
-> > 00:40:43:057  COM1 > kthread+0x47/0x73
-> > 00:40:43:057  COM1 > child_rip+0xa/0x11
-> > 00:40:43:057  COM1 >
-> > 00:40:43:057  COM1 >
-> > 00:40:43:057  COM1 >Code: 4c 89 ea e8 78 dd 30 e0 4c 89 ef 89 c5 e8 
-> > db a8 30 e0 85 ed 0f 84 da 00 00 00 48 8b 44 24 20 4c 8b a8 d0 05 00
-> > 00 4d 85 ed 75 04 <0f> 0b eb fe 48 8b 7c 24 40 48 8d 54 24 60 be 60 
-> > 00 00 00 e8 ae 
-> > 00:40:43:072  COM1 >RIP   rdac_activate+0x257/
-> > 0x387 [scsi_dh_rdac]
-> > 00:40:43:088  COM1 > RSP <ffff880127109dc0>
-> > 00:40:43:088  COM1 >---[ end trace 00e89c598c82483b ]---
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
