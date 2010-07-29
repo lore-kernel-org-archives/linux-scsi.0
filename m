@@ -1,21 +1,42 @@
-From: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Subject: Re: [PATCH 4/6] regulator: Remove owner field from attribute
- initialization in regulator core driver
-Date: Thu, 29 Jul 2010 10:15:54 -0700
-Message-ID: <20100729171553.GA24781@opensource.wolfsonmicro.com>
-References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
- <1280380166-29196-5-git-send-email-guenter.roeck@ericsson.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH -next] scsi: be2iscsi needs ISCSI_BOOT_SYSFS
+Date: Thu, 29 Jul 2010 10:16:09 -0700
+Message-ID: <20100729101609.965dbe48.randy.dunlap@oracle.com>
+References: <20100729143211.9e7edaed.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1280380166-29196-5-git-send-email-guenter.roeck@ericsson.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Guenter Roeck <guenter.roeck@ericsson.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Greg Kroah-Hartman <gregkh@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, "Eric W. Biederman" <ebiederm@aristanetworks.com>, Benjamin Thery <benjamin.thery@bull.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20100729143211.9e7edaed.sfr@canb.auug.org.au>
+Sender: linux-next-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, Jayamohan Kallickal <jayamohank@serverengines.com>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, jejbscsi <james.bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jul 28, 2010 at 10:09:24PM -0700, Guenter Roeck wrote:
-> Signed-off-by: Guenter Roeck <guenter.roeck@ericsson.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Acked-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+be2iscsi uses iscsi_boot_*() interfaces, so it should ensure that
+ISCSI_BOOT_SYSFS is enabled.
+
+ERROR: "iscsi_boot_create_target" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_create_ethernet" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_create_host_kset" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_create_initiator" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_destroy_kset" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/be2iscsi/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
+
+--- linux-next-20100729.orig/drivers/scsi/be2iscsi/Kconfig
++++ linux-next-20100729/drivers/scsi/be2iscsi/Kconfig
+@@ -2,6 +2,7 @@ config BE2ISCSI
+ 	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
+ 	depends on PCI && SCSI && NET
+ 	select SCSI_ISCSI_ATTRS
++	select ISCSI_BOOT_SYSFS
+ 
+ 	help
+ 	This driver implements the iSCSI functionality for ServerEngines'
+---
