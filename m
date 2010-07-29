@@ -1,50 +1,42 @@
-From: Eric Biederman <ebiederm@aristanetworks.com>
-Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
-Date: Wed, 28 Jul 2010 23:16:35 -0700
-Message-ID: <AANLkTinM+m15QbAg+J3YyHWnObsxtHYYU6p6C89p8wjp@mail.gmail.com>
-References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] Return NEEDS_RETRY for eh commands with status BUSY
+Date: Thu, 29 Jul 2010 10:10:16 +0200
+Message-ID: <20100729081016.985AC2A3A6@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50702 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750752Ab0G2GQg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2010 02:16:36 -0400
-In-Reply-To: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
+Received: from cantor2.suse.de ([195.135.220.15]:46325 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753914Ab0G2IKR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jul 2010 04:10:17 -0400
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	by mx2.suse.de (Postfix) with ESMTP id AB7F88726A
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2010 10:10:16 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guenter Roeck <guenter.roeck@ericsson.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Greg Kroah-Hartman <gregkh@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, Benjamin Thery <benjamin.thery@bull.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jul 28, 2010 at 10:09 PM, Guenter Roeck
-<guenter.roeck@ericsson.com> wrote:
-> The following comment is found in include/linux/sysfs.h:
->
-> =A0 /* FIXME
-> =A0 =A0* The *owner field is no longer used.
-> =A0 =A0* x86 tree has been cleaned up. The owner
-> =A0 =A0* attribute is still left for other arches.
-> =A0 =A0*/
->
-> As it turns out, the *owner field is (again?) initialized in several =
-modules,
-> suggesting that such initialization may be creeping back into the cod=
-e.
->
-> This patch set removes the above comment, the *owner field, and each =
-instance
-> in the code where it was found to be initialized.
->
-> Compiled with x86 allmodconfig as well as with all alpha, arm, mips, =
-powerpc,
-> and sparc defconfig builds.
 
-This seems reasonable to me.  Can we get this in linux-next?
+When the transport is busy and we're sending an EH command drivers
+occasionally return 'BUSY'. As this in most cases is the TUR
+command sent as part of the error recovery this is a sure way
+to make the error recovery escalate. Returning 'NEEDS_RETRY'
+here will just retry the TUR command and eventually abort the
+original command, thus making error handling far smoother.
 
-Eric
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 225d221..41266ec 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -544,6 +544,7 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
+ 		scsi_handle_queue_full(scmd->device);
+ 		/* fall through */
+ 	case BUSY:
++		return NEEDS_RETRY;
+ 	default:
+ 		return FAILED;
+ 	}
