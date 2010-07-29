@@ -1,61 +1,61 @@
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [RFC] relaxed barrier semantics
-Date: Thu, 29 Jul 2010 10:31:42 +0200
-Message-ID: <20100729083142.GA30077@lst.de>
-References: <20100727183546.GG7347@redhat.com> <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de> <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org>
+Date: Thu, 29 Jul 2010 10:42:25 +0200
+Message-ID: <20100729084225.GA30446@lst.de>
+References: <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de> <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org> <20100729024334.GA21736@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:37744 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750987Ab0G2IcK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jul 2010 04:32:10 -0400
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100729014431.GD4506@thunk.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20100729024334.GA21736@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Ted Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: Ted Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@s
 
-On Wed, Jul 28, 2010 at 09:44:31PM -0400, Ted Ts'o wrote:
-> Define "are safe" --- what interface we planning on using for the
-> non-draining barrier?  At least for ext3, when we write the commit
-> record using set_buffer_ordered(bh), it assumes that this will do a
-> flush of all previous writes and that the commit will hit the disk
-> before any subsequent writes are sent to the disk.  So turning the
-> write of a buffer head marked with set_buffered_ordered() into a FUA
-> write would _not_ be safe for ext3.
+On Wed, Jul 28, 2010 at 10:43:34PM -0400, Vivek Goyal wrote:
+> I guess we will require something like set_buffer_preflush_fua() kind of
+> operation so that we preflush the cache to make sure everything before
+> commit block is on platter and then do commit block write with FUA
+> to make sure commit block is on platter.
 
-Please be careful with your wording.  Dou you really mean
-"all previous writes" or "all previous writes that were completed".
+No more messing with buffer flags for barriers / cache flush options
+please.  It's a flag for the I/O submission, not buffer state.  See
+my patch from June to remove BH_Ordered if you're interested.
 
-My reading of the ext3/jbd code we explicitly wait on I/O completion
-of dependent writes, and only require those to actually be stable
-by issueing a flush.   If that wasn't the case the default ext3
-barriers off behaviour would not only be dangerous on devices with
-volatile write caches, but also on devices that do not have them,
-which in addition to the reading of the code is not what we've seen
-in actual power fail testing, where ext3 does well as long as there
-is no volatile write cache.
+> This is assuming that before issuing commit block request we have waited
+> for completion of rest of the journal data. This will make sure none of
+> that journal data is in request queue. Then if we issue commit with 
+> preflush and FUA, it should make sure all the journal blocks are on
+> disk and then commit block is on disk.
+> 
+> So as long as we wait in filesystem for completion of the requests commit
+> block is dependent on, before we issue commit request, we should not
+> require request queue drain and preflush and FUA write probably should
+> be fine.
 
-Any, the pre-flush semantics are what the relaxe barriers will
-preservere.  REQ_FUA is a separate interface, which we actually have
-already inside the block layer, we'll just need to emulate it for
-devices withot the FUA bit and handle it in dm and md.
+We do not require the drain for that case.  The flush is more difficult,
+because it's entirely possible that we have state that we require to be
+on disk before writing out a log buffer.  For XFS that's two cases:
 
-> For ext4, if we don't use journal checksums, then we have the same
-> requirements as ext3, and the same method of requesting it.  If we do
-> use journal checksums, what ext4 needs is a way of assuring that no
-> writes after the commit are reordered with respect to the disk platter
-> before the commit record --- but any of the writes before that,
-> including the commit, and be reordered because we rely on the checksum
-> in the commit record to know at replay time whether the last commit is
-> valid or not.  We do that right now by calling blkdev_issue_flush()
-> with BLKDEF_IFL_WAIT after submitting the write of the commit block.
+ (1) we require the actual file data to be on disk before logging the
+     file size update to avoid stale data exposure in case the log
+     buffer hits the disk before the data
+ (2) we require that the buffers writing back metadata actually made it
+     to disk before pushing the log tail
 
-blkdev_issue_flush is just am empty barrier, and the current barriers
-prevent any kind of reordering.  I'd rather avoid adding a one way
-reordering prevention.
+(1) means we'll always a pre-flush when a log buffer contains a size
+update from an appending write.
+(2) means we need to more complicated tracking of the tail lsn, e.g.
+by caching it somewhere and only updating the cached value after a
+cache flush happened, with a way to force one if needed.
 
-Given that we don't appear to actually need the full reordering
-prevention even without the journal checksums why do you have stricter
-requirements when they are enabled?
+All that is at least as complicated as it sounds.  While I have a
+working prototype just going with the relaxed barriers as a first step
+is probably.
+
+> IIUC, blkdev_issue_flush() is just a hard barrier and will drain queue
+> and flush the cache.
+
+Exactly.
+
