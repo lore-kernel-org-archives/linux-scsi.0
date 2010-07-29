@@ -1,83 +1,59 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Thu, 29 Jul 2010 16:58:24 -0400
-Message-ID: <4C51EB70.9090209@redhat.com>
-References: <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de>	 <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de>	 <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de>	 <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de>	 <20100729014431.GD4506@thunk.org> <4C51DA1F.2040701@redhat.com>	 <20100729194904.GA17098@lst.de>  <4C51DCF1.3010507@redhat.com> <1280433591.4441.393.camel@mulgrave.site>
+From: "Jayamohan Kalickal" <jayamohank@serverengines.com>
+Subject: Re: [PATCH -next] scsi: be2iscsi needs ISCSI_BOOT_SYSFS
+Date: Thu, 29 Jul 2010 14:06:33 -0700
+Message-ID: <20100729210633.19ce36e7@mailhost.serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1280433591.4441.393.camel@mulgrave.site>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: 20100729101609.965dbe48.randy.dunlap@oracle.com
+Sender: linux-next-owner@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, jejbscsi <james.bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/29/2010 03:59 PM, James Bottomley wrote:
-> On Thu, 2010-07-29 at 15:56 -0400, Ric Wheeler wrote:
->    
->> On 07/29/2010 03:49 PM, Christoph Hellwig wrote:
->>      
->>> On Thu, Jul 29, 2010 at 03:44:31PM -0400, Ric Wheeler wrote:
->>>
->>>        
->>>> I confess that I am a bit fuzzy on FUA, but think that it means that any
->>>> FUA tagged IO will go down to persistent store before returning.
->>>>
->>>>          
->>> Exactly.
->>>
->>>
->>>        
->>>> If so, then all order dependent IO would need to be issued in order and
->>>> tagged with FUA. It would not suffice to tag just the commit record as
->>>> FUA, or do I misunderstand what FUA does?
->>>>
->>>>          
->>> The commit record is ext3/4 specific terminalogy.  In xfs we just have
->>> one type of log buffers, and we could tag that as FUA.  There is very
->>> little other depenent I/O, but if that is present we need a pre-flush
->>> for it anyway.
->>>
->>>
->>>        
->> I assume that for ext3 it would get more complicated depending on the
->> journal mode. In ordered or data journal mode, we would have to write
->> the dependent non-journal data tagged with FUA, then the FUA tagged
->> transaction and finally the FUA tagged commit block.
->>
->> Not sure how FUA performs, but writing lots of small tagged writes is
->> probably not good for performance...
->>      
-> That's basically everything FUA ... you might just as well switch your
-> cache to write through and have done.
->    
+_____  
+From: Randy Dunlap [mailto:randy.dunlap@oracle.com]
+To: Stephen Rothwell [mailto:sfr@canb.auug.org.au], scsi [mailto:linux-scsi@vger.kernel.org], Jayamohan Kallickal [mailto:jayamohank@serverengines.com]
+Cc: linux-next@vger.kernel.org, LKML [mailto:linux-kernel@vger.kernel.org], jejbscsi [mailto:james.bottomley@suse.de]
+Sent: Thu, 29 Jul 2010 10:16:09 -0700
+Subject: [PATCH -next] scsi: be2iscsi needs ISCSI_BOOT_SYSFS
 
-I think that for data ordered mode that is all of the data more or less 
-would get tagged. For data journal, would we have to send 2x the write 
-workload down with tags?  I agree that this would be dubious at best.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Note that using the non-FUA cache flush commands, while brute force, 
-does have a clear win on slower devices (S-ATA specifically).  Each time 
-I have looked, using the write cache enabled on S-ATA was a win (big win 
-on streaming write performance, not sure why).
+be2iscsi uses iscsi_boot_*() interfaces, so it should ensure that
+ISCSI_BOOT_SYSFS is enabled.
 
-On SAS drives, the flush barriers were not as large a delta (do not 
-remember which won out).
+ERROR: "iscsi_boot_create_target" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_create_ethernet" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_create_host_kset" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_create_initiator" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
+ERROR: "iscsi_boot_destroy_kset" [drivers/scsi/be2iscsi/be2iscsi.ko] undefined!
 
-> This, by the way, is one area I'm hoping to have researched on SCSI
-> (where most devices do obey the caching directives).  Actually see if
-> write through without flush barriers is faster than writeback with flush
-> barriers.  I really suspect it is.
->
-> James
->    
-
-There are clearly much better ways to do this. Even the flushes, if we 
-could flush ranges that matched the partition under the file system, 
-would be better than today where we flush the entire physical device.
-
-Ric
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 
 
+Acked-by: Jayamohan Kallickal <jayamohank@serverengines.com> 
+---
+ drivers/scsi/be2iscsi/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
+--- linux-next-20100729.orig/drivers/scsi/be2iscsi/Kconfig
++++ linux-next-20100729/drivers/scsi/be2iscsi/Kconfig
+@@ -2,6 +2,7 @@ config BE2ISCSI
+ 	tristate "ServerEngines' 10Gbps iSCSI - BladeEngine 2"
+ 	depends on PCI && SCSI && NET
+ 	select SCSI_ISCSI_ATTRS
++	select ISCSI_BOOT_SYSFS
+ 
+ 	help
+ 	This driver implements the iSCSI functionality for ServerEngines'
+---
+
+___________________________________________________________________________________
+This message, together with any attachment(s), contains confidential and proprietary information of
+ServerEngines Corporation and is intended only for the designated recipient(s) named above. Any unauthorized
+review, printing, retention, copying, disclosure or distribution is strictly prohibited.  If you are not the
+intended recipient of this message, please immediately advise the sender by reply email message and
+delete all copies of this message and any attachment(s). Thank you.
