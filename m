@@ -1,78 +1,55 @@
-From: Shyam Iyer <shyam_iyer@dell.com>
-Subject: Re: [dm-devel] [PATCH 2/6] scsi_dh : increment the refcounts while
- calling activate
-Date: Thu, 29 Jul 2010 00:46:51 -0400
-Message-ID: <4C5107BB.8020201@dell.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF4D05DC422@cosmail01.lsi.com>
+From: Guenter Roeck <guenter.roeck@ericsson.com>
+Subject: [PATCH 3/6] leds: Remove owner field from attribute initialization in bd2802 driver
+Date: Wed, 28 Jul 2010 22:09:23 -0700
+Message-ID: <1280380166-29196-4-git-send-email-guenter.roeck@ericsson.com>
+References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausxippc101.us.dell.com ([143.166.85.207]:13511 "EHLO
-	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953Ab0G2ErD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2010 00:47:03 -0400
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4D05DC422@cosmail01.lsi.com>
+Received: from imr3.ericy.com ([198.24.6.13]:45806 "EHLO imr3.ericy.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751287Ab0G2FNx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jul 2010 01:13:53 -0400
+In-Reply-To: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: "Moger, Babu" <Babu.Moger@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Stankey, Robert" <Robert.Stankey@lsi.com>
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Greg Kroah-Hartman <gregkh@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul
+Cc: Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, "Eric W. Biederman" <ebiederm@aristanetworks.com>, Benjamin Thery <benjamin.thery@bull.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, Guenter Roeck <guenter.roeck@ericsson.com>
 
-On 07/28/2010 06:59 PM, Moger, Babu wrote:
-> Hold the refcounts for device and scsi_dh_data while calling handler's activate. This will make sure that devices and scsi_dh_data are not removed while activate is still in progress. Make sure to call put_device and kref_put in the handler after activate is complete.
->
-> Signed-off-by: Babu Moger<babu.moger@lsi.com>
-> ---
-> --- linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh.c.orig	2010-07-23 05:40:11.000000000 -0500
-> +++ linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh.c	2010-07-23 05:48:53.000000000 -0500
-> @@ -228,7 +228,8 @@ store_dh_state(struct device *dev, struc
->   			 * Activate a device handler
->   			 */
->   			if (scsi_dh->activate)
-> -				err = scsi_dh->activate(sdev, NULL, NULL);
-> +				err = scsi_dh_activate(sdev->request_queue,
-> +							NULL, NULL);
->   			else
->   				err = 0;
->   		}
-> @@ -431,6 +432,8 @@ EXPORT_SYMBOL_GPL(scsi_unregister_device
->    *         do not hold the lock in the caller which may be needed in fn.
->    * @data - data passed to the function fn upon completion.
->    *
-> + * NOTE  - Remember to call put_device and kref_put in the handler after
-> + *         calling the callback function. Otherwise things could become messy.
->    */
->   int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
->   {
-> @@ -450,9 +453,12 @@ int scsi_dh_activate(struct request_queu
->   	if (err)
->   		return err;
->
-> -	if (scsi_dh->activate)
-> +	if (scsi_dh->activate) {
-> +		kref_get(&sdev->scsi_dh_data->kref);
->   		err = scsi_dh->activate(sdev, fn, data);
->    
-Why not kref_put here instead of in the device handler.. It is easier to 
-associate the ref counts..
+Signed-off-by: Guenter Roeck <guenter.roeck@ericsson.com>
+---
+ drivers/leds/leds-bd2802.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Also, you are removing the put_device here and adding them to the device 
-handler which can be avoided ..
-> -	put_device(&sdev->sdev_gendev);
-> +	} else
-> +		put_device(&sdev->sdev_gendev);
-> +
->   	return err;
->   }
->   EXPORT_SYMBOL_GPL(scsi_dh_activate);
->
->
->
->
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
->    
+diff --git a/drivers/leds/leds-bd2802.c b/drivers/leds/leds-bd2802.c
+index 5dcdf9d..19dc4b6 100644
+--- a/drivers/leds/leds-bd2802.c
++++ b/drivers/leds/leds-bd2802.c
+@@ -351,7 +351,7 @@ static ssize_t bd2802_store_reg##reg_addr(struct device *dev,		\
+ 	return count;							\
+ }									\
+ static struct device_attribute bd2802_reg##reg_addr##_attr = {		\
+-	.attr = {.name = reg_name, .mode = 0644, .owner = THIS_MODULE},	\
++	.attr = {.name = reg_name, .mode = 0644},			\
+ 	.store = bd2802_store_reg##reg_addr,				\
+ };
+ 
+@@ -482,7 +482,6 @@ static struct device_attribute bd2802_adv_conf_attr = {
+ 	.attr = {
+ 		.name = "advanced_configuration",
+ 		.mode = 0644,
+-		.owner = THIS_MODULE
+ 	},
+ 	.show = bd2802_show_adv_conf,
+ 	.store = bd2802_store_adv_conf,
+@@ -519,7 +518,6 @@ static struct device_attribute bd2802_##attr_name##_attr = {		\
+ 	.attr = {							\
+ 		.name = name_str,					\
+ 		.mode = 0644,						\
+-		.owner = THIS_MODULE					\
+ 	},								\
+ 	.show = bd2802_show_##attr_name,				\
+ 	.store = bd2802_store_##attr_name,				\
+-- 
+1.7.0.87.g0901d
 
--Shyam Iyer
