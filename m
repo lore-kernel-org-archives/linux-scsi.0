@@ -1,63 +1,40 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: extfs reliability
-Date: Thu, 29 Jul 2010 16:34:56 +0200
-Message-ID: <20100729143456.GB12690@quack.suse.cz>
-References: <20100728085048.GA8884@lst.de>
- <4C4FF136.5000205@kernel.org>
- <20100728090025.GA9252@lst.de>
- <4C4FF592.9090800@kernel.org>
- <20100728092859.GA11096@lst.de>
- <20100729014431.GD4506@thunk.org>
- <20100729083142.GA30077@lst.de>
- <4C517B5A.3020905@vlnb.net>
- <20100729130852.GA11852@lst.de>
- <4C518C4D.6050607@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C518C4D.6050607@vlnb.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, linux-kernel@vger.kernel.org, kernel-bugs@lists.ubuntu.com
+From: Kulikov Vasiliy <segooon@gmail.com>
+Subject: [PATCH] scsi: ch: check put_user() result
+Date: Thu, 29 Jul 2010 19:56:02 +0400
+Message-ID: <1280418963-5984-1-git-send-email-segooon@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:46550 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757614Ab0G2P4Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2010 11:56:24 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kernel-janitors@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Davidlohr Bueso <dave@gnu.org>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu 29-07-10 18:12:29, Vladislav Bolkhovitin wrote:
-> 
-> Christoph Hellwig, on 07/29/2010 05:08 PM wrote:
-> > On Thu, Jul 29, 2010 at 05:00:10PM +0400, Vladislav Bolkhovitin wrote:
-> >> You can find full kernel logs starting from iSCSI load in the attachments.
-> >>
-> >> I already reported such issues some time ago, but my reports were not too much welcomed, so I gave up. Anyway, anybody can easily do my tests at any time. They don't need any special hardware, just 2 Linux boxes: one for iSCSI target and one for iSCSI initiator (the test box itself). But they are generic for other transports as well. You can see there's nothing iSCSI specific in the traces.
-> > 
-> > I was only talking about ext3.
-> 
-> Yes, now ext3 is a lot more reliable. The only how I was able to confuse it was:
-> 
-> ...
-> (2197) nb_write: handle 4272 was not open size=65475 ofs=0
-> (2199) nb_write: handle 4272 was not open size=65475 ofs=65534
-> (2201) nb_write: handle 4272 was not open size=65475 ofs=131068
-> (2203) nb_write: handle 4272 was not open size=65475 ofs=196602
-> (2205) nb_write: handle 4272 was not open size=65475 ofs=262136^C
-> ^C
-> root@ini:/mnt/dbench-mod# ^C
-> root@ini:/mnt/dbench-mod# ^C
-> root@ini:/mnt/dbench-mod# cd
-> root@ini:~# umount /mnt
-> 
-> <- recover device
-> 
-> root@ini:~# mount -t ext3 -o barrier=1 /dev/sdb /mnt
-> mount: wrong fs type, bad option, bad superblock on /dev/sdb,
->        missing codepage or helper program, or other error
->        In some cases useful info is found in syslog - try
->        dmesg | tail  or so
-> 
-> Kernel log: "Jul 29 22:05:32 ini kernel: [ 2905.423092] JBD: recovery failed"
-  Hmm, this is strange. Are there more messages around this one?
+put_user() may fail, if so return -EFAULT.
 
-									Honza
+Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+---
+ drivers/scsi/ch.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 4799d43..978bf68 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -548,7 +548,10 @@ static int ch_gstatus(scsi_changer *ch, int type, unsigned char __user *dest)
+ 			retval = -EIO;
+ 			break;
+ 		}
+-		put_user(data[2], dest+i);
++		if (put_user(data[2], dest+i)) {
++			retval = -EFAULT;
++			break;
++		}
+ 		if (data[2] & CESTATUS_EXCEPT)
+ 			vprintk("element 0x%x: asc=0x%x, ascq=0x%x\n",
+ 				ch->firsts[type]+i,
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+1.7.0.4
+
