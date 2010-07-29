@@ -1,95 +1,78 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Wed, 28 Jul 2010 22:43:34 -0400
-Message-ID: <20100729024334.GA21736@redhat.com>
-References: <20100727183546.GG7347@redhat.com>
- <4C4FE58C.8080403@kernel.org>
- <20100728082447.GA7668@lst.de>
- <4C4FECFE.9040509@kernel.org>
- <20100728085048.GA8884@lst.de>
- <4C4FF136.5000205@kernel.org>
- <20100728090025.GA9252@lst.de>
- <4C4FF592.9090800@kernel.org>
- <20100728092859.GA11096@lst.de>
- <20100729014431.GD4506@thunk.org>
+From: Shyam Iyer <shyam_iyer@dell.com>
+Subject: Re: [dm-devel] [PATCH 2/6] scsi_dh : increment the refcounts while
+ calling activate
+Date: Thu, 29 Jul 2010 00:46:51 -0400
+Message-ID: <4C5107BB.8020201@dell.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF4D05DC422@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22716 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752692Ab0G2Cnu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Jul 2010 22:43:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20100729014431.GD4506@thunk.org>
+Received: from ausxippc101.us.dell.com ([143.166.85.207]:13511 "EHLO
+	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953Ab0G2ErD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2010 00:47:03 -0400
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4D05DC422@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ted Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "Moger, Babu" <Babu.Moger@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Stankey, Robert" <Robert.Stankey@lsi.com>
 
-On Wed, Jul 28, 2010 at 09:44:31PM -0400, Ted Ts'o wrote:
-> On Wed, Jul 28, 2010 at 11:28:59AM +0200, Christoph Hellwig wrote:
-> > If we move all filesystems to non-draining barriers with pre- and post-
-> > flushes that might actually be a relatively easy first step.  We don't
-> > have the complications to deal with multiple types of barriers to
-> > start with, and it'll fix the issue for devices without volatile write
-> > caches completely.
-> > 
-> > I just need some help from the filesystem folks to determine if they
-> > are safe with them.
-> > 
-> > I know for sure that ext3 and xfs are from looking through them.  And
-> > I know reiserfs is if we make sure it doesn't hit the code path that
-> > relies on it that is currently enabled by the barrier option.
-> > 
-> > I'll just need more feedback from ext4, gfs2, btrfs and nilfs folks.
-> > That already ends our small list of barrier supporting filesystems, and
-> > possibly ocfs2, too - although the barrier implementation there seems
-> > incomplete as it doesn't seem to flush caches in fsync.
-> 
-> Define "are safe" --- what interface we planning on using for the
-> non-draining barrier?  At least for ext3, when we write the commit
-> record using set_buffer_ordered(bh), it assumes that this will do a
-> flush of all previous writes and that the commit will hit the disk
-> before any subsequent writes are sent to the disk.  So turning the
-> write of a buffer head marked with set_buffered_ordered() into a FUA
-> write would _not_ be safe for ext3.
-> 
+On 07/28/2010 06:59 PM, Moger, Babu wrote:
+> Hold the refcounts for device and scsi_dh_data while calling handler's activate. This will make sure that devices and scsi_dh_data are not removed while activate is still in progress. Make sure to call put_device and kref_put in the handler after activate is complete.
+>
+> Signed-off-by: Babu Moger<babu.moger@lsi.com>
+> ---
+> --- linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh.c.orig	2010-07-23 05:40:11.000000000 -0500
+> +++ linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh.c	2010-07-23 05:48:53.000000000 -0500
+> @@ -228,7 +228,8 @@ store_dh_state(struct device *dev, struc
+>   			 * Activate a device handler
+>   			 */
+>   			if (scsi_dh->activate)
+> -				err = scsi_dh->activate(sdev, NULL, NULL);
+> +				err = scsi_dh_activate(sdev->request_queue,
+> +							NULL, NULL);
+>   			else
+>   				err = 0;
+>   		}
+> @@ -431,6 +432,8 @@ EXPORT_SYMBOL_GPL(scsi_unregister_device
+>    *         do not hold the lock in the caller which may be needed in fn.
+>    * @data - data passed to the function fn upon completion.
+>    *
+> + * NOTE  - Remember to call put_device and kref_put in the handler after
+> + *         calling the callback function. Otherwise things could become messy.
+>    */
+>   int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
+>   {
+> @@ -450,9 +453,12 @@ int scsi_dh_activate(struct request_queu
+>   	if (err)
+>   		return err;
+>
+> -	if (scsi_dh->activate)
+> +	if (scsi_dh->activate) {
+> +		kref_get(&sdev->scsi_dh_data->kref);
+>   		err = scsi_dh->activate(sdev, fn, data);
+>    
+Why not kref_put here instead of in the device handler.. It is easier to 
+associate the ref counts..
 
-I guess we will require something like set_buffer_preflush_fua() kind of
-operation so that we preflush the cache to make sure everything before
-commit block is on platter and then do commit block write with FUA
-to make sure commit block is on platter.
+Also, you are removing the put_device here and adding them to the device 
+handler which can be avoided ..
+> -	put_device(&sdev->sdev_gendev);
+> +	} else
+> +		put_device(&sdev->sdev_gendev);
+> +
+>   	return err;
+>   }
+>   EXPORT_SYMBOL_GPL(scsi_dh_activate);
+>
+>
+>
+>
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+>    
 
-This is assuming that before issuing commit block request we have waited
-for completion of rest of the journal data. This will make sure none of
-that journal data is in request queue. Then if we issue commit with 
-preflush and FUA, it should make sure all the journal blocks are on
-disk and then commit block is on disk.
-
-So as long as we wait in filesystem for completion of the requests commit
-block is dependent on, before we issue commit request, we should not
-require request queue drain and preflush and FUA write probably should
-be fine.
-
-> For ext4, if we don't use journal checksums, then we have the same
-> requirements as ext3, and the same method of requesting it.  If we do
-> use journal checksums, what ext4 needs is a way of assuring that no
-> writes after the commit are reordered with respect to the disk platter
-> before the commit record --- but any of the writes before that,
-> including the commit, and be reordered because we rely on the checksum
-> in the commit record to know at replay time whether the last commit is
-> valid or not.  We do that right now by calling blkdev_issue_flush()
-> with BLKDEF_IFL_WAIT after submitting the write of the commit block.
-
-IIUC, blkdev_issue_flush() is just a hard barrier and will drain queue
-and flush the cache. I guess what we need is only flush and not drain
-after we have waited for completion of commit record as well as requests
-issued before commit record. That should make sure any WRITE after 
-commit record does not get reordered w.r.t previous commit. So we
-probably need blkdev_issue_flush_only() which will just flush caches
-and not drain request queue.
-
-This is all based on my very primitive knowledge. Please ignore if it is
-all rubbish.
-
-Thanks
-Vivek
+-Shyam Iyer
