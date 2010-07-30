@@ -1,34 +1,63 @@
-From: Christoph Hellwig <hch@lst.de>
+From: Vivek Goyal <vgoyal@redhat.com>
 Subject: Re: [RFC] relaxed barrier semantics
-Date: Fri, 30 Jul 2010 09:11:38 +0200
-Message-ID: <20100730071138.GA6411__9664.82668086446$1280473936$gmane$org@lst.de>
-References: <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org> <4C51DA1F.2040701@redhat.com> <20100729194904.GA17098@lst.de> <4C51DCF1.3010507@redhat.com> <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca> <20100729230406.GI4506@thunk.org>
+Date: Fri, 30 Jul 2010 03:41:38 -0400
+Message-ID: <20100730074138.GA1357@redhat.com>
+References: <20100728090025.GA9252@lst.de>
+ <4C4FF592.9090800@kernel.org>
+ <20100728092859.GA11096@lst.de>
+ <20100729014431.GD4506@thunk.org>
+ <20100729024334.GA21736@redhat.com>
+ <20100729084225.GA30446@lst.de>
+ <20100729200217.GD28704@redhat.com>
+ <20100729200655.GB17767@lst.de>
+ <20100730031721.GA31762@redhat.com>
+ <20100730070732.GA6291@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:35276 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755135Ab0G3HMJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jul 2010 03:12:09 -0400
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100729230406.GI4506@thunk.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20100730070732.GA6291@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: Ted Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redha>
 
-On Thu, Jul 29, 2010 at 07:04:06PM -0400, Ted Ts'o wrote:
-> My understanding is that "everything FUA" can be a performance
-> disaster.  That's because it bypasses the track buffer, and things get
-> written directly to disk.  So there is no possibility to reorder
-> buffers so that they get written in one disk rotation.  Depending on
-> the disk, it might even be that if you send N sequential sectors all
-> tagged with FUA, it could be slower than sending the N sectors
-> followed by a cache flush or SYNCHRONIZE_CACHE command.
-
-Not sure why the discussion is drifting in this direction again, but no
-one suggested to switch eweryone to forcefully use a FUA only primitive.
-If we offer a WRITE_FUA primitive to those who can make use of it, it
-won't mean the the cache flush primitive will go away - we will need it
-to implement fsync anyway.
-
+On Fri, Jul 30, 2010 at 09:07:32AM +0200, Christoph Hellwig wrote:
+> On Thu, Jul 29, 2010 at 11:17:21PM -0400, Vivek Goyal wrote:
+> > To me it looked like as if everything is there and it is just a matter
+> > of skipping elevator draining and request queue draining.
 > 
+> The problem is that is just appears to be so.  The code blocking only
+> the next barrier for tagged writes is there, but in that form it doesn't
+> work and probably never did.  When I try to use it and debug it I always
+> get my post-flush request issued before the barrier request has
+> finished.
+
+Are you referring to following piece of code.
+
+if (q->ordered & QUEUE_ORDERED_BY_TAG) {
+      /* Ordered by tag.  Blocking the next barrier is enough. */
+	if (is_barrier && rq != &q->bar_rq)
+		*rqp = NULL;
+
+If request queue is ordered by TAG, then isn't it ok to issue post-flush
+after barrier immediately (without barrier request to finish). We just
+need to block next barrier (a new barrier and not the post-flush request
+of current barrier). I thought for tagged queue, controller will take
+care of making sure commands finish in order.
+
+If queue is ordered by DRAIN, then I need to worry about first barrier
+to finish and then issue post-flush and I thought following should take
+care of it.
+
+        } else {
+                /* Ordered by draining.  Wait for turn. */
+                WARN_ON(blk_ordered_req_seq(rq) < blk_ordered_cur_seq(q));
+                if (blk_ordered_req_seq(rq) > blk_ordered_cur_seq(q))
+                        *rqp = NULL;
+        }
+
+May be there is a bug somewhere. I will do some debugging.
+
+Thanks
+Vivek
