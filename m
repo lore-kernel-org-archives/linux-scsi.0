@@ -1,51 +1,43 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
-Date: Fri, 30 Jul 2010 07:36:22 -0700
-Message-ID: <20100730143622.GA30105@suse.de>
-References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com> <4C52913C.9020204@kernel.org> <1280485690.1902.8.camel@pasglop>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/8]: qla4xxx: bug fixes and PCI AER support
+Date: Fri, 30 Jul 2010 10:38:53 -0500
+Message-ID: <4C52F20D.1020406@cs.wisc.edu>
+References: <20100730085518.GA12252@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49135 "EHLO mx2.suse.de"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42388 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752139Ab0G3Olv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jul 2010 10:41:51 -0400
-Content-Disposition: inline
-In-Reply-To: <1280485690.1902.8.camel@pasglop>
+	id S1751052Ab0G3PfJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jul 2010 11:35:09 -0400
+In-Reply-To: <20100730085518.GA12252@sles11sp1b1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Tejun Heo <tj@kernel.org>, Guenter Roeck <guenter.roeck@ericsson.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Paul Mackerras <paulus@samba.org>, Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, "Eric W. Biederman" <ebiederm@aristanetworks.com>, Benjamin Thery <benjamin.thery@bull.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: james.bottomley@suse.de, linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, nilesh.javali@qlogic.com, lalit.chandivade@qlogic.com
 
-On Fri, Jul 30, 2010 at 08:28:10PM +1000, Benjamin Herrenschmidt wrote:
-> On Fri, 2010-07-30 at 10:45 +0200, Tejun Heo wrote:
-> > On 07/29/2010 07:09 AM, Guenter Roeck wrote:
-> > > The following comment is found in include/linux/sysfs.h:
-> > > 
-> > >    /* FIXME
-> > >     * The *owner field is no longer used.
-> > >     * x86 tree has been cleaned up. The owner
-> > >     * attribute is still left for other arches.
-> > >     */
-> > > 
-> > > As it turns out, the *owner field is (again?) initialized in several modules,
-> > > suggesting that such initialization may be creeping back into the code.
-> > > 
-> > > This patch set removes the above comment, the *owner field, and each instance
-> > > in the code where it was found to be initialized.
-> > > 
-> > > Compiled with x86 allmodconfig as well as with all alpha, arm, mips, powerpc,
-> > > and sparc defconfig builds.
-> > 
-> > Yeah, the change is way overdue.  Maybe we should have just removed
-> > them back then.
-> 
-> I'm happy with the powerpc related patches as long as we all agree that
-> needs to go. Do you need me to put some of this in powerpc.git or are
-> you carrying them all to Linus ?
+On 07/30/2010 03:55 AM, Vikas Chaudhary wrote:
+> James,
+>
+> Please apply following list of patches which are generated against
+> latest scsi-misc-2.6 tree.
+>
+> Vikas Chaudhary (5)
+> 0001-qla4xxx-set-correct-value-in-sess-recovery_tmo.patch
+> 0002-qla4xxx-Use-the-correct-request-queue.patch
+> 0004-qla4xxx-clear-AF_DPC_SCHEDULED-flage-when-exit-from-.patch
+> 0005-qla4xxx-updated-mbx_sys_info-struct-to-sync-with-FW-.patch
+> 0008-qla4xxx-Update-driver-version-to-5.02.00-k3.patch
+>
+> Lalit Chandivade (2)
+> 0003-qla4xxx-Stop-firmware-before-doing-init-firmware.patch
+> 0007-qla4xxx-Added-AER-support-for-ISP82xx.patch
+>
+> Nilesh Javali (1)
+> 0006-qla4xxx-Handle-outstanding-mbx-cmds-on-hung-f-w-scen.patch
+>
 
-I can carry them all in my driver-core tree if you don't object.
+Looks ok.
 
-thanks,
-
-greg k-h
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
