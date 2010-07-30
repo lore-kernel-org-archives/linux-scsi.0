@@ -1,36 +1,105 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: dev_loss_tmo behavior question
-Date: Fri, 30 Jul 2010 12:21:49 -0500
-Message-ID: <4C530A2D.5070507@cs.wisc.edu>
-References: <4C4F4B94.1070009@cs.wisc.edu> <4C5055AA.7080703@emulex.com> <20100728165707.GA9844@plapp.qlogic.org>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH 0/6] scsi_dh : Couple of fixes for scsi device handlers
+Date: Fri, 30 Jul 2010 12:12:39 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4D0663A2C@cosmail01.lsi.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF4D05DC420@cosmail01.lsi.com>
+	 <1280440444.17620.72.camel@chandra-lucid.beaverton.ibm.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF4D0663845@cosmail01.lsi.com>
+ <1280448276.17620.80.camel@chandra-lucid.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:33158 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758686Ab0G3Rod (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jul 2010 13:44:33 -0400
-In-Reply-To: <20100728165707.GA9844@plapp.qlogic.org>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:57729 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760113Ab0G3SN1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jul 2010 14:13:27 -0400
+In-Reply-To: <1280448276.17620.80.camel@chandra-lucid.beaverton.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Smart <james.smart@Emulex.Com>, "brking@linux.vnet.ibm.com" <brking@linux.vnet.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, "Love, Robert W" <robert.w.love@intel.com>, Jing Huang <huangj@Brocade.COM>
+To: "sekharan@us.ibm.com" <sekharan@us.ibm.com>, device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "Shyam_Iyer@Dell.com" <Shyam_Iyer@Dell.com>, "Qi, Yanling" <Yanling.Qi@lsi.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>
 
-On 07/28/2010 11:57 AM, Andrew Vasquez wrote:
-> I'm curious though, each driver would still need to seed the rport's
-> dev_loss_tmo value (in the case of qla2xxx,
-> ha->port_down_retry_count), but, by doing so after rport-addition
-> (fc_remote_port_add()), the driver could still overwrite a previous
-> sysfs setting.  Internally, upon rport creation, the dev_loss_tmo
-> value is seeding with fc_dev_loss_tmo (a module parameter -- 60
-> seconds).  Should we extend the transport so the the 'default seeding
-> value' can be specified once at fc_host creation-time?
->
-
-I was going to add a fc_transport callout that gets called when the 
-rport is allocated so drivers can do other rport initialization if they 
-wanted. It is only called the first time when it is actually allocated 
-not every time fc_remote_port_add is called. Would that be more useful?
-
-
+U2VlIG15IGNvbW1lbnRzIGJlbG93Li4NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
+PiBGcm9tOiBDaGFuZHJhIFNlZXRoYXJhbWFuIFttYWlsdG86c2VraGFyYW5AdXMuaWJtLmNvbV0N
+Cj4gU2VudDogVGh1cnNkYXksIEp1bHkgMjksIDIwMTAgNzowNSBQTQ0KPiBUbzogTW9nZXIsIEJh
+YnUNCj4gQ2M6IGRldmljZS1tYXBwZXIgZGV2ZWxvcG1lbnQ7IGxpbnV4LXNjc2lAdmdlci5rZXJu
+ZWwub3JnOw0KPiBTaHlhbV9JeWVyQERlbGwuY29tOyBRaSwgWWFubGluZzsgQ2hhdWhhbiwgVmlq
+YXk7IERhY2hlcGFsbGksIFN1ZGhpcjsNCj4gU3RhbmtleSwgUm9iZXJ0DQo+IFN1YmplY3Q6IFJF
+OiBbUEFUQ0ggMC82XSBzY3NpX2RoIDogQ291cGxlIG9mIGZpeGVzIGZvciBzY3NpIGRldmljZQ0K
+PiBoYW5kbGVycw0KPiANCj4gU2VlIGNvbW1lbnQgYmVsb3cNCj4gDQo+IE9uIFRodSwgMjAxMC0w
+Ny0yOSBhdCAxNjozNSAtMDYwMCwgTW9nZXIsIEJhYnUgd3JvdGU6DQo+ID4gQ2hhbmRyYSwgU2h5
+YW0sDQo+ID4gIFRoYW5rcyBmb3IgeW91ciBjb21tZW50cy4uIFBsZWFzZSBzZWUgbXkgcmVzcG9u
+c2UuDQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBD
+aGFuZHJhIFNlZXRoYXJhbWFuIFttYWlsdG86c2VraGFyYW5AdXMuaWJtLmNvbV0NCj4gPiA+IFNl
+bnQ6IFRodXJzZGF5LCBKdWx5IDI5LCAyMDEwIDQ6NTQgUE0NCj4gPiA+IFRvOiBNb2dlciwgQmFi
+dQ0KPiA+ID4gQ2M6IGRldmljZS1tYXBwZXIgZGV2ZWxvcG1lbnQ7IGxpbnV4LXNjc2lAdmdlci5r
+ZXJuZWwub3JnOyBRaSwNCj4gWWFubGluZzsNCj4gPiA+IENoYXVoYW4sIFZpamF5OyBEYWNoZXBh
+bGxpLCBTdWRoaXI7IFN0YW5rZXksIFJvYmVydA0KPiA+ID4gU3ViamVjdDogUmU6IFtQQVRDSCAw
+LzZdIHNjc2lfZGggOiBDb3VwbGUgb2YgZml4ZXMgZm9yIHNjc2kgZGV2aWNlDQo+ID4gPiBoYW5k
+bGVycw0KPiA+ID4NCj4gPiA+IEJhYnUsDQo+ID4gPg0KPiA+ID4gWW91ciBtYWluIG9iamVjdCBp
+cyB0byBwcm90ZWN0IHNjc2lfZGhfZGF0YSBhY3Jvc3MNCj4gc2NzaV9kaF9hY3RpdmF0ZSgpDQo+
+ID4gPiBieQ0KPiA+ID4gd2F5IG9mIGdldHRpbmcga3JlZiBhcm91bmQgc2NzaV9kaF9hY3RpdmF0
+ZSgpLCByaWdodCA/DQo+ID4gPg0KPiA+DQo+ID4gICBZZXMsIFRoYXQgaXMgY29ycmVjdC4NCj4g
+Pg0KPiA+ID4gV291bGRuJ3QgZG9pbmcgd2hhdCBTaHlhbSBzdWdnZXN0ZWQgKGRvaW5nIGtyZWZf
+cHV0KCkgYW5kDQo+IHB1dF9kZXZpY2UoKSkNCj4gPiA+IGluIHNjc2lfYWN0aXZhdGUoKSBtYWtl
+IGl0IHNpbXBsZXIgYW5kIGNvZGUgc3RpbGwgYmUgcmVhZGFibGUgPyAoaXQNCj4gPiA+IHdvdWxk
+IG1ha2UgYWxsIHRoZSBwYXRjaGVzIGV4Y2VwdCAyLzYgbm90IG5lZWRlZCkuDQo+ID4gPg0KPiA+
+ID4gRGlkIHlvdSBoaXQgd2l0aCBhbnkgcHJvYmxlbXMgZG9pbmcgaXQgdGhhdCB3YXkgPw0KPiA+
+ID4NCj4gPg0KPiA+ICAgWWVzLCBXZSBjYW4gZG8gdGhhdC4gIFByb2JsZW0gaXMgSSBhbSBoaXR0
+aW5nIHRoZSBpc3N1ZSB3aXRoIEJVR19PTg0KPiA+ICBpbiBnZXRfcmRhY19kYXRhIHdoaWNoIGlz
+IHRoZXJlIGluIHRoZSBiZWdpbm5pbmcgb2YgcmRhY19hY3RpdmF0ZS4NCj4gDQo+IEkgZG8gbm90
+IHVuZGVyc3RhbmQgdGhlIHByb2JsZW0uDQo+IA0KPiBJZiB0aGUgQlVHX09OIG9uIGdldF9yZGFj
+X2RhdGEoKSBpcyBiZWluZyB0cmlnZ2VyZWQsIHRoYXQgbWVhbnMNCj4gc2Rldi0+c2NzaV9kaF9k
+YXRhIGlzIE5VTEwsIGlmIHRoYXQgaXMgdGhlIGNhc2UsIGhvdyBjYW4geW91IGFjY2Vzcw0KPiBz
+ZGV2LT5zY3NpX2RoX2RhdGEtPmtyZWYgaW4gc2NzaV9kaF9hY3RpdmF0ZSAoaW4gcGF0Y2ggMi82
+KSA/IFdvdWxkbid0DQo+IGl0IHRyaXAgYSBvb3BzID8NCg0KVGVzdCBjYXNlIGlzIGRlbGV0aW5n
+IGJvdGggYWN0aXZlIGFuZCBwYXNzaXZlIHBhdGhzIGFsbW9zdCB0b2dldGhlciBkdXJpbmcgdGhl
+IG11bHRpcGF0aCB0ZXN0aW5nLiAgTG9va3MgbGlrZSBETSBwaWNrZWQgdXAgdGhlIGFjdGl2ZSBw
+YXRoIGZhaWx1cmUgZmlyc3QuIFRoZW4gZmFpbGVkIHRoZSBhY3RpdmUgcGF0aCBhbmQgc3RhcnRl
+ZCBzY2hlZHVsaW5nIGFjdGl2YXRlX3BhdGggdG8gZmFpbG92ZXIgdG8gcGFzc2l2ZSBwYXRoLiBQ
+YXNzaXZlIHBhdGggaXMgYWxzbyBhYm91dCB0byBnbyBkb3duIHByZXR0eSBzb29uLiBXaGVuIHRo
+ZSBjb250cm9sIHdhcyBpbiBzY3NpX2RoX2FjdGl2YXRlLCBMb29rcyBsaWtlIHNjc2lfZGhfZGF0
+YSB3YXMgc3RpbGwgdmFsaWQgYmVjYXVzZSBJIGRpZCBub3Qgc2VlIHBhbmljIGhlcmUuICBCdXQg
+c2NzaV9kaF9kYXRhIGJlY2FtZSBOVUxMIHdoZW4gY29udHJvbCB3ZW50IHRvIHJkYWNfYWN0aXZh
+dGUuIFRoYXQgaXMgd2hlbiBJIGhpdCB0aGUgYnVnIG9uLiANCg0Ka2VybmVsIEJVRyBhdCAvdXNy
+L3NyYy9wYWNrYWdlcy9CVUlMRC9sc2ktc2NzaV9kaF9yZGFjLTAxLjAwL29iai9kZWZhdWx0L3Nj
+c2lfZGhfcmRhYy5jOjIzMiENClJJUDogMDAxMDogIHJkYWNfYWN0aXZhdGUrMHgyNTcvMHgzODcg
+W3Njc2lfZGhfcmRhY10NCg0KTXkgdW5kZXJzdGFuZGluZyBpcyBzb21lb25lIHRyaWdnZXJlZCBz
+Y3NpX2RoLT5kZXRhY2ggZm9yIHBhc3NpdmUgcGF0aCBkdXJpbmcgdGhpcyBzbWFsbCB3aW5kb3cu
+ICBPbmx5IHdheSBJIGNvdWxkIHNlZSBwcm9ibGVtIGdvIGF3YXkgaXMgaG9sZGluZyByZWZlcmVu
+Y2UgY291bnRzIGJldHdlZW4gdGhlc2UgY2FsbHMuICBEaWQgaSBtaXNzIGFueXRoaW5nIGhlcmU/
+IFNlZSB0aGUgY29kZSBzbmlwcGV0IGJlbG93Li4gDQoNCmludCBzY3NpX2RoX2FjdGl2YXRlKHN0
+cnVjdCByZXF1ZXN0X3F1ZXVlICpxLCBhY3RpdmF0ZV9jb21wbGV0ZSBmbiwgdm9pZCAqZGF0YSkN
+CiB7DQogICAgICAgICBpbnQgZXJyID0gMDsNCiAgICAgICAgIHVuc2lnbmVkIGxvbmcgZmxhZ3M7
+DQogICAgICAgICBzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXY7DQogICAgICAgICBzdHJ1Y3Qgc2Nz
+aV9kZXZpY2VfaGFuZGxlciAqc2NzaV9kaCA9IE5VTEw7DQogDQogICAgICAgICBzcGluX2xvY2tf
+aXJxc2F2ZShxLT5xdWV1ZV9sb2NrLCBmbGFncyk7DQogICAgICAgICBzZGV2ID0gcS0+cXVldWVk
+YXRhOw0KICAgICAgICAgaWYgKHNkZXYgJiYgc2Rldi0+c2NzaV9kaF9kYXRhKQ0KICAgICAgICAg
+ICAgICAgICBzY3NpX2RoID0gc2Rldi0+c2NzaV9kaF9kYXRhLT5zY3NpX2RoOw0KICAgICAgICAg
+aWYgKCFzY3NpX2RoIHx8ICFnZXRfZGV2aWNlKCZzZGV2LT5zZGV2X2dlbmRldikpDQogICAgICAg
+ICAgICAgICAgIGVyciA9IFNDU0lfREhfTk9TWVM7DQogICAgICAgICBzcGluX3VubG9ja19pcnFy
+ZXN0b3JlKHEtPnF1ZXVlX2xvY2ssIGZsYWdzKTsNCiANCiAgICAgICAgIGlmIChlcnIpDQogICAg
+ICAgICAgICAgICAgIHJldHVybiBlcnI7DQogDQogICAgICAgICBpZiAoc2NzaV9kaC0+YWN0aXZh
+dGUpDQogICAgICAgICAgICAgICAgIGVyciA9IHNjc2lfZGgtPmFjdGl2YXRlKHNkZXYsIGZuLCBk
+YXRhKTsNCiAgICAgICAgIHB1dF9kZXZpY2UoJnNkZXYtPnNkZXZfZ2VuZGV2KTsNCiAgICAgICAg
+IHJldHVybiBlcnI7DQogfQ0KIEVYUE9SVF9TWU1CT0xfR1BMKHNjc2lfZGhfYWN0aXZhdGUpOw0K
+IA0KDQpzdGF0aWMgaW50IHJkYWNfYWN0aXZhdGUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LA0K
+ICAgICAgICAgICAgICAgICAgICAgICAgIGFjdGl2YXRlX2NvbXBsZXRlIGZuLCB2b2lkICpkYXRh
+KQ0KIHsNCiAgICAgICAgIHN0cnVjdCByZGFjX2RoX2RhdGEgKmggPSBnZXRfcmRhY19kYXRhKHNk
+ZXYpOyAqKioqKioqICBJIGhpdCBCVUdfT04gaGVyZSAqKioqKioqKioNCiAgICAgICAgIGludCBl
+cnIgPSBTQ1NJX0RIX09LOw0KIA0KICAgICAgICAgZXJyID0gY2hlY2tfb3duZXJzaGlwKHNkZXYs
+IGgpOw0KICAgICAgICAgaWYgKGVyciAhPSBTQ1NJX0RIX09LKQ0KICAgICAgICAgICAgICAgICBn
+b3RvIGRvbmU7DQogDQogICAgICAgICBpZiAoaC0+bHVuX3N0YXRlID09IFJEQUNfTFVOX1VOT1dO
+RUQpIHsNCiAgICAgICAgICAgICAgICAgZXJyID0gcXVldWVfbW9kZV9zZWxlY3Qoc2RldiwgZm4s
+IGRhdGEpOw0KICAgICAgICAgICAgICAgICBpZiAoZXJyID09IFNDU0lfREhfT0spDQogICAgICAg
+ICAgICAgICAgICAgICAgICAgcmV0dXJuIDA7DQogICAgICAgICB9DQogZG9uZToNCiAgICAgICAg
+IGlmIChmbikNCiAgICAgICAgICAgICAgICAgZm4oZGF0YSwgZXJyKTsNCiAgICAgICAgIHJldHVy
+biAwOw0KIH0NCg0KDQo+IA0KPiANCj4gPiAgIElmIEkgaGF2ZSB0byBnbyB0aGlzIHdheSwgdGhl
+biBJIG5lZWQgdG8gcmVtb3ZlIGEgY2FsbA0KPiBnZXRfcmRhY19kYXRhDQo+ID4gIGFuZCBqdXN0
+IHZhbGlkYXRlIHBvaW50ZXJzLiBSZXBvcnQgZXJyb3IoU0NTSV9ESF9JTykgaWYgcG9pbnRlciBp
+cw0KPiBub3QgdmFsaWQuDQo+ID4gICBUaGVuIGhvbGQgdGhlIHJlZmVyZW5jZSBjb3VudHMgYW5k
+IGNvbnRpbnVlIGlmIGV2ZXJ5dGhpbmcgaXMNCj4gYWxyaWdodC4NCj4gPiAgIEkgd2lsbCBzZW5k
+IHRoZSBuZXcgcGF0Y2hlcyBhcyBzb29uIGFzIEkgY2FuLg0KPiANCg0K
