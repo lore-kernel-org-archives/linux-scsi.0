@@ -1,20 +1,22 @@
-From: Lalit Chandivade <lalit.chandivade@qlogic.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 Subject: [PATCH 7/8] qla4xxx: Added AER support for ISP82xx
-Date: Fri, 30 Jul 2010 14:28:29 +0530
-Message-ID: <20100730085829.GA12334@sles11sp1b1.qlogic.org>
+Date: Fri, 30 Jul 2010 14:38:47 +0530
+Message-ID: <20100730090847.GA12698@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:16561
+Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:26860
 	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with SMTP id S1755987Ab0G3JKq (ORCPT
+	by vger.kernel.org with SMTP id S1752462Ab0G3JML (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jul 2010 05:10:46 -0400
+	Fri, 30 Jul 2010 05:12:11 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: vikas.chaudhary@qlogic.com, ravi.anand@qlogic.com, michaelc@cs.wisc.edu, lalit.chandivade@qlogic.com
+
+From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
 Added support for PCI error handling
 
