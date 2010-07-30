@@ -1,54 +1,48 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 3/6] scsi_dh : release the refcounts in scsi_dh_alua
- handler when activate is complete
-Date: Thu, 29 Jul 2010 19:12:07 -0500
-Message-ID: <1280448727.4441.942.camel@mulgrave.site>
-References: <E463DF2B2E584B4A82673F53D62C2EF4D05DC423@cosmail01.lsi.com>
+From: Ted Ts'o <tytso@mit.edu>
+Subject: Re: [RFC] relaxed barrier semantics
+Date: Thu, 29 Jul 2010 20:19:56 -0400
+Message-ID: <20100730001956.GJ4506@thunk.org>
+References: <4C4FF592.9090800@kernel.org>
+ <20100728092859.GA11096@lst.de>
+ <20100729014431.GD4506@thunk.org>
+ <4C51DA1F.2040701@redhat.com>
+ <20100729194904.GA17098@lst.de>
+ <4C51DCF1.3010507@redhat.com>
+ <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca>
+ <20100729230406.GI4506@thunk.org>
+ <1280446105.4441.837.camel@mulgrave.site>
+ <1280446655.4441.863.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:37148 "EHLO mx1.suse.de"
+Received: from thunk.org ([69.25.196.29]:49323 "EHLO thunker.thunk.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755180Ab0G3AMN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jul 2010 20:12:13 -0400
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4D05DC423@cosmail01.lsi.com>
+	id S1755322Ab0G3AUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Jul 2010 20:20:04 -0400
+Content-Disposition: inline
+In-Reply-To: <1280446655.4441.863.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Qi, Yanling" <Yanling.Qi@lsi.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 
-On Wed, 2010-07-28 at 16:59 -0600, Moger, Babu wrote:
-> This patch releases the refcounts when activate is complete in alua handler.
+On Thu, Jul 29, 2010 at 06:37:35PM -0500, James Bottomley wrote:
+> Actually, just an update on this now that I've taken my SCSI glasses
+> off.  Anything that does tagging properly ... like SCSI or SATA NCQ
+> shouldn't have this problem because the multiple outstanding tags hide
+> the media access latency.  For untagged devices, yes, it will be
+> painful.
 > 
-> Signed-off-by: Babu Moger <babu.moger@lsi.com>
-> ---
-> --- linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh_alua.c.orig	2010-07-23 05:58:39.000000000 -0500
-> +++ linux-2.6.35-rc5/drivers/scsi/device_handler/scsi_dh_alua.c	2010-07-23 06:00:54.000000000 -0500
-> @@ -287,6 +287,8 @@ done:
->  		h->callback_fn(h->callback_data, err);
->  		h->callback_fn = h->callback_data = NULL;
->  	}
-> +	kref_put(&h->sdev->scsi_dh_data->kref, scsi_dh_handler_cleanup);
-> +	put_device(&h->sdev->sdev_gendev);
->  	return;
->  }
->  
-> @@ -684,6 +686,8 @@ static int alua_activate(struct scsi_dev
->  out:
->  	if (fn)
->  		fn(data, err);
-> +	kref_put(&sdev->scsi_dh_data->kref, scsi_dh_handler_cleanup);
-> +	put_device(&sdev->sdev_gendev);
 
-This sequence is asking for trouble: having to remember to release two
-separate references at once.
+Maybe I'm just being too paranoid and not trusting enough about the
+competence of firmware authors, but let's do a lot of testing on this
+first.  Or let's have some options so we can turn off FUA if it turns
+out to be a disaster on a particular device.  I'll have to do some
+searching, but I distinctly remember reading an article in Ars
+Technical or Anandtech about how FUA wasn't all that useful because
+what the writer had seen in terms of testing some specific devices.
+Maybe that was a while ago and devices have gotten better, and maybe
+that writer was on crack, but given that FUA doesn't get used a lot,
+I'm nervous....
 
-Logically what should happen is that the reference seems to be on
-scsi_dh_data->sdev, so it should be taken when that's initialised and
-put in scsi_dh_handler_cleanup ... so no-one has to worry about
-forgetting it.
-
-James
-
-
+						- Ted
