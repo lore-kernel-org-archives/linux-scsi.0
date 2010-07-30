@@ -1,82 +1,154 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
- Enable Online Controller Reset Bit in register related functions
-Date: Fri, 30 Jul 2010 12:53:10 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
-	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
-	 <1277046060.5242.18.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
-	 <1277063250.5242.25.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
- <1277066924.5242.41.camel@mulgrave.site>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [PATCH 03/28] libfc: IO errors on link down due to cable unplug
+Date: Fri, 30 Jul 2010 13:34:10 -0700
+Message-ID: <1280522050.25228.1252.camel@vi2.jf.intel.com>
+References: <20100720221904.17116.78553.stgit@localhost.localdomain>
+	 <20100720221920.17116.59505.stgit@localhost.localdomain>
+	 <4C466986.5040801@cs.wisc.edu>
+	 <1280266320.31061.2590.camel@vi2.jf.intel.com>
+	 <4C4FDCF6.2070105@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@suse.de>
-Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Maharana, Parag" <Parag.Maharana@lsi.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:60411 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754167Ab0G3UeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jul 2010 16:34:11 -0400
+In-Reply-To: <4C4FDCF6.2070105@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Robert Love <robert.w.love@intel.com>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-SmFtZXMsDQoNCkRvIHlvdSBrbm93IHdoZW4gdGhvc2UgcGF0Y2hlcyAoMTIgcGF0Y2hlcykgd2ls
-bCBiZSBwdXNoZWQgdG8gdXBzdHJlYW0/DQoNClRoYW5rcywNCg0KQm8gWWFuZw0KDQotLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogWWFuZywgQm8gDQpTZW50OiBUdWVzZGF5LCBKdWx5
-IDIwLCAyMDEwIDk6MDggQU0NClRvOiBZYW5nLCBCbzsgJ0phbWVzIEJvdHRvbWxleScNCkNjOiAn
-WWluZ2hhaSBMdSc7ICdsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyc7ICdha3BtQG9zZGwub3Jn
-JzsgJ2xpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcnDQpTdWJqZWN0OiBSRTogW1BBVENIIDEv
-MTJdIHNjc2k6IG1lZ2FyYWlkX3NhcyAtIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IC0gSTogRW5h
-YmxlIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IEJpdCBpbiByZWdpc3RlciByZWxhdGVkIGZ1bmN0
-aW9ucw0KDQpKYW1lcywNCg0KRG8geW91IGdldCBjaGFuY2VzIHRvIHZpZXcgdGhpcyBjaGFuZ2Vz
-IGFuZCBhcHBseSB0aGUgcGF0Y2hlcyB0byB0aGUgbWFpbiB0cmVlPw0KDQpUaGFua3MsDQoNCkJv
-IFlhbmcNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IFlhbmcsIEJvIA0KU2Vu
-dDogTW9uZGF5LCBKdW5lIDIxLCAyMDEwIDExOjM2IEFNDQpUbzogJ0phbWVzIEJvdHRvbWxleScN
-CkNjOiBZaW5naGFpIEx1OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtwbUBvc2RsLm9y
-ZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUkU6IFtQQVRDSCAxLzEy
-XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCAtIEk6IEVuYWJs
-ZSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCBCaXQgaW4gcmVnaXN0ZXIgcmVsYXRlZCBmdW5jdGlv
-bnMNCg0KSmFtZXMsDQoNCkF0dGFjaGVkIGlzIHRoZSBjaGFuZ2Vsb2cgZm9yIE9DUi4gDQoNClNp
-Z25lZC1vZmYtYnkgQm8gWWFuZzxiby55YW5nQGxzaS5jb20+DQoNCi0tLQ0KRG9jdW1lbnRhdGlv
-bi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMgfCAgIDMzICsrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKw0KIDEgZmlsZSBjaGFuZ2VkLCAzMyBpbnNlcnRpb25zKCspDQoNCmRpZmYgLXJ1
-cE4gb2xkL0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzIG5ldy9Eb2N1
-bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcw0KLS0tIG9sZC9Eb2N1bWVudGF0
-aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3NhcwkyMDEwLTA2LTIwIDAzOjQxOjMxLjAwMDAw
-MDAwMCAtMDQwMA0KKysrIG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlk
-X3NhcwkyMDEwLTA2LTIwIDAzOjU1OjQyLjAwMDAwMDAwMCAtMDQwMA0KQEAgLTEsMyArMSwzNiBA
-QA0KKzEgUmVsZWFzZSBEYXRlICAgIDogVGh1ci4gIE1heSAwMywgMjAxMCAwOToxMjo0NSBQU1Qg
-MjAwOSAtDQorCQkJKGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxzaS5jb20pDQorCQkJQm8gWWFu
-Zw0KKw0KKzIgQ3VycmVudCBWZXJzaW9uIDogMDAuMDAuMDQuMTcuMS1yYzENCiszIE9sZGVyIFZl
-cnNpb24gICA6IDAwLjAwLjA0LjE3LjEtcmMxDQorDQorMS4JQWRkIHRoZSBPbmxpbmUgQ29udHJv
-bGxlciBSZXNldCAoT0NSKSB0byB0aGUgRHJpdmVyLg0KKwlPQ1IgaXMgdGhlIG5ldyBmZWF0dXJl
-IGZvciBtZWdhcmFpZF9zYXMgZHJpdmVyIHdoaWNoDQorCXdpbGwgYWxsb3cgdGhlIGZ3IHRvIGRv
-IHRoZSBjaGlwIHJlc2V0IHdoaWNoIHdpbGwgbm90DQorCWFmZmFjdCB0aGUgT1MgYmVoYXZpb3Vz
-Lg0KKw0KKwlUbyBhZGQgdGhlIE9DUiBzdXBwb3J0LCBkcml2ZXIgbmVlZCB0byBkbzogDQorCQlh
-KS4gcmVzZXQgdGhlIGNvbnRyb2xsZXIgY2hpcHMgLS0gWHNjYWxlIGFuZCBHZW4yIHdoaWNoDQor
-CQl3aWxsIGNoYW5nZSB0aGUgZnVuY3Rpb24gY2FsbHMgYW5kIGFkZCB0aGUgcmVzZXQgZnVuY3Rp
-b24NCisJCXJlbGF0ZWQgdG8gdGhpcyB0d28gY2hpcHMuDQorCQkNCisJCWIpLiBkdXJpbmcgdGhl
-IHJlc2V0LCBkcml2ZXIgd2lsbCBzdG9yZSB0aGUgcGVuZGluZyBjbWRzDQorCQl3aGljaCBub3Qg
-cmV0dXJuZWQgYnkgRlcgdG8gZHJpdmVyJ3MgcGVuZGluZyBxdWV1ZS4gIERyaXZlcg0KKwkJd2ls
-bCByZS1pc3N1ZSB0aG9zZSBwZW5kaW5nIGNtZHMgYWdhaW4gdG8gRlcgYWZ0ZXIgdGhlIE9DUg0K
-KwkJZmluaXNoZWQuDQorCQkNCisJCWMpLiBJbiBkcml2ZXIncyB0aW1lb3V0IHJvdXRpbmUsIGRy
-aXZlciB3aWxsIHJlcG9ydCB0bw0KKwkJT1MgYXMgcmVzZXQuIEFsc28gZHJpdmVyJ3MgcXVldWUg
-cm91dGluZSB3aWxsIGJsb2NrIHRoZQ0KKwkJY21kcyB1bnRpbCB0aGUgT0NSIGZpbmlzaGVkLg0K
-KwkJDQorCQlkKS4gaW4gRHJpdmVyJ3MgSVNSIHJvdXRpbmUsIGlmIGRyaXZlciBnZXQgdGhlIEZX
-IHN0YXRlIGFzDQorCQlzdGF0ZSBjaGFuZ2UsIEZXIGluIEZhaWx1cmUgc3RhdHVzIGFuZCBGVyBz
-dXBwb3J0IG9ubGluZSBjb250cm9sbGVyDQorCQlyZXNldCAoT0NSKSwgZHJpdmVyIHdpbGwgc3Rh
-cnQgdG8gZG8gdGhlIGNvbnRyb2xsZXIgcmVzZXQuDQorCQkNCisJCWUpLiBJbiBkcml2ZXIncyBJ
-T0NUTCByb3V0aW5lLCB0aGUgYXBwbGljYXRpb24gY21kcyB3aWxsIHdhaXQgZm9yIHRoZQ0KKwkJ
-T0NSIHRvIGZpbmlzaCwgdGhlbiBpc3N1ZSB0aGUgY21kcyB0byBGVy4NCisJCSANCiAxIFJlbGVh
-c2UgRGF0ZSAgICA6IFRodXIuICBPY3QgMjksIDIwMDkgMDk6MTI6NDUgUFNUIDIwMDkgLQ0KIAkJ
-CShlbWFpbGQtaWQ6bWVnYXJhaWRsaW51eEBsc2kuY29tKQ0KIAkJCUJvIFlhbmcNCg0KDQotLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFt
-ZXMuQm90dG9tbGV5QHN1c2UuZGVdIA0KU2VudDogU3VuZGF5LCBKdW5lIDIwLCAyMDEwIDQ6NDkg
-UE0NClRvOiBZYW5nLCBCbw0KQ2M6IFlpbmdoYWkgTHU7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwu
-b3JnOyBha3BtQG9zZGwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0
-OiBSRTogW1BBVENIIDEvMTJdIHNjc2k6IG1lZ2FyYWlkX3NhcyAtIE9ubGluZSBDb250cm9sbGVy
-IFJlc2V0IC0gSTogRW5hYmxlIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IEJpdCBpbiByZWdpc3Rl
-ciByZWxhdGVkIGZ1bmN0aW9ucw0KDQpPbiBTdW4sIDIwMTAtMDYtMjAgYXQgMTQ6MTkgLTA2MDAs
-IFlhbmcsIEJvIHdyb3RlOg0KPiBZZXMuICANCg0KT0ssIGNhbiB5b3UgZ2l2ZSBtZSB0aGUgc2lu
-Z2xlIGNoYW5nZWxvZyBmb3IgdGhpcyBvbmUgY29tbWl0LCB0aGVuLA0KcGxlYXNlPw0KDQpUaGFu
-a3MsDQoNCkphbWVzDQoNCg0K
+On Wed, 2010-07-28 at 02:32 -0500, Mike Christie wrote:
+> On 07/27/2010 04:32 PM, Vasu Dev wrote:
+> >> This isn't one of those races where you are blocking the rport, but the
+> >> IO keeps coming around so the retries are used really quickly right (the
+> >> driver looks like it has the fc class and internal state checks to
+> >> prevent this but I wanted to make sure).
+> >
+> 
+> I think I am hitting the above problem.
+> 
+> >
+> > This tiny time windows can be further reduced by use of wmb() on rport
+> > state change to block and lport getting out of ready since their states
+> > are checked w/o lock in queuecommand path.
+> 
+> I think you need something like this for the lport queue ready check. 
+> It looks like the initial failure from __fc_linkdown->fc_fcp_cleanup 
+> burned a timeout. Then because it missed the lport ready check, it will 
+> use an extra retry just sitting there timing out.
+> 
+> For the rport state check, I think you are supposed to call the fc 
+> chkready function under the host lock. The port state and flags are set 
+> under it. I did the attached patch for that.
+
+I tried attached patch w/o this series and that didn't work and I got
+same IO errors on link down. However once I included my next patch 4/28
+related to IO error fix then attached patch worked w/o having this patch
+under discussion, so attached patch works w/o this patch and I agree
+rport needs to be checked under lock to get up-to-date correct rport
+state checking in fc_queueucommand, so can you submit this patch ?
+
+I'll submit another patch to replace added DID_REQUEUE here as this
+series already applied to scsi-misc, I'll replace this by
+DID_TRANSPORT_DISRUPTED since added DID_REQUEUE could be returned for
+attempted tape IO as you pointed in other response and having
+DID_TRANSPORT_DISRUPTED would be more meaningful code as lport is not
+ready in this case to complete IOs.
+
+Below is IO error log with attached patch w/o this series just after
+ixgbe link goes down :-
+
+[  452.168644] ixgbe: eth3 NIC Link is Down
+[  452.180427] sd 5:0:0:2: [sdd] Done:
+[  452.180436] sd 5:0:0:3: [sde] Done: RETRY
+[  452.180441] sd 5:0:0:3: [sde] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.180445] sd 5:0:0:3: [sde] CDB: Write(10): 2a 00 00 07 91 80 00 00
+80 00
+[  452.180464] sd 5:0:0:1: [sdc] Done: RETRY
+[  452.180467] sd 5:0:0:1: [sdc] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.180469] sd 5:0:0:1: [sdc] CDB: Write(10): 2a 00 00 07 cf 00 00 00
+80 00
+[  452.181792] RETRY
+[  452.181963] sd 5:0:0:2: [sdd] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.182241] sd 5:0:0:2: [sdd] CDB: Write(10): 2a 00 00 07 ac 00 00 00
+80 00
+[  452.183294] sd 5:0:0:2: [sdd] Done:
+[  452.183326] sd 5:0:0:0: [sdb] Done: RETRY
+[  452.183329] sd 5:0:0:0: [sdb] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.183332] sd 5:0:0:0: [sdb] CDB: Write(10): 2a 00 00 07 99 00 00 00
+80 00
+[  452.184089] RETRY
+[  452.184262] sd 5:0:0:2: [sdd] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.184514] sd 5:0:0:2: [sdd] CDB: Write(10): 2a 00 00 07 ac 00 00 00
+80 00
+[  452.185557] sd 5:0:0:2: [sdd] Done: RETRY
+[  452.185798] sd 5:0:0:2: [sdd] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.186050] sd 5:0:0:2: [sdd] CDB: Write(10): 2a 00 00 07 ac 00 00 00
+80 00
+[  452.187101] sd 5:0:0:2: [sdd] Done: RETRY
+[  452.187373] sd 5:0:0:2: [sdd] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.187633] sd 5:0:0:2: [sdd] CDB: Write(10): 2a 00 00 07 ac 00 00 00
+80 00
+[  452.188691] sd 5:0:0:2: [sdd] Done: RETRY
+[  452.188932] sd 5:0:0:2: [sdd] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK[  452.189184] sd 5:0:0:2: [sdd] CDB: Write(10): 2a
+00 00 07 ac 00 00 00 80 00
+[  452.190499] sd 5:0:0:2: [sdd] Done: SUCCESS
+[  452.190748] sd 5:0:0:2: [sdd] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.190999] sd 5:0:0:2: [sdd] CDB: Write(10): 2a 00 00 07 ac 00 00 00
+80 00
+[  452.192033] sd 5:0:0:2: [sdd] Unhandled error code
+[  452.192244] sd 5:0:0:2: [sdd] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.192495] sd 5:0:0:2: [sdd] CDB: Write(10): 2a 00 00 07 ac 00 00 00
+80 00
+[  452.193526] end_request: I/O error, dev sdd, sector 502784
+[  452.193820] host5: libfc: Link down on port (050b01)
+[  452.194006] sd 5:0:0:3: [sde] Done: RETRY
+[  452.194262] sd 5:0:0:3: [sde] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.194507] sd 5:0:0:3: [sde] CDB: Write(10): 2a 00 00 07 91 80 00 00
+80 00
+[  452.195525] sd 5:0:0:1: [sdc] Done: RETRY
+[  452.195790] sd 5:0:0:1: [sdc] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.196033] sd 5:0:0:1: [sdc] CDB: Write(10): 2a 00 00 07 cf 00 00 00
+80 00
+[  452.197076] sd 5:0:0:0: [sdb] Done: RETRY
+[  452.197354] sd 5:0:0:0: [sdb] Result: hostbyte=DID_ERROR
+driverbyte=DRIVER_OK
+[  452.197620] sd 5:0:0:0: [sdb] CDB: Write(10): 2a 00 00 07 99 00 00 00
+80 00
+[  459.476688] ixgbe: eth3 NIC Link is Up 10 Gbps, Flow Control: None
+[  464.287400] host5: libfc: Link up on port (050b01)
+[  466.304340] libfcoe: host5: FIP selected Fibre-Channel Forwarder MAC
+00:05:1e:d8:2f:03
+
+
+	In above log, IO error occurred even before libfc could start acting on
+link down at [452.193820] to block rports but once rport blocked your
+attached patch helps as I said above.
+
+	Thanks
+	Vasu
+
+
+
+
+
+
+
+
+
