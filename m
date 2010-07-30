@@ -1,50 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
-Date: Fri, 30 Jul 2010 10:45:48 +0200
-Message-ID: <4C52913C.9020204@kernel.org>
-References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: [PATCH 0/8]: qla4xxx: bug fixes and PCI AER support
+Date: Fri, 30 Jul 2010 14:25:18 +0530
+Message-ID: <20100730085518.GA12252@sles11sp1b1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: Guenter Roeck <guenter.roeck@ericsson.com>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, James Smart <james.smart@emulex.com>, "Eric W. Biederman" <ebiederm@aristanetworks.com>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, linuxppc-dev@ozlabs.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Nick Cheng <nick.cheng@areca.com.tw>, Dmitry Torokhov <dtor@mail.ru>, Jean Delvare <khali@linux-fr.org>, Paul Mackerras <paulus@samba.org>, Benjamin Thery <benjamin.thery@bull.net>, linux-scsi@vger.kernel.org, Alex Iannicelli <alex.iannicelli@emulex.com>, Liam Girdwood <lrg@slimlogic.co.uk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 115.113.65.67.static-pune-stdill.vsnl.net.in ([115.113.65.67]:3416
+	"HELO sles11sp1b1.site" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with SMTP id S1751906Ab0G3I6n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jul 2010 04:58:43 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: james.bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: vikas.chaudhary@qlogic.com, ravi.anand@qlogic.com, michaelc@cs.wisc.edu, nilesh.javali@qlogic.com, lalit.chandivade@qlogic.com
 
-On 07/29/2010 07:09 AM, Guenter Roeck wrote:
-> The following comment is found in include/linux/sysfs.h:
-> 
->    /* FIXME
->     * The *owner field is no longer used.
->     * x86 tree has been cleaned up. The owner
->     * attribute is still left for other arches.
->     */
-> 
-> As it turns out, the *owner field is (again?) initialized in several modules,
-> suggesting that such initialization may be creeping back into the code.
-> 
-> This patch set removes the above comment, the *owner field, and each instance
-> in the code where it was found to be initialized.
-> 
-> Compiled with x86 allmodconfig as well as with all alpha, arm, mips, powerpc,
-> and sparc defconfig builds.
+James,
 
-Yeah, the change is way overdue.  Maybe we should have just removed
-them back then.
+Please apply following list of patches which are generated against
+latest scsi-misc-2.6 tree.
 
- Acked-by: Tejun Heo <tj@kernel.org>
+Vikas Chaudhary (5)
+0001-qla4xxx-set-correct-value-in-sess-recovery_tmo.patch
+0002-qla4xxx-Use-the-correct-request-queue.patch
+0004-qla4xxx-clear-AF_DPC_SCHEDULED-flage-when-exit-from-.patch
+0005-qla4xxx-updated-mbx_sys_info-struct-to-sync-with-FW-.patch
+0008-qla4xxx-Update-driver-version-to-5.02.00-k3.patch
 
-Thanks.
+Lalit Chandivade (2)
+0003-qla4xxx-Stop-firmware-before-doing-init-firmware.patch
+0007-qla4xxx-Added-AER-support-for-ISP82xx.patch
 
--- 
-tejun
+Nilesh Javali (1)
+0006-qla4xxx-Handle-outstanding-mbx-cmds-on-hung-f-w-scen.patch
+
+drivers/scsi/qla4xxx/ql4_def.h     |   36 ++++-
+drivers/scsi/qla4xxx/ql4_fw.h      |   20 ++--
+drivers/scsi/qla4xxx/ql4_glbl.h    |    2 +
+drivers/scsi/qla4xxx/ql4_init.c    |   14 ++-
+drivers/scsi/qla4xxx/ql4_iocb.c    |    2 +-
+drivers/scsi/qla4xxx/ql4_isr.c     |    3 +
+drivers/scsi/qla4xxx/ql4_mbx.c     |   48 ++++++-
+drivers/scsi/qla4xxx/ql4_nx.c      |   14 ++-
+drivers/scsi/qla4xxx/ql4_os.c      |  315 +++++++++++++++++++++++++++++++++++-
+drivers/scsi/qla4xxx/ql4_version.h |    2 +-
+
+Thanks,
+Vikas.
