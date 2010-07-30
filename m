@@ -1,57 +1,45 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
-Date: Fri, 30 Jul 2010 20:28:10 +1000
-Message-ID: <1280485690.1902.8.camel@pasglop>
-References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
-	<4C52913C.9020204@kernel.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC] relaxed barrier semantics
+Date: Fri, 30 Jul 2010 16:45:00 +0400
+Message-ID: <4C52C94C.2040901@vlnb.net>
+References: <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org> <4C51DA1F.2040701@redhat.com> <20100729194904.GA17098@lst.de> <4C51DCF1.3010507@redhat.com> <1280433591.4441.393.camel@mulgrave.site> <20100729200327.GA17767@lst.de> <1280434037.4441.414.camel@mulgrave.site> <20100729201124.GD17767@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <4C52913C.9020204@kernel.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>, Linus Walleij <linus.walleij@stericsson.com>, James Smart <james.smart@emulex.com>, "Eric W. Biederman" <ebiederm@aristanetworks.com>, Dmitry Torokhov <dtor@mail.ru>, Benjamin Thery <benjamin.thery@bull.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, linuxppc-dev@ozlabs.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Paul Mackerras <paulus@samba.org>, Nick Cheng <nick.cheng@areca.com.tw>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Jean Delvare <khali@linux-fr.org>, Richard Purdie <rpurdie@rpsys.net>, Liam Girdwood <lrg@slimlogic.co.uk>, linux-scsi@vger.kernel.org, Alex Iannicelli <alex.iannicelli@emulex.com>, Guenter Roeck <guenter.roeck@ericsson.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20100729201124.GD17767@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <James.Bottomley@suse.de>, Ric Wheeler <rwheeler@redhat.com>, Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2010-07-30 at 10:45 +0200, Tejun Heo wrote:
-> On 07/29/2010 07:09 AM, Guenter Roeck wrote:
-> > The following comment is found in include/linux/sysfs.h:
-> > 
-> >    /* FIXME
-> >     * The *owner field is no longer used.
-> >     * x86 tree has been cleaned up. The owner
-> >     * attribute is still left for other arches.
-> >     */
-> > 
-> > As it turns out, the *owner field is (again?) initialized in several modules,
-> > suggesting that such initialization may be creeping back into the code.
-> > 
-> > This patch set removes the above comment, the *owner field, and each instance
-> > in the code where it was found to be initialized.
-> > 
-> > Compiled with x86 allmodconfig as well as with all alpha, arm, mips, powerpc,
-> > and sparc defconfig builds.
-> 
-> Yeah, the change is way overdue.  Maybe we should have just removed
-> them back then.
+Christoph Hellwig, on 07/30/2010 12:11 AM wrote:
+> On Thu, Jul 29, 2010 at 03:07:17PM -0500, James Bottomley wrote:
+>> There's lies, damned lies and benchmarks .. but what I was thinking is
+>> could we just do the right thing?  SCSI exposes (in sd) the interfaces
+>> to change the cache setting, so if the customer *doesn't* specify
+>> barriers on mount, could we just flip the device to write through it
+>> would be more performant in most use cases.
+>
+> We could for SCSI and ATA, but probably not easily for other kind of
+> storage.  Except that it's not that simple as we have partitions and
+> volume managers inbetween - different filesystems sitting on the same
+> device might have very different ideas of what they want.
+>
+> For SCSI we can at least permanently disable the cache, but ATA devices
+> keep coming up again with the volatile write cache enabled after a
+> reboot, or even worse a suspend to ram / resume cycle.  The latter is
+> what keeps me from just disabling the volatile cache on my laptop,
+> despite that option giving significanly better performance for typical
+> kernel developer workloads.
 
-I'm happy with the powerpc related patches as long as we all agree that
-needs to go. Do you need me to put some of this in powerpc.git or are
-you carrying them all to Linus ?
+There are also SCSI devices which keep changed settings only until the 
+next reset/restart. (The devices might be shared, so other initiators 
+can at any time reset them.)
 
-Cheers,
-Ben.
+So, to make the changed settings to not be resetted, there must be a 
+procedure which would catch the corresponding notification event (RESET 
+Unit Attention for SCSI) and set the resetted settings back in the 
+desired value.
 
->  Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> Thanks.
-> 
+Vlad
