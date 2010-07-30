@@ -1,47 +1,51 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Fri, 30 Jul 2010 16:20:25 +0200
-Message-ID: <20100730142025.GA29341@lst.de>
-References: <4C51DA1F.2040701@redhat.com> <20100729194904.GA17098@lst.de> <4C51DCF1.3010507@redhat.com> <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca> <20100729230406.GI4506@thunk.org> <4C52CBFF.6090406@vlnb.net> <20100730130957.GA26894@lst.de> <4C52D2E0.5000609@vlnb.net> <20100730133410.GA27996@lst.de> <4C52D728.6070008@vlnb.net>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
+Date: Fri, 30 Jul 2010 07:36:22 -0700
+Message-ID: <20100730143622.GA30105@suse.de>
+References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com> <4C52913C.9020204@kernel.org> <1280485690.1902.8.camel@pasglop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:49135 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752139Ab0G3Olv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Jul 2010 10:41:51 -0400
 Content-Disposition: inline
-In-Reply-To: <4C52D728.6070008@vlnb.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+In-Reply-To: <1280485690.1902.8.camel@pasglop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Tejun Heo <tj@kernel.org>, Guenter Roeck <guenter.roeck@ericsson.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Paul Mackerras <paulus@samba.org>, Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, "Eric W. Biederman" <ebiederm@aristanetworks.com>, Benjamin Thery <benjamin.thery@bull.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On Fri, Jul 30, 2010 at 05:44:08PM +0400, Vladislav Bolkhovitin wrote:
-> Yes, but why not to make step further and allow to completely eliminate 
-> the waiting/draining using ORDERED requests? Current advanced storage 
-> hardware allows that.
+On Fri, Jul 30, 2010 at 08:28:10PM +1000, Benjamin Herrenschmidt wrote:
+> On Fri, 2010-07-30 at 10:45 +0200, Tejun Heo wrote:
+> > On 07/29/2010 07:09 AM, Guenter Roeck wrote:
+> > > The following comment is found in include/linux/sysfs.h:
+> > > 
+> > >    /* FIXME
+> > >     * The *owner field is no longer used.
+> > >     * x86 tree has been cleaned up. The owner
+> > >     * attribute is still left for other arches.
+> > >     */
+> > > 
+> > > As it turns out, the *owner field is (again?) initialized in several modules,
+> > > suggesting that such initialization may be creeping back into the code.
+> > > 
+> > > This patch set removes the above comment, the *owner field, and each instance
+> > > in the code where it was found to be initialized.
+> > > 
+> > > Compiled with x86 allmodconfig as well as with all alpha, arm, mips, powerpc,
+> > > and sparc defconfig builds.
+> > 
+> > Yeah, the change is way overdue.  Maybe we should have just removed
+> > them back then.
+> 
+> I'm happy with the powerpc related patches as long as we all agree that
+> needs to go. Do you need me to put some of this in powerpc.git or are
+> you carrying them all to Linus ?
 
-There is a few caes where we could do that - the fsync without metadata
-changes above would be the prime example.  But there's a lot lower
-hanging fruit until we get to the point where it's worth trying.
+I can carry them all in my driver-core tree if you don't object.
 
-But in most cases we don't just drain an imaginary queue but actually
-need to modify software state before finishing one class of I/O and
-submitting the next.
+thanks,
 
-Again, take the example of fsync, but this time we have actually
-extended the file and need to log an inode size update, as well
-as a modification to to the btree blocks.
-
-Now the fsync in XFS looks like this:
-
-1) write out all the data blocks using WRITE
-2) wait for these to finish
-3) propagate any I/O error to the inode so we can pick them up
-4) update the inode size in the shadow in-memory structure
-5) start a transaction to log the inode size
-6) flush the write cache to make sure the data really is on disk
-7) write out a log buffer containing the inode and btree updates
-8) if the FUA bit is not support flush the cache again
-
-and yes, the flush in 6) is important so that we don't happen
-to log the inode size update before all data has made it to disk
-in case the cache flush in 8) is interrupted
-
+greg k-h
