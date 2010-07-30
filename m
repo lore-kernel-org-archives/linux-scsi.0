@@ -1,66 +1,79 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Thu, 29 Jul 2010 18:37:35 -0500
-Message-ID: <1280446655.4441.863.camel@mulgrave.site>
-References: <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org>
-	 <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org>
-	 <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org>
-	 <4C51DA1F.2040701@redhat.com> <20100729194904.GA17098@lst.de>
-	 <4C51DCF1.3010507@redhat.com>
-	 <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca>
-	 <20100729230406.GI4506@thunk.org> <1280446105.4441.837.camel@mulgrave.site>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: RE: [PATCH 0/6] scsi_dh : Couple of fixes for scsi device handlers
+Date: Thu, 29 Jul 2010 17:04:36 -0700
+Message-ID: <1280448276.17620.80.camel@chandra-lucid.beaverton.ibm.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF4D05DC420@cosmail01.lsi.com>
+	 <1280440444.17620.72.camel@chandra-lucid.beaverton.ibm.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF4D0663845@cosmail01.lsi.com>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:36548 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755351Ab0G2Xhn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Jul 2010 19:37:43 -0400
-In-Reply-To: <1280446105.4441.837.camel@mulgrave.site>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:36028 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755080Ab0G3AD3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Jul 2010 20:03:29 -0400
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o6TNsr7U008326
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2010 17:54:53 -0600
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o6U03EfT074458
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2010 18:03:15 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o6U03E5N023167
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2010 18:03:14 -0600
+In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4D0663845@cosmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ted Ts'o <tytso@mit.edu>
-Cc: Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+To: "Moger, Babu" <Babu.Moger@lsi.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Shyam_Iyer@Dell.com" <Shyam_Iyer@Dell.com>, "Qi, Yanling" <Yanling.Qi@lsi.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>
 
-On Thu, 2010-07-29 at 18:28 -0500, James Bottomley wrote:
-> On Thu, 2010-07-29 at 19:04 -0400, Ted Ts'o wrote:
-> > On Thu, Jul 29, 2010 at 04:30:54PM -0600, Andreas Dilger wrote: 
-> > > Like James wrote, this is basically everything FUA.  It is OK for
-> > > ordered mode to allow the device to aggregate the normal filesystem
-> > > and journal IO, but when the commit block is written it should flush
-> > > all of the previously written data to disk.  This still allows
-> > > request re-ordering and merging inside the device, but orders the
-> > > data vs. the commit block.  Having the proposed "flush ranges"
-> > > interface to the disk would be ideal, since there would be no wasted
-> > > time flushing data that does not need it (i.e. other partitions).
+See comment below
+
+On Thu, 2010-07-29 at 16:35 -0600, Moger, Babu wrote:
+> Chandra, Shyam,  
+>  Thanks for your comments.. Please see my response.
+> 
+> > -----Original Message-----
+> > From: Chandra Seetharaman [mailto:sekharan@us.ibm.com]
+> > Sent: Thursday, July 29, 2010 4:54 PM
+> > To: Moger, Babu
+> > Cc: device-mapper development; linux-scsi@vger.kernel.org; Qi, Yanling;
+> > Chauhan, Vijay; Dachepalli, Sudhir; Stankey, Robert
+> > Subject: Re: [PATCH 0/6] scsi_dh : Couple of fixes for scsi device
+> > handlers
 > > 
-> > My understanding is that "everything FUA" can be a performance
-> > disaster.  That's because it bypasses the track buffer, and things get
-> > written directly to disk.  So there is no possibility to reorder
-> > buffers so that they get written in one disk rotation.  Depending on
-> > the disk, it might even be that if you send N sequential sectors all
-> > tagged with FUA, it could be slower than sending the N sectors
-> > followed by a cache flush or SYNCHRONIZE_CACHE command.
+> > Babu,
+> > 
+> > Your main object is to protect scsi_dh_data across scsi_dh_activate()
+> > by
+> > way of getting kref around scsi_dh_activate(), right ?
+> > 
 > 
-> I think we're getting into disk differences here.  This certainly isn't
-> correct for SCSI disks.  The standard enterprise configuration for a
-> SCSI disk is actually cache set to write through ... so FUA is a nop.
-> Even for Write Back cache SCSI devices, FUA is just a wait until I/O is
-> on media, which is pretty much equivalent to the write through case for
-> the given cache lines.
+>   Yes, That is correct. 
 > 
-> I can see the problems you describe possibly affecting ATA devices with
-> less sophisticated caches ... but, realistically, SATA and SAS devices
-> come from virtually the same manufacturing process ... I'd be really
-> surprised if they didn't share caching technologies.
+> > Wouldn't doing what Shyam suggested (doing kref_put() and put_device())
+> > in scsi_activate() make it simpler and code still be readable ? (it
+> > would make all the patches except 2/6 not needed).
+> > 
+> > Did you hit with any problems doing it that way ?
+> >
+> 
+>   Yes, We can do that.  Problem is I am hitting the issue with BUG_ON
+>  in get_rdac_data which is there in the beginning of rdac_activate.
 
-Actually, just an update on this now that I've taken my SCSI glasses
-off.  Anything that does tagging properly ... like SCSI or SATA NCQ
-shouldn't have this problem because the multiple outstanding tags hide
-the media access latency.  For untagged devices, yes, it will be
-painful.
+I do not understand the problem.
 
-James
+If the BUG_ON on get_rdac_data() is being triggered, that means
+sdev->scsi_dh_data is NULL, if that is the case, how can you access
+sdev->scsi_dh_data->kref in scsi_dh_activate (in patch 2/6) ? Wouldn't
+it trip a oops ?
+
+
+>   If I have to go this way, then I need to remove a call get_rdac_data
+>  and just validate pointers. Report error(SCSI_DH_IO) if pointer is not valid.
+>   Then hold the reference counts and continue if everything is alright.
+>   I will send the new patches as soon as I can.  
 
 
