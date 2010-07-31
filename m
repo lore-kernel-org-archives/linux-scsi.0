@@ -1,25 +1,41 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Sat, 31 Jul 2010 11:12:46 +0200
-Message-ID: <20100731091245.GA4643@lst.de>
-References: <4C51DCF1.3010507@redhat.com> <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca> <20100729230406.GI4506@thunk.org> <4C52CBFF.6090406@vlnb.net> <20100730130957.GA26894@lst.de> <4C52D2E0.5000609@vlnb.net> <20100730133410.GA27996@lst.de> <4C52D728.6070008@vlnb.net> <20100730142025.GA29341@lst.de> <20100731004756.GC3273@quack.suse.cz>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
+ Enable Online Controller Reset Bit in register related functions
+Date: Sat, 31 Jul 2010 12:46:11 -0500
+Message-ID: <1280598371.2801.11.camel@mulgrave.site>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
+	 <1277046060.5242.18.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
+	 <1277063250.5242.25.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
+	 <1277066924.5242.41.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100731004756.GC3273@quack.suse.cz>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Vladislav Bolkhovitin <vst@vlnb.net>, Ted Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:36925 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752572Ab0GaRqV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 31 Jul 2010 13:46:21 -0400
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Maharana, Parag" <Parag.Maharana@lsi.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-On Sat, Jul 31, 2010 at 02:47:57AM +0200, Jan Kara wrote:
-> > There is a few caes where we could do that - the fsync without metadata
-> > changes above would be the prime example.  But there's a lot lower
-> > hanging fruit until we get to the point where it's worth trying.
->   Umm, I don't understand you. I think that fsync in particular is an
-> example where you have to wait and issue cache flush if the drive has
-> volatile write cache.
+On Fri, 2010-07-30 at 12:53 -0600, Yang, Bo wrote:
+> Do you know when those patches (12 patches) will be pushed to upstream?
 
-Of course.  What makes you believe anyone said something else?
+Well, it looks like I lost the branch I was fixing all this up in
+somewhere.  I don't really have time to redo that work, so could you
+send the series correctly (that's the 8 OCR patches that don't
+individually compile as a single patch with a correct changelog plus the
+four others).
+
+Thanks,
+
+James
+
 
