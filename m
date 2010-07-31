@@ -1,49 +1,74 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Sat, 31 Jul 2010 02:47:57 +0200
-Message-ID: <20100731004756.GC3273@quack.suse.cz>
-References: <20100729194904.GA17098@lst.de>
- <4C51DCF1.3010507@redhat.com>
- <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca>
- <20100729230406.GI4506@thunk.org>
- <4C52CBFF.6090406@vlnb.net>
- <20100730130957.GA26894@lst.de>
- <4C52D2E0.5000609@vlnb.net>
- <20100730133410.GA27996@lst.de>
- <4C52D728.6070008@vlnb.net>
- <20100730142025.GA29341@lst.de>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH 0/6] scsi_dh : Couple of fixes for scsi device handlers
+Date: Fri, 30 Jul 2010 23:02:09 -0600
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4D0663B70@cosmail01.lsi.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF4D05DC420@cosmail01.lsi.com>
+	 <1280440444.17620.72.camel@chandra-lucid.beaverton.ibm.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF4D0663845@cosmail01.lsi.com>
+	 <1280448276.17620.80.camel@chandra-lucid.beaverton.ibm.com>
+	 <E463DF2B2E584B4A82673F53D62C2EF4D0663A2C@cosmail01.lsi.com>
+ <1280534189.17620.284.camel@chandra-lucid.beaverton.ibm.com>
+ <4C536CB4.6090108@dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40978 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751102Ab0GaAs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Jul 2010 20:48:26 -0400
-Content-Disposition: inline
-In-Reply-To: <20100730142025.GA29341@lst.de>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:59307 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751143Ab0GaFCc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 31 Jul 2010 01:02:32 -0400
+In-Reply-To: <4C536CB4.6090108@dell.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Ted Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+To: Shyam Iyer <shyam_iyer@dell.com>, "sekharan@us.ibm.com" <sekharan@us.ibm.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Qi, Yanling" <Yanling.Qi@lsi.com>, "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>, "Dachepalli, Sudhir" <Sudhir.Dachepalli@lsi.com>, "Stankey, Robert" <Robert.Stankey@lsi.com>
 
-On Fri 30-07-10 16:20:25, Christoph Hellwig wrote:
-> On Fri, Jul 30, 2010 at 05:44:08PM +0400, Vladislav Bolkhovitin wrote:
-> > Yes, but why not to make step further and allow to completely eliminate 
-> > the waiting/draining using ORDERED requests? Current advanced storage 
-> > hardware allows that.
-> 
-> There is a few caes where we could do that - the fsync without metadata
-> changes above would be the prime example.  But there's a lot lower
-> hanging fruit until we get to the point where it's worth trying.
-  Umm, I don't understand you. I think that fsync in particular is an
-example where you have to wait and issue cache flush if the drive has
-volatile write cache. Otherwise you cannot promise to the user data will be
-really on disk in case of crash. So no ordering helps you.
-  And if you are speaking about a drive without volatile write caches, then
-fsync without metadata changes is just trivial and you don't need any
-ordering.
-
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogU2h5YW0gSXllciBbbWFp
+bHRvOnNoeWFtX2l5ZXJAZGVsbC5jb21dDQo+IFNlbnQ6IEZyaWRheSwgSnVseSAzMCwgMjAxMCA3
+OjIyIFBNDQo+IFRvOiBzZWtoYXJhbkB1cy5pYm0uY29tDQo+IENjOiBNb2dlciwgQmFidTsgZGV2
+aWNlLW1hcHBlciBkZXZlbG9wbWVudDsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7DQo+IFFp
+LCBZYW5saW5nOyBDaGF1aGFuLCBWaWpheTsgRGFjaGVwYWxsaSwgU3VkaGlyOyBTdGFua2V5LCBS
+b2JlcnQNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwLzZdIHNjc2lfZGggOiBDb3VwbGUgb2YgZml4
+ZXMgZm9yIHNjc2kgZGV2aWNlDQo+IGhhbmRsZXJzDQo+IA0KPiBPbiAwNy8zMC8yMDEwIDA3OjU2
+IFBNLCBDaGFuZHJhIFNlZXRoYXJhbWFuIHdyb3RlOg0KPiA+IE9uIEZyaSwgMjAxMC0wNy0zMCBh
+dCAxMjoxMiAtMDYwMCwgTW9nZXIsIEJhYnUgd3JvdGU6DQo+ID4NCj4gPg0KPiA+Pj4+ICAgIFll
+cywgV2UgY2FuIGRvIHRoYXQuICBQcm9ibGVtIGlzIEkgYW0gaGl0dGluZyB0aGUgaXNzdWUgd2l0
+aA0KPiBCVUdfT04NCj4gPj4+PiAgIGluIGdldF9yZGFjX2RhdGEgd2hpY2ggaXMgdGhlcmUgaW4g
+dGhlIGJlZ2lubmluZyBvZiByZGFjX2FjdGl2YXRlLg0KPiA+Pj4+DQo+ID4+PiBJIGRvIG5vdCB1
+bmRlcnN0YW5kIHRoZSBwcm9ibGVtLg0KPiA+Pj4NCj4gPj4+IElmIHRoZSBCVUdfT04gb24gZ2V0
+X3JkYWNfZGF0YSgpIGlzIGJlaW5nIHRyaWdnZXJlZCwgdGhhdCBtZWFucw0KPiA+Pj4gc2Rldi0+
+c2NzaV9kaF9kYXRhIGlzIE5VTEwsIGlmIHRoYXQgaXMgdGhlIGNhc2UsIGhvdyBjYW4geW91IGFj
+Y2Vzcw0KPiA+Pj4gc2Rldi0+c2NzaV9kaF9kYXRhLT5rcmVmIGluIHNjc2lfZGhfYWN0aXZhdGUg
+KGluIHBhdGNoIDIvNikgPyBXb3VsZG4ndA0KPiA+Pj4gaXQgdHJpcCBhIG9vcHMgPw0KPiA+Pj4N
+Cj4gPj4gVGVzdCBjYXNlIGlzIGRlbGV0aW5nIGJvdGggYWN0aXZlIGFuZCBwYXNzaXZlIHBhdGhz
+IGFsbW9zdCB0b2dldGhlcg0KPiBkdXJpbmcNCj4gPj4gICB0aGUgbXVsdGlwYXRoIHRlc3Rpbmcu
+ICBMb29rcyBsaWtlIERNIHBpY2tlZCB1cCB0aGUgYWN0aXZlIHBhdGgNCj4gZmFpbHVyZQ0KPiA+
+PiBmaXJzdC4gVGhlbiBmYWlsZWQgdGhlIGFjdGl2ZSBwYXRoIGFuZCBzdGFydGVkIHNjaGVkdWxp
+bmcgYWN0aXZhdGVfcGF0aA0KPiB0bw0KPiA+PiBmYWlsb3ZlciB0byBwYXNzaXZlIHBhdGguIFBh
+c3NpdmUgcGF0aCBpcyBhbHNvIGFib3V0IHRvIGdvIGRvd24gcHJldHR5DQo+IHNvb24uDQo+ID4+
+IFdoZW4gdGhlIGNvbnRyb2wgd2FzIGluIHNjc2lfZGhfYWN0aXZhdGUsIExvb2tzIGxpa2Ugc2Nz
+aV9kaF9kYXRhIHdhcw0KPiBzdGlsbA0KPiA+PiB2YWxpZCBiZWNhdXNlIEkgZGlkIG5vdCBzZWUg
+cGFuaWMgaGVyZS4gIEJ1dCBzY3NpX2RoX2RhdGEgYmVjYW1lIE5VTEwNCj4gd2hlbg0KPiA+PiBj
+b250cm9sIHdlbnQgdG8gcmRhY19hY3RpdmF0ZS4gVGhhdCBpcyB3aGVuIEkgaGl0IHRoZSBidWcg
+b24uDQo+ID4+DQo+ID4+IGtlcm5lbCBCVUcgYXQgL3Vzci9zcmMvcGFja2FnZXMvQlVJTEQvbHNp
+LXNjc2lfZGhfcmRhYy0NCj4gMDEuMDAvb2JqL2RlZmF1bHQvc2NzaV9kaF9yZGFjLmM6MjMyIQ0K
+PiA+PiBSSVA6IDAwMTA6ICByZGFjX2FjdGl2YXRlKzB4MjU3LzB4Mzg3IFtzY3NpX2RoX3JkYWNd
+DQo+ID4+DQo+ID4+IE15IHVuZGVyc3RhbmRpbmcgaXMgc29tZW9uZSB0cmlnZ2VyZWQgc2NzaV9k
+aC0+ZGV0YWNoIGZvciBwYXNzaXZlIHBhdGgNCj4gZHVyaW5nDQo+ID4+ICAgdGhpcyBzbWFsbCB3
+aW5kb3cuICBPbmx5IHdheSBJIGNvdWxkIHNlZSBwcm9ibGVtIGdvIGF3YXkgaXMgaG9sZGluZw0K
+PiByZWZlcmVuY2UNCj4gPj4gY291bnRzIGJldHdlZW4gdGhlc2UgY2FsbHMuICBEaWQgaSBtaXNz
+IGFueXRoaW5nIGhlcmU/IFNlZSB0aGUgY29kZQ0KPiBzbmlwcGV0IGJlbG93Li4NCj4gPj4NCj4g
+PiBTbywgYmFzaWNhbGx5LCB0aGUgbmV3IHBhdGNoIGp1c3QgcmVkdWNlcyB0aGUgd2luZG93IG9m
+IHJhY2UuIElPVywgaWYgaXQNCj4gPiBqdXN0IHNwaW5zIGZvciBmZXcgc2Vjb25kcyAob3IgcHJl
+ZW1wdGVkKSBqdXN0IGJlZm9yZSBjYWxsaW5nIHRoZQ0KPiA+IGtyZWZfZ2V0KCkgaW4gdGhlIG5l
+dyBwYXRjaCwgaXQgd2lsbCBnZW5lcmF0ZSBhbiBvb3BzIGFzIHNjc2lfZGhfZGF0YQ0KPiA+IHdv
+dWxkIGJlIE5VTEwuDQoNCiAgVGhhdCBpcyBjb3JyZWN0LiANCg0KPiA+DQo+ID4gTG9va3MgbGlr
+ZSB5b3UgaGF2ZSB0byBjcmVhdGUgYSBsb2NrIHRvIHByb3RlY3Qgc2NzaV9kaF9kYXRhIGFuZCB0
+aGVuDQo+ID4gY2FsbCBrcmVmX2dldCgpIHdpdGggdGhlIHByb3RlY3Rpb24gb2YgbG9jay4NCj4g
+Pg0KPiA+DQo+IFNlY29uZCB0aGF0Li4gU291bmRzIGxpa2UgZWFjaCBrcmVmX2dldC9rcmVmX3B1
+dCAuLiBuZWVkcyBhIGxvY2sNCj4gcHJvdGVjdGlvbiBub3QganVzdCB0aGlzIHNjZW5hcmlvLg0K
+DQogIEkgYWdyZWUuIEkgd2lsbCBhdHRlbXB0IG9uZSBtb3JlIHNldCBvZiBwYXRjaGVzLiBUaGlz
+IHRpbWUgSSB3aWxsIHRyeSB0byBtYXRjaCBnZXQgYW5kIHB1dCBzZXF1ZW5jZSBpbiBhIG9uZSBm
+aWxlLiBQbGVhc2UgZmVlbCBmcmVlIHRvIGNvbW1lbnQuDQoNCg==
