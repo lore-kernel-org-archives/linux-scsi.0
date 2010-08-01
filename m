@@ -1,108 +1,71 @@
-From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+From: Larry Finger <Larry.Finger-tQ5ms3gMjBLk1uMJSBkQmQ@public.gmane.org>
 Subject: Re: 2.6.35-rc6-git6: Reported regressions from 2.6.34
-Date: Sun, 1 Aug 2010 11:01:04 -0700
-Message-ID: <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
+Date: Sun, 01 Aug 2010 14:39:20 -0500
+Message-ID: <4C55CD68.1020401@lwfinger.net>
 References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <2dWFdr9kTFM.A.P0D.spXVMB@chimera>
 Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Jens Axboe <jaxboe-5c4llco8/ftWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Aug 1, 2010 at 6:46 AM, Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wrote:
->
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D16400
-> Subject         : 2.6.35-rc5 inconsistent lock state
-> Submitter       : Martin Pirker <lkml.collector-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Date            : 2010-07-14 20:33 (19 days old)
-> Message-ID      : <AANLkTikDF0TL6OyPVCzPlUTwxFehcrETn3ysgSSeTq92@mail=
-=2Egmail.com>
-> References      : http://marc.info/?l=3Dlinux-kernel&m=3D127913961025=
-267&w=3D2
+On 08/01/2010 08:46 AM, Rafael J. Wysocki wrote:
+> This message contains a list of some regressions from 2.6.34,
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
+> 
+> If you know of any other unresolved regressions from 2.6.34, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
+> 
+> Each entry from the list will be sent additionally in an automatic reply
+> to this message with CCs to the people involved in reporting and handling
+> the issue.
 
-This has a proposed patch. I don't know what the status of it is, thoug=
-h. Jens?
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
+> Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
+> Submitter	: Zdenek Kabelac <zdenek.kabelac-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Date		: 2010-06-28 9:40 (35 days old)
+> Message-ID	: <AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+> References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
+> Handled-By	: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+> Patch		: https://bugzilla.kernel.org/attachment.cgi?id=27272
 
-   http://marc.info/?l=3Dlinux-kernel&m=3D127950018204029&w=3D2
+I am beginning to think that Bug 16312 is not the same as Bug 16122. Even with
+the patches from 16312, I still get warnings as below:
 
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D16393
-> Subject         : kernel BUG at fs/block_dev.c:765!
-> Submitter       : Markus Trippelsdorf <markus-xp2qqqlHh3xzoYq+O6RWwA@public.gmane.org>
-> Date            : 2010-07-14 13:52 (19 days old)
-> Message-ID      : <20100714135217.GA1797-joY5NpejW+Hx3b7vapvTcQ@public.gmane.org>
-> References      : http://marc.info/?l=3Dlinux-kernel&m=3D127911564213=
-748&w=3D2
+[   11.728776] ------------[ cut here ]------------
+[   11.728787] WARNING: at fs/fs-writeback.c:964 __mark_inode_dirty+0x10f/0x1a0()
+[   11.728790] Hardware name: HP Pavilion dv2700 Notebook PC
+[   11.728792] Modules linked in: loop(+) dm_mod ide_cd_mod cdrom
+snd_hda_codec_conexant ide_pci_generic arc4 ecb b43 rng_core mac80211
+snd_hda_intel r8712u(C) cfg80211 snd_hda_codec amd74xx snd_pcm sg ide_core
+rfkill led_class snd_timer ssb mmc_core pcmcia snd joydev k8temp hwmon
+i2c_nforce2 pcmcia_core forcedeth serio_raw snd_page_alloc i2c_core battery ac
+button ext4 mbcache jbd2 crc16 ohci_hcd sd_mod ehci_hcd usbcore fan processor
+ahci libahci libata scsi_mod thermal
+[   11.728854] Pid: 2449, comm: udisks-part-id Tainted: G         C
+2.6.35-rc6-realtek+ #15
+[   11.728857] Call Trace:
+[   11.728865]  [<ffffffff8104608a>] warn_slowpath_common+0x7a/0xb0
+[   11.728869]  [<ffffffff810460d5>] warn_slowpath_null+0x15/0x20
+[   11.728874]  [<ffffffff81129d5f>] __mark_inode_dirty+0x10f/0x1a0
+[   11.728879]  [<ffffffff8111e07d>] touch_atime+0x12d/0x170
+[   11.728885]  [<ffffffff810cab91>] generic_file_aio_read+0x5c1/0x720
+[   11.728890]  [<ffffffff81107ca2>] do_sync_read+0xd2/0x110
+[   11.728896]  [<ffffffff81077e7d>] ? trace_hardirqs_on+0xd/0x10
+[   11.728900]  [<ffffffff811083c3>] vfs_read+0xb3/0x170
+[   11.728906]  [<ffffffff81002d1c>] ? sysret_check+0x27/0x62
+[   11.728909]  [<ffffffff811084cc>] sys_read+0x4c/0x80
+[   11.728914]  [<ffffffff81002ceb>] system_call_fastpath+0x16/0x1b
+[   11.728917] ---[ end trace 32e16cacad33229f ]---
+[   11.728919] bdi-block not registered
 
-This one is interesting. And I think I perhaps see where it's coming fr=
-om.
+The warnings do not occur with every boot and appear to be some kind of race
+condition.
 
-bd_start_claiming() (through bd_prepare_to_claim()) has two separate
-success cases: either there was no holder (bd_claiming is NULL) or the
-new holder was already claiming it (bd_claiming =3D=3D holder).
-
-Note in particular the case of the holder _already_ holding it. What ha=
-ppens is:
-
- - bd_start_claiming() succeeds because we had _already_ claimed it
-with the same holder
-
- - then some error happens, and we call bd_abort_claiming(), which
-does whole->bd_claiming =3D NULL;
-
- - the original holder thinks it still holds the bd, but it has been re=
-leased!
-
- - a new claimer comes in, and succeeds because bd_claiming is now NULL=
-=2E
-
- - we now have two "owners" of the bd, but bd_claiming only points to
-the second one.
-
-I think bd_start_claiming() needs to do some kind of refcount for the
-nested holder case, and bd_abort_claiming() needs to decrement the
-refcount and only clear the bd_claiming field when it goes down to
-zero.
-
-I dunno. Maybe there's something else going on, but it does look
-suspicious, and the above would explain the BUG_ON().
-
-Tejun, Jens?
-
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D16369
-> Subject         : Yet another 2.6.35 regression (AGP)?
-> Submitter       : Woody Suwalski <terraluna977-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Date            : 2010-07-09 14:21 (24 days old)
-> Message-ID      : <4C373084.8000503-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> References      : http://marc.info/?l=3Dlinux-kernel&m=3D127868797119=
-254&w=3D2
-
-Should hopefully be fixed by commit e7b96f28c58c ("agp/intel: Use the
-correct mask to detect i830 aperture size.")
-
-> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=3D16365
-> Subject         : kernel BUG at fs/btrfs/extent-tree.c:1353
-> Submitter       : Johannes Hirte <johannes.hirte-3kN+8DYepx7zMJDuovMtMLNAH6kLmebB@public.gmane.org>
-> Date            : 2010-07-08 14:27 (25 days old)
-> Message-ID      : <201007081627.24654.johannes.hirte-3kN+8DYepx7zMJDuovMtMA@public.gmane.org=
-e>
-> References      : http://marc.info/?l=3Dlinux-kernel&m=3D127859960725=
-931&w=3D2
-
-This one is reportedly fixed by commit 83ba7b071f30 ("writeback:
-simplify the write back thread queue")
-
-> Bug-Entry =A0 =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D=
-16215
-> Subject =A0 =A0 =A0 =A0 : sysfs: cannot create duplicate filename '/c=
-lass/net/bnep0'
-> Submitter =A0 =A0 =A0 : Janusz Krzysztofik <jkrzyszt-NCk8gXQAEuFz6jiHbVrK7g@public.gmane.org>
-> Date =A0 =A0 =A0 =A0 =A0 =A0: 2010-06-15 14:55 (48 days old)
-> Handled-By =A0 =A0 =A0: Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-
-=46ixed by commit 24b1442d01ae155ea716dfb94ed21605541c317d.
-
-                             Linus
+Larry
